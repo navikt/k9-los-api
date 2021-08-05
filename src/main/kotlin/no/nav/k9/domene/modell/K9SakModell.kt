@@ -367,8 +367,10 @@ data class K9SakModell(
                 return false
             }
 
-            if (forrigeAksjonspunkter.size == nåværendeAksjonspunkter.size && forrigeAksjonspunkter.values.contains("AVBR")) {
-                return false;
+            if (forrigeAksjonspunkter.size == nåværendeAksjonspunkter.size &&
+                (forrigeAksjonspunkter.values.contains("AVBR") || nåværendeAksjonspunkter.values.contains("AVBR"))
+            ) {
+                return false
             }
             return forrigeAksjonspunkter != nåværendeAksjonspunkter
         } else {
