@@ -153,10 +153,10 @@ data class K9SakModell(
         return event.aktiveAksjonspunkt().liste.any { entry ->
             (
                     entry.key == FASTSETT_BEREGNINGSGRUNNLAG_ARBEIDSTAKER_FRILANS_KODE ||
-                    entry.key == VURDER_VARIG_ENDRET_ELLER_NYOPPSTARTET_NÆRING_SELVSTENDIG_NÆRINGSDRIVENDE_KODE ||
-                    entry.key == FASTSETT_BEREGNINGSGRUNNLAG_SELVSTENDIG_NÆRINGSDRIVENDE_KODE ||
-                    entry.key == FASTSETT_BEREGNINGSGRUNNLAG_FOR_SN_NY_I_ARBEIDSLIVET_KODE ||
-                    entry.key == VURDER_FAKTA_FOR_ATFL_SN_KODE)
+                            entry.key == VURDER_VARIG_ENDRET_ELLER_NYOPPSTARTET_NÆRING_SELVSTENDIG_NÆRINGSDRIVENDE_KODE ||
+                            entry.key == FASTSETT_BEREGNINGSGRUNNLAG_SELVSTENDIG_NÆRINGSDRIVENDE_KODE ||
+                            entry.key == FASTSETT_BEREGNINGSGRUNNLAG_FOR_SN_NY_I_ARBEIDSLIVET_KODE ||
+                            entry.key == VURDER_FAKTA_FOR_ATFL_SN_KODE)
         }
     }
 
@@ -357,14 +357,29 @@ data class K9SakModell(
             return false
         }
 
-        val forrigeAksjonspunkter = forrigeEvent.aktiveAksjonspunkt()
-            .liste
-        val nåværendeAksjonspunkter = sisteEvent().aktiveAksjonspunkt().liste
+        if (sisteEvent().ytelseTypeKode == "PSB") {
+            val forrigeAksjonspunkter = forrigeEvent.aktiveAksjonspunktEllerAvbrutt().liste
+            val nåværendeAksjonspunkter = sisteEvent().aktiveAksjonspunktEllerAvbrutt().liste
 
-        if (sisteEvent().aktiveAksjonspunkt().lengde() > 0 && !sisteEvent().aktiveAksjonspunkt().tilBeslutter()) {
-            return false
+            if (sisteEvent().aktiveAksjonspunktEllerAvbrutt()
+                    .lengde() > 0 && !sisteEvent().aktiveAksjonspunktEllerAvbrutt().tilBeslutter()
+            ) {
+                return false
+            }
+
+            if (forrigeAksjonspunkter.size == nåværendeAksjonspunkter.size && forrigeAksjonspunkter.values.contains("AVBR")) {
+                return false;
+            }
+            return forrigeAksjonspunkter != nåværendeAksjonspunkter
+        } else {
+            val forrigeAksjonspunkter = forrigeEvent.aktiveAksjonspunkt().liste
+            val nåværendeAksjonspunkter = sisteEvent().aktiveAksjonspunkt().liste
+
+            if (sisteEvent().aktiveAksjonspunkt().lengde() > 0 && !sisteEvent().aktiveAksjonspunkt().tilBeslutter()) {
+                return false
+            }
+            return forrigeAksjonspunkter != nåværendeAksjonspunkter
         }
-        return forrigeAksjonspunkter != nåværendeAksjonspunkter
     }
 
     // Array med alle versjoner av modell basert på eventene, brukes når man skal spille av eventer
@@ -382,6 +397,10 @@ data class K9SakModell(
 
 fun BehandlingProsessEventDto.aktiveAksjonspunkt(): Aksjonspunkter {
     return Aksjonspunkter(this.aksjonspunktKoderMedStatusListe.filter { entry -> entry.value == "OPPR" })
+}
+
+fun BehandlingProsessEventDto.aktiveAksjonspunktEllerAvbrutt(): Aksjonspunkter {
+    return Aksjonspunkter(this.aksjonspunktKoderMedStatusListe.filter { entry -> entry.value == "OPPR" || entry.value == "AVBR" })
 }
 
 data class Aksjonspunkter(val liste: Map<String, String>) {
