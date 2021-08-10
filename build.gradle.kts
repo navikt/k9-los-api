@@ -13,7 +13,7 @@ val koinVersion = "2.2.2"
 val kotliqueryVersion = "1.3.1"
 
 plugins {
-    kotlin("jvm") version "1.5.0-RC"
+    kotlin("jvm") version "1.5.30-RC"
     id("com.github.johnrengelman.shadow") version "6.1.0"
 }
 
