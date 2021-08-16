@@ -88,7 +88,7 @@ fun Route.innsiktGrensesnitt() {
                         div {
                             classes = setOf("input-group-text display-4")
                             if (punsjliste != null) {
-                                + "${dato} antallPunsjOppgaver: ${punsjliste.size}}"
+                                + "Dato: ${dato} AntallPunsjOppgaver: ${punsjliste.size}"
                             }
                         }
                     }
