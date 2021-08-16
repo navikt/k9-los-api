@@ -77,6 +77,21 @@ fun Route.innsiktGrensesnitt() {
                             +"${aksjonspunkt.antall} kode: ${aksjonspunkt.kode} ${aksjonspunkt.navn} Totrinn: ${aksjonspunkt.totrinn}"
                         }
                     }
+
+                    val groupBy = oppgaveRepository.hentAlleOppgaveForPunsj()
+                        .groupBy { oppgave -> oppgave.eventTid.toLocalDate() }
+
+                    val sorted = groupBy.keys.sorted()
+
+                    for (dato in sorted) {
+                        val punsjliste = groupBy[dato]
+                        div {
+                            classes = setOf("input-group-text display-4")
+                            if (punsjliste != null) {
+                                + "${dato} antallPunsjOppgaver: ${punsjliste.size}}"
+                            }
+                        }
+                    }
                 }
             }
         }
