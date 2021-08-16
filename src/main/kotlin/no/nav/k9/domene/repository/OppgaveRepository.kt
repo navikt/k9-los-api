@@ -381,6 +381,25 @@ class OppgaveRepository(
         return count!!
     }
 
+    internal fun hentAlleOppgaveForPunsj() : List<Oppgave> {
+        val json: List<String> = using(sessionOf(dataSource)) {
+            //language=PostgreSQL
+            it.run(
+                queryOf(
+                    "select data from oppgave where data ->> 'system' = 'PUNSJ'"
+                )
+                    .map { row ->
+                        row.string("data")
+                    }.asList
+            )
+        }
+        val oppgaver = json.map { objectMapper().readValue(it, Oppgave::class.java) }
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
+
+        return oppgaver
+    }
+
     internal fun hentAktiveOppgaverTotaltPerBehandlingstypeOgYtelseType(
         fagsakYtelseType: FagsakYtelseType,
         behandlingType: BehandlingType
