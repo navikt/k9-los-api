@@ -345,26 +345,21 @@ data class K9SakModell(
         )
     }
 
-    fun bleBeslutter(): Boolean {
+    private fun bleBeslutter(): Boolean {
         val forrigeEvent = forrigeEvent()
         return forrigeEvent != null && !forrigeEvent.aktiveAksjonspunkt()
             .tilBeslutter() && sisteEvent().aktiveAksjonspunkt().tilBeslutter()
     }
 
     override fun fikkEndretAksjonspunkt(): Boolean {
-        val forrigeEvent = forrigeEvent()
-        if (forrigeEvent == null) {
-            return false
-        }
+        val forrigeEvent = forrigeEvent() ?: return false
 
         if (sisteEvent().ytelseTypeKode == "PSB") {
             val forrigeAksjonspunkter = forrigeEvent.aktiveAksjonspunktEllerAvbrutt().liste
             val nåværendeAksjonspunkter = sisteEvent().aktiveAksjonspunktEllerAvbrutt().liste
 
-            if (sisteEvent().aktiveAksjonspunktEllerAvbrutt()
-                    .lengde() > 0 && !sisteEvent().aktiveAksjonspunktEllerAvbrutt().tilBeslutter()
-            ) {
-                return false
+            if (bleBeslutter()) {
+                return true
             }
 
             if (forrigeAksjonspunkter.size == nåværendeAksjonspunkter.size &&
