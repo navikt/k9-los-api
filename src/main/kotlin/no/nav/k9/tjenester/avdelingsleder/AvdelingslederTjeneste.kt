@@ -202,20 +202,20 @@ class AvdelingslederTjeneste(
             FagsakYtelseType.OMSORGSPENGER_KS,
             FagsakYtelseType.OMSORGSPENGER_AO,
             FagsakYtelseType.OMSORGSPENGER_MA)
-        oppgaveKøRepository.lagre(UUID.fromString(ytelse.id))
-        { oppgaveKø ->
+        oppgaveKøRepository.lagre(UUID.fromString(ytelse.id)) { oppgaveKø ->
             oppgaveKø!!.filtreringYtelseTyper = mutableListOf()
             if (ytelse.fagsakYtelseType != null) {
-                if (ytelse.fagsakYtelseType == "OMD") {
-                    omsorgsdagerYtelser.map { oppgaveKø.filtreringYtelseTyper.add(it)  }
-                } else {
-                    oppgaveKø.filtreringYtelseTyper.add(FagsakYtelseType.fraKode(ytelse.fagsakYtelseType))
+                ytelse.fagsakYtelseType.forEach { fagsakYtelseType ->
+                    if (fagsakYtelseType == "OMD") {
+                        omsorgsdagerYtelser.forEach{ oppgaveKø.filtreringYtelseTyper.add(it) }
+                    } else {
+                        oppgaveKø.filtreringYtelseTyper.add(FagsakYtelseType.fraKode(fagsakYtelseType))
+                    }
                 }
             }
             oppgaveKø
         }
         oppgaveKøRepository.oppdaterKøMedOppgaver(UUID.fromString(ytelse.id))
-
     }
 
     suspend fun endreKriterium(kriteriumDto: AndreKriterierDto) {
