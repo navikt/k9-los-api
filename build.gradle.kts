@@ -77,7 +77,7 @@ dependencies {
     }
     testImplementation("org.skyscreamer:jsonassert:1.5.0")
 
-    testImplementation("io.zonky.test:embedded-postgres:1.3.0")
+    testImplementation("io.zonky.test:embedded-postgres:1.3.1")
     testImplementation("org.koin:koin-test:$koinVersion")
 
     implementation(kotlin("stdlib-jdk8"))
