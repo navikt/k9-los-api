@@ -66,6 +66,7 @@ data class BehandlingProsessEventDto(
     val feilutbetaltBeløp: Long? = null,
     val ansvarligSaksbehandlerIdent: String? = null,
     val ansvarligSaksbehandlerForTotrinn: String? = null,
+    val ansvarligBeslutterForTotrinn: String? = null,
 
     val fagsakPeriode: Periode? = null,
 

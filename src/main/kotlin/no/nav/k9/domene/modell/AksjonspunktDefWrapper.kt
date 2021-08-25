@@ -20,6 +20,10 @@ class AksjonspunktDefWrapper {
                 .all { it == AksjonspunktDefinisjon.FATTER_VEDTAK }
         }
 
+        fun inneholderFatterVedtak(liste: Map<String, String>): Boolean {
+            return liste.map { entry -> AksjonspunktDefinisjon.fraKode(entry.key) }.contains(AksjonspunktDefinisjon.FATTER_VEDTAK)
+        }
+
         fun finnAlleAksjonspunkter(): List<Aksjonspunkt> {
             val fraK9Sak = AksjonspunktDefinisjon.values().filter { it.kode != null }.map {
                 Aksjonspunkt(
