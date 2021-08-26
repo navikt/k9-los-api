@@ -361,13 +361,19 @@ data class K9SakModell(
         val forrigeEvent = forrigeEvent() ?: return false
 
         if (sisteEvent().ytelseTypeKode == "PSB") {
+            val forrigeAksjonspunkter = forrigeEvent.aktiveAksjonspunktEllerAvbrutt().liste
+            val nåværendeAksjonspunkter = sisteEvent().aktiveAksjonspunktEllerAvbrutt().liste
+
             if (bleBeslutter()) {
                 return true
             }
-            if (beslutterErFerdig()) {
-                return true
+
+            if (forrigeAksjonspunkter.size == nåværendeAksjonspunkter.size &&
+                (forrigeAksjonspunkter.values.contains("AVBR") || nåværendeAksjonspunkter.values.contains("AVBR"))
+            ) {
+                return false
             }
-            return false
+            return forrigeAksjonspunkter != nåværendeAksjonspunkter
         } else {
             val forrigeAksjonspunkter = forrigeEvent.aktiveAksjonspunkt().liste
             val nåværendeAksjonspunkter = sisteEvent().aktiveAksjonspunkt().liste
