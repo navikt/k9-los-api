@@ -8,6 +8,7 @@ import no.nav.k9.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.integrasjon.kafka.dto.EventHendelse
 import no.nav.k9.integrasjon.sakogbehandling.kontrakt.BehandlingAvsluttet
 import no.nav.k9.integrasjon.sakogbehandling.kontrakt.BehandlingOpprettet
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon.*
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.statistikk.kontrakter.Aktør
@@ -429,6 +430,10 @@ data class Aksjonspunkter(val liste: Map<String, String>) {
 
     fun inneholderFatterVedtak(): Boolean {
         return AksjonspunktDefWrapper.inneholderFatterVedtak(this.liste)
+    }
+
+    fun harAktivtAksjonspunkt(def: AksjonspunktDefinisjon): Boolean {
+        return AksjonspunktDefWrapper.inneholderEtAktivtAksjonspunktMedKoden(this.liste, def)
     }
 
     fun eventResultat(): EventResultat {

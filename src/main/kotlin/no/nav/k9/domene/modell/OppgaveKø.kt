@@ -6,7 +6,7 @@ import no.nav.k9.domene.lager.oppgave.Kodeverdi
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.repository.ReservasjonRepository
 import no.nav.k9.integrasjon.kafka.dto.Fagsystem.*
-import no.nav.k9.kodeverk.Fagsystem
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
@@ -159,6 +159,13 @@ data class OppgaveKø(
             return true
         }
 
+        if (oppgave.aksjonspunkter.harAktivtAksjonspunkt(AksjonspunktDefinisjon.VURDER_ARBEIDSFORHOLD)
+            && kriterier.map { it.andreKriterierType }
+                .contains(AndreKriterierType.AVKLAR_ARBEIDSFORHOLD)
+        ) {
+            return true
+        }
+
         if (oppgave.system == PUNSJ.kode && kriterier.map { it.andreKriterierType }
                 .contains(AndreKriterierType.FRA_PUNSJ)) {
             return true
@@ -266,7 +273,7 @@ enum class AndreKriterierType(override val kode: String, override val navn: Stri
     AARSKVANTUM("AARSKVANTUM", "Årskvantum"),
     AVKLAR_MEDLEMSKAP("AVKLAR_MEDLEMSKAP", "Avklar medlemskap"),
     VURDER_OPPTJENINGSVILKÅRET("VURDER_OPPTJENINGSVILKÅRET", "Avklar opptjeningsvilkåret"),
-    AVKLAR_ARBEIDSFORHOLD("AVKLAR_ARBEIDSFORHOLD", "Avklar arbeidsforhold"),
+    AVKLAR_ARBEIDSFORHOLD("AVKLAR_ARBEIDSFORHOLD", "Avklar arbeidsforhold");
 
     override val kodeverk = "ANDRE_KRITERIER_TYPE"
 
