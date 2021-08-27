@@ -55,7 +55,7 @@ spec:
     - name: AZURE_CLIENT_ID
       value: 5afad323-c9df-4e14-b481-b278e9d2bf69
     - name: AZURE_AUTHORIZED_CLIENTS
-      value: a084abb8-6a38-4506-84c2-e4ac8b438a05
+      value: 5617f485-23fd-4d15-86bc-978ee2163c5a
     - name: AZURE_V1_DISCOVERY_ENDPOINT
       value: https://login.microsoftonline.com/966ac572-f5b7-4bbe-aa88-c76419c0f851/.well-known/openid-configuration
     - name: AZURE_V2_DISCOVERY_ENDPOINT
