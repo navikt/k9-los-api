@@ -78,8 +78,17 @@ fun Route.innsiktGrensesnitt() {
                         }
                     }
 
-                    val groupBy = oppgaveRepository.hentAlleOppgaveForPunsj()
+                    val hentAlleOppgaveForPunsj = oppgaveRepository.hentAlleOppgaveForPunsj()
+                    val groupBy = hentAlleOppgaveForPunsj
                         .groupBy { oppgave -> oppgave.eventTid.toLocalDate() }
+
+                    val hvorMangeOppgaverErAvTypeFørstegangsbehandling =
+                        hentAlleOppgaveForPunsj.filter { oppgave -> oppgave.behandlingType == BehandlingType.FORSTEGANGSSOKNAD && oppgave.aktiv }.size
+
+                    div {
+                        classes = setOf("input-group-text display-4")
+                        + "Hvor mange oppgaver har blitt markert som førstegangsbehandling og som ikke er løst ${hvorMangeOppgaverErAvTypeFørstegangsbehandling}"
+                    }
 
                     val sorted = groupBy.keys.sorted()
 

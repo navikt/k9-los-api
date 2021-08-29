@@ -128,7 +128,7 @@ data class K9PunsjModell(
 
     private fun utledBehandlingType(eventDto: PunsjEventDto) : BehandlingType {
         if (eventDto.type == null) {
-            return BehandlingType.FORSTEGANGSSOKNAD
+            return BehandlingType.UKJENT
         }
         return BehandlingType.fraKode(eventDto.type)
     }
