@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonFormat
 import no.nav.k9.domene.lager.oppgave.Kodeverdi
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.repository.ReservasjonRepository
+import no.nav.k9.integrasjon.kafka.dto.Fagsystem.*
+import no.nav.k9.kodeverk.Fagsystem
 import no.nav.k9.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
@@ -157,6 +159,11 @@ data class OppgaveKø(
             return true
         }
 
+        if (oppgave.system == PUNSJ.kode && kriterier.map { it.andreKriterierType }
+                .contains(AndreKriterierType.FRA_PUNSJ)) {
+            return true
+        }
+
 /*        if (oppgave.årskvantum && kriterier.map { it.andreKriterierType }
                 .contains(AndreKriterierType.AARSKVANTUM)) {
             return true
@@ -248,6 +255,7 @@ enum class KøSortering(
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 enum class AndreKriterierType(override val kode: String, override val navn: String) : Kodeverdi {
+    FRA_PUNSJ("FRA_PUNSJ", "Fra Punsj"),
     TIL_BESLUTTER("TIL_BESLUTTER", "Til beslutter"),
     //    UTBETALING_TIL_BRUKER("UTBETALING_TIL_BRUKER", "Utbetaling til bruker"),
 //    UTLANDSSAK("UTLANDSSAK", "Utland"),
