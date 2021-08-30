@@ -95,11 +95,13 @@ fun Route.innsiktGrensesnitt() {
                     for (dato in sorted) {
                         val punsjliste = groupBy[dato]
                         val behandlingstyper = punsjliste!!.groupBy { o -> o.behandlingType }
-
                         for (behandslingstype in behandlingstyper.keys) {
-                            div {
-                                classes = setOf("input-group-text display-4")
-                                + "${dato},${behandslingstype.navn},${behandlingstyper.values.size}"
+                            val list = behandlingstyper[behandslingstype]!!
+                            for (oppgave in list) {
+                                div {
+                                    classes = setOf("input-group-text display-4")
+                                    + "${dato},${behandslingstype.navn},${behandlingstyper.values.size},${oppgave.journalpostId}"
+                                }
                             }
                         }
                     }
