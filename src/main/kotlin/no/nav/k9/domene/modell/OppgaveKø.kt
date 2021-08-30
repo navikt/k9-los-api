@@ -267,7 +267,6 @@ enum class AndreKriterierType(override val kode: String, override val navn: Stri
     AVKLAR_MEDLEMSKAP("AVKLAR_MEDLEMSKAP", "Avklar medlemskap"),
     VURDER_OPPTJENINGSVILKÅRET("VURDER_OPPTJENINGSVILKÅRET", "Avklar opptjeningsvilkåret"),
     AVKLAR_ARBEIDSFORHOLD("AVKLAR_ARBEIDSFORHOLD", "Avklar arbeidsforhold"),
-    AVKLAR_INNTEKTSMELDINGER("AVKLAR_INNTEKTSMELDINGER", "Avklar inntektsmeldinger");
 
     override val kodeverk = "ANDRE_KRITERIER_TYPE"
 
