@@ -13,8 +13,8 @@ fun Route.KonfigApis() {
     val configuration by inject<Configuration>()
     val k9sakUrlDev = "https://app-q1.adeo.no/k9/web"
     val k9sakUrlProd = "https://app.adeo.no/k9/web"
-    val refreshUrlDev = "wss://k9-los-oidc-auth-proxy.dev.adeo.no/ws/k9-los-api"
-    val refreshUrlProd = "wss://k9-los-oidc-auth-proxy.nais.adeo.no/ws/k9-los-api"
+    val refreshUrlDev = "wss://k9-los-oidc-auth-proxy.dev.intern.nav.no/ws/k9-los-api"
+    val refreshUrlProd = "wss://k9-los-oidc-auth-proxy.intern.nav.no/ws/k9-los-api"
     val refreshUrlLocal = "ws://localhost:8020/ws"
     val k9punsjUrlDev = "https://k9-punsj-frontend.dev.adeo.no/journalpost"
     val k9punsjUrlProd = "https://k9-punsj-frontend.nais.adeo.no/journalpost"
