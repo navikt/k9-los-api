@@ -7,13 +7,13 @@ val mainClass = "no.nav.k9.K9LosKt"
 val kafkaVersion = "2.7.0" // Alligned med version fra kafka-embedded-env
 val hikariVersion = "4.0.3"
 val flywayVersion = "6.0.8"
-val vaultJdbcVersion = "1.3.7"
+val vaultJdbcVersion = "1.3.9"
 val kafkaEmbeddedEnvVersion = "2.7.0"
 val koinVersion = "2.2.2"
 val kotliqueryVersion = "1.3.1"
 
 plugins {
-    kotlin("jvm") version "1.5.0-RC"
+    id("org.jetbrains.kotlin.jvm") version "1.5.30"
     id("com.github.johnrengelman.shadow") version "6.1.0"
 }
 
