@@ -17,7 +17,6 @@ import no.nav.k9.integrasjon.omsorgspenger.OmsorgspengerSakFnrDto
 import no.nav.k9.integrasjon.pdl.*
 import no.nav.k9.integrasjon.rest.idToken
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleOppgaverHistorikk
-import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import no.nav.k9.tjenester.fagsak.PersonDto
 import no.nav.k9.tjenester.mock.Aksjonspunkter
 import no.nav.k9.tjenester.saksbehandler.nokkeltall.NyeOgFerdigstilteOppgaverDto
@@ -131,6 +130,14 @@ class OppgaveTjeneste @KtorExperimentalAPI constructor(
                 oppgaveResultat.oppgaver
             )
         )
+    }
+
+    suspend fun aktiveOppgaverPåSammeBruker(oppgaveId: UUID): List<JournalpostId> {
+        val oppgave = oppgaveRepository.hent(oppgaveId)
+        val hentOppgaverMedAktorId = oppgaveRepository.hentOppgaverMedAktorId(oppgave.aktorId)
+        return hentOppgaverMedAktorId.filter { o -> o.aktiv && o.system == Fagsystem.PUNSJ.kode && o.journalpostId != oppgave.journalpostId }
+            .map { o -> JournalpostId(o.journalpostId!!) }
+            .toList()
     }
 
     private fun filtrerOppgaverForSaksnummerOgJournalpostIder(dto: SokeResultatDto): SokeResultatDto {

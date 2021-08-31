@@ -89,6 +89,15 @@ internal fun Route.OppgaveApis() {
         }
     }
 
+    @Location("/oppgaver-på-samme-bruker")
+    class oppgaverPåSammeBruker
+    post { _: opphevReservasjon ->
+        requestContextService.withRequestContext(call) {
+            val params = call.receive<OppgaveId>()
+            call.respond(oppgaveTjeneste.aktiveOppgaverPåSammeBruker(UUID.fromString(params.oppgaveId))
+        }
+    }
+
     @Location("/legg-til-behandlet-sak")
     class leggTilBehandletSak
 
