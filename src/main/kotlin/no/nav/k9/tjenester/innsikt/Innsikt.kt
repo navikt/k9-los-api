@@ -100,7 +100,7 @@ fun Route.innsiktGrensesnitt() {
                             for (oppgave in list) {
                                 div {
                                     classes = setOf("input-group-text display-4")
-                                    + "${dato},${behandslingstype.navn},${behandlingstyper.values.size},${oppgave.journalpostId}"
+                                    + "${dato},${behandslingstype.navn},${behandlingstyper.values.size},${oppgave.fagsakYtelseType.kode}"
                                 }
                             }
                         }
