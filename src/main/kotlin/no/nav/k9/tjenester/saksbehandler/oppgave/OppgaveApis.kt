@@ -94,7 +94,7 @@ internal fun Route.OppgaveApis() {
     post { _: opphevReservasjon ->
         requestContextService.withRequestContext(call) {
             val params = call.receive<OppgaveId>()
-            call.respond(oppgaveTjeneste.aktiveOppgaverPåSammeBruker(UUID.fromString(params.oppgaveId))
+            call.respond(oppgaveTjeneste.aktiveOppgaverPåSammeBruker(UUID.fromString(params.oppgaveId)))
         }
     }
 
