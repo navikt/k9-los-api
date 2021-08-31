@@ -171,40 +171,12 @@ data class OppgaveKø(
             return true
         }
 
-/*        if (oppgave.årskvantum && kriterier.map { it.andreKriterierType }
-                .contains(AndreKriterierType.AARSKVANTUM)) {
+        if (oppgave.aksjonspunkter.harAktivtAksjonspunkt(AksjonspunktDefinisjon.AVKLAR_KOMPLETT_NOK_FOR_BEREGNING)
+            && kriterier.map { it.andreKriterierType }
+                .contains(AndreKriterierType.AVKLAR_INNTEKTSMELDING_BEREGNING)
+        ) {
             return true
         }
-
-        if (oppgave.avklarArbeidsforhold && kriterier.map { it.andreKriterierType }
-                .contains(AndreKriterierType.AVKLAR_ARBEIDSFORHOLD)) {
-            return true
-        }
-
-        if (oppgave.vurderopptjeningsvilkåret && kriterier.map { it.andreKriterierType }
-                .contains(AndreKriterierType.VURDER_OPPTJENINGSVILKÅRET)) {
-            return true
-        }
-
-//        if (oppgave.utbetalingTilBruker && kriterier.map { it.andreKriterierType }
-//                .contains(AndreKriterierType.UTBETALING_TIL_BRUKER)) {
-//            return true
-//        }
-
-//        if (oppgave.utenlands && kriterier.map { it.andreKriterierType }.contains(AndreKriterierType.UTLANDSSAK)) {
-//            return true
-//        }
-
-//        if (oppgave.søktGradering && kriterier.map { it.andreKriterierType }
-//                .contains(AndreKriterierType.SOKT_GRADERING)) {
-//            return true
-//        }
-
-        if (oppgave.selvstendigFrilans && kriterier.map { it.andreKriterierType }
-                .contains(AndreKriterierType.SELVSTENDIG_FRILANS)) {
-            return true
-        } */
-
         return false
     }
 
@@ -273,7 +245,8 @@ enum class AndreKriterierType(override val kode: String, override val navn: Stri
     AARSKVANTUM("AARSKVANTUM", "Årskvantum"),
     AVKLAR_MEDLEMSKAP("AVKLAR_MEDLEMSKAP", "Avklar medlemskap"),
     VURDER_OPPTJENINGSVILKÅRET("VURDER_OPPTJENINGSVILKÅRET", "Avklar opptjeningsvilkåret"),
-    AVKLAR_ARBEIDSFORHOLD("AVKLAR_ARBEIDSFORHOLD", "Avklar arbeidsforhold");
+    AVKLAR_ARBEIDSFORHOLD("AVKLAR_ARBEIDSFORHOLD", "Avklar arbeidsforhold"),
+    AVKLAR_INNTEKTSMELDING_BEREGNING("AVKLAR_INNTEKTSMELDING_BEREGNING", "Avklar inntektsmeldng");
 
     override val kodeverk = "ANDRE_KRITERIER_TYPE"
 
