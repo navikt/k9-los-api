@@ -346,35 +346,21 @@ data class K9SakModell(
         )
     }
 
-    private fun bleBeslutter(): Boolean {
-        val forrigeEvent = forrigeEvent()
-        return forrigeEvent != null && !forrigeEvent.aktiveAksjonspunkt()
-            .tilBeslutter() && sisteEvent().aktiveAksjonspunkt().tilBeslutter()
-    }
-
-    private fun beslutterErFerdig(): Boolean {
-        val forrigeEvent = forrigeEvent()
-        return forrigeEvent != null && forrigeEvent.aktiveAksjonspunkt()
-            .tilBeslutter() && sisteEvent().inAktiveAksjonspunkt().inneholderFatterVedtak()
-    }
-
     override fun fikkEndretAksjonspunkt(): Boolean {
         val forrigeEvent = forrigeEvent() ?: return false
 
         if (sisteEvent().ytelseTypeKode == "PSB") {
-            val forrigeAksjonspunkter = forrigeEvent.aktiveAksjonspunktEllerAvbrutt().liste
-            val nåværendeAksjonspunkter = sisteEvent().aktiveAksjonspunktEllerAvbrutt().liste
-
-            if (bleBeslutter()) {
+            // har blitt beslutter
+            if (!forrigeEvent.aktiveAksjonspunkt().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK) &&
+                sisteEvent().aktiveAksjonspunkt().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)) {
                 return true
             }
-
-            if (forrigeAksjonspunkter.size == nåværendeAksjonspunkter.size &&
-                (forrigeAksjonspunkter.values.contains("AVBR") || nåværendeAksjonspunkter.values.contains("AVBR"))
-            ) {
-                return false
+            // har blitt satt på vent
+            if (sisteEvent().aktiveAksjonspunkt().påVent()) {
+                return true
             }
-            return forrigeAksjonspunkter != nåværendeAksjonspunkter
+            // skal fortsette og ligge reservert
+            return false
         } else {
             val forrigeAksjonspunkter = forrigeEvent.aktiveAksjonspunkt().liste
             val nåværendeAksjonspunkter = sisteEvent().aktiveAksjonspunkt().liste
@@ -403,14 +389,6 @@ fun BehandlingProsessEventDto.aktiveAksjonspunkt(): Aksjonspunkter {
     return Aksjonspunkter(this.aksjonspunktKoderMedStatusListe.filter { entry -> entry.value == "OPPR" })
 }
 
-fun BehandlingProsessEventDto.inAktiveAksjonspunkt(): Aksjonspunkter {
-    return Aksjonspunkter(this.aksjonspunktKoderMedStatusListe.filter { entry -> entry.value == "UTFO" })
-}
-
-fun BehandlingProsessEventDto.aktiveAksjonspunktEllerAvbrutt(): Aksjonspunkter {
-    return Aksjonspunkter(this.aksjonspunktKoderMedStatusListe.filter { entry -> entry.value == "OPPR" || entry.value == "AVBR" })
-}
-
 data class Aksjonspunkter(val liste: Map<String, String>) {
     fun lengde(): Int {
         return liste.size
@@ -426,10 +404,6 @@ data class Aksjonspunkter(val liste: Map<String, String>) {
 
     fun tilBeslutter(): Boolean {
         return AksjonspunktDefWrapper.tilBeslutter(this.liste)
-    }
-
-    fun inneholderFatterVedtak(): Boolean {
-        return AksjonspunktDefWrapper.inneholderFatterVedtak(this.liste)
     }
 
     fun harAktivtAksjonspunkt(def: AksjonspunktDefinisjon): Boolean {
