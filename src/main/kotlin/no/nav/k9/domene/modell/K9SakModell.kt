@@ -359,6 +359,13 @@ data class K9SakModell(
             if (sisteEvent().aktiveAksjonspunkt().påVent()) {
                 return true
             }
+
+            // beslutter har gjort seg ferdig
+            if (forrigeEvent.aktiveAksjonspunkt().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK) &&
+                sisteEvent().alleAksjonspunkter().harInaktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)
+            ) {
+                return true
+            }
             // skal fortsette og ligge reservert
             return false
         } else {
@@ -389,6 +396,10 @@ fun BehandlingProsessEventDto.aktiveAksjonspunkt(): Aksjonspunkter {
     return Aksjonspunkter(this.aksjonspunktKoderMedStatusListe.filter { entry -> entry.value == "OPPR" })
 }
 
+fun BehandlingProsessEventDto.alleAksjonspunkter(): Aksjonspunkter {
+    return Aksjonspunkter(this.aksjonspunktKoderMedStatusListe)
+}
+
 data class Aksjonspunkter(val liste: Map<String, String>) {
     fun lengde(): Int {
         return liste.size
@@ -408,6 +419,10 @@ data class Aksjonspunkter(val liste: Map<String, String>) {
 
     fun harAktivtAksjonspunkt(def: AksjonspunktDefinisjon): Boolean {
         return AksjonspunktDefWrapper.inneholderEtAktivtAksjonspunktMedKoden(this.liste, def)
+    }
+
+    fun harInaktivtAksjonspunkt(def: AksjonspunktDefinisjon): Boolean {
+        return AksjonspunktDefWrapper.inneholderEtInaktivtAksjonspunktMedKoden(this.liste, def)
     }
 
     fun eventResultat(): EventResultat {
