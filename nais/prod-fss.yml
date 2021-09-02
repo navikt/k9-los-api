@@ -98,7 +98,7 @@ spec:
 
       # ABAC
     - name: ABAC_PDP_ENDPOINT_URL
-      value: http://abac-k9.teamabac/application/authorize
+      value: http://abac-k9.teamabac.svc.nais.local/application/authorize
 
     - name: APPDYNAMICS_CONTROLLER_HOST_NAME
       value: appdynamics.adeo.no
