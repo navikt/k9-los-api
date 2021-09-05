@@ -165,7 +165,7 @@ class ReservasjonRepository(
         var reservasjon: Reservasjon? = null
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
-                reservasjon = lagreReservasjon(tx, uuid, f, refresh)
+                reservasjon = lagreReservasjon(tx, uuid, refresh, f)
             }
         }
         Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
@@ -173,15 +173,23 @@ class ReservasjonRepository(
         return reservasjon!!
     }
 
-    fun lagreFlereReservasjoner() {
-
+    fun lagreFlereReservasjoner(reservasjon: List<Reservasjon>) {
+        using(sessionOf(dataSource)) {
+            it.transaction { tx ->
+                reservasjon.forEach { reservasjon ->
+                    lagreReservasjon(tx, reservasjon.oppgave, refresh = true) {
+                        reservasjon
+                    }
+                }
+            }
+        }
     }
 
     private fun lagreReservasjon(
         tx: TransactionalSession,
         uuid: UUID,
-        f: (Reservasjon?) -> Reservasjon,
-        refresh: Boolean
+        refresh: Boolean,
+        f: (Reservasjon?) -> Reservasjon
     ) : Reservasjon {
         val reservasjon: Reservasjon?
         val run = tx.run(

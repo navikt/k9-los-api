@@ -119,7 +119,7 @@ class SaksbehandlerRepository(
             }
         }
     }
-    
+
     private suspend fun lagreMedEpost(
         epost: String,
         f: (Saksbehandler?) -> Saksbehandler
@@ -182,6 +182,16 @@ class SaksbehandlerRepository(
         }
     }
 
+    suspend fun leggTilFlereReservasjoner(saksbehandlerid: String?, reservasjon: List<UUID>) {
+        if (saksbehandlerid == null) {
+            return
+        }
+        lagreMedId(saksbehandlerid) { saksbehandler ->
+            saksbehandler!!.reservasjoner.addAll(reservasjon)
+            saksbehandler
+        }
+    }
+
      fun fjernReservasjon(id: String?, reservasjon: UUID) {
         if (id == null) {
             return
@@ -205,7 +215,7 @@ class SaksbehandlerRepository(
             }
         }
     }
-    
+
     suspend fun addSaksbehandler(saksbehandler: Saksbehandler) {
         lagreMedEpost(saksbehandler.epost) {
             if (it == null) {
