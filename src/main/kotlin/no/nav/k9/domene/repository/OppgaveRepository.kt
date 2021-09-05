@@ -85,12 +85,10 @@ class OppgaveRepository(
             it.run(
                 queryOf(
                     "select id, data from oppgave where data ->> 'aktiv' = 'true' and" +
-                            " data -> 'fagsakYtelseType' ->> 'kode' = ':fagsakTypeKode' " +
-                            "and data ->> 'pleietrengendeAktørId' = ':aktorId'",
-                    mapOf(
-                        "fagsakTypeKode" to fagsakYtelseType.kode,
-                        "aktorId" to pleietrengendeAktørId
-                    )
+                            " data -> 'fagsakYtelseType' ->> 'kode' = ? " +
+                            "and data ->> 'pleietrengendeAktørId' = ?",
+                    fagsakYtelseType.kode,
+                    pleietrengendeAktørId
                 )
                     .map { row ->
                         OppgaveMedId(
@@ -164,31 +162,37 @@ class OppgaveRepository(
     }
 
     @KtorExperimentalAPI
-    suspend fun sjekkKode6(oppgave : Oppgave): Boolean {
+    suspend fun sjekkKode6(oppgave: Oppgave): Boolean {
         if (oppgave.fagsakSaksnummer.isNotBlank()) {
             val søker = pepClient.erSakKode6(oppgave.fagsakSaksnummer)
-            val pleietrengende = if(oppgave.pleietrengendeAktørId != null) pepClient.erAktørKode6(oppgave.pleietrengendeAktørId) else false
-            val relatertPart = if(oppgave.relatertPartAktørId != null) pepClient.erAktørKode6(oppgave.relatertPartAktørId) else false
+            val pleietrengende =
+                if (oppgave.pleietrengendeAktørId != null) pepClient.erAktørKode6(oppgave.pleietrengendeAktørId) else false
+            val relatertPart =
+                if (oppgave.relatertPartAktørId != null) pepClient.erAktørKode6(oppgave.relatertPartAktørId) else false
             return (søker || pleietrengende || relatertPart)
 
         }
         // oppgaver laget av punsj har ikke fagsakSaksnummer
         val søker = pepClient.erAktørKode6(oppgave.aktorId)
-        val pleietrengende = if(oppgave.pleietrengendeAktørId != null) pepClient.erAktørKode6(oppgave.pleietrengendeAktørId) else false
+        val pleietrengende =
+            if (oppgave.pleietrengendeAktørId != null) pepClient.erAktørKode6(oppgave.pleietrengendeAktørId) else false
         return (søker || pleietrengende)
     }
 
     @KtorExperimentalAPI
-    suspend fun sjekkKode7EllerEgenAnsatt(oppgave : Oppgave): Boolean {
+    suspend fun sjekkKode7EllerEgenAnsatt(oppgave: Oppgave): Boolean {
         if (oppgave.fagsakSaksnummer.isNotBlank()) {
             val søker = pepClient.erSakKode7EllerEgenAnsatt(oppgave.fagsakSaksnummer)
-            val pleietrengende = if(oppgave.pleietrengendeAktørId != null) pepClient.erAktørKode7EllerEgenAnsatt(oppgave.pleietrengendeAktørId) else false
-            val relatertPart = if(oppgave.relatertPartAktørId != null) pepClient.erAktørKode7EllerEgenAnsatt(oppgave.relatertPartAktørId) else false
+            val pleietrengende =
+                if (oppgave.pleietrengendeAktørId != null) pepClient.erAktørKode7EllerEgenAnsatt(oppgave.pleietrengendeAktørId) else false
+            val relatertPart =
+                if (oppgave.relatertPartAktørId != null) pepClient.erAktørKode7EllerEgenAnsatt(oppgave.relatertPartAktørId) else false
             return (søker || pleietrengende || relatertPart)
         }
         // oppgaver laget av punsj har ikke fagsakSaksnummer
         val søker = pepClient.erAktørKode7EllerEgenAnsatt(oppgave.aktorId)
-        val pleietrengende = if(oppgave.pleietrengendeAktørId != null) pepClient.erAktørKode7EllerEgenAnsatt(oppgave.pleietrengendeAktørId) else false
+        val pleietrengende =
+            if (oppgave.pleietrengendeAktørId != null) pepClient.erAktørKode7EllerEgenAnsatt(oppgave.pleietrengendeAktørId) else false
         return (søker || pleietrengende)
     }
 
@@ -404,7 +408,7 @@ class OppgaveRepository(
         return count!!
     }
 
-    internal fun hentAlleOppgaveForPunsj() : List<Oppgave> {
+    internal fun hentAlleOppgaveForPunsj(): List<Oppgave> {
         val json: List<String> = using(sessionOf(dataSource)) {
             //language=PostgreSQL
             it.run(
@@ -580,18 +584,19 @@ class OppgaveRepository(
                             object : TypeReference<HashMap<String, String>>() {})
                         val antall = row.int("count")
                         val aksjonspunkter = map.keys.map { kode ->
-                            val aksjonspunkt = AksjonspunktDefWrapper.finnAlleAksjonspunkter().firstOrNull { a -> a.kode == kode }
+                            val aksjonspunkt =
+                                AksjonspunktDefWrapper.finnAlleAksjonspunkter().firstOrNull { a -> a.kode == kode }
                             aksjonspunkt
                         }
                             .map {
                                 Aksjonspunkt(
-                                    it?.kode?: "Utdatert-dev",
-                                    it?.navn?: "Utdatert-dev",
-                                    it?.aksjonspunktype?: "Utdatert-dev",
-                                    it?.behandlingsstegtype?: "Utdatert-dev",
+                                    it?.kode ?: "Utdatert-dev",
+                                    it?.navn ?: "Utdatert-dev",
+                                    it?.aksjonspunktype ?: "Utdatert-dev",
+                                    it?.behandlingsstegtype ?: "Utdatert-dev",
                                     "",
                                     "",
-                                    it?.totrinn?: false,
+                                    it?.totrinn ?: false,
                                     antall = antall
                                 )
                             }.toList()

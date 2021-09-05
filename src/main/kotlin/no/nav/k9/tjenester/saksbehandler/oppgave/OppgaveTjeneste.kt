@@ -6,6 +6,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.k9.Configuration
 import no.nav.k9.KoinProfile
 import no.nav.k9.domene.lager.oppgave.Oppgave
+import no.nav.k9.domene.lager.oppgave.OppgaveMedId
 import no.nav.k9.domene.lager.oppgave.Reservasjon
 import no.nav.k9.domene.modell.*
 import no.nav.k9.domene.repository.*
@@ -68,11 +69,6 @@ class OppgaveTjeneste @KtorExperimentalAPI constructor(
                 flyttetReservasjon = null
             )
         }
-        val reservasjon = Reservasjon(
-            reservertTil = LocalDateTime.now().plusHours(24).forskyvReservasjonsDato(),
-            reservertAv = ident, flyttetAv = null, flyttetTidspunkt = null, begrunnelse = null, oppgave = oppgaveUuid
-        )
-
         try {
             val oppgaveSomSkalBliReservert = oppgaveRepository.hent(oppgaveUuid)
             val relaterteOppgaverSomSkalBliReservert = if (oppgaveSomSkalBliReservert.pleietrengendeAktørId != null) {
@@ -80,11 +76,11 @@ class OppgaveTjeneste @KtorExperimentalAPI constructor(
                     oppgaveSomSkalBliReservert.pleietrengendeAktørId,
                     oppgaveSomSkalBliReservert.fagsakYtelseType
                 )
-            } else emptyList()
+            } else listOf(OppgaveMedId(oppgaveUuid, oppgaveSomSkalBliReservert))
 
-            val iderPåOppgaverSomSkalBliReservert = relaterteOppgaverSomSkalBliReservert.map { o -> o.id }.plusElement(oppgaveUuid).toSet()
-            val hent = reservasjonRepository.hent(iderPåOppgaverSomSkalBliReservert)
-            val aktiveReservasjoner = hent.filter { rev -> rev.erAktiv() }.toList()
+            val iderPåOppgaverSomSkalBliReservert = relaterteOppgaverSomSkalBliReservert.map { o -> o.id }.toSet()
+            val gamleReservasjoner = reservasjonRepository.hent(iderPåOppgaverSomSkalBliReservert)
+            val aktiveReservasjoner = gamleReservasjoner.filter { rev -> rev.erAktiv() }.toList()
             if (aktiveReservasjoner.isNotEmpty()) {
                 val map = aktiveReservasjoner.map { a -> a.oppgave }
                 throw IllegalArgumentException("Oppgaven(e) er allerede reservert $map, $ident prøvde å reservere saken")
@@ -93,18 +89,18 @@ class OppgaveTjeneste @KtorExperimentalAPI constructor(
             val reservasjoner = lagReservasjoner(iderPåOppgaverSomSkalBliReservert, ident)
 
             reservasjonRepository.lagreFlereReservasjoner(reservasjoner)
-            saksbehandlerRepository.leggTilFlereReservasjoner(reservasjon.reservertAv, reservasjoner.map { r -> r.oppgave })
+            saksbehandlerRepository.leggTilFlereReservasjoner(ident, reservasjoner.map { r -> r.oppgave })
 
-            val oppgave = oppgaveRepository.hent(oppgaveUuid)
-            log.info("Oppgaven med saksnummer ${oppgave.fagsakSaksnummer} ble reservert på $ident")
+//            val oppgave = oppgaveRepository.hent(oppgaveUuid)
+//            log.info("Oppgaven med saksnummer ${oppgave.fagsakSaksnummer} ble reservert på $ident")
 
             for (oppgavekø in oppgaveKøRepository.hentKøIdIkkeTaHensyn()) {
-                oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, listOf(oppgave).plus(relaterteOppgaverSomSkalBliReservert.map { o -> o.oppgave }), reservasjonRepository)
+                oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, relaterteOppgaverSomSkalBliReservert.map { o -> o.oppgave }, reservasjonRepository)
             }
 
             return OppgaveStatusDto(
                 erReservert = true,
-                reservertTilTidspunkt = reservasjon.reservertTil,
+                reservertTilTidspunkt = LocalDateTime.now().plusHours(24).forskyvReservasjonsDato(),
                 erReservertAvInnloggetBruker = reservertAvMeg(ident),
                 reservertAv = ident,
                 flyttetReservasjon = null
@@ -126,7 +122,7 @@ class OppgaveTjeneste @KtorExperimentalAPI constructor(
         iderPåOppgaverSomSkalBliReservert: Set<UUID>,
         ident: String
     ): List<Reservasjon> {
-        val reservasjoner = iderPåOppgaverSomSkalBliReservert.map {
+        return iderPåOppgaverSomSkalBliReservert.map {
             Reservasjon(
                 reservertTil = LocalDateTime.now().plusHours(24).forskyvReservasjonsDato(),
                 reservertAv = ident,
@@ -136,7 +132,6 @@ class OppgaveTjeneste @KtorExperimentalAPI constructor(
                 oppgave = it
             )
         }.toList()
-        return reservasjoner
     }
 
     @KtorExperimentalAPI
