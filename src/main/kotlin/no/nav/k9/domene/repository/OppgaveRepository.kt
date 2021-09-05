@@ -9,6 +9,7 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.aksjonspunktbehandling.objectMapper
 import no.nav.k9.domene.lager.oppgave.Oppgave
+import no.nav.k9.domene.lager.oppgave.OppgaveMedId
 import no.nav.k9.domene.modell.AksjonspunktDefWrapper
 import no.nav.k9.domene.modell.BehandlingStatus
 import no.nav.k9.domene.modell.BehandlingType
@@ -76,6 +77,28 @@ class OppgaveRepository(
         } catch (e: NullPointerException) {
             log.error("feiler for denne json $json")
             throw e
+        }
+    }
+
+    fun hentOppgaverSomMatcher(pleietrengendeAktørId: String, fagsakYtelseType: FagsakYtelseType): List<OppgaveMedId> {
+        return using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    "select id, data from oppgave where data ->> 'aktiv' = 'true' and" +
+                            " data -> 'fagsakYtelseType' ->> 'kode' = ':fagsakTypeKode' " +
+                            "and data ->> 'pleietrengendeAktørId' = ':aktorId'",
+                    mapOf(
+                        "fagsakTypeKode" to fagsakYtelseType.kode,
+                        "aktorId" to pleietrengendeAktørId
+                    )
+                )
+                    .map { row ->
+                        OppgaveMedId(
+                            UUID.fromString(row.string("id")),
+                            objectMapper().readValue(row.string("data"), Oppgave::class.java)
+                        )
+                    }.asList
+            )
         }
     }
 
