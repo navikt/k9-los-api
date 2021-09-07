@@ -80,7 +80,7 @@ class OppgaveTjeneste @KtorExperimentalAPI constructor(
 
             val iderPåOppgaverSomSkalBliReservert = relaterteOppgaverSomSkalBliReservert.map { o -> o.id }.toSet()
             val gamleReservasjoner = reservasjonRepository.hent(iderPåOppgaverSomSkalBliReservert)
-            val aktiveReservasjoner = gamleReservasjoner.filter { rev -> rev.erAktiv() }.toList()
+            val aktiveReservasjoner = gamleReservasjoner.filter { rev -> rev.erAktiv() && rev.reservertAv != ident }.toList()
             if (aktiveReservasjoner.isNotEmpty()) {
                 val map = aktiveReservasjoner.map { a -> a.oppgave }
                 throw IllegalArgumentException("Oppgaven(e) er allerede reservert $map, $ident prøvde å reservere saken")
@@ -90,9 +90,6 @@ class OppgaveTjeneste @KtorExperimentalAPI constructor(
 
             reservasjonRepository.lagreFlereReservasjoner(reservasjoner)
             saksbehandlerRepository.leggTilFlereReservasjoner(ident, reservasjoner.map { r -> r.oppgave })
-
-//            val oppgave = oppgaveRepository.hent(oppgaveUuid)
-//            log.info("Oppgaven med saksnummer ${oppgave.fagsakSaksnummer} ble reservert på $ident")
 
             for (oppgavekø in oppgaveKøRepository.hentKøIdIkkeTaHensyn()) {
                 oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, relaterteOppgaverSomSkalBliReservert.map { o -> o.oppgave }, reservasjonRepository)
