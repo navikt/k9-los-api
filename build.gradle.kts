@@ -10,7 +10,7 @@ val flywayVersion = "6.0.8"
 val vaultJdbcVersion = "1.3.7"
 val kafkaEmbeddedEnvVersion = "2.7.0"
 val koinVersion = "2.2.2"
-val kotliqueryVersion = "1.3.1"
+val kotliqueryVersion = "1.6.0"
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.5.30"
