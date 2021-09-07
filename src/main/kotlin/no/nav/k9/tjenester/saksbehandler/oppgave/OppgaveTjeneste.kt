@@ -82,10 +82,15 @@ class OppgaveTjeneste @KtorExperimentalAPI constructor(
             val gamleReservasjoner = reservasjonRepository.hent(iderPåOppgaverSomSkalBliReservert)
             val aktiveReservasjoner = gamleReservasjoner.filter { rev -> rev.erAktiv() && rev.reservertAv != ident }.toList()
             if (aktiveReservasjoner.isNotEmpty()) {
-                val map = aktiveReservasjoner.map { a -> a.oppgave }
-                throw IllegalArgumentException("Oppgaven(e) er allerede reservert $map, $ident prøvde å reservere saken")
+                // todo endre til og kunen vise en liste her
+                return OppgaveStatusDto(
+                    erReservert = true,
+                    reservertTilTidspunkt = aktiveReservasjoner[0].reservertTil,
+                    erReservertAvInnloggetBruker = false,
+                    reservertAv = aktiveReservasjoner[0].reservertAv,
+                    flyttetReservasjon = null
+                )
             }
-
             val reservasjoner = lagReservasjoner(iderPåOppgaverSomSkalBliReservert, ident)
 
             reservasjonRepository.lagreFlereReservasjoner(reservasjoner)
