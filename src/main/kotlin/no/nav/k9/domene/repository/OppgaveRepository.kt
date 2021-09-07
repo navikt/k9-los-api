@@ -83,10 +83,11 @@ class OppgaveRepository(
     fun hentOppgaverSomMatcher(pleietrengendeAktørId: String, fagsakYtelseType: FagsakYtelseType): List<OppgaveMedId> {
         return using(sessionOf(dataSource)) {
             it.run(
-                queryOf(
-                    "select id, data from oppgave where data ->> 'aktiv' = 'true' and" +
-                            " data -> 'fagsakYtelseType' ->> 'kode' = ? " +
-                            "and data ->> 'pleietrengendeAktørId' = ?",
+                queryOf("""
+                    select id, data from oppgave where data ->> 'aktiv' = 'true'
+                    and data -> 'fagsakYtelseType' ->> 'kode' = ?
+                    and data ->> 'pleietrengendeAktørId' = ?
+                    """,
                     fagsakYtelseType.kode,
                     pleietrengendeAktørId
                 )
