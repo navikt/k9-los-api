@@ -56,4 +56,11 @@ data class Oppgave(
         val fom: LocalDate,
         val tom: LocalDate
     )
+
+
 }
+
+data class OppgaveMedId(
+    val id: UUID,
+    val oppgave: Oppgave
+)

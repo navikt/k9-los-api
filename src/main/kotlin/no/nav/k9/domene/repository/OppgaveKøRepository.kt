@@ -175,10 +175,17 @@ class OppgaveKøRepository(
                 var endring = false
                 for (oppgave in oppgaver) {
                     if (oppgaveKø.kode6 == oppgave.kode6) {
-                        endring = endring || oppgaveKø.leggOppgaveTilEllerFjernFraKø(
-                            oppgave = oppgave,
-                            reservasjonRepository = reservasjonRepository
-                        )
+                        if (!endring) {
+                            endring = oppgaveKø.leggOppgaveTilEllerFjernFraKø(
+                                oppgave = oppgave,
+                                reservasjonRepository = reservasjonRepository
+                            )
+                        } else {
+                            oppgaveKø.leggOppgaveTilEllerFjernFraKø(
+                                oppgave = oppgave,
+                                reservasjonRepository = reservasjonRepository
+                            )
+                        }
                     }
                 }
                 if (!endring) {

@@ -3,6 +3,7 @@ package no.nav.k9.domene.repository
 import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
+import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
@@ -164,45 +165,68 @@ class ReservasjonRepository(
         var reservasjon: Reservasjon? = null
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
-                val run = tx.run(
-                    queryOf(
-                        "select (data ::jsonb -> 'reservasjoner' -> -1) as data from reservasjon where id = :id for update",
-                        mapOf("id" to uuid.toString())
-                    )
-                        .map { row ->
-                            row.string("data")
-                        }.asSingle
-                )
-                var forrigeReservasjon: String? = null
-                reservasjon = if (!run.isNullOrEmpty()) {
-                    forrigeReservasjon = run
-                    f(objectMapper().readValue(run, Reservasjon::class.java))
-                } else {
-                    f(null)
-                }
-                val json = objectMapper().writeValueAsString(reservasjon)
-
-                tx.run(
-                    queryOf(
-                        """
-                    insert into reservasjon as k (id, data)
-                    values (:id, :dataInitial :: jsonb)
-                    on conflict (id) do update
-                    set data = jsonb_set(k.data, '{reservasjoner,999999}', :data :: jsonb, true)
-                 """, mapOf(
-                            "id" to uuid.toString(),
-                            "dataInitial" to "{\"reservasjoner\": [$json]}",
-                            "data" to json
-                        )
-                    ).asUpdate
-                )
-                if (refresh && forrigeReservasjon != json) {
-                    runBlocking { refreshKlienter.sendOppdaterReserverte() }
-                }
+                reservasjon = lagreReservasjon(tx, uuid, refresh, f)
             }
         }
         Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
 
         return reservasjon!!
+    }
+
+    fun lagreFlereReservasjoner(reservasjon: List<Reservasjon>) {
+        using(sessionOf(dataSource)) {
+            it.transaction { tx ->
+                reservasjon.forEach { reservasjon ->
+                    lagreReservasjon(tx, reservasjon.oppgave, refresh = true) {
+                        reservasjon
+                    }
+                }
+            }
+        }
+    }
+
+    private fun lagreReservasjon(
+        tx: TransactionalSession,
+        uuid: UUID,
+        refresh: Boolean,
+        f: (Reservasjon?) -> Reservasjon
+    ) : Reservasjon {
+        val reservasjon: Reservasjon?
+        val run = tx.run(
+            queryOf(
+                "select (data ::jsonb -> 'reservasjoner' -> -1) as data from reservasjon where id = :id for update",
+                mapOf("id" to uuid.toString())
+            )
+                .map { row ->
+                    row.string("data")
+                }.asSingle
+        )
+        var forrigeReservasjon: String? = null
+        reservasjon = if (!run.isNullOrEmpty()) {
+            forrigeReservasjon = run
+            f(objectMapper().readValue(run, Reservasjon::class.java))
+        } else {
+            f(null)
+        }
+        val json = objectMapper().writeValueAsString(reservasjon)
+
+        tx.run(
+            queryOf(
+                """
+                        insert into reservasjon as k (id, data)
+                        values (:id, :dataInitial :: jsonb)
+                        on conflict (id) do update
+                        set data = jsonb_set(k.data, '{reservasjoner,999999}', :data :: jsonb, true)
+                     """, mapOf(
+                    "id" to uuid.toString(),
+                    "dataInitial" to "{\"reservasjoner\": [$json]}",
+                    "data" to json
+                )
+            ).asUpdate
+        )
+        if (refresh && forrigeReservasjon != json) {
+            runBlocking { refreshKlienter.sendOppdaterReserverte() }
+        }
+        return reservasjon
     }
 }

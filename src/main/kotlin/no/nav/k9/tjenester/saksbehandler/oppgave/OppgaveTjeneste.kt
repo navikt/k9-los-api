@@ -6,6 +6,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.k9.Configuration
 import no.nav.k9.KoinProfile
 import no.nav.k9.domene.lager.oppgave.Oppgave
+import no.nav.k9.domene.lager.oppgave.OppgaveMedId
 import no.nav.k9.domene.lager.oppgave.Reservasjon
 import no.nav.k9.domene.modell.*
 import no.nav.k9.domene.repository.*
@@ -58,7 +59,7 @@ class OppgaveTjeneste @KtorExperimentalAPI constructor(
     }
 
     @KtorExperimentalAPI
-    suspend fun reserverOppgave(ident: String, uuid: UUID): OppgaveStatusDto {
+    suspend fun reserverOppgave(ident: String, oppgaveUuid: UUID): OppgaveStatusDto {
         if (!pepClient.harTilgangTilReservingAvOppgaver()) {
             return OppgaveStatusDto(
                 erReservert = false,
@@ -68,37 +69,47 @@ class OppgaveTjeneste @KtorExperimentalAPI constructor(
                 flyttetReservasjon = null
             )
         }
-        val reservasjon = Reservasjon(
-            reservertTil = LocalDateTime.now().plusHours(24).forskyvReservasjonsDato(),
-            reservertAv = ident, flyttetAv = null, flyttetTidspunkt = null, begrunnelse = null, oppgave = uuid
-        )
-
         try {
-            reservasjonRepository.lagre(uuid, true) {
-                if (it != null && it.erAktiv()) {
-                    val oppgave = oppgaveRepository.hent(uuid)
-                    throw IllegalArgumentException("Oppgaven er allerede reservert $uuid ${oppgave.fagsakSaksnummer}, $ident prøvde å reservere saken")
-                }
-                reservasjon
+            val oppgaveSomSkalBliReservert = oppgaveRepository.hent(oppgaveUuid)
+            val relaterteOppgaverSomSkalBliReservert = if (oppgaveSomSkalBliReservert.pleietrengendeAktørId != null) {
+                oppgaveRepository.hentOppgaverSomMatcher(
+                    oppgaveSomSkalBliReservert.pleietrengendeAktørId,
+                    oppgaveSomSkalBliReservert.fagsakYtelseType
+                )
+            } else listOf(OppgaveMedId(oppgaveUuid, oppgaveSomSkalBliReservert))
+
+            val iderPåOppgaverSomSkalBliReservert = relaterteOppgaverSomSkalBliReservert.map { o -> o.id }.toSet()
+            val gamleReservasjoner = reservasjonRepository.hent(iderPåOppgaverSomSkalBliReservert)
+            val aktiveReservasjoner = gamleReservasjoner.filter { rev -> rev.erAktiv() && rev.reservertAv != ident }.toList()
+            if (aktiveReservasjoner.isNotEmpty()) {
+                // todo endre til og kunen vise en liste her
+                return OppgaveStatusDto(
+                    erReservert = true,
+                    reservertTilTidspunkt = aktiveReservasjoner[0].reservertTil,
+                    erReservertAvInnloggetBruker = false,
+                    reservertAv = aktiveReservasjoner[0].reservertAv,
+                    flyttetReservasjon = null
+                )
             }
-            saksbehandlerRepository.leggTilReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
-            val oppgave = oppgaveRepository.hent(uuid)
-            log.info("Oppgaven med saksnummer ${oppgave.fagsakSaksnummer} ble reservert på $ident")
+            val reservasjoner = lagReservasjoner(iderPåOppgaverSomSkalBliReservert, ident)
+
+            reservasjonRepository.lagreFlereReservasjoner(reservasjoner)
+            saksbehandlerRepository.leggTilFlereReservasjoner(ident, reservasjoner.map { r -> r.oppgave })
 
             for (oppgavekø in oppgaveKøRepository.hentKøIdIkkeTaHensyn()) {
-                oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, listOf(oppgave), reservasjonRepository)
+                oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, relaterteOppgaverSomSkalBliReservert.map { o -> o.oppgave }, reservasjonRepository)
             }
 
             return OppgaveStatusDto(
                 erReservert = true,
-                reservertTilTidspunkt = reservasjon.reservertTil,
+                reservertTilTidspunkt = LocalDateTime.now().plusHours(24).forskyvReservasjonsDato(),
                 erReservertAvInnloggetBruker = reservertAvMeg(ident),
                 reservertAv = ident,
                 flyttetReservasjon = null
             )
         } catch (e: java.lang.IllegalArgumentException) {
-            log.error(e.message)
-            val gjeldendeReservasjon = reservasjonRepository.hent(uuid)
+            log.info(e.message)
+            val gjeldendeReservasjon = reservasjonRepository.hent(oppgaveUuid)
             return OppgaveStatusDto(
                 erReservert = true,
                 reservertTilTidspunkt = gjeldendeReservasjon.reservertTil,
@@ -107,6 +118,22 @@ class OppgaveTjeneste @KtorExperimentalAPI constructor(
                 flyttetReservasjon = null
             )
         }
+    }
+
+    private fun lagReservasjoner(
+        iderPåOppgaverSomSkalBliReservert: Set<UUID>,
+        ident: String
+    ): List<Reservasjon> {
+        return iderPåOppgaverSomSkalBliReservert.map {
+            Reservasjon(
+                reservertTil = LocalDateTime.now().plusHours(24).forskyvReservasjonsDato(),
+                reservertAv = ident,
+                flyttetAv = null,
+                flyttetTidspunkt = null,
+                begrunnelse = null,
+                oppgave = it
+            )
+        }.toList()
     }
 
     @KtorExperimentalAPI
