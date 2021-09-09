@@ -71,14 +71,17 @@ class OppgaveTjeneste @KtorExperimentalAPI constructor(
         }
         try {
             val oppgaveSomSkalBliReservert = oppgaveRepository.hent(oppgaveUuid)
-            val relaterteOppgaverSomSkalBliReservert = if (oppgaveSomSkalBliReservert.pleietrengendeAktørId != null) {
-                oppgaveRepository.hentOppgaverSomMatcher(
+            val oppgaverSomSkalBliReservert = mutableListOf<OppgaveMedId>()
+            oppgaverSomSkalBliReservert.add(OppgaveMedId(oppgaveUuid, oppgaveSomSkalBliReservert))
+            if (oppgaveSomSkalBliReservert.pleietrengendeAktørId != null) {
+                val relaterteOppgaverSomSkalBliReservert = oppgaveRepository.hentOppgaverSomMatcher(
                     oppgaveSomSkalBliReservert.pleietrengendeAktørId,
                     oppgaveSomSkalBliReservert.fagsakYtelseType
                 )
-            } else listOf(OppgaveMedId(oppgaveUuid, oppgaveSomSkalBliReservert))
+                oppgaverSomSkalBliReservert.addAll(relaterteOppgaverSomSkalBliReservert)
+            }
 
-            val iderPåOppgaverSomSkalBliReservert = relaterteOppgaverSomSkalBliReservert.map { o -> o.id }.toSet()
+            val iderPåOppgaverSomSkalBliReservert = oppgaverSomSkalBliReservert.map { o -> o.id }.toSet()
             val gamleReservasjoner = reservasjonRepository.hent(iderPåOppgaverSomSkalBliReservert)
             val aktiveReservasjoner = gamleReservasjoner.filter { rev -> rev.erAktiv() && rev.reservertAv != ident }.toList()
             if (aktiveReservasjoner.isNotEmpty()) {
@@ -97,7 +100,7 @@ class OppgaveTjeneste @KtorExperimentalAPI constructor(
             saksbehandlerRepository.leggTilFlereReservasjoner(ident, reservasjoner.map { r -> r.oppgave })
 
             for (oppgavekø in oppgaveKøRepository.hentKøIdIkkeTaHensyn()) {
-                oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, relaterteOppgaverSomSkalBliReservert.map { o -> o.oppgave }, reservasjonRepository)
+                oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, oppgaverSomSkalBliReservert.map { o -> o.oppgave }, reservasjonRepository)
             }
 
             return OppgaveStatusDto(
