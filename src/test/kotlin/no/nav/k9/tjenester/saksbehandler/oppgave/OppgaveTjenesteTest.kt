@@ -23,13 +23,11 @@ import assertk.assertions.*
 import kotlin.test.asserter
 
 class OppgaveTjenesteTest : KoinTest {
-    @KtorExperimentalAPI
     @get:Rule
     val koinTestRule = KoinTestRule.create {
         modules(buildAndTestConfig())
     }
 
-    @KtorExperimentalAPI
     @Test
     fun `hent fagsak`() {
         val oppgaveRepository = get<OppgaveRepository>()
@@ -71,7 +69,6 @@ class OppgaveTjenesteTest : KoinTest {
         }
     }
 
-    @KtorExperimentalAPI
     @Test
     fun hentReservasjonsHistorikk() = runBlocking {
         val oppgaveRepository = get<OppgaveRepository>()
@@ -160,7 +157,6 @@ class OppgaveTjenesteTest : KoinTest {
         assert(reservasjonsHistorikk.reservasjoner[0].flyttetAv == "saksbehandler@nav.no")
     }
 
-    @KtorExperimentalAPI
     @Test
     fun skalKunneReserverToOppgaverSamtidig() = runBlocking {
         val oppgaveRepository = get<OppgaveRepository>()
@@ -282,7 +278,6 @@ class OppgaveTjenesteTest : KoinTest {
         asserter.assertEquals("Forventer empty liste", 0, oppgaverEtterRes.size)
     }
 
-    @KtorExperimentalAPI
     @Test
     fun skalKunneReserverEnOppgaveDerEnAnnenErReservertAlt() = runBlocking {
         val oppgaveRepository = get<OppgaveRepository>()
@@ -411,7 +406,6 @@ class OppgaveTjenesteTest : KoinTest {
         asserter.assertEquals("Forventer empty liste", 0, oppgaverEtterRes.size)
     }
 
-    @KtorExperimentalAPI
     @Test
     fun skal_bare_returnere_aktivte_eller_sist_ikke_aktive_oppgave() = runBlocking {
         val oppgaveRepository = get<OppgaveRepository>()

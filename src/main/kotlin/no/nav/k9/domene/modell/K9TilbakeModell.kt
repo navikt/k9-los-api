@@ -1,6 +1,5 @@
 package no.nav.k9.domene.modell
 
-import io.ktor.util.*
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.repository.ReservasjonRepository
 import no.nav.k9.domene.repository.SaksbehandlerRepository
@@ -102,7 +101,6 @@ data class K9TilbakeModell(
         )
     }
 
-    @KtorExperimentalAPI
     override fun behandlingOpprettetSakOgBehandling(): BehandlingOpprettet {
         val sisteEvent = sisteEvent()
         val behandlingOpprettet = BehandlingOpprettet(
@@ -136,7 +134,6 @@ data class K9TilbakeModell(
         return behandlingOpprettet
     }
 
-    @KtorExperimentalAPI
     override fun behandlingAvsluttetSakOgBehandling(
     ): BehandlingAvsluttet {
         val sisteEvent = sisteEvent()

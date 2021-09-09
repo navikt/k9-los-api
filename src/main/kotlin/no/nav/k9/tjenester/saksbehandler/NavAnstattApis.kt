@@ -15,8 +15,6 @@ import no.nav.k9.integrasjon.rest.RequestContextService
 import no.nav.k9.tjenester.avdelingsleder.InnloggetNavAnsattDto
 import org.koin.ktor.ext.inject
 
-@KtorExperimentalAPI
-@KtorExperimentalLocationsAPI
 internal fun Route.NavAnsattApis() {
     val pepClient by inject<IPepClient>()
     val requestContextService by inject<RequestContextService>()

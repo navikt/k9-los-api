@@ -5,7 +5,6 @@ import com.github.kittinunf.fuel.coroutines.awaitStringResponseResult
 import com.github.kittinunf.fuel.httpPost
 import com.google.gson.GsonBuilder
 import io.ktor.http.*
-import io.ktor.util.*
 import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.ktor.metrics.Operation
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
@@ -21,23 +20,20 @@ import java.util.*
 
 private val gson = GsonBuilder().setPrettyPrinting().create()
 
-open class OmsorgspengerService @KtorExperimentalAPI constructor(
+open class OmsorgspengerService constructor(
     val configuration: Configuration,
     val accessTokenClient: AccessTokenClient
 
 ) : IOmsorgspengerService {
     private val log: Logger = LoggerFactory.getLogger(OmsorgspengerService::class.java)
 
-    @KtorExperimentalAPI
     private val url = configuration.omsorgspengerUrl()
 
-    @KtorExperimentalAPI
     private val scope = configuration.omsorgspengerSakScope()
     private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
 
     private val NOT_FOUND = 404
 
-    @KtorExperimentalAPI
     override suspend fun hentOmsorgspengerSakDto(sakFnrDto: OmsorgspengerSakFnrDto): OmsorgspengerSakDto? {
         val bodyRequest = gson.toJson(sakFnrDto)
 

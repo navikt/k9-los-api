@@ -13,12 +13,12 @@ import java.util.*
 import kotlin.test.assertEquals
 
 class DriftsmeldingRepositoryTest: KoinTest{
-    @KtorExperimentalAPI
+
     @get:Rule
     val koinTestRule = KoinTestRule.create {
         modules(buildAndTestConfig())
     }
-    @KtorExperimentalAPI
+
     @Test
     fun skalLagreDriftsmeldingOgHenteDenIgjen() {
 

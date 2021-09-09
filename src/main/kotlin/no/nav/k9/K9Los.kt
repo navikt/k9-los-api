@@ -60,9 +60,6 @@ import java.util.*
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
-@ExperimentalCoroutinesApi
-@KtorExperimentalAPI
-@KtorExperimentalLocationsAPI
 fun Application.k9Los() {
     val appId = environment.config.id()
     logProxyProperties()
@@ -219,9 +216,6 @@ fun Application.k9Los() {
     }
 }
 
-@ExperimentalCoroutinesApi
-@KtorExperimentalAPI
-@KtorExperimentalLocationsAPI
 private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
 
     RefreshKlienterWebSocket(

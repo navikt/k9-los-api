@@ -1,6 +1,5 @@
 package no.nav.k9.integrasjon.gosys
 
-import io.ktor.util.KtorExperimentalAPI
 import no.nav.k9.AccessTokenClientResolver
 import no.nav.k9.aksjonspunktbehandling.objectMapper
 import org.apache.http.client.methods.HttpGet
@@ -15,12 +14,12 @@ import org.json.JSONObject
 import java.net.URI
 import java.util.*
 
-class GosysOppgaveGateway @KtorExperimentalAPI constructor(
+class GosysOppgaveGateway constructor(
     val httpClient: CloseableHttpClient,
     val uri: URI,
     private val accessTokenClientResolver: AccessTokenClientResolver
 ) {
-    @KtorExperimentalAPI
+
     fun opprettOppgave(request: OpprettGosysOppgaveRequest): GosysOppgave {
         val httpPost = HttpPost(uri)
         val entity = StringEntity(request.body())
@@ -31,7 +30,6 @@ class GosysOppgaveGateway @KtorExperimentalAPI constructor(
         return objectMapper().readValue(responseEntity, GosysOppgave::class.java)
     }
 
-    @KtorExperimentalAPI
     fun hentOppgaver(request: HentGosysOppgaverRequest): List<GosysOppgave> {
         val httpGet = HttpGet(uri.toString() + request.queryString())
         addHeaders(httpGet)
@@ -52,7 +50,6 @@ class GosysOppgaveGateway @KtorExperimentalAPI constructor(
         return gosysOppgaver
     }
 
-    @KtorExperimentalAPI
     private fun addHeaders(httpRequestBase: HttpRequestBase) {
         val accessToken = accessTokenClientResolver.naisSts().getAccessToken(emptySet())
         httpRequestBase.setHeaders(mapOf(

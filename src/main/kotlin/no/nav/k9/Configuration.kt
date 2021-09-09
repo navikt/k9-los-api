@@ -13,7 +13,6 @@ import java.net.URI
 import java.time.Duration
 import java.time.temporal.ChronoUnit
 
-@KtorExperimentalAPI
 data class Configuration(private val config: ApplicationConfig) {
     companion object {
         internal const val NAIS_STS_ALIAS = "nais-sts"

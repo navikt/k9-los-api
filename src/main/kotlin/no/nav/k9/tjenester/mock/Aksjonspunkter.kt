@@ -4,7 +4,7 @@ import no.nav.k9.domene.modell.AksjonspunktDefWrapper
 
 class Aksjonspunkter {
     fun aksjonspunkter(): List<Aksjonspunkt> {
-        return AksjonspunktDefWrapper.finnAlleAksjonspunkter();
+        return AksjonspunktDefWrapper.finnAlleAksjonspunkter()
     }
 }
 

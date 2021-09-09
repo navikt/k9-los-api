@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory
 import reportMetrics
 
 
-class K9sakEventHandler @KtorExperimentalAPI constructor(
+class K9sakEventHandler constructor(
     val oppgaveRepository: OppgaveRepository,
     val behandlingProsessEventK9Repository: BehandlingProsessEventK9Repository,
     val config: Configuration,
@@ -39,7 +39,6 @@ class K9sakEventHandler @KtorExperimentalAPI constructor(
         FagsakYtelseType.OMSORGSPENGER_AO
     )
 
-    @KtorExperimentalAPI
     fun prosesser(
         event: BehandlingProsessEventDto
     ) {

@@ -29,8 +29,6 @@ import java.time.LocalDateTime
 import java.util.*
 import kotlin.collections.set
 
-@KtorExperimentalAPI
-@KtorExperimentalLocationsAPI
 fun Route.MockGrensesnitt() {
     val k9sakEventHandler by inject<K9sakEventHandler>()
     val k9punsjEventHandler by inject<K9punsjEventHandler>()

@@ -4,7 +4,6 @@ import io.ktor.application.*
 import io.ktor.http.cio.websocket.*
 import io.ktor.routing.*
 import io.ktor.server.testing.*
-import io.ktor.util.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
@@ -19,8 +18,6 @@ import org.junit.Test
 import java.util.*
 import kotlin.test.assertTrue
 
-@KtorExperimentalAPI
-@ExperimentalCoroutinesApi
 class WebSocketTest {
 
     @Test

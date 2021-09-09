@@ -1,11 +1,9 @@
 package no.nav.k9.integrasjon.pdl
 
-import io.ktor.util.KtorExperimentalAPI
 
-class PdlServiceLocal @KtorExperimentalAPI constructor(
+class PdlServiceLocal constructor(
 ) : IPdlService {
 
-    @KtorExperimentalAPI
     override suspend fun person(aktorId: String): PersonPdlResponse {
         return PersonPdlResponse(false, PersonPdl(
             data = PersonPdl.Data(
@@ -33,7 +31,6 @@ class PdlServiceLocal @KtorExperimentalAPI constructor(
         ))
     }
 
-    @KtorExperimentalAPI
     override suspend fun identifikator(fnummer: String): PdlResponse {
         return PdlResponse(false, AktøridPdl(
             data = AktøridPdl.Data(

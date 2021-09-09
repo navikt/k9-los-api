@@ -25,20 +25,19 @@ import org.apache.kafka.common.serialization.StringSerializer
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
 
-class StatistikkProducer @KtorExperimentalAPI constructor(
+class StatistikkProducer constructor(
     val kafkaConfig: KafkaConfig,
     val saksbehandlerRepository: SaksbehandlerRepository,
     val reservasjonRepository: ReservasjonRepository,
     val pepClient: IPepClient,
     val config: Configuration
 ) : HealthCheck {
-    @KtorExperimentalAPI
+
     private val TOPIC_USE_STATISTIKK_SAK = TopicUse(
         name = config.getStatistikkSakTopic(),
         valueSerializer = Serializer()
     )
 
-    @KtorExperimentalAPI
     private val TOPIC_USE_STATISTIKK_BEHANDLING = TopicUse(
         name = config.getStatistikkBehandlingTopic(),
         valueSerializer = Serializer()
@@ -56,7 +55,6 @@ class StatistikkProducer @KtorExperimentalAPI constructor(
         StringSerializer()
     )
 
-    @KtorExperimentalAPI
     fun send(modell: IModell) {
         if (config.koinProfile() == KoinProfile.LOCAL) {
             return
@@ -73,7 +71,6 @@ class StatistikkProducer @KtorExperimentalAPI constructor(
         }
     }
 
-    @KtorExperimentalAPI
     private fun sendSak(
         sak: Sak
     ) {
@@ -97,7 +94,6 @@ class StatistikkProducer @KtorExperimentalAPI constructor(
 
     }
 
-    @KtorExperimentalAPI
     private fun sendBehandling(
         behandling: Behandling
     ) {
@@ -121,7 +117,6 @@ class StatistikkProducer @KtorExperimentalAPI constructor(
 
     internal fun stop() = producer.close()
 
-    @KtorExperimentalAPI
     override suspend fun check(): Result {
         val result = try {
             producer.partitionsFor(TOPIC_USE_STATISTIKK_SAK.name)

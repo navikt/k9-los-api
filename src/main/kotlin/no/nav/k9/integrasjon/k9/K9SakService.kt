@@ -3,7 +3,6 @@ package no.nav.k9.integrasjon.k9
 import com.github.kittinunf.fuel.coroutines.awaitStringResponseResult
 import com.github.kittinunf.fuel.httpPost
 import io.ktor.http.*
-import io.ktor.util.*
 import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.ktor.metrics.Operation
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
@@ -21,16 +20,15 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.util.*
 
-open class K9SakService @KtorExperimentalAPI constructor(
+open class K9SakService constructor(
     val configuration: Configuration,
     val accessTokenClient: AccessTokenClient
 ) : IK9SakService {
     val log = LoggerFactory.getLogger("K9SakService")
     private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
     private val cache = Cache<Boolean>(cacheSize = 10000)
-    @KtorExperimentalAPI
     private val url = configuration.k9Url()
-    @KtorExperimentalAPI
+
     override suspend fun refreshBehandlinger(behandlingIdList: BehandlingIdListe) {
         // Passer på at vi ikke sender behandlingsider om igjen før det har gått 24 timer
         val behandlingIdListe =

@@ -9,7 +9,7 @@ import no.nav.k9.integrasjon.kafka.dto.PunsjEventDto
 import org.slf4j.LoggerFactory
 
 
-class K9punsjEventHandler @KtorExperimentalAPI constructor(
+class K9punsjEventHandler constructor(
     val oppgaveRepository: OppgaveRepository,
     val punsjEventK9Repository: PunsjEventK9Repository,
     val statistikkRepository: StatistikkRepository,
@@ -20,7 +20,6 @@ class K9punsjEventHandler @KtorExperimentalAPI constructor(
 ) {
     private val log = LoggerFactory.getLogger(K9punsjEventHandler::class.java)
 
-    @KtorExperimentalAPI
     fun prosesser(
         event: PunsjEventDto
     ) {

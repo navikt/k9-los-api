@@ -19,7 +19,6 @@ import no.nav.k9.tjenester.saksbehandler.saksliste.SorteringDto
 import java.time.LocalDate
 import java.util.*
 
-@KtorExperimentalAPI
 class AvdelingslederTjeneste(
     private val oppgaveKøRepository: OppgaveKøRepository,
     private val saksbehandlerRepository: SaksbehandlerRepository,
@@ -49,7 +48,6 @@ class AvdelingslederTjeneste(
         )
     }
 
-    @KtorExperimentalAPI
     suspend fun hentOppgaveKøer(): List<OppgavekøDto> {
         if (!erOppgaveStyrer()) {
             return emptyList()
@@ -74,10 +72,8 @@ class AvdelingslederTjeneste(
         }.sortedBy { it.navn }
     }
 
-    @KtorExperimentalAPI
     private suspend fun erOppgaveStyrer() = (pepClient.erOppgaveStyrer())
 
-    @KtorExperimentalAPI
     suspend fun opprettOppgaveKø(): IdDto {
         if (!erOppgaveStyrer()) {
             return IdDto(UUID.randomUUID().toString())
@@ -103,7 +99,6 @@ class AvdelingslederTjeneste(
         return IdDto(uuid.toString())
     }
 
-    @KtorExperimentalAPI
     suspend fun slettOppgavekø(uuid: UUID) {
         if (!erOppgaveStyrer()) {
             return
@@ -122,7 +117,6 @@ class AvdelingslederTjeneste(
         return saksbehandler
     }
 
-    @KtorExperimentalAPI
     suspend fun fjernSaksbehandler(epost: String) {
         saksbehandlerRepository.slettSaksbehandler(epost)
         oppgaveKøRepository.hent().forEach { t: OppgaveKø ->
@@ -276,7 +270,6 @@ class AvdelingslederTjeneste(
         }
     }
 
-    @KtorExperimentalAPI
     suspend fun hentAlleReservasjoner(): List<ReservasjonDto> {
         val list = mutableListOf<ReservasjonDto>()
         for (saksbehandler in saksbehandlerRepository.hentAlleSaksbehandlere()) {

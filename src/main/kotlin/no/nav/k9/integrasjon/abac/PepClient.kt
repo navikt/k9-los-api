@@ -6,7 +6,6 @@ import com.github.kittinunf.fuel.coroutines.awaitStringResponseResult
 import com.github.kittinunf.fuel.httpPost
 import com.google.gson.GsonBuilder
 import io.ktor.http.*
-import io.ktor.util.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import no.nav.helse.dusseldorf.ktor.core.Retry
@@ -30,17 +29,16 @@ private val gson = GsonBuilder().setPrettyPrinting().create()
 private const val XACML_CONTENT_TYPE = "application/xacml+json"
 private const val DOMENE = "k9"
 
-class PepClient @KtorExperimentalAPI constructor(
+class PepClient constructor(
     private val azureGraphService: IAzureGraphService,
     private val auditlogger: Auditlogger,
     private val config: Configuration
 ) : IPepClient {
-    @KtorExperimentalAPI
+
     private val url = config.abacEndpointUrl
     private val log: Logger = LoggerFactory.getLogger(PepClient::class.java)
     private val cache = Cache<Boolean>()
 
-    @KtorExperimentalAPI
     override suspend fun erOppgaveStyrer(): Boolean {
         val requestBuilder = XacmlRequestBuilder()
             .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
@@ -53,7 +51,6 @@ class PepClient @KtorExperimentalAPI constructor(
         return decision
     }
 
-    @KtorExperimentalAPI
     override suspend fun harBasisTilgang(): Boolean {
 
         val requestBuilder = XacmlRequestBuilder()
@@ -68,7 +65,6 @@ class PepClient @KtorExperimentalAPI constructor(
         return decision
     }
 
-    @KtorExperimentalAPI
     override suspend fun kanLeggeUtDriftsmelding(): Boolean {
 
         val requestBuilder = XacmlRequestBuilder()
@@ -83,7 +79,6 @@ class PepClient @KtorExperimentalAPI constructor(
         return decision
     }
 
-    @KtorExperimentalAPI
     override suspend fun harTilgangTilLesSak(
         fagsakNummer: String,
         aktørid: String
@@ -129,7 +124,6 @@ class PepClient @KtorExperimentalAPI constructor(
         return decision
     }
 
-    @KtorExperimentalAPI
     override suspend fun harTilgangTilReservingAvOppgaver(): Boolean {
         val requestBuilder = XacmlRequestBuilder()
             .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
@@ -142,7 +136,6 @@ class PepClient @KtorExperimentalAPI constructor(
         return evaluate(requestBuilder)
     }
 
-    @KtorExperimentalAPI
     override suspend fun harTilgangTilKode6(): Boolean {
         val requestBuilder = XacmlRequestBuilder()
             .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
@@ -154,7 +147,6 @@ class PepClient @KtorExperimentalAPI constructor(
         return decision
     }
 
-    @KtorExperimentalAPI
     override suspend fun kanSendeSakTilStatistikk(
         fagsakNummer: String
     ): Boolean {
@@ -170,7 +162,6 @@ class PepClient @KtorExperimentalAPI constructor(
         return evaluate(requestBuilder)
     }
 
-    @KtorExperimentalAPI
     override suspend fun erSakKode6(fagsakNummer: String): Boolean {
         val requestBuilder = XacmlRequestBuilder()
             .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
@@ -183,7 +174,6 @@ class PepClient @KtorExperimentalAPI constructor(
         return !evaluate(requestBuilder)
     }
 
-    @KtorExperimentalAPI
     override suspend fun erAktørKode6(aktørid: String): Boolean {
         val requestBuilder = XacmlRequestBuilder()
             .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
@@ -196,7 +186,6 @@ class PepClient @KtorExperimentalAPI constructor(
         return !evaluate(requestBuilder)
     }
 
-    @KtorExperimentalAPI
     override suspend fun erSakKode7EllerEgenAnsatt(fagsakNummer: String): Boolean {
         val requestBuilder = XacmlRequestBuilder()
             .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
@@ -209,7 +198,6 @@ class PepClient @KtorExperimentalAPI constructor(
         return !evaluate(requestBuilder)
     }
 
-    @KtorExperimentalAPI
     override suspend fun erAktørKode7EllerEgenAnsatt(aktørid: String): Boolean {
         val requestBuilder = XacmlRequestBuilder()
             .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
@@ -222,7 +210,6 @@ class PepClient @KtorExperimentalAPI constructor(
         return !evaluate(requestBuilder)
     }
 
-    @KtorExperimentalAPI
     private suspend fun evaluate(xacmlRequestBuilder: XacmlRequestBuilder): Boolean {
         val xacmlJson = gson.toJson(xacmlRequestBuilder.build())
         val get = cache.get(xacmlJson)

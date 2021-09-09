@@ -1,6 +1,5 @@
 package no.nav.k9.jobber
 
-import io.ktor.util.*
 import no.nav.k9.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.integrasjon.datavarehus.StatistikkProducer
 import org.slf4j.LoggerFactory
@@ -15,7 +14,6 @@ class ResendeStatistikk(
 ) {
     private val log = LoggerFactory.getLogger(ResendeStatistikk::class.java)
 
-    @KtorExperimentalAPI
     fun resend() {
         
         val df = DecimalFormat("##.##%")

@@ -2,7 +2,6 @@ package no.nav.k9.tjenester.fagsak
 
 
 import no.nav.k9.domene.modell.BehandlingStatus
-import no.nav.k9.domene.modell.FagsakStatus
 import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.integrasjon.kafka.dto.Fagsystem
 import java.time.LocalDateTime

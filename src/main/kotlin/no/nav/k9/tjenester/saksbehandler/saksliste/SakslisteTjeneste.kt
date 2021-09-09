@@ -1,13 +1,11 @@
 package no.nav.k9.tjenester.saksbehandler.saksliste
 
-import io.ktor.util.*
 import kotlin.coroutines.coroutineContext
 import no.nav.k9.integrasjon.azuregraph.IAzureGraphService
 import no.nav.k9.integrasjon.rest.idToken
 import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 
-@KtorExperimentalAPI
-class SakslisteTjeneste @KtorExperimentalAPI constructor(
+class SakslisteTjeneste constructor(
     private val azureGraphService: IAzureGraphService,
     private val oppgaveTjeneste: OppgaveTjeneste
 

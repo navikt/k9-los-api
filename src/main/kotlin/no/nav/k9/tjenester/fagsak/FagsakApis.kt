@@ -13,8 +13,6 @@ import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import no.nav.k9.tjenester.saksbehandler.oppgave.SokeResultatDto
 import org.koin.ktor.ext.inject
 
-@KtorExperimentalAPI
-@KtorExperimentalLocationsAPI
 internal fun Route.FagsakApis() {
     val oppgaveTjeneste by inject<OppgaveTjeneste>()
     val configuration by inject<Configuration>()

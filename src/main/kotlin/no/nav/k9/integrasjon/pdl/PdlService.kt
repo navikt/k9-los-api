@@ -4,7 +4,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.kittinunf.fuel.coroutines.awaitStringResponseResult
 import com.github.kittinunf.fuel.httpPost
 import io.ktor.http.*
-import io.ktor.util.*
 import no.nav.helse.dusseldorf.ktor.client.buildURL
 import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.ktor.metrics.Operation
@@ -23,7 +22,7 @@ import java.time.LocalDateTime
 import java.util.*
 import kotlin.coroutines.coroutineContext
 
-class PdlService @KtorExperimentalAPI constructor(
+class PdlService constructor(
     baseUrl: URI,
     accessTokenClient: AccessTokenClient,
     scope: String
@@ -39,7 +38,6 @@ class PdlService @KtorExperimentalAPI constructor(
 
     private val scopes = setOf(scope)
 
-    @KtorExperimentalAPI
     override suspend fun person(aktorId: String): PersonPdlResponse {
         val queryRequest = QueryRequest(
             getStringFromResource("/pdl/hentPerson.graphql"),
@@ -107,7 +105,6 @@ class PdlService @KtorExperimentalAPI constructor(
         }
     }
 
-    @KtorExperimentalAPI
     override suspend fun identifikator(fnummer: String): PdlResponse {
         val queryRequest = QueryRequest(
             getStringFromResource("/pdl/hentIdent.graphql"),

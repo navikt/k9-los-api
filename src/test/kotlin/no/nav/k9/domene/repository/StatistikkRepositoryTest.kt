@@ -21,13 +21,12 @@ import java.util.*
 import kotlin.test.assertSame
 
 class StatistikkRepositoryTest : KoinTest {
-    @KtorExperimentalAPI
+
     @get:Rule
     val koinTestRule = KoinTestRule.create {
         modules(buildAndTestConfig())
     }
 
-    @KtorExperimentalAPI
     @Test
     fun skalFylleMedTommeElementerDersomViIkkeHarDataPåDenDagen() {
 
@@ -40,7 +39,6 @@ class StatistikkRepositoryTest : KoinTest {
         stopKoin()
     }
 
-    @KtorExperimentalAPI
     @Test
     fun skalFylleMedTommeElementerDersomVdiIkkeHarDataPåDenDagenIdempotent() {
 
@@ -88,7 +86,6 @@ class StatistikkRepositoryTest : KoinTest {
 
     }
 
-    @KtorExperimentalAPI
     @Test
     fun skalFiltrereUnikeSistBehandledeSaker() {
 

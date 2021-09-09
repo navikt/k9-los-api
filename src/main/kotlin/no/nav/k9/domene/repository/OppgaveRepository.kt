@@ -1,7 +1,6 @@
 package no.nav.k9.domene.repository
 
 import com.fasterxml.jackson.core.type.TypeReference
-import io.ktor.util.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotliquery.queryOf
@@ -121,7 +120,6 @@ class OppgaveRepository(
         } else null
     }
 
-    @KtorExperimentalAPI
     fun lagre(uuid: UUID, f: (Oppgave?) -> Oppgave) {
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
@@ -162,7 +160,6 @@ class OppgaveRepository(
         }
     }
 
-    @KtorExperimentalAPI
     suspend fun sjekkKode6(oppgave: Oppgave): Boolean {
         if (oppgave.fagsakSaksnummer.isNotBlank()) {
             val søker = pepClient.erSakKode6(oppgave.fagsakSaksnummer)
@@ -180,7 +177,6 @@ class OppgaveRepository(
         return (søker || pleietrengende)
     }
 
-    @KtorExperimentalAPI
     suspend fun sjekkKode7EllerEgenAnsatt(oppgave: Oppgave): Boolean {
         if (oppgave.fagsakSaksnummer.isNotBlank()) {
             val søker = pepClient.erSakKode7EllerEgenAnsatt(oppgave.fagsakSaksnummer)
@@ -197,7 +193,6 @@ class OppgaveRepository(
         return (søker || pleietrengende)
     }
 
-    @KtorExperimentalAPI
     fun hentOppgaver(oppgaveider: Collection<UUID>): List<Oppgave> {
 
         val oppgaveiderList = oppgaveider.toList()
@@ -323,7 +318,6 @@ class OppgaveRepository(
         return oppgaver
     }
 
-    @KtorExperimentalAPI
     suspend fun hentOppgaverMedSaksnummer(saksnummer: String): List<Oppgave> {
         val kode6 = pepClient.harTilgangTilKode6()
         val json: List<String> = using(sessionOf(dataSource)) {
@@ -346,7 +340,6 @@ class OppgaveRepository(
         return oppgaver
     }
 
-    @KtorExperimentalAPI
     suspend fun hentOppgaverMedSaksnummerIkkeTaHensyn(saksnummer: String): List<Oppgave> {
         val json: List<String> = using(sessionOf(dataSource)) {
             //language=PostgreSQL

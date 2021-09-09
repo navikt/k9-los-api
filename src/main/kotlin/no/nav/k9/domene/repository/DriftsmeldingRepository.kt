@@ -1,6 +1,5 @@
 package no.nav.k9.domene.repository
 
-import io.ktor.util.*
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
