@@ -1,6 +1,5 @@
 package no.nav.k9.domene.repository
 
-import io.ktor.util.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotliquery.queryOf
@@ -101,7 +100,7 @@ class OppgaveKøRepository(
         return objectMapper().readValue(json!!, OppgaveKø::class.java)
     }
 
-    @KtorExperimentalAPI
+
     suspend fun lagre(
         uuid: UUID,
         refresh: Boolean = false,
@@ -219,7 +218,6 @@ class OppgaveKøRepository(
         }
     }
 
-    @KtorExperimentalAPI
     suspend fun lagreIkkeTaHensyn(
         uuid: UUID,
         f: (OppgaveKø?) -> OppgaveKø

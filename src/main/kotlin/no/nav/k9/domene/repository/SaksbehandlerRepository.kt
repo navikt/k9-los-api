@@ -1,7 +1,6 @@
 package no.nav.k9.domene.repository
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import io.ktor.util.*
 import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -230,7 +229,6 @@ class SaksbehandlerRepository(
         }
     }
 
-    @KtorExperimentalAPI
     suspend fun finnSaksbehandlerMedEpost(epost: String): Saksbehandler? {
         val skjermet = pepClient.harTilgangTilKode6()
         Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
@@ -284,7 +282,6 @@ class SaksbehandlerRepository(
         return saksbehandler
     }
 
-    @KtorExperimentalAPI
     suspend fun slettSaksbehandler(epost: String) {
 
         Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
@@ -303,7 +300,6 @@ class SaksbehandlerRepository(
         }
     }
 
-    @KtorExperimentalAPI
     suspend fun hentAlleSaksbehandlere(): List<Saksbehandler> {
         Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
         val skjermet = pepClient.harTilgangTilKode6()
@@ -321,7 +317,6 @@ class SaksbehandlerRepository(
         return identer
     }
 
-    @KtorExperimentalAPI
     fun hentAlleSaksbehandlereIkkeTaHensyn(): List<Saksbehandler> {
         Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
         val identer = using(sessionOf(dataSource)) {

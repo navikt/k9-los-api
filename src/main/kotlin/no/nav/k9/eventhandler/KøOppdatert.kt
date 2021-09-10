@@ -1,6 +1,5 @@
 package no.nav.k9.eventhandler
 
-import io.ktor.util.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.channels.ReceiveChannel
@@ -18,8 +17,6 @@ import java.util.*
 import java.util.concurrent.Executors
 import kotlin.system.measureTimeMillis
 
-
-@KtorExperimentalAPI
 fun CoroutineScope.køOppdatertProsessor(
     channel: ReceiveChannel<UUID>,
     oppgaveKøRepository: OppgaveKøRepository,
@@ -44,7 +41,6 @@ fun CoroutineScope.køOppdatertProsessor(
     }
 }
 
-@KtorExperimentalAPI
 private suspend fun oppdaterKø(
     oppgaveKøRepository: OppgaveKøRepository,
     it: UUID,

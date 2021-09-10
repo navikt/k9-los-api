@@ -1,6 +1,5 @@
 package no.nav.k9.aksjonspunktbehandling
 
-import io.ktor.util.*
 import no.nav.helse.kafka.ManagedKafkaStreams
 import no.nav.helse.kafka.ManagedStreamHealthy
 import no.nav.helse.kafka.ManagedStreamReady
@@ -11,13 +10,12 @@ import org.apache.kafka.streams.Topology
 import org.apache.kafka.streams.kstream.Consumed
 import org.slf4j.LoggerFactory
 
-internal class AksjonspunktTilbakeStream @KtorExperimentalAPI constructor(
+internal class AksjonspunktTilbakeStream constructor(
     kafkaConfig: KafkaConfig,
     configuration: Configuration,
     k9TilbakeEventHandler: K9TilbakeEventHandler
 ) {
 
-    @KtorExperimentalAPI
     private val stream = ManagedKafkaStreams(
         name = NAME,
         properties = kafkaConfig.stream(NAME),
@@ -28,16 +26,13 @@ internal class AksjonspunktTilbakeStream @KtorExperimentalAPI constructor(
         unreadyAfterStreamStoppedIn = kafkaConfig.unreadyAfterStreamStoppedIn
     )
 
-    @KtorExperimentalAPI
     internal val ready = ManagedStreamReady(stream)
-    @KtorExperimentalAPI
     internal val healthy = ManagedStreamHealthy(stream)
 
     private companion object {
         private const val NAME = "TilbakeV1"
         private val log = LoggerFactory.getLogger("no.nav.$NAME.topology")
 
-        @KtorExperimentalAPI
         private fun topology(
             configuration: Configuration,
             k9TilbakeEventHandler: K9TilbakeEventHandler
@@ -62,6 +57,5 @@ internal class AksjonspunktTilbakeStream @KtorExperimentalAPI constructor(
         }
     }
 
-    @KtorExperimentalAPI
     internal fun stop() = stream.stop(becauseOfError = false)
 }

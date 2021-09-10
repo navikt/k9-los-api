@@ -16,7 +16,7 @@ import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstil
 import org.slf4j.LoggerFactory
 
 
-class K9TilbakeEventHandler @KtorExperimentalAPI constructor(
+class K9TilbakeEventHandler constructor(
     val oppgaveRepository: OppgaveRepository,
     val behandlingProsessEventTilbakeRepository: BehandlingProsessEventTilbakeRepository,
     val config: Configuration,
@@ -31,7 +31,6 @@ class K9TilbakeEventHandler @KtorExperimentalAPI constructor(
     ) {
     private val log = LoggerFactory.getLogger(K9TilbakeEventHandler::class.java)
 
-    @KtorExperimentalAPI
     fun prosesser(
         event: BehandlingProsessEventTilbakeDto
     ) {

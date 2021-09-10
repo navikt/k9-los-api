@@ -1,6 +1,5 @@
 package no.nav.k9.oppgaveko
 
-import io.ktor.util.*
 import io.mockk.every
 import io.mockk.mockk
 import io.zonky.test.db.postgres.embedded.EmbeddedPostgres
@@ -32,12 +31,12 @@ import java.time.LocalDateTime
 import java.util.*
 
 class OppgavekoTest :KoinTest{
-    @KtorExperimentalAPI
+
     @get:Rule
     val koinTestRule = KoinTestRule.create {
         modules(buildAndTestConfig(mockk()))
     }
-    @KtorExperimentalAPI
+
     @Test
     fun `Oppgavene tilfredsstiller filtreringskriteriene i køen`() = runBlocking {
         val pg = EmbeddedPostgres.start()

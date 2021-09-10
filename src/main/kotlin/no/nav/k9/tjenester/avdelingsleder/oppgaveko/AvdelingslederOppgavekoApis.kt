@@ -12,8 +12,6 @@ import no.nav.k9.tjenester.avdelingsleder.AvdelingslederTjeneste
 import org.koin.ktor.ext.inject
 import java.util.*
 
-@KtorExperimentalAPI
-@KtorExperimentalLocationsAPI
 fun Route.AvdelingslederOppgavekøApis() {
     val avdelingslederTjeneste by inject<AvdelingslederTjeneste>()
     val requestContextService by inject<RequestContextService>()

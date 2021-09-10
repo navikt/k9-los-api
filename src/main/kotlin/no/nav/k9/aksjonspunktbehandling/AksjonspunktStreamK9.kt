@@ -11,13 +11,12 @@ import org.apache.kafka.streams.Topology
 import org.apache.kafka.streams.kstream.Consumed
 import org.slf4j.LoggerFactory
 
-internal class AksjonspunktStreamK9 @KtorExperimentalAPI constructor(
+internal class AksjonspunktStreamK9 constructor(
     kafkaConfig: KafkaConfig,
     configuration: Configuration,
     k9sakEventHandler: K9sakEventHandler
 ) {
 
-    @KtorExperimentalAPI
     private val stream = ManagedKafkaStreams(
         name = NAME,
         properties = kafkaConfig.stream(NAME),
@@ -28,16 +27,13 @@ internal class AksjonspunktStreamK9 @KtorExperimentalAPI constructor(
         unreadyAfterStreamStoppedIn = kafkaConfig.unreadyAfterStreamStoppedIn
     )
 
-    @KtorExperimentalAPI
     internal val ready = ManagedStreamReady(stream)
-    @KtorExperimentalAPI
     internal val healthy = ManagedStreamHealthy(stream)
 
     private companion object {
         private const val NAME = "AksjonspunktLagetV1"
         private val log = LoggerFactory.getLogger("no.nav.$NAME.topology")
 
-        @KtorExperimentalAPI
         private fun topology(
             configuration: Configuration,
             k9sakEventHandler: K9sakEventHandler
@@ -61,6 +57,5 @@ internal class AksjonspunktStreamK9 @KtorExperimentalAPI constructor(
         }
     }
 
-    @KtorExperimentalAPI
     internal fun stop() = stream.stop(becauseOfError = false)
 }

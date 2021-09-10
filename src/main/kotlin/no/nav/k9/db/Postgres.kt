@@ -2,7 +2,6 @@ package no.nav.k9.db
 
 import com.zaxxer.hikari.HikariDataSource
 import io.ktor.application.Application
-import io.ktor.util.KtorExperimentalAPI
 import no.nav.k9.Configuration
 import no.nav.k9.KoinProfile
 import no.nav.vault.jdbc.hikaricp.HikariCPVaultUtil
@@ -15,7 +14,6 @@ enum class Role {
     override fun toString() = name.toLowerCase()
 }
 
-@KtorExperimentalAPI
 fun Application.getDataSource(configuration: Configuration) =
     if (configuration.koinProfile() == KoinProfile.LOCAL) {
         HikariDataSource(configuration.hikariConfig())
@@ -23,7 +21,6 @@ fun Application.getDataSource(configuration: Configuration) =
         dataSourceFromVault(configuration, Role.User)
     }
 
-@KtorExperimentalAPI
 fun Application.dataSourceFromVault(hikariConfig: Configuration, role: Role) =
     HikariCPVaultUtil.createHikariDataSourceWithVaultIntegration(
         hikariConfig.hikariConfig(),
@@ -31,7 +28,6 @@ fun Application.dataSourceFromVault(hikariConfig: Configuration, role: Role) =
         "${hikariConfig.databaseName()}-$role"
     )
 
-@KtorExperimentalAPI
 fun Application.migrate(configuration: Configuration) =
     if (configuration.koinProfile() == KoinProfile.LOCAL) {
         runMigration(HikariDataSource(configuration.hikariConfig()))

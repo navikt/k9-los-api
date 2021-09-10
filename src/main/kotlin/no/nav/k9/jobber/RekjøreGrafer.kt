@@ -115,7 +115,6 @@ private fun beholdningOpp(oppgave: Oppgave, statistikkRepository: StatistikkRepo
     }
 }
 
-@KtorExperimentalAPI
 fun Application.regenererOppgaver(
     oppgaveRepository: OppgaveRepository,
     behandlingProsessEventK9Repository: BehandlingProsessEventK9Repository,
@@ -135,11 +134,11 @@ fun Application.regenererOppgaver(
 
                     //finner ikke i k9, sjekker mot punsj
                     if (modell.erTom()) {
-                        modell = punsjEventK9Repository.hent(aktivOppgave.eksternId);
+                        modell = punsjEventK9Repository.hent(aktivOppgave.eksternId)
                     }
                     // finner ikke i punsj, sjekker mot tilbake
                     if (modell.erTom()) {
-                        modell = behandlingProsessEventTilbakeRepository.hent(aktivOppgave.eksternId);
+                        modell = behandlingProsessEventTilbakeRepository.hent(aktivOppgave.eksternId)
                     }
                     // finner den ikke i det hele tatt
                     if (modell.erTom()) {

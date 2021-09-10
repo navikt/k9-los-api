@@ -16,8 +16,6 @@ import java.util.*
 
 private val log: Logger = LoggerFactory.getLogger("nav.OppgaveApis")
 
-@KtorExperimentalAPI
-@KtorExperimentalLocationsAPI
 internal fun Route.OppgaveApis() {
     val requestContextService by inject<RequestContextService>()
     val oppgaveTjeneste by inject<OppgaveTjeneste>()

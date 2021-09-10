@@ -1,6 +1,5 @@
 package no.nav.k9.aksjonspunktbehandling
 
-import io.ktor.util.*
 import no.nav.k9.buildAndTestConfig
 import no.nav.k9.domene.repository.OppgaveRepository
 import org.intellij.lang.annotations.Language
@@ -15,13 +14,11 @@ import kotlin.test.assertTrue
 
 class K9TilbakeEventHandlerTest : KoinTest {
 
-    @KtorExperimentalAPI
     @get:Rule
     val koinTestRule = KoinTestRule.create {
         modules(buildAndTestConfig())
     }
 
-    @KtorExperimentalAPI
     @Test
     fun `Støtte tilbakekreving`() {
         val k9TilbakeEventHandler = get<K9TilbakeEventHandler>()
@@ -64,7 +61,6 @@ class K9TilbakeEventHandlerTest : KoinTest {
         assertTrue { !oppgave.aktiv }
     }
 
-    @KtorExperimentalAPI
     @Test
     fun `Støtte tilbakekreving aksjonspunkt`() {
         val k9TilbakeEventHandler = get<K9TilbakeEventHandler>()

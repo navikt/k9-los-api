@@ -2,7 +2,6 @@
 
 package no.nav.k9
 
-import io.ktor.util.*
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -34,7 +33,6 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import java.util.*
 
-@KtorExperimentalAPI
 fun buildAndTestConfig(pepClient: IPepClient = PepClientLocal()): Module = module {
     val pg = EmbeddedPostgres.start()
     val dataSource = pg.postgresDatabase

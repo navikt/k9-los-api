@@ -5,7 +5,6 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isSuccess
 import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import io.ktor.util.*
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.buildAndTestConfig
@@ -27,16 +26,13 @@ import kotlin.test.assertFalse
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
-
 class K9sakEventHandlerTest : KoinTest {
 
-    @KtorExperimentalAPI
     @get:Rule
     val koinTestRule = KoinTestRule.create {
         modules(buildAndTestConfig())
     }
 
-    @KtorExperimentalAPI
     @Test
     fun `Skal lukke oppgave dersom den ikke har noen aktive aksjonspunkter`() {
 
@@ -79,7 +75,6 @@ class K9sakEventHandlerTest : KoinTest {
         assertFalse { oppgave.aktiv }
     }
 
-    @KtorExperimentalAPI
     @Test
     fun `Skal lukke oppgave dersom den er satt på vent`() {
         val k9sakEventHandler = get<K9sakEventHandler>()
@@ -121,7 +116,6 @@ class K9sakEventHandlerTest : KoinTest {
         assertFalse { oppgave.aktiv }
     }
 
-    @KtorExperimentalAPI
     @Test
     fun `Skal i beslutter kø bare dersom beslutter aksjonspunktet forekommer alene`() {
         val k9sakEventHandler = get<K9sakEventHandler>()
@@ -164,7 +158,6 @@ class K9sakEventHandlerTest : KoinTest {
         assertFalse { oppgave.tilBeslutter }
     }
 
-    @KtorExperimentalAPI
     @Test
     fun `Skal i beslutter kø bare dersom beslutter aksjonspunktet forekommer alene positiv test`() {
         val k9sakEventHandler = get<K9sakEventHandler>()
@@ -210,7 +203,6 @@ class K9sakEventHandlerTest : KoinTest {
         assertTrue { oppgave.tilBeslutter }
     }
 
-    @KtorExperimentalAPI
     @Test
     fun `Skal støtte nytt format`() {
         val k9sakEventHandler = get<K9sakEventHandler>()
@@ -257,7 +249,6 @@ class K9sakEventHandlerTest : KoinTest {
         assertThat { event.fagsakPeriode?.tom }.isSuccess().isEqualTo(LocalDate.of(2020, 3, 30))
     }
 
-    @KtorExperimentalAPI
     @Test
     fun `Skal opprette oppgave dersom 5009`() {
         val k9sakEventHandler = get<K9sakEventHandler>()
@@ -299,7 +290,6 @@ class K9sakEventHandlerTest : KoinTest {
         assertTrue { oppgave.aktiv }
     }
 
-    @KtorExperimentalAPI
     @Test
     fun `Skal ha 1 oppgave med 3 aksjonspunkter`() {
         val k9sakEventHandler = get<K9sakEventHandler>()
@@ -343,7 +333,6 @@ class K9sakEventHandlerTest : KoinTest {
         assertTrue(oppgave.aksjonspunkter.lengde() == 3)
     }
 
-    @KtorExperimentalAPI
     @Test
     fun `Støtte tilbakekreving`() {
         val k9TilbakeEventHandler = get<K9TilbakeEventHandler>()
@@ -386,7 +375,6 @@ class K9sakEventHandlerTest : KoinTest {
         assertTrue { !oppgave.aktiv }
     }
 
-    @KtorExperimentalAPI
     @Test
     fun `Oppgave skal ende opp i kø`() {
         val k9sakEventHandler = get<K9sakEventHandler>()

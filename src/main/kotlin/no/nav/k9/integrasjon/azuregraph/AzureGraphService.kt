@@ -4,7 +4,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.kittinunf.fuel.coroutines.awaitStringResponseResult
 import com.github.kittinunf.fuel.httpGet
 import io.ktor.http.*
-import io.ktor.util.*
 import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.ktor.metrics.Operation
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
@@ -18,14 +17,13 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.LocalDateTime
 
-open class AzureGraphService @KtorExperimentalAPI constructor(
+open class AzureGraphService constructor(
     accessTokenClient: AccessTokenClient
 ) : IAzureGraphService {
     private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
     private val cache = Cache<String>()
     val log = LoggerFactory.getLogger("AzureGraphService")
 
-    @KtorExperimentalAPI
     override suspend fun hentIdentTilInnloggetBruker(): String {
         val username = IdToken(kotlin.coroutines.coroutineContext.idToken().value).getUsername()
         val cachedObject = cache.get(username)
@@ -82,7 +80,6 @@ open class AzureGraphService @KtorExperimentalAPI constructor(
         }
     }
 
-    @KtorExperimentalAPI
     override suspend fun hentEnhetForInnloggetBruker(): String {
       
         val username = IdToken(kotlin.coroutines.coroutineContext.idToken().value).getUsername() + "_office_location"

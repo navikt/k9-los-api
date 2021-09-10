@@ -12,8 +12,6 @@ import no.nav.k9.integrasjon.rest.RequestContextService
 import org.koin.ktor.ext.inject
 import java.util.*
 
-@KtorExperimentalAPI
-@KtorExperimentalLocationsAPI
 internal fun Route.SaksbehandlerOppgavekoApis() {
     val pepClient by inject<IPepClient>()
     val oppgaveKøRepository by inject<OppgaveKøRepository>()

@@ -1,6 +1,5 @@
 package no.nav.k9.eventhandler
 
-import io.ktor.util.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.channels.ReceiveChannel
@@ -18,7 +17,6 @@ import java.util.concurrent.Executors
 private val log: Logger =
     LoggerFactory.getLogger("oppdaterStatistikk")
 
-@KtorExperimentalAPI
 fun CoroutineScope.oppdaterStatistikk(
     channel: ReceiveChannel<Boolean>,
     statistikkRepository: StatistikkRepository,
@@ -41,7 +39,6 @@ fun CoroutineScope.oppdaterStatistikk(
 }
 
 
-@KtorExperimentalAPI
 private fun refreshHentAntallOppgaver(
     oppgaveTjeneste: OppgaveTjeneste,
     oppgavekø: OppgaveKø

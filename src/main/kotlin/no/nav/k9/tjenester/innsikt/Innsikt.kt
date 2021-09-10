@@ -16,8 +16,6 @@ import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import org.koin.ktor.ext.inject
 import kotlin.streams.toList
 
-@KtorExperimentalAPI
-@KtorExperimentalLocationsAPI
 fun Route.innsiktGrensesnitt() {
     val oppgaveRepository by inject<OppgaveRepository>()
     val oppgaveKøRepository by inject<OppgaveKøRepository>()

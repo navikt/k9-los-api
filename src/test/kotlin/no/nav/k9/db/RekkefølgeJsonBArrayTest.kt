@@ -16,17 +16,14 @@ import org.koin.test.get
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
 
 class RekkefølgeJsonBArrayTest : KoinTest {
-    @KtorExperimentalAPI
+
     @get:Rule
     val koinTestRule = KoinTestRule.create {
         modules(buildAndTestConfig())
     }
 
-    @KtorExperimentalAPI
     @Test
     fun `Endrer rekkefølgen i arrayene seg?`() {
 
@@ -40,7 +37,6 @@ class RekkefølgeJsonBArrayTest : KoinTest {
 
     }
 
-    @KtorExperimentalAPI
     private fun lagreOppgave(
         eksternId: UUID,
         oppgaveRepository: OppgaveRepository,

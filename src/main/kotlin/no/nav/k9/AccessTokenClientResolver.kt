@@ -10,7 +10,6 @@ import no.nav.helse.dusseldorf.oauth2.client.SignedJwtAccessTokenClient
 import no.nav.k9.Configuration.Companion.AZURE_V2_ALIAS
 import no.nav.k9.Configuration.Companion.NAIS_STS_ALIAS
 
-@KtorExperimentalAPI
 class AccessTokenClientResolver(
     private val clients: Map<String, Client>) {
 

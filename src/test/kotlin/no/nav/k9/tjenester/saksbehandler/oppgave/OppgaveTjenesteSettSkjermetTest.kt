@@ -33,13 +33,12 @@ import java.time.LocalDateTime
 import java.util.*
 
 class OppgaveTjenesteSettSkjermetTest : KoinTest {
-    @KtorExperimentalAPI
+
     @get:Rule
     val koinTestRule = KoinTestRule.create {
         modules(buildAndTestConfig(mockk()))
     }
 
-    @KtorExperimentalAPI
     @Test
     fun testSettSkjermet() = runBlocking{
 
@@ -173,7 +172,6 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest {
 
     }
 
-    @KtorExperimentalAPI
     @Test
     fun `hent fagsak`(){
         val pg = EmbeddedPostgres.start()
@@ -272,7 +270,6 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest {
         }
     }
 
-    @KtorExperimentalAPI
     @Test
     fun hentReservasjonsHistorikk() = runBlocking {
         val pg = EmbeddedPostgres.start()

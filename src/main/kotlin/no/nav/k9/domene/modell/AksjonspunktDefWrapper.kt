@@ -2,7 +2,6 @@ package no.nav.k9.domene.modell
 
 
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon
 import no.nav.k9.tjenester.mock.Aksjonspunkt
 
 class AksjonspunktDefWrapper {

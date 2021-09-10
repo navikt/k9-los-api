@@ -43,7 +43,6 @@ import org.koin.dsl.module
 import java.util.*
 import javax.sql.DataSource
 
-@KtorExperimentalAPI
 fun selectModuleBasedOnProfile(application: Application, config: Configuration): List<Module> {
     val envModule = when (config.koinProfile()) {
         LOCAL -> localDevConfig(application, config)
@@ -53,7 +52,6 @@ fun selectModuleBasedOnProfile(application: Application, config: Configuration):
     return listOf(common(application, config), envModule)
 }
 
-@KtorExperimentalAPI
 fun common(app: Application, config: Configuration) = module {
     single { config.koinProfile() }
     single { config }
@@ -247,7 +245,6 @@ fun common(app: Application, config: Configuration) = module {
 
 }
 
-@KtorExperimentalAPI
 fun localDevConfig(app: Application, config: Configuration) = module {
     single<IAzureGraphService> {
         AzureGraphServiceLocal()
@@ -269,7 +266,6 @@ fun localDevConfig(app: Application, config: Configuration) = module {
     }
 }
 
-@KtorExperimentalAPI
 fun preprodConfig(app: Application, config: Configuration) = module {
     single<IAzureGraphService> {
         AzureGraphService(
@@ -304,7 +300,6 @@ fun preprodConfig(app: Application, config: Configuration) = module {
     }
 }
 
-@KtorExperimentalAPI
 fun prodConfig(app: Application, config: Configuration) = module {
     single<IAzureGraphService> {
         AzureGraphService(

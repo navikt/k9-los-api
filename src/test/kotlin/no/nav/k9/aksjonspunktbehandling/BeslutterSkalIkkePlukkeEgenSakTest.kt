@@ -1,6 +1,5 @@
 package no.nav.k9.aksjonspunktbehandling
 
-import io.ktor.util.*
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.buildAndTestConfig
 import no.nav.k9.domene.lager.oppgave.Oppgave
@@ -21,13 +20,11 @@ import kotlin.test.assertSame
 
 class BeslutterSkalIkkePlukkeEgenSakTest : KoinTest {
 
-    @KtorExperimentalAPI
     @get:Rule
     val koinTestRule = KoinTestRule.create {
         modules(buildAndTestConfig())
     }
 
-    @KtorExperimentalAPI
     @Test
     fun `Beslutter skal ikke plukke en oppgave beslutteren har behandlet`() {
         val oppgaveRepository = get<OppgaveRepository>()

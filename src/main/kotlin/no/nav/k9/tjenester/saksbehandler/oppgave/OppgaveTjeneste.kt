@@ -33,8 +33,7 @@ import kotlin.system.measureTimeMillis
 private val log: Logger =
     LoggerFactory.getLogger(OppgaveTjeneste::class.java)
 
-@KtorExperimentalAPI
-class OppgaveTjeneste @KtorExperimentalAPI constructor(
+class OppgaveTjeneste constructor(
     private val oppgaveRepository: OppgaveRepository,
     private val oppgaveKøRepository: OppgaveKøRepository,
     private val saksbehandlerRepository: SaksbehandlerRepository,
@@ -58,7 +57,6 @@ class OppgaveTjeneste @KtorExperimentalAPI constructor(
         }
     }
 
-    @KtorExperimentalAPI
     suspend fun reserverOppgave(ident: String, oppgaveUuid: UUID): OppgaveStatusDto {
         if (!pepClient.harTilgangTilReservingAvOppgaver()) {
             return OppgaveStatusDto(
@@ -139,7 +137,6 @@ class OppgaveTjeneste @KtorExperimentalAPI constructor(
         }.toList()
     }
 
-    @KtorExperimentalAPI
     suspend fun søkFagsaker(query: String): SokeResultatDto {
         //TODO lage en bedre sjekk på om det er FNR
         if (query.length == 11) {
@@ -357,12 +354,10 @@ class OppgaveTjeneste @KtorExperimentalAPI constructor(
         return OppgaverResultat(ikkeTilgang, res)
     }
 
-    @KtorExperimentalAPI
     suspend fun reservertAvMeg(ident: String?): Boolean {
         return azureGraphService.hentIdentTilInnloggetBruker() == ident
     }
 
-    @KtorExperimentalAPI
     suspend fun tilOppgaveDto(oppgave: Oppgave, reservasjon: Reservasjon?): OppgaveDto {
         val oppgaveStatus =
             if (reservasjon != null && (!reservasjon.erAktiv()) || reservasjon == null) {
@@ -436,8 +431,6 @@ class OppgaveTjeneste @KtorExperimentalAPI constructor(
         }
     }
 
-
-    @KtorExperimentalAPI
     suspend fun hentOppgaverFraListe(saksnummere: List<String>): List<OppgaveDto> {
         return saksnummere.flatMap { oppgaveRepository.hentOppgaverMedSaksnummer(it) }
             .map { oppgave ->
@@ -453,7 +446,6 @@ class OppgaveTjeneste @KtorExperimentalAPI constructor(
             }.toList()
     }
 
-    @KtorExperimentalAPI
     suspend fun hentNyeOgFerdigstilteOppgaver(): List<NyeOgFerdigstilteOppgaverDto> {
         val omsorgspengerYtelser = listOf(
             FagsakYtelseType.OMSORGSPENGER,
@@ -641,7 +633,6 @@ class OppgaveTjeneste @KtorExperimentalAPI constructor(
         return oppgaveRepository.hentAktiveOppgaverTotalt()
     }
 
-    @KtorExperimentalAPI
     suspend fun hentNesteOppgaverIKø(kø: UUID): List<OppgaveDto> {
         if (pepClient.harBasisTilgang()) {
             val list = mutableListOf<OppgaveDto>()
@@ -718,7 +709,6 @@ class OppgaveTjeneste @KtorExperimentalAPI constructor(
                 }.toList().joinToString(", ")
     }
 
-    @KtorExperimentalAPI
     suspend fun hentSisteReserverteOppgaver(): List<OppgaveDto> {
         val list = mutableListOf<OppgaveDto>()
         //Hent reservasjoner for en gitt bruker skriv om til å hente med ident direkte i tabellen
@@ -864,7 +854,6 @@ class OppgaveTjeneste @KtorExperimentalAPI constructor(
         return oppgaveKøRepository.hent()
     }
 
-    @KtorExperimentalAPI
     fun leggTilBehandletOppgave(ident: String, oppgave: BehandletOppgave) {
         return statistikkRepository.lagreBehandling(ident) {
             oppgave

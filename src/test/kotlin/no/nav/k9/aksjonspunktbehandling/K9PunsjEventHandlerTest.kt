@@ -1,7 +1,6 @@
 package no.nav.k9.aksjonspunktbehandling
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import io.ktor.util.*
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.buildAndTestConfig
 import no.nav.k9.domene.repository.OppgaveRepository
@@ -22,13 +21,11 @@ class K9PunsjEventHandlerTest : KoinTest {
 
     private val log = LoggerFactory.getLogger(K9PunsjEventHandlerTest::class.java)
 
-    @KtorExperimentalAPI
     @get:Rule
     val koinTestRule = KoinTestRule.create {
         modules(buildAndTestConfig())
     }
 
-    @KtorExperimentalAPI
     @Test
     fun `Skal opprette en oppgave dersom en punsjoppgave har et aktivt aksjonspunkt`() {
 
@@ -56,7 +53,6 @@ class K9PunsjEventHandlerTest : KoinTest {
         assertTrue { oppgave.aktiv }
     }
 
-    @KtorExperimentalAPI
     @Test
     fun `Skal håndtere at eventer har satt aktørid null`() {
 
@@ -84,7 +80,6 @@ class K9PunsjEventHandlerTest : KoinTest {
         assertTrue { oppgave.aktiv }
     }
 
-    @KtorExperimentalAPI
     @Test
     fun `Skal avslutte oppgave dersom oppgaven ikke har noen aktive aksjonspunkter`() {
 
