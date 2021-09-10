@@ -11,6 +11,10 @@ on:
       - 'nais/**'
       - 'gradle/**'
 
+env:
+  GITHUB_USERNAME: x-access-token
+  GITHUB_TOKEN: ${{ secrets.LOS_TOKEN }}
+
 jobs:
   Build:
 
