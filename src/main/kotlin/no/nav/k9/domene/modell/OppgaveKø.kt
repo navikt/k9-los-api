@@ -236,16 +236,7 @@ enum class KøSortering(
 enum class AndreKriterierType(override val kode: String, override val navn: String) : Kodeverdi {
     FRA_PUNSJ("FRA_PUNSJ", "Fra Punsj"),
     TIL_BESLUTTER("TIL_BESLUTTER", "Til beslutter"),
-    //    UTBETALING_TIL_BRUKER("UTBETALING_TIL_BRUKER", "Utbetaling til bruker"),
-//    UTLANDSSAK("UTLANDSSAK", "Utland"),
-//    SOKT_GRADERING("SOKT_GRADERING", "Søkt gradering"),
-    SELVSTENDIG_FRILANS("SELVSTENDIG_FRILANS", "Selvstendig næringsdrivende/frilans"),
-
-    //    KOMBINERT("KOMBINERT", "Kombinert arbeidstaker - selvstendig/frilans"),
-    AARSKVANTUM("AARSKVANTUM", "Årskvantum"),
     AVKLAR_MEDLEMSKAP("AVKLAR_MEDLEMSKAP", "Avklar medlemskap"),
-    VURDER_OPPTJENINGSVILKÅRET("VURDER_OPPTJENINGSVILKÅRET", "Avklar opptjeningsvilkåret"),
-    AVKLAR_ARBEIDSFORHOLD("AVKLAR_ARBEIDSFORHOLD", "Avklar arbeidsforhold"),
     AVKLAR_INNTEKTSMELDING_BEREGNING("AVKLAR_INNTEKTSMELDING_BEREGNING", "Avklar inntektsmeldng");
 
     override val kodeverk = "ANDRE_KRITERIER_TYPE"
