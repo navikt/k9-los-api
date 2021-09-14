@@ -159,13 +159,6 @@ data class OppgaveKø(
             return true
         }
 
-        if (oppgave.aksjonspunkter.harAktivtAksjonspunkt(AksjonspunktDefinisjon.VURDER_ARBEIDSFORHOLD)
-            && kriterier.map { it.andreKriterierType }
-                .contains(AndreKriterierType.AVKLAR_ARBEIDSFORHOLD)
-        ) {
-            return true
-        }
-
         if (oppgave.system == PUNSJ.kode && kriterier.map { it.andreKriterierType }
                 .contains(AndreKriterierType.FRA_PUNSJ)) {
             return true
