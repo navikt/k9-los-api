@@ -1,7 +1,5 @@
 package no.nav.k9.integrasjon.azuregraph
 
-import io.ktor.util.KtorExperimentalAPI
-
 open class AzureGraphServiceLocal constructor() : IAzureGraphService {
 
     override suspend fun hentIdentTilInnloggetBruker(): String {

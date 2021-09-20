@@ -3,7 +3,6 @@ package no.nav.k9.tjenester.sse
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import io.ktor.application.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.broadcast
 import kotlinx.coroutines.channels.produce
@@ -11,7 +10,6 @@ import no.nav.k9.aksjonspunktbehandling.objectMapper
 import org.slf4j.LoggerFactory
 import java.util.*
 
-@ExperimentalCoroutinesApi
 internal object RefreshKlienter {
     private val logger = LoggerFactory.getLogger(RefreshKlienter::class.java)
     private val objectMapper = objectMapper().also {

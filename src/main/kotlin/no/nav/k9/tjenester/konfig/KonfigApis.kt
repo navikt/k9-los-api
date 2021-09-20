@@ -8,7 +8,6 @@ import no.nav.k9.Configuration
 import no.nav.k9.KoinProfile
 import org.koin.ktor.ext.inject
 
-@KtorExperimentalLocationsAPI
 fun Route.KonfigApis() {
     val configuration by inject<Configuration>()
     val k9sakUrlDev = "https://app-q1.adeo.no/k9/web"

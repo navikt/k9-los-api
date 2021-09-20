@@ -1,6 +1,5 @@
 package no.nav.k9
 
-import io.ktor.util.KtorExperimentalAPI
 import no.nav.helse.dusseldorf.ktor.auth.Client
 import no.nav.helse.dusseldorf.ktor.auth.ClientSecretClient
 import no.nav.helse.dusseldorf.ktor.auth.PrivateKeyClient
