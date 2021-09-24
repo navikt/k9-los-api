@@ -1,7 +1,5 @@
 package no.nav.k9.tjenester.saksbehandler.oppgave
 
-import assertk.all
-import io.ktor.util.*
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.buildAndTestConfig
 import no.nav.k9.domene.lager.oppgave.Oppgave
@@ -128,9 +126,9 @@ class OppgaveTjenesteTest : KoinTest {
         }
 
 
-        var oppgaver = oppgaveTjeneste.hentNesteOppgaverIKø(oppgaveko.id)
+        val oppgaver = oppgaveTjeneste.hentNesteOppgaverIKø(oppgaveko.id)
         assert(oppgaver.size == 1)
-        val oppgave = oppgaver.get(0)
+        val oppgave = oppgaver[0]
 
         saksbehandlerRepository.addSaksbehandler(
             Saksbehandler(
@@ -252,9 +250,9 @@ class OppgaveTjenesteTest : KoinTest {
         }
 
 
-        var oppgaver = oppgaveTjeneste.hentNesteOppgaverIKø(oppgaveko.id)
+        val oppgaver = oppgaveTjeneste.hentNesteOppgaverIKø(oppgaveko.id)
         assert(oppgaver.size == 2)
-        val oppgave = oppgaver.get(0)
+        val oppgave = oppgaver[0]
 
         saksbehandlerRepository.addSaksbehandler(
             Saksbehandler(
@@ -388,7 +386,7 @@ class OppgaveTjenesteTest : KoinTest {
             oppgaveKø
         }
 
-        var oppgaver = oppgaveTjeneste.hentNesteOppgaverIKø(oppgaveKø.id)
+        val oppgaver = oppgaveTjeneste.hentNesteOppgaverIKø(oppgaveKø.id)
         asserter.assertEquals("Forventer en oppgave her", 1, oppgaver.size)
         val oppgave = oppgaver[0]
 

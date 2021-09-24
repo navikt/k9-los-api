@@ -1,7 +1,6 @@
 package no.nav.k9.tjenester.saksbehandler.oppgave
 
 import info.debatty.java.stringsimilarity.Levenshtein
-import io.ktor.util.*
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.Configuration
 import no.nav.k9.KoinProfile
@@ -64,6 +63,7 @@ class OppgaveTjeneste constructor(
                 reservertTilTidspunkt = null,
                 erReservertAvInnloggetBruker = false,
                 reservertAv = null,
+                reservertAvNavn = null,
                 flyttetReservasjon = null
             )
         }
@@ -85,12 +85,14 @@ class OppgaveTjeneste constructor(
             iderPåOppgaverSomSkalBliReservert = setOf(oppgaveUuid)
         } else {
             if (aktiveReservasjoner.isNotEmpty()) {
+                val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(aktiveReservasjoner[0].reservertAv)
                 // todo endre til og kunen vise en liste her
                 return OppgaveStatusDto(
                     erReservert = true,
                     reservertTilTidspunkt = aktiveReservasjoner[0].reservertTil,
                     erReservertAvInnloggetBruker = false,
                     reservertAv = aktiveReservasjoner[0].reservertAv,
+                    reservertAvNavn = saksbehandler?.navn,
                     flyttetReservasjon = null
                 )
             }
@@ -104,11 +106,13 @@ class OppgaveTjeneste constructor(
             oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, oppgaverSomSkalBliReservert.map { o -> o.oppgave }, reservasjonRepository)
         }
 
+        val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(ident)
         return OppgaveStatusDto(
             erReservert = true,
             reservertTilTidspunkt = LocalDateTime.now().plusHours(24).forskyvReservasjonsDato(),
             erReservertAvInnloggetBruker = reservertAvMeg(ident),
             reservertAv = ident,
+            reservertAvNavn = saksbehandler?.navn,
             flyttetReservasjon = null
         )
     }
@@ -183,11 +187,11 @@ class OppgaveTjeneste constructor(
     }
 
     private suspend fun finnOppgaverBasertPåFnr(query: String): SokeResultatDto {
-        var aktørIdFraFnr = pdlService.identifikator(query)
+        val aktørIdFraFnr = pdlService.identifikator(query)
 
         val res = SokeResultatDto(false, null, mutableListOf())
-        if (aktørIdFraFnr.aktorId != null && aktørIdFraFnr.aktorId!!.data.hentIdenter != null && aktørIdFraFnr.aktorId!!.data.hentIdenter!!.identer.isNotEmpty()) {
-            var aktorId = aktørIdFraFnr.aktorId!!.data.hentIdenter!!.identer[0].ident
+        if (aktørIdFraFnr.aktorId != null && aktørIdFraFnr.aktorId.data.hentIdenter != null && aktørIdFraFnr.aktorId.data.hentIdenter!!.identer.isNotEmpty()) {
+            val aktorId = aktørIdFraFnr.aktorId.data.hentIdenter!!.identer[0].ident
             val person = pdlService.person(aktorId)
             if (person.person != null) {
                 val personDto = mapTilPersonDto(person.person)
@@ -284,6 +288,7 @@ class OppgaveTjeneste constructor(
                 reservertTilTidspunkt = null,
                 erReservertAvInnloggetBruker = false,
                 reservertAv = null,
+                reservertAvNavn = null,
                 flyttetReservasjon = null
             )
             //TODO fyll ut denne bedre?
@@ -346,20 +351,22 @@ class OppgaveTjeneste constructor(
         return OppgaverResultat(ikkeTilgang, res)
     }
 
-    suspend fun reservertAvMeg(ident: String?): Boolean {
+    private suspend fun reservertAvMeg(ident: String?): Boolean {
         return azureGraphService.hentIdentTilInnloggetBruker() == ident
     }
 
-    suspend fun tilOppgaveDto(oppgave: Oppgave, reservasjon: Reservasjon?): OppgaveDto {
+    private suspend fun tilOppgaveDto(oppgave: Oppgave, reservasjon: Reservasjon?): OppgaveDto {
         val oppgaveStatus =
             if (reservasjon != null && (!reservasjon.erAktiv()) || reservasjon == null) {
-                OppgaveStatusDto(false, null, false, null, null)
+                OppgaveStatusDto(false, null, false, null, null, null)
             } else {
+                val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(reservasjon.reservertAv)
                 OppgaveStatusDto(
                     erReservert = true,
                     reservertTilTidspunkt = reservasjon.reservertTil,
                     erReservertAvInnloggetBruker = reservertAvMeg(reservasjon.reservertAv),
                     reservertAv = reservasjon.reservertAv,
+                    reservertAvNavn = saksbehandler?.navn,
                     flyttetReservasjon = null
                 )
             }
@@ -656,6 +663,7 @@ class OppgaveTjeneste constructor(
                                 reservertTilTidspunkt = null,
                                 erReservertAvInnloggetBruker = false,
                                 reservertAv = null,
+                                reservertAvNavn = null,
                                 flyttetReservasjon = null
                             ),
                             behandlingId = oppgave.behandlingId,
@@ -666,7 +674,7 @@ class OppgaveTjeneste constructor(
                             personnummer = if (person.person == null) {
                                 "Ukjent fnummer"
                             } else {
-                                person.person?.fnr()
+                                person.person.fnr()
                             },
                             behandlingstype = oppgave.behandlingType,
                             fagsakYtelseType = oppgave.fagsakYtelseType,
@@ -718,12 +726,15 @@ class OppgaveTjeneste constructor(
 
                 val person = pdlService.person(oppgave.aktorId)
 
+                val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(reservasjon.reservertAv)
+
                 val status =
                     OppgaveStatusDto(
                         true,
                         reservasjon.reservertTil,
                         true,
                         reservasjon.reservertAv,
+                        saksbehandler?.navn,
                         flyttetReservasjon = if (reservasjon.flyttetAv.isNullOrEmpty()) {
                             null
                         } else {
@@ -781,7 +792,7 @@ class OppgaveTjeneste constructor(
         return list
     }
 
-    suspend fun tilgangTilSak(oppgave: Oppgave): Boolean {
+    private suspend fun tilgangTilSak(oppgave: Oppgave): Boolean {
         if (!pepClient.harTilgangTilLesSak(
                 fagsakNummer = oppgave.fagsakSaksnummer,
                 aktørid = oppgave.aktorId
