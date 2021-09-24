@@ -7,5 +7,6 @@ class OppgaveStatusDto(
         val reservertTilTidspunkt: LocalDateTime?,
         val erReservertAvInnloggetBruker: Boolean,
         val reservertAv: String?,
+        val reservertAvNavn: String?,
         val flyttetReservasjon: FlyttetReservasjonDto?
 )
