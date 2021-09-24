@@ -5,7 +5,6 @@ import io.ktor.locations.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
-import io.ktor.util.*
 import no.nav.k9.domene.repository.SaksbehandlerRepository
 import no.nav.k9.integrasjon.rest.RequestContextService
 import no.nav.k9.integrasjon.rest.idToken
@@ -67,12 +66,13 @@ internal fun Route.OppgaveApis() {
     class reserverOppgave
 
     post { _: reserverOppgave ->
-        val oppgaveId = call.receive<OppgaveId>()
+        val oppgaveIdMedOverstyring = call.receive<OppgaveIdMedOverstyring>()
         requestContextService.withRequestContext(call) {
             call.respond(
                 oppgaveTjeneste.reserverOppgave(
                     saksbehandlerRepository.finnSaksbehandlerMedEpost(kotlin.coroutines.coroutineContext.idToken().getUsername())!!.brukerIdent!!,
-                    UUID.fromString(oppgaveId.oppgaveId)
+                    UUID.fromString(oppgaveIdMedOverstyring.oppgaveId),
+                    oppgaveIdMedOverstyring.overstyrSjekk ?: false
                 )
             )
         }
