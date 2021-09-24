@@ -57,7 +57,7 @@ class OppgaveTjeneste constructor(
         }
     }
 
-    suspend fun reserverOppgave(ident: String, oppgaveUuid: UUID): OppgaveStatusDto {
+    suspend fun reserverOppgave(ident: String, oppgaveUuid: UUID, overstyrSjekk: Boolean = false): OppgaveStatusDto {
         if (!pepClient.harTilgangTilReservingAvOppgaver()) {
             return OppgaveStatusDto(
                 erReservert = false,
@@ -67,21 +67,23 @@ class OppgaveTjeneste constructor(
                 flyttetReservasjon = null
             )
         }
-        try {
-            val oppgaveSomSkalBliReservert = oppgaveRepository.hent(oppgaveUuid)
-            val oppgaverSomSkalBliReservert = mutableListOf<OppgaveMedId>()
-            oppgaverSomSkalBliReservert.add(OppgaveMedId(oppgaveUuid, oppgaveSomSkalBliReservert))
-            if (oppgaveSomSkalBliReservert.pleietrengendeAktørId != null) {
-                val relaterteOppgaverSomSkalBliReservert = oppgaveRepository.hentOppgaverSomMatcher(
-                    oppgaveSomSkalBliReservert.pleietrengendeAktørId,
-                    oppgaveSomSkalBliReservert.fagsakYtelseType
-                )
-                oppgaverSomSkalBliReservert.addAll(relaterteOppgaverSomSkalBliReservert)
-            }
+        val oppgaveSomSkalBliReservert = oppgaveRepository.hent(oppgaveUuid)
+        val oppgaverSomSkalBliReservert = mutableListOf<OppgaveMedId>()
+        oppgaverSomSkalBliReservert.add(OppgaveMedId(oppgaveUuid, oppgaveSomSkalBliReservert))
+        if (oppgaveSomSkalBliReservert.pleietrengendeAktørId != null) {
+            val relaterteOppgaverSomSkalBliReservert = oppgaveRepository.hentOppgaverSomMatcher(
+                oppgaveSomSkalBliReservert.pleietrengendeAktørId,
+                oppgaveSomSkalBliReservert.fagsakYtelseType
+            )
+            oppgaverSomSkalBliReservert.addAll(relaterteOppgaverSomSkalBliReservert)
+        }
 
-            val iderPåOppgaverSomSkalBliReservert = oppgaverSomSkalBliReservert.map { o -> o.id }.toSet()
-            val gamleReservasjoner = reservasjonRepository.hent(iderPåOppgaverSomSkalBliReservert)
-            val aktiveReservasjoner = gamleReservasjoner.filter { rev -> rev.erAktiv() && rev.reservertAv != ident }.toList()
+        var iderPåOppgaverSomSkalBliReservert = oppgaverSomSkalBliReservert.map { o -> o.id }.toSet()
+        val gamleReservasjoner = reservasjonRepository.hent(iderPåOppgaverSomSkalBliReservert)
+        val aktiveReservasjoner = gamleReservasjoner.filter { rev -> rev.erAktiv() && rev.reservertAv != ident }.toList()
+        if (overstyrSjekk) {
+            iderPåOppgaverSomSkalBliReservert = setOf(oppgaveUuid)
+        } else {
             if (aktiveReservasjoner.isNotEmpty()) {
                 // todo endre til og kunen vise en liste her
                 return OppgaveStatusDto(
@@ -92,33 +94,23 @@ class OppgaveTjeneste constructor(
                     flyttetReservasjon = null
                 )
             }
-            val reservasjoner = lagReservasjoner(iderPåOppgaverSomSkalBliReservert, ident)
-
-            reservasjonRepository.lagreFlereReservasjoner(reservasjoner)
-            saksbehandlerRepository.leggTilFlereReservasjoner(ident, reservasjoner.map { r -> r.oppgave })
-
-            for (oppgavekø in oppgaveKøRepository.hentKøIdIkkeTaHensyn()) {
-                oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, oppgaverSomSkalBliReservert.map { o -> o.oppgave }, reservasjonRepository)
-            }
-
-            return OppgaveStatusDto(
-                erReservert = true,
-                reservertTilTidspunkt = LocalDateTime.now().plusHours(24).forskyvReservasjonsDato(),
-                erReservertAvInnloggetBruker = reservertAvMeg(ident),
-                reservertAv = ident,
-                flyttetReservasjon = null
-            )
-        } catch (e: java.lang.IllegalArgumentException) {
-            log.info(e.message)
-            val gjeldendeReservasjon = reservasjonRepository.hent(oppgaveUuid)
-            return OppgaveStatusDto(
-                erReservert = true,
-                reservertTilTidspunkt = gjeldendeReservasjon.reservertTil,
-                erReservertAvInnloggetBruker = false,
-                reservertAv = gjeldendeReservasjon.reservertAv,
-                flyttetReservasjon = null
-            )
         }
+        val reservasjoner = lagReservasjoner(iderPåOppgaverSomSkalBliReservert, ident)
+
+        reservasjonRepository.lagreFlereReservasjoner(reservasjoner)
+        saksbehandlerRepository.leggTilFlereReservasjoner(ident, reservasjoner.map { r -> r.oppgave })
+
+        for (oppgavekø in oppgaveKøRepository.hentKøIdIkkeTaHensyn()) {
+            oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, oppgaverSomSkalBliReservert.map { o -> o.oppgave }, reservasjonRepository)
+        }
+
+        return OppgaveStatusDto(
+            erReservert = true,
+            reservertTilTidspunkt = LocalDateTime.now().plusHours(24).forskyvReservasjonsDato(),
+            erReservertAvInnloggetBruker = reservertAvMeg(ident),
+            reservertAv = ident,
+            flyttetReservasjon = null
+        )
     }
 
     private fun lagReservasjoner(
