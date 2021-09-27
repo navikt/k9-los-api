@@ -2,7 +2,7 @@ apiVersion: "nais.io/v1alpha1"
 kind: "Application"
 metadata:
   name: k9-los-api
-  namespace: default
+  namespace: k9saksbehandling
   labels:
     team: k9saksbehandling
 spec:
@@ -46,7 +46,7 @@ spec:
       - mountPath: /var/run/secrets/nais.io/azuread
         kvPath: /azuread/data/dev/creds/k9-los-api
       - mountPath: /var/run/secrets/nais.io/vault
-        kvPath: /kv/preprod/fss/k9-los-api/default
+        kvPath: /kv/preprod/fss/k9-los-api/k9saksbehandling
   sidecar: true
   webproxy: true
   env:
