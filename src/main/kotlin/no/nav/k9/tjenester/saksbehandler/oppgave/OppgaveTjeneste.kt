@@ -16,6 +16,7 @@ import no.nav.k9.integrasjon.omsorgspenger.IOmsorgspengerService
 import no.nav.k9.integrasjon.omsorgspenger.OmsorgspengerSakFnrDto
 import no.nav.k9.integrasjon.pdl.*
 import no.nav.k9.integrasjon.rest.idToken
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleOppgaverHistorikk
 import no.nav.k9.tjenester.fagsak.PersonDto
 import no.nav.k9.tjenester.mock.Aksjonspunkter
@@ -68,6 +69,8 @@ class OppgaveTjeneste constructor(
             )
         }
         val oppgaveSomSkalBliReservert = oppgaveRepository.hent(oppgaveUuid)
+
+
         val oppgaverSomSkalBliReservert = mutableListOf<OppgaveMedId>()
         oppgaverSomSkalBliReservert.add(OppgaveMedId(oppgaveUuid, oppgaveSomSkalBliReservert))
         if (oppgaveSomSkalBliReservert.pleietrengendeAktørId != null) {
@@ -75,17 +78,24 @@ class OppgaveTjeneste constructor(
                 oppgaveSomSkalBliReservert.pleietrengendeAktørId,
                 oppgaveSomSkalBliReservert.fagsakYtelseType
             )
-            oppgaverSomSkalBliReservert.addAll(relaterteOppgaverSomSkalBliReservert)
+
+            oppgaverSomSkalBliReservert.addAll(filtrerOppgaveHvisBeslutter(
+                oppgaveSomSkalBliReservert,
+                relaterteOppgaverSomSkalBliReservert
+                )
+            )
         }
 
         var iderPåOppgaverSomSkalBliReservert = oppgaverSomSkalBliReservert.map { o -> o.id }.toSet()
         val gamleReservasjoner = reservasjonRepository.hent(iderPåOppgaverSomSkalBliReservert)
-        val aktiveReservasjoner = gamleReservasjoner.filter { rev -> rev.erAktiv() && rev.reservertAv != ident }.toList()
+        val aktiveReservasjoner =
+            gamleReservasjoner.filter { rev -> rev.erAktiv() && rev.reservertAv != ident }.toList()
         if (overstyrSjekk) {
             iderPåOppgaverSomSkalBliReservert = setOf(oppgaveUuid)
         } else {
             if (aktiveReservasjoner.isNotEmpty()) {
-                val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(aktiveReservasjoner[0].reservertAv)
+                val saksbehandler =
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(aktiveReservasjoner[0].reservertAv)
                 // todo endre til og kunen vise en liste her
                 return OppgaveStatusDto(
                     erReservert = true,
@@ -103,7 +113,11 @@ class OppgaveTjeneste constructor(
         saksbehandlerRepository.leggTilFlereReservasjoner(ident, reservasjoner.map { r -> r.oppgave })
 
         for (oppgavekø in oppgaveKøRepository.hentKøIdIkkeTaHensyn()) {
-            oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, oppgaverSomSkalBliReservert.map { o -> o.oppgave }, reservasjonRepository)
+            oppgaveKøRepository.leggTilOppgaverTilKø(
+                oppgavekø,
+                oppgaverSomSkalBliReservert.map { o -> o.oppgave },
+                reservasjonRepository
+            )
         }
 
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(ident)
@@ -115,6 +129,25 @@ class OppgaveTjeneste constructor(
             reservertAvNavn = saksbehandler?.navn,
             flyttetReservasjon = null
         )
+    }
+
+    private fun filtrerOppgaveHvisBeslutter(
+        oppgaveSomSkalBliReservert: Oppgave,
+        relaterteOppgaverSomSkalBliReservert: List<OppgaveMedId>
+    ): List<OppgaveMedId> {
+        return if (oppgaveSomSkalBliReservert.aksjonspunkter.harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)) {
+            relaterteOppgaverSomSkalBliReservert.filter { o ->
+                o.oppgave.aksjonspunkter.harAktivtAksjonspunkt(
+                    AksjonspunktDefinisjon.FATTER_VEDTAK
+                )
+            }
+        } else {
+            relaterteOppgaverSomSkalBliReservert.filter { o ->
+                !o.oppgave.aksjonspunkter.harAktivtAksjonspunkt(
+                    AksjonspunktDefinisjon.FATTER_VEDTAK
+                )
+            }
+        }
     }
 
     private fun lagReservasjoner(
@@ -451,7 +484,8 @@ class OppgaveTjeneste constructor(
             FagsakYtelseType.OMSORGSDAGER,
             FagsakYtelseType.OMSORGSPENGER_KS,
             FagsakYtelseType.OMSORGSPENGER_MA,
-            FagsakYtelseType.OMSORGSPENGER_AO)
+            FagsakYtelseType.OMSORGSPENGER_AO
+        )
         val alleTallene = statistikkRepository.hentFerdigstilteOgNyeHistorikkPerAntallDager(7)
         alleTallene.forEach {
             if (omsorgspengerYtelser.contains(it.fagsakYtelseType)) it.fagsakYtelseType = FagsakYtelseType.OMSORGSPENGER
@@ -750,11 +784,11 @@ class OppgaveTjeneste constructor(
                 var personFnummer: String
                 val navn = if (KoinProfile.PREPROD == configuration.koinProfile()) {
                     "${oppgave.fagsakSaksnummer} "
-                  //          oppgave.aksjonspunkter.liste.entries.stream().map { t ->
-                  //              val a = Aksjonspunkter().aksjonspunkter()
-                 //                   .find { aksjonspunkt -> aksjonspunkt.kode == t.key }
-                 //               "${t.key} ${a?.navn ?: "Ukjent aksjonspunkt"}"
-                 //           }.toList().joinToString(", ")
+                    //          oppgave.aksjonspunkter.liste.entries.stream().map { t ->
+                    //              val a = Aksjonspunkter().aksjonspunkter()
+                    //                   .find { aksjonspunkt -> aksjonspunkt.kode == t.key }
+                    //               "${t.key} ${a?.navn ?: "Ukjent aksjonspunkt"}"
+                    //           }.toList().joinToString(", ")
                 } else {
                     person.person?.navn() ?: "Uten navn"
                 }
