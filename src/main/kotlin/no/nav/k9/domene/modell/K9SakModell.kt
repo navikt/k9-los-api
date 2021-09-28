@@ -80,7 +80,7 @@ data class K9SakModell(
             aktiv = aktiv,
             forsteStonadsdag = event.eventTid.toLocalDate(),
             utfortFraAdmin = false,
-            behandlingsfrist = event.eventTid.plusDays(21),
+            behandlingsfrist = event.behandlingstidFrist?.atStartOfDay() ?: event.eventTid.plusDays(21),
             behandlingStatus = BehandlingStatus.fraKode(behandlingStatus),
             eksternId = event.eksternId ?: UUID.randomUUID(),
             behandlingOpprettet = event.opprettetBehandling,
