@@ -8,5 +8,6 @@ class OppgaveStatusDto(
         val erReservertAvInnloggetBruker: Boolean,
         val reservertAv: String?,
         val reservertAvNavn: String?,
-        val flyttetReservasjon: FlyttetReservasjonDto?
+        val flyttetReservasjon: FlyttetReservasjonDto?,
+        val kanOverstyres: Boolean? = false
 )

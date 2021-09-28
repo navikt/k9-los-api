@@ -103,7 +103,8 @@ class OppgaveTjeneste constructor(
                     erReservertAvInnloggetBruker = false,
                     reservertAv = aktiveReservasjoner[0].reservertAv,
                     reservertAvNavn = saksbehandler?.navn,
-                    flyttetReservasjon = null
+                    flyttetReservasjon = null,
+                    kanOverstyres = true
                 )
             }
         }
