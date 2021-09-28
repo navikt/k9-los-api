@@ -60,9 +60,9 @@ fun Route.NokkeltallApis() {
     }
 
     @Location("/alle-paa-vent")
-    class hentAllePåVent
+    class HentAllePåVent
 
-    get { _: hentAllePåVent ->
+    get { _: HentAllePåVent ->
         call.respond(nokkeltallTjeneste.hentOppgaverPåVent())
     }
 
