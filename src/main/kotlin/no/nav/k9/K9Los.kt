@@ -15,7 +15,6 @@ import io.ktor.routing.*
 import io.ktor.util.*
 import io.ktor.websocket.*
 import io.prometheus.client.hotspot.DefaultExports
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.BroadcastChannel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.broadcast
