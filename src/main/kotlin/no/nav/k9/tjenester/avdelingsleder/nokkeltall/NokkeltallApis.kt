@@ -5,12 +5,9 @@ import io.ktor.locations.Location
 import io.ktor.locations.get
 import io.ktor.response.respond
 import io.ktor.routing.Route
-import no.nav.k9.domene.modell.BehandlingType
-import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.integrasjon.rest.RequestContextService
 import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import org.koin.ktor.ext.inject
-import java.time.LocalDate
 
 fun Route.NokkeltallApis() {
     val nokkeltallTjeneste by inject<NokkeltallTjeneste>()
@@ -61,4 +58,12 @@ fun Route.NokkeltallApis() {
     get { _: hentNyeSiste8Uker ->
         call.respond(nokkeltallTjeneste.hentNyeSiste8Uker())
     }
+
+    @Location("/alle-paa-vent")
+    class hentAllePåVent
+
+    get { _: hentAllePåVent ->
+        call.respond(nokkeltallTjeneste.hentOppgaverPåVent())
+    }
+
 }

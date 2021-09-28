@@ -418,6 +418,10 @@ data class Aksjonspunkter(val liste: Map<String, String>) {
         return AksjonspunktDefWrapper.inneholderEtAktivtAksjonspunktMedKoden(this.liste, def)
     }
 
+    fun alleAktiveAksjonspunkt(): Aksjonspunkter {
+        return Aksjonspunkter(liste.filter { entry -> entry.value == "OPPR" })
+    }
+
     fun harInaktivtAksjonspunkt(def: AksjonspunktDefinisjon): Boolean {
         return AksjonspunktDefWrapper.inneholderEtInaktivtAksjonspunktMedKoden(this.liste, def)
     }

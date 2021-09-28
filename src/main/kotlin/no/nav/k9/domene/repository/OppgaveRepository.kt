@@ -56,6 +56,11 @@ class OppgaveRepository(
         return list
     }
 
+    fun hentAllePåVent(): List<Oppgave> {
+        val alleOppgave = hent()
+        return alleOppgave.filter { it.aksjonspunkter.alleAktiveAksjonspunkt().påVent() }
+    }
+
     fun hent(uuid: UUID): Oppgave {
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
