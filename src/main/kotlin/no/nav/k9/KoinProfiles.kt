@@ -1,7 +1,6 @@
 package no.nav.k9
 
 import io.ktor.application.*
-import io.ktor.util.*
 import kotlinx.coroutines.channels.Channel
 import no.nav.helse.dusseldorf.ktor.health.HealthService
 import no.nav.k9.KoinProfile.*
@@ -45,9 +44,9 @@ import javax.sql.DataSource
 
 fun selectModuleBasedOnProfile(application: Application, config: Configuration): List<Module> {
     val envModule = when (config.koinProfile()) {
-        LOCAL -> localDevConfig(application, config)
-        PREPROD -> preprodConfig(application, config)
-        PROD -> prodConfig(application, config)
+        LOCAL -> localDevConfig()
+        PREPROD -> preprodConfig(config)
+        PROD -> prodConfig(config)
     }
     return listOf(common(application, config), envModule)
 }
@@ -232,7 +231,7 @@ fun common(app: Application, config: Configuration) = module {
         DriftsmeldingTjeneste(driftsmeldingRepository = get())
     }
     single {
-        SakslisteTjeneste(oppgaveTjeneste = get(), azureGraphService = get())
+        SakslisteTjeneste(oppgaveTjeneste = get())
     }
     single {
         HentKodeverkTjeneste()
@@ -245,7 +244,7 @@ fun common(app: Application, config: Configuration) = module {
 
 }
 
-fun localDevConfig(app: Application, config: Configuration) = module {
+fun localDevConfig() = module {
     single<IAzureGraphService> {
         AzureGraphServiceLocal()
     }
@@ -266,7 +265,7 @@ fun localDevConfig(app: Application, config: Configuration) = module {
     }
 }
 
-fun preprodConfig(app: Application, config: Configuration) = module {
+fun preprodConfig(config: Configuration) = module {
     single<IAzureGraphService> {
         AzureGraphService(
             accessTokenClient = get<AccessTokenClientResolver>().azureV2()
@@ -300,7 +299,7 @@ fun preprodConfig(app: Application, config: Configuration) = module {
     }
 }
 
-fun prodConfig(app: Application, config: Configuration) = module {
+fun prodConfig(config: Configuration) = module {
     single<IAzureGraphService> {
         AzureGraphService(
             accessTokenClient = get<AccessTokenClientResolver>().azureV2()

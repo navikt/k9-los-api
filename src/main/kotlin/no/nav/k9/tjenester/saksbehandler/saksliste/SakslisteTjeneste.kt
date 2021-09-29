@@ -4,9 +4,9 @@ import kotlin.coroutines.coroutineContext
 import no.nav.k9.integrasjon.azuregraph.IAzureGraphService
 import no.nav.k9.integrasjon.rest.idToken
 import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveTjeneste
+import java.util.*
 
-class SakslisteTjeneste constructor(
-    private val azureGraphService: IAzureGraphService,
+class SakslisteTjeneste(
     private val oppgaveTjeneste: OppgaveTjeneste
 
 ) {
@@ -15,7 +15,10 @@ class SakslisteTjeneste constructor(
         return hentOppgaveKøer
             .filter { oppgaveKø ->
                 oppgaveKø.saksbehandlere
-                    .any { saksbehandler -> saksbehandler.epost.toLowerCase() == coroutineContext.idToken().getUsername().toLowerCase() }
+                    .any { saksbehandler ->
+                        saksbehandler.epost.lowercase(Locale.getDefault()) == coroutineContext.idToken().getUsername()
+                            .lowercase(Locale.getDefault())
+                    }
             }
             .map { oppgaveKø ->
                 val sortering = SorteringDto(oppgaveKø.sortering, oppgaveKø.fomDato, oppgaveKø.tomDato)

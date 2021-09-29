@@ -30,7 +30,7 @@ class WebSocketTest {
         withTestApplication {
             application.websocketTestApp(refreshKlienter)
 
-            handleWebSocketConversation("/ws") { incoming, outgoing ->
+            handleWebSocketConversation("/ws") { incoming, _ ->
                 GlobalScope.launch {
                     for (melding in meldinger) {
                         refreshKlienter.sendMelding(melding)
