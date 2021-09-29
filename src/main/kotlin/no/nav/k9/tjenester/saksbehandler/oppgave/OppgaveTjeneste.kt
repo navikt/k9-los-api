@@ -78,7 +78,7 @@ class OppgaveTjeneste constructor(
                 reservertAv = null,
                 reservertAvNavn = null,
                 flyttetReservasjon = null,
-                beskjed = "Oppgaven ble besluttet av deg"
+                beskjed = Beskjed.BESLUTTET_AV_DEG
             )
         }
 
