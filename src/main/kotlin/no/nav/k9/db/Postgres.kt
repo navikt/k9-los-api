@@ -6,12 +6,13 @@ import no.nav.k9.Configuration
 import no.nav.k9.KoinProfile
 import no.nav.vault.jdbc.hikaricp.HikariCPVaultUtil
 import org.flywaydb.core.Flyway
+import java.util.*
 import javax.sql.DataSource
 
 enum class Role {
     Admin, User, ReadOnly;
 
-    override fun toString() = name.toLowerCase()
+    override fun toString() = name.lowercase(Locale.getDefault())
 }
 
 fun Application.getDataSource(configuration: Configuration) =

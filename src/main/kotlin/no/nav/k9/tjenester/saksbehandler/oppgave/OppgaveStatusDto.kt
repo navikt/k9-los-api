@@ -9,5 +9,6 @@ class OppgaveStatusDto(
         val reservertAv: String?,
         val reservertAvNavn: String?,
         val flyttetReservasjon: FlyttetReservasjonDto?,
-        val kanOverstyres: Boolean? = false
+        val kanOverstyres: Boolean? = false,
+        val beskjed: String? = null
 )

@@ -43,6 +43,7 @@ data class Oppgave(
     val vurderopptjeningsvilkåret : Boolean = false,
     val ansvarligSaksbehandlerForTotrinn : String? = null,
     val ansvarligSaksbehandlerIdent : String? = null,
+    val ansvarligBeslutterForTotrinn : String? = null,
     val fagsakPeriode: FagsakPeriode? = null,
     val pleietrengendeAktørId: String? = null,
     val relatertPartAktørId: String? = null

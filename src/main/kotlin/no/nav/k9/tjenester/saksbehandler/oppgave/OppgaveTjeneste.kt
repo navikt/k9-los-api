@@ -70,6 +70,17 @@ class OppgaveTjeneste constructor(
         }
         val oppgaveSomSkalBliReservert = oppgaveRepository.hent(oppgaveUuid)
 
+        if (sjekkHvisSaksbehandlerPrøverOgReserverEnOppgaveDeSelvHarBesluttet(ident, oppgaveSomSkalBliReservert)) {
+            return OppgaveStatusDto(
+                erReservert = false,
+                reservertTilTidspunkt = null,
+                erReservertAvInnloggetBruker = false,
+                reservertAv = null,
+                reservertAvNavn = null,
+                flyttetReservasjon = null,
+                beskjed = "Oppgaven ble besluttet av deg"
+            )
+        }
 
         val oppgaverSomSkalBliReservert = mutableListOf<OppgaveMedId>()
         oppgaverSomSkalBliReservert.add(OppgaveMedId(oppgaveUuid, oppgaveSomSkalBliReservert))
@@ -149,6 +160,13 @@ class OppgaveTjeneste constructor(
                 )
             }
         }
+    }
+
+    private fun sjekkHvisSaksbehandlerPrøverOgReserverEnOppgaveDeSelvHarBesluttet(ident: String, oppgave: Oppgave): Boolean {
+        if (oppgave.ansvarligBeslutterForTotrinn == null) {
+            return false
+        }
+        return oppgave.ansvarligBeslutterForTotrinn == ident
     }
 
     private fun lagReservasjoner(
@@ -854,7 +872,7 @@ class OppgaveTjeneste constructor(
         return saksbehandlerRepository.finnSaksbehandlerMedIdent(ident.brukerIdent)
     }
 
-    suspend fun sokSaksbehandler(søkestreng: String): Saksbehandler? {
+    suspend fun sokSaksbehandler(søkestreng: String): Saksbehandler {
         val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere()
         val levenshtein = Levenshtein()
 
@@ -864,22 +882,32 @@ class OppgaveTjeneste constructor(
             if (saksbehandler.brukerIdent == null) {
                 continue
             }
-            if (saksbehandler.navn != null && saksbehandler.navn!!.toLowerCase().contains(søkestreng, true)) {
+            if (saksbehandler.navn != null && saksbehandler.navn!!.lowercase(Locale.getDefault())
+                    .contains(søkestreng, true)) {
                 i = index
                 break
             }
 
-            var distance = levenshtein.distance(søkestreng.toLowerCase(), saksbehandler.brukerIdent!!.toLowerCase())
+            var distance = levenshtein.distance(
+                søkestreng.lowercase(Locale.getDefault()),
+                saksbehandler.brukerIdent!!.lowercase(Locale.getDefault())
+            )
             if (distance < d) {
                 d = distance
                 i = index
             }
-            distance = levenshtein.distance(søkestreng.toLowerCase(), saksbehandler.navn!!.toLowerCase())
+            distance = levenshtein.distance(
+                søkestreng.lowercase(Locale.getDefault()),
+                saksbehandler.navn!!.lowercase(Locale.getDefault())
+            )
             if (distance < d) {
                 d = distance
                 i = index
             }
-            distance = levenshtein.distance(søkestreng.toLowerCase(), saksbehandler.epost.toLowerCase())
+            distance = levenshtein.distance(
+                søkestreng.lowercase(Locale.getDefault()),
+                saksbehandler.epost.lowercase(Locale.getDefault())
+            )
             if (distance < d) {
                 d = distance
                 i = index

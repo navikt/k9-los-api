@@ -159,7 +159,7 @@ class SaksbehandlerRepository(
                      """,
                         mapOf(
                             "saksbehandlerid" to saksbehandler.brukerIdent,
-                            "epost" to saksbehandler.epost.toLowerCase(),
+                            "epost" to saksbehandler.epost.lowercase(Locale.getDefault()),
                             "navn" to saksbehandler.navn,
                             "data" to json,
                             "skjermet" to erSkjermet
@@ -221,7 +221,7 @@ class SaksbehandlerRepository(
                 saksbehandler
             } else {
                 it.brukerIdent = saksbehandler.brukerIdent
-                it.epost = saksbehandler.epost.toLowerCase()
+                it.epost = saksbehandler.epost.lowercase(Locale.getDefault())
                 it.navn = saksbehandler.navn
                 it.enhet = saksbehandler.enhet
                 it
@@ -293,7 +293,7 @@ class SaksbehandlerRepository(
                         """
                             delete from saksbehandler 
                             where lower(epost) = lower(:epost) and skjermet = :skjermet""",
-                        mapOf("epost" to epost.toLowerCase(), "skjermet" to skjermet)
+                        mapOf("epost" to epost.lowercase(Locale.getDefault()), "skjermet" to skjermet)
                     ).asUpdate
                 )
             }
@@ -339,7 +339,7 @@ class SaksbehandlerRepository(
             Saksbehandler(
                 row.stringOrNull("saksbehandlerid"),
                 row.stringOrNull("navn"),
-                row.string("epost").toLowerCase(),
+                row.string("epost").lowercase(Locale.getDefault()),
                 reservasjoner = mutableSetOf(),
                 enhet = null
             )
@@ -347,7 +347,7 @@ class SaksbehandlerRepository(
             Saksbehandler(
                 brukerIdent = objectMapper().readValue<Saksbehandler>(data).brukerIdent,
                 navn = objectMapper().readValue<Saksbehandler>(data).navn,
-                epost = row.string("epost").toLowerCase(),
+                epost = row.string("epost").lowercase(Locale.getDefault()),
                 reservasjoner = objectMapper().readValue<Saksbehandler>(data).reservasjoner,
                 enhet = objectMapper().readValue<Saksbehandler>(data).enhet
             )
