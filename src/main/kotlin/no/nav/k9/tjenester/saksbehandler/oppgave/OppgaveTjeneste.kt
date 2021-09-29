@@ -166,7 +166,7 @@ class OppgaveTjeneste constructor(
         if (oppgave.ansvarligBeslutterForTotrinn == null) {
             return false
         }
-        return oppgave.ansvarligBeslutterForTotrinn == ident
+        return oppgave.ansvarligBeslutterForTotrinn == ident && oppgave.aksjonspunkter.harInaktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)
     }
 
     private fun lagReservasjoner(
