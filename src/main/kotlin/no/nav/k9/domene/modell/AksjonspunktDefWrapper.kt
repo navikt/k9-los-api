@@ -12,7 +12,8 @@ class AksjonspunktDefWrapper {
         }
 
         fun påVent(liste: Map<String, String>): Boolean {
-            return liste.map { entry -> AksjonspunktDefinisjon.fraKode(entry.key) }.any { it.erAutopunkt() }
+            val påVent = AksjonspunktDefinisjon.values().filter { it.erAutopunkt() }.map { it.kode }
+            return liste.filter { påVent.contains(it.key) }.isNotEmpty()
         }
 
         fun tilBeslutter(liste: Map<String, String>): Boolean {
