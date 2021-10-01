@@ -1,12 +1,15 @@
 package no.nav.k9.domene.modell
 
 
+import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.tjenester.mock.Aksjonspunkt
 
 class AksjonspunktDefWrapper {
 
     companion object {
+        private val alleAutopunkter = AksjonspunktDefinisjon.values().filter { it.erAutopunkt() }.map { it.kode }
+
         fun fraKode(kode: String): AksjonspunktDefinisjon? {
            return AksjonspunktDefinisjon.fraKode(kode)
         }
@@ -59,6 +62,18 @@ class AksjonspunktDefWrapper {
             return mutableListOf(Aksjonspunkt("PUNSJ", "Punsj oppgave", "MANU", "", "", null, false),
             Aksjonspunkt("UTLØPT", "Utløpt oppgave", "MANU", "", "", null, false),
             Aksjonspunkt("MER_INFORMASJON", "Venter på informasjon", "MANU", "", "", null, false))
+        }
+
+        fun harAktivtAutopunkt(it: Oppgave) : Boolean {
+            val map = it.aksjonspunkter.alleAktiveAksjonspunktTaBortPunsj().liste.map {
+                it.key
+            }
+            map.forEach {
+                if (alleAutopunkter.contains(it)) {
+                    return true
+                }
+            }
+            return false
         }
     }
 }
