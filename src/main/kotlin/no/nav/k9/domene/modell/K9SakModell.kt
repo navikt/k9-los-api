@@ -412,8 +412,11 @@ data class Aksjonspunkter(val liste: Map<String, String>) {
         return AksjonspunktDefWrapper.inneholderEtAktivtAksjonspunktMedKoden(this.liste, def)
     }
 
-    fun alleAktiveAksjonspunkt(): Aksjonspunkter {
-        return Aksjonspunkter(liste.filter { entry -> entry.value == "OPPR" })
+    fun alleAktiveAksjonspunktTaBortPunsj(): Aksjonspunkter {
+        return Aksjonspunkter(
+            liste.filter { entry -> entry.value == "OPPR" }
+                .filter { entry -> !AksjonspunktDefWrapper.aksjonspunkterFraPunsj().map { it.kode }.contains(entry.key)  }
+        )
     }
 
     fun harInaktivtAksjonspunkt(def: AksjonspunktDefinisjon): Boolean {

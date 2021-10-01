@@ -58,7 +58,7 @@ class OppgaveRepository(
 
     fun hentAllePåVent(): List<Oppgave> {
         val alleOppgave = hent()
-        return alleOppgave.filter { it.aksjonspunkter.alleAktiveAksjonspunkt().påVent() }
+        return alleOppgave.filter { it.aksjonspunkter.alleAktiveAksjonspunktTaBortPunsj().påVent() }
     }
 
     fun hent(uuid: UUID): Oppgave {
