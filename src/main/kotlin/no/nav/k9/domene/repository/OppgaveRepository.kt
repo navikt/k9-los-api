@@ -610,4 +610,26 @@ class OppgaveRepository(
             aksjonspunkt
         }
     }
+
+    suspend fun hentOppgaveMedJournalpost(journalpostId: String) : List<Oppgave> {
+        val kode6 = pepClient.harTilgangTilKode6()
+        val json: List<String> = using(sessionOf(dataSource)) {
+            //language=PostgreSQL
+            it.run(
+                queryOf(
+                    "select data from oppgave where lower(data ->> 'journalpostId') = lower(:journalpostId) ",
+                    mapOf("journalpostId" to journalpostId)
+                )
+                    .map { row ->
+                        row.string("data")
+                    }.asList
+            )
+        }
+        val oppgaver = json.map { objectMapper().readValue(it, Oppgave::class.java) }.filter { it.kode6 == kode6 }
+        oppgaver.forEach { refreshOppgave.offer(it) }
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
+
+        return oppgaver
+    }
 }
