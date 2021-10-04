@@ -360,6 +360,19 @@ data class K9SakModell(
             // skal fortsette og ligge reservert
             return false
         } else {
+            // har blitt beslutter
+            if (!forrigeEvent.aktiveAksjonspunkt().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK) &&
+                sisteEvent().aktiveAksjonspunkt().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)) {
+                return true
+            }
+
+            // beslutter har gjort seg ferdig
+            if (forrigeEvent.aktiveAksjonspunkt().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK) &&
+                sisteEvent().alleAksjonspunkter().harInaktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)
+            ) {
+                return true
+            }
+
             val forrigeAksjonspunkter = forrigeEvent.aktiveAksjonspunkt().liste
             val nåværendeAksjonspunkter = sisteEvent().aktiveAksjonspunkt().liste
 
