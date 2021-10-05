@@ -170,7 +170,7 @@ class OppgaveTjeneste constructor(
         if (oppgave.ansvarligBeslutterForTotrinn == null) {
             return false
         }
-        return oppgave.ansvarligBeslutterForTotrinn == ident && oppgave.aksjonspunkter.harInaktivtAksjonspunkt(
+        return oppgave.ansvarligBeslutterForTotrinn.lowercase() == ident.lowercase() && !oppgave.aksjonspunkter.harAktivtAksjonspunkt(
             AksjonspunktDefinisjon.FATTER_VEDTAK
         )
     }
