@@ -90,9 +90,10 @@ class OppgaveTjeneste constructor(
                 oppgaveSomSkalBliReservert.fagsakYtelseType
             )
 
-            oppgaverSomSkalBliReservert.addAll(filtrerOppgaveHvisBeslutter(
-                oppgaveSomSkalBliReservert,
-                relaterteOppgaverSomSkalBliReservert
+            oppgaverSomSkalBliReservert.addAll(
+                filtrerOppgaveHvisBeslutter(
+                    oppgaveSomSkalBliReservert,
+                    relaterteOppgaverSomSkalBliReservert
                 )
             )
         }
@@ -162,11 +163,16 @@ class OppgaveTjeneste constructor(
         }
     }
 
-    private fun sjekkHvisSaksbehandlerPrøverOgReserverEnOppgaveDeSelvHarBesluttet(ident: String, oppgave: Oppgave): Boolean {
+    private fun sjekkHvisSaksbehandlerPrøverOgReserverEnOppgaveDeSelvHarBesluttet(
+        ident: String,
+        oppgave: Oppgave
+    ): Boolean {
         if (oppgave.ansvarligBeslutterForTotrinn == null) {
             return false
         }
-        return oppgave.ansvarligBeslutterForTotrinn == ident && oppgave.aksjonspunkter.harInaktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)
+        return oppgave.ansvarligBeslutterForTotrinn == ident && oppgave.aksjonspunkter.harInaktivtAksjonspunkt(
+            AksjonspunktDefinisjon.FATTER_VEDTAK
+        )
     }
 
     private fun lagReservasjoner(
@@ -187,8 +193,23 @@ class OppgaveTjeneste constructor(
 
     suspend fun søkFagsaker(query: String): SokeResultatDto {
         //TODO lage en bedre sjekk på om det er FNR
+        //fnr
         if (query.length == 11) {
             return filtrerOppgaverForSaksnummerOgJournalpostIder(finnOppgaverBasertPåFnr(query))
+        }
+
+        //journalpost
+        if (query.length == 9) {
+            val oppgave = oppgaveRepository.hentOppgaveMedJournalpost(query)
+            val oppgaverResultat = lagOppgaveDtoer(oppgave)
+            if (oppgaverResultat.ikkeTilgang) {
+                return SokeResultatDto(true, null, Collections.emptyList())
+            }
+            return SokeResultatDto(
+                oppgaverResultat.ikkeTilgang,
+                null,
+                oppgaverResultat.oppgaver
+            )
         }
 
         //TODO koble på omsorg når man kan søke på saksnummer
@@ -196,7 +217,7 @@ class OppgaveTjeneste constructor(
         val oppgaveResultat = lagOppgaveDtoer(oppgaver)
 
         if (oppgaveResultat.ikkeTilgang) {
-            SokeResultatDto(true, null, Collections.emptyList())
+            return SokeResultatDto(true, null, Collections.emptyList())
         }
         return filtrerOppgaverForSaksnummerOgJournalpostIder(
             SokeResultatDto(
@@ -883,7 +904,8 @@ class OppgaveTjeneste constructor(
                 continue
             }
             if (saksbehandler.navn != null && saksbehandler.navn!!.lowercase(Locale.getDefault())
-                    .contains(søkestreng, true)) {
+                    .contains(søkestreng, true)
+            ) {
                 i = index
                 break
             }
