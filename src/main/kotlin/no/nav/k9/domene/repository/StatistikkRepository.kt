@@ -214,7 +214,9 @@ class StatistikkRepository(
                             dato = row.localDate("dato"),
                             ferdigstilte = objectMapper().readValue(row.stringOrNull("ferdigstilte") ?: "[]"),
                             nye = objectMapper().readValue(row.stringOrNull("nye") ?: "[]"),
-                            ferdigstilteSaksbehandler = objectMapper().readValue(row.stringOrNull("ferdigstiltesaksbehandler") ?: "[]"),
+                            ferdigstilteSaksbehandler = objectMapper().readValue(
+                                row.stringOrNull("ferdigstiltesaksbehandler") ?: "[]"
+                            ),
                             kilde = Fagsystem.fraKode(row.string("kilde"))
                         )
                     }.asList
@@ -287,14 +289,7 @@ class StatistikkRepository(
         val ret = mutableListOf<AlleOppgaverNyeOgFerdigstilte>()
         for (i in 55 downTo 1) {
             val dato = LocalDate.now().minusDays(i.toLong())
-
-            val defaultList = lagDefaultList(dato)
-            val dagensStatistikk = datoMap.getOrDefault(dato, defaultList)
-            val behandlingsTypeMap = dagensStatistikk.groupBy { Key(it.behandlingType, it.kilde, it.fagsakYtelseType) }
-
-            behandlingsTypeMap.values.forEach {
-                ret.addAll(it)
-            }
+            ret.addAll(fyllListen(datoMap, dato))
         }
         hentFerdigstilteOgNyeHistorikkMedYtelsetypeCache.set(
             "default",
@@ -303,17 +298,32 @@ class StatistikkRepository(
         return ret
     }
 
-    private fun lagDefaultList(localDate: LocalDate): List<AlleOppgaverNyeOgFerdigstilte> {
-        val defaultList = mutableListOf<AlleOppgaverNyeOgFerdigstilte>()
+    private fun fyllListen(
+        data: Map<LocalDate, List<AlleOppgaverNyeOgFerdigstilte>>,
+        dato: LocalDate
+    ): List<AlleOppgaverNyeOgFerdigstilte> {
+        val map = mutableListOf<AlleOppgaverNyeOgFerdigstilte>()
+        val dataPåDagen = data[dato] ?: emptyList()
 
-        for (kilde in Fagsystem.values()) {
+        for (kilde in listOf(Fagsystem.PUNSJ, Fagsystem.K9SAK, Fagsystem.K9TILBAKE)) {
             for (behandlingstype in BehandlingType.values()) {
                 for (fagsakYtelse in FagsakYtelseType.values()) {
-                    defaultList.add(AlleOppgaverNyeOgFerdigstilte(fagsakYtelse, behandlingstype, localDate, kilde))
+                    val dataSett = dataPåDagen.groupBy {
+                        Key(
+                            it.behandlingType,
+                            it.kilde,
+                            it.fagsakYtelseType
+                        )
+                    }
+                    if (dataSett[Key(behandlingstype, kilde, fagsakYtelse)].isNullOrEmpty()) {
+                        map.add(AlleOppgaverNyeOgFerdigstilte(fagsakYtelse, behandlingstype, dato, kilde))
+                    } else {
+                        map.addAll(dataSett.values.flatten())
+                    }
                 }
             }
         }
-        return defaultList;
+        return map
     }
 
 

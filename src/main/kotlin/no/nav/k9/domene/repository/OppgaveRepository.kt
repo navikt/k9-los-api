@@ -14,6 +14,7 @@ import no.nav.k9.domene.modell.BehandlingStatus
 import no.nav.k9.domene.modell.BehandlingType
 import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.integrasjon.abac.IPepClient
+import no.nav.k9.integrasjon.kafka.dto.Fagsystem
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleApneBehandlinger
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleOppgaverDto
 import no.nav.k9.tjenester.innsikt.Databasekall
@@ -87,7 +88,8 @@ class OppgaveRepository(
     fun hentOppgaverSomMatcher(pleietrengendeAktørId: String, fagsakYtelseType: FagsakYtelseType): List<OppgaveMedId> {
         return using(sessionOf(dataSource)) {
             it.run(
-                queryOf("""
+                queryOf(
+                    """
                     select id, data from oppgave where data ->> 'aktiv' = 'true'
                     and data -> 'fagsakYtelseType' ->> 'kode' = ?
                     and data ->> 'pleietrengendeAktørId' = ?
@@ -448,6 +450,32 @@ class OppgaveRepository(
 
     }
 
+    internal fun hentAktiveOppgaverGruppertPåFagsystemFagsakytelseOgBehandlingstype(): Map<StatistikkRepository.Key, Int> {
+        val map: Map<StatistikkRepository.Key, Int>? = using(sessionOf(dataSource)) {
+            //language=PostgreSQL
+            it.run(
+                queryOf(
+                    """select data -> 'system' as ft, data -> 'behandlingType'->'kode' as bt, data -> 'fagsakYtelseType'->'kode' as fyt, count(*) as count from oppgave where (data -> 'aktiv') ::boolean is true group by data -> 'system', data -> 'behandlingType'->'kode', data -> 'fagsakYtelseType'->'kode'""")
+                    .map { row ->
+                        val pair = Pair(
+                            StatistikkRepository.Key(
+                                BehandlingType.fraKode(row.string("bt")),
+                                Fagsystem.fraKode(row.string("ft")),
+                                FagsakYtelseType.fraKode(row.string("fyt"))
+                            ),
+                            row.int("count")
+                        )
+                        mapOf(pair
+                        )
+                    }.asSingle
+            )
+        }
+        return map!!
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
+
+    }
+
     internal fun hentMedBehandlingsstatus(behandlingStatus: BehandlingStatus): Int {
         var spørring = System.currentTimeMillis()
         val count: Int? = using(sessionOf(dataSource)) {
@@ -611,7 +639,7 @@ class OppgaveRepository(
         }
     }
 
-    suspend fun hentOppgaveMedJournalpost(journalpostId: String) : List<Oppgave> {
+    suspend fun hentOppgaveMedJournalpost(journalpostId: String): List<Oppgave> {
         val kode6 = pepClient.harTilgangTilKode6()
         val json: List<String> = using(sessionOf(dataSource)) {
             //language=PostgreSQL

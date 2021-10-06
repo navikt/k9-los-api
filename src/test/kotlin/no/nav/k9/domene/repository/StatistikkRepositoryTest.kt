@@ -20,6 +20,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 class StatistikkRepositoryTest : KoinTest {
 
@@ -83,7 +84,93 @@ class StatistikkRepositoryTest : KoinTest {
         }
         val hentFerdigstilte = statistikkRepository.hentFerdigstilteOgNyeHistorikkMedYtelsetypeSiste8Uker()
         val omsorgspenger = hentFerdigstilte.reversed().filter { it.fagsakYtelseType == FagsakYtelseType.OMSORGSPENGER }
-        assertSame(1, omsorgspenger.find { it.behandlingType == BehandlingType.FORSTEGANGSSOKNAD }?.nye?.size )
+        assertSame(1, omsorgspenger.find { it.behandlingType == BehandlingType.FORSTEGANGSSOKNAD && it.kilde == Fagsystem.K9SAK }?.nye?.size )
+
+    }
+
+    @Test
+    fun skalLagreNedMedPunsjSomSystem() {
+
+        val statistikkRepository  = get<StatistikkRepository>()
+
+
+        val oppgave = Oppgave(
+            behandlingId = 78567,
+            fagsakSaksnummer = "5Yagdt",
+            aktorId = "675864",
+            journalpostId = null,
+            behandlendeEnhet = "Enhet",
+            behandlingsfrist = LocalDateTime.now(),
+            behandlingOpprettet = LocalDateTime.now().minusDays(23),
+            forsteStonadsdag = LocalDate.now().plusDays(6),
+            behandlingStatus = BehandlingStatus.OPPRETTET,
+            behandlingType = BehandlingType.FORSTEGANGSSOKNAD,
+            fagsakYtelseType = FagsakYtelseType.OMSORGSPENGER,
+            aktiv = true,
+            system = "PUNSJ",
+            oppgaveAvsluttet = null,
+            utfortFraAdmin = false,
+            eksternId = UUID.randomUUID(),
+            oppgaveEgenskap = emptyList(),
+            aksjonspunkter = Aksjonspunkter(emptyMap()),
+            tilBeslutter = true,
+            utbetalingTilBruker = false,
+            selvstendigFrilans = true,
+            kombinert = false,
+            søktGradering = false,
+            årskvantum = false,
+            avklarArbeidsforhold = false,
+            avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false
+        )
+        val oppgave2 = Oppgave(
+            behandlingId = 78567,
+            fagsakSaksnummer = "5Yagdt",
+            aktorId = "675864",
+            journalpostId = null,
+            behandlendeEnhet = "Enhet",
+            behandlingsfrist = LocalDateTime.now(),
+            behandlingOpprettet = LocalDateTime.now().minusDays(23),
+            forsteStonadsdag = LocalDate.now().plusDays(6),
+            behandlingStatus = BehandlingStatus.OPPRETTET,
+            behandlingType = BehandlingType.FORSTEGANGSSOKNAD,
+            fagsakYtelseType = FagsakYtelseType.OMSORGSPENGER,
+            aktiv = true,
+            system = "PUNSJ",
+            oppgaveAvsluttet = null,
+            utfortFraAdmin = false,
+            eksternId = UUID.randomUUID(),
+            oppgaveEgenskap = emptyList(),
+            aksjonspunkter = Aksjonspunkter(emptyMap()),
+            tilBeslutter = true,
+            utbetalingTilBruker = false,
+            selvstendigFrilans = true,
+            kombinert = false,
+            søktGradering = false,
+            årskvantum = false,
+            avklarArbeidsforhold = false,
+            avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false
+        )
+
+        val dato = oppgave.eventTid.toLocalDate().minusDays(1)
+
+
+        statistikkRepository.lagre(AlleOppgaverNyeOgFerdigstilte(oppgave.fagsakYtelseType, oppgave.behandlingType,
+            dato, Fagsystem.PUNSJ)){
+            it.nye.add(oppgave.eksternId.toString())
+            it
+        }
+
+        statistikkRepository.lagre(AlleOppgaverNyeOgFerdigstilte(oppgave.fagsakYtelseType, oppgave.behandlingType,
+            dato.minusDays(1), Fagsystem.PUNSJ)){
+            it.nye.add(oppgave.eksternId.toString())
+            it
+        }
+
+        val hentFerdigstilte = statistikkRepository.hentFerdigstilteOgNyeHistorikkMedYtelsetypeSiste8Uker()
+
+        val list = hentFerdigstilte.groupBy { it.dato }[dato]?.groupBy { (it.kilde) }?.get(Fagsystem.PUNSJ)
+
+        assertTrue(list?.filter { it.nye.isNotEmpty() }?.size == 1)
 
     }
 

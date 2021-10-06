@@ -568,25 +568,33 @@ class OppgaveTjeneste constructor(
     fun hentBeholdningAvOppgaverPerAntallDager(): List<AlleOppgaverHistorikk> {
         val ytelsetype =
             statistikkRepository.hentFerdigstilteOgNyeHistorikkMedYtelsetypeSiste8Uker()
+
+        val aktiveOppgaver = oppgaveRepository.hentAktiveOppgaverGruppertPåFagsystemFagsakytelseOgBehandlingstype()
+
         val ret = mutableListOf<AlleOppgaverHistorikk>()
         for (ytelseTypeEntry in ytelsetype.groupBy { it.fagsakYtelseType }) {
             val perBehandlingstype = ytelseTypeEntry.value.groupBy { it.behandlingType }
             for (behandlingTypeEntry in perBehandlingstype) {
-                var aktive =
-                    oppgaveRepository.hentAktiveOppgaverTotaltPerBehandlingstypeOgYtelseType(
-                        fagsakYtelseType = ytelseTypeEntry.key,
-                        behandlingType = behandlingTypeEntry.key
-                    )
-                behandlingTypeEntry.value.sortedByDescending { it.dato }.map {
-                    aktive = aktive - it.nye.size + it.ferdigstilte.size
-                    ret.add(
-                        AlleOppgaverHistorikk(
-                            it.fagsakYtelseType,
-                            it.behandlingType,
-                            it.dato,
-                            aktive
+                val kilde = behandlingTypeEntry.value.groupBy { it.kilde }
+                for (kildeEntry in kilde) {
+                    var antall = aktiveOppgaver[StatistikkRepository.Key(
+                        behandlingTypeEntry.key,
+                        kildeEntry.key,
+                        ytelseTypeEntry.key
+                    )] ?: 0
+                    kildeEntry.value.sortedByDescending { it.dato }.map {
+
+                        antall = antall - it.nye.size + it.ferdigstilte.size
+                        ret.add(
+                            AlleOppgaverHistorikk(
+                                it.fagsakYtelseType,
+                                it.behandlingType,
+                                it.dato,
+                                it.kilde,
+                                antall
+                            )
                         )
-                    )
+                    }
                 }
             }
         }
