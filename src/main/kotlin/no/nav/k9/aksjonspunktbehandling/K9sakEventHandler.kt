@@ -1,6 +1,5 @@
 package no.nav.k9.aksjonspunktbehandling
 
-import io.ktor.util.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.Configuration
@@ -11,6 +10,7 @@ import no.nav.k9.domene.modell.K9SakModell
 import no.nav.k9.domene.repository.*
 import no.nav.k9.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.integrasjon.kafka.dto.BehandlingProsessEventDto
+import no.nav.k9.integrasjon.kafka.dto.Fagsystem
 import no.nav.k9.integrasjon.sakogbehandling.SakOgBehandlingProducer
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import org.slf4j.LoggerFactory
@@ -36,7 +36,8 @@ class K9sakEventHandler constructor(
         FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
         FagsakYtelseType.OMSORGSPENGER_KS,
         FagsakYtelseType.OMSORGSPENGER_MA,
-        FagsakYtelseType.OMSORGSPENGER_AO
+        FagsakYtelseType.OMSORGSPENGER_AO,
+        FagsakYtelseType.OMSORGSDAGER
     )
 
     fun prosesser(
@@ -115,7 +116,8 @@ class K9sakEventHandler constructor(
                 AlleOppgaverNyeOgFerdigstilte(
                     oppgave.fagsakYtelseType,
                     oppgave.behandlingType,
-                    oppgave.eventTid.toLocalDate()
+                    oppgave.eventTid.toLocalDate(),
+                    Fagsystem.K9SAK
                 )
             ) {
                 it.ferdigstilteSaksbehandler.add(oppgave.eksternId.toString())
@@ -130,7 +132,8 @@ class K9sakEventHandler constructor(
                 AlleOppgaverNyeOgFerdigstilte(
                     oppgave.fagsakYtelseType,
                     oppgave.behandlingType,
-                    oppgave.eventTid.toLocalDate()
+                    oppgave.eventTid.toLocalDate(),
+                    Fagsystem.K9SAK
                 )
             ) {
                 it.ferdigstilte.add(oppgave.eksternId.toString())
@@ -145,7 +148,8 @@ class K9sakEventHandler constructor(
                 AlleOppgaverNyeOgFerdigstilte(
                     oppgave.fagsakYtelseType,
                     oppgave.behandlingType,
-                    oppgave.eventTid.toLocalDate()
+                    oppgave.eventTid.toLocalDate(),
+                    Fagsystem.K9SAK
                 )
             ) {
                 it.nye.add(oppgave.eksternId.toString())

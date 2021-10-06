@@ -7,6 +7,7 @@ import kotliquery.using
 import no.nav.k9.aksjonspunktbehandling.objectMapper
 import no.nav.k9.domene.modell.BehandlingType
 import no.nav.k9.domene.modell.FagsakYtelseType
+import no.nav.k9.integrasjon.kafka.dto.Fagsystem
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleFerdigstilteOppgaver
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import no.nav.k9.tjenester.innsikt.Databasekall
@@ -136,10 +137,11 @@ class StatistikkRepository(
             it.transaction { tx ->
                 val run = tx.run(
                     queryOf(
-                        "select * from nye_og_ferdigstilte where behandlingType = :behandlingType and fagsakYtelseType = :fagsakYtelseType and dato = :dato for update",
+                        "select * from nye_og_ferdigstilte where behandlingType = :behandlingType and kilde = :fagsystemType and fagsakYtelseType = :fagsakYtelseType and dato = :dato for update",
                         mapOf(
                             "behandlingType" to alleOppgaverNyeOgFerdigstilte.behandlingType.kode,
                             "fagsakYtelseType" to alleOppgaverNyeOgFerdigstilte.fagsakYtelseType.kode,
+                            "fagsystemType" to alleOppgaverNyeOgFerdigstilte.kilde.kode,
                             "dato" to alleOppgaverNyeOgFerdigstilte.dato
                         )
                     )
@@ -152,7 +154,8 @@ class StatistikkRepository(
                                 ferdigstilteSaksbehandler = objectMapper().readValue(
                                     row.stringOrNull("ferdigstiltesaksbehandler") ?: "[]"
                                 ),
-                                nye = objectMapper().readValue(row.stringOrNull("nye") ?: "[]")
+                                nye = objectMapper().readValue(row.stringOrNull("nye") ?: "[]"),
+                                kilde = Fagsystem.fraKode(row.string("kilde"))
                             )
                         }.asSingle
                 )
@@ -165,13 +168,14 @@ class StatistikkRepository(
                 tx.run(
                     queryOf(
                         """
-                                    insert into nye_og_ferdigstilte as k (behandlingType, fagsakYtelseType, dato, nye, ferdigstilte, ferdigstiltesaksbehandler)
-                                    values (:behandlingType, :fagsakYtelseType, :dato, :nye ::jsonb, :ferdigstilte ::jsonb, :ferdigstiltesaksbehandler ::jsonb)
-                                    on conflict (behandlingType, fagsakYtelseType, dato) do update
+                                    insert into nye_og_ferdigstilte as k (behandlingType, kilde, fagsakYtelseType, dato, nye, ferdigstilte, ferdigstiltesaksbehandler)
+                                    values (:behandlingType, :kilde, :fagsakYtelseType, :dato, :nye ::jsonb, :ferdigstilte ::jsonb, :ferdigstiltesaksbehandler ::jsonb)
+                                    on conflict (behandlingType, kilde, fagsakYtelseType, dato) do update
                                     set nye = :nye ::jsonb , ferdigstilte = :ferdigstilte ::jsonb , ferdigstiltesaksbehandler = :ferdigstiltesaksbehandler ::jsonb
                      """, mapOf(
                             "behandlingType" to alleOppgaverNyeOgFerdigstilteSomPersisteres.behandlingType.kode,
                             "fagsakYtelseType" to alleOppgaverNyeOgFerdigstilteSomPersisteres.fagsakYtelseType.kode,
+                            "kilde" to alleOppgaverNyeOgFerdigstilte.kilde.kode,
                             "dato" to alleOppgaverNyeOgFerdigstilteSomPersisteres.dato,
                             "nye" to objectMapper().writeValueAsString(alleOppgaverNyeOgFerdigstilteSomPersisteres.nye),
                             "ferdigstilte" to objectMapper().writeValueAsString(
@@ -197,7 +201,7 @@ class StatistikkRepository(
             it.run(
                 queryOf(
                     """
-                            select behandlingtype, fagsakYtelseType, dato, ferdigstilte, nye, ferdigstiltesaksbehandler
+                            select behandlingtype, kilde, fagsakYtelseType, dato, ferdigstilte, nye, ferdigstiltesaksbehandler
                             from nye_og_ferdigstilte  where dato >= current_date - :antall::interval
                             group by behandlingtype, fagsakYtelseType, dato
                     """.trimIndent(),
@@ -211,6 +215,7 @@ class StatistikkRepository(
                             ferdigstilte = objectMapper().readValue(row.stringOrNull("ferdigstilte") ?: "[]"),
                             nye = objectMapper().readValue(row.stringOrNull("nye") ?: "[]"),
                             ferdigstilteSaksbehandler = objectMapper().readValue(row.stringOrNull("ferdigstiltesaksbehandler") ?: "[]"),
+                            kilde = Fagsystem.fraKode(row.string("kilde"))
                         )
                     }.asList
             )
@@ -260,9 +265,9 @@ class StatistikkRepository(
             it.run(
                 queryOf(
                     """
-                            select behandlingtype, fagsakYtelseType, dato, ferdigstilte, nye 
+                            select behandlingtype, fagsakYtelseType, kilde, dato, ferdigstilte, nye 
                             from nye_og_ferdigstilte  where dato >= current_date - :antall::interval
-                            group by behandlingtype, fagsakYtelseType, dato
+                            group by behandlingtype, fagsakYtelseType, kilde, dato
                     """.trimIndent(),
                     mapOf("antall" to "\'${55} days\'")
                 )
@@ -272,7 +277,8 @@ class StatistikkRepository(
                             fagsakYtelseType = FagsakYtelseType.fraKode(row.string("fagsakYtelseType")),
                             dato = row.localDate("dato"),
                             ferdigstilte = objectMapper().readValue(row.stringOrNull("ferdigstilte") ?: "[]"),
-                            nye = objectMapper().readValue(row.stringOrNull("nye") ?: "[]")
+                            nye = objectMapper().readValue(row.stringOrNull("nye") ?: "[]"),
+                            kilde = Fagsystem.fraKode(row.string("kilde"))
                         )
                     }.asList
             )
@@ -281,31 +287,13 @@ class StatistikkRepository(
         val ret = mutableListOf<AlleOppgaverNyeOgFerdigstilte>()
         for (i in 55 downTo 1) {
             val dato = LocalDate.now().minusDays(i.toLong())
-            val defaultList = mutableListOf<AlleOppgaverNyeOgFerdigstilte>()
-            for (behandlingType in BehandlingType.values()) {
-                defaultList.addAll(tomListe(behandlingType, dato))
-            }
+
+            val defaultList = lagDefaultList(dato)
             val dagensStatistikk = datoMap.getOrDefault(dato, defaultList)
-            val behandlingsTypeMap = dagensStatistikk.groupBy { it.behandlingType }
+            val behandlingsTypeMap = dagensStatistikk.groupBy { Key(it.behandlingType, it.kilde, it.fagsakYtelseType) }
 
-            for (behandlingstype in BehandlingType.values()) {
-
-                val perBehandlingstype =
-                    behandlingsTypeMap.getOrDefault(behandlingstype, tomListe(behandlingstype, dato))
-                val fagSakytelsesMap = perBehandlingstype.groupBy { it.fagsakYtelseType }
-                for (fagsakYtelseType in FagsakYtelseType.values()) {
-                    ret.addAll(
-                        fagSakytelsesMap.getOrDefault(
-                            fagsakYtelseType, listOf(
-                                AlleOppgaverNyeOgFerdigstilte(
-                                    fagsakYtelseType = fagsakYtelseType,
-                                    behandlingType = behandlingstype,
-                                    dato = dato
-                                )
-                            )
-                        )
-                    )
-                }
+            behandlingsTypeMap.values.forEach {
+                ret.addAll(it)
             }
         }
         hentFerdigstilteOgNyeHistorikkMedYtelsetypeCache.set(
@@ -313,6 +301,19 @@ class StatistikkRepository(
             CacheObject(ret, LocalDateTime.now().plusMinutes(60))
         )
         return ret
+    }
+
+    private fun lagDefaultList(localDate: LocalDate): List<AlleOppgaverNyeOgFerdigstilte> {
+        val defaultList = mutableListOf<AlleOppgaverNyeOgFerdigstilte>()
+
+        for (kilde in Fagsystem.values()) {
+            for (behandlingstype in BehandlingType.values()) {
+                for (fagsakYtelse in FagsakYtelseType.values()) {
+                    defaultList.add(AlleOppgaverNyeOgFerdigstilte(fagsakYtelse, behandlingstype, localDate, kilde))
+                }
+            }
+        }
+        return defaultList;
     }
 
 
@@ -344,7 +345,8 @@ class StatistikkRepository(
                                 row.stringOrNull("ferdigstiltesaksbehandler")
                                     ?: "[]"
                             ),
-                            nye = objectMapper().readValue(row.stringOrNull("nye") ?: "[]")
+                            nye = objectMapper().readValue(row.stringOrNull("nye") ?: "[]"),
+                            kilde = Fagsystem.fraKode(row.string("kilde"))
                         )
                     }.asList
             )
@@ -380,7 +382,9 @@ class StatistikkRepository(
                                 row.stringOrNull("ferdigstiltesaksbehandler")
                                     ?: "[]"
                             ),
-                            nye = objectMapper().readValue(row.stringOrNull("nye") ?: "[]")
+                            nye = objectMapper().readValue(row.stringOrNull("nye") ?: "[]"),
+                            kilde = Fagsystem.fraKode(row.string("kilde"))
+
                         )
                     }.asList
             )
@@ -389,20 +393,25 @@ class StatistikkRepository(
         return list
     }
 
-    private fun tomListe(
-        behandlingstype: BehandlingType,
-        dato: LocalDate
-    ): MutableList<AlleOppgaverNyeOgFerdigstilte> {
-        val defaultList = mutableListOf<AlleOppgaverNyeOgFerdigstilte>()
-        for (fagsakYtelseType in FagsakYtelseType.values()) {
-            defaultList.add(
-                AlleOppgaverNyeOgFerdigstilte(
-                    fagsakYtelseType = fagsakYtelseType,
-                    behandlingType = behandlingstype,
-                    dato = dato
-                )
+    fun fjernDataFraSystem(system: Fagsystem) {
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
+        using(sessionOf(dataSource)) {
+            //language=PostgreSQL
+            it.run(
+                queryOf(
+                    """
+                        delete from nye_og_ferdigstilte where kilde = :system
+                    """.trimIndent(),
+                    mapOf("system" to system.kode)
+                ).asUpdate
             )
         }
-        return defaultList
     }
+
+    data class Key(
+        val behandlingstype: BehandlingType,
+        val fagsystem: Fagsystem,
+        val fagsakYtelseType: FagsakYtelseType
+    )
 }

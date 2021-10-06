@@ -3,6 +3,7 @@ package no.nav.k9.domene.modell
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.repository.ReservasjonRepository
 import no.nav.k9.domene.repository.SaksbehandlerRepository
+import no.nav.k9.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.integrasjon.kafka.dto.PunsjEventDto
 import no.nav.k9.integrasjon.sakogbehandling.kontrakt.BehandlingAvsluttet
 import no.nav.k9.integrasjon.sakogbehandling.kontrakt.BehandlingOpprettet
@@ -14,7 +15,7 @@ data class K9PunsjModell(
 ) : IModell {
 
     override fun starterSak(): Boolean {
-        TODO("Ikke relevant for punsj")
+        return this.eventer.size == 1
     }
 
     override fun erTom(): Boolean {
@@ -88,7 +89,7 @@ data class K9PunsjModell(
             forsteStonadsdag = førsteEvent.eventTid.toLocalDate(),
             behandlingStatus = utledStatus(sisteEvent),
             behandlingType = utledBehandlingType(førsteEvent),
-            fagsakYtelseType = if(førsteEvent.ytelse != null) FagsakYtelseType.fraKode(førsteEvent.ytelse) else FagsakYtelseType.PPN,
+            fagsakYtelseType = if(førsteEvent.ytelse != null) FagsakYtelseType.fraKode(førsteEvent.ytelse) else FagsakYtelseType.UKJENT,
             eventTid = sisteEvent.eventTid,
             aktiv = aktiv,
             system = "PUNSJ",
@@ -131,5 +132,16 @@ data class K9PunsjModell(
             return BehandlingType.UKJENT
         }
         return BehandlingType.fraKode(eventDto.type)
+    }
+
+    // Array med alle versjoner av modell basert på eventene, brukes når man skal spille av eventer
+    fun alleVersjoner(): MutableList<K9PunsjModell> {
+        val eventListe = mutableListOf<PunsjEventDto>()
+        val modeller = mutableListOf<K9PunsjModell>()
+        for (behandlingProsessEventDto in eventer) {
+            eventListe.add(behandlingProsessEventDto)
+            modeller.add(K9PunsjModell(eventListe.toMutableList()))
+        }
+        return modeller
     }
 }

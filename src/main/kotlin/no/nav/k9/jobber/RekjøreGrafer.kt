@@ -9,6 +9,7 @@ import no.nav.k9.domene.modell.BehandlingStatus
 import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.domene.modell.IModell
 import no.nav.k9.domene.repository.*
+import no.nav.k9.integrasjon.kafka.dto.Fagsystem
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import java.util.*
 import java.util.concurrent.Executors
@@ -17,13 +18,19 @@ import kotlin.system.measureTimeMillis
 
 fun Application.rekjørEventerForGrafer(
     behandlingProsessEventK9Repository: BehandlingProsessEventK9Repository,
-    statistikkRepository: StatistikkRepository,
-    reservasjonRepository: ReservasjonRepository
+    statistikkRepository: StatistikkRepository
 ) {
 
     launch(Executors.newSingleThreadExecutor().asCoroutineDispatcher()) {
         try {
-            val tillatteYtelseTyper = listOf(FagsakYtelseType.OMSORGSPENGER, FagsakYtelseType.PLEIEPENGER_SYKT_BARN, FagsakYtelseType.OMSORGSPENGER_KS)
+            val tillatteYtelseTyper = listOf(
+                FagsakYtelseType.OMSORGSPENGER,
+                FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
+                FagsakYtelseType.OMSORGSPENGER_KS,
+                FagsakYtelseType.OMSORGSPENGER_MA,
+                FagsakYtelseType.OMSORGSPENGER_AO,
+                FagsakYtelseType.OMSORGSDAGER
+            )
 
             val alleEventerIder = behandlingProsessEventK9Repository.hentAlleEventerIder()
             statistikkRepository.truncateStatistikk()
@@ -76,7 +83,8 @@ private fun nyFerdigstilltAvSaksbehandler(oppgave: Oppgave, statistikkRepository
             AlleOppgaverNyeOgFerdigstilte(
                 oppgave.fagsakYtelseType,
                 oppgave.behandlingType,
-                oppgave.eventTid.toLocalDate()
+                oppgave.eventTid.toLocalDate(),
+                Fagsystem.K9SAK
             )
         ) {
             it.ferdigstilteSaksbehandler.add(oppgave.eksternId.toString())
@@ -91,7 +99,8 @@ private fun beholdingNed(oppgave: Oppgave, statistikkRepository: StatistikkRepos
             AlleOppgaverNyeOgFerdigstilte(
                 oppgave.fagsakYtelseType,
                 oppgave.behandlingType,
-                oppgave.eventTid.toLocalDate()
+                oppgave.eventTid.toLocalDate(),
+                Fagsystem.K9SAK
             )
         ) {
             it.ferdigstilte.add(oppgave.eksternId.toString())
@@ -106,7 +115,8 @@ private fun beholdningOpp(oppgave: Oppgave, statistikkRepository: StatistikkRepo
             AlleOppgaverNyeOgFerdigstilte(
                 oppgave.fagsakYtelseType,
                 oppgave.behandlingType,
-                oppgave.eventTid.toLocalDate()
+                oppgave.eventTid.toLocalDate(),
+                Fagsystem.K9SAK
             )
         ) {
             it.nye.add(oppgave.eksternId.toString())

@@ -8,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonFormat
 enum class Fagsystem(val kode: String, val kodeverk: String) {
     K9SAK("K9SAK", "FAGSYSTEM"),
     K9TILBAKE("K9TILBAKE", "FAGSYSTEM"),
-    FPTILBAKE("FPTILBAKE", "FAGSYSTEM"),
     PUNSJ("PUNSJ", "FAGSYSTEM"),
     OMSORGSPENGER("OMSORGSPENGER", "FAGSYSTEM");
 

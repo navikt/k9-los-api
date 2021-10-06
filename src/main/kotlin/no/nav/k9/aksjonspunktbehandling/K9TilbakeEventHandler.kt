@@ -11,6 +11,7 @@ import no.nav.k9.domene.modell.K9TilbakeModell
 import no.nav.k9.domene.repository.*
 import no.nav.k9.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.integrasjon.kafka.dto.BehandlingProsessEventTilbakeDto
+import no.nav.k9.integrasjon.kafka.dto.Fagsystem
 import no.nav.k9.integrasjon.sakogbehandling.SakOgBehandlingProducer
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import org.slf4j.LoggerFactory
@@ -41,11 +42,11 @@ class K9TilbakeEventHandler constructor(
             beholdningOppNed(modell, oppgave)
             oppgave
         }
-        
+
         if (modell.fikkEndretAksjonspunkt()) {
             fjernReservasjon(oppgave)
         }
-       
+
         runBlocking {
             for (oppgavekø in oppgaveKøRepository.hentKøIdIkkeTaHensyn()) {
                 oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, listOf(oppgave), reservasjonRepository)
@@ -92,7 +93,8 @@ class K9TilbakeEventHandler constructor(
                 AlleOppgaverNyeOgFerdigstilte(
                     oppgave.fagsakYtelseType,
                     oppgave.behandlingType,
-                    oppgave.eventTid.toLocalDate()
+                    oppgave.eventTid.toLocalDate(),
+                    Fagsystem.K9TILBAKE
                 )
             ) {
                 it.ferdigstilteSaksbehandler.add(oppgave.eksternId.toString())
@@ -107,7 +109,8 @@ class K9TilbakeEventHandler constructor(
                 AlleOppgaverNyeOgFerdigstilte(
                     oppgave.fagsakYtelseType,
                     oppgave.behandlingType,
-                    oppgave.eventTid.toLocalDate()
+                    oppgave.eventTid.toLocalDate(),
+                    Fagsystem.K9TILBAKE
                 )
             ) {
                 it.ferdigstilte.add(oppgave.eksternId.toString())
@@ -122,7 +125,8 @@ class K9TilbakeEventHandler constructor(
                 AlleOppgaverNyeOgFerdigstilte(
                     oppgave.fagsakYtelseType,
                     oppgave.behandlingType,
-                    oppgave.eventTid.toLocalDate()
+                    oppgave.eventTid.toLocalDate(),
+                    Fagsystem.K9TILBAKE
                 )
             ) {
                 it.nye.add(oppgave.eksternId.toString())
