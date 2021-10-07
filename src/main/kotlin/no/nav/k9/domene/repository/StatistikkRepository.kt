@@ -203,7 +203,7 @@ class StatistikkRepository(
                     """
                             select behandlingtype, kilde, fagsakYtelseType, dato, ferdigstilte, nye, ferdigstiltesaksbehandler
                             from nye_og_ferdigstilte  where dato >= current_date - :antall::interval
-                            group by behandlingtype, fagsakYtelseType, dato
+                            group by behandlingtype, fagsakYtelseType, kilde, dato
                     """.trimIndent(),
                     mapOf("antall" to "\'${antall} days\'")
                 )
