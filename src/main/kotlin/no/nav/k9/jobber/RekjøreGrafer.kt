@@ -77,7 +77,6 @@ fun Application.rekjørEventerForGrafer(
             }
             log.info("""Ferdig k9-sak med ${alleEventerIder.size} av ${alleEventerIder.size}""")
 
-
             val hentAlleEventerIder = behandlingProsessEventTilbakeRepository.hentAlleEventerIder()
             val alleErPå = FagsakYtelseType.values().toList()
             for ((index, eventId) in hentAlleEventerIder.withIndex()) {
