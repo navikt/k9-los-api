@@ -79,7 +79,7 @@ class OppgaveTjeneste constructor(
                 reservertAv = null,
                 reservertAvNavn = null,
                 flyttetReservasjon = null,
-                beskjed = Beskjed.BESLUTTET_AV_DEG
+                beskjed = Beskjed.BESLUTTET_AV_DEG.kode
             )
         }
         */
