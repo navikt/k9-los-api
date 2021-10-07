@@ -170,12 +170,21 @@ class OppgaveTjeneste constructor(
         ident: String,
         oppgave: Oppgave
     ): Boolean {
+        log.info("Sjekker om saksbehandler prøver å hente sin egen oppgave")
+
         if (oppgave.ansvarligBeslutterForTotrinn == null) {
             return false
         }
-        return oppgave.ansvarligBeslutterForTotrinn.lowercase() == ident.lowercase() && !oppgave.aksjonspunkter.harAktivtAksjonspunkt(
+        val harAktivtAksjonspunkt = oppgave.aksjonspunkter.harAktivtAksjonspunkt(
             AksjonspunktDefinisjon.FATTER_VEDTAK
         )
+        val machterSaksbehandler = oppgave.ansvarligBeslutterForTotrinn.lowercase() == ident.lowercase()
+        val resultat =
+            machterSaksbehandler && !harAktivtAksjonspunkt
+
+        log.info("matcher=$machterSaksbehandler, harAktivt$harAktivtAksjonspunkt resultatet ble=$resultat, der innput var$ident")
+
+        return resultat
     }
 
     private fun lagReservasjoner(

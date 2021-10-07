@@ -451,26 +451,25 @@ class OppgaveRepository(
     }
 
     internal fun hentAktiveOppgaverGruppertPåFagsystemFagsakytelseOgBehandlingstype(): Map<StatistikkRepository.Key, Int> {
-        val map: Map<StatistikkRepository.Key, Int>? = using(sessionOf(dataSource)) {
+        val resultat = mutableMapOf<StatistikkRepository.Key, Int>()
+
+        using(sessionOf(dataSource)) {
             //language=PostgreSQL
             it.run(
                 queryOf(
-                    """select data -> 'system' as ft, data -> 'behandlingType'->'kode' as bt, data -> 'fagsakYtelseType'->'kode' as fyt, count(*) as count from oppgave where (data -> 'aktiv') ::boolean is true group by data -> 'system', data -> 'behandlingType'->'kode', data -> 'fagsakYtelseType'->'kode'""")
+                    """select data ->> 'system' as ft, data -> 'behandlingType'->>'kode' as bt, data -> 'fagsakYtelseType'->>'kode' as fyt, count(*) as count from oppgave where data ->> 'aktiv' = 'true' group by data ->> 'system', data -> 'behandlingType'->>'kode', data -> 'fagsakYtelseType'->>'kode'"""
+                )
                     .map { row ->
-                        val pair = Pair(
-                            StatistikkRepository.Key(
-                                BehandlingType.fraKode(row.string("bt")),
-                                Fagsystem.fraKode(row.string("ft")),
-                                FagsakYtelseType.fraKode(row.string("fyt"))
-                            ),
-                            row.int("count")
-                        )
-                        mapOf(pair
-                        )
+                        resultat.putIfAbsent(StatistikkRepository.Key(
+                            BehandlingType.fraKode(row.string("bt")),
+                            Fagsystem.fraKode(row.string("ft")),
+                            FagsakYtelseType.fraKode(row.string("fyt"))
+                        ),
+                            row.int("count"))
                     }.asSingle
             )
         }
-        return map!!
+        return resultat
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
 
