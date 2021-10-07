@@ -18,6 +18,7 @@ import kotlin.system.measureTimeMillis
 
 fun Application.rekjørEventerForGrafer(
     behandlingProsessEventK9Repository: BehandlingProsessEventK9Repository,
+    behandlingProsessEventTilbakeRepository: BehandlingProsessEventTilbakeRepository,
     statistikkRepository: StatistikkRepository
 ) {
 
@@ -36,32 +37,37 @@ fun Application.rekjørEventerForGrafer(
             statistikkRepository.truncateStatistikk()
             for ((index, eventId) in alleEventerIder.withIndex()) {
                 if (index % 100 == 0 && index > 1) {
-                    log.info("""Ferdig med $index av ${alleEventerIder.size}""")
+                    log.info("""Ferdig k9-sak med $index av ${alleEventerIder.size}""")
                 }
                 val alleVersjoner = behandlingProsessEventK9Repository.hent(UUID.fromString(eventId)).alleVersjoner()
                 for ((index, modell) in alleVersjoner.withIndex()) {
                     if (index % 100 == 0 && index > 1) {
-                        log.info("""Ferdig med $index av ${alleEventerIder.size}""")
+                        log.info("""Ferdig k9-sak med $index av ${alleEventerIder.size}""")
                     }
                     try {
                         val oppgave = modell.oppgave()
 
                         if (modell.starterSak()) {
                             if (oppgave.aktiv) {
-                                beholdningOpp(oppgave, statistikkRepository, tillatteYtelseTyper)
+                                beholdningOpp(oppgave, statistikkRepository, tillatteYtelseTyper, Fagsystem.K9SAK)
                             }
                         }
                         if (modell.forrigeEvent() != null && !modell.oppgave(modell.forrigeEvent()!!).aktiv && modell.oppgave().aktiv) {
-                            beholdningOpp(oppgave, statistikkRepository,tillatteYtelseTyper)
+                            beholdningOpp(oppgave, statistikkRepository, tillatteYtelseTyper, Fagsystem.K9SAK)
                         }
 
                         if (modell.forrigeEvent() != null && modell.oppgave(modell.forrigeEvent()!!).aktiv && !modell.oppgave().aktiv) {
-                            beholdingNed(oppgave, statistikkRepository, tillatteYtelseTyper)
+                            beholdingNed(oppgave, statistikkRepository, tillatteYtelseTyper, Fagsystem.K9SAK)
                         }
 
                         if (oppgave.behandlingStatus == BehandlingStatus.AVSLUTTET) {
                             if (!oppgave.ansvarligSaksbehandlerForTotrinn.isNullOrBlank()) {
-                                nyFerdigstilltAvSaksbehandler(oppgave, statistikkRepository, tillatteYtelseTyper)
+                                nyFerdigstilltAvSaksbehandler(
+                                    oppgave,
+                                    statistikkRepository,
+                                    tillatteYtelseTyper,
+                                    Fagsystem.K9SAK
+                                )
                             }
                         }
                     } catch (e: Exception) {
@@ -69,7 +75,49 @@ fun Application.rekjørEventerForGrafer(
                     }
                 }
             }
-            log.info("""Ferdig med ${alleEventerIder.size} av ${alleEventerIder.size}""")
+            log.info("""Ferdig k9-sak med ${alleEventerIder.size} av ${alleEventerIder.size}""")
+
+
+            val hentAlleEventerIder = behandlingProsessEventTilbakeRepository.hentAlleEventerIder()
+            val alleErPå = FagsakYtelseType.values().toList()
+            for ((index, eventId) in hentAlleEventerIder.withIndex()) {
+                if (index % 100 == 0 && index > 1) {
+                    log.info("""Ferdig k9-tilbake med $index av ${hentAlleEventerIder.size}""")
+                }
+                val alleVersjoner =
+                    behandlingProsessEventTilbakeRepository.hent(UUID.fromString(eventId)).alleVersjoner()
+                for ((index, modell) in alleVersjoner.withIndex()) {
+                    if (index % 100 == 0 && index > 1) {
+                        log.info("""Ferdig k9-tilbake med $index av ${hentAlleEventerIder.size}""")
+                    }
+                    try {
+                        val oppgave = modell.oppgave()
+
+                        if (modell.starterSak()) {
+                            if (oppgave.aktiv) {
+                                beholdningOpp(oppgave, statistikkRepository, alleErPå, Fagsystem.K9TILBAKE)
+                            }
+                        }
+                        if (modell.forrigeEvent() != null && !modell.oppgave(modell.forrigeEvent()!!).aktiv && modell.oppgave().aktiv) {
+                            beholdningOpp(oppgave, statistikkRepository, alleErPå, Fagsystem.K9TILBAKE)
+                        }
+
+                        if (modell.forrigeEvent() != null && modell.oppgave(modell.forrigeEvent()!!).aktiv && !modell.oppgave().aktiv) {
+                            beholdingNed(oppgave, statistikkRepository, alleErPå, Fagsystem.K9TILBAKE)
+                        }
+
+                        if (oppgave.behandlingStatus == BehandlingStatus.AVSLUTTET) {
+                            if (!oppgave.ansvarligSaksbehandlerForTotrinn.isNullOrBlank()) {
+                                nyFerdigstilltAvSaksbehandler(oppgave, statistikkRepository,
+                                    alleErPå, Fagsystem.K9TILBAKE)
+                            }
+                        }
+                    } catch (e: Exception) {
+                        continue
+                    }
+                }
+                log.info("""Ferdig k9-tilbake med ${alleEventerIder.size} av ${alleEventerIder.size}""")
+            }
         } catch (e: Exception) {
             log.error(e)
         }
@@ -77,14 +125,19 @@ fun Application.rekjørEventerForGrafer(
 }
 
 
-private fun nyFerdigstilltAvSaksbehandler(oppgave: Oppgave, statistikkRepository: StatistikkRepository, tillatteYtelseTyper: List<FagsakYtelseType>) {
+private fun nyFerdigstilltAvSaksbehandler(
+    oppgave: Oppgave,
+    statistikkRepository: StatistikkRepository,
+    tillatteYtelseTyper: List<FagsakYtelseType>,
+    fagsystem: Fagsystem
+) {
     if (tillatteYtelseTyper.contains(oppgave.fagsakYtelseType)) {
         statistikkRepository.lagre(
             AlleOppgaverNyeOgFerdigstilte(
                 oppgave.fagsakYtelseType,
                 oppgave.behandlingType,
                 oppgave.eventTid.toLocalDate(),
-                Fagsystem.K9SAK
+                fagsystem
             )
         ) {
             it.ferdigstilteSaksbehandler.add(oppgave.eksternId.toString())
@@ -93,14 +146,19 @@ private fun nyFerdigstilltAvSaksbehandler(oppgave: Oppgave, statistikkRepository
     }
 }
 
-private fun beholdingNed(oppgave: Oppgave, statistikkRepository: StatistikkRepository, tillatteYtelseTyper: List<FagsakYtelseType>) {
+private fun beholdingNed(
+    oppgave: Oppgave,
+    statistikkRepository: StatistikkRepository,
+    tillatteYtelseTyper: List<FagsakYtelseType>,
+    fagsystem: Fagsystem
+) {
     if (tillatteYtelseTyper.contains(oppgave.fagsakYtelseType)) {
         statistikkRepository.lagre(
             AlleOppgaverNyeOgFerdigstilte(
                 oppgave.fagsakYtelseType,
                 oppgave.behandlingType,
                 oppgave.eventTid.toLocalDate(),
-                Fagsystem.K9SAK
+                fagsystem
             )
         ) {
             it.ferdigstilte.add(oppgave.eksternId.toString())
@@ -109,14 +167,19 @@ private fun beholdingNed(oppgave: Oppgave, statistikkRepository: StatistikkRepos
     }
 }
 
-private fun beholdningOpp(oppgave: Oppgave, statistikkRepository: StatistikkRepository, tillatteYtelseTyper: List<FagsakYtelseType>) {
+private fun beholdningOpp(
+    oppgave: Oppgave,
+    statistikkRepository: StatistikkRepository,
+    tillatteYtelseTyper: List<FagsakYtelseType>,
+    fagsystem: Fagsystem
+) {
     if (tillatteYtelseTyper.contains(oppgave.fagsakYtelseType)) {
         statistikkRepository.lagre(
             AlleOppgaverNyeOgFerdigstilte(
                 oppgave.fagsakYtelseType,
                 oppgave.behandlingType,
                 oppgave.eventTid.toLocalDate(),
-                Fagsystem.K9SAK
+                fagsystem
             )
         ) {
             it.nye.add(oppgave.eksternId.toString())

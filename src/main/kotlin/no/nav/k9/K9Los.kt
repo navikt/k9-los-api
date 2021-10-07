@@ -161,7 +161,9 @@ fun Application.k9Los() {
 //        punsjEventK9Repository = koin.get(),
 //        behandlingProsessEventTilbakeRepository = koin.get()
 //    )
-    rekjørEventerForGraferPunsj(koin.get(), koin.get())
+
+    rekjørEventerForGrafer(koin.get(), koin.get(), koin.get())
+//    rekjørEventerForGraferPunsj(koin.get(), koin.get())
 
     install(CallIdRequired)
 
