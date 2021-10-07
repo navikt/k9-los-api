@@ -87,7 +87,7 @@ class PunsjEventK9Repository(private val dataSource: DataSource) {
             it.transaction { tx ->
                 tx.run(
                     queryOf(
-                        "select id from behandling_prosess_events_k9",
+                        "select id from behandling_prosess_events_k9_punsj",
                         mapOf()
                     )
                         .map { row ->
@@ -95,7 +95,6 @@ class PunsjEventK9Repository(private val dataSource: DataSource) {
                         }.asList
                 )
             }
-
         }
         return ider
 

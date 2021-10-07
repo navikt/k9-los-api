@@ -23,7 +23,8 @@ fun Application.rekjørEventerForGraferPunsj(
     launch(Executors.newSingleThreadExecutor().asCoroutineDispatcher()) {
         try {
             val alleEventerIder = punsjEventK9Repository.hentAlleEventerIder()
-            statistikkRepository.fjernDataFraSystem(Fagsystem.PUNSJ);
+            val antallRader = statistikkRepository.fjernDataFraSystem(Fagsystem.PUNSJ)
+            log.info("""Slettet $antallRader med data""")
             for ((index, eventId) in alleEventerIder.withIndex()) {
                 if (index % 100 == 0 && index > 1) {
                     log.info("""Ferdig med $index av ${alleEventerIder.size}""")

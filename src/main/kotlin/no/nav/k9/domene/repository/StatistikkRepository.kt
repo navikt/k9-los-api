@@ -403,10 +403,10 @@ class StatistikkRepository(
         return list
     }
 
-    fun fjernDataFraSystem(system: Fagsystem) {
+    fun fjernDataFraSystem(system: Fagsystem) : Int {
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
-        using(sessionOf(dataSource)) {
+        return using(sessionOf(dataSource)) {
             //language=PostgreSQL
             it.run(
                 queryOf(

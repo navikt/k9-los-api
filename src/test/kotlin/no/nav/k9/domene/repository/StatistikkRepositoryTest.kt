@@ -83,6 +83,51 @@ class StatistikkRepositoryTest : KoinTest {
     }
 
     @Test
+    fun test_fjernDataFraSystem() {
+        val statistikkRepository  = get<StatistikkRepository>()
+        val oppgave = Oppgave(
+            behandlingId = 78567,
+            fagsakSaksnummer = "5Yagdt",
+            aktorId = "675864",
+            journalpostId = null,
+            behandlendeEnhet = "Enhet",
+            behandlingsfrist = LocalDateTime.now(),
+            behandlingOpprettet = LocalDateTime.now().minusDays(23),
+            forsteStonadsdag = LocalDate.now().plusDays(6),
+            behandlingStatus = BehandlingStatus.OPPRETTET,
+            behandlingType = BehandlingType.FORSTEGANGSSOKNAD,
+            fagsakYtelseType = FagsakYtelseType.OMSORGSPENGER,
+            aktiv = true,
+            system = "K9SAK",
+            oppgaveAvsluttet = null,
+            utfortFraAdmin = false,
+            eksternId = UUID.randomUUID(),
+            oppgaveEgenskap = emptyList(),
+            aksjonspunkter = Aksjonspunkter(emptyMap()),
+            tilBeslutter = true,
+            utbetalingTilBruker = false,
+            selvstendigFrilans = true,
+            kombinert = false,
+            søktGradering = false,
+            årskvantum = false,
+            avklarArbeidsforhold = false,
+            avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false
+        )
+        statistikkRepository.lagre(AlleOppgaverNyeOgFerdigstilte(oppgave.fagsakYtelseType, oppgave.behandlingType, oppgave.eventTid.toLocalDate().minusDays(1), Fagsystem.PUNSJ)){
+            it.nye.add(oppgave.eksternId.toString())
+            it
+        }
+
+        val antallRader = statistikkRepository.fjernDataFraSystem(Fagsystem.PUNSJ)
+        assertSame(1, antallRader)
+
+        val hentFerdigstilteOgNyeHistorikkPerAntallDager =
+            statistikkRepository.hentFerdigstilteOgNyeHistorikkPerAntallDager(10)
+
+        assertSame(0, hentFerdigstilteOgNyeHistorikkPerAntallDager.size)
+    }
+
+    @Test
     fun test_hentFerdigstilteOgNyeHistorikkSiste8Uker() {
         val statistikkRepository  = get<StatistikkRepository>()
         val oppgave = Oppgave(
