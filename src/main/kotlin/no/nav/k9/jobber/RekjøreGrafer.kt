@@ -8,6 +8,7 @@ import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.modell.BehandlingStatus
 import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.domene.modell.IModell
+import no.nav.k9.domene.modell.K9SakModell
 import no.nav.k9.domene.repository.*
 import no.nav.k9.integrasjon.kafka.dto.Fagsystem
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
@@ -39,7 +40,14 @@ fun Application.rekjørEventerForGrafer(
                 if (index % 100 == 0 && index > 1) {
                     log.info("""Ferdig k9-sak med $index av ${alleEventerIder.size}""")
                 }
-                val alleVersjoner = behandlingProsessEventK9Repository.hent(UUID.fromString(eventId)).alleVersjoner()
+                var alleVersjoner: MutableList<K9SakModell>?
+
+                try {
+                    alleVersjoner = behandlingProsessEventK9Repository.hent(UUID.fromString(eventId)).alleVersjoner()
+                } catch (e: Exception) {
+                    log.info("""skipper denne""")
+                    continue
+                }
                 for ((index, modell) in alleVersjoner.withIndex()) {
                     if (index % 100 == 0 && index > 1) {
                         log.info("""Ferdig k9-sak med $index av ${alleEventerIder.size}""")
