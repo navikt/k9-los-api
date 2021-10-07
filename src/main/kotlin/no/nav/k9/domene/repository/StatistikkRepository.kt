@@ -336,9 +336,9 @@ class StatistikkRepository(
             it.run(
                 queryOf(
                     """
-                            select behandlingtype, fagsakYtelseType, dato, ferdigstilte, ferdigstiltesaksbehandler, nye 
+                            select behandlingtype, fagsakYtelseType, dato, kilde, ferdigstilte, ferdigstiltesaksbehandler, nye 
                             from nye_og_ferdigstilte  where dato >= current_date - :antall::interval
-                            group by behandlingtype, fagsakYtelseType, dato
+                            group by behandlingtype, fagsakYtelseType, kilde, dato
                     """.trimIndent(),
                     mapOf("antall" to "\'${55} days\'")
                 )
@@ -374,9 +374,9 @@ class StatistikkRepository(
             it.run(
                 queryOf(
                     """
-                            select behandlingtype, fagsakYtelseType, dato, ferdigstilte, ferdigstiltesaksbehandler, nye 
+                            select behandlingtype, fagsakYtelseType, dato, ferdigstilte, kilde, ferdigstiltesaksbehandler, nye 
                             from nye_og_ferdigstilte  where dato >= current_date - :antall::interval
-                            group by behandlingtype, fagsakYtelseType, dato
+                            group by behandlingtype, fagsakYtelseType, kilde, dato
                     """.trimIndent(),
                     mapOf("antall" to "\'${55} days\'")
                 )
