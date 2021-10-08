@@ -305,9 +305,9 @@ class StatistikkRepository(
         val map = mutableListOf<AlleOppgaverNyeOgFerdigstilte>()
         val dataPåDagen = data[dato] ?: emptyList()
 
-        for (kilde in listOf(Fagsystem.PUNSJ, Fagsystem.K9SAK, Fagsystem.K9TILBAKE)) {
-            for (behandlingstype in BehandlingType.values()) {
-                for (fagsakYtelse in FagsakYtelseType.values()) {
+        for (kilde in fagsystemAktivtForTellling) {
+            for (behandlingstype in fagsystemTilBehandlingType[kilde]!!) {
+                for (fagsakYtelse in fagsystemTilFagsakYtelseType[kilde]!!) {
                     val dataSett = dataPåDagen.groupBy {
                         Key(
                             it.behandlingType,
@@ -324,6 +324,76 @@ class StatistikkRepository(
             }
         }
         return map
+    }
+
+    companion object {
+        val fagsystemAktivtForTellling = listOf(Fagsystem.PUNSJ, Fagsystem.K9SAK, Fagsystem.K9TILBAKE)
+
+        val fagsystemTilFagsakYtelseType = mapOf(
+            Pair(
+                Fagsystem.K9SAK, listOf(
+                    FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
+                    FagsakYtelseType.OMSORGSPENGER,
+                    FagsakYtelseType.OMSORGSDAGER,
+                    FagsakYtelseType.OMSORGSPENGER_KS,
+                    FagsakYtelseType.OMSORGSPENGER_MA,
+                    FagsakYtelseType.OMSORGSPENGER_AO,
+                )
+            ),
+            Pair(
+                Fagsystem.PUNSJ, listOf(
+                    FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
+                    FagsakYtelseType.UKJENT
+                )
+            ),
+            Pair(
+                Fagsystem.K9TILBAKE, listOf(
+                    FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
+                    FagsakYtelseType.OMSORGSPENGER,
+                    FagsakYtelseType.OMSORGSDAGER,
+                    FagsakYtelseType.OMSORGSPENGER_KS,
+                    FagsakYtelseType.OMSORGSPENGER_MA,
+                    FagsakYtelseType.OMSORGSPENGER_AO,
+                )
+            )
+        )
+
+        val fagsystemTilBehandlingType = mapOf(
+            Pair(
+                Fagsystem.K9SAK, listOf(
+                    BehandlingType.FORSTEGANGSSOKNAD,
+                    BehandlingType.KLAGE,
+                    BehandlingType.REVURDERING,
+                    BehandlingType.INNSYN,
+                    BehandlingType.TILBAKE,
+                    BehandlingType.ANKE
+                )
+            ),
+            Pair(
+                Fagsystem.PUNSJ, listOf(
+                    BehandlingType.PAPIRSØKNAD,
+                    BehandlingType.PAPIRETTERSENDELSE,
+                    BehandlingType.PAPIRINNTEKTSOPPLYSNINGER,
+                    BehandlingType.DIGITAL_ETTERSENDELSE,
+                    BehandlingType.INNLOGGET_CHAT,
+                    BehandlingType.SKRIV_TIL_OSS_SPØRMSÅL,
+                    BehandlingType.SKRIV_TIL_OSS_SVAR,
+                    BehandlingType.SAMTALEREFERAT,
+                    BehandlingType.KOPI,
+                    BehandlingType.UKJENT
+                )
+            ),
+            Pair(
+                Fagsystem.K9TILBAKE, listOf(
+                    BehandlingType.FORSTEGANGSSOKNAD,
+                    BehandlingType.KLAGE,
+                    BehandlingType.REVURDERING,
+                    BehandlingType.INNSYN,
+                    BehandlingType.TILBAKE,
+                    BehandlingType.ANKE
+                )
+            )
+        )
     }
 
 
@@ -403,7 +473,7 @@ class StatistikkRepository(
         return list
     }
 
-    fun fjernDataFraSystem(system: Fagsystem) : Int {
+    fun fjernDataFraSystem(system: Fagsystem): Int {
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
         return using(sessionOf(dataSource)) {

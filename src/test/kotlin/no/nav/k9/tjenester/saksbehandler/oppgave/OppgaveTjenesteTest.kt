@@ -1,13 +1,14 @@
 package no.nav.k9.tjenester.saksbehandler.oppgave
 
+import assertk.assertThat
+import assertk.assertions.isEqualTo
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.buildAndTestConfig
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.modell.*
-import no.nav.k9.domene.repository.OppgaveKøRepository
-import no.nav.k9.domene.repository.OppgaveRepository
-import no.nav.k9.domene.repository.ReservasjonRepository
-import no.nav.k9.domene.repository.SaksbehandlerRepository
+import no.nav.k9.domene.repository.*
+import no.nav.k9.integrasjon.kafka.dto.Fagsystem
+import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import org.junit.Rule
 import org.junit.Test
 import org.koin.test.KoinTest
@@ -16,8 +17,7 @@ import org.koin.test.get
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
-import assertk.assertThat
-import assertk.assertions.*
+import kotlin.test.assertSame
 import kotlin.test.asserter
 
 class OppgaveTjenesteTest : KoinTest {
@@ -65,6 +65,38 @@ class OppgaveTjenesteTest : KoinTest {
             val fagsaker = oppgaveTjeneste.søkFagsaker("Yz647")
             assert(fagsaker.oppgaver.isNotEmpty())
         }
+    }
+
+
+    @Test
+    fun skal_test_beholdning() {
+        val oppgaveRepository = get<OppgaveRepository>()
+        val statistikkRepository = get<StatistikkRepository>()
+        val oppgaveTjeneste = get<OppgaveTjeneste>()
+
+        val localDateTime = LocalDate.now().minusDays(2).atStartOfDay()
+
+        val oppgave2DagerSiden = lagOppgave(
+            behandlingType = BehandlingType.DIGITAL_ETTERSENDELSE,
+            FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
+            Fagsystem.PUNSJ.kode,
+            localDateTime
+        )
+        oppgaveRepository.lagre(oppgave2DagerSiden.eksternId) { oppgave2DagerSiden }
+
+        statistikkRepository.lagre(
+            AlleOppgaverNyeOgFerdigstilte(
+                oppgave2DagerSiden.fagsakYtelseType,
+                oppgave2DagerSiden.behandlingType,
+                localDateTime.toLocalDate().plusDays(1),
+                Fagsystem.fraKode(oppgave2DagerSiden.system)
+            )
+        ) {
+            it.nye.add(oppgave2DagerSiden.eksternId.toString())
+            it
+        }
+
+        val beholdningPrDag = oppgaveTjeneste.hentBeholdningAvOppgaverPerAntallDager()
     }
 
     @Test
@@ -153,6 +185,57 @@ class OppgaveTjenesteTest : KoinTest {
 
         assert(reservasjonsHistorikk.reservasjoner.size == 2)
         assert(reservasjonsHistorikk.reservasjoner[0].flyttetAv == "saksbehandler@nav.no")
+    }
+
+    private fun lagInnslag(
+        localDate: LocalDate,
+        oppgaveRepository: OppgaveRepository,
+        statistikkRepository: StatistikkRepository
+    ) {
+
+        for (fagsystem in listOf(Fagsystem.K9SAK, Fagsystem.PUNSJ)) {
+            for (behandlingstype in listOf(
+                BehandlingType.FORSTEGANGSSOKNAD,
+                BehandlingType.DIGITAL_ETTERSENDELSE
+            )) {
+                for (fagsakytelse in listOf(
+                    FagsakYtelseType.OMSORGSDAGER,
+                    FagsakYtelseType.PLEIEPENGER_SYKT_BARN
+                )) {
+                    val oppgave = lagOppgave(
+                        behandlingType = behandlingstype,
+                        fagsakytelse,
+                        fagsystem.kode,
+                        localDate.atStartOfDay()
+                    )
+                    oppgaveRepository.lagre(oppgave.eksternId) { oppgave }
+
+                    statistikkRepository.lagre(
+                        AlleOppgaverNyeOgFerdigstilte(
+                            oppgave.fagsakYtelseType,
+                            oppgave.behandlingType,
+                            oppgave.eventTid.toLocalDate(),
+                            Fagsystem.fraKode(oppgave.system)
+                        )
+                    ) {
+                        it.nye.add(oppgave.eksternId.toString())
+                        it
+                    }
+
+                    statistikkRepository.lagre(
+                        AlleOppgaverNyeOgFerdigstilte(
+                            oppgave.fagsakYtelseType,
+                            oppgave.behandlingType,
+                            oppgave.eventTid.toLocalDate().plusDays(1),
+                            Fagsystem.fraKode(oppgave.system)
+                        )
+                    ) {
+                        it.ferdigstilte.add(oppgave.eksternId.toString())
+                        it
+                    }
+                }
+            }
+        }
     }
 
     @Test
@@ -472,5 +555,42 @@ class OppgaveTjenesteTest : KoinTest {
 
         val saker = oppgaveTjeneste.søkFagsaker(fagsakSaksnummer)
         assertThat(saker.oppgaver.size).isEqualTo(1)
+    }
+
+
+    private fun lagOppgave(
+        behandlingType: BehandlingType,
+        fagsakYtelseType: FagsakYtelseType,
+        fagsystem: String,
+        localDateTime: LocalDateTime
+    ): Oppgave {
+        return Oppgave(
+            behandlingId = 9437,
+            fagsakSaksnummer = UUID.randomUUID().toString(),
+            aktorId = "273857",
+            journalpostId = null,
+            behandlendeEnhet = "Enhet",
+            behandlingsfrist = LocalDateTime.now(),
+            behandlingOpprettet = localDateTime,
+            forsteStonadsdag = LocalDate.now().plusDays(6),
+            behandlingStatus = BehandlingStatus.OPPRETTET,
+            behandlingType = behandlingType,
+            fagsakYtelseType = fagsakYtelseType,
+            aktiv = true,
+            system = fagsystem,
+            oppgaveAvsluttet = null,
+            utfortFraAdmin = false,
+            eksternId = UUID.randomUUID(),
+            oppgaveEgenskap = emptyList(),
+            aksjonspunkter = Aksjonspunkter(emptyMap()),
+            tilBeslutter = true,
+            utbetalingTilBruker = false,
+            selvstendigFrilans = false,
+            kombinert = false,
+            søktGradering = false,
+            årskvantum = false,
+            avklarArbeidsforhold = false,
+            avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false
+        )
     }
 }
