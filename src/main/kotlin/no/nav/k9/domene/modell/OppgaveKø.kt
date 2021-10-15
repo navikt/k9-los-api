@@ -265,7 +265,7 @@ enum class FagsakYtelseType constructor(override val kode: String, override val 
     OMSORGSPENGER("OMP", "Omsorgspenger"),
     OMSORGSDAGER("OMD", "Omsorgsdager: overføring"),
     FRISINN("FRISINN", "Frisinn"),
-    PPN("PPN", "PPN"),
+    PPN("PPN", "Pleiepenger i livets sluttfase"),
     OLP("OLP", "OLP"),
     OMSORGSPENGER_KS("OMP_KS", "Omsorgsdager: kronisk syk"),
     OMSORGSPENGER_MA("OMP_MA", "Omsorgsdager: midlertidig alene"),
