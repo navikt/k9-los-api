@@ -57,7 +57,7 @@ class OppgaveTjeneste constructor(
         }
     }
 
-    suspend fun reserverOppgave(ident: String, oppgaveUuid: UUID, overstyrSjekk: Boolean = false): OppgaveStatusDto {
+    suspend fun reserverOppgave(ident: String, oppgaveUuid: UUID, overstyrSjekk: Boolean = false, overstyrBegrunnelse: String? = null): OppgaveStatusDto {
         if (!pepClient.harTilgangTilReservingAvOppgaver()) {
             return OppgaveStatusDto(
                 erReservert = false,
@@ -122,7 +122,7 @@ class OppgaveTjeneste constructor(
                 )
             }
         }
-        val reservasjoner = lagReservasjoner(iderPåOppgaverSomSkalBliReservert, ident)
+        val reservasjoner = lagReservasjoner(iderPåOppgaverSomSkalBliReservert, ident, overstyrBegrunnelse)
 
         reservasjonRepository.lagreFlereReservasjoner(reservasjoner)
         saksbehandlerRepository.leggTilFlereReservasjoner(ident, reservasjoner.map { r -> r.oppgave })
@@ -179,7 +179,8 @@ class OppgaveTjeneste constructor(
 
     private fun lagReservasjoner(
         iderPåOppgaverSomSkalBliReservert: Set<UUID>,
-        ident: String
+        ident: String,
+        begrunnelse: String? = null
     ): List<Reservasjon> {
         return iderPåOppgaverSomSkalBliReservert.map {
             Reservasjon(
@@ -187,7 +188,7 @@ class OppgaveTjeneste constructor(
                 reservertAv = ident,
                 flyttetAv = null,
                 flyttetTidspunkt = null,
-                begrunnelse = null,
+                begrunnelse = begrunnelse,
                 oppgave = it
             )
         }.toList()
