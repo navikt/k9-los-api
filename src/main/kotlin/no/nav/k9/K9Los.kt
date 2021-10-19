@@ -163,7 +163,7 @@ fun Application.k9Los() {
 //    )
 
 //    rekjørEventerForGrafer(koin.get(), koin.get(), koin.get())
-    rekjørEventerForGraferPunsj(koin.get(), koin.get())
+//    rekjørEventerForGraferPunsj(koin.get(), koin.get())
 
     install(CallIdRequired)
 
