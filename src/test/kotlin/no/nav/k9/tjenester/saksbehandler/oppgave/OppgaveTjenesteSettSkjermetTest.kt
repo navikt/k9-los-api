@@ -401,7 +401,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest {
         saksbehandlerRepository.addSaksbehandler(Saksbehandler(brukerIdent = "123", navn= null, epost = "test@test.no", enhet = null))
         saksbehandlerRepository.addSaksbehandler(Saksbehandler(brukerIdent="ny", navn=null,epost =  "test2@test.no",enhet = null))
 
-        oppgaveTjeneste.reserverOppgave("123", oppgave.eksternId)
+        oppgaveTjeneste.reserverOppgave("123", null, oppgave.eksternId)
         oppgaveTjeneste.flyttReservasjon(oppgave.eksternId, "ny", "Ville ikke ha oppgaven")
         val reservasjonsHistorikk = oppgaveTjeneste.hentReservasjonsHistorikk(oppgave.eksternId)
 

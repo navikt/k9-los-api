@@ -57,7 +57,7 @@ class OppgaveTjeneste constructor(
         }
     }
 
-    suspend fun reserverOppgave(ident: String, oppgaveUuid: UUID, overstyrSjekk: Boolean = false, overstyrBegrunnelse: String? = null): OppgaveStatusDto {
+    suspend fun reserverOppgave(ident: String, overstyrIdent: String?, oppgaveUuid: UUID, overstyrSjekk: Boolean = false, overstyrBegrunnelse: String? = null): OppgaveStatusDto {
         if (!pepClient.harTilgangTilReservingAvOppgaver()) {
             return OppgaveStatusDto(
                 erReservert = false,
@@ -102,8 +102,9 @@ class OppgaveTjeneste constructor(
 
         var iderPåOppgaverSomSkalBliReservert = oppgaverSomSkalBliReservert.map { o -> o.id }.toSet()
         val gamleReservasjoner = reservasjonRepository.hent(iderPåOppgaverSomSkalBliReservert)
+        val reserveresAvIdent = overstyrIdent ?: ident
         val aktiveReservasjoner =
-            gamleReservasjoner.filter { rev -> rev.erAktiv() && rev.reservertAv != ident }.toList()
+            gamleReservasjoner.filter { rev -> rev.erAktiv() && rev.reservertAv != reserveresAvIdent }.toList()
         if (overstyrSjekk) {
             iderPåOppgaverSomSkalBliReservert = setOf(oppgaveUuid)
         } else {
@@ -122,10 +123,10 @@ class OppgaveTjeneste constructor(
                 )
             }
         }
-        val reservasjoner = lagReservasjoner(iderPåOppgaverSomSkalBliReservert, ident, overstyrBegrunnelse)
+        val reservasjoner = lagReservasjoner(iderPåOppgaverSomSkalBliReservert, ident, overstyrIdent, overstyrBegrunnelse)
 
         reservasjonRepository.lagreFlereReservasjoner(reservasjoner)
-        saksbehandlerRepository.leggTilFlereReservasjoner(ident, reservasjoner.map { r -> r.oppgave })
+        saksbehandlerRepository.leggTilFlereReservasjoner(reserveresAvIdent, reservasjoner.map { r -> r.oppgave })
 
         for (oppgavekø in oppgaveKøRepository.hentKøIdIkkeTaHensyn()) {
             oppgaveKøRepository.leggTilOppgaverTilKø(
@@ -135,12 +136,12 @@ class OppgaveTjeneste constructor(
             )
         }
 
-        val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(ident)
+        val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(reserveresAvIdent)
         return OppgaveStatusDto(
             erReservert = true,
             reservertTilTidspunkt = LocalDateTime.now().plusHours(24).forskyvReservasjonsDato(),
-            erReservertAvInnloggetBruker = reservertAvMeg(ident),
-            reservertAv = ident,
+            erReservertAvInnloggetBruker = reservertAvMeg(reserveresAvIdent),
+            reservertAv = reserveresAvIdent,
             reservertAvNavn = saksbehandler?.navn,
             flyttetReservasjon = null
         )
@@ -180,17 +181,30 @@ class OppgaveTjeneste constructor(
     private fun lagReservasjoner(
         iderPåOppgaverSomSkalBliReservert: Set<UUID>,
         ident: String,
+        overstyrIdent: String?,
         begrunnelse: String? = null
     ): List<Reservasjon> {
         return iderPåOppgaverSomSkalBliReservert.map {
-            Reservasjon(
-                reservertTil = LocalDateTime.now().plusHours(24).forskyvReservasjonsDato(),
-                reservertAv = ident,
-                flyttetAv = null,
-                flyttetTidspunkt = null,
-                begrunnelse = begrunnelse,
-                oppgave = it
-            )
+            val reservertTil = LocalDateTime.now().plusHours(24).forskyvReservasjonsDato()
+            if (overstyrIdent != null) {
+                Reservasjon(
+                    reservertTil = reservertTil,
+                    reservertAv = overstyrIdent,
+                    flyttetAv = ident,
+                    flyttetTidspunkt = LocalDateTime.now(),
+                    begrunnelse = begrunnelse,
+                    oppgave = it
+                )
+            } else {
+                Reservasjon(
+                    reservertTil = reservertTil,
+                    reservertAv = ident,
+                    flyttetAv = null,
+                    flyttetTidspunkt = null,
+                    begrunnelse = begrunnelse,
+                    oppgave = it
+                )
+            }
         }.toList()
     }
 
