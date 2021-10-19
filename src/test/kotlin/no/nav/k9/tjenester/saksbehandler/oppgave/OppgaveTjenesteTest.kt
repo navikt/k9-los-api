@@ -147,7 +147,7 @@ class OppgaveTjenesteTest : KoinTest {
             )
         )
 
-        oppgaveTjeneste.reserverOppgave("123", oppgave.eksternId)
+        oppgaveTjeneste.reserverOppgave("123", null, oppgave.eksternId)
         oppgaveTjeneste.flyttReservasjon(oppgave.eksternId, "ny", "Ville ikke ha oppgaven")
         val reservasjonsHistorikk = oppgaveTjeneste.hentReservasjonsHistorikk(oppgave.eksternId)
 
@@ -263,7 +263,7 @@ class OppgaveTjenesteTest : KoinTest {
             )
         )
 
-        oppgaveTjeneste.reserverOppgave("123", oppgave.eksternId)
+        oppgaveTjeneste.reserverOppgave("123", null, oppgave.eksternId)
         val reservasjonsHistorikk1 = oppgaveTjeneste.hentReservasjonsHistorikk(oppgave1.eksternId)
         val reservasjonsHistorikk2 = oppgaveTjeneste.hentReservasjonsHistorikk(oppgave2.eksternId)
 
@@ -344,7 +344,7 @@ class OppgaveTjenesteTest : KoinTest {
             oppgaveko
         }
 
-            oppgaveTjeneste.reserverOppgave("123", oppgave1.eksternId)
+            oppgaveTjeneste.reserverOppgave("123", null, oppgave1.eksternId)
 
 
         val oppgave2 = Oppgave(
@@ -390,7 +390,7 @@ class OppgaveTjenesteTest : KoinTest {
         asserter.assertEquals("Forventer en oppgave her", 1, oppgaver.size)
         val oppgave = oppgaver[0]
 
-        oppgaveTjeneste.reserverOppgave("123", oppgave.eksternId)
+        oppgaveTjeneste.reserverOppgave("123", null, oppgave.eksternId)
 
         val reservasjonsHistorikk1 = oppgaveTjeneste.hentReservasjonsHistorikk(oppgave1.eksternId)
         val reservasjonsHistorikk2 = oppgaveTjeneste.hentReservasjonsHistorikk(oppgave2.eksternId)

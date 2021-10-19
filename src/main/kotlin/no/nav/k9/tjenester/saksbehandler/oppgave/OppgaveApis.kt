@@ -68,11 +68,10 @@ internal fun Route.OppgaveApis() {
     post { _: reserverOppgave ->
         val oppgaveIdMedOverstyring = call.receive<OppgaveIdMedOverstyring>()
         requestContextService.withRequestContext(call) {
-            val ident = oppgaveIdMedOverstyring.overstyrIdent
-                ?: saksbehandlerRepository.finnSaksbehandlerMedEpost(kotlin.coroutines.coroutineContext.idToken().getUsername())!!.brukerIdent!!
             call.respond(
                 oppgaveTjeneste.reserverOppgave(
-                    ident,
+                    saksbehandlerRepository.finnSaksbehandlerMedEpost(kotlin.coroutines.coroutineContext.idToken().getUsername())!!.brukerIdent!!,
+                    oppgaveIdMedOverstyring.overstyrIdent,
                     UUID.fromString(oppgaveIdMedOverstyring.oppgaveId),
                     oppgaveIdMedOverstyring.overstyrSjekk,
                     oppgaveIdMedOverstyring.overstyrBegrunnelse
