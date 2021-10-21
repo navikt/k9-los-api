@@ -25,9 +25,11 @@ import no.nav.k9.utils.Cache
 import no.nav.k9.utils.CacheObject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.lang.IllegalStateException
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.coroutines.coroutineContext
+import kotlin.random.Random
 import kotlin.system.measureTimeMillis
 
 private val log: Logger =
@@ -979,5 +981,64 @@ class OppgaveTjeneste constructor(
                 }
             }
         }
+    }
+
+    suspend fun fåOppgaveFraKø(oppgaveKøId: String, ident: String, oppgaverSomErBlokert: MutableList<OppgaveDto> = emptyArray<OppgaveDto>().toMutableList()): OppgaveDto {
+        val hentNesteOppgaverIKø = hentNesteOppgaverIKø(UUID.fromString(oppgaveKøId))
+
+        if (hentNesteOppgaverIKø.isEmpty()) {
+            throw IllegalStateException("Køen er tom")
+        }
+
+        val oppgaveDto = finnOppgave(hentNesteOppgaverIKø, oppgaverSomErBlokert)
+
+        val oppgaveUuid = oppgaveDto.eksternId
+        val oppgaveSomSkalBliReservert = oppgaveRepository.hent(oppgaveUuid)
+
+        val oppgaverSomSkalBliReservert = mutableListOf<OppgaveMedId>()
+        oppgaverSomSkalBliReservert.add(OppgaveMedId(oppgaveUuid, oppgaveSomSkalBliReservert))
+        if (oppgaveSomSkalBliReservert.pleietrengendeAktørId != null) {
+            oppgaverSomSkalBliReservert.addAll(
+                filtrerOppgaveHvisBeslutter(
+                    oppgaveSomSkalBliReservert,
+                    oppgaveRepository.hentOppgaverSomMatcher(
+                        oppgaveSomSkalBliReservert.pleietrengendeAktørId,
+                        oppgaveSomSkalBliReservert.fagsakYtelseType
+                    )
+                )
+            )
+        }
+
+        val iderPåOppgaverSomSkalBliReservert = oppgaverSomSkalBliReservert.map { o -> o.id }.toSet()
+        val gamleReservasjoner = reservasjonRepository.hent(iderPåOppgaverSomSkalBliReservert)
+        val aktiveReservasjoner = gamleReservasjoner.filter { rev -> rev.erAktiv() }.toList()
+
+        if (aktiveReservasjoner.isNotEmpty()) {
+            oppgaverSomErBlokert.add(oppgaveDto)
+            return fåOppgaveFraKø(oppgaveKøId, ident, oppgaverSomErBlokert)
+        }
+
+        val reservasjoner = lagReservasjoner(iderPåOppgaverSomSkalBliReservert, ident, null)
+
+        reservasjonRepository.lagreFlereReservasjoner(reservasjoner)
+        saksbehandlerRepository.leggTilFlereReservasjoner(ident, reservasjoner.map { r -> r.oppgave })
+
+        for (oppgavekø in oppgaveKøRepository.hentKøIdIkkeTaHensyn()) {
+            oppgaveKøRepository.leggTilOppgaverTilKø(
+                oppgavekø,
+                oppgaverSomSkalBliReservert.map { o -> o.oppgave },
+                reservasjonRepository
+            )
+        }
+        return oppgaveDto
+    }
+
+    private fun finnOppgave(oppgaver: List<OppgaveDto>, oppgaverSomErBlokert: MutableList<OppgaveDto>) : OppgaveDto {
+        val hentNesteOppgaverIKø = oppgaver.toMutableList()
+        hentNesteOppgaverIKø.removeAll(oppgaverSomErBlokert)
+
+        val size = hentNesteOppgaverIKø.size - 1
+        val index = Random.nextInt(0, size)
+        return hentNesteOppgaverIKø[index]
     }
 }

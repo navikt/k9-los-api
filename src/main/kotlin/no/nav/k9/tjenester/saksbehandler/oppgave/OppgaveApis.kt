@@ -80,6 +80,15 @@ internal fun Route.OppgaveApis() {
         }
     }
 
+    @Location("/få-oppgave-fra-kø")
+    class fåOppgaveFraKø
+    post { _: fåOppgaveFraKø ->
+        requestContextService.withRequestContext(call) {
+            val params = call.receive<OppgaveKøIdDto>()
+            call.respond(oppgaveTjeneste.fåOppgaveFraKø(params.oppgaveKøId, saksbehandlerRepository.finnSaksbehandlerMedEpost(kotlin.coroutines.coroutineContext.idToken().getUsername())!!.brukerIdent!!))
+        }
+    }
+
     @Location("/opphev")
     class opphevReservasjon
     post { _: opphevReservasjon ->
