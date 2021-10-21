@@ -469,9 +469,9 @@ class OppgaveRepository(
                     }.asSingle
             )
         }
-        return resultat
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
+        return resultat
 
     }
 

@@ -25,6 +25,7 @@ import no.nav.k9.utils.Cache
 import no.nav.k9.utils.CacheObject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.coroutines.coroutineContext
@@ -57,7 +58,13 @@ class OppgaveTjeneste constructor(
         }
     }
 
-    suspend fun reserverOppgave(ident: String, overstyrIdent: String?, oppgaveUuid: UUID, overstyrSjekk: Boolean = false, overstyrBegrunnelse: String? = null): OppgaveStatusDto {
+    suspend fun reserverOppgave(
+        ident: String,
+        overstyrIdent: String?,
+        oppgaveUuid: UUID,
+        overstyrSjekk: Boolean = false,
+        overstyrBegrunnelse: String? = null
+    ): OppgaveStatusDto {
         if (!pepClient.harTilgangTilReservingAvOppgaver()) {
             return OppgaveStatusDto(
                 erReservert = false,
@@ -123,7 +130,8 @@ class OppgaveTjeneste constructor(
                 )
             }
         }
-        val reservasjoner = lagReservasjoner(iderPåOppgaverSomSkalBliReservert, ident, overstyrIdent, overstyrBegrunnelse)
+        val reservasjoner =
+            lagReservasjoner(iderPåOppgaverSomSkalBliReservert, ident, overstyrIdent, overstyrBegrunnelse)
 
         reservasjonRepository.lagreFlereReservasjoner(reservasjoner)
         saksbehandlerRepository.leggTilFlereReservasjoner(reserveresAvIdent, reservasjoner.map { r -> r.oppgave })
@@ -575,36 +583,31 @@ class OppgaveTjeneste constructor(
     }
 
     fun hentBeholdningAvOppgaverPerAntallDager(): List<AlleOppgaverHistorikk> {
-        val ytelsetype =
-            statistikkRepository.hentFerdigstilteOgNyeHistorikkMedYtelsetypeSiste8Uker()
-
         val aktiveOppgaver = oppgaveRepository.hentAktiveOppgaverGruppertPåFagsystemFagsakytelseOgBehandlingstype()
-
         val ret = mutableListOf<AlleOppgaverHistorikk>()
-        for (ytelseTypeEntry in ytelsetype.groupBy { it.fagsakYtelseType }) {
-            val perBehandlingstype = ytelseTypeEntry.value.groupBy { it.behandlingType }
-            for (behandlingTypeEntry in perBehandlingstype) {
-                val kilde = behandlingTypeEntry.value.groupBy { it.kilde }
-                for (kildeEntry in kilde) {
-                    var antall = aktiveOppgaver[StatistikkRepository.Key(
-                        behandlingTypeEntry.key,
-                        kildeEntry.key,
-                        ytelseTypeEntry.key
-                    )] ?: 0
-                    kildeEntry.value.sortedByDescending { it.dato }.map {
 
-                        antall = antall - it.nye.size + it.ferdigstilte.size
-                        ret.add(
-                            AlleOppgaverHistorikk(
-                                it.fagsakYtelseType,
-                                it.behandlingType,
-                                it.dato,
-                                it.kilde,
-                                antall
-                            )
-                        )
-                    }
-                }
+        for (entry in statistikkRepository.hentFerdigstilteOgNyeHistorikkMedYtelsetypeSiste8Uker().groupBy {
+            StatistikkRepository.Key(
+                it.behandlingType,
+                it.kilde,
+                it.fagsakYtelseType
+            )
+        }) {
+            var antall = aktiveOppgaver[entry.key] ?: 0
+            // legger til for dagens dato
+            ret.add(AlleOppgaverHistorikk(entry.key.fagsakYtelseType, entry.key.behandlingstype, LocalDate.now(), entry.key.fagsystem, antall))
+
+            entry.value.sortedByDescending { it.dato }.map {
+                antall = antall - it.nye.size + it.ferdigstilte.size
+                ret.add(
+                    AlleOppgaverHistorikk(
+                        it.fagsakYtelseType,
+                        it.behandlingType,
+                        it.dato,
+                        it.kilde,
+                        antall
+                    )
+                )
             }
         }
         return ret
