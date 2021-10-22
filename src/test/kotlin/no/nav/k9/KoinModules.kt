@@ -26,6 +26,7 @@ import no.nav.k9.integrasjon.omsorgspenger.OmsorgspengerServiceLocal
 import no.nav.k9.integrasjon.pdl.IPdlService
 import no.nav.k9.integrasjon.pdl.PdlServiceLocal
 import no.nav.k9.integrasjon.sakogbehandling.SakOgBehandlingProducer
+import no.nav.k9.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import no.nav.k9.tjenester.sse.SseEvent
 import org.koin.core.module.Module
@@ -123,6 +124,12 @@ fun buildAndTestConfig(pepClient: IPepClient = PepClientLocal()): Module = modul
             pepClient = get(),
             statistikkRepository = get(),
             omsorgspengerService = get()
+        )
+    }
+    single {
+        NokkeltallTjeneste(
+            oppgaveRepository = get(),
+            statistikkRepository = get()
         )
     }
 

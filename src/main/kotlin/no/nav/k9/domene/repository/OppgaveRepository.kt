@@ -14,6 +14,7 @@ import no.nav.k9.domene.modell.BehandlingStatus
 import no.nav.k9.domene.modell.BehandlingType
 import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.integrasjon.abac.IPepClient
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleApneBehandlinger
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleOppgaverDto
 import no.nav.k9.tjenester.innsikt.Databasekall
@@ -57,8 +58,31 @@ class OppgaveRepository(
     }
 
     fun hentAllePåVent(): List<Oppgave> {
-        val alleOppgave = hentAktiveOppgaver()
-        return alleOppgave.filter { AksjonspunktDefWrapper.harAktivtAutopunkt(it) }
+        val startSpørring = System.currentTimeMillis()
+        val jsonOppgaver: List<String> = using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    autopunktQuery(),
+                    mapOf()
+                )
+                    .map { row ->
+                        row.string("data")
+                    }.asList
+            )
+        }
+        val spørring = System.currentTimeMillis() - startSpørring
+        val startSerialisering = System.currentTimeMillis()
+        val oppgaver = jsonOppgaver.map { s -> objectMapper().readValue(s, Oppgave::class.java) }.toList()
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
+        log.info("Henter oppgaver på vent: " + oppgaver.size + " oppgaver" + " serialisering: " + (System.currentTimeMillis() - startSerialisering) + " spørring: " + spørring)
+        return oppgaver
+    }
+
+    private fun autopunktQuery(): String {
+        val autopunkt = AksjonspunktDefinisjon.values().filter { it.erAutopunkt() }.map { it.kode }
+        val queryStubs = autopunkt.map {"data -> 'aksjonspunkter' -> 'liste' ->> '$it' = 'OPPR'"}
+        return queryStubs.joinToString(prefix = "select data from oppgave where ", separator = " or ")
     }
 
     fun hent(uuid: UUID): Oppgave {
