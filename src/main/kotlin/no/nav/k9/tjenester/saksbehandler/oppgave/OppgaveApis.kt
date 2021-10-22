@@ -80,7 +80,7 @@ internal fun Route.OppgaveApis() {
         }
     }
 
-    @Location("/få-oppgave-fra-kø")
+    @Location("/fa-oppgave-fra-ko")
     class fåOppgaveFraKø
     post { _: fåOppgaveFraKø ->
         requestContextService.withRequestContext(call) {
