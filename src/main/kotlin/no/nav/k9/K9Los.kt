@@ -161,7 +161,7 @@ fun Application.k9Los() {
 //        behandlingProsessEventTilbakeRepository = koin.get()
 //    )
 
-    rekjørEventerForGrafer(koin.get(), koin.get(), koin.get())
+//    rekjørEventerForGrafer(koin.get(), koin.get(), koin.get())
 
     install(CallIdRequired)
 
