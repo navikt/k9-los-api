@@ -29,7 +29,6 @@ import java.lang.IllegalStateException
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.coroutines.coroutineContext
-import kotlin.random.Random
 import kotlin.system.measureTimeMillis
 
 private val log: Logger =
@@ -1033,12 +1032,13 @@ class OppgaveTjeneste constructor(
         return oppgaveDto
     }
 
-    private fun finnOppgave(oppgaver: List<OppgaveDto>, oppgaverSomErBlokert: MutableList<OppgaveDto>) : OppgaveDto {
+    private fun finnOppgave(oppgaver: List<OppgaveDto>, oppgaverSomErBlokkert: MutableList<OppgaveDto>) : OppgaveDto {
         val hentNesteOppgaverIKø = oppgaver.toMutableList()
-        hentNesteOppgaverIKø.removeAll(oppgaverSomErBlokert)
+        hentNesteOppgaverIKø.removeAll(oppgaverSomErBlokkert)
 
-        val size = hentNesteOppgaverIKø.size - 1
-        val index = Random.nextInt(0, size)
-        return hentNesteOppgaverIKø[index]
+        if (hentNesteOppgaverIKø.size == 1) {
+            return hentNesteOppgaverIKø[0]
+        }
+        return hentNesteOppgaverIKø.first()
     }
 }
