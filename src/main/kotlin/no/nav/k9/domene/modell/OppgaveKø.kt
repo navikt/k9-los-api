@@ -177,6 +177,13 @@ data class OppgaveKø(
         ) {
             return true
         }
+
+        if (oppgave.aksjonspunkter.harAktivtAksjonspunkt(AksjonspunktDefinisjon.AUTO_VENTER_PÅ_KOMPLETT_SØKNAD)
+            && kriterier.map {it.andreKriterierType}.contains(AndreKriterierType.VENTER_PÅ_KOMPLETT_SØKNAD)
+        ) {
+            return true
+        }
+
         return false
     }
 
@@ -246,7 +253,8 @@ enum class AndreKriterierType(override val kode: String, override val navn: Stri
     AVKLAR_MEDLEMSKAP("AVKLAR_MEDLEMSKAP", "Avklar medlemskap"),
     VURDER_OPPTJENINGSVILKÅRET("VURDER_OPPTJENINGSVILKÅRET", "Avklar opptjeningsvilkåret"),
     AVKLAR_ARBEIDSFORHOLD("AVKLAR_ARBEIDSFORHOLD", "Avklar arbeidsforhold"),
-    AVKLAR_INNTEKTSMELDING_BEREGNING("AVKLAR_INNTEKTSMELDING_BEREGNING", "Avklar inntektsmeldng");
+    AVKLAR_INNTEKTSMELDING_BEREGNING("AVKLAR_INNTEKTSMELDING_BEREGNING", "Avklar inntektsmeldng"),
+    VENTER_PÅ_KOMPLETT_SØKNAD("VENTER_PÅ_KOMPLETT_SØKNAD", "Venter på komplett søknad");
 
     override val kodeverk = "ANDRE_KRITERIER_TYPE"
 
