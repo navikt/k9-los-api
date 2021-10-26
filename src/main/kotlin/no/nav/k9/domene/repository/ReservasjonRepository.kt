@@ -142,7 +142,10 @@ class ReservasjonRepository(
         }
         Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
 
-        return objectMapper().readValue(json!!)
+        if (json == null) {
+            return emptyList()
+        }
+        return objectMapper().readValue(json)
     }
 
     fun finnes(id: UUID): Boolean {

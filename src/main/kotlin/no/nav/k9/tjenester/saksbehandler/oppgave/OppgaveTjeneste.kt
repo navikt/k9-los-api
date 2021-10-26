@@ -990,6 +990,11 @@ class OppgaveTjeneste constructor(
         }
     }
 
+    /** Henter første oppgave fra gitt kø med noen unntak
+     *   - oppgave som har parsak som er reservert på annen saksbehandling blir hoppet over
+     *   - oppgave som beslutter har besluttet blir hoppet over
+     *   - oppgave som saksbehandler ikke har prioriet på blir hoppet over
+     */
     suspend fun fåOppgaveFraKø(
         oppgaveKøId: String,
         ident: String,
@@ -998,9 +1003,8 @@ class OppgaveTjeneste constructor(
     ): OppgaveDto? {
         val hentNesteOppgaverIKø = hentNesteOppgaverIKø(UUID.fromString(oppgaveKøId))
 
-        //todo (OJR) bedre håndtering her?
         if (hentNesteOppgaverIKø.isEmpty()) {
-            throw IllegalStateException("Køen er tom")
+            return null
         }
 
         val prioriterteOppgaver = prioriterOppgaverForSaksbehandler ?: finnPrioriterteOppgaver(
@@ -1022,6 +1026,7 @@ class OppgaveTjeneste constructor(
                     aktørid = oppgavePar.second!!.aktorId
                 )
             ) {
+                // skal ikke få oppgave saksbehandler ikke har lestilgang til
                 settSkjermet(oppgavePar.second!!)
                 oppgaverSomErBlokert.add(oppgaveDto)
                 return fåOppgaveFraKø(oppgaveKøId, ident, oppgaverSomErBlokert, prioriterteOppgaver)
@@ -1032,6 +1037,15 @@ class OppgaveTjeneste constructor(
 
         val oppgaveUuid = oppgaveDto.eksternId
         val oppgaveSomSkalBliReservert = oppgaveRepository.hent(oppgaveUuid)
+
+        // beslutter skal ikke få oppgaver de selv har besluttet
+        if (oppgaveSomSkalBliReservert.ansvarligBeslutterForTotrinn != null &&
+            oppgaveSomSkalBliReservert.ansvarligBeslutterForTotrinn == ident &&
+            !oppgaveSomSkalBliReservert.tilBeslutter
+        ) {
+            oppgaverSomErBlokert.add(oppgaveDto)
+            return fåOppgaveFraKø(oppgaveKøId, ident, oppgaverSomErBlokert, prioriterteOppgaver)
+        }
 
         val oppgaverSomSkalBliReservert = mutableListOf<OppgaveMedId>()
         oppgaverSomSkalBliReservert.add(OppgaveMedId(oppgaveUuid, oppgaveSomSkalBliReservert))
@@ -1051,6 +1065,7 @@ class OppgaveTjeneste constructor(
         val gamleReservasjoner = reservasjonRepository.hent(iderPåOppgaverSomSkalBliReservert)
         val aktiveReservasjoner = gamleReservasjoner.filter { rev -> rev.erAktiv() && rev.reservertAv != ident }.toList()
 
+        // skal ikke få oppgaver som tilhører en parsak der en av sakene er resvert på en annen saksbehandler
         if (aktiveReservasjoner.isNotEmpty()) {
             oppgaverSomErBlokert.add(oppgaveDto)
             return fåOppgaveFraKø(oppgaveKøId, ident, oppgaverSomErBlokert, prioriterteOppgaver)
