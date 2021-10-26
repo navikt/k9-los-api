@@ -25,7 +25,6 @@ import no.nav.k9.utils.Cache
 import no.nav.k9.utils.CacheObject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.lang.IllegalStateException
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.coroutines.coroutineContext
@@ -58,7 +57,13 @@ class OppgaveTjeneste constructor(
         }
     }
 
-    suspend fun reserverOppgave(ident: String, overstyrIdent: String?, oppgaveUuid: UUID, overstyrSjekk: Boolean = false, overstyrBegrunnelse: String? = null): OppgaveStatusDto {
+    suspend fun reserverOppgave(
+        ident: String,
+        overstyrIdent: String?,
+        oppgaveUuid: UUID,
+        overstyrSjekk: Boolean = false,
+        overstyrBegrunnelse: String? = null
+    ): OppgaveStatusDto {
         if (!pepClient.harTilgangTilReservingAvOppgaver()) {
             return OppgaveStatusDto(
                 erReservert = false,
@@ -124,7 +129,8 @@ class OppgaveTjeneste constructor(
                 )
             }
         }
-        val reservasjoner = lagReservasjoner(iderPåOppgaverSomSkalBliReservert, ident, overstyrIdent, overstyrBegrunnelse)
+        val reservasjoner =
+            lagReservasjoner(iderPåOppgaverSomSkalBliReservert, ident, overstyrIdent, overstyrBegrunnelse)
 
         reservasjonRepository.lagreFlereReservasjoner(reservasjoner)
         saksbehandlerRepository.leggTilFlereReservasjoner(reserveresAvIdent, reservasjoner.map { r -> r.oppgave })
@@ -749,38 +755,7 @@ class OppgaveTjeneste constructor(
                         if (person.person != null) person.person.navn() else "Uten navn"
                     }
                     list.add(
-                        OppgaveDto(
-                            status = OppgaveStatusDto(
-                                erReservert = false,
-                                reservertTilTidspunkt = null,
-                                erReservertAvInnloggetBruker = false,
-                                reservertAv = null,
-                                reservertAvNavn = null,
-                                flyttetReservasjon = null
-                            ),
-                            behandlingId = oppgave.behandlingId,
-                            saksnummer = oppgave.fagsakSaksnummer,
-                            journalpostId = oppgave.journalpostId,
-                            navn = navn,
-                            system = oppgave.system,
-                            personnummer = if (person.person == null) {
-                                "Ukjent fnummer"
-                            } else {
-                                person.person.fnr()
-                            },
-                            behandlingstype = oppgave.behandlingType,
-                            fagsakYtelseType = oppgave.fagsakYtelseType,
-                            behandlingStatus = oppgave.behandlingStatus,
-                            erTilSaksbehandling = oppgave.aktiv,
-                            opprettetTidspunkt = oppgave.behandlingOpprettet,
-                            behandlingsfrist = oppgave.behandlingsfrist,
-                            eksternId = oppgave.eksternId,
-                            tilBeslutter = oppgave.tilBeslutter,
-                            utbetalingTilBruker = oppgave.utbetalingTilBruker,
-                            søktGradering = oppgave.søktGradering,
-                            selvstendigFrilans = oppgave.selvstendigFrilans,
-                            avklarArbeidsforhold = oppgave.avklarArbeidsforhold
-                        )
+                        lagOppgaveDto(oppgave, navn, person.person)
                     )
                 }
             }
@@ -791,6 +766,39 @@ class OppgaveTjeneste constructor(
         }
         return emptyList()
     }
+
+    private fun lagOppgaveDto(
+        oppgave: Oppgave,
+        navn: String,
+        person: PersonPdl?,
+    ) = OppgaveDto(
+        status = OppgaveStatusDto(
+            erReservert = false,
+            reservertTilTidspunkt = null,
+            erReservertAvInnloggetBruker = false,
+            reservertAv = null,
+            reservertAvNavn = null,
+            flyttetReservasjon = null
+        ),
+        behandlingId = oppgave.behandlingId,
+        saksnummer = oppgave.fagsakSaksnummer,
+        journalpostId = oppgave.journalpostId,
+        navn = navn,
+        system = oppgave.system,
+        personnummer = person?.fnr() ?: "Ukjent fnummer",
+        behandlingstype = oppgave.behandlingType,
+        fagsakYtelseType = oppgave.fagsakYtelseType,
+        behandlingStatus = oppgave.behandlingStatus,
+        erTilSaksbehandling = oppgave.aktiv,
+        opprettetTidspunkt = oppgave.behandlingOpprettet,
+        behandlingsfrist = oppgave.behandlingsfrist,
+        eksternId = oppgave.eksternId,
+        tilBeslutter = oppgave.tilBeslutter,
+        utbetalingTilBruker = oppgave.utbetalingTilBruker,
+        søktGradering = oppgave.søktGradering,
+        selvstendigFrilans = oppgave.selvstendigFrilans,
+        avklarArbeidsforhold = oppgave.avklarArbeidsforhold
+    )
 
     private fun preprodNavn(oppgave: Oppgave): String {
         return "${oppgave.fagsakSaksnummer} " +
@@ -982,14 +990,45 @@ class OppgaveTjeneste constructor(
         }
     }
 
-    suspend fun fåOppgaveFraKø(oppgaveKøId: String, ident: String, oppgaverSomErBlokert: MutableList<OppgaveDto> = emptyArray<OppgaveDto>().toMutableList()): OppgaveDto {
+    suspend fun fåOppgaveFraKø(
+        oppgaveKøId: String,
+        ident: String,
+        oppgaverSomErBlokert: MutableList<OppgaveDto> = emptyArray<OppgaveDto>().toMutableList(),
+        prioriterOppgaverForSaksbehandler: List<Oppgave>? = null
+    ): OppgaveDto? {
         val hentNesteOppgaverIKø = hentNesteOppgaverIKø(UUID.fromString(oppgaveKøId))
 
+        //todo (OJR) bedre håndtering her?
         if (hentNesteOppgaverIKø.isEmpty()) {
             throw IllegalStateException("Køen er tom")
         }
 
-        val oppgaveDto = finnOppgave(hentNesteOppgaverIKø, oppgaverSomErBlokert)
+        val prioriterteOppgaver = prioriterOppgaverForSaksbehandler ?: finnPrioriterteOppgaver(
+            ident,
+            oppgaveKøId
+        )
+
+        val oppgavePar = finnOppgave(prioriterteOppgaver, hentNesteOppgaverIKø, oppgaverSomErBlokert) ?: return null
+
+        val oppgaveDto: OppgaveDto
+
+        if (oppgavePar.second != null) {
+            val oppgave = oppgavePar.second!!
+            val person = pdlService.person(oppgave.aktorId)
+
+            oppgaveDto = lagOppgaveDto(oppgavePar.second!!, person.person?.navn() ?: "Ukjent", person.person)
+            if (!pepClient.harTilgangTilLesSak(
+                    fagsakNummer = oppgavePar.second!!.fagsakSaksnummer,
+                    aktørid = oppgavePar.second!!.aktorId
+                )
+            ) {
+                settSkjermet(oppgavePar.second!!)
+                oppgaverSomErBlokert.add(oppgaveDto)
+                return fåOppgaveFraKø(oppgaveKøId, ident, oppgaverSomErBlokert, prioriterteOppgaver)
+            }
+        } else {
+            oppgaveDto = oppgavePar.first!!
+        }
 
         val oppgaveUuid = oppgaveDto.eksternId
         val oppgaveSomSkalBliReservert = oppgaveRepository.hent(oppgaveUuid)
@@ -1010,13 +1049,12 @@ class OppgaveTjeneste constructor(
 
         val iderPåOppgaverSomSkalBliReservert = oppgaverSomSkalBliReservert.map { o -> o.id }.toSet()
         val gamleReservasjoner = reservasjonRepository.hent(iderPåOppgaverSomSkalBliReservert)
-        val aktiveReservasjoner = gamleReservasjoner.filter { rev -> rev.erAktiv() }.toList()
+        val aktiveReservasjoner = gamleReservasjoner.filter { rev -> rev.erAktiv() && rev.reservertAv != ident }.toList()
 
         if (aktiveReservasjoner.isNotEmpty()) {
             oppgaverSomErBlokert.add(oppgaveDto)
-            return fåOppgaveFraKø(oppgaveKøId, ident, oppgaverSomErBlokert)
+            return fåOppgaveFraKø(oppgaveKøId, ident, oppgaverSomErBlokert, prioriterteOppgaver)
         }
-
         val reservasjoner = lagReservasjoner(iderPåOppgaverSomSkalBliReservert, ident, null)
 
         reservasjonRepository.lagreFlereReservasjoner(reservasjoner)
@@ -1032,13 +1070,38 @@ class OppgaveTjeneste constructor(
         return oppgaveDto
     }
 
-    private fun finnOppgave(oppgaver: List<OppgaveDto>, oppgaverSomErBlokkert: MutableList<OppgaveDto>) : OppgaveDto {
-        val hentNesteOppgaverIKø = oppgaver.toMutableList()
-        hentNesteOppgaverIKø.removeAll(oppgaverSomErBlokkert)
+    private suspend fun finnPrioriterteOppgaver(
+        ident: String,
+        oppgaveKøId: String
+    ): List<Oppgave> {
+        val reservasjoneneTilSaksbehandler = reservasjonRepository.hent(ident).map { it.oppgave }
+        val map = oppgaveRepository.hentOppgaver(reservasjoneneTilSaksbehandler).filter { it.pleietrengendeAktørId != null }
+                .map { it.pleietrengendeAktørId!! }
 
-        if (hentNesteOppgaverIKø.size == 1) {
-            return hentNesteOppgaverIKø[0]
+        val køen = oppgaveKøRepository.hentOppgavekø(UUID.fromString(oppgaveKøId))
+        val alleOppgaverIkøen = oppgaveRepository.hentOppgaver(køen.oppgaverOgDatoer.map { it.id })
+
+        return alleOppgaverIkøen.filter { it.pleietrengendeAktørId != null }
+            .filter { map.contains(it.pleietrengendeAktørId!!) }
+    }
+
+    private fun finnOppgave(
+        prioriterOppgaver: List<Oppgave>,
+        oppgaver: List<OppgaveDto>,
+        oppgaverSomErBlokkert: MutableList<OppgaveDto>
+    ): Pair<OppgaveDto?, Oppgave?>? {
+        val prioriterteOppgaverSomIKkeErBlokkert = prioriterOppgaver.filter { !oppgaverSomErBlokkert.map { it2 -> it2.eksternId }.contains(it.eksternId) }
+
+        val oppgaverSomIKkeErBlokkert =
+            oppgaver.filter { !oppgaverSomErBlokkert.map { it2 -> it2.eksternId }.contains(it.eksternId) }
+
+        if (prioriterteOppgaverSomIKkeErBlokkert.isNotEmpty()) {
+            val oppgave = prioriterteOppgaverSomIKkeErBlokkert.first()
+            return Pair(null, oppgave)
         }
-        return hentNesteOppgaverIKø.first()
+        if (oppgaverSomIKkeErBlokkert.isEmpty()) {
+            return null
+        }
+        return Pair(oppgaverSomIKkeErBlokkert.first(), null)
     }
 }
