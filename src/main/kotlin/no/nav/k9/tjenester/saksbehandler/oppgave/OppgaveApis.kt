@@ -1,6 +1,7 @@
 package no.nav.k9.tjenester.saksbehandler.oppgave
 
 import io.ktor.application.*
+import io.ktor.http.*
 import io.ktor.locations.*
 import io.ktor.request.*
 import io.ktor.response.*
@@ -85,7 +86,18 @@ internal fun Route.OppgaveApis() {
     post { _: fåOppgaveFraKø ->
         requestContextService.withRequestContext(call) {
             val params = call.receive<OppgaveKøIdDto>()
-            call.respond(oppgaveTjeneste.fåOppgaveFraKø(params.oppgaveKøId, saksbehandlerRepository.finnSaksbehandlerMedEpost(kotlin.coroutines.coroutineContext.idToken().getUsername())!!.brukerIdent!!))
+            val oppgaveFraKø = oppgaveTjeneste.fåOppgaveFraKø(
+                params.oppgaveKøId,
+                saksbehandlerRepository.finnSaksbehandlerMedEpost(
+                    kotlin.coroutines.coroutineContext.idToken().getUsername()
+                )!!.brukerIdent!!
+            )
+
+            if (oppgaveFraKø != null) {
+                call.respond(oppgaveFraKø)
+            } else {
+                call.respond(HttpStatusCode.NotFound, "Fant ingen oppgave i valgt kø")
+            }
         }
     }
 
