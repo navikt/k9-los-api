@@ -720,6 +720,170 @@ class OppgaveTjenesteTest : KoinTest {
         assert(reservasjonsHistorikk3.reservasjoner[0].reservertAv == "123")
     }
 
+    @Test
+    fun skalIkkeFåOppNestesakIListenHvisSaksbehandlerVarBeslutterPåParsaken() = runBlocking {
+        // arrange
+        val oppgaveRepository = get<OppgaveRepository>()
+        val oppgaveTjeneste = get<OppgaveTjeneste>()
+        val oppgaveKøRepository = get<OppgaveKøRepository>()
+        val reservasjonRepository = get<ReservasjonRepository>()
+        val saksbehandlerRepository = get<SaksbehandlerRepository>()
+
+        val oppgaveKøId = UUID.randomUUID()
+        val oppgaveko = OppgaveKø(
+            id = oppgaveKøId,
+            navn = "Ny kø",
+            sistEndret = LocalDate.now(),
+            sortering = KøSortering.OPPRETT_BEHANDLING,
+            filtreringBehandlingTyper = mutableListOf(BehandlingType.FORSTEGANGSSOKNAD, BehandlingType.INNSYN),
+            filtreringYtelseTyper = mutableListOf(),
+            filtreringAndreKriterierType = mutableListOf(),
+            enhet = Enhet.NASJONAL,
+            fomDato = null,
+            tomDato = null,
+            saksbehandlere = mutableListOf()
+        )
+        oppgaveKøRepository.lagre(oppgaveKøId) { oppgaveko }
+
+        val oppgave1 = Oppgave(
+            behandlingId = 9438,
+            fagsakSaksnummer = "Yz647",
+            aktorId = "273857",
+            journalpostId = null,
+            behandlendeEnhet = "Enhet",
+            behandlingsfrist = LocalDateTime.now(),
+            behandlingOpprettet = LocalDateTime.now(),
+            forsteStonadsdag = LocalDate.now().plusDays(6),
+            behandlingStatus = BehandlingStatus.OPPRETTET,
+            behandlingType = BehandlingType.FORSTEGANGSSOKNAD,
+            fagsakYtelseType = FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
+            aktiv = true,
+            system = "K9SAK",
+            oppgaveAvsluttet = null,
+            utfortFraAdmin = false,
+            eksternId = UUID.randomUUID(),
+            oppgaveEgenskap = emptyList(),
+            aksjonspunkter = Aksjonspunkter(emptyMap()),
+            tilBeslutter = false,
+            utbetalingTilBruker = false,
+            selvstendigFrilans = false,
+            kombinert = false,
+            søktGradering = false,
+            årskvantum = false,
+            avklarArbeidsforhold = false,
+            avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false,
+            pleietrengendeAktørId = "273856"
+        )
+        oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
+        oppgaveko.leggOppgaveTilEllerFjernFraKø(oppgave1, reservasjonRepository)
+        oppgaveKøRepository.lagre(oppgaveko.id) {
+            oppgaveko
+        }
+
+        val brukerIdent = "123"
+        saksbehandlerRepository.addSaksbehandler(
+            Saksbehandler(
+                brukerIdent = brukerIdent,
+                navn = null,
+                epost = "test@test.no",
+                enhet = null
+            )
+        )
+
+        val oppgave2 = Oppgave(
+            behandlingId = 9438,
+            fagsakSaksnummer = "Yz642",
+            aktorId = "273853",
+            journalpostId = null,
+            behandlendeEnhet = "Enhet",
+            behandlingsfrist = LocalDateTime.now(),
+            behandlingOpprettet = LocalDateTime.now(),
+            forsteStonadsdag = LocalDate.now().plusDays(6),
+            behandlingStatus = BehandlingStatus.OPPRETTET,
+            behandlingType = BehandlingType.FORSTEGANGSSOKNAD,
+            fagsakYtelseType = FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
+            aktiv = true,
+            system = "K9SAK",
+            oppgaveAvsluttet = null,
+            utfortFraAdmin = false,
+            eksternId = UUID.randomUUID(),
+            oppgaveEgenskap = emptyList(),
+            aksjonspunkter = Aksjonspunkter(emptyMap()),
+            tilBeslutter = false,
+            utbetalingTilBruker = false,
+            selvstendigFrilans = false,
+            kombinert = false,
+            søktGradering = false,
+            årskvantum = false,
+            avklarArbeidsforhold = false,
+            avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false,
+            pleietrengendeAktørId = "273856",
+            ansvarligBeslutterForTotrinn = "123"
+        )
+        oppgaveRepository.lagre(oppgave2.eksternId) { oppgave2 }
+
+        val hentOppgavekø = oppgaveKøRepository.hentOppgavekø(oppgaveKøId)
+
+        hentOppgavekø.leggOppgaveTilEllerFjernFraKø(oppgave2, reservasjonRepository)
+        oppgaveKøRepository.lagre(hentOppgavekø.id) {
+            hentOppgavekø
+        }
+
+        val oppgave3 = Oppgave(
+            behandlingId = 9438,
+            fagsakSaksnummer = "Yz642",
+            aktorId = "273853",
+            journalpostId = null,
+            behandlendeEnhet = "Enhet",
+            behandlingsfrist = LocalDateTime.now(),
+            behandlingOpprettet = LocalDateTime.now(),
+            forsteStonadsdag = LocalDate.now().plusDays(6),
+            behandlingStatus = BehandlingStatus.OPPRETTET,
+            behandlingType = BehandlingType.FORSTEGANGSSOKNAD,
+            fagsakYtelseType = FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
+            aktiv = true,
+            system = "K9SAK",
+            oppgaveAvsluttet = null,
+            utfortFraAdmin = false,
+            eksternId = UUID.randomUUID(),
+            oppgaveEgenskap = emptyList(),
+            aksjonspunkter = Aksjonspunkter(emptyMap()),
+            tilBeslutter = false,
+            utbetalingTilBruker = false,
+            selvstendigFrilans = false,
+            kombinert = false,
+            søktGradering = false,
+            årskvantum = false,
+            avklarArbeidsforhold = false,
+            avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false,
+            pleietrengendeAktørId = "273851"
+        )
+        oppgaveRepository.lagre(oppgave3.eksternId) { oppgave3 }
+
+        val hentOppgavekø2 = oppgaveKøRepository.hentOppgavekø(oppgaveKøId)
+
+        hentOppgavekø2.leggOppgaveTilEllerFjernFraKø(oppgave3, reservasjonRepository)
+        oppgaveKøRepository.lagre(hentOppgavekø2.id) {
+            hentOppgavekø2
+        }
+
+        oppgaveTjeneste.fåOppgaveFraKø(
+            oppgaveKøId.toString(),
+            brukerIdent,
+            emptyArray<OppgaveDto>().toMutableList()
+        )
+
+        val reservasjonsHistorikk1 = oppgaveTjeneste.hentReservasjonsHistorikk(oppgave1.eksternId)
+        assert(reservasjonsHistorikk1.reservasjoner.isEmpty())
+
+        val reservasjonsHistorikk2 = oppgaveTjeneste.hentReservasjonsHistorikk(oppgave2.eksternId)
+        assert(reservasjonsHistorikk2.reservasjoner.isEmpty())
+
+        val reservasjonsHistorikk3 = oppgaveTjeneste.hentReservasjonsHistorikk(oppgave3.eksternId)
+        assert(reservasjonsHistorikk3.reservasjoner.size == 1)
+        assert(reservasjonsHistorikk3.reservasjoner[0].reservertAv == "123")
+    }
+
 
     @Test
     fun skalKunneReserverToOppgaverSamtidig() = runBlocking {

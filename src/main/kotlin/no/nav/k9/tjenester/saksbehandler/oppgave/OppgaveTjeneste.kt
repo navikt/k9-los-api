@@ -1039,10 +1039,7 @@ class OppgaveTjeneste constructor(
         val oppgaveSomSkalBliReservert = oppgaveRepository.hent(oppgaveUuid)
 
         // beslutter skal ikke få oppgaver de selv har besluttet
-        if (oppgaveSomSkalBliReservert.ansvarligBeslutterForTotrinn != null &&
-            oppgaveSomSkalBliReservert.ansvarligBeslutterForTotrinn == ident &&
-            !oppgaveSomSkalBliReservert.tilBeslutter
-        ) {
+        if (innloggetSaksbehandlerHarBesluttetOppgaven(oppgaveSomSkalBliReservert, ident)) {
             oppgaverSomErBlokert.add(oppgaveDto)
             return fåOppgaveFraKø(oppgaveKøId, ident, oppgaverSomErBlokert, prioriterteOppgaver)
         }
@@ -1070,6 +1067,12 @@ class OppgaveTjeneste constructor(
             oppgaverSomErBlokert.add(oppgaveDto)
             return fåOppgaveFraKø(oppgaveKøId, ident, oppgaverSomErBlokert, prioriterteOppgaver)
         }
+
+        // sjekker også om parsakene har blitt besluttet av beslutter
+        if (oppgaverSomSkalBliReservert.map { it.oppgave }.any { innloggetSaksbehandlerHarBesluttetOppgaven(it, ident) }) {
+            oppgaverSomErBlokert.add(oppgaveDto)
+            return fåOppgaveFraKø(oppgaveKøId, ident, oppgaverSomErBlokert, prioriterteOppgaver)
+        }
         val reservasjoner = lagReservasjoner(iderPåOppgaverSomSkalBliReservert, ident, null)
 
         reservasjonRepository.lagreFlereReservasjoner(reservasjoner)
@@ -1084,6 +1087,13 @@ class OppgaveTjeneste constructor(
         }
         return oppgaveDto
     }
+
+    private fun innloggetSaksbehandlerHarBesluttetOppgaven(
+        oppgaveSomSkalBliReservert: Oppgave,
+        ident: String
+    ) = oppgaveSomSkalBliReservert.ansvarligBeslutterForTotrinn != null &&
+                oppgaveSomSkalBliReservert.ansvarligBeslutterForTotrinn == ident &&
+                !oppgaveSomSkalBliReservert.aksjonspunkter.harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)
 
     private suspend fun finnPrioriterteOppgaver(
         ident: String,
