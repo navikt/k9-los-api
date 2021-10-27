@@ -1120,14 +1120,18 @@ class OppgaveTjeneste constructor(
         oppgaveKøId: String
     ): List<Oppgave> {
         val reservasjoneneTilSaksbehandler = reservasjonRepository.hent(ident).map { it.oppgave }
-        val map = oppgaveRepository.hentOppgaver(reservasjoneneTilSaksbehandler).filter { it.pleietrengendeAktørId != null }
+        if (reservasjoneneTilSaksbehandler.isEmpty()) {
+            return emptyList()
+        }
+
+        val aktørIdFraReservasjonene = oppgaveRepository.hentOppgaver(reservasjoneneTilSaksbehandler).filter { it.pleietrengendeAktørId != null }
                 .map { it.pleietrengendeAktørId!! }
 
         val køen = oppgaveKøRepository.hentOppgavekø(UUID.fromString(oppgaveKøId))
-        val alleOppgaverIkøen = oppgaveRepository.hentOppgaver(køen.oppgaverOgDatoer.map { it.id })
+        val hentPleietrengendeAktør = oppgaveRepository.hentPleietrengendeAktør(køen.oppgaverOgDatoer.map { it.id })
+        val oppgaverIder = aktørIdFraReservasjonene.mapNotNull { hentPleietrengendeAktør["\""+it+"\""] }.map { UUID.fromString(it) }
 
-        return alleOppgaverIkøen.filter { it.pleietrengendeAktørId != null }
-            .filter { map.contains(it.pleietrengendeAktørId!!) }
+        return oppgaveRepository.hentOppgaver(oppgaverIder)
     }
 
     private fun finnOppgave(

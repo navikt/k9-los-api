@@ -256,6 +256,41 @@ class OppgaveRepository(
             .sortedBy { oppgave -> oppgave.behandlingOpprettet }
     }
 
+    fun hentPleietrengendeAktør(oppgaveider: Collection<UUID>): Map<String, String> {
+        val oppgaveiderList = oppgaveider.toList()
+        if (oppgaveider.isEmpty()) {
+            return emptyMap()
+        }
+
+        val session = sessionOf(dataSource)
+        val res: List<Pair<String, String>> = using(session) {
+
+            //language=PostgreSQL
+            it.run(
+                queryOf(
+                    "select id, data->'pleietrengendeAktørId' as aktor from oppgave " +
+                            "where id in (${
+                                IntRange(0, oppgaveiderList.size - 1).map { t -> ":p$t" }.joinToString()
+                            }) and data->>'pleietrengendeAktørId' is not null",
+                    IntRange(0, oppgaveiderList.size - 1).map { t -> "p$t" to oppgaveiderList[t].toString() as Any }
+                        .toMap()
+                )
+                    .map { row ->
+                        Pair(row.string("id"), row.string("aktor"))
+                    }.asList
+            )
+        }
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
+
+        val mapOf = mutableMapOf<String, String>()
+
+        res.forEach {
+            mapOf[it.second] = it.first
+        }
+        return mapOf
+    }
+
     suspend fun hentAlleOppgaverUnderArbeid(): List<AlleOppgaverDto> {
         val kode6 = pepClient.harTilgangTilKode6()
         try {
