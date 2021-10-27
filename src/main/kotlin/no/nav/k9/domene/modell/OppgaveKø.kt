@@ -159,6 +159,13 @@ data class OppgaveKø(
             return true
         }
 
+        if (oppgave.aksjonspunkter.harAktivtAksjonspunkt(AksjonspunktDefinisjon.VURDER_ARBEIDSFORHOLD)
+            && kriterier.map { it.andreKriterierType }
+                .contains(AndreKriterierType.AVKLAR_ARBEIDSFORHOLD)
+        ) {
+            return true
+        }
+
         if (oppgave.system == PUNSJ.kode && kriterier.map { it.andreKriterierType }
                 .contains(AndreKriterierType.FRA_PUNSJ)) {
             return true
@@ -236,7 +243,16 @@ enum class KøSortering(
 enum class AndreKriterierType(override val kode: String, override val navn: String) : Kodeverdi {
     FRA_PUNSJ("FRA_PUNSJ", "Fra Punsj"),
     TIL_BESLUTTER("TIL_BESLUTTER", "Til beslutter"),
+    //    UTBETALING_TIL_BRUKER("UTBETALING_TIL_BRUKER", "Utbetaling til bruker"),
+//    UTLANDSSAK("UTLANDSSAK", "Utland"),
+//    SOKT_GRADERING("SOKT_GRADERING", "Søkt gradering"),
+    SELVSTENDIG_FRILANS("SELVSTENDIG_FRILANS", "Selvstendig næringsdrivende/frilans"),
+
+    //    KOMBINERT("KOMBINERT", "Kombinert arbeidstaker - selvstendig/frilans"),
+    AARSKVANTUM("AARSKVANTUM", "Årskvantum"),
     AVKLAR_MEDLEMSKAP("AVKLAR_MEDLEMSKAP", "Avklar medlemskap"),
+    VURDER_OPPTJENINGSVILKÅRET("VURDER_OPPTJENINGSVILKÅRET", "Avklar opptjeningsvilkåret"),
+    AVKLAR_ARBEIDSFORHOLD("AVKLAR_ARBEIDSFORHOLD", "Avklar arbeidsforhold"),
     AVKLAR_INNTEKTSMELDING_BEREGNING("AVKLAR_INNTEKTSMELDING_BEREGNING", "Avklar inntektsmeldng"),
     VENTER_PÅ_KOMPLETT_SØKNAD("VENTER_PÅ_KOMPLETT_SØKNAD", "Venter på komplett søknad");
 
