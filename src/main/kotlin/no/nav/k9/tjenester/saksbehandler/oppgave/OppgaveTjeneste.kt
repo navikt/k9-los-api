@@ -1038,6 +1038,12 @@ class OppgaveTjeneste constructor(
         val oppgaveUuid = oppgaveDto.eksternId
         val oppgaveSomSkalBliReservert = oppgaveRepository.hent(oppgaveUuid)
 
+        // beslutter skal ikke få opp oppgave med 5016 de selv har saksbehandlet
+        if (innloggetSaksbehandlerHarSaksbehandletOppgaveSomSkalBliBesluttet(oppgaveSomSkalBliReservert, ident)) {
+            oppgaverSomErBlokert.add(oppgaveDto)
+            return fåOppgaveFraKø(oppgaveKøId, ident, oppgaverSomErBlokert, prioriterteOppgaver)
+        }
+
         // beslutter skal ikke få oppgaver de selv har besluttet
         if (innloggetSaksbehandlerHarBesluttetOppgaven(oppgaveSomSkalBliReservert, ident)) {
             oppgaverSomErBlokert.add(oppgaveDto)
@@ -1073,6 +1079,13 @@ class OppgaveTjeneste constructor(
             oppgaverSomErBlokert.add(oppgaveDto)
             return fåOppgaveFraKø(oppgaveKøId, ident, oppgaverSomErBlokert, prioriterteOppgaver)
         }
+
+        // sjekker også om parsakene har blitt saksbehandlet av saksbehandler
+        if (oppgaverSomSkalBliReservert.map { it.oppgave }.any { innloggetSaksbehandlerHarSaksbehandletOppgaveSomSkalBliBesluttet(it, ident) }) {
+            oppgaverSomErBlokert.add(oppgaveDto)
+            return fåOppgaveFraKø(oppgaveKøId, ident, oppgaverSomErBlokert, prioriterteOppgaver)
+        }
+
         val reservasjoner = lagReservasjoner(iderPåOppgaverSomSkalBliReservert, ident, null)
 
         reservasjonRepository.lagreFlereReservasjoner(reservasjoner)
@@ -1094,6 +1107,13 @@ class OppgaveTjeneste constructor(
     ) = oppgaveSomSkalBliReservert.ansvarligBeslutterForTotrinn != null &&
                 oppgaveSomSkalBliReservert.ansvarligBeslutterForTotrinn == ident &&
                 !oppgaveSomSkalBliReservert.aksjonspunkter.harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)
+
+    private fun innloggetSaksbehandlerHarSaksbehandletOppgaveSomSkalBliBesluttet(
+        oppgaveSomSkalBliReservert: Oppgave,
+        ident: String
+    ) = oppgaveSomSkalBliReservert.ansvarligSaksbehandlerForTotrinn != null &&
+            oppgaveSomSkalBliReservert.ansvarligSaksbehandlerForTotrinn == ident &&
+            oppgaveSomSkalBliReservert.aksjonspunkter.harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)
 
     private suspend fun finnPrioriterteOppgaver(
         ident: String,
