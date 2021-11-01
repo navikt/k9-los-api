@@ -11,6 +11,7 @@ val vaultJdbcVersion = "1.3.7"
 val kafkaEmbeddedEnvVersion = "2.7.0"
 val koinVersion = "2.2.2"
 val kotliqueryVersion = "1.3.1"
+val k9SakVersion = "3.2.29"
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.5.30"
@@ -52,8 +53,8 @@ dependencies {
     implementation("com.google.code.gson:gson:2.8.6")
 
     // Kontrakter
-    implementation("no.nav.k9.sak:kontrakt:3.2.20")
-    implementation("no.nav.k9.sak:kodeverk:3.2.20")
+    implementation("no.nav.k9.sak:kontrakt:$k9SakVersion")
+    implementation("no.nav.k9.sak:kodeverk:$k9SakVersion")
     implementation("no.nav.k9.statistikk:kontrakter:2.0_20201201123022_bfccad8")
 
     // Div
