@@ -23,10 +23,6 @@ class AksjonspunktDefWrapper {
                 .all { it == AksjonspunktDefinisjon.FATTER_VEDTAK }
         }
 
-        fun inneholderFatterVedtak(liste: Map<String, String>): Boolean {
-            return liste.map { entry -> AksjonspunktDefinisjon.fraKode(entry.key) }.contains(AksjonspunktDefinisjon.FATTER_VEDTAK)
-        }
-
         fun inneholderEtAktivtAksjonspunktMedKoden(liste: Map<String, String>, def: AksjonspunktDefinisjon): Boolean {
             val definisjon = liste.filter { entry -> entry.value == "OPPR" }
                 .map { entry -> entry.key }

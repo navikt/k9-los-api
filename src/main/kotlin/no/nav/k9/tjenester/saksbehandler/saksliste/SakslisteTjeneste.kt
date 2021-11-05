@@ -1,10 +1,9 @@
 package no.nav.k9.tjenester.saksbehandler.saksliste
 
-import kotlin.coroutines.coroutineContext
-import no.nav.k9.integrasjon.azuregraph.IAzureGraphService
 import no.nav.k9.integrasjon.rest.idToken
 import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import java.util.*
+import kotlin.coroutines.coroutineContext
 
 class SakslisteTjeneste(
     private val oppgaveTjeneste: OppgaveTjeneste

@@ -71,8 +71,7 @@ class K9sakEventHandlerTest : KoinTest {
 
         k9sakEventHandler.prosesser(event)
         val oppgaveModell = oppgaveRepository.hent(UUID.fromString(event.eksternId.toString()))
-        val oppgave = oppgaveModell
-        assertFalse { oppgave.aktiv }
+        assertFalse { oppgaveModell.aktiv }
     }
 
     @Test

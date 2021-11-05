@@ -1,15 +1,13 @@
 package no.nav.k9.aksjonspunktbehandling
 
-import io.ktor.util.*
-import no.nav.helse.kafka.ManagedKafkaStreams
-import no.nav.helse.kafka.ManagedStreamHealthy
-import no.nav.helse.kafka.ManagedStreamReady
 import no.nav.k9.Configuration
 import no.nav.k9.integrasjon.kafka.KafkaConfig
+import no.nav.k9.integrasjon.kafka.ManagedKafkaStreams
+import no.nav.k9.integrasjon.kafka.ManagedStreamHealthy
+import no.nav.k9.integrasjon.kafka.ManagedStreamReady
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.Topology
 import org.apache.kafka.streams.kstream.Consumed
-import org.slf4j.LoggerFactory
 
 internal class AksjonspunktPunsjStream constructor(
     kafkaConfig: KafkaConfig,
@@ -32,7 +30,6 @@ internal class AksjonspunktPunsjStream constructor(
 
     private companion object {
         private const val NAME = "AksjonspunktLagetPunsjV1"
-        private val log = LoggerFactory.getLogger("no.nav.$NAME.topology")
 
         private fun topology(
             configuration: Configuration,

@@ -1,8 +1,6 @@
 package no.nav.k9.tjenester.driftsmeldinger
 
-import no.nav.k9.domene.modell.Saksbehandler
 import no.nav.k9.domene.repository.DriftsmeldingRepository
-import no.nav.k9.tjenester.avdelingsleder.EpostDto
 import java.time.LocalDateTime
 import java.util.*
 

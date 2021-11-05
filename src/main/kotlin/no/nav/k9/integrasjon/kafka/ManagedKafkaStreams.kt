@@ -1,4 +1,4 @@
-package no.nav.helse.kafka
+package no.nav.k9.integrasjon.kafka
 
 import io.prometheus.client.Gauge
 import no.nav.helse.dusseldorf.ktor.health.HealthCheck

@@ -10,7 +10,7 @@ class HentKodeverkTjeneste  {
 
     private var KODEVERK_ENUM = makeMap()
 
-    fun makeMap(): MutableMap<String, Collection<out Kodeverdi>> {
+    private fun makeMap(): MutableMap<String, Collection<out Kodeverdi>> {
         val koder = mutableMapOf<String, Collection<out Kodeverdi>>()
 
         koder[BehandlingType::class.java.simpleName] = BehandlingType.values().asList()

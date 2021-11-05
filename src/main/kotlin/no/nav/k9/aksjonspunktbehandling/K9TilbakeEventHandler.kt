@@ -1,35 +1,29 @@
 package no.nav.k9.aksjonspunktbehandling
 
-import io.ktor.util.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
-import no.nav.k9.Configuration
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.modell.BehandlingStatus
 import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.domene.modell.K9TilbakeModell
 import no.nav.k9.domene.repository.*
-import no.nav.k9.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.integrasjon.kafka.dto.BehandlingProsessEventTilbakeDto
 import no.nav.k9.integrasjon.sakogbehandling.SakOgBehandlingProducer
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
+import no.nav.k9.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
 import org.slf4j.LoggerFactory
 
 
-class K9TilbakeEventHandler constructor(
-    val oppgaveRepository: OppgaveRepository,
-    val behandlingProsessEventTilbakeRepository: BehandlingProsessEventTilbakeRepository,
-    val config: Configuration,
-    val sakOgBehandlingProducer: SakOgBehandlingProducer,
-    val oppgaveKøRepository: OppgaveKøRepository,
-    val reservasjonRepository: ReservasjonRepository,
-    val statistikkProducer: StatistikkProducer,
-    val statistikkRepository: StatistikkRepository,
-    val saksbehhandlerRepository: SaksbehandlerRepository,
-    val statistikkChannel: Channel<Boolean>,
-
-    ) {
-    private val log = LoggerFactory.getLogger(K9TilbakeEventHandler::class.java)
+class K9TilbakeEventHandler(
+    private val oppgaveRepository: OppgaveRepository,
+    private val behandlingProsessEventTilbakeRepository: BehandlingProsessEventTilbakeRepository,
+    private val sakOgBehandlingProducer: SakOgBehandlingProducer,
+    private val oppgaveKøRepository: OppgaveKøRepository,
+    private val reservasjonRepository: ReservasjonRepository,
+    private val statistikkRepository: StatistikkRepository,
+    private val statistikkChannel: Channel<Boolean>,
+    private val reservasjonTjeneste: ReservasjonTjeneste
+) {
 
     fun prosesser(
         event: BehandlingProsessEventTilbakeDto
@@ -41,11 +35,11 @@ class K9TilbakeEventHandler constructor(
             beholdningOppNed(modell, oppgave)
             oppgave
         }
-        
+
         if (modell.fikkEndretAksjonspunkt()) {
-            fjernReservasjon(oppgave)
+            reservasjonTjeneste.fjernReservasjon(oppgave)
         }
-       
+
         runBlocking {
             for (oppgavekø in oppgaveKøRepository.hentKøIdIkkeTaHensyn()) {
                 oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, listOf(oppgave), reservasjonRepository)
@@ -130,20 +124,4 @@ class K9TilbakeEventHandler constructor(
             }
         }
     }
-
-
-    private fun fjernReservasjon(oppgave: Oppgave) {
-        if (reservasjonRepository.finnes(oppgave.eksternId)) {
-            reservasjonRepository.lagre(oppgave.eksternId) { reservasjon ->
-                reservasjon!!.reservertTil = null
-                reservasjon
-            }
-            val reservasjon = reservasjonRepository.hent(oppgave.eksternId)
-            saksbehhandlerRepository.fjernReservasjonIkkeTaHensyn(
-                reservasjon.reservertAv,
-                reservasjon.oppgave
-            )
-        }
-    }
-
 }

@@ -5,7 +5,6 @@ import io.ktor.locations.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
-import io.ktor.util.*
 import no.nav.k9.Configuration
 import no.nav.k9.KoinProfile
 import no.nav.k9.integrasjon.rest.RequestContextService

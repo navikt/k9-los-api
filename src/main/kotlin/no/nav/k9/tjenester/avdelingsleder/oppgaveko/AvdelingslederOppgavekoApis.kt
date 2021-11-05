@@ -5,8 +5,6 @@ import io.ktor.locations.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
-import io.ktor.util.*
-import no.nav.k9.KoinProfile
 import no.nav.k9.integrasjon.rest.RequestContextService
 import no.nav.k9.tjenester.avdelingsleder.AvdelingslederTjeneste
 import org.koin.ktor.ext.inject
@@ -52,7 +50,7 @@ fun Route.AvdelingslederOppgavekøApis() {
     class hentOppgaveKø
     get { _: hentOppgaveKø ->
         requestContextService.withRequestContext(call) {
-            val uuid = call.request.queryParameters.get("id")
+            val uuid = call.request.queryParameters["id"]
             call.respond(avdelingslederTjeneste.hentOppgaveKø(UUID.fromString(uuid)))
         }
     }

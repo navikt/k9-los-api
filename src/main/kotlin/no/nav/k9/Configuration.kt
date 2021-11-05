@@ -1,7 +1,6 @@
 package no.nav.k9
 
 import io.ktor.config.*
-import io.ktor.util.*
 import no.nav.helse.dusseldorf.ktor.auth.clients
 import no.nav.helse.dusseldorf.ktor.auth.issuers
 import no.nav.helse.dusseldorf.ktor.auth.withoutAdditionalClaimRules
@@ -96,24 +95,12 @@ data class Configuration(private val config: ApplicationConfig) {
         ChronoUnit.valueOf(config.getRequiredString("nav.kafka.unready_after_stream_stopped_in.unit", secret = false))
     )
 
-    fun getOppgaveBaseUri(): URI {
-        return URI(config.getRequiredString("nav.gosys.baseuri", secret = false))
-    }
-
     fun getVaultDbPath(): String {
         return config.getOptionalString("nav.db.vault_mountpath", secret = false)!!
     }
 
     fun databaseName(): String {
         return "k9-los"
-    }
-
-    fun azureClientId(): String {
-        return config.getOptionalString("nav.auth.azure_client_id", secret = false)!!
-    }
-
-    fun azureClientSecret(): String {
-        return config.getOptionalString("nav.auth.azure_client_secret", secret = true)!!
     }
 
     fun auditEnabled(): Boolean {

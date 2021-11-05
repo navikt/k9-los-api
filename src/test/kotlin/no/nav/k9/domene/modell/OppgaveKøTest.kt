@@ -1,7 +1,5 @@
 package no.nav.k9.domene.modell
 
-import assertk.assertThat
-import assertk.assertions.isEqualTo
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
 import org.junit.Assert

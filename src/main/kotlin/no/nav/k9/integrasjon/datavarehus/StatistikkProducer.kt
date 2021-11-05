@@ -1,6 +1,5 @@
 package no.nav.k9.integrasjon.datavarehus
 
-import io.ktor.util.*
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.dusseldorf.ktor.health.HealthCheck
 import no.nav.helse.dusseldorf.ktor.health.Healthy
@@ -44,7 +43,7 @@ class StatistikkProducer constructor(
     )
 
     private companion object {
-        private val NAME = "StatistikkProducer"
+        private const val NAME = "StatistikkProducer"
 
         private val log = LoggerFactory.getLogger(StatistikkProducer::class.java)
     }

@@ -13,6 +13,6 @@ fun Route.KodeverkApis() {
     class hentGruppertKodeliste
 
     get { _: hentGruppertKodeliste ->
-        kodeverkTjeneste.hentGruppertKodeliste()?.let { call.respond(it) }
+        kodeverkTjeneste.hentGruppertKodeliste().let { call.respond(it) }
     }
 }

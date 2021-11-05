@@ -9,7 +9,7 @@ import java.util.*
 data class IdToken(
     override val value: String,
 ) : IIdToken {
-    override val jwt = try {
+    override val jwt: JWTToken = try {
         val split = value.split(".")
         val header = String(Base64.getDecoder().decode(split[0]), Charset.defaultCharset())
         val body = String(Base64.getDecoder().decode(split[1]), Charset.defaultCharset())

@@ -12,21 +12,20 @@ private const val username = "srvkafkaclient"
 private const val password = "kafkaclient"
 
 object KafkaWrapper {
-    fun bootstrap() : KafkaEnvironment {
-        val kafkaEnvironment = KafkaEnvironment(
+    fun bootstrap(): KafkaEnvironment {
+        return KafkaEnvironment(
             users = listOf(JAASCredential(username, password)),
             autoStart = true,
             withSchemaRegistry = false,
             withSecurity = true,
-            topicNames= listOf(
-               "asd"
+            topicNames = listOf(
+                "asd"
             )
         )
-        return kafkaEnvironment
     }
 }
 
-private fun KafkaEnvironment.testConsumerProperties() : MutableMap<String, Any>?  {
+private fun KafkaEnvironment.testConsumerProperties() : MutableMap<String, Any> {
     return HashMap<String, Any>().apply {
         put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, brokersURL)
         put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_PLAINTEXT")
@@ -36,7 +35,7 @@ private fun KafkaEnvironment.testConsumerProperties() : MutableMap<String, Any>?
     }
 }
 
-private fun KafkaEnvironment.testProducerProperties() : MutableMap<String, Any>?  {
+private fun KafkaEnvironment.testProducerProperties() : MutableMap<String, Any> {
     return HashMap<String, Any>().apply {
         put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, brokersURL)
         put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_PLAINTEXT")

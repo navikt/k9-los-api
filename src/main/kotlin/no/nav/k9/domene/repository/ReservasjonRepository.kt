@@ -63,10 +63,10 @@ class ReservasjonRepository(
                     }.asList
             )
         }
-        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){ LongAdder() }.increment()
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
 
-        val reservasjoner = json.map { s -> objectMapper().readValue(s, Reservasjon::class.java) }.toList()
-        return reservasjoner
+        return json.map { s -> objectMapper().readValue(s, Reservasjon::class.java) }.toList()
     }
 
     private suspend fun fjernReservasjonerSomIkkeLengerErAktive(

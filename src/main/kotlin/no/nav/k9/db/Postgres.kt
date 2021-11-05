@@ -15,14 +15,14 @@ enum class Role {
     override fun toString() = name.lowercase(Locale.getDefault())
 }
 
-fun Application.getDataSource(configuration: Configuration) =
+fun Application.getDataSource(configuration: Configuration): HikariDataSource =
     if (configuration.koinProfile() == KoinProfile.LOCAL) {
         HikariDataSource(configuration.hikariConfig())
     } else {
         dataSourceFromVault(configuration, Role.User)
     }
 
-fun Application.dataSourceFromVault(hikariConfig: Configuration, role: Role) =
+fun Application.dataSourceFromVault(hikariConfig: Configuration, role: Role): HikariDataSource =
     HikariCPVaultUtil.createHikariDataSourceWithVaultIntegration(
         hikariConfig.hikariConfig(),
         hikariConfig.getVaultDbPath(),

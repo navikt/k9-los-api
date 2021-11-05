@@ -1,8 +1,8 @@
 package no.nav.k9.aksjonspunktbehandling
 
-import no.nav.helse.kafka.ManagedKafkaStreams
-import no.nav.helse.kafka.ManagedStreamHealthy
-import no.nav.helse.kafka.ManagedStreamReady
+import no.nav.k9.integrasjon.kafka.ManagedKafkaStreams
+import no.nav.k9.integrasjon.kafka.ManagedStreamHealthy
+import no.nav.k9.integrasjon.kafka.ManagedStreamReady
 import no.nav.k9.Configuration
 import no.nav.k9.integrasjon.kafka.KafkaConfig
 import org.apache.kafka.streams.StreamsBuilder

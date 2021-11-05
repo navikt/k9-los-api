@@ -1,8 +1,7 @@
+package no.nav.k9.domene.modell
 
 import io.prometheus.client.Counter
 import io.prometheus.client.Histogram
-import no.nav.k9.domene.modell.BehandlingStatus
-import no.nav.k9.domene.modell.K9SakModell
 import no.nav.k9.domene.repository.ReservasjonRepository
 import java.time.Duration
 
@@ -57,6 +56,6 @@ internal fun K9SakModell.reportMetrics(reservasjonRepository: ReservasjonReposit
 
         if (!reservasjonRepository.finnes(sisteEvent().eksternId!!)) {
             oppgaveAutomatisk.inc()
-        }        
+        }
     }
 }

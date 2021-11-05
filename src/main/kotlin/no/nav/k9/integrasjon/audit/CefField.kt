@@ -12,11 +12,7 @@ class CefField {
 
     constructor(key: CefFieldName, value: Long) {
         this.key = key
-        this.value = java.lang.Long.toString(value)
-    }
-
-    fun getKey(): CefFieldName {
-        return key
+        this.value = value.toString()
     }
 
     /**

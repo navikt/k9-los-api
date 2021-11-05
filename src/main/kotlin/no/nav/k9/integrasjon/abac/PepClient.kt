@@ -47,8 +47,7 @@ class PepClient constructor(
             .addAccessSubjectAttribute(SUBJECTID, azureGraphService.hentIdentTilInnloggetBruker())
             .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
 
-        val decision = evaluate(requestBuilder)
-        return decision
+        return evaluate(requestBuilder)
     }
 
     override suspend fun harBasisTilgang(): Boolean {
@@ -61,22 +60,20 @@ class PepClient constructor(
             .addAccessSubjectAttribute(SUBJECTID, azureGraphService.hentIdentTilInnloggetBruker())
             .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
 
-        val decision = evaluate(requestBuilder)
-        return decision
+        return evaluate(requestBuilder)
     }
 
     override suspend fun kanLeggeUtDriftsmelding(): Boolean {
 
         val requestBuilder = XacmlRequestBuilder()
-                .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
-                .addResourceAttribute(RESOURCE_TYPE, DRIFTSMELDING)
-                .addActionAttribute(ACTION_ID, "create")
-                .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
-                .addAccessSubjectAttribute(SUBJECTID, azureGraphService.hentIdentTilInnloggetBruker())
-                .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
+            .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
+            .addResourceAttribute(RESOURCE_TYPE, DRIFTSMELDING)
+            .addActionAttribute(ACTION_ID, "create")
+            .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
+            .addAccessSubjectAttribute(SUBJECTID, azureGraphService.hentIdentTilInnloggetBruker())
+            .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
 
-        val decision = evaluate(requestBuilder)
-        return decision
+        return evaluate(requestBuilder)
     }
 
     override suspend fun harTilgangTilLesSak(
@@ -143,8 +140,7 @@ class PepClient constructor(
             .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
             .addAccessSubjectAttribute(SUBJECTID, azureGraphService.hentIdentTilInnloggetBruker())
             .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
-        val decision = evaluate(requestBuilder)
-        return decision
+        return evaluate(requestBuilder)
     }
 
     override suspend fun kanSendeSakTilStatistikk(

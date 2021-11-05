@@ -1,7 +1,8 @@
 package no.nav.k9.tjenester.saksbehandler.saksliste
 
-import no.nav.k9.domene.modell.AndreKriterierType
-import no.nav.k9.domene.modell.*
+import no.nav.k9.domene.modell.BehandlingType
+import no.nav.k9.domene.modell.FagsakYtelseType
+import no.nav.k9.domene.modell.Saksbehandler
 import no.nav.k9.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
 import java.time.LocalDate
 import java.util.*

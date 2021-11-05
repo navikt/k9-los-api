@@ -44,7 +44,7 @@ data class K9PunsjModell(
         TODO("Ikke relevant for punsj")
     }
 
-    fun forrigeEvent(): PunsjEventDto? {
+    private fun forrigeEvent(): PunsjEventDto? {
         return if (this.eventer.lastIndex > 0) {
             this.eventer[this.eventer.lastIndex - 1]
         } else {
@@ -63,7 +63,7 @@ data class K9PunsjModell(
         return forrigeAksjonspunkter != nåværendeAksjonspunkter
     }
 
-    fun PunsjEventDto.aktiveAksjonspunkt(): Aksjonspunkter {
+    private fun PunsjEventDto.aktiveAksjonspunkt(): Aksjonspunkter {
         return Aksjonspunkter(this.aksjonspunktKoderMedStatusListe.filter { entry -> entry.value == "OPPR" })
     }
 

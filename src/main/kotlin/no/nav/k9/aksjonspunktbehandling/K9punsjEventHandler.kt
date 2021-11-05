@@ -1,22 +1,20 @@
 package no.nav.k9.aksjonspunktbehandling
 
-import io.ktor.util.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
-import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.repository.*
 import no.nav.k9.integrasjon.kafka.dto.PunsjEventDto
+import no.nav.k9.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
 import org.slf4j.LoggerFactory
 
 
 class K9punsjEventHandler constructor(
-    val oppgaveRepository: OppgaveRepository,
-    val punsjEventK9Repository: PunsjEventK9Repository,
-    val statistikkRepository: StatistikkRepository,
-    val statistikkChannel: Channel<Boolean>,
-    val reservasjonRepository: ReservasjonRepository,
-    val oppgaveKøRepository: OppgaveKøRepository,
-    val saksbehandlerRepository: SaksbehandlerRepository
+    private val oppgaveRepository: OppgaveRepository,
+    private val punsjEventK9Repository: PunsjEventK9Repository,
+    private val statistikkChannel: Channel<Boolean>,
+    private val reservasjonRepository: ReservasjonRepository,
+    private val oppgaveKøRepository: OppgaveKøRepository,
+    private val reservasjonTjeneste: ReservasjonTjeneste
 ) {
     private val log = LoggerFactory.getLogger(K9punsjEventHandler::class.java)
 
@@ -31,28 +29,14 @@ class K9punsjEventHandler constructor(
         }
 
         if (modell.fikkEndretAksjonspunkt()) {
-            fjernReservasjon(oppgave)
+            reservasjonTjeneste.fjernReservasjon(oppgave)
         }
-        
+
         runBlocking {
             for (oppgavekø in oppgaveKøRepository.hentKøIdIkkeTaHensyn()) {
                 oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, listOf(oppgave), reservasjonRepository)
             }
             statistikkChannel.send(true)
-        }
-    }
-    
-    private fun fjernReservasjon(oppgave: Oppgave) {
-        if (reservasjonRepository.finnes(oppgave.eksternId)) {
-            reservasjonRepository.lagre(oppgave.eksternId) { reservasjon ->
-                reservasjon!!.reservertTil = null
-                reservasjon
-            }
-            val reservasjon = reservasjonRepository.hent(oppgave.eksternId)
-            saksbehandlerRepository.fjernReservasjonIkkeTaHensyn(
-                reservasjon.reservertAv,
-                reservasjon.oppgave
-            )
         }
     }
 }

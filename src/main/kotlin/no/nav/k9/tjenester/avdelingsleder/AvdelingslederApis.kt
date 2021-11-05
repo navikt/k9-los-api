@@ -5,7 +5,6 @@ import io.ktor.locations.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
-import io.ktor.util.*
 import no.nav.k9.integrasjon.rest.RequestContextService
 import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveId
 import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveTjeneste
@@ -26,7 +25,7 @@ internal fun Route.AvdelingslederApis() {
     }
 
     @Location("/oppgaver/antall")
-    class hentAntallOppgaver()
+    class hentAntallOppgaver
     get { _: hentAntallOppgaver ->
         requestContextService.withRequestContext(call) {
             val uuid = call.parameters["id"]

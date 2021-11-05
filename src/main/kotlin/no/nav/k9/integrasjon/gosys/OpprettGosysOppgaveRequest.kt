@@ -1,7 +1,5 @@
 package no.nav.k9.integrasjon.gosys
 
-import no.nav.k9.domene.typer.AktørId
-import org.apache.http.message.BasicHeader
 import org.json.JSONObject
 import java.time.LocalDate
 

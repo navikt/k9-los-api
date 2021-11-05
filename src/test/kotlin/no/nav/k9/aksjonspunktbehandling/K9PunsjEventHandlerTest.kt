@@ -19,8 +19,6 @@ import kotlin.test.assertTrue
 
 class K9PunsjEventHandlerTest : KoinTest {
 
-    private val log = LoggerFactory.getLogger(K9PunsjEventHandlerTest::class.java)
-
     @get:Rule
     val koinTestRule = KoinTestRule.create {
         modules(buildAndTestConfig())
@@ -49,8 +47,7 @@ class K9PunsjEventHandlerTest : KoinTest {
 
         k9PunsjEventHandler.prosesser(event)
         val oppgaveModell = oppgaveRepository.hent(UUID.fromString(event.eksternId.toString()))
-        val oppgave = oppgaveModell
-        assertTrue { oppgave.aktiv }
+        assertTrue { oppgaveModell.aktiv }
     }
 
     @Test
@@ -76,8 +73,7 @@ class K9PunsjEventHandlerTest : KoinTest {
 
         k9PunsjEventHandler.prosesser(event)
         val oppgaveModell = oppgaveRepository.hent(UUID.fromString(event.eksternId.toString()))
-        val oppgave = oppgaveModell
-        assertTrue { oppgave.aktiv }
+        assertTrue { oppgaveModell.aktiv }
     }
 
     @Test
@@ -102,7 +98,6 @@ class K9PunsjEventHandlerTest : KoinTest {
 
         k9PunsjEventHandler.prosesser(event)
         val oppgaveModell = oppgaveRepository.hent(UUID.fromString(event.eksternId.toString()))
-        val oppgave = oppgaveModell
-        assertFalse { oppgave.aktiv }
+        assertFalse { oppgaveModell.aktiv }
     }
 }

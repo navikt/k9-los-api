@@ -1,6 +1,5 @@
 package no.nav.k9.tjenester.avdelingsleder
 
-import io.ktor.util.*
 import no.nav.k9.Configuration
 import no.nav.k9.KoinProfile
 import no.nav.k9.domene.lager.oppgave.Reservasjon
@@ -30,22 +29,7 @@ class AvdelingslederTjeneste(
 ) {
     fun hentOppgaveKø(uuid: UUID): OppgavekøDto {
         val oppgaveKø = oppgaveKøRepository.hentOppgavekø(uuid)
-        return OppgavekøDto(
-            id = oppgaveKø.id,
-            navn = oppgaveKø.navn,
-            sortering = SorteringDto(
-                sorteringType = KøSortering.fraKode(oppgaveKø.sortering.kode),
-                fomDato = oppgaveKø.fomDato,
-                tomDato = oppgaveKø.tomDato
-            ),
-            behandlingTyper = oppgaveKø.filtreringBehandlingTyper,
-            fagsakYtelseTyper = oppgaveKø.filtreringYtelseTyper,
-            andreKriterier = oppgaveKø.filtreringAndreKriterierType,
-            sistEndret = oppgaveKø.sistEndret,
-            skjermet = oppgaveKø.skjermet,
-            antallBehandlinger = oppgaveTjeneste.hentAntallOppgaver(oppgavekøId = oppgaveKø.id, taMedReserverte = true),
-            saksbehandlere = oppgaveKø.saksbehandlere
-        )
+        return lagOppgaveKøDto(oppgaveKø)
     }
 
     suspend fun hentOppgaveKøer(): List<OppgavekøDto> {
@@ -53,24 +37,26 @@ class AvdelingslederTjeneste(
             return emptyList()
         }
         return oppgaveKøRepository.hent().map {
-            OppgavekøDto(
-                id = it.id,
-                navn = it.navn,
-                sortering = SorteringDto(
-                    sorteringType = KøSortering.fraKode(it.sortering.kode),
-                    fomDato = it.fomDato,
-                    tomDato = it.tomDato
-                ),
-                behandlingTyper = it.filtreringBehandlingTyper,
-                fagsakYtelseTyper = it.filtreringYtelseTyper,
-                andreKriterier = it.filtreringAndreKriterierType,
-                sistEndret = it.sistEndret,
-                skjermet = it.skjermet,
-                antallBehandlinger = oppgaveTjeneste.hentAntallOppgaver(oppgavekøId = it.id, taMedReserverte = true),
-                saksbehandlere = it.saksbehandlere
-            )
+            lagOppgaveKøDto(it)
         }.sortedBy { it.navn }
     }
+
+    private fun lagOppgaveKøDto(oppgaveKø: OppgaveKø) = OppgavekøDto(
+        id = oppgaveKø.id,
+        navn = oppgaveKø.navn,
+        sortering = SorteringDto(
+            sorteringType = KøSortering.fraKode(oppgaveKø.sortering.kode),
+            fomDato = oppgaveKø.fomDato,
+            tomDato = oppgaveKø.tomDato
+        ),
+        behandlingTyper = oppgaveKø.filtreringBehandlingTyper,
+        fagsakYtelseTyper = oppgaveKø.filtreringYtelseTyper,
+        andreKriterier = oppgaveKø.filtreringAndreKriterierType,
+        sistEndret = oppgaveKø.sistEndret,
+        skjermet = oppgaveKø.skjermet,
+        antallBehandlinger = oppgaveTjeneste.hentAntallOppgaver(oppgavekøId = oppgaveKø.id, taMedReserverte = true),
+        saksbehandlere = oppgaveKø.saksbehandlere
+    )
 
     private suspend fun erOppgaveStyrer() = (pepClient.erOppgaveStyrer())
 
@@ -155,7 +141,7 @@ class AvdelingslederTjeneste(
 
     }
 
-    suspend fun hentSaksbehandlersOppgavekoer(): Map<Saksbehandler, List<OppgavekøDto>> {
+    private suspend fun hentSaksbehandlersOppgavekoer(): Map<Saksbehandler, List<OppgavekøDto>> {
         val koer = oppgaveTjeneste.hentOppgaveKøer()
         val saksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere()
         val map = mutableMapOf<Saksbehandler, List<OppgavekøDto>>()

@@ -22,8 +22,8 @@ internal data class Topic<V>(
     val serDes: SerDes<V>
 ) {
     val keySerializer = StringSerializer()
-    val keySerde = Serdes.String()
-    val valueSerde = Serdes.serdeFrom(serDes, serDes)
+    val keySerde = Serdes.String()!!
+    val valueSerde = Serdes.serdeFrom(serDes, serDes)!!
 }
 
 fun objectMapper(): ObjectMapper {

@@ -22,10 +22,8 @@ import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import no.nav.k9.tjenester.sse.SseEvent
 import org.junit.Rule
 import org.junit.Test
-import org.koin.core.qualifier.named
 import org.koin.test.KoinTest
 import org.koin.test.KoinTestRule
-import org.koin.test.get
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*

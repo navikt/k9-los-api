@@ -29,8 +29,8 @@ class SakOgBehandlingProducer constructor(
         valueSerializer = SakOgBehandlingSerialier()
     )
     private companion object {
-        private val NAME = "SakOgBehadlingProducer"
-      
+        private const val NAME = "SakOgBehadlingProducer"
+
         private val log = LoggerFactory.getLogger(SakOgBehandlingProducer::class.java)
     }
 

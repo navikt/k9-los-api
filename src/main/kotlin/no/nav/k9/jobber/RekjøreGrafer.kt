@@ -10,6 +10,7 @@ import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.domene.modell.IModell
 import no.nav.k9.domene.repository.*
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
+import no.nav.k9.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
 import java.util.*
 import java.util.concurrent.Executors
 import kotlin.system.measureTimeMillis
@@ -122,7 +123,8 @@ fun Application.regenererOppgaver(
     behandlingProsessEventTilbakeRepository: BehandlingProsessEventTilbakeRepository,
     reservasjonRepository: ReservasjonRepository,
     oppgaveKøRepository: OppgaveKøRepository,
-    saksbehhandlerRepository: SaksbehandlerRepository
+    saksbehhandlerRepository: SaksbehandlerRepository,
+    reservasjonTjeneste: ReservasjonTjeneste
 ) {
     launch(context = Executors.newSingleThreadExecutor().asCoroutineDispatcher()) {
         try {
@@ -157,17 +159,7 @@ fun Application.regenererOppgaver(
                         continue
                     }
                     if (oppgave.aktiv) {
-                        if (reservasjonRepository.finnes(oppgave.eksternId)) {
-                            reservasjonRepository.lagre(oppgave.eksternId) { reservasjon ->
-                                reservasjon!!.reservertTil = null
-                                reservasjon
-                            }
-                            val reservasjon = reservasjonRepository.hent(oppgave.eksternId)
-                            saksbehhandlerRepository.fjernReservasjonIkkeTaHensyn(
-                                reservasjon.reservertAv,
-                                reservasjon.oppgave
-                            )
-                        }
+                        reservasjonTjeneste.fjernReservasjon(oppgave)
                     }
                     oppgaveRepository.lagre(oppgave.eksternId) {
                         oppgave

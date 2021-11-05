@@ -1,8 +1,7 @@
 package no.nav.k9.integrasjon.pdl
 
 
-class PdlServiceLocal constructor(
-) : IPdlService {
+class PdlServiceLocal : IPdlService {
 
     override suspend fun person(aktorId: String): PersonPdlResponse {
         return PersonPdlResponse(false, PersonPdl(

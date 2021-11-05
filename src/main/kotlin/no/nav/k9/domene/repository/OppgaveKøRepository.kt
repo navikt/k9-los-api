@@ -107,7 +107,7 @@ class OppgaveKøRepository(
         f: (OppgaveKø?) -> OppgaveKø
     ) {
         val kode6 = pepClient.harTilgangTilKode6()
-        using(sessionOf(dataSource)) {
+        using(sessionOf(dataSource)) { it ->
             it.transaction { tx ->
                 val run = tx.run(
                     queryOf(
@@ -157,7 +157,7 @@ class OppgaveKøRepository(
     ) {
         var hintRefresh = false
         var gjennomførteTransaksjon = true
-        using(sessionOf(dataSource)) {
+        using(sessionOf(dataSource)) { it ->
             it.transaction { tx ->
                 val gammelJson = tx.run(
                     queryOf(
@@ -225,7 +225,7 @@ class OppgaveKøRepository(
 
         var hintRefresh = false
         var gjennomførteTransaksjon = true
-        using(sessionOf(dataSource)) {
+        using(sessionOf(dataSource)) { it ->
             it.transaction { tx ->
                 val gammelJson = tx.run(
                     queryOf(

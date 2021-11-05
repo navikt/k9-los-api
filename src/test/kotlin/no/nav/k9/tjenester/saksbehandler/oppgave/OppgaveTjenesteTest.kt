@@ -1,5 +1,7 @@
 package no.nav.k9.tjenester.saksbehandler.oppgave
 
+import assertk.assertThat
+import assertk.assertions.isEqualTo
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.buildAndTestConfig
 import no.nav.k9.domene.lager.oppgave.Oppgave
@@ -16,10 +18,7 @@ import org.koin.test.get
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
-import assertk.assertThat
-import assertk.assertions.*
 import kotlin.test.assertNull
-import kotlin.test.assertSame
 import kotlin.test.asserter
 
 class OppgaveTjenesteTest : KoinTest {

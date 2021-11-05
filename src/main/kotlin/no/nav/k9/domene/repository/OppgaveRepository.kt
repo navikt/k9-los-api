@@ -189,7 +189,7 @@ class OppgaveRepository(
         }
     }
 
-    suspend fun sjekkKode6(oppgave: Oppgave): Boolean {
+    private suspend fun sjekkKode6(oppgave: Oppgave): Boolean {
         if (oppgave.fagsakSaksnummer.isNotBlank()) {
             val søker = pepClient.erSakKode6(oppgave.fagsakSaksnummer)
             val pleietrengende =
@@ -206,7 +206,7 @@ class OppgaveRepository(
         return (søker || pleietrengende)
     }
 
-    suspend fun sjekkKode7EllerEgenAnsatt(oppgave: Oppgave): Boolean {
+    private suspend fun sjekkKode7EllerEgenAnsatt(oppgave: Oppgave): Boolean {
         if (oppgave.fagsakSaksnummer.isNotBlank()) {
             val søker = pepClient.erSakKode7EllerEgenAnsatt(oppgave.fagsakSaksnummer)
             val pleietrengende =
@@ -237,10 +237,12 @@ class OppgaveRepository(
                 queryOf(
                     "select data from oppgave " +
                             "where id in (${
-                                IntRange(0, oppgaveiderList.size - 1).map { t -> ":p$t" }.joinToString()
+                                IntRange(0, oppgaveiderList.size - 1).joinToString { t -> ":p$t" }
                             })",
-                    IntRange(0, oppgaveiderList.size - 1).map { t -> "p$t" to oppgaveiderList[t].toString() as Any }
-                        .toMap()
+                    IntRange(
+                        0,
+                        oppgaveiderList.size - 1
+                    ).associate { t -> "p$t" to oppgaveiderList[t].toString() as Any }
                 )
                     .map { row ->
                         row.string("data")
@@ -270,10 +272,12 @@ class OppgaveRepository(
                 queryOf(
                     "select id, data->'pleietrengendeAktørId' as aktor from oppgave " +
                             "where id in (${
-                                IntRange(0, oppgaveiderList.size - 1).map { t -> ":p$t" }.joinToString()
+                                IntRange(0, oppgaveiderList.size - 1).joinToString { t -> ":p$t" }
                             }) and data->>'pleietrengendeAktørId' is not null",
-                    IntRange(0, oppgaveiderList.size - 1).map { t -> "p$t" to oppgaveiderList[t].toString() as Any }
-                        .toMap()
+                    IntRange(
+                        0,
+                        oppgaveiderList.size - 1
+                    ).associate { t -> "p$t" to oppgaveiderList[t].toString() as Any }
                 )
                     .map { row ->
                         Pair(row.string("id"), row.string("aktor"))
@@ -404,7 +408,7 @@ class OppgaveRepository(
         return oppgaver
     }
 
-    suspend fun hentOppgaverMedSaksnummerIkkeTaHensyn(saksnummer: String): List<Oppgave> {
+    fun hentOppgaverMedSaksnummerIkkeTaHensyn(saksnummer: String): List<Oppgave> {
         val json: List<String> = using(sessionOf(dataSource)) {
             //language=PostgreSQL
             it.run(
@@ -417,9 +421,8 @@ class OppgaveRepository(
                     }.asList
             )
         }
-        val oppgaver = json.map { objectMapper().readValue(it, Oppgave::class.java) }
 
-        return oppgaver
+        return json.map { objectMapper().readValue(it, Oppgave::class.java) }
     }
 
     internal suspend fun hentAktiveOppgaverTotalt(): Int {
@@ -664,8 +667,8 @@ class OppgaveRepository(
         }
 
         return json.flatten().groupBy { it.kode }.map { entry ->
-            val aksjonspunkt = entry.value.get(0)
-            aksjonspunkt.antall = entry.value.map { it.antall }.sum()
+            val aksjonspunkt = entry.value[0]
+            aksjonspunkt.antall = entry.value.sumOf { it.antall }
             aksjonspunkt
         }
     }

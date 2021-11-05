@@ -1,6 +1,6 @@
 package no.nav.k9.integrasjon.abac
 
-class PepClientLocal constructor() : IPepClient {
+class PepClientLocal : IPepClient {
     override suspend fun erOppgaveStyrer(): Boolean {
         return true
     }

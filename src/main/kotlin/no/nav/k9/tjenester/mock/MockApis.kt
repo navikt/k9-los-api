@@ -7,7 +7,6 @@ import io.ktor.locations.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
-import io.ktor.util.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.html.*
 import no.nav.k9.KoinProfile
@@ -245,8 +244,8 @@ fun Route.MockGrensesnitt() {
         if (profile == KoinProfile.PROD) {
             call.respond(HttpStatusCode.NotFound)
         }
-        val valgtKø = call.request.queryParameters.get("valgtKø")
-        val ferdigStill = call.request.queryParameters.get("ferdigstill")
+        val valgtKø = call.request.queryParameters["valgtKø"]
+        val ferdigStill = call.request.queryParameters["ferdigstill"]
         if (ferdigStill != null) {
             k9sakEventHandler.prosesser(
                 behandlingProsessEventRepository.hent(UUID.fromString(ferdigStill)).sisteEvent()

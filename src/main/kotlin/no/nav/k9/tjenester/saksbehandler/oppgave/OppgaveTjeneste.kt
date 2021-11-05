@@ -555,7 +555,7 @@ class OppgaveTjeneste constructor(
             if (omsorgspengerYtelser.contains(it.fagsakYtelseType)) it.fagsakYtelseType = FagsakYtelseType.OMSORGSPENGER
         }
 
-        return alleTallene.map {
+        return alleTallene.map { it ->
             val hentIdentTilInnloggetBruker = azureGraphService.hentIdentTilInnloggetBruker()
             val antallFerdistilteMine =
                 reservasjonRepository.hentSelvOmDeIkkeErAktive(it.ferdigstilte.map { UUID.fromString(it)!! }
@@ -847,7 +847,6 @@ class OppgaveTjeneste constructor(
                         }
                     )
                 var personNavn: String
-                var personFnummer: String
                 val navn = if (KoinProfile.PREPROD == configuration.koinProfile()) {
                     "${oppgave.fagsakSaksnummer} "
                     //          oppgave.aksjonspunkter.liste.entries.stream().map { t ->
@@ -859,7 +858,7 @@ class OppgaveTjeneste constructor(
                     person.person?.navn() ?: "Uten navn"
                 }
                 personNavn = navn
-                personFnummer = if (person.person == null) {
+                val personFnummer: String = if (person.person == null) {
                     "Ukjent fnummer"
                 } else {
                     person.person.fnr()

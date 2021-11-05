@@ -1,9 +1,9 @@
 package no.nav.k9.tjenester.saksbehandler.oppgave
 
 class SaksbehandlerinformasjonDto(
-    val saksbehandlerIdent: String,
+    private val saksbehandlerIdent: String,
     val navn: String,
-    val avdelinger: List<String>
+    private val avdelinger: List<String>
 ) {
 
     override fun toString(): String {

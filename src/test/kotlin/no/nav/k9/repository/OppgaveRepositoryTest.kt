@@ -18,6 +18,6 @@ class OppgaveRepositoryTest {
 
     }
 
-    fun getStringFromResource(path: String) =
+    private fun getStringFromResource(path: String) =
         OppgaveRepositoryTest::class.java.getResourceAsStream(path).bufferedReader().use { it.readText() }
 }

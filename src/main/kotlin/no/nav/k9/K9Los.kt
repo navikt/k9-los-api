@@ -5,14 +5,12 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import io.ktor.application.*
 import io.ktor.auth.*
 import io.ktor.features.*
-import io.ktor.http.*
 import io.ktor.http.cio.websocket.*
 import io.ktor.http.content.*
 import io.ktor.jackson.*
 import io.ktor.locations.*
 import io.ktor.metrics.micrometer.*
 import io.ktor.routing.*
-import io.ktor.util.*
 import io.ktor.websocket.*
 import io.prometheus.client.hotspot.DefaultExports
 import kotlinx.coroutines.channels.BroadcastChannel
@@ -35,7 +33,6 @@ import no.nav.k9.eventhandler.sjekkReserverteJobb
 import no.nav.k9.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.integrasjon.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.integrasjon.sakogbehandling.SakOgBehandlingProducer
-import no.nav.k9.jobber.rekjørEventerForGrafer
 import no.nav.k9.tjenester.admin.AdminApis
 import no.nav.k9.tjenester.avdelingsleder.AvdelingslederApis
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.NokkeltallApis

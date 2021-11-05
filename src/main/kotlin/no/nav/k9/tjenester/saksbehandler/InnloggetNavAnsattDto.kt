@@ -1,4 +1,4 @@
-package no.nav.k9.tjenester.avdelingsleder
+package no.nav.k9.tjenester.saksbehandler
 
 data class InnloggetNavAnsattDto(
     val brukernavn: String,

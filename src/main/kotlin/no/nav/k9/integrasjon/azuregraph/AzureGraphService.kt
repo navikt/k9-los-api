@@ -1,8 +1,11 @@
 package no.nav.k9.integrasjon.azuregraph
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.github.kittinunf.fuel.core.FuelError
+import com.github.kittinunf.fuel.core.Request
 import com.github.kittinunf.fuel.coroutines.awaitStringResponseResult
 import com.github.kittinunf.fuel.httpGet
+import com.github.kittinunf.result.Result
 import io.ktor.http.*
 import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.ktor.metrics.Operation
@@ -22,7 +25,7 @@ open class AzureGraphService constructor(
 ) : IAzureGraphService {
     private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
     private val cache = Cache<String>()
-    val log = LoggerFactory.getLogger("AzureGraphService")
+    val log = LoggerFactory.getLogger("AzureGraphService")!!
 
     override suspend fun hentIdentTilInnloggetBruker(): String {
         val username = IdToken(kotlin.coroutines.coroutineContext.idToken().value).getUsername()
@@ -54,16 +57,7 @@ open class AzureGraphService constructor(
                     resultResolver = { 200 == it.second.statusCode }
                 ) { httpRequest.awaitStringResponseResult() }
 
-                result.fold(
-                    { success -> success },
-                    { error ->
-                        log.error(
-                            "Error response = '${error.response.body().asString("text/plain")}' fra '${request.url}'"
-                        )
-                        log.error(error.toString())
-                        throw IllegalStateException("Feil ved henting av saksbehandlers id")
-                    }
-                )
+                håndterResultat(result, request)
             }
             return try {
                 val onPremisesSamAccountName = objectMapper().readValue<AccountName>(json).onPremisesSamAccountName
@@ -80,8 +74,22 @@ open class AzureGraphService constructor(
         }
     }
 
+    private fun håndterResultat(
+        result: Result<String, FuelError>,
+        request: Request
+    ) = result.fold(
+        { success -> success },
+        { error ->
+            log.error(
+                "Error response = '${error.response.body().asString("text/plain")}' fra '${request.url}'"
+            )
+            log.error(error.toString())
+            throw IllegalStateException("Feil ved henting av saksbehandlers id")
+        }
+    )
+
     override suspend fun hentEnhetForInnloggetBruker(): String {
-      
+
         val username = IdToken(kotlin.coroutines.coroutineContext.idToken().value).getUsername() + "_office_location"
         val cachedObject = cache.get(username)
         if (cachedObject == null) {
@@ -111,16 +119,7 @@ open class AzureGraphService constructor(
                     resultResolver = { 200 == it.second.statusCode }
                 ) { httpRequest.awaitStringResponseResult() }
 
-                result.fold(
-                    { success -> success },
-                    { error ->
-                        log.error(
-                            "Error response = '${error.response.body().asString("text/plain")}' fra '${request.url}'"
-                        )
-                        log.error(error.toString())
-                        throw IllegalStateException("Feil ved henting av saksbehandlers id")
-                    }
-                )
+                håndterResultat(result, request)
             }
             return try {
                 val officeLocation = objectMapper().readValue<OfficeLocation>(json).officeLocation
@@ -136,7 +135,7 @@ open class AzureGraphService constructor(
             return cachedObject.value
         }
     }
-    
+
 }
 
 

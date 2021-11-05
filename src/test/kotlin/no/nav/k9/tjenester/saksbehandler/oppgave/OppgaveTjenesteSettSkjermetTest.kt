@@ -1,6 +1,5 @@
 package no.nav.k9.tjenester.saksbehandler.oppgave
 
-import io.ktor.util.*
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -394,9 +393,9 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest {
         ))
 
 
-        var oppgaver = oppgaveTjeneste.hentNesteOppgaverIKø(oppgaveko.id)
+        val oppgaver = oppgaveTjeneste.hentNesteOppgaverIKø(oppgaveko.id)
         assert(oppgaver.size == 1)
-        val oppgave = oppgaver.get(0)
+        val oppgave = oppgaver[0]
 
         saksbehandlerRepository.addSaksbehandler(Saksbehandler(brukerIdent = "123", navn= null, epost = "test@test.no", enhet = null))
         saksbehandlerRepository.addSaksbehandler(Saksbehandler(brukerIdent="ny", navn=null,epost =  "test2@test.no",enhet = null))

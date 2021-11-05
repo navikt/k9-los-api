@@ -4,7 +4,6 @@ import io.ktor.application.*
 import io.ktor.locations.*
 import io.ktor.response.*
 import io.ktor.routing.*
-import io.ktor.util.*
 import no.nav.k9.Configuration
 import no.nav.k9.KoinProfile
 import no.nav.k9.domene.modell.Saksbehandler
@@ -12,7 +11,6 @@ import no.nav.k9.domene.repository.SaksbehandlerRepository
 import no.nav.k9.integrasjon.abac.IPepClient
 import no.nav.k9.integrasjon.azuregraph.IAzureGraphService
 import no.nav.k9.integrasjon.rest.RequestContextService
-import no.nav.k9.tjenester.avdelingsleder.InnloggetNavAnsattDto
 import org.koin.ktor.ext.inject
 
 internal fun Route.NavAnsattApis() {

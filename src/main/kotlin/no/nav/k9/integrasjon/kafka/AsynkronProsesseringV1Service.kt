@@ -1,6 +1,5 @@
 package no.nav.k9.integrasjon.kafka
 
-import io.ktor.util.*
 import no.nav.k9.Configuration
 import no.nav.k9.aksjonspunktbehandling.*
 import org.slf4j.LoggerFactory
@@ -10,7 +9,7 @@ internal class AsynkronProsesseringV1Service constructor(
     configuration: Configuration,
     k9sakEventHandler: K9sakEventHandler,
     k9TilbakeEventHandler: K9TilbakeEventHandler,
-    punsjEventHandler: K9punsjEventHandler    
+    punsjEventHandler: K9punsjEventHandler
 ) {
 
     private companion object {
@@ -29,7 +28,7 @@ internal class AsynkronProsesseringV1Service constructor(
         configuration = configuration,
         k9TilbakeEventHandler = k9TilbakeEventHandler
     )
-    
+
     private val aksjonspunkPunsjStream = AksjonspunktPunsjStream(
         kafkaConfig = kafkaConfig,
         configuration = configuration,
@@ -55,8 +54,6 @@ internal class AsynkronProsesseringV1Service constructor(
         aksjonspunkPunsjStream.stop()
         logger.info("Alle streams stoppet.")
     }
-
-    internal fun healthChecks() = healthChecks
 
     internal fun isReadyChecks() = isReadyChecks
 }

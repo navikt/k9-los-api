@@ -56,7 +56,7 @@ internal object RefreshKlienter {
         throw cause
     }
 
-    internal suspend fun <T>sseOperationCo(operation: String, block: suspend () -> T) = try {
+    private suspend fun <T>sseOperationCo(operation: String, block: suspend () -> T) = try {
         block()
     } catch (cause: Throwable) {
         logger.error("Feil ved $operation: ${cause.stackTraceToString()}") // Får en ThrowableProxy-Error med logback

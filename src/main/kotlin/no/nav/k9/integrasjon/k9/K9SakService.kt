@@ -24,7 +24,7 @@ open class K9SakService constructor(
     val configuration: Configuration,
     val accessTokenClient: AccessTokenClient
 ) : IK9SakService {
-    val log = LoggerFactory.getLogger("K9SakService")
+    val log = LoggerFactory.getLogger("K9SakService")!!
     private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
     private val cache = Cache<Boolean>(cacheSize = 10000)
     private val url = configuration.k9Url()

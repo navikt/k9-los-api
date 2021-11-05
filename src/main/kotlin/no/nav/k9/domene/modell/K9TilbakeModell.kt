@@ -26,7 +26,6 @@ data class K9TilbakeModell(
     }
 
     fun oppgave(sisteEvent: BehandlingProsessEventTilbakeDto): Oppgave {
-        val event = sisteEvent
         val eventResultat = sisteEvent.aktiveAksjonspunkt().eventResultatTilbake()
         var aktiv = true
         var oppgaveAvsluttet: LocalDateTime? = null
@@ -35,15 +34,15 @@ data class K9TilbakeModell(
         when (eventResultat) {
             EventResultat.LUKK_OPPGAVE -> {
                 aktiv = false
-                oppgaveAvsluttet = event.eventTid
+                oppgaveAvsluttet = sisteEvent.eventTid
             }
             EventResultat.LUKK_OPPGAVE_VENT -> {
                 aktiv = false
-                oppgaveAvsluttet = event.eventTid
+                oppgaveAvsluttet = sisteEvent.eventTid
             }
             EventResultat.LUKK_OPPGAVE_MANUELT_VENT -> {
                 aktiv = false
-                oppgaveAvsluttet = event.eventTid
+                oppgaveAvsluttet = sisteEvent.eventTid
             }
             EventResultat.GJENÅPNE_OPPGAVE -> TODO()
             EventResultat.OPPRETT_BESLUTTER_OPPGAVE -> {
@@ -53,37 +52,37 @@ data class K9TilbakeModell(
                 aktiv = true
             }
         }
-        if (event.eventHendelse == EventHendelse.AKSJONSPUNKT_AVBRUTT || event.eventHendelse == EventHendelse.AKSJONSPUNKT_UTFØRT) {
+        if (sisteEvent.eventHendelse == EventHendelse.AKSJONSPUNKT_AVBRUTT || sisteEvent.eventHendelse == EventHendelse.AKSJONSPUNKT_UTFØRT) {
             aktiv = false
         }
-        if (FagsakYtelseType.fraKode(event.ytelseTypeKode) == FagsakYtelseType.FRISINN) {
+        if (FagsakYtelseType.fraKode(sisteEvent.ytelseTypeKode) == FagsakYtelseType.FRISINN) {
             aktiv = false
         }
-        var behandlingStatus = event.behandlingStatus
+        var behandlingStatus = sisteEvent.behandlingStatus
         // feil i dto, sjekker begge feltene
-        behandlingStatus = behandlingStatus ?: event.behandlinStatus ?: BehandlingStatus.OPPRETTET.kode
+        behandlingStatus = behandlingStatus ?: sisteEvent.behandlinStatus ?: BehandlingStatus.OPPRETTET.kode
         if (behandlingStatus == BehandlingStatus.AVSLUTTET.kode) {
             aktiv = false
         }
         return Oppgave(
-            behandlingId = event.behandlingId,
-            fagsakSaksnummer = event.saksnummer,
-            aktorId = event.aktørId,
+            behandlingId = sisteEvent.behandlingId,
+            fagsakSaksnummer = sisteEvent.saksnummer,
+            aktorId = sisteEvent.aktørId,
             journalpostId = null,
-            behandlendeEnhet = event.behandlendeEnhet ?: "",
-            behandlingType = BehandlingType.fraKode(event.behandlingTypeKode),
-            fagsakYtelseType = FagsakYtelseType.fraKode(event.ytelseTypeKode),
+            behandlendeEnhet = sisteEvent.behandlendeEnhet ?: "",
+            behandlingType = BehandlingType.fraKode(sisteEvent.behandlingTypeKode),
+            fagsakYtelseType = FagsakYtelseType.fraKode(sisteEvent.ytelseTypeKode),
             aktiv = aktiv,
-            forsteStonadsdag = event.eventTid.toLocalDate(),
+            forsteStonadsdag = sisteEvent.eventTid.toLocalDate(),
             utfortFraAdmin = false,
-            behandlingsfrist = event.eventTid.plusDays(21),
+            behandlingsfrist = sisteEvent.eventTid.plusDays(21),
             behandlingStatus = BehandlingStatus.fraKode(behandlingStatus),
-            eksternId = event.eksternId ?: UUID.randomUUID(),
-            behandlingOpprettet = event.opprettetBehandling,
+            eksternId = sisteEvent.eksternId ?: UUID.randomUUID(),
+            behandlingOpprettet = sisteEvent.opprettetBehandling,
             oppgaveAvsluttet = oppgaveAvsluttet,
-            system = event.fagsystem,
+            system = sisteEvent.fagsystem,
             oppgaveEgenskap = emptyList(),
-            aksjonspunkter = Aksjonspunkter(event.aktiveAksjonspunkt().liste),
+            aksjonspunkter = Aksjonspunkter(sisteEvent.aktiveAksjonspunkt().liste),
             utenlands = false,
             tilBeslutter = beslutterOppgave,
             selvstendigFrilans = false,
@@ -94,16 +93,16 @@ data class K9TilbakeModell(
             avklarMedlemskap = false,
             avklarArbeidsforhold = false,
             vurderopptjeningsvilkåret = false,
-            eventTid = event.eventTid,
+            eventTid = sisteEvent.eventTid,
             ansvarligSaksbehandlerForTotrinn = null,
-            ansvarligSaksbehandlerIdent = event.ansvarligSaksbehandlerIdent,
+            ansvarligSaksbehandlerIdent = sisteEvent.ansvarligSaksbehandlerIdent,
             kombinert = false
         )
     }
 
     override fun behandlingOpprettetSakOgBehandling(): BehandlingOpprettet {
         val sisteEvent = sisteEvent()
-        val behandlingOpprettet = BehandlingOpprettet(
+        return BehandlingOpprettet(
             hendelseType = "behandlingOpprettet",
             hendelsesId = sisteEvent.eksternId.toString() + "_" + eventer.size,
             hendelsesprodusentREF = BehandlingOpprettet.HendelsesprodusentREF("", "", "FS39"),
@@ -131,13 +130,12 @@ data class K9TilbakeModell(
             applikasjonBehandlingREF = sisteEvent().eksternId.toString().replace("-", ""),
             styringsinformasjonListe = listOf()
         )
-        return behandlingOpprettet
     }
 
     override fun behandlingAvsluttetSakOgBehandling(
     ): BehandlingAvsluttet {
         val sisteEvent = sisteEvent()
-        val behandlingAvsluttet = BehandlingAvsluttet(
+        return BehandlingAvsluttet(
             hendelseType = "behandlingAvsluttet",
             hendelsesId = """${sisteEvent.eksternId.toString()}_${eventer.size}""",
             hendelsesprodusentREF = BehandlingAvsluttet.HendelsesprodusentREF("", "", "FS39"),
@@ -166,7 +164,6 @@ data class K9TilbakeModell(
             styringsinformasjonListe = listOf(),
             avslutningsstatus = BehandlingAvsluttet.Avslutningsstatus("", "", "ok")
         )
-        return behandlingAvsluttet
     }
 
     fun sisteEvent(): BehandlingProsessEventTilbakeDto {
@@ -194,10 +191,7 @@ data class K9TilbakeModell(
     }
 
     override fun fikkEndretAksjonspunkt(): Boolean {
-        val forrigeEvent = forrigeEvent()
-        if (forrigeEvent == null) {
-            return false
-        }
+        val forrigeEvent = forrigeEvent() ?: return false
 
         val forrigeAksjonspunkter = forrigeEvent.aktiveAksjonspunkt()
             .liste
@@ -251,7 +245,7 @@ data class K9TilbakeModell(
             && reservasjonRepository.finnes(oppgave.eksternId) && reservasjonRepository.finnes(oppgave.eksternId)
         ) {
             val saksbehandler =
-                saksbehandlerRepository.finnSaksbehandlerMedIdentIkkeTaHensyn(reservasjonRepository.hent(oppgave.eksternId).reservertAv!!)
+                saksbehandlerRepository.finnSaksbehandlerMedIdentIkkeTaHensyn(reservasjonRepository.hent(oppgave.eksternId).reservertAv)
             saksbehandler?.brukerIdent
         } else {
             ""
@@ -335,7 +329,7 @@ data class AksjonspunkterTilbake(val liste: Map<String, String>) {
         return EventResultat.OPPRETT_OPPGAVE
     }
 
-    fun påVentTilbake(): Boolean {
+    private fun påVentTilbake(): Boolean {
         return this.liste.any {
             when (it.key) {
                 "7001", "7002" -> true
@@ -344,7 +338,7 @@ data class AksjonspunkterTilbake(val liste: Map<String, String>) {
         }
     }
 
-    fun tilBeslutterTilbake(): Boolean {
+    private fun tilBeslutterTilbake(): Boolean {
         return this.liste.any {
             when (it.key) {
                 "5005" -> true

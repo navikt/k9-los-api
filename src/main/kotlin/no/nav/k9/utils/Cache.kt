@@ -38,7 +38,4 @@ class Cache <T>(val cacheSize : Int = 1000){
         map.clear()
     }
 
-    fun getKeys(): List<String> {
-       return map.keys.filter { get(it) != null }.toList()
-    }
 }

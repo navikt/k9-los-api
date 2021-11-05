@@ -34,6 +34,7 @@ import no.nav.k9.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.tjenester.driftsmeldinger.DriftsmeldingTjeneste
 import no.nav.k9.tjenester.kodeverk.HentKodeverkTjeneste
 import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveTjeneste
+import no.nav.k9.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
 import no.nav.k9.tjenester.saksbehandler.saksliste.SakslisteTjeneste
 import no.nav.k9.tjenester.sse.RefreshKlienter.initializeRefreshKlienter
 import org.koin.core.module.Module
@@ -151,14 +152,13 @@ fun common(app: Application, config: Configuration) = module {
         K9sakEventHandler(
             oppgaveRepository = get(),
             behandlingProsessEventK9Repository = get(),
-            config = config,
             sakOgBehandlingProducer = get(),
             oppgaveKøRepository = get(),
             reservasjonRepository = get(),
             statistikkProducer = get(),
             statistikkChannel = get(named("statistikkRefreshChannel")),
             statistikkRepository = get(),
-            saksbehhandlerRepository = get()
+            reservasjonTjeneste = get()
         )
     }
 
@@ -166,14 +166,12 @@ fun common(app: Application, config: Configuration) = module {
         K9TilbakeEventHandler(
             oppgaveRepository = get(),
             behandlingProsessEventTilbakeRepository = get(),
-            config = config,
             sakOgBehandlingProducer = get(),
             oppgaveKøRepository = get(),
             reservasjonRepository = get(),
-            statistikkProducer = get(),
-            statistikkChannel = get(named("statistikkRefreshChannel")),
             statistikkRepository = get(),
-            saksbehhandlerRepository = get()
+            statistikkChannel = get(named("statistikkRefreshChannel")),
+            reservasjonTjeneste = get()
         )
     }
 
@@ -182,10 +180,9 @@ fun common(app: Application, config: Configuration) = module {
             oppgaveRepository = get(),
             punsjEventK9Repository = get(),
             statistikkChannel = get(named("statistikkRefreshChannel")),
-            statistikkRepository = get(),
             oppgaveKøRepository = get(),
             reservasjonRepository = get(),
-            saksbehandlerRepository = get()
+            reservasjonTjeneste = get()
         )
     }
 
@@ -212,6 +209,13 @@ fun common(app: Application, config: Configuration) = module {
             azureGraphService = get(),
             statistikkRepository = get(),
             omsorgspengerService = get()
+        )
+    }
+
+    single {
+        ReservasjonTjeneste(
+            reservasjonRepository = get(),
+            saksbehandlerRepository = get()
         )
     }
 

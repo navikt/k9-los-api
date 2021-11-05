@@ -1,11 +1,9 @@
 package no.nav.k9.tjenester.saksbehandler.nokkeltall
 
-import io.ktor.application.call
-import io.ktor.locations.Location
-import io.ktor.locations.get
-import io.ktor.response.respond
-import io.ktor.routing.Route
-import no.nav.k9.domene.modell.BehandlingType
+import io.ktor.application.*
+import io.ktor.locations.*
+import io.ktor.response.*
+import io.ktor.routing.*
 import no.nav.k9.integrasjon.rest.RequestContextService
 import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import org.koin.ktor.ext.inject

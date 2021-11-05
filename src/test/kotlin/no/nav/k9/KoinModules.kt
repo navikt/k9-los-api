@@ -28,6 +28,7 @@ import no.nav.k9.integrasjon.pdl.PdlServiceLocal
 import no.nav.k9.integrasjon.sakogbehandling.SakOgBehandlingProducer
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveTjeneste
+import no.nav.k9.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
 import no.nav.k9.tjenester.sse.SseEvent
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
@@ -143,26 +144,32 @@ fun buildAndTestConfig(pepClient: IPepClient = PepClientLocal()): Module = modul
         K9sakEventHandler(
             get(),
             BehandlingProsessEventK9Repository(dataSource = get()),
-            config = config,
             sakOgBehandlingProducer = sakOgBehadlingProducer,
             oppgaveKøRepository = get(),
             reservasjonRepository = get(),
             statistikkProducer = statistikkProducer,
             statistikkChannel = get(named("statistikkRefreshChannel")),
-            statistikkRepository = get(), saksbehhandlerRepository = get()
+            statistikkRepository = get(),
+            reservasjonTjeneste = get()
         )
     }
     single {
         K9TilbakeEventHandler(
             get(),
             BehandlingProsessEventTilbakeRepository(dataSource = get()),
-            config = config,
             sakOgBehandlingProducer = sakOgBehadlingProducer,
             oppgaveKøRepository = get(),
             reservasjonRepository = get(),
-            statistikkProducer = statistikkProducer,
+            statistikkRepository = get(),
             statistikkChannel = get(named("statistikkRefreshChannel")),
-            statistikkRepository = get(), saksbehhandlerRepository = get()
+            reservasjonTjeneste = get()
+        )
+    }
+
+    single {
+        ReservasjonTjeneste(
+            reservasjonRepository = get(),
+            saksbehandlerRepository = get()
         )
     }
 
@@ -171,10 +178,9 @@ fun buildAndTestConfig(pepClient: IPepClient = PepClientLocal()): Module = modul
             oppgaveRepository = get(),
             punsjEventK9Repository = PunsjEventK9Repository(dataSource = get()),
             statistikkChannel = get(named("statistikkRefreshChannel")),
-            statistikkRepository = get(),
             oppgaveKøRepository = get(),
             reservasjonRepository = get(),
-            saksbehandlerRepository = get()
+            reservasjonTjeneste = get()
         )
     }
 }

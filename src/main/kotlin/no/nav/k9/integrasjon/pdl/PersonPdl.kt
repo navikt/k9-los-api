@@ -11,8 +11,7 @@ import java.time.LocalDate
 data class PersonPdl(
     val `data`: Data
 ) {
-    val log = LoggerFactory.getLogger("PersonPdl")
-
+    val log = LoggerFactory.getLogger("PersonPdl")!!
     data class Data(
         val hentPerson: HentPerson
     ) {
@@ -46,7 +45,8 @@ data class PersonPdl(
     }
 }
 internal fun PersonPdl.navn(): String {
-   return if(data.hentPerson.navn.isNotEmpty()) data.hentPerson.navn[0].forkortetNavn?:data.hentPerson.navn[0].fornavn + " " + data.hentPerson.navn[0].etternavn else "Uten navn"
+   return if(data.hentPerson.navn.isNotEmpty()) data.hentPerson.navn[0].forkortetNavn
+       ?: (data.hentPerson.navn[0].fornavn + " " + data.hentPerson.navn[0].etternavn) else "Uten navn"
 }
 
 internal fun PersonPdl.fnr(): String {

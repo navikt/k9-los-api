@@ -10,11 +10,11 @@ private const val ID_PREFIX = "srvpps-k9los-"
 
 internal class KafkaConsumerConfig {
 
-    val bootstrapServers = ""
+    private val bootstrapServers = ""
     val username = ""
-    val password = ""
-    val trustStorePath = ""
-    val trustStorePassword = ""
+    private val password = ""
+    private val trustStorePath = ""
+    private val trustStorePassword = ""
 
     fun consumerConfigs(clientId: String): Map<String, Any?> {
         val props: MutableMap<String, Any> = HashMap()

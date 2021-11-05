@@ -4,17 +4,14 @@ import io.ktor.application.*
 import io.ktor.html.*
 import io.ktor.locations.*
 import io.ktor.routing.*
-import io.ktor.util.*
 import kotlinx.html.*
 import no.nav.k9.domene.modell.BehandlingStatus
 import no.nav.k9.domene.modell.BehandlingType
-import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.domene.modell.OppgaveKø
-import no.nav.k9.domene.repository.*
-import no.nav.k9.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
-import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveTjeneste
+import no.nav.k9.domene.repository.OppgaveKøRepository
+import no.nav.k9.domene.repository.OppgaveRepository
+import no.nav.k9.domene.repository.SaksbehandlerRepository
 import org.koin.ktor.ext.inject
-import kotlin.streams.toList
 
 fun Route.innsiktGrensesnitt() {
     val oppgaveRepository by inject<OppgaveRepository>()
@@ -61,7 +58,7 @@ fun Route.innsiktGrensesnitt() {
                     val aksjonspunkter = oppgaveRepository.hentAktiveOppgaversAksjonspunktliste()
                     val oppgaverTotaltAktive = oppgaveRepository.hentAktiveOppgaverTotaltIkkeSkjermede()
                     p {
-                        +"Det er nå ${aksjonspunkter.sumBy { it.antall }} åpne aksjonspunkter fordelt på $oppgaverTotaltAktive oppgaver, $inaktiveIkkeAvsluttedeOppgaver inaktive med annen status enn avsluttet (fatter vedtak ${fatterVedtakAvsluttet}, iverksetter vedtak ${iverksetterVedtakAvsluttet}, opprettet ${opprettetAvsluttet}, utredes ${utredesAvsluttet}) og $avsluttede med status avsluttet, $automatiskProsesserteTotalt er prosessert automatisk"
+                        +"Det er nå ${aksjonspunkter.sumOf { it.antall }} åpne aksjonspunkter fordelt på $oppgaverTotaltAktive oppgaver, $inaktiveIkkeAvsluttedeOppgaver inaktive med annen status enn avsluttet (fatter vedtak ${fatterVedtakAvsluttet}, iverksetter vedtak ${iverksetterVedtakAvsluttet}, opprettet ${opprettetAvsluttet}, utredes ${utredesAvsluttet}) og $avsluttede med status avsluttet, $automatiskProsesserteTotalt er prosessert automatisk"
                     }
                     p {
                         +"Totalt ${oppgaverTotaltAktive + inaktiveIkkeAvsluttedeOppgaver + avsluttede}"
@@ -85,7 +82,7 @@ fun Route.innsiktGrensesnitt() {
 
                     div {
                         classes = setOf("input-group-text display-4")
-                        + "Hvor mange oppgaver har blitt markert som førstegangsbehandling og som ikke er løst ${hvorMangeOppgaverErAvTypeFørstegangsbehandling}"
+                        + "Hvor mange oppgaver har blitt markert som førstegangsbehandling og som ikke er løst $hvorMangeOppgaverErAvTypeFørstegangsbehandling"
                     }
 
                     val sorted = groupBy.keys.sorted()

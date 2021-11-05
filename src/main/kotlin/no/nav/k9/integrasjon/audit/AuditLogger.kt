@@ -10,7 +10,7 @@ class Auditlogger constructor(
     val defaultVendor: String = configuration.auditVendor(),
     val defaultProduct: String = configuration.auditProduct()
 ) {
-    
+
     fun logg(auditdata: Auditdata) {
         if (isEnabled) {
             auditLogger.info(auditdata.toString())
@@ -18,7 +18,6 @@ class Auditlogger constructor(
     }
 
     companion object {
-        private val log: Logger = LoggerFactory.getLogger(Auditlogger::class.java)
         private val auditLogger: Logger = LoggerFactory.getLogger("auditLogger")
     }
 }
