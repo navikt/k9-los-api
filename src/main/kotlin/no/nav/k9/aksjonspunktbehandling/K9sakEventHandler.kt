@@ -128,10 +128,7 @@ class K9sakEventHandler constructor(
         }
         if (k9SakModell.forrigeEvent() != null && !k9SakModell.oppgave(k9SakModell.forrigeEvent()!!).aktiv && k9SakModell.oppgave(k9SakModell.sisteEvent()).aktiv) {
             beholdningOpp(oppgave)
-        } else if (k9SakModell.forrigeEvent() != null && k9SakModell.oppgave(k9SakModell.forrigeEvent()!!).aktiv && !k9SakModell.oppgave(
-                k9SakModell.sisteEvent()
-            ).aktiv
-        ) {
+        } else if (k9SakModell.forrigeEvent() != null && k9SakModell.oppgave(k9SakModell.forrigeEvent()!!).aktiv && !k9SakModell.oppgave(k9SakModell.sisteEvent()).aktiv) {
             beholdingNed(oppgave)
         }
 

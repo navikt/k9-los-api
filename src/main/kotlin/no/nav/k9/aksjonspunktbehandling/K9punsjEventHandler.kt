@@ -3,9 +3,12 @@ package no.nav.k9.aksjonspunktbehandling
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.domene.lager.oppgave.Oppgave
+import no.nav.k9.domene.modell.BehandlingType
 import no.nav.k9.domene.modell.IModell
+import no.nav.k9.domene.modell.K9PunsjModell
 import no.nav.k9.domene.repository.*
 import no.nav.k9.integrasjon.kafka.dto.PunsjEventDto
+import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import no.nav.k9.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
 import org.slf4j.LoggerFactory
 
@@ -16,9 +19,14 @@ class K9punsjEventHandler constructor(
     private val statistikkChannel: Channel<Boolean>,
     private val reservasjonRepository: ReservasjonRepository,
     private val oppgaveKøRepository: OppgaveKøRepository,
-    private val reservasjonTjeneste: ReservasjonTjeneste
+    private val reservasjonTjeneste: ReservasjonTjeneste,
+    private val statistikkRepository: StatistikkRepository,
 ) : EventTeller {
     private val log = LoggerFactory.getLogger(K9punsjEventHandler::class.java)
+
+    companion object {
+        private val typer = BehandlingType.values().filter { it.kodeverk == "PUNSJ_INNSENDING_TYPE" }
+    }
 
     fun prosesser(
         event: PunsjEventDto
@@ -44,6 +52,33 @@ class K9punsjEventHandler constructor(
     }
 
     override fun tellEvent(modell: IModell, oppgave: Oppgave) {
+        if (typer.contains(oppgave.behandlingType)) {
+            val k9PunsjModell = modell as K9PunsjModell
 
+            // teller oppgave fra punsj hvis det er første event og den er aktiv (P.D.D. er alle oppgaver aktive==true fra punsj)
+            if (k9PunsjModell.eventer.size == 1 && oppgave.aktiv) {
+                statistikkRepository.lagre(
+                    AlleOppgaverNyeOgFerdigstilte(
+                        oppgave.fagsakYtelseType,
+                        oppgave.behandlingType,
+                        oppgave.eventTid.toLocalDate()
+                    )
+                ) {
+                    it.nye.add(oppgave.eksternId.toString())
+                    it
+                }
+            } else if (k9PunsjModell.eventer.size > 1 && !oppgave.aktiv) {
+                statistikkRepository.lagre(
+                    AlleOppgaverNyeOgFerdigstilte(
+                        oppgave.fagsakYtelseType,
+                        oppgave.behandlingType,
+                        oppgave.eventTid.toLocalDate()
+                    )
+                ) {
+                    it.ferdigstilte.add(oppgave.eksternId.toString())
+                    it
+                }
+            }
+        }
     }
 }
