@@ -13,6 +13,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.koin.test.KoinTest
 import org.koin.test.KoinTestRule
+import org.koin.test.get
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
