@@ -236,6 +236,7 @@ enum class KøSortering(
 enum class AndreKriterierType(override val kode: String, override val navn: String) : Kodeverdi {
     FRA_PUNSJ("FRA_PUNSJ", "Fra Punsj"),
     TIL_BESLUTTER("TIL_BESLUTTER", "Til beslutter"),
+    AARSKVANTUM("AARSKVANTUM", "Årskvantum"),
     AVKLAR_MEDLEMSKAP("AVKLAR_MEDLEMSKAP", "Avklar medlemskap"),
     AVKLAR_INNTEKTSMELDING_BEREGNING("AVKLAR_INNTEKTSMELDING_BEREGNING", "Avklar inntektsmeldng"),
     VENTER_PÅ_KOMPLETT_SØKNAD("VENTER_PÅ_KOMPLETT_SØKNAD", "Venter på komplett søknad");
