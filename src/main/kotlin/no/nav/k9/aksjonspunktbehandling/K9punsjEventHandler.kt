@@ -2,6 +2,8 @@ package no.nav.k9.aksjonspunktbehandling
 
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
+import no.nav.k9.domene.lager.oppgave.Oppgave
+import no.nav.k9.domene.modell.IModell
 import no.nav.k9.domene.repository.*
 import no.nav.k9.integrasjon.kafka.dto.PunsjEventDto
 import no.nav.k9.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
@@ -15,7 +17,7 @@ class K9punsjEventHandler constructor(
     private val reservasjonRepository: ReservasjonRepository,
     private val oppgaveKøRepository: OppgaveKøRepository,
     private val reservasjonTjeneste: ReservasjonTjeneste
-) {
+) : EventTeller {
     private val log = LoggerFactory.getLogger(K9punsjEventHandler::class.java)
 
     fun prosesser(
@@ -25,6 +27,7 @@ class K9punsjEventHandler constructor(
         val modell = punsjEventK9Repository.lagre(event = event)
         val oppgave = modell.oppgave()
         oppgaveRepository.lagre(oppgave.eksternId){
+            tellEvent(modell, oppgave)
             oppgave
         }
 
@@ -38,5 +41,9 @@ class K9punsjEventHandler constructor(
             }
             statistikkChannel.send(true)
         }
+    }
+
+    override fun tellEvent(modell: IModell, oppgave: Oppgave) {
+
     }
 }
