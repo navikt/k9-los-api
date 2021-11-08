@@ -6,7 +6,6 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
-import io.zonky.test.db.postgres.embedded.EmbeddedPostgres
 import kotlinx.coroutines.channels.Channel
 import no.nav.k9.aksjonspunktbehandling.K9TilbakeEventHandler
 import no.nav.k9.aksjonspunktbehandling.K9punsjEventHandler
@@ -36,8 +35,7 @@ import org.koin.dsl.module
 import java.util.*
 
 fun buildAndTestConfig(pepClient: IPepClient = PepClientLocal()): Module = module {
-    val pg = EmbeddedPostgres.start()
-    val dataSource = pg.postgresDatabase
+    val dataSource = TestDataSource().dataSource()
     runMigration(dataSource)
 
     single(named("oppgaveKøOppdatert")) {

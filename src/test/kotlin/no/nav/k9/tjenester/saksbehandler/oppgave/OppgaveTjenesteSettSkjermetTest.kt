@@ -3,12 +3,9 @@ package no.nav.k9.tjenester.saksbehandler.oppgave
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import io.zonky.test.db.postgres.embedded.EmbeddedPostgres
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
-import no.nav.k9.Configuration
-import no.nav.k9.KoinProfile
-import no.nav.k9.buildAndTestConfig
+import no.nav.k9.*
 import no.nav.k9.db.runMigration
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.modell.*
@@ -173,8 +170,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest {
 
     @Test
     fun `hent fagsak`(){
-        val pg = EmbeddedPostgres.start()
-        val dataSource = pg.postgresDatabase
+        val dataSource = TestDataSource().dataSource()
         runMigration(dataSource)
 
         val oppgaveKøOppdatert = Channel<UUID>(1)
@@ -271,8 +267,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest {
 
     @Test
     fun hentReservasjonsHistorikk() = runBlocking {
-        val pg = EmbeddedPostgres.start()
-        val dataSource = pg.postgresDatabase
+        val dataSource = TestDataSource().dataSource()
         runMigration(dataSource)
         val oppgaveKøOppdatert = Channel<UUID>(1)
         val refreshKlienter = Channel<SseEvent>(1000)

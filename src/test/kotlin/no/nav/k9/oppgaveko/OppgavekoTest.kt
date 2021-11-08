@@ -2,24 +2,13 @@ package no.nav.k9.oppgaveko
 
 import io.mockk.every
 import io.mockk.mockk
-import io.zonky.test.db.postgres.embedded.EmbeddedPostgres
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
-import no.nav.k9.Configuration
-import no.nav.k9.KoinProfile
-import no.nav.k9.buildAndTestConfig
-import no.nav.k9.db.runMigration
+import no.nav.k9.*
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.modell.*
 import no.nav.k9.domene.repository.*
-import no.nav.k9.integrasjon.abac.IPepClient
-import no.nav.k9.integrasjon.abac.PepClientLocal
-import no.nav.k9.integrasjon.azuregraph.AzureGraphService
-import no.nav.k9.integrasjon.omsorgspenger.OmsorgspengerService
-import no.nav.k9.integrasjon.pdl.PdlService
 import no.nav.k9.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
 import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveTjeneste
-import no.nav.k9.tjenester.sse.SseEvent
 import org.junit.Rule
 import org.junit.Test
 import org.koin.test.KoinTest
@@ -32,50 +21,18 @@ class OppgavekoTest :KoinTest{
 
     @get:Rule
     val koinTestRule = KoinTestRule.create {
-        modules(buildAndTestConfig(mockk()))
+        modules(buildAndTestConfig())
     }
 
     @Test
     fun `Oppgavene tilfredsstiller filtreringskriteriene i køen`() = runBlocking {
-        val pg = EmbeddedPostgres.start()
-        val dataSource = pg.postgresDatabase
-        runMigration(dataSource)
-        val oppgaveKøOppdatert = Channel<UUID>(1)
-        val oppgaverRefreshOppdatert = Channel<UUID>(100)
-        val refreshKlienter = Channel<SseEvent>(10000)
-        val oppgaverRefresh = Channel<Oppgave>(10000)
+        val oppgaveRepository = get<OppgaveRepository>()
+        val oppgaveKøRepository = get<OppgaveKøRepository>()
+        val reservasjonRepository = get<ReservasjonRepository>()
 
-        val oppgaveRepository = OppgaveRepository(dataSource = dataSource, pepClient = PepClientLocal(), refreshOppgave = oppgaverRefresh)
-
-        val oppgaveKøRepository = OppgaveKøRepository(
-            dataSource = dataSource,
-            oppgaveKøOppdatert = oppgaveKøOppdatert,
-            refreshKlienter = refreshKlienter,
-            oppgaveRefreshChannel = oppgaverRefreshOppdatert,
-            pepClient = PepClientLocal()
-        )
-        val saksbehandlerRepository = SaksbehandlerRepository(dataSource = dataSource,
-            pepClient = PepClientLocal())
-        val reservasjonRepository = ReservasjonRepository(
-            oppgaveKøRepository = oppgaveKøRepository,
-            oppgaveRepository = oppgaveRepository,
-            dataSource = dataSource,
-            refreshKlienter = refreshKlienter,
-            saksbehandlerRepository = saksbehandlerRepository
-        )
         val config = mockk<Configuration>()
-        val pdlService = mockk<PdlService>()
-        val omsorgspengerService = mockk<OmsorgspengerService>()
-        val statistikkRepository = StatistikkRepository(dataSource = dataSource)
-        val pepClient = mockk<IPepClient>()
-        val azureGraphService = mockk<AzureGraphService>()
-        val oppgaveTjeneste = OppgaveTjeneste(
-            oppgaveRepository,
-            oppgaveKøRepository,
-            saksbehandlerRepository,
-            pdlService,
-            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, omsorgspengerService
-        )
+        val oppgaveTjeneste = get<OppgaveTjeneste>()
+
         val uuid = UUID.randomUUID()
         val oppgaveko = OppgaveKø(
             id = uuid,
