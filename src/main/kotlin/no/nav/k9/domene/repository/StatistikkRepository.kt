@@ -210,7 +210,9 @@ class StatistikkRepository(
                             dato = row.localDate("dato"),
                             ferdigstilte = objectMapper().readValue(row.stringOrNull("ferdigstilte") ?: "[]"),
                             nye = objectMapper().readValue(row.stringOrNull("nye") ?: "[]"),
-                            ferdigstilteSaksbehandler = objectMapper().readValue(row.stringOrNull("ferdigstiltesaksbehandler") ?: "[]"),
+                            ferdigstilteSaksbehandler = objectMapper().readValue(
+                                row.stringOrNull("ferdigstiltesaksbehandler") ?: "[]"
+                            ),
                         )
                     }.asList
             )
@@ -405,4 +407,30 @@ class StatistikkRepository(
         }
         return defaultList
     }
+
+    fun slettAltFraPunsj() {
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
+        using(sessionOf(dataSource)) {
+            //language=PostgreSQL
+            it.run(
+                queryOf(
+                    """
+                        delete from nye_og_ferdigstilte where behandlingtype in ('PAPIRSØKNAD',
+    'PAPIRETTERSENDELSE',
+    'PAPIRINNTEKTSOPPLYSNINGER',
+    'DIGITAL_ETTERSENDELSE',
+    'INNLOGGET_CHAT',
+    'SKRIV_TIL_OSS_SPØRMSÅL',
+    'SKRIV_TIL_OSS_SVAR',
+    'SAMTALEREFERAT',
+    'KOPI',
+    'UKJENT')""",
+                    mapOf()
+                ).asUpdate
+            )
+        }
+    }
+
+
 }

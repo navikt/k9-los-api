@@ -80,7 +80,7 @@ fun Application.rekjørEventerForGraferFraPunsj(
 
     launch(Executors.newSingleThreadExecutor().asCoroutineDispatcher()) {
         val typer = BehandlingType.values().filter { it.kodeverk == "PUNSJ_INNSENDING_TYPE" }
-
+        statistikkRepository.slettAltFraPunsj()
         try {
             val alleEventerIder = punsjEventRepo.hentAlleEventerIder()
             for ((index, eventId) in alleEventerIder.withIndex()) {
