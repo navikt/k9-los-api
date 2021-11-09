@@ -78,7 +78,7 @@ fun Application.rekjørEventerForGraferFraPunsj(
 ) {
 
     launch(Executors.newSingleThreadExecutor().asCoroutineDispatcher()) {
-        val typer = BehandlingType.values().filter { it.kodeverk == "PUNSJ_INNSENDING_TYPE" }
+        val typer = BehandlingType.values().filter { it.kodeverk == "PUNSJ_INNSENDING_TYPE" }.map { it.kode }
         log.info("""Starter jobb rekjørEventerForGraferFraPunsj""")
 
         val slettAltFraPunsj = statistikkRepository.slettAltFraPunsj()
@@ -96,8 +96,8 @@ fun Application.rekjørEventerForGraferFraPunsj(
                     }
                     try {
                         val oppgave = modell.oppgave()
-                        log.info("""Oppgavetype=$oppgave.behandlingType typer=$typer""")
-                        if (typer.contains(K9PunsjModell(listOf(modell.eventer[0])).oppgave().behandlingType)) {
+                        log.info("+++Ole+++" + typer.toString())
+                        if (typer.contains(K9PunsjModell(listOf(modell.eventer[0])).oppgave().behandlingType.kode)) {
                             // teller oppgave fra punsj hvis det er første event og den er aktiv (P.D.D. er alle oppgaver aktive==true fra punsj)
                             if (modell.eventer.size == 1 && oppgave.aktiv) {
                                 statistikkRepository.lagre(
