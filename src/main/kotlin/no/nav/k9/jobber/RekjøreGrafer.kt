@@ -4,7 +4,6 @@ import io.ktor.application.*
 import io.ktor.util.*
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
-import no.nav.k9.aksjonspunktbehandling.K9punsjEventHandler
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.modell.*
 import no.nav.k9.domene.repository.*
@@ -95,7 +94,7 @@ fun Application.rekjørEventerForGraferFraPunsj(
                     try {
                         val oppgave = modell.oppgave()
                         log.info("""Oppgavetype=$oppgave.behandlingType typer=$typer""")
-                        if (typer.contains(oppgave.behandlingType)) {
+                        if (typer.contains(K9PunsjModell(listOf(modell.eventer[0])).oppgave().behandlingType)) {
                             // teller oppgave fra punsj hvis det er første event og den er aktiv (P.D.D. er alle oppgaver aktive==true fra punsj)
                             if (modell.eventer.size == 1 && oppgave.aktiv) {
                                 statistikkRepository.lagre(
