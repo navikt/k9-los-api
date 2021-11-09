@@ -94,7 +94,7 @@ fun Application.rekjørEventerForGraferFraPunsj(
                     }
                     try {
                         val oppgave = modell.oppgave()
-                        log.info("""Oppgavetype=$oppgave.behandlingType""")
+                        log.info("""Oppgavetype=$oppgave.behandlingType typer=$typer""")
                         if (typer.contains(oppgave.behandlingType)) {
                             // teller oppgave fra punsj hvis det er første event og den er aktiv (P.D.D. er alle oppgaver aktive==true fra punsj)
                             if (modell.eventer.size == 1 && oppgave.aktiv) {
