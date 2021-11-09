@@ -90,14 +90,14 @@ fun Application.rekjørEventerForGraferFraPunsj(
                     log.info("""Punsj: Ferdig med $index av ${alleEventerIder.size}""")
                 }
                 val alleVersjoner = punsjEventRepo.hent(UUID.fromString(eventId)).alleVersjoner()
-                for ((index, modell) in alleVersjoner.withIndex()) {
-                    if (index % 100 == 0 && index > 1) {
+                for ((index2, modell) in alleVersjoner.withIndex()) {
+                    if (index2 % 100 == 0 && index > 1) {
                         log.info("""Punsj: Ferdig med $index av ${alleEventerIder.size}""")
                     }
                     try {
                         val oppgave = modell.oppgave()
-                        log.info("+++Ole+++" + typer.toString())
-                        if (typer.contains(K9PunsjModell(listOf(modell.eventer[0])).oppgave().behandlingType.kode)) {
+                        val kode = K9PunsjModell(listOf(modell.eventer[0])).oppgave().behandlingType.kode
+                        if (typer.contains(kode)) {
                             // teller oppgave fra punsj hvis det er første event og den er aktiv (P.D.D. er alle oppgaver aktive==true fra punsj)
                             if (modell.eventer.size == 1 && oppgave.aktiv) {
                                 statistikkRepository.lagre(
@@ -124,6 +124,8 @@ fun Application.rekjørEventerForGraferFraPunsj(
                                 }
                                 log.info("""En oppgave ferdig på dag ${oppgave.eventTid.toLocalDate()}""")
                             }
+                        } else {
+                            log.info("""MATCHET IKKE på $kode""")
                         }
                     } catch (e: Exception) {
                         log.info("""Feilet med denne feilen ${e.message}""")

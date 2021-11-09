@@ -425,7 +425,7 @@ class StatistikkRepository(
     'SKRIV_TIL_OSS_SVAR',
     'SAMTALEREFERAT',
     'KOPI',
-    'UKJENT')""",
+    'UKJENT')""".trimIndent(),
                     mapOf()
                 ).asUpdate
             )
