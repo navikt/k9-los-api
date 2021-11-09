@@ -3,9 +3,8 @@ package no.nav.k9.aksjonspunktbehandling
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.domene.lager.oppgave.Oppgave
-import no.nav.k9.domene.modell.BehandlingStatus
-import no.nav.k9.domene.modell.FagsakYtelseType
-import no.nav.k9.domene.modell.K9SakModell
+import no.nav.k9.domene.modell.*
+import no.nav.k9.domene.modell.reportMetrics
 import no.nav.k9.domene.repository.*
 import no.nav.k9.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.integrasjon.kafka.dto.BehandlingProsessEventDto
@@ -13,7 +12,6 @@ import no.nav.k9.integrasjon.sakogbehandling.SakOgBehandlingProducer
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import no.nav.k9.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
 import org.slf4j.LoggerFactory
-import no.nav.k9.domene.modell.reportMetrics
 
 
 class K9sakEventHandler constructor(
@@ -26,7 +24,7 @@ class K9sakEventHandler constructor(
     private val statistikkChannel: Channel<Boolean>,
     private val statistikkRepository: StatistikkRepository,
     private val reservasjonTjeneste: ReservasjonTjeneste,
-) {
+) : EventTeller {
     private val log = LoggerFactory.getLogger(K9sakEventHandler::class.java)
 
     private val tillatteYtelseTyper = listOf(
@@ -59,7 +57,7 @@ class K9sakEventHandler constructor(
 
         val oppgave = modell.oppgave(modell.sisteEvent())
         oppgaveRepository.lagre(oppgave.eksternId) {
-            beholdningOppNed(modell, oppgave)
+            tellEvent(modell, oppgave)
             statistikkProducer.send(modell)
             oppgave
         }
@@ -76,36 +74,6 @@ class K9sakEventHandler constructor(
         }
     }
 
-    private fun beholdningOppNed(
-        modell: K9SakModell,
-        oppgave: Oppgave
-    ) {
-        if (modell.starterSak()) {
-            sakOgBehandlingProducer.behandlingOpprettet(modell.behandlingOpprettetSakOgBehandling())
-            beholdningOpp(oppgave)
-        }
-        if (modell.forrigeEvent() != null && !modell.oppgave(modell.forrigeEvent()!!).aktiv && modell.oppgave(modell.sisteEvent()).aktiv) {
-            beholdningOpp(oppgave)
-        } else if (modell.forrigeEvent() != null && modell.oppgave(modell.forrigeEvent()!!).aktiv && !modell.oppgave(
-                modell.sisteEvent()
-            ).aktiv
-        ) {
-            beholdingNed(oppgave)
-        }
-
-        if (oppgave.behandlingStatus == BehandlingStatus.AVSLUTTET) {
-            if (!oppgave.ansvarligSaksbehandlerForTotrinn.isNullOrBlank()) {
-                nyFerdigstilltAvSaksbehandler(oppgave)
-                statistikkRepository.lagreFerdigstilt(
-                    oppgave.behandlingType.kode,
-                    oppgave.eksternId,
-                    oppgave.eventTid.toLocalDate()
-                )
-            }
-
-            sakOgBehandlingProducer.avsluttetBehandling(modell.behandlingAvsluttetSakOgBehandling())
-        }
-    }
 
     private fun nyFerdigstilltAvSaksbehandler(oppgave: Oppgave) {
         if (tillatteYtelseTyper.contains(oppgave.fagsakYtelseType)) {
@@ -149,6 +117,31 @@ class K9sakEventHandler constructor(
                 it.nye.add(oppgave.eksternId.toString())
                 it
             }
+        }
+    }
+
+    override fun tellEvent(modell: IModell, oppgave: Oppgave) {
+        val k9SakModell = modell as K9SakModell
+        if (k9SakModell.starterSak()) {
+            sakOgBehandlingProducer.behandlingOpprettet(k9SakModell.behandlingOpprettetSakOgBehandling())
+            beholdningOpp(oppgave)
+        }
+        if (k9SakModell.forrigeEvent() != null && !k9SakModell.oppgave(k9SakModell.forrigeEvent()!!).aktiv && k9SakModell.oppgave(k9SakModell.sisteEvent()).aktiv) {
+            beholdningOpp(oppgave)
+        } else if (k9SakModell.forrigeEvent() != null && k9SakModell.oppgave(k9SakModell.forrigeEvent()!!).aktiv && !k9SakModell.oppgave(k9SakModell.sisteEvent()).aktiv) {
+            beholdingNed(oppgave)
+        }
+
+        if (oppgave.behandlingStatus == BehandlingStatus.AVSLUTTET) {
+            if (!oppgave.ansvarligSaksbehandlerForTotrinn.isNullOrBlank()) {
+                nyFerdigstilltAvSaksbehandler(oppgave)
+                statistikkRepository.lagreFerdigstilt(
+                    oppgave.behandlingType.kode,
+                    oppgave.eksternId,
+                    oppgave.eventTid.toLocalDate()
+                )
+            }
+            sakOgBehandlingProducer.avsluttetBehandling(k9SakModell.behandlingAvsluttetSakOgBehandling())
         }
     }
 }

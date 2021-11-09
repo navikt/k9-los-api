@@ -3,6 +3,7 @@ package no.nav.k9.domene.modell
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.repository.ReservasjonRepository
 import no.nav.k9.domene.repository.SaksbehandlerRepository
+import no.nav.k9.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.integrasjon.kafka.dto.PunsjEventDto
 import no.nav.k9.integrasjon.sakogbehandling.kontrakt.BehandlingAvsluttet
 import no.nav.k9.integrasjon.sakogbehandling.kontrakt.BehandlingOpprettet
@@ -131,5 +132,15 @@ data class K9PunsjModell(
             return BehandlingType.UKJENT
         }
         return BehandlingType.fraKode(eventDto.type)
+    }
+
+    fun alleVersjoner(): MutableList<K9PunsjModell> {
+        val eventListe = mutableListOf<PunsjEventDto>()
+        val modeller = mutableListOf<K9PunsjModell>()
+        for (behandlingProsessEventDto in eventer) {
+            eventListe.add(behandlingProsessEventDto)
+            modeller.add(K9PunsjModell(eventListe.toMutableList()))
+        }
+        return modeller
     }
 }

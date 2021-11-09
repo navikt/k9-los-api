@@ -182,7 +182,8 @@ fun common(app: Application, config: Configuration) = module {
             statistikkChannel = get(named("statistikkRefreshChannel")),
             oppgaveKøRepository = get(),
             reservasjonRepository = get(),
-            reservasjonTjeneste = get()
+            reservasjonTjeneste = get(),
+            statistikkRepository = get()
         )
     }
 

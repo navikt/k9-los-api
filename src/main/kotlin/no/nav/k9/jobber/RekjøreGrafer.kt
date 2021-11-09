@@ -4,10 +4,9 @@ import io.ktor.application.*
 import io.ktor.util.*
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
+import no.nav.k9.aksjonspunktbehandling.K9punsjEventHandler
 import no.nav.k9.domene.lager.oppgave.Oppgave
-import no.nav.k9.domene.modell.BehandlingStatus
-import no.nav.k9.domene.modell.FagsakYtelseType
-import no.nav.k9.domene.modell.IModell
+import no.nav.k9.domene.modell.*
 import no.nav.k9.domene.repository.*
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import no.nav.k9.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
@@ -24,7 +23,11 @@ fun Application.rekjørEventerForGrafer(
 
     launch(Executors.newSingleThreadExecutor().asCoroutineDispatcher()) {
         try {
-            val tillatteYtelseTyper = listOf(FagsakYtelseType.OMSORGSPENGER, FagsakYtelseType.PLEIEPENGER_SYKT_BARN, FagsakYtelseType.OMSORGSPENGER_KS)
+            val tillatteYtelseTyper = listOf(
+                FagsakYtelseType.OMSORGSPENGER,
+                FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
+                FagsakYtelseType.OMSORGSPENGER_KS
+            )
 
             val alleEventerIder = behandlingProsessEventK9Repository.hentAlleEventerIder()
             statistikkRepository.truncateStatistikk()
@@ -46,7 +49,7 @@ fun Application.rekjørEventerForGrafer(
                             }
                         }
                         if (modell.forrigeEvent() != null && !modell.oppgave(modell.forrigeEvent()!!).aktiv && modell.oppgave().aktiv) {
-                            beholdningOpp(oppgave, statistikkRepository,tillatteYtelseTyper)
+                            beholdningOpp(oppgave, statistikkRepository, tillatteYtelseTyper)
                         }
 
                         if (modell.forrigeEvent() != null && modell.oppgave(modell.forrigeEvent()!!).aktiv && !modell.oppgave().aktiv) {
@@ -70,8 +73,72 @@ fun Application.rekjørEventerForGrafer(
     }
 }
 
+fun Application.rekjørEventerForGraferFraPunsj(
+    punsjEventRepo: PunsjEventK9Repository,
+    statistikkRepository: StatistikkRepository
+) {
 
-private fun nyFerdigstilltAvSaksbehandler(oppgave: Oppgave, statistikkRepository: StatistikkRepository, tillatteYtelseTyper: List<FagsakYtelseType>) {
+    launch(Executors.newSingleThreadExecutor().asCoroutineDispatcher()) {
+        val typer = BehandlingType.values().filter { it.kodeverk == "PUNSJ_INNSENDING_TYPE" }
+
+        try {
+            val alleEventerIder = punsjEventRepo.hentAlleEventerIder()
+            for ((index, eventId) in alleEventerIder.withIndex()) {
+                if (index % 100 == 0 && index > 1) {
+                    log.info("""Punsj: Ferdig med $index av ${alleEventerIder.size}""")
+                }
+                val alleVersjoner = punsjEventRepo.hent(UUID.fromString(eventId)).alleVersjoner()
+                for ((index, modell) in alleVersjoner.withIndex()) {
+                    if (index % 100 == 0 && index > 1) {
+                        log.info("""Punsj: Ferdig med $index av ${alleEventerIder.size}""")
+                    }
+                    try {
+                        val oppgave = modell.oppgave()
+                        if (typer.contains(oppgave.behandlingType)) {
+                            // teller oppgave fra punsj hvis det er første event og den er aktiv (P.D.D. er alle oppgaver aktive==true fra punsj)
+                            if (modell.eventer.size == 1 && oppgave.aktiv) {
+                                statistikkRepository.lagre(
+                                    AlleOppgaverNyeOgFerdigstilte(
+                                        oppgave.fagsakYtelseType,
+                                        oppgave.behandlingType,
+                                        oppgave.eventTid.toLocalDate()
+                                    )
+                                ) {
+                                    it.nye.add(oppgave.eksternId.toString())
+                                    it
+                                }
+                            } else if (modell.eventer.size > 1 && !oppgave.aktiv) {
+                                statistikkRepository.lagre(
+                                    AlleOppgaverNyeOgFerdigstilte(
+                                        oppgave.fagsakYtelseType,
+                                        oppgave.behandlingType,
+                                        oppgave.eventTid.toLocalDate()
+                                    )
+                                ) {
+                                    it.ferdigstilte.add(oppgave.eksternId.toString())
+                                    it
+                                }
+                            }
+                        }
+                    } catch (e: Exception) {
+                        log.info("""Feilet med denne feilen ${e.message}""")
+                        continue
+                    }
+                }
+            }
+            log.info("""Punsj: Ferdig med ${alleEventerIder.size} av ${alleEventerIder.size}""")
+        } catch (e: Exception) {
+            log.error(e)
+        }
+    }
+}
+
+
+private fun nyFerdigstilltAvSaksbehandler(
+    oppgave: Oppgave,
+    statistikkRepository: StatistikkRepository,
+    tillatteYtelseTyper: List<FagsakYtelseType>
+) {
     if (tillatteYtelseTyper.contains(oppgave.fagsakYtelseType)) {
         statistikkRepository.lagre(
             AlleOppgaverNyeOgFerdigstilte(
@@ -86,7 +153,11 @@ private fun nyFerdigstilltAvSaksbehandler(oppgave: Oppgave, statistikkRepository
     }
 }
 
-private fun beholdingNed(oppgave: Oppgave, statistikkRepository: StatistikkRepository, tillatteYtelseTyper: List<FagsakYtelseType>) {
+private fun beholdingNed(
+    oppgave: Oppgave,
+    statistikkRepository: StatistikkRepository,
+    tillatteYtelseTyper: List<FagsakYtelseType>
+) {
     if (tillatteYtelseTyper.contains(oppgave.fagsakYtelseType)) {
         statistikkRepository.lagre(
             AlleOppgaverNyeOgFerdigstilte(
@@ -101,7 +172,11 @@ private fun beholdingNed(oppgave: Oppgave, statistikkRepository: StatistikkRepos
     }
 }
 
-private fun beholdningOpp(oppgave: Oppgave, statistikkRepository: StatistikkRepository, tillatteYtelseTyper: List<FagsakYtelseType>) {
+private fun beholdningOpp(
+    oppgave: Oppgave,
+    statistikkRepository: StatistikkRepository,
+    tillatteYtelseTyper: List<FagsakYtelseType>
+) {
     if (tillatteYtelseTyper.contains(oppgave.fagsakYtelseType)) {
         statistikkRepository.lagre(
             AlleOppgaverNyeOgFerdigstilte(

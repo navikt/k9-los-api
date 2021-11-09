@@ -585,7 +585,12 @@ class OppgaveTjeneste constructor(
                         behandlingType = behandlingTypeEntry.key
                     )
                 behandlingTypeEntry.value.sortedByDescending { it.dato }.map {
-                    aktive = aktive - it.nye.size + it.ferdigstilte.size
+                    aktive = if (aktive <= 0) {
+                        0
+                    } else {
+                        val sum = aktive - it.nye.size + it.ferdigstilte.size
+                        if (sum >= 0) sum else 0
+                    }
                     ret.add(
                         AlleOppgaverHistorikk(
                             it.fagsakYtelseType,
@@ -1065,7 +1070,8 @@ class OppgaveTjeneste constructor(
 
         val iderPåOppgaverSomSkalBliReservert = oppgaverSomSkalBliReservert.map { o -> o.id }.toSet()
         val gamleReservasjoner = reservasjonRepository.hent(iderPåOppgaverSomSkalBliReservert)
-        val aktiveReservasjoner = gamleReservasjoner.filter { rev -> rev.erAktiv() && rev.reservertAv != ident }.toList()
+        val aktiveReservasjoner =
+            gamleReservasjoner.filter { rev -> rev.erAktiv() && rev.reservertAv != ident }.toList()
 
         // skal ikke få oppgaver som tilhører en parsak der en av sakene er resvert på en annen saksbehandler
         if (aktiveReservasjoner.isNotEmpty()) {
@@ -1074,13 +1080,15 @@ class OppgaveTjeneste constructor(
         }
 
         // sjekker også om parsakene har blitt besluttet av beslutter
-        if (oppgaverSomSkalBliReservert.map { it.oppgave }.any { innloggetSaksbehandlerHarBesluttetOppgaven(it, ident) }) {
+        if (oppgaverSomSkalBliReservert.map { it.oppgave }
+                .any { innloggetSaksbehandlerHarBesluttetOppgaven(it, ident) }) {
             oppgaverSomErBlokert.add(oppgaveDto)
             return fåOppgaveFraKø(oppgaveKøId, ident, oppgaverSomErBlokert, prioriterteOppgaver)
         }
 
         // sjekker også om parsakene har blitt saksbehandlet av saksbehandler
-        if (oppgaverSomSkalBliReservert.map { it.oppgave }.any { innloggetSaksbehandlerHarSaksbehandletOppgaveSomSkalBliBesluttet(it, ident) }) {
+        if (oppgaverSomSkalBliReservert.map { it.oppgave }
+                .any { innloggetSaksbehandlerHarSaksbehandletOppgaveSomSkalBliBesluttet(it, ident) }) {
             oppgaverSomErBlokert.add(oppgaveDto)
             return fåOppgaveFraKø(oppgaveKøId, ident, oppgaverSomErBlokert, prioriterteOppgaver)
         }
@@ -1104,8 +1112,8 @@ class OppgaveTjeneste constructor(
         oppgaveSomSkalBliReservert: Oppgave,
         ident: String
     ) = oppgaveSomSkalBliReservert.ansvarligBeslutterForTotrinn != null &&
-                oppgaveSomSkalBliReservert.ansvarligBeslutterForTotrinn == ident &&
-                !oppgaveSomSkalBliReservert.aksjonspunkter.harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)
+            oppgaveSomSkalBliReservert.ansvarligBeslutterForTotrinn == ident &&
+            !oppgaveSomSkalBliReservert.aksjonspunkter.harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)
 
     private fun innloggetSaksbehandlerHarSaksbehandletOppgaveSomSkalBliBesluttet(
         oppgaveSomSkalBliReservert: Oppgave,
@@ -1123,12 +1131,14 @@ class OppgaveTjeneste constructor(
             return emptyList()
         }
 
-        val aktørIdFraReservasjonene = oppgaveRepository.hentOppgaver(reservasjoneneTilSaksbehandler).filter { it.pleietrengendeAktørId != null }
+        val aktørIdFraReservasjonene =
+            oppgaveRepository.hentOppgaver(reservasjoneneTilSaksbehandler).filter { it.pleietrengendeAktørId != null }
                 .map { it.pleietrengendeAktørId!! }
 
         val køen = oppgaveKøRepository.hentOppgavekø(UUID.fromString(oppgaveKøId))
         val hentPleietrengendeAktør = oppgaveRepository.hentPleietrengendeAktør(køen.oppgaverOgDatoer.map { it.id })
-        val oppgaverIder = aktørIdFraReservasjonene.mapNotNull { hentPleietrengendeAktør["\""+it+"\""] }.map { UUID.fromString(it) }
+        val oppgaverIder = aktørIdFraReservasjonene.mapNotNull { hentPleietrengendeAktør["\"" + it + "\""] }
+            .map { UUID.fromString(it) }
 
         return oppgaveRepository.hentOppgaver(oppgaverIder)
     }
@@ -1138,7 +1148,8 @@ class OppgaveTjeneste constructor(
         oppgaver: List<OppgaveDto>,
         oppgaverSomErBlokkert: MutableList<OppgaveDto>
     ): Pair<OppgaveDto?, Oppgave?>? {
-        val prioriterteOppgaverSomIKkeErBlokkert = prioriterOppgaver.filter { !oppgaverSomErBlokkert.map { it2 -> it2.eksternId }.contains(it.eksternId) }
+        val prioriterteOppgaverSomIKkeErBlokkert =
+            prioriterOppgaver.filter { !oppgaverSomErBlokkert.map { it2 -> it2.eksternId }.contains(it.eksternId) }
 
         val oppgaverSomIKkeErBlokkert =
             oppgaver.filter { !oppgaverSomErBlokkert.map { it2 -> it2.eksternId }.contains(it.eksternId) }
