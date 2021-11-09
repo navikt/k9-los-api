@@ -94,6 +94,7 @@ fun Application.rekjørEventerForGraferFraPunsj(
                     }
                     try {
                         val oppgave = modell.oppgave()
+                        log.info("""Oppgavetype=$oppgave.behandlingType""")
                         if (typer.contains(oppgave.behandlingType)) {
                             // teller oppgave fra punsj hvis det er første event og den er aktiv (P.D.D. er alle oppgaver aktive==true fra punsj)
                             if (modell.eventer.size == 1 && oppgave.aktiv) {
@@ -107,6 +108,7 @@ fun Application.rekjørEventerForGraferFraPunsj(
                                     it.nye.add(oppgave.eksternId.toString())
                                     it
                                 }
+                                log.info("""En oppgave ankommet på dag ${oppgave.eventTid.toLocalDate()}""")
                             } else if (modell.eventer.size > 1 && !oppgave.aktiv) {
                                 statistikkRepository.lagre(
                                     AlleOppgaverNyeOgFerdigstilte(
@@ -118,6 +120,7 @@ fun Application.rekjørEventerForGraferFraPunsj(
                                     it.ferdigstilte.add(oppgave.eksternId.toString())
                                     it
                                 }
+                                log.info("""En oppgave ferdig på dag ${oppgave.eventTid.toLocalDate()}""")
                             }
                         }
                     } catch (e: Exception) {
