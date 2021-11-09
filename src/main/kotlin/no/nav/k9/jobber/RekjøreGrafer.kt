@@ -121,6 +121,7 @@ fun Application.rekjørEventerForGraferFraPunsj(
                             }
                         }
                     } catch (e: Exception) {
+                        log.info("""Feilet med denne feilen ${e.message}""")
                         continue
                     }
                 }
