@@ -408,10 +408,10 @@ class StatistikkRepository(
         return defaultList
     }
 
-    fun slettAltFraPunsj() {
+    fun slettAltFraPunsj(): Int {
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
-        using(sessionOf(dataSource)) {
+        return using(sessionOf(dataSource)) {
             //language=PostgreSQL
             it.run(
                 queryOf(
@@ -431,6 +431,4 @@ class StatistikkRepository(
             )
         }
     }
-
-
 }
