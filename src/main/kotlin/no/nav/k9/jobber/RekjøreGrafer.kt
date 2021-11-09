@@ -85,13 +85,11 @@ fun Application.rekjørEventerForGraferFraPunsj(
         log.info("""slettet antall=$slettAltFraPunsj""")
         try {
             val alleEventerIder = punsjEventRepo.hentAlleEventerIder()
-            log.info("ALLE EV "+alleEventerIder.size)
             for ((index, eventId) in alleEventerIder.withIndex()) {
                 if (index % 100 == 0 && index > 1) {
                     log.info("""Punsj: Ferdig med $index av ${alleEventerIder.size}""")
                 }
                 val alleVersjoner = punsjEventRepo.hent(UUID.fromString(eventId)).alleVersjoner()
-                log.info("ALLE V "+alleVersjoner.size)
                 for ((index2, modell) in alleVersjoner.withIndex()) {
                     if (index2 % 100 == 0 && index2 > 1) {
                         log.info("""Punsj: Ferdig med $index2 av ${alleEventerIder.size}""")
@@ -112,7 +110,6 @@ fun Application.rekjørEventerForGraferFraPunsj(
                                     it.nye.add(oppgave.eksternId.toString())
                                     it
                                 }
-                                log.info("""En oppgave ankommet på dag ${oppgave.eventTid.toLocalDate()}""")
                             } else if (modell.eventer.size > 1 && !oppgave.aktiv) {
                                 statistikkRepository.lagre(
                                     AlleOppgaverNyeOgFerdigstilte(
@@ -124,10 +121,7 @@ fun Application.rekjørEventerForGraferFraPunsj(
                                     it.ferdigstilte.add(oppgave.eksternId.toString())
                                     it
                                 }
-                                log.info("""En oppgave ferdig på dag ${oppgave.eventTid.toLocalDate()}""")
                             }
-                        } else {
-                            log.info("""MATCHET IKKE på $kode""")
                         }
                     } catch (e: Exception) {
                         log.info("""Feilet med denne feilen ${e.message}""")
