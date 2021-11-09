@@ -33,13 +33,16 @@ class PunsjEventK9Repository(private val dataSource: DataSource) {
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
         if (json.isNullOrEmpty()) {
+            log.info("TEST213")
             return K9PunsjModell(emptyList())
         }
         return try {
+            log.info("TEST321")
             val modell = objectMapper().readValue(json, K9PunsjModell::class.java)
             K9PunsjModell(modell.eventer.sortedBy { it.eventTid })
         } catch (e: Exception) {
             log.error("", e)
+            log.info("TEST123")
             K9PunsjModell(emptyList())
         }
     }
