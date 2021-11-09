@@ -85,14 +85,16 @@ fun Application.rekjørEventerForGraferFraPunsj(
         log.info("""slettet antall=$slettAltFraPunsj""")
         try {
             val alleEventerIder = punsjEventRepo.hentAlleEventerIder()
+            log.info("ALLE EV "+alleEventerIder.size)
             for ((index, eventId) in alleEventerIder.withIndex()) {
                 if (index % 100 == 0 && index > 1) {
                     log.info("""Punsj: Ferdig med $index av ${alleEventerIder.size}""")
                 }
                 val alleVersjoner = punsjEventRepo.hent(UUID.fromString(eventId)).alleVersjoner()
+                log.info("ALLE V "+alleVersjoner.size)
                 for ((index2, modell) in alleVersjoner.withIndex()) {
-                    if (index2 % 100 == 0 && index > 1) {
-                        log.info("""Punsj: Ferdig med $index av ${alleEventerIder.size}""")
+                    if (index2 % 100 == 0 && index2 > 1) {
+                        log.info("""Punsj: Ferdig med $index2 av ${alleEventerIder.size}""")
                     }
                     try {
                         val oppgave = modell.oppgave()
