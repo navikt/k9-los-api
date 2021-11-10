@@ -118,6 +118,7 @@ fun Application.rekjørEventerForGraferFraPunsj(
                                     )
                                 ) {
                                     it.ferdigstilte.add(oppgave.eksternId.toString())
+                                    it.ferdigstilteSaksbehandler.add(oppgave.eksternId.toString())
                                     it
                                 }
                             }

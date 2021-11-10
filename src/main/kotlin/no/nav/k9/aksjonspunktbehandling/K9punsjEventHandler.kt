@@ -76,6 +76,7 @@ class K9punsjEventHandler constructor(
                     )
                 ) {
                     it.ferdigstilte.add(oppgave.eksternId.toString())
+                    it.ferdigstilteSaksbehandler.add(oppgave.eksternId.toString())
                     it
                 }
             }
