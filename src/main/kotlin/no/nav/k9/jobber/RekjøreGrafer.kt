@@ -16,8 +16,7 @@ import kotlin.system.measureTimeMillis
 
 fun Application.rekjørEventerForGrafer(
     behandlingProsessEventK9Repository: BehandlingProsessEventK9Repository,
-    statistikkRepository: StatistikkRepository,
-    reservasjonRepository: ReservasjonRepository
+    statistikkRepository: StatistikkRepository
 ) {
 
     launch(Executors.newSingleThreadExecutor().asCoroutineDispatcher()) {
@@ -35,9 +34,9 @@ fun Application.rekjørEventerForGrafer(
                     log.info("""Ferdig med $index av ${alleEventerIder.size}""")
                 }
                 val alleVersjoner = behandlingProsessEventK9Repository.hent(UUID.fromString(eventId)).alleVersjoner()
-                for ((index, modell) in alleVersjoner.withIndex()) {
-                    if (index % 100 == 0 && index > 1) {
-                        log.info("""Ferdig med $index av ${alleEventerIder.size}""")
+                for ((index2, modell) in alleVersjoner.withIndex()) {
+                    if (index2 % 100 == 0 && index2 > 1) {
+                        log.info("""Ferdig med $index2 av ${alleEventerIder.size}""")
                     }
                     try {
                         val oppgave = modell.oppgave()
@@ -90,16 +89,13 @@ fun Application.rekjørEventerForGraferFraPunsj(
                     log.info("""Punsj: Ferdig med $index av ${alleEventerIder.size}""")
                 }
                 val alleVersjoner = punsjEventRepo.hent(UUID.fromString(eventId)).alleVersjoner()
-                for ((index2, modell) in alleVersjoner.withIndex()) {
-                    if (index2 % 100 == 0 && index2 > 1) {
-                        log.info("""Punsj: Ferdig med $index2 av ${alleEventerIder.size}""")
-                    }
+                for (k9PunsjModell in alleVersjoner) {
                     try {
-                        val oppgave = modell.oppgave()
-                        val kode = K9PunsjModell(listOf(modell.eventer[0])).oppgave().behandlingType.kode
+                        val oppgave = k9PunsjModell.oppgave()
+                        val kode = K9PunsjModell(listOf(k9PunsjModell.eventer[0])).oppgave().behandlingType.kode
                         if (typer.contains(kode)) {
                             // teller oppgave fra punsj hvis det er første event og den er aktiv (P.D.D. er alle oppgaver aktive==true fra punsj)
-                            if (modell.eventer.size == 1 && oppgave.aktiv) {
+                            if (k9PunsjModell.starterSak() && oppgave.aktiv) {
                                 statistikkRepository.lagre(
                                     AlleOppgaverNyeOgFerdigstilte(
                                         oppgave.fagsakYtelseType,
@@ -110,7 +106,10 @@ fun Application.rekjørEventerForGraferFraPunsj(
                                     it.nye.add(oppgave.eksternId.toString())
                                     it
                                 }
-                            } else if (modell.eventer.size > 1 && !oppgave.aktiv) {
+                            } else if (k9PunsjModell.eventer.size > 1 && !oppgave.aktiv && (k9PunsjModell.forrigeEvent() != null && k9PunsjModell.oppgave(
+                                    k9PunsjModell.forrigeEvent()!!
+                                ).aktiv)
+                            ) {
                                 statistikkRepository.lagre(
                                     AlleOppgaverNyeOgFerdigstilte(
                                         oppgave.fagsakYtelseType,
@@ -199,9 +198,7 @@ fun Application.regenererOppgaver(
     behandlingProsessEventK9Repository: BehandlingProsessEventK9Repository,
     punsjEventK9Repository: PunsjEventK9Repository,
     behandlingProsessEventTilbakeRepository: BehandlingProsessEventTilbakeRepository,
-    reservasjonRepository: ReservasjonRepository,
     oppgaveKøRepository: OppgaveKøRepository,
-    saksbehhandlerRepository: SaksbehandlerRepository,
     reservasjonTjeneste: ReservasjonTjeneste
 ) {
     launch(context = Executors.newSingleThreadExecutor().asCoroutineDispatcher()) {

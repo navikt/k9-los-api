@@ -56,7 +56,7 @@ class K9punsjEventHandler constructor(
             val k9PunsjModell = modell as K9PunsjModell
 
             // teller oppgave fra punsj hvis det er første event og den er aktiv (P.D.D. er alle oppgaver aktive==true fra punsj)
-            if (k9PunsjModell.eventer.size == 1 && oppgave.aktiv) {
+            if (k9PunsjModell.starterSak() && oppgave.aktiv) {
                 statistikkRepository.lagre(
                     AlleOppgaverNyeOgFerdigstilte(
                         oppgave.fagsakYtelseType,
@@ -67,7 +67,7 @@ class K9punsjEventHandler constructor(
                     it.nye.add(oppgave.eksternId.toString())
                     it
                 }
-            } else if (k9PunsjModell.eventer.size > 1 && !oppgave.aktiv) {
+            } else if (k9PunsjModell.eventer.size > 1 && !oppgave.aktiv && (k9PunsjModell.forrigeEvent() != null && k9PunsjModell.oppgave(k9PunsjModell.forrigeEvent()!!).aktiv)) {
                 statistikkRepository.lagre(
                     AlleOppgaverNyeOgFerdigstilte(
                         oppgave.fagsakYtelseType,

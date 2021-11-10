@@ -15,7 +15,7 @@ data class K9PunsjModell(
 ) : IModell {
 
     override fun starterSak(): Boolean {
-        TODO("Ikke relevant for punsj")
+        return eventer.size == 1
     }
 
     override fun erTom(): Boolean {
@@ -45,7 +45,7 @@ data class K9PunsjModell(
         TODO("Ikke relevant for punsj")
     }
 
-    private fun forrigeEvent(): PunsjEventDto? {
+    internal fun forrigeEvent(): PunsjEventDto? {
         return if (this.eventer.lastIndex > 0) {
             this.eventer[this.eventer.lastIndex - 1]
         } else {
@@ -68,8 +68,7 @@ data class K9PunsjModell(
         return Aksjonspunkter(this.aksjonspunktKoderMedStatusListe.filter { entry -> entry.value == "OPPR" })
     }
 
-    override fun oppgave(): Oppgave {
-        val sisteEvent = eventer.last()
+    fun oppgave(sisteEvent: PunsjEventDto = sisteEvent()): Oppgave {
         val førsteEvent = eventer.first()
 
         var aktiv = sisteEvent.aksjonspunktKoderMedStatusListe.any { aksjonspunkt -> aksjonspunkt.value == "OPPR" }
@@ -114,6 +113,10 @@ data class K9PunsjModell(
             kombinert = false,
             pleietrengendeAktørId = sisteEvent.pleietrengendeAktørId
         )
+    }
+
+    override fun oppgave(): Oppgave {
+        return oppgave(sisteEvent())
     }
 
     private fun utledStatus(eventDto: PunsjEventDto) : BehandlingStatus {
