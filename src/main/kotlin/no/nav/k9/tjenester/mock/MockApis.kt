@@ -14,10 +14,10 @@ import no.nav.k9.aksjonspunktbehandling.K9punsjEventHandler
 import no.nav.k9.aksjonspunktbehandling.K9sakEventHandler
 import no.nav.k9.domene.modell.AksjonspunktDefWrapper
 import no.nav.k9.domene.modell.BehandlingStatus
+import no.nav.k9.domene.modell.Fagsystem
 import no.nav.k9.domene.repository.*
 import no.nav.k9.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.integrasjon.kafka.dto.EventHendelse
-import no.nav.k9.integrasjon.kafka.dto.Fagsystem
 import no.nav.k9.integrasjon.kafka.dto.PunsjEventDto
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.sak.typer.AktørId

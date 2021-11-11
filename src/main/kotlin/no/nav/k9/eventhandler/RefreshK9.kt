@@ -4,9 +4,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.launch
+import no.nav.k9.domene.modell.Fagsystem
 import no.nav.k9.domene.repository.OppgaveRepository
 import no.nav.k9.integrasjon.k9.IK9SakService
-import no.nav.k9.integrasjon.kafka.dto.Fagsystem
 import no.nav.k9.sak.kontrakt.behandling.BehandlingIdDto
 import no.nav.k9.sak.kontrakt.behandling.BehandlingIdListe
 import java.util.*

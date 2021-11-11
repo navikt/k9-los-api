@@ -11,7 +11,6 @@ import no.nav.k9.domene.modell.*
 import no.nav.k9.domene.repository.*
 import no.nav.k9.integrasjon.abac.IPepClient
 import no.nav.k9.integrasjon.azuregraph.IAzureGraphService
-import no.nav.k9.integrasjon.kafka.dto.Fagsystem
 import no.nav.k9.integrasjon.omsorgspenger.IOmsorgspengerService
 import no.nav.k9.integrasjon.omsorgspenger.OmsorgspengerSakFnrDto
 import no.nav.k9.integrasjon.pdl.*
