@@ -2,6 +2,7 @@ package no.nav.k9.tjenester.saksbehandler.oppgave
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import assertk.assertions.isNull
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.buildAndTestConfig
 import no.nav.k9.domene.lager.oppgave.Oppgave
@@ -1326,4 +1327,144 @@ class OppgaveTjenesteTest : KoinTest {
         val saker = oppgaveTjeneste.søkFagsaker(fagsakSaksnummer)
         assertThat(saker.oppgaver.size).isEqualTo(1)
     }
+
+
+    @Test
+    fun `Skal kunne endre reservert av på eksisterende reservasjon`() = runBlocking {
+        val oppgaveTjeneste = get<OppgaveTjeneste>()
+        val reservasjonRepository = get<ReservasjonRepository>()
+
+        opprettSaksbehandler("Foo")
+        opprettSaksbehandler("Bar")
+        val nyOppgave = opprettDummyOppgave()
+
+        oppgaveTjeneste.reserverOppgave(
+            ident = "Foo",
+            overstyrIdent = null,
+            oppgaveUuid = nyOppgave.eksternId,
+            overstyrSjekk = false,
+        )
+
+        val reservasjon = reservasjonRepository.hent(nyOppgave.eksternId)
+        assertThat(reservasjon.reservertAv).isEqualTo("Foo")
+
+        oppgaveTjeneste.endreReservasjonPåOppgave(
+            ReservasjonEndringDto(
+                oppgaveId = nyOppgave.eksternId.toString(),
+                brukerIdent = "Bar"
+            )
+        )
+
+        val reservasjonEtterEndring = reservasjonRepository.hent(nyOppgave.eksternId)
+        assertThat(reservasjonEtterEndring.reservertAv).isEqualTo("Bar")
+    }
+
+    @Test
+    fun `Skal kunne endre begrunnelse på eksisterende reservasjon`() = runBlocking {
+        val oppgaveTjeneste = get<OppgaveTjeneste>()
+        val reservasjonRepository = get<ReservasjonRepository>()
+
+        opprettSaksbehandler("Foo")
+        val nyOppgave = opprettDummyOppgave()
+
+        oppgaveTjeneste.reserverOppgave(
+            ident = "Foo",
+            overstyrIdent = null,
+            oppgaveUuid = nyOppgave.eksternId,
+            overstyrSjekk = false,
+        )
+
+        val reservasjon = reservasjonRepository.hent(nyOppgave.eksternId)
+        assertThat(reservasjon.begrunnelse).isNull()
+
+        oppgaveTjeneste.endreReservasjonPåOppgave(
+            ReservasjonEndringDto(
+                oppgaveId = nyOppgave.eksternId.toString(),
+                begrunnelse = "test begrunnelse"
+            )
+        )
+
+        val reservasjonEtterEndring = reservasjonRepository.hent(nyOppgave.eksternId)
+        assertThat(reservasjonEtterEndring.begrunnelse).isEqualTo("test begrunnelse")
+    }
+
+    @Test
+    fun `Skal kunne endre dato på eksisterende reservasjon`() = runBlocking {
+        val oppgaveTjeneste = get<OppgaveTjeneste>()
+        val reservasjonRepository = get<ReservasjonRepository>()
+
+        opprettSaksbehandler("Foo")
+        val nyOppgave = opprettDummyOppgave()
+
+        oppgaveTjeneste.reserverOppgave(
+            ident = "Foo",
+            overstyrIdent = null,
+            oppgaveUuid = nyOppgave.eksternId,
+            overstyrSjekk = false,
+        )
+
+        val reservasjon = reservasjonRepository.hent(nyOppgave.eksternId)
+        assertThat(reservasjon.begrunnelse).isNull()
+
+        val nyDato = reservasjon.reservertTil!!.toLocalDate().plusDays(10)
+        oppgaveTjeneste.endreReservasjonPåOppgave(
+            ReservasjonEndringDto(
+                oppgaveId = nyOppgave.eksternId.toString(),
+                reserverTil = nyDato
+            )
+        )
+
+        val reservasjonEtterEndring = reservasjonRepository.hent(nyOppgave.eksternId)
+        assertThat(reservasjonEtterEndring.reservertTil!!.toLocalDate()).isEqualTo(nyDato)
+    }
+
+
+    private fun opprettDummyOppgave(): Oppgave {
+        val oppgaveRepository = get<OppgaveRepository>()
+
+        val oppgave = Oppgave(
+            behandlingId = Random().nextLong(),
+            fagsakSaksnummer = UUID.randomUUID().toString(),
+            aktorId = Random().nextLong().toString(),
+            journalpostId = null,
+            behandlendeEnhet = "Enhet",
+            behandlingsfrist = LocalDateTime.now(),
+            behandlingOpprettet = LocalDateTime.now(),
+            forsteStonadsdag = LocalDate.now().plusDays(6),
+            behandlingStatus = BehandlingStatus.OPPRETTET,
+            behandlingType = BehandlingType.FORSTEGANGSSOKNAD,
+            fagsakYtelseType = FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
+            aktiv = true,
+            system = "K9SAK",
+            oppgaveAvsluttet = null,
+            utfortFraAdmin = false,
+            eksternId = UUID.randomUUID(),
+            oppgaveEgenskap = emptyList(),
+            aksjonspunkter = Aksjonspunkter(emptyMap()),
+            tilBeslutter = true,
+            utbetalingTilBruker = false,
+            selvstendigFrilans = false,
+            kombinert = false,
+            søktGradering = false,
+            årskvantum = false,
+            avklarArbeidsforhold = false,
+            avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false
+        )
+
+        oppgaveRepository.lagre(oppgave.eksternId) { oppgave }
+        return oppgave
+    }
+
+    private suspend fun opprettSaksbehandler(ident: String) {
+        val saksbehandlerRepository = get<SaksbehandlerRepository>()
+        saksbehandlerRepository.addSaksbehandler(
+            Saksbehandler(
+                brukerIdent = ident,
+                navn = "$ident Testersen",
+                epost = "$ident@test.no",
+                enhet = null
+            )
+        )
+    }
+
 }
