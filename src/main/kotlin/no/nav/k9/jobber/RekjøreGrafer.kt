@@ -24,7 +24,10 @@ fun Application.rekjørEventerForGrafer(
             val tillatteYtelseTyper = listOf(
                 FagsakYtelseType.OMSORGSPENGER,
                 FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
-                FagsakYtelseType.OMSORGSPENGER_KS
+                FagsakYtelseType.OMSORGSPENGER_KS,
+                FagsakYtelseType.OMSORGSPENGER_MA,
+                FagsakYtelseType.OMSORGSPENGER_AO,
+                FagsakYtelseType.OMSORGSDAGER
             )
 
             val alleEventerIder = behandlingProsessEventK9Repository.hentAlleEventerIder()

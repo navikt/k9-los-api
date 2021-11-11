@@ -543,20 +543,10 @@ class OppgaveTjeneste constructor(
     }
 
     suspend fun hentNyeOgFerdigstilteOppgaver(): List<NyeOgFerdigstilteOppgaverDto> {
-        val omsorgspengerYtelser = listOf(
-            FagsakYtelseType.OMSORGSPENGER,
-            FagsakYtelseType.OMSORGSDAGER,
-            FagsakYtelseType.OMSORGSPENGER_KS,
-            FagsakYtelseType.OMSORGSPENGER_MA,
-            FagsakYtelseType.OMSORGSPENGER_AO
-        )
+        val hentIdentTilInnloggetBruker = azureGraphService.hentIdentTilInnloggetBruker()
         val alleTallene = statistikkRepository.hentFerdigstilteOgNyeHistorikkPerAntallDager(7)
-        alleTallene.forEach {
-            if (omsorgspengerYtelser.contains(it.fagsakYtelseType)) it.fagsakYtelseType = FagsakYtelseType.OMSORGSPENGER
-        }
 
         return alleTallene.map { it ->
-            val hentIdentTilInnloggetBruker = azureGraphService.hentIdentTilInnloggetBruker()
             val antallFerdistilteMine =
                 reservasjonRepository.hentSelvOmDeIkkeErAktive(it.ferdigstilte.map { UUID.fromString(it)!! }
                     .toSet())

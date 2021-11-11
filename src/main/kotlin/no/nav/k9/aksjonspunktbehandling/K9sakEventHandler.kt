@@ -32,7 +32,8 @@ class K9sakEventHandler constructor(
         FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
         FagsakYtelseType.OMSORGSPENGER_KS,
         FagsakYtelseType.OMSORGSPENGER_MA,
-        FagsakYtelseType.OMSORGSPENGER_AO
+        FagsakYtelseType.OMSORGSPENGER_AO,
+        FagsakYtelseType.OMSORGSDAGER
     )
 
     fun prosesser(
