@@ -4,5 +4,7 @@ import java.time.LocalDate
 
 data class ReservasjonEndringDto (
     val oppgaveId: String,
-    val reserverTil: LocalDate
+    val brukerIdent: String? = null,
+    val reserverTil: LocalDate? = null,
+    val begrunnelse: String? = null
 )

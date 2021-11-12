@@ -618,14 +618,26 @@ class OppgaveTjeneste constructor(
 
     fun endreReservasjonPåOppgave(resEndring: ReservasjonEndringDto): Reservasjon {
         return reservasjonRepository.lagre(UUID.fromString(resEndring.oppgaveId), true) {
-            it!!.reservertTil = LocalDateTime.of(
-                resEndring.reserverTil.year,
-                resEndring.reserverTil.month,
-                resEndring.reserverTil.dayOfMonth,
-                23,
-                59,
-                59
-            ).forskyvReservasjonsDato()
+            if (it == null) {
+                throw IllegalArgumentException("Kan ikke oppdatere reservasjon som ikke finnes.")
+            }
+            if (resEndring.reserverTil != null) {
+                it.reservertTil = LocalDateTime.of(
+                    resEndring.reserverTil.year,
+                    resEndring.reserverTil.month,
+                    resEndring.reserverTil.dayOfMonth,
+                    23,
+                    59,
+                    59
+                ).forskyvReservasjonsDato()
+
+            }
+            if (resEndring.begrunnelse != null) {
+                it.begrunnelse = resEndring.begrunnelse
+            }
+            if (resEndring.brukerIdent != null) {
+                it.reservertAv = resEndring.brukerIdent
+            }
             it
         }
     }
@@ -940,7 +952,7 @@ class OppgaveTjeneste constructor(
             }
             distance = levenshtein.distance(
                 søkestreng.lowercase(Locale.getDefault()),
-                saksbehandler.navn!!.lowercase(Locale.getDefault())
+                saksbehandler.navn?.lowercase(Locale.getDefault()) ?: ""
             )
             if (distance < d) {
                 d = distance
