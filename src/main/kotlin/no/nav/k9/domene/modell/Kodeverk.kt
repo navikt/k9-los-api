@@ -85,7 +85,7 @@ enum class BehandlingType(override val kode: String, override val navn: String, 
     SKRIV_TIL_OSS_SVAR("SKRIV_TIL_OSS_SVAR", "Skriv til oss svar", "PUNSJ_INNSENDING_TYPE"),
     SAMTALEREFERAT("SAMTALEREFERAT", "Samtalereferat", "PUNSJ_INNSENDING_TYPE"),
     KOPI("KOPI", "Kopi", "PUNSJ_INNSENDING_TYPE"),
-    INNTEKSTMELDING_UTGÅTT("INNTEKSTMELDING_UTGÅTT", "Inntekstmelding utgått", "PUNSJ_INNSENDING_TYPE"),
+    INNTEKTSMELDING_UTGÅTT("INNTEKTSMELDING_UTGÅTT", "Inntektsmelding utgått", "PUNSJ_INNSENDING_TYPE"),
     UKJENT("UKJENT", "Ukjent", "PUNSJ_INNSENDING_TYPE");
 
     companion object {
