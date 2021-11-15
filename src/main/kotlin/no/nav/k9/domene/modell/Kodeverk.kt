@@ -73,7 +73,7 @@ enum class BehandlingType(override val kode: String, override val navn: String, 
     INNSYN("BT-006", "Innsyn", "ae0042"),
     TILBAKE("BT-007", "Tilbakekreving", "ae0203"),
     ANKE("BT-008", "Anke", "ae0046"),
-    PUNSJ_OPPGAVE("BT-008", "Anke", "ae0046"),
+    UNNTAKSBEHANDLING("BT-010", "Unntaksbehandling", "N/A"),
 
     //gjelder punsj
     PAPIRSØKNAD("PAPIRSØKNAD", "Papirsøknad", "PUNSJ_INNSENDING_TYPE"),
