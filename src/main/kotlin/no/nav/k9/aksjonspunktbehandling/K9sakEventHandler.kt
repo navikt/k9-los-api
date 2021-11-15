@@ -125,8 +125,13 @@ class K9sakEventHandler constructor(
         val k9SakModell = modell as K9SakModell
         if (k9SakModell.starterSak()) {
             sakOgBehandlingProducer.behandlingOpprettet(k9SakModell.behandlingOpprettetSakOgBehandling())
+        }
+
+        // teller bare først event hvis det er aksjonspunkt
+        if (k9SakModell.starterSak() && !oppgave.aksjonspunkter.erTom() && !oppgave.aksjonspunkter.påVent()) {
             beholdningOpp(oppgave)
         }
+
         if (k9SakModell.forrigeEvent() != null && !k9SakModell.oppgave(k9SakModell.forrigeEvent()!!).aktiv && k9SakModell.oppgave(k9SakModell.sisteEvent()).aktiv) {
             beholdningOpp(oppgave)
         } else if (k9SakModell.forrigeEvent() != null && k9SakModell.oppgave(k9SakModell.forrigeEvent()!!).aktiv && !k9SakModell.oppgave(k9SakModell.sisteEvent()).aktiv) {
