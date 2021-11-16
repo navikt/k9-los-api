@@ -615,8 +615,15 @@ class OppgaveTjeneste constructor(
         }
     }
 
-    fun endreReservasjonPåOppgave(resEndring: ReservasjonEndringDto): Reservasjon {
-        return reservasjonRepository.lagre(UUID.fromString(resEndring.oppgaveId), true) {
+    suspend fun endreReservasjonPåOppgave(resEndring: ReservasjonEndringDto): Reservasjon {
+        val identTilInnloggetBruker = azureGraphService.hentIdentTilInnloggetBruker()
+        val oppgavUUID = UUID.fromString(resEndring.oppgaveId)
+        if (resEndring.brukerIdent != null) {
+            val reservasjon = reservasjonRepository.hent(oppgavUUID)
+            saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
+            saksbehandlerRepository.leggTilReservasjon(resEndring.brukerIdent, reservasjon.oppgave)
+        }
+        return reservasjonRepository.lagre(oppgavUUID, true) {
             if (it == null) {
                 throw IllegalArgumentException("Kan ikke oppdatere reservasjon som ikke finnes.")
             }
@@ -635,7 +642,9 @@ class OppgaveTjeneste constructor(
                 it.begrunnelse = resEndring.begrunnelse
             }
             if (resEndring.brukerIdent != null) {
+                it.flyttetTidspunkt = LocalDateTime.now()
                 it.reservertAv = resEndring.brukerIdent
+                it.flyttetAv = identTilInnloggetBruker
             }
             it
         }
