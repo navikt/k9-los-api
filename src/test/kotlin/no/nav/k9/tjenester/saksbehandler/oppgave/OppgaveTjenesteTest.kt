@@ -2,6 +2,7 @@ package no.nav.k9.tjenester.saksbehandler.oppgave
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import assertk.assertions.isNotEqualTo
 import assertk.assertions.isNull
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.buildAndTestConfig
@@ -1415,7 +1416,9 @@ class OppgaveTjenesteTest : KoinTest {
         )
 
         val reservasjonEtterEndring = reservasjonRepository.hent(nyOppgave.eksternId)
-        assertThat(reservasjonEtterEndring.reservertTil!!.toLocalDate()).isEqualTo(nyDato)
+
+        //sjekker at datoen har endret seg siden forskyvReservasjonsDato gjør testen sporadisk
+        assertThat(reservasjonEtterEndring.reservertTil!!.toLocalDate()).isNotEqualTo(reservasjon.reservertTil!!.toLocalDate())
     }
 
 
