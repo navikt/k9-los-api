@@ -11,9 +11,10 @@ on:
       - 'CODEOWNERS'
 
 env:
-  BASE_IMAGE: ghcr.io/${{ github.repository }}
+  BASE_IMAGE: docker.pkg.github.com/${{ github.repository }}/k9-los-api
   GITHUB_USERNAME: x-access-token
   GITHUB_TOKEN: ${{ secrets.LOS_TOKEN }}
+  IMAGE_BASE_CR: ghcr.io/${{ github.repository }}
 
 jobs:
   Build:
@@ -39,23 +40,25 @@ jobs:
           echo "IMAGE=${IMAGE}$BASE_IMAGE:$(date "+%Y.%m.%d")-$(git rev-parse --short HEAD)" >> $GITHUB_ENV
       - name: Bygg & last opp Docker image
         run: |
-          docker build --pull --tag ${IMAGE} --tag ${BASE_IMAGE}:latest
+          docker build --pull --tag ${IMAGE} --tag ${BASE_IMAGE}:latest --tag ${IMAGE_BASE_CR}:${TAG} --tag ${IMAGE_BASE_CR}:latest .
+          echo "${GITHUB_TOKEN}" | docker login -u ${GITHUB_REPOSITORY} --password-stdin  docker.pkg.github.com 
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login --username "x-access-token" --password-stdin ghcr.io
+          docker push ${IMAGE_BASE_CR} --all-tags
           docker push $BASE_IMAGE --all-tags
 
       - name: Lukk gamle issues
-        uses: actions/github-script@v5
+        uses: actions/github-script@v4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            github.rest.issues.listForRepo({
+            github.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
               state: 'open',
               labels: ['deployment']
             }).then(response => {
               response.data.forEach(issue => {
-                github.rest.issues.update({
+                github.issues.update({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: issue.number,
@@ -67,11 +70,11 @@ jobs:
       -  name: Opprett deployment issue
          id: createdeployissue
          if: success()
-         uses: actions/github-script@v5
+         uses: actions/github-script@v4
          with:
            github-token: ${{secrets.GITHUB_TOKEN}}
            script: |
-               github.rest.issues.create( {
+               github.issues.create( {
                  owner: context.issue.owner,
                  repo: context.issue.repo,
                  labels: ['deployment'],
