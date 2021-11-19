@@ -44,15 +44,12 @@ fun Application.rekjørEventerForGrafer(
                     try {
                         val oppgave = modell.oppgave()
 
-                        if (modell.starterSak()) {
-                            if (oppgave.aktiv) {
-                                beholdningOpp(oppgave, statistikkRepository, tillatteYtelseTyper)
-                            }
+                        if (modell.starterSak() && !oppgave.aksjonspunkter.erTom() && !oppgave.aksjonspunkter.påVent()) {
+                            beholdningOpp(oppgave, statistikkRepository, tillatteYtelseTyper)
                         }
                         if (modell.forrigeEvent() != null && !modell.oppgave(modell.forrigeEvent()!!).aktiv && modell.oppgave().aktiv) {
                             beholdningOpp(oppgave, statistikkRepository, tillatteYtelseTyper)
                         }
-
                         if (modell.forrigeEvent() != null && modell.oppgave(modell.forrigeEvent()!!).aktiv && !modell.oppgave().aktiv) {
                             beholdingNed(oppgave, statistikkRepository, tillatteYtelseTyper)
                         }

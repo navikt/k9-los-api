@@ -11,7 +11,6 @@ import no.nav.k9.domene.modell.*
 import no.nav.k9.domene.repository.*
 import no.nav.k9.integrasjon.abac.IPepClient
 import no.nav.k9.integrasjon.azuregraph.IAzureGraphService
-import no.nav.k9.integrasjon.kafka.dto.Fagsystem
 import no.nav.k9.integrasjon.omsorgspenger.IOmsorgspengerService
 import no.nav.k9.integrasjon.omsorgspenger.OmsorgspengerSakFnrDto
 import no.nav.k9.integrasjon.pdl.*
@@ -616,16 +615,37 @@ class OppgaveTjeneste constructor(
         }
     }
 
-    fun endreReservasjonPåOppgave(resEndring: ReservasjonEndringDto): Reservasjon {
-        return reservasjonRepository.lagre(UUID.fromString(resEndring.oppgaveId), true) {
-            it!!.reservertTil = LocalDateTime.of(
-                resEndring.reserverTil.year,
-                resEndring.reserverTil.month,
-                resEndring.reserverTil.dayOfMonth,
-                23,
-                59,
-                59
-            ).forskyvReservasjonsDato()
+    suspend fun endreReservasjonPåOppgave(resEndring: ReservasjonEndringDto): Reservasjon {
+        val identTilInnloggetBruker = azureGraphService.hentIdentTilInnloggetBruker()
+        val oppgavUUID = UUID.fromString(resEndring.oppgaveId)
+        if (resEndring.brukerIdent != null) {
+            val reservasjon = reservasjonRepository.hent(oppgavUUID)
+            saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
+            saksbehandlerRepository.leggTilReservasjon(resEndring.brukerIdent, reservasjon.oppgave)
+        }
+        return reservasjonRepository.lagre(oppgavUUID, true) {
+            if (it == null) {
+                throw IllegalArgumentException("Kan ikke oppdatere reservasjon som ikke finnes.")
+            }
+            if (resEndring.reserverTil != null) {
+                it.reservertTil = LocalDateTime.of(
+                    resEndring.reserverTil.year,
+                    resEndring.reserverTil.month,
+                    resEndring.reserverTil.dayOfMonth,
+                    23,
+                    59,
+                    59
+                ).forskyvReservasjonsDato()
+
+            }
+            if (resEndring.begrunnelse != null) {
+                it.begrunnelse = resEndring.begrunnelse
+            }
+            if (resEndring.brukerIdent != null) {
+                it.flyttetTidspunkt = LocalDateTime.now()
+                it.reservertAv = resEndring.brukerIdent
+                it.flyttetAv = identTilInnloggetBruker
+            }
             it
         }
     }
@@ -940,7 +960,7 @@ class OppgaveTjeneste constructor(
             }
             distance = levenshtein.distance(
                 søkestreng.lowercase(Locale.getDefault()),
-                saksbehandler.navn!!.lowercase(Locale.getDefault())
+                saksbehandler.navn?.lowercase(Locale.getDefault()) ?: ""
             )
             if (distance < d) {
                 d = distance
