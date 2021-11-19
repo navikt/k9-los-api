@@ -1,10 +1,18 @@
 version: 2
+registries:
+  dusseldorf:
+    type: maven-repository
+    url: https://maven.pkg.github.com/navikt/dusseldorf-ktor
+    username: x-access-token
+    password: ${{secrets.READER_TOKEN}}
 updates:
   - package-ecosystem: gradle
     directory: "/"
     schedule:
       interval: daily
     open-pull-requests-limit: 20
+    registries:
+      - dusseldorf
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
