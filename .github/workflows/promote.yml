@@ -6,7 +6,6 @@ env:
   IMAGE_BASE: ghcr.io/${{ github.repository }}
   NAMESPACE: k9saksbehandling
   CLUSTER: ${{ github.event.client_payload.slash_command.args.unnamed.arg1 }}
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   promote:

@@ -11,10 +11,6 @@ on:
       - 'nais/**'
       - 'gradle/**'
 
-env:
-  GITHUB_USERNAME: x-access-token
-  GITHUB_TOKEN: ${{ secrets.LOS_TOKEN }}
-
 jobs:
   Build:
 
@@ -26,12 +22,16 @@ jobs:
         with:
           java-version: 16
           distribution: 'adopt'
+          cache: gradle
       - uses: actions/cache@v2
         with:
           path: ~/.gradle/caches
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
-      - name: Bygge JAR
+      - name: Kjør tester & bygg JAR
         run: |
           ./gradlew clean test shadowjar
+        env:
+          GITHUB_USERNAME: x-access-token
+          GITHUB_PASSWORD: ${{ secrets.READER_TOKEN }}
