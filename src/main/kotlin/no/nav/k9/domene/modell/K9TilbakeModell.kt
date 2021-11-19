@@ -7,6 +7,7 @@ import no.nav.k9.integrasjon.kafka.dto.BehandlingProsessEventTilbakeDto
 import no.nav.k9.integrasjon.kafka.dto.EventHendelse
 import no.nav.k9.integrasjon.sakogbehandling.kontrakt.BehandlingAvsluttet
 import no.nav.k9.integrasjon.sakogbehandling.kontrakt.BehandlingOpprettet
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.statistikk.kontrakter.Aktør
 import no.nav.k9.statistikk.kontrakter.Behandling
 import no.nav.k9.statistikk.kontrakter.Sak
@@ -193,10 +194,24 @@ data class K9TilbakeModell(
     override fun fikkEndretAksjonspunkt(): Boolean {
         val forrigeEvent = forrigeEvent() ?: return false
 
-        val forrigeAksjonspunkter = forrigeEvent.aktiveAksjonspunkt()
-            .liste
-        val nåværendeAksjonspunkter = sisteEvent().aktiveAksjonspunkt().liste
-        return forrigeAksjonspunkter != nåværendeAksjonspunkter
+        // har blitt beslutter
+        if (!forrigeEvent.aktiveAksjonspunkt().tilBeslutterTilbake() &&
+            sisteEvent().aktiveAksjonspunkt().tilBeslutterTilbake()) {
+            return true
+        }
+        // har blitt satt på vent
+        if (sisteEvent().aktiveAksjonspunkt().påVentTilbake()) {
+            return true
+        }
+
+        // beslutter har gjort seg ferdig
+        if (forrigeEvent.aktiveAksjonspunkt().tilBeslutterTilbake() &&
+            sisteEvent().InaktiveAksjonspunkt().tilBeslutterTilbake())
+         {
+            return true
+        }
+        // skal fortsette og ligge reservert
+        return false
     }
 
     // Array med alle versjoner av modell basert på eventene, brukes når man skal spille av eventer
@@ -304,6 +319,10 @@ fun BehandlingProsessEventTilbakeDto.aktiveAksjonspunkt(): AksjonspunkterTilbake
     return AksjonspunkterTilbake(this.aksjonspunktKoderMedStatusListe.filter { entry -> entry.value == "OPPR" })
 }
 
+fun BehandlingProsessEventTilbakeDto.InaktiveAksjonspunkt(): AksjonspunkterTilbake {
+    return AksjonspunkterTilbake(this.aksjonspunktKoderMedStatusListe.filter { entry -> entry.value != "OPPR" })
+}
+
 data class AksjonspunkterTilbake(val liste: Map<String, String>) {
     fun lengde(): Int {
         return liste.size
@@ -329,7 +348,7 @@ data class AksjonspunkterTilbake(val liste: Map<String, String>) {
         return EventResultat.OPPRETT_OPPGAVE
     }
 
-    private fun påVentTilbake(): Boolean {
+    fun påVentTilbake(): Boolean {
         return this.liste.any {
             when (it.key) {
                 "7001", "7002" -> true
@@ -338,7 +357,7 @@ data class AksjonspunkterTilbake(val liste: Map<String, String>) {
         }
     }
 
-    private fun tilBeslutterTilbake(): Boolean {
+    fun tilBeslutterTilbake(): Boolean {
         return this.liste.any {
             when (it.key) {
                 "5005" -> true
