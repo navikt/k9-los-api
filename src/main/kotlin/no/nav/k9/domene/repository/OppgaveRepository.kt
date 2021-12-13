@@ -129,6 +129,24 @@ class OppgaveRepository(
         }
     }
 
+    fun hentOppgaverSomMatcherSaksnummer(saksnummer: String): List<OppgaveMedId> {
+        return using(sessionOf(dataSource)) {
+            it.run(
+                queryOf("""
+                    select id, data from oppgave where data ->> 'fagsakSaksnummer' = ?
+                    """,
+                    saksnummer
+                )
+                    .map { row ->
+                        OppgaveMedId(
+                            UUID.fromString(row.string("id")),
+                            objectMapper().readValue(row.string("data"), Oppgave::class.java)
+                        )
+                    }.asList
+            )
+        }
+    }
+
     fun hentHvis(uuid: UUID): Oppgave? {
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()

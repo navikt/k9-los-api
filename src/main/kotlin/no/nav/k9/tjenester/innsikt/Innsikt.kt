@@ -8,6 +8,7 @@ import kotlinx.html.*
 import no.nav.k9.domene.modell.BehandlingStatus
 import no.nav.k9.domene.modell.BehandlingType
 import no.nav.k9.domene.modell.OppgaveKø
+import no.nav.k9.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.domene.repository.OppgaveKøRepository
 import no.nav.k9.domene.repository.OppgaveRepository
 import no.nav.k9.domene.repository.SaksbehandlerRepository
@@ -17,6 +18,7 @@ fun Route.innsiktGrensesnitt() {
     val oppgaveRepository by inject<OppgaveRepository>()
     val oppgaveKøRepository by inject<OppgaveKøRepository>()
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
+    val behandlingProsessEventK9Repository by inject<BehandlingProsessEventK9Repository>()
 
     class main
 
@@ -82,7 +84,7 @@ fun Route.innsiktGrensesnitt() {
 
                     div {
                         classes = setOf("input-group-text display-4")
-                        + "Hvor mange oppgaver har blitt markert som førstegangsbehandling og som ikke er løst $hvorMangeOppgaverErAvTypeFørstegangsbehandling"
+                        +"Hvor mange oppgaver har blitt markert som førstegangsbehandling og som ikke er løst $hvorMangeOppgaverErAvTypeFørstegangsbehandling"
                     }
 
                     val sorted = groupBy.keys.sorted()
@@ -95,8 +97,23 @@ fun Route.innsiktGrensesnitt() {
                             for (oppgave in list) {
                                 div {
                                     classes = setOf("input-group-text display-4")
-                                    + "${dato},${behandslingstype.navn},${behandlingstyper.values.size},${oppgave.fagsakYtelseType.kode}"
+                                    +"${dato},${behandslingstype.navn},${behandlingstyper.values.size},${oppgave.fagsakYtelseType.kode}"
                                 }
+                            }
+                        }
+                    }
+                    val oppgaveMedId = oppgaveRepository.hentOppgaverSomMatcherSaksnummer("1DMGFC6")
+                    if (oppgaveMedId.isNotEmpty()) {
+                        val sortedByDescending = oppgaveMedId.sortedByDescending { it.oppgave.eventTid }
+                        val sakModell = behandlingProsessEventK9Repository.hent(sortedByDescending.first().id)
+                        sakModell.eventer.forEach { behandlingProsessEventDto ->
+                            val stringBuilder = StringBuilder()
+                            behandlingProsessEventDto.aksjonspunktKoderMedStatusListe.map { "kode=" + it.key + ", verdi=" + it.value }
+                                .forEach { stringBuilder.append(it) }
+
+                            div {
+                                classes = setOf("input-group-text display-4")
+                                +"EventTid=${behandlingProsessEventDto.eventTid}, Aksjonspunkter=$stringBuilder"
                             }
                         }
                     }
