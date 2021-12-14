@@ -102,18 +102,21 @@ fun Route.innsiktGrensesnitt() {
                             }
                         }
                     }
-                    val oppgaveMedId = oppgaveRepository.hentOppgaverSomMatcherSaksnummer("1DMGFC6")
+                    val oppgaveMedId = oppgaveRepository.hentOppgaverSomMatcherSaksnummer("AMHD8")
                     if (oppgaveMedId.isNotEmpty()) {
                         val sortedByDescending = oppgaveMedId.sortedByDescending { it.oppgave.eventTid }
-                        val sakModell = behandlingProsessEventK9Repository.hent(sortedByDescending.first().id)
-                        sakModell.eventer.forEach { behandlingProsessEventDto ->
-                            val stringBuilder = StringBuilder()
-                            behandlingProsessEventDto.aksjonspunktKoderMedStatusListe.map { "kode=" + it.key + ", verdi=" + it.value }
-                                .forEach { stringBuilder.append(it) }
 
-                            div {
-                                classes = setOf("input-group-text display-4")
-                                +"EventTid=${behandlingProsessEventDto.eventTid}, Aksjonspunkter=$stringBuilder"
+                        sortedByDescending.forEach { oppgaveMedId1 ->
+                            val sakModell = behandlingProsessEventK9Repository.hent(oppgaveMedId1.id)
+                            sakModell.eventer.forEach { behandlingProsessEventDto ->
+                                val stringBuilder = StringBuilder()
+                                behandlingProsessEventDto.aksjonspunktKoderMedStatusListe.map { "kode=" + it.key + ", verdi=" + it.value }
+                                    .forEach { stringBuilder.append(it) }
+
+                                div {
+                                    classes = setOf("input-group-text display-4")
+                                    +"BId=${oppgaveMedId1.oppgave.eksternId} EventTid=${behandlingProsessEventDto.eventTid}, Aksjonspunkter=$stringBuilder"
+                                }
                             }
                         }
                     }
