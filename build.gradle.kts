@@ -11,7 +11,7 @@ val vaultJdbcVersion = "1.3.7"
 val kafkaEmbeddedEnvVersion = "2.7.0"
 val koinVersion = "2.2.2"
 val kotliqueryVersion = "1.3.1"
-val k9SakVersion = "3.2.39"
+val k9SakVersion = "3.2.40"
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.5.30"
