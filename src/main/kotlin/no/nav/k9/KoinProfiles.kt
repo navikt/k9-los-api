@@ -243,7 +243,7 @@ fun common(app: Application, config: Configuration) = module {
     }
     single {
         HealthService(
-            healthChecks = get<AsynkronProsesseringV1Service>().isReadyChecks()
+            healthChecks = get<AsynkronProsesseringV1Service>().isHealtyChecks()
         )
     }
 
