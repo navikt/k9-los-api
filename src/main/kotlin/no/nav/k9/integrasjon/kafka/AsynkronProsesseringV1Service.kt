@@ -56,4 +56,5 @@ internal class AsynkronProsesseringV1Service constructor(
     }
 
     internal fun isReadyChecks() = isReadyChecks
+    internal fun isHealtyChecks() = healthChecks
 }

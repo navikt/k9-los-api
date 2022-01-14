@@ -22,6 +22,7 @@ import no.nav.helse.dusseldorf.ktor.auth.allIssuers
 import no.nav.helse.dusseldorf.ktor.auth.multipleJwtIssuers
 import no.nav.helse.dusseldorf.ktor.core.*
 import no.nav.helse.dusseldorf.ktor.health.HealthReporter
+import no.nav.helse.dusseldorf.ktor.health.HealthRoute
 import no.nav.helse.dusseldorf.ktor.jackson.JacksonStatusPages
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.helse.dusseldorf.ktor.metrics.MetricsRoute
@@ -176,6 +177,7 @@ fun Application.k9Los() {
 
         MetricsRoute()
         DefaultProbeRoutes()
+        HealthRoute(healthService = koin.get())
 
         HealthReporter(
             app = appId,
