@@ -73,4 +73,31 @@ data class BehandlingProsessEventDto(
 
     val pleietrengendeAktørId: String? = null,
     val relatertPartAktørId: String? = null,
-)
+) {
+
+    // Denne skal ikke ha fnr, aktørider, orgnumre eller beløp som kan identifisere brukeren
+    fun tryggToString(): String {
+        return """BehandlingProsessEventDto(
+            eksternId=$eksternId, 
+            fagsystem=$fagsystem, 
+            saksnummer='$saksnummer', 
+            behandlingstidFrist=$behandlingstidFrist, 
+            eventTid=$eventTid, 
+            eventHendelse=$eventHendelse, 
+            behandlingStatus=$behandlingStatus, 
+            behandlinStatus=$behandlinStatus, 
+            behandlingSteg=$behandlingSteg, 
+            behandlendeEnhet=$behandlendeEnhet, 
+            resultatType=$resultatType, 
+            ytelseTypeKode='$ytelseTypeKode', 
+            behandlingTypeKode='$behandlingTypeKode', 
+            opprettetBehandling=$opprettetBehandling, 
+            aksjonspunktKoderMedStatusListe=$aksjonspunktKoderMedStatusListe, 
+            ansvarligSaksbehandlerIdent=$ansvarligSaksbehandlerIdent, 
+            ansvarligSaksbehandlerForTotrinn=$ansvarligSaksbehandlerForTotrinn, 
+            ansvarligBeslutterForTotrinn=$ansvarligBeslutterForTotrinn, 
+            fagsakPeriode=$fagsakPeriode
+            )"""
+            .trimMargin()
+    }
+}

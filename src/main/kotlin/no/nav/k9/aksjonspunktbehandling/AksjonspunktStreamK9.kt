@@ -8,6 +8,7 @@ import no.nav.k9.integrasjon.kafka.ManagedStreamReady
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.Topology
 import org.apache.kafka.streams.kstream.Consumed
+import org.slf4j.LoggerFactory
 
 internal class AksjonspunktStreamK9 constructor(
     kafkaConfig: KafkaConfig,
@@ -31,6 +32,8 @@ internal class AksjonspunktStreamK9 constructor(
     private companion object {
         private const val NAME = "AksjonspunktLagetV1"
 
+        private val log = LoggerFactory.getLogger(AksjonspunktStreamK9::class.java)
+
         private fun topology(
             configuration: Configuration,
             k9sakEventHandler: K9sakEventHandler
@@ -44,7 +47,7 @@ internal class AksjonspunktStreamK9 constructor(
                 .stream(
                     fromTopic.name,
                     Consumed.with(fromTopic.keySerde, fromTopic.valueSerde)
-                )
+                ).peek { _, e -> log.info("--> Hendelse fra k9sak: ${e.tryggToString() }") }
                 .foreach { _, entry ->
                     if (entry != null) {
                         k9sakEventHandler.prosesser(entry)
