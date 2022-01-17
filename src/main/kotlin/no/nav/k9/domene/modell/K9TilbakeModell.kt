@@ -52,6 +52,7 @@ data class K9TilbakeModell(
             EventResultat.OPPRETT_OPPGAVE -> {
                 aktiv = true
             }
+            else -> {}
         }
         if (sisteEvent.eventHendelse == EventHendelse.AKSJONSPUNKT_AVBRUTT || sisteEvent.eventHendelse == EventHendelse.AKSJONSPUNKT_UTFØRT) {
             aktiv = false

@@ -11,10 +11,10 @@ val vaultJdbcVersion = "1.3.9"
 val kafkaEmbeddedEnvVersion = "2.8.0"
 val koinVersion = "2.2.2"
 val kotliqueryVersion = "1.3.1"
-val k9SakVersion = "3.2.40"
+val k9SakVersion = "3.2.48"
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.5.30"
+    id("org.jetbrains.kotlin.jvm") version "1.6.10"
     id("com.github.johnrengelman.shadow") version "6.1.0"
 }
 
@@ -107,13 +107,13 @@ repositories {
 
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_16
+    targetCompatibility = JavaVersion.VERSION_16
 }
 
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "16"
 }
 
 tasks.withType<ShadowJar> {
