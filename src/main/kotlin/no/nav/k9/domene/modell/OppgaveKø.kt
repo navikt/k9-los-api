@@ -170,6 +170,12 @@ data class OppgaveKø(
             return true
         }
 
+        if (oppgave.aksjonspunkter.harAktivtAksjonspunkt(AksjonspunktDefinisjon.VENT_ANNEN_PSB_SAK)
+            && kriterier.map {it.andreKriterierType}.contains(AndreKriterierType.VENTER_PÅ_ANNEN_PARTS_SAK)
+        ) {
+            return true
+        }
+
         return false
     }
 
