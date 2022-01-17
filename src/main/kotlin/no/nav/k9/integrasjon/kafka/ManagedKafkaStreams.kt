@@ -89,12 +89,11 @@ internal class ManagedKafkaStreams(
     private fun managed(streams: KafkaStreams) : KafkaStreams{
         streams.setStateListener { newState, oldState ->
             log.info("Stream endret state fra $oldState til $newState")
-            if (newState == KafkaStreams.State.ERROR) {
-                stop(becauseOfError = true)
-            }
         }
 
-        streams.setUncaughtExceptionHandler { _, _ -> stop(becauseOfError = true) }
+        streams.setUncaughtExceptionHandler { _, e ->
+            log.error("Kafkatråd feilet:", e)
+            stop(becauseOfError = true) }
 
         Runtime.getRuntime().addShutdownHook(Thread {
             stop(becauseOfError = false)
