@@ -82,7 +82,7 @@ dependencies {
     testImplementation("org.koin:koin-test:$koinVersion")
 
     implementation(kotlin("stdlib-jdk8"))
-    implementation("javax.ws.rs:javax.ws.rs-api:2.0")
+    implementation("javax.ws.rs:javax.ws.rs-api:2.1.1")
 }
 
 repositories {
