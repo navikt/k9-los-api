@@ -14,7 +14,7 @@ val kotliqueryVersion = "1.3.1"
 val k9SakVersion = "3.2.40"
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.5.30"
+    id("org.jetbrains.kotlin.jvm") version "1.6.10"
     id("com.github.johnrengelman.shadow") version "6.1.0"
 }
 
