@@ -7,7 +7,7 @@ val mainClass = "no.nav.k9.K9LosKt"
 val kafkaVersion = "2.7.0" // Alligned med version fra kafka-embedded-env
 val hikariVersion = "5.0.0"
 val flywayVersion = "6.0.8"
-val vaultJdbcVersion = "1.3.7"
+val vaultJdbcVersion = "1.3.9"
 val kafkaEmbeddedEnvVersion = "2.8.0"
 val koinVersion = "2.2.2"
 val kotliqueryVersion = "1.3.1"
@@ -50,7 +50,7 @@ dependencies {
     // Tilgangskontroll
     implementation("no.nav.common:auth:2.2021.02.08_08.29-beea07de78ad")
     implementation("no.nav.common:rest:2.2021.02.08_08.29-beea07de78ad")
-    implementation("com.google.code.gson:gson:2.8.6")
+    implementation("com.google.code.gson:gson:2.8.9")
 
     // Kontrakter
     implementation("no.nav.k9.sak:kontrakt:$k9SakVersion")
@@ -58,7 +58,7 @@ dependencies {
     implementation("no.nav.k9.statistikk:kontrakter:2.0_20201201123022_bfccad8")
 
     // Div
-    implementation(enforcedPlatform( "com.fasterxml.jackson:jackson-bom:2.12.3" ))
+    implementation(enforcedPlatform( "com.fasterxml.jackson:jackson-bom:2.13.0" ))
     implementation("info.debatty:java-string-similarity:2.0.0")
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
 
@@ -78,7 +78,7 @@ dependencies {
     }
     testImplementation("org.skyscreamer:jsonassert:1.5.0")
 
-    testImplementation("org.testcontainers:postgresql:1.15.3")
+    testImplementation("org.testcontainers:postgresql:1.16.2")
     testImplementation("org.koin:koin-test:$koinVersion")
 
     implementation(kotlin("stdlib-jdk8"))
