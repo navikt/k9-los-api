@@ -7,7 +7,6 @@ import no.nav.k9.integrasjon.kafka.dto.BehandlingProsessEventTilbakeDto
 import no.nav.k9.integrasjon.kafka.dto.EventHendelse
 import no.nav.k9.integrasjon.sakogbehandling.kontrakt.BehandlingAvsluttet
 import no.nav.k9.integrasjon.sakogbehandling.kontrakt.BehandlingOpprettet
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.statistikk.kontrakter.Aktør
 import no.nav.k9.statistikk.kontrakter.Behandling
 import no.nav.k9.statistikk.kontrakter.Sak
@@ -31,7 +30,7 @@ data class K9TilbakeModell(
         var aktiv = true
         var oppgaveAvsluttet: LocalDateTime? = null
 
-        if (eventResultat.avslutterOppgave()) {
+        if (eventResultat.lukkerOppgave()) {
             aktiv = false
             oppgaveAvsluttet = sisteEvent.eventTid
         }

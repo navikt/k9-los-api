@@ -16,7 +16,7 @@ enum class EventResultat {
         val koderSomÅpnerOppgave = EnumSet.of(GJENÅPNE_OPPGAVE, OPPRETT_BESLUTTER_OPPGAVE, OPPRETT_PAPIRSØKNAD_OPPGAVE, OPPRETT_OPPGAVE)
     }
 
-    fun avslutterOppgave(): Boolean {
+    fun lukkerOppgave(): Boolean {
         return koderSomLukkerOppgave.contains(this)
     }
 

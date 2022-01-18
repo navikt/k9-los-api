@@ -33,7 +33,7 @@ data class K9SakModell(
         var aktiv = true
         var oppgaveAvsluttet: LocalDateTime? = null
 
-        if (eventResultat.avslutterOppgave()) {
+        if (eventResultat.lukkerOppgave()) {
             aktiv = false
             oppgaveAvsluttet = sisteEvent.eventTid
         }
