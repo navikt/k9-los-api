@@ -7,7 +7,6 @@ import no.nav.k9.integrasjon.kafka.dto.BehandlingProsessEventTilbakeDto
 import no.nav.k9.integrasjon.kafka.dto.EventHendelse
 import no.nav.k9.integrasjon.sakogbehandling.kontrakt.BehandlingAvsluttet
 import no.nav.k9.integrasjon.sakogbehandling.kontrakt.BehandlingOpprettet
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.statistikk.kontrakter.Aktør
 import no.nav.k9.statistikk.kontrakter.Behandling
 import no.nav.k9.statistikk.kontrakter.Sak
@@ -30,29 +29,12 @@ data class K9TilbakeModell(
         val eventResultat = sisteEvent.aktiveAksjonspunkt().eventResultatTilbake()
         var aktiv = true
         var oppgaveAvsluttet: LocalDateTime? = null
-        var beslutterOppgave = false
 
-        when (eventResultat) {
-            EventResultat.LUKK_OPPGAVE -> {
-                aktiv = false
-                oppgaveAvsluttet = sisteEvent.eventTid
-            }
-            EventResultat.LUKK_OPPGAVE_VENT -> {
-                aktiv = false
-                oppgaveAvsluttet = sisteEvent.eventTid
-            }
-            EventResultat.LUKK_OPPGAVE_MANUELT_VENT -> {
-                aktiv = false
-                oppgaveAvsluttet = sisteEvent.eventTid
-            }
-            EventResultat.GJENÅPNE_OPPGAVE -> TODO()
-            EventResultat.OPPRETT_BESLUTTER_OPPGAVE -> {
-                beslutterOppgave = true
-            }
-            EventResultat.OPPRETT_OPPGAVE -> {
-                aktiv = true
-            }
+        if (eventResultat.lukkerOppgave()) {
+            aktiv = false
+            oppgaveAvsluttet = sisteEvent.eventTid
         }
+
         if (sisteEvent.eventHendelse == EventHendelse.AKSJONSPUNKT_AVBRUTT || sisteEvent.eventHendelse == EventHendelse.AKSJONSPUNKT_UTFØRT) {
             aktiv = false
         }
@@ -85,7 +67,7 @@ data class K9TilbakeModell(
             oppgaveEgenskap = emptyList(),
             aksjonspunkter = Aksjonspunkter(sisteEvent.aktiveAksjonspunkt().liste),
             utenlands = false,
-            tilBeslutter = beslutterOppgave,
+            tilBeslutter = eventResultat.beslutterOppgave(),
             selvstendigFrilans = false,
             søktGradering = false,
             utbetalingTilBruker = false,

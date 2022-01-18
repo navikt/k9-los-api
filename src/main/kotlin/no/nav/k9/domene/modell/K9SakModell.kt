@@ -30,32 +30,14 @@ data class K9SakModell(
 
     fun oppgave(sisteEvent: BehandlingProsessEventDto = sisteEvent()): Oppgave {
         val eventResultat = sisteEvent.aktiveAksjonspunkt().eventResultat()
-
         var aktiv = true
         var oppgaveAvsluttet: LocalDateTime? = null
-        var beslutterOppgave = false
 
-        when (eventResultat) {
-            EventResultat.LUKK_OPPGAVE -> {
-                aktiv = false
-                oppgaveAvsluttet = sisteEvent.eventTid
-            }
-            EventResultat.LUKK_OPPGAVE_VENT -> {
-                aktiv = false
-                oppgaveAvsluttet = sisteEvent.eventTid
-            }
-            EventResultat.LUKK_OPPGAVE_MANUELT_VENT -> {
-                aktiv = false
-                oppgaveAvsluttet = sisteEvent.eventTid
-            }
-            EventResultat.GJENÅPNE_OPPGAVE -> TODO()
-            EventResultat.OPPRETT_BESLUTTER_OPPGAVE -> {
-                beslutterOppgave = true
-            }
-            EventResultat.OPPRETT_OPPGAVE -> {
-                aktiv = true
-            }
+        if (eventResultat.lukkerOppgave()) {
+            aktiv = false
+            oppgaveAvsluttet = sisteEvent.eventTid
         }
+
         if (sisteEvent.eventHendelse == EventHendelse.AKSJONSPUNKT_AVBRUTT || sisteEvent.eventHendelse == EventHendelse.AKSJONSPUNKT_UTFØRT) {
             aktiv = false
         }
@@ -88,7 +70,7 @@ data class K9SakModell(
             oppgaveEgenskap = emptyList(),
             aksjonspunkter = sisteEvent.aktiveAksjonspunkt(),
             utenlands = erUtenlands(sisteEvent),
-            tilBeslutter = beslutterOppgave,
+            tilBeslutter = eventResultat.beslutterOppgave(),
             selvstendigFrilans = erSelvstendigNæringsdrivndeEllerFrilanser(sisteEvent),
             søktGradering = false,
             utbetalingTilBruker = false,

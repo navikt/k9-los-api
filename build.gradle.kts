@@ -5,16 +5,16 @@ val dusseldorfKtorVersion = "1.5.3.d73b2af"
 val ktorVersion = "1.5.3"
 val mainClass = "no.nav.k9.K9LosKt"
 val kafkaVersion = "2.7.0" // Alligned med version fra kafka-embedded-env
-val hikariVersion = "5.0.0"
+val hikariVersion = "5.0.1"
 val flywayVersion = "6.0.8"
 val vaultJdbcVersion = "1.3.9"
 val kafkaEmbeddedEnvVersion = "2.8.0"
 val koinVersion = "2.2.2"
 val kotliqueryVersion = "1.3.1"
-val k9SakVersion = "3.2.40"
+val k9SakVersion = "3.2.48"
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.5.30"
+    id("org.jetbrains.kotlin.jvm") version "1.6.10"
     id("com.github.johnrengelman.shadow") version "6.1.0"
 }
 
@@ -58,7 +58,7 @@ dependencies {
     implementation("no.nav.k9.statistikk:kontrakter:2.0_20201201123022_bfccad8")
 
     // Div
-    implementation(enforcedPlatform( "com.fasterxml.jackson:jackson-bom:2.13.0" ))
+    implementation(enforcedPlatform( "com.fasterxml.jackson:jackson-bom:2.13.1" ))
     implementation("info.debatty:java-string-similarity:2.0.0")
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
 
@@ -71,8 +71,8 @@ dependencies {
     testImplementation("org.apache.kafka:kafka-clients:$kafkaVersion")
     testImplementation("no.nav:kafka-embedded-env:$kafkaEmbeddedEnvVersion")
     testImplementation("no.nav.helse:dusseldorf-test-support:$dusseldorfKtorVersion")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
-    testImplementation("io.mockk:mockk:1.11.0")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
+    testImplementation("io.mockk:mockk:1.12.2")
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion") {
         exclude(group = "org.eclipse.jetty")
     }
@@ -107,13 +107,13 @@ repositories {
 
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_16
+    targetCompatibility = JavaVersion.VERSION_16
 }
 
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "16"
 }
 
 tasks.withType<ShadowJar> {
