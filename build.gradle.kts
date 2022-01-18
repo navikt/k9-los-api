@@ -78,7 +78,7 @@ dependencies {
     }
     testImplementation("org.skyscreamer:jsonassert:1.5.0")
 
-    testImplementation("org.testcontainers:postgresql:1.15.3")
+    testImplementation("org.testcontainers:postgresql:1.16.2")
     testImplementation("org.koin:koin-test:$koinVersion")
 
     implementation(kotlin("stdlib-jdk8"))
