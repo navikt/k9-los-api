@@ -67,7 +67,7 @@ dependencies {
     implementation("org.koin:koin-ktor:$koinVersion")
 
     // Test
-    testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.24")
+    testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.25")
     testImplementation("org.apache.kafka:kafka-clients:$kafkaVersion")
     testImplementation("no.nav:kafka-embedded-env:$kafkaEmbeddedEnvVersion")
     testImplementation("no.nav.helse:dusseldorf-test-support:$dusseldorfKtorVersion")
@@ -82,7 +82,7 @@ dependencies {
     testImplementation("org.koin:koin-test:$koinVersion")
 
     implementation(kotlin("stdlib-jdk8"))
-    implementation("javax.ws.rs:javax.ws.rs-api:2.0")
+    implementation("javax.ws.rs:javax.ws.rs-api:2.1.1")
 }
 
 repositories {

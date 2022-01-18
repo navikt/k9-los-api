@@ -170,8 +170,16 @@ data class OppgaveKø(
             return true
         }
 
+
         if (oppgave.aksjonspunkter.harAktivtAksjonspunkt(AksjonspunktDefinisjon.ENDELIG_AVKLAR_KOMPLETT_NOK_FOR_BEREGNING)
             && kriterier.map {it.andreKriterierType}.contains(AndreKriterierType.ENDELIG_BEH_AV_INNTEKTSMELDING)
+        ) {
+            return true
+        }
+
+        if (oppgave.aksjonspunkter.harAktivtAksjonspunkt(AksjonspunktDefinisjon.VENT_ANNEN_PSB_SAK)
+            && kriterier.map {it.andreKriterierType}.contains(AndreKriterierType.VENTER_PÅ_ANNEN_PARTS_SAK)
+
         ) {
             return true
         }

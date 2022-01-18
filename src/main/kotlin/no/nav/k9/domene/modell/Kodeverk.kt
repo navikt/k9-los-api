@@ -11,7 +11,8 @@ enum class AndreKriterierType(override val kode: String, override val navn: Stri
     AVKLAR_MEDLEMSKAP("AVKLAR_MEDLEMSKAP", "Avklar medlemskap"),
     AVKLAR_INNTEKTSMELDING_BEREGNING("AVKLAR_INNTEKTSMELDING_BEREGNING", "Avklar inntektsmeldng"),
     VENTER_PÅ_KOMPLETT_SØKNAD("VENTER_PÅ_KOMPLETT_SØKNAD", "Venter på komplett søknad"),
-    ENDELIG_BEH_AV_INNTEKTSMELDING("ENDELIG_BEH_AV_INNTEKTSMELDING", "Endelig beh av inntektsmelding");
+    ENDELIG_BEH_AV_INNTEKTSMELDING("ENDELIG_BEH_AV_INNTEKTSMELDING", "Endelig beh av inntektsmelding"),
+    VENTER_PÅ_ANNEN_PARTS_SAK("VENTER_PÅ_ANNEN_PARTS_SAK", "Venter på annen parts sak");
 
     override val kodeverk = "ANDRE_KRITERIER_TYPE"
 
@@ -87,7 +88,7 @@ enum class BehandlingType(override val kode: String, override val navn: String, 
     SKRIV_TIL_OSS_SVAR("SKRIV_TIL_OSS_SVAR", "Skriv til oss svar", "PUNSJ_INNSENDING_TYPE"),
     SAMTALEREFERAT("SAMTALEREFERAT", "Samtalereferat", "PUNSJ_INNSENDING_TYPE"),
     KOPI("KOPI", "Kopi", "PUNSJ_INNSENDING_TYPE"),
-    INNTEKTSMELDING_UTGÅTT("INNTEKTSMELDING_UTGÅTT", "Inntektsmelding utgått", "PUNSJ_INNSENDING_TYPE"),
+    INNTEKTSMELDING_UTGÅTT("INNTEKTSMELDING_UTGÅTT", "Inntektsmeldinger uten søknad", "PUNSJ_INNSENDING_TYPE"),
     UTEN_FNR_DNR("UTEN_FNR_DNR", "Uten fnr eller dnr", "PUNSJ_INNSENDING_TYPE"),
     UKJENT("UKJENT", "Ukjent", "PUNSJ_INNSENDING_TYPE");
 
