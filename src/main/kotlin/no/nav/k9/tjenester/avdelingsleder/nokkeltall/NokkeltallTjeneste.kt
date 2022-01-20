@@ -38,7 +38,7 @@ class NokkeltallTjeneste constructor(
     }
 
     fun hentFerdigstilteSiste8Uker(): List<AlleOppgaverHistorikk> {
-        return statistikkRepository.hentFerdigstilteOgNyeHistorikkSiste8Uker().map {
+        return statistikkRepository.hentFerdigstilteOgNyeHistorikkPerAntallDager(StatistikkRepository.SISTE_8_UKER_I_DAGER).map {
             AlleOppgaverHistorikk(
                     it.fagsakYtelseType,
                     it.behandlingType,
@@ -49,7 +49,7 @@ class NokkeltallTjeneste constructor(
     }
 
     fun hentNyeSiste8Uker(): List<AlleOppgaverHistorikk> {
-        return statistikkRepository.hentFerdigstilteOgNyeHistorikkSiste8Uker().map {
+        return statistikkRepository.hentFerdigstilteOgNyeHistorikkPerAntallDager(StatistikkRepository.SISTE_8_UKER_I_DAGER).map {
             AlleOppgaverHistorikk(
                     it.fagsakYtelseType,
                     it.behandlingType,
