@@ -9,6 +9,7 @@ import no.nav.k9.domene.modell.BehandlingType
 import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleFerdigstilteOppgaver
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
+import no.nav.k9.tjenester.avdelingsleder.nokkeltall.FerdigstiltBehandling
 import no.nav.k9.tjenester.innsikt.Databasekall
 import no.nav.k9.tjenester.saksbehandler.oppgave.BehandletOppgave
 import no.nav.k9.utils.Cache
@@ -296,6 +297,31 @@ class StatistikkRepository(
                     }.asList
             )
         }
+    }
+
+    fun hentFerdigstiltOppgavehistorikk(antallDagerHistorikk: Int = SISTE_8_UKER_I_DAGER): List<FerdigstiltBehandling> {
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }.increment()
+
+        val start_dato = LocalDate.now().minusDays(antallDagerHistorikk.toLong())
+
+        val list = using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    """
+                        SELECT statistikk.dato AS dato, oppgave.data::jsonb -> 'behandlendeEnhet' AS behandlende_enhet FROM oppgave JOIN
+                        (SELECT dato, jsonb_array_elements_text(noy.ferdigstilte) AS ferdigstilte FROM nye_og_ferdigstilte AS noy WHERE noy.dato > :start_dato) AS statistikk 
+                        ON oppgave.id in(statistikk.ferdigstilte) ORDER BY statistikk.dato
+                    """.trimIndent(),
+                    mapOf("start_dato" to start_dato)
+                ).map { rad ->
+                    FerdigstiltBehandling(
+                        dato = rad.localDate("dato"),
+                        behandlendeEnhet = objectMapper().readValue(rad.stringOrNull("behandlende_enhet") ?: ""),
+                    )
+                }.asList
+            )
+        }
+        return list
     }
 
     private fun tomListe(

@@ -52,6 +52,29 @@ fun Route.NokkeltallApis() {
         call.respond(nokkeltallTjeneste.hentFerdigstilteSiste8Uker())
     }
 
+    @Location("/ferdigstilte-enhet-historikk")
+    class hentFerdigstilteEnhet
+
+    get { _: hentFerdigstilteEnhet ->
+        val historikk = nokkeltallTjeneste.hentFerdigstilteOppgavePrEnhetHistorikk()
+            .map {
+                FerdigstillelseHistorikkEnhetDto(
+                    dato = it.key,
+                    behandlendeEnhet = it.value.map { (enhet, antall) ->
+                        FerdigstillelseHistorikkEnhetDto.AntallPrEnhet(enhet, antall)
+                    })
+        }
+        call.respond(historikk)
+    }
+
+
+    @Location("/ferdigstilte-historikk-alle")
+    class hentFerdigstilteEnhetAlle
+
+    get { _: hentFerdigstilteEnhetAlle ->
+        call.respond(nokkeltallTjeneste.hentFerdigstiltOppgavehistorikk().map { it.tilDto() })
+    }
+
     @Location("/nye-historikk")
     class hentNyeSiste8Uker
 
