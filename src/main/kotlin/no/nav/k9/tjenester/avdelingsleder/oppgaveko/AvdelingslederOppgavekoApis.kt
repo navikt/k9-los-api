@@ -60,7 +60,7 @@ fun Route.AvdelingslederOppgavekøApis() {
     post { _: lagreBehandlingstype ->
         requestContextService.withRequestContext(call) {
             val behandling = call.receive<BehandlingsTypeDto>()
-            call.respond(avdelingslederTjeneste.endreBehandlingsType(behandling))
+            call.respond(avdelingslederTjeneste.endreBehandlingsTyper(behandling))
         }
     }
 

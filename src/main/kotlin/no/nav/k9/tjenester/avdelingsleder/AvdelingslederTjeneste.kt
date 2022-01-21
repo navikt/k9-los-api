@@ -126,19 +126,14 @@ class AvdelingslederTjeneste(
         }.sortedBy { it.navn }
     }
 
-    suspend fun endreBehandlingsType(behandling: BehandlingsTypeDto) {
+    suspend fun endreBehandlingsTyper(behandling: BehandlingsTypeDto) {
         oppgaveKøRepository.lagre(UUID.fromString(behandling.id)) { oppgaveKø ->
-            if (behandling.checked) {
-                oppgaveKø!!.filtreringBehandlingTyper.add(behandling.behandlingType)
-            } else {
-                oppgaveKø!!.filtreringBehandlingTyper = oppgaveKø.filtreringBehandlingTyper.filter {
-                    it != behandling.behandlingType
-                }.toMutableList()
-            }
+            oppgaveKø!!.filtreringBehandlingTyper =
+                behandling.behandlingsTyper.filter { it.checked }
+                    .map { it.behandlingType }.toMutableList()
             oppgaveKø
         }
         oppgaveKøRepository.oppdaterKøMedOppgaver(UUID.fromString(behandling.id))
-
     }
 
     private suspend fun hentSaksbehandlersOppgavekoer(): Map<Saksbehandler, List<OppgavekøDto>> {
@@ -181,13 +176,14 @@ class AvdelingslederTjeneste(
             FagsakYtelseType.OMSORGSDAGER,
             FagsakYtelseType.OMSORGSPENGER_KS,
             FagsakYtelseType.OMSORGSPENGER_AO,
-            FagsakYtelseType.OMSORGSPENGER_MA)
+            FagsakYtelseType.OMSORGSPENGER_MA
+        )
         oppgaveKøRepository.lagre(UUID.fromString(ytelse.id)) { oppgaveKø ->
             oppgaveKø!!.filtreringYtelseTyper = mutableListOf()
             if (ytelse.fagsakYtelseType != null) {
                 ytelse.fagsakYtelseType.forEach { fagsakYtelseType ->
                     if (fagsakYtelseType == "OMD") {
-                        omsorgsdagerYtelser.forEach{ oppgaveKø.filtreringYtelseTyper.add(it) }
+                        omsorgsdagerYtelser.forEach { oppgaveKø.filtreringYtelseTyper.add(it) }
                     } else {
                         oppgaveKø.filtreringYtelseTyper.add(FagsakYtelseType.fraKode(fagsakYtelseType))
                     }

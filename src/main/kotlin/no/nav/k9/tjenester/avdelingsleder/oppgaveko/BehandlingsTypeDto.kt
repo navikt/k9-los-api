@@ -4,6 +4,10 @@ import no.nav.k9.domene.modell.BehandlingType
 
 data class BehandlingsTypeDto(
     val id: String,
-    val behandlingType: BehandlingType,
-    val checked: Boolean
-)
+    val behandlingsTyper: MutableList<TypeMedStatus>,
+) {
+    data class TypeMedStatus(
+        val behandlingType: BehandlingType,
+        val checked: Boolean
+    )
+}
