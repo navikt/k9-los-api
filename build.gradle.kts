@@ -49,7 +49,7 @@ dependencies {
 
     // Tilgangskontroll
     implementation("no.nav.common:auth:2.2021.02.08_08.29-beea07de78ad")
-    implementation("no.nav.common:rest:2.2021.02.08_08.29-beea07de78ad")
+    implementation("no.nav.common:rest:2.2022.01.21_08.02-cd96965058ef")
     implementation("com.google.code.gson:gson:2.8.9")
 
     // Kontrakter
