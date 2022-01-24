@@ -8,7 +8,6 @@ import kotlinx.html.*
 import no.nav.k9.domene.modell.BehandlingStatus
 import no.nav.k9.domene.modell.BehandlingType
 import no.nav.k9.domene.modell.OppgaveKø
-import no.nav.k9.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.domene.repository.OppgaveKøRepository
 import no.nav.k9.domene.repository.OppgaveRepository
 import no.nav.k9.domene.repository.SaksbehandlerRepository

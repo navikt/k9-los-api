@@ -6,8 +6,6 @@ import no.nav.k9.domene.periode.tidligsteOgSeneste
 import no.nav.k9.domene.repository.OppgaveRepository
 import no.nav.k9.domene.repository.StatistikkRepository
 import java.time.LocalDate
-import java.time.Period
-import java.util.stream.Stream
 
 class NokkeltallTjeneste constructor(
     private val oppgaveRepository: OppgaveRepository,

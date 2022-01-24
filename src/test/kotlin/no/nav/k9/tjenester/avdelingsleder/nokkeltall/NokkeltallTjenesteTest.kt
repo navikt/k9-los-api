@@ -72,7 +72,7 @@ class NokkeltallTjenesteTest : KoinTest {
     }
 
     @Test
-    fun `Enhetstest - Hent historikk for ferdigstilte per enhet, som aggreggerer antall og fyller tomrom i datasettet med tom liste`() {
+    fun `Hent historikk for ferdigstilte per enhet som aggreggerer antall og fyller tomrom i datasettet med tom liste`() {
 
         val statistikkRepository = mockk<StatistikkRepository>()
         every { statistikkRepository.hentFerdigstiltOppgavehistorikk() } returns listOf(

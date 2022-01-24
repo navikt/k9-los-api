@@ -302,7 +302,7 @@ class StatistikkRepository(
     fun hentFerdigstiltOppgavehistorikk(antallDagerHistorikk: Int = SISTE_8_UKER_I_DAGER): List<FerdigstiltBehandling> {
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }.increment()
 
-        val start_dato = LocalDate.now().minusDays(antallDagerHistorikk.toLong())
+        val startDato = LocalDate.now().minusDays(antallDagerHistorikk.toLong())
 
         val list = using(sessionOf(dataSource)) {
             it.run(
@@ -312,7 +312,7 @@ class StatistikkRepository(
                         (SELECT dato, jsonb_array_elements_text(noy.ferdigstilte) AS ferdigstilte FROM nye_og_ferdigstilte AS noy WHERE noy.dato > :start_dato) AS statistikk 
                         ON oppgave.id in(statistikk.ferdigstilte) ORDER BY statistikk.dato
                     """.trimIndent(),
-                    mapOf("start_dato" to start_dato)
+                    mapOf("start_dato" to startDato)
                 ).map { rad ->
                     FerdigstiltBehandling(
                         dato = rad.localDate("dato"),
