@@ -1,0 +1,184 @@
+package no.nav.k9
+
+import assertk.assertThat
+import assertk.assertions.isEqualTo
+import assertk.assertions.isSuccess
+import kotlinx.coroutines.*
+import no.nav.k9.domene.lager.oppgave.Oppgave
+import no.nav.k9.domene.modell.*
+import no.nav.k9.domene.repository.OppgaveRepository
+import no.nav.k9.domene.repository.StatistikkRepository
+import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
+import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveTjeneste
+import org.junit.Ignore
+import org.junit.Rule
+import org.junit.Test
+import org.koin.test.KoinTest
+import org.koin.test.KoinTestRule
+import org.koin.test.get
+import org.slf4j.LoggerFactory
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.util.*
+import kotlin.test.BeforeTest
+
+@Ignore("Kjøres manuelt ved behov")
+class YtelseTest: KoinTest {
+    @get:Rule
+    val koinTestRule = KoinTestRule.create {
+        modules(buildAndTestConfig())
+    }
+
+    val random = Random()
+    val antallOppgaver = 10000
+
+    @OptIn(DelicateCoroutinesApi::class)
+    @BeforeTest
+    fun setup() {
+        Kjøretid.logg("Opprettelse og ferdigstillelse av oppgaver") {
+            runBlocking {
+                coroutineScope {
+                    val nå = LocalDateTime.now()
+                    (1..antallOppgaver).map {
+                        async(Dispatchers.IO) { opprettOgFerdigstillOppgave(nå.minusDays((it / 2).toLong())) }
+                    }
+                }.awaitAll()
+            }
+        }
+    }
+
+    @Test
+    fun `Opprett og ferdigstill oppgave`() {
+        val oppgaveTjeneste = get<OppgaveTjeneste>()
+        val oppgaveRepository = get<OppgaveRepository>()
+
+        runBlocking {
+            Kjøretid.logg("Sjekk antall oppgaver") {
+                assertThat { oppgaveRepository.hent().size }.isSuccess().isEqualTo(antallOppgaver)
+            }
+        }
+
+        runBlocking {
+            Kjøretid.logg("Hent beholdning av oppgaver") {
+                val alleOppgaverNyeOgFerdigstilte = oppgaveTjeneste.hentBeholdningAvOppgaverPerAntallDager()
+                assert(alleOppgaverNyeOgFerdigstilte.size > 100)
+                assert(alleOppgaverNyeOgFerdigstilte.map { it.behandlingType }.distinct().size > 1)
+                assert(alleOppgaverNyeOgFerdigstilte.map { it.fagsakYtelseType }.distinct().size > 1)
+            }
+        }
+    }
+
+    @Test
+    fun `Hent fagsaker query`() {
+        val oppgaveTjeneste = get<OppgaveTjeneste>()
+
+        Kjøretid.logg("Hent beholdning av oppgaver") {
+            runBlocking {
+                val fagsaker = oppgaveTjeneste.søkFagsaker("Yz647")
+                assert(fagsaker.oppgaver.isNotEmpty())
+            }
+        }
+    }
+
+
+    fun opprettOgFerdigstillOppgave(
+        dato: LocalDateTime = LocalDateTime.now(),
+        behandlendeEnhet: String = "4409",
+        behandlingType: BehandlingType = BehandlingType.FORSTEGANGSSOKNAD,
+    ) {
+            val datoOpprettet = dato.minusWeeks(1)
+            val behandlingsId = UUID.randomUUID()
+
+            val oppgaveRepo = get<OppgaveRepository>()
+            val statistikkRepository = get<StatistikkRepository>()
+
+            val oppgave = mockOppgave().copy(
+                eksternId = behandlingsId,
+                behandlingOpprettet = datoOpprettet,
+                oppgaveAvsluttet = dato,
+                behandlendeEnhet = behandlendeEnhet
+            )
+            oppgaveRepo.lagre(behandlingsId) { oppgave }
+
+            statistikkRepository.lagreFerdigstilt(behandlingType.kode, behandlingsId, dato.toLocalDate())
+
+            val nyeOgFerdigstilte = AlleOppgaverNyeOgFerdigstilte(
+                oppgave.fagsakYtelseType,
+                behandlingType,
+                dato.toLocalDate(),
+                nye = mutableSetOf(behandlingsId.toString()),
+                ferdigstilte = mutableSetOf(behandlingsId.toString()),
+                ferdigstilteSaksbehandler = mutableSetOf(oppgave.ansvarligSaksbehandlerIdent!!)
+            )
+            statistikkRepository.lagre(nyeOgFerdigstilte) { nyeOgFerdigstilte }
+    }
+
+    private fun mockOppgave(): Oppgave {
+        return Oppgave(
+            behandlingId = 9438,
+            fagsakSaksnummer = "Yz647",
+            journalpostId = null,
+            aktorId = "273857",
+            behandlendeEnhet = "Enhet",
+            behandlingsfrist = LocalDateTime.now(),
+            behandlingOpprettet = LocalDateTime.now(),
+            forsteStonadsdag = LocalDate.now().plusDays(6),
+            behandlingStatus = BehandlingStatus.OPPRETTET,
+            behandlingType = random(BehandlingType::class.java),
+            fagsakYtelseType = random(FagsakYtelseType::class.java),
+            aktiv = random.nextBoolean(),
+            system = random(Fagsystem::class.java).toString(),
+            oppgaveAvsluttet = null,
+            utfortFraAdmin = false,
+            eksternId = UUID.randomUUID(),
+            oppgaveEgenskap = emptyList(),
+            aksjonspunkter = Aksjonspunkter(emptyMap()),
+            tilBeslutter = true,
+            utbetalingTilBruker = false,
+            selvstendigFrilans = false,
+            kombinert = false,
+            søktGradering = false,
+            årskvantum = false,
+            avklarArbeidsforhold = false,
+            avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false,
+            ansvarligSaksbehandlerIdent = TestSaksbehandler.tilfeldig().toString()
+        )
+    }
+
+    fun <T : Enum<*>?> random(clazz: Class<T>): T {
+        val x = random.nextInt(clazz.enumConstants.size)
+        return clazz.enumConstants[x]
+    }
+
+    enum class TestSaksbehandler {
+        Z1111111,
+        Z2222222,
+        Z3333333,
+        Z4444444,
+        Z5555555;
+
+        companion object {
+            val random = Random()
+
+            fun tilfeldig(): TestSaksbehandler {
+                val pos = random.nextInt(values().size)
+                return values()[pos]
+            }
+        }
+    }
+
+
+    object Kjøretid {
+        private val log = LoggerFactory.getLogger(YtelseTest::class.java)
+
+        fun logg(navn: String = "Jobb", funksjon: () -> Unit) {
+            val start = System.currentTimeMillis()
+            funksjon()
+            log.info("$navn utført på [${start.tidBrukt()} ms]")
+        }
+
+        private fun Long.tidBrukt(): Long {
+            return System.currentTimeMillis() - this
+        }
+    }
+}
