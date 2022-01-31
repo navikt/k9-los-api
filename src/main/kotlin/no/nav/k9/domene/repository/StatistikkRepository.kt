@@ -9,6 +9,7 @@ import no.nav.k9.domene.modell.BehandlingType
 import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleFerdigstilteOppgaver
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
+import no.nav.k9.tjenester.avdelingsleder.nokkeltall.FerdigstiltBehandling
 import no.nav.k9.tjenester.innsikt.Databasekall
 import no.nav.k9.tjenester.saksbehandler.oppgave.BehandletOppgave
 import no.nav.k9.utils.Cache
@@ -22,6 +23,10 @@ import javax.sql.DataSource
 class StatistikkRepository(
     private val dataSource: DataSource
 ) {
+    companion object {
+        val SISTE_8_UKER_I_DAGER = 55
+    }
+
     fun lagreBehandling(brukerIdent: String, f: (BehandletOppgave?) -> BehandletOppgave) {
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
@@ -189,36 +194,6 @@ class StatistikkRepository(
     }
 
 
-    fun hentFerdigstilteOgNyeHistorikkPerAntallDager(antall: Int): List<AlleOppgaverNyeOgFerdigstilte> {
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-        return using(sessionOf(dataSource)) {
-            //language=PostgreSQL
-            it.run(
-                queryOf(
-                    """
-                            select behandlingtype, fagsakYtelseType, dato, ferdigstilte, nye, ferdigstiltesaksbehandler
-                            from nye_og_ferdigstilte  where dato >= current_date - :antall::interval
-                            group by behandlingtype, fagsakYtelseType, dato
-                    """.trimIndent(),
-                    mapOf("antall" to "\'${antall} days\'")
-                )
-                    .map { row ->
-                        AlleOppgaverNyeOgFerdigstilte(
-                            behandlingType = BehandlingType.fraKode(row.string("behandlingType")),
-                            fagsakYtelseType = FagsakYtelseType.fraKode(row.string("fagsakYtelseType")),
-                            dato = row.localDate("dato"),
-                            ferdigstilte = objectMapper().readValue(row.stringOrNull("ferdigstilte") ?: "[]"),
-                            nye = objectMapper().readValue(row.stringOrNull("nye") ?: "[]"),
-                            ferdigstilteSaksbehandler = objectMapper().readValue(
-                                row.stringOrNull("ferdigstiltesaksbehandler") ?: "[]"
-                            ),
-                        )
-                    }.asList
-            )
-        }
-    }
-
     fun truncateStatistikk() {
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
@@ -255,31 +230,10 @@ class StatistikkRepository(
             }
         }
 
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-        val list = using(sessionOf(dataSource)) {
-            //language=PostgreSQL
-            it.run(
-                queryOf(
-                    """
-                            select behandlingtype, fagsakYtelseType, dato, ferdigstilte, nye 
-                            from nye_og_ferdigstilte  where dato >= current_date - :antall::interval
-                            group by behandlingtype, fagsakYtelseType, dato
-                    """.trimIndent(),
-                    mapOf("antall" to "\'${55} days\'")
-                )
-                    .map { row ->
-                        AlleOppgaverNyeOgFerdigstilte(
-                            behandlingType = BehandlingType.fraKode(row.string("behandlingType")),
-                            fagsakYtelseType = FagsakYtelseType.fraKode(row.string("fagsakYtelseType")),
-                            dato = row.localDate("dato"),
-                            ferdigstilte = objectMapper().readValue(row.stringOrNull("ferdigstilte") ?: "[]"),
-                            nye = objectMapper().readValue(row.stringOrNull("nye") ?: "[]")
-                        )
-                    }.asList
-            )
-        }
-        val datoMap = list.groupBy { it.dato }
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }.increment()
+
+        val ferdigstilteOgNyeOppgavehistorikk = hentFerdigstilteOgNyeHistorikkPerAntallDager(SISTE_8_UKER_I_DAGER)
+        val datoMap = ferdigstilteOgNyeOppgavehistorikk.groupBy { it.dato }
         val ret = mutableListOf<AlleOppgaverNyeOgFerdigstilte>()
         for (i in 55 downTo 1) {
             val dato = LocalDate.now().minusDays(i.toLong())
@@ -317,77 +271,56 @@ class StatistikkRepository(
         return ret
     }
 
+    fun hentFerdigstilteOgNyeHistorikkPerAntallDager(antall: Int = SISTE_8_UKER_I_DAGER): List<AlleOppgaverNyeOgFerdigstilte> {
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }.increment()
 
-    fun hentFerdigstilteOgNyeHistorikkSiste8Uker(): List<AlleOppgaverNyeOgFerdigstilte> {
-
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-        val list = using(sessionOf(dataSource)) {
+        return using(sessionOf(dataSource)) {
             //language=PostgreSQL
             it.run(
                 queryOf(
                     """
-                            select behandlingtype, fagsakYtelseType, dato, ferdigstilte, ferdigstiltesaksbehandler, nye 
+                            select behandlingtype, fagsakYtelseType, dato, ferdigstilte, nye, ferdigstiltesaksbehandler
                             from nye_og_ferdigstilte  where dato >= current_date - :antall::interval
                             group by behandlingtype, fagsakYtelseType, dato
                     """.trimIndent(),
-                    mapOf("antall" to "\'${55} days\'")
+                    mapOf("antall" to "\'${antall} days\'")
                 )
                     .map { row ->
                         AlleOppgaverNyeOgFerdigstilte(
                             behandlingType = BehandlingType.fraKode(row.string("behandlingType")),
                             fagsakYtelseType = FagsakYtelseType.fraKode(row.string("fagsakYtelseType")),
                             dato = row.localDate("dato"),
-                            ferdigstilte = objectMapper().readValue(
-                                row.stringOrNull("ferdigstilte")
-                                    ?: "[]"
-                            ),
-                            ferdigstilteSaksbehandler = objectMapper().readValue(
-                                row.stringOrNull("ferdigstiltesaksbehandler")
-                                    ?: "[]"
-                            ),
-                            nye = objectMapper().readValue(row.stringOrNull("nye") ?: "[]")
+                            ferdigstilte = objectMapper().readValue(row.stringOrNull("ferdigstilte") ?: "[]"),
+                            nye = objectMapper().readValue(row.stringOrNull("nye") ?: "[]"),
+                            ferdigstilteSaksbehandler = objectMapper().readValue(row.stringOrNull("ferdigstiltesaksbehandler") ?: "[]"),
                         )
                     }.asList
             )
         }
-
-        return list
     }
 
-    fun hentFerdigstilteOgNyeHistorikkSiste7dager(): List<AlleOppgaverNyeOgFerdigstilte> {
+    fun hentFerdigstiltOppgavehistorikk(antallDagerHistorikk: Int = SISTE_8_UKER_I_DAGER): List<FerdigstiltBehandling> {
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }.increment()
 
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
+        val startDato = LocalDate.now().minusDays(antallDagerHistorikk.toLong())
+
         val list = using(sessionOf(dataSource)) {
-            //language=PostgreSQL
             it.run(
                 queryOf(
                     """
-                            select behandlingtype, fagsakYtelseType, dato, ferdigstilte, ferdigstiltesaksbehandler, nye 
-                            from nye_og_ferdigstilte  where dato >= current_date - :antall::interval
-                            group by behandlingtype, fagsakYtelseType, dato
+                        SELECT statistikk.dato AS dato, oppgave.data::jsonb -> 'behandlendeEnhet' AS behandlende_enhet FROM oppgave JOIN
+                        (SELECT dato, jsonb_array_elements_text(noy.ferdigstilte) AS ferdigstilte FROM nye_og_ferdigstilte AS noy WHERE noy.dato > :start_dato) AS statistikk 
+                        ON oppgave.id in(statistikk.ferdigstilte) ORDER BY statistikk.dato
                     """.trimIndent(),
-                    mapOf("antall" to "\'${55} days\'")
-                )
-                    .map { row ->
-                        AlleOppgaverNyeOgFerdigstilte(
-                            behandlingType = BehandlingType.fraKode(row.string("behandlingType")),
-                            fagsakYtelseType = FagsakYtelseType.fraKode(row.string("fagsakYtelseType")),
-                            dato = row.localDate("dato"),
-                            ferdigstilte = objectMapper().readValue(
-                                row.stringOrNull("ferdigstilte")
-                                    ?: "[]"
-                            ), ferdigstilteSaksbehandler = objectMapper().readValue(
-                                row.stringOrNull("ferdigstiltesaksbehandler")
-                                    ?: "[]"
-                            ),
-                            nye = objectMapper().readValue(row.stringOrNull("nye") ?: "[]")
-                        )
-                    }.asList
+                    mapOf("start_dato" to startDato)
+                ).map { rad ->
+                    FerdigstiltBehandling(
+                        dato = rad.localDate("dato"),
+                        behandlendeEnhet = objectMapper().readValue(rad.stringOrNull("behandlende_enhet") ?: ""),
+                    )
+                }.asList
             )
         }
-
         return list
     }
 
