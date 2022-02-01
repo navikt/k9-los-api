@@ -81,7 +81,8 @@ data class K9PunsjModell(
             behandlingId = null,
             fagsakSaksnummer = "",
             journalpostId = førsteEvent.journalpostId.verdi,
-            aktorId = førsteEvent.aktørId?.id ?: "",
+            //må se på siste siden den kan endre seg hvis punsj finner ut at opprinnelig oppgave var på barnets aktør f.eks.
+            aktorId = sisteEvent.aktørId?.id ?: "",
             behandlendeEnhet = "",
             behandlingsfrist = førsteEvent.eventTid.toLocalDate().plusDays(21).atStartOfDay(),
             behandlingOpprettet = førsteEvent.eventTid,
