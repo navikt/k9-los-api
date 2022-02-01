@@ -3,6 +3,7 @@ package no.nav.k9.domene.modell
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.repository.ReservasjonRepository
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.*
 import no.nav.k9.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -157,33 +158,40 @@ data class OppgaveKø(
             return true
         }
 
-        if (oppgave.aksjonspunkter.harAktivtAksjonspunkt(AksjonspunktDefinisjon.AVKLAR_KOMPLETT_NOK_FOR_BEREGNING)
+        if (oppgave.aksjonspunkter.harAktivtAksjonspunkt(AVKLAR_KOMPLETT_NOK_FOR_BEREGNING)
             && kriterier.map { it.andreKriterierType }
                 .contains(AndreKriterierType.AVKLAR_INNTEKTSMELDING_BEREGNING)
         ) {
             return true
         }
 
-        if (oppgave.aksjonspunkter.harAktivtAksjonspunkt(AksjonspunktDefinisjon.AUTO_VENTER_PÅ_KOMPLETT_SØKNAD)
+        if (oppgave.aksjonspunkter.harAktivtAksjonspunkt(AUTO_VENTER_PÅ_KOMPLETT_SØKNAD)
             && kriterier.map {it.andreKriterierType}.contains(AndreKriterierType.VENTER_PÅ_KOMPLETT_SØKNAD)
         ) {
             return true
         }
 
-
-        if (oppgave.aksjonspunkter.harAktivtAksjonspunkt(AksjonspunktDefinisjon.ENDELIG_AVKLAR_KOMPLETT_NOK_FOR_BEREGNING)
+        if (oppgave.aksjonspunkter.harAktivtAksjonspunkt(ENDELIG_AVKLAR_KOMPLETT_NOK_FOR_BEREGNING)
             && kriterier.map {it.andreKriterierType}.contains(AndreKriterierType.ENDELIG_BEH_AV_INNTEKTSMELDING)
         ) {
             return true
         }
 
-        if (oppgave.aksjonspunkter.harAktivtAksjonspunkt(AksjonspunktDefinisjon.VENT_ANNEN_PSB_SAK)
+        if (oppgave.aksjonspunkter.harAktivtAksjonspunkt(VENT_ANNEN_PSB_SAK)
             && kriterier.map {it.andreKriterierType}.contains(AndreKriterierType.VENTER_PÅ_ANNEN_PARTS_SAK)
 
         ) {
             return true
         }
 
+        if(oppgave.aksjonspunkter.harEtAvInaktivtAksjonspunkt(
+                TRENGER_SØKNAD_FOR_INFOTRYGD_PERIODE,
+                OVERSTYR_BEREGNING_INPUT,
+                TRENGER_SØKNAD_FOR_INFOTRYGD_PERIODE_ANNEN_PART
+            ) && kriterier.map {it.andreKriterierType}.contains(AndreKriterierType.FORLENGELSER_FRA_INFOTRYGD)
+              && oppgave.tilBeslutter) {
+            return true
+        }
         return false
     }
 

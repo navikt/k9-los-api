@@ -415,6 +415,10 @@ data class Aksjonspunkter(val liste: Map<String, String>) {
         return AksjonspunktDefWrapper.inneholderEtInaktivtAksjonspunktMedKoden(this.liste, def)
     }
 
+    fun harEtAvInaktivtAksjonspunkt(vararg def : AksjonspunktDefinisjon): Boolean {
+        return AksjonspunktDefWrapper.inneholderEtAvInaktivtAksjonspunkterMedKoder(this.liste, def.toList())
+    }
+
     fun eventResultat(): EventResultat {
         if (erTom()) {
             return EventResultat.LUKK_OPPGAVE
