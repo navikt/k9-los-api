@@ -298,11 +298,11 @@ data class K9TilbakeModell(
 }
 
 fun BehandlingProsessEventTilbakeDto.aktiveAksjonspunkt(): AksjonspunkterTilbake {
-    return AksjonspunkterTilbake(this.aksjonspunktKoderMedStatusListe.filter { entry -> entry.value == "OPPR" })
+    return AksjonspunkterTilbake(this.aksjonspunktKoderMedStatusListe.filter { entry -> entry.value == AksjonspunktStatus.OPPRETTET.kode })
 }
 
 fun BehandlingProsessEventTilbakeDto.InaktiveAksjonspunkt(): AksjonspunkterTilbake {
-    return AksjonspunkterTilbake(this.aksjonspunktKoderMedStatusListe.filter { entry -> entry.value != "OPPR" })
+    return AksjonspunkterTilbake(this.aksjonspunktKoderMedStatusListe.filter { entry -> entry.value != AksjonspunktStatus.OPPRETTET.kode })
 }
 
 data class AksjonspunkterTilbake(val liste: Map<String, String>) {

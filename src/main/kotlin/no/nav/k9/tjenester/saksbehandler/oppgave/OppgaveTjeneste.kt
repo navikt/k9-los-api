@@ -494,7 +494,7 @@ class OppgaveTjeneste constructor(
                 søktGradering = oppgave.søktGradering,
                 avklarArbeidsforhold = oppgave.avklarArbeidsforhold,
                 fagsakPeriode = oppgave.fagsakPeriode,
-                paaVent = if (oppgave.aksjonspunkter.liste["MER_INFORMASJON"] != null) oppgave.aksjonspunkter.liste["MER_INFORMASJON"] == "OPPR" else false
+                paaVent = if (oppgave.aksjonspunkter.liste["MER_INFORMASJON"] != null) oppgave.aksjonspunkter.liste["MER_INFORMASJON"] == AksjonspunktStatus.OPPRETTET.kode else false
             )
         } else {
             return OppgaveDto(

@@ -53,7 +53,7 @@ enum class FagsakYtelseType constructor(override val kode: String, override val 
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 enum class FagsakStatus(override val kode: String, override val navn: String) : Kodeverdi {
-    OPPRETTET("OPPR", "Opprettet"),
+    OPPRETTET(AksjonspunktStatus.OPPRETTET.kode, "Opprettet"),
     UNDER_BEHANDLING("UBEH", "Under behandling"),
     LØPENDE("LOP", "Løpende"),
     AVSLUTTET("AVSLU", "Avsluttet");
@@ -166,6 +166,19 @@ enum class Fagsystem(val kode: String, val kodeverk: String) {
         @JsonCreator
         @JvmStatic
         fun fraKode(kode: String): Fagsystem = values().find { it.kode == kode } ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
+    }
+}
+
+@JsonFormat(shape = JsonFormat.Shape.OBJECT)
+enum class AksjonspunktStatus(val kode: String, val kodeverk: String) {
+    AVBRUTT("AVBR", "AKSJONSPUNKT_STATUS"),
+    OPPRETTET("OPPR", "AKSJONSPUNKT_STATUS"),
+    UTFØRT("UTFO", "AKSJONSPUNKT_STATUS");
+
+    companion object {
+        @JsonCreator
+        @JvmStatic
+        fun fraKode(kode: String): AksjonspunktStatus = values().find { it.kode == kode } ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
     }
 }
 

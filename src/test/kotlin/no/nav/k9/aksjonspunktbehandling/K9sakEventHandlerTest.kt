@@ -101,7 +101,7 @@ class K9sakEventHandlerTest : KoinTest {
               "behandlingTypeKode": "BT-002",
               "opprettetBehandling": "2020-02-20T07:38:49",
               "aksjonspunktKoderMedStatusListe": {
-                "7030": "OPPR"
+                "7030": AksjonspunktStatus.OPPRETTET.kode
               }
             }"""
         val objectMapper = jacksonObjectMapper()
@@ -142,8 +142,8 @@ class K9sakEventHandlerTest : KoinTest {
               "behandlingTypeKode": "BT-002",
               "opprettetBehandling": "2020-02-20T07:38:49",
               "aksjonspunktKoderMedStatusListe": {
-                "5016": "OPPR",
-                "5080": "OPPR"
+                "5016": AksjonspunktStatus.OPPRETTET.kode,
+                "5080": AksjonspunktStatus.OPPRETTET.kode
               }
             }"""
         val objectMapper = jacksonObjectMapper()
@@ -188,7 +188,7 @@ class K9sakEventHandlerTest : KoinTest {
               "behandlingTypeKode": "BT-002",
               "opprettetBehandling": "2020-02-20T07:38:49",
               "aksjonspunktKoderMedStatusListe": {
-                "5016": "OPPR"
+                "5016": AksjonspunktStatus.OPPRETTET.kode
               }
             }"""
         val objectMapper = jacksonObjectMapper()
@@ -229,7 +229,7 @@ class K9sakEventHandlerTest : KoinTest {
                   "behandlingTypeKode": "BT-002",
                   "opprettetBehandling": "2020-02-20T07:38:49",
                   "aksjonspunktKoderMedStatusListe": {
-                    "5009": "OPPR"
+                    "5009": AksjonspunktStatus.OPPRETTET.kode
                   },
                   "fagsakPeriode" : {
                     "fom" : "2020-02-20",
@@ -275,7 +275,7 @@ class K9sakEventHandlerTest : KoinTest {
                   "behandlingTypeKode": "BT-002",
                   "opprettetBehandling": "2020-02-20T07:38:49",
                   "aksjonspunktKoderMedStatusListe": {
-                    "5009": "OPPR"
+                    "5009": AksjonspunktStatus.OPPRETTET.kode
                   }
                 }"""
         val objectMapper = jacksonObjectMapper()
@@ -315,9 +315,9 @@ class K9sakEventHandlerTest : KoinTest {
                   "behandlingTypeKode": "BT-002",
                   "opprettetBehandling": "2020-02-20T07:38:49",
                   "aksjonspunktKoderMedStatusListe": {
-                    "5009": "OPPR",
-                    "5084": "OPPR",
-                    "5080": "OPPR"
+                    "5009": AksjonspunktStatus.OPPRETTET.kode,
+                    "5084": AksjonspunktStatus.OPPRETTET.kode,
+                    "5080": AksjonspunktStatus.OPPRETTET.kode
                   }
                 }"""
         val objectMapper = jacksonObjectMapper()
@@ -355,10 +355,10 @@ class K9sakEventHandlerTest : KoinTest {
                "behandlingTypeKode": "BT-007",
                "opprettetBehandling": "2020-06-16T13:16:51.690",
                "aksjonspunktKoderMedStatusListe": {
-                               "5030": "UTFO",
-                               "7002": "UTFO",
-                               "7001": "OPPR",
-                               "7003": "OPPR"
+                               "5030": AksjonspunktStatus.UTFØRT.kode,
+                               "7002": AksjonspunktStatus.UTFØRT.kode,
+                               "7001": AksjonspunktStatus.OPPRETTET.kode,
+                               "7003": AksjonspunktStatus.OPPRETTET.kode
                },
                "href": "/fpsak/fagsak/61613602/behandling/53/?punkt=default&fakta=default",
                "førsteFeilutbetaling": "2019-10-19",
@@ -400,7 +400,7 @@ class K9sakEventHandlerTest : KoinTest {
                   "behandlingTypeKode": "BT-002",
                   "opprettetBehandling": "2020-02-20T07:38:49",
                   "aksjonspunktKoderMedStatusListe": {
-                    "5009": "OPPR"
+                    "5009": AksjonspunktStatus.OPPRETTET.kode
                   }
                 }"""
         val objectMapper = jacksonObjectMapper()

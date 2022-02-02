@@ -49,7 +49,7 @@ class NokkeltallTjenesteTest : KoinTest {
         val nøkkeltallTjeneste = get<NokkeltallTjeneste>()
 
         //Lag en oppgave uten aksjonspunkt
-        opprettOppgave(mapOf(AksjonspunktDefinisjon.FATTER_VEDTAK.kode to "OPPR"))
+        opprettOppgave(mapOf(AksjonspunktDefinisjon.FATTER_VEDTAK.kode to AksjonspunktStatus.OPPRETTET.kode))
 
         val oppgaverPåVent = nøkkeltallTjeneste.hentOppgaverPåVent()
 
@@ -61,7 +61,7 @@ class NokkeltallTjenesteTest : KoinTest {
         val nøkkeltallTjeneste = get<NokkeltallTjeneste>()
 
         //Lag en oppgave uten aksjonspunkt
-        opprettOppgave(mapOf(AksjonspunktDefinisjon.AUTO_MANUELT_SATT_PÅ_VENT.kode to "OPPR"))
+        opprettOppgave(mapOf(AksjonspunktDefinisjon.AUTO_MANUELT_SATT_PÅ_VENT.kode to AksjonspunktStatus.OPPRETTET.kode))
 
         val oppgaverPåVent = nøkkeltallTjeneste.hentOppgaverPåVent()
 

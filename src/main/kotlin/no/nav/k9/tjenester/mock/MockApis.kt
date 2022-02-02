@@ -136,7 +136,7 @@ fun Route.MockGrensesnitt() {
             val punsjEventDto = if (modell.erTom()) {
                 PunsjEventDto(
                     eksternId = UUID.fromString(aksjonspunktToggle.eksternid),
-                    aksjonspunktKoderMedStatusListe = mutableMapOf(aksjonspunktToggle.kode to "OPPR"),
+                    aksjonspunktKoderMedStatusListe = mutableMapOf(aksjonspunktToggle.kode to AksjonspunktStatus.OPPRETTET.kode),
                     journalpostId = JournalpostId("133742069666"),
                     eventTid = LocalDateTime.now(),
                     aktørId = AktørId(aksjonspunktToggle.aktørid)
@@ -144,7 +144,7 @@ fun Route.MockGrensesnitt() {
             } else {
                 val sisteEvent = modell.sisteEvent()
                 sisteEvent.aksjonspunktKoderMedStatusListe[aksjonspunktToggle.kode] =
-                    if (aksjonspunktToggle.toggle) "OPPR" else "AVSL"
+                    if (aksjonspunktToggle.toggle) AksjonspunktStatus.OPPRETTET.kode else "AVSL"
 
                 PunsjEventDto(
                     eksternId = sisteEvent.eksternId,
@@ -171,7 +171,7 @@ fun Route.MockGrensesnitt() {
                     EventHendelse.AKSJONSPUNKT_OPPRETTET,
                     behandlingStatus = "UTRED",
                     behandlinStatus = "UTRED",
-                    aksjonspunktKoderMedStatusListe = mutableMapOf(aksjonspunktToggle.kode to "OPPR"),
+                    aksjonspunktKoderMedStatusListe = mutableMapOf(aksjonspunktToggle.kode to AksjonspunktStatus.OPPRETTET.kode),
                     behandlingSteg = "",
                     opprettetBehandling = LocalDateTime.now(),
                     behandlingTypeKode = "BT-004",
@@ -180,7 +180,7 @@ fun Route.MockGrensesnitt() {
             } else {
                 val sisteEvent = modell.sisteEvent()
                 sisteEvent.aksjonspunktKoderMedStatusListe[aksjonspunktToggle.kode] =
-                    if (aksjonspunktToggle.toggle) "OPPR" else "AVSL"
+                    if (aksjonspunktToggle.toggle) AksjonspunktStatus.OPPRETTET.kode else "AVSL"
                 BehandlingProsessEventDto(
                     sisteEvent.eksternId,
                     sisteEvent.fagsystem,
@@ -225,7 +225,7 @@ fun Route.MockGrensesnitt() {
                     EventHendelse.AKSJONSPUNKT_OPPRETTET,
                     behandlingStatus = "UTRED",
                     behandlinStatus = "UTRED",
-                    aksjonspunktKoderMedStatusListe = mutableMapOf(AksjonspunktDefinisjon.AVKLAR_OPPHOLDSRETT.kode to "OPPR"),
+                    aksjonspunktKoderMedStatusListe = mutableMapOf(AksjonspunktDefinisjon.AVKLAR_OPPHOLDSRETT.kode to AksjonspunktStatus.OPPRETTET.kode),
                     behandlingSteg = "",
                     opprettetBehandling = LocalDateTime.now(),
                     behandlingTypeKode = "BT-004",

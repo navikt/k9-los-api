@@ -764,7 +764,7 @@ class OppgaveTjenesteTest : KoinTest {
             utfortFraAdmin = false,
             eksternId = UUID.randomUUID(),
             oppgaveEgenskap = emptyList(),
-            aksjonspunkter = Aksjonspunkter(liste = mapOf("5016" to "OPPR")),
+            aksjonspunkter = Aksjonspunkter(liste = mapOf("5016" to AksjonspunktStatus.OPPRETTET.kode)),
             tilBeslutter = false,
             utbetalingTilBruker = false,
             selvstendigFrilans = false,

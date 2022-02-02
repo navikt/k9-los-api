@@ -37,7 +37,7 @@ class K9PunsjEventHandlerTest : KoinTest {
     "aktørId" : "27078522688",                                                                                                                                                                                                                                                                                                                                               
     "eventTid" : "2020-11-10T10:43:43.130644",                                                                                                                                                                                                                                                                                                                               
     "aksjonspunktKoderMedStatusListe": {
-                "PUNSJ": "OPPR"
+                "PUNSJ": AksjonspunktStatus.OPPRETTET.kode
               }                                                                                                                                                                                                                                                                                             
     }
             """.trimIndent()
@@ -63,7 +63,7 @@ class K9PunsjEventHandlerTest : KoinTest {
   "aktørId": null,
   "eventTid": "2020-11-10T10:43:43.130644",
   "aksjonspunktKoderMedStatusListe": {
-    "PUNSJ": "OPPR"
+    "PUNSJ": AksjonspunktStatus.OPPRETTET.kode
   }
 }
      """.trimIndent()
@@ -89,7 +89,7 @@ class K9PunsjEventHandlerTest : KoinTest {
   "aktørId": "27078522688",
   "eventTid": "2020-11-10T10:43:43.130644",
   "aksjonspunktKoderMedStatusListe": {
-    "PUNSJ": "UTFO"
+    "PUNSJ": AksjonspunktStatus.UTFØRT.kode
   }
 }""".trimIndent()
 

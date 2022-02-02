@@ -65,13 +65,13 @@ data class K9PunsjModell(
     }
 
     private fun PunsjEventDto.aktiveAksjonspunkt(): Aksjonspunkter {
-        return Aksjonspunkter(this.aksjonspunktKoderMedStatusListe.filter { entry -> entry.value == "OPPR" })
+        return Aksjonspunkter(this.aksjonspunktKoderMedStatusListe.filter { entry -> entry.value == AksjonspunktStatus.OPPRETTET.kode })
     }
 
     fun oppgave(sisteEvent: PunsjEventDto = sisteEvent()): Oppgave {
         val førsteEvent = eventer.first()
 
-        var aktiv = sisteEvent.aksjonspunktKoderMedStatusListe.any { aksjonspunkt -> aksjonspunkt.value == "OPPR" }
+        var aktiv = sisteEvent.aksjonspunktKoderMedStatusListe.any { aksjonspunkt -> aksjonspunkt.value == AksjonspunktStatus.OPPRETTET.kode }
 
         if (sisteEvent.aktiveAksjonspunkt().liste.containsKey("MER_INFORMASJON")) {
             aktiv = false

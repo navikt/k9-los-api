@@ -50,7 +50,7 @@ class BeslutterSkalIkkePlukkeEgenSakTest : KoinTest {
             utfortFraAdmin = false,
             eksternId = UUID.randomUUID(),
             oppgaveEgenskap = listOf(),
-            aksjonspunkter = Aksjonspunkter(liste = mapOf("5016" to "OPPR")),
+            aksjonspunkter = Aksjonspunkter(liste = mapOf("5016" to AksjonspunktStatus.OPPRETTET.kode)),
             tilBeslutter = true,
             utbetalingTilBruker = false,
             selvstendigFrilans = false,

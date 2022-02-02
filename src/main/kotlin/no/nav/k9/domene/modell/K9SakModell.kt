@@ -376,7 +376,7 @@ data class K9SakModell(
 }
 
 fun BehandlingProsessEventDto.aktiveAksjonspunkt(): Aksjonspunkter {
-    return Aksjonspunkter(this.aksjonspunktKoderMedStatusListe.filter { entry -> entry.value == "OPPR" })
+    return Aksjonspunkter(this.aksjonspunktKoderMedStatusListe.filter { entry -> entry.value == AksjonspunktStatus.OPPRETTET.kode })
 }
 
 fun BehandlingProsessEventDto.alleAksjonspunkter(): Aksjonspunkter {
@@ -406,7 +406,7 @@ data class Aksjonspunkter(val liste: Map<String, String>) {
 
     fun alleAktiveAksjonspunktTaBortPunsj(): Aksjonspunkter {
         return Aksjonspunkter(
-            liste.filter { entry -> entry.value == "OPPR" }
+            liste.filter { entry -> entry.value == AksjonspunktStatus.OPPRETTET.kode }
                 .filter { entry -> !AksjonspunktDefWrapper.aksjonspunkterFraPunsj().map { it.kode }.contains(entry.key)  }
         )
     }
