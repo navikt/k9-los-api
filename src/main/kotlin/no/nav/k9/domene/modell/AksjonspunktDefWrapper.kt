@@ -37,6 +37,13 @@ class AksjonspunktDefWrapper {
             return definisjon != null
         }
 
+        fun inneholderEtAvInaktivtAksjonspunkterMedKoder(liste: Map<String, String>, def: List<AksjonspunktDefinisjon>): Boolean {
+            val definisjon = liste.filter { entry -> entry.value != "OPPR"}
+                .map { entry -> entry.key }
+                .find { kode -> def.map { it.kode }.contains(kode) }
+            return definisjon != null
+        }
+
         fun finnAlleAksjonspunkter(): List<Aksjonspunkt> {
             val fraK9Sak = AksjonspunktDefinisjon.values().filter { it.kode != null }.map {
                 Aksjonspunkt(
