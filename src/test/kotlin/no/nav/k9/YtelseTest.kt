@@ -132,7 +132,7 @@ class YtelseTest: KoinTest, AbstractPostgresTest() {
             utfortFraAdmin = false,
             eksternId = UUID.randomUUID(),
             oppgaveEgenskap = emptyList(),
-            aksjonspunkter = Aksjonspunkter(emptyMap()),
+            aksjonspunkter = Aksjonspunkter(emptyMap(), emptyList()),
             tilBeslutter = true,
             utbetalingTilBruker = false,
             selvstendigFrilans = false,

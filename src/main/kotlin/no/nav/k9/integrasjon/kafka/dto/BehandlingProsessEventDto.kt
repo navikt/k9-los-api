@@ -1,11 +1,13 @@
 package no.nav.k9.integrasjon.kafka.dto
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer
 import no.nav.k9.domene.modell.Fagsystem
+import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import no.nav.k9.sak.typer.Periode
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -60,6 +62,7 @@ data class BehandlingProsessEventDto(
     /**
      * Map av aksjonspunktkode og statuskode.
      */
+    @Deprecated("bruk aksjonspunktTilstander")
     val aksjonspunktKoderMedStatusListe: MutableMap<String, String>,
 
     val href: String? = null,
@@ -73,6 +76,7 @@ data class BehandlingProsessEventDto(
 
     val pleietrengendeAktørId: String? = null,
     val relatertPartAktørId: String? = null,
+    val aksjonspunktTilstander: List<AksjonspunktTilstandDto> = emptyList()
 ) {
 
     // Denne skal ikke ha fnr, aktørider, orgnumre eller beløp som kan identifisere brukeren
@@ -96,7 +100,8 @@ data class BehandlingProsessEventDto(
             ansvarligSaksbehandlerIdent=$ansvarligSaksbehandlerIdent, 
             ansvarligSaksbehandlerForTotrinn=$ansvarligSaksbehandlerForTotrinn, 
             ansvarligBeslutterForTotrinn=$ansvarligBeslutterForTotrinn, 
-            fagsakPeriode=$fagsakPeriode
+            fagsakPeriode=$fagsakPeriode,
+            aksjonspunktTilstander=$aksjonspunktTilstander
             )"""
             .trimMargin()
     }

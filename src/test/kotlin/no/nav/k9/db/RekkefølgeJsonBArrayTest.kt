@@ -60,7 +60,7 @@ class RekkefølgeJsonBArrayTest : KoinTest, AbstractPostgresTest()  {
             utfortFraAdmin = false,
             eksternId = eksternId,
             oppgaveEgenskap = emptyList(),
-            aksjonspunkter = Aksjonspunkter(emptyMap()),
+            aksjonspunkter = Aksjonspunkter(emptyMap(), emptyList()),
             tilBeslutter = true,
             utbetalingTilBruker = false,
             selvstendigFrilans = false,

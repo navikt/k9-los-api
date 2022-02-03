@@ -65,7 +65,7 @@ data class K9TilbakeModell(
             oppgaveAvsluttet = oppgaveAvsluttet,
             system = sisteEvent.fagsystem,
             oppgaveEgenskap = emptyList(),
-            aksjonspunkter = Aksjonspunkter(sisteEvent.aktiveAksjonspunkt().liste),
+            aksjonspunkter = Aksjonspunkter(sisteEvent.aktiveAksjonspunkt().liste, emptyList()),
             utenlands = false,
             tilBeslutter = eventResultat.beslutterOppgave(),
             selvstendigFrilans = false,

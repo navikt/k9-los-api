@@ -18,10 +18,10 @@ class NokkeltallTjeneste constructor(
 
     fun hentOppgaverPåVent(): List<AlleOppgaverHistorikk> {
         val oppgaverPåVent = oppgaveRepository.hentAllePåVent()
-        val oppgaverPerYtelseBehandlingDato = oppgaverPåVent.groupBy {
-            YtelseBehandlingDato(it.fagsakYtelseType, it.behandlingType, it.behandlingsfrist.toLocalDate())
+        val oppgaverPerBehandlingPåVent = oppgaverPåVent.groupBy {
+            BehandlingPåVent(it.fagsakYtelseType, it.behandlingType, it.behandlingsfrist.toLocalDate())
         }
-        return oppgaverPerYtelseBehandlingDato.map { (key, value) ->
+        return oppgaverPerBehandlingPåVent.map { (key, value) ->
             AlleOppgaverHistorikk(key.fagsakYtelseType, key.behandlingType, key.dato, value.size)
         }
     }
@@ -138,7 +138,7 @@ data class FerdigstillelseHistorikkEnhet(
 }
 
 
-private data class YtelseBehandlingDato(
+private data class BehandlingPåVent(
     val fagsakYtelseType: FagsakYtelseType,
     val behandlingType: BehandlingType,
     val dato: LocalDate,

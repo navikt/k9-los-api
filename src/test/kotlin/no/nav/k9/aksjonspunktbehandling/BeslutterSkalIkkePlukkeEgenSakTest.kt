@@ -7,6 +7,8 @@ import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.modell.*
 import no.nav.k9.domene.repository.OppgaveKøRepository
 import no.nav.k9.domene.repository.OppgaveRepository
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
+import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import org.junit.Rule
 import org.junit.Test
@@ -51,7 +53,10 @@ class BeslutterSkalIkkePlukkeEgenSakTest : KoinTest, AbstractPostgresTest()  {
             utfortFraAdmin = false,
             eksternId = UUID.randomUUID(),
             oppgaveEgenskap = listOf(),
-            aksjonspunkter = Aksjonspunkter(liste = mapOf("5016" to "OPPR")),
+            aksjonspunkter = Aksjonspunkter(
+                liste = mapOf("5016" to "OPPR"),
+                apTilstander = listOf(AksjonspunktTilstandDto("5016", AksjonspunktStatus.OPPRETTET, null, null))
+            ),
             tilBeslutter = true,
             utbetalingTilBruker = false,
             selvstendigFrilans = false,
