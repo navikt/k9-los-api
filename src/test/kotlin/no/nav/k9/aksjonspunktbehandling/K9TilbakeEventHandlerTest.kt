@@ -43,10 +43,10 @@ class K9TilbakeEventHandlerTest : KoinTest {
                "behandlingTypeKode": "BT-007",
                "opprettetBehandling": "2020-06-16T13:16:51.690",
                "aksjonspunktKoderMedStatusListe": {
-                               "5030": ${AksjonspunktStatus.UTFØRT.kode},
-                               "7002": ${AksjonspunktStatus.UTFØRT.kode},
-                               "7001": ${AksjonspunktStatus.OPPRETTET.kode},
-                               "7003": ${AksjonspunktStatus.OPPRETTET.kode}
+                               "5030": "UTFO",
+                               "7002": "UTFO",
+                               "7001": "OPPR",
+                               "7003": "OPPR"
                },
                "href": "/fpsak/fagsak/61613602/behandling/53/?punkt=default&fakta=default",
                "førsteFeilutbetaling": "2019-10-19",
@@ -84,8 +84,8 @@ class K9TilbakeEventHandlerTest : KoinTest {
   "behandlingTypeKode": "BT-007",
   "opprettetBehandling": "2020-09-11T11:50:49.025",
   "aksjonspunktKoderMedStatusListe": {
-    "5002": ${AksjonspunktStatus.UTFØRT.kode},
-    "5001": ${AksjonspunktStatus.OPPRETTET.kode}
+    "5002": "UTFO",
+    "5001": "OPPR"
   },
   "href": "/fpsak/fagsak/63P3S/behandling/202/?punkt=default&fakta=default",
   "førsteFeilutbetaling": "2020-06-01",
