@@ -48,7 +48,7 @@ dependencies {
 
 
     // Tilgangskontroll
-    implementation("no.nav.common:auth:2.2021.02.08_08.29-beea07de78ad")
+    implementation("no.nav.common:auth:2.2022.02.02_07.23-5e0869d3bc69")
     implementation("no.nav.common:rest:2.2021.02.08_08.29-beea07de78ad")
     implementation("com.google.code.gson:gson:2.8.9")
 
