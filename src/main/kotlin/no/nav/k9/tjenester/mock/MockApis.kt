@@ -13,6 +13,7 @@ import no.nav.k9.KoinProfile
 import no.nav.k9.aksjonspunktbehandling.K9punsjEventHandler
 import no.nav.k9.aksjonspunktbehandling.K9sakEventHandler
 import no.nav.k9.domene.modell.AksjonspunktDefWrapper
+import no.nav.k9.domene.modell.AksjonspunktStatus
 import no.nav.k9.domene.modell.BehandlingStatus
 import no.nav.k9.domene.modell.Fagsystem
 import no.nav.k9.domene.repository.*
@@ -144,7 +145,7 @@ fun Route.MockGrensesnitt() {
             } else {
                 val sisteEvent = modell.sisteEvent()
                 sisteEvent.aksjonspunktKoderMedStatusListe[aksjonspunktToggle.kode] =
-                    if (aksjonspunktToggle.toggle) AksjonspunktStatus.OPPRETTET.kode else "AVSL"
+                    if (aksjonspunktToggle.toggle) AksjonspunktStatus.OPPRETTET.kode else AksjonspunktStatus.AVBRUTT.kode
 
                 PunsjEventDto(
                     eksternId = sisteEvent.eksternId,
@@ -180,7 +181,7 @@ fun Route.MockGrensesnitt() {
             } else {
                 val sisteEvent = modell.sisteEvent()
                 sisteEvent.aksjonspunktKoderMedStatusListe[aksjonspunktToggle.kode] =
-                    if (aksjonspunktToggle.toggle) AksjonspunktStatus.OPPRETTET.kode else "AVSL"
+                    if (aksjonspunktToggle.toggle) AksjonspunktStatus.OPPRETTET.kode else AksjonspunktStatus.AVBRUTT.kode
                 BehandlingProsessEventDto(
                     sisteEvent.eksternId,
                     sisteEvent.fagsystem,
