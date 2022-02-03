@@ -1,6 +1,7 @@
 package no.nav.k9.aksjonspunktbehandling
 
 import no.nav.k9.buildAndTestConfig
+import no.nav.k9.domene.modell.AksjonspunktStatus
 import no.nav.k9.domene.repository.OppgaveRepository
 import org.intellij.lang.annotations.Language
 import org.junit.Rule
@@ -42,10 +43,10 @@ class K9TilbakeEventHandlerTest : KoinTest {
                "behandlingTypeKode": "BT-007",
                "opprettetBehandling": "2020-06-16T13:16:51.690",
                "aksjonspunktKoderMedStatusListe": {
-                               "5030": AksjonspunktStatus.UTFØRT.kode,
-                               "7002": AksjonspunktStatus.UTFØRT.kode,
-                               "7001": AksjonspunktStatus.OPPRETTET.kode,
-                               "7003": AksjonspunktStatus.OPPRETTET.kode
+                               "5030": ${AksjonspunktStatus.UTFØRT.kode},
+                               "7002": ${AksjonspunktStatus.UTFØRT.kode},
+                               "7001": ${AksjonspunktStatus.OPPRETTET.kode},
+                               "7003": ${AksjonspunktStatus.OPPRETTET.kode}
                },
                "href": "/fpsak/fagsak/61613602/behandling/53/?punkt=default&fakta=default",
                "førsteFeilutbetaling": "2019-10-19",
@@ -83,8 +84,8 @@ class K9TilbakeEventHandlerTest : KoinTest {
   "behandlingTypeKode": "BT-007",
   "opprettetBehandling": "2020-09-11T11:50:49.025",
   "aksjonspunktKoderMedStatusListe": {
-    "5002": AksjonspunktStatus.UTFØRT.kode,
-    "5001": AksjonspunktStatus.OPPRETTET.kode
+    "5002": ${AksjonspunktStatus.UTFØRT.kode},
+    "5001": ${AksjonspunktStatus.OPPRETTET.kode}
   },
   "href": "/fpsak/fagsak/63P3S/behandling/202/?punkt=default&fakta=default",
   "førsteFeilutbetaling": "2020-06-01",

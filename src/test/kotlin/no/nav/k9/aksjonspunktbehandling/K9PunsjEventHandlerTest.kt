@@ -3,6 +3,7 @@ package no.nav.k9.aksjonspunktbehandling
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.buildAndTestConfig
+import no.nav.k9.domene.modell.AksjonspunktStatus
 import no.nav.k9.domene.repository.OppgaveRepository
 import no.nav.k9.integrasjon.kafka.dto.PunsjEventDto
 import org.intellij.lang.annotations.Language
@@ -37,7 +38,7 @@ class K9PunsjEventHandlerTest : KoinTest {
     "aktørId" : "27078522688",                                                                                                                                                                                                                                                                                                                                               
     "eventTid" : "2020-11-10T10:43:43.130644",                                                                                                                                                                                                                                                                                                                               
     "aksjonspunktKoderMedStatusListe": {
-                "PUNSJ": AksjonspunktStatus.OPPRETTET.kode
+                "PUNSJ": ${AksjonspunktStatus.OPPRETTET.kode}
               }                                                                                                                                                                                                                                                                                             
     }
             """.trimIndent()
@@ -63,7 +64,7 @@ class K9PunsjEventHandlerTest : KoinTest {
   "aktørId": null,
   "eventTid": "2020-11-10T10:43:43.130644",
   "aksjonspunktKoderMedStatusListe": {
-    "PUNSJ": AksjonspunktStatus.OPPRETTET.kode
+    "PUNSJ": ${AksjonspunktStatus.OPPRETTET.kode}
   }
 }
      """.trimIndent()
@@ -89,7 +90,7 @@ class K9PunsjEventHandlerTest : KoinTest {
   "aktørId": "27078522688",
   "eventTid": "2020-11-10T10:43:43.130644",
   "aksjonspunktKoderMedStatusListe": {
-    "PUNSJ": AksjonspunktStatus.UTFØRT.kode
+    "PUNSJ": ${AksjonspunktStatus.UTFØRT.kode}
   }
 }""".trimIndent()
 

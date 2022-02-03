@@ -6,10 +6,7 @@ import io.mockk.every
 import io.mockk.mockk
 import no.nav.k9.buildAndTestConfig
 import no.nav.k9.domene.lager.oppgave.Oppgave
-import no.nav.k9.domene.modell.Aksjonspunkter
-import no.nav.k9.domene.modell.BehandlingStatus
-import no.nav.k9.domene.modell.BehandlingType
-import no.nav.k9.domene.modell.FagsakYtelseType
+import no.nav.k9.domene.modell.*
 import no.nav.k9.domene.repository.OppgaveRepository
 import no.nav.k9.domene.repository.StatistikkRepository
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
