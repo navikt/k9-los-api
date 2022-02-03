@@ -192,6 +192,14 @@ data class OppgaveKø(
               && oppgave.tilBeslutter) {
             return true
         }
+
+        if(oppgave.aksjonspunkter.harAtAvAktivtAksjonspunkt(
+                TRENGER_SØKNAD_FOR_INFOTRYGD_PERIODE,
+                OVERSTYR_BEREGNING_INPUT,
+                TRENGER_SØKNAD_FOR_INFOTRYGD_PERIODE_ANNEN_PART
+            ) && kriterier.map {it.andreKriterierType}.contains(AndreKriterierType.FORLENGELSER_FRA_INFOTRYGD_AKSJONSPUNKT)) {
+            return true
+        }
         return false
     }
 
