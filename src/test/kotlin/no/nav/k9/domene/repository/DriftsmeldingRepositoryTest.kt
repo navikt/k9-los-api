@@ -1,5 +1,6 @@
 package no.nav.k9.domene.repository
 
+import no.nav.k9.AbstractPostgresTest
 import no.nav.k9.buildAndTestConfig
 import no.nav.k9.tjenester.driftsmeldinger.DriftsmeldingDto
 import org.junit.Rule
@@ -11,11 +12,11 @@ import java.time.LocalDateTime
 import java.util.*
 import kotlin.test.assertEquals
 
-class DriftsmeldingRepositoryTest: KoinTest{
+class DriftsmeldingRepositoryTest: KoinTest, AbstractPostgresTest() {
 
     @get:Rule
     val koinTestRule = KoinTestRule.create {
-        modules(buildAndTestConfig())
+        modules(buildAndTestConfig(dataSource))
     }
 
     @Test

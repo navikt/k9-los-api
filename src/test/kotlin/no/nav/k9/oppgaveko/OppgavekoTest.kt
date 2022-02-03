@@ -18,11 +18,11 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
-class OppgavekoTest :KoinTest{
+class OppgavekoTest :KoinTest, AbstractPostgresTest() {
 
     @get:Rule
     val koinTestRule = KoinTestRule.create {
-        modules(buildAndTestConfig())
+        modules(buildAndTestConfig(dataSource))
     }
 
     @Test

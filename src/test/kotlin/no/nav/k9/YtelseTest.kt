@@ -23,10 +23,10 @@ import java.util.*
 import kotlin.test.BeforeTest
 
 @Ignore("Kjøres manuelt ved behov")
-class YtelseTest: KoinTest {
+class YtelseTest: KoinTest, AbstractPostgresTest() {
     @get:Rule
     val koinTestRule = KoinTestRule.create {
-        modules(buildAndTestConfig())
+        modules(buildAndTestConfig(dataSource))
     }
 
     val random = Random()
