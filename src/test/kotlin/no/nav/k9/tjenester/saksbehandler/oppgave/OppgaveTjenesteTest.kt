@@ -5,6 +5,7 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isNotEqualTo
 import assertk.assertions.isNull
 import kotlinx.coroutines.runBlocking
+import no.nav.k9.AbstractPostgresTest
 import no.nav.k9.buildAndTestConfig
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.modell.*
@@ -23,10 +24,10 @@ import java.util.*
 import kotlin.test.assertNull
 import kotlin.test.asserter
 
-class OppgaveTjenesteTest : KoinTest {
+class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
     @get:Rule
     val koinTestRule = KoinTestRule.create {
-        modules(buildAndTestConfig())
+        modules(buildAndTestConfig(dataSource))
     }
 
     @Test

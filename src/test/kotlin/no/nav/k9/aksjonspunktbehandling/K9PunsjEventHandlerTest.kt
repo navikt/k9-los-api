@@ -2,6 +2,7 @@ package no.nav.k9.aksjonspunktbehandling
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
+import no.nav.k9.AbstractPostgresTest
 import no.nav.k9.buildAndTestConfig
 import no.nav.k9.domene.repository.OppgaveRepository
 import no.nav.k9.integrasjon.kafka.dto.PunsjEventDto
@@ -11,17 +12,16 @@ import org.junit.Test
 import org.koin.test.KoinTest
 import org.koin.test.KoinTestRule
 import org.koin.test.get
-import org.slf4j.LoggerFactory
 import java.util.*
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 
-class K9PunsjEventHandlerTest : KoinTest {
+class K9PunsjEventHandlerTest : KoinTest, AbstractPostgresTest()  {
 
     @get:Rule
     val koinTestRule = KoinTestRule.create {
-        modules(buildAndTestConfig())
+        modules(buildAndTestConfig(dataSource))
     }
 
     @Test

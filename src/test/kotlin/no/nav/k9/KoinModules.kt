@@ -10,7 +10,6 @@ import kotlinx.coroutines.channels.Channel
 import no.nav.k9.aksjonspunktbehandling.K9TilbakeEventHandler
 import no.nav.k9.aksjonspunktbehandling.K9punsjEventHandler
 import no.nav.k9.aksjonspunktbehandling.K9sakEventHandler
-import no.nav.k9.db.runMigration
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.repository.*
 import no.nav.k9.integrasjon.abac.IPepClient
@@ -33,10 +32,9 @@ import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import java.util.*
+import javax.sql.DataSource
 
-fun buildAndTestConfig(pepClient: IPepClient = PepClientLocal()): Module = module {
-    val dataSource = TestDataSource().dataSource()
-    runMigration(dataSource)
+fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClientLocal()): Module = module {
 
     single(named("oppgaveKøOppdatert")) {
         Channel<UUID>(Channel.UNLIMITED)

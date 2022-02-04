@@ -1,5 +1,6 @@
 package no.nav.k9.domene.repository
 
+import no.nav.k9.AbstractPostgresTest
 import no.nav.k9.buildAndTestConfig
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.modell.Aksjonspunkter
@@ -19,11 +20,11 @@ import java.time.LocalDateTime
 import java.util.*
 import kotlin.test.assertSame
 
-class StatistikkRepositoryTest : KoinTest {
+class StatistikkRepositoryTest : KoinTest, AbstractPostgresTest()  {
 
     @get:Rule
     val koinTestRule = KoinTestRule.create {
-        modules(buildAndTestConfig())
+        modules(buildAndTestConfig(dataSource))
     }
 
     @Test

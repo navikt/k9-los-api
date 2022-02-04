@@ -1,5 +1,6 @@
 package no.nav.k9.aksjonspunktbehandling
 
+import no.nav.k9.AbstractPostgresTest
 import no.nav.k9.buildAndTestConfig
 import no.nav.k9.domene.repository.OppgaveRepository
 import org.intellij.lang.annotations.Language
@@ -12,11 +13,11 @@ import java.util.*
 import kotlin.test.assertTrue
 
 
-class K9TilbakeEventHandlerTest : KoinTest {
+class K9TilbakeEventHandlerTest : KoinTest, AbstractPostgresTest()  {
 
     @get:Rule
     val koinTestRule = KoinTestRule.create {
-        modules(buildAndTestConfig())
+        modules(buildAndTestConfig(dataSource))
     }
 
     @Test

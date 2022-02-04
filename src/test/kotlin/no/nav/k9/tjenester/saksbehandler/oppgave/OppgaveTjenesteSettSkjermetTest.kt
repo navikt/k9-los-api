@@ -6,7 +6,6 @@ import io.mockk.mockk
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.*
-import no.nav.k9.db.runMigration
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.modell.*
 import no.nav.k9.domene.repository.*
@@ -28,11 +27,11 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
-class OppgaveTjenesteSettSkjermetTest : KoinTest {
+class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest()  {
 
     @get:Rule
     val koinTestRule = KoinTestRule.create {
-        modules(buildAndTestConfig(mockk()))
+        modules(buildAndTestConfig(dataSource, mockk()))
     }
 
     @Test
@@ -170,9 +169,6 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest {
 
     @Test
     fun `hent fagsak`(){
-        val dataSource = TestDataSource().dataSource()
-        runMigration(dataSource)
-
         val oppgaveKøOppdatert = Channel<UUID>(1)
         val refreshKlienter = Channel<SseEvent>(1000)
         val oppgaverRefresh = Channel<Oppgave>(1000)
@@ -267,8 +263,6 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest {
 
     @Test
     fun hentReservasjonsHistorikk() = runBlocking {
-        val dataSource = TestDataSource().dataSource()
-        runMigration(dataSource)
         val oppgaveKøOppdatert = Channel<UUID>(1)
         val refreshKlienter = Channel<SseEvent>(1000)
         val oppgaveRefreshOppdatert = Channel<UUID>(100)

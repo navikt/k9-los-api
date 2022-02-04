@@ -4,6 +4,7 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import io.mockk.every
 import io.mockk.mockk
+import no.nav.k9.AbstractPostgresTest
 import no.nav.k9.buildAndTestConfig
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.modell.Aksjonspunkter
@@ -22,15 +23,15 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
-class NokkeltallTjenesteTest : KoinTest {
+class NokkeltallTjenesteTest : KoinTest, AbstractPostgresTest()  {
     @get:Rule
     val koinTestRule = KoinTestRule.create {
-        modules(buildAndTestConfig())
+        modules(buildAndTestConfig(dataSource))
     }
 
-    val DAG1 = LocalDate.now().minusDays(2)
-    val DAG2 = LocalDate.now().minusDays(1)
-    val DAG3 = LocalDate.now()
+    val DAG1: LocalDate = LocalDate.now().minusDays(2)
+    val DAG2: LocalDate = LocalDate.now().minusDays(1)
+    val DAG3: LocalDate = LocalDate.now()
 
     @Test
     fun `Hent oppgaver på vent - 1 oppgave uten aksjonspunkt skal gi 0 oppgaver på vent`() {

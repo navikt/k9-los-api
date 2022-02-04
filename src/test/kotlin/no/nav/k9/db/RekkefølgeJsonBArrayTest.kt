@@ -1,5 +1,6 @@
 package no.nav.k9.db
 
+import no.nav.k9.AbstractPostgresTest
 import no.nav.k9.buildAndTestConfig
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.modell.Aksjonspunkter
@@ -16,11 +17,11 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
-class RekkefølgeJsonBArrayTest : KoinTest {
+class RekkefølgeJsonBArrayTest : KoinTest, AbstractPostgresTest()  {
 
     @get:Rule
     val koinTestRule = KoinTestRule.create {
-        modules(buildAndTestConfig())
+        modules(buildAndTestConfig(dataSource))
     }
 
     @Test
