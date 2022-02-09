@@ -111,8 +111,14 @@ internal class OppgaveKøTest {
             oppgaveEgenskap = emptyList(),
             aksjonspunkter = Aksjonspunkter(
                 mapOf(
+                    "5015" to "UTFO",
                     "5016" to "OPPR",
-                    "9007" to "UTFO"
+                    "5040" to "AVBR",
+                    "9001" to "UTFO",
+                    "9005" to "UTFO",
+                    "9007" to "AVBR",
+                    "9200" to "UTFO",
+                    "9201" to "UTFO"
                 )
             ),
             tilBeslutter = true,
