@@ -8,6 +8,7 @@ import kotlinx.html.*
 import no.nav.k9.domene.modell.BehandlingStatus
 import no.nav.k9.domene.modell.BehandlingType
 import no.nav.k9.domene.modell.OppgaveKø
+import no.nav.k9.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.domene.repository.OppgaveKøRepository
 import no.nav.k9.domene.repository.OppgaveRepository
 import no.nav.k9.domene.repository.SaksbehandlerRepository
@@ -17,6 +18,7 @@ fun Route.innsiktGrensesnitt() {
     val oppgaveRepository by inject<OppgaveRepository>()
     val oppgaveKøRepository by inject<OppgaveKøRepository>()
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
+    val behandlingProsessEventK9Repository by inject<BehandlingProsessEventK9Repository>()
 
     class main
 
@@ -100,24 +102,24 @@ fun Route.innsiktGrensesnitt() {
                             }
                         }
                     }
-//                    val oppgaveMedId = oppgaveRepository.hentOppgaverSomMatcherSaksnummer("AMHD8")
-//                    if (oppgaveMedId.isNotEmpty()) {
-//                        val sortedByDescending = oppgaveMedId.sortedByDescending { it.oppgave.eventTid }
-//
-//                        sortedByDescending.forEach { oppgaveMedId1 ->
-//                            val sakModell = behandlingProsessEventK9Repository.hent(oppgaveMedId1.id)
-//                            sakModell.eventer.forEach { behandlingProsessEventDto ->
-//                                val stringBuilder = StringBuilder()
-//                                behandlingProsessEventDto.aksjonspunktKoderMedStatusListe.map { "kode=" + it.key + ", verdi=" + it.value }
-//                                    .forEach { stringBuilder.append(it) }
-//
-//                                div {
-//                                    classes = setOf("input-group-text display-4")
-//                                    +"BId=${oppgaveMedId1.oppgave.eksternId} EventTid=${behandlingProsessEventDto.eventTid}, Aksjonspunkter=$stringBuilder"
-//                                }
-//                            }
-//                        }
-//                    }
+                    val oppgaveMedId = oppgaveRepository.hentOppgaverSomMatcherSaksnummer("B9YE2")
+                    if (oppgaveMedId.isNotEmpty()) {
+                        val sortedByDescending = oppgaveMedId.sortedByDescending { it.oppgave.eventTid }
+
+                        sortedByDescending.forEach { oppgaveMedId1 ->
+                            val sakModell = behandlingProsessEventK9Repository.hent(oppgaveMedId1.id)
+                            sakModell.eventer.forEach { behandlingProsessEventDto ->
+                                val stringBuilder = StringBuilder()
+                                behandlingProsessEventDto.aksjonspunktKoderMedStatusListe.map { "kode=" + it.key + ", verdi=" + it.value }
+                                    .forEach { stringBuilder.append(it) }
+
+                                div {
+                                    classes = setOf("input-group-text display-4")
+                                    +"BId=${oppgaveMedId1.oppgave.eksternId} EventTid=${behandlingProsessEventDto.eventTid}, Aksjonspunkter=$stringBuilder"
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
