@@ -75,34 +75,7 @@ fun Route.innsiktGrensesnitt() {
                         }
                     }
 
-                    val hentAlleOppgaveForPunsj = oppgaveRepository.hentAlleOppgaveForPunsj()
-                    val groupBy = hentAlleOppgaveForPunsj
-                        .groupBy { oppgave -> oppgave.eventTid.toLocalDate() }
-
-                    val hvorMangeOppgaverErAvTypeFørstegangsbehandling =
-                        hentAlleOppgaveForPunsj.filter { oppgave -> oppgave.behandlingType == BehandlingType.FORSTEGANGSSOKNAD && oppgave.aktiv }.size
-
-                    div {
-                        classes = setOf("input-group-text display-4")
-                        +"Hvor mange oppgaver har blitt markert som førstegangsbehandling og som ikke er løst $hvorMangeOppgaverErAvTypeFørstegangsbehandling"
-                    }
-
-                    val sorted = groupBy.keys.sorted()
-
-                    for (dato in sorted) {
-                        val punsjliste = groupBy[dato]
-                        val behandlingstyper = punsjliste!!.groupBy { o -> o.behandlingType }
-                        for (behandslingstype in behandlingstyper.keys) {
-                            val list = behandlingstyper[behandslingstype]!!
-                            for (oppgave in list) {
-                                div {
-                                    classes = setOf("input-group-text display-4")
-                                    +"${dato},${behandslingstype.navn},${behandlingstyper.values.size},${oppgave.fagsakYtelseType.kode}"
-                                }
-                            }
-                        }
-                    }
-                    val oppgaveMedId = oppgaveRepository.hentOppgaverSomMatcherSaksnummer("B9YE2")
+                    val oppgaveMedId = oppgaveRepository.hentOppgaverSomMatcherSaksnummer("B9UC8")
                     if (oppgaveMedId.isNotEmpty()) {
                         val sortedByDescending = oppgaveMedId.sortedByDescending { it.oppgave.eventTid }
 
