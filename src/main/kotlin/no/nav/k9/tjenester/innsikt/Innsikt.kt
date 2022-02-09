@@ -83,10 +83,6 @@ fun Route.innsiktGrensesnitt() {
                             val sakModell = behandlingProsessEventK9Repository.hent(oppgaveMedId1.id)
                             sakModell.eventer.forEach { behandlingProsessEventDto ->
                                 val stringBuilder = StringBuilder()
-                                stringBuilder.append("Info om oppgaven")
-                                stringBuilder.append("BeslutterStatus" + sakModell.oppgave().tilBeslutter)
-
-                                stringBuilder.append("Aksjonspunkt historikk kommer under her...")
 
                                 behandlingProsessEventDto.aksjonspunktKoderMedStatusListe.map { "kode=" + it.key + ", verdi=" + it.value }
                                     .forEach { stringBuilder.append(it) }
