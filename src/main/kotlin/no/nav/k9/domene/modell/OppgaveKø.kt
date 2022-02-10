@@ -99,7 +99,6 @@ data class OppgaveKø(
         }
 
         if (ekskluderer(oppgave)) {
-            log.info("Oppgaven(${oppgave.fagsakSaksnummer}) har blitt ekskludert")
             return false
         }
 
@@ -108,7 +107,6 @@ data class OppgaveKø(
         }
 
         if (inkluderer(oppgave)) {
-            log.info("Oppgaven(${oppgave.fagsakSaksnummer}) har blitt inkluderer")
             return true
         }
 
@@ -139,21 +137,19 @@ data class OppgaveKø(
     }
 
     private fun inkluderer(oppgave: Oppgave): Boolean {
-        log.info("Oppgaven(${oppgave.fagsakSaksnummer}) sjekkes mot inkludert")
         val inkluderKriterier = filtreringAndreKriterierType.filter { it.inkluder }
-        return sjekkOppgavensKriterier(oppgave, inkluderKriterier)
+        return sjekkOppgavensKriterier(oppgave, inkluderKriterier, true)
     }
 
     private fun ekskluderer(oppgave: Oppgave): Boolean {
-        log.info("Oppgaven(${oppgave.fagsakSaksnummer}) sjekkes mot ekskludert")
         val ekskluderKriterier = filtreringAndreKriterierType.filter { !it.inkluder }
-        return sjekkOppgavensKriterier(oppgave, ekskluderKriterier)
+        return sjekkOppgavensKriterier(oppgave, ekskluderKriterier, false)
     }
 
-    private fun sjekkOppgavensKriterier(oppgave: Oppgave, kriterier: List<AndreKriterierDto>): Boolean {
+    private fun sjekkOppgavensKriterier(oppgave: Oppgave, kriterier: List<AndreKriterierDto>, skalMed: Boolean): Boolean {
         if (oppgave.tilBeslutter && kriterier.map { it.andreKriterierType }
                 .contains(AndreKriterierType.TIL_BESLUTTER)) {
-            log.info("Oppgaven(${oppgave.fagsakSaksnummer}) gikk ut på tilBeslutter")
+            loggMe(oppgave.fagsakSaksnummer, skalMed, navn, AndreKriterierType.TIL_BESLUTTER)
             return true
         }
 
@@ -199,7 +195,7 @@ data class OppgaveKø(
                 TRENGER_SØKNAD_FOR_INFOTRYGD_PERIODE_ANNEN_PART
             ) && kriterier.map {it.andreKriterierType}.contains(AndreKriterierType.FORLENGELSER_FRA_INFOTRYGD)
               && oppgave.tilBeslutter) {
-            log.info("Oppgaven(${oppgave.fagsakSaksnummer}) gikk ut på FORLENGELSER_FRA_INFOTRYGD")
+            loggMe(oppgave.fagsakSaksnummer, skalMed, navn, AndreKriterierType.FORLENGELSER_FRA_INFOTRYGD)
             return true
         }
 
@@ -208,10 +204,15 @@ data class OppgaveKø(
                 OVERSTYR_BEREGNING_INPUT,
                 TRENGER_SØKNAD_FOR_INFOTRYGD_PERIODE_ANNEN_PART
             ) && kriterier.map {it.andreKriterierType}.contains(AndreKriterierType.FORLENGELSER_FRA_INFOTRYGD_AKSJONSPUNKT)) {
-            log.info("Oppgaven(${oppgave.fagsakSaksnummer}) gikk ut på FORLENGELSER_FRA_INFOTRYGD_AKSJONSPUNKT")
+            loggMe(oppgave.fagsakSaksnummer, skalMed, navn, AndreKriterierType.FORLENGELSER_FRA_INFOTRYGD_AKSJONSPUNKT)
             return true
         }
         return false
+    }
+
+    private fun loggMe(fagsak : String, skalMed: Boolean, navnPåKø: String, kriterierType: AndreKriterierType) {
+        val resultat = if (skalMed) "lagt til" else "fjernet"
+        log.info("Oppgaven($fagsak) ble $resultat for kø med navn($navnPåKø) for dette kriterie ${kriterierType.navn}")
     }
 
     fun erOppgavenReservert(
