@@ -24,6 +24,11 @@ class AksjonspunktDefWrapper {
                 .all { it == AksjonspunktDefinisjon.FATTER_VEDTAK }
         }
 
+        fun manuelleAksjonspunkter(liste: Map<String, String>): Map<AksjonspunktDefinisjon, String> {
+            return liste.mapKeys { AksjonspunktDefinisjon.fraKode(it.key) }
+                .filter { (k, v) -> !k.erAutopunkt() && v == "OPPR"}
+        }
+
         fun inneholderEtAktivtAksjonspunktMedKoden(liste: Map<String, String>, def: AksjonspunktDefinisjon): Boolean {
             val definisjon = liste.filter { entry -> entry.value == "OPPR" }
                 .map { entry -> entry.key }

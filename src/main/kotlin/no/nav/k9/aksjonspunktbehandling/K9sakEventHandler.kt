@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory
 
 class K9sakEventHandler constructor(
     private val oppgaveRepository: OppgaveRepository,
+    private val oppgaveTjenesteK9: OppgaveTjenesteSak,
     private val behandlingProsessEventK9Repository: BehandlingProsessEventK9Repository,
     private val sakOgBehandlingProducer: SakOgBehandlingProducer,
     private val oppgaveKøRepository: OppgaveKøRepository,
@@ -80,7 +81,6 @@ class K9sakEventHandler constructor(
                 oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, listOf(oppgave), reservasjonRepository)
             }
             statistikkChannel.send(true)
-
         }
     }
 

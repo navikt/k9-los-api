@@ -139,6 +139,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         K9sakEventHandler(
             get(),
+            get(),
             BehandlingProsessEventK9Repository(dataSource = get()),
             sakOgBehandlingProducer = sakOgBehadlingProducer,
             oppgaveKøRepository = get(),

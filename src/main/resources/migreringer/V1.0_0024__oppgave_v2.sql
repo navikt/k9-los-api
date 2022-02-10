@@ -1,0 +1,41 @@
+CREATE TABLE if not exists BEHANDLING
+(
+     id                          VARCHAR(36)     NOT NULL PRIMARY KEY,
+     ekstern_referanse           VARCHAR(36)     NOT NULL,
+     fagsystem                   VARCHAR(20)     NOT NULL,
+     ytelse_type                 VARCHAR(20)     NOT NULL,
+--      totrinn_paakrevd            BOOLEAN         NULL,
+--      totrinn_utfoert             BOOLEAN         NULL,
+--      totrinn_ansvarlig_ident     VARCHAR(20)     NULL,
+     soekers_id                  VARCHAR(20)     NULL,
+     kode6                       BOOLEAN         NULL,
+     skjermet                    BOOLEAN NULL
+);
+
+CREATE TABLE if not exists DELOPPGAVE(
+    id                          VARCHAR(36)     NOT NULL PRIMARY KEY,
+    behandling_id               VARCHAR(36)     NOT NULL,
+    ekstern_referanse           VARCHAR(36)     NOT NULL,
+    oppgave_status              VARCHAR(20)     NOT NULL,
+    oppgave_kode                VARCHAR(20)     NOT NULL,
+    opprettet                   DATE            NOT NULL,
+    sist_endret                 DATE            NOT NULL,
+    ferdigstilt_tidspunkt       DATE            NULL,
+    ferdigstilt_saksbehandler   VARCHAR(10)     NULL,
+    ferdigstilt_enhet           VARCHAR(10)     NULL,
+    frist                       DATE            NULL
+);
+
+CREATE UNIQUE INDEX idx_id_referanse on BEHANDLING (id, ekstern_referanse);
+CREATE UNIQUE INDEX idx_referanse_fagsystem on BEHANDLING (ekstern_referanse, fagsystem);
+CREATE UNIQUE INDEX idx_referanse_fagytelse on BEHANDLING (ekstern_referanse, ytelse_type);
+CREATE INDEX idx_kode6 on BEHANDLING (kode6);
+CREATE INDEX idx_skjermet on BEHANDLING (skjermet);
+
+-- CREATE INDEX idx_totrinn_paakrevd on OPPGAVE_V2 (totrinn_paakrevd);
+-- CREATE INDEX idx_totrinn_utført on OPPGAVE_V2 (totrinn_utfoert);
+
+CREATE INDEX idx_oppgave_aktiv on DELOPPGAVE (oppgave_status);
+
+CREATE INDEX idx_oppgave_opprettet on DELOPPGAVE (opprettet);
+CREATE INDEX idx_oppgave_ferdigstilt on DELOPPGAVE (ferdigstilt_tidspunkt);

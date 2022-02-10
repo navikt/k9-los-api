@@ -9,7 +9,10 @@ import no.nav.k9.aksjonspunktbehandling.K9punsjEventHandler
 import no.nav.k9.aksjonspunktbehandling.K9sakEventHandler
 import no.nav.k9.aksjonspunktbehandling.k9sak.K9sakEventHandlerV2
 import no.nav.k9.db.hikariConfig
+import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.repository.*
+import no.nav.k9.fagsystem.k9sak.K9SakRepository
+import no.nav.k9.fagsystem.k9sak.OppgaveTjenesteSak
 import no.nav.k9.integrasjon.abac.IPepClient
 import no.nav.k9.integrasjon.abac.PepClient
 import no.nav.k9.integrasjon.abac.PepClientLocal
@@ -87,6 +90,16 @@ fun common(app: Application, config: Configuration) = module {
         )
     }
 
+    single { OppgaveRepositoryV2(dataSource = get()) }
+    single { K9SakRepository(dataSource = get()) }
+
+    single {
+        OppgaveTjenesteSak(
+            oppgaveRepositoryV2 = get(),
+            k9SakRepository = get()
+        )
+    }
+
     single {
         SaksbehandlerRepository(
             dataSource = get(),
@@ -156,6 +169,7 @@ fun common(app: Application, config: Configuration) = module {
     single {
         K9sakEventHandler(
             oppgaveRepository = get(),
+            oppgaveTjenesteK9 = get(),
             behandlingProsessEventK9Repository = get(),
             sakOgBehandlingProducer = get(),
             oppgaveKøRepository = get(),
