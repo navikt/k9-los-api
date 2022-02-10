@@ -29,7 +29,7 @@ data class K9SakModell(
     }
 
     fun oppgave(sisteEvent: BehandlingProsessEventDto = sisteEvent()): Oppgave {
-        val eventResultat = sisteEvent.aktiveAksjonspunkt().eventResultat()
+        val eventResultat = sisteEvent.alleAksjonspunkter().eventResultat()
         var aktiv = true
         var oppgaveAvsluttet: LocalDateTime? = null
 
@@ -68,7 +68,7 @@ data class K9SakModell(
             oppgaveAvsluttet = oppgaveAvsluttet,
             system = sisteEvent.fagsystem.name,
             oppgaveEgenskap = emptyList(),
-            aksjonspunkter = sisteEvent.aktiveAksjonspunkt(),
+            aksjonspunkter = sisteEvent.aksjonspunktKoderMedStatusListe.tilAksjonspunkter(),
             utenlands = erUtenlands(sisteEvent),
             tilBeslutter = eventResultat.beslutterOppgave(),
             selvstendigFrilans = erSelvstendigNæringsdrivndeEllerFrilanser(sisteEvent),
@@ -94,38 +94,38 @@ data class K9SakModell(
     }
 
     private fun avklarMedlemskap(event: BehandlingProsessEventDto): Boolean {
-        return event.aktiveAksjonspunkt().liste.any { entry ->
+        return event.aksjonspunktKoderMedStatusListe.tilAksjonspunkter().hentAktive().any { entry ->
             (entry.key == AVKLAR_FORTSATT_MEDLEMSKAP_KODE)
         }
     }
 
     private fun avklarArbeidsforhold(event: BehandlingProsessEventDto): Boolean {
-        return event.aktiveAksjonspunkt().liste.any { entry ->
+        return event.aksjonspunktKoderMedStatusListe.tilAksjonspunkter().hentAktive().any { entry ->
             (entry.key == VURDER_ARBEIDSFORHOLD_KODE)
         }
     }
 
     private fun vurderopptjeningsvilkåret(event: BehandlingProsessEventDto): Boolean {
-        return event.aktiveAksjonspunkt().liste.any { entry ->
+        return event.aksjonspunktKoderMedStatusListe.tilAksjonspunkter().hentAktive().any { entry ->
             (entry.key == VURDER_OPPTJENINGSVILKÅRET_KODE || entry.key == VURDER_PERIODER_MED_OPPTJENING_KODE || entry.key == OVERSTYRING_AV_OPPTJENINGSVILKÅRET_KODE)
         }
     }
 
     private fun erÅrskvantum(event: BehandlingProsessEventDto): Boolean {
-        return event.aktiveAksjonspunkt().liste.any { entry ->
+        return event.aksjonspunktKoderMedStatusListe.tilAksjonspunkter().hentAktive().any { entry ->
             (entry.key == VURDER_ÅRSKVANTUM_KVOTE)
         }
     }
 
     private fun erUtenlands(event: BehandlingProsessEventDto): Boolean {
-        return event.aktiveAksjonspunkt().liste.any { entry ->
+        return event.aksjonspunktKoderMedStatusListe.tilAksjonspunkter().hentAktive().any { entry ->
             (entry.key == AUTOMATISK_MARKERING_AV_UTENLANDSSAK_KODE
                     || entry.key == MANUELL_MARKERING_AV_UTLAND_SAKSTYPE_KODE) && entry.value != AksjonspunktStatus.AVBRUTT.kode
         }
     }
 
     private fun erSelvstendigNæringsdrivndeEllerFrilanser(event: BehandlingProsessEventDto): Boolean {
-        return event.aktiveAksjonspunkt().liste.any { entry ->
+        return event.aksjonspunktKoderMedStatusListe.tilAksjonspunkter().hentAktive().any { entry ->
             (
                     entry.key == FASTSETT_BEREGNINGSGRUNNLAG_ARBEIDSTAKER_FRILANS_KODE ||
                             entry.key == VURDER_VARIG_ENDRET_ELLER_NYOPPSTARTET_NÆRING_SELVSTENDIG_NÆRINGSDRIVENDE_KODE ||
@@ -321,17 +321,18 @@ data class K9SakModell(
 
         if (sisteEvent().ytelseTypeKode == "PSB") {
             // har blitt beslutter
-            if (!forrigeEvent.aktiveAksjonspunkt().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK) &&
-                sisteEvent().aktiveAksjonspunkt().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)) {
+            if (!forrigeEvent.alleAksjonspunkter().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK) &&
+                sisteEvent().alleAksjonspunkter().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)
+            ) {
                 return true
             }
             // har blitt satt på vent
-            if (sisteEvent().aktiveAksjonspunkt().påVent()) {
+            if (sisteEvent().alleAksjonspunkter().påVent()) {
                 return true
             }
 
             // beslutter har gjort seg ferdig
-            if (forrigeEvent.aktiveAksjonspunkt().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK) &&
+            if (forrigeEvent.alleAksjonspunkter().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK) &&
                 sisteEvent().alleAksjonspunkter().harInaktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)
             ) {
                 return true
@@ -340,22 +341,23 @@ data class K9SakModell(
             return false
         } else {
             // har blitt beslutter
-            if (!forrigeEvent.aktiveAksjonspunkt().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK) &&
-                sisteEvent().aktiveAksjonspunkt().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)) {
+            if (!forrigeEvent.alleAksjonspunkter().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK) &&
+                sisteEvent().alleAksjonspunkter().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)
+            ) {
                 return true
             }
 
             // beslutter har gjort seg ferdig
-            if (forrigeEvent.aktiveAksjonspunkt().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK) &&
+            if (forrigeEvent.alleAksjonspunkter().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK) &&
                 sisteEvent().alleAksjonspunkter().harInaktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)
             ) {
                 return true
             }
 
-            val forrigeAksjonspunkter = forrigeEvent.aktiveAksjonspunkt().liste
-            val nåværendeAksjonspunkter = sisteEvent().aktiveAksjonspunkt().liste
+            val forrigeAksjonspunkter = forrigeEvent.alleAksjonspunkter().hentAktive()
+            val nåværendeAksjonspunkter = sisteEvent().alleAksjonspunkter().hentAktive()
 
-            if (sisteEvent().aktiveAksjonspunkt().lengde() > 0 && !sisteEvent().aktiveAksjonspunkt().tilBeslutter()) {
+            if (sisteEvent().alleAksjonspunkter().hentLengde() > 0 && !sisteEvent().alleAksjonspunkter().tilBeslutter()) {
                 return false
             }
             return forrigeAksjonspunkter != nåværendeAksjonspunkter
@@ -375,69 +377,6 @@ data class K9SakModell(
 
 }
 
-fun BehandlingProsessEventDto.aktiveAksjonspunkt(): Aksjonspunkter {
-    return Aksjonspunkter(this.aksjonspunktKoderMedStatusListe.filter { entry -> entry.value == "OPPR" })
-}
-
 fun BehandlingProsessEventDto.alleAksjonspunkter(): Aksjonspunkter {
-    return Aksjonspunkter(this.aksjonspunktKoderMedStatusListe)
+    return this.aksjonspunktKoderMedStatusListe.tilAksjonspunkter()
 }
-
-data class Aksjonspunkter(val liste: Map<String, String>) {
-    fun lengde(): Int {
-        return liste.size
-    }
-
-    fun påVent(): Boolean {
-        return AksjonspunktDefWrapper.påVent(this.liste)
-    }
-
-    fun erTom(): Boolean {
-        return this.liste.isEmpty()
-    }
-
-    fun tilBeslutter(): Boolean {
-        return AksjonspunktDefWrapper.tilBeslutter(this.liste)
-    }
-
-    fun harAktivtAksjonspunkt(def: AksjonspunktDefinisjon): Boolean {
-        return AksjonspunktDefWrapper.inneholderEtAktivtAksjonspunktMedKoden(this.liste, def)
-    }
-
-    fun alleAktiveAksjonspunktTaBortPunsj(): Aksjonspunkter {
-        return Aksjonspunkter(
-            liste.filter { entry -> entry.value == "OPPR" }
-                .filter { entry -> !AksjonspunktDefWrapper.aksjonspunkterFraPunsj().map { it.kode }.contains(entry.key)  }
-        )
-    }
-
-    fun harInaktivtAksjonspunkt(def: AksjonspunktDefinisjon): Boolean {
-        return AksjonspunktDefWrapper.inneholderEtInaktivtAksjonspunktMedKoden(this.liste, def)
-    }
-
-    fun harAtAvAktivtAksjonspunkt(vararg def : AksjonspunktDefinisjon): Boolean {
-        return AksjonspunktDefWrapper.inneholderEtAvAktivtAksjonspunktMedKoden(this.liste, def.toList())
-    }
-
-    fun harEtAvInaktivtAksjonspunkt(vararg def : AksjonspunktDefinisjon): Boolean {
-        return AksjonspunktDefWrapper.inneholderEtAvInaktivtAksjonspunkterMedKoder(this.liste, def.toList())
-    }
-
-    fun eventResultat(): EventResultat {
-        if (erTom()) {
-            return EventResultat.LUKK_OPPGAVE
-        }
-
-        if (påVent()) {
-            return EventResultat.LUKK_OPPGAVE_VENT
-        }
-
-        if (tilBeslutter()) {
-            return EventResultat.OPPRETT_BESLUTTER_OPPGAVE
-        }
-
-        return EventResultat.OPPRETT_OPPGAVE
-    }
-}
-
-

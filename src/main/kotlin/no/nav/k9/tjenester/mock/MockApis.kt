@@ -97,7 +97,7 @@ fun Route.MockGrensesnitt() {
                         }
                     }
 
-                    for (aksjonspunkt in Aksjonspunkter().aksjonspunkter()) {
+                    for (aksjonspunkt in AksjonspunkterMock().aksjonspunkter()) {
                         div {
                             classes = setOf("input-group")
                             div {

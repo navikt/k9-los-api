@@ -18,7 +18,7 @@ import no.nav.k9.integrasjon.rest.idToken
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleOppgaverHistorikk
 import no.nav.k9.tjenester.fagsak.PersonDto
-import no.nav.k9.tjenester.mock.Aksjonspunkter
+import no.nav.k9.tjenester.mock.AksjonspunkterMock
 import no.nav.k9.tjenester.saksbehandler.nokkeltall.NyeOgFerdigstilteOppgaverDto
 import no.nav.k9.utils.Cache
 import no.nav.k9.utils.CacheObject
@@ -494,7 +494,7 @@ class OppgaveTjeneste constructor(
                 søktGradering = oppgave.søktGradering,
                 avklarArbeidsforhold = oppgave.avklarArbeidsforhold,
                 fagsakPeriode = oppgave.fagsakPeriode,
-                paaVent = if (oppgave.aksjonspunkter.liste["MER_INFORMASJON"] != null) oppgave.aksjonspunkter.liste["MER_INFORMASJON"] == "OPPR" else false
+                paaVent = if (oppgave.aksjonspunkter.hentAktive()["MER_INFORMASJON"] != null) oppgave.aksjonspunkter.hentAktive()["MER_INFORMASJON"] == "OPPR" else false
             )
         } else {
             return OppgaveDto(
@@ -817,8 +817,8 @@ class OppgaveTjeneste constructor(
 
     private fun preprodNavn(oppgave: Oppgave): String {
         return "${oppgave.fagsakSaksnummer} " +
-                oppgave.aksjonspunkter.liste.entries.map { t ->
-                    val a = Aksjonspunkter().aksjonspunkter()
+                oppgave.aksjonspunkter.hentAktive().entries.map { t ->
+                    val a = AksjonspunkterMock().aksjonspunkter()
                         .find { aksjonspunkt -> aksjonspunkt.kode == t.key }
                     "${t.key} ${a?.navn ?: "Ukjent aksjonspunkt"}"
                 }.toList().joinToString(", ")

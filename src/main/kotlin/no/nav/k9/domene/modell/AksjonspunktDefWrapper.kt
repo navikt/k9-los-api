@@ -3,7 +3,7 @@ package no.nav.k9.domene.modell
 
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
-import no.nav.k9.tjenester.mock.Aksjonspunkt
+import no.nav.k9.tjenester.mock.AksjonspunktMock
 
 class AksjonspunktDefWrapper {
 
@@ -11,15 +11,18 @@ class AksjonspunktDefWrapper {
         private val alleAutopunkter = AksjonspunktDefinisjon.values().filter { it.erAutopunkt() }.map { it.kode }
 
         fun fraKode(kode: String): AksjonspunktDefinisjon? {
-           return AksjonspunktDefinisjon.fraKode(kode)
+            return AksjonspunktDefinisjon.fraKode(kode)
         }
 
         fun påVent(liste: Map<String, String>): Boolean {
-            return liste.map { entry -> AksjonspunktDefinisjon.fraKode(entry.key) }.any { it.erAutopunkt() }
+            return liste.filter { entry -> entry.value == "OPPR" }
+                .map { entry -> AksjonspunktDefinisjon.fraKode(entry.key) }
+                .any { it.erAutopunkt() }
         }
 
         fun tilBeslutter(liste: Map<String, String>): Boolean {
-            return liste.map { entry -> AksjonspunktDefinisjon.fraKode(entry.key) }
+            return liste.filter { entry -> entry.value == "OPPR" }
+                .map { entry -> AksjonspunktDefinisjon.fraKode(entry.key) }
                 .all { it == AksjonspunktDefinisjon.FATTER_VEDTAK }
         }
 
@@ -30,7 +33,10 @@ class AksjonspunktDefWrapper {
             return definisjon != null
         }
 
-        fun inneholderEtAvAktivtAksjonspunktMedKoden(liste: Map<String, String>, def: List<AksjonspunktDefinisjon>): Boolean {
+        fun inneholderEtAvAktivtAksjonspunktMedKoden(
+            liste: Map<String, String>,
+            def: List<AksjonspunktDefinisjon>
+        ): Boolean {
             val definisjon = liste.filter { entry -> entry.value == "OPPR" }
                 .map { entry -> entry.key }
                 .find { kode -> def.map { it.kode }.contains(kode) }
@@ -38,22 +44,25 @@ class AksjonspunktDefWrapper {
         }
 
         fun inneholderEtInaktivtAksjonspunktMedKoden(liste: Map<String, String>, def: AksjonspunktDefinisjon): Boolean {
-            val definisjon = liste.filter { entry -> entry.value != "OPPR"}
+            val definisjon = liste.filter { entry -> entry.value != "OPPR" }
                 .map { entry -> entry.key }
                 .find { kode -> kode == def.kode }
             return definisjon != null
         }
 
-        fun inneholderEtAvInaktivtAksjonspunkterMedKoder(liste: Map<String, String>, def: List<AksjonspunktDefinisjon>): Boolean {
-            val definisjon = liste.filter { entry -> entry.value != "OPPR"}
+        fun inneholderEtAvInaktivtAksjonspunkterMedKoder(
+            liste: Map<String, String>,
+            def: List<AksjonspunktDefinisjon>
+        ): Boolean {
+            val definisjon = liste.filter { entry -> entry.value != "OPPR" }
                 .map { entry -> entry.key }
                 .find { kode -> def.map { it.kode }.contains(kode) }
             return definisjon != null
         }
 
-        fun finnAlleAksjonspunkter(): List<Aksjonspunkt> {
+        fun finnAlleAksjonspunkter(): List<AksjonspunktMock> {
             val fraK9Sak = AksjonspunktDefinisjon.values().filter { it.kode != null }.map {
-                Aksjonspunkt(
+                AksjonspunktMock(
                     kode = it.kode,
                     navn = it.navn,
                     aksjonspunktype = it.aksjonspunktType.name,
@@ -68,14 +77,16 @@ class AksjonspunktDefWrapper {
             return listeMedAlle
         }
 
-        fun aksjonspunkterFraPunsj(): MutableList<Aksjonspunkt>{
-            return mutableListOf(Aksjonspunkt("PUNSJ", "Punsj oppgave", "MANU", "", "", null, false),
-            Aksjonspunkt("UTLØPT", "Utløpt oppgave", "MANU", "", "", null, false),
-            Aksjonspunkt("MER_INFORMASJON", "Venter på informasjon", "MANU", "", "", null, false))
+        fun aksjonspunkterFraPunsj(): MutableList<AksjonspunktMock> {
+            return mutableListOf(
+                AksjonspunktMock("PUNSJ", "Punsj oppgave", "MANU", "", "", null, false),
+                AksjonspunktMock("UTLØPT", "Utløpt oppgave", "MANU", "", "", null, false),
+                AksjonspunktMock("MER_INFORMASJON", "Venter på informasjon", "MANU", "", "", null, false)
+            )
         }
 
-        fun harAktivtAutopunkt(it: Oppgave) : Boolean {
-            val map = it.aksjonspunkter.alleAktiveAksjonspunktTaBortPunsj().liste.map {
+        fun harAktivtAutopunkt(it: Oppgave): Boolean {
+            val map = it.aksjonspunkter.alleAktiveAksjonspunktTaBortPunsj().hentAktive().map {
                 it.key
             }
             map.forEach {

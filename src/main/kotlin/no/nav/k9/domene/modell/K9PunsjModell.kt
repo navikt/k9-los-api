@@ -3,7 +3,6 @@ package no.nav.k9.domene.modell
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.repository.ReservasjonRepository
 import no.nav.k9.domene.repository.SaksbehandlerRepository
-import no.nav.k9.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.integrasjon.kafka.dto.PunsjEventDto
 import no.nav.k9.integrasjon.sakogbehandling.kontrakt.BehandlingAvsluttet
 import no.nav.k9.integrasjon.sakogbehandling.kontrakt.BehandlingOpprettet
@@ -59,13 +58,13 @@ data class K9PunsjModell(
 
     override fun fikkEndretAksjonspunkt(): Boolean {
         val forrigeEvent = forrigeEvent() ?: return false
-        val forrigeAksjonspunkter = forrigeEvent.aktiveAksjonspunkt().liste
-        val nåværendeAksjonspunkter = sisteEvent().aktiveAksjonspunkt().liste
+        val forrigeAksjonspunkter = forrigeEvent.aksjonspunkter().hentAktive()
+        val nåværendeAksjonspunkter = sisteEvent().aksjonspunkter().hentAktive()
         return forrigeAksjonspunkter != nåværendeAksjonspunkter
     }
 
-    private fun PunsjEventDto.aktiveAksjonspunkt(): Aksjonspunkter {
-        return Aksjonspunkter(this.aksjonspunktKoderMedStatusListe.filter { entry -> entry.value == "OPPR" })
+    private fun PunsjEventDto.aksjonspunkter(): Aksjonspunkter {
+        return this.aksjonspunktKoderMedStatusListe.tilAksjonspunkter()
     }
 
     fun oppgave(sisteEvent: PunsjEventDto = sisteEvent()): Oppgave {
@@ -73,7 +72,7 @@ data class K9PunsjModell(
 
         var aktiv = sisteEvent.aksjonspunktKoderMedStatusListe.any { aksjonspunkt -> aksjonspunkt.value == "OPPR" }
 
-        if (sisteEvent.aktiveAksjonspunkt().liste.containsKey("MER_INFORMASJON")) {
+        if (sisteEvent.aksjonspunkter().hentAktive().containsKey("MER_INFORMASJON")) {
             aktiv = false
         }
 
@@ -97,7 +96,7 @@ data class K9PunsjModell(
             utfortFraAdmin = false,
             eksternId = sisteEvent.eksternId,
             oppgaveEgenskap = listOf(),
-            aksjonspunkter = sisteEvent.aktiveAksjonspunkt(),
+            aksjonspunkter = sisteEvent.aksjonspunktKoderMedStatusListe.tilAktiveAksjonspunkter(),
             tilBeslutter = false,
             utbetalingTilBruker = false,
             selvstendigFrilans = false,
@@ -121,11 +120,11 @@ data class K9PunsjModell(
     }
 
     private fun utledStatus(eventDto: PunsjEventDto) : BehandlingStatus {
-        if (eventDto.aktiveAksjonspunkt().liste.containsKey("MER_INFORMASJON")) {
+        if (eventDto.aksjonspunkter().hentAktive().containsKey("MER_INFORMASJON")) {
             return BehandlingStatus.SATT_PÅ_VENT
         } else if (eventDto.sendtInn != null && eventDto.sendtInn) {
             return BehandlingStatus.SENDT_INN
-        } else if (eventDto.aktiveAksjonspunkt().erTom() && (eventDto.sendtInn == null || !eventDto.sendtInn)) {
+        } else if (eventDto.aksjonspunkter().erIngenAktive() && (eventDto.sendtInn == null || !eventDto.sendtInn)) {
             return BehandlingStatus.LUKKET
         }
         return BehandlingStatus.OPPRETTET

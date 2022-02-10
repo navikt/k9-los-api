@@ -268,7 +268,7 @@ internal class OppgaveKøTest {
             LocalDate.now(),
             KøSortering.OPPRETT_BEHANDLING,
             mutableListOf(),
-            mutableListOf(),
+            mutableListOf(FagsakYtelseType.PLEIEPENGER_SYKT_BARN),
             mutableListOf(
                 AndreKriterierDto(
                     "1",
@@ -293,16 +293,16 @@ internal class OppgaveKøTest {
 
         val oppgave = Oppgave(
             behandlingId = 9438,
-            fagsakSaksnummer = "",
+            fagsakSaksnummer = "12423",
             aktorId = "273857",
-            journalpostId = "234234535",
+            journalpostId = "",
             behandlendeEnhet = "Enhet",
             behandlingsfrist = LocalDateTime.now(),
             behandlingOpprettet = LocalDateTime.now().minusDays(23),
             forsteStonadsdag = LocalDate.now().plusDays(6),
             behandlingStatus = BehandlingStatus.OPPRETTET,
             behandlingType = BehandlingType.UKJENT,
-            fagsakYtelseType = FagsakYtelseType.UKJENT,
+            fagsakYtelseType = FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
             aktiv = true,
             system = Fagsystem.K9SAK.kode,
             oppgaveAvsluttet = null,
@@ -311,8 +311,12 @@ internal class OppgaveKøTest {
             oppgaveEgenskap = emptyList(),
             aksjonspunkter = Aksjonspunkter(
                 mapOf(
-                    "5016" to "OPPR",
+                    "9001" to "UTFO",
+                    "9007" to "AVBR",
                     "9005" to "UTFO",
+                    "5015" to "UTFO",
+                    "5016" to "OPPR",
+                    "5040" to "UTFO"
                 )
             ),
             tilBeslutter = true,

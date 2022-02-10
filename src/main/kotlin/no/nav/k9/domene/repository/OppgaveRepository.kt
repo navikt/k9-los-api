@@ -18,7 +18,7 @@ import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleApneBehandlinger
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleOppgaverDto
 import no.nav.k9.tjenester.innsikt.Databasekall
-import no.nav.k9.tjenester.mock.Aksjonspunkt
+import no.nav.k9.tjenester.mock.AksjonspunktMock
 import no.nav.k9.utils.Cache
 import no.nav.k9.utils.CacheObject
 import org.slf4j.Logger
@@ -647,11 +647,11 @@ class OppgaveRepository(
         return list
     }
 
-    internal fun hentAktiveOppgaversAksjonspunktliste(): List<Aksjonspunkt> {
+    internal fun hentAktiveOppgaversAksjonspunktliste(): List<AksjonspunktMock> {
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
 
-        val json: List<List<Aksjonspunkt>> = using(sessionOf(dataSource)) { it ->
+        val json: List<List<AksjonspunktMock>> = using(sessionOf(dataSource)) { it ->
             it.run(
                 queryOf(
                     "select (data -> 'aksjonspunkter' -> 'liste') punkt,  count(*) from oppgave where ((data -> 'aktiv') ::boolean and (data ->> 'system') = 'K9SAK') or ((data -> 'aktiv') ::boolean and (data ->> 'system') = 'PUNSJ')  group by data -> 'aksjonspunkter' -> 'liste'",
@@ -668,7 +668,7 @@ class OppgaveRepository(
                             aksjonspunkt
                         }
                             .map {
-                                Aksjonspunkt(
+                                AksjonspunktMock(
                                     it?.kode ?: "Utdatert-dev",
                                     it?.navn ?: "Utdatert-dev",
                                     it?.aksjonspunktype ?: "Utdatert-dev",
