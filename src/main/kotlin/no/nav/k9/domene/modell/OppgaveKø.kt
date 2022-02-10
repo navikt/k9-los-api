@@ -30,8 +30,6 @@ data class OppgaveKø(
     var oppgaverOgDatoer: MutableList<OppgaveIdMedDato> = mutableListOf(),
     val kode6: Boolean = false
 ) {
-    private val log: Logger = LoggerFactory.getLogger(OppgaveKø::class.java)
-
     fun leggOppgaveTilEllerFjernFraKø(
         oppgave: Oppgave,
         reservasjonRepository: ReservasjonRepository? = null
@@ -149,7 +147,6 @@ data class OppgaveKø(
     private fun sjekkOppgavensKriterier(oppgave: Oppgave, kriterier: List<AndreKriterierDto>, skalMed: Boolean): Boolean {
         if (oppgave.tilBeslutter && kriterier.map { it.andreKriterierType }
                 .contains(AndreKriterierType.TIL_BESLUTTER)) {
-            loggMe(oppgave.fagsakSaksnummer, skalMed, navn, AndreKriterierType.TIL_BESLUTTER)
             return true
         }
 
@@ -195,7 +192,6 @@ data class OppgaveKø(
                 TRENGER_SØKNAD_FOR_INFOTRYGD_PERIODE_ANNEN_PART
             ) && kriterier.map {it.andreKriterierType}.contains(AndreKriterierType.FORLENGELSER_FRA_INFOTRYGD)
               && oppgave.tilBeslutter) {
-            loggMe(oppgave.fagsakSaksnummer, skalMed, navn, AndreKriterierType.FORLENGELSER_FRA_INFOTRYGD)
             return true
         }
 
@@ -204,15 +200,9 @@ data class OppgaveKø(
                 OVERSTYR_BEREGNING_INPUT,
                 TRENGER_SØKNAD_FOR_INFOTRYGD_PERIODE_ANNEN_PART
             ) && kriterier.map {it.andreKriterierType}.contains(AndreKriterierType.FORLENGELSER_FRA_INFOTRYGD_AKSJONSPUNKT)) {
-            loggMe(oppgave.fagsakSaksnummer, skalMed, navn, AndreKriterierType.FORLENGELSER_FRA_INFOTRYGD_AKSJONSPUNKT)
             return true
         }
         return false
-    }
-
-    private fun loggMe(fagsak : String, skalMed: Boolean, navnPåKø: String, kriterierType: AndreKriterierType) {
-        val resultat = if (skalMed) "lagt til" else "fjernet"
-        log.info("Oppgaven($fagsak) ble $resultat for kø med navn($navnPåKø) og info om kø: $filtreringAndreKriterierType for dette kriterie ${kriterierType.navn}")
     }
 
     fun erOppgavenReservert(

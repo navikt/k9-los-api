@@ -330,7 +330,7 @@ class K9sakEventHandlerTest : KoinTest, AbstractPostgresTest()  {
         val oppgave =
             oppgaveRepository.hent(UUID.fromString("6b521f78-ef71-43c3-a615-6c2b8bb4dcdb"))
         assertTrue { oppgave.aktiv }
-        assertTrue(oppgave.aksjonspunkter.lengde() == 3)
+        assertTrue(oppgave.aksjonspunkter.hentLengde() == 3)
     }
 
     @Test
@@ -436,7 +436,7 @@ class K9sakEventHandlerTest : KoinTest, AbstractPostgresTest()  {
         val oppgave =
             oppgaveRepository.hent(UUID.fromString("6b521f78-ef71-43c3-a615-6c2b8bb4dcdb"))
         assertTrue { oppgave.aktiv }
-        assertTrue(oppgave.aksjonspunkter.lengde() == 1)
+        assertTrue(oppgave.aksjonspunkter.hentLengde() == 1)
 
         val i = runBlocking {
             oppgaveKøRepository.hent()
