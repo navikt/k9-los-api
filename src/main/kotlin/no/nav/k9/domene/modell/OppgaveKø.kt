@@ -30,8 +30,6 @@ data class OppgaveKø(
     var oppgaverOgDatoer: MutableList<OppgaveIdMedDato> = mutableListOf(),
     val kode6: Boolean = false
 ) {
-    private val log: Logger = LoggerFactory.getLogger(OppgaveKø::class.java)
-
     fun leggOppgaveTilEllerFjernFraKø(
         oppgave: Oppgave,
         reservasjonRepository: ReservasjonRepository? = null

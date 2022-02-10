@@ -29,7 +29,7 @@ data class K9SakModell(
     }
 
     fun oppgave(sisteEvent: BehandlingProsessEventDto = sisteEvent()): Oppgave {
-        val eventResultat = sisteEvent.alleAksjonspunkter().eventResultat()
+        val eventResultat = sisteEvent.aktiveAksjonspunkter().eventResultat()
         var aktiv = true
         var oppgaveAvsluttet: LocalDateTime? = null
 
@@ -357,7 +357,7 @@ data class K9SakModell(
             val forrigeAksjonspunkter = forrigeEvent.alleAksjonspunkter().hentAktive()
             val nåværendeAksjonspunkter = sisteEvent().alleAksjonspunkter().hentAktive()
 
-            if (sisteEvent().alleAksjonspunkter().hentLengde() > 0 && !sisteEvent().alleAksjonspunkter().tilBeslutter()) {
+            if (sisteEvent().aktiveAksjonspunkter().hentLengde() > 0 && !sisteEvent().aktiveAksjonspunkter().tilBeslutter()) {
                 return false
             }
             return forrigeAksjonspunkter != nåværendeAksjonspunkter
@@ -379,4 +379,8 @@ data class K9SakModell(
 
 fun BehandlingProsessEventDto.alleAksjonspunkter(): Aksjonspunkter {
     return this.aksjonspunktKoderMedStatusListe.tilAksjonspunkter()
+}
+
+fun BehandlingProsessEventDto.aktiveAksjonspunkter(): Aksjonspunkter {
+    return this.aksjonspunktKoderMedStatusListe.tilAktiveAksjonspunkter()
 }
