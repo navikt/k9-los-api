@@ -212,7 +212,7 @@ data class OppgaveKø(
 
     private fun loggMe(fagsak : String, skalMed: Boolean, navnPåKø: String, kriterierType: AndreKriterierType) {
         val resultat = if (skalMed) "lagt til" else "fjernet"
-        log.info("Oppgaven($fagsak) ble $resultat for kø med navn($navnPåKø) for dette kriterie ${kriterierType.navn}")
+        log.info("Oppgaven($fagsak) ble $resultat for kø med navn($navnPåKø) og info om kø: $filtreringAndreKriterierType for dette kriterie ${kriterierType.navn}")
     }
 
     fun erOppgavenReservert(
