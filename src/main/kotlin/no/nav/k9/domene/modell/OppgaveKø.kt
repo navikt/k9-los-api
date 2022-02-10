@@ -5,6 +5,9 @@ import no.nav.k9.domene.repository.ReservasjonRepository
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.*
 import no.nav.k9.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
+import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveTjeneste
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -27,16 +30,17 @@ data class OppgaveKø(
     var oppgaverOgDatoer: MutableList<OppgaveIdMedDato> = mutableListOf(),
     val kode6: Boolean = false
 ) {
+    private val log: Logger = LoggerFactory.getLogger(OppgaveKø::class.java)
 
     fun leggOppgaveTilEllerFjernFraKø(
         oppgave: Oppgave,
         reservasjonRepository: ReservasjonRepository? = null
     ): Boolean {
-        if (tilhørerOppgaveTilKø(
-                oppgave = oppgave,
-                reservasjonRepository = reservasjonRepository
-            )
-        ) {
+        val tilhørerOppgaveTilKø = tilhørerOppgaveTilKø(
+            oppgave = oppgave,
+            reservasjonRepository = reservasjonRepository
+        )
+        if (tilhørerOppgaveTilKø) {
             if (this.oppgaverOgDatoer.none { it.id == oppgave.eksternId }) {
                 this.oppgaverOgDatoer.add(
                     OppgaveIdMedDato(
@@ -95,6 +99,7 @@ data class OppgaveKø(
         }
 
         if (ekskluderer(oppgave)) {
+            log.info("Oppgaven(${oppgave.fagsakSaksnummer}) har blitt ekskludert")
             return false
         }
 
@@ -103,6 +108,7 @@ data class OppgaveKø(
         }
 
         if (inkluderer(oppgave)) {
+            log.info("Oppgaven(${oppgave.fagsakSaksnummer}) har blitt inkluderer")
             return true
         }
 
@@ -133,11 +139,13 @@ data class OppgaveKø(
     }
 
     private fun inkluderer(oppgave: Oppgave): Boolean {
+        log.info("Oppgaven(${oppgave.fagsakSaksnummer}) sjekkes mot inkludert")
         val inkluderKriterier = filtreringAndreKriterierType.filter { it.inkluder }
         return sjekkOppgavensKriterier(oppgave, inkluderKriterier)
     }
 
     private fun ekskluderer(oppgave: Oppgave): Boolean {
+        log.info("Oppgaven(${oppgave.fagsakSaksnummer}) sjekkes mot ekskludert")
         val ekskluderKriterier = filtreringAndreKriterierType.filter { !it.inkluder }
         return sjekkOppgavensKriterier(oppgave, ekskluderKriterier)
     }
@@ -145,6 +153,7 @@ data class OppgaveKø(
     private fun sjekkOppgavensKriterier(oppgave: Oppgave, kriterier: List<AndreKriterierDto>): Boolean {
         if (oppgave.tilBeslutter && kriterier.map { it.andreKriterierType }
                 .contains(AndreKriterierType.TIL_BESLUTTER)) {
+            log.info("Oppgaven(${oppgave.fagsakSaksnummer}) gikk ut på tilBeslutter")
             return true
         }
 
@@ -190,6 +199,7 @@ data class OppgaveKø(
                 TRENGER_SØKNAD_FOR_INFOTRYGD_PERIODE_ANNEN_PART
             ) && kriterier.map {it.andreKriterierType}.contains(AndreKriterierType.FORLENGELSER_FRA_INFOTRYGD)
               && oppgave.tilBeslutter) {
+            log.info("Oppgaven(${oppgave.fagsakSaksnummer}) gikk ut på FORLENGELSER_FRA_INFOTRYGD")
             return true
         }
 
@@ -198,6 +208,7 @@ data class OppgaveKø(
                 OVERSTYR_BEREGNING_INPUT,
                 TRENGER_SØKNAD_FOR_INFOTRYGD_PERIODE_ANNEN_PART
             ) && kriterier.map {it.andreKriterierType}.contains(AndreKriterierType.FORLENGELSER_FRA_INFOTRYGD_AKSJONSPUNKT)) {
+            log.info("Oppgaven(${oppgave.fagsakSaksnummer}) gikk ut på FORLENGELSER_FRA_INFOTRYGD_AKSJONSPUNKT")
             return true
         }
         return false
