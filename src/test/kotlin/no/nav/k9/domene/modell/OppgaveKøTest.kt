@@ -261,6 +261,75 @@ internal class OppgaveKøTest {
     }
 
     @Test
+    fun `skal fjerne 9005, 9008, 9007 fra vanlig beslutter kø`() {
+        val oppgaveKø = OppgaveKø(
+            UUID.randomUUID(),
+            "test",
+            LocalDate.now(),
+            KøSortering.OPPRETT_BEHANDLING,
+            mutableListOf(),
+            mutableListOf(),
+            mutableListOf(
+                AndreKriterierDto(
+                    "1",
+                    AndreKriterierType.TIL_BESLUTTER,
+                    checked = true,
+                    inkluder = true
+                ),
+                AndreKriterierDto(
+                    "2",
+                    AndreKriterierType.FORLENGELSER_FRA_INFOTRYGD,
+                    checked = true,
+                    inkluder = false
+                )
+            ),
+            Enhet.NASJONAL,
+            null,
+            null,
+            mutableListOf(Saksbehandler("OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn)),
+            false,
+            mutableListOf()
+        )
+
+        val oppgave = Oppgave(
+            behandlingId = 9438,
+            fagsakSaksnummer = "",
+            aktorId = "273857",
+            journalpostId = "234234535",
+            behandlendeEnhet = "Enhet",
+            behandlingsfrist = LocalDateTime.now(),
+            behandlingOpprettet = LocalDateTime.now().minusDays(23),
+            forsteStonadsdag = LocalDate.now().plusDays(6),
+            behandlingStatus = BehandlingStatus.OPPRETTET,
+            behandlingType = BehandlingType.UKJENT,
+            fagsakYtelseType = FagsakYtelseType.UKJENT,
+            aktiv = true,
+            system = Fagsystem.K9SAK.kode,
+            oppgaveAvsluttet = null,
+            utfortFraAdmin = false,
+            eksternId = UUID.randomUUID(),
+            oppgaveEgenskap = emptyList(),
+            aksjonspunkter = Aksjonspunkter(
+                mapOf(
+                    "5016" to "OPPR",
+                    "9005" to "UTFO",
+                )
+            ),
+            tilBeslutter = true,
+            utbetalingTilBruker = false,
+            selvstendigFrilans = false,
+            kombinert = false,
+            søktGradering = false,
+            årskvantum = false,
+            avklarArbeidsforhold = false,
+            avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false
+        )
+
+        val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, null)
+        Assert.assertFalse(tilhørerOppgaveTilKø)
+    }
+
+    @Test
     fun `skal fjerne fra vanlig beslutter kø`() {
         val oppgaveKø = OppgaveKø(
             UUID.randomUUID(),

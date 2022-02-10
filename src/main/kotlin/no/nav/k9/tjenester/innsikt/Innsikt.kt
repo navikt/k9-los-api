@@ -13,6 +13,7 @@ import no.nav.k9.domene.repository.OppgaveKøRepository
 import no.nav.k9.domene.repository.OppgaveRepository
 import no.nav.k9.domene.repository.SaksbehandlerRepository
 import org.koin.ktor.ext.inject
+import java.util.*
 
 fun Route.innsiktGrensesnitt() {
     val oppgaveRepository by inject<OppgaveRepository>()
@@ -75,12 +76,19 @@ fun Route.innsiktGrensesnitt() {
                         }
                     }
 
-                    val oppgaveMedId = oppgaveRepository.hentOppgaverSomMatcherSaksnummer("B9YE2")
+                    val oppgaveMedId = oppgaveRepository.hentOppgaverSomMatcherSaksnummer("B9UC8")
+
                     if (oppgaveMedId.isNotEmpty()) {
                         val sortedByDescending = oppgaveMedId.sortedByDescending { it.oppgave.eventTid }
 
                         sortedByDescending.forEach { oppgaveMedId1 ->
                             val sakModell = behandlingProsessEventK9Repository.hent(oppgaveMedId1.id)
+
+                            div {
+                                classes = setOf("input-group-text display-4")
+                                +"TilBeslutter = ${sakModell.oppgave().tilBeslutter}}"
+                            }
+
                             sakModell.eventer.forEach { behandlingProsessEventDto ->
                                 val stringBuilder = StringBuilder()
 
