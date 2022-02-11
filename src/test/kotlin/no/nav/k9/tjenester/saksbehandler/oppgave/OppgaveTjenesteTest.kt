@@ -7,14 +7,21 @@ import assertk.assertions.isNull
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.AbstractPostgresTest
 import no.nav.k9.buildAndTestConfig
+import no.nav.k9.domene.lager.oppgave.AksjonspunktTilstand
 import no.nav.k9.domene.lager.oppgave.Oppgave
-import no.nav.k9.domene.modell.*
+import no.nav.k9.domene.modell.AksjonspunktStatus
+import no.nav.k9.domene.modell.Aksjonspunkter
+import no.nav.k9.domene.modell.BehandlingStatus
+import no.nav.k9.domene.modell.BehandlingType
+import no.nav.k9.domene.modell.Enhet
+import no.nav.k9.domene.modell.FagsakYtelseType
+import no.nav.k9.domene.modell.KøSortering
+import no.nav.k9.domene.modell.OppgaveKø
+import no.nav.k9.domene.modell.Saksbehandler
 import no.nav.k9.domene.repository.OppgaveKøRepository
 import no.nav.k9.domene.repository.OppgaveRepository
 import no.nav.k9.domene.repository.ReservasjonRepository
 import no.nav.k9.domene.repository.SaksbehandlerRepository
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
-import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import org.junit.Rule
 import org.junit.Test
 import org.koin.test.KoinTest
@@ -769,7 +776,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
             oppgaveEgenskap = emptyList(),
             aksjonspunkter = Aksjonspunkter(
                 liste = mapOf("5016" to "OPPR"),
-                apTilstander = listOf(AksjonspunktTilstandDto("5016", AksjonspunktStatus.OPPRETTET, null, null))
+                apTilstander = listOf(AksjonspunktTilstand("5016", AksjonspunktStatus.OPPRETTET))
             ),
             tilBeslutter = false,
             utbetalingTilBruker = false,

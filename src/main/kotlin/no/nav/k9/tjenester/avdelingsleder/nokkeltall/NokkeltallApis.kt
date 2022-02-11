@@ -1,10 +1,9 @@
 package no.nav.k9.tjenester.avdelingsleder.nokkeltall
 
-import io.ktor.application.call
-import io.ktor.locations.Location
-import io.ktor.locations.get
-import io.ktor.response.respond
-import io.ktor.routing.Route
+import io.ktor.application.*
+import io.ktor.locations.*
+import io.ktor.response.*
+import io.ktor.routing.*
 import no.nav.k9.integrasjon.rest.RequestContextService
 import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import org.koin.ktor.ext.inject
@@ -87,6 +86,13 @@ fun Route.NokkeltallApis() {
 
     get { _: HentAllePåVent ->
         call.respond(nokkeltallTjeneste.hentOppgaverPåVent())
+    }
+
+    @Location("/alle-paa-vent_v2")
+    class HentAllePåVentV2
+
+    get { _: HentAllePåVentV2 ->
+        call.respond(nokkeltallTjeneste.hentOppgaverPåVentV2())
     }
 
 }

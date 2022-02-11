@@ -1,10 +1,14 @@
 package no.nav.k9.tjenester.avdelingsleder.nokkeltall
 
+import no.nav.k9.domene.lager.oppgave.AksjonspunktTilstand
+import no.nav.k9.domene.modell.AksjonspunktStatus
+import no.nav.k9.domene.modell.Aksjonspunkter
 import no.nav.k9.domene.modell.BehandlingType
 import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.domene.periode.tidligsteOgSeneste
 import no.nav.k9.domene.repository.OppgaveRepository
 import no.nav.k9.domene.repository.StatistikkRepository
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import java.time.LocalDate
 
 class NokkeltallTjeneste constructor(
@@ -24,6 +28,29 @@ class NokkeltallTjeneste constructor(
         return oppgaverPerBehandlingPåVent.map { (key, value) ->
             AlleOppgaverHistorikk(key.fagsakYtelseType, key.behandlingType, key.dato, value.size)
         }
+    }
+
+    fun hentOppgaverPåVentV2(): OppgaverPåVentDto.PåVentResponse {
+        val oppgaverPåVent = oppgaveRepository.hentAllePåVent()
+
+        data class PerBehandling(val f: FagsakYtelseType, val b: BehandlingType, val frist: LocalDate)
+        data class PerBehandlingVenteårsak(val f: FagsakYtelseType, val b: BehandlingType, val frist: LocalDate,
+                                           val venteårsak: String)
+
+        val påVentPerBehandling = oppgaverPåVent.groupingBy {
+            PerBehandling(it.fagsakYtelseType, it.behandlingType, it.behandlingsfrist.toLocalDate())
+        }.eachCount().map { (vo, antall) ->  OppgaverPåVentDto.PerBehandlingDto(vo.f, vo.b, vo.frist, antall) }
+
+        val påVentPerVenteårsak = oppgaverPåVent.groupingBy {
+            val autopunkt = it.aksjonspunkter.aktivAutopunkt()
+            PerBehandlingVenteårsak(
+                it.fagsakYtelseType,
+                it.behandlingType,
+                autopunkt?.frist?.toLocalDate() ?: it.behandlingsfrist.toLocalDate(),
+                autopunkt?.venteårsak ?: "UKJENT") // TODO eget kodeverk?
+        }.eachCount()
+            .map { (vo, antall) -> OppgaverPåVentDto.PerVenteårsakDto(vo.f, vo.b, vo.frist, vo.venteårsak, antall) }
+        return OppgaverPåVentDto.PåVentResponse(påVentPerBehandling, påVentPerVenteårsak)
     }
 
     fun hentNyeFerdigstilteOppgaverOppsummering(): List<AlleOppgaverNyeOgFerdigstilteDto> {
@@ -108,6 +135,16 @@ class NokkeltallTjeneste constructor(
         return oppgaveRepository.hentApneBehandlingerPerBehandlingtypeIdag()
     }
 }
+
+private fun Aksjonspunkter.aktivAutopunkt(): AksjonspunktTilstand? {
+    if (this.apTilstander == null) return null
+    return this.apTilstander.first {
+        it.status == AksjonspunktStatus.OPPRETTET
+                && it.erAutopunkt()
+                && it.venteårsak != null }
+}
+
+private fun AksjonspunktTilstand.erAutopunkt() = AksjonspunktDefinisjon.fraKode(this.aksjonspunktKode).erAutopunkt()
 
 fun <T> Map<LocalDate, T>.fyllTommeDagerMedVerdi(verdi: T): Map<LocalDate, T> {
     val resultat = this.toSortedMap()

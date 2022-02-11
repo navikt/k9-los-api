@@ -1,5 +1,6 @@
 package no.nav.k9.domene.lager.oppgave
 
+import no.nav.k9.domene.modell.AksjonspunktStatus
 import no.nav.k9.domene.modell.Aksjonspunkter
 import no.nav.k9.domene.modell.BehandlingStatus
 import no.nav.k9.domene.modell.BehandlingType
@@ -40,28 +41,33 @@ data class Oppgave(
     var kode6: Boolean = false,
     var skjermet: Boolean = false,
     val utenlands: Boolean,
-    val vurderopptjeningsvilkåret : Boolean = false,
-    val ansvarligSaksbehandlerForTotrinn : String? = null,
-    val ansvarligSaksbehandlerIdent : String? = null,
-    val ansvarligBeslutterForTotrinn : String? = null,
+    val vurderopptjeningsvilkåret: Boolean = false,
+    val ansvarligSaksbehandlerForTotrinn: String? = null,
+    val ansvarligSaksbehandlerIdent: String? = null,
+    val ansvarligBeslutterForTotrinn: String? = null,
     val fagsakPeriode: FagsakPeriode? = null,
     val pleietrengendeAktørId: String? = null,
     val relatertPartAktørId: String? = null
 
-    ){
+) {
     fun avluttet(): Boolean {
         return behandlingStatus == BehandlingStatus.AVSLUTTET
     }
 
     data class FagsakPeriode(
-        val fom: LocalDate,
-        val tom: LocalDate
+        val fom: LocalDate, val tom: LocalDate
     )
 
 
 }
 
 data class OppgaveMedId(
-    val id: UUID,
-    val oppgave: Oppgave
+    val id: UUID, val oppgave: Oppgave
+)
+
+data class AksjonspunktTilstand(
+    val aksjonspunktKode: String,
+    val status: AksjonspunktStatus,
+    val venteårsak: String? = null,
+    val frist: LocalDateTime? = null
 )
