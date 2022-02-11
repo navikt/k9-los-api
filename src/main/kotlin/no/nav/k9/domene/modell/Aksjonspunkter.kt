@@ -41,18 +41,6 @@ data class Aksjonspunkter(
         return AksjonspunktDefWrapper.inneholderEtAktivtAksjonspunktMedKoden(this.liste, def)
     }
 
-    fun alleAktiveAksjonspunktTaBortPunsj(): Aksjonspunkter {
-        return Aksjonspunkter(
-            liste.filter { entry -> entry.value == AKTIV }
-                .filter { entry ->
-                    !AksjonspunktDefWrapper.aksjonspunkterFraPunsj().map { it.kode }.contains(entry.key)
-                },
-            apTilstander
-                .filter { it.status == AksjonspunktStatus.OPPRETTET }
-                .filter { entry -> !AksjonspunktDefWrapper.aksjonspunkterFraPunsj().map { it.kode }.contains(entry.aksjonspunktKode) }
-        )
-    }
-
     fun harInaktivtAksjonspunkt(def: AksjonspunktDefinisjon): Boolean {
         return AksjonspunktDefWrapper.inneholderEtInaktivtAksjonspunktMedKoden(this.liste, def)
     }
