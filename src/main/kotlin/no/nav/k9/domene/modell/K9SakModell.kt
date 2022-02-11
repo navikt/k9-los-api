@@ -1,6 +1,5 @@
 package no.nav.k9.domene.modell
 
-import no.nav.k9.domene.lager.oppgave.AksjonspunktTilstand
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.repository.ReservasjonRepository
 import no.nav.k9.domene.repository.SaksbehandlerRepository
@@ -23,8 +22,6 @@ import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon.VUR
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon.VURDER_VARIG_ENDRET_ELLER_NYOPPSTARTET_NÆRING_SELVSTENDIG_NÆRINGSDRIVENDE_KODE
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon.VURDER_ÅRSKVANTUM_KVOTE
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
-import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import no.nav.k9.statistikk.kontrakter.Aktør
 import no.nav.k9.statistikk.kontrakter.Behandling
 import no.nav.k9.statistikk.kontrakter.Sak
@@ -33,7 +30,6 @@ import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.util.*
 import kotlin.math.min
-import no.nav.k9.domene.modell.AksjonspunktStatus as AksjonspunktStatusLos
 
 data class K9SakModell(
     val eventer: MutableList<BehandlingProsessEventDto>
@@ -45,7 +41,7 @@ data class K9SakModell(
     }
 
     fun oppgave(sisteEvent: BehandlingProsessEventDto = sisteEvent()): Oppgave {
-        val eventResultat = sisteEvent.aktiveAksjonspunkter().eventResultat()
+        val eventResultat = sisteEvent.tilAktiveAksjonspunkter().eventResultat()
         var aktiv = true
         var oppgaveAvsluttet: LocalDateTime? = null
 
@@ -84,7 +80,7 @@ data class K9SakModell(
             oppgaveAvsluttet = oppgaveAvsluttet,
             system = sisteEvent.fagsystem.name,
             oppgaveEgenskap = emptyList(),
-            aksjonspunkter = sisteEvent.aksjonspunktKoderMedStatusListe.tilAksjonspunkter(),
+            aksjonspunkter = sisteEvent.tilAksjonspunkter(),
             utenlands = erUtenlands(sisteEvent),
             tilBeslutter = eventResultat.beslutterOppgave(),
             selvstendigFrilans = erSelvstendigNæringsdrivndeEllerFrilanser(sisteEvent),
@@ -110,38 +106,38 @@ data class K9SakModell(
     }
 
     private fun avklarMedlemskap(event: BehandlingProsessEventDto): Boolean {
-        return event.aksjonspunktKoderMedStatusListe.tilAksjonspunkter().hentAktive().any { entry ->
+        return event.tilAksjonspunkter().hentAktive().any { entry ->
             (entry.key == AVKLAR_FORTSATT_MEDLEMSKAP_KODE)
         }
     }
 
     private fun avklarArbeidsforhold(event: BehandlingProsessEventDto): Boolean {
-        return event.aksjonspunktKoderMedStatusListe.tilAksjonspunkter().hentAktive().any { entry ->
+        return event.tilAksjonspunkter().hentAktive().any { entry ->
             (entry.key == VURDER_ARBEIDSFORHOLD_KODE)
         }
     }
 
     private fun vurderopptjeningsvilkåret(event: BehandlingProsessEventDto): Boolean {
-        return event.aksjonspunktKoderMedStatusListe.tilAksjonspunkter().hentAktive().any { entry ->
+        return event.tilAksjonspunkter().hentAktive().any { entry ->
             (entry.key == VURDER_OPPTJENINGSVILKÅRET_KODE || entry.key == VURDER_PERIODER_MED_OPPTJENING_KODE || entry.key == OVERSTYRING_AV_OPPTJENINGSVILKÅRET_KODE)
         }
     }
 
     private fun erÅrskvantum(event: BehandlingProsessEventDto): Boolean {
-        return event.aksjonspunktKoderMedStatusListe.tilAksjonspunkter().hentAktive().any { entry ->
+        return event.tilAksjonspunkter().hentAktive().any { entry ->
             (entry.key == VURDER_ÅRSKVANTUM_KVOTE)
         }
     }
 
     private fun erUtenlands(event: BehandlingProsessEventDto): Boolean {
-        return event.aksjonspunktKoderMedStatusListe.tilAksjonspunkter().hentAktive().any { entry ->
+        return event.tilAksjonspunkter().hentAktive().any { entry ->
             (entry.key == AUTOMATISK_MARKERING_AV_UTENLANDSSAK_KODE
                     || entry.key == MANUELL_MARKERING_AV_UTLAND_SAKSTYPE_KODE) && entry.value != AksjonspunktStatus.AVBRUTT.kode
         }
     }
 
     private fun erSelvstendigNæringsdrivndeEllerFrilanser(event: BehandlingProsessEventDto): Boolean {
-        return event.aksjonspunktKoderMedStatusListe.tilAksjonspunkter().hentAktive().any { entry ->
+        return event.tilAksjonspunkter().hentAktive().any { entry ->
             (
                     entry.key == FASTSETT_BEREGNINGSGRUNNLAG_ARBEIDSTAKER_FRILANS_KODE ||
                             entry.key == VURDER_VARIG_ENDRET_ELLER_NYOPPSTARTET_NÆRING_SELVSTENDIG_NÆRINGSDRIVENDE_KODE ||
@@ -337,19 +333,19 @@ data class K9SakModell(
 
         if (sisteEvent().ytelseTypeKode == "PSB") {
             // har blitt beslutter
-            if (!forrigeEvent.alleAksjonspunkter().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK) &&
-                sisteEvent().alleAksjonspunkter().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)
+            if (!forrigeEvent.tilAksjonspunkter().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK) &&
+                sisteEvent().tilAksjonspunkter().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)
             ) {
                 return true
             }
             // har blitt satt på vent
-            if (sisteEvent().alleAksjonspunkter().påVent()) {
+            if (sisteEvent().tilAksjonspunkter().påVent()) {
                 return true
             }
 
             // beslutter har gjort seg ferdig
-            if (forrigeEvent.alleAksjonspunkter().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK) &&
-                sisteEvent().alleAksjonspunkter().harInaktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)
+            if (forrigeEvent.tilAksjonspunkter().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK) &&
+                sisteEvent().tilAksjonspunkter().harInaktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)
             ) {
                 return true
             }
@@ -357,23 +353,25 @@ data class K9SakModell(
             return false
         } else {
             // har blitt beslutter
-            if (!forrigeEvent.alleAksjonspunkter().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK) &&
-                sisteEvent().alleAksjonspunkter().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)
+            if (!forrigeEvent.tilAksjonspunkter().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK) &&
+                sisteEvent().tilAksjonspunkter().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)
             ) {
                 return true
             }
 
             // beslutter har gjort seg ferdig
-            if (forrigeEvent.alleAksjonspunkter().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK) &&
-                sisteEvent().alleAksjonspunkter().harInaktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)
+            if (forrigeEvent.tilAksjonspunkter().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK) &&
+                sisteEvent().tilAksjonspunkter().harInaktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)
             ) {
                 return true
             }
 
-            val forrigeAksjonspunkter = forrigeEvent.alleAksjonspunkter().hentAktive()
-            val nåværendeAksjonspunkter = sisteEvent().alleAksjonspunkter().hentAktive()
+            val forrigeAksjonspunkter = forrigeEvent.tilAksjonspunkter().hentAktive()
+            val nåværendeAksjonspunkter = sisteEvent().tilAksjonspunkter().hentAktive()
 
-            if (sisteEvent().aktiveAksjonspunkter().hentLengde() > 0 && !sisteEvent().aktiveAksjonspunkter().tilBeslutter()) {
+            if (sisteEvent().tilAktiveAksjonspunkter().hentLengde() > 0 && !sisteEvent().tilAktiveAksjonspunkter()
+                    .tilBeslutter()
+            ) {
                 return false
             }
             return forrigeAksjonspunkter != nåværendeAksjonspunkter
@@ -393,10 +391,4 @@ data class K9SakModell(
 
 }
 
-fun BehandlingProsessEventDto.alleAksjonspunkter(): Aksjonspunkter {
-    return this.aksjonspunktKoderMedStatusListe.tilAksjonspunkter()
-}
 
-fun BehandlingProsessEventDto.aktiveAksjonspunkter(): Aksjonspunkter {
-    return this.aksjonspunktKoderMedStatusListe.tilAktiveAksjonspunkter()
-}

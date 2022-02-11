@@ -1,5 +1,6 @@
 package no.nav.k9.domene.modell
 
+import no.nav.k9.domene.lager.oppgave.AksjonspunktTilstand
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.repository.ReservasjonRepository
 import no.nav.k9.domene.repository.SaksbehandlerRepository
@@ -26,7 +27,8 @@ data class K9TilbakeModell(
     }
 
     fun oppgave(sisteEvent: BehandlingProsessEventTilbakeDto): Oppgave {
-        val eventResultat = sisteEvent.aktiveAksjonspunkt().eventResultatTilbake()
+        val aktiveAksjonspunkt = sisteEvent.aktiveAksjonspunkt()
+        val eventResultat = aktiveAksjonspunkt.eventResultatTilbake()
         var aktiv = true
         var oppgaveAvsluttet: LocalDateTime? = null
 
@@ -65,7 +67,7 @@ data class K9TilbakeModell(
             oppgaveAvsluttet = oppgaveAvsluttet,
             system = sisteEvent.fagsystem,
             oppgaveEgenskap = emptyList(),
-            aksjonspunkter = Aksjonspunkter(sisteEvent.aktiveAksjonspunkt().liste, emptyList()),
+            aksjonspunkter = Aksjonspunkter(aktiveAksjonspunkt.liste, aktiveAksjonspunkt.liste.map { AksjonspunktTilstand(it.key, AksjonspunktStatus.fraKode(it.value)) }),
             utenlands = false,
             tilBeslutter = eventResultat.beslutterOppgave(),
             selvstendigFrilans = false,

@@ -137,8 +137,7 @@ class NokkeltallTjeneste constructor(
 }
 
 private fun Aksjonspunkter.aktivAutopunkt(): AksjonspunktTilstand? {
-    if (this.apTilstander == null) return null
-    return this.apTilstander.first {
+    return this.apTilstander.firstOrNull {
         it.status == AksjonspunktStatus.OPPRETTET
                 && it.erAutopunkt()
                 && it.venteårsak != null }
