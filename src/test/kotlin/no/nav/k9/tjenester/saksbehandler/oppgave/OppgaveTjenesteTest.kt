@@ -7,9 +7,9 @@ import assertk.assertions.isNull
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.AbstractPostgresTest
 import no.nav.k9.buildAndTestConfig
-import no.nav.k9.domene.lager.oppgave.AksjonspunktTilstand
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.modell.AksjonspunktStatus
+import no.nav.k9.domene.modell.AksjonspunktTilstand
 import no.nav.k9.domene.modell.Aksjonspunkter
 import no.nav.k9.domene.modell.BehandlingStatus
 import no.nav.k9.domene.modell.BehandlingType

@@ -1,6 +1,5 @@
 package no.nav.k9.domene.modell
 
-import no.nav.k9.domene.lager.oppgave.AksjonspunktTilstand
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.repository.ReservasjonRepository
 import no.nav.k9.domene.repository.SaksbehandlerRepository

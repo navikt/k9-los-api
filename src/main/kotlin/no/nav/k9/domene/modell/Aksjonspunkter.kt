@@ -1,11 +1,11 @@
 package no.nav.k9.domene.modell
 
-import no.nav.k9.domene.lager.oppgave.AksjonspunktTilstand
 import no.nav.k9.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.integrasjon.kafka.dto.PunsjEventDto
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
+import java.time.LocalDateTime
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus as AksjonspunktStatusK9
 
 data class Aksjonspunkter(
@@ -73,6 +73,13 @@ data class Aksjonspunkter(
         private const val AKTIV = "OPPR"
     }
 }
+
+data class AksjonspunktTilstand(
+    val aksjonspunktKode: String,
+    val status: AksjonspunktStatus,
+    val venteårsak: String? = null,
+    val frist: LocalDateTime? = null
+)
 
 internal fun BehandlingProsessEventDto.tilAksjonspunkter(): Aksjonspunkter {
     return Aksjonspunkter(

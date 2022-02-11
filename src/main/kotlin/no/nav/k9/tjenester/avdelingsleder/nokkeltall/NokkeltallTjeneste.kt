@@ -1,7 +1,8 @@
 package no.nav.k9.tjenester.avdelingsleder.nokkeltall
 
-import no.nav.k9.domene.lager.oppgave.AksjonspunktTilstand
+import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.modell.AksjonspunktStatus
+import no.nav.k9.domene.modell.AksjonspunktTilstand
 import no.nav.k9.domene.modell.Aksjonspunkter
 import no.nav.k9.domene.modell.BehandlingType
 import no.nav.k9.domene.modell.FagsakYtelseType
@@ -10,6 +11,7 @@ import no.nav.k9.domene.repository.OppgaveRepository
 import no.nav.k9.domene.repository.StatistikkRepository
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import java.time.LocalDate
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak as VenteårsakK9Sak
 
 class NokkeltallTjeneste constructor(
     private val oppgaveRepository: OppgaveRepository,
@@ -32,36 +34,69 @@ class NokkeltallTjeneste constructor(
 
     fun hentOppgaverPåVentV2(): OppgaverPåVentDto.PåVentResponse {
         val oppgaverPåVent = oppgaveRepository.hentAllePåVent()
+        val påVentPerBehandling = antallOppgaverPåVent(oppgaverPåVent)
+        val påVentPerVenteårsak = antallOppgaverPåVentMedÅrsak(oppgaverPåVent)
+        return OppgaverPåVentDto.PåVentResponse(påVentPerBehandling, påVentPerVenteårsak)
+    }
 
+    private fun antallOppgaverPåVent(oppgaverPåVent: List<Oppgave>): List<OppgaverPåVentDto.PerBehandlingDto> {
         data class PerBehandling(val f: FagsakYtelseType, val b: BehandlingType, val frist: LocalDate)
-        data class PerBehandlingVenteårsak(val f: FagsakYtelseType, val b: BehandlingType, val frist: LocalDate,
-                                           val venteårsak: String)
 
-        val påVentPerBehandling = oppgaverPåVent.groupingBy {
+        return oppgaverPåVent.groupingBy {
             PerBehandling(it.fagsakYtelseType, it.behandlingType, it.behandlingsfrist.toLocalDate())
-        }.eachCount().map { (vo, antall) ->  OppgaverPåVentDto.PerBehandlingDto(vo.f, vo.b, vo.frist, antall) }
+        }
+            .eachCount()
+            .map { (vo, antall) -> OppgaverPåVentDto.PerBehandlingDto(vo.f, vo.b, vo.frist, antall) }
+    }
 
-        val påVentPerVenteårsak = oppgaverPåVent.groupingBy {
+    private fun antallOppgaverPåVentMedÅrsak(oppgaverPåVent: List<Oppgave>): List<OppgaverPåVentDto.PerVenteårsakDto> {
+        data class PerVenteårsak(val f: FagsakYtelseType, val b: BehandlingType, val frist: LocalDate, val venteårsak: Venteårsak)
+
+        return oppgaverPåVent.groupingBy {
             val autopunkt = it.aksjonspunkter.aktivAutopunkt()
-            PerBehandlingVenteårsak(
+            PerVenteårsak(
                 it.fagsakYtelseType,
                 it.behandlingType,
                 autopunkt?.frist?.toLocalDate() ?: it.behandlingsfrist.toLocalDate(),
-                autopunkt?.venteårsak ?: "UKJENT") // TODO eget kodeverk?
-        }.eachCount()
+                autopunkt?.venteårsak?.tilVenteårsak() ?: Venteårsak.UKJENT
+            )
+        }
+            .eachCount()
             .map { (vo, antall) -> OppgaverPåVentDto.PerVenteårsakDto(vo.f, vo.b, vo.frist, vo.venteårsak, antall) }
-        return OppgaverPåVentDto.PåVentResponse(påVentPerBehandling, påVentPerVenteårsak)
     }
+
+    private fun String.tilVenteårsak(): Venteårsak =
+        when (this) {
+            VenteårsakK9Sak.AVV_DOK.kode
+            -> Venteårsak.AVV_DOK
+            VenteårsakK9Sak.VENT_MANGL_FUNKSJ_SAKSBEHANDLER.kode
+            -> Venteårsak.VENT_MANGL_FUNKSJ_SAKSBEHANDLER
+            VenteårsakK9Sak.AVV_DOK.kode,
+            VenteårsakK9Sak.UTV_FRIST.kode,
+            VenteårsakK9Sak.AVV_RESPONS_REVURDERING.kode,
+            VenteårsakK9Sak.FOR_TIDLIG_SOKNAD.kode,
+            VenteårsakK9Sak.VENT_PÅ_NY_INNTEKTSMELDING_MED_GYLDIG_ARB_ID.kode,
+            VenteårsakK9Sak.ANKE_VENTER_PAA_MERKNADER_FRA_BRUKER.kode,
+            VenteårsakK9Sak.ANKE_OVERSENDT_TIL_TRYGDERETTEN.kode,
+            VenteårsakK9Sak.VENT_OPDT_INNTEKTSMELDING.kode,
+            VenteårsakK9Sak.VENT_OPPTJENING_OPPLYSNINGER.kode,
+            VenteårsakK9Sak.VENT_MANGL_FUNKSJ_SAKSBEHANDLER.kode,
+            VenteårsakK9Sak.VENTER_SVAR_PORTEN.kode,
+            VenteårsakK9Sak.VENTER_SVAR_TEAMS.kode
+            -> Venteårsak.ANNET_MANUELT_SATT_PA_VENT
+            else
+            -> Venteårsak.AUTOMATISK_SATT_PA_VENT
+        }
 
     fun hentNyeFerdigstilteOppgaverOppsummering(): List<AlleOppgaverNyeOgFerdigstilteDto> {
         return statistikkRepository.hentFerdigstilteOgNyeHistorikkPerAntallDager(7).map {
             AlleOppgaverNyeOgFerdigstilteDto(
-                    it.fagsakYtelseType,
-                    it.behandlingType,
-                    it.dato,
-                    it.nye.size,
-                    it.ferdigstilteSaksbehandler.size,
-                    )
+                it.fagsakYtelseType,
+                it.behandlingType,
+                it.dato,
+                it.nye.size,
+                it.ferdigstilteSaksbehandler.size,
+            )
         }
     }
 
@@ -76,7 +111,10 @@ class NokkeltallTjeneste constructor(
     }
 
     enum class FerdigstiltHistorikkType { ENHET, YTELSETYPE }
-    fun hentFerdigstiltOppgavehistorikk(historikkType: List<FerdigstiltHistorikkType> = FerdigstiltHistorikkType.values().toList()): List<FerdigstillelseHistorikkEnhet> {
+
+    fun hentFerdigstiltOppgavehistorikk(
+        historikkType: List<FerdigstiltHistorikkType> = FerdigstiltHistorikkType.values().toList()
+    ): List<FerdigstillelseHistorikkEnhet> {
         val resultat = mutableMapOf<LocalDate, FerdigstillelseHistorikkEnhet>()
 
         if (historikkType.contains(FerdigstiltHistorikkType.ENHET)) {
@@ -110,25 +148,27 @@ class NokkeltallTjeneste constructor(
     }
 
     fun hentFerdigstilteSiste8Uker(): List<AlleOppgaverHistorikk> {
-        return statistikkRepository.hentFerdigstilteOgNyeHistorikkPerAntallDager(StatistikkRepository.SISTE_8_UKER_I_DAGER).map {
-            AlleOppgaverHistorikk(
+        return statistikkRepository.hentFerdigstilteOgNyeHistorikkPerAntallDager(StatistikkRepository.SISTE_8_UKER_I_DAGER)
+            .map {
+                AlleOppgaverHistorikk(
                     it.fagsakYtelseType,
                     it.behandlingType,
                     it.dato,
                     it.ferdigstilteSaksbehandler.size
-            )
-        }
+                )
+            }
     }
 
     fun hentNyeSiste8Uker(): List<AlleOppgaverHistorikk> {
-        return statistikkRepository.hentFerdigstilteOgNyeHistorikkPerAntallDager(StatistikkRepository.SISTE_8_UKER_I_DAGER).map {
-            AlleOppgaverHistorikk(
+        return statistikkRepository.hentFerdigstilteOgNyeHistorikkPerAntallDager(StatistikkRepository.SISTE_8_UKER_I_DAGER)
+            .map {
+                AlleOppgaverHistorikk(
                     it.fagsakYtelseType,
                     it.behandlingType,
                     it.dato,
                     it.nye.size
-            )
-        }
+                )
+            }
     }
 
     suspend fun hentDagensTall(): List<AlleApneBehandlinger> {
@@ -139,11 +179,10 @@ class NokkeltallTjeneste constructor(
 private fun Aksjonspunkter.aktivAutopunkt(): AksjonspunktTilstand? {
     return this.apTilstander.firstOrNull {
         it.status == AksjonspunktStatus.OPPRETTET
-                && it.erAutopunkt()
-                && it.venteårsak != null }
+                && AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode).erAutopunkt()
+                && it.venteårsak != null
+    }
 }
-
-private fun AksjonspunktTilstand.erAutopunkt() = AksjonspunktDefinisjon.fraKode(this.aksjonspunktKode).erAutopunkt()
 
 fun <T> Map<LocalDate, T>.fyllTommeDagerMedVerdi(verdi: T): Map<LocalDate, T> {
     val resultat = this.toSortedMap()

@@ -6,8 +6,9 @@ import io.mockk.every
 import io.mockk.mockk
 import no.nav.k9.AbstractPostgresTest
 import no.nav.k9.buildAndTestConfig
-import no.nav.k9.domene.lager.oppgave.AksjonspunktTilstand
 import no.nav.k9.domene.lager.oppgave.Oppgave
+import no.nav.k9.domene.modell.AksjonspunktStatus
+import no.nav.k9.domene.modell.AksjonspunktTilstand
 import no.nav.k9.domene.modell.Aksjonspunkter
 import no.nav.k9.domene.modell.BehandlingStatus
 import no.nav.k9.domene.modell.BehandlingType
@@ -107,7 +108,7 @@ class NokkeltallTjenesteTest : KoinTest, AbstractPostgresTest()  {
 
     private fun opprettOppgave(aksjonspunkter: Map<String, String>) {
         val oppgaveRepo = get<OppgaveRepository>()
-        val oppgave = mockOppgave().copy(aksjonspunkter = Aksjonspunkter(aksjonspunkter, aksjonspunkter.map { AksjonspunktTilstand(it.key, no.nav.k9.domene.modell.AksjonspunktStatus.fraKode(it.value)) }))
+        val oppgave = mockOppgave().copy(aksjonspunkter = Aksjonspunkter(aksjonspunkter, aksjonspunkter.map { AksjonspunktTilstand(it.key, AksjonspunktStatus.fraKode(it.value)) }))
         oppgaveRepo.lagre(oppgave.eksternId) {oppgave}
     }
 

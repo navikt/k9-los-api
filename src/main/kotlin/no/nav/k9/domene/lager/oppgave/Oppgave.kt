@@ -1,6 +1,5 @@
 package no.nav.k9.domene.lager.oppgave
 
-import no.nav.k9.domene.modell.AksjonspunktStatus
 import no.nav.k9.domene.modell.Aksjonspunkter
 import no.nav.k9.domene.modell.BehandlingStatus
 import no.nav.k9.domene.modell.BehandlingType
@@ -65,9 +64,3 @@ data class OppgaveMedId(
     val id: UUID, val oppgave: Oppgave
 )
 
-data class AksjonspunktTilstand(
-    val aksjonspunktKode: String,
-    val status: AksjonspunktStatus,
-    val venteårsak: String? = null,
-    val frist: LocalDateTime? = null
-)
