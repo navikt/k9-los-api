@@ -9,6 +9,8 @@ on:
       - '.gitignore'
       - 'LICENCE'
       - 'CODEOWNERS'
+      - 'alerts/*'
+      - '.github/workflows/deploy-alerts.yml'
 
 env:
   BASE_IMAGE: ghcr.io/${{ github.repository }}
