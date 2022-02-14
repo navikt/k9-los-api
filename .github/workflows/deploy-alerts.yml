@@ -5,6 +5,7 @@ on:
     paths:
       - 'alerts/*'
       - '!alerts/README.md'
+      - '.github/workflows/deploy-alerts.yml'
     branches:
       - master
 
