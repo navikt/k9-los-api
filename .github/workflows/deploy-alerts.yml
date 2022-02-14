@@ -1,0 +1,24 @@
+name: Deploy alerts to NAIS
+
+on:
+  push:
+    paths:
+      - 'alerts/*'
+      - '!alerts/README.md'
+    branches:
+      - master
+
+jobs:
+  deploy-to-dev-and-prod:
+    name: Deploy to ${{ matrix.cluster }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        cluster: [dev-fss, dev-gcp, prod-fss, prod-gcp]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: nais/deploy/actions/deploy@v1
+        env:
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          CLUSTER: ${{ matrix.cluster }}
+          RESOURCE: alerts/alerts-${{ matrix.cluster }}.yml
