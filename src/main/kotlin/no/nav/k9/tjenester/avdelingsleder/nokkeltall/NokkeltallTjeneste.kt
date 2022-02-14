@@ -71,7 +71,6 @@ class NokkeltallTjeneste constructor(
             -> Venteårsak.AVV_DOK
             VenteårsakK9Sak.VENT_MANGL_FUNKSJ_SAKSBEHANDLER.kode
             -> Venteårsak.VENT_MANGL_FUNKSJ_SAKSBEHANDLER
-            VenteårsakK9Sak.AVV_DOK.kode,
             VenteårsakK9Sak.UTV_FRIST.kode,
             VenteårsakK9Sak.AVV_RESPONS_REVURDERING.kode,
             VenteårsakK9Sak.FOR_TIDLIG_SOKNAD.kode,
@@ -80,7 +79,6 @@ class NokkeltallTjeneste constructor(
             VenteårsakK9Sak.ANKE_OVERSENDT_TIL_TRYGDERETTEN.kode,
             VenteårsakK9Sak.VENT_OPDT_INNTEKTSMELDING.kode,
             VenteårsakK9Sak.VENT_OPPTJENING_OPPLYSNINGER.kode,
-            VenteårsakK9Sak.VENT_MANGL_FUNKSJ_SAKSBEHANDLER.kode,
             VenteårsakK9Sak.VENTER_SVAR_PORTEN.kode,
             VenteårsakK9Sak.VENTER_SVAR_TEAMS.kode
             -> Venteårsak.ANNET_MANUELT_SATT_PA_VENT
