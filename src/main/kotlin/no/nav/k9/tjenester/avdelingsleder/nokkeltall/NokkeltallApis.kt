@@ -52,18 +52,15 @@ fun Route.NokkeltallApis() {
         call.respond(nokkeltallTjeneste.hentFerdigstilteSiste8Uker())
     }
 
-    @Location("/ferdigstilte-enhet-historikk")
-    class HentFerdigstilteEnhet
+    @Location("/aksjonspunkter-per-enhet-historikk")
+    class HentFullførteDeloppgaverPrEnhetOgYtelse
 
-    get { _: HentFerdigstilteEnhet ->
-        val historikk = nokkeltallTjeneste.hentFerdigstilteOppgavePrEnhetHistorikk()
-            .map {
-                FerdigstillelseHistorikkEnhetDto(
-                    dato = it.key,
-                    behandlendeEnhet = it.value.map { (enhet, antall) ->
-                        FerdigstillelseHistorikkEnhetDto.AntallPrEnhet(enhet, antall)
-                    })
-        }
+    get { _: HentFullførteDeloppgaverPrEnhetOgYtelse ->
+        val historikk = nokkeltallTjeneste.hentFerdigstilteDeloppgaverHistorikk(
+            VelgbartHistorikkfelt.DATO,
+            VelgbartHistorikkfelt.ENHET,
+            VelgbartHistorikkfelt.YTELSETYPE
+        )
         call.respond(historikk)
     }
 

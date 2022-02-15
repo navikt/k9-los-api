@@ -17,6 +17,7 @@ class NokkeltallTjeneste constructor(
     private val oppgaveRepository: OppgaveRepository,
     private val statistikkRepository: StatistikkRepository
 ) {
+    val EnheterSomSkalUtelatesFraStatistikk = setOf("2103")
 
     suspend fun hentOppgaverUnderArbeid(): List<AlleOppgaverDto> {
         return oppgaveRepository.hentAlleOppgaverUnderArbeid()
@@ -98,25 +99,29 @@ class NokkeltallTjeneste constructor(
         }
     }
 
-    fun hentFerdigstilteOppgavePrEnhetHistorikk(): Map<LocalDate, Map<String, Int>> {
-        val enheterSomSkalUtelatesFraStatistikk = setOf("2103")
+    fun hentFerdigstilteDeloppgaverHistorikk(
+        vararg historikkType: VelgbartHistorikkfelt
+    ): List<HistorikkElementAntall> {
         return statistikkRepository.hentFerdigstiltOppgavehistorikk(antallDagerHistorikk = StatistikkRepository.SISTE_8_UKER_I_DAGER)
-            .filterNot { enheterSomSkalUtelatesFraStatistikk.contains(it.behandlendeEnhet) }
+            .filterNot { EnheterSomSkalUtelatesFraStatistikk.contains(it.behandlendeEnhet) }
+            .feltSelector(*historikkType)
+}
+
+
+    fun hentFerdigstilteBehandlingerPrEnhetHistorikk(): Map<LocalDate, Map<String, Int>> {
+        return statistikkRepository.hentFerdigstiltOppgavehistorikk(antallDagerHistorikk = StatistikkRepository.SISTE_8_UKER_I_DAGER)
+            .filterNot { EnheterSomSkalUtelatesFraStatistikk.contains(it.behandlendeEnhet) }
             .groupBy { it.dato }
             .mapValues { (_, ferdigstiltOppgave) ->
                 ferdigstiltOppgave.groupBy { it.behandlendeEnhet }.mapValues { it.value.size }
             }.fyllTommeDagerMedVerdi(emptyMap())
     }
 
-    enum class FerdigstiltHistorikkType { ENHET, YTELSETYPE }
-
-    fun hentFerdigstiltOppgavehistorikk(
-        historikkType: List<FerdigstiltHistorikkType> = FerdigstiltHistorikkType.values().toList()
-    ): List<FerdigstillelseHistorikkEnhet> {
+    fun hentFerdigstiltOppgavehistorikk(historikkType: List<VelgbartHistorikkfelt> = VelgbartHistorikkfelt.values().toList()): List<FerdigstillelseHistorikkEnhet> {
         val resultat = mutableMapOf<LocalDate, FerdigstillelseHistorikkEnhet>()
 
-        if (historikkType.contains(FerdigstiltHistorikkType.ENHET)) {
-            hentFerdigstilteOppgavePrEnhetHistorikk()
+        if (historikkType.contains(VelgbartHistorikkfelt.ENHET)) {
+            hentFerdigstilteBehandlingerPrEnhetHistorikk()
                 .mapValues {
                     FerdigstillelseHistorikkEnhet(
                         dato = it.key,
@@ -126,7 +131,7 @@ class NokkeltallTjeneste constructor(
                 }.run { resultat.putAll(this) }
         }
 
-        if (historikkType.contains(FerdigstiltHistorikkType.YTELSETYPE)) {
+        if (historikkType.contains(VelgbartHistorikkfelt.YTELSETYPE)) {
             hentFerdigstilteSiste8Uker()
                 .groupBy { it.dato }
                 .mapValues {
