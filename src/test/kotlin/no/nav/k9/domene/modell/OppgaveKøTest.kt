@@ -51,7 +51,7 @@ internal class OppgaveKøTest {
             utfortFraAdmin = false,
             eksternId = UUID.randomUUID(),
             oppgaveEgenskap = emptyList(),
-            aksjonspunkter = Aksjonspunkter(emptyMap()),
+            aksjonspunkter = Aksjonspunkter(emptyMap(), emptyList()),
             tilBeslutter = false,
             utbetalingTilBruker = false,
             selvstendigFrilans = false,

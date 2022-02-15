@@ -2,6 +2,7 @@ package no.nav.k9.domene.modell
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonFormat
+import com.fasterxml.jackson.annotation.JsonValue
 import no.nav.k9.domene.lager.oppgave.Kodeverdi
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
@@ -170,4 +171,18 @@ enum class Fagsystem(val kode: String, val kodeverk: String) {
     }
 }
 
+enum class AksjonspunktStatus(@JsonValue val kode: String, val navn: String) {
+    AVBRUTT ("AVBR", "Avbrutt"),
+    OPPRETTET("OPPR", "Opprettet"),
+    UTFØRT ("UTFO", "Utført");
 
+    companion object {
+        private val KODER = values().associateBy { it.kode }
+
+        @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
+        @JvmStatic
+        fun fraKode(kode: String): AksjonspunktStatus {
+            return KODER[kode] ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
+        }
+    }
+}

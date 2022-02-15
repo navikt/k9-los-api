@@ -26,7 +26,8 @@ data class K9TilbakeModell(
     }
 
     fun oppgave(sisteEvent: BehandlingProsessEventTilbakeDto): Oppgave {
-        val eventResultat = sisteEvent.aktiveAksjonspunkt().eventResultatTilbake()
+        val aktiveAksjonspunkt = sisteEvent.aktiveAksjonspunkt()
+        val eventResultat = aktiveAksjonspunkt.eventResultatTilbake()
         var aktiv = true
         var oppgaveAvsluttet: LocalDateTime? = null
 
@@ -65,7 +66,7 @@ data class K9TilbakeModell(
             oppgaveAvsluttet = oppgaveAvsluttet,
             system = sisteEvent.fagsystem,
             oppgaveEgenskap = emptyList(),
-            aksjonspunkter = Aksjonspunkter(sisteEvent.aktiveAksjonspunkt().liste),
+            aksjonspunkter = Aksjonspunkter(aktiveAksjonspunkt.liste, aktiveAksjonspunkt.liste.map { AksjonspunktTilstand(it.key, AksjonspunktStatus.fraKode(it.value)) }),
             utenlands = false,
             tilBeslutter = eventResultat.beslutterOppgave(),
             selvstendigFrilans = false,

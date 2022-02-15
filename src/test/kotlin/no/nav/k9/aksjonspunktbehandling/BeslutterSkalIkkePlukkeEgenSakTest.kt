@@ -4,7 +4,15 @@ import kotlinx.coroutines.runBlocking
 import no.nav.k9.AbstractPostgresTest
 import no.nav.k9.buildAndTestConfig
 import no.nav.k9.domene.lager.oppgave.Oppgave
-import no.nav.k9.domene.modell.*
+import no.nav.k9.domene.modell.AksjonspunktStatus
+import no.nav.k9.domene.modell.AksjonspunktTilstand
+import no.nav.k9.domene.modell.Aksjonspunkter
+import no.nav.k9.domene.modell.BehandlingStatus
+import no.nav.k9.domene.modell.BehandlingType
+import no.nav.k9.domene.modell.Enhet
+import no.nav.k9.domene.modell.FagsakYtelseType
+import no.nav.k9.domene.modell.KøSortering
+import no.nav.k9.domene.modell.OppgaveKø
 import no.nav.k9.domene.repository.OppgaveKøRepository
 import no.nav.k9.domene.repository.OppgaveRepository
 import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveTjeneste
@@ -51,7 +59,10 @@ class BeslutterSkalIkkePlukkeEgenSakTest : KoinTest, AbstractPostgresTest()  {
             utfortFraAdmin = false,
             eksternId = UUID.randomUUID(),
             oppgaveEgenskap = listOf(),
-            aksjonspunkter = Aksjonspunkter(liste = mapOf("5016" to "OPPR")),
+            aksjonspunkter = Aksjonspunkter(
+                liste = mapOf("5016" to "OPPR"),
+                apTilstander = listOf(AksjonspunktTilstand("5016", AksjonspunktStatus.OPPRETTET, null, null))
+            ),
             tilBeslutter = true,
             utbetalingTilBruker = false,
             selvstendigFrilans = false,

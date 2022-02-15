@@ -1,20 +1,30 @@
 package no.nav.k9.domene.modell
 
+import no.nav.k9.integrasjon.kafka.dto.BehandlingProsessEventDto
+import no.nav.k9.integrasjon.kafka.dto.PunsjEventDto
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
+import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
+import java.time.LocalDateTime
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus as AksjonspunktStatusK9
 
 data class Aksjonspunkter(
     // ikke bruk denne direkte gå via hentAlle eller hentAktive
-    val liste: Map<String, String>
+    val liste: Map<String, String>,
+    val apTilstander: List<AksjonspunktTilstand> = emptyList()
 ) {
     fun hentLengde(): Int {
         return liste.filter { entry -> entry.value == AKTIV }.size
     }
+
     fun hentAlle(): Map<String, String> {
         return liste
     }
+
     fun hentAktive(): Map<String, String> {
         return liste.filter { entry -> entry.value == AKTIV }
     }
+
     fun påVent(): Boolean {
         return AksjonspunktDefWrapper.påVent(this.liste)
     }
@@ -29,15 +39,6 @@ data class Aksjonspunkter(
 
     fun harAktivtAksjonspunkt(def: AksjonspunktDefinisjon): Boolean {
         return AksjonspunktDefWrapper.inneholderEtAktivtAksjonspunktMedKoden(this.liste, def)
-    }
-
-    fun alleAktiveAksjonspunktTaBortPunsj(): Aksjonspunkter {
-        return Aksjonspunkter(
-            liste.filter { entry -> entry.value == AKTIV }
-                .filter { entry ->
-                    !AksjonspunktDefWrapper.aksjonspunkterFraPunsj().map { it.kode }.contains(entry.key)
-                }
-        )
     }
 
     fun harInaktivtAksjonspunkt(def: AksjonspunktDefinisjon): Boolean {
@@ -73,11 +74,45 @@ data class Aksjonspunkter(
     }
 }
 
-internal fun MutableMap<String, String>.tilAksjonspunkter() : Aksjonspunkter{
-    return Aksjonspunkter(this)
+data class AksjonspunktTilstand(
+    val aksjonspunktKode: String,
+    val status: AksjonspunktStatus,
+    val venteårsak: String? = null,
+    val frist: LocalDateTime? = null
+)
+
+internal fun BehandlingProsessEventDto.tilAksjonspunkter(): Aksjonspunkter {
+    return Aksjonspunkter(
+        this.aksjonspunktKoderMedStatusListe,
+        this.aksjonspunktTilstander.map { it.tilModell() })
 }
 
-internal fun MutableMap<String, String>.tilAktiveAksjonspunkter() : Aksjonspunkter{
-    return Aksjonspunkter(this.filter { it.value == "OPPR" })
+internal fun BehandlingProsessEventDto.tilAktiveAksjonspunkter(): Aksjonspunkter {
+    return Aksjonspunkter(
+        this.aksjonspunktKoderMedStatusListe.filter { it.value == AksjonspunktStatus.OPPRETTET.kode },
+        this.aksjonspunktTilstander.filter { it.status == AksjonspunktStatusK9.OPPRETTET }.map { it.tilModell() })
+}
+
+private fun AksjonspunktTilstandDto.tilModell() = AksjonspunktTilstand(
+    this.aksjonspunktKode,
+    AksjonspunktStatus.fraKode(this.status.kode),
+    if (this.venteårsak == Venteårsak.UDEFINERT) null else this.venteårsak.kode,
+    this.fristTid
+)
+
+internal fun PunsjEventDto.tilAksjonspunkter(): Aksjonspunkter {
+    return Aksjonspunkter(
+        this.aksjonspunktKoderMedStatusListe,
+        this.aksjonspunktKoderMedStatusListe.map { AksjonspunktTilstand(it.key, AksjonspunktStatus.fraKode(it.value)) })
+}
+
+internal fun PunsjEventDto.tilAktiveAksjonspunkter(): Aksjonspunkter {
+    return this.aksjonspunktKoderMedStatusListe
+        .filter { it.value == AksjonspunktStatus.OPPRETTET.kode }
+        .let {
+            Aksjonspunkter(
+                it,
+                it.map { aktiv -> AksjonspunktTilstand(aktiv.key, AksjonspunktStatus.fraKode(aktiv.value)) })
+        }
 }
 

@@ -468,62 +468,42 @@ class OppgaveTjeneste constructor(
             }
         val person = pdlService.person(oppgave.aktorId)
 
-        if (oppgave.system == "PUNSJ") {
-            return OppgaveDto(
-                status = oppgaveStatus,
-                behandlingId = oppgave.behandlingId,
-                journalpostId = oppgave.journalpostId,
-                saksnummer = oppgave.fagsakSaksnummer,
-                navn = person.person?.navn() ?: "Ukjent navn",
-                system = oppgave.system,
-                personnummer = if (person.person != null) {
-                    person.person.fnr()
-                } else {
-                    "Ukjent fnummer"
-                },
-                behandlingstype = oppgave.behandlingType,
-                fagsakYtelseType = oppgave.fagsakYtelseType,
-                behandlingStatus = oppgave.behandlingStatus,
-                erTilSaksbehandling = oppgave.aktiv,
-                opprettetTidspunkt = oppgave.behandlingOpprettet,
-                behandlingsfrist = oppgave.behandlingsfrist,
-                eksternId = oppgave.eksternId,
-                tilBeslutter = oppgave.tilBeslutter,
-                utbetalingTilBruker = oppgave.utbetalingTilBruker,
-                selvstendigFrilans = oppgave.selvstendigFrilans,
-                søktGradering = oppgave.søktGradering,
-                avklarArbeidsforhold = oppgave.avklarArbeidsforhold,
-                fagsakPeriode = oppgave.fagsakPeriode,
-                paaVent = if (oppgave.aksjonspunkter.hentAktive()["MER_INFORMASJON"] != null) oppgave.aksjonspunkter.hentAktive()["MER_INFORMASJON"] == "OPPR" else false
-            )
+        return if (oppgave.system == "PUNSJ") {
+            val paaVent = oppgave.aksjonspunkter.hentAktive()["MER_INFORMASJON"]?.let { it == "OPPR" } == true
+            oppgave.tilDto(oppgaveStatus, person, paaVent)
         } else {
-            return OppgaveDto(
-                status = oppgaveStatus,
-                behandlingId = oppgave.behandlingId,
-                journalpostId = oppgave.journalpostId,
-                saksnummer = oppgave.fagsakSaksnummer,
-                navn = person.person?.navn() ?: "Ukjent navn",
-                system = oppgave.system,
-                personnummer = if (person.person != null) {
-                    person.person.fnr()
-                } else {
-                    "Ukjent fnummer"
-                },
-                behandlingstype = oppgave.behandlingType,
-                fagsakYtelseType = oppgave.fagsakYtelseType,
-                behandlingStatus = oppgave.behandlingStatus,
-                erTilSaksbehandling = oppgave.aktiv,
-                opprettetTidspunkt = oppgave.behandlingOpprettet,
-                behandlingsfrist = oppgave.behandlingsfrist,
-                eksternId = oppgave.eksternId,
-                tilBeslutter = oppgave.tilBeslutter,
-                utbetalingTilBruker = oppgave.utbetalingTilBruker,
-                selvstendigFrilans = oppgave.selvstendigFrilans,
-                søktGradering = oppgave.søktGradering,
-                avklarArbeidsforhold = oppgave.avklarArbeidsforhold,
-                fagsakPeriode = oppgave.fagsakPeriode
-            )
+            oppgave.tilDto(oppgaveStatus, person)
         }
+    }
+
+    private fun Oppgave.tilDto(oppgaveStatus: OppgaveStatusDto, person: PersonPdlResponse, paaVent: Boolean? = null): OppgaveDto {
+        return OppgaveDto(
+            status = oppgaveStatus,
+            behandlingId = this.behandlingId,
+            journalpostId = this.journalpostId,
+            saksnummer = this.fagsakSaksnummer,
+            navn = person.person?.navn() ?: "Ukjent navn",
+            system = this.system,
+            personnummer = if (person.person != null) {
+                person.person.fnr()
+            } else {
+                "Ukjent fnummer"
+            },
+            behandlingstype = this.behandlingType,
+            fagsakYtelseType = this.fagsakYtelseType,
+            behandlingStatus = this.behandlingStatus,
+            erTilSaksbehandling = this.aktiv,
+            opprettetTidspunkt = this.behandlingOpprettet,
+            behandlingsfrist = this.behandlingsfrist,
+            eksternId = this.eksternId,
+            tilBeslutter = this.tilBeslutter,
+            utbetalingTilBruker = this.utbetalingTilBruker,
+            selvstendigFrilans = this.selvstendigFrilans,
+            søktGradering = this.søktGradering,
+            avklarArbeidsforhold = this.avklarArbeidsforhold,
+            fagsakPeriode = this.fagsakPeriode,
+            paaVent = paaVent
+        )
     }
 
     suspend fun hentOppgaverFraListe(saksnummere: List<String>): List<OppgaveDto> {

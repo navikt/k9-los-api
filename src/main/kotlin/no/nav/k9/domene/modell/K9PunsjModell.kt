@@ -64,7 +64,7 @@ data class K9PunsjModell(
     }
 
     private fun PunsjEventDto.aksjonspunkter(): Aksjonspunkter {
-        return this.aksjonspunktKoderMedStatusListe.tilAksjonspunkter()
+        return this.tilAksjonspunkter()
     }
 
     fun oppgave(sisteEvent: PunsjEventDto = sisteEvent()): Oppgave {
@@ -96,7 +96,7 @@ data class K9PunsjModell(
             utfortFraAdmin = false,
             eksternId = sisteEvent.eksternId,
             oppgaveEgenskap = listOf(),
-            aksjonspunkter = sisteEvent.aksjonspunktKoderMedStatusListe.tilAktiveAksjonspunkter(),
+            aksjonspunkter = sisteEvent.tilAktiveAksjonspunkter(),
             tilBeslutter = false,
             utbetalingTilBruker = false,
             selvstendigFrilans = false,

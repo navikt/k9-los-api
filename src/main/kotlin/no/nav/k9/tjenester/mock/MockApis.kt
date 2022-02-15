@@ -175,7 +175,8 @@ fun Route.MockGrensesnitt() {
                     behandlingSteg = "",
                     opprettetBehandling = LocalDateTime.now(),
                     behandlingTypeKode = "BT-004",
-                    ytelseTypeKode = "OMP"
+                    ytelseTypeKode = "OMP",
+                    aksjonspunktTilstander = emptyList()
                 )
             } else {
                 val sisteEvent = modell.sisteEvent()
@@ -196,7 +197,8 @@ fun Route.MockGrensesnitt() {
                     behandlingSteg = "",
                     opprettetBehandling = LocalDateTime.now(),
                     behandlingTypeKode = "BT-004",
-                    ytelseTypeKode = sisteEvent.ytelseTypeKode
+                    ytelseTypeKode = sisteEvent.ytelseTypeKode,
+                    aksjonspunktTilstander = emptyList()
                 )
             }
             k9sakEventHandler.prosesser(event)
@@ -229,7 +231,8 @@ fun Route.MockGrensesnitt() {
                     behandlingSteg = "",
                     opprettetBehandling = LocalDateTime.now(),
                     behandlingTypeKode = "BT-004",
-                    ytelseTypeKode = "OMP"
+                    ytelseTypeKode = "OMP",
+                    aksjonspunktTilstander = emptyList() // TODO skal være lik aksjonspunktKoderMedStatus
                 )
 
             k9sakEventHandler.prosesser(event)
