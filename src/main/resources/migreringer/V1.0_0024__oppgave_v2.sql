@@ -4,9 +4,7 @@ CREATE TABLE if not exists BEHANDLING
      ekstern_referanse           VARCHAR(36)     NOT NULL,
      fagsystem                   VARCHAR(20)     NOT NULL,
      ytelse_type                 VARCHAR(20)     NOT NULL,
---      totrinn_paakrevd            BOOLEAN         NULL,
---      totrinn_utfoert             BOOLEAN         NULL,
---      totrinn_ansvarlig_ident     VARCHAR(20)     NULL,
+     ferdigstilt_tidspunkt       TIMESTAMP       NULL,
      soekers_id                  VARCHAR(20)     NULL,
      kode6                       BOOLEAN         NULL,
      skjermet                    BOOLEAN NULL
@@ -18,12 +16,12 @@ CREATE TABLE if not exists DELOPPGAVE(
     ekstern_referanse           VARCHAR(36)     NOT NULL,
     oppgave_status              VARCHAR(20)     NOT NULL,
     oppgave_kode                VARCHAR(20)     NOT NULL,
-    opprettet                   DATE            NOT NULL,
-    sist_endret                 DATE            NOT NULL,
-    ferdigstilt_tidspunkt       DATE            NULL,
+    opprettet                   TIMESTAMP       NOT NULL,
+    sist_endret                 TIMESTAMP       NOT NULL,
+    ferdigstilt_tidspunkt       TIMESTAMP       NULL,
     ferdigstilt_saksbehandler   VARCHAR(10)     NULL,
     ferdigstilt_enhet           VARCHAR(10)     NULL,
-    frist                       DATE            NULL
+    frist                       TIMESTAMP       NULL
 );
 
 CREATE UNIQUE INDEX idx_id_referanse on BEHANDLING (id, ekstern_referanse);

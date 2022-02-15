@@ -173,6 +173,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         K9punsjEventHandler(
             oppgaveRepository = get(),
+            oppgaveTjenesteV2 = get(),
             punsjEventK9Repository = PunsjEventK9Repository(dataSource = get()),
             statistikkChannel = get(named("statistikkRefreshChannel")),
             oppgaveKøRepository = get(),

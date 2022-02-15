@@ -1,5 +1,6 @@
 package no.nav.k9.fagsystem.k9sak
 
+import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.modell.Aksjonspunkter
 import no.nav.k9.domene.modell.alleAksjonspunkter
 import no.nav.k9.integrasjon.kafka.dto.BehandlingProsessEventDto
@@ -39,13 +40,13 @@ data class FagsystemBehandlingData(
     companion object {
         private val log = LoggerFactory.getLogger(FagsystemBehandlingData::class.java)
 
-        fun opprettFra(eksternReferanse: UUID, event: BehandlingProsessEventDto): FagsystemBehandlingData {
+        fun opprettFra(eksternReferanse: UUID, oppgave: Oppgave): FagsystemBehandlingData {
             return FagsystemBehandlingData(
                 eksternReferanse = eksternReferanse,
-                relarelatertPartAktørId = event.relatertPartAktørId,
-                pleietrengendeAktør = event.pleietrengendeAktørId,
+                relarelatertPartAktørId = oppgave.relatertPartAktørId,
+                pleietrengendeAktør = oppgave.pleietrengendeAktørId,
                 kravType = null,
-                aksjonspunkter = event.alleAksjonspunkter()
+                aksjonspunkter = oppgave.aksjonspunkter
             )
         }
     }

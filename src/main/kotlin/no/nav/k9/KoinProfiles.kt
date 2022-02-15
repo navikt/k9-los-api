@@ -95,7 +95,7 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         OppgaveTjenesteSak(
-            oppgaveRepositoryV2 = get(),
+            oppgaveRepository = get(),
             k9SakRepository = get()
         )
     }
@@ -197,6 +197,7 @@ fun common(app: Application, config: Configuration) = module {
     single {
         K9punsjEventHandler(
             oppgaveRepository = get(),
+            oppgaveTjenesteV2 = get(),
             punsjEventK9Repository = get(),
             statistikkChannel = get(named("statistikkRefreshChannel")),
             oppgaveKøRepository = get(),

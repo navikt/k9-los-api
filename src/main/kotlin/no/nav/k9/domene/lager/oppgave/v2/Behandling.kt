@@ -2,6 +2,7 @@ package no.nav.k9.domene.lager.oppgave.v2
 
 import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.domene.modell.Fagsystem
+import no.nav.k9.fagsystem.k9sak.FagsystemBehandling
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.*
@@ -16,6 +17,11 @@ open class Behandling constructor(
     val kode6: Boolean,
     val skjermet: Boolean,
 ) {
+    var ferdigstilt: LocalDateTime? = null
+    set(value) {
+        if (ferdigstilt == null) field = value
+    }
+
     companion object {
         private val log = LoggerFactory.getLogger(Behandling::class.java)
     }
@@ -39,7 +45,21 @@ open class Behandling constructor(
     }
 
     open fun erFerdigstilt(): Boolean {
-        return !harAktiveOppgaver()
+        return (ferdigstilt != null).also {
+            if (harAktiveOppgaver()) {
+                log.warn("Behandling er satt til ferdigstilt, men har aktive deloppgaver $eksternReferanse")
+            }
+        }
+    }
+
+    open fun ferdigstill(
+        tidspunkt: LocalDateTime = LocalDateTime.now(),
+        ansvarligSaksbehandler: String? = null,
+        enhet: String? = null
+    ) {
+        log.info("Ferdigstiller behandling $eksternReferanse")
+        lukkAktiveOppgaver(tidspunkt, ansvarligSaksbehandler = ansvarligSaksbehandler, enhet = enhet)
+        ferdigstilt = tidspunkt
     }
 
     open fun lukkAktiveOppgaver(

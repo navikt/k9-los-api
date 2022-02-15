@@ -17,9 +17,8 @@ class FagsystemBehandling(
         return erFerdigstilt() && fagsystemBehandlingdata?.erFerdigstilt() == true
     }
 
-    fun ferdigstill(tidspunkt: LocalDateTime, ansvarligSaksbehandler: String?, enhet: String?) {
-        log.info("Ferdigstiller behandling $eksternReferanse")
-        super.lukkAktiveOppgaver(tidspunkt, ansvarligSaksbehandler = ansvarligSaksbehandler, enhet = enhet)
+    override fun ferdigstill(tidspunkt: LocalDateTime, ansvarligSaksbehandler: String?, enhet: String?) {
+        super.ferdigstill(tidspunkt, ansvarligSaksbehandler = ansvarligSaksbehandler, enhet = enhet)
         fagsystemBehandlingdata?.ferdigstill(tidspunkt)
     }
 }

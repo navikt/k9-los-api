@@ -3,6 +3,7 @@ package no.nav.k9.aksjonspunktbehandling
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.domene.lager.oppgave.Oppgave
+import no.nav.k9.domene.lager.oppgave.v2.OppgaveTjenesteV2
 import no.nav.k9.domene.modell.BehandlingType
 import no.nav.k9.domene.modell.IModell
 import no.nav.k9.domene.modell.K9PunsjModell
@@ -15,6 +16,7 @@ import org.slf4j.LoggerFactory
 
 class K9punsjEventHandler constructor(
     private val oppgaveRepository: OppgaveRepository,
+    private val oppgaveTjenesteV2: OppgaveTjenesteV2,
     private val punsjEventK9Repository: PunsjEventK9Repository,
     private val statistikkChannel: Channel<Boolean>,
     private val reservasjonRepository: ReservasjonRepository,
@@ -49,6 +51,8 @@ class K9punsjEventHandler constructor(
             }
             statistikkChannel.send(true)
         }
+
+        oppgaveTjenesteV2.nyOppgavehendelse(oppgave)
     }
 
     override fun tellEvent(modell: IModell, oppgave: Oppgave) {

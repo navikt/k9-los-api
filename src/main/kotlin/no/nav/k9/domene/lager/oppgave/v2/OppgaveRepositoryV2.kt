@@ -21,14 +21,14 @@ class OppgaveRepositoryV2(
         TODO("Not yet implemented")
     }
 
-    fun hentBehandling(eksternReferanse: UUID, tx: TransactionalSession? = null): Behandling? {
+    fun hentBehandling(eksternReferanse: String, tx: TransactionalSession? = null): Behandling? {
         return tx?.run {
-            val deloppgaver = run(hentOppgaver(eksternReferanse.toString()))
-            run(hentBehandling(eksternReferanse.toString(), deloppgaver))
+            val deloppgaver = run(hentOppgaver(eksternReferanse))
+            run(hentBehandling(eksternReferanse, deloppgaver))
         } ?: using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
-                val deloppgaver = tx.run(hentOppgaver(eksternReferanse.toString()))
-                tx.run(hentBehandling(eksternReferanse.toString(), deloppgaver))
+                val deloppgaver = tx.run(hentOppgaver(eksternReferanse))
+                tx.run(hentBehandling(eksternReferanse, deloppgaver))
             }
         }
     }
@@ -44,6 +44,7 @@ class OppgaveRepositoryV2(
                             fagsystem,
                             ytelse_type,
                             soekers_id,
+                            ferdigstilt_tidspunkt,
                             kode6,
                             skjermet
                         from behandling 
@@ -60,7 +61,7 @@ class OppgaveRepositoryV2(
                     søkersId = Ident(row.string("soekers_id"), Ident.IdType.AKTØRID),
                     kode6 = row.boolean("kode6"),
                     skjermet = row.boolean("skjermet"),
-                )
+                ).also { it.ferdigstilt = row.localDateTimeOrNull("ferdigstilt_tidspunkt") }
             }.asSingle
     }
 
@@ -127,6 +128,7 @@ class OppgaveRepositoryV2(
                         fagsystem,
                         ytelse_type,
                         soekers_id,
+                        ferdigstilt_tidspunkt,
                         kode6,
                         skjermet
                     ) VALUES (
@@ -135,6 +137,7 @@ class OppgaveRepositoryV2(
                         :fagsystem,
                         :ytelse_type,
                         :soekers_id,
+                        :ferdigstilt_tidspunkt,
                         :kode6,
                         :skjermet
                     )  on conflict (id) do update set
@@ -150,6 +153,7 @@ class OppgaveRepositoryV2(
                     "fagsystem" to behandling.fagsystem.kode,
                     "ytelse_type" to behandling.ytelseType.kode,
                     "soekers_id" to behandling.søkersId?.id,
+                    "ferdigstilt_tidspunkt" to behandling.ferdigstilt,
                     "kode6" to behandling.kode6,
                     "skjermet" to behandling.skjermet
                 )
