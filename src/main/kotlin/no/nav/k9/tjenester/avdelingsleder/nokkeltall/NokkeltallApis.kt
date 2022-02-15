@@ -64,14 +64,6 @@ fun Route.NokkeltallApis() {
         call.respond(historikk)
     }
 
-
-    @Location("/ferdigstilte-historikk-alle")
-    class HentFerdigstilteEnhetAlle
-
-    get { _: HentFerdigstilteEnhetAlle ->
-        call.respond(nokkeltallTjeneste.hentFerdigstiltOppgavehistorikk().map { it.tilDto() })
-    }
-
     @Location("/nye-historikk")
     class hentNyeSiste8Uker
 

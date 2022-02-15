@@ -32,9 +32,9 @@ enum class VelgbartHistorikkfelt(
 }
 
 fun Collection<HistorikkElement>.feltSelector(
-    vararg kolonnerØnsket: VelgbartHistorikkfelt
+    vararg felt: VelgbartHistorikkfelt
 ): List<HistorikkElementAntall> {
-    return map { it.feltSelector(kolonnerØnsket.toSet()) }
+    return map { it.feltSelector(felt.toSet()) }
         .groupingBy { it }.eachCount()
         .map { (key, antall) -> HistorikkElementAntall(key, antall = antall) }
 }

@@ -117,39 +117,6 @@ class NokkeltallTjeneste constructor(
             }.fyllTommeDagerMedVerdi(emptyMap())
     }
 
-    fun hentFerdigstiltOppgavehistorikk(historikkType: List<VelgbartHistorikkfelt> = VelgbartHistorikkfelt.values().toList()): List<FerdigstillelseHistorikkEnhet> {
-        val resultat = mutableMapOf<LocalDate, FerdigstillelseHistorikkEnhet>()
-
-        if (historikkType.contains(VelgbartHistorikkfelt.ENHET)) {
-            hentFerdigstilteBehandlingerPrEnhetHistorikk()
-                .mapValues {
-                    FerdigstillelseHistorikkEnhet(
-                        dato = it.key,
-                        behandlendeEnhet = it.value.map { (enhet, antall) ->
-                            FerdigstillelseHistorikkEnhet.AntallPrEnhet(enhet, antall)
-                        })
-                }.run { resultat.putAll(this) }
-        }
-
-        if (historikkType.contains(VelgbartHistorikkfelt.YTELSETYPE)) {
-            hentFerdigstilteSiste8Uker()
-                .groupBy { it.dato }
-                .mapValues {
-                    it.value.map { verdi ->
-                        FerdigstillelseHistorikkEnhet.AntallPrYtelsetype(
-                            fagsakYtelseType = verdi.fagsakYtelseType,
-                            behandlingType = verdi.behandlingType,
-                            antall = verdi.antall
-                        )
-                    }
-                }.forEach { (dato, verdier) ->
-                    resultat.getOrPut(dato) { FerdigstillelseHistorikkEnhet(dato) }.ytelseType = verdier
-                }
-        }
-
-        return resultat.map { it.value }
-    }
-
     fun hentFerdigstilteSiste8Uker(): List<AlleOppgaverHistorikk> {
         return statistikkRepository.hentFerdigstilteOgNyeHistorikkPerAntallDager(StatistikkRepository.SISTE_8_UKER_I_DAGER)
             .map {
