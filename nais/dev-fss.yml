@@ -9,7 +9,7 @@ spec:
   image: {{ image }}
   port: 8020
   liveness:
-    path: isalive
+    path: health
     initialDelay: 20
     timeout: 1
     periodSeconds: 5
