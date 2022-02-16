@@ -45,8 +45,12 @@ data class Aksjonspunkter(
         return AksjonspunktDefWrapper.inneholderEtInaktivtAksjonspunktMedKoden(this.liste, def)
     }
 
-    fun harAtAvAktivtAksjonspunkt(vararg def: AksjonspunktDefinisjon): Boolean {
+    fun harEtAvAktivtAksjonspunkt(vararg def: AksjonspunktDefinisjon): Boolean {
         return AksjonspunktDefWrapper.inneholderEtAvAktivtAksjonspunktMedKoden(this.liste, def.toList())
+    }
+
+    fun harEtAvAksjonspunkt(vararg def: AksjonspunktDefinisjon): Boolean {
+        return AksjonspunktDefWrapper.inneholderEtAvAksjonspunktUavheningStatusMedKoden(this.liste, def.toList())
     }
 
     fun harEtAvInaktivtAksjonspunkt(vararg def: AksjonspunktDefinisjon): Boolean {
