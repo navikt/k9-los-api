@@ -2,13 +2,11 @@ package no.nav.k9.fagsystem.k9sak
 
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.modell.Aksjonspunkter
-import no.nav.k9.domene.modell.alleAksjonspunkter
-import no.nav.k9.integrasjon.kafka.dto.BehandlingProsessEventDto
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.*
 
-data class FagsystemBehandlingData(
+data class BehandlingdataK9Sak(
     val eksternReferanse: UUID,
     val pleietrengendeAktør: String?,
     val relarelatertPartAktørId: String?,
@@ -38,10 +36,10 @@ data class FagsystemBehandlingData(
     }
 
     companion object {
-        private val log = LoggerFactory.getLogger(FagsystemBehandlingData::class.java)
+        private val log = LoggerFactory.getLogger(BehandlingdataK9Sak::class.java)
 
-        fun opprettFra(eksternReferanse: UUID, oppgave: Oppgave): FagsystemBehandlingData {
-            return FagsystemBehandlingData(
+        fun opprettFra(eksternReferanse: UUID, oppgave: Oppgave): BehandlingdataK9Sak {
+            return BehandlingdataK9Sak(
                 eksternReferanse = eksternReferanse,
                 relarelatertPartAktørId = oppgave.relatertPartAktørId,
                 pleietrengendeAktør = oppgave.pleietrengendeAktørId,

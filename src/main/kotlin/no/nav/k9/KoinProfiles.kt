@@ -12,7 +12,7 @@ import no.nav.k9.db.hikariConfig
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.repository.*
 import no.nav.k9.fagsystem.k9sak.K9SakRepository
-import no.nav.k9.fagsystem.k9sak.OppgaveTjenesteSak
+import no.nav.k9.fagsystem.k9sak.OppgaveTjenesteK9Sak
 import no.nav.k9.integrasjon.abac.IPepClient
 import no.nav.k9.integrasjon.abac.PepClient
 import no.nav.k9.integrasjon.abac.PepClientLocal
@@ -94,7 +94,7 @@ fun common(app: Application, config: Configuration) = module {
     single { K9SakRepository(dataSource = get()) }
 
     single {
-        OppgaveTjenesteSak(
+        OppgaveTjenesteK9Sak(
             oppgaveRepository = get(),
             k9SakRepository = get()
         )

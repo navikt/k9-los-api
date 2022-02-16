@@ -4,13 +4,13 @@ import no.nav.k9.domene.lager.oppgave.v2.Behandling
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
-class FagsystemBehandling(
-    behandling: Behandling,
-    val fagsystemBehandlingdata: FagsystemBehandlingData?,
+class BehandlingK9Sak(
+    val behandling: Behandling,
+    val fagsystemBehandlingdata: BehandlingdataK9Sak?,
 ) : Behandling(behandling, id = behandling.id)  {
 
     companion object {
-        private val log = LoggerFactory.getLogger(FagsystemBehandling::class.java)
+        private val log = LoggerFactory.getLogger(BehandlingK9Sak::class.java)
     }
 
     override fun erFerdigstilt(): Boolean {

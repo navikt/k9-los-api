@@ -2,7 +2,6 @@ package no.nav.k9.domene.lager.oppgave.v2
 
 import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.domene.modell.Fagsystem
-import no.nav.k9.fagsystem.k9sak.FagsystemBehandling
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.*
