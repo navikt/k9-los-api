@@ -89,7 +89,7 @@ class NokkeltallTjenesteTest : KoinTest, AbstractPostgresTest()  {
         )
 
         val nøkkeltallTjeneste = NokkeltallTjeneste(mockk(), statistikkRepository)
-        val historikk = nøkkeltallTjeneste.hentFerdigstilteOppgavePrEnhetHistorikk()
+        val historikk = nøkkeltallTjeneste.hentFerdigstilteBehandlingerPrEnhetHistorikk()
         assertThat(historikk).isEqualTo(
             mapOf(
                 DAG1 to mapOf(
