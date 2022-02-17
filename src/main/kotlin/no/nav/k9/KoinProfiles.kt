@@ -7,6 +7,7 @@ import no.nav.k9.KoinProfile.*
 import no.nav.k9.aksjonspunktbehandling.K9TilbakeEventHandler
 import no.nav.k9.aksjonspunktbehandling.K9punsjEventHandler
 import no.nav.k9.aksjonspunktbehandling.K9sakEventHandler
+import no.nav.k9.aksjonspunktbehandling.K9sakEventHandlerV2
 import no.nav.k9.db.hikariConfig
 import no.nav.k9.domene.repository.*
 import no.nav.k9.integrasjon.abac.IPepClient
@@ -149,6 +150,10 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
+        K9sakEventHandlerV2(azureGraphService = get())
+    }
+
+    single {
         K9sakEventHandler(
             oppgaveRepository = get(),
             behandlingProsessEventK9Repository = get(),
@@ -191,8 +196,10 @@ fun common(app: Application, config: Configuration) = module {
     single {
         AsynkronProsesseringV1Service(
             kafkaConfig = config.getKafkaConfig(),
+            kafkaAivenConfig = config.getProfileAwareKafkaAivenConfig(),
             configuration = config,
             k9sakEventHandler = get(),
+            k9sakEventHandlerv2 = get(),
             k9TilbakeEventHandler = get(),
             punsjEventHandler = get()
         )

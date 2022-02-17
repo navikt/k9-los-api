@@ -1,0 +1,41 @@
+package no.nav.k9.aksjonspunktbehandling.k9sak
+
+import com.fasterxml.jackson.module.kotlin.readValue
+import io.mockk.mockk
+import no.nav.k9.aksjonspunktbehandling.K9sakEventHandlerV2
+import no.nav.k9.aksjonspunktbehandling.objectMapper
+import org.intellij.lang.annotations.Language
+import org.junit.Ignore
+import org.junit.Test
+import java.util.*
+
+class K9SakStreamTest {
+
+    val eksternId = UUID.randomUUID()
+    val eventHandler = K9sakEventHandlerV2(mockk())
+
+    @Ignore
+    @Test
+    suspend fun `K9SakStream skal kunne motta aksjonspunkthendelser`() {
+        @Language("JSON") val input = """{
+            "eksternId": "$eksternId",
+            "hendelseTid": "2020-02-20T07:38:49",
+            "hendelseType": "AKSJONSPUNKT",
+             "aksjonspunktTilstander": []
+        }""".trimIndent()
+        eventHandler.prosesser(objectMapper().readValue(input))
+    }
+
+    @Ignore
+    @Test
+    suspend fun `K9SakStream skal kunne motta kravdokumenthendelser`() {
+
+        @Language("JSON") val input = """{
+            "eksternId": "$eksternId",
+            "hendelseTid": "2020-02-20T07:38:49",
+            "hendelseType": "KRAVDOKUMENT",
+            "kravdokumenter": []
+        }""".trimIndent()
+        eventHandler.prosesser(objectMapper().readValue(input))
+    }
+}

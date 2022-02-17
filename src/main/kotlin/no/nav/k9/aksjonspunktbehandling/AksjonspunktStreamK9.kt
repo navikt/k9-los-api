@@ -47,7 +47,7 @@ internal class AksjonspunktStreamK9 constructor(
                 .stream(
                     fromTopic.name,
                     Consumed.with(fromTopic.keySerde, fromTopic.valueSerde)
-                ).peek { _, e -> log.info("--> Hendelse fra k9sak: ${e.tryggToString() }") }
+                ).peek { _, e -> log.info("--> Behandlingsprosesshendelse fra k9sak: ${e.tryggToString() }") }
                 .foreach { _, entry ->
                     if (entry != null) {
                         k9sakEventHandler.prosesser(entry)

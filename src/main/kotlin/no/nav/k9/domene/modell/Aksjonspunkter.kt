@@ -73,6 +73,14 @@ data class Aksjonspunkter(
         return EventResultat.OPPRETT_OPPGAVE
     }
 
+    fun aktivAutopunkt(): AksjonspunktTilstand? {
+        return this.apTilstander.firstOrNull {
+            it.status == AksjonspunktStatus.OPPRETTET
+                    && AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode).erAutopunkt()
+                    && it.venteårsak != null
+        }
+    }
+
     companion object {
         private const val AKTIV = "OPPR"
     }
@@ -119,4 +127,3 @@ internal fun PunsjEventDto.tilAktiveAksjonspunkter(): Aksjonspunkter {
                 it.map { aktiv -> AksjonspunktTilstand(aktiv.key, AksjonspunktStatus.fraKode(aktiv.value)) })
         }
 }
-
