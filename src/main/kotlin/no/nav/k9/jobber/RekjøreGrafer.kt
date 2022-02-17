@@ -1,12 +1,22 @@
 package no.nav.k9.jobber
 
-import io.ktor.application.*
-import io.ktor.util.*
+import io.ktor.application.Application
+import io.ktor.application.log
+import io.ktor.util.error
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import no.nav.k9.domene.lager.oppgave.Oppgave
-import no.nav.k9.domene.modell.*
-import no.nav.k9.domene.repository.*
+import no.nav.k9.domene.modell.BehandlingStatus
+import no.nav.k9.domene.modell.BehandlingType
+import no.nav.k9.domene.modell.FagsakYtelseType
+import no.nav.k9.domene.modell.IModell
+import no.nav.k9.domene.modell.K9PunsjModell
+import no.nav.k9.domene.repository.BehandlingProsessEventK9Repository
+import no.nav.k9.domene.repository.BehandlingProsessEventTilbakeRepository
+import no.nav.k9.domene.repository.OppgaveKøRepository
+import no.nav.k9.domene.repository.OppgaveRepository
+import no.nav.k9.domene.repository.PunsjEventK9Repository
+import no.nav.k9.domene.repository.StatistikkRepository
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import no.nav.k9.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
 import java.util.*
@@ -27,7 +37,8 @@ fun Application.rekjørEventerForGrafer(
                 FagsakYtelseType.OMSORGSPENGER_KS,
                 FagsakYtelseType.OMSORGSPENGER_MA,
                 FagsakYtelseType.OMSORGSPENGER_AO,
-                FagsakYtelseType.OMSORGSDAGER
+                FagsakYtelseType.OMSORGSDAGER,
+                FagsakYtelseType.PPN
             )
 
             val alleEventerIder = behandlingProsessEventK9Repository.hentAlleEventerIder()

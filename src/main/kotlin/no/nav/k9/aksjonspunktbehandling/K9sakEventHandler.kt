@@ -3,9 +3,16 @@ package no.nav.k9.aksjonspunktbehandling
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.domene.lager.oppgave.Oppgave
-import no.nav.k9.domene.modell.*
+import no.nav.k9.domene.modell.BehandlingStatus
+import no.nav.k9.domene.modell.FagsakYtelseType
+import no.nav.k9.domene.modell.IModell
+import no.nav.k9.domene.modell.K9SakModell
 import no.nav.k9.domene.modell.reportMetrics
-import no.nav.k9.domene.repository.*
+import no.nav.k9.domene.repository.BehandlingProsessEventK9Repository
+import no.nav.k9.domene.repository.OppgaveKøRepository
+import no.nav.k9.domene.repository.OppgaveRepository
+import no.nav.k9.domene.repository.ReservasjonRepository
+import no.nav.k9.domene.repository.StatistikkRepository
 import no.nav.k9.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.integrasjon.sakogbehandling.SakOgBehandlingProducer
@@ -33,7 +40,8 @@ class K9sakEventHandler constructor(
         FagsakYtelseType.OMSORGSPENGER_KS,
         FagsakYtelseType.OMSORGSPENGER_MA,
         FagsakYtelseType.OMSORGSPENGER_AO,
-        FagsakYtelseType.OMSORGSDAGER
+        FagsakYtelseType.OMSORGSDAGER,
+        FagsakYtelseType.PPN
     )
 
     fun prosesser(
@@ -88,7 +96,7 @@ class K9sakEventHandler constructor(
                 it.ferdigstilteSaksbehandler.add(oppgave.eksternId.toString())
                 it
             }
-        }
+        } else log.warn("Ignorerer nyFerdigstilltAvSaksbehandler statistikk på ytelseType=${oppgave.fagsakYtelseType} da den ikke er støttet enda ")
     }
 
     private fun beholdingNed(oppgave: Oppgave) {
@@ -103,7 +111,7 @@ class K9sakEventHandler constructor(
                 it.ferdigstilte.add(oppgave.eksternId.toString())
                 it
             }
-        }
+        } else log.warn("Ignorerer beholdingNed statistikk på ytelseType=${oppgave.fagsakYtelseType} da den ikke er støttet enda ")
     }
 
     private fun beholdningOpp(oppgave: Oppgave) {
@@ -118,7 +126,7 @@ class K9sakEventHandler constructor(
                 it.nye.add(oppgave.eksternId.toString())
                 it
             }
-        }
+        } else log.warn("Ignorerer beholdningOpp statistikk på ytelseType=${oppgave.fagsakYtelseType} da den ikke er støttet enda ")
     }
 
     override fun tellEvent(modell: IModell, oppgave: Oppgave) {
