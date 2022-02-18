@@ -115,7 +115,7 @@ class YtelseTest: KoinTest, AbstractPostgresTest() {
 
     private fun mockOppgave(): Oppgave {
         return Oppgave(
-            behandlingId = 9438,
+            
             fagsakSaksnummer = "Yz647",
             journalpostId = null,
             aktorId = "273857",

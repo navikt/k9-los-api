@@ -114,7 +114,7 @@ class NokkeltallTjenesteTest : KoinTest, AbstractPostgresTest()  {
 
     private fun mockOppgave(): Oppgave {
         return Oppgave(
-            behandlingId = 9438,
+            eksternId = UUID.randomUUID(),
             fagsakSaksnummer = "Yz647",
             journalpostId = null,
             aktorId = "273857",
@@ -129,7 +129,6 @@ class NokkeltallTjenesteTest : KoinTest, AbstractPostgresTest()  {
             system = "K9SAK",
             oppgaveAvsluttet = null,
             utfortFraAdmin = false,
-            eksternId = UUID.randomUUID(),
             oppgaveEgenskap = emptyList(),
             aksjonspunkter = Aksjonspunkter(emptyMap(), emptyList()),
             tilBeslutter = true,

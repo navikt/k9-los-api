@@ -144,7 +144,8 @@ enum class KøSortering(
 ) :
     Kodeverdi {
     OPPRETT_BEHANDLING("OPPRBEH", "Dato for opprettelse av behandling", "DATO", ""),
-    FORSTE_STONADSDAG("FORSTONAD", "Dato for første stønadsdag", "DATO", "");
+    FORSTE_STONADSDAG("FORSTONAD", "Dato for første stønadsdag", "DATO", ""),
+    FEILUTBETALT("FEILUTBETALT", "Sorter etter høyeste feilutbetalt beløp", "BELOP", "");
 
     override val kodeverk = "KO_SORTERING"
 

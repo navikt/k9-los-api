@@ -45,7 +45,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         val oppgaveTjeneste = get<OppgaveTjeneste>()
 
         val oppgave1 = Oppgave(
-            behandlingId = 9438,
+            
             fagsakSaksnummer = "Yz647",
             journalpostId = null,
             aktorId = "273857",
@@ -105,7 +105,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         oppgaveKøRepository.lagre(uuid) { oppgaveko }
 
         val oppgave1 = Oppgave(
-            behandlingId = 9438,
+            
             fagsakSaksnummer = "Yz647",
             aktorId = "273857",
             journalpostId = null,
@@ -194,7 +194,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         oppgaveKøRepository.lagre(oppgaveKøId) { oppgaveko }
 
         val oppgave1 = Oppgave(
-            behandlingId = 9438,
+            
             fagsakSaksnummer = "Yz647",
             aktorId = "273857",
             journalpostId = null,
@@ -277,7 +277,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         oppgaveKøRepository.lagre(oppgaveKøId) { oppgaveko }
 
         val oppgave1 = Oppgave(
-            behandlingId = 9438,
+            
             fagsakSaksnummer = "Yz647",
             aktorId = "273857",
             journalpostId = null,
@@ -332,7 +332,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         assert(reservasjonsHistorikk1.reservasjoner[0].reservertAv == "123")
 
         val oppgave2 = Oppgave(
-            behandlingId = 9438,
+            
             fagsakSaksnummer = "Yz642",
             aktorId = "273853",
             journalpostId = null,
@@ -414,7 +414,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         oppgaveKøRepository.lagre(oppgaveKøId) { oppgaveko }
 
         val oppgave1 = Oppgave(
-            behandlingId = 9438,
+            
             fagsakSaksnummer = "Yz647",
             aktorId = "273857",
             journalpostId = null,
@@ -469,7 +469,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         assert(reservasjonsHistorikk1.reservasjoner[0].reservertAv == "123")
 
         val oppgave2 = Oppgave(
-            behandlingId = 9438,
+            
             fagsakSaksnummer = "Yz642",
             aktorId = "273853",
             journalpostId = null,
@@ -507,7 +507,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         }
 
         val oppgave3 = Oppgave(
-            behandlingId = 9438,
+            
             fagsakSaksnummer = "Yz642",
             aktorId = "273853",
             journalpostId = null,
@@ -585,7 +585,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         oppgaveKøRepository.lagre(oppgaveKøId) { oppgaveko }
 
         val oppgave1 = Oppgave(
-            behandlingId = 9438,
+            
             fagsakSaksnummer = "Yz647",
             aktorId = "273857",
             journalpostId = null,
@@ -640,7 +640,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         assert(reservasjonsHistorikk1.reservasjoner[0].reservertAv == "123")
 
         val oppgave2 = Oppgave(
-            behandlingId = 9438,
+            
             fagsakSaksnummer = "Yz642",
             aktorId = "273853",
             journalpostId = null,
@@ -679,7 +679,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         }
 
         val oppgave3 = Oppgave(
-            behandlingId = 9438,
+            
             fagsakSaksnummer = "Yz642",
             aktorId = "273853",
             journalpostId = null,
@@ -757,7 +757,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         oppgaveKøRepository.lagre(oppgaveKøId) { oppgaveko }
 
         val oppgave1 = Oppgave(
-            behandlingId = 9438,
+            
             fagsakSaksnummer = "Yz647",
             aktorId = "273857",
             journalpostId = null,
@@ -807,7 +807,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         )
 
         val oppgave2 = Oppgave(
-            behandlingId = 9438,
+            
             fagsakSaksnummer = "Yz642",
             aktorId = "273853",
             journalpostId = null,
@@ -884,7 +884,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         oppgaveKøRepository.lagre(oppgaveKøId) { oppgaveko }
 
         val oppgave1 = Oppgave(
-            behandlingId = 9438,
+            
             fagsakSaksnummer = "Yz647",
             aktorId = "273857",
             journalpostId = null,
@@ -929,7 +929,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         )
 
         val oppgave2 = Oppgave(
-            behandlingId = 9438,
+            
             fagsakSaksnummer = "Yz642",
             aktorId = "273853",
             journalpostId = null,
@@ -968,7 +968,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         }
 
         val oppgave3 = Oppgave(
-            behandlingId = 9438,
+            
             fagsakSaksnummer = "Yz642",
             aktorId = "273853",
             journalpostId = null,
@@ -1048,7 +1048,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         oppgaveKøRepository.lagre(uuid) { oppgaveko }
 
         val oppgave1 = Oppgave(
-            behandlingId = 9438,
+            
             fagsakSaksnummer = "Yz647",
             aktorId = "273857",
             journalpostId = null,
@@ -1178,7 +1178,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         oppgaveKøRepository.lagre(uuid) { oppgaveko }
 
         val oppgave1 = Oppgave(
-            behandlingId = 9438,
+            
             fagsakSaksnummer = "Yz647",
             aktorId = "273857",
             journalpostId = null,
@@ -1308,7 +1308,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         )
 
         val oppgave2 = Oppgave(
-            behandlingId = 9438,
+            
             fagsakSaksnummer = fagsakSaksnummer,
             aktorId = "273857",
             journalpostId = null,

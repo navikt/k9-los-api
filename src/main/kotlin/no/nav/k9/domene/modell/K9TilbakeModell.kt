@@ -80,7 +80,8 @@ data class K9TilbakeModell(
             eventTid = sisteEvent.eventTid,
             ansvarligSaksbehandlerForTotrinn = null,
             ansvarligSaksbehandlerIdent = sisteEvent.ansvarligSaksbehandlerIdent,
-            kombinert = false
+            kombinert = false,
+            feilutbetaltBeløp = sisteEvent.feilutbetaltBeløp
         )
     }
 

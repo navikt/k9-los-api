@@ -796,12 +796,13 @@ class OppgaveTjeneste constructor(
     )
 
     private fun preprodNavn(oppgave: Oppgave): String {
-        return "${oppgave.fagsakSaksnummer} " +
-                oppgave.aksjonspunkter.hentAktive().entries.map { t ->
-                    val a = AksjonspunkterMock().aksjonspunkter()
-                        .find { aksjonspunkt -> aksjonspunkt.kode == t.key }
-                    "${t.key} ${a?.navn ?: "Ukjent aksjonspunkt"}"
-                }.toList().joinToString(", ")
+        val  aksjonspunkter = oppgave.aksjonspunkter.hentAktive().entries.map { t ->
+            val a = AksjonspunkterMock().aksjonspunkter()
+                .find { aksjonspunkt -> aksjonspunkt.kode == t.key }
+            "${t.key} ${a?.navn ?: "Ukjent aksjonspunkt"}"
+        }.toList().joinToString(", ")
+
+        return "${oppgave.fagsakSaksnummer} " + aksjonspunkter + "FeilutbetaltBeløp=" + oppgave.feilutbetaltBeløp
     }
 
     suspend fun hentSisteReserverteOppgaver(): List<OppgaveDto> {
