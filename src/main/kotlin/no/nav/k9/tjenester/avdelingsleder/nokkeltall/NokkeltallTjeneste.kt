@@ -1,11 +1,7 @@
 package no.nav.k9.tjenester.avdelingsleder.nokkeltall
 
 import no.nav.k9.domene.lager.oppgave.Oppgave
-import no.nav.k9.domene.modell.AksjonspunktStatus
-import no.nav.k9.domene.modell.AksjonspunktTilstand
-import no.nav.k9.domene.modell.Aksjonspunkter
-import no.nav.k9.domene.modell.BehandlingType
-import no.nav.k9.domene.modell.FagsakYtelseType
+import no.nav.k9.domene.modell.*
 import no.nav.k9.domene.periode.tidligsteOgSeneste
 import no.nav.k9.domene.repository.OppgaveRepository
 import no.nav.k9.domene.repository.StatistikkRepository
@@ -54,7 +50,7 @@ class NokkeltallTjeneste constructor(
         data class PerVenteårsak(val f: FagsakYtelseType, val b: BehandlingType, val frist: LocalDate, val venteårsak: Venteårsak)
 
         return oppgaverPåVent.groupingBy {
-            val autopunkt = it.aksjonspunkter.aktivAutopunkt()
+            val autopunkt = if (it.system == Fagsystem.K9SAK.kode) it.aksjonspunkter.aktivAutopunkt() else null
             PerVenteårsak(
                 it.fagsakYtelseType,
                 it.behandlingType,
