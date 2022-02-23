@@ -92,7 +92,7 @@ open class AzureGraphService constructor(
         return hentEnhetForBruker(brukernavn = brukernavnFraKontekst, accessToken = accessToken)
     }
 
-    suspend fun hentEnhetForBrukerServiceToken(brukernavn: String): String {
+    override suspend fun hentEnhetForBrukerMedSystemToken(brukernavn: String): String {
         val accessToken = accessToken()
         return hentEnhetForBruker(brukernavn = brukernavn, accessToken = accessToken)
     }
