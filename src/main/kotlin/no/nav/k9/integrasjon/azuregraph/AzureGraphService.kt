@@ -9,16 +9,19 @@ import com.github.kittinunf.result.Result
 import io.ktor.http.*
 import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.ktor.metrics.Operation
+import no.nav.helse.dusseldorf.oauth2.client.AccessToken
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
 import no.nav.k9.aksjonspunktbehandling.objectMapper
 import no.nav.k9.integrasjon.rest.idToken
+import no.nav.k9.tjenester.saksbehandler.IIdToken
 import no.nav.k9.tjenester.saksbehandler.IdToken
 import no.nav.k9.utils.Cache
 import no.nav.k9.utils.CacheObject
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.LocalDateTime
+import kotlin.coroutines.coroutineContext
 
 open class AzureGraphService constructor(
     accessTokenClient: AccessTokenClient
@@ -28,20 +31,15 @@ open class AzureGraphService constructor(
     val log = LoggerFactory.getLogger("AzureGraphService")!!
 
     override suspend fun hentIdentTilInnloggetBruker(): String {
-        val username = IdToken(kotlin.coroutines.coroutineContext.idToken().value).getUsername()
+        val username = IdToken(coroutineContext.idToken().value).getUsername()
         val cachedObject = cache.get(username)
         if (cachedObject == null) {
-            val accessToken =
-                cachedAccessTokenClient.getAccessToken(
-                    setOf("https://graph.microsoft.com/user.read"),
-                    kotlin.coroutines.coroutineContext.idToken().value
-                )
 
             val httpRequest = "https://graph.microsoft.com/v1.0/me?\$select=onPremisesSamAccountName"
                 .httpGet()
                 .header(
                     HttpHeaders.Accept to "application/json",
-                    HttpHeaders.Authorization to "Bearer ${accessToken.token}"
+                    HttpHeaders.Authorization to "Bearer ${accessToken(coroutineContext.idToken()).token}"
                 )
 
 
@@ -89,15 +87,21 @@ open class AzureGraphService constructor(
     )
 
     override suspend fun hentEnhetForInnloggetBruker(): String {
+        coroutineContext.idToken().let { brukersToken ->
+            val brukernavnFraKontekst = IdToken(brukersToken.value).getUsername()
+            return hentEnhetForBruker(brukernavn = brukernavnFraKontekst, onBehalfOf = brukersToken)
+        }
+    }
 
-        val username = IdToken(kotlin.coroutines.coroutineContext.idToken().value).getUsername() + "_office_location"
-        val cachedObject = cache.get(username)
-        if (cachedObject == null) {
-            val accessToken =
-                cachedAccessTokenClient.getAccessToken(
-                    setOf("https://graph.microsoft.com/user.read"),
-                    kotlin.coroutines.coroutineContext.idToken().value
-                )
+    override suspend fun hentEnhetForBrukerMedSystemToken(brukernavn: String): String {
+        return hentEnhetForBruker(brukernavn = brukernavn)
+    }
+
+    private suspend fun hentEnhetForBruker(brukernavn: String, onBehalfOf: IIdToken? = null): String {
+        val key = brukernavn + "_office_location"
+        val cachedOfficeLocation = cache.get(key)
+        if (cachedOfficeLocation == null) {
+            val accessToken = accessToken(onBehalfOf)
 
             val httpRequest = "https://graph.microsoft.com/v1.0/me?\$select=officeLocation"
                 .httpGet()
@@ -105,7 +109,6 @@ open class AzureGraphService constructor(
                     HttpHeaders.Accept to "application/json",
                     HttpHeaders.Authorization to "Bearer ${accessToken.token}"
                 )
-
 
             val json = Retry.retry(
                 operation = "office-location",
@@ -123,7 +126,7 @@ open class AzureGraphService constructor(
             }
             return try {
                 val officeLocation = objectMapper().readValue<OfficeLocation>(json).officeLocation
-                cache.set(username, CacheObject(officeLocation, LocalDateTime.now().plusDays(180)))
+                cache.set(key, CacheObject(officeLocation, LocalDateTime.now().plusDays(180)))
                 return officeLocation
             } catch (e: Exception) {
                 log.error(
@@ -132,10 +135,16 @@ open class AzureGraphService constructor(
                 ""
             }
         } else {
-            return cachedObject.value
+            return cachedOfficeLocation.value
         }
     }
 
+    private fun accessToken(onBehalfOf: IIdToken? = null): AccessToken {
+        val scopes = setOf("https://graph.microsoft.com/user.read")
+        return onBehalfOf?.run {
+            cachedAccessTokenClient.getAccessToken(scopes, this.value) } ?:
+            cachedAccessTokenClient.getAccessToken(scopes)
+    }
 }
 
 

@@ -7,7 +7,11 @@ open class AzureGraphServiceLocal : IAzureGraphService {
     }
 
     override suspend fun hentEnhetForInnloggetBruker(): String {
-        return "saksbehandler@nav.no"
+        return "3450"
+    }
+
+    override suspend fun hentEnhetForBrukerMedSystemToken(brukernavn: String): String {
+        return "3450"
     }
 
 }
