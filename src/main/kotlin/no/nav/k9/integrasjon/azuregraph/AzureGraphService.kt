@@ -87,20 +87,22 @@ open class AzureGraphService constructor(
     )
 
     override suspend fun hentEnhetForInnloggetBruker(): String {
-        val brukernavnFraKontekst = IdToken(coroutineContext.idToken().value).getUsername()
-        val accessToken = accessToken(coroutineContext.idToken())
-        return hentEnhetForBruker(brukernavn = brukernavnFraKontekst, accessToken = accessToken)
+        coroutineContext.idToken().let { brukersToken ->
+            val brukernavnFraKontekst = IdToken(brukersToken.value).getUsername()
+            return hentEnhetForBruker(brukernavn = brukernavnFraKontekst, onBehalfOf = brukersToken)
+        }
     }
 
     override suspend fun hentEnhetForBrukerMedSystemToken(brukernavn: String): String {
-        val accessToken = accessToken()
-        return hentEnhetForBruker(brukernavn = brukernavn, accessToken = accessToken)
+        return hentEnhetForBruker(brukernavn = brukernavn)
     }
 
-    private suspend fun hentEnhetForBruker(brukernavn: String, accessToken: AccessToken): String {
+    private suspend fun hentEnhetForBruker(brukernavn: String, onBehalfOf: IIdToken? = null): String {
         val key = brukernavn + "_office_location"
         val cachedOfficeLocation = cache.get(key)
         if (cachedOfficeLocation == null) {
+            val accessToken = accessToken(onBehalfOf)
+
             val httpRequest = "https://graph.microsoft.com/v1.0/me?\$select=officeLocation"
                 .httpGet()
                 .header(
