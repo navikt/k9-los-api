@@ -49,6 +49,8 @@ spec:
         kvPath: /kv/preprod/fss/k9-los-api/k9saksbehandling
   sidecar: true
   webproxy: true
+  kafka:
+    pool: nav-dev
   env:
     - name: NAIS_STS_DISCOVERY_ENDPOINT
       value: https://security-token-service.nais.preprod.local/rest/v1/sts/.well-known/openid-configuration
@@ -94,6 +96,8 @@ spec:
       value: privat-k9statistikk-sak-v1
     - name: KAFKA_STATISTIKK_BEHANDLING_TOPIC
       value: privat-k9statistikk-behandling-v1
+    - name: KAFKA_K9SAK_TOPIC
+      value: privat-k9-produksjonsstyring-sak-v1
 
       # ABAC
     - name: ABAC_PDP_ENDPOINT_URL
