@@ -6,11 +6,11 @@ import no.nav.k9.Configuration
 import no.nav.k9.aksjonspunktbehandling.K9sakEventHandlerV2
 import no.nav.k9.aksjonspunktbehandling.SerDes
 import no.nav.k9.aksjonspunktbehandling.Topic
-import no.nav.k9.aksjonspunktbehandling.k9sak.kontrakt.ProduksjonsstyringHendelseKontrakt
 import no.nav.k9.integrasjon.kafka.*
 import no.nav.k9.integrasjon.kafka.ManagedKafkaStreams
 import no.nav.k9.integrasjon.kafka.ManagedStreamHealthy
 import no.nav.k9.integrasjon.kafka.ManagedStreamReady
+import no.nav.k9.sak.kontrakt.produksjonsstyring.los.ProduksjonsstyringHendelse
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.Topology
 import org.apache.kafka.streams.kstream.Consumed
@@ -64,8 +64,8 @@ internal class K9SakStream constructor(
             return builder.build()
         }
 
-        class K9SakEventSerDes : SerDes<ProduksjonsstyringHendelseKontrakt>() {
-            override fun deserialize(topic: String?, data: ByteArray?): ProduksjonsstyringHendelseKontrakt? {
+        class K9SakEventSerDes : SerDes<ProduksjonsstyringHendelse>() {
+            override fun deserialize(topic: String?, data: ByteArray?): ProduksjonsstyringHendelse? {
                 return data?.let {
                     return try {
                         objectMapper.readValue(it)
