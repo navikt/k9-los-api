@@ -11,7 +11,7 @@ val vaultJdbcVersion = "1.3.9"
 val kafkaEmbeddedEnvVersion = "2.8.0"
 val koinVersion = "2.2.2"
 val kotliqueryVersion = "1.3.1"
-val k9SakVersion = "3.2.51"
+val k9SakVersion = "3.2.52"
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.6.10"
@@ -50,7 +50,7 @@ dependencies {
     // Tilgangskontroll
     implementation("no.nav.common:auth:2.2021.02.08_08.29-beea07de78ad")
     implementation("no.nav.common:rest:2.2021.02.08_08.29-beea07de78ad")
-    implementation("com.google.code.gson:gson:2.8.9")
+    implementation("com.google.code.gson:gson:2.9.0")
 
     // Kontrakter
     implementation("no.nav.k9.sak:kontrakt:$k9SakVersion")
