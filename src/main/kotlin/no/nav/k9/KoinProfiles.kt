@@ -7,7 +7,7 @@ import no.nav.k9.KoinProfile.*
 import no.nav.k9.aksjonspunktbehandling.K9TilbakeEventHandler
 import no.nav.k9.aksjonspunktbehandling.K9punsjEventHandler
 import no.nav.k9.aksjonspunktbehandling.K9sakEventHandler
-import no.nav.k9.aksjonspunktbehandling.K9sakEventHandlerV2
+import no.nav.k9.aksjonspunktbehandling.k9sak.K9sakEventHandlerV2
 import no.nav.k9.db.hikariConfig
 import no.nav.k9.domene.repository.*
 import no.nav.k9.integrasjon.abac.IPepClient

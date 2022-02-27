@@ -3,6 +3,7 @@ package no.nav.k9.integrasjon.kafka
 import no.nav.k9.Configuration
 import no.nav.k9.aksjonspunktbehandling.*
 import no.nav.k9.aksjonspunktbehandling.k9sak.K9SakStream
+import no.nav.k9.aksjonspunktbehandling.k9sak.K9sakEventHandlerV2
 import org.slf4j.LoggerFactory
 
 internal class AsynkronProsesseringV1Service(

@@ -3,7 +3,6 @@ package no.nav.k9.aksjonspunktbehandling.k9sak
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
-import no.nav.k9.aksjonspunktbehandling.K9sakEventHandlerV2
 import no.nav.k9.aksjonspunktbehandling.objectMapper
 import org.intellij.lang.annotations.Language
 import org.junit.Ignore

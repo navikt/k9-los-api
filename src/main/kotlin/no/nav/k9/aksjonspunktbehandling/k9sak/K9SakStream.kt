@@ -3,7 +3,6 @@ package no.nav.k9.aksjonspunktbehandling.k9sak
 import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.Configuration
-import no.nav.k9.aksjonspunktbehandling.K9sakEventHandlerV2
 import no.nav.k9.aksjonspunktbehandling.SerDes
 import no.nav.k9.aksjonspunktbehandling.Topic
 import no.nav.k9.integrasjon.kafka.*

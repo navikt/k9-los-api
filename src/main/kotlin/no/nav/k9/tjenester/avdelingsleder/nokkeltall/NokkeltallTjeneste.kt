@@ -142,14 +142,6 @@ class NokkeltallTjeneste constructor(
     }
 }
 
-private fun Aksjonspunkter.aktivAutopunkt(): AksjonspunktTilstand? {
-    return this.apTilstander.firstOrNull {
-        it.status == AksjonspunktStatus.OPPRETTET
-                && AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode).erAutopunkt()
-                && it.venteårsak != null
-    }
-}
-
 fun <T> Map<LocalDate, T>.fyllTommeDagerMedVerdi(verdi: T): Map<LocalDate, T> {
     val resultat = this.toSortedMap()
 
