@@ -97,7 +97,7 @@ spec:
     - name: KAFKA_STATISTIKK_BEHANDLING_TOPIC
       value: privat-k9statistikk-behandling-v1
     - name: KAFKA_K9SAK_TOPIC
-      value: privat-k9-produksjonsstyring-sak-v1
+      value: k9saksbehandling.privat-k9-produksjonsstyring-sak-v1
 
       # ABAC
     - name: ABAC_PDP_ENDPOINT_URL

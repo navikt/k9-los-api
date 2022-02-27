@@ -7,6 +7,7 @@ import no.nav.helse.dusseldorf.ktor.auth.withoutAdditionalClaimRules
 import no.nav.helse.dusseldorf.ktor.core.getOptionalString
 import no.nav.helse.dusseldorf.ktor.core.getRequiredString
 import no.nav.k9.db.createHikariConfig
+import no.nav.k9.integrasjon.kafka.KafkaAivenConfig
 import no.nav.k9.integrasjon.kafka.KafkaConfig
 import java.net.URI
 import java.time.Duration
@@ -43,6 +44,11 @@ data class Configuration(private val config: ApplicationConfig) {
     internal fun getAksjonspunkthendelseTopic(): String {
         return config.getOptionalString("nav.kafka.aksjonshendelseTopic", secret = false)
             ?: "privat-k9-aksjonspunkthendelse"
+    }
+
+    internal fun getK9SakTopic(): String {
+        return config.getOptionalString("nav.kafka_aiven.k9sakTopic", secret = false)
+            ?: "k9saksbehandling.privat-k9-produksjonsstyring-sak-v1"
     }
 
     internal fun getAksjonspunkthendelsePunsjTopic(): String {
@@ -89,6 +95,28 @@ data class Configuration(private val config: ApplicationConfig) {
                 unreadyAfterStreamStoppedIn = unreadyAfterStreamStoppedIn()
             )
         }
+
+    internal fun getProfileAwareKafkaAivenConfig() =
+        // Bytter ut aivenkonfig med onprem kafkakonfig som er støttet i vtp
+        if (koinProfile == KoinProfile.LOCAL) getKafkaConfig() else getKafkaAivenConfig()
+
+
+    internal fun getKafkaAivenConfig(): KafkaAivenConfig {
+        val bootstrapServers = config.getRequiredString("nav.kafka_aiven.bootstrap_servers", secret = false)
+        val trustStorePath = config.getRequiredString("nav.kafka_aiven.trust_store_path", secret = false)
+        val keyStorePath = config.getRequiredString("nav.kafka_aiven.key_store_path", secret = false)
+        val credStorePassword = config.getRequiredString("nav.kafka_aiven.credstore_password", secret = true)
+
+        return KafkaAivenConfig(
+            applicationId = config.getRequiredString("nav.kafka_aiven.application_id", false),
+            bootstrapServers = bootstrapServers,
+            trustStore = Pair(trustStorePath, credStorePassword),
+            keyStore = Pair(keyStorePath, credStorePassword),
+            credStorePassword = credStorePassword,
+            exactlyOnce = false,
+            unreadyAfterStreamStoppedIn = unreadyAfterStreamStoppedIn()
+        )
+    }
 
     private fun unreadyAfterStreamStoppedIn() = Duration.of(
         config.getRequiredString("nav.kafka.unready_after_stream_stopped_in.amount", secret = false).toLong(),

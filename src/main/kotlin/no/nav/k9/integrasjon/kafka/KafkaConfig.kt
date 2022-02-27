@@ -16,13 +16,19 @@ import java.util.*
 private val logger: Logger = LoggerFactory.getLogger(KafkaConfig::class.java)
 private const val ID_PREFIX = "srvpps-k9los-"
 
+interface IKafkaConfig {
+    val unreadyAfterStreamStoppedIn: Duration
+    fun stream(name: String): Properties
+    fun producer(name: String): Properties
+}
+
 class KafkaConfig(
     bootstrapServers: String,
     credentials: Pair<String, String>,
     trustStore: Pair<String, String>?,
     exactlyOnce: Boolean,
-    internal val unreadyAfterStreamStoppedIn: Duration
-) {
+    override val unreadyAfterStreamStoppedIn: Duration
+) : IKafkaConfig {
     private val streams = Properties().apply {
         put(BOOTSTRAP_SERVERS_CONFIG, bootstrapServers)
         put(DEFAULT_DESERIALIZATION_EXCEPTION_HANDLER_CLASS_CONFIG, LogAndFailExceptionHandler::class.java)
@@ -32,7 +38,7 @@ class KafkaConfig(
         medProcessingGuarantee(exactlyOnce)
     }
 
-    internal fun stream(name: String) = streams.apply {
+    override fun stream(name: String) = streams.apply {
         put(APPLICATION_ID_CONFIG, "$ID_PREFIX$name")
     }
 
@@ -42,7 +48,7 @@ class KafkaConfig(
         medTrustStore(trustStore)
     }
 
-    internal fun producer(name: String) = producer.apply {
+    override fun producer(name: String) = producer.apply {
         put(ProducerConfig.CLIENT_ID_CONFIG, "$ID_PREFIX$name")
     }
 
