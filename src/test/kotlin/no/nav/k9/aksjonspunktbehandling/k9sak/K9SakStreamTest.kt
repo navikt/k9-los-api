@@ -15,7 +15,7 @@ class K9SakStreamTest {
     val eventHandler = K9sakEventHandlerV2(mockk())
 
     @Test
-    fun `K9SakStream skal kunne motta aksjonspunkthendelser`() {
+    fun K9SakStreamSkalKunneMottaAksjonspunkthendelser() {
         @Language("JSON") val input = """{
             "eksternId": "$eksternId",
             "hendelseTid": "2020-02-20T07:38:49",
@@ -29,8 +29,7 @@ class K9SakStreamTest {
 
     @Ignore
     @Test
-    fun `K9SakStream skal kunne motta kravdokumenthendelser`() {
-
+    fun K9SakStreamSkalKunneMottaKravdokumenthendelser() {
         @Language("JSON") val input = """{
             "eksternId": "$eksternId",
             "hendelseTid": "2020-02-20T07:38:49",

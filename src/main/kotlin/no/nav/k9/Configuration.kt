@@ -103,8 +103,8 @@ data class Configuration(private val config: ApplicationConfig) {
 
     internal fun getKafkaAivenConfig(): KafkaAivenConfig {
         val bootstrapServers = config.getRequiredString("nav.kafka_aiven.bootstrap_servers", secret = false)
-        val trustStorePath = config.getRequiredString("nav.kafka_aiven.trust_store.path", secret = false)
-        val keyStorePath = config.getRequiredString("nav.kafka_aiven.key_store.path", secret = false)
+        val trustStorePath = config.getRequiredString("nav.kafka_aiven.trust_store_path", secret = false)
+        val keyStorePath = config.getRequiredString("nav.kafka_aiven.key_store_path", secret = false)
         val credStorePassword = config.getRequiredString("nav.kafka_aiven.credstore_password", secret = true)
 
         return KafkaAivenConfig(
