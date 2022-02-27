@@ -51,6 +51,7 @@ spec:
   webproxy: true
   kafka:
     pool: nav-dev
+    streams: true
   env:
     - name: NAIS_STS_DISCOVERY_ENDPOINT
       value: https://security-token-service.nais.preprod.local/rest/v1/sts/.well-known/openid-configuration
