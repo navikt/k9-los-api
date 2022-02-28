@@ -8,16 +8,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.k9.AbstractPostgresTest
 import no.nav.k9.buildAndTestConfig
 import no.nav.k9.domene.lager.oppgave.Oppgave
-import no.nav.k9.domene.modell.AksjonspunktStatus
-import no.nav.k9.domene.modell.AksjonspunktTilstand
-import no.nav.k9.domene.modell.Aksjonspunkter
-import no.nav.k9.domene.modell.BehandlingStatus
-import no.nav.k9.domene.modell.BehandlingType
-import no.nav.k9.domene.modell.Enhet
-import no.nav.k9.domene.modell.FagsakYtelseType
-import no.nav.k9.domene.modell.KøSortering
-import no.nav.k9.domene.modell.OppgaveKø
-import no.nav.k9.domene.modell.Saksbehandler
+import no.nav.k9.domene.modell.*
 import no.nav.k9.domene.repository.OppgaveKøRepository
 import no.nav.k9.domene.repository.OppgaveRepository
 import no.nav.k9.domene.repository.ReservasjonRepository
@@ -45,7 +36,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         val oppgaveTjeneste = get<OppgaveTjeneste>()
 
         val oppgave1 = Oppgave(
-            
+
             fagsakSaksnummer = "Yz647",
             journalpostId = null,
             aktorId = "273857",
@@ -105,7 +96,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         oppgaveKøRepository.lagre(uuid) { oppgaveko }
 
         val oppgave1 = Oppgave(
-            
+
             fagsakSaksnummer = "Yz647",
             aktorId = "273857",
             journalpostId = null,
@@ -194,7 +185,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         oppgaveKøRepository.lagre(oppgaveKøId) { oppgaveko }
 
         val oppgave1 = Oppgave(
-            
+
             fagsakSaksnummer = "Yz647",
             aktorId = "273857",
             journalpostId = null,
@@ -277,7 +268,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         oppgaveKøRepository.lagre(oppgaveKøId) { oppgaveko }
 
         val oppgave1 = Oppgave(
-            
+
             fagsakSaksnummer = "Yz647",
             aktorId = "273857",
             journalpostId = null,
@@ -332,7 +323,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         assert(reservasjonsHistorikk1.reservasjoner[0].reservertAv == "123")
 
         val oppgave2 = Oppgave(
-            
+
             fagsakSaksnummer = "Yz642",
             aktorId = "273853",
             journalpostId = null,
@@ -389,6 +380,91 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
     }
 
     @Test
+    fun `skal sortere på størrelse på feil utbetalingsbeløp`() = runBlocking {
+        val oppgaveRepository = get<OppgaveRepository>()
+        val oppgaveTjeneste = get<OppgaveTjeneste>()
+        val oppgaveKøRepository = get<OppgaveKøRepository>()
+
+        val tilbakeKrevingsKø = OppgaveKø(
+            id = UUID.randomUUID(),
+            navn = "test",
+            sistEndret = LocalDate.now(),
+            sortering = KøSortering.FEILUTBETALT,
+            saksbehandlere = mutableListOf(Saksbehandler("OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn))
+        )
+        val oppgaveId1 = UUID.randomUUID()
+        val oppgaveId2 = UUID.randomUUID()
+        val oppgaveId3 = UUID.randomUUID()
+        val oppgaveId4 = UUID.randomUUID()
+
+
+        val o1 = lagOppgave(oppgaveId1, 10000L)
+        val o2 = lagOppgave(oppgaveId2, 1000L)
+        val o3 = lagOppgave(oppgaveId3, 100L)
+        val o4 = lagOppgave(oppgaveId4, 10L)
+
+        tilbakeKrevingsKø.leggOppgaveTilEllerFjernFraKø(o2)
+        tilbakeKrevingsKø.leggOppgaveTilEllerFjernFraKø(o3)
+        tilbakeKrevingsKø.leggOppgaveTilEllerFjernFraKø(o4)
+        tilbakeKrevingsKø.leggOppgaveTilEllerFjernFraKø(o1)
+
+        oppgaveRepository.lagre(o2.eksternId) { o2 }
+        oppgaveRepository.lagre(o4.eksternId) { o4 }
+        oppgaveRepository.lagre(o1.eksternId) { o1 }
+        oppgaveRepository.lagre(o3.eksternId) { o3 }
+        tilbakeKrevingsKø.leggOppgaveTilEllerFjernFraKø(o2, null)
+        tilbakeKrevingsKø.leggOppgaveTilEllerFjernFraKø(o4, null)
+        tilbakeKrevingsKø.leggOppgaveTilEllerFjernFraKø(o1, null)
+        tilbakeKrevingsKø.leggOppgaveTilEllerFjernFraKø(o3, null)
+        oppgaveKøRepository.lagre(tilbakeKrevingsKø.id) {
+            tilbakeKrevingsKø
+        }
+
+        //sjekk at køen er sorter etter høyest feilutbetaling
+        val hentOppgaver = oppgaveTjeneste.hentOppgaver(tilbakeKrevingsKø.id)
+
+        assertThat(hentOppgaver[0].feilutbetaltBeløp).isEqualTo(o1.feilutbetaltBeløp)
+        assertThat(hentOppgaver[0].feilutbetaltBeløp).isEqualTo(o2.feilutbetaltBeløp)
+        assertThat(hentOppgaver[0].feilutbetaltBeløp).isEqualTo(o3.feilutbetaltBeløp)
+        assertThat(hentOppgaver[0].feilutbetaltBeløp).isEqualTo(o4.feilutbetaltBeløp)
+    }
+
+    private fun lagOppgave(uuid: UUID, beløp: Long): Oppgave {
+        return Oppgave(
+            eksternId = uuid,
+            feilutbetaltBeløp = beløp,
+            fagsakSaksnummer = "",
+            aktorId = "273857",
+            journalpostId = "234234535",
+            behandlendeEnhet = "Enhet",
+            behandlingsfrist = LocalDateTime.now(),
+            behandlingOpprettet = LocalDateTime.now().minusDays(23),
+            forsteStonadsdag = LocalDate.now().plusDays(6),
+            behandlingStatus = BehandlingStatus.OPPRETTET,
+            behandlingType = BehandlingType.UKJENT,
+            fagsakYtelseType = FagsakYtelseType.UKJENT,
+            aktiv = true,
+            system = Fagsystem.K9SAK.kode,
+            oppgaveAvsluttet = null,
+            utfortFraAdmin = false,
+            oppgaveEgenskap = emptyList(),
+            aksjonspunkter = Aksjonspunkter(
+                mapOf(
+                    "5015" to "OPPR"
+                )
+            ),
+            tilBeslutter = false,
+            utbetalingTilBruker = false,
+            selvstendigFrilans = false,
+            kombinert = false,
+            søktGradering = false,
+            årskvantum = false,
+            avklarArbeidsforhold = false,
+            avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false
+        )
+    }
+
+    @Test
     fun skalPlukkeParSakHvisSaksbehandlingHarOpprinneligSakPåSeg() = runBlocking {
         // arrange
         val oppgaveRepository = get<OppgaveRepository>()
@@ -414,7 +490,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         oppgaveKøRepository.lagre(oppgaveKøId) { oppgaveko }
 
         val oppgave1 = Oppgave(
-            
+
             fagsakSaksnummer = "Yz647",
             aktorId = "273857",
             journalpostId = null,
@@ -469,7 +545,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         assert(reservasjonsHistorikk1.reservasjoner[0].reservertAv == "123")
 
         val oppgave2 = Oppgave(
-            
+
             fagsakSaksnummer = "Yz642",
             aktorId = "273853",
             journalpostId = null,
@@ -507,7 +583,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         }
 
         val oppgave3 = Oppgave(
-            
+
             fagsakSaksnummer = "Yz642",
             aktorId = "273853",
             journalpostId = null,
@@ -585,7 +661,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         oppgaveKøRepository.lagre(oppgaveKøId) { oppgaveko }
 
         val oppgave1 = Oppgave(
-            
+
             fagsakSaksnummer = "Yz647",
             aktorId = "273857",
             journalpostId = null,
@@ -640,7 +716,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         assert(reservasjonsHistorikk1.reservasjoner[0].reservertAv == "123")
 
         val oppgave2 = Oppgave(
-            
+
             fagsakSaksnummer = "Yz642",
             aktorId = "273853",
             journalpostId = null,
@@ -679,7 +755,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         }
 
         val oppgave3 = Oppgave(
-            
+
             fagsakSaksnummer = "Yz642",
             aktorId = "273853",
             journalpostId = null,
@@ -757,7 +833,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         oppgaveKøRepository.lagre(oppgaveKøId) { oppgaveko }
 
         val oppgave1 = Oppgave(
-            
+
             fagsakSaksnummer = "Yz647",
             aktorId = "273857",
             journalpostId = null,
@@ -807,7 +883,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         )
 
         val oppgave2 = Oppgave(
-            
+
             fagsakSaksnummer = "Yz642",
             aktorId = "273853",
             journalpostId = null,
@@ -884,7 +960,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         oppgaveKøRepository.lagre(oppgaveKøId) { oppgaveko }
 
         val oppgave1 = Oppgave(
-            
+
             fagsakSaksnummer = "Yz647",
             aktorId = "273857",
             journalpostId = null,
@@ -929,7 +1005,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         )
 
         val oppgave2 = Oppgave(
-            
+
             fagsakSaksnummer = "Yz642",
             aktorId = "273853",
             journalpostId = null,
@@ -968,7 +1044,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         }
 
         val oppgave3 = Oppgave(
-            
+
             fagsakSaksnummer = "Yz642",
             aktorId = "273853",
             journalpostId = null,
@@ -1048,7 +1124,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         oppgaveKøRepository.lagre(uuid) { oppgaveko }
 
         val oppgave1 = Oppgave(
-            
+
             fagsakSaksnummer = "Yz647",
             aktorId = "273857",
             journalpostId = null,
@@ -1178,7 +1254,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         oppgaveKøRepository.lagre(uuid) { oppgaveko }
 
         val oppgave1 = Oppgave(
-            
+
             fagsakSaksnummer = "Yz647",
             aktorId = "273857",
             journalpostId = null,
@@ -1308,7 +1384,7 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         )
 
         val oppgave2 = Oppgave(
-            
+
             fagsakSaksnummer = fagsakSaksnummer,
             aktorId = "273857",
             journalpostId = null,
