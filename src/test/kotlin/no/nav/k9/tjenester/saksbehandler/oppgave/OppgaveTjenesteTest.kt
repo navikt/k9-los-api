@@ -424,9 +424,9 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         val hentOppgaver = oppgaveTjeneste.hentOppgaver(tilbakeKrevingsKø.id)
 
         assertThat(hentOppgaver[0].feilutbetaltBeløp).isEqualTo(o1.feilutbetaltBeløp)
-        assertThat(hentOppgaver[0].feilutbetaltBeløp).isEqualTo(o2.feilutbetaltBeløp)
-        assertThat(hentOppgaver[0].feilutbetaltBeløp).isEqualTo(o3.feilutbetaltBeløp)
-        assertThat(hentOppgaver[0].feilutbetaltBeløp).isEqualTo(o4.feilutbetaltBeløp)
+        assertThat(hentOppgaver[1].feilutbetaltBeløp).isEqualTo(o2.feilutbetaltBeløp)
+        assertThat(hentOppgaver[2].feilutbetaltBeløp).isEqualTo(o3.feilutbetaltBeløp)
+        assertThat(hentOppgaver[3].feilutbetaltBeløp).isEqualTo(o4.feilutbetaltBeløp)
     }
 
     private fun lagOppgave(uuid: UUID, beløp: Long): Oppgave {

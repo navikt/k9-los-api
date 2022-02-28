@@ -51,7 +51,7 @@ class OppgaveTjeneste constructor(
             val oppgaveKø = oppgaveKøRepository.hentOppgavekø(oppgavekøId)
             if (oppgaveKø.sortering == KøSortering.FEILUTBETALT) {
                 val oppgaver = oppgaveRepository.hentOppgaver(oppgaveKø.oppgaverOgDatoer.map { it.id })
-                val høyestFørst = oppgaver.sortedBy { it.feilutbetaltBeløp }
+                val høyestFørst = oppgaver.sortedByDescending { it.feilutbetaltBeløp }
                 høyestFørst
             } else {
                 oppgaveRepository.hentOppgaver(oppgaveKø.oppgaverOgDatoer.take(20).map { it.id })
