@@ -95,7 +95,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest()  {
 
 
         val oppgave1 = Oppgave(
-            behandlingId = 9438,
+            
             fagsakSaksnummer = "Yz647",
             aktorId = "273857",
             journalpostId = null,
@@ -207,7 +207,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest()  {
         )
 
         val oppgave1 = Oppgave(
-            behandlingId = 9438,
+            
             fagsakSaksnummer = "Yz647",
             aktorId = "273857",
             journalpostId = null,
@@ -320,7 +320,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest()  {
 
 
         val oppgave1 = Oppgave(
-            behandlingId = 9438,
+            
             fagsakSaksnummer = "Yz647",
             aktorId = "273857",
             journalpostId = null,

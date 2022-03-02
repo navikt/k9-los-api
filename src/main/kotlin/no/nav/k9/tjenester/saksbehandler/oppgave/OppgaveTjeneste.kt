@@ -49,7 +49,13 @@ class OppgaveTjeneste constructor(
     fun hentOppgaver(oppgavekøId: UUID): List<Oppgave> {
         return try {
             val oppgaveKø = oppgaveKøRepository.hentOppgavekø(oppgavekøId)
-            oppgaveRepository.hentOppgaver(oppgaveKø.oppgaverOgDatoer.take(20).map { it.id })
+            if (oppgaveKø.sortering == KøSortering.FEILUTBETALT) {
+                val oppgaver = oppgaveRepository.hentOppgaver(oppgaveKø.oppgaverOgDatoer.map { it.id })
+                val høyestFørst = oppgaver.sortedByDescending { it.feilutbetaltBeløp }
+                høyestFørst
+            } else {
+                oppgaveRepository.hentOppgaver(oppgaveKø.oppgaverOgDatoer.take(20).map { it.id })
+            }
         } catch (e: Exception) {
             log.error("Henting av oppgave feilet, returnerer en tom oppgaveliste", e)
             emptyList()
@@ -476,7 +482,11 @@ class OppgaveTjeneste constructor(
         }
     }
 
-    private fun Oppgave.tilDto(oppgaveStatus: OppgaveStatusDto, person: PersonPdlResponse, paaVent: Boolean? = null): OppgaveDto {
+    private fun Oppgave.tilDto(
+        oppgaveStatus: OppgaveStatusDto,
+        person: PersonPdlResponse,
+        paaVent: Boolean? = null
+    ): OppgaveDto {
         return OppgaveDto(
             status = oppgaveStatus,
             behandlingId = this.behandlingId,
@@ -796,12 +806,13 @@ class OppgaveTjeneste constructor(
     )
 
     private fun preprodNavn(oppgave: Oppgave): String {
-        return "${oppgave.fagsakSaksnummer} " +
-                oppgave.aksjonspunkter.hentAktive().entries.map { t ->
-                    val a = AksjonspunkterMock().aksjonspunkter()
-                        .find { aksjonspunkt -> aksjonspunkt.kode == t.key }
-                    "${t.key} ${a?.navn ?: "Ukjent aksjonspunkt"}"
-                }.toList().joinToString(", ")
+        val aksjonspunkter = oppgave.aksjonspunkter.hentAktive().entries.map { t ->
+            val a = AksjonspunkterMock().aksjonspunkter()
+                .find { aksjonspunkt -> aksjonspunkt.kode == t.key }
+            "${t.key} ${a?.navn ?: "Ukjent aksjonspunkt"}"
+        }.toList().joinToString(", ")
+
+        return "${oppgave.fagsakSaksnummer} " + aksjonspunkter + "FeilutbetaltBeløp=" + oppgave.feilutbetaltBeløp
     }
 
     suspend fun hentSisteReserverteOppgaver(): List<OppgaveDto> {

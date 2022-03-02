@@ -34,7 +34,6 @@ internal class OppgaveKøTest {
         )
 
         val oppgave = Oppgave(
-            behandlingId = 9438,
             fagsakSaksnummer = "",
             aktorId = "273857",
             journalpostId = "234234535",
@@ -92,7 +91,7 @@ internal class OppgaveKøTest {
         )
 
         val oppgave = Oppgave(
-            behandlingId = 9438,
+
             fagsakSaksnummer = "",
             aktorId = "273857",
             journalpostId = "234234535",
@@ -107,7 +106,6 @@ internal class OppgaveKøTest {
             system = Fagsystem.K9SAK.kode,
             oppgaveAvsluttet = null,
             utfortFraAdmin = false,
-            eksternId = UUID.randomUUID(),
             oppgaveEgenskap = emptyList(),
             aksjonspunkter = Aksjonspunkter(
                 mapOf(
@@ -128,7 +126,8 @@ internal class OppgaveKøTest {
             søktGradering = false,
             årskvantum = false,
             avklarArbeidsforhold = false,
-            avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false
+            avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false,
+            eksternId = UUID.randomUUID(),
         )
 
         val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, null)
@@ -161,7 +160,7 @@ internal class OppgaveKøTest {
         )
 
         val oppgave = Oppgave(
-            behandlingId = 9438,
+
             fagsakSaksnummer = "",
             aktorId = "273857",
             journalpostId = "234234535",
@@ -176,7 +175,6 @@ internal class OppgaveKøTest {
             system = Fagsystem.K9SAK.kode,
             oppgaveAvsluttet = null,
             utfortFraAdmin = false,
-            eksternId = UUID.randomUUID(),
             oppgaveEgenskap = emptyList(),
             aksjonspunkter = Aksjonspunkter(
                 mapOf(
@@ -191,7 +189,8 @@ internal class OppgaveKøTest {
             søktGradering = false,
             årskvantum = false,
             avklarArbeidsforhold = false,
-            avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false
+            avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false,
+            eksternId = UUID.randomUUID(),
         )
 
         val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, null)
@@ -224,7 +223,7 @@ internal class OppgaveKøTest {
         )
 
         val oppgave = Oppgave(
-            behandlingId = 9438,
+
             fagsakSaksnummer = "",
             aktorId = "273857",
             journalpostId = "234234535",
@@ -239,7 +238,6 @@ internal class OppgaveKøTest {
             system = Fagsystem.K9SAK.kode,
             oppgaveAvsluttet = null,
             utfortFraAdmin = false,
-            eksternId = UUID.randomUUID(),
             oppgaveEgenskap = emptyList(),
             aksjonspunkter = Aksjonspunkter(
                 mapOf(
@@ -253,7 +251,8 @@ internal class OppgaveKøTest {
             søktGradering = false,
             årskvantum = false,
             avklarArbeidsforhold = false,
-            avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false
+            avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false,
+            eksternId = UUID.randomUUID(),
         )
 
         val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, null)
@@ -292,7 +291,7 @@ internal class OppgaveKøTest {
         )
 
         val oppgave = Oppgave(
-            behandlingId = 9438,
+
             fagsakSaksnummer = "12423",
             aktorId = "273857",
             journalpostId = "",
@@ -307,7 +306,6 @@ internal class OppgaveKøTest {
             system = Fagsystem.K9SAK.kode,
             oppgaveAvsluttet = null,
             utfortFraAdmin = false,
-            eksternId = UUID.randomUUID(),
             oppgaveEgenskap = emptyList(),
             aksjonspunkter = Aksjonspunkter(
                 mapOf(
@@ -326,7 +324,8 @@ internal class OppgaveKøTest {
             søktGradering = false,
             årskvantum = false,
             avklarArbeidsforhold = false,
-            avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false
+            avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false,
+            eksternId = UUID.randomUUID(),
         )
 
         val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, null)
@@ -359,7 +358,7 @@ internal class OppgaveKøTest {
         )
 
         val oppgave = Oppgave(
-            behandlingId = 9438,
+
             fagsakSaksnummer = "",
             aktorId = "273857",
             journalpostId = "234234535",
@@ -374,7 +373,6 @@ internal class OppgaveKøTest {
             system = Fagsystem.K9SAK.kode,
             oppgaveAvsluttet = null,
             utfortFraAdmin = false,
-            eksternId = UUID.randomUUID(),
             oppgaveEgenskap = emptyList(),
             aksjonspunkter = Aksjonspunkter(
                 mapOf(
@@ -389,11 +387,11 @@ internal class OppgaveKøTest {
             søktGradering = false,
             årskvantum = false,
             avklarArbeidsforhold = false,
-            avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false
+            avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false,
+            eksternId = UUID.randomUUID(),
         )
 
         val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, null)
         Assert.assertFalse(tilhørerOppgaveTilKø)
     }
-
 }

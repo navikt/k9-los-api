@@ -43,7 +43,7 @@ class RekkefølgeJsonBArrayTest : KoinTest, AbstractPostgresTest()  {
         i: Int
     ) {
         val oppgave1 = Oppgave(
-            behandlingId = 9438,
+            
             fagsakSaksnummer = "Yz647",
             aktorId = "273857",
             journalpostId = null,

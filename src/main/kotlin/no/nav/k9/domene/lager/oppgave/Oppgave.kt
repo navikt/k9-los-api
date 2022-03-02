@@ -8,8 +8,9 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
+//TODO burde splittes i spesifikke oppgaver, SakOppgave, PunsjOppgave, TilbakeOppgave f.eks.
 data class Oppgave(
-    val behandlingId: Long?,
+    @Deprecated("Bruk eksternId") val behandlingId: Long? = null,
     val fagsakSaksnummer: String,
     val journalpostId: String?,
     val aktorId: String,
@@ -46,7 +47,8 @@ data class Oppgave(
     val ansvarligBeslutterForTotrinn: String? = null,
     val fagsakPeriode: FagsakPeriode? = null,
     val pleietrengendeAktørId: String? = null,
-    val relatertPartAktørId: String? = null
+    val relatertPartAktørId: String? = null,
+    val feilutbetaltBeløp: Long? = null
 
 ) {
     fun avluttet(): Boolean {
@@ -56,8 +58,6 @@ data class Oppgave(
     data class FagsakPeriode(
         val fom: LocalDate, val tom: LocalDate
     )
-
-
 }
 
 data class OppgaveMedId(
