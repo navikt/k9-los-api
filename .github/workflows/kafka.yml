@@ -12,7 +12,7 @@ jobs:
     if: startsWith(github.ref, 'refs/heads/master')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
       - uses: nais/deploy/actions/deploy@v1
         env:
           APIKEY: ${{ secrets.DEPLOY_KEY }}
@@ -25,7 +25,7 @@ jobs:
     if: startsWith(github.ref, 'refs/heads/master')  # If the branch is master
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
       - uses: nais/deploy/actions/deploy@v1
         env:
           APIKEY: ${{ secrets.DEPLOY_KEY }}
