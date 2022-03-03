@@ -71,13 +71,6 @@ fun Route.NokkeltallApis() {
         call.respond(nokkeltallTjeneste.hentNyeSiste8Uker())
     }
 
-    @Location("/alle-paa-vent")
-    class HentAllePåVent
-
-    get { _: HentAllePåVent ->
-        call.respond(nokkeltallTjeneste.hentOppgaverPåVent())
-    }
-
     @Location("/alle-paa-vent_v2")
     class HentAllePåVentV2
 

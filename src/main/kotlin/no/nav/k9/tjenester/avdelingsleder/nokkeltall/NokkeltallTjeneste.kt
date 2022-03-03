@@ -20,16 +20,6 @@ class NokkeltallTjeneste constructor(
         return oppgaveRepository.hentAlleOppgaverUnderArbeid()
     }
 
-    fun hentOppgaverPåVent(): List<AlleOppgaverHistorikk> {
-        val oppgaverPåVent = oppgaveRepository.hentAllePåVent()
-        val oppgaverPerBehandlingPåVent = oppgaverPåVent.groupBy {
-            BehandlingPåVent(it.fagsakYtelseType, it.behandlingType, it.behandlingsfrist.toLocalDate())
-        }
-        return oppgaverPerBehandlingPåVent.map { (key, value) ->
-            AlleOppgaverHistorikk(key.fagsakYtelseType, key.behandlingType, key.dato, value.size)
-        }
-    }
-
     fun hentOppgaverPåVentV2(): OppgaverPåVentDto.PåVentResponse {
         val oppgaverPåVent = oppgaveRepository.hentAllePåVent()
         val påVentPerBehandling = antallOppgaverPåVent(oppgaverPåVent)
@@ -156,27 +146,3 @@ fun <T> Map<LocalDate, T>.fyllTommeDagerMedVerdi(verdi: T): Map<LocalDate, T> {
 }
 
 
-
-data class FerdigstillelseHistorikkEnhet(
-    val dato: LocalDate,
-    var behandlendeEnhet: List<AntallPrEnhet>? = null,
-    var ytelseType: List<AntallPrYtelsetype>? = null
-) {
-    data class AntallPrEnhet(
-        val enhet: String,
-        val antall: Int
-    )
-
-    data class AntallPrYtelsetype(
-        val fagsakYtelseType: FagsakYtelseType,
-        val behandlingType: BehandlingType,
-        val antall: Int
-    )
-}
-
-
-private data class BehandlingPåVent(
-    val fagsakYtelseType: FagsakYtelseType,
-    val behandlingType: BehandlingType,
-    val dato: LocalDate,
-)
