@@ -42,7 +42,7 @@ class NokkeltallTjenesteTest : KoinTest, AbstractPostgresTest()  {
         //Lag en oppgave uten aksjonspunkt
         opprettOppgave(mapOf())
 
-        val oppgaverPåVent = nøkkeltallTjeneste.hentOppgaverPåVent()
+        val oppgaverPåVent = nøkkeltallTjeneste.hentOppgaverPåVentV2().påVent
 
         assert(oppgaverPåVent.isEmpty())
     }
@@ -54,7 +54,7 @@ class NokkeltallTjenesteTest : KoinTest, AbstractPostgresTest()  {
         //Lag en oppgave uten aksjonspunkt
         opprettOppgave(mapOf(AksjonspunktDefinisjon.FATTER_VEDTAK.kode to "OPPR"))
 
-        val oppgaverPåVent = nøkkeltallTjeneste.hentOppgaverPåVent()
+        val oppgaverPåVent = nøkkeltallTjeneste.hentOppgaverPåVentV2().påVent
 
         assert(oppgaverPåVent.isEmpty())
     }
@@ -66,7 +66,7 @@ class NokkeltallTjenesteTest : KoinTest, AbstractPostgresTest()  {
         //Lag en oppgave uten aksjonspunkt
         opprettOppgave(mapOf(AksjonspunktDefinisjon.AUTO_MANUELT_SATT_PÅ_VENT.kode to "OPPR"))
 
-        val oppgaverPåVent = nøkkeltallTjeneste.hentOppgaverPåVent()
+        val oppgaverPåVent = nøkkeltallTjeneste.hentOppgaverPåVentV2().påVent
 
         assert(oppgaverPåVent.size == 1)
         assert(oppgaverPåVent[0].behandlingType == BehandlingType.FORSTEGANGSSOKNAD)

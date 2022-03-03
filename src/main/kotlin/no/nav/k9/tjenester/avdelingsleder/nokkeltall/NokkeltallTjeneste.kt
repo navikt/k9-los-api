@@ -1,11 +1,12 @@
 package no.nav.k9.tjenester.avdelingsleder.nokkeltall
 
 import no.nav.k9.domene.lager.oppgave.Oppgave
-import no.nav.k9.domene.modell.*
+import no.nav.k9.domene.modell.BehandlingType
+import no.nav.k9.domene.modell.FagsakYtelseType
+import no.nav.k9.domene.modell.Fagsystem
 import no.nav.k9.domene.periode.tidligsteOgSeneste
 import no.nav.k9.domene.repository.OppgaveRepository
 import no.nav.k9.domene.repository.StatistikkRepository
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import java.time.LocalDate
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak as VenteårsakK9Sak
 
@@ -38,9 +39,9 @@ class NokkeltallTjeneste constructor(
 
     private fun antallOppgaverPåVent(oppgaverPåVent: List<Oppgave>): List<OppgaverPåVentDto.PerBehandlingDto> {
         data class PerBehandling(val f: FagsakYtelseType, val b: BehandlingType, val frist: LocalDate)
-
         return oppgaverPåVent.groupingBy {
-            PerBehandling(it.fagsakYtelseType, it.behandlingType, it.behandlingsfrist.toLocalDate())
+            val autopunkt = finnAutopunkt(it)
+            PerBehandling(it.fagsakYtelseType, it.behandlingType, autopunkt?.frist?.toLocalDate() ?: it.behandlingsfrist.toLocalDate())
         }
             .eachCount()
             .map { (vo, antall) -> OppgaverPåVentDto.PerBehandlingDto(vo.f, vo.b, vo.frist, antall) }
@@ -50,7 +51,7 @@ class NokkeltallTjeneste constructor(
         data class PerVenteårsak(val f: FagsakYtelseType, val b: BehandlingType, val frist: LocalDate, val venteårsak: Venteårsak)
 
         return oppgaverPåVent.groupingBy {
-            val autopunkt = if (it.system == Fagsystem.K9SAK.kode) it.aksjonspunkter.aktivAutopunkt() else null
+            val autopunkt = finnAutopunkt(it) //Tilbakekreving er ikke håndtert enda
             PerVenteårsak(
                 it.fagsakYtelseType,
                 it.behandlingType,
@@ -62,23 +63,26 @@ class NokkeltallTjeneste constructor(
             .map { (vo, antall) -> OppgaverPåVentDto.PerVenteårsakDto(vo.f, vo.b, vo.frist, vo.venteårsak, antall) }
     }
 
+    private fun finnAutopunkt(it: Oppgave) =
+        if (it.system == Fagsystem.K9SAK.kode) it.aksjonspunkter.aktivAutopunkt() else null //Tilbakekreving er ikke håndtert enda
+
     private fun String.tilVenteårsak(): Venteårsak =
         when (this) {
-            VenteårsakK9Sak.AVV_DOK.kode
+            VenteårsakK9Sak.AVV_DOK.kode,
+            VenteårsakK9Sak.UTV_FRIST.kode,
+            VenteårsakK9Sak.AVV_RESPONS_REVURDERING.kode,
+            VenteårsakK9Sak.ANKE_OVERSENDT_TIL_TRYGDERETTEN.kode,
+            VenteårsakK9Sak.ANKE_VENTER_PAA_MERKNADER_FRA_BRUKER.kode,
+            VenteårsakK9Sak.VENT_PÅ_NY_INNTEKTSMELDING_MED_GYLDIG_ARB_ID.kode,
+            VenteårsakK9Sak.VENT_OPDT_INNTEKTSMELDING.kode,
+            VenteårsakK9Sak.VENT_OPPTJENING_OPPLYSNINGER.kode,
+            VenteårsakK9Sak.FOR_TIDLIG_SOKNAD.kode,
             -> Venteårsak.AVV_DOK
             VenteårsakK9Sak.VENT_MANGL_FUNKSJ_SAKSBEHANDLER.kode
             -> Venteårsak.VENT_MANGL_FUNKSJ_SAKSBEHANDLER
-            VenteårsakK9Sak.UTV_FRIST.kode,
-            VenteårsakK9Sak.AVV_RESPONS_REVURDERING.kode,
-            VenteårsakK9Sak.FOR_TIDLIG_SOKNAD.kode,
-            VenteårsakK9Sak.VENT_PÅ_NY_INNTEKTSMELDING_MED_GYLDIG_ARB_ID.kode,
-            VenteårsakK9Sak.ANKE_VENTER_PAA_MERKNADER_FRA_BRUKER.kode,
-            VenteårsakK9Sak.ANKE_OVERSENDT_TIL_TRYGDERETTEN.kode,
-            VenteårsakK9Sak.VENT_OPDT_INNTEKTSMELDING.kode,
-            VenteårsakK9Sak.VENT_OPPTJENING_OPPLYSNINGER.kode,
             VenteårsakK9Sak.VENTER_SVAR_PORTEN.kode,
             VenteårsakK9Sak.VENTER_SVAR_TEAMS.kode
-            -> Venteårsak.ANNET_MANUELT_SATT_PA_VENT
+            -> Venteårsak.VENTER_SVAR_INTERNT
             else
             -> Venteårsak.AUTOMATISK_SATT_PA_VENT
         }

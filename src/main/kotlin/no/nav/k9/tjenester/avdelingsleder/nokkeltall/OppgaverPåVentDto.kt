@@ -30,8 +30,8 @@ object OppgaverPåVentDto {
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 enum class Venteårsak(val kode: String, val navn: String) {
     AVV_DOK("AVV_DOK", "Avventer dokumentasjon"),
-    VENT_MANGL_FUNKSJ_SAKSBEHANDLER("VENT_MANGL_FUNKSJ_SAKSBEHANDLER", "Settes på vent av saksbehandler pga. manglende funksjonalitet i løsningen"),
-    ANNET_MANUELT_SATT_PA_VENT("ANNET_MANUELT", "Annen manuell venteårsak "),
+    VENT_MANGL_FUNKSJ_SAKSBEHANDLER("VENT_MANGL_FUNKSJ_SAKSBEHANDLER", "Manglende funksjonalitet i løsningen"),
+    VENTER_SVAR_INTERNT("VENTER_SVAR_INTERNT", "Meldt i Porten eller Teams"),
     AUTOMATISK_SATT_PA_VENT("AUTOMATISK", "Automatisk satt på vent"),
     UKJENT("UKJENT", "Mangler venteårsak")
 }
