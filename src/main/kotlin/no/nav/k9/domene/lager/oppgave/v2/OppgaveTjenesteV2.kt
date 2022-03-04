@@ -1,64 +1,52 @@
 package no.nav.k9.domene.lager.oppgave.v2
 
-import no.nav.k9.domene.lager.oppgave.Oppgave
-import no.nav.k9.domene.modell.BehandlingStatus
-import no.nav.k9.domene.modell.Fagsystem
 import org.slf4j.LoggerFactory
-import java.util.*
+import java.time.LocalDateTime
 
-abstract class OppgaveTjenesteV2(
+open class OppgaveTjenesteV2(
     val oppgaveRepository: OppgaveRepositoryV2,
 ) {
     private val log = LoggerFactory.getLogger(OppgaveTjenesteV2::class.java)
 
-    open fun nyOppgavehendelse(oppgave: Oppgave) {
-        val behandling = hentEllerOpprettFra(oppgave)
+    fun nyOppgaveHendelse(eksternId: String, hendelse: OppgaveHendelse, opprettFunc: () -> Behandling? = { null } ) {
+        val behandling = hentEllerOpprettFra(eksternId, opprettFunc)
 
-        log.info("Oppdaterer behandling ${oppgave.eksternId} med nytt prosessevent")
-        val eventResultat = oppgave.aksjonspunkter.eventResultat()
-
-        val manuelleAktiveAksjonspunkter = oppgave.aksjonspunkter.manuelleAksjonspunkter()
-        manuelleAktiveAksjonspunkter.forEach { manueltAksjonspunkt ->
-            behandling.nyOppgave(oppgave.eventTid, manueltAksjonspunkt.key.kode)
-        }
-
-        if (eventResultat.setterOppgavePåVent()) {
-            behandling.settPåVent()
-        } else if (eventResultat.lukkerOppgave()) {
-            behandling.lukkAktiveOppgaver(
-                oppgave.eventTid,
-                ansvarligSaksbehandler = oppgave.ansvarligSaksbehandlerIdent,
-                enhet = oppgave.behandlendeEnhet
-            )
-        }
-        if (oppgave.behandlingStatus == BehandlingStatus.AVSLUTTET) {
-            behandling.lukkAktiveOppgaver(
-                oppgave.eventTid,
-                ansvarligSaksbehandler = oppgave.ansvarligSaksbehandlerIdent,
-                enhet = oppgave.behandlendeEnhet
-            )
-        }
+        when(hendelse) {
+                is OpprettOppgave -> behandling.nyOppgave(hendelse)
+                is Ferdigstillelse -> behandling.lukkAktiveOppgaver(hendelse)
+            }
         oppgaveRepository.lagre(behandling)
     }
 
-    open fun hentEllerOpprettFra(oppgave: Oppgave): Behandling {
-        return hentBehandling(oppgave.eksternId) ?: opprettNyBehandling(oppgave)
+    fun opprettBehandling(eksternId: String, opprettFunc: () -> Behandling? = { null }) {
+        hentEllerOpprettFra(eksternId, opprettFunc).run { oppgaveRepository.lagre(this) }
     }
 
-    open fun hentBehandling(referanse: UUID): Behandling? {
-        return oppgaveRepository.hentBehandling(referanse.toString())
+    fun avsluttBehandling(eksternId: String, ferdigstillelse: Ferdigstillelse) {
+        oppgaveRepository.hentBehandling(eksternId)
+            ?.also { behandling -> behandling.ferdigstill(ferdigstillelse) }
+            ?.run { oppgaveRepository.lagre(this) }
     }
 
-    open fun opprettNyBehandling(oppgave: Oppgave): Behandling {
-        log.info("Oppretter ny behandling $oppgave.eksternId")
-        return Behandling(
-            id = UUID.randomUUID(),
-            eksternReferanse = oppgave.eksternId.toString(),
-            fagsystem = Fagsystem.fraKode(oppgave.system),
-            ytelseType = oppgave.fagsakYtelseType,
-            søkersId = Ident(oppgave.aktorId, Ident.IdType.AKTØRID),
-            kode6 = oppgave.kode6,
-            skjermet = oppgave.skjermet
-        )
+    fun hentEllerOpprettFra(eksternId: String, opprettFunc: () -> Behandling? = { null }): Behandling {
+        return oppgaveRepository.hentBehandling(eksternId)?.also { log.info("Bruker eksisterende behandling for $eksternId") }
+            ?: opprettFunc()?.also { log.info("Oppretter ny behandling for $eksternId") }
+        ?: throw IllegalStateException("Finner ikke behandling og kan ikke opprette ny for $eksternId")
     }
 }
+
+interface OppgaveHendelse {
+    val tidspunkt: LocalDateTime
+}
+
+data class Ferdigstillelse(
+    override val tidspunkt: LocalDateTime,
+    val ansvarligSaksbehandlerIdent: String? = null,
+    val behandlendeEnhet: String? = null
+) : OppgaveHendelse
+
+data class OpprettOppgave(
+    override val tidspunkt: LocalDateTime,
+    val oppgaveKode: String,
+    val frist: LocalDateTime?
+): OppgaveHendelse

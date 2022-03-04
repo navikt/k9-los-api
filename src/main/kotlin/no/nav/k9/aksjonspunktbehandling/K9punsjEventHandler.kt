@@ -51,8 +51,6 @@ class K9punsjEventHandler constructor(
             }
             statistikkChannel.send(true)
         }
-
-        oppgaveTjenesteV2.nyOppgavehendelse(oppgave)
     }
 
     override fun tellEvent(modell: IModell, oppgave: Oppgave) {

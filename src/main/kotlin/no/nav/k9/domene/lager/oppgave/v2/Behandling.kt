@@ -7,11 +7,12 @@ import java.time.LocalDateTime
 import java.util.*
 
 open class Behandling constructor(
-    private val oppgaver: MutableSet<OppgaveV2> = mutableSetOf(),
+    private val oppgaver: MutableSet<Deloppgave> = mutableSetOf(),
     val id: UUID,
     val eksternReferanse: String,
     val fagsystem: Fagsystem,
     val ytelseType: FagsakYtelseType,
+    val behandlingType: String?,
     val søkersId: Ident?,
     val kode6: Boolean,
     val skjermet: Boolean,
@@ -23,6 +24,19 @@ open class Behandling constructor(
 
     companion object {
         private val log = LoggerFactory.getLogger(Behandling::class.java)
+
+        fun ny(eksternReferanse: String, fagsystem: Fagsystem, ytelseType: FagsakYtelseType, behandlingType: String?, søkersId: Ident?): Behandling {
+            return Behandling(
+                id = UUID.randomUUID(),
+                eksternReferanse = eksternReferanse,
+                fagsystem = fagsystem,
+                ytelseType = ytelseType,
+                behandlingType = behandlingType,
+                søkersId = søkersId,
+                kode6 = false,
+                skjermet = false
+            )
+        }
     }
 
     constructor(other: Behandling, id: UUID = UUID.randomUUID()) : this(
@@ -31,6 +45,7 @@ open class Behandling constructor(
         eksternReferanse = other.eksternReferanse,
         fagsystem = other.fagsystem,
         ytelseType = other.ytelseType,
+        behandlingType = other.behandlingType,
         søkersId = other.søkersId,
         kode6 = other.kode6,
         skjermet = other.skjermet
@@ -51,27 +66,15 @@ open class Behandling constructor(
         }
     }
 
-    open fun ferdigstill(
-        tidspunkt: LocalDateTime = LocalDateTime.now(),
-        ansvarligSaksbehandler: String? = null,
-        enhet: String? = null
-    ) {
+    open fun ferdigstill(ferdigstillelse: Ferdigstillelse) {
         log.info("Ferdigstiller behandling $eksternReferanse")
-        lukkAktiveOppgaver(tidspunkt, ansvarligSaksbehandler = ansvarligSaksbehandler, enhet = enhet)
-        ferdigstilt = tidspunkt
+        lukkAktiveOppgaver(ferdigstillelse)
+        ferdigstilt = ferdigstillelse.tidspunkt
     }
 
-    open fun lukkAktiveOppgaver(
-        tidspunkt: LocalDateTime = LocalDateTime.now(),
-        ansvarligSaksbehandler: String? = null,
-        enhet: String? = null
-    ) {
+    open fun lukkAktiveOppgaver(ferdigstillelse: Ferdigstillelse) {
         log.info("Lukker oppgaver $eksternReferanse")
-        oppgaver.filter { it.erAktiv() }.forEach { it.ferdigstill(
-            tidspunkt = tidspunkt,
-            ansvarligSaksbehandler = ansvarligSaksbehandler,
-            behandlendeEnhet = enhet
-        )}
+        oppgaver.filter { it.erAktiv() }.forEach { it.ferdigstill(ferdigstillelse)}
     }
 
     fun settPåVent() {
@@ -79,19 +82,14 @@ open class Behandling constructor(
         oppgaver.filter { it.erAktiv() }.forEach { it.avbrytOppgaveUtenFerdigstillelse() }
     }
 
-    fun nyOppgave(
-        opprettet: LocalDateTime,
-        oppgaveKode: String
-    ) {
-        log.info("Ny oppgave lagt til $eksternReferanse")
+    fun nyOppgave(opprettOppgave: OpprettOppgave) {
+        log.info("Ny oppgave (${opprettOppgave.oppgaveKode}) lagt til $eksternReferanse")
         oppgaver.add(
-            OppgaveV2.ny(
+            Deloppgave.ny(
                 eksternReferanse = eksternReferanse,
-                fagSystem = fagsystem,
-                ytelseType = ytelseType,
-                oppgaveKode = oppgaveKode,
-                opprettet = opprettet,
-                søkersId = søkersId,
+                oppgaveKode = opprettOppgave.oppgaveKode,
+                opprettet = opprettOppgave.tidspunkt,
+                frist = opprettOppgave.frist
             )
         )
     }

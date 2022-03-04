@@ -1,14 +1,13 @@
 package no.nav.k9.tjenester.avdelingsleder.nokkeltall
 
-import no.nav.k9.domene.modell.FagsakYtelseType
 import java.time.LocalDate
-
 
 data class FerdigstiltBehandling(
     override val dato: LocalDate,
-    override val ytelseType: FagsakYtelseType? = null,
+    override val ytelseType: String? = null,
     override val behandlingType: String? = null,
-    val behandlendeEnhet: String,
+    override val fagsystemType: String? = null,
+    val behandlendeEnhet: String? = null,
 ): HistorikkElement {
 
     override fun tilMap(): Map<VelgbartHistorikkfelt, Any?> {
@@ -16,6 +15,7 @@ data class FerdigstiltBehandling(
                 VelgbartHistorikkfelt.DATO to dato,
                 VelgbartHistorikkfelt.YTELSETYPE to ytelseType,
                 VelgbartHistorikkfelt.BEHANDLINGTYPE to behandlingType,
+                VelgbartHistorikkfelt.FAGSYSTEM to fagsystemType,
                 VelgbartHistorikkfelt.ENHET to behandlendeEnhet
         )
     }

@@ -1,11 +1,8 @@
 package no.nav.k9.domene.lager.oppgave.v2
 
-import kotliquery.TransactionalSession
+import kotliquery.*
 import kotliquery.action.ListResultQueryAction
 import kotliquery.action.NullableResultQueryAction
-import kotliquery.queryOf
-import kotliquery.sessionOf
-import kotliquery.using
 import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.domene.modell.Fagsystem
 import no.nav.k9.tjenester.innsikt.Databasekall
@@ -16,10 +13,6 @@ import javax.sql.DataSource
 class OppgaveRepositoryV2(
     private val dataSource: DataSource
 ) {
-
-    fun hentAlleAktiveOppgaverForFagsystemGruppertPrReferanse(k9SAK: Fagsystem): Map<String, Behandling> {
-        TODO("Not yet implemented")
-    }
 
     fun hentBehandling(eksternReferanse: String, tx: TransactionalSession? = null): Behandling? {
         return tx?.run {
@@ -35,7 +28,7 @@ class OppgaveRepositoryV2(
 
     private fun hentBehandling(
         eksternReferanse: String,
-        deloppgaver: Collection<OppgaveV2>
+        deloppgaver: Collection<Deloppgave>
     ): NullableResultQueryAction<Behandling> {
         return queryOf(
             """
@@ -43,6 +36,7 @@ class OppgaveRepositoryV2(
                             id,
                             fagsystem,
                             ytelse_type,
+                            behandling_type,
                             soekers_id,
                             ferdigstilt_tidspunkt,
                             kode6,
@@ -50,22 +44,27 @@ class OppgaveRepositoryV2(
                         from behandling 
                         WHERE ekstern_referanse = :ekstern_referanse
                     """,
-            mapOf("ekstern_referanse" to eksternReferanse.toString())
-        ).map { row ->
-                Behandling(
-                    id = UUID.fromString(row.string("id")),
-                    eksternReferanse = eksternReferanse.toString(),
-                    oppgaver = deloppgaver.toMutableSet(),
-                    fagsystem = Fagsystem.fraKode(row.string("fagsystem")),
-                    ytelseType = FagsakYtelseType.fraKode(row.string("ytelse_type")),
-                    søkersId = Ident(row.string("soekers_id"), Ident.IdType.AKTØRID),
-                    kode6 = row.boolean("kode6"),
-                    skjermet = row.boolean("skjermet"),
-                ).also { it.ferdigstilt = row.localDateTimeOrNull("ferdigstilt_tidspunkt") }
-            }.asSingle
+            mapOf("ekstern_referanse" to eksternReferanse)
+        ).map { row -> row.tilBehandling(eksternReferanse, deloppgaver) }.asSingle
     }
 
-    private fun hentOppgaver(eksternReferanse: String): ListResultQueryAction<OppgaveV2> {
+    private fun Row.tilBehandling(eksternReferanse: String, deloppgaver: Collection<Deloppgave>): Behandling {
+        return Behandling(
+            id = UUID.fromString(string("id")),
+            eksternReferanse = eksternReferanse,
+            oppgaver = deloppgaver.toMutableSet(),
+            fagsystem = Fagsystem.fraKode(string("fagsystem")),
+            ytelseType = FagsakYtelseType.fraKode(string("ytelse_type")),
+            behandlingType = stringOrNull("behandling_type"),
+            søkersId = Ident(string("soekers_id"), Ident.IdType.AKTØRID),
+            kode6 = boolean("kode6"),
+            skjermet = boolean("skjermet"),
+        ).also {
+            it.ferdigstilt = localDateTimeOrNull("ferdigstilt_tidspunkt")
+        }
+    }
+
+    private fun hentOppgaver(eksternReferanse: String): ListResultQueryAction<Deloppgave> {
         return queryOf(
             """
                         select
@@ -86,18 +85,19 @@ class OppgaveRepositoryV2(
                     "ekstern_referanse" to eksternReferanse,
                 )
             ).map { row ->
-                OppgaveV2(
+                Deloppgave(
                     id = UUID.fromString(row.string("id")),
                     eksternReferanse = eksternReferanse,
                     opprettet = row.localDateTime("opprettet"),
                     sistEndret = row.localDateTime("sist_endret"),
                     oppgaveStatus = OppgaveStatus.valueOf(row.string("oppgave_status")),
-                    oppgaveKode = row.stringOrNull("oppgave_kode"),
+                    oppgaveKode = row.string("oppgave_kode"),
+                    frist = row.localDateTimeOrNull("frist")
                 ).also {
                     row.localDateTimeOrNull("ferdigstilt_tidspunkt")?.let { ferdigstiltTidspunkt ->
-                        it.ferdigstill(
+                        it.ferdistilt = Deloppgave.Ferdigstilt(
                             tidspunkt = ferdigstiltTidspunkt,
-                            ansvarligSaksbehandler = row.stringOrNull("ferdigstilt_saksbehandler"),
+                            ansvarligSaksbehandlerIdent = row.stringOrNull("ferdigstilt_saksbehandler"),
                             behandlendeEnhet = row.stringOrNull("ferdigstilt_enhet")
                         )
                     }
@@ -127,6 +127,7 @@ class OppgaveRepositoryV2(
                         ekstern_referanse,
                         fagsystem,
                         ytelse_type,
+                        behandling_type,
                         soekers_id,
                         ferdigstilt_tidspunkt,
                         kode6,
@@ -136,6 +137,7 @@ class OppgaveRepositoryV2(
                         :ekstern_referanse,
                         :fagsystem,
                         :ytelse_type,
+                        :behandling_type,
                         :soekers_id,
                         :ferdigstilt_tidspunkt,
                         :kode6,
@@ -144,6 +146,7 @@ class OppgaveRepositoryV2(
                         ekstern_referanse = :ekstern_referanse, 
                         fagsystem = :fagsystem,
                         ytelse_type = :ytelse_type,
+                        behandling_type = :behandling_type,
                         soekers_id = :soekers_id,
                         kode6 = :kode6,
                         skjermet = :skjermet
@@ -152,6 +155,7 @@ class OppgaveRepositoryV2(
                     "ekstern_referanse" to behandling.eksternReferanse,
                     "fagsystem" to behandling.fagsystem.kode,
                     "ytelse_type" to behandling.ytelseType.kode,
+                    "behandling_type" to behandling.behandlingType,
                     "soekers_id" to behandling.søkersId?.id,
                     "ferdigstilt_tidspunkt" to behandling.ferdigstilt,
                     "kode6" to behandling.kode6,
@@ -162,7 +166,7 @@ class OppgaveRepositoryV2(
     }
 
 
-    private fun lagre(behandlingId: UUID, oppgave: OppgaveV2, tx: TransactionalSession) {
+    private fun lagre(behandlingId: UUID, oppgave: Deloppgave, tx: TransactionalSession) {
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
 

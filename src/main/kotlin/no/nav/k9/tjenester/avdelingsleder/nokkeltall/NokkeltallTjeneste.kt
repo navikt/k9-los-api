@@ -103,7 +103,7 @@ class NokkeltallTjeneste constructor(
             .filterNot { EnheterSomSkalUtelatesFraStatistikk.contains(it.behandlendeEnhet) }
             .groupBy { it.dato }
             .mapValues { (_, ferdigstiltOppgave) ->
-                ferdigstiltOppgave.groupBy { it.behandlendeEnhet }.mapValues { it.value.size }
+                ferdigstiltOppgave.groupBy { it.behandlendeEnhet!! }.mapValues { it.value.size }
             }.fyllTommeDagerMedVerdi(emptyMap())
     }
 

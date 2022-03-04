@@ -4,6 +4,7 @@ CREATE TABLE if not exists BEHANDLING
      ekstern_referanse           VARCHAR(36)     NOT NULL,
      fagsystem                   VARCHAR(20)     NOT NULL,
      ytelse_type                 VARCHAR(20)     NOT NULL,
+     behandling_type             VARCHAR(20)     NULL,
      ferdigstilt_tidspunkt       TIMESTAMP       NULL,
      soekers_id                  VARCHAR(20)     NULL,
      kode6                       BOOLEAN         NULL,
@@ -29,11 +30,8 @@ CREATE UNIQUE INDEX idx_referanse_fagsystem on BEHANDLING (ekstern_referanse, fa
 CREATE UNIQUE INDEX idx_referanse_fagytelse on BEHANDLING (ekstern_referanse, ytelse_type);
 CREATE INDEX idx_kode6 on BEHANDLING (kode6);
 CREATE INDEX idx_skjermet on BEHANDLING (skjermet);
-
--- CREATE INDEX idx_totrinn_paakrevd on OPPGAVE_V2 (totrinn_paakrevd);
--- CREATE INDEX idx_totrinn_utført on OPPGAVE_V2 (totrinn_utfoert);
+CREATE INDEX idx_ferdigstilt on BEHANDLING (ferdigstilt_tidspunkt);
 
 CREATE INDEX idx_oppgave_aktiv on DELOPPGAVE (oppgave_status);
-
 CREATE INDEX idx_oppgave_opprettet on DELOPPGAVE (opprettet);
 CREATE INDEX idx_oppgave_ferdigstilt on DELOPPGAVE (ferdigstilt_tidspunkt);

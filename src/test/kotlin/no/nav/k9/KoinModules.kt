@@ -11,6 +11,7 @@ import no.nav.k9.aksjonspunktbehandling.K9TilbakeEventHandler
 import no.nav.k9.aksjonspunktbehandling.K9punsjEventHandler
 import no.nav.k9.aksjonspunktbehandling.K9sakEventHandler
 import no.nav.k9.domene.lager.oppgave.Oppgave
+import no.nav.k9.domene.lager.oppgave.v2.OppgaveTjenesteV2
 import no.nav.k9.domene.repository.*
 import no.nav.k9.integrasjon.abac.IPepClient
 import no.nav.k9.integrasjon.abac.PepClientLocal
@@ -123,6 +124,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             omsorgspengerService = get()
         )
     }
+
     single {
         NokkeltallTjeneste(
             oppgaveRepository = get(),
@@ -139,7 +141,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         K9sakEventHandler(
             get(),
-            get(),
             BehandlingProsessEventK9Repository(dataSource = get()),
             sakOgBehandlingProducer = sakOgBehadlingProducer,
             oppgaveKøRepository = get(),
@@ -150,6 +151,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             reservasjonTjeneste = get()
         )
     }
+
     single {
         K9TilbakeEventHandler(
             get(),

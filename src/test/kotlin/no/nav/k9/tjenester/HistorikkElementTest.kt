@@ -19,15 +19,15 @@ class HistorikkElementTest {
     val DAG3 = LocalDate.of(2021, 1,3)
 
     val oppgaver = listOf(
-        FerdigstiltBehandling(DAG1, FagsakYtelseType.PLEIEPENGER_SYKT_BARN, BehandlingType.FORSTEGANGSSOKNAD.kode,"4407", ),
-        FerdigstiltBehandling(DAG1, FagsakYtelseType.OMSORGSPENGER, BehandlingType.FORSTEGANGSSOKNAD.kode, "4404"),
+        FerdigstiltBehandling(DAG1, FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode, BehandlingType.FORSTEGANGSSOKNAD.kode,"4407", ),
+        FerdigstiltBehandling(DAG1, FagsakYtelseType.OMSORGSPENGER.kode, BehandlingType.FORSTEGANGSSOKNAD.kode, "4404"),
 
-        FerdigstiltBehandling(DAG2, FagsakYtelseType.PLEIEPENGER_SYKT_BARN, BehandlingType.REVURDERING.kode, "4407"),
+        FerdigstiltBehandling(DAG2, FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode, BehandlingType.REVURDERING.kode, "4407"),
 
-        FerdigstiltBehandling(DAG3, FagsakYtelseType.PLEIEPENGER_SYKT_BARN, BehandlingType.FORSTEGANGSSOKNAD.kode, "4407"),
-        FerdigstiltBehandling(DAG3, FagsakYtelseType.PLEIEPENGER_SYKT_BARN, BehandlingType.REVURDERING.kode, "4405"),
-        FerdigstiltBehandling(DAG3, FagsakYtelseType.OMSORGSPENGER, BehandlingType.FORSTEGANGSSOKNAD.kode, "4404"),
-        FerdigstiltBehandling(DAG3, FagsakYtelseType.OMSORGSPENGER, BehandlingType.REVURDERING.kode, "4404")
+        FerdigstiltBehandling(DAG3, FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode, BehandlingType.FORSTEGANGSSOKNAD.kode, "4407"),
+        FerdigstiltBehandling(DAG3, FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode, BehandlingType.REVURDERING.kode, "4405"),
+        FerdigstiltBehandling(DAG3, FagsakYtelseType.OMSORGSPENGER.kode, BehandlingType.FORSTEGANGSSOKNAD.kode, "4404"),
+        FerdigstiltBehandling(DAG3, FagsakYtelseType.OMSORGSPENGER.kode, BehandlingType.REVURDERING.kode, "4404")
     )
 
     @Test
@@ -77,7 +77,7 @@ class HistorikkElementTest {
         val resultat = listOf(
             FerdigstiltBehandling(
                 DAG3,
-                FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
+                FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode,
                 BehandlingType.FORSTEGANGSSOKNAD.kode,
                 "4407"
             )

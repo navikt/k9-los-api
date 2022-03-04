@@ -3,13 +3,12 @@ package no.nav.k9.aksjonspunktbehandling
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.domene.lager.oppgave.Oppgave
+import no.nav.k9.domene.lager.oppgave.v2.OppgaveTjenesteV2
 import no.nav.k9.domene.modell.BehandlingStatus
 import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.domene.modell.IModell
 import no.nav.k9.domene.modell.K9SakModell
 import no.nav.k9.domene.modell.reportMetrics
-import no.nav.k9.domene.repository.*
-import no.nav.k9.fagsystem.k9sak.OppgaveTjenesteK9Sak
 import no.nav.k9.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.domene.repository.OppgaveKøRepository
 import no.nav.k9.domene.repository.OppgaveRepository
@@ -25,7 +24,6 @@ import org.slf4j.LoggerFactory
 
 class K9sakEventHandler constructor(
     private val oppgaveRepository: OppgaveRepository,
-    private val oppgaveTjenesteK9: OppgaveTjenesteK9Sak,
     private val behandlingProsessEventK9Repository: BehandlingProsessEventK9Repository,
     private val sakOgBehandlingProducer: SakOgBehandlingProducer,
     private val oppgaveKøRepository: OppgaveKøRepository,

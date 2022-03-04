@@ -1,39 +1,36 @@
 package no.nav.k9.domene.lager.oppgave.v2
 
-import no.nav.k9.domene.modell.FagsakYtelseType
-import no.nav.k9.domene.modell.Fagsystem
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.*
 
-data class OppgaveV2(
+data class Deloppgave(
     val id: UUID,
     val eksternReferanse: String,
+    val oppgaveKode: String,
     var oppgaveStatus: OppgaveStatus,
     val opprettet: LocalDateTime = LocalDateTime.now(),
     var sistEndret: LocalDateTime = opprettet,
-    val oppgaveKode: String?,
-    val frist: LocalDateTime? = null,
+    val frist: LocalDateTime?,
 ) {
-    var totrinn: Totrinnskontroll? = null
-        private set
-
-    var ferdistilt: Ferdigstillelse? = null
+    var ferdistilt: Ferdigstilt? = null
 
     fun avbrytOppgaveUtenFerdigstillelse() {
         sistEndret = LocalDateTime.now()
         oppgaveStatus = OppgaveStatus.AVBRUTT
     }
 
-    fun ferdigstill(
-        tidspunkt: LocalDateTime,
-        ansvarligSaksbehandler: String? = null,
-        behandlendeEnhet: String? = null
-    ) {
+    fun ferdigstill(ferdigstillelse: Ferdigstillelse) {
         oppgaveStatus = OppgaveStatus.FERDIGSTILT
-        sistEndret = tidspunkt
+        sistEndret = ferdigstillelse.tidspunkt
 
         if (ferdistilt == null) {
-            ferdistilt = Ferdigstillelse(tidspunkt, ansvarligSaksbehandler, behandlendeEnhet)
+            log.info("Ferdigstiller oppgave $oppgaveKode for $eksternReferanse")
+            ferdistilt = Ferdigstilt(
+                tidspunkt = ferdigstillelse.tidspunkt,
+                ansvarligSaksbehandlerIdent = ferdigstillelse.ansvarligSaksbehandlerIdent,
+                behandlendeEnhet = ferdigstillelse.behandlendeEnhet
+            )
         }
     }
 
@@ -42,80 +39,27 @@ data class OppgaveV2(
     }
 
     companion object {
+        private val log = LoggerFactory.getLogger(Deloppgave::class.java)
+
         fun ny(
-            fagSystem: Fagsystem,
-            ytelseType: FagsakYtelseType,
             eksternReferanse: String,
-            oppgaveKode: String? = null,
+            oppgaveKode: String,
             opprettet: LocalDateTime,
-            søkersId: Ident?,
+            frist: LocalDateTime? = null,
         ) =
-            OppgaveV2(
+            Deloppgave(
                 id = UUID.randomUUID(),
+                oppgaveStatus = OppgaveStatus.OPPRETTET,
                 eksternReferanse = eksternReferanse,
                 oppgaveKode = oppgaveKode,
-                oppgaveStatus = OppgaveStatus.OPPRETTET,
+                opprettet = opprettet,
+                frist = frist
             )
     }
-}
 
-data class Ident(
-        val id: String,
-        val idType: IdType,
-) {
-    enum class IdType {
-        ORGNR,
-        AKTØRID,
-    }
-}
-
-class Ferdigstillelse(
-    val tidspunkt: LocalDateTime,
-    val ansvarligSaksbehandlerIdent: String? = null,
-    val behandlendeEnhet: String? = null,
-)
-
-enum class OppgaveStatus(val kode: String) {
-    OPPRETTET("OPPRETTET"),
-    UNDER_BEHANDLING("UNDER_BEHANDLING"),
-    AVBRUTT("AVBRUTT"),
-    FERDIGSTILT("FERDIGSTILT"),
-    FEILREGISTRERT("FEILREGISTRERT");
-
-    companion object {
-        val aktivOppgaveKoder = EnumSet.of(OppgaveStatus.OPPRETTET, OppgaveStatus.UNDER_BEHANDLING)
-    }
-
-    fun erAktiv(): Boolean {
-        return aktivOppgaveKoder.contains(this)
-    }
-}
-
-class Totrinnskontroll (
-) {
-    var utført: LocalDateTime? = null
-    var utførtAvIdent: String? = null
-
-    fun erPåkrevd(): Boolean {
-        return true
-    }
-
-    fun venterPåBeslutter(): Boolean {
-        if (erPåkrevd()) {
-            return utført != null
-        } else {
-            return false
-        }
-    }
-
-    fun utfør(ident: String) {
-        this.utførtAvIdent = ident
-        utført = LocalDateTime.now()
-    }
-}
-
-enum class OppgaveKommando {
-    OPPRETT,
-    SETT_PÅ_VENT,
-    FERDIGSTILL
+    data class Ferdigstilt(
+        val tidspunkt: LocalDateTime,
+        val ansvarligSaksbehandlerIdent: String? = null,
+        val behandlendeEnhet: String? = null,
+    )
 }
