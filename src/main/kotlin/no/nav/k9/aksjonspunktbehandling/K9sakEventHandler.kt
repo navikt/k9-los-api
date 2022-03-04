@@ -71,6 +71,7 @@ class K9sakEventHandler constructor(
             oppgave
         }
         if (modell.fikkEndretAksjonspunkt()) {
+            log.info("Fjerner reservasjon på oppgave ${oppgave.eksternId}")
             reservasjonTjeneste.fjernReservasjon(oppgave)
         }
         modell.reportMetrics(reservasjonRepository)

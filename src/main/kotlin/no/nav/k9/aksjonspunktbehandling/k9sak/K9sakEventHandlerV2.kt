@@ -24,7 +24,6 @@ class K9sakEventHandlerV2(
     }
 
     private suspend fun håndterNyttAksjonspunkt(aksjonspunkthendelse: ProduksjonsstyringAksjonspunktHendelse) {
-        log.warn("AKSJONSPUNKTHENDELSE er ikke implementert ${aksjonspunkthendelse.aksjonspunktTilstander.joinToString(", ") { it.toString() }}")
 //        val aksjonspunkterMedBehandlendeEnhet = aksjonspunkthendelse.aksjonspunktTilstander.associateBy { it!! }
 //            .mapValues { (_, v) ->
 //                v.ansvarligSaksbehandler?.let { azureGraphService.hentEnhetForBrukerMedSystemToken(it) }

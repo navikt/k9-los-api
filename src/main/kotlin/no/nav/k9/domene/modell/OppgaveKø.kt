@@ -1,9 +1,11 @@
 package no.nav.k9.domene.modell
 
+import no.nav.k9.aksjonspunktbehandling.K9sakEventHandler
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.repository.ReservasjonRepository
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.*
 import no.nav.k9.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -26,6 +28,10 @@ data class OppgaveKø(
     var oppgaverOgDatoer: MutableList<OppgaveIdMedDato> = mutableListOf(),
     val kode6: Boolean = false
 ) {
+    companion object {
+        private val log = LoggerFactory.getLogger(OppgaveKø::class.java)
+    }
+
     fun leggOppgaveTilEllerFjernFraKø(
         oppgave: Oppgave,
         reservasjonRepository: ReservasjonRepository? = null
@@ -36,6 +42,7 @@ data class OppgaveKø(
         )
         if (tilhørerOppgaveTilKø) {
             if (this.oppgaverOgDatoer.none { it.id == oppgave.eksternId }) {
+                log.info("Legger til oppgave ${oppgave.eksternId} i kø $navn")
                 this.oppgaverOgDatoer.add(
                     OppgaveIdMedDato(
                         oppgave.eksternId,
@@ -50,6 +57,7 @@ data class OppgaveKø(
             }
         } else {
             if (this.oppgaverOgDatoer.any { it.id == oppgave.eksternId }) {
+                log.info("Fjerner oppgave ${oppgave.eksternId} fra kø $navn")
                 this.oppgaverOgDatoer.remove(this.oppgaverOgDatoer.first { it.id == oppgave.eksternId })
                 return true
             }

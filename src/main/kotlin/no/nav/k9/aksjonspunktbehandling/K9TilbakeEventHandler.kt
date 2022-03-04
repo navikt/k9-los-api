@@ -2,6 +2,7 @@ package no.nav.k9.aksjonspunktbehandling
 
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
+import no.nav.k9.aksjonspunktbehandling.k9sak.K9sakEventHandlerV2
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.modell.BehandlingStatus
 import no.nav.k9.domene.modell.FagsakYtelseType
@@ -26,6 +27,10 @@ class K9TilbakeEventHandler(
     private val reservasjonTjeneste: ReservasjonTjeneste
 ) : EventTeller {
 
+    companion object {
+        private val log = LoggerFactory.getLogger(K9TilbakeEventHandler::class.java)
+    }
+
     fun prosesser(
         event: BehandlingProsessEventTilbakeDto
     ) {
@@ -38,6 +43,7 @@ class K9TilbakeEventHandler(
         }
 
         if (modell.fikkEndretAksjonspunkt()) {
+            log.info("Fjerner reservasjon på oppgave ${oppgave.eksternId}")
             reservasjonTjeneste.fjernReservasjon(oppgave)
         }
 
