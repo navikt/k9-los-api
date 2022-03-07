@@ -5,6 +5,8 @@ import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.modell.IModell
 import no.nav.k9.integrasjon.azuregraph.IAzureGraphService
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.ProduksjonsstyringAksjonspunktHendelse
+import no.nav.k9.sak.kontrakt.produksjonsstyring.los.ProduksjonsstyringBehandlingAvsluttetHendelse
+import no.nav.k9.sak.kontrakt.produksjonsstyring.los.ProduksjonsstyringBehandlingOpprettetHendelse
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.ProduksjonsstyringDokumentHendelse
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.ProduksjonsstyringHendelse
 import org.slf4j.LoggerFactory
@@ -19,6 +21,8 @@ class K9sakEventHandlerV2(
         when (hendelse) {
             is ProduksjonsstyringDokumentHendelse -> håndterNyttDokument(hendelse)
             is ProduksjonsstyringAksjonspunktHendelse -> håndterNyttAksjonspunkt(hendelse)
+            is ProduksjonsstyringBehandlingOpprettetHendelse,
+            is ProduksjonsstyringBehandlingAvsluttetHendelse -> log.warn("Ikke implementert")
             else -> throw UnsupportedOperationException("Mottok eventtype som ikke er støttet ${hendelse.tryggToString()}")
         }
     }
