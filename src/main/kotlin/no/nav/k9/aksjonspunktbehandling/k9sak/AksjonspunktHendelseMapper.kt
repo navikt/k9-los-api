@@ -37,10 +37,11 @@ class AksjonspunktHendelseMapper(
                 )
         }
         if (aksjonspunkt.erUtført()) {
-                return Ferdigstillelse(
+                return FerdigstillOppgave(
                     tidspunkt = hendelse.hendelseTid,
                     ansvarligSaksbehandlerIdent = dto.ansvarligSaksbehandler,
-                    behandlendeEnhet = dto.ansvarligSaksbehandler?.let { azureGraphService.hentEnhetForBrukerMedSystemToken(it) }
+                    behandlendeEnhet = dto.ansvarligSaksbehandler?.let { azureGraphService.hentEnhetForBrukerMedSystemToken(it) },
+                    oppgaveKode = dto.aksjonspunktKode
                 )
         }
         return null

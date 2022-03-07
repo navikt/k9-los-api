@@ -8,6 +8,7 @@ data class Deloppgave(
     val id: UUID,
     val eksternReferanse: String,
     val oppgaveKode: String,
+    val erBeslutter: Boolean,
     var oppgaveStatus: OppgaveStatus,
     val opprettet: LocalDateTime = LocalDateTime.now(),
     var sistEndret: LocalDateTime = opprettet,
@@ -45,6 +46,7 @@ data class Deloppgave(
             eksternReferanse: String,
             oppgaveKode: String,
             opprettet: LocalDateTime,
+            beslutter: Boolean = false,
             frist: LocalDateTime? = null,
         ) =
             Deloppgave(
@@ -53,6 +55,7 @@ data class Deloppgave(
                 eksternReferanse = eksternReferanse,
                 oppgaveKode = oppgaveKode,
                 opprettet = opprettet,
+                erBeslutter = beslutter,
                 frist = frist
             )
     }

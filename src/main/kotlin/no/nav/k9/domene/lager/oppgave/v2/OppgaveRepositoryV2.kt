@@ -73,6 +73,7 @@ class OppgaveRepositoryV2(
                             oppgave_status, 
                             oppgave_kode, 
                             opprettet,
+                            beslutter,
                             sist_endret,
                             ferdigstilt_tidspunkt,
                             ferdigstilt_saksbehandler,
@@ -92,6 +93,7 @@ class OppgaveRepositoryV2(
                     sistEndret = row.localDateTime("sist_endret"),
                     oppgaveStatus = OppgaveStatus.valueOf(row.string("oppgave_status")),
                     oppgaveKode = row.string("oppgave_kode"),
+                    erBeslutter = row.boolean("beslutter"),
                     frist = row.localDateTimeOrNull("frist")
                 ).also {
                     row.localDateTimeOrNull("ferdigstilt_tidspunkt")?.let { ferdigstiltTidspunkt ->
@@ -181,6 +183,7 @@ class OppgaveRepositoryV2(
                         oppgave_kode,
                         opprettet,
                         sist_endret,
+                        beslutter,
                         ferdigstilt_tidspunkt,
                         ferdigstilt_saksbehandler,
                         ferdigstilt_enhet,
@@ -193,6 +196,7 @@ class OppgaveRepositoryV2(
                         :oppgave_kode,
                         :opprettet,
                         :sist_endret,
+                        :beslutter,
                         :ferdigstilt_tidspunkt,
                         :ferdigstilt_saksbehandler,
                         :ferdigstilt_enhet,
@@ -203,6 +207,7 @@ class OppgaveRepositoryV2(
                         oppgave_kode = :oppgave_kode, 
                         opprettet = :opprettet,
                         sist_endret = :sist_endret, 
+                        beslutter = :beslutter,
                         ferdigstilt_tidspunkt = :ferdigstilt_tidspunkt,
                         ferdigstilt_saksbehandler = :ferdigstilt_saksbehandler,
                         ferdigstilt_enhet = :ferdigstilt_enhet,
@@ -215,6 +220,7 @@ class OppgaveRepositoryV2(
                     "oppgave_kode" to oppgave.oppgaveKode,
                     "opprettet" to oppgave.opprettet,
                     "sist_endret" to oppgave.sistEndret,
+                    "beslutter" to oppgave.erBeslutter,
                     "ferdigstilt_tidspunkt" to oppgave.ferdistilt?.tidspunkt,
                     "ferdigstilt_saksbehandler" to oppgave.ferdistilt?.ansvarligSaksbehandlerIdent,
                     "ferdigstilt_enhet" to oppgave.ferdistilt?.behandlendeEnhet,

@@ -8,13 +8,14 @@ open class OppgaveTjenesteV2(
 ) {
     private val log = LoggerFactory.getLogger(OppgaveTjenesteV2::class.java)
 
-    fun nyOppgaveHendelse(eksternId: String, hendelse: OppgaveHendelse, opprettFunc: () -> Behandling? = { null } ) {
+    fun nyeOppgaveHendelser(eksternId: String, hendelse: OppgaveHendelse, opprettFunc: () -> Behandling? = { null } ) {
         val behandling = hentEllerOpprettFra(eksternId, opprettFunc)
 
-        when(hendelse) {
-                is OpprettOppgave -> behandling.nyOppgave(hendelse)
-                is Ferdigstillelse -> behandling.lukkAktiveOppgaver(hendelse)
-            }
+        when (hendelse) {
+            is OpprettOppgave -> behandling.nyOppgave(hendelse)
+            is FerdigstillOppgave -> behandling.lukkAktiveOppgaverFørOppgittOppgavekode(hendelse)
+            is FerdigstillBehandling -> behandling.ferdigstill(hendelse)
+        }
         oppgaveRepository.lagre(behandling)
     }
 
@@ -39,11 +40,19 @@ interface OppgaveHendelse {
     val tidspunkt: LocalDateTime
 }
 
-data class Ferdigstillelse(
+data class FerdigstillBehandling(
     override val tidspunkt: LocalDateTime,
-    val ansvarligSaksbehandlerIdent: String? = null,
-    val behandlendeEnhet: String? = null
-) : OppgaveHendelse
+    override val ansvarligSaksbehandlerIdent: String? = null,
+    override val behandlendeEnhet: String? = null,
+) : Ferdigstillelse, OppgaveHendelse
+
+data class FerdigstillOppgave(
+    override val tidspunkt: LocalDateTime,
+    override val ansvarligSaksbehandlerIdent: String? = null,
+    override val behandlendeEnhet: String? = null,
+    val oppgaveKode: String?
+) : Ferdigstillelse, OppgaveHendelse
+
 
 data class OpprettOppgave(
     override val tidspunkt: LocalDateTime,

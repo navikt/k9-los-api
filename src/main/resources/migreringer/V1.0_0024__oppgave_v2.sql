@@ -8,7 +8,7 @@ CREATE TABLE if not exists BEHANDLING
      ferdigstilt_tidspunkt       TIMESTAMP       NULL,
      soekers_id                  VARCHAR(20)     NULL,
      kode6                       BOOLEAN         NULL,
-     skjermet                    BOOLEAN NULL
+     skjermet                    BOOLEAN         NULL
 );
 
 CREATE TABLE if not exists DELOPPGAVE(
@@ -19,6 +19,7 @@ CREATE TABLE if not exists DELOPPGAVE(
     oppgave_kode                VARCHAR(20)     NOT NULL,
     opprettet                   TIMESTAMP       NOT NULL,
     sist_endret                 TIMESTAMP       NOT NULL,
+    beslutter                   BOOLEAN         NOT NULL,
     ferdigstilt_tidspunkt       TIMESTAMP       NULL,
     ferdigstilt_saksbehandler   VARCHAR(10)     NULL,
     ferdigstilt_enhet           VARCHAR(10)     NULL,

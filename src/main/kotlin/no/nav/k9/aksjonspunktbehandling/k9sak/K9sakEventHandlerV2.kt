@@ -2,10 +2,7 @@ package no.nav.k9.aksjonspunktbehandling.k9sak
 
 import no.nav.k9.aksjonspunktbehandling.EventTeller
 import no.nav.k9.domene.lager.oppgave.Oppgave
-import no.nav.k9.domene.lager.oppgave.v2.Behandling
-import no.nav.k9.domene.lager.oppgave.v2.Ferdigstillelse
-import no.nav.k9.domene.lager.oppgave.v2.Ident
-import no.nav.k9.domene.lager.oppgave.v2.OppgaveTjenesteV2
+import no.nav.k9.domene.lager.oppgave.v2.*
 import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.domene.modell.Fagsystem
 import no.nav.k9.domene.modell.IModell
@@ -31,6 +28,8 @@ class K9sakEventHandlerV2(
     }
 
     private fun håndterBehandlingOpprettet(hendelse: ProduksjonsstyringBehandlingOpprettetHendelse) {
+        log.info("Behandling opprettet: ${hendelse.behandlingType}, ${hendelse.ytelseType}, ${hendelse.saksnummer},  ${hendelse.behandlingstidFrist}, ${hendelse.tryggToString()}")
+
         val eksternId = hendelse.eksternId.toString()
         oppgaveTjenesteV2.opprettBehandling(eksternId) {
             Behandling.ny(
@@ -44,15 +43,19 @@ class K9sakEventHandlerV2(
     }
 
     private fun håndterBehandlingAvsluttet(hendelse: ProduksjonsstyringBehandlingAvsluttetHendelse) {
+        log.info("Behandling avsluttet: ${hendelse.behandlingResultatType}, ${hendelse.tryggToString()}")
+
         val eksternId = hendelse.eksternId.toString()
-        oppgaveTjenesteV2.avsluttBehandling(eksternId,
-            Ferdigstillelse(
+        oppgaveTjenesteV2.nyeOppgaveHendelser(eksternId,
+            FerdigstillBehandling(
                tidspunkt = hendelse.hendelseTid
             )
         )
     }
 
     private suspend fun håndterNyttAksjonspunkt(hendelse: ProduksjonsstyringAksjonspunktHendelse) {
+        log.info("Aksjonspunkthendelse: "+hendelse.aksjonspunktTilstander.joinToString(", "))
+
         val aksjonspunkter = hendelse.aksjonspunktTilstander.associateBy { it }
             .mapKeys { (k, _) ->
                 AksjonspunktHendelseMapper.Aksjonspunkt(AksjonspunktDefinisjon.fraKode(k.aksjonspunktKode), k.status)
@@ -60,7 +63,7 @@ class K9sakEventHandlerV2(
 
         try {
             aksjonspunktHendelseMapper.hentOppgavehendelser(hendelse, aksjonspunkter).forEach {
-                oppgaveTjenesteV2.nyOppgaveHendelse(hendelse.eksternId.toString(), it)
+                oppgaveTjenesteV2.nyeOppgaveHendelser(hendelse.eksternId.toString(), it)
             }
         } catch (e: IllegalStateException) {
             log.error("Feilet ved håndtering av oppgavehendelser", e)

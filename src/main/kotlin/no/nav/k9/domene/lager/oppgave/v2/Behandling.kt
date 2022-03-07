@@ -74,7 +74,21 @@ open class Behandling constructor(
 
     open fun lukkAktiveOppgaver(ferdigstillelse: Ferdigstillelse) {
         log.info("Lukker oppgaver $eksternReferanse")
-        oppgaver.filter { it.erAktiv() }.forEach { it.ferdigstill(ferdigstillelse)}
+        return oppgaver.filter { it.erAktiv() }.forEach { it.ferdigstill(ferdigstillelse) }
+    }
+
+    open fun lukkAktiveOppgaverFørOppgittOppgavekode(ferdigstillelse: FerdigstillOppgave) {
+        log.info("Lukker oppgaver $eksternReferanse")
+        return oppgaver.filter { it.erAktiv() }.let { aktiveOppgaver ->
+            if (ferdigstillelse.oppgaveKode != null) {
+                val ferdigstiltOppgaveOpprettet =
+                    aktiveOppgaver.first { it.oppgaveKode == ferdigstillelse.oppgaveKode }.opprettet
+                aktiveOppgaver.filter { aktiveOppgave -> aktiveOppgave.opprettet <= ferdigstiltOppgaveOpprettet }
+                    .forEach { it.ferdigstill(ferdigstillelse) }
+            } else {
+                aktiveOppgaver.forEach { it.ferdigstill(ferdigstillelse) }
+            }
+        }
     }
 
     fun settPåVent() {
@@ -94,3 +108,10 @@ open class Behandling constructor(
         )
     }
 }
+
+interface Ferdigstillelse {
+    val tidspunkt: LocalDateTime
+    val ansvarligSaksbehandlerIdent: String?
+    val behandlendeEnhet: String?
+}
+
