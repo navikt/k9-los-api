@@ -1,4 +1,4 @@
-package no.nav.k9.aksjonspunktbehandling.k9sak
+package no.nav.k9.fagsystem.k9sak
 
 import no.nav.k9.domene.lager.oppgave.v2.*
 import no.nav.k9.integrasjon.azuregraph.IAzureGraphService

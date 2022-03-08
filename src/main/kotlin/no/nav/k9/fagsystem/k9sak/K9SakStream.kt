@@ -1,22 +1,24 @@
 package no.nav.k9.fagsystem.k9sak
 
+import com.fasterxml.jackson.module.kotlin.readValue
+import kotlinx.coroutines.runBlocking
 import no.nav.k9.Configuration
-import no.nav.k9.aksjonspunktbehandling.AksjonspunktLaget
-import no.nav.k9.aksjonspunktbehandling.K9sakEventHandler
+import no.nav.k9.aksjonspunktbehandling.SerDes
 import no.nav.k9.aksjonspunktbehandling.Topic
-import no.nav.k9.integrasjon.kafka.KafkaConfig
+import no.nav.k9.integrasjon.kafka.*
 import no.nav.k9.integrasjon.kafka.ManagedKafkaStreams
 import no.nav.k9.integrasjon.kafka.ManagedStreamHealthy
 import no.nav.k9.integrasjon.kafka.ManagedStreamReady
+import no.nav.k9.sak.kontrakt.produksjonsstyring.los.ProduksjonsstyringHendelse
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.Topology
 import org.apache.kafka.streams.kstream.Consumed
 import org.slf4j.LoggerFactory
 
-internal class K9DokumentStream constructor(
-    kafkaConfig: KafkaConfig,
+internal class K9SakStream constructor(
+    kafkaConfig: IKafkaConfig,
     configuration: Configuration,
-    k9sakEventHandler: K9sakEventHandler
+    k9sakEventHandlerv2: K9sakEventHandlerV2
 ) {
 
     private val stream = ManagedKafkaStreams(
@@ -24,7 +26,7 @@ internal class K9DokumentStream constructor(
         properties = kafkaConfig.stream(NAME),
         topology = topology(
             configuration = configuration,
-            k9sakEventHandler = k9sakEventHandler
+            k9sakEventHandler = k9sakEventHandlerv2
         ),
         unreadyAfterStreamStoppedIn = kafkaConfig.unreadyAfterStreamStoppedIn
     )
@@ -33,30 +35,46 @@ internal class K9DokumentStream constructor(
     internal val healthy = ManagedStreamHealthy(stream)
 
     private companion object {
-        private const val NAME = "KravdokumentMottattHendelseV1"
+        private const val NAME = "K9SakHendelseV1"
 
-        private val log = LoggerFactory.getLogger(K9DokumentStream::class.java)
+        private val log = LoggerFactory.getLogger(K9SakStream::class.java)
 
         private fun topology(
             configuration: Configuration,
-            k9sakEventHandler: K9sakEventHandler
+            k9sakEventHandler: K9sakEventHandlerV2
         ): Topology {
             val builder = StreamsBuilder()
             val fromTopic = Topic(
-                name = configuration.getAksjonspunkthendelseTopic(),
-                serDes = AksjonspunktLaget()
+                name = configuration.getK9SakTopic(),
+                serDes = K9SakEventSerDes()
             )
             builder
                 .stream(
                     fromTopic.name,
                     Consumed.with(fromTopic.keySerde, fromTopic.valueSerde)
-                ).peek { _, e -> log.info("--> Kravdokumenthendelse fra k9sak: ${e.tryggToString() }") }
+                ).peek { _, e -> log.info("--> K9SakHendelse: ${e.tryggToString() }") }
                 .foreach { _, entry ->
                     if (entry != null) {
-                        k9sakEventHandler.prosesser(entry)
+                        runBlocking {
+                            k9sakEventHandler.prosesser(entry)
+                        }
                     }
                 }
             return builder.build()
+        }
+
+        class K9SakEventSerDes : SerDes<ProduksjonsstyringHendelse>() {
+            override fun deserialize(topic: String?, data: ByteArray?): ProduksjonsstyringHendelse? {
+                return data?.let {
+                    return try {
+                        objectMapper.readValue(it)
+                    } catch (e: Exception) {
+                        log.warn("", e)
+                        log.warn(String(it))
+                        throw e
+                    }
+                }
+            }
         }
     }
 

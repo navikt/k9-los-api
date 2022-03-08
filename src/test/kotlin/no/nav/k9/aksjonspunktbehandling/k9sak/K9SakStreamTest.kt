@@ -2,11 +2,12 @@ package no.nav.k9.aksjonspunktbehandling.k9sak
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.mockk.coEvery
-import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.aksjonspunktbehandling.objectMapper
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveTjenesteV2
+import no.nav.k9.fagsystem.k9sak.AksjonspunktHendelseMapper
+import no.nav.k9.fagsystem.k9sak.K9sakEventHandlerV2
 import no.nav.k9.integrasjon.azuregraph.AzureGraphService
 import org.intellij.lang.annotations.Language
 import org.junit.Before
