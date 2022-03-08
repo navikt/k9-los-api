@@ -58,13 +58,9 @@ data class K9PunsjModell(
 
     override fun fikkEndretAksjonspunkt(): Boolean {
         val forrigeEvent = forrigeEvent() ?: return false
-        val forrigeAksjonspunkter = forrigeEvent.aksjonspunkter().hentAktive()
-        val nåværendeAksjonspunkter = sisteEvent().aksjonspunkter().hentAktive()
+        val forrigeAksjonspunkter = forrigeEvent.tilAksjonspunkter().hentAktive()
+        val nåværendeAksjonspunkter = sisteEvent().tilAksjonspunkter().hentAktive()
         return forrigeAksjonspunkter != nåværendeAksjonspunkter
-    }
-
-    private fun PunsjEventDto.aksjonspunkter(): Aksjonspunkter {
-        return this.tilAksjonspunkter()
     }
 
     fun oppgave(sisteEvent: PunsjEventDto = sisteEvent()): Oppgave {
@@ -72,7 +68,7 @@ data class K9PunsjModell(
 
         var aktiv = sisteEvent.aksjonspunktKoderMedStatusListe.any { aksjonspunkt -> aksjonspunkt.value == "OPPR" }
 
-        if (sisteEvent.aksjonspunkter().hentAktive().containsKey("MER_INFORMASJON")) {
+        if (sisteEvent.tilAksjonspunkter().hentAktive().containsKey("MER_INFORMASJON")) {
             aktiv = false
         }
 
@@ -86,7 +82,7 @@ data class K9PunsjModell(
             behandlingsfrist = førsteEvent.eventTid.toLocalDate().plusDays(21).atStartOfDay(),
             behandlingOpprettet = førsteEvent.eventTid,
             forsteStonadsdag = førsteEvent.eventTid.toLocalDate(),
-            behandlingStatus = utledStatus(sisteEvent),
+            behandlingStatus = sisteEvent.utledStatus(),
             behandlingType = utledBehandlingType(førsteEvent),
             fagsakYtelseType = if(førsteEvent.ytelse != null) FagsakYtelseType.fraKode(førsteEvent.ytelse) else FagsakYtelseType.PPN,
             eventTid = sisteEvent.eventTid,
@@ -119,17 +115,6 @@ data class K9PunsjModell(
         return oppgave(sisteEvent())
     }
 
-    private fun utledStatus(eventDto: PunsjEventDto) : BehandlingStatus {
-        if (eventDto.aksjonspunkter().hentAktive().containsKey("MER_INFORMASJON")) {
-            return BehandlingStatus.SATT_PÅ_VENT
-        } else if (eventDto.sendtInn != null && eventDto.sendtInn) {
-            return BehandlingStatus.SENDT_INN
-        } else if (eventDto.aksjonspunkter().erIngenAktive() && (eventDto.sendtInn == null || !eventDto.sendtInn)) {
-            return BehandlingStatus.LUKKET
-        }
-        return BehandlingStatus.OPPRETTET
-    }
-
     private fun utledBehandlingType(eventDto: PunsjEventDto) : BehandlingType {
         if (eventDto.type == null) {
             return BehandlingType.UKJENT
@@ -146,4 +131,16 @@ data class K9PunsjModell(
         }
         return modeller
     }
+}
+
+fun PunsjEventDto.utledStatus() : BehandlingStatus {
+    val aksjonspunkter = tilAksjonspunkter()
+    if (aksjonspunkter.hentAktive().containsKey("MER_INFORMASJON")) {
+        return BehandlingStatus.SATT_PÅ_VENT
+    } else if (sendtInn != null && sendtInn) {
+        return BehandlingStatus.SENDT_INN
+    } else if (aksjonspunkter.erIngenAktive() && (sendtInn == null || !sendtInn)) {
+        return BehandlingStatus.LUKKET
+    }
+    return BehandlingStatus.OPPRETTET
 }

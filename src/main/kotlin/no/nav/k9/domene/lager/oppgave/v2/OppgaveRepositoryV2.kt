@@ -97,7 +97,7 @@ class OppgaveRepositoryV2(
                     frist = row.localDateTimeOrNull("frist")
                 ).also {
                     row.localDateTimeOrNull("ferdigstilt_tidspunkt")?.let { ferdigstiltTidspunkt ->
-                        it.ferdistilt = Deloppgave.Ferdigstilt(
+                        it.ferdigstilt = Deloppgave.Ferdigstilt(
                             tidspunkt = ferdigstiltTidspunkt,
                             ansvarligSaksbehandlerIdent = row.stringOrNull("ferdigstilt_saksbehandler"),
                             behandlendeEnhet = row.stringOrNull("ferdigstilt_enhet")
@@ -108,15 +108,17 @@ class OppgaveRepositoryV2(
     }
 
     fun lagre(behandling: Behandling) {
-        behandling.oppgaver().run {
-            using(sessionOf(dataSource)) {
-                it.transaction { tx ->
-                    lagreBehandling(behandling, tx)
-                    forEach { oppgave ->
-                        lagre(behandling.id, oppgave, tx)
-                    }
-                }
+        using(sessionOf(dataSource)) {
+            it.transaction { tx ->
+                lagre(behandling, tx)
             }
+        }
+    }
+
+    fun lagre(behandling: Behandling, tx: TransactionalSession) {
+        lagreBehandling(behandling, tx)
+        behandling.oppgaver().forEach { oppgave ->
+            lagre(behandling.id, oppgave, tx)
         }
     }
 
@@ -221,9 +223,9 @@ class OppgaveRepositoryV2(
                     "opprettet" to oppgave.opprettet,
                     "sist_endret" to oppgave.sistEndret,
                     "beslutter" to oppgave.erBeslutter,
-                    "ferdigstilt_tidspunkt" to oppgave.ferdistilt?.tidspunkt,
-                    "ferdigstilt_saksbehandler" to oppgave.ferdistilt?.ansvarligSaksbehandlerIdent,
-                    "ferdigstilt_enhet" to oppgave.ferdistilt?.behandlendeEnhet,
+                    "ferdigstilt_tidspunkt" to oppgave.ferdigstilt?.tidspunkt,
+                    "ferdigstilt_saksbehandler" to oppgave.ferdigstilt?.ansvarligSaksbehandlerIdent,
+                    "ferdigstilt_enhet" to oppgave.ferdigstilt?.behandlendeEnhet,
                     "frist" to oppgave.frist,
                 )
             ).asUpdate

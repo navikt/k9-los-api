@@ -1,10 +1,7 @@
 package no.nav.k9.tjenester.avdelingsleder.nokkeltall
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonValue
-import no.nav.k9.domene.modell.FagsakYtelseType
-import no.nav.k9.domene.modell.Fagsystem
 import java.time.LocalDate
 
 typealias HistorikkSeleksjonsresultat = Map<VelgbartHistorikkfelt, Any?>

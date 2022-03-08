@@ -19,19 +19,19 @@ class HistorikkElementTest {
     val DAG3 = LocalDate.of(2021, 1,3)
 
     val oppgaver = listOf(
-        FerdigstiltBehandling(DAG1, FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode, BehandlingType.FORSTEGANGSSOKNAD.kode,"4407", ),
-        FerdigstiltBehandling(DAG1, FagsakYtelseType.OMSORGSPENGER.kode, BehandlingType.FORSTEGANGSSOKNAD.kode, "4404"),
+        FerdigstiltBehandling(DAG1, FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode, BehandlingType.FORSTEGANGSSOKNAD.kode, behandlendeEnhet = "4407", ),
+        FerdigstiltBehandling(DAG1, FagsakYtelseType.OMSORGSPENGER.kode, BehandlingType.FORSTEGANGSSOKNAD.kode, behandlendeEnhet = "4404"),
 
-        FerdigstiltBehandling(DAG2, FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode, BehandlingType.REVURDERING.kode, "4407"),
+        FerdigstiltBehandling(DAG2, FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode, BehandlingType.REVURDERING.kode, behandlendeEnhet = "4407"),
 
-        FerdigstiltBehandling(DAG3, FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode, BehandlingType.FORSTEGANGSSOKNAD.kode, "4407"),
-        FerdigstiltBehandling(DAG3, FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode, BehandlingType.REVURDERING.kode, "4405"),
-        FerdigstiltBehandling(DAG3, FagsakYtelseType.OMSORGSPENGER.kode, BehandlingType.FORSTEGANGSSOKNAD.kode, "4404"),
-        FerdigstiltBehandling(DAG3, FagsakYtelseType.OMSORGSPENGER.kode, BehandlingType.REVURDERING.kode, "4404")
+        FerdigstiltBehandling(DAG3, FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode, BehandlingType.FORSTEGANGSSOKNAD.kode, behandlendeEnhet = "4407"),
+        FerdigstiltBehandling(DAG3, FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode, BehandlingType.REVURDERING.kode, behandlendeEnhet = "4405"),
+        FerdigstiltBehandling(DAG3, FagsakYtelseType.OMSORGSPENGER.kode, BehandlingType.FORSTEGANGSSOKNAD.kode, behandlendeEnhet = "4404"),
+        FerdigstiltBehandling(DAG3, FagsakYtelseType.OMSORGSPENGER.kode, BehandlingType.REVURDERING.kode, behandlendeEnhet = "4404")
     )
 
     @Test
-    fun `grupper kun på dato`() {
+    fun `grupper kun paa dato`() {
         val resultat = oppgaver.feltSelector(VelgbartHistorikkfelt.DATO)
         assertThat(resultat).hasSize(3)
         assertThat(resultat[0].antall).isEqualTo(2)
@@ -40,7 +40,7 @@ class HistorikkElementTest {
     }
 
     @Test
-    fun `grupper på dato og ytelse`() {
+    fun `grupper paa dato og ytelse`() {
         val resultat = oppgaver.feltSelector(VelgbartHistorikkfelt.DATO, VelgbartHistorikkfelt.YTELSETYPE)
 
         assertThat(resultat).hasSize(5)
@@ -54,7 +54,7 @@ class HistorikkElementTest {
     }
 
     @Test
-    fun `grupper på dato, ytelse og enhet`() {
+    fun `grupper paa dato, ytelse og enhet`() {
         val resultat = oppgaver.feltSelector(
             VelgbartHistorikkfelt.DATO,
             VelgbartHistorikkfelt.YTELSETYPE,
@@ -79,7 +79,7 @@ class HistorikkElementTest {
                 DAG3,
                 FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode,
                 BehandlingType.FORSTEGANGSSOKNAD.kode,
-                "4407"
+                behandlendeEnhet = "4407"
             )
         ).feltSelector(VelgbartHistorikkfelt.DATO, VelgbartHistorikkfelt.YTELSETYPE, VelgbartHistorikkfelt.ENHET)
         val result = objectMapper().writeValueAsString(resultat)

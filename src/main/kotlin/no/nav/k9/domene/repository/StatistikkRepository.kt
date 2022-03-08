@@ -312,8 +312,8 @@ class StatistikkRepository(
                     behandling.fagsystem as fagsystem_type, 
                     behandling.ytelse_type AS ytelse_type,
                     behandling.behandling_type as behandling_type,
-                    deloppgave.ferdigstilt_enhet AS behandlende_enhet
-                    deloppgave.ans AS behandlende_enhet
+                    deloppgave.ferdigstilt_enhet AS behandlende_enhet,
+                    deloppgave.ferdigstilt_saksbehandler AS ansvarlig_saksbehandler
                     FROM deloppgave LEFT JOIN behandling ON behandling.id = deloppgave.behandling_id
                     WHERE deloppgave.ferdigstilt_tidspunkt > :start_dato ORDER BY dato
                     """.trimIndent(),

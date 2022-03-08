@@ -14,7 +14,10 @@ data class Deloppgave(
     var sistEndret: LocalDateTime = opprettet,
     val frist: LocalDateTime?,
 ) {
-    var ferdistilt: Ferdigstilt? = null
+    var ferdigstilt: Ferdigstilt? = null
+        set(value) {
+            if (ferdigstilt == null) field = value
+        }
 
     fun avbrytOppgaveUtenFerdigstillelse() {
         sistEndret = LocalDateTime.now()
@@ -23,15 +26,15 @@ data class Deloppgave(
 
     fun ferdigstill(ferdigstillelse: Ferdigstillelse) {
         oppgaveStatus = OppgaveStatus.FERDIGSTILT
-        sistEndret = ferdigstillelse.tidspunkt
 
-        if (ferdistilt == null) {
+        if (ferdigstilt == null) {
             log.info("Ferdigstiller oppgave $oppgaveKode for $eksternReferanse")
-            ferdistilt = Ferdigstilt(
+            ferdigstilt = Ferdigstilt(
                 tidspunkt = ferdigstillelse.tidspunkt,
                 ansvarligSaksbehandlerIdent = ferdigstillelse.ansvarligSaksbehandlerIdent,
                 behandlendeEnhet = ferdigstillelse.behandlendeEnhet
             )
+            sistEndret = ferdigstillelse.tidspunkt
         }
     }
 

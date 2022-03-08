@@ -25,7 +25,12 @@ open class Behandling constructor(
     companion object {
         private val log = LoggerFactory.getLogger(Behandling::class.java)
 
-        fun ny(eksternReferanse: String, fagsystem: Fagsystem, ytelseType: FagsakYtelseType, behandlingType: String?, søkersId: Ident?): Behandling {
+        fun ny(eksternReferanse: String,
+               fagsystem: Fagsystem,
+               ytelseType: FagsakYtelseType,
+               behandlingType: String?,
+               søkersId: Ident?
+        ): Behandling {
             return Behandling(
                 id = UUID.randomUUID(),
                 eksternReferanse = eksternReferanse,
@@ -73,19 +78,20 @@ open class Behandling constructor(
     }
 
     open fun lukkAktiveOppgaver(ferdigstillelse: Ferdigstillelse) {
-        log.info("Lukker oppgaver $eksternReferanse")
+        log.info("Lukker alle aktive oppgaver $eksternReferanse")
         return oppgaver.filter { it.erAktiv() }.forEach { it.ferdigstill(ferdigstillelse) }
     }
 
     open fun lukkAktiveOppgaverFørOppgittOppgavekode(ferdigstillelse: FerdigstillOppgave) {
-        log.info("Lukker oppgaver $eksternReferanse")
         return oppgaver.filter { it.erAktiv() }.let { aktiveOppgaver ->
             if (ferdigstillelse.oppgaveKode != null) {
+                log.info("Lukker aktive oppgaver opprettet før ${ferdigstillelse.oppgaveKode} $eksternReferanse")
                 val ferdigstiltOppgaveOpprettet =
                     aktiveOppgaver.first { it.oppgaveKode == ferdigstillelse.oppgaveKode }.opprettet
                 aktiveOppgaver.filter { aktiveOppgave -> aktiveOppgave.opprettet <= ferdigstiltOppgaveOpprettet }
                     .forEach { it.ferdigstill(ferdigstillelse) }
             } else {
+                log.info("Lukker alle aktive oppgaver $eksternReferanse")
                 aktiveOppgaver.forEach { it.ferdigstill(ferdigstillelse) }
             }
         }

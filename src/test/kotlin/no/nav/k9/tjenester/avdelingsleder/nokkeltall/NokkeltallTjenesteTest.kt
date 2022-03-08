@@ -1,9 +1,5 @@
 package no.nav.k9.tjenester.avdelingsleder.nokkeltall
 
-import assertk.assertThat
-import assertk.assertions.isEqualTo
-import io.mockk.every
-import io.mockk.mockk
 import no.nav.k9.AbstractPostgresTest
 import no.nav.k9.buildAndTestConfig
 import no.nav.k9.domene.lager.oppgave.Oppgave
@@ -14,7 +10,6 @@ import no.nav.k9.domene.modell.BehandlingStatus
 import no.nav.k9.domene.modell.BehandlingType
 import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.domene.repository.OppgaveRepository
-import no.nav.k9.domene.repository.StatistikkRepository
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import org.junit.Rule
 import org.junit.Test
@@ -73,38 +68,6 @@ class NokkeltallTjenesteTest : KoinTest, AbstractPostgresTest()  {
         assert(oppgaverPåVent[0].fagsakYtelseType == FagsakYtelseType.PLEIEPENGER_SYKT_BARN)
         assert(oppgaverPåVent[0].antall == 1)
     }
-
-//    @Test
-//    fun `Hent historikk for ferdigstilte per enhet som aggreggerer antall og fyller tomrom i datasettet med tom liste`() {
-//
-//        val statistikkRepository = mockk<StatistikkRepository>()
-//        every { statistikkRepository.hentFerdigstiltOppgavehistorikk() } returns listOf(
-//            FerdigstiltBehandling(dato = DAG1, behandlendeEnhet = "1111"),
-//            FerdigstiltBehandling(dato = DAG1, behandlendeEnhet = "2222"),
-//            FerdigstiltBehandling(dato = DAG1, behandlendeEnhet = "2222"),
-//            // TIRSDAG - Ingen behandlinger
-//            FerdigstiltBehandling(dato = DAG3, behandlendeEnhet = "1111"),
-//            FerdigstiltBehandling(dato = DAG3, behandlendeEnhet = "2222"),
-//            FerdigstiltBehandling(dato = DAG3, behandlendeEnhet = "3333"),
-//        )
-//
-//        val nøkkeltallTjeneste = NokkeltallTjeneste(mockk(), statistikkRepository)
-//        val historikk = nøkkeltallTjeneste.hentFerdigstilteBehandlingerPrEnhetHistorikk()
-//        assertThat(historikk).isEqualTo(
-//            mapOf(
-//                DAG1 to mapOf(
-//                    "1111" to 1,
-//                    "2222" to 2
-//                ),
-//                DAG2 to emptyMap(),
-//                DAG3 to mapOf(
-//                    "1111" to 1,
-//                    "2222" to 1,
-//                    "3333" to 1
-//                ),
-//            )
-//        )
-//    }
 
     private fun opprettOppgave(aksjonspunkter: Map<String, String>) {
         val oppgaveRepo = get<OppgaveRepository>()

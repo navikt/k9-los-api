@@ -11,6 +11,7 @@ import no.nav.k9.aksjonspunktbehandling.K9TilbakeEventHandler
 import no.nav.k9.aksjonspunktbehandling.K9punsjEventHandler
 import no.nav.k9.aksjonspunktbehandling.K9sakEventHandler
 import no.nav.k9.domene.lager.oppgave.Oppgave
+import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveTjenesteV2
 import no.nav.k9.domene.repository.*
 import no.nav.k9.integrasjon.abac.IPepClient
@@ -124,6 +125,9 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             omsorgspengerService = get()
         )
     }
+
+    single { OppgaveRepositoryV2(dataSource = get()) }
+    single { OppgaveTjenesteV2(oppgaveRepository = get()) }
 
     single {
         NokkeltallTjeneste(
