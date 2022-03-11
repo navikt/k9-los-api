@@ -2,6 +2,7 @@ package no.nav.k9.integrasjon.kafka
 
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.consumer.ConsumerConfig
+import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.config.SslConfigs
 import org.apache.kafka.common.security.auth.SecurityProtocol
@@ -24,6 +25,7 @@ class KafkaAivenConfig(
     credStorePassword: String,
     exactlyOnce: Boolean,
     override val unreadyAfterStreamStoppedIn: Duration,
+    private val defaultOffsetResetStrategy: OffsetResetStrategy,
 ): IKafkaConfig {
     val properties = Properties().apply {
         put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers)
@@ -40,12 +42,12 @@ class KafkaAivenConfig(
 
     private val streams = properties.apply {
         put(DEFAULT_DESERIALIZATION_EXCEPTION_HANDLER_CLASS_CONFIG, LogAndFailExceptionHandler::class.java)
-        put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
         medProcessingGuarantee(exactlyOnce)
     }
 
-    override fun stream(name: String): Properties = streams.apply {
+    override fun stream(name: String, offsetResetStrategy: OffsetResetStrategy?): Properties = streams.apply {
         put(APPLICATION_ID_CONFIG, applicationId)
+        put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, (offsetResetStrategy ?: defaultOffsetResetStrategy).toString().lowercase())
     }
 }
 

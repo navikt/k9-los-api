@@ -1,26 +1,35 @@
 package no.nav.k9.domene.lager.oppgave.v2
 
+import no.nav.k9.domene.modell.FagsakYtelseType
+import no.nav.k9.domene.modell.Fagsystem
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
 open class OppgaveTjenesteV2(
     val oppgaveRepository: OppgaveRepositoryV2,
+    val tm: TransactionalManager
 ) {
     private val log = LoggerFactory.getLogger(OppgaveTjenesteV2::class.java)
 
-    fun nyeOppgaveHendelser(eksternId: String, hendelse: OppgaveHendelse, opprettFunc: () -> Behandling? = { null } ) {
-        val behandling = hentEllerOpprettFra(eksternId, opprettFunc)
-
-        when (hendelse) {
-            is OpprettOppgave -> behandling.nyOppgave(hendelse)
-            is FerdigstillOppgave -> behandling.lukkAktiveOppgaverFørOppgittOppgavekode(hendelse)
-            is FerdigstillBehandling -> behandling.ferdigstill(hendelse)
-        }
-        oppgaveRepository.lagre(behandling)
+    fun nyOppgaveHendelse(eksternId: String, hendelser: OppgaveHendelse) {
+        nyeOppgaveHendelser(eksternId, listOf(hendelser))
     }
 
-    fun opprettBehandling(eksternId: String, opprettFunc: () -> Behandling? = { null }) {
-        hentEllerOpprettFra(eksternId, opprettFunc).run { oppgaveRepository.lagre(this) }
+    fun nyeOppgaveHendelser(eksternId: String, hendelser: List<OppgaveHendelse>) {
+        log.info("Starter prosessering av hendelser ${hendelser.map { it.javaClass }}")
+        tm.transaction { tx ->
+            val behandling = oppgaveRepository.hentBehandling(eksternId, tx)
+                ?: hendelser.hentBehandlingEndretEvent()?.tilBehandling()
+                ?: throw IllegalStateException("Mottatt hende<lse uten å ha behandling. $eksternId")
+
+            hendelser.forEach { behandling.nyHendelse(it) }
+            oppgaveRepository.lagre(behandling, tx)
+        }
+    }
+
+    fun List<OppgaveHendelse>.hentBehandlingEndretEvent(): BehandlingEndret? {
+        val behandlingEndretEvent = firstOrNull { it is BehandlingEndret }
+        return (behandlingEndretEvent as BehandlingEndret?)
     }
 
     fun avsluttBehandling(eksternId: String, ferdigstillelse: Ferdigstillelse) {
@@ -29,15 +38,31 @@ open class OppgaveTjenesteV2(
             ?.run { oppgaveRepository.lagre(this) }
     }
 
-    fun hentEllerOpprettFra(eksternId: String, opprettFunc: () -> Behandling? = { null }): Behandling {
-        return oppgaveRepository.hentBehandling(eksternId)?.also { log.info("Bruker eksisterende behandling for $eksternId") }
-            ?: opprettFunc()?.also { log.info("Oppretter ny behandling for $eksternId") }
-        ?: throw IllegalStateException("Finner ikke behandling og kan ikke opprette ny for $eksternId")
-    }
 }
 
 interface OppgaveHendelse {
     val tidspunkt: LocalDateTime
+}
+
+data class BehandlingEndret(
+    override val tidspunkt: LocalDateTime,
+    val eksternReferanse: String,
+    val fagsystem: Fagsystem,
+    val ytelseType: FagsakYtelseType,
+    val behandlingType: String?,
+    val søkersId: Ident?
+) : OppgaveHendelse {
+
+    fun tilBehandling(): Behandling {
+        return Behandling.ny(
+            opprettet = tidspunkt,
+            eksternReferanse = eksternReferanse,
+            fagsystem = fagsystem,
+            ytelseType = ytelseType,
+            behandlingType = behandlingType,
+            søkersId = søkersId
+        )
+    }
 }
 
 data class FerdigstillBehandling(

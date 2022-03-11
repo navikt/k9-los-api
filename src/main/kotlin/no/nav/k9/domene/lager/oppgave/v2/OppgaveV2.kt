@@ -2,10 +2,9 @@ package no.nav.k9.domene.lager.oppgave.v2
 
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
-import java.util.*
 
-data class Deloppgave(
-    val id: UUID,
+class OppgaveV2(
+    var id: Long?,
     val eksternReferanse: String,
     val oppgaveKode: String,
     val erBeslutter: Boolean,
@@ -43,7 +42,7 @@ data class Deloppgave(
     }
 
     companion object {
-        private val log = LoggerFactory.getLogger(Deloppgave::class.java)
+        private val log = LoggerFactory.getLogger(OppgaveV2::class.java)
 
         fun ny(
             eksternReferanse: String,
@@ -52,8 +51,8 @@ data class Deloppgave(
             beslutter: Boolean = false,
             frist: LocalDateTime? = null,
         ) =
-            Deloppgave(
-                id = UUID.randomUUID(),
+            OppgaveV2(
+                id = null,
                 oppgaveStatus = OppgaveStatus.OPPRETTET,
                 eksternReferanse = eksternReferanse,
                 oppgaveKode = oppgaveKode,

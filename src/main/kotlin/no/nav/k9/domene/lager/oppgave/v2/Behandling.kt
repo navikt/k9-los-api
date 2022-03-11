@@ -4,15 +4,16 @@ import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.domene.modell.Fagsystem
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
-import java.util.*
 
 open class Behandling constructor(
-    private val oppgaver: MutableSet<Deloppgave> = mutableSetOf(),
-    val id: UUID,
+    private val oppgaver: MutableSet<OppgaveV2> = mutableSetOf(),
+    var id: Long?,
     val eksternReferanse: String,
     val fagsystem: Fagsystem,
     val ytelseType: FagsakYtelseType,
     val behandlingType: String?,
+    val opprettet: LocalDateTime,
+    val sistEndret: LocalDateTime?,
     val søkersId: Ident?,
     val kode6: Boolean,
     val skjermet: Boolean,
@@ -25,18 +26,22 @@ open class Behandling constructor(
     companion object {
         private val log = LoggerFactory.getLogger(Behandling::class.java)
 
-        fun ny(eksternReferanse: String,
-               fagsystem: Fagsystem,
-               ytelseType: FagsakYtelseType,
-               behandlingType: String?,
-               søkersId: Ident?
+        fun ny(
+            eksternReferanse: String,
+            fagsystem: Fagsystem,
+            ytelseType: FagsakYtelseType,
+            behandlingType: String?,
+            søkersId: Ident?,
+            opprettet: LocalDateTime = LocalDateTime.now()
         ): Behandling {
             return Behandling(
-                id = UUID.randomUUID(),
+                id = null,
                 eksternReferanse = eksternReferanse,
                 fagsystem = fagsystem,
                 ytelseType = ytelseType,
                 behandlingType = behandlingType,
+                opprettet = opprettet,
+                sistEndret = opprettet,
                 søkersId = søkersId,
                 kode6 = false,
                 skjermet = false
@@ -44,13 +49,15 @@ open class Behandling constructor(
         }
     }
 
-    constructor(other: Behandling, id: UUID = UUID.randomUUID()) : this(
+    constructor(other: Behandling, id: Long? = null) : this(
         id = id,
         oppgaver = other.oppgaver.toMutableSet(),
         eksternReferanse = other.eksternReferanse,
         fagsystem = other.fagsystem,
         ytelseType = other.ytelseType,
         behandlingType = other.behandlingType,
+        opprettet = other.opprettet,
+        sistEndret = other.sistEndret,
         søkersId = other.søkersId,
         kode6 = other.kode6,
         skjermet = other.skjermet
@@ -66,8 +73,16 @@ open class Behandling constructor(
     open fun erFerdigstilt(): Boolean {
         return (ferdigstilt != null).also {
             if (harAktiveOppgaver()) {
-                log.warn("Behandling er satt til ferdigstilt, men har aktive deloppgaver $eksternReferanse")
+                log.warn("Behandling er satt til ferdigstilt, men har aktive oppgaver $eksternReferanse")
             }
+        }
+    }
+
+    fun nyHendelse(oppgaveHendelse: OppgaveHendelse) {
+        when (oppgaveHendelse) {
+            is OpprettOppgave -> nyOppgave(oppgaveHendelse)
+            is FerdigstillOppgave -> lukkAktiveOppgaverFørOppgittOppgavekode(oppgaveHendelse)
+            is FerdigstillBehandling -> ferdigstill(oppgaveHendelse)
         }
     }
 
@@ -102,16 +117,30 @@ open class Behandling constructor(
         oppgaver.filter { it.erAktiv() }.forEach { it.avbrytOppgaveUtenFerdigstillelse() }
     }
 
+
     fun nyOppgave(opprettOppgave: OpprettOppgave) {
-        log.info("Ny oppgave (${opprettOppgave.oppgaveKode}) lagt til $eksternReferanse")
+        if (harAktivOppgaveMedReferanseOgKode(eksternReferanse = eksternReferanse, opprettOppgave.oppgaveKode)) {
+            log.warn("Har allerede eksisterende, aktiv oppgave med oppgavekode på referansen. $eksternReferanse")
+            return
+        }
+
         oppgaver.add(
-            Deloppgave.ny(
+            OppgaveV2.ny(
                 eksternReferanse = eksternReferanse,
                 oppgaveKode = opprettOppgave.oppgaveKode,
                 opprettet = opprettOppgave.tidspunkt,
                 frist = opprettOppgave.frist
             )
         )
+        log.info("Ny oppgave (${opprettOppgave.oppgaveKode}) lagt til $eksternReferanse")
+    }
+
+    fun harAktivOppgaveMedReferanseOgKode(eksternReferanse: String, oppgaveKode: String): Boolean {
+        return oppgaver.any {
+            it.erAktiv() &&
+                    it.eksternReferanse == eksternReferanse &&
+                    it.oppgaveKode == oppgaveKode
+        }
     }
 }
 

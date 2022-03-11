@@ -308,14 +308,14 @@ class StatistikkRepository(
             it.run(
                 queryOf(
                     """
-                    SELECT date(deloppgave.ferdigstilt_tidspunkt) AS dato, 
+                    SELECT date(oppgave_v2.ferdigstilt_tidspunkt) AS dato, 
                     behandling.fagsystem as fagsystem_type, 
                     behandling.ytelse_type AS ytelse_type,
                     behandling.behandling_type as behandling_type,
-                    deloppgave.ferdigstilt_enhet AS behandlende_enhet,
-                    deloppgave.ferdigstilt_saksbehandler AS ansvarlig_saksbehandler
-                    FROM deloppgave LEFT JOIN behandling ON behandling.id = deloppgave.behandling_id
-                    WHERE deloppgave.ferdigstilt_tidspunkt > :start_dato ORDER BY dato
+                    oppgave_v2.ferdigstilt_enhet AS behandlende_enhet,
+                    oppgave_v2.ferdigstilt_saksbehandler AS ansvarlig_saksbehandler
+                    FROM oppgave_v2 LEFT JOIN behandling ON behandling.id = oppgave_v2.behandling_id
+                    WHERE oppgave_v2.ferdigstilt_tidspunkt > :start_dato ORDER BY dato
                     """.trimIndent(),
                     mapOf("start_dato" to startDato)
                 ).map { rad ->

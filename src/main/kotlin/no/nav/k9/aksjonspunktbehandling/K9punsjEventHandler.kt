@@ -88,7 +88,15 @@ class K9punsjEventHandler constructor(
 
     private fun oppdaterOppgaveV2(event: PunsjEventDto) {
         val resultat = event.utledStatus()
-        val oppgaveHendelse = when (resultat) {
+        val behandlingEndret = BehandlingEndret(
+            eksternReferanse = event.eksternId.toString(),
+            fagsystem = Fagsystem.PUNSJ,
+            ytelseType = event.ytelse?.run { FagsakYtelseType.fraKode(this) } ?: FagsakYtelseType.UKJENT,
+            behandlingType = event.type,
+            søkersId = event.aktørId?.id?.run { Ident(this, Ident.IdType.AKTØRID) },
+            tidspunkt = event.eventTid
+        )
+        val oppgaveHendelser = when (resultat) {
             BehandlingStatus.LUKKET -> listOf(
                 FerdigstillBehandling(
                     tidspunkt = event.eventTid,
@@ -100,28 +108,15 @@ class K9punsjEventHandler constructor(
                 OpprettOppgave(
                     tidspunkt = event.eventTid,
                     oppgaveKode = it.key,
-                    frist = null
+                    frist = null,
                 )
             }
             else -> emptyList()
         }
 
-        val opprettNyBehandlingMapper = {
-            Behandling.ny(
-                eksternReferanse = event.eksternId.toString(),
-                fagsystem = Fagsystem.PUNSJ,
-                ytelseType = event.ytelse?.run { FagsakYtelseType.fraKode(this) } ?: FagsakYtelseType.UKJENT,
-                behandlingType = event.type,
-                søkersId = event.aktørId?.id?.run { Ident(this, Ident.IdType.AKTØRID) }
-            )
-        }
-
-        oppgaveHendelse.forEach {
-            oppgaveTjenesteV2.nyeOppgaveHendelser(
-                eksternId = event.eksternId.toString(),
-                it,
-                opprettNyBehandlingMapper
-            )
-        }
+        oppgaveTjenesteV2.nyeOppgaveHendelser(
+            eksternId = event.eksternId.toString(),
+            listOf(behandlingEndret, *oppgaveHendelser.toTypedArray())
+        )
     }
 }

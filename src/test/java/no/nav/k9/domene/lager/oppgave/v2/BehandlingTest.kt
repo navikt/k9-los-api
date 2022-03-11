@@ -79,6 +79,7 @@ internal class BehandlingTest {
         fagsystem = Fagsystem.K9SAK,
         ytelseType = FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
         behandlingType = " ",
-        søkersId = Ident("123456", Ident.IdType.AKTØRID)
+        søkersId = Ident("123456", Ident.IdType.AKTØRID),
+        opprettet = LocalDateTime.now()
     )
 }

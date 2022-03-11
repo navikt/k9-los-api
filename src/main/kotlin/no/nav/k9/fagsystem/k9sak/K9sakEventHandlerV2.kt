@@ -28,25 +28,26 @@ class K9sakEventHandlerV2(
     }
 
     private fun håndterBehandlingOpprettet(hendelse: ProduksjonsstyringBehandlingOpprettetHendelse) {
-        log.info("Behandling opprettet: ${hendelse.behandlingType}, ${hendelse.ytelseType}, ${hendelse.saksnummer},  ${hendelse.behandlingstidFrist}, ${hendelse.tryggToString()}")
+        log.info("Behandling opprettet hendelse: ${hendelse.behandlingType}, ${hendelse.ytelseType}, ${hendelse.saksnummer},  ${hendelse.behandlingstidFrist}, ${hendelse.tryggToString()}")
 
         val eksternId = hendelse.eksternId.toString()
-        oppgaveTjenesteV2.opprettBehandling(eksternId) {
-            Behandling.ny(
+        oppgaveTjenesteV2.nyOppgaveHendelse(
+            eksternId, BehandlingEndret(
                 eksternReferanse = eksternId,
                 fagsystem = Fagsystem.K9SAK,
                 ytelseType = FagsakYtelseType.fraKode(hendelse.ytelseType),
                 behandlingType = hendelse.behandlingType,
-                søkersId = Ident(id = hendelse.søkersAktørId.aktørId, Ident.IdType.AKTØRID)
+                søkersId = Ident(id = hendelse.søkersAktørId.aktørId, Ident.IdType.AKTØRID),
+                tidspunkt = hendelse.hendelseTid
             )
-        }
+        )
     }
 
     private fun håndterBehandlingAvsluttet(hendelse: ProduksjonsstyringBehandlingAvsluttetHendelse) {
-        log.info("Behandling avsluttet: ${hendelse.behandlingResultatType}, ${hendelse.tryggToString()}")
+        log.info("Behandling avsluttet hendelse: ${hendelse.behandlingResultatType}, ${hendelse.tryggToString()}")
 
         val eksternId = hendelse.eksternId.toString()
-        oppgaveTjenesteV2.nyeOppgaveHendelser(eksternId,
+        oppgaveTjenesteV2.nyOppgaveHendelse(eksternId,
             FerdigstillBehandling(
                tidspunkt = hendelse.hendelseTid
             )
@@ -62,9 +63,8 @@ class K9sakEventHandlerV2(
             }
 
         try {
-            aksjonspunktHendelseMapper.hentOppgavehendelser(hendelse, aksjonspunkter).forEach {
-                oppgaveTjenesteV2.nyeOppgaveHendelser(hendelse.eksternId.toString(), it)
-            }
+            val nyeHendelser = aksjonspunktHendelseMapper.hentOppgavehendelser(hendelse, aksjonspunkter).toList()
+            oppgaveTjenesteV2.nyeOppgaveHendelser(hendelse.eksternId.toString(), nyeHendelser)
         } catch (e: IllegalStateException) {
             log.error("Feilet ved håndtering av oppgavehendelser", e)
         }

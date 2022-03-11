@@ -12,6 +12,7 @@ import no.nav.k9.fagsystem.k9sak.K9sakEventHandlerV2
 import no.nav.k9.db.hikariConfig
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveTjenesteV2
+import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.domene.repository.*
 import no.nav.k9.integrasjon.abac.IPepClient
 import no.nav.k9.integrasjon.abac.PepClient
@@ -93,7 +94,8 @@ fun common(app: Application, config: Configuration) = module {
 
     single { AksjonspunktHendelseMapper(get()) }
     single { OppgaveRepositoryV2(dataSource = get()) }
-    single { OppgaveTjenesteV2(get()) }
+    single { TransactionalManager(dataSource = get()) }
+    single { OppgaveTjenesteV2(get(), get()) }
 
     single {
         SaksbehandlerRepository(

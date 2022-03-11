@@ -10,6 +10,7 @@ import no.nav.k9.integrasjon.kafka.ManagedKafkaStreams
 import no.nav.k9.integrasjon.kafka.ManagedStreamHealthy
 import no.nav.k9.integrasjon.kafka.ManagedStreamReady
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.ProduksjonsstyringHendelse
+import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.Topology
 import org.apache.kafka.streams.kstream.Consumed
@@ -23,7 +24,7 @@ internal class K9SakStream constructor(
 
     private val stream = ManagedKafkaStreams(
         name = NAME,
-        properties = kafkaConfig.stream(NAME),
+        properties = kafkaConfig.stream(NAME, OffsetResetStrategy.NONE),
         topology = topology(
             configuration = configuration,
             k9sakEventHandler = k9sakEventHandlerv2

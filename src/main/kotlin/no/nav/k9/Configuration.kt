@@ -9,6 +9,7 @@ import no.nav.helse.dusseldorf.ktor.core.getRequiredString
 import no.nav.k9.db.createHikariConfig
 import no.nav.k9.integrasjon.kafka.KafkaAivenConfig
 import no.nav.k9.integrasjon.kafka.KafkaConfig
+import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import java.net.URI
 import java.time.Duration
 import java.time.temporal.ChronoUnit
@@ -97,11 +98,11 @@ data class Configuration(private val config: ApplicationConfig) {
         }
 
     internal fun getProfileAwareKafkaAivenConfig() =
-        // Bytter ut aivenkonfig med onprem kafkakonfig som er støttet i vtp
-        if (koinProfile == KoinProfile.LOCAL) getKafkaConfig() else getKafkaAivenConfig()
+        // Bytter ut aivenkonfig med onprem kafkakonfig som er støttet i vtp. Bruker alltid earliest lokal fordi kafkakluster ofte er nytt
+        if (koinProfile == KoinProfile.LOCAL) getKafkaConfig() else getKafkaAivenConfig(OffsetResetStrategy.EARLIEST)
 
 
-    internal fun getKafkaAivenConfig(): KafkaAivenConfig {
+    internal fun getKafkaAivenConfig(defaultOffsetResetStrategy: OffsetResetStrategy = OffsetResetStrategy.NONE): KafkaAivenConfig {
         val bootstrapServers = config.getRequiredString("nav.kafka_aiven.bootstrap_servers", secret = false)
         val trustStorePath = config.getRequiredString("nav.kafka_aiven.trust_store_path", secret = false)
         val keyStorePath = config.getRequiredString("nav.kafka_aiven.key_store_path", secret = false)
@@ -114,6 +115,7 @@ data class Configuration(private val config: ApplicationConfig) {
             keyStore = Pair(keyStorePath, credStorePassword),
             credStorePassword = credStorePassword,
             exactlyOnce = false,
+            defaultOffsetResetStrategy = defaultOffsetResetStrategy,
             unreadyAfterStreamStoppedIn = unreadyAfterStreamStoppedIn()
         )
     }

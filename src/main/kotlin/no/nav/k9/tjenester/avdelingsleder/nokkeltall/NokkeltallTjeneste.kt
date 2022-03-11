@@ -89,7 +89,7 @@ class NokkeltallTjeneste constructor(
         }
     }
 
-    fun hentFerdigstilteDeloppgaverHistorikk(
+    fun hentFerdigstilteOppgaverHistorikk(
         vararg historikkType: VelgbartHistorikkfelt
     ): List<HistorikkElementAntall> {
         return statistikkRepository.hentFerdigstiltOppgavehistorikk(antallDagerHistorikk = StatistikkRepository.SISTE_8_UKER_I_DAGER)

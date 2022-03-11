@@ -13,6 +13,7 @@ import no.nav.k9.aksjonspunktbehandling.K9sakEventHandler
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveTjenesteV2
+import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.domene.repository.*
 import no.nav.k9.integrasjon.abac.IPepClient
 import no.nav.k9.integrasjon.abac.PepClientLocal
@@ -127,7 +128,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single { OppgaveRepositoryV2(dataSource = get()) }
-    single { OppgaveTjenesteV2(oppgaveRepository = get()) }
+    single { TransactionalManager(dataSource = get()) }
+    single { OppgaveTjenesteV2(oppgaveRepository = get(), tm = get()) }
 
     single {
         NokkeltallTjeneste(
