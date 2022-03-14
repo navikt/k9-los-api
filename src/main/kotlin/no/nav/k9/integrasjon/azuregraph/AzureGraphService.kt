@@ -140,10 +140,9 @@ open class AzureGraphService constructor(
     }
 
     private fun accessToken(onBehalfOf: IIdToken? = null): AccessToken {
-        val scopes = setOf("https://graph.microsoft.com/user.read")
         return onBehalfOf?.run {
-            cachedAccessTokenClient.getAccessToken(scopes, this.value) } ?:
-            cachedAccessTokenClient.getAccessToken(scopes)
+            cachedAccessTokenClient.getAccessToken(setOf("https://graph.microsoft.com/user.read"), this.value) } ?:
+            cachedAccessTokenClient.getAccessToken(emptySet())
     }
 }
 
