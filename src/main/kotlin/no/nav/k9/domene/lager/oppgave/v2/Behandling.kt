@@ -100,10 +100,13 @@ open class Behandling constructor(
     open fun lukkAktiveOppgaverFørOppgittOppgavekode(ferdigstillelse: FerdigstillOppgave) {
         return oppgaver.filter { it.erAktiv() }.let { aktiveOppgaver ->
             if (ferdigstillelse.oppgaveKode != null) {
-                log.info("Lukker aktive oppgaver opprettet før ${ferdigstillelse.oppgaveKode} $eksternReferanse")
-                val ferdigstiltOppgaveOpprettet = aktiveOppgaver.first { it.oppgaveKode == ferdigstillelse.oppgaveKode }.opprettet
-                aktiveOppgaver.filter { aktiveOppgave -> aktiveOppgave.opprettet <= ferdigstiltOppgaveOpprettet }
-                    .forEach { it.ferdigstill(ferdigstillelse) }
+                val ferdigstiltOppgaveOpprettet = aktiveOppgaver.firstOrNull { it.oppgaveKode == ferdigstillelse.oppgaveKode }?.opprettet
+                if (ferdigstiltOppgaveOpprettet == null) {
+                    log.error("Ferdigstillelse inneholder oppgavekode ${ferdigstillelse.oppgaveKode} som ikke finnes blant aktive oppgaver. $eksternReferanse")
+                } else {
+                    log.info("Lukker aktive oppgaver opprettet før ${ferdigstillelse.oppgaveKode} $eksternReferanse")
+                    aktiveOppgaver.filter { aktiveOppgave -> aktiveOppgave.opprettet <= ferdigstiltOppgaveOpprettet }.forEach { it.ferdigstill(ferdigstillelse) }
+                }
             } else {
                 log.info("Lukker alle aktive oppgaver $eksternReferanse")
                 aktiveOppgaver.forEach { it.ferdigstill(ferdigstillelse) }

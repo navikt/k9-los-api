@@ -1,10 +1,7 @@
 package no.nav.k9.domene.lager.oppgave.v2
 
-import kotliquery.sessionOf
-import kotliquery.using
 import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.domene.modell.Fagsystem
-import no.nav.k9.statistikk.kontrakter.JsonSchemas.behandling
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 

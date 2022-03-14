@@ -6,11 +6,8 @@ import kotliquery.action.NullableResultQueryAction
 import kotliquery.action.UpdateQueryAction
 import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.domene.modell.Fagsystem
-import no.nav.k9.statistikk.kontrakter.JsonSchemas.behandling
 import no.nav.k9.tjenester.innsikt.Databasekall
-import org.apache.kafka.common.utils.Checksums.update
 import org.slf4j.LoggerFactory
-import java.util.*
 import java.util.concurrent.atomic.LongAdder
 import javax.sql.DataSource
 
@@ -206,7 +203,7 @@ class OppgaveRepositoryV2(
     private fun insert(behandlingId: Long, oppgave: OppgaveV2): Query {
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }.increment()
 
-        log.info("Lagrer ny oppgave for $behandlingId på referanse: ${oppgave.eksternReferanse}")
+        log.info("Lagrer ny oppgave for ${oppgave.oppgaveKode} på referanse: ${oppgave.eksternReferanse}")
         return queryOf(
             """
                 insert into oppgave_v2 (
