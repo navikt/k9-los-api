@@ -101,8 +101,7 @@ open class Behandling constructor(
         return oppgaver.filter { it.erAktiv() }.let { aktiveOppgaver ->
             if (ferdigstillelse.oppgaveKode != null) {
                 log.info("Lukker aktive oppgaver opprettet før ${ferdigstillelse.oppgaveKode} $eksternReferanse")
-                val ferdigstiltOppgaveOpprettet =
-                    aktiveOppgaver.first { it.oppgaveKode == ferdigstillelse.oppgaveKode }.opprettet
+                val ferdigstiltOppgaveOpprettet = aktiveOppgaver.first { it.oppgaveKode == ferdigstillelse.oppgaveKode }.opprettet
                 aktiveOppgaver.filter { aktiveOppgave -> aktiveOppgave.opprettet <= ferdigstiltOppgaveOpprettet }
                     .forEach { it.ferdigstill(ferdigstillelse) }
             } else {

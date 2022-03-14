@@ -12,7 +12,6 @@ val kafkaEmbeddedEnvVersion = "2.8.1"
 val koinVersion = "2.2.2"
 val kotliqueryVersion = "1.6.3"
 val k9SakVersion = "3.2.53"
-val sulkyVersion = "8.3.0"
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.6.10"
@@ -32,7 +31,6 @@ dependencies {
     implementation("org.flywaydb:flyway-core:$flywayVersion")
     implementation("no.nav:vault-jdbc:$vaultJdbcVersion")
     implementation("com.github.seratch:kotliquery:$kotliqueryVersion")
-    implementation("de.huxhorn.sulky:de.huxhorn.sulky.ulid:$sulkyVersion")
 
     implementation("io.ktor:ktor-locations:$ktorVersion")
     implementation("io.ktor:ktor-html-builder:$ktorVersion")

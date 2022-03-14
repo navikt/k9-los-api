@@ -98,8 +98,8 @@ data class Configuration(private val config: ApplicationConfig) {
         }
 
     internal fun getProfileAwareKafkaAivenConfig() =
-        // Bytter ut aivenkonfig med onprem kafkakonfig som er støttet i vtp. Bruker alltid earliest lokal fordi kafkakluster ofte er nytt
-        if (koinProfile == KoinProfile.LOCAL) getKafkaConfig() else getKafkaAivenConfig(OffsetResetStrategy.EARLIEST)
+        // Bytter ut aivenkonfig med onprem kafkakonfig som er støttet i vtp.
+        if (koinProfile == KoinProfile.LOCAL) getKafkaConfig() else getKafkaAivenConfig()
 
 
     internal fun getKafkaAivenConfig(defaultOffsetResetStrategy: OffsetResetStrategy = OffsetResetStrategy.NONE): KafkaAivenConfig {
