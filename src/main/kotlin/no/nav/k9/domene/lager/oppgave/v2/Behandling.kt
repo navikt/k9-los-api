@@ -13,7 +13,7 @@ open class Behandling constructor(
     val ytelseType: FagsakYtelseType,
     val behandlingType: String?,
     val opprettet: LocalDateTime,
-    val sistEndret: LocalDateTime?,
+    var sistEndret: LocalDateTime?,
     val søkersId: Ident?,
     val kode6: Boolean,
     val skjermet: Boolean,
@@ -87,12 +87,14 @@ open class Behandling constructor(
     }
 
     open fun ferdigstill(ferdigstillelse: Ferdigstillelse) {
+        sistEndret = LocalDateTime.now()
         log.info("Ferdigstiller behandling $eksternReferanse")
         lukkAktiveOppgaver(ferdigstillelse)
         ferdigstilt = ferdigstillelse.tidspunkt
     }
 
     open fun lukkAktiveOppgaver(ferdigstillelse: Ferdigstillelse) {
+        sistEndret = LocalDateTime.now()
         log.info("Lukker alle aktive oppgaver $eksternReferanse")
         return oppgaver.filter { it.erAktiv() }.forEach { it.ferdigstill(ferdigstillelse) }
     }
@@ -106,10 +108,12 @@ open class Behandling constructor(
                 } else {
                     log.info("Lukker aktive oppgaver opprettet før ${ferdigstillelse.oppgaveKode} $eksternReferanse")
                     aktiveOppgaver.filter { aktiveOppgave -> aktiveOppgave.opprettet <= ferdigstiltOppgaveOpprettet }.forEach { it.ferdigstill(ferdigstillelse) }
+                    sistEndret = LocalDateTime.now()
                 }
             } else {
                 log.info("Lukker alle aktive oppgaver $eksternReferanse")
                 aktiveOppgaver.forEach { it.ferdigstill(ferdigstillelse) }
+                sistEndret = LocalDateTime.now()
             }
         }
     }
@@ -134,6 +138,7 @@ open class Behandling constructor(
                 frist = opprettOppgave.frist
             )
         )
+        sistEndret = LocalDateTime.now()
         log.info("Ny oppgave (${opprettOppgave.oppgaveKode}) lagt til $eksternReferanse")
     }
 

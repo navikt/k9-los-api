@@ -182,7 +182,6 @@ class OppgaveRepositoryV2(
         return queryOf(
     """
                 UPDATE behandling SET
-                    behandling_type = :behandling_type,
                     sist_endret = :sist_endret,
                     soekers_id = :soekers_id,
                     ferdigstilt_tidspunkt = :ferdigstilt_tidspunkt,
