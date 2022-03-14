@@ -5,8 +5,10 @@ import no.nav.helse.dusseldorf.ktor.health.HealthCheck
 import no.nav.helse.dusseldorf.ktor.health.Healthy
 import no.nav.helse.dusseldorf.ktor.health.Result
 import no.nav.helse.dusseldorf.ktor.health.UnHealthy
+import org.apache.kafka.common.errors.TopicAuthorizationException
 import org.apache.kafka.streams.KafkaStreams
 import org.apache.kafka.streams.Topology
+import org.apache.kafka.streams.errors.StreamsUncaughtExceptionHandler
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.LocalDateTime
@@ -91,9 +93,20 @@ internal class ManagedKafkaStreams(
             log.info("Stream endret state fra $oldState til $newState")
         }
 
-        streams.setUncaughtExceptionHandler { _, e ->
-            log.error("Kafkatråd feilet:", e)
-            stop(becauseOfError = true) }
+        streams.setUncaughtExceptionHandler{ e ->
+            when (e.rotfeil()) {
+                is TopicAuthorizationException -> {
+                    log.error("Kafkatråd feilet, erstatter stream med nytt tråd pga exception", e);
+                    StreamsUncaughtExceptionHandler.StreamThreadExceptionResponse.REPLACE_THREAD
+                }
+                else -> {
+                    log.error("Kafkatråd feilet, stopper", e)
+                    stop(becauseOfError = true) // vet ikke om denne trengs med den nye setUncaughtExceptionHandler
+                    StreamsUncaughtExceptionHandler.StreamThreadExceptionResponse.SHUTDOWN_CLIENT
+                }
+            }
+
+        };
 
         Runtime.getRuntime().addShutdownHook(Thread {
             stop(becauseOfError = false)
@@ -112,4 +125,12 @@ internal class ManagedStreamHealthy(private val managedKafkaStreams: ManagedKafk
 
 internal class ManagedStreamReady(private val managedKafkaStreams: ManagedKafkaStreams) : HealthCheck {
     override suspend fun check(): Result = managedKafkaStreams.ready()
+}
+
+private fun Throwable.rotfeil(): Throwable? {
+        var rootCause: Throwable? = this
+        while (rootCause?.cause != null) {
+            rootCause = rootCause.cause
+        }
+        return rootCause
 }

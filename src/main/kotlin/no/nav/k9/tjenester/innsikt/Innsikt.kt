@@ -1,19 +1,28 @@
 package no.nav.k9.tjenester.innsikt
 
-import io.ktor.application.*
-import io.ktor.html.*
-import io.ktor.locations.*
-import io.ktor.routing.*
-import kotlinx.html.*
+import io.ktor.application.call
+import io.ktor.html.respondHtml
+import io.ktor.locations.Location
+import io.ktor.locations.get
+import io.ktor.routing.Route
+import kotlinx.html.body
+import kotlinx.html.classes
+import kotlinx.html.div
+import kotlinx.html.h1
+import kotlinx.html.head
+import kotlinx.html.li
+import kotlinx.html.p
+import kotlinx.html.script
+import kotlinx.html.styleLink
+import kotlinx.html.title
+import kotlinx.html.ul
 import no.nav.k9.domene.modell.BehandlingStatus
-import no.nav.k9.domene.modell.BehandlingType
 import no.nav.k9.domene.modell.OppgaveKø
 import no.nav.k9.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.domene.repository.OppgaveKøRepository
 import no.nav.k9.domene.repository.OppgaveRepository
 import no.nav.k9.domene.repository.SaksbehandlerRepository
 import org.koin.ktor.ext.inject
-import java.util.*
 
 fun Route.innsiktGrensesnitt() {
     val oppgaveRepository by inject<OppgaveRepository>()
@@ -86,7 +95,7 @@ fun Route.innsiktGrensesnitt() {
 
                             div {
                                 classes = setOf("input-group-text display-4")
-                                +"TilBeslutter = ${sakModell.oppgave().tilBeslutter}}"
+                                +"TilBeslutter = ${sakModell.oppgave().tilBeslutter}"
                             }
 
                             sakModell.eventer.forEach { behandlingProsessEventDto ->

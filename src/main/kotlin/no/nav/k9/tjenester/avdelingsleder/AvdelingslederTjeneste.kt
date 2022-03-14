@@ -3,13 +3,25 @@ package no.nav.k9.tjenester.avdelingsleder
 import no.nav.k9.Configuration
 import no.nav.k9.KoinProfile
 import no.nav.k9.domene.lager.oppgave.Reservasjon
-import no.nav.k9.domene.modell.*
+import no.nav.k9.domene.modell.Enhet
+import no.nav.k9.domene.modell.FagsakYtelseType
+import no.nav.k9.domene.modell.KøSortering
+import no.nav.k9.domene.modell.OppgaveKø
+import no.nav.k9.domene.modell.Saksbehandler
 import no.nav.k9.domene.repository.OppgaveKøRepository
 import no.nav.k9.domene.repository.OppgaveRepository
 import no.nav.k9.domene.repository.ReservasjonRepository
 import no.nav.k9.domene.repository.SaksbehandlerRepository
 import no.nav.k9.integrasjon.abac.IPepClient
-import no.nav.k9.tjenester.avdelingsleder.oppgaveko.*
+import no.nav.k9.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
+import no.nav.k9.tjenester.avdelingsleder.oppgaveko.BehandlingsTypeDto
+import no.nav.k9.tjenester.avdelingsleder.oppgaveko.IdDto
+import no.nav.k9.tjenester.avdelingsleder.oppgaveko.KøSorteringDto
+import no.nav.k9.tjenester.avdelingsleder.oppgaveko.OppgavekøNavnDto
+import no.nav.k9.tjenester.avdelingsleder.oppgaveko.SaksbehandlerOppgavekoDto
+import no.nav.k9.tjenester.avdelingsleder.oppgaveko.SkjermetDto
+import no.nav.k9.tjenester.avdelingsleder.oppgaveko.SorteringDatoDto
+import no.nav.k9.tjenester.avdelingsleder.oppgaveko.YtelsesTypeDto
 import no.nav.k9.tjenester.avdelingsleder.reservasjoner.ReservasjonDto
 import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import no.nav.k9.tjenester.saksbehandler.saksliste.OppgavekøDto
@@ -277,7 +289,8 @@ class AvdelingslederTjeneste(
                         reservertTilTidspunkt = reservasjon.reservertTil!!,
                         oppgaveId = reservasjon.oppgave,
                         saksnummer = oppgave.fagsakSaksnummer,
-                        behandlingType = oppgave.behandlingType
+                        behandlingType = oppgave.behandlingType,
+                        tilBeslutter = oppgave.tilBeslutter
                     )
                 )
 

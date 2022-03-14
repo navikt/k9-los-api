@@ -17,4 +17,14 @@ data class PunsjEventDto(
     val type : String? = null,
     val ytelse : String? = null,
     val sendtInn : Boolean? = null
-)
+) {
+    fun safePrint() = """
+        PunsjEventDto(eksternId=$eksternId, 
+        journalpostId=$journalpostId, 
+        eventTid=$eventTid, 
+        aksjonspunktKoderMedStatusListe=$aksjonspunktKoderMedStatusListe, 
+        type=$type, 
+        ytelse=$ytelse, 
+        sendtInn=$sendtInn)
+        """.trimIndent()
+}

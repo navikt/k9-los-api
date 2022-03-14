@@ -5,7 +5,11 @@ import kotlinx.coroutines.runBlocking
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.lager.oppgave.v2.*
 import no.nav.k9.domene.modell.*
-import no.nav.k9.domene.repository.*
+import no.nav.k9.domene.repository.OppgaveKøRepository
+import no.nav.k9.domene.repository.OppgaveRepository
+import no.nav.k9.domene.repository.PunsjEventK9Repository
+import no.nav.k9.domene.repository.ReservasjonRepository
+import no.nav.k9.domene.repository.StatistikkRepository
 import no.nav.k9.integrasjon.kafka.dto.PunsjEventDto
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import no.nav.k9.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
@@ -31,7 +35,7 @@ class K9punsjEventHandler constructor(
     fun prosesser(
         event: PunsjEventDto
     ) {
-        log.info(event.toString())
+        log.info(event.safePrint())
         val modell = punsjEventK9Repository.lagre(event = event)
         val oppgave = modell.oppgave()
         oppgaveRepository.lagre(oppgave.eksternId){

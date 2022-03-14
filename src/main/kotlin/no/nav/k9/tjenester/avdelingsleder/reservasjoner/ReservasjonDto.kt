@@ -10,5 +10,6 @@ data class ReservasjonDto(
         val reservertTilTidspunkt: LocalDateTime,
         val oppgaveId: UUID,
         val saksnummer: String,
-        val behandlingType: BehandlingType
+        val behandlingType: BehandlingType,
+        val tilBeslutter: Boolean
 )
