@@ -2,6 +2,7 @@ package no.nav.k9.integrasjon.kafka
 
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.consumer.ConsumerConfig
+import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.config.SaslConfigs
 import org.apache.kafka.common.config.SslConfigs
@@ -18,7 +19,7 @@ private const val ID_PREFIX = "srvpps-k9los-"
 
 interface IKafkaConfig {
     val unreadyAfterStreamStoppedIn: Duration
-    fun stream(name: String): Properties
+    fun stream(name: String, offsetResetStrategy: OffsetResetStrategy? = null): Properties
     fun producer(name: String): Properties
 }
 
@@ -38,7 +39,7 @@ class KafkaConfig(
         medProcessingGuarantee(exactlyOnce)
     }
 
-    override fun stream(name: String) = streams.apply {
+    override fun stream(name: String, offsetResetStrategy: OffsetResetStrategy?) = streams.apply {
         put(APPLICATION_ID_CONFIG, "$ID_PREFIX$name")
     }
 

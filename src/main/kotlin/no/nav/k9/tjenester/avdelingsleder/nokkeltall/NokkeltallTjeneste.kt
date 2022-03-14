@@ -89,7 +89,7 @@ class NokkeltallTjeneste constructor(
         }
     }
 
-    fun hentFerdigstilteDeloppgaverHistorikk(
+    fun hentFerdigstilteOppgaverHistorikk(
         vararg historikkType: VelgbartHistorikkfelt
     ): List<HistorikkElementAntall> {
         return statistikkRepository.hentFerdigstiltOppgavehistorikk(antallDagerHistorikk = StatistikkRepository.SISTE_8_UKER_I_DAGER)
@@ -103,7 +103,7 @@ class NokkeltallTjeneste constructor(
             .filterNot { EnheterSomSkalUtelatesFraStatistikk.contains(it.behandlendeEnhet) }
             .groupBy { it.dato }
             .mapValues { (_, ferdigstiltOppgave) ->
-                ferdigstiltOppgave.groupBy { it.behandlendeEnhet }.mapValues { it.value.size }
+                ferdigstiltOppgave.groupBy { it.behandlendeEnhet!! }.mapValues { it.value.size }
             }.fyllTommeDagerMedVerdi(emptyMap())
     }
 

@@ -56,9 +56,8 @@ data class K9SakModell(
         if (FagsakYtelseType.fraKode(sisteEvent.ytelseTypeKode) == FagsakYtelseType.FRISINN) {
             aktiv = false
         }
-        var behandlingStatus = sisteEvent.behandlingStatus
         // feil i dto, sjekker begge feltene
-        behandlingStatus = behandlingStatus ?: sisteEvent.behandlinStatus ?: BehandlingStatus.OPPRETTET.kode
+        val behandlingStatus = sisteEvent.behandlingStatus ?: BehandlingStatus.OPPRETTET.kode
         if (behandlingStatus == BehandlingStatus.AVSLUTTET.kode) {
             aktiv = false
         }

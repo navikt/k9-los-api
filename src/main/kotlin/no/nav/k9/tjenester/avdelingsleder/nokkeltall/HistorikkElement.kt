@@ -2,14 +2,14 @@ package no.nav.k9.tjenester.avdelingsleder.nokkeltall
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter
 import com.fasterxml.jackson.annotation.JsonValue
-import no.nav.k9.domene.modell.FagsakYtelseType
 import java.time.LocalDate
 
 typealias HistorikkSeleksjonsresultat = Map<VelgbartHistorikkfelt, Any?>
 
 interface HistorikkElement {
     val dato: LocalDate
-    val ytelseType: FagsakYtelseType?
+    val ytelseType: String?
+    val fagsystemType: String?
     val behandlingType: String?
 
     fun tilMap(): HistorikkSeleksjonsresultat
@@ -28,6 +28,7 @@ enum class VelgbartHistorikkfelt(
     DATO("dato"),
     ENHET("behandlendeEnhet"),
     YTELSETYPE("ytelseType"),
+    FAGSYSTEM("fagsystemType"),
     BEHANDLINGTYPE("behandlingType");
 }
 

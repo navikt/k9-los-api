@@ -3,9 +3,8 @@ package no.nav.k9.aksjonspunktbehandling
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.domene.lager.oppgave.Oppgave
-import no.nav.k9.domene.modell.BehandlingType
-import no.nav.k9.domene.modell.IModell
-import no.nav.k9.domene.modell.K9PunsjModell
+import no.nav.k9.domene.lager.oppgave.v2.*
+import no.nav.k9.domene.modell.*
 import no.nav.k9.domene.repository.OppgaveKøRepository
 import no.nav.k9.domene.repository.OppgaveRepository
 import no.nav.k9.domene.repository.PunsjEventK9Repository
@@ -19,6 +18,7 @@ import org.slf4j.LoggerFactory
 
 class K9punsjEventHandler constructor(
     private val oppgaveRepository: OppgaveRepository,
+    private val oppgaveTjenesteV2: OppgaveTjenesteV2,
     private val punsjEventK9Repository: PunsjEventK9Repository,
     private val statistikkChannel: Channel<Boolean>,
     private val reservasjonRepository: ReservasjonRepository,
@@ -53,6 +53,9 @@ class K9punsjEventHandler constructor(
             }
             statistikkChannel.send(true)
         }
+
+//        Kan vente med å lage v2 oppgaver til punsjevent inneholder ansvarligsaksbehandler
+//        oppdaterOppgaveV2(event)
     }
 
     override fun tellEvent(modell: IModell, oppgave: Oppgave) {
@@ -85,5 +88,39 @@ class K9punsjEventHandler constructor(
                 }
             }
         }
+    }
+
+    private fun oppdaterOppgaveV2(event: PunsjEventDto) {
+        val resultat = event.utledStatus()
+        val behandlingEndret = BehandlingEndret(
+            eksternReferanse = event.eksternId.toString(),
+            fagsystem = Fagsystem.PUNSJ,
+            ytelseType = event.ytelse?.run { FagsakYtelseType.fraKode(this) } ?: FagsakYtelseType.UKJENT,
+            behandlingType = event.type,
+            søkersId = event.aktørId?.id?.run { Ident(this, Ident.IdType.AKTØRID) },
+            tidspunkt = event.eventTid
+        )
+        val oppgaveHendelser = when (resultat) {
+            BehandlingStatus.LUKKET -> listOf(
+                FerdigstillBehandling(
+                    tidspunkt = event.eventTid,
+                    behandlendeEnhet = null,
+                    ansvarligSaksbehandlerIdent = null
+                )
+            )
+            BehandlingStatus.OPPRETTET -> event.aksjonspunktKoderMedStatusListe.map {
+                OpprettOppgave(
+                    tidspunkt = event.eventTid,
+                    oppgaveKode = it.key,
+                    frist = null,
+                )
+            }
+            else -> emptyList()
+        }
+
+        oppgaveTjenesteV2.nyeOppgaveHendelser(
+            eksternId = event.eksternId.toString(),
+            listOf(behandlingEndret, *oppgaveHendelser.toTypedArray())
+        )
     }
 }

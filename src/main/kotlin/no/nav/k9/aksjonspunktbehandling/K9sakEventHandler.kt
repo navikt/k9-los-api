@@ -3,16 +3,8 @@ package no.nav.k9.aksjonspunktbehandling
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.domene.lager.oppgave.Oppgave
-import no.nav.k9.domene.modell.BehandlingStatus
-import no.nav.k9.domene.modell.FagsakYtelseType
-import no.nav.k9.domene.modell.IModell
-import no.nav.k9.domene.modell.K9SakModell
-import no.nav.k9.domene.modell.reportMetrics
-import no.nav.k9.domene.repository.BehandlingProsessEventK9Repository
-import no.nav.k9.domene.repository.OppgaveKøRepository
-import no.nav.k9.domene.repository.OppgaveRepository
-import no.nav.k9.domene.repository.ReservasjonRepository
-import no.nav.k9.domene.repository.StatistikkRepository
+import no.nav.k9.domene.modell.*
+import no.nav.k9.domene.repository.*
 import no.nav.k9.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.integrasjon.sakogbehandling.SakOgBehandlingProducer
@@ -80,7 +72,6 @@ class K9sakEventHandler constructor(
                 oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, listOf(oppgave), reservasjonRepository)
             }
             statistikkChannel.send(true)
-
         }
     }
 

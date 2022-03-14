@@ -7,8 +7,12 @@ import no.nav.k9.KoinProfile.*
 import no.nav.k9.aksjonspunktbehandling.K9TilbakeEventHandler
 import no.nav.k9.aksjonspunktbehandling.K9punsjEventHandler
 import no.nav.k9.aksjonspunktbehandling.K9sakEventHandler
-import no.nav.k9.aksjonspunktbehandling.k9sak.K9sakEventHandlerV2
+import no.nav.k9.fagsystem.k9sak.AksjonspunktHendelseMapper
+import no.nav.k9.fagsystem.k9sak.K9sakEventHandlerV2
 import no.nav.k9.db.hikariConfig
+import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
+import no.nav.k9.domene.lager.oppgave.v2.OppgaveTjenesteV2
+import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.domene.repository.*
 import no.nav.k9.integrasjon.abac.IPepClient
 import no.nav.k9.integrasjon.abac.PepClient
@@ -77,6 +81,7 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single { OppgaveRepository(get(), get(), get(named("oppgaveRefreshChannel"))) }
+
     single {
         OppgaveKøRepository(
             dataSource = get(),
@@ -86,6 +91,11 @@ fun common(app: Application, config: Configuration) = module {
             pepClient = get()
         )
     }
+
+    single { AksjonspunktHendelseMapper(get()) }
+    single { OppgaveRepositoryV2(dataSource = get()) }
+    single { TransactionalManager(dataSource = get()) }
+    single { OppgaveTjenesteV2(get(), get()) }
 
     single {
         SaksbehandlerRepository(
@@ -150,7 +160,10 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        K9sakEventHandlerV2(azureGraphService = get())
+        K9sakEventHandlerV2(
+            oppgaveTjenesteV2 = get(),
+            aksjonspunktHendelseMapper = get()
+        )
     }
 
     single {
@@ -183,6 +196,7 @@ fun common(app: Application, config: Configuration) = module {
     single {
         K9punsjEventHandler(
             oppgaveRepository = get(),
+            oppgaveTjenesteV2 = get(),
             punsjEventK9Repository = get(),
             statistikkChannel = get(named("statistikkRefreshChannel")),
             oppgaveKøRepository = get(),

@@ -11,6 +11,9 @@ import no.nav.k9.aksjonspunktbehandling.K9TilbakeEventHandler
 import no.nav.k9.aksjonspunktbehandling.K9punsjEventHandler
 import no.nav.k9.aksjonspunktbehandling.K9sakEventHandler
 import no.nav.k9.domene.lager.oppgave.Oppgave
+import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
+import no.nav.k9.domene.lager.oppgave.v2.OppgaveTjenesteV2
+import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.domene.repository.*
 import no.nav.k9.integrasjon.abac.IPepClient
 import no.nav.k9.integrasjon.abac.PepClientLocal
@@ -123,6 +126,11 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             omsorgspengerService = get()
         )
     }
+
+    single { OppgaveRepositoryV2(dataSource = get()) }
+    single { TransactionalManager(dataSource = get()) }
+    single { OppgaveTjenesteV2(oppgaveRepository = get(), tm = get()) }
+
     single {
         NokkeltallTjeneste(
             oppgaveRepository = get(),
@@ -149,6 +157,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             reservasjonTjeneste = get()
         )
     }
+
     single {
         K9TilbakeEventHandler(
             get(),
@@ -172,6 +181,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         K9punsjEventHandler(
             oppgaveRepository = get(),
+            oppgaveTjenesteV2 = get(),
             punsjEventK9Repository = PunsjEventK9Repository(dataSource = get()),
             statistikkChannel = get(named("statistikkRefreshChannel")),
             oppgaveKøRepository = get(),

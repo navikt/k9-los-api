@@ -308,15 +308,23 @@ class StatistikkRepository(
             it.run(
                 queryOf(
                     """
-                        SELECT statistikk.dato AS dato, oppgave.data::jsonb -> 'behandlendeEnhet' AS behandlende_enhet FROM oppgave JOIN
-                        (SELECT dato, jsonb_array_elements_text(noy.ferdigstilte) AS ferdigstilte FROM nye_og_ferdigstilte AS noy WHERE noy.dato > :start_dato) AS statistikk 
-                        ON oppgave.id in(statistikk.ferdigstilte) ORDER BY statistikk.dato
+                    SELECT date(oppgave_v2.ferdigstilt_tidspunkt) AS dato, 
+                    behandling.fagsystem as fagsystem_type, 
+                    behandling.ytelse_type AS ytelse_type,
+                    behandling.behandling_type as behandling_type,
+                    oppgave_v2.ferdigstilt_enhet AS behandlende_enhet,
+                    oppgave_v2.ferdigstilt_saksbehandler AS ansvarlig_saksbehandler
+                    FROM oppgave_v2 LEFT JOIN behandling ON behandling.id = oppgave_v2.behandling_id
+                    WHERE oppgave_v2.ferdigstilt_tidspunkt > :start_dato ORDER BY dato
                     """.trimIndent(),
                     mapOf("start_dato" to startDato)
                 ).map { rad ->
                     FerdigstiltBehandling(
                         dato = rad.localDate("dato"),
-                        behandlendeEnhet = objectMapper().readValue(rad.stringOrNull("behandlende_enhet") ?: ""),
+                        fagsystemType = rad.stringOrNull("fagsystem_type"),
+                        ytelseType = rad.stringOrNull("ytelse_type"),
+                        behandlingType = rad.stringOrNull("behandling_type"),
+                        behandlendeEnhet = rad.stringOrNull("behandlende_enhet"),
                     )
                 }.asList
             )

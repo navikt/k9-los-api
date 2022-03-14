@@ -53,10 +53,10 @@ fun Route.NokkeltallApis() {
     }
 
     @Location("/aksjonspunkter-per-enhet-historikk")
-    class HentFullførteDeloppgaverPrEnhetOgYtelse
+    class HentFullførteOppgaverPrEnhetOgYtelse
 
-    get { _: HentFullførteDeloppgaverPrEnhetOgYtelse ->
-        val historikk = nokkeltallTjeneste.hentFerdigstilteDeloppgaverHistorikk(
+    get { _: HentFullførteOppgaverPrEnhetOgYtelse ->
+        val historikk = nokkeltallTjeneste.hentFerdigstilteOppgaverHistorikk(
             VelgbartHistorikkfelt.DATO,
             VelgbartHistorikkfelt.ENHET,
             VelgbartHistorikkfelt.YTELSETYPE
