@@ -142,7 +142,7 @@ open class AzureGraphService constructor(
     private fun accessToken(onBehalfOf: IIdToken? = null): AccessToken {
         return onBehalfOf?.run {
             cachedAccessTokenClient.getAccessToken(setOf("https://graph.microsoft.com/user.read"), this.value) } ?:
-            cachedAccessTokenClient.getAccessToken(emptySet())
+            cachedAccessTokenClient.getAccessToken(setOf("https://graph.microsoft.com/.default"))
     }
 }
 
