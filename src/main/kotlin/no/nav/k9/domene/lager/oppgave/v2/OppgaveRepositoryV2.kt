@@ -30,7 +30,7 @@ class OppgaveRepositoryV2(
 
     fun hentBehandling(eksternReferanse: String, tx: TransactionalSession): Behandling? {
         val oppgaver = tx.run(hentOppgaver(eksternReferanse))
-        return tx. run(hentBehandling(eksternReferanse, oppgaver))
+        return tx.run(hentBehandling(eksternReferanse, oppgaver))
     }
 
     private fun hentBehandling(

@@ -11,13 +11,20 @@ import javax.sql.DataSource
 class TestDataSource {
 
     fun dataSource(kPostgreSQLContainer: KPostgreSQLContainer): DataSource {
-        val config = HikariConfig()
-        config.jdbcUrl = kPostgreSQLContainer.jdbcUrl
-        config.username = kPostgreSQLContainer.username
-        config.password = kPostgreSQLContainer.password
-        config.addDataSourceProperty("cachePrepStmts", "true")
-        config.addDataSourceProperty("prepStmtCacheSize", "250")
-        config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048")
+        val config = HikariConfig().apply {
+            jdbcUrl = kPostgreSQLContainer.jdbcUrl
+            username = kPostgreSQLContainer.username
+            password = kPostgreSQLContainer.password
+            maximumPoolSize = 3
+            minimumIdle = 1
+            idleTimeout = 10001
+            connectionTimeout = 5000
+            maxLifetime = 30001
+            driverClassName = "org.postgresql.Driver"
+            addDataSourceProperty("cachePrepStmts", "true")
+            addDataSourceProperty("prepStmtCacheSize", "250")
+            addDataSourceProperty("prepStmtCacheSqlLimit", "2048")
+        }
         return HikariDataSource(config)
     }
 

@@ -1,7 +1,10 @@
 package no.nav.k9.domene.lager.oppgave.v2
 
+import kotliquery.sessionOf
+import kotliquery.using
 import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.domene.modell.Fagsystem
+import no.nav.k9.statistikk.kontrakter.JsonSchemas.behandling
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
@@ -20,7 +23,7 @@ open class OppgaveTjenesteV2(
         tm.transaction { tx ->
             val behandling = oppgaveRepository.hentBehandling(eksternId, tx)
                 ?: hendelser.hentBehandlingEndretEvent()?.tilBehandling()
-                ?: throw IllegalStateException("Mottatt hende<lse uten å ha behandling. $eksternId")
+                ?: throw IllegalStateException("Mottatt hendelse uten å ha behandling. $eksternId")
 
             hendelser.forEach { behandling.nyHendelse(it) }
             oppgaveRepository.lagre(behandling, tx)
