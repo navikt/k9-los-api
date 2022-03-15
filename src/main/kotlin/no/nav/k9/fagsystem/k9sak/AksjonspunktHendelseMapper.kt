@@ -40,7 +40,7 @@ class AksjonspunktHendelseMapper(
                 return FerdigstillOppgave(
                     tidspunkt = hendelse.hendelseTid,
                     ansvarligSaksbehandlerIdent = dto.ansvarligSaksbehandler,
-                    behandlendeEnhet = dto.ansvarligSaksbehandler?.let { azureGraphService.hentEnhetForBrukerMedSystemToken(it) },
+                    behandlendeEnhet = dto.ansvarligSaksbehandler?.let { azureGraphService.hentEnhetForBrukerMedSystemToken(it) } ?: "UKJENT",
                     oppgaveKode = dto.aksjonspunktKode
                 )
         }

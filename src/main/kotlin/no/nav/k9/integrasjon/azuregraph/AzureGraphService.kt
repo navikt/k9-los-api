@@ -94,8 +94,13 @@ open class AzureGraphService constructor(
         }
     }
 
-    override suspend fun hentEnhetForBrukerMedSystemToken(brukernavn: String): String {
-        return hentEnhetForBruker(brukernavn = brukernavn)
+    override suspend fun hentEnhetForBrukerMedSystemToken(brukernavn: String): String? {
+        return try {
+            hentEnhetForBruker(brukernavn = brukernavn)
+        } catch (e: Exception) {
+            log.warn("Klarte ikke å hente behandlende enhet for $brukernavn")
+            null
+        }
     }
 
     private suspend fun hentEnhetForBruker(brukernavn: String, onBehalfOf: IIdToken? = null): String {
