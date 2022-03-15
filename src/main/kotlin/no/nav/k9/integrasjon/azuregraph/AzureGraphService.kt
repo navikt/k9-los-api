@@ -107,7 +107,7 @@ open class AzureGraphService constructor(
             val graphUrl = if (onBehalfOf != null) {
                 "https://graph.microsoft.com/v1.0/me?\$select=officeLocation"
             } else {
-                "https://graph.microsoft.com/v1.0/users/$brukernavn?\$select=officeLocation"
+                "https://graph.microsoft.com/v1.0/users?\$filter=mailNickname eq '$brukernavn'&\$select=officeLocation"
             }
 
             val httpRequest = graphUrl
@@ -132,7 +132,14 @@ open class AzureGraphService constructor(
                 håndterResultat(result, request)
             }
             return try {
-                val officeLocation = objectMapper().readValue<OfficeLocation>(json).officeLocation
+                val officeLocation = if (onBehalfOf != null) {
+                    objectMapper().readValue<OfficeLocation>(json).officeLocation
+                } else {
+                    val result = objectMapper().readValue<OfficeLocationFilterResult>(json).value.also {
+                        if (it.size > 1) log.warn("Flere enn 1 treff på ident")
+                    }
+                    result.first().officeLocation
+                }
                 cache.set(key, CacheObject(officeLocation, LocalDateTime.now().plusDays(180)))
                 return officeLocation
             } catch (e: Exception) {
