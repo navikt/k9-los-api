@@ -25,7 +25,8 @@ import java.time.LocalDateTime
 import kotlin.coroutines.coroutineContext
 
 open class AzureGraphService constructor(
-    accessTokenClient: AccessTokenClient
+    accessTokenClient: AccessTokenClient,
+    private val clientId: String,
 ) : IAzureGraphService {
     private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
     private val cache = Cache<String>()
@@ -149,7 +150,7 @@ open class AzureGraphService constructor(
     private fun accessToken(onBehalfOf: IIdToken? = null): AccessToken {
         return onBehalfOf?.run {
             cachedAccessTokenClient.getAccessToken(setOf("https://graph.microsoft.com/user.read"), this.value) } ?:
-            cachedAccessTokenClient.getAccessToken(setOf("https://graph.microsoft.com/.default"))
+            cachedAccessTokenClient.getAccessToken(setOf("https://graph.microsoft.com/$clientId/.default"))
     }
 }
 

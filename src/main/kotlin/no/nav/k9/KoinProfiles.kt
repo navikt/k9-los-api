@@ -294,7 +294,8 @@ fun localDevConfig() = module {
 fun preprodConfig(config: Configuration) = module {
     single<IAzureGraphService> {
         AzureGraphService(
-            accessTokenClient = get<AccessTokenClientResolver>().azureV2()
+            accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+            clientId = get<AccessTokenClientResolver>().azureClientId()
         )
     }
     single<IPepClient> {
@@ -328,7 +329,8 @@ fun preprodConfig(config: Configuration) = module {
 fun prodConfig(config: Configuration) = module {
     single<IAzureGraphService> {
         AzureGraphService(
-            accessTokenClient = get<AccessTokenClientResolver>().azureV2()
+            accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+            clientId = get<AccessTokenClientResolver>().azureClientId()
         )
     }
     single<IPepClient> {
