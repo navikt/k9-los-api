@@ -42,8 +42,6 @@ class AccessTokenClientResolver(
         return client as PrivateKeyClient
     }
 
-    internal fun azureClientId() = azureV2Client().clientId()
-
     internal fun naisSts() = naisSts
     internal fun azureV2() = azureV2
 }
