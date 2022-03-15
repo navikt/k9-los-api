@@ -7,6 +7,7 @@ import com.github.kittinunf.fuel.coroutines.awaitStringResponseResult
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.result.Result
 import io.ktor.http.*
+import no.nav.helse.dusseldorf.ktor.client.SimpleHttpClient.httpGet
 import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.ktor.metrics.Operation
 import no.nav.helse.dusseldorf.oauth2.client.AccessToken
@@ -103,7 +104,13 @@ open class AzureGraphService constructor(
         if (cachedOfficeLocation == null) {
             val accessToken = accessToken(onBehalfOf)
 
-            val httpRequest = "https://graph.microsoft.com/v1.0/me?\$select=officeLocation"
+            val graphUrl = if (onBehalfOf != null) {
+                "https://graph.microsoft.com/v1.0/me?\$select=officeLocation"
+            } else {
+                "https://graph.microsoft.com/v1.0/users/$brukernavn?\$select=officeLocation"
+            }
+
+            val httpRequest = graphUrl
                 .httpGet()
                 .header(
                     HttpHeaders.Accept to "application/json",
