@@ -112,7 +112,7 @@ open class AzureGraphService constructor(
             val graphUrl = if (onBehalfOf != null) {
                 "https://graph.microsoft.com/v1.0/me?\$select=officeLocation"
             } else {
-                "https://graph.microsoft.com/v1.0/users?\$filter=onPremisesSamAccountName eq '$brukernavn'&\$select=officeLocation"
+                "https://graph.microsoft.com/v1.0/users?\$filter=mailNickname eq '$brukernavn'&\$select=officeLocation"
             }
 
             val httpRequest = graphUrl
