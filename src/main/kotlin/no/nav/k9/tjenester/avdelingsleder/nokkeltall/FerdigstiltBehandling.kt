@@ -4,7 +4,7 @@ import java.time.LocalDate
 
 data class FerdigstiltBehandling(
     override val dato: LocalDate,
-    override val ytelseType: String? = null,
+    override val fagsakYtelseType: String? = null,
     override val behandlingType: String? = null,
     override val fagsystemType: String? = null,
     val behandlendeEnhet: String? = null,
@@ -13,7 +13,7 @@ data class FerdigstiltBehandling(
     override fun tilMap(): Map<VelgbartHistorikkfelt, Any?> {
         return mapOf(
                 VelgbartHistorikkfelt.DATO to dato,
-                VelgbartHistorikkfelt.YTELSETYPE to ytelseType,
+                VelgbartHistorikkfelt.YTELSETYPE to fagsakYtelseType,
                 VelgbartHistorikkfelt.BEHANDLINGTYPE to behandlingType,
                 VelgbartHistorikkfelt.FAGSYSTEM to fagsystemType,
                 VelgbartHistorikkfelt.ENHET to behandlendeEnhet

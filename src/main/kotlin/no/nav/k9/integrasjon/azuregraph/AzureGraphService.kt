@@ -112,14 +112,15 @@ open class AzureGraphService constructor(
             val graphUrl = if (onBehalfOf != null) {
                 "https://graph.microsoft.com/v1.0/me?\$select=officeLocation"
             } else {
-                "https://graph.microsoft.com/v1.0/users?\$filter=mailNickname eq '$brukernavn'&\$select=officeLocation"
+                "https://graph.microsoft.com/v1.0/users?\$filter=onPremisesSamAccountName eq '$brukernavn'&\$select=officeLocation"
             }
 
             val httpRequest = graphUrl
                 .httpGet()
                 .header(
                     HttpHeaders.Accept to "application/json",
-                    HttpHeaders.Authorization to "Bearer ${accessToken.token}"
+                    HttpHeaders.Authorization to "Bearer ${accessToken.token}",
+                    "ConsistencyLevel" to "eventual",
                 )
 
             val json = Retry.retry(

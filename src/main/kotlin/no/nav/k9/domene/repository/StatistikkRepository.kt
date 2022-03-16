@@ -322,7 +322,7 @@ class StatistikkRepository(
                     FerdigstiltBehandling(
                         dato = rad.localDate("dato"),
                         fagsystemType = rad.stringOrNull("fagsystem_type"),
-                        ytelseType = rad.stringOrNull("ytelse_type"),
+                        fagsakYtelseType = rad.stringOrNull("ytelse_type"),
                         behandlingType = rad.stringOrNull("behandling_type"),
                         behandlendeEnhet = rad.stringOrNull("behandlende_enhet"),
                     )

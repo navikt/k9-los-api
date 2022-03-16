@@ -8,7 +8,7 @@ typealias HistorikkSeleksjonsresultat = Map<VelgbartHistorikkfelt, Any?>
 
 interface HistorikkElement {
     val dato: LocalDate
-    val ytelseType: String?
+    val fagsakYtelseType: String?
     val fagsystemType: String?
     val behandlingType: String?
 
