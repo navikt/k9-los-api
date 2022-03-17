@@ -84,7 +84,7 @@ data class K9PunsjModell(
             forsteStonadsdag = førsteEvent.eventTid.toLocalDate(),
             behandlingStatus = sisteEvent.utledStatus(),
             behandlingType = utledBehandlingType(førsteEvent),
-            fagsakYtelseType = if(førsteEvent.ytelse != null) FagsakYtelseType.fraKode(førsteEvent.ytelse) else FagsakYtelseType.PPN,
+            fagsakYtelseType = if(førsteEvent.ytelse != null) FagsakYtelseType.fraKode(førsteEvent.ytelse) else FagsakYtelseType.UKJENT,
             eventTid = sisteEvent.eventTid,
             aktiv = aktiv,
             system = "PUNSJ",
