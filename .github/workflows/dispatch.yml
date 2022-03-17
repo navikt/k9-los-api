@@ -9,7 +9,7 @@ jobs:
       - name: Slash command dispatch
         uses: peter-evans/slash-command-dispatch@v2.3.0
         with:
-          token: ${{ secrets.LOS_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           commands: promote
           issue-type: issue
           allow-edits: true
