@@ -46,12 +46,16 @@ class K9sakEventHandlerV2(
     private fun håndterBehandlingAvsluttet(hendelse: ProduksjonsstyringBehandlingAvsluttetHendelse) {
         log.info("Behandling avsluttet hendelse: ${hendelse.behandlingResultatType}, ${hendelse.tryggToString()}")
 
-        val eksternId = hendelse.eksternId.toString()
-        oppgaveTjenesteV2.nyOppgaveHendelse(eksternId,
-            FerdigstillBehandling(
-               tidspunkt = hendelse.hendelseTid
+        try {
+            val eksternId = hendelse.eksternId.toString()
+            oppgaveTjenesteV2.nyOppgaveHendelse(eksternId,
+                FerdigstillBehandling(
+                   tidspunkt = hendelse.hendelseTid
+                )
             )
-        )
+        } catch (e: IllegalStateException) {
+            log.error("Feilet ved håndtering av behandlingavsluttet hendelse", e)
+        }
     }
 
     private suspend fun håndterNyttAksjonspunkt(hendelse: ProduksjonsstyringAksjonspunktHendelse) {
@@ -66,7 +70,7 @@ class K9sakEventHandlerV2(
             val nyeHendelser = aksjonspunktHendelseMapper.hentOppgavehendelser(hendelse, aksjonspunkter).toList()
             oppgaveTjenesteV2.nyeOppgaveHendelser(hendelse.eksternId.toString(), nyeHendelser)
         } catch (e: IllegalStateException) {
-            log.error("Feilet ved håndtering av oppgavehendelser", e)
+            log.error("Feilet ved håndtering av aksjonspunkthendelser", e)
         }
     }
 
