@@ -27,7 +27,7 @@ enum class VelgbartHistorikkfelt(
 ) {
     DATO("dato"),
     ENHET("behandlendeEnhet"),
-    YTELSETYPE("ytelseType"),
+    YTELSETYPE("fagsakYtelseType"),
     FAGSYSTEM("fagsystemType"),
     BEHANDLINGTYPE("behandlingType");
 }
