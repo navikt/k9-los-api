@@ -59,7 +59,8 @@ fun Route.NokkeltallApis() {
         val historikk = nokkeltallTjeneste.hentFerdigstilteOppgaverHistorikk(
             VelgbartHistorikkfelt.DATO,
             VelgbartHistorikkfelt.ENHET,
-            VelgbartHistorikkfelt.YTELSETYPE
+            VelgbartHistorikkfelt.YTELSETYPE,
+            VelgbartHistorikkfelt.FAGSYSTEM
         )
         call.respond(historikk)
     }
