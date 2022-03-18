@@ -30,6 +30,10 @@ class K9sakEventHandlerV2(
     private fun håndterBehandlingOpprettet(hendelse: ProduksjonsstyringBehandlingOpprettetHendelse) {
         log.info("Behandling opprettet hendelse: ${hendelse.behandlingType}, ${hendelse.ytelseType}, ${hendelse.saksnummer},  ${hendelse.behandlingstidFrist}, ${hendelse.tryggToString()}")
 
+        if (hendelse.ytelseType == FagsakYtelseType.FRISINN.kode) {
+            return // Skal ikke opprette oppgaver for frisinn
+        }
+
         val eksternId = hendelse.eksternId.toString()
         oppgaveTjenesteV2.nyOppgaveHendelse(
             eksternId, BehandlingEndret(
