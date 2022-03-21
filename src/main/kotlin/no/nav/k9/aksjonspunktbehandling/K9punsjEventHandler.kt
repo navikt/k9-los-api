@@ -54,8 +54,7 @@ class K9punsjEventHandler constructor(
             statistikkChannel.send(true)
         }
 
-//        Kan vente med å lage v2 oppgaver til punsjevent inneholder ansvarligsaksbehandler
-//        oppdaterOppgaveV2(event)
+        oppdaterOppgaveV2(event, modell)
     }
 
     override fun tellEvent(modell: IModell, oppgave: Oppgave) {
@@ -90,37 +89,43 @@ class K9punsjEventHandler constructor(
         }
     }
 
-    private fun oppdaterOppgaveV2(event: PunsjEventDto) {
+    private fun oppdaterOppgaveV2(event: PunsjEventDto, modell: K9PunsjModell) {
+        val oppgavehendelser = mutableSetOf<OppgaveHendelse>()
         val resultat = event.utledStatus()
-        val behandlingEndret = BehandlingEndret(
-            eksternReferanse = event.eksternId.toString(),
-            fagsystem = Fagsystem.PUNSJ,
-            ytelseType = event.ytelse?.run { FagsakYtelseType.fraKode(this) } ?: FagsakYtelseType.UKJENT,
-            behandlingType = event.type,
-            søkersId = event.aktørId?.id?.run { Ident(this, Ident.IdType.AKTØRID) },
-            tidspunkt = event.eventTid
+        oppgavehendelser.add(
+            BehandlingEndret(
+                eksternReferanse = event.eksternId.toString(),
+                fagsystem = Fagsystem.PUNSJ,
+                ytelseType = event.ytelse?.run { FagsakYtelseType.fraKode(this) } ?: FagsakYtelseType.UKJENT,
+                behandlingType = event.type,
+                søkersId = event.aktørId?.id?.run { Ident(this, Ident.IdType.AKTØRID) },
+                tidspunkt = event.eventTid
+            )
         )
-        val oppgaveHendelser = when (resultat) {
-            BehandlingStatus.LUKKET -> listOf(
+
+        if (modell.starterSak()) {
+            event.aksjonspunktKoderMedStatusListe.map {
+                oppgavehendelser.add(
+                    OpprettOppgave(
+                        tidspunkt = event.eventTid,
+                        oppgaveKode = it.key,
+                        frist = null,
+                    )
+                )
+            }
+        }
+
+        if (resultat == BehandlingStatus.SENDT_INN ||
+            resultat == BehandlingStatus.LUKKET) {
+            oppgavehendelser.add(
                 FerdigstillBehandling(
                     tidspunkt = event.eventTid,
                     behandlendeEnhet = null,
                     ansvarligSaksbehandlerIdent = null
                 )
             )
-            BehandlingStatus.OPPRETTET -> event.aksjonspunktKoderMedStatusListe.map {
-                OpprettOppgave(
-                    tidspunkt = event.eventTid,
-                    oppgaveKode = it.key,
-                    frist = null,
-                )
-            }
-            else -> emptyList()
         }
 
-        oppgaveTjenesteV2.nyeOppgaveHendelser(
-            eksternId = event.eksternId.toString(),
-            listOf(behandlingEndret, *oppgaveHendelser.toTypedArray())
-        )
+        oppgaveTjenesteV2.nyeOppgaveHendelser(eksternId = event.eksternId.toString(), oppgavehendelser.toList())
     }
 }
