@@ -65,7 +65,7 @@ class OppgaveRepositoryV2(
             behandlingType = stringOrNull("behandling_type"),
             opprettet = localDateTime("opprettet"),
             sistEndret = localDateTimeOrNull("sist_endret"),
-            søkersId = Ident(string("soekers_id"), Ident.IdType.AKTØRID),
+            søkersId = stringOrNull("soekers_id")?.let { Ident(it, Ident.IdType.AKTØRID) },
             kode6 = boolean("kode6"),
             skjermet = boolean("skjermet"),
         ).also {

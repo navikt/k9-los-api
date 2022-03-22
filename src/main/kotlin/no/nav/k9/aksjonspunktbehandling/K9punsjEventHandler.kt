@@ -10,6 +10,7 @@ import no.nav.k9.domene.repository.OppgaveRepository
 import no.nav.k9.domene.repository.PunsjEventK9Repository
 import no.nav.k9.domene.repository.ReservasjonRepository
 import no.nav.k9.domene.repository.StatistikkRepository
+import no.nav.k9.integrasjon.azuregraph.IAzureGraphService
 import no.nav.k9.integrasjon.kafka.dto.PunsjEventDto
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import no.nav.k9.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
@@ -25,6 +26,7 @@ class K9punsjEventHandler constructor(
     private val oppgaveKøRepository: OppgaveKøRepository,
     private val reservasjonTjeneste: ReservasjonTjeneste,
     private val statistikkRepository: StatistikkRepository,
+    private val azureGraphService: IAzureGraphService,
 ) : EventTeller {
     private val log = LoggerFactory.getLogger(K9punsjEventHandler::class.java)
 
@@ -32,9 +34,7 @@ class K9punsjEventHandler constructor(
         private val typer = BehandlingType.values().filter { it.kodeverk == "PUNSJ_INNSENDING_TYPE" }
     }
 
-    fun prosesser(
-        event: PunsjEventDto
-    ) {
+    fun prosesser(event: PunsjEventDto) {
         log.info(event.safePrint())
         val modell = punsjEventK9Repository.lagre(event = event)
         val oppgave = modell.oppgave()
@@ -52,10 +52,9 @@ class K9punsjEventHandler constructor(
                 oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, listOf(oppgave), reservasjonRepository)
             }
             statistikkChannel.send(true)
-        }
 
-//        Kan vente med å lage v2 oppgaver til punsjevent inneholder ansvarligsaksbehandler
-//        oppdaterOppgaveV2(event)
+            oppdaterOppgaveV2(event, modell)
+        }
     }
 
     override fun tellEvent(modell: IModell, oppgave: Oppgave) {
@@ -90,37 +89,44 @@ class K9punsjEventHandler constructor(
         }
     }
 
-    private fun oppdaterOppgaveV2(event: PunsjEventDto) {
+    private suspend fun oppdaterOppgaveV2(event: PunsjEventDto, modell: K9PunsjModell) {
+        val oppgavehendelser = mutableSetOf<OppgaveHendelse>()
         val resultat = event.utledStatus()
-        val behandlingEndret = BehandlingEndret(
-            eksternReferanse = event.eksternId.toString(),
-            fagsystem = Fagsystem.PUNSJ,
-            ytelseType = event.ytelse?.run { FagsakYtelseType.fraKode(this) } ?: FagsakYtelseType.UKJENT,
-            behandlingType = event.type,
-            søkersId = event.aktørId?.id?.run { Ident(this, Ident.IdType.AKTØRID) },
-            tidspunkt = event.eventTid
-        )
-        val oppgaveHendelser = when (resultat) {
-            BehandlingStatus.LUKKET -> listOf(
-                FerdigstillBehandling(
-                    tidspunkt = event.eventTid,
-                    behandlendeEnhet = null,
-                    ansvarligSaksbehandlerIdent = null
-                )
+        oppgavehendelser.add(
+            BehandlingEndret(
+                eksternReferanse = event.eksternId.toString(),
+                fagsystem = Fagsystem.PUNSJ,
+                ytelseType = event.ytelse?.run { FagsakYtelseType.fraKode(this) } ?: FagsakYtelseType.UKJENT,
+                behandlingType = event.type,
+                søkersId = event.aktørId?.id?.run { Ident(this, Ident.IdType.AKTØRID) },
+                tidspunkt = event.eventTid
             )
-            BehandlingStatus.OPPRETTET -> event.aksjonspunktKoderMedStatusListe.map {
-                OpprettOppgave(
-                    tidspunkt = event.eventTid,
-                    oppgaveKode = it.key,
-                    frist = null,
+        )
+
+        if (modell.starterSak()) {
+            event.aksjonspunktKoderMedStatusListe.map {
+                oppgavehendelser.add(
+                    OpprettOppgave(
+                        tidspunkt = event.eventTid,
+                        oppgaveKode = it.key,
+                        frist = null,
+                    )
                 )
             }
-            else -> emptyList()
         }
 
-        oppgaveTjenesteV2.nyeOppgaveHendelser(
-            eksternId = event.eksternId.toString(),
-            listOf(behandlingEndret, *oppgaveHendelser.toTypedArray())
-        )
+        if (resultat == BehandlingStatus.SENDT_INN ||
+            resultat == BehandlingStatus.LUKKET) {
+            val behandlendeEnhet = event.ferdigstiltAv?.run { azureGraphService.hentEnhetForBrukerMedSystemToken(this) }
+            oppgavehendelser.add(
+                FerdigstillBehandling(
+                    tidspunkt = event.eventTid,
+                    behandlendeEnhet = behandlendeEnhet ?: "UKJENT",
+                    ansvarligSaksbehandlerIdent = event.ferdigstiltAv
+                )
+            )
+        }
+
+        oppgaveTjenesteV2.nyeOppgaveHendelser(eksternId = event.eksternId.toString(), oppgavehendelser.toList())
     }
 }

@@ -187,7 +187,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgaveKøRepository = get(),
             reservasjonRepository = get(),
             reservasjonTjeneste = get(),
-            statistikkRepository = get()
+            statistikkRepository = get(),
+            azureGraphService = get()
         )
     }
 }
