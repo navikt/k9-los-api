@@ -16,7 +16,8 @@ data class PunsjEventDto(
     val pleietrengendeAktørId: String? = null,
     val type : String? = null,
     val ytelse : String? = null,
-    val sendtInn : Boolean? = null
+    val sendtInn : Boolean? = null,
+    val ferdigstiltAv: String? = null,
 ) {
     fun safePrint() = """
         PunsjEventDto(eksternId=$eksternId, 
@@ -25,6 +26,7 @@ data class PunsjEventDto(
         aksjonspunktKoderMedStatusListe=$aksjonspunktKoderMedStatusListe, 
         type=$type, 
         ytelse=$ytelse, 
-        sendtInn=$sendtInn)
+        sendtInn=$sendtInn,
+        ferdigstiltAv=$ferdigstiltAv)
         """.trimIndent()
 }

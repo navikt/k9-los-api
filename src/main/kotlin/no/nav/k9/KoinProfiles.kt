@@ -202,7 +202,8 @@ fun common(app: Application, config: Configuration) = module {
             oppgaveKøRepository = get(),
             reservasjonRepository = get(),
             reservasjonTjeneste = get(),
-            statistikkRepository = get()
+            statistikkRepository = get(),
+            azureGraphService = get()
         )
     }
 
