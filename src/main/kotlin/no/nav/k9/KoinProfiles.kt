@@ -10,6 +10,7 @@ import no.nav.k9.aksjonspunktbehandling.K9sakEventHandler
 import no.nav.k9.fagsystem.k9sak.AksjonspunktHendelseMapper
 import no.nav.k9.fagsystem.k9sak.K9sakEventHandlerV2
 import no.nav.k9.db.hikariConfig
+import no.nav.k9.domene.lager.oppgave.v2.BehandlingsmigreringTjeneste
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveTjenesteV2
 import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
@@ -95,7 +96,8 @@ fun common(app: Application, config: Configuration) = module {
     single { AksjonspunktHendelseMapper(get()) }
     single { OppgaveRepositoryV2(dataSource = get()) }
     single { TransactionalManager(dataSource = get()) }
-    single { OppgaveTjenesteV2(get(), get()) }
+    single { BehandlingsmigreringTjeneste(get()) }
+    single { OppgaveTjenesteV2(get(), get(), get()) }
 
     single {
         SaksbehandlerRepository(

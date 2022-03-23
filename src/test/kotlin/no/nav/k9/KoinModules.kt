@@ -11,6 +11,7 @@ import no.nav.k9.aksjonspunktbehandling.K9TilbakeEventHandler
 import no.nav.k9.aksjonspunktbehandling.K9punsjEventHandler
 import no.nav.k9.aksjonspunktbehandling.K9sakEventHandler
 import no.nav.k9.domene.lager.oppgave.Oppgave
+import no.nav.k9.domene.lager.oppgave.v2.BehandlingsmigreringTjeneste
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveTjenesteV2
 import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
@@ -129,7 +130,13 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single { OppgaveRepositoryV2(dataSource = get()) }
     single { TransactionalManager(dataSource = get()) }
-    single { OppgaveTjenesteV2(oppgaveRepository = get(), tm = get()) }
+    single { OppgaveTjenesteV2(
+        oppgaveRepository = get(),
+        migreringstjeneste = BehandlingsmigreringTjeneste(
+            BehandlingProsessEventK9Repository(dataSource = get())
+        ),
+        tm = get())
+    }
 
     single {
         NokkeltallTjeneste(

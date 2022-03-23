@@ -7,6 +7,7 @@ import java.time.LocalDateTime
 
 open class OppgaveTjenesteV2(
     val oppgaveRepository: OppgaveRepositoryV2,
+    val migreringstjeneste: BehandlingsmigreringTjeneste,
     val tm: TransactionalManager
 ) {
     private val log = LoggerFactory.getLogger(OppgaveTjenesteV2::class.java)
@@ -20,11 +21,16 @@ open class OppgaveTjenesteV2(
         tm.transaction { tx ->
             val behandling = oppgaveRepository.hentBehandling(eksternId, tx)
                 ?: hendelser.hentBehandlingEndretEvent()?.tilBehandling()
+                ?: migreringstjeneste.hentBehandlingFraTidligereProsessEvents(eksternId)
                 ?: throw IllegalStateException("Mottatt hendelse uten å ha behandling. $eksternId")
 
             hendelser.forEach { behandling.nyHendelse(it) }
             oppgaveRepository.lagre(behandling, tx)
         }
+    }
+
+    private fun hentBehandlingFraTidligereEventer(eksternId: String): Behandling {
+        TODO("Not yet implemented")
     }
 
     fun List<OppgaveHendelse>.hentBehandlingEndretEvent(): BehandlingEndret? {
