@@ -29,10 +29,6 @@ open class OppgaveTjenesteV2(
         }
     }
 
-    private fun hentBehandlingFraTidligereEventer(eksternId: String): Behandling {
-        TODO("Not yet implemented")
-    }
-
     fun List<OppgaveHendelse>.hentBehandlingEndretEvent(): BehandlingEndret? {
         val behandlingEndretEvent = firstOrNull { it is BehandlingEndret }
         return (behandlingEndretEvent as BehandlingEndret?)
