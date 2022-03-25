@@ -67,11 +67,11 @@ data class BehandlingEndret(
     }
 }
 
-data class FerdigstillBehandling(
+data class OpprettOppgave(
     override val tidspunkt: LocalDateTime,
-    override val ansvarligSaksbehandlerIdent: String? = null,
-    override val behandlendeEnhet: String? = null,
-) : Ferdigstillelse, OppgaveHendelse
+    val oppgaveKode: String,
+    val frist: LocalDateTime?
+): OppgaveHendelse
 
 data class FerdigstillOppgave(
     override val tidspunkt: LocalDateTime,
@@ -80,9 +80,13 @@ data class FerdigstillOppgave(
     val oppgaveKode: String?
 ) : Ferdigstillelse, OppgaveHendelse
 
-
-data class OpprettOppgave(
+data class AvbrytOppgave(
     override val tidspunkt: LocalDateTime,
-    val oppgaveKode: String,
-    val frist: LocalDateTime?
-): OppgaveHendelse
+    val oppgaveKode: String?
+) : OppgaveHendelse
+
+data class FerdigstillBehandling(
+    override val tidspunkt: LocalDateTime,
+    override val ansvarligSaksbehandlerIdent: String? = null,
+    override val behandlendeEnhet: String? = null,
+) : Ferdigstillelse, OppgaveHendelse

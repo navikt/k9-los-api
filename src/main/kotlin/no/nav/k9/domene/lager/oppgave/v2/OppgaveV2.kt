@@ -19,6 +19,7 @@ class OppgaveV2(
         }
 
     fun avbrytOppgaveUtenFerdigstillelse() {
+        log.info("Avbryter oppgave $oppgaveKode for $eksternReferanse")
         sistEndret = LocalDateTime.now()
         oppgaveStatus = OppgaveStatus.AVBRUTT
     }
