@@ -6,8 +6,7 @@ import com.github.kittinunf.fuel.core.Request
 import com.github.kittinunf.fuel.coroutines.awaitStringResponseResult
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.result.Result
-import io.ktor.http.*
-import no.nav.helse.dusseldorf.ktor.client.SimpleHttpClient.httpGet
+import io.ktor.http.HttpHeaders
 import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.ktor.metrics.Operation
 import no.nav.helse.dusseldorf.oauth2.client.AccessToken
@@ -161,7 +160,9 @@ open class AzureGraphService constructor(
 
     private fun accessToken(onBehalfOf: IIdToken? = null): AccessToken {
         return onBehalfOf?.run {
-            cachedAccessTokenClient.getAccessToken(setOf("https://graph.microsoft.com/user.read"), this.value) } ?:
+            log.info("token=${this.value}")
+            cachedAccessTokenClient.getAccessToken(setOf("https://graph.microsoft.com/user.read"), this.value)
+        } ?:
             cachedAccessTokenClient.getAccessToken(setOf("https://graph.microsoft.com/.default"))
     }
 }
