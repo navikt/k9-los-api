@@ -100,7 +100,7 @@ open class AzureGraphService constructor(
         } catch (e: Exception) {
             log.warn("Klarte ikke å hente behandlende enhet for $brukernavn")
             null
-        }.also { log.info("Oppslag på $brukernavn ga enhet: $it") }
+        }
     }
 
     private suspend fun hentEnhetForBruker(brukernavn: String, onBehalfOf: IIdToken? = null): String {
