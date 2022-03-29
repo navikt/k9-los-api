@@ -43,6 +43,7 @@ spec:
     paths:
       - mountPath: /var/run/secrets/nais.io/serviceuser
         kvPath: /serviceuser/data/dev/srvk9los
+        # kan fjernes etter at azure provisioning er verifisert ok
       - mountPath: /var/run/secrets/nais.io/azuread
         kvPath: /azuread/data/dev/creds/k9-los-api
       - mountPath: /var/run/secrets/nais.io/vault
@@ -52,6 +53,14 @@ spec:
   kafka:
     pool: nav-dev
     streams: true
+  azure:
+    application:
+      enabled: true
+  accessPolicy:
+    inbound:
+      rules:
+        - application: k9-los-oidc-auth-proxy
+          namespace: k9saksbehandling
   env:
     - name: NAIS_STS_DISCOVERY_ENDPOINT
       value: https://security-token-service.nais.preprod.local/rest/v1/sts/.well-known/openid-configuration
