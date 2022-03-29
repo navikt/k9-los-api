@@ -64,16 +64,8 @@ spec:
   env:
     - name: NAIS_STS_DISCOVERY_ENDPOINT
       value: https://security-token-service.nais.preprod.local/rest/v1/sts/.well-known/openid-configuration
-    - name: AZURE_CLIENT_ID
-      value: 5afad323-c9df-4e14-b481-b278e9d2bf69
-    - name: AZURE_AUTHORIZED_CLIENTS
-      value: 5617f485-23fd-4d15-86bc-978ee2163c5a
     - name: AZURE_V1_DISCOVERY_ENDPOINT
       value: https://login.microsoftonline.com/966ac572-f5b7-4bbe-aa88-c76419c0f851/.well-known/openid-configuration
-    - name: AZURE_V2_DISCOVERY_ENDPOINT
-      value: https://login.microsoftonline.com/966ac572-f5b7-4bbe-aa88-c76419c0f851/v2.0/.well-known/openid-configuration
-    - name: AZURE_TOKEN_ENDPOINT
-      value: https://login.microsoftonline.com/966ac572-f5b7-4bbe-aa88-c76419c0f851/oauth2/v2.0/token
     - name: OPPGAVE_BASE_URI
       value: https://oppgave.nais.preprod.local
     - name: DB_URL
