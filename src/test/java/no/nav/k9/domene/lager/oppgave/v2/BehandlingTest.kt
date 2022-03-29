@@ -12,6 +12,7 @@ internal class BehandlingTest {
 
     val oppgave1 = OpprettOppgave(tidspunkt = LocalDateTime.now().minusHours(12), oppgaveKode = "OPPGAVE1", frist = null)
     val oppgave2 = OpprettOppgave(tidspunkt = LocalDateTime.now().minusHours(1), oppgaveKode = "OPPGAVE2", frist = null)
+    val nå = LocalDateTime.now()
 
     @Test
     fun `FerdigstillOppgave ferdigstiller ikke etterfolgende oppgaver ved oppgitt OppgaveKode`() {
@@ -97,7 +98,6 @@ internal class BehandlingTest {
         assertThat(behandling.oppgaver().filter { it.erAktiv() }).isEmpty()
     }
 
-
     @Test
     fun `AvbrytOppgave avbryter gjeldene og foregående oppgaver ved oppgitt OppgaveKode`() {
         val behandling = opprettBehandling()
@@ -114,9 +114,28 @@ internal class BehandlingTest {
         assertThat(behandling.harAktiveOppgaver()).isFalse()
     }
 
+    @Test // Dette må være mulig fordi f.eks beslutter kan sende saksbehandler tilbake, forbi tidligere ferdigstilte aksjonspunkter
+    fun `AvbrytOppgave kan endre den siste ferdigstilt oppgaven til avbrutt`() {
+        val behandling = opprettBehandling()
+        behandling.nyHendelse(oppgave1)
+        behandling.nyHendelse(FerdigstillOppgave(tidspunkt = nå, oppgaveKode = oppgave1.oppgaveKode))
+
+        behandling.nyHendelse(oppgave2.copy(tidspunkt = nå.plusDays(1)))
+        behandling.nyHendelse(FerdigstillOppgave(tidspunkt = nå.plusDays(1), oppgaveKode = oppgave2.oppgaveKode))
+        behandling.nyHendelse(oppgave2.copy(tidspunkt = nå.plusDays(2)))
+        behandling.nyHendelse(FerdigstillOppgave(tidspunkt = nå.plusDays(2), oppgaveKode = oppgave2.oppgaveKode))
+
+        behandling.nyHendelse(AvbrytOppgave(tidspunkt = nå.plusDays(3), oppgaveKode = oppgave1.oppgaveKode))
+        behandling.nyHendelse(AvbrytOppgave(tidspunkt = nå.plusDays(3), oppgaveKode = oppgave2.oppgaveKode))
+
+        assertThat(behandling.hentAlle(oppgave1).map { it.oppgaveStatus }).containsOnly(OppgaveStatus.AVBRUTT)
+        assertThat(behandling.hentAlle(oppgave2).map { it.oppgaveStatus }).containsExactly(OppgaveStatus.FERDIGSTILT, OppgaveStatus.AVBRUTT)
+
+        assertThat(behandling.harAktiveOppgaver()).isFalse()
+    }
 
     @Test
-    fun `ferdigstilling av behandling lukker alle aktive oppgaver og setter ferdigstilt-tidspunkt på behandling`() {
+    fun `Ferdigstilling av behandling lukker alle aktive oppgaver og setter ferdigstilt-tidspunkt på behandling`() {
         val behandling = opprettBehandling()
 
         behandling.nyHendelse(oppgave1)
@@ -130,7 +149,7 @@ internal class BehandlingTest {
     }
 
     @Test
-    fun `ferdigstilling av behandling endrer ikke tidligere ferdigstilte eller avbrutte oppgaver`() {
+    fun `Ferdigstilling av behandling endrer ikke tidligere ferdigstilte eller avbrutte oppgaver`() {
         val behandling = opprettBehandling()
 
         behandling.nyHendelse(oppgave1)
@@ -163,6 +182,10 @@ internal class BehandlingTest {
 
     private fun Behandling.hent(oppgave: OpprettOppgave): OppgaveV2 {
         return oppgaver().first { it.oppgaveKode == oppgave.oppgaveKode }
+    }
+
+    private fun Behandling.hentAlle(oppgave: OpprettOppgave): List<OppgaveV2> {
+        return oppgaver().filter { it.oppgaveKode == oppgave.oppgaveKode }
     }
 
     private fun opprettBehandling() = Behandling.ny(

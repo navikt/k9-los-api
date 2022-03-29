@@ -20,6 +20,7 @@ class OppgaveV2(
 
     fun avbrytOppgaveUtenFerdigstillelse() {
         log.info("Avbryter oppgave $oppgaveKode for $eksternReferanse")
+        ferdigstilt = null
         sistEndret = LocalDateTime.now()
         oppgaveStatus = OppgaveStatus.AVBRUTT
     }
@@ -40,6 +41,10 @@ class OppgaveV2(
 
     fun erAktiv(): Boolean {
         return oppgaveStatus.erAktiv()
+    }
+
+    fun erFerdigstilt(): Boolean {
+        return oppgaveStatus.erFerdigstilt()
     }
 
     companion object {

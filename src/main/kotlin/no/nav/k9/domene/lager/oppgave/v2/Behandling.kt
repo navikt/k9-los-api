@@ -66,6 +66,11 @@ open class Behandling constructor(
     fun oppgaver() = oppgaver.toSet()
 
     fun aktiveOppgaver() = oppgaver.filter { it.erAktiv() }
+    fun ferdigstilteOppgaver() = oppgaver.filter { it.erFerdigstilt() }
+
+    fun List<OppgaveV2>.hentOppgaveSenesteFørst(oppgaveKode: String): OppgaveV2? {
+        return sortedByDescending { it.opprettet }.firstOrNull { it.oppgaveKode == oppgaveKode }
+    }
 
     fun harAktiveOppgaver(): Boolean {
         return oppgaver.any { it.erAktiv() }
@@ -83,7 +88,7 @@ open class Behandling constructor(
         when (oppgaveHendelse) {
             is OpprettOppgave -> nyOppgave(oppgaveHendelse)
             is FerdigstillOppgave -> ferdigstillOppgave(oppgaveHendelse)
-            is AvbrytOppgave -> lukkAktiveOppgaverFørOppgittOppgavekode(oppgaveKode = oppgaveHendelse.oppgaveKode)
+            is AvbrytOppgave -> avbrytOppgave(oppgaveHendelse)
             is FerdigstillBehandling -> ferdigstill(oppgaveHendelse)
         }
     }
@@ -91,37 +96,57 @@ open class Behandling constructor(
     open fun ferdigstill(ferdigstillelse: Ferdigstillelse) {
         sistEndret = LocalDateTime.now()
         log.info("Ferdigstiller behandling $eksternReferanse")
-        lukkAktiveOppgaver(ferdigstillelse)
+        lukkAlleAktiveOppgaver(ferdigstillelse)
         ferdigstilt = ferdigstillelse.tidspunkt
     }
 
-    open fun lukkAktiveOppgaver(ferdigstillelse: Ferdigstillelse?) {
+    open fun lukkAlleAktiveOppgaver(ferdigstillelse: Ferdigstillelse?) {
         sistEndret = LocalDateTime.now()
         log.info("Lukker alle aktive oppgaver $eksternReferanse")
         aktiveOppgaver().lukkAlleMed(ferdigstillelse)
     }
 
     private fun ferdigstillOppgave(ferdigstillOppgave: FerdigstillOppgave) {
-        lukkAktiveOppgaverFørOppgittOppgavekode(ferdigstillOppgave.oppgaveKode, ferdigstillOppgave)
-    }
-
-    fun lukkAktiveOppgaverFørOppgittOppgavekode(oppgaveKode: String?, ferdigstillelse: Ferdigstillelse? = null) {
-        if (oppgaveKode == null) {
-            lukkAktiveOppgaver(ferdigstillelse)
+        if (ferdigstillOppgave.oppgaveKode == null) {
+            lukkAlleAktiveOppgaver(ferdigstillOppgave)
             return
         }
 
-        val aktiveOppgaver = aktiveOppgaver()
-        val ferdigstiltOppgaveOpprettet = aktiveOppgaver.firstOrNull { it.oppgaveKode == oppgaveKode }?.opprettet
-        if (ferdigstiltOppgaveOpprettet == null) {
-            log.error("Ferdigstillelse inneholder oppgavekode ${oppgaveKode} som ikke finnes blant aktive oppgaver. $eksternReferanse")
+        val eksisterendeAktivOppgave = aktiveOppgaver().hentOppgaveSenesteFørst(ferdigstillOppgave.oppgaveKode)
+        if (eksisterendeAktivOppgave != null) {
+            lukkAktiveOppgaverOpprettetFør(eksisterendeAktivOppgave, ferdigstillOppgave)
         } else {
-            log.info("Lukker aktive oppgaver opprettet før ${oppgaveKode} $eksternReferanse")
-            sistEndret = LocalDateTime.now()
-            aktiveOppgaver
-                .filter { aktivOppgave -> aktivOppgave.opprettet <= ferdigstiltOppgaveOpprettet }
-                .lukkAlleMed(ferdigstillelse)
+            log.error("Ferdigstillelse inneholder oppgavekode ${ferdigstillOppgave.oppgaveKode} som ikke finnes blant aktive oppgaver. $eksternReferanse")
         }
+    }
+
+    fun avbrytOppgave(avbrytOppgave: AvbrytOppgave) {
+        if (avbrytOppgave.oppgaveKode == null) {
+            lukkAlleAktiveOppgaver(ferdigstillelse = null)
+            return
+        }
+
+        val eksisterendeAktivOppgave = aktiveOppgaver().hentOppgaveSenesteFørst(avbrytOppgave.oppgaveKode)
+        if (eksisterendeAktivOppgave != null) {
+            lukkAktiveOppgaverOpprettetFør(eksisterendeAktivOppgave, ferdigstillelse = null)
+            return
+        }
+
+        val eksisterendeFerdigstiltOppgave = ferdigstilteOppgaver().hentOppgaveSenesteFørst(avbrytOppgave.oppgaveKode)
+        if (eksisterendeFerdigstiltOppgave != null) {
+            sistEndret = LocalDateTime.now()
+            eksisterendeFerdigstiltOppgave.avbrytOppgaveUtenFerdigstillelse()
+            return
+        }
+        log.error("Avbrytelse inneholder oppgavekode ${avbrytOppgave.oppgaveKode} som ikke finnes blant aktive oppgaver. $eksternReferanse")
+    }
+
+    private fun lukkAktiveOppgaverOpprettetFør(eksisterendeOppgave: OppgaveV2, ferdigstillelse: Ferdigstillelse?) {
+        log.info("Lukker aktive oppgaver opprettet før ${eksisterendeOppgave.oppgaveKode} $eksternReferanse")
+        sistEndret = LocalDateTime.now()
+        aktiveOppgaver()
+            .filter { aktivOppgave -> aktivOppgave.opprettet <= eksisterendeOppgave.opprettet }
+            .lukkAlleMed(ferdigstillelse)
     }
 
     private fun List<OppgaveV2>.lukkAlleMed(ferdigstillelse: Ferdigstillelse?) {
