@@ -1,11 +1,13 @@
 package no.nav.k9.tjenester.saksbehandler.oppgave
 
-import io.ktor.application.*
-import io.ktor.http.*
-import io.ktor.locations.*
-import io.ktor.request.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.application.call
+import io.ktor.http.HttpStatusCode
+import io.ktor.locations.Location
+import io.ktor.locations.get
+import io.ktor.locations.post
+import io.ktor.request.receive
+import io.ktor.response.respond
+import io.ktor.routing.Route
 import no.nav.k9.domene.repository.SaksbehandlerRepository
 import no.nav.k9.integrasjon.rest.RequestContextService
 import no.nav.k9.integrasjon.rest.idToken
@@ -86,14 +88,15 @@ internal fun Route.OppgaveApis() {
     post { _: fåOppgaveFraKø ->
         requestContextService.withRequestContext(call) {
             val params = call.receive<OppgaveKøIdDto>()
-            val oppgaveFraKø = oppgaveTjeneste.fåOppgaveFraKø(
-                params.oppgaveKøId,
-                saksbehandlerRepository.finnSaksbehandlerMedEpost(
-                    kotlin.coroutines.coroutineContext.idToken().getUsername()
-                )!!.brukerIdent!!
-            )
+
+            val ident = saksbehandlerRepository.finnSaksbehandlerMedEpost(
+                kotlin.coroutines.coroutineContext.idToken().getUsername()
+            )!!.brukerIdent!!
+
+            val oppgaveFraKø = oppgaveTjeneste.fåOppgaveFraKø(params.oppgaveKøId, ident)
 
             if (oppgaveFraKø != null) {
+                log.info("oppgave=${oppgaveFraKø.eksternId}, saksnummer=${oppgaveFraKø.saksnummer}, beslutter=${oppgaveFraKø.tilBeslutter} ble reservert av $ident fra kø=${params.oppgaveKøId}")
                 call.respond(oppgaveFraKø)
             } else {
                 call.respond(HttpStatusCode.NotFound, "Fant ingen oppgave i valgt kø")

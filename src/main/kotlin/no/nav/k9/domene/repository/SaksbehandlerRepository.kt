@@ -177,6 +177,7 @@ class SaksbehandlerRepository(
         }
         lagreMedId(saksbehandlerid) { saksbehandler ->
             saksbehandler!!.reservasjoner.add(reservasjon)
+            loggLeggTilReservasjon(saksbehandlerid, listOf(reservasjon))
             saksbehandler
         }
     }
@@ -187,32 +188,43 @@ class SaksbehandlerRepository(
         }
         lagreMedId(saksbehandlerid) { saksbehandler ->
             saksbehandler!!.reservasjoner.addAll(reservasjon)
+            loggLeggTilReservasjon(saksbehandlerid, reservasjon)
             saksbehandler
         }
     }
 
-     fun fjernReservasjon(id: String?, reservasjon: UUID) {
+    private fun loggLeggTilReservasjon(id: String, reservasjon: List<UUID>) {
+        log.info("Lagt til oppgave(r)=$reservasjon på saksbehandler=$id i saksbehandler tabell")
+    }
+
+    fun fjernReservasjon(id: String?, reservasjon: UUID) {
         if (id == null) {
             return
         }
         if (finnSaksbehandlerMedIdentIkkeTaHensyn(id) != null) {
             lagreMedIdIkkeTaHensyn(id) { saksbehandler ->
-                saksbehandler!!.reservasjoner.remove(reservasjon)
+                val fjernet= saksbehandler!!.reservasjoner.remove(reservasjon)
+                loggFjernet(fjernet, id, reservasjon)
                 saksbehandler
             }
         }
     }
 
-     fun fjernReservasjonIkkeTaHensyn(id: String?, reservasjon: UUID) {
+    fun fjernReservasjonIkkeTaHensyn(id: String?, reservasjon: UUID) {
         if (id == null) {
             return
         }
         if (finnSaksbehandlerMedIdentIkkeTaHensyn(id) != null) {
             lagreMedIdIkkeTaHensyn(id) { saksbehandler ->
-                saksbehandler!!.reservasjoner.remove(reservasjon)
+                val fjernet = saksbehandler!!.reservasjoner.remove(reservasjon)
+                loggFjernet(fjernet, id, reservasjon)
                 saksbehandler
             }
         }
+    }
+
+    private fun loggFjernet(fjernet: Boolean, id: String, reservasjon: UUID) {
+        if (fjernet) log.info("Fjernet reservasjonen til $id på oppgave=${reservasjon} fra saksbehandler tabell")
     }
 
     suspend fun addSaksbehandler(saksbehandler: Saksbehandler) {

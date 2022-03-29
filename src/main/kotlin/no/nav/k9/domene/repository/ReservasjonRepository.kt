@@ -228,8 +228,22 @@ class ReservasjonRepository(
             ).asUpdate
         )
         if (refresh && forrigeReservasjon != json) {
+            loggFjerningAvReservasjon(reservasjon, forrigeReservasjon)
             runBlocking { refreshKlienter.sendOppdaterReserverte() }
         }
+
         return reservasjon
+    }
+
+    private fun loggFjerningAvReservasjon(reservasjon: Reservasjon, forrigeReservasjon: String?) {
+        if (forrigeReservasjon != null ) {
+            val fr = objectMapper().readValue(forrigeReservasjon, Reservasjon::class.java)
+            if (!reservasjon.erAktiv() && fr.erAktiv() && reservasjon.reservertAv == fr.reservertAv) {
+                log.info("Fjerner reservasjon til ${reservasjon.reservertAv} på oppgave=${reservasjon.oppgave} med begrunnelse=${reservasjon.begrunnelse} i reservasjonstabellen")
+            }
+            if (reservasjon.erAktiv() && fr.erAktiv() && reservasjon.reservertAv != fr.reservertAv) {
+                log.info("Endrer reservasjon fra ${fr.reservertAv} til ${reservasjon.reservertAv} på oppgave=${reservasjon.oppgave} med begrunnelse=${reservasjon.begrunnelse} i reservasjonstabellen")
+            }
+        }
     }
 }
