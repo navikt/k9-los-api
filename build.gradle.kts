@@ -58,7 +58,7 @@ dependencies {
     implementation("no.nav.k9.statistikk:kontrakter:2.0_20201201123022_bfccad8")
 
     // Div
-    implementation(enforcedPlatform( "com.fasterxml.jackson:jackson-bom:2.13.2.20220324" ))
+    implementation(enforcedPlatform( "com.fasterxml.jackson:jackson-bom:2.13.2.20220328" ))
     implementation("info.debatty:java-string-similarity:2.0.0")
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
 
