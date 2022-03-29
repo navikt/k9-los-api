@@ -193,10 +193,6 @@ class SaksbehandlerRepository(
         }
     }
 
-    private fun loggLeggTilReservasjon(id: String, reservasjon: List<UUID>) {
-        log.info("Lagt til oppgave(r)=$reservasjon på saksbehandler=$id i saksbehandler tabell")
-    }
-
     fun fjernReservasjon(id: String?, reservasjon: UUID) {
         if (id == null) {
             return
@@ -223,8 +219,12 @@ class SaksbehandlerRepository(
         }
     }
 
+    private fun loggLeggTilReservasjon(id: String, reservasjon: List<UUID>) {
+        log.info("RESERVASJONDEBUG: Lagt til $id oppgave(r)=$reservasjon i saksbehandlertabell")
+    }
+
     private fun loggFjernet(fjernet: Boolean, id: String, reservasjon: UUID) {
-        if (fjernet) log.info("Fjernet reservasjonen til $id på oppgave=${reservasjon} fra saksbehandler tabell")
+        if (fjernet) log.info("RESERVASJONDEBUG: Fjernet $id oppgave=${reservasjon} fra saksbehandlertabell")
     }
 
     suspend fun addSaksbehandler(saksbehandler: Saksbehandler) {

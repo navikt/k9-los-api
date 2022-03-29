@@ -96,7 +96,7 @@ internal fun Route.OppgaveApis() {
             val oppgaveFraKø = oppgaveTjeneste.fåOppgaveFraKø(params.oppgaveKøId, ident)
 
             if (oppgaveFraKø != null) {
-                log.info("oppgave=${oppgaveFraKø.eksternId}, saksnummer=${oppgaveFraKø.saksnummer}, beslutter=${oppgaveFraKø.tilBeslutter} ble reservert av $ident fra kø=${params.oppgaveKøId}")
+                log.info("RESERVASJONDEBUG: Lagt til $ident oppgave=${oppgaveFraKø.eksternId}, beslutter=${oppgaveFraKø.tilBeslutter}, kø=${params.oppgaveKøId} (neste oppgave)")
                 call.respond(oppgaveFraKø)
             } else {
                 call.respond(HttpStatusCode.NotFound, "Fant ingen oppgave i valgt kø")
