@@ -43,9 +43,6 @@ spec:
     paths:
       - mountPath: /var/run/secrets/nais.io/serviceuser
         kvPath: /serviceuser/data/dev/srvk9los
-        # kan fjernes etter at azure provisioning er verifisert ok
-      - mountPath: /var/run/secrets/nais.io/azuread
-        kvPath: /azuread/data/dev/creds/k9-los-api
       - mountPath: /var/run/secrets/nais.io/vault
         kvPath: /kv/preprod/fss/k9-los-api/k9saksbehandling
   sidecar: true
@@ -64,8 +61,6 @@ spec:
   env:
     - name: NAIS_STS_DISCOVERY_ENDPOINT
       value: https://security-token-service.nais.preprod.local/rest/v1/sts/.well-known/openid-configuration
-    - name: AZURE_V1_DISCOVERY_ENDPOINT
-      value: https://login.microsoftonline.com/966ac572-f5b7-4bbe-aa88-c76419c0f851/.well-known/openid-configuration
     - name: OPPGAVE_BASE_URI
       value: https://oppgave.nais.preprod.local
     - name: DB_URL

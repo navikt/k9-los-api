@@ -44,8 +44,6 @@ spec:
     paths:
       - mountPath: /var/run/secrets/nais.io/serviceuser
         kvPath: /serviceuser/data/prod/srvk9los
-      - mountPath: /var/run/secrets/nais.io/azuread
-        kvPath: /azuread/data/prod/creds/k9-los-api
       - mountPath: /var/run/secrets/nais.io/vault
         kvPath: /kv/prod/fss/k9-los-api/k9saksbehandling
   sidecar: true
@@ -64,16 +62,6 @@ spec:
   env:
     - name: NAIS_STS_DISCOVERY_ENDPOINT
       value: https://security-token-service.nais.adeo.no/rest/v1/sts/.well-known/openid-configuration
-    - name: AZURE_CLIENT_ID
-      value: 37066d6c-842c-470a-85f1-3149a37da2c2
-    - name: AZURE_AUTHORIZED_CLIENTS
-      value: 0dc85ed5-a4d7-4893-8424-700ee6725067
-    - name: AZURE_V1_DISCOVERY_ENDPOINT
-      value: https://login.microsoftonline.com/62366534-1ec3-4962-8869-9b5535279d0b/.well-known/openid-configuration
-    - name: AZURE_V2_DISCOVERY_ENDPOINT
-      value: https://login.microsoftonline.com/62366534-1ec3-4962-8869-9b5535279d0b/v2.0/.well-known/openid-configuration
-    - name: AZURE_TOKEN_ENDPOINT
-      value: https://login.microsoftonline.com/62366534-1ec3-4962-8869-9b5535279d0b/oauth2/v2.0/token
     - name: OPPGAVE_BASE_URI
       value: https://oppgave.nais.adeo.no
     - name: DB_URL
