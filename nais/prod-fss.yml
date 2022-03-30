@@ -120,4 +120,4 @@ spec:
 
       # token scope
     - name: OMSORGSPENGER_SAK_SCOPE
-      value: "4c4e6e55-2063-4507-8fd6-5d5a4604c0db/.default"
+      value: "api://prod-gcp.omsorgspenger.omsorgspenger-sak/.default"
