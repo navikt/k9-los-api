@@ -115,9 +115,11 @@ class K9punsjEventHandler constructor(
             }
         }
 
-        if (resultat == BehandlingStatus.SENDT_INN ||
-            resultat == BehandlingStatus.LUKKET) {
-            val behandlendeEnhet = event.ferdigstiltAv?.run { azureGraphService.hentEnhetForBrukerMedSystemToken(this) }
+        if (resultat == BehandlingStatus.SENDT_INN) {
+            val behandlendeEnhet = event.ferdigstiltAv?.run {
+                azureGraphService.hentEnhetForBrukerMedSystemToken(event.ferdigstiltAv)
+            }
+
             oppgavehendelser.add(
                 FerdigstillBehandling(
                     tidspunkt = event.eventTid,
@@ -127,6 +129,14 @@ class K9punsjEventHandler constructor(
             )
         }
 
+        if (resultat == BehandlingStatus.LUKKET) {
+            oppgavehendelser.add(
+                AvbrytOppgave(
+                    tidspunkt = event.eventTid,
+                    oppgaveKode = null
+                )
+            )
+        }
         oppgaveTjenesteV2.nyeOppgaveHendelser(eksternId = event.eksternId.toString(), oppgavehendelser.toList())
     }
 }
