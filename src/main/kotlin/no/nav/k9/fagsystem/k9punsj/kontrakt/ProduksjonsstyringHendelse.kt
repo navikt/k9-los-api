@@ -23,9 +23,9 @@ import java.util.*
     ]
 )
 open class ProduksjonsstyringHendelse(
-    @JsonProperty("eksternId") val eksternId: UUID,
-    @JsonProperty("journalpostId") val journalpostId: JournalpostId,
-    @JsonProperty("hendelseTid") val hendelseTid: LocalDateTime
+    val eksternId: UUID,
+    val journalpostId: JournalpostId,
+    val hendelseTid: LocalDateTime
 ) {
     open fun safeToString(): String {
         return "ProduksjonsstyringHendelse{" +

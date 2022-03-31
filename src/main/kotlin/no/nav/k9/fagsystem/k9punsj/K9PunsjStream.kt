@@ -5,13 +5,12 @@ import kotlinx.coroutines.runBlocking
 import no.nav.k9.Configuration
 import no.nav.k9.aksjonspunktbehandling.SerDes
 import no.nav.k9.aksjonspunktbehandling.Topic
+import no.nav.k9.fagsystem.k9punsj.kontrakt.ProduksjonsstyringHendelse
 import no.nav.k9.fagsystem.k9sak.K9SakStream
-import no.nav.k9.fagsystem.k9sak.K9sakEventHandlerV2
 import no.nav.k9.integrasjon.kafka.*
 import no.nav.k9.integrasjon.kafka.ManagedKafkaStreams
 import no.nav.k9.integrasjon.kafka.ManagedStreamHealthy
 import no.nav.k9.integrasjon.kafka.ManagedStreamReady
-import no.nav.k9.sak.kontrakt.produksjonsstyring.los.ProduksjonsstyringHendelse
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.Topology
@@ -21,7 +20,7 @@ import org.slf4j.LoggerFactory
 internal class K9PunsjStream constructor(
     kafkaConfig: IKafkaConfig,
     configuration: Configuration,
-    k9sakEventHandlerv2: K9sakEventHandlerV2
+    k9punsjEventHandlerv2: K9PunsjEventHandlerV2
 ) {
 
     private val stream = ManagedKafkaStreams(
@@ -29,7 +28,7 @@ internal class K9PunsjStream constructor(
         properties = kafkaConfig.stream(NAME, OffsetResetStrategy.NONE),
         topology = topology(
             configuration = configuration,
-            k9sakEventHandler = k9sakEventHandlerv2
+            k9PunsjEventHandler = k9punsjEventHandlerv2
         ),
         unreadyAfterStreamStoppedIn = kafkaConfig.unreadyAfterStreamStoppedIn
     )
@@ -44,29 +43,29 @@ internal class K9PunsjStream constructor(
 
         private fun topology(
             configuration: Configuration,
-            k9sakEventHandler: K9sakEventHandlerV2
+            k9PunsjEventHandler: K9PunsjEventHandlerV2
         ): Topology {
             val builder = StreamsBuilder()
             val fromTopic = Topic(
-                name = configuration.getK9SakTopic(),
-                serDes = K9SakEventSerDes()
+                name = configuration.getK9PunsjTopic(),
+                serDes = K9PunsjEventSerDes()
             )
             builder
                 .stream(
                     fromTopic.name,
                     Consumed.with(fromTopic.keySerde, fromTopic.valueSerde)
-                ).peek { _, e -> log.info("--> K9PunsjHendelse: ${e.tryggToString() }") }
+                ).peek { _, e -> log.info("--> K9PunsjHendelse: ${e.safeToString() }") }
                 .foreach { _, entry ->
                     if (entry != null) {
                         runBlocking {
-                            k9sakEventHandler.prosesser(entry)
+                            k9PunsjEventHandler.prosesser(entry)
                         }
                     }
                 }
             return builder.build()
         }
 
-        class K9SakEventSerDes : SerDes<ProduksjonsstyringHendelse>() {
+        class K9PunsjEventSerDes : SerDes<ProduksjonsstyringHendelse>() {
             override fun deserialize(topic: String?, data: ByteArray?): ProduksjonsstyringHendelse? {
                 return data?.let {
                     return try {

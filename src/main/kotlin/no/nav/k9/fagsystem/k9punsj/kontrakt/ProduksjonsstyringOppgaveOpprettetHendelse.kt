@@ -18,14 +18,14 @@ import java.util.*
 )
 @JsonTypeName(K9PunsjHendelseType.PUNSJ_OPPRETTET_TYPE)
 class ProduksjonsstyringOppgaveOpprettetHendelse(
-    @JsonProperty("eksternId") eksternId: UUID,
-    @JsonProperty("journalpostId") journalpostId: JournalpostId,
-    @JsonProperty("hendelseTid") hendelseTid: LocalDateTime,
-    @JsonProperty("ytelseType") val ytelseType: String?,
-    @JsonProperty("behandlingType") val behandlingType: String?,
-    @JsonProperty("behandlingstidFrist") val behandlingstidFrist: LocalDate?,
-    @JsonProperty("søkersAktørId") val søkersAktørId: AktørId?,
-    @JsonProperty("pleietrengendeAktørId") val pleietrengendeAktørId: AktørId?,
+    eksternId: UUID,
+    journalpostId: JournalpostId,
+    hendelseTid: LocalDateTime,
+    val ytelseType: String?,
+    val behandlingType: String?,
+    val behandlingstidFrist: LocalDate?,
+    val søkersAktørId: AktørId?,
+    val pleietrengendeAktørId: AktørId?,
 ) : ProduksjonsstyringHendelse(eksternId, journalpostId, hendelseTid) {
 
     override fun safeToString() = """

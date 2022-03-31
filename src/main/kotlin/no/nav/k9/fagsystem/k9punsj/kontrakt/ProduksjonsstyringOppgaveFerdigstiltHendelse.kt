@@ -14,11 +14,11 @@ import java.util.*
 )
 @JsonTypeName(K9PunsjHendelseType.PUNSJ_FERDIGSTILT_TYPE)
 class ProduksjonsstyringOppgaveFerdigstiltHendelse(
-    @JsonProperty("eksternId") eksternId: UUID,
-    @JsonProperty("hendelseTid") hendelseTid: LocalDateTime,
-    @JsonProperty("journalpostId") journalpostId: JournalpostId,
-    @JsonProperty("sendtInn") val sendtInn : Boolean,
-    @JsonProperty("ferdigstiltAv") val ferdigstiltAv: String? = null,
+    eksternId: UUID,
+    hendelseTid: LocalDateTime,
+    journalpostId: JournalpostId,
+    val sendtInn : Boolean,
+    val ferdigstiltAv: String? = null,
 ) : ProduksjonsstyringHendelse(eksternId, journalpostId, hendelseTid) {
 
     override fun safeToString() = """

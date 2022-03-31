@@ -14,9 +14,9 @@ import java.util.*
 )
 @JsonTypeName(K9PunsjHendelseType.PUNSJ_AVBRUTT_TYPE)
 class ProduksjonsstyringOppgaveAvbruttHendelse(
-    @JsonProperty("eksternId") eksternId: UUID,
-    @JsonProperty("journalpostId") journalpostId: JournalpostId,
-    @JsonProperty("hendelseTid") hendelseTid: LocalDateTime
+    eksternId: UUID,
+    journalpostId: JournalpostId,
+    hendelseTid: LocalDateTime
 ) : ProduksjonsstyringHendelse(eksternId, journalpostId, hendelseTid) {
 
     override fun safeToString() = """

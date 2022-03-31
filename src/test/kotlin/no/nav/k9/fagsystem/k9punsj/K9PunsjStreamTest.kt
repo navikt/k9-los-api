@@ -25,7 +25,7 @@ class K9PunsjStreamTest {
         val azure = mockk<AzureGraphService>()
         coEvery { azure.hentEnhetForBrukerMedSystemToken(any()) } returns "12345"
         val oppgaveTjenesteV2 = mockk<OppgaveTjenesteV2>(relaxed = true)
-        eventHandler = K9PunsjEventHandlerV2(oppgaveTjenesteV2)
+        eventHandler = K9PunsjEventHandlerV2(oppgaveTjenesteV2, azure)
     }
 
     @Test

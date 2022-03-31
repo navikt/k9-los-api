@@ -10,15 +10,14 @@ import no.nav.k9.fagsystem.k9punsj.kontrakt.ProduksjonsstyringHendelse
 import no.nav.k9.fagsystem.k9punsj.kontrakt.ProduksjonsstyringOppgaveAvbruttHendelse
 import no.nav.k9.fagsystem.k9punsj.kontrakt.ProduksjonsstyringOppgaveFerdigstiltHendelse
 import no.nav.k9.fagsystem.k9punsj.kontrakt.ProduksjonsstyringOppgaveOpprettetHendelse
-import no.nav.k9.fagsystem.k9sak.AksjonspunktHendelseMapper
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
-import no.nav.k9.sak.kontrakt.produksjonsstyring.los.ProduksjonsstyringAksjonspunktHendelse
+import no.nav.k9.integrasjon.azuregraph.IAzureGraphService
 import org.slf4j.LoggerFactory
 
 
 class K9PunsjEventHandlerV2(
     val oppgaveTjenesteV2: OppgaveTjenesteV2,
-) : EventTeller {
+    val azureGraphService: IAzureGraphService,
+    ) : EventTeller {
     private val log = LoggerFactory.getLogger(K9PunsjEventHandlerV2::class.java)
 
     suspend fun prosesser(hendelse: ProduksjonsstyringHendelse) {
@@ -46,14 +45,16 @@ class K9PunsjEventHandlerV2(
         )
     }
 
-    private fun håndterBehandlingFerdigstilt(hendelse: ProduksjonsstyringOppgaveFerdigstiltHendelse) {
+    private suspend fun håndterBehandlingFerdigstilt(hendelse: ProduksjonsstyringOppgaveFerdigstiltHendelse) {
         log.info("Behandling ferdigstilt hendelse: ${hendelse.safeToString()}")
 
         try {
             val eksternId = hendelse.eksternId.toString()
             oppgaveTjenesteV2.nyOppgaveHendelse(eksternId,
                 FerdigstillBehandling(
-                   tidspunkt = hendelse.hendelseTid
+                   tidspunkt = hendelse.hendelseTid,
+                    behandlendeEnhet = hendelse.ferdigstiltAv?.let { azureGraphService.hentEnhetForBrukerMedSystemToken(it) } ?: "UKJENT",
+                    ansvarligSaksbehandlerIdent = hendelse.ferdigstiltAv
                 )
             )
         } catch (e: IllegalStateException) {
