@@ -2,18 +2,17 @@ name: Vulnerabilities scanning of dependencies
 on:
   schedule:
     - cron:  '0 0 * * 1'
+  workflow_dispatch:
 jobs:
-  security:
+  snyk:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
+      - uses: snyk/actions/setup@master
 
       - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/gradle-jdk16@master
+        run: snyk monitor --org=k9saksbehandling --project-name=${{ github.repository }} --remote-repo-url=https://github.com/${{ github.repository }}.git
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
           GITHUB_USERNAME: x-access-token
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          command: monitor
-          args: --org=k9saksbehandling --configuration-attributes=usage:java-runtime --project-name=${{ github.repository }} --remote-repo-url=https://github.com/${{ github.repository }}.git
