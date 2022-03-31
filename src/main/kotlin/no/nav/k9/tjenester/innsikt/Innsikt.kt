@@ -85,7 +85,7 @@ fun Route.innsiktGrensesnitt() {
                         }
                     }
 
-                    val oppgaveMedId = oppgaveRepository.hentOppgaverSomMatcherSaksnummer("BADV0")
+                    val oppgaveMedId = oppgaveRepository.hentOppgaverSomMatcherSaksnummer("BHR28")
 
                     if (oppgaveMedId.isNotEmpty()) {
                         val sortedByDescending = oppgaveMedId.sortedByDescending { it.oppgave.eventTid }
@@ -101,7 +101,7 @@ fun Route.innsiktGrensesnitt() {
                             sakModell.eventer.forEach { behandlingProsessEventDto ->
                                 val stringBuilder = StringBuilder()
 
-                                behandlingProsessEventDto.aksjonspunktKoderMedStatusListe.map { "kode=" + it.key + ", verdi=" + it.value }
+                                behandlingProsessEventDto.aksjonspunktKoderMedStatusListe.map { "kode=${it.key}, verdi=${it.value} " }
                                     .forEach { stringBuilder.append(it) }
 
                                 div {
