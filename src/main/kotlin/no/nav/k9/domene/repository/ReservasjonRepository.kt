@@ -238,11 +238,12 @@ class ReservasjonRepository(
     private fun loggFjerningAvReservasjon(reservasjon: Reservasjon, forrigeReservasjon: String?) {
         if (forrigeReservasjon != null ) {
             val fr = objectMapper().readValue(forrigeReservasjon, Reservasjon::class.java)
+            val harBegrunnelse = reservasjon.begrunnelse != null
             if (!reservasjon.erAktiv() && fr.erAktiv() && reservasjon.reservertAv == fr.reservertAv) {
-                log.info("RESERVASJONDEBUG: Fjerner ${reservasjon.reservertAv} oppgave=${reservasjon.oppgave} med begrunnelse=${reservasjon.begrunnelse} i reservasjonstabellen")
+                log.info("RESERVASJONDEBUG: Fjerner ${reservasjon.reservertAv} oppgave=${reservasjon.oppgave} begrunnelse=$harBegrunnelse i reservasjonstabellen")
             }
             if (reservasjon.erAktiv() && fr.erAktiv() && reservasjon.reservertAv != fr.reservertAv) {
-                log.info("RESERVASJONDEBUG: Endrer fra ${fr.reservertAv} til ${reservasjon.reservertAv} oppgave=${reservasjon.oppgave} med begrunnelse=${reservasjon.begrunnelse} i reservasjonstabellen")
+                log.info("RESERVASJONDEBUG: Endrer fra ${fr.reservertAv} til ${reservasjon.reservertAv} oppgave=${reservasjon.oppgave} begrunnelse=$harBegrunnelse i reservasjonstabellen")
             }
         }
     }
