@@ -16,8 +16,4 @@ enum class OppgaveStatus(val kode: String) {
     fun erAktiv(): Boolean {
         return aktivOppgaveKoder.contains(this)
     }
-
-    fun erFerdigstilt(): Boolean {
-        return this == FERDIGSTILT
-    }
 }

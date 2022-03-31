@@ -44,12 +44,6 @@ class AksjonspunktHendelseMapper(
                     oppgaveKode = dto.aksjonspunktKode
                 )
         }
-        if (aksjonspunkt.erLukket()) {
-            return AvbrytOppgave(
-                tidspunkt = hendelse.hendelseTid,
-                oppgaveKode = dto.aksjonspunktKode
-            )
-        }
         return null
     }
 
