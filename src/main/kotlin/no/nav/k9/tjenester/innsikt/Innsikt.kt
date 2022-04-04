@@ -5,11 +5,13 @@ import io.ktor.html.*
 import io.ktor.locations.*
 import io.ktor.routing.*
 import kotlinx.html.*
+import no.nav.k9.aksjonspunktbehandling.AksjonspunktStreamK9
 import no.nav.k9.domene.modell.BehandlingStatus
 import no.nav.k9.domene.modell.OppgaveKø
 import no.nav.k9.domene.repository.*
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste.Companion.EnheterSomSkalUtelatesFraStatistikk
 import org.koin.ktor.ext.inject
+import org.slf4j.LoggerFactory
 
 fun Route.innsiktGrensesnitt() {
     val oppgaveRepository by inject<OppgaveRepository>()
@@ -17,6 +19,8 @@ fun Route.innsiktGrensesnitt() {
     val oppgaveKøRepository by inject<OppgaveKøRepository>()
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
     val behandlingProsessEventK9Repository by inject<BehandlingProsessEventK9Repository>()
+
+    val LOGGER = LoggerFactory.getLogger(StatistikkRepository::class.java)
 
     class main
     get { _: main ->
@@ -170,8 +174,9 @@ fun Route.innsiktGrensesnitt() {
                     ul {
                         ferdigstilteOppgaver.forEach {
                             li {
-                                +"${it.dato}, ${it.fagsystemType}, ${it.fagsakYtelseType}, ${it.behandlingType}, ${it.saksbehandler} "
+                                +"${it.dato}, ${it.fagsystemType}, ${it.fagsakYtelseType}, ${it.behandlingType} "
                             }
+                            LOGGER.info("${it.fagsystemType}, ${it.fagsakYtelseType}, ${it.behandlingType}, ${it.saksbehandler}")
                         }
                     }
                 }
