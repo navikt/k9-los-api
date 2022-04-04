@@ -8,6 +8,7 @@ data class FerdigstiltBehandling(
     override val behandlingType: String? = null,
     override val fagsystemType: String? = null,
     val behandlendeEnhet: String? = null,
+    val saksbehandler: String? = null,
 ): HistorikkElement {
 
     override fun tilMap(): Map<VelgbartHistorikkfelt, Any?> {
@@ -16,7 +17,8 @@ data class FerdigstiltBehandling(
                 VelgbartHistorikkfelt.YTELSETYPE to fagsakYtelseType,
                 VelgbartHistorikkfelt.BEHANDLINGTYPE to behandlingType,
                 VelgbartHistorikkfelt.FAGSYSTEM to fagsystemType,
-                VelgbartHistorikkfelt.ENHET to behandlendeEnhet
+                VelgbartHistorikkfelt.ENHET to behandlendeEnhet,
+                VelgbartHistorikkfelt.SAKSBEHANDLER to saksbehandler
         )
     }
 

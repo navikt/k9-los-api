@@ -29,7 +29,8 @@ enum class VelgbartHistorikkfelt(
     ENHET("behandlendeEnhet"),
     YTELSETYPE("fagsakYtelseType"),
     FAGSYSTEM("fagsystemType"),
-    BEHANDLINGTYPE("behandlingType");
+    BEHANDLINGTYPE("behandlingType"),
+    SAKSBEHANDLER("saksbehandler");
 }
 
 fun Collection<HistorikkElement>.feltSelector(

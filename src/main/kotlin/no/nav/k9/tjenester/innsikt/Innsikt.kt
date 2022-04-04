@@ -1,37 +1,24 @@
 package no.nav.k9.tjenester.innsikt
 
-import io.ktor.application.call
-import io.ktor.html.respondHtml
-import io.ktor.locations.Location
-import io.ktor.locations.get
-import io.ktor.routing.Route
-import kotlinx.html.body
-import kotlinx.html.classes
-import kotlinx.html.div
-import kotlinx.html.h1
-import kotlinx.html.head
-import kotlinx.html.li
-import kotlinx.html.p
-import kotlinx.html.script
-import kotlinx.html.styleLink
-import kotlinx.html.title
-import kotlinx.html.ul
+import io.ktor.application.*
+import io.ktor.html.*
+import io.ktor.locations.*
+import io.ktor.routing.*
+import kotlinx.html.*
 import no.nav.k9.domene.modell.BehandlingStatus
 import no.nav.k9.domene.modell.OppgaveKø
-import no.nav.k9.domene.repository.BehandlingProsessEventK9Repository
-import no.nav.k9.domene.repository.OppgaveKøRepository
-import no.nav.k9.domene.repository.OppgaveRepository
-import no.nav.k9.domene.repository.SaksbehandlerRepository
+import no.nav.k9.domene.repository.*
+import no.nav.k9.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste.Companion.EnheterSomSkalUtelatesFraStatistikk
 import org.koin.ktor.ext.inject
 
 fun Route.innsiktGrensesnitt() {
     val oppgaveRepository by inject<OppgaveRepository>()
+    val statistikkRepository by inject<StatistikkRepository>()
     val oppgaveKøRepository by inject<OppgaveKøRepository>()
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
     val behandlingProsessEventK9Repository by inject<BehandlingProsessEventK9Repository>()
 
     class main
-
     get { _: main ->
         call.respondHtml {
             head {
@@ -169,7 +156,26 @@ fun Route.innsiktGrensesnitt() {
                     køer = emptyList()
                 }
             }
+        }
+    }
 
+    route("/oppgaver/ferdigstilt") {
+        get ("{behandlendeEnhet}") {
+            val behandlendeEnhet = call.parameters["behandlendeEnhet"]
+            val ferdigstilteOppgaver = statistikkRepository.hentFerdigstiltOppgavehistorikk(55)
+                .filterNot { EnheterSomSkalUtelatesFraStatistikk.contains(it.behandlendeEnhet) }
+                .filter { it.behandlendeEnhet == behandlendeEnhet }
+            call.respondHtml {
+                body {
+                    ul {
+                        ferdigstilteOppgaver.forEach {
+                            li {
+                                +"${it.dato}, ${it.fagsystemType}, ${it.fagsakYtelseType}, ${it.behandlingType}, ${it.saksbehandler} "
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
