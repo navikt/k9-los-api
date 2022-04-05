@@ -368,8 +368,8 @@ data class K9SakModell(
             val forrigeAksjonspunkter = forrigeEvent.tilAksjonspunkter().hentAktive()
             val nåværendeAksjonspunkter = sisteEvent().tilAksjonspunkter().hentAktive()
 
-            if (sisteEvent().tilAktiveAksjonspunkter().hentLengde() > 0 && !sisteEvent().tilAktiveAksjonspunkter()
-                    .tilBeslutter()
+            if (sisteEvent().tilAktiveAksjonspunkter().hentLengde() > 0
+                && !sisteEvent().tilAktiveAksjonspunkter().tilBeslutter() // jeg tror denne sjekken er overflødig og til og med feil pga tidligere beslutter sjekker.
             ) {
                 return false
             }
