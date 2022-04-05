@@ -433,7 +433,7 @@ class K9SakModellReservasjonTest {
         return K9SakModell(eventer)
     }
 
-    //        @Test
+    @Test
     fun `Tolker som endret reservasjon hvis både 5016 og en annen AP er aktiv samtidig`() {
         val eventer = mutableListOf<BehandlingProsessEventDto>()
         val modell = K9SakModell(eventer)
