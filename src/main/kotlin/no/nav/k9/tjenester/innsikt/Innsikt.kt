@@ -1,13 +1,30 @@
 package no.nav.k9.tjenester.innsikt
 
-import io.ktor.application.*
-import io.ktor.html.*
-import io.ktor.locations.*
-import io.ktor.routing.*
-import kotlinx.html.*
+import io.ktor.application.call
+import io.ktor.html.respondHtml
+import io.ktor.locations.Location
+import io.ktor.locations.get
+import io.ktor.routing.Route
+import io.ktor.routing.get
+import io.ktor.routing.route
+import kotlinx.html.body
+import kotlinx.html.classes
+import kotlinx.html.div
+import kotlinx.html.h1
+import kotlinx.html.head
+import kotlinx.html.li
+import kotlinx.html.p
+import kotlinx.html.script
+import kotlinx.html.styleLink
+import kotlinx.html.title
+import kotlinx.html.ul
 import no.nav.k9.domene.modell.BehandlingStatus
 import no.nav.k9.domene.modell.OppgaveKø
-import no.nav.k9.domene.repository.*
+import no.nav.k9.domene.repository.BehandlingProsessEventK9Repository
+import no.nav.k9.domene.repository.OppgaveKøRepository
+import no.nav.k9.domene.repository.OppgaveRepository
+import no.nav.k9.domene.repository.SaksbehandlerRepository
+import no.nav.k9.domene.repository.StatistikkRepository
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste.Companion.EnheterSomSkalUtelatesFraStatistikk
 import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
@@ -75,7 +92,7 @@ fun Route.innsiktGrensesnitt() {
                         }
                     }
 
-                    val oppgaveMedId = oppgaveRepository.hentOppgaverSomMatcherSaksnummer("BHR28")
+                    val oppgaveMedId = oppgaveRepository.hentOppgaverSomMatcherSaksnummer("B8KUQ")
 
                     if (oppgaveMedId.isNotEmpty()) {
                         val sortedByDescending = oppgaveMedId.sortedByDescending { it.oppgave.eventTid }
