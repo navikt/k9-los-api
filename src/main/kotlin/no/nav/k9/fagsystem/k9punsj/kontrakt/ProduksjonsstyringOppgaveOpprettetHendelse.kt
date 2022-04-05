@@ -1,9 +1,10 @@
 package no.nav.k9.fagsystem.k9punsj.kontrakt
 
-import com.fasterxml.jackson.annotation.*
-import no.nav.k9.fagsystem.k9punsj.BehandlingType
+import com.fasterxml.jackson.annotation.JsonAutoDetect
+import com.fasterxml.jackson.annotation.JsonFormat
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonTypeName
 import no.nav.k9.sak.typer.AktørId
-import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.sak.typer.JournalpostId
 import java.time.LocalDate
 import java.time.LocalDateTime

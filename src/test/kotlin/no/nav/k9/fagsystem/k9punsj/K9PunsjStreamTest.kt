@@ -6,12 +6,10 @@ import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.aksjonspunktbehandling.objectMapper
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveTjenesteV2
-import no.nav.k9.fagsystem.k9sak.AksjonspunktHendelseMapper
 import no.nav.k9.integrasjon.azuregraph.AzureGraphService
 import no.nav.k9.sak.typer.AktørId
 import org.intellij.lang.annotations.Language
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import java.util.*
 
