@@ -71,7 +71,7 @@ dependencies {
     testImplementation("org.apache.kafka:kafka-clients:$kafkaVersion")
     testImplementation("no.nav:kafka-embedded-env:$kafkaEmbeddedEnvVersion")
     testImplementation("no.nav.helse:dusseldorf-test-support:$dusseldorfKtorVersion")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
     testImplementation("io.mockk:mockk:1.12.3")
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion") {
         exclude(group = "org.eclipse.jetty")
