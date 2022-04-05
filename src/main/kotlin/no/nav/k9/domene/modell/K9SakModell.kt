@@ -330,40 +330,27 @@ data class K9SakModell(
     override fun fikkEndretAksjonspunkt(): Boolean {
         val forrigeEvent = forrigeEvent() ?: return false
 
-        if (sisteEvent().ytelseTypeKode == "PSB") {
-            // har blitt beslutter
-            if (!forrigeEvent.tilAksjonspunkter().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK) &&
+        val blittBeslutter =
+            !forrigeEvent.tilAksjonspunkter().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK) &&
                 sisteEvent().tilAksjonspunkter().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)
-            ) {
-                return true
-            }
-            // har blitt satt på vent
-            if (sisteEvent().tilAksjonspunkter().påVent()) {
-                return true
-            }
 
-            // beslutter har gjort seg ferdig
-            if (forrigeEvent.tilAksjonspunkter().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK) &&
+        if (blittBeslutter) return true
+
+        // har blitt satt på vent
+        if (sisteEvent().ytelseTypeKode == FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode
+            && sisteEvent().tilAksjonspunkter().påVent())
+            return true
+
+        val beslutterFerdig =
+            forrigeEvent.tilAksjonspunkter().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK) &&
                 sisteEvent().tilAksjonspunkter().harInaktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)
-            ) {
-                return true
-            }
+
+        if (beslutterFerdig) return true
+
+        if (sisteEvent().ytelseTypeKode == FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode) {
             // skal fortsette og ligge reservert
             return false
         } else {
-            // har blitt beslutter
-            if (!forrigeEvent.tilAksjonspunkter().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK) &&
-                sisteEvent().tilAksjonspunkter().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)
-            ) {
-                return true
-            }
-
-            // beslutter har gjort seg ferdig
-            if (forrigeEvent.tilAksjonspunkter().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK) &&
-                sisteEvent().tilAksjonspunkter().harInaktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)
-            ) {
-                return true
-            }
 
             val forrigeAksjonspunkter = forrigeEvent.tilAksjonspunkter().hentAktive()
             val nåværendeAksjonspunkter = sisteEvent().tilAksjonspunkter().hentAktive()
