@@ -37,12 +37,18 @@ class AksjonspunktHendelseMapper(
                 )
         }
         if (aksjonspunkt.erUtført()) {
-                return FerdigstillOppgave(
-                    tidspunkt = hendelse.hendelseTid,
-                    ansvarligSaksbehandlerIdent = dto.ansvarligSaksbehandler,
-                    behandlendeEnhet = dto.ansvarligSaksbehandler?.let { azureGraphService.hentEnhetForBrukerMedSystemToken(it) } ?: "UKJENT",
-                    oppgaveKode = dto.aksjonspunktKode
-                )
+            val behandlendeEnhet = dto.ansvarligSaksbehandler?.let {
+                azureGraphService.hentEnhetForBrukerMedSystemToken(it) } ?:
+                "UKJENT".also {
+                    log.warn("Forventet saksbehandler satt for $dto. Bruker 'UKJENT' som enhet")
+                }
+
+            return FerdigstillOppgave(
+                tidspunkt = hendelse.hendelseTid,
+                ansvarligSaksbehandlerIdent = dto.ansvarligSaksbehandler,
+                behandlendeEnhet = behandlendeEnhet,
+                oppgaveKode = dto.aksjonspunktKode
+            )
         }
         if (aksjonspunkt.erLukket()) {
             return AvbrytOppgave(

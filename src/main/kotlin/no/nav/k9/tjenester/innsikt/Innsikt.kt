@@ -5,7 +5,6 @@ import io.ktor.html.*
 import io.ktor.locations.*
 import io.ktor.routing.*
 import kotlinx.html.*
-import no.nav.k9.aksjonspunktbehandling.AksjonspunktStreamK9
 import no.nav.k9.domene.modell.BehandlingStatus
 import no.nav.k9.domene.modell.OppgaveKø
 import no.nav.k9.domene.repository.*
@@ -176,7 +175,7 @@ fun Route.innsiktGrensesnitt() {
                             li {
                                 +"${it.dato}, ${it.fagsystemType}, ${it.fagsakYtelseType}, ${it.behandlingType} "
                             }
-                            LOGGER.info("${it.fagsystemType}, ${it.fagsakYtelseType}, ${it.behandlingType}, ${it.saksbehandler}")
+                            LOGGER.info("${it.dato}: ${it.fagsystemType}, ${it.fagsakYtelseType}, ${it.behandlingType}, ${it.saksbehandler}")
                         }
                     }
                 }

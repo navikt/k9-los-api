@@ -17,6 +17,10 @@ open class BehandlingsmigreringTjeneste(
             val k9sakModell = behandlingProsessEventK9Repository.hent(UUID.fromString(eksternId))
             val sisteEvent = k9sakModell.sisteEvent()
 
+            if (k9sakModell.oppgave().fagsakYtelseType == FagsakYtelseType.FRISINN) {
+                return null // Skal ikke opprette oppgaver for frisinn
+            }
+
             Behandling.ny(
                 eksternId,
                 fagsystem = Fagsystem.K9SAK,

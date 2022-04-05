@@ -118,12 +118,14 @@ class K9punsjEventHandler constructor(
         if (resultat == BehandlingStatus.SENDT_INN) {
             val behandlendeEnhet = event.ferdigstiltAv?.run {
                 azureGraphService.hentEnhetForBrukerMedSystemToken(event.ferdigstiltAv)
+            } ?: "UKJENT".also {
+                log.warn("Forventet saksbehandler satt for ${event.safePrint()}. Bruker 'UKJENT' som enhet")
             }
 
             oppgavehendelser.add(
                 FerdigstillBehandling(
                     tidspunkt = event.eventTid,
-                    behandlendeEnhet = behandlendeEnhet ?: "UKJENT",
+                    behandlendeEnhet = behandlendeEnhet,
                     ansvarligSaksbehandlerIdent = event.ferdigstiltAv
                 )
             )
