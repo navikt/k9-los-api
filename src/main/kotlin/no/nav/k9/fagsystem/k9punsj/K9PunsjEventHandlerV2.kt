@@ -30,7 +30,7 @@ class K9PunsjEventHandlerV2(
     }
 
     private fun håndterBehandlingOpprettet(hendelse: ProduksjonsstyringOppgaveOpprettetHendelse) {
-        log.info("Behandling opprettet hendelse: ${hendelse.safeToString()}")
+        log.info("Oppgave opprettet hendelse: ${hendelse.safeToString()}")
 
         val eksternId = hendelse.eksternId.toString()
         oppgaveTjenesteV2.nyOppgaveHendelse(
@@ -46,7 +46,7 @@ class K9PunsjEventHandlerV2(
     }
 
     private suspend fun håndterBehandlingFerdigstilt(hendelse: ProduksjonsstyringOppgaveFerdigstiltHendelse) {
-        log.info("Behandling ferdigstilt hendelse: ${hendelse.safeToString()}")
+        log.info("Oppgave ferdigstilt hendelse: ${hendelse.safeToString()}")
 
         try {
             val eksternId = hendelse.eksternId.toString()
@@ -58,24 +58,25 @@ class K9PunsjEventHandlerV2(
                 )
             )
         } catch (e: IllegalStateException) {
-            log.error("Feilet ved håndtering av behandlingavsluttet hendelse", e)
+            log.error("Feilet ved håndtering av oppgave ferdigstilt hendelse", e)
         }
     }
 
 
     private fun håndterBehandlingAvbrutt(hendelse: ProduksjonsstyringOppgaveAvbruttHendelse) {
-        log.info("Behandling avbrutt hendelse: ${hendelse.safeToString()}")
+        log.info("Oppgave avbrutt hendelse: ${hendelse.safeToString()}")
 
-//        try {
-//            val eksternId = hendelse.eksternId.toString()
-//            oppgaveTjenesteV2.nyOppgaveHendelse(eksternId,
-//                AvbruttOppgave(
-//                    tidspunkt = hendelse.hendelseTid
-//                )
-//            )
-//        } catch (e: IllegalStateException) {
-//            log.error("Feilet ved håndtering av behandlingavsluttet hendelse", e)
-//        }
+        try {
+            val eksternId = hendelse.eksternId.toString()
+            oppgaveTjenesteV2.nyOppgaveHendelse(eksternId,
+                AvbrytOppgave(
+                    tidspunkt = hendelse.hendelseTid,
+                    oppgaveKode = null
+                )
+            )
+        } catch (e: IllegalStateException) {
+            log.error("Feilet ved håndtering av oppgave avbrutt hendelse", e)
+        }
     }
 
 
