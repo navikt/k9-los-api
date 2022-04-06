@@ -3,7 +3,7 @@ name: Create or update Kafka topics
 on:
   push:
     paths:
-      - 'nais/topics.yml'
+      - 'nais/kafka/**'
       - '.github/workflows/kafka.yml'
 
 jobs:
@@ -12,23 +12,35 @@ jobs:
     if: startsWith(github.ref, 'refs/heads/master')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
       - uses: nais/deploy/actions/deploy@v1
         env:
           APIKEY: ${{ secrets.DEPLOY_KEY }}
           CLUSTER: dev-gcp
           VAR: kafka-pool=nav-dev
-          RESOURCE: nais/topics.yml
+          RESOURCE: nais/kafka/produksjonsstyring-k9sak.yml
+      - uses: nais/deploy/actions/deploy@v1
+        env:
+          APIKEY: ${{ secrets.DEPLOY_KEY }}
+          CLUSTER: dev-gcp
+          VAR: kafka-pool=nav-dev
+          RESOURCE: nais/kafka/produksjonsstyring-k9punsj.yml
 
   deploy-kafka-topics-prod:
     name: Deploy to Aiven Prod
     if: startsWith(github.ref, 'refs/heads/master')  # If the branch is master
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
       - uses: nais/deploy/actions/deploy@v1
         env:
           APIKEY: ${{ secrets.DEPLOY_KEY }}
           CLUSTER: prod-gcp
           VAR: kafka-pool=nav-prod
-          RESOURCE: nais/topics.yml
+          RESOURCE: nais/kafka/produksjonsstyring-k9sak.yml
+      - uses: nais/deploy/actions/deploy@v1
+        env:
+          APIKEY: ${{ secrets.DEPLOY_KEY }}
+          CLUSTER: prod-gcp
+          VAR: kafka-pool=nav-prod
+          RESOURCE: nais/kafka/produksjonsstyring-k9punsj.yml

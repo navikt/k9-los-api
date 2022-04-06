@@ -97,7 +97,7 @@ open class AzureGraphService constructor(
         return try {
             hentEnhetForBruker(brukernavn = brukernavn)
         } catch (e: Exception) {
-            log.warn("Klarte ikke å hente behandlende enhet for $brukernavn")
+            log.warn("Klarte ikke å hente behandlende enhet for $brukernavn", e)
             null
         }
     }

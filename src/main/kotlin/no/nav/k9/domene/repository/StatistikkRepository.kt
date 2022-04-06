@@ -325,6 +325,7 @@ class StatistikkRepository(
                         fagsakYtelseType = rad.stringOrNull("ytelse_type"),
                         behandlingType = rad.stringOrNull("behandling_type"),
                         behandlendeEnhet = rad.stringOrNull("behandlende_enhet"),
+                        saksbehandler = rad.stringOrNull("ansvarlig_saksbehandler")
                     )
                 }.asList
             )

@@ -5,10 +5,14 @@ import io.ktor.html.respondHtml
 import io.ktor.locations.Location
 import io.ktor.locations.get
 import io.ktor.routing.Route
+import io.ktor.routing.get
+import io.ktor.routing.route
+import kotlinx.html.BODY
 import kotlinx.html.body
 import kotlinx.html.classes
 import kotlinx.html.div
 import kotlinx.html.h1
+import kotlinx.html.h2
 import kotlinx.html.head
 import kotlinx.html.li
 import kotlinx.html.p
@@ -22,16 +26,21 @@ import no.nav.k9.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.domene.repository.OppgaveKøRepository
 import no.nav.k9.domene.repository.OppgaveRepository
 import no.nav.k9.domene.repository.SaksbehandlerRepository
+import no.nav.k9.domene.repository.StatistikkRepository
+import no.nav.k9.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste.Companion.EnheterSomSkalUtelatesFraStatistikk
 import org.koin.ktor.ext.inject
+import org.slf4j.LoggerFactory
 
 fun Route.innsiktGrensesnitt() {
     val oppgaveRepository by inject<OppgaveRepository>()
+    val statistikkRepository by inject<StatistikkRepository>()
     val oppgaveKøRepository by inject<OppgaveKøRepository>()
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
     val behandlingProsessEventK9Repository by inject<BehandlingProsessEventK9Repository>()
 
-    class main
+    val LOGGER = LoggerFactory.getLogger(StatistikkRepository::class.java)
 
+    class main
     get { _: main ->
         call.respondHtml {
             head {
@@ -85,34 +94,58 @@ fun Route.innsiktGrensesnitt() {
                         }
                     }
 
-                    val oppgaveMedId = oppgaveRepository.hentOppgaverSomMatcherSaksnummer("BADV0")
 
-                    if (oppgaveMedId.isNotEmpty()) {
-                        val sortedByDescending = oppgaveMedId.sortedByDescending { it.oppgave.eventTid }
+                }
+            }
+        }
+    }
 
-                        sortedByDescending.forEach { oppgaveMedId1 ->
-                            val sakModell = behandlingProsessEventK9Repository.hent(oppgaveMedId1.id)
+    fun BODY.oppgaveSeksjon(saksnummer: String) {
+        val oppgaveMedId = oppgaveRepository.hentOppgaverSomMatcherSaksnummer(saksnummer)
 
-                            div {
-                                classes = setOf("input-group-text display-4")
-                                +"TilBeslutter = ${sakModell.oppgave().tilBeslutter}"
-                            }
+        if (oppgaveMedId.isNotEmpty()) {
+            val sortedByDescending = oppgaveMedId.sortedByDescending { it.oppgave.eventTid }
 
-                            sakModell.eventer.forEach { behandlingProsessEventDto ->
-                                val stringBuilder = StringBuilder()
+            sortedByDescending.forEach { oppgaveMedId1 ->
+                val sakModell = behandlingProsessEventK9Repository.hent(oppgaveMedId1.id)
 
-                                behandlingProsessEventDto.aksjonspunktKoderMedStatusListe.map { "kode=" + it.key + ", verdi=" + it.value }
-                                    .forEach { stringBuilder.append(it) }
+                div {
+                    classes = setOf("input-group-text display-4")
+                    +"TilBeslutter = ${sakModell.oppgave().tilBeslutter}, saksnummer=$saksnummer"
+                }
 
-                                div {
-                                    classes = setOf("input-group-text display-4")
-                                    +"BId=${oppgaveMedId1.oppgave.eksternId} EventTid=${behandlingProsessEventDto.eventTid}, Aksjonspunkter=$stringBuilder"
-                                }
-                            }
-                        }
+                sakModell.eventer.forEach { behandlingProsessEventDto ->
+                    val stringBuilder = StringBuilder()
+
+                    behandlingProsessEventDto.aksjonspunktKoderMedStatusListe.map { "kode=${it.key}, verdi=${it.value} " }
+                        .forEach { stringBuilder.append(it) }
+
+                    div {
+                        classes = setOf("input-group-text display-4")
+                        +"BId=${oppgaveMedId1.oppgave.eksternId} EventTid=${behandlingProsessEventDto.eventTid}, Aksjonspunkter=$stringBuilder"
                     }
                 }
             }
+        }
+    }
+
+    get("/sak") {
+        call.respondHtml {
+            val saksnummer = call.request.queryParameters["saksnummer"]?.split(",")
+            head {
+                title { +(saksnummer?.let {"Innsikt for saksnummer=$saksnummer"}?: "Oppgi saksnummer") }
+                styleLink("/static/bootstrap.css")
+                script(src = "/static/script.js") {}
+            }
+            body {
+                if (saksnummer.isNullOrEmpty()) div {+"Oppgi saksnummer"}
+                else {
+                    h2 { +saksnummer.let {"Innsikt for saksnummer=$saksnummer"} }
+                    saksnummer.map { oppgaveSeksjon(it) }
+                }
+
+            }
+
         }
     }
 
@@ -169,7 +202,27 @@ fun Route.innsiktGrensesnitt() {
                     køer = emptyList()
                 }
             }
+        }
+    }
 
+    route("/oppgaver/ferdigstilt") {
+        get ("{behandlendeEnhet}") {
+            val behandlendeEnhet = call.parameters["behandlendeEnhet"]
+            val ferdigstilteOppgaver = statistikkRepository.hentFerdigstiltOppgavehistorikk(55)
+                .filterNot { EnheterSomSkalUtelatesFraStatistikk.contains(it.behandlendeEnhet) }
+                .filter { it.behandlendeEnhet == behandlendeEnhet }
+            call.respondHtml {
+                body {
+                    ul {
+                        ferdigstilteOppgaver.forEach {
+                            li {
+                                +"${it.dato}, ${it.fagsystemType}, ${it.fagsakYtelseType}, ${it.behandlingType} "
+                            }
+                            LOGGER.info("${it.dato}: ${it.fagsystemType}, ${it.fagsakYtelseType}, ${it.behandlingType}, ${it.saksbehandler}")
+                        }
+                    }
+                }
+            }
         }
     }
 }
