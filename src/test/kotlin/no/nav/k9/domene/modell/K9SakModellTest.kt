@@ -434,7 +434,7 @@ class K9SakModellReservasjonTest {
     }
 
     @Test
-    fun `Tolker som endret reservasjon hvis både 5016 og en annen AP er aktiv samtidig`() {
+    fun `Skal håndtere flere eventer etter hverandre med tilbakerull PSB`() {
         val eventer = mutableListOf<BehandlingProsessEventDto>()
         val modell = K9SakModell(eventer)
         val psbEventBuilder = eventBuilder(FagsakYtelseType.PLEIEPENGER_SYKT_BARN)
@@ -448,35 +448,35 @@ class K9SakModellReservasjonTest {
             )
         )
 
-        val foreslåVedtakAvbrutt = psbEventBuilder(
+        val beslutterOgForeslåVedtakAvbrutt = psbEventBuilder(
             mutableMapOf(
                 "5015" to AVBR,
-                "5016" to OPPR,
+                "5016" to AVBR,
                 "9001" to UTFO,
                 "9203" to AVBR
             )
         )
 
         eventer.add(tilBeslutter)
-        eventer.add(foreslåVedtakAvbrutt)
-        assertThat(modell.fikkEndretAksjonspunkt()).isFalse()
+        eventer.add(beslutterOgForeslåVedtakAvbrutt)
+        assertThat(modell.fikkEndretAksjonspunkt()).isTrue()
 
         val tilbakeHopp9001 = psbEventBuilder(
             mutableMapOf(
                 "5015" to AVBR,
-                "5016" to OPPR,
+                "5016" to AVBR,
                 "9001" to OPPR,
                 "9203" to AVBR
             )
         )
 
         eventer.add(tilbakeHopp9001)
-        assertThat(modell.fikkEndretAksjonspunkt()).isTrue()
+        assertThat(modell.fikkEndretAksjonspunkt()).isFalse()
 
         val ferdigstill9001 = psbEventBuilder(
             mutableMapOf(
                 "5015" to AVBR,
-                "5016" to OPPR,
+                "5016" to AVBR,
                 "9001" to UTFO,
                 "9203" to AVBR
             )
@@ -488,7 +488,7 @@ class K9SakModellReservasjonTest {
         val foreslåVedtakPåNytt = psbEventBuilder(
             mutableMapOf(
                 "5015" to OPPR,
-                "5016" to OPPR,
+                "5016" to AVBR,
                 "9001" to UTFO,
                 "9203" to AVBR
             )
