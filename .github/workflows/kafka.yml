@@ -3,7 +3,7 @@ name: Create or update Kafka topics
 on:
   push:
     paths:
-      - 'nais/kafka/**'
+      - 'nais/topics.yml'
       - '.github/workflows/kafka.yml'
 
 jobs:
@@ -18,13 +18,7 @@ jobs:
           APIKEY: ${{ secrets.DEPLOY_KEY }}
           CLUSTER: dev-gcp
           VAR: kafka-pool=nav-dev
-          RESOURCE: nais/kafka/produksjonsstyring-k9sak.yml
-      - uses: nais/deploy/actions/deploy@v1
-        env:
-          APIKEY: ${{ secrets.DEPLOY_KEY }}
-          CLUSTER: dev-gcp
-          VAR: kafka-pool=nav-dev
-          RESOURCE: nais/kafka/produksjonsstyring-k9punsj.yml
+          RESOURCE: nais/topics.yml
 
   deploy-kafka-topics-prod:
     name: Deploy to Aiven Prod
@@ -37,10 +31,4 @@ jobs:
           APIKEY: ${{ secrets.DEPLOY_KEY }}
           CLUSTER: prod-gcp
           VAR: kafka-pool=nav-prod
-          RESOURCE: nais/kafka/produksjonsstyring-k9sak.yml
-      - uses: nais/deploy/actions/deploy@v1
-        env:
-          APIKEY: ${{ secrets.DEPLOY_KEY }}
-          CLUSTER: prod-gcp
-          VAR: kafka-pool=nav-prod
-          RESOURCE: nais/kafka/produksjonsstyring-k9punsj.yml
+          RESOURCE: nais/topics.yml
