@@ -3,6 +3,8 @@ package no.nav.k9.domene.modell
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonValue
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.TextNode
 import no.nav.k9.domene.lager.oppgave.Kodeverdi
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
@@ -20,9 +22,10 @@ enum class AndreKriterierType(override val kode: String, override val navn: Stri
     override val kodeverk = "ANDRE_KRITERIER_TYPE"
 
     companion object {
-        @JsonCreator
+        @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
         @JvmStatic
-        fun fraKode(kode: String): AndreKriterierType {
+        fun fraKode(o: Any): AndreKriterierType {
+            val kode = TempAvledeKode.getVerdi(o)
             return values().find { it.kode == kode } ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
         }
     }
@@ -44,9 +47,10 @@ enum class FagsakYtelseType constructor(override val kode: String, override val 
     override val kodeverk = "FAGSAK_YTELSE_TYPE"
 
     companion object {
-        @JsonCreator
+        @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
         @JvmStatic
-        fun fraKode(kode: String): FagsakYtelseType {
+        fun fraKode(o: Any): FagsakYtelseType {
+            val kode = TempAvledeKode.getVerdi(o)
             return values().find { it.kode == kode } ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
         }
     }
@@ -63,9 +67,12 @@ enum class FagsakStatus(override val kode: String, override val navn: String) : 
     override val kodeverk = "FAGSAK_STATUS"
 
     companion object {
-        @JsonCreator
+        @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
         @JvmStatic
-        fun fraKode(kode: String): FagsakStatus = values().find { it.kode == kode } ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
+        fun fraKode(o: Any): FagsakStatus {
+            val kode = TempAvledeKode.getVerdi(o)
+            return values().find { it.kode == kode } ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
+        }
     }
 }
 
@@ -96,9 +103,12 @@ enum class BehandlingType(override val kode: String, override val navn: String, 
     UKJENT("UKJENT", "Ukjent", "PUNSJ_INNSENDING_TYPE");
 
     companion object {
-        @JsonCreator
+        @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
         @JvmStatic
-        fun fraKode(kode: String): BehandlingType = values().find { it.kode == kode } ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
+        fun fraKode(o: Any): BehandlingType {
+            val kode = TempAvledeKode.getVerdi(o)
+            return values().find { it.kode == kode } ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
+        }
     }
 }
 
@@ -118,9 +128,12 @@ enum class BehandlingStatus(override val kode: String, override val navn: String
     override val kodeverk = "BEHANDLING_TYPE"
 
     companion object {
-        @JsonCreator
+        @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
         @JvmStatic
-        fun fraKode(kode: String): BehandlingStatus = values().find { it.kode == kode } ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
+        fun fraKode(o: Any): BehandlingStatus {
+            val kode = TempAvledeKode.getVerdi(o)
+            return values().find { it.kode == kode } ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
+        }
     }
 }
 
@@ -129,9 +142,12 @@ enum class Enhet(val navn: String) {
     NASJONAL("NASJONAL");
 
     companion object {
-        @JsonCreator
+        @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
         @JvmStatic
-        fun fraKode(navn: String): Enhet = values().find { it.navn == navn } ?: throw IllegalStateException("Kjenner ikke igjen navnet=$navn")
+        fun fraKode(o: Any): Enhet {
+            val navn = TempAvledeKode.getVerdi(o, "navn")
+            return values().find { it.navn == navn } ?: throw IllegalStateException("Kjenner ikke igjen navnet=$navn")
+        }
     }
 }
 
@@ -150,9 +166,12 @@ enum class KøSortering(
     override val kodeverk = "KO_SORTERING"
 
     companion object {
-        @JsonCreator
+        @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
         @JvmStatic
-        fun fraKode(kode: String): KøSortering = values().find { it.kode == kode } ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
+        fun fraKode(o: Any): KøSortering {
+            val kode = TempAvledeKode.getVerdi(o)
+            return values().find { it.kode == kode } ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
+        }
     }
 }
 
@@ -161,14 +180,17 @@ enum class KøSortering(
 enum class Fagsystem(val kode: String, val kodeverk: String) {
     K9SAK("K9SAK", "FAGSYSTEM"),
     K9TILBAKE("K9TILBAKE", "FAGSYSTEM"),
-    FPTILBAKE("FPTILBAKE", "FAGSYSTEM"),
+    FPTILBAKE( "FPTILBAKE", "FAGSYSTEM"),
     PUNSJ("PUNSJ", "FAGSYSTEM"),
     OMSORGSPENGER("OMSORGSPENGER", "FAGSYSTEM");
 
     companion object {
-        @JsonCreator
+        @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
         @JvmStatic
-        fun fraKode(kode: String): Fagsystem = values().find { it.kode == kode } ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
+        fun fraKode(o: Any): Fagsystem {
+            val kode = TempAvledeKode.getVerdi(o)
+            return values().find { it.kode == kode } ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
+        }
     }
 }
 
@@ -187,3 +209,30 @@ enum class AksjonspunktStatus(@JsonValue val kode: String, val navn: String) {
         }
     }
 }
+
+
+/**
+ * for avledning av kode for enum som ikke er mappet direkte på navn der både ny (@JsonValue) og gammel (@JsonProperty kode + kodeverk) kan
+ * bli sendt. Brukes til eksisterende kode er konvertert til @JsonValue på alle grensesnitt.
+ *
+ * <h3>Eksempel - [BehandlingType]</h3>
+ * **Gammel**: {"kode":"BT-004","kodeverk":"BEHANDLING_TYPE"}
+ *
+ *
+ * **Ny**: "BT-004"
+ *
+ *
+ *
+ */
+@Deprecated("endre grensesnitt til @JsonValue istdf @JsonProperty + @JsonCreator")
+private object TempAvledeKode {
+    fun getVerdi(node: Any, key: String = "kode"): String? {
+        return when (node) {
+            is String -> node
+            is TextNode -> node.asText()
+            is JsonNode -> node[key].asText()
+            is Map<*, *> -> node[key] as String?
+            else -> throw IllegalArgumentException("Støtter ikke node av type: " + node.javaClass)
+        }
+        }
+    }
