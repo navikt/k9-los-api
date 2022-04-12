@@ -55,7 +55,7 @@ dependencies {
     // Kontrakter
     implementation("no.nav.k9.sak:kontrakt:$k9SakVersion")
     implementation("no.nav.k9.sak:kodeverk:$k9SakVersion")
-    implementation("no.nav.k9.statistikk:kontrakter:2.0_20201201123022_bfccad8")
+    implementation("no.nav.k9.statistikk:kontrakter:2.0_20220411110858_dc06dd1")
 
     // Div
     implementation(enforcedPlatform( "com.fasterxml.jackson:jackson-bom:2.13.2.20220328" ))
