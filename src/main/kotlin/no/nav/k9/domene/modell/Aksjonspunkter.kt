@@ -108,7 +108,7 @@ internal fun BehandlingProsessEventDto.tilAktiveAksjonspunkter(): Aksjonspunkter
 private fun AksjonspunktTilstandDto.tilModell() = AksjonspunktTilstand(
     this.aksjonspunktKode,
     AksjonspunktStatus.fraKode(this.status.kode),
-    if (this.venteårsak == Venteårsak.UDEFINERT) null else this.venteårsak.kode,
+    if (this.venteårsak == null || this.venteårsak == Venteårsak.UDEFINERT) null else this.venteårsak.kode,
     this.fristTid
 )
 
