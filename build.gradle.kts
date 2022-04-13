@@ -19,7 +19,7 @@ val ktorVersion = "1.6.8"
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.6.20"
-    id("com.github.johnrengelman.shadow") version "6.1.0"
+    id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
 dependencies {
