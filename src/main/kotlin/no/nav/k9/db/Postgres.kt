@@ -51,4 +51,5 @@ fun runMigration(dataSource: DataSource, initSql: String? = null): Int {
         .initSql(initSql)
         .load()
         .migrate()
+        .migrationsExecuted
 }
