@@ -4,7 +4,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 val mainClass = "no.nav.k9.K9LosKt"
 val kafkaVersion = "2.8.1" // Alligned med version fra kafka-embedded-env
 val hikariVersion = "5.0.1"
-val flywayVersion = "8.5.5"
+val flywayVersion = "8.5.7"
 val vaultJdbcVersion = "1.3.9"
 val kafkaEmbeddedEnvVersion = "2.8.1"
 val koinVersion = "2.2.2"
