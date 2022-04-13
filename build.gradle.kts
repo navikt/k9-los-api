@@ -2,20 +2,21 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val mainClass = "no.nav.k9.K9LosKt"
-val kafkaVersion = "2.8.1" // Alligned med version fra kafka-embedded-env
 val hikariVersion = "5.0.1"
 val flywayVersion = "8.5.5"
 val vaultJdbcVersion = "1.3.9"
-val kafkaEmbeddedEnvVersion = "2.8.1"
 val koinVersion = "2.2.2"
 val kotliqueryVersion = "1.7.0"
 val k9SakVersion = "3.2.59"
 val fuelVersion = "2.3.1"
 
 val dusseldorfKtorVersion = "3.1.6.8-248832c"
+
 // Disse bør henge sammen med https://github.com/navikt/dusseldorf-ktor/blob/master/pom.xml#L36
 val kotlinVersion = "1.6.20"
 val ktorVersion = "1.6.8"
+val kafkaEmbeddedEnvVersion = "2.8.1"
+val kafkaVersion = "2.8.1" // Alligned med version fra kafka-embedded-env
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.6.20"
@@ -116,13 +117,13 @@ repositories {
 
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_16
-    targetCompatibility = JavaVersion.VERSION_16
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "16"
+    kotlinOptions.jvmTarget = "17"
 }
 
 tasks.withType<ShadowJar> {
