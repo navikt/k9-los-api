@@ -28,11 +28,10 @@ class K9sakEventHandlerV2(
     }
 
     private fun håndterBehandlingOpprettet(hendelse: ProduksjonsstyringBehandlingOpprettetHendelse) {
-        log.info("Behandling opprettet hendelse: ${hendelse.behandlingType}, ${hendelse.ytelseType}, ${hendelse.saksnummer},  ${hendelse.behandlingstidFrist}, ${hendelse.tryggToString()}")
-
         if (hendelse.ytelseType == FagsakYtelseType.FRISINN.kode) {
             return // Skal ikke opprette oppgaver for frisinn
         }
+        log.info("Behandling opprettet hendelse: ${hendelse.behandlingType}, ${hendelse.ytelseType}, ${hendelse.saksnummer},  ${hendelse.behandlingstidFrist}, ${hendelse.tryggToString()}  ${hendelse.eksternId}")
 
         val eksternId = hendelse.eksternId.toString()
         oppgaveTjenesteV2.nyOppgaveHendelse(
@@ -48,7 +47,7 @@ class K9sakEventHandlerV2(
     }
 
     private fun håndterBehandlingAvsluttet(hendelse: ProduksjonsstyringBehandlingAvsluttetHendelse) {
-        log.info("Behandling avsluttet hendelse: ${hendelse.behandlingResultatType}, ${hendelse.tryggToString()}")
+        log.info("Behandling avsluttet hendelse: ${hendelse.behandlingResultatType}, ${hendelse.tryggToString()} ${hendelse.eksternId}")
 
         try {
             val eksternId = hendelse.eksternId.toString()
@@ -63,7 +62,7 @@ class K9sakEventHandlerV2(
     }
 
     private suspend fun håndterNyttAksjonspunkt(hendelse: ProduksjonsstyringAksjonspunktHendelse) {
-        log.info("Aksjonspunkthendelse: "+hendelse.aksjonspunktTilstander.joinToString(", "))
+        log.info("Aksjonspunkthendelse: ${hendelse.aksjonspunktTilstander.joinToString(", ")} ${hendelse.eksternId}")
 
         val aksjonspunkter = hendelse.aksjonspunktTilstander.associateBy { it }
             .mapKeys { (k, _) ->
