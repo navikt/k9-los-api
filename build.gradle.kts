@@ -16,7 +16,7 @@ val dusseldorfKtorVersion = "3.1.6.8-248832c"
 val kotlinVersion = "1.6.20"
 val ktorVersion = "1.6.8"
 val kafkaEmbeddedEnvVersion = "2.8.1"
-val kafkaVersion = "2.8.1" // Alligned med version fra kafka-embedded-env
+val kafkaVersion = "7.1.0-ce" // Alligned med version fra kafka-embedded-env
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.6.20"
