@@ -246,9 +246,7 @@ class OppgaveRepositoryV2(
         )
     }
 
-
     private fun update(oppgave: OppgaveV2): UpdateQueryAction {
-        log.info("Oppdaterer eksisterende oppgave ${oppgave.oppgaveKode} på referanse: ${oppgave.eksternReferanse}")
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }.increment()
 
         return queryOf(

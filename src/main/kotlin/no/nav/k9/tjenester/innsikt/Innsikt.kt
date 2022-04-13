@@ -1,38 +1,21 @@
 package no.nav.k9.tjenester.innsikt
 
-import io.ktor.application.call
-import io.ktor.html.respondHtml
-import io.ktor.locations.Location
-import io.ktor.locations.get
-import io.ktor.routing.Route
-import io.ktor.routing.get
-import io.ktor.routing.route
-import kotlinx.html.BODY
-import kotlinx.html.body
-import kotlinx.html.classes
-import kotlinx.html.div
-import kotlinx.html.h1
-import kotlinx.html.h2
-import kotlinx.html.head
-import kotlinx.html.li
-import kotlinx.html.p
-import kotlinx.html.script
-import kotlinx.html.styleLink
-import kotlinx.html.title
-import kotlinx.html.ul
+import io.ktor.application.*
+import io.ktor.html.*
+import io.ktor.locations.*
+import io.ktor.routing.*
+import kotlinx.html.*
+import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.modell.BehandlingStatus
 import no.nav.k9.domene.modell.OppgaveKø
-import no.nav.k9.domene.repository.BehandlingProsessEventK9Repository
-import no.nav.k9.domene.repository.OppgaveKøRepository
-import no.nav.k9.domene.repository.OppgaveRepository
-import no.nav.k9.domene.repository.SaksbehandlerRepository
-import no.nav.k9.domene.repository.StatistikkRepository
+import no.nav.k9.domene.repository.*
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste.Companion.EnheterSomSkalUtelatesFraStatistikk
 import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
 
 fun Route.innsiktGrensesnitt() {
     val oppgaveRepository by inject<OppgaveRepository>()
+    val oppgaveRepositoryV2 by inject<OppgaveRepositoryV2>()
     val statistikkRepository by inject<StatistikkRepository>()
     val oppgaveKøRepository by inject<OppgaveKøRepository>()
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
@@ -205,24 +188,69 @@ fun Route.innsiktGrensesnitt() {
         }
     }
 
-    route("/oppgaver/ferdigstilt") {
-        get ("{behandlendeEnhet}") {
+    route("/oppgaver") {
+        get ("/ferdigstilt/{behandlendeEnhet}") {
             val behandlendeEnhet = call.parameters["behandlendeEnhet"]
             val ferdigstilteOppgaver = statistikkRepository.hentFerdigstiltOppgavehistorikk(55)
                 .filterNot { EnheterSomSkalUtelatesFraStatistikk.contains(it.behandlendeEnhet) }
                 .filter { it.behandlendeEnhet == behandlendeEnhet }
             call.respondHtml {
+                innsiktHeader("Ferdigstilte oppgaver")
                 body {
                     ul {
+                        classes = setOf("list-group")
                         ferdigstilteOppgaver.forEach {
-                            li {
-                                +"${it.dato}, ${it.fagsystemType}, ${it.fagsakYtelseType}, ${it.behandlingType} "
-                            }
+                            listeelement("${it.dato}, ${it.fagsystemType}, ${it.fagsakYtelseType}, ${it.behandlingType}")
                             LOGGER.info("${it.dato}: ${it.fagsystemType}, ${it.fagsakYtelseType}, ${it.behandlingType}, ${it.saksbehandler}")
                         }
                     }
                 }
             }
         }
+
+        get {
+            val eksternId = call.request.queryParameters["eksternid"]
+            val behandling = oppgaveRepositoryV2.hentBehandling(eksternId!!)!!
+
+            call.respondHtml {
+                innsiktHeader("Alle oppgaver for $eksternId")
+                body {
+                    div {
+                        classes = setOf("jumbotron")
+                        h1 { +"Oppgavebehandling" }
+
+                        ul {
+                            classes = setOf("list-group")
+                            listeelement("Fagsystem: ${behandling.fagsystem} ")
+                            listeelement("ytelse: ${behandling.ytelseType} ")
+                            listeelement("behandlingType: ${behandling.behandlingType} ")
+                            listeelement("ferdigstilt: ${behandling.ferdigstilt} ")
+                            listeelement("Aktive oppgaver ${behandling.aktiveOppgaver().size} ")
+                            listeelement("Ferdigstilte oppgaver: ${behandling.ferdigstilteOppgaver().size} ")
+                        }
+
+                        h2 { +"Oppgaver" }
+                        ul {
+                            classes = setOf("list-group")
+                            behandling.oppgaver().forEach {
+                                listeelement("${it.opprettet}, kode: ${it.oppgaveKode}, status: ${it.oppgaveStatus}, erBeslutter: ${it.erBeslutter} ")
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
+}
+
+fun HTML.innsiktHeader(tittel: String) = head {
+    title { +(tittel) }
+    styleLink("/static/bootstrap.css")
+    script(src = "/static/script.js") {}
+}
+
+
+fun UL.listeelement(innhold: String) = li {
+    classes = setOf("list-group-item")
+    +innhold
 }

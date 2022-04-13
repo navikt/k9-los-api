@@ -17,7 +17,7 @@ open class OppgaveTjenesteV2(
     }
 
     fun nyeOppgaveHendelser(eksternId: String, hendelser: List<OppgaveHendelse>) {
-        log.info("Starter prosessering av hendelser ${hendelser.map { it.javaClass }}")
+        log.info("Starter prosessering av hendelser ${hendelser.map { it::class.simpleName }}")
         tm.transaction { tx ->
             val behandling = oppgaveRepository.hentBehandling(eksternId, tx)
                 ?: hendelser.hentBehandlingEndretEvent()?.tilBehandling()
