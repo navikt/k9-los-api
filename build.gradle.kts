@@ -1,8 +1,6 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-val dusseldorfKtorVersion = "1.5.3.d73b2af"
-val ktorVersion = "1.5.3"
 val mainClass = "no.nav.k9.K9LosKt"
 val kafkaVersion = "2.8.1" // Alligned med version fra kafka-embedded-env
 val hikariVersion = "5.0.1"
@@ -12,6 +10,12 @@ val kafkaEmbeddedEnvVersion = "2.8.1"
 val koinVersion = "2.2.2"
 val kotliqueryVersion = "1.7.0"
 val k9SakVersion = "3.2.57"
+val fuelVersion = "2.3.1"
+
+val dusseldorfKtorVersion = "3.1.6.8-248832c"
+// Disse bør henge sammen med https://github.com/navikt/dusseldorf-ktor/blob/master/pom.xml#L36
+val kotlinVersion = "1.6.20"
+val ktorVersion = "1.6.8"
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.6.20"
@@ -61,6 +65,10 @@ dependencies {
     implementation(enforcedPlatform( "com.fasterxml.jackson:jackson-bom:2.13.2.20220328" ))
     implementation("info.debatty:java-string-similarity:2.0.0")
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
+    implementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
+    implementation("com.github.kittinunf.fuel:fuel-coroutines:$fuelVersion"){
+        exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
+    }
 
     // DI
     implementation("org.koin:koin-core:$koinVersion")
@@ -80,6 +88,7 @@ dependencies {
 
     testImplementation("org.testcontainers:postgresql:1.16.3")
     testImplementation("org.koin:koin-test:$koinVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
 
     implementation(kotlin("stdlib-jdk8"))
     implementation("javax.ws.rs:javax.ws.rs-api:2.1.1")

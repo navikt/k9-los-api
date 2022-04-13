@@ -1,21 +1,49 @@
 package no.nav.k9.tjenester.mock
 
-import io.ktor.application.*
-import io.ktor.html.*
-import io.ktor.http.*
-import io.ktor.locations.*
-import io.ktor.request.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.application.call
+import io.ktor.html.respondHtml
+import io.ktor.http.HttpStatusCode
+import io.ktor.request.receive
+import io.ktor.response.respond
+import io.ktor.routing.Route
+import io.ktor.routing.get
+import io.ktor.routing.post
 import kotlinx.coroutines.runBlocking
-import kotlinx.html.*
+import kotlinx.html.InputType
+import kotlinx.html.a
+import kotlinx.html.body
+import kotlinx.html.button
+import kotlinx.html.classes
+import kotlinx.html.div
+import kotlinx.html.h1
+import kotlinx.html.head
+import kotlinx.html.id
+import kotlinx.html.input
+import kotlinx.html.onChange
+import kotlinx.html.onClick
+import kotlinx.html.option
+import kotlinx.html.p
+import kotlinx.html.script
+import kotlinx.html.select
+import kotlinx.html.span
+import kotlinx.html.styleLink
+import kotlinx.html.table
+import kotlinx.html.td
+import kotlinx.html.textInput
+import kotlinx.html.thead
+import kotlinx.html.title
+import kotlinx.html.tr
 import no.nav.k9.KoinProfile
 import no.nav.k9.aksjonspunktbehandling.K9punsjEventHandler
 import no.nav.k9.aksjonspunktbehandling.K9sakEventHandler
 import no.nav.k9.domene.modell.AksjonspunktDefWrapper
 import no.nav.k9.domene.modell.BehandlingStatus
 import no.nav.k9.domene.modell.Fagsystem
-import no.nav.k9.domene.repository.*
+import no.nav.k9.domene.repository.BehandlingProsessEventK9Repository
+import no.nav.k9.domene.repository.OppgaveKøRepository
+import no.nav.k9.domene.repository.OppgaveRepository
+import no.nav.k9.domene.repository.PunsjEventK9Repository
+import no.nav.k9.domene.repository.SaksbehandlerRepository
 import no.nav.k9.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.integrasjon.kafka.dto.EventHendelse
 import no.nav.k9.integrasjon.kafka.dto.PunsjEventDto
@@ -38,9 +66,7 @@ fun Route.MockGrensesnitt() {
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
     val profile by inject<KoinProfile>()
 
-    class main
-
-    get { _: main ->
+    get {
         if (profile == KoinProfile.PROD) {
             call.respond(HttpStatusCode.NotFound)
         }
@@ -121,9 +147,7 @@ fun Route.MockGrensesnitt() {
         }
     }
 
-    @Location("/toggleaksjonspunkt")
-    class aksjonspunkt
-    post { _: aksjonspunkt ->
+    post("/toggleaksjonspunkt") {
         if (profile == KoinProfile.PROD) {
             call.respond(HttpStatusCode.NotFound)
         }
@@ -206,10 +230,7 @@ fun Route.MockGrensesnitt() {
         call.respond(HttpStatusCode.Accepted)
     }
 
-    @Location("/10000AktiveEventer")
-    class aksjonspunkt2
-
-    get { _: aksjonspunkt2 ->
+    get("/10000AktiveEventer") {
         if (profile == KoinProfile.PROD) {
             call.respond(HttpStatusCode.NotFound)
         }
@@ -240,10 +261,7 @@ fun Route.MockGrensesnitt() {
         call.respond(HttpStatusCode.Accepted)
     }
 
-    @Location("/endreBehandling")
-    class endreBehandling
-
-    get { _: endreBehandling ->
+    get("/endreBehandling") {
         if (profile == KoinProfile.PROD) {
             call.respond(HttpStatusCode.NotFound)
         }

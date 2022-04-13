@@ -1,10 +1,11 @@
 package no.nav.k9.tjenester.avdelingsleder
 
-import io.ktor.application.*
-import io.ktor.locations.*
-import io.ktor.request.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.application.call
+import io.ktor.request.receive
+import io.ktor.response.respond
+import io.ktor.routing.Route
+import io.ktor.routing.get
+import io.ktor.routing.post
 import no.nav.k9.integrasjon.rest.RequestContextService
 import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveId
 import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveTjeneste
@@ -16,61 +17,46 @@ internal fun Route.AvdelingslederApis() {
     val avdelingslederTjeneste by inject<AvdelingslederTjeneste>()
     val requestContextService by inject<RequestContextService>()
 
-    @Location("/oppgaver/antall-totalt")
-    class hentAntallOppgaverTotalt
-    get { _: hentAntallOppgaverTotalt ->
+    get("/oppgaver/antall-totalt") {
         requestContextService.withRequestContext(call) {
             call.respond(oppgaveTjeneste.hentAntallOppgaverTotalt())
         }
     }
 
-    @Location("/oppgaver/antall")
-    class hentAntallOppgaver
-    get { _: hentAntallOppgaver ->
+    get("/oppgaver/antall") {
         requestContextService.withRequestContext(call) {
             val uuid = call.parameters["id"]
             call.respond(oppgaveTjeneste.hentAntallOppgaver(oppgavekøId = UUID.fromString(uuid), taMedReserverte = true))
         }
     }
 
-    @Location("/saksbehandlere")
-    class hentSaksbehandlere
-    get { _: hentSaksbehandlere ->
+    get("/saksbehandlere") {
         requestContextService.withRequestContext(call) {
             call.respond(avdelingslederTjeneste.hentSaksbehandlere())
         }
     }
 
-    @Location("/saksbehandlere/sok")
-    class søkSaksbehandler
-    post { _: søkSaksbehandler ->
+    post("/saksbehandlere/sok") {
         requestContextService.withRequestContext(call) {
             val epost = call.receive<EpostDto>()
             call.respond(avdelingslederTjeneste.søkSaksbehandler(epost))
         }
     }
 
-
-    @Location("/saksbehandlere/slett")
-    class slettSaksbehandler
-    post { _: slettSaksbehandler ->
+    post("/saksbehandlere/slett") {
         requestContextService.withRequestContext(call) {
             val epost = call.receive<EpostDto>()
             call.respond(avdelingslederTjeneste.fjernSaksbehandler(epost.epost))
         }
     }
 
-    @Location("/reservasjoner")
-    class hentReservasjoner
-    get { _: hentReservasjoner ->
+    get("/reservasjoner") {
         requestContextService.withRequestContext(call) {
             call.respond(avdelingslederTjeneste.hentAlleReservasjoner())
         }
     }
 
-    @Location("/reservasjoner/opphev")
-    class opphevReservasjon
-    post { _: opphevReservasjon ->
+    post("/reservasjoner/opphev") {
         requestContextService.withRequestContext(call) {
             val params = call.receive<OppgaveId>()
             call.respond(avdelingslederTjeneste.opphevReservasjon(UUID.fromString(params.oppgaveId)))

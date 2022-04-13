@@ -1,10 +1,10 @@
 package no.nav.k9.tjenester.fagsak
 
-import io.ktor.application.*
-import io.ktor.locations.*
-import io.ktor.request.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.application.call
+import io.ktor.request.receive
+import io.ktor.response.respond
+import io.ktor.routing.Route
+import io.ktor.routing.post
 import no.nav.k9.Configuration
 import no.nav.k9.KoinProfile
 import no.nav.k9.integrasjon.rest.RequestContextService
@@ -17,9 +17,7 @@ internal fun Route.FagsakApis() {
     val configuration by inject<Configuration>()
     val requestContextService by inject<RequestContextService>()
 
-    @Location("/sok")
-    class søkFagsaker
-    post { _: søkFagsaker ->
+    post("/sok") {
         if (KoinProfile.LOCAL == configuration.koinProfile()) {
             call.respond(SokeResultatDto(true, null, mutableListOf()))
         } else {
@@ -30,9 +28,7 @@ internal fun Route.FagsakApis() {
         }
     }
 
-    @Location("/aktoerid-sok")
-    class søkFagsakerMedAktørId
-    post { _: søkFagsakerMedAktørId ->
+    post("/aktoerid-sok") {
         requestContextService.withRequestContext(call) {
             val param = call.receive<AktoerIdDto>()
             call.respond(oppgaveTjeneste.finnOppgaverBasertPåAktørId(param.aktoerId))
