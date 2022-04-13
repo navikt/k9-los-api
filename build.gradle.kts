@@ -9,7 +9,7 @@ val vaultJdbcVersion = "1.3.9"
 val kafkaEmbeddedEnvVersion = "2.8.1"
 val koinVersion = "2.2.2"
 val kotliqueryVersion = "1.7.0"
-val k9SakVersion = "3.2.57"
+val k9SakVersion = "3.2.59"
 val fuelVersion = "2.3.1"
 
 val dusseldorfKtorVersion = "3.1.6.8-248832c"
