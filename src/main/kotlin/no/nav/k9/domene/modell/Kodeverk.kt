@@ -17,7 +17,8 @@ enum class AndreKriterierType(override val kode: String, override val navn: Stri
     ENDELIG_BEH_AV_INNTEKTSMELDING("ENDELIG_BEH_AV_INNTEKTSMELDING", "Endelig beh av inntektsmelding"),
     VENTER_PÅ_ANNEN_PARTS_SAK("VENTER_PÅ_ANNEN_PARTS_SAK", "Venter på annen parts sak"),
     FORLENGELSER_FRA_INFOTRYGD("FORLENGELSER_FRA_INFOTRYGD", "Forlengelser fra infotrygd"),
-    FORLENGELSER_FRA_INFOTRYGD_AKSJONSPUNKT("FORLENGELSER_FRA_INFOTRYGD_AKSJONSPUNKT", "Forlengelser fra infotrygd aksjonspunkt");
+    FORLENGELSER_FRA_INFOTRYGD_AKSJONSPUNKT("FORLENGELSER_FRA_INFOTRYGD_AKSJONSPUNKT", "Forlengelser fra infotrygd aksjonspunkt"),
+    AARSKVANTUM("AARSKVANTUM", "Årskvantum");
 
     override val kodeverk = "ANDRE_KRITERIER_TYPE"
 

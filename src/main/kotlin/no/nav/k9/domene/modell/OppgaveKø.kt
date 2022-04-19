@@ -1,9 +1,14 @@
 package no.nav.k9.domene.modell
 
-import no.nav.k9.aksjonspunktbehandling.K9sakEventHandler
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.repository.ReservasjonRepository
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.*
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.AUTO_VENTER_PÅ_KOMPLETT_SØKNAD
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.AVKLAR_KOMPLETT_NOK_FOR_BEREGNING
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.ENDELIG_AVKLAR_KOMPLETT_NOK_FOR_BEREGNING
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.OVERSTYR_BEREGNING_INPUT
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.TRENGER_SØKNAD_FOR_INFOTRYGD_PERIODE
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.TRENGER_SØKNAD_FOR_INFOTRYGD_PERIODE_ANNEN_PART
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.VENT_ANNEN_PSB_SAK
 import no.nav.k9.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
@@ -160,6 +165,11 @@ data class OppgaveKø(
 
         if (oppgave.avklarMedlemskap && kriterier.map { it.andreKriterierType }
                 .contains(AndreKriterierType.AVKLAR_MEDLEMSKAP)) {
+            return true
+        }
+
+        if (oppgave.årskvantum && kriterier.map { it.andreKriterierType }
+                .contains(AndreKriterierType.AARSKVANTUM)) {
             return true
         }
 
