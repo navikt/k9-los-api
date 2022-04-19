@@ -15,8 +15,7 @@ val dusseldorfKtorVersion = "3.1.6.8-248832c"
 // Disse bør henge sammen med https://github.com/navikt/dusseldorf-ktor/blob/master/pom.xml#L36
 val kotlinVersion = "1.6.20"
 val ktorVersion = "1.6.8"
-val kafkaEmbeddedEnvVersion = "2.8.1"
-val kafkaVersion = "2.8.1" // Alligned med version fra kafka-embedded-env
+val kafkaVersion = "2.8.1"
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.6.20"
@@ -78,7 +77,7 @@ dependencies {
     // Test
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.25")
     testImplementation("org.apache.kafka:kafka-clients:$kafkaVersion")
-    testImplementation("no.nav:kafka-embedded-env:$kafkaEmbeddedEnvVersion")
+
     testImplementation("no.nav.helse:dusseldorf-test-support:$dusseldorfKtorVersion")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
     testImplementation("io.mockk:mockk:1.12.3")

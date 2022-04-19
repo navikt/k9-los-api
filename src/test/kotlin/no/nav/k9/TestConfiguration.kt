@@ -2,7 +2,6 @@ package no.nav.k9
 
 import com.github.kittinunf.fuel.httpGet
 import com.github.tomakehurst.wiremock.WireMockServer
-import no.nav.common.KafkaEnvironment
 import no.nav.helse.dusseldorf.testsupport.jws.ClientCredentials
 import no.nav.k9.wiremocks.getTpsProxyUrl
 import org.json.JSONObject
@@ -11,7 +10,6 @@ object TestConfiguration {
 
     fun asMap(
         wireMockServer: WireMockServer? = null,
-        kafkaEnvironment: KafkaEnvironment? = null,
         port: Int = 8020,
         tpsProxyBaseUrl: String? = wireMockServer?.getTpsProxyUrl()
     ): Map<String, String> {
@@ -42,9 +40,9 @@ object TestConfiguration {
         map["nav.auth.clients.1.certificate_hex_thumbprint"] = ClientCredentials.ClientA.certificateHexThumbprint
         map["nav.auth.clients.1.discovery_endpoint"] = "http://azure-mock:8100/v2.0/.well-known/openid-configuration"
 
-        map["nav.kafka.bootstrap_servers"] = kafkaEnvironment?.brokersURL ?: "vtp:9092"
-        map["nav.kafka.username"] = kafkaEnvironment?.username() ?: "vtp"
-        map["nav.kafka.password"] = kafkaEnvironment?.password() ?: "vtp"
+        map["nav.kafka.bootstrap_servers"] = "vtp:9092"
+        map["nav.kafka.username"] = "vtp"
+        map["nav.kafka.password"] = "vtp"
         map["nav.kafka.unready_after_stream_stopped_in.amount"] = "1010"
         map["nav.kafka.unready_after_stream_stopped_in.unit"] = "SECONDS"
         map["nav.trust_store.path"] = "${System.getProperty("user.home")}/.modig/truststore.jks"
