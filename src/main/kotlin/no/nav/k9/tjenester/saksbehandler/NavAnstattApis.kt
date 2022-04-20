@@ -26,9 +26,11 @@ internal fun Route.NavAnsattApis() {
         if (configuration.koinProfile() != KoinProfile.LOCAL) {
             requestContextService.withRequestContext(call) {
                 val token = call.idToken()
+                val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
                 val innloggetNavAnsattDto = InnloggetNavAnsattDto(
                     token.getUsername(),
                     token.getName(),
+                    brukerIdent = saksbehandlerIdent,
                     kanSaksbehandle = pepClient.harBasisTilgang(),
                     kanVeilede = pepClient.harBasisTilgang(),
                     kanBeslutte = pepClient.harBasisTilgang(),
@@ -42,7 +44,7 @@ internal fun Route.NavAnsattApis() {
                 if (saksbehandlerRepository.finnSaksbehandlerMedEpost(token.getUsername()) != null) {
                     saksbehandlerRepository.addSaksbehandler(
                         Saksbehandler(
-                            brukerIdent = azureGraphService.hentIdentTilInnloggetBruker(),
+                            brukerIdent = saksbehandlerIdent,
                             navn = token.getName(),
                             epost = token.getUsername(),
                             reservasjoner = mutableSetOf(),
@@ -59,6 +61,7 @@ internal fun Route.NavAnsattApis() {
                 InnloggetNavAnsattDto(
                     "saksbehandler@nav.no",
                     "Saksbehandler Sara",
+                    "Z123456",
                     kanSaksbehandle = true,
                     kanVeilede = true,
                     kanBeslutte = true,
