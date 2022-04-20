@@ -10,12 +10,12 @@ val kotliqueryVersion = "1.7.0"
 val k9SakVersion = "3.2.59"
 val fuelVersion = "2.3.1"
 
-val dusseldorfKtorVersion = "3.1.6.8-248832c"
+val dusseldorfKtorVersion = "3.1.6.8-1a4651d"
 
 // Disse bør henge sammen med https://github.com/navikt/dusseldorf-ktor/blob/master/pom.xml#L36
 val kotlinVersion = "1.6.20"
 val ktorVersion = "1.6.8"
-val kafkaVersion = "2.8.1"
+val kafkaVersion = "3.1.0"
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.6.20"
