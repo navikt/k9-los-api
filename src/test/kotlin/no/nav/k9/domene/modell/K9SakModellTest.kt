@@ -377,39 +377,37 @@ class K9SakModellReservasjonTest {
     }
 
     @Test
-    fun `Skal fjerne reservasjon hvis alle ap er fullført for andre enn PSB`() {
-        val vurder_årskvantum = mutableMapOf(
-            "9020" to UTFO,
-            "9003" to OPPR
-        )
-        val vurder_omsorgenfor = mutableMapOf(
-            "9020" to UTFO,
-            "9003" to UTFO
-        )
-
-
-        val eventBuilder = eventBuilder(FagsakYtelseType.OMSORGSPENGER_KS)
-        val modell = kjørEventer(eventBuilder, vurder_årskvantum, vurder_omsorgenfor)
-        assertThat(modell.fikkEndretAksjonspunkt()).isTrue()
+    fun `Skal IKKE fjerne reservasjon selv om det finnes ingen aktive ikke-beslutter aksjonspunkter`() {
+        beholdeReservasjonNårIngenAktiveAP(FagsakYtelseType.PLEIEPENGER_SYKT_BARN)
+        beholdeReservasjonNårIngenAktiveAP(FagsakYtelseType.OMSORGSPENGER)
 
     }
 
-    @Test
-    fun `Skal IKKE fjerne reservasjon selv om alle aktive ikke-beslutter aksjonspunkter for PSB er fullført`() {
-        val vurder_årskvantum = mutableMapOf(
-            "9020" to UTFO,
-            "9003" to OPPR
-        )
-        val vurder_omsorgenfor = mutableMapOf(
-            "9020" to UTFO,
-            "9003" to UTFO
+    private fun beholdeReservasjonNårIngenAktiveAP(fagsakYtelseType: FagsakYtelseType) {
+        val venter_soknad = mutableMapOf(
+            "7003" to OPPR
         )
 
+        val vurder_varighet_SN = mutableMapOf(
+            "5039" to OPPR,
+            "7003" to UTFO
+        )
 
-        val eventBuilder = eventBuilder(FagsakYtelseType.PLEIEPENGER_SYKT_BARN)
-        val modell = kjørEventer(eventBuilder, vurder_årskvantum, vurder_omsorgenfor)
+        val feridig_5039 = mutableMapOf(
+            "5039" to UTFO,
+            "7003" to UTFO
+        )
+
+        val omsEventBuilder = eventBuilder(fagsakYtelseType)
+        val eventer = mutableListOf<BehandlingProsessEventDto>()
+        val modell = K9SakModell(eventer)
+
+        eventer.add(omsEventBuilder(venter_soknad))
+        eventer.add(omsEventBuilder(vurder_varighet_SN))
         assertThat(modell.fikkEndretAksjonspunkt()).isFalse()
 
+        eventer.add(omsEventBuilder(feridig_5039))
+        assertThat(modell.fikkEndretAksjonspunkt()).isFalse()
     }
 
     @Test

@@ -347,21 +347,7 @@ data class K9SakModell(
 
         if (beslutterFerdig) return true
 
-        if (sisteEvent().ytelseTypeKode == FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode) {
-            // skal fortsette og ligge reservert
-            return false
-        } else {
-
-            val forrigeAksjonspunkter = forrigeEvent.tilAksjonspunkter().hentAktive()
-            val nåværendeAksjonspunkter = sisteEvent().tilAksjonspunkter().hentAktive()
-
-            if (sisteEvent().tilAktiveAksjonspunkter().hentLengde() > 0
-                && !sisteEvent().tilAktiveAksjonspunkter().tilBeslutter() // jeg tror denne sjekken er overflødig og til og med feil pga tidligere beslutter sjekker.
-            ) {
-                return false
-            }
-            return forrigeAksjonspunkter != nåværendeAksjonspunkter
-        }
+        return false
     }
 
     // Array med alle versjoner av modell basert på eventene, brukes når man skal spille av eventer
