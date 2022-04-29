@@ -1,0 +1,19 @@
+package no.nav.k9.tjenester.avdelingsleder.nokkeltall
+
+import io.ktor.http.*
+import org.junit.Test
+import kotlin.test.assertFailsWith
+
+internal class DataeksportApisKtTest {
+
+    @Test
+    fun `Saksbehandler er ikke et velgbart felt grunnet personvern`() {
+        val parametre = ParametersBuilder()
+            .apply { append("filtre", "${VelgbartHistorikkfelt.DATO},${VelgbartHistorikkfelt.SAKSBEHANDLER}") }
+            .build()
+
+        assertFailsWith<UnsupportedOperationException> {
+            hentFiltre(parametre)
+        }
+    }
+}
