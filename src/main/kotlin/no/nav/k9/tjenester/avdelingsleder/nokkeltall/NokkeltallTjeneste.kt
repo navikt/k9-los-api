@@ -92,9 +92,10 @@ class NokkeltallTjeneste constructor(
     }
 
     fun hentFerdigstilteOppgaverHistorikk(
-        vararg historikkType: VelgbartHistorikkfelt
+        vararg historikkType: VelgbartHistorikkfelt,
+        antallDagerHistorikk: Int = StatistikkRepository.SISTE_8_UKER_I_DAGER
     ): List<HistorikkElementAntall> {
-        return statistikkRepository.hentFerdigstiltOppgavehistorikk(antallDagerHistorikk = StatistikkRepository.SISTE_8_UKER_I_DAGER)
+        return statistikkRepository.hentFerdigstiltOppgavehistorikk(antallDagerHistorikk = antallDagerHistorikk)
             .filterNot { EnheterSomSkalUtelatesFraStatistikk.contains(it.behandlendeEnhet) }
             .feltSelector(*historikkType)
     }
