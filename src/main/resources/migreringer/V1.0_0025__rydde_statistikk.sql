@@ -1,0 +1,1 @@
+UPDATE oppgave_v2 SET ferdigstilt_enhet = 'UKJENT' WHERE ferdigstilt_enhet LIKE '2103%'

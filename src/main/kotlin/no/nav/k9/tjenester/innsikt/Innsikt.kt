@@ -9,7 +9,7 @@ import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.modell.BehandlingStatus
 import no.nav.k9.domene.modell.OppgaveKø
 import no.nav.k9.domene.repository.*
-import no.nav.k9.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste.Companion.EnheterSomSkalUtelatesFraStatistikk
+import no.nav.k9.tjenester.avdelingsleder.nokkeltall.EnheterSomSkalUtelatesFraLos
 import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
 
@@ -192,7 +192,7 @@ fun Route.innsiktGrensesnitt() {
         get ("/ferdigstilt/{behandlendeEnhet}") {
             val behandlendeEnhet = call.parameters["behandlendeEnhet"]
             val ferdigstilteOppgaver = statistikkRepository.hentFerdigstiltOppgavehistorikk(55)
-                .filterNot { EnheterSomSkalUtelatesFraStatistikk.contains(it.behandlendeEnhet) }
+                .filter { EnheterSomSkalUtelatesFraLos.sjekkKanBrukes(it.behandlendeEnhet) }
                 .filter { it.behandlendeEnhet == behandlendeEnhet }
             call.respondHtml {
                 innsiktHeader("Ferdigstilte oppgaver")
