@@ -7,13 +7,28 @@ import no.nav.k9.KoinProfile
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.lager.oppgave.OppgaveMedId
 import no.nav.k9.domene.lager.oppgave.Reservasjon
-import no.nav.k9.domene.modell.*
-import no.nav.k9.domene.repository.*
+import no.nav.k9.domene.modell.BehandlingStatus
+import no.nav.k9.domene.modell.BehandlingType
+import no.nav.k9.domene.modell.FagsakYtelseType
+import no.nav.k9.domene.modell.Fagsystem
+import no.nav.k9.domene.modell.KøSortering
+import no.nav.k9.domene.modell.OppgaveKø
+import no.nav.k9.domene.modell.Saksbehandler
+import no.nav.k9.domene.repository.OppgaveKøRepository
+import no.nav.k9.domene.repository.OppgaveRepository
+import no.nav.k9.domene.repository.ReservasjonRepository
+import no.nav.k9.domene.repository.SaksbehandlerRepository
+import no.nav.k9.domene.repository.StatistikkRepository
 import no.nav.k9.integrasjon.abac.IPepClient
 import no.nav.k9.integrasjon.azuregraph.IAzureGraphService
 import no.nav.k9.integrasjon.omsorgspenger.IOmsorgspengerService
 import no.nav.k9.integrasjon.omsorgspenger.OmsorgspengerSakFnrDto
-import no.nav.k9.integrasjon.pdl.*
+import no.nav.k9.integrasjon.pdl.IPdlService
+import no.nav.k9.integrasjon.pdl.PersonPdl
+import no.nav.k9.integrasjon.pdl.PersonPdlResponse
+import no.nav.k9.integrasjon.pdl.fnr
+import no.nav.k9.integrasjon.pdl.kjoenn
+import no.nav.k9.integrasjon.pdl.navn
 import no.nav.k9.integrasjon.rest.idToken
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleOppgaverHistorikk
@@ -754,11 +769,8 @@ class OppgaveTjeneste constructor(
 
                     val person = pdlService.person(oppgave.aktorId)
 
-                    val navn = if (KoinProfile.PREPROD == configuration.koinProfile()) {
-                        preprodNavn(oppgave)
-                    } else {
-                        if (person.person != null) person.person.navn() else "Uten navn"
-                    }
+                    val navn = if (person.person != null) person.person.navn() else "Uten navn"
+
                     list.add(
                         lagOppgaveDto(oppgave, navn, person.person)
                     )
