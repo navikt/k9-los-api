@@ -14,9 +14,6 @@ class NokkeltallTjeneste constructor(
     private val oppgaveRepository: OppgaveRepository,
     private val statistikkRepository: StatistikkRepository
 ) {
-    companion object {
-        val EnheterSomSkalUtelatesFraStatistikk = setOf("2103")
-    }
 
     suspend fun hentOppgaverUnderArbeid(): List<AlleOppgaverDto> {
         return oppgaveRepository.hentAlleOppgaverUnderArbeid()
@@ -96,14 +93,14 @@ class NokkeltallTjeneste constructor(
         antallDagerHistorikk: Int = StatistikkRepository.SISTE_8_UKER_I_DAGER
     ): List<HistorikkElementAntall> {
         return statistikkRepository.hentFerdigstiltOppgavehistorikk(antallDagerHistorikk = antallDagerHistorikk)
-            .filterNot { EnheterSomSkalUtelatesFraStatistikk.contains(it.behandlendeEnhet) }
+            .filter { EnheterSomSkalUtelatesFraLos.sjekkKanBrukes(it.behandlendeEnhet) }
             .feltSelector(*historikkType)
     }
 
 
     fun hentFerdigstilteBehandlingerPrEnhetHistorikk(): Map<LocalDate, Map<String, Int>> {
         return statistikkRepository.hentFerdigstiltOppgavehistorikk(antallDagerHistorikk = StatistikkRepository.SISTE_8_UKER_I_DAGER)
-            .filterNot { EnheterSomSkalUtelatesFraStatistikk.contains(it.behandlendeEnhet) }
+            .filter { EnheterSomSkalUtelatesFraLos.sjekkKanBrukes(it.behandlendeEnhet)}
             .groupBy { it.dato }
             .mapValues { (_, ferdigstiltOppgave) ->
                 ferdigstiltOppgave.groupBy { it.behandlendeEnhet!! }.mapValues { it.value.size }

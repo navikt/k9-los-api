@@ -14,6 +14,7 @@ import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
 import no.nav.k9.aksjonspunktbehandling.objectMapper
 import no.nav.k9.integrasjon.rest.idToken
+import no.nav.k9.tjenester.avdelingsleder.nokkeltall.EnheterSomSkalUtelatesFraLos
 import no.nav.k9.tjenester.saksbehandler.IIdToken
 import no.nav.k9.tjenester.saksbehandler.IdToken
 import no.nav.k9.utils.Cache
@@ -96,6 +97,7 @@ open class AzureGraphService constructor(
     override suspend fun hentEnhetForBrukerMedSystemToken(brukernavn: String): String? {
         return try {
             hentEnhetForBruker(brukernavn = brukernavn)
+                .takeIf { EnheterSomSkalUtelatesFraLos.sjekkKanBrukes(it) }
         } catch (e: Exception) {
             log.warn("Klarte ikke å hente behandlende enhet for $brukernavn", e)
             null

@@ -1,5 +1,11 @@
 package no.nav.k9.tjenester.avdelingsleder.nokkeltall
 
+import assertk.assertThat
+import assertk.assertions.contains
+import assertk.assertions.containsOnly
+import assertk.assertions.doesNotContain
+import io.mockk.every
+import io.mockk.mockk
 import no.nav.k9.AbstractPostgresTest
 import no.nav.k9.buildAndTestConfig
 import no.nav.k9.domene.lager.oppgave.Oppgave
@@ -10,6 +16,7 @@ import no.nav.k9.domene.modell.BehandlingStatus
 import no.nav.k9.domene.modell.BehandlingType
 import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.domene.repository.OppgaveRepository
+import no.nav.k9.domene.repository.StatistikkRepository
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import org.junit.Rule
 import org.junit.Test
@@ -26,9 +33,9 @@ class NokkeltallTjenesteTest : KoinTest, AbstractPostgresTest()  {
         modules(buildAndTestConfig(dataSource))
     }
 
-    val DAG1: LocalDate = LocalDate.now().minusDays(2)
-    val DAG2: LocalDate = LocalDate.now().minusDays(1)
-    val DAG3: LocalDate = LocalDate.now()
+    val DAG1 = LocalDate.now().minusDays(2)
+    val DAG2 = LocalDate.now().minusDays(1)
+    val DAG3 = LocalDate.now()
 
     @Test
     fun `Hent oppgaver på vent - 1 oppgave uten aksjonspunkt skal gi 0 oppgaver på vent`() {
@@ -69,6 +76,31 @@ class NokkeltallTjenesteTest : KoinTest, AbstractPostgresTest()  {
         assert(oppgaverPåVent[0].antall == 1)
     }
 
+    @Test
+    fun `Hent løste aksjonspunkter bortsett fra de med behandlende enhet 2103`() {
+        val statistikkRepository = mockk<StatistikkRepository>()
+        val nøkkeltallTjeneste = NokkeltallTjeneste(mockk(), statistikkRepository)
+
+        val ferdigstiltBehandling = FerdigstiltBehandling(
+            dato = LocalDate.now(),
+            fagsakYtelseType = "PSB",
+            behandlingType = "BT-002",
+            fagsystemType = "K9SAK",
+            saksbehandler = "Z12345",
+            behandlendeEnhet = "4565 OK AVDELING"
+        )
+
+        every { statistikkRepository.hentFerdigstiltOppgavehistorikk(any()) } returns listOf(
+            ferdigstiltBehandling,
+            ferdigstiltBehandling.copy(behandlendeEnhet = "2103 VIKEN")
+        )
+
+        val ferdigstilteoppgaver = nøkkeltallTjeneste.hentFerdigstilteBehandlingerPrEnhetHistorikk()
+
+        assertThat(ferdigstilteoppgaver).containsOnly(ferdigstiltBehandling.dato to mapOf("4565 OK AVDELING" to 1))
+        assertThat(ferdigstilteoppgaver).doesNotContain(ferdigstiltBehandling.dato to mapOf("2103 VIKEN" to 1))
+    }
+
     private fun opprettOppgave(aksjonspunkter: Map<String, String>) {
         val oppgaveRepo = get<OppgaveRepository>()
         val oppgave = mockOppgave().copy(aksjonspunkter = Aksjonspunkter(aksjonspunkter, aksjonspunkter.map { AksjonspunktTilstand(it.key, AksjonspunktStatus.fraKode(it.value)) }))
@@ -105,5 +137,4 @@ class NokkeltallTjenesteTest : KoinTest, AbstractPostgresTest()  {
             avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false
         )
     }
-
 }
