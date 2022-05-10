@@ -31,7 +31,8 @@ data class OppgaveKø(
     var saksbehandlere: MutableList<Saksbehandler>,
     var skjermet: Boolean = false,
     var oppgaverOgDatoer: MutableList<OppgaveIdMedDato> = mutableListOf(),
-    val kode6: Boolean = false
+    val kode6: Boolean = false,
+    var filtreringFeilutbetaling: Intervall<Long>? = null
 ) {
     companion object {
         private val log = LoggerFactory.getLogger(OppgaveKø::class.java)
@@ -98,6 +99,12 @@ data class OppgaveKø(
         }
 
         if (oppgave.kode6 != this.kode6) {
+            return false
+        }
+
+        if (oppgave.feilutbetaltBeløp != null && filtreringFeilutbetaling != null
+            && filtreringFeilutbetaling!!.erUtenfor(oppgave.feilutbetaltBeløp)
+        ) {
             return false
         }
 

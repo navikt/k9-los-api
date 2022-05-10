@@ -2,10 +2,14 @@ package no.nav.k9.domene.modell
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonFormat
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonValue
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
 import no.nav.k9.domene.lager.oppgave.Kodeverdi
+import no.nav.k9.domene.modell.KøKritererTypeValidatorer.HeltallRangeValidator
+import no.nav.k9.domene.modell.KøKritererTypeValidatorer.KodeverkValidator
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 enum class AndreKriterierType(override val kode: String, override val navn: String) : Kodeverdi {
@@ -30,6 +34,49 @@ enum class AndreKriterierType(override val kode: String, override val navn: Stri
             return values().find { it.kode == kode } ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
         }
     }
+}
+
+// Tanken er på sikt å erstatte AndreKriterierType og SorteringDatoDto og evt. andre filtereringsmuligheter med denne
+@JsonFormat(shape = JsonFormat.Shape.OBJECT)
+@JsonInclude(value = JsonInclude.Include.NON_ABSENT, content = JsonInclude.Include.NON_EMPTY)
+enum class KøKriterierType(
+    override val kode: String,
+    override val navn: String,
+    val felttype: KøKritererFeltType,
+    val felttypeKodeverk: String? = null,
+    @JsonIgnore val validator: KøKritererTypeValidator
+) : Kodeverdi {
+    FEILUTBETALING(
+        kode = "FEILUTBETALING",
+        navn = "Feilutbetalt beløp",
+        felttype = KøKritererFeltType.BELØP,
+        validator = HeltallRangeValidator
+    ),
+    BEHANDLINGTYPE(
+        kode = "BEHANDLINGTYPE",
+        navn = "Behandling type",
+        felttype = KøKritererFeltType.KODEVERK,
+        felttypeKodeverk = BehandlingType::class.java.simpleName,
+        validator = KodeverkValidator { BehandlingType.fraKode(it) }
+    );
+
+    companion object {
+        private val KODER = values().associateBy { it.kode }
+
+        @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
+        @JvmStatic
+        fun fraKode(kode: String): KøKriterierType {
+            return KODER[kode] ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
+        }
+    }
+
+    override val kodeverk = "KØ_KRITERIER_TYPE"
+
+}
+
+@JsonFormat(shape = JsonFormat.Shape.OBJECT)
+enum class KøKritererFeltType(@JsonValue val kode: String) {
+    BELØP("BELOP"), KODEVERK("KODEVERK")
 }
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)

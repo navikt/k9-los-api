@@ -6,6 +6,7 @@ import no.nav.k9.domene.modell.BehandlingStatus
 import no.nav.k9.domene.modell.BehandlingType
 import no.nav.k9.domene.modell.FagsakStatus
 import no.nav.k9.domene.modell.FagsakYtelseType
+import no.nav.k9.domene.modell.KøKriterierType
 import no.nav.k9.domene.modell.KøSortering
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.Venteårsak
 
@@ -26,6 +27,7 @@ class HentKodeverkTjeneste  {
         koder[AndreKriterierType::class.java.simpleName] = AndreKriterierType.values().asList()
         koder[BehandlingStatus::class.java.simpleName] = BehandlingStatus.values().asList()
         koder[Venteårsak::class.java.simpleName] = Venteårsak.values().asList()
+        koder[KøKriterierType::class.java.simpleName] = KøKriterierType.values().asList()
         return koder
     }
 }

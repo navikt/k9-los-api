@@ -5,6 +5,8 @@ import no.nav.k9.KoinProfile
 import no.nav.k9.domene.lager.oppgave.Reservasjon
 import no.nav.k9.domene.modell.Enhet
 import no.nav.k9.domene.modell.FagsakYtelseType
+import no.nav.k9.domene.modell.Intervall
+import no.nav.k9.domene.modell.KøKriterierType
 import no.nav.k9.domene.modell.KøSortering
 import no.nav.k9.domene.modell.OppgaveKø
 import no.nav.k9.domene.modell.Saksbehandler
@@ -16,6 +18,7 @@ import no.nav.k9.integrasjon.abac.IPepClient
 import no.nav.k9.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
 import no.nav.k9.tjenester.avdelingsleder.oppgaveko.BehandlingsTypeDto
 import no.nav.k9.tjenester.avdelingsleder.oppgaveko.IdDto
+import no.nav.k9.tjenester.avdelingsleder.oppgaveko.KriteriumDto
 import no.nav.k9.tjenester.avdelingsleder.oppgaveko.KøSorteringDto
 import no.nav.k9.tjenester.avdelingsleder.oppgaveko.OppgavekøNavnDto
 import no.nav.k9.tjenester.avdelingsleder.oppgaveko.SaksbehandlerOppgavekoDto
@@ -168,8 +171,7 @@ class AvdelingslederTjeneste(
                         sistEndret = oppgaveKø.sistEndret,
                         skjermet = oppgaveKø.skjermet,
                         sortering = SorteringDto(oppgaveKø.sortering, oppgaveKø.fomDato, oppgaveKø.tomDato),
-                        andreKriterier = oppgaveKø.filtreringAndreKriterierType
-                    )
+                        andreKriterier = oppgaveKø.filtreringAndreKriterierType                    )
                 }
         }
         return map
@@ -245,6 +247,32 @@ class AvdelingslederTjeneste(
             oppgaveKø
         }
         oppgaveKøRepository.oppdaterKøMedOppgaver(UUID.fromString(datoSortering.id))
+    }
+
+    suspend fun endreKøKriterier(kriteriumDto: KriteriumDto) {
+        kriteriumDto.valider()
+        oppgaveKøRepository.lagre(UUID.fromString(kriteriumDto.id)) { oppgaveKø ->
+            if (kriteriumDto.inkluder)
+                leggTilEllerEndreKriterum(kriteriumDto, oppgaveKø!!)
+            else fjernKriterium(kriteriumDto, oppgaveKø!!)
+            oppgaveKø
+        }
+        oppgaveKøRepository.oppdaterKøMedOppgaver(UUID.fromString(kriteriumDto.id))
+    }
+
+    private fun leggTilEllerEndreKriterum(kriteriumDto: KriteriumDto, oppgaveKø: OppgaveKø) {
+        when (kriteriumDto.kriterierType) {
+            KøKriterierType.FEILUTBETALING ->
+                oppgaveKø.filtreringFeilutbetaling = Intervall(kriteriumDto.fom?.toLong(), kriteriumDto.tom?.toLong())
+            else -> throw IllegalArgumentException("Støtter ikke kriterierType=${kriteriumDto.kriterierType}")
+        }
+    }
+
+    private fun fjernKriterium(kriteriumDto: KriteriumDto, oppgaveKø: OppgaveKø) {
+        when (kriteriumDto.kriterierType) {
+            KøKriterierType.FEILUTBETALING -> oppgaveKø.filtreringFeilutbetaling = null
+            else -> throw IllegalArgumentException("Støtter ikke kriterierType=${kriteriumDto.kriterierType}")
+        }
     }
 
     suspend fun leggFjernSaksbehandlerOppgavekø(saksbehandlerKø: SaksbehandlerOppgavekoDto) {
