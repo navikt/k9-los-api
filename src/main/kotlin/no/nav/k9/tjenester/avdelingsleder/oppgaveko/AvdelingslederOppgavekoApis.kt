@@ -96,4 +96,11 @@ fun Route.AvdelingslederOppgavekøApis() {
             call.respond(avdelingslederTjeneste.leggFjernSaksbehandlerOppgavekø(saksbehandler))
         }
     }
+
+    post("/kriterier") {
+        requestContextService.withRequestContext(call) {
+            val kriterier = call.receive<KriteriumDto>()
+            call.respond(avdelingslederTjeneste.endreKøKriterier(kriterier))
+        }
+    }
 }

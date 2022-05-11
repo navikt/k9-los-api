@@ -2,7 +2,8 @@ package no.nav.k9.domene.modell
 
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
-import org.junit.Assert
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -62,7 +63,7 @@ internal class OppgaveKøTest {
         )
 
         val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, null)
-        Assert.assertTrue(tilhørerOppgaveTilKø)
+        assertTrue(tilhørerOppgaveTilKø)
     }
 
     @Test
@@ -131,7 +132,7 @@ internal class OppgaveKøTest {
         )
 
         val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, null)
-        Assert.assertTrue(tilhørerOppgaveTilKø)
+        assertTrue(tilhørerOppgaveTilKø)
     }
 
     @Test
@@ -194,7 +195,7 @@ internal class OppgaveKøTest {
         )
 
         val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, null)
-        Assert.assertFalse(tilhørerOppgaveTilKø)
+        assertFalse(tilhørerOppgaveTilKø)
     }
 
     @Test
@@ -256,7 +257,7 @@ internal class OppgaveKøTest {
         )
 
         val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, null)
-        Assert.assertTrue(tilhørerOppgaveTilKø)
+        assertTrue(tilhørerOppgaveTilKø)
     }
 
     @Test
@@ -329,7 +330,7 @@ internal class OppgaveKøTest {
         )
 
         val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, null)
-        Assert.assertFalse(tilhørerOppgaveTilKø)
+        assertFalse(tilhørerOppgaveTilKø)
     }
 
     @Test
@@ -392,6 +393,86 @@ internal class OppgaveKøTest {
         )
 
         val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, null)
-        Assert.assertFalse(tilhørerOppgaveTilKø)
+        assertFalse(tilhørerOppgaveTilKø)
     }
+
+    @Test
+    fun `skal ta med feilutbetaling intervall`() {
+        assertTrue(feilutb_kø(50, 100).tilhørerOppgaveTilKø(feilutb_oppg(70), null))
+        assertFalse(feilutb_kø(50, 100).tilhørerOppgaveTilKø(feilutb_oppg(200), null))
+        assertTrue(feilutb_kø(50, null).tilhørerOppgaveTilKø(feilutb_oppg(200), null))
+        assertFalse(feilutb_kø(50, null).tilhørerOppgaveTilKø(feilutb_oppg(49), null))
+        assertTrue(feilutb_kø(50, 100).tilhørerOppgaveTilKø(feilutb_oppg(50), null))
+        assertTrue(feilutb_kø(50, 100).tilhørerOppgaveTilKø(feilutb_oppg(100), null))
+    }
+
+    @Test
+    fun `feilutbetaling filter i kombinasjon med andre kriterie`() {
+        assertTrue(
+            feilutb_kø(50, 100, kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
+                .tilhørerOppgaveTilKø(feilutb_oppg(70, true), null))
+
+        assertFalse(
+            feilutb_kø(50, 100, kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
+                .tilhørerOppgaveTilKø(feilutb_oppg(200, true), null))
+
+        assertFalse(
+            feilutb_kø(50, 100, kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
+                .tilhørerOppgaveTilKø(feilutb_oppg(70, false), null))
+
+    }
+
+    private fun kriterie(type: AndreKriterierType) = AndreKriterierDto("1", type, checked = true, inkluder = true)
+
+    private fun feilutb_oppg(feilutbetaling: Long, avklarMedlemskap: Boolean = false) = Oppgave(
+
+        fagsakSaksnummer = "",
+        aktorId = "273857",
+        journalpostId = "234234535",
+        behandlendeEnhet = "Enhet",
+        behandlingsfrist = LocalDateTime.now(),
+        behandlingOpprettet = LocalDateTime.now().minusDays(23),
+        forsteStonadsdag = LocalDate.now().plusDays(6),
+        behandlingStatus = BehandlingStatus.OPPRETTET,
+        behandlingType = BehandlingType.UKJENT,
+        fagsakYtelseType = FagsakYtelseType.UKJENT,
+        aktiv = true,
+        system = Fagsystem.K9SAK.kode,
+        oppgaveAvsluttet = null,
+        utfortFraAdmin = false,
+        oppgaveEgenskap = emptyList(),
+        aksjonspunkter = Aksjonspunkter(
+            mapOf(
+                "5016" to "OPPR",
+                "9005" to "UTFO"
+            )
+        ),
+        tilBeslutter = true,
+        utbetalingTilBruker = false,
+        selvstendigFrilans = false,
+        kombinert = false,
+        søktGradering = false,
+        årskvantum = false,
+        avklarArbeidsforhold = false,
+        avklarMedlemskap = avklarMedlemskap, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false,
+        eksternId = UUID.randomUUID(),
+        feilutbetaltBeløp = feilutbetaling
+    )
+
+    private fun feilutb_kø(fom: Long, tom: Long?, andreKriterierDto: AndreKriterierDto? = null ) = OppgaveKø(
+        UUID.randomUUID(),
+        "test",
+        LocalDate.now(),
+        KøSortering.FEILUTBETALT,
+        mutableListOf(),
+        mutableListOf(),
+        andreKriterierDto?.let {mutableListOf(it)} ?: mutableListOf(),
+        Enhet.NASJONAL,
+        null,
+        null,
+        mutableListOf(Saksbehandler("OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn)),
+        false,
+        mutableListOf(),
+        filtreringFeilutbetaling = Intervall(fom, tom)
+    )
 }
