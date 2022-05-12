@@ -10,6 +10,7 @@ import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.TRENGER
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.TRENGER_SØKNAD_FOR_INFOTRYGD_PERIODE_ANNEN_PART
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.VENT_ANNEN_PSB_SAK
 import no.nav.k9.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
+import no.nav.k9.tjenester.avdelingsleder.oppgaveko.KriteriumDto
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -243,6 +244,20 @@ data class OppgaveKø(
             return reservasjon.erAktiv()
         }
         return false
+    }
+
+
+    fun lagKriterier(): List<KriteriumDto> {
+        if (filtreringFeilutbetaling == null) return emptyList()
+        return listOf(
+            KriteriumDto(
+                id = id.toString(),
+                kriterierType = KøKriterierType.FEILUTBETALING,
+                inkluder = true,
+                fom = filtreringFeilutbetaling!!.fom?.toString(),
+                tom = filtreringFeilutbetaling!!.tom?.toString()
+            )
+        )
     }
 
 }

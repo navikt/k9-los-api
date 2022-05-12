@@ -4,6 +4,7 @@ import no.nav.k9.domene.modell.BehandlingType
 import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.domene.modell.Saksbehandler
 import no.nav.k9.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
+import no.nav.k9.tjenester.avdelingsleder.oppgaveko.KriteriumDto
 import java.time.LocalDate
 import java.util.*
 
@@ -17,5 +18,6 @@ class OppgavekøDto(
         var skjermet: Boolean,
         var sistEndret: LocalDate,
         var antallBehandlinger: Int,
-        var saksbehandlere: MutableList<Saksbehandler>
+        var saksbehandlere: MutableList<Saksbehandler>,
+        var kriterier: List<KriteriumDto>
 )

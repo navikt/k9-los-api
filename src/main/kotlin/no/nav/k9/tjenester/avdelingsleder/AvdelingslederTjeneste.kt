@@ -70,7 +70,8 @@ class AvdelingslederTjeneste(
         sistEndret = oppgaveKø.sistEndret,
         skjermet = oppgaveKø.skjermet,
         antallBehandlinger = oppgaveTjeneste.hentAntallOppgaver(oppgavekøId = oppgaveKø.id, taMedReserverte = true),
-        saksbehandlere = oppgaveKø.saksbehandlere
+        saksbehandlere = oppgaveKø.saksbehandlere,
+        kriterier = oppgaveKø.lagKriterier()
     )
 
     private suspend fun erOppgaveStyrer() = (pepClient.erOppgaveStyrer())
@@ -171,7 +172,9 @@ class AvdelingslederTjeneste(
                         sistEndret = oppgaveKø.sistEndret,
                         skjermet = oppgaveKø.skjermet,
                         sortering = SorteringDto(oppgaveKø.sortering, oppgaveKø.fomDato, oppgaveKø.tomDato),
-                        andreKriterier = oppgaveKø.filtreringAndreKriterierType                    )
+                        andreKriterier = oppgaveKø.filtreringAndreKriterierType,
+                        kriterier = oppgaveKø.lagKriterier()
+                    )
                 }
         }
         return map

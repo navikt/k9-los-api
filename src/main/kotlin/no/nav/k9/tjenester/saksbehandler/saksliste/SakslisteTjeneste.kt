@@ -32,7 +32,8 @@ class SakslisteTjeneste(
                     sistEndret = oppgaveKø.sistEndret,
                     skjermet = oppgaveKø.skjermet,
                     sortering = sortering,
-                    andreKriterier = oppgaveKø.filtreringAndreKriterierType
+                    andreKriterier = oppgaveKø.filtreringAndreKriterierType,
+                    kriterier = oppgaveKø.lagKriterier()
                 )
 
             }
