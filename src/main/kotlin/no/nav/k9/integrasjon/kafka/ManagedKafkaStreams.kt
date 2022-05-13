@@ -5,6 +5,7 @@ import no.nav.helse.dusseldorf.ktor.health.HealthCheck
 import no.nav.helse.dusseldorf.ktor.health.Healthy
 import no.nav.helse.dusseldorf.ktor.health.Result
 import no.nav.helse.dusseldorf.ktor.health.UnHealthy
+import org.apache.kafka.common.errors.SaslAuthenticationException
 import org.apache.kafka.common.errors.TopicAuthorizationException
 import org.apache.kafka.streams.KafkaStreams
 import org.apache.kafka.streams.Topology
@@ -95,7 +96,7 @@ internal class ManagedKafkaStreams(
 
         streams.setUncaughtExceptionHandler{ e ->
             when (e.rotfeil()) {
-                is TopicAuthorizationException -> {
+                is TopicAuthorizationException, is SaslAuthenticationException -> {
                     log.error("Kafkatråd feilet, erstatter stream med nytt tråd pga exception", e);
                     StreamsUncaughtExceptionHandler.StreamThreadExceptionResponse.REPLACE_THREAD
                 }
