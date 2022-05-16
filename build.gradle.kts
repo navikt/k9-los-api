@@ -62,7 +62,7 @@ dependencies {
     implementation("no.nav.k9.statistikk:kontrakter:2.0_20220411110858_dc06dd1")
 
     // Div
-    implementation(enforcedPlatform( "com.fasterxml.jackson:jackson-bom:2.13.2.20220328" ))
+    implementation(enforcedPlatform( "com.fasterxml.jackson:jackson-bom:2.13.3" ))
     implementation("info.debatty:java-string-similarity:2.0.0")
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
     implementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
