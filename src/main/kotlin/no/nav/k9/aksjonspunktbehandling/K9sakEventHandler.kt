@@ -52,16 +52,16 @@ class K9sakEventHandler constructor(
             k9SakModell.eventer.add(event)
             k9SakModell
         }
-        if (skalSkippe) {
-            return
-        }
-
         val oppgave = modell.oppgave(modell.sisteEvent())
         oppgaveRepository.lagre(oppgave.eksternId) {
-            tellEvent(modell, oppgave)
             statistikkProducer.send(modell)
             oppgave
         }
+        if (skalSkippe) {
+            return
+        }
+        tellEvent(modell, oppgave)
+
         if (modell.fikkEndretAksjonspunkt()) {
             log.info("Fjerner reservasjon på oppgave ${oppgave.eksternId}")
             reservasjonTjeneste.fjernReservasjon(oppgave)
