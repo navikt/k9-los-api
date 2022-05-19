@@ -2,9 +2,10 @@ package no.nav.k9.domene.modell.punsj.akjonspunkter
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonFormat
+import com.fasterxml.jackson.annotation.JsonValue
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
-enum class Aksjonspunkt(override val kode: String, override val navn: String) : Kodeverdi {
+enum class Aksjonspunkt(@JsonValue override val kode: String, override val navn: String) : Kodeverdi {
     PUNSJ("PUNSJ", "Punsj oppgave"),
     PUNSJ_HAR_UTLØPT("UTLØPT", "Utløpt oppgave"),
     VENTER_PÅ_INFORMASJON("MER_INFORMASJON", "Venter på informasjon");
