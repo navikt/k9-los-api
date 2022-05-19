@@ -2,6 +2,7 @@ package no.nav.k9.tjenester.saksbehandler.oppgave
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonFormat
+import com.fasterxml.jackson.annotation.JsonValue
 import java.time.LocalDateTime
 
 class OppgaveStatusDto(
@@ -16,7 +17,7 @@ class OppgaveStatusDto(
 )
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
-enum class Beskjed(val kode: String) {
+enum class Beskjed(@JsonValue val kode: String) {
         BESLUTTET_AV_DEG("BESLUTTET_AV_DEG");
 
         companion object {
