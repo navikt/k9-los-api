@@ -42,21 +42,23 @@ enum class AndreKriterierType(override val kode: String, override val navn: Stri
 enum class KøKriterierType(
     override val kode: String,
     override val navn: String,
-    val felttype: KøKritererFeltType,
+    val felttype: KøKriterierFeltType,
     val felttypeKodeverk: String? = null,
-    @JsonIgnore val validator: KøKritererTypeValidator
+    val skalVises: Boolean = true,
+    @JsonIgnore val validator: KøKriterierTypeValidator
 ) : Kodeverdi {
     FEILUTBETALING(
         kode = "FEILUTBETALING",
         navn = "Feilutbetalt beløp",
-        felttype = KøKritererFeltType.BELØP,
+        felttype = KøKriterierFeltType.BELØP,
         validator = HeltallRangeValidator
     ),
     BEHANDLINGTYPE(
         kode = "BEHANDLINGTYPE",
         navn = "Behandling type",
-        felttype = KøKritererFeltType.KODEVERK,
+        felttype = KøKriterierFeltType.KODEVERK,
         felttypeKodeverk = BehandlingType::class.java.simpleName,
+        skalVises = false,
         validator = KodeverkValidator { BehandlingType.fraKode(it) }
     );
 
@@ -75,7 +77,7 @@ enum class KøKriterierType(
 }
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
-enum class KøKritererFeltType(@JsonValue val kode: String) {
+enum class KøKriterierFeltType(@JsonValue val kode: String) {
     BELØP("BELOP"), KODEVERK("KODEVERK")
 }
 

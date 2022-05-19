@@ -2,24 +2,24 @@ package no.nav.k9.domene.modell
 
 import no.nav.k9.tjenester.avdelingsleder.oppgaveko.KriteriumDto
 
-fun interface KøKritererTypeValidator {
+fun interface KøKriterierTypeValidator {
     fun valider(kriteriumDto: KriteriumDto)
 }
 
 object KøKritererTypeValidatorer {
-    private val RangeValidator = KøKritererTypeValidator {
+    private val RangeValidator = KøKriterierTypeValidator {
         if (it.fom.isNullOrEmpty() && it.tom.isNullOrEmpty())
             throw IllegalArgumentException("fom og tom kan ikke være tomme for ${it.kriterierType}, men var fom=$it.fom" + " tom=${it.tom})")
     }
 
-    val HeltallRangeValidator = KøKritererTypeValidator {
+    val HeltallRangeValidator = KøKriterierTypeValidator {
         RangeValidator.valider(it)
         if (it.fom != null && it.fom.toIntOrNull() == null) throw IllegalArgumentException("fra og med må være heltall men var ${it.fom}")
         if (it.tom != null && it.tom.toIntOrNull() == null) throw IllegalArgumentException("til og med må være heltall men var ${it.tom}")
     }
 
-    val KodeverkValidator: ((Any) -> Unit) -> KøKritererTypeValidator = { kodeVerdiValidator ->
-        KøKritererTypeValidator { kriteriumDto ->
+    val KodeverkValidator: ((Any) -> Unit) -> KøKriterierTypeValidator = { kodeVerdiValidator ->
+        KøKriterierTypeValidator { kriteriumDto ->
             if (kriteriumDto.koder == null) throw IllegalArgumentException("koder må være satt men var null")
             kriteriumDto.koder.forEach { k ->
                 try { kodeVerdiValidator.invoke(k) }
