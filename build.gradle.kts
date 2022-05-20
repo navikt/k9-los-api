@@ -22,6 +22,13 @@ plugins {
     id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
+
+configurations {
+    all {
+        exclude(group = "junit", module = "junit")
+    }
+}
+
 dependencies {
     // Server
     implementation ( "no.nav.helse:dusseldorf-ktor-core:$dusseldorfKtorVersion")
