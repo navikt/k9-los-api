@@ -5,24 +5,10 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
-import no.nav.k9.AbstractPostgresTest
-import no.nav.k9.Configuration
-import no.nav.k9.KoinProfile
-import no.nav.k9.buildAndTestConfig
+import no.nav.k9.*
 import no.nav.k9.domene.lager.oppgave.Oppgave
-import no.nav.k9.domene.modell.Aksjonspunkter
-import no.nav.k9.domene.modell.BehandlingStatus
-import no.nav.k9.domene.modell.BehandlingType
-import no.nav.k9.domene.modell.Enhet
-import no.nav.k9.domene.modell.FagsakYtelseType
-import no.nav.k9.domene.modell.KøSortering
-import no.nav.k9.domene.modell.OppgaveKø
-import no.nav.k9.domene.modell.Saksbehandler
-import no.nav.k9.domene.repository.OppgaveKøRepository
-import no.nav.k9.domene.repository.OppgaveRepository
-import no.nav.k9.domene.repository.ReservasjonRepository
-import no.nav.k9.domene.repository.SaksbehandlerRepository
-import no.nav.k9.domene.repository.StatistikkRepository
+import no.nav.k9.domene.modell.*
+import no.nav.k9.domene.repository.*
 import no.nav.k9.integrasjon.abac.IPepClient
 import no.nav.k9.integrasjon.abac.PepClientLocal
 import no.nav.k9.integrasjon.azuregraph.AzureGraphService
@@ -32,21 +18,20 @@ import no.nav.k9.integrasjon.pdl.PdlService
 import no.nav.k9.integrasjon.pdl.PersonPdl
 import no.nav.k9.integrasjon.pdl.PersonPdlResponse
 import no.nav.k9.tjenester.sse.SseEvent
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.RegisterExtension
+import org.junit.Rule
+import org.junit.Test
 import org.koin.test.KoinTest
+import org.koin.test.KoinTestRule
 import org.koin.test.get
-import org.koin.test.junit5.KoinTestExtension
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
 class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest()  {
 
-    @JvmField
-    @RegisterExtension
-    val koinTestRule = KoinTestExtension.create {
-        modules(buildAndTestConfig(dataSource))
+    @get:Rule
+    val koinTestRule = KoinTestRule.create {
+        modules(buildAndTestConfig(dataSource, mockk()))
     }
 
     @Test

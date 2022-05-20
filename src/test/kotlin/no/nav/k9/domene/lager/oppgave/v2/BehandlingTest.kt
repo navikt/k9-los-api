@@ -1,17 +1,12 @@
 package no.nav.k9.domene.lager.oppgave.v2
 
 import assertk.assertThat
-import assertk.assertions.containsExactly
-import assertk.assertions.containsOnly
-import assertk.assertions.isEmpty
-import assertk.assertions.isEqualTo
-import assertk.assertions.isFalse
-import assertk.assertions.isNull
+import assertk.assertions.*
 import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.domene.modell.Fagsystem
-import org.junit.jupiter.api.Test
+import org.junit.Test
 import java.time.LocalDateTime
-import java.util.*
+import java.util.UUID
 
 internal class BehandlingTest {
 

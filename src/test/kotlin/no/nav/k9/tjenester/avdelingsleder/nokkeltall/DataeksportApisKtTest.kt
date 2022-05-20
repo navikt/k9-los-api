@@ -1,7 +1,7 @@
 package no.nav.k9.tjenester.avdelingsleder.nokkeltall
 
-import io.ktor.http.ParametersBuilder
-import org.junit.jupiter.api.Test
+import io.ktor.http.*
+import org.junit.Test
 import kotlin.test.assertFailsWith
 
 internal class DataeksportApisKtTest {

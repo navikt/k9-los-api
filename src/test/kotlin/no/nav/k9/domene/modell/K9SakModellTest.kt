@@ -10,7 +10,7 @@ import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
-import org.junit.jupiter.api.Test
+import org.junit.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*

@@ -9,8 +9,8 @@ import no.nav.k9.domene.lager.oppgave.v2.OppgaveTjenesteV2
 import no.nav.k9.integrasjon.azuregraph.AzureGraphService
 import no.nav.k9.sak.typer.AktørId
 import org.intellij.lang.annotations.Language
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import org.junit.Before
+import org.junit.Test
 import java.util.*
 
 class K9PunsjStreamTest {
@@ -18,7 +18,7 @@ class K9PunsjStreamTest {
     val eksternId = UUID.randomUUID()
     lateinit var eventHandler: K9PunsjEventHandlerV2
 
-    @BeforeEach
+    @Before
     fun setup() {
         val azure = mockk<AzureGraphService>()
         coEvery { azure.hentEnhetForBrukerMedSystemToken(any()) } returns "12345"

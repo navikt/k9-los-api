@@ -2,7 +2,7 @@ package no.nav.k9.integrasjon.pdl
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.k9.aksjonspunktbehandling.objectMapper
-import org.junit.jupiter.api.Test
+import org.junit.Test
 import kotlin.test.assertEquals
 
 class PdlServiceTest {

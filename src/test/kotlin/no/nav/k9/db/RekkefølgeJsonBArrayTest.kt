@@ -8,20 +8,19 @@ import no.nav.k9.domene.modell.BehandlingStatus
 import no.nav.k9.domene.modell.BehandlingType
 import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.domene.repository.OppgaveRepository
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.RegisterExtension
+import org.junit.Rule
+import org.junit.Test
 import org.koin.test.KoinTest
+import org.koin.test.KoinTestRule
 import org.koin.test.get
-import org.koin.test.junit5.KoinTestExtension
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
 class RekkefølgeJsonBArrayTest : KoinTest, AbstractPostgresTest()  {
 
-    @JvmField
-    @RegisterExtension
-    val koinTestRule = KoinTestExtension.create {
+    @get:Rule
+    val koinTestRule = KoinTestRule.create {
         modules(buildAndTestConfig(dataSource))
     }
 

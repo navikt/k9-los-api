@@ -11,6 +11,8 @@ import no.nav.k9.buildAndTestConfig
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveTjenesteV2
 import no.nav.k9.integrasjon.azuregraph.AzureGraphService
+import no.nav.k9.integrasjon.azuregraph.AzureGraphServiceLocal
+import no.nav.k9.integrasjon.azuregraph.IAzureGraphService
 import no.nav.k9.kodeverk.behandling.BehandlingType
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
@@ -19,20 +21,19 @@ import no.nav.k9.sak.kontrakt.produksjonsstyring.los.ProduksjonsstyringAksjonspu
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.ProduksjonsstyringBehandlingOpprettetHendelse
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.Periode
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.RegisterExtension
+import org.junit.Rule
+import org.junit.Test
 import org.koin.test.KoinTest
+import org.koin.test.KoinTestRule
 import org.koin.test.get
-import org.koin.test.junit5.KoinTestExtension
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
 class K9SakEventHandlerV2Test : AbstractPostgresTest(), KoinTest {
 
-        @JvmField
-    @RegisterExtension
-    val koinTestRule = KoinTestExtension.create {
+    @get:Rule
+    val koinTestRule = KoinTestRule.create {
         modules(buildAndTestConfig(dataSource))
     }
 

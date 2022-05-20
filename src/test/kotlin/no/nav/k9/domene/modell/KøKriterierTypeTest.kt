@@ -2,7 +2,7 @@ package no.nav.k9.domene.modell
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.k9.tjenester.avdelingsleder.oppgaveko.KriteriumDto
-import org.junit.jupiter.api.Test
+import org.junit.Test
 import java.util.*
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse

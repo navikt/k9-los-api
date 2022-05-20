@@ -2,9 +2,9 @@ package no.nav.k9.domene.modell
 
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Test
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -411,18 +411,15 @@ internal class OppgaveKøTest {
     fun `feilutbetaling filter i kombinasjon med andre kriterie`() {
         assertTrue(
             feilutb_kø(50, 100, kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
-                .tilhørerOppgaveTilKø(feilutb_oppg(70, true), null)
-        )
+                .tilhørerOppgaveTilKø(feilutb_oppg(70, true), null))
 
         assertFalse(
             feilutb_kø(50, 100, kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
-                .tilhørerOppgaveTilKø(feilutb_oppg(200, true), null)
-        )
+                .tilhørerOppgaveTilKø(feilutb_oppg(200, true), null))
 
         assertFalse(
             feilutb_kø(50, 100, kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
-                .tilhørerOppgaveTilKø(feilutb_oppg(70, false), null)
-        )
+                .tilhørerOppgaveTilKø(feilutb_oppg(70, false), null))
 
     }
 
@@ -520,8 +517,6 @@ internal class OppgaveKøTest {
         eksternId = UUID.randomUUID(),
         feilutbetaltBeløp = feilutbetaling
     )
-
-
 
     private fun feilutb_kø(fom: Long, tom: Long?, andreKriterierDto: AndreKriterierDto? = null ) = OppgaveKø(
         UUID.randomUUID(),
