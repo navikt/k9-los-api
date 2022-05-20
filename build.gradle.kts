@@ -76,7 +76,6 @@ dependencies {
 
     // Test
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
-    testImplementation("org.junit.vintage:junit-vintage-engine:5.8.2")
 
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.25")
     testImplementation("org.apache.kafka:kafka-clients:$kafkaVersion")
