@@ -18,12 +18,11 @@ import kotlin.reflect.full.memberProperties
 
 class HentKodeverkTjeneste() {
 
-
     companion object {
         private val KODEVERKLISTE = makeMap()
 
-        private fun makeMap(): MutableMap<String, Collection<out Kodeverdi>> {
-            val koder = mutableMapOf<String, Collection<out Kodeverdi>>()
+        private fun makeMap(): MutableMap<String, Collection<Kodeverdi>> {
+            val koder = mutableMapOf<String, Collection<Kodeverdi>>()
 
             koder[BehandlingType::class.java.simpleName] = BehandlingType.values().asList()
             koder[FagsakYtelseType::class.java.simpleName] = FagsakYtelseType.values().asList()
@@ -37,39 +36,8 @@ class HentKodeverkTjeneste() {
         }
     }
 
-    fun hentGruppertKodeliste(): MutableMap<String, Collection<Kodeverdi>> {
-        return KODEVERK_ENUM
-    }
-
-    fun hentGruppertKodeliste2() = FullKodeverkMap(KODEVERKLISTE)
-
-    private var KODEVERK_ENUM = makeMap()
-
-    private fun makeMap(): MutableMap<String, Collection<Kodeverdi>> {
-        val koder = mutableMapOf<String, Collection<Kodeverdi>>()
-
-        koder[BehandlingType::class.java.simpleName] = BehandlingType.values().asList()
-        koder[FagsakYtelseType::class.java.simpleName] = FagsakYtelseType.values().asList()
-        koder[KøSortering::class.java.simpleName] = KøSortering.values().asList()
-        koder[FagsakStatus::class.java.simpleName] = FagsakStatus.values().asList()
-        koder[AndreKriterierType::class.java.simpleName] = AndreKriterierType.values().asList()
-        koder[BehandlingStatus::class.java.simpleName] = BehandlingStatus.values().asList()
-        koder[Venteårsak::class.java.simpleName] = Venteårsak.values().asList()
-        koder[KøKriterierType::class.java.simpleName] = KøKriterierType.values().asList()
-        return koder
-    }
+    fun hentGruppertKodeliste() = FullKodeverkMap(KODEVERKLISTE)
 }
-
-//fun main() {
-////    val module = SimpleModule()
-////    module.addSerializer(FullKodeverdiSerializer())
-//    val o = objectMapper()
-////    o.registerModule(module)
-//    println(o.writeValueAsString(FullKodeverkMap(mapOf(
-//        KøKriterierType::class.simpleName!! to KøKriterierType.values().asList(),
-//        BehandlingType::class.simpleName!! to BehandlingType.values().asList(),
-//    ))))
-//}
 
 @JsonSerialize(using = FullKodeverdiMapSerializer::class)
 class FullKodeverkMap(val kodeMap: Map<String, Collection<Kodeverdi>>)
@@ -90,7 +58,7 @@ class FullKodeverdiMapSerializer : StdSerializer<FullKodeverkMap>(FullKodeverkMa
     private fun serialize(value: Kodeverdi, gen: JsonGenerator) {
         val enumFields = Enum::class.java.declaredFields.map { it.name }
         val ignoredProps = value::class.java.declaredFields
-            .filter {it.getAnnotation(JsonIgnore::class.java) !=null }
+            .filter { it.getAnnotation(JsonIgnore::class.java) != null }
             .map { it.name }
 
         val kodeProps = value::class.memberProperties
