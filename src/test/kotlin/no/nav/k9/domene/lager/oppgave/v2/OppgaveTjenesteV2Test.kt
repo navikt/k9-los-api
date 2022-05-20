@@ -8,18 +8,19 @@ import no.nav.k9.buildAndTestConfig
 import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.domene.modell.Fagsystem
 import org.junit.Assert.assertThrows
-import org.junit.Rule
-import org.junit.Test
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.RegisterExtension
 import org.koin.test.KoinTest
-import org.koin.test.KoinTestRule
 import org.koin.test.get
+import org.koin.test.junit5.KoinTestExtension
 import java.time.LocalDateTime
 import java.util.*
 
 internal class OppgaveTjenesteV2Test : AbstractPostgresTest(), KoinTest {
 
-    @get:Rule
-    val koinTestRule = KoinTestRule.create {
+        @JvmField
+    @RegisterExtension
+    val koinTestRule = KoinTestExtension.create {
         modules(buildAndTestConfig(dataSource))
     }
     val eksternId1 = UUID.randomUUID().toString()

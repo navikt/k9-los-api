@@ -5,7 +5,7 @@ val mainClass = "no.nav.k9.K9LosKt"
 val hikariVersion = "5.0.1"
 val flywayVersion = "8.5.11"
 val vaultJdbcVersion = "1.3.9"
-val koinVersion = "2.2.2"
+val koinVersion = "2.2.3"
 val kotliqueryVersion = "1.7.0"
 val k9SakVersion = "3.3.3"
 val fuelVersion = "2.3.1"
@@ -71,10 +71,13 @@ dependencies {
     }
 
     // DI
-    implementation("org.koin:koin-core:$koinVersion")
-    implementation("org.koin:koin-ktor:$koinVersion")
+    implementation("io.insert-koin:koin-core:$koinVersion")
+    implementation("io.insert-koin:koin-ktor:$koinVersion")
 
     // Test
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
+    testImplementation("org.junit.vintage:junit-vintage-engine:5.8.2")
+
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.25")
     testImplementation("org.apache.kafka:kafka-clients:$kafkaVersion")
 
@@ -87,7 +90,7 @@ dependencies {
     testImplementation("org.skyscreamer:jsonassert:1.5.0")
 
     testImplementation("org.testcontainers:postgresql:1.17.1")
-    testImplementation("org.koin:koin-test:$koinVersion")
+    testImplementation("io.insert-koin:koin-test-junit5:$koinVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
 
     implementation(kotlin("stdlib-jdk8"))

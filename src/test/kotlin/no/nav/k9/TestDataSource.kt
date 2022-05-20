@@ -3,7 +3,7 @@ package no.nav.k9
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import no.nav.k9.db.runMigration
-import org.junit.After
+import org.junit.jupiter.api.AfterEach
 import org.testcontainers.containers.PostgreSQLContainer
 import javax.sql.DataSource
 
@@ -52,7 +52,7 @@ abstract class AbstractPostgresTest {
 
     }
 
-    @After
+    @AfterEach
     fun tømDB() {
         dataSource.connection.use {
             it.createStatement().execute("""

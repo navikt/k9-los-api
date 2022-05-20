@@ -3,7 +3,7 @@ package no.nav.k9.tjenester.avdelingsleder.nokkeltall
 import assertk.assertThat
 import assertk.assertions.isFalse
 import assertk.assertions.isTrue
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 internal class EnheterSomSkalUtelatesFraLosTest {
 

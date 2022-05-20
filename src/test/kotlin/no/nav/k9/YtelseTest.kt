@@ -3,29 +3,39 @@ package no.nav.k9
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isSuccess
-import kotlinx.coroutines.*
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.runBlocking
 import no.nav.k9.domene.lager.oppgave.Oppgave
-import no.nav.k9.domene.modell.*
+import no.nav.k9.domene.modell.Aksjonspunkter
+import no.nav.k9.domene.modell.BehandlingStatus
+import no.nav.k9.domene.modell.BehandlingType
+import no.nav.k9.domene.modell.FagsakYtelseType
+import no.nav.k9.domene.modell.Fagsystem
 import no.nav.k9.domene.repository.OppgaveRepository
 import no.nav.k9.domene.repository.StatistikkRepository
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveTjeneste
-import org.junit.Ignore
-import org.junit.Rule
-import org.junit.Test
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.RegisterExtension
 import org.koin.test.KoinTest
-import org.koin.test.KoinTestRule
 import org.koin.test.get
+import org.koin.test.junit5.KoinTestExtension
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.test.BeforeTest
 
-@Ignore("Kjøres manuelt ved behov")
+@Disabled("Kjøres manuelt ved behov")
 class YtelseTest: KoinTest, AbstractPostgresTest() {
-    @get:Rule
-    val koinTestRule = KoinTestRule.create {
+    @JvmField
+    @RegisterExtension
+    val koinTestRule = KoinTestExtension.create {
         modules(buildAndTestConfig(dataSource))
     }
 

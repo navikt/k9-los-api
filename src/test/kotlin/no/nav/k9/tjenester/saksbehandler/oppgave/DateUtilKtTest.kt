@@ -1,6 +1,6 @@
 package no.nav.k9.tjenester.saksbehandler.oppgave
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.time.DayOfWeek
 import java.time.LocalDateTime
 
