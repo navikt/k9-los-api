@@ -10,6 +10,6 @@ fun Route.KodeverkApis() {
     val kodeverkTjeneste by inject<HentKodeverkTjeneste>()
 
     get("/kodeverk") {
-        kodeverkTjeneste.hentGruppertKodeliste2().let { call.respond(it) }
+        kodeverkTjeneste.hentGruppertKodeliste().let { call.respond(it) }
     }
 }
