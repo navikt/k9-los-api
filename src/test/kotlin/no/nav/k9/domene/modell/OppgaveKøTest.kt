@@ -7,6 +7,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.util.*
 
 
@@ -420,6 +421,64 @@ internal class OppgaveKøTest {
             feilutb_kø(50, 100, kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
                 .tilhørerOppgaveTilKø(feilutb_oppg(70, false), null))
 
+    }
+
+    @Test
+    fun `filtrering av behandlig opprettet dato skal inkludere fra og med`() {
+        val køFom = LocalDate.now().minusDays(10)
+        val køTom = LocalDate.now().minusDays(5)
+        val oppgaveKø = OppgaveKø(
+            UUID.randomUUID(),
+            "test",
+            LocalDate.now(),
+            KøSortering.OPPRETT_BEHANDLING,
+            mutableListOf(),
+            mutableListOf(),
+            mutableListOf(),
+            Enhet.NASJONAL,
+            køFom,
+            køTom,
+            mutableListOf(Saksbehandler("OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn)),
+            false,
+            mutableListOf(),
+            filtreringFeilutbetaling = null
+        )
+
+        val oppgave = Oppgave(
+
+            fagsakSaksnummer = "",
+            aktorId = "273857",
+            journalpostId = "234234535",
+            behandlendeEnhet = "Enhet",
+            behandlingsfrist = LocalDateTime.now(),
+            behandlingOpprettet = LocalDateTime.of(køFom, LocalTime.now()),
+            forsteStonadsdag = LocalDate.now().plusDays(6),
+            behandlingStatus = BehandlingStatus.OPPRETTET,
+            behandlingType = BehandlingType.UKJENT,
+            fagsakYtelseType = FagsakYtelseType.UKJENT,
+            aktiv = true,
+            system = Fagsystem.K9SAK.kode,
+            oppgaveAvsluttet = null,
+            utfortFraAdmin = false,
+            oppgaveEgenskap = emptyList(),
+            aksjonspunkter = Aksjonspunkter(
+                mapOf(
+                    "5016" to "OPPR",
+                    "9005" to "UTFO"
+                )
+            ),
+            tilBeslutter = true,
+            utbetalingTilBruker = false,
+            selvstendigFrilans = false,
+            kombinert = false,
+            søktGradering = false,
+            årskvantum = false,
+            avklarArbeidsforhold = false,
+            avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false,
+            eksternId = UUID.randomUUID(),
+            feilutbetaltBeløp = null
+        )
+        assertTrue(oppgaveKø.tilhørerOppgaveTilKø(oppgave, null))
     }
 
     private fun kriterie(type: AndreKriterierType) = AndreKriterierDto("1", type, checked = true, inkluder = true)

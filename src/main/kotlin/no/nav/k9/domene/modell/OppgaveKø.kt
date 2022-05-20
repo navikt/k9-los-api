@@ -130,7 +130,7 @@ data class OppgaveKø(
 
     private fun erInnenforOppgavekøensPeriode(oppgave: Oppgave): Boolean {
         if (sortering == KøSortering.OPPRETT_BEHANDLING) {
-            if (fomDato != null && oppgave.behandlingOpprettet.toLocalDate().isBefore(fomDato!!.plusDays(1))) {
+            if (fomDato != null && oppgave.behandlingOpprettet.toLocalDate().isBefore(fomDato!!)) {
                 return false
             }
 
@@ -140,7 +140,7 @@ data class OppgaveKø(
         }
 
         if (sortering == KøSortering.FORSTE_STONADSDAG) {
-            if (fomDato != null && oppgave.forsteStonadsdag.isBefore(fomDato!!.plusDays(1))) {
+            if (fomDato != null && oppgave.forsteStonadsdag.isBefore(fomDato!!)) {
                 return false
             }
 
