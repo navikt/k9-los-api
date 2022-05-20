@@ -8,9 +8,9 @@ import no.nav.k9.aksjonspunktbehandling.objectMapper
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveTjenesteV2
 import no.nav.k9.integrasjon.azuregraph.AzureGraphService
 import org.intellij.lang.annotations.Language
-import org.junit.Before
-import org.junit.Ignore
-import org.junit.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
 import java.util.*
 
 class K9SakStreamTest {
@@ -18,7 +18,7 @@ class K9SakStreamTest {
     val eksternId = UUID.randomUUID()
     lateinit var eventHandler: K9sakEventHandlerV2
 
-    @Before
+    @BeforeEach
     fun setup() {
         val azure = mockk<AzureGraphService>()
         coEvery { azure.hentEnhetForBrukerMedSystemToken(any()) } returns "12345"
@@ -74,7 +74,7 @@ class K9SakStreamTest {
     }
 
 
-    @Ignore
+    @Disabled
     @Test
     fun k9SakStreamSkalKunneMottaKravdokumenthendelser() {
         @Language("JSON") val input = """{

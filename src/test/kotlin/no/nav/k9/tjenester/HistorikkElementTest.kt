@@ -10,7 +10,7 @@ import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.FerdigstiltBehandling
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.VelgbartHistorikkfelt
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.feltSelector
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class HistorikkElementTest {

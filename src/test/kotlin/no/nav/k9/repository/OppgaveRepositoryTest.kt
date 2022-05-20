@@ -2,7 +2,7 @@ package no.nav.k9.repository
 
 import no.nav.k9.aksjonspunktbehandling.objectMapper
 import no.nav.k9.integrasjon.pdl.PdlService
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class OppgaveRepositoryTest {
 

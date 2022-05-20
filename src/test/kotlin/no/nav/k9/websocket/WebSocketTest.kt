@@ -1,20 +1,26 @@
 package no.nav.k9.websocket
 
-import io.ktor.application.*
-import io.ktor.http.cio.websocket.*
-import io.ktor.routing.*
-import io.ktor.server.testing.*
-import io.ktor.websocket.*
-import kotlinx.coroutines.*
+import io.ktor.application.Application
+import io.ktor.application.install
+import io.ktor.http.cio.websocket.Frame
+import io.ktor.http.cio.websocket.readText
+import io.ktor.routing.routing
+import io.ktor.server.testing.withTestApplication
+import io.ktor.websocket.WebSockets
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.Channel
-import no.nav.k9.tjenester.sse.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import no.nav.k9.tjenester.sse.Melding
 import no.nav.k9.tjenester.sse.RefreshKlienter.initializeRefreshKlienter
 import no.nav.k9.tjenester.sse.RefreshKlienter.oppdaterReserverteMelding
 import no.nav.k9.tjenester.sse.RefreshKlienter.oppdaterTilBehandlingMelding
 import no.nav.k9.tjenester.sse.RefreshKlienter.sendMelding
 import no.nav.k9.tjenester.sse.RefreshKlienter.sseChannel
+import no.nav.k9.tjenester.sse.RefreshKlienterWebSocket
+import no.nav.k9.tjenester.sse.SseEvent
 import org.json.JSONObject
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.util.*
 import kotlin.test.assertTrue
 
