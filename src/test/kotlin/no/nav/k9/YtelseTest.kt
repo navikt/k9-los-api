@@ -19,6 +19,7 @@ import no.nav.k9.domene.repository.OppgaveRepository
 import no.nav.k9.domene.repository.StatistikkRepository
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveTjeneste
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -29,7 +30,6 @@ import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
-import kotlin.test.BeforeTest
 
 @Disabled("Kjøres manuelt ved behov")
 class YtelseTest: KoinTest, AbstractPostgresTest() {
@@ -43,7 +43,7 @@ class YtelseTest: KoinTest, AbstractPostgresTest() {
     val antallOppgaver = 10000
 
     @OptIn(DelicateCoroutinesApi::class)
-    @BeforeTest
+    @BeforeEach
     fun setup() {
         Kjøretid.logg("Opprettelse og ferdigstillelse av oppgaver") {
             runBlocking {

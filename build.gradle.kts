@@ -22,20 +22,15 @@ plugins {
     id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
-
-configurations {
-    all {
-        exclude(group = "junit", module = "junit")
-    }
-}
-
 dependencies {
     // Server
     implementation ( "no.nav.helse:dusseldorf-ktor-core:$dusseldorfKtorVersion")
     implementation ( "no.nav.helse:dusseldorf-ktor-jackson:$dusseldorfKtorVersion")
     implementation ( "no.nav.helse:dusseldorf-ktor-metrics:$dusseldorfKtorVersion")
     implementation ( "no.nav.helse:dusseldorf-ktor-health:$dusseldorfKtorVersion")
-    implementation ( "no.nav.helse:dusseldorf-ktor-auth:$dusseldorfKtorVersion")
+    implementation ( "no.nav.helse:dusseldorf-ktor-auth:$dusseldorfKtorVersion") {
+        exclude(group = "junit", module = "junit")
+    }
 
     // Database
     implementation("com.zaxxer:HikariCP:$hikariVersion")
@@ -93,12 +88,18 @@ dependencies {
     testImplementation("io.mockk:mockk:1.12.4")
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion") {
         exclude(group = "org.eclipse.jetty")
+        exclude(group = "junit", module = "junit")
     }
     testImplementation("org.skyscreamer:jsonassert:1.5.0")
 
-    testImplementation("org.testcontainers:postgresql:1.17.1")
+    testImplementation("org.testcontainers:postgresql:1.17.1") {
+        exclude(group = "junit", module = "junit")
+    }
+    testImplementation("org.testcontainers:junit-jupiter:1.17.1")
     testImplementation("io.insert-koin:koin-test-junit5:$koinVersion")
-    testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion") {
+        exclude(group = "junit", module = "junit")
+    }
 
     implementation(kotlin("stdlib-jdk8"))
     implementation("javax.ws.rs:javax.ws.rs-api:2.1.1")

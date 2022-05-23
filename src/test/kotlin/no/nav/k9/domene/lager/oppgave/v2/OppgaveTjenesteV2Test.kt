@@ -7,7 +7,7 @@ import no.nav.k9.AbstractPostgresTest
 import no.nav.k9.buildAndTestConfig
 import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.domene.modell.Fagsystem
-import org.junit.Assert.assertThrows
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.koin.test.KoinTest
@@ -18,7 +18,7 @@ import java.util.*
 
 internal class OppgaveTjenesteV2Test : AbstractPostgresTest(), KoinTest {
 
-        @JvmField
+    @JvmField
     @RegisterExtension
     val koinTestRule = KoinTestExtension.create {
         modules(buildAndTestConfig(dataSource))
