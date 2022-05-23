@@ -16,11 +16,11 @@ import no.nav.k9.domene.repository.OppgaveKøRepository
 import no.nav.k9.domene.repository.OppgaveRepository
 import no.nav.k9.integrasjon.kafka.dto.BehandlingProsessEventDto
 import org.intellij.lang.annotations.Language
-import org.junit.Rule
-import org.junit.Test
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.RegisterExtension
 import org.koin.test.KoinTest
-import org.koin.test.KoinTestRule
 import org.koin.test.get
+import org.koin.test.junit5.KoinTestExtension
 import java.time.LocalDate
 import java.util.*
 import kotlin.test.assertFalse
@@ -29,8 +29,9 @@ import kotlin.test.assertTrue
 
 class K9sakEventHandlerTest : KoinTest, AbstractPostgresTest()  {
 
-    @get:Rule
-    val koinTestRule = KoinTestRule.create {
+    @JvmField
+    @RegisterExtension
+    val koinTestRule = KoinTestExtension.create {
         modules(buildAndTestConfig(dataSource))
     }
 

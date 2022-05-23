@@ -5,7 +5,7 @@ val mainClass = "no.nav.k9.K9LosKt"
 val hikariVersion = "5.0.1"
 val flywayVersion = "8.5.11"
 val vaultJdbcVersion = "1.3.9"
-val koinVersion = "2.2.2"
+val koinVersion = "2.2.3"
 val kotliqueryVersion = "1.7.0"
 val k9SakVersion = "3.3.3"
 val fuelVersion = "2.3.1"
@@ -28,7 +28,9 @@ dependencies {
     implementation ( "no.nav.helse:dusseldorf-ktor-jackson:$dusseldorfKtorVersion")
     implementation ( "no.nav.helse:dusseldorf-ktor-metrics:$dusseldorfKtorVersion")
     implementation ( "no.nav.helse:dusseldorf-ktor-health:$dusseldorfKtorVersion")
-    implementation ( "no.nav.helse:dusseldorf-ktor-auth:$dusseldorfKtorVersion")
+    implementation ( "no.nav.helse:dusseldorf-ktor-auth:$dusseldorfKtorVersion") {
+        exclude(group = "junit", module = "junit")
+    }
 
     // Database
     implementation("com.zaxxer:HikariCP:$hikariVersion")
@@ -71,10 +73,13 @@ dependencies {
     }
 
     // DI
-    implementation("org.koin:koin-core:$koinVersion")
-    implementation("org.koin:koin-ktor:$koinVersion")
+    implementation("io.insert-koin:koin-core:$koinVersion")
+    implementation("io.insert-koin:koin-ktor:$koinVersion")
 
     // Test
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
+    testImplementation("org.junit.vintage:junit-vintage-engine:5.8.2")
+
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.25")
     testImplementation("org.apache.kafka:kafka-clients:$kafkaVersion")
 
@@ -83,12 +88,18 @@ dependencies {
     testImplementation("io.mockk:mockk:1.12.4")
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion") {
         exclude(group = "org.eclipse.jetty")
+        exclude(group = "junit", module = "junit")
     }
     testImplementation("org.skyscreamer:jsonassert:1.5.0")
 
-    testImplementation("org.testcontainers:postgresql:1.17.1")
-    testImplementation("org.koin:koin-test:$koinVersion")
-    testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
+    testImplementation("org.testcontainers:postgresql:1.17.1") {
+        exclude(group = "junit", module = "junit")
+    }
+    testImplementation("org.testcontainers:junit-jupiter:1.17.1")
+    testImplementation("io.insert-koin:koin-test-junit5:$koinVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion") {
+        exclude(group = "junit", module = "junit")
+    }
 
     implementation(kotlin("stdlib-jdk8"))
     implementation("javax.ws.rs:javax.ws.rs-api:2.1.1")

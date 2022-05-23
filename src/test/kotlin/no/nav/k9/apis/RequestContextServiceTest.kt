@@ -1,14 +1,21 @@
 package no.nav.k9.apis
 
-import io.ktor.application.*
-import io.ktor.http.*
-import io.ktor.response.*
-import io.ktor.routing.*
-import io.ktor.server.testing.*
+import io.ktor.application.Application
+import io.ktor.application.call
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
+import io.ktor.response.respond
+import io.ktor.response.respondText
+import io.ktor.routing.get
+import io.ktor.routing.route
+import io.ktor.routing.routing
+import io.ktor.server.testing.handleRequest
+import io.ktor.server.testing.withTestApplication
 import no.nav.k9.KoinProfile
 import no.nav.k9.integrasjon.rest.RequestContextService
 import no.nav.k9.integrasjon.rest.idToken
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
 internal class RequestContextServiceTest {
