@@ -22,7 +22,7 @@ import kotlin.test.assertSame
 
 class StatistikkRepositoryTest : KoinTest, AbstractPostgresTest()  {
 
-        @JvmField
+    @JvmField
     @RegisterExtension
     val koinTestRule = KoinTestExtension.create {
         modules(buildAndTestConfig(dataSource))

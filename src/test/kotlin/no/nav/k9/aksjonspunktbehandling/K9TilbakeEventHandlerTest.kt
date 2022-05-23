@@ -15,7 +15,7 @@ import kotlin.test.assertTrue
 
 class K9TilbakeEventHandlerTest : KoinTest, AbstractPostgresTest()  {
 
-        @JvmField
+    @JvmField
     @RegisterExtension
     val koinTestRule = KoinTestExtension.create {
         modules(buildAndTestConfig(dataSource))

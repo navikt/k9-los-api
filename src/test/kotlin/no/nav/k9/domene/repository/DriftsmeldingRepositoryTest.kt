@@ -14,7 +14,7 @@ import kotlin.test.assertEquals
 
 class DriftsmeldingRepositoryTest: KoinTest, AbstractPostgresTest() {
 
-        @JvmField
+    @JvmField
     @RegisterExtension
     val koinTestRule = KoinTestExtension.create {
         modules(buildAndTestConfig(dataSource))

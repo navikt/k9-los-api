@@ -30,7 +30,7 @@ import java.util.*
 
 class K9SakEventHandlerV2Test : AbstractPostgresTest(), KoinTest {
 
-        @JvmField
+    @JvmField
     @RegisterExtension
     val koinTestRule = KoinTestExtension.create {
         modules(buildAndTestConfig(dataSource))
