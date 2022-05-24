@@ -92,7 +92,7 @@ dependencies {
     }
     testImplementation("org.skyscreamer:jsonassert:1.5.0")
 
-    testImplementation("org.testcontainers:postgresql:1.17.1") {
+    testImplementation("org.testcontainers:postgresql:1.17.2") {
         exclude(group = "junit", module = "junit")
     }
     testImplementation("org.testcontainers:junit-jupiter:1.17.2")
