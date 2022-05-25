@@ -106,8 +106,6 @@ dependencies {
 }
 
 repositories {
-    mavenLocal()
-
     maven {
         name = "GitHubPackages"
         url = uri("https://maven.pkg.github.com/navikt/dusseldorf-ktor")
@@ -122,7 +120,7 @@ repositories {
     maven("https://jitpack.io")
 
     maven("https://maven.pkg.jetbrains.space/public/p/kotlinx-html/maven") // https://github.com/detekt/detekt/issues/3461
-    jcenter() // https://github.com/InsertKoinIO/koin#jcenter
+    mavenLocal()
 }
 
 
