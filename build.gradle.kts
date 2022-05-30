@@ -153,4 +153,11 @@ tasks.withType<Wrapper> {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    // Always run tests, even when nothing changed.
+    dependsOn("cleanTest")
+
+    // Show test results.
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
 }
