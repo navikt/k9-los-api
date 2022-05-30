@@ -185,14 +185,17 @@ fun Route.innsiktGrensesnitt() {
             val hentAktiveOppgaver =
                 oppgaveRepository.hentAktiveOppgaver().filterNot { alleReservasjoner.contains(it.eksternId) }
 
-            val k = oppgaveKøRepository.hentIkkeTaHensyn()
-            for (b in k.filter { !it.kode6 }) {
-                b.oppgaverOgDatoer.clear()
+            val oppgaveKøer = oppgaveKøRepository.hentIkkeTaHensyn()
+            for (oppgaveKø in oppgaveKøer.filter { !it.kode6 }) {
+                oppgaveKø.oppgaverOgDatoer.clear()
                 for (oppgave in hentAktiveOppgaver) {
-                    b.leggOppgaveTilEllerFjernFraKø(oppgave)
+                    oppgaveKø.leggOppgaveTilEllerFjernFraKø(
+                        oppgave,
+                        merknader = oppgaveRepositoryV2.hentMerknader(oppgave.eksternId.toString())
+                    )
                 }
             }
-            køer = k
+            køer = oppgaveKøer
             call.respondHtml { }
         } else {
             call.respondHtml {

@@ -86,6 +86,7 @@ fun common(app: Application, config: Configuration) = module {
     single {
         OppgaveKøRepository(
             dataSource = get(),
+            oppgaveRepositoryV2 = get(),
             oppgaveKøOppdatert = get(named("oppgaveKøOppdatert")),
             refreshKlienter = get(named("refreshKlienter")),
             oppgaveRefreshChannel = get(named("oppgaveRefreshChannel")),
@@ -115,6 +116,7 @@ fun common(app: Application, config: Configuration) = module {
     single {
         ReservasjonRepository(
             oppgaveRepository = get(),
+            oppgaveRepositoryV2 = get(),
             oppgaveKøRepository = get(),
             dataSource = get(),
             refreshKlienter = get(named("refreshKlienter")),
@@ -225,6 +227,7 @@ fun common(app: Application, config: Configuration) = module {
     single {
         OppgaveTjeneste(
             oppgaveRepository = get(),
+            oppgaveRepositoryV2 = get(),
             oppgaveKøRepository = get(),
             saksbehandlerRepository = get(),
             reservasjonRepository = get(),

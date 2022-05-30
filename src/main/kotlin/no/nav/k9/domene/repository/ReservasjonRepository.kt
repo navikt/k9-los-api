@@ -9,6 +9,7 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.aksjonspunktbehandling.objectMapper
 import no.nav.k9.domene.lager.oppgave.Reservasjon
+import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.tjenester.innsikt.Databasekall
 import no.nav.k9.tjenester.sse.RefreshKlienter.sendOppdaterReserverte
 import no.nav.k9.tjenester.sse.SseEvent
@@ -21,6 +22,7 @@ import javax.sql.DataSource
 class ReservasjonRepository(
     private val oppgaveKøRepository: OppgaveKøRepository,
     private val oppgaveRepository: OppgaveRepository,
+    private val oppgaveRepositoryV2: OppgaveRepositoryV2,
     private val saksbehandlerRepository: SaksbehandlerRepository,
     private val dataSource: DataSource,
     private val refreshKlienter: Channel<SseEvent>
@@ -37,9 +39,7 @@ class ReservasjonRepository(
 
     suspend fun hent(reservasjoner: Set<UUID>): List<Reservasjon> {
         return fjernReservasjonerSomIkkeLengerErAktive(
-            hentReservasjoner(reservasjoner),
-            oppgaveKøRepository,
-            oppgaveRepository
+            hentReservasjoner(reservasjoner)
         )
     }
 
@@ -69,11 +69,7 @@ class ReservasjonRepository(
         return json.map { s -> objectMapper().readValue(s, Reservasjon::class.java) }.toList()
     }
 
-    private suspend fun fjernReservasjonerSomIkkeLengerErAktive(
-        reservasjoner: List<Reservasjon>,
-        oppgaveKøRepository: OppgaveKøRepository,
-        oppgaveRepository: OppgaveRepository
-    ): List<Reservasjon> {
+    private suspend fun fjernReservasjonerSomIkkeLengerErAktive(reservasjoner: List<Reservasjon>): List<Reservasjon> {
         reservasjoner.forEach { reservasjon ->
 
             if (!reservasjon.erAktiv()) {
@@ -84,11 +80,16 @@ class ReservasjonRepository(
                 saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
                 val oppgave = oppgaveRepository.hent(reservasjon.oppgave)
                 oppgaveKøRepository.hentIkkeTaHensyn().forEach { oppgaveKø ->
-                    if (oppgaveKø.leggOppgaveTilEllerFjernFraKø(oppgave, this)) {
+                    if (oppgaveKø.leggOppgaveTilEllerFjernFraKø(
+                            oppgave,
+                            this,
+                            oppgaveRepositoryV2.hentMerknader(reservasjon.oppgave.toString())
+                        )) {
                         oppgaveKøRepository.lagreIkkeTaHensyn(oppgaveKø.id) {
                             it!!.leggOppgaveTilEllerFjernFraKø(
                                 oppgave = oppgave,
-                                reservasjonRepository = this
+                                reservasjonRepository = this,
+                                merknader = oppgaveRepositoryV2.hentMerknader(reservasjon.oppgave.toString())
                             )
                             it
                         }

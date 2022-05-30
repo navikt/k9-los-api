@@ -11,6 +11,7 @@ import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.TRENGER
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.VENT_ANNEN_PSB_SAK
 import no.nav.k9.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
 import no.nav.k9.tjenester.avdelingsleder.oppgaveko.KriteriumDto
+import no.nav.k9.tjenester.saksbehandler.merknad.Merknad
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -33,7 +34,8 @@ data class OppgaveKø(
     var skjermet: Boolean = false,
     var oppgaverOgDatoer: MutableList<OppgaveIdMedDato> = mutableListOf(),
     val kode6: Boolean = false,
-    var filtreringFeilutbetaling: Intervall<Long>? = null
+    var filtreringFeilutbetaling: Intervall<Long>? = null,
+    var merknadKoder: List<String> = emptyList(),
 ) {
     companion object {
         private val log = LoggerFactory.getLogger(OppgaveKø::class.java)
@@ -41,11 +43,13 @@ data class OppgaveKø(
 
     fun leggOppgaveTilEllerFjernFraKø(
         oppgave: Oppgave,
-        reservasjonRepository: ReservasjonRepository? = null
+        reservasjonRepository: ReservasjonRepository? = null,
+        merknader: List<Merknad>
     ): Boolean {
         val tilhørerOppgaveTilKø = tilhørerOppgaveTilKø(
             oppgave = oppgave,
-            reservasjonRepository = reservasjonRepository
+            reservasjonRepository = reservasjonRepository,
+            merknader
         )
         if (tilhørerOppgaveTilKø) {
             if (this.oppgaverOgDatoer.none { it.id == oppgave.eksternId }) {
@@ -74,10 +78,15 @@ data class OppgaveKø(
 
     fun tilhørerOppgaveTilKø(
         oppgave: Oppgave,
-        reservasjonRepository: ReservasjonRepository?
+        reservasjonRepository: ReservasjonRepository?,
+        merknader: List<Merknad>
     ): Boolean {
         if (!oppgave.aktiv) {
             return false
+        }
+
+        if (this.merknadKoder.any { valgteMerknader -> merknader.flatMap { it.merknadKoder }.contains(valgteMerknader) }) {
+            return true
         }
 
         if (reservasjonRepository != null && erOppgavenReservert(reservasjonRepository, oppgave)) {

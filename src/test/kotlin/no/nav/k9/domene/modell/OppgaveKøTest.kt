@@ -2,6 +2,7 @@ package no.nav.k9.domene.modell
 
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
+import no.nav.k9.tjenester.saksbehandler.merknad.Merknad
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -63,7 +64,7 @@ internal class OppgaveKøTest {
             avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false
         )
 
-        val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, null)
+        val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, null, emptyList())
         assertTrue(tilhørerOppgaveTilKø)
     }
 
@@ -132,7 +133,7 @@ internal class OppgaveKøTest {
             eksternId = UUID.randomUUID(),
         )
 
-        val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, null)
+        val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, null, emptyList())
         assertTrue(tilhørerOppgaveTilKø)
     }
 
@@ -195,7 +196,7 @@ internal class OppgaveKøTest {
             eksternId = UUID.randomUUID(),
         )
 
-        val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, null)
+        val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, null, emptyList())
         assertFalse(tilhørerOppgaveTilKø)
     }
 
@@ -257,7 +258,7 @@ internal class OppgaveKøTest {
             eksternId = UUID.randomUUID(),
         )
 
-        val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, null)
+        val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, null, emptyList())
         assertTrue(tilhørerOppgaveTilKø)
     }
 
@@ -330,7 +331,7 @@ internal class OppgaveKøTest {
             eksternId = UUID.randomUUID(),
         )
 
-        val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, null)
+        val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, null, emptyList())
         assertFalse(tilhørerOppgaveTilKø)
     }
 
@@ -393,37 +394,36 @@ internal class OppgaveKøTest {
             eksternId = UUID.randomUUID(),
         )
 
-        val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, null)
+        val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, null, emptyList())
         assertFalse(tilhørerOppgaveTilKø)
     }
 
     @Test
     fun `skal ta med feilutbetaling intervall`() {
-        assertTrue(feilutb_kø(50, 100).tilhørerOppgaveTilKø(feilutb_oppg(70), null))
-        assertFalse(feilutb_kø(50, 100).tilhørerOppgaveTilKø(feilutb_oppg(200), null))
-        assertTrue(feilutb_kø(50, null).tilhørerOppgaveTilKø(feilutb_oppg(200), null))
-        assertFalse(feilutb_kø(50, null).tilhørerOppgaveTilKø(feilutb_oppg(49), null))
-        assertTrue(feilutb_kø(50, 100).tilhørerOppgaveTilKø(feilutb_oppg(50), null))
-        assertTrue(feilutb_kø(50, 100).tilhørerOppgaveTilKø(feilutb_oppg(100), null))
+        assertTrue(lagOppgaveKø(Intervall(50, 100)).tilhørerOppgaveTilKø(feilutb_oppg(70), null, emptyList()))
+        assertFalse(lagOppgaveKø(Intervall(50, 100)).tilhørerOppgaveTilKø(feilutb_oppg(200), null, emptyList()))
+        assertTrue(lagOppgaveKø(Intervall(50, null)).tilhørerOppgaveTilKø(feilutb_oppg(200), null, emptyList()))
+        assertFalse(lagOppgaveKø(Intervall(50, null)).tilhørerOppgaveTilKø(feilutb_oppg(49), null, emptyList()))
+        assertTrue(lagOppgaveKø(Intervall(50, 100)).tilhørerOppgaveTilKø(feilutb_oppg(50), null, emptyList()))
+        assertTrue(lagOppgaveKø(Intervall(50, 100)).tilhørerOppgaveTilKø(feilutb_oppg(100), null, emptyList()))
     }
 
     @Test
     fun `feilutbetaling filter i kombinasjon med andre kriterie`() {
         assertTrue(
-            feilutb_kø(50, 100, kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
-                .tilhørerOppgaveTilKø(feilutb_oppg(70, true), null)
+            lagOppgaveKø(Intervall(50, 100), kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
+                .tilhørerOppgaveTilKø(feilutb_oppg(70, true), null, emptyList())
         )
 
         assertFalse(
-            feilutb_kø(50, 100, kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
-                .tilhørerOppgaveTilKø(feilutb_oppg(200, true), null)
+            lagOppgaveKø(Intervall(50, 100), kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
+                .tilhørerOppgaveTilKø(feilutb_oppg(200, true), null, emptyList())
         )
 
         assertFalse(
-            feilutb_kø(50, 100, kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
-                .tilhørerOppgaveTilKø(feilutb_oppg(70, false), null)
+            lagOppgaveKø(Intervall(50, 100), kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
+                .tilhørerOppgaveTilKø(feilutb_oppg(70, false), null, emptyList())
         )
-
     }
 
     @Test
@@ -481,7 +481,54 @@ internal class OppgaveKøTest {
             eksternId = UUID.randomUUID(),
             feilutbetaltBeløp = null
         )
-        assertTrue(oppgaveKø.tilhørerOppgaveTilKø(oppgave, null))
+        assertTrue(oppgaveKø.tilhørerOppgaveTilKø(oppgave, null, emptyList()))
+    }
+
+    @Test
+    fun `Skal inkludere markerte oppgaver hvis det finnes merknad i køen`() {
+        val oppgave = Oppgave(
+            fagsakSaksnummer = "",
+            aktorId = "273857",
+            journalpostId = "234234535",
+            behandlendeEnhet = "Enhet",
+            behandlingsfrist = LocalDateTime.now(),
+            behandlingOpprettet = LocalDateTime.now().minusDays(23),
+            forsteStonadsdag = LocalDate.now().plusDays(6),
+            behandlingStatus = BehandlingStatus.OPPRETTET,
+            behandlingType = BehandlingType.UKJENT,
+            fagsakYtelseType = FagsakYtelseType.UKJENT,
+            aktiv = true,
+            system = "K9SAK",
+            oppgaveAvsluttet = null,
+            utfortFraAdmin = false,
+            eksternId = UUID.randomUUID(),
+            oppgaveEgenskap = emptyList(),
+            aksjonspunkter = Aksjonspunkter(emptyMap(), emptyList()),
+            tilBeslutter = false,
+            utbetalingTilBruker = false,
+            selvstendigFrilans = false,
+            kombinert = false,
+            søktGradering = false,
+            årskvantum = false,
+            avklarArbeidsforhold = false,
+            avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false,
+        )
+
+        val hastekø = lagOppgaveKø(merknadKoder = listOf("HASTESAK"))
+        assertTrue(hastekø.tilhørerOppgaveTilKø(oppgave, null, listOf(lagMerknad(listOf("HASTESAK")))))
+        assertFalse(hastekø.tilhørerOppgaveTilKø(oppgave, null, listOf(lagMerknad(listOf("VANSKELIG")))))
+        assertFalse(hastekø.tilhørerOppgaveTilKø(oppgave, null, emptyList()))
+
+        val hasteogVanskeligKø = lagOppgaveKø(merknadKoder = listOf("HASTESAK", "VANSKELIG"))
+
+        assertTrue(hasteogVanskeligKø.tilhørerOppgaveTilKø(oppgave, null, listOf(lagMerknad(listOf("VANSKELIG", "HASTESAK")))))
+        assertTrue(hasteogVanskeligKø.tilhørerOppgaveTilKø(oppgave, null, listOf(lagMerknad(listOf("VANSKELIG")))))
+        assertTrue(hasteogVanskeligKø.tilhørerOppgaveTilKø(oppgave, null, listOf(lagMerknad(listOf("HASTESAK")))))
+        assertFalse(hasteogVanskeligKø.tilhørerOppgaveTilKø(oppgave, null, emptyList()))
+
+        val ingenMerknadKø = lagOppgaveKø(merknadKoder = emptyList())
+        assertTrue(ingenMerknadKø.tilhørerOppgaveTilKø(oppgave, null, listOf(lagMerknad(listOf("VANSKELIG", "HASTESAK")))))
+        assertTrue(ingenMerknadKø.tilhørerOppgaveTilKø(oppgave, null, listOf()))
     }
 
     private fun kriterie(type: AndreKriterierType) = AndreKriterierDto("1", type, checked = true, inkluder = true)
@@ -523,7 +570,11 @@ internal class OppgaveKøTest {
 
 
 
-    private fun feilutb_kø(fom: Long, tom: Long?, andreKriterierDto: AndreKriterierDto? = null ) = OppgaveKø(
+    private fun lagOppgaveKø(
+        feilutbetaling: Intervall<Long>? = null,
+        andreKriterierDto: AndreKriterierDto? = null,
+        merknadKoder: List<String> = emptyList()
+    ) = OppgaveKø(
         UUID.randomUUID(),
         "test",
         LocalDate.now(),
@@ -537,6 +588,18 @@ internal class OppgaveKøTest {
         mutableListOf(Saksbehandler("OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn)),
         false,
         mutableListOf(),
-        filtreringFeilutbetaling = Intervall(fom, tom)
+        filtreringFeilutbetaling = feilutbetaling,
+        merknadKoder = merknadKoder
     )
+
+    fun lagMerknad(merknadKoder: List<String>): Merknad {
+        return Merknad(
+            id = 123456L,
+            merknadKoder=merknadKoder,
+            oppgaveKoder = emptyList(),
+            oppgaveIder = emptyList(),
+            saksbehandler = "",
+            opprettet = LocalDateTime.now()
+        )
+    }
 }

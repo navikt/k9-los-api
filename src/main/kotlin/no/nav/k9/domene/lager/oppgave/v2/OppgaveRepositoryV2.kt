@@ -1,12 +1,16 @@
 package no.nav.k9.domene.lager.oppgave.v2
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import kotliquery.*
 import kotliquery.action.ListResultQueryAction
 import kotliquery.action.NullableResultQueryAction
 import kotliquery.action.UpdateQueryAction
+import no.nav.k9.aksjonspunktbehandling.objectMapper
 import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.domene.modell.Fagsystem
 import no.nav.k9.tjenester.innsikt.Databasekall
+import no.nav.k9.tjenester.saksbehandler.merknad.Merknad
+import org.checkerframework.checker.units.qual.m
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.LongAdder
 import javax.sql.DataSource
@@ -27,12 +31,14 @@ class OppgaveRepositoryV2(
 
     fun hentBehandling(eksternReferanse: String, tx: TransactionalSession): Behandling? {
         val oppgaver = tx.run(hentOppgaver(eksternReferanse))
-        return tx.run(hentBehandling(eksternReferanse, oppgaver))
+        val merknader = tx.run(hentMerknaderQuery(eksternReferanse))
+        return tx.run(hentBehandling(eksternReferanse, oppgaver, merknader))
     }
 
     private fun hentBehandling(
         eksternReferanse: String,
-        oppgaver: Collection<OppgaveV2>
+        oppgaver: Collection<OppgaveV2>,
+        merknader: List<Merknad>
     ): NullableResultQueryAction<Behandling> {
         return queryOf(
             """
@@ -44,18 +50,20 @@ class OppgaveRepositoryV2(
                             soekers_id,
                             opprettet,
                             sist_endret,
-                            ferdigstilt_tidspunkt,
-                            kode6,
-                            skjermet
+                            ferdigstilt_tidspunkt
                         from behandling 
                         WHERE ekstern_referanse = :ekstern_referanse
                         FOR UPDATE
                     """,
             mapOf("ekstern_referanse" to eksternReferanse)
-        ).map { row -> row.tilBehandling(eksternReferanse, oppgaver) }.asSingle
+        ).map { row -> row.tilBehandling(eksternReferanse, oppgaver, merknader) }.asSingle
     }
 
-    private fun Row.tilBehandling(eksternReferanse: String, oppgaver: Collection<OppgaveV2>): Behandling {
+    private fun Row.tilBehandling(
+        eksternReferanse: String,
+        oppgaver: Collection<OppgaveV2>,
+        merknader: Collection<Merknad>
+    ): Behandling {
         return Behandling(
             id = long("id"),
             eksternReferanse = eksternReferanse,
@@ -66,8 +74,8 @@ class OppgaveRepositoryV2(
             opprettet = localDateTime("opprettet"),
             sistEndret = localDateTimeOrNull("sist_endret"),
             søkersId = stringOrNull("soekers_id")?.let { Ident(it, Ident.IdType.AKTØRID) },
-            kode6 = boolean("kode6"),
-            skjermet = boolean("skjermet"),
+            merknader = merknader.toMutableSet(),
+            data = null
         ).also {
             it.ferdigstilt = localDateTimeOrNull("ferdigstilt_tidspunkt")
         }
@@ -116,6 +124,40 @@ class OppgaveRepositoryV2(
             }.asList
     }
 
+    fun hentMerknader(eksternReferanse: String): List<Merknad> {
+        return using(sessionOf(dataSource)) { it.run(hentMerknaderQuery(eksternReferanse)) }
+    }
+
+    private fun hentMerknaderQuery(eksternReferanse: String) : ListResultQueryAction<Merknad> {
+            return queryOf(
+                """
+                        select
+                            id,
+                            merknad_koder,
+                            oppgave_koder,
+                            fritekst,
+                            saksbehandler,
+                            opprettet,
+                            sist_endret,
+                            slettet
+                        from merknad 
+                        WHERE ekstern_referanse = :ekstern_referanse
+                    """,
+                mapOf("ekstern_referanse" to eksternReferanse)
+            ).map { row -> Merknad(
+                id = row.long("id"),
+                oppgaveKoder = objectMapper().readValue(row.string("oppgave_koder")),
+                oppgaveIder = objectMapper().readValue(row.string("oppgave_ider")),
+                saksbehandler = row.stringOrNull("saksbehandler"),
+                opprettet = row.localDateTime("opprettet"),
+                sistEndret = row.localDateTimeOrNull("sist_endret"),
+                slettet = row.boolean("slettet")
+            ).apply {
+                merknadKoder = objectMapper().readValue(row.string("merknad_koder"))
+                fritekst = row.stringOrNull("fritekst")
+            }}.asList
+    }
+
     fun lagre(behandling: Behandling) {
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
@@ -132,6 +174,11 @@ class OppgaveRepositoryV2(
             oppgave.id?.also { tx.run(update(oppgave)) }
                 ?: tx.updateAndReturnGeneratedKey(insert(dbId!!, oppgave))?.also { oppgave.id = it }
         }
+
+        behandling.hentMerknader().forEach { merknad ->
+            merknad.id?.also { tx.run(update(merknad)) }
+                ?: tx.updateAndReturnGeneratedKey(insert(dbId!!, behandling.eksternReferanse, merknad))?.also { merknad.settId(it) }
+        }
     }
 
     private fun insert(behandling: Behandling): Query {
@@ -146,9 +193,7 @@ class OppgaveRepositoryV2(
                     opprettet,
                     sist_endret,
                     soekers_id,
-                    ferdigstilt_tidspunkt,
-                    kode6,
-                    skjermet
+                    ferdigstilt_tidspunkt
                 ) VALUES (
                     :ekstern_referanse,
                     :fagsystem,
@@ -157,9 +202,7 @@ class OppgaveRepositoryV2(
                     :opprettet,
                     :sist_endret,
                     :soekers_id,
-                    :ferdigstilt_tidspunkt,
-                    :kode6,
-                    :skjermet
+                    :ferdigstilt_tidspunkt
                 )
                 """, mapOf(
                 "ekstern_referanse" to behandling.eksternReferanse,
@@ -170,8 +213,6 @@ class OppgaveRepositoryV2(
                 "sist_endret" to behandling.sistEndret,
                 "soekers_id" to behandling.søkersId?.id,
                 "ferdigstilt_tidspunkt" to behandling.ferdigstilt,
-                "kode6" to behandling.kode6,
-                "skjermet" to behandling.skjermet
             )
         )
     }
@@ -184,17 +225,13 @@ class OppgaveRepositoryV2(
                 UPDATE behandling SET
                     sist_endret = :sist_endret,
                     soekers_id = :soekers_id,
-                    ferdigstilt_tidspunkt = :ferdigstilt_tidspunkt,
-                    kode6 = :kode6,
-                    skjermet = :skjermet
+                    ferdigstilt_tidspunkt = :ferdigstilt_tidspunkt
                 WHERE id = :id
             """, mapOf(
                 "id" to behandling.id,
                 "sist_endret" to behandling.sistEndret,
                 "soekers_id" to behandling.søkersId?.id,
-                "ferdigstilt_tidspunkt" to behandling.ferdigstilt,
-                "kode6" to behandling.kode6,
-                "skjermet" to behandling.skjermet
+                "ferdigstilt_tidspunkt" to behandling.ferdigstilt
             )
         )
     }
@@ -271,5 +308,62 @@ class OppgaveRepositoryV2(
                 "frist" to oppgave.frist,
             )
         ).asUpdate
+    }
+
+
+    private fun update(merknad: Merknad): UpdateQueryAction {
+        return queryOf(
+            """
+                UPDATE merknad SET
+                    sist_endret = :sist_endret,
+                    fritekst = :fritekst,
+                    merknad_koder = :merknad_koder,
+                    slettet = :slettet
+                WHERE id = :id
+            """, mapOf(
+                "id" to merknad.id,
+                "fritekst" to merknad.fritekst,
+                "sist_endret" to merknad.sistEndret,
+                "merknad_koder" to merknad.merknadKoder,
+                "slettet" to merknad.slettet
+            )
+        ).asUpdate
+    }
+
+    private fun insert(behandlingId: Long, eksternReferanse: String,  merknad: Merknad): Query {
+        return queryOf(
+            """
+                insert into merknad (
+                    behandling_id,
+                    ekstern_referanse,
+                    merknad_koder,
+                    oppgave_koder,
+                    oppgave_ider,
+                    fritekst,
+                    saksbehandler,
+                    opprettet,
+                    sist_endret
+                ) VALUES (
+                    :ekstern_referanse,
+                    :fagsystem,
+                    :ytelse_type,
+                    :behandling_type,
+                    :opprettet,
+                    :sist_endret,
+                    :soekers_id,
+                    :ferdigstilt_tidspunkt
+                )
+                """, mapOf(
+                "behandling_id" to behandlingId,
+                "ekstern_referanse" to eksternReferanse,
+                "merknad_koder" to merknad.merknadKoder,
+                "oppgave_koder" to merknad.oppgaveKoder,
+                "oppgave_ider" to merknad.oppgaveIder,
+                "fritekst" to merknad.fritekst,
+                "saksbehandler" to merknad.saksbehandler,
+                "opprettet" to merknad.opprettet,
+                "sist_endret" to merknad.sistEndret,
+            )
+        )
     }
 }

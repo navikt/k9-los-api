@@ -7,6 +7,7 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.aksjonspunktbehandling.objectMapper
 import no.nav.k9.domene.lager.oppgave.Oppgave
+import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.modell.OppgaveIdMedDato
 import no.nav.k9.domene.modell.OppgaveKø
 import no.nav.k9.integrasjon.abac.IPepClient
@@ -22,6 +23,7 @@ import javax.sql.DataSource
 
 class OppgaveKøRepository(
     private val dataSource: DataSource,
+    private val oppgaveRepositoryV2: OppgaveRepositoryV2,
     private val oppgaveKøOppdatert: Channel<UUID>,
     private val refreshKlienter: Channel<SseEvent>,
     private val oppgaveRefreshChannel: Channel<UUID>,
@@ -171,23 +173,21 @@ class OppgaveKøRepository(
                 val oppgaveKø = objectMapper().readValue(gammelJson, OppgaveKø::class.java)
                 val første20OppgaverSomVar = oppgaveKø.oppgaverOgDatoer.take(20).toList()
 
-                var endring = false
+                var finnesOppgavekøMedEndring = false
                 for (oppgave in oppgaver) {
                     if (oppgaveKø.kode6 == oppgave.kode6) {
-                        if (!endring) {
-                            endring = oppgaveKø.leggOppgaveTilEllerFjernFraKø(
-                                oppgave = oppgave,
-                                reservasjonRepository = reservasjonRepository
-                            )
-                        } else {
-                            oppgaveKø.leggOppgaveTilEllerFjernFraKø(
-                                oppgave = oppgave,
-                                reservasjonRepository = reservasjonRepository
-                            )
+                        val oppgavekøHarEndring = oppgaveKø.leggOppgaveTilEllerFjernFraKø(
+                            oppgave = oppgave,
+                            reservasjonRepository = reservasjonRepository,
+                            merknader = oppgaveRepositoryV2.hentMerknader(oppgave.eksternId.toString())
+                        )
+
+                        if (oppgavekøHarEndring) {
+                            finnesOppgavekøMedEndring = true
                         }
                     }
                 }
-                if (!endring) {
+                if (!finnesOppgavekøMedEndring) {
                     gjennomførteTransaksjon = false
                     return@transaction
                 }

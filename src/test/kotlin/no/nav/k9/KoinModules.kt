@@ -78,6 +78,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         OppgaveKøRepository(
             dataSource = get(),
+            oppgaveRepositoryV2 = get(),
             oppgaveKøOppdatert = get(named("oppgaveKøOppdatert")),
             refreshKlienter = get(named("refreshKlienter")),
             oppgaveRefreshChannel = get(named("oppgaveRefreshChannel")),
@@ -95,6 +96,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         ReservasjonRepository(
             oppgaveKøRepository = get(),
             oppgaveRepository = get(),
+            oppgaveRepositoryV2 = get(),
             dataSource = get(),
             refreshKlienter = get(named("refreshKlienter")),
             saksbehandlerRepository = get()
@@ -116,6 +118,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         OppgaveTjeneste(
             oppgaveRepository = get(),
+            oppgaveRepositoryV2 = get(),
             oppgaveKøRepository = get(),
             saksbehandlerRepository = get(),
             pdlService = get(),

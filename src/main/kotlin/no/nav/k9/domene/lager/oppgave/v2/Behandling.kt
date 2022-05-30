@@ -1,7 +1,10 @@
 package no.nav.k9.domene.lager.oppgave.v2
 
+import com.fasterxml.jackson.databind.JsonNode
 import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.domene.modell.Fagsystem
+import no.nav.k9.tjenester.saksbehandler.merknad.Merknad
+import no.nav.k9.tjenester.saksbehandler.merknad.MerknadEndret
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
@@ -15,8 +18,10 @@ open class Behandling constructor(
     val opprettet: LocalDateTime,
     var sistEndret: LocalDateTime?,
     val søkersId: Ident?,
-    val kode6: Boolean,
-    val skjermet: Boolean,
+    val kode6: Boolean = false,
+    val skjermet: Boolean = false,
+    private val merknader: MutableSet<Merknad>,
+    private val data: JsonNode?
 ) {
     var ferdigstilt: LocalDateTime? = null
     set(value) {
@@ -44,24 +49,12 @@ open class Behandling constructor(
                 sistEndret = opprettet,
                 søkersId = søkersId,
                 kode6 = false,
-                skjermet = false
+                skjermet = false,
+                merknader = mutableSetOf(),
+                data = null
             )
         }
     }
-
-    constructor(other: Behandling, id: Long? = null) : this(
-        id = id,
-        oppgaver = other.oppgaver.toMutableSet(),
-        eksternReferanse = other.eksternReferanse,
-        fagsystem = other.fagsystem,
-        ytelseType = other.ytelseType,
-        behandlingType = other.behandlingType,
-        opprettet = other.opprettet,
-        sistEndret = other.sistEndret,
-        søkersId = other.søkersId,
-        kode6 = other.kode6,
-        skjermet = other.skjermet
-    )
 
     fun oppgaver() = oppgaver.toSet()
 
@@ -182,6 +175,32 @@ open class Behandling constructor(
                     it.oppgaveKode == oppgaveKode
         }
     }
+
+    fun lagreMerknad(merknad: MerknadEndret, saksbehandler: String) {
+        if (merknad.merknadKoder.isEmpty()) {
+            slettMerknad(merknad.id)
+        }
+
+        val aktiveMerknader = merknader.aktive()
+        if (aktiveMerknader.isEmpty()) {
+            merknader.add(merknad.nyMerknad(saksbehandler, aktiveOppgaver()))
+        } else {
+            val merknadId = merknad.id ?: throw IllegalStateException("Kan ikke endre eksisterende merknad uten merknadId")
+            aktiveMerknader
+                .firstOrNull { eksisterendeMerknad -> eksisterendeMerknad.id!! == merknadId }
+                ?.oppdater(merknad.merknadKoder, merknad.fritekst)
+        }
+    }
+
+    fun slettMerknad(merknadId: Long?) {
+        merknader.filter { merknadId == null || it.id == merknadId }.forEach { it.slett() }
+    }
+
+    fun Collection<Merknad>.aktive(): List<Merknad> {
+        return merknader.filterNot { it.slettet }
+    }
+
+    fun hentMerknader() = merknader.aktive().toSet()
 }
 
 interface Ferdigstillelse {
