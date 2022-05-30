@@ -23,7 +23,7 @@ internal class FullKodeverdiMapSerializerTest {
         assertThat(feilutbetalingJsonNode.get("navn").asText()).isEqualTo(FEILUTBETALING.navn)
         assertThat(feilutbetalingJsonNode.get("kode").asText()).isEqualTo(FEILUTBETALING.kode)
         assertThat(feilutbetalingJsonNode.get("kodeverk").asText()).isEqualTo(FEILUTBETALING.kodeverk)
-        assertThat(feilutbetalingJsonNode.get("felttypeKodeverk").asText())
+        assertThat(feilutbetalingJsonNode.get("felttypeKodeverk").isNull()).isTrue()
         assertThat(feilutbetalingJsonNode.get("skalVises").asBoolean()).isTrue()
     }
 
