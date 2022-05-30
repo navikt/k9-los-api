@@ -65,4 +65,21 @@ data class BehandlingProsessEventTilbakeDto(
     val feilutbetaltBeløp: Long? = null,
     val ansvarligSaksbehandlerIdent: String? = null
 
-)
+) {
+    fun tryggPrint(): String {
+        return """BehandlingProsessEventTilbakeDto(
+            aksjonspunktKoderMedStatusListe=$aksjonspunktKoderMedStatusListe, 
+            eksternId=$eksternId, saksnummer='$saksnummer', ytelseTypeKode='$ytelseTypeKode', 
+            fagsystem='$fagsystem', behandlingstidFrist=$behandlingstidFrist, eventTid=$eventTid, 
+            førsteFeilutbetaling=$førsteFeilutbetaling, feilutbetaltBeløp=$feilutbetaltBeløp)
+            eventHendelse=$eventHendelse, behandlinStatus=$behandlinStatus, behandlingStatus=$behandlingStatus, 
+            behandlingSteg=$behandlingSteg, resultatType=$resultatType, 
+            behandlingTypeKode='$behandlingTypeKode', 
+            opprettetBehandling=$opprettetBehandling, 
+            """
+            .trimMargin()
+    }
+
+
+
+}

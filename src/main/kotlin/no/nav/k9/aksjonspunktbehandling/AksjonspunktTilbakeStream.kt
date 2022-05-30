@@ -1,10 +1,10 @@
 package no.nav.k9.aksjonspunktbehandling
 
+import no.nav.k9.Configuration
+import no.nav.k9.integrasjon.kafka.KafkaConfig
 import no.nav.k9.integrasjon.kafka.ManagedKafkaStreams
 import no.nav.k9.integrasjon.kafka.ManagedStreamHealthy
 import no.nav.k9.integrasjon.kafka.ManagedStreamReady
-import no.nav.k9.Configuration
-import no.nav.k9.integrasjon.kafka.KafkaConfig
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.Topology
 import org.apache.kafka.streams.kstream.Consumed
@@ -49,7 +49,7 @@ internal class AksjonspunktTilbakeStream constructor(
                 )
                 .foreach { _, entry ->
                     if (entry != null) {
-                        log.info("Prosesserer entry fra tilbakekreving")
+                        log.info("Prosesserer entry fra tilbakekreving ${entry.tryggPrint()}")
                         k9TilbakeEventHandler.prosesser(entry)
                     }
                 }

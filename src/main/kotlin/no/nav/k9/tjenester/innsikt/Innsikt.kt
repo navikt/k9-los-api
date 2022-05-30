@@ -1,17 +1,43 @@
 package no.nav.k9.tjenester.innsikt
 
-import io.ktor.application.*
-import io.ktor.html.*
-import io.ktor.locations.*
-import io.ktor.routing.*
-import kotlinx.html.*
+import io.ktor.application.call
+import io.ktor.html.respondHtml
+import io.ktor.locations.Location
+import io.ktor.locations.get
+import io.ktor.routing.Route
+import io.ktor.routing.get
+import io.ktor.routing.route
+import kotlinx.html.BODY
+import kotlinx.html.HTML
+import kotlinx.html.UL
+import kotlinx.html.body
+import kotlinx.html.classes
+import kotlinx.html.div
+import kotlinx.html.h1
+import kotlinx.html.h2
+import kotlinx.html.head
+import kotlinx.html.li
+import kotlinx.html.p
+import kotlinx.html.script
+import kotlinx.html.styleLink
+import kotlinx.html.title
+import kotlinx.html.ul
+import no.nav.k9.domene.lager.oppgave.OppgaveMedId
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.modell.BehandlingStatus
+import no.nav.k9.domene.modell.Fagsystem
 import no.nav.k9.domene.modell.OppgaveKø
-import no.nav.k9.domene.repository.*
+import no.nav.k9.domene.repository.BehandlingProsessEventK9Repository
+import no.nav.k9.domene.repository.BehandlingProsessEventTilbakeRepository
+import no.nav.k9.domene.repository.OppgaveKøRepository
+import no.nav.k9.domene.repository.OppgaveRepository
+import no.nav.k9.domene.repository.PunsjEventK9Repository
+import no.nav.k9.domene.repository.SaksbehandlerRepository
+import no.nav.k9.domene.repository.StatistikkRepository
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.EnheterSomSkalUtelatesFraLos
 import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 
 fun Route.innsiktGrensesnitt() {
     val oppgaveRepository by inject<OppgaveRepository>()
@@ -20,6 +46,8 @@ fun Route.innsiktGrensesnitt() {
     val oppgaveKøRepository by inject<OppgaveKøRepository>()
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
     val behandlingProsessEventK9Repository by inject<BehandlingProsessEventK9Repository>()
+    val behandlingProsessEventTilbakeRepository by inject<BehandlingProsessEventTilbakeRepository>()
+    val punsjEventK9Repository by inject<PunsjEventK9Repository>()
 
     val LOGGER = LoggerFactory.getLogger(StatistikkRepository::class.java)
 
@@ -83,6 +111,20 @@ fun Route.innsiktGrensesnitt() {
         }
     }
 
+    data class InnsiktEvent(val apMap: Map<String, String>, val eventTid: LocalDateTime)
+
+    fun hentEventer(oppgaveMedId1: OppgaveMedId): List<InnsiktEvent> {
+        return when(oppgaveMedId1.oppgave.system) {
+            Fagsystem.PUNSJ.kode -> punsjEventK9Repository.hent(oppgaveMedId1.id)
+                .eventer.map { InnsiktEvent(it.aksjonspunktKoderMedStatusListe, it.eventTid) }
+            Fagsystem.K9TILBAKE.kode, Fagsystem.FPTILBAKE.kode -> behandlingProsessEventTilbakeRepository.hent(oppgaveMedId1.id)
+                .eventer.map { InnsiktEvent(it.aksjonspunktKoderMedStatusListe, it.eventTid) }
+            else -> behandlingProsessEventK9Repository.hent(oppgaveMedId1.id)
+                .eventer.map { InnsiktEvent(it.aksjonspunktKoderMedStatusListe, it.eventTid) }
+        }
+    }
+
+
     fun BODY.oppgaveSeksjon(saksnummer: String) {
         val oppgaveMedId = oppgaveRepository.hentOppgaverSomMatcherSaksnummer(saksnummer)
 
@@ -90,22 +132,22 @@ fun Route.innsiktGrensesnitt() {
             val sortedByDescending = oppgaveMedId.sortedByDescending { it.oppgave.eventTid }
 
             sortedByDescending.forEach { oppgaveMedId1 ->
-                val sakModell = behandlingProsessEventK9Repository.hent(oppgaveMedId1.id)
 
                 div {
                     classes = setOf("input-group-text display-4")
-                    +"TilBeslutter = ${sakModell.oppgave().tilBeslutter}, saksnummer=$saksnummer"
+                    +"TilBeslutter = ${oppgaveMedId1.oppgave.tilBeslutter}, saksnummer=$saksnummer"
                 }
 
-                sakModell.eventer.forEach { behandlingProsessEventDto ->
+                val sakModell = hentEventer(oppgaveMedId1)
+                sakModell.forEach { event ->
                     val stringBuilder = StringBuilder()
 
-                    behandlingProsessEventDto.aksjonspunktKoderMedStatusListe.map { "kode=${it.key}, verdi=${it.value} " }
+                    event.apMap.map { "kode=${it.key}, verdi=${it.value} " }
                         .forEach { stringBuilder.append(it) }
 
                     div {
                         classes = setOf("input-group-text display-4")
-                        +"BId=${oppgaveMedId1.oppgave.eksternId} EventTid=${behandlingProsessEventDto.eventTid}, Aksjonspunkter=$stringBuilder"
+                        +"BId=${oppgaveMedId1.oppgave.eksternId} EventTid=${event.eventTid}, Aksjonspunkter=$stringBuilder"
                     }
                 }
             }
