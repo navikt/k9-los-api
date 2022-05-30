@@ -12,7 +12,7 @@ import no.nav.k9.domene.modell.KøKritererTypeValidatorer.HeltallRangeValidator
 import no.nav.k9.domene.modell.KøKritererTypeValidatorer.KodeverkValidator
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
-enum class AndreKriterierType(@JsonValue override val kode: String, override val navn: String) : Kodeverdi {
+enum class AndreKriterierType(override val kode: String, override val navn: String) : Kodeverdi {
     FRA_PUNSJ("FRA_PUNSJ", "Fra Punsj"),
     TIL_BESLUTTER("TIL_BESLUTTER", "Til beslutter"),
     AVKLAR_MEDLEMSKAP("AVKLAR_MEDLEMSKAP", "Avklar medlemskap"),
@@ -40,7 +40,7 @@ enum class AndreKriterierType(@JsonValue override val kode: String, override val
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 @JsonInclude(value = JsonInclude.Include.NON_ABSENT, content = JsonInclude.Include.NON_EMPTY)
 enum class KøKriterierType(
-    @JsonValue override val kode: String,
+    override val kode: String,
     override val navn: String,
     val felttype: KøKriterierFeltType,
     val felttypeKodeverk: String? = null,
@@ -82,7 +82,7 @@ enum class KøKriterierFeltType(@JsonValue val kode: String) {
 }
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
-enum class FagsakYtelseType constructor(@JsonValue override val kode: String, override val navn: String) : Kodeverdi {
+enum class FagsakYtelseType constructor(override val kode: String, override val navn: String) : Kodeverdi {
     PLEIEPENGER_SYKT_BARN("PSB", "Pleiepenger sykt barn"),
     OMSORGSPENGER("OMP", "Omsorgspenger"),
     OMSORGSDAGER("OMD", "Omsorgsdager: overføring"),
@@ -108,7 +108,7 @@ enum class FagsakYtelseType constructor(@JsonValue override val kode: String, ov
 
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
-enum class FagsakStatus(@JsonValue override val kode: String, override val navn: String) : Kodeverdi {
+enum class FagsakStatus(override val kode: String, override val navn: String) : Kodeverdi {
     OPPRETTET("OPPR", "Opprettet"),
     UNDER_BEHANDLING("UBEH", "Under behandling"),
     LØPENDE("LOP", "Løpende"),
@@ -127,7 +127,7 @@ enum class FagsakStatus(@JsonValue override val kode: String, override val navn:
 }
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
-enum class BehandlingType(@JsonValue override val kode: String, override val navn: String, override val kodeverk: String) :
+enum class BehandlingType(override val kode: String, override val navn: String, override val kodeverk: String) :
     Kodeverdi {
     FORSTEGANGSSOKNAD("BT-002", "Førstegangsbehandling", "ae0034"),
     KLAGE("BT-003", "Klage", "ae0058"),
@@ -163,7 +163,7 @@ enum class BehandlingType(@JsonValue override val kode: String, override val nav
 }
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
-enum class BehandlingStatus(@JsonValue override val kode: String, override val navn: String) : Kodeverdi {
+enum class BehandlingStatus(override val kode: String, override val navn: String) : Kodeverdi {
     AVSLUTTET("AVSLU", "Avsluttet"),
     FATTER_VEDTAK("FVED", "Fatter vedtak"),
     IVERKSETTER_VEDTAK("IVED", "Iverksetter vedtak"),
@@ -188,7 +188,7 @@ enum class BehandlingStatus(@JsonValue override val kode: String, override val n
 }
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
-enum class Enhet(@JsonValue val navn: String) {
+enum class Enhet(val navn: String) {
     NASJONAL("NASJONAL");
 
     companion object {
@@ -203,7 +203,7 @@ enum class Enhet(@JsonValue val navn: String) {
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 enum class KøSortering(
-    @JsonValue override val kode: String,
+    override val kode: String,
     override val navn: String,
     val felttype: String,
     val feltkategori: String
@@ -227,7 +227,7 @@ enum class KøSortering(
 
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
-enum class Fagsystem(@JsonValue  val kode: String, val kodeverk: String) {
+enum class Fagsystem(val kode: String, val kodeverk: String) {
     K9SAK("K9SAK", "FAGSYSTEM"),
     K9TILBAKE("K9TILBAKE", "FAGSYSTEM"),
     FPTILBAKE( "FPTILBAKE", "FAGSYSTEM"),
