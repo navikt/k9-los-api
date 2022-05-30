@@ -133,9 +133,10 @@ fun Route.innsiktGrensesnitt() {
 
             sortedByDescending.forEach { oppgaveMedId1 ->
 
+                val oppgave = oppgaveMedId1.oppgave
                 div {
                     classes = setOf("input-group-text display-4")
-                    +"TilBeslutter = ${oppgaveMedId1.oppgave.tilBeslutter}, saksnummer=$saksnummer"
+                    +"TilBeslutter = ${oppgave.tilBeslutter}, saksnummer=$saksnummer, fagsystem=${oppgave.system}, behandlingType=${oppgave.behandlingType.navn}, behandlingStatus=${oppgave.behandlingStatus.navn}"
                 }
 
                 val sakModell = hentEventer(oppgaveMedId1)
@@ -147,7 +148,7 @@ fun Route.innsiktGrensesnitt() {
 
                     div {
                         classes = setOf("input-group-text display-4")
-                        +"BId=${oppgaveMedId1.oppgave.eksternId} EventTid=${event.eventTid}, Aksjonspunkter=$stringBuilder"
+                        +"BId=${oppgave.eksternId} EventTid=${event.eventTid}, Aksjonspunkter=$stringBuilder"
                     }
                 }
             }
