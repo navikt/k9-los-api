@@ -46,7 +46,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest()  {
     @JvmField
     @RegisterExtension
     val koinTestRule = KoinTestExtension.create {
-        modules(buildAndTestConfig(dataSource))
+        modules(buildAndTestConfig(dataSource, mockk()))
     }
 
     @Test
