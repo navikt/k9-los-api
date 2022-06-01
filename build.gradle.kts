@@ -55,7 +55,7 @@ dependencies {
 
     // Tilgangskontroll
     implementation("no.nav.common:auth:2.2022.04.11_07.31-bca292df5e64")
-    implementation("no.nav.common:rest:2.2022.05.13_07.24-6eadb37dec31")
+    implementation("no.nav.common:rest:2.2022.05.31_07.13-5812471780dc")
     implementation("com.google.code.gson:gson:2.9.0")
 
     // Kontrakter
