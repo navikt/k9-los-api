@@ -1,20 +1,30 @@
 package no.nav.k9
 
-import io.ktor.application.*
+import io.ktor.application.Application
 import kotlinx.coroutines.channels.Channel
 import no.nav.helse.dusseldorf.ktor.health.HealthService
-import no.nav.k9.KoinProfile.*
+import no.nav.k9.KoinProfile.LOCAL
+import no.nav.k9.KoinProfile.PREPROD
+import no.nav.k9.KoinProfile.PROD
 import no.nav.k9.aksjonspunktbehandling.K9TilbakeEventHandler
 import no.nav.k9.aksjonspunktbehandling.K9punsjEventHandler
 import no.nav.k9.aksjonspunktbehandling.K9sakEventHandler
-import no.nav.k9.fagsystem.k9sak.AksjonspunktHendelseMapper
-import no.nav.k9.fagsystem.k9sak.K9sakEventHandlerV2
 import no.nav.k9.db.hikariConfig
 import no.nav.k9.domene.lager.oppgave.v2.BehandlingsmigreringTjeneste
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveTjenesteV2
 import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.domene.repository.*
+import no.nav.k9.domene.repository.BehandlingProsessEventK9Repository
+import no.nav.k9.domene.repository.BehandlingProsessEventTilbakeRepository
+import no.nav.k9.domene.repository.DriftsmeldingRepository
+import no.nav.k9.domene.repository.OppgaveKøRepository
+import no.nav.k9.domene.repository.OppgaveRepository
+import no.nav.k9.domene.repository.PunsjEventK9Repository
+import no.nav.k9.domene.repository.ReservasjonRepository
+import no.nav.k9.domene.repository.SaksbehandlerRepository
+import no.nav.k9.domene.repository.StatistikkRepository
+import no.nav.k9.fagsystem.k9sak.AksjonspunktHendelseMapper
+import no.nav.k9.fagsystem.k9sak.K9sakEventHandlerV2
 import no.nav.k9.integrasjon.abac.IPepClient
 import no.nav.k9.integrasjon.abac.PepClient
 import no.nav.k9.integrasjon.abac.PepClientLocal
@@ -39,6 +49,7 @@ import no.nav.k9.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.tjenester.driftsmeldinger.DriftsmeldingTjeneste
 import no.nav.k9.tjenester.kodeverk.HentKodeverkTjeneste
+import no.nav.k9.tjenester.saksbehandler.merknad.MerknadTjeneste
 import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import no.nav.k9.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
 import no.nav.k9.tjenester.saksbehandler.saksliste.SakslisteTjeneste
@@ -268,6 +279,15 @@ fun common(app: Application, config: Configuration) = module {
     single {
         HentKodeverkTjeneste()
     }
+
+    single {
+        MerknadTjeneste(
+            oppgaveRepositoryV2 = get(),
+            azureGraphService = get(),
+            tm = get()
+        )
+    }
+
     single {
         HealthService(
             healthChecks = get<AsynkronProsesseringV1Service>().isHealtyChecks()

@@ -1,12 +1,16 @@
 package no.nav.k9.tjenester.saksbehandler.merknad
 
-import io.ktor.application.*
-import io.ktor.http.*
-import io.ktor.request.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.application.call
+import io.ktor.http.HttpStatusCode
+import io.ktor.request.receive
+import io.ktor.response.respond
+import io.ktor.routing.Route
+import io.ktor.routing.get
+import io.ktor.routing.post
+import io.ktor.routing.route
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveV2
+import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.integrasjon.azuregraph.IAzureGraphService
 import org.koin.ktor.ext.inject
 import java.time.LocalDateTime
@@ -81,6 +85,7 @@ data class MerknadEndret(
 class MerknadTjeneste(
     private val oppgaveRepositoryV2: OppgaveRepositoryV2,
     private val azureGraphService: IAzureGraphService,
+    private val tm: TransactionalManager
 ) {
 
     fun hentMerknad(eksternReferanse: String): Set<Merknad> {
@@ -89,6 +94,11 @@ class MerknadTjeneste(
 
     suspend fun lagreMerknad(eksternReferanse: String, merknad: MerknadEndret) {
         val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
-        oppgaveRepositoryV2.hentBehandling(eksternReferanse)!!.lagreMerknad(merknad, saksbehandler = saksbehandlerIdent)
+        tm.transaction {
+            val behandling = oppgaveRepositoryV2.hentBehandling(eksternReferanse, it)
+            behandling!!.lagreMerknad(merknad, saksbehandler = saksbehandlerIdent)
+            oppgaveRepositoryV2.lagre(behandling, it)
+        }
+
     }
 }

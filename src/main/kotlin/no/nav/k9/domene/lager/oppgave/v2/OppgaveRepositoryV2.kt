@@ -1,16 +1,20 @@
 package no.nav.k9.domene.lager.oppgave.v2
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import kotliquery.*
+import kotliquery.Query
+import kotliquery.Row
+import kotliquery.TransactionalSession
 import kotliquery.action.ListResultQueryAction
 import kotliquery.action.NullableResultQueryAction
 import kotliquery.action.UpdateQueryAction
+import kotliquery.queryOf
+import kotliquery.sessionOf
+import kotliquery.using
 import no.nav.k9.aksjonspunktbehandling.objectMapper
 import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.domene.modell.Fagsystem
 import no.nav.k9.tjenester.innsikt.Databasekall
 import no.nav.k9.tjenester.saksbehandler.merknad.Merknad
-import org.checkerframework.checker.units.qual.m
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.LongAdder
 import javax.sql.DataSource
@@ -134,6 +138,7 @@ class OppgaveRepositoryV2(
                         select
                             id,
                             merknad_koder,
+                            oppgave_ider,
                             oppgave_koder,
                             fritekst,
                             saksbehandler,
@@ -331,6 +336,7 @@ class OppgaveRepositoryV2(
     }
 
     private fun insert(behandlingId: Long, eksternReferanse: String,  merknad: Merknad): Query {
+        val om = objectMapper()
         return queryOf(
             """
                 insert into merknad (
@@ -344,21 +350,22 @@ class OppgaveRepositoryV2(
                     opprettet,
                     sist_endret
                 ) VALUES (
+                    :behandling_id,
                     :ekstern_referanse,
-                    :fagsystem,
-                    :ytelse_type,
-                    :behandling_type,
+                    :merknad_koder :: jsonb,
+                    :oppgave_koder :: jsonb,
+                    :oppgave_ider :: jsonb,
+                    :fritekst,
+                    :saksbehandler,
                     :opprettet,
-                    :sist_endret,
-                    :soekers_id,
-                    :ferdigstilt_tidspunkt
+                    :sist_endret
                 )
                 """, mapOf(
                 "behandling_id" to behandlingId,
                 "ekstern_referanse" to eksternReferanse,
-                "merknad_koder" to merknad.merknadKoder,
-                "oppgave_koder" to merknad.oppgaveKoder,
-                "oppgave_ider" to merknad.oppgaveIder,
+                "merknad_koder" to om.writeValueAsString(merknad.merknadKoder),
+                "oppgave_koder" to om.writeValueAsString(merknad.oppgaveKoder),
+                "oppgave_ider" to om.writeValueAsString(merknad.oppgaveIder),
                 "fritekst" to merknad.fritekst,
                 "saksbehandler" to merknad.saksbehandler,
                 "opprettet" to merknad.opprettet,
