@@ -1,5 +1,8 @@
 package no.nav.k9.domene.modell
 
+import assertk.assertThat
+import assertk.assertions.isFalse
+import assertk.assertions.isTrue
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
 import no.nav.k9.tjenester.saksbehandler.merknad.Merknad
@@ -486,52 +489,66 @@ internal class OppgaveKøTest {
 
     @Test
     fun `Skal inkludere markerte oppgaver hvis det finnes merknad i køen`() {
-        val oppgave = Oppgave(
-            fagsakSaksnummer = "",
-            aktorId = "273857",
-            journalpostId = "234234535",
-            behandlendeEnhet = "Enhet",
-            behandlingsfrist = LocalDateTime.now(),
-            behandlingOpprettet = LocalDateTime.now().minusDays(23),
-            forsteStonadsdag = LocalDate.now().plusDays(6),
-            behandlingStatus = BehandlingStatus.OPPRETTET,
-            behandlingType = BehandlingType.UKJENT,
-            fagsakYtelseType = FagsakYtelseType.UKJENT,
-            aktiv = true,
-            system = "K9SAK",
-            oppgaveAvsluttet = null,
-            utfortFraAdmin = false,
-            eksternId = UUID.randomUUID(),
-            oppgaveEgenskap = emptyList(),
-            aksjonspunkter = Aksjonspunkter(emptyMap(), emptyList()),
-            tilBeslutter = false,
-            utbetalingTilBruker = false,
-            selvstendigFrilans = false,
-            kombinert = false,
-            søktGradering = false,
-            årskvantum = false,
-            avklarArbeidsforhold = false,
-            avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false,
-        )
+        val oppgave = merknadOppgave(FagsakYtelseType.PLEIEPENGER_SYKT_BARN)
 
         val hastekø = lagOppgaveKø(merknadKoder = listOf("HASTESAK"))
-        assertTrue(hastekø.tilhørerOppgaveTilKø(oppgave, null, listOf(lagMerknad(listOf("HASTESAK")))))
-        assertFalse(hastekø.tilhørerOppgaveTilKø(oppgave, null, listOf(lagMerknad(listOf("VANSKELIG")))))
+        assertTrue(hastekø.tilhørerOppgaveTilKø(oppgave, null, merknadMed("HASTESAK")))
+        assertFalse(hastekø.tilhørerOppgaveTilKø(oppgave, null, merknadMed("VANSKELIG")))
         assertFalse(hastekø.tilhørerOppgaveTilKø(oppgave, null, emptyList()))
 
         val hasteogVanskeligKø = lagOppgaveKø(merknadKoder = listOf("HASTESAK", "VANSKELIG"))
 
-        assertTrue(hasteogVanskeligKø.tilhørerOppgaveTilKø(oppgave, null, listOf(lagMerknad(listOf("VANSKELIG", "HASTESAK")))))
-        assertTrue(hasteogVanskeligKø.tilhørerOppgaveTilKø(oppgave, null, listOf(lagMerknad(listOf("VANSKELIG")))))
-        assertTrue(hasteogVanskeligKø.tilhørerOppgaveTilKø(oppgave, null, listOf(lagMerknad(listOf("HASTESAK")))))
+        assertTrue(hasteogVanskeligKø.tilhørerOppgaveTilKø(oppgave, null, merknadMed("VANSKELIG", "HASTESAK")))
+        assertTrue(hasteogVanskeligKø.tilhørerOppgaveTilKø(oppgave, null, merknadMed("VANSKELIG")))
+        assertTrue(hasteogVanskeligKø.tilhørerOppgaveTilKø(oppgave, null, merknadMed("HASTESAK")))
         assertFalse(hasteogVanskeligKø.tilhørerOppgaveTilKø(oppgave, null, emptyList()))
 
         val ingenMerknadKø = lagOppgaveKø(merknadKoder = emptyList())
-        assertTrue(ingenMerknadKø.tilhørerOppgaveTilKø(oppgave, null, listOf(lagMerknad(listOf("VANSKELIG", "HASTESAK")))))
+        assertTrue(ingenMerknadKø.tilhørerOppgaveTilKø(oppgave, null, merknadMed("VANSKELIG", "HASTESAK")))
         assertTrue(ingenMerknadKø.tilhørerOppgaveTilKø(oppgave, null, listOf()))
     }
 
+    @Test
+    fun `markerte oppgaver i kombinasjon med andre kriterier`() {
+        val psbOppgave = merknadOppgave(FagsakYtelseType.PLEIEPENGER_SYKT_BARN)
+        val psbHastekø = lagOppgaveKø(merknadKoder = listOf("HASTESAK"), fagsakYtelseTyper = mutableListOf(FagsakYtelseType.PLEIEPENGER_SYKT_BARN))
+        val pilsHastekø = lagOppgaveKø(merknadKoder = listOf("HASTESAK"), fagsakYtelseTyper = mutableListOf(FagsakYtelseType.PPN))
+
+        assertThat(psbHastekø.tilhørerOppgaveTilKø(psbOppgave, null, merknadMed("HASTESAK"))).isTrue()
+        assertThat(pilsHastekø.tilhørerOppgaveTilKø(psbOppgave, null, merknadMed("HASTESAK"))).isFalse()
+
+    }
+
+    private fun merknadOppgave(fagsakYtelseType: FagsakYtelseType) = Oppgave(
+        fagsakSaksnummer = "",
+        aktorId = "273857",
+        journalpostId = "234234535",
+        behandlendeEnhet = "Enhet",
+        behandlingsfrist = LocalDateTime.now(),
+        behandlingOpprettet = LocalDateTime.now().minusDays(23),
+        forsteStonadsdag = LocalDate.now().plusDays(6),
+        behandlingStatus = BehandlingStatus.OPPRETTET,
+        behandlingType = BehandlingType.FORSTEGANGSSOKNAD,
+        fagsakYtelseType = fagsakYtelseType,
+        aktiv = true,
+        system = "K9SAK",
+        oppgaveAvsluttet = null,
+        utfortFraAdmin = false,
+        eksternId = UUID.randomUUID(),
+        oppgaveEgenskap = emptyList(),
+        aksjonspunkter = Aksjonspunkter(emptyMap(), emptyList()),
+        tilBeslutter = false,
+        utbetalingTilBruker = false,
+        selvstendigFrilans = false,
+        kombinert = false,
+        søktGradering = false,
+        årskvantum = false,
+        avklarArbeidsforhold = false,
+        avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false,
+    )
+
     private fun kriterie(type: AndreKriterierType) = AndreKriterierDto("1", type, checked = true, inkluder = true)
+
 
     private fun feilutb_oppg(feilutbetaling: Long, avklarMedlemskap: Boolean = false) = Oppgave(
 
@@ -568,19 +585,19 @@ internal class OppgaveKøTest {
         feilutbetaltBeløp = feilutbetaling
     )
 
-
-
     private fun lagOppgaveKø(
         feilutbetaling: Intervall<Long>? = null,
         andreKriterierDto: AndreKriterierDto? = null,
-        merknadKoder: List<String> = emptyList()
+        merknadKoder: List<String> = emptyList(),
+        behandlingTyper: MutableList<BehandlingType> = mutableListOf(),
+        fagsakYtelseTyper: MutableList<FagsakYtelseType> = mutableListOf(),
     ) = OppgaveKø(
         UUID.randomUUID(),
         "test",
         LocalDate.now(),
-        KøSortering.FEILUTBETALT,
-        mutableListOf(),
-        mutableListOf(),
+        if (feilutbetaling != null) KøSortering.FEILUTBETALT else KøSortering.OPPRETT_BEHANDLING,
+        behandlingTyper,
+        fagsakYtelseTyper,
         andreKriterierDto?.let {mutableListOf(it)} ?: mutableListOf(),
         Enhet.NASJONAL,
         null,
@@ -592,14 +609,15 @@ internal class OppgaveKøTest {
         merknadKoder = merknadKoder
     )
 
-    fun lagMerknad(merknadKoder: List<String>): Merknad {
-        return Merknad(
+    private fun merknadMed(vararg merknadKoder: String) = listOf(
+        Merknad(
             id = 123456L,
-            merknadKoder=merknadKoder,
+            merknadKoder = merknadKoder.toList(),
             oppgaveKoder = emptyList(),
             oppgaveIder = emptyList(),
             saksbehandler = "",
             opprettet = LocalDateTime.now()
         )
-    }
+    )
+
 }

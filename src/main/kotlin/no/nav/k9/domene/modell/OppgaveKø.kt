@@ -85,10 +85,6 @@ data class OppgaveKø(
             return false
         }
 
-        if (this.merknadKoder.any { valgteMerknader -> merknader.flatMap { it.merknadKoder }.contains(valgteMerknader) }) {
-            return true
-        }
-
         if (reservasjonRepository != null && erOppgavenReservert(reservasjonRepository, oppgave)) {
             return false
         }
@@ -109,6 +105,10 @@ data class OppgaveKø(
         }
 
         if (oppgave.kode6 != this.kode6) {
+            return false
+        }
+
+        if (merknadKoder.isNotEmpty() && !merknader.flatMap { it.merknadKoder }.any { it in merknadKoder }) {
             return false
         }
 
