@@ -128,11 +128,11 @@ class OppgaveRepositoryV2(
             }.asList
     }
 
-    fun hentMerknader(eksternReferanse: String): List<Merknad> {
-        return using(sessionOf(dataSource)) { it.run(hentMerknaderQuery(eksternReferanse)) }
+    fun hentMerknader(eksternReferanse: String, inkluderSlettet: Boolean = false): List<Merknad> {
+        return using(sessionOf(dataSource)) { it.run(hentMerknaderQuery(eksternReferanse, inkluderSlettet)) }
     }
 
-    private fun hentMerknaderQuery(eksternReferanse: String) : ListResultQueryAction<Merknad> {
+    private fun hentMerknaderQuery(eksternReferanse: String, inkluderSlettet: Boolean = false) : ListResultQueryAction<Merknad> {
             return queryOf(
                 """
                         select
@@ -146,9 +146,13 @@ class OppgaveRepositoryV2(
                             sist_endret,
                             slettet
                         from merknad 
-                        WHERE ekstern_referanse = :ekstern_referanse
+                        WHERE ekstern_referanse = :ekstern_referanse 
+                        and slettet = :slettet
                     """,
-                mapOf("ekstern_referanse" to eksternReferanse)
+                mapOf(
+                    "ekstern_referanse" to eksternReferanse,
+                    "slettet" to inkluderSlettet
+                )
             ).map { row -> Merknad(
                 id = row.long("id"),
                 oppgaveKoder = objectMapper().readValue(row.string("oppgave_koder")),
@@ -322,14 +326,14 @@ class OppgaveRepositoryV2(
                 UPDATE merknad SET
                     sist_endret = :sist_endret,
                     fritekst = :fritekst,
-                    merknad_koder = :merknad_koder,
+                    merknad_koder = :merknad_koder :: jsonb,
                     slettet = :slettet
                 WHERE id = :id
             """, mapOf(
                 "id" to merknad.id,
                 "fritekst" to merknad.fritekst,
                 "sist_endret" to merknad.sistEndret,
-                "merknad_koder" to merknad.merknadKoder,
+                "merknad_koder" to objectMapper().writeValueAsString(merknad.merknadKoder),
                 "slettet" to merknad.slettet
             )
         ).asUpdate

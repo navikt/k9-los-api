@@ -1,8 +1,11 @@
 package no.nav.k9.tjenester.saksbehandler.merknad
 
 import assertk.assertThat
+import assertk.assertions.containsAll
 import assertk.assertions.hasSize
+import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
+import assertk.assertions.isTrue
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -77,6 +80,42 @@ internal class MerknadTjenesteKtTest : AbstractPostgresTest(), KoinTest  {
         assertThat(merknader).hasSize(1)
         assertThat(merknader.first().merknadKoder.first()).isEqualTo(merknadKode)
         assertThat(merknader.first().fritekst).isEqualTo(fritekst)
+    }
+
+    @Test
+    fun `skal kunne endre og slette merknad`() {
+        val eksternReferanse = UUID.randomUUID().toString()
+        lagreNyBehandlingMedOppgave(eksternReferanse)
+        val nyMerknad = MerknadEndret(id = null, merknadKoder = listOf("HASTESAK"), fritekst = "hei")
+
+        runBlocking { merknadTjeneste.lagreMerknad(eksternReferanse, nyMerknad) }
+
+        val orginale = merknadTjeneste.hentMerknad(eksternReferanse)
+        assertThat(orginale).hasSize(1)
+
+        val original = orginale.first()
+
+        val endretMerknad = MerknadEndret(id = original.id, merknadKoder = listOf("VENTESAK", "HASTESAK"), fritekst = "hå")
+        runBlocking { merknadTjeneste.lagreMerknad(eksternReferanse, endretMerknad) }
+        val endrede = merknadTjeneste.hentMerknad(eksternReferanse)
+        assertThat(endrede).hasSize(1)
+        val endret = endrede.first()
+        assertThat(endret.id!!).isEqualTo(original.id!!)
+        assertThat(endret.merknadKoder).containsAll(*endretMerknad.merknadKoder.toTypedArray())
+        assertThat(endret.fritekst).isEqualTo(endretMerknad.fritekst)
+
+        val slettMerknad = MerknadEndret(id = original.id, merknadKoder = emptyList(), fritekst = "blalba")
+        runBlocking { merknadTjeneste.lagreMerknad(eksternReferanse, slettMerknad) }
+
+        assertThat(merknadTjeneste.hentMerknad(eksternReferanse)).isEmpty()
+        val slettede = oppgaveRepository.hentMerknader(eksternReferanse, inkluderSlettet = true)
+        assertThat(slettede).hasSize(1)
+        val slettet = slettede.first()
+        assertThat(slettet.id!!).isEqualTo(original.id!!)
+        assertThat(slettet.merknadKoder).containsAll(*endretMerknad.merknadKoder.toTypedArray())
+        assertThat(slettet.fritekst).isEqualTo(endretMerknad.fritekst)
+        assertThat(slettet.slettet).isTrue()
+
     }
 
     @Test

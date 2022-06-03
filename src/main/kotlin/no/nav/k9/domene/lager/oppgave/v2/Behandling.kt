@@ -179,28 +179,36 @@ open class Behandling constructor(
     fun lagreMerknad(merknad: MerknadEndret, saksbehandler: String) {
         if (merknad.merknadKoder.isEmpty()) {
             slettMerknad(merknad.id)
+            return
         }
 
-        val aktiveMerknader = merknader.aktive()
-        if (aktiveMerknader.isEmpty()) {
+        if (merknader.isEmpty()) {
             merknader.add(merknad.nyMerknad(saksbehandler, aktiveOppgaver()))
         } else {
-            val merknadId = merknad.id ?: throw IllegalStateException("Kan ikke endre eksisterende merknad uten merknadId")
-            aktiveMerknader
-                .firstOrNull { eksisterendeMerknad -> eksisterendeMerknad.id!! == merknadId }
-                ?.oppdater(merknad.merknadKoder, merknad.fritekst)
+            endreMerknad(merknad)
         }
     }
 
-    fun slettMerknad(merknadId: Long?) {
-        merknader.filter { merknadId == null || it.id == merknadId }.forEach { it.slett() }
+    private fun endreMerknad(merknad: MerknadEndret) {
+        val merknadId = merknad.id
+            ?: throw IllegalStateException("Kan ikke endre eksisterende merknad uten merknadId")
+
+        merknader
+            .firstOrNull { eksisterendeMerknad -> eksisterendeMerknad.id!! == merknadId }
+            ?.oppdater(merknad.merknadKoder, merknad.fritekst)
     }
 
-    fun Collection<Merknad>.aktive(): List<Merknad> {
-        return merknader.filterNot { it.slettet }
+    private fun slettMerknad(merknadId: Long?) {
+        if (merknader.isEmpty())  {
+            log.warn("Prøver å slette merknad med merknadId=$merknadId, men finnes ingen merknader")
+            return
+        }
+
+        merknadId ?: throw IllegalStateException("Kan ikke slette eksisterende merknad uten merknadId")
+        merknader.filter { it.id == merknadId }.forEach { it.slett() }
     }
 
-    fun hentMerknader() = merknader.aktive().toSet()
+    fun hentMerknader() = merknader.toSet()
 }
 
 interface Ferdigstillelse {
