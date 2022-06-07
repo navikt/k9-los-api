@@ -3,26 +3,16 @@ package no.nav.k9.domene.lager.oppgave.v2
 import assertk.assertThat
 import assertk.assertions.containsOnly
 import assertk.assertions.hasSize
-import no.nav.k9.AbstractPostgresTest
-import no.nav.k9.buildAndTestConfig
+import no.nav.k9.AbstractK9LosIntegrationTest
 import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.domene.modell.Fagsystem
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.RegisterExtension
-import org.koin.test.KoinTest
 import org.koin.test.get
-import org.koin.test.junit5.KoinTestExtension
 import java.time.LocalDateTime
 import java.util.*
 
-internal class OppgaveTjenesteV2Test : AbstractPostgresTest(), KoinTest {
-
-    @JvmField
-    @RegisterExtension
-    val koinTestRule = KoinTestExtension.create {
-        modules(buildAndTestConfig(dataSource))
-    }
+internal class OppgaveTjenesteV2Test : AbstractK9LosIntegrationTest() {
     val eksternId1 = UUID.randomUUID().toString()
     val eksternId2 = UUID.randomUUID().toString()
 

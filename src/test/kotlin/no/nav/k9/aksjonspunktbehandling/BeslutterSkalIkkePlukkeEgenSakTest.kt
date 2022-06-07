@@ -1,8 +1,7 @@
 package no.nav.k9.aksjonspunktbehandling
 
 import kotlinx.coroutines.runBlocking
-import no.nav.k9.AbstractPostgresTest
-import no.nav.k9.buildAndTestConfig
+import no.nav.k9.AbstractK9LosIntegrationTest
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.modell.AksjonspunktStatus
@@ -18,23 +17,14 @@ import no.nav.k9.domene.repository.OppgaveKøRepository
 import no.nav.k9.domene.repository.OppgaveRepository
 import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.RegisterExtension
-import org.koin.test.KoinTest
 import org.koin.test.get
-import org.koin.test.junit5.KoinTestExtension
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.test.assertSame
 
 
-class BeslutterSkalIkkePlukkeEgenSakTest : KoinTest, AbstractPostgresTest()  {
-
-    @JvmField
-    @RegisterExtension
-    val koinTestRule = KoinTestExtension.create {
-        modules(buildAndTestConfig(dataSource))
-    }
+class BeslutterSkalIkkePlukkeEgenSakTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `Beslutter skal ikke plukke en oppgave beslutteren har behandlet`() {

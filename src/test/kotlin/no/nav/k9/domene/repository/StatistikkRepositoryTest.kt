@@ -1,7 +1,6 @@
 package no.nav.k9.domene.repository
 
-import no.nav.k9.AbstractPostgresTest
-import no.nav.k9.buildAndTestConfig
+import no.nav.k9.AbstractK9LosIntegrationTest
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.modell.Aksjonspunkter
 import no.nav.k9.domene.modell.BehandlingStatus
@@ -10,23 +9,14 @@ import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import no.nav.k9.tjenester.saksbehandler.oppgave.BehandletOppgave
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.RegisterExtension
 import org.koin.core.context.stopKoin
-import org.koin.test.KoinTest
 import org.koin.test.get
-import org.koin.test.junit5.KoinTestExtension
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.test.assertSame
 
-class StatistikkRepositoryTest : KoinTest, AbstractPostgresTest()  {
-
-    @JvmField
-    @RegisterExtension
-    val koinTestRule = KoinTestExtension.create {
-        modules(buildAndTestConfig(dataSource))
-    }
+class StatistikkRepositoryTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun skalFylleMedTommeElementerDersomViIkkeHarDataPåDenDagen() {
