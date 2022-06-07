@@ -8,6 +8,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.k9.AbstractPostgresTest
 import no.nav.k9.buildAndTestConfig
 import no.nav.k9.domene.lager.oppgave.Oppgave
+import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.modell.AksjonspunktStatus
 import no.nav.k9.domene.modell.AksjonspunktTilstand
 import no.nav.k9.domene.modell.Aksjonspunkter
@@ -86,6 +87,8 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
     @Test
     fun hentReservasjonsHistorikk() = runBlocking {
         val oppgaveRepository = get<OppgaveRepository>()
+        val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
+
         val oppgaveTjeneste = get<OppgaveTjeneste>()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
         val reservasjonRepository = get<ReservasjonRepository>()
@@ -136,7 +139,11 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
             avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false
         )
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
-        oppgaveko.leggOppgaveTilEllerFjernFraKø(oppgave1, reservasjonRepository)
+        oppgaveko.leggOppgaveTilEllerFjernFraKø(
+            oppgave1,
+            reservasjonRepository,
+            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+        )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
         }
@@ -175,6 +182,8 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
     fun skalKunnePlukkeSisteSakIenKø() = runBlocking {
         // arrange
         val oppgaveRepository = get<OppgaveRepository>()
+        val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
+
         val oppgaveTjeneste = get<OppgaveTjeneste>()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
         val reservasjonRepository = get<ReservasjonRepository>()
@@ -226,7 +235,11 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
             pleietrengendeAktørId = "273856"
         )
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
-        oppgaveko.leggOppgaveTilEllerFjernFraKø(oppgave1, reservasjonRepository)
+        oppgaveko.leggOppgaveTilEllerFjernFraKø(
+            oppgave1,
+            reservasjonRepository,
+            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+        )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
         }
@@ -258,6 +271,8 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
     fun skalIkkePlukkeEnParSakDerDenAndreSakErReservertPåEnAnnenSaksbehandler() = runBlocking {
         // arrange
         val oppgaveRepository = get<OppgaveRepository>()
+        val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
+
         val oppgaveTjeneste = get<OppgaveTjeneste>()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
         val reservasjonRepository = get<ReservasjonRepository>()
@@ -309,7 +324,11 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
             pleietrengendeAktørId = "273856"
         )
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
-        oppgaveko.leggOppgaveTilEllerFjernFraKø(oppgave1, reservasjonRepository)
+        oppgaveko.leggOppgaveTilEllerFjernFraKø(
+            oppgave1,
+            reservasjonRepository,
+            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+        )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
         }
@@ -367,7 +386,11 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
 
         val hentOppgavekø = oppgaveKøRepository.hentOppgavekø(oppgaveKøId)
 
-        hentOppgavekø.leggOppgaveTilEllerFjernFraKø(oppgave2, reservasjonRepository)
+        hentOppgavekø.leggOppgaveTilEllerFjernFraKø(
+            oppgave2,
+            reservasjonRepository,
+            oppgaveRepositoryV2.hentMerknader(oppgave2.eksternId.toString())
+        )
         oppgaveKøRepository.lagre(hentOppgavekø.id) {
             hentOppgavekø
         }
@@ -394,6 +417,8 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
     @Test
     fun `skal sortere på størrelse på feil utbetalingsbeløp`() = runBlocking {
         val oppgaveRepository = get<OppgaveRepository>()
+        val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
+
         val oppgaveTjeneste = get<OppgaveTjeneste>()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
 
@@ -415,19 +440,47 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         val o3 = lagOppgave(oppgaveId3, 100L)
         val o4 = lagOppgave(oppgaveId4, 10L)
 
-        tilbakeKrevingsKø.leggOppgaveTilEllerFjernFraKø(o2)
-        tilbakeKrevingsKø.leggOppgaveTilEllerFjernFraKø(o3)
-        tilbakeKrevingsKø.leggOppgaveTilEllerFjernFraKø(o4)
-        tilbakeKrevingsKø.leggOppgaveTilEllerFjernFraKø(o1)
+        tilbakeKrevingsKø.leggOppgaveTilEllerFjernFraKø(
+            o2,
+            merknader = oppgaveRepositoryV2.hentMerknader(o2.eksternId.toString())
+        )
+        tilbakeKrevingsKø.leggOppgaveTilEllerFjernFraKø(
+            o3,
+            merknader = oppgaveRepositoryV2.hentMerknader(o3.eksternId.toString())
+        )
+        tilbakeKrevingsKø.leggOppgaveTilEllerFjernFraKø(
+            o4,
+            merknader = oppgaveRepositoryV2.hentMerknader(o4.eksternId.toString())
+        )
+        tilbakeKrevingsKø.leggOppgaveTilEllerFjernFraKø(
+            o1,
+            merknader = oppgaveRepositoryV2.hentMerknader(o1.eksternId.toString())
+        )
 
         oppgaveRepository.lagre(o2.eksternId) { o2 }
         oppgaveRepository.lagre(o4.eksternId) { o4 }
         oppgaveRepository.lagre(o1.eksternId) { o1 }
         oppgaveRepository.lagre(o3.eksternId) { o3 }
-        tilbakeKrevingsKø.leggOppgaveTilEllerFjernFraKø(o2, null)
-        tilbakeKrevingsKø.leggOppgaveTilEllerFjernFraKø(o4, null)
-        tilbakeKrevingsKø.leggOppgaveTilEllerFjernFraKø(o1, null)
-        tilbakeKrevingsKø.leggOppgaveTilEllerFjernFraKø(o3, null)
+        tilbakeKrevingsKø.leggOppgaveTilEllerFjernFraKø(
+            o2,
+            null,
+            oppgaveRepositoryV2.hentMerknader(o2.eksternId.toString())
+        )
+        tilbakeKrevingsKø.leggOppgaveTilEllerFjernFraKø(
+            o4,
+            null,
+            oppgaveRepositoryV2.hentMerknader(o4.eksternId.toString())
+        )
+        tilbakeKrevingsKø.leggOppgaveTilEllerFjernFraKø(
+            o1,
+            null,
+            oppgaveRepositoryV2.hentMerknader(o1.eksternId.toString())
+        )
+        tilbakeKrevingsKø.leggOppgaveTilEllerFjernFraKø(
+            o3,
+            null,
+            oppgaveRepositoryV2.hentMerknader(o3.eksternId.toString())
+        )
         oppgaveKøRepository.lagre(tilbakeKrevingsKø.id) {
             tilbakeKrevingsKø
         }
@@ -480,6 +533,8 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
     fun skalPlukkeParSakHvisSaksbehandlingHarOpprinneligSakPåSeg() = runBlocking {
         // arrange
         val oppgaveRepository = get<OppgaveRepository>()
+        val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
+
         val oppgaveTjeneste = get<OppgaveTjeneste>()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
         val reservasjonRepository = get<ReservasjonRepository>()
@@ -531,7 +586,11 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
             pleietrengendeAktørId = "273856"
         )
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
-        oppgaveko.leggOppgaveTilEllerFjernFraKø(oppgave1, reservasjonRepository)
+        oppgaveko.leggOppgaveTilEllerFjernFraKø(
+            oppgave1,
+            reservasjonRepository,
+            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+        )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
         }
@@ -589,7 +648,11 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
 
         val hentOppgavekø = oppgaveKøRepository.hentOppgavekø(oppgaveKøId)
 
-        hentOppgavekø.leggOppgaveTilEllerFjernFraKø(oppgave2, reservasjonRepository)
+        hentOppgavekø.leggOppgaveTilEllerFjernFraKø(
+            oppgave2,
+            reservasjonRepository,
+            oppgaveRepositoryV2.hentMerknader(oppgave2.eksternId.toString())
+        )
         oppgaveKøRepository.lagre(hentOppgavekø.id) {
             hentOppgavekø
         }
@@ -627,7 +690,11 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
 
         val hentOppgavekø2 = oppgaveKøRepository.hentOppgavekø(oppgaveKøId)
 
-        hentOppgavekø2.leggOppgaveTilEllerFjernFraKø(oppgave3, reservasjonRepository)
+        hentOppgavekø2.leggOppgaveTilEllerFjernFraKø(
+            oppgave3,
+            reservasjonRepository,
+            oppgaveRepositoryV2.hentMerknader(oppgave3.eksternId.toString())
+        )
         oppgaveKøRepository.lagre(hentOppgavekø2.id) {
             hentOppgavekø2
         }
@@ -651,6 +718,8 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
     fun skalIkkeFåOppNestesakIListenHvisSaksbehandlerVarBeslutterPåDen() = runBlocking {
         // arrange
         val oppgaveRepository = get<OppgaveRepository>()
+        val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
+
         val oppgaveTjeneste = get<OppgaveTjeneste>()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
         val reservasjonRepository = get<ReservasjonRepository>()
@@ -702,7 +771,11 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
             pleietrengendeAktørId = "273856"
         )
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
-        oppgaveko.leggOppgaveTilEllerFjernFraKø(oppgave1, reservasjonRepository)
+        oppgaveko.leggOppgaveTilEllerFjernFraKø(
+            oppgave1,
+            reservasjonRepository,
+            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+        )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
         }
@@ -761,7 +834,11 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
 
         val hentOppgavekø = oppgaveKøRepository.hentOppgavekø(oppgaveKøId)
 
-        hentOppgavekø.leggOppgaveTilEllerFjernFraKø(oppgave2, reservasjonRepository)
+        hentOppgavekø.leggOppgaveTilEllerFjernFraKø(
+            oppgave2,
+            reservasjonRepository,
+            oppgaveRepositoryV2.hentMerknader(oppgave2.eksternId.toString())
+        )
         oppgaveKøRepository.lagre(hentOppgavekø.id) {
             hentOppgavekø
         }
@@ -799,7 +876,11 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
 
         val hentOppgavekø2 = oppgaveKøRepository.hentOppgavekø(oppgaveKøId)
 
-        hentOppgavekø2.leggOppgaveTilEllerFjernFraKø(oppgave3, reservasjonRepository)
+        hentOppgavekø2.leggOppgaveTilEllerFjernFraKø(
+            oppgave3,
+            reservasjonRepository,
+            oppgaveRepositoryV2.hentMerknader(oppgave3.eksternId.toString())
+        )
         oppgaveKøRepository.lagre(hentOppgavekø2.id) {
             hentOppgavekø2
         }
@@ -823,6 +904,8 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
     fun skalIkkeFåSammeSakSomDuHarSaksbehandletNårDuSkalBeslutteEnSak() = runBlocking {
         // arrange
         val oppgaveRepository = get<OppgaveRepository>()
+        val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
+
         val oppgaveTjeneste = get<OppgaveTjeneste>()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
         val reservasjonRepository = get<ReservasjonRepository>()
@@ -879,7 +962,11 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
 
         )
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
-        oppgaveko.leggOppgaveTilEllerFjernFraKø(oppgave1, reservasjonRepository)
+        oppgaveko.leggOppgaveTilEllerFjernFraKø(
+            oppgave1,
+            reservasjonRepository,
+            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+        )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
         }
@@ -927,7 +1014,11 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
 
         val hentOppgavekø = oppgaveKøRepository.hentOppgavekø(oppgaveKøId)
 
-        hentOppgavekø.leggOppgaveTilEllerFjernFraKø(oppgave2, reservasjonRepository)
+        hentOppgavekø.leggOppgaveTilEllerFjernFraKø(
+            oppgave2,
+            reservasjonRepository,
+            oppgaveRepositoryV2.hentMerknader(oppgave2.eksternId.toString())
+        )
         oppgaveKøRepository.lagre(hentOppgavekø.id) {
             hentOppgavekø
         }
@@ -950,6 +1041,8 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
     fun skalIkkeFåOppNestesakIListenHvisSaksbehandlerVarBeslutterPåParsaken() = runBlocking {
         // arrange
         val oppgaveRepository = get<OppgaveRepository>()
+        val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
+
         val oppgaveTjeneste = get<OppgaveTjeneste>()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
         val reservasjonRepository = get<ReservasjonRepository>()
@@ -1001,7 +1094,11 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
             pleietrengendeAktørId = "273856"
         )
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
-        oppgaveko.leggOppgaveTilEllerFjernFraKø(oppgave1, reservasjonRepository)
+        oppgaveko.leggOppgaveTilEllerFjernFraKø(
+            oppgave1,
+            reservasjonRepository,
+            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+        )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
         }
@@ -1050,7 +1147,11 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
 
         val hentOppgavekø = oppgaveKøRepository.hentOppgavekø(oppgaveKøId)
 
-        hentOppgavekø.leggOppgaveTilEllerFjernFraKø(oppgave2, reservasjonRepository)
+        hentOppgavekø.leggOppgaveTilEllerFjernFraKø(
+            oppgave2,
+            reservasjonRepository,
+            oppgaveRepositoryV2.hentMerknader(oppgave2.eksternId.toString())
+        )
         oppgaveKøRepository.lagre(hentOppgavekø.id) {
             hentOppgavekø
         }
@@ -1088,7 +1189,11 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
 
         val hentOppgavekø2 = oppgaveKøRepository.hentOppgavekø(oppgaveKøId)
 
-        hentOppgavekø2.leggOppgaveTilEllerFjernFraKø(oppgave3, reservasjonRepository)
+        hentOppgavekø2.leggOppgaveTilEllerFjernFraKø(
+            oppgave3,
+            reservasjonRepository,
+            oppgaveRepositoryV2.hentMerknader(oppgave3.eksternId.toString())
+        )
         oppgaveKøRepository.lagre(hentOppgavekø2.id) {
             hentOppgavekø2
         }
@@ -1114,6 +1219,8 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
     @Test
     fun skalKunneReserverToOppgaverSamtidig() = runBlocking {
         val oppgaveRepository = get<OppgaveRepository>()
+        val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
+
         val oppgaveTjeneste = get<OppgaveTjeneste>()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
         val reservasjonRepository = get<ReservasjonRepository>()
@@ -1165,7 +1272,11 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
             pleietrengendeAktørId = "273856"
         )
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
-        oppgaveko.leggOppgaveTilEllerFjernFraKø(oppgave1, reservasjonRepository)
+        oppgaveko.leggOppgaveTilEllerFjernFraKø(
+            oppgave1,
+            reservasjonRepository,
+            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+        )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
         }
@@ -1200,7 +1311,11 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
             pleietrengendeAktørId = "273856"
         )
         oppgaveRepository.lagre(oppgave2.eksternId) { oppgave2 }
-        oppgaveko.leggOppgaveTilEllerFjernFraKø(oppgave2, reservasjonRepository)
+        oppgaveko.leggOppgaveTilEllerFjernFraKø(
+            oppgave2,
+            reservasjonRepository,
+            oppgaveRepositoryV2.hentMerknader(oppgave2.eksternId.toString())
+        )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
         }
@@ -1235,6 +1350,8 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
     @Test
     fun skalKunneReserverEnOppgaveDerEnAnnenErReservertAlt() = runBlocking {
         val oppgaveRepository = get<OppgaveRepository>()
+        val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
+
         val oppgaveTjeneste = get<OppgaveTjeneste>()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
         val reservasjonRepository = get<ReservasjonRepository>()
@@ -1295,7 +1412,11 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
             pleietrengendeAktørId = "273856"
         )
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
-        oppgaveko.leggOppgaveTilEllerFjernFraKø(oppgave1, reservasjonRepository)
+        oppgaveko.leggOppgaveTilEllerFjernFraKø(
+            oppgave1,
+            reservasjonRepository,
+            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+        )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
         }
@@ -1336,7 +1457,11 @@ class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
         val oppgaveKø = hentOppgaveKøer[0]
 
         oppgaveRepository.lagre(oppgave2.eksternId) { oppgave2 }
-        oppgaveKø.leggOppgaveTilEllerFjernFraKø(oppgave2, reservasjonRepository)
+        oppgaveKø.leggOppgaveTilEllerFjernFraKø(
+            oppgave2,
+            reservasjonRepository,
+            oppgaveRepositoryV2.hentMerknader(oppgave2.eksternId.toString())
+        )
 
         oppgaveKøRepository.lagre(oppgaveKø.id) {
             oppgaveKø

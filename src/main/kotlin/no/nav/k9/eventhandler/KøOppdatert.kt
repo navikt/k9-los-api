@@ -4,6 +4,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.launch
+import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.repository.OppgaveKøRepository
 import no.nav.k9.domene.repository.OppgaveRepository
 import no.nav.k9.domene.repository.ReservasjonRepository
@@ -21,6 +22,7 @@ fun CoroutineScope.køOppdatertProsessor(
     channel: ReceiveChannel<UUID>,
     oppgaveKøRepository: OppgaveKøRepository,
     oppgaveRepository: OppgaveRepository,
+    oppgaveRepositoryV2: OppgaveRepositoryV2,
     oppgaveTjeneste: OppgaveTjeneste,
     reservasjonRepository: ReservasjonRepository,
     k9SakService: IK9SakService
@@ -32,6 +34,7 @@ fun CoroutineScope.køOppdatertProsessor(
                 oppgaveKøRepository,
                 it,
                 oppgaveRepository,
+                oppgaveRepositoryV2,
                 reservasjonRepository,
                 oppgaveTjeneste,
                 k9SakService
@@ -45,6 +48,7 @@ private suspend fun oppdaterKø(
     oppgaveKøRepository: OppgaveKøRepository,
     it: UUID,
     oppgaveRepository: OppgaveRepository,
+    oppgaveRepositoryV2: OppgaveRepositoryV2,
     reservasjonRepository: ReservasjonRepository,
     oppgaveTjeneste: OppgaveTjeneste,
     k9SakService: IK9SakService
@@ -60,7 +64,8 @@ private suspend fun oppdaterKø(
         for (oppgave in aktiveOppgaver) {
             if (kø.kode6 == oppgave.kode6) {
                 kø.leggOppgaveTilEllerFjernFraKø(
-                    oppgave = oppgave
+                    oppgave = oppgave,
+                    merknader = oppgaveRepositoryV2.hentMerknader(oppgave.eksternId.toString())
                 )
             }
         }
@@ -73,7 +78,8 @@ private suspend fun oppdaterKø(
                 for (oppgave in aktiveOppgaver) {
                     if (kø.kode6 == oppgave.kode6) {
                         oppgaveKø.leggOppgaveTilEllerFjernFraKø(
-                            oppgave = oppgave
+                            oppgave = oppgave,
+                            merknader = oppgaveRepositoryV2.hentMerknader(oppgave.eksternId.toString())
                         )
                     }
                 }

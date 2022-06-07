@@ -15,7 +15,15 @@ import no.nav.k9.domene.lager.oppgave.v2.BehandlingsmigreringTjeneste
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveTjenesteV2
 import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.domene.repository.*
+import no.nav.k9.domene.repository.BehandlingProsessEventK9Repository
+import no.nav.k9.domene.repository.BehandlingProsessEventTilbakeRepository
+import no.nav.k9.domene.repository.DriftsmeldingRepository
+import no.nav.k9.domene.repository.OppgaveKøRepository
+import no.nav.k9.domene.repository.OppgaveRepository
+import no.nav.k9.domene.repository.PunsjEventK9Repository
+import no.nav.k9.domene.repository.ReservasjonRepository
+import no.nav.k9.domene.repository.SaksbehandlerRepository
+import no.nav.k9.domene.repository.StatistikkRepository
 import no.nav.k9.integrasjon.abac.IPepClient
 import no.nav.k9.integrasjon.abac.PepClientLocal
 import no.nav.k9.integrasjon.azuregraph.AzureGraphServiceLocal
@@ -29,6 +37,7 @@ import no.nav.k9.integrasjon.pdl.IPdlService
 import no.nav.k9.integrasjon.pdl.PdlServiceLocal
 import no.nav.k9.integrasjon.sakogbehandling.SakOgBehandlingProducer
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
+import no.nav.k9.tjenester.saksbehandler.merknad.MerknadTjeneste
 import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import no.nav.k9.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
 import no.nav.k9.tjenester.sse.SseEvent
@@ -78,6 +87,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         OppgaveKøRepository(
             dataSource = get(),
+            oppgaveRepositoryV2 = get(),
             oppgaveKøOppdatert = get(named("oppgaveKøOppdatert")),
             refreshKlienter = get(named("refreshKlienter")),
             oppgaveRefreshChannel = get(named("oppgaveRefreshChannel")),
@@ -95,6 +105,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         ReservasjonRepository(
             oppgaveKøRepository = get(),
             oppgaveRepository = get(),
+            oppgaveRepositoryV2 = get(),
             dataSource = get(),
             refreshKlienter = get(named("refreshKlienter")),
             saksbehandlerRepository = get()
@@ -116,6 +127,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         OppgaveTjeneste(
             oppgaveRepository = get(),
+            oppgaveRepositoryV2 = get(),
             oppgaveKøRepository = get(),
             saksbehandlerRepository = get(),
             pdlService = get(),
@@ -196,6 +208,14 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             reservasjonTjeneste = get(),
             statistikkRepository = get(),
             azureGraphService = get()
+        )
+    }
+
+    single {
+        MerknadTjeneste(
+            oppgaveRepositoryV2 = get(),
+            azureGraphService = get(),
+            tm = get()
         )
     }
 }

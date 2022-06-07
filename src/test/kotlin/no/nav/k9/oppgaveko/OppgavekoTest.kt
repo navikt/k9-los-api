@@ -8,6 +8,7 @@ import no.nav.k9.Configuration
 import no.nav.k9.KoinProfile
 import no.nav.k9.buildAndTestConfig
 import no.nav.k9.domene.lager.oppgave.Oppgave
+import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.modell.Aksjonspunkter
 import no.nav.k9.domene.modell.AndreKriterierType
 import no.nav.k9.domene.modell.BehandlingStatus
@@ -41,6 +42,8 @@ class OppgavekoTest :KoinTest, AbstractPostgresTest() {
     @Test
     fun `Oppgavene tilfredsstiller filtreringskriteriene i køen`() = runBlocking {
         val oppgaveRepository = get<OppgaveRepository>()
+        val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
+
         val oppgaveKøRepository = get<OppgaveKøRepository>()
         val reservasjonRepository = get<ReservasjonRepository>()
 
@@ -136,8 +139,16 @@ class OppgavekoTest :KoinTest, AbstractPostgresTest() {
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
         oppgaveRepository.lagre(oppgave2.eksternId) { oppgave2 }
 
-        oppgaveko.leggOppgaveTilEllerFjernFraKø(oppgave1, reservasjonRepository)
-        oppgaveko.leggOppgaveTilEllerFjernFraKø(oppgave2, reservasjonRepository)
+        oppgaveko.leggOppgaveTilEllerFjernFraKø(
+            oppgave1,
+            reservasjonRepository,
+            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+        )
+        oppgaveko.leggOppgaveTilEllerFjernFraKø(
+            oppgave2,
+            reservasjonRepository,
+            oppgaveRepositoryV2.hentMerknader(oppgave2.eksternId.toString())
+        )
         oppgaveKøRepository.lagre(oppgaveko.id) {
              oppgaveko
         }

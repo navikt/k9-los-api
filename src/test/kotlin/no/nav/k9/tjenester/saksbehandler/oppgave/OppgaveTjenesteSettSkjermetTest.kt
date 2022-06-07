@@ -10,6 +10,7 @@ import no.nav.k9.Configuration
 import no.nav.k9.KoinProfile
 import no.nav.k9.buildAndTestConfig
 import no.nav.k9.domene.lager.oppgave.Oppgave
+import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.modell.Aksjonspunkter
 import no.nav.k9.domene.modell.BehandlingStatus
 import no.nav.k9.domene.modell.BehandlingType
@@ -62,9 +63,12 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest()  {
         val refreshKlienter = Channel<SseEvent>(1000)
 
         val oppgaveRepository = get<OppgaveRepository>()
+        val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
+
         val omsorgspengerService = get<IOmsorgspengerService>()
         val oppgaveKøRepository = OppgaveKøRepository(
             dataSource = get(),
+            oppgaveRepositoryV2,
             oppgaveKøOppdatert = oppgaveKøOppdatert,
             refreshKlienter = refreshKlienter,
             oppgaveRefreshChannel = oppgaveRefreshOppdatert,
@@ -75,6 +79,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest()  {
         val reservasjonRepository = ReservasjonRepository(
             oppgaveKøRepository = oppgaveKøRepository,
             oppgaveRepository = oppgaveRepository,
+            oppgaveRepositoryV2 = oppgaveRepositoryV2,
             dataSource = get(),
             refreshKlienter = refreshKlienter,
             saksbehandlerRepository = saksbehandlerRepository
@@ -86,6 +91,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest()  {
         val azureGraphService = mockk<AzureGraphService>()
         val oppgaveTjeneste = OppgaveTjeneste(
             oppgaveRepository,
+            oppgaveRepositoryV2,
             oppgaveKøRepository,
             saksbehandlerRepository,
             pdlService,
@@ -138,7 +144,11 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest()  {
             avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false
         )
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
-        oppgaveko.leggOppgaveTilEllerFjernFraKø(oppgave1, reservasjonRepository)
+        oppgaveko.leggOppgaveTilEllerFjernFraKø(
+            oppgave1,
+            reservasjonRepository,
+            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+        )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
         }
@@ -190,9 +200,12 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest()  {
         val oppgaveRefreshOppdatert = Channel<UUID>(100)
 
         val oppgaveRepository = OppgaveRepository(dataSource = dataSource,pepClient = PepClientLocal(), refreshOppgave = oppgaverRefresh)
+        val oppgaveRepositoryV2 = OppgaveRepositoryV2(dataSource = dataSource)
+
         val oppgaveKøRepository = OppgaveKøRepository(
             dataSource = dataSource,
             oppgaveKøOppdatert = oppgaveKøOppdatert,
+            oppgaveRepositoryV2 = oppgaveRepositoryV2,
             refreshKlienter = refreshKlienter,
             oppgaveRefreshChannel = oppgaveRefreshOppdatert,
             pepClient = PepClientLocal()
@@ -209,12 +222,14 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest()  {
         val reservasjonRepository = ReservasjonRepository(
             oppgaveKøRepository = oppgaveKøRepository,
             oppgaveRepository = oppgaveRepository,
+            oppgaveRepositoryV2 = oppgaveRepositoryV2,
             dataSource = dataSource,
             refreshKlienter = refreshKlienter,
             saksbehandlerRepository = saksbehandlerRepository
         )
         val oppgaveTjeneste = OppgaveTjeneste(
             oppgaveRepository,
+            oppgaveRepositoryV2,
             oppgaveKøRepository,
             saksbehandlerRepository,
             pdlService,
@@ -285,8 +300,11 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest()  {
         val oppgaverRefresh = Channel<Oppgave>(1000)
 
         val oppgaveRepository = OppgaveRepository(dataSource = dataSource,pepClient = PepClientLocal(), refreshOppgave = oppgaverRefresh)
+        val oppgaveRepositoryV2 = OppgaveRepositoryV2(dataSource = dataSource)
+
         val oppgaveKøRepository = OppgaveKøRepository(
             dataSource = dataSource,
+            oppgaveRepositoryV2 = oppgaveRepositoryV2,
             oppgaveKøOppdatert = oppgaveKøOppdatert,
             refreshKlienter = refreshKlienter,
             oppgaveRefreshChannel = oppgaveRefreshOppdatert,
@@ -297,6 +315,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest()  {
         val reservasjonRepository = ReservasjonRepository(
             oppgaveKøRepository = oppgaveKøRepository,
             oppgaveRepository = oppgaveRepository,
+            oppgaveRepositoryV2 = oppgaveRepositoryV2,
             dataSource = dataSource,
             refreshKlienter = refreshKlienter,
             saksbehandlerRepository = saksbehandlerRepository
@@ -310,11 +329,13 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest()  {
 
         coEvery {  azureGraphService.hentIdentTilInnloggetBruker() } returns "123"
         val oppgaveTjeneste = OppgaveTjeneste(
-        oppgaveRepository,
-        oppgaveKøRepository,
-        saksbehandlerRepository,
-        pdlService,
-        reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, omsorgspengerService)
+            oppgaveRepository,
+            oppgaveRepositoryV2,
+            oppgaveKøRepository,
+            saksbehandlerRepository,
+            pdlService,
+            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, omsorgspengerService
+        )
 
 
         val uuid = UUID.randomUUID()
@@ -363,7 +384,11 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest()  {
             avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false
         )
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
-        oppgaveko.leggOppgaveTilEllerFjernFraKø(oppgave1, reservasjonRepository)
+        oppgaveko.leggOppgaveTilEllerFjernFraKø(
+            oppgave1,
+            reservasjonRepository,
+            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+        )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
         }

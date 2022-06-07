@@ -4,6 +4,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.k9.AbstractPostgresTest
 import no.nav.k9.buildAndTestConfig
 import no.nav.k9.domene.lager.oppgave.Oppgave
+import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.modell.AksjonspunktStatus
 import no.nav.k9.domene.modell.AksjonspunktTilstand
 import no.nav.k9.domene.modell.Aksjonspunkter
@@ -38,6 +39,7 @@ class BeslutterSkalIkkePlukkeEgenSakTest : KoinTest, AbstractPostgresTest()  {
     @Test
     fun `Beslutter skal ikke plukke en oppgave beslutteren har behandlet`() {
         val oppgaveRepository = get<OppgaveRepository>()
+        val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
 
         val oppgaveTjeneste = get<OppgaveTjeneste>()
@@ -100,7 +102,10 @@ class BeslutterSkalIkkePlukkeEgenSakTest : KoinTest, AbstractPostgresTest()  {
         )
 
         val nesteOppgaverIKø = runBlocking {
-            oppgaveKø.leggOppgaveTilEllerFjernFraKø(oppgave)
+            oppgaveKø.leggOppgaveTilEllerFjernFraKø(
+                oppgave,
+                merknader = oppgaveRepositoryV2.hentMerknader(oppgave.eksternId.toString())
+            )
 
             oppgaveKøRepository.lagreIkkeTaHensyn(oppgaveKø.id) {
                 oppgaveKø

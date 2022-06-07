@@ -7,6 +7,7 @@ import no.nav.k9.KoinProfile
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.lager.oppgave.OppgaveMedId
 import no.nav.k9.domene.lager.oppgave.Reservasjon
+import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.modell.BehandlingStatus
 import no.nav.k9.domene.modell.BehandlingType
 import no.nav.k9.domene.modell.FagsakYtelseType
@@ -49,6 +50,7 @@ private val log: Logger =
 
 class OppgaveTjeneste constructor(
     private val oppgaveRepository: OppgaveRepository,
+    private val oppgaveRepositoryV2: OppgaveRepositoryV2,
     private val oppgaveKøRepository: OppgaveKøRepository,
     private val saksbehandlerRepository: SaksbehandlerRepository,
     private val pdlService: IPdlService,
@@ -736,7 +738,7 @@ class OppgaveTjeneste constructor(
             )
 
             for (oppgave in oppgaveRepository.hentOppgaver(reservasjoner.map { it.oppgave })) {
-                if (oppgavekø.tilhørerOppgaveTilKø(oppgave, reservasjonRepository)) {
+                if (oppgavekø.tilhørerOppgaveTilKø(oppgave, reservasjonRepository, emptyList())) {
                     reserverteOppgaverSomHørerTilKø++
                 }
             }
@@ -923,7 +925,11 @@ class OppgaveTjeneste constructor(
             settSkjermet(oppgave)
             oppgaveKøRepository.hent().forEach { oppgaveKø ->
                 oppgaveKøRepository.lagre(oppgaveKø.id) {
-                    it!!.leggOppgaveTilEllerFjernFraKø(oppgave, reservasjonRepository)
+                    it!!.leggOppgaveTilEllerFjernFraKø(
+                        oppgave,
+                        reservasjonRepository,
+                        oppgaveRepositoryV2.hentMerknader(oppgave.eksternId.toString())
+                    )
                     it
                 }
             }
@@ -997,10 +1003,18 @@ class OppgaveTjeneste constructor(
         }
         val oppaveSkjermet = oppgaveRepository.hent(oppgave.eksternId)
         for (oppgaveKø in oppgaveKøRepository.hent()) {
-            val skalOppdareKø = oppgaveKø.leggOppgaveTilEllerFjernFraKø(oppaveSkjermet, reservasjonRepository)
+            val skalOppdareKø = oppgaveKø.leggOppgaveTilEllerFjernFraKø(
+                oppaveSkjermet,
+                reservasjonRepository,
+                oppgaveRepositoryV2.hentMerknader(oppgave.eksternId.toString())
+            )
             if (skalOppdareKø) {
                 oppgaveKøRepository.lagre(oppgaveKø.id) {
-                    it!!.leggOppgaveTilEllerFjernFraKø(oppaveSkjermet, reservasjonRepository)
+                    it!!.leggOppgaveTilEllerFjernFraKø(
+                        oppaveSkjermet,
+                        reservasjonRepository,
+                        oppgaveRepositoryV2.hentMerknader(oppgave.eksternId.toString())
+                    )
                     it
                 }
             }
