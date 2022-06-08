@@ -38,6 +38,7 @@ import no.nav.k9.tjenester.avdelingsleder.nokkeltall.EnheterSomSkalUtelatesFraLo
 import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
+import java.util.*
 
 fun Route.innsiktGrensesnitt() {
     val oppgaveRepository by inject<OppgaveRepository>()
@@ -136,7 +137,7 @@ fun Route.innsiktGrensesnitt() {
                 val oppgave = oppgaveMedId1.oppgave
                 div {
                     classes = setOf("input-group-text display-4")
-                    +"TilBeslutter = ${oppgave.tilBeslutter}, saksnummer=$saksnummer, fagsystem=${oppgave.system}, behandlingType=${oppgave.behandlingType.navn}, behandlingStatus=${oppgave.behandlingStatus.navn}"
+                    +"aktiv=${oppgave.aktiv} TilBeslutter=${oppgave.tilBeslutter}, saksnummer=$saksnummer, fagsystem=${oppgave.system}, behandlingType=${oppgave.behandlingType.navn}, behandlingStatus=${oppgave.behandlingStatus.navn}"
                 }
 
                 val sakModell = hentEventer(oppgaveMedId1)
@@ -172,6 +173,44 @@ fun Route.innsiktGrensesnitt() {
 
             }
 
+        }
+    }
+
+    fun BODY.oppgavekø(køid: String) {
+        val kø = oppgaveKøRepository.hentOppgavekø(UUID.fromString(køid))
+        if (kø.skjermet || kø.kode6) return
+
+        val oppgaver = oppgaveRepository.hentOppgaver(kø.oppgaverOgDatoer.map { it.id }).sortedBy { it.eventTid }
+        div {
+            classes = setOf("input-group-text display-4")
+            +"kønavn=${kø.navn} antallOppgaverKøTabell=${kø.oppgaverOgDatoer.size} antallOppgaver=${oppgaver.size} ${kø.sortering.kode}"
+        }
+
+        oppgaver.forEach { oppgave ->
+            div {
+                classes = setOf("input-group-text display-4")
+                +"sisteEvent=${oppgave.eventTid} opprettet=${oppgave.behandlingOpprettet} BId=${oppgave.eksternId} saksnummer=${oppgave.fagsakSaksnummer}"
+            }
+        }
+
+    }
+
+    get("oppgaveko") {
+        call.respondHtml {
+            val køid = call.request.queryParameters["id"]?.split(",")
+            head {
+                title { +(køid?.let {"Innsikt for køid=$køid"}?: "Oppgi køid") }
+                styleLink("/static/bootstrap.css")
+                script(src = "/static/script.js") {}
+            }
+            body {
+                if (køid.isNullOrEmpty()) div {+"Oppgi køid"}
+                else {
+                    h2 { +køid.let {"Innsikt for køid=$køid"} }
+                    køid.map { oppgavekø(it) }
+                }
+
+            }
         }
     }
 
