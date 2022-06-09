@@ -108,7 +108,7 @@ data class OppgaveKø(
             return false
         }
 
-        if (merknadKoder.isNotEmpty() && !merknader.flatMap { it.merknadKoder }.any { it in merknadKoder }) {
+        if (merknadKoder.isEmpty() && merknader.isNotEmpty() || !merknader.flatMap { it.merknadKoder }.containsAll(merknadKoder)) {
             return false
         }
 
