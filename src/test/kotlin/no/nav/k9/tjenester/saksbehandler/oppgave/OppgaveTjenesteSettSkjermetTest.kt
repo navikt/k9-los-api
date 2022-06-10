@@ -5,9 +5,10 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
-import no.nav.k9.AbstractK9LosIntegrationTest
+import no.nav.k9.AbstractPostgresTest
 import no.nav.k9.Configuration
 import no.nav.k9.KoinProfile
+import no.nav.k9.buildAndTestConfig
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.modell.Aksjonspunkter
@@ -33,12 +34,21 @@ import no.nav.k9.integrasjon.pdl.PersonPdl
 import no.nav.k9.integrasjon.pdl.PersonPdlResponse
 import no.nav.k9.tjenester.sse.SseEvent
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.RegisterExtension
+import org.koin.test.KoinTest
 import org.koin.test.get
+import org.koin.test.junit5.KoinTestExtension
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
-class OppgaveTjenesteSettSkjermetTest : AbstractK9LosIntegrationTest() {
+class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
+
+    @JvmField
+    @RegisterExtension
+    val koinTestRule = KoinTestExtension.create {
+        modules(buildAndTestConfig(dataSource, mockk()))
+    }
 
     @Test
     fun testSettSkjermet() = runBlocking{
