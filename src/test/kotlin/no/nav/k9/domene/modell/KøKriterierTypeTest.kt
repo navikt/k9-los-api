@@ -61,7 +61,6 @@ internal class KøKriterierTypeTest {
 
     private fun feilutbetalingJson(fom: Int?, tom: Int?) = """ 
                 {   "id": "${UUID.randomUUID()}",
-                    "inkluder": true,
                     "kriterierType": "${KøKriterierType.FEILUTBETALING.kode}",
                     "fom": "$fom",
                     "tom": "$tom"
@@ -70,7 +69,6 @@ internal class KøKriterierTypeTest {
 
     private fun kodeverkJson(kodeverkType: KøKriterierType, koder: List<String>) = """ 
                 {   "id": "${UUID.randomUUID()}",
-                    "inkluder": true,
                     "kriterierType": "${kodeverkType.kode}",
                     "koder": [${koder.joinToString {"\"$it\""}}]
                 }

@@ -6,9 +6,11 @@ import no.nav.k9.domene.modell.KøKriterierType
 data class KriteriumDto(
     val id: String,
     val kriterierType: KøKriterierType,
-    val inkluder: Boolean,
+    // Brukes for å inkluder/ekskluder funksjonalitet (ikke i bruk enda)
+    val inkluder: Boolean = true,
     val fom: String? = null,
     val tom: String? = null,
+    // Brukes for å fjerne et kriterie
     val checked: Boolean? = null,
     val koder: List<String>? = null
 ) {

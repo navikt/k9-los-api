@@ -4,6 +4,7 @@ import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.containsExactlyInAnyOrder
 import assertk.assertions.extracting
+import assertk.assertions.isEmpty
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.AbstractK9LosIntegrationTest
 import no.nav.k9.domene.modell.KøKriterierType
@@ -31,13 +32,13 @@ internal class AvdelingslederTjenesteTest : AbstractK9LosIntegrationTest() {
             val merknadKriterium = KriteriumDto(
                 id = køUuid,
                 kriterierType = KøKriterierType.MERKNADTYPE,
-                inkluder = true,
                 koder = listOf(MerknadType.HASTESAK.kode, MerknadType.VANSKELIG.kode)
             )
 
             avdelingslederTjeneste.endreKøKriterier(merknadKriterium)
 
-            var oppgaveKø = avdelingslederTjeneste.hentOppgaveKø(UUID.fromString(køUuid))
+            val køid = UUID.fromString(køUuid)
+            var oppgaveKø = avdelingslederTjeneste.hentOppgaveKø(køid)
             assertThat(oppgaveKø.kriterier)
                 .extracting { it.kriterierType }
                 .containsExactly(KøKriterierType.MERKNADTYPE)
@@ -45,14 +46,13 @@ internal class AvdelingslederTjenesteTest : AbstractK9LosIntegrationTest() {
             val feilutbetalingKriterium = KriteriumDto(
                 id = køUuid,
                 kriterierType = KøKriterierType.FEILUTBETALING,
-                inkluder = true,
                 fom = 10.toString(),
                 tom = 20.toString()
             )
 
             avdelingslederTjeneste.endreKøKriterier(feilutbetalingKriterium)
 
-            oppgaveKø = avdelingslederTjeneste.hentOppgaveKø(UUID.fromString(køUuid))
+            oppgaveKø = avdelingslederTjeneste.hentOppgaveKø(køid)
             assertThat(oppgaveKø.kriterier)
                 .extracting { it.kriterierType }
                 .containsExactlyInAnyOrder(KøKriterierType.MERKNADTYPE, KøKriterierType.FEILUTBETALING)
@@ -60,16 +60,27 @@ internal class AvdelingslederTjenesteTest : AbstractK9LosIntegrationTest() {
             val fjernMerknadKrierium = KriteriumDto(
                 id = køUuid,
                 kriterierType = KøKriterierType.MERKNADTYPE,
-                inkluder = true,
                 koder = emptyList()
             )
 
 
             avdelingslederTjeneste.endreKøKriterier(fjernMerknadKrierium)
-            oppgaveKø = avdelingslederTjeneste.hentOppgaveKø(UUID.fromString(køUuid))
+            oppgaveKø = avdelingslederTjeneste.hentOppgaveKø(køid)
             assertThat(oppgaveKø.kriterier)
                 .extracting { it.kriterierType }
                 .containsExactlyInAnyOrder(KøKriterierType.FEILUTBETALING)
+
+            val fjernFeilUtbetalingKriterium = KriteriumDto(
+                id = køUuid,
+                kriterierType = KøKriterierType.FEILUTBETALING,
+                fom = 10.toString(),
+                tom = 20.toString(),
+                checked = false
+            )
+
+            avdelingslederTjeneste.endreKøKriterier(fjernFeilUtbetalingKriterium)
+            oppgaveKø = avdelingslederTjeneste.hentOppgaveKø(køid)
+            assertThat(oppgaveKø.kriterier).isEmpty()
 
         }
 

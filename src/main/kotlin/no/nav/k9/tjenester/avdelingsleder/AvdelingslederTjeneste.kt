@@ -255,9 +255,9 @@ class AvdelingslederTjeneste(
     suspend fun endreKøKriterier(kriteriumDto: KriteriumDto) {
         kriteriumDto.valider()
         oppgaveKøRepository.lagre(UUID.fromString(kriteriumDto.id)) { oppgaveKø ->
-            if (kriteriumDto.inkluder)
-                leggTilEllerEndreKriterium(kriteriumDto, oppgaveKø!!)
-            else fjernKriterium(kriteriumDto, oppgaveKø!!)
+            if (kriteriumDto.checked != null && kriteriumDto.checked == false)
+                fjernKriterium(kriteriumDto, oppgaveKø!!)
+            else leggTilEllerEndreKriterium(kriteriumDto, oppgaveKø!!)
             oppgaveKø
         }
         oppgaveKøRepository.oppdaterKøMedOppgaver(UUID.fromString(kriteriumDto.id))
