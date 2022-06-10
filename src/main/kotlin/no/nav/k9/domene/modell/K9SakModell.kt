@@ -4,7 +4,6 @@ import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.repository.ReservasjonRepository
 import no.nav.k9.domene.repository.SaksbehandlerRepository
 import no.nav.k9.integrasjon.kafka.dto.BehandlingProsessEventDto
-import no.nav.k9.integrasjon.kafka.dto.EventHendelse
 import no.nav.k9.integrasjon.sakogbehandling.kontrakt.BehandlingAvsluttet
 import no.nav.k9.integrasjon.sakogbehandling.kontrakt.BehandlingOpprettet
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
@@ -50,9 +49,6 @@ data class K9SakModell(
             oppgaveAvsluttet = sisteEvent.eventTid
         }
 
-        if (sisteEvent.eventHendelse == EventHendelse.AKSJONSPUNKT_AVBRUTT || sisteEvent.eventHendelse == EventHendelse.AKSJONSPUNKT_UTFØRT) {
-            aktiv = false
-        }
         if (FagsakYtelseType.fraKode(sisteEvent.ytelseTypeKode) == FagsakYtelseType.FRISINN) {
             aktiv = false
         }
