@@ -226,7 +226,7 @@ fun Route.innsiktGrensesnitt() {
                 oppgaveRepository.hentAktiveOppgaver().filterNot { alleReservasjoner.contains(it.eksternId) }
 
             val oppgaveKøer = oppgaveKøRepository.hentIkkeTaHensyn()
-            for (oppgaveKø in oppgaveKøer.filter { !it.kode6 }) {
+            for (oppgaveKø in oppgaveKøer.filterNot { it.kode6 || it.skjermet }) {
                 oppgaveKø.oppgaverOgDatoer.clear()
                 for (oppgave in hentAktiveOppgaver) {
                     oppgaveKø.leggOppgaveTilEllerFjernFraKø(
@@ -246,7 +246,7 @@ fun Route.innsiktGrensesnitt() {
                 }
                 body {
                     val list =
-                        oppgaveKøRepository.hentIkkeTaHensyn().filter { !it.kode6 }
+                        oppgaveKøRepository.hentIkkeTaHensyn().filterNot { it.kode6 || it.skjermet }
                     ul {
                         for (l in list) {
                             val oppgaverOgDatoer = køer.first { it.navn == l.navn }.oppgaverOgDatoer
@@ -254,7 +254,7 @@ fun Route.innsiktGrensesnitt() {
                             oppgaverOgDatoer.removeAll(l.oppgaverOgDatoer)
 
                             li {
-                                +"${l.navn}: ${l.oppgaverOgDatoer.size} vs $size"
+                                +"${l.navn}: ${l.oppgaverOgDatoer.size} vs $size - id=${l.id}"
                             }
                         }
                     }
