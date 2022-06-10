@@ -257,17 +257,32 @@ data class OppgaveKø(
 
 
     fun lagKriterier(): List<KriteriumDto> {
-        if (filtreringFeilutbetaling == null) return emptyList()
-        return listOf(
-            KriteriumDto(
-                id = id.toString(),
-                kriterierType = KøKriterierType.FEILUTBETALING,
-                inkluder = true,
-                fom = filtreringFeilutbetaling!!.fom?.toString(),
-                tom = filtreringFeilutbetaling!!.tom?.toString()
-            )
-        )
+        val kriterierDto = mutableListOf<KriteriumDto>()
+        if (filtreringFeilutbetaling != null) {
+            kriterierDto.add(tilFeilutbetalingKriterium())
+        }
+
+        if (merknadKoder.isNotEmpty()) {
+            kriterierDto.add(tilMerknadKriterium())
+        }
+
+        return kriterierDto
     }
+
+    private fun tilFeilutbetalingKriterium() = KriteriumDto(
+        id = id.toString(),
+        kriterierType = KøKriterierType.FEILUTBETALING,
+        inkluder = true,
+        fom = filtreringFeilutbetaling!!.fom?.toString(),
+        tom = filtreringFeilutbetaling!!.tom?.toString()
+    )
+
+    private fun tilMerknadKriterium() = KriteriumDto(
+        id = id.toString(),
+        kriterierType = KøKriterierType.MERKNADTYPE,
+        inkluder = true,
+        koder = merknadKoder
+    )
 
 }
 
