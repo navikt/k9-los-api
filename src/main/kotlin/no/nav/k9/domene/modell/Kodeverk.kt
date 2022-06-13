@@ -267,7 +267,7 @@ enum class AksjonspunktStatus(@JsonValue val kode: String, val navn: String) {
     }
 }
 
-enum class MerknadType(@JsonValue override val kode: String, override val navn: String) : Kodeverdi {
+enum class MerknadType(override val kode: String, override val navn: String) : Kodeverdi {
     HASTESAK("HASTESAK", "Hastesak"),
     VANSKELIG("VANSKELIG", "Vanskelig sak");
 
