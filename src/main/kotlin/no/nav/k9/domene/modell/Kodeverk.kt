@@ -44,7 +44,6 @@ enum class KøKriterierType(
     override val navn: String,
     val felttype: KøKriterierFeltType,
     val felttypeKodeverk: String? = null,
-    val skalVises: Boolean = true,
     @JsonIgnore val validator: KøKriterierTypeValidator
 ) : Kodeverdi {
     FEILUTBETALING(
@@ -58,7 +57,6 @@ enum class KøKriterierType(
         navn = "Behandling type",
         felttype = KøKriterierFeltType.KODEVERK,
         felttypeKodeverk = BehandlingType::class.java.simpleName,
-        skalVises = false,
         validator = KodeverkValidator { BehandlingType.fraKode(it) }
     ),
     MERKNADTYPE(
