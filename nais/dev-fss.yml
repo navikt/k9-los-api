@@ -61,6 +61,8 @@ spec:
   env:
     - name: NAIS_STS_DISCOVERY_ENDPOINT
       value: https://security-token-service.nais.preprod.local/rest/v1/sts/.well-known/openid-configuration
+    - name: STS_AUDIENCE
+      value: srvk9sak
     - name: OPPGAVE_BASE_URI
       value: https://oppgave.nais.preprod.local
     - name: DB_URL

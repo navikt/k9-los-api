@@ -35,14 +35,16 @@ class OppgaveRepositoryV2(
 
     fun hentBehandling(eksternReferanse: String, tx: TransactionalSession): Behandling? {
         val oppgaver = tx.run(hentOppgaver(eksternReferanse))
-        val merknader = tx.run(hentMerknaderQuery(eksternReferanse))
-        return tx.run(hentBehandling(eksternReferanse, oppgaver, merknader))
+        val merknad = tx.run(hentMerknaderQuery(eksternReferanse))
+            .also { check(it.size <= 1) { "Behandling kan bare ha en aktiv merknad. Fant ${it.size}" }}
+            .firstOrNull()
+        return tx.run(hentBehandling(eksternReferanse, oppgaver, merknad))
     }
 
     private fun hentBehandling(
         eksternReferanse: String,
         oppgaver: Collection<OppgaveV2>,
-        merknader: List<Merknad>
+        merknad: Merknad?
     ): NullableResultQueryAction<Behandling> {
         return queryOf(
             """
@@ -60,13 +62,13 @@ class OppgaveRepositoryV2(
                         FOR UPDATE
                     """,
             mapOf("ekstern_referanse" to eksternReferanse)
-        ).map { row -> row.tilBehandling(eksternReferanse, oppgaver, merknader) }.asSingle
+        ).map { row -> row.tilBehandling(eksternReferanse, oppgaver, merknad) }.asSingle
     }
 
     private fun Row.tilBehandling(
         eksternReferanse: String,
         oppgaver: Collection<OppgaveV2>,
-        merknader: Collection<Merknad>
+        merknad: Merknad?
     ): Behandling {
         return Behandling(
             id = long("id"),
@@ -78,7 +80,7 @@ class OppgaveRepositoryV2(
             opprettet = localDateTime("opprettet"),
             sistEndret = localDateTimeOrNull("sist_endret"),
             søkersId = stringOrNull("soekers_id")?.let { Ident(it, Ident.IdType.AKTØRID) },
-            merknader = merknader.toMutableSet(),
+            merknad = merknad,
             data = null
         ).also {
             it.ferdigstilt = localDateTimeOrNull("ferdigstilt_tidspunkt")
@@ -154,7 +156,6 @@ class OppgaveRepositoryV2(
                     "slettet" to inkluderSlettet
                 )
             ).map { row -> Merknad(
-                id = row.long("id"),
                 oppgaveKoder = objectMapper().readValue(row.string("oppgave_koder")),
                 oppgaveIder = objectMapper().readValue(row.string("oppgave_ider")),
                 saksbehandler = row.stringOrNull("saksbehandler"),
@@ -162,6 +163,7 @@ class OppgaveRepositoryV2(
                 sistEndret = row.localDateTimeOrNull("sist_endret"),
                 slettet = row.boolean("slettet")
             ).apply {
+                id = row.long("id")
                 merknadKoder = objectMapper().readValue(row.string("merknad_koder"))
                 fritekst = row.stringOrNull("fritekst")
             }}.asList
@@ -184,9 +186,9 @@ class OppgaveRepositoryV2(
                 ?: tx.updateAndReturnGeneratedKey(insert(dbId!!, oppgave))?.also { oppgave.id = it }
         }
 
-        behandling.hentMerknader().forEach { merknad ->
+            behandling.merknad?.let { merknad ->
             merknad.id?.also { tx.run(update(merknad)) }
-                ?: tx.updateAndReturnGeneratedKey(insert(dbId!!, behandling.eksternReferanse, merknad))?.also { merknad.settId(it) }
+                ?: tx.updateAndReturnGeneratedKey(insert(dbId!!, behandling.eksternReferanse, merknad))?.also { merknad.id = it }
         }
     }
 
