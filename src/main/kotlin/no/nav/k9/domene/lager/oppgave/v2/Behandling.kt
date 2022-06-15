@@ -176,14 +176,14 @@ open class Behandling constructor(
         }
     }
 
-    fun lagreMerknad(merknadEndring: MerknadEndret, saksbehandler: String) {
+    fun lagreMerknad(merknadEndring: MerknadEndret, saksbehandlerIdent: String?) {
         if (merknadEndring.merknadKoder.isEmpty()) {
             slettMerknad()
             return
         }
 
         if (merknad == null) {
-            merknad = merknadEndring.nyMerknad(saksbehandler, aktiveOppgaver())
+            merknad = merknadEndring.nyMerknad(saksbehandlerIdent, aktiveOppgaver())
             return
         }
         merknad?.oppdater(merknadEndring.merknadKoder, merknadEndring.fritekst)

@@ -63,13 +63,14 @@ data class MerknadResponse(
 
 data class MerknadEndret(
     val merknadKoder: List<String>,
-    val fritekst: String?
+    val fritekst: String?,
+    val saksbehandlerIdent: String? = null
 ) {
-    fun nyMerknad(saksbehandlerIdent: String, aktiveOppgaver: List<OppgaveV2>): Merknad {
+    fun nyMerknad(saksbehandlerIdent: String?, aktiveOppgaver: List<OppgaveV2>): Merknad {
         return Merknad(
             oppgaveKoder = aktiveOppgaver.map { it.oppgaveKode },
             oppgaveIder = aktiveOppgaver.map { it.id!! },
-            saksbehandler = saksbehandlerIdent,
+            saksbehandler = saksbehandlerIdent ?: this.saksbehandlerIdent,
             opprettet = LocalDateTime.now(),
         ).also {
             it.oppdater(
@@ -93,12 +94,11 @@ class MerknadTjeneste(
 
     suspend fun lagreMerknad(eksternReferanse: String, merknad: MerknadEndret): Merknad? {
         // Så lenge merknader går via k9-sak med systemtoken, må k9-sak legge ved denne identen
-        val saksbehandlerIdent = try { azureGraphService.hentIdentTilInnloggetBruker() } catch (_: Exception) { "" }
-
+        val saksbehandlerIdent = try { azureGraphService.hentIdentTilInnloggetBruker() } catch (_: Exception) { null }
         val merknaderEtterLagring = tm.transaction { transaction ->
             val behandling = oppgaveRepositoryV2.hentBehandling(eksternReferanse, transaction)
                 ?: throw IllegalStateException("Forsøker å lagre merknad på ukjent eksternReferanse $eksternReferanse")
-            behandling.lagreMerknad(merknad, saksbehandler = saksbehandlerIdent)
+            behandling.lagreMerknad(merknad, saksbehandlerIdent = saksbehandlerIdent)
             oppgaveRepositoryV2.lagre(behandling, transaction)
             behandling.merknad
         }

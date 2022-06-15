@@ -113,7 +113,7 @@ internal class MerknadTjenesteKtTest : AbstractPostgresTest(), KoinTest  {
         lagreNyBehandlingMedOppgave(eksternReferanse)
 
         withTestApplication(Application::merknadTestModule) {
-            handleRequest(HttpMethod.Post, "/merknad/$eksternReferanse") {
+            handleRequest(HttpMethod.Post, "/$eksternReferanse/merknad") {
                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 val merknadEndret = MerknadEndret(merknadKoder = listOf("456"), fritekst = "hei")
                 setBody(om.writeValueAsString(merknadEndret))
@@ -121,7 +121,7 @@ internal class MerknadTjenesteKtTest : AbstractPostgresTest(), KoinTest  {
             }.apply {
                 assertThat(response.status()).isEqualTo(HttpStatusCode.OK)
             }
-            handleRequest(HttpMethod.Get, "/merknad/$eksternReferanse")
+            handleRequest(HttpMethod.Get, "/$eksternReferanse/merknad")
                 .apply {
                     assertThat(response.status()).isEqualTo(HttpStatusCode.OK)
                     val merknad = om.readValue<MerknadResponse>(response.content!!)
