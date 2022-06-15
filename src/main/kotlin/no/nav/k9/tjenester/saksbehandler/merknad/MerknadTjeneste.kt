@@ -1,7 +1,7 @@
 package no.nav.k9.tjenester.saksbehandler.merknad
 
 import io.ktor.application.call
-import io.ktor.http.HttpStatusCode
+import io.ktor.http.*
 import io.ktor.request.receive
 import io.ktor.response.respond
 import io.ktor.routing.Route
@@ -18,12 +18,12 @@ import java.time.LocalDateTime
 internal fun Route.MerknadApi() {
     val merknadTjeneste by inject<MerknadTjeneste>()
 
-    route("/merknad/{eksternReferanse}") {
+    route("/{eksternReferanse}/merknad") {
         get {
             val eksternReferanse = call.parameters["eksternReferanse"]
                 ?: throw IllegalStateException("Mangler eksternReferanse i path")
             call.respond(
-                merknadTjeneste.hentMerknad(eksternReferanse).map { MerknadResponse.avMerknad(it) }
+                merknadTjeneste.hentMerknad(eksternReferanse)?.let { MerknadResponse.avMerknad(it) } ?: HttpStatusCode.NoContent
             )
         }
 
@@ -32,8 +32,9 @@ internal fun Route.MerknadApi() {
                 ?: throw IllegalStateException("Mangler eksternReferanse i path")
             val merknad = call.receive<MerknadEndret>()
 
-            merknadTjeneste.lagreMerknad(eksternReferanse, merknad)
-            call.respond(HttpStatusCode.OK)
+            call.respond(
+                merknadTjeneste.lagreMerknad(eksternReferanse, merknad) ?: HttpStatusCode.NoContent
+            )
         }
     }
 }
@@ -61,16 +62,15 @@ data class MerknadResponse(
 }
 
 data class MerknadEndret(
-    var id: Long?,
     val merknadKoder: List<String>,
-    val fritekst: String?
+    val fritekst: String?,
+    val saksbehandlerIdent: String? = null
 ) {
-    fun nyMerknad(saksbehandlerIdent: String, aktiveOppgaver: List<OppgaveV2>): Merknad {
+    fun nyMerknad(saksbehandlerIdent: String?, aktiveOppgaver: List<OppgaveV2>): Merknad {
         return Merknad(
-            id = id,
             oppgaveKoder = aktiveOppgaver.map { it.oppgaveKode },
             oppgaveIder = aktiveOppgaver.map { it.id!! },
-            saksbehandler = saksbehandlerIdent,
+            saksbehandler = saksbehandlerIdent ?: this.saksbehandlerIdent,
             opprettet = LocalDateTime.now(),
         ).also {
             it.oppdater(
@@ -88,17 +88,20 @@ class MerknadTjeneste(
     private val tm: TransactionalManager
 ) {
 
-    fun hentMerknad(eksternReferanse: String): Set<Merknad> {
-        return oppgaveRepositoryV2.hentBehandling(eksternReferanse)?.hentMerknader() ?: emptySet()
+    fun hentMerknad(eksternReferanse: String): Merknad? {
+        return oppgaveRepositoryV2.hentBehandling(eksternReferanse)?.merknad
     }
 
-    suspend fun lagreMerknad(eksternReferanse: String, merknad: MerknadEndret) {
-        val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
-        tm.transaction {
-            val behandling = oppgaveRepositoryV2.hentBehandling(eksternReferanse, it)
-            behandling!!.lagreMerknad(merknad, saksbehandler = saksbehandlerIdent)
-            oppgaveRepositoryV2.lagre(behandling, it)
+    suspend fun lagreMerknad(eksternReferanse: String, merknad: MerknadEndret): Merknad? {
+        // Så lenge merknader går via k9-sak med systemtoken, må k9-sak legge ved denne identen
+        val saksbehandlerIdent = try { azureGraphService.hentIdentTilInnloggetBruker() } catch (_: Exception) { null }
+        val merknaderEtterLagring = tm.transaction { transaction ->
+            val behandling = oppgaveRepositoryV2.hentBehandling(eksternReferanse, transaction)
+                ?: throw IllegalStateException("Forsøker å lagre merknad på ukjent eksternReferanse $eksternReferanse")
+            behandling.lagreMerknad(merknad, saksbehandlerIdent = saksbehandlerIdent)
+            oppgaveRepositoryV2.lagre(behandling, transaction)
+            behandling.merknad
         }
-
+        return merknaderEtterLagring?.takeIf { !it.slettet }
     }
 }

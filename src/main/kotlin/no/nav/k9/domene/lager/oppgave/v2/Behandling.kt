@@ -20,7 +20,7 @@ open class Behandling constructor(
     val søkersId: Ident?,
     val kode6: Boolean = false,
     val skjermet: Boolean = false,
-    private val merknader: MutableSet<Merknad>,
+    var merknad: Merknad?,
     private val data: JsonNode?
 ) {
     var ferdigstilt: LocalDateTime? = null
@@ -50,7 +50,7 @@ open class Behandling constructor(
                 søkersId = søkersId,
                 kode6 = false,
                 skjermet = false,
-                merknader = mutableSetOf(),
+                merknad = null,
                 data = null
             )
         }
@@ -176,39 +176,26 @@ open class Behandling constructor(
         }
     }
 
-    fun lagreMerknad(merknad: MerknadEndret, saksbehandler: String) {
-        if (merknad.merknadKoder.isEmpty()) {
-            slettMerknad(merknad.id)
+    fun lagreMerknad(merknadEndring: MerknadEndret, saksbehandlerIdent: String?) {
+        if (merknadEndring.merknadKoder.isEmpty()) {
+            slettMerknad()
             return
         }
 
-        if (merknader.isEmpty()) {
-            merknader.add(merknad.nyMerknad(saksbehandler, aktiveOppgaver()))
-        } else {
-            endreMerknad(merknad)
-        }
-    }
-
-    private fun endreMerknad(merknad: MerknadEndret) {
-        val merknadId = merknad.id
-            ?: throw IllegalStateException("Kan ikke endre eksisterende merknad uten merknadId")
-
-        merknader
-            .firstOrNull { eksisterendeMerknad -> eksisterendeMerknad.id!! == merknadId }
-            ?.oppdater(merknad.merknadKoder, merknad.fritekst)
-    }
-
-    private fun slettMerknad(merknadId: Long?) {
-        if (merknader.isEmpty())  {
-            log.warn("Prøver å slette merknad med merknadId=$merknadId, men finnes ingen merknader")
+        if (merknad == null) {
+            merknad = merknadEndring.nyMerknad(saksbehandlerIdent, aktiveOppgaver())
             return
         }
-
-        merknadId ?: throw IllegalStateException("Kan ikke slette eksisterende merknad uten merknadId")
-        merknader.filter { it.id == merknadId }.forEach { it.slett() }
+        merknad?.oppdater(merknadEndring.merknadKoder, merknadEndring.fritekst)
     }
 
-    fun hentMerknader() = merknader.toSet()
+    private fun slettMerknad() {
+        if (merknad == null)  {
+            log.warn("Prøver å slette merknad som ikke finnes eller allerede er slettet")
+            return
+        }
+        merknad?.slett()
+    }
 }
 
 interface Ferdigstillelse {

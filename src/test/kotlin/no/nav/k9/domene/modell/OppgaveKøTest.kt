@@ -611,13 +611,14 @@ internal class OppgaveKøTest {
 
     private fun merknadMed(vararg merknadKoder: String) = listOf(
         Merknad(
-            id = 123456L,
             merknadKoder = merknadKoder.toList(),
             oppgaveKoder = emptyList(),
             oppgaveIder = emptyList(),
             saksbehandler = "",
             opprettet = LocalDateTime.now()
-        )
+        ).also {
+            it.id = 123456L
+        }
     )
 
 }

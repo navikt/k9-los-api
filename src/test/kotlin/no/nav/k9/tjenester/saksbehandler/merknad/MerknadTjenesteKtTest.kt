@@ -1,16 +1,11 @@
 package no.nav.k9.tjenester.saksbehandler.merknad
 
 import assertk.assertThat
-import assertk.assertions.containsAll
-import assertk.assertions.hasSize
-import assertk.assertions.isEmpty
-import assertk.assertions.isEqualTo
-import assertk.assertions.isTrue
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.JsonNode
+import assertk.assertions.*
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.ktor.application.Application
 import io.ktor.application.install
 import io.ktor.features.ContentNegotiation
@@ -52,7 +47,7 @@ internal class MerknadTjenesteKtTest : AbstractPostgresTest(), KoinTest  {
         modules(buildAndTestConfig(dataSource))
     }
 
-    private val om = ObjectMapper()
+    private val om = ObjectMapper().configure()
 
     private lateinit var oppgaveRepository : OppgaveRepositoryV2
     private lateinit var tm : TransactionalManager
@@ -69,45 +64,38 @@ internal class MerknadTjenesteKtTest : AbstractPostgresTest(), KoinTest  {
     fun `skal lagre riktig merknad`() {
         val eksternReferanse = UUID.randomUUID().toString()
         lagreNyBehandlingMedOppgave(eksternReferanse)
-        val merknadKode = "456"
-        val fritekst = "hei"
-        val merknadEndret = MerknadEndret(id = null, merknadKoder = listOf(merknadKode), fritekst = fritekst)
+        val merknadKode = "VANSKELIG"
+        val fritekst = "Markert fordi den står fast"
+        val merknadEndret = MerknadEndret(merknadKoder = listOf(merknadKode), fritekst = fritekst)
 
         runBlocking {
             merknadTjeneste.lagreMerknad(eksternReferanse, merknadEndret)
         }
-        val merknader = merknadTjeneste.hentMerknad(eksternReferanse)
-        assertThat(merknader).hasSize(1)
-        assertThat(merknader.first().merknadKoder.first()).isEqualTo(merknadKode)
-        assertThat(merknader.first().fritekst).isEqualTo(fritekst)
+        val merknad = merknadTjeneste.hentMerknad(eksternReferanse)!!
+        assertThat(merknad.merknadKoder.first()).isEqualTo(merknadKode)
+        assertThat(merknad.fritekst).isEqualTo(fritekst)
     }
 
     @Test
     fun `skal kunne endre og slette merknad`() {
         val eksternReferanse = UUID.randomUUID().toString()
         lagreNyBehandlingMedOppgave(eksternReferanse)
-        val nyMerknad = MerknadEndret(id = null, merknadKoder = listOf("HASTESAK"), fritekst = "hei")
 
+        val nyMerknad = MerknadEndret(merknadKoder = listOf("HASTESAK"), fritekst = "OBS trenger hjelp asap")
         runBlocking { merknadTjeneste.lagreMerknad(eksternReferanse, nyMerknad) }
+        val original = merknadTjeneste.hentMerknad(eksternReferanse)!!
 
-        val orginale = merknadTjeneste.hentMerknad(eksternReferanse)
-        assertThat(orginale).hasSize(1)
-
-        val original = orginale.first()
-
-        val endretMerknad = MerknadEndret(id = original.id, merknadKoder = listOf("VENTESAK", "HASTESAK"), fritekst = "hå")
+        val endretMerknad = MerknadEndret(merknadKoder = listOf("VENTESAK", "HASTESAK"), fritekst = "Står fast og haster")
         runBlocking { merknadTjeneste.lagreMerknad(eksternReferanse, endretMerknad) }
-        val endrede = merknadTjeneste.hentMerknad(eksternReferanse)
-        assertThat(endrede).hasSize(1)
-        val endret = endrede.first()
+        val endret = merknadTjeneste.hentMerknad(eksternReferanse)!!
         assertThat(endret.id!!).isEqualTo(original.id!!)
         assertThat(endret.merknadKoder).containsAll(*endretMerknad.merknadKoder.toTypedArray())
         assertThat(endret.fritekst).isEqualTo(endretMerknad.fritekst)
 
-        val slettMerknad = MerknadEndret(id = original.id, merknadKoder = emptyList(), fritekst = "blalba")
+        val slettMerknad = MerknadEndret(merknadKoder = emptyList(), fritekst = "blalba")
         runBlocking { merknadTjeneste.lagreMerknad(eksternReferanse, slettMerknad) }
 
-        assertThat(merknadTjeneste.hentMerknad(eksternReferanse)).isEmpty()
+        assertThat(merknadTjeneste.hentMerknad(eksternReferanse)).isNull()
         val slettede = oppgaveRepository.hentMerknader(eksternReferanse, inkluderSlettet = true)
         assertThat(slettede).hasSize(1)
         val slettet = slettede.first()
@@ -125,19 +113,19 @@ internal class MerknadTjenesteKtTest : AbstractPostgresTest(), KoinTest  {
         lagreNyBehandlingMedOppgave(eksternReferanse)
 
         withTestApplication(Application::merknadTestModule) {
-            handleRequest(HttpMethod.Post, "/merknad/$eksternReferanse") {
+            handleRequest(HttpMethod.Post, "/$eksternReferanse/merknad") {
                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                val merknadEndret = MerknadEndret(id = null, merknadKoder = listOf("456"), fritekst = "hei")
+                val merknadEndret = MerknadEndret(merknadKoder = listOf("456"), fritekst = "hei")
                 setBody(om.writeValueAsString(merknadEndret))
 
             }.apply {
                 assertThat(response.status()).isEqualTo(HttpStatusCode.OK)
             }
-            handleRequest(HttpMethod.Get, "/merknad/$eksternReferanse")
+            handleRequest(HttpMethod.Get, "/$eksternReferanse/merknad")
                 .apply {
                     assertThat(response.status()).isEqualTo(HttpStatusCode.OK)
-                    val merknader = om.readValue(response.content, object : TypeReference<List<JsonNode>>() {})
-                    assertThat(merknader).hasSize(1)
+                    val merknad = om.readValue<MerknadResponse>(response.content!!)
+                    assertThat(merknad.merknadKoder).containsExactly("456")
                 }
         }
     }
@@ -169,9 +157,13 @@ private fun Application.merknadTestModule() {
     }
     install(ContentNegotiation) {
         jackson {
-            dusseldorfConfigured()
-                .setPropertyNamingStrategy(PropertyNamingStrategy.LOWER_CAMEL_CASE)
-                .configure(SerializationFeature.WRITE_DURATIONS_AS_TIMESTAMPS, false)
+            configure()
         }
     }
+}
+
+fun ObjectMapper.configure(): ObjectMapper {
+    return dusseldorfConfigured()
+        .enable(SerializationFeature.INDENT_OUTPUT)
+        .registerKotlinModule()
 }

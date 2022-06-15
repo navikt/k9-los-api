@@ -3,7 +3,6 @@ package no.nav.k9.tjenester.saksbehandler.merknad
 import java.time.LocalDateTime
 
 data class Merknad(
-    val id: Long?,
     val oppgaveKoder: List<String>,
     val oppgaveIder: List<Long>,
     val saksbehandler: String?,
@@ -13,6 +12,12 @@ data class Merknad(
     var merknadKoder: List<String> = emptyList(),
     var fritekst: String? = null
 ) {
+    var id: Long? = null
+        set(value) {
+            check(this.id == null) { "Forsøker å overskrive satt id" }
+            field = value
+        }
+
     fun oppdater(merknadKoder: List<String>, fritekst: String?) {
         this.merknadKoder = merknadKoder
         this.fritekst = fritekst
@@ -22,10 +27,5 @@ data class Merknad(
     fun slett() {
         slettet = true
         sistEndret = LocalDateTime.now()
-    }
-
-    fun settId(id: Long): Merknad {
-        check(this.id == null) { "Forsøker å overskrive satt id" }
-        return copy(id = id)
     }
 }
