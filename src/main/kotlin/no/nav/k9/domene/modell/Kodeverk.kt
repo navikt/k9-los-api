@@ -265,6 +265,7 @@ enum class AksjonspunktStatus(@JsonValue val kode: String, val navn: String) {
     }
 }
 
+@JsonFormat(shape = JsonFormat.Shape.OBJECT)
 enum class MerknadType(override val kode: String, override val navn: String) : Kodeverdi {
     HASTESAK("HASTESAK", "Hastesak"),
     VANSKELIG("VANSKELIG", "Vanskelig sak");
