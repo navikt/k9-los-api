@@ -22,22 +22,14 @@ import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.RegisterExtension
-import org.koin.test.KoinTest
 import org.koin.test.get
-import org.koin.test.junit5.KoinTestExtension
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
 @Disabled("Kjøres manuelt ved behov")
-class YtelseTest: KoinTest, AbstractPostgresTest() {
-    @JvmField
-    @RegisterExtension
-    val koinTestRule = KoinTestExtension.create {
-        modules(buildAndTestConfig(dataSource))
-    }
+class YtelseTest : AbstractK9LosIntegrationTest() {
 
     val random = Random()
     val antallOppgaver = 10000

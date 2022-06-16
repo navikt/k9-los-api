@@ -1,12 +1,13 @@
 package no.nav.k9.domene.modell
 
+import assertk.assertThat
+import assertk.assertions.isFalse
+import assertk.assertions.isTrue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.k9.tjenester.avdelingsleder.oppgaveko.KriteriumDto
 import org.junit.jupiter.api.Test
 import java.util.*
 import kotlin.test.assertFailsWith
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 
 internal class KøKriterierTypeTest {
@@ -28,17 +29,16 @@ internal class KøKriterierTypeTest {
 
     @Test
     fun `skal deserialisere kodeverk type riktig og validere basert på kodeverk type`() {
-        val kodeverkJson = kodeverkJson(KøKriterierType.BEHANDLINGTYPE,
-            listOf(BehandlingType.FORSTEGANGSSOKNAD.kode, BehandlingType.REVURDERING.kode))
+        val kodeverkJson = kodeverkJson(KøKriterierType.MERKNADTYPE,
+            listOf(MerknadType.HASTESAK.kode, MerknadType.VANSKELIG.kode))
         val kriteriumDto = om.readValue(kodeverkJson, KriteriumDto::class.java)
         kriteriumDto.valider()
-        println(kriteriumDto)
     }
 
     @Test
     fun `skal kaste feil hvis kodeverk validering feiler`() {
-        val kodeverkJson = kodeverkJson(KøKriterierType.BEHANDLINGTYPE,
-            listOf(BehandlingType.FORSTEGANGSSOKNAD.kode, FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode))
+        val kodeverkJson = kodeverkJson(KøKriterierType.MERKNADTYPE,
+            listOf(MerknadType.HASTESAK.kode, FagsakYtelseType.PPN.kode))
 
         val kriteriumDto = om.readValue(kodeverkJson, KriteriumDto::class.java)
 
@@ -49,20 +49,18 @@ internal class KøKriterierTypeTest {
 
     @Test
     fun `skal serialisere kodeverk type med felttypeKodeverk`() {
-        val json = om.writeValueAsString(KøKriterierType.BEHANDLINGTYPE)
-        assertTrue(json.contains("felttypeKodeverk"))
-        assertTrue(json.contains(BehandlingType::class.java.simpleName))
+        val json = om.writeValueAsString(KøKriterierType.MERKNADTYPE)
+        assertThat(json.contains("felttypeKodeverk")).isTrue()
     }
 
     @Test
     fun `skal serialisere kodeverk type uten felttypeKodeverk`() {
         val json = om.writeValueAsString(KøKriterierType.FEILUTBETALING)
-        assertFalse(json.contains("felttypeKodeverk"))
+        assertThat(json.contains("felttypeKodeverk")).isFalse()
     }
 
     private fun feilutbetalingJson(fom: Int?, tom: Int?) = """ 
                 {   "id": "${UUID.randomUUID()}",
-                    "inkluder": true,
                     "kriterierType": "${KøKriterierType.FEILUTBETALING.kode}",
                     "fom": "$fom",
                     "tom": "$tom"
@@ -71,7 +69,6 @@ internal class KøKriterierTypeTest {
 
     private fun kodeverkJson(kodeverkType: KøKriterierType, koder: List<String>) = """ 
                 {   "id": "${UUID.randomUUID()}",
-                    "inkluder": true,
                     "kriterierType": "${kodeverkType.kode}",
                     "koder": [${koder.joinToString {"\"$it\""}}]
                 }

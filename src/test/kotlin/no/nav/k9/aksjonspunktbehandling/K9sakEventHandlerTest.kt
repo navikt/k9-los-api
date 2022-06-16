@@ -7,8 +7,7 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
-import no.nav.k9.AbstractPostgresTest
-import no.nav.k9.buildAndTestConfig
+import no.nav.k9.AbstractK9LosIntegrationTest
 import no.nav.k9.domene.modell.Enhet
 import no.nav.k9.domene.modell.KøSortering
 import no.nav.k9.domene.modell.OppgaveKø
@@ -17,23 +16,14 @@ import no.nav.k9.domene.repository.OppgaveRepository
 import no.nav.k9.integrasjon.kafka.dto.BehandlingProsessEventDto
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.RegisterExtension
-import org.koin.test.KoinTest
 import org.koin.test.get
-import org.koin.test.junit5.KoinTestExtension
 import java.time.LocalDate
 import java.util.*
 import kotlin.test.assertFalse
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
-class K9sakEventHandlerTest : KoinTest, AbstractPostgresTest()  {
-
-    @JvmField
-    @RegisterExtension
-    val koinTestRule = KoinTestExtension.create {
-        modules(buildAndTestConfig(dataSource))
-    }
+class K9sakEventHandlerTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `Skal lukke oppgave dersom den ikke har noen aktive aksjonspunkter`() {

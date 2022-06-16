@@ -5,8 +5,7 @@ import assertk.assertions.containsOnly
 import assertk.assertions.doesNotContain
 import io.mockk.every
 import io.mockk.mockk
-import no.nav.k9.AbstractPostgresTest
-import no.nav.k9.buildAndTestConfig
+import no.nav.k9.AbstractK9LosIntegrationTest
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.modell.AksjonspunktStatus
 import no.nav.k9.domene.modell.AksjonspunktTilstand
@@ -18,20 +17,12 @@ import no.nav.k9.domene.repository.OppgaveRepository
 import no.nav.k9.domene.repository.StatistikkRepository
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.RegisterExtension
-import org.koin.test.KoinTest
 import org.koin.test.get
-import org.koin.test.junit5.KoinTestExtension
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
-class NokkeltallTjenesteTest : KoinTest, AbstractPostgresTest()  {
-    @JvmField
-    @RegisterExtension
-    val koinTestRule = KoinTestExtension.create {
-        modules(buildAndTestConfig(dataSource))
-    }
+class NokkeltallTjenesteTest : AbstractK9LosIntegrationTest() {
 
     val DAG1 = LocalDate.now().minusDays(2)
     val DAG2 = LocalDate.now().minusDays(1)

@@ -42,7 +42,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
-class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest()  {
+class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
 
     @JvmField
     @RegisterExtension

@@ -22,8 +22,7 @@ enum class AndreKriterierType(override val kode: String, override val navn: Stri
     VENTER_PÅ_ANNEN_PARTS_SAK("VENTER_PÅ_ANNEN_PARTS_SAK", "Venter på annen parts sak"),
     FORLENGELSER_FRA_INFOTRYGD("FORLENGELSER_FRA_INFOTRYGD", "Forlengelser fra infotrygd"),
     FORLENGELSER_FRA_INFOTRYGD_AKSJONSPUNKT("FORLENGELSER_FRA_INFOTRYGD_AKSJONSPUNKT", "Forlengelser fra infotrygd aksjonspunkt"),
-    AARSKVANTUM("AARSKVANTUM", "Årskvantum"),
-    MERKNAD_KOMPLISERT("MERKNAD_KOMPLISERT", "Markert som komplisert");
+    AARSKVANTUM("AARSKVANTUM", "Årskvantum");
 
     override val kodeverk = "ANDRE_KRITERIER_TYPE"
 
@@ -45,7 +44,6 @@ enum class KøKriterierType(
     override val navn: String,
     val felttype: KøKriterierFeltType,
     val felttypeKodeverk: String? = null,
-    val skalVises: Boolean = true,
     @JsonIgnore val validator: KøKriterierTypeValidator
 ) : Kodeverdi {
     FEILUTBETALING(
@@ -59,8 +57,14 @@ enum class KøKriterierType(
         navn = "Behandling type",
         felttype = KøKriterierFeltType.KODEVERK,
         felttypeKodeverk = BehandlingType::class.java.simpleName,
-        skalVises = false,
         validator = KodeverkValidator { BehandlingType.fraKode(it) }
+    ),
+    MERKNADTYPE(
+        kode = "MERKNADTYPE",
+        navn = "Merknad type",
+        felttype = KøKriterierFeltType.KODEVERK,
+        felttypeKodeverk = MerknadType::class.java.simpleName,
+        validator = KodeverkValidator { MerknadType.fraKode(it) }
     );
 
     companion object {
@@ -256,6 +260,24 @@ enum class AksjonspunktStatus(@JsonValue val kode: String, val navn: String) {
         @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
         @JvmStatic
         fun fraKode(kode: String): AksjonspunktStatus {
+            return KODER[kode] ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
+        }
+    }
+}
+
+@JsonFormat(shape = JsonFormat.Shape.OBJECT)
+enum class MerknadType(override val kode: String, override val navn: String) : Kodeverdi {
+    HASTESAK("HASTESAK", "Hastesak"),
+    VANSKELIG("VANSKELIG", "Vanskelig sak");
+
+    override val kodeverk = "MERKNADTYPE"
+
+    companion object {
+        private val KODER = values().associateBy { it.kode }
+
+        @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
+        @JvmStatic
+        fun fraKode(kode: String): MerknadType {
             return KODER[kode] ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
         }
     }

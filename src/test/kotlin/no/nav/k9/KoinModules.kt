@@ -36,6 +36,7 @@ import no.nav.k9.integrasjon.omsorgspenger.OmsorgspengerServiceLocal
 import no.nav.k9.integrasjon.pdl.IPdlService
 import no.nav.k9.integrasjon.pdl.PdlServiceLocal
 import no.nav.k9.integrasjon.sakogbehandling.SakOgBehandlingProducer
+import no.nav.k9.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.tjenester.saksbehandler.merknad.MerknadTjeneste
 import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveTjeneste
@@ -216,6 +217,18 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgaveRepositoryV2 = get(),
             azureGraphService = get(),
             tm = get()
+        )
+    }
+
+    single {
+        AvdelingslederTjeneste(
+            oppgaveKøRepository = get(),
+            saksbehandlerRepository = get(),
+            oppgaveTjeneste = get(),
+            reservasjonRepository = get(),
+            oppgaveRepository = get(),
+            pepClient = get(),
+            configuration = get()
         )
     }
 }

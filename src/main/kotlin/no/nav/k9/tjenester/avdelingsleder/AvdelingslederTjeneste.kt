@@ -255,18 +255,20 @@ class AvdelingslederTjeneste(
     suspend fun endreKøKriterier(kriteriumDto: KriteriumDto) {
         kriteriumDto.valider()
         oppgaveKøRepository.lagre(UUID.fromString(kriteriumDto.id)) { oppgaveKø ->
-            if (kriteriumDto.inkluder)
-                leggTilEllerEndreKriterum(kriteriumDto, oppgaveKø!!)
-            else fjernKriterium(kriteriumDto, oppgaveKø!!)
+            if (kriteriumDto.checked != null && kriteriumDto.checked == false)
+                fjernKriterium(kriteriumDto, oppgaveKø!!)
+            else leggTilEllerEndreKriterium(kriteriumDto, oppgaveKø!!)
             oppgaveKø
         }
         oppgaveKøRepository.oppdaterKøMedOppgaver(UUID.fromString(kriteriumDto.id))
     }
 
-    private fun leggTilEllerEndreKriterum(kriteriumDto: KriteriumDto, oppgaveKø: OppgaveKø) {
+    private fun leggTilEllerEndreKriterium(kriteriumDto: KriteriumDto, oppgaveKø: OppgaveKø) {
         when (kriteriumDto.kriterierType) {
             KøKriterierType.FEILUTBETALING ->
                 oppgaveKø.filtreringFeilutbetaling = Intervall(kriteriumDto.fom?.toLong(), kriteriumDto.tom?.toLong())
+            KøKriterierType.MERKNADTYPE ->
+                oppgaveKø.merknadKoder = kriteriumDto.koder ?: emptyList()
             else -> throw IllegalArgumentException("Støtter ikke kriterierType=${kriteriumDto.kriterierType}")
         }
     }
@@ -274,7 +276,8 @@ class AvdelingslederTjeneste(
     private fun fjernKriterium(kriteriumDto: KriteriumDto, oppgaveKø: OppgaveKø) {
         when (kriteriumDto.kriterierType) {
             KøKriterierType.FEILUTBETALING -> oppgaveKø.filtreringFeilutbetaling = null
-            else -> throw IllegalArgumentException("Støtter ikke kriterierType=${kriteriumDto.kriterierType}")
+            KøKriterierType.MERKNADTYPE -> oppgaveKø.merknadKoder = emptyList()
+            else -> throw IllegalArgumentException("Støtter ikke fjerning av kriterierType=${kriteriumDto.kriterierType}")
         }
     }
 

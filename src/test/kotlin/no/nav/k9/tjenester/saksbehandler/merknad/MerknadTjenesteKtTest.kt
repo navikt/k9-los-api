@@ -20,8 +20,7 @@ import io.ktor.server.testing.setBody
 import io.ktor.server.testing.withTestApplication
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
-import no.nav.k9.AbstractPostgresTest
-import no.nav.k9.buildAndTestConfig
+import no.nav.k9.AbstractK9LosIntegrationTest
 import no.nav.k9.domene.lager.oppgave.v2.Behandling
 import no.nav.k9.domene.lager.oppgave.v2.Ident
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
@@ -32,20 +31,11 @@ import no.nav.k9.domene.modell.Fagsystem
 import no.nav.k9.kodeverk.behandling.BehandlingType
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.RegisterExtension
-import org.koin.test.KoinTest
 import org.koin.test.get
-import org.koin.test.junit5.KoinTestExtension
 import java.time.LocalDateTime
 import java.util.*
 
-internal class MerknadTjenesteKtTest : AbstractPostgresTest(), KoinTest  {
-
-    @JvmField
-    @RegisterExtension
-    val koinTestRule = KoinTestExtension.create {
-        modules(buildAndTestConfig(dataSource))
-    }
+internal class MerknadTjenesteKtTest  : AbstractK9LosIntegrationTest() {
 
     private val om = ObjectMapper().configure()
 

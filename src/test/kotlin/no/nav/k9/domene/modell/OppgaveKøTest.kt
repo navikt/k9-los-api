@@ -487,35 +487,46 @@ internal class OppgaveKøTest {
         assertTrue(oppgaveKø.tilhørerOppgaveTilKø(oppgave, null, emptyList()))
     }
 
+    private val HASTESAK = "HASTESAK"
+    private val VANSKELIG = "VANSKELIG"
+
     @Test
     fun `Skal inkludere markerte oppgaver hvis det finnes merknad i køen`() {
         val oppgave = merknadOppgave(FagsakYtelseType.PLEIEPENGER_SYKT_BARN)
 
-        val hastekø = lagOppgaveKø(merknadKoder = listOf("HASTESAK"))
-        assertTrue(hastekø.tilhørerOppgaveTilKø(oppgave, null, merknadMed("HASTESAK")))
-        assertFalse(hastekø.tilhørerOppgaveTilKø(oppgave, null, merknadMed("VANSKELIG")))
+        val hastekø = lagOppgaveKø(merknadKoder = listOf(HASTESAK))
+        assertTrue(hastekø.tilhørerOppgaveTilKø(oppgave, null, merknadMed(HASTESAK)))
+        assertTrue(hastekø.tilhørerOppgaveTilKø(oppgave, null, merknadMed(HASTESAK, VANSKELIG)))
+        assertFalse(hastekø.tilhørerOppgaveTilKø(oppgave, null, merknadMed(VANSKELIG)))
         assertFalse(hastekø.tilhørerOppgaveTilKø(oppgave, null, emptyList()))
 
-        val hasteogVanskeligKø = lagOppgaveKø(merknadKoder = listOf("HASTESAK", "VANSKELIG"))
+        val vanskeligeHasteKø = lagOppgaveKø(merknadKoder = listOf(HASTESAK, VANSKELIG))
+        assertTrue(vanskeligeHasteKø.tilhørerOppgaveTilKø(oppgave, null, merknadMed(VANSKELIG, HASTESAK)))
+        assertFalse(vanskeligeHasteKø.tilhørerOppgaveTilKø(oppgave, null, merknadMed(VANSKELIG)))
+        assertFalse(vanskeligeHasteKø.tilhørerOppgaveTilKø(oppgave, null, merknadMed(HASTESAK)))
+        assertFalse(vanskeligeHasteKø.tilhørerOppgaveTilKø(oppgave, null, emptyList()))
 
-        assertTrue(hasteogVanskeligKø.tilhørerOppgaveTilKø(oppgave, null, merknadMed("VANSKELIG", "HASTESAK")))
-        assertTrue(hasteogVanskeligKø.tilhørerOppgaveTilKø(oppgave, null, merknadMed("VANSKELIG")))
-        assertTrue(hasteogVanskeligKø.tilhørerOppgaveTilKø(oppgave, null, merknadMed("HASTESAK")))
-        assertFalse(hasteogVanskeligKø.tilhørerOppgaveTilKø(oppgave, null, emptyList()))
-
-        val ingenMerknadKø = lagOppgaveKø(merknadKoder = emptyList())
-        assertTrue(ingenMerknadKø.tilhørerOppgaveTilKø(oppgave, null, merknadMed("VANSKELIG", "HASTESAK")))
-        assertTrue(ingenMerknadKø.tilhørerOppgaveTilKø(oppgave, null, listOf()))
     }
 
     @Test
     fun `markerte oppgaver i kombinasjon med andre kriterier`() {
         val psbOppgave = merknadOppgave(FagsakYtelseType.PLEIEPENGER_SYKT_BARN)
-        val psbHastekø = lagOppgaveKø(merknadKoder = listOf("HASTESAK"), fagsakYtelseTyper = mutableListOf(FagsakYtelseType.PLEIEPENGER_SYKT_BARN))
-        val pilsHastekø = lagOppgaveKø(merknadKoder = listOf("HASTESAK"), fagsakYtelseTyper = mutableListOf(FagsakYtelseType.PPN))
+        val psbHastekø = lagOppgaveKø(merknadKoder = listOf(HASTESAK), fagsakYtelseTyper = mutableListOf(FagsakYtelseType.PLEIEPENGER_SYKT_BARN))
+        val pilsHastekø = lagOppgaveKø(merknadKoder = listOf(HASTESAK), fagsakYtelseTyper = mutableListOf(FagsakYtelseType.PPN))
 
-        assertThat(psbHastekø.tilhørerOppgaveTilKø(psbOppgave, null, merknadMed("HASTESAK"))).isTrue()
-        assertThat(pilsHastekø.tilhørerOppgaveTilKø(psbOppgave, null, merknadMed("HASTESAK"))).isFalse()
+        assertThat(psbHastekø.tilhørerOppgaveTilKø(psbOppgave, null, merknadMed(HASTESAK))).isTrue()
+        assertThat(pilsHastekø.tilhørerOppgaveTilKø(psbOppgave, null, merknadMed(HASTESAK))).isFalse()
+
+    }
+
+    @Test
+    fun `vanlige køer skal ikke ha med markerte oppgaver`() {
+        val oppgave = merknadOppgave(FagsakYtelseType.PLEIEPENGER_SYKT_BARN)
+        val vanligPsbKø = lagOppgaveKø(fagsakYtelseTyper = mutableListOf(FagsakYtelseType.PLEIEPENGER_SYKT_BARN))
+
+        assertThat(vanligPsbKø.tilhørerOppgaveTilKø(oppgave, null, merknadMed(VANSKELIG, HASTESAK))).isFalse()
+        assertThat(vanligPsbKø.tilhørerOppgaveTilKø(oppgave, null, merknadMed(HASTESAK))).isFalse()
+        assertThat(vanligPsbKø.tilhørerOppgaveTilKø(oppgave, null, emptyList())).isTrue()
 
     }
 

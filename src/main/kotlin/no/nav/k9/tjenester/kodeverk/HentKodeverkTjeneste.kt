@@ -8,6 +8,7 @@ import no.nav.k9.domene.modell.FagsakStatus
 import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.domene.modell.KøKriterierType
 import no.nav.k9.domene.modell.KøSortering
+import no.nav.k9.domene.modell.MerknadType
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.Venteårsak
 
 class HentKodeverkTjeneste  {
@@ -28,6 +29,9 @@ class HentKodeverkTjeneste  {
         koder[BehandlingStatus::class.java.simpleName] = BehandlingStatus.values().asList()
         koder[Venteårsak::class.java.simpleName] = Venteårsak.values().asList()
         koder[KøKriterierType::class.java.simpleName] = KøKriterierType.values().asList()
+            .filterNot { it == KøKriterierType.BEHANDLINGTYPE } // ikke i bruk foreløpig
+        koder[MerknadType::class.java.simpleName] = MerknadType.values().asList()
+            .filterNot { it == MerknadType.VANSKELIG } // ikke støttet foreløpig
         return koder
     }
 }

@@ -18,7 +18,7 @@ object KøKritererTypeValidatorer {
         if (it.tom != null && it.tom.toIntOrNull() == null) throw IllegalArgumentException("til og med må være heltall men var ${it.tom}")
     }
 
-    val KodeverkValidator: ((Any) -> Unit) -> KøKriterierTypeValidator = { kodeVerdiValidator ->
+    val KodeverkValidator: ((String) -> Unit) -> KøKriterierTypeValidator = { kodeVerdiValidator ->
         KøKriterierTypeValidator { kriteriumDto ->
             if (kriteriumDto.koder == null) throw IllegalArgumentException("koder må være satt men var null")
             kriteriumDto.koder.forEach { k ->

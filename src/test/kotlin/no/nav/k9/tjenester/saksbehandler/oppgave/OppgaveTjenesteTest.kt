@@ -5,8 +5,7 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isNotEqualTo
 import assertk.assertions.isNull
 import kotlinx.coroutines.runBlocking
-import no.nav.k9.AbstractPostgresTest
-import no.nav.k9.buildAndTestConfig
+import no.nav.k9.AbstractK9LosIntegrationTest
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.modell.AksjonspunktStatus
@@ -25,23 +24,14 @@ import no.nav.k9.domene.repository.OppgaveRepository
 import no.nav.k9.domene.repository.ReservasjonRepository
 import no.nav.k9.domene.repository.SaksbehandlerRepository
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.RegisterExtension
-import org.koin.test.KoinTest
 import org.koin.test.get
-import org.koin.test.junit5.KoinTestExtension
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.test.assertNull
 import kotlin.test.asserter
 
-class OppgaveTjenesteTest : KoinTest, AbstractPostgresTest()  {
-
-    @JvmField
-    @RegisterExtension
-    val koinTestRule = KoinTestExtension.create {
-        modules(buildAndTestConfig(dataSource))
-    }
+class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `hent fagsak`() {
