@@ -28,5 +28,6 @@ class OppgaveDto(
     val selvstendigFrilans: Boolean,
     val søktGradering: Boolean,
     val fagsakPeriode: Oppgave.FagsakPeriode? = null,
-    val paaVent: Boolean? = null
+    val paaVent: Boolean? = null,
+    val harMerknad: Boolean = false
 )

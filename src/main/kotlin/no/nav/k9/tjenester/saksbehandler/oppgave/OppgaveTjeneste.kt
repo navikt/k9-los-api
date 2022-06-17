@@ -443,7 +443,7 @@ class OppgaveTjeneste constructor(
 
     private suspend fun lagOppgaveDtoer(oppgaver: List<Oppgave>): OppgaverResultat {
         var ikkeTilgang = false
-        val res = oppgaver.filter { oppgave ->
+        val oppgaver = oppgaver.filter { oppgave ->
             if (!pepClient.harTilgangTilLesSak(
                     fagsakNummer = oppgave.fagsakSaksnummer,
                     aktørid = oppgave.aktorId
@@ -467,7 +467,11 @@ class OppgaveTjeneste constructor(
             )
         }.toMutableList()
 
-        return OppgaverResultat(ikkeTilgang, res)
+        return OppgaverResultat(
+            ikkeTilgang,
+            oppgaver,
+            oppgaver.any { it.harMerknad }
+        )
     }
 
     private suspend fun reservertAvMeg(ident: String?): Boolean {
