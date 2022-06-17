@@ -23,7 +23,8 @@ internal fun Route.MerknadApi() {
             val eksternReferanse = call.parameters["eksternReferanse"]
                 ?: throw IllegalStateException("Mangler eksternReferanse i path")
             call.respond(
-                merknadTjeneste.hentMerknad(eksternReferanse)?.let { MerknadResponse.avMerknad(it) } ?: HttpStatusCode.NoContent
+                merknadTjeneste.hentMerknad(eksternReferanse)?.let { MerknadResponse.avMerknad(it) }
+                    ?: HttpStatusCode.NoContent
             )
         }
 
@@ -33,7 +34,8 @@ internal fun Route.MerknadApi() {
             val merknad = call.receive<MerknadEndret>()
 
             call.respond(
-                merknadTjeneste.lagreMerknad(eksternReferanse, merknad) ?: HttpStatusCode.NoContent
+                merknadTjeneste.lagreMerknad(eksternReferanse, merknad)?.let { MerknadResponse.avMerknad(it) }
+                    ?: HttpStatusCode.NoContent
             )
         }
     }

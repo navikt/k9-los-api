@@ -308,7 +308,6 @@ class OppgaveTjeneste constructor(
     private suspend fun finnOppgaverBasertPåFnr(query: String): SokeResultatDto {
         val aktørIdFraFnr = pdlService.identifikator(query)
 
-        val res = SokeResultatDto(false, null, mutableListOf())
         if (aktørIdFraFnr.aktorId != null && aktørIdFraFnr.aktorId.data.hentIdenter != null && aktørIdFraFnr.aktorId.data.hentIdenter!!.identer.isNotEmpty()) {
             val aktorId = aktørIdFraFnr.aktorId.data.hentIdenter!!.identer[0].ident
             val person = pdlService.person(aktorId)
@@ -321,16 +320,20 @@ class OppgaveTjeneste constructor(
                 if (oppgaveDto != null) {
                     oppgaver.add(oppgaveDto)
                 }
-                res.ikkeTilgang = person.ikkeTilgang
-                res.person = personDto
-                res.oppgaver.addAll(oppgaver)
+                return SokeResultatDto(
+                    ikkeTilgang = person.ikkeTilgang,
+                    person = personDto,
+                    oppgaver = oppgaver
+                )
             } else {
-                res.ikkeTilgang = person.ikkeTilgang
-                res.person = null
-                res.oppgaver = mutableListOf()
+                return SokeResultatDto(
+                    ikkeTilgang = person.ikkeTilgang,
+                    person = null,
+                    oppgaver = mutableListOf()
+                )
             }
         }
-        return res
+        return SokeResultatDto(false, null, mutableListOf())
     }
 
     suspend fun finnOppgaverBasertPåAktørId(aktørId: String): SokeResultatDto {
@@ -365,8 +368,7 @@ class OppgaveTjeneste constructor(
             )
         }
         val personInfo = person.person
-        val res = SokeResultatDto(false, null, mutableListOf())
-        if (personInfo != null) {
+        val res = if (personInfo != null) {
             val personDto = mapTilPersonDto(personInfo)
             val oppgaver: MutableList<OppgaveDto> = hentOppgaver(aktørId)
             //sjekker om det finnes en visningsak i omsorgsdager
@@ -374,13 +376,17 @@ class OppgaveTjeneste constructor(
             if (oppgaveDto != null) {
                 oppgaver.add(oppgaveDto)
             }
-            res.ikkeTilgang = person.ikkeTilgang
-            res.person = personDto
-            res.oppgaver.addAll(oppgaver)
+            SokeResultatDto(
+                ikkeTilgang = person.ikkeTilgang,
+                person = personDto,
+                oppgaver = oppgaver
+            )
         } else {
-            res.ikkeTilgang = person.ikkeTilgang
-            res.person = null
-            res.oppgaver = mutableListOf()
+            SokeResultatDto(
+                ikkeTilgang = person.ikkeTilgang,
+                person = null,
+                oppgaver = mutableListOf()
+            )
         }
         return filtrerOppgaverForSaksnummerOgJournalpostIder(res)
     }
@@ -455,15 +461,17 @@ class OppgaveTjeneste constructor(
             } else {
                 true
             }
-        }.map {
+        }.map {oppgave ->
             tilOppgaveDto(
-                oppgave = it, reservasjon = if (reservasjonRepository.finnes(it.eksternId)
-                    && reservasjonRepository.hent(it.eksternId).erAktiv()
+                oppgave = oppgave,
+                reservasjon = if (reservasjonRepository.finnes(oppgave.eksternId)
+                    && reservasjonRepository.hent(oppgave.eksternId).erAktiv()
                 ) {
-                    reservasjonRepository.hent(it.eksternId)
+                    reservasjonRepository.hent(oppgave.eksternId)
                 } else {
                     null
-                }
+                },
+                harMerknad = oppgaveRepositoryV2.hentMerknader(oppgave.eksternId.toString()).isNotEmpty()
             )
         }.toMutableList()
 
@@ -478,7 +486,7 @@ class OppgaveTjeneste constructor(
         return azureGraphService.hentIdentTilInnloggetBruker() == ident
     }
 
-    private suspend fun tilOppgaveDto(oppgave: Oppgave, reservasjon: Reservasjon?): OppgaveDto {
+    private suspend fun tilOppgaveDto(oppgave: Oppgave, reservasjon: Reservasjon?, harMerknad: Boolean): OppgaveDto {
         val oppgaveStatus =
             if (reservasjon != null && (!reservasjon.erAktiv()) || reservasjon == null) {
                 OppgaveStatusDto(false, null, false, null, null, null)
@@ -497,16 +505,17 @@ class OppgaveTjeneste constructor(
 
         return if (oppgave.system == "PUNSJ") {
             val paaVent = oppgave.aksjonspunkter.hentAktive()["MER_INFORMASJON"]?.let { it == "OPPR" } == true
-            oppgave.tilDto(oppgaveStatus, person, paaVent)
+            oppgave.tilDto(oppgaveStatus, person, paaVent = paaVent, harMerknad = harMerknad)
         } else {
-            oppgave.tilDto(oppgaveStatus, person)
+            oppgave.tilDto(oppgaveStatus, person, harMerknad = harMerknad)
         }
     }
 
     private fun Oppgave.tilDto(
         oppgaveStatus: OppgaveStatusDto,
         person: PersonPdlResponse,
-        paaVent: Boolean? = null
+        paaVent: Boolean? = null,
+        harMerknad: Boolean
     ): OppgaveDto {
         return OppgaveDto(
             status = oppgaveStatus,
@@ -533,7 +542,8 @@ class OppgaveTjeneste constructor(
             søktGradering = this.søktGradering,
             avklarArbeidsforhold = this.avklarArbeidsforhold,
             fagsakPeriode = this.fagsakPeriode,
-            paaVent = paaVent
+            paaVent = paaVent,
+            harMerknad = harMerknad
         )
     }
 
@@ -547,7 +557,8 @@ class OppgaveTjeneste constructor(
                         reservasjonRepository.hent(oppgave.eksternId)
                     } else {
                         null
-                    }
+                    },
+                    harMerknad = oppgaveRepositoryV2.hentMerknader(oppgave.eksternId.toString()).isNotEmpty()
                 )
             }.toList()
     }
