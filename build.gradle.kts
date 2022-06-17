@@ -7,7 +7,7 @@ val flywayVersion = "8.5.11"
 val vaultJdbcVersion = "1.3.9"
 val koinVersion = "2.2.3"
 val kotliqueryVersion = "1.7.0"
-val k9SakVersion = "3.3.3"
+val k9SakVersion = "3.3.4"
 val fuelVersion = "2.3.1"
 
 val dusseldorfKtorVersion = "3.1.6.8-1a4651d"
