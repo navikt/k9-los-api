@@ -35,6 +35,7 @@ import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleOppgaverHistorikk
 import no.nav.k9.tjenester.fagsak.PersonDto
 import no.nav.k9.tjenester.mock.AksjonspunkterMock
+import no.nav.k9.tjenester.saksbehandler.merknad.Merknad
 import no.nav.k9.tjenester.saksbehandler.nokkeltall.NyeOgFerdigstilteOppgaverDto
 import no.nav.k9.utils.Cache
 import no.nav.k9.utils.CacheObject
@@ -461,7 +462,7 @@ class OppgaveTjeneste constructor(
             } else {
                 true
             }
-        }.map {oppgave ->
+        }.map { oppgave ->
             tilOppgaveDto(
                 oppgave = oppgave,
                 reservasjon = if (reservasjonRepository.finnes(oppgave.eksternId)
@@ -471,22 +472,34 @@ class OppgaveTjeneste constructor(
                 } else {
                     null
                 },
-                harMerknad = oppgaveRepositoryV2.hentMerknader(oppgave.eksternId.toString()).isNotEmpty()
+                merknad = hentAktivMerknad(oppgave.eksternId.toString())
             )
         }.toMutableList()
 
         return OppgaverResultat(
             ikkeTilgang,
             oppgaver,
-            oppgaver.any { it.harMerknad }
+            oppgaver.any { it.merknad != null }
         )
+    }
+
+    fun hentAktivMerknad(eksternId: String): MerknadDto? {
+        return oppgaveRepositoryV2.hentMerknader(eksternId, inkluderSlettet = false).firstOrNull().tilDto()
+    }
+    private fun Merknad?.tilDto(): MerknadDto? {
+        return this?.let {
+            MerknadDto(
+                merknadKoder = it.merknadKoder,
+                fritekst = it.fritekst ?: ""
+            )
+        }
     }
 
     private suspend fun reservertAvMeg(ident: String?): Boolean {
         return azureGraphService.hentIdentTilInnloggetBruker() == ident
     }
 
-    private suspend fun tilOppgaveDto(oppgave: Oppgave, reservasjon: Reservasjon?, harMerknad: Boolean): OppgaveDto {
+    private suspend fun tilOppgaveDto(oppgave: Oppgave, reservasjon: Reservasjon?, merknad: MerknadDto?): OppgaveDto {
         val oppgaveStatus =
             if (reservasjon != null && (!reservasjon.erAktiv()) || reservasjon == null) {
                 OppgaveStatusDto(false, null, false, null, null, null)
@@ -505,9 +518,9 @@ class OppgaveTjeneste constructor(
 
         return if (oppgave.system == "PUNSJ") {
             val paaVent = oppgave.aksjonspunkter.hentAktive()["MER_INFORMASJON"]?.let { it == "OPPR" } == true
-            oppgave.tilDto(oppgaveStatus, person, paaVent = paaVent, harMerknad = harMerknad)
+            oppgave.tilDto(oppgaveStatus, person, paaVent = paaVent, merknad = merknad)
         } else {
-            oppgave.tilDto(oppgaveStatus, person, harMerknad = harMerknad)
+            oppgave.tilDto(oppgaveStatus, person, merknad = merknad)
         }
     }
 
@@ -515,7 +528,7 @@ class OppgaveTjeneste constructor(
         oppgaveStatus: OppgaveStatusDto,
         person: PersonPdlResponse,
         paaVent: Boolean? = null,
-        harMerknad: Boolean
+        merknad: MerknadDto?
     ): OppgaveDto {
         return OppgaveDto(
             status = oppgaveStatus,
@@ -543,7 +556,7 @@ class OppgaveTjeneste constructor(
             avklarArbeidsforhold = this.avklarArbeidsforhold,
             fagsakPeriode = this.fagsakPeriode,
             paaVent = paaVent,
-            harMerknad = harMerknad
+            merknad = merknad
         )
     }
 
@@ -558,7 +571,7 @@ class OppgaveTjeneste constructor(
                     } else {
                         null
                     },
-                    harMerknad = oppgaveRepositoryV2.hentMerknader(oppgave.eksternId.toString()).isNotEmpty()
+                    merknad = hentAktivMerknad(oppgave.eksternId.toString())
                 )
             }.toList()
     }
@@ -918,7 +931,8 @@ class OppgaveTjeneste constructor(
                         utbetalingTilBruker = oppgave.utbetalingTilBruker,
                         selvstendigFrilans = oppgave.selvstendigFrilans,
                         søktGradering = oppgave.søktGradering,
-                        avklarArbeidsforhold = oppgave.avklarArbeidsforhold
+                        avklarArbeidsforhold = oppgave.avklarArbeidsforhold,
+                        merknad = hentAktivMerknad(oppgave.eksternId.toString())
                     )
                 )
             }

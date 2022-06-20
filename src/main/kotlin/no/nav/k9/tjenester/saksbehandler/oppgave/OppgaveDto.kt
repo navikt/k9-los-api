@@ -29,5 +29,5 @@ class OppgaveDto(
     val søktGradering: Boolean,
     val fagsakPeriode: Oppgave.FagsakPeriode? = null,
     val paaVent: Boolean? = null,
-    val harMerknad: Boolean = false
+    val merknad: MerknadDto? = null
 )
