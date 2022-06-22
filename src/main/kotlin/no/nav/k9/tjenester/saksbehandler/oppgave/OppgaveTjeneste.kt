@@ -836,7 +836,7 @@ class OppgaveTjeneste constructor(
         behandlingstype = oppgave.behandlingType,
         fagsakYtelseType = oppgave.fagsakYtelseType,
         behandlingStatus = oppgave.behandlingStatus,
-        erTilSaksbehandling = oppgave.aktiv,
+        erTilSaksbehandling = oppgave.aktiv || oppgave.behandlingStatus.underBehandling(),
         opprettetTidspunkt = oppgave.behandlingOpprettet,
         behandlingsfrist = oppgave.behandlingsfrist,
         eksternId = oppgave.eksternId,
@@ -1220,3 +1220,5 @@ class OppgaveTjeneste constructor(
         return Pair(oppgaverSomIKkeErBlokkert.first(), null)
     }
 }
+
+private fun BehandlingStatus.underBehandling() = this != BehandlingStatus.AVSLUTTET && this != BehandlingStatus.LUKKET
