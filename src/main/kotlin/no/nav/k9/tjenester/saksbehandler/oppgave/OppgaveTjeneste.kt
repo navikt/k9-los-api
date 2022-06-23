@@ -545,7 +545,7 @@ class OppgaveTjeneste constructor(
             behandlingstype = this.behandlingType,
             fagsakYtelseType = this.fagsakYtelseType,
             behandlingStatus = this.behandlingStatus,
-            erTilSaksbehandling = this.aktiv,
+            erTilSaksbehandling = this.aktiv || this.behandlingStatus.underBehandling(),
             opprettetTidspunkt = this.behandlingOpprettet,
             behandlingsfrist = this.behandlingsfrist,
             eksternId = this.eksternId,
