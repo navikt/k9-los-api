@@ -21,13 +21,10 @@ import io.ktor.server.testing.withTestApplication
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.AbstractK9LosIntegrationTest
-import no.nav.k9.domene.lager.oppgave.v2.Behandling
-import no.nav.k9.domene.lager.oppgave.v2.Ident
-import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
-import no.nav.k9.domene.lager.oppgave.v2.OpprettOppgave
-import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.domene.lager.oppgave.v2.*
 import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.domene.modell.Fagsystem
+import no.nav.k9.domene.repository.OppgaveRepository
 import no.nav.k9.kodeverk.behandling.BehandlingType
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -40,12 +37,14 @@ internal class MerknadTjenesteKtTest  : AbstractK9LosIntegrationTest() {
     private val om = ObjectMapper().configure()
 
     private lateinit var oppgaveRepository : OppgaveRepositoryV2
+    private lateinit var oppgaveRepositoryGammel : OppgaveRepository
     private lateinit var tm : TransactionalManager
     private lateinit var merknadTjeneste: MerknadTjeneste
 
     @BeforeEach
     fun setup() {
         oppgaveRepository = get()
+        oppgaveRepositoryGammel = get()
         tm = get()
         merknadTjeneste = get()
     }
@@ -132,13 +131,15 @@ internal class MerknadTjenesteKtTest  : AbstractK9LosIntegrationTest() {
 
         behandling.nyHendelse(OpprettOppgave(LocalDateTime.now(), "9001", null))
 
+        val oppgaveGammel = behandling.tilOppgaveV1()
         tm.transaction {
             oppgaveRepository.lagre(behandling, it)
+            oppgaveRepositoryGammel.lagre(UUID.fromString(eksternReferanse)) {
+                oppgaveGammel
+            }
         }
     }
 }
-
-
 
 
 private fun Application.merknadTestModule() {
