@@ -216,6 +216,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         MerknadTjeneste(
             oppgaveRepositoryV2 = get(),
             azureGraphService = get(),
+            oppgaveKøOppdaterer = get(),
             tm = get()
         )
     }

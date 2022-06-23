@@ -12,8 +12,10 @@ import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveV2
 import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.integrasjon.azuregraph.IAzureGraphService
+import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveKøOppdaterer
 import org.koin.ktor.ext.inject
 import java.time.LocalDateTime
+import java.util.*
 
 internal fun Route.MerknadApi() {
     val merknadTjeneste by inject<MerknadTjeneste>()
@@ -87,6 +89,7 @@ data class MerknadEndret(
 class MerknadTjeneste(
     private val oppgaveRepositoryV2: OppgaveRepositoryV2,
     private val azureGraphService: IAzureGraphService,
+    private val oppgaveKøOppdaterer: OppgaveKøOppdaterer,
     private val tm: TransactionalManager
 ) {
 
@@ -104,6 +107,7 @@ class MerknadTjeneste(
             oppgaveRepositoryV2.lagre(behandling, transaction)
             behandling.merknad
         }
+        oppgaveKøOppdaterer.oppdater(UUID.fromString(eksternReferanse))
         return merknaderEtterLagring?.takeIf { !it.slettet }
     }
 }

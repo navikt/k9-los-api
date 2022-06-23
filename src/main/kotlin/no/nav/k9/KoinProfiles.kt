@@ -50,6 +50,7 @@ import no.nav.k9.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.tjenester.driftsmeldinger.DriftsmeldingTjeneste
 import no.nav.k9.tjenester.kodeverk.HentKodeverkTjeneste
 import no.nav.k9.tjenester.saksbehandler.merknad.MerknadTjeneste
+import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveKøOppdaterer
 import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import no.nav.k9.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
 import no.nav.k9.tjenester.saksbehandler.saksliste.SakslisteTjeneste
@@ -280,9 +281,12 @@ fun common(app: Application, config: Configuration) = module {
         HentKodeverkTjeneste()
     }
 
+    single { OppgaveKøOppdaterer(get(), get(), get()) }
+
     single {
         MerknadTjeneste(
             oppgaveRepositoryV2 = get(),
+            oppgaveKøOppdaterer = get(),
             azureGraphService = get(),
             tm = get()
         )

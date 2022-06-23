@@ -300,5 +300,4 @@ class OppgaveKøRepository(
     suspend fun oppdaterKøMedOppgaver(uuid: UUID) {
         oppgaveKøOppdatert.send(uuid)
     }
-
 }
