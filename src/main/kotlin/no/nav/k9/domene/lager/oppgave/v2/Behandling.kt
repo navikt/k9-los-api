@@ -90,6 +90,8 @@ open class Behandling constructor(
         sistEndret = LocalDateTime.now()
         log.info("Ferdigstiller behandling $eksternReferanse")
         lukkAlleAktiveOppgaver(ferdigstillelse)
+        if (merknad != null) { slettMerknad() }
+
         ferdigstilt = ferdigstillelse.tidspunkt
     }
 

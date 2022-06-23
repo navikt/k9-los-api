@@ -39,6 +39,7 @@ import no.nav.k9.integrasjon.sakogbehandling.SakOgBehandlingProducer
 import no.nav.k9.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.tjenester.saksbehandler.merknad.MerknadTjeneste
+import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveKøOppdaterer
 import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import no.nav.k9.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
 import no.nav.k9.tjenester.sse.SseEvent
@@ -216,9 +217,12 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         MerknadTjeneste(
             oppgaveRepositoryV2 = get(),
             azureGraphService = get(),
+            oppgaveKøOppdaterer = get(),
             tm = get()
         )
     }
+
+    single { OppgaveKøOppdaterer(get(), get(), get()) }
 
     single {
         AvdelingslederTjeneste(
