@@ -1,7 +1,12 @@
 package no.nav.k9.domene.lager.oppgave.v2
 
 import assertk.assertThat
-import assertk.assertions.*
+import assertk.assertions.containsExactly
+import assertk.assertions.containsOnly
+import assertk.assertions.isEmpty
+import assertk.assertions.isEqualTo
+import assertk.assertions.isFalse
+import assertk.assertions.isNull
 import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.domene.modell.Fagsystem
 import org.junit.jupiter.api.Test
@@ -99,7 +104,7 @@ internal class BehandlingTest {
     }
 
     @Test
-    fun `AvbrytOppgave avbryter kun gjeldene oppgave ved oppgitt OppgaveKode`() {
+    fun `AvbrytOppgave avbryter gjeldene og foregående oppgaver ved oppgitt OppgaveKode`() {
         val behandling = opprettBehandling()
         behandling.nyHendelse(oppgave1)
         behandling.nyHendelse(oppgave2)
@@ -110,8 +115,8 @@ internal class BehandlingTest {
                 oppgaveKode = oppgave2.oppgaveKode
             )
         )
-        assertThat(behandling.oppgaver().map { it.oppgaveStatus }).containsExactly(OppgaveStatus.OPPRETTET, OppgaveStatus.AVBRUTT)
-        assertThat(behandling.harAktiveOppgaver()).isTrue()
+        assertThat(behandling.oppgaver().map { it.oppgaveStatus }).containsOnly(OppgaveStatus.AVBRUTT)
+        assertThat(behandling.harAktiveOppgaver()).isFalse()
     }
 
     @Test // Dette må være mulig fordi f.eks beslutter kan sende saksbehandler tilbake, forbi tidligere ferdigstilte aksjonspunkter
