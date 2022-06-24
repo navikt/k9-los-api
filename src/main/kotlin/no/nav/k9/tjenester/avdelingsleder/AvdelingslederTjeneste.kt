@@ -269,6 +269,8 @@ class AvdelingslederTjeneste(
                 oppgaveKø.filtreringFeilutbetaling = Intervall(kriteriumDto.fom?.toLong(), kriteriumDto.tom?.toLong())
             KøKriterierType.MERKNADTYPE ->
                 oppgaveKø.merknadKoder = kriteriumDto.koder ?: emptyList()
+            KøKriterierType.OPPGAVEKODE ->
+                oppgaveKø.oppgaveKoder = kriteriumDto.koder ?: emptyList()
             else -> throw IllegalArgumentException("Støtter ikke kriterierType=${kriteriumDto.kriterierType}")
         }
     }
@@ -277,6 +279,7 @@ class AvdelingslederTjeneste(
         when (kriteriumDto.kriterierType) {
             KøKriterierType.FEILUTBETALING -> oppgaveKø.filtreringFeilutbetaling = null
             KøKriterierType.MERKNADTYPE -> oppgaveKø.merknadKoder = emptyList()
+            KøKriterierType.OPPGAVEKODE -> oppgaveKø.oppgaveKoder = emptyList()
             else -> throw IllegalArgumentException("Støtter ikke fjerning av kriterierType=${kriteriumDto.kriterierType}")
         }
     }

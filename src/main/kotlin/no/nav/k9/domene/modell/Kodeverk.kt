@@ -59,6 +59,13 @@ enum class KøKriterierType(
         felttypeKodeverk = BehandlingType::class.java.simpleName,
         validator = KodeverkValidator { BehandlingType.fraKode(it) }
     ),
+    OPPGAVEKODE(
+        kode = "OPPGAVEKODE",
+        navn = "Oppgavekode",
+        felttype = KøKriterierFeltType.KODEVERK,
+        felttypeKodeverk = OppgaveKode::class.java.simpleName,
+        validator = KodeverkValidator { OppgaveKode.fraKode(it) }
+    ),
     MERKNADTYPE(
         kode = "MERKNADTYPE",
         navn = "Merknad type",
@@ -163,6 +170,31 @@ enum class BehandlingType(override val kode: String, override val navn: String, 
         fun fraKode(o: Any): BehandlingType {
             val kode = TempAvledeKode.getVerdi(o)
             return values().find { it.kode == kode } ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
+        }
+    }
+}
+
+@JsonFormat(shape = JsonFormat.Shape.OBJECT)
+enum class OppgaveKode(override val kode: String, override val navn: String) : Kodeverdi {
+    SYKDOM("9001", "Sykdom"),
+    INFOTRYGD_SØK("9007", "Infotrygdsøk"),
+    OMSORG("9020", "Omsorg"),
+    ETTERLYS_INNTEKTSMELDING("9068", "Etterlys inntektsmelding"),
+    AVKLAR_MANGLENDE_INNTEKTSMELDING("9069", "Avklar manglende inntektsmelding"),
+    FASTSETT_BEREGNINGSGRUNNLAG("5038", "Fastsett beregningsgrunnlag"),
+    MEDLEMSKAP("5053", "Medlemskap"),
+    FORESLÅ_VEDTAK("5015", "Forslå vedtak"),
+    FORESLÅ_VEDTAK_MANUELT("5028", "Foreslå vedtak manuelt"),
+    FATTE_VEDTAK("5016", "Fatte vedtak");
+
+    override val kodeverk = "OPPGAVE_KODE"
+
+    companion object {
+        @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
+        @JvmStatic
+        fun fraKode(o: Any): OppgaveKode {
+            val kode = TempAvledeKode.getVerdi(o)
+            return OppgaveKode.values().find { it.kode == kode } ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
         }
     }
 }

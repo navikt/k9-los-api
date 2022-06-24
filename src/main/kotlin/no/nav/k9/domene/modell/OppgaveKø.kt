@@ -36,6 +36,7 @@ data class OppgaveKø(
     val kode6: Boolean = false,
     var filtreringFeilutbetaling: Intervall<Long>? = null,
     var merknadKoder: List<String> = emptyList(),
+    var oppgaveKoder: List<String> = emptyList(),
 ) {
     companion object {
         private val log = LoggerFactory.getLogger(OppgaveKø::class.java)
@@ -132,6 +133,10 @@ data class OppgaveKø(
 
         if (inkluderer(oppgave)) {
             return true
+        }
+
+        if (oppgaveKoder.isEmpty() && oppgave.aksjonspunkter.liste.isNotEmpty() || !oppgave.aksjonspunkter.hentAktive().keys.containsAll(oppgaveKoder)) {
+            return false
         }
 
         return false
@@ -266,6 +271,10 @@ data class OppgaveKø(
             kriterierDto.add(tilMerknadKriterium())
         }
 
+        if (oppgaveKoder.isNotEmpty()) {
+            kriterierDto.add(tilOppgaveKodeKriterium())
+        }
+
         return kriterierDto
     }
 
@@ -282,6 +291,13 @@ data class OppgaveKø(
         kriterierType = KøKriterierType.MERKNADTYPE,
         inkluder = true,
         koder = merknadKoder
+    )
+
+    private fun tilOppgaveKodeKriterium() = KriteriumDto(
+        id = id.toString(),
+        kriterierType = KøKriterierType.OPPGAVEKODE,
+        inkluder = true,
+        koder = oppgaveKoder
     )
 
 }
