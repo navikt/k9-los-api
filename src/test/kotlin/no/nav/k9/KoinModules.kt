@@ -146,11 +146,11 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single { TransactionalManager(dataSource = get()) }
     single { OppgaveTjenesteV2(
         oppgaveRepository = get(),
-        migreringstjeneste = BehandlingsmigreringTjeneste(
-            BehandlingProsessEventK9Repository(dataSource = get())
-        ),
+        migreringstjeneste = get(),
         tm = get())
     }
+
+    single { BehandlingsmigreringTjeneste(BehandlingProsessEventK9Repository(dataSource = get()))}
 
     single {
         NokkeltallTjeneste(
@@ -218,6 +218,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgaveRepositoryV2 = get(),
             azureGraphService = get(),
             oppgaveKøOppdaterer = get(),
+            migreringstjeneste = get(),
             tm = get()
         )
     }

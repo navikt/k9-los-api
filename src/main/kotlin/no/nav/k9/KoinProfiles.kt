@@ -288,6 +288,7 @@ fun common(app: Application, config: Configuration) = module {
             oppgaveRepositoryV2 = get(),
             oppgaveKøOppdaterer = get(),
             azureGraphService = get(),
+            migreringstjeneste = get(),
             tm = get()
         )
     }

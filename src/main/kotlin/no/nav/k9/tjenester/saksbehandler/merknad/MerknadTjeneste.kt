@@ -8,6 +8,7 @@ import io.ktor.routing.Route
 import io.ktor.routing.get
 import io.ktor.routing.post
 import io.ktor.routing.route
+import no.nav.k9.domene.lager.oppgave.v2.BehandlingsmigreringTjeneste
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveV2
 import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
@@ -90,6 +91,7 @@ class MerknadTjeneste(
     private val oppgaveRepositoryV2: OppgaveRepositoryV2,
     private val azureGraphService: IAzureGraphService,
     private val oppgaveKøOppdaterer: OppgaveKøOppdaterer,
+    private val migreringstjeneste: BehandlingsmigreringTjeneste,
     private val tm: TransactionalManager
 ) {
 
@@ -102,6 +104,7 @@ class MerknadTjeneste(
         val saksbehandlerIdent = try { azureGraphService.hentIdentTilInnloggetBruker() } catch (_: Exception) { null }
         val merknaderEtterLagring = tm.transaction { transaction ->
             val behandling = oppgaveRepositoryV2.hentBehandling(eksternReferanse, transaction)
+                ?: migreringstjeneste.hentBehandlingFraTidligereProsessEvents(eksternReferanse)
                 ?: throw IllegalStateException("Forsøker å lagre merknad på ukjent eksternReferanse $eksternReferanse")
             behandling.lagreMerknad(merknad, saksbehandlerIdent = saksbehandlerIdent)
             oppgaveRepositoryV2.lagre(behandling, transaction)
