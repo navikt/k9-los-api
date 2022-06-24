@@ -121,19 +121,13 @@ open class Behandling constructor(
             return
         }
 
-        val eksisterendeAktivOppgave = aktiveOppgaver().hentOppgaveSenesteFørst(avbrytOppgave.oppgaveKode)
-        if (eksisterendeAktivOppgave != null) {
-            lukkAktiveOppgaverOpprettetFør(eksisterendeAktivOppgave, ferdigstillelse = null)
-            return
-        }
+        val eksisterendeOppgave = aktiveOppgaver().hentOppgaveSenesteFørst(avbrytOppgave.oppgaveKode)
+            ?: ferdigstilteOppgaver().hentOppgaveSenesteFørst(avbrytOppgave.oppgaveKode)
 
-        val eksisterendeFerdigstiltOppgave = ferdigstilteOppgaver().hentOppgaveSenesteFørst(avbrytOppgave.oppgaveKode)
-        if (eksisterendeFerdigstiltOppgave != null) {
+        eksisterendeOppgave?.run {
             sistEndret = LocalDateTime.now()
-            eksisterendeFerdigstiltOppgave.avbrytOppgaveUtenFerdigstillelse()
-            return
-        }
-        log.error("Avbrytelse inneholder oppgavekode ${avbrytOppgave.oppgaveKode} som ikke finnes blant aktive oppgaver. $eksternReferanse")
+            avbrytOppgaveUtenFerdigstillelse()
+        } ?: log.info("Avbrytelse inneholder oppgavekode ${avbrytOppgave.oppgaveKode} som ikke finnes blant aktive oppgaver. $eksternReferanse")
     }
 
     private fun lukkAktiveOppgaverOpprettetFør(eksisterendeOppgave: OppgaveV2, ferdigstillelse: Ferdigstillelse?) {
