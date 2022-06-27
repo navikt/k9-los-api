@@ -119,6 +119,10 @@ data class OppgaveKø(
             return false
         }
 
+        if (oppgaveKoder.isNotEmpty() && !oppgaveKoder.containsAll(oppgave.aksjonspunkter.hentAktive().keys)) {
+            return false
+        }
+
         if (filtreringAndreKriterierType.isEmpty()) {
             return true
         }
@@ -133,10 +137,6 @@ data class OppgaveKø(
 
         if (inkluderer(oppgave)) {
             return true
-        }
-
-        if (oppgaveKoder.isEmpty() && oppgave.aksjonspunkter.liste.isNotEmpty() || !oppgave.aksjonspunkter.hentAktive().keys.containsAll(oppgaveKoder)) {
-            return false
         }
 
         return false

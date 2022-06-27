@@ -530,6 +530,50 @@ internal class OppgaveKøTest {
 
     }
 
+    @Test
+    fun `kø med oppgavekoder skal inneholde oppgaver med matchende aksjonspunkt`() {
+        val oppgave = oppgaveMedAksjonspunkter(Aksjonspunkter(liste = mapOf("9001" to "OPPR")))
+        val køMedSykdomKriterie = lagOppgaveKø(fagsakYtelseTyper = mutableListOf(FagsakYtelseType.PLEIEPENGER_SYKT_BARN), oppgaveKoder = listOf("9001"))
+
+        assertThat(køMedSykdomKriterie.tilhørerOppgaveTilKø(oppgave, null, emptyList())).isTrue()
+    }
+
+    @Test
+    fun `kø uten oppgavekoder skal ikke inneholde oppgaver matchende aksjonspunkt`() {
+        val oppgave = oppgaveMedAksjonspunkter(Aksjonspunkter(liste = mapOf("9001" to "OPPR")))
+        val køMedSykdomKriterie = lagOppgaveKø(fagsakYtelseTyper = mutableListOf(FagsakYtelseType.PLEIEPENGER_SYKT_BARN))
+
+        assertThat(køMedSykdomKriterie.tilhørerOppgaveTilKø(oppgave, null, emptyList())).isFalse()
+    }
+
+    private fun oppgaveMedAksjonspunkter(aksjonspunkter: Aksjonspunkter) = Oppgave(
+        fagsakSaksnummer = "",
+        aktorId = "273857",
+        journalpostId = "234234535",
+        behandlendeEnhet = "Enhet",
+        behandlingsfrist = LocalDateTime.now(),
+        behandlingOpprettet = LocalDateTime.now().minusDays(23),
+        forsteStonadsdag = LocalDate.now().plusDays(6),
+        behandlingStatus = BehandlingStatus.OPPRETTET,
+        behandlingType = BehandlingType.FORSTEGANGSSOKNAD,
+        fagsakYtelseType = FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
+        aktiv = true,
+        system = "K9SAK",
+        oppgaveAvsluttet = null,
+        utfortFraAdmin = false,
+        eksternId = UUID.randomUUID(),
+        oppgaveEgenskap = emptyList(),
+        aksjonspunkter = aksjonspunkter,
+        tilBeslutter = false,
+        utbetalingTilBruker = false,
+        selvstendigFrilans = false,
+        kombinert = false,
+        søktGradering = false,
+        årskvantum = false,
+        avklarArbeidsforhold = false,
+        avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false,
+    )
+
     private fun merknadOppgave(fagsakYtelseType: FagsakYtelseType) = Oppgave(
         fagsakSaksnummer = "",
         aktorId = "273857",
@@ -602,6 +646,7 @@ internal class OppgaveKøTest {
         merknadKoder: List<String> = emptyList(),
         behandlingTyper: MutableList<BehandlingType> = mutableListOf(),
         fagsakYtelseTyper: MutableList<FagsakYtelseType> = mutableListOf(),
+        oppgaveKoder: List<String> = emptyList()
     ) = OppgaveKø(
         UUID.randomUUID(),
         "test",
@@ -617,7 +662,8 @@ internal class OppgaveKøTest {
         false,
         mutableListOf(),
         filtreringFeilutbetaling = feilutbetaling,
-        merknadKoder = merknadKoder
+        merknadKoder = merknadKoder,
+        oppgaveKoder = oppgaveKoder
     )
 
     private fun merknadMed(vararg merknadKoder: String) = listOf(
