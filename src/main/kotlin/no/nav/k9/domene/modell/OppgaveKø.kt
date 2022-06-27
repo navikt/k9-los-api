@@ -119,7 +119,9 @@ data class OppgaveKø(
             return false
         }
 
-        if (oppgaveKoder.isNotEmpty() && !oppgaveKoder.containsAll(oppgave.aksjonspunkter.hentAktive().keys)) {
+        if (oppgaveKoder.isNotEmpty() && oppgave.aksjonspunkter.hentAktive().isEmpty() ||
+            oppgaveKoder.isNotEmpty() && oppgave.aksjonspunkter.hentAktive().isNotEmpty() &&
+            !oppgaveKoder.containsAll(oppgave.aksjonspunkter.hentAktive().keys)) {
             return false
         }
 

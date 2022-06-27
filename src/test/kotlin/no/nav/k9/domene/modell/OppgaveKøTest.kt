@@ -539,9 +539,9 @@ internal class OppgaveKøTest {
     }
 
     @Test
-    fun `kø uten oppgavekoder skal ikke inneholde oppgaver matchende aksjonspunkt`() {
-        val oppgave = oppgaveMedAksjonspunkter(Aksjonspunkter(liste = mapOf("9001" to "OPPR")))
-        val køMedSykdomKriterie = lagOppgaveKø(fagsakYtelseTyper = mutableListOf(FagsakYtelseType.PLEIEPENGER_SYKT_BARN))
+    fun `kø med oppgavekoder skal ikke inneholde oppgaver uten aksjonspunkt`() {
+        val oppgave = oppgaveMedAksjonspunkter(Aksjonspunkter(liste = emptyMap()))
+        val køMedSykdomKriterie = lagOppgaveKø(fagsakYtelseTyper = mutableListOf(FagsakYtelseType.PLEIEPENGER_SYKT_BARN), oppgaveKoder = listOf("9001"))
 
         assertThat(køMedSykdomKriterie.tilhørerOppgaveTilKø(oppgave, null, emptyList())).isFalse()
     }
