@@ -1,5 +1,6 @@
 package no.nav.k9.eventhandler
 
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.channels.ReceiveChannel
@@ -29,17 +30,20 @@ fun CoroutineScope.køOppdatertProsessor(
 ) = launch(Executors.newSingleThreadExecutor().asCoroutineDispatcher()) {
     val log = LoggerFactory.getLogger("behandleOppgave")
     for (uuid in channel) {
-        hentAlleElementerIkøSomSet(uuid, channel = channel).forEach {
+        try {
             val measureTimeMillis = oppdaterKø(
                 oppgaveKøRepository,
-                it,
+                uuid,
                 oppgaveRepository,
                 oppgaveRepositoryV2,
                 reservasjonRepository,
                 oppgaveTjeneste,
                 k9SakService
             )
-            log.info("tok ${measureTimeMillis}ms å oppdatere kø")
+            log.info("tok ${measureTimeMillis}ms å oppdatere køen: $uuid")
+
+        } catch (e: Exception) {
+            log.error("Feilet ved oppdatering av kø $uuid", e)
         }
     }
 }
@@ -71,7 +75,8 @@ private suspend fun oppdaterKø(
         }
         val behandlingsListe = mutableListOf<BehandlingIdDto>()
         oppgaveKøRepository.lagreIkkeTaHensyn(it) { oppgaveKø ->
-            if (oppgaveKø!!.oppgaverOgDatoer == opprinnelige) {
+            checkNotNull(oppgaveKø) { "Fant ikke kø ved køoppdatering" }
+            if (oppgaveKø.oppgaverOgDatoer == opprinnelige) {
                 oppgaveKø.oppgaverOgDatoer = kø.oppgaverOgDatoer
             } else {
                 oppgaveKø.oppgaverOgDatoer.clear()
@@ -94,18 +99,4 @@ private suspend fun oppdaterKø(
         oppgaveTjeneste.hentAntallOppgaver(oppgavekøId = it, taMedReserverte = false, refresh = true)
         k9SakService.refreshBehandlinger(BehandlingIdListe(behandlingsListe))
     }
-}
-
-
-fun hentAlleElementerIkøSomSet(
-    uuid: UUID,
-    channel: ReceiveChannel<UUID>
-): MutableSet<UUID> {
-    val set = mutableSetOf(uuid)
-    var neste = channel.poll()
-    while (neste != null) {
-        set.add(neste)
-        neste = channel.poll()
-    }
-    return set
 }
