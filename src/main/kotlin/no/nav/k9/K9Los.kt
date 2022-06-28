@@ -43,6 +43,7 @@ import no.nav.k9.tjenester.driftsmeldinger.DriftsmeldingerApis
 import no.nav.k9.tjenester.fagsak.FagsakApis
 import no.nav.k9.tjenester.innsikt.innsiktGrensesnitt
 import no.nav.k9.tjenester.kodeverk.KodeverkApis
+import no.nav.k9.tjenester.kokriterier.KøkriterieApis
 import no.nav.k9.tjenester.konfig.KonfigApis
 import no.nav.k9.tjenester.mock.MockGrensesnitt
 import no.nav.k9.tjenester.saksbehandler.NavAnsattApis
@@ -260,6 +261,7 @@ private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
 
         route("konfig") { KonfigApis() }
         KodeverkApis()
+        KøkriterieApis()
     }
 }
 
