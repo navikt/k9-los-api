@@ -546,6 +546,16 @@ internal class OppgaveKøTest {
         assertThat(køMedSykdomKriterie.tilhørerOppgaveTilKø(oppgave, null, emptyList())).isFalse()
     }
 
+    @Test
+    fun `kø med oppavekoder skal ikke inneholde oppgaver som ikke har mathende aktive aksjonspunkt`() {
+        val oppgaveMedUtførtSykdomsAksjonsPunkt = oppgaveMedAksjonspunkter(Aksjonspunkter(liste = mapOf("9001" to "UTFO")))
+        val oppgaveMedEtterlysIMAksjonsPunkt = oppgaveMedAksjonspunkter(Aksjonspunkter(liste = mapOf("9068" to "OPPR")))
+        val køMedSykdomKriterie = lagOppgaveKø(fagsakYtelseTyper = mutableListOf(FagsakYtelseType.PLEIEPENGER_SYKT_BARN), oppgaveKoder = listOf("9001"))
+
+        assertThat(køMedSykdomKriterie.tilhørerOppgaveTilKø(oppgaveMedUtførtSykdomsAksjonsPunkt, null, emptyList())).isFalse()
+        assertThat(køMedSykdomKriterie.tilhørerOppgaveTilKø(oppgaveMedEtterlysIMAksjonsPunkt, null, emptyList())).isFalse()
+    }
+
     private fun oppgaveMedAksjonspunkter(aksjonspunkter: Aksjonspunkter) = Oppgave(
         fagsakSaksnummer = "",
         aktorId = "273857",
