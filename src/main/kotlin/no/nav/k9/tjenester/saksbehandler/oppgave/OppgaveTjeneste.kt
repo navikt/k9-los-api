@@ -844,7 +844,8 @@ class OppgaveTjeneste constructor(
         utbetalingTilBruker = oppgave.utbetalingTilBruker,
         søktGradering = oppgave.søktGradering,
         selvstendigFrilans = oppgave.selvstendigFrilans,
-        avklarArbeidsforhold = oppgave.avklarArbeidsforhold
+        avklarArbeidsforhold = oppgave.avklarArbeidsforhold,
+        merknad = hentAktivMerknad(oppgave.eksternId.toString())
     )
 
     private fun preprodNavn(oppgave: Oppgave): String {
