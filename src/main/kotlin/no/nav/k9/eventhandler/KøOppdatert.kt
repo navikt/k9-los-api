@@ -27,7 +27,7 @@ fun CoroutineScope.køOppdatertProsessor(
     oppgaveTjeneste: OppgaveTjeneste,
     reservasjonRepository: ReservasjonRepository,
     k9SakService: IK9SakService
-) = launch(Executors.newSingleThreadExecutor().asCoroutineDispatcher()) {
+) = launch(Executors.newSingleThreadExecutor().asCoroutineDispatcherWithErrorHandling()) {
     val log = LoggerFactory.getLogger("behandleOppgave")
     for (uuid in channel) {
         try {
