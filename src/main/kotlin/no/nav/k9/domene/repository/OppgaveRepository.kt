@@ -31,7 +31,7 @@ import javax.sql.DataSource
 class OppgaveRepository(
     private val dataSource: DataSource,
     private val pepClient: IPepClient,
-    private val refreshOppgave: Channel<Oppgave>
+    private val refreshOppgave: Channel<UUID>
 ) {
     private val log: Logger = LoggerFactory.getLogger(OppgaveRepository::class.java)
     fun hent(): List<Oppgave> {
@@ -398,7 +398,7 @@ class OppgaveRepository(
         }
         val oppgaver =
             json.map { s -> objectMapper().readValue(s, Oppgave::class.java) }.filter { it.kode6 == kode6 }.toList()
-        oppgaver.forEach { refreshOppgave.offer(it) }
+        oppgaver.forEach { refreshOppgave.trySend(it.eksternId) }
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
         return oppgaver
@@ -419,7 +419,7 @@ class OppgaveRepository(
             )
         }
         val oppgaver = json.map { objectMapper().readValue(it, Oppgave::class.java) }.filter { it.kode6 == kode6 }
-        oppgaver.forEach { refreshOppgave.offer(it) }
+        oppgaver.forEach { refreshOppgave.trySend(it.eksternId) }
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
 
@@ -706,7 +706,7 @@ class OppgaveRepository(
             )
         }
         val oppgaver = json.map { objectMapper().readValue(it, Oppgave::class.java) }.filter { it.kode6 == kode6 }
-        oppgaver.forEach { refreshOppgave.offer(it) }
+        oppgaver.forEach { refreshOppgave.trySend(it.eksternId) }
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
 

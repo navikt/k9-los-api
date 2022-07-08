@@ -1,8 +1,6 @@
 package no.nav.k9.eventhandler
 
-import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.launch
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
