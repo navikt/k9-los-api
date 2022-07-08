@@ -9,6 +9,7 @@ import no.nav.k9.domene.repository.OppgaveRepository
 import no.nav.k9.integrasjon.k9.IK9SakService
 import no.nav.k9.sak.kontrakt.behandling.BehandlingIdDto
 import no.nav.k9.sak.kontrakt.behandling.BehandlingIdListe
+import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.Executors
 
@@ -17,14 +18,20 @@ fun CoroutineScope.refreshK9(
     channel: ReceiveChannel<UUID>,
     k9SakService: IK9SakService,
     oppgaveRepository: OppgaveRepository
-) = launch(Executors.newSingleThreadExecutor().asCoroutineDispatcher()) {
+) = launch(Executors.newSingleThreadExecutor().asCoroutineDispatcherWithErrorHandling()) {
+    val log = LoggerFactory.getLogger("refreshK9")
+
     val oppgaveListe = mutableListOf<UUID>()
     oppgaveListe.add(channel.receive())
     while (true) {
         val oppgaveId = channel.poll()
         if (oppgaveId == null) {
-            refreshK9(oppgaveListe, k9SakService)
-            oppgaveListe.clear()
+            try {
+                refreshK9(oppgaveListe, k9SakService)
+                oppgaveListe.clear()
+            } catch (e: Exception) {
+                log.error("Feilet ved refresh av oppgaver i k9-sak", e)
+            }
             oppgaveListe.add(channel.receive())
         } else {
             val oppgave = oppgaveRepository.hent(oppgaveId)

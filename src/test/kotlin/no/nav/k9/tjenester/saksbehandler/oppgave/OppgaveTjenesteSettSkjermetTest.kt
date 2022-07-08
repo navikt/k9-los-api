@@ -196,8 +196,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
     fun `hent fagsak`(){
         val oppgaveKøOppdatert = Channel<UUID>(1)
         val refreshKlienter = Channel<SseEvent>(1000)
-        val oppgaverRefresh = Channel<Oppgave>(1000)
-        val oppgaveRefreshOppdatert = Channel<UUID>(100)
+        val oppgaverRefresh = Channel<UUID>(1000)
 
         val oppgaveRepository = OppgaveRepository(dataSource = dataSource,pepClient = PepClientLocal(), refreshOppgave = oppgaverRefresh)
         val oppgaveRepositoryV2 = OppgaveRepositoryV2(dataSource = dataSource)
@@ -207,7 +206,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             oppgaveKøOppdatert = oppgaveKøOppdatert,
             oppgaveRepositoryV2 = oppgaveRepositoryV2,
             refreshKlienter = refreshKlienter,
-            oppgaveRefreshChannel = oppgaveRefreshOppdatert,
+            oppgaveRefreshChannel = oppgaverRefresh,
             pepClient = PepClientLocal()
         )
         val pdlService = mockk<PdlService>()
@@ -295,9 +294,8 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
     fun hentReservasjonsHistorikk() = runBlocking {
         val oppgaveKøOppdatert = Channel<UUID>(1)
         val refreshKlienter = Channel<SseEvent>(1000)
-        val oppgaveRefreshOppdatert = Channel<UUID>(100)
 
-        val oppgaverRefresh = Channel<Oppgave>(1000)
+        val oppgaverRefresh = Channel<UUID>(1000)
 
         val oppgaveRepository = OppgaveRepository(dataSource = dataSource,pepClient = PepClientLocal(), refreshOppgave = oppgaverRefresh)
         val oppgaveRepositoryV2 = OppgaveRepositoryV2(dataSource = dataSource)
@@ -307,7 +305,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             oppgaveRepositoryV2 = oppgaveRepositoryV2,
             oppgaveKøOppdatert = oppgaveKøOppdatert,
             refreshKlienter = refreshKlienter,
-            oppgaveRefreshChannel = oppgaveRefreshOppdatert,
+            oppgaveRefreshChannel = oppgaverRefresh,
             pepClient = PepClientLocal()
         )
         val saksbehandlerRepository = SaksbehandlerRepository(dataSource = dataSource,
