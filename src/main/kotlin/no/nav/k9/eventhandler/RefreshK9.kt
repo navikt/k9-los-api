@@ -27,26 +27,28 @@ fun CoroutineScope.refreshK9(
         val oppgaveId = channel.poll()
         if (oppgaveId == null) {
             try {
-                refreshK9(oppgaveListe, k9SakService)
+                refreshK9(oppgaveListe
+                    .map { oppgaveRepository.hent(it) }
+                    .filter { it.system == Fagsystem.K9SAK.kode }
+                    .map { it.eksternId },
+                    k9SakService
+                )
                 oppgaveListe.clear()
             } catch (e: Exception) {
                 log.error("Feilet ved refresh av oppgaver i k9-sak", e)
             }
             oppgaveListe.add(channel.receive())
         } else {
-            val oppgave = oppgaveRepository.hent(oppgaveId)
-            if (oppgave.system == Fagsystem.K9SAK.kode) {
-                oppgaveListe.add(oppgaveId)
-            }
+            oppgaveListe.add(oppgaveId)
         }
     }
 }
 
 private suspend fun refreshK9(
-    oppgaveListe: MutableList<UUID>,
+    oppgaveListe: List<UUID>,
     k9SakService: IK9SakService
 ) {
     val behandlingsListe = mutableListOf<BehandlingIdDto>()
-    behandlingsListe.addAll(oppgaveListe.map { BehandlingIdDto(it) }.toList())
+    behandlingsListe.addAll(oppgaveListe.map { BehandlingIdDto(it) })
     k9SakService.refreshBehandlinger(BehandlingIdListe(behandlingsListe))
 }

@@ -74,7 +74,6 @@ open class K9SakService constructor(
                     success
                 },
                 { error ->
-                    log.error(request.toString())
                     log.error(
                         "Error response = '${error.response.body().asString("text/plain")}' fra '${request.url}'"
                     )
