@@ -59,7 +59,7 @@ data class Oppgave(
         val fom: LocalDate, val tom: LocalDate
     )
 
-    //TODO Dette burde endres. FagsaksNummer er ikke nullable, men kan pr dags dato være en tom streng
+    //TODO Dette burde endres. FagsaksNummer er ikke nullable, men kan pr dags dato være en tom streng. Burde derfor endres til String?
     fun harFagSaksNummer(): Boolean {
         return fagsakSaksnummer.isNotBlank()
     }
