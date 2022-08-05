@@ -305,7 +305,8 @@ class AvdelingslederTjeneste(
 
                 val oppgave = oppgaveRepository.hent(uuid)
 
-                if (configuration.koinProfile() != KoinProfile.LOCAL && !pepClient.harTilgangTilLesSak(
+                if (configuration.koinProfile() != KoinProfile.LOCAL &&
+                    !oppgave.harFagSaksNummer() || !pepClient.harTilgangTilLesSak(
                         fagsakNummer = oppgave.fagsakSaksnummer,
                         aktørid = oppgave.aktorId
                     )

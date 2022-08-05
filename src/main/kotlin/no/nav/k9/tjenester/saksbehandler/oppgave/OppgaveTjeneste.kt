@@ -451,7 +451,7 @@ class OppgaveTjeneste constructor(
     private suspend fun lagOppgaveDtoer(oppgaver: List<Oppgave>): OppgaverResultat {
         var ikkeTilgang = false
         val oppgaver = oppgaver.filter { oppgave ->
-            if (!pepClient.harTilgangTilLesSak(
+            if (!oppgave.harFagSaksNummer() || !pepClient.harTilgangTilLesSak(
                     fagsakNummer = oppgave.fagsakSaksnummer,
                     aktørid = oppgave.aktorId
                 )
@@ -788,7 +788,7 @@ class OppgaveTjeneste constructor(
                     if (list.size == 10) {
                         break
                     }
-                    if (!pepClient.harTilgangTilLesSak(
+                    if (!oppgave.harFagSaksNummer() || !pepClient.harTilgangTilLesSak(
                             fagsakNummer = oppgave.fagsakSaksnummer,
                             aktørid = oppgave.aktorId
                         )
@@ -942,7 +942,7 @@ class OppgaveTjeneste constructor(
     }
 
     private suspend fun tilgangTilSak(oppgave: Oppgave): Boolean {
-        if (!pepClient.harTilgangTilLesSak(
+        if (!oppgave.harFagSaksNummer() || !pepClient.harTilgangTilLesSak(
                 fagsakNummer = oppgave.fagsakSaksnummer,
                 aktørid = oppgave.aktorId
             )
@@ -1082,7 +1082,7 @@ class OppgaveTjeneste constructor(
             val person = pdlService.person(oppgave.aktorId)
 
             oppgaveDto = lagOppgaveDto(oppgavePar.second!!, person.person?.navn() ?: "Ukjent", person.person)
-            if (!pepClient.harTilgangTilLesSak(
+            if (!oppgave.harFagSaksNummer() || !pepClient.harTilgangTilLesSak(
                     fagsakNummer = oppgavePar.second!!.fagsakSaksnummer,
                     aktørid = oppgavePar.second!!.aktorId
                 )

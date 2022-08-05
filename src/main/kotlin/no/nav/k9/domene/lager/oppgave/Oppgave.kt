@@ -58,6 +58,11 @@ data class Oppgave(
     data class FagsakPeriode(
         val fom: LocalDate, val tom: LocalDate
     )
+
+    //TODO Dette burde endres. FagsaksNummer er ikke nullable, men kan pr dags dato være en tom streng
+    fun harFagSaksNummer(): Boolean {
+        return fagsakSaksnummer.isNotBlank()
+    }
 }
 
 data class OppgaveMedId(
