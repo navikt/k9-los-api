@@ -3,11 +3,11 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val mainClass = "no.nav.k9.K9LosKt"
 val hikariVersion = "5.0.1"
-val flywayVersion = "8.5.13"
+val flywayVersion = "9.1.2"
 val vaultJdbcVersion = "1.3.9"
 val koinVersion = "2.2.3"
 val kotliqueryVersion = "1.8.0"
-val k9SakVersion = "3.3.7"
+val k9SakVersion = "3.3.8"
 val fuelVersion = "2.3.1"
 
 val dusseldorfKtorVersion = "3.1.6.8-1a4651d"
@@ -18,7 +18,7 @@ val ktorVersion = "1.6.8"
 val kafkaVersion = "3.1.0"
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.7.0"
+    id("org.jetbrains.kotlin.jvm") version "1.7.10"
     id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
@@ -56,7 +56,7 @@ dependencies {
     // Tilgangskontroll
     implementation("no.nav.common:auth:2.2022.04.11_07.31-bca292df5e64")
     implementation("no.nav.common:rest:2.2022.05.13_07.24-6eadb37dec31")
-    implementation("com.google.code.gson:gson:2.9.0")
+    implementation("com.google.code.gson:gson:2.9.1")
 
     // Kontrakter
     implementation("no.nav.k9.sak:kontrakt:$k9SakVersion")
@@ -77,20 +77,20 @@ dependencies {
     implementation("io.insert-koin:koin-ktor:$koinVersion")
 
     // Test
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
-    testImplementation("org.junit.vintage:junit-vintage-engine:5.8.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.0")
+    testImplementation("org.junit.vintage:junit-vintage-engine:5.9.0")
 
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.25")
     testImplementation("org.apache.kafka:kafka-clients:$kafkaVersion")
 
     testImplementation("no.nav.helse:dusseldorf-test-support:$dusseldorfKtorVersion")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.3")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
     testImplementation("io.mockk:mockk:1.12.5")
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion") {
         exclude(group = "org.eclipse.jetty")
         exclude(group = "junit", module = "junit")
     }
-    testImplementation("org.skyscreamer:jsonassert:1.5.0")
+    testImplementation("org.skyscreamer:jsonassert:1.5.1")
 
     testImplementation("org.testcontainers:postgresql:1.17.3") {
         exclude(group = "junit", module = "junit")
