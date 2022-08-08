@@ -325,6 +325,62 @@ fun Route.innsiktGrensesnitt() {
                 }
             }
         }
+
+        route("/aktive") {
+
+            get("/mangler-ko") {
+                val aktiveOppgaver = oppgaveRepository.hentAktiveOppgaver()
+                val oppgavekøer = oppgaveKøRepository.hentIkkeTaHensyn().filter { it.oppgaverOgDatoer.isNotEmpty() }
+                val aktiveOppgaverSomIkkeTilhørerKø = aktiveOppgaver.filter { oppgave ->
+                    oppgavekøer.none { kø ->
+                        kø.oppgaverOgDatoer.map { it.id }.contains(oppgave.eksternId)
+                    }
+                }
+
+                call.respondHtml {
+                    innsiktHeader("Oppgaver som mangler kø")
+                    body {
+                        div { +"Antall: ${aktiveOppgaverSomIkkeTilhørerKø.size}" }
+                        if (aktiveOppgaverSomIkkeTilhørerKø.isNotEmpty()) {
+                            ul {
+                                classes = setOf("list-group")
+                                aktiveOppgaverSomIkkeTilhørerKø.forEach {
+                                    listeelement("${it.eksternId}, Saksnummer: ${it.fagsakSaksnummer}, Beslutter: ${it.tilBeslutter}")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            get("/{eksternId}/tilhorer-ko") {
+                val eksternId = call.parameters["eksternId"]!!
+                val oppgave = oppgaveRepository.hent(UUID.fromString(eksternId))
+                val oppgavekøer = oppgaveKøRepository.hentIkkeTaHensyn()
+                    .filterNot { it.kode6 }
+                    .filterNot { it.skjermet }
+                    .filter { it.oppgaverOgDatoer.isNotEmpty() }
+
+                val køerSomInneholderOppgave = oppgavekøer.filter { kø ->
+                    kø.oppgaverOgDatoer.map { it.id }.contains(oppgave.eksternId)
+                }
+
+                call.respondHtml {
+                    innsiktHeader("Køer som inneholder oppgave")
+                    body {
+                        div { +"Antall: ${køerSomInneholderOppgave.size}" }
+                        if (køerSomInneholderOppgave.isNotEmpty()) {
+                            ul {
+                                classes = setOf("list-group")
+                                køerSomInneholderOppgave.forEach {
+                                    listeelement("${it.id}, ${it.navn}, SistEndret: ${it.sistEndret}, GjelderYtelse: ${it.filtreringYtelseTyper.joinToString("-")}, AndreKriterier: ${it.filtreringAndreKriterierType.filter { it.inkluder }.joinToString("-")}")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
