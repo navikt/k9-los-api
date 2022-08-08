@@ -90,7 +90,7 @@ dependencies {
         exclude(group = "org.eclipse.jetty")
         exclude(group = "junit", module = "junit")
     }
-    testImplementation("org.skyscreamer:jsonassert:1.5.0")
+    testImplementation("org.skyscreamer:jsonassert:1.5.1")
 
     testImplementation("org.testcontainers:postgresql:1.17.3") {
         exclude(group = "junit", module = "junit")
