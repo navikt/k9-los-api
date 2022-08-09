@@ -7,21 +7,8 @@ import io.ktor.locations.get
 import io.ktor.routing.Route
 import io.ktor.routing.get
 import io.ktor.routing.route
-import kotlinx.html.BODY
-import kotlinx.html.HTML
-import kotlinx.html.UL
-import kotlinx.html.body
-import kotlinx.html.classes
-import kotlinx.html.div
-import kotlinx.html.h1
-import kotlinx.html.h2
-import kotlinx.html.head
-import kotlinx.html.li
-import kotlinx.html.p
-import kotlinx.html.script
-import kotlinx.html.styleLink
-import kotlinx.html.title
-import kotlinx.html.ul
+import kotlinx.html.*
+import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.lager.oppgave.OppgaveMedId
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.modell.BehandlingStatus
@@ -325,6 +312,100 @@ fun Route.innsiktGrensesnitt() {
                 }
             }
         }
+
+        fun køDistribusjon(): Map<Int, List<Oppgave>> {
+            val aktiveOppgaver = oppgaveRepository.hentAktiveOppgaver()
+            val oppgavekøer = oppgaveKøRepository.hentIkkeTaHensyn().filter { it.oppgaverOgDatoer.isNotEmpty() }
+            return aktiveOppgaver.groupBy { oppgave ->
+                oppgavekøer.count { kø ->
+                    kø.oppgaverOgDatoer.map { it.id }.contains(oppgave.eksternId)
+                }
+            }
+        }
+
+        route("/aktive") {
+            route("/distribusjon") {
+                get {
+                    val oppgaverIAntallKøer = køDistribusjon().toSortedMap()
+                    call.respondHtml {
+                        innsiktHeader("Oppgave funnet i antall køer")
+                        body {
+                            if (oppgaverIAntallKøer.isNotEmpty()) {
+                                ul {
+                                    classes = setOf("list-group")
+                                    oppgaverIAntallKøer.forEach {
+                                        listeelement(
+                                            "${it.key} - Antall oppgaver: ${it.value.count()}",
+                                            "distribusjon/${it.key}"
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                get("/{antall}") {
+                    val antall = call.parameters["antall"]!!.toInt()
+                    val oppgaver = køDistribusjon()[antall] ?: emptyList()
+
+                    call.respondHtml {
+                        innsiktHeader("Oppgaver som finnes valgt antall køer")
+                        body {
+                            div { +"Antall oppgaver i valgt distribusjon: ${oppgaver.size}" }
+                            if (oppgaver.isNotEmpty()) {
+                                ul {
+                                    classes = setOf("list-group")
+                                    oppgaver
+                                        .filterNot { it.kode6 || it.skjermet }
+                                        .forEach {
+                                            listeelement("${it.eksternId}, Saksnummer: ${it.fagsakSaksnummer}, Beslutter: ${it.tilBeslutter}",
+                                                "${it.eksternId}/tilhorer-ko")
+                                        }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                get("/{eksternId}/tilhorer-ko") {
+                    val eksternId = call.parameters["eksternId"]!!
+                    val oppgave = oppgaveRepository.hent(UUID.fromString(eksternId))
+                    val oppgavekøer = if (oppgave.kode6 || oppgave.skjermet) {
+                        listOf()
+                    } else {
+                        oppgaveKøRepository.hentIkkeTaHensyn().filterNot { it.kode6 || it.skjermet }
+                    }
+
+                    val køerSomInneholderOppgave = oppgavekøer.filter { kø ->
+                        kø.oppgaverOgDatoer.map { it.id }.contains(oppgave.eksternId)
+                    }
+
+                    call.respondHtml {
+                        innsiktHeader("Køer som inneholder oppgave")
+                        body {
+                            div { +"Antall køer som inneholder oppgaven: ${køerSomInneholderOppgave.size}" }
+                            if (køerSomInneholderOppgave.isNotEmpty()) {
+                                ul {
+                                    classes = setOf("list-group")
+                                    køerSomInneholderOppgave.forEach {
+                                        listeelement(
+                                            "Navn: '${it.navn}', SistEndret: ${it.sistEndret}, Id: ${it.id}, GjelderYtelse: ${
+                                                it.filtreringYtelseTyper.joinToString(
+                                                    "-"
+                                                )
+                                            }, AndreKriterier: ${
+                                                it.filtreringAndreKriterierType.filter { it.inkluder }.joinToString("-")
+                                            }"
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -335,7 +416,13 @@ fun HTML.innsiktHeader(tittel: String) = head {
 }
 
 
-fun UL.listeelement(innhold: String) = li {
+fun UL.listeelement(innhold: String, href: String? = null) = li {
     classes = setOf("list-group-item")
-    +innhold
+    if (href != null)  {
+        a(href) {
+            +innhold
+        }
+    } else {
+        +innhold
+    }
 }
