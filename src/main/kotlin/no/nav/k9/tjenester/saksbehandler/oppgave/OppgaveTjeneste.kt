@@ -1214,5 +1214,3 @@ class OppgaveTjeneste constructor(
 }
 
 private fun BehandlingStatus.underBehandling() = this != BehandlingStatus.AVSLUTTET && this != BehandlingStatus.LUKKET
-
-
