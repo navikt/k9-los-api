@@ -451,7 +451,7 @@ class OppgaveTjeneste constructor(
     private suspend fun lagOppgaveDtoer(oppgaver: List<Oppgave>): OppgaverResultat {
         var ikkeTilgang = false
         val oppgaver = oppgaver.filter { oppgave ->
-            if (!harFagsaksNummerOgHarTilgangTilLesSak(oppgave)) {
+            if (!harTilgangTilOppgave(oppgave)) {
                 settSkjermet(oppgave)
                 ikkeTilgang = true
                 false
@@ -784,7 +784,7 @@ class OppgaveTjeneste constructor(
                     if (list.size == 10) {
                         break
                     }
-                    if (!harFagsaksNummerOgHarTilgangTilLesSak(oppgave)) {
+                    if (!harTilgangTilOppgave(oppgave)) {
                         settSkjermet(oppgave)
                         continue
                     }
@@ -934,7 +934,7 @@ class OppgaveTjeneste constructor(
     }
 
     private suspend fun tilgangTilSak(oppgave: Oppgave): Boolean {
-        if (!harFagsaksNummerOgHarTilgangTilLesSak(oppgave)) {
+        if (!harTilgangTilOppgave(oppgave)) {
             reservasjonRepository.lagre(oppgave.eksternId, true) {
                 it!!.reservertTil = null
                 runBlocking { saksbehandlerRepository.fjernReservasjon(it.reservertAv, it.oppgave) }
@@ -1070,7 +1070,7 @@ class OppgaveTjeneste constructor(
             val person = pdlService.person(oppgave.aktorId)
 
             oppgaveDto = lagOppgaveDto(oppgavePar.second!!, person.person?.navn() ?: "Ukjent", person.person)
-            if (!harFagsaksNummerOgHarTilgangTilLesSak(oppgave)) {
+            if (!harTilgangTilOppgave(oppgave)) {
                 // skal ikke få oppgave saksbehandler ikke har lestilgang til
                 settSkjermet(oppgavePar.second!!)
                 oppgaverSomErBlokert.add(oppgaveDto)
@@ -1205,8 +1205,8 @@ class OppgaveTjeneste constructor(
         return Pair(oppgaverSomIKkeErBlokkert.first(), null)
     }
 
-    private suspend fun harFagsaksNummerOgHarTilgangTilLesSak(oppgave: Oppgave) : Boolean {
-        return oppgave.harFagSaksNummer() && pepClient.harTilgangTilLesSak(
+    private suspend fun harTilgangTilOppgave(oppgave: Oppgave) : Boolean {
+        return !oppgave.harFagSaksNummer() || pepClient.harTilgangTilLesSak(
             fagsakNummer = oppgave.fagsakSaksnummer,
             aktørid = oppgave.aktorId
         )

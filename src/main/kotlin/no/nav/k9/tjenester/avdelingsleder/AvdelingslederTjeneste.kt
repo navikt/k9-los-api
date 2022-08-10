@@ -307,7 +307,7 @@ class AvdelingslederTjeneste(
                 val oppgave = oppgaveRepository.hent(uuid)
 
                 if (configuration.koinProfile() != KoinProfile.LOCAL &&
-                    !harFagsaksNummerOgHarTilgangTilLesSak(oppgave)
+                    !harTilgangTilOppgave(oppgave)
                 ) {
                     continue
                 }
@@ -333,8 +333,8 @@ class AvdelingslederTjeneste(
         return list.sortedWith(compareBy({ it.reservertAvNavn }, { it.reservertTilTidspunkt }))
     }
 
-    private suspend fun harFagsaksNummerOgHarTilgangTilLesSak(oppgave: Oppgave) : Boolean {
-        return oppgave.harFagSaksNummer() && pepClient.harTilgangTilLesSak(
+    private suspend fun harTilgangTilOppgave(oppgave: Oppgave) : Boolean {
+        return !oppgave.harFagSaksNummer() || pepClient.harTilgangTilLesSak(
             fagsakNummer = oppgave.fagsakSaksnummer,
             aktørid = oppgave.aktorId
         )
