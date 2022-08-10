@@ -49,7 +49,6 @@ import no.nav.k9.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.tjenester.driftsmeldinger.DriftsmeldingTjeneste
 import no.nav.k9.tjenester.kodeverk.HentKodeverkTjeneste
-import no.nav.k9.tjenester.kokriterier.HentKøkritierierTjeneste
 import no.nav.k9.tjenester.saksbehandler.merknad.MerknadTjeneste
 import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveKøOppdaterer
 import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveTjeneste
@@ -280,9 +279,6 @@ fun common(app: Application, config: Configuration) = module {
     }
     single {
         HentKodeverkTjeneste()
-    }
-    single {
-        HentKøkritierierTjeneste()
     }
 
     single { OppgaveKøOppdaterer(get(), get(), get()) }
