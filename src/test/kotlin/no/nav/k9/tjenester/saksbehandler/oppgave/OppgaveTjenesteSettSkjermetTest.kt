@@ -178,7 +178,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             )
         ))
         coEvery { pepClient.harBasisTilgang() } returns true
-        coEvery { pepClient.harTilgangTilLesSak(any(),any()) } returns true
+        coEvery { pepClient.harTilgangTilOppgave(any()) } returns true
 
         var oppgaver = oppgaveTjeneste.hentNesteOppgaverIKø(oppgaveko.id)
         assert(oppgaver.size == 1)
@@ -267,7 +267,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
 
         coEvery {  azureGraphService.hentIdentTilInnloggetBruker() } returns "123"
         every { config.koinProfile() } returns KoinProfile.LOCAL
-        coEvery { pepClient.harTilgangTilLesSak(any(), any()) } returns true
+        coEvery { pepClient.harTilgangTilOppgave(any()) } returns true
         coEvery { omsorgspengerService.hentOmsorgspengerSakDto(any()) } returns null
         coEvery { pdlService.person(any()) } returns PersonPdlResponse(false, PersonPdl(data = PersonPdl.Data(
             hentPerson = PersonPdl.Data.HentPerson(
@@ -392,7 +392,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
         }
         every { config.koinProfile() } returns KoinProfile.LOCAL
         coEvery { pepClient.harBasisTilgang() } returns true
-        coEvery { pepClient.harTilgangTilLesSak(any(),any()) } returns true
+        coEvery { pepClient.harTilgangTilOppgave(any()) } returns true
         coEvery { pepClient.harTilgangTilReservingAvOppgaver() } returns true
         coEvery { pdlService.person(any()) } returns PersonPdlResponse(false, PersonPdl(
             data = PersonPdl.Data(
