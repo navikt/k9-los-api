@@ -9,6 +9,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.k9.AbstractK9LosIntegrationTest
 import no.nav.k9.domene.modell.KøKriterierType
 import no.nav.k9.domene.modell.MerknadType
+import no.nav.k9.domene.modell.OppgaveKode
 import no.nav.k9.tjenester.avdelingsleder.oppgaveko.KriteriumDto
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -63,7 +64,6 @@ internal class AvdelingslederTjenesteTest : AbstractK9LosIntegrationTest() {
                 koder = emptyList()
             )
 
-
             avdelingslederTjeneste.endreKøKriterier(fjernMerknadKrierium)
             oppgaveKø = avdelingslederTjeneste.hentOppgaveKø(køid)
             assertThat(oppgaveKø.kriterier)
@@ -82,6 +82,29 @@ internal class AvdelingslederTjenesteTest : AbstractK9LosIntegrationTest() {
             oppgaveKø = avdelingslederTjeneste.hentOppgaveKø(køid)
             assertThat(oppgaveKø.kriterier).isEmpty()
 
+
+            val oppgavekodeKriterium = KriteriumDto(
+                id = køUuid,
+                kriterierType = KøKriterierType.OPPGAVEKODE,
+                koder = listOf(OppgaveKode.SYKDOM.kode, OppgaveKode.ETTERLYS_INNTEKTSMELDING.kode)
+            )
+
+            avdelingslederTjeneste.endreKøKriterier(oppgavekodeKriterium)
+
+            oppgaveKø = avdelingslederTjeneste.hentOppgaveKø(køid)
+            assertThat(oppgaveKø.kriterier)
+                .extracting { it.kriterierType }
+                .containsExactlyInAnyOrder(KøKriterierType.OPPGAVEKODE)
+
+            val fjernOppgaveKodeKriterium = KriteriumDto(
+                id = køUuid,
+                kriterierType = KøKriterierType.OPPGAVEKODE,
+                koder = emptyList()
+            )
+
+            avdelingslederTjeneste.endreKøKriterier(fjernOppgaveKodeKriterium)
+            oppgaveKø = avdelingslederTjeneste.hentOppgaveKø(køid)
+            assertThat(oppgaveKø.kriterier).isEmpty()
         }
 
     }

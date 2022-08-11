@@ -1,14 +1,7 @@
 package no.nav.k9.tjenester.kodeverk
 
 import no.nav.k9.domene.lager.oppgave.Kodeverdi
-import no.nav.k9.domene.modell.AndreKriterierType
-import no.nav.k9.domene.modell.BehandlingStatus
-import no.nav.k9.domene.modell.BehandlingType
-import no.nav.k9.domene.modell.FagsakStatus
-import no.nav.k9.domene.modell.FagsakYtelseType
-import no.nav.k9.domene.modell.KøKriterierType
-import no.nav.k9.domene.modell.KøSortering
-import no.nav.k9.domene.modell.MerknadType
+import no.nav.k9.domene.modell.*
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.Venteårsak
 
 class HentKodeverkTjeneste  {
@@ -32,6 +25,7 @@ class HentKodeverkTjeneste  {
             .filterNot { it == KøKriterierType.BEHANDLINGTYPE } // ikke i bruk foreløpig
         koder[MerknadType::class.java.simpleName] = MerknadType.values().asList()
             .filterNot { it == MerknadType.VANSKELIG } // ikke støttet foreløpig
+        koder[OppgaveKode::class.java.simpleName] = OppgaveKode.values().asList()
         return koder
     }
 }
