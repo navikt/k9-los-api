@@ -2,7 +2,6 @@ package no.nav.k9.tjenester.avdelingsleder
 
 import no.nav.k9.Configuration
 import no.nav.k9.KoinProfile
-import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.lager.oppgave.Reservasjon
 import no.nav.k9.domene.modell.Enhet
 import no.nav.k9.domene.modell.FagsakYtelseType
@@ -307,7 +306,7 @@ class AvdelingslederTjeneste(
                 val oppgave = oppgaveRepository.hent(uuid)
 
                 if (configuration.koinProfile() != KoinProfile.LOCAL &&
-                    !harTilgangTilOppgave(oppgave)
+                    !pepClient.harTilgangTilOppgave(oppgave)
                 ) {
                     continue
                 }
@@ -333,12 +332,6 @@ class AvdelingslederTjeneste(
         return list.sortedWith(compareBy({ it.reservertAvNavn }, { it.reservertTilTidspunkt }))
     }
 
-    private suspend fun harTilgangTilOppgave(oppgave: Oppgave) : Boolean {
-        return !oppgave.harFagSaksNummer() || pepClient.harTilgangTilLesSak(
-            fagsakNummer = oppgave.fagsakSaksnummer,
-            aktørid = oppgave.aktorId
-        )
-    }
 
     suspend fun opphevReservasjon(uuid: UUID): Reservasjon {
         val reservasjon = reservasjonRepository.lagre(uuid, true) {

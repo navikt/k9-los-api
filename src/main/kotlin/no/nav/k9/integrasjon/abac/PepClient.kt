@@ -12,6 +12,7 @@ import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.ktor.metrics.Operation
 import no.nav.k9.Configuration
 import no.nav.k9.aksjonspunktbehandling.objectMapper
+import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.integrasjon.audit.*
 import no.nav.k9.integrasjon.azuregraph.IAzureGraphService
 import no.nav.k9.integrasjon.rest.NavHeaders
@@ -204,6 +205,13 @@ class PepClient constructor(
             .addResourceAttribute(RESOURCE_AKTØR_ID, aktørid)
 
         return !evaluate(requestBuilder)
+    }
+
+    override suspend fun harTilgangTilOppgave(oppgave: Oppgave): Boolean {
+        return !oppgave.harFagSaksNummer() || harTilgangTilLesSak(
+            fagsakNummer = oppgave.fagsakSaksnummer,
+            aktørid = oppgave.aktorId
+        )
     }
 
     private suspend fun evaluate(xacmlRequestBuilder: XacmlRequestBuilder): Boolean {
