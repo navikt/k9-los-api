@@ -1,5 +1,7 @@
 package no.nav.k9.integrasjon.abac
 
+import no.nav.k9.domene.lager.oppgave.Oppgave
+
 class PepClientLocal : IPepClient {
     override suspend fun erOppgaveStyrer(): Boolean {
         return true
@@ -43,6 +45,10 @@ class PepClientLocal : IPepClient {
 
     override suspend fun erAktørKode7EllerEgenAnsatt(aktørid: String): Boolean {
         return false
+    }
+
+    override suspend fun harTilgangTilOppgave(oppgave: Oppgave): Boolean {
+        return true
     }
 
 }

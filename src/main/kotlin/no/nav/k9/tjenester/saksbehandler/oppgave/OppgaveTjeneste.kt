@@ -451,11 +451,7 @@ class OppgaveTjeneste constructor(
     private suspend fun lagOppgaveDtoer(oppgaver: List<Oppgave>): OppgaverResultat {
         var ikkeTilgang = false
         val oppgaver = oppgaver.filter { oppgave ->
-            if (!pepClient.harTilgangTilLesSak(
-                    fagsakNummer = oppgave.fagsakSaksnummer,
-                    aktørid = oppgave.aktorId
-                )
-            ) {
+            if (!pepClient.harTilgangTilOppgave(oppgave)) {
                 settSkjermet(oppgave)
                 ikkeTilgang = true
                 false
@@ -788,11 +784,7 @@ class OppgaveTjeneste constructor(
                     if (list.size == 10) {
                         break
                     }
-                    if (!pepClient.harTilgangTilLesSak(
-                            fagsakNummer = oppgave.fagsakSaksnummer,
-                            aktørid = oppgave.aktorId
-                        )
-                    ) {
+                    if (!pepClient.harTilgangTilOppgave(oppgave)) {
                         settSkjermet(oppgave)
                         continue
                     }
@@ -942,11 +934,7 @@ class OppgaveTjeneste constructor(
     }
 
     private suspend fun tilgangTilSak(oppgave: Oppgave): Boolean {
-        if (!pepClient.harTilgangTilLesSak(
-                fagsakNummer = oppgave.fagsakSaksnummer,
-                aktørid = oppgave.aktorId
-            )
-        ) {
+        if (!pepClient.harTilgangTilOppgave(oppgave)) {
             reservasjonRepository.lagre(oppgave.eksternId, true) {
                 it!!.reservertTil = null
                 runBlocking { saksbehandlerRepository.fjernReservasjon(it.reservertAv, it.oppgave) }
@@ -1082,11 +1070,7 @@ class OppgaveTjeneste constructor(
             val person = pdlService.person(oppgave.aktorId)
 
             oppgaveDto = lagOppgaveDto(oppgavePar.second!!, person.person?.navn() ?: "Ukjent", person.person)
-            if (!pepClient.harTilgangTilLesSak(
-                    fagsakNummer = oppgavePar.second!!.fagsakSaksnummer,
-                    aktørid = oppgavePar.second!!.aktorId
-                )
-            ) {
+            if (!pepClient.harTilgangTilOppgave(oppgave)) {
                 // skal ikke få oppgave saksbehandler ikke har lestilgang til
                 settSkjermet(oppgavePar.second!!)
                 oppgaverSomErBlokert.add(oppgaveDto)
@@ -1220,6 +1204,7 @@ class OppgaveTjeneste constructor(
         }
         return Pair(oppgaverSomIKkeErBlokkert.first(), null)
     }
+
 }
 
 private fun BehandlingStatus.underBehandling() = this != BehandlingStatus.AVSLUTTET && this != BehandlingStatus.LUKKET

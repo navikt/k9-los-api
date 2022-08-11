@@ -1,5 +1,7 @@
 package no.nav.k9.integrasjon.abac
 
+import no.nav.k9.domene.lager.oppgave.Oppgave
+
 interface IPepClient {
 
     suspend fun erOppgaveStyrer(): Boolean
@@ -31,4 +33,6 @@ interface IPepClient {
 
     suspend fun erAktørKode6(aktørid: String): Boolean
     suspend fun erAktørKode7EllerEgenAnsatt(aktørid: String): Boolean
+
+    suspend fun harTilgangTilOppgave(oppgave: Oppgave) : Boolean
 }

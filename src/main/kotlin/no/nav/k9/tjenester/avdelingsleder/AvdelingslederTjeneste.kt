@@ -305,10 +305,8 @@ class AvdelingslederTjeneste(
 
                 val oppgave = oppgaveRepository.hent(uuid)
 
-                if (configuration.koinProfile() != KoinProfile.LOCAL && !pepClient.harTilgangTilLesSak(
-                        fagsakNummer = oppgave.fagsakSaksnummer,
-                        aktørid = oppgave.aktorId
-                    )
+                if (configuration.koinProfile() != KoinProfile.LOCAL &&
+                    !pepClient.harTilgangTilOppgave(oppgave)
                 ) {
                     continue
                 }
@@ -333,6 +331,7 @@ class AvdelingslederTjeneste(
 
         return list.sortedWith(compareBy({ it.reservertAvNavn }, { it.reservertTilTidspunkt }))
     }
+
 
     suspend fun opphevReservasjon(uuid: UUID): Reservasjon {
         val reservasjon = reservasjonRepository.lagre(uuid, true) {
