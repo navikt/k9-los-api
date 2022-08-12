@@ -64,7 +64,7 @@ class OppgaveTjeneste constructor(
 
 ) {
 
-    fun hentOppgaver(oppgavekøId: UUID): List<Oppgave> {
+    suspend fun hentOppgaver(oppgavekøId: UUID): List<Oppgave> {
         return try {
             val oppgaveKø = oppgaveKøRepository.hentOppgavekø(oppgavekøId)
             if (oppgaveKø.sortering == KøSortering.FEILUTBETALT) {
@@ -745,7 +745,7 @@ class OppgaveTjeneste constructor(
     }
 
     private val hentAntallOppgaverCache = Cache<Int>()
-    fun hentAntallOppgaver(oppgavekøId: UUID, taMedReserverte: Boolean = false, refresh: Boolean = false): Int {
+    suspend fun hentAntallOppgaver(oppgavekøId: UUID, taMedReserverte: Boolean = false, refresh: Boolean = false): Int {
         val key = oppgavekøId.toString() + taMedReserverte
         if (!refresh) {
             val cacheObject = hentAntallOppgaverCache.get(key)
@@ -753,7 +753,7 @@ class OppgaveTjeneste constructor(
                 return cacheObject.value
             }
         }
-        val oppgavekø = oppgaveKøRepository.hentOppgavekø(oppgavekøId)
+        val oppgavekø = oppgaveKøRepository.hentOppgavekø(oppgavekøId, ignorerSkjerming = true)
         var reserverteOppgaverSomHørerTilKø = 0
         if (taMedReserverte) {
             val reservasjoner = reservasjonRepository.hentSelvOmDeIkkeErAktive(

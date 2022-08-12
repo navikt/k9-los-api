@@ -42,8 +42,8 @@ class AvdelingslederTjeneste(
     private val pepClient: IPepClient,
     private val configuration: Configuration
 ) {
-    fun hentOppgaveKø(uuid: UUID): OppgavekøDto {
-        val oppgaveKø = oppgaveKøRepository.hentOppgavekø(uuid)
+    suspend fun hentOppgaveKø(uuid: UUID): OppgavekøDto {
+        val oppgaveKø = oppgaveKøRepository.hentOppgavekø(uuid, ignorerSkjerming = false)
         return lagOppgaveKøDto(oppgaveKø)
     }
 
@@ -56,7 +56,7 @@ class AvdelingslederTjeneste(
         }.sortedBy { it.navn }
     }
 
-    private fun lagOppgaveKøDto(oppgaveKø: OppgaveKø) = OppgavekøDto(
+    private suspend fun lagOppgaveKøDto(oppgaveKø: OppgaveKø) = OppgavekøDto(
         id = oppgaveKø.id,
         navn = oppgaveKø.navn,
         sortering = SorteringDto(
