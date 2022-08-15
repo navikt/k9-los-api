@@ -100,11 +100,7 @@ class OppgaveKøRepository(
 
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }.increment()
 
-        return kø.brukHvisTilgang(ignorerSkjerming)
-    }
-
-    private suspend fun OppgaveKø.brukHvisTilgang(ignorerSkjerming: Boolean): OppgaveKø {
-        return takeIf { !ignorerSkjerming || kode6 == pepClient.harTilgangTilKode6() }
+        return kø.takeIf { ignorerSkjerming || kø.kode6 == pepClient.harTilgangTilKode6() }
             ?: throw IllegalStateException("Klarte ikke å hente oppgave med id $id")
     }
 
