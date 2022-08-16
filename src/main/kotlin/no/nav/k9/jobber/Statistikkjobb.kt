@@ -16,21 +16,16 @@ class Statistikkjobb(private val statistikkRepository: StatistikkRepository) {
             daemon = true,
             initialDelay = TimeUnit.SECONDS.toMillis(10),
             period = TimeUnit.DAYS.toMillis(1)) {
-            `hvor lang tid tar det fra en sak kommer inn til k9 til en saksbehandler tar tak i den`()
+            minutterLøptFørFørsteReservasjon()
             //`hvor lenge ligger journalføringsoppgaver før de håndteres`()
             //`hvor lenge ligger saker på vent i k9`()
         }
     }
 
-    private fun `hvor lang tid tar det fra en sak kommer inn til k9 til en saksbehandler tar tak i den`() {
-        val tider = mutableListOf<Long>()
+    private fun minutterLøptFørFørsteReservasjon() {
+        val tider = statistikkRepository.hentTiderFraOpprettetBehandlingTilFørsteReservasjon()
+            .map { ChronoUnit.MINUTES.between(it.first, it.second) }
 
-        for (reservasjon in statistikkRepository.hentReservasjoner()) {
-            if (statistikkRepository.erOppgavenAktiv(oppgaveId = reservasjon.oppgave)) {
-                val behandlingOpprettet = statistikkRepository.hentBehandlingOpprettet(eksternReferanse = reservasjon.oppgave)
-                tider.add(ChronoUnit.MINUTES.between(behandlingOpprettet, reservasjon.opprettet))
-            }
-        }
         log.info("Det tar {} minutter fra en sak kommer inn til k9 til en saksbehandler tar tak i den", tider.finnMedian())
     }
 
@@ -43,6 +38,9 @@ class Statistikkjobb(private val statistikkRepository: StatistikkRepository) {
     }
 
     private fun Collection<Long>.finnMedian(): Double {
+        if (this.isEmpty())
+            return 0.0
+
         val sortert = this.sorted()
 
         return if (sortert.size % 2 == 0) {

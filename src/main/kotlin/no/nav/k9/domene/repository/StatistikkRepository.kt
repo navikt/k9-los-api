@@ -375,57 +375,27 @@ class StatistikkRepository(
         }
     }
 
-    fun hentReservasjoner(): List<Reservasjon> {
-        val reservasjoner = using(sessionOf(dataSource)) {
+    fun hentTiderFraOpprettetBehandlingTilFørsteReservasjon(): List<Pair<LocalDateTime, LocalDateTime>> {
+        val tiderFraOpprettetBehandlingTilFørsteReservasjon = using(sessionOf(dataSource)) {
             it.run(
-                queryOf(
-                    "select id, opprettet from reservasjon where opprettet is not null"
-                ).map { rad ->
-                    Reservasjon(
-                        reservertTil = null,
-                        reservertAv = "",
-                        flyttetAv = "",
-                        flyttetTidspunkt = null,
-                        begrunnelse = null,
-                        oppgave = UUID.fromString(rad.string("id")),
-                        opprettet = rad.localDateTimeOrNull("opprettet")
+                queryOf("""
+                    select b.opprettet behandling_opprettet, r.opprettet reservasjon_opprettet
+                    from reservasjon r
+                        inner join behandling b on r.id = b.ekstern_referanse
+                        inner join oppgave o on r.id = o.id
+                    where o.data -> 'aktiv' = 'true'
+                """.trimIndent()
+                ).map { row ->
+                    Pair(
+                        row.localDateTime("behandling_opprettet"),
+                        row.localDateTime("reservasjon_opprettet")
                     )
                 }.asList
             )
         }
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
-        return reservasjoner
-    }
 
-    fun erOppgavenAktiv(oppgaveId: UUID): Boolean {
-        val aktiv = using(sessionOf(dataSource)) {
-                it.run(
-                    queryOf(
-                        "select (data ::jsonb -> 'aktiv' -> -1) as aktiv from oppgave where id = :id",
-                        mapOf("id" to oppgaveId.toString())
-                    ).map { row ->
-                        row.boolean("aktiv")
-                    }.asSingle
-                )
-            }
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-        return aktiv?: false
-    }
-
-    fun hentBehandlingOpprettet(eksternReferanse: UUID): LocalDateTime {
-        val opprettet = using(sessionOf(dataSource)) {
-            it.run(
-                queryOf("select opprettet from behandling where ekstern_referanse = :eksternReferanse",
-                    mapOf("eksternReferanse" to eksternReferanse.toString())
-                ).map { row ->
-                    row.localDateTime("opprettet")
-                }.asSingle
-            )
-        }
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-        return opprettet!!
+        return tiderFraOpprettetBehandlingTilFørsteReservasjon
     }
 }
