@@ -223,7 +223,8 @@ class OppgaveTjeneste constructor(
                     flyttetAv = ident,
                     flyttetTidspunkt = LocalDateTime.now(),
                     begrunnelse = begrunnelse,
-                    oppgave = it
+                    oppgave = it,
+                    opprettet = LocalDateTime.now()
                 )
             } else {
                 Reservasjon(
@@ -232,7 +233,8 @@ class OppgaveTjeneste constructor(
                     flyttetAv = null,
                     flyttetTidspunkt = null,
                     begrunnelse = begrunnelse,
-                    oppgave = it
+                    oppgave = it,
+                    opprettet = LocalDateTime.now()
                 )
             }
         }.toList()

@@ -5,6 +5,7 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.aksjonspunktbehandling.objectMapper
+import no.nav.k9.domene.lager.oppgave.Reservasjon
 import no.nav.k9.domene.modell.BehandlingType
 import no.nav.k9.domene.modell.FagsakYtelseType
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.AlleFerdigstilteOppgaver
@@ -372,5 +373,59 @@ class StatistikkRepository(
                 ).asUpdate
             )
         }
+    }
+
+    fun hentReservasjoner(): List<Reservasjon> {
+        val reservasjoner = using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    "select id, opprettet from reservasjon where opprettet is not null"
+                ).map { rad ->
+                    Reservasjon(
+                        reservertTil = null,
+                        reservertAv = "",
+                        flyttetAv = "",
+                        flyttetTidspunkt = null,
+                        begrunnelse = null,
+                        oppgave = UUID.fromString(rad.string("id")),
+                        opprettet = rad.localDateTimeOrNull("opprettet")
+                    )
+                }.asList
+            )
+        }
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
+        return reservasjoner
+    }
+
+    fun erOppgavenAktiv(oppgaveId: UUID): Boolean {
+        val aktiv = using(sessionOf(dataSource)) {
+                it.run(
+                    queryOf(
+                        "select (data ::jsonb -> 'aktiv' -> -1) as aktiv from oppgave where id = :id",
+                        mapOf("id" to oppgaveId.toString())
+                    ).map { row ->
+                        row.boolean("aktiv")
+                    }.asSingle
+                )
+            }
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
+        return aktiv?: false
+    }
+
+    fun hentBehandlingOpprettet(eksternReferanse: UUID): LocalDateTime {
+        val opprettet = using(sessionOf(dataSource)) {
+            it.run(
+                queryOf("select opprettet from behandling where ekstern_referanse = :eksternReferanse",
+                    mapOf("eksternReferanse" to eksternReferanse.toString())
+                ).map { row ->
+                    row.localDateTime("opprettet")
+                }.asSingle
+            )
+        }
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
+        return opprettet!!
     }
 }

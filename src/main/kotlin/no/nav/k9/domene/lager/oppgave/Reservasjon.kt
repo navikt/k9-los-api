@@ -9,7 +9,8 @@ data class Reservasjon(
     var flyttetAv: String?,
     var flyttetTidspunkt: LocalDateTime?,
     var begrunnelse: String?,
-    val oppgave: UUID
+    val oppgave: UUID,
+    val opprettet: LocalDateTime?
 ) {
     fun erAktiv(): Boolean {
         return reservertTil !=null && reservertTil!!.isAfter(LocalDateTime.now())

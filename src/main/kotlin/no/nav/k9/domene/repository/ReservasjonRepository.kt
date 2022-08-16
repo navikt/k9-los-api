@@ -217,8 +217,8 @@ class ReservasjonRepository(
         tx.run(
             queryOf(
                 """
-                        insert into reservasjon as k (id, data)
-                        values (:id, :dataInitial :: jsonb)
+                        insert into reservasjon as k (id, data, opprettet)
+                        values (:id, :dataInitial :: jsonb, current_timestamp)
                         on conflict (id) do update
                         set data = jsonb_set(k.data, '{reservasjoner,999999}', :data :: jsonb, true)
                      """, mapOf(

@@ -34,6 +34,7 @@ import no.nav.k9.eventhandler.sjekkReserverteJobb
 import no.nav.k9.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.integrasjon.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.integrasjon.sakogbehandling.SakOgBehandlingProducer
+import no.nav.k9.jobber.Statistikkjobb
 import no.nav.k9.tjenester.admin.AdminApis
 import no.nav.k9.tjenester.avdelingsleder.AvdelingslederApis
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.DataeksportApis
@@ -219,6 +220,9 @@ fun Application.k9Los() {
     install(CallId) {
         fromXCorrelationIdHeader()
     }
+
+    Statistikkjobb(statistikkRepository = koin.get())
+        .kjørOppgaveOgBehandlingsstatistikk()
 }
 
 private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
