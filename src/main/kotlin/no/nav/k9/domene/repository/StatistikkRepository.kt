@@ -383,7 +383,7 @@ class StatistikkRepository(
                     from reservasjon r
                         inner join behandling b on r.id = b.ekstern_referanse
                         inner join oppgave o on r.id = o.id
-                    where o.data -> 'aktiv' = 'true'
+                    where o.data -> 'aktiv' = 'true' and r.opprettet is not null
                 """.trimIndent()
                 ).map { row ->
                     Pair(
