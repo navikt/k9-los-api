@@ -85,8 +85,8 @@ class OppgaveKøRepository(
         return uuidListe
     }
 
-    fun hentOppgavekø(id: UUID): OppgaveKø {
-        val json: String? = using(sessionOf(dataSource)) {
+    suspend fun hentOppgavekø(id: UUID, ignorerSkjerming: Boolean = false): OppgaveKø {
+        val kø = using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
                     "select data from oppgaveko where id = :id",
@@ -95,13 +95,14 @@ class OppgaveKøRepository(
                     row.string("data")
                 }.asSingle
             )
-        }
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
+        }?.let { objectMapper().readValue(it, OppgaveKø::class.java) }
+            ?: throw IllegalStateException("Fant ikke oppgavekø med id $id")
 
-        return objectMapper().readValue(json!!, OppgaveKø::class.java)
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }.increment()
+
+        return kø.takeIf { ignorerSkjerming || kø.kode6 == pepClient.harTilgangTilKode6() }
+            ?: throw IllegalStateException("Klarte ikke å hente oppgavekø med id $id")
     }
-
 
     suspend fun lagre(
         uuid: UUID,

@@ -56,7 +56,7 @@ private suspend fun oppdaterKø(
     k9SakService: IK9SakService
 ): Long {
     return measureTimeMillis {
-        val kø = oppgaveKøRepository.hentOppgavekø(it)
+        val kø = oppgaveKøRepository.hentOppgavekø(it, ignorerSkjerming = true)
         val opprinnelige = kø.oppgaverOgDatoer.toMutableList()
 
         // dersom den er uendret når vi skal lagre, foreta en check og eventuellt lagre på nytt inne i lås

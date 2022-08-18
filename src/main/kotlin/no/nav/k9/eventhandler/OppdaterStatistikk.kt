@@ -39,7 +39,7 @@ fun CoroutineScope.oppdaterStatistikk(
 }
 
 
-private fun refreshHentAntallOppgaver(
+private suspend fun refreshHentAntallOppgaver(
     oppgaveTjeneste: OppgaveTjeneste,
     oppgavekø: OppgaveKø
 ) {

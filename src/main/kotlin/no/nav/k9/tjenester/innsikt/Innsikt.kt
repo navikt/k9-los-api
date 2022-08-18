@@ -7,6 +7,7 @@ import io.ktor.locations.get
 import io.ktor.routing.Route
 import io.ktor.routing.get
 import io.ktor.routing.route
+import kotlinx.coroutines.runBlocking
 import kotlinx.html.*
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.lager.oppgave.OppgaveMedId
@@ -163,7 +164,7 @@ fun Route.innsiktGrensesnitt() {
         }
     }
 
-    fun BODY.oppgavekø(køid: String) {
+    suspend fun BODY.oppgavekø(køid: String) {
         val kø = oppgaveKøRepository.hentOppgavekø(UUID.fromString(køid))
         if (kø.skjermet || kø.kode6) return
 
@@ -194,7 +195,9 @@ fun Route.innsiktGrensesnitt() {
                 if (køid.isNullOrEmpty()) div {+"Oppgi køid"}
                 else {
                     h2 { +køid.let {"Innsikt for køid=$køid"} }
-                    køid.map { oppgavekø(it) }
+                    runBlocking {
+                        køid.map { oppgavekø(it) }
+                    }
                 }
 
             }
