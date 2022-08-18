@@ -96,12 +96,12 @@ class OppgaveKøRepository(
                 }.asSingle
             )
         }?.let { objectMapper().readValue(it, OppgaveKø::class.java) }
-            ?: throw IllegalStateException("Fant ikke oppgave med id $id")
+            ?: throw IllegalStateException("Fant ikke oppgavekø med id $id")
 
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }.increment()
 
         return kø.takeIf { ignorerSkjerming || kø.kode6 == pepClient.harTilgangTilKode6() }
-            ?: throw IllegalStateException("Klarte ikke å hente oppgave med id $id")
+            ?: throw IllegalStateException("Klarte ikke å hente oppgavekø med id $id")
     }
 
     suspend fun lagre(
