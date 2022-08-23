@@ -85,7 +85,7 @@ dependencies {
 
     testImplementation("no.nav.helse:dusseldorf-test-support:$dusseldorfKtorVersion")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
-    testImplementation("io.mockk:mockk:1.12.5")
+    testImplementation("io.mockk:mockk:1.12.6")
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion") {
         exclude(group = "org.eclipse.jetty")
         exclude(group = "junit", module = "junit")
