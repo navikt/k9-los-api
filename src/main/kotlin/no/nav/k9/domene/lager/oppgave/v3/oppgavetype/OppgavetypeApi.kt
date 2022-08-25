@@ -1,4 +1,4 @@
-package no.nav.k9.domene.lager.oppgave.v3.datatype
+package no.nav.k9.domene.lager.oppgave.v3.oppgavetype
 
 import io.ktor.application.*
 import io.ktor.request.*
@@ -8,17 +8,17 @@ import io.ktor.routing.post
 import no.nav.k9.integrasjon.rest.RequestContextService
 import org.koin.ktor.ext.inject
 
-internal fun Route.DatatypeApi() {
-    val datatypeRepository by inject<DatatypeRepository>()
+internal fun Route.OppgavetypeApi() {
+    val oppgavetypeRepository by inject<OppgavetypeRepository>()
     val requestContextService by inject<RequestContextService>()
 
     post {
         requestContextService.withRequestContext(call) {
-            val datatyper = call.receive<Datatyper>()
-            // hent alle datatyper for innkommende område
+            val oppgavetyper = call.receive<Oppgavetyper>()
+            // hent alle oppgavetyper for innkommende område
             // sjekk diff
             // sett inn/fjern det som trengs
-            // TODO oppdatering av datatyper venter vi med :)
+
             call.respond("OK")
         }
     }
