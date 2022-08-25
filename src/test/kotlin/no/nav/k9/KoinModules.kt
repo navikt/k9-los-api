@@ -15,6 +15,7 @@ import no.nav.k9.domene.lager.oppgave.v2.BehandlingsmigreringTjeneste
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveTjenesteV2
 import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.domene.lager.oppgave.v3.omraade.OmrådeRepository
 import no.nav.k9.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.domene.repository.BehandlingProsessEventTilbakeRepository
 import no.nav.k9.domene.repository.DriftsmeldingRepository
@@ -236,4 +237,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             configuration = get()
         )
     }
+
+    single { OmrådeRepository(get()) }
 }

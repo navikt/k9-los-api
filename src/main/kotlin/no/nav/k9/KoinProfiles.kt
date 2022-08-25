@@ -14,6 +14,7 @@ import no.nav.k9.domene.lager.oppgave.v2.BehandlingsmigreringTjeneste
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveTjenesteV2
 import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.domene.lager.oppgave.v3.omraade.OmrådeRepository
 import no.nav.k9.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.domene.repository.BehandlingProsessEventTilbakeRepository
 import no.nav.k9.domene.repository.DriftsmeldingRepository
@@ -298,6 +299,8 @@ fun common(app: Application, config: Configuration) = module {
             healthChecks = get<AsynkronProsesseringV1Service>().isHealtyChecks()
         )
     }
+
+    single { OmrådeRepository(get()) }
 
 }
 
