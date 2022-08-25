@@ -12,6 +12,5 @@ class OmrådeRepositoryTest: AbstractK9LosIntegrationTest() {
 
         områdeRepository.lagre("K9")
 
-
     }
 }

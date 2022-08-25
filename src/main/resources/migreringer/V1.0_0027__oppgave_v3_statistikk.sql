@@ -61,14 +61,15 @@ comment on column OPPGAVEFELT.pakrevd is 'Angir om et felt er påkrevd eller fri
 CREATE TABLE if not exists OPPGAVE_V3
 (
     id                          BIGINT GENERATED ALWAYS AS IDENTITY     NOT NULL PRIMARY KEY,
-    ekstern_id                  VARCHAR(100)                            NOT NULL unique,
+    ekstern_id                  VARCHAR(100)                            NOT NULL,
     oppgavetype_id              BIGINT                                  NOT NULL,
     versjon                     int                                     NOT NULL,
     aktiv                       boolean                                 NOT NULL DEFAULT TRUE,
-    opprettet                   timestamp(3)                            NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    fullfort                    timestamp(3),
+    kildeomrade                 VARCHAR(30)                             NOT NULL,
+    endret_tidspunkt            timestamp(3)                            NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT FK_OPPGAVE_01
-        FOREIGN KEY(oppgavetype_id) REFERENCES OPPGAVETYPE(id)
+        FOREIGN KEY(oppgavetype_id) REFERENCES OPPGAVETYPE(id),
+    UNIQUE(kildeomrade, ekstern_id)
 );
 
 comment on table OPPGAVE_V3 is 'Konkrete oppgaver av en definert oppgavetype';

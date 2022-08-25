@@ -24,6 +24,11 @@ class OmrådeRepository(private val dataSource: DataSource) {
         }
     }
 
+    fun hent(navn: String): Område {
+        TODO()
+    }
+
+    /*
     fun hent(navn: String): Long {
         return using(sessionOf(dataSource)) { session ->
             session.run(
@@ -36,6 +41,8 @@ class OmrådeRepository(private val dataSource: DataSource) {
             ).takeIf { it != null } ?: throw NotFoundException("Fant ikke område")
         }
     }
+
+     */
 
     /*
     fun lagre(datatyper: Set<Datatype>) {

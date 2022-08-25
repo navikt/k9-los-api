@@ -27,6 +27,7 @@ import no.nav.helse.dusseldorf.ktor.jackson.JacksonStatusPages
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.helse.dusseldorf.ktor.metrics.MetricsRoute
 import no.nav.helse.dusseldorf.ktor.metrics.init
+import no.nav.k9.domene.lager.oppgave.v3.datatype.DatatypeApi
 import no.nav.k9.eventhandler.køOppdatertProsessor
 import no.nav.k9.eventhandler.oppdaterStatistikk
 import no.nav.k9.eventhandler.refreshK9
@@ -260,6 +261,10 @@ private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
 
         route("konfig") { KonfigApis() }
         KodeverkApis()
+
+        route("datatype") {
+            DatatypeApi()
+        }
     }
 }
 
