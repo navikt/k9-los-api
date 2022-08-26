@@ -45,12 +45,12 @@ comment on column OPPGAVETYPE.definisjonskilde is 'Referanse som beskriver hvor 
 CREATE TABLE IF NOT EXISTS OPPGAVEFELT
 (
     id                          BIGINT GENERATED ALWAYS AS IDENTITY     NOT NULL PRIMARY KEY,
-    datatype_id                 BIGINT                                  NOT NULL,
+    feltdefinisjon_id           BIGINT                                  NOT NULL,
     oppgavetype_id              BIGINT                                  NOT NULL,
     --vis_pa_oppgave              boolean                                 NOT NULL DEFAULT TRUE, --ikke aktuelt for statistikk,
     pakrevd                     boolean                                 NOT NULL DEFAULT FALSE,
     CONSTRAINT FK_OPPGAVEFELT_01
-        FOREIGN KEY(datatype_id) REFERENCES FELTDEFINISJON(id),
+        FOREIGN KEY(feltdefinisjon_id) REFERENCES FELTDEFINISJON(id),
     CONSTRAINT FK_OPPGAVEFELT_02
         FOREIGN KEY(oppgavetype_id) REFERENCES OPPGAVETYPE(id)
 );
