@@ -4,4 +4,8 @@ class Oppgavetyper(
     val område: String,
     val definisjonskilde: String,
     val oppgavetyper: Set<Oppgavetype>
-)
+) {
+    fun finnForskjell() {
+        TODO("Not yet implemented")
+    }
+}
