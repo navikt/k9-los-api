@@ -1,6 +1,6 @@
 package no.nav.k9.domene.lager.oppgave.v3.omraade
 
-import no.nav.k9.domene.lager.oppgave.v3.datatype.Feltdefinisjon
+import no.nav.k9.domene.lager.oppgave.v3.feltdefinisjon.Feltdefinisjon
 import no.nav.k9.domene.lager.oppgave.v3.oppgavetype.Oppgavetype
 
 class Område(

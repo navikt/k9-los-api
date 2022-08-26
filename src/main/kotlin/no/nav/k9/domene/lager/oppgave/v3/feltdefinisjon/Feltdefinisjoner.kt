@@ -1,4 +1,4 @@
-package no.nav.k9.domene.lager.oppgave.v3.datatype
+package no.nav.k9.domene.lager.oppgave.v3.feltdefinisjon
 
 class Feltdefinisjoner(
     val område: String,
