@@ -7,22 +7,23 @@ CREATE TABLE if not exists OMRADE
 comment on table OMRADE is 'Spesifiserer subdomene for oppgaver';
 comment on column OMRADE.ekstern_id is 'Navn på område, feks "k9"';
 
-CREATE TABLE if not exists DATATYPE
+CREATE TABLE if not exists FELTDEFINISJON
 (
     id                          BIGINT GENERATED ALWAYS AS IDENTITY     NOT NULL PRIMARY KEY,
-    ekstern_id                  VARCHAR(100)                            NOT NULL unique,
+    eksternt_navn               VARCHAR(100)                            NOT NULL,
     omrade_id                   BIGINT                                  NOT NULL, --eier
     liste_type                  boolean                                 NOT NULL,
-    implementasjonstype         VARCHAR(100)                            NOT NULL,
+    parses_som                  VARCHAR(100)                            NOT NULL,
     --vis_til_bruker              boolean                                 NOT NULL DEFAULT TRUE --ikke aktuelt for statistikk
-    CONSTRAINT FK_DATATYPE_01
-        FOREIGN KEY(omrade_id) references OMRADE(id)
+    CONSTRAINT FK_FELTDEFINISJON_01
+        FOREIGN KEY(omrade_id) references OMRADE(id),
+    UNIQUE(omrade_id, eksternt_navn)
 );
 
-comment on table DATATYPE is 'Spesifiserer lovlige datatyper for et gitt område';
-comment on column DATATYPE.ekstern_id is 'Human readable navn på datatype som også er eksponert eksternt. Feks "k9.saksnummer". Skal prefikses med område-id for å unngå navnekollisjoner/unique constraint.';
-comment on column DATATYPE.liste_type is 'Flagg som bestemmer om datatypen skal deserialiseres til en list eller om det er en enkeltverdi.';
-comment on column DATATYPE.implementasjonstype is 'Hvilken "primitiv" datatype som brukes, feks String, int, Date.';
+comment on table FELTDEFINISJON is 'Spesifiserer lovlige datatyper for et gitt område';
+comment on column FELTDEFINISJON.eksternt_navn is 'Human readable navn på datatype som også er eksponert eksternt. Feks "k9.saksnummer". Skal prefikses med område-id for å unngå navnekollisjoner/unique constraint.';
+comment on column FELTDEFINISJON.liste_type is 'Flagg som bestemmer om datatypen skal deserialiseres til en list eller om det er en enkeltverdi.';
+comment on column FELTDEFINISJON.parses_som is 'Hvilken datatype som brukes, feks String, int, Date.';
 --comment on column DATATYPE.vis_til_bruker is 'Flagg som bestemmer om datatypen skal kunne brukes til filtrering og/eller koprioritering, eller om det er et rent infofelt.'
 
 CREATE TABLE if not exists OPPGAVETYPE
@@ -49,7 +50,7 @@ CREATE TABLE IF NOT EXISTS OPPGAVEFELT
     --vis_pa_oppgave              boolean                                 NOT NULL DEFAULT TRUE, --ikke aktuelt for statistikk,
     pakrevd                     boolean                                 NOT NULL DEFAULT FALSE,
     CONSTRAINT FK_OPPGAVEFELT_01
-        FOREIGN KEY(datatype_id) REFERENCES DATATYPE(id),
+        FOREIGN KEY(datatype_id) REFERENCES FELTDEFINISJON(id),
     CONSTRAINT FK_OPPGAVEFELT_02
         FOREIGN KEY(oppgavetype_id) REFERENCES OPPGAVETYPE(id)
 );

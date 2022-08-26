@@ -14,7 +14,7 @@ import no.nav.k9.domene.lager.oppgave.v2.BehandlingsmigreringTjeneste
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveTjenesteV2
 import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.domene.lager.oppgave.v3.datatype.DatatypeRepository
+import no.nav.k9.domene.lager.oppgave.v3.datatype.FeltdefinisjonRepository
 import no.nav.k9.domene.lager.oppgave.v3.omraade.OmrådeRepository
 import no.nav.k9.domene.lager.oppgave.v3.omraade.OmrådeService
 import no.nav.k9.domene.repository.BehandlingProsessEventK9Repository
@@ -304,7 +304,7 @@ fun common(app: Application, config: Configuration) = module {
 
     single { OmrådeRepository(get()) }
     single { OmrådeService(områdeRepository = get()) }
-    single { DatatypeRepository(get()) }
+    single { FeltdefinisjonRepository(get()) }
 
 }
 

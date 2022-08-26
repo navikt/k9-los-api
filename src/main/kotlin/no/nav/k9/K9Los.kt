@@ -27,7 +27,7 @@ import no.nav.helse.dusseldorf.ktor.jackson.JacksonStatusPages
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.helse.dusseldorf.ktor.metrics.MetricsRoute
 import no.nav.helse.dusseldorf.ktor.metrics.init
-import no.nav.k9.domene.lager.oppgave.v3.datatype.DatatypeApi
+import no.nav.k9.domene.lager.oppgave.v3.datatype.FeltdefinisjonApi
 import no.nav.k9.domene.lager.oppgave.v3.oppgave.OppgaveV3Api
 import no.nav.k9.domene.lager.oppgave.v3.oppgavetype.OppgavetypeApi
 import no.nav.k9.eventhandler.køOppdatertProsessor
@@ -264,7 +264,7 @@ private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
         route("konfig") { KonfigApis() }
         KodeverkApis()
 
-        route("datatype") { DatatypeApi() }
+        route("feltdefinisjon") { FeltdefinisjonApi() }
         route("oppgavetype") { OppgavetypeApi() }
         route("oppgave-v3") { OppgaveV3Api() }
     }
