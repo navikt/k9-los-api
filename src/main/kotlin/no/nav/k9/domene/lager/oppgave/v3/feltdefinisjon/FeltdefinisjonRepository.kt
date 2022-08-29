@@ -2,19 +2,24 @@ package no.nav.k9.domene.lager.oppgave.v3.feltdefinisjon
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
+import no.nav.k9.domene.lager.oppgave.v3.omraade.OmrådeRepository
 import org.slf4j.LoggerFactory
 import javax.sql.DataSource
 
-class FeltdefinisjonRepository(private val dataSource: DataSource) {
+class FeltdefinisjonRepository(
+    private val dataSource: DataSource,
+    private val områdeRepository: OmrådeRepository
+) {
 
     private val log = LoggerFactory.getLogger(FeltdefinisjonRepository::class.java)
 
     fun hent(område: String, tx: TransactionalSession): Feltdefinisjoner {
-        val datatyper = tx.run(
+        val feltdefinisjoner= tx.run(
             queryOf(
                 """
                 select * from feltdefinisjon 
                 where omrade_id = (select id from omrade where omrade.ekstern_id = :omrade)
+                for update
             """.trimIndent(),
                 mapOf("omrade" to område)
             ).map { row ->
@@ -26,14 +31,7 @@ class FeltdefinisjonRepository(private val dataSource: DataSource) {
                 )
             }.asList
         )
-        return Feltdefinisjoner(område, datatyper.toSet())
-    }
-
-    private fun hentOmrådeId(område: String, tx: TransactionalSession): Long {
-        return tx.run(
-            queryOf("select id from omrade where omrade.ekstern_id = :omrade", mapOf("omrade" to område))
-                .map { row -> row.long("id") }.asSingle
-        ).takeIf { id -> id != null } ?: throw IllegalArgumentException("Området finnes ikke")
+        return Feltdefinisjoner(område, feltdefinisjoner.toSet())
     }
 
     fun fjern(sletteListe: Set<Feltdefinisjon>, tx: TransactionalSession) {
@@ -49,7 +47,7 @@ class FeltdefinisjonRepository(private val dataSource: DataSource) {
     }
 
     fun leggTil(leggTilListe: Set<Feltdefinisjon>, område: String, tx: TransactionalSession) {
-        val områdeId = hentOmrådeId(område, tx)
+        val områdeId = områdeRepository.hentOmrådeId(område, tx)
         leggTilListe.forEach { datatype ->
             tx.run(
                 queryOf(
