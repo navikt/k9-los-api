@@ -16,13 +16,16 @@ internal fun Route.OppgavetypeApi() {
 
     post {
         requestContextService.withRequestContext(call) {
-            val oppgavetyper = call.receive<Oppgavetyper>()
+            val innkommendeOppgavetyper = call.receive<Oppgavetyper>()
             transactionalManager.transaction { tx ->
                 // hent alle oppgavetyper for innkommende område
-                val persisterteOppgavetyper = oppgavetypeRepository.hent(oppgavetyper.område, tx)
+                val persisterteOppgavetyper = oppgavetypeRepository.hent(innkommendeOppgavetyper.område, tx)
                 // sjekk diff
-                persisterteOppgavetyper.finnForskjell()
-                // sett inn/fjern det som trengs
+                val (sletteListe, leggtilListe, oppdaterListe) = persisterteOppgavetyper.finnForskjell(innkommendeOppgavetyper)
+                // 3 lister
+                // sletteliste - for hvert element: slett først oppgavefelter, så oppgavetype
+                // leggtilListe - for hvert element: insert først oppgavetype, så oppgavefelter
+                // oppdaterListe - for hvert element: sjekk diff oppgavefelter og insert/delete på deltalister
             }
 
             call.respond("OK")

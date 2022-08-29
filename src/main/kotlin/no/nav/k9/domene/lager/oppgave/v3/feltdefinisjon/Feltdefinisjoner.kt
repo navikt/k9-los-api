@@ -6,7 +6,7 @@ class Feltdefinisjoner(
 ) {
     fun finnForskjeller(innkommendeFeltdefinisjoner: Feltdefinisjoner): Pair<Set<Feltdefinisjon>, Set<Feltdefinisjon>> {
         if (!innkommendeFeltdefinisjoner.område.equals(this.område)) {
-            throw IllegalArgumentException("Kan ikke sammenligne datatyper på tvers av områder. Dette skal være separate sett")
+            throw IllegalStateException("Kan ikke sammenligne datatyper på tvers av områder. Dette skal være separate sett")
         }
         val leggtilListe = mutableSetOf<Feltdefinisjon>()
         val slettListe = mutableSetOf<Feltdefinisjon>()

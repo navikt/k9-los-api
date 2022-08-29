@@ -5,7 +5,46 @@ class Oppgavetyper(
     val definisjonskilde: String,
     val oppgavetyper: Set<Oppgavetype>
 ) {
-    fun finnForskjell() {
-        TODO("Not yet implemented")
+    fun finnForskjell(innkommendeOppgavetyper: Oppgavetyper): Triple<Oppgavetyper, Oppgavetyper, Oppgavetyper> {
+        if (!innkommendeOppgavetyper.område.equals(this.område)) {
+            throw IllegalStateException("Kan ikke sammenligne oppgavetyper på tvers av områder")
+        }
+        if (!innkommendeOppgavetyper.definisjonskilde.equals(this.definisjonskilde)) {
+            throw IllegalStateException("Kan ikke sammenligne oppgavetyper på tvers av definisjonskilder")
+        }
+        val slettListe = mutableSetOf<Oppgavetype>()
+        val leggTilListe = mutableSetOf<Oppgavetype>()
+        val finnFeltforskjellListe = mutableSetOf<Oppgavetype>()
+
+        innkommendeOppgavetyper.oppgavetyper.forEach {innkommende ->
+            val eksisterende = oppgavetyper.find { it.id.equals(innkommende.id) }
+            if (eksisterende == null) {
+                leggTilListe.add(innkommende)
+            } else {
+                finnFeltforskjellListe.add(innkommende)
+            }
+        }
+
+        oppgavetyper.forEach { eksistereende ->
+            val innkommende = innkommendeOppgavetyper.oppgavetyper.find { it.id.equals(eksistereende.id) }
+            if (innkommende == null) {
+                slettListe.add(eksistereende)
+            }
+        }
+        return Triple(
+            Oppgavetyper(
+                område = this.område,
+                definisjonskilde = this.definisjonskilde,
+                oppgavetyper = slettListe.toSet()),
+            Oppgavetyper(
+                område = this.område,
+                definisjonskilde = this.definisjonskilde,
+                oppgavetyper = leggTilListe.toSet()
+            ),
+            Oppgavetyper(
+                område = this.område,
+                definisjonskilde = this.definisjonskilde,
+                oppgavetyper = finnFeltforskjellListe.toSet()
+            ))
     }
 }
