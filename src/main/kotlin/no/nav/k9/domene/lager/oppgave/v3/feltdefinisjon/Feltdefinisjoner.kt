@@ -11,7 +11,7 @@ class Feltdefinisjoner(
         val leggtilListe = mutableSetOf<Feltdefinisjon>()
         val slettListe = mutableSetOf<Feltdefinisjon>()
         innkommendeFeltdefinisjoner.feltdefinisjoner.forEach { innkommende ->
-            val eksisterende = feltdefinisjoner.find { it.eksterntNavn.equals(innkommende.eksterntNavn) }
+            val eksisterende = feltdefinisjoner.find { it.navn.equals(innkommende.navn) }
             if (eksisterende == null) {
                 leggtilListe.add(innkommende)
             } else { // finnes i liste, men kanskje forskjellig?
@@ -24,7 +24,7 @@ class Feltdefinisjoner(
         }
 
         feltdefinisjoner.forEach{ eksisterende ->
-            val innkommende = innkommendeFeltdefinisjoner.feltdefinisjoner.find { it.eksterntNavn.equals(eksisterende.eksterntNavn) }
+            val innkommende = innkommendeFeltdefinisjoner.feltdefinisjoner.find { it.navn.equals(eksisterende.navn) }
             if (innkommende == null) {
                 slettListe.add(eksisterende)
             }

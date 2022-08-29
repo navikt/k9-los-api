@@ -1,10 +1,22 @@
 package no.nav.k9.domene.lager.oppgave.v3.oppgavetype
 
+import no.nav.k9.domene.lager.oppgave.v3.feltdefinisjon.Feltdefinisjoner
+
 class Oppgavetyper(
     val område: String,
     val definisjonskilde: String,
     val oppgavetyper: Set<Oppgavetype>
 ) {
+
+    constructor(dto: OppgavetyperDTO, feltdefinisjoner: Feltdefinisjoner): this(
+        område = dto.område,
+        definisjonskilde = dto.definisjonskilde,
+        oppgavetyper = dto.oppgavetyper.map {
+            Oppgavetype(it, feltdefinisjoner)
+        }.toSet()
+    )
+
+
     fun finnForskjell(innkommendeOppgavetyper: Oppgavetyper): Triple<Oppgavetyper, Oppgavetyper, Oppgavetyper> {
         if (!innkommendeOppgavetyper.område.equals(this.område)) {
             throw IllegalStateException("Kan ikke sammenligne oppgavetyper på tvers av områder")

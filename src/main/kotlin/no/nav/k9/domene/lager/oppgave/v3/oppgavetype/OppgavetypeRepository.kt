@@ -10,14 +10,17 @@ class OppgavetypeRepository(private val områdeRepository: OmrådeRepository) {
 
     private val log = LoggerFactory.getLogger(OppgavetypeRepository::class.java)
 
-    fun hent(område: String, tx: TransactionalSession): Oppgavetyper {
+    fun hent(område: String, definisjonskilde: String, tx: TransactionalSession): Oppgavetyper {
         val områdeId = områdeRepository.hentOmrådeId(område, tx)
         val oppgavetypeListe = tx.run(
             queryOf(
                 """
-                select * from oppgavetype where omrade_id = :omradeId
+                select * from oppgavetype where omrade_id = :omradeId and definisjonskilde = :definisjonskilde
             """.trimIndent(),
-                mapOf("omradeId" to områdeId)
+                mapOf(
+                    "omradeId" to områdeId,
+                    "definisjonskilde" to definisjonskilde
+                )
             ).map { oppgavetypeRow ->
                 Oppgavetype(
                     id = oppgavetypeRow.string("ekstern_id"),
@@ -27,13 +30,12 @@ class OppgavetypeRepository(private val områdeRepository: OmrådeRepository) {
                             select *
                             from oppgavefelt o
                             	inner join feltdefinisjon d on o.feltdefinisjon_id = d.id
-                            where oppgavetype_id = :oppgavetypeId
-                        """.trimIndent(),
+                            where oppgavetype_id = :oppgavetypeId""",
                             mapOf("oppgavetypeId" to oppgavetypeRow.long("id"))
                         ).map { row ->
                             Oppgavefelt(
                                 feltDefinisjon = Feltdefinisjon(
-                                    eksterntNavn = row.string("eksternt_navn"),
+                                    navn = row.string("eksternt_navn"),
                                     listetype = row.boolean("liste_type"),
                                     parsesSom = row.string("parses_som"),
                                     visTilBruker = true
@@ -47,6 +49,79 @@ class OppgavetypeRepository(private val områdeRepository: OmrådeRepository) {
             }.asList
         )
 
-        return Oppgavetyper(område, "", oppgavetypeListe.toSet())
+        return Oppgavetyper(område, definisjonskilde, oppgavetypeListe.toSet())
+    }
+
+    fun fjern(oppgavetyper: Oppgavetyper, tx: TransactionalSession) {
+        oppgavetyper.oppgavetyper.forEach { oppgavetype ->
+            oppgavetype.oppgavefelter.forEach { oppgavefelt ->
+                tx.run(
+                    queryOf(
+                        """
+                         delete from oppgavefelt
+                         where oppgavetype_id = (select id from oppgavetype where ekstern_id = :oppgavetype) 
+                            and feltdefinisjon_id = (
+                                select id
+                                from feltdefinisjon
+                                where eksternt_navn = :feltnavn
+                                    and omrade_id = (select id from omrade where ekstern_id = :omrade)""",
+                        mapOf(
+                            "oppgavetype" to oppgavetype.id,
+                            "feltnavn" to oppgavefelt.feltDefinisjon.navn,
+                            "omrade" to oppgavetyper.område
+                        )
+                    ).asUpdate
+                )
+            }
+            tx.run(
+                queryOf(
+                    """
+                    delete from oppgavetype
+                    where ekstern_id = :ekstern_id
+                        and omrade_id = (select id from omrade where ekstern_id = :område""",
+                    mapOf(
+                        "ekstern_id" to oppgavetype.id,
+                        "område" to oppgavetyper.område
+                    )
+                ).asUpdate
+            )
+        }
+    }
+
+    fun leggTil(oppgavetyper: Oppgavetyper, tx: TransactionalSession) {
+        oppgavetyper.oppgavetyper.forEach { oppgavetype ->
+            val oppgavetypeId = tx.run(
+                queryOf(
+                    """
+                    insert into oppgavetype(ekstern_id, omrade_id, definisjonskilde)
+                    values(
+                        :eksterntNavn,
+                        (select id from omrade where ekstern_id = :omradeId),
+                        :definisjonskilde)""",
+                    mapOf(
+                        "eksterntNavn" to oppgavetype.id,
+                        "omradeId" to oppgavetyper.område,
+                        "definisjonskilde" to oppgavetyper.definisjonskilde
+                    )
+                ).asUpdateAndReturnGeneratedKey
+            )!!
+            oppgavetype.oppgavefelter.forEach { oppgavefelt ->
+                tx.run(
+                    queryOf(
+                        """
+                            insert into oppgavefelt(feltdefinisjon_id, oppgavetype_id, pakrevd)
+                            values(
+                                (select id from feltdefinisjon where eksternt_navn = :feltnavn),
+                                :oppgavetypeId,
+                                :påkrevd)""",
+                        mapOf(
+                            "feltnavn" to oppgavefelt.feltDefinisjon.navn,
+                            "oppgavetypeId" to oppgavetypeId,
+                            "påkrevd" to oppgavefelt.påkrevd
+                        ) //TODO: joine inn område_id? usikker på hva jeg synes om at feltdefinisjon.eksternt_navn alltid er prefikset med område
+                    ).asUpdate
+                )
+            }
+        }
     }
 }

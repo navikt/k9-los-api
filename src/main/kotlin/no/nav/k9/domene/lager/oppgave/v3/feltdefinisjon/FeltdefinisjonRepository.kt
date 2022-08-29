@@ -14,7 +14,7 @@ class FeltdefinisjonRepository(
     private val log = LoggerFactory.getLogger(FeltdefinisjonRepository::class.java)
 
     fun hent(område: String, tx: TransactionalSession): Feltdefinisjoner {
-        val feltdefinisjoner= tx.run(
+        val feltdefinisjoner = tx.run(
             queryOf(
                 """
                 select * from feltdefinisjon 
@@ -24,7 +24,7 @@ class FeltdefinisjonRepository(
                 mapOf("omrade" to område)
             ).map { row ->
                 Feltdefinisjon(
-                    eksterntNavn = row.string("eksternt_navn"),
+                    navn = row.string("eksternt_navn"),
                     listetype = row.boolean("liste_type"),
                     parsesSom = row.string("parses_som"),
                     visTilBruker = true
@@ -40,7 +40,7 @@ class FeltdefinisjonRepository(
                 queryOf(
                     """
                         delete from feltdefinisjon where eksternt_navn = :eksterntNavn""",
-                    mapOf("eksterntNavn" to datatype.eksterntNavn)
+                    mapOf("eksterntNavn" to datatype.navn)
                 ).asUpdate
             )
         }
@@ -53,10 +53,9 @@ class FeltdefinisjonRepository(
                 queryOf(
                     """
                     insert into feltdefinisjon(eksternt_navn, omrade_id, liste_type, parses_som) 
-                    values(:eksterntNavn, :omradeId, :listeType, :parsesSom)
-                """.trimIndent(),
+                    values(:eksterntNavn, :omradeId, :listeType, :parsesSom)""",
                     mapOf(
-                        "eksterntNavn" to datatype.eksterntNavn,
+                        "eksterntNavn" to datatype.navn,
                         "omradeId" to områdeId,
                         "listeType" to datatype.listetype,
                         "parsesSom" to datatype.parsesSom

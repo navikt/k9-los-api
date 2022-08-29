@@ -2,13 +2,13 @@
   "område": "K9",
   "datatyper": [
     {
-      "id": "saksnummer",
+      "navn": "saksnummer",
       "listetype": false,
       "implementasjonstype": "String",
       "visTilBruker": true
     },
     {
-      "id": "opprettet",
+      "navn": "opprettet",
       "listetype": false,
       "implementasjonstype": "Date",
       "visTilBruker": true

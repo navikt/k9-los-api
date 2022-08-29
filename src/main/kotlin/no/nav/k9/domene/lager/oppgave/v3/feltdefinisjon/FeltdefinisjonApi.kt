@@ -19,8 +19,8 @@ internal fun Route.FeltdefinisjonApi() {
             val innkommendeFeltdefinisjoner = call.receive<Feltdefinisjoner>()
 
             transactionalManager.transaction { tx ->
-                val persisterteDatatyper = feltdefinisjonRepository.hent(innkommendeFeltdefinisjoner.område, tx)
-                val (sletteListe, leggTilListe) = persisterteDatatyper.finnForskjeller(innkommendeFeltdefinisjoner)
+                val eksisterendeFeltdefinisjoner = feltdefinisjonRepository.hent(innkommendeFeltdefinisjoner.område, tx)
+                val (sletteListe, leggTilListe) = eksisterendeFeltdefinisjoner.finnForskjeller(innkommendeFeltdefinisjoner)
                 feltdefinisjonRepository.fjern(sletteListe, tx)
                 feltdefinisjonRepository.leggTil(leggTilListe, innkommendeFeltdefinisjoner.område, tx)
             }
