@@ -24,7 +24,7 @@ class FeltdefinisjonRepository(
                 mapOf("omrade" to område)
             ).map { row ->
                 Feltdefinisjon(
-                    id = row.string("eksternt_navn"),
+                    eksterntNavn = row.string("eksternt_navn"),
                     listetype = row.boolean("liste_type"),
                     parsesSom = row.string("parses_som"),
                     visTilBruker = true
@@ -40,7 +40,7 @@ class FeltdefinisjonRepository(
                 queryOf(
                     """
                         delete from feltdefinisjon where eksternt_navn = :eksterntNavn""",
-                    mapOf("eksterntNavn" to datatype.id)
+                    mapOf("eksterntNavn" to datatype.eksterntNavn)
                 ).asUpdate
             )
         }
@@ -56,7 +56,7 @@ class FeltdefinisjonRepository(
                     values(:eksterntNavn, :omradeId, :listeType, :parsesSom)
                 """.trimIndent(),
                     mapOf(
-                        "eksterntNavn" to datatype.id,
+                        "eksterntNavn" to datatype.eksterntNavn,
                         "omradeId" to områdeId,
                         "listeType" to datatype.listetype,
                         "parsesSom" to datatype.parsesSom
