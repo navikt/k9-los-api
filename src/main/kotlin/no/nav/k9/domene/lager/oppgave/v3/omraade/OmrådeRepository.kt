@@ -20,7 +20,7 @@ class OmrådeRepository(private val dataSource: DataSource) {
     }
 
     fun lagre(område: String) {
-        TODO()
+        TODO() //ikke i bruk ennå
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 tx.run(

@@ -30,13 +30,16 @@ class FeltdefinisjonRepository(private val områdeRepository: OmrådeRepository)
         return Feltdefinisjoner(område, feltdefinisjoner.toSet())
     }
 
-    fun fjern(sletteListe: Set<Feltdefinisjon>, tx: TransactionalSession) {
+    fun fjern(område: String, sletteListe: Set<Feltdefinisjon>, tx: TransactionalSession) {
         sletteListe.forEach { datatype ->
             tx.run(
                 queryOf(
                     """
-                        delete from feltdefinisjon where eksternt_navn = :eksterntNavn""", //TODO: område?
-                    mapOf("eksterntNavn" to datatype.navn)
+                        delete from feltdefinisjon where eksternt_navn = :eksterntNavn and omrade = :omrade""",
+                    mapOf(
+                        "eksterntNavn" to datatype.navn,
+                        "omrade" to område
+                    )
                 ).asUpdate
             )
         }

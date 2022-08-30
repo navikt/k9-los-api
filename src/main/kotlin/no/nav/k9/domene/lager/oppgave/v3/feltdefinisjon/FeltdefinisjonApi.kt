@@ -21,7 +21,7 @@ internal fun Route.FeltdefinisjonApi() {
             transactionalManager.transaction { tx ->
                 val eksisterendeFeltdefinisjoner = feltdefinisjonRepository.hent(innkommendeFeltdefinisjoner.område, tx)
                 val (sletteListe, leggTilListe) = eksisterendeFeltdefinisjoner.finnForskjeller(innkommendeFeltdefinisjoner)
-                feltdefinisjonRepository.fjern(sletteListe, tx)
+                feltdefinisjonRepository.fjern(innkommendeFeltdefinisjoner.område, sletteListe, tx)
                 feltdefinisjonRepository.leggTil(leggTilListe, innkommendeFeltdefinisjoner.område, tx)
             }
             call.respond("OK")

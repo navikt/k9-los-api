@@ -14,7 +14,6 @@ class OppgavetypeTest {
 
         val (sletteListe, leggTilListe, oppdaterListe) = Oppgavetyper(
             område = "K9",
-            definisjonskilde = "k9-sak-til-los",
             emptySet()
         ).finnForskjell(innkommendeOppgavetyper)
 
@@ -27,10 +26,10 @@ class OppgavetypeTest {
     fun `test at vi sletter en oppgavetype dersom den ikke finnes i dto men er persistert`() {
         val innkomendeOppgavetyper = Oppgavetyper(
             område = "K9",
-            definisjonskilde = "k9-sak-til-los",
             oppgavetyper = setOf(
                 Oppgavetype(
                     id = "aksjonspunkt",
+                    definisjonskilde = "k9-sak-til-los",
                     oppgavefelter = setOf(
                         Oppgavefelt(
                             feltDefinisjon = Feltdefinisjon("aksjonspunkt", false, "String", true),
@@ -57,10 +56,10 @@ class OppgavetypeTest {
     fun `test at vi legger feltdefinisjoner i opppdaterListe om de har endringer`() {
         val innkommendeFeltdefinisjoner = Oppgavetyper(
             område = "K9",
-            definisjonskilde = "k9-sak-til-los",
             oppgavetyper = setOf(
                 Oppgavetype(
                     id = "aksjonspunkt",
+                    definisjonskilde = "k9-sak-til-los",
                     oppgavefelter = setOf(
                         Oppgavefelt(
                             feltDefinisjon = Feltdefinisjon("aksjonspunkt", true, "String", true),
@@ -76,6 +75,7 @@ class OppgavetypeTest {
                 ),
                 Oppgavetype(
                     id = "test",
+                    definisjonskilde = "k9-sak-til-los",
                     oppgavefelter = setOf(
                         Oppgavefelt(
                             feltDefinisjon = Feltdefinisjon("opprettet", true, "Date", true),
@@ -96,10 +96,10 @@ class OppgavetypeTest {
     private fun lagOppgavetyper(): Oppgavetyper {
         return Oppgavetyper(
             område = "K9",
-            definisjonskilde = "k9-sak-til-los",
             oppgavetyper = setOf(
                 Oppgavetype(
                     id = "aksjonspunkt",
+                    definisjonskilde = "k9-sak-til-los",
                     oppgavefelter = setOf(
                         Oppgavefelt(
                             feltDefinisjon = Feltdefinisjon("aksjonspunkt", false, "String", true),
@@ -115,6 +115,7 @@ class OppgavetypeTest {
                 ),
                 Oppgavetype(
                     id = "test",
+                    definisjonskilde = "k9-sak-til-los",
                     oppgavefelter = setOf(
                         Oppgavefelt(
                             feltDefinisjon = Feltdefinisjon("opprettet", false, "Date", true),

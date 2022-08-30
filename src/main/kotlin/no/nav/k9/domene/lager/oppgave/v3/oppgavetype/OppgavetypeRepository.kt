@@ -10,16 +10,15 @@ class OppgavetypeRepository(private val områdeRepository: OmrådeRepository) {
 
     private val log = LoggerFactory.getLogger(OppgavetypeRepository::class.java)
 
-    fun hent(område: String, definisjonskilde: String, tx: TransactionalSession): Oppgavetyper {
+    fun hent(område: String, tx: TransactionalSession): Oppgavetyper {
         val områdeId = områdeRepository.hentOmrådeId(område, tx)
         val oppgavetypeListe = tx.run(
             queryOf(
                 """
-                select * from oppgavetype where omrade_id = :omradeId and definisjonskilde = :definisjonskilde
+                select * from oppgavetype where omrade_id = :omradeId
             """.trimIndent(),
                 mapOf(
-                    "omradeId" to områdeId,
-                    "definisjonskilde" to definisjonskilde
+                    "omradeId" to områdeId
                 )
             ).map { oppgavetypeRow ->
                 Oppgavetype(
@@ -44,12 +43,13 @@ class OppgavetypeRepository(private val områdeRepository: OmrådeRepository) {
                                 visPåOppgave = true
                             )
                         }.asList
-                    ).toSet()
+                    ).toSet(),
+                    definisjonskilde = oppgavetypeRow.string("definisjonskilde")
                 )
             }.asList
         )
 
-        return Oppgavetyper(område, definisjonskilde, oppgavetypeListe.toSet())
+        return Oppgavetyper(område, oppgavetypeListe.toSet())
     }
 
     fun fjern(oppgavetyper: Oppgavetyper, tx: TransactionalSession) {
@@ -102,7 +102,7 @@ class OppgavetypeRepository(private val områdeRepository: OmrådeRepository) {
                     mapOf(
                         "eksterntNavn" to oppgavetype.id,
                         "omradeId" to oppgavetyper.område,
-                        "definisjonskilde" to oppgavetyper.definisjonskilde
+                        "definisjonskilde" to oppgavetype.definisjonskilde
                     )
                 ).asUpdateAndReturnGeneratedKey
             )!!

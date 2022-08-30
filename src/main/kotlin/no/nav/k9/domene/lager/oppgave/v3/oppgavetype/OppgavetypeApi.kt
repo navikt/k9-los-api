@@ -25,7 +25,7 @@ internal fun Route.OppgavetypeApi() {
                 val eksisterendeFeltdefinisjoner = feltdefinisjonRepository.hent(innkommendeOppgavetyperDto.område, tx)
                 val innkommendeOppgavetyper = Oppgavetyper(innkommendeOppgavetyperDto, eksisterendeFeltdefinisjoner)
 
-                val eksisterendeOppgavetyper = oppgavetypeRepository.hent(innkommendeOppgavetyperDto.område, innkommendeOppgavetyperDto.definisjonskilde, tx)
+                val eksisterendeOppgavetyper = oppgavetypeRepository.hent(innkommendeOppgavetyperDto.område, tx)
                 val (sletteListe, leggtilListe, oppdaterListe) = eksisterendeOppgavetyper.finnForskjell(innkommendeOppgavetyper)
                 oppgavetypeRepository.fjern(sletteListe, tx)
                 oppgavetypeRepository.leggTil(leggtilListe, tx)
