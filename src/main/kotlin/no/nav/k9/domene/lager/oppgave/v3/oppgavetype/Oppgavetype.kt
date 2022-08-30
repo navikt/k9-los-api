@@ -13,7 +13,8 @@ class Oppgavetype(
             Oppgavefelt(
                 feltDefinisjon = feltdefinisjoner.feltdefinisjoner.find { eksisterendeFeltdefinisjon ->
                     eksisterendeFeltdefinisjon.navn == innkommendeFeltdefinisjon.navn
-                }.takeIf { feltdefinisjon -> feltdefinisjon != null } ?: throw IllegalStateException("Omsøkt feltdefinisjon finnes ikke"),
+                }.takeIf { feltdefinisjon -> feltdefinisjon != null }
+                    ?: throw IllegalStateException("Omsøkt feltdefinisjon finnes ikke"),
                 visPåOppgave = innkommendeFeltdefinisjon.visPåOppgave,
                 påkrevd = innkommendeFeltdefinisjon.påkrevd
             )

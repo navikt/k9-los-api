@@ -4,12 +4,8 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.domene.lager.oppgave.v3.omraade.OmrådeRepository
 import org.slf4j.LoggerFactory
-import javax.sql.DataSource
 
-class FeltdefinisjonRepository(
-    private val dataSource: DataSource,
-    private val områdeRepository: OmrådeRepository
-) {
+class FeltdefinisjonRepository(private val områdeRepository: OmrådeRepository) {
 
     private val log = LoggerFactory.getLogger(FeltdefinisjonRepository::class.java)
 

@@ -303,7 +303,7 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single { OmrådeRepository(get()) }
-    single { FeltdefinisjonRepository(get(), get()) }
+    single { FeltdefinisjonRepository(get()) }
     single { OppgavetypeRepository(get()) }
 
 }

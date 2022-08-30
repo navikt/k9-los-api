@@ -1,69 +1,80 @@
 package no.nav.k9.domene.lager.oppgave.v3.feltdefinisjon
 
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.server.*
-import io.ktor.server.testing.*
-import no.nav.k9.AbstractK9LosIntegrationTest
-import no.nav.k9.domene.lager.oppgave.v3.omraade.OmrådeRepository
-import org.junit.jupiter.api.BeforeEach
+import assertk.assertThat
+import assertk.assertions.hasSize
+import assertk.assertions.isEmpty
 import org.junit.jupiter.api.Test
-import org.koin.test.get
-import kotlin.test.*
 
-class FeltdefinisjonTest : AbstractK9LosIntegrationTest() {
+class FeltdefinisjonTest {
 
-    lateinit var områdeRepository: OmrådeRepository
-
-    @BeforeEach
-    fun setup() {
-        områdeRepository = get()
-        områdeRepository.lagre("K9")
+    @Test
+    fun `test at vi legger til feltdefinisjoner om de ikke finnes fra før`() {
+        val innkommendeFeltdefinisjoner = lagFeltdefinisjoner()
+        val (sletteListe, leggTilListe) = Feltdefinisjoner(område = "K9", emptySet()).finnForskjeller(innkommendeFeltdefinisjoner)
+        assertThat(leggTilListe).hasSize(2)
+        assertThat(sletteListe).isEmpty()
     }
 
     @Test
-    fun `test`() {
-        /*val response = client.post("/api/feltdefinisjon") {
-            contentType(ContentType.Application.Json)
-            setBody()
-        }
-        val feltdefinisjonRepository = get<FeltdefinisjonRepository>()
-        //val response = client.post("/api/feltdefinisjon")
-
-         */
+    fun `test at vi sletter en feltdefinisjon dersom den ikke finnes i dto men er persistert`() {
+        val innkommendeFeltdefinisjoner = Feltdefinisjoner(
+            område = "K9",
+            feltdefinisjoner = setOf(
+                Feltdefinisjon(
+                    navn = "saksnummer",
+                    listetype = false,
+                    parsesSom = "String",
+                    visTilBruker = true
+                )
+            )
+        )
+        val (sletteListe, leggTilListe) = lagFeltdefinisjoner().finnForskjeller(innkommendeFeltdefinisjoner)
+        assertThat(sletteListe).hasSize(1)
+        assertThat(leggTilListe).isEmpty()
     }
 
-    private fun TestApplicationEngine.sendJsonRequest(
-        forventetHttpResponseCode: HttpStatusCode
-    ) {
-        handleRequest(HttpMethod.Post, "api/feltdefinisjon") {
-            addHeader(HttpHeaders.ContentType, "application/json")
-            addHeader(HttpHeaders.Origin, "https://k9-los.nav.no")
-            setBody(
-                """
-                {
-                  "område": "K9",
-                  "feltdefinisjoner": [
-                    {
-                      "id": "saksnummer",
-                      "listetype": false,
-                      "parsesSom": "String",
-                      "visTilBruker": true
-                    },
-                    {
-                      "id": "opprettet",
-                      "listetype": false,
-                      "parsesSom": "Date",
-                      "visTilBruker": true
-                    }
-                  ]
-                }
-            """.trimIndent()
+    @Test
+    fun `test at vi sletter feltdefinisjoner og legger de til på nytt om de har endringer`() {
+        val innkommendeFeltdefinisjoner = Feltdefinisjoner(
+            område = "K9",
+            feltdefinisjoner = setOf(
+                Feltdefinisjon(
+                    navn = "saksnummer",
+                    listetype = true,
+                    parsesSom = "String",
+                    visTilBruker = true
+                ),
+                Feltdefinisjon(
+                    navn = "opprettet",
+                    listetype = true,
+                    parsesSom = "Date",
+                    visTilBruker = true
+                )
             )
-        }.apply {
-            assertEquals(forventetHttpResponseCode, response.status())
-        }
+        )
+        val (sletteListe, leggTilListe) = lagFeltdefinisjoner().finnForskjeller(innkommendeFeltdefinisjoner)
+        assertThat(sletteListe).hasSize(2)
+        assertThat(leggTilListe).hasSize(2)
+    }
+
+    private fun lagFeltdefinisjoner(): Feltdefinisjoner {
+        return Feltdefinisjoner(
+            område = "K9",
+            feltdefinisjoner = setOf(
+                Feltdefinisjon(
+                    navn = "saksnummer",
+                    listetype = false,
+                    parsesSom = "String",
+                    visTilBruker = true
+                ),
+                Feltdefinisjon(
+                    navn = "opprettet",
+                    listetype = false,
+                    parsesSom = "Date",
+                    visTilBruker = true
+                )
+            )
+        )
     }
 
 }

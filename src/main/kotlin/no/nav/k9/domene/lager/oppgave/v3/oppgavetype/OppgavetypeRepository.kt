@@ -64,7 +64,8 @@ class OppgavetypeRepository(private val områdeRepository: OmrådeRepository) {
                                 select id
                                 from feltdefinisjon
                                 where eksternt_navn = :feltnavn
-                                    and omrade_id = (select id from omrade where ekstern_id = :omrade)""",
+                                    and omrade_id = (select id from omrade where ekstern_id = :omrade)
+                            )""",
                         mapOf(
                             "oppgavetype" to oppgavetype.id,
                             "feltnavn" to oppgavefelt.feltDefinisjon.navn,
@@ -78,10 +79,10 @@ class OppgavetypeRepository(private val områdeRepository: OmrådeRepository) {
                     """
                     delete from oppgavetype
                     where ekstern_id = :ekstern_id
-                        and omrade_id = (select id from omrade where ekstern_id = :område""",
+                        and omrade_id = (select id from omrade where ekstern_id = :omrade)""",
                     mapOf(
                         "ekstern_id" to oppgavetype.id,
-                        "område" to oppgavetyper.område
+                        "omrade" to oppgavetyper.område
                     )
                 ).asUpdate
             )
@@ -113,11 +114,11 @@ class OppgavetypeRepository(private val områdeRepository: OmrådeRepository) {
                             values(
                                 (select id from feltdefinisjon where eksternt_navn = :feltnavn),
                                 :oppgavetypeId,
-                                :påkrevd)""",
+                                :paakrevd)""",
                         mapOf(
                             "feltnavn" to oppgavefelt.feltDefinisjon.navn,
                             "oppgavetypeId" to oppgavetypeId,
-                            "påkrevd" to oppgavefelt.påkrevd
+                            "paakrevd" to oppgavefelt.påkrevd
                         ) //TODO: joine inn område_id? usikker på hva jeg synes om at feltdefinisjon.eksternt_navn alltid er prefikset med område
                     ).asUpdate
                 )

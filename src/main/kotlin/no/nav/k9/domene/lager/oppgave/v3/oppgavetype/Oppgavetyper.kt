@@ -28,7 +28,7 @@ class Oppgavetyper(
         val leggTilListe = mutableSetOf<Oppgavetype>()
         val finnFeltforskjellListe = mutableSetOf<Oppgavetype>()
 
-        innkommendeOppgavetyper.oppgavetyper.forEach {innkommende ->
+        innkommendeOppgavetyper.oppgavetyper.forEach { innkommende ->
             val eksisterende = oppgavetyper.find { it.id.equals(innkommende.id) }
             if (eksisterende == null) {
                 leggTilListe.add(innkommende)
@@ -47,7 +47,8 @@ class Oppgavetyper(
             Oppgavetyper(
                 område = this.område,
                 definisjonskilde = this.definisjonskilde,
-                oppgavetyper = slettListe.toSet()),
+                oppgavetyper = slettListe.toSet()
+            ),
             Oppgavetyper(
                 område = this.område,
                 definisjonskilde = this.definisjonskilde,
@@ -57,6 +58,7 @@ class Oppgavetyper(
                 område = this.område,
                 definisjonskilde = this.definisjonskilde,
                 oppgavetyper = finnFeltforskjellListe.toSet()
-            ))
+            )
+        )
     }
 }
