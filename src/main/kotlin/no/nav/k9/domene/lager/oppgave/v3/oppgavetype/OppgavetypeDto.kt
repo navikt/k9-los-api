@@ -1,6 +1,6 @@
 package no.nav.k9.domene.lager.oppgave.v3.oppgavetype
 
-data class OppgavetypeDTO (
+data class OppgavetypeDto (
     val navn: String,
-    val oppgavefelter: Set<OppgavefeltDTO>
+    val oppgavefelter: Set<OppgavefeltDto>
 )

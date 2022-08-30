@@ -1,6 +1,6 @@
 package no.nav.k9.domene.lager.oppgave.v3.oppgavetype
 
-data class OppgavefeltDTO (
+data class OppgavefeltDto (
     val navn: String,
     val visPåOppgave: Boolean,
     val påkrevd: Boolean

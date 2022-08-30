@@ -7,7 +7,7 @@ class Oppgavetype(
     val oppgavefelter: Set<Oppgavefelt>
 ) {
 
-    constructor(dto: OppgavetypeDTO, feltdefinisjoner: Feltdefinisjoner) : this(
+    constructor(dto: OppgavetypeDto, feltdefinisjoner: Feltdefinisjoner) : this(
         id = dto.navn,
         oppgavefelter = dto.oppgavefelter.map { innkommendeFeltdefinisjon ->
             Oppgavefelt(

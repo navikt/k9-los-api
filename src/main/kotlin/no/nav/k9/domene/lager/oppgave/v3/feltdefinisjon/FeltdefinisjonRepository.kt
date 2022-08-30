@@ -39,7 +39,7 @@ class FeltdefinisjonRepository(
             tx.run(
                 queryOf(
                     """
-                        delete from feltdefinisjon where eksternt_navn = :eksterntNavn""",
+                        delete from feltdefinisjon where eksternt_navn = :eksterntNavn""", //TODO: område?
                     mapOf("eksterntNavn" to datatype.navn)
                 ).asUpdate
             )

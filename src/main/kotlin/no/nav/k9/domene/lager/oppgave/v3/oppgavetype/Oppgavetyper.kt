@@ -8,7 +8,7 @@ class Oppgavetyper(
     val oppgavetyper: Set<Oppgavetype>
 ) {
 
-    constructor(dto: OppgavetyperDTO, feltdefinisjoner: Feltdefinisjoner): this(
+    constructor(dto: OppgavetyperDto, feltdefinisjoner: Feltdefinisjoner): this(
         område = dto.område,
         definisjonskilde = dto.definisjonskilde,
         oppgavetyper = dto.oppgavetyper.map {

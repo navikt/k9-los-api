@@ -13,6 +13,7 @@ class OmrådeRepository(private val dataSource: DataSource) {
     private val log = LoggerFactory.getLogger(OmrådeRepository::class.java)
 
     fun hentOmrådeId(område: String, tx: TransactionalSession): Long {
+        TODO()
         return tx.run(
             queryOf("select id from omrade where omrade.ekstern_id = :omrade", mapOf("omrade" to område))
                 .map { row -> row.long("id") }.asSingle
@@ -20,6 +21,7 @@ class OmrådeRepository(private val dataSource: DataSource) {
     }
 
     fun lagre(område: String) {
+        TODO()
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 tx.run(

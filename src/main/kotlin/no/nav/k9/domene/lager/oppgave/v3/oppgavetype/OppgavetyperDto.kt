@@ -1,7 +1,7 @@
 package no.nav.k9.domene.lager.oppgave.v3.oppgavetype
 
-data class OppgavetyperDTO (
+data class OppgavetyperDto (
     val område: String,
     val definisjonskilde: String,
-    val oppgavetyper: Set<OppgavetypeDTO>
+    val oppgavetyper: Set<OppgavetypeDto>
 )

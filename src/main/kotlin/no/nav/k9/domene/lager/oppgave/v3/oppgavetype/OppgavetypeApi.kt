@@ -18,21 +18,17 @@ internal fun Route.OppgavetypeApi() {
 
     post {
         requestContextService.withRequestContext(call) {
-            val innkommendeOppgavetyperDTO = call.receive<OppgavetyperDTO>()
+            val innkommendeOppgavetyperDto = call.receive<OppgavetyperDto>()
             transactionalManager.transaction { tx ->
                 // lås feltdefinisjoner for område og hent opp
-                val eksisterendeFeltdefinisjoner = feltdefinisjonRepository.hent(innkommendeOppgavetyperDTO.område, tx)
-                val innkommendeOppgavetyper = Oppgavetyper(innkommendeOppgavetyperDTO, eksisterendeFeltdefinisjoner)
-                // hent alle oppgavetyper for innkommende område
-                val eksisterendeOppgavetyper = oppgavetypeRepository.hent(innkommendeOppgavetyperDTO.område, innkommendeOppgavetyperDTO.definisjonskilde, tx)
-                // sjekk diff
+                val eksisterendeFeltdefinisjoner = feltdefinisjonRepository.hent(innkommendeOppgavetyperDto.område, tx)
+                val innkommendeOppgavetyper = Oppgavetyper(innkommendeOppgavetyperDto, eksisterendeFeltdefinisjoner)
+
+                val eksisterendeOppgavetyper = oppgavetypeRepository.hent(innkommendeOppgavetyperDto.område, innkommendeOppgavetyperDto.definisjonskilde, tx)
                 val (sletteListe, leggtilListe, oppdaterListe) = eksisterendeOppgavetyper.finnForskjell(innkommendeOppgavetyper)
-                // 3 lister
-                // sletteliste - for hvert element: slett først oppgavefelter, så oppgavetype
                 oppgavetypeRepository.fjern(sletteListe, tx)
-                // leggtilListe - for hvert element: insert først oppgavetype, så oppgavefelter
                 oppgavetypeRepository.leggTil(leggtilListe, tx)
-                // oppdaterListe - for hvert element: sjekk diff oppgavefelter og insert/delete på deltalister
+                // TODO: oppdaterListe - for hvert element: sjekk diff oppgavefelter og insert/delete på deltalister
             }
 
             call.respond("OK")
