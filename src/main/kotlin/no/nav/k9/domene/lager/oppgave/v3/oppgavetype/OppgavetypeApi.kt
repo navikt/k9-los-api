@@ -9,6 +9,7 @@ import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.domene.lager.oppgave.v3.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.integrasjon.rest.RequestContextService
 import org.koin.ktor.ext.inject
+import javax.ws.rs.NotSupportedException
 
 internal fun Route.OppgavetypeApi() {
     val oppgavetypeRepository by inject<OppgavetypeRepository>()
@@ -29,6 +30,9 @@ internal fun Route.OppgavetypeApi() {
                 oppgavetypeRepository.fjern(sletteListe, tx)
                 oppgavetypeRepository.leggTil(leggtilListe, tx)
                 // TODO: oppdaterListe - for hvert element: sjekk diff oppgavefelter og insert/delete på deltalister
+                if (oppdaterListe.oppgavetyper.size > 0) {
+                    throw IllegalArgumentException("Endring av oppgavefeltliste til oppgavetype er ikke implementert ennå. Oppgavetypen må slettes og lages på nytt inntil videre")
+                }
             }
 
             call.respond("OK")
