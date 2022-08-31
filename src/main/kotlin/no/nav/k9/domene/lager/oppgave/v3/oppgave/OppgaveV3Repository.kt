@@ -14,7 +14,7 @@ class OppgaveV3Repository {
     private val log = LoggerFactory.getLogger(OppgaveV3Repository::class.java)
 
     //TODO: status enum
-    
+
     fun lagre(oppgave: OppgaveV3, tx: TransactionalSession) {
         // hente ut nyeste versjon(ekstern_id, område) i basen, sette aktuell versjon til inaktiv
         val (eksisterendeId, eksisterendeVersjon) = hentVersjon(tx, oppgave) ?: Pair(null, null) //TODO: Herregud så stygt!

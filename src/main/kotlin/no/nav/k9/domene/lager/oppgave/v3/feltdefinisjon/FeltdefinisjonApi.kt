@@ -11,10 +11,8 @@ import no.nav.k9.integrasjon.rest.RequestContextService
 import org.koin.ktor.ext.inject
 
 internal fun Route.FeltdefinisjonApi() {
-    val feltdefinisjonRepository by inject<FeltdefinisjonRepository>()
-    val områdeRepository by inject<OmrådeRepository>()
     val requestContextService by inject<RequestContextService>()
-    val transactionalManager by inject<TransactionalManager>()
+    val feltdefinisjonTjeneste by inject<FeltdefinisjonTjeneste>()
 
     //TODO: definere lovlige datatyper -> tolkes_som. enum i koden
 
@@ -22,16 +20,10 @@ internal fun Route.FeltdefinisjonApi() {
         requestContextService.withRequestContext(call) {
             val innkommendeFeltdefinisjonerDto = call.receive<FeltdefinisjonerDto>()
 
-            transactionalManager.transaction { tx ->
-                val område = områdeRepository.hentOmråde(innkommendeFeltdefinisjonerDto.område, tx)
-                val eksisterendeFeltdefinisjoner = feltdefinisjonRepository.hent(område, tx)
-                val innkommendeFeltdefinisjoner = Feltdefinisjoner(innkommendeFeltdefinisjonerDto, område)
+            feltdefinisjonTjeneste.oppdater(innkommendeFeltdefinisjonerDto)
 
-                val (sletteListe, leggTilListe) = eksisterendeFeltdefinisjoner.finnForskjeller(innkommendeFeltdefinisjoner)
-                feltdefinisjonRepository.fjern(sletteListe, tx)
-                feltdefinisjonRepository.leggTil(leggTilListe, innkommendeFeltdefinisjoner.område, tx)
-            }
             call.respond("OK")
         }
     }
 }
+

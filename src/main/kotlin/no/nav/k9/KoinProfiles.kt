@@ -15,9 +15,12 @@ import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveTjenesteV2
 import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.domene.lager.oppgave.v3.feltdefinisjon.FeltdefinisjonRepository
+import no.nav.k9.domene.lager.oppgave.v3.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.domene.lager.oppgave.v3.omraade.OmrådeRepository
 import no.nav.k9.domene.lager.oppgave.v3.oppgave.OppgaveV3Repository
+import no.nav.k9.domene.lager.oppgave.v3.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.domene.lager.oppgave.v3.oppgavetype.OppgavetypeRepository
+import no.nav.k9.domene.lager.oppgave.v3.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.domene.repository.BehandlingProsessEventTilbakeRepository
 import no.nav.k9.domene.repository.DriftsmeldingRepository
@@ -307,7 +310,29 @@ fun common(app: Application, config: Configuration) = module {
     single { FeltdefinisjonRepository() }
     single { OppgavetypeRepository(get()) }
     single { OppgaveV3Repository() }
-
+    single {
+        FeltdefinisjonTjeneste(
+            feltdefinisjonRepository = get(),
+            områdeRepository = get(),
+            transactionalManager = get()
+        )
+    }
+    single {
+        OppgavetypeTjeneste(
+            oppgavetypeRepository = get(),
+            områdeRepository = get(),
+            feltdefinisjonRepository = get(),
+            transactionalManager = get(),
+        )
+    }
+    single {
+        OppgaveV3Tjeneste(
+            oppgaveV3Repository = get(),
+            oppgavetypeRepository = get(),
+            områdeRepository = get(),
+            transactionalManager = get()
+        )
+    }
 }
 
 fun localDevConfig() = module {
