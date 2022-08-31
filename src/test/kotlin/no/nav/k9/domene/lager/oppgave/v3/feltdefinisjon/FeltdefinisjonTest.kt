@@ -25,7 +25,7 @@ class FeltdefinisjonTest {
                     eksternId = "saksnummer",
                     område = område,
                     listetype = false,
-                    parsesSom = "String",
+                    tolkesSom = "String",
                     visTilBruker = true
                 )
             )
@@ -44,14 +44,14 @@ class FeltdefinisjonTest {
                     eksternId = "saksnummer",
                     område = område,
                     listetype = true,
-                    parsesSom = "String",
+                    tolkesSom = "String",
                     visTilBruker = true
                 ),
                 Feltdefinisjon(
                     eksternId = "opprettet",
                     område = område,
                     listetype = true,
-                    parsesSom = "Date",
+                    tolkesSom = "Date",
                     visTilBruker = true
                 )
             )
@@ -69,14 +69,14 @@ class FeltdefinisjonTest {
                     eksternId = "saksnummer",
                     område = område,
                     listetype = false,
-                    parsesSom = "String",
+                    tolkesSom = "String",
                     visTilBruker = true
                 ),
                 Feltdefinisjon(
                     eksternId = "opprettet",
                     område = område,
                     listetype = false,
-                    parsesSom = "Date",
+                    tolkesSom = "Date",
                     visTilBruker = true
                 )
             )

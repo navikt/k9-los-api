@@ -3,7 +3,6 @@ package no.nav.k9.domene.lager.oppgave.v3.feltdefinisjon
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.domene.lager.oppgave.v3.omraade.Område
-import no.nav.k9.domene.lager.oppgave.v3.omraade.OmrådeRepository
 import org.slf4j.LoggerFactory
 
 class FeltdefinisjonRepository {
@@ -25,7 +24,7 @@ class FeltdefinisjonRepository {
                     eksternId = row.string("ekstern_id"),
                     område = område,
                     listetype = row.boolean("liste_type"),
-                    parsesSom = row.string("parses_som"),
+                    tolkesSom = row.string("tolkes_som"),
                     visTilBruker = true
                 )
             }.asList
@@ -52,13 +51,13 @@ class FeltdefinisjonRepository {
             tx.run(
                 queryOf(
                     """
-                    insert into feltdefinisjon(ekstern_id, omrade_id, liste_type, parses_som) 
-                    values(:eksternId, :omradeId, :listeType, :parsesSom)""",
+                    insert into feltdefinisjon(ekstern_id, omrade_id, liste_type, tolkes_som) 
+                    values(:eksternId, :omradeId, :listeType, :tolkesSom)""",
                     mapOf(
                         "eksternId" to datatype.eksternId,
                         "omradeId" to område.id,
                         "listeType" to datatype.listetype,
-                        "parsesSom" to datatype.parsesSom
+                        "tolkesSom" to datatype.tolkesSom
                     )
                 ).asUpdate
             )

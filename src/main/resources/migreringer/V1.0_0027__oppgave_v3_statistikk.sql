@@ -13,7 +13,7 @@ CREATE TABLE if not exists FELTDEFINISJON
     ekstern_id                  VARCHAR(100)                            NOT NULL,
     omrade_id                   BIGINT                                  NOT NULL, --eier
     liste_type                  boolean                                 NOT NULL,
-    parses_som                  VARCHAR(100)                            NOT NULL,
+    tolkes_som                  VARCHAR(100)                            NOT NULL,
     --vis_til_bruker              boolean                                 NOT NULL DEFAULT TRUE --ikke aktuelt for statistikk
     CONSTRAINT FK_FELTDEFINISJON_01
         FOREIGN KEY(omrade_id) references OMRADE(id),
@@ -23,7 +23,7 @@ CREATE TABLE if not exists FELTDEFINISJON
 comment on table FELTDEFINISJON is 'Spesifiserer lovlige datatyper for et gitt område';
 comment on column FELTDEFINISJON.ekstern_id is 'Human readable navn på datatype som også er eksponert eksternt. Feks "k9.saksnummer". Skal prefikses med område-id for å unngå navnekollisjoner/unique constraint.';
 comment on column FELTDEFINISJON.liste_type is 'Flagg som bestemmer om datatypen skal deserialiseres til en list eller om det er en enkeltverdi.';
-comment on column FELTDEFINISJON.parses_som is 'Hvilken datatype som brukes, feks String, int, Date.';
+comment on column FELTDEFINISJON.tolkes_som is 'Hvilken datatype som brukes, feks String, int, Date.';
 --comment on column DATATYPE.vis_til_bruker is 'Flagg som bestemmer om datatypen skal kunne brukes til filtrering og/eller koprioritering, eller om det er et rent infofelt.'
 
 CREATE TABLE if not exists OPPGAVETYPE
@@ -71,14 +71,14 @@ CREATE TABLE if not exists OPPGAVE_V3
     endret_tidspunkt            timestamp(3)                            NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT FK_OPPGAVE_01
         FOREIGN KEY(oppgavetype_id) REFERENCES OPPGAVETYPE(id),
-    UNIQUE(kildeomrade, ekstern_id)
+    UNIQUE(kildeomrade, ekstern_id, versjon)
 );
 
 comment on table OPPGAVE_V3 is 'Konkrete oppgaver av en definert oppgavetype';
 comment on column OPPGAVE_V3.ekstern_id is 'Ekstern nøkkel for idempotens ved opprettelse/oppdatering og oppslag på oppgave. Eies av adapterne. Må være unik for en gitt oppgave, og ikke kollidere med feks andre oppgaver på samme område.';
 comment on column OPPGAVE_V3.status is 'Status på oppgaven. Enum styrt av los. Feks ÅPEN, UTFØRT';
 comment on column OPPGAVE_V3.versjon is 'Generasjonsteller for oppdateringer av en konkret oppgave. Bevarer historikk';
-comment on column OPPGAVE_V3.aktiv is 'Flagg som angir om en versjon av oppgaven er den gyldige';
+comment on column OPPGAVE_V3.aktiv is 'Flagg som angir om en versjon av oppgaven er den gyldige. Brukes for ytelse på uthenting av oppgaver for oppgavestyring';
 
 
 CREATE TABLE if not exists OPPGAVEFELT_VERDI

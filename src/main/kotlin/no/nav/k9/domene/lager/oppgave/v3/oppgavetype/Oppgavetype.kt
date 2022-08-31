@@ -32,6 +32,7 @@ class Oppgavetype(
         oppgaveDto.feltverdier.forEach { dtofelt ->
             oppgavefelter.find { it.feltDefinisjon.eksternId.equals(dtofelt.nøkkel) }
                 ?: throw IllegalArgumentException("Kan ikke oppgi feltverdi som ikke er spesifisert i oppgavetypen")
+            //TODO: valider at feltverdi kan tolkes som angitt feltdefinisjon sin tolkesSom
         }
 
         oppgavefelter

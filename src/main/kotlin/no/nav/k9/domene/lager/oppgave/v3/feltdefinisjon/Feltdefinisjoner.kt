@@ -14,7 +14,7 @@ class Feltdefinisjoner(
                 eksternId = feltdefinisjonDto.id,
                 område = område,
                 listetype = feltdefinisjonDto.listetype,
-                parsesSom = feltdefinisjonDto.parsesSom,
+                tolkesSom = feltdefinisjonDto.parsesSom,
                 visTilBruker = feltdefinisjonDto.visTilBruker
             )
         }.toSet()

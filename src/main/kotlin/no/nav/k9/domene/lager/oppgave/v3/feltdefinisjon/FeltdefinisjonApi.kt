@@ -16,6 +16,8 @@ internal fun Route.FeltdefinisjonApi() {
     val requestContextService by inject<RequestContextService>()
     val transactionalManager by inject<TransactionalManager>()
 
+    //TODO: definere lovlige datatyper -> tolkes_som. enum i koden
+
     post {
         requestContextService.withRequestContext(call) {
             val innkommendeFeltdefinisjonerDto = call.receive<FeltdefinisjonerDto>()

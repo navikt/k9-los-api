@@ -40,7 +40,7 @@ class OppgavetypeTest {
                                 eksternId = "saksnummer",
                                 område = område,
                                 listetype = false,
-                                parsesSom = "String",
+                                tolkesSom = "String",
                                 visTilBruker = true
                             ),
                             visPåOppgave = true,
@@ -51,7 +51,7 @@ class OppgavetypeTest {
                                 eksternId = "saksnummer",
                                 område = område,
                                 listetype = false,
-                                parsesSom = "String",
+                                tolkesSom = "String",
                                 visTilBruker = true
                             ),
                             visPåOppgave = true,
@@ -83,7 +83,7 @@ class OppgavetypeTest {
                                 eksternId = "saksnummer",
                                 område = område,
                                 listetype = false,
-                                parsesSom = "String",
+                                tolkesSom = "String",
                                 visTilBruker = true
                             ),
                             visPåOppgave = true,
@@ -94,7 +94,7 @@ class OppgavetypeTest {
                                 eksternId = "saksnummer",
                                 område = område,
                                 listetype = false,
-                                parsesSom = "String",
+                                tolkesSom = "String",
                                 visTilBruker = true
                             ),
                             visPåOppgave = true,
@@ -112,7 +112,7 @@ class OppgavetypeTest {
                                 eksternId = "saksnummer",
                                 område = område,
                                 listetype = false,
-                                parsesSom = "String",
+                                tolkesSom = "String",
                                 visTilBruker = true
                             ),
                             visPåOppgave = true,
@@ -143,7 +143,7 @@ class OppgavetypeTest {
                                 eksternId = "saksnummer",
                                 område = område,
                                 listetype = false,
-                                parsesSom = "String",
+                                tolkesSom = "String",
                                 visTilBruker = true
                             ),
                             visPåOppgave = true,
@@ -154,7 +154,7 @@ class OppgavetypeTest {
                                 eksternId = "saksnummer",
                                 område = område,
                                 listetype = false,
-                                parsesSom = "String",
+                                tolkesSom = "String",
                                 visTilBruker = true
                             ),
                             visPåOppgave = true,
@@ -172,7 +172,7 @@ class OppgavetypeTest {
                                 eksternId = "saksnummer",
                                 område = område,
                                 listetype = false,
-                                parsesSom = "String",
+                                tolkesSom = "String",
                                 visTilBruker = true
                             ),
                             visPåOppgave = true,

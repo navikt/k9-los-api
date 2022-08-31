@@ -13,84 +13,58 @@ class OppgaveV3Repository {
 
     private val log = LoggerFactory.getLogger(OppgaveV3Repository::class.java)
 
-    fun hentOppgaveType(område: Område, type: String, tx: TransactionalSession): Oppgavetype? {
-        return tx.run(
-            queryOf(
-                """select * 
-                    from oppgavetype 
-                    where ekstern_id = :type
-                    and omrade_id = :omradeId)""".trimIndent(),
-                mapOf(
-                    "type" to type,
-                    "omradeId" to område.id
-                )
-            ).map { oppgavetypeRow ->
-                Oppgavetype(
-                    id = oppgavetypeRow.long("id"),
-                    eksternId = oppgavetypeRow.string("ekstern_id"),
-                    område = område,
-                    definisjonskilde = oppgavetypeRow.string("definisjonskilde"),
-                    oppgavefelter = hentOppgavefelter(tx, område, oppgavetypeRow)
-                )
-            }.asSingle
-        )
-    }
-
-    private fun hentOppgavefelter(
-        tx: TransactionalSession,
-        område: Område,
-        oppgavetypeRow: Row
-    ) = tx.run(
-        queryOf(
-            """
-                select * 
-                from oppgavefelt o
-                inner join feltdefinisjon d on o.feltdefinisjon_id = d.id
-                where oppgavetype_id = :oppgavetypeId""",
-            mapOf("oppgavetypeId" to oppgavetypeRow.long("id"))
-        ).map { row ->
-            Oppgavefelt(
-                id = row.long("id"),
-                feltDefinisjon = Feltdefinisjon(
-                    eksternId = row.string("eksternt_navn"),
-                    område = område,
-                    listetype = row.boolean("liste_type"),
-                    parsesSom = row.string("parses_som"),
-                    visTilBruker = true
-                ),
-                påkrevd = row.boolean("pakrevd"),
-                visPåOppgave = true
-            )
-        }.asList
-    ).toSet()
-
+    //TODO: status enum
+    
     fun lagre(oppgave: OppgaveV3, tx: TransactionalSession) {
         // hente ut nyeste versjon(ekstern_id, område) i basen, sette aktuell versjon til inaktiv
-        val eksisterendeVersjon = hentVersjon(tx, oppgave)
+        val (eksisterendeId, eksisterendeVersjon) = hentVersjon(tx, oppgave) ?: Pair(null, null) //TODO: Herregud så stygt!
 
-        eksisterendeVersjon?.let { deaktiverVersjon(oppgave, it, tx) }
+        eksisterendeId?.let { deaktiverVersjon(eksisterendeId, tx) }
 
         val nyVersjon = eksisterendeVersjon?.plus(1) ?: 0
 
         val oppgaveId = lagre(oppgave, nyVersjon, tx)
+        lagreFelter(oppgaveId, oppgave.felter, tx)
         // TODO: lagre oppgavefeltverdier
     }
 
-    private fun hentVersjon(tx: TransactionalSession, oppgave: OppgaveV3): Long? {
+    private fun lagreFelter(oppgaveId: Long, oppgaveFeltverdier: Set<OppgaveFeltverdi>, tx: TransactionalSession) {
+        oppgaveFeltverdier.forEach { feltverdi ->
+            tx.run(
+                queryOf(
+                    """
+                    insert into oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi)
+                    VALUES(:oppgaveId, :oppgavefeltId, :verdi)""".trimIndent(),
+                    mapOf(
+                        "oppgaveId" to oppgaveId,
+                        "oppgavefeltId" to feltverdi.oppgavefelt.id,
+                        "verdi" to  feltverdi.verdi
+                    )
+                ).asUpdate
+            )
+        }
+    }
+
+    private fun hentVersjon(tx: TransactionalSession, oppgave: OppgaveV3): Pair<Long, Long>? {
+        //TODO: konsistenssjekk - skrive om til å hente alle oppgavene for gitt eksternId og sjekke at en og bare en versjon er aktiv = true
         return tx.run(
             queryOf(
                 """
-                    select max(versjon) as versjon
-                    from oppgave_v3 o
-                    where o.ekstern_id = :eksternId
-                    and o.kildeomrade = :omrade
-                    and o.aktiv is true 
+                select versjon, id
+                from oppgave_v3 o
+                where o.ekstern_id = :eksternId
+                and o.kildeomrade = :omrade
+                and versjon = 
+                    (select max(versjon)
+                     from oppgave_v3 oi
+                     where oi.ekstern_id = o.ekstern_id
+                     and oi.kildeomrade = o.kildeomrade)
                 """.trimIndent(),
                 mapOf(
                     "eksternId" to oppgave.eksternId,
                     "omrade" to oppgave.kildeområde
                 )
-            ).map { row -> row.longOrNull("versjon") }.asSingle
+            ).map { row -> Pair(row.long("id"), row.long("versjon")) }.asSingle
         )
     }
 
@@ -112,7 +86,13 @@ class OppgaveV3Repository {
         )!!
     }
 
-    private fun deaktiverVersjon(oppgave: OppgaveV3, eksisterendeVersjon: Long, tx: TransactionalSession) {
-        TODO()
+    private fun deaktiverVersjon(eksisterendeId: Long, tx: TransactionalSession) {
+        tx.run(
+            queryOf("""
+                update oppgave_v3 set status = 'LUKKET' where id = :id
+            """.trimIndent(),
+                mapOf("id" to eksisterendeId)
+            ).asUpdate
+        )
     }
 }
