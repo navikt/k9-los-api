@@ -14,13 +14,6 @@ import no.nav.k9.domene.lager.oppgave.v2.BehandlingsmigreringTjeneste
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveTjenesteV2
 import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.domene.lager.oppgave.v3.feltdefinisjon.FeltdefinisjonRepository
-import no.nav.k9.domene.lager.oppgave.v3.feltdefinisjon.FeltdefinisjonTjeneste
-import no.nav.k9.domene.lager.oppgave.v3.omraade.OmrådeRepository
-import no.nav.k9.domene.lager.oppgave.v3.oppgave.OppgaveV3Repository
-import no.nav.k9.domene.lager.oppgave.v3.oppgave.OppgaveV3Tjeneste
-import no.nav.k9.domene.lager.oppgave.v3.oppgavetype.OppgavetypeRepository
-import no.nav.k9.domene.lager.oppgave.v3.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.domene.repository.BehandlingProsessEventTilbakeRepository
 import no.nav.k9.domene.repository.DriftsmeldingRepository
@@ -52,6 +45,13 @@ import no.nav.k9.integrasjon.pdl.PdlService
 import no.nav.k9.integrasjon.pdl.PdlServiceLocal
 import no.nav.k9.integrasjon.rest.RequestContextService
 import no.nav.k9.integrasjon.sakogbehandling.SakOgBehandlingProducer
+import no.nav.k9.nyoppgavestyring.feltdefinisjon.FeltdefinisjonRepository
+import no.nav.k9.nyoppgavestyring.feltdefinisjon.FeltdefinisjonTjeneste
+import no.nav.k9.nyoppgavestyring.omraade.OmrådeRepository
+import no.nav.k9.nyoppgavestyring.oppgave.OppgaveV3Repository
+import no.nav.k9.nyoppgavestyring.oppgave.OppgaveV3Tjeneste
+import no.nav.k9.nyoppgavestyring.oppgavetype.OppgavetypeRepository
+import no.nav.k9.nyoppgavestyring.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.tjenester.driftsmeldinger.DriftsmeldingTjeneste
@@ -306,6 +306,11 @@ fun common(app: Application, config: Configuration) = module {
         )
     }
 
+    single { FeltdefinisjonRepository() }
+    single { OmrådeRepository(get()) }
+    single { OppgavetypeRepository(get()) }
+    single { OppgaveV3Repository() }
+
     single {
         FeltdefinisjonTjeneste(
             feltdefinisjonRepository = get(),
@@ -329,6 +334,7 @@ fun common(app: Application, config: Configuration) = module {
             transactionalManager = get()
         )
     }
+
 }
 
 fun localDevConfig() = module {

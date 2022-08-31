@@ -27,9 +27,6 @@ import no.nav.helse.dusseldorf.ktor.jackson.JacksonStatusPages
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.helse.dusseldorf.ktor.metrics.MetricsRoute
 import no.nav.helse.dusseldorf.ktor.metrics.init
-import no.nav.k9.domene.lager.oppgave.v3.feltdefinisjon.FeltdefinisjonApi
-import no.nav.k9.domene.lager.oppgave.v3.oppgave.OppgaveV3Api
-import no.nav.k9.domene.lager.oppgave.v3.oppgavetype.OppgavetypeApi
 import no.nav.k9.eventhandler.køOppdatertProsessor
 import no.nav.k9.eventhandler.oppdaterStatistikk
 import no.nav.k9.eventhandler.refreshK9
@@ -37,6 +34,9 @@ import no.nav.k9.eventhandler.sjekkReserverteJobb
 import no.nav.k9.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.integrasjon.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.integrasjon.sakogbehandling.SakOgBehandlingProducer
+import no.nav.k9.nyoppgavestyring.feltdefinisjon.FeltdefinisjonApi
+import no.nav.k9.nyoppgavestyring.oppgave.OppgaveV3Api
+import no.nav.k9.nyoppgavestyring.oppgavetype.OppgavetypeApi
 import no.nav.k9.tjenester.admin.AdminApis
 import no.nav.k9.tjenester.avdelingsleder.AvdelingslederApis
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.DataeksportApis

@@ -1,0 +1,9 @@
+package no.nav.k9.nyoppgavestyring.oppgave
+
+import no.nav.k9.nyoppgavestyring.oppgavetype.Oppgavefelt
+
+class OppgaveFeltverdi(
+    val id: Long? = null,
+    val oppgavefelt: Oppgavefelt,
+    val verdi: String
+)
