@@ -1,8 +1,11 @@
 package no.nav.k9.domene.lager.oppgave.v3.feltdefinisjon
 
+import no.nav.k9.domene.lager.oppgave.v3.omraade.Område
+
 class Feltdefinisjon(
     val id: Long? = null,
     val eksternId: String,
+    val område: Område,
     val listetype: Boolean,
     val parsesSom: String,
     val visTilBruker: Boolean

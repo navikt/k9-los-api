@@ -4,16 +4,18 @@ import assertk.assertThat
 import assertk.assertions.hasSize
 import assertk.assertions.isEmpty
 import no.nav.k9.domene.lager.oppgave.v3.feltdefinisjon.Feltdefinisjon
+import no.nav.k9.domene.lager.oppgave.v3.omraade.Område
 import org.junit.jupiter.api.Test
 
 class OppgavetypeTest {
+    val område = Område(eksternId = "K9")
 
     @Test
     fun `test at vi legger til oppgavetyper om de ikke finnes fra før`() {
         val innkommendeOppgavetyper = lagOppgavetyper()
 
         val (sletteListe, leggTilListe, oppdaterListe) = Oppgavetyper(
-            område = "K9",
+            område = område,
             emptySet()
         ).finnForskjell(innkommendeOppgavetyper)
 
@@ -25,19 +27,32 @@ class OppgavetypeTest {
     @Test
     fun `test at vi sletter en oppgavetype dersom den ikke finnes i dto men er persistert`() {
         val innkomendeOppgavetyper = Oppgavetyper(
-            område = "K9",
+            område = område,
             oppgavetyper = setOf(
                 Oppgavetype(
                     eksternId = "aksjonspunkt",
                     definisjonskilde = "k9-sak-til-los",
                     oppgavefelter = setOf(
                         Oppgavefelt(
-                            feltDefinisjon = Feltdefinisjon(null, "aksjonspunkt", false, "String", true),
+                            feltDefinisjon =
+                            Feltdefinisjon(
+                                eksternId = "saksnummer",
+                                område = område,
+                                listetype = false,
+                                parsesSom = "String",
+                                visTilBruker = true
+                            ),
                             visPåOppgave = true,
                             påkrevd = true
                         ),
                         Oppgavefelt(
-                            feltDefinisjon = Feltdefinisjon(null, "opprettet", false, "Date", true),
+                            feltDefinisjon = Feltdefinisjon(
+                                eksternId = "saksnummer",
+                                område = område,
+                                listetype = false,
+                                parsesSom = "String",
+                                visTilBruker = true
+                            ),
                             visPåOppgave = true,
                             påkrevd = true
                         )
@@ -55,19 +70,31 @@ class OppgavetypeTest {
     @Test
     fun `test at vi legger feltdefinisjoner i opppdaterListe om de har endringer`() {
         val innkommendeFeltdefinisjoner = Oppgavetyper(
-            område = "K9",
+            område = område,
             oppgavetyper = setOf(
                 Oppgavetype(
                     eksternId = "aksjonspunkt",
                     definisjonskilde = "k9-sak-til-los",
                     oppgavefelter = setOf(
                         Oppgavefelt(
-                            feltDefinisjon = Feltdefinisjon(null, "aksjonspunkt", true, "String", true),
+                            feltDefinisjon = Feltdefinisjon(
+                                eksternId = "saksnummer",
+                                område = område,
+                                listetype = false,
+                                parsesSom = "String",
+                                visTilBruker = true
+                            ),
                             visPåOppgave = true,
                             påkrevd = true
                         ),
                         Oppgavefelt(
-                            feltDefinisjon = Feltdefinisjon(null, "opprettet", false, "Date", true),
+                            feltDefinisjon = Feltdefinisjon(
+                                eksternId = "saksnummer",
+                                område = område,
+                                listetype = false,
+                                parsesSom = "String",
+                                visTilBruker = true
+                            ),
                             visPåOppgave = true,
                             påkrevd = true
                         )
@@ -78,7 +105,13 @@ class OppgavetypeTest {
                     definisjonskilde = "k9-sak-til-los",
                     oppgavefelter = setOf(
                         Oppgavefelt(
-                            feltDefinisjon = Feltdefinisjon(null, "opprettet", true, "Date", true),
+                            feltDefinisjon = Feltdefinisjon(
+                                eksternId = "saksnummer",
+                                område = område,
+                                listetype = false,
+                                parsesSom = "String",
+                                visTilBruker = true
+                            ),
                             visPåOppgave = true,
                             påkrevd = true
                         )
@@ -95,19 +128,31 @@ class OppgavetypeTest {
 
     private fun lagOppgavetyper(): Oppgavetyper {
         return Oppgavetyper(
-            område = "K9",
+            område = område,
             oppgavetyper = setOf(
                 Oppgavetype(
                     eksternId = "aksjonspunkt",
                     definisjonskilde = "k9-sak-til-los",
                     oppgavefelter = setOf(
                         Oppgavefelt(
-                            feltDefinisjon = Feltdefinisjon(null, "aksjonspunkt", false, "String", true),
+                            feltDefinisjon = Feltdefinisjon(
+                                eksternId = "saksnummer",
+                                område = område,
+                                listetype = false,
+                                parsesSom = "String",
+                                visTilBruker = true
+                            ),
                             visPåOppgave = true,
                             påkrevd = true
                         ),
                         Oppgavefelt(
-                            feltDefinisjon = Feltdefinisjon(null, "opprettet", false, "Date", true),
+                            feltDefinisjon = Feltdefinisjon(
+                                eksternId = "saksnummer",
+                                område = område,
+                                listetype = false,
+                                parsesSom = "String",
+                                visTilBruker = true
+                            ),
                             visPåOppgave = true,
                             påkrevd = true
                         )
@@ -118,7 +163,13 @@ class OppgavetypeTest {
                     definisjonskilde = "k9-sak-til-los",
                     oppgavefelter = setOf(
                         Oppgavefelt(
-                            feltDefinisjon = Feltdefinisjon(null, "opprettet", false, "Date", true),
+                            feltDefinisjon = Feltdefinisjon(
+                                eksternId = "saksnummer",
+                                område = område,
+                                listetype = false,
+                                parsesSom = "String",
+                                visTilBruker = true
+                            ),
                             visPåOppgave = true,
                             påkrevd = true
                         )

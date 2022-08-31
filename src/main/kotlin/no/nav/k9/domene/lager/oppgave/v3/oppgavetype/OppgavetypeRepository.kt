@@ -3,6 +3,7 @@ package no.nav.k9.domene.lager.oppgave.v3.oppgavetype
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.domene.lager.oppgave.v3.feltdefinisjon.Feltdefinisjon
+import no.nav.k9.domene.lager.oppgave.v3.omraade.Område
 import no.nav.k9.domene.lager.oppgave.v3.omraade.OmrådeRepository
 import org.slf4j.LoggerFactory
 
@@ -10,15 +11,14 @@ class OppgavetypeRepository(private val områdeRepository: OmrådeRepository) {
 
     private val log = LoggerFactory.getLogger(OppgavetypeRepository::class.java)
 
-    fun hent(område: String, tx: TransactionalSession): Oppgavetyper {
-        val områdeId = områdeRepository.hentOmrådeId(område, tx)
+    fun hent(område: Område, tx: TransactionalSession): Oppgavetyper {
         val oppgavetypeListe = tx.run(
             queryOf(
                 """
                 select * from oppgavetype where omrade_id = :omradeId
             """.trimIndent(),
                 mapOf(
-                    "omradeId" to områdeId
+                    "omradeId" to område.id
                 )
             ).map { oppgavetypeRow ->
                 Oppgavetype(
@@ -37,6 +37,7 @@ class OppgavetypeRepository(private val områdeRepository: OmrådeRepository) {
                                 id = row.long("o.id"),
                                 feltDefinisjon = Feltdefinisjon(
                                     eksternId = row.string("eksternt_navn"),
+                                    område = område,
                                     listetype = row.boolean("liste_type"),
                                     parsesSom = row.string("parses_som"),
                                     visTilBruker = true

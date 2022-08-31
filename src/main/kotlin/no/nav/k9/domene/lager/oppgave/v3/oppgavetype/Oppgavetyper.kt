@@ -1,14 +1,15 @@
 package no.nav.k9.domene.lager.oppgave.v3.oppgavetype
 
 import no.nav.k9.domene.lager.oppgave.v3.feltdefinisjon.Feltdefinisjoner
+import no.nav.k9.domene.lager.oppgave.v3.omraade.Område
 
 class Oppgavetyper(
-    val område: String,
+    val område: Område,
     val oppgavetyper: Set<Oppgavetype>
 ) {
 
     constructor(dto: OppgavetyperDto, feltdefinisjoner: Feltdefinisjoner): this(
-        område = dto.område,
+        område = feltdefinisjoner.område,
         oppgavetyper = dto.oppgavetyper.map {
             Oppgavetype(
                 it,

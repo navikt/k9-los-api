@@ -1,6 +1,5 @@
 package no.nav.k9.domene.lager.oppgave.v3.omraade
 
-import io.ktor.features.*
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -12,10 +11,15 @@ class OmrådeRepository(private val dataSource: DataSource) {
 
     private val log = LoggerFactory.getLogger(OmrådeRepository::class.java)
 
-    fun hentOmrådeId(område: String, tx: TransactionalSession): Long {
+    fun hentOmråde(eksternId: String, tx: TransactionalSession): Område {
         return tx.run(
-            queryOf("select id from omrade where omrade.ekstern_id = :omrade", mapOf("omrade" to område))
-                .map { row -> row.long("id") }.asSingle
+            queryOf("select * from omrade where omrade.ekstern_id = :eksternId", mapOf("eksternId" to eksternId))
+                .map { row ->
+                    Område(
+                        id = row.long("id"),
+                        eksternId = row.string("ekstern_id")
+                    )
+                }.asSingle
         ).takeIf { id -> id != null } ?: throw IllegalArgumentException("Området finnes ikke")
     }
 

@@ -1,15 +1,18 @@
 package no.nav.k9.domene.lager.oppgave.v3.feltdefinisjon
 
+import no.nav.k9.domene.lager.oppgave.v3.omraade.Område
+
 class Feltdefinisjoner(
-    val område: String,
+    val område: Område,
     val feltdefinisjoner: Set<Feltdefinisjon>
 ) {
 
-    constructor(feltdefinisjonerDto: FeltdefinisjonerDto): this(
-        område = feltdefinisjonerDto.område,
+    constructor(feltdefinisjonerDto: FeltdefinisjonerDto, område: Område): this(
+        område = område,
         feltdefinisjoner = feltdefinisjonerDto.feltdefinisjoner.map { feltdefinisjonDto ->
             Feltdefinisjon(
                 eksternId = feltdefinisjonDto.id,
+                område = område,
                 listetype = feltdefinisjonDto.listetype,
                 parsesSom = feltdefinisjonDto.parsesSom,
                 visTilBruker = feltdefinisjonDto.visTilBruker
