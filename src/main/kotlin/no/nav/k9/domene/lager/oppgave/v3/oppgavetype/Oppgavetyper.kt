@@ -29,7 +29,7 @@ class Oppgavetyper(
 
         innkommendeOppgavetyper.oppgavetyper.forEach { innkommende ->
             val eksisterende = oppgavetyper.find { it.id.equals(innkommende.id) }
-            if (!eksisterende?.definisjonskilde.equals(innkommende.definisjonskilde)) {
+            if (eksisterende?.definisjonskilde != null && !eksisterende.definisjonskilde.equals(innkommende.definisjonskilde)) {
                 //?. - hvis eksisterende ikke finnes gir det ikke mening å sammenligne, siden det er en ny oppgavetype
                 throw IllegalStateException("Kan ikke sammenligne oppgavetyper på tvers av definisjonskilder")
             }

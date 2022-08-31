@@ -33,6 +33,7 @@ class OppgavetypeRepository(private val områdeRepository: OmrådeRepository) {
                             mapOf("oppgavetypeId" to oppgavetypeRow.long("id"))
                         ).map { row ->
                             Oppgavefelt(
+                                id = row.long("o.id"),
                                 feltDefinisjon = Feltdefinisjon(
                                     navn = row.string("eksternt_navn"),
                                     listetype = row.boolean("liste_type"),

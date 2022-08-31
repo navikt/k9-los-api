@@ -5,7 +5,6 @@ import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.domene.lager.oppgave.v3.oppgavetype.OppgavetypeRepository
 import no.nav.k9.integrasjon.rest.RequestContextService
 import org.koin.ktor.ext.inject
 import java.lang.IllegalArgumentException
@@ -23,7 +22,7 @@ internal fun Route.OppgaveV3Api() {
                     ?: throw IllegalArgumentException("Kan ikke legge til oppgave på en oppgavetype som ikke er definert")
 
                 oppgavetype.valider(oppgaveDto)
-                val innkommendeOppgave = OppgaveV3(oppgaveDto, oppgavetype.oppgavefelter)
+                val innkommendeOppgave = OppgaveV3(oppgaveDto, oppgavetype)
 
                 oppgaveV3Repository.lagre(innkommendeOppgave, tx)
             }

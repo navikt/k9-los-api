@@ -31,13 +31,12 @@ class Oppgavetype(
         }
 
         oppgavefelter
-            .filter{ it.påkrevd }
-            .forEach{obligatoriskFelt ->
+            .filter { it.påkrevd }
+            .forEach { obligatoriskFelt ->
                 oppgaveDto
                     .feltverdier
-                    .find {
-                        it.nøkkel.equals(obligatoriskFelt.feltDefinisjon.navn)
-                    }?: throw IllegalArgumentException("Oppgaven mangler obligatorisk felt " + obligatoriskFelt.feltDefinisjon.navn)
+                    .find { it.nøkkel.equals(obligatoriskFelt.feltDefinisjon.navn) }
+                    ?: throw IllegalArgumentException("Oppgaven mangler obligatorisk felt " + obligatoriskFelt.feltDefinisjon.navn)
             }
     }
 }

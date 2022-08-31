@@ -16,6 +16,7 @@ import no.nav.k9.domene.lager.oppgave.v2.OppgaveTjenesteV2
 import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.domene.lager.oppgave.v3.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.domene.lager.oppgave.v3.omraade.OmrådeRepository
+import no.nav.k9.domene.lager.oppgave.v3.oppgave.OppgaveV3Repository
 import no.nav.k9.domene.lager.oppgave.v3.oppgavetype.OppgavetypeRepository
 import no.nav.k9.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.domene.repository.BehandlingProsessEventTilbakeRepository
@@ -305,6 +306,7 @@ fun common(app: Application, config: Configuration) = module {
     single { OmrådeRepository(get()) }
     single { FeltdefinisjonRepository(get()) }
     single { OppgavetypeRepository(get()) }
+    single { OppgaveV3Repository() }
 
 }
 
