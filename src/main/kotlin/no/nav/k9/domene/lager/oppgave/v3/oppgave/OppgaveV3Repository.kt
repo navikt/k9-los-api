@@ -4,6 +4,7 @@ import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.domene.lager.oppgave.v3.feltdefinisjon.Feltdefinisjon
+import no.nav.k9.domene.lager.oppgave.v3.omraade.Område
 import no.nav.k9.domene.lager.oppgave.v3.oppgavetype.Oppgavefelt
 import no.nav.k9.domene.lager.oppgave.v3.oppgavetype.Oppgavetype
 import org.slf4j.LoggerFactory
@@ -12,24 +13,24 @@ class OppgaveV3Repository {
 
     private val log = LoggerFactory.getLogger(OppgaveV3Repository::class.java)
 
-    fun hentOppgaveType(område: String, type: String, tx: TransactionalSession): Oppgavetype? {
+    fun hentOppgaveType(område: Område, type: String, tx: TransactionalSession): Oppgavetype? {
         return tx.run(
             queryOf(
                 """select * 
                     from oppgavetype 
-                    where ekstern_id = :type and omrade_id = (select id 
-                    from omrade 
-                    where ekstern_id = :omrade)""".trimIndent(),
+                    where ekstern_id = :type
+                    and omrade_id = :omradeId)""".trimIndent(),
                 mapOf(
                     "type" to type,
-                    "omrade" to område
+                    "omradeId" to område.id
                 )
             ).map { oppgavetypeRow ->
                 Oppgavetype(
                     id = oppgavetypeRow.long("id"),
                     eksternId = oppgavetypeRow.string("ekstern_id"),
+                    område = område,
                     definisjonskilde = oppgavetypeRow.string("definisjonskilde"),
-                    oppgavefelter = hentOppgavefelter(tx, oppgavetypeRow)
+                    oppgavefelter = hentOppgavefelter(tx, område, oppgavetypeRow)
                 )
             }.asSingle
         )
@@ -37,6 +38,7 @@ class OppgaveV3Repository {
 
     private fun hentOppgavefelter(
         tx: TransactionalSession,
+        område: Område,
         oppgavetypeRow: Row
     ) = tx.run(
         queryOf(
@@ -51,6 +53,7 @@ class OppgaveV3Repository {
                 id = row.long("id"),
                 feltDefinisjon = Feltdefinisjon(
                     eksternId = row.string("eksternt_navn"),
+                    område = område,
                     listetype = row.boolean("liste_type"),
                     parsesSom = row.string("parses_som"),
                     visTilBruker = true

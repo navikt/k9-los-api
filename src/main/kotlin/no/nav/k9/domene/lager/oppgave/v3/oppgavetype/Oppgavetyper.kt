@@ -8,13 +8,14 @@ class Oppgavetyper(
     val oppgavetyper: Set<Oppgavetype>
 ) {
 
-    constructor(dto: OppgavetyperDto, feltdefinisjoner: Feltdefinisjoner): this(
-        område = feltdefinisjoner.område,
-        oppgavetyper = dto.oppgavetyper.map {
+    constructor(dto: OppgavetyperDto, område: Område, feltdefinisjoner: Feltdefinisjoner): this(
+        område = område,
+        oppgavetyper = dto.oppgavetyper.map { oppgavetypeDto ->
             Oppgavetype(
-                it,
-                dto.definisjonskilde,
-                feltdefinisjoner)
+                dto = oppgavetypeDto,
+                definisjonskilde = dto.definisjonskilde,
+                område = område,
+                feltdefinisjoner = feltdefinisjoner)
         }.toSet()
     )
 

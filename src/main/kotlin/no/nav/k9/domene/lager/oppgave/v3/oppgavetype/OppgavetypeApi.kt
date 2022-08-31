@@ -24,7 +24,7 @@ internal fun Route.OppgavetypeApi() {
                 val område = områdeRepository.hentOmråde(innkommendeOppgavetyperDto.område, tx)
                 // lås feltdefinisjoner for område og hent opp
                 val eksisterendeFeltdefinisjoner = feltdefinisjonRepository.hent(område, tx)
-                val innkommendeOppgavetyper = Oppgavetyper(innkommendeOppgavetyperDto, eksisterendeFeltdefinisjoner)
+                val innkommendeOppgavetyper = Oppgavetyper(innkommendeOppgavetyperDto, område, eksisterendeFeltdefinisjoner)
 
                 val eksisterendeOppgavetyper = oppgavetypeRepository.hent(område, tx)
                 val (sletteListe, leggtilListe, oppdaterListe) = eksisterendeOppgavetyper.finnForskjell(innkommendeOppgavetyper)

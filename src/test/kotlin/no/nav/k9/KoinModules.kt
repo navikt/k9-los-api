@@ -240,5 +240,5 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single { OmrådeRepository(get()) }
-    single { FeltdefinisjonRepository(get()) }
+    single { FeltdefinisjonRepository() }
 }

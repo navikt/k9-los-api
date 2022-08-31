@@ -1,17 +1,20 @@
 package no.nav.k9.domene.lager.oppgave.v3.oppgavetype
 
 import no.nav.k9.domene.lager.oppgave.v3.feltdefinisjon.Feltdefinisjoner
+import no.nav.k9.domene.lager.oppgave.v3.omraade.Område
 import no.nav.k9.domene.lager.oppgave.v3.oppgave.OppgaveDto
 
 class Oppgavetype(
     val id: Long? = null,
     val eksternId: String,
+    val område: Område,
     val definisjonskilde: String,
     val oppgavefelter: Set<Oppgavefelt>
 ) {
 
-    constructor(dto: OppgavetypeDto, definisjonskilde: String, feltdefinisjoner: Feltdefinisjoner) : this(
+    constructor(dto: OppgavetypeDto, definisjonskilde: String, område: Område, feltdefinisjoner: Feltdefinisjoner) : this(
         eksternId = dto.navn,
+        område = område,
         definisjonskilde = definisjonskilde,
         oppgavefelter = dto.oppgavefelter.map { innkommendeFeltdefinisjon ->
             Oppgavefelt(

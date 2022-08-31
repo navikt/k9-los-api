@@ -3,15 +3,17 @@ package no.nav.k9.domene.lager.oppgave.v3.oppgavetype
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.domene.lager.oppgave.v3.feltdefinisjon.Feltdefinisjon
+import no.nav.k9.domene.lager.oppgave.v3.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.domene.lager.oppgave.v3.omraade.Område
 import no.nav.k9.domene.lager.oppgave.v3.omraade.OmrådeRepository
 import org.slf4j.LoggerFactory
 
-class OppgavetypeRepository(private val områdeRepository: OmrådeRepository) {
+class OppgavetypeRepository(private val feltdefinisjonRepository: FeltdefinisjonRepository) {
 
     private val log = LoggerFactory.getLogger(OppgavetypeRepository::class.java)
 
     fun hent(område: Område, tx: TransactionalSession): Oppgavetyper {
+        val feltdefinisjoner = feltdefinisjonRepository.hent(område, tx)
         val oppgavetypeListe = tx.run(
             queryOf(
                 """
@@ -24,24 +26,20 @@ class OppgavetypeRepository(private val områdeRepository: OmrådeRepository) {
                 Oppgavetype(
                     id = oppgavetypeRow.long("id"),
                     eksternId = oppgavetypeRow.string("ekstern_id"),
+                    område = område,
                     oppgavefelter = tx.run(
                         queryOf(
                             """
                             select *
                             from oppgavefelt o
-                            	inner join feltdefinisjon d on o.feltdefinisjon_id = d.id
                             where oppgavetype_id = :oppgavetypeId""",
                             mapOf("oppgavetypeId" to oppgavetypeRow.long("id"))
                         ).map { row ->
                             Oppgavefelt(
-                                id = row.long("o.id"),
-                                feltDefinisjon = Feltdefinisjon(
-                                    eksternId = row.string("eksternt_navn"),
-                                    område = område,
-                                    listetype = row.boolean("liste_type"),
-                                    parsesSom = row.string("parses_som"),
-                                    visTilBruker = true
-                                ),
+                                id = row.long("id"),
+                                feltDefinisjon = feltdefinisjoner.feltdefinisjoner.find { feltdefinisjon -> feltdefinisjon.id!!.equals(row.long("feltdefinisjon_id")) }
+                                    ?: throw IllegalStateException("Oppgavetypens oppgavefelt referer til udefinert feltdefinisjon eller feltdefinisjon utenfor området")
+                                ,
                                 påkrevd = row.boolean("pakrevd"),
                                 visPåOppgave = true
                             )
@@ -62,17 +60,11 @@ class OppgavetypeRepository(private val områdeRepository: OmrådeRepository) {
                     queryOf(
                         """
                          delete from oppgavefelt
-                         where oppgavetype_id = (select id from oppgavetype where ekstern_id = :oppgavetype) 
-                            and feltdefinisjon_id = (
-                                select id
-                                from feltdefinisjon
-                                where eksternt_navn = :feltnavn
-                                    and omrade_id = (select id from omrade where ekstern_id = :omrade)
-                            )""",
+                         where oppgavetype_id = :oppgavetypeId 
+                            and feltdefinisjon_id = :feltdefinisjonId""",
                         mapOf(
-                            "oppgavetype" to oppgavetype.eksternId,
-                            "feltnavn" to oppgavefelt.feltDefinisjon.eksternId,
-                            "omrade" to oppgavetyper.område
+                            "oppgavetypeId" to oppgavetype.id,
+                            "feltdefinisjonId" to oppgavefelt.feltDefinisjon.id
                         )
                     ).asUpdate
                 )
@@ -81,11 +73,11 @@ class OppgavetypeRepository(private val områdeRepository: OmrådeRepository) {
                 queryOf(
                     """
                     delete from oppgavetype
-                    where ekstern_id = :ekstern_id
-                        and omrade_id = (select id from omrade where ekstern_id = :omrade)""",
+                    where id = :oppgavetypeId
+                        and omrade_id = :omradeId""",
                     mapOf(
-                        "ekstern_id" to oppgavetype.eksternId,
-                        "omrade" to oppgavetyper.område
+                        "oppgavetypeId" to oppgavetype.id,
+                        "omradeId" to oppgavetyper.område.id
                     )
                 ).asUpdate
             )
@@ -100,11 +92,11 @@ class OppgavetypeRepository(private val områdeRepository: OmrådeRepository) {
                     insert into oppgavetype(ekstern_id, omrade_id, definisjonskilde)
                     values(
                         :eksterntNavn,
-                        (select id from omrade where ekstern_id = :omradeId),
+                        :omradeId,
                         :definisjonskilde)""",
                     mapOf(
                         "eksterntNavn" to oppgavetype.eksternId,
-                        "omradeId" to oppgavetyper.område,
+                        "omradeId" to oppgavetype.område.id,
                         "definisjonskilde" to oppgavetype.definisjonskilde
                     )
                 ).asUpdateAndReturnGeneratedKey
@@ -115,11 +107,11 @@ class OppgavetypeRepository(private val områdeRepository: OmrådeRepository) {
                         """
                             insert into oppgavefelt(feltdefinisjon_id, oppgavetype_id, pakrevd)
                             values(
-                                (select id from feltdefinisjon where eksternt_navn = :feltnavn),
+                                :feltdefinisjonId,
                                 :oppgavetypeId,
                                 :paakrevd)""",
                         mapOf(
-                            "feltnavn" to oppgavefelt.feltDefinisjon.eksternId,
+                            "feltdefinisjonId" to oppgavefelt.feltDefinisjon.id,
                             "oppgavetypeId" to oppgavetypeId,
                             "paakrevd" to oppgavefelt.påkrevd
                         ) //TODO: joine inn område_id? usikker på hva jeg synes om at feltdefinisjon.eksternt_navn alltid er prefikset med område

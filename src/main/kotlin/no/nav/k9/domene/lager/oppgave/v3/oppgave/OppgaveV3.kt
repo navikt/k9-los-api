@@ -20,7 +20,6 @@ class OppgaveV3(
                 oppgavefelt = oppgavetype.oppgavefelter.find {
                     it.feltDefinisjon.eksternId.equals(oppgaveFeltverdiDto.nøkkel)
                 }.takeIf { it != null } ?: throw IllegalStateException("Kunne ikke finne matchede oppgavefelt for oppgaveFeltverdi"),
-                overstyrMedOmråde = oppgaveDto.kildeområde, // TODO dette skal også på sikt kunne overstyres med område fra oppgaveFeltverdiDto
                 verdi = oppgaveFeltverdiDto.verdi
             )
         }.toSet()

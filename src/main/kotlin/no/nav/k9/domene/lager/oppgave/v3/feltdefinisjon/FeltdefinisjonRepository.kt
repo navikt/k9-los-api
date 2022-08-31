@@ -6,7 +6,7 @@ import no.nav.k9.domene.lager.oppgave.v3.omraade.Område
 import no.nav.k9.domene.lager.oppgave.v3.omraade.OmrådeRepository
 import org.slf4j.LoggerFactory
 
-class FeltdefinisjonRepository(private val områdeRepository: OmrådeRepository) {
+class FeltdefinisjonRepository {
 
     private val log = LoggerFactory.getLogger(FeltdefinisjonRepository::class.java)
 
@@ -22,7 +22,7 @@ class FeltdefinisjonRepository(private val områdeRepository: OmrådeRepository)
             ).map { row ->
                 Feltdefinisjon(
                     id = row.long("id"),
-                    eksternId = row.string("eksternt_navn"),
+                    eksternId = row.string("ekstern_id"),
                     område = område,
                     listetype = row.boolean("liste_type"),
                     parsesSom = row.string("parses_som"),
@@ -52,7 +52,7 @@ class FeltdefinisjonRepository(private val områdeRepository: OmrådeRepository)
             tx.run(
                 queryOf(
                     """
-                    insert into feltdefinisjon(eksternt_id, omrade_id, liste_type, parses_som) 
+                    insert into feltdefinisjon(ekstern_id, omrade_id, liste_type, parses_som) 
                     values(:eksternId, :omradeId, :listeType, :parsesSom)""",
                     mapOf(
                         "eksternId" to datatype.eksternId,

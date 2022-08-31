@@ -31,6 +31,7 @@ class OppgavetypeTest {
             oppgavetyper = setOf(
                 Oppgavetype(
                     eksternId = "aksjonspunkt",
+                    område = område,
                     definisjonskilde = "k9-sak-til-los",
                     oppgavefelter = setOf(
                         Oppgavefelt(
@@ -74,6 +75,7 @@ class OppgavetypeTest {
             oppgavetyper = setOf(
                 Oppgavetype(
                     eksternId = "aksjonspunkt",
+                    område = område,
                     definisjonskilde = "k9-sak-til-los",
                     oppgavefelter = setOf(
                         Oppgavefelt(
@@ -102,6 +104,7 @@ class OppgavetypeTest {
                 ),
                 Oppgavetype(
                     eksternId = "test",
+                    område = område,
                     definisjonskilde = "k9-sak-til-los",
                     oppgavefelter = setOf(
                         Oppgavefelt(
@@ -132,6 +135,7 @@ class OppgavetypeTest {
             oppgavetyper = setOf(
                 Oppgavetype(
                     eksternId = "aksjonspunkt",
+                    område = område,
                     definisjonskilde = "k9-sak-til-los",
                     oppgavefelter = setOf(
                         Oppgavefelt(
@@ -160,6 +164,7 @@ class OppgavetypeTest {
                 ),
                 Oppgavetype(
                     eksternId = "test",
+                    område = område,
                     definisjonskilde = "k9-sak-til-los",
                     oppgavefelter = setOf(
                         Oppgavefelt(
