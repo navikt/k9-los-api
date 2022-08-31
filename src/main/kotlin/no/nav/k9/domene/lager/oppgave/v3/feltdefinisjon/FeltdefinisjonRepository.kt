@@ -20,7 +20,8 @@ class FeltdefinisjonRepository(private val områdeRepository: OmrådeRepository)
                 mapOf("omrade" to område)
             ).map { row ->
                 Feltdefinisjon(
-                    navn = row.string("eksternt_navn"),
+                    id = row.long("id"),
+                    eksternId = row.string("eksternt_navn"),
                     listetype = row.boolean("liste_type"),
                     parsesSom = row.string("parses_som"),
                     visTilBruker = true
@@ -37,7 +38,7 @@ class FeltdefinisjonRepository(private val områdeRepository: OmrådeRepository)
                     """
                         delete from feltdefinisjon where eksternt_navn = :eksterntNavn and omrade = :omrade""",
                     mapOf(
-                        "eksterntNavn" to datatype.navn,
+                        "eksterntNavn" to datatype.eksternId,
                         "omrade" to område
                     )
                 ).asUpdate
@@ -54,7 +55,7 @@ class FeltdefinisjonRepository(private val områdeRepository: OmrådeRepository)
                     insert into feltdefinisjon(eksternt_navn, omrade_id, liste_type, parses_som) 
                     values(:eksterntNavn, :omradeId, :listeType, :parsesSom)""",
                     mapOf(
-                        "eksterntNavn" to datatype.navn,
+                        "eksterntNavn" to datatype.eksternId,
                         "omradeId" to områdeId,
                         "listeType" to datatype.listetype,
                         "parsesSom" to datatype.parsesSom

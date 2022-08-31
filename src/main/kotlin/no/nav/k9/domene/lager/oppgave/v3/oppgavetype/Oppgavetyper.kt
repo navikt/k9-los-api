@@ -28,7 +28,7 @@ class Oppgavetyper(
         val finnFeltforskjellListe = mutableSetOf<Oppgavetype>()
 
         innkommendeOppgavetyper.oppgavetyper.forEach { innkommende ->
-            val eksisterende = oppgavetyper.find { it.id.equals(innkommende.id) }
+            val eksisterende = oppgavetyper.find { it.eksternId.equals(innkommende.eksternId) }
             if (eksisterende?.definisjonskilde != null && !eksisterende.definisjonskilde.equals(innkommende.definisjonskilde)) {
                 //?. - hvis eksisterende ikke finnes gir det ikke mening å sammenligne, siden det er en ny oppgavetype
                 throw IllegalStateException("Kan ikke sammenligne oppgavetyper på tvers av definisjonskilder")
@@ -41,7 +41,7 @@ class Oppgavetyper(
         }
 
         oppgavetyper.forEach { eksistereende ->
-            val innkommende = innkommendeOppgavetyper.oppgavetyper.find { it.id.equals(eksistereende.id) }
+            val innkommende = innkommendeOppgavetyper.oppgavetyper.find { it.eksternId.equals(eksistereende.eksternId) }
             if (innkommende == null) {
                 slettListe.add(eksistereende)
             }

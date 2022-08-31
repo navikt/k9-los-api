@@ -21,7 +21,7 @@ class FeltdefinisjonTest {
             område = "K9",
             feltdefinisjoner = setOf(
                 Feltdefinisjon(
-                    navn = "saksnummer",
+                    eksternId = "saksnummer",
                     listetype = false,
                     parsesSom = "String",
                     visTilBruker = true
@@ -39,13 +39,13 @@ class FeltdefinisjonTest {
             område = "K9",
             feltdefinisjoner = setOf(
                 Feltdefinisjon(
-                    navn = "saksnummer",
+                    eksternId = "saksnummer",
                     listetype = true,
                     parsesSom = "String",
                     visTilBruker = true
                 ),
                 Feltdefinisjon(
-                    navn = "opprettet",
+                    eksternId = "opprettet",
                     listetype = true,
                     parsesSom = "Date",
                     visTilBruker = true
@@ -62,13 +62,13 @@ class FeltdefinisjonTest {
             område = "K9",
             feltdefinisjoner = setOf(
                 Feltdefinisjon(
-                    navn = "saksnummer",
+                    eksternId = "saksnummer",
                     listetype = false,
                     parsesSom = "String",
                     visTilBruker = true
                 ),
                 Feltdefinisjon(
-                    navn = "opprettet",
+                    eksternId = "opprettet",
                     listetype = false,
                     parsesSom = "Date",
                     visTilBruker = true

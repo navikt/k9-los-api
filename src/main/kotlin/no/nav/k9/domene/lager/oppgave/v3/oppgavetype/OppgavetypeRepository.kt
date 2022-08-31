@@ -22,7 +22,8 @@ class OppgavetypeRepository(private val områdeRepository: OmrådeRepository) {
                 )
             ).map { oppgavetypeRow ->
                 Oppgavetype(
-                    id = oppgavetypeRow.string("ekstern_id"),
+                    id = oppgavetypeRow.long("id"),
+                    eksternId = oppgavetypeRow.string("ekstern_id"),
                     oppgavefelter = tx.run(
                         queryOf(
                             """
@@ -35,7 +36,7 @@ class OppgavetypeRepository(private val områdeRepository: OmrådeRepository) {
                             Oppgavefelt(
                                 id = row.long("o.id"),
                                 feltDefinisjon = Feltdefinisjon(
-                                    navn = row.string("eksternt_navn"),
+                                    eksternId = row.string("eksternt_navn"),
                                     listetype = row.boolean("liste_type"),
                                     parsesSom = row.string("parses_som"),
                                     visTilBruker = true
@@ -68,8 +69,8 @@ class OppgavetypeRepository(private val områdeRepository: OmrådeRepository) {
                                     and omrade_id = (select id from omrade where ekstern_id = :omrade)
                             )""",
                         mapOf(
-                            "oppgavetype" to oppgavetype.id,
-                            "feltnavn" to oppgavefelt.feltDefinisjon.navn,
+                            "oppgavetype" to oppgavetype.eksternId,
+                            "feltnavn" to oppgavefelt.feltDefinisjon.eksternId,
                             "omrade" to oppgavetyper.område
                         )
                     ).asUpdate
@@ -82,7 +83,7 @@ class OppgavetypeRepository(private val områdeRepository: OmrådeRepository) {
                     where ekstern_id = :ekstern_id
                         and omrade_id = (select id from omrade where ekstern_id = :omrade)""",
                     mapOf(
-                        "ekstern_id" to oppgavetype.id,
+                        "ekstern_id" to oppgavetype.eksternId,
                         "omrade" to oppgavetyper.område
                     )
                 ).asUpdate
@@ -101,7 +102,7 @@ class OppgavetypeRepository(private val områdeRepository: OmrådeRepository) {
                         (select id from omrade where ekstern_id = :omradeId),
                         :definisjonskilde)""",
                     mapOf(
-                        "eksterntNavn" to oppgavetype.id,
+                        "eksterntNavn" to oppgavetype.eksternId,
                         "omradeId" to oppgavetyper.område,
                         "definisjonskilde" to oppgavetype.definisjonskilde
                     )
@@ -117,7 +118,7 @@ class OppgavetypeRepository(private val områdeRepository: OmrådeRepository) {
                                 :oppgavetypeId,
                                 :paakrevd)""",
                         mapOf(
-                            "feltnavn" to oppgavefelt.feltDefinisjon.navn,
+                            "feltnavn" to oppgavefelt.feltDefinisjon.eksternId,
                             "oppgavetypeId" to oppgavetypeId,
                             "paakrevd" to oppgavefelt.påkrevd
                         ) //TODO: joine inn område_id? usikker på hva jeg synes om at feltdefinisjon.eksternt_navn alltid er prefikset med område

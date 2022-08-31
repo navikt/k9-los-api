@@ -18,7 +18,7 @@ internal fun Route.OppgaveV3Api() {
         requestContextService.withRequestContext(call) {
             val oppgaveDto = call.receive<OppgaveDto>()
             transactionalManager.transaction { tx ->
-                val oppgavetype = oppgaveV3Repository.hentOppgaveType(oppgaveDto.område, oppgaveDto.type, tx)
+                val oppgavetype = oppgaveV3Repository.hentOppgaveType(oppgaveDto.kildeområde, oppgaveDto.type, tx)
                     ?: throw IllegalArgumentException("Kan ikke legge til oppgave på en oppgavetype som ikke er definert")
 
                 oppgavetype.valider(oppgaveDto)

@@ -28,16 +28,16 @@ class OppgavetypeTest {
             område = "K9",
             oppgavetyper = setOf(
                 Oppgavetype(
-                    id = "aksjonspunkt",
+                    eksternId = "aksjonspunkt",
                     definisjonskilde = "k9-sak-til-los",
                     oppgavefelter = setOf(
                         Oppgavefelt(
-                            feltDefinisjon = Feltdefinisjon("aksjonspunkt", false, "String", true),
+                            feltDefinisjon = Feltdefinisjon(null, "aksjonspunkt", false, "String", true),
                             visPåOppgave = true,
                             påkrevd = true
                         ),
                         Oppgavefelt(
-                            feltDefinisjon = Feltdefinisjon("opprettet", false, "Date", true),
+                            feltDefinisjon = Feltdefinisjon(null, "opprettet", false, "Date", true),
                             visPåOppgave = true,
                             påkrevd = true
                         )
@@ -58,27 +58,27 @@ class OppgavetypeTest {
             område = "K9",
             oppgavetyper = setOf(
                 Oppgavetype(
-                    id = "aksjonspunkt",
+                    eksternId = "aksjonspunkt",
                     definisjonskilde = "k9-sak-til-los",
                     oppgavefelter = setOf(
                         Oppgavefelt(
-                            feltDefinisjon = Feltdefinisjon("aksjonspunkt", true, "String", true),
+                            feltDefinisjon = Feltdefinisjon(null, "aksjonspunkt", true, "String", true),
                             visPåOppgave = true,
                             påkrevd = true
                         ),
                         Oppgavefelt(
-                            feltDefinisjon = Feltdefinisjon("opprettet", false, "Date", true),
+                            feltDefinisjon = Feltdefinisjon(null, "opprettet", false, "Date", true),
                             visPåOppgave = true,
                             påkrevd = true
                         )
                     )
                 ),
                 Oppgavetype(
-                    id = "test",
+                    eksternId = "test",
                     definisjonskilde = "k9-sak-til-los",
                     oppgavefelter = setOf(
                         Oppgavefelt(
-                            feltDefinisjon = Feltdefinisjon("opprettet", true, "Date", true),
+                            feltDefinisjon = Feltdefinisjon(null, "opprettet", true, "Date", true),
                             visPåOppgave = true,
                             påkrevd = true
                         )
@@ -98,27 +98,27 @@ class OppgavetypeTest {
             område = "K9",
             oppgavetyper = setOf(
                 Oppgavetype(
-                    id = "aksjonspunkt",
+                    eksternId = "aksjonspunkt",
                     definisjonskilde = "k9-sak-til-los",
                     oppgavefelter = setOf(
                         Oppgavefelt(
-                            feltDefinisjon = Feltdefinisjon("aksjonspunkt", false, "String", true),
+                            feltDefinisjon = Feltdefinisjon(null, "aksjonspunkt", false, "String", true),
                             visPåOppgave = true,
                             påkrevd = true
                         ),
                         Oppgavefelt(
-                            feltDefinisjon = Feltdefinisjon("opprettet", false, "Date", true),
+                            feltDefinisjon = Feltdefinisjon(null, "opprettet", false, "Date", true),
                             visPåOppgave = true,
                             påkrevd = true
                         )
                     )
                 ),
                 Oppgavetype(
-                    id = "test",
+                    eksternId = "test",
                     definisjonskilde = "k9-sak-til-los",
                     oppgavefelter = setOf(
                         Oppgavefelt(
-                            feltDefinisjon = Feltdefinisjon("opprettet", false, "Date", true),
+                            feltDefinisjon = Feltdefinisjon(null, "opprettet", false, "Date", true),
                             visPåOppgave = true,
                             påkrevd = true
                         )

@@ -26,7 +26,8 @@ class OppgaveV3Repository {
                 )
             ).map { oppgavetypeRow ->
                 Oppgavetype(
-                    id = oppgavetypeRow.string("ekstern_id"),
+                    id = oppgavetypeRow.long("id"),
+                    eksternId = oppgavetypeRow.string("ekstern_id"),
                     definisjonskilde = oppgavetypeRow.string("definisjonskilde"),
                     oppgavefelter = hentOppgavefelter(tx, oppgavetypeRow)
                 )
@@ -49,7 +50,7 @@ class OppgaveV3Repository {
             Oppgavefelt(
                 id = row.long("id"),
                 feltDefinisjon = Feltdefinisjon(
-                    navn = row.string("eksternt_navn"),
+                    eksternId = row.string("eksternt_navn"),
                     listetype = row.boolean("liste_type"),
                     parsesSom = row.string("parses_som"),
                     visTilBruker = true
@@ -83,8 +84,8 @@ class OppgaveV3Repository {
                     and o.aktiv is true 
                 """.trimIndent(),
                 mapOf(
-                    "eksternId" to oppgave.id,
-                    "omrade" to oppgave.område
+                    "eksternId" to oppgave.eksternId,
+                    "omrade" to oppgave.kildeområde
                 )
             ).map { row -> row.longOrNull("versjon") }.asSingle
         )
@@ -97,11 +98,12 @@ class OppgaveV3Repository {
                     values(:eksternId, :oppgavetypeId, :status, :versjon, :aktiv, :kildeomrade, CURRENT_TIMESTAMP)
                 """.trimIndent(),
                 mapOf(
-                    "eksternId" to oppgave.id,
-                    "oppgavetypeId" to oppgave.type, // TODO heller ha id'n til oppgavetype på oppgaveobjektet
+                    "eksternId" to oppgave.eksternId,
+                    "oppgavetypeId" to oppgave.oppgavetype.id,
                     "status" to oppgave.status,
+                    "versjon" to nyVersjon,
                     "aktiv" to true,
-                    "kildeomrade" to oppgave.område, // TODO heller ha id til område her
+                    "kildeomrade" to oppgave.kildeområde
                 )
             )
         )!!
