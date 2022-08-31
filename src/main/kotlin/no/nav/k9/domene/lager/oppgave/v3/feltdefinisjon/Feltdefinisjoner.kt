@@ -4,6 +4,19 @@ class Feltdefinisjoner(
     val område: String,
     val feltdefinisjoner: Set<Feltdefinisjon>
 ) {
+
+    constructor(feltdefinisjonerDto: FeltdefinisjonerDto): this(
+        område = feltdefinisjonerDto.område,
+        feltdefinisjoner = feltdefinisjonerDto.feltdefinisjoner.map { feltdefinisjonDto ->
+            Feltdefinisjon(
+                eksternId = feltdefinisjonDto.id,
+                listetype = feltdefinisjonDto.listetype,
+                parsesSom = feltdefinisjonDto.parsesSom,
+                visTilBruker = feltdefinisjonDto.visTilBruker
+            )
+        }.toSet()
+    )
+
     fun finnForskjeller(innkommendeFeltdefinisjoner: Feltdefinisjoner): Pair<Set<Feltdefinisjon>, Set<Feltdefinisjon>> {
         if (!innkommendeFeltdefinisjoner.område.equals(this.område)) {
             throw IllegalStateException("Kan ikke sammenligne datatyper på tvers av områder. Dette skal være separate sett")

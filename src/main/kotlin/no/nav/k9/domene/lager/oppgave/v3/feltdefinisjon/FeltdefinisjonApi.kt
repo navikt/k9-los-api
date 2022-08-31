@@ -16,10 +16,12 @@ internal fun Route.FeltdefinisjonApi() {
 
     post {
         requestContextService.withRequestContext(call) {
-            val innkommendeFeltdefinisjoner = call.receive<Feltdefinisjoner>()
+            val innkommendeFeltdefinisjonerDto = call.receive<FeltdefinisjonerDto>()
 
             transactionalManager.transaction { tx ->
-                val eksisterendeFeltdefinisjoner = feltdefinisjonRepository.hent(innkommendeFeltdefinisjoner.område, tx)
+                val eksisterendeFeltdefinisjoner = feltdefinisjonRepository.hent(innkommendeFeltdefinisjonerDto.område, tx)
+                val innkommendeFeltdefinisjoner = Feltdefinisjoner(innkommendeFeltdefinisjonerDto)
+
                 val (sletteListe, leggTilListe) = eksisterendeFeltdefinisjoner.finnForskjeller(innkommendeFeltdefinisjoner)
                 feltdefinisjonRepository.fjern(innkommendeFeltdefinisjoner.område, sletteListe, tx)
                 feltdefinisjonRepository.leggTil(leggTilListe, innkommendeFeltdefinisjoner.område, tx)

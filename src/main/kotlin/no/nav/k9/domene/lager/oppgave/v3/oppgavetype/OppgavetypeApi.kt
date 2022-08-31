@@ -3,13 +3,11 @@ package no.nav.k9.domene.lager.oppgave.v3.oppgavetype
 import io.ktor.application.*
 import io.ktor.request.*
 import io.ktor.response.*
-import io.ktor.routing.Route
-import io.ktor.routing.post
+import io.ktor.routing.*
 import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.domene.lager.oppgave.v3.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.integrasjon.rest.RequestContextService
 import org.koin.ktor.ext.inject
-import javax.ws.rs.NotSupportedException
 
 internal fun Route.OppgavetypeApi() {
     val oppgavetypeRepository by inject<OppgavetypeRepository>()
