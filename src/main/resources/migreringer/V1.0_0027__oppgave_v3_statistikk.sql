@@ -63,6 +63,7 @@ CREATE TABLE if not exists OPPGAVE_V3
 (
     id                          BIGINT GENERATED ALWAYS AS IDENTITY     NOT NULL PRIMARY KEY,
     ekstern_id                  VARCHAR(100)                            NOT NULL,
+    ekstern_versjon             VARCHAR(100)                            NOT NULL,
     oppgavetype_id              BIGINT                                  NOT NULL,
     status                      VARCHAR(50)                             NOT NULL,
     versjon                     int                                     NOT NULL,
@@ -75,7 +76,8 @@ CREATE TABLE if not exists OPPGAVE_V3
 );
 
 comment on table OPPGAVE_V3 is 'Konkrete oppgaver av en definert oppgavetype';
-comment on column OPPGAVE_V3.ekstern_id is 'Ekstern nøkkel for idempotens ved opprettelse/oppdatering og oppslag på oppgave. Eies av adapterne. Må være unik for en gitt oppgave, og ikke kollidere med feks andre oppgaver på samme område.';
+comment on column OPPGAVE_V3.ekstern_id is 'Ekstern nøkkel for å unikt identifisere en oppgave. Eies av adapterne. Må være unik for en gitt oppgave, og ikke kollidere med feks andre oppgaver på samme område.';
+comment on column OPPGAVE_V3.ekstern_id is 'Ekstern versjonsindikator for versjonering/idempotens av oppgaver. Eies av adapterne';
 comment on column OPPGAVE_V3.status is 'Status på oppgaven. Enum styrt av los. Feks ÅPEN, UTFØRT';
 comment on column OPPGAVE_V3.versjon is 'Generasjonsteller for oppdateringer av en konkret oppgave. Bevarer historikk';
 comment on column OPPGAVE_V3.aktiv is 'Flagg som angir om en versjon av oppgaven er den gyldige. Brukes for ytelse på uthenting av oppgaver for oppgavestyring';

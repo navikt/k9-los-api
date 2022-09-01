@@ -14,13 +14,13 @@ class Oppgavetype(
 ) {
 
     constructor(dto: OppgavetypeDto, definisjonskilde: String, område: Område, feltdefinisjoner: Feltdefinisjoner) : this(
-        eksternId = dto.navn,
+        eksternId = dto.id,
         område = område,
         definisjonskilde = definisjonskilde,
         oppgavefelter = dto.oppgavefelter.map { innkommendeFeltdefinisjon ->
             Oppgavefelt(
                 feltDefinisjon = feltdefinisjoner.feltdefinisjoner.find { eksisterendeFeltdefinisjon ->
-                    eksisterendeFeltdefinisjon.eksternId == innkommendeFeltdefinisjon.navn
+                    eksisterendeFeltdefinisjon.eksternId == innkommendeFeltdefinisjon.id
                 } ?: throw IllegalStateException("Omsøkt feltdefinisjon finnes ikke"),
                 visPåOppgave = innkommendeFeltdefinisjon.visPåOppgave,
                 påkrevd = innkommendeFeltdefinisjon.påkrevd

@@ -44,14 +44,8 @@ fun Application.rekjørEventerForGrafer(
             val alleEventerIder = behandlingProsessEventK9Repository.hentAlleEventerIder()
             statistikkRepository.truncateStatistikk()
             for ((index, eventId) in alleEventerIder.withIndex()) {
-                if (index % 100 == 0 && index > 1) {
-                    log.info("""Ferdig med $index av ${alleEventerIder.size}""")
-                }
-                val alleVersjoner = behandlingProsessEventK9Repository.hent(UUID.fromString(eventId)).alleVersjoner()
+                val alleVersjoner = behandlingProsessEventK9Repository.hent(eventId).alleVersjoner()
                 for ((index2, modell) in alleVersjoner.withIndex()) {
-                    if (index2 % 100 == 0 && index2 > 1) {
-                        log.info("""Ferdig med $index2 av ${alleEventerIder.size}""")
-                    }
                     try {
                         val oppgave = modell.oppgave()
 
@@ -72,7 +66,14 @@ fun Application.rekjørEventerForGrafer(
                         }
                     } catch (e: Exception) {
                         continue
+                    } finally {
+                        if (index2 % 100 == 0 && index2 > 1) {
+                            log.info("""Ferdig med $index2 av ${alleEventerIder.size}""")
+                        }
                     }
+                }
+                if (index % 100 == 0 && index > 1) {
+                    log.info("""Ferdig med $index av ${alleEventerIder.size}""")
                 }
             }
             log.info("""Ferdig med ${alleEventerIder.size} av ${alleEventerIder.size}""")

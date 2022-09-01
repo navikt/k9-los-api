@@ -5,6 +5,7 @@ import no.nav.k9.nyoppgavestyring.oppgavetype.Oppgavetype
 class OppgaveV3(
     val id: Long? = null,
     val eksternId: String,
+    val eksternVersjon: String,
     val oppgavetype: Oppgavetype,
     val status: String, //TODO: definere typer/enum
     val kildeområde: String,
@@ -12,6 +13,7 @@ class OppgaveV3(
 ) {
     constructor(oppgaveDto: OppgaveDto, oppgavetype: Oppgavetype) : this(
         eksternId = oppgaveDto.id,
+        eksternVersjon = oppgaveDto.versjon,
         oppgavetype = oppgavetype,
         status = oppgaveDto.status,
         kildeområde = oppgaveDto.kildeområde,

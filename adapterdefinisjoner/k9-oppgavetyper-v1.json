@@ -3,15 +3,20 @@
   "definisjonskilde": "k9-sak-til-los",
   "oppgavetyper": [
     {
-      "navn": "aksjonspunkt",
+      "id": "aksjonspunkt",
       "oppgavefelter": [
         {
-          "navn": "saksnummer",
+          "id": "saksnummer",
           "visPåOppgave": true,
           "påkrevd": true
         },
         {
-          "navn": "opprettet",
+          "id": "opprettet",
+          "visPåOppgave": true,
+          "påkrevd": true
+        },
+        {
+          "id": "aksjonspunktKode",
           "visPåOppgave": true,
           "påkrevd": true
         }

@@ -39,7 +39,7 @@ class Oppgavetyper(
             if (eksisterende == null) {
                 leggTilListe.add(innkommende)
             } else {
-                finnFeltforskjellListe.add(innkommende)
+                //finnFeltforskjellListe.add(innkommende)
             }
         }
 

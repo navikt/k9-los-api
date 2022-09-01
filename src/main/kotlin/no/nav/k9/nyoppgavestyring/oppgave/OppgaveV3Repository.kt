@@ -23,6 +23,25 @@ class OppgaveV3Repository {
         // TODO: lagre oppgavefeltverdier
     }
 
+    private fun lagre(oppgave: OppgaveV3, nyVersjon: Long, tx: TransactionalSession): Long  {
+        return tx.updateAndReturnGeneratedKey(
+            queryOf("""
+                    insert into oppgave_v3(ekstern_id, ekstern_versjon, oppgavetype_id, status, versjon, aktiv, kildeomrade, endret_tidspunkt)
+                    values(:eksternId, :eksternVersjon, :oppgavetypeId, :status, :versjon, :aktiv, :kildeomrade, CURRENT_TIMESTAMP)
+                """.trimIndent(),
+                mapOf(
+                    "eksternId" to oppgave.eksternId,
+                    "eksternVersjon" to oppgave.eksternVersjon,
+                    "oppgavetypeId" to oppgave.oppgavetype.id,
+                    "status" to oppgave.status,
+                    "versjon" to nyVersjon,
+                    "aktiv" to true,
+                    "kildeomrade" to oppgave.kildeområde
+                )
+            )
+        )!!
+    }
+
     private fun lagreFelter(oppgaveId: Long, oppgaveFeltverdier: Set<OppgaveFeltverdi>, tx: TransactionalSession) {
         oppgaveFeltverdier.forEach { feltverdi ->
             tx.run(
@@ -63,28 +82,10 @@ class OppgaveV3Repository {
         )
     }
 
-    private fun lagre(oppgave: OppgaveV3, nyVersjon: Long, tx: TransactionalSession): Long  {
-        return tx.updateAndReturnGeneratedKey(
-            queryOf("""
-                    insert into oppgave_v3(ekstern_id, oppgavetype_id, status, versjon, aktiv, kildeomrade, endret_tidspunkt)
-                    values(:eksternId, :oppgavetypeId, :status, :versjon, :aktiv, :kildeomrade, CURRENT_TIMESTAMP)
-                """.trimIndent(),
-                mapOf(
-                    "eksternId" to oppgave.eksternId,
-                    "oppgavetypeId" to oppgave.oppgavetype.id,
-                    "status" to oppgave.status,
-                    "versjon" to nyVersjon,
-                    "aktiv" to true,
-                    "kildeomrade" to oppgave.kildeområde
-                )
-            )
-        )!!
-    }
-
     private fun deaktiverVersjon(eksisterendeId: Long, tx: TransactionalSession) {
         tx.run(
             queryOf("""
-                update oppgave_v3 set status = 'LUKKET' where id = :id
+                update oppgave_v3 set aktiv = false where id = :id
             """.trimIndent(),
                 mapOf("id" to eksisterendeId)
             ).asUpdate

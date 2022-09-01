@@ -45,6 +45,7 @@ import no.nav.k9.integrasjon.pdl.PdlService
 import no.nav.k9.integrasjon.pdl.PdlServiceLocal
 import no.nav.k9.integrasjon.rest.RequestContextService
 import no.nav.k9.integrasjon.sakogbehandling.SakOgBehandlingProducer
+import no.nav.k9.nyoppgavestyring.adapter.K9SakTilLosAdapterTjeneste
 import no.nav.k9.nyoppgavestyring.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.nyoppgavestyring.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.nyoppgavestyring.omraade.OmrådeRepository

@@ -34,6 +34,7 @@ import no.nav.k9.eventhandler.sjekkReserverteJobb
 import no.nav.k9.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.integrasjon.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.integrasjon.sakogbehandling.SakOgBehandlingProducer
+import no.nav.k9.nyoppgavestyring.adapter.K9SakTilLosAdapterTjeneste
 import no.nav.k9.nyoppgavestyring.feltdefinisjon.FeltdefinisjonApi
 import no.nav.k9.nyoppgavestyring.oppgave.OppgaveV3Api
 import no.nav.k9.nyoppgavestyring.oppgavetype.OppgavetypeApi
@@ -146,6 +147,8 @@ fun Application.k9Los() {
         refreshOppgaveJobb.cancel()
         oppdaterStatistikkJobb.cancel()
     }
+
+    K9SakTilLosAdapterTjeneste(koin.get(), koin.get(), koin.get(), koin.get(), koin.get()).kjør()
 
     // Server side events
     val sseChannel = produce {

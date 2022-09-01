@@ -74,7 +74,7 @@ class BehandlingProsessEventK9Repository(private val dataSource: DataSource) {
     }
 
     fun hentAlleEventerIder(
-    ): List<String> {
+    ): List<UUID> {
 
         val ider = using(sessionOf(dataSource)) {
             it.transaction { tx ->
@@ -84,7 +84,7 @@ class BehandlingProsessEventK9Repository(private val dataSource: DataSource) {
                         mapOf()
                     )
                         .map { row ->
-                            row.string("id")
+                            UUID.fromString(row.string("id"))
                    }.asList
                 )
             }

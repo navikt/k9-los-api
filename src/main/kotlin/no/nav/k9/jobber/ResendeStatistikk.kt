@@ -24,7 +24,7 @@ class ResendeStatistikk(
                 if (index % 1000 == 0) {
                     log.info("Statistikk, ferdig med ${df.format((index.toDouble() / hentAlleEventerIder.size.toDouble()))}")
                 }
-                for (modell in behandlingProsessEventK9Repository.hent(UUID.fromString(uuid)).alleVersjoner()) {
+                for (modell in behandlingProsessEventK9Repository.hent(uuid).alleVersjoner()) {
                     statistikkProducer.send(modell)
                 }
             }

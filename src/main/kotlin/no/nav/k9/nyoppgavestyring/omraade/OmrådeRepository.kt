@@ -24,12 +24,11 @@ class OmrådeRepository(private val dataSource: DataSource) {
     }
 
     fun lagre(område: String) {
-        TODO() //ikke i bruk ennå
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 tx.run(
                     queryOf(
-                        "insert into omrade(ekstern_id) values (:ekstern_id)",
+                        "insert into omrade(ekstern_id) values (:ekstern_id) on conflict do nothing",
                         mapOf("ekstern_id" to område)
                     ).asUpdate
                 )
