@@ -20,7 +20,7 @@ class OmrådeRepository(private val dataSource: DataSource) {
                         eksternId = row.string("ekstern_id")
                     )
                 }.asSingle
-        ).takeIf { id -> id != null } ?: throw IllegalArgumentException("Området finnes ikke")
+        ) ?: throw IllegalArgumentException("Området finnes ikke")
     }
 
     fun lagre(område: String) {

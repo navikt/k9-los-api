@@ -19,7 +19,7 @@ class OppgaveV3(
             OppgaveFeltverdi(
                 oppgavefelt = oppgavetype.oppgavefelter.find {
                     it.feltDefinisjon.eksternId.equals(oppgaveFeltverdiDto.nøkkel)
-                }.takeIf { it != null } ?: throw IllegalStateException("Kunne ikke finne matchede oppgavefelt for oppgaveFeltverdi"),
+                } ?: throw IllegalStateException("Kunne ikke finne matchede oppgavefelt for oppgaveFeltverdi"),
                 verdi = oppgaveFeltverdiDto.verdi
             )
         }.toSet()
