@@ -40,7 +40,7 @@ class K9SakTilLosAdapterTjeneste(
         }
     }
 
-    private fun spillAvBehandlingProsessEventer(kjørSetup: Boolean) {
+    fun spillAvBehandlingProsessEventer(kjørSetup: Boolean) {
         if (kjørSetup) {
             setup()
         }

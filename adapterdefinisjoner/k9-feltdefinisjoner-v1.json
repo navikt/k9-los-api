@@ -15,7 +15,7 @@
     },
     {
       "id": "aksjonspunktKode",
-      "listetype": true,
+      "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true
     }

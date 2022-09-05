@@ -112,7 +112,11 @@ class OppgaveV3Repository {
         )
     }
 
-    fun idempotensMatch(tx: TransactionalSession, eksternId: String, eksternVersjon: String): Boolean {
+    fun idempotensMatch(tx: TransactionalSession, oppgaveDto: OppgaveDto): Boolean {
+        return finnesEksternIdOgEksternVersjon(tx, oppgaveDto.id, oppgaveDto.versjon) ||
+                finnesSammeOppgaveMedIdentiskStatus(tx, oppgaveDto.id, oppgaveDto.status)
+    }
+    private fun finnesEksternIdOgEksternVersjon(tx: TransactionalSession, eksternId: String, eksternVersjon: String): Boolean {
         return tx.run(
             queryOf("""
                     select exists(
@@ -126,6 +130,21 @@ class OppgaveV3Repository {
                     "eksternId" to eksternId,
                     "eksternVersjon" to eksternVersjon
                 )
+            ).map { row -> row.boolean(1) }.asSingle
+        )!!
+    }
+
+    private fun finnesSammeOppgaveMedIdentiskStatus(tx: TransactionalSession, eksternId: String, status: String): Boolean {
+        return tx.run(
+            queryOf("""
+                select exists(
+                    select * 
+                    from oppgave_v3 
+                    where ekstern_id = :eksternId 
+                    and status = :status
+                )
+            """.trimIndent(),
+            mapOf("eksternId" to eksternId, "status" to status)
             ).map { row -> row.boolean(1) }.asSingle
         )!!
     }

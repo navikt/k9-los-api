@@ -28,8 +28,14 @@ import no.nav.k9.integrasjon.omsorgspenger.OmsorgspengerServiceLocal
 import no.nav.k9.integrasjon.pdl.IPdlService
 import no.nav.k9.integrasjon.pdl.PdlServiceLocal
 import no.nav.k9.integrasjon.sakogbehandling.SakOgBehandlingProducer
+import no.nav.k9.nyoppgavestyring.adapter.K9SakTilLosAdapterTjeneste
 import no.nav.k9.nyoppgavestyring.feltdefinisjon.FeltdefinisjonRepository
+import no.nav.k9.nyoppgavestyring.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.nyoppgavestyring.omraade.OmrådeRepository
+import no.nav.k9.nyoppgavestyring.oppgave.OppgaveV3Repository
+import no.nav.k9.nyoppgavestyring.oppgave.OppgaveV3Tjeneste
+import no.nav.k9.nyoppgavestyring.oppgavetype.OppgavetypeRepository
+import no.nav.k9.nyoppgavestyring.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.tjenester.saksbehandler.merknad.MerknadTjeneste
@@ -231,6 +237,43 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         )
     }
 
-    single { OmrådeRepository(get()) }
     single { FeltdefinisjonRepository() }
+    single { OmrådeRepository(get()) }
+    single { OppgavetypeRepository(get()) }
+    single { OppgaveV3Repository() }
+    single { BehandlingProsessEventK9Repository(dataSource = get()) }
+
+    single {
+        FeltdefinisjonTjeneste(
+            feltdefinisjonRepository = get(),
+            områdeRepository = get(),
+            transactionalManager = get()
+        )
+    }
+    single {
+        OppgavetypeTjeneste(
+            oppgavetypeRepository = get(),
+            områdeRepository = get(),
+            feltdefinisjonRepository = get(),
+            transactionalManager = get(),
+        )
+    }
+    single {
+        OppgaveV3Tjeneste(
+            oppgaveV3Repository = get(),
+            oppgavetypeRepository = get(),
+            områdeRepository = get(),
+            transactionalManager = get()
+        )
+    }
+
+    single {
+        K9SakTilLosAdapterTjeneste(
+            behandlingProsessEventK9Repository = get(),
+            områdeRepository = get(),
+            feltdefinisjonTjeneste = get(),
+            oppgavetypeTjeneste = get(),
+            oppgaveV3Tjeneste = get()
+        )
+    }
 }
