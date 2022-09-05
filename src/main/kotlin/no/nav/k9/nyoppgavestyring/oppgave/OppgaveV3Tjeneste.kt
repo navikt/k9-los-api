@@ -19,9 +19,11 @@ class OppgaveV3Tjeneste(
                 ?: throw IllegalArgumentException("Kan ikke legge til oppgave på en oppgavetype som ikke er definert")
 
             oppgavetype.valider(oppgaveDto)
-            val innkommendeOppgave = OppgaveV3(oppgaveDto, oppgavetype)
 
-            oppgaveV3Repository.lagre(innkommendeOppgave, tx)
+            if (!oppgaveV3Repository.idempotensMatch(tx, oppgaveDto.id, oppgaveDto.versjon)) {
+                val innkommendeOppgave = OppgaveV3(oppgaveDto, oppgavetype)
+                oppgaveV3Repository.lagre(innkommendeOppgave, tx)
+            }
         }
     }
 

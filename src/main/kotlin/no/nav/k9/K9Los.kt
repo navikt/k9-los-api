@@ -148,7 +148,7 @@ fun Application.k9Los() {
         oppdaterStatistikkJobb.cancel()
     }
 
-    K9SakTilLosAdapterTjeneste(koin.get(), koin.get(), koin.get(), koin.get(), koin.get()).kjør()
+    K9SakTilLosAdapterTjeneste(koin.get(), koin.get(), koin.get(), koin.get(), koin.get()).kjør(kjørSetup = false)
 
     // Server side events
     val sseChannel = produce {

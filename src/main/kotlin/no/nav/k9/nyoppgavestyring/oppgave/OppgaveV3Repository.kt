@@ -19,8 +19,7 @@ class OppgaveV3Repository {
         val nyVersjon = eksisterendeVersjon?.plus(1) ?: 0
 
         val oppgaveId = lagre(oppgave, nyVersjon, tx)
-        lagreFelter(oppgaveId, oppgave.felter, tx)
-        // TODO: lagre oppgavefeltverdier
+        lagreFeltverdier(oppgaveId, oppgave.felter, tx)
     }
 
     private fun lagre(oppgave: OppgaveV3, nyVersjon: Long, tx: TransactionalSession): Long  {
@@ -42,7 +41,7 @@ class OppgaveV3Repository {
         )!!
     }
 
-    private fun lagreFelter(oppgaveId: Long, oppgaveFeltverdier: Set<OppgaveFeltverdi>, tx: TransactionalSession) {
+    private fun lagreFeltverdier(oppgaveId: Long, oppgaveFeltverdier: Set<OppgaveFeltverdi>, tx: TransactionalSession) {
         oppgaveFeltverdier.forEach { feltverdi ->
             tx.run(
                 queryOf(
@@ -82,6 +81,27 @@ class OppgaveV3Repository {
         )
     }
 
+    private fun hentOppgavefelter(tx: TransactionalSession, oppgave: OppgaveV3): Set<OppgaveFeltverdi> {
+        return tx.run(
+            queryOf(
+                """
+                select *
+                from oppgavefelt_verdi ov 
+                where ov.oppgave_id = :oppgaveId
+                """.trimIndent(),
+                mapOf("oppgaveId" to oppgave.id)
+            ).map { row ->
+                OppgaveFeltverdi(
+                    id = row.long("id"),
+                    oppgavefelt = oppgave.oppgavetype.oppgavefelter.find { oppgavefelt ->
+                        oppgavefelt.id == row.long("oppgavefelt_id")
+                    } ?: throw IllegalStateException("Oppgavetype mangler oppgavens angitte oppgavefelt"),
+                    verdi = row.string("verdi")
+                )
+            }.asList
+        ).toSet()
+    }
+
     private fun deaktiverVersjon(eksisterendeId: Long, tx: TransactionalSession) {
         tx.run(
             queryOf("""
@@ -90,5 +110,23 @@ class OppgaveV3Repository {
                 mapOf("id" to eksisterendeId)
             ).asUpdate
         )
+    }
+
+    fun idempotensMatch(tx: TransactionalSession, eksternId: String, eksternVersjon: String): Boolean {
+        return tx.run(
+            queryOf("""
+                    select exists(
+                        select *
+                        from oppgave_v3 ov 
+                        where ekstern_id = :eksternId
+                        and ekstern_versjon = :eksternVersjon
+                    )
+                """.trimIndent(),
+                mapOf(
+                    "eksternId" to eksternId,
+                    "eksternVersjon" to eksternVersjon
+                )
+            ).map { row -> row.boolean(1) }.asSingle
+        )!!
     }
 }

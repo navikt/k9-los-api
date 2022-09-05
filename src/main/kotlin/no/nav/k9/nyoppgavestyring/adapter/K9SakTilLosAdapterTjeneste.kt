@@ -28,38 +28,40 @@ class K9SakTilLosAdapterTjeneste(
 
     private val log: Logger = LoggerFactory.getLogger(K9SakTilLosAdapterTjeneste::class.java)
 
-    fun kjør() {
+    fun kjør(kjørSetup: Boolean) {
+
         fixedRateTimer(
             name = "k9-sak-til-los",
             daemon = true,
             initialDelay = TimeUnit.SECONDS.toMillis(10),
-            period = TimeUnit.DAYS.toMillis(1)) {
-            spillAvBehandlingProsessEventer()
+            period = TimeUnit.DAYS.toMillis(1)
+        ) {
+            spillAvBehandlingProsessEventer(kjørSetup)
         }
     }
 
-    fun spillAvBehandlingProsessEventer() {
-        setup()
-
-        if (true) {
-            log.info("Starter avspilling av BehandlingProsessEventer")
-            val oppgaver = behandlingProsessEventK9Repository.hentAlleEventerIder()
-                .map { uuid ->
-                    behandlingProsessEventK9Repository.hent(uuid).eventer
-                        .map { event ->
-                            event.aksjonspunktTilstander.forEach { aksjonspunktTilstand ->
-                                val oppgaveDto = lagOppgaveDto(event, aksjonspunktTilstand)
-                                oppgaveV3Tjeneste.oppdater(oppgaveDto)
-                                print("Her kan vi stoppe..")
-                            }
-                        }
-                }
+    private fun spillAvBehandlingProsessEventer(kjørSetup: Boolean) {
+        if (kjørSetup) {
+            setup()
         }
+
+        log.info("Starter avspilling av BehandlingProsessEventer")
+        behandlingProsessEventK9Repository.hentAlleEventerIder()
+            .map { uuid ->
+                behandlingProsessEventK9Repository.hent(uuid).eventer
+                    .map { event ->
+                        event.aksjonspunktTilstander.forEach { aksjonspunktTilstand ->
+                            val oppgaveDto = lagOppgaveDto(event, aksjonspunktTilstand)
+                            oppgaveV3Tjeneste.oppdater(oppgaveDto)
+                        }
+                    }
+            }
+        log.info("Avspilling av BehandlingProsessEventer ferdig")
     }
 
     private fun lagOppgaveDto(event: BehandlingProsessEventDto, aksjonspunktTilstandDto: AksjonspunktTilstandDto) =
         OppgaveDto(
-            id = event.eksternId.toString()+"."+aksjonspunktTilstandDto.aksjonspunktKode,
+            id = event.eksternId.toString() + "." + aksjonspunktTilstandDto.aksjonspunktKode,
             versjon = event.eventTid.toString(),
             område = "K9",
             kildeområde = "K9",
@@ -89,9 +91,19 @@ class K9SakTilLosAdapterTjeneste(
         log.info("oppretter område")
         områdeRepository.lagre("K9")
         log.info("oppretter feltdefinisjoner")
-        feltdefinisjonTjeneste.oppdater(objectMapper.readValue(File("./adapterdefinisjoner/k9-feltdefinisjoner-v1.json"), FeltdefinisjonerDto::class.java))
+        feltdefinisjonTjeneste.oppdater(
+            objectMapper.readValue(
+                File("./adapterdefinisjoner/k9-feltdefinisjoner-v1.json"),
+                FeltdefinisjonerDto::class.java
+            )
+        )
         log.info("oppretter oppgavetype")
-        oppgavetypeTjeneste.oppdater(objectMapper.readValue(File("./adapterdefinisjoner/k9-oppgavetyper-v1.json"), OppgavetyperDto::class.java))
+        oppgavetypeTjeneste.oppdater(
+            objectMapper.readValue(
+                File("./adapterdefinisjoner/k9-oppgavetyper-v1.json"),
+                OppgavetyperDto::class.java
+            )
+        )
     }
 
 }
