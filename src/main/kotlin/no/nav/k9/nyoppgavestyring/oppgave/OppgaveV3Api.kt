@@ -26,8 +26,7 @@ internal fun Route.OppgaveV3Api() {
 
     put("/startOppgaveprosessering") {
         requestContextService.withRequestContext(call) {
-            val parametere = call.receiveParameters()
-            val kjørSetup = parametere["kjørSetup"].toBoolean()
+            val kjørSetup = call.request.queryParameters["kjorSetup"].toBoolean()
             k9SakTilLosAdapterTjeneste.kjør(kjørSetup)
         }
     }

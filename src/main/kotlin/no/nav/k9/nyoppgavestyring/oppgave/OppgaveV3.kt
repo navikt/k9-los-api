@@ -1,6 +1,7 @@
 package no.nav.k9.nyoppgavestyring.oppgave
 
 import no.nav.k9.nyoppgavestyring.oppgavetype.Oppgavetype
+import java.lang.IllegalArgumentException
 
 class OppgaveV3(
     val id: Long? = null,
@@ -9,7 +10,7 @@ class OppgaveV3(
     val oppgavetype: Oppgavetype,
     val status: String, //TODO: definere typer/enum
     val kildeområde: String,
-    val felter: Set<OppgaveFeltverdi>
+    val felter: List<OppgaveFeltverdi>
 ) {
     constructor(oppgaveDto: OppgaveDto, oppgavetype: Oppgavetype) : this(
         eksternId = oppgaveDto.id,
@@ -17,13 +18,42 @@ class OppgaveV3(
         oppgavetype = oppgavetype,
         status = oppgaveDto.status,
         kildeområde = oppgaveDto.kildeområde,
-        felter = oppgaveDto.feltverdier.map { oppgaveFeltverdiDto ->
+        felter = lagFelter(oppgaveDto, oppgavetype)
+            /*
             OppgaveFeltverdi(
-                oppgavefelt = oppgavetype.oppgavefelter.find {
-                    it.feltDefinisjon.eksternId.equals(oppgaveFeltverdiDto.nøkkel)
-                } ?: throw IllegalStateException("Kunne ikke finne matchede oppgavefelt for oppgaveFeltverdi"),
-                verdi = oppgaveFeltverdiDto.verdi
+
+                //?: throw IllegalStateException("Kunne ikke finne matchede oppgavefelt for oppgaveFeltverdi"),
+                //verdi = oppgaveFeltverdiDto.verdi
             )
-        }.toSet()
+
+        }*/
     )
+
+    private fun lagFelter(oppgaveDto: OppgaveDto, oppgavetype: Oppgavetype): List<OppgaveFeltverdi> {
+        val oppgavefelter = oppgaveDto.feltverdier.map { oppgaveFeltverdiDto ->
+            val oppgavefelt = oppgavetype.oppgavefelter.find {
+                it.feltDefinisjon.eksternId.equals(oppgaveFeltverdiDto.nøkkel)
+            }
+                ?: throw IllegalStateException("Kunne ikke finne matchede oppgavefelt for oppgaveFeltverdi: ${oppgaveFeltverdiDto.nøkkel}")
+
+            if (oppgaveFeltverdiDto.verdi == null) {
+                if (oppgavefelt.påkrevd) {
+                    if (oppgavefelt.feltDefinisjon.listetype) {
+                        //skip. lagrer ikke verdier for tomme lister
+                    } else {
+                        throw IllegalArgumentException("Mangler obligatorisk feltverdi for ${oppgavefelt.feltDefinisjon.eksternId}")
+                    }
+                } else {
+                    //
+                }
+            } else {
+                OppgaveFeltverdi(
+                    oppgavefelt = oppgavefelt,
+                    verdi = oppgaveFeltverdiDto.verdi,
+                )
+            }
+        }
+
+        return oppgavefelter
+    }
 }

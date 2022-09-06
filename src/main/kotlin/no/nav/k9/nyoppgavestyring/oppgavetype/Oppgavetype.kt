@@ -31,15 +31,14 @@ class Oppgavetype(
     fun valider(oppgaveDto: OppgaveDto) {
         oppgaveDto.feltverdier.forEach { dtofelt ->
             oppgavefelter.find { it.feltDefinisjon.eksternId.equals(dtofelt.nøkkel) }
-                ?: throw IllegalArgumentException("Kan ikke oppgi feltverdi som ikke er spesifisert i oppgavetypen")
+                ?: throw IllegalArgumentException("Kan ikke oppgi feltverdi som ikke er spesifisert i oppgavetypen: ${dtofelt.nøkkel}")
             //TODO: valider at feltverdi kan tolkes som angitt feltdefinisjon sin tolkesSom
         }
 
         oppgavefelter
             .filter { it.påkrevd }
             .forEach { obligatoriskFelt ->
-                oppgaveDto
-                    .feltverdier
+                oppgaveDto.feltverdier
                     .find { it.nøkkel.equals(obligatoriskFelt.feltDefinisjon.eksternId) }
                     ?: throw IllegalArgumentException("Oppgaven mangler obligatorisk felt " + obligatoriskFelt.feltDefinisjon.eksternId)
             }

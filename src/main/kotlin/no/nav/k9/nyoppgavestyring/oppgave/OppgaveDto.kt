@@ -7,5 +7,5 @@ data class OppgaveDto(
     val kildeområde: String,
     val type: String,
     val status: String,
-    val feltverdier: Set<OppgaveFeltverdiDto>
+    val feltverdier: List<OppgaveFeltverdiDto>
 )

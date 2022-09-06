@@ -41,7 +41,7 @@ class OppgaveV3Repository {
         )!!
     }
 
-    private fun lagreFeltverdier(oppgaveId: Long, oppgaveFeltverdier: Set<OppgaveFeltverdi>, tx: TransactionalSession) {
+    private fun lagreFeltverdier(oppgaveId: Long, oppgaveFeltverdier: List<OppgaveFeltverdi>, tx: TransactionalSession) {
         oppgaveFeltverdier.forEach { feltverdi ->
             tx.run(
                 queryOf(

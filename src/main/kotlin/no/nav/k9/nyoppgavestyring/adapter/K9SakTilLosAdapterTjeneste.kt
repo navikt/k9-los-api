@@ -67,24 +67,111 @@ class K9SakTilLosAdapterTjeneste(
             kildeområde = "K9",
             type = "aksjonspunkt",
             status = aksjonspunktTilstandDto.status.kode,
-            feltverdier = lagFeltverdier(event, aksjonspunktTilstandDto)
+            feltverdier = lagFeltverdier(event)
         )
 
-    private fun lagFeltverdier(event: BehandlingProsessEventDto, aksjonspunktTilstandDto: AksjonspunktTilstandDto) =
-        setOf(
+    private fun lagFeltverdier(
+        event: BehandlingProsessEventDto
+    ): List<OppgaveFeltverdiDto> {
+        val oppgaveFeltverdiDtos = mutableListOf(
+            OppgaveFeltverdiDto(
+                nøkkel = "behandlingUuid",
+                verdi = event.eksternId.toString()
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "aktorId",
+                verdi = event.aktørId
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "fagsystem",
+                verdi = event.fagsystem.kode
+            ),
             OppgaveFeltverdiDto(
                 nøkkel = "saksnummer",
                 verdi = event.saksnummer
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "opprettet",
-                verdi = event.eventTid.toString()
+                nøkkel = "resultattype",
+                verdi = event.resultatType
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "aksjonspunktKode",
-                verdi = aksjonspunktTilstandDto.aksjonspunktKode
+                nøkkel = "ytelsestype",
+                verdi = event.ytelseTypeKode
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "behandlingsstatus",
+                verdi = event.behandlingStatus
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "behandlingTypekode",
+                verdi = event.behandlingTypeKode
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "relatertPartAktorid",
+                verdi = event.relatertPartAktørId
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "pleietrengendeAktorId",
+                verdi = event.pleietrengendeAktørId
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "ansvarligSaksbehandlerIdent",
+                verdi = event.ansvarligSaksbehandlerIdent
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "ansvarligBeslutterForTotrinn",
+                verdi = event.ansvarligBeslutterForTotrinn
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "ansvarligSaksbehandlerForTotrinn",
+                verdi = event.ansvarligSaksbehandlerIdent
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "totrinnskontroll",
+                verdi = false.toString() // TODO dette må utledes fra ansvarligBeslutterForTotrinn & ansvarligSaksbehandlerForTotrinn
             )
         )
+
+        if (event.aksjonspunktTilstander.isNotEmpty()) {
+            oppgaveFeltverdiDtos.addAll(event.aksjonspunktTilstander.map { aksjonspunktTilstand ->
+                OppgaveFeltverdiDto(
+                    nøkkel = "aksjonspunkt",
+                    verdi = aksjonspunktTilstand.aksjonspunktKode
+                )
+            })
+        } else {
+            oppgaveFeltverdiDtos.add(
+                OppgaveFeltverdiDto(
+                    nøkkel = "aksjonspunkt",
+                    verdi = null
+                )
+            )
+        }
+
+        val åpneAksjonspunkter = event.aksjonspunktTilstander.filter { aksjonspunktTilstand ->
+            aksjonspunktTilstand.status.erÅpentAksjonspunkt()
+        }
+
+        if (åpneAksjonspunkter.isNotEmpty()) {
+            åpneAksjonspunkter.map { åpentAksjonspunkt ->
+                oppgaveFeltverdiDtos.add(
+                    OppgaveFeltverdiDto(
+                        nøkkel = "aktivtAksjonspunkt",
+                        verdi = åpentAksjonspunkt.aksjonspunktKode
+                    )
+                )
+            }
+        } else {
+            oppgaveFeltverdiDtos.add(
+                OppgaveFeltverdiDto(
+                    nøkkel = "aktivtAksjonspunkt",
+                    verdi = null
+                )
+            )
+        }
+
+        return oppgaveFeltverdiDtos
+    }
 
     private fun setup() {
         val objectMapper = jacksonObjectMapper()
@@ -93,14 +180,14 @@ class K9SakTilLosAdapterTjeneste(
         log.info("oppretter feltdefinisjoner")
         feltdefinisjonTjeneste.oppdater(
             objectMapper.readValue(
-                File("./adapterdefinisjoner/k9-feltdefinisjoner-v1.json"),
+                File("./adapterdefinisjoner/k9-feltdefinisjoner-v2.json"),
                 FeltdefinisjonerDto::class.java
             )
         )
         log.info("oppretter oppgavetype")
         oppgavetypeTjeneste.oppdater(
             objectMapper.readValue(
-                File("./adapterdefinisjoner/k9-oppgavetyper-v1.json"),
+                File("./adapterdefinisjoner/k9-oppgavetyper-v2.json"),
                 OppgavetyperDto::class.java
             )
         )
