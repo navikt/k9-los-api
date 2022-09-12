@@ -20,7 +20,7 @@ class OppgaveV3Tjeneste(
 
             oppgavetype.valider(oppgaveDto)
 
-            if (!oppgaveV3Repository.idempotensMatch(tx, oppgaveDto)) {
+            if (!oppgaveV3Repository.idempotensMatch(tx, oppgaveDto.id, oppgaveDto.versjon)) {
                 val innkommendeOppgave = OppgaveV3(oppgaveDto, oppgavetype)
                 oppgaveV3Repository.lagre(innkommendeOppgave, tx)
             }

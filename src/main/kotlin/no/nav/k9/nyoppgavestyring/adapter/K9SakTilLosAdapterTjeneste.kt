@@ -23,7 +23,7 @@ class K9SakTilLosAdapterTjeneste(
     private val områdeRepository: OmrådeRepository,
     private val feltdefinisjonTjeneste: FeltdefinisjonTjeneste,
     private val oppgavetypeTjeneste: OppgavetypeTjeneste,
-    private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
+    private val oppgaveV3Tjeneste: OppgaveV3Tjeneste
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9SakTilLosAdapterTjeneste::class.java)
@@ -61,7 +61,7 @@ class K9SakTilLosAdapterTjeneste(
 
     private fun lagOppgaveDto(event: BehandlingProsessEventDto, aksjonspunktTilstandDto: AksjonspunktTilstandDto) =
         OppgaveDto(
-            id = event.eksternId.toString() + "." + aksjonspunktTilstandDto.aksjonspunktKode,
+            id = event.eksternId.toString(),
             versjon = event.eventTid.toString(),
             område = "K9",
             kildeområde = "K9",
