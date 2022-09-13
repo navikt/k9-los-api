@@ -2,6 +2,7 @@ package no.nav.k9.nyoppgavestyring.oppgavetype
 
 import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.nyoppgavestyring.feltdefinisjon.FeltdefinisjonRepository
+import no.nav.k9.nyoppgavestyring.omraade.Område
 import no.nav.k9.nyoppgavestyring.omraade.OmrådeRepository
 
 class OppgavetypeTjeneste(
@@ -30,4 +31,10 @@ class OppgavetypeTjeneste(
             }
         }
     }
+
+    fun hent(område: Område) = (
+            transactionalManager.transaction { tx ->
+                oppgavetypeRepository.hent(område, tx)
+            }
+    )
 }

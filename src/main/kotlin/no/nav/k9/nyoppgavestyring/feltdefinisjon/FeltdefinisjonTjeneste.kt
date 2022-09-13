@@ -1,6 +1,7 @@
 package no.nav.k9.nyoppgavestyring.feltdefinisjon
 
 import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.nyoppgavestyring.omraade.Område
 import no.nav.k9.nyoppgavestyring.omraade.OmrådeRepository
 
 class FeltdefinisjonTjeneste(
@@ -18,6 +19,12 @@ class FeltdefinisjonTjeneste(
             val (sletteListe, leggTilListe) = eksisterendeFeltdefinisjoner.finnForskjeller(innkommendeFeltdefinisjoner)
             feltdefinisjonRepository.fjern(sletteListe, tx)
             feltdefinisjonRepository.leggTil(leggTilListe, innkommendeFeltdefinisjoner.område, tx)
+        }
+    }
+
+    fun hent(område: Område): Feltdefinisjoner {
+        return transactionalManager.transaction { tx ->
+            feltdefinisjonRepository.hent(område, tx)
         }
     }
 }

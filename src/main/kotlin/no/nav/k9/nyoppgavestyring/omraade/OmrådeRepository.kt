@@ -36,4 +36,20 @@ class OmrådeRepository(private val dataSource: DataSource) {
         }
     }
 
+    fun hent(eksternId: String): Område {
+        return using(sessionOf(dataSource)) { session ->
+            session.transaction { tx ->
+                tx.run(
+                    queryOf("select * from omrade where omrade.ekstern_id = :eksternId", mapOf("eksternId" to eksternId))
+                        .map { row ->
+                            Område(
+                                id = row.long("id"),
+                                eksternId = row.string("ekstern_id")
+                            )
+                        }.asSingle
+                )!!
+            }
+        }
+    }
+
 }

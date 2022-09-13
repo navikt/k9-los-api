@@ -1,9 +1,11 @@
 package no.nav.k9.nyoppgavestyring.adapter
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.k9.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.nyoppgavestyring.feltdefinisjon.FeltdefinisjonTjeneste
+import no.nav.k9.nyoppgavestyring.feltdefinisjon.Feltdefinisjoner
 import no.nav.k9.nyoppgavestyring.feltdefinisjon.FeltdefinisjonerDto
 import no.nav.k9.nyoppgavestyring.omraade.OmrådeRepository
 import no.nav.k9.nyoppgavestyring.oppgave.OppgaveDto
@@ -29,7 +31,6 @@ class K9SakTilLosAdapterTjeneste(
     private val log: Logger = LoggerFactory.getLogger(K9SakTilLosAdapterTjeneste::class.java)
 
     fun kjør(kjørSetup: Boolean) {
-
         fixedRateTimer(
             name = "k9-sak-til-los",
             daemon = true,
@@ -175,22 +176,50 @@ class K9SakTilLosAdapterTjeneste(
 
     private fun setup() {
         val objectMapper = jacksonObjectMapper()
+        opprettOmråde()
+        opprettFeltdefinisjoner(objectMapper)
+        opprettOppgavetype(objectMapper)
+    }
+
+    private fun opprettOmråde() {
         log.info("oppretter område")
         områdeRepository.lagre("K9")
-        log.info("oppretter feltdefinisjoner")
-        feltdefinisjonTjeneste.oppdater(
-            objectMapper.readValue(
-                File("./adapterdefinisjoner/k9-feltdefinisjoner-v2.json"),
-                FeltdefinisjonerDto::class.java
-            )
+    }
+
+    private fun opprettFeltdefinisjoner(objectMapper: ObjectMapper) {
+        val feltdefinisjonerDto = objectMapper.readValue(
+            File("./adapterdefinisjoner/k9-feltdefinisjoner-v2.json"),
+            FeltdefinisjonerDto::class.java
         )
-        log.info("oppretter oppgavetype")
-        oppgavetypeTjeneste.oppdater(
-            objectMapper.readValue(
-                File("./adapterdefinisjoner/k9-oppgavetyper-v2.json"),
-                OppgavetyperDto::class.java
-            )
+
+        val område = områdeRepository.hent(feltdefinisjonerDto.område)
+
+        if (!feltdefinisjonTjeneste.hent(område).feltdefinisjoner
+            .containsAll(Feltdefinisjoner(feltdefinisjonerDto, område).feltdefinisjoner)) {
+            feltdefinisjonTjeneste.oppdater(feltdefinisjonerDto)
+            log.info("opprettet feltdefinisjoner")
+        } else {
+            log.info("feltdefinisjoner er allerede oppdatert")
+        }
+    }
+
+    private fun opprettOppgavetype(objectMapper: ObjectMapper) {
+        val oppgavetyperDto = objectMapper.readValue(
+            File("./adapterdefinisjoner/k9-oppgavetyper-v2.json"),
+            OppgavetyperDto::class.java
         )
+
+        val område = områdeRepository.hent(oppgavetyperDto.område)
+
+        val oppgaveType = oppgavetypeTjeneste.hent(område).oppgavetyper.find {
+            it.eksternId.equals(oppgavetyperDto.oppgavetyper.first().id)
+        }
+        if (oppgaveType == null) {
+            oppgavetypeTjeneste.oppdater(oppgavetyperDto)
+            log.info("opprettet oppgavetype")
+        } else {
+            log.info("oppgavetype er allerede oppdatert")
+        }
     }
 
 }
