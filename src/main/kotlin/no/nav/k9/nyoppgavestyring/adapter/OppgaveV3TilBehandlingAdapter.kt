@@ -3,15 +3,17 @@ package no.nav.k9.nyoppgavestyring.adapter
 import no.nav.k9.nyoppgavestyring.oppgave.OppgaveV3
 import no.nav.k9.statistikk.kontrakter.Behandling
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 class OppgaveV3TilBehandlingAdapter {
 
     fun lagBehandling(oppgaveV3: OppgaveV3): Behandling {
         return Behandling(
             sakId = null,
-            behandlingId = "",
-            funksjonellTid = OffsetDateTime.now(),
+            behandlingId = oppgaveV3.eksternId,
+            funksjonellTid = OffsetDateTime.of(LocalDateTime.parse(oppgaveV3.eksternVersjon), ZoneOffset.UTC),
             tekniskTid = OffsetDateTime.now(),
             mottattDato = LocalDate.now(),
             registrertDato = null,

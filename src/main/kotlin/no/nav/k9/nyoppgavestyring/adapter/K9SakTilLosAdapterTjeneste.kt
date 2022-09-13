@@ -53,7 +53,7 @@ class K9SakTilLosAdapterTjeneste(
                     .map { event ->
                         event.aksjonspunktTilstander.forEach { aksjonspunktTilstand ->
                             val oppgaveDto = lagOppgaveDto(event, aksjonspunktTilstand)
-                            oppgaveV3Tjeneste.oppdater(oppgaveDto)
+                            oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto)
                         }
                     }
             }
@@ -68,6 +68,7 @@ class K9SakTilLosAdapterTjeneste(
             kildeområde = "K9",
             type = "aksjonspunkt",
             status = aksjonspunktTilstandDto.status.kode,
+            endretTidspunkt = event.eventTid,
             feltverdier = lagFeltverdier(event)
         )
 

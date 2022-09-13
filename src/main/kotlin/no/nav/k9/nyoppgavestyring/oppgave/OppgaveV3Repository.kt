@@ -3,6 +3,7 @@ package no.nav.k9.nyoppgavestyring.oppgave
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 
 class OppgaveV3Repository {
 
@@ -14,7 +15,7 @@ class OppgaveV3Repository {
         // hente ut nyeste versjon(ekstern_id, område) i basen, sette aktuell versjon til inaktiv
         val (eksisterendeId, eksisterendeVersjon) = hentVersjon(tx, oppgave) ?: Pair(null, null) //TODO: Herregud så stygt!
 
-        eksisterendeId?.let { deaktiverVersjon(eksisterendeId, tx) }
+        eksisterendeId?.let { deaktiverVersjon(eksisterendeId, oppgave.endretTidspunkt, tx) }
 
         val nyVersjon = eksisterendeVersjon?.plus(1) ?: 0
 
@@ -26,13 +27,14 @@ class OppgaveV3Repository {
         return tx.updateAndReturnGeneratedKey(
             queryOf("""
                     insert into oppgave_v3(ekstern_id, ekstern_versjon, oppgavetype_id, status, versjon, aktiv, kildeomrade, endret_tidspunkt)
-                    values(:eksternId, :eksternVersjon, :oppgavetypeId, :status, :versjon, :aktiv, :kildeomrade, CURRENT_TIMESTAMP)
+                    values(:eksternId, :eksternVersjon, :oppgavetypeId, :status, :versjon, :aktiv, :kildeomrade, :endretTidspunkt)
                 """.trimIndent(),
                 mapOf(
                     "eksternId" to oppgave.eksternId,
                     "eksternVersjon" to oppgave.eksternVersjon,
                     "oppgavetypeId" to oppgave.oppgavetype.id,
                     "status" to oppgave.status,
+                    "endretTidspunkt" to oppgave.endretTidspunkt,
                     "versjon" to nyVersjon,
                     "aktiv" to true,
                     "kildeomrade" to oppgave.kildeområde
@@ -81,6 +83,10 @@ class OppgaveV3Repository {
         )
     }
 
+    fun hentOppgaveMedHistoriskeVersjoner(tx: TransactionalSession, eksternId: String): Set<OppgaveV3> {
+        TODO()
+    }
+
     private fun hentOppgavefelter(tx: TransactionalSession, oppgave: OppgaveV3): Set<OppgaveFeltverdi> {
         return tx.run(
             queryOf(
@@ -102,12 +108,15 @@ class OppgaveV3Repository {
         ).toSet()
     }
 
-    private fun deaktiverVersjon(eksisterendeId: Long, tx: TransactionalSession) {
+    private fun deaktiverVersjon(eksisterendeId: Long, deaktivertTidspunkt: LocalDateTime, tx: TransactionalSession) {
         tx.run(
             queryOf("""
-                update oppgave_v3 set aktiv = false where id = :id
+                update oppgave_v3 set aktiv = false, deaktivert_tidspunkt = :deaktivertTidspunkt where id = :id
             """.trimIndent(),
-                mapOf("id" to eksisterendeId)
+                mapOf(
+                    "id" to eksisterendeId,
+                    "deaktivertTidsunkt" to deaktivertTidspunkt
+                )
             ).asUpdate
         )
     }

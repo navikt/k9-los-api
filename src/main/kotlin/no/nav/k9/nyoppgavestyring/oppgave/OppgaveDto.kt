@@ -1,5 +1,7 @@
 package no.nav.k9.nyoppgavestyring.oppgave
 
+import java.time.LocalDateTime
+
 data class OppgaveDto(
     val id: String,
     val versjon: String,
@@ -7,5 +9,6 @@ data class OppgaveDto(
     val kildeområde: String,
     val type: String,
     val status: String,
+    val endretTidspunkt: LocalDateTime,
     val feltverdier: List<OppgaveFeltverdiDto>
 )

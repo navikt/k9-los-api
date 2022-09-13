@@ -332,7 +332,8 @@ fun common(app: Application, config: Configuration) = module {
             oppgaveV3Repository = get(),
             oppgavetypeRepository = get(),
             områdeRepository = get(),
-            transactionalManager = get()
+            transactionalManager = get(),
+            oppgaveV3TilBehandlingAdapter = get()
         )
     }
 

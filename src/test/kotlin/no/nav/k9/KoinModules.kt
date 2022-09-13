@@ -263,7 +263,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgaveV3Repository = get(),
             oppgavetypeRepository = get(),
             områdeRepository = get(),
-            transactionalManager = get()
+            transactionalManager = get(),
+            oppgaveV3TilBehandlingAdapter = get(),
         )
     }
 

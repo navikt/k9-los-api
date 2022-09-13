@@ -58,7 +58,7 @@
         {
           "id": "pleietrengendeAktorId",
           "visPåOppgave": true,
-          "påkrevd": true
+          "påkrevd": false
         },
         {
           "id": "ansvarligSaksbehandlerIdent",

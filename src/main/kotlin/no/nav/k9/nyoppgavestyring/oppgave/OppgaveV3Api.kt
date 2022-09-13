@@ -18,7 +18,8 @@ internal fun Route.OppgaveV3Api() {
     put {
         requestContextService.withRequestContext(call) {
             val oppgaveDto = call.receive<OppgaveDto>()
-            oppgaveV3Tjeneste.oppdater(oppgaveDto)
+
+            oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto)
 
             call.respond("OK")
         }
