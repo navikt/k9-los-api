@@ -1,4 +1,4 @@
-package no.nav.k9.nyoppgavestyring.adaptere.k9saktillosadapter
+package no.nav.k9.nyoppgavestyring.adaptere.statistikkadapter
 
 import no.nav.k9.nyoppgavestyring.oppgave.OppgaveV3
 import no.nav.k9.statistikk.kontrakter.Sak
