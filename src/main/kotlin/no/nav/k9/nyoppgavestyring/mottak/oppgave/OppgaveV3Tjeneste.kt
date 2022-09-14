@@ -3,8 +3,8 @@ package no.nav.k9.nyoppgavestyring.mottak.oppgave
 import kotliquery.TransactionalSession
 import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.nyoppgavestyring.adaptere.statistikkadapter.OppgaveV3TilBehandlingAdapter
-import no.nav.k9.nyoppgavestyring.omraade.OmrådeRepository
-import no.nav.k9.nyoppgavestyring.oppgavetype.OppgavetypeRepository
+import no.nav.k9.nyoppgavestyring.mottak.omraade.OmrådeRepository
+import no.nav.k9.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.statistikk.kontrakter.Behandling
 
 class OppgaveV3Tjeneste(

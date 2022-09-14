@@ -3,7 +3,8 @@ package no.nav.k9.nyoppgavestyring.feltdefinisjon
 import assertk.assertThat
 import assertk.assertions.hasSize
 import assertk.assertions.isEmpty
-import no.nav.k9.nyoppgavestyring.omraade.Område
+import no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjoner
+import no.nav.k9.nyoppgavestyring.mottak.omraade.Område
 import org.junit.jupiter.api.Test
 
 class FeltdefinisjonTest {

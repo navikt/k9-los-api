@@ -2,7 +2,7 @@ package no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
-import no.nav.k9.nyoppgavestyring.omraade.Område
+import no.nav.k9.nyoppgavestyring.mottak.omraade.Område
 import org.slf4j.LoggerFactory
 
 class FeltdefinisjonRepository {

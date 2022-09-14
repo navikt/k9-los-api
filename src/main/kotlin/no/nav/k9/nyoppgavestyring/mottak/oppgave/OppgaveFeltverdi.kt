@@ -1,6 +1,6 @@
 package no.nav.k9.nyoppgavestyring.mottak.oppgave
 
-import no.nav.k9.nyoppgavestyring.oppgavetype.Oppgavefelt
+import no.nav.k9.nyoppgavestyring.mottak.oppgavetype.Oppgavefelt
 
 class OppgaveFeltverdi(
     val id: Long? = null,

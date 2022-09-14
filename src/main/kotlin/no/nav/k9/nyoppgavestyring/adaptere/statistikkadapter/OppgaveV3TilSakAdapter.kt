@@ -1,6 +1,6 @@
 package no.nav.k9.nyoppgavestyring.adaptere.statistikkadapter
 
-import no.nav.k9.nyoppgavestyring.oppgave.OppgaveV3
+import no.nav.k9.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.statistikk.kontrakter.Sak
 
 class OppgaveV3TilSakAdapter {

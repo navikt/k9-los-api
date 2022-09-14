@@ -3,8 +3,7 @@ package no.nav.k9.nyoppgavestyring.adaptere.statistikkadapter
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.kodeverk.behandling.BehandlingType
-import no.nav.k9.nyoppgavestyring.oppgave.OppgaveV3
-import no.nav.k9.sak.kontrakt.sykdom.Resultat
+import no.nav.k9.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.statistikk.kontrakter.Behandling
 import java.time.LocalDate
 import java.time.LocalDateTime

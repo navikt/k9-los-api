@@ -1,9 +1,9 @@
 package no.nav.k9.nyoppgavestyring.mottak.oppgavetype
 
 import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.nyoppgavestyring.feltdefinisjon.FeltdefinisjonRepository
-import no.nav.k9.nyoppgavestyring.omraade.Område
-import no.nav.k9.nyoppgavestyring.omraade.OmrådeRepository
+import no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
+import no.nav.k9.nyoppgavestyring.mottak.omraade.Område
+import no.nav.k9.nyoppgavestyring.mottak.omraade.OmrådeRepository
 
 class OppgavetypeTjeneste(
     private val oppgavetypeRepository: OppgavetypeRepository,

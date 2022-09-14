@@ -1,6 +1,6 @@
 package no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon
 
-import no.nav.k9.nyoppgavestyring.omraade.Område
+import no.nav.k9.nyoppgavestyring.mottak.omraade.Område
 
 
 class Feltdefinisjon(

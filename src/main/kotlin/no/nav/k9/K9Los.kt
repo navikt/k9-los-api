@@ -35,9 +35,9 @@ import no.nav.k9.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.integrasjon.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.integrasjon.sakogbehandling.SakOgBehandlingProducer
 import no.nav.k9.nyoppgavestyring.adaptere.k9saktillosadapter.K9SakTilLosAdapterTjeneste
-import no.nav.k9.nyoppgavestyring.feltdefinisjon.FeltdefinisjonApi
-import no.nav.k9.nyoppgavestyring.oppgave.OppgaveV3Api
-import no.nav.k9.nyoppgavestyring.oppgavetype.OppgavetypeApi
+import no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonApi
+import no.nav.k9.nyoppgavestyring.mottak.oppgave.OppgaveV3Api
+import no.nav.k9.nyoppgavestyring.mottak.oppgavetype.OppgavetypeApi
 import no.nav.k9.tjenester.admin.AdminApis
 import no.nav.k9.tjenester.avdelingsleder.AvdelingslederApis
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.DataeksportApis

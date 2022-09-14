@@ -3,7 +3,11 @@ package no.nav.k9.nyoppgavestyring.oppgavetype
 import assertk.assertThat
 import assertk.assertions.hasSize
 import assertk.assertions.isEmpty
-import no.nav.k9.nyoppgavestyring.omraade.Område
+import no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon
+import no.nav.k9.nyoppgavestyring.mottak.omraade.Område
+import no.nav.k9.nyoppgavestyring.mottak.oppgavetype.Oppgavefelt
+import no.nav.k9.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
+import no.nav.k9.nyoppgavestyring.mottak.oppgavetype.Oppgavetyper
 import org.junit.jupiter.api.Test
 
 class OppgavetypeTest {
@@ -35,7 +39,7 @@ class OppgavetypeTest {
                     oppgavefelter = setOf(
                         Oppgavefelt(
                             feltDefinisjon =
-                            no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon(
+                            Feltdefinisjon(
                                 eksternId = "saksnummer",
                                 område = område,
                                 listetype = false,
@@ -46,7 +50,7 @@ class OppgavetypeTest {
                             påkrevd = true
                         ),
                         Oppgavefelt(
-                            feltDefinisjon = no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon(
+                            feltDefinisjon = Feltdefinisjon(
                                 eksternId = "saksnummer",
                                 område = område,
                                 listetype = false,

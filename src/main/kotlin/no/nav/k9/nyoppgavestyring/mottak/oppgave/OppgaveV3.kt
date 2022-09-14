@@ -1,7 +1,7 @@
 package no.nav.k9.nyoppgavestyring.mottak.oppgave
 
-import no.nav.k9.nyoppgavestyring.oppgavetype.Oppgavefelt
-import no.nav.k9.nyoppgavestyring.oppgavetype.Oppgavetype
+import no.nav.k9.nyoppgavestyring.mottak.oppgavetype.Oppgavefelt
+import no.nav.k9.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import java.time.LocalDateTime
 
 class OppgaveV3(

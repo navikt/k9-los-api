@@ -1,8 +1,8 @@
 package no.nav.k9.nyoppgavestyring.mottak.oppgavetype
 
-import no.nav.k9.nyoppgavestyring.feltdefinisjon.Feltdefinisjoner
-import no.nav.k9.nyoppgavestyring.omraade.Område
-import no.nav.k9.nyoppgavestyring.oppgave.OppgaveDto
+import no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjoner
+import no.nav.k9.nyoppgavestyring.mottak.omraade.Område
+import no.nav.k9.nyoppgavestyring.mottak.oppgave.OppgaveDto
 
 
 class Oppgavetype(

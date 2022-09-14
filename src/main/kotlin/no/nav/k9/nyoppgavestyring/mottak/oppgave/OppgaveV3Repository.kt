@@ -2,13 +2,11 @@ package no.nav.k9.nyoppgavestyring.mottak.oppgave
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
-import no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon
-import no.nav.k9.nyoppgavestyring.omraade.Område
-import no.nav.k9.nyoppgavestyring.omraade.OmrådeRepository
-import no.nav.k9.nyoppgavestyring.oppgavetype.Oppgavefelt
-import no.nav.k9.nyoppgavestyring.oppgavetype.Oppgavetype
-import no.nav.k9.nyoppgavestyring.oppgavetype.OppgavetypeRepository
-import no.nav.k9.nyoppgavestyring.oppgavetype.Oppgavetyper
+import no.nav.k9.nyoppgavestyring.mottak.omraade.Område
+import no.nav.k9.nyoppgavestyring.mottak.omraade.OmrådeRepository
+import no.nav.k9.nyoppgavestyring.mottak.oppgavetype.Oppgavefelt
+import no.nav.k9.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
+import no.nav.k9.nyoppgavestyring.mottak.oppgavetype.Oppgavetyper
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
