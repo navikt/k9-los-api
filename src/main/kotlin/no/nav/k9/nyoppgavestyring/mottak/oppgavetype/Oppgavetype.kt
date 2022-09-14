@@ -1,4 +1,4 @@
-package no.nav.k9.nyoppgavestyring.oppgavetype
+package no.nav.k9.nyoppgavestyring.mottak.oppgavetype
 
 import no.nav.k9.nyoppgavestyring.feltdefinisjon.Feltdefinisjoner
 import no.nav.k9.nyoppgavestyring.omraade.Område

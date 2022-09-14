@@ -1,4 +1,4 @@
-package no.nav.k9.nyoppgavestyring.feltdefinisjon
+package no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon
 
 data class FeltdefinisjonerDto(
     val område: String,

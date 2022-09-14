@@ -1,8 +1,8 @@
-package no.nav.k9.nyoppgavestyring.oppgave
+package no.nav.k9.nyoppgavestyring.mottak.oppgave
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
-import no.nav.k9.nyoppgavestyring.feltdefinisjon.Feltdefinisjon
+import no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon
 import no.nav.k9.nyoppgavestyring.omraade.Område
 import no.nav.k9.nyoppgavestyring.omraade.OmrådeRepository
 import no.nav.k9.nyoppgavestyring.oppgavetype.Oppgavefelt
@@ -165,7 +165,7 @@ class OppgaveV3Repository(
         ).toSet()
     }
 
-    private fun hentFeltdefinisjon(): Feltdefinisjon {
+    private fun hentFeltdefinisjon(): no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon {
         TODO()
     }
 

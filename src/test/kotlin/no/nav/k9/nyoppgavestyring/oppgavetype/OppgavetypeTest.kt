@@ -35,7 +35,7 @@ class OppgavetypeTest {
                     oppgavefelter = setOf(
                         Oppgavefelt(
                             feltDefinisjon =
-                            no.nav.k9.nyoppgavestyring.feltdefinisjon.Feltdefinisjon(
+                            no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon(
                                 eksternId = "saksnummer",
                                 område = område,
                                 listetype = false,
@@ -46,7 +46,7 @@ class OppgavetypeTest {
                             påkrevd = true
                         ),
                         Oppgavefelt(
-                            feltDefinisjon = no.nav.k9.nyoppgavestyring.feltdefinisjon.Feltdefinisjon(
+                            feltDefinisjon = no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon(
                                 eksternId = "saksnummer",
                                 område = område,
                                 listetype = false,
@@ -78,7 +78,7 @@ class OppgavetypeTest {
                     definisjonskilde = "k9-sak-til-los",
                     oppgavefelter = setOf(
                         Oppgavefelt(
-                            feltDefinisjon = no.nav.k9.nyoppgavestyring.feltdefinisjon.Feltdefinisjon(
+                            feltDefinisjon = no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon(
                                 eksternId = "saksnummer",
                                 område = område,
                                 listetype = false,
@@ -89,7 +89,7 @@ class OppgavetypeTest {
                             påkrevd = true
                         ),
                         Oppgavefelt(
-                            feltDefinisjon = no.nav.k9.nyoppgavestyring.feltdefinisjon.Feltdefinisjon(
+                            feltDefinisjon = no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon(
                                 eksternId = "saksnummer",
                                 område = område,
                                 listetype = false,
@@ -107,7 +107,7 @@ class OppgavetypeTest {
                     definisjonskilde = "k9-sak-til-los",
                     oppgavefelter = setOf(
                         Oppgavefelt(
-                            feltDefinisjon = no.nav.k9.nyoppgavestyring.feltdefinisjon.Feltdefinisjon(
+                            feltDefinisjon = no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon(
                                 eksternId = "saksnummer",
                                 område = område,
                                 listetype = false,
@@ -138,7 +138,7 @@ class OppgavetypeTest {
                     definisjonskilde = "k9-sak-til-los",
                     oppgavefelter = setOf(
                         Oppgavefelt(
-                            feltDefinisjon = no.nav.k9.nyoppgavestyring.feltdefinisjon.Feltdefinisjon(
+                            feltDefinisjon = no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon(
                                 eksternId = "saksnummer",
                                 område = område,
                                 listetype = false,
@@ -149,7 +149,7 @@ class OppgavetypeTest {
                             påkrevd = true
                         ),
                         Oppgavefelt(
-                            feltDefinisjon = no.nav.k9.nyoppgavestyring.feltdefinisjon.Feltdefinisjon(
+                            feltDefinisjon = no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon(
                                 eksternId = "saksnummer",
                                 område = område,
                                 listetype = false,
@@ -167,7 +167,7 @@ class OppgavetypeTest {
                     definisjonskilde = "k9-sak-til-los",
                     oppgavefelter = setOf(
                         Oppgavefelt(
-                            feltDefinisjon = no.nav.k9.nyoppgavestyring.feltdefinisjon.Feltdefinisjon(
+                            feltDefinisjon = no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon(
                                 eksternId = "saksnummer",
                                 område = område,
                                 listetype = false,

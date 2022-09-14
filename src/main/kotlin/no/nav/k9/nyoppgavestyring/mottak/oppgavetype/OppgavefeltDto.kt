@@ -1,4 +1,4 @@
-package no.nav.k9.nyoppgavestyring.oppgavetype
+package no.nav.k9.nyoppgavestyring.mottak.oppgavetype
 
 data class OppgavefeltDto (
     val id: String,

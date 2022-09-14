@@ -1,4 +1,4 @@
-package no.nav.k9.nyoppgavestyring.feltdefinisjon
+package no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon
 
 import io.ktor.application.*
 import io.ktor.request.*

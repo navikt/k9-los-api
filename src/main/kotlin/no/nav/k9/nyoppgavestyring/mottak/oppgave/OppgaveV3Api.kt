@@ -1,4 +1,4 @@
-package no.nav.k9.nyoppgavestyring.oppgave
+package no.nav.k9.nyoppgavestyring.mottak.oppgave
 
 import io.ktor.application.*
 import io.ktor.request.*

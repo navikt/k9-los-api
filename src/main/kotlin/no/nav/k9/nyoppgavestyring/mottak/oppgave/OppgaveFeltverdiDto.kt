@@ -1,4 +1,4 @@
-package no.nav.k9.nyoppgavestyring.oppgave
+package no.nav.k9.nyoppgavestyring.mottak.oppgave
 
 
 data class OppgaveFeltverdiDto(

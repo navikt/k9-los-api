@@ -1,4 +1,4 @@
-package no.nav.k9.nyoppgavestyring.oppgave
+package no.nav.k9.nyoppgavestyring.mottak.oppgave
 
 import kotliquery.TransactionalSession
 import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager

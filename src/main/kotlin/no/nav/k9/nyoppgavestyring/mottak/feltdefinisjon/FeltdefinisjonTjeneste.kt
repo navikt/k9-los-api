@@ -1,4 +1,4 @@
-package no.nav.k9.nyoppgavestyring.feltdefinisjon
+package no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon
 
 import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.nyoppgavestyring.omraade.Område

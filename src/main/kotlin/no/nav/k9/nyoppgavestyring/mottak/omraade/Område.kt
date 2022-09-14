@@ -1,4 +1,4 @@
-package no.nav.k9.nyoppgavestyring.omraade
+package no.nav.k9.nyoppgavestyring.mottak.omraade
 
 class Område (
     val id: Long? = null,

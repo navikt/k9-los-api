@@ -21,7 +21,7 @@ class FeltdefinisjonTest {
         val innkommendeFeltdefinisjoner = Feltdefinisjoner(
             område = område,
             feltdefinisjoner = setOf(
-                no.nav.k9.nyoppgavestyring.feltdefinisjon.Feltdefinisjon(
+                no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon(
                     eksternId = "saksnummer",
                     område = område,
                     listetype = false,
@@ -40,14 +40,14 @@ class FeltdefinisjonTest {
         val innkommendeFeltdefinisjoner = Feltdefinisjoner(
             område = område,
             feltdefinisjoner = setOf(
-                no.nav.k9.nyoppgavestyring.feltdefinisjon.Feltdefinisjon(
+                no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon(
                     eksternId = "saksnummer",
                     område = område,
                     listetype = true,
                     tolkesSom = "String",
                     visTilBruker = true
                 ),
-                no.nav.k9.nyoppgavestyring.feltdefinisjon.Feltdefinisjon(
+                no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon(
                     eksternId = "opprettet",
                     område = område,
                     listetype = true,
@@ -65,14 +65,14 @@ class FeltdefinisjonTest {
         return Feltdefinisjoner(
             område = område,
             feltdefinisjoner = setOf(
-                no.nav.k9.nyoppgavestyring.feltdefinisjon.Feltdefinisjon(
+                no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon(
                     eksternId = "saksnummer",
                     område = område,
                     listetype = false,
                     tolkesSom = "String",
                     visTilBruker = true
                 ),
-                no.nav.k9.nyoppgavestyring.feltdefinisjon.Feltdefinisjon(
+                no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon(
                     eksternId = "opprettet",
                     område = område,
                     listetype = false,

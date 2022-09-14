@@ -1,4 +1,4 @@
-package no.nav.k9.nyoppgavestyring.feltdefinisjon
+package no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon
 
 import no.nav.k9.nyoppgavestyring.omraade.Område
 
@@ -15,7 +15,7 @@ class Feltdefinisjon(
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as Feltdefinisjon
+        other as no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon
 
         if (eksternId != other.eksternId) return false
         if (listetype != other.listetype) return false
