@@ -2,10 +2,29 @@ package no.nav.k9.nyoppgavestyring.oppgave
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
+import no.nav.k9.nyoppgavestyring.feltdefinisjon.Feltdefinisjon
+import no.nav.k9.nyoppgavestyring.omraade.Område
+import no.nav.k9.nyoppgavestyring.omraade.OmrådeRepository
+import no.nav.k9.nyoppgavestyring.oppgavetype.Oppgavefelt
+import no.nav.k9.nyoppgavestyring.oppgavetype.Oppgavetype
+import no.nav.k9.nyoppgavestyring.oppgavetype.OppgavetypeRepository
+import no.nav.k9.nyoppgavestyring.oppgavetype.Oppgavetyper
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
-class OppgaveV3Repository {
+class OppgaveV3Repository(
+    private val områdeRepository: OmrådeRepository,
+    //private val oppgavetypeRepository: OppgavetypeRepository
+    ) {
+
+    companion object {
+        val oppgavetypeCache = HashMap<String, HashMap<String, Oppgavetype>>()
+    }
+
+    fun HashMap<Område, Oppgavetyper>.populer() {
+        this.clear()
+        //oppgavetypeRepository.hent()
+    }
 
     private val log = LoggerFactory.getLogger(OppgaveV3Repository::class.java)
 
@@ -84,10 +103,73 @@ class OppgaveV3Repository {
     }
 
     fun hentOppgaveMedHistoriskeVersjoner(tx: TransactionalSession, eksternId: String): Set<OppgaveV3> {
+        val oppgavetype = hentOppgavetype(tx, eksternId)
+        return tx.run(
+            queryOf(
+                """
+                    select * 
+                    from oppgave_v3 ov
+                    where ov.ekstern_id = :eksternId
+                    order by versjon desc
+                """.trimIndent(),
+                mapOf("eksternId" to eksternId)
+            ).map { row ->
+                OppgaveV3(
+                    id = row.long("id"),
+                    eksternId = eksternId,
+                    eksternVersjon = row.string("ekstern_versjon"),
+                    oppgavetype = oppgavetype,
+                    status = row.string("status"),
+                    endretTidspunkt = row.localDateTime("endret_tidspunkt"),
+                    kildeområde = row.string("kildeomrade"),
+                    felter = hentOppgavefeltverdier(tx, row.long("id"), oppgavetype)
+                )
+            }.asList
+        ).toSet()
+    }
+
+    private fun hentOppgavetype(tx: TransactionalSession, oppgaveEksternId: String): Oppgavetype {
+        return tx.run(
+            queryOf("""
+                    select * from oppgavetype where id = (select oppgavetype_id from oppgave_v3 where ekstern_id = :oppgaveEksternId
+                """.trimIndent(),
+                mapOf("oppgaveEksternId" to oppgaveEksternId)
+            ).map { row ->
+                Oppgavetype(
+                    id = row.long("id"),
+                    eksternId = row.string("ekstern_id"),
+                    område = områdeRepository.hent(tx, row.long("omrade_id")),
+                    definisjonskilde = row.string("definisjonskilde"),
+                    oppgavefelter = hentOppgavefelter(tx, row.long("id"))
+                )
+            }.asSingle
+        ) ?: throw IllegalStateException("Fant ingen oppgavetype for eksisterende oppgave: $oppgaveEksternId")
+    }
+
+    private fun hentOppgavefelter(tx: TransactionalSession, oppgavetypeId: Long): Set<Oppgavefelt> {
+        return tx.run(
+            queryOf(
+                """
+                            select *
+                            from oppgavefelt o
+                            where oppgavetype_id = :oppgavetypeId""",
+                mapOf("oppgavetypeId" to oppgavetypeId)
+            ).map { row ->
+                Oppgavefelt(
+                    id = row.long("id"),
+                    feltDefinisjon = hentFeltdefinisjon(),
+                    påkrevd = row.boolean("pakrevd"),
+                    visPåOppgave = true
+                )
+            }.asList
+        ).toSet()
+    }
+
+    private fun hentFeltdefinisjon(): Feltdefinisjon {
         TODO()
     }
 
-    private fun hentOppgavefelter(tx: TransactionalSession, oppgave: OppgaveV3): Set<OppgaveFeltverdi> {
+    private fun hentOppgavefeltverdier(tx: TransactionalSession, oppgaveId: Long, oppgavetype: Oppgavetype): List<OppgaveFeltverdi> {
         return tx.run(
             queryOf(
                 """
@@ -95,17 +177,17 @@ class OppgaveV3Repository {
                 from oppgavefelt_verdi ov 
                 where ov.oppgave_id = :oppgaveId
                 """.trimIndent(),
-                mapOf("oppgaveId" to oppgave.id)
+                mapOf("oppgaveId" to oppgaveId)
             ).map { row ->
                 OppgaveFeltverdi(
                     id = row.long("id"),
-                    oppgavefelt = oppgave.oppgavetype.oppgavefelter.find { oppgavefelt ->
+                    oppgavefelt = oppgavetype.oppgavefelter.find { oppgavefelt ->
                         oppgavefelt.id == row.long("oppgavefelt_id")
                     } ?: throw IllegalStateException("Oppgavetype mangler oppgavens angitte oppgavefelt"),
                     verdi = row.string("verdi")
                 )
             }.asList
-        ).toSet()
+        )
     }
 
     private fun deaktiverVersjon(eksisterendeId: Long, deaktivertTidspunkt: LocalDateTime, tx: TransactionalSession) {

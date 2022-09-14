@@ -2,9 +2,12 @@ package no.nav.k9.nyoppgavestyring.oppgavetype
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
+import kotliquery.sessionOf
+import kotliquery.using
 import no.nav.k9.nyoppgavestyring.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.nyoppgavestyring.omraade.Område
 import org.slf4j.LoggerFactory
+import javax.sql.DataSource
 
 class OppgavetypeRepository(private val feltdefinisjonRepository: FeltdefinisjonRepository) {
 

@@ -1,13 +1,11 @@
 package no.nav.k9.nyoppgavestyring.oppgave
 
 import io.ktor.application.*
-import io.ktor.locations.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import no.nav.k9.integrasjon.rest.RequestContextService
-import no.nav.k9.nyoppgavestyring.adapter.K9SakTilLosAdapterTjeneste
-import org.koin.experimental.property.inject
+import no.nav.k9.nyoppgavestyring.adaptere.k9saktillosadapter.K9SakTilLosAdapterTjeneste
 import org.koin.ktor.ext.inject
 
 internal fun Route.OppgaveV3Api() {

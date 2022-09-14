@@ -28,7 +28,8 @@ import no.nav.k9.integrasjon.omsorgspenger.OmsorgspengerServiceLocal
 import no.nav.k9.integrasjon.pdl.IPdlService
 import no.nav.k9.integrasjon.pdl.PdlServiceLocal
 import no.nav.k9.integrasjon.sakogbehandling.SakOgBehandlingProducer
-import no.nav.k9.nyoppgavestyring.adapter.K9SakTilLosAdapterTjeneste
+import no.nav.k9.nyoppgavestyring.adaptere.k9saktillosadapter.K9SakTilLosAdapterTjeneste
+import no.nav.k9.nyoppgavestyring.adaptere.statistikkadapter.OppgaveV3TilBehandlingAdapter
 import no.nav.k9.nyoppgavestyring.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.nyoppgavestyring.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.nyoppgavestyring.omraade.OmrådeRepository
@@ -240,8 +241,9 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single { FeltdefinisjonRepository() }
     single { OmrådeRepository(get()) }
     single { OppgavetypeRepository(get()) }
-    single { OppgaveV3Repository() }
+    single { OppgaveV3Repository(get()) }
     single { BehandlingProsessEventK9Repository(dataSource = get()) }
+    single { OppgaveV3TilBehandlingAdapter() }
 
     single {
         FeltdefinisjonTjeneste(

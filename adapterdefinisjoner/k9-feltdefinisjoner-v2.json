@@ -68,6 +68,12 @@
       "visTilBruker": true
     },
     {
+      "id": "behandlendeEnhet",
+      "listetype": false,
+      "tolkesSom": "String",
+      "visTilBruker": true
+    },
+    {
       "id": "ansvarligSaksbehandlerIdent",
       "listetype": false,
       "tolkesSom": "String",

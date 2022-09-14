@@ -2,7 +2,7 @@ package no.nav.k9.nyoppgavestyring.oppgave
 
 import kotliquery.TransactionalSession
 import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.nyoppgavestyring.adapter.OppgaveV3TilBehandlingAdapter
+import no.nav.k9.nyoppgavestyring.adaptere.statistikkadapter.OppgaveV3TilBehandlingAdapter
 import no.nav.k9.nyoppgavestyring.omraade.OmrådeRepository
 import no.nav.k9.nyoppgavestyring.oppgavetype.OppgavetypeRepository
 import no.nav.k9.statistikk.kontrakter.Behandling

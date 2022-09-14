@@ -52,4 +52,16 @@ class OmrådeRepository(private val dataSource: DataSource) {
         }
     }
 
+    fun hent(tx: TransactionalSession, id: Long): Område {
+        return tx.run(
+            queryOf("select * from omrade where id = :id", mapOf("id" to id))
+                .map { row ->
+                    Område(
+                        id = row.long("id"),
+                        eksternId = row.string("ekstern_id")
+                    )
+                }.asSingle
+        ) ?: throw IllegalArgumentException("Området finnes ikke")
+    }
+
 }

@@ -56,6 +56,11 @@
           "påkrevd": false
         },
         {
+          "id": "behandlendeEnhet",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
           "id": "pleietrengendeAktorId",
           "visPåOppgave": true,
           "påkrevd": false
