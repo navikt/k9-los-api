@@ -15,13 +15,7 @@ import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.modell.BehandlingStatus
 import no.nav.k9.domene.modell.Fagsystem
 import no.nav.k9.domene.modell.OppgaveKø
-import no.nav.k9.domene.repository.BehandlingProsessEventK9Repository
-import no.nav.k9.domene.repository.BehandlingProsessEventTilbakeRepository
-import no.nav.k9.domene.repository.OppgaveKøRepository
-import no.nav.k9.domene.repository.OppgaveRepository
-import no.nav.k9.domene.repository.PunsjEventK9Repository
-import no.nav.k9.domene.repository.SaksbehandlerRepository
-import no.nav.k9.domene.repository.StatistikkRepository
+import no.nav.k9.domene.repository.*
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.EnheterSomSkalUtelatesFraLos
 import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
@@ -37,6 +31,7 @@ fun Route.innsiktGrensesnitt() {
     val behandlingProsessEventK9Repository by inject<BehandlingProsessEventK9Repository>()
     val behandlingProsessEventTilbakeRepository by inject<BehandlingProsessEventTilbakeRepository>()
     val punsjEventK9Repository by inject<PunsjEventK9Repository>()
+    val reservasjonRepository by inject<ReservasjonRepository>()
 
     val LOGGER = LoggerFactory.getLogger(StatistikkRepository::class.java)
 
@@ -185,21 +180,20 @@ fun Route.innsiktGrensesnitt() {
 
     get("oppgaveko") {
         call.respondHtml {
-            val køid = call.request.queryParameters["id"]?.split(",")
+            val køIder = call.request.queryParameters["id"]?.split(",")
             head {
-                title { +(køid?.let {"Innsikt for køid=$køid"}?: "Oppgi køid") }
+                title { +(køIder?.let {"Innsikt for køid=$køIder"}?: "Oppgi køid") }
                 styleLink("/static/bootstrap.css")
                 script(src = "/static/script.js") {}
             }
             body {
-                if (køid.isNullOrEmpty()) div {+"Oppgi køid"}
+                if (køIder.isNullOrEmpty()) div {+"Oppgi køid"}
                 else {
-                    h2 { +køid.let {"Innsikt for køid=$køid"} }
+                    h2 { +køIder.let {"Innsikt for køid=$køIder"} }
                     runBlocking {
-                        køid.map { oppgavekø(it) }
+                        køIder.map { køId -> oppgavekø(køId) }
                     }
                 }
-
             }
         }
     }
@@ -319,7 +313,13 @@ fun Route.innsiktGrensesnitt() {
         fun køDistribusjon(): Map<Int, List<Oppgave>> {
             val aktiveOppgaver = oppgaveRepository.hentAktiveOppgaver()
             val oppgavekøer = oppgaveKøRepository.hentIkkeTaHensyn().filter { it.oppgaverOgDatoer.isNotEmpty() }
-            return aktiveOppgaver.groupBy { oppgave ->
+            val reservasjoner = runBlocking {
+                reservasjonRepository.hent(aktiveOppgaver.map { it.eksternId }.toSet())
+            }.map { it.oppgave }
+
+            return aktiveOppgaver
+                .filterNot { reservasjoner.contains(it.eksternId) }
+                .groupBy { oppgave ->
                 oppgavekøer.count { kø ->
                     kø.oppgaverOgDatoer.map { it.id }.contains(oppgave.eksternId)
                 }
