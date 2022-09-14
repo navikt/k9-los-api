@@ -2,17 +2,14 @@ package no.nav.k9.nyoppgavestyring.mottak.oppgave
 
 import kotliquery.TransactionalSession
 import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.nyoppgavestyring.adaptere.statistikkadapter.OppgaveV3TilBehandlingAdapter
 import no.nav.k9.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
-import no.nav.k9.statistikk.kontrakter.Behandling
 
 class OppgaveV3Tjeneste(
     private val oppgaveV3Repository: OppgaveV3Repository,
     private val oppgavetypeRepository: OppgavetypeRepository,
     private val områdeRepository: OmrådeRepository,
-    private val transactionalManager: TransactionalManager,
-    private val oppgaveV3TilBehandlingAdapter: OppgaveV3TilBehandlingAdapter
+    private val transactionalManager: TransactionalManager
 ) {
 
     fun sjekkDuplikatOgProsesser(dto: OppgaveDto) {
@@ -26,10 +23,7 @@ class OppgaveV3Tjeneste(
         }
     }
 
-    private fun byggOppgavestatistikkForBehandling(id: String, tx: TransactionalSession): Behandling {
-        //oppgaveV3TilBehandlingAdapter.lagBehandling()
-        TODO()
-    }
+
 
     fun oppdater(oppgaveDto: OppgaveDto, tx: TransactionalSession) {
         val område = områdeRepository.hentOmråde(oppgaveDto.område, tx)

@@ -3,7 +3,7 @@ package no.nav.k9.nyoppgavestyring.adaptere.statistikkadapter
 import no.nav.k9.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.statistikk.kontrakter.Sak
 
-class OppgaveV3TilSakAdapter {
+class OppgaveTilSakAdapter {
 
     fun lagSak(oppgaveV3: OppgaveV3): Sak {
         return Sak(

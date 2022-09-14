@@ -3,16 +3,16 @@ package no.nav.k9.nyoppgavestyring.adaptere.statistikkadapter
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.kodeverk.behandling.BehandlingType
-import no.nav.k9.nyoppgavestyring.mottak.oppgave.OppgaveV3
+import no.nav.k9.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.statistikk.kontrakter.Behandling
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
-class OppgaveV3TilBehandlingAdapter {
+class OppgaveTilBehandlingAdapter {
 
-    fun lagBehandling(oppgaveversjoner: Set<OppgaveV3>): Behandling {
+    fun lagBehandling(oppgaveversjoner: Set<Oppgave>): Behandling {
         val sisteVersjon = oppgaveversjoner.first()
         return Behandling(
             sakId = null,
