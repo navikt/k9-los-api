@@ -160,7 +160,7 @@ fun Route.innsiktGrensesnitt() {
     }
 
     suspend fun BODY.oppgavekø(køid: String) {
-        val kø = oppgaveKøRepository.hentOppgavekø(UUID.fromString(køid))
+        val kø = oppgaveKøRepository.hentOppgavekø(UUID.fromString(køid), ignorerSkjerming = true)
         if (kø.skjermet || kø.kode6) return
 
         val oppgaver = oppgaveRepository.hentOppgaver(kø.oppgaverOgDatoer.map { it.id }).sortedBy { it.eventTid }
