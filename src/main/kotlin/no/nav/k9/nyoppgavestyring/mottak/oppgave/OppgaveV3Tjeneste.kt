@@ -18,7 +18,8 @@ class OppgaveV3Tjeneste(
         transactionalManager.transaction { tx ->
             if (!idempotensMatch(dto, tx)) {
                 oppdater(dto, tx)
-                val (behandlingEvent, sakEvent) = oppgavestatistikkTjeneste.byggOppgavestatistikk(dto.id, tx)
+                oppgavestatistikkTjeneste.sendStatistikk(dto.id, tx)
+
                 //sendEvent(behandlingEvent)
             }
         }

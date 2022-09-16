@@ -12,6 +12,14 @@ class OppgavestatistikkTjeneste(
     private val oppgaveRepository: OppgaveRepository,
 ) {
 
+    fun sendStatistikk(id: String, tx: TransactionalSession) {
+        val (behandlingEvent, sakEvent) = byggOppgavestatistikk(id, tx)
+    }
+
+    private fun sendEvent() {
+        TODO("Not yet implemented")
+    }
+
     fun byggOppgavestatistikk(id: String, tx: TransactionalSession): Pair<Behandling, Sak> {
         val oppgaveMedHistoriskeVersjoner =
             oppgaveRepository.hentOppgaveMedHistoriskeVersjoner(tx, id)

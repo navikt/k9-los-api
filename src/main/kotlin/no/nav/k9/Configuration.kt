@@ -77,8 +77,18 @@ data class Configuration(private val config: ApplicationConfig) {
             ?: ""
     }
 
+    internal fun getÅpenStatistikkSakTopic(): String {
+        return config.getOptionalString("nav.kafka.åpenStatistikkSakTopic", secret = false)
+            ?: ""
+    }
+
     internal fun getStatistikkBehandlingTopic(): String {
         return config.getOptionalString("nav.kafka.statistikkBehandlingTopic", secret = false)
+            ?: ""
+    }
+
+    internal fun getÅpenStatistikkBehandlingTopic(): String {
+        return config.getOptionalString("nav.kafka.åpenStatistikkBehandlingTopic", secret = false)
             ?: ""
     }
 
