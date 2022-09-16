@@ -30,6 +30,8 @@ import no.nav.k9.integrasjon.pdl.PdlServiceLocal
 import no.nav.k9.integrasjon.sakogbehandling.SakOgBehandlingProducer
 import no.nav.k9.nyoppgavestyring.adaptere.k9saktillosadapter.K9SakTilLosAdapterTjeneste
 import no.nav.k9.nyoppgavestyring.adaptere.statistikkadapter.OppgaveTilBehandlingAdapter
+import no.nav.k9.nyoppgavestyring.adaptere.statistikkadapter.OppgaveTilSakAdapter
+import no.nav.k9.nyoppgavestyring.adaptere.statistikkadapter.OppgavestatistikkTjeneste
 import no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.nyoppgavestyring.mottak.omraade.OmrådeRepository
@@ -244,6 +246,15 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single { OppgaveV3Repository() }
     single { BehandlingProsessEventK9Repository(dataSource = get()) }
     single { OppgaveTilBehandlingAdapter() }
+    single { OppgaveTilSakAdapter() }
+    single { no.nav.k9.nyoppgavestyring.visningoguttrekk.OppgaveRepository() }
+    single {
+        OppgavestatistikkTjeneste(
+            oppgaveTilBehandlingAdapter = get(),
+            oppgaveTilSakAdapter = get(),
+            oppgaveRepository = get()
+        )
+    }
 
     single {
         FeltdefinisjonTjeneste(
@@ -266,6 +277,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgavetypeRepository = get(),
             områdeRepository = get(),
             transactionalManager = get(),
+            oppgavestatistikkTjeneste = get()
         )
     }
 

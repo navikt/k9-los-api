@@ -2,6 +2,7 @@ package no.nav.k9.nyoppgavestyring.mottak.oppgave
 
 import kotliquery.TransactionalSession
 import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.nyoppgavestyring.adaptere.statistikkadapter.OppgavestatistikkTjeneste
 import no.nav.k9.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 
@@ -9,16 +10,16 @@ class OppgaveV3Tjeneste(
     private val oppgaveV3Repository: OppgaveV3Repository,
     private val oppgavetypeRepository: OppgavetypeRepository,
     private val områdeRepository: OmrådeRepository,
-    private val transactionalManager: TransactionalManager
+    private val transactionalManager: TransactionalManager,
+    private val oppgavestatistikkTjeneste: OppgavestatistikkTjeneste
 ) {
 
     fun sjekkDuplikatOgProsesser(dto: OppgaveDto) {
         transactionalManager.transaction { tx ->
             if (!idempotensMatch(dto, tx)) {
                 oppdater(dto, tx)
-                //val behandlingEvent = byggOppgavestatistikkForBehandling(dto.id, tx)
+                val (behandlingEvent, sakEvent) = oppgavestatistikkTjeneste.byggOppgavestatistikk(dto.id, tx)
                 //sendEvent(behandlingEvent)
-                //val afbasdgf = byggOppgavestatistikkForSak(dto.id)
             }
         }
     }

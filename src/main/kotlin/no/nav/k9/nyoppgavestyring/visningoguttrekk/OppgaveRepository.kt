@@ -12,7 +12,7 @@ class OppgaveRepository {
                     select * 
                     from oppgave_v3 ov
                     where ov.ekstern_id = :eksternId
-                    order by versjon desc
+                    order by versjon asc
                 """.trimIndent(),
                 mapOf("eksternId" to eksternId)
             ).map { row ->
@@ -54,49 +54,4 @@ class OppgaveRepository {
         )
     }
 
-    /*
-    private fun hentOppgavefelter(tx: TransactionalSession, oppgavetypeId: Long): Set<Oppgavefelt> {
-        return tx.run(
-            queryOf(
-                """
-                            select *
-                            from oppgavefelt o
-                            where oppgavetype_id = :oppgavetypeId""",
-                mapOf("oppgavetypeId" to oppgavetypeId)
-            ).map { row ->
-                Oppgavefelt(
-                    id = row.long("id"),
-                    feltDefinisjon = hentFeltdefinisjon(),
-                    påkrevd = row.boolean("pakrevd"),
-                    visPåOppgave = true
-                )
-            }.asList
-        ).toSet()
-    }
-
-    private fun hentOppgavetype(tx: TransactionalSession, oppgaveEksternId: String): Oppgavetype {
-        return tx.run(
-            queryOf("""
-                    select * from oppgavetype where id = (select oppgavetype_id from oppgave_v3 where ekstern_id = :oppgaveEksternId
-                """.trimIndent(),
-                mapOf("oppgaveEksternId" to oppgaveEksternId)
-            ).map { row ->
-                Oppgavetype(
-                    id = row.long("id"),
-                    eksternId = row.string("ekstern_id"),
-                    område = områdeRepository.hent(tx, row.long("omrade_id")),
-                    definisjonskilde = row.string("definisjonskilde"),
-                    oppgavefelter = hentOppgavefelter(tx, row.long("id"))
-                )
-            }.asSingle
-        ) ?: throw IllegalStateException("Fant ingen oppgavetype for eksisterende oppgave: $oppgaveEksternId")
-    }
-
-
-
-    private fun hentFeltdefinisjon(): no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon {
-        TODO()
-    }
-
-*/
 }

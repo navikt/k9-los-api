@@ -13,12 +13,12 @@ import java.time.ZoneOffset
 class OppgaveTilBehandlingAdapter {
 
     fun lagBehandling(oppgaveversjoner: Set<Oppgave>): Behandling {
-        val sisteVersjon = oppgaveversjoner.first()
+        val sisteVersjon = oppgaveversjoner.last()
         return Behandling(
             sakId = null,
             behandlingId = sisteVersjon.eksternId,
-            funksjonellTid = OffsetDateTime.of(LocalDateTime.parse(sisteVersjon.eksternVersjon), ZoneOffset.UTC),
-            tekniskTid = OffsetDateTime.now(),
+            funksjonellTid = OffsetDateTime.of(LocalDateTime.parse(sisteVersjon.eksternVersjon), ZoneOffset.of("Europe/Oslo")),
+            tekniskTid = OffsetDateTime.of(LocalDateTime.now(), ZoneOffset.of("Europe/Oslo")),
             mottattDato = LocalDate.now(),
             registrertDato = null,
             vedtaksDato = null,
@@ -26,7 +26,7 @@ class OppgaveTilBehandlingAdapter {
             vedtakId = null, //TODO: callback mot K9?
             saksnummer = sisteVersjon.hentVerdi("saksnummer")?.verdi,
             behandlingType = sisteVersjon.hentVerdi("behandlingTypekode")?.verdi,
-            behandlingStatus = sisteVersjon.hentVerdi("behandnlingsstatus")?.verdi,
+            behandlingStatus = sisteVersjon.hentVerdi("behandlingsstatus")?.verdi,
             resultat = sisteVersjon.hentVerdi("resultattype")?.verdi,
             resultatBegrunnelse = null, //TODO: callback mot K9?
             utenlandstilsnitt = null,
