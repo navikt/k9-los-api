@@ -175,17 +175,45 @@ enum class BehandlingType(override val kode: String, override val navn: String, 
 }
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
-enum class OppgaveKode(override val kode: String, override val navn: String) : Kodeverdi {
-    SYKDOM("9001", "Sykdom"),
-    INFOTRYGD_SØK("9007", "Infotrygdsøk"),
-    OMSORG("9020", "Omsorg"),
-    ETTERLYS_INNTEKTSMELDING("9068", "Etterlys inntektsmelding"),
-    AVKLAR_MANGLENDE_INNTEKTSMELDING("9069", "Avklar manglende inntektsmelding"),
-    FASTSETT_BEREGNINGSGRUNNLAG("5038", "Fastsett beregningsgrunnlag"),
-    MEDLEMSKAP("5053", "Medlemskap"),
-    FORESLÅ_VEDTAK("5015", "Forslå vedtak"),
-    FORESLÅ_VEDTAK_MANUELT("5028", "Foreslå vedtak manuelt"),
-    FATTE_VEDTAK("5016", "Fatte vedtak");
+enum class OppgaveKode(override val kode: String, override val navn: String, val gruppering: String) : Kodeverdi {
+    // Innledene behandling
+    MEDLEMSKAP("5053", "Medlemskap", "Innledende behandling"),
+    SØKNADSFRIST("5077", "Søknadsfrist", "Innledende behandling"),
+    OPPTJENING("5089", "Opptjening", "Innledende behandling"),
+    SYKDOM("5053", "Sykdom", "Innledende behandling"),
+    OMSORGEN_FOR("5053", "Omsorgen for", "Innledende behandling"),
+    AVKLAR_VERGE("5053", "Avklar verge", "Innledende behandling"),
+    // Om barnet
+    NATTEVÅK("9200", "Nattevåk", "Om barnet"),
+    BEREDSKAP("9201", "Beredskap", "Om barnet"),
+    BARNS_DØD("9202", "Barns død", "Om barnet"),
+    // Mangler inntektsmelding
+    AVKLAR_MANGLENDE_IM("9069", "Avklar manglende IM", "Mangler inntektsmelding"),
+    ENDELIG_AVKLARING_MANGLER_IM("9071", "Endelig avklaring mangler IM", "Mangler inntektsmelding"),
+    MANGLER_ARBEIDSTID("9203", "Mangler arbeidstid", "Mangler inntektsmelding"),
+    // Beregning
+    FASTSETT_BEREGNINGSGRUNNLAG("5038", "Fastsett beregningsgrunnlag", "Beregning"),
+    NY_ENDRET_SN_VARIG_ENDRING("5039", "Ny/endret SN (varig endring)", "Beregning"),
+    NY_ENDRET_SN_NY_I_ARB_LIVET("5049", "Ny/endret SN (ny i arb.livet)", "Beregning"),
+    FORDEL_BEREGNINGSGRUNNLAG("5046", "Fordel beregningsgrunnlag", "Beregning"),
+    TIDSBEGRENSET_ARBEIDSFORHOLD("5047", "Tidsbegrenset arbeidsforhold", "Beregning"),
+    AKTIVITETER("5052", "Aktiviteter", "Beregning"),
+    BEREGNINGSFAKTA("5058", "Beregningsfakta", "Beregning"),
+    FEILUTBETALING("5084", "Feilutbetaling", "Beregning"),
+    OVERSTYRING_BEREGNINGSAKTIVITET("6014", "Overstyring beregningsaktivitet", "Beregning"),
+    OVERSTYRING_BEREGNINGSGRUNNLAG("6015", "Overstyring beregningsgrunnlag", "Beregning"),
+    // Flyttesaker
+    MANUELL_BEREGNING("9005", "Manuell beregning", "Flyttesaker"),
+    INFOTRYGDSØKNAD("9007", "Infotrygsøknad", "Flyttesaker"),
+    INFOTRYGDSØKNAD_TO_PERSONER("9008", "Infotrygdsøknad 2 personer", "Flyttesaker"),
+    // Fatte vedtak
+    FORESLÅ_VEDTAK("5015", "Foreslå vedtak", "Fatte vedtak"),
+    FORESLÅ_VEDTAK_MANUELT("5028", "Foreslå vedtak manuelt", "Fatte vedtak"),
+    VURDERE_ANNEN_YTELSE_FØR_VEDTAK_KODE("5033", "Sjekk VKY", "Fatte vedtak"),
+    VURDER_DOKUMENT("5034", "Vurder dokument", "Fatte vedtak"),
+    // Uspesifisert
+    KONTROLL_MANUELL_REVURDERING("5056", "Kontroll manuell revurdering", "Uspesifisert"),
+    VURDER_REFUSJON_BERGRUNN_KODE("5059", "Mangler navn", "Uspesifisert");
 
     override val kodeverk = "OPPGAVE_KODE"
 

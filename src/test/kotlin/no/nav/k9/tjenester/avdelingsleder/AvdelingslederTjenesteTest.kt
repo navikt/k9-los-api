@@ -86,7 +86,7 @@ internal class AvdelingslederTjenesteTest : AbstractK9LosIntegrationTest() {
             val oppgavekodeKriterium = KriteriumDto(
                 id = køUuid,
                 kriterierType = KøKriterierType.OPPGAVEKODE,
-                koder = listOf(OppgaveKode.SYKDOM.kode, OppgaveKode.ETTERLYS_INNTEKTSMELDING.kode)
+                koder = listOf(OppgaveKode.SYKDOM.kode, OppgaveKode.ENDELIG_AVKLARING_MANGLER_IM.kode)
             )
 
             avdelingslederTjeneste.endreKøKriterier(oppgavekodeKriterium)
