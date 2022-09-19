@@ -177,43 +177,43 @@ enum class BehandlingType(override val kode: String, override val navn: String, 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 enum class OppgaveKode(override val kode: String, override val navn: String, val gruppering: String) : Kodeverdi {
     // Innledene behandling
-    MEDLEMSKAP("5053", "Medlemskap", "Innledende behandling"),
-    SØKNADSFRIST("5077", "Søknadsfrist", "Innledende behandling"),
-    OPPTJENING("5089", "Opptjening", "Innledende behandling"),
-    SYKDOM("5053", "Sykdom", "Innledende behandling"),
-    OMSORGEN_FOR("5053", "Omsorgen for", "Innledende behandling"),
-    AVKLAR_VERGE("5053", "Avklar verge", "Innledende behandling"),
+    MEDLEMSKAP("5053", "Medlemskap", OppgaveKodeGruppe.INNLEDENDE_BEHANDLING.navn),
+    SØKNADSFRIST("5077", "Søknadsfrist", OppgaveKodeGruppe.INNLEDENDE_BEHANDLING.navn),
+    OPPTJENING("5089", "Opptjening", OppgaveKodeGruppe.INNLEDENDE_BEHANDLING.navn),
+    SYKDOM("5053", "Sykdom", OppgaveKodeGruppe.INNLEDENDE_BEHANDLING.navn),
+    OMSORGEN_FOR("5053", "Omsorgen for", OppgaveKodeGruppe.INNLEDENDE_BEHANDLING.navn),
+    AVKLAR_VERGE("5053", "Avklar verge", OppgaveKodeGruppe.INNLEDENDE_BEHANDLING.navn),
     // Om barnet
-    NATTEVÅK("9200", "Nattevåk", "Om barnet"),
-    BEREDSKAP("9201", "Beredskap", "Om barnet"),
-    BARNS_DØD("9202", "Barns død", "Om barnet"),
+    NATTEVÅK("9200", "Nattevåk", OppgaveKodeGruppe.OM_BARNET.navn),
+    BEREDSKAP("9201", "Beredskap", OppgaveKodeGruppe.OM_BARNET.navn),
+    BARNS_DØD("9202", "Barns død", OppgaveKodeGruppe.OM_BARNET.navn),
     // Mangler inntektsmelding
-    AVKLAR_MANGLENDE_IM("9069", "Avklar manglende IM", "Mangler inntektsmelding"),
-    ENDELIG_AVKLARING_MANGLER_IM("9071", "Endelig avklaring mangler IM", "Mangler inntektsmelding"),
-    MANGLER_ARBEIDSTID("9203", "Mangler arbeidstid", "Mangler inntektsmelding"),
+    AVKLAR_MANGLENDE_IM("9069", "Avklar manglende IM", OppgaveKodeGruppe.MANGLER_INNTEKTSMELDING.navn),
+    ENDELIG_AVKLARING_MANGLER_IM("9071", "Endelig avklaring mangler IM", OppgaveKodeGruppe.MANGLER_INNTEKTSMELDING.navn),
+    MANGLER_ARBEIDSTID("9203", "Mangler arbeidstid", OppgaveKodeGruppe.MANGLER_INNTEKTSMELDING.navn),
     // Beregning
-    FASTSETT_BEREGNINGSGRUNNLAG("5038", "Fastsett beregningsgrunnlag", "Beregning"),
-    NY_ENDRET_SN_VARIG_ENDRING("5039", "Ny/endret SN (varig endring)", "Beregning"),
-    NY_ENDRET_SN_NY_I_ARB_LIVET("5049", "Ny/endret SN (ny i arb.livet)", "Beregning"),
-    FORDEL_BEREGNINGSGRUNNLAG("5046", "Fordel beregningsgrunnlag", "Beregning"),
-    TIDSBEGRENSET_ARBEIDSFORHOLD("5047", "Tidsbegrenset arbeidsforhold", "Beregning"),
-    AKTIVITETER("5052", "Aktiviteter", "Beregning"),
-    BEREGNINGSFAKTA("5058", "Beregningsfakta", "Beregning"),
-    FEILUTBETALING("5084", "Feilutbetaling", "Beregning"),
-    OVERSTYRING_BEREGNINGSAKTIVITET("6014", "Overstyring beregningsaktivitet", "Beregning"),
-    OVERSTYRING_BEREGNINGSGRUNNLAG("6015", "Overstyring beregningsgrunnlag", "Beregning"),
+    FASTSETT_BEREGNINGSGRUNNLAG("5038", "Fastsett beregningsgrunnlag", OppgaveKodeGruppe.BEREGNING.navn),
+    NY_ENDRET_SN_VARIG_ENDRING("5039", "Ny/endret SN (varig endring)", OppgaveKodeGruppe.BEREGNING.navn),
+    NY_ENDRET_SN_NY_I_ARB_LIVET("5049", "Ny/endret SN (ny i arb.livet)", OppgaveKodeGruppe.BEREGNING.navn),
+    FORDEL_BEREGNINGSGRUNNLAG("5046", "Fordel beregningsgrunnlag", OppgaveKodeGruppe.BEREGNING.navn),
+    TIDSBEGRENSET_ARBEIDSFORHOLD("5047", "Tidsbegrenset arbeidsforhold", OppgaveKodeGruppe.BEREGNING.navn),
+    AKTIVITETER("5052", "Aktiviteter", OppgaveKodeGruppe.BEREGNING.navn),
+    BEREGNINGSFAKTA("5058", "Beregningsfakta", OppgaveKodeGruppe.BEREGNING.navn),
+    FEILUTBETALING("5084", "Feilutbetaling", OppgaveKodeGruppe.BEREGNING.navn),
+    OVERSTYRING_BEREGNINGSAKTIVITET("6014", "Overstyring beregningsaktivitet", OppgaveKodeGruppe.BEREGNING.navn),
+    OVERSTYRING_BEREGNINGSGRUNNLAG("6015", "Overstyring beregningsgrunnlag", OppgaveKodeGruppe.BEREGNING.navn),
     // Flyttesaker
-    MANUELL_BEREGNING("9005", "Manuell beregning", "Flyttesaker"),
-    INFOTRYGDSØKNAD("9007", "Infotrygsøknad", "Flyttesaker"),
-    INFOTRYGDSØKNAD_TO_PERSONER("9008", "Infotrygdsøknad 2 personer", "Flyttesaker"),
+    MANUELL_BEREGNING("9005", "Manuell beregning", OppgaveKodeGruppe.FLYTTESAKER.navn),
+    INFOTRYGDSØKNAD("9007", "Infotrygsøknad", OppgaveKodeGruppe.FLYTTESAKER.navn),
+    INFOTRYGDSØKNAD_TO_PERSONER("9008", "Infotrygdsøknad 2 personer", OppgaveKodeGruppe.FLYTTESAKER.navn),
     // Fatte vedtak
-    FORESLÅ_VEDTAK("5015", "Foreslå vedtak", "Fatte vedtak"),
-    FORESLÅ_VEDTAK_MANUELT("5028", "Foreslå vedtak manuelt", "Fatte vedtak"),
-    VURDERE_ANNEN_YTELSE_FØR_VEDTAK_KODE("5033", "Sjekk VKY", "Fatte vedtak"),
-    VURDER_DOKUMENT("5034", "Vurder dokument", "Fatte vedtak"),
+    FORESLÅ_VEDTAK("5015", "Foreslå vedtak", OppgaveKodeGruppe.FATTE_VEDTAK.navn),
+    FORESLÅ_VEDTAK_MANUELT("5028", "Foreslå vedtak manuelt", OppgaveKodeGruppe.FATTE_VEDTAK.navn),
+    VURDERE_ANNEN_YTELSE_FØR_VEDTAK_KODE("5033", "Sjekk VKY", OppgaveKodeGruppe.FATTE_VEDTAK.navn),
+    VURDER_DOKUMENT("5034", "Vurder dokument", OppgaveKodeGruppe.FATTE_VEDTAK.navn),
     // Uspesifisert
-    KONTROLL_MANUELL_REVURDERING("5056", "Kontroll manuell revurdering", "Uspesifisert"),
-    VURDER_REFUSJON_BERGRUNN_KODE("5059", "Mangler navn", "Uspesifisert");
+    KONTROLL_MANUELL_REVURDERING("5056", "Kontroll manuell revurdering", OppgaveKodeGruppe.USPESIFISERT.navn),
+    VURDER_REFUSJON_BERGRUNN_KODE("5059", "Mangler navn", OppgaveKodeGruppe.USPESIFISERT.navn);
 
     override val kodeverk = "OPPGAVE_KODE"
 
@@ -225,6 +225,16 @@ enum class OppgaveKode(override val kode: String, override val navn: String, val
             return OppgaveKode.values().find { it.kode == kode } ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
         }
     }
+}
+
+enum class OppgaveKodeGruppe(val navn: String) {
+    INNLEDENDE_BEHANDLING("Innledende behandling"),
+    OM_BARNET("Om barnet"),
+    MANGLER_INNTEKTSMELDING("Mangler inntektsmelding"),
+    BEREGNING("Beregning"),
+    FLYTTESAKER("Flyttesaker"),
+    FATTE_VEDTAK("Fatte vedtak"),
+    USPESIFISERT("Uspesifisert");
 }
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
