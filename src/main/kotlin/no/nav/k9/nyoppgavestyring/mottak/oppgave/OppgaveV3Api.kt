@@ -5,7 +5,7 @@ import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import no.nav.k9.integrasjon.rest.RequestContextService
-import no.nav.k9.nyoppgavestyring.adaptere.k9saktillosadapter.K9SakTilLosAdapterTjeneste
+import no.nav.k9.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdapterTjeneste
 import org.koin.ktor.ext.inject
 
 internal fun Route.OppgaveV3Api() {

@@ -2,7 +2,7 @@ package no.nav.k9.nyoppgavestyring.mottak.oppgave
 
 import kotliquery.TransactionalSession
 import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.nyoppgavestyring.adaptere.statistikkadapter.OppgavestatistikkTjeneste
+import no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 
@@ -19,13 +19,9 @@ class OppgaveV3Tjeneste(
             if (!idempotensMatch(dto, tx)) {
                 oppdater(dto, tx)
                 oppgavestatistikkTjeneste.sendStatistikk(dto.id, tx)
-
-                //sendEvent(behandlingEvent)
             }
         }
     }
-
-
 
     fun oppdater(oppgaveDto: OppgaveDto, tx: TransactionalSession) {
         val område = områdeRepository.hentOmråde(oppgaveDto.område, tx)

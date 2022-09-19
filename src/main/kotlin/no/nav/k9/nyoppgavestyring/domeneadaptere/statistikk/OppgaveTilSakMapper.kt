@@ -1,4 +1,4 @@
-package no.nav.k9.nyoppgavestyring.adaptere.statistikkadapter
+package no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk
 
 import no.nav.k9.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.statistikk.kontrakter.Sak
@@ -6,7 +6,7 @@ import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
-class OppgaveTilSakAdapter {
+class OppgaveTilSakMapper {
 
     companion object {
         val zoneOffset = ZoneOffset.of("Europe/Oslo")

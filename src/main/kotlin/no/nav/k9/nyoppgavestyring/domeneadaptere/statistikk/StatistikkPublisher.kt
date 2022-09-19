@@ -1,4 +1,4 @@
-package no.nav.k9.nyoppgavestyring.statistikk
+package no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk
 
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.dusseldorf.ktor.health.HealthCheck
@@ -8,7 +8,6 @@ import no.nav.helse.dusseldorf.ktor.health.UnHealthy
 import no.nav.k9.Configuration
 import no.nav.k9.KoinProfile
 import no.nav.k9.aksjonspunktbehandling.objectMapper
-import no.nav.k9.integrasjon.abac.IPepClient
 import no.nav.k9.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.integrasjon.kafka.KafkaConfig
 import no.nav.k9.integrasjon.kafka.TopicEntry
@@ -21,9 +20,8 @@ import org.apache.kafka.common.serialization.StringSerializer
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
 
-class StatistikkProducer constructor(
+class StatistikkPublisher constructor(
     val kafkaConfig: KafkaConfig,
-    val pepClient: IPepClient,
     val config: Configuration
 ) : HealthCheck {
 
@@ -49,7 +47,7 @@ class StatistikkProducer constructor(
         StringSerializer()
     )
 
-    fun send(sak: Sak, behandling: Behandling) {
+    fun publiser(sak: Sak, behandling: Behandling) {
         if (config.koinProfile() == KoinProfile.LOCAL) {
             return
         }

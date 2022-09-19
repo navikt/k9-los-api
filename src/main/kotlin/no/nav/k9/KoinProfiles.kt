@@ -45,10 +45,11 @@ import no.nav.k9.integrasjon.pdl.PdlService
 import no.nav.k9.integrasjon.pdl.PdlServiceLocal
 import no.nav.k9.integrasjon.rest.RequestContextService
 import no.nav.k9.integrasjon.sakogbehandling.SakOgBehandlingProducer
-import no.nav.k9.nyoppgavestyring.adaptere.k9saktillosadapter.K9SakTilLosAdapterTjeneste
-import no.nav.k9.nyoppgavestyring.adaptere.statistikkadapter.OppgaveTilBehandlingAdapter
-import no.nav.k9.nyoppgavestyring.adaptere.statistikkadapter.OppgaveTilSakAdapter
-import no.nav.k9.nyoppgavestyring.adaptere.statistikkadapter.OppgavestatistikkTjeneste
+import no.nav.k9.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk.OppgaveTilBehandlingMapper
+import no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk.OppgaveTilSakMapper
+import no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk.OppgavestatistikkTjeneste
+import no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk.StatistikkPublisher
 import no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.nyoppgavestyring.mottak.omraade.OmrådeRepository
@@ -314,14 +315,21 @@ fun common(app: Application, config: Configuration) = module {
     single { OmrådeRepository(get()) }
     single { OppgavetypeRepository(get()) }
     single { OppgaveV3Repository() }
-    single { OppgaveTilBehandlingAdapter() }
-    single { OppgaveTilSakAdapter() }
+    single { OppgaveTilBehandlingMapper() }
+    single { OppgaveTilSakMapper() }
     single { no.nav.k9.nyoppgavestyring.visningoguttrekk.OppgaveRepository() }
+
+    single {
+        StatistikkPublisher(
+            kafkaConfig = config.getKafkaConfig(),
+            config = config
+        )
+    }
+
     single {
         OppgavestatistikkTjeneste(
-            oppgaveTilBehandlingAdapter = get(),
-            oppgaveTilSakAdapter = get(),
-            oppgaveRepository = get()
+            oppgaveRepository = get(),
+            statistikkPublisher = get()
         )
     }
 

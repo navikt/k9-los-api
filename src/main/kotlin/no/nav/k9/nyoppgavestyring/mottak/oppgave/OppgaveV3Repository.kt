@@ -13,7 +13,7 @@ class OppgaveV3Repository {
 
     fun lagre(oppgave: OppgaveV3, tx: TransactionalSession) {
         // hente ut nyeste versjon(ekstern_id, område) i basen, sette aktuell versjon til inaktiv
-        val (eksisterendeId, eksisterendeVersjon) = hentVersjon(tx, oppgave) ?: Pair(null, null) //TODO: Herregud så stygt!
+        val (eksisterendeId, eksisterendeVersjon) = hentVersjon(tx, oppgave)
 
         eksisterendeId?.let { deaktiverVersjon(eksisterendeId, oppgave.endretTidspunkt, tx) }
 
@@ -60,7 +60,7 @@ class OppgaveV3Repository {
         }
     }
 
-    private fun hentVersjon(tx: TransactionalSession, oppgave: OppgaveV3): Pair<Long, Long>? {
+    private fun hentVersjon(tx: TransactionalSession, oppgave: OppgaveV3): Pair<Long?, Long?> {
         //TODO: konsistenssjekk - skrive om til å hente alle oppgavene for gitt eksternId og sjekke at en og bare en versjon er aktiv = true
         return tx.run(
             queryOf(
@@ -80,7 +80,7 @@ class OppgaveV3Repository {
                     "omrade" to oppgave.kildeområde
                 )
             ).map { row -> Pair(row.long("id"), row.long("versjon")) }.asSingle
-        )
+        )?: Pair(null, null)
     }
 
     private fun deaktiverVersjon(eksisterendeId: Long, deaktivertTidspunkt: LocalDateTime, tx: TransactionalSession) {

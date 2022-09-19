@@ -1,4 +1,4 @@
-package no.nav.k9.nyoppgavestyring.adaptere.statistikkadapter
+package no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk
 
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStatus
@@ -10,7 +10,7 @@ import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
-class OppgaveTilBehandlingAdapter {
+class OppgaveTilBehandlingMapper {
 
     companion object {
         val zoneOffset = ZoneOffset.of("Europe/Oslo")
@@ -39,7 +39,7 @@ class OppgaveTilBehandlingAdapter {
             resultatBeskrivelse = BehandlingResultatType.fraKode(sisteVersjon.hentVerdi("resultattype")).navn, //resultattype
             resultatBegrunnelseBeskrivelse = null,
             utenlandstilsnittBeskrivelse = null,
-            beslutter = null,
+            beslutter = sisteVersjon.hentVerdi("ansvarligBeslutterForTotrinn"),
             saksbehandler = null,
             behandlingOpprettetAv = null,
             behandlingOpprettetType = null,
