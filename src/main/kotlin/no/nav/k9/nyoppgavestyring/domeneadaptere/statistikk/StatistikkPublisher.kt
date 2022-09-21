@@ -12,8 +12,6 @@ import no.nav.k9.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.integrasjon.kafka.KafkaConfig
 import no.nav.k9.integrasjon.kafka.TopicEntry
 import no.nav.k9.integrasjon.kafka.TopicUse
-import no.nav.k9.statistikk.kontrakter.Behandling
-import no.nav.k9.statistikk.kontrakter.Sak
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.StringSerializer

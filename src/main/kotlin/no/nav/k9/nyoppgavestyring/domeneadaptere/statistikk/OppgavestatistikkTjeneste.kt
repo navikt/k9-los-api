@@ -2,8 +2,6 @@ package no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk
 
 import kotliquery.TransactionalSession
 import no.nav.k9.nyoppgavestyring.visningoguttrekk.OppgaveRepository
-import no.nav.k9.statistikk.kontrakter.Behandling
-import no.nav.k9.statistikk.kontrakter.Sak
 
 class OppgavestatistikkTjeneste(
     private val oppgaveRepository: OppgaveRepository,

@@ -5,7 +5,6 @@ import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.kodeverk.behandling.BehandlingType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon
 import no.nav.k9.nyoppgavestyring.visningoguttrekk.Oppgave
-import no.nav.k9.statistikk.kontrakter.Behandling
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -26,9 +25,9 @@ class OppgaveTilBehandlingMapper {
             tekniskTid = OffsetDateTime.now(zoneOffset),
             mottattDato = oppgaveversjoner.first().endretTidspunkt.toLocalDate(),
             registrertDato = oppgaveversjoner.first().endretTidspunkt.toLocalDate(),
-            vedtaksDato = null, // TODO vedtakstopic, YtelseV1.vedtattTidspunkt
+            vedtaksDato = sisteVersjon.hentVerdi("vedtaksDato")?.let { LocalDate.parse(it) }, // TODO vedtakstopic, YtelseV1.vedtattTidspunkt
             relatertBehandlingId = null,
-            vedtakId = null, //TODO: callback mot K9? evt vedtakstopic, YtelseV1.vedtakReferanse
+            vedtakId = sisteVersjon.hentVerdi("vedtakId"), //TODO: callback mot K9? evt vedtakstopic, YtelseV1.vedtakReferanse
             saksnummer = sisteVersjon.hentVerdi("saksnummer"),
             behandlingType = sisteVersjon.hentVerdi("behandlingTypekode"), //TODO: Bruke navn direkte her?
             behandlingStatus = sisteVersjon.hentVerdi("behandlingsstatus"),
