@@ -1,7 +1,6 @@
 package no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk
 
 import no.nav.k9.nyoppgavestyring.visningoguttrekk.Oppgave
-import no.nav.k9.statistikk.kontrakter.Sak
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -19,9 +18,9 @@ class OppgaveTilSakMapper {
             sakId = sisteVersjon.eksternId,
             funksjonellTid = OffsetDateTime.of(LocalDateTime.parse(sisteVersjon.eksternVersjon), zoneOffset),
             tekniskTid = OffsetDateTime.now(zoneOffset),
-            opprettetDato = LocalDateTime.parse(oppgaveversjoner.first().eksternVersjon).toLocalDate(),
+            opprettetDato = oppgaveversjoner.first().endretTidspunkt.toLocalDate(), // TODO må finne ut om dette er riktig
             aktorId = sisteVersjon.hentVerdi("aktorId")?.toLong(),
-            aktorer = listOf(),
+            aktorer = listOf(Aktør(sisteVersjon.hentVerdi("aktorId")!!.toLong(), "Søker", "Søker")), // TODO dette må gjøres mer robust
             ytelseType = sisteVersjon.hentVerdi("ytelsestype"),
             underType = null,
             sakStatus = sisteVersjon.hentVerdi("behandlingsstatus"),

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.k9.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.integrasjon.kafka.dto.BehandlingProsessEventDto
+import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjoner
 import no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
@@ -52,12 +53,22 @@ class K9SakTilLosAdapterTjeneste(
                 behandlingProsessEventK9Repository.hent(uuid).eventer
                     .map { event ->
                         event.aksjonspunktTilstander.forEach { aksjonspunktTilstand ->
-                            val oppgaveDto = lagOppgaveDto(event, aksjonspunktTilstand)
+                            var oppgaveDto = lagOppgaveDto(event, aksjonspunktTilstand)
+
+                            if (event.behandlingStatus == BehandlingStatus.AVSLUTTET.kode) {
+                                val vedtaksInfo = hentVedtaksInfo()
+                                oppgaveDto = oppgaveDto.berikMedVedtaksInfo(vedtaksInfo)
+                            }
+
                             oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto)
                         }
                     }
             }
         log.info("Avspilling av BehandlingProsessEventer ferdig")
+    }
+
+    private fun hentVedtaksInfo(): Map<String, String> {
+        TODO()
     }
 
     private fun lagOppgaveDto(event: BehandlingProsessEventDto, aksjonspunktTilstandDto: AksjonspunktTilstandDto) =
@@ -221,6 +232,14 @@ class K9SakTilLosAdapterTjeneste(
         } else {
             log.info("oppgavetype er allerede oppdatert")
         }
+    }
+
+    private fun OppgaveDto.berikMedVedtaksInfo(vedtaksInfo: Map<String, String>): OppgaveDto {
+        return this.copy(
+            feltverdier = this.feltverdier.plus(vedtaksInfo.map { (key, value) ->
+                OppgaveFeltverdiDto(nøkkel = key, verdi = value)
+            })
+        )
     }
 
 }
