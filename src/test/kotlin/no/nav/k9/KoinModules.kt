@@ -242,7 +242,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single { FeltdefinisjonRepository() }
-    single { OmrådeRepository(get()) }
+    single { OmrådeRepository(dataSource = get()) }
     single { OppgavetypeRepository(get()) }
     single { OppgaveV3Repository() }
     single { BehandlingProsessEventK9Repository(dataSource = get()) }
@@ -250,17 +250,12 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single { OppgaveTilSakMapper() }
     single { no.nav.k9.nyoppgavestyring.visningoguttrekk.OppgaveRepository() }
 
-    single {
-        StatistikkPublisher(
-            kafkaConfig = config.getKafkaConfig(),
-            config = config
-        )
-    }
+    val statistikkPublisher = mockk<StatistikkPublisher>()
 
     single {
         OppgavestatistikkTjeneste(
             oppgaveRepository = get(),
-            statistikkPublisher = get()
+            statistikkPublisher = statistikkPublisher
         )
     }
 

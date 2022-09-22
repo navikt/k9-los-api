@@ -204,7 +204,7 @@ class K9SakTilLosAdapterTjeneste(
             FeltdefinisjonerDto::class.java
         )
 
-        val område = områdeRepository.hent(feltdefinisjonerDto.område)
+        val område = områdeRepository.hent(feltdefinisjonerDto.område)!!
 
         if (!feltdefinisjonTjeneste.hent(område).feltdefinisjoner
             .containsAll(Feltdefinisjoner(feltdefinisjonerDto, område).feltdefinisjoner)) {
@@ -221,7 +221,7 @@ class K9SakTilLosAdapterTjeneste(
             OppgavetyperDto::class.java
         )
 
-        val område = områdeRepository.hent(oppgavetyperDto.område)
+        val område = områdeRepository.hent(oppgavetyperDto.område)!!
 
         val oppgaveType = oppgavetypeTjeneste.hent(område).oppgavetyper.find {
             it.eksternId.equals(oppgavetyperDto.oppgavetyper.first().id)

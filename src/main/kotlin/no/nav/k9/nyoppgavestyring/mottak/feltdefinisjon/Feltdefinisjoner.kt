@@ -2,16 +2,15 @@ package no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon
 
 import no.nav.k9.nyoppgavestyring.mottak.omraade.Område
 
-
 class Feltdefinisjoner(
     val område: Område,
-    val feltdefinisjoner: Set<no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon>
+    val feltdefinisjoner: Set<Feltdefinisjon>
 ) {
 
-    constructor(feltdefinisjonerDto: FeltdefinisjonerDto, område: Område): this(
+    constructor(feltdefinisjonerDto: FeltdefinisjonerDto, område: Område) : this(
         område = område,
         feltdefinisjoner = feltdefinisjonerDto.feltdefinisjoner.map { feltdefinisjonDto ->
-            no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon(
+            Feltdefinisjon(
                 eksternId = feltdefinisjonDto.id,
                 område = område,
                 listetype = feltdefinisjonDto.listetype,
@@ -21,12 +20,12 @@ class Feltdefinisjoner(
         }.toSet()
     )
 
-    fun finnForskjeller(innkommendeFeltdefinisjoner: Feltdefinisjoner): Pair<Set<no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon>, Set<no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon>> {
+    fun finnForskjeller(innkommendeFeltdefinisjoner: Feltdefinisjoner): Pair<Set<Feltdefinisjon>, Set<Feltdefinisjon>> {
         if (!innkommendeFeltdefinisjoner.område.equals(this.område)) {
             throw IllegalStateException("Kan ikke sammenligne datatyper på tvers av områder. Dette skal være separate sett")
         }
-        val leggtilListe = mutableSetOf<no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon>()
-        val slettListe = mutableSetOf<no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon>()
+        val leggtilListe = mutableSetOf<Feltdefinisjon>()
+        val slettListe = mutableSetOf<Feltdefinisjon>()
         innkommendeFeltdefinisjoner.feltdefinisjoner.forEach { innkommende ->
             val eksisterende = feltdefinisjoner.find { it.eksternId.equals(innkommende.eksternId) }
             if (eksisterende == null) {
@@ -41,11 +40,11 @@ class Feltdefinisjoner(
         }
 
         feltdefinisjoner.forEach{ eksisterende ->
-            val innkommende = innkommendeFeltdefinisjoner.feltdefinisjoner.find { it.eksternId.equals(eksisterende.eksternId) }
-            if (innkommende == null) {
-                slettListe.add(eksisterende)
-            }
+            innkommendeFeltdefinisjoner.feltdefinisjoner.find { innkommendeFeltdefinisjon ->
+                innkommendeFeltdefinisjon.eksternId.equals(eksisterende.eksternId)
+            }?: slettListe.add(eksisterende)
         }
+
         return Pair(slettListe, leggtilListe)
     }
 

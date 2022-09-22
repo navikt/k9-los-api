@@ -1,14 +1,13 @@
-package no.nav.k9.nyoppgavestyring.feltdefinisjon
+package no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon
 
 import assertk.assertThat
 import assertk.assertions.hasSize
 import assertk.assertions.isEmpty
-import no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjoner
 import no.nav.k9.nyoppgavestyring.mottak.omraade.Område
 import org.junit.jupiter.api.Test
 
 class FeltdefinisjonTest {
-    val område = Område(eksternId = "K9")
+    private val område = Område(eksternId = "K9")
     @Test
     fun `test at vi legger til feltdefinisjoner om de ikke finnes fra før`() {
         val innkommendeFeltdefinisjoner = lagFeltdefinisjoner()
@@ -22,7 +21,7 @@ class FeltdefinisjonTest {
         val innkommendeFeltdefinisjoner = Feltdefinisjoner(
             område = område,
             feltdefinisjoner = setOf(
-                no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon(
+                Feltdefinisjon(
                     eksternId = "saksnummer",
                     område = område,
                     listetype = false,
@@ -41,14 +40,14 @@ class FeltdefinisjonTest {
         val innkommendeFeltdefinisjoner = Feltdefinisjoner(
             område = område,
             feltdefinisjoner = setOf(
-                no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon(
+                Feltdefinisjon(
                     eksternId = "saksnummer",
                     område = område,
                     listetype = true,
                     tolkesSom = "String",
                     visTilBruker = true
                 ),
-                no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon(
+                Feltdefinisjon(
                     eksternId = "opprettet",
                     område = område,
                     listetype = true,
@@ -66,14 +65,14 @@ class FeltdefinisjonTest {
         return Feltdefinisjoner(
             område = område,
             feltdefinisjoner = setOf(
-                no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon(
+                Feltdefinisjon(
                     eksternId = "saksnummer",
                     område = område,
                     listetype = false,
                     tolkesSom = "String",
                     visTilBruker = true
                 ),
-                no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon(
+                Feltdefinisjon(
                     eksternId = "opprettet",
                     område = område,
                     listetype = false,

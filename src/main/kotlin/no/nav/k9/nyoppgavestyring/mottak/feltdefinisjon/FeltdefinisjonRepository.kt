@@ -20,7 +20,7 @@ class FeltdefinisjonRepository {
             """.trimIndent(),
                 mapOf("omradeId" to område.id)
             ).map { row ->
-                no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon(
+                Feltdefinisjon(
                     id = row.long("id"),
                     eksternId = row.string("ekstern_id"),
                     område = område,
@@ -33,7 +33,7 @@ class FeltdefinisjonRepository {
         return Feltdefinisjoner(område, feltdefinisjoner.toSet())
     }
 
-    fun fjern(sletteListe: Set<no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon>, tx: TransactionalSession) {
+    fun fjern(sletteListe: Set<Feltdefinisjon>, tx: TransactionalSession) {
         sletteListe.forEach { datatype ->
             tx.run(
                 queryOf(
@@ -47,7 +47,7 @@ class FeltdefinisjonRepository {
         }
     }
 
-    fun leggTil(leggTilListe: Set<no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon>, område: Område, tx: TransactionalSession) {
+    fun leggTil(leggTilListe: Set<Feltdefinisjon>, område: Område, tx: TransactionalSession) {
         leggTilListe.forEach { datatype ->
             tx.run(
                 queryOf(
