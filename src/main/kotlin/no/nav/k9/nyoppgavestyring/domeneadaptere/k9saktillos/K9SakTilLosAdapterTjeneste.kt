@@ -20,28 +20,32 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.fixedRateTimer
+import no.nav.k9.Configuration
 
 class K9SakTilLosAdapterTjeneste(
     private val behandlingProsessEventK9Repository: BehandlingProsessEventK9Repository,
     private val områdeRepository: OmrådeRepository,
     private val feltdefinisjonTjeneste: FeltdefinisjonTjeneste,
     private val oppgavetypeTjeneste: OppgavetypeTjeneste,
-    private val oppgaveV3Tjeneste: OppgaveV3Tjeneste
+    private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
+    private val config: Configuration
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9SakTilLosAdapterTjeneste::class.java)
 
     fun kjør(kjørSetup: Boolean) {
-        fixedRateTimer(
-            name = "k9-sak-til-los",
-            daemon = true,
-            initialDelay = TimeUnit.SECONDS.toMillis(10),
-            period = TimeUnit.DAYS.toMillis(1)
-        ) {
-            if (kjørSetup) {
-                setup()
+        if (config.nyOppgavestyringAktivert()) {
+            fixedRateTimer(
+                name = "k9-sak-til-los",
+                daemon = true,
+                initialDelay = TimeUnit.SECONDS.toMillis(10),
+                period = TimeUnit.DAYS.toMillis(1)
+            ) {
+                if (kjørSetup) {
+                    setup()
+                }
+                spillAvBehandlingProsessEventer()
             }
-            spillAvBehandlingProsessEventer()
         }
     }
 

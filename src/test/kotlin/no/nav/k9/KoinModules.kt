@@ -290,7 +290,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             områdeRepository = get(),
             feltdefinisjonTjeneste = get(),
             oppgavetypeTjeneste = get(),
-            oppgaveV3Tjeneste = get()
+            oppgaveV3Tjeneste = get(),
+            config = get()
         )
     }
 }

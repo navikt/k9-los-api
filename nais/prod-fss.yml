@@ -125,3 +125,7 @@ spec:
       # token scope
     - name: OMSORGSPENGER_SAK_SCOPE
       value: "api://prod-gcp.omsorgspenger.omsorgspenger-sak/.default"
+
+      # feature toggles
+    - name: NY_OPPGAVESTYRING
+      value: "false"

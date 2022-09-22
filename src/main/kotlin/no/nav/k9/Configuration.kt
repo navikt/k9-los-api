@@ -92,6 +92,10 @@ data class Configuration(private val config: ApplicationConfig) {
             ?: ""
     }
 
+    internal fun nyOppgavestyringAktivert(): Boolean {
+        return config.getOptionalString("nav.features.nyOppgavestyring", secret = false).toBoolean()
+    }
+
     internal fun getKafkaConfig() =
         config.getRequiredString("nav.kafka.bootstrap_servers", secret = false).let { bootstrapServers ->
             val trustStore = config.getRequiredString("nav.trust_store.path", secret = false).let { trustStorePath ->
