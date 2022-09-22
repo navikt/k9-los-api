@@ -135,10 +135,11 @@ class AvdelingslederTjeneste(
         val saksbehandlersKoer = hentSaksbehandlersOppgavekoer()
         return saksbehandlersKoer.entries.map {
             SaksbehandlerDto(
-                it.key.brukerIdent,
-                it.key.navn,
-                it.key.epost,
-                it.value.map { ko -> ko.navn })
+                brukerIdent = it.key.brukerIdent,
+                navn = it.key.navn,
+                epost = it.key.epost,
+                enhet = it.key.enhet,
+                oppgavekoer = it.value.map { ko -> ko.navn })
         }.sortedBy { it.navn }
     }
 

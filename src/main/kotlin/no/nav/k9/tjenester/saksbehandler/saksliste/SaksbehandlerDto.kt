@@ -4,4 +4,6 @@ class SaksbehandlerDto(
     val brukerIdent: String?,
     val navn: String?,
     var epost: String,
-    val oppgavekoer: List<String>)
+    var enhet: String?,
+    val oppgavekoer: List<String>
+)
