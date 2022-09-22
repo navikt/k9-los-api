@@ -180,9 +180,9 @@ enum class OppgaveKode(override val kode: String, override val navn: String, val
     MEDLEMSKAP("5053", "Medlemskap", OppgaveKodeGruppe.INNLEDENDE_BEHANDLING.navn),
     SØKNADSFRIST("5077", "Søknadsfrist", OppgaveKodeGruppe.INNLEDENDE_BEHANDLING.navn),
     OPPTJENING("5089", "Opptjening", OppgaveKodeGruppe.INNLEDENDE_BEHANDLING.navn),
-    SYKDOM("5053", "Sykdom", OppgaveKodeGruppe.INNLEDENDE_BEHANDLING.navn),
-    OMSORGEN_FOR("5053", "Omsorgen for", OppgaveKodeGruppe.INNLEDENDE_BEHANDLING.navn),
-    AVKLAR_VERGE("5053", "Avklar verge", OppgaveKodeGruppe.INNLEDENDE_BEHANDLING.navn),
+    SYKDOM("9001", "Sykdom", OppgaveKodeGruppe.INNLEDENDE_BEHANDLING.navn),
+    OMSORGEN_FOR("9020", "Omsorgen for", OppgaveKodeGruppe.INNLEDENDE_BEHANDLING.navn),
+    AVKLAR_VERGE("5030", "Avklar verge", OppgaveKodeGruppe.INNLEDENDE_BEHANDLING.navn),
     // Om barnet
     NATTEVÅK("9200", "Nattevåk", OppgaveKodeGruppe.OM_BARNET.navn),
     BEREDSKAP("9201", "Beredskap", OppgaveKodeGruppe.OM_BARNET.navn),
