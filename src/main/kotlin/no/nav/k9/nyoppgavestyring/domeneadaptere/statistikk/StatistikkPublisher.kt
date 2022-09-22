@@ -34,7 +34,7 @@ class StatistikkPublisher constructor(
     )
 
     private companion object {
-        private const val NAME = "NyStatistikkProducer"
+        private const val NAME = "NyStatistikkPublisher"
 
         private val log = LoggerFactory.getLogger(StatistikkProducer::class.java)
     }
