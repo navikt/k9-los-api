@@ -8,12 +8,13 @@ import no.nav.k9.nyoppgavestyring.visningoguttrekk.Oppgave
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
 
 class OppgaveTilBehandlingMapper {
 
     companion object {
-        val zoneOffset = ZoneOffset.of("Europe/Oslo")
+        val zoneId = ZoneId.of("Europe/Oslo")
     }
 
     fun lagBehandling(oppgaveversjoner: Set<Oppgave>): Behandling {
@@ -21,8 +22,8 @@ class OppgaveTilBehandlingMapper {
         return Behandling(
             sakId = sisteVersjon.hentVerdi("saksnummer"),
             behandlingId = sisteVersjon.eksternId,
-            funksjonellTid = OffsetDateTime.of(LocalDateTime.parse(sisteVersjon.eksternVersjon), zoneOffset),
-            tekniskTid = OffsetDateTime.now(zoneOffset),
+            funksjonellTid = LocalDateTime.parse(sisteVersjon.eksternVersjon).atZone(zoneId).toOffsetDateTime(),
+            tekniskTid = OffsetDateTime.now(zoneId),
             mottattDato = oppgaveversjoner.first().endretTidspunkt.toLocalDate(),
             registrertDato = oppgaveversjoner.first().endretTidspunkt.toLocalDate(),
             vedtaksDato = sisteVersjon.hentVerdi("vedtaksDato")?.let { LocalDate.parse(it) }, // TODO vedtakstopic, YtelseV1.vedtattTidspunkt

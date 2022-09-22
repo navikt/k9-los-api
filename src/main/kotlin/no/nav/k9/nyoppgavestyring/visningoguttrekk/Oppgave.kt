@@ -5,7 +5,7 @@ import java.time.LocalDateTime
 class Oppgave(
     val eksternId: String,
     val eksternVersjon: String,
-    val oppgavetype: String,
+    val oppgavetypeId: Long,
     val status: String, //TODO: definere typer/enum
     val endretTidspunkt: LocalDateTime,
     val kildeområde: String,
@@ -15,7 +15,7 @@ class Oppgave(
         val oppgavefelt = hentOppgavefelt(feltnavn)
 
         if (oppgavefelt?.listetype == true) {
-            throw IllegalStateException("Kan ikke hente listetype som enkeltverdi")
+            throw IllegalStateException("Kan ikke hente listetype av $feltnavn som enkeltverdi")
         }
 
         return oppgavefelt?.verdi
@@ -24,8 +24,10 @@ class Oppgave(
     fun hentListeverdi(feltnavn: String): List<String> {
         val oppgavefelt = hentOppgavefelt(feltnavn)
 
-        if (oppgavefelt?.listetype != true) {
-            throw IllegalStateException("Kan ikke hente enkeltverdi som listetype")
+        if (oppgavefelt != null) {
+            if (!oppgavefelt.listetype) {
+                throw IllegalStateException("Kan ikke hente enkeltverdi av $feltnavn som listetype")
+            }
         }
 
         return felter.filter { feltverdi ->

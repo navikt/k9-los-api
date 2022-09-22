@@ -19,7 +19,7 @@ class OppgaveRepository {
                 Oppgave(
                     eksternId = eksternId,
                     eksternVersjon = row.string("ekstern_versjon"),
-                    oppgavetype = row.string("oppgavetype"),
+                    oppgavetypeId = row.long("oppgavetype_id"),
                     status = row.string("status"),
                     endretTidspunkt = row.localDateTime("endret_tidspunkt"),
                     kildeområde = row.string("kildeomrade"),
@@ -46,7 +46,7 @@ class OppgaveRepository {
                 Oppgavefelt(
                     eksternId = row.string("ekstern_id"),
                     område = row.string("omrade"),
-                    listetype = row.boolean("listetype"),
+                    listetype = row.boolean("liste_type"),
                     påkrevd = row.boolean("pakrevd"),
                     verdi = row.string("verdi"),
                 )

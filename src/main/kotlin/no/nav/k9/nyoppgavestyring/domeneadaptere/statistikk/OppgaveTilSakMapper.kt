@@ -3,12 +3,13 @@ package no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk
 import no.nav.k9.nyoppgavestyring.visningoguttrekk.Oppgave
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
 
 class OppgaveTilSakMapper {
 
     companion object {
-        val zoneOffset = ZoneOffset.of("Europe/Oslo")
+        val zoneId = ZoneId.of("Europe/Oslo")
     }
 
     fun lagSak(oppgaveversjoner: Set<Oppgave>): Sak {
@@ -16,8 +17,8 @@ class OppgaveTilSakMapper {
         return Sak(
             saksnummer = sisteVersjon.eksternId,
             sakId = sisteVersjon.eksternId,
-            funksjonellTid = OffsetDateTime.of(LocalDateTime.parse(sisteVersjon.eksternVersjon), zoneOffset),
-            tekniskTid = OffsetDateTime.now(zoneOffset),
+            funksjonellTid = LocalDateTime.parse(sisteVersjon.eksternVersjon).atZone(OppgaveTilBehandlingMapper.zoneId).toOffsetDateTime(),
+            tekniskTid = OffsetDateTime.now(zoneId),
             opprettetDato = oppgaveversjoner.first().endretTidspunkt.toLocalDate(), // TODO må finne ut om dette er riktig
             aktorId = sisteVersjon.hentVerdi("aktorId")?.toLong(),
             aktorer = listOf(Aktør(sisteVersjon.hentVerdi("aktorId")!!.toLong(), "Søker", "Søker")), // TODO dette må gjøres mer robust

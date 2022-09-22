@@ -90,7 +90,7 @@ class OppgaveV3Repository {
             """.trimIndent(),
                 mapOf(
                     "id" to eksisterendeId,
-                    "deaktivertTidsunkt" to deaktivertTidspunkt
+                    "deaktivertTidspunkt" to deaktivertTidspunkt
                 )
             ).asUpdate
         )

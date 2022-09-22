@@ -59,8 +59,8 @@ class K9SakTilLosAdapterTjeneste(
                             var oppgaveDto = lagOppgaveDto(event, aksjonspunktTilstand)
 
                             if (event.behandlingStatus == BehandlingStatus.AVSLUTTET.kode) {
-                                val vedtaksInfo = hentVedtaksInfo()
-                                oppgaveDto = oppgaveDto.berikMedVedtaksInfo(vedtaksInfo)
+                                //val vedtaksInfo = hentVedtaksInfo()
+                                //oppgaveDto = oppgaveDto.berikMedVedtaksInfo(vedtaksInfo)
                             }
 
                             oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto)
