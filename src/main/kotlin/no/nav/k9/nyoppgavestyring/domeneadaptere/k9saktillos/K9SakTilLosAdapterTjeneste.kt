@@ -38,15 +38,14 @@ class K9SakTilLosAdapterTjeneste(
             initialDelay = TimeUnit.SECONDS.toMillis(10),
             period = TimeUnit.DAYS.toMillis(1)
         ) {
-            spillAvBehandlingProsessEventer(kjørSetup)
+            if (kjørSetup) {
+                setup()
+            }
+            spillAvBehandlingProsessEventer()
         }
     }
 
-    fun spillAvBehandlingProsessEventer(kjørSetup: Boolean) {
-        if (kjørSetup) {
-            setup()
-        }
-
+    fun spillAvBehandlingProsessEventer() {
         log.info("Starter avspilling av BehandlingProsessEventer")
         behandlingProsessEventK9Repository.hentAlleEventerIder()
             .map { uuid ->
