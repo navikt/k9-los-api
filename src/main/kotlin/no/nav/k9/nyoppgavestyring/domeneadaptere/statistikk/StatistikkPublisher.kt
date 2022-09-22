@@ -46,9 +46,11 @@ class StatistikkPublisher constructor(
     )
 
     fun publiser(sak: Sak, behandling: Behandling) {
+        /*
         if (config.koinProfile() == KoinProfile.LOCAL) {
             return
         }
+        */
         runBlocking {
             send(sak, TOPIC_USE_STATISTIKK_SAK.name)
             send(behandling, TOPIC_USE_STATISTIKK_BEHANDLING.name)
@@ -56,11 +58,11 @@ class StatistikkPublisher constructor(
     }
 
     private fun send(melding: Any, topic: String) {
-        if (config.koinProfile() == KoinProfile.LOCAL) {
+        /*if (config.koinProfile() == KoinProfile.LOCAL) {
             log.info("Lokal kjøring, sender ikke melding til statistikk")
             return
         }
-
+*/
         val meldingJson = objectMapper().writeValueAsString(melding)
         producer.send(ProducerRecord(topic, meldingJson)) { _, exception ->
             if (exception != null) {
