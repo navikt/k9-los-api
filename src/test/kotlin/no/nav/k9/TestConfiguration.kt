@@ -54,6 +54,7 @@ object TestConfiguration {
         map["nav.db.url"] = "jdbc:postgresql://localhost:5432/k9los_unit"
         map["nav.db.username"] = "k9los_unit"
         map["nav.db.password"] = "k9los_unit"
+        map["nav.features.nyOppgavestyring"] = "true"
         return map.toMap()
     }
 
