@@ -63,7 +63,7 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
 
     private fun byggOppgavemodell() {
         if (områdeRepository.hent(områdeDto.eksternId) == null) {
-            områdeRepository.lagre(område = områdeDto.eksternId)
+            områdeRepository.lagre(eksternId = områdeDto.eksternId)
             feltdefinisjonTjeneste.oppdater(lagFeltdefinisjonDto())
             oppgavetypeTjeneste.oppdater(lagOppgavetypeDto())
         }
