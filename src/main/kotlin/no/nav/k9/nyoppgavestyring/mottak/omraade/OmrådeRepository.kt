@@ -23,13 +23,13 @@ class OmrådeRepository(private val dataSource: DataSource) {
         ) ?: throw IllegalArgumentException("Området finnes ikke")
     }
 
-    fun lagre(område: String) {
+    fun lagre(eksternId: String) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 tx.run(
                     queryOf(
                         "insert into omrade(ekstern_id) values (:ekstern_id) on conflict do nothing",
-                        mapOf("ekstern_id" to område)
+                        mapOf("ekstern_id" to eksternId)
                     ).asUpdate
                 )
             }
