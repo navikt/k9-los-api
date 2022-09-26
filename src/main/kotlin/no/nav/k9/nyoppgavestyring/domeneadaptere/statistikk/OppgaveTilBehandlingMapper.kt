@@ -1,6 +1,5 @@
 package no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk
 
-import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.kodeverk.behandling.BehandlingType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon
@@ -9,7 +8,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneId
-import java.time.ZoneOffset
 
 class OppgaveTilBehandlingMapper {
 
@@ -30,29 +28,29 @@ class OppgaveTilBehandlingMapper {
             relatertBehandlingId = null,
             vedtakId = sisteVersjon.hentVerdi("vedtakId"), //TODO: callback mot K9? evt vedtakstopic, YtelseV1.vedtakReferanse
             saksnummer = sisteVersjon.hentVerdi("saksnummer"),
-            behandlingType = sisteVersjon.hentVerdi("behandlingTypekode"), //TODO: Bruke navn direkte her?
-            behandlingStatus = sisteVersjon.hentVerdi("behandlingsstatus"),
+            behandlingType = BehandlingType.fraKode(sisteVersjon.hentVerdi("behandlingTypekode")).navn, //TODO: Bruke navn direkte her?
+            behandlingStatus = BehandlingStatus.fraKode(sisteVersjon.hentVerdi("behandlingsstatus")).navn,
             resultat = sisteVersjon.hentVerdi("resultattype"),
             resultatBegrunnelse = null, //TODO: callback mot K9?
             utenlandstilsnitt = utledUtenlandstilsnitt(sisteVersjon),
-            behandlingTypeBeskrivelse = BehandlingType.fraKode(sisteVersjon.hentVerdi("behandlingTypekode")).navn,
-            behandlingStatusBeskrivelse = BehandlingStatus.fraKode(sisteVersjon.hentVerdi("behandlingsstatus")).navn,
-            resultatBeskrivelse = BehandlingResultatType.fraKode(sisteVersjon.hentVerdi("resultattype")).navn, //resultattype
+            //behandlingTypeBeskrivelse = BehandlingType.fraKode(sisteVersjon.hentVerdi("behandlingTypekode")).navn,
+            //behandlingStatusBeskrivelse = BehandlingStatus.fraKode(sisteVersjon.hentVerdi("behandlingsstatus")).navn,
+            //resultatBeskrivelse = BehandlingResultatType.fraKode(sisteVersjon.hentVerdi("resultattype")).navn, //resultattype
             resultatBegrunnelseBeskrivelse = null,
             utenlandstilsnittBeskrivelse = null,
-            beslutter = sisteVersjon.hentVerdi("ansvarligBeslutterForTotrinn"), //TODO riktig?
+            beslutter = sisteVersjon.hentVerdi("ansvarligBeslutterForTotrinn")?: "", //TODO riktig?
             saksbehandler = utledAnsvarligSaksbehandler(oppgaveversjoner),
             behandlingOpprettetAv = "system",
             behandlingOpprettetType = null,
             behandlingOpprettetTypeBeskrivelse = null,
-            ansvarligEnhetKode = sisteVersjon.hentVerdi("behandlendeEnhet"),
+            ansvarligEnhetKode = sisteVersjon.hentVerdi("behandlendeEnhet")?: "SRV",
             ansvarligEnhetType = "NORG",
-            behandlendeEnhetKode = sisteVersjon.hentVerdi("behandlendeEnhet"),
+            behandlendeEnhetKode = sisteVersjon.hentVerdi("behandlendeEnhet")?: "SRV",
             behandlendeEnhetType = "NORG",
             datoForUttak = null, // TODO: mappes fra YtelseV1.anvist.firstOrNull()?.periode?.fom, men trengs ikke?
             datoForUtbetaling = null, //TODO: trengs ikke?
             totrinnsbehandling = sisteVersjon.hentVerdi("totrinnskontroll").toBoolean(),
-            avsender = "k9sak",
+            avsender = "K9sak",
             versjon = 1, //TODO: Ikke i bruk?
         )
     }
