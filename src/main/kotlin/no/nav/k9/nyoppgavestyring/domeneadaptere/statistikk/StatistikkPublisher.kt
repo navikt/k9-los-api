@@ -6,10 +6,8 @@ import no.nav.helse.dusseldorf.ktor.health.Healthy
 import no.nav.helse.dusseldorf.ktor.health.Result
 import no.nav.helse.dusseldorf.ktor.health.UnHealthy
 import no.nav.k9.Configuration
-import no.nav.k9.KoinProfile
 import no.nav.k9.aksjonspunktbehandling.objectMapper
-import no.nav.k9.integrasjon.datavarehus.StatistikkProducer
-import no.nav.k9.integrasjon.kafka.KafkaConfig
+import no.nav.k9.integrasjon.kafka.IKafkaConfig
 import no.nav.k9.integrasjon.kafka.TopicEntry
 import no.nav.k9.integrasjon.kafka.TopicUse
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -18,8 +16,8 @@ import org.apache.kafka.common.serialization.StringSerializer
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
 
-class StatistikkPublisher constructor(
-    val kafkaConfig: KafkaConfig,
+class StatistikkPublisher(
+    val kafkaConfig: IKafkaConfig,
     val config: Configuration
 ) : HealthCheck {
 
@@ -36,7 +34,7 @@ class StatistikkPublisher constructor(
     private companion object {
         private const val NAME = "NyStatistikkPublisher"
 
-        private val log = LoggerFactory.getLogger(StatistikkProducer::class.java)
+        private val log = LoggerFactory.getLogger(StatistikkPublisher::class.java)
     }
 
     private val producer: KafkaProducer<String, String> = KafkaProducer(
