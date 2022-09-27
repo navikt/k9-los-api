@@ -203,7 +203,7 @@ class K9SakTilLosAdapterTjeneste(
 
     private fun opprettFeltdefinisjoner(objectMapper: ObjectMapper) {
         val feltdefinisjonerDto = objectMapper.readValue(
-            File("./adapterdefinisjoner/k9-feltdefinisjoner-v2.json"),
+            K9SakTilLosAdapterTjeneste::class.java.getResource("/adapterdefinisjoner/k9-feltdefinisjoner-v2.json")!!.readText(),
             FeltdefinisjonerDto::class.java
         )
 
@@ -220,7 +220,7 @@ class K9SakTilLosAdapterTjeneste(
 
     private fun opprettOppgavetype(objectMapper: ObjectMapper) {
         val oppgavetyperDto = objectMapper.readValue(
-            File("./adapterdefinisjoner/k9-oppgavetyper-v2.json"),
+            K9SakTilLosAdapterTjeneste::class.java.getResource("/adapterdefinisjoner/k9-oppgavetyper-v2.json")!!.readText(),
             OppgavetyperDto::class.java
         )
 
