@@ -25,6 +25,18 @@ jobs:
           CLUSTER: dev-gcp
           VAR: kafka-pool=nav-dev
           RESOURCE: nais/kafka/produksjonsstyring-k9punsj.yml
+      - uses: nais/deploy/actions/deploy@v1
+        env:
+          APIKEY: ${{ secrets.DEPLOY_KEY }}
+          CLUSTER: dev-gcp
+          VAR: kafka-pool=nav-dev
+          RESOURCE: nais/kafka/aapen-k9statistikk-behandling-v2.yml
+      - uses: nais/deploy/actions/deploy@v1
+        env:
+          APIKEY: ${{ secrets.DEPLOY_KEY }}
+          CLUSTER: dev-gcp
+          VAR: kafka-pool=nav-dev
+          RESOURCE: nais/kafka/aapen-k9statistikk-sak-v2.yml
 
   deploy-kafka-topics-prod:
     name: Deploy to Aiven Prod
@@ -44,3 +56,15 @@ jobs:
           CLUSTER: prod-gcp
           VAR: kafka-pool=nav-prod
           RESOURCE: nais/kafka/produksjonsstyring-k9punsj.yml
+      #- uses: nais/deploy/actions/deploy@v1
+      #  env:
+      #    APIKEY: ${{ secrets.DEPLOY_KEY }}
+      #    CLUSTER: dev-gcp
+      #    VAR: kafka-pool=nav-dev
+      #    RESOURCE: nais/kafka/aapen-k9statistikk-behandling-v2.yml
+      #- uses: nais/deploy/actions/deploy@v1
+      #  env:
+      #    APIKEY: ${{ secrets.DEPLOY_KEY }}
+      #    CLUSTER: dev-gcp
+      #    VAR: kafka-pool=nav-dev
+      #    RESOURCE: nais/kafka/aapen-k9statistikk-sak-v2.yml

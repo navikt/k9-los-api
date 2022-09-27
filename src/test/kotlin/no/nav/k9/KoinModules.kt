@@ -15,15 +15,7 @@ import no.nav.k9.domene.lager.oppgave.v2.BehandlingsmigreringTjeneste
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.domene.lager.oppgave.v2.OppgaveTjenesteV2
 import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.domene.repository.BehandlingProsessEventK9Repository
-import no.nav.k9.domene.repository.BehandlingProsessEventTilbakeRepository
-import no.nav.k9.domene.repository.DriftsmeldingRepository
-import no.nav.k9.domene.repository.OppgaveKøRepository
-import no.nav.k9.domene.repository.OppgaveRepository
-import no.nav.k9.domene.repository.PunsjEventK9Repository
-import no.nav.k9.domene.repository.ReservasjonRepository
-import no.nav.k9.domene.repository.SaksbehandlerRepository
-import no.nav.k9.domene.repository.StatistikkRepository
+import no.nav.k9.domene.repository.*
 import no.nav.k9.integrasjon.abac.IPepClient
 import no.nav.k9.integrasjon.abac.PepClientLocal
 import no.nav.k9.integrasjon.azuregraph.AzureGraphServiceLocal
@@ -36,6 +28,18 @@ import no.nav.k9.integrasjon.omsorgspenger.OmsorgspengerServiceLocal
 import no.nav.k9.integrasjon.pdl.IPdlService
 import no.nav.k9.integrasjon.pdl.PdlServiceLocal
 import no.nav.k9.integrasjon.sakogbehandling.SakOgBehandlingProducer
+import no.nav.k9.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk.OppgaveTilBehandlingMapper
+import no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk.OppgaveTilSakMapper
+import no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk.OppgavestatistikkTjeneste
+import no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk.StatistikkPublisher
+import no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
+import no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
+import no.nav.k9.nyoppgavestyring.mottak.omraade.OmrådeRepository
+import no.nav.k9.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
+import no.nav.k9.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
+import no.nav.k9.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
+import no.nav.k9.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.tjenester.saksbehandler.merknad.MerknadTjeneste
@@ -234,6 +238,60 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgaveRepository = get(),
             pepClient = get(),
             configuration = get()
+        )
+    }
+
+    single { FeltdefinisjonRepository() }
+    single { OmrådeRepository(dataSource = get()) }
+    single { OppgavetypeRepository(get()) }
+    single { OppgaveV3Repository() }
+    single { BehandlingProsessEventK9Repository(dataSource = get()) }
+    single { OppgaveTilBehandlingMapper() }
+    single { OppgaveTilSakMapper() }
+    single { no.nav.k9.nyoppgavestyring.visningoguttrekk.OppgaveRepository() }
+
+    val statistikkPublisher = mockk<StatistikkPublisher>()
+
+    single {
+        OppgavestatistikkTjeneste(
+            oppgaveRepository = get(),
+            statistikkPublisher = statistikkPublisher
+        )
+    }
+
+    single {
+        FeltdefinisjonTjeneste(
+            feltdefinisjonRepository = get(),
+            områdeRepository = get(),
+            transactionalManager = get()
+        )
+    }
+    single {
+        OppgavetypeTjeneste(
+            oppgavetypeRepository = get(),
+            områdeRepository = get(),
+            feltdefinisjonRepository = get(),
+            transactionalManager = get(),
+        )
+    }
+    single {
+        OppgaveV3Tjeneste(
+            oppgaveV3Repository = get(),
+            oppgavetypeRepository = get(),
+            områdeRepository = get(),
+            transactionalManager = get(),
+            oppgavestatistikkTjeneste = get()
+        )
+    }
+
+    single {
+        K9SakTilLosAdapterTjeneste(
+            behandlingProsessEventK9Repository = get(),
+            områdeRepository = get(),
+            feltdefinisjonTjeneste = get(),
+            oppgavetypeTjeneste = get(),
+            oppgaveV3Tjeneste = get(),
+            config = get()
         )
     }
 }

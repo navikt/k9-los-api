@@ -1,0 +1,46 @@
+{
+  "område": "K9",
+  "definisjonskilde": "k9-sak-til-los",
+  "oppgavetyper": [
+    {
+      "id": "aksjonspunkt",
+      "oppgavefelter": [
+        {
+          "id": "saksnummer",
+          "visPåOppgave": true,
+          "påkrevd": true
+        },
+        {
+          "id": "opprettet",
+          "visPåOppgave": true,
+          "påkrevd": true
+        },
+        {
+          "id": "aksjonspunktKode",
+          "visPåOppgave": true,
+          "påkrevd": true
+        }
+      ]
+    },
+    {
+      "id": "behandling",
+      "oppgavefelter": [
+        {
+          "id": "saksnummer",
+          "visPåOppgave": true,
+          "påkrevd": true
+        },
+        {
+          "id": "opprettet",
+          "visPåOppgave": true,
+          "påkrevd": true
+        },
+        {
+          "id": "aksjonspunktKode",
+          "visPåOppgave": true,
+          "påkrevd": true
+        }
+      ]
+    }
+  ]
+}

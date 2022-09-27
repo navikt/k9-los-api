@@ -45,6 +45,18 @@ import no.nav.k9.integrasjon.pdl.PdlService
 import no.nav.k9.integrasjon.pdl.PdlServiceLocal
 import no.nav.k9.integrasjon.rest.RequestContextService
 import no.nav.k9.integrasjon.sakogbehandling.SakOgBehandlingProducer
+import no.nav.k9.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk.OppgaveTilBehandlingMapper
+import no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk.OppgaveTilSakMapper
+import no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk.OppgavestatistikkTjeneste
+import no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk.StatistikkPublisher
+import no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
+import no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
+import no.nav.k9.nyoppgavestyring.mottak.omraade.OmrådeRepository
+import no.nav.k9.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
+import no.nav.k9.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
+import no.nav.k9.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
+import no.nav.k9.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.tjenester.driftsmeldinger.DriftsmeldingTjeneste
@@ -296,6 +308,64 @@ fun common(app: Application, config: Configuration) = module {
     single {
         HealthService(
             healthChecks = get<AsynkronProsesseringV1Service>().isHealtyChecks()
+        )
+    }
+
+    single { FeltdefinisjonRepository() }
+    single { OmrådeRepository(get()) }
+    single { OppgavetypeRepository(get()) }
+    single { OppgaveV3Repository() }
+    single { OppgaveTilBehandlingMapper() }
+    single { OppgaveTilSakMapper() }
+    single { no.nav.k9.nyoppgavestyring.visningoguttrekk.OppgaveRepository() }
+
+    single {
+        StatistikkPublisher(
+            kafkaConfig = config.getKafkaConfig(),
+            config = config
+        )
+    }
+
+    single {
+        OppgavestatistikkTjeneste(
+            oppgaveRepository = get(),
+            statistikkPublisher = get()
+        )
+    }
+
+    single {
+        FeltdefinisjonTjeneste(
+            feltdefinisjonRepository = get(),
+            områdeRepository = get(),
+            transactionalManager = get()
+        )
+    }
+    single {
+        OppgavetypeTjeneste(
+            oppgavetypeRepository = get(),
+            områdeRepository = get(),
+            feltdefinisjonRepository = get(),
+            transactionalManager = get(),
+        )
+    }
+    single {
+        OppgaveV3Tjeneste(
+            oppgaveV3Repository = get(),
+            oppgavetypeRepository = get(),
+            områdeRepository = get(),
+            transactionalManager = get(),
+            oppgavestatistikkTjeneste = get()
+        )
+    }
+
+    single {
+        K9SakTilLosAdapterTjeneste(
+            behandlingProsessEventK9Repository = get(),
+            områdeRepository = get(),
+            feltdefinisjonTjeneste = get(),
+            oppgavetypeTjeneste = get(),
+            oppgaveV3Tjeneste = get(),
+            config = get()
         )
     }
 

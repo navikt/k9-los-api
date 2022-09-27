@@ -1,0 +1,29 @@
+apiVersion: kafka.nais.io/v1
+kind: Topic
+metadata:
+  name: aapen-k9statistikk-behandling-v2
+  namespace: k9saksbehandling
+  labels:
+    team: k9saksbehandling
+spec:
+  pool: {{kafka-pool}}
+  config:
+    cleanupPolicy: delete  # delete, compact
+    minimumInSyncReplicas: 1
+    partitions: 3
+    replication: 3  # see min/max requirements
+    retentionBytes: -1  # -1 means unlimited
+    retentionHours: 2160 # 90 dager
+  acl:
+    - team: k9saksbehandling
+      application: k9-los-api
+      access: write
+    - team: ptsak
+      application: pt-sak-k9-dev
+      access: read
+    - team: ptsak
+      application: pt-sak-k9-preprod
+      access: read
+    #- team: ptsak
+    #  application: pt-sak-k9
+    #  access: read
