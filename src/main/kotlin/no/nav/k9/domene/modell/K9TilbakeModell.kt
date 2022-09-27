@@ -78,8 +78,9 @@ data class K9TilbakeModell(
             avklarArbeidsforhold = false,
             vurderopptjeningsvilkåret = false,
             eventTid = sisteEvent.eventTid,
-            ansvarligSaksbehandlerForTotrinn = null,
+            ansvarligSaksbehandlerForTotrinn = sisteEvent.ansvarligSaksbehandlerIdent,
             ansvarligSaksbehandlerIdent = sisteEvent.ansvarligSaksbehandlerIdent,
+            ansvarligBeslutterForTotrinn = sisteEvent.ansvarligBeslutterIdent,
             kombinert = false,
             feilutbetaltBeløp = sisteEvent.feilutbetaltBeløp
         )

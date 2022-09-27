@@ -63,7 +63,8 @@ data class BehandlingProsessEventTilbakeDto(
     val href: String? = null,
     val førsteFeilutbetaling: String? = null,
     val feilutbetaltBeløp: Long? = null,
-    val ansvarligSaksbehandlerIdent: String? = null
+    val ansvarligSaksbehandlerIdent: String? = null,
+    val ansvarligBeslutterIdent: String? = null
 
 ) {
     fun tryggPrint(): String {
