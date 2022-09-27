@@ -321,7 +321,7 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         StatistikkPublisher(
-            kafkaConfig = config.getKafkaConfig(),
+            kafkaConfig = config.getProfileAwareKafkaAivenConfig(),
             config = config
         )
     }
