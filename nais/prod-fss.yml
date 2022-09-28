@@ -95,11 +95,11 @@ spec:
     - name: KAFKA_STATISTIKK_SAK_TOPIC
       value: privat-k9statistikk-sak-v1
     - name: KAFKA_AAPEN_STATISTIKK_SAK_TOPIC
-      value: aapen-k9statistikk-sak-v2
+      value: k9saksbehandling.aapen-k9statistikk-sak-v2
     - name: KAFKA_STATISTIKK_BEHANDLING_TOPIC
       value: privat-k9statistikk-behandling-v1
     - name: KAFKA_AAPEN_STATISTIKK_BEHANDLING_TOPIC
-      value: aapen-k9statistikk-behandling-v2
+      value: k9saksbehandling.aapen-k9statistikk-behandling-v2
     - name: KAFKA_K9SAK_TOPIC
       value: k9saksbehandling.privat-k9-produksjonsstyring-sak-v1
     - name: KAFKA_K9PUNSJ_TOPIC
