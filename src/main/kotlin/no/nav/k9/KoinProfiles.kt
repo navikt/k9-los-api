@@ -314,7 +314,7 @@ fun common(app: Application, config: Configuration) = module {
     single { FeltdefinisjonRepository() }
     single { OmrådeRepository(get()) }
     single { OppgavetypeRepository(get()) }
-    single { OppgaveV3Repository() }
+    single { OppgaveV3Repository(dataSource = get()) }
     single { OppgaveTilBehandlingMapper() }
     single { OppgaveTilSakMapper() }
     single { no.nav.k9.nyoppgavestyring.visningoguttrekk.OppgaveRepository() }

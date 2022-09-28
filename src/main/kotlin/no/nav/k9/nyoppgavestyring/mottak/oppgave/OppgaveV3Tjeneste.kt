@@ -5,6 +5,7 @@ import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
+import org.slf4j.LoggerFactory
 
 class OppgaveV3Tjeneste(
     private val oppgaveV3Repository: OppgaveV3Repository,
@@ -14,16 +15,28 @@ class OppgaveV3Tjeneste(
     private val oppgavestatistikkTjeneste: OppgavestatistikkTjeneste
 ) {
 
-    fun sjekkDuplikatOgProsesser(dto: OppgaveDto) {
+    private val log = LoggerFactory.getLogger(OppgaveV3Tjeneste::class.java)
+
+    fun sjekkDuplikatOgProsesser(dto: OppgaveDto): Boolean {
+        var skalOppdatere = false
         transactionalManager.transaction { tx ->
-            if (!idempotensMatch(dto, tx)) {
+            val duplikatsjekk = System.currentTimeMillis()
+            skalOppdatere = skalOppdatere(dto, tx)
+            log.info("Duplikatsjekk av oppgave med eksternId: ${dto.id}, tidsbruk: ${System.currentTimeMillis() - duplikatsjekk}")
+            if (skalOppdatere) {
+                val startOppdatering = System.currentTimeMillis()
                 oppdater(dto, tx)
+                log.info("Lagret oppgave med eksternId: ${dto.id}, tidsbruk: ${System.currentTimeMillis() - startOppdatering}")
+
+                val startKafkasending = System.currentTimeMillis()
                 oppgavestatistikkTjeneste.sendStatistikk(dto.id, tx)
+                log.info("Sendt statistikkevent for behandling: ${dto.id}, tidsbruk: ${System.currentTimeMillis() - startKafkasending}")
             }
         }
+        return skalOppdatere
     }
 
-    fun oppdater(oppgaveDto: OppgaveDto, tx: TransactionalSession) {
+    private fun oppdater(oppgaveDto: OppgaveDto, tx: TransactionalSession) {
         val område = områdeRepository.hentOmråde(oppgaveDto.område, tx)
         val oppgavetyper = oppgavetypeRepository.hent(område, tx) //TODO: cache denne? Invalideres av post-kall på oppgavetype eller feltdefinisjon
         val oppgavetype = oppgavetyper.oppgavetyper.find { it.eksternId.equals(oppgaveDto.type) }
@@ -31,14 +44,16 @@ class OppgaveV3Tjeneste(
 
         oppgavetype.valider(oppgaveDto)
 
-        if (!oppgaveV3Repository.idempotensMatch(tx, oppgaveDto.id, oppgaveDto.versjon)) {
-            val innkommendeOppgave = OppgaveV3(oppgaveDto, oppgavetype)
-            oppgaveV3Repository.lagre(innkommendeOppgave, tx)
-        }
+        val innkommendeOppgave = OppgaveV3(oppgaveDto, oppgavetype)
+        oppgaveV3Repository.lagre(innkommendeOppgave, tx)
     }
 
-    fun idempotensMatch(oppgaveDto: OppgaveDto, tx: TransactionalSession): Boolean {
-        return oppgaveV3Repository.idempotensMatch(tx, oppgaveDto.id, oppgaveDto.versjon)
+    fun skalOppdatere(oppgaveDto: OppgaveDto, tx: TransactionalSession): Boolean {
+        return !oppgaveV3Repository.finnesFraFør(tx, oppgaveDto.id, oppgaveDto.versjon)
+    }
+
+    fun tellAntall(): Pair<Long, Long> {
+        return oppgaveV3Repository.tellAntall()
     }
 
 }

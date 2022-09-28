@@ -50,23 +50,41 @@ class K9SakTilLosAdapterTjeneste(
     }
 
     fun spillAvBehandlingProsessEventer() {
+        var eventTeller: Long = 0
         log.info("Starter avspilling av BehandlingProsessEventer")
-        behandlingProsessEventK9Repository.hentAlleEventerIder()
-            .map { uuid ->
-                behandlingProsessEventK9Repository.hent(uuid).eventer
-                    .map { event ->
-                        event.aksjonspunktTilstander.forEach { aksjonspunktTilstand ->
-                            var oppgaveDto = lagOppgaveDto(event, aksjonspunktTilstand)
 
-                            if (event.behandlingStatus == BehandlingStatus.AVSLUTTET.kode) {
-                                //val vedtaksInfo = hentVedtaksInfo()
-                                //oppgaveDto = oppgaveDto.berikMedVedtaksInfo(vedtaksInfo)
-                            }
+        val startHentAlleIDer = System.currentTimeMillis()
+        val behandlingsIder = behandlingProsessEventK9Repository.hentAlleEventerIder()
+        log.info("Hentet behandlingsIder, tidsbruk: ${System.currentTimeMillis() - startHentAlleIDer}")
 
-                            oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto)
+        log.info("Fant ${behandlingsIder.size} behandlinger")
+        behandlingsIder.forEach { uuid ->
+
+            val hentEventerForBehandling = System.currentTimeMillis()
+            val behandlingProsessEventer = behandlingProsessEventK9Repository.hent(uuid).eventer
+            log.info("Hentet eventer for behandling: ${uuid}, tidsbruk: ${System.currentTimeMillis() - hentEventerForBehandling}. Antall eventer: ${behandlingProsessEventer.size}")
+
+            behandlingProsessEventer.forEach { event ->
+                event.aksjonspunktTilstander.forEach { aksjonspunktTilstand ->
+                    val behandlerOppgaveversjon = System.currentTimeMillis()
+                    val oppgaveDto = lagOppgaveDto(event, aksjonspunktTilstand)
+
+                    if (event.behandlingStatus == BehandlingStatus.AVSLUTTET.kode) {
+                        //val vedtaksInfo = hentVedtaksInfo()
+                        //oppgaveDto = oppgaveDto.berikMedVedtaksInfo(vedtaksInfo)
+                    }
+
+                    if (oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto)) { //deilig med destruktiv if-test, eller? :P
+                        eventTeller++
+                        if (eventTeller.mod(100) == 0) {
+                            log.info("Behandlet $eventTeller eventer")
                         }
                     }
+                    log.info("Behandlet oppgaveversjon: ${event.eksternId}, tidsbruk: ${System.currentTimeMillis() - behandlerOppgaveversjon}")
+                }
             }
+        }
+        val (antallAktive, antallAlle) = oppgaveV3Tjeneste.tellAntall()
         log.info("Avspilling av BehandlingProsessEventer ferdig")
     }
 
@@ -210,7 +228,8 @@ class K9SakTilLosAdapterTjeneste(
         val område = områdeRepository.hent(feltdefinisjonerDto.område)!!
 
         if (!feltdefinisjonTjeneste.hent(område).feltdefinisjoner
-            .containsAll(Feltdefinisjoner(feltdefinisjonerDto, område).feltdefinisjoner)) {
+                .containsAll(Feltdefinisjoner(feltdefinisjonerDto, område).feltdefinisjoner)
+        ) {
             feltdefinisjonTjeneste.oppdater(feltdefinisjonerDto)
             log.info("opprettet feltdefinisjoner")
         } else {
