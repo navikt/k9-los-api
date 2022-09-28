@@ -131,4 +131,4 @@ spec:
 
       # feature toggles
     - name: NY_OPPGAVESTYRING
-      value: "true"
+      value: "false"

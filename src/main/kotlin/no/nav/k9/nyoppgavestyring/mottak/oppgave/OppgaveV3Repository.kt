@@ -1,11 +1,15 @@
 package no.nav.k9.nyoppgavestyring.mottak.oppgave
 
+import io.ktor.http.*
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
+import kotliquery.sessionOf
+import kotliquery.using
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
+import javax.sql.DataSource
 
-class OppgaveV3Repository {
+class OppgaveV3Repository(private val dataSource: DataSource) {
 
     private val log = LoggerFactory.getLogger(OppgaveV3Repository::class.java)
 
@@ -23,9 +27,10 @@ class OppgaveV3Repository {
         lagreFeltverdier(oppgaveId, oppgave.felter, tx)
     }
 
-    private fun lagre(oppgave: OppgaveV3, nyVersjon: Long, tx: TransactionalSession): Long  {
+    private fun lagre(oppgave: OppgaveV3, nyVersjon: Long, tx: TransactionalSession): Long {
         return tx.updateAndReturnGeneratedKey(
-            queryOf("""
+            queryOf(
+                """
                     insert into oppgave_v3(ekstern_id, ekstern_versjon, oppgavetype_id, status, versjon, aktiv, kildeomrade, endret_tidspunkt)
                     values(:eksternId, :eksternVersjon, :oppgavetypeId, :status, :versjon, :aktiv, :kildeomrade, :endretTidspunkt)
                 """.trimIndent(),
@@ -43,7 +48,11 @@ class OppgaveV3Repository {
         )!!
     }
 
-    private fun lagreFeltverdier(oppgaveId: Long, oppgaveFeltverdier: List<OppgaveFeltverdi>, tx: TransactionalSession) {
+    private fun lagreFeltverdier(
+        oppgaveId: Long,
+        oppgaveFeltverdier: List<OppgaveFeltverdi>,
+        tx: TransactionalSession
+    ) {
         oppgaveFeltverdier.forEach { feltverdi ->
             tx.run(
                 queryOf(
@@ -53,7 +62,7 @@ class OppgaveV3Repository {
                     mapOf(
                         "oppgaveId" to oppgaveId,
                         "oppgavefeltId" to feltverdi.oppgavefelt.id,
-                        "verdi" to  feltverdi.verdi
+                        "verdi" to feltverdi.verdi
                     )
                 ).asUpdate
             )
@@ -80,12 +89,13 @@ class OppgaveV3Repository {
                     "omrade" to oppgave.kildeområde
                 )
             ).map { row -> Pair(row.long("id"), row.long("versjon")) }.asSingle
-        )?: Pair(null, null)
+        ) ?: Pair(null, null)
     }
 
     private fun deaktiverVersjon(eksisterendeId: Long, deaktivertTidspunkt: LocalDateTime, tx: TransactionalSession) {
         tx.run(
-            queryOf("""
+            queryOf(
+                """
                 update oppgave_v3 set aktiv = false, deaktivert_tidspunkt = :deaktivertTidspunkt where id = :id
             """.trimIndent(),
                 mapOf(
@@ -96,9 +106,10 @@ class OppgaveV3Repository {
         )
     }
 
-    fun idempotensMatch(tx: TransactionalSession, eksternId: String, eksternVersjon: String): Boolean {
+    fun finnesFraFør(tx: TransactionalSession, eksternId: String, eksternVersjon: String): Boolean {
         return tx.run(
-            queryOf("""
+            queryOf(
+                """
                     select exists(
                         select *
                         from oppgave_v3 ov 
@@ -112,6 +123,32 @@ class OppgaveV3Repository {
                 )
             ).map { row -> row.boolean(1) }.asSingle
         )!!
+    }
+
+    fun tellAntall(): Pair<Long, Long> {
+        return using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    """
+                    with antallAlle as (
+                        select count(*) as antallAlle
+                        from oppgave_v3
+                    ), antallAktive as (
+                        select count(*) as antallAktive
+                        from oppgave_v3
+                        where aktiv = true
+                    )
+                    select antallAlle, antallAktive
+                    from antallAlle, antallAktive
+                """.trimIndent()
+                ).map { row ->
+                    Pair(
+                        first = row.long("antallAlle"),
+                        second = row.long("antallAktive")
+                    )
+                }.asSingle
+            )!!
+        }
     }
 
 }
