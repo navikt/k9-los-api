@@ -15,7 +15,7 @@ val dusseldorfKtorVersion = "3.1.6.8-1a4651d"
 // Disse bør henge sammen med https://github.com/navikt/dusseldorf-ktor/blob/master/pom.xml#L36
 val kotlinVersion = "1.7.10"
 val ktorVersion = "1.6.8"
-val kafkaVersion = "3.1.0"
+val kafkaVersion = "3.2.3"
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.7.10"
