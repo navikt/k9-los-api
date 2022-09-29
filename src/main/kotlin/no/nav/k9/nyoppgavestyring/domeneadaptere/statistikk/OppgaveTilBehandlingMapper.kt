@@ -28,7 +28,8 @@ class OppgaveTilBehandlingMapper {
             relatertBehandlingId = null,
             vedtakId = sisteVersjon.hentVerdi("vedtakId"), //TODO: callback mot K9? evt vedtakstopic, YtelseV1.vedtakReferanse
             saksnummer = sisteVersjon.hentVerdi("saksnummer"),
-            behandlingType = BehandlingType.fraKode(sisteVersjon.hentVerdi("behandlingTypekode")).navn, //TODO: Bruke navn direkte her?
+            behandlingType = sisteVersjon.hentVerdi("behandlingTypekode")
+                ?.let { no.nav.k9.domene.modell.BehandlingType.fraKode(it).navn }, //TODO: Bruke navn direkte her?
             behandlingStatus = BehandlingStatus.fraKode(sisteVersjon.hentVerdi("behandlingsstatus")).navn,
             resultat = sisteVersjon.hentVerdi("resultattype"),
             resultatBegrunnelse = null, //TODO: callback mot K9?
