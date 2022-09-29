@@ -1,7 +1,6 @@
 package no.nav.k9.tjenester.avdelingsleder.nokkeltall
 
 import io.ktor.server.application.*
-import io.ktor.server.html.*
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*

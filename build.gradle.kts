@@ -9,6 +9,7 @@ val koinVersion = "3.2.1"
 val kotliqueryVersion = "1.9.0"
 val k9SakVersion = "3.3.20"
 val fuelVersion = "2.3.1"
+val jacksonVersion = "2.13.4"
 
 val dusseldorfKtorVersion = "3.2.1.1-2d23a3e"
 
@@ -48,7 +49,6 @@ dependencies {
     implementation("io.ktor:ktor-server-locations-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-html-builder-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-websockets-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
     implementation("io.ktor:ktor-client-auth-jvm:$ktorVersion")
 
     // Client
@@ -58,7 +58,6 @@ dependencies {
 
     // Kafka
     implementation("org.apache.kafka:kafka-streams:$kafkaVersion")
-
 
     // Tilgangskontroll
     implementation("no.nav.common:auth:2.2022.10.11_08.33-4f72c1840f61")
@@ -71,7 +70,7 @@ dependencies {
     implementation("no.nav.k9.statistikk:kontrakter:2.0_20220411110858_dc06dd1")
 
     // Div
-    implementation(enforcedPlatform( "com.fasterxml.jackson:jackson-bom:2.13.4" ))
+    implementation(enforcedPlatform( "com.fasterxml.jackson:jackson-bom:$jacksonVersion"))
     implementation("info.debatty:java-string-similarity:2.0.0")
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
     implementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
@@ -85,13 +84,10 @@ dependencies {
 
     // Test
     testImplementation("org.junit.jupiter:junit-jupiter-api:$jupiterVersion")
-    testImplementation("org.junit.vintage:junit-vintage-engine:$jupiterVersion")
 
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.25")
-    testImplementation("org.apache.kafka:kafka-clients:$kafkaVersion")
 
     testImplementation("no.nav.helse:dusseldorf-test-support:$dusseldorfKtorVersion")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
     testImplementation("io.mockk:mockk:1.13.1")
     testImplementation("io.ktor:ktor-server-test-host-jvm:$ktorVersion") {
         exclude(group = "org.eclipse.jetty")
@@ -99,11 +95,7 @@ dependencies {
     testImplementation("org.skyscreamer:jsonassert:$jsonassertVersion")
 
     testImplementation("org.testcontainers:postgresql:$testContainers")
-    testImplementation("org.testcontainers:junit-jupiter:$testContainers")
     testImplementation("io.insert-koin:koin-test-junit5:$koinVersion")
-
-    implementation(kotlin("stdlib-jdk8"))
-    implementation("javax.ws.rs:javax.ws.rs-api:2.1.1")
 }
 
 repositories {
@@ -120,7 +112,6 @@ repositories {
     maven("https://packages.confluent.io/maven/")
     maven("https://jitpack.io")
 
-    maven("https://maven.pkg.jetbrains.space/public/p/kotlinx-html/maven") // https://github.com/detekt/detekt/issues/3461
     mavenLocal()
 }
 
