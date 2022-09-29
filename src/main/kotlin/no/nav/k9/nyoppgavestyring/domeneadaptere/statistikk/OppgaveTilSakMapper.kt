@@ -4,7 +4,6 @@ import no.nav.k9.nyoppgavestyring.visningoguttrekk.Oppgave
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneId
-import java.time.ZoneOffset
 
 class OppgaveTilSakMapper {
 
@@ -20,8 +19,8 @@ class OppgaveTilSakMapper {
             funksjonellTid = LocalDateTime.parse(sisteVersjon.eksternVersjon).atZone(OppgaveTilBehandlingMapper.zoneId).toOffsetDateTime(),
             tekniskTid = OffsetDateTime.now(zoneId),
             opprettetDato = oppgaveversjoner.first().endretTidspunkt.toLocalDate(), // TODO må finne ut om dette er riktig
-            aktorId = sisteVersjon.hentVerdi("aktorId")?.toLong(),
-            aktorer = listOf(Aktør(sisteVersjon.hentVerdi("aktorId")!!.toLong(), "Søker", "Søker")), // TODO dette må gjøres mer robust
+            aktorId = utledAktørId(sisteVersjon.hentVerdi("aktorId")),
+            aktorer = utledAktører(sisteVersjon.hentVerdi("aktorId")),
             ytelseType = sisteVersjon.hentVerdi("ytelsestype"),
             underType = null,
             sakStatus = sisteVersjon.hentVerdi("behandlingsstatus"),
@@ -31,5 +30,18 @@ class OppgaveTilSakMapper {
             avsender = "K9los",
             versjon = 1 // TODO blir dette riktig?
         )
+    }
+
+    fun utledAktørId(aktørId: String?): Long? {
+        val aktørIdLong = kotlin.runCatching { aktørId?.toLong() }.getOrNull()
+        return aktørIdLong
+    }
+    fun utledAktører(aktørId: String?): List<Aktør> {
+        val aktørIdLong = utledAktørId(aktørId)
+        return if (aktørIdLong != null) {
+            listOf(Aktør(aktørIdLong, "Søker", "Søker"))
+        } else {
+            listOf()
+        }
     }
 }
