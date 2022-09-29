@@ -4,6 +4,7 @@ import info.debatty.java.stringsimilarity.Levenshtein
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.Configuration
 import no.nav.k9.KoinProfile
+import no.nav.k9.aksjonspunktbehandling.AksjonspunktDefinisjonK9Tilbake
 import no.nav.k9.domene.lager.oppgave.Oppgave
 import no.nav.k9.domene.lager.oppgave.OppgaveMedId
 import no.nav.k9.domene.lager.oppgave.Reservasjon
@@ -181,17 +182,13 @@ class OppgaveTjeneste constructor(
         oppgaveSomSkalBliReservert: Oppgave,
         relaterteOppgaverSomSkalBliReservert: List<OppgaveMedId>
     ): List<OppgaveMedId> {
-        return if (oppgaveSomSkalBliReservert.aksjonspunkter.harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)) {
+        return if (erBeslutterOppgave(oppgaveSomSkalBliReservert)) {
             relaterteOppgaverSomSkalBliReservert.filter { o ->
-                o.oppgave.aksjonspunkter.harAktivtAksjonspunkt(
-                    AksjonspunktDefinisjon.FATTER_VEDTAK
-                )
+                erBeslutterOppgave(o.oppgave)
             }
         } else {
             relaterteOppgaverSomSkalBliReservert.filter { o ->
-                !o.oppgave.aksjonspunkter.harAktivtAksjonspunkt(
-                    AksjonspunktDefinisjon.FATTER_VEDTAK
-                )
+                !erBeslutterOppgave(o.oppgave)
             }
         }
     }
@@ -203,9 +200,7 @@ class OppgaveTjeneste constructor(
         if (oppgave.ansvarligBeslutterForTotrinn == null) {
             return false
         }
-        return oppgave.ansvarligBeslutterForTotrinn.lowercase() == ident.lowercase() && !oppgave.aksjonspunkter.harAktivtAksjonspunkt(
-            AksjonspunktDefinisjon.FATTER_VEDTAK
-        )
+        return oppgave.ansvarligBeslutterForTotrinn.lowercase() == ident.lowercase() && !erBeslutterOppgave(oppgave)
     }
 
     private fun lagReservasjoner(
@@ -1154,14 +1149,21 @@ class OppgaveTjeneste constructor(
         ident: String
     ) = oppgaveSomSkalBliReservert.ansvarligBeslutterForTotrinn != null &&
             oppgaveSomSkalBliReservert.ansvarligBeslutterForTotrinn == ident &&
-            !oppgaveSomSkalBliReservert.aksjonspunkter.harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)
+            !erBeslutterOppgave(oppgaveSomSkalBliReservert)
 
     private fun innloggetSaksbehandlerHarSaksbehandletOppgaveSomSkalBliBesluttet(
         oppgaveSomSkalBliReservert: Oppgave,
         ident: String
     ) = oppgaveSomSkalBliReservert.ansvarligSaksbehandlerForTotrinn != null &&
             oppgaveSomSkalBliReservert.ansvarligSaksbehandlerForTotrinn == ident &&
-            oppgaveSomSkalBliReservert.aksjonspunkter.harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)
+            erBeslutterOppgave(oppgaveSomSkalBliReservert)
+
+
+    private fun erBeslutterOppgave(oppgaveSomSkalBliReservert: Oppgave) =
+        oppgaveSomSkalBliReservert.aksjonspunkter.hentAktive().keys.any {
+            it == AksjonspunktDefinisjon.FATTER_VEDTAK.kode
+                    || it == AksjonspunktDefinisjonK9Tilbake.FATTE_VEDTAK.kode
+        }
 
     private suspend fun finnPrioriterteOppgaver(
         ident: String,
