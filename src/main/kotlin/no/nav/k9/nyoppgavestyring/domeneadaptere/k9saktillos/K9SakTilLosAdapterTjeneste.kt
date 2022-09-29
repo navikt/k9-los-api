@@ -130,7 +130,7 @@ class K9SakTilLosAdapterTjeneste(
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "behandlingsstatus",
-                verdi = event.behandlingStatus
+                verdi = event.behandlingStatus ?: "UTRED"
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "behandlingTypekode",
