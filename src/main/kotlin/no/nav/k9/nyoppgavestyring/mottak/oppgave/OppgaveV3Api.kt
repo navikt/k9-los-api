@@ -2,10 +2,10 @@ package no.nav.k9.nyoppgavestyring.mottak.oppgave
 
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import io.ktor.application.*
-import io.ktor.request.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.server.application.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.domene.modell.K9SakModell
 import no.nav.k9.domene.repository.BehandlingProsessEventK9Repository

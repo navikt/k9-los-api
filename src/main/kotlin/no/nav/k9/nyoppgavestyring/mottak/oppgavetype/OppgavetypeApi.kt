@@ -1,9 +1,9 @@
 package no.nav.k9.nyoppgavestyring.mottak.oppgavetype
 
-import io.ktor.application.*
-import io.ktor.request.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.server.application.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import no.nav.k9.integrasjon.rest.RequestContextService
 import org.koin.ktor.ext.inject
 

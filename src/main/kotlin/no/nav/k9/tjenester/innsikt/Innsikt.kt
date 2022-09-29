@@ -1,12 +1,12 @@
 package no.nav.k9.tjenester.innsikt
 
-import io.ktor.application.call
-import io.ktor.html.respondHtml
-import io.ktor.locations.Location
-import io.ktor.locations.get
-import io.ktor.routing.Route
-import io.ktor.routing.get
-import io.ktor.routing.route
+import io.ktor.server.application.call
+import io.ktor.server.html.respondHtml
+import io.ktor.server.locations.Location
+import io.ktor.server.locations.get
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
+import io.ktor.server.routing.route
 import kotlinx.coroutines.runBlocking
 import kotlinx.html.*
 import no.nav.k9.domene.lager.oppgave.Oppgave
@@ -98,11 +98,15 @@ fun Route.innsiktGrensesnitt() {
     data class InnsiktEvent(val apMap: Map<String, String>, val eventTid: LocalDateTime)
 
     fun hentEventer(oppgaveMedId1: OppgaveMedId): List<InnsiktEvent> {
-        return when(oppgaveMedId1.oppgave.system) {
+        return when (oppgaveMedId1.oppgave.system) {
             Fagsystem.PUNSJ.kode -> punsjEventK9Repository.hent(oppgaveMedId1.id)
                 .eventer.map { InnsiktEvent(it.aksjonspunktKoderMedStatusListe, it.eventTid) }
-            Fagsystem.K9TILBAKE.kode, Fagsystem.FPTILBAKE.kode -> behandlingProsessEventTilbakeRepository.hent(oppgaveMedId1.id)
+
+            Fagsystem.K9TILBAKE.kode, Fagsystem.FPTILBAKE.kode -> behandlingProsessEventTilbakeRepository.hent(
+                oppgaveMedId1.id
+            )
                 .eventer.map { InnsiktEvent(it.aksjonspunktKoderMedStatusListe, it.eventTid) }
+
             else -> behandlingProsessEventK9Repository.hent(oppgaveMedId1.id)
                 .eventer.map { InnsiktEvent(it.aksjonspunktKoderMedStatusListe, it.eventTid) }
         }
@@ -143,14 +147,14 @@ fun Route.innsiktGrensesnitt() {
         call.respondHtml {
             val saksnummer = call.request.queryParameters["saksnummer"]?.split(",")
             head {
-                title { +(saksnummer?.let {"Innsikt for saksnummer=$saksnummer"}?: "Oppgi saksnummer") }
+                title { +(saksnummer?.let { "Innsikt for saksnummer=$saksnummer" } ?: "Oppgi saksnummer") }
                 styleLink("/static/bootstrap.css")
                 script(src = "/static/script.js") {}
             }
             body {
-                if (saksnummer.isNullOrEmpty()) div {+"Oppgi saksnummer"}
+                if (saksnummer.isNullOrEmpty()) div { +"Oppgi saksnummer" }
                 else {
-                    h2 { +saksnummer.let {"Innsikt for saksnummer=$saksnummer"} }
+                    h2 { +saksnummer.let { "Innsikt for saksnummer=$saksnummer" } }
                     saksnummer.map { oppgaveSeksjon(it) }
                 }
 
@@ -182,14 +186,14 @@ fun Route.innsiktGrensesnitt() {
         call.respondHtml {
             val køIder = call.request.queryParameters["id"]?.split(",")
             head {
-                title { +(køIder?.let {"Innsikt for køid=$køIder"}?: "Oppgi køid") }
+                title { +(køIder?.let { "Innsikt for køid=$køIder" } ?: "Oppgi køid") }
                 styleLink("/static/bootstrap.css")
                 script(src = "/static/script.js") {}
             }
             body {
-                if (køIder.isNullOrEmpty()) div {+"Oppgi køid"}
+                if (køIder.isNullOrEmpty()) div { +"Oppgi køid" }
                 else {
-                    h2 { +køIder.let {"Innsikt for køid=$køIder"} }
+                    h2 { +køIder.let { "Innsikt for køid=$køIder" } }
                     runBlocking {
                         køIder.map { køId -> oppgavekø(køId) }
                     }
@@ -258,7 +262,7 @@ fun Route.innsiktGrensesnitt() {
     }
 
     route("/oppgaver") {
-        get ("/ferdigstilt/{behandlendeEnhet}") {
+        get("/ferdigstilt/{behandlendeEnhet}") {
             val behandlendeEnhet = call.parameters["behandlendeEnhet"]
             val ferdigstilteOppgaver = statistikkRepository.hentFerdigstiltOppgavehistorikk(55)
                 .filter { EnheterSomSkalUtelatesFraLos.sjekkKanBrukes(it.behandlendeEnhet) }
@@ -320,10 +324,10 @@ fun Route.innsiktGrensesnitt() {
             return aktiveOppgaver
                 .filterNot { reservasjoner.contains(it.eksternId) }
                 .groupBy { oppgave ->
-                oppgavekøer.count { kø ->
-                    kø.oppgaverOgDatoer.map { it.id }.contains(oppgave.eksternId)
+                    oppgavekøer.count { kø ->
+                        kø.oppgaverOgDatoer.map { it.id }.contains(oppgave.eksternId)
+                    }
                 }
-            }
         }
 
         route("/aktive") {
@@ -362,8 +366,10 @@ fun Route.innsiktGrensesnitt() {
                                     oppgaver
                                         .filterNot { it.kode6 || it.skjermet }
                                         .forEach {
-                                            listeelement("${it.eksternId}, Saksnummer: ${it.fagsakSaksnummer}, Beslutter: ${it.tilBeslutter}",
-                                                "${it.eksternId}/tilhorer-ko")
+                                            listeelement(
+                                                "${it.eksternId}, Saksnummer: ${it.fagsakSaksnummer}, Beslutter: ${it.tilBeslutter}",
+                                                "${it.eksternId}/tilhorer-ko"
+                                            )
                                         }
                                 }
                             }
@@ -421,7 +427,7 @@ fun HTML.innsiktHeader(tittel: String) = head {
 
 fun UL.listeelement(innhold: String, href: String? = null) = li {
     classes = setOf("list-group-item")
-    if (href != null)  {
+    if (href != null) {
         a(href) {
             +innhold
         }

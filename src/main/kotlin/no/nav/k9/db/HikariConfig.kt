@@ -3,7 +3,7 @@ package no.nav.k9.db
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import io.ktor.application.*
+import io.ktor.server.application.*
 import no.nav.k9.Configuration
 
 fun createHikariConfig(jdbcUrl: String, username: String? = null, password: String? = null) =

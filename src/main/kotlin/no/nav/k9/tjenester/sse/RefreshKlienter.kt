@@ -2,7 +2,7 @@ package no.nav.k9.tjenester.sse
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
-import io.ktor.application.*
+import io.ktor.server.application.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.broadcast
 import kotlinx.coroutines.channels.produce
@@ -15,6 +15,7 @@ internal object RefreshKlienter {
     private val objectMapper = objectMapper().also {
         it.disable(SerializationFeature.INDENT_OUTPUT)
     }
+
     private inline fun <reified T> ObjectMapper.asString(value: T): String = writeValueAsString(value)
 
     internal fun Application.sseChannel(channel: Channel<SseEvent>) = sseOperation("sseChannel") {
@@ -36,7 +37,8 @@ internal object RefreshKlienter {
         }
     }
 
-    internal suspend fun Channel<SseEvent>.sendOppdaterTilBehandling(uuid: UUID) = sendMelding(oppdaterTilBehandlingMelding(uuid))
+    internal suspend fun Channel<SseEvent>.sendOppdaterTilBehandling(uuid: UUID) =
+        sendMelding(oppdaterTilBehandlingMelding(uuid))
 
     internal suspend fun Channel<SseEvent>.sendOppdaterReserverte() = sendMelding(oppdaterReserverteMelding())
 
@@ -49,14 +51,14 @@ internal object RefreshKlienter {
         melding = "oppdaterReserverte"
     )
 
-    internal fun <T>sseOperation(operation: String, block: () -> T) = try {
+    internal fun <T> sseOperation(operation: String, block: () -> T) = try {
         block()
     } catch (cause: Throwable) {
         logger.error("Feil ved $operation: ${cause.stackTraceToString()}") // Får en ThrowableProxy-Error med logback
         throw cause
     }
 
-    private suspend fun <T>sseOperationCo(operation: String, block: suspend () -> T) = try {
+    private suspend fun <T> sseOperationCo(operation: String, block: suspend () -> T) = try {
         block()
     } catch (cause: Throwable) {
         logger.error("Feil ved $operation: ${cause.stackTraceToString()}") // Får en ThrowableProxy-Error med logback

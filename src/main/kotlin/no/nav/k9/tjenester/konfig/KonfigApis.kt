@@ -1,9 +1,9 @@
 package no.nav.k9.tjenester.konfig
 
-import io.ktor.application.*
-import io.ktor.locations.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.server.application.*
+import io.ktor.server.locations.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import no.nav.k9.Configuration
 import no.nav.k9.KoinProfile
 import org.koin.ktor.ext.inject
@@ -24,21 +24,27 @@ fun Route.KonfigApis() {
     class hentK9SakUrl
 
     get { _: hentK9SakUrl ->
-        if (KoinProfile.PREPROD == configuration.koinProfile()) call.respond(Konfig(k9sakUrlDev)) else call.respond(Konfig(k9sakUrlProd))
+        if (KoinProfile.PREPROD == configuration.koinProfile()) call.respond(Konfig(k9sakUrlDev)) else call.respond(
+            Konfig(k9sakUrlProd)
+        )
     }
 
     @Location("/k9-punsj-url")
     class hentK9PunsjUrl
 
     get { _: hentK9PunsjUrl ->
-        if (KoinProfile.PREPROD == configuration.koinProfile()) call.respond(Konfig(k9punsjUrlDev)) else call.respond(Konfig(k9punsjUrlProd))
+        if (KoinProfile.PREPROD == configuration.koinProfile()) call.respond(Konfig(k9punsjUrlDev)) else call.respond(
+            Konfig(k9punsjUrlProd)
+        )
     }
 
     @Location("/omsorgspenger-url")
     class hentOmsorgspengerUrl
 
     get { _: hentOmsorgspengerUrl ->
-        if (KoinProfile.PREPROD == configuration.koinProfile()) call.respond(Konfig(omsorgspengerUrlDev)) else call.respond(Konfig(omsorgspengerUrlProd))
+        if (KoinProfile.PREPROD == configuration.koinProfile()) call.respond(Konfig(omsorgspengerUrlDev)) else call.respond(
+            Konfig(omsorgspengerUrlProd)
+        )
     }
 
     @Location("/refresh-url")
@@ -49,9 +55,11 @@ fun Route.KonfigApis() {
             configuration.koinProfile() == KoinProfile.PROD -> {
                 call.respond(Konfig(refreshUrlProd))
             }
+
             KoinProfile.PREPROD == configuration.koinProfile() -> {
                 call.respond(Konfig(refreshUrlDev))
             }
+
             else -> {
                 call.respond(Konfig(refreshUrlLocal))
             }

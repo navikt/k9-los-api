@@ -1,13 +1,13 @@
 package no.nav.k9.tjenester.mock
 
-import io.ktor.application.call
-import io.ktor.html.respondHtml
+import io.ktor.server.application.call
+import io.ktor.server.html.respondHtml
 import io.ktor.http.HttpStatusCode
-import io.ktor.request.receive
-import io.ktor.response.respond
-import io.ktor.routing.Route
-import io.ktor.routing.get
-import io.ktor.routing.post
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
 import kotlinx.coroutines.runBlocking
 import kotlinx.html.InputType
 import kotlinx.html.a
@@ -324,7 +324,8 @@ fun Route.MockGrensesnitt() {
                                 if (valgtKø == "reserverte") {
                                     oppgaveRepository
                                         .hentOppgaver(
-                                            saksbehandlerRepository.hentAlleSaksbehandlereIkkeTaHensyn() .flatMap { it.reservasjoner })
+                                            saksbehandlerRepository.hentAlleSaksbehandlereIkkeTaHensyn()
+                                                .flatMap { it.reservasjoner })
                                 } else {
                                     oppgaveRepository
                                         .hentOppgaver(oppgavekøer.first { it.id == UUID.fromString(valgtKø) }

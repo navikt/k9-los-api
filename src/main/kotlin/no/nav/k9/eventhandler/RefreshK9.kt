@@ -24,7 +24,7 @@ fun CoroutineScope.refreshK9(
     val oppgaveListe = mutableListOf<UUID>()
     oppgaveListe.add(channel.receive())
     while (true) {
-        val oppgaveId = channel.poll()
+        val oppgaveId = channel.tryReceive().getOrNull()
         if (oppgaveId == null) {
             try {
                 refreshK9(oppgaveListe

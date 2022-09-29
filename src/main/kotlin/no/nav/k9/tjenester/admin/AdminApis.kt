@@ -1,14 +1,14 @@
 package no.nav.k9.tjenester.admin
 
-import io.ktor.locations.Location
-import io.ktor.locations.get
-import io.ktor.routing.Route
+import io.ktor.server.locations.Location
+import io.ktor.server.locations.get
+import io.ktor.server.routing.Route
 
 fun Route.AdminApis() {
     @Location("/admin/synkroniseroppgave")
     class synkroniserOppgave
 
-    get { _: synkroniserOppgave ->       
+    get { _: synkroniserOppgave ->
     }
 
     @Location("/admin/sepaaoppgave")

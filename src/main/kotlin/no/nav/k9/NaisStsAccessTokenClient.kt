@@ -21,10 +21,12 @@ internal class NaisStsAccessTokenClient(
 ) : AccessTokenClient {
 
     private val authorizationHeader = getAuthorizationHeader(clientId, clientSecret)
-    private val url = Url.buildURL(baseUrl = tokenEndpoint, queryParameters = mapOf(
-        "grant_type" to listOf("client_credentials"),
-        "scope" to listOf("openid")
-    )).toString()
+    private val url = Url.buildURL(
+        baseUrl = tokenEndpoint, queryParameters = mapOf(
+            "grant_type" to listOf("client_credentials"),
+            "scope" to listOf("openid")
+        )
+    ).toString()
 
     override fun getAccessToken(scopes: Set<String>): AccessTokenResponse {
         val (request, _, result) = url.httpGet()
@@ -53,7 +55,7 @@ internal class NaisStsAccessTokenClient(
         throw IllegalStateException("NaisSts støtter ikke onBehalfOf")
     }
 
-    private fun getAuthorizationHeader(clientId: String, clientSecret: String) : String {
+    private fun getAuthorizationHeader(clientId: String, clientSecret: String): String {
         val auth = "$clientId:$clientSecret"
         return "Basic ${Base64.getEncoder().encodeToString(auth.toByteArray())}"
     }

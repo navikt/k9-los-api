@@ -1,16 +1,18 @@
 package no.nav.k9.websocket
 
-import io.ktor.application.Application
-import io.ktor.application.install
-import io.ktor.http.cio.websocket.Frame
-import io.ktor.http.cio.websocket.readText
-import io.ktor.routing.routing
-import io.ktor.server.testing.withTestApplication
-import io.ktor.websocket.WebSockets
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.websocket.Frame
+import io.ktor.websocket.readText
+import io.ktor.server.routing.routing
+import io.ktor.server.testing.*
+import io.ktor.server.websocket.WebSockets
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.broadcast
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import no.nav.k9.tjenester.sse.Melding
 import no.nav.k9.tjenester.sse.RefreshKlienter.initializeRefreshKlienter
 import no.nav.k9.tjenester.sse.RefreshKlienter.oppdaterReserverteMelding
@@ -61,7 +63,7 @@ class WebSocketTest {
     private companion object {
         private const val AntallMeldinger = 100
 
-        private fun Frame.somMelding() : Melding {
+        private fun Frame.somMelding(): Melding {
             val frameText = (this as Frame.Text).readText()
             val json = JSONObject(frameText)
             return when (json.has("id") && !json.isNull("id")) {
@@ -70,16 +72,18 @@ class WebSocketTest {
             }
         }
 
-        private fun genererRandomMeldinger() = (1..AntallMeldinger).map { when ((0..1).random()) {
-            0 -> oppdaterTilBehandlingMelding(UUID.randomUUID())
-            else -> oppdaterReserverteMelding()
-        }}
+        private fun genererRandomMeldinger() = (1..AntallMeldinger).map {
+            when ((0..1).random()) {
+                0 -> oppdaterTilBehandlingMelding(UUID.randomUUID())
+                else -> oppdaterReserverteMelding()
+            }
+        }
 
         private fun Application.websocketTestApp(refreshKlienter: Channel<SseEvent>) {
             install(WebSockets)
             routing {
                 RefreshKlienterWebSocket(
-                    sseChannel = sseChannel(refreshKlienter)
+                    sseChannel = refreshKlienter.broadcast()
                 )
             }
         }

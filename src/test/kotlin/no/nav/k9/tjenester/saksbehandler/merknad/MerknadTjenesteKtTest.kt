@@ -6,15 +6,15 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import io.ktor.application.Application
-import io.ktor.application.install
-import io.ktor.features.ContentNegotiation
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
-import io.ktor.jackson.jackson
-import io.ktor.routing.routing
+import io.ktor.serialization.jackson.jackson
+import io.ktor.server.routing.routing
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.setBody
 import io.ktor.server.testing.withTestApplication
@@ -32,13 +32,13 @@ import org.koin.test.get
 import java.time.LocalDateTime
 import java.util.*
 
-internal class MerknadTjenesteKtTest  : AbstractK9LosIntegrationTest() {
+internal class MerknadTjenesteKtTest : AbstractK9LosIntegrationTest() {
 
     private val om = ObjectMapper().configure()
 
-    private lateinit var oppgaveRepository : OppgaveRepositoryV2
-    private lateinit var oppgaveRepositoryGammel : OppgaveRepository
-    private lateinit var tm : TransactionalManager
+    private lateinit var oppgaveRepository: OppgaveRepositoryV2
+    private lateinit var oppgaveRepositoryGammel: OppgaveRepository
+    private lateinit var tm: TransactionalManager
     private lateinit var merknadTjeneste: MerknadTjeneste
 
     @BeforeEach
@@ -74,7 +74,8 @@ internal class MerknadTjenesteKtTest  : AbstractK9LosIntegrationTest() {
         runBlocking { merknadTjeneste.lagreMerknad(eksternReferanse, nyMerknad) }
         val original = merknadTjeneste.hentMerknad(eksternReferanse)!!
 
-        val endretMerknad = MerknadEndret(merknadKoder = listOf("VENTESAK", "HASTESAK"), fritekst = "Står fast og haster")
+        val endretMerknad =
+            MerknadEndret(merknadKoder = listOf("VENTESAK", "HASTESAK"), fritekst = "Står fast og haster")
         runBlocking { merknadTjeneste.lagreMerknad(eksternReferanse, endretMerknad) }
         val endret = merknadTjeneste.hentMerknad(eksternReferanse)!!
         assertThat(endret.id!!).isEqualTo(original.id!!)

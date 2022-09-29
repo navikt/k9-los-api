@@ -1,21 +1,21 @@
 package no.nav.k9.apis
 
 import com.github.tomakehurst.wiremock.WireMockServer
-import io.ktor.application.Application
-import io.ktor.application.call
-import io.ktor.application.install
-import io.ktor.auth.Authentication
-import io.ktor.auth.authenticate
-import io.ktor.features.CORS
-import io.ktor.features.CallLogging
-import io.ktor.features.StatusPages
+import io.ktor.server.application.Application
+import io.ktor.server.application.call
+import io.ktor.server.application.install
+import io.ktor.server.auth.Authentication
+import io.ktor.server.auth.authenticate
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
-import io.ktor.response.respond
-import io.ktor.routing.post
-import io.ktor.routing.route
-import io.ktor.routing.routing
+import io.ktor.server.response.respond
+import io.ktor.server.routing.post
+import io.ktor.server.routing.route
+import io.ktor.server.routing.routing
+import io.ktor.server.plugins.callloging.CallLogging
+import io.ktor.server.plugins.cors.routing.*
+import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.setBody
@@ -47,9 +47,11 @@ class AuthenticationTest {
 
         withTestApplication({ testApp(wireMock = wireMock, cors = false) }) {
             sendJsonRequest(forventetHttpResponseCode = HttpStatusCode.NoContent)
-            sendJsonRequest(forventetHttpResponseCode = HttpStatusCode.Forbidden, authorizationHeader = authorizationHeader(
-                audience = "feil-audience"
-            ))
+            sendJsonRequest(
+                forventetHttpResponseCode = HttpStatusCode.Forbidden, authorizationHeader = authorizationHeader(
+                    audience = "feil-audience"
+                )
+            )
         }
 
         wireMock.stop()
@@ -57,8 +59,9 @@ class AuthenticationTest {
 
     private fun TestApplicationEngine.sendJsonRequest(
         authorizationHeader: String = authorizationHeader(),
-        forventetHttpResponseCode: HttpStatusCode) {
-        handleRequest(HttpMethod.Post, "/test"){
+        forventetHttpResponseCode: HttpStatusCode
+    ) {
+        handleRequest(HttpMethod.Post, "/test") {
             addHeader(HttpHeaders.Authorization, authorizationHeader)
             addHeader(HttpHeaders.ContentType, "application/json")
             addHeader(HttpHeaders.Origin, "https://k9-los.nav.no")
@@ -70,7 +73,8 @@ class AuthenticationTest {
 
     private fun Application.testApp(
         wireMock: WireMockServer,
-        cors: Boolean) {
+        cors: Boolean
+    ) {
         install(CallLogging) {
             logRequests()
         }
@@ -91,14 +95,14 @@ class AuthenticationTest {
             azureV2.alias() to azureV2,
         ).withoutAdditionalClaimRules()
 
-        install(Authentication){
+        install(Authentication) {
             multipleJwtIssuers(issuers)
         }
 
         routing {
             if (cors) {
                 install(CORS) {
-                    method(HttpMethod.Options)
+                    allowMethod(HttpMethod.Options)
                     anyHost()
                     allowCredentials = true
                 }

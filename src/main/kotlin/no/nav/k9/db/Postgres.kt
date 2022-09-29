@@ -1,7 +1,7 @@
 package no.nav.k9.db
 
 import com.zaxxer.hikari.HikariDataSource
-import io.ktor.application.Application
+import io.ktor.server.application.Application
 import no.nav.k9.Configuration
 import no.nav.k9.KoinProfile
 import no.nav.vault.jdbc.hikaricp.HikariCPVaultUtil

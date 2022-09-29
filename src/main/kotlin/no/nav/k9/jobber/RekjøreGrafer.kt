@@ -1,8 +1,8 @@
 package no.nav.k9.jobber
 
-import io.ktor.application.Application
-import io.ktor.application.log
-import io.ktor.util.error
+import io.ktor.server.application.Application
+import io.ktor.server.application.log
+import io.ktor.util.logging.*
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import no.nav.k9.domene.lager.oppgave.Oppgave

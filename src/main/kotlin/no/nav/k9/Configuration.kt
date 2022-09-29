@@ -1,6 +1,6 @@
 package no.nav.k9
 
-import io.ktor.config.*
+import io.ktor.server.config.*
 import no.nav.helse.dusseldorf.ktor.auth.clients
 import no.nav.helse.dusseldorf.ktor.auth.issuers
 import no.nav.helse.dusseldorf.ktor.auth.withoutAdditionalClaimRules

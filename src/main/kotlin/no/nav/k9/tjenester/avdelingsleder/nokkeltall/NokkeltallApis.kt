@@ -1,10 +1,10 @@
 package no.nav.k9.tjenester.avdelingsleder.nokkeltall
 
-import io.ktor.application.call
-import io.ktor.locations.Location
-import io.ktor.locations.get
-import io.ktor.response.respond
-import io.ktor.routing.Route
+import io.ktor.server.application.call
+import io.ktor.server.locations.Location
+import io.ktor.server.locations.get
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
 import no.nav.k9.integrasjon.rest.RequestContextService
 import no.nav.k9.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import org.koin.ktor.ext.inject
@@ -13,6 +13,7 @@ fun Route.NokkeltallApis() {
     val nokkeltallTjeneste by inject<NokkeltallTjeneste>()
     val oppgaveTjeneste by inject<OppgaveTjeneste>()
     val requestContextService by inject<RequestContextService>()
+
     @Location("/behandlinger-under-arbeid")
     class getAlleOppgaver
 

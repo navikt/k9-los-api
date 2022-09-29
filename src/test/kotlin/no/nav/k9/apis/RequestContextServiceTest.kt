@@ -1,15 +1,15 @@
 package no.nav.k9.apis
 
-import io.ktor.application.Application
-import io.ktor.application.call
+import io.ktor.server.application.Application
+import io.ktor.server.application.call
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
-import io.ktor.response.respond
-import io.ktor.response.respondText
-import io.ktor.routing.get
-import io.ktor.routing.route
-import io.ktor.routing.routing
+import io.ktor.server.response.respond
+import io.ktor.server.response.respondText
+import io.ktor.server.routing.get
+import io.ktor.server.routing.route
+import io.ktor.server.routing.routing
 import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.withTestApplication
 import no.nav.k9.KoinProfile
@@ -37,13 +37,16 @@ internal class RequestContextServiceTest {
     }
 
     private fun Application.testApp(
-        requestContextService: RequestContextService = RequestContextService(profile = KoinProfile.PROD)) {
+        requestContextService: RequestContextService = RequestContextService(profile = KoinProfile.PROD)
+    ) {
         routing {
             route("med-request-context") {
                 get {
-                    kotlin.runCatching { requestContextService.withRequestContext(call) {
-                        coroutineContext.idToken()
-                    }}.fold(
+                    kotlin.runCatching {
+                        requestContextService.withRequestContext(call) {
+                            coroutineContext.idToken()
+                        }
+                    }.fold(
                         onSuccess = {
                             call.respondText("Hei ${it.getUsername()}")
                         },
