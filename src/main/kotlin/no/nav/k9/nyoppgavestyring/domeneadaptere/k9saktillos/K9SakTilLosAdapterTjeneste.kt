@@ -122,7 +122,7 @@ class K9SakTilLosAdapterTjeneste(
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "resultattype",
-                verdi = event.resultatType
+                verdi = event.resultatType ?: "IKKE_FASTSATT"
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "ytelsestype",
