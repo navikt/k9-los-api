@@ -14,10 +14,8 @@ import no.nav.k9.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
-import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.io.File
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.fixedRateTimer
 import no.nav.k9.Configuration
@@ -65,23 +63,21 @@ class K9SakTilLosAdapterTjeneste(
             log.info("Hentet eventer for behandling: ${uuid}, tidsbruk: ${System.currentTimeMillis() - hentEventerForBehandling}. Antall eventer: ${behandlingProsessEventer.size}")
 
             behandlingProsessEventer.forEach { event ->
-                event.aksjonspunktTilstander.forEach { aksjonspunktTilstand ->
-                    val behandlerOppgaveversjon = System.currentTimeMillis()
-                    val oppgaveDto = lagOppgaveDto(event, aksjonspunktTilstand)
+                val behandlerOppgaveversjon = System.currentTimeMillis()
+                val oppgaveDto = lagOppgaveDto(event)
 
-                    if (event.behandlingStatus == BehandlingStatus.AVSLUTTET.kode) {
-                        //val vedtaksInfo = hentVedtaksInfo()
-                        //oppgaveDto = oppgaveDto.berikMedVedtaksInfo(vedtaksInfo)
-                    }
-
-                    if (oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto)) { //deilig med destruktiv if-test, eller? :P
-                        eventTeller++
-                        if (eventTeller.mod(100) == 0) {
-                            log.info("Behandlet $eventTeller eventer")
-                        }
-                    }
-                    log.info("Behandlet oppgaveversjon: ${event.eksternId}, tidsbruk: ${System.currentTimeMillis() - behandlerOppgaveversjon}")
+                if (event.behandlingStatus == BehandlingStatus.AVSLUTTET.kode) {
+                    //val vedtaksInfo = hentVedtaksInfo()
+                    //oppgaveDto = oppgaveDto.berikMedVedtaksInfo(vedtaksInfo)
                 }
+
+                if (oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto)) { //deilig med destruktiv if-test, eller? :P
+                    eventTeller++
+                    if (eventTeller.mod(100) == 0) { // Dette logges aldri
+                        log.info("Behandlet $eventTeller eventer")
+                    }
+                }
+                log.info("Behandlet oppgaveversjon: ${event.eksternId}, tidsbruk: ${System.currentTimeMillis() - behandlerOppgaveversjon}")
             }
         }
         val (antallAktive, antallAlle) = oppgaveV3Tjeneste.tellAntall()
@@ -92,14 +88,14 @@ class K9SakTilLosAdapterTjeneste(
         TODO()
     }
 
-    private fun lagOppgaveDto(event: BehandlingProsessEventDto, aksjonspunktTilstandDto: AksjonspunktTilstandDto) =
+    private fun lagOppgaveDto(event: BehandlingProsessEventDto) =
         OppgaveDto(
             id = event.eksternId.toString(),
             versjon = event.eventTid.toString(),
             område = "K9",
             kildeområde = "K9",
             type = "aksjonspunkt",
-            status = aksjonspunktTilstandDto.status.kode,
+            status = event.aksjonspunktTilstander.lastOrNull()?.status?.kode ?: "OPPR", // TODO statuser må gås opp
             endretTidspunkt = event.eventTid,
             feltverdier = lagFeltverdier(event)
         )
@@ -221,7 +217,8 @@ class K9SakTilLosAdapterTjeneste(
 
     private fun opprettFeltdefinisjoner(objectMapper: ObjectMapper) {
         val feltdefinisjonerDto = objectMapper.readValue(
-            K9SakTilLosAdapterTjeneste::class.java.getResource("/adapterdefinisjoner/k9-feltdefinisjoner-v2.json")!!.readText(),
+            K9SakTilLosAdapterTjeneste::class.java.getResource("/adapterdefinisjoner/k9-feltdefinisjoner-v2.json")!!
+                .readText(),
             FeltdefinisjonerDto::class.java
         )
 
@@ -239,7 +236,8 @@ class K9SakTilLosAdapterTjeneste(
 
     private fun opprettOppgavetype(objectMapper: ObjectMapper) {
         val oppgavetyperDto = objectMapper.readValue(
-            K9SakTilLosAdapterTjeneste::class.java.getResource("/adapterdefinisjoner/k9-oppgavetyper-v2.json")!!.readText(),
+            K9SakTilLosAdapterTjeneste::class.java.getResource("/adapterdefinisjoner/k9-oppgavetyper-v2.json")!!
+                .readText(),
             OppgavetyperDto::class.java
         )
 
