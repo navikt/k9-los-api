@@ -1,5 +1,7 @@
 package no.nav.k9.nyoppgavestyring.mottak.oppgave
 
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.k9.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import java.time.LocalDateTime
 
@@ -37,7 +39,11 @@ class OppgaveV3(
                         if (oppgavefelt.feltDefinisjon.listetype) {
                             //skip. lagrer ikke verdier for tomme lister
                         } else {
-                            throw IllegalArgumentException("Mangler obligatorisk feltverdi for ${oppgavefelt.feltDefinisjon.eksternId}")
+                            val sanertOppgaveDto =
+                                oppgaveDto.copy(feltverdier = oppgaveDto.feltverdier.filterNot { it.nøkkel == "aktorId" })
+                            throw IllegalArgumentException("Mangler obligatorisk feltverdi for ${oppgavefelt.feltDefinisjon.eksternId}. \n" +
+                                    jacksonObjectMapper().registerModule(JavaTimeModule()).writeValueAsString(sanertOppgaveDto)
+                            )
                         }
                     }
                 } else {
