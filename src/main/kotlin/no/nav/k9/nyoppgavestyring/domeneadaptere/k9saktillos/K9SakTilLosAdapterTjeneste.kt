@@ -48,6 +48,7 @@ class K9SakTilLosAdapterTjeneste(
     }
 
     fun spillAvBehandlingProsessEventer() {
+        var behandlingTeller: Long = 0
         var eventTeller: Long = 0
         log.info("Starter avspilling av BehandlingProsessEventer")
 
@@ -71,17 +72,23 @@ class K9SakTilLosAdapterTjeneste(
                     //oppgaveDto = oppgaveDto.berikMedVedtaksInfo(vedtaksInfo)
                 }
 
-                if (oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto)) { //deilig med destruktiv if-test, eller? :P
+                if (oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto)) {
                     eventTeller++
-                    if (eventTeller.mod(100) == 0) { // Dette logges aldri
-                        log.info("Behandlet $eventTeller eventer")
-                    }
+                    loggFremgangForHver100(eventTeller, "Behandlet $eventTeller eventer")
                 }
                 log.info("Behandlet oppgaveversjon: ${event.eksternId}, tidsbruk: ${System.currentTimeMillis() - behandlerOppgaveversjon}")
             }
+            behandlingTeller++
+            loggFremgangForHver100(eventTeller, "Forsert $behandlingTeller behandlinger")
         }
         val (antallAktive, antallAlle) = oppgaveV3Tjeneste.tellAntall()
         log.info("Avspilling av BehandlingProsessEventer ferdig")
+    }
+
+    private fun loggFremgangForHver100(teller: Long, tekst: String) {
+        if (teller.mod(100) == 0) {
+            log.info(tekst)
+        }
     }
 
     private fun hentVedtaksInfo(): Map<String, String> {
