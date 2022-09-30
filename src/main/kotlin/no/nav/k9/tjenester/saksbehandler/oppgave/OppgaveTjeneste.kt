@@ -1078,7 +1078,7 @@ class OppgaveTjeneste constructor(
         val oppgaveUuid = oppgaveDto.eksternId
         val oppgaveSomSkalBliReservert = oppgaveRepository.hent(oppgaveUuid)
 
-        // beslutter skal ikke få opp oppgave med 5016 de selv har saksbehandlet
+        // beslutter skal ikke få opp oppgave med 5016 eller 5005 de selv har saksbehandlet
         if (innloggetSaksbehandlerHarSaksbehandletOppgaveSomSkalBliBesluttet(oppgaveSomSkalBliReservert, ident)) {
             oppgaverSomErBlokert.add(oppgaveDto)
             return fåOppgaveFraKø(oppgaveKøId, ident, oppgaverSomErBlokert, prioriterteOppgaver)
@@ -1154,9 +1154,19 @@ class OppgaveTjeneste constructor(
     private fun innloggetSaksbehandlerHarSaksbehandletOppgaveSomSkalBliBesluttet(
         oppgaveSomSkalBliReservert: Oppgave,
         ident: String
-    ) = oppgaveSomSkalBliReservert.ansvarligSaksbehandlerForTotrinn != null &&
-            oppgaveSomSkalBliReservert.ansvarligSaksbehandlerForTotrinn == ident &&
-            erBeslutterOppgave(oppgaveSomSkalBliReservert)
+    ): Boolean {
+        val besluttet = oppgaveSomSkalBliReservert.ansvarligSaksbehandlerForTotrinn != null &&
+                oppgaveSomSkalBliReservert.ansvarligSaksbehandlerForTotrinn == ident
+
+        //for gamle k9-tilbake behandlinger så er feltet ansvarligSaksbehandlerIdent brukt
+        // istedenfor ansvarligSaksbehandlerForTotrinn, så sjekker begge.
+        val besluttetK9Tilbake = oppgaveSomSkalBliReservert.ansvarligSaksbehandlerIdent != null &&
+                oppgaveSomSkalBliReservert.ansvarligSaksbehandlerIdent == ident
+                && oppgaveSomSkalBliReservert.system == Fagsystem.K9TILBAKE.kode
+
+        return (besluttet || besluttetK9Tilbake) &&
+                erBeslutterOppgave(oppgaveSomSkalBliReservert)
+    }
 
 
     private fun erBeslutterOppgave(oppgaveSomSkalBliReservert: Oppgave) =
