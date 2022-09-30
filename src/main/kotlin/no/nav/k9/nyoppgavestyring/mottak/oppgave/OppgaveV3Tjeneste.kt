@@ -28,9 +28,7 @@ class OppgaveV3Tjeneste(
                 oppdater(dto, tx)
                 log.info("Lagret oppgave med eksternId: ${dto.id}, tidsbruk: ${System.currentTimeMillis() - startOppdatering}")
 
-                val startKafkasending = System.currentTimeMillis()
                 oppgavestatistikkTjeneste.sendStatistikk(dto.id, tx)
-                log.info("Sendt statistikkevent for behandling: ${dto.id}, tidsbruk: ${System.currentTimeMillis() - startKafkasending}")
             }
         }
         return skalOppdatere

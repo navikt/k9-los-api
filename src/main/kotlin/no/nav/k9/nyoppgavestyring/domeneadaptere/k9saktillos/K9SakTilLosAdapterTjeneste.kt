@@ -79,7 +79,7 @@ class K9SakTilLosAdapterTjeneste(
                 log.info("Behandlet oppgaveversjon: ${event.eksternId}, tidsbruk: ${System.currentTimeMillis() - behandlerOppgaveversjon}")
             }
             behandlingTeller++
-            loggFremgangForHver100(eventTeller, "Forsert $behandlingTeller behandlinger")
+            loggFremgangForHver100(behandlingTeller, "Forsert $behandlingTeller behandlinger")
         }
         val (antallAktive, antallAlle) = oppgaveV3Tjeneste.tellAntall()
         log.info("Avspilling av BehandlingProsessEventer ferdig")
