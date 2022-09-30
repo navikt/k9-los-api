@@ -49,24 +49,24 @@ class StatistikkPublisher(
             return
         }
         */
-        runBlocking {
-            send(sak, sak.saksnummer, TOPIC_USE_STATISTIKK_SAK.name)
-            send(behandling, behandling.behandlingId, TOPIC_USE_STATISTIKK_BEHANDLING.name)
-        }
+        send(sak, sak.saksnummer, TOPIC_USE_STATISTIKK_SAK.name)
+        send(behandling, behandling.behandlingId, TOPIC_USE_STATISTIKK_BEHANDLING.name)
     }
 
-    private fun send(melding: Any, key: String,  topic: String) {
+    private fun send(melding: Any, key: String, topic: String) {
         /*if (config.koinProfile() == KoinProfile.LOCAL) {
             log.info("Lokal kjøring, sender ikke melding til statistikk")
             return
         }
 */
+        val publiserStatistikk = System.currentTimeMillis()
         val meldingJson = objectMapper().writeValueAsString(melding)
-        producer.send(ProducerRecord(topic, key , meldingJson)) { _, exception ->
+        producer.send(ProducerRecord(topic, key, meldingJson)) { _, exception ->
             if (exception != null) {
                 log.error("", exception)
             }
         }.get()
+        log.info("Publiserte statistikk på topic: $topic, tidsbruk: ${System.currentTimeMillis() - publiserStatistikk}")
     }
 
     internal fun stop() = producer.close()
