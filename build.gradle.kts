@@ -95,7 +95,7 @@ dependencies {
     testImplementation("org.testcontainers:postgresql:1.17.3") {
         exclude(group = "junit", module = "junit")
     }
-    testImplementation("org.testcontainers:junit-jupiter:1.17.3")
+    testImplementation("org.testcontainers:junit-jupiter:1.17.4")
     testImplementation("io.insert-koin:koin-test-junit5:$koinVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion") {
         exclude(group = "junit", module = "junit")
