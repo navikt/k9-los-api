@@ -18,12 +18,11 @@ class OppgavestatistikkTjeneste(
 
     //TODO: koble fra transaksjon? Dette burde ikke kjøre i samme tx som lagring av oppgave, tror jeg
     private fun byggOppgavestatistikk(id: String, tx: TransactionalSession): Pair<Sak, Behandling> {
-        val hentOppgaveMedVersjoner = System.currentTimeMillis()
-        val oppgaveMedHistoriskeVersjoner =
-            oppgaveRepository.hentOppgaveMedHistoriskeVersjoner(tx, id)
-        log.info("Hentet oppgave med historiske versjoner: $id, tidsbruk: ${System.currentTimeMillis() - hentOppgaveMedVersjoner}")
-        val behandling = OppgaveTilBehandlingMapper().lagBehandling(oppgaveMedHistoriskeVersjoner)
-        val sak = OppgaveTilSakMapper().lagSak(oppgaveMedHistoriskeVersjoner)
+        val hentOppgave = System.currentTimeMillis()
+        val oppgave = oppgaveRepository.hentOppgave(tx, id)
+        log.info("Hentet oppgave med historiske versjoner: $id, tidsbruk: ${System.currentTimeMillis() - hentOppgave}")
+        val behandling = OppgaveTilBehandlingMapper().lagBehandling(oppgave)
+        val sak = OppgaveTilSakMapper().lagSak(oppgave)
         return Pair(sak, behandling)
     }
 

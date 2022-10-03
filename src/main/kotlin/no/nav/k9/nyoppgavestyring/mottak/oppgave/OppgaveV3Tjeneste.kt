@@ -17,24 +17,24 @@ class OppgaveV3Tjeneste(
 
     private val log = LoggerFactory.getLogger(OppgaveV3Tjeneste::class.java)
 
-    fun sjekkDuplikatOgProsesser(dto: OppgaveDto): Boolean {
-        var skalOppdatere = false
+    fun sjekkDuplikatOgProsesser(dto: OppgaveDto): OppgaveV3? {
+        var oppgave: OppgaveV3? = null
         transactionalManager.transaction { tx ->
             val duplikatsjekk = System.currentTimeMillis()
-            skalOppdatere = skalOppdatere(dto, tx)
+            val skalOppdatere = skalOppdatere(dto, tx)
             log.info("Duplikatsjekk av oppgave med eksternId: ${dto.id}, tidsbruk: ${System.currentTimeMillis() - duplikatsjekk}")
             if (skalOppdatere) {
                 val startOppdatering = System.currentTimeMillis()
-                oppdater(dto, tx)
+                oppgave = oppdater(dto, tx)
                 log.info("Lagret oppgave med eksternId: ${dto.id}, tidsbruk: ${System.currentTimeMillis() - startOppdatering}")
 
                 oppgavestatistikkTjeneste.sendStatistikk(dto.id, tx)
             }
         }
-        return skalOppdatere
+        return oppgave
     }
 
-    private fun oppdater(oppgaveDto: OppgaveDto, tx: TransactionalSession) {
+    private fun oppdater(oppgaveDto: OppgaveDto, tx: TransactionalSession): OppgaveV3 {
         val område = områdeRepository.hentOmråde(oppgaveDto.område, tx)
         val oppgavetyper = oppgavetypeRepository.hent(område, tx) //TODO: cache denne? Invalideres av post-kall på oppgavetype eller feltdefinisjon
         val oppgavetype = oppgavetyper.oppgavetyper.find { it.eksternId.equals(oppgaveDto.type) }
@@ -44,6 +44,8 @@ class OppgaveV3Tjeneste(
 
         val innkommendeOppgave = OppgaveV3(oppgaveDto, oppgavetype)
         oppgaveV3Repository.lagre(innkommendeOppgave, tx)
+
+        return innkommendeOppgave
     }
 
     fun skalOppdatere(oppgaveDto: OppgaveDto, tx: TransactionalSession): Boolean {

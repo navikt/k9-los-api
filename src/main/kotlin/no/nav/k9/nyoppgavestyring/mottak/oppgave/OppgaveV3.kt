@@ -3,6 +3,7 @@ package no.nav.k9.nyoppgavestyring.mottak.oppgave
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.k9.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
+import no.nav.k9.nyoppgavestyring.visningoguttrekk.Oppgavefelt
 import java.time.LocalDateTime
 
 class OppgaveV3(
@@ -56,6 +57,36 @@ class OppgaveV3(
                 }
             }
             return oppgavefelter
+        }
+    }
+
+    fun hentVerdi(feltnavn: String): String? {
+        val oppgavefelt = hentOppgavefelt(feltnavn)
+
+        if (oppgavefelt?.oppgavefelt?.feltDefinisjon?.listetype == true) {
+            throw IllegalStateException("Kan ikke hente listetype av $feltnavn som enkeltverdi")
+        }
+
+        return oppgavefelt?.verdi
+    }
+
+    fun hentListeverdi(feltnavn: String): List<String> {
+        val oppgavefelt = hentOppgavefelt(feltnavn)
+
+        if (oppgavefelt != null) {
+            if (!oppgavefelt.oppgavefelt.feltDefinisjon.listetype) {
+                throw IllegalStateException("Kan ikke hente enkeltverdi av $feltnavn som listetype")
+            }
+        }
+
+        return felter.filter { feltverdi ->
+            feltverdi.oppgavefelt.feltDefinisjon.eksternId == feltnavn
+        }.map { it.verdi }
+    }
+
+    private fun hentOppgavefelt(feltnavn: String): OppgaveFeltverdi? {
+        return felter.find { oppgavefelter ->
+            oppgavefelter.oppgavefelt.feltDefinisjon.eksternId == feltnavn
         }
     }
 }
