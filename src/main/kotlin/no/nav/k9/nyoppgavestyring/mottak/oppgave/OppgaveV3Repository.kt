@@ -23,8 +23,12 @@ class OppgaveV3Repository(private val dataSource: DataSource) {
 
         val nyVersjon = eksisterendeVersjon?.plus(1) ?: 0
 
+        val startLagreOppgave = System.currentTimeMillis()
+        log.info("Lagret oppgaveV3, tidsbruk: ${System.currentTimeMillis() - startLagreOppgave}")
         val oppgaveId = lagre(oppgave, nyVersjon, tx)
+        val startLagreFeltverdier = System.currentTimeMillis()
         lagreFeltverdier(oppgaveId, oppgave.felter, tx)
+        log.info("Lagret feltverdier, tidsbruk: ${System.currentTimeMillis() - startLagreFeltverdier}")
     }
 
     private fun lagre(oppgave: OppgaveV3, nyVersjon: Long, tx: TransactionalSession): Long {
@@ -53,20 +57,21 @@ class OppgaveV3Repository(private val dataSource: DataSource) {
         oppgaveFeltverdier: List<OppgaveFeltverdi>,
         tx: TransactionalSession
     ) {
+        var values = ""
         oppgaveFeltverdier.forEach { feltverdi ->
-            tx.run(
-                queryOf(
-                    """
-                    insert into oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi)
-                    VALUES(:oppgaveId, :oppgavefeltId, :verdi)""".trimIndent(),
-                    mapOf(
-                        "oppgaveId" to oppgaveId,
-                        "oppgavefeltId" to feltverdi.oppgavefelt.id,
-                        "verdi" to feltverdi.verdi
-                    )
-                ).asUpdate
-            )
+            values += "($oppgaveId, ${feltverdi.oppgavefelt.id}, ${feltverdi.verdi}),\n"
         }
+        values.dropLast(2)
+
+        tx.run(
+            queryOf(
+                """
+                    insert into oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi)
+                    VALUES :values 
+                """.trimIndent(),
+                mapOf("values" to values)
+            ).asUpdate
+        )
     }
 
     private fun hentVersjon(tx: TransactionalSession, oppgave: OppgaveV3): Pair<Long?, Long?> {
