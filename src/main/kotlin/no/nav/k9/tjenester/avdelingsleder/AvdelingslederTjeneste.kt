@@ -285,6 +285,24 @@ class AvdelingslederTjeneste(
         }
     }
 
+    suspend fun leggFjernSaksbehandlereFraOppgaveKø(saksbehandlereDto: List<SaksbehandlerOppgavekoDto>) {
+        val saksbehandlerKøId = saksbehandlereDto.first().id
+        if (!saksbehandlereDto.all { it.id == saksbehandlerKøId }) {
+            throw IllegalArgumentException("Støtter ikke å legge til eller fjerne saksbehandlere fra flere køer samtidig")
+        }
+        val saksbehandlereSomSkalLeggesTil = saksbehandlereDto.filter { it.checked }.map { saksbehandlerRepository.finnSaksbehandlerMedEpost(it.epost)!! }
+        val saksbehandlereSomSkalFjernes = saksbehandlereDto.filter { !it.checked }.map { saksbehandlerRepository.finnSaksbehandlerMedEpost(it.epost)!! }
+
+        oppgaveKøRepository.lagre(UUID.fromString(saksbehandlerKøId)) { oppgaveKø ->
+            saksbehandlereSomSkalLeggesTil.forEach{ nySaksbehandler ->
+                oppgaveKø!!.saksbehandlere.find { it.epost == nySaksbehandler.epost }
+                    ?: oppgaveKø.saksbehandlere.add(nySaksbehandler)
+            }
+            oppgaveKø!!.saksbehandlere.removeAll(saksbehandlereSomSkalFjernes)
+            oppgaveKø
+        }
+    }
+
     suspend fun leggFjernSaksbehandlerOppgavekø(saksbehandlerKø: SaksbehandlerOppgavekoDto) {
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(
             saksbehandlerKø.epost
