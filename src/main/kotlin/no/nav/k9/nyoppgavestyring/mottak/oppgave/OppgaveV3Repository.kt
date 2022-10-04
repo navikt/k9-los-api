@@ -57,20 +57,17 @@ class OppgaveV3Repository(private val dataSource: DataSource) {
         oppgaveFeltverdier: List<OppgaveFeltverdi>,
         tx: TransactionalSession
     ) {
-        var values = ""
-        oppgaveFeltverdier.forEach { feltverdi ->
-            values += "($oppgaveId, ${feltverdi.oppgavefelt.id}, ${feltverdi.verdi}),\n"
-        }
-        values.dropLast(2)
-
-        tx.run(
-            queryOf(
-                """
-                    insert into oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi)
-                    VALUES :values 
-                """.trimIndent(),
-                mapOf("values" to values)
-            ).asUpdate
+        tx.batchPreparedNamedStatement("""
+            insert into oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi)
+                    VALUES (:oppgaveId, :oppgavefeltId, :verdi)
+        """.trimIndent(),
+            oppgaveFeltverdier.map { feltverdi ->
+                mapOf(
+                    "oppgaveId" to oppgaveId,
+                    "oppgavefeltId" to feltverdi.oppgavefelt.id,
+                    "verdi" to feltverdi.verdi
+                )
+            }
         )
     }
 
