@@ -39,7 +39,7 @@ internal class AvdelingslederTjenesteTest : AbstractK9LosIntegrationTest() {
             val id = avdelingslederTjeneste.opprettOppgaveKø()
             val saksbehandlerDto = saksbehandlere.map {
                 SaksbehandlerOppgavekoDto(id.id, it.epost, true)
-            }
+            }.toTypedArray()
 
             avdelingslederTjeneste.leggFjernSaksbehandlereFraOppgaveKø(saksbehandlerDto)
             val oppgaveKø = avdelingslederTjeneste.hentOppgaveKø(UUID.fromString(id.id))
@@ -56,7 +56,7 @@ internal class AvdelingslederTjenesteTest : AbstractK9LosIntegrationTest() {
             val id = avdelingslederTjeneste.opprettOppgaveKø()
             val saksbehandlerDto = saksbehandlere.map {
                 SaksbehandlerOppgavekoDto(id.id, it.epost, true)
-            }
+            }.toTypedArray()
 
             avdelingslederTjeneste.leggFjernSaksbehandlereFraOppgaveKø(saksbehandlerDto)
             var oppgaveKø = avdelingslederTjeneste.hentOppgaveKø(UUID.fromString(id.id))
@@ -77,7 +77,7 @@ internal class AvdelingslederTjenesteTest : AbstractK9LosIntegrationTest() {
             val id = avdelingslederTjeneste.opprettOppgaveKø()
             var saksbehandlerDto = saksbehandlere.map {
                 SaksbehandlerOppgavekoDto(id.id, it.epost, true)
-            }
+            }.toTypedArray()
 
             avdelingslederTjeneste.leggFjernSaksbehandlereFraOppgaveKø(saksbehandlerDto)
             var oppgaveKø = avdelingslederTjeneste.hentOppgaveKø(UUID.fromString(id.id))
@@ -85,7 +85,7 @@ internal class AvdelingslederTjenesteTest : AbstractK9LosIntegrationTest() {
 
             saksbehandlerDto = saksbehandlere.map {
                 SaksbehandlerOppgavekoDto(id.id, it.epost, false)
-            }
+            }.toTypedArray()
 
             avdelingslederTjeneste.leggFjernSaksbehandlereFraOppgaveKø(saksbehandlerDto)
             oppgaveKø = avdelingslederTjeneste.hentOppgaveKø(UUID.fromString(id.id))
@@ -102,13 +102,13 @@ internal class AvdelingslederTjenesteTest : AbstractK9LosIntegrationTest() {
             val id = avdelingslederTjeneste.opprettOppgaveKø()
             var saksbehandlerDto = saksbehandlere.map {
                 SaksbehandlerOppgavekoDto(id.id, it.epost, true)
-            }
+            }.toTypedArray()
 
             avdelingslederTjeneste.leggFjernSaksbehandlereFraOppgaveKø(saksbehandlerDto)
             var oppgaveKø = avdelingslederTjeneste.hentOppgaveKø(UUID.fromString(id.id))
             assertThat(oppgaveKø.saksbehandlere.size == saksbehandlerDto.size)
 
-            saksbehandlerDto = listOf(
+            saksbehandlerDto = arrayOf(
                 SaksbehandlerOppgavekoDto(id.id, saksbehandlere[0].epost, true),
                 SaksbehandlerOppgavekoDto(id.id, saksbehandlere[1].epost, false),
             )

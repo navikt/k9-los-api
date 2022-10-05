@@ -99,7 +99,7 @@ fun Route.AvdelingslederOppgavekøApis() {
 
     post("/saksbehandlere") {
         requestContextService.withRequestContext(call) {
-            val saksbehandlere = call.receive<List<SaksbehandlerOppgavekoDto>>()
+            val saksbehandlere = call.receive<Array<SaksbehandlerOppgavekoDto>>()
             call.respond(avdelingslederTjeneste.leggFjernSaksbehandlereFraOppgaveKø(saksbehandlere))
         }
     }
