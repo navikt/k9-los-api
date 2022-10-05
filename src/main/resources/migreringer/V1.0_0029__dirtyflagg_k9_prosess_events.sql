@@ -1,0 +1,1 @@
+alter table behandling_prosess_events_k9 add column if not exists dirty boolean not null default true

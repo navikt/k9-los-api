@@ -345,7 +345,6 @@ fun common(app: Application, config: Configuration) = module {
             oppgaveV3Repository = get(),
             oppgavetypeRepository = get(),
             områdeRepository = get(),
-            transactionalManager = get(),
             oppgavestatistikkTjeneste = get()
         )
     }
@@ -365,7 +364,8 @@ fun common(app: Application, config: Configuration) = module {
             feltdefinisjonTjeneste = get(),
             oppgavetypeTjeneste = get(),
             oppgaveV3Tjeneste = get(),
-            config = get()
+            config = get(),
+            transactionalManager = get()
         )
     }
 

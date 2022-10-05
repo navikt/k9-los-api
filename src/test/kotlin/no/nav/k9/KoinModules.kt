@@ -271,7 +271,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgaveV3Repository = get(),
             oppgavetypeRepository = get(),
             områdeRepository = get(),
-            transactionalManager = get(),
             oppgavestatistikkTjeneste = get()
         )
     }
@@ -291,7 +290,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             feltdefinisjonTjeneste = get(),
             oppgavetypeTjeneste = get(),
             oppgaveV3Tjeneste = get(),
-            config = get()
+            config = get(),
+            transactionalManager = get()
         )
     }
 }

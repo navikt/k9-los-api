@@ -11,26 +11,24 @@ class OppgaveV3Tjeneste(
     private val oppgaveV3Repository: OppgaveV3Repository,
     private val oppgavetypeRepository: OppgavetypeRepository,
     private val områdeRepository: OmrådeRepository,
-    private val transactionalManager: TransactionalManager,
     private val oppgavestatistikkTjeneste: OppgavestatistikkTjeneste
 ) {
 
     private val log = LoggerFactory.getLogger(OppgaveV3Tjeneste::class.java)
 
-    fun sjekkDuplikatOgProsesser(dto: OppgaveDto): OppgaveV3? {
+    fun sjekkDuplikatOgProsesser(dto: OppgaveDto, tx: TransactionalSession): OppgaveV3? {
         var oppgave: OppgaveV3? = null
-        transactionalManager.transaction { tx ->
-            val duplikatsjekk = System.currentTimeMillis()
-            val skalOppdatere = skalOppdatere(dto, tx)
-            log.info("Duplikatsjekk av oppgave med eksternId: ${dto.id}, tidsbruk: ${System.currentTimeMillis() - duplikatsjekk}")
-            if (skalOppdatere) {
-                val startOppdatering = System.currentTimeMillis()
-                oppgave = oppdater(dto, tx)
-                log.info("Lagret oppgave med eksternId: ${dto.id}, tidsbruk: ${System.currentTimeMillis() - startOppdatering}")
+        val duplikatsjekk = System.currentTimeMillis()
+        val skalOppdatere = skalOppdatere(dto, tx)
+        log.info("Duplikatsjekk av oppgave med eksternId: ${dto.id}, tidsbruk: ${System.currentTimeMillis() - duplikatsjekk}")
+        if (skalOppdatere) {
+            val startOppdatering = System.currentTimeMillis()
+            oppgave = oppdater(dto, tx)
+            log.info("Lagret oppgave med eksternId: ${dto.id}, tidsbruk: ${System.currentTimeMillis() - startOppdatering}")
 
-                oppgavestatistikkTjeneste.sendStatistikk(dto.id, tx)
-            }
+            oppgavestatistikkTjeneste.sendStatistikk(dto.id, tx)
         }
+
         return oppgave
     }
 
@@ -39,7 +37,8 @@ class OppgaveV3Tjeneste(
         val område = områdeRepository.hentOmråde(oppgaveDto.område, tx)
         log.info("Hentet område, tidsbruk: ${System.currentTimeMillis() - hentOmråde}")
         val hentOppgavetype = System.currentTimeMillis()
-        val oppgavetype = oppgavetypeRepository.hent(område, tx).oppgavetyper.find { it.eksternId.equals(oppgaveDto.type) }
+        val oppgavetype =
+            oppgavetypeRepository.hent(område, tx).oppgavetyper.find { it.eksternId.equals(oppgaveDto.type) }
                 ?: throw IllegalArgumentException("Kan ikke legge til oppgave på en oppgavetype som ikke er definert")
         log.info("Hentet oppgavetype, tidsbruk: ${System.currentTimeMillis() - hentOppgavetype}")
 
