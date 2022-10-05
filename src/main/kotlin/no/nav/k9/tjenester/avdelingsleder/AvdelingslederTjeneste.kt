@@ -285,7 +285,7 @@ class AvdelingslederTjeneste(
         }
     }
 
-    suspend fun leggFjernSaksbehandlereFraOppgaveKø(saksbehandlereDto: List<SaksbehandlerOppgavekoDto>) {
+    suspend fun leggFjernSaksbehandlereFraOppgaveKø(saksbehandlereDto: Array<SaksbehandlerOppgavekoDto>) {
         val saksbehandlerKøId = saksbehandlereDto.first().id
         if (!saksbehandlereDto.all { it.id == saksbehandlerKøId }) {
             throw IllegalArgumentException("Støtter ikke å legge til eller fjerne saksbehandlere fra flere køer samtidig")
