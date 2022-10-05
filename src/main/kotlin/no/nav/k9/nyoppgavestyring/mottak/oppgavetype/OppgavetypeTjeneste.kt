@@ -26,7 +26,7 @@ class OppgavetypeTjeneste(
             )
             oppgavetypeRepository.fjern(sletteListe, tx)
             oppgavetypeRepository.leggTil(leggtilListe, tx)
-            oppdaterListe.forEach{ endring ->
+            oppdaterListe.forEach { endring ->
                 oppgavetypeRepository.endre(endring, tx)
             }
             invaliderCache()

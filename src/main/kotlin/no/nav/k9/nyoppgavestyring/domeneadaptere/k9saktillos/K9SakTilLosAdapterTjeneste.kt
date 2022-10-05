@@ -171,14 +171,15 @@ class K9SakTilLosAdapterTjeneste(
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "ansvarligSaksbehandlerForTotrinn",
-                verdi = event.ansvarligSaksbehandlerForTotrinn ?: forrigeOppgave?.hentVerdi("ansvarligSaksbehandlerForTotrinn")
+                verdi = event.ansvarligSaksbehandlerForTotrinn
+                    ?: forrigeOppgave?.hentVerdi("ansvarligSaksbehandlerForTotrinn")
             ),
             OppgaveFeltverdiDto(
-                nøkkel= "mottattDato",
+                nøkkel = "mottattDato",
                 verdi = forrigeOppgave?.hentVerdi("mottattDato") ?: event.eventTid.toString()
             ),
             OppgaveFeltverdiDto(
-                nøkkel= "registrertDato",
+                nøkkel = "registrertDato",
                 verdi = forrigeOppgave?.hentVerdi("registrertDato") ?: event.eventTid.toString()
             ),
             OppgaveFeltverdiDto(
@@ -246,17 +247,8 @@ class K9SakTilLosAdapterTjeneste(
                 .readText(),
             FeltdefinisjonerDto::class.java
         )
-
-        val område = områdeRepository.hent(feltdefinisjonerDto.område)!!
-
-        if (!feltdefinisjonTjeneste.hent(område).feltdefinisjoner
-                .containsAll(Feltdefinisjoner(feltdefinisjonerDto, område).feltdefinisjoner)
-        ) {
-            feltdefinisjonTjeneste.oppdater(feltdefinisjonerDto)
-            log.info("opprettet feltdefinisjoner")
-        } else {
-            log.info("feltdefinisjoner er allerede oppdatert")
-        }
+        log.info("oppretter feltdefinisjoner")
+        feltdefinisjonTjeneste.oppdater(feltdefinisjonerDto)
     }
 
     private fun opprettOppgavetype(objectMapper: ObjectMapper) {
@@ -265,18 +257,8 @@ class K9SakTilLosAdapterTjeneste(
                 .readText(),
             OppgavetyperDto::class.java
         )
-
-        val område = områdeRepository.hent(oppgavetyperDto.område)!!
-
-        val oppgaveType = oppgavetypeTjeneste.hent(område).oppgavetyper.find {
-            it.eksternId.equals(oppgavetyperDto.oppgavetyper.first().id)
-        }
-        if (oppgaveType == null) {
-            oppgavetypeTjeneste.oppdater(oppgavetyperDto)
-            log.info("opprettet oppgavetype")
-        } else {
-            log.info("oppgavetype er allerede oppdatert")
-        }
+        oppgavetypeTjeneste.oppdater(oppgavetyperDto)
+        log.info("opprettet oppgavetype")
     }
 
     private fun OppgaveDto.berikMedVedtaksInfo(vedtaksInfo: Map<String, String>): OppgaveDto {

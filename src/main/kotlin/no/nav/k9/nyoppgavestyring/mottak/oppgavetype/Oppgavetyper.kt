@@ -39,7 +39,9 @@ class Oppgavetyper(
             if (eksisterende == null) {
                 leggTilListe.add(innkommende)
             } else {
-                finnFeltforskjellListe.add(utledOppdatering(eksisterende, innkommende))
+                utledOppdatering(eksisterende, innkommende)?.let { oppdatering ->
+                    finnFeltforskjellListe.add(oppdatering)
+                }
             }
         }
 
@@ -62,7 +64,7 @@ class Oppgavetyper(
         )
     }
 
-    fun utledOppdatering(eksisterendeOppgave: Oppgavetype, innkommendeOppgave: Oppgavetype): OppgavetypeEndring {
+    fun utledOppdatering(eksisterendeOppgave: Oppgavetype, innkommendeOppgave: Oppgavetype): OppgavetypeEndring? {
         val leggTilListe = mutableSetOf<Oppgavefelt>()
         val sletteliste = mutableSetOf<Oppgavefelt>()
         val endreliste = mutableSetOf<OppgavefeltDelta>()
@@ -92,7 +94,8 @@ class Oppgavetyper(
                 sletteliste.add(eksisterendeFelt)
             }
         }
-        return OppgavetypeEndring(
+        return if (leggTilListe.isEmpty() && sletteliste.isEmpty() && endreliste.isEmpty()) null
+        else OppgavetypeEndring(
             oppgavetype = eksisterendeOppgave,
             felterSomSkalLeggesTil = leggTilListe.toList(),
             felterSomSkalFjernes = sletteliste.toList(),

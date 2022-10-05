@@ -95,6 +95,7 @@ class OppgaveV3Repository(private val dataSource: DataSource) {
     }
 
     private fun deaktiverVersjon(eksisterendeId: Long, deaktivertTidspunkt: LocalDateTime, tx: TransactionalSession) {
+        val deaktiverVersjon = System.currentTimeMillis()
         tx.run(
             queryOf(
                 """
@@ -106,6 +107,7 @@ class OppgaveV3Repository(private val dataSource: DataSource) {
                 )
             ).asUpdate
         )
+        log.info("Deaktiverte forrige versjon, tidsbruk: ${System.currentTimeMillis() - deaktiverVersjon}")
     }
 
     fun finnesFraFør(tx: TransactionalSession, eksternId: String, eksternVersjon: String): Boolean {

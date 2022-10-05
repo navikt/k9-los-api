@@ -3,14 +3,9 @@ package no.nav.k9.nyoppgavestyring.mottak.oppgave
 import kotliquery.TransactionalSession
 import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk.OppgavestatistikkTjeneste
-import no.nav.k9.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.nyoppgavestyring.mottak.omraade.OmrådeRepository
-import no.nav.k9.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import no.nav.k9.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
-import no.nav.k9.utils.Cache
-import no.nav.k9.utils.CacheObject
 import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
 
 class OppgaveV3Tjeneste(
     private val oppgaveV3Repository: OppgaveV3Repository,
@@ -40,14 +35,21 @@ class OppgaveV3Tjeneste(
     }
 
     private fun oppdater(oppgaveDto: OppgaveDto, tx: TransactionalSession): OppgaveV3 {
+        val hentOmråde = System.currentTimeMillis()
         val område = områdeRepository.hentOmråde(oppgaveDto.område, tx)
-
+        log.info("Hentet område, tidsbruk: ${System.currentTimeMillis() - hentOmråde}")
+        val hentOppgavetype = System.currentTimeMillis()
         val oppgavetype = oppgavetypeRepository.hent(område, tx).oppgavetyper.find { it.eksternId.equals(oppgaveDto.type) }
                 ?: throw IllegalArgumentException("Kan ikke legge til oppgave på en oppgavetype som ikke er definert")
+        log.info("Hentet oppgavetype, tidsbruk: ${System.currentTimeMillis() - hentOppgavetype}")
 
+        val validerOppgaveDto = System.currentTimeMillis()
         oppgavetype.valider(oppgaveDto)
+        log.info("Validerte oppgaveDto, tidsbruk: ${System.currentTimeMillis() - validerOppgaveDto}")
 
+        val opprettOppgave = System.currentTimeMillis()
         val innkommendeOppgave = OppgaveV3(oppgaveDto, oppgavetype)
+        log.info("Opprettet oppgave fra dto, tidsbruk: ${System.currentTimeMillis() - opprettOppgave}")
         oppgaveV3Repository.lagre(innkommendeOppgave, tx)
 
         return innkommendeOppgave

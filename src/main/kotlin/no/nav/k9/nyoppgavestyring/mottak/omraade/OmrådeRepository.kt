@@ -5,9 +5,7 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.utils.Cache
-import no.nav.k9.utils.CacheObject
 import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
 import javax.sql.DataSource
 
 class OmrådeRepository(private val dataSource: DataSource) {
