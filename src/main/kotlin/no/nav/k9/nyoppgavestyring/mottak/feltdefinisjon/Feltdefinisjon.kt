@@ -15,7 +15,7 @@ class Feltdefinisjon(
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon
+        other as Feltdefinisjon
 
         if (eksternId != other.eksternId) return false
         if (listetype != other.listetype) return false

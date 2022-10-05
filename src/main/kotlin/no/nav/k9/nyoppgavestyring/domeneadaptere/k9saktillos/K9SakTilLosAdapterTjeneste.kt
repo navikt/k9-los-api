@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.fixedRateTimer
 import no.nav.k9.Configuration
+import no.nav.k9.nyoppgavestyring.mottak.oppgave.OppgaveV3
 
 class K9SakTilLosAdapterTjeneste(
     private val behandlingProsessEventK9Repository: BehandlingProsessEventK9Repository,
@@ -50,6 +51,8 @@ class K9SakTilLosAdapterTjeneste(
     fun spillAvBehandlingProsessEventer() {
         var behandlingTeller: Long = 0
         var eventTeller: Long = 0
+        var forrigeOppgave: OppgaveV3? = null
+
         log.info("Starter avspilling av BehandlingProsessEventer")
 
         val startHentAlleIDer = System.currentTimeMillis()
@@ -65,19 +68,25 @@ class K9SakTilLosAdapterTjeneste(
 
             behandlingProsessEventer.forEach { event ->
                 val behandlerOppgaveversjon = System.currentTimeMillis()
-                val oppgaveDto = lagOppgaveDto(event)
+                val oppgaveDto = lagOppgaveDto(event, forrigeOppgave)
 
                 if (event.behandlingStatus == BehandlingStatus.AVSLUTTET.kode) {
                     //val vedtaksInfo = hentVedtaksInfo()
                     //oppgaveDto = oppgaveDto.berikMedVedtaksInfo(vedtaksInfo)
                 }
 
-                if (oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto)) {
+                var ansvarlig = event.ansvarligSaksbehandlerIdent ?: forrigeOppgave?.hentVerdi("")
+
+                val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto)
+
+                if (oppgave != null) {
                     eventTeller++
                     loggFremgangForHver100(eventTeller, "Behandlet $eventTeller eventer")
                 }
                 log.info("Behandlet oppgaveversjon: ${event.eksternId}, tidsbruk: ${System.currentTimeMillis() - behandlerOppgaveversjon}")
+                forrigeOppgave = oppgave
             }
+            forrigeOppgave = null
             behandlingTeller++
             loggFremgangForHver100(behandlingTeller, "Forsert $behandlingTeller behandlinger")
         }
@@ -95,7 +104,7 @@ class K9SakTilLosAdapterTjeneste(
         TODO()
     }
 
-    private fun lagOppgaveDto(event: BehandlingProsessEventDto) =
+    private fun lagOppgaveDto(event: BehandlingProsessEventDto, forrigeOppgave: OppgaveV3?) =
         OppgaveDto(
             id = event.eksternId.toString(),
             versjon = event.eventTid.toString(),
@@ -104,11 +113,12 @@ class K9SakTilLosAdapterTjeneste(
             type = "aksjonspunkt",
             status = event.aksjonspunktTilstander.lastOrNull()?.status?.kode ?: "OPPR", // TODO statuser må gås opp
             endretTidspunkt = event.eventTid,
-            feltverdier = lagFeltverdier(event)
+            feltverdier = lagFeltverdier(event, forrigeOppgave)
         )
 
     private fun lagFeltverdier(
-        event: BehandlingProsessEventDto
+        event: BehandlingProsessEventDto,
+        forrigeOppgave: OppgaveV3?
     ): List<OppgaveFeltverdiDto> {
         val oppgaveFeltverdiDtos = mutableListOf(
             OppgaveFeltverdiDto(
@@ -153,15 +163,24 @@ class K9SakTilLosAdapterTjeneste(
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "ansvarligSaksbehandlerIdent",
-                verdi = event.ansvarligSaksbehandlerIdent
+                verdi = event.ansvarligSaksbehandlerIdent ?: forrigeOppgave?.hentVerdi("ansvarligSaksbehandlerIdent")
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "ansvarligBeslutterForTotrinn",
-                verdi = event.ansvarligBeslutterForTotrinn
+                verdi = event.ansvarligBeslutterForTotrinn ?: forrigeOppgave?.hentVerdi("ansvarligBeslutterForTotrinn")
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "ansvarligSaksbehandlerForTotrinn",
-                verdi = event.ansvarligSaksbehandlerIdent
+                verdi = event.ansvarligSaksbehandlerForTotrinn
+                    ?: forrigeOppgave?.hentVerdi("ansvarligSaksbehandlerForTotrinn")
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "mottattDato",
+                verdi = forrigeOppgave?.hentVerdi("mottattDato") ?: event.eventTid.toString()
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "registrertDato",
+                verdi = forrigeOppgave?.hentVerdi("registrertDato") ?: event.eventTid.toString()
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "totrinnskontroll",
@@ -228,17 +247,8 @@ class K9SakTilLosAdapterTjeneste(
                 .readText(),
             FeltdefinisjonerDto::class.java
         )
-
-        val område = områdeRepository.hent(feltdefinisjonerDto.område)!!
-
-        if (!feltdefinisjonTjeneste.hent(område).feltdefinisjoner
-                .containsAll(Feltdefinisjoner(feltdefinisjonerDto, område).feltdefinisjoner)
-        ) {
-            feltdefinisjonTjeneste.oppdater(feltdefinisjonerDto)
-            log.info("opprettet feltdefinisjoner")
-        } else {
-            log.info("feltdefinisjoner er allerede oppdatert")
-        }
+        log.info("oppretter feltdefinisjoner")
+        feltdefinisjonTjeneste.oppdater(feltdefinisjonerDto)
     }
 
     private fun opprettOppgavetype(objectMapper: ObjectMapper) {
@@ -247,18 +257,8 @@ class K9SakTilLosAdapterTjeneste(
                 .readText(),
             OppgavetyperDto::class.java
         )
-
-        val område = områdeRepository.hent(oppgavetyperDto.område)!!
-
-        val oppgaveType = oppgavetypeTjeneste.hent(område).oppgavetyper.find {
-            it.eksternId.equals(oppgavetyperDto.oppgavetyper.first().id)
-        }
-        if (oppgaveType == null) {
-            oppgavetypeTjeneste.oppdater(oppgavetyperDto)
-            log.info("opprettet oppgavetype")
-        } else {
-            log.info("oppgavetype er allerede oppdatert")
-        }
+        oppgavetypeTjeneste.oppdater(oppgavetyperDto)
+        log.info("opprettet oppgavetype")
     }
 
     private fun OppgaveDto.berikMedVedtaksInfo(vedtaksInfo: Map<String, String>): OppgaveDto {

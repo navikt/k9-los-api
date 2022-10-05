@@ -341,20 +341,20 @@ fun common(app: Application, config: Configuration) = module {
         )
     }
     single {
-        OppgavetypeTjeneste(
-            oppgavetypeRepository = get(),
-            områdeRepository = get(),
-            feltdefinisjonRepository = get(),
-            transactionalManager = get(),
-        )
-    }
-    single {
         OppgaveV3Tjeneste(
             oppgaveV3Repository = get(),
             oppgavetypeRepository = get(),
             områdeRepository = get(),
             transactionalManager = get(),
             oppgavestatistikkTjeneste = get()
+        )
+    }
+    single {
+        OppgavetypeTjeneste(
+            oppgavetypeRepository = get(),
+            områdeRepository = get(),
+            feltdefinisjonRepository = get(),
+            transactionalManager = get()
         )
     }
 

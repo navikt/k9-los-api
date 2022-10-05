@@ -27,6 +27,7 @@ internal fun Route.OppgaveV3Api() {
         requestContextService.withRequestContext(call) {
             val kjørSetup = call.request.queryParameters["kjorSetup"].toBoolean()
             k9SakTilLosAdapterTjeneste.kjør(kjørSetup)
+            call.respond("OK")
         }
     }
 

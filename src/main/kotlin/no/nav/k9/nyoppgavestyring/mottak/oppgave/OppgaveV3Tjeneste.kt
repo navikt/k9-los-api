@@ -17,33 +17,42 @@ class OppgaveV3Tjeneste(
 
     private val log = LoggerFactory.getLogger(OppgaveV3Tjeneste::class.java)
 
-    fun sjekkDuplikatOgProsesser(dto: OppgaveDto): Boolean {
-        var skalOppdatere = false
+    fun sjekkDuplikatOgProsesser(dto: OppgaveDto): OppgaveV3? {
+        var oppgave: OppgaveV3? = null
         transactionalManager.transaction { tx ->
             val duplikatsjekk = System.currentTimeMillis()
-            skalOppdatere = skalOppdatere(dto, tx)
+            val skalOppdatere = skalOppdatere(dto, tx)
             log.info("Duplikatsjekk av oppgave med eksternId: ${dto.id}, tidsbruk: ${System.currentTimeMillis() - duplikatsjekk}")
             if (skalOppdatere) {
                 val startOppdatering = System.currentTimeMillis()
-                oppdater(dto, tx)
+                oppgave = oppdater(dto, tx)
                 log.info("Lagret oppgave med eksternId: ${dto.id}, tidsbruk: ${System.currentTimeMillis() - startOppdatering}")
 
                 oppgavestatistikkTjeneste.sendStatistikk(dto.id, tx)
             }
         }
-        return skalOppdatere
+        return oppgave
     }
 
-    private fun oppdater(oppgaveDto: OppgaveDto, tx: TransactionalSession) {
+    private fun oppdater(oppgaveDto: OppgaveDto, tx: TransactionalSession): OppgaveV3 {
+        val hentOmråde = System.currentTimeMillis()
         val område = områdeRepository.hentOmråde(oppgaveDto.område, tx)
-        val oppgavetyper = oppgavetypeRepository.hent(område, tx) //TODO: cache denne? Invalideres av post-kall på oppgavetype eller feltdefinisjon
-        val oppgavetype = oppgavetyper.oppgavetyper.find { it.eksternId.equals(oppgaveDto.type) }
-            ?: throw IllegalArgumentException("Kan ikke legge til oppgave på en oppgavetype som ikke er definert")
+        log.info("Hentet område, tidsbruk: ${System.currentTimeMillis() - hentOmråde}")
+        val hentOppgavetype = System.currentTimeMillis()
+        val oppgavetype = oppgavetypeRepository.hent(område, tx).oppgavetyper.find { it.eksternId.equals(oppgaveDto.type) }
+                ?: throw IllegalArgumentException("Kan ikke legge til oppgave på en oppgavetype som ikke er definert")
+        log.info("Hentet oppgavetype, tidsbruk: ${System.currentTimeMillis() - hentOppgavetype}")
 
+        val validerOppgaveDto = System.currentTimeMillis()
         oppgavetype.valider(oppgaveDto)
+        log.info("Validerte oppgaveDto, tidsbruk: ${System.currentTimeMillis() - validerOppgaveDto}")
 
+        val opprettOppgave = System.currentTimeMillis()
         val innkommendeOppgave = OppgaveV3(oppgaveDto, oppgavetype)
+        log.info("Opprettet oppgave fra dto, tidsbruk: ${System.currentTimeMillis() - opprettOppgave}")
         oppgaveV3Repository.lagre(innkommendeOppgave, tx)
+
+        return innkommendeOppgave
     }
 
     fun skalOppdatere(oppgaveDto: OppgaveDto, tx: TransactionalSession): Boolean {

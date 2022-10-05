@@ -29,6 +29,29 @@ class OppgaveRepository {
         ).toSet()
     }
 
+    fun hentOppgave(tx: TransactionalSession, eksternId: String): Oppgave {
+        return tx.run (
+            queryOf("""
+                select * 
+                from oppgave_v3 ov
+                where ov.ekstern_id = :eksternId
+                and ov.versjon = (select max(versjon) from oppgave_v3 ov2 where ov2.ekstern_id = :eksternId)
+            """.trimIndent(),
+                mapOf("eksternId" to eksternId)
+            ).map { row ->
+                Oppgave(
+                    eksternId = eksternId,
+                    eksternVersjon = row.string("ekstern_versjon"),
+                    oppgavetypeId = row.long("oppgavetype_id"),
+                    status = row.string("status"),
+                    endretTidspunkt = row.localDateTime("endret_tidspunkt"),
+                    kildeområde = row.string("kildeomrade"),
+                    felter = hentOppgavefelter(tx, row.long("id"))
+                )
+            }.asSingle
+        )?: throw IllegalStateException("Fant ikke oppgave med eksternId $eksternId")
+    }
+
     private fun hentOppgavefelter(tx: TransactionalSession, oppgaveId: Long): List<Oppgavefelt> {
         return tx.run(
             queryOf(

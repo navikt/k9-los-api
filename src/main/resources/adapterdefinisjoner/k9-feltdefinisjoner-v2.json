@@ -50,6 +50,18 @@
       "visTilBruker": true
     },
     {
+      "id": "mottattDato",
+      "listetype": false,
+      "tolkesSom": "String",
+      "visTilBruker": true
+    },
+    {
+      "id": "registrertDato",
+      "listetype": false,
+      "tolkesSom": "String",
+      "visTilBruker": true
+    },
+    {
       "id": "behandlingTypekode",
       "listetype": false,
       "tolkesSom": "String",

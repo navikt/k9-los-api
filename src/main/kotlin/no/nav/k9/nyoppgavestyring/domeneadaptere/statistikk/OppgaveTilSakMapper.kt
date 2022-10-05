@@ -1,6 +1,7 @@
 package no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk
 
 import no.nav.k9.nyoppgavestyring.visningoguttrekk.Oppgave
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneId
@@ -11,19 +12,18 @@ class OppgaveTilSakMapper {
         val zoneId = ZoneId.of("Europe/Oslo")
     }
 
-    fun lagSak(oppgaveversjoner: Set<Oppgave>): Sak {
-        val sisteVersjon = oppgaveversjoner.last()
+    fun lagSak(oppgave: Oppgave): Sak {
         return Sak(
-            saksnummer = sisteVersjon.eksternId,
-            sakId = sisteVersjon.eksternId,
-            funksjonellTid = LocalDateTime.parse(sisteVersjon.eksternVersjon).atZone(OppgaveTilBehandlingMapper.zoneId).toOffsetDateTime(),
+            saksnummer = oppgave.eksternId,
+            sakId = oppgave.eksternId,
+            funksjonellTid = LocalDateTime.parse(oppgave.eksternVersjon).atZone(OppgaveTilBehandlingMapper.zoneId).toOffsetDateTime(),
             tekniskTid = OffsetDateTime.now(zoneId),
-            opprettetDato = oppgaveversjoner.first().endretTidspunkt.toLocalDate(), // TODO må finne ut om dette er riktig
-            aktorId = utledAktørId(sisteVersjon.hentVerdi("aktorId")),
-            aktorer = utledAktører(sisteVersjon.hentVerdi("aktorId")),
-            ytelseType = sisteVersjon.hentVerdi("ytelsestype"),
+            opprettetDato = LocalDateTime.parse(oppgave.hentVerdi("mottattDato")).toLocalDate(), // TODO må finne ut om dette er riktig
+            aktorId = utledAktørId(oppgave.hentVerdi("aktorId")),
+            aktorer = utledAktører(oppgave.hentVerdi("aktorId")),
+            ytelseType = oppgave.hentVerdi("ytelsestype"),
             underType = null,
-            sakStatus = sisteVersjon.hentVerdi("behandlingsstatus"),
+            sakStatus = oppgave.hentVerdi("behandlingsstatus"),
             ytelseTypeBeskrivelse = null,
             underTypeBeskrivelse = null,
             sakStatusBeskrivelse = null,

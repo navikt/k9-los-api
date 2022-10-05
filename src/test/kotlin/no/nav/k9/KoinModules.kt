@@ -267,20 +267,20 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         )
     }
     single {
-        OppgavetypeTjeneste(
-            oppgavetypeRepository = get(),
-            områdeRepository = get(),
-            feltdefinisjonRepository = get(),
-            transactionalManager = get(),
-        )
-    }
-    single {
         OppgaveV3Tjeneste(
             oppgaveV3Repository = get(),
             oppgavetypeRepository = get(),
             områdeRepository = get(),
             transactionalManager = get(),
             oppgavestatistikkTjeneste = get()
+        )
+    }
+    single {
+        OppgavetypeTjeneste(
+            oppgavetypeRepository = get(),
+            områdeRepository = get(),
+            feltdefinisjonRepository = get(),
+            transactionalManager = get()
         )
     }
 
