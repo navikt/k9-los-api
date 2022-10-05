@@ -4,23 +4,29 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.k9.utils.Cache
+import no.nav.k9.utils.CacheObject
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 import javax.sql.DataSource
 
 class OmrådeRepository(private val dataSource: DataSource) {
 
     private val log = LoggerFactory.getLogger(OmrådeRepository::class.java)
+    private val områdeCache = Cache<Område>()
 
     fun hentOmråde(eksternId: String, tx: TransactionalSession): Område {
-        return tx.run(
-            queryOf("select * from omrade where omrade.ekstern_id = :eksternId", mapOf("eksternId" to eksternId))
-                .map { row ->
-                    Område(
-                        id = row.long("id"),
-                        eksternId = row.string("ekstern_id")
-                    )
-                }.asSingle
-        ) ?: throw IllegalArgumentException("Området finnes ikke")
+        return områdeCache.hent(nøkkel = eksternId) {
+            tx.run(
+                queryOf("select * from omrade where omrade.ekstern_id = :eksternId", mapOf("eksternId" to eksternId))
+                    .map { row ->
+                        Område(
+                            id = row.long("id"),
+                            eksternId = row.string("ekstern_id")
+                        )
+                    }.asSingle
+            ) ?: throw IllegalArgumentException("Området finnes ikke")
+        }
     }
 
     fun lagre(eksternId: String) {
@@ -62,6 +68,10 @@ class OmrådeRepository(private val dataSource: DataSource) {
                     )
                 }.asSingle
         ) ?: throw IllegalArgumentException("Området finnes ikke")
+    }
+
+    fun invaliderCache() {
+        områdeCache.clear()
     }
 
 }

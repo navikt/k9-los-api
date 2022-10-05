@@ -38,12 +38,12 @@
         {
           "id": "mottattDato",
           "visPåOppgave": true,
-          "påkrevd": true
+          "påkrevd": false
         },
         {
           "id": "registrertDato",
           "visPåOppgave": true,
-          "påkrevd": true
+          "påkrevd": false
         },
         {
           "id": "ytelsestype",

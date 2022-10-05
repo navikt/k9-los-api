@@ -4,6 +4,7 @@ import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.nyoppgavestyring.mottak.omraade.OmrådeRepository
+import no.nav.k9.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 
 class OppgavetypeTjeneste(
     private val oppgavetypeRepository: OppgavetypeRepository,
@@ -25,10 +26,10 @@ class OppgavetypeTjeneste(
             )
             oppgavetypeRepository.fjern(sletteListe, tx)
             oppgavetypeRepository.leggTil(leggtilListe, tx)
-            // TODO: oppdaterListe - for hvert element: sjekk diff oppgavefelter og insert/delete på deltalister
-            if (oppdaterListe.oppgavetyper.size > 0) {
-                throw IllegalArgumentException("Endring av oppgavefeltliste til oppgavetype er ikke implementert ennå. Oppgavetypen må slettes og lages på nytt inntil videre")
+            oppdaterListe.forEach{ endring ->
+                oppgavetypeRepository.endre(endring, tx)
             }
+            invaliderCache()
         }
     }
 
@@ -37,4 +38,9 @@ class OppgavetypeTjeneste(
                 oppgavetypeRepository.hent(område, tx)
             }
     )
+
+    private fun invaliderCache() {
+        områdeRepository.invaliderCache()
+        oppgavetypeRepository.invaliderCache()
+    }
 }

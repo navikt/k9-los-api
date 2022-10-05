@@ -38,4 +38,14 @@ class Cache <T>(val cacheSize : Int = 1000){
         map.clear()
     }
 
+    fun hent(nøkkel: String, populerCache: () -> T): T {
+        val verdi = this.get(nøkkel)
+        if (verdi == null) {
+            val hentetVerdi = populerCache.invoke()
+            this.set(nøkkel, CacheObject(value = hentetVerdi, expire = LocalDateTime.now().plusMinutes(30)))
+            return hentetVerdi
+        }
+        return verdi.value
+    }
+
 }
