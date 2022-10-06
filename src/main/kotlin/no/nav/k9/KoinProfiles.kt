@@ -318,6 +318,7 @@ fun common(app: Application, config: Configuration) = module {
     single { OppgaveTilBehandlingMapper() }
     single { OppgaveTilSakMapper() }
     single { no.nav.k9.nyoppgavestyring.visningoguttrekk.OppgaveRepository() }
+    single { no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk.StatistikkRepository(dataSource = get()) }
 
     single {
         StatistikkPublisher(
@@ -329,7 +330,10 @@ fun common(app: Application, config: Configuration) = module {
     single {
         OppgavestatistikkTjeneste(
             oppgaveRepository = get(),
-            statistikkPublisher = get()
+            statistikkPublisher = get(),
+            transactionalManager = get(),
+            statistikkRepository = get(),
+            config = get()
         )
     }
 
@@ -344,8 +348,7 @@ fun common(app: Application, config: Configuration) = module {
         OppgaveV3Tjeneste(
             oppgaveV3Repository = get(),
             oppgavetypeRepository = get(),
-            områdeRepository = get(),
-            oppgavestatistikkTjeneste = get()
+            områdeRepository = get()
         )
     }
     single {

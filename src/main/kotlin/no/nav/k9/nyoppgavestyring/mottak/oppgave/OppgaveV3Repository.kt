@@ -1,6 +1,5 @@
 package no.nav.k9.nyoppgavestyring.mottak.oppgave
 
-import io.ktor.http.*
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -23,12 +22,8 @@ class OppgaveV3Repository(private val dataSource: DataSource) {
 
         val nyVersjon = eksisterendeVersjon?.plus(1) ?: 0
 
-        val startLagreOppgave = System.currentTimeMillis()
-        log.info("Lagret oppgaveV3, tidsbruk: ${System.currentTimeMillis() - startLagreOppgave}")
         val oppgaveId = lagre(oppgave, nyVersjon, tx)
-        val startLagreFeltverdier = System.currentTimeMillis()
         lagreFeltverdier(oppgaveId, oppgave.felter, tx)
-        log.info("Lagret feltverdier, tidsbruk: ${System.currentTimeMillis() - startLagreFeltverdier}")
     }
 
     private fun lagre(oppgave: OppgaveV3, nyVersjon: Long, tx: TransactionalSession): Long {
@@ -95,7 +90,6 @@ class OppgaveV3Repository(private val dataSource: DataSource) {
     }
 
     private fun deaktiverVersjon(eksisterendeId: Long, deaktivertTidspunkt: LocalDateTime, tx: TransactionalSession) {
-        val deaktiverVersjon = System.currentTimeMillis()
         tx.run(
             queryOf(
                 """
@@ -107,7 +101,6 @@ class OppgaveV3Repository(private val dataSource: DataSource) {
                 )
             ).asUpdate
         )
-        log.info("Deaktiverte forrige versjon, tidsbruk: ${System.currentTimeMillis() - deaktiverVersjon}")
     }
 
     fun finnesFraFør(tx: TransactionalSession, eksternId: String, eksternVersjon: String): Boolean {
@@ -127,6 +120,20 @@ class OppgaveV3Repository(private val dataSource: DataSource) {
                 )
             ).map { row -> row.boolean(1) }.asSingle
         )!!
+    }
+
+    fun slettOppgaverOgFelter() {
+        using(sessionOf(dataSource)) {
+            it.run(
+                queryOf("""delete from oppgavefelt_verdi""").asUpdate
+            )
+            it.run(
+                queryOf("""delete from oppgave_v3""").asUpdate
+            )
+            it.run(
+                queryOf("""update behandling_prosess_events_k9 set dirty = true""").asUpdate
+            )
+        }
     }
 
     fun tellAntall(): Pair<Long, Long> {

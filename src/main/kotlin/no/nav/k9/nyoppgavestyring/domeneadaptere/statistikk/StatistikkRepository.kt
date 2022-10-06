@@ -37,4 +37,13 @@ class StatistikkRepository(private val dataSource: DataSource) {
         }
     }
 
+    fun fjernSendtMarkering() {
+        using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    """delete from oppgave_v3_sendt_dvh"""
+                ).asUpdate
+            )
+        }
+    }
 }

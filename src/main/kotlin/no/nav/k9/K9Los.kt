@@ -35,6 +35,8 @@ import no.nav.k9.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.integrasjon.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.integrasjon.sakogbehandling.SakOgBehandlingProducer
 import no.nav.k9.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk.OppgavestatistikkTjeneste
+import no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk.StatistikkApi
 import no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonApi
 import no.nav.k9.nyoppgavestyring.mottak.oppgave.OppgaveV3Api
 import no.nav.k9.nyoppgavestyring.mottak.oppgavetype.OppgavetypeApi
@@ -158,6 +160,14 @@ fun Application.k9Los() {
         transactionalManager = koin.get()
     ).kjør(kjørSetup = true)
 
+    OppgavestatistikkTjeneste(
+        oppgaveRepository = koin.get(),
+        statistikkPublisher = koin.get(),
+        transactionalManager = koin.get(),
+        statistikkRepository = koin.get(),
+        config = koin.get()
+    ).kjør()
+
     // Server side events
     val sseChannel = produce {
         for (oppgaverOppdatertEvent in koin.get<Channel<SseEvent>>(named("refreshKlienter"))) {
@@ -275,12 +285,11 @@ private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
         route("konfig") { KonfigApis() }
         KodeverkApis()
 
-        route("feltdefinisjon") { FeltdefinisjonApi() }
-        route("oppgavetype") { OppgavetypeApi() }
-        route("oppgave-v3") { OppgaveV3Api() }
+        route("ny-oppgavestyring") {
+            route("feltdefinisjon") { FeltdefinisjonApi() }
+            route("oppgavetype") { OppgavetypeApi() }
+            route("oppgave-v3") { OppgaveV3Api() }
+            route("statistikk") { StatistikkApi() }
+        }
     }
 }
-
-
-
-

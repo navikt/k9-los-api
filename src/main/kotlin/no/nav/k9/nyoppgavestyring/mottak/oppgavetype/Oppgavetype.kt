@@ -4,7 +4,6 @@ import no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjoner
 import no.nav.k9.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.nyoppgavestyring.mottak.oppgave.OppgaveDto
 
-
 class Oppgavetype(
     val id: Long? = null,
     val eksternId: String,

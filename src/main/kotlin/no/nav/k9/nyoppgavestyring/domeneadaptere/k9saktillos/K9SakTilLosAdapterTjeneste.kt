@@ -6,7 +6,6 @@ import no.nav.k9.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
-import no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjoner
 import no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
 import no.nav.k9.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.nyoppgavestyring.mottak.oppgave.OppgaveDto
@@ -56,20 +55,15 @@ class K9SakTilLosAdapterTjeneste(
         var forrigeOppgave: OppgaveV3? = null
 
         log.info("Starter avspilling av BehandlingProsessEventer")
+        val tidKjøringStartet = System.currentTimeMillis()
 
-        val startHentAlleIDer = System.currentTimeMillis()
         val behandlingsIder = behandlingProsessEventK9Repository.hentAlleDirtyEventIder()
-        log.info("Hentet behandlingsIder, tidsbruk: ${System.currentTimeMillis() - startHentAlleIDer}")
-
         log.info("Fant ${behandlingsIder.size} behandlinger")
+
         behandlingsIder.forEach { uuid ->
             transactionalManager.transaction { tx ->
-                val hentEventerForBehandling = System.currentTimeMillis()
                 val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
-                log.info("Hentet eventer for behandling: ${uuid}, tidsbruk: ${System.currentTimeMillis() - hentEventerForBehandling}. Antall eventer: ${behandlingProsessEventer.size}")
-
                 behandlingProsessEventer.forEach { event -> //TODO: hva skjer om eventer kommer out of order her, fordi feks k9 har sendt i feil rekkefølge?
-                    val behandlerOppgaveversjon = System.currentTimeMillis()
                     val oppgaveDto = lagOppgaveDto(event, forrigeOppgave)
 
                     if (event.behandlingStatus == BehandlingStatus.AVSLUTTET.kode) {
@@ -77,15 +71,9 @@ class K9SakTilLosAdapterTjeneste(
                         //oppgaveDto = oppgaveDto.berikMedVedtaksInfo(vedtaksInfo)
                     }
 
-                    var ansvarlig = event.ansvarligSaksbehandlerIdent ?: forrigeOppgave?.hentVerdi("")
-
                     val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
 
-                    if (oppgave != null) {
-                        eventTeller++
-                        loggFremgangForHver100(eventTeller, "Behandlet $eventTeller eventer")
-                    }
-                    log.info("Behandlet oppgaveversjon: ${event.eksternId}, tidsbruk: ${System.currentTimeMillis() - behandlerOppgaveversjon}")
+                    oppgave?.let { eventTeller++ }
                     forrigeOppgave = oppgave
                 }
                 forrigeOppgave = null
@@ -95,7 +83,12 @@ class K9SakTilLosAdapterTjeneste(
                 behandlingProsessEventK9Repository.fjernDirty(uuid, tx)
             }
         }
-        val (antallAktive, antallAlle) = oppgaveV3Tjeneste.tellAntall()
+        val (antallAlle, antallAktive) = oppgaveV3Tjeneste.tellAntall()
+        val tidHeleKjøringen = System.currentTimeMillis() - tidKjøringStartet
+        log.info("Antall oppgaver etter kjøring: $antallAlle, antall aktive: $antallAktive, antall nye eventer: $eventTeller fordelt på $behandlingTeller behandlinger.")
+        if (eventTeller > 0) {
+            log.info("Gjennomsnittstid pr behandling: ${tidHeleKjøringen / behandlingTeller}ms, Gjennsomsnittstid pr event: ${tidHeleKjøringen / eventTeller}ms")
+        }
         log.info("Avspilling av BehandlingProsessEventer ferdig")
     }
 

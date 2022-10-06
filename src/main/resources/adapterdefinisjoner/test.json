@@ -1,0 +1,404 @@
+{
+  "eventer": [
+    {
+      "href": null,
+      "aktørId": "9907518043875",
+      "eventTid": "2022-08-31T15:13:25.488781644",
+      "eksternId": "25e9e8ef-c403-40bf-81e9-0cee4f3c5220",
+      "fagsystem": {
+        "kode": "K9SAK",
+        "kodeverk": "FAGSYSTEM"
+      },
+      "saksnummer": "5YC36",
+      "behandlingId": null,
+      "resultatType": "IKKE_FASTSATT",
+      "eventHendelse": "BEHANDLINGSKONTROLL_EVENT",
+      "fagsakPeriode": {
+        "fom": "2022-07-06",
+        "tom": "9999-12-31"
+      },
+      "behandlingSteg": "INREG",
+      "ytelseTypeKode": "OMP_AO",
+      "behandlinStatus": null,
+      "behandlendeEnhet": "4409",
+      "behandlingStatus": "UTRED",
+      "behandlingTypeKode": "BT-002",
+      "feilutbetaltBeløp": null,
+      "behandlingstidFrist": "2022-10-12",
+      "opprettetBehandling": "2022-08-31T15:13:25",
+      "relatertPartAktørId": null,
+      "førsteFeilutbetaling": null,
+      "aksjonspunktTilstander": [],
+      "pleietrengendeAktørId": "9916502098334",
+      "ansvarligSaksbehandlerIdent": null,
+      "ansvarligBeslutterForTotrinn": null,
+      "aksjonspunktKoderMedStatusListe": {},
+      "ansvarligSaksbehandlerForTotrinn": null
+    },
+    {
+      "href": null,
+      "aktørId": "9907518043875",
+      "eventTid": "2022-08-31T15:13:25.876068120",
+      "eksternId": "25e9e8ef-c403-40bf-81e9-0cee4f3c5220",
+      "fagsystem": {
+        "kode": "K9SAK",
+        "kodeverk": "FAGSYSTEM"
+      },
+      "saksnummer": "5YC36",
+      "behandlingId": null,
+      "resultatType": "IKKE_FASTSATT",
+      "eventHendelse": "BEHANDLINGSKONTROLL_EVENT",
+      "fagsakPeriode": {
+        "fom": "2022-07-06",
+        "tom": "9999-12-31"
+      },
+      "behandlingSteg": "MANUELL_VILKÅRSVURDERING",
+      "ytelseTypeKode": "OMP_AO",
+      "behandlinStatus": null,
+      "behandlendeEnhet": "4409",
+      "behandlingStatus": "UTRED",
+      "behandlingTypeKode": "BT-002",
+      "feilutbetaltBeløp": null,
+      "behandlingstidFrist": "2022-10-12",
+      "opprettetBehandling": "2022-08-31T15:13:25",
+      "relatertPartAktørId": null,
+      "førsteFeilutbetaling": null,
+      "aksjonspunktTilstander": [
+        {
+          "status": {
+            "kode": "OPPR",
+            "kodeverk": "AKSJONSPUNKT_STATUS"
+          },
+          "fristTid": null,
+          "venteårsak": {
+            "kode": "-",
+            "kodeverk": "VENT_AARSAK",
+            "kanVelgesIGui": false
+          },
+          "aksjonspunktKode": "9013",
+          "ansvarligSaksbehandler": null
+        }
+      ],
+      "pleietrengendeAktørId": "9916502098334",
+      "ansvarligSaksbehandlerIdent": null,
+      "ansvarligBeslutterForTotrinn": null,
+      "aksjonspunktKoderMedStatusListe": {
+        "9013": "OPPR"
+      },
+      "ansvarligSaksbehandlerForTotrinn": null
+    },
+    {
+      "href": null,
+      "aktørId": "9907518043875",
+      "eventTid": "2022-08-31T15:13:26.807130237",
+      "eksternId": "25e9e8ef-c403-40bf-81e9-0cee4f3c5220",
+      "fagsystem": {
+        "kode": "K9SAK",
+        "kodeverk": "FAGSYSTEM"
+      },
+      "saksnummer": "5YC36",
+      "behandlingId": null,
+      "resultatType": "INNVILGET",
+      "eventHendelse": "BEHANDLINGSKONTROLL_EVENT",
+      "fagsakPeriode": {
+        "fom": "2022-07-06",
+        "tom": "9999-12-31"
+      },
+      "behandlingSteg": "FORVEDSTEG",
+      "ytelseTypeKode": "OMP_AO",
+      "behandlinStatus": null,
+      "behandlendeEnhet": "4409",
+      "behandlingStatus": "UTRED",
+      "behandlingTypeKode": "BT-002",
+      "feilutbetaltBeløp": null,
+      "behandlingstidFrist": "2022-10-12",
+      "opprettetBehandling": "2022-08-31T15:13:25",
+      "relatertPartAktørId": null,
+      "førsteFeilutbetaling": null,
+      "aksjonspunktTilstander": [
+        {
+          "status": {
+            "kode": "UTFO",
+            "kodeverk": "AKSJONSPUNKT_STATUS"
+          },
+          "fristTid": null,
+          "venteårsak": {
+            "kode": "-",
+            "kodeverk": "VENT_AARSAK",
+            "kanVelgesIGui": false
+          },
+          "aksjonspunktKode": "9013",
+          "ansvarligSaksbehandler": "saksbeh"
+        },
+        {
+          "status": {
+            "kode": "OPPR",
+            "kodeverk": "AKSJONSPUNKT_STATUS"
+          },
+          "fristTid": null,
+          "venteårsak": {
+            "kode": "-",
+            "kodeverk": "VENT_AARSAK",
+            "kanVelgesIGui": false
+          },
+          "aksjonspunktKode": "5015",
+          "ansvarligSaksbehandler": null
+        }
+      ],
+      "pleietrengendeAktørId": "9916502098334",
+      "ansvarligSaksbehandlerIdent": null,
+      "ansvarligBeslutterForTotrinn": null,
+      "aksjonspunktKoderMedStatusListe": {
+        "5015": "OPPR",
+        "9013": "UTFO"
+      },
+      "ansvarligSaksbehandlerForTotrinn": "saksbeh"
+    },
+    {
+      "href": null,
+      "aktørId": "9907518043875",
+      "eventTid": "2022-08-31T15:13:27.805791230",
+      "eksternId": "25e9e8ef-c403-40bf-81e9-0cee4f3c5220",
+      "fagsystem": {
+        "kode": "K9SAK",
+        "kodeverk": "FAGSYSTEM"
+      },
+      "saksnummer": "5YC36",
+      "behandlingId": null,
+      "resultatType": "INNVILGET",
+      "eventHendelse": "BEHANDLINGSKONTROLL_EVENT",
+      "fagsakPeriode": {
+        "fom": "2022-07-06",
+        "tom": "9999-12-31"
+      },
+      "behandlingSteg": "FVEDSTEG",
+      "ytelseTypeKode": "OMP_AO",
+      "behandlinStatus": null,
+      "behandlendeEnhet": "4409",
+      "behandlingStatus": "FVED",
+      "behandlingTypeKode": "BT-002",
+      "feilutbetaltBeløp": null,
+      "behandlingstidFrist": "2022-10-12",
+      "opprettetBehandling": "2022-08-31T15:13:25",
+      "relatertPartAktørId": null,
+      "førsteFeilutbetaling": null,
+      "aksjonspunktTilstander": [
+        {
+          "status": {
+            "kode": "UTFO",
+            "kodeverk": "AKSJONSPUNKT_STATUS"
+          },
+          "fristTid": null,
+          "venteårsak": {
+            "kode": "-",
+            "kodeverk": "VENT_AARSAK",
+            "kanVelgesIGui": false
+          },
+          "aksjonspunktKode": "9013",
+          "ansvarligSaksbehandler": "saksbeh"
+        },
+        {
+          "status": {
+            "kode": "UTFO",
+            "kodeverk": "AKSJONSPUNKT_STATUS"
+          },
+          "fristTid": null,
+          "venteårsak": {
+            "kode": "-",
+            "kodeverk": "VENT_AARSAK",
+            "kanVelgesIGui": false
+          },
+          "aksjonspunktKode": "5015",
+          "ansvarligSaksbehandler": "saksbeh"
+        },
+        {
+          "status": {
+            "kode": "OPPR",
+            "kodeverk": "AKSJONSPUNKT_STATUS"
+          },
+          "fristTid": null,
+          "venteårsak": {
+            "kode": "-",
+            "kodeverk": "VENT_AARSAK",
+            "kanVelgesIGui": false
+          },
+          "aksjonspunktKode": "5016",
+          "ansvarligSaksbehandler": null
+        }
+      ],
+      "pleietrengendeAktørId": "9916502098334",
+      "ansvarligSaksbehandlerIdent": null,
+      "ansvarligBeslutterForTotrinn": null,
+      "aksjonspunktKoderMedStatusListe": {
+        "5015": "UTFO",
+        "5016": "OPPR",
+        "9013": "UTFO"
+      },
+      "ansvarligSaksbehandlerForTotrinn": "saksbeh"
+    },
+    {
+      "href": null,
+      "aktørId": "9907518043875",
+      "eventTid": "2022-08-31T15:13:28.409622235",
+      "eksternId": "25e9e8ef-c403-40bf-81e9-0cee4f3c5220",
+      "fagsystem": {
+        "kode": "K9SAK",
+        "kodeverk": "FAGSYSTEM"
+      },
+      "saksnummer": "5YC36",
+      "behandlingId": null,
+      "resultatType": "INNVILGET",
+      "eventHendelse": "BEHANDLINGSKONTROLL_EVENT",
+      "fagsakPeriode": {
+        "fom": "2022-07-06",
+        "tom": "9999-12-31"
+      },
+      "behandlingSteg": "IVEDSTEG",
+      "ytelseTypeKode": "OMP_AO",
+      "behandlinStatus": null,
+      "behandlendeEnhet": "4409",
+      "behandlingStatus": "IVED",
+      "behandlingTypeKode": "BT-002",
+      "feilutbetaltBeløp": null,
+      "behandlingstidFrist": "2022-10-12",
+      "opprettetBehandling": "2022-08-31T15:13:25",
+      "relatertPartAktørId": null,
+      "førsteFeilutbetaling": null,
+      "aksjonspunktTilstander": [
+        {
+          "status": {
+            "kode": "UTFO",
+            "kodeverk": "AKSJONSPUNKT_STATUS"
+          },
+          "fristTid": null,
+          "venteårsak": {
+            "kode": "-",
+            "kodeverk": "VENT_AARSAK",
+            "kanVelgesIGui": false
+          },
+          "aksjonspunktKode": "5016",
+          "ansvarligSaksbehandler": "beslut"
+        },
+        {
+          "status": {
+            "kode": "UTFO",
+            "kodeverk": "AKSJONSPUNKT_STATUS"
+          },
+          "fristTid": null,
+          "venteårsak": {
+            "kode": "-",
+            "kodeverk": "VENT_AARSAK",
+            "kanVelgesIGui": false
+          },
+          "aksjonspunktKode": "9013",
+          "ansvarligSaksbehandler": "saksbeh"
+        },
+        {
+          "status": {
+            "kode": "UTFO",
+            "kodeverk": "AKSJONSPUNKT_STATUS"
+          },
+          "fristTid": null,
+          "venteårsak": {
+            "kode": "-",
+            "kodeverk": "VENT_AARSAK",
+            "kanVelgesIGui": false
+          },
+          "aksjonspunktKode": "5015",
+          "ansvarligSaksbehandler": "saksbeh"
+        }
+      ],
+      "pleietrengendeAktørId": "9916502098334",
+      "ansvarligSaksbehandlerIdent": null,
+      "ansvarligBeslutterForTotrinn": "beslut",
+      "aksjonspunktKoderMedStatusListe": {
+        "5015": "UTFO",
+        "5016": "UTFO",
+        "9013": "UTFO"
+      },
+      "ansvarligSaksbehandlerForTotrinn": "saksbeh"
+    },
+    {
+      "href": null,
+      "aktørId": "9907518043875",
+      "eventTid": "2022-08-31T15:13:28.765160087",
+      "eksternId": "25e9e8ef-c403-40bf-81e9-0cee4f3c5220",
+      "fagsystem": {
+        "kode": "K9SAK",
+        "kodeverk": "FAGSYSTEM"
+      },
+      "saksnummer": "5YC36",
+      "behandlingId": null,
+      "resultatType": "INNVILGET",
+      "eventHendelse": "AKSJONSPUNKT_AVBRUTT",
+      "fagsakPeriode": {
+        "fom": "2022-07-06",
+        "tom": "9999-12-31"
+      },
+      "behandlingSteg": null,
+      "ytelseTypeKode": "OMP_AO",
+      "behandlinStatus": null,
+      "behandlendeEnhet": "4409",
+      "behandlingStatus": "AVSLU",
+      "behandlingTypeKode": "BT-002",
+      "feilutbetaltBeløp": null,
+      "behandlingstidFrist": "2022-10-12",
+      "opprettetBehandling": "2022-08-31T15:13:25",
+      "relatertPartAktørId": null,
+      "førsteFeilutbetaling": null,
+      "aksjonspunktTilstander": [
+        {
+          "status": {
+            "kode": "UTFO",
+            "kodeverk": "AKSJONSPUNKT_STATUS"
+          },
+          "fristTid": null,
+          "venteårsak": {
+            "kode": "-",
+            "kodeverk": "VENT_AARSAK",
+            "kanVelgesIGui": false
+          },
+          "aksjonspunktKode": "5016",
+          "ansvarligSaksbehandler": "beslut"
+        },
+        {
+          "status": {
+            "kode": "UTFO",
+            "kodeverk": "AKSJONSPUNKT_STATUS"
+          },
+          "fristTid": null,
+          "venteårsak": {
+            "kode": "-",
+            "kodeverk": "VENT_AARSAK",
+            "kanVelgesIGui": false
+          },
+          "aksjonspunktKode": "9013",
+          "ansvarligSaksbehandler": "saksbeh"
+        },
+        {
+          "status": {
+            "kode": "UTFO",
+            "kodeverk": "AKSJONSPUNKT_STATUS"
+          },
+          "fristTid": null,
+          "venteårsak": {
+            "kode": "-",
+            "kodeverk": "VENT_AARSAK",
+            "kanVelgesIGui": false
+          },
+          "aksjonspunktKode": "5015",
+          "ansvarligSaksbehandler": "saksbeh"
+        }
+      ],
+      "pleietrengendeAktørId": "9916502098334",
+      "ansvarligSaksbehandlerIdent": null,
+      "ansvarligBeslutterForTotrinn": "beslut",
+      "aksjonspunktKoderMedStatusListe": {
+        "5015": "UTFO",
+        "5016": "UTFO",
+        "9013": "UTFO"
+      },
+      "ansvarligSaksbehandlerForTotrinn": "saksbeh"
+    }
+  ]
+}

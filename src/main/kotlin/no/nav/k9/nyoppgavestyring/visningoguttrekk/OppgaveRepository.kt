@@ -2,11 +2,8 @@ package no.nav.k9.nyoppgavestyring.visningoguttrekk
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
-import kotliquery.sessionOf
-import kotliquery.using
-import javax.sql.DataSource
 
-class OppgaveRepository(private val dataSource: DataSource) {
+class OppgaveRepository {
 
     fun hentNyesteOppgaveForEksternId(tx: TransactionalSession, eksternId: String): Oppgave {
         return tx.run(

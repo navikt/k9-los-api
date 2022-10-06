@@ -16,7 +16,7 @@ class OppgavestatistikkTjeneste(
     private val config: Configuration
 ) {
 
-    fun kjør(kjørSetup: Boolean) {
+    fun kjør() {
         if (config.nyOppgavestyringAktivert()) {
             fixedRateTimer(
                 name = "k9los-til-statistikk",
@@ -29,15 +29,26 @@ class OppgavestatistikkTjeneste(
         }
     }
 
-    public fun spillAvStatistikk() {
-        // Hente oppgaveversjoner som ikke finnes i OPPGAVE_V3_SENDT_DVH (som ikke er sendt)
+    fun spillAvStatistikk() {
+        log.info("Starter sending av saks- og behandlingsstatistikk til DVH")
+        val tidStatistikksendingStartet = System.currentTimeMillis()
         val oppgaverSomIkkeErSendt = statistikkRepository.hentOppgaverSomIkkeErSendt()
-
-        oppgaverSomIkkeErSendt.forEach { oppgaveId ->
+        log.info("Fant ${oppgaverSomIkkeErSendt.size} oppgaveversjoner som ikke er sendt til DVH")
+        oppgaverSomIkkeErSendt.forEachIndexed { index, oppgaveId ->
             transactionalManager.transaction { tx ->
                 sendStatistikk(oppgaveId, tx)
                 statistikkRepository.kvitterSending(oppgaveId)
             }
+            if (index.mod(100) == 0) {
+                log.info("Sendt $index eventer")
+            }
+        }
+        val tidStatistikksendingFerdig = System.currentTimeMillis()
+        val kjøretid = tidStatistikksendingFerdig - tidStatistikksendingStartet
+        log.info("Sending av saks- og behanlingsstatistikk ferdig")
+        log.info("Sendt ${oppgaverSomIkkeErSendt.size} oppgaversjoner. Totalt tidsbruk: ${kjøretid} ms")
+        if (oppgaverSomIkkeErSendt.size > 0) {
+            log.info("Gjennomsnitt tidsbruk: ${kjøretid/oppgaverSomIkkeErSendt.size} ms pr oppgaveversjon")
         }
     }
 
@@ -48,14 +59,15 @@ class OppgavestatistikkTjeneste(
         statistikkPublisher.publiser(sak, behandling)
     }
 
-    //TODO: koble fra transaksjon? Dette burde ikke kjøre i samme tx som lagring av oppgave, tror jeg
     private fun byggOppgavestatistikk(id: Long, tx: TransactionalSession): Pair<Sak, Behandling> {
-        val hentOppgave = System.currentTimeMillis()
         val oppgave = oppgaveRepository.hentOppgaveForId(tx, id)
-        log.info("Hentet oppgave med historiske versjoner: $id, tidsbruk: ${System.currentTimeMillis() - hentOppgave}")
         val behandling = OppgaveTilBehandlingMapper().lagBehandling(oppgave)
         val sak = OppgaveTilSakMapper().lagSak(oppgave)
         return Pair(sak, behandling)
+    }
+
+    fun slettStatistikkgrunnlag() {
+        statistikkRepository.fjernSendtMarkering()
     }
 
 }

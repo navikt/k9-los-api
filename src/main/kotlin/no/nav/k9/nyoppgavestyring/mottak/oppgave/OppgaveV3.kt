@@ -3,7 +3,6 @@ package no.nav.k9.nyoppgavestyring.mottak.oppgave
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.k9.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
-import no.nav.k9.nyoppgavestyring.visningoguttrekk.Oppgavefelt
 import java.time.LocalDateTime
 
 class OppgaveV3(

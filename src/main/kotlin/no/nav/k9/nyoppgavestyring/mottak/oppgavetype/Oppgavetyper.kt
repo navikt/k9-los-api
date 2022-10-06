@@ -3,7 +3,6 @@ package no.nav.k9.nyoppgavestyring.mottak.oppgavetype
 import no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjoner
 import no.nav.k9.nyoppgavestyring.mottak.omraade.Område
 
-
 class Oppgavetyper(
     val område: Område,
     val oppgavetyper: Set<Oppgavetype>
