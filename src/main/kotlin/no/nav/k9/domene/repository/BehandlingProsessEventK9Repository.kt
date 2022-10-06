@@ -15,17 +15,17 @@ import javax.sql.DataSource
 class BehandlingProsessEventK9Repository(private val dataSource: DataSource) {
 
     fun hent(uuid: UUID): K9SakModell {
-        val json: String? = using(sessionOf(dataSource)) {
-            it.run(
-                queryOf(
-                    "select data from behandling_prosess_events_k9 where id = :id",
-                    mapOf("id" to uuid.toString())
+            val json: String? = using(sessionOf(dataSource)) {
+                it.run(
+                    queryOf(
+                        "select data from behandling_prosess_events_k9 where id = :id",
+                        mapOf("id" to uuid.toString())
+                    )
+                        .map { row ->
+                            row.string("data")
+                        }.asSingle
                 )
-                    .map { row ->
-                        row.string("data")
-                    }.asSingle
-            )
-        }
+            }
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
         if (json.isNullOrEmpty()) {

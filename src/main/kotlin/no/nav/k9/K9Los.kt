@@ -154,7 +154,8 @@ fun Application.k9Los() {
         feltdefinisjonTjeneste = koin.get(),
         oppgavetypeTjeneste = koin.get(),
         oppgaveV3Tjeneste = koin.get(),
-        config = koin.get()
+        config = koin.get(),
+        transactionalManager = koin.get()
     ).kjør(kjørSetup = true)
 
     // Server side events

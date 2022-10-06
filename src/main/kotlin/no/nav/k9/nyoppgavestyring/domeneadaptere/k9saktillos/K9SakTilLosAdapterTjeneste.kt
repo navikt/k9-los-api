@@ -68,7 +68,7 @@ class K9SakTilLosAdapterTjeneste(
                 val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
                 log.info("Hentet eventer for behandling: ${uuid}, tidsbruk: ${System.currentTimeMillis() - hentEventerForBehandling}. Antall eventer: ${behandlingProsessEventer.size}")
 
-                behandlingProsessEventer.forEach { event ->
+                behandlingProsessEventer.forEach { event -> //TODO: hva skjer om eventer kommer out of order her, fordi feks k9 har sendt i feil rekkefølge?
                     val behandlerOppgaveversjon = System.currentTimeMillis()
                     val oppgaveDto = lagOppgaveDto(event, forrigeOppgave)
 

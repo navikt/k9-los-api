@@ -10,8 +10,7 @@ import org.slf4j.LoggerFactory
 class OppgaveV3Tjeneste(
     private val oppgaveV3Repository: OppgaveV3Repository,
     private val oppgavetypeRepository: OppgavetypeRepository,
-    private val områdeRepository: OmrådeRepository,
-    private val oppgavestatistikkTjeneste: OppgavestatistikkTjeneste
+    private val områdeRepository: OmrådeRepository
 ) {
 
     private val log = LoggerFactory.getLogger(OppgaveV3Tjeneste::class.java)
@@ -25,8 +24,6 @@ class OppgaveV3Tjeneste(
             val startOppdatering = System.currentTimeMillis()
             oppgave = oppdater(dto, tx)
             log.info("Lagret oppgave med eksternId: ${dto.id}, tidsbruk: ${System.currentTimeMillis() - startOppdatering}")
-
-            oppgavestatistikkTjeneste.sendStatistikk(dto.id, tx)
         }
 
         return oppgave
