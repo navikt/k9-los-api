@@ -73,7 +73,10 @@ class K9SakTilLosAdapterTjeneste(
 
                     val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
 
-                    oppgave?.let { eventTeller++ }
+                    oppgave?.let {
+                        eventTeller++
+                        loggFremgangForHver100(eventTeller, "Prosessert $eventTeller eventer")
+                    }
                     forrigeOppgave = oppgave
                 }
                 forrigeOppgave = null
