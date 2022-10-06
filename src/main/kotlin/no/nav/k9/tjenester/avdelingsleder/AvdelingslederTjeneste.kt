@@ -298,8 +298,10 @@ class AvdelingslederTjeneste(
                 oppgaveKø!!.saksbehandlere.find { it.epost == nySaksbehandler.epost }
                     ?: oppgaveKø.saksbehandlere.add(nySaksbehandler)
             }
-            oppgaveKø!!.saksbehandlere.removeAll(saksbehandlereSomSkalFjernes)
-            oppgaveKø
+            saksbehandlereSomSkalFjernes.forEach { saksbehandlerSomSkalFjernes ->
+                oppgaveKø!!.saksbehandlere.removeIf { it.epost == saksbehandlerSomSkalFjernes.epost }
+            }
+            oppgaveKø!!
         }
     }
 
