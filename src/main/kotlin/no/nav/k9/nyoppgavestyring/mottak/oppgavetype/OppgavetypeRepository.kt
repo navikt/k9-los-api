@@ -5,9 +5,7 @@ import kotliquery.queryOf
 import no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.utils.Cache
-import no.nav.k9.utils.CacheObject
 import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
 
 class OppgavetypeRepository(private val feltdefinisjonRepository: FeltdefinisjonRepository) {
 
