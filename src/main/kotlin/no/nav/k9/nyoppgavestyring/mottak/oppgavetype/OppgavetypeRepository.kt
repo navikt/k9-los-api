@@ -174,7 +174,7 @@ class OppgavetypeRepository(private val feltdefinisjonRepository: Feltdefinisjon
         val verdi = tx.run(
             queryOf(
                 """
-                    select *
+                    select id
                     from oppgave_v3 ov 
                     where oppgavetype_id = :oppgavetypeId
                     limit 1
@@ -183,7 +183,7 @@ class OppgavetypeRepository(private val feltdefinisjonRepository: Feltdefinisjon
                     "oppgavetypeId" to oppgavetypeId
                 )
             ).map { row ->
-                row.long(0)
+                row.long("id")
             }.asSingle
         )
         return verdi != null
