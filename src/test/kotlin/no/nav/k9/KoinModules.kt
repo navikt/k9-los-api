@@ -249,13 +249,17 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single { OppgaveTilBehandlingMapper() }
     single { OppgaveTilSakMapper() }
     single { no.nav.k9.nyoppgavestyring.visningoguttrekk.OppgaveRepository() }
+    single { no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk.StatistikkRepository(dataSource = get()) }
 
     val statistikkPublisher = mockk<StatistikkPublisher>()
 
     single {
         OppgavestatistikkTjeneste(
             oppgaveRepository = get(),
-            statistikkPublisher = statistikkPublisher
+            statistikkPublisher = get(),
+            transactionalManager = get(),
+            statistikkRepository = get(),
+            config = get()
         )
     }
 
@@ -270,9 +274,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         OppgaveV3Tjeneste(
             oppgaveV3Repository = get(),
             oppgavetypeRepository = get(),
-            områdeRepository = get(),
-            transactionalManager = get(),
-            oppgavestatistikkTjeneste = get()
+            områdeRepository = get()
         )
     }
     single {
@@ -291,7 +293,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             feltdefinisjonTjeneste = get(),
             oppgavetypeTjeneste = get(),
             oppgaveV3Tjeneste = get(),
-            config = get()
+            config = get(),
+            transactionalManager = get()
         )
     }
 }

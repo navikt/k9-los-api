@@ -1,6 +1,5 @@
 package no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk
 
-import kotlinx.coroutines.runBlocking
 import no.nav.helse.dusseldorf.ktor.health.HealthCheck
 import no.nav.helse.dusseldorf.ktor.health.Healthy
 import no.nav.helse.dusseldorf.ktor.health.Result
@@ -66,7 +65,6 @@ class StatistikkPublisher(
                 log.error("", exception)
             }
         }.get()
-        log.info("Publiserte statistikk på topic: $topic, tidsbruk: ${System.currentTimeMillis() - publiserStatistikk}")
     }
 
     internal fun stop() = producer.close()

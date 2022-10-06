@@ -1,7 +1,6 @@
 package no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk
 
 import no.nav.k9.nyoppgavestyring.visningoguttrekk.Oppgave
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneId

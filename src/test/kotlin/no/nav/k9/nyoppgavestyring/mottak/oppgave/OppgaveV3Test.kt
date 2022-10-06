@@ -1,6 +1,7 @@
 package no.nav.k9.nyoppgavestyring.mottak.oppgave
 
 import no.nav.k9.AbstractK9LosIntegrationTest
+import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonDto
 import no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjoner
@@ -21,6 +22,7 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
     private lateinit var områdeRepository: OmrådeRepository
     private lateinit var feltdefinisjonTjeneste: FeltdefinisjonTjeneste
     private lateinit var oppgavetypeTjeneste: OppgavetypeTjeneste
+    private lateinit var transactionalManager: TransactionalManager
 
     @BeforeEach
     fun setup() {
@@ -29,13 +31,16 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
         feltdefinisjonTjeneste = get()
         oppgavetypeTjeneste = get()
         byggOppgavemodell()
+        transactionalManager = get()
     }
 
     @Test
     fun `test at oppgave ikke blir opprettet om området ikke finnes`() {
         val innkommendeOppgaveMedUkjentOmråde = lagOppgaveDto().copy(område = "ukjent-område")
         assertThrows<IllegalArgumentException>("Området finnes ikke") {
-            oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(innkommendeOppgaveMedUkjentOmråde)
+            transactionalManager.transaction { tx ->
+                oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(innkommendeOppgaveMedUkjentOmråde, tx)
+            }
         }
     }
 
@@ -47,7 +52,9 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
             oppgaveDto.copy(feltverdier = oppgaveDto.feltverdier.plus(ukjentOppgaveFeltVerdi))
 
         assertThrows<IllegalArgumentException>("Kunne ikke finne matchede oppgavefelt for oppgaveFeltverdi: ${ukjentOppgaveFeltVerdi.nøkkel}\"") {
-            oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDtoMedUkjentFeltVerdi)
+            transactionalManager.transaction { tx ->
+                oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDtoMedUkjentFeltVerdi, tx)
+            }
         }
 
     }
@@ -58,7 +65,9 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
         val oppgaveDto = lagOppgaveDto()
         val oppgaveSomManglerObligatoriskFelt = oppgaveDto.copy(feltverdier = listOf(feilOppgaveFeltverdi))
         assertThrows<IllegalArgumentException>("Kan ikke oppgi feltverdi som ikke er spesifisert i oppgavetypen: ${feilOppgaveFeltverdi.nøkkel}\"") {
-            oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveSomManglerObligatoriskFelt)
+            transactionalManager.transaction { tx ->
+                oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveSomManglerObligatoriskFelt, tx)
+            }
         }
     }
 

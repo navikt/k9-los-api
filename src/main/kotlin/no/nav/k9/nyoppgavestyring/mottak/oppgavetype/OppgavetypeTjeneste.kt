@@ -4,7 +4,6 @@ import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.nyoppgavestyring.mottak.omraade.OmrådeRepository
-import no.nav.k9.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 
 class OppgavetypeTjeneste(
     private val oppgavetypeRepository: OppgavetypeRepository,
