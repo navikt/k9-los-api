@@ -1078,12 +1078,14 @@ class OppgaveTjeneste constructor(
         val oppgaveSomSkalBliReservert = oppgaveRepository.hent(oppgaveUuid)
 
         // beslutter skal ikke få opp oppgave med 5016 eller 5005 de selv har saksbehandlet
+        log.info("beslutter skal ikke få opp oppgave med 5016 eller 5005 de selv har saksbehandlet")
         if (innloggetSaksbehandlerHarSaksbehandletOppgaveSomSkalBliBesluttet(oppgaveSomSkalBliReservert, ident)) {
             oppgaverSomErBlokert.add(oppgaveDto)
             return fåOppgaveFraKø(oppgaveKøId, ident, oppgaverSomErBlokert, prioriterteOppgaver)
         }
 
         // beslutter skal ikke få oppgaver de selv har besluttet
+        log.info("beslutter skal ikke få oppgaver de selv har besluttet")
         if (innloggetSaksbehandlerHarBesluttetOppgaven(oppgaveSomSkalBliReservert, ident)) {
             oppgaverSomErBlokert.add(oppgaveDto)
             return fåOppgaveFraKø(oppgaveKøId, ident, oppgaverSomErBlokert, prioriterteOppgaver)
@@ -1163,8 +1165,10 @@ class OppgaveTjeneste constructor(
                 oppgaveSomSkalBliReservert.ansvarligSaksbehandlerIdent == ident
                 && oppgaveSomSkalBliReservert.system == Fagsystem.K9TILBAKE.kode
 
+        val erBeslutterOppgave = erBeslutterOppgave(oppgaveSomSkalBliReservert)
+        log.info("tilbakekrevingdebug: ident=$ident besluttet = $besluttet besluttetK9Tilbake=$besluttetK9Tilbake erBeslutterOppgave=$erBeslutterOppgave")
         return (besluttet || besluttetK9Tilbake) &&
-                erBeslutterOppgave(oppgaveSomSkalBliReservert)
+                erBeslutterOppgave
     }
 
 
