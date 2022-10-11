@@ -18,4 +18,20 @@ data class Reservasjon(
     fun erAktiv(eventTid:LocalDateTime): Boolean {
         return reservertTil !=null && reservertTil!!.isAfter(eventTid)
     }
+
+    fun hentFlyttet(): Flyttet? {
+        return flyttetAv?.takeIf { it.isNotBlank() }?.let {
+            Flyttet(
+                flyttetAv = it,
+                flyttetTidspunkt = flyttetTidspunkt ?: throw IllegalStateException("Flyttet uten å ha satt flyttetTidspunkt"),
+                begrunnelse = begrunnelse ?: throw IllegalStateException("Flyttet uten å ha satt begrunnelse")
+            )
+        }
+    }
+
+    data class Flyttet(
+        var flyttetAv: String,
+        var flyttetTidspunkt: LocalDateTime,
+        var begrunnelse: String,
+    )
 }

@@ -876,16 +876,7 @@ class OppgaveTjeneste constructor(
                         true,
                         reservasjon.reservertAv,
                         saksbehandler?.navn,
-                        flyttetReservasjon = if (reservasjon.flyttetAv.isNullOrEmpty()) {
-                            null
-                        } else {
-                            FlyttetReservasjonDto(
-                                reservasjon.flyttetTidspunkt!!,
-                                reservasjon.flyttetAv!!,
-                                saksbehandlerRepository.finnSaksbehandlerMedIdent(reservasjon.flyttetAv!!)?.navn!!,
-                                reservasjon.begrunnelse!!
-                            )
-                        }
+                        flyttetReservasjon = reservasjon.hentFlyttet()?.let { lagFlyttetReservasjonDto(it) }
                     )
                 var personNavn: String
                 val navn = if (KoinProfile.PREPROD == configuration.koinProfile()) {
@@ -932,6 +923,14 @@ class OppgaveTjeneste constructor(
         }
         return list
     }
+
+    private suspend fun lagFlyttetReservasjonDto(reservasjon: Reservasjon.Flyttet) =
+        FlyttetReservasjonDto(
+            reservasjon.flyttetTidspunkt,
+            reservasjon.flyttetAv,
+            saksbehandlerRepository.finnSaksbehandlerMedIdent(reservasjon.flyttetAv)?.navn ?: reservasjon.flyttetAv,
+            reservasjon.begrunnelse
+        )
 
     private suspend fun tilgangTilSak(oppgave: Oppgave): Boolean {
         if (!pepClient.harTilgangTilOppgave(oppgave)) {
