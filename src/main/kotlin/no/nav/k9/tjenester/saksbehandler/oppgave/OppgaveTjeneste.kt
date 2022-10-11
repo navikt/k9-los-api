@@ -1157,12 +1157,12 @@ class OppgaveTjeneste constructor(
         ident: String
     ): Boolean {
         val besluttet = oppgaveSomSkalBliReservert.ansvarligSaksbehandlerForTotrinn != null &&
-                oppgaveSomSkalBliReservert.ansvarligSaksbehandlerForTotrinn == ident
+                oppgaveSomSkalBliReservert.ansvarligSaksbehandlerForTotrinn.equals(ident, true)
 
         //for gamle k9-tilbake behandlinger så er feltet ansvarligSaksbehandlerIdent brukt
         // istedenfor ansvarligSaksbehandlerForTotrinn, så sjekker begge.
         val besluttetK9Tilbake = oppgaveSomSkalBliReservert.ansvarligSaksbehandlerIdent != null &&
-                oppgaveSomSkalBliReservert.ansvarligSaksbehandlerIdent == ident
+                oppgaveSomSkalBliReservert.ansvarligSaksbehandlerIdent.equals(ident, true)
                 && oppgaveSomSkalBliReservert.system == Fagsystem.K9TILBAKE.kode
 
         val erBeslutterOppgave = erBeslutterOppgave(oppgaveSomSkalBliReservert)
