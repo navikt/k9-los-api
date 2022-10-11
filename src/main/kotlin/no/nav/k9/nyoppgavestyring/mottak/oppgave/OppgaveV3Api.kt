@@ -43,7 +43,7 @@ internal fun Route.OppgaveV3Api() {
 
     put("/startOppgaveprosessering") {
         requestContextService.withRequestContext(call) {
-            k9SakTilLosAdapterTjeneste.spillAvBehandlingProsessEventer()
+            k9SakTilLosAdapterTjeneste.kjør(false)
             call.respond("OK")
         }
     }
