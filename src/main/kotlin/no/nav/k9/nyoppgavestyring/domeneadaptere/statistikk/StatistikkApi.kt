@@ -12,7 +12,7 @@ internal fun Route.StatistikkApi() {
 
     put {
         requestContextService.withRequestContext(call) {
-            oppgavestatistikkTjeneste.kjør()
+            oppgavestatistikkTjeneste.kjør(kjørUmiddelbart = true)
             call.respond("OK")
         }
     }

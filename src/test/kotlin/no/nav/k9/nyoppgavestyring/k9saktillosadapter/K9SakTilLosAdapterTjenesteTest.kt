@@ -27,7 +27,7 @@ class K9SakTilLosAdapterTjenesteTest : AbstractK9LosIntegrationTest() {
             return@lagre opprettK9SakModell()
         }
 
-        k9SakTilLosAdapterTjeneste.spillAvBehandlingProsessEventer()
+        //k9SakTilLosAdapterTjeneste.spillAvBehandlingProsessEventer()
 
         assert(størrelseErLik(6))
     }
