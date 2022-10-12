@@ -8,5 +8,5 @@ class Oppgavefelt(
     val feltDefinisjon: Feltdefinisjon,
     val visPåOppgave: Boolean,
     val påkrevd: Boolean,
-    val feltutleder: Feltutleder?
+    val feltutleder: String?
 )
