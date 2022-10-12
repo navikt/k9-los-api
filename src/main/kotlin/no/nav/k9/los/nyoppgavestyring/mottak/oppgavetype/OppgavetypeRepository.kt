@@ -43,7 +43,8 @@ class OppgavetypeRepository(private val feltdefinisjonRepository: Feltdefinisjon
                                     }
                                         ?: throw IllegalStateException("Oppgavetypens oppgavefelt referer til udefinert feltdefinisjon eller feltdefinisjon utenfor området"),
                                     påkrevd = row.boolean("pakrevd"),
-                                    visPåOppgave = true
+                                    visPåOppgave = true,
+                                    feltutleder = null // TODO
                                 )
                             }.asList
                         ).toSet(),

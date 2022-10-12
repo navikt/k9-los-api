@@ -104,6 +104,17 @@
           "id": "aktivtAksjonspunkt",
           "visPåOppgave": true,
           "påkrevd": true
+        },
+        {
+          "id": "akkumulertVentetidSaksbehandler",
+          "visPåOppgave": false,
+          "påkrevd": true,
+          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutledere.AkkumulertVentetidSaksbehandlerFeltutleder"
+        },
+        {
+          "id": "avventerSaksbehandler",
+          "visPåOppgave": false,
+          "påkrevd": true
         }
       ]
     }

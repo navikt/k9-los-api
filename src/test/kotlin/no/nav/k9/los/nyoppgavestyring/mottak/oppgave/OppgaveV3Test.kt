@@ -123,6 +123,12 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
                     listetype = false,
                     tolkesSom = "String",
                     true
+                ),
+                FeltdefinisjonDto(
+                    id = "akkumulertVentetidSaksbehandler",
+                    listetype = false,
+                    tolkesSom = "Duration",
+                    false
                 )
             )
         )
@@ -150,6 +156,12 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
                             id = "aktorId",
                             visPåOppgave = true,
                             påkrevd = true
+                        ),
+                        OppgavefeltDto(
+                            id = "akkumulertVentetidSaksbehandler",
+                            visPåOppgave = false,
+                            påkrevd = true,
+                            feltutleder = "no.nav.k9.los.nyoppgavestyring.feltutledere.AkkumulertVentetidSaksbehandler",
                         )
                     )
                 )

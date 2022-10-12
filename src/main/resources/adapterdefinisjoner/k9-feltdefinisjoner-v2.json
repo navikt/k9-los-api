@@ -120,6 +120,36 @@
       "listetype": true,
       "tolkesSom": "String",
       "visTilBruker": true
+    },
+    {
+      "id": "akkumulertVentetidSaksbehandler",
+      "listetype": false,
+      "tolkesSom": "Duration",
+      "visTilBruker": false
+    },
+    {
+      "id": "avventerSaksbehandler",
+      "listetype": false,
+      "tolkesSom": "boolean",
+      "visTilBruker": true
+    },
+    {
+      "id": "avventerSoeker",
+      "listetype": false,
+      "tolkesSom": "boolean",
+      "visTilBruker": true
+    },
+    {
+      "id": "avventerArbeidsgiver",
+      "listetype": false,
+      "tolkesSom": "boolean",
+      "visTilBruker": true
+    },
+    {
+      "id": "avventerTekniskFeil",
+      "listetype": false,
+      "tolkesSom": "boolean",
+      "visTilBruker": true
     }
   ]
 }

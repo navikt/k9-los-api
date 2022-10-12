@@ -80,7 +80,8 @@ class OppgavetypeTest {
                                 visTilBruker = true
                             ),
                             visPåOppgave = true,
-                            påkrevd = true
+                            påkrevd = true,
+                            feltutleder = null
                         ),
                         Oppgavefelt(
                             feltDefinisjon = Feltdefinisjon(
@@ -91,7 +92,8 @@ class OppgavetypeTest {
                                 visTilBruker = true
                             ),
                             visPåOppgave = true,
-                            påkrevd = true
+                            påkrevd = true,
+                            feltutleder = null // TODO
                         )
                     )
                 )
@@ -124,7 +126,8 @@ class OppgavetypeTest {
                                 visTilBruker = true
                             ),
                             visPåOppgave = true,
-                            påkrevd = true
+                            påkrevd = true,
+                            feltutleder = null
                         ),
                         Oppgavefelt(
                             feltDefinisjon = Feltdefinisjon(
@@ -135,7 +138,8 @@ class OppgavetypeTest {
                                 visTilBruker = true
                             ),
                             visPåOppgave = true,
-                            påkrevd = true
+                            påkrevd = true,
+                            feltutleder = null
                         )
                     )
                 ),
@@ -153,7 +157,8 @@ class OppgavetypeTest {
                                 visTilBruker = true
                             ),
                             visPåOppgave = true,
-                            påkrevd = true
+                            påkrevd = true,
+                            feltutleder = null
                         )
                     )
                 )
@@ -184,7 +189,8 @@ class OppgavetypeTest {
                                 visTilBruker = true
                             ),
                             visPåOppgave = true,
-                            påkrevd = true
+                            påkrevd = true,
+                            feltutleder = null
                         ),
                         Oppgavefelt(
                             feltDefinisjon = Feltdefinisjon(
@@ -195,7 +201,8 @@ class OppgavetypeTest {
                                 visTilBruker = true
                             ),
                             visPåOppgave = true,
-                            påkrevd = true
+                            påkrevd = true,
+                            feltutleder = null
                         )
                     )
                 ),
@@ -213,7 +220,8 @@ class OppgavetypeTest {
                                 visTilBruker = true
                             ),
                             visPåOppgave = true,
-                            påkrevd = true
+                            påkrevd = true,
+                            feltutleder = null
                         )
                     )
                 )

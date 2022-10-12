@@ -1,8 +1,11 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype
 
+import no.nav.k9.los.nyoppgavestyring.feltutledere.Feltutleder
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjoner
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
+import kotlin.reflect.full.createInstance
+import kotlin.reflect.jvm.internal.impl.load.kotlin.KotlinClassFinder.Result.KotlinClass
 
 class Oppgavetype(
     val id: Long? = null,
@@ -22,7 +25,8 @@ class Oppgavetype(
                     eksisterendeFeltdefinisjon.eksternId == innkommendeFeltdefinisjon.id
                 } ?: throw IllegalStateException("Omsøkt feltdefinisjon finnes ikke"),
                 visPåOppgave = innkommendeFeltdefinisjon.visPåOppgave,
-                påkrevd = innkommendeFeltdefinisjon.påkrevd
+                påkrevd = innkommendeFeltdefinisjon.påkrevd,
+                feltutleder = innkommendeFeltdefinisjon.feltutleder?.let { Class.forName(innkommendeFeltdefinisjon.feltutleder).kotlin as Feltutleder }
             )
         }.toSet()
     )
