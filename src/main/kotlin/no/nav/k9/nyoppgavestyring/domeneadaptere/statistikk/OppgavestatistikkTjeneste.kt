@@ -7,6 +7,7 @@ import no.nav.k9.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.fixedRateTimer
+import kotlin.concurrent.thread
 
 class OppgavestatistikkTjeneste(
     private val oppgaveRepository: OppgaveRepository,
@@ -16,20 +17,52 @@ class OppgavestatistikkTjeneste(
     private val config: Configuration
 ) {
 
-    fun kjør() {
+    private val log = LoggerFactory.getLogger(OppgavestatistikkTjeneste::class.java)
+    private val TRÅDNAVN = "k9los-til-statistikk"
+
+    companion object {
+        private var avspillingKjører = false
+    }
+
+    fun kjør(kjørUmiddelbart: Boolean = false) {
         if (config.nyOppgavestyringAktivert()) {
-            fixedRateTimer(
-                name = "k9los-til-statistikk",
-                daemon = true,
-                initialDelay = TimeUnit.DAYS.toMillis(1),
-                period = TimeUnit.DAYS.toMillis(1)
-            ) {
-                spillAvStatistikk()
-            }
+            if (!avspillingKjører) {
+                when (kjørUmiddelbart) {
+                    true -> spillAvUmiddelbart()
+                    false -> schedulerAvspilling()
+                }
+            } else log.info("Avspilling av statistikk kjører allerede")
+        } else log.info("Ny oppgavestyring er deaktivert")
+    }
+
+    private fun spillAvUmiddelbart() {
+        log.info("Spiller av BehandlingProsessEventer umiddelbart")
+        avspillingKjører = true
+        thread(
+            start = true,
+            isDaemon = true,
+            name = TRÅDNAVN
+        ) {
+            spillAvStatistikk()
+            avspillingKjører = false
         }
     }
 
-    fun spillAvStatistikk() {
+    private fun schedulerAvspilling() {
+        log.info("Schedulerer avspilling av statistikk til å kjøre 1 dag fra nå, og hver 24. time etter det")
+        avspillingKjører = true
+        fixedRateTimer(
+            name = TRÅDNAVN,
+            daemon = true,
+            initialDelay = TimeUnit.DAYS.toMillis(1),
+            period = TimeUnit.DAYS.toMillis(1)
+        ) {
+            spillAvStatistikk()
+            avspillingKjører = false
+        }
+    }
+
+    private fun spillAvStatistikk() {
         log.info("Starter sending av saks- og behandlingsstatistikk til DVH")
         val tidStatistikksendingStartet = System.currentTimeMillis()
         val oppgaverSomIkkeErSendt = statistikkRepository.hentOppgaverSomIkkeErSendt()
@@ -51,8 +84,6 @@ class OppgavestatistikkTjeneste(
             log.info("Gjennomsnitt tidsbruk: ${kjøretid/oppgaverSomIkkeErSendt.size} ms pr oppgaveversjon")
         }
     }
-
-    private val log = LoggerFactory.getLogger(OppgavestatistikkTjeneste::class.java)
 
     private fun sendStatistikk(id: Long, tx: TransactionalSession) {
         val (sak, behandling) = byggOppgavestatistikk(id, tx)

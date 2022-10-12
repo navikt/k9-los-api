@@ -158,7 +158,7 @@ fun Application.k9Los() {
         oppgaveV3Tjeneste = koin.get(),
         config = koin.get(),
         transactionalManager = koin.get()
-    ).kjør(kjørSetup = true)
+    ).kjør(kjørSetup = true, kjørUmiddelbart = false)
 
     OppgavestatistikkTjeneste(
         oppgaveRepository = koin.get(),
@@ -166,7 +166,7 @@ fun Application.k9Los() {
         transactionalManager = koin.get(),
         statistikkRepository = koin.get(),
         config = koin.get()
-    ).kjør()
+    ).kjør(kjørUmiddelbart = false)
 
     // Server side events
     val sseChannel = produce {

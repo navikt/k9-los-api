@@ -20,6 +20,7 @@ import kotlin.concurrent.fixedRateTimer
 import no.nav.k9.Configuration
 import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.nyoppgavestyring.mottak.oppgave.OppgaveV3
+import kotlin.concurrent.thread
 
 class K9SakTilLosAdapterTjeneste(
     private val behandlingProsessEventK9Repository: BehandlingProsessEventK9Repository,
@@ -32,24 +33,54 @@ class K9SakTilLosAdapterTjeneste(
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9SakTilLosAdapterTjeneste::class.java)
+    private val TRÅDNAVN = "k9-sak-til-los"
 
-    fun kjør(kjørSetup: Boolean) {
+    companion object {
+        private var avspillingKjører = false
+    }
+
+    fun kjør(kjørSetup: Boolean = false, kjørUmiddelbart: Boolean = false) {
         if (config.nyOppgavestyringAktivert()) {
-            fixedRateTimer(
-                name = "k9-sak-til-los",
-                daemon = true,
-                initialDelay = TimeUnit.SECONDS.toMillis(10),
-                period = TimeUnit.DAYS.toMillis(1)
-            ) {
-                if (kjørSetup) {
-                    setup()
+            if (!avspillingKjører) {
+                when (kjørUmiddelbart) {
+                    true -> spillAvUmiddelbart()
+                    false -> schedulerAvspilling(kjørSetup)
                 }
-                spillAvBehandlingProsessEventer()
-            }
+            } else log.info("Avspilling av BehandlingProsessEventer kjører allerede")
+        } else log.info("Ny oppgavestyring er deaktivert")
+    }
+
+    private fun spillAvUmiddelbart() {
+        log.info("Spiller av BehandlingProsessEventer umiddelbart")
+        avspillingKjører = true
+        thread(
+            start = true,
+            isDaemon = true,
+            name = TRÅDNAVN
+        ) {
+            spillAvBehandlingProsessEventer()
+            avspillingKjører = false
         }
     }
 
-    fun spillAvBehandlingProsessEventer() {
+    private fun schedulerAvspilling(kjørSetup: Boolean) {
+        log.info("Schedulerer avspilling av BehandlingProsessEventer til å kjøre 10s fra nå, hver 24. time")
+        avspillingKjører = true
+        fixedRateTimer(
+            name = TRÅDNAVN,
+            daemon = true,
+            initialDelay = TimeUnit.SECONDS.toMillis(10),
+            period = TimeUnit.DAYS.toMillis(1)
+        ) {
+            if (kjørSetup) {
+                setup()
+            }
+            spillAvBehandlingProsessEventer()
+            avspillingKjører = false
+        }
+    }
+
+    private fun spillAvBehandlingProsessEventer() {
         var behandlingTeller: Long = 0
         var eventTeller: Long = 0
         var forrigeOppgave: OppgaveV3? = null
