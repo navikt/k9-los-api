@@ -27,12 +27,23 @@ class Oppgavetype(
                 } ?: throw IllegalStateException("Omsøkt feltdefinisjon finnes ikke"),
                 visPåOppgave = innkommendeFeltdefinisjon.visPåOppgave,
                 påkrevd = innkommendeFeltdefinisjon.påkrevd,
-                feltutleder = innkommendeFeltdefinisjon.feltutleder
+                feltutleder = innkommendeFeltdefinisjon.feltutleder?.let { utledFeltutleder(it) }
             )
         }.toSet()
     )
 
+    companion object {
+        private fun utledFeltutleder(feltutleder: String): String {
+            runCatching {
+                Class.forName(feltutleder)
+            }.onFailure { throw IllegalArgumentException("Utleder finnes ikke: $feltutleder") }
+            return feltutleder
+        }
+    }
+
+
     fun valider(oppgaveDto: OppgaveDto) {
+
         oppgaveDto.feltverdier.forEach { dtofelt ->
             oppgavefelter.find { it.feltDefinisjon.eksternId.equals(dtofelt.nøkkel) }
                 ?: throw IllegalArgumentException("Kan ikke oppgi feltverdi som ikke er spesifisert i oppgavetypen: ${dtofelt.nøkkel}")
