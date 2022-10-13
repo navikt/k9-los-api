@@ -1,12 +1,9 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype
 
-import no.nav.k9.los.nyoppgavestyring.feltutledere.Feltutleder
+import no.nav.k9.los.nyoppgavestyring.feltutledere.GyldigeFeltutledere
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjoner
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
-import kotlin.reflect.full.cast
-import kotlin.reflect.full.createInstance
-import kotlin.reflect.jvm.internal.impl.load.kotlin.KotlinClassFinder.Result.KotlinClass
 
 class Oppgavetype(
     val id: Long? = null,
@@ -34,13 +31,10 @@ class Oppgavetype(
 
     companion object {
         private fun utledFeltutleder(feltutleder: String): String {
-            runCatching {
-                Class.forName(feltutleder)
-            }.onFailure { throw IllegalArgumentException("Utleder finnes ikke: $feltutleder") }
-            return feltutleder
+            val kClass = GyldigeFeltutledere.feltutledere[feltutleder]
+            return if (kClass != null) feltutleder else throw IllegalArgumentException("Utleder finnes ikke: $feltutleder")
         }
     }
-
 
     fun valider(oppgaveDto: OppgaveDto) {
 

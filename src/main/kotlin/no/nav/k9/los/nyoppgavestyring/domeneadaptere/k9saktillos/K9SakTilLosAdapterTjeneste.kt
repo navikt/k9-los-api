@@ -220,6 +220,9 @@ class K9SakTilLosAdapterTjeneste(
             )
         )
 
+        // TODO sette nye flag, som blir utledet fra aksjonspunkt feks
+        // avventerSaksbehandler
+
         if (event.aksjonspunktTilstander.isNotEmpty()) {
             oppgaveFeltverdiDtos.addAll(event.aksjonspunktTilstander.map { aksjonspunktTilstand ->
                 OppgaveFeltverdiDto(
