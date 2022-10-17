@@ -4,6 +4,7 @@ import no.nav.k9.los.nyoppgavestyring.feltutledere.GyldigeFeltutledere
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjoner
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
+import kotlin.reflect.full.createInstance
 
 class Oppgavetype(
     val id: Long? = null,
@@ -36,8 +37,26 @@ class Oppgavetype(
         }
     }
 
-    fun valider(oppgaveDto: OppgaveDto) {
+    fun valider() {
+        oppgavefelter.forEach { oppgavefelt ->
+            oppgavefelt.feltutleder?.let { feltutleder ->
+                val feltUtleder = GyldigeFeltutledere.feltutledere[feltutleder]!!.createInstance()
+                feltUtleder.påkrevdeFelter.forEach { påkrevdFeltEntry ->
+                    val påkrevdFelt = oppgavefelter.find { oppgavefelt ->
+                        oppgavefelt.feltDefinisjon.eksternId == påkrevdFeltEntry.key
+                    } ?: throw IllegalArgumentException("Feltutleder krever felt ${påkrevdFeltEntry.key}, men denne mangler i oppgavetypen.")
+                    if (påkrevdFelt.feltDefinisjon.tolkesSom != påkrevdFeltEntry.value) {
+                        throw IllegalStateException("Feltutleder krever felt ${påkrevdFeltEntry.key}, og forventer datatype ${påkrevdFeltEntry.value}, men datatypen på feltdefinisjonen er ${oppgavefelt.feltDefinisjon.tolkesSom}")
+                    }
+                    if (påkrevdFelt.påkrevd.not()) {
+                        throw IllegalStateException("Feltutleder krever felt ${påkrevdFeltEntry.key}, men det aktuelle feltet er ikke satt som påkrevd")
+                    }
+                }
+            }
+        }
+    }
 
+    fun validerInnkommendeOppgave(oppgaveDto: OppgaveDto) {
         oppgaveDto.feltverdier.forEach { dtofelt ->
             oppgavefelter.find { it.feltDefinisjon.eksternId.equals(dtofelt.nøkkel) }
                 ?: throw IllegalArgumentException("Kan ikke oppgi feltverdi som ikke er spesifisert i oppgavetypen: ${dtofelt.nøkkel}")

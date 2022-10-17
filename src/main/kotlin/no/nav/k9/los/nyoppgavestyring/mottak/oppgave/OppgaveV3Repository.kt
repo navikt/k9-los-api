@@ -4,18 +4,22 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
-class OppgaveV3Repository(private val dataSource: DataSource) {
+class OppgaveV3Repository(
+    private val dataSource: DataSource
+) {
 
     private val log = LoggerFactory.getLogger(OppgaveV3Repository::class.java)
 
     //TODO: status enum
 
     fun lagre(oppgave: OppgaveV3, tx: TransactionalSession) {
-        // hente ut nyeste versjon(ekstern_id, område) i basen, sette aktuell versjon til inaktiv
         val (eksisterendeId, eksisterendeVersjon) = hentVersjon(tx, oppgave)
 
         eksisterendeId?.let { deaktiverVersjon(eksisterendeId, oppgave.endretTidspunkt, tx) }
@@ -24,6 +28,27 @@ class OppgaveV3Repository(private val dataSource: DataSource) {
 
         val oppgaveId = lagre(oppgave, nyVersjon, tx)
         lagreFeltverdier(oppgaveId, oppgave.felter, tx)
+    }
+
+    fun hentAktivOppgave(eksternId: String, oppgavetype: Oppgavetype, tx: TransactionalSession): OppgaveV3 {
+        return tx.run(
+            queryOf(
+                """
+                    select * from oppgave_v3 where ekstern_id = :eksternId and aktiv = true
+                """.trimIndent(), mapOf("eksternId" to eksternId)
+            ).map { row ->
+                OppgaveV3(
+                    id = row.long("id"),
+                    eksternId = row.string("ekstern_id"),
+                    eksternVersjon = row.string("ekstern_versjon"),
+                    oppgavetype = oppgavetype,
+                    status = row.string("status"),
+                    endretTidspunkt = row.localDateTime("endretTidspunkt"),
+                    kildeområde = row.string("kildeomrade"),
+                    felter = hentFeltverdier(row.long("id"), oppgavetype, tx)
+                )
+            }.asSingle
+        ) ?: throw IllegalStateException("Kunne ikke finne aktiv oppgave med eksternId: $eksternId")
     }
 
     private fun lagre(oppgave: OppgaveV3, nyVersjon: Long, tx: TransactionalSession): Long {
@@ -45,6 +70,28 @@ class OppgaveV3Repository(private val dataSource: DataSource) {
                 )
             )
         )!!
+    }
+
+    private fun hentFeltverdier(
+        oppgaveId: Long,
+        oppgavetype: Oppgavetype,
+        tx: TransactionalSession
+    ): List<OppgaveFeltverdi> {
+        return tx.run(
+            queryOf(
+                """
+                    select * from oppgavefeltverdi where oppgave_id = :oppgaveId
+                """.trimIndent(),
+                mapOf("oppgaveId" to oppgaveId)
+            ).map { row ->
+                OppgaveFeltverdi(
+                    id = row.long("id"),
+                    oppgavefelt = oppgavetype.oppgavefelter.first { oppgavefelt ->
+                        oppgavefelt.id == row.long("oppgavefelt_id") },
+                    verdi = row.string("verdi")
+                )
+            }.asList
+        )
     }
 
     private fun lagreFeltverdier(

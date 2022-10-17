@@ -129,6 +129,12 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
                     listetype = false,
                     tolkesSom = "Duration",
                     false
+                ),
+                FeltdefinisjonDto(
+                    id = "avventerSaksbehandler",
+                    listetype = false,
+                    tolkesSom = "boolean",
+                    false
                 )
             )
         )
@@ -162,6 +168,11 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
                             visPåOppgave = false,
                             påkrevd = true,
                             feltutleder = "no.nav.k9.los.nyoppgavestyring.feltutledere.AkkumulertVentetidSaksbehandler",
+                        ),
+                        OppgavefeltDto(
+                            id = "avventerSaksbehandler",
+                            visPåOppgave = false,
+                            påkrevd = true
                         )
                     )
                 )

@@ -8,14 +8,15 @@ class Oppgavetyper(
     val oppgavetyper: Set<Oppgavetype>
 ) {
 
-    constructor(dto: OppgavetyperDto, område: Område, feltdefinisjoner: Feltdefinisjoner): this(
+    constructor(dto: OppgavetyperDto, område: Område, feltdefinisjoner: Feltdefinisjoner) : this(
         område = område,
         oppgavetyper = dto.oppgavetyper.map { oppgavetypeDto ->
             Oppgavetype(
                 dto = oppgavetypeDto,
                 definisjonskilde = dto.definisjonskilde,
                 område = område,
-                feltdefinisjoner = feltdefinisjoner)
+                feltdefinisjoner = feltdefinisjoner
+            )
         }.toSet()
     )
 
@@ -67,8 +68,8 @@ class Oppgavetyper(
         val leggTilListe = mutableSetOf<Oppgavefelt>()
         val sletteliste = mutableSetOf<Oppgavefelt>()
         val endreliste = mutableSetOf<OppgavefeltDelta>()
-        
-        innkommendeOppgave.oppgavefelter.forEach{ innkommendeFelt ->
+
+        innkommendeOppgave.oppgavefelter.forEach { innkommendeFelt ->
             val eksisterendeOppgavefelt = eksisterendeOppgave.oppgavefelter.find { oppgavefelt ->
                 oppgavefelt.feltDefinisjon.equals(innkommendeFelt.feltDefinisjon)
             }
@@ -77,9 +78,19 @@ class Oppgavetyper(
                 leggTilListe.add(innkommendeFelt)
             } else {
                 if (!innkommendeFelt.påkrevd.equals(eksisterendeOppgavefelt.påkrevd)) {
-                    endreliste.add(OppgavefeltDelta(eksisterendeFelt = eksisterendeOppgavefelt, innkommendeFelt = innkommendeFelt))
+                    endreliste.add(
+                        OppgavefeltDelta(
+                            eksisterendeFelt = eksisterendeOppgavefelt,
+                            innkommendeFelt = innkommendeFelt
+                        )
+                    )
                 } else if (!innkommendeFelt.visPåOppgave.equals(eksisterendeOppgavefelt.visPåOppgave)) {
-                    endreliste.add(OppgavefeltDelta(eksisterendeFelt = eksisterendeOppgavefelt, innkommendeFelt = innkommendeFelt))
+                    endreliste.add(
+                        OppgavefeltDelta(
+                            eksisterendeFelt = eksisterendeOppgavefelt,
+                            innkommendeFelt = innkommendeFelt
+                        )
+                    )
                 }
             }
         }
@@ -101,5 +112,9 @@ class Oppgavetyper(
             felterSomSkalEndresMedNyeVerdier = endreliste.toList()
 
         )
+    }
+
+    fun valider() {
+        oppgavetyper.forEach { oppgavetype -> oppgavetype.valider() }
     }
 }

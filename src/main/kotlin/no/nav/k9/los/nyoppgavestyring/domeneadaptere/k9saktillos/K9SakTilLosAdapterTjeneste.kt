@@ -5,6 +5,8 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.kodeverk.behandling.BehandlingStatus
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
@@ -34,6 +36,13 @@ class K9SakTilLosAdapterTjeneste(
 
     private val log: Logger = LoggerFactory.getLogger(K9SakTilLosAdapterTjeneste::class.java)
     private val TRÅDNAVN = "k9-sak-til-los"
+    private val MANUELLE_AKSJONSPUNKTER = AksjonspunktDefinisjon.values().filter { aksjonspunktDefinisjon ->
+        aksjonspunktDefinisjon.aksjonspunktType.equals(AksjonspunktType.MANUELL)
+    }.map { aksjonspunktDefinisjon -> aksjonspunktDefinisjon.kode }
+
+    private val AUTOPUNKTER = AksjonspunktDefinisjon.values().filter {aksjonspunktDefinisjon ->
+        aksjonspunktDefinisjon.aksjonspunktType.equals(AksjonspunktType.AUTOPUNKT)
+    }.map { aksjonspunktDefinisjon -> aksjonspunktDefinisjon.kode }
 
     companion object {
         private var avspillingKjører = false
@@ -252,6 +261,30 @@ class K9SakTilLosAdapterTjeneste(
                     )
                 )
             }
+            val harManueltAksjonspunkt = åpneAksjonspunkter.any { aksjonspunktTilstandDto ->
+                MANUELLE_AKSJONSPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode)
+            }
+
+            val harAutopunkt = åpneAksjonspunkter.any { aksjonspunktTilstandDto ->
+                AUTOPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode)
+            }
+
+            if (harManueltAksjonspunkt && !harAutopunkt) {
+                oppgaveFeltverdiDtos.add(
+                    OppgaveFeltverdiDto(
+                        nøkkel = "avventerSaksbehandler",
+                        verdi = "true"
+                    )
+                )
+            } else {
+                oppgaveFeltverdiDtos.add(
+                    OppgaveFeltverdiDto(
+                        nøkkel = "avventerSaksbehandler",
+                        verdi = "false"
+                    )
+                )
+            }
+
         } else {
             oppgaveFeltverdiDtos.add(
                 OppgaveFeltverdiDto(

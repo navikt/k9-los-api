@@ -44,7 +44,7 @@ class OppgavetypeRepository(private val feltdefinisjonRepository: Feltdefinisjon
                                         ?: throw IllegalStateException("Oppgavetypens oppgavefelt referer til udefinert feltdefinisjon eller feltdefinisjon utenfor området"),
                                     påkrevd = row.boolean("pakrevd"),
                                     visPåOppgave = true,
-                                    feltutleder = null // TODO
+                                    feltutleder = row.stringOrNull("feltutleder")
                                 )
                             }.asList
                         ).toSet(),
@@ -118,15 +118,17 @@ class OppgavetypeRepository(private val feltdefinisjonRepository: Feltdefinisjon
         tx.run(
             queryOf(
                 """
-                insert into oppgavefelt(feltdefinisjon_id, oppgavetype_id, pakrevd)
+                insert into oppgavefelt(feltdefinisjon_id, oppgavetype_id, pakrevd, feltutleder)
                 values(
                     :feltdefinisjonId,
                     :oppgavetypeId,
-                    :paakrevd)""",
+                    :paakrevd,
+                    :feltutleder)""",
                 mapOf(
                     "feltdefinisjonId" to oppgavefelt.feltDefinisjon.id,
                     "oppgavetypeId" to oppgavetypeId,
-                    "paakrevd" to oppgavefelt.påkrevd
+                    "paakrevd" to oppgavefelt.påkrevd,
+                    "feltutleder" to oppgavefelt.feltutleder
                 ) //TODO: joine inn område_id? usikker på hva jeg synes om at feltdefinisjon.eksternt_navn alltid er prefikset med område
             ).asUpdate
         )
@@ -159,13 +161,14 @@ class OppgavetypeRepository(private val feltdefinisjonRepository: Feltdefinisjon
             queryOf(
                 """
                 update oppgavefelt
-                set pakrevd = :pakrevd
+                set pakrevd = :pakrevd, feltutleder = :feltutleder
                 where id = :id
             """.trimIndent(),
                 mapOf(
                     "pakrevd" to innkommendeFelt.påkrevd,
-                    "visPaOppgave" to innkommendeFelt.visPåOppgave,
-                    "id" to id
+                    "visPaOppgave" to innkommendeFelt.visPåOppgave, //TODO: Denne er ikke i basen ennå
+                    "id" to id,
+                    "feltutleder" to innkommendeFelt.feltutleder
                 )
             ).asUpdate
         )

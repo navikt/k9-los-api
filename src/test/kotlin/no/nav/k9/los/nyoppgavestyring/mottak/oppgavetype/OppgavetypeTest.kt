@@ -3,6 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype
 import assertk.assertThat
 import assertk.assertions.hasSize
 import assertk.assertions.isEmpty
+import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavefelt
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon
@@ -11,6 +12,8 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetyper
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import java.time.Duration
+import kotlin.test.assertFailsWith
 
 class OppgavetypeTest {
     private val område = Område(eksternId = "K9")
@@ -104,6 +107,123 @@ class OppgavetypeTest {
         assertThat(sletteListe.oppgavetyper).hasSize(1)
         assertThat(leggTilListe.oppgavetyper).isEmpty()
         //assertThat(oppdaterListe.oppgavetyper).isEmpty() //TODO sjekk oppdaterListe
+    }
+
+    @Test
+    fun `test at feltutleder feiler oppgavetype som mangler felter påkrevd av feltutleder`() {
+        val oppgavetyper = Oppgavetyper(
+            område = område,
+            oppgavetyper = setOf(
+                Oppgavetype(
+                    eksternId = "aksjonspunkt",
+                    område = område,
+                    definisjonskilde = "k9-sak-til-los",
+                    oppgavefelter = setOf(
+                        Oppgavefelt(
+                            feltDefinisjon = Feltdefinisjon(
+                                eksternId = "saksnummer",
+                                område = område,
+                                listetype = false,
+                                tolkesSom = "String",
+                                visTilBruker = true
+                            ),
+                            visPåOppgave = true,
+                            påkrevd = true
+                        ),
+                        Oppgavefelt(
+                            feltDefinisjon = Feltdefinisjon(
+                                eksternId = "saksnummer",
+                                område = område,
+                                listetype = false,
+                                tolkesSom = "String",
+                                visTilBruker = true
+                            ),
+                            visPåOppgave = true,
+                            påkrevd = true
+                        ),
+                        Oppgavefelt(
+                            feltDefinisjon = Feltdefinisjon(
+                                eksternId = "akkumulertVentetidSaksbehandler",
+                                område = område,
+                                listetype = false,
+                                tolkesSom = "Duration",
+                                visTilBruker = true
+                            ),
+                            visPåOppgave = true,
+                            påkrevd = true,
+                            feltutleder = "no.nav.k9.los.nyoppgavestyring.feltutledere.AkkumulertVentetidSaksbehandler"
+                        )
+                    )
+                )
+            )
+        )
+
+        assertFailsWith<IllegalArgumentException> {
+            oppgavetyper.valider()
+        }
+    }
+
+    @Test
+    fun `test at feltutleder validerer OK når påkrevd felt er med`() {
+        val oppgavetyper = Oppgavetyper(
+            område = område,
+            oppgavetyper = setOf(
+                Oppgavetype(
+                    eksternId = "aksjonspunkt",
+                    område = område,
+                    definisjonskilde = "k9-sak-til-los",
+                    oppgavefelter = setOf(
+                        Oppgavefelt(
+                            feltDefinisjon = Feltdefinisjon(
+                                eksternId = "saksnummer",
+                                område = område,
+                                listetype = false,
+                                tolkesSom = "String",
+                                visTilBruker = true
+                            ),
+                            visPåOppgave = true,
+                            påkrevd = true
+                        ),
+                        Oppgavefelt(
+                            feltDefinisjon = Feltdefinisjon(
+                                eksternId = "saksnummer",
+                                område = område,
+                                listetype = false,
+                                tolkesSom = "String",
+                                visTilBruker = true
+                            ),
+                            visPåOppgave = true,
+                            påkrevd = true
+                        ),
+                        Oppgavefelt(
+                            feltDefinisjon = Feltdefinisjon(
+                                eksternId = "akkumulertVentetidSaksbehandler",
+                                område = område,
+                                listetype = false,
+                                tolkesSom = "Duration",
+                                visTilBruker = true
+                            ),
+                            visPåOppgave = true,
+                            påkrevd = true,
+                            feltutleder = "no.nav.k9.los.nyoppgavestyring.feltutledere.AkkumulertVentetidSaksbehandler"
+                        ),
+                        Oppgavefelt(
+                            feltDefinisjon = Feltdefinisjon(
+                                eksternId = "avventerSaksbehandler",
+                                område = område,
+                                listetype = false,
+                                tolkesSom = "boolean",
+                                visTilBruker = true
+                            ),
+                            visPåOppgave = true,
+                            påkrevd = true
+                        )
+                    )
+                )
+            )
+        )
+
+        oppgavetyper.valider()
     }
 
     @Disabled("I påvente av funksjonalitet for å kunne oppdatere oppgavetyper, i stedet for å måtte opprette de på nytt")

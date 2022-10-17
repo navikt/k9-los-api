@@ -7,5 +7,5 @@ class Oppgavefelt(
     val feltDefinisjon: Feltdefinisjon,
     val visPåOppgave: Boolean,
     val påkrevd: Boolean,
-    val feltutleder: String?
+    val feltutleder: String? = null
 )
