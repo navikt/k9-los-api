@@ -64,7 +64,7 @@ class Oppgavetype(
         }
 
         oppgavefelter
-            .filter { it.påkrevd }
+            .filter { it.påkrevd && it.erUtledet().not()}
             .forEach { obligatoriskFelt ->
                 oppgaveDto.feltverdier
                     .find { it.nøkkel.equals(obligatoriskFelt.feltDefinisjon.eksternId) }

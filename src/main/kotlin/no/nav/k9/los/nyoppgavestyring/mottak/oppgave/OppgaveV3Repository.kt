@@ -30,7 +30,7 @@ class OppgaveV3Repository(
         lagreFeltverdier(oppgaveId, oppgave.felter, tx)
     }
 
-    fun hentAktivOppgave(eksternId: String, oppgavetype: Oppgavetype, tx: TransactionalSession): OppgaveV3 {
+    fun hentAktivOppgave(eksternId: String, oppgavetype: Oppgavetype, tx: TransactionalSession): OppgaveV3? {
         return tx.run(
             queryOf(
                 """
@@ -43,12 +43,12 @@ class OppgaveV3Repository(
                     eksternVersjon = row.string("ekstern_versjon"),
                     oppgavetype = oppgavetype,
                     status = row.string("status"),
-                    endretTidspunkt = row.localDateTime("endretTidspunkt"),
+                    endretTidspunkt = row.localDateTime("endret_tidspunkt"),
                     kildeområde = row.string("kildeomrade"),
                     felter = hentFeltverdier(row.long("id"), oppgavetype, tx)
                 )
             }.asSingle
-        ) ?: throw IllegalStateException("Kunne ikke finne aktiv oppgave med eksternId: $eksternId")
+        )
     }
 
     private fun lagre(oppgave: OppgaveV3, nyVersjon: Long, tx: TransactionalSession): Long {
@@ -80,7 +80,7 @@ class OppgaveV3Repository(
         return tx.run(
             queryOf(
                 """
-                    select * from oppgavefeltverdi where oppgave_id = :oppgaveId
+                    select * from oppgavefelt_verdi where oppgave_id = :oppgaveId
                 """.trimIndent(),
                 mapOf("oppgaveId" to oppgaveId)
             ).map { row ->

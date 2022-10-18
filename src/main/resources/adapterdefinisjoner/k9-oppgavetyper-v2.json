@@ -109,7 +109,7 @@
           "id": "akkumulertVentetidSaksbehandler",
           "visPåOppgave": false,
           "påkrevd": true,
-          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutledere.AkkumulertVentetidSaksbehandlerFeltutleder"
+          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutledere.AkkumulertVentetidSaksbehandler"
         },
         {
           "id": "avventerSaksbehandler",

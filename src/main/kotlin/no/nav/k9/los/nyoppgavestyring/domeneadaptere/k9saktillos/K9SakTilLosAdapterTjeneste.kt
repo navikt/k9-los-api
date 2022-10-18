@@ -37,11 +37,11 @@ class K9SakTilLosAdapterTjeneste(
     private val log: Logger = LoggerFactory.getLogger(K9SakTilLosAdapterTjeneste::class.java)
     private val TRÅDNAVN = "k9-sak-til-los"
     private val MANUELLE_AKSJONSPUNKTER = AksjonspunktDefinisjon.values().filter { aksjonspunktDefinisjon ->
-        aksjonspunktDefinisjon.aksjonspunktType.equals(AksjonspunktType.MANUELL)
+        aksjonspunktDefinisjon.aksjonspunktType == AksjonspunktType.MANUELL
     }.map { aksjonspunktDefinisjon -> aksjonspunktDefinisjon.kode }
 
     private val AUTOPUNKTER = AksjonspunktDefinisjon.values().filter {aksjonspunktDefinisjon ->
-        aksjonspunktDefinisjon.aksjonspunktType.equals(AksjonspunktType.AUTOPUNKT)
+        aksjonspunktDefinisjon.aksjonspunktType == AksjonspunktType.AUTOPUNKT
     }.map { aksjonspunktDefinisjon -> aksjonspunktDefinisjon.kode }
 
     companion object {
@@ -261,35 +261,35 @@ class K9SakTilLosAdapterTjeneste(
                     )
                 )
             }
-            val harManueltAksjonspunkt = åpneAksjonspunkter.any { aksjonspunktTilstandDto ->
-                MANUELLE_AKSJONSPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode)
-            }
-
-            val harAutopunkt = åpneAksjonspunkter.any { aksjonspunktTilstandDto ->
-                AUTOPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode)
-            }
-
-            if (harManueltAksjonspunkt && !harAutopunkt) {
-                oppgaveFeltverdiDtos.add(
-                    OppgaveFeltverdiDto(
-                        nøkkel = "avventerSaksbehandler",
-                        verdi = "true"
-                    )
-                )
-            } else {
-                oppgaveFeltverdiDtos.add(
-                    OppgaveFeltverdiDto(
-                        nøkkel = "avventerSaksbehandler",
-                        verdi = "false"
-                    )
-                )
-            }
-
         } else {
             oppgaveFeltverdiDtos.add(
                 OppgaveFeltverdiDto(
                     nøkkel = "aktivtAksjonspunkt",
                     verdi = null
+                )
+            )
+        }
+
+        val harManueltAksjonspunkt = åpneAksjonspunkter.any { aksjonspunktTilstandDto ->
+            MANUELLE_AKSJONSPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode)
+        }
+
+        val harAutopunkt = åpneAksjonspunkter.any { aksjonspunktTilstandDto ->
+            AUTOPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode)
+        }
+
+        if (harManueltAksjonspunkt && !harAutopunkt) {
+            oppgaveFeltverdiDtos.add(
+                OppgaveFeltverdiDto(
+                    nøkkel = "avventerSaksbehandler",
+                    verdi = "true"
+                )
+            )
+        } else {
+            oppgaveFeltverdiDtos.add(
+                OppgaveFeltverdiDto(
+                    nøkkel = "avventerSaksbehandler",
+                    verdi = "false"
                 )
             )
         }

@@ -125,7 +125,7 @@
       "id": "akkumulertVentetidSaksbehandler",
       "listetype": false,
       "tolkesSom": "Duration",
-      "visTilBruker": false
+      "visTilBruker": true
     },
     {
       "id": "avventerSaksbehandler",

@@ -8,4 +8,8 @@ class Oppgavefelt(
     val visPåOppgave: Boolean,
     val påkrevd: Boolean,
     val feltutleder: String? = null
-)
+) {
+    fun erUtledet(): Boolean {
+        return feltutleder != null
+    }
+}
