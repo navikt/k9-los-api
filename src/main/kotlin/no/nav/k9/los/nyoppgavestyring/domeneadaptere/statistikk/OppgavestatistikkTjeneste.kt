@@ -20,37 +20,28 @@ class OppgavestatistikkTjeneste(
     private val log = LoggerFactory.getLogger(OppgavestatistikkTjeneste::class.java)
     private val TRÅDNAVN = "k9los-til-statistikk"
 
-    companion object {
-        private var avspillingKjører = false
-    }
-
     fun kjør(kjørUmiddelbart: Boolean = false) {
         if (config.nyOppgavestyringAktivert()) {
-            if (!avspillingKjører) {
-                when (kjørUmiddelbart) {
-                    true -> spillAvUmiddelbart()
-                    false -> schedulerAvspilling()
-                }
-            } else log.info("Avspilling av statistikk kjører allerede")
+            when (kjørUmiddelbart) {
+                true -> spillAvUmiddelbart()
+                false -> schedulerAvspilling()
+            }
         } else log.info("Ny oppgavestyring er deaktivert")
     }
 
     private fun spillAvUmiddelbart() {
         log.info("Spiller av BehandlingProsessEventer umiddelbart")
-        avspillingKjører = true
         thread(
             start = true,
             isDaemon = true,
             name = TRÅDNAVN
         ) {
             spillAvStatistikk()
-            avspillingKjører = false
         }
     }
 
     private fun schedulerAvspilling() {
         log.info("Schedulerer avspilling av statistikk til å kjøre 1 dag fra nå, og hver 24. time etter det")
-        avspillingKjører = true
         fixedRateTimer(
             name = TRÅDNAVN,
             daemon = true,
@@ -58,7 +49,6 @@ class OppgavestatistikkTjeneste(
             period = TimeUnit.DAYS.toMillis(1)
         ) {
             spillAvStatistikk()
-            avspillingKjører = false
         }
     }
 
@@ -81,7 +71,7 @@ class OppgavestatistikkTjeneste(
         log.info("Sending av saks- og behanlingsstatistikk ferdig")
         log.info("Sendt ${oppgaverSomIkkeErSendt.size} oppgaversjoner. Totalt tidsbruk: ${kjøretid} ms")
         if (oppgaverSomIkkeErSendt.size > 0) {
-            log.info("Gjennomsnitt tidsbruk: ${kjøretid/oppgaverSomIkkeErSendt.size} ms pr oppgaveversjon")
+            log.info("Gjennomsnitt tidsbruk: ${kjøretid / oppgaverSomIkkeErSendt.size} ms pr oppgaveversjon")
         }
     }
 

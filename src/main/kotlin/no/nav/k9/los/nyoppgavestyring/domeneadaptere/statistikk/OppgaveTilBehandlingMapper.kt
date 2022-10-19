@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk
 
+import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon
 import no.nav.k9.los.domene.modell.BehandlingType
@@ -34,13 +35,13 @@ class OppgaveTilBehandlingMapper {
             resultat = oppgave.hentVerdi("resultattype"),
             resultatBegrunnelse = null, //TODO: callback mot K9?
             utenlandstilsnitt = utledUtenlandstilsnitt(oppgave),
-            //behandlingTypeBeskrivelse = BehandlingType.fraKode(sisteVersjon.hentVerdi("behandlingTypekode")).navn,
-            //behandlingStatusBeskrivelse = BehandlingStatus.fraKode(sisteVersjon.hentVerdi("behandlingsstatus")).navn,
-            //resultatBeskrivelse = BehandlingResultatType.fraKode(sisteVersjon.hentVerdi("resultattype")).navn, //resultattype
+            behandlingTypeBeskrivelse = BehandlingType.fraKode(oppgave.hentVerdi("behandlingTypekode").toString()).navn,
+            behandlingStatusBeskrivelse = BehandlingStatus.fraKode(oppgave.hentVerdi("behandlingsstatus")).navn,
+            resultatBeskrivelse = BehandlingResultatType.fraKode(oppgave.hentVerdi("resultattype")).navn,
             resultatBegrunnelseBeskrivelse = null,
             utenlandstilsnittBeskrivelse = null,
-            beslutter = oppgave.hentVerdi("ansvarligBeslutterForTotrinn") ?: "", //TODO riktig?
-            saksbehandler = utledAnsvarligSaksbehandler(oppgave),
+            beslutter = oppgave.hentVerdi("ansvarligBeslutter") ?: "", //TODO riktig?
+            saksbehandler = oppgave.hentVerdi("ansvarligSaksbehandler"),
             behandlingOpprettetAv = "system",
             behandlingOpprettetType = null,
             behandlingOpprettetTypeBeskrivelse = null,
@@ -54,18 +55,6 @@ class OppgaveTilBehandlingMapper {
             avsender = "K9sak",
             versjon = 1, //TODO: Ikke i bruk?
         )
-    }
-
-    private fun utledAnsvarligSaksbehandler(oppgave: Oppgave): String? {
-        val ansvarligSaksbehandlerForTotrinn = oppgave.hentVerdi("ansvarligSaksbehandlerForTotrinn")
-        val ansvarligSaksbehandlerIdent = oppgave.hentVerdi("ansvarligSaksbehandlerIdent")
-
-        if (null != ansvarligSaksbehandlerForTotrinn) {
-            return ansvarligSaksbehandlerForTotrinn
-        } else if (null != ansvarligSaksbehandlerIdent) {
-            return ansvarligSaksbehandlerIdent
-        }
-        return null
     }
 
     private fun utledUtenlandstilsnitt(oppgave: Oppgave): String {

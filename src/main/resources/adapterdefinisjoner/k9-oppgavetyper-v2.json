@@ -76,17 +76,12 @@
           "påkrevd": false
         },
         {
-          "id": "ansvarligSaksbehandlerIdent",
+          "id": "ansvarligSaksbehandler",
           "visPåOppgave": true,
           "påkrevd": false
         },
         {
-          "id": "ansvarligBeslutterForTotrinn",
-          "visPåOppgave": true,
-          "påkrevd": false
-        },
-        {
-          "id": "ansvarligSaksbehandlerForTotrinn",
+          "id": "ansvarligBeslutter",
           "visPåOppgave": true,
           "påkrevd": false
         },

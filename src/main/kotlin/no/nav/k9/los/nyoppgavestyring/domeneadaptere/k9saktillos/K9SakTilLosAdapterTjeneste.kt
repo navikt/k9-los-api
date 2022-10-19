@@ -40,41 +40,33 @@ class K9SakTilLosAdapterTjeneste(
         aksjonspunktDefinisjon.aksjonspunktType == AksjonspunktType.MANUELL
     }.map { aksjonspunktDefinisjon -> aksjonspunktDefinisjon.kode }
 
-    private val AUTOPUNKTER = AksjonspunktDefinisjon.values().filter {aksjonspunktDefinisjon ->
+    private val AUTOPUNKTER = AksjonspunktDefinisjon.values().filter { aksjonspunktDefinisjon ->
         aksjonspunktDefinisjon.aksjonspunktType == AksjonspunktType.AUTOPUNKT
     }.map { aksjonspunktDefinisjon -> aksjonspunktDefinisjon.kode }
 
-    companion object {
-        private var avspillingKjører = false
-    }
 
     fun kjør(kjørSetup: Boolean = false, kjørUmiddelbart: Boolean = false) {
         if (config.nyOppgavestyringAktivert()) {
-            if (!avspillingKjører) {
-                when (kjørUmiddelbart) {
-                    true -> spillAvUmiddelbart()
-                    false -> schedulerAvspilling(kjørSetup)
-                }
-            } else log.info("Avspilling av BehandlingProsessEventer kjører allerede")
+            when (kjørUmiddelbart) {
+                true -> spillAvUmiddelbart()
+                false -> schedulerAvspilling(kjørSetup)
+            }
         } else log.info("Ny oppgavestyring er deaktivert")
     }
 
     private fun spillAvUmiddelbart() {
         log.info("Spiller av BehandlingProsessEventer umiddelbart")
-        avspillingKjører = true
         thread(
             start = true,
             isDaemon = true,
             name = TRÅDNAVN
         ) {
             spillAvBehandlingProsessEventer()
-            avspillingKjører = false
         }
     }
 
     private fun schedulerAvspilling(kjørSetup: Boolean) {
         log.info("Schedulerer avspilling av BehandlingProsessEventer til å kjøre 10s fra nå, hver 24. time")
-        avspillingKjører = true
         fixedRateTimer(
             name = TRÅDNAVN,
             daemon = true,
@@ -85,7 +77,6 @@ class K9SakTilLosAdapterTjeneste(
                 setup()
             }
             spillAvBehandlingProsessEventer()
-            avspillingKjører = false
         }
     }
 
@@ -203,17 +194,13 @@ class K9SakTilLosAdapterTjeneste(
                 verdi = event.pleietrengendeAktørId
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "ansvarligSaksbehandlerIdent",
-                verdi = event.ansvarligSaksbehandlerIdent ?: forrigeOppgave?.hentVerdi("ansvarligSaksbehandlerIdent")
+                nøkkel = "ansvarligBeslutter",
+                verdi = event.ansvarligBeslutterForTotrinn ?: forrigeOppgave?.hentVerdi("ansvarligBeslutter")
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "ansvarligBeslutterForTotrinn",
-                verdi = event.ansvarligBeslutterForTotrinn ?: forrigeOppgave?.hentVerdi("ansvarligBeslutterForTotrinn")
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "ansvarligSaksbehandlerForTotrinn",
+                nøkkel = "ansvarligSaksbehandler",
                 verdi = event.ansvarligSaksbehandlerForTotrinn
-                    ?: forrigeOppgave?.hentVerdi("ansvarligSaksbehandlerForTotrinn")
+                    ?: forrigeOppgave?.hentVerdi("ansvarligSaksbehandler")
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "mottattDato",

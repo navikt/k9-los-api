@@ -86,19 +86,13 @@
       "visTilBruker": true
     },
     {
-      "id": "ansvarligSaksbehandlerIdent",
+      "id": "ansvarligSaksbehandler",
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true
     },
     {
-      "id": "ansvarligBeslutterForTotrinn",
-      "listetype": false,
-      "tolkesSom": "String",
-      "visTilBruker": true
-    },
-    {
-      "id": "ansvarligSaksbehandlerForTotrinn",
+      "id": "ansvarligBeslutter",
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true

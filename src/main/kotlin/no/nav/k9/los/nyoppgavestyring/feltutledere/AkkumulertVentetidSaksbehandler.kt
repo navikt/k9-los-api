@@ -34,11 +34,8 @@ class AkkumulertVentetidSaksbehandler : Feltutleder {
                 }
 
 
-            val felter =
-                mutableListOf<OppgaveFeltverdi>() //TODO: Hvorfor filterNot? Må vi filtrere bort en forekomst med en utleder, men ikke verdi?
-            felter.addAll(innkommendeOppgave.felter.filterNot { // TODO: Burde ikke få treff?
-                it.oppgavefelt.feltDefinisjon.eksternId == AKKUMULERT_VENTETID_SAKSBEHANDLER
-            })
+            val felter = innkommendeOppgave.felter.toMutableList()
+
             felter.add(
                 OppgaveFeltverdi(
                     oppgavefelt = innkommendeOppgave.oppgavetype.oppgavefelter.first { oppgavefelt ->
