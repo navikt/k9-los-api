@@ -1,0 +1,92 @@
+{
+  "eventer": [
+    {
+      "type": "PAPIRSØKNAD",
+      "ytelse": "PSB",
+      "aktørId": "2348856597441",
+      "eventTid": "2021-06-01T09:59:27.907069403",
+      "sendtInn": null,
+      "eksternId": "22c8881b-a4d3-4739-9d1f-ac716a830bf6",
+      "journalpostId": "493392610",
+      "pleietrengendeAktørId": null,
+      "aksjonspunktKoderMedStatusListe": {
+        "PUNSJ": "OPPR"
+      }
+    },
+    {
+      "type": null,
+      "ytelse": null,
+      "aktørId": "2348856597441",
+      "eventTid": "2021-06-01T13:39:22.485904611",
+      "sendtInn": null,
+      "eksternId": "22c8881b-a4d3-4739-9d1f-ac716a830bf6",
+      "journalpostId": "493392610",
+      "pleietrengendeAktørId": "05111680665",
+      "aksjonspunktKoderMedStatusListe": {
+        "PUNSJ": "UTFO",
+        "MER_INFORMASJON": "OPPR"
+      }
+    },
+    {
+      "type": null,
+      "ytelse": null,
+      "aktørId": "2348856597441",
+      "eventTid": "2021-06-01T21:20:55.666404868",
+      "sendtInn": true,
+      "eksternId": "22c8881b-a4d3-4739-9d1f-ac716a830bf6",
+      "journalpostId": "493392610",
+      "pleietrengendeAktørId": null,
+      "aksjonspunktKoderMedStatusListe": {}
+    }
+  ]
+}
+
+
+
+{
+  "eventer": [
+    {
+      "aktørId": "2249017636279",
+      "eventTid": "2021-05-14T09:28:50.263160793",
+      "eksternId": "9e3ca5ae-94e2-4f1c-b7b3-aa09ea7b1422",
+      "journalpostId": "493390183",
+      "aksjonspunktKoderMedStatusListe": {
+        "PUNSJ": "OPPR"
+      }
+    },
+    {
+      "aktørId": "2249017636279",
+      "eventTid": "2021-05-14T14:29:44.601271774",
+      "eksternId": "9e3ca5ae-94e2-4f1c-b7b3-aa09ea7b1422",
+      "journalpostId": "493390183",
+      "aksjonspunktKoderMedStatusListe": {
+        "PUNSJ": "UTFO",
+        "MER_INFORMASJON": "OPPR"
+      }
+    },
+    {
+      "type": null,
+      "ytelse": null,
+      "aktørId": "2249017636279",
+      "eventTid": "2021-06-05T04:00:00.065640041",
+      "sendtInn": null,
+      "eksternId": "9e3ca5ae-94e2-4f1c-b7b3-aa09ea7b1422",
+      "journalpostId": "493390183",
+      "pleietrengendeAktørId": null,
+      "aksjonspunktKoderMedStatusListe": {
+        "UTLØPT": "OPPR"
+      }
+    },
+    {
+      "type": null,
+      "ytelse": null,
+      "aktørId": "2249017636279",
+      "eventTid": "2021-06-07T09:47:40.150788583",
+      "sendtInn": false,
+      "eksternId": "9e3ca5ae-94e2-4f1c-b7b3-aa09ea7b1422",
+      "journalpostId": "493390183",
+      "pleietrengendeAktørId": null,
+      "aksjonspunktKoderMedStatusListe": {}
+    }
+  ]
+}

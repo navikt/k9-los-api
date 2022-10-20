@@ -14,6 +14,9 @@ import java.util.*
 import java.time.Duration
 import no.nav.helse.dusseldorf.ktor.metrics.Operation
 
+/**
+ * Klient for callback mot k9-sak for å berike eventer med tilleggsopplysninger. Foreløpig ikke i bruk
+ */
 class K9SakAdapter(
     private val configuration: Configuration,
     private val accessTokenClient: AccessTokenClient
