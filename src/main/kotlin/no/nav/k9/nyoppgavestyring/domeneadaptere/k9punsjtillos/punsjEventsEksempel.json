@@ -14,11 +14,11 @@
       }
     },
     {
-      "type": null,
-      "ytelse": null,
-      "aktørId": "2348856597441",
-      "eventTid": "2021-06-01T13:39:22.485904611",
-      "sendtInn": null,
+      "type": null, // dokumenttype -- feltverdi
+      "ytelse": null, // ytelsestype
+      "aktørId": "2348856597441", //
+      "eventTid": "2021-06-01T13:39:22.485904611", //funksjonell tid
+      "sendtInn": null, //boolean med superposisjon
       "eksternId": "22c8881b-a4d3-4739-9d1f-ac716a830bf6",
       "journalpostId": "493392610",
       "pleietrengendeAktørId": "05111680665",
