@@ -261,7 +261,7 @@ class K9SakTilLosAdapterTjeneste(
             MANUELLE_AKSJONSPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode)
         }
 
-        if (forrigeOppgave?.hentVerdi("helautomatiskBehandlet").toBoolean().not()) {
+        if (forrigeOppgave != null && forrigeOppgave.hentVerdi("helautomatiskBehandlet").toBoolean().not()) {
             oppgaveFeltverdiDtos.add(
                 OppgaveFeltverdiDto(
                     nøkkel = "helautomatiskBehandlet",
