@@ -261,6 +261,22 @@ class K9SakTilLosAdapterTjeneste(
             MANUELLE_AKSJONSPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode)
         }
 
+        if (forrigeOppgave?.hentVerdi("helautomatiskBehandlet").toBoolean().not()) {
+            oppgaveFeltverdiDtos.add(
+                OppgaveFeltverdiDto(
+                    nøkkel = "helautomatiskBehandlet",
+                    verdi = false.toString()
+                )
+            )
+        } else {
+            oppgaveFeltverdiDtos.add(
+                OppgaveFeltverdiDto(
+                    nøkkel = "helautomatiskBehandlet",
+                    verdi = if (harManueltAksjonspunkt) false.toString() else true.toString()
+                )
+            )
+        }
+
         val harAutopunkt = åpneAksjonspunkter.any { aksjonspunktTilstandDto ->
             AUTOPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode)
         }

@@ -110,6 +110,11 @@
           "id": "avventerSaksbehandler",
           "visPåOppgave": false,
           "påkrevd": true
+        },
+        {
+          "id": "helautomatiskBehandlet",
+          "visPåOppgave": false,
+          "påkrevd": true
         }
       ]
     }

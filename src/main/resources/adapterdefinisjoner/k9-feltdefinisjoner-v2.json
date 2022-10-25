@@ -144,6 +144,12 @@
       "listetype": false,
       "tolkesSom": "boolean",
       "visTilBruker": true
+    },
+    {
+      "id": "helautomatiskBehandlet",
+      "listetype": false,
+      "tolkesSom": "boolean",
+      "visTilBruker": true
     }
   ]
 }
