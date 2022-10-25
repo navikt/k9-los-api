@@ -212,7 +212,7 @@ class K9SakTilLosAdapterTjeneste(
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "totrinnskontroll",
-                verdi = false.toString() // TODO dette må utledes fra ansvarligBeslutterForTotrinn & ansvarligSaksbehandlerForTotrinn
+                verdi = (event.ansvarligBeslutterForTotrinn != null).toString()
             )
         )
 
