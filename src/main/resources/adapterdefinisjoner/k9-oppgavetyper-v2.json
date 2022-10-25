@@ -3,7 +3,7 @@
   "definisjonskilde": "k9-sak-til-los",
   "oppgavetyper": [
     {
-      "id": "aksjonspunkt",
+      "id": "k9-sak",
       "oppgavefelter": [
         {
           "id": "behandlingUuid",
@@ -94,6 +94,86 @@
           "id": "totrinnskontroll",
           "visPåOppgave": true,
           "påkrevd": true
+        },
+        {
+          "id": "aksjonspunkt",
+          "visPåOppgave": true,
+          "påkrevd": true
+        },
+        {
+          "id": "aktivtAksjonspunkt",
+          "visPåOppgave": true,
+          "påkrevd": true
+        }
+      ]
+    },
+    {
+      "id": "k9-tilbake",
+      "oppgavefelter": [
+        {
+          "id": "behandlingUuid",
+          "visPåOppgave": true,
+          "påkrevd": true
+        },
+        {
+          "id": "aktorId",
+          "visPåOppgave": true,
+          "påkrevd": true
+        },
+        {
+          "id": "fagsystem",
+          "visPåOppgave": true,
+          "påkrevd": true
+        },
+        {
+          "id": "saksnummer",
+          "visPåOppgave": true,
+          "påkrevd": true
+        },
+        {
+          "id": "resultattype",
+          "visPåOppgave": true,
+          "påkrevd": true
+        },
+        {
+          "id": "behandlingssteg",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "mottattDato",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "registrertDato",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "ytelsestype",
+          "visPåOppgave": true,
+          "påkrevd": true
+        },
+        {
+          "id": "behandlingsstatus",
+          "visPåOppgave": true,
+          "påkrevd": true
+        },
+        {
+          "id": "behandlingTypekode",
+          "visPåOppgave": true,
+          "påkrevd": true
+        },
+        {
+          "id": "behandlendeEnhet",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "ansvarligSaksbehandlerIdent",
+          "visPåOppgave": true,
+          "påkrevd": false
         },
         {
           "id": "aksjonspunkt",

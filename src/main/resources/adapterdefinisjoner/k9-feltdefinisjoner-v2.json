@@ -120,6 +120,18 @@
       "listetype": true,
       "tolkesSom": "String",
       "visTilBruker": true
+    },
+    {
+      "id": "feilutbetaltBelop",
+      "listetype": false,
+      "tolkesSom": "String",
+      "visTilBruker": true
+    },
+    {
+      "id": "førsteFeilutbetaling",
+      "listetype": false,
+      "tolkesSom": "String",
+      "visTilBruker": true
     }
   ]
 }

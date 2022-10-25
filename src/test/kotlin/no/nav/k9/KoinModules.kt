@@ -28,7 +28,7 @@ import no.nav.k9.integrasjon.omsorgspenger.OmsorgspengerServiceLocal
 import no.nav.k9.integrasjon.pdl.IPdlService
 import no.nav.k9.integrasjon.pdl.PdlServiceLocal
 import no.nav.k9.integrasjon.sakogbehandling.SakOgBehandlingProducer
-import no.nav.k9.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdapter
 import no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk.OppgaveTilBehandlingMapper
 import no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk.OppgaveTilSakMapper
 import no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk.OppgavestatistikkTjeneste
@@ -287,7 +287,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single {
-        K9SakTilLosAdapterTjeneste(
+        K9SakTilLosAdapter(
             behandlingProsessEventK9Repository = get(),
             områdeRepository = get(),
             feltdefinisjonTjeneste = get(),

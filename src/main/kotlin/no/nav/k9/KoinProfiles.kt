@@ -45,7 +45,8 @@ import no.nav.k9.integrasjon.pdl.PdlService
 import no.nav.k9.integrasjon.pdl.PdlServiceLocal
 import no.nav.k9.integrasjon.rest.RequestContextService
 import no.nav.k9.integrasjon.sakogbehandling.SakOgBehandlingProducer
-import no.nav.k9.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdapter
+import no.nav.k9.nyoppgavestyring.domeneadaptere.k9tilbaketillos.K9TilbakeTilLosAdapter
 import no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk.OppgaveTilBehandlingMapper
 import no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk.OppgaveTilSakMapper
 import no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk.OppgavestatistikkTjeneste
@@ -361,8 +362,20 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        K9SakTilLosAdapterTjeneste(
+        K9SakTilLosAdapter(
             behandlingProsessEventK9Repository = get(),
+            områdeRepository = get(),
+            feltdefinisjonTjeneste = get(),
+            oppgavetypeTjeneste = get(),
+            oppgaveV3Tjeneste = get(),
+            config = get(),
+            transactionalManager = get()
+        )
+    }
+
+    single {
+        K9TilbakeTilLosAdapter(
+            behandlingProsessEventTilbakeRepository = get(),
             områdeRepository = get(),
             feltdefinisjonTjeneste = get(),
             oppgavetypeTjeneste = get(),
