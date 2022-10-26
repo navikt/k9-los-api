@@ -10,7 +10,7 @@ val kotliqueryVersion = "1.8.0"
 val k9SakVersion = "3.3.18"
 val fuelVersion = "2.3.1"
 
-val dusseldorfKtorVersion = "3.1.6.8-1a4651d"
+val dusseldorfKtorVersion = "3.2.1.2-93aa998"
 
 // Disse bør henge sammen med https://github.com/navikt/dusseldorf-ktor/blob/master/pom.xml#L36
 val kotlinVersion = "1.7.10"
