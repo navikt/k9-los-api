@@ -314,7 +314,7 @@ fun Route.innsiktGrensesnitt() {
             val aktiveOppgaver = oppgaveRepository.hentAktiveOppgaver()
             val oppgavekøer = oppgaveKøRepository.hentIkkeTaHensyn().filter { it.oppgaverOgDatoer.isNotEmpty() }
             val reservasjoner = runBlocking {
-                reservasjonRepository.hent(aktiveOppgaver.map { it.eksternId }.toSet())
+                reservasjonRepository.hentSelvOmDeIkkeErAktive(aktiveOppgaver.map { it.eksternId }.toSet())
             }.map { it.oppgave }
 
             return aktiveOppgaver
