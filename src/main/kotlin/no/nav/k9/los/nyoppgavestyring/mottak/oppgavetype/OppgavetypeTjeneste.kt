@@ -18,7 +18,6 @@ class OppgavetypeTjeneste(
             // lås feltdefinisjoner for område og hent opp
             val eksisterendeFeltdefinisjoner = feltdefinisjonRepository.hent(område, tx)
             val innkommendeOppgavetyper = Oppgavetyper(innkommendeOppgavetyperDto, område, eksisterendeFeltdefinisjoner)
-                .also { it.valider() }
 
             val eksisterendeOppgavetyper = oppgavetypeRepository.hent(område, tx)
             val (sletteListe, leggtilListe, oppdaterListe) = eksisterendeOppgavetyper.finnForskjell(

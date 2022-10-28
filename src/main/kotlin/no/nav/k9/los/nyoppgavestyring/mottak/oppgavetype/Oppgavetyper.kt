@@ -113,8 +113,4 @@ class Oppgavetyper(
 
         )
     }
-
-    fun valider() {
-        oppgavetyper.forEach { oppgavetype -> oppgavetype.valider() }
-    }
 }

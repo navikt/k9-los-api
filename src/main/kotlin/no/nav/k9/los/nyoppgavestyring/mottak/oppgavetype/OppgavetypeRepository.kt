@@ -2,6 +2,8 @@ package no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
+import no.nav.k9.los.nyoppgavestyring.feltutledere.Feltutleder
+import no.nav.k9.los.nyoppgavestyring.feltutledere.GyldigeFeltutledere
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.utils.Cache
@@ -44,7 +46,9 @@ class OppgavetypeRepository(private val feltdefinisjonRepository: Feltdefinisjon
                                         ?: throw IllegalStateException("Oppgavetypens oppgavefelt referer til udefinert feltdefinisjon eller feltdefinisjon utenfor området"),
                                     påkrevd = row.boolean("pakrevd"),
                                     visPåOppgave = true,
-                                    feltutleder = row.stringOrNull("feltutleder")
+                                    feltutleder = row.stringOrNull("feltutleder")?.let {
+                                            GyldigeFeltutledere.hentFeltutleder(it)
+                                        }
                                 )
                             }.asList
                         ).toSet(),
@@ -128,7 +132,7 @@ class OppgavetypeRepository(private val feltdefinisjonRepository: Feltdefinisjon
                     "feltdefinisjonId" to oppgavefelt.feltDefinisjon.id,
                     "oppgavetypeId" to oppgavetypeId,
                     "paakrevd" to oppgavefelt.påkrevd,
-                    "feltutleder" to oppgavefelt.feltutleder
+                    "feltutleder" to oppgavefelt.feltutleder?.hentFeltutledernavn()
                 ) //TODO: joine inn område_id? usikker på hva jeg synes om at feltdefinisjon.eksternt_navn alltid er prefikset med område
             ).asUpdate
         )
@@ -168,7 +172,7 @@ class OppgavetypeRepository(private val feltdefinisjonRepository: Feltdefinisjon
                     "pakrevd" to innkommendeFelt.påkrevd,
                     "visPaOppgave" to innkommendeFelt.visPåOppgave, //TODO: Denne er ikke i basen ennå
                     "id" to id,
-                    "feltutleder" to innkommendeFelt.feltutleder
+                    "feltutleder" to innkommendeFelt.feltutleder?.hentFeltutledernavn()
                 )
             ).asUpdate
         )

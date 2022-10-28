@@ -25,22 +25,22 @@ class OppgaveTilBehandlingMapper {
             mottattDato = LocalDateTime.parse(oppgave.hentVerdi("mottattDato")).toLocalDate(),
             registrertDato = LocalDateTime.parse(oppgave.hentVerdi("registrertDato")).toLocalDate(),
             vedtaksDato = oppgave.hentVerdi("vedtaksDato")
-                ?.let { LocalDate.parse(it) }, // TODO vedtakstopic, YtelseV1.vedtattTidspunkt
+                ?.let { LocalDate.parse(it) },
             relatertBehandlingId = null,
             vedtakId = oppgave.hentVerdi("vedtakId"), //TODO: callback mot K9? evt vedtakstopic, YtelseV1.vedtakReferanse
             saksnummer = oppgave.hentVerdi("saksnummer"),
             behandlingType = oppgave.hentVerdi("behandlingTypekode")
-                ?.let { BehandlingType.fraKode(it).navn }, //TODO: Bruke navn direkte her?
+                ?.let { BehandlingType.fraKode(it).navn },
             behandlingStatus = BehandlingStatus.fraKode(oppgave.hentVerdi("behandlingsstatus")).navn,
             resultat = oppgave.hentVerdi("resultattype"),
             resultatBegrunnelse = null, //TODO: callback mot K9?
             utenlandstilsnitt = utledUtenlandstilsnitt(oppgave),
-            behandlingTypeBeskrivelse = BehandlingType.fraKode(oppgave.hentVerdi("behandlingTypekode").toString()).navn,
+            behandlingTypeBeskrivelse = BehandlingType.fraKode(oppgave.hentVerdi("behandlingTypekode")!!).navn,
             behandlingStatusBeskrivelse = BehandlingStatus.fraKode(oppgave.hentVerdi("behandlingsstatus")).navn,
             resultatBeskrivelse = BehandlingResultatType.fraKode(oppgave.hentVerdi("resultattype")).navn,
             resultatBegrunnelseBeskrivelse = null,
             utenlandstilsnittBeskrivelse = null,
-            beslutter = oppgave.hentVerdi("ansvarligBeslutter") ?: "", //TODO riktig?
+            beslutter = oppgave.hentVerdi("ansvarligBeslutter"),
             saksbehandler = oppgave.hentVerdi("ansvarligSaksbehandler"),
             behandlingOpprettetAv = "system",
             behandlingOpprettetType = null,

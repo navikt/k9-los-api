@@ -103,7 +103,7 @@
         {
           "id": "akkumulertVentetidSaksbehandler",
           "visPåOppgave": false,
-          "påkrevd": true,
+          "påkrevd": false,
           "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutledere.AkkumulertVentetidSaksbehandler"
         },
         {

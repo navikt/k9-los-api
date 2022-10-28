@@ -18,6 +18,7 @@ class Feltdefinisjon(
         other as Feltdefinisjon
 
         if (eksternId != other.eksternId) return false
+        if (område != other.område) return false
         if (listetype != other.listetype) return false
         if (tolkesSom != other.tolkesSom) return false
         if (visTilBruker != other.visTilBruker) return false

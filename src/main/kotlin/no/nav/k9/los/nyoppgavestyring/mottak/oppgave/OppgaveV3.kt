@@ -2,6 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavefelt
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import java.time.LocalDateTime
 
@@ -23,6 +24,17 @@ class OppgaveV3(
         endretTidspunkt = oppgaveDto.endretTidspunkt,
         kildeområde = oppgaveDto.kildeområde,
         felter = lagFelter(oppgaveDto, oppgavetype)
+    )
+
+    constructor(oppgave: OppgaveV3, oppgavefelter: List<OppgaveFeltverdi>) : this(
+        id = oppgave.id,
+        eksternId = oppgave.eksternId,
+        eksternVersjon = oppgave.eksternVersjon,
+        oppgavetype = oppgave.oppgavetype,
+        status = oppgave.status,
+        endretTidspunkt = oppgave.endretTidspunkt,
+        kildeområde = oppgave.kildeområde,
+        felter = oppgavefelter
     )
 
     companion object {
@@ -59,6 +71,10 @@ class OppgaveV3(
         }
     }
 
+    fun hentFelt(eksternId: String) : Oppgavefelt {
+        return oppgavetype.oppgavefelter.first { it.feltDefinisjon.eksternId == eksternId }
+    }
+
     fun hentVerdi(feltnavn: String): String? {
         val oppgavefelt = hentOppgavefelt(feltnavn)
 
@@ -87,5 +103,15 @@ class OppgaveV3(
         return felter.find { oppgavefelter ->
             oppgavefelter.oppgavefelt.feltDefinisjon.eksternId == feltnavn
         }
+    }
+
+    fun valider() {
+        oppgavetype.oppgavefelter
+            .filter { it.påkrevd && !it.feltDefinisjon.listetype }
+            .forEach { obligatoriskFelt ->
+                felter.find {
+                    it.oppgavefelt.equals(obligatoriskFelt)
+                } ?: throw IllegalArgumentException("Oppgaven mangler obligatorisk felt " + obligatoriskFelt.feltDefinisjon.eksternId)
+            }
     }
 }

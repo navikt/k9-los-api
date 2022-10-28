@@ -31,20 +31,22 @@ class OppgaveV3Tjeneste(
             oppgavetypeRepository.hent(område, tx).oppgavetyper.find { it.eksternId.equals(oppgaveDto.type) }
                 ?: throw IllegalArgumentException("Kan ikke legge til oppgave på en oppgavetype som ikke er definert")
 
-        oppgavetype.validerInnkommendeOppgave(oppgaveDto)
 
         val aktivOppgaveVersjon = oppgaveV3Repository.hentAktivOppgave(oppgaveDto.id, oppgavetype, tx)
         var innkommendeOppgave = OppgaveV3(oppgaveDto, oppgavetype)
 
+        val utledeteFelter = mutableListOf<OppgaveFeltverdi>()
+
         innkommendeOppgave.oppgavetype.oppgavefelter.forEach { oppgavefelt ->
-            val innkommendeOppgaveMedUtledetFelt = oppgavefelt.feltutleder?.let {
-                GyldigeFeltutledere.feltutledere[it]?.createInstance()
-                    ?: throw IllegalStateException("Fant ikke feltutleder: $it")
-            }?.utled(innkommendeOppgave, aktivOppgaveVersjon, tx)
-            if (innkommendeOppgaveMedUtledetFelt != null) {
-                innkommendeOppgave = innkommendeOppgaveMedUtledetFelt
+            val utledetFeltverdi = oppgavefelt.feltutleder?.utled(innkommendeOppgave, aktivOppgaveVersjon)
+            if (utledetFeltverdi != null) {
+                utledeteFelter.add(utledetFeltverdi)
             }
         }
+        innkommendeOppgave = OppgaveV3(innkommendeOppgave, innkommendeOppgave.felter.plus(utledeteFelter))
+
+        innkommendeOppgave.valider()
+        //oppgavetype.validerInnkommendeOppgave(oppgaveDto)
 
         oppgaveV3Repository.lagre(innkommendeOppgave, tx)
 
