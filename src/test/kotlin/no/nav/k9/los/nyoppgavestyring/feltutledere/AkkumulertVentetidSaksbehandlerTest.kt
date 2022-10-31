@@ -58,6 +58,22 @@ internal class AkkumulertVentetidSaksbehandlerTest {
         assertEquals(Duration.ofMinutes(15), Duration.parse(utledet!!.verdi))
     }
 
+    @Test
+    fun `aktiv oppgave som ikke venter på saksbehandler skal ikke akkumulere ventetid`() {
+        val nå = LocalDateTime.now()
+        val femMinuttersiden = nå.minusMinutes(5)
+
+        val aktivOppgave = lagOppgave(avventerSaksbehandler = false, femMinuttersiden, lagOppgavefeltverdi("akkumulertVentetidSaksbehandler", verdi = Duration.ofMinutes(10).toString()))
+
+
+        val utledet = akkumulertVentetidUtleder.utled(
+            innkommendeOppgave = lagOppgave(avventerSaksbehandler = true, nå),
+            aktivOppgaveVersjon = aktivOppgave
+        )
+
+        assertEquals(Duration.ofMinutes(10), Duration.parse(utledet!!.verdi))
+    }
+
     fun lagOppgave(avventerSaksbehandler: Boolean, endretTidspunkt: LocalDateTime): OppgaveV3 {
         return lagOppgave(avventerSaksbehandler, endretTidspunkt, null)
     }
