@@ -29,15 +29,4 @@ class Oppgavetype(
             )
         }.toSet()
     )
-
-    companion object {
-        private fun utledFeltutleder(feltutleder: String): String {
-            val kClass = GyldigeFeltutledere.feltutledere[feltutleder]
-            return if (kClass != null) feltutleder else throw IllegalArgumentException("Utleder finnes ikke: $feltutleder")
-        }
-    }
-
-    fun finnOppgavefelt(eksternId: String) : Oppgavefelt? {
-        return oppgavefelter.find { it.feltDefinisjon.eksternId.equals(eksternId) }
-    }
 }
