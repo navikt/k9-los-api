@@ -13,7 +13,7 @@ val fuelVersion = "2.3.1"
 val dusseldorfKtorVersion = "3.1.6.8-1a4651d"
 
 // Disse bør henge sammen med https://github.com/navikt/dusseldorf-ktor/blob/master/pom.xml#L36
-val kotlinVersion = "1.7.20"
+val kotlinVersion = "1.7.21"
 val ktorVersion = "1.6.8"
 val kafkaVersion = "3.1.0"
 
