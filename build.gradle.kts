@@ -7,14 +7,14 @@ val flywayVersion = "9.6.0"
 val vaultJdbcVersion = "1.3.10"
 val koinVersion = "3.2.2"
 val kotliqueryVersion = "1.9.0"
-val k9SakVersion = "3.3.20"
+val k9SakVersion = "3.3.22"
 val fuelVersion = "2.3.1"
 val jacksonVersion = "2.13.4"
 
 val dusseldorfKtorVersion = "3.2.1.2-ce40a5b"
 
 // Disse bør henge sammen med https://github.com/navikt/dusseldorf-ktor/blob/master/pom.xml#L36
-val kotlinVersion = "1.7.20"
+val kotlinVersion = "1.7.21"
 val ktorVersion = "2.1.2"
 val kafkaVersion = "3.2.3"
 
@@ -24,7 +24,7 @@ val jsonassertVersion = "1.5.1"
 val jupiterVersion = "5.9.1"
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.7.20"
+    id("org.jetbrains.kotlin.jvm") version "1.7.21"
     id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
