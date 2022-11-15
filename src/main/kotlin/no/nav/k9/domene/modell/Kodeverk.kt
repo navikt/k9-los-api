@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
 import no.nav.k9.domene.lager.oppgave.Kodeverdi
+import no.nav.k9.domene.modell.KøKritererTypeValidatorer.FlaggValidator
 import no.nav.k9.domene.modell.KøKritererTypeValidatorer.HeltallRangeValidator
 import no.nav.k9.domene.modell.KøKritererTypeValidatorer.KodeverkValidator
 
@@ -72,7 +73,15 @@ enum class KøKriterierType(
         felttype = KøKriterierFeltType.KODEVERK,
         felttypeKodeverk = MerknadType::class.java.simpleName,
         validator = KodeverkValidator { MerknadType.fraKode(it) }
-    );
+    ),
+    NYE_KRAV(
+        kode = "NYE KRAV",
+        navn = "Nye krav",
+        felttype = KøKriterierFeltType.FLAGG,
+        validator = FlaggValidator
+    ),
+    ;
+
 
     companion object {
         private val KODER = values().associateBy { it.kode }
@@ -90,7 +99,7 @@ enum class KøKriterierType(
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 enum class KøKriterierFeltType(@JsonValue val kode: String) {
-    BELØP("BELOP"), KODEVERK("KODEVERK")
+    BELØP("BELOP"), KODEVERK("KODEVERK"), FLAGG("FLAGG")
 }
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
