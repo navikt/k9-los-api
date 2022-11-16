@@ -219,6 +219,31 @@ internal class AvdelingslederTjenesteTest : AbstractK9LosIntegrationTest() {
             avdelingslederTjeneste.endreKøKriterier(fjernOppgaveKodeKriterium)
             oppgaveKø = avdelingslederTjeneste.hentOppgaveKø(køid)
             assertThat(oppgaveKø.kriterier).isEmpty()
+
+
+            val nyeKrav = KriteriumDto(
+                id = køUuid,
+                kriterierType = KøKriterierType.NYE_KRAV,
+                checked = true,
+                inkluder = true
+            )
+
+            avdelingslederTjeneste.endreKøKriterier(nyeKrav)
+
+            oppgaveKø = avdelingslederTjeneste.hentOppgaveKø(køid)
+            assertThat(oppgaveKø.kriterier)
+                .extracting { it.kriterierType }
+                .containsExactlyInAnyOrder(KøKriterierType.NYE_KRAV)
+
+            val fjernNyeKrav = KriteriumDto(
+                id = køUuid,
+                kriterierType = KøKriterierType.NYE_KRAV,
+                checked = false
+            )
+
+            avdelingslederTjeneste.endreKøKriterier(fjernNyeKrav)
+            oppgaveKø = avdelingslederTjeneste.hentOppgaveKø(køid)
+            assertThat(oppgaveKø.kriterier).isEmpty()
         }
 
     }

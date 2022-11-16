@@ -8,8 +8,10 @@ import com.fasterxml.jackson.annotation.JsonValue
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
 import no.nav.k9.los.domene.lager.oppgave.Kodeverdi
+import no.nav.k9.los.domene.modell.KøKritererTypeValidatorer.FlaggValidator
 import no.nav.k9.los.domene.modell.KøKritererTypeValidatorer.HeltallRangeValidator
 import no.nav.k9.los.domene.modell.KøKritererTypeValidatorer.KodeverkValidator
+
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 enum class AndreKriterierType(override val kode: String, override val navn: String) : Kodeverdi {
@@ -21,7 +23,10 @@ enum class AndreKriterierType(override val kode: String, override val navn: Stri
     ENDELIG_BEH_AV_INNTEKTSMELDING("ENDELIG_BEH_AV_INNTEKTSMELDING", "Endelig beh av inntektsmelding"),
     VENTER_PÅ_ANNEN_PARTS_SAK("VENTER_PÅ_ANNEN_PARTS_SAK", "Venter på annen parts sak"),
     FORLENGELSER_FRA_INFOTRYGD("FORLENGELSER_FRA_INFOTRYGD", "Forlengelser fra infotrygd"),
-    FORLENGELSER_FRA_INFOTRYGD_AKSJONSPUNKT("FORLENGELSER_FRA_INFOTRYGD_AKSJONSPUNKT", "Forlengelser fra infotrygd aksjonspunkt"),
+    FORLENGELSER_FRA_INFOTRYGD_AKSJONSPUNKT(
+        "FORLENGELSER_FRA_INFOTRYGD_AKSJONSPUNKT",
+        "Forlengelser fra infotrygd aksjonspunkt"
+    ),
     AARSKVANTUM("AARSKVANTUM", "Årskvantum");
 
     override val kodeverk = "ANDRE_KRITERIER_TYPE"
@@ -72,7 +77,15 @@ enum class KøKriterierType(
         felttype = KøKriterierFeltType.KODEVERK,
         felttypeKodeverk = MerknadType::class.java.simpleName,
         validator = KodeverkValidator { MerknadType.fraKode(it) }
-    );
+    ),
+    NYE_KRAV(
+        kode = "NYE KRAV",
+        navn = "Nye krav",
+        felttype = KøKriterierFeltType.FLAGG,
+        validator = FlaggValidator
+    ),
+    ;
+
 
     companion object {
         private val KODER = values().associateBy { it.kode }
@@ -90,7 +103,7 @@ enum class KøKriterierType(
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 enum class KøKriterierFeltType(@JsonValue val kode: String) {
-    BELØP("BELOP"), KODEVERK("KODEVERK")
+    BELØP("BELOP"), KODEVERK("KODEVERK"), FLAGG("FLAGG")
 }
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
@@ -183,14 +196,21 @@ enum class OppgaveKode(override val kode: String, override val navn: String, val
     SYKDOM("9001", "Sykdom", OppgaveKodeGruppe.INNLEDENDE_BEHANDLING.navn),
     OMSORGEN_FOR("9020", "Omsorgen for", OppgaveKodeGruppe.INNLEDENDE_BEHANDLING.navn),
     AVKLAR_VERGE("5030", "Avklar verge", OppgaveKodeGruppe.INNLEDENDE_BEHANDLING.navn),
+
     // Om barnet
     NATTEVÅK("9200", "Nattevåk", OppgaveKodeGruppe.OM_BARNET.navn),
     BEREDSKAP("9201", "Beredskap", OppgaveKodeGruppe.OM_BARNET.navn),
     BARNS_DØD("9202", "Barns død", OppgaveKodeGruppe.OM_BARNET.navn),
+
     // Mangler inntektsmelding
     AVKLAR_MANGLENDE_IM("9069", "Avklar manglende IM", OppgaveKodeGruppe.MANGLER_INNTEKTSMELDING.navn),
-    ENDELIG_AVKLARING_MANGLER_IM("9071", "Endelig avklaring mangler IM", OppgaveKodeGruppe.MANGLER_INNTEKTSMELDING.navn),
+    ENDELIG_AVKLARING_MANGLER_IM(
+        "9071",
+        "Endelig avklaring mangler IM",
+        OppgaveKodeGruppe.MANGLER_INNTEKTSMELDING.navn
+    ),
     MANGLER_ARBEIDSTID("9203", "Mangler arbeidstid", OppgaveKodeGruppe.MANGLER_INNTEKTSMELDING.navn),
+
     // Beregning
     FASTSETT_BEREGNINGSGRUNNLAG("5038", "Fastsett beregningsgrunnlag", OppgaveKodeGruppe.BEREGNING.navn),
     NY_ENDRET_SN_VARIG_ENDRING("5039", "Ny/endret SN (varig endring)", OppgaveKodeGruppe.BEREGNING.navn),
@@ -202,15 +222,18 @@ enum class OppgaveKode(override val kode: String, override val navn: String, val
     FEILUTBETALING("5084", "Feilutbetaling", OppgaveKodeGruppe.BEREGNING.navn),
     OVERSTYRING_BEREGNINGSAKTIVITET("6014", "Overstyring beregningsaktivitet", OppgaveKodeGruppe.BEREGNING.navn),
     OVERSTYRING_BEREGNINGSGRUNNLAG("6015", "Overstyring beregningsgrunnlag", OppgaveKodeGruppe.BEREGNING.navn),
+
     // Flyttesaker
     MANUELL_BEREGNING("9005", "Manuell beregning", OppgaveKodeGruppe.FLYTTESAKER.navn),
     INFOTRYGDSØKNAD("9007", "Infotrygsøknad", OppgaveKodeGruppe.FLYTTESAKER.navn),
     INFOTRYGDSØKNAD_TO_PERSONER("9008", "Infotrygdsøknad 2 personer", OppgaveKodeGruppe.FLYTTESAKER.navn),
+
     // Fatte vedtak
     FORESLÅ_VEDTAK("5015", "Foreslå vedtak", OppgaveKodeGruppe.FATTE_VEDTAK.navn),
     FORESLÅ_VEDTAK_MANUELT("5028", "Foreslå vedtak manuelt", OppgaveKodeGruppe.FATTE_VEDTAK.navn),
     VURDERE_ANNEN_YTELSE_FØR_VEDTAK_KODE("5033", "Sjekk VKY", OppgaveKodeGruppe.FATTE_VEDTAK.navn),
     VURDER_DOKUMENT("5034", "Vurder dokument", OppgaveKodeGruppe.FATTE_VEDTAK.navn),
+
     // Uspesifisert
     KONTROLL_MANUELL_REVURDERING("5056", "Kontroll manuell revurdering", OppgaveKodeGruppe.USPESIFISERT.navn),
     VURDER_REFUSJON_BERGRUNN_KODE("5059", "Mangler navn", OppgaveKodeGruppe.USPESIFISERT.navn);
@@ -222,7 +245,8 @@ enum class OppgaveKode(override val kode: String, override val navn: String, val
         @JvmStatic
         fun fraKode(o: Any): OppgaveKode {
             val kode = TempAvledeKode.getVerdi(o)
-            return OppgaveKode.values().find { it.kode == kode } ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
+            return OppgaveKode.values().find { it.kode == kode }
+                ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
         }
     }
 }
@@ -305,7 +329,7 @@ enum class KøSortering(
 enum class Fagsystem(val kode: String, val kodeverk: String) {
     K9SAK("K9SAK", "FAGSYSTEM"),
     K9TILBAKE("K9TILBAKE", "FAGSYSTEM"),
-    FPTILBAKE( "FPTILBAKE", "FAGSYSTEM"),
+    FPTILBAKE("FPTILBAKE", "FAGSYSTEM"),
     PUNSJ("PUNSJ", "FAGSYSTEM"),
     OMSORGSPENGER("OMSORGSPENGER", "FAGSYSTEM");
 
@@ -320,9 +344,9 @@ enum class Fagsystem(val kode: String, val kodeverk: String) {
 }
 
 enum class AksjonspunktStatus(@JsonValue val kode: String, val navn: String) {
-    AVBRUTT ("AVBR", "Avbrutt"),
+    AVBRUTT("AVBR", "Avbrutt"),
     OPPRETTET("OPPR", "Opprettet"),
-    UTFØRT ("UTFO", "Utført");
+    UTFØRT("UTFO", "Utført");
 
     companion object {
         private val KODER = values().associateBy { it.kode }
@@ -377,5 +401,5 @@ private object TempAvledeKode {
             is Map<*, *> -> node[key] as String?
             else -> throw IllegalArgumentException("Støtter ikke node av type: " + node.javaClass)
         }
-        }
     }
+}

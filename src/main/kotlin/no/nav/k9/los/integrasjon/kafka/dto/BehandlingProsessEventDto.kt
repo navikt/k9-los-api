@@ -75,7 +75,8 @@ data class BehandlingProsessEventDto(
 
     val pleietrengendeAktørId: String? = null,
     val relatertPartAktørId: String? = null,
-    val aksjonspunktTilstander: List<AksjonspunktTilstandDto> = emptyList()
+    val aksjonspunktTilstander: List<AksjonspunktTilstandDto> = emptyList(),
+    val nyeKrav: Boolean = false
 ) {
 
     // Denne skal ikke ha fnr, aktørider, orgnumre eller beløp som kan identifisere brukeren
@@ -100,7 +101,8 @@ data class BehandlingProsessEventDto(
             ansvarligSaksbehandlerForTotrinn=$ansvarligSaksbehandlerForTotrinn, 
             ansvarligBeslutterForTotrinn=$ansvarligBeslutterForTotrinn, 
             fagsakPeriode=$fagsakPeriode,
-            aksjonspunktTilstander=$aksjonspunktTilstander
+            aksjonspunktTilstander=$aksjonspunktTilstander,
+            nyeKrav=$nyeKrav
             )"""
             .trimMargin()
     }

@@ -14,6 +14,12 @@ internal class KøKriterierTypeTest {
     private val om = jacksonObjectMapper()
 
     @Test
+    fun `skal deserialisere boolean type riktig og validere basert på boolean`() {
+        val kriteriumDto = om.readValue(flaggJson(true), KriteriumDto::class.java)
+        kriteriumDto.valider()
+    }
+
+    @Test
     fun `skal deserialisere beløp type riktig og validere basert på type`() {
         val kriteriumDto = om.readValue(feilutbetalingJson(10, 100), KriteriumDto::class.java)
         kriteriumDto.valider()
@@ -22,6 +28,14 @@ internal class KøKriterierTypeTest {
     @Test
     fun `skal kaste feil hvis beløp validering feiler`() {
         val kriteriumDto = om.readValue(feilutbetalingJson(null, null), KriteriumDto::class.java)
+        assertFailsWith(IllegalArgumentException::class) {
+            kriteriumDto.valider()
+        }
+    }
+
+    @Test
+    fun `skal kaste feil hvis boolean validering feiler`() {
+        val kriteriumDto = om.readValue(flaggJson(null), KriteriumDto::class.java)
         assertFailsWith(IllegalArgumentException::class) {
             kriteriumDto.valider()
         }
@@ -60,6 +74,16 @@ internal class KøKriterierTypeTest {
         val json = om.writeValueAsString(KøKriterierType.FEILUTBETALING)
         assertThat(json.contains("felttypeKodeverk")).isFalse()
     }
+
+
+    private fun flaggJson(flagg: Boolean?) = """ 
+                {   "id": "${UUID.randomUUID()}",
+                    "kriterierType": "${KøKriterierType.NYE_KRAV.kode}",                   
+                    "checked" : "true",
+                    "inkluder" : "$flagg"
+                
+                }
+            """
 
     private fun feilutbetalingJson(fom: Int?, tom: Int?) = """ 
                 {   "id": "${UUID.randomUUID()}",

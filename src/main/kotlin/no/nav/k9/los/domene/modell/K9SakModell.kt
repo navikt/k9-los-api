@@ -100,7 +100,8 @@ data class K9SakModell(
             pleietrengendeAktørId = sisteEvent.pleietrengendeAktørId,
             relatertPartAktørId = sisteEvent.relatertPartAktørId,
             kombinert = false,
-            ansvarligBeslutterForTotrinn = sisteEvent.ansvarligBeslutterForTotrinn
+            ansvarligBeslutterForTotrinn = sisteEvent.ansvarligBeslutterForTotrinn,
+            nyeKrav = sisteEvent.nyeKrav
         )
     }
 
