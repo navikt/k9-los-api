@@ -15,7 +15,7 @@ internal class KøKriterierTypeTest {
 
     @Test
     fun `skal deserialisere boolean type riktig og validere basert på boolean`() {
-        val kriteriumDto = om.readValue(booleanJson(true), KriteriumDto::class.java)
+        val kriteriumDto = om.readValue(flaggJson(true), KriteriumDto::class.java)
         kriteriumDto.valider()
     }
 
@@ -35,7 +35,7 @@ internal class KøKriterierTypeTest {
 
     @Test
     fun `skal kaste feil hvis boolean validering feiler`() {
-        val kriteriumDto = om.readValue(booleanJson(null), KriteriumDto::class.java)
+        val kriteriumDto = om.readValue(flaggJson(null), KriteriumDto::class.java)
         assertFailsWith(IllegalArgumentException::class) {
             kriteriumDto.valider()
         }
@@ -74,11 +74,11 @@ internal class KøKriterierTypeTest {
     }
 
 
-    private fun booleanJson(flagg: Boolean?) = """ 
+    private fun flaggJson(flagg: Boolean?) = """ 
                 {   "id": "${UUID.randomUUID()}",
                     "kriterierType": "${KøKriterierType.NYE_KRAV.kode}",                   
                     "checked" : "true",
-                    "flagg" : "$flagg"
+                    "inkluder" : "$flagg"
                 
                 }
             """
