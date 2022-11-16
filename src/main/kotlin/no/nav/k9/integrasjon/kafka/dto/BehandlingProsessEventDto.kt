@@ -1,6 +1,5 @@
 package no.nav.k9.integrasjon.kafka.dto
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer
@@ -76,7 +75,8 @@ data class BehandlingProsessEventDto(
 
     val pleietrengendeAktørId: String? = null,
     val relatertPartAktørId: String? = null,
-    val aksjonspunktTilstander: List<AksjonspunktTilstandDto> = emptyList()
+    val aksjonspunktTilstander: List<AksjonspunktTilstandDto> = emptyList(),
+    val nyeKrav: Boolean = false
 ) {
 
     // Denne skal ikke ha fnr, aktørider, orgnumre eller beløp som kan identifisere brukeren
@@ -101,7 +101,8 @@ data class BehandlingProsessEventDto(
             ansvarligSaksbehandlerForTotrinn=$ansvarligSaksbehandlerForTotrinn, 
             ansvarligBeslutterForTotrinn=$ansvarligBeslutterForTotrinn, 
             fagsakPeriode=$fagsakPeriode,
-            aksjonspunktTilstander=$aksjonspunktTilstander
+            aksjonspunktTilstander=$aksjonspunktTilstander,
+            nyeKrav=$nyeKrav
             )"""
             .trimMargin()
     }
