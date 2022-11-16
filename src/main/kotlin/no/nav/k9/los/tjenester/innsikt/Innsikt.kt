@@ -313,9 +313,9 @@ fun Route.innsiktGrensesnitt() {
         fun køDistribusjon(): Map<Int, List<Oppgave>> {
             val aktiveOppgaver = oppgaveRepository.hentAktiveOppgaver()
             val oppgavekøer = oppgaveKøRepository.hentIkkeTaHensyn().filter { it.oppgaverOgDatoer.isNotEmpty() }
-            val reservasjoner = runBlocking {
-                reservasjonRepository.hent(aktiveOppgaver.map { it.eksternId }.toSet())
-            }.map { it.oppgave }
+            val reservasjoner = reservasjonRepository.hentSelvOmDeIkkeErAktive(
+                aktiveOppgaver.map { it.eksternId }.toSet()
+            ).map { it.oppgave }
 
             return aktiveOppgaver
                 .filterNot { reservasjoner.contains(it.eksternId) }

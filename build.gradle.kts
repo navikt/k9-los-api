@@ -3,22 +3,22 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val mainClass = "no.nav.k9.los.K9LosKt"
 val hikariVersion = "5.0.1"
-val flywayVersion = "9.1.2"
+val flywayVersion = "9.6.0"
 val vaultJdbcVersion = "1.3.10"
 val koinVersion = "2.2.3"
-val kotliqueryVersion = "1.8.0"
-val k9SakVersion = "3.3.16"
+val kotliqueryVersion = "1.9.0"
+val k9SakVersion = "3.3.22"
 val fuelVersion = "2.3.1"
 
 val dusseldorfKtorVersion = "3.1.6.8-1a4651d"
 
 // Disse bør henge sammen med https://github.com/navikt/dusseldorf-ktor/blob/master/pom.xml#L36
-val kotlinVersion = "1.7.10"
+val kotlinVersion = "1.7.21"
 val ktorVersion = "1.6.8"
 val kafkaVersion = "3.1.0"
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.7.10"
+    id("org.jetbrains.kotlin.jvm") version "1.7.21"
     id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
@@ -54,9 +54,9 @@ dependencies {
 
 
     // Tilgangskontroll
-    implementation("no.nav.common:auth:2.2022.04.11_07.31-bca292df5e64")
-    implementation("no.nav.common:rest:2.2022.05.13_07.24-6eadb37dec31")
-    implementation("com.google.code.gson:gson:2.9.1")
+    implementation("no.nav.common:auth:2.2022.10.11_08.33-4f72c1840f61")
+    implementation("no.nav.common:rest:2.2022.10.11_08.33-4f72c1840f61")
+    implementation("com.google.code.gson:gson:2.10")
 
     // Kontrakter
     implementation("no.nav.k9.sak:kontrakt:$k9SakVersion")
@@ -92,10 +92,10 @@ dependencies {
     }
     testImplementation("org.skyscreamer:jsonassert:1.5.1")
 
-    testImplementation("org.testcontainers:postgresql:1.17.3") {
+    testImplementation("org.testcontainers:postgresql:1.17.5") {
         exclude(group = "junit", module = "junit")
     }
-    testImplementation("org.testcontainers:junit-jupiter:1.17.3")
+    testImplementation("org.testcontainers:junit-jupiter:1.17.5")
     testImplementation("io.insert-koin:koin-test-junit5:$koinVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion") {
         exclude(group = "junit", module = "junit")
