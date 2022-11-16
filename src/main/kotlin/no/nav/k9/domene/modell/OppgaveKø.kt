@@ -37,7 +37,9 @@ data class OppgaveKø(
     var filtreringFeilutbetaling: Intervall<Long>? = null,
     var merknadKoder: List<String> = emptyList(),
     var oppgaveKoder: List<String> = emptyList(),
+    var nyeKrav: Boolean? = null
 ) {
+
     companion object {
         private val log = LoggerFactory.getLogger(OppgaveKø::class.java)
     }
@@ -116,6 +118,10 @@ data class OppgaveKø(
         if (oppgave.feilutbetaltBeløp != null && filtreringFeilutbetaling != null
             && filtreringFeilutbetaling!!.erUtenfor(oppgave.feilutbetaltBeløp)
         ) {
+            return false
+        }
+
+        if (nyeKrav != null && nyeKrav != oppgave.nyeKrav) {
             return false
         }
 
@@ -277,13 +283,17 @@ data class OppgaveKø(
             kriterierDto.add(tilOppgaveKodeKriterium())
         }
 
+        if (nyeKrav != null) {
+            kriterierDto.add(tilNyeKravKriterium())
+        }
+
         return kriterierDto
     }
 
     private fun tilFeilutbetalingKriterium() = KriteriumDto(
         id = id.toString(),
         kriterierType = KøKriterierType.FEILUTBETALING,
-        inkluder = true,
+        checked = true,
         fom = filtreringFeilutbetaling!!.fom?.toString(),
         tom = filtreringFeilutbetaling!!.tom?.toString()
     )
@@ -291,15 +301,23 @@ data class OppgaveKø(
     private fun tilMerknadKriterium() = KriteriumDto(
         id = id.toString(),
         kriterierType = KøKriterierType.MERKNADTYPE,
-        inkluder = true,
+        checked = true,
         koder = merknadKoder
     )
 
     private fun tilOppgaveKodeKriterium() = KriteriumDto(
         id = id.toString(),
         kriterierType = KøKriterierType.OPPGAVEKODE,
-        inkluder = true,
+        checked = true,
         koder = oppgaveKoder
+    )
+
+    private fun tilNyeKravKriterium() = KriteriumDto(
+        id = id.toString(),
+        kriterierType = KøKriterierType.NYE_KRAV,
+        checked = true,
+        inkluder = nyeKrav
+
     )
 
 }

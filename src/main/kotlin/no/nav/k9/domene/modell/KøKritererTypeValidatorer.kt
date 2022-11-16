@@ -18,6 +18,13 @@ object KøKritererTypeValidatorer {
         if (it.tom != null && it.tom.toIntOrNull() == null) throw IllegalArgumentException("til og med må være heltall men var ${it.tom}")
     }
 
+    val FlaggValidator = KøKriterierTypeValidator {
+        require(it.checked != null) { "checked må være satt ved flagg felter" }
+        if (it.checked) {
+            require(it.inkluder != null) { "hvis checked er satt så må inkluder ha verdi" }
+        }
+    }
+
     val KodeverkValidator: ((String) -> Unit) -> KøKriterierTypeValidator = { kodeVerdiValidator ->
         KøKriterierTypeValidator { kriteriumDto ->
             if (kriteriumDto.koder == null) throw IllegalArgumentException("koder må være satt men var null")

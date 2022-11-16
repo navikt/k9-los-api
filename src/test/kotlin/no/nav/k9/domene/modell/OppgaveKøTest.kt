@@ -412,6 +412,46 @@ internal class OppgaveKøTest {
     }
 
     @Test
+    fun `skal håndtere med nytt krav, med og uten kombinasjon med andre kriterier`() {
+
+        assertTrue(lagOppgaveKø(nyeKrav = true).tilhørerOppgaveTilKø(nye_krav_oppg(true), null, emptyList()))
+        assertTrue(lagOppgaveKø(nyeKrav = false).tilhørerOppgaveTilKø(nye_krav_oppg(false), null, emptyList()))
+        assertFalse(lagOppgaveKø(nyeKrav = false).tilhørerOppgaveTilKø(nye_krav_oppg(true), null, emptyList()))
+        assertFalse(lagOppgaveKø(nyeKrav = true).tilhørerOppgaveTilKø(nye_krav_oppg(false), null, emptyList()))
+
+        assertTrue(
+            lagOppgaveKø(nyeKrav = null, andreKriterierDto = kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
+                .tilhørerOppgaveTilKø(nye_krav_oppg(true, avklarMedlemskap = true), null, emptyList())
+        )
+
+        assertTrue(
+            lagOppgaveKø(nyeKrav = null, andreKriterierDto = kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
+                .tilhørerOppgaveTilKø(nye_krav_oppg(false, avklarMedlemskap = true), null, emptyList())
+        )
+
+        assertFalse(
+            lagOppgaveKø(nyeKrav = true, andreKriterierDto = kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
+                .tilhørerOppgaveTilKø(nye_krav_oppg(true, avklarMedlemskap = false), null, emptyList())
+        )
+
+        assertFalse(
+            lagOppgaveKø(nyeKrav = true, andreKriterierDto = kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
+                .tilhørerOppgaveTilKø(nye_krav_oppg(false, avklarMedlemskap = true), null, emptyList())
+        )
+
+        assertTrue(
+            lagOppgaveKø(nyeKrav = true, andreKriterierDto = kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
+                .tilhørerOppgaveTilKø(nye_krav_oppg(true, avklarMedlemskap = true), null, emptyList())
+        )
+
+        assertTrue(
+            lagOppgaveKø(nyeKrav = false, andreKriterierDto = kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
+                .tilhørerOppgaveTilKø(nye_krav_oppg(false, avklarMedlemskap = true), null, emptyList())
+        )
+
+    }
+
+    @Test
     fun `feilutbetaling filter i kombinasjon med andre kriterie`() {
         assertTrue(
             lagOppgaveKø(Intervall(50, 100), kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
@@ -649,6 +689,40 @@ internal class OppgaveKøTest {
         eksternId = UUID.randomUUID(),
         feilutbetaltBeløp = feilutbetaling
     )
+    private fun nye_krav_oppg(nyeKrav: Boolean = false, avklarMedlemskap: Boolean = false) = Oppgave(
+        fagsakSaksnummer = "",
+        aktorId = "273857",
+        journalpostId = "234234535",
+        behandlendeEnhet = "Enhet",
+        behandlingsfrist = LocalDateTime.now(),
+        behandlingOpprettet = LocalDateTime.now().minusDays(23),
+        forsteStonadsdag = LocalDate.now().plusDays(6),
+        behandlingStatus = BehandlingStatus.OPPRETTET,
+        behandlingType = BehandlingType.UKJENT,
+        fagsakYtelseType = FagsakYtelseType.UKJENT,
+        aktiv = true,
+        system = Fagsystem.K9SAK.kode,
+        oppgaveAvsluttet = null,
+        utfortFraAdmin = false,
+        oppgaveEgenskap = emptyList(),
+        aksjonspunkter = Aksjonspunkter(
+            mapOf(
+                "5016" to "OPPR",
+                "9005" to "UTFO"
+            )
+        ),
+        tilBeslutter = true,
+        utbetalingTilBruker = false,
+        selvstendigFrilans = false,
+        kombinert = false,
+        søktGradering = false,
+        årskvantum = false,
+        avklarArbeidsforhold = false,
+        avklarMedlemskap = avklarMedlemskap, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false,
+        eksternId = UUID.randomUUID(),
+        nyeKrav = nyeKrav
+    )
+
 
     private fun lagOppgaveKø(
         feilutbetaling: Intervall<Long>? = null,
@@ -656,7 +730,8 @@ internal class OppgaveKøTest {
         merknadKoder: List<String> = emptyList(),
         behandlingTyper: MutableList<BehandlingType> = mutableListOf(),
         fagsakYtelseTyper: MutableList<FagsakYtelseType> = mutableListOf(),
-        oppgaveKoder: List<String> = emptyList()
+        oppgaveKoder: List<String> = emptyList(),
+        nyeKrav: Boolean? = null
     ) = OppgaveKø(
         UUID.randomUUID(),
         "test",
@@ -673,7 +748,8 @@ internal class OppgaveKøTest {
         mutableListOf(),
         filtreringFeilutbetaling = feilutbetaling,
         merknadKoder = merknadKoder,
-        oppgaveKoder = oppgaveKoder
+        oppgaveKoder = oppgaveKoder,
+        nyeKrav = nyeKrav
     )
 
     private fun merknadMed(vararg merknadKoder: String) = listOf(
