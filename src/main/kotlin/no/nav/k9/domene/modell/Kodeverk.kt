@@ -75,7 +75,7 @@ enum class KøKriterierType(
         validator = KodeverkValidator { MerknadType.fraKode(it) }
     ),
     NYE_KRAV(
-        kode = "NYE KRAV",
+        kode = "NYE_KRAV",
         navn = "Nye krav",
         felttype = KøKriterierFeltType.FLAGG,
         validator = FlaggValidator
