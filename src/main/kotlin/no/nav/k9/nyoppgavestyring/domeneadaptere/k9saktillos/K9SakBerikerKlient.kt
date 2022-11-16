@@ -14,7 +14,7 @@ import java.util.*
 import java.time.Duration
 import no.nav.helse.dusseldorf.ktor.metrics.Operation
 
-class K9SakAdapter(
+class K9SakBerikerKlient(
     private val configuration: Configuration,
     private val accessTokenClient: AccessTokenClient
     ) {
