@@ -61,7 +61,7 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `test at oppgave ikke blir opprettet om den mangler obligatoriske felter`() {
-        val feilOppgaveFeltverdi = OppgaveFeltverdiDto(nøkkel = "ukjent", verdi = "test")
+        val feilOppgaveFeltverdi = OppgaveFeltverdiDto(nøkkel = "aktorId", verdi = "test")
         val oppgaveDto = lagOppgaveDto()
         val oppgaveSomManglerObligatoriskFelt = oppgaveDto.copy(feltverdier = listOf(feilOppgaveFeltverdi))
         assertThrows<IllegalArgumentException>("Kan ikke oppgi feltverdi som ikke er spesifisert i oppgavetypen: ${feilOppgaveFeltverdi.nøkkel}\"") {

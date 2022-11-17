@@ -44,7 +44,7 @@ class OppgaveV3(
             oppgaveDto.feltverdier.forEach { oppgaveFeltverdiDto ->
                 val oppgavefelt = oppgavetype.oppgavefelter.find {
                     it.feltDefinisjon.eksternId.equals(oppgaveFeltverdiDto.nøkkel)
-                } ?: throw IllegalStateException("Kunne ikke finne matchede oppgavefelt for oppgaveFeltverdi: ${oppgaveFeltverdiDto.nøkkel}")
+                } ?: throw IllegalArgumentException("Kunne ikke finne matchede oppgavefelt for oppgaveFeltverdi: ${oppgaveFeltverdiDto.nøkkel}")
 
                 if (oppgaveFeltverdiDto.verdi == null) {
                     if (oppgavefelt.påkrevd) {
