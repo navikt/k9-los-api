@@ -86,19 +86,13 @@
       "visTilBruker": true
     },
     {
-      "id": "ansvarligSaksbehandlerIdent",
+      "id": "ansvarligSaksbehandler",
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true
     },
     {
-      "id": "ansvarligBeslutterForTotrinn",
-      "listetype": false,
-      "tolkesSom": "String",
-      "visTilBruker": true
-    },
-    {
-      "id": "ansvarligSaksbehandlerForTotrinn",
+      "id": "ansvarligBeslutter",
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true
@@ -119,6 +113,42 @@
       "id": "aktivtAksjonspunkt",
       "listetype": true,
       "tolkesSom": "String",
+      "visTilBruker": true
+    },
+    {
+      "id": "akkumulertVentetidSaksbehandler",
+      "listetype": false,
+      "tolkesSom": "Duration",
+      "visTilBruker": true
+    },
+    {
+      "id": "avventerSaksbehandler",
+      "listetype": false,
+      "tolkesSom": "boolean",
+      "visTilBruker": true
+    },
+    {
+      "id": "avventerSoeker",
+      "listetype": false,
+      "tolkesSom": "boolean",
+      "visTilBruker": true
+    },
+    {
+      "id": "avventerArbeidsgiver",
+      "listetype": false,
+      "tolkesSom": "boolean",
+      "visTilBruker": true
+    },
+    {
+      "id": "avventerTekniskFeil",
+      "listetype": false,
+      "tolkesSom": "boolean",
+      "visTilBruker": true
+    },
+    {
+      "id": "helautomatiskBehandlet",
+      "listetype": false,
+      "tolkesSom": "boolean",
       "visTilBruker": true
     }
   ]
