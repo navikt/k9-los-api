@@ -49,7 +49,7 @@ data class Oppgave(
     val pleietrengendeAktørId: String? = null,
     val relatertPartAktørId: String? = null,
     val feilutbetaltBeløp: Long? = null,
-    val nyeKrav: Boolean = false
+    val nyeKrav: Boolean? = null
 
 ) {
     fun avluttet(): Boolean {
