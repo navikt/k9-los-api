@@ -13,8 +13,10 @@ class StatistikkRepository(private val dataSource: DataSource) {
                 queryOf(
                     """
                         select id
-                        from oppgave_v3 ov 
-                        where not exists (select * from OPPGAVE_V3_SENDT_DVH os where os.id = ov.id)
+                        from oppgave_v3 ov
+                            	inner join oppgavetype o on ov.oppgavetype_id = o.id 
+                        where o.ekstern_id = 'k9-sak'  
+                        and not exists (select * from OPPGAVE_V3_SENDT_DVH os where os.id = ov.id)
                     """.trimIndent()
                 )
                     .map { row ->

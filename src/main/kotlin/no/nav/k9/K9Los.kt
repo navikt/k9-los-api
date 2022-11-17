@@ -34,7 +34,8 @@ import no.nav.k9.eventhandler.sjekkReserverteJobb
 import no.nav.k9.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.integrasjon.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.integrasjon.sakogbehandling.SakOgBehandlingProducer
-import no.nav.k9.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdapter
+import no.nav.k9.nyoppgavestyring.domeneadaptere.k9tilbaketillos.K9TilbakeTilLosAdapter
 import no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.nyoppgavestyring.domeneadaptere.statistikk.StatistikkApi
 import no.nav.k9.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonApi
@@ -150,7 +151,7 @@ fun Application.k9Los() {
         oppdaterStatistikkJobb.cancel()
     }
 
-    K9SakTilLosAdapterTjeneste(
+    K9SakTilLosAdapter(
         behandlingProsessEventK9Repository = koin.get(),
         områdeRepository = koin.get(),
         feltdefinisjonTjeneste = koin.get(),
@@ -159,6 +160,16 @@ fun Application.k9Los() {
         config = koin.get(),
         transactionalManager = koin.get()
     ).kjør(kjørSetup = true, kjørUmiddelbart = false)
+
+    K9TilbakeTilLosAdapter(
+        behandlingProsessEventTilbakeRepository = koin.get(),
+        områdeRepository = koin.get(),
+        feltdefinisjonTjeneste = koin.get(),
+        oppgavetypeTjeneste = koin.get(),
+        oppgaveV3Tjeneste = koin.get(),
+        config = koin.get(),
+        transactionalManager = koin.get()
+    ).kjør(kjørSetup = false, kjørUmiddelbart = false)
 
     OppgavestatistikkTjeneste(
         oppgaveRepository = koin.get(),

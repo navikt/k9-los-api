@@ -8,18 +8,18 @@ import kotliquery.using
 import no.nav.k9.AbstractK9LosIntegrationTest
 import no.nav.k9.domene.modell.K9SakModell
 import no.nav.k9.domene.repository.BehandlingProsessEventK9Repository
-import no.nav.k9.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdapter
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.koin.test.get
 import java.util.*
 
-class K9SakTilLosAdapterTjenesteTest : AbstractK9LosIntegrationTest() {
+class K9SakTilLosAdapterTest : AbstractK9LosIntegrationTest() {
 
     @Disabled
     @Test
     fun `test avspilling av behandlings prosess events k9`() {
-        val k9SakTilLosAdapterTjeneste = get<K9SakTilLosAdapterTjeneste>()
+        val k9SakTilLosAdapter = get<K9SakTilLosAdapter>()
         val behandlingProsessEventK9Repository = get<BehandlingProsessEventK9Repository>()
 
         val behandlingProsessEventUUID = UUID.randomUUID()

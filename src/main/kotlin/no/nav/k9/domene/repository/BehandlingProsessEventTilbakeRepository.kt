@@ -1,5 +1,6 @@
 package no.nav.k9.domene.repository
 
+import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
@@ -45,10 +46,10 @@ class BehandlingProsessEventTilbakeRepository(private val dataSource: DataSource
                 tx.run(
                     queryOf(
                         """
-                    insert into behandling_prosess_events_tilbake as k (id, data)
-                    values (:id, :dataInitial :: jsonb)
+                    insert into behandling_prosess_events_tilbake as k (id, data, dirty)
+                    values (:id, :dataInitial :: jsonb, true)
                     on conflict (id) do update
-                    set data = jsonb_set(k.data, '{eventer,999999}', :data :: jsonb, true)
+                    set data = jsonb_set(k.data, '{eventer,999999}', :data :: jsonb, true), dirty = true
                  """, mapOf("id" to id, "dataInitial" to "{\"eventer\": [$json]}", "data" to json)
                     ).asUpdate
                 )
@@ -88,7 +89,51 @@ class BehandlingProsessEventTilbakeRepository(private val dataSource: DataSource
         }
         Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
         return ider
+    }
 
+    fun hentAlleDirtyEventIder(): List<UUID> {
+        return using(sessionOf(dataSource)) {
+            it.transaction { tx ->
+                tx.run(
+                    queryOf(
+                        "select id from behandling_prosess_events_tilbake where dirty = true",
+                        mapOf()
+                    ).map { row ->
+                        UUID.fromString(row.string("id"))
+                    }.asList
+                )
+            }
+        }
+    }
+
+    fun hentMedLås(tx: TransactionalSession, uuid: UUID): K9TilbakeModell {
+        val json: String? = tx.run(
+            queryOf(
+                "select data from behandling_prosess_events_tilbake where id = :id for update",
+                mapOf("id" to uuid.toString())
+            )
+                .map { row ->
+                    row.string("data")
+                }.asSingle
+        )
+
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
+        if (json.isNullOrEmpty()) {
+            return K9TilbakeModell(mutableListOf())
+        }
+        val modell = objectMapper().readValue(json, K9TilbakeModell::class.java)
+
+        return K9TilbakeModell(modell.eventer.sortedBy { it.eventTid }.toMutableList())
+    }
+
+    fun fjernDirty(uuid: UUID, tx: TransactionalSession) {
+        tx.run(
+            queryOf(
+                """update behandling_prosess_events_tilbake set dirty = false where id = :id""",
+                mapOf("id" to uuid.toString())
+            ).asUpdate
+        )
     }
 
 }

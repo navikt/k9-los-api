@@ -10,7 +10,8 @@ import no.nav.k9.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.domene.modell.K9SakModell
 import no.nav.k9.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.integrasjon.rest.RequestContextService
-import no.nav.k9.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdapter
+import no.nav.k9.nyoppgavestyring.domeneadaptere.k9tilbaketillos.K9TilbakeTilLosAdapter
 import org.koin.ktor.ext.inject
 import java.time.LocalDateTime
 import java.util.*
@@ -18,7 +19,8 @@ import java.util.*
 internal fun Route.OppgaveV3Api() {
     val requestContextService by inject<RequestContextService>()
     val oppgaveV3Tjeneste by inject<OppgaveV3Tjeneste>()
-    val k9SakTilLosAdapterTjeneste by inject<K9SakTilLosAdapterTjeneste>()
+    val k9SakTilLosAdapter by inject<K9SakTilLosAdapter>()
+    val k9TilbakeTilLosAdapter by inject<K9TilbakeTilLosAdapter>()
     val transactionalManager by inject<TransactionalManager>()
     val behandlingProsessEventK9Repository by inject<BehandlingProsessEventK9Repository>()
 
@@ -41,9 +43,16 @@ internal fun Route.OppgaveV3Api() {
         }
     }
 
-    put("/startOppgaveprosessering") {
+    put("/startOppgaveprosessering/k9sak") {
         requestContextService.withRequestContext(call) {
-            k9SakTilLosAdapterTjeneste.kjør(kjørUmiddelbart = true)
+            k9SakTilLosAdapter.kjør(kjørUmiddelbart = true)
+            call.respond("OK")
+        }
+    }
+
+    put("/startOppgaveprosessering/k9tilbake") {
+        requestContextService.withRequestContext(call) {
+            k9TilbakeTilLosAdapter.kjør(kjørUmiddelbart = true)
             call.respond("OK")
         }
     }
@@ -52,7 +61,7 @@ internal fun Route.OppgaveV3Api() {
     post("/lagbehandlinger") {
         requestContextService.withRequestContext(call) {
             val k9SakModell = jacksonObjectMapper().registerModule(JavaTimeModule()).readValue(
-                K9SakTilLosAdapterTjeneste::class.java.getResource("/adapterdefinisjoner/test.json")!!
+                K9SakTilLosAdapter::class.java.getResource("/adapterdefinisjoner/test.json")!!
                     .readText(),
                 K9SakModell::class.java
             )
