@@ -6,6 +6,7 @@ import no.nav.helse.dusseldorf.ktor.health.HealthService
 import no.nav.k9.los.KoinProfile.LOCAL
 import no.nav.k9.los.KoinProfile.PREPROD
 import no.nav.k9.los.KoinProfile.PROD
+import no.nav.k9.los.aksjonspunktbehandling.K9KlageEventHandler
 import no.nav.k9.los.aksjonspunktbehandling.K9TilbakeEventHandler
 import no.nav.k9.los.aksjonspunktbehandling.K9punsjEventHandler
 import no.nav.k9.los.aksjonspunktbehandling.K9sakEventHandler
@@ -205,6 +206,12 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
+        K9KlageEventHandler(
+            behandlingProsessEventKlageRepository = get()
+        )
+    }
+
+    single {
         K9TilbakeEventHandler(
             oppgaveRepository = get(),
             behandlingProsessEventTilbakeRepository = get(),
@@ -240,7 +247,8 @@ fun common(app: Application, config: Configuration) = module {
             k9sakEventHandler = get(),
             k9sakEventHandlerv2 = get(),
             k9TilbakeEventHandler = get(),
-            punsjEventHandler = get()
+            punsjEventHandler = get(),
+            k9KlageEventHandler = get(),
         )
     }
 

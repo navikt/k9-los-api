@@ -29,6 +29,7 @@ import no.nav.k9.los.integrasjon.pdl.PdlServiceLocal
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
+import no.nav.k9.los.aksjonspunktbehandling.K9KlageEventHandler
 import no.nav.k9.los.domene.repository.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.StatistikkRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdapterTjeneste
@@ -188,6 +189,12 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single {
+        K9KlageEventHandler(
+            BehandlingProsessEventKlageRepository(dataSource = get()),
+        )
+    }
+
+    single {
         K9TilbakeEventHandler(
             get(),
             BehandlingProsessEventTilbakeRepository(dataSource = get()),
@@ -250,6 +257,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single { OppgavetypeRepository(get()) }
     single { OppgaveV3Repository(dataSource = get()) }
     single { BehandlingProsessEventK9Repository(dataSource = get()) }
+    single { BehandlingProsessEventKlageRepository(dataSource = get()) }
     single { OppgaveTilBehandlingMapper() }
     single { OppgaveTilSakMapper() }
     single { OppgaveRepository() }

@@ -1,12 +1,12 @@
-package no.nav.k9.domene.repository
+package no.nav.k9.los.domene.repository
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.aksjonspunktbehandling.objectMapper
-import no.nav.k9.domene.modell.K9KlageModell
-import no.nav.k9.tjenester.innsikt.Databasekall
+import no.nav.k9.los.aksjonspunktbehandling.objectMapper
+import no.nav.k9.los.domene.modell.K9KlageModell
+import no.nav.k9.los.tjenester.innsikt.Databasekall
 import java.util.*
 import java.util.concurrent.atomic.LongAdder
 import javax.sql.DataSource

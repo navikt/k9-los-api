@@ -13,6 +13,7 @@ internal class AsynkronProsesseringV1Service(
     kafkaAivenConfig: IKafkaConfig,
     configuration: Configuration,
     k9sakEventHandler: K9sakEventHandler,
+    k9KlageEventHandler: K9KlageEventHandler,
     k9sakEventHandlerv2: K9sakEventHandlerV2,
     k9TilbakeEventHandler: K9TilbakeEventHandler,
     punsjEventHandler: K9punsjEventHandler,
@@ -32,6 +33,12 @@ internal class AsynkronProsesseringV1Service(
         kafkaConfig = kafkaAivenConfig,
         configuration = configuration,
         k9sakEventHandlerv2 = k9sakEventHandlerv2
+    )
+
+    private val k9KlageStream = AksjonspunktKlageStream(
+        kafkaConfig = kafkaConfig,
+        configuration = configuration,
+        k9KlageEventHandler = K9KlageEventHandler,
     )
 
     private val aksjonspunkTilbaketStream = AksjonspunktTilbakeStream(

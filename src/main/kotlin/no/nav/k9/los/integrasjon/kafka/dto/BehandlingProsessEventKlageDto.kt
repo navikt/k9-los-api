@@ -1,4 +1,4 @@
-package no.nav.k9.integrasjon.kafka.dto
+package no.nav.k9.los.integrasjon.kafka.dto
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ser.std.ToStringSerializer
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer
 import no.nav.k9.los.domene.modell.Fagsystem
-import no.nav.k9.los.integrasjon.kafka.dto.EventHendelse
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import no.nav.k9.sak.typer.Periode
 import java.time.LocalDate
