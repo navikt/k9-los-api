@@ -121,7 +121,7 @@ data class OppgaveKø(
             return false
         }
 
-        if (nyeKrav != null && oppgave.nyeKrav != null && nyeKrav != oppgave.nyeKrav) {
+        if (nyeKrav != null && nyeKrav != oppgave.nyeKrav) {
             return false
         }
 

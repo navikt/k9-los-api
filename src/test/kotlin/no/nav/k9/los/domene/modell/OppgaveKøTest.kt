@@ -449,15 +449,18 @@ internal class OppgaveKøTest {
                 .tilhørerOppgaveTilKø(nye_krav_oppg(false, avklarMedlemskap = true), null, emptyList())
         )
 
-        assertTrue(
+        assertFalse(
             lagOppgaveKø(nyeKrav = true, andreKriterierDto = kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
                 .tilhørerOppgaveTilKø(nye_krav_oppg(null, avklarMedlemskap = true), null, emptyList())
         )
 
-        assertTrue(
-            lagOppgaveKø(nyeKrav = null, andreKriterierDto = kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
-                .tilhørerOppgaveTilKø(nye_krav_oppg(true, avklarMedlemskap = true), null, emptyList())
+        assertFalse(
+            lagOppgaveKø(nyeKrav = false, andreKriterierDto = kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
+                .tilhørerOppgaveTilKø(nye_krav_oppg(null, avklarMedlemskap = true), null, emptyList())
         )
+
+
+
 
     }
 
