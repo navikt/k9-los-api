@@ -449,6 +449,19 @@ internal class OppgaveKøTest {
                 .tilhørerOppgaveTilKø(nye_krav_oppg(false, avklarMedlemskap = true), null, emptyList())
         )
 
+        assertFalse(
+            lagOppgaveKø(nyeKrav = true, andreKriterierDto = kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
+                .tilhørerOppgaveTilKø(nye_krav_oppg(null, avklarMedlemskap = true), null, emptyList())
+        )
+
+        assertFalse(
+            lagOppgaveKø(nyeKrav = false, andreKriterierDto = kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
+                .tilhørerOppgaveTilKø(nye_krav_oppg(null, avklarMedlemskap = true), null, emptyList())
+        )
+
+
+
+
     }
 
     @Test
@@ -691,7 +704,7 @@ internal class OppgaveKøTest {
         eksternId = UUID.randomUUID(),
         feilutbetaltBeløp = feilutbetaling
     )
-    private fun nye_krav_oppg(nyeKrav: Boolean = false, avklarMedlemskap: Boolean = false) = Oppgave(
+    private fun nye_krav_oppg(nyeKrav: Boolean? = false, avklarMedlemskap: Boolean = false) = Oppgave(
         fagsakSaksnummer = "",
         aktorId = "273857",
         journalpostId = "234234535",

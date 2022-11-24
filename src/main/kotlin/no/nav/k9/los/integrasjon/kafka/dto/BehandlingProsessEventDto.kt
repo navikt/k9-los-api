@@ -76,7 +76,7 @@ data class BehandlingProsessEventDto(
     val pleietrengendeAktørId: String? = null,
     val relatertPartAktørId: String? = null,
     val aksjonspunktTilstander: List<AksjonspunktTilstandDto> = emptyList(),
-    val nyeKrav: Boolean = false
+    val nyeKrav: Boolean? = null
 ) {
 
     // Denne skal ikke ha fnr, aktørider, orgnumre eller beløp som kan identifisere brukeren

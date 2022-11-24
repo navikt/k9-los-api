@@ -1,12 +1,5 @@
 package no.nav.k9.los.domene.modell
 
-import no.nav.k9.los.domene.lager.oppgave.Oppgave
-import no.nav.k9.los.domene.repository.ReservasjonRepository
-import no.nav.k9.los.domene.repository.SaksbehandlerRepository
-import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
-import no.nav.k9.los.integrasjon.kafka.dto.EventHendelse
-import no.nav.k9.los.integrasjon.sakogbehandling.kontrakt.BehandlingAvsluttet
-import no.nav.k9.los.integrasjon.sakogbehandling.kontrakt.BehandlingOpprettet
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon.AUTOMATISK_MARKERING_AV_UTENLANDSSAK_KODE
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon.AVKLAR_FORTSATT_MEDLEMSKAP_KODE
@@ -22,6 +15,13 @@ import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon.VUR
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon.VURDER_VARIG_ENDRET_ELLER_NYOPPSTARTET_NÆRING_SELVSTENDIG_NÆRINGSDRIVENDE_KODE
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon.VURDER_ÅRSKVANTUM_KVOTE
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
+import no.nav.k9.los.domene.lager.oppgave.Oppgave
+import no.nav.k9.los.domene.repository.ReservasjonRepository
+import no.nav.k9.los.domene.repository.SaksbehandlerRepository
+import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
+import no.nav.k9.los.integrasjon.kafka.dto.EventHendelse
+import no.nav.k9.los.integrasjon.sakogbehandling.kontrakt.BehandlingAvsluttet
+import no.nav.k9.los.integrasjon.sakogbehandling.kontrakt.BehandlingOpprettet
 import no.nav.k9.statistikk.kontrakter.Aktør
 import no.nav.k9.statistikk.kontrakter.Behandling
 import no.nav.k9.statistikk.kontrakter.Sak
@@ -101,7 +101,7 @@ data class K9SakModell(
             relatertPartAktørId = sisteEvent.relatertPartAktørId,
             kombinert = false,
             ansvarligBeslutterForTotrinn = sisteEvent.ansvarligBeslutterForTotrinn,
-            nyeKrav = sisteEvent.nyeKrav
+            nyeKrav = sisteEvent.nyeKrav ?: false
         )
     }
 
