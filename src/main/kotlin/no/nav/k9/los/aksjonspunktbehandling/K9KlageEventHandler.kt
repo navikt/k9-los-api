@@ -1,9 +1,9 @@
 package no.nav.k9.los.aksjonspunktbehandling
 
+import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.KlagebehandlingProsessHendelse
+import no.nav.k9.los.domene.modell.FagsakYtelseType
 import no.nav.k9.los.domene.modell.K9KlageModell
 import no.nav.k9.los.domene.repository.BehandlingProsessEventKlageRepository
-import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventKlageDto
-import no.nav.k9.los.domene.modell.FagsakYtelseType
 import org.slf4j.LoggerFactory
 
 
@@ -23,7 +23,7 @@ class K9KlageEventHandler constructor(
     )
 
     fun prosesser(
-        event: BehandlingProsessEventKlageDto
+        event: KlagebehandlingProsessHendelse
     ) {
         behandlingProsessEventKlageRepository.lagre(event.eksternId!!) { k9KlageModell ->
             if (k9KlageModell == null) {

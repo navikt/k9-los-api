@@ -14,6 +14,14 @@ class OppgavetypeRepository(private val feltdefinisjonRepository: Feltdefinisjon
     private val log = LoggerFactory.getLogger(OppgavetypeRepository::class.java)
     private val oppgavetypeCache = Cache<Oppgavetyper>()
 
+    fun hent(område: Område, definisjonskilde: String, tx: TransactionalSession): Oppgavetyper {
+        val oppgavetyper = hent(område, tx)
+        return Oppgavetyper(
+            område = område,
+            oppgavetyper = oppgavetyper.oppgavetyper.filter { oppgavetype ->  oppgavetype.definisjonskilde == definisjonskilde }.toSet()
+        )
+    }
+
     fun hent(område: Område, tx: TransactionalSession): Oppgavetyper {
         return oppgavetypeCache.hent(område.eksternId) {
             val feltdefinisjoner = feltdefinisjonRepository.hent(område, tx)

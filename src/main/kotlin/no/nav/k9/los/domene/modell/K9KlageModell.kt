@@ -1,9 +1,9 @@
 package no.nav.k9.los.domene.modell
 
-import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventKlageDto
+import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.KlagebehandlingProsessHendelse
 
 data class K9KlageModell(
-    val eventer: MutableList<BehandlingProsessEventKlageDto>
+    val eventer: MutableList<KlagebehandlingProsessHendelse>
 ) {
 }
 

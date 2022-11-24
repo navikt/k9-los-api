@@ -40,8 +40,8 @@ internal class AksjonspunktKlageStream constructor(
         ): Topology {
             val builder = StreamsBuilder()
             val fromTopic = Topic(
-                name = configuration.getAksjonspunkthendelseTopic(),
-                serDes = AksjonspunktLaget()
+                name = configuration.getKlageOppgavemeldingerTopic(),
+                serDes = AksjonspunktKlageLaget()
             )
             builder
                 .stream(

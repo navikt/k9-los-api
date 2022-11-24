@@ -2,6 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.KlagebehandlingProsessHendelse
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
@@ -17,7 +18,6 @@ import kotlin.concurrent.fixedRateTimer
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.BehandlingProsessEventKlageRepository
-import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventKlageDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import kotlin.concurrent.thread
 
@@ -126,20 +126,20 @@ class K9KlageTilLosAdapterTjeneste(
         }
     }
 
-    private fun lagOppgaveDto(event: BehandlingProsessEventKlageDto, forrigeOppgave: OppgaveV3?) =
+    private fun lagOppgaveDto(event: KlagebehandlingProsessHendelse, forrigeOppgave: OppgaveV3?) =
         OppgaveDto(
             id = event.eksternId.toString(),
             versjon = event.eventTid.toString(),
             område = "K9",
             kildeområde = "K9",
-            type = "k9-klage",
-            status = event.aksjonspunktTilstander.lastOrNull()?.status?.kode ?: "OPPR", // TODO statuser må gås opp
+            type = "k9klage",
+            status = event.aksjonspunkttilstander.lastOrNull()?.status?.kode ?: "OPPR", // TODO statuser må gås opp
             endretTidspunkt = event.eventTid,
             feltverdier = lagFeltverdier(event, forrigeOppgave)
         )
 
     private fun lagFeltverdier(
-        event: BehandlingProsessEventKlageDto,
+        event: KlagebehandlingProsessHendelse,
         forrigeOppgave: OppgaveV3?
     ): List<OppgaveFeltverdiDto> {
         val oppgaveFeltverdiDtos = mutableListOf(
@@ -177,24 +177,24 @@ class K9KlageTilLosAdapterTjeneste(
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "relatertPartAktorid",
-                verdi = event.relatertPartAktørId
+                verdi = event.relatertPartAktørId?.id
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "pleietrengendeAktorId",
-                verdi = event.pleietrengendeAktørId
+                verdi = event.pleietrengendeAktørId?.id
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "ansvarligSaksbehandlerIdent",
-                verdi = event.ansvarligSaksbehandlerIdent ?: forrigeOppgave?.hentVerdi("ansvarligSaksbehandlerIdent")
+                verdi = event.ansvarligSaksbehandler ?: forrigeOppgave?.hentVerdi("ansvarligSaksbehandlerIdent")
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "ansvarligBeslutterForTotrinn",
-                verdi = event.ansvarligBeslutterForTotrinn ?: forrigeOppgave?.hentVerdi("ansvarligBeslutterForTotrinn")
+                nøkkel = "ansvarligBeslutter",
+                verdi = event.ansvarligBeslutter ?: forrigeOppgave?.hentVerdi("ansvarligBeslutter")
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "ansvarligSaksbehandlerForTotrinn",
-                verdi = event.ansvarligSaksbehandlerForTotrinn
-                    ?: forrigeOppgave?.hentVerdi("ansvarligSaksbehandlerForTotrinn")
+                verdi = event.ansvarligSaksbehandler
+                    ?: forrigeOppgave?.hentVerdi("ansvarligSaksbehandler")
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "mottattDato",
@@ -210,11 +210,11 @@ class K9KlageTilLosAdapterTjeneste(
             )
         )
 
-        if (event.aksjonspunktTilstander.isNotEmpty()) {
-            oppgaveFeltverdiDtos.addAll(event.aksjonspunktTilstander.map { aksjonspunktTilstand ->
+        if (event.aksjonspunkttilstander.isNotEmpty()) {
+            oppgaveFeltverdiDtos.addAll(event.aksjonspunkttilstander.map { aksjonspunkttilstand ->
                 OppgaveFeltverdiDto(
                     nøkkel = "aksjonspunkt",
-                    verdi = aksjonspunktTilstand.aksjonspunktKode
+                    verdi = aksjonspunkttilstand.aksjonspunktKode
                 )
             })
         } else {
@@ -226,8 +226,8 @@ class K9KlageTilLosAdapterTjeneste(
             )
         }
 
-        val åpneAksjonspunkter = event.aksjonspunktTilstander.filter { aksjonspunktTilstand ->
-            aksjonspunktTilstand.status.erÅpentAksjonspunkt()
+        val åpneAksjonspunkter = event.aksjonspunkttilstander.filter { aksjonspunkttilstand ->
+            aksjonspunkttilstand.status.erÅpentAksjonspunkt()
         }
 
         if (åpneAksjonspunkter.isNotEmpty()) {
@@ -275,20 +275,11 @@ class K9KlageTilLosAdapterTjeneste(
 
     private fun opprettOppgavetype(objectMapper: ObjectMapper) {
         val oppgavetyperDto = objectMapper.readValue(
-            K9KlageTilLosAdapterTjeneste::class.java.getResource("/adapterdefinisjoner/k9-oppgavetyper-v2.json")!!
+            K9KlageTilLosAdapterTjeneste::class.java.getResource("/adapterdefinisjoner/k9-oppgavetyper-k9klage.json")!!
                 .readText(),
             OppgavetyperDto::class.java
         )
         oppgavetypeTjeneste.oppdater(oppgavetyperDto)
         log.info("opprettet oppgavetype")
     }
-
-    private fun OppgaveDto.berikMedVedtaksInfo(vedtaksInfo: Map<String, String>): OppgaveDto {
-        return this.copy(
-            feltverdier = this.feltverdier.plus(vedtaksInfo.map { (key, value) ->
-                OppgaveFeltverdiDto(nøkkel = key, verdi = value)
-            })
-        )
-    }
-
 }

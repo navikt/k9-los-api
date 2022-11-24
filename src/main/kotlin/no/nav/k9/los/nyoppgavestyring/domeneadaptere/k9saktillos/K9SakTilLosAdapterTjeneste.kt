@@ -143,7 +143,7 @@ class K9SakTilLosAdapterTjeneste(
             versjon = event.eventTid.toString(),
             område = "K9",
             kildeområde = "K9",
-            type = "aksjonspunkt",
+            type = "k9sak",
             status = event.aksjonspunktTilstander.lastOrNull()?.status?.kode ?: "OPPR", // TODO statuser må gås opp
             endretTidspunkt = event.eventTid,
             feltverdier = lagFeltverdier(event, forrigeOppgave)
@@ -355,7 +355,7 @@ class K9SakTilLosAdapterTjeneste(
 
     private fun opprettOppgavetype(objectMapper: ObjectMapper) {
         val oppgavetyperDto = objectMapper.readValue(
-            K9SakTilLosAdapterTjeneste::class.java.getResource("/adapterdefinisjoner/k9-oppgavetyper-v2.json")!!
+            K9SakTilLosAdapterTjeneste::class.java.getResource("/adapterdefinisjoner/k9-oppgavetyper-k9sak.json")!!
                 .readText(),
             OppgavetyperDto::class.java
         )

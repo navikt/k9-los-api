@@ -15,13 +15,7 @@ import no.nav.k9.los.domene.lager.oppgave.v2.BehandlingsmigreringTjeneste
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveTjenesteV2
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
-import no.nav.k9.los.domene.repository.BehandlingProsessEventTilbakeRepository
-import no.nav.k9.los.domene.repository.DriftsmeldingRepository
-import no.nav.k9.los.domene.repository.OppgaveKøRepository
-import no.nav.k9.los.domene.repository.PunsjEventK9Repository
-import no.nav.k9.los.domene.repository.ReservasjonRepository
-import no.nav.k9.los.domene.repository.SaksbehandlerRepository
+import no.nav.k9.los.domene.repository.*
 import no.nav.k9.los.fagsystem.k9sak.AksjonspunktHendelseMapper
 import no.nav.k9.los.fagsystem.k9sak.K9sakEventHandlerV2
 import no.nav.k9.los.integrasjon.abac.IPepClient
@@ -44,8 +38,10 @@ import no.nav.k9.los.integrasjon.pdl.PdlService
 import no.nav.k9.los.integrasjon.pdl.PdlServiceLocal
 import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.*
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.StatistikkRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
@@ -147,6 +143,10 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         BehandlingProsessEventK9Repository(get())
+    }
+
+    single {
+        BehandlingProsessEventKlageRepository(get())
     }
 
     single {
@@ -367,6 +367,18 @@ fun common(app: Application, config: Configuration) = module {
     single {
         K9SakTilLosAdapterTjeneste(
             behandlingProsessEventK9Repository = get(),
+            områdeRepository = get(),
+            feltdefinisjonTjeneste = get(),
+            oppgavetypeTjeneste = get(),
+            oppgaveV3Tjeneste = get(),
+            config = get(),
+            transactionalManager = get()
+        )
+    }
+
+    single {
+        K9KlageTilLosAdapterTjeneste(
+            behandlingProsessEventKlageRepository = get(),
             områdeRepository = get(),
             feltdefinisjonTjeneste = get(),
             oppgavetypeTjeneste = get(),

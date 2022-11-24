@@ -19,10 +19,8 @@ class OppgavetypeTjeneste(
             val eksisterendeFeltdefinisjoner = feltdefinisjonRepository.hent(område, tx)
             val innkommendeOppgavetyper = Oppgavetyper(innkommendeOppgavetyperDto, område, eksisterendeFeltdefinisjoner)
 
-            val eksisterendeOppgavetyper = oppgavetypeRepository.hent(område, tx)
-            val (sletteListe, leggtilListe, oppdaterListe) = eksisterendeOppgavetyper.finnForskjell(
-                innkommendeOppgavetyper
-            )
+            val eksisterendeOppgavetyper = oppgavetypeRepository.hent(område, innkommendeOppgavetyperDto.definisjonskilde, tx)
+            val (sletteListe, leggtilListe, oppdaterListe) = eksisterendeOppgavetyper.finnForskjell(innkommendeOppgavetyper)
             oppgavetypeRepository.fjern(sletteListe, tx)
             oppgavetypeRepository.leggTil(leggtilListe, tx)
             oppdaterListe.forEach { endring ->
