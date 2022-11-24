@@ -20,8 +20,6 @@ import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.los.integrasjon.kafka.dto.EventHendelse
-import no.nav.k9.los.integrasjon.sakogbehandling.kontrakt.BehandlingAvsluttet
-import no.nav.k9.los.integrasjon.sakogbehandling.kontrakt.BehandlingOpprettet
 import no.nav.k9.statistikk.kontrakter.Aktør
 import no.nav.k9.statistikk.kontrakter.Behandling
 import no.nav.k9.statistikk.kontrakter.Sak
@@ -29,7 +27,6 @@ import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.util.*
-import kotlin.math.min
 
 data class K9SakModell(
     val eventer: MutableList<BehandlingProsessEventDto>
@@ -190,74 +187,6 @@ data class K9SakModell(
             sakStatusBeskrivelse = null,
             avsender = "K9los",
             versjon = 1
-        )
-    }
-
-    override fun behandlingOpprettetSakOgBehandling(
-
-    ): BehandlingOpprettet {
-        val sisteEvent = sisteEvent()
-        return BehandlingOpprettet(
-            hendelseType = "behandlingOpprettet",
-            hendelsesId = sisteEvent.eksternId.toString() + "_" + eventer.size,
-            hendelsesprodusentREF = BehandlingOpprettet.HendelsesprodusentREF("", "", "FS39"),
-            hendelsesTidspunkt = sisteEvent.eventTid,
-            behandlingsID = ("k9-los-" + sisteEvent.eksternId).substring(
-                0,
-                min(31, ("k9-los-" + sisteEvent.eksternId).length - 1)
-            ),
-            behandlingstype = BehandlingOpprettet.Behandlingstype(
-                "",
-                "",
-                BehandlingType.fraKode(sisteEvent.behandlingTypeKode).kodeverk
-            ),
-            sakstema = BehandlingOpprettet.Sakstema("", "", "OMS"),
-            behandlingstema = BehandlingOpprettet.Behandlingstema(
-                "ab0149",
-                "ab0149",
-                `Omsorgspenger, Pleiepenger og opplæringspenger`
-            ),
-            aktoerREF = listOf(BehandlingOpprettet.AktoerREF(sisteEvent.aktørId)),
-            ansvarligEnhetREF = "NASJONAL",
-            primaerBehandlingREF = null,
-            sekundaerBehandlingREF = listOf(),
-            applikasjonSakREF = sisteEvent().saksnummer,
-            applikasjonBehandlingREF = sisteEvent().eksternId.toString().replace("-", ""),
-            styringsinformasjonListe = listOf()
-        )
-    }
-
-    override fun behandlingAvsluttetSakOgBehandling(
-    ): BehandlingAvsluttet {
-        val sisteEvent = sisteEvent()
-        return BehandlingAvsluttet(
-            hendelseType = "behandlingAvsluttet",
-            hendelsesId = """${sisteEvent.eksternId.toString()}_${eventer.size}""",
-            hendelsesprodusentREF = BehandlingAvsluttet.HendelsesprodusentREF("", "", "FS39"),
-            hendelsesTidspunkt = sisteEvent.eventTid,
-            behandlingsID = ("k9-los-" + sisteEvent.eksternId).substring(
-                0,
-                min(31, ("k9-los-" + sisteEvent.eksternId).length - 1)
-            ),
-            behandlingstype = BehandlingAvsluttet.Behandlingstype(
-                "",
-                "",
-                BehandlingType.fraKode(sisteEvent.behandlingTypeKode).kodeverk
-            ),
-            sakstema = BehandlingAvsluttet.Sakstema("", "", "OMS"),
-            behandlingstema = BehandlingAvsluttet.Behandlingstema(
-                "ab0149",
-                "ab0149",
-                `Omsorgspenger, Pleiepenger og opplæringspenger`
-            ),
-            aktoerREF = listOf(BehandlingAvsluttet.AktoerREF(sisteEvent.aktørId)),
-            ansvarligEnhetREF = "NASJONAL",
-            primaerBehandlingREF = null,
-            sekundaerBehandlingREF = listOf(),
-            applikasjonSakREF = sisteEvent().saksnummer,
-            applikasjonBehandlingREF = sisteEvent().eksternId.toString().replace("-", ""),
-            styringsinformasjonListe = listOf(),
-            avslutningsstatus = BehandlingAvsluttet.Avslutningsstatus("", "", "ok")
         )
     }
 

@@ -15,6 +15,13 @@ import no.nav.k9.los.domene.lager.oppgave.v2.BehandlingsmigreringTjeneste
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveTjenesteV2
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
+import no.nav.k9.los.domene.repository.BehandlingProsessEventTilbakeRepository
+import no.nav.k9.los.domene.repository.DriftsmeldingRepository
+import no.nav.k9.los.domene.repository.OppgaveKøRepository
+import no.nav.k9.los.domene.repository.PunsjEventK9Repository
+import no.nav.k9.los.domene.repository.ReservasjonRepository
+import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.abac.PepClientLocal
 import no.nav.k9.los.integrasjon.azuregraph.AzureGraphServiceLocal
@@ -26,16 +33,12 @@ import no.nav.k9.los.integrasjon.omsorgspenger.IOmsorgspengerService
 import no.nav.k9.los.integrasjon.omsorgspenger.OmsorgspengerServiceLocal
 import no.nav.k9.los.integrasjon.pdl.IPdlService
 import no.nav.k9.los.integrasjon.pdl.PdlServiceLocal
-import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
-import no.nav.k9.los.Configuration
-import no.nav.k9.los.KoinProfile
-import no.nav.k9.los.domene.repository.*
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.StatistikkRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.OppgaveTilBehandlingMapper
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.OppgaveTilSakMapper
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.StatistikkPublisher
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.StatistikkRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
@@ -167,17 +170,13 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         )
     }
 
-    val sakOgBehadlingProducer = mockk<SakOgBehandlingProducer>()
     val statistikkProducer = mockk<StatistikkProducer>()
-    every { sakOgBehadlingProducer.behandlingOpprettet(any()) } just runs
-    every { sakOgBehadlingProducer.avsluttetBehandling(any()) } just runs
     every { statistikkProducer.send(any()) } just runs
 
     single {
         K9sakEventHandler(
             get(),
             BehandlingProsessEventK9Repository(dataSource = get()),
-            sakOgBehandlingProducer = sakOgBehadlingProducer,
             oppgaveKøRepository = get(),
             reservasjonRepository = get(),
             statistikkProducer = statistikkProducer,
@@ -191,7 +190,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         K9TilbakeEventHandler(
             get(),
             BehandlingProsessEventTilbakeRepository(dataSource = get()),
-            sakOgBehandlingProducer = sakOgBehadlingProducer,
             oppgaveKøRepository = get(),
             reservasjonRepository = get(),
             statistikkRepository = get(),

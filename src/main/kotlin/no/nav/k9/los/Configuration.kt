@@ -1,6 +1,6 @@
 package no.nav.k9.los
 
-import io.ktor.config.*
+import io.ktor.config.ApplicationConfig
 import no.nav.helse.dusseldorf.ktor.auth.clients
 import no.nav.helse.dusseldorf.ktor.auth.issuers
 import no.nav.helse.dusseldorf.ktor.auth.withoutAdditionalClaimRules
@@ -65,11 +65,6 @@ data class Configuration(private val config: ApplicationConfig) {
     internal fun getAksjonspunkthendelseTilbakeTopic(): String {
         return config.getOptionalString("nav.kafka.tilbakekrevingaksjonshendelseTopic", secret = false)
             ?: "privat-tilbakekreving-k9loshendelse-v1"
-    }
-
-    internal fun getSakOgBehandlingTopic(): String {
-        return config.getOptionalString("nav.kafka.sakOgBehandlingTopic", secret = false)
-            ?: ""
     }
 
     internal fun getStatistikkSakTopic(): String {

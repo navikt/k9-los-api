@@ -2,16 +2,29 @@ package no.nav.k9.los
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import com.fasterxml.jackson.databind.SerializationFeature
-import io.ktor.application.*
-import io.ktor.auth.*
-import io.ktor.features.*
-import io.ktor.http.cio.websocket.*
-import io.ktor.http.content.*
-import io.ktor.jackson.*
-import io.ktor.locations.*
-import io.ktor.metrics.micrometer.*
-import io.ktor.routing.*
-import io.ktor.websocket.*
+import io.ktor.application.Application
+import io.ktor.application.ApplicationCallPipeline
+import io.ktor.application.ApplicationStopping
+import io.ktor.application.call
+import io.ktor.application.install
+import io.ktor.application.log
+import io.ktor.auth.Authentication
+import io.ktor.auth.authenticate
+import io.ktor.features.CallId
+import io.ktor.features.CallLogging
+import io.ktor.features.ContentNegotiation
+import io.ktor.features.StatusPages
+import io.ktor.http.cio.websocket.pingPeriod
+import io.ktor.http.cio.websocket.timeout
+import io.ktor.http.content.resources
+import io.ktor.http.content.static
+import io.ktor.jackson.jackson
+import io.ktor.locations.Locations
+import io.ktor.metrics.micrometer.MicrometerMetrics
+import io.ktor.routing.Route
+import io.ktor.routing.Routing
+import io.ktor.routing.route
+import io.ktor.websocket.WebSockets
 import io.prometheus.client.hotspot.DefaultExports
 import kotlinx.coroutines.channels.BroadcastChannel
 import kotlinx.coroutines.channels.Channel
@@ -20,7 +33,15 @@ import kotlinx.coroutines.channels.produce
 import no.nav.helse.dusseldorf.ktor.auth.AuthStatusPages
 import no.nav.helse.dusseldorf.ktor.auth.allIssuers
 import no.nav.helse.dusseldorf.ktor.auth.multipleJwtIssuers
-import no.nav.helse.dusseldorf.ktor.core.*
+import no.nav.helse.dusseldorf.ktor.core.CallIdRequired
+import no.nav.helse.dusseldorf.ktor.core.DefaultProbeRoutes
+import no.nav.helse.dusseldorf.ktor.core.DefaultStatusPages
+import no.nav.helse.dusseldorf.ktor.core.correlationIdAndRequestIdInMdc
+import no.nav.helse.dusseldorf.ktor.core.fromXCorrelationIdHeader
+import no.nav.helse.dusseldorf.ktor.core.id
+import no.nav.helse.dusseldorf.ktor.core.log
+import no.nav.helse.dusseldorf.ktor.core.logProxyProperties
+import no.nav.helse.dusseldorf.ktor.core.logRequests
 import no.nav.helse.dusseldorf.ktor.health.HealthReporter
 import no.nav.helse.dusseldorf.ktor.health.HealthRoute
 import no.nav.helse.dusseldorf.ktor.jackson.JacksonStatusPages
@@ -33,7 +54,6 @@ import no.nav.k9.los.eventhandler.refreshK9
 import no.nav.k9.los.eventhandler.sjekkReserverteJobb
 import no.nav.k9.los.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.los.integrasjon.kafka.AsynkronProsesseringV1Service
-import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.StatistikkApi
@@ -134,13 +154,11 @@ fun Application.k9Los() {
         sjekkReserverteJobb(saksbehandlerRepository = koin.get(), reservasjonRepository = koin.get())
 
     val asynkronProsesseringV1Service = koin.get<AsynkronProsesseringV1Service>()
-    val sakOgBehadlingProducer = koin.get<SakOgBehandlingProducer>()
     val statistikkProducer = koin.get<StatistikkProducer>()
 
     environment.monitor.subscribe(ApplicationStopping) {
         log.info("Stopper AsynkronProsesseringV1Service.")
         asynkronProsesseringV1Service.stop()
-        sakOgBehadlingProducer.stop()
         statistikkProducer.stop()
         sjekkReserverteJobb.cancel()
         log.info("AsynkronProsesseringV1Service Stoppet.")

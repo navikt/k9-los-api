@@ -4,8 +4,6 @@ import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.kafka.dto.PunsjEventDto
-import no.nav.k9.los.integrasjon.sakogbehandling.kontrakt.BehandlingAvsluttet
-import no.nav.k9.los.integrasjon.sakogbehandling.kontrakt.BehandlingOpprettet
 import no.nav.k9.statistikk.kontrakter.Behandling
 import no.nav.k9.statistikk.kontrakter.Sak
 
@@ -33,14 +31,6 @@ data class K9PunsjModell(
     }
 
     override fun sisteSaksNummer(): String {
-        TODO("Ikke relevant for punsj")
-    }
-
-    override fun behandlingOpprettetSakOgBehandling(): BehandlingOpprettet {
-        TODO("Ikke relevant for punsj")
-    }
-
-    override fun behandlingAvsluttetSakOgBehandling(): BehandlingAvsluttet {
         TODO("Ikke relevant for punsj")
     }
 

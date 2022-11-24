@@ -3,13 +3,15 @@ package no.nav.k9.los.aksjonspunktbehandling
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
-import no.nav.k9.los.domene.modell.BehandlingStatus
 import no.nav.k9.los.domene.modell.FagsakYtelseType
 import no.nav.k9.los.domene.modell.IModell
 import no.nav.k9.los.domene.modell.K9TilbakeModell
-import no.nav.k9.los.domene.repository.*
+import no.nav.k9.los.domene.repository.BehandlingProsessEventTilbakeRepository
+import no.nav.k9.los.domene.repository.OppgaveKøRepository
+import no.nav.k9.los.domene.repository.OppgaveRepository
+import no.nav.k9.los.domene.repository.ReservasjonRepository
+import no.nav.k9.los.domene.repository.StatistikkRepository
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventTilbakeDto
-import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
 import org.slf4j.LoggerFactory
@@ -18,7 +20,6 @@ import org.slf4j.LoggerFactory
 class K9TilbakeEventHandler(
     private val oppgaveRepository: OppgaveRepository,
     private val behandlingProsessEventTilbakeRepository: BehandlingProsessEventTilbakeRepository,
-    private val sakOgBehandlingProducer: SakOgBehandlingProducer,
     private val oppgaveKøRepository: OppgaveKøRepository,
     private val reservasjonRepository: ReservasjonRepository,
     private val statistikkRepository: StatistikkRepository,
@@ -101,10 +102,7 @@ class K9TilbakeEventHandler(
 
     override fun tellEvent(modell: IModell, oppgave: Oppgave) {
         val k9TilbakeModell = modell as K9TilbakeModell
-        if (k9TilbakeModell.starterSak()) {
-            sakOgBehandlingProducer.behandlingOpprettet(k9TilbakeModell.behandlingOpprettetSakOgBehandling())
-            beholdningOpp(oppgave)
-        }
+
         if (k9TilbakeModell.forrigeEvent() != null && !k9TilbakeModell.oppgave(k9TilbakeModell.forrigeEvent()!!).aktiv && k9TilbakeModell.oppgave(k9TilbakeModell.sisteEvent()).aktiv) {
             beholdningOpp(oppgave)
         } else if (k9TilbakeModell.forrigeEvent() != null && k9TilbakeModell.oppgave(k9TilbakeModell.forrigeEvent()!!).aktiv && !k9TilbakeModell.oppgave(
@@ -114,16 +112,5 @@ class K9TilbakeEventHandler(
             beholdingNed(oppgave)
         }
 
-        if (oppgave.behandlingStatus == BehandlingStatus.AVSLUTTET) {
-            if (!oppgave.ansvarligSaksbehandlerForTotrinn.isNullOrBlank()) {
-                nyFerdigstilltAvSaksbehandler(oppgave)
-                statistikkRepository.lagreFerdigstilt(
-                    oppgave.behandlingType.kode,
-                    oppgave.eksternId,
-                    oppgave.eventTid.toLocalDate()
-                )
-            }
-            sakOgBehandlingProducer.avsluttetBehandling(k9TilbakeModell.behandlingAvsluttetSakOgBehandling())
-        }
     }
 }

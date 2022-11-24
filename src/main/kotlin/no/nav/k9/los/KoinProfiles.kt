@@ -42,9 +42,12 @@ import no.nav.k9.los.integrasjon.pdl.IPdlService
 import no.nav.k9.los.integrasjon.pdl.PdlService
 import no.nav.k9.los.integrasjon.pdl.PdlServiceLocal
 import no.nav.k9.los.integrasjon.rest.RequestContextService
-import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.*
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.OppgaveTilBehandlingMapper
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.OppgaveTilSakMapper
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.OppgavestatistikkTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.StatistikkPublisher
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.StatistikkRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
@@ -160,12 +163,6 @@ fun common(app: Application, config: Configuration) = module {
         no.nav.k9.los.domene.repository.StatistikkRepository(get())
     }
 
-    single {
-        SakOgBehandlingProducer(
-            kafkaConfig = config.getKafkaConfig(),
-            config = config
-        )
-    }
 
     single {
         AccessTokenClientResolver(
@@ -194,7 +191,6 @@ fun common(app: Application, config: Configuration) = module {
         K9sakEventHandler(
             oppgaveRepository = get(),
             behandlingProsessEventK9Repository = get(),
-            sakOgBehandlingProducer = get(),
             oppgaveKøRepository = get(),
             reservasjonRepository = get(),
             statistikkProducer = get(),
@@ -208,7 +204,6 @@ fun common(app: Application, config: Configuration) = module {
         K9TilbakeEventHandler(
             oppgaveRepository = get(),
             behandlingProsessEventTilbakeRepository = get(),
-            sakOgBehandlingProducer = get(),
             oppgaveKøRepository = get(),
             reservasjonRepository = get(),
             statistikkRepository = get(),

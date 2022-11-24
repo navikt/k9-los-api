@@ -90,8 +90,6 @@ spec:
       value: privat-k9punsj-aksjonspunkthendelse-v1
     - name: KAFKA_AKSJONSPUNKTHENDELSE_TILBAKE_TOPIC
       value: privat-tilbakekreving-k9loshendelse-v1
-    - name: KAFKA_SAKOGBEHANDLING_TOPIC
-      value: aapen-sob-oppgaveHendelse-v1
     - name: KAFKA_STATISTIKK_SAK_TOPIC
       value: privat-k9statistikk-sak-v1
     - name: KAFKA_AAPEN_STATISTIKK_SAK_TOPIC
