@@ -8,6 +8,12 @@
       "visTilBruker": true
     },
     {
+      "id": "påklagdBehandlingUuid",
+      "listetype": false,
+      "tolkesSom": "String",
+      "visTilBruker": true
+    },
+    {
       "id": "aktorId",
       "listetype": false,
       "tolkesSom": "String",

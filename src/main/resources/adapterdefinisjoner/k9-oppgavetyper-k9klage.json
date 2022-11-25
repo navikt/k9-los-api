@@ -11,6 +11,11 @@
           "påkrevd": true
         },
         {
+          "id": "påklagdBehandlingUuid",
+          "visPåOppgave": true,
+          "påkrevd": true
+        },
+        {
           "id": "aktorId",
           "visPåOppgave": true,
           "påkrevd": true

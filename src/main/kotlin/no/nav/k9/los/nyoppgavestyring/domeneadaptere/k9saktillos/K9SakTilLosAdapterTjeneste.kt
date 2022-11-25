@@ -6,6 +6,7 @@ import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
@@ -21,7 +22,9 @@ import java.util.concurrent.TimeUnit
 import kotlin.concurrent.fixedRateTimer
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.domene.modell.AksjonspunktTilstand
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
+import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktKode
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import kotlin.concurrent.thread
 
@@ -153,7 +156,6 @@ class K9SakTilLosAdapterTjeneste(
         event: BehandlingProsessEventDto,
         forrigeOppgave: OppgaveV3?
     ): List<OppgaveFeltverdiDto> {
-        
         val oppgaveFeltverdiDtos = mapEnkeltverdier(event, forrigeOppgave)
         
         val åpneAksjonspunkter = event.aksjonspunktTilstander.filter { aksjonspunktTilstand ->
@@ -239,7 +241,9 @@ class K9SakTilLosAdapterTjeneste(
         ),
         OppgaveFeltverdiDto(
             nøkkel = "totrinnskontroll",
-            verdi = (event.ansvarligBeslutterForTotrinn != null).toString()
+            verdi = event.aksjonspunktTilstander.filter { aksjonspunktTilstandDto ->
+                aksjonspunktTilstandDto.aksjonspunktKode.equals("5015") && aksjonspunktTilstandDto.status !in (listOf(AksjonspunktStatus.AVBRUTT))
+            }.isNotEmpty().toString()
         )
     )
 

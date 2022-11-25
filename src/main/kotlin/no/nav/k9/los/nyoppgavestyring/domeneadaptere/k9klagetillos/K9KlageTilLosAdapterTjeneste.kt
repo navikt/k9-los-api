@@ -2,7 +2,10 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.Aksjonspunkttilstand
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.KlagebehandlingProsessHendelse
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
@@ -33,38 +36,36 @@ class K9KlageTilLosAdapterTjeneste(
 
     private val log: Logger = LoggerFactory.getLogger(K9KlageTilLosAdapterTjeneste::class.java)
     private val TRÅDNAVN = "k9-klage-til-los"
+    private val MANUELLE_AKSJONSPUNKTER = AksjonspunktDefinisjon.values().filter { aksjonspunktDefinisjon ->
+        aksjonspunktDefinisjon.aksjonspunktType == AksjonspunktType.MANUELL
+    }.map { aksjonspunktDefinisjon -> aksjonspunktDefinisjon.kode }
 
-    companion object {
-        private var avspillingKjører = false
-    }
+    private val AUTOPUNKTER = AksjonspunktDefinisjon.values().filter { aksjonspunktDefinisjon ->
+        aksjonspunktDefinisjon.aksjonspunktType == AksjonspunktType.AUTOPUNKT
+    }.map { aksjonspunktDefinisjon -> aksjonspunktDefinisjon.kode }
 
     fun kjør(kjørSetup: Boolean = false, kjørUmiddelbart: Boolean = false) {
         if (config.nyOppgavestyringAktivert()) {
-            if (!avspillingKjører) {
-                when (kjørUmiddelbart) {
-                    true -> spillAvUmiddelbart()
-                    false -> schedulerAvspilling(kjørSetup)
-                }
-            } else log.info("Avspilling av BehandlingProsessEventer kjører allerede")
+            when (kjørUmiddelbart) {
+                true -> spillAvUmiddelbart()
+                false -> schedulerAvspilling(kjørSetup)
+            }
         } else log.info("Ny oppgavestyring er deaktivert")
     }
 
     private fun spillAvUmiddelbart() {
         log.info("Spiller av BehandlingProsessEventer umiddelbart")
-        avspillingKjører = true
         thread(
             start = true,
             isDaemon = true,
             name = TRÅDNAVN
         ) {
             spillAvBehandlingProsessEventer()
-            avspillingKjører = false
         }
     }
 
     private fun schedulerAvspilling(kjørSetup: Boolean) {
         log.info("Schedulerer avspilling av BehandlingProsessEventer til å kjøre 10s fra nå, hver 24. time")
-        avspillingKjører = true
         fixedRateTimer(
             name = TRÅDNAVN,
             daemon = true,
@@ -75,7 +76,6 @@ class K9KlageTilLosAdapterTjeneste(
                 setup()
             }
             spillAvBehandlingProsessEventer()
-            avspillingKjører = false
         }
     }
 
@@ -142,94 +142,32 @@ class K9KlageTilLosAdapterTjeneste(
         event: KlagebehandlingProsessHendelse,
         forrigeOppgave: OppgaveV3?
     ): List<OppgaveFeltverdiDto> {
-        val oppgaveFeltverdiDtos = mutableListOf(
-            OppgaveFeltverdiDto(
-                nøkkel = "behandlingUuid",
-                verdi = event.eksternId.toString()
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "aktorId",
-                verdi = event.aktørId
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "fagsystem",
-                verdi = event.fagsystem.kode
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "saksnummer",
-                verdi = event.saksnummer
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "resultattype",
-                verdi = event.resultatType ?: "IKKE_FASTSATT"
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "ytelsestype",
-                verdi = event.ytelseTypeKode
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "behandlingsstatus",
-                verdi = event.behandlingStatus ?: "UTRED"
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "behandlingTypekode",
-                verdi = event.behandlingTypeKode
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "relatertPartAktorid",
-                verdi = event.relatertPartAktørId?.id
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "pleietrengendeAktorId",
-                verdi = event.pleietrengendeAktørId?.id
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "ansvarligSaksbehandlerIdent",
-                verdi = event.ansvarligSaksbehandler ?: forrigeOppgave?.hentVerdi("ansvarligSaksbehandlerIdent")
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "ansvarligBeslutter",
-                verdi = event.ansvarligBeslutter ?: forrigeOppgave?.hentVerdi("ansvarligBeslutter")
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "ansvarligSaksbehandlerForTotrinn",
-                verdi = event.ansvarligSaksbehandler
-                    ?: forrigeOppgave?.hentVerdi("ansvarligSaksbehandler")
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "mottattDato",
-                verdi = forrigeOppgave?.hentVerdi("mottattDato") ?: event.eventTid.toString()
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "registrertDato",
-                verdi = forrigeOppgave?.hentVerdi("registrertDato") ?: event.eventTid.toString()
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "totrinnskontroll",
-                verdi = false.toString() // TODO dette må utledes fra ansvarligBeslutterForTotrinn & ansvarligSaksbehandlerForTotrinn
-            )
-        )
-
-        if (event.aksjonspunkttilstander.isNotEmpty()) {
-            oppgaveFeltverdiDtos.addAll(event.aksjonspunkttilstander.map { aksjonspunkttilstand ->
-                OppgaveFeltverdiDto(
-                    nøkkel = "aksjonspunkt",
-                    verdi = aksjonspunkttilstand.aksjonspunktKode
-                )
-            })
-        } else {
-            oppgaveFeltverdiDtos.add(
-                OppgaveFeltverdiDto(
-                    nøkkel = "aksjonspunkt",
-                    verdi = null
-                )
-            )
-        }
+        val oppgaveFeltverdiDtos = mapEnkeltverdier(event, forrigeOppgave)
 
         val åpneAksjonspunkter = event.aksjonspunkttilstander.filter { aksjonspunkttilstand ->
             aksjonspunkttilstand.status.erÅpentAksjonspunkt()
         }
 
+        val harAutopunkt = åpneAksjonspunkter.any { aksjonspunktTilstandDto ->
+            AUTOPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode)
+        }
+
+        val harManueltAksjonspunkt = åpneAksjonspunkter.any { aksjonspunktTilstandDto ->
+            MANUELLE_AKSJONSPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode)
+        }
+
+        utledAksjonspunkter(event, oppgaveFeltverdiDtos)
+        utledÅpneAksjonspunkter(åpneAksjonspunkter, oppgaveFeltverdiDtos)
+        //automatiskBehandletFlagg er defaultet til False p.t.
+        utledAvventerSaksbehandler(harManueltAksjonspunkt, harAutopunkt, oppgaveFeltverdiDtos)
+
+        return oppgaveFeltverdiDtos
+    }
+
+    private fun utledÅpneAksjonspunkter(
+        åpneAksjonspunkter: List<Aksjonspunkttilstand>,
+        oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
+    ) {
         if (åpneAksjonspunkter.isNotEmpty()) {
             åpneAksjonspunkter.map { åpentAksjonspunkt ->
                 oppgaveFeltverdiDtos.add(
@@ -247,14 +185,125 @@ class K9KlageTilLosAdapterTjeneste(
                 )
             )
         }
+    }
 
-        return oppgaveFeltverdiDtos
+    private fun utledAksjonspunkter(
+        event: KlagebehandlingProsessHendelse,
+        oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
+    ) {
+        if (event.aksjonspunkttilstander.isNotEmpty()) {
+            oppgaveFeltverdiDtos.addAll(event.aksjonspunkttilstander.map { aksjonspunkttilstand ->
+                OppgaveFeltverdiDto(
+                    nøkkel = "aksjonspunkt",
+                    verdi = aksjonspunkttilstand.aksjonspunktKode
+                )
+            })
+        } else {
+            oppgaveFeltverdiDtos.add(
+                OppgaveFeltverdiDto(
+                    nøkkel = "aksjonspunkt",
+                    verdi = null
+                )
+            )
+        }
+    }
+
+    private fun mapEnkeltverdier(
+        event: KlagebehandlingProsessHendelse,
+        forrigeOppgave: OppgaveV3?
+    ) = mutableListOf(
+        OppgaveFeltverdiDto(
+            nøkkel = "behandlingUuid",
+            verdi = event.eksternId.toString()
+        ),
+        OppgaveFeltverdiDto(
+            nøkkel = "aktorId",
+            verdi = event.aktørId
+        ),
+        OppgaveFeltverdiDto(
+            nøkkel = "fagsystem",
+            verdi = event.fagsystem.kode
+        ),
+        OppgaveFeltverdiDto(
+            nøkkel = "saksnummer",
+            verdi = event.saksnummer
+        ),
+        OppgaveFeltverdiDto(
+            nøkkel = "resultattype",
+            verdi = event.resultatType ?: "IKKE_FASTSATT"
+        ),
+        OppgaveFeltverdiDto(
+            nøkkel = "ytelsestype",
+            verdi = event.ytelseTypeKode
+        ),
+        OppgaveFeltverdiDto(
+            nøkkel = "behandlingsstatus",
+            verdi = event.behandlingStatus ?: "UTRED"
+        ),
+        OppgaveFeltverdiDto(
+            nøkkel = "behandlingTypekode",
+            verdi = event.behandlingTypeKode
+        ),
+        OppgaveFeltverdiDto(
+            nøkkel = "relatertPartAktorid",
+            verdi = event.relatertPartAktørId?.id
+        ),
+        OppgaveFeltverdiDto(
+            nøkkel = "pleietrengendeAktorId",
+            verdi = event.pleietrengendeAktørId?.id
+        ),
+        OppgaveFeltverdiDto(
+            nøkkel = "ansvarligSaksbehandler",
+            verdi = event.ansvarligSaksbehandler ?: forrigeOppgave?.hentVerdi("ansvarligSaksbehandler")
+        ),
+        OppgaveFeltverdiDto(
+            nøkkel = "ansvarligBeslutter",
+            verdi = event.ansvarligBeslutter ?: forrigeOppgave?.hentVerdi("ansvarligBeslutter")
+        ),
+        OppgaveFeltverdiDto(
+            nøkkel = "mottattDato",
+            verdi = forrigeOppgave?.hentVerdi("mottattDato") ?: event.eventTid.toString()
+        ),
+        OppgaveFeltverdiDto(
+            nøkkel = "registrertDato",
+            verdi = forrigeOppgave?.hentVerdi("registrertDato") ?: event.eventTid.toString()
+        ),
+        OppgaveFeltverdiDto(
+            nøkkel = "totrinnskontroll",
+            verdi = false.toString() // TODO dette må utledes fra ansvarligBeslutterForTotrinn & ansvarligSaksbehandlerForTotrinn
+        ),
+        OppgaveFeltverdiDto(
+            nøkkel = "helautomatiskBehandlet",
+            verdi = false.toString()
+        )
+    )
+
+    private fun utledAvventerSaksbehandler(
+        harManueltAksjonspunkt: Boolean,
+        harAutopunkt: Boolean,
+        oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
+    ) {
+        if (harManueltAksjonspunkt && !harAutopunkt) {
+            oppgaveFeltverdiDtos.add(
+                OppgaveFeltverdiDto(
+                    nøkkel = "avventerSaksbehandler",
+                    verdi = "true"
+                )
+            )
+        } else {
+            oppgaveFeltverdiDtos.add(
+                OppgaveFeltverdiDto(
+                    nøkkel = "avventerSaksbehandler",
+                    verdi = "false"
+                )
+            )
+        }
     }
 
     private fun setup() {
         val objectMapper = jacksonObjectMapper()
         opprettOmråde()
-        opprettFeltdefinisjoner(objectMapper)
+        //opprettFeltdefinisjoner(objectMapper) K9SakAdapter er master på feltdefinisjoner inntil videre
         opprettOppgavetype(objectMapper)
     }
 
