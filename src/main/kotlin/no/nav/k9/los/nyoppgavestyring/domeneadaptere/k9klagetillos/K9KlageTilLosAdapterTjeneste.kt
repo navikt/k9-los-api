@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.Aksjonspunkttilstand
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.KlagebehandlingProsessHendelse
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
@@ -270,11 +271,14 @@ class K9KlageTilLosAdapterTjeneste(
         ),
         OppgaveFeltverdiDto(
             nøkkel = "totrinnskontroll",
-            verdi = false.toString() // TODO dette må utledes fra ansvarligBeslutterForTotrinn & ansvarligSaksbehandlerForTotrinn
+            verdi = event.aksjonspunkttilstander.filter { aksjonspunktTilstandDto ->
+                aksjonspunktTilstandDto.aksjonspunktKode.equals("5015") && aksjonspunktTilstandDto.status !in (listOf(
+                    AksjonspunktStatus.AVBRUTT))
+            }.isNotEmpty().toString()
         ),
         OppgaveFeltverdiDto(
             nøkkel = "helautomatiskBehandlet",
-            verdi = false.toString()
+            verdi = false.toString() //TODO: Påstand - klagesaker er alltid manuelt behandlet?
         )
     )
 
