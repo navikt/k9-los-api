@@ -26,6 +26,7 @@ import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.SkjermetDto
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.SorteringDatoDto
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.YtelsesTypeDto
 import no.nav.k9.los.tjenester.avdelingsleder.reservasjoner.ReservasjonDto
+import no.nav.k9.los.tjenester.saksbehandler.oppgave.FlyttetReservasjonDto
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.OppgavekøDto
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.SaksbehandlerDto
@@ -346,7 +347,8 @@ class AvdelingslederTjeneste(
                         oppgaveId = reservasjon.oppgave,
                         saksnummer = oppgave.fagsakSaksnummer,
                         behandlingType = oppgave.behandlingType,
-                        tilBeslutter = oppgave.tilBeslutter
+                        tilBeslutter = oppgave.tilBeslutter,
+                        flyttetReservasjon = reservasjon.hentFlyttet()?.let { lagFlyttetReservasjonDto(it) }
                     )
                 )
 
@@ -356,6 +358,13 @@ class AvdelingslederTjeneste(
         return list.sortedWith(compareBy({ it.reservertAvNavn }, { it.reservertTilTidspunkt }))
     }
 
+    private suspend fun lagFlyttetReservasjonDto(reservasjon: Reservasjon.Flyttet) =
+        FlyttetReservasjonDto(
+            reservasjon.flyttetTidspunkt,
+            reservasjon.flyttetAv,
+            saksbehandlerRepository.finnSaksbehandlerMedIdent(reservasjon.flyttetAv)?.navn ?: reservasjon.flyttetAv,
+            reservasjon.begrunnelse
+        )
 
     suspend fun opphevReservasjon(uuid: UUID): Reservasjon {
         val reservasjon = reservasjonRepository.lagre(uuid, true) {
