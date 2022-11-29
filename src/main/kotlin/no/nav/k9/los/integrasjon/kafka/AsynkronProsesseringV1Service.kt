@@ -41,7 +41,7 @@ internal class AsynkronProsesseringV1Service(
     )
 
     private val aksjonspunkPunsjStream = AksjonspunktPunsjStream(
-        kafkaConfig = kafkaConfig,
+        kafkaConfig = kafkaAivenConfig,
         configuration = configuration,
         K9punsjEventHandler = punsjEventHandler
     )
