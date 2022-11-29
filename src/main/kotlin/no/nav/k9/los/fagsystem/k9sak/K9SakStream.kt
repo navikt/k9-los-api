@@ -5,10 +5,10 @@ import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.aksjonspunktbehandling.SerDes
 import no.nav.k9.los.aksjonspunktbehandling.Topic
+import no.nav.k9.los.integrasjon.kafka.*
 import no.nav.k9.los.integrasjon.kafka.ManagedKafkaStreams
 import no.nav.k9.los.integrasjon.kafka.ManagedStreamHealthy
 import no.nav.k9.los.integrasjon.kafka.ManagedStreamReady
-import no.nav.k9.los.integrasjon.kafka.IKafkaConfig
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.ProduksjonsstyringHendelse
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import org.apache.kafka.streams.StreamsBuilder
@@ -53,7 +53,9 @@ internal class K9SakStream constructor(
                 .stream(
                     fromTopic.name,
                     Consumed.with(fromTopic.keySerde, fromTopic.valueSerde)
-                ).peek { _, e -> log.info("--> K9SakHendelse: ${e.tryggToString() }") }
+                )
+                .filterNotHeartbeats()
+                .peek { _, e -> log.info("--> K9SakHendelse: ${e.tryggToString() }") }
                 .foreach { _, entry ->
                     if (entry != null) {
                         runBlocking {
