@@ -59,7 +59,7 @@ data class Configuration(private val config: ApplicationConfig) {
 
     internal fun getAksjonspunkthendelsePunsjTopic(): String {
         return config.getOptionalString("nav.kafka.punsjAksjonshendelseTopic", secret = false)
-            ?: "k9saksbehandling.privat-k9punsj-aksjonspunkthendelse-v1"
+            ?: "k9saksbehandling.punsj-aksjonspunkthendelse-v1"
     }
 
     internal fun getAksjonspunkthendelseTilbakeTopic(): String {
