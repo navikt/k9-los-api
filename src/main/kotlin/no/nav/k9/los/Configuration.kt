@@ -44,7 +44,7 @@ data class Configuration(private val config: ApplicationConfig) {
 
     internal fun getAksjonspunkthendelseTopic(): String {
         return config.getOptionalString("nav.kafka.aksjonshendelseTopic", secret = false)
-            ?: "privat-k9-aksjonspunkthendelse"
+            ?: "k9saksbehandling.privat-k9-aksjonspunkthendelse"
     }
 
     internal fun getK9SakTopic(): String {
