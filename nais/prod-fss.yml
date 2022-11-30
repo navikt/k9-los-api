@@ -87,7 +87,7 @@ spec:
     - name: KAFKA_AKSJONSPUNKTHENDELSE_TOPIC
       value: privat-k9-aksjonspunkthendelse
     - name: KAFKA_PUNSJAKSJONSPUNKTHENDELSE_TOPIC
-      value: k9saksbehandling.k9punsj-aksjonspunkthendelse-v1
+      value: k9saksbehandling.punsj-aksjonspunkthendelse-v1
     - name: KAFKA_AKSJONSPUNKTHENDELSE_TILBAKE_TOPIC
       value: privat-tilbakekreving-k9loshendelse-v1
     - name: KAFKA_SAKOGBEHANDLING_TOPIC
