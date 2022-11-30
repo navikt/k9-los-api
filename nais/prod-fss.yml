@@ -84,7 +84,7 @@ spec:
       # Kafka
     - name: BOOTSTRAP_SERVERS
       value: a01apvl00145.adeo.no:8443,a01apvl00146.adeo.no:8443,a01apvl00147.adeo.no:8443,a01apvl00148.adeo.no:8443,a01apvl00149.adeo.no:8443,a01apvl00150.adeo.no:8443
-    - name: KAFKA_AKSJONSPUNKTHENDELSE_TOPIC
+    - name: k9saksbehandling.KAFKA_AKSJONSPUNKTHENDELSE_TOPIC
       value: privat-k9-aksjonspunkthendelse
     - name: KAFKA_PUNSJAKSJONSPUNKTHENDELSE_TOPIC
       value: privat-k9punsj-aksjonspunkthendelse-v1
