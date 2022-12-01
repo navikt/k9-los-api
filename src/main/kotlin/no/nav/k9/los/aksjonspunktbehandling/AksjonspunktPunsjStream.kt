@@ -52,7 +52,7 @@ internal class AksjonspunktPunsjStream constructor(
                 .foreach { _, entry ->
                     if (entry != null) {
                         val spørring = System.currentTimeMillis()
-                        logger.info("--> Mottat hendelse fra punsj: ${entry.eksternId} - ${entry.journalpostId}")
+                        logger.info("--> Mottatt hendelse fra punsj: ${entry.eksternId} - ${entry.journalpostId}")
                         K9punsjEventHandler.prosesser(entry)
                         logger.info("Ferdig prosessert hendelse fra punsj etter ${System.currentTimeMillis() - spørring}ms: ${entry.eksternId} - ${entry.journalpostId}.")
                     }
