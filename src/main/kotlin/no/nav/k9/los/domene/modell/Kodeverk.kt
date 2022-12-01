@@ -80,7 +80,7 @@ enum class KøKriterierType(
     ),
     NYE_KRAV(
         kode = "NYE_KRAV",
-        navn = "Nye krav",
+        navn = "Nye søknadsperioder",
         felttype = KøKriterierFeltType.FLAGG,
         validator = FlaggValidator
     ),
