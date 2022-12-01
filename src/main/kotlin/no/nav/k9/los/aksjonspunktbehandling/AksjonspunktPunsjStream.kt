@@ -9,6 +9,8 @@ import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.Topology
 import org.apache.kafka.streams.kstream.Consumed
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 internal class AksjonspunktPunsjStream constructor(
     kafkaConfig: IKafkaConfig,
@@ -30,6 +32,7 @@ internal class AksjonspunktPunsjStream constructor(
     internal val healthy = ManagedStreamHealthy(stream)
 
     private companion object {
+        private val logger: Logger = LoggerFactory.getLogger(AksjonspunktPunsjStream::class.java)
         private const val NAME = "AksjonspunktLagetPunsjV1"
 
         private fun topology(
@@ -48,7 +51,10 @@ internal class AksjonspunktPunsjStream constructor(
                 )
                 .foreach { _, entry ->
                     if (entry != null) {
+                        val spørring = System.currentTimeMillis()
+                        logger.info("--> Mottat hendelse fra punsj: ${entry.eksternId} - ${entry.journalpostId}")
                         K9punsjEventHandler.prosesser(entry)
+                        logger.info("Ferdig prosessert hendelse fra punsj etter ${System.currentTimeMillis() - spørring}ms: ${entry.eksternId} - ${entry.journalpostId}.")
                     }
                 }
             return builder.build()
