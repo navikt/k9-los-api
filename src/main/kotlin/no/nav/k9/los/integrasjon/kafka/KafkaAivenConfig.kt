@@ -46,7 +46,7 @@ class KafkaAivenConfig(
     }
 
     override fun stream(name: String, offsetResetStrategy: OffsetResetStrategy?): Properties = streams.apply {
-        put(APPLICATION_ID_CONFIG+name, applicationId)
+        put(APPLICATION_ID_CONFIG, applicationId+name)
         put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, (offsetResetStrategy ?: defaultOffsetResetStrategy).toString().lowercase())
     }
 }
