@@ -27,6 +27,8 @@ open class OppgaveTjenesteV2(
             if (!behandling.erFerdigstilt()) {
                 hendelser.forEach { behandling.nyHendelse(it) }
                 oppgaveRepository.lagre(behandling, tx)
+            } else {
+                log.warn("Mottok hendelse for allerede ferdigstilt behandling $eksternId")
             }
         }
     }

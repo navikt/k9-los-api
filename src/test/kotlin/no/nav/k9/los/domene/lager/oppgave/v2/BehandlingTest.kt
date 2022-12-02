@@ -183,6 +183,66 @@ internal class BehandlingTest {
         assertThat(behandling.ferdigstilt).isEqualTo(ferdigstiltTidspunkt)
     }
 
+    @Test
+    fun `FerdigstillOppgave skal ignoreres hvis det allerede finnes ferdigstillelse med samme på timestamp uavhengig av om oppgaveKode er satt`() {
+        val behandling = opprettBehandling()
+
+        behandling.nyHendelse(oppgave1)
+        val ferdigstillelseUtenKode = FerdigstillOppgave(tidspunkt = LocalDateTime.now(), oppgaveKode = null)
+        assertThat(behandling.harBehandletFerdigstillelseAvOppgave(ferdigstillelseUtenKode)).isFalse()
+        behandling.nyHendelse(ferdigstillelseUtenKode)
+
+        assertThat(behandling.harBehandletFerdigstillelseAvOppgave(ferdigstillelseUtenKode)).isTrue()
+
+        behandling.nyHendelse(oppgave1.copy(tidspunkt = LocalDateTime.now().plusMinutes(1)))
+        val ferdigstillelseMedKode = FerdigstillOppgave(tidspunkt = LocalDateTime.now().plusMinutes(1), oppgaveKode = oppgave1.oppgaveKode)
+        assertThat(behandling.harBehandletFerdigstillelseAvOppgave(ferdigstillelseMedKode)).isFalse()
+        behandling.nyHendelse(ferdigstillelseMedKode)
+
+        assertThat(behandling.harBehandletFerdigstillelseAvOppgave(ferdigstillelseMedKode)).isTrue()
+    }
+
+    @Test
+    fun `FerdigstillOppgave skal brukes selv om det finnes oppgave med oppgavekode`() {
+        val behandling = opprettBehandling().apply { nyHendelse(oppgave1) }
+
+        val ferdigstillelse1 = FerdigstillOppgave(tidspunkt = LocalDateTime.now(), oppgaveKode = oppgave1.oppgaveKode)
+        assertThat(behandling.harBehandletFerdigstillelseAvOppgave(ferdigstillelse1)).isFalse()
+        behandling.nyHendelse(ferdigstillelse1)
+
+        val ferdigstillelse2 = FerdigstillOppgave(tidspunkt = LocalDateTime.now().plusMinutes(1), oppgaveKode = oppgave1.oppgaveKode)
+        assertThat(behandling.harBehandletFerdigstillelseAvOppgave(ferdigstillelse2)).isFalse()
+    }
+
+    @Test
+    fun `Duplikatsjekk skal kunne handtere stor forskjell i timestamp`() {
+        val behandling = opprettBehandling().apply {
+            nyHendelse(oppgave1.copy(tidspunkt = LocalDateTime.MIN))
+        }
+
+        val ferdigstillelse1 = FerdigstillOppgave(tidspunkt = LocalDateTime.MAX, oppgaveKode = oppgave1.oppgaveKode)
+        assertThat(behandling.harBehandletFerdigstillelseAvOppgave(ferdigstillelse1)).isFalse()
+        behandling.nyHendelse(ferdigstillelse1)
+
+        behandling.nyHendelse(oppgave1.copy(tidspunkt = LocalDateTime.MAX))
+    }
+
+    @Test
+    fun `timestampsammenligning med liten forskjell må tåle variasjon i presisjon`() {
+        val eventTid = LocalDateTime.parse("2022-12-02T16:23:32.725600600")
+        val dbTid = LocalDateTime.parse("2022-12-02T16:23:32.726")
+        assertThat(eventTid.equals(dbTid)).isFalse()
+        assertThat(eventTid == dbTid).isFalse()
+        assertThat(eventTid.equalsWithPrecision(dbTid)).isTrue()
+    }
+
+    @Test
+    fun `timestampsammenligning skal tåle timestamps med stor forskjell`() {
+        val dbTid = LocalDateTime.MAX
+        val eventTid = LocalDateTime.MIN
+        assertThat(eventTid.equalsWithPrecision(dbTid)).isFalse()
+    }
+
     private fun Behandling.hent(oppgave: OpprettOppgave): OppgaveV2 {
         return oppgaver().first { it.oppgaveKode == oppgave.oppgaveKode }
     }
