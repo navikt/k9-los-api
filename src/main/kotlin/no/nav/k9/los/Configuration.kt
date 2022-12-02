@@ -64,7 +64,7 @@ data class Configuration(private val config: ApplicationConfig) {
 
     internal fun getAksjonspunkthendelseTilbakeTopic(): String {
         return config.getOptionalString("nav.kafka.tilbakekrevingaksjonshendelseTopic", secret = false)
-            ?: "k9saksbehandling.privat-tilbakekreving-k9loshendelse-v1"
+            ?: "k9saksbehandling.tilbakekreving-hendelse-los"
     }
 
     internal fun getSakOgBehandlingTopic(): String {
