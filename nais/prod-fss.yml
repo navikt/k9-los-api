@@ -133,3 +133,9 @@ spec:
       # feature toggles
     - name: NY_OPPGAVESTYRING
       value: "false"
+    - name: K9SAK_CONSUMER_AIVEN
+      value: "false"
+    - name: PUNSJ_CONSUMER_AIVEN
+      value: "false"
+    - name: TILBAKE_CONSUMER_AIVEN
+      value: "false"
