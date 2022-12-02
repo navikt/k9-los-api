@@ -28,11 +28,11 @@ internal class AsynkronProsesseringV1Service(
         k9sakEventHandler = k9sakEventHandler
     )
 
-//    private val k9SakStream = K9SakStream(
-//        kafkaConfig = kafkaAivenConfig,
-//        configuration = configuration,
-//        k9sakEventHandlerv2 = k9sakEventHandlerv2
-//    )
+    private val k9SakStream = K9SakStream(
+        kafkaConfig = kafkaAivenConfig,
+        configuration = configuration,
+        k9sakEventHandlerv2 = k9sakEventHandlerv2
+    )
 
     private val aksjonspunkTilbaketStream = AksjonspunktTilbakeStream(
         kafkaConfig = kafkaConfig,
@@ -47,14 +47,14 @@ internal class AsynkronProsesseringV1Service(
     )
 
     private val healthChecks = setOf(
-        //k9SakStream.healthy,
+        k9SakStream.healthy,
         aksjonspunktStream.healthy,
         aksjonspunkTilbaketStream.healthy,
         aksjonspunkPunsjStream.healthy
     )
 
     private val isReadyChecks = setOf(
-//        k9SakStream.ready,
+        k9SakStream.ready,
         aksjonspunktStream.ready,
         aksjonspunkTilbaketStream.ready,
         aksjonspunkPunsjStream.ready
@@ -63,7 +63,7 @@ internal class AsynkronProsesseringV1Service(
     internal fun stop() {
         logger.info("Stopper streams.")
         aksjonspunktStream.stop()
-//        k9SakStream.stop()
+        k9SakStream.stop()
         aksjonspunkTilbaketStream.stop()
         aksjonspunkPunsjStream.stop()
         logger.info("Alle streams stoppet.")
