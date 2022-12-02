@@ -1,24 +1,25 @@
 package no.nav.k9.los.aksjonspunktbehandling
 
 import no.nav.k9.los.Configuration
-import no.nav.k9.los.integrasjon.kafka.KafkaConfig
+import no.nav.k9.los.integrasjon.kafka.IKafkaConfig
 import no.nav.k9.los.integrasjon.kafka.ManagedKafkaStreams
 import no.nav.k9.los.integrasjon.kafka.ManagedStreamHealthy
 import no.nav.k9.los.integrasjon.kafka.ManagedStreamReady
+import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.Topology
 import org.apache.kafka.streams.kstream.Consumed
 import org.slf4j.LoggerFactory
 
 internal class AksjonspunktStreamK9 constructor(
-    kafkaConfig: KafkaConfig,
+    kafkaConfig: IKafkaConfig,
     configuration: Configuration,
     k9sakEventHandler: K9sakEventHandler
 ) {
 
     private val stream = ManagedKafkaStreams(
         name = NAME,
-        properties = kafkaConfig.stream(NAME),
+        properties = kafkaConfig.stream(NAME, OffsetResetStrategy.EARLIEST),
         topology = topology(
             configuration = configuration,
             k9sakEventHandler = k9sakEventHandler
