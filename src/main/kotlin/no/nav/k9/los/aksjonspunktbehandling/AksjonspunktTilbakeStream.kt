@@ -5,6 +5,7 @@ import no.nav.k9.los.integrasjon.kafka.IKafkaConfig
 import no.nav.k9.los.integrasjon.kafka.ManagedKafkaStreams
 import no.nav.k9.los.integrasjon.kafka.ManagedStreamHealthy
 import no.nav.k9.los.integrasjon.kafka.ManagedStreamReady
+import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.Topology
 import org.apache.kafka.streams.kstream.Consumed
@@ -18,7 +19,7 @@ internal class AksjonspunktTilbakeStream constructor(
 
     private val stream = ManagedKafkaStreams(
         name = NAME,
-        properties = kafkaConfig.stream(NAME),
+        properties = kafkaConfig.stream(NAME, OffsetResetStrategy.EARLIEST),
         topology = topology(
             configuration = configuration,
             k9TilbakeEventHandler = k9TilbakeEventHandler
