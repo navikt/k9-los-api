@@ -24,7 +24,7 @@ internal class K9SakStream constructor(
 
     private val stream = ManagedKafkaStreams(
         name = NAME,
-        properties = kafkaConfig.stream(NAME, OffsetResetStrategy.NONE),
+        properties = kafkaConfig.stream(NAME, OffsetResetStrategy.EARLIEST),
         topology = topology(
             configuration = configuration,
             k9sakEventHandler = k9sakEventHandlerv2
