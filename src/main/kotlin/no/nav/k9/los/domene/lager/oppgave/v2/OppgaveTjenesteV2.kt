@@ -25,6 +25,7 @@ open class OppgaveTjenesteV2(
                 ?: throw IllegalStateException("Mottatt hendelse uten å ha behandling. $eksternId")
 
             if (!behandling.erFerdigstilt()) {
+                log.warn("Mottok hendelse for ferdigstilt behandling $eksternId")
                 hendelser.forEach { behandling.nyHendelse(it) }
                 oppgaveRepository.lagre(behandling, tx)
             }

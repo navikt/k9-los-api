@@ -36,7 +36,7 @@ internal class K9SakStream constructor(
     internal val healthy = ManagedStreamHealthy(stream)
 
     private companion object {
-        private const val NAME = "K9SakHendelseV1"
+        private const val NAME = "K9SakProduksjonsstyringHendelse"
 
         private val log = LoggerFactory.getLogger(K9SakStream::class.java)
 
