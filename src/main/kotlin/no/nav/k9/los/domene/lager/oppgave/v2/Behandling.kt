@@ -105,7 +105,7 @@ open class Behandling constructor(
 
     private fun ferdigstillOppgave(ferdigstillOppgave: FerdigstillOppgave) {
         if (harBehandletFerdigstillelseAvOppgave(ferdigstillOppgave)) {
-            log.warn("Har allerede behandlet ferdigstillelse med oppgavekode (${ferdigstillOppgave.oppgaveKode}) og timestamp ${ferdigstillOppgave.tidspunkt} på referansen. $eksternReferanse\")")
+            log.warn("Har allerede behandlet ferdigstillelse med oppgavekode (${ferdigstillOppgave.oppgaveKode}) og timestamp ${ferdigstillOppgave.tidspunkt} på referansen. $eksternReferanse")
             return
         }
 
