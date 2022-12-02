@@ -35,7 +35,7 @@ internal class AsynkronProsesseringV1Service(
     )
 
     private val aksjonspunkTilbaketStream = AksjonspunktTilbakeStream(
-        kafkaConfig = kafkaConfig,
+        kafkaConfig = kafkaAivenConfig,
         configuration = configuration,
         k9TilbakeEventHandler = k9TilbakeEventHandler
     )
