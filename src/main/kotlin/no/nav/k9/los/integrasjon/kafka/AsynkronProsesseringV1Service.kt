@@ -23,7 +23,7 @@ internal class AsynkronProsesseringV1Service(
     }
 
     private val aksjonspunktStream = AksjonspunktStreamK9(
-        kafkaConfig = kafkaAivenConfig,
+        kafkaConfig = if (configuration.k9SakConsumerAiven()) kafkaAivenConfig else kafkaConfig,
         configuration = configuration,
         k9sakEventHandler = k9sakEventHandler
     )
@@ -35,13 +35,13 @@ internal class AsynkronProsesseringV1Service(
     )
 
     private val aksjonspunkTilbaketStream = AksjonspunktTilbakeStream(
-        kafkaConfig = kafkaAivenConfig,
+        kafkaConfig = if (configuration.tilbakeConsumerAiven()) kafkaAivenConfig else kafkaConfig,
         configuration = configuration,
         k9TilbakeEventHandler = k9TilbakeEventHandler
     )
 
     private val aksjonspunkPunsjStream = AksjonspunktPunsjStream(
-        kafkaConfig = kafkaAivenConfig,
+        kafkaConfig = if (configuration.punsjConsumerAiven()) kafkaAivenConfig else kafkaConfig,
         configuration = configuration,
         K9punsjEventHandler = punsjEventHandler
     )
