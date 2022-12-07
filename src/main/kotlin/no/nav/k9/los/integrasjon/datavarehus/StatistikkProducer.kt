@@ -12,7 +12,7 @@ import no.nav.k9.los.domene.modell.IModell
 import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.abac.IPepClient
-import no.nav.k9.los.integrasjon.kafka.KafkaAivenConfig
+import no.nav.k9.los.integrasjon.kafka.IKafkaConfig
 import no.nav.k9.los.integrasjon.kafka.TopicEntry
 import no.nav.k9.los.integrasjon.kafka.TopicUse
 import no.nav.k9.statistikk.kontrakter.Behandling
@@ -25,7 +25,7 @@ import org.json.JSONObject
 import org.slf4j.LoggerFactory
 
 class StatistikkProducer constructor(
-    val kafkaConfig: KafkaAivenConfig,
+    val kafkaConfig: IKafkaConfig,
     val saksbehandlerRepository: SaksbehandlerRepository,
     val reservasjonRepository: ReservasjonRepository,
     val pepClient: IPepClient,

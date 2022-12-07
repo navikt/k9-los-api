@@ -175,7 +175,7 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         StatistikkProducer(
-            kafkaConfig = config.getKafkaConfig(),
+            kafkaConfig = config.getProfileAwareKafkaAivenConfig(),
             config = config,
             pepClient = get(),
             saksbehandlerRepository = get(),
