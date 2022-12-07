@@ -9,7 +9,7 @@ val koinVersion = "3.2.2"
 val kotliqueryVersion = "1.9.0"
 val k9SakVersion = "3.3.25"
 val fuelVersion = "2.3.1"
-val jacksonVersion = "2.13.4"
+val jacksonVersion = "2.14.1"
 
 val dusseldorfKtorVersion = "3.2.1.2-ce40a5b"
 
