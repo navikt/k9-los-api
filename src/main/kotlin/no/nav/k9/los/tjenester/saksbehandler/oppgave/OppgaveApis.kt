@@ -1,13 +1,13 @@
 package no.nav.k9.los.tjenester.saksbehandler.oppgave
 
-import io.ktor.application.call
+import io.ktor.server.application.call
 import io.ktor.http.HttpStatusCode
-import io.ktor.locations.Location
-import io.ktor.locations.get
-import io.ktor.locations.post
-import io.ktor.request.receive
-import io.ktor.response.respond
-import io.ktor.routing.Route
+import io.ktor.server.locations.Location
+import io.ktor.server.locations.get
+import io.ktor.server.locations.post
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.integrasjon.rest.idToken
@@ -73,7 +73,9 @@ internal fun Route.OppgaveApis() {
         requestContextService.withRequestContext(call) {
             call.respond(
                 oppgaveTjeneste.reserverOppgave(
-                    saksbehandlerRepository.finnSaksbehandlerMedEpost(kotlin.coroutines.coroutineContext.idToken().getUsername())!!.brukerIdent!!,
+                    saksbehandlerRepository.finnSaksbehandlerMedEpost(
+                        kotlin.coroutines.coroutineContext.idToken().getUsername()
+                    )!!.brukerIdent!!,
                     oppgaveIdMedOverstyring.overstyrIdent,
                     UUID.fromString(oppgaveIdMedOverstyring.oppgaveId),
                     oppgaveIdMedOverstyring.overstyrSjekk,

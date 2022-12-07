@@ -1,9 +1,9 @@
 package no.nav.k9.los.tjenester.konfig
 
-import io.ktor.application.*
-import io.ktor.locations.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.server.application.*
+import io.ktor.server.locations.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
 import org.koin.ktor.ext.inject
@@ -55,9 +55,11 @@ fun Route.KonfigApis() {
             configuration.koinProfile() == KoinProfile.PROD -> {
                 call.respond(Konfig(refreshUrlProd))
             }
+
             KoinProfile.PREPROD == configuration.koinProfile() -> {
                 call.respond(Konfig(refreshUrlDev))
             }
+
             else -> {
                 call.respond(Konfig(refreshUrlLocal))
             }

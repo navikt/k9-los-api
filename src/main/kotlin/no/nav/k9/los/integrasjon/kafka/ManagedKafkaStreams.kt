@@ -25,44 +25,54 @@ internal class ManagedKafkaStreams(
 
     private companion object {
         private val streamStatus = Gauge
-            .build("stream_status",
-                "Indikerer streamens status. 0 er Running, 1 er stopped.")
+            .build(
+                "stream_status",
+                "Indikerer streamens status. 0 er Running, 1 er stopped."
+            )
             .labelNames("stream")
             .register()
     }
 
-    private fun safeStoppedIn() : Duration {
+    private fun safeStoppedIn(): Duration {
         val stoppedAt = stopped ?: LocalDateTime.now().minus(
             unreadyAfterStreamStoppedIn.seconds,
             ChronoUnit.SECONDS
         ).minusSeconds(1)
         return Duration.between(stoppedAt, LocalDateTime.now())
     }
+
     private fun Duration.hasReachedUnready() = compareTo(unreadyAfterStreamStoppedIn) >= 0
 
-    private fun result(notRunningBlock: (Duration) -> Result) : Result {
-        return when(kafkaStreams.state()) {
+    private fun result(notRunningBlock: (Duration) -> Result): Result {
+        return when (kafkaStreams.state()) {
             KafkaStreams.State.PENDING_SHUTDOWN, KafkaStreams.State.NOT_RUNNING -> {
                 notRunningBlock(safeStoppedIn())
             }
+
             KafkaStreams.State.RUNNING, KafkaStreams.State.REBALANCING, KafkaStreams.State.CREATED -> {
                 Healthy(name, "Kjører som normalt i state ${kafkaStreams.state().name}.")
             }
+
             else -> UnHealthy(name, "Stream befinner seg i state '${kafkaStreams.state().name}'.")
         }
     }
+
     internal fun ready() = result { stoppedIn ->
         if (stoppedIn.hasReachedUnready()) {
             UnHealthy(name, "Stream har vært stoppet i ${stoppedIn.toMinutes()} minutter.")
-        } else Healthy(name, "Stream har vært stoppet i ${stoppedIn.toMinutes()} minutter. Unready først etter ${unreadyAfterStreamStoppedIn.toMinutes()} minutter.")
+        } else Healthy(
+            name,
+            "Stream har vært stoppet i ${stoppedIn.toMinutes()} minutter. Unready først etter ${unreadyAfterStreamStoppedIn.toMinutes()} minutter."
+        )
     }
+
     internal fun healthy() = result { stoppedIn ->
         UnHealthy(name, "Stream har vært stoppet i ${stoppedIn.toMinutes()} minutter.")
     }
 
     private val log = LoggerFactory.getLogger("no.nav.$name.stream")
     private var kafkaStreams = managed(KafkaStreams(topology, properties))
-    private var stopped : LocalDateTime? = null
+    private var stopped: LocalDateTime? = null
 
     init {
         if (unreadyAfterStreamStoppedIn.toMinutes() < 1) throw IllegalStateException("unreadyAfterStreamStoppedIn må være over 1 minutt.")
@@ -89,17 +99,18 @@ internal class ManagedKafkaStreams(
         }
     }
 
-    private fun managed(streams: KafkaStreams) : KafkaStreams{
+    private fun managed(streams: KafkaStreams): KafkaStreams {
         streams.setStateListener { newState, oldState ->
             log.info("Stream endret state fra $oldState til $newState")
         }
 
-        streams.setUncaughtExceptionHandler{ e ->
+        streams.setUncaughtExceptionHandler { e ->
             when (e.rotfeil()) {
                 is TopicAuthorizationException, is SaslAuthenticationException -> {
                     log.error("Kafkatråd feilet, erstatter stream med nytt tråd pga exception", e);
                     StreamsUncaughtExceptionHandler.StreamThreadExceptionResponse.REPLACE_THREAD
                 }
+
                 else -> {
                     log.error("Kafkatråd feilet, stopper", e)
                     stop(becauseOfError = true) // vet ikke om denne trengs med den nye setUncaughtExceptionHandler
@@ -129,9 +140,9 @@ internal class ManagedStreamReady(private val managedKafkaStreams: ManagedKafkaS
 }
 
 private fun Throwable.rotfeil(): Throwable? {
-        var rootCause: Throwable? = this
-        while (rootCause?.cause != null) {
-            rootCause = rootCause.cause
-        }
-        return rootCause
+    var rootCause: Throwable? = this
+    while (rootCause?.cause != null) {
+        rootCause = rootCause.cause
+    }
+    return rootCause
 }

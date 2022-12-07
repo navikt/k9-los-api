@@ -1,8 +1,8 @@
 package no.nav.k9.los.tjenester.sse
 
-import io.ktor.http.cio.websocket.*
-import io.ktor.routing.*
 import io.ktor.websocket.*
+import io.ktor.server.routing.*
+import io.ktor.server.websocket.*
 import kotlinx.coroutines.channels.BroadcastChannel
 import no.nav.k9.los.tjenester.sse.RefreshKlienter.sseOperation
 import org.slf4j.LoggerFactory

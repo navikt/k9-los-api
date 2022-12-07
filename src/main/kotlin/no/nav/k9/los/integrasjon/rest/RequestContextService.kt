@@ -1,6 +1,6 @@
 package no.nav.k9.los.integrasjon.rest
 
-import io.ktor.application.*
+import io.ktor.server.application.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.withContext
 import no.nav.k9.los.KoinProfile
@@ -26,12 +26,13 @@ internal fun CoroutineContext.idToken() = requestContext().idToken
 
 internal class RequestContextService(
     private val profile: KoinProfile
-)  {
+) {
 
-    internal suspend fun <T>withRequestContext(call: ApplicationCall, block: suspend CoroutineScope.() -> T) = withContext(
-        context = establish(call),
-        block = block
-    )
+    internal suspend fun <T> withRequestContext(call: ApplicationCall, block: suspend CoroutineScope.() -> T) =
+        withContext(
+            context = establish(call),
+            block = block
+        )
 
     private suspend fun establish(call: ApplicationCall) = coroutineContext + CoroutineRequestContext(
         idToken = when (profile == KoinProfile.LOCAL) {

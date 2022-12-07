@@ -80,19 +80,22 @@ class PdlService constructor(
                         log.warn(
                             "Error response = '${error.response.body().asString("text/plain")}' fra '${request.url}'"
                         )
-                        log.warn(error.toString() + "aktorId callId: " + callId + " " + coroutineContext.idToken().getUsername())
+                        log.warn(
+                            error.toString() + "aktorId callId: " + callId + " " + coroutineContext.idToken()
+                                .getUsername()
+                        )
                         null
                     }
                 )
             }
-             try {
+            try {
                 val readValue = objectMapper().readValue<PersonPdl>(json!!)
                 cache.set(query, CacheObject(json, LocalDateTime.now().plusHours(7)))
                 return PersonPdlResponse(false, readValue)
             } catch (e: Exception) {
                 try {
                     val value = objectMapper().readValue<Error>(json!!)
-                    if (value.errors.any { it.extensions.code == "unauthorized" }){
+                    if (value.errors.any { it.extensions.code == "unauthorized" }) {
                         return PersonPdlResponse(true, null)
                     }
                 } catch (e: Exception) {
@@ -117,7 +120,7 @@ class PdlService constructor(
         val query = objectMapper().writeValueAsString(
             queryRequest
         )
-        
+
         val cachedObject = cache.get(query)
         if (cachedObject == null) {
             val callId = UUID.randomUUID().toString()
@@ -163,7 +166,7 @@ class PdlService constructor(
             } catch (e: Exception) {
                 try {
                     val value = objectMapper().readValue<Error>(json!!)
-                    if (value.errors.any { it.extensions.code == "unauthorized" }){
+                    if (value.errors.any { it.extensions.code == "unauthorized" }) {
                         return PdlResponse(true, null)
                     }
                 } catch (e: Exception) {
@@ -179,7 +182,8 @@ class PdlService constructor(
     data class QueryRequest(
         val query: String,
         val variables: Map<String, Any>,
-        val operationName: String? = null) {
+        val operationName: String? = null
+    ) {
         data class Variables(
             val variables: Map<String, Any>
         )

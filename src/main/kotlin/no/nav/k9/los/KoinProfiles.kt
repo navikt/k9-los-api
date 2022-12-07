@@ -1,6 +1,6 @@
 package no.nav.k9.los
 
-import io.ktor.application.Application
+import io.ktor.server.application.Application
 import kotlinx.coroutines.channels.Channel
 import no.nav.helse.dusseldorf.ktor.health.HealthService
 import no.nav.k9.los.KoinProfile.LOCAL

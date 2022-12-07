@@ -81,6 +81,10 @@ open class K9SakService constructor(
                 }
             )
         }
-        log.info("Refreshet " + behandlingIdListe.behandlinger.size +" i k9 sak (" + behandlingIdListe.behandlinger.joinToString(",")+")")
+        log.info(
+            "Refreshet " + behandlingIdListe.behandlinger.size + " i k9 sak (" + behandlingIdListe.behandlinger.joinToString(
+                ","
+            ) + ")"
+        )
     }
 }

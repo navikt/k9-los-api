@@ -1,14 +1,15 @@
 package no.nav.k9.los.tjenester.kodeverk
 
-import io.ktor.application.call
-import io.ktor.locations.Location
-import io.ktor.locations.get
-import io.ktor.response.respond
-import io.ktor.routing.Route
+import io.ktor.server.application.call
+import io.ktor.server.locations.Location
+import io.ktor.server.locations.get
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
 import org.koin.ktor.ext.inject
 
 fun Route.KodeverkApis() {
     val kodeverkTjeneste by inject<HentKodeverkTjeneste>()
+
     @Location("/kodeverk")
     class hentGruppertKodeliste
 

@@ -1,9 +1,9 @@
 package no.nav.k9.los.tjenester.saksbehandler.saksliste
 
-import io.ktor.application.*
-import io.ktor.locations.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.server.application.*
+import io.ktor.server.locations.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import no.nav.k9.los.domene.modell.OppgaveKø
 import no.nav.k9.los.domene.repository.OppgaveKøRepository
 import no.nav.k9.los.integrasjon.abac.IPepClient

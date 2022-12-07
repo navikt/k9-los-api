@@ -1,9 +1,9 @@
 package no.nav.k9.los.tjenester.avdelingsleder.nokkeltall
 
-import io.ktor.application.*
+import io.ktor.server.application.*
 import io.ktor.http.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
 
 fun Route.DataeksportApis() {
@@ -26,7 +26,10 @@ fun Route.DataeksportApis() {
                     ContentDisposition.Parameters.FileName, "løste_aksjonspunkter.csv"
                 ).toString()
             )
-            val historikk = nøkkeltallTjeneste.hentFerdigstilteOppgaverHistorikk(*filtre.toTypedArray(), antallDagerHistorikk = antallDager)
+            val historikk = nøkkeltallTjeneste.hentFerdigstilteOppgaverHistorikk(
+                *filtre.toTypedArray(),
+                antallDagerHistorikk = antallDager
+            )
             call.respondText(historikk.tilCsv())
         }
     }
