@@ -19,7 +19,7 @@ val ktorVersion = "2.1.2"
 val kafkaVersion = "3.2.3"
 
 // Test Dependencies
-val testContainers = "1.17.5"
+val testContainers = "1.17.6"
 val jsonassertVersion = "1.5.1"
 val jupiterVersion = "5.9.1"
 
