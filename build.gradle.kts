@@ -1,20 +1,20 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-val mainClass = "no.nav.k9.K9LosKt"
+val mainClass = "no.nav.k9.los.K9LosKt"
 val hikariVersion = "5.0.1"
 val flywayVersion = "9.6.0"
 val vaultJdbcVersion = "1.3.10"
 val koinVersion = "3.2.2"
 val kotliqueryVersion = "1.9.0"
-val k9SakVersion = "3.3.22"
+val k9SakVersion = "3.3.25"
 val fuelVersion = "2.3.1"
 val jacksonVersion = "2.13.4"
 
 val dusseldorfKtorVersion = "3.2.1.2-ce40a5b"
 
 // Disse bør henge sammen med https://github.com/navikt/dusseldorf-ktor/blob/master/pom.xml#L36
-val kotlinVersion = "1.7.21"
+val kotlinVersion = "1.7.22"
 val ktorVersion = "2.1.2"
 val kafkaVersion = "3.2.3"
 

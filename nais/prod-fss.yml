@@ -85,11 +85,11 @@ spec:
     - name: BOOTSTRAP_SERVERS
       value: a01apvl00145.adeo.no:8443,a01apvl00146.adeo.no:8443,a01apvl00147.adeo.no:8443,a01apvl00148.adeo.no:8443,a01apvl00149.adeo.no:8443,a01apvl00150.adeo.no:8443
     - name: KAFKA_AKSJONSPUNKTHENDELSE_TOPIC
-      value: privat-k9-aksjonspunkthendelse
+      value: k9saksbehandling.k9sak-aksjonspunkthendelse
     - name: KAFKA_PUNSJAKSJONSPUNKTHENDELSE_TOPIC
-      value: privat-k9punsj-aksjonspunkthendelse-v1
+      value: k9saksbehandling.punsj-aksjonspunkthendelse-v1
     - name: KAFKA_AKSJONSPUNKTHENDELSE_TILBAKE_TOPIC
-      value: privat-tilbakekreving-k9loshendelse-v1
+      value: k9saksbehandling.tilbakekreving-hendelse-los
     - name: KAFKA_SAKOGBEHANDLING_TOPIC
       value: aapen-sob-oppgaveHendelse-v1
     - name: KAFKA_STATISTIKK_SAK_TOPIC
@@ -107,7 +107,7 @@ spec:
 
       # ABAC
     - name: ABAC_PDP_ENDPOINT_URL
-      value: http://abac-k9.teamabac.svc.nais.local/application/authorize
+      value: http://abac-k9.k9saksbehandling.svc.nais.local/application/authorize
 
     - name: APPDYNAMICS_CONTROLLER_HOST_NAME
       value: appdynamics.adeo.no
@@ -133,3 +133,9 @@ spec:
       # feature toggles
     - name: NY_OPPGAVESTYRING
       value: "false"
+    - name: K9SAK_CONSUMER_AIVEN
+      value: "true"
+    - name: PUNSJ_CONSUMER_AIVEN
+      value: "true"
+    - name: TILBAKE_CONSUMER_AIVEN
+      value: "true"
