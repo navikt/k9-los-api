@@ -24,16 +24,16 @@ fun CoroutineScope.oppdaterStatistikk(
     oppgaveKøRepository: OppgaveKøRepository
 
 ) = launch(Executors.newSingleThreadExecutor().asCoroutineDispatcher()) {
-    for (skalOppdatereStatistikk in channel) {
-        try {
+    try {
+        for (skalOppdatereStatistikk in channel) {
             delay(500)
             oppgaveKøRepository.hentIkkeTaHensyn().forEach {
                 refreshHentAntallOppgaver(oppgaveTjeneste, it)
             }
             statistikkRepository.hentFerdigstilteOgNyeHistorikkMedYtelsetypeSiste8Uker(refresh = true)
-        } catch (e: Exception) {
-            log.error("Feil ved oppdatering av statistikk", e)
         }
+    } catch (e: Exception) {
+        log.error("Feil ved oppdatering av statistikk", e)
     }
 }
 
