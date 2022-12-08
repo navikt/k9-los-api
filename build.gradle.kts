@@ -16,7 +16,7 @@ val dusseldorfKtorVersion = "3.2.1.2-ce40a5b"
 // Disse bør henge sammen med https://github.com/navikt/dusseldorf-ktor/blob/master/pom.xml#L36
 val kotlinVersion = "1.7.22"
 val ktorVersion = "2.1.2"
-val kafkaVersion = "3.2.3"
+val kafkaVersion = "6.2.7-ce"
 
 // Test Dependencies
 val testContainers = "1.17.5"
