@@ -11,20 +11,19 @@ val k9SakVersion = "3.3.25"
 val fuelVersion = "2.3.1"
 val jacksonVersion = "2.13.4"
 
-val dusseldorfKtorVersion = "3.2.1.2-ce40a5b"
+val dusseldorfKtorVersion = "3.2.2.1-4942135"
+val ktorVersion = "2.2.1"
+val kafkaVersion = "3.3.1"
 
-// Disse bør henge sammen med https://github.com/navikt/dusseldorf-ktor/blob/master/pom.xml#L36
-val kotlinVersion = "1.7.22"
-val ktorVersion = "2.1.2"
-val kafkaVersion = "3.2.3"
+val navTilgangskontroll = "2.2022.11.16_08.36-35c94368bc44"
 
 // Test Dependencies
-val testContainers = "1.17.5"
+val testContainers = "1.17.6"
 val jsonassertVersion = "1.5.1"
 val jupiterVersion = "5.9.1"
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.7.21"
+    id("org.jetbrains.kotlin.jvm") version "1.7.22"
     id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
@@ -60,8 +59,8 @@ dependencies {
     implementation("org.apache.kafka:kafka-streams:$kafkaVersion")
 
     // Tilgangskontroll
-    implementation("no.nav.common:auth:2.2022.10.11_08.33-4f72c1840f61")
-    implementation("no.nav.common:rest:2.2022.10.11_08.33-4f72c1840f61")
+    implementation("no.nav.common:auth:$navTilgangskontroll")
+    implementation("no.nav.common:rest:$navTilgangskontroll")
     implementation("com.google.code.gson:gson:2.10")
 
     // Kontrakter
@@ -88,7 +87,7 @@ dependencies {
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.25")
 
     testImplementation("no.nav.helse:dusseldorf-test-support:$dusseldorfKtorVersion")
-    testImplementation("io.mockk:mockk:1.13.1")
+    testImplementation("io.mockk:mockk:1.13.3")
     testImplementation("io.ktor:ktor-server-test-host-jvm:$ktorVersion") {
         exclude(group = "org.eclipse.jetty")
     }
@@ -140,7 +139,7 @@ tasks.withType<ShadowJar> {
 }
 
 tasks.withType<Wrapper> {
-    gradleVersion = "7.4.1"
+    gradleVersion = "7.6"
 }
 
 tasks.withType<Test> {
