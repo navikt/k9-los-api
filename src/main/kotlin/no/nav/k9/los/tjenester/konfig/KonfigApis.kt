@@ -11,7 +11,7 @@ import org.koin.ktor.ext.inject
 fun Route.KonfigApis() {
     val configuration by inject<Configuration>()
     val k9sakUrlDev = "https://k9.dev.intern.nav.no/k9/web"
-    val k9sakUrlProd = "https://app.adeo.no/k9/web"
+    val k9sakUrlProd = "https://k9.intern.nav.no/k9/web"
     val refreshUrlDev = "wss://k9-los-oidc-auth-proxy.dev.intern.nav.no/ws/k9-los-api"
     val refreshUrlProd = "wss://k9-los-oidc-auth-proxy.intern.nav.no/ws/k9-los-api"
     val refreshUrlLocal = "ws://localhost:8020/ws"
