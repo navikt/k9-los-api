@@ -12,7 +12,7 @@ import no.nav.k9.los.domene.modell.IModell
 import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.abac.IPepClient
-import no.nav.k9.los.integrasjon.kafka.KafkaConfig
+import no.nav.k9.los.integrasjon.kafka.IKafkaConfig
 import no.nav.k9.los.integrasjon.kafka.TopicEntry
 import no.nav.k9.los.integrasjon.kafka.TopicUse
 import no.nav.k9.statistikk.kontrakter.Behandling
@@ -25,7 +25,7 @@ import org.json.JSONObject
 import org.slf4j.LoggerFactory
 
 class StatistikkProducer constructor(
-    val kafkaConfig: KafkaConfig,
+    val kafkaConfig: IKafkaConfig,
     val saksbehandlerRepository: SaksbehandlerRepository,
     val reservasjonRepository: ReservasjonRepository,
     val pepClient: IPepClient,
@@ -87,7 +87,7 @@ class StatistikkProducer constructor(
             if (exception != null) {
                 log.error("", exception)
             } else {
-            //    log.info("Sendt til Topic '${TOPIC_USE_STATISTIKK_SAK.name}' med offset '${metadata.offset()}' til partition '${metadata.partition()}' topic ${metadata.topic()}")
+                log.info("Melding sendt OK til k9-statistikk med offset '${metadata.offset()}' til partition '${metadata.partition()}' topic ${metadata.topic()}")
             }
         }.get()
 
@@ -107,9 +107,11 @@ class StatistikkProducer constructor(
                 TOPIC_USE_STATISTIKK_BEHANDLING.name,
                 melding
             )
-        ) { _, exception ->
+        ) { metadata, exception ->
             if (exception != null) {
                 log.error("", exception)
+            } else {
+                log.info("Melding sendt OK til k9-statistikk med offset '${metadata.offset()}' til partition '${metadata.partition()}' topic ${metadata.topic()}")
             }
         }.get()
     }

@@ -2,16 +2,18 @@ package no.nav.k9.los
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import com.fasterxml.jackson.databind.SerializationFeature
-import io.ktor.application.*
-import io.ktor.auth.*
-import io.ktor.features.*
-import io.ktor.http.cio.websocket.*
-import io.ktor.http.content.*
-import io.ktor.jackson.*
-import io.ktor.locations.*
-import io.ktor.metrics.micrometer.*
-import io.ktor.routing.*
-import io.ktor.websocket.*
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.http.content.*
+import io.ktor.serialization.jackson.*
+import io.ktor.server.locations.*
+import io.ktor.server.metrics.micrometer.*
+import io.ktor.server.routing.*
+import io.ktor.server.plugins.callid.CallId
+import io.ktor.server.plugins.callloging.CallLogging
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.websocket.*
 import io.prometheus.client.hotspot.DefaultExports
 import kotlinx.coroutines.channels.BroadcastChannel
 import kotlinx.coroutines.channels.Channel
@@ -62,8 +64,8 @@ import no.nav.k9.los.tjenester.saksbehandler.saksliste.SaksbehandlerOppgavekoApi
 import no.nav.k9.los.tjenester.sse.RefreshKlienterWebSocket
 import no.nav.k9.los.tjenester.sse.SseEvent
 import org.koin.core.qualifier.named
-import org.koin.ktor.ext.Koin
 import org.koin.ktor.ext.getKoin
+import org.koin.ktor.plugin.Koin
 import java.time.Duration
 import java.util.*
 

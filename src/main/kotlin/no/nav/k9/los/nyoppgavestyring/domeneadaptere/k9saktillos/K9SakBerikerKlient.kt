@@ -17,7 +17,7 @@ import no.nav.helse.dusseldorf.ktor.metrics.Operation
 class K9SakBerikerKlient(
     private val configuration: Configuration,
     private val accessTokenClient: AccessTokenClient
-    ) {
+) {
     val log = LoggerFactory.getLogger("K9SakAdapter")
     private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
     private val url = configuration.k9Url()

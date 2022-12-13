@@ -1,7 +1,7 @@
 package no.nav.k9.los.db
 
 import com.zaxxer.hikari.HikariDataSource
-import io.ktor.application.Application
+import io.ktor.server.application.Application
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
 import no.nav.vault.jdbc.hikaricp.HikariCPVaultUtil

@@ -1,12 +1,12 @@
 package no.nav.k9.los.tjenester.driftsmeldinger
 
-import io.ktor.application.call
-import io.ktor.locations.Location
-import io.ktor.locations.get
-import io.ktor.locations.post
-import io.ktor.request.receive
-import io.ktor.response.respond
-import io.ktor.routing.Route
+import io.ktor.server.application.call
+import io.ktor.server.locations.Location
+import io.ktor.server.locations.get
+import io.ktor.server.locations.post
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.IdDto
 import org.koin.ktor.ext.inject
 import java.util.*

@@ -3,35 +3,38 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val mainClass = "no.nav.k9.los.K9LosKt"
 val hikariVersion = "5.0.1"
-val flywayVersion = "9.6.0"
+val flywayVersion = "9.9.0"
 val vaultJdbcVersion = "1.3.10"
-val koinVersion = "2.2.3"
+val koinVersion = "3.2.2"
 val kotliqueryVersion = "1.9.0"
-val k9SakVersion = "3.3.22"
+val k9SakVersion = "3.3.25"
 val k9KlageVersion = "0.0.2-SNAPSHOT"
 val fuelVersion = "2.3.1"
+val jacksonVersion = "2.13.4"
 
-val dusseldorfKtorVersion = "3.1.6.8-1a4651d"
+val dusseldorfKtorVersion = "3.2.2.1-4942135"
+val ktorVersion = "2.2.1"
+val kafkaVersion = "3.3.1"
 
-// Disse bør henge sammen med https://github.com/navikt/dusseldorf-ktor/blob/master/pom.xml#L36
-val kotlinVersion = "1.7.21"
-val ktorVersion = "1.6.8"
-val kafkaVersion = "3.1.0"
+val navTilgangskontroll = "2.2022.11.16_08.36-35c94368bc44"
+
+// Test Dependencies
+val testContainers = "1.17.6"
+val jsonassertVersion = "1.5.1"
+val jupiterVersion = "5.9.1"
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.7.21"
+    id("org.jetbrains.kotlin.jvm") version "1.7.22"
     id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
 dependencies {
     // Server
-    implementation ( "no.nav.helse:dusseldorf-ktor-core:$dusseldorfKtorVersion")
-    implementation ( "no.nav.helse:dusseldorf-ktor-jackson:$dusseldorfKtorVersion")
-    implementation ( "no.nav.helse:dusseldorf-ktor-metrics:$dusseldorfKtorVersion")
-    implementation ( "no.nav.helse:dusseldorf-ktor-health:$dusseldorfKtorVersion")
-    implementation ( "no.nav.helse:dusseldorf-ktor-auth:$dusseldorfKtorVersion") {
-        exclude(group = "junit", module = "junit")
-    }
+    implementation ("no.nav.helse:dusseldorf-ktor-core:$dusseldorfKtorVersion")
+    implementation ("no.nav.helse:dusseldorf-ktor-jackson:$dusseldorfKtorVersion")
+    implementation ("no.nav.helse:dusseldorf-ktor-metrics:$dusseldorfKtorVersion")
+    implementation ("no.nav.helse:dusseldorf-ktor-health:$dusseldorfKtorVersion")
+    implementation ("no.nav.helse:dusseldorf-ktor-auth:$dusseldorfKtorVersion")
 
     // Database
     implementation("com.zaxxer:HikariCP:$hikariVersion")
@@ -39,24 +42,26 @@ dependencies {
     implementation("no.nav:vault-jdbc:$vaultJdbcVersion")
     implementation("com.github.seratch:kotliquery:$kotliqueryVersion")
 
-    implementation("io.ktor:ktor-locations:$ktorVersion")
-    implementation("io.ktor:ktor-html-builder:$ktorVersion")
-    implementation("io.ktor:ktor-websockets:$ktorVersion")
+    // Ktor
+    implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
+    implementation("io.ktor:ktor-server-cors:$ktorVersion")
+    implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
+    implementation("io.ktor:ktor-server-locations-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-html-builder-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-websockets-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-client-auth-jvm:$ktorVersion")
 
     // Client
     implementation("no.nav.helse:dusseldorf-ktor-client:$dusseldorfKtorVersion")
     implementation("no.nav.helse:dusseldorf-oauth2-client:$dusseldorfKtorVersion")
-    implementation("io.ktor:ktor-client-apache:$ktorVersion")
-    implementation("io.ktor:ktor-client-auth-basic:$ktorVersion")
-    implementation("io.ktor:ktor-client-auth:$ktorVersion")
+    implementation("org.apache.httpcomponents:httpclient:4.5.13")
 
     // Kafka
     implementation("org.apache.kafka:kafka-streams:$kafkaVersion")
 
-
     // Tilgangskontroll
-    implementation("no.nav.common:auth:2.2022.10.11_08.33-4f72c1840f61")
-    implementation("no.nav.common:rest:2.2022.10.11_08.33-4f72c1840f61")
+    implementation("no.nav.common:auth:$navTilgangskontroll")
+    implementation("no.nav.common:rest:$navTilgangskontroll")
     implementation("com.google.code.gson:gson:2.10")
 
     // Kontrakter
@@ -67,7 +72,7 @@ dependencies {
     implementation("no.nav.k9.statistikk:kontrakter:2.0_20220411110858_dc06dd1")
 
     // Div
-    implementation(enforcedPlatform( "com.fasterxml.jackson:jackson-bom:2.13.4" ))
+    implementation(enforcedPlatform( "com.fasterxml.jackson:jackson-bom:$jacksonVersion"))
     implementation("info.debatty:java-string-similarity:2.0.0")
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
     implementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
@@ -80,32 +85,19 @@ dependencies {
     implementation("io.insert-koin:koin-ktor:$koinVersion")
 
     // Test
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.1")
-    testImplementation("org.junit.vintage:junit-vintage-engine:5.9.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:$jupiterVersion")
 
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.25")
-    testImplementation("org.apache.kafka:kafka-clients:$kafkaVersion")
 
     testImplementation("no.nav.helse:dusseldorf-test-support:$dusseldorfKtorVersion")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
-    testImplementation("io.mockk:mockk:1.12.8")
-    testImplementation("io.ktor:ktor-server-test-host:$ktorVersion") {
+    testImplementation("io.mockk:mockk:1.13.3")
+    testImplementation("io.ktor:ktor-server-test-host-jvm:$ktorVersion") {
         exclude(group = "org.eclipse.jetty")
-        exclude(group = "junit", module = "junit")
     }
-    testImplementation("org.skyscreamer:jsonassert:1.5.1")
+    testImplementation("org.skyscreamer:jsonassert:$jsonassertVersion")
 
-    testImplementation("org.testcontainers:postgresql:1.17.5") {
-        exclude(group = "junit", module = "junit")
-    }
-    testImplementation("org.testcontainers:junit-jupiter:1.17.5")
+    testImplementation("org.testcontainers:postgresql:$testContainers")
     testImplementation("io.insert-koin:koin-test-junit5:$koinVersion")
-    testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion") {
-        exclude(group = "junit", module = "junit")
-    }
-
-    implementation(kotlin("stdlib-jdk8"))
-    implementation("javax.ws.rs:javax.ws.rs-api:2.1.1")
 }
 
 repositories {
@@ -122,7 +114,6 @@ repositories {
     maven("https://packages.confluent.io/maven/")
     maven("https://jitpack.io")
 
-    maven("https://maven.pkg.jetbrains.space/public/p/kotlinx-html/maven") // https://github.com/detekt/detekt/issues/3461
     mavenLocal()
 }
 
@@ -151,7 +142,7 @@ tasks.withType<ShadowJar> {
 }
 
 tasks.withType<Wrapper> {
-    gradleVersion = "7.4.1"
+    gradleVersion = "7.6"
 }
 
 tasks.withType<Test> {

@@ -1,7 +1,7 @@
 package no.nav.k9.los.tjenester.saksbehandler
 
-import io.ktor.application.*
-import io.ktor.auth.*
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
 import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import java.nio.charset.Charset
 import java.util.*

@@ -7,6 +7,8 @@ import no.nav.k9.los.tjenester.saksbehandler.merknad.Merknad
 import no.nav.k9.los.tjenester.saksbehandler.merknad.MerknadEndret
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
+import kotlin.math.abs
 
 open class Behandling constructor(
     private val oppgaver: MutableSet<OppgaveV2> = mutableSetOf(),
@@ -102,6 +104,11 @@ open class Behandling constructor(
     }
 
     private fun ferdigstillOppgave(ferdigstillOppgave: FerdigstillOppgave) {
+        if (harBehandletFerdigstillelseAvOppgave(ferdigstillOppgave)) {
+            log.warn("Har allerede behandlet ferdigstillelse med oppgavekode (${ferdigstillOppgave.oppgaveKode}) og timestamp ${ferdigstillOppgave.tidspunkt} på referansen. $eksternReferanse")
+            return
+        }
+
         if (ferdigstillOppgave.oppgaveKode == null) {
             lukkAlleAktiveOppgaver(ferdigstillOppgave)
             return
@@ -112,6 +119,15 @@ open class Behandling constructor(
             lukkAktiveOppgaverOpprettetFør(eksisterendeAktivOppgave, ferdigstillOppgave)
         } else {
             log.error("Ferdigstillelse inneholder oppgavekode ${ferdigstillOppgave.oppgaveKode} som ikke finnes blant aktive oppgaver. $eksternReferanse")
+        }
+    }
+
+    fun harBehandletFerdigstillelseAvOppgave(nyFerdigstillelse: FerdigstillOppgave): Boolean {
+        return oppgaver.any { eksisterendeOppgave ->
+            eksisterendeOppgave.ferdigstilt?.tidspunkt?.let {
+                it.equalsWithPrecision(nyFerdigstillelse.tidspunkt, 50L)
+                        && nyFerdigstillelse.oppgaveKode?.let { nyOppgaveKode -> nyOppgaveKode == eksisterendeOppgave.oppgaveKode } ?: true
+            } ?: false
         }
     }
 
@@ -147,7 +163,12 @@ open class Behandling constructor(
     }
 
     private fun nyOppgave(opprettOppgave: OpprettOppgave) {
-        if (harAktivOppgaveMedReferanseOgKode(eksternReferanse = eksternReferanse, opprettOppgave.oppgaveKode)) {
+        if (harAlleredeOppgave(opprettOppgave)) {
+            log.warn("Har allerede oppgave med oppgavekode (${opprettOppgave.oppgaveKode}) og timestamp ${opprettOppgave.tidspunkt} på referansen. $eksternReferanse")
+            return
+        }
+
+        if (harAktivOppgaveMedReferanseOgKode(opprettOppgave.oppgaveKode)) {
             log.warn("Har allerede eksisterende, aktiv oppgave med oppgavekode (${opprettOppgave.oppgaveKode}) på referansen. $eksternReferanse")
             return
         }
@@ -164,12 +185,12 @@ open class Behandling constructor(
         log.info("Ny oppgave (${opprettOppgave.oppgaveKode}) lagt til $eksternReferanse")
     }
 
-    fun harAktivOppgaveMedReferanseOgKode(eksternReferanse: String, oppgaveKode: String): Boolean {
-        return oppgaver.any {
-            it.erAktiv() &&
-                    it.eksternReferanse == eksternReferanse &&
-                    it.oppgaveKode == oppgaveKode
-        }
+    fun harAktivOppgaveMedReferanseOgKode(oppgaveKode: String): Boolean {
+        return oppgaver.any {it.erAktiv() && it.oppgaveKode == oppgaveKode }
+    }
+
+    fun harAlleredeOppgave(nyOppgave: OpprettOppgave): Boolean {
+        return oppgaver.any { it.oppgaveKode == nyOppgave.oppgaveKode && it.opprettet.equalsWithPrecision(nyOppgave.tidspunkt, 50L) }
     }
 
     fun lagreMerknad(merknadEndring: MerknadEndret, saksbehandlerIdent: String?) {
@@ -193,6 +214,14 @@ open class Behandling constructor(
         merknad?.slett()
     }
 }
+
+fun LocalDateTime.equalsWithPrecision(annen: LocalDateTime, errorMs: Long = 50L): Boolean {
+    if (this.toLocalDate() != annen.toLocalDate()) {
+        return false
+    }
+    return abs(ChronoUnit.MILLIS.between(this, annen)) < errorMs
+}
+
 
 interface Ferdigstillelse {
     val tidspunkt: LocalDateTime

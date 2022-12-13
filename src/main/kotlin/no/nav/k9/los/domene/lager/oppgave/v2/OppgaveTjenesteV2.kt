@@ -24,8 +24,12 @@ open class OppgaveTjenesteV2(
                 ?: migreringstjeneste.hentBehandlingFraTidligereProsessEvents(eksternId)
                 ?: throw IllegalStateException("Mottatt hendelse uten å ha behandling. $eksternId")
 
-            hendelser.forEach { behandling.nyHendelse(it) }
-            oppgaveRepository.lagre(behandling, tx)
+            if (!behandling.erFerdigstilt()) {
+                hendelser.forEach { behandling.nyHendelse(it) }
+                oppgaveRepository.lagre(behandling, tx)
+            } else {
+                log.warn("Mottok hendelse for allerede ferdigstilt behandling $eksternId")
+            }
         }
     }
 
