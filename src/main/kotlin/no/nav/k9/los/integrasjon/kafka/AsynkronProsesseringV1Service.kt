@@ -36,7 +36,7 @@ internal class AsynkronProsesseringV1Service(
     )
 
     private val k9KlageStream = AksjonspunktKlageStream(
-        kafkaConfig = kafkaConfig,
+        kafkaConfig = kafkaAivenConfig,
         configuration = configuration,
         k9KlageEventHandler = k9KlageEventHandler,
     )
