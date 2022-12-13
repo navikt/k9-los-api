@@ -18,7 +18,7 @@ spec:
     - team: k9saksbehandling
       application: k9-klage
       access: write
-    - team: ptsak
+    - team: k9saksbehandling
       application: k9-los-api
       access: read
     #- team: ptsak
