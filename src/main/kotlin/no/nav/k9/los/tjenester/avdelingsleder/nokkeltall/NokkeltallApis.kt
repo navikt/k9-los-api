@@ -57,7 +57,9 @@ fun Route.NokkeltallApis() {
     class HentHastesaker
 
     get { _: HentHastesaker ->
-        call.respond(nokkeltallTjeneste.hentHastesaker())
+        requestContextService.withRequestContext(call) {
+            call.respond(nokkeltallTjeneste.hentHastesaker())
+        }
     }
 
     @Location("/aksjonspunkter-per-enhet-historikk")
