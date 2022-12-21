@@ -89,12 +89,11 @@ class NokkeltallTjeneste constructor(
         }
     }
 
-    suspend fun hentHastesaker(): List<HasteOppgaveDto> {
-        return oppgaveRepository.hentHasteoppgaver().map { HasteOppgaveDto(
-            saksnummer = it.fagsakSaksnummer,
-            ytelseType = it.fagsakYtelseType,
-            opprettet = it.behandlingOpprettet
-        )}
+    suspend fun hentHastesaker(): String {
+        return "saksnummer, ytelsetype, behandling_opprettet\n" +
+        oppgaveRepository.hentHasteoppgaver().map {
+            it.fagsakSaksnummer + ", " + it.fagsakYtelseType + ", " + it.behandlingOpprettet
+        }.joinToString("\n")
     }
 
     data class HasteOppgaveDto(
