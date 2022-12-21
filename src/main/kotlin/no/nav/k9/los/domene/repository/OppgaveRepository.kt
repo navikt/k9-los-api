@@ -187,9 +187,9 @@ class OppgaveRepository(
                     }.asList
             )
         }
-        val oppgaver =
-            json.map { s -> objectMapper().readValue(s, Oppgave::class.java) }.filter { it.kode6 == kode6 }.toList()
-        oppgaver.forEach { refreshOppgave.trySend(it.eksternId) }
+        val oppgaver = json.map { s -> objectMapper().readValue(s, Oppgave::class.java) }
+            .filter { it.kode6 == kode6 }.toList()
+
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
         return oppgaver
