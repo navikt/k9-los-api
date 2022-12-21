@@ -26,6 +26,7 @@ import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.SkjermetDto
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.SorteringDatoDto
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.YtelsesTypeDto
 import no.nav.k9.los.tjenester.avdelingsleder.reservasjoner.ReservasjonDto
+import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveDto
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.OppgavekøDto
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.SaksbehandlerDto

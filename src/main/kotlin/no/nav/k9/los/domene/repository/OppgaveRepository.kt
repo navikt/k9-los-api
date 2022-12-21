@@ -167,6 +167,34 @@ class OppgaveRepository(
         } else null
     }
 
+    suspend fun hentHasteoppgaver(): List<Oppgave> {
+        val kode6 = pepClient.harTilgangTilKode6()
+        val json: List<String> = using(sessionOf(dataSource)) {
+            //language=PostgreSQL
+            it.run(
+                queryOf(
+                    """
+                    SELECT o.data
+                    FROM merknad m INNER JOIN Oppgave o ON (
+                        m.ekstern_referanse = o.id
+                      )
+                    WHERE m.slettet = false
+                    ORDER BY m.opprettet DESC
+                    """
+                )
+                    .map { row ->
+                        row.string("data")
+                    }.asList
+            )
+        }
+        val oppgaver =
+            json.map { s -> objectMapper().readValue(s, Oppgave::class.java) }.filter { it.kode6 == kode6 }.toList()
+        oppgaver.forEach { refreshOppgave.trySend(it.eksternId) }
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
+        return oppgaver
+    }
+
     fun lagre(uuid: UUID, f: (Oppgave?) -> Oppgave) {
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()

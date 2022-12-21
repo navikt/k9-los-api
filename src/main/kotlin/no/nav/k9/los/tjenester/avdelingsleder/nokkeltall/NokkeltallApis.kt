@@ -53,6 +53,13 @@ fun Route.NokkeltallApis() {
         call.respond(nokkeltallTjeneste.hentFerdigstilteSiste8Uker())
     }
 
+    @Location("/hastesaker")
+    class HentHastesaker
+
+    get { _: HentHastesaker ->
+        call.respond(nokkeltallTjeneste.hentHastesaker())
+    }
+
     @Location("/aksjonspunkter-per-enhet-historikk")
     class HentFullførteOppgaverPrEnhetOgYtelse
 
