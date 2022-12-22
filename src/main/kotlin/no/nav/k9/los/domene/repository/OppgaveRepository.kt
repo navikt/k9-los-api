@@ -177,7 +177,7 @@ class OppgaveRepository(
                     SELECT o.data
                     FROM merknad m INNER JOIN Oppgave o ON (m.ekstern_referanse = o.id)
                         LEFT JOIN behandling b on b.ekstern_referanse = o.id
-                    WHERE m.slettet = false OR b.ferdigstilt_tidspunkt is not NULL
+                    WHERE m.slettet = false AND b.ferdigstilt_tidspunkt is not NULL
                     ORDER BY m.opprettet DESC
                     """
                 )
