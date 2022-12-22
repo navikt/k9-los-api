@@ -211,6 +211,7 @@ open class Behandling constructor(
             log.warn("Prøver å slette merknad som ikke finnes eller allerede er slettet")
             return
         }
+        log.info("Sletter merknad $eksternReferanse")
         merknad?.slett()
     }
 }
