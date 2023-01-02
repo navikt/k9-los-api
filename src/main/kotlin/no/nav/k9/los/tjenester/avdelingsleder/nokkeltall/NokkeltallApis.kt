@@ -1,9 +1,10 @@
 package no.nav.k9.los.tjenester.avdelingsleder.nokkeltall
 
+import io.ktor.http.*
 import io.ktor.server.application.call
 import io.ktor.server.locations.Location
 import io.ktor.server.locations.get
-import io.ktor.server.response.respond
+import io.ktor.server.response.*
 import io.ktor.server.routing.Route
 import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
@@ -51,6 +52,21 @@ fun Route.NokkeltallApis() {
 
     get { _: HentFerdigstilteSiste8Uker ->
         call.respond(nokkeltallTjeneste.hentFerdigstilteSiste8Uker())
+    }
+
+    @Location("/hastesaker")
+    class HentHastesaker
+
+    get { _: HentHastesaker ->
+        requestContextService.withRequestContext(call) {
+            call.response.header(
+                HttpHeaders.ContentDisposition,
+                ContentDisposition.Attachment.withParameter(
+                    ContentDisposition.Parameters.FileName, "hastesaker.csv"
+                ).toString()
+            )
+            call.respond(nokkeltallTjeneste.hentHastesaker())
+        }
     }
 
     @Location("/aksjonspunkter-per-enhet-historikk")

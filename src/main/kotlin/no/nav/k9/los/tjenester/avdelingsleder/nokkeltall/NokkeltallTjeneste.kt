@@ -8,6 +8,7 @@ import no.nav.k9.los.domene.periode.tidligsteOgSeneste
 import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.domene.repository.StatistikkRepository
 import java.time.LocalDate
+import java.time.LocalDateTime
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak as VenteårsakK9Sak
 
 class NokkeltallTjeneste constructor(
@@ -87,6 +88,20 @@ class NokkeltallTjeneste constructor(
             )
         }
     }
+
+    suspend fun hentHastesaker(): String {
+        return "saksnummer, ytelsetype, behandling_opprettet\n" +
+        oppgaveRepository.hentHasteoppgaver().map {
+            it.fagsakSaksnummer + ", " + it.fagsakYtelseType + ", " + it.behandlingOpprettet
+        }.joinToString("\n")
+    }
+
+    data class HasteOppgaveDto(
+        val saksnummer: String,
+        val ytelseType: FagsakYtelseType,
+        val opprettet: LocalDateTime
+    )
+
 
     fun hentFerdigstilteOppgaverHistorikk(
         vararg historikkType: VelgbartHistorikkfelt,
