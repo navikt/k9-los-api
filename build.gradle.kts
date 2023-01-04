@@ -7,12 +7,12 @@ val flywayVersion = "9.9.0"
 val vaultJdbcVersion = "1.3.10"
 val koinVersion = "3.2.2"
 val kotliqueryVersion = "1.9.0"
-val k9SakVersion = "3.3.25"
+val k9SakVersion = "3.3.29"
 val fuelVersion = "2.3.1"
 val jacksonVersion = "2.13.4"
 
 val dusseldorfKtorVersion = "3.2.2.2-d9c7672"
-val ktorVersion = "2.2.1"
+val ktorVersion = "2.2.2"
 val kafkaVersion = "3.3.1"
 
 val navTilgangskontroll = "2.2022.11.16_08.36-35c94368bc44"
@@ -23,7 +23,7 @@ val jsonassertVersion = "1.5.1"
 val jupiterVersion = "5.9.1"
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.7.22"
+    id("org.jetbrains.kotlin.jvm") version "1.8.0"
     id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
@@ -53,7 +53,7 @@ dependencies {
     // Client
     implementation("no.nav.helse:dusseldorf-ktor-client:$dusseldorfKtorVersion")
     implementation("no.nav.helse:dusseldorf-oauth2-client:$dusseldorfKtorVersion")
-    implementation("org.apache.httpcomponents:httpclient:4.5.13")
+    implementation("org.apache.httpcomponents:httpclient:4.5.14")
 
     // Kafka
     implementation("org.apache.kafka:kafka-streams:$kafkaVersion")
