@@ -28,6 +28,7 @@ object TestConfiguration {
         map["nav.abac.system_user_password"] = "secret"
         map["nav.abac.url"] = "https://url"
 
+        map["nav.auth.clients.size"] = "2"
         map["nav.auth.clients.0.alias"] = "nais-sts"
         map["nav.auth.clients.0.client_id"] = "srvpps-k9-los-api"
         map["nav.auth.clients.0.client_secret"] = "very-secret"
