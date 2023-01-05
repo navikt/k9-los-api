@@ -53,7 +53,7 @@ data class Configuration(private val config: ApplicationConfig) {
 
     internal fun getKlageOppgavemeldingerTopic(): String {
         return config.getOptionalString("nav.kafka.klageTilLosTopic", secret = false)
-            ?: "oppgavemeldinger-klage-til-los"
+            ?: "k9saksbehandling.oppgavemeldinger-klage-til-los"
     }
 
     internal fun getK9SakTopic(): String {
