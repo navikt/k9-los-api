@@ -15,7 +15,6 @@ class SqlOppgaveQuery {
     private val queryParams: MutableMap<String, Any?> = mutableMapOf()
 
     fun getQuery(): String {
-        System.out.println(query)
         return query;
     }
 

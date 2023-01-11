@@ -9,6 +9,45 @@ import javax.sql.DataSource
 
 class OppgaveQueryRepository(val datasource: DataSource) {
 
+    fun hentAlleFelter(): Oppgavefelter {
+        return using(sessionOf(datasource)) { it ->
+            it.transaction { tx -> Oppgavefelter(hentAlleFelter(tx)) }
+        }
+    }
+
+    private fun midlertidigFiksVisningsnavn(kode: String): String {
+        val s = kode.replace("([A-ZÆØÅ])".toRegex(), " $1").lowercase();
+        return s.substring(0, 1).uppercase() + s.substring(1)
+    }
+
+    private fun hentAlleFelter(tx: TransactionalSession): List<Oppgavefelt> {
+        val felterFraDatabase = tx.run(
+            queryOf(
+                """
+                    SELECT DISTINCT fo.ekstern_id as omrade,
+                      fd.ekstern_id as kode,
+                      fd.ekstern_id as visningsnavn
+                    FROM Feltdefinisjon fd INNER JOIN Omrade fo ON (
+                      fo.id = fd.omrade_id
+                    )
+                """.trimIndent()
+            ).map{row -> Oppgavefelt(
+                row.string("omrade"),
+                row.string("kode"),
+                midlertidigFiksVisningsnavn(row.string("visningsnavn")))
+            }.asList
+        ) ?: throw IllegalStateException("Feil ved kjøring av hentAlleFelter")
+
+        val standardfelter = listOf(
+            Oppgavefelt(null, "oppgavestatus", "Oppgavestatus"),
+            Oppgavefelt(null, "kildeområde", "Kildeområde"),
+            Oppgavefelt(null, "oppgavetype", "Oppgavetype"),
+            Oppgavefelt(null, "oppgaveområde", "Oppgaveområde"),
+        )
+
+        return (felterFraDatabase + standardfelter).sortedBy { it.visningsnavn };
+    }
+
     fun query(oppgaveQuery: OppgaveQuery): List<Long> {
         return using(sessionOf(datasource)) { it ->
             it.transaction { tx -> query(tx, oppgaveQuery) }

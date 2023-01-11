@@ -20,6 +20,7 @@ import java.util.*
 fun Route.OppgaveQueryApis() {
     val requestContextService by inject<RequestContextService>()
     val oppgaveQueryRepository by inject<OppgaveQueryRepository>()
+    val oppgaveQueryService by inject<OppgaveQueryService>()
 
     @Location("/query")
     class queryOppgave
@@ -27,9 +28,16 @@ fun Route.OppgaveQueryApis() {
     post { _: queryOppgave ->
         val oppgaveQuery = call.receive<OppgaveQuery>()
         requestContextService.withRequestContext(call) {
-            call.respond(
-                oppgaveQueryRepository.query(oppgaveQuery)
-            )
+            call.respond(oppgaveQueryService.query(oppgaveQuery))
+        }
+    }
+
+    @Location("/felter")
+    class hentAlleFelter
+
+    get { _: hentAlleFelter ->
+        requestContextService.withRequestContext(call) {
+            call.respond(oppgaveQueryService.hentAlleFelter())
         }
     }
 }
