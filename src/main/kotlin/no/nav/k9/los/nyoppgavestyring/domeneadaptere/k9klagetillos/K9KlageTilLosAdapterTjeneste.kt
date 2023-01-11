@@ -217,6 +217,10 @@ class K9KlageTilLosAdapterTjeneste(
             verdi = event.eksternId.toString()
         ),
         OppgaveFeltverdiDto(
+            nøkkel = "påklagdBehandlingUuid",
+            verdi = event.påklagdBehandlingEksternId.toString(),
+        ),
+        OppgaveFeltverdiDto(
             nøkkel = "aktorId",
             verdi = event.aktørId
         ),
