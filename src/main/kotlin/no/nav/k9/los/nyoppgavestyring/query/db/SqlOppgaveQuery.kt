@@ -80,7 +80,7 @@ class SqlOppgaveQuery {
                     WHERE ov.oppgave_id = o.id
                       AND fo.ekstern_id = :feltOmrade$index
                       AND fd.ekstern_id = :feltkode$index
-                      AND ov.verdi ${operator.sql} (:oppgaveVerdi$index)
+                      AND ov.verdi ${operator.sql} (:feltverdi$index)
                   ) 
             """.trimIndent()
     }
