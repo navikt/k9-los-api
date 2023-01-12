@@ -32,19 +32,19 @@ class SqlOppgaveQuery {
         when (feltkode) {
             "oppgavestatus" -> {
                 query += "${combineOperator.sql} o.status ${operator.sql} (:oppgavestatus$index) "
-                queryParams[":oppgavestatus$index"] = feltverdi
+                queryParams["oppgavestatus$index"] = feltverdi
             }
             "kildeområde" -> {
                 query += "${combineOperator.sql} o.kildeomrade ${operator.sql} (:kildeomrade$index) "
-                queryParams[":kildeomrade$index"] = feltverdi
+                queryParams["kildeomrade$index"] = feltverdi
             }
             "oppgavetype" -> {
                 query += "${combineOperator.sql} o.ekstern_id ${operator.sql} (:oppgavetype$index) "
-                queryParams[":oppgavetype$index"] = feltverdi
+                queryParams["oppgavetype$index"] = feltverdi
             }
             "oppgaveområde" -> {
                 query += "${combineOperator.sql} oppgave_omrade.ekstern_id ${operator.sql} (:oppgave_omrade$index) "
-                queryParams[":oppgave_omrade$index"] = feltverdi
+                queryParams["oppgave_omrade$index"] = feltverdi
             }
             else -> throw IllegalStateException("Ukjent feltkode: $feltkode")
         }

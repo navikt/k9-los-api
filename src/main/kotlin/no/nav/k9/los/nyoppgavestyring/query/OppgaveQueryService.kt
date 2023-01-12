@@ -7,6 +7,7 @@ import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.koin.java.KoinJavaComponent.inject
+import java.lang.RuntimeException
 import javax.sql.DataSource
 
 class OppgaveQueryService() {
@@ -42,10 +43,18 @@ class OppgaveQueryService() {
         oppgave: Oppgave
     ) = oppgaveQuery.select.map {
         if (it is EnkelSelectFelt) {
+            val verdi = when (it.kode) {
+                "oppgavestatus" -> oppgave.status
+                "kildeområde" -> oppgave.kildeområde
+                "oppgavetype" -> throw RuntimeException("Not implemented yet.")
+                "oppgaveområde" -> throw RuntimeException("Not implemented yet.")
+                else -> oppgave.hentVerdiEllerListe(requireNotNull(it.område), it.kode)
+            }
             Oppgavefeltverdi(
                 it.område,
                 it.kode,
-                oppgave.hentVerdiEllerListe(requireNotNull(it.område), it.kode))
+                verdi
+            )
         } else {
             // TODO: Støtt aggregerte felter:
             Oppgavefeltverdi("", "", "")
