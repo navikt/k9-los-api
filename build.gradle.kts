@@ -8,6 +8,7 @@ val vaultJdbcVersion = "1.3.10"
 val koinVersion = "3.2.2"
 val kotliqueryVersion = "1.9.0"
 val k9SakVersion = "3.3.30"
+val k9KlageVersion = "0.2.0"
 val fuelVersion = "2.3.1"
 val jacksonVersion = "2.13.4"
 
@@ -66,6 +67,8 @@ dependencies {
     // Kontrakter
     implementation("no.nav.k9.sak:kontrakt:$k9SakVersion")
     implementation("no.nav.k9.sak:kodeverk:$k9SakVersion")
+    implementation("no.nav.k9.klage:kontrakt-jakarta:$k9KlageVersion")
+    implementation("no.nav.k9.klage:kodeverk-jakarta:$k9KlageVersion")
     implementation("no.nav.k9.statistikk:kontrakter:2.0_20220411110858_dc06dd1")
 
     // Div

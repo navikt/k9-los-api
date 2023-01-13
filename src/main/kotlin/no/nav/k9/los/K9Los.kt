@@ -36,7 +36,10 @@ import no.nav.k9.los.eventhandler.sjekkReserverteJobb
 import no.nav.k9.los.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.los.integrasjon.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.StatistikkApi
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonApi
@@ -154,6 +157,16 @@ fun Application.k9Los() {
 
     K9SakTilLosAdapterTjeneste(
         behandlingProsessEventK9Repository = koin.get(),
+        områdeRepository = koin.get(),
+        feltdefinisjonTjeneste = koin.get(),
+        oppgavetypeTjeneste = koin.get(),
+        oppgaveV3Tjeneste = koin.get(),
+        config = koin.get(),
+        transactionalManager = koin.get()
+    ).kjør(kjørSetup = true, kjørUmiddelbart = false)
+
+    K9KlageTilLosAdapterTjeneste(
+        behandlingProsessEventKlageRepository = koin.get(),
         områdeRepository = koin.get(),
         feltdefinisjonTjeneste = koin.get(),
         oppgavetypeTjeneste = koin.get(),
@@ -292,6 +305,8 @@ private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
             route("oppgavetype") { OppgavetypeApi() }
             route("oppgave-v3") { OppgaveV3Api() }
             route("statistikk") { StatistikkApi() }
+            route("k9saktillos") { K9SakTilLosApi() }
+            route("k9klagetillos") { K9KlageTilLosApi() }
         }
     }
 }
