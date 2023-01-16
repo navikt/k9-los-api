@@ -26,7 +26,8 @@ class OppgaveQueryRepository(val datasource: DataSource) {
                 """
                     SELECT DISTINCT fo.ekstern_id as omrade,
                       fd.ekstern_id as kode,
-                      fd.ekstern_id as visningsnavn
+                      fd.ekstern_id as visningsnavn,
+                      fd.tolkes_som as tolkes_som
                     FROM Feltdefinisjon fd INNER JOIN Omrade fo ON (
                       fo.id = fd.omrade_id
                     )
@@ -34,15 +35,16 @@ class OppgaveQueryRepository(val datasource: DataSource) {
             ).map{row -> Oppgavefelt(
                 row.string("omrade"),
                 row.string("kode"),
-                midlertidigFiksVisningsnavn(row.string("visningsnavn")))
-            }.asList
+                midlertidigFiksVisningsnavn(row.string("visningsnavn")),
+                row.string("tolkes_som")
+            ) }.asList
         ) ?: throw IllegalStateException("Feil ved kjøring av hentAlleFelter")
 
         val standardfelter = listOf(
-            Oppgavefelt(null, "oppgavestatus", "Oppgavestatus"),
-            Oppgavefelt(null, "kildeområde", "Kildeområde"),
-            Oppgavefelt(null, "oppgavetype", "Oppgavetype"),
-            Oppgavefelt(null, "oppgaveområde", "Oppgaveområde"),
+            Oppgavefelt(null, "oppgavestatus", "Oppgavestatus", "String"),
+            Oppgavefelt(null, "kildeområde", "Kildeområde", "String"),
+            Oppgavefelt(null, "oppgavetype", "Oppgavetype", "String"),
+            Oppgavefelt(null, "oppgaveområde", "Oppgaveområde", "String")
         )
 
         return (felterFraDatabase + standardfelter).sortedBy { it.visningsnavn };
