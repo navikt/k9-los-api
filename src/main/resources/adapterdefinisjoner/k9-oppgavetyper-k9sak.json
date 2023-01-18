@@ -46,6 +46,11 @@
           "påkrevd": false
         },
         {
+          "id": "vedtaksdato",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
           "id": "ytelsestype",
           "visPåOppgave": true,
           "påkrevd": true

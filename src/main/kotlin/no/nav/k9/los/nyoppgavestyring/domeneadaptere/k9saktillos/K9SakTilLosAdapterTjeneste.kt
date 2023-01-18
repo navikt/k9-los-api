@@ -240,6 +240,10 @@ class K9SakTilLosAdapterTjeneste(
             verdi = forrigeOppgave?.hentVerdi("registrertDato") ?: event.eventTid.toString()
         ),
         OppgaveFeltverdiDto(
+            nøkkel = "vedtaksdato",
+            verdi = event.vedtaksdato?.toString() ?: forrigeOppgave?.hentVerdi("vedtaksdato")
+        ),
+        OppgaveFeltverdiDto(
             nøkkel = "totrinnskontroll",
             verdi = event.aksjonspunktTilstander.filter { aksjonspunktTilstandDto ->
                 aksjonspunktTilstandDto.aksjonspunktKode.equals("5015") && aksjonspunktTilstandDto.status !in (listOf(AksjonspunktStatus.AVBRUTT))
