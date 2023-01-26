@@ -14,7 +14,7 @@ val jacksonVersion = "2.13.4"
 
 val dusseldorfKtorVersion = "3.2.2.2-d9c7672"
 val ktorVersion = "2.2.2"
-val kafkaVersion = "3.3.1"
+val kafkaVersion = "3.2.3"
 
 val navTilgangskontroll = "2.2022.11.16_08.36-35c94368bc44"
 

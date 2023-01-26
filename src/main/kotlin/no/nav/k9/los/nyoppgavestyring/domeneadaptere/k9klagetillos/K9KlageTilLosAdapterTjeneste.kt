@@ -272,10 +272,10 @@ class K9KlageTilLosAdapterTjeneste(
             nøkkel = "registrertDato",
             verdi = forrigeOppgave?.hentVerdi("registrertDato") ?: event.eventTid.toString()
         ),
-        //OppgaveFeltverdiDto(
-        //    nøkkel = "vedtaksdato",
-        //    verdi = event.vedtaksdato?.toString() ?: forrigeOppgave?.hentVerdi("vedtaksdato")
-        //),
+        OppgaveFeltverdiDto(
+            nøkkel = "vedtaksdato",
+            verdi = event.vedtaksdato?.toString() ?: forrigeOppgave?.hentVerdi("vedtaksdato")
+        ),
         OppgaveFeltverdiDto(
             nøkkel = "totrinnskontroll",
             verdi = event.aksjonspunkttilstander.filter { aksjonspunktTilstandDto ->
