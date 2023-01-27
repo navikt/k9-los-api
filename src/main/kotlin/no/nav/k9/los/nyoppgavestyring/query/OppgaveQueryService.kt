@@ -29,11 +29,8 @@ class OppgaveQueryService() {
 
     fun query(tx: TransactionalSession, oppgaveQuery: OppgaveQuery): List<Oppgaverad> {
         val oppgaver: List<Long> = oppgaveQueryRepository.query(tx, oppgaveQuery)
-        if (oppgaveQuery.select.isEmpty()) {
-            return listOf(Oppgaverad(listOf(Oppgavefeltverdi(null, "Antall", oppgaver.size))))
-        }
 
-        return runBlocking {
+        val oppgaverader = runBlocking {
             oppgaver.mapNotNull {
                 val oppgave = oppgaveRepository.hentOppgaveForId(tx, it)
 
@@ -43,12 +40,20 @@ class OppgaveQueryService() {
 
                 if (saksnummer === null || !pepClient.harTilgangTilLesSak(saksnummer, aktorId)) {
                     null
+                } else if (oppgaveQuery.select.isEmpty()) {
+                    Oppgaverad(listOf())
                 } else {
                     val felter = toOppgavefeltverdier(oppgaveQuery, oppgave)
                     Oppgaverad(felter)
                 }
             }
         }
+
+        if (oppgaveQuery.select.isEmpty()) {
+            return listOf(Oppgaverad(listOf(Oppgavefeltverdi(null, "Antall", oppgaverader.size))))
+        }
+
+        return oppgaverader
     }
 
     private fun toOppgavefeltverdier(
