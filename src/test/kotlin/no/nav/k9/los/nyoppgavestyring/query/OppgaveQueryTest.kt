@@ -27,11 +27,11 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             FeltverdiOppgavefilter(null, "oppgaveområde", "EQUALS", "aksjonspunkt"),
             FeltverdiOppgavefilter("K9", "fagsystem", "NOT_EQUALS", "Tullball"),
             CombineOppgavefilter("OR", listOf(
-                FeltverdiOppgavefilter("K9", "totrinnskontroll", "EQUALS", true),
-                FeltverdiOppgavefilter("K9", "helautomatiskBehandlet", "NOT_EQUALS", false),
+                FeltverdiOppgavefilter("K9", "totrinnskontroll", "EQUALS", "true"),
+                FeltverdiOppgavefilter("K9", "helautomatiskBehandlet", "NOT_EQUALS", "false"),
                 FeltverdiOppgavefilter("K9", "mottattDato", "LESS_THAN", LocalDate.of(2022, 1, 1)),
                 CombineOppgavefilter("AND", listOf(
-                    FeltverdiOppgavefilter("K9", "aktorId", "GREATER_THAN_OR_EQUALS", 2),
+                    FeltverdiOppgavefilter("K9", "aktorId", "GREATER_THAN_OR_EQUALS", "2"),
                 ))
             ))
         ))
