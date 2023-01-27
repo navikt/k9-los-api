@@ -180,6 +180,7 @@ fun Application.k9Los() {
         statistikkPublisher = koin.get(),
         transactionalManager = koin.get(),
         statistikkRepository = koin.get(),
+        pepClient = koin.get(),
         config = koin.get()
     ).kjør(kjørUmiddelbart = false)
 
