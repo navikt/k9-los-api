@@ -1,8 +1,11 @@
 package no.nav.k9.los.nyoppgavestyring.query
 
+import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.k9.los.integrasjon.abac.IPepClient
+import no.nav.k9.los.integrasjon.abac.PepClient
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
@@ -14,13 +17,14 @@ class OppgaveQueryService() {
     val datasource by inject<DataSource>(DataSource::class.java)
     val oppgaveQueryRepository by inject<OppgaveQueryRepository>(OppgaveQueryRepository::class.java)
     val oppgaveRepository by inject<OppgaveRepository>(OppgaveRepository::class.java)
+    val pepClient by inject<IPepClient>(IPepClient::class.java)
 
     fun hentAlleFelter(): Oppgavefelter {
-        return oppgaveQueryRepository.hentAlleFelter();
+        return oppgaveQueryRepository.hentAlleFelter()
     }
 
     fun queryForOppgaveId(oppgaveQuery: OppgaveQuery): List<Long> {
-        return oppgaveQueryRepository.query(oppgaveQuery);
+        return oppgaveQueryRepository.query(oppgaveQuery)
     }
 
     fun query(tx: TransactionalSession, oppgaveQuery: OppgaveQuery): List<Oppgaverad> {
@@ -29,12 +33,21 @@ class OppgaveQueryService() {
             return listOf(Oppgaverad(listOf(Oppgavefeltverdi(null, "Antall", oppgaver.size))))
         }
 
-        return oppgaver.map {
-            val oppgave = oppgaveRepository.hentOppgaveForId(tx, it)
-            val felter = toOppgavefeltverdier(oppgaveQuery, oppgave)
-            // TODO: pluss på felter som er direkte på oppgaven.
+        return runBlocking {
+            oppgaver.mapNotNull {
+                val oppgave = oppgaveRepository.hentOppgaveForId(tx, it)
 
-            Oppgaverad(felter)
+                // TODO: Generaliser ABAC-attributter + sjekk av disse:
+                val saksnummer = oppgave.hentVerdi("K9", "saksnummer")
+                val aktorId = oppgave.hentVerdi("K9", "aktorId")!!
+
+                if (saksnummer === null || !pepClient.harTilgangTilLesSak(saksnummer, aktorId)) {
+                    null
+                } else {
+                    val felter = toOppgavefeltverdier(oppgaveQuery, oppgave)
+                    Oppgaverad(felter)
+                }
+            }
         }
     }
 
