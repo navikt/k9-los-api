@@ -18,7 +18,6 @@ import java.util.*
 internal fun Route.OppgaveV3Api() {
     val requestContextService by inject<RequestContextService>()
     val oppgaveV3Tjeneste by inject<OppgaveV3Tjeneste>()
-    val k9SakTilLosAdapterTjeneste by inject<K9SakTilLosAdapterTjeneste>()
     val transactionalManager by inject<TransactionalManager>()
     val behandlingProsessEventK9Repository by inject<BehandlingProsessEventK9Repository>()
 
@@ -30,20 +29,6 @@ internal fun Route.OppgaveV3Api() {
                 oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
             }
 
-            call.respond("OK")
-        }
-    }
-
-    delete("/slettOppgavedata") {
-        requestContextService.withRequestContext(call) {
-            oppgaveV3Tjeneste.slettOppgaveData()
-            call.respond("OK")
-        }
-    }
-
-    put("/startOppgaveprosessering") {
-        requestContextService.withRequestContext(call) {
-            k9SakTilLosAdapterTjeneste.kjør(kjørUmiddelbart = true)
             call.respond("OK")
         }
     }
@@ -73,5 +58,4 @@ internal fun Route.OppgaveV3Api() {
         }
         call.respond("OK")
     }
-
 }

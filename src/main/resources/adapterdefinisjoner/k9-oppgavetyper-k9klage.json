@@ -1,12 +1,17 @@
 {
   "område": "K9",
-  "definisjonskilde": "k9-sak-til-los",
+  "definisjonskilde": "k9-klage-til-los",
   "oppgavetyper": [
     {
-      "id": "aksjonspunkt",
+      "id": "k9klage",
       "oppgavefelter": [
         {
           "id": "behandlingUuid",
+          "visPåOppgave": true,
+          "påkrevd": true
+        },
+        {
+          "id": "påklagdBehandlingUuid",
           "visPåOppgave": true,
           "påkrevd": true
         },

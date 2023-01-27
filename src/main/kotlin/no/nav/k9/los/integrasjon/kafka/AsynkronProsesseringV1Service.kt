@@ -13,6 +13,7 @@ internal class AsynkronProsesseringV1Service(
     kafkaAivenConfig: IKafkaConfig,
     configuration: Configuration,
     k9sakEventHandler: K9sakEventHandler,
+    k9KlageEventHandler: K9KlageEventHandler,
     k9sakEventHandlerv2: K9sakEventHandlerV2,
     k9TilbakeEventHandler: K9TilbakeEventHandler,
     punsjEventHandler: K9punsjEventHandler,
@@ -34,6 +35,12 @@ internal class AsynkronProsesseringV1Service(
         k9sakEventHandlerv2 = k9sakEventHandlerv2
     )
 
+    private val k9KlageStream = AksjonspunktKlageStream(
+        kafkaConfig = kafkaAivenConfig,
+        configuration = configuration,
+        k9KlageEventHandler = k9KlageEventHandler,
+    )
+
     private val aksjonspunkTilbaketStream = AksjonspunktTilbakeStream(
         kafkaConfig = if (configuration.tilbakeConsumerAiven()) kafkaAivenConfig else kafkaConfig,
         configuration = configuration,
@@ -49,6 +56,7 @@ internal class AsynkronProsesseringV1Service(
     private val healthChecks = setOf(
         k9SakStream.healthy,
         aksjonspunktStream.healthy,
+        k9KlageStream.healthy,
         aksjonspunkTilbaketStream.healthy,
         aksjonspunkPunsjStream.healthy
     )
@@ -56,6 +64,7 @@ internal class AsynkronProsesseringV1Service(
     private val isReadyChecks = setOf(
         k9SakStream.ready,
         aksjonspunktStream.ready,
+        k9KlageStream.ready,
         aksjonspunkTilbaketStream.ready,
         aksjonspunkPunsjStream.ready
     )

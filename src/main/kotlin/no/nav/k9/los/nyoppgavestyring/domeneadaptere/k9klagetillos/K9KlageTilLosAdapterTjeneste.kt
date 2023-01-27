@@ -1,13 +1,11 @@
-package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
-import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
-import no.nav.k9.kodeverk.behandling.BehandlingStatus
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktType
+import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
+import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktType
+import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.Aksjonspunkttilstand
+import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.KlagebehandlingProsessHendelse
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
@@ -22,14 +20,12 @@ import java.util.concurrent.TimeUnit
 import kotlin.concurrent.fixedRateTimer
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.los.domene.modell.AksjonspunktTilstand
+import no.nav.k9.los.domene.repository.BehandlingProsessEventKlageRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
-import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktKode
-import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import kotlin.concurrent.thread
 
-class K9SakTilLosAdapterTjeneste(
-    private val behandlingProsessEventK9Repository: BehandlingProsessEventK9Repository,
+class K9KlageTilLosAdapterTjeneste(
+    private val behandlingProsessEventKlageRepository: BehandlingProsessEventKlageRepository,
     private val områdeRepository: OmrådeRepository,
     private val feltdefinisjonTjeneste: FeltdefinisjonTjeneste,
     private val oppgavetypeTjeneste: OppgavetypeTjeneste,
@@ -38,8 +34,8 @@ class K9SakTilLosAdapterTjeneste(
     private val transactionalManager: TransactionalManager
 ) {
 
-    private val log: Logger = LoggerFactory.getLogger(K9SakTilLosAdapterTjeneste::class.java)
-    private val TRÅDNAVN = "k9-sak-til-los"
+    private val log: Logger = LoggerFactory.getLogger(K9KlageTilLosAdapterTjeneste::class.java)
+    private val TRÅDNAVN = "k9-klage-til-los"
     private val MANUELLE_AKSJONSPUNKTER = AksjonspunktDefinisjon.values().filter { aksjonspunktDefinisjon ->
         aksjonspunktDefinisjon.aksjonspunktType == AksjonspunktType.MANUELL
     }.map { aksjonspunktDefinisjon -> aksjonspunktDefinisjon.kode }
@@ -47,7 +43,6 @@ class K9SakTilLosAdapterTjeneste(
     private val AUTOPUNKTER = AksjonspunktDefinisjon.values().filter { aksjonspunktDefinisjon ->
         aksjonspunktDefinisjon.aksjonspunktType == AksjonspunktType.AUTOPUNKT
     }.map { aksjonspunktDefinisjon -> aksjonspunktDefinisjon.kode }
-
 
     fun kjør(kjørSetup: Boolean = false, kjørUmiddelbart: Boolean = false) {
         if (config.nyOppgavestyringAktivert()) {
@@ -92,19 +87,14 @@ class K9SakTilLosAdapterTjeneste(
         log.info("Starter avspilling av BehandlingProsessEventer")
         val tidKjøringStartet = System.currentTimeMillis()
 
-        val behandlingsIder = behandlingProsessEventK9Repository.hentAlleDirtyEventIder()
+        val behandlingsIder = behandlingProsessEventKlageRepository.hentAlleDirtyEventIder()
         log.info("Fant ${behandlingsIder.size} behandlinger")
 
         behandlingsIder.forEach { uuid ->
             transactionalManager.transaction { tx ->
-                val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
+                val behandlingProsessEventer = behandlingProsessEventKlageRepository.hentMedLås(tx, uuid).eventer
                 behandlingProsessEventer.forEach { event -> //TODO: hva skjer om eventer kommer out of order her, fordi feks k9 har sendt i feil rekkefølge?
                     val oppgaveDto = lagOppgaveDto(event, forrigeOppgave)
-
-                    if (event.behandlingStatus == BehandlingStatus.AVSLUTTET.kode) {
-                        //val vedtaksInfo = hentVedtaksInfo()
-                        //oppgaveDto = oppgaveDto.berikMedVedtaksInfo(vedtaksInfo)
-                    }
 
                     val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
 
@@ -118,7 +108,7 @@ class K9SakTilLosAdapterTjeneste(
                 behandlingTeller++
                 loggFremgangForHver100(behandlingTeller, "Forsert $behandlingTeller behandlinger")
 
-                behandlingProsessEventK9Repository.fjernDirty(uuid, tx)
+                behandlingProsessEventKlageRepository.fjernDirty(uuid, tx)
             }
         }
         val (antallAlle, antallAktive) = oppgaveV3Tjeneste.tellAntall()
@@ -136,30 +126,26 @@ class K9SakTilLosAdapterTjeneste(
         }
     }
 
-    private fun hentVedtaksInfo(): Map<String, String> {
-        TODO()
-    }
-
-    private fun lagOppgaveDto(event: BehandlingProsessEventDto, forrigeOppgave: OppgaveV3?) =
+    private fun lagOppgaveDto(event: KlagebehandlingProsessHendelse, forrigeOppgave: OppgaveV3?) =
         OppgaveDto(
             id = event.eksternId.toString(),
             versjon = event.eventTid.toString(),
             område = "K9",
             kildeområde = "K9",
-            type = "k9sak",
-            status = event.aksjonspunktTilstander.lastOrNull()?.status?.kode ?: "OPPR", // TODO statuser må gås opp
+            type = "k9klage",
+            status = event.aksjonspunkttilstander.lastOrNull()?.status?.kode ?: "OPPR", // TODO statuser må gås opp
             endretTidspunkt = event.eventTid,
             feltverdier = lagFeltverdier(event, forrigeOppgave)
         )
 
     private fun lagFeltverdier(
-        event: BehandlingProsessEventDto,
+        event: KlagebehandlingProsessHendelse,
         forrigeOppgave: OppgaveV3?
     ): List<OppgaveFeltverdiDto> {
         val oppgaveFeltverdiDtos = mapEnkeltverdier(event, forrigeOppgave)
-        
-        val åpneAksjonspunkter = event.aksjonspunktTilstander.filter { aksjonspunktTilstand ->
-            aksjonspunktTilstand.status.erÅpentAksjonspunkt()
+
+        val åpneAksjonspunkter = event.aksjonspunkttilstander.filter { aksjonspunkttilstand ->
+            aksjonspunkttilstand.status.erÅpentAksjonspunkt()
         }
 
         val harAutopunkt = åpneAksjonspunkter.any { aksjonspunktTilstandDto ->
@@ -169,22 +155,70 @@ class K9SakTilLosAdapterTjeneste(
         val harManueltAksjonspunkt = åpneAksjonspunkter.any { aksjonspunktTilstandDto ->
             MANUELLE_AKSJONSPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode)
         }
-        
+
         utledAksjonspunkter(event, oppgaveFeltverdiDtos)
         utledÅpneAksjonspunkter(åpneAksjonspunkter, oppgaveFeltverdiDtos)
-        utledAutomatiskBehandletFlagg(forrigeOppgave, oppgaveFeltverdiDtos, harManueltAksjonspunkt)
+        //automatiskBehandletFlagg er defaultet til False p.t.
         utledAvventerSaksbehandler(harManueltAksjonspunkt, harAutopunkt, oppgaveFeltverdiDtos)
 
         return oppgaveFeltverdiDtos
     }
 
+    private fun utledÅpneAksjonspunkter(
+        åpneAksjonspunkter: List<Aksjonspunkttilstand>,
+        oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
+    ) {
+        if (åpneAksjonspunkter.isNotEmpty()) {
+            åpneAksjonspunkter.map { åpentAksjonspunkt ->
+                oppgaveFeltverdiDtos.add(
+                    OppgaveFeltverdiDto(
+                        nøkkel = "aktivtAksjonspunkt",
+                        verdi = åpentAksjonspunkt.aksjonspunktKode
+                    )
+                )
+            }
+        } else {
+            oppgaveFeltverdiDtos.add(
+                OppgaveFeltverdiDto(
+                    nøkkel = "aktivtAksjonspunkt",
+                    verdi = null
+                )
+            )
+        }
+    }
+
+    private fun utledAksjonspunkter(
+        event: KlagebehandlingProsessHendelse,
+        oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
+    ) {
+        if (event.aksjonspunkttilstander.isNotEmpty()) {
+            oppgaveFeltverdiDtos.addAll(event.aksjonspunkttilstander.map { aksjonspunkttilstand ->
+                OppgaveFeltverdiDto(
+                    nøkkel = "aksjonspunkt",
+                    verdi = aksjonspunkttilstand.aksjonspunktKode
+                )
+            })
+        } else {
+            oppgaveFeltverdiDtos.add(
+                OppgaveFeltverdiDto(
+                    nøkkel = "aksjonspunkt",
+                    verdi = null
+                )
+            )
+        }
+    }
+
     private fun mapEnkeltverdier(
-        event: BehandlingProsessEventDto,
+        event: KlagebehandlingProsessHendelse,
         forrigeOppgave: OppgaveV3?
     ) = mutableListOf(
         OppgaveFeltverdiDto(
             nøkkel = "behandlingUuid",
             verdi = event.eksternId.toString()
+        ),
+        OppgaveFeltverdiDto(
+            nøkkel = "påklagdBehandlingUuid",
+            verdi = event.påklagdBehandlingEksternId.toString(),
         ),
         OppgaveFeltverdiDto(
             nøkkel = "aktorId",
@@ -216,20 +250,19 @@ class K9SakTilLosAdapterTjeneste(
         ),
         OppgaveFeltverdiDto(
             nøkkel = "relatertPartAktorid",
-            verdi = event.relatertPartAktørId
+            verdi = event.relatertPartAktørId?.id
         ),
         OppgaveFeltverdiDto(
             nøkkel = "pleietrengendeAktorId",
-            verdi = event.pleietrengendeAktørId
-        ),
-        OppgaveFeltverdiDto(
-            nøkkel = "ansvarligBeslutter",
-            verdi = event.ansvarligBeslutterForTotrinn ?: forrigeOppgave?.hentVerdi("ansvarligBeslutter")
+            verdi = event.pleietrengendeAktørId?.id
         ),
         OppgaveFeltverdiDto(
             nøkkel = "ansvarligSaksbehandler",
-            verdi = event.ansvarligSaksbehandlerForTotrinn
-                ?: forrigeOppgave?.hentVerdi("ansvarligSaksbehandler")
+            verdi = event.ansvarligSaksbehandler ?: forrigeOppgave?.hentVerdi("ansvarligSaksbehandler")
+        ),
+        OppgaveFeltverdiDto(
+            nøkkel = "ansvarligBeslutter",
+            verdi = event.ansvarligBeslutter ?: forrigeOppgave?.hentVerdi("ansvarligBeslutter")
         ),
         OppgaveFeltverdiDto(
             nøkkel = "mottattDato",
@@ -241,9 +274,13 @@ class K9SakTilLosAdapterTjeneste(
         ),
         OppgaveFeltverdiDto(
             nøkkel = "totrinnskontroll",
-            verdi = event.aksjonspunktTilstander.filter { aksjonspunktTilstandDto ->
-                aksjonspunktTilstandDto.aksjonspunktKode.equals("5015") && aksjonspunktTilstandDto.status !in (listOf(AksjonspunktStatus.AVBRUTT))
+            verdi = event.aksjonspunkttilstander.filter { aksjonspunktTilstandDto ->
+                aksjonspunktTilstandDto.aksjonspunktKode.equals("5015") && aksjonspunktTilstandDto.status.equals(no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus.AVBRUTT).not()
             }.isNotEmpty().toString()
+        ),
+        OppgaveFeltverdiDto(
+            nøkkel = "helautomatiskBehandlet",
+            verdi = false.toString() //TODO: Påstand - klagesaker er alltid manuelt behandlet?
         )
     )
 
@@ -269,76 +306,10 @@ class K9SakTilLosAdapterTjeneste(
         }
     }
 
-    private fun utledAutomatiskBehandletFlagg(
-        forrigeOppgave: OppgaveV3?,
-        oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>,
-        harManueltAksjonspunkt: Boolean
-    ) {
-        if (forrigeOppgave != null && forrigeOppgave.hentVerdi("helautomatiskBehandlet").toBoolean().not()) {
-            oppgaveFeltverdiDtos.add(
-                OppgaveFeltverdiDto(
-                    nøkkel = "helautomatiskBehandlet",
-                    verdi = false.toString()
-                )
-            )
-        } else {
-            oppgaveFeltverdiDtos.add(
-                OppgaveFeltverdiDto(
-                    nøkkel = "helautomatiskBehandlet",
-                    verdi = if (harManueltAksjonspunkt) false.toString() else true.toString()
-                )
-            )
-        }
-    }
-
-    private fun utledÅpneAksjonspunkter(
-        åpneAksjonspunkter: List<AksjonspunktTilstandDto>,
-        oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
-    ) {
-        if (åpneAksjonspunkter.isNotEmpty()) {
-            åpneAksjonspunkter.map { åpentAksjonspunkt ->
-                oppgaveFeltverdiDtos.add(
-                    OppgaveFeltverdiDto(
-                        nøkkel = "aktivtAksjonspunkt",
-                        verdi = åpentAksjonspunkt.aksjonspunktKode
-                    )
-                )
-            }
-        } else {
-            oppgaveFeltverdiDtos.add(
-                OppgaveFeltverdiDto(
-                    nøkkel = "aktivtAksjonspunkt",
-                    verdi = null
-                )
-            )
-        }
-    }
-
-    private fun utledAksjonspunkter(
-        event: BehandlingProsessEventDto,
-        oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
-    ) {
-        if (event.aksjonspunktTilstander.isNotEmpty()) {
-            oppgaveFeltverdiDtos.addAll(event.aksjonspunktTilstander.map { aksjonspunktTilstand ->
-                OppgaveFeltverdiDto(
-                    nøkkel = "aksjonspunkt",
-                    verdi = aksjonspunktTilstand.aksjonspunktKode
-                )
-            })
-        } else {
-            oppgaveFeltverdiDtos.add(
-                OppgaveFeltverdiDto(
-                    nøkkel = "aksjonspunkt",
-                    verdi = null
-                )
-            )
-        }
-    }
-
     private fun setup() {
         val objectMapper = jacksonObjectMapper()
         opprettOmråde()
-        opprettFeltdefinisjoner(objectMapper)
+        //opprettFeltdefinisjoner(objectMapper) K9SakAdapter er master på feltdefinisjoner inntil videre
         opprettOppgavetype(objectMapper)
     }
 
@@ -349,7 +320,7 @@ class K9SakTilLosAdapterTjeneste(
 
     private fun opprettFeltdefinisjoner(objectMapper: ObjectMapper) {
         val feltdefinisjonerDto = objectMapper.readValue(
-            K9SakTilLosAdapterTjeneste::class.java.getResource("/adapterdefinisjoner/k9-feltdefinisjoner-v2.json")!!
+            K9KlageTilLosAdapterTjeneste::class.java.getResource("/adapterdefinisjoner/k9-feltdefinisjoner-v2.json")!!
                 .readText(),
             FeltdefinisjonerDto::class.java
         )
@@ -359,20 +330,11 @@ class K9SakTilLosAdapterTjeneste(
 
     private fun opprettOppgavetype(objectMapper: ObjectMapper) {
         val oppgavetyperDto = objectMapper.readValue(
-            K9SakTilLosAdapterTjeneste::class.java.getResource("/adapterdefinisjoner/k9-oppgavetyper-k9sak.json")!!
+            K9KlageTilLosAdapterTjeneste::class.java.getResource("/adapterdefinisjoner/k9-oppgavetyper-k9klage.json")!!
                 .readText(),
             OppgavetyperDto::class.java
         )
         oppgavetypeTjeneste.oppdater(oppgavetyperDto)
         log.info("opprettet oppgavetype")
     }
-
-    private fun OppgaveDto.berikMedVedtaksInfo(vedtaksInfo: Map<String, String>): OppgaveDto {
-        return this.copy(
-            feltverdier = this.feltverdier.plus(vedtaksInfo.map { (key, value) ->
-                OppgaveFeltverdiDto(nøkkel = key, verdi = value)
-            })
-        )
-    }
-
 }
