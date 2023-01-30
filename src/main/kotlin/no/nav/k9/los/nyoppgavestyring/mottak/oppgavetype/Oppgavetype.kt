@@ -22,7 +22,7 @@ class Oppgavetype(
             Oppgavefelt(
                 feltDefinisjon = feltdefinisjoner.feltdefinisjoner.find { eksisterendeFeltdefinisjon ->
                     eksisterendeFeltdefinisjon.eksternId == innkommendeFeltdefinisjon.id
-                } ?: throw IllegalStateException("Omsøkt feltdefinisjon finnes ikke"),
+                } ?: throw IllegalStateException("Omsøkt feltdefinisjon finnes ikke: ${innkommendeFeltdefinisjon.id}"),
                 visPåOppgave = innkommendeFeltdefinisjon.visPåOppgave,
                 påkrevd = innkommendeFeltdefinisjon.påkrevd,
                 feltutleder = innkommendeFeltdefinisjon.feltutleder?.let { GyldigeFeltutledere.hentFeltutleder(innkommendeFeltdefinisjon.feltutleder) }

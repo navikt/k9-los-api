@@ -156,6 +156,12 @@
       "listetype": false,
       "tolkesSom": "boolean",
       "visTilBruker": true
+    },
+    {
+      "id": "vedtaksdato",
+      "listetype": false,
+      "tolkesSom": "String",
+      "visTilBruker": true
     }
   ]
 }
