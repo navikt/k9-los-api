@@ -22,6 +22,7 @@ data class BehandlingProsessEventDto(
     val fagsystem: Fagsystem,
     val saksnummer: String,
     val aktørId: String,
+    val vedtaksdato: LocalDate?,
 
     val behandlingId: Long?, // fjernes etter overgang til eksternId
 

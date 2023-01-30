@@ -8,13 +8,13 @@ val vaultJdbcVersion = "1.3.10"
 val koinVersion = "3.2.2"
 val kotliqueryVersion = "1.9.0"
 val k9SakVersion = "3.3.30"
-val k9KlageVersion = "0.2.0"
+val k9KlageVersion = "0.3.0"
 val fuelVersion = "2.3.1"
 val jacksonVersion = "2.13.4"
 
 val dusseldorfKtorVersion = "3.2.2.2-d9c7672"
 val ktorVersion = "2.2.2"
-val kafkaVersion = "3.3.1"
+val kafkaVersion = "3.2.3"
 
 val navTilgangskontroll = "2.2022.11.16_08.36-35c94368bc44"
 

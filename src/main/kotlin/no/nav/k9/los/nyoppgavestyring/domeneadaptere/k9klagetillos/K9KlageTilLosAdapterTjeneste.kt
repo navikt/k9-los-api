@@ -273,6 +273,10 @@ class K9KlageTilLosAdapterTjeneste(
             verdi = forrigeOppgave?.hentVerdi("registrertDato") ?: event.eventTid.toString()
         ),
         OppgaveFeltverdiDto(
+            nøkkel = "vedtaksdato",
+            verdi = event.vedtaksdato?.toString() ?: forrigeOppgave?.hentVerdi("vedtaksdato")
+        ),
+        OppgaveFeltverdiDto(
             nøkkel = "totrinnskontroll",
             verdi = event.aksjonspunkttilstander.filter { aksjonspunktTilstandDto ->
                 aksjonspunktTilstandDto.aksjonspunktKode.equals("5015") && aksjonspunktTilstandDto.status.equals(no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus.AVBRUTT).not()
