@@ -5,8 +5,12 @@ import kotliquery.TransactionalSession
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.los.integrasjon.abac.IPepClient
-import no.nav.k9.los.integrasjon.abac.PepClient
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
+import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelter
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgavefeltverdi
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgaverad
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.koin.java.KoinJavaComponent.inject

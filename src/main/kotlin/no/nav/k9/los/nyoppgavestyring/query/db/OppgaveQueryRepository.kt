@@ -4,7 +4,12 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.nyoppgavestyring.query.*
+import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
+import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelter
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
 import javax.sql.DataSource
 
 class OppgaveQueryRepository(val datasource: DataSource) {

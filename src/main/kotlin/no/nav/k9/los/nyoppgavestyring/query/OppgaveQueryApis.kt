@@ -6,14 +6,9 @@ import io.ktor.server.locations.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.Route
-import kotliquery.sessionOf
-import kotliquery.using
-import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.integrasjon.rest.RequestContextService
-import no.nav.k9.los.integrasjon.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveIdMedOverstyring
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import org.koin.ktor.ext.inject
 import java.util.*
 

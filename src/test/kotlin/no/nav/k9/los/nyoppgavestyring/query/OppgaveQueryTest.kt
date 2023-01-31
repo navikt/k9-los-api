@@ -2,15 +2,15 @@ package no.nav.k9.los.nyoppgavestyring.query
 
 import assertk.assertThat
 import assertk.assertions.isEmpty
-import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import org.junit.jupiter.api.Test
 import java.io.StringWriter
 import java.time.LocalDate

@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.query
+package no.nav.k9.los.nyoppgavestyring.query.dto.query
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect
 import com.fasterxml.jackson.annotation.JsonFormat
@@ -12,8 +12,5 @@ import com.fasterxml.jackson.annotation.JsonTypeName
     setterVisibility = JsonAutoDetect.Visibility.NONE,
     fieldVisibility = JsonAutoDetect.Visibility.ANY
 )
-@JsonTypeName("combine")
-class CombineOppgavefilter (
-    val combineOperator: String,
-    val filtere: List<Oppgavefilter>
-): Oppgavefilter()
+@JsonTypeName("aggregert")
+class AggregertSelectFelt(): SelectFelt();

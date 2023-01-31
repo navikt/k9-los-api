@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.query
+package no.nav.k9.los.nyoppgavestyring.query.dto.query
 
 /**
  * Spørring som kan søke på oppgaver som oppfyller gitte filtre.
