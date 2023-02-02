@@ -16,6 +16,8 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.koin.java.KoinJavaComponent.inject
 import java.lang.RuntimeException
 import javax.sql.DataSource
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.coroutineContext
 
 class OppgaveQueryService() {
     val datasource by inject<DataSource>(DataSource::class.java)
@@ -31,10 +33,10 @@ class OppgaveQueryService() {
         return oppgaveQueryRepository.query(oppgaveQuery)
     }
 
-    fun query(tx: TransactionalSession, oppgaveQuery: OppgaveQuery): List<Oppgaverad> {
+    fun query(tx: TransactionalSession, oppgaveQuery: OppgaveQuery, ctx: CoroutineContext): List<Oppgaverad> {
         val oppgaver: List<Long> = oppgaveQueryRepository.query(tx, oppgaveQuery)
 
-        val oppgaverader = runBlocking {
+        val oppgaverader = runBlocking(context = ctx) {
             oppgaver.mapNotNull {
                 val oppgave = oppgaveRepository.hentOppgaveForId(tx, it)
 
@@ -83,9 +85,10 @@ class OppgaveQueryService() {
         }
     }
 
-    fun query(oppgaveQuery: OppgaveQuery): List<Oppgaverad> {
+    suspend fun query(oppgaveQuery: OppgaveQuery): List<Oppgaverad> {
+        val ctx = coroutineContext
         return using(sessionOf(datasource)) { it ->
-            it.transaction { tx -> query(tx, oppgaveQuery) }
+            it.transaction { tx -> query(tx, oppgaveQuery, ctx) }
         }
     }
 }
