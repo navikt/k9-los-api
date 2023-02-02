@@ -13,7 +13,7 @@ import kotlin.coroutines.coroutineContext
 
 // For bruk i suspending functions
 // https://blog.tpersson.io/2018/04/22/emulating-request-scoped-objects-with-kotlin-coroutines/
-private class CoroutineRequestContext(
+public class CoroutineRequestContext(
     val idToken: IIdToken
 ) : AbstractCoroutineContextElement(Key) {
     companion object Key : CoroutineContext.Key<CoroutineRequestContext>

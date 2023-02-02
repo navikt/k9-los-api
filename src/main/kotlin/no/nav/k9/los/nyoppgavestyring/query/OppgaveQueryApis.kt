@@ -7,6 +7,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.Route
 import no.nav.k9.los.integrasjon.rest.RequestContextService
+import no.nav.k9.los.integrasjon.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import org.koin.ktor.ext.inject
@@ -23,7 +24,8 @@ fun Route.OppgaveQueryApis() {
     post { _: queryOppgave ->
         val oppgaveQuery = call.receive<OppgaveQuery>()
         requestContextService.withRequestContext(call) {
-            call.respond(oppgaveQueryService.query(oppgaveQuery))
+            val idToken = kotlin.coroutines.coroutineContext.idToken()
+            call.respond(oppgaveQueryService.query(oppgaveQuery, idToken))
         }
     }
 

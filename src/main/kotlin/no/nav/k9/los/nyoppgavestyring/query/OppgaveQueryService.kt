@@ -1,10 +1,13 @@
 package no.nav.k9.los.nyoppgavestyring.query
 
+import io.ktor.server.application.*
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.los.integrasjon.abac.IPepClient
+import no.nav.k9.los.integrasjon.rest.CoroutineRequestContext
+import no.nav.k9.los.integrasjon.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
@@ -13,10 +16,12 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgavefeltverdi
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgaverad
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
+import no.nav.k9.los.tjenester.saksbehandler.IIdToken
 import org.koin.java.KoinJavaComponent.inject
 import java.lang.RuntimeException
 import javax.sql.DataSource
 import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.coroutines.coroutineContext
 
 class OppgaveQueryService() {
@@ -33,10 +38,10 @@ class OppgaveQueryService() {
         return oppgaveQueryRepository.query(oppgaveQuery)
     }
 
-    fun query(tx: TransactionalSession, oppgaveQuery: OppgaveQuery, ctx: CoroutineContext): List<Oppgaverad> {
+    fun query(tx: TransactionalSession, oppgaveQuery: OppgaveQuery, idToken: IIdToken): List<Oppgaverad> {
         val oppgaver: List<Long> = oppgaveQueryRepository.query(tx, oppgaveQuery)
 
-        val oppgaverader = runBlocking(context = ctx) {
+        val oppgaverader = runBlocking(context = CoroutineRequestContext(idToken)) {
             oppgaver.mapNotNull {
                 val oppgave = oppgaveRepository.hentOppgaveForId(tx, it)
 
@@ -85,10 +90,9 @@ class OppgaveQueryService() {
         }
     }
 
-    suspend fun query(oppgaveQuery: OppgaveQuery): List<Oppgaverad> {
-        val ctx = coroutineContext
+    fun query(oppgaveQuery: OppgaveQuery, idToken: IIdToken): List<Oppgaverad> {
         return using(sessionOf(datasource)) { it ->
-            it.transaction { tx -> query(tx, oppgaveQuery, ctx) }
+            it.transaction { tx -> query(tx, oppgaveQuery, idToken) }
         }
     }
 }
