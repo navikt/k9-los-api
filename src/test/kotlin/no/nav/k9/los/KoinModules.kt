@@ -260,7 +260,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single { BehandlingProsessEventKlageRepository(dataSource = get()) }
     single { OppgaveTilBehandlingMapper() }
     single { OppgaveTilSakMapper() }
-    single { OppgaveRepository() }
+    single { OppgaveRepository(oppgavetypeRepository = get()) }
     single { StatistikkRepository(dataSource = get()) }
 
     val statistikkPublisher = mockk<StatistikkPublisher>()

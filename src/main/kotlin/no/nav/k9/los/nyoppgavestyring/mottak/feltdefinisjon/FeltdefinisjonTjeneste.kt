@@ -12,6 +12,9 @@ class FeltdefinisjonTjeneste(
 
     fun oppdater(innkommendeFeltdefinisjonerDto: FeltdefinisjonerDto) {
         transactionalManager.transaction { tx ->
+            //select for update skjemer ikke mot nye inserts, og samtidig eksekvering av oppdater() ga
+            //unique constraint exception i basen. Bare en av adapterene kunne sette seg opp pr oppstart fra tomt system.
+            feltdefinisjonRepository.lås(tx)
             val område = områdeRepository.hentOmråde(innkommendeFeltdefinisjonerDto.område, tx)
             val eksisterendeFeltdefinisjoner = feltdefinisjonRepository.hent(område, tx)
             val innkommendeFeltdefinisjoner = Feltdefinisjoner(innkommendeFeltdefinisjonerDto, område)

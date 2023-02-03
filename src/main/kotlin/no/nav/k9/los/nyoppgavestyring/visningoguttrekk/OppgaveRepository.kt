@@ -2,8 +2,10 @@ package no.nav.k9.los.nyoppgavestyring.visningoguttrekk
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 
-class OppgaveRepository {
+class OppgaveRepository(private val oppgavetypeRepository: OppgavetypeRepository) {
 
     fun hentNyesteOppgaveForEksternId(tx: TransactionalSession, eksternId: String): Oppgave {
         return tx.run(
@@ -23,7 +25,8 @@ class OppgaveRepository {
                     status = row.string("status"),
                     endretTidspunkt = row.localDateTime("endret_tidspunkt"),
                     kildeområde = row.string("kildeomrade"),
-                    felter = hentOppgavefelter(tx, row.long("id"))
+                    felter = hentOppgavefelter(tx, row.long("id"),
+                        oppgavetypeRepository.hentOppgavetype(row.string("kildeomrade"), row.long("oppgavetype_id"), tx))
                 )
             }.asSingle
         ) ?: throw IllegalStateException("Fant ikke oppgave med eksternId $eksternId")
@@ -46,13 +49,14 @@ class OppgaveRepository {
                     status = row.string("status"),
                     endretTidspunkt = row.localDateTime("endret_tidspunkt"),
                     kildeområde = row.string("kildeomrade"),
-                    felter = hentOppgavefelter(tx, row.long("id"))
+                    felter = hentOppgavefelter(tx, row.long("id"),
+                        oppgavetypeRepository.hentOppgavetype(row.string("kildeomrade"), row.long("oppgavetype_id"), tx))
                 )
             }.asSingle
         ) ?: throw IllegalStateException("Fant ikke oppgave med id $id")
     }
 
-    private fun hentOppgavefelter(tx: TransactionalSession, oppgaveId: Long): List<Oppgavefelt> {
+    private fun hentOppgavefelter(tx: TransactionalSession, oppgaveId: Long, oppgavetype: Oppgavetype): List<Oppgavefelt> {
         return tx.run(
             queryOf(
                 """

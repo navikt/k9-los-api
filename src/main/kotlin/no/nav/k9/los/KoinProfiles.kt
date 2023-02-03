@@ -321,7 +321,7 @@ fun common(app: Application, config: Configuration) = module {
     single { OppgaveV3Repository(dataSource = get()) }
     single { OppgaveTilBehandlingMapper() }
     single { OppgaveTilSakMapper() }
-    single { OppgaveRepository() }
+    single { OppgaveRepository(oppgavetypeRepository = get()) }
     single { StatistikkRepository(dataSource = get()) }
 
     single {

@@ -2,14 +2,17 @@ package no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
-import no.nav.k9.los.nyoppgavestyring.feltutledere.Feltutleder
 import no.nav.k9.los.nyoppgavestyring.feltutledere.GyldigeFeltutledere
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
+import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.utils.Cache
 import org.slf4j.LoggerFactory
 
-class OppgavetypeRepository(private val feltdefinisjonRepository: FeltdefinisjonRepository) {
+class OppgavetypeRepository(
+    private val feltdefinisjonRepository: FeltdefinisjonRepository,
+    private val områdeRepository: OmrådeRepository
+    ) {
 
     private val log = LoggerFactory.getLogger(OppgavetypeRepository::class.java)
     private val oppgavetypeCache = Cache<Oppgavetyper>()
@@ -20,6 +23,11 @@ class OppgavetypeRepository(private val feltdefinisjonRepository: Feltdefinisjon
             område = område,
             oppgavetyper = oppgavetyper.oppgavetyper.filter { oppgavetype ->  oppgavetype.definisjonskilde == definisjonskilde }.toSet()
         )
+    }
+
+    fun hentOppgavetype(område: String, oppgavetypeId: Long, tx: TransactionalSession): Oppgavetype {
+        return hent(områdeRepository.hentOmråde(område, tx), tx).oppgavetyper.find { it.id!!.equals(oppgavetypeId) }
+            ?: throw java.lang.IllegalStateException("Finner ikke omsøkt oppgavetype")
     }
 
     fun hent(område: Område, tx: TransactionalSession): Oppgavetyper {
@@ -53,6 +61,7 @@ class OppgavetypeRepository(private val feltdefinisjonRepository: Feltdefinisjon
                                     }
                                         ?: throw IllegalStateException("Oppgavetypens oppgavefelt referer til udefinert feltdefinisjon eller feltdefinisjon utenfor området"),
                                     påkrevd = row.boolean("pakrevd"),
+                                    defaultVerdi = row.string("defaultVerdi"),
                                     visPåOppgave = true,
                                     feltutleder = row.stringOrNull("feltutleder")?.let {
                                             GyldigeFeltutledere.hentFeltutleder(it)
@@ -130,16 +139,18 @@ class OppgavetypeRepository(private val feltdefinisjonRepository: Feltdefinisjon
         tx.run(
             queryOf(
                 """
-                insert into oppgavefelt(feltdefinisjon_id, oppgavetype_id, pakrevd, feltutleder)
+                insert into oppgavefelt(feltdefinisjon_id, oppgavetype_id, pakrevd, defaultverdi, feltutleder)
                 values(
                     :feltdefinisjonId,
                     :oppgavetypeId,
                     :paakrevd,
+                    :defaultverdi,
                     :feltutleder)""",
                 mapOf(
                     "feltdefinisjonId" to oppgavefelt.feltDefinisjon.id,
                     "oppgavetypeId" to oppgavetypeId,
                     "paakrevd" to oppgavefelt.påkrevd,
+                    "defaultverdi" to oppgavefelt.defaultVerdi,
                     "feltutleder" to oppgavefelt.feltutleder?.hentFeltutledernavn()
                 ) //TODO: joine inn område_id? usikker på hva jeg synes om at feltdefinisjon.eksternt_navn alltid er prefikset med område
             ).asUpdate
@@ -149,8 +160,8 @@ class OppgavetypeRepository(private val feltdefinisjonRepository: Feltdefinisjon
     fun endre(endring: OppgavetypeEndring, tx: TransactionalSession) {
         val oppgaveFinnes = sjekkOmOppgaverFinnes(endring.oppgavetype.id!!, tx)
         endring.felterSomSkalLeggesTil.forEach { felt ->
-            if (felt.påkrevd && oppgaveFinnes) {
-                throw IllegalArgumentException("Kan ikke legge til påkrevd felt når det finnes eksisterende oppgaver av denne typen")
+            if (felt.påkrevd && felt.defaultVerdi.isNullOrEmpty()) {
+                throw IllegalArgumentException("Kan ikke legge til påkrevd på eksisterende oppgave uten å oppgi defaultverdi")
             }
             leggTilOppgavefelt(tx, felt, endring.oppgavetype.id)
         }
@@ -173,11 +184,12 @@ class OppgavetypeRepository(private val feltdefinisjonRepository: Feltdefinisjon
             queryOf(
                 """
                 update oppgavefelt
-                set pakrevd = :pakrevd, feltutleder = :feltutleder
+                set pakrevd = :pakrevd, defaultverdi = :defaultverdi, feltutleder = :feltutleder
                 where id = :id
             """.trimIndent(),
                 mapOf(
                     "pakrevd" to innkommendeFelt.påkrevd,
+                    "defaultverdi" to innkommendeFelt.defaultVerdi,
                     "visPaOppgave" to innkommendeFelt.visPåOppgave, //TODO: Denne er ikke i basen ennå
                     "id" to id,
                     "feltutleder" to innkommendeFelt.feltutleder?.hentFeltutledernavn()
