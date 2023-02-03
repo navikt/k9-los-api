@@ -186,13 +186,15 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             statistikkProducer = statistikkProducer,
             statistikkChannel = get(named("statistikkRefreshChannel")),
             statistikkRepository = get(),
-            reservasjonTjeneste = get()
+            reservasjonTjeneste = get(),
+            k9SakTilLosAdapterTjeneste = get(),
         )
     }
 
     single {
         K9KlageEventHandler(
             BehandlingProsessEventKlageRepository(dataSource = get()),
+            k9KlageTilLosAdapterTjeneste = get()
         )
     }
 

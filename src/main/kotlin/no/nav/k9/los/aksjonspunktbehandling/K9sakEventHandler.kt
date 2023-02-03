@@ -9,6 +9,7 @@ import no.nav.k9.los.domene.modell.reportMetrics
 import no.nav.k9.los.domene.repository.*
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
 import org.slf4j.LoggerFactory
@@ -24,6 +25,7 @@ class K9sakEventHandler constructor(
     private val statistikkChannel: Channel<Boolean>,
     private val statistikkRepository: StatistikkRepository,
     private val reservasjonTjeneste: ReservasjonTjeneste,
+    private val k9SakTilLosAdapterTjeneste: K9SakTilLosAdapterTjeneste,
 ) : EventTeller {
     private val log = LoggerFactory.getLogger(K9sakEventHandler::class.java)
 
@@ -62,6 +64,7 @@ class K9sakEventHandler constructor(
             return
         }
         tellEvent(modell, oppgave)
+        k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId)
 
         if (modell.fikkEndretAksjonspunkt()) {
             log.info("Fjerner reservasjon på oppgave ${oppgave.eksternId}")
