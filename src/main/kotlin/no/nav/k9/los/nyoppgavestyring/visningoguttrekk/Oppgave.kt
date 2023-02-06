@@ -2,7 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.visningoguttrekk
 
 import java.time.LocalDateTime
 
-class Oppgave(
+data class Oppgave(
     val eksternId: String,
     val eksternVersjon: String,
     val oppgavetypeId: Long,

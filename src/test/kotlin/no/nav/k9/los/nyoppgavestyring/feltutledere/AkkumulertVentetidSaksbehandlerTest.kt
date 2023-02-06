@@ -136,5 +136,6 @@ internal class AkkumulertVentetidSaksbehandlerTest {
         ),
         visPåOppgave = true,
         påkrevd = false,
+        defaultVerdi = "defaultverdi"
     )
 }

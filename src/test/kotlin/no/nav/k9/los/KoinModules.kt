@@ -254,7 +254,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single { FeltdefinisjonRepository() }
     single { OmrådeRepository(dataSource = get()) }
-    single { OppgavetypeRepository(get()) }
+    single { OppgavetypeRepository(feltdefinisjonRepository = get(), områdeRepository = get()) }
     single { OppgaveV3Repository(dataSource = get()) }
     single { BehandlingProsessEventK9Repository(dataSource = get()) }
     single { BehandlingProsessEventKlageRepository(dataSource = get()) }

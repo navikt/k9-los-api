@@ -2,13 +2,12 @@ package no.nav.k9.los.nyoppgavestyring.visningoguttrekk
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 
 class OppgaveRepository(private val oppgavetypeRepository: OppgavetypeRepository) {
 
     fun hentNyesteOppgaveForEksternId(tx: TransactionalSession, eksternId: String): Oppgave {
-        return tx.run(
+        val oppgave = tx.run(
             queryOf(
                 """
                 select * 
@@ -25,15 +24,16 @@ class OppgaveRepository(private val oppgavetypeRepository: OppgavetypeRepository
                     status = row.string("status"),
                     endretTidspunkt = row.localDateTime("endret_tidspunkt"),
                     kildeområde = row.string("kildeomrade"),
-                    felter = hentOppgavefelter(tx, row.long("id"),
-                        oppgavetypeRepository.hentOppgavetype(row.string("kildeomrade"), row.long("oppgavetype_id"), tx))
+                    felter = hentOppgavefelter(tx, row.long("id"))
                 )
             }.asSingle
         ) ?: throw IllegalStateException("Fant ikke oppgave med eksternId $eksternId")
+
+        return fyllDefaultverdier(oppgave, tx)
     }
 
     fun hentOppgaveForId(tx: TransactionalSession, id: Long): Oppgave {
-        return tx.run(
+        val oppgave = tx.run(
             queryOf(
                 """
                 select * 
@@ -49,14 +49,41 @@ class OppgaveRepository(private val oppgavetypeRepository: OppgavetypeRepository
                     status = row.string("status"),
                     endretTidspunkt = row.localDateTime("endret_tidspunkt"),
                     kildeområde = row.string("kildeomrade"),
-                    felter = hentOppgavefelter(tx, row.long("id"),
-                        oppgavetypeRepository.hentOppgavetype(row.string("kildeomrade"), row.long("oppgavetype_id"), tx))
+                    felter = hentOppgavefelter(tx, row.long("id"))
                 )
             }.asSingle
         ) ?: throw IllegalStateException("Fant ikke oppgave med id $id")
+
+        return fyllDefaultverdier(oppgave, tx)
     }
 
-    private fun hentOppgavefelter(tx: TransactionalSession, oppgaveId: Long, oppgavetype: Oppgavetype): List<Oppgavefelt> {
+    private fun fyllDefaultverdier(
+        oppgave: Oppgave,
+        tx: TransactionalSession
+    ): Oppgave {
+        val oppgavetype = oppgavetypeRepository.hentOppgavetype(oppgave.kildeområde, oppgave.oppgavetypeId, tx)
+        val defaultverdier = mutableListOf<Oppgavefelt>()
+
+        oppgavetype.oppgavefelter
+            .filter { oppgavefelt -> oppgavefelt.påkrevd }
+            .forEach { påkrevdFelt ->
+                if (oppgave.felter.find { it.eksternId.equals(påkrevdFelt.feltDefinisjon.eksternId) } == null) {
+                    defaultverdier.add(
+                        Oppgavefelt(
+                            eksternId = påkrevdFelt.feltDefinisjon.eksternId,
+                            område = oppgave.kildeområde,
+                            listetype = false, //listetyper er aldri påkrevd
+                            påkrevd = true,
+                            verdi = påkrevdFelt.defaultVerdi.toString()
+                        )
+                    )
+                }
+            }
+
+        return oppgave.copy(felter = oppgave.felter.plus(defaultverdier))
+    }
+
+    private fun hentOppgavefelter(tx: TransactionalSession, oppgaveId: Long): List<Oppgavefelt> {
         return tx.run(
             queryOf(
                 """
@@ -75,7 +102,7 @@ class OppgaveRepository(private val oppgavetypeRepository: OppgavetypeRepository
                     område = row.string("omrade"),
                     listetype = row.boolean("liste_type"),
                     påkrevd = row.boolean("pakrevd"),
-                    verdi = row.string("verdi"),
+                    verdi = row.string("verdi")
                 )
             }.asList
         )

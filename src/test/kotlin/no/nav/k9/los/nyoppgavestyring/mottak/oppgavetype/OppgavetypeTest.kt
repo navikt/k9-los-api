@@ -84,7 +84,8 @@ class OppgavetypeTest {
                             ),
                             visPåOppgave = true,
                             påkrevd = true,
-                            feltutleder = null
+                            feltutleder = null,
+                            defaultVerdi = "defaultverdi"
                         ),
                         Oppgavefelt(
                             feltDefinisjon = Feltdefinisjon(
@@ -96,7 +97,8 @@ class OppgavetypeTest {
                             ),
                             visPåOppgave = true,
                             påkrevd = true,
-                            feltutleder = null // TODO
+                            feltutleder = null,
+                            defaultVerdi = "defaultverdi"
                         )
                     )
                 )
@@ -130,7 +132,8 @@ class OppgavetypeTest {
                             ),
                             visPåOppgave = true,
                             påkrevd = true,
-                            feltutleder = null
+                            feltutleder = null,
+                            defaultVerdi = "defaultverdi"
                         ),
                         Oppgavefelt(
                             feltDefinisjon = Feltdefinisjon(
@@ -142,7 +145,8 @@ class OppgavetypeTest {
                             ),
                             visPåOppgave = true,
                             påkrevd = true,
-                            feltutleder = null
+                            feltutleder = null,
+                            defaultVerdi = "defaultverdi"
                         )
                     )
                 ),
@@ -161,7 +165,8 @@ class OppgavetypeTest {
                             ),
                             visPåOppgave = true,
                             påkrevd = true,
-                            feltutleder = null
+                            feltutleder = null,
+                            defaultVerdi = "defaultverdi"
                         )
                     )
                 )
@@ -193,7 +198,8 @@ class OppgavetypeTest {
                             ),
                             visPåOppgave = true,
                             påkrevd = true,
-                            feltutleder = null
+                            feltutleder = null,
+                            defaultVerdi = "defaultverdi"
                         ),
                         Oppgavefelt(
                             feltDefinisjon = Feltdefinisjon(
@@ -205,7 +211,8 @@ class OppgavetypeTest {
                             ),
                             visPåOppgave = true,
                             påkrevd = true,
-                            feltutleder = null
+                            feltutleder = null,
+                            defaultVerdi = "defaultverdi"
                         )
                     )
                 ),
@@ -224,7 +231,8 @@ class OppgavetypeTest {
                             ),
                             visPåOppgave = true,
                             påkrevd = true,
-                            feltutleder = null
+                            feltutleder = null,
+                            defaultVerdi = "defaultverdi"
                         )
                     )
                 )
