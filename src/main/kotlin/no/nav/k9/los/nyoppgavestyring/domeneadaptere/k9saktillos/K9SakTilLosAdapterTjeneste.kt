@@ -346,11 +346,12 @@ class K9SakTilLosAdapterTjeneste(
         }
     }
 
-    private fun setup() {
+    fun setup(): K9SakTilLosAdapterTjeneste {
         val objectMapper = jacksonObjectMapper()
         opprettOmråde()
         opprettFeltdefinisjoner(objectMapper)
         opprettOppgavetype(objectMapper)
+        return this
     }
 
     private fun opprettOmråde() {

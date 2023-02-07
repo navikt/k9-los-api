@@ -311,7 +311,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgaveV3Tjeneste = get(),
             config = get(),
             transactionalManager = get()
-        )
+        ).setup()
     }
 
     single {
