@@ -4,7 +4,7 @@ import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.los.integrasjon.abac.PepClient
+import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
@@ -17,7 +17,7 @@ class OppgavestatistikkTjeneste(
     private val transactionalManager: TransactionalManager,
     private val statistikkRepository: StatistikkRepository,
     private val config: Configuration,
-    private val pepClient: PepClient
+    private val pepClient: IPepClient
 ) {
 
     private val log = LoggerFactory.getLogger(OppgavestatistikkTjeneste::class.java)
