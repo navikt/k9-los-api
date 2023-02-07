@@ -1,8 +1,10 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk
 
+import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.integrasjon.abac.PepClient
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
@@ -14,7 +16,8 @@ class OppgavestatistikkTjeneste(
     private val statistikkPublisher: StatistikkPublisher,
     private val transactionalManager: TransactionalManager,
     private val statistikkRepository: StatistikkRepository,
-    private val config: Configuration
+    private val config: Configuration,
+    private val pepClient: PepClient
 ) {
 
     private val log = LoggerFactory.getLogger(OppgavestatistikkTjeneste::class.java)
@@ -76,8 +79,21 @@ class OppgavestatistikkTjeneste(
     }
 
     private fun sendStatistikk(id: Long, tx: TransactionalSession) {
-        val (sak, behandling) = byggOppgavestatistikk(id, tx)
+        var (sak, behandling) = byggOppgavestatistikk(id, tx)
+        val erKode6 = runBlocking { pepClient.erSakKode6(sak.saksnummer) }
+        if (erKode6) {
+            sak = nullUtEventuelleSensitiveFelter(sak)
+            behandling = nullUtEventuelleSensitiveFelter(behandling)
+        }
         statistikkPublisher.publiser(sak, behandling)
+    }
+
+    private fun nullUtEventuelleSensitiveFelter(sak: Sak): Sak {
+        return sak.copy(aktorer = sak.aktorer.map { Aktør(aktorId = -5, rolle = "-5", rolleBeskrivelse = "-5") })
+    }
+
+    private fun nullUtEventuelleSensitiveFelter(behandling: Behandling): Behandling {
+        return behandling.copy(beslutter = "-5", saksbehandler = "-5", behandlingOpprettetAv = "-5", ansvarligEnhetKode = "-5", behandlendeEnhetKode = "-5")
     }
 
     private fun byggOppgavestatistikk(id: Long, tx: TransactionalSession): Pair<Sak, Behandling> {

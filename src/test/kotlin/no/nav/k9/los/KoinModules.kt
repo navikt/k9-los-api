@@ -273,6 +273,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             statistikkPublisher = get(),
             transactionalManager = get(),
             statistikkRepository = get(),
+            pepClient = get(),
             config = get()
         )
     }
