@@ -37,7 +37,8 @@ data class OppgaveKø(
     var filtreringFeilutbetaling: Intervall<Long>? = null,
     var merknadKoder: List<String> = emptyList(),
     var oppgaveKoder: List<String> = emptyList(),
-    var nyeKrav: Boolean? = null
+    var nyeKrav: Boolean? = null,
+    var søknadsdataEndret: Boolean? = null
 ) {
 
     companion object {
@@ -122,6 +123,10 @@ data class OppgaveKø(
         }
 
         if (nyeKrav != null && nyeKrav != oppgave.nyeKrav) {
+            return false
+        }
+
+        if (søknadsdataEndret != null && søknadsdataEndret != oppgave.søknadsdataEndret) {
             return false
         }
 
@@ -287,6 +292,10 @@ data class OppgaveKø(
             kriterierDto.add(tilNyeKravKriterium())
         }
 
+        if (søknadsdataEndret != null) {
+            kriterierDto.add(tilSøknadsdataEndretKriterium())
+        }
+
         return kriterierDto
     }
 
@@ -317,9 +326,14 @@ data class OppgaveKø(
         kriterierType = KøKriterierType.NYE_KRAV,
         checked = true,
         inkluder = nyeKrav
-
     )
 
+    private fun tilSøknadsdataEndretKriterium() = KriteriumDto(
+        id = id.toString(),
+        kriterierType = KøKriterierType.SOKNADSDATA_ENDRET,
+        checked = true,
+        inkluder = søknadsdataEndret
+    )
 }
 
 class Saksbehandler(

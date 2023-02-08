@@ -84,6 +84,12 @@ enum class KøKriterierType(
         felttype = KøKriterierFeltType.FLAGG,
         validator = FlaggValidator
     ),
+    SOKNADSDATA_ENDRET(
+        kode = "SOKNADSDATA_ENDRET",
+        navn = "Endrede søknadsperioder",
+        felttype = KøKriterierFeltType.FLAGG,
+        validator = FlaggValidator
+    ),
     ;
 
 

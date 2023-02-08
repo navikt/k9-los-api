@@ -26,7 +26,6 @@ import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.SkjermetDto
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.SorteringDatoDto
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.YtelsesTypeDto
 import no.nav.k9.los.tjenester.avdelingsleder.reservasjoner.ReservasjonDto
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveDto
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.OppgavekøDto
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.SaksbehandlerDto
@@ -272,6 +271,7 @@ class AvdelingslederTjeneste(
             KøKriterierType.MERKNADTYPE -> oppgaveKø.merknadKoder = kriteriumDto.koder ?: emptyList()
             KøKriterierType.OPPGAVEKODE -> oppgaveKø.oppgaveKoder = kriteriumDto.koder ?: emptyList()
             KøKriterierType.NYE_KRAV -> oppgaveKø.nyeKrav = kriteriumDto.inkluder
+            KøKriterierType.SOKNADSDATA_ENDRET -> oppgaveKø.søknadsdataEndret = kriteriumDto.inkluder
             else -> throw IllegalArgumentException("Støtter ikke kriterierType=${kriteriumDto.kriterierType}")
         }
     }
@@ -282,6 +282,7 @@ class AvdelingslederTjeneste(
             KøKriterierType.MERKNADTYPE -> oppgaveKø.merknadKoder = emptyList()
             KøKriterierType.OPPGAVEKODE -> oppgaveKø.oppgaveKoder = emptyList()
             KøKriterierType.NYE_KRAV -> oppgaveKø.nyeKrav = null
+            KøKriterierType.SOKNADSDATA_ENDRET -> oppgaveKø.søknadsdataEndret = null
             else -> throw IllegalArgumentException("Støtter ikke fjerning av kriterierType=${kriteriumDto.kriterierType}")
         }
     }
