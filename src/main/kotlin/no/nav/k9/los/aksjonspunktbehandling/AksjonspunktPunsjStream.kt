@@ -50,12 +50,17 @@ internal class AksjonspunktPunsjStream constructor(
                     Consumed.with(fromTopic.keySerde, fromTopic.valueSerde)
                 )
                 .foreach { _, entry ->
-                    if (entry != null) {
-                        val spørring = System.currentTimeMillis()
-                        logger.info("--> Mottatt hendelse fra punsj: ${entry.eksternId} - ${entry.journalpostId}")
-                        K9punsjEventHandler.prosesser(entry)
-                        logger.info("Ferdig prosessert hendelse fra punsj etter ${System.currentTimeMillis() - spørring}ms: ${entry.eksternId} - ${entry.journalpostId}.")
+                    try {
+                        if (entry != null) {
+                            val spørring = System.currentTimeMillis()
+                            logger.info("--> Mottatt hendelse fra punsj: ${entry.eksternId} - ${entry.journalpostId}")
+                            K9punsjEventHandler.prosesser(entry)
+                            logger.info("Ferdig prosessert hendelse fra punsj etter ${System.currentTimeMillis() - spørring}ms: ${entry.eksternId} - ${entry.journalpostId}.")
+                        }
+                    } catch (e: Exception) {
+                        logger.warn("Fant poisonpill i kafka-topic: [${configuration.getAksjonspunkthendelsePunsjTopic()}], hendelseId: [${entry.eksternId}]")
                     }
+
                 }
             return builder.build()
         }
