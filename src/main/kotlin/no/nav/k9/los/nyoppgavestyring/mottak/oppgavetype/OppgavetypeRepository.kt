@@ -61,7 +61,7 @@ class OppgavetypeRepository(
                                     }
                                         ?: throw IllegalStateException("Oppgavetypens oppgavefelt referer til udefinert feltdefinisjon eller feltdefinisjon utenfor området"),
                                     påkrevd = row.boolean("pakrevd"),
-                                    defaultVerdi = row.string("defaultVerdi"),
+                                    defaultverdi = row.stringOrNull("defaultVerdi"),
                                     visPåOppgave = true,
                                     feltutleder = row.stringOrNull("feltutleder")?.let {
                                             GyldigeFeltutledere.hentFeltutleder(it)
@@ -150,7 +150,7 @@ class OppgavetypeRepository(
                     "feltdefinisjonId" to oppgavefelt.feltDefinisjon.id,
                     "oppgavetypeId" to oppgavetypeId,
                     "paakrevd" to oppgavefelt.påkrevd,
-                    "defaultverdi" to oppgavefelt.defaultVerdi,
+                    "defaultverdi" to oppgavefelt.defaultverdi,
                     "feltutleder" to oppgavefelt.feltutleder?.hentFeltutledernavn()
                 ) //TODO: joine inn område_id? usikker på hva jeg synes om at feltdefinisjon.eksternt_navn alltid er prefikset med område
             ).asUpdate
@@ -160,20 +160,19 @@ class OppgavetypeRepository(
     fun endre(endring: OppgavetypeEndring, tx: TransactionalSession) {
         val oppgaveFinnes = sjekkOmOppgaverFinnes(endring.oppgavetype.id!!, tx)
         endring.felterSomSkalLeggesTil.forEach { felt ->
-            if (felt.påkrevd && felt.defaultVerdi.isNullOrEmpty()) {
+            if (oppgaveFinnes && felt.påkrevd && felt.defaultverdi.isNullOrEmpty()) {
                 throw IllegalArgumentException("Kan ikke legge til påkrevd på eksisterende oppgave uten å oppgi defaultverdi")
             }
             leggTilOppgavefelt(tx, felt, endring.oppgavetype.id)
         }
 
         endring.felterSomSkalFjernes.forEach { felt ->
-            //fjernFelt(felt, tx)
-            throw NotImplementedError("Støtter foreløpig ikke å kunne fjerne felter fra oppgavetype")
+            fjernFelt(endring.oppgavetype.id, felt, tx)
         }
 
         endring.felterSomSkalEndresMedNyeVerdier.forEach { felter ->
-            if (felter.innkommendeFelt.påkrevd && !felter.eksisterendeFelt.påkrevd && oppgaveFinnes) {
-                throw IllegalArgumentException("Kan ikke endre felt til påkrevd når det finnes eksisterende oppgaver som mangler denne verdien")
+            if (oppgaveFinnes && felter.innkommendeFelt.påkrevd && !felter.eksisterendeFelt.påkrevd && felter.innkommendeFelt.defaultverdi == null) {
+                throw IllegalArgumentException("Kan ikke legge til påkrevd på eksisterende oppgave uten å oppgi defaultverdi")
             }
             oppdaterFelt(felter.eksisterendeFelt.id!!, felter.innkommendeFelt, tx)
         }
@@ -189,7 +188,7 @@ class OppgavetypeRepository(
             """.trimIndent(),
                 mapOf(
                     "pakrevd" to innkommendeFelt.påkrevd,
-                    "defaultverdi" to innkommendeFelt.defaultVerdi,
+                    "defaultverdi" to innkommendeFelt.defaultverdi,
                     "visPaOppgave" to innkommendeFelt.visPåOppgave, //TODO: Denne er ikke i basen ennå
                     "id" to id,
                     "feltutleder" to innkommendeFelt.feltutleder?.hentFeltutledernavn()
@@ -217,17 +216,22 @@ class OppgavetypeRepository(
         return verdi != null
     }
 
-    private fun fjernFelt(felt: Oppgavefelt, tx: TransactionalSession) {
+    private fun fjernFelt(oppgavetypeId: Long, felt: Oppgavefelt, tx: TransactionalSession) {
         tx.run(
             queryOf(
                 """
-                    delete 
+                    delete
                     from oppgavefelt f
-                        inner join feltdefinisjon fd on f.feltdefinisjon_id = fd.id 
-                    where fd.ekstern_id = :eksternId 
+                    where f.id = (select fi.id 
+                        from oppgavefelt fi
+                            inner join feltdefinisjon fd on fi.feltdefinisjon_id = fd.id
+                            inner join oppgavetype o on fi.oppgavetype_id = o.id 
+                        where fd.ekstern_id = :feltdefinisjon_ekstern_id 
+                        and o.id = :oppgavetype_id)
                 """.trimIndent(),
                 mapOf(
-                    "eksternId" to felt.feltDefinisjon.eksternId
+                    "feltdefinisjon_ekstern_id" to felt.feltDefinisjon.eksternId,
+                    "oppgavetype_id" to oppgavetypeId
                 )
             ).asUpdate
         )

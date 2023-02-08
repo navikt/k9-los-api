@@ -1,8 +1,5 @@
 package no.nav.k9.los.nyoppgavestyring.feltutledere
 
-import io.mockk.InternalPlatformDsl.toStr
-import io.mockk.mockk
-import io.mockk.mockkConstructor
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdi
@@ -136,6 +133,6 @@ internal class AkkumulertVentetidSaksbehandlerTest {
         ),
         visPåOppgave = true,
         påkrevd = false,
-        defaultVerdi = "defaultverdi"
+        defaultverdi = "defaultverdi"
     )
 }

@@ -3,17 +3,11 @@ package no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype
 import assertk.assertThat
 import assertk.assertions.hasSize
 import assertk.assertions.isEmpty
-import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavefelt
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetyper
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import java.time.Duration
-import kotlin.test.assertFailsWith
 
 class OppgavetypeTest {
     private val område = Område(eksternId = "K9")
@@ -85,7 +79,7 @@ class OppgavetypeTest {
                             visPåOppgave = true,
                             påkrevd = true,
                             feltutleder = null,
-                            defaultVerdi = "defaultverdi"
+                            defaultverdi = "defaultverdi"
                         ),
                         Oppgavefelt(
                             feltDefinisjon = Feltdefinisjon(
@@ -98,7 +92,7 @@ class OppgavetypeTest {
                             visPåOppgave = true,
                             påkrevd = true,
                             feltutleder = null,
-                            defaultVerdi = "defaultverdi"
+                            defaultverdi = "defaultverdi"
                         )
                     )
                 )
@@ -111,7 +105,6 @@ class OppgavetypeTest {
         //assertThat(oppdaterListe.oppgavetyper).isEmpty() //TODO sjekk oppdaterListe
     }
 
-    @Disabled("I påvente av funksjonalitet for å kunne oppdatere oppgavetyper, i stedet for å måtte opprette de på nytt")
     @Test
     fun `test at vi legger feltdefinisjoner i opppdaterListe om de har endringer`() {
         val innkommendeFeltdefinisjoner = Oppgavetyper(
@@ -133,7 +126,7 @@ class OppgavetypeTest {
                             visPåOppgave = true,
                             påkrevd = true,
                             feltutleder = null,
-                            defaultVerdi = "defaultverdi"
+                            defaultverdi = null
                         ),
                         Oppgavefelt(
                             feltDefinisjon = Feltdefinisjon(
@@ -146,7 +139,20 @@ class OppgavetypeTest {
                             visPåOppgave = true,
                             påkrevd = true,
                             feltutleder = null,
-                            defaultVerdi = "defaultverdi"
+                            defaultverdi = null
+                        ),
+                        Oppgavefelt(
+                            feltDefinisjon = Feltdefinisjon(
+                                eksternId = "aktorId",
+                                område = område,
+                                listetype = false,
+                                tolkesSom = "String",
+                                visTilBruker = true
+                            ),
+                            visPåOppgave = true,
+                            påkrevd = true,
+                            feltutleder = null,
+                            defaultverdi = null
                         )
                     )
                 ),
@@ -166,7 +172,7 @@ class OppgavetypeTest {
                             visPåOppgave = true,
                             påkrevd = true,
                             feltutleder = null,
-                            defaultVerdi = "defaultverdi"
+                            defaultverdi = "defaultverdi"
                         )
                     )
                 )
@@ -176,7 +182,8 @@ class OppgavetypeTest {
         val (sletteListe, leggTilListe, oppdaterListe) = lagOppgavetyper().finnForskjell(innkommendeFeltdefinisjoner)
         assertThat(sletteListe.oppgavetyper).isEmpty()
         assertThat(leggTilListe.oppgavetyper).isEmpty()
-        //assertThat(oppdaterListe.oppgavetyper.).hasSize(2)
+        assertThat(oppdaterListe[0].felterSomSkalLeggesTil).hasSize(1)
+        assertThat(oppdaterListe[0].felterSomSkalFjernes).hasSize(1)
     }
 
     private fun lagOppgavetyper(): Oppgavetyper {
@@ -199,7 +206,7 @@ class OppgavetypeTest {
                             visPåOppgave = true,
                             påkrevd = true,
                             feltutleder = null,
-                            defaultVerdi = "defaultverdi"
+                            defaultverdi = null
                         ),
                         Oppgavefelt(
                             feltDefinisjon = Feltdefinisjon(
@@ -212,7 +219,20 @@ class OppgavetypeTest {
                             visPåOppgave = true,
                             påkrevd = true,
                             feltutleder = null,
-                            defaultVerdi = "defaultverdi"
+                            defaultverdi = null
+                        ),
+                        Oppgavefelt(
+                            feltDefinisjon = Feltdefinisjon(
+                                eksternId = "testverdi",
+                                område = område,
+                                listetype = false,
+                                tolkesSom = "String",
+                                visTilBruker = true
+                            ),
+                            visPåOppgave = true,
+                            påkrevd = false,
+                            feltutleder = null,
+                            defaultverdi = "defaultverdi"
                         )
                     )
                 ),
@@ -232,7 +252,7 @@ class OppgavetypeTest {
                             visPåOppgave = true,
                             påkrevd = true,
                             feltutleder = null,
-                            defaultVerdi = "defaultverdi"
+                            defaultverdi = null
                         )
                     )
                 )

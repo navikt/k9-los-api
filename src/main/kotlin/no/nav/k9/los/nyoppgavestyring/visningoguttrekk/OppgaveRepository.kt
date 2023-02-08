@@ -74,7 +74,7 @@ class OppgaveRepository(private val oppgavetypeRepository: OppgavetypeRepository
                             område = oppgave.kildeområde,
                             listetype = false, //listetyper er aldri påkrevd
                             påkrevd = true,
-                            verdi = påkrevdFelt.defaultVerdi.toString()
+                            verdi = påkrevdFelt.defaultverdi.toString()
                         )
                     )
                 }
