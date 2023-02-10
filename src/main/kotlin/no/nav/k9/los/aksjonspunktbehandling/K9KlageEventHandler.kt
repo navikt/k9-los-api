@@ -4,11 +4,13 @@ import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.KlagebehandlingProsessH
 import no.nav.k9.los.domene.modell.FagsakYtelseType
 import no.nav.k9.los.domene.modell.K9KlageModell
 import no.nav.k9.los.domene.repository.BehandlingProsessEventKlageRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosAdapterTjeneste
 import org.slf4j.LoggerFactory
 
 
 class K9KlageEventHandler constructor(
     private val behandlingProsessEventKlageRepository: BehandlingProsessEventKlageRepository,
+    private val k9KlageTilLosAdapterTjeneste: K9KlageTilLosAdapterTjeneste,
 ) {
     private val log = LoggerFactory.getLogger(K9KlageEventHandler::class.java)
 
@@ -36,5 +38,6 @@ class K9KlageEventHandler constructor(
             k9KlageModell.eventer.add(event)
             k9KlageModell
         }
+        k9KlageTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId)
     }
 }
