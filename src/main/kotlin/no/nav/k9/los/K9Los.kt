@@ -83,7 +83,14 @@ fun Application.k9Los() {
     install(Koin) {
         modules(selectModuleBasedOnProfile(this@k9Los, config = configuration))
     }
+
     val koin = getKoin()
+
+    val k9SakTilLosAdapterTjeneste = koin.get<K9SakTilLosAdapterTjeneste>()
+    k9SakTilLosAdapterTjeneste.setup()
+    val k9KlageTilLosAdapterTjeneste = koin.get<K9KlageTilLosAdapterTjeneste>()
+    k9KlageTilLosAdapterTjeneste.setup()
+
     install(Authentication) {
         multipleJwtIssuers(issuers)
     }
