@@ -203,13 +203,15 @@ fun common(app: Application, config: Configuration) = module {
             statistikkProducer = get(),
             statistikkChannel = get(named("statistikkRefreshChannel")),
             statistikkRepository = get(),
-            reservasjonTjeneste = get()
+            reservasjonTjeneste = get(),
+            k9SakTilLosAdapterTjeneste = get(),
         )
     }
 
     single {
         K9KlageEventHandler(
-            behandlingProsessEventKlageRepository = get()
+            behandlingProsessEventKlageRepository = get(),
+            k9KlageTilLosAdapterTjeneste = get(),
         )
     }
 
