@@ -6,19 +6,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import org.slf4j.LoggerFactory
 
 class FeltdefinisjonRepository {
-
     private val log = LoggerFactory.getLogger(FeltdefinisjonRepository::class.java)
-
-
-    fun lås(tx: TransactionalSession) {
-        tx.run(
-            queryOf(
-                """
-                    lock table feltdefinisjon
-                """.trimIndent()
-            ).asExecute
-        )
-    }
 
     fun hent(område: Område, tx: TransactionalSession): Feltdefinisjoner {
         val feltdefinisjoner = tx.run(
