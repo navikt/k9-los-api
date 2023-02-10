@@ -64,7 +64,6 @@ class K9sakEventHandler constructor(
             return
         }
         tellEvent(modell, oppgave)
-        k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId)
 
         if (modell.fikkEndretAksjonspunkt()) {
             log.info("Fjerner reservasjon på oppgave ${oppgave.eksternId}")
@@ -77,6 +76,8 @@ class K9sakEventHandler constructor(
             }
             statistikkChannel.send(true)
         }
+        
+        k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId)
     }
 
 
