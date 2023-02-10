@@ -107,6 +107,7 @@ class K9KlageTilLosAdapterTjeneste(
     fun oppdaterOppgaveForBehandlingUuid(uuid: UUID) {
         oppdaterOppgaveForBehandlingUuid(uuid, 0L)
     }
+
     private fun oppdaterOppgaveForBehandlingUuid(uuid: UUID, eventTellerInn: Long): Long {
         var eventTeller = eventTellerInn
         var forrigeOppgave: OppgaveV3? = null
