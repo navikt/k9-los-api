@@ -2,11 +2,14 @@ package no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
+import no.nav.k9.los.nyoppgavestyring.feilhandtering.IllegalDeleteException
+import no.nav.k9.los.nyoppgavestyring.feilhandtering.MissingDefaultException
 import no.nav.k9.los.nyoppgavestyring.feltutledere.GyldigeFeltutledere
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.utils.Cache
+import org.postgresql.util.PSQLException
 import org.slf4j.LoggerFactory
 
 class OppgavetypeRepository(
@@ -80,25 +83,33 @@ class OppgavetypeRepository(
     fun fjern(oppgavetyper: Oppgavetyper, tx: TransactionalSession) {
         oppgavetyper.oppgavetyper.forEach { oppgavetype ->
             oppgavetype.oppgavefelter.forEach { oppgavefelt ->
-                tx.run(
-                    queryOf(
-                        """
+                try {
+                    tx.run(
+                        queryOf(
+                            """
                          delete from oppgavefelt
                          where oppgavetype_id = :oppgavetypeId 
                             and feltdefinisjon_id = :feltdefinisjonId""",
-                        mapOf(
-                            "oppgavetypeId" to oppgavetype.id,
-                            "feltdefinisjonId" to oppgavefelt.feltDefinisjon.id
-                        )
-                    ).asUpdate
-                )
+                            mapOf(
+                                "oppgavetypeId" to oppgavetype.id,
+                                "feltdefinisjonId" to oppgavefelt.feltDefinisjon.id
+                            )
+                        ).asUpdate
+                    )
+                }  catch (e: PSQLException) {
+                    if (e.sqlState.equals("23503")) {
+                        throw IllegalDeleteException("Kan ikke slette oppgavefelt som brukes av oppgave", e)
+                    } else {
+                        throw e
+                    }
+                }
             }
             tx.run(
                 queryOf(
                     """
                     delete from oppgavetype
                     where id = :oppgavetypeId
-                        and omrade_id = :omradeId""",
+                        and omrade_id =2d""",
                     mapOf(
                         "oppgavetypeId" to oppgavetype.id,
                         "omradeId" to oppgavetyper.område.id
@@ -161,7 +172,7 @@ class OppgavetypeRepository(
         val oppgaveFinnes = sjekkOmOppgaverFinnes(endring.oppgavetype.id!!, tx)
         endring.felterSomSkalLeggesTil.forEach { felt ->
             if (oppgaveFinnes && felt.påkrevd && felt.defaultverdi.isNullOrEmpty()) {
-                throw IllegalArgumentException("Kan ikke legge til påkrevd på eksisterende oppgave uten å oppgi defaultverdi")
+                throw MissingDefaultException("Kan ikke legge til påkrevd på eksisterende oppgave uten å oppgi defaultverdi")
             }
             leggTilOppgavefelt(tx, felt, endring.oppgavetype.id)
         }
@@ -172,7 +183,7 @@ class OppgavetypeRepository(
 
         endring.felterSomSkalEndresMedNyeVerdier.forEach { felter ->
             if (oppgaveFinnes && felter.innkommendeFelt.påkrevd && !felter.eksisterendeFelt.påkrevd && felter.innkommendeFelt.defaultverdi == null) {
-                throw IllegalArgumentException("Kan ikke legge til påkrevd på eksisterende oppgave uten å oppgi defaultverdi")
+                throw MissingDefaultException("Kan ikke legge til påkrevd på eksisterende oppgave uten å oppgi defaultverdi")
             }
             oppdaterFelt(felter.eksisterendeFelt.id!!, felter.innkommendeFelt, tx)
         }

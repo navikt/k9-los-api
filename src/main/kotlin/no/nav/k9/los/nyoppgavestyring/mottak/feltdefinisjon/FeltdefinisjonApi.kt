@@ -8,6 +8,7 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.integrasjon.rest.RequestContextService
+import no.nav.k9.los.nyoppgavestyring.feilhandtering.IllegalDeleteException
 import org.koin.ktor.ext.inject
 import org.postgresql.util.PSQLException
 
@@ -25,15 +26,10 @@ internal fun Route.FeltdefinisjonApi() {
 
                 try {
                     feltdefinisjonTjeneste.oppdater(innkommendeFeltdefinisjonerDto)
-                } catch (e: PSQLException) {
-                    if (e.sqlState.equals("23503")) {
-                        call.respond(
-                            HttpStatusCode.BadRequest,
-                            "Constraint Violation. Forsøker å fjerne en feltdefinisjon som er i bruk i en oppgavedefinisjon"
-                        )
-                    }
+                    call.respond("OK")
+                } catch (e: IllegalDeleteException) {
+                    call.respond(HttpStatusCode.BadRequest, e.message!!)
                 }
-                call.respond("OK")
             }
         } else {
             call.respond(HttpStatusCode.Locked)

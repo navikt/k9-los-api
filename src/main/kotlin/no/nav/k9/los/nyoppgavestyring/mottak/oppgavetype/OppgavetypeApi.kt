@@ -7,6 +7,8 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.integrasjon.rest.RequestContextService
+import no.nav.k9.los.nyoppgavestyring.feilhandtering.IllegalDeleteException
+import no.nav.k9.los.nyoppgavestyring.feilhandtering.MissingDefaultException
 import org.koin.ktor.ext.inject
 import org.postgresql.util.PSQLException
 
@@ -22,19 +24,14 @@ internal fun Route.OppgavetypeApi() {
 
                 try {
                     oppgavetypeTjeneste.oppdater(innkommendeOppgavetyperDto)
-                } catch (e: PSQLException) {
-                    if (e.sqlState.equals("23503")) {
-                        call.respond(
-                            HttpStatusCode.BadRequest,
-                            "Constraint Violation. Forsøker å fjerne et oppgavefelt som er i bruk i en oppgave"
-                        )
-                    }
-                } catch (e: IllegalArgumentException) {
-                    if (e.message.toString() == "Kan ikke legge til påkrevd på eksisterende oppgave uten å oppgi defaultverdi")
-                        call.respond(HttpStatusCode.BadRequest, e.message.toString())
+                    call.respond("OK")
+                } catch (e: IllegalDeleteException) {
+                    call.respond(
+                        HttpStatusCode.BadRequest, e.message!!
+                    )
+                } catch (e: MissingDefaultException) {
+                    call.respond(HttpStatusCode.BadRequest, e.message!!)
                 }
-
-                call.respond("OK")
             }
         } else {
             call.respond(HttpStatusCode.Locked)
