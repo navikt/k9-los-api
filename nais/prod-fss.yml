@@ -53,6 +53,7 @@ spec:
     streams: true
   azure:
     application:
+      allowAllUsers: true
       enabled: true
   accessPolicy:
     inbound:
