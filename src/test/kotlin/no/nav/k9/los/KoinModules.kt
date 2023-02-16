@@ -258,13 +258,13 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single { FeltdefinisjonRepository() }
     single { OmrådeRepository(dataSource = get()) }
-    single { OppgavetypeRepository(get()) }
+    single { OppgavetypeRepository(feltdefinisjonRepository = get(), områdeRepository = get()) }
     single { OppgaveV3Repository(dataSource = get()) }
     single { BehandlingProsessEventK9Repository(dataSource = get()) }
     single { BehandlingProsessEventKlageRepository(dataSource = get()) }
     single { OppgaveTilBehandlingMapper() }
     single { OppgaveTilSakMapper() }
-    single { OppgaveRepository() }
+    single { OppgaveRepository(oppgavetypeRepository = get()) }
     single { StatistikkRepository(dataSource = get()) }
 
     val statistikkPublisher = mockk<StatistikkPublisher>()

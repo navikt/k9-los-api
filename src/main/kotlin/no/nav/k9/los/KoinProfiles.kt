@@ -321,11 +321,11 @@ fun common(app: Application, config: Configuration) = module {
 
     single { FeltdefinisjonRepository() }
     single { OmrådeRepository(get()) }
-    single { OppgavetypeRepository(get()) }
+    single { OppgavetypeRepository(feltdefinisjonRepository = get(), områdeRepository = get()) }
     single { OppgaveV3Repository(dataSource = get()) }
     single { OppgaveTilBehandlingMapper() }
     single { OppgaveTilSakMapper() }
-    single { OppgaveRepository() }
+    single { OppgaveRepository(oppgavetypeRepository = get()) }
     single { StatistikkRepository(dataSource = get()) }
 
     single {

@@ -3,8 +3,6 @@ package no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype
 import no.nav.k9.los.nyoppgavestyring.feltutledere.GyldigeFeltutledere
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjoner
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
-import kotlin.reflect.full.createInstance
 
 class Oppgavetype(
     val id: Long? = null,
@@ -25,6 +23,7 @@ class Oppgavetype(
                 } ?: throw IllegalStateException("Omsøkt feltdefinisjon finnes ikke: ${innkommendeFeltdefinisjon.id}"),
                 visPåOppgave = innkommendeFeltdefinisjon.visPåOppgave,
                 påkrevd = innkommendeFeltdefinisjon.påkrevd,
+                defaultverdi = innkommendeFeltdefinisjon.defaultverdi,
                 feltutleder = innkommendeFeltdefinisjon.feltutleder?.let { GyldigeFeltutledere.hentFeltutleder(innkommendeFeltdefinisjon.feltutleder) }
             )
         }.toSet()

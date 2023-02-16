@@ -110,7 +110,6 @@ class Oppgavetyper(
             felterSomSkalLeggesTil = leggTilListe.toList(),
             felterSomSkalFjernes = sletteliste.toList(),
             felterSomSkalEndresMedNyeVerdier = endreliste.toList()
-
         )
     }
 }

@@ -8,6 +8,7 @@ class Oppgavefelt(
     val feltDefinisjon: Feltdefinisjon,
     val visPåOppgave: Boolean,
     val påkrevd: Boolean,
+    val defaultverdi: String?,
     val feltutleder: Feltutleder? = null
 ) {
     fun erUtledet(): Boolean {
@@ -24,6 +25,7 @@ class Oppgavefelt(
         if (feltDefinisjon != other.feltDefinisjon) return false
         if (visPåOppgave != other.visPåOppgave) return false
         if (påkrevd != other.påkrevd) return false
+        if (defaultverdi != other.defaultverdi) return false
         if (feltutleder != other.feltutleder) return false
 
         return true

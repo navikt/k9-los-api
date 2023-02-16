@@ -324,7 +324,7 @@ class K9KlageTilLosAdapterTjeneste(
     fun setup() {
         val objectMapper = jacksonObjectMapper()
         opprettOmråde()
-        //opprettFeltdefinisjoner(objectMapper) K9SakAdapter er master på feltdefinisjoner inntil videre
+        opprettFeltdefinisjoner(objectMapper)
         opprettOppgavetype(objectMapper)
     }
 

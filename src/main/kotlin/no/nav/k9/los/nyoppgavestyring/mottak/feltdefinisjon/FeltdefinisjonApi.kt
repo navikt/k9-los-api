@@ -8,7 +8,9 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.integrasjon.rest.RequestContextService
+import no.nav.k9.los.nyoppgavestyring.feilhandtering.IllegalDeleteException
 import org.koin.ktor.ext.inject
+import org.postgresql.util.PSQLException
 
 internal fun Route.FeltdefinisjonApi() {
     val requestContextService by inject<RequestContextService>()
@@ -22,9 +24,12 @@ internal fun Route.FeltdefinisjonApi() {
             requestContextService.withRequestContext(call) {
                 val innkommendeFeltdefinisjonerDto = call.receive<FeltdefinisjonerDto>()
 
-                feltdefinisjonTjeneste.oppdater(innkommendeFeltdefinisjonerDto)
-
-                call.respond("OK")
+                try {
+                    feltdefinisjonTjeneste.oppdater(innkommendeFeltdefinisjonerDto)
+                    call.respond("OK")
+                } catch (e: IllegalDeleteException) {
+                    call.respond(HttpStatusCode.BadRequest, e.message!!)
+                }
             }
         } else {
             call.respond(HttpStatusCode.Locked)
