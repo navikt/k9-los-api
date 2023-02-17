@@ -91,9 +91,9 @@ class K9KlageTilLosAdapterTjeneste(
         var eventTeller: Long = 0
         behandlingsIder.forEach { uuid ->
             eventTeller = oppdaterOppgaveForBehandlingUuid(uuid, eventTeller)
+            behandlingTeller++
+            loggFremgangForHver100(behandlingTeller, "Forsert $behandlingTeller behandlinger")
         }
-        behandlingTeller++
-        loggFremgangForHver100(behandlingTeller, "Forsert $behandlingTeller behandlinger")
 
         val (antallAlle, antallAktive) = oppgaveV3Tjeneste.tellAntall()
         val tidHeleKjøringen = System.currentTimeMillis() - tidKjøringStartet
