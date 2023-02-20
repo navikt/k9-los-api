@@ -271,7 +271,7 @@ class AvdelingslederTjeneste(
             KøKriterierType.MERKNADTYPE -> oppgaveKø.merknadKoder = kriteriumDto.koder ?: emptyList()
             KøKriterierType.OPPGAVEKODE -> oppgaveKø.oppgaveKoder = kriteriumDto.koder ?: emptyList()
             KøKriterierType.NYE_KRAV -> oppgaveKø.nyeKrav = kriteriumDto.inkluder
-            KøKriterierType.SOKNADSDATA_ENDRET -> oppgaveKø.søknadsdataEndret = kriteriumDto.inkluder
+            KøKriterierType.FRA_ENDRINGSDIALOG -> oppgaveKø.fraEndringsdialog = kriteriumDto.inkluder
             else -> throw IllegalArgumentException("Støtter ikke kriterierType=${kriteriumDto.kriterierType}")
         }
     }
@@ -282,7 +282,7 @@ class AvdelingslederTjeneste(
             KøKriterierType.MERKNADTYPE -> oppgaveKø.merknadKoder = emptyList()
             KøKriterierType.OPPGAVEKODE -> oppgaveKø.oppgaveKoder = emptyList()
             KøKriterierType.NYE_KRAV -> oppgaveKø.nyeKrav = null
-            KøKriterierType.SOKNADSDATA_ENDRET -> oppgaveKø.søknadsdataEndret = null
+            KøKriterierType.FRA_ENDRINGSDIALOG -> oppgaveKø.fraEndringsdialog = null
             else -> throw IllegalArgumentException("Støtter ikke fjerning av kriterierType=${kriteriumDto.kriterierType}")
         }
     }

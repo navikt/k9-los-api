@@ -78,7 +78,7 @@ data class BehandlingProsessEventDto(
     val relatertPartAktørId: String? = null,
     val aksjonspunktTilstander: List<AksjonspunktTilstandDto> = emptyList(),
     val nyeKrav: Boolean? = null,
-    val søknadsdataEndret: Boolean? = null
+    val fraEndringsdialog: Boolean? = null
 ) {
 
     // Denne skal ikke ha fnr, aktørider, orgnumre eller beløp som kan identifisere brukeren
@@ -105,7 +105,7 @@ data class BehandlingProsessEventDto(
             fagsakPeriode=$fagsakPeriode,
             aksjonspunktTilstander=$aksjonspunktTilstander,
             nyeKrav=$nyeKrav
-            søknadsdataEndret=$søknadsdataEndret
+            fraEndringsdialog=$fraEndringsdialog
             )"""
             .trimMargin()
     }

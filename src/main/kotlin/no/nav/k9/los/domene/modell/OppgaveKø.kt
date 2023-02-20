@@ -38,7 +38,7 @@ data class OppgaveKø(
     var merknadKoder: List<String> = emptyList(),
     var oppgaveKoder: List<String> = emptyList(),
     var nyeKrav: Boolean? = null,
-    var søknadsdataEndret: Boolean? = null
+    var fraEndringsdialog: Boolean? = null
 ) {
 
     companion object {
@@ -126,7 +126,7 @@ data class OppgaveKø(
             return false
         }
 
-        if (søknadsdataEndret != null && søknadsdataEndret != oppgave.søknadsdataEndret) {
+        if (fraEndringsdialog != null && fraEndringsdialog != oppgave.fraEndringsdialog) {
             return false
         }
 
@@ -292,8 +292,8 @@ data class OppgaveKø(
             kriterierDto.add(tilNyeKravKriterium())
         }
 
-        if (søknadsdataEndret != null) {
-            kriterierDto.add(tilSøknadsdataEndretKriterium())
+        if (fraEndringsdialog != null) {
+            kriterierDto.add(fraEndringsdialogKriterium())
         }
 
         return kriterierDto
@@ -328,11 +328,11 @@ data class OppgaveKø(
         inkluder = nyeKrav
     )
 
-    private fun tilSøknadsdataEndretKriterium() = KriteriumDto(
+    private fun fraEndringsdialogKriterium() = KriteriumDto(
         id = id.toString(),
-        kriterierType = KøKriterierType.SOKNADSDATA_ENDRET,
+        kriterierType = KøKriterierType.FRA_ENDRINGSDIALOG,
         checked = true,
-        inkluder = søknadsdataEndret
+        inkluder = fraEndringsdialog
     )
 }
 
