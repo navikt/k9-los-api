@@ -37,7 +37,8 @@ data class OppgaveKø(
     var filtreringFeilutbetaling: Intervall<Long>? = null,
     var merknadKoder: List<String> = emptyList(),
     var oppgaveKoder: List<String> = emptyList(),
-    var nyeKrav: Boolean? = null
+    var nyeKrav: Boolean? = null,
+    var fraEndringsdialog: Boolean? = null
 ) {
 
     companion object {
@@ -122,6 +123,10 @@ data class OppgaveKø(
         }
 
         if (nyeKrav != null && nyeKrav != oppgave.nyeKrav) {
+            return false
+        }
+
+        if (fraEndringsdialog != null && fraEndringsdialog != oppgave.fraEndringsdialog) {
             return false
         }
 
@@ -287,6 +292,10 @@ data class OppgaveKø(
             kriterierDto.add(tilNyeKravKriterium())
         }
 
+        if (fraEndringsdialog != null) {
+            kriterierDto.add(fraEndringsdialogKriterium())
+        }
+
         return kriterierDto
     }
 
@@ -317,9 +326,14 @@ data class OppgaveKø(
         kriterierType = KøKriterierType.NYE_KRAV,
         checked = true,
         inkluder = nyeKrav
-
     )
 
+    private fun fraEndringsdialogKriterium() = KriteriumDto(
+        id = id.toString(),
+        kriterierType = KøKriterierType.FRA_ENDRINGSDIALOG,
+        checked = true,
+        inkluder = fraEndringsdialog
+    )
 }
 
 class Saksbehandler(
