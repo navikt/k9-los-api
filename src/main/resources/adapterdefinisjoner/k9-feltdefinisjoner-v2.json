@@ -162,6 +162,18 @@
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true
+    },
+    {
+      "id": "nyeKrav",
+      "listetype": false,
+      "tolkesSom": "String",
+      "visTilBruker": true
+    },
+    {
+      "id": "fraEndringsdialog",
+      "listetype": false,
+      "tolkesSom": "String",
+      "visTilBruker": true
     }
   ]
 }

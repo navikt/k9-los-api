@@ -250,13 +250,25 @@ class K9SakTilLosAdapterTjeneste(
             nøkkel = "vedtaksdato",
             verdi = event.vedtaksdato?.toString() ?: forrigeOppgave?.hentVerdi("vedtaksdato")
         ),
+        event.nyeKrav?.let {
+            OppgaveFeltverdiDto(
+                nøkkel = "nyeKrav",
+                verdi = event.nyeKrav.toString()
+            )
+        },
+        event.fraEndringsdialog?.let {
+            OppgaveFeltverdiDto(
+                nøkkel = "fraEndringsdialog",
+                verdi = event.fraEndringsdialog.toString()
+            )
+        },
         OppgaveFeltverdiDto(
             nøkkel = "totrinnskontroll",
             verdi = event.aksjonspunktTilstander.filter { aksjonspunktTilstandDto ->
                 aksjonspunktTilstandDto.aksjonspunktKode.equals("5015") && aksjonspunktTilstandDto.status !in (listOf(AksjonspunktStatus.AVBRUTT))
             }.isNotEmpty().toString()
         )
-    )
+    ).filterNotNull().toMutableList()
 
     private fun utledAvventerSaksbehandler(
         harManueltAksjonspunkt: Boolean,
