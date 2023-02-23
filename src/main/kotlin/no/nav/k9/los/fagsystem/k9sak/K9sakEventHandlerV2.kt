@@ -60,7 +60,7 @@ class K9sakEventHandlerV2(
                 )
             )
         } catch (e: IllegalStateException) {
-            log.error("Feilet ved håndtering av behandlingavsluttet hendelse", e)
+            log.warn("Feilet ved håndtering av behandlingavsluttet hendelse", e)
         }
     }
 
@@ -76,7 +76,7 @@ class K9sakEventHandlerV2(
             val nyeHendelser = aksjonspunktHendelseMapper.hentOppgavehendelser(hendelse, aksjonspunkter).toList()
             oppgaveTjenesteV2.nyeOppgaveHendelser(hendelse.eksternId.toString(), nyeHendelser)
         } catch (e: IllegalStateException) {
-            log.error("Feilet ved håndtering av aksjonspunkthendelser", e)
+            log.warn("Feilet ved håndtering av aksjonspunkthendelser", e)
         }
     }
 
