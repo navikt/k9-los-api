@@ -24,6 +24,6 @@ spec:
     - team: ptsak
       application: pt-sak-k9-preprod
       access: read
-    #- team: ptsak
-    #  application: pt-sak-k9
-    #  access: read
+    - team: ptsak
+      application: pt-sak-k9
+      access: read
