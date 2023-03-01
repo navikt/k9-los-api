@@ -67,7 +67,7 @@ class OppgaveRepository(private val oppgavetypeRepository: OppgavetypeRepository
         oppgavetype.oppgavefelter
             .filter { oppgavefelt -> oppgavefelt.påkrevd }
             .forEach { påkrevdFelt ->
-                if (oppgave.felter.find { it.eksternId.equals(påkrevdFelt.feltDefinisjon.eksternId) } == null) {
+                if (oppgave.felter.find { it.eksternId.equals(påkrevdFelt.feltDefinisjon.eksternId) && !påkrevdFelt.feltDefinisjon.listetype } == null) {
                     defaultverdier.add(
                         Oppgavefelt(
                             eksternId = påkrevdFelt.feltDefinisjon.eksternId,

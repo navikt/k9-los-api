@@ -8,7 +8,6 @@ import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
-import kotlin.concurrent.fixedRateTimer
 import kotlin.concurrent.thread
 import kotlin.concurrent.timer
 
