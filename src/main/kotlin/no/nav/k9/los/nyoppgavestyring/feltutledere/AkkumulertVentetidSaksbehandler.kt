@@ -1,6 +1,5 @@
 package no.nav.k9.los.nyoppgavestyring.feltutledere
 
-import kotliquery.TransactionalSession
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import java.time.Duration
