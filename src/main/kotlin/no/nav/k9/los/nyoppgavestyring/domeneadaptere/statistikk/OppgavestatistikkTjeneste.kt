@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.fixedRateTimer
 import kotlin.concurrent.thread
+import kotlin.concurrent.timer
 
 class OppgavestatistikkTjeneste(
     private val oppgaveRepository: OppgaveRepository,
@@ -44,14 +45,18 @@ class OppgavestatistikkTjeneste(
     }
 
     private fun schedulerAvspilling() {
-        log.info("Schedulerer avspilling av statistikk til å kjøre 1 dag fra nå, og hver 24. time etter det")
-        fixedRateTimer(
+        log.info("Schedulerer avspilling av statistikk til å kjøre 5 minutter fra nå, og hver time etter det")
+        timer(
             name = TRÅDNAVN,
             daemon = true,
-            initialDelay = TimeUnit.DAYS.toMillis(1),
-            period = TimeUnit.DAYS.toMillis(1)
+            initialDelay = TimeUnit.MINUTES.toMillis(5),
+            period = TimeUnit.HOURS.toMillis(1)
         ) {
-            spillAvStatistikk()
+            try {
+                spillAvStatistikk()
+            } catch (e: Exception) {
+                log.warn("Overføring av statistikk til DVH feilet. Retry om en time", e)
+            }
         }
     }
 

@@ -24,6 +24,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import java.util.*
 import kotlin.concurrent.thread
+import kotlin.concurrent.timer
 
 class K9SakTilLosAdapterTjeneste(
     private val behandlingProsessEventK9Repository: BehandlingProsessEventK9Repository,
@@ -67,17 +68,21 @@ class K9SakTilLosAdapterTjeneste(
     }
 
     private fun schedulerAvspilling(kjørSetup: Boolean) {
-        log.info("Schedulerer avspilling av BehandlingProsessEventer til å kjøre 10s fra nå, hver 24. time")
-        fixedRateTimer(
+        log.info("Schedulerer avspilling av BehandlingProsessEventer til å kjøre 1m fra nå, hver time")
+        timer(
             name = TRÅDNAVN,
             daemon = true,
-            initialDelay = TimeUnit.SECONDS.toMillis(10),
-            period = TimeUnit.DAYS.toMillis(1)
+            initialDelay = TimeUnit.MINUTES.toMillis(1),
+            period = TimeUnit.HOURS.toMillis(1)
         ) {
             if (kjørSetup) {
                 setup()
             }
-            spillAvBehandlingProsessEventer()
+            try {
+                spillAvBehandlingProsessEventer()
+            } catch (e: Exception) {
+                log.warn("Avspilling av k9sak-eventer til oppgaveV3 feilet. Retry om en time", e)
+            }
         }
     }
 
