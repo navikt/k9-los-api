@@ -2,27 +2,28 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
-import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktType
+import no.nav.k9.los.Configuration
+import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
+import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
+import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.util.concurrent.TimeUnit
-import kotlin.concurrent.fixedRateTimer
-import no.nav.k9.los.Configuration
-import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.*
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
-import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import java.util.*
+import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 import kotlin.concurrent.timer
 

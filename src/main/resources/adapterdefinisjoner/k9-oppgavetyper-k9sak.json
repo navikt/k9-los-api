@@ -98,12 +98,12 @@
         {
           "id": "aksjonspunkt",
           "visPåOppgave": true,
-          "påkrevd": true
+          "påkrevd": false
         },
         {
           "id": "aktivtAksjonspunkt",
           "visPåOppgave": true,
-          "påkrevd": true
+          "påkrevd": false
         },
         {
           "id": "akkumulertVentetidSaksbehandler",
