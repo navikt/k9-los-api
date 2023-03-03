@@ -10,6 +10,7 @@ import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.integrasjon.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
+import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.tilCsv
 import org.koin.ktor.ext.inject
 import java.util.*
 
@@ -26,6 +27,24 @@ fun Route.OppgaveQueryApis() {
         requestContextService.withRequestContext(call) {
             val idToken = kotlin.coroutines.coroutineContext.idToken()
             call.respond(oppgaveQueryService.query(oppgaveQuery, idToken))
+        }
+    }
+
+    @Location("/queryToFile")
+    class queryOppgaveToFile
+
+    post { _: queryOppgaveToFile ->
+        val oppgaveQuery = call.receive<OppgaveQuery>()
+        requestContextService.withRequestContext(call) {
+            val idToken = kotlin.coroutines.coroutineContext.idToken()
+
+            call.response.header(
+                HttpHeaders.ContentDisposition,
+                ContentDisposition.Attachment.withParameter(
+                    ContentDisposition.Parameters.FileName, "oppgaver.csv"
+                ).toString()
+            )
+            call.respondText(oppgaveQueryService.queryToFile(oppgaveQuery, idToken))
         }
     }
 

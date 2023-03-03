@@ -38,6 +38,26 @@ class OppgaveQueryService() {
         return oppgaveQueryRepository.query(oppgaveQuery)
     }
 
+    fun queryToFile(tx: TransactionalSession, oppgaveQuery: OppgaveQuery, idToken: IIdToken): String {
+        val oppgaver = query(tx, oppgaveQuery, idToken)
+        if (oppgaver.isEmpty()) {
+            return ""
+        }
+
+        val oppgaverad = oppgaver[0]
+        val oppgavefelter = oppgaveQueryRepository.hentAlleFelter().felter.associateBy {
+            it.område + it.kode
+        }
+
+        val header = oppgaverad.felter.joinToString(";") { oppgavefelter[it.område + it.kode]?.visningsnavn?:"" }
+
+        return header + "\n" + oppgaver.joinToString("\n") { or: Oppgaverad ->
+            or.felter.joinToString(";") {
+                if (it.verdi == null) "" else it.verdi.toString()
+            }
+        }
+    }
+
     fun query(tx: TransactionalSession, oppgaveQuery: OppgaveQuery, idToken: IIdToken): List<Oppgaverad> {
         val oppgaver: List<Long> = oppgaveQueryRepository.query(tx, oppgaveQuery)
 
@@ -93,6 +113,12 @@ class OppgaveQueryService() {
     fun query(oppgaveQuery: OppgaveQuery, idToken: IIdToken): List<Oppgaverad> {
         return using(sessionOf(datasource)) { it ->
             it.transaction { tx -> query(tx, oppgaveQuery, idToken) }
+        }
+    }
+
+    fun queryToFile(oppgaveQuery: OppgaveQuery, idToken: IIdToken): String {
+        return using(sessionOf(datasource)) { it ->
+            it.transaction { tx -> queryToFile(tx, oppgaveQuery, idToken) }
         }
     }
 }
