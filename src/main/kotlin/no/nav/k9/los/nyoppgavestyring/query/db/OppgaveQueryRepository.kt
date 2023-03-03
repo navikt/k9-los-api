@@ -6,10 +6,7 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelter
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
 import javax.sql.DataSource
 
 class OppgaveQueryRepository(val datasource: DataSource) {
@@ -79,6 +76,7 @@ class OppgaveQueryRepository(val datasource: DataSource) {
         val query = SqlOppgaveQuery()
         val combineOperator = CombineOperator.AND;
         håndterFiltere(query, oppgaveQuery.filtere, combineOperator)
+        håndterOrder(query, oppgaveQuery.order)
 
         return query
      }
@@ -104,6 +102,15 @@ class OppgaveQueryRepository(val datasource: DataSource) {
                     };
                 }
                 else -> throw IllegalStateException("Ukjent filter: " + filter::class.qualifiedName)
+            }
+        }
+    }
+
+    private fun håndterOrder(query: SqlOppgaveQuery, orderBys: List<OrderFelt>) {
+        for (orderBy in orderBys) {
+            when (orderBy) {
+                is EnkelOrderFelt -> query.medEnkelOrder(orderBy.område, orderBy.kode, orderBy.økende)
+                else -> throw IllegalStateException("Ukjent OrderFelt: " + orderBy::class.qualifiedName)
             }
         }
     }

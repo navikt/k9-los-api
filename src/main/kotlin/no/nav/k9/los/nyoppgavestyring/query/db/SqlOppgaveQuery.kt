@@ -12,14 +12,19 @@ class SqlOppgaveQuery {
                 WHERE aktiv = true 
             """.trimIndent()
 
+    private var orderByQuery = """
+                ORDER BY TRUE
+            """.trimIndent()
+
     private val queryParams: MutableMap<String, Any?> = mutableMapOf()
+    private val orderByQueryParams: MutableMap<String, Any?> = mutableMapOf()
 
     fun getQuery(): String {
-        return query;
+        return query + orderByQuery;
     }
 
     fun getParams(): Map<String, Any?> {
-        return queryParams.toMap()
+        return (queryParams + orderByQueryParams).toMap()
     }
 
     fun medFeltverdi(combineOperator: CombineOperator, feltområde: String?, feltkode: String, operator: FeltverdiOperator, feltverdi: Any) {
@@ -83,5 +88,58 @@ class SqlOppgaveQuery {
                       AND ov.verdi ${operator.sql} (:feltverdi$index)
                   ) 
             """.trimIndent()
+    }
+
+    fun medEnkelOrder(feltområde: String?, feltkode: String, økende: Boolean) {
+        if (feltområde != null) {
+            medEnkelOrderAvOppgavefelt(feltområde, feltkode, økende)
+            return
+        }
+
+        val index = queryParams.size;
+        when (feltkode) {
+            "oppgavestatus" -> {
+                orderByQuery += ", o.status "
+            }
+            "kildeområde" -> {
+                orderByQuery += ", o.kildeomrade "
+            }
+            "oppgavetype" -> {
+                orderByQuery += ", o.ekstern_id "
+            }
+            "oppgaveområde" -> {
+                orderByQuery += ", oppgave_omrade.ekstern_id "
+            }
+            else -> throw IllegalStateException("Ukjent feltkode: $feltkode")
+        }
+
+        orderByQuery += if (økende) "ASC" else "DESC"
+    }
+
+    private fun medEnkelOrderAvOppgavefelt(feltområde: String, feltkode: String, økende: Boolean) {
+        val index = orderByQueryParams.size;
+
+        orderByQueryParams.putAll(mutableMapOf(
+            "orderByfeltOmrade$index" to feltområde,
+            "orderByfeltkode$index" to feltkode
+        ))
+
+        orderByQuery += """
+                , (
+                  SELECT ov.verdi
+                  FROM Oppgavefelt_verdi ov INNER JOIN Oppgavefelt f ON (
+                    f.id = ov.oppgavefelt_id
+                  ) INNER JOIN Feltdefinisjon fd ON (
+                    fd.id = f.feltdefinisjon_id
+                  ) INNER JOIN Omrade fo ON (
+                    fo.id = fd.omrade_id
+                  )
+                  WHERE ov.oppgave_id = o.id
+                    AND fo.ekstern_id = :orderByfeltOmrade$index
+                    AND fd.ekstern_id = :orderByfeltkode$index
+                ) 
+            """.trimIndent()
+
+        orderByQuery += if (økende) "ASC" else "DESC"
     }
 }
