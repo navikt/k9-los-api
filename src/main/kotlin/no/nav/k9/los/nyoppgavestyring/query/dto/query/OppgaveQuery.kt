@@ -6,7 +6,8 @@ package no.nav.k9.los.nyoppgavestyring.query.dto.query
 class OppgaveQuery(
     val filtere: List<Oppgavefilter>,
     val select: List<SelectFelt> = listOf(),
-    val order: List<OrderFelt> = listOf()
+    val order: List<OrderFelt> = listOf(),
+    val limit: Int = 10
 ) {
-    constructor(filtere: List<Oppgavefilter>) : this(filtere, listOf(), listOf());
+    constructor(filtere: List<Oppgavefilter>) : this(filtere, listOf(), listOf(), 10);
 }

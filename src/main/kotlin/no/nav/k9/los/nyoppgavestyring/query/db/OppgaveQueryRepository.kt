@@ -77,6 +77,7 @@ class OppgaveQueryRepository(val datasource: DataSource) {
         val combineOperator = CombineOperator.AND;
         håndterFiltere(query, oppgaveQuery.filtere, combineOperator)
         håndterOrder(query, oppgaveQuery.order)
+        query.medLimit(oppgaveQuery.limit)
 
         return query
      }

@@ -12,19 +12,21 @@ class SqlOppgaveQuery {
                 WHERE aktiv = true 
             """.trimIndent()
 
-    private var orderByQuery = """
-                ORDER BY TRUE
+    private var orderBySql = """
+                ORDER BY TRUE 
             """.trimIndent()
 
     private val queryParams: MutableMap<String, Any?> = mutableMapOf()
-    private val orderByQueryParams: MutableMap<String, Any?> = mutableMapOf()
+    private val orderByParams: MutableMap<String, Any?> = mutableMapOf()
+    private var limit: Int = -1;
 
     fun getQuery(): String {
-        return query + orderByQuery;
+        val limitSql = if (limit >= 0) " LIMIT " + limit else "";
+        return query + orderBySql + limitSql;
     }
 
     fun getParams(): Map<String, Any?> {
-        return (queryParams + orderByQueryParams).toMap()
+        return (queryParams + orderByParams).toMap()
     }
 
     fun medFeltverdi(combineOperator: CombineOperator, feltområde: String?, feltkode: String, operator: FeltverdiOperator, feltverdi: Any) {
@@ -99,32 +101,32 @@ class SqlOppgaveQuery {
         val index = queryParams.size;
         when (feltkode) {
             "oppgavestatus" -> {
-                orderByQuery += ", o.status "
+                orderBySql += ", o.status "
             }
             "kildeområde" -> {
-                orderByQuery += ", o.kildeomrade "
+                orderBySql += ", o.kildeomrade "
             }
             "oppgavetype" -> {
-                orderByQuery += ", o.ekstern_id "
+                orderBySql += ", o.ekstern_id "
             }
             "oppgaveområde" -> {
-                orderByQuery += ", oppgave_omrade.ekstern_id "
+                orderBySql += ", oppgave_omrade.ekstern_id "
             }
             else -> throw IllegalStateException("Ukjent feltkode: $feltkode")
         }
 
-        orderByQuery += if (økende) "ASC" else "DESC"
+        orderBySql += if (økende) "ASC" else "DESC"
     }
 
     private fun medEnkelOrderAvOppgavefelt(feltområde: String, feltkode: String, økende: Boolean) {
-        val index = orderByQueryParams.size;
+        val index = orderByParams.size;
 
-        orderByQueryParams.putAll(mutableMapOf(
+        orderByParams.putAll(mutableMapOf(
             "orderByfeltOmrade$index" to feltområde,
             "orderByfeltkode$index" to feltkode
         ))
 
-        orderByQuery += """
+        orderBySql += """
                 , (
                   SELECT ov.verdi
                   FROM Oppgavefelt_verdi ov INNER JOIN Oppgavefelt f ON (
@@ -140,6 +142,10 @@ class SqlOppgaveQuery {
                 ) 
             """.trimIndent()
 
-        orderByQuery += if (økende) "ASC" else "DESC"
+        orderBySql += if (økende) "ASC" else "DESC"
+    }
+
+    fun medLimit(limit: Int) {
+        this.limit = limit;
     }
 }
