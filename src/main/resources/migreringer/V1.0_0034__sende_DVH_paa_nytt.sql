@@ -1,0 +1,1 @@
+truncate table oppgave_v3_sendt_dvh;
