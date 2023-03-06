@@ -13,7 +13,7 @@ class OppgaveTilSakMapper {
 
     fun lagSak(oppgave: Oppgave): Sak {
         return Sak(
-            saksnummer = oppgave.eksternId,
+            saksnummer = oppgave.hentVerdi("saksnummer")!!,
             sakId = oppgave.eksternId,
             funksjonellTid = LocalDateTime.parse(oppgave.eksternVersjon).atZone(OppgaveTilBehandlingMapper.zoneId).toOffsetDateTime(),
             tekniskTid = OffsetDateTime.now(zoneId),
