@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.feltutledere
+package no.nav.k9.los.nyoppgavestyring.feltutlederforlagring
 
 class GyldigeFeltutledere {
     companion object {

@@ -122,15 +122,15 @@
       "visTilBruker": true
     },
     {
-      "id": "akkumulertVentetidSaksbehandler",
-      "listetype": false,
-      "tolkesSom": "Duration",
-      "visTilBruker": true
-    },
-    {
       "id": "avventerSaksbehandler",
       "listetype": false,
       "tolkesSom": "boolean",
+      "visTilBruker": true
+    },
+    {
+      "id": "akkumulertVentetidSaksbehandlerForTidligereVersjoner",
+      "listetype": false,
+      "tolkesSom": "Duration",
       "visTilBruker": true
     },
     {
@@ -140,15 +140,45 @@
       "visTilBruker": true
     },
     {
+      "id": "akkumulertVentetidSoekerForTidligereVersjoner",
+      "listetype": false,
+      "tolkesSom": "Duration",
+      "visTilBruker": true
+    },
+    {
       "id": "avventerArbeidsgiver",
       "listetype": false,
       "tolkesSom": "boolean",
       "visTilBruker": true
     },
     {
+      "id": "akkumulertVentetidArbeidsgiverForTidligereVersjoner",
+      "listetype": false,
+      "tolkesSom": "Duration",
+      "visTilBruker": true
+    },
+    {
       "id": "avventerTekniskFeil",
       "listetype": false,
       "tolkesSom": "boolean",
+      "visTilBruker": true
+    },
+    {
+      "id": "akkumulertVentetidTekniskFeilForTidligereVersjoner",
+      "listetype": false,
+      "tolkesSom": "Duration",
+      "visTilBruker": true
+    },
+    {
+      "id": "aktivVenteårsak",
+      "listetype": false,
+      "tolkesSom": "String",
+      "visTilBruker": true
+    },
+    {
+      "id": "aktivVentefrist",
+      "listetype": false,
+      "tolkesSom": "Timestamp",
       "visTilBruker": true
     },
     {

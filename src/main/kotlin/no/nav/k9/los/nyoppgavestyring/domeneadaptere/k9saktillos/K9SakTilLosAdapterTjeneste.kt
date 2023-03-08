@@ -6,6 +6,7 @@ import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktType
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
@@ -185,6 +186,7 @@ class K9SakTilLosAdapterTjeneste(
         
         utledAksjonspunkter(event, oppgaveFeltverdiDtos)
         utledÅpneAksjonspunkter(åpneAksjonspunkter, oppgaveFeltverdiDtos)
+        utledVenteÅrsakOgFrist(åpneAksjonspunkter, oppgaveFeltverdiDtos)
         utledAutomatiskBehandletFlagg(forrigeOppgave, oppgaveFeltverdiDtos, harManueltAksjonspunkt)
         utledAvventerSaksbehandler(harManueltAksjonspunkt, harAutopunkt, oppgaveFeltverdiDtos)
 
@@ -328,6 +330,32 @@ class K9SakTilLosAdapterTjeneste(
                     verdi = null
                 )
             )
+        }
+    }
+
+    private fun utledVenteÅrsakOgFrist(
+        åpneAksjonspunkter: List<AksjonspunktTilstandDto>,
+        oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
+    ) {
+        if (åpneAksjonspunkter.isNotEmpty()) {
+            åpneAksjonspunkter
+                .filter { aksjonspunktTilstandDto ->
+                    !aksjonspunktTilstandDto.venteårsak.equals(Venteårsak.UDEFINERT)
+                            && aksjonspunktTilstandDto.status.equals(AksjonspunktStatus.OPPRETTET)}
+                .singleOrNull { aksjonspunktTilstandDto ->
+                    oppgaveFeltverdiDtos.add(
+                        OppgaveFeltverdiDto(
+                            nøkkel = "aktivVenteårsak",
+                            verdi = aksjonspunktTilstandDto.venteårsak.kode.toString()
+                        )
+                    )
+                    oppgaveFeltverdiDtos.add(
+                        OppgaveFeltverdiDto(
+                            nøkkel = "aktivVentefrist",
+                            verdi = aksjonspunktTilstandDto.fristTid.toString()
+                        )
+                    )
+                }
         }
     }
 

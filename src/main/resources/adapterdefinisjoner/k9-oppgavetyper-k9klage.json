@@ -111,10 +111,10 @@
           "påkrevd": true
         },
         {
-          "id": "akkumulertVentetidSaksbehandler",
+          "id": "akkumulertVentetidSaksbehandlerForTidligereVersjoner",
           "visPåOppgave": false,
           "påkrevd": false,
-          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutledere.AkkumulertVentetidSaksbehandler"
+          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.AkkumulertVentetidSaksbehandler"
         },
         {
           "id": "avventerSaksbehandler",

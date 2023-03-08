@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.feltutledere
+package no.nav.k9.los.nyoppgavestyring.feltutlederforlagring
 
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test
 import java.time.Duration
 import java.time.LocalDateTime
 
-internal class AkkumulertVentetidSaksbehandlerTest {
+internal class AkkumulertVentetidTest {
     val akkumulertVentetidUtleder = AkkumulertVentetidSaksbehandler()
 
     @Test

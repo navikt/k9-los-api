@@ -106,15 +106,25 @@
           "påkrevd": false
         },
         {
-          "id": "akkumulertVentetidSaksbehandler",
-          "visPåOppgave": false,
-          "påkrevd": false,
-          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutledere.AkkumulertVentetidSaksbehandler"
+          "id": "aktivVenteårsak",
+          "visPåOppgave": true,
+          "påkrevd": false
         },
         {
-          "id": "avventerSaksbehandler",
+          "id": "aktivVentefrist",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+        "id": "avventerSaksbehandler",
+        "visPåOppgave": false,
+        "påkrevd": true
+        },
+        {
+          "id": "akkumulertVentetidSaksbehandlerForTidligereVersjoner",
           "visPåOppgave": false,
-          "påkrevd": true
+          "påkrevd": false,
+          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.AkkumulertVentetidSaksbehandler"
         },
         {
           "id": "helautomatiskBehandlet",
