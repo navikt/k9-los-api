@@ -1,12 +1,6 @@
 package no.nav.k9.los.domene.modell
 
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.AUTO_VENTER_PÅ_KOMPLETT_SØKNAD
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.AVKLAR_KOMPLETT_NOK_FOR_BEREGNING
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.ENDELIG_AVKLAR_KOMPLETT_NOK_FOR_BEREGNING
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.OVERSTYR_BEREGNING_INPUT
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.TRENGER_SØKNAD_FOR_INFOTRYGD_PERIODE
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.TRENGER_SØKNAD_FOR_INFOTRYGD_PERIODE_ANNEN_PART
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.VENT_ANNEN_PSB_SAK
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.*
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
@@ -193,8 +187,7 @@ data class OppgaveKø(
         kriterier: List<AndreKriterierDto>,
         skalMed: Boolean
     ): Boolean {
-        if (oppgave.tilBeslutter && kriterier.map { it.andreKriterierType }
-                .contains(AndreKriterierType.TIL_BESLUTTER)) {
+        if (oppgave.tilBeslutter && tilBeslutter(kriterier)) {
             return true
         }
 
@@ -261,6 +254,12 @@ data class OppgaveKø(
         }
         return false
     }
+
+    fun beslutterKø() = tilBeslutter(filtreringAndreKriterierType)
+
+    private fun tilBeslutter(kriterier: List<AndreKriterierDto>) =
+        kriterier.map { it.andreKriterierType }
+            .contains(AndreKriterierType.TIL_BESLUTTER)
 
     fun erOppgavenReservert(
         reservasjonRepository: ReservasjonRepository,
