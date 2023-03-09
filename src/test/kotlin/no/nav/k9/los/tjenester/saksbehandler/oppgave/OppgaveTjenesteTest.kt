@@ -537,7 +537,6 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         lagreOppgaverOgLeggTilIKø(vanligKø, o1, o2, o3)
 
-        //sjekk at køen er sorter etter eldste beslutter AP
         val hentOppgaver = oppgaveTjeneste.hentOppgaver(vanligKø.id)
 
         assertThat(hentOppgaver).extracting { it.eksternId }
