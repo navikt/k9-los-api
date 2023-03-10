@@ -81,7 +81,7 @@ class OppgaveQueryService() {
             if (oppgaverad != null) {
                 oppgaverader.add(oppgaverad)
                 antall++
-                if (antall >= limit) {
+                if (limit >= 0 && antall >= limit) {
                     return oppgaverader
                 }
             }
