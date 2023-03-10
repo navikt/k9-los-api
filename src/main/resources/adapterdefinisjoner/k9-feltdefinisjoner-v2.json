@@ -166,13 +166,13 @@
     {
       "id": "nyeKrav",
       "listetype": false,
-      "tolkesSom": "String",
+      "tolkesSom": "boolean",
       "visTilBruker": true
     },
     {
       "id": "fraEndringsdialog",
       "listetype": false,
-      "tolkesSom": "String",
+      "tolkesSom": "boolean",
       "visTilBruker": true
     }
   ]
