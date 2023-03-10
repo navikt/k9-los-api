@@ -3,12 +3,12 @@ package no.nav.k9.los.domene.modell
 import assertk.assertThat
 import assertk.assertions.isFalse
 import assertk.assertions.isTrue
-import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
-import no.nav.k9.los.integrasjon.kafka.dto.EventHendelse
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
+import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
+import no.nav.k9.los.integrasjon.kafka.dto.EventHendelse
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -555,6 +555,6 @@ class K9SakModellReservasjonTest {
     }
 
     private fun Map<String, String>.tilAksjonspunktTilstandDtoer() =
-        this.entries.map { AksjonspunktTilstandDto(it.key, AksjonspunktStatus.fraKode(it.value), null, null, null)}
+        this.entries.map { AksjonspunktTilstandDto(it.key, AksjonspunktStatus.fraKode(it.value), null, null, null, null, null)}
 }
 
