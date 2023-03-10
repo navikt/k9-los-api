@@ -1,28 +1,17 @@
 package no.nav.k9.los.tjenester.saksbehandler.oppgave
 
 import assertk.assertThat
-import assertk.assertions.isEqualTo
-import assertk.assertions.isNotEqualTo
-import assertk.assertions.isNull
+import assertk.assertions.*
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
-import no.nav.k9.los.domene.modell.AksjonspunktStatus
-import no.nav.k9.los.domene.modell.AksjonspunktTilstand
-import no.nav.k9.los.domene.modell.Aksjonspunkter
-import no.nav.k9.los.domene.modell.BehandlingStatus
-import no.nav.k9.los.domene.modell.BehandlingType
-import no.nav.k9.los.domene.modell.Enhet
-import no.nav.k9.los.domene.modell.FagsakYtelseType
-import no.nav.k9.los.domene.modell.Fagsystem
-import no.nav.k9.los.domene.modell.KøSortering
-import no.nav.k9.los.domene.modell.OppgaveKø
-import no.nav.k9.los.domene.modell.Saksbehandler
+import no.nav.k9.los.domene.modell.*
 import no.nav.k9.los.domene.repository.OppgaveKøRepository
 import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
+import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
 import org.junit.jupiter.api.Test
 import org.koin.test.get
 import java.time.LocalDate
@@ -406,11 +395,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `skal sortere på størrelse på feil utbetalingsbeløp`() = runBlocking {
-        val oppgaveRepository = get<OppgaveRepository>()
-        val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
-
         val oppgaveTjeneste = get<OppgaveTjeneste>()
-        val oppgaveKøRepository = get<OppgaveKøRepository>()
 
         val tilbakeKrevingsKø = OppgaveKø(
             id = UUID.randomUUID(),
@@ -430,50 +415,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val o3 = lagOppgave(oppgaveId3, 100L)
         val o4 = lagOppgave(oppgaveId4, 10L)
 
-        tilbakeKrevingsKø.leggOppgaveTilEllerFjernFraKø(
-            o2,
-            merknader = oppgaveRepositoryV2.hentMerknader(o2.eksternId.toString())
-        )
-        tilbakeKrevingsKø.leggOppgaveTilEllerFjernFraKø(
-            o3,
-            merknader = oppgaveRepositoryV2.hentMerknader(o3.eksternId.toString())
-        )
-        tilbakeKrevingsKø.leggOppgaveTilEllerFjernFraKø(
-            o4,
-            merknader = oppgaveRepositoryV2.hentMerknader(o4.eksternId.toString())
-        )
-        tilbakeKrevingsKø.leggOppgaveTilEllerFjernFraKø(
-            o1,
-            merknader = oppgaveRepositoryV2.hentMerknader(o1.eksternId.toString())
-        )
-
-        oppgaveRepository.lagre(o2.eksternId) { o2 }
-        oppgaveRepository.lagre(o4.eksternId) { o4 }
-        oppgaveRepository.lagre(o1.eksternId) { o1 }
-        oppgaveRepository.lagre(o3.eksternId) { o3 }
-        tilbakeKrevingsKø.leggOppgaveTilEllerFjernFraKø(
-            o2,
-            null,
-            oppgaveRepositoryV2.hentMerknader(o2.eksternId.toString())
-        )
-        tilbakeKrevingsKø.leggOppgaveTilEllerFjernFraKø(
-            o4,
-            null,
-            oppgaveRepositoryV2.hentMerknader(o4.eksternId.toString())
-        )
-        tilbakeKrevingsKø.leggOppgaveTilEllerFjernFraKø(
-            o1,
-            null,
-            oppgaveRepositoryV2.hentMerknader(o1.eksternId.toString())
-        )
-        tilbakeKrevingsKø.leggOppgaveTilEllerFjernFraKø(
-            o3,
-            null,
-            oppgaveRepositoryV2.hentMerknader(o3.eksternId.toString())
-        )
-        oppgaveKøRepository.lagre(tilbakeKrevingsKø.id) {
-            tilbakeKrevingsKø
-        }
+        lagreOppgaverOgLeggTilIKø(tilbakeKrevingsKø, o2, o3, o4, o1)
 
         //sjekk at køen er sorter etter høyest feilutbetaling
         val hentOppgaver = oppgaveTjeneste.hentOppgaver(tilbakeKrevingsKø.id)
@@ -484,7 +426,169 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         assertThat(hentOppgaver[3].feilutbetaltBeløp).isEqualTo(o4.feilutbetaltBeløp)
     }
 
-    private fun lagOppgave(uuid: UUID, beløp: Long): Oppgave {
+    @Test
+    fun `skal sortere på beslutter ap opprettet tidspunkt ved beslutter kø`() = runBlocking {
+
+        val oppgaveTjeneste = get<OppgaveTjeneste>()
+
+        val beslutterKø = OppgaveKø(
+            id = UUID.randomUUID(),
+            navn = "test",
+            sistEndret = LocalDate.now(),
+            sortering = KøSortering.OPPRETT_BEHANDLING,
+            filtreringAndreKriterierType = andreKriterierDtos(AndreKriterierType.TIL_BESLUTTER),
+            saksbehandlere = mutableListOf(Saksbehandler("OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn))
+        )
+
+        val oppgaveId1 = UUID.fromString("0000000-0000-0000-0000-000000000001")
+        val oppgaveId2 = UUID.fromString("0000000-0000-0000-0000-000000000002")
+        val oppgaveId3 = UUID.fromString("0000000-0000-0000-0000-000000000003")
+        val oppgaveId4 = UUID.fromString("0000000-0000-0000-0000-000000000004")
+        val oppgaveId5 = UUID.fromString("0000000-0000-0000-0000-000000000005")
+
+        val now = LocalDateTime.now()
+
+        //1
+        val o1b1 = lagOppgave(oppgaveId1,
+            tilBeslutter = true,
+            behandlingOpprettet = now.minusDays(5),
+            beslutterApOpprettTid = now.minusDays(5)
+        )
+
+        //3
+        val o2b3 = lagOppgave(oppgaveId2,
+            tilBeslutter = true,
+            behandlingOpprettet = now.minusDays(4),
+            beslutterApOpprettTid = now.minusDays(3)
+        )
+
+        //5
+        val o3b5 = lagOppgave(oppgaveId3,
+            tilBeslutter = true,
+            behandlingOpprettet = now.minusDays(3),
+            beslutterApOpprettTid = now.minusDays(1)
+        )
+
+        //4
+        val o4b4 = lagOppgave(oppgaveId4,
+            tilBeslutter = true,
+            behandlingOpprettet = now.minusDays(2)
+            //hvis opprettet tid mangler så brukes behandling opprettet
+        )
+
+        //2
+        val o5b2 = lagOppgave(oppgaveId5,
+            tilBeslutter = true,
+            behandlingOpprettet = now.minusDays(1),
+            beslutterApOpprettTid = now.minusDays(4)
+        )
+
+        lagreOppgaverOgLeggTilIKø(beslutterKø, o1b1, o2b3, o3b5, o4b4, o5b2)
+
+        //sjekk at køen er sorter etter eldste beslutter AP
+        val hentOppgaver = oppgaveTjeneste.hentOppgaver(beslutterKø.id)
+
+        assertThat(hentOppgaver).extracting { it.eksternId }
+            .containsExactly(
+                o1b1.eksternId,
+                o5b2.eksternId,
+                o2b3.eksternId,
+                o4b4.eksternId,
+                o3b5.eksternId
+            )
+
+    }
+
+    @Test
+    fun `skal sortere på behandling opprettet tidspunkt default`() = runBlocking {
+
+        val oppgaveTjeneste = get<OppgaveTjeneste>()
+
+        val vanligKø = OppgaveKø(
+            id = UUID.randomUUID(),
+            navn = "test",
+            sistEndret = LocalDate.now(),
+            sortering = KøSortering.OPPRETT_BEHANDLING,
+            saksbehandlere = mutableListOf(Saksbehandler("OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn))
+        )
+
+        val oppgaveId1 = UUID.fromString("0000000-0000-0000-0000-000000000001")
+        val oppgaveId2 = UUID.fromString("0000000-0000-0000-0000-000000000002")
+        val oppgaveId3 = UUID.fromString("0000000-0000-0000-0000-000000000003")
+
+        val now = LocalDateTime.now()
+
+        //1
+        val o1 = lagOppgave(oppgaveId1,
+            behandlingOpprettet = now.minusDays(3),
+        )
+
+        //3
+        val o2 = lagOppgave(oppgaveId2,
+            behandlingOpprettet = now.minusDays(1),
+        )
+
+        //2
+        val o3 = lagOppgave(oppgaveId3,
+            behandlingOpprettet = now.minusDays(2),
+            beslutterApOpprettTid = now.minusDays(1)
+        )
+
+
+        lagreOppgaverOgLeggTilIKø(vanligKø, o1, o2, o3)
+
+        val hentOppgaver = oppgaveTjeneste.hentOppgaver(vanligKø.id)
+
+        assertThat(hentOppgaver).extracting { it.eksternId }
+            .containsExactly(
+                o1.eksternId,
+                o3.eksternId,
+                o2.eksternId
+            )
+
+    }
+
+    private suspend fun lagreOppgaverOgLeggTilIKø(
+        beslutterKø: OppgaveKø,
+        vararg oppgaver: Oppgave
+    ) {
+        val oppgaveRepository = get<OppgaveRepository>()
+        val oppgaveKøRepository = get<OppgaveKøRepository>()
+
+        oppgaver.forEach {o ->
+            beslutterKø.leggOppgaveTilEllerFjernFraKø(
+                o,
+                merknader = emptyList()
+            )
+            oppgaveRepository.lagre(o.eksternId) { o }
+            oppgaveKøRepository.lagre(beslutterKø.id) { beslutterKø}
+        }
+
+    }
+
+
+    private fun andreKriterierDtos(andreKriterierType: AndreKriterierType): MutableList<AndreKriterierDto> =
+        mutableListOf(AndreKriterierDto("1", andreKriterierType, true, true))
+
+    private fun lagOppgave(
+        uuid: UUID, beløp: Long = 0,
+        tilBeslutter: Boolean = false,
+        behandlingOpprettet: LocalDateTime = LocalDateTime.now().minusDays(23),
+        beslutterApOpprettTid: LocalDateTime? = null): Oppgave {
+        val apKoder = mutableMapOf("5015" to "OPPR")
+        val apTilstand = mutableListOf(AksjonspunktTilstand("5015", AksjonspunktStatus.OPPRETTET))
+
+        if (tilBeslutter) {
+            apKoder["5016"] = "OPPR"
+            apTilstand.add(AksjonspunktTilstand("5016", AksjonspunktStatus.OPPRETTET, opprettetTidspunkt = beslutterApOpprettTid))
+        }
+
+        val aksjonspunkter = Aksjonspunkter(
+            apKoder,
+            apTilstand
+        )
+
+
         return Oppgave(
             eksternId = uuid,
             feilutbetaltBeløp = beløp,
@@ -493,7 +597,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
             journalpostId = "234234535",
             behandlendeEnhet = "Enhet",
             behandlingsfrist = LocalDateTime.now(),
-            behandlingOpprettet = LocalDateTime.now().minusDays(23),
+            behandlingOpprettet = behandlingOpprettet,
             forsteStonadsdag = LocalDate.now().plusDays(6),
             behandlingStatus = BehandlingStatus.OPPRETTET,
             behandlingType = BehandlingType.UKJENT,
@@ -503,12 +607,8 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
             oppgaveAvsluttet = null,
             utfortFraAdmin = false,
             oppgaveEgenskap = emptyList(),
-            aksjonspunkter = Aksjonspunkter(
-                mapOf(
-                    "5015" to "OPPR"
-                )
-            ),
-            tilBeslutter = false,
+            aksjonspunkter = aksjonspunkter,
+            tilBeslutter = tilBeslutter,
             utbetalingTilBruker = false,
             selvstendigFrilans = false,
             kombinert = false,

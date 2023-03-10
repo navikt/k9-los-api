@@ -2,6 +2,7 @@ package no.nav.k9.los.tjenester.saksbehandler.oppgave
 
 import info.debatty.java.stringsimilarity.Levenshtein
 import kotlinx.coroutines.runBlocking
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.aksjonspunktbehandling.AksjonspunktDefinisjonK9Tilbake
@@ -9,30 +10,14 @@ import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.OppgaveMedId
 import no.nav.k9.los.domene.lager.oppgave.Reservasjon
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
-import no.nav.k9.los.domene.modell.BehandlingStatus
-import no.nav.k9.los.domene.modell.BehandlingType
-import no.nav.k9.los.domene.modell.FagsakYtelseType
-import no.nav.k9.los.domene.modell.Fagsystem
-import no.nav.k9.los.domene.modell.KøSortering
-import no.nav.k9.los.domene.modell.OppgaveKø
-import no.nav.k9.los.domene.modell.Saksbehandler
-import no.nav.k9.los.domene.repository.OppgaveKøRepository
-import no.nav.k9.los.domene.repository.OppgaveRepository
-import no.nav.k9.los.domene.repository.ReservasjonRepository
-import no.nav.k9.los.domene.repository.SaksbehandlerRepository
-import no.nav.k9.los.domene.repository.StatistikkRepository
+import no.nav.k9.los.domene.modell.*
+import no.nav.k9.los.domene.repository.*
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
 import no.nav.k9.los.integrasjon.omsorgspenger.IOmsorgspengerService
 import no.nav.k9.los.integrasjon.omsorgspenger.OmsorgspengerSakFnrDto
-import no.nav.k9.los.integrasjon.pdl.IPdlService
-import no.nav.k9.los.integrasjon.pdl.PersonPdl
-import no.nav.k9.los.integrasjon.pdl.PersonPdlResponse
-import no.nav.k9.los.integrasjon.pdl.fnr
-import no.nav.k9.los.integrasjon.pdl.kjoenn
-import no.nav.k9.los.integrasjon.pdl.navn
+import no.nav.k9.los.integrasjon.pdl.*
 import no.nav.k9.los.integrasjon.rest.idToken
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverHistorikk
 import no.nav.k9.los.tjenester.fagsak.PersonDto
 import no.nav.k9.los.tjenester.mock.AksjonspunkterMock
@@ -68,17 +53,29 @@ class OppgaveTjeneste constructor(
     suspend fun hentOppgaver(oppgavekøId: UUID): List<Oppgave> {
         return try {
             val oppgaveKø = oppgaveKøRepository.hentOppgavekø(oppgavekøId)
-            if (oppgaveKø.sortering == KøSortering.FEILUTBETALT) {
-                val oppgaver = oppgaveRepository.hentOppgaver(oppgaveKø.oppgaverOgDatoer.map { it.id })
-                val høyestFørst = oppgaver.sortedByDescending { it.feilutbetaltBeløp }
-                høyestFørst
-            } else {
-                oppgaveRepository.hentOppgaver(oppgaveKø.oppgaverOgDatoer.take(20).map { it.id })
-            }
+            sorterOgHent(oppgaveKø)
         } catch (e: Exception) {
             log.error("Henting av oppgave feilet, returnerer en tom oppgaveliste", e)
             emptyList()
         }
+    }
+
+    private fun sorterOgHent(oppgaveKø: OppgaveKø): List<Oppgave> {
+        if (oppgaveKø.beslutterKø()) {
+            val oppgaver = oppgaveRepository.hentOppgaver(oppgaveKø.oppgaverOgDatoer.map { it.id })
+            return oppgaver.sortedBy {
+                it.aksjonspunkter.beslutterAp()?.opprettetTidspunkt ?: it.behandlingOpprettet
+            }.take(20)
+
+        }
+
+        if (oppgaveKø.sortering == KøSortering.FEILUTBETALT) {
+            val oppgaver = oppgaveRepository.hentOppgaver(oppgaveKø.oppgaverOgDatoer.map { it.id })
+            return oppgaver.sortedByDescending { it.feilutbetaltBeløp }
+        }
+
+        return oppgaveRepository.hentOppgaver(oppgaveKø.oppgaverOgDatoer.take(20).map { it.id })
+
     }
 
     suspend fun reserverOppgave(
