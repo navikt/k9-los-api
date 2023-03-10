@@ -17,7 +17,7 @@
       "id": "aktorId",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true
+      "visTilBruker": false
     },
     {
       "id": "fagsystem",
@@ -77,13 +77,13 @@
       "id": "relatertPartAktorid",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true
+      "visTilBruker": false
     },
     {
       "id": "pleietrengendeAktorId",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true
+      "visTilBruker": false
     },
     {
       "id": "behandlendeEnhet",
@@ -122,6 +122,12 @@
       "visTilBruker": true
     },
     {
+      "id": "løsbartAksjonspunkt",
+      "listetype": false,
+      "tolkesSom": "String",
+      "visTilBruker": true
+    },
+    {
       "id": "akkumulertVentetidSaksbehandler",
       "listetype": false,
       "tolkesSom": "Duration",
@@ -153,6 +159,7 @@
     },
     {
       "id": "helautomatiskBehandlet",
+
       "listetype": false,
       "tolkesSom": "boolean",
       "visTilBruker": true

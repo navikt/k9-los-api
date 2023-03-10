@@ -184,7 +184,7 @@ class K9SakTilLosAdapterTjeneste(
         }
         
         utledAksjonspunkter(event, oppgaveFeltverdiDtos)
-        utledÅpneAksjonspunkter(åpneAksjonspunkter, oppgaveFeltverdiDtos)
+        utledÅpneAksjonspunkter(event.behandlingSteg, åpneAksjonspunkter, oppgaveFeltverdiDtos)
         utledAutomatiskBehandletFlagg(forrigeOppgave, oppgaveFeltverdiDtos, harManueltAksjonspunkt)
         utledAvventerSaksbehandler(harManueltAksjonspunkt, harAutopunkt, oppgaveFeltverdiDtos)
 
@@ -309,6 +309,7 @@ class K9SakTilLosAdapterTjeneste(
     }
 
     private fun utledÅpneAksjonspunkter(
+        behandlingSteg: String?,
         åpneAksjonspunkter: List<AksjonspunktTilstandDto>,
         oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
     ) {
@@ -320,6 +321,19 @@ class K9SakTilLosAdapterTjeneste(
                         verdi = åpentAksjonspunkt.aksjonspunktKode
                     )
                 )
+            }
+            if (behandlingSteg != null) {
+                åpneAksjonspunkter.firstOrNull { åpentAksjonspunkt ->
+                    val aksjonspunktDefinisjon = AksjonspunktDefinisjon.fraKode(åpentAksjonspunkt.aksjonspunktKode)
+                    !aksjonspunktDefinisjon.erAutopunkt() && aksjonspunktDefinisjon.behandlingSteg != null && aksjonspunktDefinisjon.behandlingSteg.kode == behandlingSteg
+                }?.let {
+                    oppgaveFeltverdiDtos.add(
+                        OppgaveFeltverdiDto(
+                            nøkkel = "løsbartAksjonspunkt",
+                            verdi = it.aksjonspunktKode
+                        )
+                    )
+                }
             }
         } else {
             oppgaveFeltverdiDtos.add(
