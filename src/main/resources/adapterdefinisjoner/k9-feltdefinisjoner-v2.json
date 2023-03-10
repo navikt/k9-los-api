@@ -17,7 +17,7 @@
       "id": "aktorId",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": false
+      "visTilBruker": true
     },
     {
       "id": "fagsystem",
@@ -77,13 +77,13 @@
       "id": "relatertPartAktorid",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": false
+      "visTilBruker": true
     },
     {
       "id": "pleietrengendeAktorId",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": false
+      "visTilBruker": true
     },
     {
       "id": "behandlendeEnhet",
