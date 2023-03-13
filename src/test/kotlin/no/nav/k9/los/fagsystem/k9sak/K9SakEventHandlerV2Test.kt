@@ -6,13 +6,13 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
+import no.nav.k9.kodeverk.behandling.BehandlingType
+import no.nav.k9.kodeverk.behandling.FagsakYtelseType
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveTjenesteV2
 import no.nav.k9.los.integrasjon.azuregraph.AzureGraphService
-import no.nav.k9.kodeverk.behandling.BehandlingType
-import no.nav.k9.kodeverk.behandling.FagsakYtelseType
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.ProduksjonsstyringAksjonspunktHendelse
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.ProduksjonsstyringBehandlingOpprettetHendelse
@@ -94,6 +94,8 @@ class K9SakEventHandlerV2Test : AbstractK9LosIntegrationTest() {
                 AksjonspunktStatus.OPPRETTET,
                 null,
                 null,
+                null,
+                null,
                 null
             ))
         )
@@ -108,6 +110,8 @@ class K9SakEventHandlerV2Test : AbstractK9LosIntegrationTest() {
                 AksjonspunktStatus.UTFØRT,
                 null,
                 saksbehandler,
+                null,
+                null,
                 null
             ))
         )

@@ -62,22 +62,7 @@ class OppgaveQueryService() {
         val oppgaver: List<Long> = oppgaveQueryRepository.query(tx, oppgaveQuery)
 
         val oppgaverader = runBlocking(context = CoroutineRequestContext(idToken)) {
-            oppgaver.mapNotNull {
-                val oppgave = oppgaveRepository.hentOppgaveForId(tx, it)
-
-                // TODO: Generaliser ABAC-attributter + sjekk av disse:
-                val saksnummer = oppgave.hentVerdi("K9", "saksnummer")
-                val aktorId = oppgave.hentVerdi("K9", "aktorId")!!
-
-                if (saksnummer === null || !pepClient.harTilgangTilLesSak(saksnummer, aktorId)) {
-                    null
-                } else if (oppgaveQuery.select.isEmpty()) {
-                    Oppgaverad(listOf())
-                } else {
-                    val felter = toOppgavefeltverdier(oppgaveQuery, oppgave)
-                    Oppgaverad(felter)
-                }
-            }
+            mapOppgaver(tx, oppgaveQuery, oppgaver)
         }
 
         if (oppgaveQuery.select.isEmpty()) {
@@ -85,6 +70,40 @@ class OppgaveQueryService() {
         }
 
         return oppgaverader
+    }
+
+    private suspend fun mapOppgaver(tx: TransactionalSession, oppgaveQuery: OppgaveQuery, oppgaveIder: List<Long>): List<Oppgaverad> {
+        val oppgaverader = mutableListOf<Oppgaverad>()
+        val limit = oppgaveQuery.limit
+        var antall = 0
+        for (oppgaveId in oppgaveIder) {
+            val oppgaverad = mapOppgave(tx, oppgaveQuery, oppgaveId)
+            if (oppgaverad != null) {
+                oppgaverader.add(oppgaverad)
+                antall++
+                if (limit >= 0 && antall >= limit) {
+                    return oppgaverader
+                }
+            }
+        }
+        return oppgaverader
+    }
+
+    private suspend fun mapOppgave(tx: TransactionalSession, oppgaveQuery: OppgaveQuery, oppgaveId: Long): Oppgaverad? {
+        val oppgave = oppgaveRepository.hentOppgaveForId(tx, oppgaveId)
+
+        // TODO: Generaliser ABAC-attributter + sjekk av disse:
+        val saksnummer = oppgave.hentVerdi("K9", "saksnummer")
+        val aktorId = oppgave.hentVerdi("K9", "aktorId")!!
+
+        if (saksnummer === null || !pepClient.harTilgangTilLesSak(saksnummer, aktorId)) {
+            return null
+        } else if (oppgaveQuery.select.isEmpty()) {
+            return Oppgaverad(listOf())
+        } else {
+            val felter = toOppgavefeltverdier(oppgaveQuery, oppgave)
+            return Oppgaverad(felter)
+        }
     }
 
     private fun toOppgavefeltverdier(
