@@ -62,7 +62,10 @@ open class OmsorgspengerService constructor(
                 app = "k9-los-api",
                 operation = "hent-saksnummer-omsorgspenger",
                 resultResolver = { 200 == it.second.statusCode }
-            ) { httpRequest.awaitStringResponseResult() }
+            ) {
+                log.info("kaller ${httpRequest.url} ")
+                httpRequest.awaitStringResponseResult()
+            }
 
             result.fold(
                 { success ->
