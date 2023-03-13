@@ -185,7 +185,7 @@ class K9SakTilLosAdapterTjeneste(
         utledÅpneAksjonspunkter(event.behandlingSteg, åpneAksjonspunkter, oppgaveFeltverdiDtos)
         utledVenteÅrsakOgFrist(åpneAksjonspunkter, oppgaveFeltverdiDtos)
         utledAutomatiskBehandletFlagg(forrigeOppgave, oppgaveFeltverdiDtos, harManueltAksjonspunkt)
-        utledAvventerflagg(harManueltAksjonspunkt, harAutopunkt, åpneAksjonspunkter, oppgaveFeltverdiDtos)
+        utledAvventerflagg(event.behandlingSteg, åpneAksjonspunkter, oppgaveFeltverdiDtos)
 
         return oppgaveFeltverdiDtos
     }
@@ -266,11 +266,14 @@ class K9SakTilLosAdapterTjeneste(
     )
 
     private fun utledAvventerflagg(
-        harManueltAksjonspunkt: Boolean,
-        harAutopunkt: Boolean,
+        behandlingSteg: String?,
         åpneAksjonspunkter: List<AksjonspunktTilstandDto>,
         oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
     ) {
+        if (åpneAksjonspunkter.isEmpty()) {
+            oppgaveFeltverdiDtos.addAll(avventerIngen())
+            return
+        }
         åpneAksjonspunkter
             .filter { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.fristTid != null }
             .sortedBy { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.fristTid }
@@ -285,8 +288,31 @@ class K9SakTilLosAdapterTjeneste(
                     Ventekategori.AVVENTER_ANNET_IKKE_SAKSBEHANDLINGSTID -> oppgaveFeltverdiDtos.addAll(avventerIngen())
                 }
             }
-            ?: if (harManueltAksjonspunkt && !harAutopunkt) {
-                oppgaveFeltverdiDtos.addAll(avventerSaksbehandler())
+            ?: if (behandlingSteg != null) {
+                val løsbareAksjonspunkt = åpneAksjonspunkter.filter { åpentAksjonspunkt ->
+                    val aksjonspunktDefinisjon = AksjonspunktDefinisjon.fraKode(åpentAksjonspunkt.aksjonspunktKode)
+                    aksjonspunktDefinisjon.erAutopunkt() || aksjonspunktDefinisjon.behandlingSteg != null && aksjonspunktDefinisjon.behandlingSteg.kode == behandlingSteg
+                }
+
+                løsbareAksjonspunkt.firstOrNull { aksjonspunktTilstandDto ->
+                    AksjonspunktDefinisjon.fraKode(aksjonspunktTilstandDto.aksjonspunktKode).defaultVentekategori == Ventekategori.AVVENTER_TEKNISK_FEIL
+                }?.let { oppgaveFeltverdiDtos.addAll(avventerTekniskFeil()) }
+                    ?: løsbareAksjonspunkt.firstOrNull { aksjonspunktTilstandDto ->
+                        AksjonspunktDefinisjon.fraKode(aksjonspunktTilstandDto.aksjonspunktKode).defaultVentekategori == Ventekategori.AVVENTER_SAKSBEHANDLER
+                    }?.let { oppgaveFeltverdiDtos.addAll(avventerSaksbehandler()) }
+                    ?: løsbareAksjonspunkt.firstOrNull { aksjonspunktTilstandDto ->
+                        AksjonspunktDefinisjon.fraKode(aksjonspunktTilstandDto.aksjonspunktKode).defaultVentekategori == Ventekategori.AVVENTER_ANNET
+                    }?.let { oppgaveFeltverdiDtos.addAll(avventerSaksbehandler()) }
+                    ?: løsbareAksjonspunkt.firstOrNull { aksjonspunktTilstandDto ->
+                        AksjonspunktDefinisjon.fraKode(aksjonspunktTilstandDto.aksjonspunktKode).defaultVentekategori == Ventekategori.AVVENTER_ARBEIDSGIVER
+                    }?.let { oppgaveFeltverdiDtos.addAll(avventerArbeidsgiver()) }
+                    ?: løsbareAksjonspunkt.firstOrNull { aksjonspunktTilstandDto ->
+                        AksjonspunktDefinisjon.fraKode(aksjonspunktTilstandDto.aksjonspunktKode).defaultVentekategori == Ventekategori.AVVENTER_SØKER
+                    }?.let { oppgaveFeltverdiDtos.addAll(avventerSøker()) }
+                    ?: løsbareAksjonspunkt.firstOrNull { aksjonspunktTilstandDto ->
+                        AksjonspunktDefinisjon.fraKode(aksjonspunktTilstandDto.aksjonspunktKode).defaultVentekategori == Ventekategori.AVVENTER_ANNET_IKKE_SAKSBEHANDLINGSTID
+                    }?.let { oppgaveFeltverdiDtos.addAll(avventerIngen()) }
+                    ?: oppgaveFeltverdiDtos.addAll(avventerIngen()) //Ingen løsbare aksjonspunkt
             } else {
                 oppgaveFeltverdiDtos.addAll(avventerIngen())
             }
