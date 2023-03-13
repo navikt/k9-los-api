@@ -116,6 +116,11 @@
           "påkrevd": false
         },
         {
+          "id": "løsbartAksjonspunkt",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
         "id": "avventerSaksbehandler",
         "visPåOppgave": false,
         "påkrevd": true
