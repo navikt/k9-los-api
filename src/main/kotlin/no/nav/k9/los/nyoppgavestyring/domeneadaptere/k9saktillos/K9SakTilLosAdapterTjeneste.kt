@@ -3,10 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.k9.kodeverk.behandling.BehandlingStatus
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktType
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.*
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
@@ -25,6 +22,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.collections.ArrayList
 import kotlin.concurrent.thread
 import kotlin.concurrent.timer
 
@@ -171,7 +169,7 @@ class K9SakTilLosAdapterTjeneste(
         forrigeOppgave: OppgaveV3?
     ): List<OppgaveFeltverdiDto> {
         val oppgaveFeltverdiDtos = mapEnkeltverdier(event, forrigeOppgave)
-        
+
         val åpneAksjonspunkter = event.aksjonspunktTilstander.filter { aksjonspunktTilstand ->
             aksjonspunktTilstand.status.erÅpentAksjonspunkt()
         }
@@ -183,12 +181,12 @@ class K9SakTilLosAdapterTjeneste(
         val harManueltAksjonspunkt = åpneAksjonspunkter.any { aksjonspunktTilstandDto ->
             MANUELLE_AKSJONSPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode)
         }
-        
+
         utledAksjonspunkter(event, oppgaveFeltverdiDtos)
         utledÅpneAksjonspunkter(åpneAksjonspunkter, oppgaveFeltverdiDtos)
         utledVenteÅrsakOgFrist(åpneAksjonspunkter, oppgaveFeltverdiDtos)
         utledAutomatiskBehandletFlagg(forrigeOppgave, oppgaveFeltverdiDtos, harManueltAksjonspunkt)
-        utledAvventerSaksbehandler(harManueltAksjonspunkt, harAutopunkt, oppgaveFeltverdiDtos)
+        utledAvventerflagg(harManueltAksjonspunkt, harAutopunkt, åpneAksjonspunkter, oppgaveFeltverdiDtos)
 
         return oppgaveFeltverdiDtos
     }
@@ -261,31 +259,143 @@ class K9SakTilLosAdapterTjeneste(
         OppgaveFeltverdiDto(
             nøkkel = "totrinnskontroll",
             verdi = event.aksjonspunktTilstander.filter { aksjonspunktTilstandDto ->
-                aksjonspunktTilstandDto.aksjonspunktKode.equals("5015") && aksjonspunktTilstandDto.status !in (listOf(AksjonspunktStatus.AVBRUTT))
+                aksjonspunktTilstandDto.aksjonspunktKode.equals("5015") && aksjonspunktTilstandDto.status !in (listOf(
+                    AksjonspunktStatus.AVBRUTT
+                ))
             }.isNotEmpty().toString()
         )
     )
 
-    private fun utledAvventerSaksbehandler(
+    private fun utledAvventerflagg(
         harManueltAksjonspunkt: Boolean,
         harAutopunkt: Boolean,
+        åpneAksjonspunkter: List<AksjonspunktTilstandDto>,
         oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
     ) {
-        if (harManueltAksjonspunkt && !harAutopunkt) {
-            oppgaveFeltverdiDtos.add(
-                OppgaveFeltverdiDto(
-                    nøkkel = "avventerSaksbehandler",
-                    verdi = "true"
-                )
+        åpneAksjonspunkter
+            .filter { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.fristTid != null }
+            .sortedBy { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.fristTid }
+            .firstOrNull()
+            ?.let { aksjonspunktTilsdandDto ->
+                when (aksjonspunktTilsdandDto.venteårsak.ventekategori) {
+                    Ventekategori.AVVENTER_SAKSBEHANDLER -> oppgaveFeltverdiDtos.addAll(avventerSaksbehandler())
+                    Ventekategori.AVVENTER_SØKER -> oppgaveFeltverdiDtos.addAll(avventerSøker())
+                    Ventekategori.AVVENTER_ARBEIDSGIVER -> oppgaveFeltverdiDtos.addAll(avventerArbeidsgiver())
+                    Ventekategori.AVVENTER_TEKNISK_FEIL -> oppgaveFeltverdiDtos.addAll(avventerTekniskFeil())
+                    Ventekategori.AVVENTER_ANNET -> oppgaveFeltverdiDtos.addAll(avventerSaksbehandler())
+                    Ventekategori.AVVENTER_ANNET_IKKE_SAKSBEHANDLINGSTID -> oppgaveFeltverdiDtos.addAll(avventerIngen())
+                }
+            }
+            ?: if (harManueltAksjonspunkt && !harAutopunkt) {
+                oppgaveFeltverdiDtos.addAll(avventerSaksbehandler())
+            } else {
+                oppgaveFeltverdiDtos.addAll(avventerIngen())
+            }
+    }
+
+    private fun avventerSaksbehandler(): List<OppgaveFeltverdiDto> {
+        return listOf(
+            OppgaveFeltverdiDto(
+                nøkkel = "avventerSaksbehandler",
+                verdi = true.toString()
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "avventerSøker",
+                verdi = false.toString()
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "avventerArbeidsgiver",
+                verdi = false.toString()
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "avventerTekniskFeil",
+                verdi = false.toString()
             )
-        } else {
-            oppgaveFeltverdiDtos.add(
-                OppgaveFeltverdiDto(
-                    nøkkel = "avventerSaksbehandler",
-                    verdi = "false"
-                )
+        )
+    }
+
+    private fun avventerIngen(): List<OppgaveFeltverdiDto> {
+        return listOf(
+            OppgaveFeltverdiDto(
+                nøkkel = "avventerSaksbehandler",
+                verdi = false.toString()
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "avventerSøker",
+                verdi = false.toString()
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "avventerArbeidsgiver",
+                verdi = false.toString()
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "avventerTekniskFeil",
+                verdi = false.toString()
             )
-        }
+        )
+    }
+
+    private fun avventerSøker(): List<OppgaveFeltverdiDto> {
+        return listOf(
+            OppgaveFeltverdiDto(
+                nøkkel = "avventerSaksbehandler",
+                verdi = false.toString()
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "avventerSøker",
+                verdi = true.toString()
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "avventerArbeidsgiver",
+                verdi = false.toString()
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "avventerTekniskFeil",
+                verdi = false.toString()
+            )
+        )
+    }
+
+    private fun avventerArbeidsgiver(): List<OppgaveFeltverdiDto> {
+        return listOf(
+            OppgaveFeltverdiDto(
+                nøkkel = "avventerSaksbehandler",
+                verdi = false.toString()
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "avventerSøker",
+                verdi = false.toString()
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "avventerArbeidsgiver",
+                verdi = true.toString()
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "avventerTekniskFeil",
+                verdi = false.toString()
+            )
+        )
+    }
+
+    private fun avventerTekniskFeil(): List<OppgaveFeltverdiDto> {
+        return listOf(
+            OppgaveFeltverdiDto(
+                nøkkel = "avventerSaksbehandler",
+                verdi = false.toString()
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "avventerSøker",
+                verdi = false.toString()
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "avventerArbeidsgiver",
+                verdi = false.toString()
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "avventerTekniskFeil",
+                verdi = true.toString()
+            )
+        )
     }
 
     private fun utledAutomatiskBehandletFlagg(
@@ -341,7 +451,8 @@ class K9SakTilLosAdapterTjeneste(
             åpneAksjonspunkter
                 .filter { aksjonspunktTilstandDto ->
                     !aksjonspunktTilstandDto.venteårsak.equals(Venteårsak.UDEFINERT)
-                            && aksjonspunktTilstandDto.status.equals(AksjonspunktStatus.OPPRETTET)}
+                            && aksjonspunktTilstandDto.status.equals(AksjonspunktStatus.OPPRETTET)
+                }
                 .singleOrNull { aksjonspunktTilstandDto ->
                     oppgaveFeltverdiDtos.add(
                         OppgaveFeltverdiDto(
