@@ -6,7 +6,9 @@ class GyldigeFeltutledere {
             AkkumulertVentetidSaksbehandler::class.java.canonicalName to AkkumulertVentetidSaksbehandler(),
             AkkumulertVentetidSøker::class.java.canonicalName to AkkumulertVentetidSøker(),
             AkkumulertVentetidArbeidsgiver::class.java.canonicalName to AkkumulertVentetidArbeidsgiver(),
-            AkkumulertVentetidTekniskFeil::class.java.canonicalName to AkkumulertVentetidTekniskFeil()
+            AkkumulertVentetidTekniskFeil::class.java.canonicalName to AkkumulertVentetidTekniskFeil(),
+            AkkumulertVentetidAnnet::class.java.canonicalName to AkkumulertVentetidAnnet(),
+            AkkumulertVentetidAnnetIkkeSaksbehandlingstid::class.java.canonicalName to AkkumulertVentetidAnnetIkkeSaksbehandlingstid()
         )
 
         fun hentFeltutleder(utleder: String): Feltutleder {

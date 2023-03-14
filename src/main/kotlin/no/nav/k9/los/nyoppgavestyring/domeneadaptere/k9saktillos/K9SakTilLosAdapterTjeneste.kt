@@ -265,162 +265,147 @@ class K9SakTilLosAdapterTjeneste(
         )
     )
 
-    private fun utledAvventerflagg(
+    internal fun utledAvventerflagg(
         behandlingSteg: String?,
         åpneAksjonspunkter: List<AksjonspunktTilstandDto>,
         oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
     ) {
+        if (behandlingSteg.isNullOrEmpty()) {
+            if (åpneAksjonspunkter.isEmpty()) {
+                oppgaveFeltverdiDtos.addAll(avventerIngen())
+                return
+            } else {
+                throw IllegalStateException("Aktivt aksjonspunkt: ${åpneAksjonspunkter.first().aksjonspunktKode}, men ikke aktivt behandlingssteg")
+            }
+        }
+
         if (åpneAksjonspunkter.isEmpty()) {
-            oppgaveFeltverdiDtos.addAll(avventerIngen())
+            oppgaveFeltverdiDtos.addAll(avventerAnnet())
             return
         }
-        åpneAksjonspunkter
+
+        val førsteAPMedFristOgVenteårsak = åpneAksjonspunkter
             .filter { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.fristTid != null }
             .sortedBy { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.fristTid }
             .firstOrNull()
-            ?.let { aksjonspunktTilsdandDto ->
-                when (aksjonspunktTilsdandDto.venteårsak.ventekategori) {
-                    Ventekategori.AVVENTER_SAKSBEHANDLER -> oppgaveFeltverdiDtos.addAll(avventerSaksbehandler())
-                    Ventekategori.AVVENTER_SØKER -> oppgaveFeltverdiDtos.addAll(avventerSøker())
-                    Ventekategori.AVVENTER_ARBEIDSGIVER -> oppgaveFeltverdiDtos.addAll(avventerArbeidsgiver())
-                    Ventekategori.AVVENTER_TEKNISK_FEIL -> oppgaveFeltverdiDtos.addAll(avventerTekniskFeil())
-                    Ventekategori.AVVENTER_ANNET -> oppgaveFeltverdiDtos.addAll(avventerSaksbehandler())
-                    Ventekategori.AVVENTER_ANNET_IKKE_SAKSBEHANDLINGSTID -> oppgaveFeltverdiDtos.addAll(avventerIngen())
-                }
-            }
-            ?: if (behandlingSteg != null) {
-                val løsbareAksjonspunkt = åpneAksjonspunkter.filter { åpentAksjonspunkt ->
-                    val aksjonspunktDefinisjon = AksjonspunktDefinisjon.fraKode(åpentAksjonspunkt.aksjonspunktKode)
-                    aksjonspunktDefinisjon.erAutopunkt() || aksjonspunktDefinisjon.behandlingSteg != null && aksjonspunktDefinisjon.behandlingSteg.kode == behandlingSteg
-                }
 
-                løsbareAksjonspunkt.firstOrNull { aksjonspunktTilstandDto ->
-                    AksjonspunktDefinisjon.fraKode(aksjonspunktTilstandDto.aksjonspunktKode).defaultVentekategori == Ventekategori.AVVENTER_TEKNISK_FEIL
-                }?.let { oppgaveFeltverdiDtos.addAll(avventerTekniskFeil()) }
-                    ?: løsbareAksjonspunkt.firstOrNull { aksjonspunktTilstandDto ->
-                        AksjonspunktDefinisjon.fraKode(aksjonspunktTilstandDto.aksjonspunktKode).defaultVentekategori == Ventekategori.AVVENTER_SAKSBEHANDLER
-                    }?.let { oppgaveFeltverdiDtos.addAll(avventerSaksbehandler()) }
-                    ?: løsbareAksjonspunkt.firstOrNull { aksjonspunktTilstandDto ->
-                        AksjonspunktDefinisjon.fraKode(aksjonspunktTilstandDto.aksjonspunktKode).defaultVentekategori == Ventekategori.AVVENTER_ANNET
-                    }?.let { oppgaveFeltverdiDtos.addAll(avventerSaksbehandler()) }
-                    ?: løsbareAksjonspunkt.firstOrNull { aksjonspunktTilstandDto ->
-                        AksjonspunktDefinisjon.fraKode(aksjonspunktTilstandDto.aksjonspunktKode).defaultVentekategori == Ventekategori.AVVENTER_ARBEIDSGIVER
-                    }?.let { oppgaveFeltverdiDtos.addAll(avventerArbeidsgiver()) }
-                    ?: løsbareAksjonspunkt.firstOrNull { aksjonspunktTilstandDto ->
-                        AksjonspunktDefinisjon.fraKode(aksjonspunktTilstandDto.aksjonspunktKode).defaultVentekategori == Ventekategori.AVVENTER_SØKER
-                    }?.let { oppgaveFeltverdiDtos.addAll(avventerSøker()) }
-                    ?: løsbareAksjonspunkt.firstOrNull { aksjonspunktTilstandDto ->
-                        AksjonspunktDefinisjon.fraKode(aksjonspunktTilstandDto.aksjonspunktKode).defaultVentekategori == Ventekategori.AVVENTER_ANNET_IKKE_SAKSBEHANDLINGSTID
-                    }?.let { oppgaveFeltverdiDtos.addAll(avventerIngen()) }
-                    ?: oppgaveFeltverdiDtos.addAll(avventerIngen()) //Ingen løsbare aksjonspunkt
+        if (førsteAPMedFristOgVenteårsak != null) {
+            when (førsteAPMedFristOgVenteårsak.venteårsak.ventekategori) {
+                Ventekategori.AVVENTER_SAKSBEHANDLER -> oppgaveFeltverdiDtos.addAll(avventerSaksbehandler())
+                Ventekategori.AVVENTER_SØKER -> oppgaveFeltverdiDtos.addAll(avventerSøker())
+                Ventekategori.AVVENTER_ARBEIDSGIVER -> oppgaveFeltverdiDtos.addAll(avventerArbeidsgiver())
+                Ventekategori.AVVENTER_TEKNISK_FEIL -> oppgaveFeltverdiDtos.addAll(avventerTekniskFeil())
+                Ventekategori.AVVENTER_ANNET -> oppgaveFeltverdiDtos.addAll(avventerSaksbehandler())
+                Ventekategori.AVVENTER_ANNET_IKKE_SAKSBEHANDLINGSTID -> oppgaveFeltverdiDtos.addAll(avventerIngen())
+                else -> oppgaveFeltverdiDtos.addAll(avventerAnnet())//TODO : Exception?
+            }
+            return
+        }
+
+        //Hvis ingen venteårsak hentes ventekategori fra løsbare aksjonspunkt i prioritert rekkefølge
+        val løsbareAksjonspunkt = åpneAksjonspunkter.filter { åpentAksjonspunkt ->
+            val aksjonspunktDefinisjon = AksjonspunktDefinisjon.fraKode(åpentAksjonspunkt.aksjonspunktKode)
+            aksjonspunktDefinisjon.erAutopunkt() || aksjonspunktDefinisjon.behandlingSteg != null && aksjonspunktDefinisjon.behandlingSteg.kode == behandlingSteg
+        }
+
+        if (apInneholder(løsbareAksjonspunkt, Ventekategori.AVVENTER_TEKNISK_FEIL)) {
+            oppgaveFeltverdiDtos.addAll(avventerTekniskFeil())
+            return
+        }
+
+        if (apInneholder(løsbareAksjonspunkt, Ventekategori.AVVENTER_SAKSBEHANDLER)) {
+            oppgaveFeltverdiDtos.addAll(avventerSaksbehandler())
+            return
+        }
+
+        if (apInneholder(løsbareAksjonspunkt, Ventekategori.AVVENTER_ANNET)) {
+            oppgaveFeltverdiDtos.addAll(avventerSaksbehandler())
+            return
+        }
+
+        if (apInneholder(løsbareAksjonspunkt, Ventekategori.AVVENTER_ARBEIDSGIVER)) {
+            oppgaveFeltverdiDtos.addAll(avventerArbeidsgiver())
+            return
+        }
+
+        if (apInneholder(løsbareAksjonspunkt, Ventekategori.AVVENTER_SØKER)) {
+            oppgaveFeltverdiDtos.addAll(avventerSøker())
+            return
+        }
+
+        if (apInneholder(løsbareAksjonspunkt, Ventekategori.AVVENTER_ANNET_IKKE_SAKSBEHANDLINGSTID)) {
+            oppgaveFeltverdiDtos.addAll(avventerIngen())
+            return
+        }
+
+        throw IllegalStateException("Aktivt steg: ${behandlingSteg}, og åpne aksjonspunkt: ${åpneAksjonspunkter} men ingen løsbare aksjonspunkt")
+    }
+
+    private fun apInneholder(
+        løsbareAksjonspunkt: List<AksjonspunktTilstandDto>,
+        ventekategori: Ventekategori
+    ) : Boolean {
+        return løsbareAksjonspunkt.firstOrNull { aksjonspunktTilstandDto ->
+            AksjonspunktDefinisjon.fraKode(aksjonspunktTilstandDto.aksjonspunktKode).defaultVentekategori == ventekategori
+        } != null
+    }
+
+    internal fun avventerSøker(): List<OppgaveFeltverdiDto> {
+        return avventerflagg(listOf("avventerSøker"))
+    }
+
+    internal fun avventerArbeidsgiver(): List<OppgaveFeltverdiDto> {
+        return avventerflagg(listOf("avventerArbeidsgiver"))
+    }
+
+    internal fun avventerSaksbehandler(): List<OppgaveFeltverdiDto> {
+        return avventerflagg(listOf("avventerSaksbehandler"))
+    }
+
+    internal fun avventerTekniskFeil(): List<OppgaveFeltverdiDto> {
+        return avventerflagg(listOf("avventerTekniskFeil"))
+    }
+
+    internal fun avventerAnnet(): List<OppgaveFeltverdiDto> {
+        return avventerflagg(listOf("avventerAnnet"))
+    }
+
+    internal fun avventerAnnetIkkeSaksbehandlingstid(): List<OppgaveFeltverdiDto> {
+        return avventerflagg(listOf("avventerAnnetIkkeSaksbehandlingstid"))
+    }
+
+    internal fun avventerIngen(): List<OppgaveFeltverdiDto> {
+        return avventerflagg(emptyList())
+    }
+
+    private fun avventerflagg(skalSettesTrue: List<String>): List<OppgaveFeltverdiDto> {
+        val oppgavefelter = mutableListOf<OppgaveFeltverdiDto>()
+        listOf(
+            "avventerSøker",
+            "avventerArbeidsgiver",
+            "avventerSaksbehandler",
+            "avventerTekniskFeil",
+            "avventerAnnet",
+            "avventerAnnetIkkeSaksbehandlingstid"
+        ).forEach {
+            if (skalSettesTrue.contains(it)) {
+                oppgavefelter.add(
+                    OppgaveFeltverdiDto(
+                        nøkkel = it,
+                        verdi = true.toString()
+                    )
+                )
             } else {
-                oppgaveFeltverdiDtos.addAll(avventerIngen())
+                oppgavefelter.add(
+                    OppgaveFeltverdiDto(
+                        nøkkel = it,
+                        verdi = false.toString()
+                    )
+                )
             }
-    }
+        }
 
-    private fun avventerSaksbehandler(): List<OppgaveFeltverdiDto> {
-        return listOf(
-            OppgaveFeltverdiDto(
-                nøkkel = "avventerSaksbehandler",
-                verdi = true.toString()
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "avventerSøker",
-                verdi = false.toString()
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "avventerArbeidsgiver",
-                verdi = false.toString()
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "avventerTekniskFeil",
-                verdi = false.toString()
-            )
-        )
-    }
-
-    private fun avventerIngen(): List<OppgaveFeltverdiDto> {
-        return listOf(
-            OppgaveFeltverdiDto(
-                nøkkel = "avventerSaksbehandler",
-                verdi = false.toString()
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "avventerSøker",
-                verdi = false.toString()
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "avventerArbeidsgiver",
-                verdi = false.toString()
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "avventerTekniskFeil",
-                verdi = false.toString()
-            )
-        )
-    }
-
-    private fun avventerSøker(): List<OppgaveFeltverdiDto> {
-        return listOf(
-            OppgaveFeltverdiDto(
-                nøkkel = "avventerSaksbehandler",
-                verdi = false.toString()
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "avventerSøker",
-                verdi = true.toString()
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "avventerArbeidsgiver",
-                verdi = false.toString()
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "avventerTekniskFeil",
-                verdi = false.toString()
-            )
-        )
-    }
-
-    private fun avventerArbeidsgiver(): List<OppgaveFeltverdiDto> {
-        return listOf(
-            OppgaveFeltverdiDto(
-                nøkkel = "avventerSaksbehandler",
-                verdi = false.toString()
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "avventerSøker",
-                verdi = false.toString()
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "avventerArbeidsgiver",
-                verdi = true.toString()
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "avventerTekniskFeil",
-                verdi = false.toString()
-            )
-        )
-    }
-
-    private fun avventerTekniskFeil(): List<OppgaveFeltverdiDto> {
-        return listOf(
-            OppgaveFeltverdiDto(
-                nøkkel = "avventerSaksbehandler",
-                verdi = false.toString()
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "avventerSøker",
-                verdi = false.toString()
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "avventerArbeidsgiver",
-                verdi = false.toString()
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "avventerTekniskFeil",
-                verdi = true.toString()
-            )
-        )
+        return oppgavefelter
     }
 
     private fun utledAutomatiskBehandletFlagg(

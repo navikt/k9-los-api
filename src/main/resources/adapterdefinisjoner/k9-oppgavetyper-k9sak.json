@@ -132,6 +132,36 @@
           "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.AkkumulertVentetidSaksbehandler"
         },
         {
+          "id": "akkumulertVentetidSøkerForTidligereVersjoner",
+          "visPåOppgave": false,
+          "påkrevd": false,
+          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.AkkumulertVentetidSøker"
+        },
+        {
+          "id": "akkumulertVentetidTekniskFeilForTidligereVersjoner",
+          "visPåOppgave": false,
+          "påkrevd": false,
+          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.AkkumulertVentetidTekniskFeil"
+        },
+        {
+          "id": "akkumulertVentetidArbeidsgiverForTidligereVersjoner",
+          "visPåOppgave": false,
+          "påkrevd": false,
+          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.AkkumulertVentetidArbeidsgiver"
+        },
+        {
+          "id": "akkumulertVentetidAnnetForTidligereVersjoner",
+          "visPåOppgave": false,
+          "påkrevd": false,
+          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.AkkumulertVentetidAnnet"
+        },
+        {
+          "id": "akkumulertVentetidAnnetIkkeSaksbehandlingstidForTidligereVersjoner",
+          "visPåOppgave": false,
+          "påkrevd": false,
+          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.AkkumulertVentetidAnnetIkkeSaksbehandlingstid"
+        },
+        {
           "id": "helautomatiskBehandlet",
           "visPåOppgave": false,
           "påkrevd": true

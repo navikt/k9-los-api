@@ -134,21 +134,9 @@
       "visTilBruker": true
     },
     {
-      "id": "akkumulertVentetidSaksbehandlerForTidligereVersjoner",
-      "listetype": false,
-      "tolkesSom": "Duration",
-      "visTilBruker": true
-    },
-    {
-      "id": "avventerSoeker",
+      "id": "avventerSøker",
       "listetype": false,
       "tolkesSom": "boolean",
-      "visTilBruker": true
-    },
-    {
-      "id": "akkumulertVentetidSoekerForTidligereVersjoner",
-      "listetype": false,
-      "tolkesSom": "Duration",
       "visTilBruker": true
     },
     {
@@ -158,19 +146,55 @@
       "visTilBruker": true
     },
     {
-      "id": "akkumulertVentetidArbeidsgiverForTidligereVersjoner",
-      "listetype": false,
-      "tolkesSom": "Duration",
-      "visTilBruker": true
-    },
-    {
       "id": "avventerTekniskFeil",
       "listetype": false,
       "tolkesSom": "boolean",
       "visTilBruker": true
     },
     {
+      "id": "avventerAnnet",
+      "listetype": false,
+      "tolkesSom": "boolean",
+      "visTilBruker": true
+    },
+    {
+      "id": "avventerAnnetIkkeSaksbehandlingstid",
+      "listetype": false,
+      "tolkesSom": "boolean",
+      "visTilBruker": true
+    },
+    {
+      "id": "akkumulertVentetidSaksbehandlerForTidligereVersjoner",
+      "listetype": false,
+      "tolkesSom": "Duration",
+      "visTilBruker": true
+    },
+    {
+      "id": "akkumulertVentetidSøkerForTidligereVersjoner",
+      "listetype": false,
+      "tolkesSom": "Duration",
+      "visTilBruker": true
+    },
+    {
       "id": "akkumulertVentetidTekniskFeilForTidligereVersjoner",
+      "listetype": false,
+      "tolkesSom": "Duration",
+      "visTilBruker": true
+    },
+    {
+    "id": "akkumulertVentetidArbeidsgiverForTidligereVersjoner",
+    "listetype": false,
+    "tolkesSom": "Duration",
+    "visTilBruker": true
+    },
+    {
+      "id": "akkumulertVentetidAnnetForTidligereVersjoner",
+      "listetype": false,
+      "tolkesSom": "Duration",
+      "visTilBruker": true
+    },
+    {
+      "id": "akkumulertVentetidAnnetIkkeSaksbehandlingstidForTidligereVersjoner",
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": true
