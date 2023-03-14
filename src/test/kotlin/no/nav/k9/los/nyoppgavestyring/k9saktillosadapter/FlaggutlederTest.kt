@@ -115,26 +115,26 @@ class FlaggutlederTest : AbstractK9LosIntegrationTest() {
     }
 
     @Test
-    fun `aktivt steg og åpne aksjonspunkt, men ingen løsbare er feiltilstand`() {
+    fun `aktivt steg og åpne aksjonspunkt, men ingen løsbare gir avventerAnnet`() {
         val k9SakTilLosAdapterTjeneste = get<K9SakTilLosAdapterTjeneste>()
         val feltverdier = mutableListOf<OppgaveFeltverdiDto>()
 
-        assertThrows(IllegalStateException::class.java) {
-            k9SakTilLosAdapterTjeneste.utledAvventerflagg(
-                behandlingSteg = BehandlingStegType.INREG_AVSL.getKode(),
-                åpneAksjonspunkter = listOf(
-                    AksjonspunktTilstandDto(
-                        "9001",
-                        AksjonspunktStatus.OPPRETTET,
-                        null,
-                        "saksbehandler",
-                        null,
-                        null,
-                        null
-                    )
-                ),
-                oppgaveFeltverdiDtos = feltverdier
-            )
-        }
+        k9SakTilLosAdapterTjeneste.utledAvventerflagg(
+            behandlingSteg = BehandlingStegType.INREG_AVSL.getKode(),
+            åpneAksjonspunkter = listOf(
+                AksjonspunktTilstandDto(
+                    "9001",
+                    AksjonspunktStatus.OPPRETTET,
+                    null,
+                    "saksbehandler",
+                    null,
+                    null,
+                    null
+                )
+            ),
+            oppgaveFeltverdiDtos = feltverdier
+        )
+
+        assertEquals(k9SakTilLosAdapterTjeneste.avventerAnnet(), feltverdier)
     }
 }

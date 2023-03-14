@@ -338,7 +338,7 @@ class K9SakTilLosAdapterTjeneste(
             return
         }
 
-        throw IllegalStateException("Aktivt steg: ${behandlingSteg}, og åpne aksjonspunkt: ${åpneAksjonspunkter} men ingen løsbare aksjonspunkt")
+        oppgaveFeltverdiDtos.addAll(avventerAnnet())
     }
 
     private fun apInneholder(

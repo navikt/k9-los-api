@@ -121,9 +121,34 @@
           "påkrevd": false
         },
         {
-        "id": "avventerSaksbehandler",
+          "id": "avventerSøker",
+          "visPåOppgave": false,
+          "påkrevd": true
+        },
+        {
+          "id": "avventerArbeidsgiver",
+          "visPåOppgave": false,
+          "påkrevd": true
+        },
+        {
+          "id": "avventerSaksbehandler",
+          "visPåOppgave": false,
+          "påkrevd": true
+        },
+        {
+        "id": "avventerTekniskFeil",
         "visPåOppgave": false,
         "påkrevd": true
+        },
+        {
+          "id": "avventerAnnet",
+          "visPåOppgave": false,
+          "påkrevd": true
+        },
+        {
+          "id": "avventerAnnetIkkeSaksbehandlingstid",
+          "visPåOppgave": false,
+          "påkrevd": true
         },
         {
           "id": "akkumulertVentetidSaksbehandlerForTidligereVersjoner",
