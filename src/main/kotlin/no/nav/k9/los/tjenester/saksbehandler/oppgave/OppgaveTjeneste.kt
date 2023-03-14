@@ -309,7 +309,9 @@ class OppgaveTjeneste constructor(
                 val oppgaver = hentOppgaver(aktorId)
 
                 //sjekker om det finnes en visningsak i omsorgsdager
+                log.info("andre => kaller omsorgspenger app")
                 val oppgaveDto = hentOmsorgsdagerForFnr(query, person.person.navn())
+                log.info("omsorgspenger oppgave.saksnummer=${oppgaveDto?.saksnummer}")
                 if (oppgaveDto != null) {
                     oppgaver.add(oppgaveDto)
                 }
@@ -365,7 +367,9 @@ class OppgaveTjeneste constructor(
             val personDto = mapTilPersonDto(personInfo)
             val oppgaver: MutableList<OppgaveDto> = hentOppgaver(aktørId)
             //sjekker om det finnes en visningsak i omsorgsdager
+            log.info("aktor => kaller omsorgspenger app")
             val oppgaveDto = hentOmsorgsdagerForFnr(personInfo.fnr(), personInfo.navn())
+            log.info("aktor => omsorgspenger oppgave.saksnummer=${oppgaveDto?.saksnummer}")
             if (oppgaveDto != null) {
                 oppgaver.add(oppgaveDto)
             }
@@ -399,7 +403,7 @@ class OppgaveTjeneste constructor(
         navn: String
     ): OppgaveDto? {
         val omsorgspengerSakDto = omsorgspengerService.hentOmsorgspengerSakDto(OmsorgspengerSakFnrDto(fnr))
-
+        log.info("Fikk svar fra omsorgsdager=${omsorgspengerSakDto?.saksnummer}")
         if (omsorgspengerSakDto != null) {
             val statusDto = OppgaveStatusDto(
                 erReservert = false,
