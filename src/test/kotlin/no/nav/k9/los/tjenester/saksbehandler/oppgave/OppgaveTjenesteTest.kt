@@ -450,35 +450,35 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         //1
         val o1b1 = lagOppgave(oppgaveId1,
-            tilBeslutter = true,
+            beslutterApStatus = "OPPR",
             behandlingOpprettet = now.minusDays(5),
             beslutterApOpprettTid = now.minusDays(5)
         )
 
         //3
         val o2b3 = lagOppgave(oppgaveId2,
-            tilBeslutterTilbakekreving = true,
+            beslutterApStatusTilbake = "OPPR",
             behandlingOpprettet = now.minusDays(4),
             beslutterApOpprettTid = now.minusDays(3)
         )
 
         //5
         val o3b5 = lagOppgave(oppgaveId3,
-            tilBeslutter = true,
+            beslutterApStatus = "OPPR",
             behandlingOpprettet = now.minusDays(3),
             beslutterApOpprettTid = now.minusDays(1)
         )
 
         //4
         val o4b4 = lagOppgave(oppgaveId4,
-            tilBeslutter = true,
+            beslutterApStatus = "OPPR",
             behandlingOpprettet = now.minusDays(2)
             //hvis opprettet tid mangler så brukes behandling opprettet
         )
 
         //2
         val o5b2 = lagOppgave(oppgaveId5,
-            tilBeslutter = true,
+            beslutterApStatus = "OPPR",
             behandlingOpprettet = now.minusDays(1),
             beslutterApOpprettTid = now.minusDays(4)
         )
@@ -548,6 +548,60 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
     }
 
+    @Test
+    fun `skal sortere på behandling opprettet tidspunkt ved eksludert beslutter`() = runBlocking {
+
+        val oppgaveTjeneste = get<OppgaveTjeneste>()
+
+        val vanligKø = OppgaveKø(
+            id = UUID.randomUUID(),
+            navn = "test",
+            filtreringAndreKriterierType = mutableListOf(AndreKriterierDto("1", AndreKriterierType.TIL_BESLUTTER, true, false)),
+            sistEndret = LocalDate.now(),
+            sortering = KøSortering.OPPRETT_BEHANDLING,
+            saksbehandlere = mutableListOf(Saksbehandler("OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn))
+        )
+
+        val oppgaveId1 = UUID.fromString("0000000-0000-0000-0000-000000000001")
+        val oppgaveId2 = UUID.fromString("0000000-0000-0000-0000-000000000002")
+        val oppgaveId3 = UUID.fromString("0000000-0000-0000-0000-000000000003")
+
+        val now = LocalDateTime.now()
+
+        //1
+        val o1 = lagOppgave(oppgaveId1,
+            beslutterApStatus = "UTFO",
+            behandlingOpprettet = now.minusDays(3),
+            beslutterApOpprettTid = now.minusDays(2)
+        )
+
+        //3
+        val o2 = lagOppgave(oppgaveId2,
+            beslutterApStatus = "UTFO",
+            behandlingOpprettet = now.minusDays(1),
+            beslutterApOpprettTid = now.minusDays(4)
+        )
+
+        //2
+        val o3 = lagOppgave(oppgaveId3,
+            behandlingOpprettet = now.minusDays(2),
+        )
+
+
+        lagreOppgaverOgLeggTilIKø(vanligKø, o1, o2, o3)
+
+        val hentOppgaver = oppgaveTjeneste.hentOppgaver(vanligKø.id)
+
+        assertThat(hentOppgaver).extracting { it.eksternId }
+            .containsExactly(
+                o1.eksternId,
+                o3.eksternId,
+                o2.eksternId
+            )
+
+    }
+
+
     private suspend fun lagreOppgaverOgLeggTilIKø(
         beslutterKø: OppgaveKø,
         vararg oppgaver: Oppgave
@@ -572,20 +626,20 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
     private fun lagOppgave(
         uuid: UUID, beløp: Long = 0,
-        tilBeslutter: Boolean = false,
-        tilBeslutterTilbakekreving: Boolean = false,
+        beslutterApStatus: String? = null,
+        beslutterApStatusTilbake: String? = null,
         behandlingOpprettet: LocalDateTime = LocalDateTime.now().minusDays(23),
         beslutterApOpprettTid: LocalDateTime? = null): Oppgave {
         val apKoder = mutableMapOf("5015" to "OPPR")
         val apTilstand = mutableListOf(AksjonspunktTilstand("5015", AksjonspunktStatus.OPPRETTET))
 
-        if (tilBeslutter) {
-            apKoder["5016"] = "OPPR"
+        if (beslutterApStatus != null) {
+            apKoder["5016"] = beslutterApStatus
             apTilstand.add(AksjonspunktTilstand("5016", AksjonspunktStatus.OPPRETTET, opprettetTidspunkt = beslutterApOpprettTid))
         }
 
-        if (tilBeslutterTilbakekreving) {
-            apKoder["5005"] = "OPPR"
+        if (beslutterApStatusTilbake != null) {
+            apKoder["5005"] = beslutterApStatusTilbake
             apTilstand.add(AksjonspunktTilstand("5005", AksjonspunktStatus.OPPRETTET, opprettetTidspunkt = beslutterApOpprettTid))
         }
 
@@ -594,6 +648,8 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
             apTilstand
         )
 
+        val tilBeslutter = beslutterApStatus != null && beslutterApStatus == "OPPR" ||
+        beslutterApStatusTilbake != null && beslutterApStatusTilbake == "OPPR"
 
         return Oppgave(
             eksternId = uuid,
@@ -614,7 +670,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
             utfortFraAdmin = false,
             oppgaveEgenskap = emptyList(),
             aksjonspunkter = aksjonspunkter,
-            tilBeslutter = tilBeslutter || tilBeslutterTilbakekreving,
+            tilBeslutter = tilBeslutter,
             utbetalingTilBruker = false,
             selvstendigFrilans = false,
             kombinert = false,
