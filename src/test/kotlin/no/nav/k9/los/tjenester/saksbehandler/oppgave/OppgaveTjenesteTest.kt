@@ -457,7 +457,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         //3
         val o2b3 = lagOppgave(oppgaveId2,
-            tilBeslutter = true,
+            tilBeslutterTilbakekreving = true,
             behandlingOpprettet = now.minusDays(4),
             beslutterApOpprettTid = now.minusDays(3)
         )
@@ -573,6 +573,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
     private fun lagOppgave(
         uuid: UUID, beløp: Long = 0,
         tilBeslutter: Boolean = false,
+        tilBeslutterTilbakekreving: Boolean = false,
         behandlingOpprettet: LocalDateTime = LocalDateTime.now().minusDays(23),
         beslutterApOpprettTid: LocalDateTime? = null): Oppgave {
         val apKoder = mutableMapOf("5015" to "OPPR")
@@ -581,6 +582,11 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         if (tilBeslutter) {
             apKoder["5016"] = "OPPR"
             apTilstand.add(AksjonspunktTilstand("5016", AksjonspunktStatus.OPPRETTET, opprettetTidspunkt = beslutterApOpprettTid))
+        }
+
+        if (tilBeslutterTilbakekreving) {
+            apKoder["5005"] = "OPPR"
+            apTilstand.add(AksjonspunktTilstand("5005", AksjonspunktStatus.OPPRETTET, opprettetTidspunkt = beslutterApOpprettTid))
         }
 
         val aksjonspunkter = Aksjonspunkter(
@@ -608,7 +614,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
             utfortFraAdmin = false,
             oppgaveEgenskap = emptyList(),
             aksjonspunkter = aksjonspunkter,
-            tilBeslutter = tilBeslutter,
+            tilBeslutter = tilBeslutter || tilBeslutterTilbakekreving,
             utbetalingTilBruker = false,
             selvstendigFrilans = false,
             kombinert = false,

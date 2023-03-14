@@ -34,6 +34,7 @@ open class OmsorgspengerService constructor(
 
     private val NOT_FOUND = 404
 
+    //TODO omsorgsdager-sak appen er ikke lenger i bruk så integrasjonen kan slettes.
     override suspend fun hentOmsorgspengerSakDto(sakFnrDto: OmsorgspengerSakFnrDto): OmsorgspengerSakDto? {
         val bodyRequest = gson.toJson(sakFnrDto)
 
