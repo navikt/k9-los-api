@@ -309,9 +309,7 @@ class OppgaveTjeneste constructor(
                 val oppgaver = hentOppgaver(aktorId)
 
                 //sjekker om det finnes en visningsak i omsorgsdager
-                log.info("andre => kaller omsorgspenger app")
                 val oppgaveDto = hentOmsorgsdagerForFnr(query, person.person.navn())
-                log.info("omsorgspenger oppgave.saksnummer=${oppgaveDto?.saksnummer}")
                 if (oppgaveDto != null) {
                     oppgaver.add(oppgaveDto)
                 }

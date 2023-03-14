@@ -63,7 +63,6 @@ open class OmsorgspengerService constructor(
                 operation = "hent-saksnummer-omsorgspenger",
                 resultResolver = { 200 == it.second.statusCode }
             ) {
-                log.info("kaller ${httpRequest.url} ")
                 httpRequest.awaitStringResponseResult()
             }
 
