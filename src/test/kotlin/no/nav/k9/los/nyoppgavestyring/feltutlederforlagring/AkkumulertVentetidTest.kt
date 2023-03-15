@@ -44,7 +44,7 @@ internal class AkkumulertVentetidTest {
         val nå = LocalDateTime.now()
         val femMinuttersiden = nå.minusMinutes(5)
 
-        val aktivOppgave = lagOppgave(avventerSaksbehandler = true, femMinuttersiden, lagOppgavefeltverdi("akkumulertVentetidSaksbehandler", verdi = Duration.ofMinutes(10).toString()))
+        val aktivOppgave = lagOppgave(avventerSaksbehandler = true, femMinuttersiden, lagOppgavefeltverdi("akkumulertVentetidSaksbehandlerForTidligereVersjoner", verdi = Duration.ofMinutes(10).toString()))
 
 
         val utledet = akkumulertVentetidUtleder.utled(
@@ -60,7 +60,7 @@ internal class AkkumulertVentetidTest {
         val nå = LocalDateTime.now()
         val femMinuttersiden = nå.minusMinutes(5)
 
-        val aktivOppgave = lagOppgave(avventerSaksbehandler = false, femMinuttersiden, lagOppgavefeltverdi("akkumulertVentetidSaksbehandler", verdi = Duration.ofMinutes(10).toString()))
+        val aktivOppgave = lagOppgave(avventerSaksbehandler = false, femMinuttersiden, lagOppgavefeltverdi("akkumulertVentetidSaksbehandlerForTidligereVersjoner", verdi = Duration.ofMinutes(10).toString()))
 
 
         val utledet = akkumulertVentetidUtleder.utled(
@@ -108,7 +108,7 @@ internal class AkkumulertVentetidTest {
             definisjonskilde = "junit",
             oppgavefelter = setOf(
                 lagOppgavefelt("avventerSaksbehandler"),
-                lagOppgavefelt("akkumulertVentetidSaksbehandler")
+                lagOppgavefelt("akkumulertVentetidSaksbehandlerForTidligereVersjoner")
             )
         )
     }
