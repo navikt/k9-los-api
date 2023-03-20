@@ -149,10 +149,37 @@ class K9KlageTilLosAdapterTjeneste(
             område = "K9",
             kildeområde = "K9",
             type = "k9klage",
-            status = event.aksjonspunkttilstander.lastOrNull()?.status?.kode ?: "OPPR", // TODO statuser må gås opp
+            status = if (event.aksjonspunkttilstander.any { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.status.erÅpentAksjonspunkt() }) {
+                if (oppgaveSkalHaVentestatus(event)) {
+                    "VENTER"
+                } else {
+                    "AAPEN"
+                }
+            } else {
+                "LUKKET"
+            },
             endretTidspunkt = event.eventTid,
             feltverdier = lagFeltverdier(event, forrigeOppgave)
         )
+
+    private fun oppgaveSkalHaVentestatus(event: KlagebehandlingProsessHendelse): Boolean {
+        val oppgaveFeltverdiDtos = mutableListOf<OppgaveFeltverdiDto>()
+        val åpneAksjonspunkter = event.aksjonspunkttilstander.filter { aksjonspunkttilstand ->
+            aksjonspunkttilstand.status.erÅpentAksjonspunkt()
+        }
+
+        val harAutopunkt = åpneAksjonspunkter.any { aksjonspunktTilstandDto ->
+            AUTOPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode)
+        }
+
+        val harManueltAksjonspunkt = åpneAksjonspunkter.any { aksjonspunktTilstandDto ->
+            MANUELLE_AKSJONSPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode)
+        }
+
+        utledAvventerSaksbehandler(harManueltAksjonspunkt = harManueltAksjonspunkt, harAutopunkt = harAutopunkt, oppgaveFeltverdiDtos = oppgaveFeltverdiDtos)
+
+        return oppgaveFeltverdiDtos.first().nøkkel == "false"
+    }
 
     private fun lagFeltverdier(
         event: KlagebehandlingProsessHendelse,

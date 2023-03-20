@@ -118,7 +118,7 @@ class K9SakTilLosAdapterTjeneste(
         var forrigeOppgave: OppgaveV3? = null
         transactionalManager.transaction { tx ->
             val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
-            behandlingProsessEventer.forEach { event -> //TODO: hva skjer om eventer kommer out of order her, fordi feks k9 har sendt i feil rekkefølge?
+            behandlingProsessEventer.forEach { event ->
                 val oppgaveDto = lagOppgaveDto(event, forrigeOppgave)
 
                 if (event.behandlingStatus == BehandlingStatus.AVSLUTTET.kode) {
@@ -151,6 +151,17 @@ class K9SakTilLosAdapterTjeneste(
         TODO()
     }
 
+    private fun oppgaveSkalHaVentestatus(event: BehandlingProsessEventDto): Boolean {
+        val åpneAksjonspunkter = event.aksjonspunktTilstander.filter { aksjonspunktTilstand ->
+            aksjonspunktTilstand.status.erÅpentAksjonspunkt()
+        }
+        val oppgaveFeltVerdiDtos = mutableListOf<OppgaveFeltverdiDto>()
+
+        utledAvventerflagg(event.behandlingSteg, åpneAksjonspunkter = åpneAksjonspunkter, oppgaveFeltverdiDtos = oppgaveFeltVerdiDtos)
+
+        return !oppgaveFeltVerdiDtos.any { it.nøkkel == "avventerSaksbehandler" && it.verdi == "true" }
+    }
+
     private fun lagOppgaveDto(event: BehandlingProsessEventDto, forrigeOppgave: OppgaveV3?) =
         OppgaveDto(
             id = event.eksternId.toString(),
@@ -158,7 +169,15 @@ class K9SakTilLosAdapterTjeneste(
             område = "K9",
             kildeområde = "K9",
             type = "k9sak",
-            status = event.aksjonspunktTilstander.lastOrNull()?.status?.kode ?: "OPPR", // TODO statuser må gås opp
+            status = if (event.aksjonspunktTilstander.any { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.status.erÅpentAksjonspunkt() }) {
+                if (oppgaveSkalHaVentestatus(event)) {
+                    "VENTER"
+                } else {
+                    "AAPEN"
+                }
+            } else {
+                "LUKKET"
+            },
             endretTidspunkt = event.eventTid,
             feltverdier = lagFeltverdier(event, forrigeOppgave)
         )
@@ -171,10 +190,6 @@ class K9SakTilLosAdapterTjeneste(
 
         val åpneAksjonspunkter = event.aksjonspunktTilstander.filter { aksjonspunktTilstand ->
             aksjonspunktTilstand.status.erÅpentAksjonspunkt()
-        }
-
-        val harAutopunkt = åpneAksjonspunkter.any { aksjonspunktTilstandDto ->
-            AUTOPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode)
         }
 
         val harManueltAksjonspunkt = åpneAksjonspunkter.any { aksjonspunktTilstandDto ->
