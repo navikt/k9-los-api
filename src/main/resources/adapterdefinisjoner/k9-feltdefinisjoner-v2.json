@@ -122,6 +122,12 @@
       "visTilBruker": true
     },
     {
+      "id": "løsbartAksjonspunkt",
+      "listetype": false,
+      "tolkesSom": "String",
+      "visTilBruker": true
+    },
+    {
       "id": "akkumulertVentetidSaksbehandler",
       "listetype": false,
       "tolkesSom": "Duration",
@@ -153,6 +159,7 @@
     },
     {
       "id": "helautomatiskBehandlet",
+
       "listetype": false,
       "tolkesSom": "boolean",
       "visTilBruker": true
@@ -161,6 +168,18 @@
       "id": "vedtaksdato",
       "listetype": false,
       "tolkesSom": "String",
+      "visTilBruker": true
+    },
+    {
+      "id": "nyeKrav",
+      "listetype": false,
+      "tolkesSom": "boolean",
+      "visTilBruker": true
+    },
+    {
+      "id": "fraEndringsdialog",
+      "listetype": false,
+      "tolkesSom": "boolean",
       "visTilBruker": true
     }
   ]

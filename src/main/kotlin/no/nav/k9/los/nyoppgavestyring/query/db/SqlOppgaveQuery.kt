@@ -1,5 +1,10 @@
 package no.nav.k9.los.nyoppgavestyring.query.db
 
+import org.postgresql.util.PGInterval
+import java.math.BigDecimal
+import java.math.BigInteger
+import java.time.LocalDateTime
+
 class SqlOppgaveQuery {
 
     private var query = """
@@ -21,8 +26,7 @@ class SqlOppgaveQuery {
     private var limit: Int = -1;
 
     fun getQuery(): String {
-        val limitSql = if (limit >= 0) " LIMIT " + limit else "";
-        return query + orderBySql + limitSql;
+        return query + orderBySql
     }
 
     fun getParams(): Map<String, Any?> {
@@ -66,12 +70,40 @@ class SqlOppgaveQuery {
     }
 
     private fun medOppgavefelt(combineOperator: CombineOperator, feltområde: String, feltkode: String, operator: FeltverdiOperator, feltverdi: Any) {
-        val index = queryParams.size;
+        val index = queryParams.size
+
+        /*
+         * Postgres støtter ikke betinget typekonvertering av queryparametere. Dette fordi
+         * typekonverteringen blir gjort ved opprettelse av spørring og at feilende
+         * typekonvertering gjør at spørringen feiler.
+         *
+         * Mulig forbedring: Hvis vi cacher hvilke "tolkes_som" hvert enkelt felt er,
+         * så kan vi legge til kun den datatypen som blir brukt.
+         */
+        val timestampFeltverdi = try {
+            LocalDateTime.parse(feltverdi as String)
+        } catch (e: Exception) { null }
+
+        val durationFeltverdi = try {
+            PGInterval(feltverdi as String)
+        } catch (e: Exception) { null }
+
+        val integerFeltverdi = try {
+            BigInteger(feltverdi as String)
+        } catch (e: Exception) { null }
+
+        val doubleFeltverdi = try {
+            BigDecimal(feltverdi as String)
+        } catch (e: Exception) { null }
 
         queryParams.putAll(mutableMapOf(
             "feltOmrade$index" to feltområde,
             "feltkode$index" to feltkode,
-            "feltverdi$index" to feltverdi
+            "feltverdi$index" to feltverdi,
+            "timestamp_feltverdi$index" to timestampFeltverdi,
+            "duration_feltverdi$index" to durationFeltverdi,
+            "integer_feltverdi$index" to integerFeltverdi,
+            "double_feltverdi$index" to doubleFeltverdi
         ))
 
         query += """
@@ -87,7 +119,13 @@ class SqlOppgaveQuery {
                     WHERE ov.oppgave_id = o.id
                       AND fo.ekstern_id = :feltOmrade$index
                       AND fd.ekstern_id = :feltkode$index
-                      AND ov.verdi ${operator.sql} (:feltverdi$index)
+                      AND CASE
+                          WHEN fd.tolkes_som = 'Timestamp' THEN CAST(ov.verdi AS timestamp) ${operator.sql} (:timestamp_feltverdi$index)
+                          WHEN fd.tolkes_som = 'Duration' THEN CAST(ov.verdi AS interval) ${operator.sql} (:duration_feltverdi$index)
+                          WHEN fd.tolkes_som = 'Integer' THEN CAST(ov.verdi AS integer) ${operator.sql} (:integer_feltverdi$index)
+                          WHEN fd.tolkes_som = 'Double' THEN CAST(ov.verdi AS DOUBLE PRECISION) ${operator.sql} (:double_feltverdi$index)
+                          ELSE ov.verdi ${operator.sql} (:feltverdi$index)
+                        END
                   ) 
             """.trimIndent()
     }
@@ -126,23 +164,39 @@ class SqlOppgaveQuery {
             "orderByfeltkode$index" to feltkode
         ))
 
-        orderBySql += """
-                , (
-                  SELECT ov.verdi
-                  FROM Oppgavefelt_verdi ov INNER JOIN Oppgavefelt f ON (
-                    f.id = ov.oppgavefelt_id
-                  ) INNER JOIN Feltdefinisjon fd ON (
-                    fd.id = f.feltdefinisjon_id
-                  ) INNER JOIN Omrade fo ON (
-                    fo.id = fd.omrade_id
-                  )
-                  WHERE ov.oppgave_id = o.id
-                    AND fo.ekstern_id = :orderByfeltOmrade$index
-                    AND fd.ekstern_id = :orderByfeltkode$index
-                ) 
-            """.trimIndent()
+        /*
+         * Koden under håndterer sortering per datatype.
+         *
+         * Mulig forbedring: Hvis vi cacher hvilke "tolkes_som" hvert enkelt felt er,
+         * så kan vi legge til kun den datatypen som blir brukt.
+         */
+        val conversions = arrayOf(
+            "CASE WHEN fd.tolkes_som = 'Duration' THEN ov.verdi::interval ELSE NULL END",
+            "CASE WHEN fd.tolkes_som = 'Integer' THEN ov.verdi::integer ELSE NULL END",
+            "CASE WHEN fd.tolkes_som = 'Double' THEN CAST(ov.verdi AS DOUBLE PRECISION) ELSE NULL END",
+            "CASE WHEN fd.tolkes_som = 'Timestamp' THEN ov.verdi::timestamp ELSE NULL END",
+            "CASE WHEN fd.tolkes_som NOT IN ('Duration', 'Integer', 'Double', 'Timestamp') THEN ov.verdi ELSE NULL END"
+        )
 
-        orderBySql += if (økende) "ASC" else "DESC"
+        for (typeConversion in conversions) {
+            orderBySql += """
+                    , (
+                      SELECT $typeConversion                    
+                      FROM Oppgavefelt_verdi ov INNER JOIN Oppgavefelt f ON (
+                        f.id = ov.oppgavefelt_id
+                      ) INNER JOIN Feltdefinisjon fd ON (
+                        fd.id = f.feltdefinisjon_id
+                      ) INNER JOIN Omrade fo ON (
+                        fo.id = fd.omrade_id
+                      )
+                      WHERE ov.oppgave_id = o.id
+                        AND fo.ekstern_id = :orderByfeltOmrade$index
+                        AND fd.ekstern_id = :orderByfeltkode$index
+                    ) 
+                """.trimIndent()
+
+            orderBySql += if (økende) "ASC" else "DESC"
+        }
     }
 
     fun medLimit(limit: Int) {
