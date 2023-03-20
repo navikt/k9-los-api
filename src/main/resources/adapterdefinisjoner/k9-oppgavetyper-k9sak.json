@@ -125,6 +125,16 @@
           "id": "helautomatiskBehandlet",
           "visPåOppgave": false,
           "påkrevd": true
+        },
+        {
+          "id": "nyeKrav",
+          "visPåOppgave": false,
+          "påkrevd": false
+        },
+        {
+          "id": "fraEndringsdialog",
+          "visPåOppgave": false,
+          "påkrevd": false
         }
       ]
     }
