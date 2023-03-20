@@ -4,6 +4,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavefelt
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import org.junit.jupiter.api.Assertions.*
@@ -84,7 +85,7 @@ internal class AkkumulertVentetidTest {
             eksternId = "123",
             eksternVersjon = "456",
             oppgavetype = lagOppgaveType(),
-            status = "åpen",
+            status = Oppgavestatus.AAPEN,
             kildeområde = "junit",
             endretTidspunkt = endretTidspunkt,
             felter = ekstraFeltverdi?.let { //TODO: lekrere kotlinkode for dette?
