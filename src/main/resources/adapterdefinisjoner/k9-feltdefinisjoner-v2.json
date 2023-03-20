@@ -222,6 +222,18 @@
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true
+    },
+    {
+      "id": "nyeKrav",
+      "listetype": false,
+      "tolkesSom": "boolean",
+      "visTilBruker": true
+    },
+    {
+      "id": "fraEndringsdialog",
+      "listetype": false,
+      "tolkesSom": "boolean",
+      "visTilBruker": true
     }
   ]
 }

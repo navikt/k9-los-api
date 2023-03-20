@@ -255,6 +255,18 @@ class K9SakTilLosAdapterTjeneste(
             nøkkel = "vedtaksdato",
             verdi = event.vedtaksdato?.toString() ?: forrigeOppgave?.hentVerdi("vedtaksdato")
         ),
+        event.nyeKrav?.let {
+            OppgaveFeltverdiDto(
+                nøkkel = "nyeKrav",
+                verdi = event.nyeKrav.toString()
+            )
+        },
+        event.fraEndringsdialog?.let {
+            OppgaveFeltverdiDto(
+                nøkkel = "fraEndringsdialog",
+                verdi = event.fraEndringsdialog.toString()
+            )
+        },
         OppgaveFeltverdiDto(
             nøkkel = "totrinnskontroll",
             verdi = event.aksjonspunktTilstander.filter { aksjonspunktTilstandDto ->
@@ -263,7 +275,7 @@ class K9SakTilLosAdapterTjeneste(
                 ))
             }.isNotEmpty().toString()
         )
-    )
+    ).filterNotNull().toMutableList()
 
     internal fun utledAvventerflagg(
         behandlingSteg: String?,
