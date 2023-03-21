@@ -46,6 +46,11 @@
           "påkrevd": false
         },
         {
+          "id": "vedtaksdato",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
           "id": "ytelsestype",
           "visPåOppgave": true,
           "påkrevd": true
@@ -93,12 +98,17 @@
         {
           "id": "aksjonspunkt",
           "visPåOppgave": true,
-          "påkrevd": true
+          "påkrevd": false
         },
         {
           "id": "aktivtAksjonspunkt",
           "visPåOppgave": true,
-          "påkrevd": true
+          "påkrevd": false
+        },
+        {
+          "id": "løsbartAksjonspunkt",
+          "visPåOppgave": true,
+          "påkrevd": false
         },
         {
           "id": "akkumulertVentetidSaksbehandler",
@@ -115,6 +125,16 @@
           "id": "helautomatiskBehandlet",
           "visPåOppgave": false,
           "påkrevd": true
+        },
+        {
+          "id": "nyeKrav",
+          "visPåOppgave": false,
+          "påkrevd": false
+        },
+        {
+          "id": "fraEndringsdialog",
+          "visPåOppgave": false,
+          "påkrevd": false
         }
       ]
     }

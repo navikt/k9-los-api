@@ -49,6 +49,8 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
+import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
+import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
@@ -201,13 +203,15 @@ fun common(app: Application, config: Configuration) = module {
             statistikkProducer = get(),
             statistikkChannel = get(named("statistikkRefreshChannel")),
             statistikkRepository = get(),
-            reservasjonTjeneste = get()
+            reservasjonTjeneste = get(),
+            k9SakTilLosAdapterTjeneste = get(),
         )
     }
 
     single {
         K9KlageEventHandler(
-            behandlingProsessEventKlageRepository = get()
+            behandlingProsessEventKlageRepository = get(),
+            k9KlageTilLosAdapterTjeneste = get(),
         )
     }
 
@@ -317,11 +321,11 @@ fun common(app: Application, config: Configuration) = module {
 
     single { FeltdefinisjonRepository() }
     single { OmrådeRepository(get()) }
-    single { OppgavetypeRepository(get()) }
+    single { OppgavetypeRepository(feltdefinisjonRepository = get(), områdeRepository = get()) }
     single { OppgaveV3Repository(dataSource = get()) }
     single { OppgaveTilBehandlingMapper() }
     single { OppgaveTilSakMapper() }
-    single { OppgaveRepository() }
+    single { OppgaveRepository(oppgavetypeRepository = get()) }
     single { StatistikkRepository(dataSource = get()) }
 
     single {
@@ -337,6 +341,7 @@ fun common(app: Application, config: Configuration) = module {
             statistikkPublisher = get(),
             transactionalManager = get(),
             statistikkRepository = get(),
+            pepClient = get(),
             config = get()
         )
     }
@@ -377,6 +382,16 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
+        OppgaveQueryRepository(
+            datasource = get()
+        )
+    }
+
+    single {
+        OppgaveQueryService()
+    }
+
+    single {
         K9KlageTilLosAdapterTjeneste(
             behandlingProsessEventKlageRepository = get(),
             områdeRepository = get(),
@@ -387,7 +402,6 @@ fun common(app: Application, config: Configuration) = module {
             transactionalManager = get()
         )
     }
-
 }
 
 fun localDevConfig() = module {

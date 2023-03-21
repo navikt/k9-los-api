@@ -84,6 +84,12 @@ enum class KøKriterierType(
         felttype = KøKriterierFeltType.FLAGG,
         validator = FlaggValidator
     ),
+    FRA_ENDRINGSDIALOG(
+        kode = "FRA_ENDRINGSDIALOG",
+        navn = "Har endring fra endringsdialog",
+        felttype = KøKriterierFeltType.FLAGG,
+        validator = FlaggValidator
+    ),
     ;
 
 

@@ -101,7 +101,8 @@ data class K9SakModell(
             relatertPartAktørId = sisteEvent.relatertPartAktørId,
             kombinert = false,
             ansvarligBeslutterForTotrinn = sisteEvent.ansvarligBeslutterForTotrinn,
-            nyeKrav = sisteEvent.nyeKrav ?: false
+            nyeKrav = sisteEvent.nyeKrav ?: false,
+            fraEndringsdialog = sisteEvent.fraEndringsdialog ?: false
         )
     }
 

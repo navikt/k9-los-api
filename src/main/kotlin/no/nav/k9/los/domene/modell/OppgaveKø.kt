@@ -1,12 +1,6 @@
 package no.nav.k9.los.domene.modell
 
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.AUTO_VENTER_PÅ_KOMPLETT_SØKNAD
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.AVKLAR_KOMPLETT_NOK_FOR_BEREGNING
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.ENDELIG_AVKLAR_KOMPLETT_NOK_FOR_BEREGNING
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.OVERSTYR_BEREGNING_INPUT
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.TRENGER_SØKNAD_FOR_INFOTRYGD_PERIODE
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.TRENGER_SØKNAD_FOR_INFOTRYGD_PERIODE_ANNEN_PART
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.VENT_ANNEN_PSB_SAK
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.*
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
@@ -37,7 +31,8 @@ data class OppgaveKø(
     var filtreringFeilutbetaling: Intervall<Long>? = null,
     var merknadKoder: List<String> = emptyList(),
     var oppgaveKoder: List<String> = emptyList(),
-    var nyeKrav: Boolean? = null
+    var nyeKrav: Boolean? = null,
+    var fraEndringsdialog: Boolean? = null
 ) {
 
     companion object {
@@ -111,7 +106,8 @@ data class OppgaveKø(
             return false
         }
 
-        if (merknadKoder.isEmpty() && merknader.isNotEmpty() || !merknader.flatMap { it.merknadKoder }.containsAll(merknadKoder)) {
+        if (merknadKoder.isEmpty() && merknader.isNotEmpty() || !merknader.flatMap { it.merknadKoder }
+                .containsAll(merknadKoder)) {
             return false
         }
 
@@ -125,9 +121,14 @@ data class OppgaveKø(
             return false
         }
 
+        if (fraEndringsdialog != null && fraEndringsdialog != oppgave.fraEndringsdialog) {
+            return false
+        }
+
         if (oppgaveKoder.isNotEmpty() && oppgave.aksjonspunkter.hentAktive().isEmpty() ||
             oppgaveKoder.isNotEmpty() && oppgave.aksjonspunkter.hentAktive().isNotEmpty() &&
-            !oppgaveKoder.containsAll(oppgave.aksjonspunkter.hentAktive().keys)) {
+            !oppgaveKoder.containsAll(oppgave.aksjonspunkter.hentAktive().keys)
+        ) {
             return false
         }
 
@@ -257,6 +258,11 @@ data class OppgaveKø(
         return false
     }
 
+    fun beslutterKø() = filtreringAndreKriterierType
+        .filter { it.inkluder }
+        .map { it.andreKriterierType }
+        .contains(AndreKriterierType.TIL_BESLUTTER)
+
     fun erOppgavenReservert(
         reservasjonRepository: ReservasjonRepository,
         oppgave: Oppgave
@@ -285,6 +291,10 @@ data class OppgaveKø(
 
         if (nyeKrav != null) {
             kriterierDto.add(tilNyeKravKriterium())
+        }
+
+        if (fraEndringsdialog != null) {
+            kriterierDto.add(fraEndringsdialogKriterium())
         }
 
         return kriterierDto
@@ -317,9 +327,14 @@ data class OppgaveKø(
         kriterierType = KøKriterierType.NYE_KRAV,
         checked = true,
         inkluder = nyeKrav
-
     )
 
+    private fun fraEndringsdialogKriterium() = KriteriumDto(
+        id = id.toString(),
+        kriterierType = KøKriterierType.FRA_ENDRINGSDIALOG,
+        checked = true,
+        inkluder = fraEndringsdialog
+    )
 }
 
 class Saksbehandler(

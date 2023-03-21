@@ -53,6 +53,7 @@ spec:
     streams: true
   azure:
     application:
+      allowAllUsers: true
       enabled: true
   accessPolicy:
     inbound:
@@ -134,6 +135,8 @@ spec:
 
       # feature toggles
     - name: NY_OPPGAVESTYRING
+      value: "false"
+    - name: NY_OPPGAVESTYRING_REST_API
       value: "false"
     - name: K9SAK_CONSUMER_AIVEN
       value: "true"

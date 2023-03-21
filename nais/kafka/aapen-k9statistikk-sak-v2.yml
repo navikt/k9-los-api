@@ -13,7 +13,7 @@ spec:
     partitions: 3
     replication: 3  # see min/max requirements
     retentionBytes: -1  # -1 means unlimited
-    retentionHours: 2160 # 90 dager
+    retentionHours: 1 # 90 dager
   acl:
     - team: k9saksbehandling
       application: k9-los-api
@@ -24,6 +24,6 @@ spec:
     - team: ptsak
       application: pt-sak-k9-preprod
       access: read
-    #- team: ptsak
-    #  application: pt-sak-k9
-    #  access: read
+    - team: ptsak
+      application: pt-sak-k9
+      access: read

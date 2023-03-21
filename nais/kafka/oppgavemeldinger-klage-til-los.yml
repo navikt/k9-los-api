@@ -21,6 +21,3 @@ spec:
     - team: k9saksbehandling
       application: k9-los-api
       access: read
-    #- team: ptsak
-    #  application: pt-sak-k9
-    #  access: read

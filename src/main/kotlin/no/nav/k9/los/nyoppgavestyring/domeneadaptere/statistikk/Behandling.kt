@@ -104,6 +104,9 @@ data class Behandling(
     @JsonProperty("totrinnsbehandling")
     val totrinnsbehandling: Boolean? = null,
 
+    @JsonProperty("helautomatiskBehandlet")
+    val helautomatiskBehandlet: Boolean? = false,
+
     @JsonProperty("avsender")
     val avsender: String? = null,
 
@@ -258,6 +261,11 @@ class BehandlingBuilder(behandlingId: String, saksnummer: String) {
 
     fun totrinnsbehandling(totrinnsbehandling: Boolean?): BehandlingBuilder {
         behandling = behandling.copy(totrinnsbehandling = totrinnsbehandling)
+        return this
+    }
+
+    fun helautomatiskBehandlet(helautomatiskBehandlet: Boolean?): BehandlingBuilder {
+        behandling = behandling.copy(helautomatiskBehandlet = helautomatiskBehandlet)
         return this
     }
 
