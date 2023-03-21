@@ -12,7 +12,8 @@ import java.time.LocalDateTime
 import javax.sql.DataSource
 
 class OppgaveV3Repository(
-    private val dataSource: DataSource
+    private val dataSource: DataSource,
+    private val oppgavetypeRepository: OppgavetypeRepository,
 ) {
 
     private val log = LoggerFactory.getLogger(OppgaveV3Repository::class.java)
@@ -28,6 +29,50 @@ class OppgaveV3Repository(
 
         val oppgaveId = lagre(oppgave, nyVersjon, tx)
         lagreFeltverdier(oppgaveId, oppgave.felter, tx)
+    }
+
+    fun hentOppgaveversjon(
+        område: Område,
+        eksternId: String,
+        eksternVersjon: String,
+        tx: TransactionalSession
+    ): OppgaveV3? {
+        return tx.run(
+            queryOf(
+                """
+                    select ov.*, o.ekstern_id as oppgavetype_ekstern_id
+                    from oppgave_v3 ov
+                    	inner join oppgavetype o ON ov.oppgavetype_id = o.id 
+                    	inner join omrade o2 on o.omrade_id = o2.id 
+                    where o2.ekstern_id = :omrade_id
+                    and ov.ekstern_id = :ekstern_id 
+                    and ov.ekstern_versjon = :ekstern_versjon 
+                """.trimIndent()
+            ).map { row ->
+                OppgaveV3(
+                    id = row.long("id"),
+                    eksternId = row.string("ekstern_id"),
+                    eksternVersjon = row.string("ekstern_versjon"),
+                    oppgavetype = oppgavetypeRepository.hentOppgavetype(
+                        område = område.eksternId,
+                        row.long("oppgavetype_id"),
+                        tx
+                    ),
+                    status = row.string("status"),
+                    endretTidspunkt = row.localDateTime("endret_tidspunkt"),
+                    kildeområde = row.string("kildeomrade"),
+                    felter = hentFeltverdier(
+                        row.long("id"),
+                        oppgavetypeRepository.hentOppgavetype(
+                            område = område.eksternId,
+                            row.long("oppgavetype_id"),
+                            tx
+                        ),
+                        tx
+                    )
+                )
+            }.asSingle
+        )
     }
 
     fun hentAktivOppgave(eksternId: String, oppgavetype: Oppgavetype, tx: TransactionalSession): OppgaveV3? {
@@ -87,7 +132,8 @@ class OppgaveV3Repository(
                 OppgaveFeltverdi(
                     id = row.long("id"),
                     oppgavefelt = oppgavetype.oppgavefelter.first { oppgavefelt ->
-                        oppgavefelt.id == row.long("oppgavefelt_id") },
+                        oppgavefelt.id == row.long("oppgavefelt_id")
+                    },
                     verdi = row.string("verdi")
                 )
             }.asList
@@ -111,6 +157,53 @@ class OppgaveV3Repository(
                 )
             }
         )
+    }
+
+    private fun oppdaterFeltverdier(
+        oppgaveId: Long,
+        oppgaveFeltverdier: List<OppgaveFeltverdi>,
+        tx: TransactionalSession
+    ) {
+        oppgaveFeltverdier.forEach {
+            tx.update(
+                queryOf(
+                    """
+                        update oppgavefelt_verdi 
+                        set verdi = :verdi 
+                        where oppgave_id = :oppgave_id  
+                        and oppgavefelt_id = :oppgavefelt_id  
+                    """.trimIndent(),
+                    mapOf(
+                        "oppgavefelt_id" to it.oppgavefelt.id,
+                        "oppgave_id" to oppgaveId,
+                        "verdi" to it.verdi
+                    )
+                )
+            )
+        }
+    }
+
+    private fun slettFeltverdier(
+        oppgaveId: Long,
+        oppgaveFeltverdier: List<OppgaveFeltverdi>,
+        tx: TransactionalSession
+    ) {
+        oppgaveFeltverdier.forEach {
+            tx.update(
+                queryOf(
+                    """
+                        delete 
+                        from oppgavefelt_verdi 
+                        where oppgave_id = :oppgave_id 
+                        and oppgavefelt_id = :oppgavefelt_id
+                    """.trimIndent(),
+                    mapOf(
+                        "oppgave_id" to oppgaveId,
+                        "oppgavefelt_id" to it.oppgavefelt.id
+                    )
+                )
+            )
+        }
     }
 
     private fun hentVersjon(tx: TransactionalSession, oppgave: OppgaveV3): Pair<Long?, Long?> {

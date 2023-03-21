@@ -1,6 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 
 import kotliquery.TransactionalSession
+import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.feltutledere.GyldigeFeltutledere
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
@@ -10,7 +11,8 @@ import kotlin.reflect.full.createInstance
 class OppgaveV3Tjeneste(
     private val oppgaveV3Repository: OppgaveV3Repository,
     private val oppgavetypeRepository: OppgavetypeRepository,
-    private val områdeRepository: OmrådeRepository
+    private val områdeRepository: OmrådeRepository,
+    private val transactionalManager: TransactionalManager
 ) {
 
     private val log = LoggerFactory.getLogger(OppgaveV3Tjeneste::class.java)
@@ -23,6 +25,16 @@ class OppgaveV3Tjeneste(
             oppgave = oppdater(dto, tx)
         }
         return oppgave
+    }
+
+    fun hentOppgaveversjon(område: String, eksternId: String, eksternVersjon: String): OppgaveV3? {
+        return transactionalManager.transaction { tx ->
+            oppgaveV3Repository.hentOppgaveversjon(
+                område = områdeRepository.hentOmråde(område, tx),
+                eksternId = eksternId,
+                eksternVersjon = eksternVersjon,
+                tx = tx)
+        }
     }
 
     private fun oppdater(oppgaveDto: OppgaveDto, tx: TransactionalSession): OppgaveV3 {
