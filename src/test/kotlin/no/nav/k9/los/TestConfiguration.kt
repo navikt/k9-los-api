@@ -28,11 +28,12 @@ object TestConfiguration {
         map["nav.abac.system_user_password"] = "secret"
         map["nav.abac.url"] = "https://url"
 
+        map["nav.auth.clients.size"] = "2"
         map["nav.auth.clients.0.alias"] = "nais-sts"
         map["nav.auth.clients.0.client_id"] = "srvpps-k9-los-api"
         map["nav.auth.clients.0.client_secret"] = "very-secret"
         map["nav.auth.clients.0.discovery_endpoint"] =
-            "https://vtp:8063/rest/isso/oauth2/.well-known/openid-configuration"
+            "http://vtp:8060/rest/isso/oauth2/.well-known/openid-configuration"
 
         map["nav.auth.clients.1.alias"] = "azure-v2"
         map["nav.auth.clients.1.client_id"] = "pleiepengesoknad-prosessering"
@@ -55,6 +56,7 @@ object TestConfiguration {
         map["nav.db.username"] = "k9los_unit"
         map["nav.db.password"] = "k9los_unit"
         map["nav.features.nyOppgavestyring"] = "true"
+        map["nav.features.nyOppgavestyringRestApi"] = "true"
         map["nav.kafka.åpenStatistikkBehandlingTopic"] = "aapen-k9statistikk-behandling-v2"
         map["nav.kafka.åpenStatistikkSakTopic"] = "aapen-k9statistikk-sak-v2"
         return map.toMap()

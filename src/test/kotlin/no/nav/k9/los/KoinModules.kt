@@ -29,6 +29,7 @@ import no.nav.k9.los.integrasjon.pdl.PdlServiceLocal
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
+import no.nav.k9.los.aksjonspunktbehandling.K9KlageEventHandler
 import no.nav.k9.los.domene.repository.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.StatistikkRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdapterTjeneste
@@ -43,6 +44,8 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
+import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
+import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
@@ -183,7 +186,15 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             statistikkProducer = statistikkProducer,
             statistikkChannel = get(named("statistikkRefreshChannel")),
             statistikkRepository = get(),
-            reservasjonTjeneste = get()
+            reservasjonTjeneste = get(),
+            k9SakTilLosAdapterTjeneste = get(),
+        )
+    }
+
+    single {
+        K9KlageEventHandler(
+            BehandlingProsessEventKlageRepository(dataSource = get()),
+            k9KlageTilLosAdapterTjeneste = get()
         )
     }
 
@@ -247,12 +258,13 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single { FeltdefinisjonRepository() }
     single { OmrådeRepository(dataSource = get()) }
-    single { OppgavetypeRepository(get()) }
+    single { OppgavetypeRepository(feltdefinisjonRepository = get(), områdeRepository = get()) }
     single { OppgaveV3Repository(dataSource = get()) }
     single { BehandlingProsessEventK9Repository(dataSource = get()) }
+    single { BehandlingProsessEventKlageRepository(dataSource = get()) }
     single { OppgaveTilBehandlingMapper() }
     single { OppgaveTilSakMapper() }
-    single { OppgaveRepository() }
+    single { OppgaveRepository(oppgavetypeRepository = get()) }
     single { StatistikkRepository(dataSource = get()) }
 
     val statistikkPublisher = mockk<StatistikkPublisher>()
@@ -263,6 +275,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             statistikkPublisher = get(),
             transactionalManager = get(),
             statistikkRepository = get(),
+            pepClient = get(),
             config = get()
         )
     }
@@ -299,6 +312,16 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgaveV3Tjeneste = get(),
             config = get(),
             transactionalManager = get()
+        ).setup()
+    }
+
+    single {
+        OppgaveQueryRepository(
+            datasource = get()
         )
+    }
+
+    single {
+        OppgaveQueryService()
     }
 }

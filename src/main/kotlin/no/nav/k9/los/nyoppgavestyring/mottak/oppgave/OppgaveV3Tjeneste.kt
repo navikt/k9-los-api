@@ -29,7 +29,7 @@ class OppgaveV3Tjeneste(
         val område = områdeRepository.hentOmråde(oppgaveDto.område, tx)
         val oppgavetype =
             oppgavetypeRepository.hent(område, tx).oppgavetyper.find { it.eksternId.equals(oppgaveDto.type) }
-                ?: throw IllegalArgumentException("Kan ikke legge til oppgave på en oppgavetype som ikke er definert")
+                ?: throw IllegalArgumentException("Kan ikke legge til oppgave på en oppgavetype som ikke er definert: ${oppgaveDto.type}")
 
 
         val aktivOppgaveVersjon = oppgaveV3Repository.hentAktivOppgave(oppgaveDto.id, oppgavetype, tx)

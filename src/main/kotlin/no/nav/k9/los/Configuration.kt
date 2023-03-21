@@ -44,11 +44,16 @@ data class Configuration(private val config: ApplicationConfig) {
 
     internal fun getAksjonspunkthendelseTopic(): String {
         if (k9SakConsumerAiven()) {
-        return config.getOptionalString("nav.kafka.aksjonshendelseTopic", secret = false)
-            ?: "k9saksbehandling.k9sak-aksjonspunkthendelse"
+            return config.getOptionalString("nav.kafka.aksjonshendelseTopic", secret = false)
+                ?: "k9saksbehandling.k9sak-aksjonspunkthendelse"
         } else {
             return "privat-k9-aksjonspunkthendelse"
         }
+    }
+
+    internal fun getKlageOppgavemeldingerTopic(): String {
+        return config.getOptionalString("nav.kafka.klageTilLosTopic", secret = false)
+            ?: "k9saksbehandling.oppgavemeldinger-klage-til-los"
     }
 
     internal fun getK9SakTopic(): String {
@@ -106,6 +111,10 @@ data class Configuration(private val config: ApplicationConfig) {
 
     internal fun nyOppgavestyringAktivert(): Boolean {
         return config.getOptionalString("nav.features.nyOppgavestyring", secret = false).toBoolean()
+    }
+
+    internal fun nyOppgavestyringRestAktivert(): Boolean {
+        return config.getOptionalString("nav.features.nyOppgavestyringRestApi", secret = false).toBoolean()
     }
 
     internal fun punsjConsumerAiven(): Boolean {

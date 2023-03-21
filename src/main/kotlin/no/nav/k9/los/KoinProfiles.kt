@@ -6,6 +6,7 @@ import no.nav.helse.dusseldorf.ktor.health.HealthService
 import no.nav.k9.los.KoinProfile.LOCAL
 import no.nav.k9.los.KoinProfile.PREPROD
 import no.nav.k9.los.KoinProfile.PROD
+import no.nav.k9.los.aksjonspunktbehandling.K9KlageEventHandler
 import no.nav.k9.los.aksjonspunktbehandling.K9TilbakeEventHandler
 import no.nav.k9.los.aksjonspunktbehandling.K9punsjEventHandler
 import no.nav.k9.los.aksjonspunktbehandling.K9sakEventHandler
@@ -14,13 +15,7 @@ import no.nav.k9.los.domene.lager.oppgave.v2.BehandlingsmigreringTjeneste
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveTjenesteV2
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
-import no.nav.k9.los.domene.repository.BehandlingProsessEventTilbakeRepository
-import no.nav.k9.los.domene.repository.DriftsmeldingRepository
-import no.nav.k9.los.domene.repository.OppgaveKøRepository
-import no.nav.k9.los.domene.repository.PunsjEventK9Repository
-import no.nav.k9.los.domene.repository.ReservasjonRepository
-import no.nav.k9.los.domene.repository.SaksbehandlerRepository
+import no.nav.k9.los.domene.repository.*
 import no.nav.k9.los.fagsystem.k9sak.AksjonspunktHendelseMapper
 import no.nav.k9.los.fagsystem.k9sak.K9sakEventHandlerV2
 import no.nav.k9.los.integrasjon.abac.IPepClient
@@ -43,8 +38,10 @@ import no.nav.k9.los.integrasjon.pdl.PdlService
 import no.nav.k9.los.integrasjon.pdl.PdlServiceLocal
 import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.*
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.StatistikkRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
@@ -52,6 +49,8 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
+import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
+import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
@@ -149,6 +148,10 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
+        BehandlingProsessEventKlageRepository(get())
+    }
+
+    single {
         PunsjEventK9Repository(get())
     }
 
@@ -200,7 +203,15 @@ fun common(app: Application, config: Configuration) = module {
             statistikkProducer = get(),
             statistikkChannel = get(named("statistikkRefreshChannel")),
             statistikkRepository = get(),
-            reservasjonTjeneste = get()
+            reservasjonTjeneste = get(),
+            k9SakTilLosAdapterTjeneste = get(),
+        )
+    }
+
+    single {
+        K9KlageEventHandler(
+            behandlingProsessEventKlageRepository = get(),
+            k9KlageTilLosAdapterTjeneste = get(),
         )
     }
 
@@ -240,7 +251,8 @@ fun common(app: Application, config: Configuration) = module {
             k9sakEventHandler = get(),
             k9sakEventHandlerv2 = get(),
             k9TilbakeEventHandler = get(),
-            punsjEventHandler = get()
+            punsjEventHandler = get(),
+            k9KlageEventHandler = get(),
         )
     }
 
@@ -309,11 +321,11 @@ fun common(app: Application, config: Configuration) = module {
 
     single { FeltdefinisjonRepository() }
     single { OmrådeRepository(get()) }
-    single { OppgavetypeRepository(get()) }
+    single { OppgavetypeRepository(feltdefinisjonRepository = get(), områdeRepository = get()) }
     single { OppgaveV3Repository(dataSource = get()) }
     single { OppgaveTilBehandlingMapper() }
     single { OppgaveTilSakMapper() }
-    single { OppgaveRepository() }
+    single { OppgaveRepository(oppgavetypeRepository = get()) }
     single { StatistikkRepository(dataSource = get()) }
 
     single {
@@ -329,6 +341,7 @@ fun common(app: Application, config: Configuration) = module {
             statistikkPublisher = get(),
             transactionalManager = get(),
             statistikkRepository = get(),
+            pepClient = get(),
             config = get()
         )
     }
@@ -368,6 +381,27 @@ fun common(app: Application, config: Configuration) = module {
         )
     }
 
+    single {
+        OppgaveQueryRepository(
+            datasource = get()
+        )
+    }
+
+    single {
+        OppgaveQueryService()
+    }
+
+    single {
+        K9KlageTilLosAdapterTjeneste(
+            behandlingProsessEventKlageRepository = get(),
+            områdeRepository = get(),
+            feltdefinisjonTjeneste = get(),
+            oppgavetypeTjeneste = get(),
+            oppgaveV3Tjeneste = get(),
+            config = get(),
+            transactionalManager = get()
+        )
+    }
 }
 
 fun localDevConfig() = module {
