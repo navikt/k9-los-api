@@ -22,6 +22,7 @@ data class BehandlingProsessEventDto(
     val fagsystem: Fagsystem,
     val saksnummer: String,
     val aktørId: String,
+    val vedtaksdato: LocalDate?,
 
     val behandlingId: Long?, // fjernes etter overgang til eksternId
 
@@ -76,7 +77,8 @@ data class BehandlingProsessEventDto(
     val pleietrengendeAktørId: String? = null,
     val relatertPartAktørId: String? = null,
     val aksjonspunktTilstander: List<AksjonspunktTilstandDto> = emptyList(),
-    val nyeKrav: Boolean? = null
+    val nyeKrav: Boolean? = null,
+    val fraEndringsdialog: Boolean? = null
 ) {
 
     // Denne skal ikke ha fnr, aktørider, orgnumre eller beløp som kan identifisere brukeren
@@ -103,6 +105,7 @@ data class BehandlingProsessEventDto(
             fagsakPeriode=$fagsakPeriode,
             aksjonspunktTilstander=$aksjonspunktTilstander,
             nyeKrav=$nyeKrav
+            fraEndringsdialog=$fraEndringsdialog
             )"""
             .trimMargin()
     }

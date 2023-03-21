@@ -36,12 +36,16 @@ import no.nav.k9.los.eventhandler.sjekkReserverteJobb
 import no.nav.k9.los.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.los.integrasjon.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.StatistikkApi
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonApi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Api
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeApi
+import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryApis
 import no.nav.k9.los.tjenester.admin.AdminApis
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederApis
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.DataeksportApis
@@ -79,7 +83,14 @@ fun Application.k9Los() {
     install(Koin) {
         modules(selectModuleBasedOnProfile(this@k9Los, config = configuration))
     }
+
     val koin = getKoin()
+
+    val k9SakTilLosAdapterTjeneste = koin.get<K9SakTilLosAdapterTjeneste>()
+    k9SakTilLosAdapterTjeneste.setup()
+    val k9KlageTilLosAdapterTjeneste = koin.get<K9KlageTilLosAdapterTjeneste>()
+    k9KlageTilLosAdapterTjeneste.setup()
+
     install(Authentication) {
         multipleJwtIssuers(issuers)
     }
@@ -159,14 +170,25 @@ fun Application.k9Los() {
         oppgavetypeTjeneste = koin.get(),
         oppgaveV3Tjeneste = koin.get(),
         config = koin.get(),
+        transactionalManager = koin.get(),
+    ).kjør(kjørSetup = false, kjørUmiddelbart = false)
+
+    K9KlageTilLosAdapterTjeneste(
+        behandlingProsessEventKlageRepository = koin.get(),
+        områdeRepository = koin.get(),
+        feltdefinisjonTjeneste = koin.get(),
+        oppgavetypeTjeneste = koin.get(),
+        oppgaveV3Tjeneste = koin.get(),
+        config = koin.get(),
         transactionalManager = koin.get()
-    ).kjør(kjørSetup = true, kjørUmiddelbart = false)
+    ).kjør(kjørSetup = false, kjørUmiddelbart = false)
 
     OppgavestatistikkTjeneste(
         oppgaveRepository = koin.get(),
         statistikkPublisher = koin.get(),
         transactionalManager = koin.get(),
         statistikkRepository = koin.get(),
+        pepClient = koin.get(),
         config = koin.get()
     ).kjør(kjørUmiddelbart = false)
 
@@ -288,10 +310,13 @@ private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
         KodeverkApis()
 
         route("ny-oppgavestyring") {
+            route("oppgave") { OppgaveQueryApis() }
             route("feltdefinisjon") { FeltdefinisjonApi() }
             route("oppgavetype") { OppgavetypeApi() }
             route("oppgave-v3") { OppgaveV3Api() }
             route("statistikk") { StatistikkApi() }
+            route("k9saktillos") { K9SakTilLosApi() }
+            route("k9klagetillos") { K9KlageTilLosApi() }
         }
     }
 }

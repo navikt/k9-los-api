@@ -74,7 +74,7 @@ open class Behandling constructor(
     open fun erFerdigstilt(): Boolean {
         return (ferdigstilt != null).also {
             if (harAktiveOppgaver()) {
-                log.warn("Behandling er satt til ferdigstilt, men har aktive oppgaver $eksternReferanse")
+                log.info("Behandling er satt til ferdigstilt, men har aktive oppgaver $eksternReferanse")
             }
         }
     }
@@ -105,7 +105,7 @@ open class Behandling constructor(
 
     private fun ferdigstillOppgave(ferdigstillOppgave: FerdigstillOppgave) {
         if (harBehandletFerdigstillelseAvOppgave(ferdigstillOppgave)) {
-            log.warn("Har allerede behandlet ferdigstillelse med oppgavekode (${ferdigstillOppgave.oppgaveKode}) og timestamp ${ferdigstillOppgave.tidspunkt} på referansen. $eksternReferanse")
+            log.info("Har allerede behandlet ferdigstillelse med oppgavekode (${ferdigstillOppgave.oppgaveKode}) og timestamp ${ferdigstillOppgave.tidspunkt} på referansen. $eksternReferanse")
             return
         }
 
@@ -118,7 +118,7 @@ open class Behandling constructor(
         if (eksisterendeAktivOppgave != null) {
             lukkAktiveOppgaverOpprettetFør(eksisterendeAktivOppgave, ferdigstillOppgave)
         } else {
-            log.error("Ferdigstillelse inneholder oppgavekode ${ferdigstillOppgave.oppgaveKode} som ikke finnes blant aktive oppgaver. $eksternReferanse")
+            log.info("Ferdigstillelse inneholder oppgavekode ${ferdigstillOppgave.oppgaveKode} som ikke finnes blant aktive oppgaver. $eksternReferanse")
         }
     }
 
@@ -164,12 +164,12 @@ open class Behandling constructor(
 
     private fun nyOppgave(opprettOppgave: OpprettOppgave) {
         if (harAlleredeOppgave(opprettOppgave)) {
-            log.warn("Har allerede oppgave med oppgavekode (${opprettOppgave.oppgaveKode}) og timestamp ${opprettOppgave.tidspunkt} på referansen. $eksternReferanse")
+            log.info("Har allerede oppgave med oppgavekode (${opprettOppgave.oppgaveKode}) og timestamp ${opprettOppgave.tidspunkt} på referansen. $eksternReferanse")
             return
         }
 
         if (harAktivOppgaveMedReferanseOgKode(opprettOppgave.oppgaveKode)) {
-            log.warn("Har allerede eksisterende, aktiv oppgave med oppgavekode (${opprettOppgave.oppgaveKode}) på referansen. $eksternReferanse")
+            log.info("Har allerede eksisterende, aktiv oppgave med oppgavekode (${opprettOppgave.oppgaveKode}) på referansen. $eksternReferanse")
             return
         }
 

@@ -19,12 +19,15 @@ internal fun Route.RefreshKlienterWebSocket(sseChannel: BroadcastChannel<SseEven
         try {
             for (event in events) {
                 for (dataLine in event.data.lines()) {
-                    outgoing.send(Frame.Text(dataLine))
+                    if (!outgoing.isClosedForSend) {
+                        outgoing.send(Frame.Text(dataLine))
+                    }
                 }
             }
+        } catch (e: Exception) {
+            logger.info("WebSocket closed. CloseReason=[${closeReason.await()}], ClosedForSend=[${outgoing.isClosedForSend}], ClosedForReceive=[${incoming.isClosedForReceive}]")
         } finally {
             events.cancel()
-            logger.info("WebSocket closed. CloseReason=[${closeReason.await()}], ClosedForSend=[${outgoing.isClosedForSend}], ClosedForReceive=[${incoming.isClosedForReceive}]")
         }
     }
 }

@@ -2,28 +2,30 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
-import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktType
+import no.nav.k9.los.Configuration
+import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
+import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
+import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.util.*
 import java.util.concurrent.TimeUnit
-import kotlin.concurrent.fixedRateTimer
-import no.nav.k9.los.Configuration
-import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
-import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import kotlin.concurrent.thread
+import kotlin.concurrent.timer
 
 class K9SakTilLosAdapterTjeneste(
     private val behandlingProsessEventK9Repository: BehandlingProsessEventK9Repository,
@@ -67,57 +69,39 @@ class K9SakTilLosAdapterTjeneste(
     }
 
     private fun schedulerAvspilling(kjørSetup: Boolean) {
-        log.info("Schedulerer avspilling av BehandlingProsessEventer til å kjøre 10s fra nå, hver 24. time")
-        fixedRateTimer(
+        log.info("Schedulerer avspilling av BehandlingProsessEventer til å kjøre 1m fra nå, hver time")
+        timer(
             name = TRÅDNAVN,
             daemon = true,
-            initialDelay = TimeUnit.SECONDS.toMillis(10),
-            period = TimeUnit.DAYS.toMillis(1)
+            initialDelay = TimeUnit.MINUTES.toMillis(1),
+            period = TimeUnit.HOURS.toMillis(1)
         ) {
             if (kjørSetup) {
                 setup()
             }
-            spillAvBehandlingProsessEventer()
+            try {
+                spillAvBehandlingProsessEventer()
+            } catch (e: Exception) {
+                log.warn("Avspilling av k9sak-eventer til oppgaveV3 feilet. Retry om en time", e)
+            }
         }
     }
 
     private fun spillAvBehandlingProsessEventer() {
-        var behandlingTeller: Long = 0
-        var eventTeller: Long = 0
-        var forrigeOppgave: OppgaveV3? = null
-
         log.info("Starter avspilling av BehandlingProsessEventer")
         val tidKjøringStartet = System.currentTimeMillis()
 
         val behandlingsIder = behandlingProsessEventK9Repository.hentAlleDirtyEventIder()
         log.info("Fant ${behandlingsIder.size} behandlinger")
 
+        var behandlingTeller: Long = 0
+        var eventTeller: Long = 0
         behandlingsIder.forEach { uuid ->
-            transactionalManager.transaction { tx ->
-                val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
-                behandlingProsessEventer.forEach { event -> //TODO: hva skjer om eventer kommer out of order her, fordi feks k9 har sendt i feil rekkefølge?
-                    val oppgaveDto = lagOppgaveDto(event, forrigeOppgave)
-
-                    if (event.behandlingStatus == BehandlingStatus.AVSLUTTET.kode) {
-                        //val vedtaksInfo = hentVedtaksInfo()
-                        //oppgaveDto = oppgaveDto.berikMedVedtaksInfo(vedtaksInfo)
-                    }
-
-                    val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
-
-                    oppgave?.let {
-                        eventTeller++
-                        loggFremgangForHver100(eventTeller, "Prosessert $eventTeller eventer")
-                    }
-                    forrigeOppgave = oppgave
-                }
-                forrigeOppgave = null
-                behandlingTeller++
-                loggFremgangForHver100(behandlingTeller, "Forsert $behandlingTeller behandlinger")
-
-                behandlingProsessEventK9Repository.fjernDirty(uuid, tx)
-            }
+            eventTeller = oppdaterOppgaveForBehandlingUuid(uuid, eventTeller)
+            behandlingTeller++
+            loggFremgangForHver100(behandlingTeller, "Forsert $behandlingTeller behandlinger")
         }
+
         val (antallAlle, antallAktive) = oppgaveV3Tjeneste.tellAntall()
         val tidHeleKjøringen = System.currentTimeMillis() - tidKjøringStartet
         log.info("Antall oppgaver etter kjøring: $antallAlle, antall aktive: $antallAktive, antall nye eventer: $eventTeller fordelt på $behandlingTeller behandlinger.")
@@ -125,6 +109,38 @@ class K9SakTilLosAdapterTjeneste(
             log.info("Gjennomsnittstid pr behandling: ${tidHeleKjøringen / behandlingTeller}ms, Gjennsomsnittstid pr event: ${tidHeleKjøringen / eventTeller}ms")
         }
         log.info("Avspilling av BehandlingProsessEventer ferdig")
+    }
+
+    fun oppdaterOppgaveForBehandlingUuid(uuid: UUID) {
+        oppdaterOppgaveForBehandlingUuid(uuid, 0L)
+    }
+
+    private fun oppdaterOppgaveForBehandlingUuid(uuid: UUID, eventTellerInn: Long): Long {
+        var eventTeller = eventTellerInn
+        var forrigeOppgave: OppgaveV3? = null
+        transactionalManager.transaction { tx ->
+            val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
+            behandlingProsessEventer.forEach { event -> //TODO: hva skjer om eventer kommer out of order her, fordi feks k9 har sendt i feil rekkefølge?
+                val oppgaveDto = lagOppgaveDto(event, forrigeOppgave)
+
+                if (event.behandlingStatus == BehandlingStatus.AVSLUTTET.kode) {
+                    //val vedtaksInfo = hentVedtaksInfo()
+                    //oppgaveDto = oppgaveDto.berikMedVedtaksInfo(vedtaksInfo)
+                }
+
+                val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
+
+                oppgave?.let {
+                    eventTeller++
+                    loggFremgangForHver100(eventTeller, "Prosessert $eventTeller eventer")
+                }
+                forrigeOppgave = oppgave
+            }
+            forrigeOppgave = null
+
+            behandlingProsessEventK9Repository.fjernDirty(uuid, tx)
+        }
+        return eventTeller
     }
 
     private fun loggFremgangForHver100(teller: Long, tekst: String) {
@@ -143,7 +159,7 @@ class K9SakTilLosAdapterTjeneste(
             versjon = event.eventTid.toString(),
             område = "K9",
             kildeområde = "K9",
-            type = "aksjonspunkt",
+            type = "k9sak",
             status = event.aksjonspunktTilstander.lastOrNull()?.status?.kode ?: "OPPR", // TODO statuser må gås opp
             endretTidspunkt = event.eventTid,
             feltverdier = lagFeltverdier(event, forrigeOppgave)
@@ -153,7 +169,6 @@ class K9SakTilLosAdapterTjeneste(
         event: BehandlingProsessEventDto,
         forrigeOppgave: OppgaveV3?
     ): List<OppgaveFeltverdiDto> {
-        
         val oppgaveFeltverdiDtos = mapEnkeltverdier(event, forrigeOppgave)
         
         val åpneAksjonspunkter = event.aksjonspunktTilstander.filter { aksjonspunktTilstand ->
@@ -169,7 +184,7 @@ class K9SakTilLosAdapterTjeneste(
         }
         
         utledAksjonspunkter(event, oppgaveFeltverdiDtos)
-        utledÅpneAksjonspunkter(åpneAksjonspunkter, oppgaveFeltverdiDtos)
+        utledÅpneAksjonspunkter(event.behandlingSteg, åpneAksjonspunkter, oppgaveFeltverdiDtos)
         utledAutomatiskBehandletFlagg(forrigeOppgave, oppgaveFeltverdiDtos, harManueltAksjonspunkt)
         utledAvventerSaksbehandler(harManueltAksjonspunkt, harAutopunkt, oppgaveFeltverdiDtos)
 
@@ -238,10 +253,28 @@ class K9SakTilLosAdapterTjeneste(
             verdi = forrigeOppgave?.hentVerdi("registrertDato") ?: event.eventTid.toString()
         ),
         OppgaveFeltverdiDto(
+            nøkkel = "vedtaksdato",
+            verdi = event.vedtaksdato?.toString() ?: forrigeOppgave?.hentVerdi("vedtaksdato")
+        ),
+        event.nyeKrav?.let {
+            OppgaveFeltverdiDto(
+                nøkkel = "nyeKrav",
+                verdi = event.nyeKrav.toString()
+            )
+        },
+        event.fraEndringsdialog?.let {
+            OppgaveFeltverdiDto(
+                nøkkel = "fraEndringsdialog",
+                verdi = event.fraEndringsdialog.toString()
+            )
+        },
+        OppgaveFeltverdiDto(
             nøkkel = "totrinnskontroll",
-            verdi = (event.ansvarligBeslutterForTotrinn != null).toString()
+            verdi = event.aksjonspunktTilstander.filter { aksjonspunktTilstandDto ->
+                aksjonspunktTilstandDto.aksjonspunktKode.equals("5015") && aksjonspunktTilstandDto.status !in (listOf(AksjonspunktStatus.AVBRUTT))
+            }.isNotEmpty().toString()
         )
-    )
+    ).filterNotNull().toMutableList()
 
     private fun utledAvventerSaksbehandler(
         harManueltAksjonspunkt: Boolean,
@@ -288,6 +321,7 @@ class K9SakTilLosAdapterTjeneste(
     }
 
     private fun utledÅpneAksjonspunkter(
+        behandlingSteg: String?,
         åpneAksjonspunkter: List<AksjonspunktTilstandDto>,
         oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
     ) {
@@ -299,6 +333,19 @@ class K9SakTilLosAdapterTjeneste(
                         verdi = åpentAksjonspunkt.aksjonspunktKode
                     )
                 )
+            }
+            if (behandlingSteg != null) {
+                åpneAksjonspunkter.firstOrNull { åpentAksjonspunkt ->
+                    val aksjonspunktDefinisjon = AksjonspunktDefinisjon.fraKode(åpentAksjonspunkt.aksjonspunktKode)
+                    !aksjonspunktDefinisjon.erAutopunkt() && aksjonspunktDefinisjon.behandlingSteg != null && aksjonspunktDefinisjon.behandlingSteg.kode == behandlingSteg
+                }?.let {
+                    oppgaveFeltverdiDtos.add(
+                        OppgaveFeltverdiDto(
+                            nøkkel = "løsbartAksjonspunkt",
+                            verdi = it.aksjonspunktKode
+                        )
+                    )
+                }
             }
         } else {
             oppgaveFeltverdiDtos.add(
@@ -331,11 +378,12 @@ class K9SakTilLosAdapterTjeneste(
         }
     }
 
-    private fun setup() {
+    fun setup(): K9SakTilLosAdapterTjeneste {
         val objectMapper = jacksonObjectMapper()
         opprettOmråde()
         opprettFeltdefinisjoner(objectMapper)
         opprettOppgavetype(objectMapper)
+        return this
     }
 
     private fun opprettOmråde() {
@@ -355,7 +403,7 @@ class K9SakTilLosAdapterTjeneste(
 
     private fun opprettOppgavetype(objectMapper: ObjectMapper) {
         val oppgavetyperDto = objectMapper.readValue(
-            K9SakTilLosAdapterTjeneste::class.java.getResource("/adapterdefinisjoner/k9-oppgavetyper-v2.json")!!
+            K9SakTilLosAdapterTjeneste::class.java.getResource("/adapterdefinisjoner/k9-oppgavetyper-k9sak.json")!!
                 .readText(),
             OppgavetyperDto::class.java
         )

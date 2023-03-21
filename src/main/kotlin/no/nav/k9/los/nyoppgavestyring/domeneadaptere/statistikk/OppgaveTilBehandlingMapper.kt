@@ -52,6 +52,7 @@ class OppgaveTilBehandlingMapper {
             datoForUttak = null, // TODO: mappes fra YtelseV1.anvist.firstOrNull()?.periode?.fom, men trengs ikke?
             datoForUtbetaling = null, //TODO: trengs ikke?
             totrinnsbehandling = oppgave.hentVerdi("totrinnskontroll").toBoolean(),
+            helautomatiskBehandlet = oppgave.hentVerdi("helautomatiskBehandlet").toBoolean(),
             avsender = "K9sak",
             versjon = 1, //TODO: Ikke i bruk?
         )

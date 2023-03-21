@@ -3,27 +3,28 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val mainClass = "no.nav.k9.los.K9LosKt"
 val hikariVersion = "5.0.1"
-val flywayVersion = "9.9.0"
+val flywayVersion = "9.16.1"
 val vaultJdbcVersion = "1.3.10"
 val koinVersion = "3.2.2"
 val kotliqueryVersion = "1.9.0"
-val k9SakVersion = "3.3.29"
+val k9SakVersion = "3.4.1"
+val k9KlageVersion = "0.3.0"
 val fuelVersion = "2.3.1"
 val jacksonVersion = "2.13.4"
 
-val dusseldorfKtorVersion = "3.2.2.2-d9c7672"
-val ktorVersion = "2.2.2"
-val kafkaVersion = "3.3.1"
+val dusseldorfKtorVersion = "3.2.2.3-0b4ec43"
+val ktorVersion = "2.2.4"
+val kafkaVersion = "3.2.3"
 
 val navTilgangskontroll = "2.2022.11.16_08.36-35c94368bc44"
 
 // Test Dependencies
 val testContainers = "1.17.6"
 val jsonassertVersion = "1.5.1"
-val jupiterVersion = "5.9.1"
+val jupiterVersion = "5.9.2"
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.8.0"
+    id("org.jetbrains.kotlin.jvm") version "1.8.10"
     id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
@@ -66,6 +67,8 @@ dependencies {
     // Kontrakter
     implementation("no.nav.k9.sak:kontrakt:$k9SakVersion")
     implementation("no.nav.k9.sak:kodeverk:$k9SakVersion")
+    implementation("no.nav.k9.klage:kontrakt-jakarta:$k9KlageVersion")
+    implementation("no.nav.k9.klage:kodeverk-jakarta:$k9KlageVersion")
     implementation("no.nav.k9.statistikk:kontrakter:2.0_20220411110858_dc06dd1")
 
     // Div
@@ -87,7 +90,7 @@ dependencies {
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.25")
 
     testImplementation("no.nav.helse:dusseldorf-test-support:$dusseldorfKtorVersion")
-    testImplementation("io.mockk:mockk:1.13.3")
+    testImplementation("io.mockk:mockk:1.13.4")
     testImplementation("io.ktor:ktor-server-test-host-jvm:$ktorVersion") {
         exclude(group = "org.eclipse.jetty")
     }

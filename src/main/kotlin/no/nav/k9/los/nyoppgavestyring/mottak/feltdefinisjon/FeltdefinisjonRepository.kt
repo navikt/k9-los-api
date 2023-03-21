@@ -1,14 +1,17 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon
 
+import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.response.*
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
+import no.nav.k9.los.nyoppgavestyring.feilhandtering.IllegalDeleteException
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
+import org.postgresql.util.PSQLException
 import org.slf4j.LoggerFactory
 
 class FeltdefinisjonRepository {
-
     private val log = LoggerFactory.getLogger(FeltdefinisjonRepository::class.java)
-
 
     fun hent(område: Område, tx: TransactionalSession): Feltdefinisjoner {
         val feltdefinisjoner = tx.run(
@@ -35,15 +38,23 @@ class FeltdefinisjonRepository {
 
     fun fjern(sletteListe: Set<Feltdefinisjon>, tx: TransactionalSession) {
         sletteListe.forEach { datatype ->
-            tx.run(
-                queryOf(
-                    """
+            try {
+                tx.run(
+                    queryOf(
+                        """
                         delete from feltdefinisjon where id = :id""",
-                    mapOf(
-                        "id" to datatype.id,
-                    )
-                ).asUpdate
-            )
+                        mapOf(
+                            "id" to datatype.id,
+                        )
+                    ).asUpdate
+                )
+            } catch (e: PSQLException) {
+                if (e.sqlState.equals("23503")) {
+                    throw IllegalDeleteException("Kan ikke slette feltdefinisjon som brukes av oppgavetype", e)
+                } else {
+                    throw e
+                }
+            }
         }
     }
 

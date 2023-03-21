@@ -49,8 +49,8 @@ data class Oppgave(
     val pleietrengendeAktørId: String? = null,
     val relatertPartAktørId: String? = null,
     val feilutbetaltBeløp: Long? = null,
-    val nyeKrav: Boolean? = null
-
+    val nyeKrav: Boolean? = null,
+    var fraEndringsdialog: Boolean? = false,
 ) {
     fun avluttet(): Boolean {
         return behandlingStatus == BehandlingStatus.AVSLUTTET
