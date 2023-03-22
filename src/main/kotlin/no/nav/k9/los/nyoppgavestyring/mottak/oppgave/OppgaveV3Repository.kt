@@ -62,7 +62,7 @@ class OppgaveV3Repository(
                     "eksternId" to oppgave.eksternId,
                     "eksternVersjon" to oppgave.eksternVersjon,
                     "oppgavetypeId" to oppgave.oppgavetype.id,
-                    "status" to oppgave.status,
+                    "status" to oppgave.status.toString(),
                     "endretTidspunkt" to oppgave.endretTidspunkt,
                     "versjon" to nyVersjon,
                     "aktiv" to true,
