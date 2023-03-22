@@ -121,11 +121,6 @@ class K9SakTilLosAdapterTjeneste(
             behandlingProsessEventer.forEach { event ->
                 val oppgaveDto = lagOppgaveDto(event, forrigeOppgave)
 
-                if (event.behandlingStatus == BehandlingStatus.AVSLUTTET.kode) {
-                    //val vedtaksInfo = hentVedtaksInfo()
-                    //oppgaveDto = oppgaveDto.berikMedVedtaksInfo(vedtaksInfo)
-                }
-
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
 
                 oppgave?.let {
@@ -147,19 +142,14 @@ class K9SakTilLosAdapterTjeneste(
         }
     }
 
-    private fun hentVedtaksInfo(): Map<String, String> {
-        TODO()
-    }
 
     private fun oppgaveSkalHaVentestatus(event: BehandlingProsessEventDto): Boolean {
         val åpneAksjonspunkter = event.aksjonspunktTilstander.filter { aksjonspunktTilstand ->
             aksjonspunktTilstand.status.erÅpentAksjonspunkt()
         }
-        val oppgaveFeltVerdiDtos = mutableListOf<OppgaveFeltverdiDto>()
 
-        utledAvventerflagg(event.behandlingSteg, åpneAksjonspunkter = åpneAksjonspunkter, oppgaveFeltverdiDtos = oppgaveFeltVerdiDtos)
-
-        return !oppgaveFeltVerdiDtos.any { it.nøkkel == "avventerSaksbehandler" && it.verdi == "true" }
+        val ventetype = utledVentetype(event.behandlingSteg, åpneAksjonspunkter)
+        return ventetype != Ventekategori.AVVENTER_SAKSBEHANDLER
     }
 
     private fun lagOppgaveDto(event: BehandlingProsessEventDto, forrigeOppgave: OppgaveV3?) =
@@ -176,7 +166,11 @@ class K9SakTilLosAdapterTjeneste(
                     "AAPEN"
                 }
             } else {
-                "LUKKET"
+                if (event.behandlingStatus == BehandlingStatus.UTREDES.toString()) {
+                    "AAPEN"
+                } else {
+                    "LUKKET"
+                }
             },
             endretTidspunkt = event.eventTid,
             feltverdier = lagFeltverdier(event, forrigeOppgave)
@@ -200,7 +194,7 @@ class K9SakTilLosAdapterTjeneste(
         utledÅpneAksjonspunkter(event.behandlingSteg, åpneAksjonspunkter, oppgaveFeltverdiDtos)
         utledVenteÅrsakOgFrist(åpneAksjonspunkter, oppgaveFeltverdiDtos)
         utledAutomatiskBehandletFlagg(forrigeOppgave, oppgaveFeltverdiDtos, harManueltAksjonspunkt)
-        utledAvventerflagg(event.behandlingSteg, åpneAksjonspunkter, oppgaveFeltverdiDtos)
+        oppgaveFeltverdiDtos.addAll(ventekategoriTilFlagg(utledVentetype(event.behandlingSteg, åpneAksjonspunkter)))
 
         return oppgaveFeltverdiDtos
     }
@@ -292,23 +286,20 @@ class K9SakTilLosAdapterTjeneste(
         )
     ).filterNotNull().toMutableList()
 
-    internal fun utledAvventerflagg(
+    internal fun utledVentetype(
         behandlingSteg: String?,
-        åpneAksjonspunkter: List<AksjonspunktTilstandDto>,
-        oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
-    ) {
+        åpneAksjonspunkter: List<AksjonspunktTilstandDto>
+    ): Ventekategori? {
         if (behandlingSteg.isNullOrEmpty()) {
             if (åpneAksjonspunkter.isEmpty()) {
-                oppgaveFeltverdiDtos.addAll(avventerIngen())
-                return
+                return null
             } else {
                 throw IllegalStateException("Aktivt aksjonspunkt: ${åpneAksjonspunkter.first().aksjonspunktKode}, men ikke aktivt behandlingssteg")
             }
         }
 
         if (åpneAksjonspunkter.isEmpty()) {
-            oppgaveFeltverdiDtos.addAll(avventerAnnet())
-            return
+            return Ventekategori.AVVENTER_ANNET
         }
 
         val førsteAPMedFristOgVenteårsak = åpneAksjonspunkter
@@ -318,15 +309,14 @@ class K9SakTilLosAdapterTjeneste(
 
         if (førsteAPMedFristOgVenteårsak != null) {
             when (førsteAPMedFristOgVenteårsak.venteårsak.ventekategori) {
-                Ventekategori.AVVENTER_SAKSBEHANDLER -> oppgaveFeltverdiDtos.addAll(avventerSaksbehandler())
-                Ventekategori.AVVENTER_SØKER -> oppgaveFeltverdiDtos.addAll(avventerSøker())
-                Ventekategori.AVVENTER_ARBEIDSGIVER -> oppgaveFeltverdiDtos.addAll(avventerArbeidsgiver())
-                Ventekategori.AVVENTER_TEKNISK_FEIL -> oppgaveFeltverdiDtos.addAll(avventerTekniskFeil())
-                Ventekategori.AVVENTER_ANNET -> oppgaveFeltverdiDtos.addAll(avventerSaksbehandler())
-                Ventekategori.AVVENTER_ANNET_IKKE_SAKSBEHANDLINGSTID -> oppgaveFeltverdiDtos.addAll(avventerIngen())
-                else -> oppgaveFeltverdiDtos.addAll(avventerAnnet())//TODO : Exception?
+                Ventekategori.AVVENTER_SAKSBEHANDLER -> return Ventekategori.AVVENTER_SAKSBEHANDLER
+                Ventekategori.AVVENTER_SØKER -> return Ventekategori.AVVENTER_SØKER
+                Ventekategori.AVVENTER_ARBEIDSGIVER -> return Ventekategori.AVVENTER_ARBEIDSGIVER
+                Ventekategori.AVVENTER_TEKNISK_FEIL -> return Ventekategori.AVVENTER_TEKNISK_FEIL
+                Ventekategori.AVVENTER_ANNET -> return Ventekategori.AVVENTER_SAKSBEHANDLER
+                Ventekategori.AVVENTER_ANNET_IKKE_SAKSBEHANDLINGSTID -> return null
+                else -> throw IllegalStateException("Ukjent enumverdi: ${førsteAPMedFristOgVenteårsak.venteårsak.ventekategori}")
             }
-            return
         }
 
         //Hvis ingen venteårsak hentes ventekategori fra løsbare aksjonspunkt i prioritert rekkefølge
@@ -336,36 +326,46 @@ class K9SakTilLosAdapterTjeneste(
         }
 
         if (apInneholder(løsbareAksjonspunkt, Ventekategori.AVVENTER_TEKNISK_FEIL)) {
-            oppgaveFeltverdiDtos.addAll(avventerTekniskFeil())
-            return
+            return Ventekategori.AVVENTER_TEKNISK_FEIL
         }
 
         if (apInneholder(løsbareAksjonspunkt, Ventekategori.AVVENTER_SAKSBEHANDLER)) {
-            oppgaveFeltverdiDtos.addAll(avventerSaksbehandler())
-            return
+            return Ventekategori.AVVENTER_SAKSBEHANDLER
         }
 
         if (apInneholder(løsbareAksjonspunkt, Ventekategori.AVVENTER_ANNET)) {
-            oppgaveFeltverdiDtos.addAll(avventerSaksbehandler())
-            return
+            return Ventekategori.AVVENTER_ANNET
         }
 
         if (apInneholder(løsbareAksjonspunkt, Ventekategori.AVVENTER_ARBEIDSGIVER)) {
-            oppgaveFeltverdiDtos.addAll(avventerArbeidsgiver())
-            return
+            return Ventekategori.AVVENTER_ARBEIDSGIVER
         }
 
         if (apInneholder(løsbareAksjonspunkt, Ventekategori.AVVENTER_SØKER)) {
-            oppgaveFeltverdiDtos.addAll(avventerSøker())
-            return
+            return Ventekategori.AVVENTER_SØKER
         }
 
         if (apInneholder(løsbareAksjonspunkt, Ventekategori.AVVENTER_ANNET_IKKE_SAKSBEHANDLINGSTID)) {
-            oppgaveFeltverdiDtos.addAll(avventerIngen())
-            return
+            return Ventekategori.AVVENTER_ANNET_IKKE_SAKSBEHANDLINGSTID
         }
 
-        oppgaveFeltverdiDtos.addAll(avventerAnnet())
+        return Ventekategori.AVVENTER_ANNET
+    }
+
+    internal fun ventekategoriTilFlagg(
+        ventekategori: Ventekategori?
+    ) : List<OppgaveFeltverdiDto> {
+        if (ventekategori == null) {
+            return avventerIngen()
+        }
+        return when (ventekategori) {
+            Ventekategori.AVVENTER_SØKER -> avventerSøker()
+            Ventekategori.AVVENTER_ARBEIDSGIVER -> avventerArbeidsgiver()
+            Ventekategori.AVVENTER_SAKSBEHANDLER -> avventerSaksbehandler()
+            Ventekategori.AVVENTER_TEKNISK_FEIL -> avventerTekniskFeil()
+            Ventekategori.AVVENTER_ANNET -> avventerAnnet()
+            Ventekategori.AVVENTER_ANNET_IKKE_SAKSBEHANDLINGSTID -> avventerAnnetIkkeSaksbehandlingstid()
+        }
     }
 
     private fun apInneholder(
@@ -378,34 +378,34 @@ class K9SakTilLosAdapterTjeneste(
     }
 
     internal fun avventerSøker(): List<OppgaveFeltverdiDto> {
-        return avventerflagg(listOf("avventerSøker"))
+        return avventerflagg("avventerSøker")
     }
 
     internal fun avventerArbeidsgiver(): List<OppgaveFeltverdiDto> {
-        return avventerflagg(listOf("avventerArbeidsgiver"))
+        return avventerflagg("avventerArbeidsgiver")
     }
 
     internal fun avventerSaksbehandler(): List<OppgaveFeltverdiDto> {
-        return avventerflagg(listOf("avventerSaksbehandler"))
+        return avventerflagg("avventerSaksbehandler")
     }
 
     internal fun avventerTekniskFeil(): List<OppgaveFeltverdiDto> {
-        return avventerflagg(listOf("avventerTekniskFeil"))
+        return avventerflagg("avventerTekniskFeil")
     }
 
     internal fun avventerAnnet(): List<OppgaveFeltverdiDto> {
-        return avventerflagg(listOf("avventerAnnet"))
+        return avventerflagg("avventerAnnet")
     }
 
     internal fun avventerAnnetIkkeSaksbehandlingstid(): List<OppgaveFeltverdiDto> {
-        return avventerflagg(listOf("avventerAnnetIkkeSaksbehandlingstid"))
+        return avventerflagg("avventerAnnetIkkeSaksbehandlingstid")
     }
 
     internal fun avventerIngen(): List<OppgaveFeltverdiDto> {
-        return avventerflagg(emptyList())
+        return avventerflagg("")
     }
 
-    private fun avventerflagg(skalSettesTrue: List<String>): List<OppgaveFeltverdiDto> {
+    private fun avventerflagg(skalSettesTrue: String): List<OppgaveFeltverdiDto> {
         val oppgavefelter = mutableListOf<OppgaveFeltverdiDto>()
         listOf(
             "avventerSøker",
@@ -415,7 +415,7 @@ class K9SakTilLosAdapterTjeneste(
             "avventerAnnet",
             "avventerAnnetIkkeSaksbehandlingstid"
         ).forEach {
-            if (skalSettesTrue.contains(it)) {
+            if (skalSettesTrue == it) {
                 oppgavefelter.add(
                     OppgaveFeltverdiDto(
                         nøkkel = it,
