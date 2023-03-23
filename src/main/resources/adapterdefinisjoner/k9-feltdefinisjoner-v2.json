@@ -125,7 +125,8 @@
       "id": "løsbartAksjonspunkt",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "beskrivelse": "Det kan være mange aktive aksjonspunkter på en gitt oppgave, mens bare en av de er mulig å løse basert på hvor i prosessen behandlihgen står"
     },
     {
       "id": "avventerSaksbehandler",

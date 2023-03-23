@@ -37,7 +37,7 @@ class OppgaveV3Tjeneste(
         val utledeteFelter = mutableListOf<OppgaveFeltverdi>()
 
         oppgavetype.oppgavefelter
-            .filter { oppgavefelt -> oppgavefelt.feltutleder !=null }
+            .filter { oppgavefelt -> oppgavefelt.feltutleder != null }
             .forEach {
                 oppgavefelt ->
                 val utledetFeltverdi = oppgavefelt.feltutleder!!.utled(innkommendeOppgave, aktivOppgaveVersjon)

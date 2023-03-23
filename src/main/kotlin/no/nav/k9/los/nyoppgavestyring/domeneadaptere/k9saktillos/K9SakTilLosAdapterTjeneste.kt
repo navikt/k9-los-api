@@ -166,7 +166,7 @@ class K9SakTilLosAdapterTjeneste(
                     "AAPEN"
                 }
             } else {
-                if (event.behandlingStatus == BehandlingStatus.UTREDES.toString()) {
+                if (event.behandlingStatus != BehandlingStatus.AVSLUTTET.getKode() && event.behandlingStatus != BehandlingStatus.IVERKSETTER_VEDTAK.getKode()) {
                     "AAPEN"
                 } else {
                     "LUKKET"
@@ -308,16 +308,18 @@ class K9SakTilLosAdapterTjeneste(
             .firstOrNull()
 
         if (førsteAPMedFristOgVenteårsak != null) {
-            when (førsteAPMedFristOgVenteårsak.venteårsak.ventekategori) {
-                Ventekategori.AVVENTER_SAKSBEHANDLER -> return Ventekategori.AVVENTER_SAKSBEHANDLER
-                Ventekategori.AVVENTER_SØKER -> return Ventekategori.AVVENTER_SØKER
-                Ventekategori.AVVENTER_ARBEIDSGIVER -> return Ventekategori.AVVENTER_ARBEIDSGIVER
-                Ventekategori.AVVENTER_TEKNISK_FEIL -> return Ventekategori.AVVENTER_TEKNISK_FEIL
-                Ventekategori.AVVENTER_ANNET -> return Ventekategori.AVVENTER_SAKSBEHANDLER
-                Ventekategori.AVVENTER_ANNET_IKKE_SAKSBEHANDLINGSTID -> return null
-                else -> throw IllegalStateException("Ukjent enumverdi: ${førsteAPMedFristOgVenteårsak.venteårsak.ventekategori}")
-            }
+            return førsteAPMedFristOgVenteårsak.venteårsak.ventekategori
         }
+
+
+        val ventekategorierPrioritert = listOf(
+            Ventekategori.AVVENTER_TEKNISK_FEIL,
+            Ventekategori.AVVENTER_SAKSBEHANDLER,
+            Ventekategori.AVVENTER_ANNET,
+            Ventekategori.AVVENTER_ARBEIDSGIVER,
+            Ventekategori.AVVENTER_SØKER,
+            Ventekategori.AVVENTER_ANNET_IKKE_SAKSBEHANDLINGSTID
+        )
 
         //Hvis ingen venteårsak hentes ventekategori fra løsbare aksjonspunkt i prioritert rekkefølge
         val løsbareAksjonspunkt = åpneAksjonspunkter.filter { åpentAksjonspunkt ->
@@ -325,28 +327,10 @@ class K9SakTilLosAdapterTjeneste(
             aksjonspunktDefinisjon.erAutopunkt() || aksjonspunktDefinisjon.behandlingSteg != null && aksjonspunktDefinisjon.behandlingSteg.kode == behandlingSteg
         }
 
-        if (apInneholder(løsbareAksjonspunkt, Ventekategori.AVVENTER_TEKNISK_FEIL)) {
-            return Ventekategori.AVVENTER_TEKNISK_FEIL
-        }
-
-        if (apInneholder(løsbareAksjonspunkt, Ventekategori.AVVENTER_SAKSBEHANDLER)) {
-            return Ventekategori.AVVENTER_SAKSBEHANDLER
-        }
-
-        if (apInneholder(løsbareAksjonspunkt, Ventekategori.AVVENTER_ANNET)) {
-            return Ventekategori.AVVENTER_ANNET
-        }
-
-        if (apInneholder(løsbareAksjonspunkt, Ventekategori.AVVENTER_ARBEIDSGIVER)) {
-            return Ventekategori.AVVENTER_ARBEIDSGIVER
-        }
-
-        if (apInneholder(løsbareAksjonspunkt, Ventekategori.AVVENTER_SØKER)) {
-            return Ventekategori.AVVENTER_SØKER
-        }
-
-        if (apInneholder(løsbareAksjonspunkt, Ventekategori.AVVENTER_ANNET_IKKE_SAKSBEHANDLINGSTID)) {
-            return Ventekategori.AVVENTER_ANNET_IKKE_SAKSBEHANDLINGSTID
+        ventekategorierPrioritert.forEach { ventekategori ->
+            if (apInneholder(løsbareAksjonspunkt, ventekategori)) {
+                return ventekategori
+            }
         }
 
         return Ventekategori.AVVENTER_ANNET
@@ -354,7 +338,7 @@ class K9SakTilLosAdapterTjeneste(
 
     internal fun ventekategoriTilFlagg(
         ventekategori: Ventekategori?
-    ) : List<OppgaveFeltverdiDto> {
+    ): List<OppgaveFeltverdiDto> {
         if (ventekategori == null) {
             return avventerIngen()
         }
@@ -365,13 +349,14 @@ class K9SakTilLosAdapterTjeneste(
             Ventekategori.AVVENTER_TEKNISK_FEIL -> avventerTekniskFeil()
             Ventekategori.AVVENTER_ANNET -> avventerAnnet()
             Ventekategori.AVVENTER_ANNET_IKKE_SAKSBEHANDLINGSTID -> avventerAnnetIkkeSaksbehandlingstid()
+            else -> throw IllegalArgumentException("Ukjent ventekategori: ${ventekategori}")
         }
     }
 
     private fun apInneholder(
         løsbareAksjonspunkt: List<AksjonspunktTilstandDto>,
         ventekategori: Ventekategori
-    ) : Boolean {
+    ): Boolean {
         return løsbareAksjonspunkt.firstOrNull { aksjonspunktTilstandDto ->
             AksjonspunktDefinisjon.fraKode(aksjonspunktTilstandDto.aksjonspunktKode).defaultVentekategori == ventekategori
         } != null
@@ -501,8 +486,8 @@ class K9SakTilLosAdapterTjeneste(
         if (åpneAksjonspunkter.isNotEmpty()) {
             åpneAksjonspunkter
                 .filter { aksjonspunktTilstandDto ->
-                    !aksjonspunktTilstandDto.venteårsak.equals(Venteårsak.UDEFINERT)
-                            && aksjonspunktTilstandDto.status.equals(AksjonspunktStatus.OPPRETTET)
+                    aksjonspunktTilstandDto.venteårsak != Venteårsak.UDEFINERT
+                            && aksjonspunktTilstandDto.status == AksjonspunktStatus.OPPRETTET
                 }
                 .singleOrNull { aksjonspunktTilstandDto ->
                     oppgaveFeltverdiDtos.add(
