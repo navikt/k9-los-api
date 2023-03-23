@@ -1,9 +1,10 @@
 package no.nav.k9.los.domene.modell
 
-import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
-import no.nav.k9.los.integrasjon.kafka.dto.PunsjEventDto
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
+import no.nav.k9.los.aksjonspunktbehandling.AksjonspunktDefinisjonK9Tilbake
+import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
+import no.nav.k9.los.integrasjon.kafka.dto.PunsjEventDto
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import java.time.LocalDateTime
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus as AksjonspunktStatusK9
@@ -81,6 +82,13 @@ data class Aksjonspunkter(
         }
     }
 
+    fun beslutterAp(): AksjonspunktTilstand? {
+        return this.apTilstander.firstOrNull {
+           it.aksjonspunktKode == AksjonspunktDefinisjon.FATTER_VEDTAK.kode
+                   || it.aksjonspunktKode == AksjonspunktDefinisjonK9Tilbake.FATTE_VEDTAK.kode
+        }
+    }
+
     companion object {
         private const val AKTIV = "OPPR"
     }
@@ -90,7 +98,9 @@ data class AksjonspunktTilstand(
     val aksjonspunktKode: String,
     val status: AksjonspunktStatus,
     val venteårsak: String? = null,
-    val frist: LocalDateTime? = null
+    val frist: LocalDateTime? = null,
+    val opprettetTidspunkt: LocalDateTime? = null,
+    val endretTidspunkt: LocalDateTime? = null
 )
 
 internal fun BehandlingProsessEventDto.tilAksjonspunkter(): Aksjonspunkter {
@@ -109,7 +119,9 @@ private fun AksjonspunktTilstandDto.tilModell() = AksjonspunktTilstand(
     this.aksjonspunktKode,
     AksjonspunktStatus.fraKode(this.status.kode),
     if (this.venteårsak == null || this.venteårsak == Venteårsak.UDEFINERT) null else this.venteårsak.kode,
-    this.fristTid
+    this.fristTid,
+    this.opprettetTidspunkt,
+    this.endretTidspunkt
 )
 
 internal fun PunsjEventDto.tilAksjonspunkter(): Aksjonspunkter {

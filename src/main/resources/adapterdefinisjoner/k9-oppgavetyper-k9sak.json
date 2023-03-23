@@ -106,6 +106,11 @@
           "påkrevd": false
         },
         {
+          "id": "løsbartAksjonspunkt",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
           "id": "akkumulertVentetidSaksbehandler",
           "visPåOppgave": false,
           "påkrevd": false,
@@ -120,6 +125,16 @@
           "id": "helautomatiskBehandlet",
           "visPåOppgave": false,
           "påkrevd": true
+        },
+        {
+          "id": "nyeKrav",
+          "visPåOppgave": false,
+          "påkrevd": false
+        },
+        {
+          "id": "fraEndringsdialog",
+          "visPåOppgave": false,
+          "påkrevd": false
         }
       ]
     }
