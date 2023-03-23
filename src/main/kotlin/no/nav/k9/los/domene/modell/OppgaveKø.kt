@@ -106,7 +106,8 @@ data class OppgaveKø(
             return false
         }
 
-        if (merknadKoder.isEmpty() && merknader.isNotEmpty() || !merknader.flatMap { it.merknadKoder }.containsAll(merknadKoder)) {
+        if (merknadKoder.isEmpty() && merknader.isNotEmpty() || !merknader.flatMap { it.merknadKoder }
+                .containsAll(merknadKoder)) {
             return false
         }
 
@@ -126,7 +127,8 @@ data class OppgaveKø(
 
         if (oppgaveKoder.isNotEmpty() && oppgave.aksjonspunkter.hentAktive().isEmpty() ||
             oppgaveKoder.isNotEmpty() && oppgave.aksjonspunkter.hentAktive().isNotEmpty() &&
-            !oppgaveKoder.containsAll(oppgave.aksjonspunkter.hentAktive().keys)) {
+            !oppgaveKoder.containsAll(oppgave.aksjonspunkter.hentAktive().keys)
+        ) {
             return false
         }
 
@@ -187,7 +189,8 @@ data class OppgaveKø(
         kriterier: List<AndreKriterierDto>,
         skalMed: Boolean
     ): Boolean {
-        if (oppgave.tilBeslutter && tilBeslutter(kriterier)) {
+        if (oppgave.tilBeslutter && kriterier.map { it.andreKriterierType }
+                .contains(AndreKriterierType.TIL_BESLUTTER)) {
             return true
         }
 
@@ -255,11 +258,10 @@ data class OppgaveKø(
         return false
     }
 
-    fun beslutterKø() = tilBeslutter(filtreringAndreKriterierType)
-
-    private fun tilBeslutter(kriterier: List<AndreKriterierDto>) =
-        kriterier.map { it.andreKriterierType }
-            .contains(AndreKriterierType.TIL_BESLUTTER)
+    fun beslutterKø() = filtreringAndreKriterierType
+        .filter { it.inkluder }
+        .map { it.andreKriterierType }
+        .contains(AndreKriterierType.TIL_BESLUTTER)
 
     fun erOppgavenReservert(
         reservasjonRepository: ReservasjonRepository,

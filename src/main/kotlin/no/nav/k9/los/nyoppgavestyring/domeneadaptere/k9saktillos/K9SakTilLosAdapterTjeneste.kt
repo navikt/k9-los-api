@@ -184,7 +184,7 @@ class K9SakTilLosAdapterTjeneste(
         }
         
         utledAksjonspunkter(event, oppgaveFeltverdiDtos)
-        utledÅpneAksjonspunkter(åpneAksjonspunkter, oppgaveFeltverdiDtos)
+        utledÅpneAksjonspunkter(event.behandlingSteg, åpneAksjonspunkter, oppgaveFeltverdiDtos)
         utledAutomatiskBehandletFlagg(forrigeOppgave, oppgaveFeltverdiDtos, harManueltAksjonspunkt)
         utledAvventerSaksbehandler(harManueltAksjonspunkt, harAutopunkt, oppgaveFeltverdiDtos)
 
@@ -256,13 +256,25 @@ class K9SakTilLosAdapterTjeneste(
             nøkkel = "vedtaksdato",
             verdi = event.vedtaksdato?.toString() ?: forrigeOppgave?.hentVerdi("vedtaksdato")
         ),
+        event.nyeKrav?.let {
+            OppgaveFeltverdiDto(
+                nøkkel = "nyeKrav",
+                verdi = event.nyeKrav.toString()
+            )
+        },
+        event.fraEndringsdialog?.let {
+            OppgaveFeltverdiDto(
+                nøkkel = "fraEndringsdialog",
+                verdi = event.fraEndringsdialog.toString()
+            )
+        },
         OppgaveFeltverdiDto(
             nøkkel = "totrinnskontroll",
             verdi = event.aksjonspunktTilstander.filter { aksjonspunktTilstandDto ->
                 aksjonspunktTilstandDto.aksjonspunktKode.equals("5015") && aksjonspunktTilstandDto.status !in (listOf(AksjonspunktStatus.AVBRUTT))
             }.isNotEmpty().toString()
         )
-    )
+    ).filterNotNull().toMutableList()
 
     private fun utledAvventerSaksbehandler(
         harManueltAksjonspunkt: Boolean,
@@ -309,6 +321,7 @@ class K9SakTilLosAdapterTjeneste(
     }
 
     private fun utledÅpneAksjonspunkter(
+        behandlingSteg: String?,
         åpneAksjonspunkter: List<AksjonspunktTilstandDto>,
         oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
     ) {
@@ -320,6 +333,19 @@ class K9SakTilLosAdapterTjeneste(
                         verdi = åpentAksjonspunkt.aksjonspunktKode
                     )
                 )
+            }
+            if (behandlingSteg != null) {
+                åpneAksjonspunkter.firstOrNull { åpentAksjonspunkt ->
+                    val aksjonspunktDefinisjon = AksjonspunktDefinisjon.fraKode(åpentAksjonspunkt.aksjonspunktKode)
+                    !aksjonspunktDefinisjon.erAutopunkt() && aksjonspunktDefinisjon.behandlingSteg != null && aksjonspunktDefinisjon.behandlingSteg.kode == behandlingSteg
+                }?.let {
+                    oppgaveFeltverdiDtos.add(
+                        OppgaveFeltverdiDto(
+                            nøkkel = "løsbartAksjonspunkt",
+                            verdi = it.aksjonspunktKode
+                        )
+                    )
+                }
             }
         } else {
             oppgaveFeltverdiDtos.add(

@@ -2,6 +2,7 @@ package no.nav.k9.los.domene.modell
 
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
+import no.nav.k9.los.aksjonspunktbehandling.AksjonspunktDefinisjonK9Tilbake
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.los.integrasjon.kafka.dto.PunsjEventDto
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
@@ -83,7 +84,8 @@ data class Aksjonspunkter(
 
     fun beslutterAp(): AksjonspunktTilstand? {
         return this.apTilstander.firstOrNull {
-            AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode) == AksjonspunktDefinisjon.FATTER_VEDTAK
+           it.aksjonspunktKode == AksjonspunktDefinisjon.FATTER_VEDTAK.kode
+                   || it.aksjonspunktKode == AksjonspunktDefinisjonK9Tilbake.FATTE_VEDTAK.kode
         }
     }
 
