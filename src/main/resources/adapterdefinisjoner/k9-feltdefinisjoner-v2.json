@@ -125,7 +125,7 @@
       "id": "løsbartAksjonspunkt",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true,
+      "visTilBruker": true
     },
     {
       "id": "avventerSaksbehandler",
