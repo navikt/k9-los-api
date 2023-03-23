@@ -22,6 +22,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
@@ -379,6 +380,7 @@ class K9SakTilLosAdapterTjeneste(
     }
 
     fun setup(): K9SakTilLosAdapterTjeneste {
+        oppgaveV3Tjeneste.slettOppgaveDataFørTidspunkt(LocalDateTime.of(2023, 3, 24, 16, 45))
         val objectMapper = jacksonObjectMapper()
         opprettOmråde()
         opprettFeltdefinisjoner(objectMapper)
