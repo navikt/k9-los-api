@@ -29,7 +29,7 @@ class FeltdefinisjonRepository {
                     område = område,
                     listetype = row.boolean("liste_type"),
                     tolkesSom = row.string("tolkes_som"),
-                    visTilBruker = true
+                    visTilBruker = row.boolean("vis_til_bruker"),
                 )
             }.asList
         )
@@ -58,18 +58,39 @@ class FeltdefinisjonRepository {
         }
     }
 
+    fun oppdater(oppdaterlListe: Set<Feltdefinisjon>, område: Område, tx: TransactionalSession) {
+        oppdaterlListe.forEach { datatype ->
+            tx.run(
+                queryOf(
+                    """
+                    update feltdefinisjon 
+                    set liste_type = :listeType, tolkes_som = :tolkesSom, vis_til_bruker = :visTilBruker
+                    WHERE omrade_id = :omradeId AND ekstern_id = :eksternId""",
+                    mapOf(
+                        "eksternId" to datatype.eksternId,
+                        "omradeId" to område.id,
+                        "listeType" to datatype.listetype,
+                        "tolkesSom" to datatype.tolkesSom,
+                        "visTilBruker" to datatype.visTilBruker
+                    )
+                ).asUpdate
+            )
+        }
+    }
+
     fun leggTil(leggTilListe: Set<Feltdefinisjon>, område: Område, tx: TransactionalSession) {
         leggTilListe.forEach { datatype ->
             tx.run(
                 queryOf(
                     """
-                    insert into feltdefinisjon(ekstern_id, omrade_id, liste_type, tolkes_som) 
-                    values(:eksternId, :omradeId, :listeType, :tolkesSom)""",
+                    insert into feltdefinisjon(ekstern_id, omrade_id, liste_type, tolkes_som, vis_til_bruker) 
+                    values(:eksternId, :omradeId, :listeType, :tolkesSom, :visTilBruker)""",
                     mapOf(
                         "eksternId" to datatype.eksternId,
                         "omradeId" to område.id,
                         "listeType" to datatype.listetype,
-                        "tolkesSom" to datatype.tolkesSom
+                        "tolkesSom" to datatype.tolkesSom,
+                        "visTilBruker" to datatype.visTilBruker
                     )
                 ).asUpdate
             )

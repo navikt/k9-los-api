@@ -1,0 +1,1 @@
+alter table feltdefinisjon add column if not exists vis_til_bruker boolean NOT NULL DEFAULT TRUE;

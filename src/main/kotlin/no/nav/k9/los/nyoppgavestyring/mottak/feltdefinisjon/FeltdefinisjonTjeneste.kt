@@ -16,8 +16,9 @@ class FeltdefinisjonTjeneste(
             val eksisterendeFeltdefinisjoner = feltdefinisjonRepository.hent(område, tx)
             val innkommendeFeltdefinisjoner = Feltdefinisjoner(innkommendeFeltdefinisjonerDto, område)
 
-            val (sletteListe, leggTilListe) = eksisterendeFeltdefinisjoner.finnForskjeller(innkommendeFeltdefinisjoner)
+            val (sletteListe, oppdaterListe, leggTilListe) = eksisterendeFeltdefinisjoner.finnForskjeller(innkommendeFeltdefinisjoner)
             feltdefinisjonRepository.fjern(sletteListe, tx)
+            feltdefinisjonRepository.oppdater(oppdaterListe, innkommendeFeltdefinisjoner.område, tx)
             feltdefinisjonRepository.leggTil(leggTilListe, innkommendeFeltdefinisjoner.område, tx)
         }
     }
