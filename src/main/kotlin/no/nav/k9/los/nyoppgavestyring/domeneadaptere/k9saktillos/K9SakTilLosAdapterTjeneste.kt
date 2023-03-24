@@ -3,9 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.k9.kodeverk.behandling.BehandlingStatus
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktType
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.*
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
@@ -121,13 +119,8 @@ class K9SakTilLosAdapterTjeneste(
         var forrigeOppgave: OppgaveV3? = null
         transactionalManager.transaction { tx ->
             val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
-            behandlingProsessEventer.forEach { event -> //TODO: hva skjer om eventer kommer out of order her, fordi feks k9 har sendt i feil rekkefølge?
+            behandlingProsessEventer.forEach { event ->
                 val oppgaveDto = lagOppgaveDto(event, forrigeOppgave)
-
-                if (event.behandlingStatus == BehandlingStatus.AVSLUTTET.kode) {
-                    //val vedtaksInfo = hentVedtaksInfo()
-                    //oppgaveDto = oppgaveDto.berikMedVedtaksInfo(vedtaksInfo)
-                }
 
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
 
@@ -150,8 +143,14 @@ class K9SakTilLosAdapterTjeneste(
         }
     }
 
-    private fun hentVedtaksInfo(): Map<String, String> {
-        TODO()
+
+    private fun oppgaveSkalHaVentestatus(event: BehandlingProsessEventDto): Boolean {
+        val åpneAksjonspunkter = event.aksjonspunktTilstander.filter { aksjonspunktTilstand ->
+            aksjonspunktTilstand.status.erÅpentAksjonspunkt()
+        }
+
+        val ventetype = utledVentetype(event.behandlingSteg, åpneAksjonspunkter)
+        return ventetype != Ventekategori.AVVENTER_SAKSBEHANDLER
     }
 
     private fun lagOppgaveDto(event: BehandlingProsessEventDto, forrigeOppgave: OppgaveV3?) =
@@ -161,7 +160,19 @@ class K9SakTilLosAdapterTjeneste(
             område = "K9",
             kildeområde = "K9",
             type = "k9sak",
-            status = event.aksjonspunktTilstander.lastOrNull()?.status?.kode ?: "OPPR", // TODO statuser må gås opp
+            status = if (event.aksjonspunktTilstander.any { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.status.erÅpentAksjonspunkt() }) {
+                if (oppgaveSkalHaVentestatus(event)) {
+                    "VENTER"
+                } else {
+                    "AAPEN"
+                }
+            } else {
+                if (event.behandlingStatus != BehandlingStatus.AVSLUTTET.getKode() && event.behandlingStatus != BehandlingStatus.IVERKSETTER_VEDTAK.getKode()) {
+                    "AAPEN"
+                } else {
+                    "LUKKET"
+                }
+            },
             endretTidspunkt = event.eventTid,
             feltverdier = lagFeltverdier(event, forrigeOppgave)
         )
@@ -171,23 +182,20 @@ class K9SakTilLosAdapterTjeneste(
         forrigeOppgave: OppgaveV3?
     ): List<OppgaveFeltverdiDto> {
         val oppgaveFeltverdiDtos = mapEnkeltverdier(event, forrigeOppgave)
-        
+
         val åpneAksjonspunkter = event.aksjonspunktTilstander.filter { aksjonspunktTilstand ->
             aksjonspunktTilstand.status.erÅpentAksjonspunkt()
-        }
-
-        val harAutopunkt = åpneAksjonspunkter.any { aksjonspunktTilstandDto ->
-            AUTOPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode)
         }
 
         val harManueltAksjonspunkt = åpneAksjonspunkter.any { aksjonspunktTilstandDto ->
             MANUELLE_AKSJONSPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode)
         }
-        
+
         utledAksjonspunkter(event, oppgaveFeltverdiDtos)
         utledÅpneAksjonspunkter(event.behandlingSteg, åpneAksjonspunkter, oppgaveFeltverdiDtos)
+        utledVenteÅrsakOgFrist(åpneAksjonspunkter, oppgaveFeltverdiDtos)
         utledAutomatiskBehandletFlagg(forrigeOppgave, oppgaveFeltverdiDtos, harManueltAksjonspunkt)
-        utledAvventerSaksbehandler(harManueltAksjonspunkt, harAutopunkt, oppgaveFeltverdiDtos)
+        oppgaveFeltverdiDtos.addAll(ventekategoriTilFlagg(utledVentetype(event.behandlingSteg, åpneAksjonspunkter)))
 
         return oppgaveFeltverdiDtos
     }
@@ -272,31 +280,145 @@ class K9SakTilLosAdapterTjeneste(
         OppgaveFeltverdiDto(
             nøkkel = "totrinnskontroll",
             verdi = event.aksjonspunktTilstander.filter { aksjonspunktTilstandDto ->
-                aksjonspunktTilstandDto.aksjonspunktKode.equals("5015") && aksjonspunktTilstandDto.status !in (listOf(AksjonspunktStatus.AVBRUTT))
+                aksjonspunktTilstandDto.aksjonspunktKode.equals("5015") && aksjonspunktTilstandDto.status !in (listOf(
+                    AksjonspunktStatus.AVBRUTT
+                ))
             }.isNotEmpty().toString()
         )
     ).filterNotNull().toMutableList()
 
-    private fun utledAvventerSaksbehandler(
-        harManueltAksjonspunkt: Boolean,
-        harAutopunkt: Boolean,
-        oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
-    ) {
-        if (harManueltAksjonspunkt && !harAutopunkt) {
-            oppgaveFeltverdiDtos.add(
-                OppgaveFeltverdiDto(
-                    nøkkel = "avventerSaksbehandler",
-                    verdi = "true"
-                )
-            )
-        } else {
-            oppgaveFeltverdiDtos.add(
-                OppgaveFeltverdiDto(
-                    nøkkel = "avventerSaksbehandler",
-                    verdi = "false"
-                )
-            )
+    internal fun utledVentetype(
+        behandlingSteg: String?,
+        åpneAksjonspunkter: List<AksjonspunktTilstandDto>
+    ): Ventekategori? {
+        if (behandlingSteg.isNullOrEmpty()) {
+            if (åpneAksjonspunkter.isEmpty()) {
+                return null
+            } else {
+                throw IllegalStateException("Aktivt aksjonspunkt: ${åpneAksjonspunkter.first().aksjonspunktKode}, men ikke aktivt behandlingssteg")
+            }
         }
+
+        if (åpneAksjonspunkter.isEmpty()) {
+            return Ventekategori.AVVENTER_ANNET
+        }
+
+        val førsteAPMedFristOgVenteårsak = åpneAksjonspunkter
+            .filter { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.fristTid != null }
+            .sortedBy { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.fristTid }
+            .firstOrNull()
+
+        if (førsteAPMedFristOgVenteårsak != null) {
+            return førsteAPMedFristOgVenteårsak.venteårsak.ventekategori
+        }
+
+
+        val ventekategorierPrioritert = listOf(
+            Ventekategori.AVVENTER_TEKNISK_FEIL,
+            Ventekategori.AVVENTER_SAKSBEHANDLER,
+            Ventekategori.AVVENTER_ANNET,
+            Ventekategori.AVVENTER_ARBEIDSGIVER,
+            Ventekategori.AVVENTER_SØKER,
+            Ventekategori.AVVENTER_ANNET_IKKE_SAKSBEHANDLINGSTID
+        )
+
+        //Hvis ingen venteårsak hentes ventekategori fra løsbare aksjonspunkt i prioritert rekkefølge
+        val løsbareAksjonspunkt = åpneAksjonspunkter.filter { åpentAksjonspunkt ->
+            val aksjonspunktDefinisjon = AksjonspunktDefinisjon.fraKode(åpentAksjonspunkt.aksjonspunktKode)
+            aksjonspunktDefinisjon.erAutopunkt() || aksjonspunktDefinisjon.behandlingSteg != null && aksjonspunktDefinisjon.behandlingSteg.kode == behandlingSteg
+        }
+
+        ventekategorierPrioritert.forEach { ventekategori ->
+            if (apInneholder(løsbareAksjonspunkt, ventekategori)) {
+                return ventekategori
+            }
+        }
+
+        return Ventekategori.AVVENTER_ANNET
+    }
+
+    internal fun ventekategoriTilFlagg(
+        ventekategori: Ventekategori?
+    ): List<OppgaveFeltverdiDto> {
+        if (ventekategori == null) {
+            return avventerIngen()
+        }
+        return when (ventekategori) {
+            Ventekategori.AVVENTER_SØKER -> avventerSøker()
+            Ventekategori.AVVENTER_ARBEIDSGIVER -> avventerArbeidsgiver()
+            Ventekategori.AVVENTER_SAKSBEHANDLER -> avventerSaksbehandler()
+            Ventekategori.AVVENTER_TEKNISK_FEIL -> avventerTekniskFeil()
+            Ventekategori.AVVENTER_ANNET -> avventerAnnet()
+            Ventekategori.AVVENTER_ANNET_IKKE_SAKSBEHANDLINGSTID -> avventerAnnetIkkeSaksbehandlingstid()
+            else -> throw IllegalArgumentException("Ukjent ventekategori: ${ventekategori}")
+        }
+    }
+
+    private fun apInneholder(
+        løsbareAksjonspunkt: List<AksjonspunktTilstandDto>,
+        ventekategori: Ventekategori
+    ): Boolean {
+        return løsbareAksjonspunkt.firstOrNull { aksjonspunktTilstandDto ->
+            AksjonspunktDefinisjon.fraKode(aksjonspunktTilstandDto.aksjonspunktKode).defaultVentekategori == ventekategori
+        } != null
+    }
+
+    internal fun avventerSøker(): List<OppgaveFeltverdiDto> {
+        return avventerflagg("avventerSøker")
+    }
+
+    internal fun avventerArbeidsgiver(): List<OppgaveFeltverdiDto> {
+        return avventerflagg("avventerArbeidsgiver")
+    }
+
+    internal fun avventerSaksbehandler(): List<OppgaveFeltverdiDto> {
+        return avventerflagg("avventerSaksbehandler")
+    }
+
+    internal fun avventerTekniskFeil(): List<OppgaveFeltverdiDto> {
+        return avventerflagg("avventerTekniskFeil")
+    }
+
+    internal fun avventerAnnet(): List<OppgaveFeltverdiDto> {
+        return avventerflagg("avventerAnnet")
+    }
+
+    internal fun avventerAnnetIkkeSaksbehandlingstid(): List<OppgaveFeltverdiDto> {
+        return avventerflagg("avventerAnnetIkkeSaksbehandlingstid")
+    }
+
+    internal fun avventerIngen(): List<OppgaveFeltverdiDto> {
+        return avventerflagg("")
+    }
+
+    private fun avventerflagg(skalSettesTrue: String): List<OppgaveFeltverdiDto> {
+        val oppgavefelter = mutableListOf<OppgaveFeltverdiDto>()
+        listOf(
+            "avventerSøker",
+            "avventerArbeidsgiver",
+            "avventerSaksbehandler",
+            "avventerTekniskFeil",
+            "avventerAnnet",
+            "avventerAnnetIkkeSaksbehandlingstid"
+        ).forEach {
+            if (skalSettesTrue == it) {
+                oppgavefelter.add(
+                    OppgaveFeltverdiDto(
+                        nøkkel = it,
+                        verdi = true.toString()
+                    )
+                )
+            } else {
+                oppgavefelter.add(
+                    OppgaveFeltverdiDto(
+                        nøkkel = it,
+                        verdi = false.toString()
+                    )
+                )
+            }
+        }
+
+        return oppgavefelter
     }
 
     private fun utledAutomatiskBehandletFlagg(
@@ -355,6 +477,33 @@ class K9SakTilLosAdapterTjeneste(
                     verdi = null
                 )
             )
+        }
+    }
+
+    private fun utledVenteÅrsakOgFrist(
+        åpneAksjonspunkter: List<AksjonspunktTilstandDto>,
+        oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
+    ) {
+        if (åpneAksjonspunkter.isNotEmpty()) {
+            åpneAksjonspunkter
+                .filter { aksjonspunktTilstandDto ->
+                    aksjonspunktTilstandDto.venteårsak != Venteårsak.UDEFINERT
+                            && aksjonspunktTilstandDto.status == AksjonspunktStatus.OPPRETTET
+                }
+                .singleOrNull { aksjonspunktTilstandDto ->
+                    oppgaveFeltverdiDtos.add(
+                        OppgaveFeltverdiDto(
+                            nøkkel = "aktivVenteårsak",
+                            verdi = aksjonspunktTilstandDto.venteårsak.kode.toString()
+                        )
+                    )
+                    oppgaveFeltverdiDtos.add(
+                        OppgaveFeltverdiDto(
+                            nøkkel = "aktivVentefrist",
+                            verdi = aksjonspunktTilstandDto.fristTid.toString()
+                        )
+                    )
+                }
         }
     }
 

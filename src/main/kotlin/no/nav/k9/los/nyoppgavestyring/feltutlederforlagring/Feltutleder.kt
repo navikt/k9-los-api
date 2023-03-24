@@ -1,6 +1,5 @@
-package no.nav.k9.los.nyoppgavestyring.feltutledere
+package no.nav.k9.los.nyoppgavestyring.feltutlederforlagring
 
-import kotliquery.TransactionalSession
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 

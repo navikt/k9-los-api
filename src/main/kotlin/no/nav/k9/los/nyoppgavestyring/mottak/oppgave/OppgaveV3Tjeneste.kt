@@ -35,12 +35,16 @@ class OppgaveV3Tjeneste(
 
         val utledeteFelter = mutableListOf<OppgaveFeltverdi>()
 
-        innkommendeOppgave.oppgavetype.oppgavefelter.forEach { oppgavefelt ->
-            val utledetFeltverdi = oppgavefelt.feltutleder?.utled(innkommendeOppgave, aktivOppgaveVersjon)
-            if (utledetFeltverdi != null) {
-                utledeteFelter.add(utledetFeltverdi)
+        oppgavetype.oppgavefelter
+            .filter { oppgavefelt -> oppgavefelt.feltutleder != null }
+            .forEach {
+                oppgavefelt ->
+                val utledetFeltverdi = oppgavefelt.feltutleder!!.utled(innkommendeOppgave, aktivOppgaveVersjon)
+                if (utledetFeltverdi != null) {
+                    utledeteFelter.add(utledetFeltverdi)
+                }
             }
-        }
+
         innkommendeOppgave = OppgaveV3(innkommendeOppgave, innkommendeOppgave.felter.plus(utledeteFelter))
 
         innkommendeOppgave.valider()

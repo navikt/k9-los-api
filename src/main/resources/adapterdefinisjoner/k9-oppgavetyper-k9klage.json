@@ -111,17 +111,6 @@
           "påkrevd": true
         },
         {
-          "id": "akkumulertVentetidSaksbehandler",
-          "visPåOppgave": false,
-          "påkrevd": false,
-          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutledere.AkkumulertVentetidSaksbehandler"
-        },
-        {
-          "id": "avventerSaksbehandler",
-          "visPåOppgave": false,
-          "påkrevd": true
-        },
-        {
           "id": "helautomatiskBehandlet",
           "visPåOppgave": false,
           "påkrevd": true

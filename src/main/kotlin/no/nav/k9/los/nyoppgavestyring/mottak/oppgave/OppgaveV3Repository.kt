@@ -42,7 +42,7 @@ class OppgaveV3Repository(
                     eksternId = row.string("ekstern_id"),
                     eksternVersjon = row.string("ekstern_versjon"),
                     oppgavetype = oppgavetype,
-                    status = row.string("status"),
+                    status = Oppgavestatus.valueOf(row.string("status")),
                     endretTidspunkt = row.localDateTime("endret_tidspunkt"),
                     kildeområde = row.string("kildeomrade"),
                     felter = hentFeltverdier(row.long("id"), oppgavetype, tx)
@@ -62,7 +62,7 @@ class OppgaveV3Repository(
                     "eksternId" to oppgave.eksternId,
                     "eksternVersjon" to oppgave.eksternVersjon,
                     "oppgavetypeId" to oppgave.oppgavetype.id,
-                    "status" to oppgave.status,
+                    "status" to oppgave.status.toString(),
                     "endretTidspunkt" to oppgave.endretTidspunkt,
                     "versjon" to nyVersjon,
                     "aktiv" to true,
