@@ -18,7 +18,7 @@ internal fun Route.K9SakTilLosApi() {
     delete("/slettOppgavedata") {
         if (config.nyOppgavestyringRestAktivert()) {
             requestContextService.withRequestContext(call) {
-                oppgaveV3Tjeneste.slettOppgaveData()
+                oppgaveV3Tjeneste.destruktivSlettAvAlleOppgaveData()
                 call.respond("OK")
             }
         } else {
