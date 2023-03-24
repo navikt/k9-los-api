@@ -186,6 +186,17 @@ class OppgaveV3Repository(
             it.run(
                 queryOf("""update behandling_prosess_events_klage set dirty = true""").asUpdate
             )
+            //TODO: Slett disse asap
+            it.run(
+                queryOf("""delete from oppgavefelt""").asUpdate
+            )
+            it.run(
+                queryOf("""delete from oppgavetype""").asUpdate
+            )
+            it.run(
+                queryOf("""delete from feltdefinisjon""").asUpdate
+            )
+
         }
     }
 
