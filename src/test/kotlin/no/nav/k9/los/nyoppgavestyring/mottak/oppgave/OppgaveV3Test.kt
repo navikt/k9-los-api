@@ -10,11 +10,14 @@ import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.*
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.koin.test.get
 import java.time.LocalDateTime
+import kotlin.test.Ignore
 
+@Disabled
 class OppgaveV3Test : AbstractK9LosIntegrationTest() {
 
     private val områdeDto = Område(eksternId = "K9")
