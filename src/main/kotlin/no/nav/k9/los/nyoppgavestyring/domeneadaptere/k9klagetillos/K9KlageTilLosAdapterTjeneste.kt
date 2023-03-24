@@ -72,7 +72,7 @@ class K9KlageTilLosAdapterTjeneste(
         timer(
             name = TRÅDNAVN,
             daemon = true,
-            initialDelay = TimeUnit.MINUTES.toMillis(2),
+            initialDelay = TimeUnit.HOURS.toMillis(2),
             period = TimeUnit.HOURS.toMillis(1)
         ) {
             if (kjørSetup) {

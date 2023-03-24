@@ -64,6 +64,8 @@ class OppgaveV3Tjeneste(
     }
 
     fun destruktivSlettAvAlleOppgaveData() {
+        log.info("trunkerer oppgavedata")
         oppgaveV3Repository.slettOppgaverOgFelter()
+        log.info("oppgavedata trunkert")
     }
 }

@@ -48,7 +48,7 @@ class OppgavestatistikkTjeneste(
         timer(
             name = TRÅDNAVN,
             daemon = true,
-            initialDelay = TimeUnit.MINUTES.toMillis(5),
+            initialDelay = TimeUnit.HOURS.toMillis(5),
             period = TimeUnit.HOURS.toMillis(1)
         ) {
             try {
