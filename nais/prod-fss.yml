@@ -10,13 +10,13 @@ spec:
   port: 8020
   liveness:
     path: isalive
-    initialDelay: 1800
+    initialDelay: 20
     timeout: 1
     periodSeconds: 5
     failureThreshold: 10
   readiness:
     path: isready
-    initialDelay: 1800
+    initialDelay: 20
     timeout: 1
   resources:
     limits:
