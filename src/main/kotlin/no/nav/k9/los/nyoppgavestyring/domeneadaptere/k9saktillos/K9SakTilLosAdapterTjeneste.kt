@@ -380,7 +380,9 @@ class K9SakTilLosAdapterTjeneste(
     }
 
     fun setup(): K9SakTilLosAdapterTjeneste {
-        oppgaveV3Tjeneste.slettOppgaveDataFørTidspunkt(LocalDateTime.of(2023, 3, 24, 16, 45))
+        if (LocalDateTime.now().isBefore(LocalDateTime.of(2023, 3, 24, 16, 45))) {
+            oppgaveV3Tjeneste.slettOppgaveData()
+        }
         val objectMapper = jacksonObjectMapper()
         opprettOmråde()
         opprettFeltdefinisjoner(objectMapper)

@@ -65,10 +65,4 @@ class OppgaveV3Tjeneste(
     fun slettOppgaveData() {
         oppgaveV3Repository.slettOppgaverOgFelter()
     }
-
-    fun slettOppgaveDataFørTidspunkt(tidspunkt: LocalDateTime) {
-        if (LocalDateTime.now().isBefore(tidspunkt)) {
-            oppgaveV3Repository.slettOppgaverOgFelter()
-        }
-    }
 }

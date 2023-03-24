@@ -172,6 +172,9 @@ class OppgaveV3Repository(
     fun slettOppgaverOgFelter() {
         using(sessionOf(dataSource)) {
             it.run(
+                queryOf("""delete from oppgave_v3_sendt_dvh""").asUpdate
+            )
+            it.run(
                 queryOf("""delete from oppgavefelt_verdi""").asUpdate
             )
             it.run(
@@ -179,6 +182,9 @@ class OppgaveV3Repository(
             )
             it.run(
                 queryOf("""update behandling_prosess_events_k9 set dirty = true""").asUpdate
+            )
+            it.run(
+                queryOf("""update behandling_prosess_events_klage set dirty = true""").asUpdate
             )
         }
     }
