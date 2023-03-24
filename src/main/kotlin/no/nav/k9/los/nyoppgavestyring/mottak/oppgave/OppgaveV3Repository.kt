@@ -172,13 +172,13 @@ class OppgaveV3Repository(
     fun slettOppgaverOgFelter() {
         using(sessionOf(dataSource)) {
             it.run(
-                queryOf("""delete from oppgave_v3_sendt_dvh""").asUpdate
+                queryOf("""truncate table oppgave_v3_sendt_dvh""").asUpdate
             )
             it.run(
-                queryOf("""delete from oppgavefelt_verdi""").asUpdate
+                queryOf("""truncate table oppgavefelt_verdi""").asUpdate
             )
             it.run(
-                queryOf("""delete from oppgave_v3""").asUpdate
+                queryOf("""truncate table oppgave_v3""").asUpdate
             )
             it.run(
                 queryOf("""update behandling_prosess_events_k9 set dirty = true""").asUpdate
@@ -186,17 +186,15 @@ class OppgaveV3Repository(
             it.run(
                 queryOf("""update behandling_prosess_events_klage set dirty = true""").asUpdate
             )
-            //TODO: Slett disse asap
             it.run(
-                queryOf("""delete from oppgavefelt""").asUpdate
+                queryOf("""truncate table oppgavefelt""").asUpdate
             )
             it.run(
-                queryOf("""delete from oppgavetype""").asUpdate
+                queryOf("""truncate table oppgavetype""").asUpdate
             )
             it.run(
-                queryOf("""delete from feltdefinisjon""").asUpdate
+                queryOf("""truncate table feltdefinisjon""").asUpdate
             )
-
         }
     }
 
