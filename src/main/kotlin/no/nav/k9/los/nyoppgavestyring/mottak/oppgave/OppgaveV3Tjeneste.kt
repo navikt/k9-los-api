@@ -1,7 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 
 import kotliquery.TransactionalSession
-import no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.GyldigeFeltutledere
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import org.slf4j.LoggerFactory
@@ -64,8 +63,7 @@ class OppgaveV3Tjeneste(
         return oppgaveV3Repository.tellAntall()
     }
 
-    fun slettOppgaveData() {
+    fun destruktivSlettAvAlleOppgaveData() {
         oppgaveV3Repository.slettOppgaverOgFelter()
     }
-
 }

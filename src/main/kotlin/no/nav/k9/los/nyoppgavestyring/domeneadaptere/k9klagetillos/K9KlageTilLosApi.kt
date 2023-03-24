@@ -1,7 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos
 
 import io.ktor.http.*
-import io.ktor.serialization.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -19,7 +18,7 @@ internal fun Route.K9KlageTilLosApi() {
     delete("/slettOppgavedata") {
         if (config.nyOppgavestyringRestAktivert()) {
             requestContextService.withRequestContext(call) {
-                oppgaveV3Tjeneste.slettOppgaveData()
+                oppgaveV3Tjeneste.destruktivSlettAvAlleOppgaveData()
                 call.respond("OK")
             }
         } else {
