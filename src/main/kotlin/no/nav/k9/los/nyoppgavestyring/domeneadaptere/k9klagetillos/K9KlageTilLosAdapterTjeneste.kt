@@ -359,10 +359,12 @@ class K9KlageTilLosAdapterTjeneste(
     }
 
     fun setup() {
+        /*
         val objectMapper = jacksonObjectMapper()
         opprettOmråde()
         opprettFeltdefinisjoner(objectMapper)
         opprettOppgavetype(objectMapper)
+         */
     }
 
     private fun opprettOmråde() {

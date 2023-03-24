@@ -529,7 +529,7 @@ class K9SakTilLosAdapterTjeneste(
     }
 
     fun setup(): K9SakTilLosAdapterTjeneste {
-        if (LocalDateTime.now().isBefore(LocalDateTime.of(2023, 3, 24, 18, 30))) {
+        if (LocalDateTime.now().isBefore(LocalDateTime.of(2023, 3, 24, 22, 30))) {
             oppgaveV3Tjeneste.destruktivSlettAvAlleOppgaveData()
         }
         val objectMapper = jacksonObjectMapper()
