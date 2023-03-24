@@ -529,13 +529,16 @@ class K9SakTilLosAdapterTjeneste(
     }
 
     fun setup(): K9SakTilLosAdapterTjeneste {
-        if (LocalDateTime.now().isBefore(LocalDateTime.of(2023, 3, 24, 22, 30))) {
-            oppgaveV3Tjeneste.destruktivSlettAvAlleOppgaveData()
+        if (config.nyOppgavestyringAktivert()) {
+            if (LocalDateTime.now().isBefore(LocalDateTime.of(2023, 3, 24, 22, 30))) {
+                oppgaveV3Tjeneste.destruktivSlettAvAlleOppgaveData()
+            }
+            val objectMapper = jacksonObjectMapper()
+            opprettOmråde()
+            opprettFeltdefinisjoner(objectMapper)
+            opprettOppgavetype(objectMapper)
+            return this
         }
-        val objectMapper = jacksonObjectMapper()
-        opprettOmråde()
-        opprettFeltdefinisjoner(objectMapper)
-        opprettOppgavetype(objectMapper)
         return this
     }
 

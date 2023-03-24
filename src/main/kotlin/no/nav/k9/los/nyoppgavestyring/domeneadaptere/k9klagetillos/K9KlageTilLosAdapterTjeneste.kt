@@ -48,12 +48,12 @@ class K9KlageTilLosAdapterTjeneste(
     }.map { aksjonspunktDefinisjon -> aksjonspunktDefinisjon.kode }
 
     fun kjør(kjørSetup: Boolean = false, kjørUmiddelbart: Boolean = false) {
-        if (config.nyOppgavestyringAktivert()) {
+        if (false) {
             when (kjørUmiddelbart) {
                 true -> spillAvUmiddelbart()
                 false -> schedulerAvspilling(kjørSetup)
             }
-        } else log.info("Ny oppgavestyring er deaktivert")
+        } else log.info("Ny oppgavestyring k9klage er deaktivert")
     }
 
     private fun spillAvUmiddelbart() {
