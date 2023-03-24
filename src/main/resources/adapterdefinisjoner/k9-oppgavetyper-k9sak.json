@@ -106,20 +106,85 @@
           "påkrevd": false
         },
         {
+          "id": "aktivVenteårsak",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "aktivVentefrist",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
           "id": "løsbartAksjonspunkt",
           "visPåOppgave": true,
           "påkrevd": false
         },
         {
-          "id": "akkumulertVentetidSaksbehandler",
+          "id": "avventerSøker",
           "visPåOppgave": false,
-          "påkrevd": false,
-          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutledere.AkkumulertVentetidSaksbehandler"
+          "påkrevd": true
+        },
+        {
+          "id": "avventerArbeidsgiver",
+          "visPåOppgave": false,
+          "påkrevd": true
         },
         {
           "id": "avventerSaksbehandler",
           "visPåOppgave": false,
           "påkrevd": true
+        },
+        {
+        "id": "avventerTekniskFeil",
+        "visPåOppgave": false,
+        "påkrevd": true
+        },
+        {
+          "id": "avventerAnnet",
+          "visPåOppgave": false,
+          "påkrevd": true
+        },
+        {
+          "id": "avventerAnnetIkkeSaksbehandlingstid",
+          "visPåOppgave": false,
+          "påkrevd": true
+        },
+        {
+          "id": "akkumulertVentetidSaksbehandlerForTidligereVersjoner",
+          "visPåOppgave": false,
+          "påkrevd": false,
+          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.AkkumulertVentetidSaksbehandler"
+        },
+        {
+          "id": "akkumulertVentetidSøkerForTidligereVersjoner",
+          "visPåOppgave": false,
+          "påkrevd": false,
+          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.AkkumulertVentetidSøker"
+        },
+        {
+          "id": "akkumulertVentetidTekniskFeilForTidligereVersjoner",
+          "visPåOppgave": false,
+          "påkrevd": false,
+          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.AkkumulertVentetidTekniskFeil"
+        },
+        {
+          "id": "akkumulertVentetidArbeidsgiverForTidligereVersjoner",
+          "visPåOppgave": false,
+          "påkrevd": false,
+          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.AkkumulertVentetidArbeidsgiver"
+        },
+        {
+          "id": "akkumulertVentetidAnnetForTidligereVersjoner",
+          "visPåOppgave": false,
+          "påkrevd": false,
+          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.AkkumulertVentetidAnnet"
+        },
+        {
+          "id": "akkumulertVentetidAnnetIkkeSaksbehandlingstidForTidligereVersjoner",
+          "visPåOppgave": false,
+          "påkrevd": false,
+          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.AkkumulertVentetidAnnetIkkeSaksbehandlingstid"
         },
         {
           "id": "helautomatiskBehandlet",

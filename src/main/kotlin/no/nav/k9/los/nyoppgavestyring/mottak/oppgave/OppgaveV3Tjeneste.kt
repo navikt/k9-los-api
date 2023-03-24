@@ -1,11 +1,10 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 
 import kotliquery.TransactionalSession
-import no.nav.k9.los.nyoppgavestyring.feltutledere.GyldigeFeltutledere
+import no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.GyldigeFeltutledere
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import org.slf4j.LoggerFactory
-import kotlin.reflect.full.createInstance
 
 class OppgaveV3Tjeneste(
     private val oppgaveV3Repository: OppgaveV3Repository,
@@ -37,12 +36,16 @@ class OppgaveV3Tjeneste(
 
         val utledeteFelter = mutableListOf<OppgaveFeltverdi>()
 
-        innkommendeOppgave.oppgavetype.oppgavefelter.forEach { oppgavefelt ->
-            val utledetFeltverdi = oppgavefelt.feltutleder?.utled(innkommendeOppgave, aktivOppgaveVersjon)
-            if (utledetFeltverdi != null) {
-                utledeteFelter.add(utledetFeltverdi)
+        oppgavetype.oppgavefelter
+            .filter { oppgavefelt -> oppgavefelt.feltutleder != null }
+            .forEach {
+                oppgavefelt ->
+                val utledetFeltverdi = oppgavefelt.feltutleder!!.utled(innkommendeOppgave, aktivOppgaveVersjon)
+                if (utledetFeltverdi != null) {
+                    utledeteFelter.add(utledetFeltverdi)
+                }
             }
-        }
+
         innkommendeOppgave = OppgaveV3(innkommendeOppgave, innkommendeOppgave.felter.plus(utledeteFelter))
 
         innkommendeOppgave.valider()
