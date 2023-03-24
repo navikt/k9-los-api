@@ -134,9 +134,9 @@ spec:
 
       # feature toggles
     - name: NY_OPPGAVESTYRING
-      value: "false"
+      value: "true"
     - name: NY_OPPGAVESTYRING_REST_API
-      value: "false"
+      value: "true"
     - name: K9SAK_CONSUMER_AIVEN
       value: "true"
     - name: PUNSJ_CONSUMER_AIVEN
