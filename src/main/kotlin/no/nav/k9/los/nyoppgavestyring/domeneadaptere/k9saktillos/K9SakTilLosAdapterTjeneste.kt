@@ -72,7 +72,7 @@ class K9SakTilLosAdapterTjeneste(
         timer(
             name = TRÅDNAVN,
             daemon = true,
-            initialDelay = TimeUnit.HOURS.toMillis(1),
+            initialDelay = TimeUnit.MINUTES.toMillis(1),
             period = TimeUnit.HOURS.toMillis(1)
         ) {
             if (kjørSetup) {

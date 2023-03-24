@@ -38,6 +38,6 @@ class K9KlageEventHandler constructor(
             k9KlageModell.eventer.add(event)
             k9KlageModell
         }
-        //k9KlageTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId)
+        k9KlageTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId)
     }
 }

@@ -77,7 +77,7 @@ class K9sakEventHandler constructor(
             statistikkChannel.send(true)
         }
         
-        //k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId)
+        k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId)
     }
 
 

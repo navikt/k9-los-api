@@ -72,7 +72,7 @@ class K9KlageTilLosAdapterTjeneste(
         timer(
             name = TRÅDNAVN,
             daemon = true,
-            initialDelay = TimeUnit.HOURS.toMillis(2),
+            initialDelay = TimeUnit.MINUTES.toMillis(2),
             period = TimeUnit.HOURS.toMillis(1)
         ) {
             if (kjørSetup) {
@@ -359,12 +359,10 @@ class K9KlageTilLosAdapterTjeneste(
     }
 
     fun setup() {
-        /*
         val objectMapper = jacksonObjectMapper()
         opprettOmråde()
         opprettFeltdefinisjoner(objectMapper)
         opprettOppgavetype(objectMapper)
-         */
     }
 
     private fun opprettOmråde() {
