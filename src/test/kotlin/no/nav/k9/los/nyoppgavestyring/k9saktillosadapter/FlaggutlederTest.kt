@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.k9saktillosadapter
 
+import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Ventekategori
@@ -7,7 +8,9 @@ import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
+import org.junit.Ignore
 import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.koin.test.get
 import java.time.LocalDateTime
@@ -17,11 +20,11 @@ import kotlin.test.assertNull
 class FlaggutlederTest : AbstractK9LosIntegrationTest() {
 
     @Test
-    fun `ingen åpne aksjonspunkter og ingen steg gir ingen flagg`() {
+    fun `avsluttet behandling og ingen steg gir ingen flagg`() {
         val k9SakTilLosAdapterTjeneste = get<K9SakTilLosAdapterTjeneste>()
 
         val ventetype =
-            k9SakTilLosAdapterTjeneste.utledVentetype(behandlingSteg = null, åpneAksjonspunkter = emptyList())
+            k9SakTilLosAdapterTjeneste.utledVentetype(behandlingSteg = null, behandlingStatus = BehandlingStatus.AVSLUTTET.kode, åpneAksjonspunkter = emptyList())
 
         assertNull(ventetype)
     }
@@ -33,6 +36,7 @@ class FlaggutlederTest : AbstractK9LosIntegrationTest() {
         val ventetype =
             k9SakTilLosAdapterTjeneste.utledVentetype(
                 behandlingSteg = BehandlingStegType.INNHENT_REGISTEROPP.toString(),
+                behandlingStatus = null,
                 åpneAksjonspunkter = emptyList()
             )
 
@@ -45,6 +49,7 @@ class FlaggutlederTest : AbstractK9LosIntegrationTest() {
 
         val ventetype = k9SakTilLosAdapterTjeneste.utledVentetype(
             behandlingSteg = BehandlingStegType.VURDER_MEDISINSKE_VILKÅR.toString(),
+            behandlingStatus = null,
             åpneAksjonspunkter = listOf(
                 AksjonspunktTilstandDto(
                     "9001",
@@ -62,24 +67,15 @@ class FlaggutlederTest : AbstractK9LosIntegrationTest() {
     }
 
     @Test
-    fun `ikke aktivt behandlingssteg men åpne AP er feiltilstand`() {
+    fun `avsluttet behandling, men åpne AP er feiltilstand`() {
         val k9SakTilLosAdapterTjeneste = get<K9SakTilLosAdapterTjeneste>()
 
         assertThrows(IllegalStateException::class.java) {
             k9SakTilLosAdapterTjeneste.utledVentetype(
                 behandlingSteg = null,
-                åpneAksjonspunkter = listOf(
-                    AksjonspunktTilstandDto(
-                        "9001",
-                        AksjonspunktStatus.OPPRETTET,
-                        Venteårsak.LEGEERKLÆRING,
-                        "saksbehandler",
-                        LocalDateTime.now().plusDays(1),
-                        null,
-                        null
-                    )
+                behandlingStatus = BehandlingStatus.UTREDES.kode,
+                åpneAksjonspunkter = emptyList()
                 )
-            )
         }
     }
 
@@ -89,6 +85,7 @@ class FlaggutlederTest : AbstractK9LosIntegrationTest() {
 
         val ventetype = k9SakTilLosAdapterTjeneste.utledVentetype(
             behandlingSteg = BehandlingStegType.VURDER_MEDISINSKE_VILKÅR.getKode(),
+            behandlingStatus = null,
             åpneAksjonspunkter = listOf(
                 AksjonspunktTilstandDto(
                     "9001",
@@ -111,6 +108,7 @@ class FlaggutlederTest : AbstractK9LosIntegrationTest() {
 
         val ventetype = k9SakTilLosAdapterTjeneste.utledVentetype(
             behandlingSteg = BehandlingStegType.INREG_AVSL.getKode(),
+            behandlingStatus = null,
             åpneAksjonspunkter = listOf(
                 AksjonspunktTilstandDto(
                     "9001",
@@ -125,5 +123,28 @@ class FlaggutlederTest : AbstractK9LosIntegrationTest() {
         )
 
         assertEquals(Ventekategori.AVVENTER_ANNET, ventetype)
+    }
+
+    @Test
+    fun `forvent aksjonspunkt med ventefrist og -årsak hvis behandlingen er åpen, men ingen steg er aktive`() {
+        val k9SakTilLosAdapterTjeneste = get<K9SakTilLosAdapterTjeneste>()
+
+        assertThrows(IllegalStateException::class.java) {
+            val ventetype = k9SakTilLosAdapterTjeneste.utledVentetype(
+                behandlingSteg = null,
+                behandlingStatus = BehandlingStatus.UTREDES.kode,
+                åpneAksjonspunkter = listOf(
+                    AksjonspunktTilstandDto(
+                        "9001",
+                        AksjonspunktStatus.OPPRETTET,
+                        null,
+                        "saksbehandler",
+                        null,
+                        null,
+                        null
+                    )
+                )
+            )
+        }
     }
 }
