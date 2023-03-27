@@ -111,6 +111,11 @@
           "påkrevd": true
         },
         {
+          "id": "avventerSaksbehandler",
+          "visPåOppgave": true,
+          "påkrevd": true
+        },
+        {
           "id": "helautomatiskBehandlet",
           "visPåOppgave": false,
           "påkrevd": true
