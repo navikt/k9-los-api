@@ -137,19 +137,12 @@ class K9SakTilLosAdapterTjeneste(
         return eventTeller
     }
 
-    private fun loggFremgangForHver100(teller: Long, tekst: String) {
-        if (teller.mod(100) == 0) {
-            log.info(tekst)
-        }
-    }
-
-
     private fun oppgaveSkalHaVentestatus(event: BehandlingProsessEventDto): Boolean {
         val åpneAksjonspunkter = event.aksjonspunktTilstander.filter { aksjonspunktTilstand ->
             aksjonspunktTilstand.status.erÅpentAksjonspunkt()
         }
 
-        val ventetype = utledVentetype(event.behandlingSteg, åpneAksjonspunkter)
+        val ventetype = utledVentetype(event.behandlingSteg, event.behandlingStatus, åpneAksjonspunkter)
         return ventetype != Ventekategori.AVVENTER_SAKSBEHANDLER
     }
 
@@ -195,7 +188,7 @@ class K9SakTilLosAdapterTjeneste(
         utledÅpneAksjonspunkter(event.behandlingSteg, åpneAksjonspunkter, oppgaveFeltverdiDtos)
         utledVenteÅrsakOgFrist(åpneAksjonspunkter, oppgaveFeltverdiDtos)
         utledAutomatiskBehandletFlagg(forrigeOppgave, oppgaveFeltverdiDtos, harManueltAksjonspunkt)
-        oppgaveFeltverdiDtos.addAll(ventekategoriTilFlagg(utledVentetype(event.behandlingSteg, åpneAksjonspunkter)))
+        oppgaveFeltverdiDtos.addAll(ventekategoriTilFlagg(utledVentetype(event.behandlingSteg, event.behandlingStatus, åpneAksjonspunkter)))
 
         return oppgaveFeltverdiDtos
     }
@@ -289,14 +282,15 @@ class K9SakTilLosAdapterTjeneste(
 
     internal fun utledVentetype(
         behandlingSteg: String?,
+        behandlingStatus: String?,
         åpneAksjonspunkter: List<AksjonspunktTilstandDto>
     ): Ventekategori? {
-        if (behandlingSteg.isNullOrEmpty()) {
-            if (åpneAksjonspunkter.isEmpty()) {
-                return null
-            } else {
-                throw IllegalStateException("Aktivt aksjonspunkt: ${åpneAksjonspunkter.first().aksjonspunktKode}, men ikke aktivt behandlingssteg")
-            }
+        if (behandlingStatus != BehandlingStatus.AVSLUTTET.kode && behandlingSteg.isNullOrEmpty() && åpneAksjonspunkter.isEmpty()) {
+            throw IllegalStateException("Åpen behandling, uten behandlingssteg eller aksjonspunkt")
+        }
+
+        if (behandlingStatus == BehandlingStatus.AVSLUTTET.kode) {
+            return null
         }
 
         if (åpneAksjonspunkter.isEmpty()) {
@@ -312,6 +306,9 @@ class K9SakTilLosAdapterTjeneste(
             return førsteAPMedFristOgVenteårsak.venteårsak.ventekategori
         }
 
+        if (behandlingSteg.isNullOrEmpty()) {
+            throw IllegalStateException("Ikke aktivt behandlingssteg, og mangler aksjonspunkt med ventefrist")
+        }
 
         val ventekategorierPrioritert = listOf(
             Ventekategori.AVVENTER_TEKNISK_FEIL,
@@ -569,4 +566,9 @@ class K9SakTilLosAdapterTjeneste(
         )
     }
 
+    private fun loggFremgangForHver100(teller: Long, tekst: String) {
+        if (teller.mod(100) == 0) {
+            log.info(tekst)
+        }
+    }
 }
