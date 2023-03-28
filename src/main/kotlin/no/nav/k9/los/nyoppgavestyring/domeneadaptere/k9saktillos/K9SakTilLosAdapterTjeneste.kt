@@ -20,7 +20,6 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
@@ -319,14 +318,23 @@ class K9SakTilLosAdapterTjeneste(
             Ventekategori.AVVENTER_ANNET_IKKE_SAKSBEHANDLINGSTID
         )
 
-        //Hvis ingen venteårsak hentes ventekategori fra løsbare aksjonspunkt i prioritert rekkefølge
-        val løsbareAksjonspunkt = åpneAksjonspunkter.filter { åpentAksjonspunkt ->
+        // Prioriter autopunkter fremfor andre aksjonspunkter
+        val autopunkter = åpneAksjonspunkter.filter { åpentAksjonspunkt ->
             val aksjonspunktDefinisjon = AksjonspunktDefinisjon.fraKode(åpentAksjonspunkt.aksjonspunktKode)
-            aksjonspunktDefinisjon.erAutopunkt() || aksjonspunktDefinisjon.behandlingSteg != null && aksjonspunktDefinisjon.behandlingSteg.kode == behandlingSteg
+            aksjonspunktDefinisjon.erAutopunkt()
+        }
+        ventekategorierPrioritert.forEach { ventekategori ->
+            if (apInneholder(autopunkter, ventekategori)) {
+                return ventekategori
+            }
         }
 
+        val løsbareManuelleAksjonspunkter = åpneAksjonspunkter.filter { åpentAksjonspunkt ->
+            val aksjonspunktDefinisjon = AksjonspunktDefinisjon.fraKode(åpentAksjonspunkt.aksjonspunktKode)
+            aksjonspunktDefinisjon.behandlingSteg != null && aksjonspunktDefinisjon.behandlingSteg.kode == behandlingSteg
+        }
         ventekategorierPrioritert.forEach { ventekategori ->
-            if (apInneholder(løsbareAksjonspunkt, ventekategori)) {
+            if (apInneholder(løsbareManuelleAksjonspunkter, ventekategori)) {
                 return ventekategori
             }
         }
