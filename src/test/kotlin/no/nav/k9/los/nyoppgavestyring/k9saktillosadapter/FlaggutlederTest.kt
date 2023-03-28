@@ -24,7 +24,11 @@ class FlaggutlederTest : AbstractK9LosIntegrationTest() {
         val k9SakTilLosAdapterTjeneste = get<K9SakTilLosAdapterTjeneste>()
 
         val ventetype =
-            k9SakTilLosAdapterTjeneste.utledVentetype(behandlingSteg = null, behandlingStatus = BehandlingStatus.AVSLUTTET.kode, åpneAksjonspunkter = emptyList())
+            k9SakTilLosAdapterTjeneste.utledVentetype(
+                behandlingSteg = null,
+                behandlingStatus = BehandlingStatus.AVSLUTTET.kode,
+                åpneAksjonspunkter = emptyList()
+            )
 
         assertNull(ventetype)
     }
@@ -75,7 +79,7 @@ class FlaggutlederTest : AbstractK9LosIntegrationTest() {
                 behandlingSteg = null,
                 behandlingStatus = BehandlingStatus.UTREDES.kode,
                 åpneAksjonspunkter = emptyList()
-                )
+            )
         }
     }
 
@@ -126,25 +130,25 @@ class FlaggutlederTest : AbstractK9LosIntegrationTest() {
     }
 
     @Test
-    fun `forvent aksjonspunkt med ventefrist og -årsak hvis behandlingen er åpen, men ingen steg er aktive`() {
+    fun `forvent Avventer Annet hvis ingen aksjonspunkter med ventefrist og -årsak og behandlingen er åpen, men ingen steg er aktive`() {
         val k9SakTilLosAdapterTjeneste = get<K9SakTilLosAdapterTjeneste>()
 
-        assertThrows(IllegalStateException::class.java) {
-            val ventetype = k9SakTilLosAdapterTjeneste.utledVentetype(
-                behandlingSteg = null,
-                behandlingStatus = BehandlingStatus.UTREDES.kode,
-                åpneAksjonspunkter = listOf(
-                    AksjonspunktTilstandDto(
-                        "9001",
-                        AksjonspunktStatus.OPPRETTET,
-                        null,
-                        "saksbehandler",
-                        null,
-                        null,
-                        null
-                    )
+        val ventetype = k9SakTilLosAdapterTjeneste.utledVentetype(
+            behandlingSteg = null,
+            behandlingStatus = BehandlingStatus.UTREDES.kode,
+            åpneAksjonspunkter = listOf(
+                AksjonspunktTilstandDto(
+                    "9001",
+                    AksjonspunktStatus.OPPRETTET,
+                    null,
+                    "saksbehandler",
+                    null,
+                    null,
+                    null
                 )
             )
-        }
+        )
+
+        assertEquals(Ventekategori.AVVENTER_ANNET, ventetype)
     }
 }

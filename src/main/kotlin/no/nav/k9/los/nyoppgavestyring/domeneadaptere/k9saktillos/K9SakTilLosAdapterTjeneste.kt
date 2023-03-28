@@ -310,10 +310,6 @@ class K9SakTilLosAdapterTjeneste(
             aksjonspunktDefinisjon.erAutopunkt()
         }
 
-        if (autopunkter.isEmpty() && behandlingSteg.isNullOrEmpty()) {
-            throw IllegalStateException("Ikke aktivt behandlingssteg, og mangler autopunkt eller aksjonspunkt med ventefrist")
-        }
-
         val ventekategorierPrioritert = listOf(
             Ventekategori.AVVENTER_TEKNISK_FEIL,
             Ventekategori.AVVENTER_SAKSBEHANDLER,
