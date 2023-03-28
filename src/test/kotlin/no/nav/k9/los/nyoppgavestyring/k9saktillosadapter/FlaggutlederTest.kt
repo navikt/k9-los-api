@@ -71,16 +71,17 @@ class FlaggutlederTest : AbstractK9LosIntegrationTest() {
     }
 
     @Test
-    fun `avsluttet behandling, men åpne AP er feiltilstand`() {
+    fun `avsluttet behandling, men ingen AP gir avventer annet`() {
         val k9SakTilLosAdapterTjeneste = get<K9SakTilLosAdapterTjeneste>()
 
-        assertThrows(IllegalStateException::class.java) {
-            k9SakTilLosAdapterTjeneste.utledVentetype(
-                behandlingSteg = null,
-                behandlingStatus = BehandlingStatus.UTREDES.kode,
-                åpneAksjonspunkter = emptyList()
-            )
-        }
+
+        val ventetype = k9SakTilLosAdapterTjeneste.utledVentetype(
+            behandlingSteg = null,
+            behandlingStatus = BehandlingStatus.UTREDES.kode,
+            åpneAksjonspunkter = emptyList()
+        )
+
+        assertEquals(Ventekategori.AVVENTER_ANNET, ventetype)
     }
 
     @Test
