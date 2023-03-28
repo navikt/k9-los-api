@@ -14,7 +14,7 @@ spec:
           for: 2m
           annotations:
             consequence: Application is unavailable
-            action: "`kubectl describe pod {{ $labels.container }} -n {{ $labels.namespace }}` for events, og `kubectl logs {{ $labels.pod }} -c {{ $labels.app }} -n {{ $labels.namespace }}` for logger, eller sjekk <https://logs.adeo.no/app/discover#/?_g=(time:(from:now-24h,to:now))&_a=(columns:!(message,envclass,level),index:'96e648c0-980a-11e9-830a-e17bbd64b4db',interval:auto,query:(language:lucene,query:'%2Bapplication:%22k9-los-api%22%20%2Bcluster:{{cluster}}%20%2Blevel:Error'))|kibana>"
+            action: "`kubectl describe pod {{ $labels.container }} -n {{ $labels.namespace }}` for events, og `kubectl logs {{ $labels.pod }} -c {{ $labels.app }} -n {{ $labels.namespace }}` for logger, eller sjekk <https://logs.adeo.no/app/discover#/?_g=(time:(from:now-24h,to:now))&_a=(columns:!(message,envclass,level),index:'96e648c0-980a-11e9-830a-e17bbd64b4db',interval:auto,query:(language:lucene,query:'%2Bapplication:%22k9-los-api%22%20%2Bcluster:{{ $labels.cluster }}%20%2Blevel:Error'))|kibana>"
             summary: |-
               Applikasjonen er nede
           labels:
@@ -25,7 +25,7 @@ spec:
           for: 3m
           annotations:
             consequence: High error rate
-            action: "`kubectl logs {{ $labels.container }} -n {{ $labels.namespace }}` - <https://logs.adeo.no/app/discover#/?_g=(time:(from:now-24h,to:now))&_a=(columns:!(message,envclass,level),index:'96e648c0-980a-11e9-830a-e17bbd64b4db',interval:auto,query:(language:lucene,query:'%2Bapplication:%22k9-los-api%22%20%2Bcluster:{{cluster}}%20%2Blevel:Error'))|kibana>"
+            action: "`kubectl logs {{ $labels.container }} -n {{ $labels.namespace }}` - <https://logs.adeo.no/app/discover#/?_g=(time:(from:now-24h,to:now))&_a=(columns:!(message,envclass,level),index:'96e648c0-980a-11e9-830a-e17bbd64b4db',interval:auto,query:(language:lucene,query:'%2Bapplication:%22k9-los-api%22%20%2Bcluster:{{ $labels.cluster }}%20%2Blevel:Error'))|kibana>"
             summary: |-
               høy feilrate i logger
           labels:
@@ -36,7 +36,7 @@ spec:
           for: 1m
           annotations:
             consequence: Stream failing
-            action: "`kubectl logs {{ $labels.container }} -n {{ $labels.namespace }}` - <https://logs.adeo.no/app/discover#/?_g=(time:(from:now-24h,to:now))&_a=(columns:!(message,envclass,level),index:'96e648c0-980a-11e9-830a-e17bbd64b4db',interval:auto,query:(language:lucene,query:'%2Bapplication:%22k9-los-api%22%20%2Bcluster:{{cluster}}%20%2Blevel:Error'))|kibana>"
+            action: "`kubectl logs {{ $labels.container }} -n {{ $labels.namespace }}` - <https://logs.adeo.no/app/discover#/?_g=(time:(from:now-24h,to:now))&_a=(columns:!(message,envclass,level),index:'96e648c0-980a-11e9-830a-e17bbd64b4db',interval:auto,query:(language:lucene,query:'%2Bapplication:%22k9-los-api%22%20%2Bcluster:{{ $labels.cluster }}%20%2Blevel:Error'))|kibana>"
             summary: |-
               {{ $labels.stream }}-stream feiler. Sjekk logger
           labels:
