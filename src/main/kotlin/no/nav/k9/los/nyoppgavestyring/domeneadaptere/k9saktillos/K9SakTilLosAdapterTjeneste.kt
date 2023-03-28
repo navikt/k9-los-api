@@ -305,8 +305,13 @@ class K9SakTilLosAdapterTjeneste(
             return førsteAPMedFristOgVenteårsak.venteårsak.ventekategori
         }
 
-        if (behandlingSteg.isNullOrEmpty()) {
-            throw IllegalStateException("Ikke aktivt behandlingssteg, og mangler aksjonspunkt med ventefrist")
+        val autopunkter = åpneAksjonspunkter.filter { åpentAksjonspunkt ->
+            val aksjonspunktDefinisjon = AksjonspunktDefinisjon.fraKode(åpentAksjonspunkt.aksjonspunktKode)
+            aksjonspunktDefinisjon.erAutopunkt()
+        }
+
+        if (autopunkter.isEmpty() && behandlingSteg.isNullOrEmpty()) {
+            throw IllegalStateException("Ikke aktivt behandlingssteg, og mangler autopunkt eller aksjonspunkt med ventefrist")
         }
 
         val ventekategorierPrioritert = listOf(
@@ -319,10 +324,6 @@ class K9SakTilLosAdapterTjeneste(
         )
 
         // Prioriter autopunkter fremfor andre aksjonspunkter
-        val autopunkter = åpneAksjonspunkter.filter { åpentAksjonspunkt ->
-            val aksjonspunktDefinisjon = AksjonspunktDefinisjon.fraKode(åpentAksjonspunkt.aksjonspunktKode)
-            aksjonspunktDefinisjon.erAutopunkt()
-        }
         ventekategorierPrioritert.forEach { ventekategori ->
             if (apInneholder(autopunkter, ventekategori)) {
                 return ventekategori
