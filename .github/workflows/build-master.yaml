@@ -9,7 +9,7 @@ on:
       - '.gitignore'
       - 'LICENSE'
       - 'CODEOWNERS'
-      - 'alerts/*'
+      - 'nais/alerts.yml'
       - '.github/workflows/deploy-alerts.yml'
 
 env:
