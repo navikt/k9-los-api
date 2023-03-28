@@ -285,7 +285,7 @@ class K9SakTilLosAdapterTjeneste(
         åpneAksjonspunkter: List<AksjonspunktTilstandDto>
     ): Ventekategori? {
         if (behandlingStatus != BehandlingStatus.AVSLUTTET.kode && behandlingSteg.isNullOrEmpty() && åpneAksjonspunkter.isEmpty()) {
-            throw IllegalStateException("Åpen behandling, uten behandlingssteg eller aksjonspunkt")
+            return Ventekategori.AVVENTER_ANNET //TODO: Finne ut hva for et case dette egentlig er?
         }
 
         if (behandlingStatus == BehandlingStatus.AVSLUTTET.kode) {
