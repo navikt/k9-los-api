@@ -1,5 +1,4 @@
 name: Deploy alerts to NAIS
-
 on:
   push:
     paths:
