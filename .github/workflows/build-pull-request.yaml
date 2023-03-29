@@ -10,7 +10,7 @@ on:
       - 'CODEOWNERS'
       - 'nais/**'
       - 'gradle/**'
-      - 'nais/alerts.yml'
+      - 'nais/alerts/*'
       - '.github/workflows/deploy-alerts.yml'
 
 jobs:

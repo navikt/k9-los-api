@@ -20,6 +20,8 @@ spec:
           labels:
             namespace: k9saksbehandling
             severity: critical
+            special_type_to_use_in_alertmanager_config: k9-los-alert-manager
+            alert_type: custom
         - alert: høy feilrate i logger
           expr: (100 * sum by (log_app, log_namespace) (rate(logd_messages_total{log_app="k9-los-api",log_level=~"Warning|Error"}[3m])) / sum by (log_app, log_namespace) (rate(logd_messages_total{log_app="k9-los-api"}[3m]))) > 10
           for: 3m
@@ -31,6 +33,8 @@ spec:
           labels:
             namespace: k9saksbehandling
             severity: critical
+            special_type_to_use_in_alertmanager_config: k9-los-alert-manager
+            alert_type: custom
         - alert: Prosessering feiler
           expr: stream_status{app="k9-los-api"} > 0
           for: 1m
@@ -42,3 +46,5 @@ spec:
           labels:
             namespace: k9saksbehandling
             severity: critical
+            special_type_to_use_in_alertmanager_config: k9-los-alert-manager
+            alert_type: custom
