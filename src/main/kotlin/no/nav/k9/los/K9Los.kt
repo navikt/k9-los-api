@@ -185,6 +185,7 @@ fun Application.k9Los() {
 
     OppgavestatistikkTjeneste(
         oppgaveRepository = koin.get(),
+        oppgavetypeRepository = koin.get(),
         statistikkPublisher = koin.get(),
         transactionalManager = koin.get(),
         statistikkRepository = koin.get(),

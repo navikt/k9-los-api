@@ -27,13 +27,11 @@ import no.nav.k9.los.integrasjon.omsorgspenger.OmsorgspengerServiceLocal
 import no.nav.k9.los.integrasjon.pdl.IPdlService
 import no.nav.k9.los.integrasjon.pdl.PdlServiceLocal
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
-import no.nav.k9.los.Configuration
-import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.aksjonspunktbehandling.K9KlageEventHandler
 import no.nav.k9.los.domene.repository.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.StatistikkRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.OppgaveTilBehandlingMapper
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.K9SakOppgaveTilDVHMapper
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.OppgaveTilSakMapper
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.StatistikkPublisher
@@ -262,7 +260,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single { OppgaveV3Repository(dataSource = get()) }
     single { BehandlingProsessEventK9Repository(dataSource = get()) }
     single { BehandlingProsessEventKlageRepository(dataSource = get()) }
-    single { OppgaveTilBehandlingMapper() }
+    single { K9SakOppgaveTilDVHMapper() }
     single { OppgaveTilSakMapper() }
     single { OppgaveRepository(oppgavetypeRepository = get()) }
     single { StatistikkRepository(dataSource = get()) }
@@ -272,6 +270,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         OppgavestatistikkTjeneste(
             oppgaveRepository = get(),
+            oppgavetypeRepository = get(),
             statistikkPublisher = get(),
             transactionalManager = get(),
             statistikkRepository = get(),
