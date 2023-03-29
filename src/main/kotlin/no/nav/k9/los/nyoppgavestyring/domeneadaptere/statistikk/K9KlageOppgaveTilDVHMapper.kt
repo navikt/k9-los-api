@@ -1,7 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk
 
 import no.nav.k9.klage.kodeverk.behandling.BehandlingStatus
-import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.los.domene.modell.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
