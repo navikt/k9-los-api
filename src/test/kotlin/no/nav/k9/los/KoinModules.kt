@@ -7,6 +7,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import kotlinx.coroutines.channels.Channel
+import no.nav.k9.los.aksjonspunktbehandling.K9KlageEventHandler
 import no.nav.k9.los.aksjonspunktbehandling.K9TilbakeEventHandler
 import no.nav.k9.los.aksjonspunktbehandling.K9punsjEventHandler
 import no.nav.k9.los.aksjonspunktbehandling.K9sakEventHandler
@@ -15,6 +16,7 @@ import no.nav.k9.los.domene.lager.oppgave.v2.BehandlingsmigreringTjeneste
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveTjenesteV2
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.domene.repository.*
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.abac.PepClientLocal
 import no.nav.k9.los.integrasjon.azuregraph.AzureGraphServiceLocal
@@ -27,14 +29,9 @@ import no.nav.k9.los.integrasjon.omsorgspenger.OmsorgspengerServiceLocal
 import no.nav.k9.los.integrasjon.pdl.IPdlService
 import no.nav.k9.los.integrasjon.pdl.PdlServiceLocal
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
-import no.nav.k9.los.aksjonspunktbehandling.K9KlageEventHandler
-import no.nav.k9.los.domene.repository.*
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.StatistikkRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.K9SakOppgaveTilDVHMapper
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.OppgaveTilSakMapper
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.OppgavestatistikkTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.StatistikkPublisher
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.*
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.StatistikkRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
@@ -261,7 +258,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single { BehandlingProsessEventK9Repository(dataSource = get()) }
     single { BehandlingProsessEventKlageRepository(dataSource = get()) }
     single { K9SakOppgaveTilDVHMapper() }
-    single { OppgaveTilSakMapper() }
+    single { K9KlageOppgaveTilDVHMapper() }
     single { OppgaveRepository(oppgavetypeRepository = get()) }
     single { StatistikkRepository(dataSource = get()) }
 
