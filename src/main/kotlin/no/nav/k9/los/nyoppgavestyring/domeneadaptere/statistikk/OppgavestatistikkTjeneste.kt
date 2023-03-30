@@ -26,7 +26,7 @@ class OppgavestatistikkTjeneste(
     private val TRÅDNAVN = "k9los-til-statistikk"
 
     fun kjør(kjørUmiddelbart: Boolean = false) {
-        if (config.nyOppgavestyringAktivert()) {
+        if (config.nyOppgavestyringDvhSendingAktivert()) {
             when (kjørUmiddelbart) {
                 true -> spillAvUmiddelbart()
                 false -> schedulerAvspilling()
@@ -103,8 +103,7 @@ class OppgavestatistikkTjeneste(
             beslutter = "-5",
             saksbehandler = "-5",
             behandlingOpprettetAv = "-5",
-            ansvarligEnhetKode = "-5",
-            behandlendeEnhetKode = "-5"
+            ansvarligEnhetKode = "-5"
         )
     }
 
