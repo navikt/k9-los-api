@@ -2,6 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk
 
 import no.nav.k9.klage.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.klage.kodeverk.behandling.BehandlingStatus
+import no.nav.k9.klage.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.los.domene.modell.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import java.time.LocalDate
@@ -29,8 +30,8 @@ class K9KlageOppgaveTilDVHMapper {
             vedtakId = oppgave.hentVerdi("vedtakId"), //TODO: callback mot K9? evt vedtakstopic, YtelseV1.vedtakReferanse
             saksnummer = oppgave.hentVerdi("saksnummer"),
             behandlingType = oppgave.hentVerdi("behandlingTypekode")
-                ?.let { BehandlingType.fraKode(it).navn },
-            behandlingStatus = BehandlingStatus.fraKode(oppgave.hentVerdi("behandlingsstatus")).navn,
+                ?.let { BehandlingType.fraKode(it).kode },
+            behandlingStatus = BehandlingStatus.fraKode(oppgave.hentVerdi("behandlingsstatus")).kode,
             resultat = oppgave.hentVerdi("resultattype"),
             resultatBegrunnelse = null, //TODO: callback mot K9?
             utenlandstilsnitt = null, //Ikke i bruk i k9-klage
@@ -44,10 +45,8 @@ class K9KlageOppgaveTilDVHMapper {
             behandlingOpprettetAv = "system",
             behandlingOpprettetType = null,
             behandlingOpprettetTypeBeskrivelse = null,
-            ansvarligEnhetKode = oppgave.hentVerdi("behandlendeEnhet") ?: "SRV", //TODO: enhetskodene mangler p.t.
+            ansvarligEnhetKode = utledEnhetskode(oppgave),
             ansvarligEnhetType = "NORG",
-            behandlendeEnhetKode = oppgave.hentVerdi("behandlendeEnhet") ?: "SRV", //TODO: enhetskodene mangler p.t.
-            behandlendeEnhetType = "NORG",
             datoForUttak = null, // TODO: mappes fra YtelseV1.anvist.firstOrNull()?.periode?.fom, men trengs ikke?
             datoForUtbetaling = null, //TODO: trengs ikke?
             totrinnsbehandling = oppgave.hentVerdi("totrinnskontroll").toBoolean(),
@@ -76,6 +75,29 @@ class K9KlageOppgaveTilDVHMapper {
             versjon = 1 // TODO blir dette riktig?
         )
     }
+
+    private fun utledEnhetskode(oppgave: Oppgave) =
+        when (FagsakYtelseType.fraKode(oppgave.hentVerdi("ytelsestype"))) {
+            FagsakYtelseType.FRISINN -> "4863"
+            FagsakYtelseType.DAGPENGER -> "4487"
+            FagsakYtelseType.SYKEPENGER -> "4487"
+            FagsakYtelseType.PLEIEPENGER_SYKT_BARN -> "4487"
+            FagsakYtelseType.PLEIEPENGER_NÆRSTÅENDE -> "4487"
+            FagsakYtelseType.OMSORGSPENGER -> "4487"
+            FagsakYtelseType.OMSORGSPENGER_KS -> "4487"
+            FagsakYtelseType.OMSORGSPENGER_MA -> "4487"
+            FagsakYtelseType.OMSORGSPENGER_AO -> "4487"
+            FagsakYtelseType.OPPLÆRINGSPENGER -> "4487"
+            FagsakYtelseType.PÅRØRENDESYKDOM -> "4487"
+            FagsakYtelseType.ARBEIDSAVKLARINGSPENGER -> "4487"
+            FagsakYtelseType.ENGANGSTØNAD -> "4487"
+            FagsakYtelseType.FORELDREPENGER -> "4487"
+            FagsakYtelseType.SVANGERSKAPSPENGER -> "4487"
+            FagsakYtelseType.ENSLIG_FORSØRGER -> "4487"
+            FagsakYtelseType.OBSOLETE -> "4487"
+            FagsakYtelseType.UDEFINERT -> "4487"
+            else -> throw IllegalStateException("Ukjent ytelsestype: ${oppgave.hentVerdi("ytelsestype")}")
+        }
 
     private fun utledAktørId(aktørId: String?): Long? {
         val aktørIdLong = kotlin.runCatching { aktørId?.toLong() }.getOrNull()
