@@ -8,6 +8,7 @@ import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 import kotlin.concurrent.timer
@@ -53,6 +54,11 @@ class OppgavestatistikkTjeneste(
             initialDelay = TimeUnit.MINUTES.toMillis(5),
             period = TimeUnit.HOURS.toMillis(1)
         ) {
+            if (LocalDateTime.now().isBefore(LocalDateTime.of(2023, 3, 30, 14, 0))) {
+                log.info("Nullstiller datavarehussending")
+                statistikkRepository.fjernSendtMarkering()
+                log.info("Datavarehussending nullstilt")
+            }
             try {
                 spillAvStatistikk()
             } catch (e: Exception) {
