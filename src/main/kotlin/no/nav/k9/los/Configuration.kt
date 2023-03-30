@@ -113,6 +113,10 @@ data class Configuration(private val config: ApplicationConfig) {
         return config.getOptionalString("nav.features.nyOppgavestyring", secret = false).toBoolean()
     }
 
+    internal fun nyOppgavestyringDvhSendingAktivert(): Boolean {
+        return config.getOptionalString("nav.features.nyOppgavestyringDvhSending", secret = false).toBoolean()
+    }
+
     internal fun nyOppgavestyringRestAktivert(): Boolean {
         return config.getOptionalString("nav.features.nyOppgavestyringRestApi", secret = false).toBoolean()
     }
