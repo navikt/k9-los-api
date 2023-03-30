@@ -103,8 +103,7 @@ class OppgavestatistikkTjeneste(
             beslutter = "-5",
             saksbehandler = "-5",
             behandlingOpprettetAv = "-5",
-            ansvarligEnhetKode = "-5",
-            behandlendeEnhetKode = "-5"
+            ansvarligEnhetKode = "-5"
         )
     }
 
