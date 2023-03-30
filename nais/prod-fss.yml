@@ -137,7 +137,7 @@ spec:
     - name: NY_OPPGAVESTYRING
       value: "true"
     - name: NY_OPPGAVESTYRING_DVH_SENDING
-      value: "false"
+      value: "true"
     - name: NY_OPPGAVESTYRING_REST_API
       value: "false"
     - name: K9SAK_CONSUMER_AIVEN
