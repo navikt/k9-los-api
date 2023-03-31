@@ -263,25 +263,32 @@ class OppgaveV3Repository(
     }
 
     fun slettOppgaverOgFelter() {
-        using(sessionOf(dataSource)) { session ->
-            log.info("trunkerer oppgavetabeller")
-            session.transaction { tx ->
-                tx.run(
-                    queryOf("""truncate table oppgave_v3_sendt_dvh, oppgavefelt_verdi, oppgave_v3, oppgavefelt, oppgavetype, feltdefinisjon""").asUpdate
-                )
-            }
-            log.info("resetter dirtyflagg på k9sak-eventer")
-            session.transaction { tx ->
-                tx.run(
-                    queryOf("""update behandling_prosess_events_k9 set dirty = true""").asUpdate
-                )
-            }
-            log.info("resetter dirtyflagg på k9klage-eventer")
-            session.transaction { tx ->
-                tx.run(
-                    queryOf("""update behandling_prosess_events_klage set dirty = true""").asUpdate
-                )
-            }
+        using(sessionOf(dataSource)) {
+            it.run(
+                queryOf("""truncate table oppgave_v3_sendt_dvh""").asUpdate
+            )
+            it.run(
+                queryOf("""truncate table oppgavefelt_verdi""").asUpdate
+            )
+            it.run(
+                queryOf("""truncate table oppgave_v3""").asUpdate
+            )
+            it.run(
+                queryOf("""update behandling_prosess_events_k9 set dirty = true""").asUpdate
+            )
+            it.run(
+                queryOf("""update behandling_prosess_events_klage set dirty = true""").asUpdate
+            )
+            it.run(
+                queryOf("""truncate table oppgavefelt""").asUpdate
+            )
+            it.run(
+                queryOf("""truncate table oppgavetype""").asUpdate
+            )
+            it.run(
+                queryOf("""truncate table feltdefinisjon""").asUpdate
+            )
+
         }
     }
 
