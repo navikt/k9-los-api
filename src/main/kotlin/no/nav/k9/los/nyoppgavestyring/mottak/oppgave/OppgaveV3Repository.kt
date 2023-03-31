@@ -58,7 +58,7 @@ class OppgaveV3Repository(
                         row.long("oppgavetype_id"),
                         tx
                     ),
-                    status = row.string("status"),
+                    status = Oppgavestatus.valueOf(row.string("status")),
                     endretTidspunkt = row.localDateTime("endret_tidspunkt"),
                     kildeområde = row.string("kildeomrade"),
                     felter = hentFeltverdier(

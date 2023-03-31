@@ -322,7 +322,10 @@ fun common(app: Application, config: Configuration) = module {
     single { FeltdefinisjonRepository() }
     single { OmrådeRepository(get()) }
     single { OppgavetypeRepository(feltdefinisjonRepository = get(), områdeRepository = get()) }
-    single { OppgaveV3Repository(dataSource = get()) }
+    single { OppgaveV3Repository(
+        dataSource = get(),
+        oppgavetypeRepository = get())
+    }
     single { K9SakOppgaveTilDVHMapper() }
     single { K9KlageOppgaveTilDVHMapper() }
     single { OppgaveRepository(oppgavetypeRepository = get()) }
@@ -358,7 +361,8 @@ fun common(app: Application, config: Configuration) = module {
         OppgaveV3Tjeneste(
             oppgaveV3Repository = get(),
             oppgavetypeRepository = get(),
-            områdeRepository = get()
+            områdeRepository = get(),
+            transactionalManager = get()
         )
     }
     single {

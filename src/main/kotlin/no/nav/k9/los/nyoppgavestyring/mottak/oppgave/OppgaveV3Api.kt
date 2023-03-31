@@ -52,6 +52,7 @@ internal fun Route.OppgaveV3Api() {
         }
     }
 
+    /*
     patch ( "/{område}/{eksternId}/{eksternVersjon}" ) {
         if (config.nyOppgavestyringRestAktivert()) {
             requestContextService.withRequestContext(call) {
@@ -61,6 +62,7 @@ internal fun Route.OppgaveV3Api() {
             }
         }
     }
+    */
 
     // TODO fjernes før prodsetting, bare for test
     post("/lagbehandlinger") {

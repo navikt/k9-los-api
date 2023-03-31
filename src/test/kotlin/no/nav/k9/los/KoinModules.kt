@@ -254,7 +254,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single { FeltdefinisjonRepository() }
     single { OmrådeRepository(dataSource = get()) }
     single { OppgavetypeRepository(feltdefinisjonRepository = get(), områdeRepository = get()) }
-    single { OppgaveV3Repository(dataSource = get()) }
+    single { OppgaveV3Repository(dataSource = get(), oppgavetypeRepository = get()) }
     single { BehandlingProsessEventK9Repository(dataSource = get()) }
     single { BehandlingProsessEventKlageRepository(dataSource = get()) }
     single { K9SakOppgaveTilDVHMapper() }
@@ -287,7 +287,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         OppgaveV3Tjeneste(
             oppgaveV3Repository = get(),
             oppgavetypeRepository = get(),
-            områdeRepository = get()
+            områdeRepository = get(),
+            transactionalManager = get()
         )
     }
     single {
