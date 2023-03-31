@@ -60,8 +60,6 @@ class K9SakOppgaveTilDVHMapper {
     private fun utledEnhetskode(oppgave: Oppgave) =
         when (FagsakYtelseType.fraKode(oppgave.hentVerdi("ytelsestype"))) {
             FagsakYtelseType.FRISINN -> "4863"
-            FagsakYtelseType.DAGPENGER -> "4487"
-            FagsakYtelseType.SYKEPENGER -> "4487"
             FagsakYtelseType.PLEIEPENGER_SYKT_BARN -> "4487"
             FagsakYtelseType.PLEIEPENGER_NÆRSTÅENDE -> "4487"
             FagsakYtelseType.OMSORGSPENGER -> "4487"
@@ -70,11 +68,6 @@ class K9SakOppgaveTilDVHMapper {
             FagsakYtelseType.OMSORGSPENGER_AO -> "4487"
             FagsakYtelseType.OPPLÆRINGSPENGER -> "4487"
             FagsakYtelseType.PÅRØRENDESYKDOM -> "4487"
-            FagsakYtelseType.ARBEIDSAVKLARINGSPENGER -> "4487"
-            FagsakYtelseType.ENGANGSTØNAD -> "4487"
-            FagsakYtelseType.FORELDREPENGER -> "4487"
-            FagsakYtelseType.SVANGERSKAPSPENGER -> "4487"
-            FagsakYtelseType.ENSLIG_FORSØRGER -> "4487"
             FagsakYtelseType.OBSOLETE -> "4487"
             FagsakYtelseType.UDEFINERT -> "4487"
             else -> throw IllegalStateException("Ukjent ytelsestype: ${oppgave.hentVerdi("ytelsestype")}")
