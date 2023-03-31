@@ -1,10 +1,8 @@
 name: Deploy alerts to NAIS
-
 on:
   push:
     paths:
-      - 'alerts/*'
-      - '!alerts/README.md'
+      - 'nais/alerts/**'
       - '.github/workflows/deploy-alerts.yml'
     branches:
       - master
@@ -22,4 +20,9 @@ jobs:
         env:
           APIKEY: ${{ secrets.DEPLOY_KEY }}
           CLUSTER: ${{ matrix.cluster }}
-          RESOURCE: alerts/alerts-${{ matrix.cluster }}.yml
+          RESOURCE: nais/alerts/alert-manager.yml
+      - uses: nais/deploy/actions/deploy@v1
+        env:
+          APIKEY: ${{ secrets.DEPLOY_KEY }}
+          CLUSTER: ${{ matrix.cluster }}
+          RESOURCE: nais/alerts/alerts.yml

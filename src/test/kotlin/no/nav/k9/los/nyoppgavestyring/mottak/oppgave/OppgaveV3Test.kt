@@ -167,7 +167,7 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
                             id = "akkumulertVentetidSaksbehandler",
                             visPåOppgave = false,
                             påkrevd = true,
-                            feltutleder = "no.nav.k9.los.nyoppgavestyring.feltutledere.AkkumulertVentetidSaksbehandler",
+                            feltutleder = "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.AkkumulertVentetidSaksbehandler",
                         ),
                         OppgavefeltDto(
                             id = "avventerSaksbehandler",

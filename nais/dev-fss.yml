@@ -79,7 +79,7 @@ spec:
       value: https://k9-sak.nais.preprod.local/k9/sak/api
 
     - name: APP_OMSORGSPENGER_URL
-      value: https://omsorgspenger-sak.dev.intern.nav.no
+      value: https://omsorgspenger-sak.intern.dev.nav.no
 
       # Kafka
     - name: BOOTSTRAP_SERVERS
@@ -135,6 +135,8 @@ spec:
       # feature toggles
     - name: NY_OPPGAVESTYRING
       value: "true"
+    - name: NY_OPPGAVESTYRING_DVH_SENDING
+      value: "false"
     - name: NY_OPPGAVESTYRING_REST_API
       value: "true"
     - name: K9SAK_CONSUMER_AIVEN

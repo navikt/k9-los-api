@@ -23,7 +23,7 @@ class OmrådeRepository(private val dataSource: DataSource) {
                             eksternId = row.string("ekstern_id")
                         )
                     }.asSingle
-            ) ?: throw IllegalArgumentException("Området finnes ikke")
+            ) ?: throw IllegalArgumentException("Området finnes ikke: ${eksternId}")
         }
     }
 
@@ -65,7 +65,7 @@ class OmrådeRepository(private val dataSource: DataSource) {
                         eksternId = row.string("ekstern_id")
                     )
                 }.asSingle
-        ) ?: throw IllegalArgumentException("Området finnes ikke")
+        ) ?: throw IllegalArgumentException("Området finnes ikke: ${id}")
     }
 
     fun invaliderCache() {

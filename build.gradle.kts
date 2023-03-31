@@ -3,17 +3,17 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val mainClass = "no.nav.k9.los.K9LosKt"
 val hikariVersion = "5.0.1"
-val flywayVersion = "9.9.0"
+val flywayVersion = "9.16.1"
 val vaultJdbcVersion = "1.3.10"
-val koinVersion = "3.2.2"
+val koinVersion = "3.3.0"
 val kotliqueryVersion = "1.9.0"
-val k9SakVersion = "3.4.1"
+val k9SakVersion = "3.4.3"
 val k9KlageVersion = "0.3.0"
 val fuelVersion = "2.3.1"
-val jacksonVersion = "2.13.4"
+val jacksonVersion = "2.14.2"
 
 val dusseldorfKtorVersion = "3.2.2.3-0b4ec43"
-val ktorVersion = "2.2.3"
+val ktorVersion = "2.2.4"
 val kafkaVersion = "3.2.3"
 
 val navTilgangskontroll = "2.2022.11.16_08.36-35c94368bc44"
@@ -25,7 +25,7 @@ val jupiterVersion = "5.9.2"
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.8.10"
-    id("com.github.johnrengelman.shadow") version "7.1.2"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 dependencies {
@@ -62,7 +62,7 @@ dependencies {
     // Tilgangskontroll
     implementation("no.nav.common:auth:$navTilgangskontroll")
     implementation("no.nav.common:rest:$navTilgangskontroll")
-    implementation("com.google.code.gson:gson:2.10")
+    implementation("com.google.code.gson:gson:2.10.1")
 
     // Kontrakter
     implementation("no.nav.k9.sak:kontrakt:$k9SakVersion")
@@ -142,7 +142,7 @@ tasks.withType<ShadowJar> {
 }
 
 tasks.withType<Wrapper> {
-    gradleVersion = "7.6"
+    gradleVersion = "8.0"
 }
 
 tasks.withType<Test> {

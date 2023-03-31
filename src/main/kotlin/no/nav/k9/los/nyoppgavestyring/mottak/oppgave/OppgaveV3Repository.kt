@@ -87,7 +87,7 @@ class OppgaveV3Repository(
                     eksternId = row.string("ekstern_id"),
                     eksternVersjon = row.string("ekstern_versjon"),
                     oppgavetype = oppgavetype,
-                    status = row.string("status"),
+                    status = Oppgavestatus.valueOf(row.string("status")),
                     endretTidspunkt = row.localDateTime("endret_tidspunkt"),
                     kildeområde = row.string("kildeomrade"),
                     felter = hentFeltverdier(row.long("id"), oppgavetype, tx)
@@ -107,7 +107,7 @@ class OppgaveV3Repository(
                     "eksternId" to oppgave.eksternId,
                     "eksternVersjon" to oppgave.eksternVersjon,
                     "oppgavetypeId" to oppgave.oppgavetype.id,
-                    "status" to oppgave.status,
+                    "status" to oppgave.status.toString(),
                     "endretTidspunkt" to oppgave.endretTidspunkt,
                     "versjon" to nyVersjon,
                     "aktiv" to true,
@@ -263,18 +263,28 @@ class OppgaveV3Repository(
     }
 
     fun slettOppgaverOgFelter() {
-        using(sessionOf(dataSource)) {
-            it.run(
-                queryOf("""delete from oppgavefelt_verdi""").asUpdate
-            )
-            it.run(
-                queryOf("""delete from oppgave_v3""").asUpdate
-            )
-            it.run(
-                queryOf("""update behandling_prosess_events_k9 set dirty = true""").asUpdate
-            )
+        using(sessionOf(dataSource)) { session ->
+            log.info("trunkerer oppgavetabeller")
+            session.transaction { tx ->
+                tx.run(
+                    queryOf("""truncate table oppgave_v3_sendt_dvh, oppgavefelt_verdi, oppgave_v3, oppgavefelt, oppgavetype, feltdefinisjon""").asUpdate
+                )
+            }
+            log.info("resetter dirtyflagg på k9sak-eventer")
+            session.transaction { tx ->
+                tx.run(
+                    queryOf("""update behandling_prosess_events_k9 set dirty = true""").asUpdate
+                )
+            }
+            log.info("resetter dirtyflagg på k9klage-eventer")
+            session.transaction { tx ->
+                tx.run(
+                    queryOf("""update behandling_prosess_events_klage set dirty = true""").asUpdate
+                )
+            }
         }
     }
+
 
     fun tellAntall(): Pair<Long, Long> {
         return using(sessionOf(dataSource)) {

@@ -11,7 +11,7 @@ class OppgaveV3(
     val eksternId: String,
     val eksternVersjon: String,
     val oppgavetype: Oppgavetype,
-    val status: String, //TODO: definere typer/enum
+    val status: Oppgavestatus,
     val endretTidspunkt: LocalDateTime,
     val kildeområde: String,
     val felter: List<OppgaveFeltverdi>
@@ -20,7 +20,7 @@ class OppgaveV3(
         eksternId = oppgaveDto.id,
         eksternVersjon = oppgaveDto.versjon,
         oppgavetype = oppgavetype,
-        status = oppgaveDto.status,
+        status = Oppgavestatus.valueOf(oppgaveDto.status),
         endretTidspunkt = oppgaveDto.endretTidspunkt,
         kildeområde = oppgaveDto.kildeområde,
         felter = lagFelter(oppgaveDto, oppgavetype)

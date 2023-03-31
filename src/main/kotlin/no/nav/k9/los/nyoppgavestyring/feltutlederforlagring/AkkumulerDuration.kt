@@ -1,13 +1,13 @@
-package no.nav.k9.los.nyoppgavestyring.feltutledere
+package no.nav.k9.los.nyoppgavestyring.feltutlederforlagring
 
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import java.time.Duration
 
-class AkkumulertVentetidSaksbehandler : Feltutleder {
-
-    private val AKKUMULERT_VENTETID_SAKSBEHANDLER = "akkumulertVentetidSaksbehandler"
-    private val AVVENTER_SAKSBEHANDLER = "avventerSaksbehandler"
+abstract class AkkumulerDuration(
+    val beslutningsfelt: String,
+    val målfelt: String
+) : Feltutleder {
 
     override fun utled(
         innkommendeOppgave: OppgaveV3,
@@ -19,10 +19,10 @@ class AkkumulertVentetidSaksbehandler : Feltutleder {
         }
 
         val akkumulertFraTidligere =
-            aktivOppgaveVersjon.hentVerdi(AKKUMULERT_VENTETID_SAKSBEHANDLER)?.let { Duration.parse(it) }
+            aktivOppgaveVersjon.hentVerdi(målfelt)?.let { Duration.parse(it) }
                 ?: Duration.ZERO
         val akkumulertVentetidSaksbehandler =
-            if (aktivOppgaveVersjon.hentVerdi(AVVENTER_SAKSBEHANDLER).toBoolean()) {
+            if (aktivOppgaveVersjon.hentVerdi(beslutningsfelt).toBoolean()) {
                 Duration.between(aktivOppgaveVersjon.endretTidspunkt, innkommendeOppgave.endretTidspunkt)
                     .plus(akkumulertFraTidligere)
             } else {
@@ -30,7 +30,7 @@ class AkkumulertVentetidSaksbehandler : Feltutleder {
             }
 
         return OppgaveFeltverdi(
-                oppgavefelt = innkommendeOppgave.hentFelt(AKKUMULERT_VENTETID_SAKSBEHANDLER),
+                oppgavefelt = innkommendeOppgave.hentFelt(målfelt),
                 verdi = akkumulertVentetidSaksbehandler.toString()
             )
     }

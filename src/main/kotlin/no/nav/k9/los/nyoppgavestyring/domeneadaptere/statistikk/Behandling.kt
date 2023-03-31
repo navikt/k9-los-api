@@ -51,7 +51,7 @@ data class Behandling(
     val resultatBegrunnelse: String? = null,
 
     @JsonProperty("utenlandstilsnitt")
-    val utenlandstilsnitt: String? = null,
+    val utenlandstilsnitt: Boolean? = null,
 
     @JsonProperty("behandlingTypeBeskrivelse")
     val behandlingTypeBeskrivelse: String? = null,
@@ -88,12 +88,6 @@ data class Behandling(
 
     @JsonProperty("ansvarligEnhetType")
     val ansvarligEnhetType: String? = null,
-
-    @JsonProperty("behandlendeEnhetKode")
-    val behandlendeEnhetKode: String? = null,
-
-    @JsonProperty("behandlendeEnhetType")
-    val behandlendeEnhetType: String? = null,
 
     @JsonProperty("datoForUttak")
     val datoForUttak: LocalDate? = null,
@@ -199,11 +193,6 @@ class BehandlingBuilder(behandlingId: String, saksnummer: String) {
         return this
     }
 
-    fun utenlandstilsnitt(kode: String?, beskrivelse: String?): BehandlingBuilder {
-        behandling = behandling.copy(utenlandstilsnitt = kode, utenlandstilsnittBeskrivelse = beskrivelse)
-        return this
-    }
-
     fun beslutter(beslutter: String?): BehandlingBuilder {
         behandling = behandling.copy(beslutter = beslutter)
         return this
@@ -236,16 +225,6 @@ class BehandlingBuilder(behandlingId: String, saksnummer: String) {
 
     fun ansvarligEnhetType(ansvarligEnhetType: String?): BehandlingBuilder {
         behandling = behandling.copy(ansvarligEnhetType = ansvarligEnhetType)
-        return this
-    }
-
-    fun behandlendeEnhetKode(behandlendeEnhetKode: String?): BehandlingBuilder {
-        behandling = behandling.copy(behandlendeEnhetKode = behandlendeEnhetKode)
-        return this
-    }
-
-    fun behandlendeEnhetType(behandlendeEnhetType: String?): BehandlingBuilder {
-        behandling = behandling.copy(behandlendeEnhetType = behandlendeEnhetType)
         return this
     }
 

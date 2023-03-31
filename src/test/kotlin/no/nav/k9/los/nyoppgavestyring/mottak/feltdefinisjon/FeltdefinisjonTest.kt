@@ -13,7 +13,7 @@ class FeltdefinisjonTest {
     @Test
     fun `test at vi legger til feltdefinisjoner om de ikke finnes fra før`() {
         val innkommendeFeltdefinisjoner = lagFeltdefinisjoner()
-        val (sletteListe, leggTilListe) = Feltdefinisjoner(område = område, emptySet()).finnForskjeller(innkommendeFeltdefinisjoner)
+        val (sletteListe, oppdaterListe, leggTilListe) = Feltdefinisjoner(område = område, emptySet()).finnForskjeller(innkommendeFeltdefinisjoner)
         assertThat(leggTilListe).hasSize(2)
         assertThat(sletteListe).isEmpty()
     }
@@ -32,13 +32,13 @@ class FeltdefinisjonTest {
                 )
             )
         )
-        val (sletteListe, leggTilListe) = lagFeltdefinisjoner().finnForskjeller(innkommendeFeltdefinisjoner)
+        val (sletteListe, oppdaterListe, leggTilListe) = lagFeltdefinisjoner().finnForskjeller(innkommendeFeltdefinisjoner)
         assertThat(sletteListe).hasSize(1)
         assertThat(leggTilListe).isEmpty()
     }
 
     @Test
-    fun `test at vi sletter feltdefinisjoner og legger de til på nytt om de har endringer`() {
+    fun `test at vi oppdaterer feltdefinisjoner om de har endringer`() {
         val innkommendeFeltdefinisjoner = Feltdefinisjoner(
             område = område,
             feltdefinisjoner = setOf(
@@ -58,9 +58,10 @@ class FeltdefinisjonTest {
                 )
             )
         )
-        val (sletteListe, leggTilListe) = lagFeltdefinisjoner().finnForskjeller(innkommendeFeltdefinisjoner)
-        assertThat(sletteListe).hasSize(2)
-        assertThat(leggTilListe).hasSize(2)
+        val (sletteListe, oppdaterListe, leggTilListe) = lagFeltdefinisjoner().finnForskjeller(innkommendeFeltdefinisjoner)
+        assertThat(sletteListe).hasSize(0)
+        assertThat(oppdaterListe).hasSize(2)
+        assertThat(leggTilListe).hasSize(0)
     }
 
     private fun lagFeltdefinisjoner(): Feltdefinisjoner {

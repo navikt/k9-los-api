@@ -8,7 +8,6 @@ import kotliquery.using
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.domene.modell.K9SakModell
 import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdapterTjeneste
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.koin.test.get

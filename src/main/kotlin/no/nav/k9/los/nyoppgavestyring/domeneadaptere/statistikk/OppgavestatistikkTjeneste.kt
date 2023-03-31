@@ -5,14 +5,17 @@ import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.integrasjon.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 import kotlin.concurrent.timer
 
 class OppgavestatistikkTjeneste(
     private val oppgaveRepository: OppgaveRepository,
+    private val oppgavetypeRepository: OppgavetypeRepository,
     private val statistikkPublisher: StatistikkPublisher,
     private val transactionalManager: TransactionalManager,
     private val statistikkRepository: StatistikkRepository,
@@ -24,7 +27,7 @@ class OppgavestatistikkTjeneste(
     private val TRÅDNAVN = "k9los-til-statistikk"
 
     fun kjør(kjørUmiddelbart: Boolean = false) {
-        if (config.nyOppgavestyringAktivert()) {
+        if (config.nyOppgavestyringDvhSendingAktivert()) {
             when (kjørUmiddelbart) {
                 true -> spillAvUmiddelbart()
                 false -> schedulerAvspilling()
@@ -51,6 +54,11 @@ class OppgavestatistikkTjeneste(
             initialDelay = TimeUnit.MINUTES.toMillis(5),
             period = TimeUnit.HOURS.toMillis(1)
         ) {
+            if (LocalDateTime.now().isBefore(LocalDateTime.of(2023, 3, 30, 14, 0))) {
+                log.info("Nullstiller datavarehussending")
+                statistikkRepository.fjernSendtMarkering()
+                log.info("Datavarehussending nullstilt")
+            }
             try {
                 spillAvStatistikk()
             } catch (e: Exception) {
@@ -97,13 +105,34 @@ class OppgavestatistikkTjeneste(
     }
 
     private fun nullUtEventuelleSensitiveFelter(behandling: Behandling): Behandling {
-        return behandling.copy(beslutter = "-5", saksbehandler = "-5", behandlingOpprettetAv = "-5", ansvarligEnhetKode = "-5", behandlendeEnhetKode = "-5")
+        return behandling.copy(
+            beslutter = "-5",
+            saksbehandler = "-5",
+            behandlingOpprettetAv = "-5",
+            ansvarligEnhetKode = "-5"
+        )
     }
 
-    private fun byggOppgavestatistikk(id: Long, tx: TransactionalSession): Pair<Sak, Behandling> {
-        val oppgave = oppgaveRepository.hentOppgaveForId(tx, id)
-        val behandling = OppgaveTilBehandlingMapper().lagBehandling(oppgave)
-        val sak = OppgaveTilSakMapper().lagSak(oppgave)
+    private fun byggOppgavestatistikk(oppgaveId: Long, tx: TransactionalSession): Pair<Sak, Behandling> {
+        val oppgave = oppgaveRepository.hentOppgaveForId(tx, oppgaveId)
+
+        var behandling: Behandling
+        var sak: Sak
+        val oppgavetype = oppgavetypeRepository.hentOppgavetype("K9", oppgave.oppgavetypeId, tx)
+        when (oppgavetype.eksternId) {
+            "k9sak" -> {
+                behandling = K9SakOppgaveTilDVHMapper().lagBehandling(oppgave)
+                sak = K9SakOppgaveTilDVHMapper().lagSak(oppgave)
+            }
+
+            "k9klage" -> {
+                behandling = K9KlageOppgaveTilDVHMapper().lagBehandling(oppgave)
+                sak = K9KlageOppgaveTilDVHMapper().lagSak(oppgave)
+            }
+
+            else -> throw IllegalStateException("Ukjent oppgavetype for sending til DVH: ${oppgavetype.eksternId}")
+        }
+
         return Pair(sak, behandling)
     }
 

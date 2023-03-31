@@ -1,6 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype
 
-import no.nav.k9.los.nyoppgavestyring.feltutledere.GyldigeFeltutledere
+import no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.GyldigeFeltutledere
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjoner
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 

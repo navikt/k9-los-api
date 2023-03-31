@@ -2,6 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import no.nav.k9.klage.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktType
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.Aksjonspunkttilstand
@@ -47,12 +48,12 @@ class K9KlageTilLosAdapterTjeneste(
     }.map { aksjonspunktDefinisjon -> aksjonspunktDefinisjon.kode }
 
     fun kjør(kjørSetup: Boolean = false, kjørUmiddelbart: Boolean = false) {
-        if (config.nyOppgavestyringAktivert()) {
+        if (false) {
             when (kjørUmiddelbart) {
                 true -> spillAvUmiddelbart()
                 false -> schedulerAvspilling(kjørSetup)
             }
-        } else log.info("Ny oppgavestyring er deaktivert")
+        } else log.info("Ny oppgavestyring k9klage er deaktivert")
     }
 
     private fun spillAvUmiddelbart() {
@@ -149,10 +150,41 @@ class K9KlageTilLosAdapterTjeneste(
             område = "K9",
             kildeområde = "K9",
             type = "k9klage",
-            status = event.aksjonspunkttilstander.lastOrNull()?.status?.kode ?: "OPPR", // TODO statuser må gås opp
+            status = if (event.aksjonspunkttilstander.any { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.status.erÅpentAksjonspunkt() }) {
+                if (oppgaveSkalHaVentestatus(event)) {
+                    "VENTER"
+                } else {
+                    "AAPEN"
+                }
+            } else {
+                if (event.behandlingStatus == BehandlingStatus.UTREDES.toString()) {
+                    "AAPEN"
+                } else {
+                    "LUKKET"
+                }
+            },
             endretTidspunkt = event.eventTid,
             feltverdier = lagFeltverdier(event, forrigeOppgave)
         )
+
+    private fun oppgaveSkalHaVentestatus(event: KlagebehandlingProsessHendelse): Boolean {
+        val oppgaveFeltverdiDtos = mutableListOf<OppgaveFeltverdiDto>()
+        val åpneAksjonspunkter = event.aksjonspunkttilstander.filter { aksjonspunkttilstand ->
+            aksjonspunkttilstand.status.erÅpentAksjonspunkt()
+        }
+
+        val harAutopunkt = åpneAksjonspunkter.any { aksjonspunktTilstandDto ->
+            AUTOPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode)
+        }
+
+        val harManueltAksjonspunkt = åpneAksjonspunkter.any { aksjonspunktTilstandDto ->
+            MANUELLE_AKSJONSPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode)
+        }
+
+        utledAvventerSaksbehandler(harManueltAksjonspunkt = harManueltAksjonspunkt, harAutopunkt = harAutopunkt, oppgaveFeltverdiDtos = oppgaveFeltverdiDtos)
+
+        return oppgaveFeltverdiDtos.first().nøkkel == "false"
+    }
 
     private fun lagFeltverdier(
         event: KlagebehandlingProsessHendelse,
