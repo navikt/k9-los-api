@@ -141,6 +141,46 @@ class BehandlingProsessEventK9Repository(private val dataSource: DataSource) {
         }
     }
 
+    fun nullstillHistorikkvask() {
+        using(sessionOf(dataSource)) {
+            it.transaction { tx ->
+                tx.run(
+                    queryOf(
+                        """delete * from behandling_prosess_events_k9_historikkvask_ferdig"""
+                    ).asUpdate
+                )
+            }
+        }
+    }
+
+    fun hentAlleEventIderUtenVasketHistorikk(): List<UUID> {
+        return using(sessionOf(dataSource)) {
+            it.transaction { tx ->
+                tx.run(
+                    queryOf(
+                        """
+                            select * 
+                            from behandling_prosess_events_k9 e
+                            where not exists (select * from behandling_prosess_events_k9_historikkvask_ferdig hv where hv.id = e.id)
+                             """.trimMargin(),
+                        mapOf()
+                    ).map { row ->
+                        UUID.fromString(row.string("id"))
+                    }.asList
+                )
+            }
+        }
+    }
+
+    fun markerVasketHistorikk(uuid: UUID, tx: TransactionalSession) {
+        tx.run(
+            queryOf(
+                """insert into behandling_prosess_events_k9_historikkvask_ferdig(id) values (uuid)""",
+                mapOf("id" to uuid.toString())
+            ).asUpdate
+        )
+    }
+
     fun lagreNy(uuid: UUID, modell: K9SakModell) {
         using(sessionOf(dataSource)) {
             it.transaction { tx ->

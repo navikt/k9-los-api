@@ -28,9 +28,18 @@ class OppgavetypeRepository(
         )
     }
 
+    fun hentOppgavetype(område: String, eksternId: String, tx: TransactionalSession): Oppgavetype {
+        return hentOppgavetype(områdeRepository.hentOmråde(område, tx), eksternId, tx)
+    }
+
+    fun hentOppgavetype(område: Område, eksternId: String, tx: TransactionalSession): Oppgavetype {
+        return hent(område, tx).oppgavetyper.find { it.eksternId.equals(eksternId) }
+            ?: throw IllegalArgumentException("Finner ikke oppgavetype: ${eksternId} for område: ${område}")
+    }
+
     fun hentOppgavetype(område: String, oppgavetypeId: Long, tx: TransactionalSession): Oppgavetype {
         return hent(områdeRepository.hentOmråde(område, tx), tx).oppgavetyper.find { it.id!!.equals(oppgavetypeId) }
-            ?: throw java.lang.IllegalStateException("Finner ikke omsøkt oppgavetype")
+            ?: throw java.lang.IllegalStateException("Finner ikke omsøkt oppgavetypeId: ${oppgavetypeId} for område: ${område}")
     }
 
     fun hent(område: Område, tx: TransactionalSession): Oppgavetyper {

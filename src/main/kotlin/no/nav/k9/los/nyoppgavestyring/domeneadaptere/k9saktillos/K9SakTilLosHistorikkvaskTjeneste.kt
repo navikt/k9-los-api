@@ -3,7 +3,9 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.k9.kodeverk.behandling.BehandlingStatus
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.*
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktType
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
@@ -21,11 +23,9 @@ import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
-import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
-import kotlin.concurrent.timer
 
-class K9SakTilLosAdapterTjeneste(
+class K9SakTilLosHistorikkvaskTjeneste(
     private val behandlingProsessEventK9Repository: BehandlingProsessEventK9Repository,
     private val områdeRepository: OmrådeRepository,
     private val feltdefinisjonTjeneste: FeltdefinisjonTjeneste,
@@ -35,79 +35,56 @@ class K9SakTilLosAdapterTjeneste(
     private val transactionalManager: TransactionalManager
 ) {
 
-    private val log: Logger = LoggerFactory.getLogger(K9SakTilLosAdapterTjeneste::class.java)
+    private val log: Logger = LoggerFactory.getLogger(K9SakTilLosHistorikkvaskTjeneste::class.java)
     private val TRÅDNAVN = "k9-sak-til-los"
+    private val MANUELLE_AKSJONSPUNKTER = AksjonspunktDefinisjon.values().filter { aksjonspunktDefinisjon ->
+        aksjonspunktDefinisjon.aksjonspunktType == AksjonspunktType.MANUELL
+    }.map { aksjonspunktDefinisjon -> aksjonspunktDefinisjon.kode }
 
+    private val AUTOPUNKTER = AksjonspunktDefinisjon.values().filter { aksjonspunktDefinisjon ->
+        aksjonspunktDefinisjon.aksjonspunktType == AksjonspunktType.AUTOPUNKT
+    }.map { aksjonspunktDefinisjon -> aksjonspunktDefinisjon.kode }
 
-
-    fun kjør(kjørSetup: Boolean = false, kjørUmiddelbart: Boolean = false) {
+    fun kjørHistorikkvask() {
         if (config.nyOppgavestyringAktivert()) {
-            when (kjørUmiddelbart) {
-                true -> spillAvUmiddelbart()
-                false -> schedulerAvspilling(kjørSetup)
+            log.info("Starter vask av oppgaver mot historiske k9sak-hendelser")
+            thread(
+                start = true,
+                isDaemon = true,
+                name = TRÅDNAVN
+            ) {
+                spillAvBehandlingProsessEventer()
             }
         } else log.info("Ny oppgavestyring er deaktivert")
     }
 
-    private fun spillAvUmiddelbart() {
-        log.info("Spiller av BehandlingProsessEventer umiddelbart")
-        thread(
-            start = true,
-            isDaemon = true,
-            name = TRÅDNAVN
-        ) {
-            spillAvBehandlingProsessEventer()
-        }
-    }
-
-    private fun schedulerAvspilling(kjørSetup: Boolean) {
-        log.info("Schedulerer avspilling av BehandlingProsessEventer til å kjøre 1m fra nå, hver time")
-        timer(
-            name = TRÅDNAVN,
-            daemon = true,
-            initialDelay = TimeUnit.MINUTES.toMillis(1),
-            period = TimeUnit.HOURS.toMillis(1)
-        ) {
-            if (kjørSetup) {
-                setup()
-            }
-            try {
-                spillAvBehandlingProsessEventer()
-            } catch (e: Exception) {
-                log.warn("Avspilling av k9sak-eventer til oppgaveV3 feilet. Retry om en time", e)
-            }
-        }
-    }
-
     private fun spillAvBehandlingProsessEventer() {
-        log.info("Starter avspilling av BehandlingProsessEventer")
+        log.info("Starter avspilling av historiske BehandlingProsessEventer")
         val tidKjøringStartet = System.currentTimeMillis()
 
-        val behandlingsIder = behandlingProsessEventK9Repository.hentAlleDirtyEventIder()
+        val behandlingsIder = behandlingProsessEventK9Repository.hentAlleEventIderUtenVasketHistorikk()
         log.info("Fant ${behandlingsIder.size} behandlinger")
 
         var behandlingTeller: Long = 0
         var eventTeller: Long = 0
         behandlingsIder.forEach { uuid ->
-            eventTeller = oppdaterOppgaveForBehandlingUuid(uuid, eventTeller)
+            eventTeller = vaskOppgaverForBehandlingUUID(uuid, eventTeller)
             behandlingTeller++
-            loggFremgangForHver100(behandlingTeller, "Forsert $behandlingTeller behandlinger")
+            loggFremgangForHver100(behandlingTeller, "Vasket $behandlingTeller behandlinger")
         }
 
         val (antallAlle, antallAktive) = oppgaveV3Tjeneste.tellAntall()
         val tidHeleKjøringen = System.currentTimeMillis() - tidKjøringStartet
-        log.info("Antall oppgaver etter kjøring: $antallAlle, antall aktive: $antallAktive, antall nye eventer: $eventTeller fordelt på $behandlingTeller behandlinger.")
+        log.info("Antall oppgaver etter historikkvask (k9-sak): $antallAlle, antall aktive: $antallAktive, antall vaskede eventer: $eventTeller fordelt på $behandlingTeller behandlinger.")
         if (eventTeller > 0) {
             log.info("Gjennomsnittstid pr behandling: ${tidHeleKjøringen / behandlingTeller}ms, Gjennsomsnittstid pr event: ${tidHeleKjøringen / eventTeller}ms")
         }
-        log.info("Avspilling av BehandlingProsessEventer ferdig")
+        log.info("Historikkvask k9sak ferdig")
+
+        behandlingProsessEventK9Repository.nullstillHistorikkvask()
     }
 
-    fun oppdaterOppgaveForBehandlingUuid(uuid: UUID) {
-        oppdaterOppgaveForBehandlingUuid(uuid, 0L)
-    }
-
-    private fun oppdaterOppgaveForBehandlingUuid(uuid: UUID, eventTellerInn: Long): Long {
+    private fun vaskOppgaverForBehandlingUUID(uuid: UUID, eventTellerInn: Long): Long {
         var eventTeller = eventTellerInn
         var forrigeOppgave: OppgaveV3? = null
         transactionalManager.transaction { tx ->
@@ -115,22 +92,29 @@ class K9SakTilLosAdapterTjeneste(
             behandlingProsessEventer.forEach { event ->
                 val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
 
-                val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
+                oppgaveV3Tjeneste.oppdaterEkstisterendeOppgaveversjon(oppgaveDto, tx)
 
-                oppgave?.let {
-                    eventTeller++
-                    loggFremgangForHver100(eventTeller, "Prosessert $eventTeller eventer")
-                }
-                forrigeOppgave = oppgave
+                eventTeller++
+                loggFremgangForHver100(eventTeller, "Prosessert $eventTeller eventer")
+
+                forrigeOppgave = oppgaveV3Tjeneste.hentOppgaveversjon(
+                    område = "k9", eksternId = oppgaveDto.id, eksternVersjon = oppgaveDto.versjon, tx = tx
+                )
             }
             forrigeOppgave = null
 
-            behandlingProsessEventK9Repository.fjernDirty(uuid, tx)
+            behandlingProsessEventK9Repository.markerVasketHistorikk(uuid, tx)
         }
         return eventTeller
     }
 
-    fun setup(): K9SakTilLosAdapterTjeneste {
+    private fun loggFremgangForHver100(teller: Long, tekst: String) {
+        if (teller.mod(100) == 0) {
+            log.info(tekst)
+        }
+    }
+
+    fun setup(): K9SakTilLosHistorikkvaskTjeneste {
         val objectMapper = jacksonObjectMapper()
         opprettOmråde()
         opprettFeltdefinisjoner(objectMapper)
@@ -145,7 +129,7 @@ class K9SakTilLosAdapterTjeneste(
 
     private fun opprettFeltdefinisjoner(objectMapper: ObjectMapper) {
         val feltdefinisjonerDto = objectMapper.readValue(
-            K9SakTilLosAdapterTjeneste::class.java.getResource("/adapterdefinisjoner/k9-feltdefinisjoner-v2.json")!!
+            K9SakTilLosHistorikkvaskTjeneste::class.java.getResource("/adapterdefinisjoner/k9-feltdefinisjoner-v2.json")!!
                 .readText(),
             FeltdefinisjonerDto::class.java
         )
@@ -155,17 +139,11 @@ class K9SakTilLosAdapterTjeneste(
 
     private fun opprettOppgavetype(objectMapper: ObjectMapper) {
         val oppgavetyperDto = objectMapper.readValue(
-            K9SakTilLosAdapterTjeneste::class.java.getResource("/adapterdefinisjoner/k9-oppgavetyper-k9sak.json")!!
+            K9SakTilLosHistorikkvaskTjeneste::class.java.getResource("/adapterdefinisjoner/k9-oppgavetyper-k9sak.json")!!
                 .readText(),
             OppgavetyperDto::class.java
         )
         oppgavetypeTjeneste.oppdater(oppgavetyperDto)
         log.info("opprettet oppgavetype")
-    }
-
-    private fun loggFremgangForHver100(teller: Long, tekst: String) {
-        if (teller.mod(100) == 0) {
-            log.info(tekst)
-        }
     }
 }

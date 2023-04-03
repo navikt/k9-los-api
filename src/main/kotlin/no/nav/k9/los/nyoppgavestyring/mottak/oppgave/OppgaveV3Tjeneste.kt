@@ -17,30 +17,21 @@ class OppgaveV3Tjeneste(
 
     fun sjekkDuplikatOgProsesser(dto: OppgaveDto, tx: TransactionalSession): OppgaveV3? {
         var oppgave: OppgaveV3? = null
-        val skalOppdatere = skalOppdatere(dto, tx)
+        val skalOppdatere = nyEksternversjon(dto, tx)
 
         if (skalOppdatere) {
-            oppgave = oppdater(dto, tx)
+            oppgave = lagreNyOppgaveversjon(dto, tx)
         }
         return oppgave
     }
 
-    fun hentOppgaveversjon(område: String, eksternId: String, eksternVersjon: String): OppgaveV3? {
-        return transactionalManager.transaction { tx ->
-            oppgaveV3Repository.hentOppgaveversjon(
-                område = områdeRepository.hentOmråde(område, tx),
-                eksternId = eksternId,
-                eksternVersjon = eksternVersjon,
-                tx = tx)
-        }
-    }
-
-    private fun oppdater(oppgaveDto: OppgaveDto, tx: TransactionalSession): OppgaveV3 {
+    private fun lagreNyOppgaveversjon(oppgaveDto: OppgaveDto, tx: TransactionalSession): OppgaveV3 {
         val område = områdeRepository.hentOmråde(oppgaveDto.område, tx)
-        val oppgavetype =
-            oppgavetypeRepository.hent(område, tx).oppgavetyper.find { it.eksternId.equals(oppgaveDto.type) }
-                ?: throw IllegalArgumentException("Kan ikke legge til oppgave på en oppgavetype som ikke er definert: ${oppgaveDto.type}")
-
+        val oppgavetype = oppgavetypeRepository.hentOppgavetype(
+            område = område.eksternId,
+            eksternId = oppgaveDto.id,
+            tx = tx
+        )
 
         val aktivOppgaveVersjon = oppgaveV3Repository.hentAktivOppgave(oppgaveDto.id, oppgavetype, tx)
         var innkommendeOppgave = OppgaveV3(oppgaveDto, oppgavetype)
@@ -62,12 +53,49 @@ class OppgaveV3Tjeneste(
         innkommendeOppgave.valider()
         //oppgavetype.validerInnkommendeOppgave(oppgaveDto)
 
-        oppgaveV3Repository.lagre(innkommendeOppgave, tx)
+        oppgaveV3Repository.nyOppgaveversjon(innkommendeOppgave, tx)
 
         return innkommendeOppgave
     }
 
-    fun skalOppdatere(oppgaveDto: OppgaveDto, tx: TransactionalSession): Boolean {
+    fun hentOppgaveversjon(
+        område: String,
+        eksternId: String,
+        eksternVersjon: String,
+        tx: TransactionalSession
+    ): OppgaveV3 {
+        return oppgaveV3Repository.hentOppgaveversjon(
+            område = områdeRepository.hentOmråde(område, tx),
+            eksternId = eksternId,
+            eksternVersjon = eksternVersjon,
+            tx = tx
+        )
+    }
+
+    fun oppdaterEkstisterendeOppgaveversjon(oppgaveDto: OppgaveDto, tx: TransactionalSession) {
+        val oppgavetype = oppgavetypeRepository.hentOppgavetype(
+            område = oppgaveDto.område,
+            eksternId = oppgaveDto.type,
+            tx = tx
+        )
+
+        val oppgave = OppgaveV3(oppgaveDto = oppgaveDto, oppgavetype = oppgavetype)
+
+        oppgaveV3Repository.slettFeltverdier(
+            eksternId = oppgaveDto.id,
+            eksternVersjon = oppgaveDto.versjon,
+            tx = tx
+        )
+
+        oppgaveV3Repository.lagreFeltverdier(
+            eksternId = oppgaveDto.id,
+            eksternVersjon = oppgaveDto.versjon,
+            oppgaveFeltverdier = oppgave.felter,
+            tx = tx
+        )
+    }
+
+    fun nyEksternversjon(oppgaveDto: OppgaveDto, tx: TransactionalSession): Boolean {
         return !oppgaveV3Repository.finnesFraFør(tx, oppgaveDto.id, oppgaveDto.versjon)
     }
 

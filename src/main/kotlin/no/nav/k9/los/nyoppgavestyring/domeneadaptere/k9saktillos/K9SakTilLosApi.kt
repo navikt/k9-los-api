@@ -13,6 +13,7 @@ internal fun Route.K9SakTilLosApi() {
     val requestContextService by inject<RequestContextService>()
     val oppgaveV3Tjeneste by inject<OppgaveV3Tjeneste>()
     val k9SakTilLosAdapterTjeneste by inject<K9SakTilLosAdapterTjeneste>()
+    val k9SakTilLosHistorikkvaskTjeneste by inject<K9SakTilLosHistorikkvaskTjeneste>()
     val config by inject<Configuration>()
 
     delete("/slettOppgavedata") {
@@ -34,6 +35,14 @@ internal fun Route.K9SakTilLosApi() {
             }
         } else {
             call.respond(HttpStatusCode.Locked)
+        }
+    }
+
+    put("/startHistorikkvask") {
+        if (config.nyOppgavestyringRestAktivert()) {
+            requestContextService.withRequestContext(call) {
+                k9SakTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
+            }
         }
     }
 }
