@@ -161,7 +161,7 @@ class EventTilDtoMapper {
             )
         ).filterNotNull().toMutableList()
 
-        private fun utledVentetype(
+        internal fun utledVentetype(
             behandlingSteg: String?,
             behandlingStatus: String?,
             åpneAksjonspunkter: List<AksjonspunktTilstandDto>
