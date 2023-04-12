@@ -7,7 +7,7 @@ class Feltdefinisjoner(
     val feltdefinisjoner: Set<Feltdefinisjon>
 ) {
 
-    constructor(feltdefinisjonerDto: FeltdefinisjonerDto, område: Område) : this(
+    constructor(feltdefinisjonerDto: FeltdefinisjonerDto, kodeverkForOmråde: KodeverkForOmråde, område: Område) : this(
         område = område,
         feltdefinisjoner = feltdefinisjonerDto.feltdefinisjoner.map { feltdefinisjonDto ->
             Feltdefinisjon(
@@ -15,10 +15,16 @@ class Feltdefinisjoner(
                 område = område,
                 listetype = feltdefinisjonDto.listetype,
                 tolkesSom = feltdefinisjonDto.tolkesSom,
-                visTilBruker = feltdefinisjonDto.visTilBruker
+                visTilBruker = feltdefinisjonDto.visTilBruker,
+                kodeverk = feltdefinisjonDto.kodeverk?.let { kodeverkForOmråde.hentKodeverk(eksternId = feltdefinisjonDto.kodeverk) }
             )
         }.toSet()
     )
+
+    fun hentFeltdefinisjon(eksternId: String) : Feltdefinisjon {
+        return feltdefinisjoner.firstOrNull { feltdefinisjon -> feltdefinisjon.eksternId == eksternId }
+            ?: throw IllegalArgumentException("Finner ikke omsøkt feltdefinisjon: $eksternId for område: ${område.eksternId}")
+    }
 
     fun finnForskjeller(innkommendeFeltdefinisjoner: Feltdefinisjoner): Triple<Set<Feltdefinisjon>, Set<Feltdefinisjon>, Set<Feltdefinisjon>> {
         if (!innkommendeFeltdefinisjoner.område.equals(this.område)) {

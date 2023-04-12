@@ -18,7 +18,6 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
-import kotlin.concurrent.fixedRateTimer
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.BehandlingProsessEventKlageRepository

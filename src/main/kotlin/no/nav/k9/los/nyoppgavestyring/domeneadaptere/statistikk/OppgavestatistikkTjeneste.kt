@@ -118,7 +118,8 @@ class OppgavestatistikkTjeneste(
 
         var behandling: Behandling
         var sak: Sak
-        val oppgavetype = oppgavetypeRepository.hentOppgavetype("K9", oppgave.oppgavetypeId, tx)
+        val oppgavetype =
+            oppgavetypeRepository.hentOppgavetype("K9", oppgave.oppgavetypeId, tx)
         when (oppgavetype.eksternId) {
             "k9sak" -> {
                 behandling = K9SakOppgaveTilDVHMapper().lagBehandling(oppgave)

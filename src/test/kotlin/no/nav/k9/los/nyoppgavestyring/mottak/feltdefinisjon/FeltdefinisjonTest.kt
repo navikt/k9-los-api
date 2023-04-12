@@ -28,7 +28,8 @@ class FeltdefinisjonTest {
                     område = område,
                     listetype = false,
                     tolkesSom = "String",
-                    visTilBruker = true
+                    visTilBruker = true,
+                    kodeverk = null
                 )
             )
         )
@@ -47,14 +48,16 @@ class FeltdefinisjonTest {
                     område = område,
                     listetype = true,
                     tolkesSom = "String",
-                    visTilBruker = true
+                    visTilBruker = true,
+                    kodeverk = null
                 ),
                 Feltdefinisjon(
                     eksternId = "opprettet",
                     område = område,
                     listetype = true,
                     tolkesSom = "Date",
-                    visTilBruker = true
+                    visTilBruker = true,
+                    kodeverk = null
                 )
             )
         )
@@ -73,14 +76,16 @@ class FeltdefinisjonTest {
                     område = område,
                     listetype = false,
                     tolkesSom = "String",
-                    visTilBruker = true
+                    visTilBruker = true,
+                    kodeverk = null
                 ),
                 Feltdefinisjon(
                     eksternId = "opprettet",
                     område = område,
                     listetype = false,
                     tolkesSom = "Date",
-                    visTilBruker = true
+                    visTilBruker = true,
+                    kodeverk = null
                 )
             )
         )

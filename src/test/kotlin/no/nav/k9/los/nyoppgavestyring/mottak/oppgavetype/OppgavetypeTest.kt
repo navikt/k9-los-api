@@ -5,7 +5,6 @@ import assertk.assertions.hasSize
 import assertk.assertions.isEmpty
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
@@ -74,7 +73,8 @@ class OppgavetypeTest {
                                 område = område,
                                 listetype = false,
                                 tolkesSom = "String",
-                                visTilBruker = true
+                                visTilBruker = true,
+                                kodeverk = null
                             ),
                             visPåOppgave = true,
                             påkrevd = true,
@@ -87,7 +87,8 @@ class OppgavetypeTest {
                                 område = område,
                                 listetype = false,
                                 tolkesSom = "String",
-                                visTilBruker = true
+                                visTilBruker = true,
+                                kodeverk = null
                             ),
                             visPåOppgave = true,
                             påkrevd = true,
@@ -121,7 +122,8 @@ class OppgavetypeTest {
                                 område = område,
                                 listetype = false,
                                 tolkesSom = "String",
-                                visTilBruker = true
+                                visTilBruker = true,
+                                kodeverk = null
                             ),
                             visPåOppgave = true,
                             påkrevd = true,
@@ -134,7 +136,8 @@ class OppgavetypeTest {
                                 område = område,
                                 listetype = false,
                                 tolkesSom = "String",
-                                visTilBruker = true
+                                visTilBruker = true,
+                                kodeverk = null
                             ),
                             visPåOppgave = true,
                             påkrevd = true,
@@ -147,7 +150,8 @@ class OppgavetypeTest {
                                 område = område,
                                 listetype = false,
                                 tolkesSom = "String",
-                                visTilBruker = true
+                                visTilBruker = true,
+                                kodeverk = null
                             ),
                             visPåOppgave = true,
                             påkrevd = true,
@@ -167,7 +171,8 @@ class OppgavetypeTest {
                                 område = område,
                                 listetype = false,
                                 tolkesSom = "String",
-                                visTilBruker = true
+                                visTilBruker = true,
+                                kodeverk = null
                             ),
                             visPåOppgave = true,
                             påkrevd = true,
@@ -201,7 +206,8 @@ class OppgavetypeTest {
                                 område = område,
                                 listetype = false,
                                 tolkesSom = "String",
-                                visTilBruker = true
+                                visTilBruker = true,
+                                kodeverk = null
                             ),
                             visPåOppgave = true,
                             påkrevd = true,
@@ -214,7 +220,8 @@ class OppgavetypeTest {
                                 område = område,
                                 listetype = false,
                                 tolkesSom = "String",
-                                visTilBruker = true
+                                visTilBruker = true,
+                                kodeverk = null
                             ),
                             visPåOppgave = true,
                             påkrevd = true,
@@ -227,7 +234,8 @@ class OppgavetypeTest {
                                 område = område,
                                 listetype = false,
                                 tolkesSom = "String",
-                                visTilBruker = true
+                                visTilBruker = true,
+                                kodeverk = null
                             ),
                             visPåOppgave = true,
                             påkrevd = false,
@@ -247,7 +255,8 @@ class OppgavetypeTest {
                                 område = område,
                                 listetype = false,
                                 tolkesSom = "String",
-                                visTilBruker = true
+                                visTilBruker = true,
+                                kodeverk = null
                             ),
                             visPåOppgave = true,
                             påkrevd = true,

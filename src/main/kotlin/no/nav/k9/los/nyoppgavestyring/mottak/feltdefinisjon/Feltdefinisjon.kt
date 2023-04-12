@@ -9,7 +9,8 @@ class Feltdefinisjon(
     val område: Område,
     val listetype: Boolean,
     val tolkesSom: String,
-    val visTilBruker: Boolean
+    val visTilBruker: Boolean,
+    val kodeverk: Kodeverk?,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -22,15 +23,20 @@ class Feltdefinisjon(
         if (listetype != other.listetype) return false
         if (tolkesSom != other.tolkesSom) return false
         if (visTilBruker != other.visTilBruker) return false
+        if (kodeverk != other.kodeverk) return false
 
         return true
     }
 
     override fun hashCode(): Int {
         var result = eksternId.hashCode()
+        result = 31 * result + område.hashCode()
         result = 31 * result + listetype.hashCode()
         result = 31 * result + tolkesSom.hashCode()
         result = 31 * result + visTilBruker.hashCode()
+        result = 31 * result + kodeverk.hashCode()
         return result
     }
+
+
 }
