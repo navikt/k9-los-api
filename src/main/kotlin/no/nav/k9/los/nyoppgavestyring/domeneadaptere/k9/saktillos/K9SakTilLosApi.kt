@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos
 
 import io.ktor.http.*
 import io.ktor.server.application.*

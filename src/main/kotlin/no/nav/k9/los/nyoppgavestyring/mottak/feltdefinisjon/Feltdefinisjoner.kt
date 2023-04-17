@@ -16,7 +16,12 @@ class Feltdefinisjoner(
                 listetype = feltdefinisjonDto.listetype,
                 tolkesSom = feltdefinisjonDto.tolkesSom,
                 visTilBruker = feltdefinisjonDto.visTilBruker,
-                kodeverk = feltdefinisjonDto.kodeverk?.let { kodeverkForOmråde.hentKodeverk(eksternId = feltdefinisjonDto.kodeverk) }
+                kodeverk = feltdefinisjonDto.kodeverk?.let { kodeverk ->
+                    //TODO: Elegant måte å slå opp på tvers av områder?
+                    val område = kodeverk.substringBefore(".")
+                    val eksternIdUtenOmråde = kodeverk.substringAfter(".")
+                    kodeverkForOmråde.hentKodeverk(eksternId = eksternIdUtenOmråde)
+                }
             )
         }.toSet()
     )

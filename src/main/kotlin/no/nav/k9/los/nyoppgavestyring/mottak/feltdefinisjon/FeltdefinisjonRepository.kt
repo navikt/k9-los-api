@@ -29,7 +29,7 @@ class FeltdefinisjonRepository {
                     listetype = row.boolean("liste_type"),
                     tolkesSom = row.string("tolkes_som"),
                     visTilBruker = row.boolean("vis_til_bruker"),
-                    kodeverk = row.longOrNull("kodeverk_id")?.let {hentKodeverk(område, tx).hentKodeverk(kodeverkId = row.long("kodeverk_id")) }
+                    kodeverk = row.longOrNull("kodeverk_id")?.let { hentKodeverk(område, tx).hentKodeverk(kodeverkId = row.long("kodeverk_id")) }
                 )
             }.asList
         )
@@ -80,19 +80,19 @@ class FeltdefinisjonRepository {
     }
 
     fun leggTil(leggTilListe: Set<Feltdefinisjon>, område: Område, tx: TransactionalSession) {
-        leggTilListe.forEach { datatype ->
+        leggTilListe.forEach { feltdefinisjon ->
             tx.run(
                 queryOf(
                     """
                     insert into feltdefinisjon(ekstern_id, omrade_id, liste_type, tolkes_som, vis_til_bruker, kodeverk_id) 
                     values(:eksternId, :omradeId, :listeType, :tolkesSom, :visTilBruker, :kodeverkId)""",
                     mapOf(
-                        "eksternId" to datatype.eksternId,
+                        "eksternId" to feltdefinisjon.eksternId,
                         "omradeId" to område.id,
-                        "listeType" to datatype.listetype,
-                        "tolkesSom" to datatype.tolkesSom,
-                        "visTilBruker" to datatype.visTilBruker,
-                        "kodeverkId" to datatype.kodeverk?.id!!
+                        "listeType" to feltdefinisjon.listetype,
+                        "tolkesSom" to feltdefinisjon.tolkesSom,
+                        "visTilBruker" to feltdefinisjon.visTilBruker,
+                        "kodeverkId" to feltdefinisjon.kodeverk?.let { it.id!! }
                     )
                 ).asUpdate
             )
@@ -104,9 +104,12 @@ class FeltdefinisjonRepository {
             queryOf(
                 """
                     delete
-                    from kodeverkVerdi kv
-                        inner join kodeverk k on kv.kodeverk_id = k.id
-                    where k.ekstern_id = :eksternId
+                    from kodeverk_verdi kv
+                    where kv.id in (
+                        select kvi.id from kodeverk_verdi kvi
+                            inner join kodeverk k on kvi.kodeverk_id = k.id
+                        where k.ekstern_id = :eksternId
+                    )
                 """.trimIndent(),
                 mapOf(
                     "eksternId" to kodeverk.eksternId

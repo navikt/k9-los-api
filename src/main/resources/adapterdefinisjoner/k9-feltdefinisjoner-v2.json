@@ -23,7 +23,8 @@
       "id": "fagsystem",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kodeverk": "K9.Fagsystem"
     },
     {
       "id": "saksnummer",
@@ -35,25 +36,29 @@
       "id": "resultattype",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kodeverk": "K9.Resultattype"
     },
     {
       "id": "behandlingssteg",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kodeverk": "K9.Behandlingssteg"
     },
     {
       "id": "ytelsestype",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kodeverk": "K9.Ytelsetype"
     },
     {
       "id": "behandlingsstatus",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kodeverk": "K9.Behandlingsstatus"
     },
     {
       "id": "mottattDato",
@@ -71,7 +76,8 @@
       "id": "behandlingTypekode",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kodeverk": "K9.Behandlingtype"
     },
     {
       "id": "relatertPartAktorid",
@@ -113,19 +119,22 @@
       "id": "aksjonspunkt",
       "listetype": true,
       "tolkesSom": "String",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kodeverk": "K9.Aksjonspunkt"
     },
     {
       "id": "aktivtAksjonspunkt",
       "listetype": true,
       "tolkesSom": "String",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kodeverk": "K9.Aksjonspunkt"
     },
     {
       "id": "løsbartAksjonspunkt",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kodeverk": "K9.Aksjonspunkt"
     },
     {
       "id": "avventerSaksbehandler",
@@ -203,7 +212,8 @@
       "id": "aktivVenteårsak",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kodeverk": "K9.Venteårsak"
     },
     {
       "id": "aktivVentefrist",

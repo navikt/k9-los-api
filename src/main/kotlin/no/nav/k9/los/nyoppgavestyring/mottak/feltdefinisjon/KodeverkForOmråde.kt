@@ -8,7 +8,9 @@ class KodeverkForOmråde(
     val kodeverk: List<Kodeverk>,
 ) {
     fun hentKodeverk(eksternId: String) : Kodeverk {
-        return kodeverk.firstOrNull { kodeverk -> kodeverk.eksternId == eksternId }
+        return kodeverk.firstOrNull { kodeverk ->
+            kodeverk.eksternId == eksternId
+        }
             ?: throw IllegalArgumentException("Fant ikke omsøkt kodeverk: $eksternId for område: ${område.eksternId}")
     }
 
