@@ -126,7 +126,7 @@ class OppgaveKoRepository(val datasource: DataSource) {
     private fun hentKoSaksbehandlere(tx: TransactionalSession, oppgavekoV3Id: Long): List<String> {
         return tx.run(
             queryOf(
-                "SELECT epost FROM OPPGAVEKO_SAKSBEHANDLER WHERE oppgaveko_v3_id = :oppgavekoV3Id",
+                "SELECT saksbehandler_epost FROM OPPGAVEKO_SAKSBEHANDLER WHERE oppgaveko_v3_id = :oppgavekoV3Id",
                 mapOf(
                     "oppgavekoV3Id" to oppgavekoV3Id
                 )
