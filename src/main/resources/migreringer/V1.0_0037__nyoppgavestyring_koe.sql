@@ -14,6 +14,6 @@ CREATE TABLE if not exists OPPGAVEKO_SAKSBEHANDLER
     oppgaveko_v3_id               BIGINT                                  NOT NULL,
     saksbehandler_epost           VARCHAR(200)                            NOT NULL,
 
-    CONSTRAINT FK_OPPGAVEKO_V3_ID FOREIGN KEY(oppgaveko_v3_id) references OPPGAVEKO_V3(id)
+    CONSTRAINT FK_OPPGAVEKO_V3_ID FOREIGN KEY(oppgaveko_v3_id) references OPPGAVEKO_V3(id),
     CONSTRAINT FK_SAKSBEHANDLER_EPOST FOREIGN KEY(saksbehandler_epost) references SAKSBEHANDLER(epost)
 );
