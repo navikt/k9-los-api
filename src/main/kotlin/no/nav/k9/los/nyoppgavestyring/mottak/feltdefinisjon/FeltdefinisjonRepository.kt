@@ -4,11 +4,12 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.IllegalDeleteException
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
+import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.utils.Cache
 import org.postgresql.util.PSQLException
 import org.slf4j.LoggerFactory
 
-class FeltdefinisjonRepository {
+class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
     private val log = LoggerFactory.getLogger(FeltdefinisjonRepository::class.java)
     private val kodeverkCache = Cache<KodeverkForOmråde>()
 
@@ -149,6 +150,11 @@ class FeltdefinisjonRepository {
         )
 
         invaliderCache()
+    }
+
+    fun hentKodeverk(områdeEksternId: String, tx: TransactionalSession) : KodeverkForOmråde {
+        return hentKodeverk(områdeRepository.hentOmråde(områdeEksternId, tx), tx)
+
     }
 
     fun hentKodeverk(område: Område, tx: TransactionalSession) : KodeverkForOmråde {

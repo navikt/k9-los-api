@@ -4,8 +4,10 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelter
+import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Verdiforklaring
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
 import javax.sql.DataSource
 
@@ -29,28 +31,71 @@ class OppgaveQueryRepository(val datasource: DataSource) {
                     SELECT DISTINCT fo.ekstern_id as omrade,
                       fd.ekstern_id as kode,
                       fd.ekstern_id as visningsnavn,
-                      fd.tolkes_som as tolkes_som
+                      fd.tolkes_som as tolkes_som,
+                      fd.kodeverk_id as kodeverk_id
                     FROM Feltdefinisjon fd INNER JOIN Omrade fo ON (
                       fo.id = fd.omrade_id
                     )
                 """.trimIndent()
-            ).map{row -> Oppgavefelt(
-                row.string("omrade"),
-                row.string("kode"),
-                midlertidigFiksVisningsnavn(row.string("visningsnavn")),
-                row.string("tolkes_som")
-            ) }.asList
+            ).map { row ->
+                Oppgavefelt(
+                    område = row.string("omrade"),
+                    kode = row.string("kode"),
+                    visningsnavn = midlertidigFiksVisningsnavn(row.string("visningsnavn")),
+                    tolkes_som = row.string("tolkes_som"),
+                    verdier = hentVerdiforklaringer(row.long("kodeverk"), tx)
+                )
+            }.asList
         ) ?: throw IllegalStateException("Feil ved kjøring av hentAlleFelter")
 
         val standardfelter = listOf(
-            Oppgavefelt(null, "oppgavestatus", "Oppgavestatus", "String"),
-            Oppgavefelt(null, "kildeområde", "Kildeområde", "String"),
-            Oppgavefelt(null, "oppgavetype", "Oppgavetype", "String"),
-            Oppgavefelt(null, "oppgaveområde", "Oppgaveområde", "String")
+            Oppgavefelt(
+                null,
+                "oppgavestatus",
+                "Oppgavestatus",
+                "String",
+                Oppgavestatus.values().map { oppgavestatus ->
+                    Verdiforklaring(
+                        verdi = oppgavestatus.kode,
+                        visningsnavn = oppgavestatus.visningsnavn
+                    )
+                }),
+            Oppgavefelt(
+                null,
+                "kildeområde",
+                "Kildeområde",
+                "String",
+                emptyList()
+                ),
+            Oppgavefelt(null, "oppgavetype", "Oppgavetype", "String", emptyList()),
+            Oppgavefelt(null, "oppgaveområde", "Oppgaveområde", "String", emptyList()
+            )
         )
 
         return (felterFraDatabase + standardfelter).sortedBy { it.visningsnavn };
     }
+
+    private fun hentVerdiforklaringer(kodeverk_id: Long, tx: TransactionalSession): List<Verdiforklaring> {
+        return tx.run(
+            queryOf(
+                """
+                    select 
+                        kv.verdi as verdi,
+                        kv.visningsnavn as visningsnavn
+                    from kodeverk_verdi kv where kodeverk_id = :kodeverk_id
+                """.trimIndent(),
+                mapOf(
+                    "kodeverk_id" to kodeverk_id
+                )
+            ).map { row ->
+                Verdiforklaring(
+                    verdi = row.string("verdi"),
+                    visningsnavn = row.string("visningsnavn")
+                )
+            }.asList
+        )
+    }
+
 
     fun query(oppgaveQuery: OppgaveQuery): List<Long> {
         return using(sessionOf(datasource)) { it ->
@@ -68,7 +113,7 @@ class OppgaveQueryRepository(val datasource: DataSource) {
             queryOf(
                 oppgaveQuery.getQuery(),
                 oppgaveQuery.getParams()
-            ).map{row -> row.long("id")}.asList
+            ).map { row -> row.long("id") }.asList
         ) ?: throw IllegalStateException("Feil ved kjøring av oppgavequery")
     }
 
@@ -80,7 +125,7 @@ class OppgaveQueryRepository(val datasource: DataSource) {
         query.medLimit(oppgaveQuery.limit)
 
         return query
-     }
+    }
 
     private fun håndterFiltere(
         query: SqlOppgaveQuery,
@@ -96,12 +141,14 @@ class OppgaveQueryRepository(val datasource: DataSource) {
                     FeltverdiOperator.valueOf(filter.operator),
                     filter.verdi
                 )
+
                 is CombineOppgavefilter -> {
                     val newCombineOperator = CombineOperator.valueOf(filter.combineOperator)
                     query.medBlokk(combineOperator, newCombineOperator.defaultValue) {
                         håndterFiltere(query, filter.filtere, newCombineOperator);
                     };
                 }
+
                 else -> throw IllegalStateException("Ukjent filter: " + filter::class.qualifiedName)
             }
         }
