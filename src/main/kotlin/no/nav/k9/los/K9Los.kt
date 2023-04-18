@@ -42,6 +42,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdap
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.StatistikkApi
+import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoApis
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonApi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Api
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeApi
@@ -311,6 +312,7 @@ private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
         KodeverkApis()
 
         route("ny-oppgavestyring") {
+            route("ko") { OppgaveKoApis() }
             route("oppgave") { OppgaveQueryApis() }
             route("feltdefinisjon") { FeltdefinisjonApi() }
             route("oppgavetype") { OppgavetypeApi() }
