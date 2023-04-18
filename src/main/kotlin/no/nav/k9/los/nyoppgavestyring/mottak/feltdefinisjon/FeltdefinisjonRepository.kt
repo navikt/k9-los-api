@@ -136,6 +136,7 @@ class FeltdefinisjonRepository {
         tx.batchPreparedNamedStatement("""
             insert into kodeverk_verdi(kodeverk_id, verdi, visningsnavn, beskrivelse)
             VALUES (:kodeverkId, :verdi, :visningsnavn, :beskrivelse)
+            on conflict(kodeverk_id, verdi) do update set visningsnavn = :visningsnavn, beskrivelse = :beskrivelse
         """.trimIndent(),
             kodeverk.verdier.map { verdi ->
                 mapOf(

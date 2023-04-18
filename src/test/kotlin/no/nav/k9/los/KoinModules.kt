@@ -29,6 +29,8 @@ import no.nav.k9.los.integrasjon.omsorgspenger.OmsorgspengerServiceLocal
 import no.nav.k9.los.integrasjon.pdl.IPdlService
 import no.nav.k9.los.integrasjon.pdl.PdlServiceLocal
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository
@@ -150,10 +152,12 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single { OppgaveRepositoryV2(dataSource = get()) }
     single { TransactionalManager(dataSource = get()) }
-    single { OppgaveTjenesteV2(
-        oppgaveRepository = get(),
-        migreringstjeneste = get(),
-        tm = get())
+    single {
+        OppgaveTjenesteV2(
+            oppgaveRepository = get(),
+            migreringstjeneste = get(),
+            tm = get()
+        )
     }
 
     single { BehandlingsmigreringTjeneste(BehandlingProsessEventK9Repository(dataSource = get())) }
@@ -253,6 +257,12 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single { FeltdefinisjonRepository() }
     single { OmrådeRepository(dataSource = get()) }
+    single(createdAtStart = true) {
+        OmrådeSetup(
+            områdeRepository = get(),
+            feltdefinisjonTjeneste = get()
+        ).setup()
+    }
     single { OppgavetypeRepository(feltdefinisjonRepository = get(), områdeRepository = get()) }
     single { OppgaveV3Repository(dataSource = get()) }
     single { BehandlingProsessEventK9Repository(dataSource = get()) }
@@ -262,7 +272,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single { OppgaveRepository(oppgavetypeRepository = get()) }
     single { StatistikkRepository(dataSource = get()) }
 
-    val statistikkPublisher = mockk<StatistikkPublisher>()
+    single { mockk<StatistikkPublisher>() }
 
     single {
         OppgavestatistikkTjeneste(
@@ -309,6 +319,18 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             config = get(),
             transactionalManager = get()
         ).setup()
+    }
+
+    single {
+        K9KlageTilLosAdapterTjeneste(
+            behandlingProsessEventKlageRepository = get(),
+            områdeRepository = get(),
+            feltdefinisjonTjeneste = get(),
+            oppgavetypeTjeneste = get(),
+            oppgaveV3Tjeneste = get(),
+            config = get(),
+            transactionalManager = get()
+        )
     }
 
     single {
