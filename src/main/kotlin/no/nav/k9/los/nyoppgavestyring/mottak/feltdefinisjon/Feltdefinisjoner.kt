@@ -7,7 +7,7 @@ class Feltdefinisjoner(
     val feltdefinisjoner: Set<Feltdefinisjon>
 ) {
 
-    constructor(feltdefinisjonerDto: FeltdefinisjonerDto, kodeverkForOmråde: KodeverkForOmråde, område: Område) : this(
+    constructor(feltdefinisjonerDto: FeltdefinisjonerDto, område: Område) : this(
         område = område,
         feltdefinisjoner = feltdefinisjonerDto.feltdefinisjoner.map { feltdefinisjonDto ->
             Feltdefinisjon(
@@ -16,12 +16,7 @@ class Feltdefinisjoner(
                 listetype = feltdefinisjonDto.listetype,
                 tolkesSom = feltdefinisjonDto.tolkesSom,
                 visTilBruker = feltdefinisjonDto.visTilBruker,
-                kodeverk = feltdefinisjonDto.kodeverk?.let { kodeverk ->
-                    //TODO: Elegant måte å slå opp på tvers av områder?
-                    val område = kodeverk.substringBefore(".")
-                    val eksternIdUtenOmråde = kodeverk.substringAfter(".")
-                    kodeverkForOmråde.hentKodeverk(eksternId = eksternIdUtenOmråde)
-                }
+                kodeverkreferanse = feltdefinisjonDto.kodeverk?.let { kodeverk -> Kodeverkreferanse(kodeverk) }
             )
         }.toSet()
     )

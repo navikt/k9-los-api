@@ -30,7 +30,7 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                     listetype = row.boolean("liste_type"),
                     tolkesSom = row.string("tolkes_som"),
                     visTilBruker = row.boolean("vis_til_bruker"),
-                    kodeverk = row.longOrNull("kodeverk_id")?.let { hentKodeverk(område, tx).hentKodeverk(kodeverkId = row.long("kodeverk_id")) }
+                    kodeverkreferanse = row.stringOrNull("kodeverkreferanse")?.let { Kodeverkreferanse(it) }
                 )
             }.asList
         )
@@ -65,7 +65,7 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                 queryOf(
                     """
                     update feltdefinisjon 
-                    set liste_type = :listeType, tolkes_som = :tolkesSom, vis_til_bruker = :visTilBruker, kodeverk_id = :kodeverkId
+                    set liste_type = :listeType, tolkes_som = :tolkesSom, vis_til_bruker = :visTilBruker, kodeverkreferanse = :kodeverkreferanse
                     WHERE omrade_id = :omradeId AND ekstern_id = :eksternId""",
                     mapOf(
                         "eksternId" to datatype.eksternId,
@@ -73,7 +73,7 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                         "listeType" to datatype.listetype,
                         "tolkesSom" to datatype.tolkesSom,
                         "visTilBruker" to datatype.visTilBruker,
-                        "kodeverkId" to datatype.kodeverk?.id
+                        "kodeverkreferanse" to datatype.kodeverkreferanse?.let { it.toDatabasestreng() }
                     )
                 ).asUpdate
             )
@@ -85,15 +85,15 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
             tx.run(
                 queryOf(
                     """
-                    insert into feltdefinisjon(ekstern_id, omrade_id, liste_type, tolkes_som, vis_til_bruker, kodeverk_id) 
-                    values(:eksternId, :omradeId, :listeType, :tolkesSom, :visTilBruker, :kodeverkId)""",
+                    insert into feltdefinisjon(ekstern_id, omrade_id, liste_type, tolkes_som, vis_til_bruker, kodeverkreferanse) 
+                    values(:eksternId, :omradeId, :listeType, :tolkesSom, :visTilBruker, :kodeverkreferanse)""",
                     mapOf(
                         "eksternId" to feltdefinisjon.eksternId,
                         "omradeId" to område.id,
                         "listeType" to feltdefinisjon.listetype,
                         "tolkesSom" to feltdefinisjon.tolkesSom,
                         "visTilBruker" to feltdefinisjon.visTilBruker,
-                        "kodeverkId" to feltdefinisjon.kodeverk?.let { it.id!! }
+                        "kodeverkreferanse" to feltdefinisjon.kodeverkreferanse?.let { it.toDatabasestreng() }
                     )
                 ).asUpdate
             )
@@ -110,10 +110,12 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                         select kvi.id from kodeverk_verdi kvi
                             inner join kodeverk k on kvi.kodeverk_id = k.id
                         where k.ekstern_id = :eksternId
+                        and k.omrade_id = :omradeId
                     )
                 """.trimIndent(),
                 mapOf(
-                    "eksternId" to kodeverk.eksternId
+                    "eksternId" to kodeverk.eksternId,
+                    "omradeId" to kodeverk.område.id!!
                 )
             ).asUpdate
         )
@@ -152,12 +154,15 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
         invaliderCache()
     }
 
-    fun hentKodeverk(områdeEksternId: String, tx: TransactionalSession) : KodeverkForOmråde {
-        return hentKodeverk(områdeRepository.hentOmråde(områdeEksternId, tx), tx)
-
+    fun hentKodeverk(referanse: Kodeverkreferanse, tx: TransactionalSession) : Kodeverk {
+        return hentKodeverk(områdeRepository.hentOmråde(referanse.område, tx), tx).hentKodeverk(referanse.eksternId)
     }
 
-    fun hentKodeverk(område: Område, tx: TransactionalSession) : KodeverkForOmråde {
+    fun hentKodeverk(områdeEksternId: String, tx: TransactionalSession): KodeverkForOmråde {
+        return hentKodeverk(områdeRepository.hentOmråde(områdeEksternId, tx), tx)
+    }
+
+    fun hentKodeverk(område: Område, tx: TransactionalSession): KodeverkForOmråde {
         return kodeverkCache.hent(område.eksternId) {
             val kodeverks = tx.run(
                 queryOf(

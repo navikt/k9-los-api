@@ -10,7 +10,7 @@ class Feltdefinisjon(
     val listetype: Boolean,
     val tolkesSom: String,
     val visTilBruker: Boolean,
-    val kodeverk: Kodeverk?,
+    val kodeverkreferanse: Kodeverkreferanse?,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -23,7 +23,7 @@ class Feltdefinisjon(
         if (listetype != other.listetype) return false
         if (tolkesSom != other.tolkesSom) return false
         if (visTilBruker != other.visTilBruker) return false
-        if (kodeverk != other.kodeverk) return false
+        if (kodeverkreferanse != other.kodeverkreferanse) return false
 
         return true
     }
@@ -34,7 +34,7 @@ class Feltdefinisjon(
         result = 31 * result + listetype.hashCode()
         result = 31 * result + tolkesSom.hashCode()
         result = 31 * result + visTilBruker.hashCode()
-        result = 31 * result + kodeverk.hashCode()
+        result = 31 * result + kodeverkreferanse.hashCode()
         return result
     }
 

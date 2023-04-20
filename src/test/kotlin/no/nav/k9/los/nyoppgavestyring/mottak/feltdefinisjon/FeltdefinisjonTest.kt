@@ -3,8 +3,6 @@ package no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon
 import assertk.assertThat
 import assertk.assertions.hasSize
 import assertk.assertions.isEmpty
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjoner
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import org.junit.jupiter.api.Test
 
@@ -29,7 +27,7 @@ class FeltdefinisjonTest {
                     listetype = false,
                     tolkesSom = "String",
                     visTilBruker = true,
-                    kodeverk = null
+                    kodeverkreferanse = null
                 )
             )
         )
@@ -49,7 +47,7 @@ class FeltdefinisjonTest {
                     listetype = true,
                     tolkesSom = "String",
                     visTilBruker = true,
-                    kodeverk = null
+                    kodeverkreferanse = null
                 ),
                 Feltdefinisjon(
                     eksternId = "opprettet",
@@ -57,7 +55,7 @@ class FeltdefinisjonTest {
                     listetype = true,
                     tolkesSom = "Date",
                     visTilBruker = true,
-                    kodeverk = null
+                    kodeverkreferanse = null
                 )
             )
         )
@@ -77,7 +75,7 @@ class FeltdefinisjonTest {
                     listetype = false,
                     tolkesSom = "String",
                     visTilBruker = true,
-                    kodeverk = null
+                    kodeverkreferanse = null
                 ),
                 Feltdefinisjon(
                     eksternId = "opprettet",
@@ -85,7 +83,7 @@ class FeltdefinisjonTest {
                     listetype = false,
                     tolkesSom = "Date",
                     visTilBruker = true,
-                    kodeverk = null
+                    kodeverkreferanse = null
                 )
             )
         )

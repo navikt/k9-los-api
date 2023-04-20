@@ -54,7 +54,7 @@ class KodeverkTest : AbstractK9LosIntegrationTest() {
         transactionalManager.transaction { tx ->
             feltdefinisjonRepository.lagre(kodeverk, tx)
             kodeverk = feltdefinisjonRepository.hentKodeverk(område, tx).hentKodeverk("kodeverk")
-            val feltdefinisjon = byggFeltdefinisjon(område, kodeverk)
+            val feltdefinisjon = byggFeltdefinisjon(område, Kodeverkreferanse(kodeverk))
 
             feltdefinisjonRepository.leggTil(
                 leggTilListe = setOf(feltdefinisjon),
@@ -65,11 +65,11 @@ class KodeverkTest : AbstractK9LosIntegrationTest() {
             val feltdefinisjonHentet = feltdefinisjonRepository.hent(område, tx).hentFeltdefinisjon("Feltdefinisjon")
 
             assertThat(feltdefinisjonHentet.eksternId).isEqualTo("Feltdefinisjon")
-            assertThat(feltdefinisjonHentet.kodeverk).isEqualTo(kodeverk)
+            assertThat(feltdefinisjonHentet.kodeverkreferanse).isEqualTo(Kodeverkreferanse(kodeverk))
         }
     }
 
-    internal fun byggFeltdefinisjon(område: Område, kodeverk: Kodeverk?): Feltdefinisjon {
+    internal fun byggFeltdefinisjon(område: Område, kodeverk: Kodeverkreferanse?): Feltdefinisjon {
          return Feltdefinisjon(
              id = null,
              eksternId = "Feltdefinisjon",
@@ -77,7 +77,7 @@ class KodeverkTest : AbstractK9LosIntegrationTest() {
              listetype = false,
              tolkesSom = "String",
              visTilBruker = true,
-             kodeverk = kodeverk
+             kodeverkreferanse = kodeverk
          )
     }
 

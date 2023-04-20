@@ -74,7 +74,7 @@ class OppgavetypeTest {
                                 listetype = false,
                                 tolkesSom = "String",
                                 visTilBruker = true,
-                                kodeverk = null
+                                kodeverkreferanse = null
                             ),
                             visPåOppgave = true,
                             påkrevd = true,
@@ -88,7 +88,7 @@ class OppgavetypeTest {
                                 listetype = false,
                                 tolkesSom = "String",
                                 visTilBruker = true,
-                                kodeverk = null
+                                kodeverkreferanse = null
                             ),
                             visPåOppgave = true,
                             påkrevd = true,
@@ -123,7 +123,7 @@ class OppgavetypeTest {
                                 listetype = false,
                                 tolkesSom = "String",
                                 visTilBruker = true,
-                                kodeverk = null
+                                kodeverkreferanse = null
                             ),
                             visPåOppgave = true,
                             påkrevd = true,
@@ -137,7 +137,7 @@ class OppgavetypeTest {
                                 listetype = false,
                                 tolkesSom = "String",
                                 visTilBruker = true,
-                                kodeverk = null
+                                kodeverkreferanse = null
                             ),
                             visPåOppgave = true,
                             påkrevd = true,
@@ -151,7 +151,7 @@ class OppgavetypeTest {
                                 listetype = false,
                                 tolkesSom = "String",
                                 visTilBruker = true,
-                                kodeverk = null
+                                kodeverkreferanse = null
                             ),
                             visPåOppgave = true,
                             påkrevd = true,
@@ -172,7 +172,7 @@ class OppgavetypeTest {
                                 listetype = false,
                                 tolkesSom = "String",
                                 visTilBruker = true,
-                                kodeverk = null
+                                kodeverkreferanse = null
                             ),
                             visPåOppgave = true,
                             påkrevd = true,
@@ -207,7 +207,7 @@ class OppgavetypeTest {
                                 listetype = false,
                                 tolkesSom = "String",
                                 visTilBruker = true,
-                                kodeverk = null
+                                kodeverkreferanse = null
                             ),
                             visPåOppgave = true,
                             påkrevd = true,
@@ -221,7 +221,7 @@ class OppgavetypeTest {
                                 listetype = false,
                                 tolkesSom = "String",
                                 visTilBruker = true,
-                                kodeverk = null
+                                kodeverkreferanse = null
                             ),
                             visPåOppgave = true,
                             påkrevd = true,
@@ -235,7 +235,7 @@ class OppgavetypeTest {
                                 listetype = false,
                                 tolkesSom = "String",
                                 visTilBruker = true,
-                                kodeverk = null
+                                kodeverkreferanse = null
                             ),
                             visPåOppgave = true,
                             påkrevd = false,
@@ -256,7 +256,7 @@ class OppgavetypeTest {
                                 listetype = false,
                                 tolkesSom = "String",
                                 visTilBruker = true,
-                                kodeverk = null
+                                kodeverkreferanse = null
                             ),
                             visPåOppgave = true,
                             påkrevd = true,

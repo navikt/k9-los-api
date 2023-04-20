@@ -4,6 +4,8 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Kodeverkreferanse
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelter
@@ -11,7 +13,10 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Verdiforklaring
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
 import javax.sql.DataSource
 
-class OppgaveQueryRepository(val datasource: DataSource) {
+class OppgaveQueryRepository(
+        val datasource: DataSource,
+        val feltdefinisjonRepository: FeltdefinisjonRepository
+) {
 
     fun hentAlleFelter(): Oppgavefelter {
         return using(sessionOf(datasource)) { it ->
@@ -32,7 +37,7 @@ class OppgaveQueryRepository(val datasource: DataSource) {
                       fd.ekstern_id as kode,
                       fd.ekstern_id as visningsnavn,
                       fd.tolkes_som as tolkes_som,
-                      fd.kodeverk_id as kodeverk_id
+                      fd.kodeverkreferanse as kodeverkreferanse
                     FROM Feltdefinisjon fd INNER JOIN Omrade fo ON (
                       fo.id = fd.omrade_id
                     )
@@ -43,7 +48,9 @@ class OppgaveQueryRepository(val datasource: DataSource) {
                     kode = row.string("kode"),
                     visningsnavn = midlertidigFiksVisningsnavn(row.string("visningsnavn")),
                     tolkes_som = row.string("tolkes_som"),
-                    verdier = hentVerdiforklaringer(row.long("kodeverk"), tx)
+                    verdier = row.stringOrNull("kodeverkreferanse")?.let {
+                        hentVerdiforklaringer(Kodeverkreferanse(it), tx)
+                    }
                 )
             }.asList
         ) ?: throw IllegalStateException("Feil ved kjøring av hentAlleFelter")
@@ -75,27 +82,14 @@ class OppgaveQueryRepository(val datasource: DataSource) {
         return (felterFraDatabase + standardfelter).sortedBy { it.visningsnavn };
     }
 
-    private fun hentVerdiforklaringer(kodeverk_id: Long, tx: TransactionalSession): List<Verdiforklaring> {
-        return tx.run(
-            queryOf(
-                """
-                    select 
-                        kv.verdi as verdi,
-                        kv.visningsnavn as visningsnavn
-                    from kodeverk_verdi kv where kodeverk_id = :kodeverk_id
-                """.trimIndent(),
-                mapOf(
-                    "kodeverk_id" to kodeverk_id
-                )
-            ).map { row ->
-                Verdiforklaring(
-                    verdi = row.string("verdi"),
-                    visningsnavn = row.string("visningsnavn")
-                )
-            }.asList
-        )
+    private fun hentVerdiforklaringer(kodeverkreferanse: Kodeverkreferanse, tx: TransactionalSession) : List<Verdiforklaring> {
+        return feltdefinisjonRepository.hentKodeverk(kodeverkreferanse, tx).verdier.map { kodeverkverdi ->
+            Verdiforklaring(
+                    verdi = kodeverkverdi.verdi,
+                    visningsnavn = kodeverkverdi.visningsnavn
+            )
+        }
     }
-
 
     fun query(oppgaveQuery: OppgaveQuery): List<Long> {
         return using(sessionOf(datasource)) { it ->

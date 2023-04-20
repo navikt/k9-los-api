@@ -131,7 +131,7 @@ internal class AkkumulertVentetidTest {
             listetype = false,
             tolkesSom = "Boolean",
             visTilBruker = true,
-            kodeverk = null,
+            kodeverkreferanse = null,
         ),
         visPåOppgave = true,
         påkrevd = false,

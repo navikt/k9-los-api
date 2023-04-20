@@ -14,8 +14,7 @@ class FeltdefinisjonTjeneste(
         transactionalManager.transaction { tx ->
             val område = områdeRepository.hentOmråde(innkommendeFeltdefinisjonerDto.område, tx)
             val eksisterendeFeltdefinisjoner = feltdefinisjonRepository.hent(område, tx)
-            val kodeverkForOmråde = feltdefinisjonRepository.hentKodeverk(område, tx)
-            val innkommendeFeltdefinisjoner = Feltdefinisjoner(innkommendeFeltdefinisjonerDto, kodeverkForOmråde, område)
+            val innkommendeFeltdefinisjoner = Feltdefinisjoner(innkommendeFeltdefinisjonerDto, område)
 
             val (sletteListe, oppdaterListe, leggTilListe) = eksisterendeFeltdefinisjoner.finnForskjeller(innkommendeFeltdefinisjoner)
             feltdefinisjonRepository.fjern(sletteListe, tx)

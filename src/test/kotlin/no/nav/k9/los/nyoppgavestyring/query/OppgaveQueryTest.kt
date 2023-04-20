@@ -5,8 +5,11 @@ import assertk.assertions.isEmpty
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import io.mockk.mockk
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.los.AbstractK9LosIntegrationTest
+import no.nav.k9.los.domene.repository.StatistikkRepository
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
@@ -19,7 +22,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `sjekker at oppgave-query kan kjøres mot database`() {
-        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource)
+        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
         val oppgaveQuery = OppgaveQuery(listOf(
             FeltverdiOppgavefilter(null, "oppgavestatus", "EQUALS", "OPPR"),
             FeltverdiOppgavefilter(null, "kildeområde", "EQUALS", "K9"),

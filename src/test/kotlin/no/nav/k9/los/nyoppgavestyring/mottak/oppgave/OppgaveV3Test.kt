@@ -84,8 +84,7 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
                     område = område,
                     feltdefinisjoner = Feltdefinisjoner(
                         feltdefinisjonerDto = feltdefinisjonDto,
-                        område = område,
-                        kodeverkForOmråde = KodeverkForOmråde(område, emptyList())
+                        område = område
                     )
                 )
             )

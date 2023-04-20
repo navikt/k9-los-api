@@ -31,7 +31,6 @@ comment on column KODEVERK_VERDI.verdi is 'Verdi som kan oppgis, feks fra en enu
 comment on column KODEVERK_VERDI.visningsnavn is 'Tekst for verdi som brukes i skjermbilder';
 comment on column KODEVERK_VERDI.beskrivelse is 'Beskrivelse eller funksjonell forklaring på hva den aktuelle verdien betyr';
 
-alter table FELTDEFINISJON add column kodeverk_id BIGINT;
-alter table FELTDEFINISJON ADD CONSTRAINT FK_FELTDEFINISJON_02 FOREIGN KEY(KODEVERK_ID) references KODEVERK(id);
+alter table FELTDEFINISJON add column kodeverkreferanse VARCHAR(201);
 
-comment on column FELTDEFINISJON.kodeverk_id is 'Fremmednøkkel til kodeverk som inneholder kjente verdier og visningsnavn, typisk for enumverdier';
+comment on column FELTDEFINISJON.kodeverkreferanse is 'Referanse som kan brukes for å hente ut kodeverk for feltet';

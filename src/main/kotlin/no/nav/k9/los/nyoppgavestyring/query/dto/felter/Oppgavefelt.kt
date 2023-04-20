@@ -5,5 +5,5 @@ class Oppgavefelt(
     val kode: String,
     val visningsnavn: String,
     val tolkes_som: String,
-    val verdier: List<Verdiforklaring>
+    val verdier: List<Verdiforklaring>?
 )
