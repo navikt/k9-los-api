@@ -130,7 +130,7 @@ class OppgaveKoRepository(val datasource: DataSource) {
                 mapOf(
                     "oppgavekoV3Id" to oppgavekoV3Id
                 )
-            ).map{row -> row.string("epost")}.asList
+            ).map{row -> row.string("saksbehandler_epost")}.asList
         )
     }
 
