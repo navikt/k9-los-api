@@ -10,7 +10,7 @@ val kotliqueryVersion = "1.9.0"
 val k9SakVersion = "3.4.3"
 val k9KlageVersion = "0.3.0"
 val fuelVersion = "2.3.1"
-val jacksonVersion = "2.14.2"
+val jacksonVersion = "2.15.0"
 
 val dusseldorfKtorVersion = "3.2.2.3-0b4ec43"
 val ktorVersion = "2.2.4"
