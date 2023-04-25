@@ -111,7 +111,7 @@ class OppgaveKoRepository(val datasource: DataSource) {
                     "gammelVersjon" to oppgaveKo.versjon,
                     "tittel" to oppgaveKo.tittel,
                     "beskrivelse" to oppgaveKo.beskrivelse,
-                    "query" to objectMapper.writeValueAsString(OppgaveQuery()),
+                    "query" to objectMapper.writeValueAsString(oppgaveKo.oppgaveQuery),
                     "frittValgAvOppgave" to oppgaveKo.frittValgAvOppgave
                 )
             ).asUpdate
