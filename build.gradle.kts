@@ -24,7 +24,7 @@ val jsonassertVersion = "1.5.1"
 val jupiterVersion = "5.9.2"
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.8.10"
+    id("org.jetbrains.kotlin.jvm") version "1.8.21"
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
