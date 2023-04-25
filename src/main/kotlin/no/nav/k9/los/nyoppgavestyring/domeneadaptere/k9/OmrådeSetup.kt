@@ -63,6 +63,7 @@ class OmrådeSetup(
             område = område,
             eksternId = "Aksjonspunkt",
             beskrivelse = null,
+            uttømmende = false,
             verdier = AksjonspunktDefinisjon.values().filterNot { it == AksjonspunktDefinisjon.UNDEFINED }.map { apDefinisjon ->
                 KodeverkVerdiDto(
                     verdi = apDefinisjon.kode,
@@ -79,6 +80,7 @@ class OmrådeSetup(
             område = område,
             eksternId = "Fagsystem",
             beskrivelse = null,
+            uttømmende = true,
             verdier = Fagsystem.values().map { fagsystem ->
                 KodeverkVerdiDto(
                     verdi = fagsystem.kode,
@@ -102,6 +104,7 @@ class OmrådeSetup(
             område = område,
             eksternId = "Resultattype",
             beskrivelse = null,
+            uttømmende = true,
             verdier = BehandlingResultatType.values().map { resultattype ->
                 KodeverkVerdiDto(
                     verdi = resultattype.kode,
@@ -118,6 +121,7 @@ class OmrådeSetup(
             område = område,
             eksternId = "Ytelsetype",
             beskrivelse = null,
+            uttømmende = true,
             verdier = FagsakYtelseType.values().map { ytelsetype ->
                 KodeverkVerdiDto(
                     verdi = ytelsetype.kode,
@@ -134,6 +138,7 @@ class OmrådeSetup(
             område = område,
             eksternId = "Behandlingsstatus",
             beskrivelse = null,
+            uttømmende = true,
             verdier = BehandlingStatus.values().map { behandlingstatus ->
                 KodeverkVerdiDto(
                     verdi = behandlingstatus.kode,
@@ -150,6 +155,7 @@ class OmrådeSetup(
             område = område,
             eksternId = "Behandlingtype",
             beskrivelse = null,
+            uttømmende = true,
             verdier = BehandlingType.values().map { behandlingtype ->
                 KodeverkVerdiDto(
                     verdi = behandlingtype.kode,
@@ -166,6 +172,7 @@ class OmrådeSetup(
             område = område,
             eksternId = "Venteårsak",
             beskrivelse = null,
+            uttømmende = true,
             verdier = Venteårsak.values().map { venteårsak ->
                 KodeverkVerdiDto(
                     verdi = venteårsak.kode,
@@ -182,6 +189,7 @@ class OmrådeSetup(
             område = område,
             eksternId = "Behandlingssteg",
             beskrivelse = null,
+            uttømmende = false,
             verdier = BehandlingStegType.values().map { verdi ->
                 KodeverkVerdiDto(
                     verdi = verdi.kode,

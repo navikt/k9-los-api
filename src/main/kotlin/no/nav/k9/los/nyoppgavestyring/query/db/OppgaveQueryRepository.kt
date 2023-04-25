@@ -43,13 +43,21 @@ class OppgaveQueryRepository(
                     )
                 """.trimIndent()
             ).map { row ->
+                val kodeverk = row.stringOrNull("kodeverkreferanse")
+                    ?.let { feltdefinisjonRepository.hentKodeverk(Kodeverkreferanse(it), tx) }
                 Oppgavefelt(
                     område = row.string("omrade"),
                     kode = row.string("kode"),
                     visningsnavn = midlertidigFiksVisningsnavn(row.string("visningsnavn")),
                     tolkes_som = row.string("tolkes_som"),
-                    verdier = row.stringOrNull("kodeverkreferanse")?.let {
-                        hentVerdiforklaringer(Kodeverkreferanse(it), tx)
+                    uttømmendeVerdiforklaringer = kodeverk?.uttømmende,
+                    verdier = kodeverk?.let { kodeverk ->
+                        kodeverk.verdier.map { kodeverkverdi ->
+                            Verdiforklaring(
+                                verdi = kodeverkverdi.verdi,
+                                visningsnavn = kodeverkverdi.visningsnavn
+                            )
+                        }
                     }
                 )
             }.asList
@@ -61,34 +69,19 @@ class OppgaveQueryRepository(
                 "oppgavestatus",
                 "Oppgavestatus",
                 "String",
+                uttømmendeVerdiforklaringer = true,
                 Oppgavestatus.values().map { oppgavestatus ->
                     Verdiforklaring(
                         verdi = oppgavestatus.kode,
                         visningsnavn = oppgavestatus.visningsnavn
                     )
                 }),
-            Oppgavefelt(
-                null,
-                "kildeområde",
-                "Kildeområde",
-                "String",
-                emptyList()
-                ),
-            Oppgavefelt(null, "oppgavetype", "Oppgavetype", "String", emptyList()),
-            Oppgavefelt(null, "oppgaveområde", "Oppgaveområde", "String", emptyList()
-            )
+            Oppgavefelt(null, "kildeområde", "Kildeområde", "String", false, emptyList()),
+            Oppgavefelt(null, "oppgavetype", "Oppgavetype", "String", false, emptyList()),
+            Oppgavefelt(null, "oppgaveområde", "Oppgaveområde", "String", false, emptyList())
         )
 
         return (felterFraDatabase + standardfelter).sortedBy { it.visningsnavn };
-    }
-
-    private fun hentVerdiforklaringer(kodeverkreferanse: Kodeverkreferanse, tx: TransactionalSession) : List<Verdiforklaring> {
-        return feltdefinisjonRepository.hentKodeverk(kodeverkreferanse, tx).verdier.map { kodeverkverdi ->
-            Verdiforklaring(
-                    verdi = kodeverkverdi.verdi,
-                    visningsnavn = kodeverkverdi.visningsnavn
-            )
-        }
     }
 
     fun query(oppgaveQuery: OppgaveQuery): List<Long> {

@@ -7,12 +7,14 @@ class Kodeverk(
     val område: Område,
     val eksternId: String,
     val beskrivelse: String?,
+    val uttømmende: Boolean?,
     val verdier: List<Kodeverkverdi>,
 ) {
     constructor(kodeverkDto: KodeverkDto, område: Område) : this (
         område = område,
         eksternId = kodeverkDto.eksternId,
         beskrivelse = kodeverkDto.beskrivelse,
+        uttømmende = kodeverkDto.uttømmende,
         verdier = kodeverkDto.verdier.map { dto ->
             Kodeverkverdi(dto)
         }
@@ -33,6 +35,7 @@ class Kodeverk(
         if (område != other.område) return false
         if (eksternId != other.eksternId) return false
         if (beskrivelse != other.beskrivelse) return false
+        if (uttømmende != other.uttømmende) return false
         return verdier == other.verdier
     }
 

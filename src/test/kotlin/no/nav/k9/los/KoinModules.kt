@@ -312,8 +312,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         K9SakTilLosAdapterTjeneste(
                 behandlingProsessEventK9Repository = get(),
-                områdeRepository = get(),
-                feltdefinisjonTjeneste = get(),
                 oppgavetypeTjeneste = get(),
                 oppgaveV3Tjeneste = get(),
                 config = get(),

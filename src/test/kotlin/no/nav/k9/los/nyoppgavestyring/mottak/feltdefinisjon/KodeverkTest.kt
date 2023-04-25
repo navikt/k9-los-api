@@ -87,6 +87,7 @@ class KodeverkTest : AbstractK9LosIntegrationTest() {
             område = område,
             eksternId = "kodeverk",
             beskrivelse = null,
+            uttømmende = false,
             verdier = listOf(
                 Kodeverkverdi(
                     id = null,

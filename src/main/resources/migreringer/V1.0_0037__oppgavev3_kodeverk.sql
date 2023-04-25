@@ -4,6 +4,7 @@ create table if not exists KODEVERK
     omrade_id                   BIGINT                                  NOT NULL,
     ekstern_id                  VARCHAR(100)                            NOT NULL,
     beskrivelse                 VARCHAR(200)                            ,
+    uttommende                  BOOLEAN                                 ,
     CONSTRAINT FK_KODEVERK_01
         FOREIGN KEY(omrade_id) references OMRADE(id),
     UNIQUE(omrade_id, ekstern_id)
@@ -12,6 +13,7 @@ create table if not exists KODEVERK
 comment on table KODEVERK is 'Spesifiserer kjente og/eller lovlige verdier for en feltdefinisjon innenfor et område, og holder på visningsnavn til GUI og forklaringstekster';
 comment on column KODEVERK.ekstern_id is 'Human readable navn på kodeverk, som refereres av feltdefinisjon. Flere feltdefinisjoner i et område kan bruke samme kodeverk, men forskjellige oppgaver innenfor et område skal ikke kunne bruke forskjellige kodeverk for samme feltdefinisjon.';
 comment on column KODEVERK.beskrivelse is 'Funksjonell beskrivelse av hva verdien som bruker kodeverket brukes til';
+comment on column KODEVERK.uttommende is 'Flagger om listen med kodeverksverdier er uttømmende eller om det kan oppstå verdier som ikke er beskrevet i listen';
 
 create table if not exists KODEVERK_VERDI
 (

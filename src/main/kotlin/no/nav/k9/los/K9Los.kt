@@ -173,8 +173,6 @@ fun Application.k9Los() {
 
     K9SakTilLosAdapterTjeneste(
         behandlingProsessEventK9Repository = koin.get(),
-        områdeRepository = koin.get(),
-        feltdefinisjonTjeneste = koin.get(),
         oppgavetypeTjeneste = koin.get(),
         oppgaveV3Tjeneste = koin.get(),
         config = koin.get(),

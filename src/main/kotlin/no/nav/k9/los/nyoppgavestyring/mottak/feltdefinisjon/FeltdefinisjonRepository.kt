@@ -125,14 +125,15 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
         val kodeverkId = tx.updateAndReturnGeneratedKey(
             queryOf(
                 """
-                    insert into kodeverk(omrade_id, ekstern_id, beskrivelse)
-                    values(:omradeId, :eksternId, :beskrivelse)
-                    on conflict (omrade_id, ekstern_id) do update set beskrivelse = :beskrivelse 
+                    insert into kodeverk(omrade_id, ekstern_id, beskrivelse, uttommende)
+                    values(:omradeId, :eksternId, :beskrivelse, :uttommende)
+                    on conflict (omrade_id, ekstern_id) do update set beskrivelse = :beskrivelse, uttommende = :uttommende 
                 """.trimIndent(),
                 mapOf(
                     "omradeId" to kodeverk.område.id,
                     "eksternId" to kodeverk.eksternId,
-                    "beskrivelse" to kodeverk.beskrivelse
+                    "beskrivelse" to kodeverk.beskrivelse,
+                    "uttommende" to kodeverk.uttømmende,
                 )
             )
         )
@@ -178,6 +179,7 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                         område = område,
                         eksternId = kodeverkRow.string("ekstern_id"),
                         beskrivelse = kodeverkRow.stringOrNull("beskrivelse"),
+                        uttømmende = kodeverkRow.anyOrNull("uttommende")?.let { it.toString().toBoolean() },
                         verdier = tx.run(
                             queryOf(
                                 """
