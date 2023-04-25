@@ -29,7 +29,7 @@ class OppgaveV3Tjeneste(
         val område = områdeRepository.hentOmråde(oppgaveDto.område, tx)
         val oppgavetype = oppgavetypeRepository.hentOppgavetype(
             område = område.eksternId,
-            eksternId = oppgaveDto.id,
+            eksternId = oppgaveDto.type,
             tx = tx
         )
 
