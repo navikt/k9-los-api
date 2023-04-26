@@ -21,7 +21,7 @@ val navTilgangskontroll = "2.2022.11.16_08.36-35c94368bc44"
 // Test Dependencies
 val testContainers = "1.17.6"
 val jsonassertVersion = "1.5.1"
-val jupiterVersion = "5.9.2"
+val jupiterVersion = "5.9.3"
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.8.10"
