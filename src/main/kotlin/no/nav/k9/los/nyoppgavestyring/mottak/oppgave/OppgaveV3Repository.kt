@@ -40,18 +40,18 @@ class OppgaveV3Repository(
         return tx.run(
             queryOf(
                 """
-                    select ov.*, o.ekstern_id as oppgavetype_ekstern_id
-                    from oppgave_v3 ov
-                    	inner join oppgavetype o ON ov.oppgavetype_id = o.id 
-                    	inner join omrade o2 on o.omrade_id = o2.id 
-                    where o2.ekstern_id = :omrade_id
-                    and ov.ekstern_id = :ekstern_id 
-                    and ov.ekstern_versjon = :ekstern_versjon 
+                    select o.*
+                    from oppgave_v3 o
+                        inner join oppgavetype ot on o.oppgavetype_id = ot.id
+                        inner join omrade omr on ot.omrade_id = omr.id
+                    where o.ekstern_id = :oppgave_ekstern_id
+                    and o.ekstern_versjon = :oppgave_ekstern_versjon 
+                    and omr.ekstern_id = :omrade_ekstern_id
                 """.trimIndent(),
                 mapOf(
-                    "omrade_id" to område.id,
-                    "ekstern_id" to eksternId,
-                    "ekstern_versjon" to eksternVersjon
+                    "oppgave_ekstern_id" to eksternId,
+                    "oppgave_ekstern_versjon" to eksternVersjon,
+                    "omrade_ekstern_id" to område.eksternId
                 )
             ).map { row ->
                 OppgaveV3(
@@ -77,8 +77,45 @@ class OppgaveV3Repository(
                     )
                 )
             }.asSingle
+        ) ?: throw IllegalArgumentException("Fant ikke oppgave med ekstern_id: ${eksternId}, ekstern_versjon: ${eksternVersjon} og område: ${område.eksternId}")
+    }
+
+    fun hentOppgaveversjonenFør(
+        eksternId: String,
+        eksternVersjon: String,
+        oppgavetype: Oppgavetype,
+        tx: TransactionalSession
+    ): OppgaveV3? {
+        return tx.run(
+            queryOf(
+                """
+                    select *
+                    from oppgave_v3 ov 
+                    where ekstern_id = :eksternId
+                    and versjon = (
+                        select versjon - 1
+                        from oppgave_v3 ov 
+                        where ekstern_id = :eksternId 
+                        and ekstern_versjon = :eksternVersjon
+                    )
+                """.trimIndent(),
+                mapOf(
+                    "eksternId" to eksternId,
+                    "eksternVersjon" to eksternVersjon
+                )
+            ).map { row ->
+                OppgaveV3(
+                    id = row.long("id"),
+                    eksternId = row.string("ekstern_id"),
+                    eksternVersjon = row.string("ekstern_versjon"),
+                    oppgavetype = oppgavetype,
+                    status = Oppgavestatus.valueOf(row.string("status")),
+                    endretTidspunkt = row.localDateTime("endret_tidspunkt"),
+                    kildeområde = row.string("kildeomrade"),
+                    felter = hentFeltverdier(row.long("id"), oppgavetype, tx)
+                )
+            }.asSingle
         )
-            ?: throw IllegalArgumentException("Fant ikke oppgave med ekstern_id ${eksternId} og ekstern_versjon ${eksternVersjon}")
     }
 
     fun hentAktivOppgave(eksternId: String, oppgavetype: Oppgavetype, tx: TransactionalSession): OppgaveV3? {
@@ -172,8 +209,17 @@ class OppgaveV3Repository(
         tx: TransactionalSession
     ) {
         tx.batchPreparedNamedStatement("""
-            INSERT INTO oppgavefelt_verdi ov(oppgave_id, oppgavefelt_id, verdi)
-            VALUES ((SELECT id FROM oppgave WHERE ekstern_id = :ekstern_id AND ekstern_versjon = :ekstern_versjon), :oppgavefelt_id, :verdi)
+            INSERT INTO oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi)
+            VALUES (
+                (
+                    SELECT id 
+                    FROM oppgave_v3
+                    WHERE ekstern_id = :ekstern_id
+                    AND ekstern_versjon = :ekstern_versjon
+                ),
+                :oppgavefelt_id,
+                :verdi
+            )
         """.trimIndent(),
             oppgaveFeltverdier.map { feltverdi ->
                 mapOf(
@@ -194,11 +240,15 @@ class OppgaveV3Repository(
         tx.update(
             queryOf(
                 """
-                    DELETE
-                    FROM oppgavefelt_verdi ov
-                        INNER JOIN oppgave_v3 o ON ov.oppgave_id = o.id
-                    WHERE o.ekstern_id = :ekstern_id
-                    AND o.ekstern_versjon = :ekstern_versjon
+                    delete 
+                    from oppgavefelt_verdi 
+                    where oppgavefelt_verdi.id in (
+                        select ov.id
+                        from oppgavefelt_verdi ov
+                            inner join oppgave_v3 o on ov.oppgave_id = o.id
+                        where o.ekstern_id = :ekstern_id
+                        and o.ekstern_versjon = :ekstern_versjon
+                    )
                     """.trimIndent(),
                 mapOf(
                     "ekstern_id" to eksternId,

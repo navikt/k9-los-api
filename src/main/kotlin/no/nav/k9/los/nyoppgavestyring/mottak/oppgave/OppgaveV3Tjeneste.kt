@@ -37,11 +37,9 @@ class OppgaveV3Tjeneste(
         var innkommendeOppgave = OppgaveV3(oppgaveDto, oppgavetype)
 
         val utledeteFelter = mutableListOf<OppgaveFeltverdi>()
-
         oppgavetype.oppgavefelter
             .filter { oppgavefelt -> oppgavefelt.feltutleder != null }
-            .forEach {
-                oppgavefelt ->
+            .forEach { oppgavefelt ->
                 val utledetFeltverdi = oppgavefelt.feltutleder!!.utled(innkommendeOppgave, aktivOppgaveVersjon)
                 if (utledetFeltverdi != null) {
                     utledeteFelter.add(utledetFeltverdi)
@@ -79,7 +77,22 @@ class OppgaveV3Tjeneste(
             tx = tx
         )
 
-        val oppgave = OppgaveV3(oppgaveDto = oppgaveDto, oppgavetype = oppgavetype)
+        val forrigeOppgaveversjon =
+            oppgaveV3Repository.hentOppgaveversjonenFør(oppgaveDto.id, oppgaveDto.versjon, oppgavetype, tx)
+        var innkommendeOppgave = OppgaveV3(oppgaveDto = oppgaveDto, oppgavetype = oppgavetype)
+
+        val utledeteFelter = mutableListOf<OppgaveFeltverdi>()
+        oppgavetype.oppgavefelter
+            .filter { oppgavefelt -> oppgavefelt.feltutleder != null }
+            .forEach { oppgavefelt ->
+                val utledetFeltverdi = oppgavefelt.feltutleder!!.utled(innkommendeOppgave, forrigeOppgaveversjon)
+                if (utledetFeltverdi != null) {
+                    utledeteFelter.add(utledetFeltverdi)
+                }
+            }
+
+        innkommendeOppgave = OppgaveV3(innkommendeOppgave, innkommendeOppgave.felter.plus(utledeteFelter))
+        innkommendeOppgave.valider()
 
         oppgaveV3Repository.slettFeltverdier(
             eksternId = oppgaveDto.id,
@@ -90,7 +103,7 @@ class OppgaveV3Tjeneste(
         oppgaveV3Repository.lagreFeltverdier(
             eksternId = oppgaveDto.id,
             eksternVersjon = oppgaveDto.versjon,
-            oppgaveFeltverdier = oppgave.felter,
+            oppgaveFeltverdier = innkommendeOppgave.felter,
             tx = tx
         )
     }

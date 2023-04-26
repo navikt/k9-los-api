@@ -98,7 +98,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 loggFremgangForHver100(eventTeller, "Prosessert $eventTeller eventer")
 
                 forrigeOppgave = oppgaveV3Tjeneste.hentOppgaveversjon(
-                    område = "k9", eksternId = oppgaveDto.id, eksternVersjon = oppgaveDto.versjon, tx = tx
+                    område = "K9", eksternId = oppgaveDto.id, eksternVersjon = oppgaveDto.versjon, tx = tx
                 )
             }
             forrigeOppgave = null
