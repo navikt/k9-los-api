@@ -2,10 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonDto
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjoner
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.*
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.*
@@ -110,31 +107,36 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
                     id = "aksjonspunkt",
                     listetype = true,
                     tolkesSom = "String",
-                    true
+                    true,
+                    kodeverkreferanse = null
                 ),
                 FeltdefinisjonDto(
                     id = "opprettet",
                     listetype = false,
                     tolkesSom = "Date",
-                    true
+                    true,
+                    kodeverkreferanse = null
                 ),
                 FeltdefinisjonDto(
                     id = "aktorId",
                     listetype = false,
                     tolkesSom = "String",
-                    true
+                    true,
+                    kodeverkreferanse = null
                 ),
                 FeltdefinisjonDto(
                     id = "akkumulertVentetidSaksbehandler",
                     listetype = false,
                     tolkesSom = "Duration",
-                    false
+                    false,
+                    kodeverkreferanse = null
                 ),
                 FeltdefinisjonDto(
                     id = "avventerSaksbehandler",
                     listetype = false,
                     tolkesSom = "boolean",
-                    false
+                    false,
+                    kodeverkreferanse = null
                 )
             )
         )

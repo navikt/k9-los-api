@@ -23,6 +23,17 @@ class FeltdefinisjonTjeneste(
         }
     }
 
+    fun oppdater(kodeverkDto: KodeverkDto) {
+        transactionalManager.transaction { tx ->
+            val område = områdeRepository.hentOmråde(kodeverkDto.område, tx)
+
+            val kodeverk = Kodeverk(kodeverkDto, område)
+
+            feltdefinisjonRepository.tømVerdierHvisKodeverkFinnes(kodeverk, tx)
+            feltdefinisjonRepository.lagre(kodeverk, tx)
+        }
+    }
+
     fun hent(område: Område): Feltdefinisjoner {
         return transactionalManager.transaction { tx ->
             feltdefinisjonRepository.hent(område, tx)

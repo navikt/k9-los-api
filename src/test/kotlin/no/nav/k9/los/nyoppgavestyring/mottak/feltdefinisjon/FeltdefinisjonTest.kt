@@ -3,8 +3,6 @@ package no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon
 import assertk.assertThat
 import assertk.assertions.hasSize
 import assertk.assertions.isEmpty
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjoner
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import org.junit.jupiter.api.Test
 
@@ -28,7 +26,8 @@ class FeltdefinisjonTest {
                     område = område,
                     listetype = false,
                     tolkesSom = "String",
-                    visTilBruker = true
+                    visTilBruker = true,
+                    kodeverkreferanse = null
                 )
             )
         )
@@ -47,14 +46,16 @@ class FeltdefinisjonTest {
                     område = område,
                     listetype = true,
                     tolkesSom = "String",
-                    visTilBruker = true
+                    visTilBruker = true,
+                    kodeverkreferanse = null
                 ),
                 Feltdefinisjon(
                     eksternId = "opprettet",
                     område = område,
                     listetype = true,
                     tolkesSom = "Date",
-                    visTilBruker = true
+                    visTilBruker = true,
+                    kodeverkreferanse = null
                 )
             )
         )
@@ -73,14 +74,16 @@ class FeltdefinisjonTest {
                     område = område,
                     listetype = false,
                     tolkesSom = "String",
-                    visTilBruker = true
+                    visTilBruker = true,
+                    kodeverkreferanse = null
                 ),
                 Feltdefinisjon(
                     eksternId = "opprettet",
                     område = område,
                     listetype = false,
                     tolkesSom = "Date",
-                    visTilBruker = true
+                    visTilBruker = true,
+                    kodeverkreferanse = null
                 )
             )
         )
