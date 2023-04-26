@@ -7,7 +7,7 @@ class Kodeverk(
     val område: Område,
     val eksternId: String,
     val beskrivelse: String?,
-    val uttømmende: Boolean?,
+    val uttømmende: Boolean = false,
     val verdier: List<Kodeverkverdi>,
 ) {
     constructor(kodeverkDto: KodeverkDto, område: Område) : this (

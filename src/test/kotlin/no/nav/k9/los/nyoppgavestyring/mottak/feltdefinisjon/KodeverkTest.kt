@@ -17,15 +17,15 @@ class KodeverkTest : AbstractK9LosIntegrationTest() {
     private lateinit var transactionalManager: TransactionalManager
     private lateinit var områdeRepository: OmrådeRepository
 
+    private val testFeltdefinissjonEksternId = "testFeltdefinisjonEksternId"
+
     @BeforeEach
     fun setup() {
         feltdefinisjonRepository = get()
         transactionalManager = get()
         områdeRepository = get()
 
-        if (områdeRepository.hent("K9") == null) {
-            områdeRepository.lagre(eksternId = "K9")
-        }
+        områdeRepository.lagre(eksternId = "K9")
 
         område = områdeRepository.hent("K9")!!
     }
@@ -62,22 +62,22 @@ class KodeverkTest : AbstractK9LosIntegrationTest() {
                 tx = tx
             )
 
-            val feltdefinisjonHentet = feltdefinisjonRepository.hent(område, tx).hentFeltdefinisjon("Feltdefinisjon")
+            val feltdefinisjonHentet = feltdefinisjonRepository.hent(område, tx).hentFeltdefinisjon(testFeltdefinissjonEksternId)
 
-            assertThat(feltdefinisjonHentet.eksternId).isEqualTo("Feltdefinisjon")
+            assertThat(feltdefinisjonHentet.eksternId).isEqualTo(testFeltdefinissjonEksternId)
             assertThat(feltdefinisjonHentet.kodeverkreferanse).isEqualTo(Kodeverkreferanse(kodeverk))
         }
     }
 
-    internal fun byggFeltdefinisjon(område: Område, kodeverk: Kodeverkreferanse?): Feltdefinisjon {
+    internal fun byggFeltdefinisjon(område: Område, kodeverkreferanse: Kodeverkreferanse?): Feltdefinisjon {
          return Feltdefinisjon(
              id = null,
-             eksternId = "Feltdefinisjon",
+             eksternId = testFeltdefinissjonEksternId,
              område = område,
              listetype = false,
              tolkesSom = "String",
              visTilBruker = true,
-             kodeverkreferanse = kodeverk
+             kodeverkreferanse = kodeverkreferanse
          )
     }
 

@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon
 
+import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.IllegalDeleteException
@@ -179,23 +180,8 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                         område = område,
                         eksternId = kodeverkRow.string("ekstern_id"),
                         beskrivelse = kodeverkRow.stringOrNull("beskrivelse"),
-                        uttømmende = kodeverkRow.anyOrNull("uttommende")?.let { it.toString().toBoolean() },
-                        verdier = tx.run(
-                            queryOf(
-                                """
-                                select *
-                                from kodeverk_verdi
-                                where kodeverk_id = :kodeverkId""",
-                                mapOf("kodeverkId" to kodeverkRow.long("id"))
-                            ).map { kodeverkverdiRow ->
-                                Kodeverkverdi(
-                                    id = kodeverkverdiRow.long("id"),
-                                    verdi = kodeverkverdiRow.string("verdi"),
-                                    visningsnavn = kodeverkverdiRow.string("visningsnavn"),
-                                    beskrivelse = kodeverkverdiRow.stringOrNull("beskrivelse")
-                                )
-                            }.asList
-                        )
+                        uttømmende = kodeverkRow.boolean("uttommende"),
+                        verdier = hentKodeverdier(tx, kodeverkRow)
                     )
                 }.asList
             )
@@ -206,6 +192,26 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
             )
         }
     }
+
+    private fun hentKodeverdier(
+        tx: TransactionalSession,
+        kodeverkRow: Row
+    ) = tx.run(
+        queryOf(
+"""
+                select *
+                from kodeverk_verdi
+                where kodeverk_id = :kodeverkId""",
+            mapOf("kodeverkId" to kodeverkRow.long("id"))
+        ).map { kodeverkverdiRow ->
+            Kodeverkverdi(
+                id = kodeverkverdiRow.long("id"),
+                verdi = kodeverkverdiRow.string("verdi"),
+                visningsnavn = kodeverkverdiRow.string("visningsnavn"),
+                beskrivelse = kodeverkverdiRow.stringOrNull("beskrivelse")
+            )
+        }.asList
+    )
 
     fun invaliderCache() {
         kodeverkCache.clear()

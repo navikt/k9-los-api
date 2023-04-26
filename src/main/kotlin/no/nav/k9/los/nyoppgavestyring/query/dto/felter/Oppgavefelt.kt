@@ -5,6 +5,6 @@ class Oppgavefelt(
     val kode: String,
     val visningsnavn: String,
     val tolkes_som: String,
-    val uttømmendeVerdiforklaringer: Boolean?,
-    val verdier: List<Verdiforklaring>?
+    val verdiforklaringerErUttømmende: Boolean = false,
+    val verdiforklaringer: List<Verdiforklaring>?
 )

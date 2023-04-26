@@ -16,7 +16,7 @@ class Feltdefinisjoner(
                 listetype = feltdefinisjonDto.listetype,
                 tolkesSom = feltdefinisjonDto.tolkesSom,
                 visTilBruker = feltdefinisjonDto.visTilBruker,
-                kodeverkreferanse = feltdefinisjonDto.kodeverk?.let { kodeverk -> Kodeverkreferanse(kodeverk) }
+                kodeverkreferanse = feltdefinisjonDto.kodeverkreferanse?.let { kodeverkreferanseDto -> Kodeverkreferanse(kodeverkreferanseDto) }
             )
         }.toSet()
     )

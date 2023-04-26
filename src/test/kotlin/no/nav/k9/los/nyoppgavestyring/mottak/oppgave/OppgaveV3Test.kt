@@ -108,35 +108,35 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
                     listetype = true,
                     tolkesSom = "String",
                     true,
-                    kodeverk = null
+                    kodeverkreferanse = null
                 ),
                 FeltdefinisjonDto(
                     id = "opprettet",
                     listetype = false,
                     tolkesSom = "Date",
                     true,
-                    kodeverk = null
+                    kodeverkreferanse = null
                 ),
                 FeltdefinisjonDto(
                     id = "aktorId",
                     listetype = false,
                     tolkesSom = "String",
                     true,
-                    kodeverk = null
+                    kodeverkreferanse = null
                 ),
                 FeltdefinisjonDto(
                     id = "akkumulertVentetidSaksbehandler",
                     listetype = false,
                     tolkesSom = "Duration",
                     false,
-                    kodeverk = null
+                    kodeverkreferanse = null
                 ),
                 FeltdefinisjonDto(
                     id = "avventerSaksbehandler",
                     listetype = false,
                     tolkesSom = "boolean",
                     false,
-                    kodeverk = null
+                    kodeverkreferanse = null
                 )
             )
         )

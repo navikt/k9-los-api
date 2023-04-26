@@ -4,7 +4,7 @@ create table if not exists KODEVERK
     omrade_id                   BIGINT                                  NOT NULL,
     ekstern_id                  VARCHAR(100)                            NOT NULL,
     beskrivelse                 VARCHAR(200)                            ,
-    uttommende                  BOOLEAN                                 ,
+    uttommende                  BOOLEAN                                 NOT NULL DEFAULT FALSE,
     CONSTRAINT FK_KODEVERK_01
         FOREIGN KEY(omrade_id) references OMRADE(id),
     UNIQUE(omrade_id, ekstern_id)
@@ -22,7 +22,7 @@ create table if not exists KODEVERK_VERDI
     verdi                       VARCHAR(100)                            NOT NULL,
     visningsnavn                VARCHAR(200)                            NOT NULL,
     beskrivelse                 VARCHAR(200)                            ,
-    CONSTRAINT FK_KODEVRK_VERDI_01
+    CONSTRAINT FK_KODEVERK_VERDI_01
         FOREIGN KEY(kodeverk_id) references KODEVERK(id),
     UNIQUE (kodeverk_id, verdi)
 );

@@ -5,5 +5,5 @@ data class FeltdefinisjonDto(
     val listetype: Boolean,
     val tolkesSom: String,
     val visTilBruker: Boolean,
-    val kodeverk: String?,
+    val kodeverkreferanse: KodeverkReferanseDto?,
 )

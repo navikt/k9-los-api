@@ -50,8 +50,8 @@ class OppgaveQueryRepository(
                     kode = row.string("kode"),
                     visningsnavn = midlertidigFiksVisningsnavn(row.string("visningsnavn")),
                     tolkes_som = row.string("tolkes_som"),
-                    uttømmendeVerdiforklaringer = kodeverk?.uttømmende,
-                    verdier = kodeverk?.let { kodeverk ->
+                    verdiforklaringerErUttømmende = kodeverk?.uttømmende ?: false,
+                    verdiforklaringer = kodeverk?.let { kodeverk ->
                         kodeverk.verdier.map { kodeverkverdi ->
                             Verdiforklaring(
                                 verdi = kodeverkverdi.verdi,
@@ -69,7 +69,7 @@ class OppgaveQueryRepository(
                 "oppgavestatus",
                 "Oppgavestatus",
                 "String",
-                uttømmendeVerdiforklaringer = true,
+                verdiforklaringerErUttømmende = true,
                 Oppgavestatus.values().map { oppgavestatus ->
                     Verdiforklaring(
                         verdi = oppgavestatus.kode,
