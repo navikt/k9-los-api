@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos
 
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -6,17 +6,19 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.integrasjon.rest.RequestContextService
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import org.koin.ktor.ext.inject
 
-internal fun Route.StatistikkApi() {
+internal fun Route.K9KlageTilLosApi() {
     val requestContextService by inject<RequestContextService>()
-    val oppgavestatistikkTjeneste by inject<OppgavestatistikkTjeneste>()
+    val oppgaveV3Tjeneste by inject<OppgaveV3Tjeneste>()
+    val k9KlageTilLosAdapterTjeneste by inject<K9KlageTilLosAdapterTjeneste>()
     val config by inject<Configuration>()
 
-    put {
+    delete("/slettOppgavedata") {
         if (config.nyOppgavestyringRestAktivert()) {
             requestContextService.withRequestContext(call) {
-                oppgavestatistikkTjeneste.kjør(kjørUmiddelbart = true)
+                oppgaveV3Tjeneste.destruktivSlettAvAlleOppgaveData()
                 call.respond("OK")
             }
         } else {
@@ -24,11 +26,10 @@ internal fun Route.StatistikkApi() {
         }
     }
 
-    //TODO: Til test. Fjernes før prodsetting!
-    delete("/slettStatistikkgrunnlag") {
+    put("/startOppgaveprosessering") {
         if (config.nyOppgavestyringRestAktivert()) {
             requestContextService.withRequestContext(call) {
-                oppgavestatistikkTjeneste.slettStatistikkgrunnlag()
+                k9KlageTilLosAdapterTjeneste.kjør(kjørUmiddelbart = true)
                 call.respond("OK")
             }
         } else {

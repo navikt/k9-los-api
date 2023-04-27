@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -8,9 +8,6 @@ import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
-import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
@@ -27,8 +24,6 @@ import kotlin.concurrent.timer
 
 class K9SakTilLosAdapterTjeneste(
     private val behandlingProsessEventK9Repository: BehandlingProsessEventK9Repository,
-    private val områdeRepository: OmrådeRepository,
-    private val feltdefinisjonTjeneste: FeltdefinisjonTjeneste,
     private val oppgavetypeTjeneste: OppgavetypeTjeneste,
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
     private val config: Configuration,
@@ -532,25 +527,8 @@ class K9SakTilLosAdapterTjeneste(
 
     fun setup(): K9SakTilLosAdapterTjeneste {
         val objectMapper = jacksonObjectMapper()
-        opprettOmråde()
-        opprettFeltdefinisjoner(objectMapper)
         opprettOppgavetype(objectMapper)
         return this
-    }
-
-    private fun opprettOmråde() {
-        log.info("oppretter område")
-        områdeRepository.lagre("K9")
-    }
-
-    private fun opprettFeltdefinisjoner(objectMapper: ObjectMapper) {
-        val feltdefinisjonerDto = objectMapper.readValue(
-            K9SakTilLosAdapterTjeneste::class.java.getResource("/adapterdefinisjoner/k9-feltdefinisjoner-v2.json")!!
-                .readText(),
-            FeltdefinisjonerDto::class.java
-        )
-        log.info("oppretter feltdefinisjoner")
-        feltdefinisjonTjeneste.oppdater(feltdefinisjonerDto)
     }
 
     private fun opprettOppgavetype(objectMapper: ObjectMapper) {

@@ -23,7 +23,11 @@
       "id": "fagsystem",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kodeverkreferanse": {
+        "område": "K9",
+        "eksternId": "Fagsystem"
+      }
     },
     {
       "id": "saksnummer",
@@ -35,25 +39,41 @@
       "id": "resultattype",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kodeverkreferanse": {
+        "område": "K9",
+        "eksternId": "Resultattype"
+      }
     },
     {
       "id": "behandlingssteg",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kodeverkreferanse": {
+        "område": "K9",
+        "eksternId": "Behandlingssteg"
+      }
     },
     {
       "id": "ytelsestype",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kodeverkreferanse": {
+        "område": "K9",
+        "eksternId": "Ytelsetype"
+      }
     },
     {
       "id": "behandlingsstatus",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kodeverkreferanse": {
+        "område": "K9",
+        "eksternId": "Behandlingsstatus"
+      }
     },
     {
       "id": "mottattDato",
@@ -71,7 +91,11 @@
       "id": "behandlingTypekode",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kodeverkreferanse": {
+        "område": "K9",
+        "eksternId": "Behandlingtype"
+      }
     },
     {
       "id": "relatertPartAktorid",
@@ -113,19 +137,31 @@
       "id": "aksjonspunkt",
       "listetype": true,
       "tolkesSom": "String",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kodeverkreferanse": {
+        "område": "K9",
+        "eksternId": "Aksjonspunkt"
+      }
     },
     {
       "id": "aktivtAksjonspunkt",
       "listetype": true,
       "tolkesSom": "String",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kodeverkreferanse": {
+        "område": "K9",
+        "eksternId": "Aksjonspunkt"
+      }
     },
     {
       "id": "løsbartAksjonspunkt",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kodeverkreferanse": {
+        "område": "K9",
+        "eksternId": "Aksjonspunkt"
+      }
     },
     {
       "id": "avventerSaksbehandler",
@@ -203,7 +239,11 @@
       "id": "aktivVenteårsak",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kodeverkreferanse": {
+        "område": "K9",
+        "eksternId": "Venteårsak"
+      }
     },
     {
       "id": "aktivVentefrist",
