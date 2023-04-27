@@ -15,10 +15,16 @@ class Feltdefinisjoner(
                 område = område,
                 listetype = feltdefinisjonDto.listetype,
                 tolkesSom = feltdefinisjonDto.tolkesSom,
-                visTilBruker = feltdefinisjonDto.visTilBruker
+                visTilBruker = feltdefinisjonDto.visTilBruker,
+                kodeverkreferanse = feltdefinisjonDto.kodeverkreferanse?.let { kodeverkreferanseDto -> Kodeverkreferanse(kodeverkreferanseDto) }
             )
         }.toSet()
     )
+
+    fun hentFeltdefinisjon(eksternId: String) : Feltdefinisjon {
+        return feltdefinisjoner.firstOrNull { feltdefinisjon -> feltdefinisjon.eksternId == eksternId }
+            ?: throw IllegalArgumentException("Finner ikke omsøkt feltdefinisjon: $eksternId for område: ${område.eksternId}")
+    }
 
     fun finnForskjeller(innkommendeFeltdefinisjoner: Feltdefinisjoner): Triple<Set<Feltdefinisjon>, Set<Feltdefinisjon>, Set<Feltdefinisjon>> {
         if (!innkommendeFeltdefinisjoner.område.equals(this.område)) {

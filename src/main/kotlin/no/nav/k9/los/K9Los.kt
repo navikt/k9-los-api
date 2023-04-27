@@ -36,12 +36,13 @@ import no.nav.k9.los.eventhandler.sjekkReserverteJobb
 import no.nav.k9.los.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.los.integrasjon.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosApi
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosApi
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.OppgavestatistikkTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.StatistikkApi
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosApi
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosApi
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkApi
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonApi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Api
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeApi
@@ -86,6 +87,8 @@ fun Application.k9Los() {
 
     val koin = getKoin()
 
+    val områdeSetup = koin.get<OmrådeSetup>()
+    områdeSetup.setup()
     val k9SakTilLosAdapterTjeneste = koin.get<K9SakTilLosAdapterTjeneste>()
     k9SakTilLosAdapterTjeneste.setup()
     val k9KlageTilLosAdapterTjeneste = koin.get<K9KlageTilLosAdapterTjeneste>()
@@ -163,10 +166,13 @@ fun Application.k9Los() {
         oppdaterStatistikkJobb.cancel()
     }
 
+    OmrådeSetup(
+        områdeRepository = koin.get(),
+        feltdefinisjonTjeneste = koin.get()
+    )
+
     K9SakTilLosAdapterTjeneste(
         behandlingProsessEventK9Repository = koin.get(),
-        områdeRepository = koin.get(),
-        feltdefinisjonTjeneste = koin.get(),
         oppgavetypeTjeneste = koin.get(),
         oppgaveV3Tjeneste = koin.get(),
         config = koin.get(),
@@ -179,7 +185,6 @@ fun Application.k9Los() {
         feltdefinisjonTjeneste = koin.get(),
         oppgavetypeTjeneste = koin.get(),
         oppgaveV3Tjeneste = koin.get(),
-        config = koin.get(),
         transactionalManager = koin.get()
     ).kjør(kjørSetup = false, kjørUmiddelbart = false)
 

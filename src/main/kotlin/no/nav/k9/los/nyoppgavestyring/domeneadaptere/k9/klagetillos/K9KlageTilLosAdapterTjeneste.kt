@@ -1,23 +1,18 @@
-package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.nav.k9.kodeverk.behandling.BehandlingStatus
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.*
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
-import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
+import no.nav.k9.los.domene.repository.BehandlingProsessEventKlageRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.EventTilDtoMapper
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
-import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -25,28 +20,26 @@ import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 import kotlin.concurrent.timer
 
-class K9SakTilLosAdapterTjeneste(
-    private val behandlingProsessEventK9Repository: BehandlingProsessEventK9Repository,
+class K9KlageTilLosAdapterTjeneste(
+    private val behandlingProsessEventKlageRepository: BehandlingProsessEventKlageRepository,
     private val områdeRepository: OmrådeRepository,
     private val feltdefinisjonTjeneste: FeltdefinisjonTjeneste,
     private val oppgavetypeTjeneste: OppgavetypeTjeneste,
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
-    private val config: Configuration,
     private val transactionalManager: TransactionalManager
 ) {
 
-    private val log: Logger = LoggerFactory.getLogger(K9SakTilLosAdapterTjeneste::class.java)
-    private val TRÅDNAVN = "k9-sak-til-los"
-
+    private val log: Logger = LoggerFactory.getLogger(K9KlageTilLosAdapterTjeneste::class.java)
+    private val TRÅDNAVN = "k9-klage-til-los"
 
 
     fun kjør(kjørSetup: Boolean = false, kjørUmiddelbart: Boolean = false) {
-        if (config.nyOppgavestyringAktivert()) {
+        if (false) {
             when (kjørUmiddelbart) {
                 true -> spillAvUmiddelbart()
                 false -> schedulerAvspilling(kjørSetup)
             }
-        } else log.info("Ny oppgavestyring er deaktivert")
+        } else log.info("Ny oppgavestyring k9klage er deaktivert")
     }
 
     private fun spillAvUmiddelbart() {
@@ -61,11 +54,11 @@ class K9SakTilLosAdapterTjeneste(
     }
 
     private fun schedulerAvspilling(kjørSetup: Boolean) {
-        log.info("Schedulerer avspilling av BehandlingProsessEventer til å kjøre 1m fra nå, hver time")
+        log.info("Schedulerer avspilling av BehandlingProsessEventer til å kjøre 2m fra nå, hver time")
         timer(
             name = TRÅDNAVN,
             daemon = true,
-            initialDelay = TimeUnit.MINUTES.toMillis(1),
+            initialDelay = TimeUnit.MINUTES.toMillis(2),
             period = TimeUnit.HOURS.toMillis(1)
         ) {
             if (kjørSetup) {
@@ -74,7 +67,7 @@ class K9SakTilLosAdapterTjeneste(
             try {
                 spillAvBehandlingProsessEventer()
             } catch (e: Exception) {
-                log.warn("Avspilling av k9sak-eventer til oppgaveV3 feilet. Retry om en time", e)
+                log.warn("Avspilling av k9klage-eventer til oppgaveV3 feilet. Retry om en time", e)
             }
         }
     }
@@ -83,7 +76,7 @@ class K9SakTilLosAdapterTjeneste(
         log.info("Starter avspilling av BehandlingProsessEventer")
         val tidKjøringStartet = System.currentTimeMillis()
 
-        val behandlingsIder = behandlingProsessEventK9Repository.hentAlleDirtyEventIder()
+        val behandlingsIder = behandlingProsessEventKlageRepository.hentAlleDirtyEventIder()
         log.info("Fant ${behandlingsIder.size} behandlinger")
 
         var behandlingTeller: Long = 0
@@ -111,8 +104,8 @@ class K9SakTilLosAdapterTjeneste(
         var eventTeller = eventTellerInn
         var forrigeOppgave: OppgaveV3? = null
         transactionalManager.transaction { tx ->
-            val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
-            behandlingProsessEventer.forEach { event ->
+            val behandlingProsessEventer = behandlingProsessEventKlageRepository.hentMedLås(tx, uuid).eventer
+            behandlingProsessEventer.forEach { event -> //TODO: hva skjer om eventer kommer out of order her, fordi feks k9 har sendt i feil rekkefølge?
                 val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
 
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
@@ -125,17 +118,22 @@ class K9SakTilLosAdapterTjeneste(
             }
             forrigeOppgave = null
 
-            behandlingProsessEventK9Repository.fjernDirty(uuid, tx)
+            behandlingProsessEventKlageRepository.fjernDirty(uuid, tx)
         }
         return eventTeller
     }
 
-    fun setup(): K9SakTilLosAdapterTjeneste {
+    private fun loggFremgangForHver100(teller: Long, tekst: String) {
+        if (teller.mod(100) == 0) {
+            log.info(tekst)
+        }
+    }
+
+    fun setup() {
         val objectMapper = jacksonObjectMapper()
         opprettOmråde()
         opprettFeltdefinisjoner(objectMapper)
         opprettOppgavetype(objectMapper)
-        return this
     }
 
     private fun opprettOmråde() {
@@ -145,7 +143,7 @@ class K9SakTilLosAdapterTjeneste(
 
     private fun opprettFeltdefinisjoner(objectMapper: ObjectMapper) {
         val feltdefinisjonerDto = objectMapper.readValue(
-            K9SakTilLosAdapterTjeneste::class.java.getResource("/adapterdefinisjoner/k9-feltdefinisjoner-v2.json")!!
+            K9KlageTilLosAdapterTjeneste::class.java.getResource("/adapterdefinisjoner/k9-feltdefinisjoner-v2.json")!!
                 .readText(),
             FeltdefinisjonerDto::class.java
         )
@@ -155,17 +153,11 @@ class K9SakTilLosAdapterTjeneste(
 
     private fun opprettOppgavetype(objectMapper: ObjectMapper) {
         val oppgavetyperDto = objectMapper.readValue(
-            K9SakTilLosAdapterTjeneste::class.java.getResource("/adapterdefinisjoner/k9-oppgavetyper-k9sak.json")!!
+            K9KlageTilLosAdapterTjeneste::class.java.getResource("/adapterdefinisjoner/k9-oppgavetyper-k9klage.json")!!
                 .readText(),
             OppgavetyperDto::class.java
         )
         oppgavetypeTjeneste.oppdater(oppgavetyperDto)
         log.info("opprettet oppgavetype")
-    }
-
-    private fun loggFremgangForHver100(teller: Long, tekst: String) {
-        if (teller.mod(100) == 0) {
-            log.info(tekst)
-        }
     }
 }

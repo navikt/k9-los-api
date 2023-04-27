@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk
 
 import io.ktor.http.*
 import io.ktor.server.application.*

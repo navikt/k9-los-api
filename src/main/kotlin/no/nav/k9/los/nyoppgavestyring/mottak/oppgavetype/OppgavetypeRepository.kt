@@ -187,7 +187,7 @@ class OppgavetypeRepository(
         }
 
         endring.felterSomSkalFjernes.forEach { felt ->
-            fjernFelt(endring.oppgavetype.id, felt, tx)
+            fjernFelt(felt, tx)
         }
 
         endring.felterSomSkalEndresMedNyeVerdier.forEach { felter ->
@@ -236,22 +236,16 @@ class OppgavetypeRepository(
         return verdi != null
     }
 
-    private fun fjernFelt(oppgavetypeId: Long, felt: Oppgavefelt, tx: TransactionalSession) {
+    private fun fjernFelt(felt: Oppgavefelt, tx: TransactionalSession) {
         tx.run(
             queryOf(
                 """
                     delete
                     from oppgavefelt f
-                    where f.id = (select fi.id 
-                        from oppgavefelt fi
-                            inner join feltdefinisjon fd on fi.feltdefinisjon_id = fd.id
-                            inner join oppgavetype o on fi.oppgavetype_id = o.id 
-                        where fd.ekstern_id = :feltdefinisjon_ekstern_id 
-                        and o.id = :oppgavetype_id)
+                    where f.id = :oppgavefelt_id
                 """.trimIndent(),
                 mapOf(
-                    "feltdefinisjon_ekstern_id" to felt.feltDefinisjon.eksternId,
-                    "oppgavetype_id" to oppgavetypeId
+                    "oppgavefelt_id" to felt.id!!
                 )
             ).asUpdate
         )

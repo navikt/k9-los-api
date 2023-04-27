@@ -56,7 +56,7 @@ class OmrådeRepository(private val dataSource: DataSource) {
         }
     }
 
-    fun hent(tx: TransactionalSession, id: Long): Område {
+    fun hent(id: Long, tx: TransactionalSession): Område {
         return tx.run(
             queryOf("select * from omrade where id = :id", mapOf("id" to id))
                 .map { row ->
