@@ -11,4 +11,20 @@ data class OppgaveDto(
     val status: String,
     val endretTidspunkt: LocalDateTime,
     val feltverdier: List<OppgaveFeltverdiDto>
-)
+) {
+
+    constructor(oppgaveDto: OppgaveDto, feltverdier: List<OppgaveFeltverdiDto>) : this(
+        id = oppgaveDto.id,
+        versjon = oppgaveDto.versjon,
+        område = oppgaveDto.område,
+        kildeområde = oppgaveDto.kildeområde,
+        type = oppgaveDto.type,
+        status = oppgaveDto.status,
+        endretTidspunkt = oppgaveDto.endretTidspunkt,
+        feltverdier = feltverdier,
+    )
+
+    fun leggTilFeltverdi(oppgaveFeltverdi: OppgaveFeltverdiDto): OppgaveDto {
+        return OppgaveDto(this, this.feltverdier.plus(oppgaveFeltverdi))
+    }
+}

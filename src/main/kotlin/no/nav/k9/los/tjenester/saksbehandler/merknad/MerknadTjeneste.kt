@@ -12,7 +12,9 @@ import no.nav.k9.los.domene.lager.oppgave.v2.BehandlingsmigreringTjeneste
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveV2
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveKøOppdaterer
 import org.koin.ktor.ext.inject
 import java.time.LocalDateTime
@@ -92,6 +94,8 @@ class MerknadTjeneste(
     private val azureGraphService: IAzureGraphService,
     private val oppgaveKøOppdaterer: OppgaveKøOppdaterer,
     private val migreringstjeneste: BehandlingsmigreringTjeneste,
+    private val k9SakTilLosAdapterTjeneste: K9SakTilLosAdapterTjeneste,
+    private val behandlingProsessEventK9Repository: BehandlingProsessEventK9Repository,
     private val tm: TransactionalManager
 ) {
 
@@ -112,6 +116,11 @@ class MerknadTjeneste(
                 ?: throw IllegalStateException("Forsøker å lagre merknad på ukjent eksternReferanse $eksternReferanse")
             behandling.lagreMerknad(merknad, saksbehandlerIdent = saksbehandlerIdent)
             oppgaveRepositoryV2.lagre(behandling, transaction)
+
+            val behandlingUUID = UUID.fromString(eksternReferanse)
+            behandlingProsessEventK9Repository.fjernDirty(behandlingUUID, transaction)
+            k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(behandlingUUID)
+
             behandling.merknad
         }
         oppgaveKøOppdaterer.oppdater(UUID.fromString(eksternReferanse))

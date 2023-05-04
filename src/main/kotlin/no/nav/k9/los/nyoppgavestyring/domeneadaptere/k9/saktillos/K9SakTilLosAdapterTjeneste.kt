@@ -4,9 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.*
 import no.nav.k9.los.Configuration
+import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.EventTilDtoMapper
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
@@ -23,7 +26,8 @@ class K9SakTilLosAdapterTjeneste(
     private val oppgavetypeTjeneste: OppgavetypeTjeneste,
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
     private val config: Configuration,
-    private val transactionalManager: TransactionalManager
+    private val transactionalManager: TransactionalManager,
+    private val oppgaveRepositoryV2: OppgaveRepositoryV2,
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9SakTilLosAdapterTjeneste::class.java)
@@ -101,12 +105,28 @@ class K9SakTilLosAdapterTjeneste(
     private fun oppdaterOppgaveForBehandlingUuid(uuid: UUID, eventTellerInn: Long): Long {
         var eventTeller = eventTellerInn
         var forrigeOppgave: OppgaveV3? = null
+
+        var sisteOppgaveDtoTilHastesakvask: OppgaveDto? = null
+        val hastesak = oppgaveRepositoryV2.hentMerknader(uuid.toString(), false)
+            .filter { merknad -> merknad.merknadKoder.contains("HASTESAK") }.isNotEmpty()
+
         transactionalManager.transaction { tx ->
             val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
             behandlingProsessEventer.forEach { event ->
                 val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+                    .leggTilFeltverdi(
+                        OppgaveFeltverdiDto(
+                            nøkkel = "hastesak",
+                            verdi = hastesak.toString()
+                        )
+                    )
+
 
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
+
+                if (oppgave == null) {
+                    sisteOppgaveDtoTilHastesakvask = oppgaveDto
+                }
 
                 oppgave?.let {
                     eventTeller++
@@ -114,6 +134,12 @@ class K9SakTilLosAdapterTjeneste(
                 }
                 forrigeOppgave = oppgave
             }
+
+            // Midlertidig påfunn for å sette markør for hastesak. Mer permanent løsning kommer senere, og da kan dette slettes
+            if (sisteOppgaveDtoTilHastesakvask != null) {
+                oppgaveV3Tjeneste.oppdaterEkstisterendeOppgaveversjon(sisteOppgaveDtoTilHastesakvask!!, tx)
+            }
+
             forrigeOppgave = null
 
             behandlingProsessEventK9Repository.fjernDirty(uuid, tx)

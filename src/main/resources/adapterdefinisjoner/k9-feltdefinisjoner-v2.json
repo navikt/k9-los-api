@@ -274,6 +274,12 @@
       "listetype": false,
       "tolkesSom": "boolean",
       "visTilBruker": true
+    },
+    {
+      "id": "hastesak",
+      "listetype": false,
+      "tolkesSom": "boolean",
+      "visTilBruker": true
     }
   ]
 }
