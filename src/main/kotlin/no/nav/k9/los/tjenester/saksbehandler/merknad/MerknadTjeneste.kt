@@ -118,7 +118,7 @@ class MerknadTjeneste(
             oppgaveRepositoryV2.lagre(behandling, transaction)
 
             val behandlingUUID = UUID.fromString(eksternReferanse)
-            behandlingProsessEventK9Repository.fjernDirty(behandlingUUID, transaction)
+            behandlingProsessEventK9Repository.settDirty(behandlingUUID, transaction)
             k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(behandlingUUID)
 
             behandling.merknad
