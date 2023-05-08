@@ -110,6 +110,8 @@ class MerknadTjeneste(
         } catch (_: Exception) {
             null
         }
+
+        val behandlingUuid = UUID.fromString(eksternReferanse)
         val merknaderEtterLagring = tm.transaction { transaction ->
             val behandling = oppgaveRepositoryV2.hentBehandling(eksternReferanse, transaction)
                 ?: migreringstjeneste.hentBehandlingFraTidligereProsessEvents(eksternReferanse)
@@ -117,12 +119,12 @@ class MerknadTjeneste(
             behandling.lagreMerknad(merknad, saksbehandlerIdent = saksbehandlerIdent)
             oppgaveRepositoryV2.lagre(behandling, transaction)
 
-            val behandlingUUID = UUID.fromString(eksternReferanse)
-            behandlingProsessEventK9Repository.settDirty(behandlingUUID, transaction)
-            k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(behandlingUUID)
+            behandlingProsessEventK9Repository.settDirty(behandlingUuid, transaction)
 
             behandling.merknad
         }
+
+        k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(behandlingUuid)
         oppgaveKøOppdaterer.oppdater(UUID.fromString(eksternReferanse))
         return merknaderEtterLagring?.takeIf { !it.slettet }
     }
