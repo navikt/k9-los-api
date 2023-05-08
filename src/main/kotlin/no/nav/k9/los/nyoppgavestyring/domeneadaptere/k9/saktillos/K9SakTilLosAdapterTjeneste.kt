@@ -34,7 +34,6 @@ class K9SakTilLosAdapterTjeneste(
     private val TRÅDNAVN = "k9-sak-til-los"
 
 
-
     fun kjør(kjørSetup: Boolean = false, kjørUmiddelbart: Boolean = false) {
         if (config.nyOppgavestyringAktivert()) {
             when (kjørUmiddelbart) {
@@ -107,10 +106,10 @@ class K9SakTilLosAdapterTjeneste(
         var forrigeOppgave: OppgaveV3? = null
 
         var sisteOppgaveDtoTilHastesakvask: OppgaveDto? = null
-        val hastesak = oppgaveRepositoryV2.hentMerknader(uuid.toString(), false)
-            .filter { merknad -> merknad.merknadKoder.contains("HASTESAK") }.isNotEmpty()
 
         transactionalManager.transaction { tx ->
+            val hastesak = oppgaveRepositoryV2.hentMerknader(uuid.toString(), false, tx)
+                .filter { merknad -> merknad.merknadKoder.contains("HASTESAK") }.isNotEmpty()
             val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
             behandlingProsessEventer.forEach { event ->
                 val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
