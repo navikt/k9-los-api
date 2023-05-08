@@ -43,6 +43,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAda
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkApi
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonApi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Api
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeApi
@@ -69,6 +70,7 @@ import org.koin.core.qualifier.named
 import org.koin.ktor.ext.getKoin
 import org.koin.ktor.plugin.Koin
 import java.time.Duration
+import java.time.LocalDateTime
 import java.util.*
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
@@ -93,6 +95,10 @@ fun Application.k9Los() {
     k9SakTilLosAdapterTjeneste.setup()
     val k9KlageTilLosAdapterTjeneste = koin.get<K9KlageTilLosAdapterTjeneste>()
     k9KlageTilLosAdapterTjeneste.setup()
+
+    if (LocalDateTime.now().isBefore(LocalDateTime.of(2023, 5, 8, 18, 0))) {
+        koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
+    }
 
     install(Authentication) {
         multipleJwtIssuers(issuers)
