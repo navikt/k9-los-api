@@ -12,22 +12,110 @@ import java.time.LocalDateTime
 import javax.sql.DataSource
 
 class OppgaveV3Repository(
-    private val dataSource: DataSource
+    private val dataSource: DataSource,
+    private val oppgavetypeRepository: OppgavetypeRepository,
 ) {
 
     private val log = LoggerFactory.getLogger(OppgaveV3Repository::class.java)
 
     //TODO: status enum
 
-    fun lagre(oppgave: OppgaveV3, tx: TransactionalSession) {
+    fun nyOppgaveversjon(oppgave: OppgaveV3, tx: TransactionalSession) {
         val (eksisterendeId, eksisterendeVersjon) = hentVersjon(tx, oppgave)
 
         eksisterendeId?.let { deaktiverVersjon(eksisterendeId, oppgave.endretTidspunkt, tx) }
 
         val nyVersjon = eksisterendeVersjon?.plus(1) ?: 0
 
-        val oppgaveId = lagre(oppgave, nyVersjon, tx)
+        val oppgaveId = nyOppgaveversjon(oppgave, nyVersjon, tx)
         lagreFeltverdier(oppgaveId, oppgave.felter, tx)
+    }
+
+    fun hentOppgaveversjon(
+        område: Område,
+        eksternId: String,
+        eksternVersjon: String,
+        tx: TransactionalSession
+    ): OppgaveV3 {
+        return tx.run(
+            queryOf(
+                """
+                    select o.*
+                    from oppgave_v3 o
+                        inner join oppgavetype ot on o.oppgavetype_id = ot.id
+                        inner join omrade omr on ot.omrade_id = omr.id
+                    where o.ekstern_id = :oppgave_ekstern_id
+                    and o.ekstern_versjon = :oppgave_ekstern_versjon 
+                    and omr.ekstern_id = :omrade_ekstern_id
+                """.trimIndent(),
+                mapOf(
+                    "oppgave_ekstern_id" to eksternId,
+                    "oppgave_ekstern_versjon" to eksternVersjon,
+                    "omrade_ekstern_id" to område.eksternId
+                )
+            ).map { row ->
+                OppgaveV3(
+                    id = row.long("id"),
+                    eksternId = row.string("ekstern_id"),
+                    eksternVersjon = row.string("ekstern_versjon"),
+                    oppgavetype = oppgavetypeRepository.hentOppgavetype(
+                        område = område.eksternId,
+                        row.long("oppgavetype_id"),
+                        tx
+                    ),
+                    status = Oppgavestatus.valueOf(row.string("status")),
+                    endretTidspunkt = row.localDateTime("endret_tidspunkt"),
+                    kildeområde = row.string("kildeomrade"),
+                    felter = hentFeltverdier(
+                        row.long("id"),
+                        oppgavetypeRepository.hentOppgavetype(
+                            område = område.eksternId,
+                            row.long("oppgavetype_id"),
+                            tx
+                        ),
+                        tx
+                    )
+                )
+            }.asSingle
+        ) ?: throw IllegalArgumentException("Fant ikke oppgave med ekstern_id: ${eksternId}, ekstern_versjon: ${eksternVersjon} og område: ${område.eksternId}")
+    }
+
+    fun hentOppgaveversjonenFør(
+        eksternId: String,
+        eksternVersjon: String,
+        oppgavetype: Oppgavetype,
+        tx: TransactionalSession
+    ): OppgaveV3? {
+        return tx.run(
+            queryOf(
+                """
+                    select *
+                    from oppgave_v3 ov 
+                    where ekstern_id = :eksternId
+                    and versjon = (
+                        select versjon - 1
+                        from oppgave_v3 ov 
+                        where ekstern_id = :eksternId 
+                        and ekstern_versjon = :eksternVersjon
+                    )
+                """.trimIndent(),
+                mapOf(
+                    "eksternId" to eksternId,
+                    "eksternVersjon" to eksternVersjon
+                )
+            ).map { row ->
+                OppgaveV3(
+                    id = row.long("id"),
+                    eksternId = row.string("ekstern_id"),
+                    eksternVersjon = row.string("ekstern_versjon"),
+                    oppgavetype = oppgavetype,
+                    status = Oppgavestatus.valueOf(row.string("status")),
+                    endretTidspunkt = row.localDateTime("endret_tidspunkt"),
+                    kildeområde = row.string("kildeomrade"),
+                    felter = hentFeltverdier(row.long("id"), oppgavetype, tx)
+                )
+            }.asSingle
+        )
     }
 
     fun hentAktivOppgave(eksternId: String, oppgavetype: Oppgavetype, tx: TransactionalSession): OppgaveV3? {
@@ -51,7 +139,7 @@ class OppgaveV3Repository(
         )
     }
 
-    private fun lagre(oppgave: OppgaveV3, nyVersjon: Long, tx: TransactionalSession): Long {
+    private fun nyOppgaveversjon(oppgave: OppgaveV3, nyVersjon: Long, tx: TransactionalSession): Long {
         return tx.updateAndReturnGeneratedKey(
             queryOf(
                 """
@@ -95,7 +183,7 @@ class OppgaveV3Repository(
         )
     }
 
-    private fun lagreFeltverdier(
+    fun lagreFeltverdier(
         oppgaveId: Long,
         oppgaveFeltverdier: List<OppgaveFeltverdi>,
         tx: TransactionalSession
@@ -111,6 +199,62 @@ class OppgaveV3Repository(
                     "verdi" to feltverdi.verdi
                 )
             }
+        )
+    }
+
+    fun lagreFeltverdier(
+        eksternId: String,
+        eksternVersjon: String,
+        oppgaveFeltverdier: List<OppgaveFeltverdi>,
+        tx: TransactionalSession
+    ) {
+        tx.batchPreparedNamedStatement("""
+            INSERT INTO oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi)
+            VALUES (
+                (
+                    SELECT id 
+                    FROM oppgave_v3
+                    WHERE ekstern_id = :ekstern_id
+                    AND ekstern_versjon = :ekstern_versjon
+                ),
+                :oppgavefelt_id,
+                :verdi
+            )
+        """.trimIndent(),
+            oppgaveFeltverdier.map { feltverdi ->
+                mapOf(
+                    "ekstern_id" to eksternId,
+                    "ekstern_versjon" to eksternVersjon,
+                    "oppgavefelt_id" to feltverdi.oppgavefelt.id,
+                    "verdi" to feltverdi.verdi
+                )
+            }
+        )
+    }
+
+    fun slettFeltverdier(
+        eksternId: String,
+        eksternVersjon: String,
+        tx: TransactionalSession
+    ) {
+        tx.update(
+            queryOf(
+                """
+                    delete 
+                    from oppgavefelt_verdi 
+                    where oppgavefelt_verdi.id in (
+                        select ov.id
+                        from oppgavefelt_verdi ov
+                            inner join oppgave_v3 o on ov.oppgave_id = o.id
+                        where o.ekstern_id = :ekstern_id
+                        and o.ekstern_versjon = :ekstern_versjon
+                    )
+                    """.trimIndent(),
+                mapOf(
+                    "ekstern_id" to eksternId,
+                    "ekstern_versjon" to eksternVersjon
+                )
+            )
         )
     }
 

@@ -40,6 +40,38 @@ internal fun Route.OppgaveV3Api() {
         }
     }
 
+    get("/{område}/{eksternId}/{eksternVersjon}") {
+        if (config.nyOppgavestyringRestAktivert()) {
+            requestContextService.withRequestContext(call) {
+                call.respond(
+                    transactionalManager.transaction { tx ->
+                        oppgaveV3Tjeneste.hentOppgaveversjon(
+                            område = call.parameters["område"]!!,
+                            eksternId = call.parameters["eksternId"]!!,
+                            eksternVersjon = call.parameters["eksternVersjon"]!!,
+                            tx = tx
+                        )
+                    }
+                )
+            }
+        } else {
+            call.respond(HttpStatusCode.Locked)
+        }
+    }
+
+    post ( "/{område}/{eksternId}/{eksternVersjon}" ) {
+        if (config.nyOppgavestyringRestAktivert()) {
+            requestContextService.withRequestContext(call) {
+                val oppgaveDto = call.receive<OppgaveDto>()
+                transactionalManager.transaction { tx ->
+                    oppgaveV3Tjeneste.oppdaterEkstisterendeOppgaveversjon(oppgaveDto, tx)
+                }
+            }
+        } else {
+            call.respond(HttpStatusCode.Locked)
+        }
+    }
+
     // TODO fjernes før prodsetting, bare for test
     post("/lagbehandlinger") {
         if (config.nyOppgavestyringRestAktivert()) {

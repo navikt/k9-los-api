@@ -30,4 +30,8 @@ class Oppgavefelt(
 
         return true
     }
+
+    override fun toString(): String {
+        return "Oppgavefelt(feltDefinisjon=$feltDefinisjon, visPåOppgave=$visPåOppgave, påkrevd=$påkrevd, defaultverdi=$defaultverdi, feltutleder=$feltutleder)"
+    }
 }
