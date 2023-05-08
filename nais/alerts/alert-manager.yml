@@ -26,6 +26,7 @@ spec:
             *Alert:* {{ .Annotations.title }}{{ if .Labels.severity }} - `{{ .Labels.severity }}`{{ end }}
             *Summary:* {{ .Annotations.summary }}
             *Description:* {{ .Annotations.description }}
+            {{ end }}
           color: |-
             {{ if eq .Status "firing" -}}
               {{ if eq .CommonLabels.severity "warning" -}}
