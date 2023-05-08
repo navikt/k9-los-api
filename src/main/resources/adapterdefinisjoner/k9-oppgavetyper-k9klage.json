@@ -13,7 +13,7 @@
         {
           "id": "påklagdBehandlingUuid",
           "visPåOppgave": true,
-          "påkrevd": true
+          "påkrevd": false
         },
         {
           "id": "aktorId",

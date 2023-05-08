@@ -143,7 +143,7 @@ class EventTilDtoMapper {
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "påklagdBehandlingUuid",
-                verdi = event.påklagdBehandlingEksternId.toString(),
+                verdi = event.påklagdBehandlingEksternId?.toString(),
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "aktorId",
