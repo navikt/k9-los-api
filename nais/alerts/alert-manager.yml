@@ -24,7 +24,7 @@ spec:
           text: >-
             {{ range .Alerts -}}
             *Alert:* {{ .Annotations.title }}{{ if .Labels.severity }} - `{{ .Labels.severity }}`{{ end }}
-            *Summary:* {{ .Annotations.summary }}{{ if .Labels.severity }} - `{{ .Labels.severity }}`{{ end }}
+            *Summary:* {{ .Annotations.summary }}
             *Description:* {{ .Annotations.description }}
           color: |-
             {{ if eq .Status "firing" -}}
