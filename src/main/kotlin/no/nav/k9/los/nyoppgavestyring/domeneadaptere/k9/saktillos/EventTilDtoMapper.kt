@@ -10,8 +10,8 @@ import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 
 class EventTilDtoMapper {
     companion object {
-        private val MANUELLE_AKSJONSPUNKTER = AksjonspunktDefinisjon.values().filter { aksjonspunktDefinisjon ->
-            aksjonspunktDefinisjon.aksjonspunktType == AksjonspunktType.MANUELL
+        private val MANUELLE_AKSJONSPUNKTER = AksjonspunktDefinisjon.values().filter {
+            aksjonspunktDefinisjon -> aksjonspunktDefinisjon.aksjonspunktType == AksjonspunktType.MANUELL
         }.map { aksjonspunktDefinisjon -> aksjonspunktDefinisjon.kode }
 
         private val AUTOPUNKTER = AksjonspunktDefinisjon.values().filter { aksjonspunktDefinisjon ->
@@ -61,14 +61,14 @@ class EventTilDtoMapper {
                 aksjonspunktTilstand.status.erÅpentAksjonspunkt()
             }
 
-            val harManueltAksjonspunkt = åpneAksjonspunkter.any { aksjonspunktTilstandDto ->
-                MANUELLE_AKSJONSPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode)
-            }
+            val harEllerHarHattManueltAksjonspunkt = event.aksjonspunktTilstander
+                .filter { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.status != AksjonspunktStatus.AVBRUTT }
+                .any { aksjonspunktTilstandDto -> MANUELLE_AKSJONSPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode) }
 
             utledAksjonspunkter(event, oppgaveFeltverdiDtos)
             utledÅpneAksjonspunkter(event.behandlingSteg, åpneAksjonspunkter, oppgaveFeltverdiDtos)
             utledVenteÅrsakOgFrist(åpneAksjonspunkter, oppgaveFeltverdiDtos)
-            utledAutomatiskBehandletFlagg(forrigeOppgave, oppgaveFeltverdiDtos, harManueltAksjonspunkt)
+            utledAutomatiskBehandletFlagg(forrigeOppgave, oppgaveFeltverdiDtos, harEllerHarHattManueltAksjonspunkt)
             oppgaveFeltverdiDtos.addAll(ventekategoriTilFlagg(utledVentetype(event.behandlingSteg, event.behandlingStatus, åpneAksjonspunkter)))
 
             return oppgaveFeltverdiDtos
