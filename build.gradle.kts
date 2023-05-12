@@ -12,7 +12,7 @@ val k9KlageVersion = "0.3.0"
 val fuelVersion = "2.3.1"
 val jacksonVersion = "2.14.2"
 
-val dusseldorfKtorVersion = "3.2.3.0-f979367"
+val dusseldorfKtorVersion = "3.2.3.0-9c2889c"
 val ktorVersion = "2.3.0"
 val kafkaVersion = "3.2.3"
 
