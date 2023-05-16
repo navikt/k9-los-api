@@ -7,7 +7,7 @@ on:
       - '.github/workflows/dependency-submission.yml'
   workflow_dispatch:
 env:
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GITHUB_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   scan:
