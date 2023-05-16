@@ -7,8 +7,9 @@ on:
       - '.github/workflows/dependency-submission.yml'
   workflow_dispatch:
 env:
-  GITHUB_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
-
+  GITHUB_USERNAME: k9-los-api
+  GITHUB_PASSWORD: ${{ secrets.READER_TOKEN }}
+      
 jobs:
   scan:
     uses: navikt/sif-gha-workflows/.github/workflows/gradle-dependency-submission.yml@main
