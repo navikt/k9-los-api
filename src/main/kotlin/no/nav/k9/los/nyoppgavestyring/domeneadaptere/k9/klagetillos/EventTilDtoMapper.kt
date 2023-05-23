@@ -20,35 +20,37 @@ class EventTilDtoMapper {
             aksjonspunktDefinisjon.aksjonspunktType == AksjonspunktType.AUTOPUNKT
         }.map { aksjonspunktDefinisjon -> aksjonspunktDefinisjon.kode }
 
-        internal fun lagOppgaveDto(event: KlagebehandlingProsessHendelse, forrigeOppgave: OppgaveV3?) =
-            OppgaveDto(
-                id = event.eksternId.toString(),
-                versjon = event.eventTid.toString(),
-                område = "K9",
-                kildeområde = "K9",
-                type = "k9klage",
-                status = if (event.aksjonspunkttilstander.any { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.status.erÅpentAksjonspunkt() }) {
-                    if (oppgaveSkalHaVentestatus(event)) {
-                        "VENTER"
-                    } else {
-                        "AAPEN"
-                    }
+        internal fun lagOppgaveDto(event: KlagebehandlingProsessHendelse, forrigeOppgave: OppgaveV3?) = OppgaveDto(
+            id = event.eksternId.toString(),
+            versjon = event.eventTid.toString(),
+            område = "K9",
+            kildeområde = "K9",
+            type = "k9klage",
+            status = if (event.aksjonspunkttilstander.any { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.status.erÅpentAksjonspunkt() }) {
+                if (oppgaveSkalHaVentestatus(event)) {
+                    "VENTER"
                 } else {
-                    if (event.behandlingStatus == BehandlingStatus.UTREDES.toString()) {
-                        "AAPEN"
-                    } else {
-                        "LUKKET"
-                    }
-                },
-                endretTidspunkt = event.eventTid,
-                feltverdier = lagFeltverdier(event, forrigeOppgave)
-            )
+                    "AAPEN"
+                }
+            } else {
+                if (event.behandlingStatus == BehandlingStatus.UTREDES.toString()) {
+                    "AAPEN"
+                } else {
+                    "LUKKET"
+                }
+            },
+            endretTidspunkt = event.eventTid,
+            reservasjonsnøkkel = if (erTilBeslutter(event)) {
+                "K9_k_${event.ytelseTypeKode}_${event.pleietrengendeAktørId}_beslutter"
+            } else {
+                "K9_k_${event.ytelseTypeKode}_${event.pleietrengendeAktørId}"
+            },
+            feltverdier = lagFeltverdier(event, forrigeOppgave)
+        )
 
         private fun oppgaveSkalHaVentestatus(event: KlagebehandlingProsessHendelse): Boolean {
             val oppgaveFeltverdiDtos = mutableListOf<OppgaveFeltverdiDto>()
-            val åpneAksjonspunkter = event.aksjonspunkttilstander.filter { aksjonspunkttilstand ->
-                aksjonspunkttilstand.status.erÅpentAksjonspunkt()
-            }
+            val åpneAksjonspunkter = getåpneAksjonspunkter(event)
 
             val harAutopunkt = åpneAksjonspunkter.any { aksjonspunktTilstandDto ->
                 AUTOPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode)
@@ -58,9 +60,19 @@ class EventTilDtoMapper {
                 MANUELLE_AKSJONSPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode)
             }
 
-            utledAvventerSaksbehandler(harManueltAksjonspunkt = harManueltAksjonspunkt, harAutopunkt = harAutopunkt, oppgaveFeltverdiDtos = oppgaveFeltverdiDtos)
+            utledAvventerSaksbehandler(
+                harManueltAksjonspunkt = harManueltAksjonspunkt,
+                harAutopunkt = harAutopunkt,
+                oppgaveFeltverdiDtos = oppgaveFeltverdiDtos
+            )
 
             return oppgaveFeltverdiDtos.first().nøkkel == "false"
+        }
+
+        private fun erTilBeslutter(event: KlagebehandlingProsessHendelse): Boolean {
+            return getåpneAksjonspunkter(event).firstOrNull { ap ->
+                ap.aksjonspunktKode.equals(AksjonspunktDefinisjon.FATTER_VEDTAK.kode)
+            } != null
         }
 
         private fun lagFeltverdier(
@@ -69,9 +81,7 @@ class EventTilDtoMapper {
         ): List<OppgaveFeltverdiDto> {
             val oppgaveFeltverdiDtos = mapEnkeltverdier(event, forrigeOppgave)
 
-            val åpneAksjonspunkter = event.aksjonspunkttilstander.filter { aksjonspunkttilstand ->
-                aksjonspunkttilstand.status.erÅpentAksjonspunkt()
-            }
+            val åpneAksjonspunkter = getåpneAksjonspunkter(event)
 
             val harAutopunkt = åpneAksjonspunkter.any { aksjonspunktTilstandDto ->
                 AUTOPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode)
@@ -88,6 +98,11 @@ class EventTilDtoMapper {
 
             return oppgaveFeltverdiDtos
         }
+
+        private fun getåpneAksjonspunkter(event: KlagebehandlingProsessHendelse) =
+            event.aksjonspunkttilstander.filter { aksjonspunkttilstand ->
+                aksjonspunkttilstand.status.erÅpentAksjonspunkt()
+            }
 
         private fun utledÅpneAksjonspunkter(
             åpneAksjonspunkter: List<Aksjonspunkttilstand>,

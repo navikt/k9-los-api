@@ -10,6 +10,7 @@ data class OppgaveDto(
     val type: String,
     val status: String,
     val endretTidspunkt: LocalDateTime,
+    val reservasjonsnøkkel: String,
     val feltverdier: List<OppgaveFeltverdiDto>
 ) {
 
@@ -21,6 +22,7 @@ data class OppgaveDto(
         type = oppgaveDto.type,
         status = oppgaveDto.status,
         endretTidspunkt = oppgaveDto.endretTidspunkt,
+        reservasjonsnøkkel = oppgaveDto.reservasjonsnøkkel,
         feltverdier = feltverdier,
     )
 

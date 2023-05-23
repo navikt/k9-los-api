@@ -1,8 +1,10 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos
 
+import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.KlagebehandlingProsessHendelse
 import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.*
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.EventTilDtoMapper
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
@@ -39,13 +41,22 @@ class EventTilDtoMapper {
                     }
                 },
                 endretTidspunkt = event.eventTid,
+                reservasjonsnøkkel = if (erTilBeslutter(event)) {
+                    "K9_b_${event.ytelseTypeKode}_${event.pleietrengendeAktørId}_beslutter"
+                } else {
+                    "K9_b_${event.ytelseTypeKode}_${event.pleietrengendeAktørId}"
+                },
                 feltverdier = lagFeltverdier(event, forrigeOppgave)
             )
 
+        private fun erTilBeslutter(event: BehandlingProsessEventDto): Boolean {
+            return getåpneAksjonspunkter(event).firstOrNull { ap ->
+                ap.aksjonspunktKode.equals(no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.FATTER_VEDTAK.kode)
+            } != null
+        }
+
         private fun oppgaveSkalHaVentestatus(event: BehandlingProsessEventDto): Boolean {
-            val åpneAksjonspunkter = event.aksjonspunktTilstander.filter { aksjonspunktTilstand ->
-                aksjonspunktTilstand.status.erÅpentAksjonspunkt()
-            }
+            val åpneAksjonspunkter = getåpneAksjonspunkter(event)
 
             val ventetype = utledVentetype(event.behandlingSteg, event.behandlingStatus, åpneAksjonspunkter)
             return ventetype != Ventekategori.AVVENTER_SAKSBEHANDLER
@@ -57,9 +68,7 @@ class EventTilDtoMapper {
         ): List<OppgaveFeltverdiDto> {
             val oppgaveFeltverdiDtos = mapEnkeltverdier(event, forrigeOppgave)
 
-            val åpneAksjonspunkter = event.aksjonspunktTilstander.filter { aksjonspunktTilstand ->
-                aksjonspunktTilstand.status.erÅpentAksjonspunkt()
-            }
+            val åpneAksjonspunkter = getåpneAksjonspunkter(event)
 
             val harManueltAksjonspunkt = åpneAksjonspunkter.any { aksjonspunktTilstandDto ->
                 MANUELLE_AKSJONSPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode)
@@ -73,6 +82,11 @@ class EventTilDtoMapper {
 
             return oppgaveFeltverdiDtos
         }
+
+        private fun getåpneAksjonspunkter(event: BehandlingProsessEventDto) =
+            event.aksjonspunktTilstander.filter { aksjonspunktTilstand ->
+                aksjonspunktTilstand.status.erÅpentAksjonspunkt()
+            }
 
         private fun mapEnkeltverdier(
             event: BehandlingProsessEventDto,
