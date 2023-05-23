@@ -66,7 +66,7 @@ class OppgaveV3Repository(
                     status = Oppgavestatus.valueOf(row.string("status")),
                     endretTidspunkt = row.localDateTime("endret_tidspunkt"),
                     kildeområde = row.string("kildeomrade"),
-                    reservasjonsnøkkel = row.stringOrNull("reservasjonsnøkkel") ?: "mangler_historikkvask",
+                    reservasjonsnøkkel = row.stringOrNull("reservasjonsnokkel") ?: "mangler_historikkvask",
                     felter = hentFeltverdier(
                         row.long("id"),
                         oppgavetypeRepository.hentOppgavetype(
@@ -113,7 +113,7 @@ class OppgaveV3Repository(
                     status = Oppgavestatus.valueOf(row.string("status")),
                     endretTidspunkt = row.localDateTime("endret_tidspunkt"),
                     kildeområde = row.string("kildeomrade"),
-                    reservasjonsnøkkel = row.stringOrNull("reservasjonsnøkkel") ?: "mangler_historikkvask",
+                    reservasjonsnøkkel = row.stringOrNull("reservasjonsnokkel") ?: "mangler_historikkvask",
                     felter = hentFeltverdier(row.long("id"), oppgavetype, tx)
                 )
             }.asSingle
@@ -135,7 +135,7 @@ class OppgaveV3Repository(
                     status = Oppgavestatus.valueOf(row.string("status")),
                     endretTidspunkt = row.localDateTime("endret_tidspunkt"),
                     kildeområde = row.string("kildeomrade"),
-                    reservasjonsnøkkel = row.stringOrNull("reservasjonsnøkkel") ?: "mangler_historikkvask",
+                    reservasjonsnøkkel = row.stringOrNull("reservasjonsnkkel") ?: "mangler_historikkvask",
                     felter = hentFeltverdier(row.long("id"), oppgavetype, tx)
                 )
             }.asSingle
@@ -146,8 +146,8 @@ class OppgaveV3Repository(
         return tx.updateAndReturnGeneratedKey(
             queryOf(
                 """
-                    insert into oppgave_v3(ekstern_id, ekstern_versjon, oppgavetype_id, status, versjon, aktiv, kildeomrade, endret_tidspunkt, reservasjonsnøkkel)
-                    values(:eksternId, :eksternVersjon, :oppgavetypeId, :status, :versjon, :aktiv, :kildeomrade, :endretTidspunkt, :reservasjonsnøkkel)
+                    insert into oppgave_v3(ekstern_id, ekstern_versjon, oppgavetype_id, status, versjon, aktiv, kildeomrade, endret_tidspunkt, reservasjonsnokkel)
+                    values(:eksternId, :eksternVersjon, :oppgavetypeId, :status, :versjon, :aktiv, :kildeomrade, :endretTidspunkt, :reservasjonsnokkel)
                 """.trimIndent(),
                 mapOf(
                     "eksternId" to oppgave.eksternId,
@@ -158,7 +158,7 @@ class OppgaveV3Repository(
                     "versjon" to nyVersjon,
                     "aktiv" to true,
                     "kildeomrade" to oppgave.kildeområde,
-                    "reservasjonsnøkkel" to oppgave.reservasjonsnøkkel,
+                    "reservasjonsnokkel" to oppgave.reservasjonsnøkkel,
                 )
             )
         )!!
