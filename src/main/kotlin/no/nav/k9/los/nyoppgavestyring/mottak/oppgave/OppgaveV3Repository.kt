@@ -135,7 +135,7 @@ class OppgaveV3Repository(
                     status = Oppgavestatus.valueOf(row.string("status")),
                     endretTidspunkt = row.localDateTime("endret_tidspunkt"),
                     kildeområde = row.string("kildeomrade"),
-                    reservasjonsnøkkel = row.stringOrNull("reservasjonsnkkel") ?: "mangler_historikkvask",
+                    reservasjonsnøkkel = row.stringOrNull("reservasjonsnokkel") ?: "mangler_historikkvask",
                     felter = hentFeltverdier(row.long("id"), oppgavetype, tx)
                 )
             }.asSingle
