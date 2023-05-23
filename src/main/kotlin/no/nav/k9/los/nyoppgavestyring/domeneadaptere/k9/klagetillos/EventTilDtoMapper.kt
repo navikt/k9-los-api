@@ -6,6 +6,7 @@ import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktType
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.Aksjonspunkttilstand
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.KlagebehandlingProsessHendelse
+import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
@@ -40,13 +41,25 @@ class EventTilDtoMapper {
                 }
             },
             endretTidspunkt = event.eventTid,
-            reservasjonsnøkkel = if (erTilBeslutter(event)) {
-                "K9_k_${event.ytelseTypeKode}_${event.pleietrengendeAktørId}_beslutter"
-            } else {
-                "K9_k_${event.ytelseTypeKode}_${event.pleietrengendeAktørId}"
-            },
+            reservasjonsnøkkel = utledReservasjonsnøkkel(event),
             feltverdier = lagFeltverdier(event, forrigeOppgave)
         )
+
+        private fun utledReservasjonsnøkkel(event: KlagebehandlingProsessHendelse): String {
+            return when (FagsakYtelseType.fraKode(event.ytelseTypeKode)) {
+                FagsakYtelseType.PLEIEPENGER_SYKT_BARN -> if (erTilBeslutter(event)) {
+                    "K9_b_${event.ytelseTypeKode}_${event.pleietrengendeAktørId}_beslutter"
+                } else {
+                    "K9_b_${event.ytelseTypeKode}_${event.pleietrengendeAktørId}"
+                }
+
+                else -> if (erTilBeslutter(event)) {
+                    "K9_b_${event.ytelseTypeKode}_${event.aktørId}_beslutter"
+                } else {
+                    "K9_b_${event.ytelseTypeKode}_${event.aktørId}"
+                }
+            }
+        }
 
         private fun oppgaveSkalHaVentestatus(event: KlagebehandlingProsessHendelse): Boolean {
             val oppgaveFeltverdiDtos = mutableListOf<OppgaveFeltverdiDto>()
@@ -220,7 +233,8 @@ class EventTilDtoMapper {
                 nøkkel = "totrinnskontroll",
                 verdi = event.aksjonspunkttilstander.filter { aksjonspunktTilstandDto ->
                     aksjonspunktTilstandDto.aksjonspunktKode.equals("5015") && aksjonspunktTilstandDto.status.equals(
-                        AksjonspunktStatus.AVBRUTT).not()
+                        AksjonspunktStatus.AVBRUTT
+                    ).not()
                 }.isNotEmpty().toString()
             ),
             OppgaveFeltverdiDto(

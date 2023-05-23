@@ -1,10 +1,9 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos
 
-import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.KlagebehandlingProsessHendelse
 import no.nav.k9.kodeverk.behandling.BehandlingStatus
+import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.*
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.EventTilDtoMapper
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
@@ -41,13 +40,25 @@ class EventTilDtoMapper {
                     }
                 },
                 endretTidspunkt = event.eventTid,
-                reservasjonsnøkkel = if (erTilBeslutter(event)) {
+                reservasjonsnøkkel = utledReservasjonsnøkkel(event),
+                feltverdier = lagFeltverdier(event, forrigeOppgave)
+            )
+
+        private fun utledReservasjonsnøkkel(event: BehandlingProsessEventDto): String {
+            return when (FagsakYtelseType.fraKode(event.ytelseTypeKode)) {
+                FagsakYtelseType.PLEIEPENGER_SYKT_BARN -> if (erTilBeslutter(event)) {
                     "K9_b_${event.ytelseTypeKode}_${event.pleietrengendeAktørId}_beslutter"
                 } else {
                     "K9_b_${event.ytelseTypeKode}_${event.pleietrengendeAktørId}"
-                },
-                feltverdier = lagFeltverdier(event, forrigeOppgave)
-            )
+                }
+
+                else -> if (erTilBeslutter(event)) {
+                    "K9_b_${event.ytelseTypeKode}_${event.aktørId}_beslutter"
+                } else {
+                    "K9_b_${event.ytelseTypeKode}_${event.aktørId}"
+                }
+            }
+        }
 
         private fun erTilBeslutter(event: BehandlingProsessEventDto): Boolean {
             return getåpneAksjonspunkter(event).firstOrNull { ap ->
@@ -78,7 +89,15 @@ class EventTilDtoMapper {
             utledÅpneAksjonspunkter(event.behandlingSteg, åpneAksjonspunkter, oppgaveFeltverdiDtos)
             utledVenteÅrsakOgFrist(åpneAksjonspunkter, oppgaveFeltverdiDtos)
             utledAutomatiskBehandletFlagg(forrigeOppgave, oppgaveFeltverdiDtos, harManueltAksjonspunkt)
-            oppgaveFeltverdiDtos.addAll(ventekategoriTilFlagg(utledVentetype(event.behandlingSteg, event.behandlingStatus, åpneAksjonspunkter)))
+            oppgaveFeltverdiDtos.addAll(
+                ventekategoriTilFlagg(
+                    utledVentetype(
+                        event.behandlingSteg,
+                        event.behandlingStatus,
+                        åpneAksjonspunkter
+                    )
+                )
+            )
 
             return oppgaveFeltverdiDtos
         }
@@ -386,7 +405,7 @@ class EventTilDtoMapper {
                 åpneAksjonspunkter
                     .filter { aksjonspunktTilstandDto ->
                         aksjonspunktTilstandDto.venteårsak != Venteårsak.UDEFINERT
-                                && aksjonspunktTilstandDto.status == AksjonspunktStatus.OPPRETTET
+                            && aksjonspunktTilstandDto.status == AksjonspunktStatus.OPPRETTET
                     }
                     .singleOrNull { aksjonspunktTilstandDto ->
                         oppgaveFeltverdiDtos.add(
