@@ -181,7 +181,7 @@ class EventTilDtoMapper(
             )
         } else {
             OppgaveFeltverdiDto(
-                nøkkel = "resultattypoe",
+                nøkkel = "resultattype",
                 verdi = "IKKE_FASTSATT"
             )
         }
