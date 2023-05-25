@@ -19,6 +19,7 @@ object TestConfiguration {
             Pair("nav.register_urls.pdl_url", "$tpsProxyBaseUrl")
         )
 
+        map["nav.register_urls.k9_url"] = "http://localshost:8080/"
         map["nav.audit.enabled"] = "false"
         map["nav.audit.vendor"] = "test"
         map["nav.audit.product"] = "test"

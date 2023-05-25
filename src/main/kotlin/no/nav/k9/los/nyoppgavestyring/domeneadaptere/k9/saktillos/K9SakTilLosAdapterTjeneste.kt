@@ -2,7 +2,6 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.*
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
@@ -28,6 +27,7 @@ class K9SakTilLosAdapterTjeneste(
     private val config: Configuration,
     private val transactionalManager: TransactionalManager,
     private val oppgaveRepositoryV2: OppgaveRepositoryV2,
+    private val eventTilDtoMapper: EventTilDtoMapper,
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9SakTilLosAdapterTjeneste::class.java)
@@ -112,7 +112,7 @@ class K9SakTilLosAdapterTjeneste(
                 .filter { merknad -> merknad.merknadKoder.contains("HASTESAK") }.isNotEmpty()
             val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
             behandlingProsessEventer.forEach { event ->
-                val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+                val oppgaveDto = eventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
                     .leggTilFeltverdi(
                         OppgaveFeltverdiDto(
                             nøkkel = "hastesak",

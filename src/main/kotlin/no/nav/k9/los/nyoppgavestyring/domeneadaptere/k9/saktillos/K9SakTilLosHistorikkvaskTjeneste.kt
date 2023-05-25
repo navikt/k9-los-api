@@ -35,6 +35,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
     private val config: Configuration,
     private val transactionalManager: TransactionalManager,
     private val oppgaveRepositoryV2: OppgaveRepositoryV2,
+    private val eventTilDtoMapper: EventTilDtoMapper,
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9SakTilLosHistorikkvaskTjeneste::class.java)
@@ -94,7 +95,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 .filter { merknad -> merknad.merknadKoder.contains("HASTESAK") }.isNotEmpty()
             val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
             behandlingProsessEventer.forEach { event ->
-                val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+                val oppgaveDto = eventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
                     .leggTilFeltverdi(
                         OppgaveFeltverdiDto(
                             nøkkel = "hastesak",

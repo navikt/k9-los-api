@@ -319,7 +319,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgaveV3Tjeneste = get(),
             config = get(),
             oppgaveRepositoryV2 = get(),
-            transactionalManager = get()
+            transactionalManager = get(),
+            eventTilDtoMapper = get(),
         ).setup()
     }
 
