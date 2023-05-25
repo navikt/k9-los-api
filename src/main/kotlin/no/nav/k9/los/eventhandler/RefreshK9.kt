@@ -40,7 +40,6 @@ fun CoroutineScope.refreshK9(
         } else {
             oppgaveListe.add(oppgaveId)
         }
-        log.error("alert testing - testfeil!!!")
     }
 }
 
