@@ -3,14 +3,14 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos
 import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.*
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerKlient
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 
 class EventTilDtoMapper(
-    val k9SakBerikerKlient: K9SakBerikerKlient
+    val k9SakBerikerKlient: K9SakBerikerInterfaceKludge
 ) {
     private val MANUELLE_AKSJONSPUNKTER = AksjonspunktDefinisjon.values().filter { aksjonspunktDefinisjon ->
         aksjonspunktDefinisjon.aksjonspunktType == AksjonspunktType.MANUELL
@@ -104,11 +104,7 @@ class EventTilDtoMapper(
             nøkkel = "saksnummer",
             verdi = event.saksnummer
         ),
-        OppgaveFeltverdiDto(
-            nøkkel = "resultattype",
-            verdi = k9SakBerikerKlient.hentBehandling(event.eksternId!!).behandlingResultatType.kode
-            //event.resultatType ?: "IKKE_FASTSATT"
-        ),
+        utledResultattype(event),
         OppgaveFeltverdiDto(
             nøkkel = "ytelsestype",
             verdi = event.ytelseTypeKode
@@ -171,6 +167,24 @@ class EventTilDtoMapper(
             }.isNotEmpty().toString()
         )
     ).filterNotNull().toMutableList()
+
+    private fun utledResultattype(event: BehandlingProsessEventDto) =
+        if (event.resultatType != null) {
+            OppgaveFeltverdiDto(
+                nøkkel = "resultattype",
+                verdi = event.resultatType
+            )
+        } else if (event.behandlingStatus == "AVSLU") {
+            OppgaveFeltverdiDto(
+                nøkkel = "resultattype",
+                verdi = k9SakBerikerKlient.hentBehandling(event.eksternId!!).behandlingResultatType.kode
+            )
+        } else {
+            OppgaveFeltverdiDto(
+                nøkkel = "resultattypoe",
+                verdi = "IKKE_FASTSATT"
+            )
+        }
 
     internal fun utledVentetype(
         behandlingSteg: String?,

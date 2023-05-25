@@ -40,7 +40,9 @@ import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerKlient
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerKlientLocal
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository
@@ -445,13 +447,6 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        K9SakBerikerKlient(
-            configuration = get(),
-            accessTokenClient = get<AccessTokenClientResolver>().naisSts()
-        )
-    }
-
-    single {
         K9KlageTilLosHistorikkvaskTjeneste(
             behandlingProsessEventKlageRepository = get(),
             områdeRepository = get(),
@@ -483,6 +478,11 @@ fun localDevConfig() = module {
     single<IOmsorgspengerService> {
         OmsorgspengerServiceLocal()
     }
+
+    single<K9SakBerikerInterfaceKludge> {
+        K9SakBerikerKlientLocal()
+    }
+
 }
 
 fun preprodConfig(config: Configuration) = module {
@@ -517,6 +517,14 @@ fun preprodConfig(config: Configuration) = module {
             scope = "api://dev-fss.pdl.pdl-api/.default"
         )
     }
+
+    single {
+        K9SakBerikerKlient(
+            configuration = get(),
+            accessTokenClient = get<AccessTokenClientResolver>().naisSts()
+        )
+    }
+
 }
 
 fun prodConfig(config: Configuration) = module {
@@ -551,5 +559,13 @@ fun prodConfig(config: Configuration) = module {
             scope = "api://prod-fss.pdl.pdl-api/.default"
         )
     }
+
+    single {
+        K9SakBerikerKlient(
+            configuration = get(),
+            accessTokenClient = get<AccessTokenClientResolver>().naisSts()
+        )
+    }
+
 }
 
