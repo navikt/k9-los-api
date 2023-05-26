@@ -34,7 +34,7 @@ class K9KlageTilLosHistorikkvaskTjeneste(
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9KlageTilLosHistorikkvaskTjeneste::class.java)
-    private val TRÅDNAVN = "k9-klage-til-los"
+    private val TRÅDNAVN = "k9-klage-til-los-historikkvask"
     private val MANUELLE_AKSJONSPUNKTER = AksjonspunktDefinisjon.values().filter { aksjonspunktDefinisjon ->
         aksjonspunktDefinisjon.aksjonspunktType == AksjonspunktType.MANUELL
     }.map { aksjonspunktDefinisjon -> aksjonspunktDefinisjon.kode }
@@ -45,7 +45,7 @@ class K9KlageTilLosHistorikkvaskTjeneste(
 
     fun kjørHistorikkvask() {
         if (config.nyOppgavestyringAktivert()) {
-            log.info("Starter vask av oppgaver mot historiske k9sak-hendelser")
+            log.info("Starter vask av oppgaver mot historiske k9klage-hendelser")
             thread(
                 start = true,
                 isDaemon = true,

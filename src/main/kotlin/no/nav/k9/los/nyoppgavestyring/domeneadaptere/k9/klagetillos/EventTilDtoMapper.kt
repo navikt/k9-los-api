@@ -47,16 +47,20 @@ class EventTilDtoMapper {
 
         private fun utledReservasjonsnøkkel(event: KlagebehandlingProsessHendelse): String {
             return when (FagsakYtelseType.fraKode(event.ytelseTypeKode)) {
-                FagsakYtelseType.PLEIEPENGER_SYKT_BARN -> if (erTilBeslutter(event)) {
-                    "K9_b_${event.ytelseTypeKode}_${event.pleietrengendeAktørId}_beslutter"
+                FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
+                FagsakYtelseType.PLEIEPENGER_NÆRSTÅENDE,
+                FagsakYtelseType.OMSORGSPENGER_KS,
+                FagsakYtelseType.OMSORGSPENGER_AO,
+                FagsakYtelseType.OPPLÆRINGSPENGER  -> if (erTilBeslutter(event)) {
+                    "K9_k_${event.ytelseTypeKode}_${event.pleietrengendeAktørId}_beslutter"
                 } else {
-                    "K9_b_${event.ytelseTypeKode}_${event.pleietrengendeAktørId}"
+                    "K9_k_${event.ytelseTypeKode}_${event.pleietrengendeAktørId}"
                 }
 
                 else -> if (erTilBeslutter(event)) {
-                    "K9_b_${event.ytelseTypeKode}_${event.aktørId}_beslutter"
+                    "K9_k_${event.ytelseTypeKode}_${event.aktørId}_beslutter"
                 } else {
-                    "K9_b_${event.ytelseTypeKode}_${event.aktørId}"
+                    "K9_k_${event.ytelseTypeKode}_${event.aktørId}"
                 }
             }
         }

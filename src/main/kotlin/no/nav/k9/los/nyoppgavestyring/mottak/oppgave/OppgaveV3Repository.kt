@@ -142,6 +142,24 @@ class OppgaveV3Repository(
         )
     }
 
+    fun oppdaterReservasjonsnøkkel(eksternId: String, eksternVersjon: String, reservasjonsnokkel: String, tx: TransactionalSession) {
+        tx.run(
+            queryOf(
+                """
+                    update oppgave_v3 
+                    set reservasjonsnokkel = :reservasjonsnokkel 
+                    where ekstern_id = :eksternId 
+                    and ekstern_versjon = :eksternVersjon 
+                """.trimIndent(),
+                mapOf(
+                    "reservasjonsnokkel" to reservasjonsnokkel,
+                    "eksternId" to eksternId,
+                    "eksternVersjon" to eksternVersjon
+                )
+            ).asUpdateAndReturnGeneratedKey
+        )
+    }
+
     private fun nyOppgaveversjon(oppgave: OppgaveV3, nyVersjon: Long, tx: TransactionalSession): Long {
         return tx.updateAndReturnGeneratedKey(
             queryOf(
