@@ -11,6 +11,8 @@ import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerInterfaceKludge
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerKlient
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
@@ -35,6 +37,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
     private val config: Configuration,
     private val transactionalManager: TransactionalManager,
     private val oppgaveRepositoryV2: OppgaveRepositoryV2,
+    private val k9SakBerikerKlient: K9SakBerikerInterfaceKludge,
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9SakTilLosHistorikkvaskTjeneste::class.java)
@@ -94,13 +97,15 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 .filter { merknad -> merknad.merknadKoder.contains("HASTESAK") }.isNotEmpty()
             val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
             behandlingProsessEventer.forEach { event ->
-                val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+                var oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
                     .leggTilFeltverdi(
                         OppgaveFeltverdiDto(
                             nøkkel = "hastesak",
                             verdi = hastesak.toString()
                         )
                     )
+
+                oppgaveDto = ryddOppResultatfeilFra2020(event, oppgaveDto)
 
                 oppgaveV3Tjeneste.oppdaterEkstisterendeOppgaveversjon(oppgaveDto, tx)
 
@@ -116,6 +121,27 @@ class K9SakTilLosHistorikkvaskTjeneste(
             behandlingProsessEventK9Repository.markerVasketHistorikk(uuid, tx)
         }
         return eventTeller
+    }
+
+    private fun ryddOppResultatfeilFra2020(
+        event: BehandlingProsessEventDto,
+        oppgaveDto: OppgaveDto
+    ): OppgaveDto {
+        var oppgaveDto1 = oppgaveDto
+        if (event.behandlingStatus == "AVSLU" && event.resultatType == null) {
+            oppgaveDto1 = OppgaveDto(
+                oppgaveDto1,
+                feltverdier = oppgaveDto1.feltverdier
+                    .filterNot { it.nøkkel == "resultattype" }
+                    .plus(
+                        OppgaveFeltverdiDto(
+                            nøkkel = "resultattype",
+                            verdi = k9SakBerikerKlient.hentBehandling(event.eksternId!!).behandlingResultatType.kode
+                        )
+                    )
+            )
+        }
+        return oppgaveDto1
     }
 
     private fun loggFremgangForHver100(teller: Long, tekst: String) {

@@ -186,6 +186,7 @@ fun Application.k9Los() {
         config = koin.get(),
         transactionalManager = koin.get(),
         oppgaveRepositoryV2 = koin.get(),
+        k9SakBerikerKlient = koin.get()
     ).kjør(kjørSetup = false, kjørUmiddelbart = false)
 
     K9KlageTilLosAdapterTjeneste(
