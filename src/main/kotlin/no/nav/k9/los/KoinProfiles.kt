@@ -40,10 +40,14 @@ import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerInterfaceKludge
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerKlient
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerKlientLocal
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.EventTilDtoMapper
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
@@ -395,7 +399,8 @@ fun common(app: Application, config: Configuration) = module {
             oppgaveV3Tjeneste = get(),
             config = get(),
             oppgaveRepositoryV2 = get(),
-            transactionalManager = get()
+            transactionalManager = get(),
+            k9SakBerikerKlient = get(),
         )
     }
 
@@ -431,6 +436,7 @@ fun common(app: Application, config: Configuration) = module {
             config = get(),
             transactionalManager = get(),
             oppgaveRepositoryV2 = get(),
+            k9SakBerikerKlient = get(),
         )
     }
 
@@ -466,6 +472,11 @@ fun localDevConfig() = module {
     single<IOmsorgspengerService> {
         OmsorgspengerServiceLocal()
     }
+
+    single<K9SakBerikerInterfaceKludge> {
+        K9SakBerikerKlientLocal()
+    }
+
 }
 
 fun preprodConfig(config: Configuration) = module {
@@ -500,6 +511,14 @@ fun preprodConfig(config: Configuration) = module {
             scope = "api://dev-fss.pdl.pdl-api/.default"
         )
     }
+
+    single {
+        K9SakBerikerKlient(
+            configuration = get(),
+            accessTokenClient = get<AccessTokenClientResolver>().naisSts()
+        )
+    }
+
 }
 
 fun prodConfig(config: Configuration) = module {
@@ -534,5 +553,13 @@ fun prodConfig(config: Configuration) = module {
             scope = "api://prod-fss.pdl.pdl-api/.default"
         )
     }
+
+    single {
+        K9SakBerikerKlient(
+            configuration = get(),
+            accessTokenClient = get<AccessTokenClientResolver>().naisSts()
+        )
+    }
+
 }
 

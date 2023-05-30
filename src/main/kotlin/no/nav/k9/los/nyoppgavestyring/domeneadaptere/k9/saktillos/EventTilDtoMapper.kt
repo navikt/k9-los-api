@@ -3,6 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos
 import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.*
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
@@ -61,15 +62,23 @@ class EventTilDtoMapper {
                 aksjonspunktTilstand.status.erÅpentAksjonspunkt()
             }
 
-            val harManueltAksjonspunkt = åpneAksjonspunkter.any { aksjonspunktTilstandDto ->
-                MANUELLE_AKSJONSPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode)
-            }
+            val harEllerHarHattManueltAksjonspunkt = event.aksjonspunktTilstander
+                .filter { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.status != AksjonspunktStatus.AVBRUTT }
+                .any { aksjonspunktTilstandDto -> MANUELLE_AKSJONSPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode) }
 
             utledAksjonspunkter(event, oppgaveFeltverdiDtos)
             utledÅpneAksjonspunkter(event.behandlingSteg, åpneAksjonspunkter, oppgaveFeltverdiDtos)
             utledVenteÅrsakOgFrist(åpneAksjonspunkter, oppgaveFeltverdiDtos)
-            utledAutomatiskBehandletFlagg(forrigeOppgave, oppgaveFeltverdiDtos, harManueltAksjonspunkt)
-            oppgaveFeltverdiDtos.addAll(ventekategoriTilFlagg(utledVentetype(event.behandlingSteg, event.behandlingStatus, åpneAksjonspunkter)))
+            utledAutomatiskBehandletFlagg(forrigeOppgave, oppgaveFeltverdiDtos, harEllerHarHattManueltAksjonspunkt)
+            oppgaveFeltverdiDtos.addAll(
+                ventekategoriTilFlagg(
+                    utledVentetype(
+                        event.behandlingSteg,
+                        event.behandlingStatus,
+                        åpneAksjonspunkter
+                    )
+                )
+            )
 
             return oppgaveFeltverdiDtos
         }
@@ -94,10 +103,12 @@ class EventTilDtoMapper {
                 nøkkel = "saksnummer",
                 verdi = event.saksnummer
             ),
-            OppgaveFeltverdiDto(
-                nøkkel = "resultattype",
-                verdi = event.resultatType ?: "IKKE_FASTSATT"
-            ),
+            event.resultatType?.let {
+                OppgaveFeltverdiDto(
+                    nøkkel = "resultattype",
+                    verdi = event.resultatType
+                )
+            },
             OppgaveFeltverdiDto(
                 nøkkel = "ytelsestype",
                 verdi = event.ytelseTypeKode
@@ -139,12 +150,10 @@ class EventTilDtoMapper {
                 nøkkel = "vedtaksdato",
                 verdi = event.vedtaksdato?.toString() ?: forrigeOppgave?.hentVerdi("vedtaksdato")
             ),
-            event.nyeKrav?.let {
-                OppgaveFeltverdiDto(
-                    nøkkel = "nyeKrav",
-                    verdi = event.nyeKrav.toString()
-                )
-            },
+            OppgaveFeltverdiDto(
+                nøkkel = "resultattype",
+                verdi = event.resultatType ?: "IKKE_FASTSATT"
+            ),
             event.fraEndringsdialog?.let {
                 OppgaveFeltverdiDto(
                     nøkkel = "fraEndringsdialog",
@@ -372,7 +381,7 @@ class EventTilDtoMapper {
                 åpneAksjonspunkter
                     .filter { aksjonspunktTilstandDto ->
                         aksjonspunktTilstandDto.venteårsak != Venteårsak.UDEFINERT
-                                && aksjonspunktTilstandDto.status == AksjonspunktStatus.OPPRETTET
+                            && aksjonspunktTilstandDto.status == AksjonspunktStatus.OPPRETTET
                     }
                     .singleOrNull { aksjonspunktTilstandDto ->
                         oppgaveFeltverdiDtos.add(
