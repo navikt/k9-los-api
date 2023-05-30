@@ -1,14 +1,14 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.kittinunf.fuel.coroutines.awaitStringResponseResult
 import com.github.kittinunf.fuel.httpGet
 import io.ktor.http.*
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
 import no.nav.k9.los.Configuration
+import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import no.nav.k9.los.integrasjon.rest.NavHeaders
 import no.nav.k9.sak.kontrakt.behandling.BehandlingDto
 import org.slf4j.LoggerFactory
@@ -49,9 +49,10 @@ class K9SakBerikerKlient(
                     "Error response = '${error.response.body().asString("text/plain")}' fra '${httpRequest.url}'"
                 )
                 log.error(error.toString())
+                throw IllegalStateException("Feil ved henting av behandling fra k9-sak")
             }
         )
 
-        return jacksonObjectMapper().readValue(abc.toString(), BehandlingDto::class.java)
+        return objectMapper().readValue<BehandlingDto>(abc)
     }
 }
