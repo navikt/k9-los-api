@@ -24,16 +24,11 @@ class K9SakBerikerKlient(
 
     override fun hentBehandling(behandlingUUID: UUID): BehandlingDto {
         var behandlingDto: BehandlingDto? = null
-        runBlocking {
-            launch {
-                behandlingDto = hent(behandlingUUID)
-            }
-        }
+        runBlocking { behandlingDto = hent(behandlingUUID) }
         return behandlingDto!!
     }
 
     suspend fun hent(behandlingUUID: UUID): BehandlingDto {
-        val body = jacksonObjectMapper().writeValueAsString("behandlingsId?")
         val parameters = listOf<Pair<String, String>>(Pair("behandlingUuid", behandlingUUID.toString()))
         val httpRequest = "${url}/behandling"
             .httpGet(parameters)

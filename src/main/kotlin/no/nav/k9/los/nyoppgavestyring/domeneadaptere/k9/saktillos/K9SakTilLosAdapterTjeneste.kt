@@ -6,6 +6,7 @@ import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
+import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.EventTilDtoMapper
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
@@ -27,7 +28,7 @@ class K9SakTilLosAdapterTjeneste(
     private val config: Configuration,
     private val transactionalManager: TransactionalManager,
     private val oppgaveRepositoryV2: OppgaveRepositoryV2,
-    private val eventTilDtoMapper: EventTilDtoMapper,
+    private val k9SakBerikerKlient: K9SakBerikerInterfaceKludge,
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9SakTilLosAdapterTjeneste::class.java)
@@ -112,7 +113,7 @@ class K9SakTilLosAdapterTjeneste(
                 .filter { merknad -> merknad.merknadKoder.contains("HASTESAK") }.isNotEmpty()
             val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
             behandlingProsessEventer.forEach { event ->
-                val oppgaveDto = eventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+                var oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
                     .leggTilFeltverdi(
                         OppgaveFeltverdiDto(
                             nøkkel = "hastesak",
@@ -120,6 +121,7 @@ class K9SakTilLosAdapterTjeneste(
                         )
                     )
 
+                oppgaveDto = ryddOppResultatfeilFra2020(event, oppgaveDto)
 
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
 
@@ -144,6 +146,27 @@ class K9SakTilLosAdapterTjeneste(
             behandlingProsessEventK9Repository.fjernDirty(uuid, tx)
         }
         return eventTeller
+    }
+
+    private fun ryddOppResultatfeilFra2020(
+        event: BehandlingProsessEventDto,
+        oppgaveDto: OppgaveDto
+    ): OppgaveDto {
+        var oppgaveDto1 = oppgaveDto
+        if (event.behandlingStatus == "AVSLU" && event.resultatType == null) {
+            oppgaveDto1 = OppgaveDto(
+                oppgaveDto1,
+                feltverdier = oppgaveDto1.feltverdier
+                    .filterNot { it.nøkkel == "resultattype" }
+                    .plus(
+                        OppgaveFeltverdiDto(
+                            nøkkel = "resultattype",
+                            verdi = k9SakBerikerKlient.hentBehandling(event.eksternId!!).behandlingResultatType.kode
+                        )
+                    )
+            )
+        }
+        return oppgaveDto1
     }
 
     fun setup(): K9SakTilLosAdapterTjeneste {

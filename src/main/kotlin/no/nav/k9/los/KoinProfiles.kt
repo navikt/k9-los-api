@@ -400,7 +400,7 @@ fun common(app: Application, config: Configuration) = module {
             config = get(),
             oppgaveRepositoryV2 = get(),
             transactionalManager = get(),
-            eventTilDtoMapper = get(),
+            k9SakBerikerKlient = get(),
         )
     }
 
@@ -436,12 +436,6 @@ fun common(app: Application, config: Configuration) = module {
             config = get(),
             transactionalManager = get(),
             oppgaveRepositoryV2 = get(),
-            eventTilDtoMapper = get(),
-        )
-    }
-
-    single {
-        EventTilDtoMapper(
             k9SakBerikerKlient = get(),
         )
     }

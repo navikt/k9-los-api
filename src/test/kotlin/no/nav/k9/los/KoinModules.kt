@@ -323,14 +323,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             config = get(),
             oppgaveRepositoryV2 = get(),
             transactionalManager = get(),
-            eventTilDtoMapper = get(),
+            k9SakBerikerKlient = get(),
         ).setup()
-    }
-
-    single {
-        EventTilDtoMapper(
-            k9SakBerikerKlient = get()
-        )
     }
 
     single<K9SakBerikerInterfaceKludge> {
