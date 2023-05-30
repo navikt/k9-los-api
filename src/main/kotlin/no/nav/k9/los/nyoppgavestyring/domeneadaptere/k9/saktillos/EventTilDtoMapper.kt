@@ -103,12 +103,10 @@ class EventTilDtoMapper {
                 nøkkel = "saksnummer",
                 verdi = event.saksnummer
             ),
-            event.resultatType?.let {
-                OppgaveFeltverdiDto(
-                    nøkkel = "resultattype",
-                    verdi = event.resultatType
-                )
-            },
+            OppgaveFeltverdiDto(
+                nøkkel = "resultattype",
+                verdi = event.resultatType ?: "IKKE_FASTSATT"
+            ),
             OppgaveFeltverdiDto(
                 nøkkel = "ytelsestype",
                 verdi = event.ytelseTypeKode
@@ -149,10 +147,6 @@ class EventTilDtoMapper {
             OppgaveFeltverdiDto(
                 nøkkel = "vedtaksdato",
                 verdi = event.vedtaksdato?.toString() ?: forrigeOppgave?.hentVerdi("vedtaksdato")
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "resultattype",
-                verdi = event.resultatType ?: "IKKE_FASTSATT"
             ),
             event.fraEndringsdialog?.let {
                 OppgaveFeltverdiDto(
