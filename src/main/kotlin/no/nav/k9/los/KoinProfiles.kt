@@ -512,7 +512,7 @@ fun preprodConfig(config: Configuration) = module {
         )
     }
 
-    single {
+    single<K9SakBerikerInterfaceKludge> {
         K9SakBerikerKlient(
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().naisSts()
@@ -554,7 +554,7 @@ fun prodConfig(config: Configuration) = module {
         )
     }
 
-    single {
+    single<K9SakBerikerInterfaceKludge> {
         K9SakBerikerKlient(
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().naisSts()
