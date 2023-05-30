@@ -153,7 +153,7 @@ class K9SakTilLosAdapterTjeneste(
         oppgaveDto: OppgaveDto
     ): OppgaveDto {
         var oppgaveDto1 = oppgaveDto
-        if (event.behandlingStatus == "AVSLU" && event.resultatType == null) {
+        if (event.behandlingStatus == "AVSLU" && oppgaveDto.feltverdier.filter { it.nøkkel == "resultattype" }.first().verdi == "IKKE_FASTSATT") {
             oppgaveDto1 = OppgaveDto(
                 oppgaveDto1,
                 feltverdier = oppgaveDto1.feltverdier
