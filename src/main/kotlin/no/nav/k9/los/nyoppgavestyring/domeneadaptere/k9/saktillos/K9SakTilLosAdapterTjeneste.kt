@@ -2,6 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
@@ -153,7 +154,9 @@ class K9SakTilLosAdapterTjeneste(
         oppgaveDto: OppgaveDto
     ): OppgaveDto {
         var oppgaveDto1 = oppgaveDto
-        if (event.behandlingStatus == "AVSLU" && oppgaveDto.feltverdier.filter { it.nøkkel == "resultattype" }.first().verdi == "IKKE_FASTSATT") {
+        if (event.ytelseTypeKode != FagsakYtelseType.OBSOLETE.kode
+            && event.behandlingStatus == "AVSLU"
+            && oppgaveDto.feltverdier.filter { it.nøkkel == "resultattype" }.first().verdi == "IKKE_FASTSATT") {
             oppgaveDto1 = OppgaveDto(
                 oppgaveDto1,
                 feltverdier = oppgaveDto1.feltverdier
