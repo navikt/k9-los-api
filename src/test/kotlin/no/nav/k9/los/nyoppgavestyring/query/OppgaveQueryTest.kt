@@ -24,17 +24,17 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
     fun `sjekker at oppgave-query kan kjøres mot database`() {
         val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
         val oppgaveQuery = OppgaveQuery(listOf(
-            FeltverdiOppgavefilter(null, "oppgavestatus", "EQUALS", "OPPR"),
-            FeltverdiOppgavefilter(null, "kildeområde", "EQUALS", "K9"),
-            FeltverdiOppgavefilter(null, "oppgavetype", "EQUALS", "aksjonspunkt"),
-            FeltverdiOppgavefilter(null, "oppgaveområde", "EQUALS", "aksjonspunkt"),
-            FeltverdiOppgavefilter("K9", "fagsystem", "NOT_EQUALS", "Tullball"),
+            FeltverdiOppgavefilter(null, "oppgavestatus", "EQUALS", listOf("OPPR")),
+            FeltverdiOppgavefilter(null, "kildeområde", "EQUALS", listOf("K9")),
+            FeltverdiOppgavefilter(null, "oppgavetype", "EQUALS", listOf("aksjonspunkt")),
+            FeltverdiOppgavefilter(null, "oppgaveområde", "EQUALS", listOf("aksjonspunkt")),
+            FeltverdiOppgavefilter("K9", "fagsystem", "NOT_EQUALS", listOf("Tullball")),
             CombineOppgavefilter("OR", listOf(
-                FeltverdiOppgavefilter("K9", "totrinnskontroll", "EQUALS", "true"),
-                FeltverdiOppgavefilter("K9", "helautomatiskBehandlet", "NOT_EQUALS", "false"),
-                FeltverdiOppgavefilter("K9", "mottattDato", "LESS_THAN", LocalDate.of(2022, 1, 1)),
+                FeltverdiOppgavefilter("K9", "totrinnskontroll", "EQUALS", listOf("true")),
+                FeltverdiOppgavefilter("K9", "helautomatiskBehandlet", "NOT_EQUALS", listOf("false")),
+                FeltverdiOppgavefilter("K9", "mottattDato", "LESS_THAN", listOf(LocalDate.of(2022, 1, 1))),
                 CombineOppgavefilter("AND", listOf(
-                    FeltverdiOppgavefilter("K9", "aktorId", "GREATER_THAN_OR_EQUALS", "2"),
+                    FeltverdiOppgavefilter("K9", "aktorId", "GREATER_THAN_OR_EQUALS", listOf("2")),
                 ))
             ))
         ))

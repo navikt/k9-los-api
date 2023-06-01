@@ -17,9 +17,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName
     fieldVisibility = JsonAutoDetect.Visibility.ANY
 )
 @JsonTypeName("feltverdi")
-class FeltverdiOppgavefilter (
+data class FeltverdiOppgavefilter (
     val område: String?,
     val kode: String,
     val operator: String,
-    val verdi: Any
+    val verdi: List<Any>
 ): Oppgavefilter()
