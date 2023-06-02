@@ -30,7 +30,7 @@ class K9SakBerikerKlient(
 
     suspend fun hent(behandlingUUID: UUID): BehandlingMedFagsakDto? {
         val parameters = listOf<Pair<String, String>>(Pair("behandlingUuid", behandlingUUID.toString()))
-        val httpRequest = "${url}/los/los/behandling"
+        val httpRequest = "${url}/los/behandling"
             .httpGet(parameters)
             .header(
                 HttpHeaders.Authorization to cachedAccessTokenClient.getAccessToken(emptySet()).asAuthoriationHeader(),
