@@ -154,51 +154,40 @@ class K9SakTilLosAdapterTjeneste(
         event: BehandlingProsessEventDto,
         oppgaveDto: OppgaveDto
     ): OppgaveDto {
-        var oppgaveDto1 = oppgaveDto
-        if (event.ytelseTypeKode != FagsakYtelseType.OBSOLETE.kode
-            && event.behandlingStatus == "AVSLU"
+        if (event.ytelseTypeKode == FagsakYtelseType.OBSOLETE.kode) {
+            return oppgaveDto.erstattFeltverdi(
+                OppgaveFeltverdiDto(
+                    "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
+                )
+            )
+        }
+
+        if (event.behandlingStatus == "AVSLU"
             && oppgaveDto.feltverdier.filter { it.nøkkel == "resultattype" }.first().verdi == "IKKE_FASTSATT"
         ) {
             val behandlingDto = k9SakBerikerKlient.hentBehandling(event.eksternId!!)
-            if (behandlingDto.sakstype == FagsakYtelseType.OBSOLETE) {
-                oppgaveDto1 = OppgaveDto(
-                    oppgaveDto1,
-                    feltverdier = oppgaveDto1.feltverdier
-                        .filterNot { it.nøkkel == "resultattype" }
-                        .plus(
-                            OppgaveFeltverdiDto(
-                                nøkkel = "resultattype",
-                                verdi = BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
-                            )
-                        )
+            if (behandlingDto == null) {
+                return oppgaveDto.erstattFeltverdi(
+                    OppgaveFeltverdiDto(
+                        "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
+                    )
+                )
+            } else if (behandlingDto.sakstype == FagsakYtelseType.OBSOLETE) {
+                return oppgaveDto.erstattFeltverdi(
+                    OppgaveFeltverdiDto(
+                        "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
+                    )
                 )
             } else {
-                oppgaveDto1 = OppgaveDto(
-                    oppgaveDto1,
-                    feltverdier = oppgaveDto1.feltverdier
-                        .filterNot { it.nøkkel == "resultattype" }
-                        .plus(
-                            OppgaveFeltverdiDto(
-                                nøkkel = "resultattype",
-                                verdi = behandlingDto.behandlingResultatType.kode
-                            )
-                        )
+                return oppgaveDto.erstattFeltverdi(
+                    OppgaveFeltverdiDto(
+                        "resultattype", behandlingDto.behandlingResultatType.kode
+                    )
                 )
             }
-        } else if (event.ytelseTypeKode == FagsakYtelseType.OBSOLETE.kode) {
-            oppgaveDto1 = oppgaveDto1.copy(
-                status = "LUKKET",
-                feltverdier = oppgaveDto1.feltverdier
-                    .filterNot { it.nøkkel == "resultattype" }
-                    .plus(
-                        OppgaveFeltverdiDto(
-                            nøkkel = "resultattype",
-                            verdi = BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
-                        )
-                    )
-            )
         }
-        return oppgaveDto1
+
+        return oppgaveDto
     }
 
     fun setup(): K9SakTilLosAdapterTjeneste {

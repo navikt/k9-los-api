@@ -22,13 +22,13 @@ class K9SakBerikerKlient(
     private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
     private val url = configuration.k9Url()
 
-    override fun hentBehandling(behandlingUUID: UUID): BehandlingMedFagsakDto {
+    override fun hentBehandling(behandlingUUID: UUID): BehandlingMedFagsakDto? {
         var behandlingDto: BehandlingMedFagsakDto? = null
         runBlocking { behandlingDto = hent(behandlingUUID) }
-        return behandlingDto!!
+        return behandlingDto
     }
 
-    suspend fun hent(behandlingUUID: UUID): BehandlingMedFagsakDto {
+    suspend fun hent(behandlingUUID: UUID): BehandlingMedFagsakDto? {
         val parameters = listOf<Pair<String, String>>(Pair("behandlingUuid", behandlingUUID.toString()))
         val httpRequest = "${url}/los/los/behandling"
             .httpGet(parameters)
@@ -39,7 +39,10 @@ class K9SakBerikerKlient(
                 NavHeaders.CallId to UUID.randomUUID().toString()
             )
 
-        val (_,_, result) = httpRequest.awaitStringResponseResult()
+        val (_,response, result) = httpRequest.awaitStringResponseResult()
+        if (response.statusCode == HttpStatusCode.NoContent.value) {
+            return null
+        }
         val abc = result.fold(
             { success ->
                 success

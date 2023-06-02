@@ -2,9 +2,9 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.nav.k9.kodeverk.behandling.BehandlingStatus
+import no.nav.k9.kodeverk.behandling.BehandlingResultatType
+import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktType
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
@@ -12,7 +12,6 @@ import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerInterfaceKludge
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerKlient
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
@@ -22,7 +21,6 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
-import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -105,7 +103,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
                         )
                     )
 
-                oppgaveDto = ryddOppResultatfeilFra2020(event, oppgaveDto)
+                oppgaveDto = ryddOppObsoleteOgResultatfeilFra2020(event, oppgaveDto)
 
                 oppgaveV3Tjeneste.oppdaterEkstisterendeOppgaveversjon(oppgaveDto, tx)
 
@@ -123,25 +121,44 @@ class K9SakTilLosHistorikkvaskTjeneste(
         return eventTeller
     }
 
-    private fun ryddOppResultatfeilFra2020(
+    private fun ryddOppObsoleteOgResultatfeilFra2020(
         event: BehandlingProsessEventDto,
         oppgaveDto: OppgaveDto
     ): OppgaveDto {
-        var oppgaveDto1 = oppgaveDto
-        if (event.behandlingStatus == "AVSLU" && event.resultatType == null) {
-            oppgaveDto1 = OppgaveDto(
-                oppgaveDto1,
-                feltverdier = oppgaveDto1.feltverdier
-                    .filterNot { it.nøkkel == "resultattype" }
-                    .plus(
-                        OppgaveFeltverdiDto(
-                            nøkkel = "resultattype",
-                            verdi = k9SakBerikerKlient.hentBehandling(event.eksternId!!).behandlingResultatType.kode
-                        )
-                    )
+        if (event.ytelseTypeKode == FagsakYtelseType.OBSOLETE.kode) {
+            return oppgaveDto.erstattFeltverdi(
+                OppgaveFeltverdiDto(
+                    "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
+                )
             )
         }
-        return oppgaveDto1
+
+        if (event.behandlingStatus == "AVSLU"
+            && oppgaveDto.feltverdier.filter { it.nøkkel == "resultattype" }.first().verdi == "IKKE_FASTSATT"
+        ) {
+            val behandlingDto = k9SakBerikerKlient.hentBehandling(event.eksternId!!)
+            if (behandlingDto == null) {
+                return oppgaveDto.erstattFeltverdi(
+                    OppgaveFeltverdiDto(
+                        "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
+                    )
+                )
+            } else if (behandlingDto.sakstype == FagsakYtelseType.OBSOLETE) {
+                return oppgaveDto.erstattFeltverdi(
+                    OppgaveFeltverdiDto(
+                        "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
+                    )
+                )
+            } else {
+                return oppgaveDto.erstattFeltverdi(
+                    OppgaveFeltverdiDto(
+                        "resultattype", behandlingDto.behandlingResultatType.kode
+                    )
+                )
+            }
+        }
+
+        return oppgaveDto
     }
 
     private fun loggFremgangForHver100(teller: Long, tekst: String) {
