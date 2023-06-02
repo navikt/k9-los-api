@@ -150,7 +150,7 @@ class K9SakTilLosAdapterTjeneste(
         return eventTeller
     }
 
-    private fun ryddOppObsoleteOgResultatfeilFra2020(
+    internal fun ryddOppObsoleteOgResultatfeilFra2020(
         event: BehandlingProsessEventDto,
         oppgaveDto: OppgaveDto
     ): OppgaveDto {

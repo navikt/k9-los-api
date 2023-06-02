@@ -2,20 +2,16 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.nav.k9.kodeverk.behandling.BehandlingResultatType
-import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktType
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
-import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerInterfaceKludge
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
@@ -35,7 +31,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
     private val config: Configuration,
     private val transactionalManager: TransactionalManager,
     private val oppgaveRepositoryV2: OppgaveRepositoryV2,
-    private val k9SakBerikerKlient: K9SakBerikerInterfaceKludge,
+    private val k9SakTilLosAdapterTjeneste: K9SakTilLosAdapterTjeneste
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9SakTilLosHistorikkvaskTjeneste::class.java)
@@ -103,7 +99,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
                         )
                     )
 
-                oppgaveDto = ryddOppObsoleteOgResultatfeilFra2020(event, oppgaveDto)
+                oppgaveDto = k9SakTilLosAdapterTjeneste.ryddOppObsoleteOgResultatfeilFra2020(event, oppgaveDto)
 
                 oppgaveV3Tjeneste.oppdaterEkstisterendeOppgaveversjon(oppgaveDto, tx)
 
@@ -119,46 +115,6 @@ class K9SakTilLosHistorikkvaskTjeneste(
             behandlingProsessEventK9Repository.markerVasketHistorikk(uuid, tx)
         }
         return eventTeller
-    }
-
-    private fun ryddOppObsoleteOgResultatfeilFra2020(
-        event: BehandlingProsessEventDto,
-        oppgaveDto: OppgaveDto
-    ): OppgaveDto {
-        if (event.ytelseTypeKode == FagsakYtelseType.OBSOLETE.kode) {
-            return oppgaveDto.erstattFeltverdi(
-                OppgaveFeltverdiDto(
-                    "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
-                )
-            )
-        }
-
-        if (event.behandlingStatus == "AVSLU"
-            && oppgaveDto.feltverdier.filter { it.nøkkel == "resultattype" }.first().verdi == "IKKE_FASTSATT"
-        ) {
-            val behandlingDto = k9SakBerikerKlient.hentBehandling(event.eksternId!!)
-            if (behandlingDto == null) {
-                return oppgaveDto.erstattFeltverdi(
-                    OppgaveFeltverdiDto(
-                        "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
-                    )
-                )
-            } else if (behandlingDto.sakstype == FagsakYtelseType.OBSOLETE) {
-                return oppgaveDto.erstattFeltverdi(
-                    OppgaveFeltverdiDto(
-                        "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
-                    )
-                )
-            } else {
-                return oppgaveDto.erstattFeltverdi(
-                    OppgaveFeltverdiDto(
-                        "resultattype", behandlingDto.behandlingResultatType.kode
-                    )
-                )
-            }
-        }
-
-        return oppgaveDto
     }
 
     private fun loggFremgangForHver100(teller: Long, tekst: String) {
