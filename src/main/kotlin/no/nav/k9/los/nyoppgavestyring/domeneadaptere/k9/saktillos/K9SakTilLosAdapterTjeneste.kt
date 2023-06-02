@@ -155,7 +155,7 @@ class K9SakTilLosAdapterTjeneste(
         oppgaveDto: OppgaveDto
     ): OppgaveDto {
         if (event.ytelseTypeKode == FagsakYtelseType.OBSOLETE.kode) {
-            return oppgaveDto.erstattFeltverdi(
+            return oppgaveDto.copy(status = "LUKKET").erstattFeltverdi(
                 OppgaveFeltverdiDto(
                     "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
                 )
@@ -167,13 +167,13 @@ class K9SakTilLosAdapterTjeneste(
         ) {
             val behandlingDto = k9SakBerikerKlient.hentBehandling(event.eksternId!!)
             if (behandlingDto == null) {
-                return oppgaveDto.erstattFeltverdi(
+                return oppgaveDto.copy(status = "LUKKET").erstattFeltverdi(
                     OppgaveFeltverdiDto(
                         "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
                     )
                 )
             } else if (behandlingDto.sakstype == FagsakYtelseType.OBSOLETE) {
-                return oppgaveDto.erstattFeltverdi(
+                return oppgaveDto.copy(status = "LUKKET").erstattFeltverdi(
                     OppgaveFeltverdiDto(
                         "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
                     )
