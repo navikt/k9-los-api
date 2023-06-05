@@ -25,7 +25,7 @@ jobs:
               core.setOutput('title', response.data.title);
             });
 
-      - name: Setter IMAGE som brukes i deploy filen & TAG for kode checkout
+      - name: Setter IMAGE som brukes i deploy-filen & SHA for kode checkout
         env:
           SHA_INPUT: ${{ steps.issue_comment.outputs.sha }}
           IMAGE_INPUT: ${{ steps.issue_comment.outputs.title }}
