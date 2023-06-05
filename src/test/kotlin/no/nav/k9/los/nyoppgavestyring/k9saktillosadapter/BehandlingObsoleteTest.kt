@@ -132,6 +132,7 @@ class BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
             type = "k9-sak",
             status = Oppgavestatus.AAPEN.kode,
             endretTidspunkt = LocalDateTime.now(),
+            reservasjonsnøkkel = "12345",
             feltverdier = listOf(OppgaveFeltverdiDto(
                 nøkkel = "resultattype",
                 verdi = resultat.kode
