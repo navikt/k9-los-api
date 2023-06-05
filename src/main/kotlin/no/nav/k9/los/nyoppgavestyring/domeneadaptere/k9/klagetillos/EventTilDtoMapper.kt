@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos
 
+import no.nav.k9.klage.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.klage.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
@@ -10,6 +11,7 @@ import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 
 class EventTilDtoMapper {
     companion object {
@@ -29,15 +31,15 @@ class EventTilDtoMapper {
             type = "k9klage",
             status = if (event.aksjonspunkttilstander.any { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.status.erÅpentAksjonspunkt() }) {
                 if (oppgaveSkalHaVentestatus(event)) {
-                    "VENTER"
+                    Oppgavestatus.VENTER.kode
                 } else {
-                    "AAPEN"
+                    Oppgavestatus.AAPEN.kode
                 }
             } else {
                 if (event.behandlingStatus == BehandlingStatus.UTREDES.toString()) {
-                    "AAPEN"
+                    Oppgavestatus.AAPEN.kode
                 } else {
-                    "LUKKET"
+                    Oppgavestatus.LUKKET.kode
                 }
             },
             endretTidspunkt = event.eventTid,
@@ -191,7 +193,7 @@ class EventTilDtoMapper {
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "resultattype",
-                verdi = event.resultatType ?: "IKKE_FASTSATT"
+                verdi = event.resultatType ?: BehandlingResultatType.IKKE_FASTSATT.kode
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "ytelsestype",
@@ -199,7 +201,7 @@ class EventTilDtoMapper {
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "behandlingsstatus",
-                verdi = event.behandlingStatus ?: "UTRED"
+                verdi = event.behandlingStatus ?: BehandlingStatus.UTREDES.kode
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "behandlingTypekode",
