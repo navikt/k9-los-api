@@ -68,7 +68,7 @@ class EventTilDtoMapper {
 
         private fun erTilBeslutter(event: BehandlingProsessEventDto): Boolean {
             return getåpneAksjonspunkter(event).firstOrNull { ap ->
-                ap.aksjonspunktKode.equals(no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.FATTER_VEDTAK.kode)
+                ap.aksjonspunktKode.equals(AksjonspunktDefinisjon.FATTER_VEDTAK.kode)
             } != null
         }
 
