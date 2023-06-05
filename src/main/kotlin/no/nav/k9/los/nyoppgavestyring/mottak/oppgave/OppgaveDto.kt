@@ -29,4 +29,8 @@ data class OppgaveDto(
     fun leggTilFeltverdi(oppgaveFeltverdi: OppgaveFeltverdiDto): OppgaveDto {
         return OppgaveDto(this, this.feltverdier.plus(oppgaveFeltverdi))
     }
+
+    fun erstattFeltverdi(oppgaveFeltverdi: OppgaveFeltverdiDto): OppgaveDto {
+        return OppgaveDto(this, this.feltverdier.filterNot { it.nøkkel == oppgaveFeltverdi.nøkkel }.plus(oppgaveFeltverdi))
+    }
 }

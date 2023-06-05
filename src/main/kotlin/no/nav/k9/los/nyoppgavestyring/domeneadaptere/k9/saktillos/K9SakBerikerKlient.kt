@@ -10,7 +10,7 @@ import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import no.nav.k9.los.integrasjon.rest.NavHeaders
-import no.nav.k9.sak.kontrakt.behandling.BehandlingDto
+import no.nav.k9.sak.kontrakt.produksjonsstyring.los.BehandlingMedFagsakDto
 import org.slf4j.LoggerFactory
 import java.util.*
 
@@ -22,15 +22,15 @@ class K9SakBerikerKlient(
     private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
     private val url = configuration.k9Url()
 
-    override fun hentBehandling(behandlingUUID: UUID): BehandlingDto {
-        var behandlingDto: BehandlingDto? = null
+    override fun hentBehandling(behandlingUUID: UUID): BehandlingMedFagsakDto? {
+        var behandlingDto: BehandlingMedFagsakDto? = null
         runBlocking { behandlingDto = hent(behandlingUUID) }
-        return behandlingDto!!
+        return behandlingDto
     }
 
-    suspend fun hent(behandlingUUID: UUID): BehandlingDto {
+    suspend fun hent(behandlingUUID: UUID): BehandlingMedFagsakDto? {
         val parameters = listOf<Pair<String, String>>(Pair("behandlingUuid", behandlingUUID.toString()))
-        val httpRequest = "${url}/behandling"
+        val httpRequest = "${url}/los/behandling"
             .httpGet(parameters)
             .header(
                 HttpHeaders.Authorization to cachedAccessTokenClient.getAccessToken(emptySet()).asAuthoriationHeader(),
@@ -39,7 +39,10 @@ class K9SakBerikerKlient(
                 NavHeaders.CallId to UUID.randomUUID().toString()
             )
 
-        val (_,_, result) = httpRequest.awaitStringResponseResult()
+        val (_,response, result) = httpRequest.awaitStringResponseResult()
+        if (response.statusCode == HttpStatusCode.NoContent.value) {
+            return null
+        }
         val abc = result.fold(
             { success ->
                 success
@@ -53,6 +56,6 @@ class K9SakBerikerKlient(
             }
         )
 
-        return objectMapper().readValue<BehandlingDto>(abc)
+        return objectMapper().readValue<BehandlingMedFagsakDto>(abc)
     }
 }
