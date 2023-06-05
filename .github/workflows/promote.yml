@@ -25,14 +25,13 @@ jobs:
               core.setOutput('title', response.data.title);
             });
 
-      - name: Setter IMAGE som brukes i deploy-filen & SHA for kode checkout
+      - name: Setter IMAGE som brukes i deploy-filen & TAG for kode checkout
         env:
-          SHA_INPUT: ${{ steps.issue_comment.outputs.sha }}
-          IMAGE_INPUT: ${{ steps.issue_comment.outputs.title }}
+          TAG_INPUT: ${{ steps.issue_comment.outputs.title }}
           CLUSTER_INPUT: ${{ github.event.client_payload.slash_command.args.unnamed.arg1 }}
         run: |
-          echo "IMAGE=$IMAGE_BASE:$(echo $IMAGE_INPUT | awk '{print $NF}')" >> $GITHUB_ENV
-          echo "SHA=$(echo $SHA_INPUT | awk '{print $NF}')" >> $GITHUB_ENV
+          echo "IMAGE=$IMAGE_BASE:$(echo $TAG_INPUT | awk '{print $NF}')" >> $GITHUB_ENV
+          echo "TAG=$(echo $TAG_INPUT | awk -F- '{print $NF}')" >> $GITHUB_ENV
           echo "CLUSTER=$CLUSTER_INPUT" >> $GITHUB_ENV
 
       - name: Sjekk ut kode
