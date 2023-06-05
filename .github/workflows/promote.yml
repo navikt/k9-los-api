@@ -5,7 +5,6 @@ on:
 env:
   IMAGE_BASE: ghcr.io/${{ github.repository }}
   NAMESPACE: k9saksbehandling
-  CLUSTER: ${{ github.event.client_payload.slash_command.args.unnamed.arg1 }}
 
 jobs:
   promote:
@@ -28,8 +27,9 @@ jobs:
 
       - name: Setter IMAGE som brukes i deploy filen & TAG for kode checkout
         run: |
-          echo "IMAGE=$IMAGE_BASE:$(echo ${{ steps.issue_comment.outputs.title }} | awk '{print $NF}')" >> $GITHUB_ENV
-          echo "TAG=$(echo ${{ steps.issue_comment.outputs.title }} | awk -F- '{print $NF}')" >> $GITHUB_ENV
+          echo "IMAGE=$IMAGE_BASE:$(echo ${{ steps.issue_comment.outputs.title }} | awk '{print $NF}' | grep -oE '[[:alnum:]_-]+')" >> $GITHUB_ENV
+          echo "SHA=$(echo ${{ steps.issue_comment.outputs.sha }} | awk '{print $NF}' | grep -oE '[[:alnum:]_-]+')" >> $GITHUB_ENV
+          echo "CLUSTER=$(echo ${{ github.event.client_payload.slash_command.args.unnamed.arg1 }} | grep -oE '[[:alnum:]_-]+')" >> $GITHUB_ENV
 
       - name: Sjekk ut kode
         uses: actions/checkout@v1 # short sha ref støttes ikke i v2
