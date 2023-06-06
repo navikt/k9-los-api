@@ -6,4 +6,8 @@ class OppgaveFeltverdi(
     val id: Long? = null,
     val oppgavefelt: Oppgavefelt,
     val verdi: String
-)
+) {
+    override fun toString(): String {
+        return "OppgaveFeltverdi(id=$id, oppgavefeltnavn=${oppgavefelt.feltDefinisjon.eksternId}, verdi='$verdi')"
+    }
+}

@@ -200,6 +200,12 @@
           "id": "fraEndringsdialog",
           "visPåOppgave": false,
           "påkrevd": false
+        },
+        {
+          "id": "hastesak",
+          "visPåOppgave": true,
+          "påkrevd": true,
+          "defaultverdi": false
         }
       ]
     }

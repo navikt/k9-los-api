@@ -12,7 +12,7 @@ import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.modell.K9SakModell
 import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.los.integrasjon.rest.RequestContextService
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import org.koin.ktor.ext.inject
 import java.time.LocalDateTime
 import java.util.*
@@ -34,6 +34,38 @@ internal fun Route.OppgaveV3Api() {
                 }
 
                 call.respond("OK")
+            }
+        } else {
+            call.respond(HttpStatusCode.Locked)
+        }
+    }
+
+    get("/{område}/{eksternId}/{eksternVersjon}") {
+        if (config.nyOppgavestyringRestAktivert()) {
+            requestContextService.withRequestContext(call) {
+                call.respond(
+                    transactionalManager.transaction { tx ->
+                        oppgaveV3Tjeneste.hentOppgaveversjon(
+                            område = call.parameters["område"]!!,
+                            eksternId = call.parameters["eksternId"]!!,
+                            eksternVersjon = call.parameters["eksternVersjon"]!!,
+                            tx = tx
+                        )
+                    }
+                )
+            }
+        } else {
+            call.respond(HttpStatusCode.Locked)
+        }
+    }
+
+    post ( "/{område}/{eksternId}/{eksternVersjon}" ) {
+        if (config.nyOppgavestyringRestAktivert()) {
+            requestContextService.withRequestContext(call) {
+                val oppgaveDto = call.receive<OppgaveDto>()
+                transactionalManager.transaction { tx ->
+                    oppgaveV3Tjeneste.oppdaterEkstisterendeOppgaveversjon(oppgaveDto, tx)
+                }
             }
         } else {
             call.respond(HttpStatusCode.Locked)

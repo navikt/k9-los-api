@@ -35,5 +35,14 @@ internal fun Route.FeltdefinisjonApi() {
             call.respond(HttpStatusCode.Locked)
         }
     }
+
+    post {
+        if (config.nyOppgavestyringRestAktivert()) {
+            requestContextService.withRequestContext(call) {
+                val kodeverkDto = call.receive<KodeverkDto>()
+                feltdefinisjonTjeneste.oppdater(kodeverkDto)
+            }
+        }
+    }
 }
 

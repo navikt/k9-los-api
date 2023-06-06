@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype
 
+import kotliquery.TransactionalSession
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjoner
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 
@@ -20,6 +21,10 @@ class Oppgavetyper(
         }.toSet()
     )
 
+    fun hentOppgavetype(oppgavetypeId: Long): Oppgavetype {
+        return oppgavetyper.find { it.id!!.equals(oppgavetypeId) }
+            ?: throw java.lang.IllegalStateException("Finner ikke omsøkt oppgavetype")
+    }
 
     fun finnForskjell(innkommendeOppgavetyper: Oppgavetyper): Triple<Oppgavetyper, Oppgavetyper, List<OppgavetypeEndring>> {
         if (!innkommendeOppgavetyper.område.equals(this.område)) {

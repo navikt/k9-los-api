@@ -38,10 +38,17 @@ import no.nav.k9.los.integrasjon.pdl.PdlService
 import no.nav.k9.los.integrasjon.pdl.PdlServiceLocal
 import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.*
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk.StatistikkRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerInterfaceKludge
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerKlient
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerKlientLocal
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.*
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.EventTilDtoMapper
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
@@ -309,6 +316,8 @@ fun common(app: Application, config: Configuration) = module {
             oppgaveKøOppdaterer = get(),
             azureGraphService = get(),
             migreringstjeneste = get(),
+            k9SakTilLosAdapterTjeneste = get(),
+            behandlingProsessEventK9Repository = get(),
             tm = get()
         )
     }
@@ -319,10 +328,15 @@ fun common(app: Application, config: Configuration) = module {
         )
     }
 
-    single { FeltdefinisjonRepository() }
+    single { FeltdefinisjonRepository(områdeRepository = get()) }
     single { OmrådeRepository(get()) }
     single { OppgavetypeRepository(feltdefinisjonRepository = get(), områdeRepository = get()) }
-    single { OppgaveV3Repository(dataSource = get()) }
+    single {
+        OppgaveV3Repository(
+            dataSource = get(),
+            oppgavetypeRepository = get()
+        )
+    }
     single { K9SakOppgaveTilDVHMapper() }
     single { K9KlageOppgaveTilDVHMapper() }
     single { OppgaveRepository(oppgavetypeRepository = get()) }
@@ -358,7 +372,8 @@ fun common(app: Application, config: Configuration) = module {
         OppgaveV3Tjeneste(
             oppgaveV3Repository = get(),
             oppgavetypeRepository = get(),
-            områdeRepository = get()
+            områdeRepository = get(),
+            transactionalManager = get()
         )
     }
     single {
@@ -371,20 +386,28 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
+        OmrådeSetup(
+            områdeRepository = get(),
+            feltdefinisjonTjeneste = get()
+        )
+    }
+
+    single {
         K9SakTilLosAdapterTjeneste(
             behandlingProsessEventK9Repository = get(),
-            områdeRepository = get(),
-            feltdefinisjonTjeneste = get(),
             oppgavetypeTjeneste = get(),
             oppgaveV3Tjeneste = get(),
             config = get(),
-            transactionalManager = get()
+            oppgaveRepositoryV2 = get(),
+            transactionalManager = get(),
+            k9SakBerikerKlient = get(),
         )
     }
 
     single {
         OppgaveQueryRepository(
-            datasource = get()
+            datasource = get(),
+            feltdefinisjonRepository = get()
         )
     }
 
@@ -399,8 +422,33 @@ fun common(app: Application, config: Configuration) = module {
             feltdefinisjonTjeneste = get(),
             oppgavetypeTjeneste = get(),
             oppgaveV3Tjeneste = get(),
-            config = get(),
             transactionalManager = get()
+        )
+    }
+
+    single {
+        K9SakTilLosHistorikkvaskTjeneste(
+            behandlingProsessEventK9Repository = get(),
+            områdeRepository = get(),
+            feltdefinisjonTjeneste = get(),
+            oppgavetypeTjeneste = get(),
+            oppgaveV3Tjeneste = get(),
+            config = get(),
+            transactionalManager = get(),
+            oppgaveRepositoryV2 = get(),
+            k9SakTilLosAdapterTjeneste = get(),
+        )
+    }
+
+    single {
+        K9KlageTilLosHistorikkvaskTjeneste(
+            behandlingProsessEventKlageRepository = get(),
+            områdeRepository = get(),
+            feltdefinisjonTjeneste = get(),
+            oppgavetypeTjeneste = get(),
+            oppgaveV3Tjeneste = get(),
+            config = get(),
+            transactionalManager = get(),
         )
     }
 }
@@ -424,6 +472,11 @@ fun localDevConfig() = module {
     single<IOmsorgspengerService> {
         OmsorgspengerServiceLocal()
     }
+
+    single<K9SakBerikerInterfaceKludge> {
+        K9SakBerikerKlientLocal()
+    }
+
 }
 
 fun preprodConfig(config: Configuration) = module {
@@ -458,6 +511,14 @@ fun preprodConfig(config: Configuration) = module {
             scope = "api://dev-fss.pdl.pdl-api/.default"
         )
     }
+
+    single<K9SakBerikerInterfaceKludge> {
+        K9SakBerikerKlient(
+            configuration = get(),
+            accessTokenClient = get<AccessTokenClientResolver>().naisSts()
+        )
+    }
+
 }
 
 fun prodConfig(config: Configuration) = module {
@@ -492,5 +553,13 @@ fun prodConfig(config: Configuration) = module {
             scope = "api://prod-fss.pdl.pdl-api/.default"
         )
     }
+
+    single<K9SakBerikerInterfaceKludge> {
+        K9SakBerikerKlient(
+            configuration = get(),
+            accessTokenClient = get<AccessTokenClientResolver>().naisSts()
+        )
+    }
+
 }
 
