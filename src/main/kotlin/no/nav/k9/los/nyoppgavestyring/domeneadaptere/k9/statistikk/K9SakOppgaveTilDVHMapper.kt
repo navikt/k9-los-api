@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.domeneadaptere.statistikk
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk
 
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStatus
@@ -92,9 +92,9 @@ class K9SakOppgaveTilDVHMapper {
             ytelseType = oppgave.hentVerdi("ytelsestype"),
             underType = null,
             sakStatus = oppgave.hentVerdi("behandlingsstatus"),
-            ytelseTypeBeskrivelse = null,
+            ytelseTypeBeskrivelse = FagsakYtelseType.fraKode(oppgave.hentVerdi("ytelsestype")).navn,
             underTypeBeskrivelse = null,
-            sakStatusBeskrivelse = null,
+            sakStatusBeskrivelse = BehandlingStatus.fraKode(oppgave.hentVerdi("behandlingsstatus")).navn,
             avsender = "K9los",
             versjon = 1 // TODO blir dette riktig?
         )

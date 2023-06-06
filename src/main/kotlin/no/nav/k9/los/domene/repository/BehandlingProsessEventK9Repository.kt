@@ -66,6 +66,15 @@ class BehandlingProsessEventK9Repository(private val dataSource: DataSource) {
         )
     }
 
+    fun settDirty(uuid: UUID, tx: TransactionalSession) {
+        tx.run(
+            queryOf(
+                """update behandling_prosess_events_k9 set dirty = true where id = :id""",
+                mapOf("id" to uuid.toString())
+            ).asUpdate
+        )
+    }
+
     fun lagre(uuid: UUID, f: (K9SakModell?) -> K9SakModell): K9SakModell {
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
@@ -139,6 +148,46 @@ class BehandlingProsessEventK9Repository(private val dataSource: DataSource) {
                 )
             }
         }
+    }
+
+    fun nullstillHistorikkvask() {
+        using(sessionOf(dataSource)) {
+            it.transaction { tx ->
+                tx.run(
+                    queryOf(
+                        """delete from behandling_prosess_events_k9_historikkvask_ferdig"""
+                    ).asUpdate
+                )
+            }
+        }
+    }
+
+    fun hentAlleEventIderUtenVasketHistorikk(): List<UUID> {
+        return using(sessionOf(dataSource)) {
+            it.transaction { tx ->
+                tx.run(
+                    queryOf(
+                        """
+                            select * 
+                            from behandling_prosess_events_k9 e
+                            where not exists (select * from behandling_prosess_events_k9_historikkvask_ferdig hv where hv.id = e.id)
+                             """.trimMargin(),
+                        mapOf()
+                    ).map { row ->
+                        UUID.fromString(row.string("id"))
+                    }.asList
+                )
+            }
+        }
+    }
+
+    fun markerVasketHistorikk(uuid: UUID, tx: TransactionalSession) {
+        tx.run(
+            queryOf(
+                """insert into behandling_prosess_events_k9_historikkvask_ferdig(id) values (:uuid)""",
+                mapOf("uuid" to uuid.toString())
+            ).asUpdate
+        )
     }
 
     fun lagreNy(uuid: UUID, modell: K9SakModell) {
