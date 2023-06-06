@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName
     fieldVisibility = JsonAutoDetect.Visibility.ANY
 )
 @JsonTypeName("combine")
-class CombineOppgavefilter (
+data class CombineOppgavefilter (
     val combineOperator: String,
     val filtere: List<Oppgavefilter>
 ): Oppgavefilter()

@@ -101,12 +101,12 @@ class OppgaveQueryRepository(
                 oppgaveQuery.getQuery(),
                 oppgaveQuery.getParams()
             ).map { row -> row.long("id") }.asList
-        ) ?: throw IllegalStateException("Feil ved kjøring av oppgavequery")
+        )
     }
 
     fun toSqlOppgaveQuery(oppgaveQuery: OppgaveQuery): SqlOppgaveQuery {
         val query = SqlOppgaveQuery()
-        val combineOperator = CombineOperator.AND;
+        val combineOperator = CombineOperator.AND
         håndterFiltere(query, oppgaveQuery.filtere, combineOperator)
         håndterOrder(query, oppgaveQuery.order)
         query.medLimit(oppgaveQuery.limit)
@@ -119,21 +119,21 @@ class OppgaveQueryRepository(
         filtere: List<Oppgavefilter>,
         combineOperator: CombineOperator
     ) {
-        for (filter in filtere) {
+        for (filter in OppgavefilterUtvider.utvid(filtere)) {
             when (filter) {
                 is FeltverdiOppgavefilter -> query.medFeltverdi(
                     combineOperator,
                     filter.område,
                     filter.kode,
                     FeltverdiOperator.valueOf(filter.operator),
-                    filter.verdi
+                    filter.verdi.first()
                 )
 
                 is CombineOppgavefilter -> {
                     val newCombineOperator = CombineOperator.valueOf(filter.combineOperator)
                     query.medBlokk(combineOperator, newCombineOperator.defaultValue) {
-                        håndterFiltere(query, filter.filtere, newCombineOperator);
-                    };
+                        håndterFiltere(query, filter.filtere, newCombineOperator)
+                    }
                 }
 
                 else -> throw IllegalStateException("Ukjent filter: " + filter::class.qualifiedName)
