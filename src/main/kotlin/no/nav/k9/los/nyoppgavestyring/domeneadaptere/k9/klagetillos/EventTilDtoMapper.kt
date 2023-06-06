@@ -54,9 +54,9 @@ class EventTilDtoMapper {
                 AUTOPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode)
             }
 
-            val harManueltAksjonspunkt = åpneAksjonspunkter.any { aksjonspunktTilstandDto ->
-                MANUELLE_AKSJONSPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode)
-            }
+            val harManueltAksjonspunkt = event.aksjonspunkttilstander
+                .filter { aksjonspunkttilstand -> aksjonspunkttilstand.status != AksjonspunktStatus.AVBRUTT  }
+                .any { aksjonspunktTilstandDto -> MANUELLE_AKSJONSPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode) }
 
             utledAvventerSaksbehandler(harManueltAksjonspunkt = harManueltAksjonspunkt, harAutopunkt = harAutopunkt, oppgaveFeltverdiDtos = oppgaveFeltverdiDtos)
 
