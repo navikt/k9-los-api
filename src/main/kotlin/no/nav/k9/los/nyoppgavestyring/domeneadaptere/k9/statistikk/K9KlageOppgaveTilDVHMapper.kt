@@ -68,9 +68,9 @@ class K9KlageOppgaveTilDVHMapper {
             ytelseType = oppgave.hentVerdi("ytelsestype"),
             underType = null,
             sakStatus = oppgave.hentVerdi("behandlingsstatus"),
-            ytelseTypeBeskrivelse = null,
+            ytelseTypeBeskrivelse = FagsakYtelseType.fraKode(oppgave.hentVerdi("ytelsestype")).navn,
             underTypeBeskrivelse = null,
-            sakStatusBeskrivelse = null,
+            sakStatusBeskrivelse = BehandlingStatus.fraKode(oppgave.hentVerdi("behandlingsstatus")).navn,
             avsender = "K9los",
             versjon = 1 // TODO blir dette riktig?
         )

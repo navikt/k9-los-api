@@ -6,14 +6,20 @@ import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Ventekategori
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.los.AbstractK9LosIntegrationTest
+import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.EventTilDtoMapper
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
+import org.junit.Before
 import org.junit.jupiter.api.Test
+import org.koin.core.context.startKoin
+import org.koin.test.get
+import org.koin.test.mock.declareMock
 import java.time.LocalDateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 class FlaggutlederTest : AbstractK9LosIntegrationTest() {
+
 
     @Test
     fun `avsluttet behandling og ingen steg gir ingen flagg`() {

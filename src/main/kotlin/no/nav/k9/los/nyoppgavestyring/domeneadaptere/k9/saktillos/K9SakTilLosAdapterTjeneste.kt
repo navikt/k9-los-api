@@ -2,11 +2,13 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.*
+import no.nav.k9.kodeverk.behandling.BehandlingResultatType
+import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
+import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.EventTilDtoMapper
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
@@ -28,6 +30,7 @@ class K9SakTilLosAdapterTjeneste(
     private val config: Configuration,
     private val transactionalManager: TransactionalManager,
     private val oppgaveRepositoryV2: OppgaveRepositoryV2,
+    private val k9SakBerikerKlient: K9SakBerikerInterfaceKludge,
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9SakTilLosAdapterTjeneste::class.java)
@@ -112,7 +115,7 @@ class K9SakTilLosAdapterTjeneste(
                 .filter { merknad -> merknad.merknadKoder.contains("HASTESAK") }.isNotEmpty()
             val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
             behandlingProsessEventer.forEach { event ->
-                val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+                var oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
                     .leggTilFeltverdi(
                         OppgaveFeltverdiDto(
                             nøkkel = "hastesak",
@@ -120,6 +123,7 @@ class K9SakTilLosAdapterTjeneste(
                         )
                     )
 
+                oppgaveDto = ryddOppObsoleteOgResultatfeilFra2020(event, oppgaveDto)
 
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
 
@@ -144,6 +148,46 @@ class K9SakTilLosAdapterTjeneste(
             behandlingProsessEventK9Repository.fjernDirty(uuid, tx)
         }
         return eventTeller
+    }
+
+    internal fun ryddOppObsoleteOgResultatfeilFra2020(
+        event: BehandlingProsessEventDto,
+        oppgaveDto: OppgaveDto
+    ): OppgaveDto {
+        if (event.ytelseTypeKode == FagsakYtelseType.OBSOLETE.kode) {
+            return oppgaveDto.copy(status = "LUKKET").erstattFeltverdi(
+                OppgaveFeltverdiDto(
+                    "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
+                )
+            )
+        }
+
+        if (event.behandlingStatus == "AVSLU"
+            && oppgaveDto.feltverdier.filter { it.nøkkel == "resultattype" }.first().verdi == "IKKE_FASTSATT"
+        ) {
+            val behandlingDto = k9SakBerikerKlient.hentBehandling(event.eksternId!!)
+            if (behandlingDto == null) {
+                return oppgaveDto.copy(status = "LUKKET").erstattFeltverdi(
+                    OppgaveFeltverdiDto(
+                        "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
+                    )
+                )
+            } else if (behandlingDto.sakstype == FagsakYtelseType.OBSOLETE) {
+                return oppgaveDto.copy(status = "LUKKET").erstattFeltverdi(
+                    OppgaveFeltverdiDto(
+                        "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
+                    )
+                )
+            } else {
+                return oppgaveDto.erstattFeltverdi(
+                    OppgaveFeltverdiDto(
+                        "resultattype", behandlingDto.behandlingResultatType.kode
+                    )
+                )
+            }
+        }
+
+        return oppgaveDto
     }
 
     fun setup(): K9SakTilLosAdapterTjeneste {
