@@ -49,7 +49,7 @@ class OppgaveQueryService() {
             it.område + it.kode
         }
 
-        val header = oppgaverad.felter.joinToString(";") { oppgavefelter[it.område + it.kode]?.visningsnavn?:"" }
+        val header = oppgaverad.felter.joinToString(";") { oppgavefelter[it.område + it.kode]?.visningsnavn ?: "" }
 
         return header + "\n" + oppgaver.joinToString("\n") { or: Oppgaverad ->
             or.felter.joinToString(";") {
