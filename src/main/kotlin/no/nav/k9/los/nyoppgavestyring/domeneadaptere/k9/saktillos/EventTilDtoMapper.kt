@@ -1,12 +1,14 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos
 
+import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStatus
+import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.*
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 
 class EventTilDtoMapper {
@@ -28,25 +30,50 @@ class EventTilDtoMapper {
                 type = "k9sak",
                 status = if (event.aksjonspunktTilstander.any { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.status.erÅpentAksjonspunkt() }) {
                     if (oppgaveSkalHaVentestatus(event)) {
-                        "VENTER"
+                        Oppgavestatus.VENTER.kode
                     } else {
-                        "AAPEN"
+                        Oppgavestatus.AAPEN.kode
                     }
                 } else {
                     if (event.behandlingStatus != BehandlingStatus.AVSLUTTET.getKode() && event.behandlingStatus != BehandlingStatus.IVERKSETTER_VEDTAK.getKode()) {
-                        "AAPEN"
+                        Oppgavestatus.AAPEN.kode
                     } else {
-                        "LUKKET"
+                        Oppgavestatus.LUKKET.kode
                     }
                 },
                 endretTidspunkt = event.eventTid,
+                reservasjonsnøkkel = utledReservasjonsnøkkel(event),
                 feltverdier = lagFeltverdier(event, forrigeOppgave)
             )
 
-        private fun oppgaveSkalHaVentestatus(event: BehandlingProsessEventDto): Boolean {
-            val åpneAksjonspunkter = event.aksjonspunktTilstander.filter { aksjonspunktTilstand ->
-                aksjonspunktTilstand.status.erÅpentAksjonspunkt()
+        private fun utledReservasjonsnøkkel(event: BehandlingProsessEventDto): String {
+            return when (FagsakYtelseType.fraKode(event.ytelseTypeKode)) {
+                FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
+                FagsakYtelseType.PLEIEPENGER_NÆRSTÅENDE,
+                FagsakYtelseType.OMSORGSPENGER_KS,
+                FagsakYtelseType.OMSORGSPENGER_AO,
+                FagsakYtelseType.OPPLÆRINGSPENGER -> if (erTilBeslutter(event)) {
+                    "K9_b_${event.ytelseTypeKode}_${event.pleietrengendeAktørId}_beslutter"
+                } else {
+                    "K9_b_${event.ytelseTypeKode}_${event.pleietrengendeAktørId}"
+                }
+
+                else -> if (erTilBeslutter(event)) {
+                    "K9_b_${event.ytelseTypeKode}_${event.aktørId}_beslutter"
+                } else {
+                    "K9_b_${event.ytelseTypeKode}_${event.aktørId}"
+                }
             }
+        }
+
+        private fun erTilBeslutter(event: BehandlingProsessEventDto): Boolean {
+            return getåpneAksjonspunkter(event).firstOrNull { ap ->
+                ap.aksjonspunktKode.equals(AksjonspunktDefinisjon.FATTER_VEDTAK.kode)
+            } != null
+        }
+
+        private fun oppgaveSkalHaVentestatus(event: BehandlingProsessEventDto): Boolean {
+            val åpneAksjonspunkter = getåpneAksjonspunkter(event)
 
             val ventetype = utledVentetype(event.behandlingSteg, event.behandlingStatus, åpneAksjonspunkter)
             return ventetype != Ventekategori.AVVENTER_SAKSBEHANDLER
@@ -58,9 +85,7 @@ class EventTilDtoMapper {
         ): List<OppgaveFeltverdiDto> {
             val oppgaveFeltverdiDtos = mapEnkeltverdier(event, forrigeOppgave)
 
-            val åpneAksjonspunkter = event.aksjonspunktTilstander.filter { aksjonspunktTilstand ->
-                aksjonspunktTilstand.status.erÅpentAksjonspunkt()
-            }
+            val åpneAksjonspunkter = getåpneAksjonspunkter(event)
 
             val harEllerHarHattManueltAksjonspunkt = event.aksjonspunktTilstander
                 .filter { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.status != AksjonspunktStatus.AVBRUTT }
@@ -82,6 +107,11 @@ class EventTilDtoMapper {
 
             return oppgaveFeltverdiDtos
         }
+
+        private fun getåpneAksjonspunkter(event: BehandlingProsessEventDto) =
+            event.aksjonspunktTilstander.filter { aksjonspunktTilstand ->
+                aksjonspunktTilstand.status.erÅpentAksjonspunkt()
+            }
 
         private fun mapEnkeltverdier(
             event: BehandlingProsessEventDto,
@@ -105,7 +135,7 @@ class EventTilDtoMapper {
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "resultattype",
-                verdi = event.resultatType ?: "IKKE_FASTSATT"
+                verdi = event.resultatType ?: BehandlingResultatType.IKKE_FASTSATT.kode
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "ytelsestype",
@@ -113,7 +143,7 @@ class EventTilDtoMapper {
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "behandlingsstatus",
-                verdi = event.behandlingStatus ?: "UTRED"
+                verdi = event.behandlingStatus ?: BehandlingStatus.UTREDES.kode
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "behandlingTypekode",
@@ -148,6 +178,12 @@ class EventTilDtoMapper {
                 nøkkel = "vedtaksdato",
                 verdi = event.vedtaksdato?.toString() ?: forrigeOppgave?.hentVerdi("vedtaksdato")
             ),
+            event.nyeKrav?.let {
+                OppgaveFeltverdiDto(
+                    nøkkel = "nyeKrav",
+                    verdi = event.nyeKrav.toString()
+                )
+            },
             event.fraEndringsdialog?.let {
                 OppgaveFeltverdiDto(
                     nøkkel = "fraEndringsdialog",

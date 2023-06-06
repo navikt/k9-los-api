@@ -106,6 +106,8 @@ class OppgaveV3Tjeneste(
             oppgaveFeltverdier = innkommendeOppgave.felter,
             tx = tx
         )
+
+        oppgaveV3Repository.oppdaterReservasjonsnøkkel(oppgaveDto.id, oppgaveDto.versjon, oppgaveDto.reservasjonsnøkkel, tx)
     }
 
     fun nyEksternversjon(oppgaveDto: OppgaveDto, tx: TransactionalSession): Boolean {

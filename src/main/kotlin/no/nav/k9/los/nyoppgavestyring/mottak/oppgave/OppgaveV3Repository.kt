@@ -66,6 +66,7 @@ class OppgaveV3Repository(
                     status = Oppgavestatus.valueOf(row.string("status")),
                     endretTidspunkt = row.localDateTime("endret_tidspunkt"),
                     kildeområde = row.string("kildeomrade"),
+                    reservasjonsnøkkel = row.stringOrNull("reservasjonsnokkel") ?: "mangler_historikkvask",
                     felter = hentFeltverdier(
                         row.long("id"),
                         oppgavetypeRepository.hentOppgavetype(
@@ -112,6 +113,7 @@ class OppgaveV3Repository(
                     status = Oppgavestatus.valueOf(row.string("status")),
                     endretTidspunkt = row.localDateTime("endret_tidspunkt"),
                     kildeområde = row.string("kildeomrade"),
+                    reservasjonsnøkkel = row.stringOrNull("reservasjonsnokkel") ?: "mangler_historikkvask",
                     felter = hentFeltverdier(row.long("id"), oppgavetype, tx)
                 )
             }.asSingle
@@ -133,9 +135,28 @@ class OppgaveV3Repository(
                     status = Oppgavestatus.valueOf(row.string("status")),
                     endretTidspunkt = row.localDateTime("endret_tidspunkt"),
                     kildeområde = row.string("kildeomrade"),
+                    reservasjonsnøkkel = row.stringOrNull("reservasjonsnokkel") ?: "mangler_historikkvask",
                     felter = hentFeltverdier(row.long("id"), oppgavetype, tx)
                 )
             }.asSingle
+        )
+    }
+
+    fun oppdaterReservasjonsnøkkel(eksternId: String, eksternVersjon: String, reservasjonsnokkel: String, tx: TransactionalSession) {
+        tx.run(
+            queryOf(
+                """
+                    update oppgave_v3 
+                    set reservasjonsnokkel = :reservasjonsnokkel 
+                    where ekstern_id = :eksternId 
+                    and ekstern_versjon = :eksternVersjon 
+                """.trimIndent(),
+                mapOf(
+                    "reservasjonsnokkel" to reservasjonsnokkel,
+                    "eksternId" to eksternId,
+                    "eksternVersjon" to eksternVersjon
+                )
+            ).asUpdateAndReturnGeneratedKey
         )
     }
 
@@ -143,8 +164,8 @@ class OppgaveV3Repository(
         return tx.updateAndReturnGeneratedKey(
             queryOf(
                 """
-                    insert into oppgave_v3(ekstern_id, ekstern_versjon, oppgavetype_id, status, versjon, aktiv, kildeomrade, endret_tidspunkt)
-                    values(:eksternId, :eksternVersjon, :oppgavetypeId, :status, :versjon, :aktiv, :kildeomrade, :endretTidspunkt)
+                    insert into oppgave_v3(ekstern_id, ekstern_versjon, oppgavetype_id, status, versjon, aktiv, kildeomrade, endret_tidspunkt, reservasjonsnokkel)
+                    values(:eksternId, :eksternVersjon, :oppgavetypeId, :status, :versjon, :aktiv, :kildeomrade, :endretTidspunkt, :reservasjonsnokkel)
                 """.trimIndent(),
                 mapOf(
                     "eksternId" to oppgave.eksternId,
@@ -154,7 +175,8 @@ class OppgaveV3Repository(
                     "endretTidspunkt" to oppgave.endretTidspunkt,
                     "versjon" to nyVersjon,
                     "aktiv" to true,
-                    "kildeomrade" to oppgave.kildeområde
+                    "kildeomrade" to oppgave.kildeområde,
+                    "reservasjonsnokkel" to oppgave.reservasjonsnøkkel,
                 )
             )
         )!!

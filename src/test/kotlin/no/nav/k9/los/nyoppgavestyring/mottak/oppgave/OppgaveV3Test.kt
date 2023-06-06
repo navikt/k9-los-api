@@ -191,6 +191,7 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
             type = "aksjonspunkt",
             status = "ÅPEN",
             endretTidspunkt = LocalDateTime.now(),
+            reservasjonsnøkkel = "test",
             feltverdier = listOf(
                 OppgaveFeltverdiDto(
                     nøkkel = "aksjonspunkt",
@@ -217,6 +218,7 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
             type = "aksjonspunkt",
             status = "ÅPEN",
             endretTidspunkt = LocalDateTime.now(),
+            reservasjonsnøkkel = "test",
             feltverdier = listOf(
                 OppgaveFeltverdiDto(
                     nøkkel = "aksjonspunkt",

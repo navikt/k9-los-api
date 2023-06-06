@@ -44,6 +44,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAda
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkApi
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonApi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Api
@@ -99,6 +100,7 @@ fun Application.k9Los() {
 
     if (LocalDateTime.now().isBefore(LocalDateTime.of(2023, 6, 2, 20, 30))) {
         koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
+        koin.get<K9KlageTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
     }
 
     install(Authentication) {
