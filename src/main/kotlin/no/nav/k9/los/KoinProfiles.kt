@@ -436,7 +436,7 @@ fun common(app: Application, config: Configuration) = module {
             config = get(),
             transactionalManager = get(),
             oppgaveRepositoryV2 = get(),
-            k9SakBerikerKlient = get(),
+            k9SakTilLosAdapterTjeneste = get(),
         )
     }
 
