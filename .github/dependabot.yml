@@ -1,10 +1,10 @@
 version: 2
 registries:
-  dusseldorf:
+  k9los:
     type: maven-repository
-    url: https://maven.pkg.github.com/navikt/dusseldorf-ktor
+    url: https://maven.pkg.github.com/navikt/k9-los-api
     username: x-access-token
-    password: ${{secrets.LOS_TOKEN}}
+    password: ${{secrets.READER_TOKEN}}
 updates:
   - package-ecosystem: gradle
     directory: "/"
@@ -12,7 +12,7 @@ updates:
       interval: daily
     open-pull-requests-limit: 20
     registries:
-      - dusseldorf
+      - k9los
   - package-ecosystem: github-actions
     directory: "/"
     schedule:

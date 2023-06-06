@@ -6,25 +6,25 @@ import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Ventekategori
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.EventTilDtoMapper
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
-import org.junit.Ignore
-import org.junit.jupiter.api.Assertions.assertThrows
-import org.junit.jupiter.api.Disabled
+import org.junit.Before
 import org.junit.jupiter.api.Test
+import org.koin.core.context.startKoin
 import org.koin.test.get
+import org.koin.test.mock.declareMock
 import java.time.LocalDateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 class FlaggutlederTest : AbstractK9LosIntegrationTest() {
 
+
     @Test
     fun `avsluttet behandling og ingen steg gir ingen flagg`() {
-        val k9SakTilLosAdapterTjeneste = get<K9SakTilLosAdapterTjeneste>()
-
         val ventetype =
-            k9SakTilLosAdapterTjeneste.utledVentetype(
+            EventTilDtoMapper.utledVentetype(
                 behandlingSteg = null,
                 behandlingStatus = BehandlingStatus.AVSLUTTET.kode,
                 åpneAksjonspunkter = emptyList()
@@ -35,10 +35,8 @@ class FlaggutlederTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `aktivt behandlingssteg men ingen aktive aksjonspunkter gir avventerAnnet`() {
-        val k9SakTilLosAdapterTjeneste = get<K9SakTilLosAdapterTjeneste>()
-
         val ventetype =
-            k9SakTilLosAdapterTjeneste.utledVentetype(
+            EventTilDtoMapper.utledVentetype(
                 behandlingSteg = BehandlingStegType.INNHENT_REGISTEROPP.toString(),
                 behandlingStatus = null,
                 åpneAksjonspunkter = emptyList()
@@ -49,9 +47,7 @@ class FlaggutlederTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `åpent aksjonspunkt med venteårsak gir ventekategori fra venteårsaken`() {
-        val k9SakTilLosAdapterTjeneste = get<K9SakTilLosAdapterTjeneste>()
-
-        val ventetype = k9SakTilLosAdapterTjeneste.utledVentetype(
+        val ventetype = EventTilDtoMapper.utledVentetype(
             behandlingSteg = BehandlingStegType.VURDER_MEDISINSKE_VILKÅR.toString(),
             behandlingStatus = null,
             åpneAksjonspunkter = listOf(
@@ -72,10 +68,7 @@ class FlaggutlederTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `avsluttet behandling, men ingen AP gir avventer annet`() {
-        val k9SakTilLosAdapterTjeneste = get<K9SakTilLosAdapterTjeneste>()
-
-
-        val ventetype = k9SakTilLosAdapterTjeneste.utledVentetype(
+        val ventetype = EventTilDtoMapper.utledVentetype(
             behandlingSteg = null,
             behandlingStatus = BehandlingStatus.UTREDES.kode,
             åpneAksjonspunkter = emptyList()
@@ -86,9 +79,7 @@ class FlaggutlederTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `åpent aksjonspunkt uten venteårsak gir ventekategori fra aksjonspunkt`() {
-        val k9SakTilLosAdapterTjeneste = get<K9SakTilLosAdapterTjeneste>()
-
-        val ventetype = k9SakTilLosAdapterTjeneste.utledVentetype(
+        val ventetype = EventTilDtoMapper.utledVentetype(
             behandlingSteg = BehandlingStegType.VURDER_MEDISINSKE_VILKÅR.getKode(),
             behandlingStatus = null,
             åpneAksjonspunkter = listOf(
@@ -109,9 +100,7 @@ class FlaggutlederTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `aktivt steg og åpne aksjonspunkt, men ingen løsbare gir avventerAnnet`() {
-        val k9SakTilLosAdapterTjeneste = get<K9SakTilLosAdapterTjeneste>()
-
-        val ventetype = k9SakTilLosAdapterTjeneste.utledVentetype(
+        val ventetype = EventTilDtoMapper.utledVentetype(
             behandlingSteg = BehandlingStegType.INREG_AVSL.getKode(),
             behandlingStatus = null,
             åpneAksjonspunkter = listOf(
@@ -132,9 +121,7 @@ class FlaggutlederTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `forvent Avventer Annet hvis ingen aksjonspunkter med ventefrist og -årsak og behandlingen er åpen, men ingen steg er aktive`() {
-        val k9SakTilLosAdapterTjeneste = get<K9SakTilLosAdapterTjeneste>()
-
-        val ventetype = k9SakTilLosAdapterTjeneste.utledVentetype(
+        val ventetype = EventTilDtoMapper.utledVentetype(
             behandlingSteg = null,
             behandlingStatus = BehandlingStatus.UTREDES.kode,
             åpneAksjonspunkter = listOf(

@@ -134,6 +134,10 @@ class OppgaveRepositoryV2(
         return using(sessionOf(dataSource)) { it.run(hentMerknaderQuery(eksternReferanse, inkluderSlettet)) }
     }
 
+    fun hentMerknader(eksternReferanse: String, inkluderSlettet: Boolean = false, tx: TransactionalSession): List<Merknad> {
+        return tx.run(hentMerknaderQuery(eksternReferanse, inkluderSlettet))
+    }
+
     private fun hentMerknaderQuery(eksternReferanse: String, inkluderSlettet: Boolean = false) : ListResultQueryAction<Merknad> {
             return queryOf(
                 """
