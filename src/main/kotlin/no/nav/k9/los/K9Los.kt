@@ -196,7 +196,8 @@ fun Application.k9Los() {
         feltdefinisjonTjeneste = koin.get(),
         oppgavetypeTjeneste = koin.get(),
         oppgaveV3Tjeneste = koin.get(),
-        transactionalManager = koin.get()
+        transactionalManager = koin.get(),
+        config = koin.get(),
     ).kjør(kjørSetup = false, kjørUmiddelbart = false)
 
     OppgavestatistikkTjeneste(

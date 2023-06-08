@@ -23,6 +23,7 @@ import kotlin.concurrent.timer
 class K9KlageTilLosAdapterTjeneste(
     private val behandlingProsessEventKlageRepository: BehandlingProsessEventKlageRepository,
     private val områdeRepository: OmrådeRepository,
+    private val config: Configuration,
     private val feltdefinisjonTjeneste: FeltdefinisjonTjeneste,
     private val oppgavetypeTjeneste: OppgavetypeTjeneste,
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
@@ -34,7 +35,7 @@ class K9KlageTilLosAdapterTjeneste(
 
 
     fun kjør(kjørSetup: Boolean = false, kjørUmiddelbart: Boolean = false) {
-        if (false) {
+        if (config.nyOppgavestyringAktivert()) {
             when (kjørUmiddelbart) {
                 true -> spillAvUmiddelbart()
                 false -> schedulerAvspilling(kjørSetup)
