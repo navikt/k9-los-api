@@ -146,7 +146,7 @@ class BehandlingProsessEventKlageRepository(private val dataSource: DataSource) 
             it.transaction { tx ->
                 tx.run(
                     queryOf(
-                        """delete * from behandling_prosess_events_klage_historikkvask_ferdig"""
+                        """delete from behandling_prosess_events_klage_historikkvask_ferdig"""
                     ).asUpdate
                 )
             }
