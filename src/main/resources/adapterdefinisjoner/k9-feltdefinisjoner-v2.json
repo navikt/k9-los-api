@@ -78,7 +78,7 @@
     {
       "id": "mottattDato",
       "listetype": false,
-      "tolkesSom": "String",
+      "tolkesSom": "Timestamp",
       "visTilBruker": true
     },
     {
