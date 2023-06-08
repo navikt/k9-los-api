@@ -175,8 +175,8 @@ class BehandlingProsessEventKlageRepository(private val dataSource: DataSource) 
     fun markerVasketHistorikk(uuid: UUID, tx: TransactionalSession) {
         tx.run(
             queryOf(
-                """insert into behandling_prosess_events_klage_historikkvask_ferdig(id) values (uuid)""",
-                mapOf("id" to uuid.toString())
+                """insert into behandling_prosess_events_klage_historikkvask_ferdig(id) values (:uuid)""",
+                mapOf("uuid" to uuid.toString())
             ).asUpdate
         )
     }
