@@ -63,7 +63,7 @@ fun Route.OppgaveKoApis() {
         }
     }
 
-    @Location("/")
+    @Location("")
     class endreOppgaveKo
 
     post { _: endreOppgaveKo ->
