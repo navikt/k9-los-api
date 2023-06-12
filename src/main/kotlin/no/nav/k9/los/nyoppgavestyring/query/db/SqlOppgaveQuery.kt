@@ -3,6 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.query.db
 import org.postgresql.util.PGInterval
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 class SqlOppgaveQuery {
@@ -82,6 +83,9 @@ class SqlOppgaveQuery {
          */
         val timestampFeltverdi = try {
             LocalDateTime.parse(feltverdi as String)
+        } catch (e: Exception) { null } ?:
+        try {
+            LocalDate.parse(feltverdi as String)
         } catch (e: Exception) { null }
 
         val durationFeltverdi = try {

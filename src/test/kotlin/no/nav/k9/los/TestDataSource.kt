@@ -36,7 +36,7 @@ class KPostgreSQLContainer(imageName: String) : PostgreSQLContainer<KPostgreSQLC
 
 abstract class AbstractPostgresTest {
     companion object {
-        private val postgresContainer = KPostgreSQLContainer("postgres:11.1")
+        private val postgresContainer = KPostgreSQLContainer("postgres:12")
             .withDatabaseName("my-db")
             .withUsername("foo")
             .withPassword("secret")
@@ -66,6 +66,7 @@ abstract class AbstractPostgresTest {
                 ferdigstilte_behandlinger,
                 nye_og_ferdigstilte,
                 oppgave,
+                oppgavefelt_verdi,
                 oppgaveko,
                 reservasjon,
                 saksbehandler,
