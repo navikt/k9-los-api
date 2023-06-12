@@ -6,6 +6,13 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonTypeName
 
 
+interface IFeltverdiOppgavefilter<T> {
+    val område: String?
+    val kode: String
+    val operator: String
+    val verdi: List<T>
+}
+
 /**
  * Et filter som sjekker feltverdiene på en oppgave.
  */
@@ -18,10 +25,10 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 )
 @JsonTypeName("feltverdi")
 data class FeltverdiOppgavefilter (
-    val område: String?,
-    val kode: String,
-    val operator: String,
+    override val område: String?,
+    override val kode: String,
+    override val operator: String,
 
     @JsonFormat(with = [JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY])
-    val verdi: List<Any>
-): Oppgavefilter()
+    override val verdi: List<Any>
+): Oppgavefilter(), IFeltverdiOppgavefilter<Any>
