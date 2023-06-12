@@ -3,14 +3,17 @@ package no.nav.k9.los.nyoppgavestyring.query
 import assertk.assertThat
 import assertk.assertions.isEmpty
 import assertk.assertions.isNotNull
+import assertk.assertions.isNotEmpty
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.mockk.mockk
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.domene.repository.StatistikkRepository
+import no.nav.k9.los.nyoppgavestyring.FeltType
+import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
+import no.nav.k9.los.nyoppgavestyring.query.db.FeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
@@ -51,6 +54,105 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         val result = oppgaveQueryRepository.query(oppgaveQuery)
         assertThat(result).isEmpty()
+    }
+
+    @Test
+    fun `sjekker at oppgave-query kan utvides ved flere verdier i filter`() {
+        OppgaveTestDataBuilder()
+            .medOppgaveFeltVerdi(FeltType.aksjonspunkt, "5016")
+            .lagOgLagre()
+
+        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
+        val oppgaveQuery = OppgaveQuery(listOf(
+            byggFilterK9(FeltType.aksjonspunkt, FeltverdiOperator.EQUALS, "5016")
+        ))
+
+        val om = ObjectMapper().dusseldorfConfigured()
+            .enable(SerializationFeature.INDENT_OUTPUT)
+            .registerKotlinModule()
+        val sw = StringWriter()
+        om.writeValue(sw, oppgaveQuery)
+
+        val result = oppgaveQueryRepository.query(oppgaveQuery)
+        assertThat(result).isNotEmpty()
+    }
+
+    @Test
+    fun `sjekker at oppgave-query kan sammenligne timestamp`() {
+        OppgaveTestDataBuilder()
+            .medOppgaveFeltVerdi(FeltType.mottattDato, "2023-05-15T00:00:00.000")
+            .lagOgLagre()
+
+        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
+
+        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+            byggFilterK9(FeltType.mottattDato, FeltverdiOperator.GREATER_THAN, "2023-05-14T00:00:00.000"),
+        )))).isNotEmpty()
+
+        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+            byggFilterK9(FeltType.mottattDato, FeltverdiOperator.LESS_THAN, "2023-05-15T00:00:00.000"),
+        )))).isEmpty()
+
+        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+            byggFilterK9(FeltType.mottattDato, FeltverdiOperator.GREATER_THAN, "2023-05-15T00:00:00.000"),
+        )))).isEmpty()
+
+        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+            byggFilterK9(FeltType.mottattDato, FeltverdiOperator.LESS_THAN, "2023-05-16T00:00:00.000"),
+        )))).isNotEmpty()
+    }
+
+    @Test
+    fun `sjekker at oppgave-query kan sjekke timestamp for likhet - urealistisk med timestamp`() {
+        OppgaveTestDataBuilder()
+            .medOppgaveFeltVerdi(FeltType.mottattDato, "2023-05-15T00:00:00.000")
+            .lagOgLagre()
+
+        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
+
+        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+            byggFilterK9(FeltType.mottattDato, FeltverdiOperator.LESS_THAN_OR_EQUALS, "2023-05-15T00:00:00.000"),
+        )))).isNotEmpty()
+
+        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+            byggFilterK9(FeltType.mottattDato, FeltverdiOperator.EQUALS, "2023-05-15T00:00:00.000"),
+        )))).isNotEmpty()
+
+        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+            byggFilterK9(FeltType.mottattDato, FeltverdiOperator.GREATER_THAN_OR_EQUALS, "2023-05-15T00:00:00.000"),
+        )))).isNotEmpty()
+    }
+
+
+    @Test
+    fun `sjekker at oppgave-query med kun dato kan sjekkes mot timestamp`() {
+        OppgaveTestDataBuilder()
+            .medOppgaveFeltVerdi(FeltType.mottattDato, "2023-05-15T00:00:00.000")
+            .lagOgLagre()
+
+        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
+
+        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+            byggFilterK9(FeltType.mottattDato, FeltverdiOperator.LESS_THAN_OR_EQUALS, "2023-05-16"),
+        )))).isNotEmpty()
+
+        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+            byggFilterK9(FeltType.mottattDato, FeltverdiOperator.EQUALS, "2023-05-15"),
+        )))).isNotEmpty()
+
+        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+            byggFilterK9(FeltType.mottattDato, FeltverdiOperator.GREATER_THAN_OR_EQUALS, "2023-05-14"),
+        )))).isNotEmpty()
+    }
+
+
+    private fun byggFilterK9(feltType: FeltType, feltverdiOperator: FeltverdiOperator, vararg verdier: String): FeltverdiOppgavefilter {
+        return FeltverdiOppgavefilter(
+            "K9",
+            feltType.eksternId,
+            feltverdiOperator.name,
+            verdier.toList()
+        )
     }
 
     @Test
