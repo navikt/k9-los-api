@@ -83,8 +83,7 @@ class SqlOppgaveQuery {
          */
         val timestampFeltverdi = try {
             LocalDateTime.parse(feltverdi as String)
-        } catch (e: Exception) { null } ?:
-        try {
+        } catch (e: Exception) { null } ?: try {
             LocalDate.parse(feltverdi as String)
         } catch (e: Exception) { null }
 
