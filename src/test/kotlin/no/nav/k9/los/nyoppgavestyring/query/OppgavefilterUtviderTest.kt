@@ -1,8 +1,11 @@
 package no.nav.k9.los.nyoppgavestyring.query
 
+import assertk.Assert
 import assertk.assertThat
-import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
+import assertk.assertions.support.fail
+import no.nav.k9.los.domene.lager.oppgave.v2.equalsWithPrecision
+import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.query.db.CombineOperator
 import no.nav.k9.los.nyoppgavestyring.query.db.FeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgavefilterUtvider
@@ -10,70 +13,37 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
 
 class OppgavefilterUtviderTest {
 
     @Test
-    fun `Flere verdier med 'IN' skal endres til CombineOperator-OR med énverdisfiltre med EQUALS`() {
+    fun `Oppgavefiltre med flere verdier av dato skal utvides med combiner for dato og verdier`() {
         val oppgavefiltre = listOf(
-            FeltverdiOppgavefilter(null, "oppgavestatus", FeltverdiOperator.IN.name, listOf("OPPR", "AVSLU"))
-        )
-        assertThat(OppgavefilterUtvider.utvid(oppgavefiltre).first()).isEqualTo(
-            CombineOppgavefilter(CombineOperator.OR.kode, filtere = listOf(
-                FeltverdiOppgavefilter(null, "oppgavestatus", FeltverdiOperator.EQUALS.name, listOf("OPPR")),
-                FeltverdiOppgavefilter(null, "oppgavestatus", FeltverdiOperator.EQUALS.name, listOf("AVSLU"))
-            ))
-        )
-    }
-
-    @Test
-    fun `Kun oppgaver som inneholder alle verdier-'EQUALS' skal endres til CombineOperator-AND med énverdisfiltre med EQUALS`() {
-        val oppgavefiltre = listOf(
-            FeltverdiOppgavefilter(null, "aksjonspunkt", FeltverdiOperator.EQUALS.name, listOf("5053", "5016"))
-        )
-        val resultat = OppgavefilterUtvider.utvid(oppgavefiltre)
-        assertThat(resultat).containsExactly(
-            CombineOppgavefilter(CombineOperator.AND.kode, filtere = listOf(
-                FeltverdiOppgavefilter(null, "aksjonspunkt", FeltverdiOperator.EQUALS.name, listOf("5053")),
-                FeltverdiOppgavefilter(null, "aksjonspunkt", FeltverdiOperator.EQUALS.name, listOf("5016"))
-            ))
-        )
-    }
-
-    @Test
-    fun `Oppgaver som ikke inneholder verdier-'NOT IN' skal endres til CombineOperator-AND med énverdisfiltre med NOT EQUALS`() {
-        val oppgavefiltre = listOf(
-            FeltverdiOppgavefilter(null, "oppgavestatus", FeltverdiOperator.NOT_IN.name, listOf("OPPR", "AVSLU"))
-        )
-        assertThat(OppgavefilterUtvider.utvid(oppgavefiltre).first()).isEqualTo(
-            CombineOppgavefilter(CombineOperator.AND.kode, filtere = listOf(
-                FeltverdiOppgavefilter(null, "oppgavestatus", FeltverdiOperator.NOT_EQUALS.name, listOf("OPPR")),
-                FeltverdiOppgavefilter(null, "oppgavestatus", FeltverdiOperator.NOT_EQUALS.name, listOf("AVSLU"))
-            ))
-        )
-    }
-
-    @Test
-    fun `Nested oppgavefiltre med 'IN' skal utvides`() {
-        val oppgavefiltre = listOf(
-            CombineOppgavefilter(CombineOperator.OR.kode, filtere = listOf(
-                FeltverdiOppgavefilter(null, "oppgavestatus", FeltverdiOperator.IN.name, listOf("OPPR", "AVSLU")),
-                FeltverdiOppgavefilter(null, "aksjonspunkt", FeltverdiOperator.EQUALS.name, listOf("5053", "5016"))
-            ))
+            FeltverdiOppgavefilter(null, FeltType.mottattDato.eksternId, FeltverdiOperator.IN.name, listOf("2023-05-05", "2023-05-07"))
         )
 
-        assertThat(OppgavefilterUtvider.utvid(oppgavefiltre).first()).isEqualTo(
-            CombineOppgavefilter(CombineOperator.OR.kode, filtere = listOf(
-                CombineOppgavefilter(CombineOperator.OR.kode, filtere = listOf(
-                    FeltverdiOppgavefilter(null, "oppgavestatus", FeltverdiOperator.EQUALS.name, listOf("OPPR")),
-                    FeltverdiOppgavefilter(null, "oppgavestatus", FeltverdiOperator.EQUALS.name, listOf("AVSLU"))
-                )),
-                CombineOppgavefilter(CombineOperator.AND.kode, filtere = listOf(
-                    FeltverdiOppgavefilter(null, "aksjonspunkt", FeltverdiOperator.EQUALS.name, listOf("5053")),
-                    FeltverdiOppgavefilter(null, "aksjonspunkt", FeltverdiOperator.EQUALS.name, listOf("5016"))
-                ))
-            ))
-        )
+        val combineFilter = OppgavefilterUtvider.utvid(oppgavefiltre).first() as CombineOppgavefilter
+        assertThat(combineFilter.combineOperator).isEqualTo(CombineOperator.OR.kode)
+
+        val (førsteDatoKombiner, sisteDatoKombiner) = combineFilter.filtere.map { it as CombineOppgavefilter }.apply { first() to last() }
+        assertThat(førsteDatoKombiner.combineOperator).isEqualTo(CombineOperator.AND.kode)
+        assertThat(førsteDatoKombiner.hentFørsteMedOperator(FeltverdiOperator.GREATER_THAN_OR_EQUALS).verdi.first()).isEqualToDate(LocalDateTime.parse("2023-05-05T00:00:00"))
+        assertThat(førsteDatoKombiner.hentFørsteMedOperator(FeltverdiOperator.LESS_THAN_OR_EQUALS).verdi.first()).isEqualToDate(LocalDateTime.parse("2023-05-05T23:59:59.999"))
+
+        assertThat(sisteDatoKombiner.combineOperator).isEqualTo(CombineOperator.AND.kode)
+        assertThat(sisteDatoKombiner.hentFørsteMedOperator(FeltverdiOperator.GREATER_THAN_OR_EQUALS).verdi.first()).isEqualToDate(LocalDateTime.parse("2023-05-07T00:00:00"))
+        assertThat(sisteDatoKombiner.hentFørsteMedOperator(FeltverdiOperator.LESS_THAN_OR_EQUALS).verdi.first()).isEqualToDate(LocalDateTime.parse("2023-05-07T23:59:59.999"))
     }
+}
+
+
+internal fun CombineOppgavefilter.hentFørsteMedOperator(operator: FeltverdiOperator) = filtere.map { it as FeltverdiOppgavefilter }.hentFørsteMedOperator(operator)
+
+internal fun List<FeltverdiOppgavefilter>.hentFørsteMedOperator(operator: FeltverdiOperator) = first { it.operator == operator.name }
+
+internal fun Assert<Any>.isEqualToDate(expected: LocalDateTime) = given { actual ->
+    if (LocalDateTime.parse(actual as String).equalsWithPrecision(expected, 10)) return
+    fail(expected, actual)
 }
 
