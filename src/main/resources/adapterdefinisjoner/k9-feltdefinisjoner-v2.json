@@ -84,7 +84,7 @@
     {
       "id": "registrertDato",
       "listetype": false,
-      "tolkesSom": "String",
+      "tolkesSom": "Timestamp",
       "visTilBruker": true
     },
     {
@@ -260,7 +260,7 @@
     {
       "id": "vedtaksdato",
       "listetype": false,
-      "tolkesSom": "String",
+      "tolkesSom": "Timestamp",
       "visTilBruker": true
     },
     {
