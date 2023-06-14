@@ -145,7 +145,7 @@ class SqlOppgaveQuery {
             "feltkode$index" to feltkode
         ))
 
-        val operator = when (operator) {
+        val invertertOperator = when (operator) {
             FeltverdiOperator.EQUALS,
             FeltverdiOperator.IN -> " NOT"
             FeltverdiOperator.NOT_EQUALS,
@@ -155,7 +155,7 @@ class SqlOppgaveQuery {
         }
 
         query += """
-                ${combineOperator.sql}$operator EXISTS (
+                ${combineOperator.sql}$invertertOperator EXISTS (
                     SELECT 'Y'
                     FROM Oppgavefelt_verdi ov INNER JOIN Oppgavefelt f ON (
                       f.id = ov.oppgavefelt_id
@@ -177,7 +177,6 @@ class SqlOppgaveQuery {
             return
         }
 
-        val index = queryParams.size;
         when (feltkode) {
             "oppgavestatus" -> {
                 orderBySql += ", o.status "

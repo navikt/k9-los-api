@@ -81,5 +81,6 @@ enum class FeltType(
     totrinnskontroll("totrinnskontroll", tolkesSom = "Boolean"),
     behandlingsstatus("behandlingsstatus", true),
     ytelsestype("ytelsestype", true),
-    mottattDato("mottattDato")
+    mottattDato("mottattDato"),
+    avventerArbeidsgiver("avventerArbeidsgiver", tolkesSom = "Boolean")
 }
