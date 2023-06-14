@@ -34,9 +34,13 @@ class SqlOppgaveQuery {
         return (queryParams + orderByParams).toMap()
     }
 
-    fun medFeltverdi(combineOperator: CombineOperator, feltområde: String?, feltkode: String, operator: FeltverdiOperator, feltverdi: Any) {
+    fun medFeltverdi(combineOperator: CombineOperator, feltområde: String?, feltkode: String, operator: FeltverdiOperator, feltverdi: Any?) {
         if (feltområde != null) {
-            medOppgavefelt(combineOperator, feltområde, feltkode, operator, feltverdi)
+            if (feltverdi == null) {
+                utenOppgavefelt(combineOperator, feltområde, feltkode, operator)
+            } else {
+                medOppgavefelt(combineOperator, feltområde, feltkode, operator, feltverdi)
+            }
             return
         }
 
@@ -133,13 +137,46 @@ class SqlOppgaveQuery {
             """.trimIndent()
     }
 
+    private fun utenOppgavefelt(combineOperator: CombineOperator, feltområde: String, feltkode: String, operator: FeltverdiOperator) {
+        val index = queryParams.size
+
+        queryParams.putAll(mutableMapOf(
+            "feltOmrade$index" to feltområde,
+            "feltkode$index" to feltkode
+        ))
+
+        val invertertOperator = when (operator) {
+            FeltverdiOperator.EQUALS,
+            FeltverdiOperator.IN -> " NOT"
+            FeltverdiOperator.NOT_EQUALS,
+            FeltverdiOperator.NOT_IN -> ""
+
+            else -> throw IllegalArgumentException("Ugyldig operator for tom verdi.")
+        }
+
+        query += """
+                ${combineOperator.sql}$invertertOperator EXISTS (
+                    SELECT 'Y'
+                    FROM Oppgavefelt_verdi ov INNER JOIN Oppgavefelt f ON (
+                      f.id = ov.oppgavefelt_id
+                    ) INNER JOIN Feltdefinisjon fd ON (
+                      fd.id = f.feltdefinisjon_id
+                    ) INNER JOIN Omrade fo ON (
+                      fo.id = fd.omrade_id
+                    )
+                    WHERE ov.oppgave_id = o.id
+                      AND fo.ekstern_id = :feltOmrade$index
+                      AND fd.ekstern_id = :feltkode$index
+                  )
+            """.trimIndent()
+    }
+
     fun medEnkelOrder(feltområde: String?, feltkode: String, økende: Boolean) {
         if (feltområde != null) {
             medEnkelOrderAvOppgavefelt(feltområde, feltkode, økende)
             return
         }
 
-        val index = queryParams.size;
         when (feltkode) {
             "oppgavestatus" -> {
                 orderBySql += ", o.status "

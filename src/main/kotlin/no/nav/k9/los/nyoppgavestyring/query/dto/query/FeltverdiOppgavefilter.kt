@@ -23,5 +23,5 @@ data class FeltverdiOppgavefilter (
     val operator: String,
 
     @JsonFormat(with = [JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY])
-    val verdi: List<Any>
+    val verdi: List<Any?>
 ): Oppgavefilter()
