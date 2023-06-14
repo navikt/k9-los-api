@@ -109,7 +109,7 @@ class OppgaveQueryService() {
                 "oppgavestatus" -> oppgave.status
                 "kildeområde" -> oppgave.kildeområde
                 "oppgavetype" -> oppgave.oppgavetype.eksternId
-                "oppgaveområde" -> oppgave.kildeområde
+                "oppgaveområde" -> oppgave.oppgavetype.område.eksternId
                 else -> oppgave.hentVerdiEllerListe(requireNotNull(it.område), it.kode)
             }
             Oppgavefeltverdi(
