@@ -2,9 +2,9 @@ package no.nav.k9.los.nyoppgavestyring.mottak.reservasjon
 
 import java.time.LocalDateTime
 
-class Reservasjon(
-    val id: Long? = null,
+data class TaReservasjonDto(
     val saksbehandlerEpost: String,
     val reservasjonsnøkkel: String,
-    val gyldigTil: LocalDateTime,
+    val gyldigFra: LocalDateTime = LocalDateTime.now(),
+    val gyldigTil: LocalDateTime
 )
