@@ -21,6 +21,7 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import org.junit.jupiter.api.Test
 import java.io.StringWriter
 import java.time.LocalDate
+import java.util.*
 
 class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
@@ -145,8 +146,89 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         )))).isNotEmpty()
     }
 
+    @Test
+    fun `sjekker at oppgave-query med boolean kan ha null`() {
+        val behandlingUuid = UUID.randomUUID().toString()
+        OppgaveTestDataBuilder()
+            .medOppgaveFeltVerdi(FeltType.behandlingUuid, behandlingUuid)
+            .lagOgLagre()   // avventerArbeidsgiver er null
 
-    private fun byggFilterK9(feltType: FeltType, feltverdiOperator: FeltverdiOperator, vararg verdier: String): FeltverdiOppgavefilter {
+        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
+
+        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+            byggFilterK9(FeltType.behandlingUuid, FeltverdiOperator.EQUALS, behandlingUuid),
+            byggFilterK9(FeltType.avventerArbeidsgiver, FeltverdiOperator.EQUALS, null),
+        )))).isNotEmpty()
+
+        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+            byggFilterK9(FeltType.behandlingUuid, FeltverdiOperator.EQUALS, behandlingUuid),
+            byggFilterK9(FeltType.avventerArbeidsgiver, FeltverdiOperator.IN, null),
+        )))).isNotEmpty()
+
+        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+            byggFilterK9(FeltType.behandlingUuid, FeltverdiOperator.EQUALS, behandlingUuid),
+            byggFilterK9(FeltType.avventerArbeidsgiver, FeltverdiOperator.IN, null, "true"),
+        )))).isNotEmpty()
+
+        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+            byggFilterK9(FeltType.behandlingUuid, FeltverdiOperator.EQUALS, behandlingUuid),
+            byggFilterK9(FeltType.avventerArbeidsgiver, FeltverdiOperator.IN, "true"),
+        )))).isEmpty()
+
+        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+            byggFilterK9(FeltType.behandlingUuid, FeltverdiOperator.EQUALS, behandlingUuid),
+            byggFilterK9(FeltType.avventerArbeidsgiver, FeltverdiOperator.EQUALS, "true"),
+        )))).isEmpty()
+
+        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+            byggFilterK9(FeltType.behandlingUuid, FeltverdiOperator.EQUALS, behandlingUuid),
+            byggFilterK9(FeltType.avventerArbeidsgiver, FeltverdiOperator.EQUALS, "false"),
+        )))).isEmpty()
+    }
+
+    @Test
+    fun `sjekker at oppgave-query med boolean med true`() {
+        val behandlingUuid = UUID.randomUUID().toString()
+        OppgaveTestDataBuilder()
+            .medOppgaveFeltVerdi(FeltType.behandlingUuid, behandlingUuid)
+            .medOppgaveFeltVerdi(FeltType.avventerArbeidsgiver, "true")
+            .lagOgLagre()
+
+        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
+
+        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+            byggFilterK9(FeltType.behandlingUuid, FeltverdiOperator.EQUALS, behandlingUuid),
+            byggFilterK9(FeltType.avventerArbeidsgiver, FeltverdiOperator.EQUALS, null),
+        )))).isEmpty()
+
+        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+            byggFilterK9(FeltType.behandlingUuid, FeltverdiOperator.EQUALS, behandlingUuid),
+            byggFilterK9(FeltType.avventerArbeidsgiver, FeltverdiOperator.IN, null),
+        )))).isEmpty()
+
+        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+            byggFilterK9(FeltType.behandlingUuid, FeltverdiOperator.EQUALS, behandlingUuid),
+            byggFilterK9(FeltType.avventerArbeidsgiver, FeltverdiOperator.IN, null, "true"),
+        )))).isNotEmpty()
+
+        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+            byggFilterK9(FeltType.behandlingUuid, FeltverdiOperator.EQUALS, behandlingUuid),
+            byggFilterK9(FeltType.avventerArbeidsgiver, FeltverdiOperator.EQUALS, "true"),
+        )))).isNotEmpty()
+
+        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+            byggFilterK9(FeltType.behandlingUuid, FeltverdiOperator.EQUALS, behandlingUuid),
+            byggFilterK9(FeltType.avventerArbeidsgiver, FeltverdiOperator.IN, "true"),
+        )))).isNotEmpty()
+
+        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+            byggFilterK9(FeltType.behandlingUuid, FeltverdiOperator.EQUALS, behandlingUuid),
+            byggFilterK9(FeltType.avventerArbeidsgiver, FeltverdiOperator.EQUALS, "false"),
+        )))).isEmpty()
+    }
+
+
+    private fun byggFilterK9(feltType: FeltType, feltverdiOperator: FeltverdiOperator, vararg verdier: String?): FeltverdiOppgavefilter {
         return FeltverdiOppgavefilter(
             "K9",
             feltType.eksternId,
