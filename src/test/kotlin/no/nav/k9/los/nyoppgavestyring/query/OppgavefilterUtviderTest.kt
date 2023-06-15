@@ -42,7 +42,7 @@ internal fun CombineOppgavefilter.hentFørsteMedOperator(operator: FeltverdiOper
 
 internal fun List<FeltverdiOppgavefilter>.hentFørsteMedOperator(operator: FeltverdiOperator) = first { it.operator == operator.name }
 
-internal fun Assert<Any>.isEqualToDate(expected: LocalDateTime) = given { actual ->
+internal fun Assert<Any?>.isEqualToDate(expected: LocalDateTime) = given { actual ->
     if (LocalDateTime.parse(actual as String).equalsWithPrecision(expected, 10)) return
     fail(expected, actual)
 }
