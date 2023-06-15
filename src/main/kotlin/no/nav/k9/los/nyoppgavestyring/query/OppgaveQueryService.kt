@@ -1,13 +1,11 @@
 package no.nav.k9.los.nyoppgavestyring.query
 
-import io.ktor.server.application.*
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.rest.CoroutineRequestContext
-import no.nav.k9.los.integrasjon.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
@@ -18,11 +16,7 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.tjenester.saksbehandler.IIdToken
 import org.koin.java.KoinJavaComponent.inject
-import java.lang.RuntimeException
 import javax.sql.DataSource
-import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.EmptyCoroutineContext
-import kotlin.coroutines.coroutineContext
 
 class OppgaveQueryService() {
     val datasource by inject<DataSource>(DataSource::class.java)
@@ -114,8 +108,8 @@ class OppgaveQueryService() {
             val verdi = when (it.kode) {
                 "oppgavestatus" -> oppgave.status
                 "kildeområde" -> oppgave.kildeområde
-                "oppgavetype" -> throw RuntimeException("Not implemented yet.")
-                "oppgaveområde" -> throw RuntimeException("Not implemented yet.")
+                "oppgavetype" -> oppgave.oppgavetype.eksternId
+                "oppgaveområde" -> oppgave.oppgavetype.område.eksternId
                 else -> oppgave.hentVerdiEllerListe(requireNotNull(it.område), it.kode)
             }
             Oppgavefeltverdi(
