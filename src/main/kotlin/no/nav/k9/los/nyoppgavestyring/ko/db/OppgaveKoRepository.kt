@@ -8,9 +8,9 @@ import kotliquery.using
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKoListeDto
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKoListeelement
-import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
 import java.lang.IllegalArgumentException
+import java.time.LocalDateTime
 import javax.sql.DataSource
 
 class OppgaveKoRepository(val datasource: DataSource) {
@@ -25,10 +25,12 @@ class OppgaveKoRepository(val datasource: DataSource) {
         return OppgaveKoListeDto(
             tx.run(
                 queryOf(
-                    "SELECT id, tittel FROM OPPGAVEKO_V3"
+                    "SELECT id, tittel, endret_tidspunkt FROM OPPGAVEKO_V3"
                 ).map{row -> OppgaveKoListeelement(
-                    row.long("id"),
-                    row.string("tittel")
+                    id = row.long("id"),
+                    tittel = row.string("tittel"),
+                    antallSaksbehandlere = hentKoSaksbehandlere(tx, row.long("id")).size,
+                    sistEndret = row.localDateTimeOrNull("endret_tidspunkt")
                 )}.asList
             )
         )
@@ -44,19 +46,22 @@ class OppgaveKoRepository(val datasource: DataSource) {
         val objectMapper = jacksonObjectMapper()
         return tx.run(
             queryOf(
-                "SELECT id, versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave FROM OPPGAVEKO_V3 WHERE id = :id",
+                "SELECT id, versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave, endret_tidspunkt FROM OPPGAVEKO_V3 WHERE id = :id",
                 mapOf(
                     "id" to oppgaveKoId
                 )
-            ).map{row -> OppgaveKo(
-                row.long("id"),
-                row.long("versjon"),
-                row.string("tittel"),
-                row.string("beskrivelse"),
-                objectMapper.readValue(row.string("query"), OppgaveQuery::class.java),
-                row.boolean("fritt_valg_av_oppgave"),
-                hentKoSaksbehandlere(tx, row.long("id"))
-            )}.asSingle
+            ).map { row ->
+                OppgaveKo(
+                    id = row.long("id"),
+                    versjon = row.long("versjon"),
+                    tittel = row.string("tittel"),
+                    beskrivelse = row.string("beskrivelse"),
+                    oppgaveQuery = objectMapper.readValue(row.string("query"), OppgaveQuery::class.java),
+                    frittValgAvOppgave = row.boolean("fritt_valg_av_oppgave"),
+                    saksbehandlere = hentKoSaksbehandlere(tx, row.long("id")),
+                    endretTidspunkt = row.localDateTimeOrNull("endret_tidspunkt")
+                )
+            }.asSingle
         ) ?: throw IllegalStateException("Feil ved henting av oppgavekø: $oppgaveKoId")
     }
 
@@ -71,11 +76,12 @@ class OppgaveKoRepository(val datasource: DataSource) {
         val oppgaveKoId = tx.run(
             queryOf(
                 """
-                INSERT INTO OPPGAVEKO_V3 (versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave) 
-                VALUES (0, :tittel, '', :query, false) RETURNING ID""",
+                INSERT INTO OPPGAVEKO_V3 (versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave, endret_tidspunk) 
+                VALUES (0, :tittel, '', :query, false, :endret_tidspunkt) RETURNING ID""",
                 mapOf(
                     "tittel" to tittel,
-                    "query" to objectMapper.writeValueAsString(OppgaveQuery())
+                    "query" to objectMapper.writeValueAsString(OppgaveQuery()),
+                    "endret_tidspunkt" to LocalDateTime.now()
                 )
             ).map{row -> row.long(1)}.asSingle
         ) ?: throw IllegalStateException("Feil ved opprettelse av ny oppgavekø.")
@@ -102,7 +108,8 @@ class OppgaveKoRepository(val datasource: DataSource) {
                       tittel = :tittel,
                       beskrivelse = :beskrivelse,
                       query = :query,
-                      fritt_valg_av_oppgave = :frittValgAvOppgave
+                      fritt_valg_av_oppgave = :frittValgAvOppgave,
+                      endret_tidspunkt = :endret_tidspunkt
                     WHERE id = :id AND versjon = :gammelVersjon
                 """.trimIndent(),
                 mapOf(
@@ -112,7 +119,8 @@ class OppgaveKoRepository(val datasource: DataSource) {
                     "tittel" to oppgaveKo.tittel,
                     "beskrivelse" to oppgaveKo.beskrivelse,
                     "query" to objectMapper.writeValueAsString(oppgaveKo.oppgaveQuery),
-                    "frittValgAvOppgave" to oppgaveKo.frittValgAvOppgave
+                    "frittValgAvOppgave" to oppgaveKo.frittValgAvOppgave,
+                    "endret_tidspunkt" to LocalDateTime.now()
                 )
             ).asUpdate
         )
