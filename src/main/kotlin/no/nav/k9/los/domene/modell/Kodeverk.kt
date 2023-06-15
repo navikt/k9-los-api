@@ -332,12 +332,12 @@ enum class KøSortering(
 
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
-enum class Fagsystem(val kode: String, val kodeverk: String) {
-    K9SAK("K9SAK", "FAGSYSTEM"),
-    K9TILBAKE("K9TILBAKE", "FAGSYSTEM"),
-    FPTILBAKE("FPTILBAKE", "FAGSYSTEM"),
-    PUNSJ("PUNSJ", "FAGSYSTEM"),
-    OMSORGSPENGER("OMSORGSPENGER", "FAGSYSTEM");
+enum class Fagsystem(val kode: String, val kodeverk: String, val navn: String) {
+    K9SAK("K9SAK", "FAGSYSTEM", "K9-sak"),
+    K9TILBAKE("K9TILBAKE", "FAGSYSTEM", "K9-tilbake"),
+    FPTILBAKE("FPTILBAKE", "FAGSYSTEM", "FP-tilbake"),
+    PUNSJ("PUNSJ", "FAGSYSTEM", "K9-punsj"),
+    OMSORGSPENGER("OMSORGSPENGER", "FAGSYSTEM", "Omsorgspenger");
 
     companion object {
         @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
