@@ -31,7 +31,7 @@ object OppgavefilterOperatorUtvider {
             FeltverdiOperator.IN -> (CombineOperator.OR to FeltverdiOperator.EQUALS)
             FeltverdiOperator.NOT_IN, FeltverdiOperator.NOT_EQUALS -> (CombineOperator.AND to FeltverdiOperator.NOT_EQUALS)
             FeltverdiOperator.EQUALS -> (CombineOperator.AND to FeltverdiOperator.EQUALS)
-            else -> throw IllegalStateException("Ukjent feltverdiOperator for mengeoperasjoner")
+            else -> throw IllegalStateException("Ukjent feltverdiOperator for mengder")
         }
 
         return CombineOppgavefilter(
