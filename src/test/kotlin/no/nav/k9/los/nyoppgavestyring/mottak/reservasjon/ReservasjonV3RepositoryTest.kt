@@ -183,15 +183,15 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         transactionalManager.transaction { tx ->
             val reservasjonHentet = repo.hentAktivReservasjonForReservasjonsnøkkel("test1", tx)
             assertEquals("test2@test.com", reservasjonHentet!!.saksbehandlerEpost)
-            assertTrue(overførTildato.equalsWithPrecision(reservasjonHentet!!.gyldigTil, 10))
-            assertEquals(reservasjon.reservasjonsnøkkel, reservasjonHentet!!.reservasjonsnøkkel)
+            assertTrue(overførTildato.equalsWithPrecision(reservasjonHentet.gyldigTil, 10))
+            assertEquals(reservasjon.reservasjonsnøkkel, reservasjonHentet.reservasjonsnøkkel)
         }
 
         transactionalManager.transaction { tx ->
             val reservasjonerHentet = repo.hentAktiveReservasjonerForSaksbehandler("test2@test.com", tx)
-            assertEquals("test2@test.com", reservasjonerHentet[0]!!.saksbehandlerEpost)
-            assertTrue(overførTildato.equalsWithPrecision(reservasjonerHentet[0]!!.gyldigTil, 10))
-            assertEquals(reservasjon.reservasjonsnøkkel, reservasjonerHentet[0]!!.reservasjonsnøkkel)
+            assertEquals("test2@test.com", reservasjonerHentet[0].saksbehandlerEpost)
+            assertTrue(overførTildato.equalsWithPrecision(reservasjonerHentet[0].gyldigTil, 10))
+            assertEquals(reservasjon.reservasjonsnøkkel, reservasjonerHentet[0].reservasjonsnøkkel)
         }
     }
 }
