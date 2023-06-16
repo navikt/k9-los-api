@@ -430,7 +430,8 @@ fun common(app: Application, config: Configuration) = module {
             feltdefinisjonTjeneste = get(),
             oppgavetypeTjeneste = get(),
             oppgaveV3Tjeneste = get(),
-            transactionalManager = get()
+            transactionalManager = get(),
+            config = get(),
         )
     }
 

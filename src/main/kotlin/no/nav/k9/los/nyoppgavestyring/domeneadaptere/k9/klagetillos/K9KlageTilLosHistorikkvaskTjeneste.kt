@@ -78,6 +78,8 @@ class K9KlageTilLosHistorikkvaskTjeneste(
             log.info("Gjennomsnittstid pr behandling: ${tidHeleKjøringen / behandlingTeller}ms, Gjennsomsnittstid pr event: ${tidHeleKjøringen / eventTeller}ms")
         }
         log.info("Historikkvask k9klage ferdig")
+
+        behandlingProsessEventKlageRepository.nullstillHistorikkvask()
     }
 
     private fun vaskOppgaveForBehandlingUUID(uuid: UUID, eventTellerInn: Long): Long {
@@ -94,7 +96,7 @@ class K9KlageTilLosHistorikkvaskTjeneste(
                 loggFremgangForHver100(eventTeller, "Prosessert $eventTeller eventer")
 
                 forrigeOppgave = oppgaveV3Tjeneste.hentOppgaveversjon(
-                    område = "k9", eksternId = oppgaveDto.id, eksternVersjon = oppgaveDto.versjon, tx = tx
+                    område = "K9", eksternId = oppgaveDto.id, eksternVersjon = oppgaveDto.versjon, tx = tx
                 )
             }
             forrigeOppgave = null

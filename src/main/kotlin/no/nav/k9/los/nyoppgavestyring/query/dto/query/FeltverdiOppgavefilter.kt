@@ -21,5 +21,7 @@ data class FeltverdiOppgavefilter (
     val område: String?,
     val kode: String,
     val operator: String,
-    val verdi: List<Any>
+
+    @JsonFormat(with = [JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY])
+    val verdi: List<Any?>
 ): Oppgavefilter()

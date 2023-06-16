@@ -4,6 +4,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.los.domene.modell.BehandlingStatus
 import no.nav.k9.los.domene.modell.BehandlingType
 import no.nav.k9.los.domene.modell.FagsakYtelseType
@@ -14,7 +15,6 @@ import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.KodeverkDto
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.KodeverkVerdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
-import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.Venteårsak
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -84,14 +84,7 @@ class OmrådeSetup(
             verdier = Fagsystem.values().map { fagsystem ->
                 KodeverkVerdiDto(
                     verdi = fagsystem.kode,
-                    visningsnavn =
-                    when (fagsystem) {
-                        Fagsystem.K9SAK -> "K9-sak"
-                        Fagsystem.K9TILBAKE -> "K9-tilbake"
-                        Fagsystem.FPTILBAKE -> "FP-tilbake"
-                        Fagsystem.PUNSJ -> "K9-punsj"
-                        Fagsystem.OMSORGSPENGER -> "Omsorgspenger"
-                    },
+                    visningsnavn = fagsystem.navn,
                     beskrivelse = null
                 )
             }

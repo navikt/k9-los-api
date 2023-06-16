@@ -4,7 +4,9 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 
-class OppgaveRepository(private val oppgavetypeRepository: OppgavetypeRepository) {
+class OppgaveRepository(
+    private val oppgavetypeRepository: OppgavetypeRepository
+) {
 
     fun hentNyesteOppgaveForEksternId(tx: TransactionalSession, eksternId: String): Oppgave {
         val oppgave = tx.run(
@@ -17,10 +19,12 @@ class OppgaveRepository(private val oppgavetypeRepository: OppgavetypeRepository
             """.trimIndent(),
                 mapOf("eksternId" to eksternId)
             ).map { row ->
+                val kildeområde = row.string("kildeomrade")
+                val oppgaveTypeId = row.long("oppgavetype_id")
                 Oppgave(
                     eksternId = eksternId,
                     eksternVersjon = row.string("ekstern_versjon"),
-                    oppgavetypeId = row.long("oppgavetype_id"),
+                    oppgavetype = oppgavetypeRepository.hentOppgavetype(kildeområde, oppgaveTypeId, tx),
                     status = row.string("status"),
                     endretTidspunkt = row.localDateTime("endret_tidspunkt"),
                     kildeområde = row.string("kildeomrade"),
@@ -29,7 +33,7 @@ class OppgaveRepository(private val oppgavetypeRepository: OppgavetypeRepository
             }.asSingle
         ) ?: throw IllegalStateException("Fant ikke oppgave med eksternId $eksternId")
 
-        return fyllDefaultverdier(oppgave, tx)
+        return oppgave.fyllDefaultverdier()
     }
 
     fun hentOppgaveForId(tx: TransactionalSession, id: Long): Oppgave {
@@ -42,10 +46,12 @@ class OppgaveRepository(private val oppgavetypeRepository: OppgavetypeRepository
             """.trimIndent(),
                 mapOf("id" to id)
             ).map { row ->
+                val kildeområde = row.string("kildeomrade")
+                val oppgaveTypeId = row.long("oppgavetype_id")
                 Oppgave(
                     eksternId = row.string("ekstern_id"),
                     eksternVersjon = row.string("ekstern_versjon"),
-                    oppgavetypeId = row.long("oppgavetype_id"),
+                    oppgavetype = oppgavetypeRepository.hentOppgavetype(kildeområde, oppgaveTypeId, tx),
                     status = row.string("status"),
                     endretTidspunkt = row.localDateTime("endret_tidspunkt"),
                     kildeområde = row.string("kildeomrade"),
@@ -54,33 +60,25 @@ class OppgaveRepository(private val oppgavetypeRepository: OppgavetypeRepository
             }.asSingle
         ) ?: throw IllegalStateException("Fant ikke oppgave med id $id")
 
-        return fyllDefaultverdier(oppgave, tx)
+        return oppgave.fyllDefaultverdier()
     }
 
-    private fun fyllDefaultverdier(
-        oppgave: Oppgave,
-        tx: TransactionalSession
-    ): Oppgave {
-        val oppgavetype = oppgavetypeRepository.hentOppgavetype(oppgave.kildeområde, oppgave.oppgavetypeId, tx)
-        val defaultverdier = mutableListOf<Oppgavefelt>()
-
-        oppgavetype.oppgavefelter
+    private fun Oppgave.fyllDefaultverdier(): Oppgave {
+        val defaultverdier = oppgavetype.oppgavefelter
             .filter { oppgavefelt -> oppgavefelt.påkrevd }
-            .forEach { påkrevdFelt ->
-                if (oppgave.felter.find { it.eksternId.equals(påkrevdFelt.feltDefinisjon.eksternId) && !påkrevdFelt.feltDefinisjon.listetype } == null) {
-                    defaultverdier.add(
-                        Oppgavefelt(
-                            eksternId = påkrevdFelt.feltDefinisjon.eksternId,
-                            område = oppgave.kildeområde,
-                            listetype = false, //listetyper er aldri påkrevd
-                            påkrevd = true,
-                            verdi = påkrevdFelt.defaultverdi.toString()
-                        )
+            .mapNotNull { påkrevdFelt ->
+                if (felter.find { it.eksternId == påkrevdFelt.feltDefinisjon.eksternId && !påkrevdFelt.feltDefinisjon.listetype } == null) {
+                    Oppgavefelt(
+                        eksternId = påkrevdFelt.feltDefinisjon.eksternId,
+                        område = kildeområde,
+                        listetype = false, //listetyper er aldri påkrevd
+                        påkrevd = true,
+                        verdi = påkrevdFelt.defaultverdi.toString()
                     )
-                }
+                } else null
             }
 
-        return oppgave.copy(felter = oppgave.felter.plus(defaultverdier))
+        return copy(felter = felter.plus(defaultverdier))
     }
 
     private fun hentOppgavefelter(tx: TransactionalSession, oppgaveId: Long): List<Oppgavefelt> {

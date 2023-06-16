@@ -1,11 +1,12 @@
 package no.nav.k9.los.nyoppgavestyring.visningoguttrekk
 
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import java.time.LocalDateTime
 
 data class Oppgave(
     val eksternId: String,
     val eksternVersjon: String,
-    val oppgavetypeId: Long,
+    val oppgavetype: Oppgavetype,
     val status: String, //TODO: definere typer/enum
     val endretTidspunkt: LocalDateTime,
     val kildeområde: String,

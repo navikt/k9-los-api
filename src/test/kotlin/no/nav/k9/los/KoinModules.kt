@@ -341,7 +341,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             feltdefinisjonTjeneste = get(),
             oppgavetypeTjeneste = get(),
             oppgaveV3Tjeneste = get(),
-            transactionalManager = get()
+            transactionalManager = get(),
+            config = get(),
         )
     }
 

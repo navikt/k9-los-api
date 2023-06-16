@@ -54,7 +54,7 @@ class OppgavestatistikkTjeneste(
             initialDelay = TimeUnit.MINUTES.toMillis(5),
             period = TimeUnit.HOURS.toMillis(1)
         ) {
-            if (LocalDateTime.now().isBefore(LocalDateTime.of(2023, 3, 30, 14, 0))) {
+            if (LocalDateTime.now().isBefore(LocalDateTime.of(2023, 6, 9, 20, 0))) {
                 log.info("Nullstiller datavarehussending")
                 statistikkRepository.fjernSendtMarkering()
                 log.info("Datavarehussending nullstilt")
@@ -118,8 +118,7 @@ class OppgavestatistikkTjeneste(
 
         var behandling: Behandling
         var sak: Sak
-        val oppgavetype = oppgavetypeRepository.hentOppgavetype("K9", oppgave.oppgavetypeId, tx)
-        when (oppgavetype.eksternId) {
+        when (oppgave.oppgavetype.eksternId) {
             "k9sak" -> {
                 behandling = K9SakOppgaveTilDVHMapper().lagBehandling(oppgave)
                 sak = K9SakOppgaveTilDVHMapper().lagSak(oppgave)
@@ -130,7 +129,7 @@ class OppgavestatistikkTjeneste(
                 sak = K9KlageOppgaveTilDVHMapper().lagSak(oppgave)
             }
 
-            else -> throw IllegalStateException("Ukjent oppgavetype for sending til DVH: ${oppgavetype.eksternId}")
+            else -> throw IllegalStateException("Ukjent oppgavetype for sending til DVH: ${oppgave.oppgavetype.eksternId}")
         }
 
         return Pair(sak, behandling)
