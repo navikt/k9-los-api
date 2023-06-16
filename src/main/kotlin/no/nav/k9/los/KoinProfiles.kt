@@ -35,6 +35,7 @@ import no.nav.k9.los.integrasjon.pdl.PdlService
 import no.nav.k9.los.integrasjon.pdl.PdlServiceLocal
 import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
+import no.nav.k9.los.nyoppgavestyring.pep.PepCacheRepository
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
@@ -45,7 +46,6 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAda
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.EventTilDtoMapper
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosLukkeFeiloppgaverTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
@@ -55,6 +55,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
+import no.nav.k9.los.nyoppgavestyring.pep.PepCacheService
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
@@ -464,6 +465,19 @@ fun common(app: Application, config: Configuration) = module {
             k9SakBerikerKlient = get(),
         )
     }
+
+    single {
+        PepCacheRepository(dataSource = get())
+    }
+
+    single {
+        PepCacheService(
+            pepClient = get(),
+            pepCacheRepository = get(),
+            oppgaveRepository = get(),
+            transactionalManager = get()
+        )
+    }
 }
 
 fun localDevConfig() = module {
@@ -555,6 +569,5 @@ fun prodConfig(config: Configuration) = module {
             accessTokenClient = get<AccessTokenClientResolver>().naisSts()
         )
     }
-
 }
 

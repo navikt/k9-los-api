@@ -36,6 +36,8 @@ import no.nav.k9.los.eventhandler.sjekkReserverteJobb
 import no.nav.k9.los.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.los.integrasjon.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
+import no.nav.k9.los.nyoppgavestyring.pep.PepCacheOppdaterer
+import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoApis
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosApi
@@ -158,6 +160,13 @@ fun Application.k9Los() {
             oppgaveTjeneste = koin.get(),
             oppgaveKøRepository = koin.get()
         )
+
+    PepCacheOppdaterer(
+        koin.get(),
+        koin.get(),
+        koin.get(),
+        koin.get()
+    ).start()
 
     val sjekkReserverteJobb =
         sjekkReserverteJobb(saksbehandlerRepository = koin.get(), reservasjonRepository = koin.get())

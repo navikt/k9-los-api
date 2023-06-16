@@ -8,18 +8,20 @@ class OppgaveRepository(
     private val oppgavetypeRepository: OppgavetypeRepository
 ) {
 
-    fun hentNyesteOppgaveForEksternId(tx: TransactionalSession, eksternId: String): Oppgave {
+    fun hentNyesteOppgaveForEksternId(tx: TransactionalSession, kildeområde: String, eksternId: String): Oppgave {
         val oppgave = tx.run(
             queryOf(
                 """
                 select * 
                 from oppgave_v3 ov
-                where ov.ekstern_id = :eksternId
+                where ov.kildeomrade = :kildeomrade AND ov.ekstern_id = :eksternId 
                 and ov.versjon = (select max(versjon) from oppgave_v3 ov2 where ov2.ekstern_id = :eksternId)
             """.trimIndent(),
-                mapOf("eksternId" to eksternId)
+                mapOf(
+                    "kildeomrade" to kildeområde,
+                    "eksternId" to eksternId
+                )
             ).map { row ->
-                val kildeområde = row.string("kildeomrade")
                 val oppgaveTypeId = row.long("oppgavetype_id")
                 Oppgave(
                     eksternId = eksternId,
@@ -27,12 +29,12 @@ class OppgaveRepository(
                     oppgavetype = oppgavetypeRepository.hentOppgavetype(kildeområde, oppgaveTypeId, tx),
                     status = row.string("status"),
                     endretTidspunkt = row.localDateTime("endret_tidspunkt"),
-                    kildeområde = row.string("kildeomrade"),
+                    kildeområde = kildeområde,
                     felter = hentOppgavefelter(tx, row.long("id")),
                     versjon = row.int("versjon")
                 )
             }.asSingle
-        ) ?: throw IllegalStateException("Fant ikke oppgave med eksternId $eksternId")
+        ) ?: throw IllegalStateException("Fant ikke oppgave med kilde $kildeområde og eksternId $eksternId")
 
         return oppgave.fyllDefaultverdier()
     }
