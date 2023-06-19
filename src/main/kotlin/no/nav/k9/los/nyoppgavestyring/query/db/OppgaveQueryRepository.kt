@@ -4,6 +4,7 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Kodeverkreferanse
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
@@ -29,7 +30,7 @@ class OppgaveQueryRepository(
         return s.substring(0, 1).uppercase() + s.substring(1)
     }
 
-    private fun hentAlleFelter(tx: TransactionalSession): List<Oppgavefelt> {
+    private fun hentAlleFelter(tx: TransactionalSession, medKodeverk: Boolean = true): List<Oppgavefelt> {
         val felterFraDatabase = tx.run(
             queryOf(
                 """
@@ -43,8 +44,10 @@ class OppgaveQueryRepository(
                     )
                 """.trimIndent()
             ).map { row ->
-                val kodeverk = row.stringOrNull("kodeverkreferanse")
-                    ?.let { feltdefinisjonRepository.hentKodeverk(Kodeverkreferanse(it), tx) }
+                val kodeverk = if (medKodeverk) {
+                    row.stringOrNull("kodeverkreferanse")?.let {
+                        feltdefinisjonRepository.hentKodeverk(Kodeverkreferanse(it), tx) }
+                } else { null }
                 Oppgavefelt(
                     område = row.string("omrade"),
                     kode = row.string("kode"),
@@ -85,13 +88,16 @@ class OppgaveQueryRepository(
     }
 
     fun query(oppgaveQuery: OppgaveQuery): List<Long> {
-        return using(sessionOf(datasource)) { it ->
+        return using(sessionOf(datasource)) {
             it.transaction { tx -> query(tx, oppgaveQuery) }
         }
     }
 
     fun query(tx: TransactionalSession, oppgaveQuery: OppgaveQuery): List<Long> {
-        return query(tx, toSqlOppgaveQuery(oppgaveQuery))
+        val oppgavefelterKodeOgType = hentAlleFelter(tx, medKodeverk = false)
+            .associate { felt -> felt.kode to Datatype.fraKode(felt.tolkes_som) }
+
+        return query(tx, toSqlOppgaveQuery(oppgaveQuery, oppgavefelterKodeOgType))
     }
 
 
@@ -104,8 +110,8 @@ class OppgaveQueryRepository(
         )
     }
 
-    fun toSqlOppgaveQuery(oppgaveQuery: OppgaveQuery): SqlOppgaveQuery {
-        val query = SqlOppgaveQuery()
+    fun toSqlOppgaveQuery(oppgaveQuery: OppgaveQuery, oppgavefelterKodeOgType: Map<String, Datatype>): SqlOppgaveQuery {
+        val query = SqlOppgaveQuery(oppgavefelterKodeOgType)
         val combineOperator = CombineOperator.AND
         håndterFiltere(query, oppgaveQuery.filtere, combineOperator)
         håndterOrder(query, oppgaveQuery.order)

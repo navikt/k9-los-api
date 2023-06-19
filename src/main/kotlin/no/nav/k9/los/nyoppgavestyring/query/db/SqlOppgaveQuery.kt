@@ -1,12 +1,16 @@
 package no.nav.k9.los.nyoppgavestyring.query.db
 
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype.*
 import org.postgresql.util.PGInterval
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-class SqlOppgaveQuery {
+class SqlOppgaveQuery(
+    val oppgavefelterKodeOgType: Map<String, Datatype>
+) {
 
     private var query = """
                 SELECT o.id as id
@@ -77,42 +81,6 @@ class SqlOppgaveQuery {
     private fun medOppgavefelt(combineOperator: CombineOperator, feltområde: String, feltkode: String, operator: FeltverdiOperator, feltverdi: Any) {
         val index = queryParams.size
 
-        /*
-         * Postgres støtter ikke betinget typekonvertering av queryparametere. Dette fordi
-         * typekonverteringen blir gjort ved opprettelse av spørring og at feilende
-         * typekonvertering gjør at spørringen feiler.
-         *
-         * Mulig forbedring: Hvis vi cacher hvilke "tolkes_som" hvert enkelt felt er,
-         * så kan vi legge til kun den datatypen som blir brukt.
-         */
-        val timestampFeltverdi = try {
-            LocalDateTime.parse(feltverdi as String)
-        } catch (e: Exception) { null } ?: try {
-            LocalDate.parse(feltverdi as String)
-        } catch (e: Exception) { null }
-
-        val durationFeltverdi = try {
-            PGInterval(feltverdi as String)
-        } catch (e: Exception) { null }
-
-        val integerFeltverdi = try {
-            BigInteger(feltverdi as String)
-        } catch (e: Exception) { null }
-
-        val doubleFeltverdi = try {
-            BigDecimal(feltverdi as String)
-        } catch (e: Exception) { null }
-
-        queryParams.putAll(mutableMapOf(
-            "feltOmrade$index" to feltområde,
-            "feltkode$index" to feltkode,
-            "feltverdi$index" to feltverdi,
-            "timestamp_feltverdi$index" to timestampFeltverdi,
-            "duration_feltverdi$index" to durationFeltverdi,
-            "integer_feltverdi$index" to integerFeltverdi,
-            "double_feltverdi$index" to doubleFeltverdi
-        ))
-
         query += """
                 ${combineOperator.sql} EXISTS (
                     SELECT 'Y'
@@ -126,15 +94,58 @@ class SqlOppgaveQuery {
                     WHERE ov.oppgave_id = o.id
                       AND fo.ekstern_id = :feltOmrade$index
                       AND fd.ekstern_id = :feltkode$index
-                      AND CASE
-                          WHEN fd.tolkes_som = 'Timestamp' THEN CAST(ov.verdi AS timestamp) ${operator.sql} (:timestamp_feltverdi$index)
-                          WHEN fd.tolkes_som = 'Duration' THEN CAST(ov.verdi AS interval) ${operator.sql} (:duration_feltverdi$index)
-                          WHEN fd.tolkes_som = 'Integer' THEN CAST(ov.verdi AS integer) ${operator.sql} (:integer_feltverdi$index)
-                          WHEN fd.tolkes_som = 'Double' THEN CAST(ov.verdi AS DOUBLE PRECISION) ${operator.sql} (:double_feltverdi$index)
-                          ELSE ov.verdi ${operator.sql} (:feltverdi$index)
-                        END
-                  ) 
+                      AND 
             """.trimIndent()
+
+        /*
+         * Postgres støtter ikke betinget typekonvertering av queryparametere. Dette fordi
+         * typekonverteringen blir gjort ved opprettelse av spørring og at feilende
+         * typekonvertering gjør at spørringen feiler.
+         */
+        val queryVerdiParam: Any?
+        when (oppgavefelterKodeOgType[feltkode]) {
+            TIMESTAMP -> {
+                query += "CAST(ov.verdi AS timestamp) ${operator.sql} (:feltverdi$index)"
+                queryVerdiParam = try {
+                    LocalDateTime.parse(feltverdi as String)
+                } catch (e: Exception) { null } ?: try {
+                    LocalDate.parse(feltverdi as String)
+                } catch (e: Exception) { null }
+            }
+
+            DURATION -> {
+                query += "CAST(ov.verdi AS interval) ${operator.sql} (:feltverdi$index)"
+                queryVerdiParam = try {
+                    PGInterval(feltverdi as String)
+                } catch (e: Exception) { null }
+            }
+
+            INTEGER -> {
+                query += "CAST(ov.verdi AS integer) ${operator.sql} (:feltverdi$index)"
+                queryVerdiParam = try {
+                    BigInteger(feltverdi as String)
+                } catch (e: Exception) { null }
+            }
+
+            DOUBLE -> {
+                query += "CAST(ov.verdi AS DOUBLE PRECISION) ${operator.sql} (:feltverdi$index)"
+                queryVerdiParam = try {
+                    BigDecimal(feltverdi as String)
+                } catch (e: Exception) { null }
+            }
+            else -> {
+                query += "ov.verdi ${operator.sql} (:feltverdi$index)"
+                queryVerdiParam = feltverdi
+            }
+        }
+
+        query += ") "
+
+        queryParams.putAll(mutableMapOf(
+            "feltOmrade$index" to feltområde,
+            "feltkode$index" to feltkode,
+            "feltverdi$index" to queryVerdiParam
+        ))
     }
 
     private fun utenOppgavefelt(combineOperator: CombineOperator, feltområde: String, feltkode: String, operator: FeltverdiOperator) {
