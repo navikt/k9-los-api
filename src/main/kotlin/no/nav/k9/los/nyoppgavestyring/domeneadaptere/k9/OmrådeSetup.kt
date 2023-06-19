@@ -166,7 +166,7 @@ class OmrådeSetup(
             eksternId = "Venteårsak",
             beskrivelse = null,
             uttømmende = true,
-            verdier = Venteårsak.values().map { venteårsak ->
+            verdier = Venteårsak.values().distinctBy { it.navn }.map { venteårsak ->
                 KodeverkVerdiDto(
                     verdi = venteårsak.kode,
                     visningsnavn = venteårsak.navn,
