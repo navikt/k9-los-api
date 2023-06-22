@@ -1,6 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.ko.dto
 
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
+import java.time.LocalDateTime
 
 class OppgaveKo(
     val id: Long,
@@ -9,5 +10,6 @@ class OppgaveKo(
     val beskrivelse: String,
     val oppgaveQuery: OppgaveQuery,
     val frittValgAvOppgave: Boolean,
-    val saksbehandlere: List<String>
+    val saksbehandlere: List<String>,
+    val endretTidspunkt: LocalDateTime?
 )
