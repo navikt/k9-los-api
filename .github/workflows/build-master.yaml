@@ -83,7 +83,7 @@ jobs:
                  owner: context.issue.owner,
                  repo: context.issue.repo,
                  labels: ['deployment'],
-                 body: 'Kommenter enten "/promote dev-fss" eller "/promote prod-fss"',
+                 body: '${{ github.sha }}',
                  title: 'Deploy av ${{ env.TAG }}'})
                .then(response => {
                        core.setOutput('number', response.data.number);

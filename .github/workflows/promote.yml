@@ -35,9 +35,9 @@ jobs:
           echo "CLUSTER=$CLUSTER_INPUT" >> $GITHUB_ENV
 
       - name: Sjekk ut kode
-        uses: actions/checkout@v1 # short sha ref støttes ikke i v2
+        uses: actions/checkout@v3
         with:
-          ref: ${{ env.TAG }}
+          ref: ${{ steps.issue_comment.outputs.sha }}
 
       - name: Promoter til cluster og namespace
         uses: nais/deploy/actions/deploy@v1
