@@ -88,7 +88,7 @@ class OppgaveQueryService() {
     private suspend fun mapOppgave(tx: TransactionalSession, oppgaveQuery: OppgaveQuery, oppgaveId: Long): Oppgaverad? {
         val oppgave = oppgaveRepository.hentOppgaveForId(tx, oppgaveId)
 
-        val pepCache = pepService.hent(oppgave, tx)
+        val pepCache = pepService.hentOgOppdaterVedBehov(oppgave, tx)
         if (pepCache.måSjekkes()) {
             // TODO: Generaliser ABAC-attributter + sjekk av disse:
             val saksnummer = oppgave.hentVerdi("K9", "saksnummer")

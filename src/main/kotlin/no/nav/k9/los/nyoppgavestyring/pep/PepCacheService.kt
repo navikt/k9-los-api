@@ -19,11 +19,11 @@ class PepCacheService(
 
     fun erOppgaveKode6(oppgave: Oppgave): Boolean {
         return transactionalManager.transaction { tx ->
-            runBlocking {  hent(oppgave, tx).kode6 }
+            runBlocking {  hentOgOppdaterVedBehov(oppgave, tx).kode6 }
         }
     }
 
-    fun hent(kildeområde: String, eksternId: String): PepCache {
+    fun hentOgOppdaterVedBehov(kildeområde: String, eksternId: String): PepCache {
         return transactionalManager.transaction { tx ->
             val oppgave = oppgaveRepository.hentNyesteOppgaveForEksternId(
                 tx,
@@ -31,23 +31,23 @@ class PepCacheService(
                 eksternId = eksternId
             )
             runBlocking {
-                hent(oppgave, tx)
+                hentOgOppdaterVedBehov(oppgave, tx)
             }
         }
     }
 
-    suspend fun hent(oppgave: Oppgave, tx: TransactionalSession): PepCache {
+    suspend fun hentOgOppdaterVedBehov(oppgave: Oppgave, tx: TransactionalSession): PepCache {
         return pepCacheRepository.hent(kildeområde = oppgave.kildeområde, eksternId = oppgave.eksternId, tx).let { pepCache ->
-            if (pepCache?.erGyldig(2) != true) {
-                    pepCache.fraOppgave(oppgave)
+            if (pepCache?.erGyldig(maksAntallTimer = 2) != true) {
+                pepCache ?: (lagPepCacheFra(oppgave).also { nyPepCache -> pepCacheRepository.lagre(nyPepCache, tx) })
             } else {
                 pepCache
             }
         }
     }
 
-    private suspend fun PepCache?.fraOppgave(oppgave: Oppgave): PepCache {
-        val pep = this ?: PepCache(
+    private suspend fun lagPepCacheFra(oppgave: Oppgave): PepCache {
+        val pep = PepCache(
             eksternId = oppgave.eksternId,
             kildeområde = oppgave.kildeområde,
             kode6 = true,

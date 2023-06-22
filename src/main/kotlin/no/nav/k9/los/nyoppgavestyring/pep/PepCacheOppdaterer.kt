@@ -17,27 +17,31 @@ class PepCacheOppdaterer(
 ) {
     private val log = LoggerFactory.getLogger(OppgaveKøRepository::class.java)
 
-    fun start() = runBlocking {
-        launch(Executors.newSingleThreadExecutor().asCoroutineDispatcherWithErrorHandling()) {
-            val tidMellomKjøring = Duration.ofMinutes(1)
-            while (true) {
-                oppdater()
-                delay(tidMellomKjøring.toMillis())
-            }
+    @DelicateCoroutinesApi
+    fun start() = GlobalScope.launch(Executors.newSingleThreadExecutor().asCoroutineDispatcherWithErrorHandling()) {
+        val tidMellomKjøring = Duration.ofMinutes(1)
+        while (true) {
+            oppdater()
+            delay(tidMellomKjøring.toMillis())
         }
     }
 
     fun oppdater() {
         transactionalManager.transaction { tx ->
             runBlocking {
-                log.info("Starter oppfrisking av oppgaver")
+                log.info("Oppfrisking av oppgaver")
                 pepCacheRepository.hentEldste(100, tx).forEach { pepCache ->
-                    val oppgave = oppgaveRepository.hentNyesteOppgaveForEksternId(
-                        tx,
-                        eksternId = pepCache.eksternId,
-                        kildeområde = pepCache.kildeområde
-                    )
-                    pepService.hent(oppgave,tx)
+                    try {
+                        val oppgave = oppgaveRepository.hentNyesteOppgaveForEksternId(
+                            tx,
+                            eksternId = pepCache.eksternId,
+                            kildeområde = pepCache.kildeområde
+                        )
+                        pepService.hentOgOppdaterVedBehov(oppgave, tx)
+                    } catch (e: Exception) {
+                        log.warn("Exception ved oppfrisking av oppgave, sletter cache", e)
+                        pepCacheRepository.slett(pepCache.eksternId, pepCache.kildeområde, tx)
+                    }
                 }
             }
         }
