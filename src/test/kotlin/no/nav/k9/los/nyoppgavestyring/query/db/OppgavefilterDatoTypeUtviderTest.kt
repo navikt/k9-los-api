@@ -58,7 +58,7 @@ class OppgavefilterDatoTypeUtviderTest {
         )
 
         val combineFilter = OppgavefilterUtvider.utvid(oppgavefiltre).first() as CombineOppgavefilter
-        assertThat(combineFilter.combineOperator).isEqualTo(CombineOperator.AND.kode)
+        assertThat(combineFilter.combineOperator).isEqualTo(CombineOperator.OR.kode)
         val filtre = combineFilter.filtere.map { it as FeltverdiOppgavefilter }
 
         assertThat(filtre.hentFørsteMedOperator(FeltverdiOperator.LESS_THAN).verdi.first()).isEqualToDate(LocalDateTime.parse("2023-06-15T00:00:00"))
