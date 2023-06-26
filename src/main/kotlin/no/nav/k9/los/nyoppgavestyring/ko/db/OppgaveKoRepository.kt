@@ -76,7 +76,7 @@ class OppgaveKoRepository(val datasource: DataSource) {
         val oppgaveKoId = tx.run(
             queryOf(
                 """
-                INSERT INTO OPPGAVEKO_V3 (versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave, endret_tidspunk) 
+                INSERT INTO OPPGAVEKO_V3 (versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave, endret_tidspunkt) 
                 VALUES (0, :tittel, '', :query, false, :endret_tidspunkt) RETURNING ID""",
                 mapOf(
                     "tittel" to tittel,
