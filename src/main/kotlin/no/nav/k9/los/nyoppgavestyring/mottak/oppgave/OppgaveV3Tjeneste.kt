@@ -56,6 +56,22 @@ class OppgaveV3Tjeneste(
         return innkommendeOppgave
     }
 
+    fun hentAlleÅpneOppgaver(oppgavetypeEksternId: String, områdeEksternId: String, tx: TransactionalSession) : List<String> {
+        tx.run {
+            val område = områdeRepository.hentOmråde(områdeEksternId, tx)
+            val oppgavetype = oppgavetypeRepository.hentOppgavetype(område, oppgavetypeEksternId, tx)
+            return oppgaveV3Repository.hentAlleÅpneOppgaverEksternId(oppgavetype, område, tx)
+        }
+    }
+
+    fun hentAktivOppgave(eksternId: String, oppgavetypeEksternId: String, områdeEksternId: String, tx: TransactionalSession) : OppgaveV3 {
+        tx.run {
+            val område = områdeRepository.hentOmråde(områdeEksternId, tx)
+            val oppgavetype = oppgavetypeRepository.hentOppgavetype(område, oppgavetypeEksternId, tx)
+            return oppgaveV3Repository.hentAktivOppgave(eksternId, oppgavetype, tx)!!
+        }
+    }
+
     fun hentOppgaveversjon(
         område: String,
         eksternId: String,

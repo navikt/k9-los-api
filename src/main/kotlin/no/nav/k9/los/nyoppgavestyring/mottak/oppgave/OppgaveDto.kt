@@ -14,6 +14,23 @@ data class OppgaveDto(
     val feltverdier: List<OppgaveFeltverdiDto>
 ) {
 
+    constructor(oppgaveV3: OppgaveV3) : this(
+        id = oppgaveV3.eksternId,
+        versjon = oppgaveV3.eksternVersjon,
+        område = oppgaveV3.oppgavetype.område.eksternId,
+        kildeområde = oppgaveV3.kildeområde,
+        type = oppgaveV3.oppgavetype.eksternId,
+        status = oppgaveV3.status.kode,
+        endretTidspunkt = oppgaveV3.endretTidspunkt,
+        reservasjonsnøkkel = oppgaveV3.reservasjonsnøkkel,
+        feltverdier = oppgaveV3.felter.map { felt ->
+            OppgaveFeltverdiDto(
+                nøkkel = felt.oppgavefelt.feltDefinisjon.eksternId,
+                verdi = felt.verdi
+            )
+        }
+    )
+
     constructor(oppgaveDto: OppgaveDto, feltverdier: List<OppgaveFeltverdiDto>) : this(
         id = oppgaveDto.id,
         versjon = oppgaveDto.versjon,
