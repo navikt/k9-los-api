@@ -142,6 +142,28 @@ class OppgaveV3Repository(
         )
     }
 
+    fun hentAlleÅpneOppgaverEksternId(oppgavetype: Oppgavetype, område: Område, tx: TransactionalSession): List<String> {
+        return tx.run(
+            queryOf(
+                """
+                    select ov.ekstern_id as ekstern_id
+                    from oppgave_v3 ov
+                        inner join oppgavetype ot on ov.oppgavetype_id = ot.id and ot.ekstern_id = :oppgavetype
+                        inner join omrade o on ot.omrade_id = o.id and o.ekstern_id = :omrade
+                    where ov.status = :oppgavestatus
+                    and ov.aktiv = true
+                """.trimIndent(),
+                mapOf(
+                    "oppgavetype" to oppgavetype.eksternId,
+                    "omrade" to område.eksternId,
+                    "oppgavestatus" to Oppgavestatus.AAPEN.kode
+                )
+            ).map { row ->
+                row.string("ekstern_id")
+            }.asList
+        )
+    }
+
     fun oppdaterReservasjonsnøkkel(eksternId: String, eksternVersjon: String, reservasjonsnokkel: String, tx: TransactionalSession) {
         tx.run(
             queryOf(
