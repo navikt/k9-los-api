@@ -156,7 +156,7 @@ class OppgaveV3Repository(
                 mapOf(
                     "oppgavetype" to oppgavetype.eksternId,
                     "omrade" to område.eksternId,
-                    "oppgavestatus" to Oppgavestatus.AAPEN
+                    "oppgavestatus" to Oppgavestatus.AAPEN.kode
                 )
             ).map { row ->
                 row.string("ekstern_id")

@@ -1,5 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos
 
+import kotliquery.sessionOf
+import kotliquery.using
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
@@ -15,6 +17,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.*
+import javax.sql.DataSource
 import kotlin.concurrent.thread
 
 class K9SakTilLosLukkeFeiloppgaverTjeneste(
@@ -44,9 +47,11 @@ class K9SakTilLosLukkeFeiloppgaverTjeneste(
     private fun spillAvBehandlingProsessEventer() {
         log.info("Starter avspilling av historiske BehandlingProsessEventer")
 
+
         val åpneOppgaver = transactionalManager.transaction {
             oppgaveV3Tjeneste.hentAlleÅpneOppgaver("k9sak", "K9", it)
         }
+
         log.info("Fant ${åpneOppgaver.size} åpne oppgaver")
 
         var oppgaveteller: Long = 0
