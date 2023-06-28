@@ -130,6 +130,22 @@ class ReservasjonRepository(
         return objectMapper().readValue(json!!, Reservasjon::class.java)
     }
 
+    fun hentSisteReservasjonMedLås(id: UUID): Reservasjon {
+        val json: String? = using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    "select (data ::jsonb -> 'reservasjoner' -> -1) as data from reservasjon where id = :id for update",
+                    mapOf("id" to id.toString())
+                ).map { row ->
+                    row.string("data")
+                }.asSingle
+            )
+        }
+        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
+
+        return objectMapper().readValue(json!!, Reservasjon::class.java)
+    }
+
     fun hentMedHistorikk(id: UUID): List<Reservasjon> {
         val json: String? = using(sessionOf(dataSource)) {
             it.run(
@@ -147,6 +163,18 @@ class ReservasjonRepository(
             return emptyList()
         }
         return objectMapper().readValue(json)
+    }
+
+    fun hentAlleBehandlingUUID() : List<UUID> {
+        return using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    "select id from reservasjon",
+                ).map { row ->
+                    UUID.fromString(row.string("id"))
+                }.asList
+            )
+        }
     }
 
     fun finnes(id: UUID): Boolean {

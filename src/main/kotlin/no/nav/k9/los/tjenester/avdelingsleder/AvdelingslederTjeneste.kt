@@ -112,7 +112,7 @@ class AvdelingslederTjeneste(
         var saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(epostDto.epost)
         if (saksbehandler == null) {
             saksbehandler = Saksbehandler(
-                null, null, epostDto.epost, mutableSetOf(), null
+                null, null, null, epostDto.epost, mutableSetOf(), null
             )
             saksbehandlerRepository.addSaksbehandler(saksbehandler)
         }

@@ -1,8 +1,10 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.reservasjon
 
+import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.los.domene.lager.oppgave.v2.equalsWithPrecision
+import no.nav.k9.los.domene.modell.Saksbehandler
+import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -13,26 +15,44 @@ import java.time.LocalDateTime
 class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
     @Test
     fun `Teste skriv og les`() {
-        val repo = get<ReservasjonV3Repository>()
+        val saksbehandlerRepository = get<SaksbehandlerRepository>()
+        val reservasjonV3Repository = get<ReservasjonV3Repository>()
         val transactionalManager = get<TransactionalManager>()
-        var reservasjon = ReservasjonV3(
-            saksbehandlerEpost = "test1@test.com",
+
+        val saksbehandler = runBlocking {
+            saksbehandlerRepository.addSaksbehandler(
+                Saksbehandler(
+                    id = null,
+                    brukerIdent = null,
+                    navn = null,
+                    epost = "test1@test.no",
+                    reservasjoner = mutableSetOf(),
+                    enhet = null,
+                )
+            )
+
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no")!!
+        }
+
+        val test = TaReservasjonDto("asd", "asdf", LocalDateTime.now(), LocalDateTime.now().plusDays(1))
+        val reservasjon = ReservasjonV3(
+            reservertAv = saksbehandler.id!!,
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
         )
 
         transactionalManager.transaction { tx ->
-            repo.lagreReservasjon(reservasjon, tx)
+            reservasjonV3Repository.lagreReservasjon(reservasjon, tx)
         }
 
         transactionalManager.transaction { tx ->
-            val reservasjonHentet = repo.hentAktivReservasjonForReservasjonsnøkkel("test1", tx)
+            val reservasjonHentet = reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel("test1", tx)
             assertEquals(reservasjon, reservasjonHentet)
         }
 
         transactionalManager.transaction { tx ->
-            val reservasjonerHentet = repo.hentAktiveReservasjonerForSaksbehandler("test1@test.com", tx)
+            val reservasjonerHentet = reservasjonV3Repository.hentAktiveReservasjonerForSaksbehandler(saksbehandler, tx)
             assertEquals(reservasjon, reservasjonerHentet[0])
         }
     }
@@ -41,15 +61,46 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
     fun `tillatt med 2 reservasjoner på samme nøkkel med ikke overlappende gyldig tidsrom`() {
         val repo = get<ReservasjonV3Repository>()
         val transactionalManager = get<TransactionalManager>()
+        val saksbehandlerRepository = get<SaksbehandlerRepository>()
+
+        val saksbehandler1 = runBlocking {
+            saksbehandlerRepository.addSaksbehandler(
+                Saksbehandler(
+                    id = null,
+                    brukerIdent = null,
+                    navn = null,
+                    epost = "test1@test.no",
+                    reservasjoner = mutableSetOf(),
+                    enhet = null,
+                )
+            )
+
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no")!!
+        }
+
+        val saksbehandler2 = runBlocking {
+            saksbehandlerRepository.addSaksbehandler(
+                Saksbehandler(
+                    id = null,
+                    brukerIdent = null,
+                    navn = null,
+                    epost = "test2@test.no",
+                    reservasjoner = mutableSetOf(),
+                    enhet = null,
+                )
+            )
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no")!!
+        }
+
         var reservasjon1 = ReservasjonV3(
-            saksbehandlerEpost = "test1@test.com",
+            reservertAv = saksbehandler1.id!!,
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now().minusDays(5),
             gyldigTil = LocalDateTime.now().minusDays(1),
         )
 
         var reservasjon2 = ReservasjonV3(
-            saksbehandlerEpost = "test2@test.com",
+            reservertAv = saksbehandler2.id!!,
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now().plusMinutes(1),
             gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
@@ -68,15 +119,32 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
     fun `hent kun aktiv reservasjon`() {
         val repo = get<ReservasjonV3Repository>()
         val transactionalManager = get<TransactionalManager>()
+        val saksbehandlerRepository = get<SaksbehandlerRepository>()
+
+        val saksbehandler1 = runBlocking {
+            saksbehandlerRepository.addSaksbehandler(
+                Saksbehandler(
+                    id = null,
+                    brukerIdent = null,
+                    navn = null,
+                    epost = "test1@test.no",
+                    reservasjoner = mutableSetOf(),
+                    enhet = null,
+                )
+            )
+
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no")!!
+        }
+
         var reservasjon1 = ReservasjonV3(
-            saksbehandlerEpost = "test1@test.com",
+            reservertAv = saksbehandler1.id!!,
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now().minusDays(5),
             gyldigTil = LocalDateTime.now().minusDays(1),
         )
 
         var reservasjon2 = ReservasjonV3(
-            saksbehandlerEpost = "test1@test.com",
+            reservertAv = saksbehandler1.id!!,
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
@@ -93,9 +161,10 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             assertEquals(reservasjon2, aktivReservasjon)
         }
 
+
         transactionalManager.transaction { tx ->
             val aktiveReservasjoner =
-                repo.hentAktiveReservasjonerForSaksbehandler(reservasjon1.saksbehandlerEpost, tx)
+                repo.hentAktiveReservasjonerForSaksbehandler(saksbehandler1, tx)
             assertEquals(reservasjon2, aktiveReservasjoner[0])
         }
     }
@@ -104,15 +173,46 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
     fun `Ikke tillatt med 2 reservasjoner på samme nøkkel med overlappende gyldig tidsrom`() {
         val repo = get<ReservasjonV3Repository>()
         val transactionalManager = get<TransactionalManager>()
+        val saksbehandlerRepository = get<SaksbehandlerRepository>()
+
+        val saksbehandler1 = runBlocking {
+            saksbehandlerRepository.addSaksbehandler(
+                Saksbehandler(
+                    id = null,
+                    brukerIdent = null,
+                    navn = null,
+                    epost = "test1@test.no",
+                    reservasjoner = mutableSetOf(),
+                    enhet = null,
+                )
+            )
+
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no")!!
+        }
+
+        val saksbehandler2 = runBlocking {
+            saksbehandlerRepository.addSaksbehandler(
+                Saksbehandler(
+                    id = null,
+                    brukerIdent = null,
+                    navn = null,
+                    epost = "test2@test.no",
+                    reservasjoner = mutableSetOf(),
+                    enhet = null,
+                )
+            )
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no")!!
+        }
+
         var reservasjon1 = ReservasjonV3(
-            saksbehandlerEpost = "test1@test.com",
+            reservertAv = saksbehandler1.id!!,
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
         )
 
         var reservasjon2 = ReservasjonV3(
-            saksbehandlerEpost = "test2@test.com",
+            reservertAv = saksbehandler2.id!!,
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now().plusMinutes(1),
             gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
@@ -136,15 +236,46 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
     fun `Ikke tillatt med 2 reservasjoner på samme nøkkel med overlappende gyldig tidsrom med mindre alle unntatt 1 er annullert`() {
         val repo = get<ReservasjonV3Repository>()
         val transactionalManager = get<TransactionalManager>()
+        val saksbehandlerRepository = get<SaksbehandlerRepository>()
+
+        val saksbehandler1 = runBlocking {
+            saksbehandlerRepository.addSaksbehandler(
+                Saksbehandler(
+                    id = null,
+                    brukerIdent = null,
+                    navn = null,
+                    epost = "test1@test.no",
+                    reservasjoner = mutableSetOf(),
+                    enhet = null,
+                )
+            )
+
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no")!!
+        }
+
+        val saksbehandler2 = runBlocking {
+            saksbehandlerRepository.addSaksbehandler(
+                Saksbehandler(
+                    id = null,
+                    brukerIdent = null,
+                    navn = null,
+                    epost = "test2@test.no",
+                    reservasjoner = mutableSetOf(),
+                    enhet = null,
+                )
+            )
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no")!!
+        }
+
         var reservasjon1 = ReservasjonV3(
-            saksbehandlerEpost = "test1@test.com",
+            reservertAv = saksbehandler1.id!!,
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
         )
 
         var reservasjon2 = ReservasjonV3(
-            saksbehandlerEpost = "test2@test.com",
+            reservertAv = saksbehandler2.id!!,
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now().plusMinutes(1),
             gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
@@ -152,46 +283,11 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
 
         transactionalManager.transaction { tx ->
             repo.lagreReservasjon(reservasjon1, tx)
-            repo.annullerAktivReservasjon(AnnullerReservasjonDto(reservasjon1.saksbehandlerEpost, reservasjon1.reservasjonsnøkkel), tx)
+            repo.annullerAktivReservasjon(saksbehandler1, reservasjon1.reservasjonsnøkkel, tx)
         }
 
         transactionalManager.transaction { tx ->
             repo.lagreReservasjon(reservasjon2, tx)
-        }
-    }
-
-    @Test
-    fun `overføre reservasjon`() {
-        val repo = get<ReservasjonV3Repository>()
-        val reservasjonV3Tjeneste = get<ReservasjonV3Tjeneste>()
-        val transactionalManager = get<TransactionalManager>()
-        var reservasjon = ReservasjonV3(
-            saksbehandlerEpost = "test1@test.com",
-            reservasjonsnøkkel = "test1",
-            gyldigFra = LocalDateTime.now(),
-            gyldigTil = LocalDateTime.now().plusDays(1),
-        )
-
-        transactionalManager.transaction { tx ->
-            repo.lagreReservasjon(reservasjon, tx)
-        }
-
-        val overførTildato = LocalDateTime.now().plusDays(2)
-
-        reservasjonV3Tjeneste.overførReservasjon(OverførReservasjonDto(reservasjon.saksbehandlerEpost, "test2@test.com", reservasjon.reservasjonsnøkkel, overførTildato))
-
-        transactionalManager.transaction { tx ->
-            val reservasjonHentet = repo.hentAktivReservasjonForReservasjonsnøkkel("test1", tx)
-            assertEquals("test2@test.com", reservasjonHentet!!.saksbehandlerEpost)
-            assertTrue(overførTildato.equalsWithPrecision(reservasjonHentet.gyldigTil, 10))
-            assertEquals(reservasjon.reservasjonsnøkkel, reservasjonHentet.reservasjonsnøkkel)
-        }
-
-        transactionalManager.transaction { tx ->
-            val reservasjonerHentet = repo.hentAktiveReservasjonerForSaksbehandler("test2@test.com", tx)
-            assertEquals("test2@test.com", reservasjonerHentet[0].saksbehandlerEpost)
-            assertTrue(overførTildato.equalsWithPrecision(reservasjonerHentet[0].gyldigTil, 10))
-            assertEquals(reservasjon.reservasjonsnøkkel, reservasjonerHentet[0].reservasjonsnøkkel)
         }
     }
 }

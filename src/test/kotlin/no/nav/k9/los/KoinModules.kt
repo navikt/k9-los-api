@@ -271,7 +271,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             feltdefinisjonTjeneste = get()
         ).setup()
     }
-    single { OppgavetypeRepository(feltdefinisjonRepository = get(), områdeRepository = get()) }
+    single { OppgavetypeRepository(dataSource = get(), feltdefinisjonRepository = get(), områdeRepository = get()) }
     single { OppgaveV3Repository(dataSource = get(), oppgavetypeRepository = get()) }
     single { BehandlingProsessEventK9Repository(dataSource = get()) }
     single { BehandlingProsessEventKlageRepository(dataSource = get()) }
@@ -348,14 +348,17 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         ReservasjonV3Repository(
-            dataSource = get(),
+
         )
     }
 
     single {
         ReservasjonV3Tjeneste(
+            pepClient = get(),
             transactionalManager = get(),
             reservasjonV3Repository = get(),
+            saksbehandlerRepository = get(),
+            azureGraphService = get()
         )
     }
 

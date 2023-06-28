@@ -332,7 +332,7 @@ fun common(app: Application, config: Configuration) = module {
 
     single { FeltdefinisjonRepository(områdeRepository = get()) }
     single { OmrådeRepository(get()) }
-    single { OppgavetypeRepository(feltdefinisjonRepository = get(), områdeRepository = get()) }
+    single { OppgavetypeRepository(dataSource = get(), feltdefinisjonRepository = get(), områdeRepository = get()) }
     single {
         OppgaveV3Repository(
             dataSource = get(),
@@ -463,7 +463,6 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         ReservasjonV3Repository(
-            dataSource = get(),
         )
     }
 
@@ -471,6 +470,9 @@ fun common(app: Application, config: Configuration) = module {
         ReservasjonV3Tjeneste(
             transactionalManager = get(),
             reservasjonV3Repository = get(),
+            pepClient = get(),
+            saksbehandlerRepository = get(),
+            azureGraphService = get()
         )
     }
 }

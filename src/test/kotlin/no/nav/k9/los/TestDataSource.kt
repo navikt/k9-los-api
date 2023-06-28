@@ -73,7 +73,8 @@ abstract class AbstractPostgresTest {
                 siste_behandlinger,
                 OPPGAVEKO_SAKSBEHANDLER,
                 OPPGAVEKO_V3,
-                RESERVASJON_V3
+                RESERVASJON_V3,
+                RESERVASJON_V3_ENDRING
         """)
         }
 

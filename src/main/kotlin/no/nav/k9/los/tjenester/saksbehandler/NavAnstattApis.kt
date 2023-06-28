@@ -44,6 +44,7 @@ internal fun Route.NavAnsattApis() {
                 if (saksbehandlerRepository.finnSaksbehandlerMedEpost(token.getUsername()) != null) {
                     saksbehandlerRepository.addSaksbehandler(
                         Saksbehandler(
+                            id = null,
                             brukerIdent = saksbehandlerIdent,
                             navn = token.getName(),
                             epost = token.getUsername(),

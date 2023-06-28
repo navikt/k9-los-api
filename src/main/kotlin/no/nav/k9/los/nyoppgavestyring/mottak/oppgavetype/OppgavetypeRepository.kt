@@ -2,6 +2,8 @@ package no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
+import kotliquery.sessionOf
+import kotliquery.using
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.IllegalDeleteException
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.MissingDefaultException
 import no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.GyldigeFeltutledere
@@ -11,8 +13,10 @@ import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.utils.Cache
 import org.postgresql.util.PSQLException
 import org.slf4j.LoggerFactory
+import javax.sql.DataSource
 
 class OppgavetypeRepository(
+    private val dataSource: DataSource,
     private val feltdefinisjonRepository: FeltdefinisjonRepository,
     private val områdeRepository: OmrådeRepository
     ) {
@@ -26,6 +30,14 @@ class OppgavetypeRepository(
             område = område,
             oppgavetyper = oppgavetyper.oppgavetyper.filter { oppgavetype ->  oppgavetype.definisjonskilde == definisjonskilde }.toSet()
         )
+    }
+
+    fun hentOppgavetype(område: String, eksternId: String): Oppgavetype {
+        return using(sessionOf(dataSource)) {
+            it.transaction { tx ->
+                hentOppgavetype(område, eksternId, tx)
+            }
+        }
     }
 
     fun hentOppgavetype(område: String, eksternId: String, tx: TransactionalSession): Oppgavetype {

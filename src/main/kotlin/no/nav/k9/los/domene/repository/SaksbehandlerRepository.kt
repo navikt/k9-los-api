@@ -119,6 +119,21 @@ class SaksbehandlerRepository(
         }
     }
 
+    suspend fun addSaksbehandler(saksbehandler: Saksbehandler) {
+        lagreMedEpost(saksbehandler.epost) {
+            if (it == null) {
+                saksbehandler
+            } else {
+                it.id = saksbehandler.id
+                it.brukerIdent = saksbehandler.brukerIdent
+                it.epost = saksbehandler.epost.lowercase(Locale.getDefault())
+                it.navn = saksbehandler.navn
+                it.enhet = saksbehandler.enhet
+                it
+            }
+        }
+    }
+
     private suspend fun lagreMedEpost(
         epost: String,
         f: (Saksbehandler?) -> Saksbehandler
@@ -227,18 +242,17 @@ class SaksbehandlerRepository(
         if (fjernet) log.info("RESERVASJONDEBUG: Fjernet $id oppgave=${reservasjon} fra saksbehandlertabell")
     }
 
-    suspend fun addSaksbehandler(saksbehandler: Saksbehandler) {
-        lagreMedEpost(saksbehandler.epost) {
-            if (it == null) {
-                saksbehandler
-            } else {
-                it.brukerIdent = saksbehandler.brukerIdent
-                it.epost = saksbehandler.epost.lowercase(Locale.getDefault())
-                it.navn = saksbehandler.navn
-                it.enhet = saksbehandler.enhet
-                it
-            }
-        }
+    fun finnSaksbehandlerMedId(id: Long): Saksbehandler {
+        return using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    "select * from saksbehandler where id = :id",
+                    mapOf("id" to id)
+                ).map { row ->
+                    mapSaksbehandler(row)
+                }.asSingle
+            )
+        }!!
     }
 
     suspend fun finnSaksbehandlerMedEpost(epost: String): Saksbehandler? {
@@ -349,6 +363,7 @@ class SaksbehandlerRepository(
         val data = row.stringOrNull("data")
         return if (data == null) {
             Saksbehandler(
+                row.long("id"),
                 row.stringOrNull("saksbehandlerid"),
                 row.stringOrNull("navn"),
                 row.string("epost").lowercase(Locale.getDefault()),
@@ -357,6 +372,7 @@ class SaksbehandlerRepository(
             )
         } else {
             Saksbehandler(
+                id = row.long("id"),
                 brukerIdent = objectMapper().readValue<Saksbehandler>(data).brukerIdent,
                 navn = objectMapper().readValue<Saksbehandler>(data).navn,
                 epost = row.string("epost").lowercase(Locale.getDefault()),
