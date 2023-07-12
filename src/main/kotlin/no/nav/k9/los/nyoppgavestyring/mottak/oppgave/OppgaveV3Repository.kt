@@ -142,7 +142,7 @@ class OppgaveV3Repository(
         )
     }
 
-    fun hentAlleÅpneOppgaverEksternId(oppgavetype: Oppgavetype, område: Område, tx: TransactionalSession): List<String> {
+    fun hentEksternIdForOppgaverMedStatus(oppgavetype: Oppgavetype, område: Område, oppgavestatus: Oppgavestatus, tx: TransactionalSession): List<String> {
         return tx.run(
             queryOf(
                 """
@@ -156,7 +156,7 @@ class OppgaveV3Repository(
                 mapOf(
                     "oppgavetype" to oppgavetype.eksternId,
                     "omrade" to område.eksternId,
-                    "oppgavestatus" to Oppgavestatus.AAPEN.kode
+                    "oppgavestatus" to oppgavestatus.kode
                 )
             ).map { row ->
                 row.string("ekstern_id")

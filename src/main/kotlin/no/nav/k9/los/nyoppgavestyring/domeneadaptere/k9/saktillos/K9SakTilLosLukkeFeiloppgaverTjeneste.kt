@@ -49,7 +49,7 @@ class K9SakTilLosLukkeFeiloppgaverTjeneste(
 
 
         val åpneOppgaver = transactionalManager.transaction {
-            oppgaveV3Tjeneste.hentAlleÅpneOppgaver("k9sak", "K9", it)
+            oppgaveV3Tjeneste.hentEksternIdForOppgaverMedStatus("k9sak", "K9", Oppgavestatus.VENTER, it)
         }
 
         log.info("Fant ${åpneOppgaver.size} åpne oppgaver")

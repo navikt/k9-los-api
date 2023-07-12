@@ -56,11 +56,11 @@ class OppgaveV3Tjeneste(
         return innkommendeOppgave
     }
 
-    fun hentAlleÅpneOppgaver(oppgavetypeEksternId: String, områdeEksternId: String, tx: TransactionalSession) : List<String> {
+    fun hentEksternIdForOppgaverMedStatus(oppgavetypeEksternId: String, områdeEksternId: String, oppgavestatus: Oppgavestatus, tx: TransactionalSession) : List<String> {
         tx.run {
             val område = områdeRepository.hentOmråde(områdeEksternId, tx)
             val oppgavetype = oppgavetypeRepository.hentOppgavetype(område, oppgavetypeEksternId, tx)
-            return oppgaveV3Repository.hentAlleÅpneOppgaverEksternId(oppgavetype, område, tx)
+            return oppgaveV3Repository.hentEksternIdForOppgaverMedStatus(oppgavetype, område, oppgavestatus, tx)
         }
     }
 
