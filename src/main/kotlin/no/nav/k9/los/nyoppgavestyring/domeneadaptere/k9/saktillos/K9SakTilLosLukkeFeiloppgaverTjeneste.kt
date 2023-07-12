@@ -55,6 +55,7 @@ class K9SakTilLosLukkeFeiloppgaverTjeneste(
         log.info("Fant ${åpneOppgaver.size} åpne oppgaver")
 
         var oppgaveteller: Long = 0
+        var lukketOppgaveteller: Long = 0
         åpneOppgaver.forEach { uuid ->
             transactionalManager.transaction { tx ->
                 val aktivOppgave = oppgaveV3Tjeneste.hentAktivOppgave(uuid, "k9sak", "K9", tx)
@@ -89,13 +90,14 @@ class K9SakTilLosLukkeFeiloppgaverTjeneste(
 
                     //lukk oppgave
                     oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveLukket, tx)
+                    lukketOppgaveteller++
                 }
             }
             oppgaveteller++
-            loggFremgangForHver100(oppgaveteller, "Lukket $oppgaveteller oppgaver")
+            loggFremgangForHver100(oppgaveteller, "Lukking håndert for $oppgaveteller oppgaver")
         }
 
-        log.info("Antall oppgaver lukket av vaskejobb (k9-sak): $oppgaveteller")
+        log.info("Antall oppgaver lukket av vaskejobb (k9-sak): $lukketOppgaveteller")
         log.info("Lukke feilsaker k9sak ferdig")
 
         behandlingProsessEventK9Repository.nullstillHistorikkvask()
