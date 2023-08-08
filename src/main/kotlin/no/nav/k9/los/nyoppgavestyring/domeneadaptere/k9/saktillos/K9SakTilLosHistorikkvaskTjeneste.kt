@@ -36,13 +36,6 @@ class K9SakTilLosHistorikkvaskTjeneste(
 
     private val log: Logger = LoggerFactory.getLogger(K9SakTilLosHistorikkvaskTjeneste::class.java)
     private val TRÅDNAVN = "k9-sak-til-los-historikkvask"
-    private val MANUELLE_AKSJONSPUNKTER = AksjonspunktDefinisjon.values().filter { aksjonspunktDefinisjon ->
-        aksjonspunktDefinisjon.aksjonspunktType == AksjonspunktType.MANUELL
-    }.map { aksjonspunktDefinisjon -> aksjonspunktDefinisjon.kode }
-
-    private val AUTOPUNKTER = AksjonspunktDefinisjon.values().filter { aksjonspunktDefinisjon ->
-        aksjonspunktDefinisjon.aksjonspunktType == AksjonspunktType.AUTOPUNKT
-    }.map { aksjonspunktDefinisjon -> aksjonspunktDefinisjon.kode }
 
     fun kjørHistorikkvask() {
         if (config.nyOppgavestyringAktivert()) {
@@ -123,36 +116,4 @@ class K9SakTilLosHistorikkvaskTjeneste(
         }
     }
 
-    fun setup(): K9SakTilLosHistorikkvaskTjeneste {
-        val objectMapper = jacksonObjectMapper()
-        opprettOmråde()
-        opprettFeltdefinisjoner(objectMapper)
-        opprettOppgavetype(objectMapper)
-        return this
-    }
-
-    private fun opprettOmråde() {
-        log.info("oppretter område")
-        områdeRepository.lagre("K9")
-    }
-
-    private fun opprettFeltdefinisjoner(objectMapper: ObjectMapper) {
-        val feltdefinisjonerDto = objectMapper.readValue(
-            K9SakTilLosHistorikkvaskTjeneste::class.java.getResource("/adapterdefinisjoner/k9-feltdefinisjoner-v2.json")!!
-                .readText(),
-            FeltdefinisjonerDto::class.java
-        )
-        log.info("oppretter feltdefinisjoner")
-        feltdefinisjonTjeneste.oppdater(feltdefinisjonerDto)
-    }
-
-    private fun opprettOppgavetype(objectMapper: ObjectMapper) {
-        val oppgavetyperDto = objectMapper.readValue(
-            K9SakTilLosHistorikkvaskTjeneste::class.java.getResource("/adapterdefinisjoner/k9-oppgavetyper-k9sak.json")!!
-                .readText(),
-            OppgavetyperDto::class.java
-        )
-        oppgavetypeTjeneste.oppdater(oppgavetyperDto)
-        log.info("opprettet oppgavetype")
-    }
 }

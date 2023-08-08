@@ -35,6 +35,25 @@ class OppgavefilterUtviderTest {
         assertThat(sisteDatoKombiner.hentFørsteMedOperator(FeltverdiOperator.GREATER_THAN_OR_EQUALS).verdi.first()).isEqualToDate(LocalDateTime.parse("2023-05-07T00:00:00"))
         assertThat(sisteDatoKombiner.hentFørsteMedOperator(FeltverdiOperator.LESS_THAN_OR_EQUALS).verdi.first()).isEqualToDate(LocalDateTime.parse("2023-05-07T23:59:59.999"))
     }
+
+    @Test
+    fun `Oppgavefiltre skal kun gi oppgaver som ikke matche noen av datoerverdier`() {
+        val oppgavefiltre = listOf(
+            FeltverdiOppgavefilter(null, FeltType.mottattDato.eksternId, FeltverdiOperator.NOT_EQUALS.name, listOf("2023-05-05", "2023-05-07"))
+        )
+
+        val combineFilter = OppgavefilterUtvider.utvid(oppgavefiltre).first() as CombineOppgavefilter
+        assertThat(combineFilter.combineOperator).isEqualTo(CombineOperator.AND.kode)
+
+        val (førsteDatoKombiner, sisteDatoKombiner) = combineFilter.filtere.map { it as CombineOppgavefilter }.apply { first() to last() }
+        assertThat(førsteDatoKombiner.combineOperator).isEqualTo(CombineOperator.OR.kode)
+        assertThat(førsteDatoKombiner.hentFørsteMedOperator(FeltverdiOperator.LESS_THAN).verdi.first()).isEqualToDate(LocalDateTime.parse("2023-05-05T00:00:00"))
+        assertThat(førsteDatoKombiner.hentFørsteMedOperator(FeltverdiOperator.GREATER_THAN).verdi.first()).isEqualToDate(LocalDateTime.parse("2023-05-05T23:59:59.999"))
+
+        assertThat(sisteDatoKombiner.combineOperator).isEqualTo(CombineOperator.OR.kode)
+        assertThat(sisteDatoKombiner.hentFørsteMedOperator(FeltverdiOperator.LESS_THAN).verdi.first()).isEqualToDate(LocalDateTime.parse("2023-05-07T00:00:00"))
+        assertThat(sisteDatoKombiner.hentFørsteMedOperator(FeltverdiOperator.GREATER_THAN).verdi.first()).isEqualToDate(LocalDateTime.parse("2023-05-07T23:59:59.999"))
+    }
 }
 
 

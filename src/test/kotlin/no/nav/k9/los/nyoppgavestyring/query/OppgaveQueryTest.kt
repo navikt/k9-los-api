@@ -227,6 +227,32 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         )))).isEmpty()
     }
 
+    @Test
+    fun `sjekker at oppgave-query med flere datoer som ikke skal matche`() {
+        val behandlingUuid = UUID.randomUUID().toString()
+        OppgaveTestDataBuilder()
+            .medOppgaveFeltVerdi(FeltType.behandlingUuid, behandlingUuid)
+            .medOppgaveFeltVerdi(FeltType.mottattDato, "2023-05-15T12:00:00.000")
+            .lagOgLagre()
+
+        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
+
+        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+            byggFilterK9(FeltType.behandlingUuid, FeltverdiOperator.EQUALS, behandlingUuid),
+            byggFilterK9(FeltType.mottattDato, FeltverdiOperator.NOT_EQUALS, "2023-05-15T00:00:00.000"),
+        )))).isEmpty()
+
+        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+            byggFilterK9(FeltType.behandlingUuid, FeltverdiOperator.EQUALS, behandlingUuid),
+            byggFilterK9(FeltType.mottattDato, FeltverdiOperator.NOT_EQUALS, "2023-05-15T00:00:00.000", "2023-05-16T00:00:00.000"),
+        )))).isEmpty()
+
+        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+            byggFilterK9(FeltType.behandlingUuid, FeltverdiOperator.EQUALS, behandlingUuid),
+            byggFilterK9(FeltType.mottattDato, FeltverdiOperator.NOT_EQUALS, "2023-05-14T00:00:00.000", "2023-05-16T00:00:00.000"),
+        )))).isNotEmpty()
+    }
+
 
     private fun byggFilterK9(feltType: FeltType, feltverdiOperator: FeltverdiOperator, vararg verdier: String?): FeltverdiOppgavefilter {
         return FeltverdiOppgavefilter(

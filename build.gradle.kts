@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val mainClass = "no.nav.k9.los.K9LosKt"
 val hikariVersion = "5.0.1"
-val flywayVersion = "9.19.4"
+val flywayVersion = "9.20.0"
 val vaultJdbcVersion = "1.3.10"
 val koinVersion = "3.4.1"
 val kotliqueryVersion = "1.9.0"
@@ -12,8 +12,8 @@ val k9KlageVersion = "0.3.0"
 val fuelVersion = "2.3.1"
 val jacksonVersion = "2.15.2"
 
-val dusseldorfKtorVersion = "3.2.3.0-f979367"
-val ktorVersion = "2.3.1"
+val dusseldorfKtorVersion = "3.2.3.2-80dded7"
+val ktorVersion = "2.3.2"
 val kafkaVersion = "3.2.3"
 
 val navTilgangskontroll = "2.2023.01.09_08.56-ae38750bc0d9"
@@ -24,7 +24,7 @@ val jsonassertVersion = "1.5.1"
 val jupiterVersion = "5.9.3"
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.8.22"
+    id("org.jetbrains.kotlin.jvm") version "1.9.0"
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 

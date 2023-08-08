@@ -83,8 +83,8 @@ data class K9PunsjModell(
             behandlingOpprettet = førsteEvent.eventTid,
             forsteStonadsdag = førsteEvent.eventTid.toLocalDate(),
             behandlingStatus = sisteEvent.utledStatus(),
-            behandlingType = utledBehandlingType(førsteEvent),
-            fagsakYtelseType = if(førsteEvent.ytelse != null) FagsakYtelseType.fraKode(førsteEvent.ytelse) else FagsakYtelseType.UKJENT,
+            behandlingType = (sisteEvent.type ?: førsteEvent.type)?.let { BehandlingType.fraKode(it) } ?: BehandlingType.UKJENT,
+            fagsakYtelseType = (sisteEvent.ytelse ?: førsteEvent.ytelse)?.let { FagsakYtelseType.fraKode(it) } ?: FagsakYtelseType.UKJENT,
             eventTid = sisteEvent.eventTid,
             aktiv = aktiv,
             system = "PUNSJ",
@@ -113,13 +113,6 @@ data class K9PunsjModell(
 
     override fun oppgave(): Oppgave {
         return oppgave(sisteEvent())
-    }
-
-    private fun utledBehandlingType(eventDto: PunsjEventDto) : BehandlingType {
-        if (eventDto.type == null) {
-            return BehandlingType.UKJENT
-        }
-        return BehandlingType.fraKode(eventDto.type)
     }
 
     fun alleVersjoner(): MutableList<K9PunsjModell> {
