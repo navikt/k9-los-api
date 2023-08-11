@@ -26,8 +26,8 @@ comment on column RESERVASJON_V3.annullert_for_utlop is 'Hvis dette feltet er po
 create table if not exists RESERVASJON_V3_ENDRING
 (
     id                          BIGINT GENERATED ALWAYS AS IDENTITY     NOT NULL PRIMARY KEY,
-    annullert_reservasjon_id       BIGINT                                  NOT NULL,
-    ny_reservasjon_id           BIGINT                                  NOT NULL,
+    annullert_reservasjon_id    BIGINT                                  NOT NULL,
+    ny_reservasjon_id           BIGINT                                  ,
     endretAv                    BIGINT                                  NOT NULL,
     opprettet                   timestamp                               NOT NULL default localtimestamp,
 

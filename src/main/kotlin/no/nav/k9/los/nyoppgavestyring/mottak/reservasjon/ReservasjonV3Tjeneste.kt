@@ -19,8 +19,10 @@ class ReservasjonV3Tjeneste(
             return ReservasjonStatusDto.blankIkkeTilgang()
         }
 
+        val identTilInnloggetBruker = azureGraphService.hentIdentTilInnloggetBruker()
+
         val innloggetBruker =
-            saksbehandlerRepository.finnSaksbehandlerMedIdent(azureGraphService.hentIdentTilInnloggetBruker())!!
+            saksbehandlerRepository.finnSaksbehandlerMedIdent(identTilInnloggetBruker)!!
 
         val saksbehandlerSomVilReservere =
             saksbehandlerRepository.finnSaksbehandlerMedEpost(taReservasjonDto.saksbehandlerEpost)!!
@@ -55,19 +57,19 @@ class ReservasjonV3Tjeneste(
                     } else { //allerede reservert lengre enn ønsket
                         return@transaction ReservasjonStatusDto(
                             reservasjonsnøkkel = taReservasjonDto.reservasjonsnøkkel,
-                            aktivReservasjon.gyldigFra,
-                            aktivReservasjon.gyldigTil,
-                            saksbehandlerSomHarReservert,
-                            innloggetBruker
+                            gyldigFra = aktivReservasjon.gyldigFra,
+                            gyldigTil = aktivReservasjon.gyldigTil,
+                            saksbehandlerSomHarReservasjon = saksbehandlerSomHarReservert,
+                            innloggetBruker = innloggetBruker
                         )
                     }
                 } else { //reservert av andre
                     return@transaction ReservasjonStatusDto(
                         reservasjonsnøkkel = taReservasjonDto.reservasjonsnøkkel,
-                        aktivReservasjon.gyldigFra,
-                        aktivReservasjon.gyldigTil,
-                        saksbehandlerSomHarReservert,
-                        innloggetBruker
+                        gyldigFra = aktivReservasjon.gyldigFra,
+                        gyldigTil = aktivReservasjon.gyldigTil,
+                        saksbehandlerSomHarReservasjon =  saksbehandlerSomHarReservert,
+                        innloggetBruker = innloggetBruker
                     )
                 }
             } else {
@@ -90,8 +92,29 @@ class ReservasjonV3Tjeneste(
         }
     }
 
+    fun hentReservasjonerForSaksbehandlerEpost(saksbehandlerEpost: String) : List<ReservasjonStatusDto> {
+        val identTilInnloggetBruker = runBlocking { azureGraphService.hentIdentTilInnloggetBruker() }
 
-    fun annullerReservasjon(annullerReservasjonDto: AnnullerReservasjonDto) {
+        val innloggetBruker = runBlocking {
+            saksbehandlerRepository.finnSaksbehandlerMedIdent(identTilInnloggetBruker)!! }
+        val saksbehandler = runBlocking { saksbehandlerRepository.finnSaksbehandlerMedEpost(saksbehandlerEpost) }!!
+        return transactionalManager.transaction { tx ->
+            val aktiveReservasjonerForSaksbehandler =
+                reservasjonV3Repository.hentAktiveReservasjonerForSaksbehandler(saksbehandler, tx)
+            aktiveReservasjonerForSaksbehandler.map { reservasjon ->
+                ReservasjonStatusDto(
+                    reservasjonsnøkkel = reservasjon.reservasjonsnøkkel,
+                    gyldigFra = reservasjon.gyldigFra,
+                    gyldigTil = reservasjon.gyldigTil,
+                    saksbehandlerSomHarReservasjon = saksbehandlerRepository.finnSaksbehandlerMedId(reservasjon.reservertAv),
+                    innloggetBruker = innloggetBruker
+                )
+            }
+        }
+    }
+
+
+    fun annullerReservasjon(annullerReservasjonDto: AnnullerReservasjonDto) : ReservasjonStatusDto {
         val innloggetBruker =
             runBlocking { saksbehandlerRepository.finnSaksbehandlerMedIdent(azureGraphService.hentIdentTilInnloggetBruker()) } !!
         transactionalManager.transaction { tx ->
@@ -109,6 +132,7 @@ class ReservasjonV3Tjeneste(
                 ), tx
             )
         }
+        return ReservasjonStatusDto.annullertReservasjon(annullerReservasjonDto.reservasjonsnøkkel)
     }
 
     fun overførReservasjon(overførReservasjonDto: OverførReservasjonDto) {

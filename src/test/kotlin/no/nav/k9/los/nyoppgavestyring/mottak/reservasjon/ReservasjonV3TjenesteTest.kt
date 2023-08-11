@@ -7,6 +7,8 @@ import no.nav.k9.los.domene.lager.oppgave.v2.equalsWithPrecision
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.koin.test.get
@@ -14,6 +16,98 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
 class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
+
+    @BeforeEach
+    fun setup() {
+        val saksbehandlerRepository = get<SaksbehandlerRepository>()
+
+        val saksbehandlerinnlogget = runBlocking {
+            saksbehandlerRepository.addSaksbehandler(
+                Saksbehandler(
+                    id = null,
+                    brukerIdent = "saksbehandler@nav.no",
+                    navn = null,
+                    epost = "saksbehandler@nav.no",
+                    reservasjoner = mutableSetOf(),
+                    enhet = null,
+                )
+            )
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("saksbehandler@nav.no")!!
+        }
+
+        val saksbehandler1 = runBlocking {
+            saksbehandlerRepository.addSaksbehandler(
+                Saksbehandler(
+                    id = null,
+                    brukerIdent = null,
+                    navn = null,
+                    epost = "test1@test.no",
+                    reservasjoner = mutableSetOf(),
+                    enhet = null,
+                )
+            )
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no")!!
+        }
+    }
+
+    @Test
+    fun `ta reservasjon`() {
+        val reservasjonV3Tjeneste = get<ReservasjonV3Tjeneste>()
+
+        val taReservasjonDto = TaReservasjonDto(
+            saksbehandlerEpost = "test1@test.no",
+            reservasjonsnøkkel = "test1",
+            gyldigFra = LocalDateTime.now(),
+            gyldigTil = LocalDateTime.now().plusDays(1),
+        )
+
+        val reservasjonStatusDto = runBlocking {
+            reservasjonV3Tjeneste.taReservasjon(taReservasjonDto)
+        }
+
+        assertTrue(reservasjonStatusDto.erReservert)
+        assertFalse(reservasjonStatusDto.erReservertAvInnloggetBruker)
+        assertEquals("test1", reservasjonStatusDto.reservasjonsnøkkel)
+        assertEquals("test1@test.no", reservasjonStatusDto.reservertAvEpost)
+
+        val reservasjoner =
+            reservasjonV3Tjeneste.hentReservasjonerForSaksbehandlerEpost(taReservasjonDto.saksbehandlerEpost)
+
+        assertEquals(1, reservasjoner.size)
+        assertEquals(taReservasjonDto.saksbehandlerEpost, reservasjoner[0].reservertAvEpost)
+    }
+
+
+    @Test
+    fun `annullerReservasjon`() {
+        val reservasjonV3Tjeneste = get<ReservasjonV3Tjeneste>()
+
+        val taReservasjonDto = TaReservasjonDto(
+            saksbehandlerEpost = "test1@test.no",
+            reservasjonsnøkkel = "test1",
+            gyldigFra = LocalDateTime.now(),
+            gyldigTil = LocalDateTime.now().plusDays(1),
+        )
+
+        val reservasjonStatusDto = runBlocking {
+            reservasjonV3Tjeneste.taReservasjon(taReservasjonDto)
+        }
+
+        val annullerReservasjonDto = AnnullerReservasjonDto(
+            reservertAv = "test1@test.no",
+            reservasjonsnøkkel = "test1",
+        )
+
+        val annullertReservasjonStatus = reservasjonV3Tjeneste.annullerReservasjon(annullerReservasjonDto)
+        assertEquals(annullerReservasjonDto.reservasjonsnøkkel, annullertReservasjonStatus.reservasjonsnøkkel)
+        assertFalse(annullertReservasjonStatus.erReservert)
+
+        val aktiveReservasjoner =
+            reservasjonV3Tjeneste.hentReservasjonerForSaksbehandlerEpost(annullerReservasjonDto.reservertAv)
+
+        assertEquals(0, aktiveReservasjoner.size)
+    }
+
 
     @Test
     fun `overføre reservasjon`() {

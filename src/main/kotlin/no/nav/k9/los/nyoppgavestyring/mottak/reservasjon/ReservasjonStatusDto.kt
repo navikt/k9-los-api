@@ -43,5 +43,19 @@ data class ReservasjonStatusDto(
                 kanOverstyres = null
             )
         }
+
+        fun annullertReservasjon(reservasjonsnøkkel: String) : ReservasjonStatusDto {
+            return ReservasjonStatusDto(
+                reservasjonsnøkkel = reservasjonsnøkkel,
+                erReservert = false,
+                reservertFraTidspunkt = null,
+                reservertTilTidspunkt = null,
+                erReservertAvInnloggetBruker = false,
+                reservertAvEpost = null,
+                reservertAvIdent = null,
+                reservertAvNavn = null,
+                kanOverstyres = null
+            )
+        }
     }
 }
