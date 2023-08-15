@@ -90,7 +90,7 @@ dependencies {
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.26.1")
 
     testImplementation("no.nav.helse:dusseldorf-test-support:$dusseldorfKtorVersion")
-    testImplementation("io.mockk:mockk:1.13.5")
+    testImplementation("io.mockk:mockk:1.13.7")
     testImplementation("io.ktor:ktor-server-test-host-jvm:$ktorVersion") {
         exclude(group = "org.eclipse.jetty")
     }
