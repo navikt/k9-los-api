@@ -1,7 +1,9 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.reservasjon
 
 import kotlinx.coroutines.runBlocking
+import kotliquery.TransactionalSession
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
@@ -24,79 +26,89 @@ class ReservasjonV3Tjeneste(
         val innloggetBruker =
             saksbehandlerRepository.finnSaksbehandlerMedIdent(identTilInnloggetBruker)!!
 
-        val saksbehandlerSomVilReservere =
+        val saksbehandlerSomSkalHaReservasjon =
             saksbehandlerRepository.finnSaksbehandlerMedEpost(taReservasjonDto.saksbehandlerEpost)!!
 
         return transactionalManager.transaction { tx ->
-            val aktivReservasjon =
-                reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(
-                    taReservasjonDto.reservasjonsnøkkel,
-                    tx
-                )
-
-            if (aktivReservasjon != null) {
-                val saksbehandlerSomHarReservert =
-                    runBlocking { saksbehandlerRepository.finnSaksbehandlerMedId(aktivReservasjon.reservertAv) }
-
-                if (saksbehandlerSomVilReservere.epost == saksbehandlerSomHarReservert.epost) {
-                    if (aktivReservasjon.gyldigTil < taReservasjonDto.gyldigTil) {
-                        reservasjonV3Repository.lagreReservasjon( //forlenge reservasjon
-                            ReservasjonV3(
-                                saksbehandlerSomVilReservere,
-                                taReservasjonDto.copy(gyldigFra = aktivReservasjon.gyldigTil)
-                            ),
-                            tx
-                        )
-                        return@transaction ReservasjonStatusDto(
-                            reservasjonsnøkkel = taReservasjonDto.reservasjonsnøkkel,
-                            gyldigFra = aktivReservasjon.gyldigFra,
-                            gyldigTil = taReservasjonDto.gyldigTil,
-                            saksbehandlerSomHarReservasjon = saksbehandlerSomVilReservere,
-                            innloggetBruker = innloggetBruker,
-                        )
-                    } else { //allerede reservert lengre enn ønsket
-                        return@transaction ReservasjonStatusDto(
-                            reservasjonsnøkkel = taReservasjonDto.reservasjonsnøkkel,
-                            gyldigFra = aktivReservasjon.gyldigFra,
-                            gyldigTil = aktivReservasjon.gyldigTil,
-                            saksbehandlerSomHarReservasjon = saksbehandlerSomHarReservert,
-                            innloggetBruker = innloggetBruker
-                        )
-                    }
-                } else { //reservert av andre
-                    return@transaction ReservasjonStatusDto(
-                        reservasjonsnøkkel = taReservasjonDto.reservasjonsnøkkel,
-                        gyldigFra = aktivReservasjon.gyldigFra,
-                        gyldigTil = aktivReservasjon.gyldigTil,
-                        saksbehandlerSomHarReservasjon =  saksbehandlerSomHarReservert,
-                        innloggetBruker = innloggetBruker
-                    )
-                }
-            } else {
-                val reservasjonTilLagring = ReservasjonV3(
-                    reservertAv = saksbehandlerSomVilReservere.id!!,
-                    reservasjonsnøkkel = taReservasjonDto.reservasjonsnøkkel,
-                    gyldigFra = taReservasjonDto.gyldigFra,
-                    gyldigTil = taReservasjonDto.gyldigTil,
-                )
-                reservasjonV3Repository.lagreReservasjon(reservasjonTilLagring, tx)
-
-                return@transaction ReservasjonStatusDto(
-                    reservasjonsnøkkel = taReservasjonDto.reservasjonsnøkkel,
-                    taReservasjonDto.gyldigFra,
-                    taReservasjonDto.gyldigTil,
-                    saksbehandlerSomVilReservere,
-                    innloggetBruker
-                )
-            }
+            sjekkOgHåndterEksisterendeReservasjon(taReservasjonDto, saksbehandlerSomSkalHaReservasjon, innloggetBruker, tx)
         }
     }
 
-    fun hentReservasjonerForSaksbehandlerEpost(saksbehandlerEpost: String) : List<ReservasjonStatusDto> {
+    private fun sjekkOgHåndterEksisterendeReservasjon(
+        taReservasjonDto: TaReservasjonDto,
+        saksbehandlerSomVilReservere: Saksbehandler,
+        innloggetBruker: Saksbehandler,
+        tx: TransactionalSession
+    ): ReservasjonStatusDto {
+        val aktivReservasjon =
+            reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(
+                taReservasjonDto.reservasjonsnøkkel,
+                tx
+            )
+
+        if (aktivReservasjon == null) {
+            val reservasjonTilLagring = ReservasjonV3(
+                reservertAv = saksbehandlerSomVilReservere.id!!,
+                reservasjonsnøkkel = taReservasjonDto.reservasjonsnøkkel,
+                gyldigFra = taReservasjonDto.gyldigFra,
+                gyldigTil = taReservasjonDto.gyldigTil,
+            )
+            reservasjonV3Repository.lagreReservasjon(reservasjonTilLagring, tx)
+
+            return ReservasjonStatusDto(
+                reservasjonsnøkkel = taReservasjonDto.reservasjonsnøkkel,
+                taReservasjonDto.gyldigFra,
+                taReservasjonDto.gyldigTil,
+                saksbehandlerSomVilReservere,
+                innloggetBruker
+            )
+        }
+
+        val saksbehandlerSomHarReservert =
+            runBlocking { saksbehandlerRepository.finnSaksbehandlerMedId(aktivReservasjon.reservertAv) }
+
+        if (saksbehandlerSomVilReservere.epost != saksbehandlerSomHarReservert.epost) { // reservert av andre
+            return ReservasjonStatusDto(
+                reservasjonsnøkkel = taReservasjonDto.reservasjonsnøkkel,
+                gyldigFra = aktivReservasjon.gyldigFra,
+                gyldigTil = aktivReservasjon.gyldigTil,
+                saksbehandlerSomHarReservasjon = saksbehandlerSomHarReservert,
+                innloggetBruker = innloggetBruker
+            )
+        }
+
+        if (aktivReservasjon.gyldigTil < taReservasjonDto.gyldigTil) {
+            reservasjonV3Repository.lagreReservasjon( //forlenge reservasjon  //TODO: heller annullere gammel reservasjon
+                ReservasjonV3(
+                    saksbehandlerSomVilReservere,
+                    taReservasjonDto.copy(gyldigFra = aktivReservasjon.gyldigTil)
+                ),
+                tx
+            )
+            return ReservasjonStatusDto(
+                reservasjonsnøkkel = taReservasjonDto.reservasjonsnøkkel,
+                gyldigFra = aktivReservasjon.gyldigFra,
+                gyldigTil = taReservasjonDto.gyldigTil,
+                saksbehandlerSomHarReservasjon = saksbehandlerSomVilReservere,
+                innloggetBruker = innloggetBruker,
+            )
+        } else { //allerede reservert lengre enn ønsket //TODO: kort ned reservasjon i stedet? Avklaring neste uke. Sjekke opp mot V1-logikken
+            return ReservasjonStatusDto(
+                reservasjonsnøkkel = taReservasjonDto.reservasjonsnøkkel,
+                gyldigFra = aktivReservasjon.gyldigFra,
+                gyldigTil = aktivReservasjon.gyldigTil,
+                saksbehandlerSomHarReservasjon = saksbehandlerSomHarReservert,
+                innloggetBruker = innloggetBruker
+            )
+        }
+    }
+
+    fun hentReservasjonerForSaksbehandlerEpost(saksbehandlerEpost: String): List<ReservasjonStatusDto> {
         val identTilInnloggetBruker = runBlocking { azureGraphService.hentIdentTilInnloggetBruker() }
 
         val innloggetBruker = runBlocking {
-            saksbehandlerRepository.finnSaksbehandlerMedIdent(identTilInnloggetBruker)!! }
+            saksbehandlerRepository.finnSaksbehandlerMedIdent(identTilInnloggetBruker)!!
+        }
         val saksbehandler = runBlocking { saksbehandlerRepository.finnSaksbehandlerMedEpost(saksbehandlerEpost) }!!
         return transactionalManager.transaction { tx ->
             val aktiveReservasjonerForSaksbehandler =
@@ -114,29 +126,19 @@ class ReservasjonV3Tjeneste(
     }
 
 
-    fun annullerReservasjon(annullerReservasjonDto: AnnullerReservasjonDto) : ReservasjonStatusDto {
+    fun annullerReservasjon(annullerReservasjonDto: AnnullerReservasjonDto): ReservasjonStatusDto {
         val innloggetBruker =
-            runBlocking { saksbehandlerRepository.finnSaksbehandlerMedIdent(azureGraphService.hentIdentTilInnloggetBruker()) } !!
+            runBlocking { saksbehandlerRepository.finnSaksbehandlerMedIdent(azureGraphService.hentIdentTilInnloggetBruker()) }!!
+        val saksbehandler =
+            runBlocking { saksbehandlerRepository.finnSaksbehandlerMedEpost(annullerReservasjonDto.reservertAv) }!!
+
         transactionalManager.transaction { tx ->
-            val saksbehandler = runBlocking { saksbehandlerRepository.finnSaksbehandlerMedEpost(annullerReservasjonDto.reservertAv) }!!
-            val annullertReservasjonId = reservasjonV3Repository.annullerAktivReservasjon(
-                saksbehandler,
-                annullerReservasjonDto.reservasjonsnøkkel,
-                tx
-            )
-            reservasjonV3Repository.lagreEndring(
-                ReservasjonV3Endring(
-                    annullertReservasjonId = annullertReservasjonId,
-                    nyReservasjonId = null,
-                    endretAv = innloggetBruker.id!!,
-                ), tx
-            )
+            reservasjonV3Repository.annullerAktivReservasjonOgLagreEndring(saksbehandler, innloggetBruker, annullerReservasjonDto.reservasjonsnøkkel, tx)
         }
         return ReservasjonStatusDto.annullertReservasjon(annullerReservasjonDto.reservasjonsnøkkel)
     }
 
     fun overførReservasjon(overførReservasjonDto: OverførReservasjonDto) {
-        val overføringstidspunkt = LocalDateTime.now()
         val innloggetBruker =
             runBlocking { saksbehandlerRepository.finnSaksbehandlerMedEpost(azureGraphService.hentIdentTilInnloggetBruker()) }!!
 
@@ -144,26 +146,16 @@ class ReservasjonV3Tjeneste(
             runBlocking { saksbehandlerRepository.finnSaksbehandlerMedEpost(overførReservasjonDto.tilSaksbehandlerEpost) }
                 ?: throw IllegalArgumentException("Saksbehandler ${overførReservasjonDto.tilSaksbehandlerEpost} finnes ikke!")
 
+        val saksbehandlerSomHarReservasjon =  runBlocking { saksbehandlerRepository.finnSaksbehandlerMedEpost(overførReservasjonDto.fraSaksbehandlerEpost)!! }
+
         transactionalManager.transaction { tx ->
-            val annullertReservasjonId = reservasjonV3Repository.annullerAktivReservasjon(
-                saksbehandler = runBlocking { saksbehandlerRepository.finnSaksbehandlerMedEpost(overførReservasjonDto.fraSaksbehandlerEpost)!! },
+            reservasjonV3Repository.overførReservasjon(
+                saksbehandlerSomHarReservasjon = saksbehandlerSomHarReservasjon,
+                saksbehandlerSomSkalHaReservasjon = saksbehandlerSomSkalFåReservasjon,
+                innloggetBruker = innloggetBruker,
+                reserverTil = overførReservasjonDto.reserverTil,
                 reservasjonsnøkkel = overførReservasjonDto.reservasjonsnøkkel,
                 tx
-            )
-            val nyReservasjonId = reservasjonV3Repository.lagreReservasjon(
-                ReservasjonV3(
-                    reservertAv = saksbehandlerSomSkalFåReservasjon.id!!,
-                    reservasjonsnøkkel = overførReservasjonDto.reservasjonsnøkkel,
-                    gyldigFra = overføringstidspunkt,
-                    gyldigTil = overførReservasjonDto.reserverTil
-                ), tx
-            )
-            reservasjonV3Repository.lagreEndring(
-                ReservasjonV3Endring(
-                    annullertReservasjonId = annullertReservasjonId,
-                    nyReservasjonId = nyReservasjonId,
-                    endretAv = innloggetBruker.id!!,
-                ), tx
             )
         }
     }

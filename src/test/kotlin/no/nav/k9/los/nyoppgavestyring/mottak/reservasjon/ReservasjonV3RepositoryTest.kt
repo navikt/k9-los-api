@@ -92,14 +92,14 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no")!!
         }
 
-        var reservasjon1 = ReservasjonV3(
+        val reservasjon1 = ReservasjonV3(
             reservertAv = saksbehandler1.id!!,
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now().minusDays(5),
             gyldigTil = LocalDateTime.now().minusDays(1),
         )
 
-        var reservasjon2 = ReservasjonV3(
+        val reservasjon2 = ReservasjonV3(
             reservertAv = saksbehandler2.id!!,
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now().plusMinutes(1),
@@ -136,14 +136,14 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no")!!
         }
 
-        var reservasjon1 = ReservasjonV3(
+        val reservasjon1 = ReservasjonV3(
             reservertAv = saksbehandler1.id!!,
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now().minusDays(5),
             gyldigTil = LocalDateTime.now().minusDays(1),
         )
 
-        var reservasjon2 = ReservasjonV3(
+        val reservasjon2 = ReservasjonV3(
             reservertAv = saksbehandler1.id!!,
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now(),
@@ -204,14 +204,14 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no")!!
         }
 
-        var reservasjon1 = ReservasjonV3(
+        val reservasjon1 = ReservasjonV3(
             reservertAv = saksbehandler1.id!!,
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
         )
 
-        var reservasjon2 = ReservasjonV3(
+        val reservasjon2 = ReservasjonV3(
             reservertAv = saksbehandler2.id!!,
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now().plusMinutes(1),
@@ -267,23 +267,37 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no")!!
         }
 
-        var reservasjon1 = ReservasjonV3(
+        val reservasjon1 = ReservasjonV3(
             reservertAv = saksbehandler1.id!!,
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
         )
 
-        var reservasjon2 = ReservasjonV3(
+        val reservasjon2 = ReservasjonV3(
             reservertAv = saksbehandler2.id!!,
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now().plusMinutes(1),
             gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
         )
 
+        val saksbehandlerInnlogget = runBlocking {
+            saksbehandlerRepository.addSaksbehandler(
+                Saksbehandler(
+                    id = null,
+                    brukerIdent = "saksbehandler@nav.no",
+                    navn = null,
+                    epost = "saksbehandler@nav.no",
+                    reservasjoner = mutableSetOf(),
+                    enhet = null,
+                )
+            )
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("saksbehandler@nav.no")!!
+        }
+
         transactionalManager.transaction { tx ->
             repo.lagreReservasjon(reservasjon1, tx)
-            repo.annullerAktivReservasjon(saksbehandler1, reservasjon1.reservasjonsnøkkel, tx)
+            repo.annullerAktivReservasjonOgLagreEndring(saksbehandler1, saksbehandlerInnlogget, reservasjon1.reservasjonsnøkkel, tx)
         }
 
         transactionalManager.transaction { tx ->

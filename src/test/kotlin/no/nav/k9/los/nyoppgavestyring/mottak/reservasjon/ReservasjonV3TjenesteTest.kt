@@ -16,12 +16,14 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
 class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
+    private lateinit var saksbehandlerInnlogget: Saksbehandler
+    private lateinit var saksbehandler1: Saksbehandler
 
     @BeforeEach
     fun setup() {
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
 
-        val saksbehandlerinnlogget = runBlocking {
+        saksbehandlerInnlogget = runBlocking {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
                     id = null,
@@ -35,7 +37,7 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
             saksbehandlerRepository.finnSaksbehandlerMedEpost("saksbehandler@nav.no")!!
         }
 
-        val saksbehandler1 = runBlocking {
+        saksbehandler1 = runBlocking {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
                     id = null,
@@ -116,20 +118,6 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
         val transactionalManager = get<TransactionalManager>()
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
 
-        val saksbehandler1 = runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
-                Saksbehandler(
-                    id = null,
-                    brukerIdent = null,
-                    navn = null,
-                    epost = "test1@test.no",
-                    reservasjoner = mutableSetOf(),
-                    enhet = null,
-                )
-            )
-            saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no")!!
-        }
-
         val saksbehandler2 = runBlocking {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
@@ -142,19 +130,6 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
                 )
             )
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no")!!
-        }
-
-        runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
-                Saksbehandler(
-                    id = null,
-                    brukerIdent = null,
-                    navn = null,
-                    epost = "saksbehandler@nav.no",
-                    reservasjoner = mutableSetOf(),
-                    enhet = null,
-                )
-            )
         }
 
         var reservasjon = ReservasjonV3(
@@ -199,34 +174,6 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
         val repo = get<ReservasjonV3Repository>()
         val reservasjonV3Tjeneste = get<ReservasjonV3Tjeneste>()
         val transactionalManager = get<TransactionalManager>()
-        val saksbehandlerRepository = get<SaksbehandlerRepository>()
-
-        val saksbehandler1 = runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
-                Saksbehandler(
-                    id = null,
-                    brukerIdent = null,
-                    navn = null,
-                    epost = "test1@test.no",
-                    reservasjoner = mutableSetOf(),
-                    enhet = null,
-                )
-            )
-            saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no")!!
-        }
-
-        runBlocking {
-            saksbehandlerRepository.addSaksbehandler(
-                Saksbehandler(
-                    id = null,
-                    brukerIdent = null,
-                    navn = null,
-                    epost = "saksbehandler@nav.no",
-                    reservasjoner = mutableSetOf(),
-                    enhet = null,
-                )
-            )
-        }
 
         var reservasjon = ReservasjonV3(
             reservertAv = saksbehandler1.id!!,

@@ -33,7 +33,49 @@ class ReservasjonV3Repository(
         }
     }
 
-    fun annullerAktivReservasjon(saksbehandler: Saksbehandler, reservasjonsnøkkel: String, tx: TransactionalSession) : Long {
+    fun annullerAktivReservasjonOgLagreEndring(saksbehandler: Saksbehandler, innloggetBruker: Saksbehandler, reservasjonsnøkkel: String, tx: TransactionalSession) {
+        val annullertReservasjonId = annullerAktivReservasjon(saksbehandler, reservasjonsnøkkel, tx)
+        lagreEndring(
+            ReservasjonV3Endring(
+                annullertReservasjonId = annullertReservasjonId,
+                nyReservasjonId = null,
+                endretAv = innloggetBruker.id!!
+            ),
+            tx
+        )
+    }
+
+    fun overførReservasjon(
+            saksbehandlerSomHarReservasjon: Saksbehandler,
+            saksbehandlerSomSkalHaReservasjon: Saksbehandler,
+            innloggetBruker: Saksbehandler,
+            reserverTil: LocalDateTime,
+            reservasjonsnøkkel: String,
+            tx: TransactionalSession) {
+        val overføringstidspunkt = LocalDateTime.now()
+
+        val annullertReservasjonId = annullerAktivReservasjon(saksbehandlerSomHarReservasjon, reservasjonsnøkkel, tx)
+
+        val nyReservasjonId = lagreReservasjon(
+            ReservasjonV3(
+                reservertAv = saksbehandlerSomSkalHaReservasjon.id!!,
+                reservasjonsnøkkel = reservasjonsnøkkel,
+                gyldigFra = overføringstidspunkt,
+                gyldigTil = reserverTil
+            ),
+            tx
+        )
+
+        lagreEndring(
+            ReservasjonV3Endring(
+                annullertReservasjonId = annullertReservasjonId,
+                nyReservasjonId = nyReservasjonId,
+                endretAv = innloggetBruker.id!!,
+            ), tx
+        )
+    }
+
+    private fun annullerAktivReservasjon(saksbehandler: Saksbehandler, reservasjonsnøkkel: String, tx: TransactionalSession) : Long {
         return tx.updateAndReturnGeneratedKey(
             queryOf(
                 """
@@ -106,7 +148,7 @@ class ReservasjonV3Repository(
         )
     }
 
-    fun lagreEndring(endring: ReservasjonV3Endring, tx: TransactionalSession) {
+    private fun lagreEndring(endring: ReservasjonV3Endring, tx: TransactionalSession) {
         tx.run(
             queryOf("""
                 insert into RESERVASJON_V3_ENDRING(annullert_reservasjon_id, ny_reservasjon_id, endretAv)
