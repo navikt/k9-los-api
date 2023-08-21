@@ -45,6 +45,28 @@ class ReservasjonV3Repository(
         )
     }
 
+    fun forlengReservasjon(aktivReservasjon: ReservasjonV3, saksbehandlerSomHarReservasjon: Saksbehandler, innloggetBruker: Saksbehandler, nyTildato: LocalDateTime, tx: TransactionalSession) {
+        val annullertReservasjonId = annullerAktivReservasjon(saksbehandlerSomHarReservasjon, aktivReservasjon.reservasjonsnøkkel, tx)
+        val nyReservasjonId = lagreReservasjon(
+            ReservasjonV3(
+                reservertAv = saksbehandlerSomHarReservasjon.id!!,
+                reservasjonsnøkkel = aktivReservasjon.reservasjonsnøkkel,
+                gyldigFra = aktivReservasjon.gyldigFra,
+                gyldigTil = nyTildato,
+            ),
+            tx
+        )
+
+        lagreEndring(
+            ReservasjonV3Endring(
+                annullertReservasjonId = annullertReservasjonId,
+                nyReservasjonId = nyReservasjonId,
+                endretAv = innloggetBruker.id!!
+            ),
+            tx
+        )
+    }
+
     fun overførReservasjon(
             saksbehandlerSomHarReservasjon: Saksbehandler,
             saksbehandlerSomSkalHaReservasjon: Saksbehandler,

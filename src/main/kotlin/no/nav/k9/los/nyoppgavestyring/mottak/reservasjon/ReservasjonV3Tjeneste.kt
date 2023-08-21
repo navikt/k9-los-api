@@ -78,13 +78,14 @@ class ReservasjonV3Tjeneste(
         }
 
         if (aktivReservasjon.gyldigTil < taReservasjonDto.gyldigTil) {
-            reservasjonV3Repository.lagreReservasjon( //forlenge reservasjon  //TODO: heller annullere gammel reservasjon
-                ReservasjonV3(
-                    saksbehandlerSomVilReservere,
-                    taReservasjonDto.copy(gyldigFra = aktivReservasjon.gyldigTil)
-                ),
+            reservasjonV3Repository.forlengReservasjon(
+                aktivReservasjon,
+                saksbehandlerSomVilReservere,
+                innloggetBruker,
+                taReservasjonDto.gyldigTil,
                 tx
             )
+
             return ReservasjonStatusDto(
                 reservasjonsnøkkel = taReservasjonDto.reservasjonsnøkkel,
                 gyldigFra = aktivReservasjon.gyldigFra,
