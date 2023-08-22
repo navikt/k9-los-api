@@ -19,7 +19,7 @@ val kafkaVersion = "3.2.3"
 val navTilgangskontroll = "2.2023.01.09_08.56-ae38750bc0d9"
 
 // Test Dependencies
-val testContainers = "1.18.3"
+val testContainers = "1.19.0"
 val jsonassertVersion = "1.5.1"
 val jupiterVersion = "5.10.0"
 
