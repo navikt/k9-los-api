@@ -21,6 +21,7 @@ jobs:
           APIKEY: ${{ secrets.DEPLOY_KEY }}
           CLUSTER: ${{ matrix.cluster }}
           RESOURCE: nais/alerts/alert-manager.yml
+          VAR: cluster=$${{ matrix.cluster }}
       - uses: nais/deploy/actions/deploy@v1
         env:
           APIKEY: ${{ secrets.DEPLOY_KEY }}
