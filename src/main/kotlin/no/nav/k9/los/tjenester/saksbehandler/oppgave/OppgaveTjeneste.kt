@@ -587,8 +587,7 @@ class OppgaveTjeneste constructor(
     }
 
     fun hentBeholdningAvOppgaverPerAntallDager(): List<AlleOppgaverHistorikk> {
-        val ytelsetype =
-            statistikkRepository.hentFerdigstilteOgNyeHistorikkMedYtelsetypeSiste8Uker()
+        val ytelsetype = statistikkRepository.hentFerdigstilteOgNyeHistorikkMedYtelsetypeSiste8Uker()
         val ret = mutableListOf<AlleOppgaverHistorikk>()
         for (ytelseTypeEntry in ytelsetype.groupBy { it.fagsakYtelseType }) {
             val perBehandlingstype = ytelseTypeEntry.value.groupBy { it.behandlingType }
@@ -1043,6 +1042,14 @@ class OppgaveTjeneste constructor(
         oppgaverSomErBlokert: MutableList<OppgaveDto> = emptyArray<OppgaveDto>().toMutableList(),
         prioriterOppgaverForSaksbehandler: List<Oppgave>? = null
     ): OppgaveDto? {
+
+        /* V3-versjon av denne logikken:
+         få oppgave fra kø (V1 eller V3) -- versjonsagnostisk kandidat
+         er nøkkelen reservert? -- neste kandidat  //evt filtrere vekk filtrerte først et annet sted?
+         totrinnskontroll - utelukk beslutt egen saksbehandling og motsatt for alle oppgaver i reservasjon
+         pepclent.harTilgangTilOppgave -- for alle oppgaver knyttet til nøkkel?
+         */
+
         val hentNesteOppgaverIKø = hentNesteOppgaverIKø(UUID.fromString(oppgaveKøId))
 
         if (hentNesteOppgaverIKø.isEmpty()) {

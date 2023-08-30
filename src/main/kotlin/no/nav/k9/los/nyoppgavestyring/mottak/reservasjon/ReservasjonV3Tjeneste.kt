@@ -1,161 +1,107 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.reservasjon
 
-import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
-import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
 import java.time.LocalDateTime
 
 class ReservasjonV3Tjeneste(
     private val transactionalManager: TransactionalManager,
     private val reservasjonV3Repository: ReservasjonV3Repository,
-    private val pepClient: IPepClient,
-    private val saksbehandlerRepository: SaksbehandlerRepository,
-    private val azureGraphService: IAzureGraphService,
 ) {
-    suspend fun taReservasjon(taReservasjonDto: TaReservasjonDto): ReservasjonStatusDto {
-        if (!pepClient.harTilgangTilReservingAvOppgaver()) {
-            return ReservasjonStatusDto.blankIkkeTilgang()
-        }
-
-        val identTilInnloggetBruker = azureGraphService.hentIdentTilInnloggetBruker()
-
-        val innloggetBruker =
-            saksbehandlerRepository.finnSaksbehandlerMedIdent(identTilInnloggetBruker)!!
-
-        val saksbehandlerSomSkalHaReservasjon =
-            saksbehandlerRepository.finnSaksbehandlerMedEpost(taReservasjonDto.saksbehandlerEpost)!!
-
+    fun taReservasjon(
+        reservasjonsnøkkel: String,
+        reserverForId: Long,
+        gyldigFra: LocalDateTime,
+        gyldigTil: LocalDateTime,
+        utføresAvId: Long
+    ): ReservasjonV3 {
         return transactionalManager.transaction { tx ->
-            sjekkOgHåndterEksisterendeReservasjon(taReservasjonDto, saksbehandlerSomSkalHaReservasjon, innloggetBruker, tx)
+            sjekkOgHåndterEksisterendeReservasjon(
+                reservasjonsnøkkel,
+                reserverForId,
+                gyldigFra,
+                gyldigTil,
+                utføresAvId,
+                tx
+            )
         }
     }
 
     private fun sjekkOgHåndterEksisterendeReservasjon(
-        taReservasjonDto: TaReservasjonDto,
-        saksbehandlerSomVilReservere: Saksbehandler,
-        innloggetBruker: Saksbehandler,
+        reservasjonsnøkkel: String,
+        reserverForId: Long,
+        gyldigFra: LocalDateTime,
+        gyldigTil: LocalDateTime,
+        utføresAvId: Long,
         tx: TransactionalSession
-    ): ReservasjonStatusDto {
+    ): ReservasjonV3 {
         val aktivReservasjon =
             reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(
-                taReservasjonDto.reservasjonsnøkkel,
+                reservasjonsnøkkel,
                 tx
             )
 
         if (aktivReservasjon == null) {
             val reservasjonTilLagring = ReservasjonV3(
-                reservertAv = saksbehandlerSomVilReservere.id!!,
-                reservasjonsnøkkel = taReservasjonDto.reservasjonsnøkkel,
-                gyldigFra = taReservasjonDto.gyldigFra,
-                gyldigTil = taReservasjonDto.gyldigTil,
+                reservertAv = reserverForId,
+                reservasjonsnøkkel = reservasjonsnøkkel,
+                gyldigFra = gyldigFra,
+                gyldigTil = gyldigTil,
             )
-            reservasjonV3Repository.lagreReservasjon(reservasjonTilLagring, tx)
-
-            return ReservasjonStatusDto(
-                reservasjonsnøkkel = taReservasjonDto.reservasjonsnøkkel,
-                taReservasjonDto.gyldigFra,
-                taReservasjonDto.gyldigTil,
-                saksbehandlerSomVilReservere,
-                innloggetBruker
-            )
+            return reservasjonV3Repository.lagreReservasjon(reservasjonTilLagring, tx)
         }
 
-        val saksbehandlerSomHarReservert =
-            runBlocking { saksbehandlerRepository.finnSaksbehandlerMedId(aktivReservasjon.reservertAv) }
-
-        if (saksbehandlerSomVilReservere.epost != saksbehandlerSomHarReservert.epost) { // reservert av andre
-            return ReservasjonStatusDto(
-                reservasjonsnøkkel = taReservasjonDto.reservasjonsnøkkel,
-                gyldigFra = aktivReservasjon.gyldigFra,
-                gyldigTil = aktivReservasjon.gyldigTil,
-                saksbehandlerSomHarReservasjon = saksbehandlerSomHarReservert,
-                innloggetBruker = innloggetBruker
-            )
+        if (reserverForId != aktivReservasjon.reservertAv) { // reservert av andre
+            return aktivReservasjon
         }
 
-        if (aktivReservasjon.gyldigTil < taReservasjonDto.gyldigTil) {
-            reservasjonV3Repository.forlengReservasjon(
+        if (aktivReservasjon.gyldigTil < gyldigTil) {
+            return reservasjonV3Repository.forlengReservasjon(
                 aktivReservasjon,
-                saksbehandlerSomVilReservere,
-                innloggetBruker,
-                taReservasjonDto.gyldigTil,
+                endretAv = utføresAvId,
+                nyTildato = gyldigTil,
                 tx
             )
-
-            return ReservasjonStatusDto(
-                reservasjonsnøkkel = taReservasjonDto.reservasjonsnøkkel,
-                gyldigFra = aktivReservasjon.gyldigFra,
-                gyldigTil = taReservasjonDto.gyldigTil,
-                saksbehandlerSomHarReservasjon = saksbehandlerSomVilReservere,
-                innloggetBruker = innloggetBruker,
-            )
-        } else { //allerede reservert lengre enn ønsket //TODO: kort ned reservasjon i stedet? Avklaring neste uke. Sjekke opp mot V1-logikken
-            return ReservasjonStatusDto(
-                reservasjonsnøkkel = taReservasjonDto.reservasjonsnøkkel,
-                gyldigFra = aktivReservasjon.gyldigFra,
-                gyldigTil = aktivReservasjon.gyldigTil,
-                saksbehandlerSomHarReservasjon = saksbehandlerSomHarReservert,
-                innloggetBruker = innloggetBruker
-            )
         }
+
+        //allerede reservert lengre enn ønsket
+        // TODO: kort ned reservasjon i stedet? Avklaring neste uke. Sjekke opp mot V1-logikken
+        // TODO: Alt 1. - kort ned reservasjon dersom det er innlogget bruker sin reservasjon som endres. Ellers IllegalArgument.
+        // TODO: Alt 2. - Alltid feilmelding eller "ikke utført", for så å tvinge kall mot "endre reservasjon()" eller lignende
+        return aktivReservasjon
     }
 
-    fun hentReservasjonerForSaksbehandlerEpost(saksbehandlerEpost: String): List<ReservasjonStatusDto> {
-        val identTilInnloggetBruker = runBlocking { azureGraphService.hentIdentTilInnloggetBruker() }
-
-        val innloggetBruker = runBlocking {
-            saksbehandlerRepository.finnSaksbehandlerMedIdent(identTilInnloggetBruker)!!
-        }
-        val saksbehandler = runBlocking { saksbehandlerRepository.finnSaksbehandlerMedEpost(saksbehandlerEpost) }!!
+    fun hentReservasjonerForSaksbehandler(saksbehandlerId: Long): List<ReservasjonV3> {
         return transactionalManager.transaction { tx ->
-            val aktiveReservasjonerForSaksbehandler =
-                reservasjonV3Repository.hentAktiveReservasjonerForSaksbehandler(saksbehandler, tx)
-            aktiveReservasjonerForSaksbehandler.map { reservasjon ->
-                ReservasjonStatusDto(
-                    reservasjonsnøkkel = reservasjon.reservasjonsnøkkel,
-                    gyldigFra = reservasjon.gyldigFra,
-                    gyldigTil = reservasjon.gyldigTil,
-                    saksbehandlerSomHarReservasjon = saksbehandlerRepository.finnSaksbehandlerMedId(reservasjon.reservertAv),
-                    innloggetBruker = innloggetBruker
-                )
-            }
+            reservasjonV3Repository.hentAktiveReservasjonerForSaksbehandler(saksbehandlerId, tx)
         }
     }
 
 
-    fun annullerReservasjon(annullerReservasjonDto: AnnullerReservasjonDto): ReservasjonStatusDto {
-        val innloggetBruker =
-            runBlocking { saksbehandlerRepository.finnSaksbehandlerMedIdent(azureGraphService.hentIdentTilInnloggetBruker()) }!!
-        val saksbehandler =
-            runBlocking { saksbehandlerRepository.finnSaksbehandlerMedEpost(annullerReservasjonDto.reservertAv) }!!
-
+    fun annullerReservasjon(reservasjonsnøkkel: String, annullertAvBrukerId: Long) {
         transactionalManager.transaction { tx ->
-            reservasjonV3Repository.annullerAktivReservasjonOgLagreEndring(saksbehandler, innloggetBruker, annullerReservasjonDto.reservasjonsnøkkel, tx)
+            val aktivReservasjon =
+                reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(reservasjonsnøkkel, tx)!!
+            reservasjonV3Repository.annullerAktivReservasjonOgLagreEndring(
+                aktivReservasjon,
+                annullertAvBrukerId,
+                tx
+            )
         }
-        return ReservasjonStatusDto.annullertReservasjon(annullerReservasjonDto.reservasjonsnøkkel)
     }
 
-    fun overførReservasjon(overførReservasjonDto: OverførReservasjonDto) {
-        val innloggetBruker =
-            runBlocking { saksbehandlerRepository.finnSaksbehandlerMedEpost(azureGraphService.hentIdentTilInnloggetBruker()) }!!
-
-        val saksbehandlerSomSkalFåReservasjon =
-            runBlocking { saksbehandlerRepository.finnSaksbehandlerMedEpost(overførReservasjonDto.tilSaksbehandlerEpost) }
-                ?: throw IllegalArgumentException("Saksbehandler ${overførReservasjonDto.tilSaksbehandlerEpost} finnes ikke!")
-
-        val saksbehandlerSomHarReservasjon =  runBlocking { saksbehandlerRepository.finnSaksbehandlerMedEpost(overførReservasjonDto.fraSaksbehandlerEpost)!! }
-
+    fun overførReservasjon(reservasjonsnøkkel: String, reserverTil: LocalDateTime, tilSaksbehandlerId: Long, utførtAvBrukerId: Long) {
         transactionalManager.transaction { tx ->
+            val aktivReservasjon =
+                reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(reservasjonsnøkkel, tx)!!
             reservasjonV3Repository.overførReservasjon(
-                saksbehandlerSomHarReservasjon = saksbehandlerSomHarReservasjon,
-                saksbehandlerSomSkalHaReservasjon = saksbehandlerSomSkalFåReservasjon,
-                innloggetBruker = innloggetBruker,
-                reserverTil = overførReservasjonDto.reserverTil,
-                reservasjonsnøkkel = overførReservasjonDto.reservasjonsnøkkel,
+                aktivReservasjon = aktivReservasjon,
+                saksbehandlerSomSkalHaReservasjonId = tilSaksbehandlerId,
+                endretAvBrukerId = utførtAvBrukerId,
+                reserverTil = reserverTil,
                 tx
             )
         }

@@ -6,6 +6,7 @@ import java.time.LocalDateTime
 data class Oppgave(
     val eksternId: String,
     val eksternVersjon: String,
+    val reservasjonsnøkkel: String,
     val oppgavetype: Oppgavetype,
     val status: String, //TODO: definere typer/enum
     val endretTidspunkt: LocalDateTime,

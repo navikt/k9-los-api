@@ -168,7 +168,7 @@ class ReservasjonRepository(
         return objectMapper().readValue(json)
     }
 
-    fun hentAlleBehandlingUUID(): List<UUID> {
+    fun hentAlleReservasjonUUID(): List<UUID> {
         return using(sessionOf(dataSource)) {
             it.run(
                 queryOf(

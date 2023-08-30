@@ -7,7 +7,6 @@ import no.nav.k9.los.domene.lager.oppgave.v2.equalsWithPrecision
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -56,27 +55,26 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
     fun `ta reservasjon`() {
         val reservasjonV3Tjeneste = get<ReservasjonV3Tjeneste>()
 
-        val taReservasjonDto = TaReservasjonDto(
-            saksbehandlerEpost = "test1@test.no",
-            reservasjonsnøkkel = "test1",
-            gyldigFra = LocalDateTime.now(),
-            gyldigTil = LocalDateTime.now().plusDays(1),
-        )
-
-        val reservasjonStatusDto = runBlocking {
-            reservasjonV3Tjeneste.taReservasjon(taReservasjonDto)
+        val reservasjon = runBlocking {
+            reservasjonV3Tjeneste.taReservasjon(
+                reservasjonsnøkkel = "test1",
+                reserverForId = saksbehandler1.id!!,
+                gyldigFra = LocalDateTime.now(),
+                gyldigTil = LocalDateTime.now().plusDays(1),
+                utføresAvId = saksbehandlerInnlogget.id!!
+            )
         }
 
-        assertTrue(reservasjonStatusDto.erReservert)
-        assertFalse(reservasjonStatusDto.erReservertAvInnloggetBruker)
-        assertEquals("test1", reservasjonStatusDto.reservasjonsnøkkel)
-        assertEquals("test1@test.no", reservasjonStatusDto.reservertAvEpost)
+        assertTrue(reservasjon.reservertAv == saksbehandler1.id)
+        assertFalse(reservasjon.reservertAv == saksbehandlerInnlogget.id)
+        assertTrue(reservasjon.gyldigTil.isAfter(LocalDateTime.now()))
+        assertEquals("test1", reservasjon.reservasjonsnøkkel)
 
         val reservasjoner =
-            reservasjonV3Tjeneste.hentReservasjonerForSaksbehandlerEpost(taReservasjonDto.saksbehandlerEpost)
+            reservasjonV3Tjeneste.hentReservasjonerForSaksbehandler(saksbehandler1.id!!)
 
         assertEquals(1, reservasjoner.size)
-        assertEquals(taReservasjonDto.saksbehandlerEpost, reservasjoner[0].reservertAvEpost)
+        assertEquals(saksbehandler1.id, reservasjoner[0].reservertAv)
     }
 
 
@@ -84,28 +82,20 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
     fun `annullerReservasjon`() {
         val reservasjonV3Tjeneste = get<ReservasjonV3Tjeneste>()
 
-        val taReservasjonDto = TaReservasjonDto(
-            saksbehandlerEpost = "test1@test.no",
-            reservasjonsnøkkel = "test1",
-            gyldigFra = LocalDateTime.now(),
-            gyldigTil = LocalDateTime.now().plusDays(1),
-        )
-
-        val reservasjonStatusDto = runBlocking {
-            reservasjonV3Tjeneste.taReservasjon(taReservasjonDto)
+        val reservasjon = runBlocking {
+            reservasjonV3Tjeneste.taReservasjon(
+                reservasjonsnøkkel = "test1",
+                reserverForId = saksbehandler1.id!!,
+                gyldigFra = LocalDateTime.now(),
+                gyldigTil = LocalDateTime.now().plusDays(1),
+                utføresAvId = saksbehandlerInnlogget.id!!
+            )
         }
 
-        val annullerReservasjonDto = AnnullerReservasjonDto(
-            reservertAv = "test1@test.no",
-            reservasjonsnøkkel = "test1",
-        )
-
-        val annullertReservasjonStatus = reservasjonV3Tjeneste.annullerReservasjon(annullerReservasjonDto)
-        assertEquals(annullerReservasjonDto.reservasjonsnøkkel, annullertReservasjonStatus.reservasjonsnøkkel)
-        assertFalse(annullertReservasjonStatus.erReservert)
+        reservasjonV3Tjeneste.annullerReservasjon(reservasjonsnøkkel = "test1", annullertAvBrukerId = saksbehandlerInnlogget.id!!)
 
         val aktiveReservasjoner =
-            reservasjonV3Tjeneste.hentReservasjonerForSaksbehandlerEpost(annullerReservasjonDto.reservertAv)
+            reservasjonV3Tjeneste.hentReservasjonerForSaksbehandler(saksbehandler1.id!!)
 
         assertEquals(0, aktiveReservasjoner.size)
     }
@@ -132,7 +122,7 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test2@test.no")!!
         }
 
-        var reservasjon = ReservasjonV3(
+        val reservasjon = ReservasjonV3(
             reservertAv = saksbehandler1.id!!,
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now(),
@@ -146,12 +136,10 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
         val overførTildato = LocalDateTime.now().plusDays(2)
 
         reservasjonV3Tjeneste.overførReservasjon(
-            OverførReservasjonDto(
-                saksbehandler1.epost,
-                "test2@test.no",
-                reservasjon.reservasjonsnøkkel,
-                overførTildato
-            )
+            "test1",
+            overførTildato,
+            saksbehandler2.id!!,
+            saksbehandler2.id!!
         )
 
         transactionalManager.transaction { tx ->
@@ -162,7 +150,7 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
         }
 
         transactionalManager.transaction { tx ->
-            val reservasjonerHentet = repo.hentAktiveReservasjonerForSaksbehandler(saksbehandler2, tx)
+            val reservasjonerHentet = repo.hentAktiveReservasjonerForSaksbehandler(saksbehandler2.id!!, tx)
             assertEquals(saksbehandler2.id, reservasjonerHentet[0].reservertAv)
             assertTrue(overførTildato.equalsWithPrecision(reservasjonerHentet[0].gyldigTil, 10))
             assertEquals(reservasjon.reservasjonsnøkkel, reservasjonerHentet[0].reservasjonsnøkkel)
@@ -190,12 +178,10 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
 
         assertThrows<IllegalArgumentException> {
             reservasjonV3Tjeneste.overførReservasjon(
-                OverførReservasjonDto(
-                    saksbehandler1.epost,
-                    "test2@test.com",
-                    reservasjon.reservasjonsnøkkel,
-                    overførTildato
-                )
+                reservasjon.reservasjonsnøkkel,
+                overførTildato,
+                5L,
+                saksbehandler1.id!!
             )
         }
 

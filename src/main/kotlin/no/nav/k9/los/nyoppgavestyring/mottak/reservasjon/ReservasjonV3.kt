@@ -4,7 +4,7 @@ import no.nav.k9.los.domene.modell.Saksbehandler
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
-class ReservasjonV3 (
+class ReservasjonV3(
     val id: Long? = null,
     val reservertAv: Long,
     val reservasjonsnøkkel: String,
@@ -15,11 +15,34 @@ class ReservasjonV3 (
     val gyldigFra = gyldigFra.truncatedTo(ChronoUnit.MICROS)
     val gyldigTil = gyldigTil.truncatedTo(ChronoUnit.MICROS)
 
-    constructor(saksbehandler: Saksbehandler, taReservasjonDto: TaReservasjonDto) : this(
+    fun copy(
+        id: Long?,
+        reservertAv: Long = this.reservertAv,
+        reservasjonsnøkkel: String = this.reservasjonsnøkkel,
+        annullertFørUtløp: Boolean = this.annullertFørUtløp,
+        gyldigFra: LocalDateTime = this.gyldigFra,
+        gyldigTil: LocalDateTime = this.gyldigTil
+    ): ReservasjonV3 {
+        return ReservasjonV3(
+            id,
+            reservertAv,
+            reservasjonsnøkkel,
+            annullertFørUtløp,
+            gyldigFra,
+            gyldigTil
+        )
+    }
+
+    constructor(
+        saksbehandler: Saksbehandler,
+        reservasjonsnøkkel: String,
+        gyldigFra: LocalDateTime,
+        gyldigTil: LocalDateTime
+    ) : this(
         reservertAv = saksbehandler.id!!,
-        reservasjonsnøkkel = taReservasjonDto.reservasjonsnøkkel,
-        gyldigFra = taReservasjonDto.gyldigFra,
-        gyldigTil = taReservasjonDto.gyldigTil,
+        reservasjonsnøkkel = reservasjonsnøkkel,
+        gyldigFra = gyldigFra,
+        gyldigTil = gyldigTil,
     )
 
     override fun equals(other: Any?): Boolean {

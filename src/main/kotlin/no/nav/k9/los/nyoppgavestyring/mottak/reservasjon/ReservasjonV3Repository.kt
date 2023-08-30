@@ -2,54 +2,66 @@ package no.nav.k9.los.nyoppgavestyring.mottak.reservasjon
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
-import no.nav.k9.los.domene.modell.Saksbehandler
 import org.postgresql.util.PSQLException
 import java.time.LocalDateTime
 
 class ReservasjonV3Repository(
 ) {
-    fun lagreReservasjon(reservasjonV3: ReservasjonV3, tx: TransactionalSession): Long {
+    fun lagreReservasjon(reservasjonV3: ReservasjonV3, tx: TransactionalSession): ReservasjonV3 {
         try {
-            return tx.updateAndReturnGeneratedKey(
-                queryOf(
-                    """
+            return reservasjonV3.copy(
+                tx.updateAndReturnGeneratedKey(
+                    queryOf(
+                        """
                     insert into RESERVASJON_V3(reservertAv, reservasjonsnokkel, gyldig_tidsrom)
                     values (:reservertAv, :nokkel, tsrange(:gyldig_fra, :gyldig_til))
                 """.trimIndent(),
-                    mapOf(
-                        "reservertAv" to reservasjonV3.reservertAv,
-                        "nokkel" to reservasjonV3.reservasjonsnøkkel,
-                        "gyldig_fra" to reservasjonV3.gyldigFra,
-                        "gyldig_til" to reservasjonV3.gyldigTil
+                        mapOf(
+                            "reservertAv" to reservasjonV3.reservertAv,
+                            "nokkel" to reservasjonV3.reservasjonsnøkkel,
+                            "gyldig_fra" to reservasjonV3.gyldigFra,
+                            "gyldig_til" to reservasjonV3.gyldigTil
+                        )
                     )
-                )
-            )!!
+                )!!
+            )
         } catch (e: PSQLException) {
             if (e.sqlState == "23P01") {//exclusion_violation
                 throw IllegalArgumentException("${reservasjonV3.reservasjonsnøkkel} er allerede reservert!")
+            } else if (e.sqlState == "23503" && e.message!!.contains("fk_reservasjon_v3_01")) {
+            throw IllegalArgumentException("Saksbehandler med id ${reservasjonV3.reservertAv} finnes ikke")
             } else {
                 throw e
             }
         }
     }
 
-    fun annullerAktivReservasjonOgLagreEndring(saksbehandler: Saksbehandler, innloggetBruker: Saksbehandler, reservasjonsnøkkel: String, tx: TransactionalSession) {
-        val annullertReservasjonId = annullerAktivReservasjon(saksbehandler, reservasjonsnøkkel, tx)
+    fun annullerAktivReservasjonOgLagreEndring(
+        aktivReservasjon: ReservasjonV3,
+        innloggetBrukerId: Long,
+        tx: TransactionalSession
+    ) {
+        val annullertReservasjonId = annullerAktivReservasjon(aktivReservasjon, tx)
         lagreEndring(
             ReservasjonV3Endring(
                 annullertReservasjonId = annullertReservasjonId,
                 nyReservasjonId = null,
-                endretAv = innloggetBruker.id!!
+                endretAv = innloggetBrukerId
             ),
             tx
         )
     }
 
-    fun forlengReservasjon(aktivReservasjon: ReservasjonV3, saksbehandlerSomHarReservasjon: Saksbehandler, innloggetBruker: Saksbehandler, nyTildato: LocalDateTime, tx: TransactionalSession) {
-        val annullertReservasjonId = annullerAktivReservasjon(saksbehandlerSomHarReservasjon, aktivReservasjon.reservasjonsnøkkel, tx)
-        val nyReservasjonId = lagreReservasjon(
+    fun forlengReservasjon(
+        aktivReservasjon: ReservasjonV3,
+        endretAv: Long,
+        nyTildato: LocalDateTime,
+        tx: TransactionalSession
+    ): ReservasjonV3 {
+        val annullertReservasjonId = annullerAktivReservasjon(aktivReservasjon, tx)
+        val nyReservasjon = lagreReservasjon(
             ReservasjonV3(
-                reservertAv = saksbehandlerSomHarReservasjon.id!!,
+                reservertAv = aktivReservasjon.reservertAv,
                 reservasjonsnøkkel = aktivReservasjon.reservasjonsnøkkel,
                 gyldigFra = aktivReservasjon.gyldigFra,
                 gyldigTil = nyTildato,
@@ -60,28 +72,29 @@ class ReservasjonV3Repository(
         lagreEndring(
             ReservasjonV3Endring(
                 annullertReservasjonId = annullertReservasjonId,
-                nyReservasjonId = nyReservasjonId,
-                endretAv = innloggetBruker.id!!
+                nyReservasjonId = nyReservasjon.id,
+                endretAv = endretAv
             ),
             tx
         )
+        return nyReservasjon
     }
 
     fun overførReservasjon(
-            saksbehandlerSomHarReservasjon: Saksbehandler,
-            saksbehandlerSomSkalHaReservasjon: Saksbehandler,
-            innloggetBruker: Saksbehandler,
-            reserverTil: LocalDateTime,
-            reservasjonsnøkkel: String,
-            tx: TransactionalSession) {
+        aktivReservasjon: ReservasjonV3,
+        saksbehandlerSomSkalHaReservasjonId: Long,
+        endretAvBrukerId: Long,
+        reserverTil: LocalDateTime,
+        tx: TransactionalSession
+    ) {
         val overføringstidspunkt = LocalDateTime.now()
 
-        val annullertReservasjonId = annullerAktivReservasjon(saksbehandlerSomHarReservasjon, reservasjonsnøkkel, tx)
+        val annullertReservasjonId = annullerAktivReservasjon(aktivReservasjon, tx)
 
-        val nyReservasjonId = lagreReservasjon(
+        val nyReservasjon = lagreReservasjon(
             ReservasjonV3(
-                reservertAv = saksbehandlerSomSkalHaReservasjon.id!!,
-                reservasjonsnøkkel = reservasjonsnøkkel,
+                reservertAv = saksbehandlerSomSkalHaReservasjonId,
+                reservasjonsnøkkel = aktivReservasjon.reservasjonsnøkkel,
                 gyldigFra = overføringstidspunkt,
                 gyldigTil = reserverTil
             ),
@@ -91,14 +104,14 @@ class ReservasjonV3Repository(
         lagreEndring(
             ReservasjonV3Endring(
                 annullertReservasjonId = annullertReservasjonId,
-                nyReservasjonId = nyReservasjonId,
-                endretAv = innloggetBruker.id!!,
+                nyReservasjonId = nyReservasjon.id,
+                endretAv = endretAvBrukerId,
             ), tx
         )
     }
 
-    private fun annullerAktivReservasjon(saksbehandler: Saksbehandler, reservasjonsnøkkel: String, tx: TransactionalSession) : Long {
-        return tx.updateAndReturnGeneratedKey(
+    private fun annullerAktivReservasjon(aktivReservasjon: ReservasjonV3, tx: TransactionalSession): Long {
+        return tx.updateAndReturnGeneratedKey( //TODO: reservasjon allerede utløpt, men ikke annullert? Returnere Long?
             queryOf(
                 """
                     UPDATE public.reservasjon_v3
@@ -109,15 +122,18 @@ class ReservasjonV3Repository(
                     and annullert_for_utlop = false
                     """.trimIndent(),
                 mapOf(
-                    "reservertAv" to saksbehandler.id,
-                    "reservasjonsnokkel" to reservasjonsnøkkel,
+                    "reservertAv" to aktivReservasjon.reservertAv,
+                    "reservasjonsnokkel" to aktivReservasjon.reservasjonsnøkkel,
                     "now" to LocalDateTime.now(),
                 )
             )
         )!!
     }
 
-    fun hentAktiveReservasjonerForSaksbehandler(saksbehandler: Saksbehandler, tx: TransactionalSession): List<ReservasjonV3> {
+    fun hentAktiveReservasjonerForSaksbehandler(
+        saksbehandlerId: Long,
+        tx: TransactionalSession
+    ): List<ReservasjonV3> {
         return tx.run(
             queryOf(
                 """
@@ -129,7 +145,7 @@ class ReservasjonV3Repository(
                    and upper(r.gyldig_tidsrom) > localtimestamp
                 """.trimIndent(),
                 mapOf(
-                    "reservertAv" to saksbehandler.id
+                    "reservertAv" to saksbehandlerId
                 )
             ).map { row ->
                 ReservasjonV3(
@@ -172,7 +188,8 @@ class ReservasjonV3Repository(
 
     private fun lagreEndring(endring: ReservasjonV3Endring, tx: TransactionalSession) {
         tx.run(
-            queryOf("""
+            queryOf(
+                """
                 insert into RESERVASJON_V3_ENDRING(annullert_reservasjon_id, ny_reservasjon_id, endretAv)
                 values(:annullert_reservasjon_id, :ny_reservasjon_id, :endretAv)
             """.trimIndent(),

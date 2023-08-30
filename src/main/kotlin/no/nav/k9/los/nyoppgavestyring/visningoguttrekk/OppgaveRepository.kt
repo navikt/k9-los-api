@@ -24,6 +24,7 @@ class OppgaveRepository(
                 Oppgave(
                     eksternId = eksternId,
                     eksternVersjon = row.string("ekstern_versjon"),
+                    reservasjonsnøkkel = row.string("reservasjonsnokkel"),
                     oppgavetype = oppgavetypeRepository.hentOppgavetype(kildeområde, oppgaveTypeId, tx),
                     status = row.string("status"),
                     endretTidspunkt = row.localDateTime("endret_tidspunkt"),
@@ -55,7 +56,8 @@ class OppgaveRepository(
                     status = row.string("status"),
                     endretTidspunkt = row.localDateTime("endret_tidspunkt"),
                     kildeområde = row.string("kildeomrade"),
-                    felter = hentOppgavefelter(tx, row.long("id"))
+                    felter = hentOppgavefelter(tx, row.long("id")),
+                    reservasjonsnøkkel = row.string("reservasjonsnokkel")
                 )
             }.asSingle
         ) ?: throw IllegalStateException("Fant ikke oppgave med id $id")

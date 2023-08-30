@@ -34,7 +34,6 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no")!!
         }
 
-        val test = TaReservasjonDto("asd", "asdf", LocalDateTime.now(), LocalDateTime.now().plusDays(1))
         val reservasjon = ReservasjonV3(
             reservertAv = saksbehandler.id!!,
             reservasjonsnøkkel = "test1",
@@ -52,7 +51,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         }
 
         transactionalManager.transaction { tx ->
-            val reservasjonerHentet = reservasjonV3Repository.hentAktiveReservasjonerForSaksbehandler(saksbehandler, tx)
+            val reservasjonerHentet = reservasjonV3Repository.hentAktiveReservasjonerForSaksbehandler(saksbehandler.id!!, tx)
             assertEquals(reservasjon, reservasjonerHentet[0])
         }
     }
@@ -164,7 +163,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
 
         transactionalManager.transaction { tx ->
             val aktiveReservasjoner =
-                repo.hentAktiveReservasjonerForSaksbehandler(saksbehandler1, tx)
+                repo.hentAktiveReservasjonerForSaksbehandler(saksbehandler1.id!!, tx)
             assertEquals(reservasjon2, aktiveReservasjoner[0])
         }
     }
@@ -296,8 +295,8 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         }
 
         transactionalManager.transaction { tx ->
-            repo.lagreReservasjon(reservasjon1, tx)
-            repo.annullerAktivReservasjonOgLagreEndring(saksbehandler1, saksbehandlerInnlogget, reservasjon1.reservasjonsnøkkel, tx)
+            val reservasjon = repo.lagreReservasjon(reservasjon1, tx)
+            repo.annullerAktivReservasjonOgLagreEndring(reservasjon, saksbehandlerInnlogget.id!!, tx)
         }
 
         transactionalManager.transaction { tx ->

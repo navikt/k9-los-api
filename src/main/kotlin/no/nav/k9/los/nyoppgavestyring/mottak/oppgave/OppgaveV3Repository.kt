@@ -164,6 +164,41 @@ class OppgaveV3Repository(
         )
     }
 
+    fun hentOppgaveEksternIderForReservasjonsnøkkel(reservasjonsnøkkel: String, tx: TransactionalSession) : List<String> {
+        return tx.run(
+            queryOf(
+                """
+                    select eksternId
+                    from oppgave_v3
+                    where reservasjonsnokkel = :reservasjonsnokkel
+                    and aktiv = true
+                """.trimIndent(),
+                mapOf(
+                    "reservasjonsnokkel" to reservasjonsnøkkel
+                )
+            ).map { row -> row.string("eksternId")}.asList
+        )
+    }
+
+    fun sjekkOmOppgaverFinnesForReservasjonsnøkkel(reservasjonsnokkel: String, tx: TransactionalSession) : Boolean {
+        val antall = tx.run(
+            queryOf(
+                """
+                    select count(*) as antallOppgaver
+                    from oppgave_v3
+                    where reservasjonsnokkel = :reservasjonsnokkel
+                    and aktiv = true
+                """.trimIndent(),
+                mapOf(
+                    "reservasjonsnokkel" to reservasjonsnokkel
+                )
+            ).map { row -> row.long("antallOppgaver") }.asSingle
+
+        )!!
+
+        return antall > 0
+    }
+
     fun oppdaterReservasjonsnøkkel(eksternId: String, eksternVersjon: String, reservasjonsnokkel: String, tx: TransactionalSession) {
         tx.run(
             queryOf(

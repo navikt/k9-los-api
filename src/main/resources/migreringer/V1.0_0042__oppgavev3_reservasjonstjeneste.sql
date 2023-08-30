@@ -9,6 +9,7 @@ create table if not exists RESERVASJON_V3
     reservasjonsnokkel          varchar(50)                             NOT NULL,
     gyldig_tidsrom              tsrange                                 NOT NULL,
     annullert_for_utlop         boolean                                 NOT NULL default false,
+    kommentar                   varchar(1500)                           ,
     opprettet                   timestamp                               NOT NULL default localtimestamp,
     sist_endret                 timestamp                               NOT NULL default localtimestamp,
     EXCLUDE USING gist (reservasjonsnokkel with =, gyldig_tidsrom with &&) where (not annullert_for_utlop),

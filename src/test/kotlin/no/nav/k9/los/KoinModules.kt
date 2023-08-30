@@ -354,11 +354,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         ReservasjonV3Tjeneste(
-            pepClient = get(),
             transactionalManager = get(),
             reservasjonV3Repository = get(),
-            saksbehandlerRepository = get(),
-            azureGraphService = get()
         )
     }
 

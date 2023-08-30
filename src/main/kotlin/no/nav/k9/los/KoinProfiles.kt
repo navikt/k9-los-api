@@ -481,9 +481,6 @@ fun common(app: Application, config: Configuration) = module {
         ReservasjonV3Tjeneste(
             transactionalManager = get(),
             reservasjonV3Repository = get(),
-            pepClient = get(),
-            saksbehandlerRepository = get(),
-            azureGraphService = get()
         )
     }
 }
