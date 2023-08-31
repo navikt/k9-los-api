@@ -26,7 +26,7 @@ class K9KlageOppgaveTilDVHMapper {
             registrertDato = LocalDateTime.parse(oppgave.hentVerdi("registrertDato")).toLocalDate(),
             vedtaksDato = oppgave.hentVerdi("vedtaksDato")
                 ?.let { LocalDate.parse(it) },
-            relatertBehandlingId = null,
+            relatertBehandlingId = oppgave.hentVerdi("påklagdBehandlingUuid"),
             vedtakId = oppgave.hentVerdi("vedtakId"), //TODO: callback mot K9? evt vedtakstopic, YtelseV1.vedtakReferanse
             saksnummer = oppgave.hentVerdi("saksnummer"),
             behandlingType = oppgave.hentVerdi("behandlingTypekode")
