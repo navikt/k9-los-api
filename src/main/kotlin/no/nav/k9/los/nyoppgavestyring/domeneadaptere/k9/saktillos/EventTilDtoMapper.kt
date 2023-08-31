@@ -167,16 +167,16 @@ class EventTilDtoMapper {
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "ansvarligSaksbehandler",
-                verdi = event.ansvarligSaksbehandlerForTotrinn
+                verdi = event.ansvarligSaksbehandlerIdent
                     ?: forrigeOppgave?.hentVerdi("ansvarligSaksbehandler")
             ),
             OppgaveFeltverdiDto(
-                nøkkel = "mottattDato",
-                verdi = forrigeOppgave?.hentVerdi("mottattDato") ?: event.eventTid.toString()
+                nøkkel = "mottattDato", //TODO: Dette skal være innkommet_dato for første søknad på fagsaken
+                verdi = forrigeOppgave?.hentVerdi("mottattDato") ?: event.opprettetBehandling.toString()
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "registrertDato",
-                verdi = forrigeOppgave?.hentVerdi("registrertDato") ?: event.eventTid.toString()
+                verdi = forrigeOppgave?.hentVerdi("registrertDato") ?: event.opprettetBehandling.toString()
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "vedtaksdato",
