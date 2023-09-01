@@ -13,7 +13,7 @@ val fuelVersion = "2.3.1"
 val jacksonVersion = "2.15.2"
 
 val dusseldorfKtorVersion = "3.2.3.2-80dded7"
-val ktorVersion = "2.3.2"
+val ktorVersion = "2.3.4"
 val kafkaVersion = "3.2.3"
 
 val navTilgangskontroll = "2.2023.01.09_08.56-ae38750bc0d9"
