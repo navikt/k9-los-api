@@ -8,6 +8,7 @@ import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
@@ -31,7 +32,8 @@ class K9SakTilLosHistorikkvaskTjeneste(
     private val config: Configuration,
     private val transactionalManager: TransactionalManager,
     private val oppgaveRepositoryV2: OppgaveRepositoryV2,
-    private val k9SakTilLosAdapterTjeneste: K9SakTilLosAdapterTjeneste
+    private val k9SakTilLosAdapterTjeneste: K9SakTilLosAdapterTjeneste,
+    private val k9SakBerikerKlient: K9SakBerikerInterfaceKludge,
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9SakTilLosHistorikkvaskTjeneste::class.java)
@@ -80,10 +82,14 @@ class K9SakTilLosHistorikkvaskTjeneste(
         var eventTeller = eventTellerInn
         var forrigeOppgave: OppgaveV3? = null
         transactionalManager.transaction { tx ->
+            val behandlingMedFagsakDto = k9SakBerikerKlient.hentBehandling(UUID.fromString(uuid.toString()))
             val hastesak = oppgaveRepositoryV2.hentMerknader(uuid.toString(), false)
                 .filter { merknad -> merknad.merknadKoder.contains("HASTESAK") }.isNotEmpty()
             val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
             behandlingProsessEventer.forEach { event ->
+                if (event.eldsteDatoMedEndringFraSøker == null && behandlingMedFagsakDto != null) {
+                    event.copy(eldsteDatoMedEndringFraSøker = behandlingMedFagsakDto.eldsteDatoMedEndringFraSøker)
+                }
                 var oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
                     .leggTilFeltverdi(
                         OppgaveFeltverdiDto(
