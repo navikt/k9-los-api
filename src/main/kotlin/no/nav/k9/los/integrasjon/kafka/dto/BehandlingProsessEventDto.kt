@@ -66,7 +66,7 @@ data class BehandlingProsessEventDto(
      */
     @JsonSerialize(using = ToStringSerializer::class)
     @JsonDeserialize(using = LocalDateTimeDeserializer::class)
-    val eldsteDatoMedEndringFraSøker: LocalDateTime,
+    val eldsteDatoMedEndringFraSøker: LocalDateTime?,
 
     /**
      * Map av aksjonspunktkode og statuskode.

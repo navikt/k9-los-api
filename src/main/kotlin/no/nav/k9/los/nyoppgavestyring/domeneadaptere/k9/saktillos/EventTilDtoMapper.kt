@@ -172,7 +172,10 @@ class EventTilDtoMapper {
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "mottattDato",
-                verdi = event.eldsteDatoMedEndringFraSøker.toString()
+                verdi = event.eldsteDatoMedEndringFraSøker?.toString()
+                    ?: forrigeOppgave?.hentVerdi("mottattDato")
+                    ?: forrigeOppgave?.hentVerdi("registrertDato")
+                    ?: event.opprettetBehandling.toString()
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "registrertDato",
