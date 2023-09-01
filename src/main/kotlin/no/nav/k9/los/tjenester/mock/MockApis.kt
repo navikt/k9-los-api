@@ -198,6 +198,7 @@ fun Route.MockGrensesnitt() {
                     aksjonspunktKoderMedStatusListe = mutableMapOf(aksjonspunktToggle.kode to "OPPR"),
                     behandlingSteg = "",
                     opprettetBehandling = LocalDateTime.now(),
+                    eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
                     behandlingTypeKode = "BT-004",
                     ytelseTypeKode = "OMP",
                     aksjonspunktTilstander = emptyList()
@@ -220,6 +221,7 @@ fun Route.MockGrensesnitt() {
                     aksjonspunktKoderMedStatusListe = sisteEvent.aksjonspunktKoderMedStatusListe,
                     behandlingSteg = "",
                     opprettetBehandling = LocalDateTime.now(),
+                    eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
                     behandlingTypeKode = "BT-004",
                     ytelseTypeKode = sisteEvent.ytelseTypeKode,
                     aksjonspunktTilstander = emptyList()
@@ -251,6 +253,7 @@ fun Route.MockGrensesnitt() {
                     aksjonspunktKoderMedStatusListe = mutableMapOf(AksjonspunktDefinisjon.AVKLAR_OPPHOLDSRETT.kode to "OPPR"),
                     behandlingSteg = "",
                     opprettetBehandling = LocalDateTime.now(),
+                    eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
                     behandlingTypeKode = "BT-004",
                     ytelseTypeKode = "OMP",
                     aksjonspunktTilstander = emptyList() // TODO skal være lik aksjonspunktKoderMedStatus

@@ -117,6 +117,7 @@ class BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
             ytelseTypeKode = fagsakYtelseType.kode,
             behandlingTypeKode = BehandlingType.FORSTEGANGSSOKNAD.kode,
             opprettetBehandling = LocalDateTime.now(),
+            eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
             aksjonspunktKoderMedStatusListe = emptyMap<String, String>().toMutableMap(),
             aksjonspunktTilstander = emptyList()
         )

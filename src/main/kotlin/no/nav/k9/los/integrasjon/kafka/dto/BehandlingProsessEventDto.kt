@@ -62,6 +62,13 @@ data class BehandlingProsessEventDto(
     val opprettetBehandling: LocalDateTime,
 
     /**
+     * Tidspunkt NAV har mottatt dokument som instigerte behandlingen
+     */
+    @JsonSerialize(using = ToStringSerializer::class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer::class)
+    val eldsteDatoMedEndringFraSøker: LocalDateTime,
+
+    /**
      * Map av aksjonspunktkode og statuskode.
      */
     @Deprecated("bruk aksjonspunktTilstander")

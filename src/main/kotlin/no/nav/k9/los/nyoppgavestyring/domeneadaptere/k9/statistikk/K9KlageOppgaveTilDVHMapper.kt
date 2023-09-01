@@ -57,10 +57,10 @@ class K9KlageOppgaveTilDVHMapper {
     }
 
     private fun utledBehandlingStatus(oppgave: Oppgave): String {
-        if (oppgave.hentListeverdi("aktivtAksjonspunkt").contains("AUTO_OVERFØRT_NK")) {
-            return "OVERFORT_KLAGE_ANKE"
+        return if (oppgave.hentListeverdi("aktivtAksjonspunkt").contains("AUTO_OVERFØRT_NK")) {
+            "OVERFORT_KLAGE_ANKE"
         } else {
-            return BehandlingStatus.fraKode(oppgave.hentVerdi("behandlingsstatus")).kode
+            BehandlingStatus.fraKode(oppgave.hentVerdi("behandlingsstatus")).kode
         }
     }
 
