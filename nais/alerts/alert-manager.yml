@@ -20,35 +20,35 @@ spec:
           httpConfig:
             proxyURL: http://webproxy.nais:8088
           title: |-
-            [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .CommonLabels.alertname }}
+            [\{{ .Status | toUpper }}\{{ if eq .Status "firing" }}:\{{ .Alerts.Firing | len }}\{{ end }}] \{{ .CommonLabels.alertname }}
           text: |-
-            {{ range .Alerts -}}
-            *Alert:* {{ .Annotations.title }}{{ if .Labels.severity }} - `{{ .Labels.severity }}`{{ end }}
-            *Summary:* {{ .Annotations.summary }}
-            *Description:* {{ .Annotations.description }} <https://logs.adeo.no/app/discover#/?_g=(time:(from:now-24h,to:now))&_a=(columns:!(message,envclass,level),index:'96e648c0-980a-11e9-830a-e17bbd64b4db',interval:auto,query:(language:lucene,query:'%2Bapplication:%22k9-los-api%22%20%2Bcluster:{{ cluster }}%20%2Blevel:Error'))|kibana>
-            {{ end }}
+            \{{ range .Alerts -}}
+            *Alert:* \{{ .Annotations.title }}\{{ if .Labels.severity }} - `\{{ .Labels.severity }}`\{{ end }}
+            *Summary:* \{{ .Annotations.summary }}
+            *Description:* \{{ .Annotations.description }} <https://logs.adeo.no/app/discover#/?_g=(time:(from:now-24h,to:now))&_a=(columns:!(message,envclass,level),index:'96e648c0-980a-11e9-830a-e17bbd64b4db',interval:auto,query:(language:lucene,query:'%2Bapplication:%22k9-los-api%22%20%2Bcluster:{{ cluster }}%20%2Blevel:Error'))|kibana>
+            \{{ end }}
           color: |-
-            {{ if eq .Status "firing" -}}
-              {{ if eq .CommonLabels.severity "warning" -}}
+            \{{ if eq .Status "firing" -}}
+              \{{ if eq .CommonLabels.severity "warning" -}}
                 warning
-              {{- else if eq .CommonLabels.severity "fatal" -}}
+              \{{- else if eq .CommonLabels.severity "fatal" -}}
                 #611f69
-              {{- else if eq .CommonLabels.severity "critical" -}}
+              \{{- else if eq .CommonLabels.severity "critical" -}}
                 #611f69
-              {{- else if eq .CommonLabels.severity "danger" -}}
+              \{{- else if eq .CommonLabels.severity "danger" -}}
                 danger
-              {{- else if eq .CommonLabels.severity "error" -}}
+              \{{- else if eq .CommonLabels.severity "error" -}}
                 danger
-              {{- else if eq .CommonLabels.severity "notice" -}}
+              \{{- else if eq .CommonLabels.severity "notice" -}}
                 good
-              {{- else if eq .CommonLabels.severity "info" -}}
+              \{{- else if eq .CommonLabels.severity "info" -}}
                 #36c5f0
-              {{- else -}}
+              \{{- else -}}
                 .CommonLabels.severity
-              {{- end -}}
-            {{ else -}}
+              \{{- end -}}
+            \{{ else -}}
             good
-            {{- end }}
+            \{{- end }}
   route:
     groupBy:
       - alertname
