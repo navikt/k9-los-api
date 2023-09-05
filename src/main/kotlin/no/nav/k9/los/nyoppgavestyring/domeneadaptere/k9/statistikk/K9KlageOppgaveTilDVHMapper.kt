@@ -26,12 +26,12 @@ class K9KlageOppgaveTilDVHMapper {
             registrertDato = LocalDateTime.parse(oppgave.hentVerdi("registrertDato")).toLocalDate(),
             vedtaksDato = oppgave.hentVerdi("vedtaksDato")
                 ?.let { LocalDate.parse(it) },
-            relatertBehandlingId = null,
+            relatertBehandlingId = oppgave.hentVerdi("påklagdBehandlingUuid"),
             vedtakId = oppgave.hentVerdi("vedtakId"), //TODO: callback mot K9? evt vedtakstopic, YtelseV1.vedtakReferanse
             saksnummer = oppgave.hentVerdi("saksnummer"),
             behandlingType = oppgave.hentVerdi("behandlingTypekode")
                 ?.let { BehandlingType.fraKode(it).kode },
-            behandlingStatus = BehandlingStatus.fraKode(oppgave.hentVerdi("behandlingsstatus")).kode,
+            behandlingStatus = utledBehandlingStatus(oppgave),
             resultat = oppgave.hentVerdi("resultattype"),
             resultatBegrunnelse = null, //TODO: callback mot K9?
             utenlandstilsnitt = null, //Ikke i bruk i k9-klage
@@ -54,6 +54,14 @@ class K9KlageOppgaveTilDVHMapper {
             avsender = "K9klage",
             versjon = 1, //TODO: Ikke i bruk?
         )
+    }
+
+    private fun utledBehandlingStatus(oppgave: Oppgave): String {
+        return if (oppgave.hentListeverdi("aktivtAksjonspunkt").contains("AUTO_OVERFØRT_NK")) {
+            "OVERFORT_KLAGE_ANKE"
+        } else {
+            BehandlingStatus.fraKode(oppgave.hentVerdi("behandlingsstatus")).kode
+        }
     }
 
     fun lagSak(oppgave: Oppgave): Sak {
