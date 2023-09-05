@@ -99,10 +99,10 @@ fun Application.k9Los() {
     val k9KlageTilLosAdapterTjeneste = koin.get<K9KlageTilLosAdapterTjeneste>()
     k9KlageTilLosAdapterTjeneste.setup()
 
-    if (LocalDateTime.now().isBefore(LocalDateTime.of(2023, 7, 12, 19, 0))) {
-        koin.get<K9SakTilLosLukkeFeiloppgaverTjeneste>().kjørFeiloppgaverVask()
-        //koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
-        //koin.get<K9KlageTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
+    if (LocalDateTime.now().isBefore(LocalDateTime.of(2023, 9, 5, 19, 0))) {
+        //koin.get<K9SakTilLosLukkeFeiloppgaverTjeneste>().kjørFeiloppgaverVask()
+        koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
+        koin.get<K9KlageTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
     }
 
     install(Authentication) {
