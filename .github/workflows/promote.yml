@@ -9,6 +9,9 @@ env:
 jobs:
   promote:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
     steps:
 
       - name: Henter informasjon fra issuet
