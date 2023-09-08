@@ -8,6 +8,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
 import no.nav.k9.los.Configuration
+import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import no.nav.k9.los.integrasjon.rest.NavHeaders
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.BehandlingMedFagsakDto
@@ -48,11 +49,20 @@ class K9SakBerikerKlient(
                 success
             },
             { error ->
+                val feiltekst = error.response.body().asString("text/plain")
+                val ignorerManglendeTilgangPgaUtdatertTestdata = configuration.koinProfile == KoinProfile.PREPROD
+                        && feiltekst.contains("MANGLER_TILGANG_FEIL")
+
                 log.error(
-                    "Error response = '${error.response.body().asString("text/plain")}' fra '${httpRequest.url}'"
+                    (if(ignorerManglendeTilgangPgaUtdatertTestdata) "IGNORERER I DEV: " else "") +
+                            "Error response = '$feiltekst' fra '${httpRequest.url}'"
                 )
                 log.error(error.toString())
-                throw IllegalStateException("Feil ved henting av behandling fra k9-sak")
+
+                if (ignorerManglendeTilgangPgaUtdatertTestdata) {
+                    return null
+                } else throw IllegalStateException("Feil ved henting av behandling fra k9-sak")
+
             }
         )
 
