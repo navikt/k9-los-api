@@ -2,17 +2,17 @@ package no.nav.k9.los
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import com.fasterxml.jackson.databind.SerializationFeature
+import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.http.content.*
-import io.ktor.serialization.jackson.*
 import io.ktor.server.locations.*
 import io.ktor.server.metrics.micrometer.*
-import io.ktor.server.routing.*
-import io.ktor.server.plugins.callid.CallId
-import io.ktor.server.plugins.callloging.CallLogging
-import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.plugins.callid.*
+import io.ktor.server.plugins.callloging.*
+import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.prometheus.client.hotspot.DefaultExports
 import kotlinx.coroutines.channels.BroadcastChannel
@@ -36,7 +36,6 @@ import no.nav.k9.los.eventhandler.sjekkReserverteJobb
 import no.nav.k9.los.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.los.integrasjon.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
-import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoApis
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosApi
@@ -46,7 +45,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.Oppgavestatis
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosLukkeFeiloppgaverTjeneste
+import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoApis
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonApi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Api
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeApi
@@ -99,7 +98,7 @@ fun Application.k9Los() {
     val k9KlageTilLosAdapterTjeneste = koin.get<K9KlageTilLosAdapterTjeneste>()
     k9KlageTilLosAdapterTjeneste.setup()
 
-    if (LocalDateTime.now().isBefore(LocalDateTime.of(2023, 9, 5, 19, 0))) {
+    if (LocalDateTime.now().isBefore(LocalDateTime.of(2023, 9, 8, 19, 0))) {
         //koin.get<K9SakTilLosLukkeFeiloppgaverTjeneste>().kjørFeiloppgaverVask()
         koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
         koin.get<K9KlageTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
