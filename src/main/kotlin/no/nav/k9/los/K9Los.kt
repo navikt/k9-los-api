@@ -101,7 +101,7 @@ fun Application.k9Los() {
     if (LocalDateTime.now().isBefore(LocalDateTime.of(2023, 9, 8, 19, 0))) {
         //koin.get<K9SakTilLosLukkeFeiloppgaverTjeneste>().kjørFeiloppgaverVask()
         koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
-        koin.get<K9KlageTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
+        //koin.get<K9KlageTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
     }
 
     install(Authentication) {
