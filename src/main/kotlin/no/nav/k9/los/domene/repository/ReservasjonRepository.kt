@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.atomic.LongAdder
 import javax.sql.DataSource
+import kotlin.system.measureTimeMillis
 
 class ReservasjonRepository(
     private val oppgaveKøRepository: OppgaveKøRepository,
@@ -27,6 +28,9 @@ class ReservasjonRepository(
     private val dataSource: DataSource,
     private val refreshKlienter: Channel<SseEvent>
 ) {
+    companion object {
+        val RESERVASJON_YTELSE_LOG = LoggerFactory.getLogger("ReservasjonYtelseDebug")
+    }
     private val log: Logger = LoggerFactory.getLogger(ReservasjonRepository::class.java)
 
     suspend fun hent(saksbehandlersIdent: String): List<Reservasjon> {
@@ -38,9 +42,16 @@ class ReservasjonRepository(
     }
 
     suspend fun hent(reservasjoner: Set<UUID>): List<Reservasjon> {
-        return fjernReservasjonerSomIkkeLengerErAktive(
-            hentReservasjoner(reservasjoner)
-        )
+        var fjernede: List<Reservasjon>
+
+        val tid = measureTimeMillis {
+            fjernede = fjernReservasjonerSomIkkeLengerErAktive(
+                hentReservasjoner(reservasjoner)
+            )
+        }
+
+        RESERVASJON_YTELSE_LOG.info("henting og fjerning av {} reservasjoner tok {} ms", reservasjoner.size, tid)
+        return fjernede
     }
 
     fun hentSelvOmDeIkkeErAktive(reservasjoner: Set<UUID>): List<Reservasjon> {
@@ -169,7 +180,11 @@ class ReservasjonRepository(
         var reservasjon: Reservasjon? = null
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
-                reservasjon = lagreReservasjon(tx, uuid, refresh, f)
+                val tid = measureTimeMillis {
+                    reservasjon = lagreReservasjon(tx, uuid, refresh, f)
+                }
+                RESERVASJON_YTELSE_LOG.info("lagring av reservasjon tok {} ms", tid)
+                reservasjon
             }
         }
         Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
@@ -229,8 +244,11 @@ class ReservasjonRepository(
             ).asUpdate
         )
         if (refresh && forrigeReservasjon != json) {
-            loggFjerningAvReservasjon(reservasjon, forrigeReservasjon)
-            runBlocking { refreshKlienter.sendOppdaterReserverte() }
+            val refreshTid = measureTimeMillis {
+                loggFjerningAvReservasjon(reservasjon, forrigeReservasjon)
+                runBlocking { refreshKlienter.sendOppdaterReserverte() }
+            }
+            RESERVASJON_YTELSE_LOG.info("refresh av reservasjoner tok {}", refreshTid)
         }
 
         return reservasjon
