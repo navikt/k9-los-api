@@ -180,11 +180,7 @@ class ReservasjonRepository(
         var reservasjon: Reservasjon? = null
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
-                val tid = measureTimeMillis {
-                    reservasjon = lagreReservasjon(tx, uuid, refresh, f)
-                }
-                RESERVASJON_YTELSE_LOG.info("lagring av reservasjon tok {} ms", tid)
-                reservasjon
+                reservasjon = lagreReservasjon(tx, uuid, refresh, f)
             }
         }
         Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
