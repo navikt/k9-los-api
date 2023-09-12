@@ -67,12 +67,12 @@ class OppgaveTjeneste constructor(
                 oppgaver = oppgaveRepository.hentOppgaver(oppgaveKø.oppgaverOgDatoer.map { it.id })
                     .sortedBy {
                     it.aksjonspunkter.beslutterAp()?.opprettetTidspunkt ?: it.behandlingOpprettet
-                }.take(20)
+                }
             }
 
             ReservasjonRepository.RESERVASJON_YTELSE_LOG
                 .info("sortering av beslutterkø med {} oppgaver tok {} ms", oppgaver.size, tid)
-            return oppgaver
+            return oppgaver.take(20)
         }
 
         if (oppgaveKø.sortering == KøSortering.FEILUTBETALT) {
