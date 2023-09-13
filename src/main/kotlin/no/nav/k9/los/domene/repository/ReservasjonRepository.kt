@@ -96,13 +96,14 @@ class ReservasjonRepository(
     private suspend fun fjernInaktivReservasjon(
         reservasjon: Reservasjon,
         oppgaveKøer: List<OppgaveKø>
-    ) {
+    ): Int {
         lagre(reservasjon.oppgave) {
             it!!.reservertTil = null
             it
         }
         saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
         val oppgave = oppgaveRepository.hent(reservasjon.oppgave)
+        var fjernetFraAntallKøer = 0
         oppgaveKøer.forEach { oppgaveKø ->
             if (oppgaveKø.leggOppgaveTilEllerFjernFraKø(
                     oppgave,
@@ -118,8 +119,11 @@ class ReservasjonRepository(
                     )
                     it
                 }
+                fjernetFraAntallKøer++
+
             }
         }
+        return fjernetFraAntallKøer
     }
 
     private fun fjernReservasjonPåInaktivOppgave(reservasjon: Reservasjon) {
@@ -140,14 +144,16 @@ class ReservasjonRepository(
     private suspend fun fjernReservasjonerSomIkkeLengerErAktive2(reservasjoner: List<Reservasjon>): List<Reservasjon> {
         val reservasjonPrAktive = reservasjoner.groupBy { it.erAktiv() }
         val inaktive = reservasjonPrAktive[false] ?: emptyList()
+        var totalAntallFjerninger = 0
         if (inaktive.isNotEmpty()) {
             val oppgaveKøer = oppgaveKøRepository.hentIkkeTaHensyn()
             val tid = measureTimeMillis {
                 inaktive.forEach { reservasjon ->
-                    fjernInaktivReservasjon(reservasjon, oppgaveKøer)
+                    totalAntallFjerninger += fjernInaktivReservasjon(reservasjon, oppgaveKøer)
+
                 }
             }
-            RESERVASJON_YTELSE_LOG.info("fjerning av {} inaktive reservasjoner fra potensielle {} køer tok {} ms", inaktive.size, oppgaveKøer.size, tid)
+            RESERVASJON_YTELSE_LOG.info("{} fjerninger av {} inaktive reservasjoner fra potensielle {} køer tok {} ms", totalAntallFjerninger, inaktive.size, oppgaveKøer.size, tid)
         }
 
         val aktive = reservasjonPrAktive[true] ?: emptyList()
