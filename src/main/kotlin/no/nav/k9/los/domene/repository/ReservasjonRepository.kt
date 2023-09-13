@@ -119,7 +119,7 @@ class ReservasjonRepository(
                     )
                     it
                 }
-                fjernetFraAntallKøer++
+                fjernetFraAntallKøer += 1
 
             }
         }
