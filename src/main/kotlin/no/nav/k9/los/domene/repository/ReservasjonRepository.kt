@@ -10,6 +10,7 @@ import kotliquery.using
 import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import no.nav.k9.los.domene.lager.oppgave.Reservasjon
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
+import no.nav.k9.los.domene.modell.OppgaveKø
 import no.nav.k9.los.tjenester.innsikt.Databasekall
 import no.nav.k9.los.tjenester.sse.RefreshKlienter.sendOppdaterReserverte
 import no.nav.k9.los.tjenester.sse.SseEvent
@@ -45,7 +46,7 @@ class ReservasjonRepository(
         var fjernede: List<Reservasjon>
 
         val tid = measureTimeMillis {
-            fjernede = fjernReservasjonerSomIkkeLengerErAktive(
+            fjernede = fjernReservasjonerSomIkkeLengerErAktive2(
                 hentReservasjoner(reservasjoner)
             )
         }
@@ -79,48 +80,81 @@ class ReservasjonRepository(
 
         return json.map { s -> objectMapper().readValue(s, Reservasjon::class.java) }.toList()
     }
-
     private suspend fun fjernReservasjonerSomIkkeLengerErAktive(reservasjoner: List<Reservasjon>): List<Reservasjon> {
         reservasjoner.forEach { reservasjon ->
 
             if (!reservasjon.erAktiv()) {
+                fjernInaktivReservasjon(reservasjon, oppgaveKøRepository.hentIkkeTaHensyn())
+            } else {
+                fjernReservasjonPåInaktivOppgave(reservasjon)
+            }
+        }
+
+        return reservasjoner.filter { it.erAktiv() }
+    }
+
+    private suspend fun fjernInaktivReservasjon(
+        reservasjon: Reservasjon,
+        oppgaveKøer: List<OppgaveKø>
+    ) {
+        lagre(reservasjon.oppgave) {
+            it!!.reservertTil = null
+            it
+        }
+        saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
+        val oppgave = oppgaveRepository.hent(reservasjon.oppgave)
+        oppgaveKøer.forEach { oppgaveKø ->
+            if (oppgaveKø.leggOppgaveTilEllerFjernFraKø(
+                    oppgave,
+                    this,
+                    oppgaveRepositoryV2.hentMerknader(reservasjon.oppgave.toString())
+                )
+            ) {
+                oppgaveKøRepository.lagreIkkeTaHensyn(oppgaveKø.id) {
+                    it!!.leggOppgaveTilEllerFjernFraKø(
+                        oppgave = oppgave,
+                        reservasjonRepository = this,
+                        merknader = oppgaveRepositoryV2.hentMerknader(reservasjon.oppgave.toString())
+                    )
+                    it
+                }
+            }
+        }
+    }
+
+    private fun fjernReservasjonPåInaktivOppgave(reservasjon: Reservasjon) {
+        val oppgave = oppgaveRepository.hentHvis(reservasjon.oppgave)
+        if (oppgave != null) {
+            if (!oppgave.aktiv) {
                 lagre(reservasjon.oppgave) {
                     it!!.reservertTil = null
                     it
                 }
                 saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
-                val oppgave = oppgaveRepository.hent(reservasjon.oppgave)
-                oppgaveKøRepository.hentIkkeTaHensyn().forEach { oppgaveKø ->
-                    if (oppgaveKø.leggOppgaveTilEllerFjernFraKø(
-                            oppgave,
-                            this,
-                            oppgaveRepositoryV2.hentMerknader(reservasjon.oppgave.toString())
-                        )) {
-                        oppgaveKøRepository.lagreIkkeTaHensyn(oppgaveKø.id) {
-                            it!!.leggOppgaveTilEllerFjernFraKø(
-                                oppgave = oppgave,
-                                reservasjonRepository = this,
-                                merknader = oppgaveRepositoryV2.hentMerknader(reservasjon.oppgave.toString())
-                            )
-                            it
-                        }
-                    }
-                }
-            } else {
-                val oppgave = oppgaveRepository.hentHvis(reservasjon.oppgave)
-                if (oppgave != null) {
-                    if (!oppgave.aktiv) {
-                        lagre(reservasjon.oppgave) {
-                            it!!.reservertTil = null
-                            it
-                        }
-                        saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
-                    }
-                } else {
-                    saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
+            }
+        } else {
+            saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
+        }
+    }
+
+    private suspend fun fjernReservasjonerSomIkkeLengerErAktive2(reservasjoner: List<Reservasjon>): List<Reservasjon> {
+        val reservasjonPrAktive = reservasjoner.groupBy { it.erAktiv() }
+        val inaktive = reservasjonPrAktive[false] ?: emptyList()
+        if (inaktive.isNotEmpty()) {
+            val oppgaveKøer = oppgaveKøRepository.hentIkkeTaHensyn()
+            val tid = measureTimeMillis {
+                inaktive.forEach { reservasjon ->
+                    fjernInaktivReservasjon(reservasjon, oppgaveKøer)
                 }
             }
+            RESERVASJON_YTELSE_LOG.info("fjerning av {} inaktive reservasjoner fra potensielle {} køer tok {} ms", inaktive.size, oppgaveKøer.size, tid)
         }
+
+        val aktive = reservasjonPrAktive[true] ?: emptyList()
+        aktive.forEach { reservasjon ->
+            fjernReservasjonPåInaktivOppgave(reservasjon)
+        }
+
 
         return reservasjoner.filter { it.erAktiv() }
     }
