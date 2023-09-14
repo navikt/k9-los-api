@@ -1,12 +1,9 @@
 package no.nav.k9.los.tjenester.innsikt
 
-import io.ktor.server.application.call
-import io.ktor.server.html.respondHtml
-import io.ktor.server.locations.Location
-import io.ktor.server.locations.get
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.get
-import io.ktor.server.routing.route
+import io.ktor.server.application.*
+import io.ktor.server.html.*
+import io.ktor.server.locations.*
+import io.ktor.server.routing.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.html.*
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
@@ -176,7 +173,7 @@ fun Route.innsiktGrensesnitt() {
         oppgaver.forEach { oppgave ->
             div {
                 classes = setOf("input-group-text display-4")
-                +"sisteEvent=${oppgave.eventTid} opprettet=${oppgave.behandlingOpprettet} BId=${oppgave.eksternId} saksnummer=${oppgave.fagsakSaksnummer}"
+                +"sisteEvent=${oppgave.eventTid},opprettet=${oppgave.behandlingOpprettet},BId=${oppgave.eksternId},saksnummer=${oppgave.fagsakSaksnummer},journalpostId=${oppgave.journalpostId},stønadsType=${oppgave.fagsakYtelseType},behandlingsType=${oppgave.behandlingType}"
             }
         }
 

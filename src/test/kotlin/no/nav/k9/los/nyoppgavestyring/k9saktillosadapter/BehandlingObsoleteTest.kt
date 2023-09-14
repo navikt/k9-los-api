@@ -113,11 +113,11 @@ class BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
             eventTid = LocalDateTime.now(),
             eventHendelse = EventHendelse.BEHANDLINGSKONTROLL_EVENT,
             behandlingStatus = behandlingStatus.kode,
-            behandlinStatus = no.nav.k9.los.domene.modell.BehandlingStatus.UTREDES.kode,
             behandlingSteg = BehandlingStegType.INNHENT_REGISTEROPP.kode,
             ytelseTypeKode = fagsakYtelseType.kode,
             behandlingTypeKode = BehandlingType.FORSTEGANGSSOKNAD.kode,
             opprettetBehandling = LocalDateTime.now(),
+            eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
             aksjonspunktKoderMedStatusListe = emptyMap<String, String>().toMutableMap(),
             aksjonspunktTilstander = emptyList()
         )

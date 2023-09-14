@@ -62,11 +62,17 @@ class OppgaveTjeneste constructor(
 
     private fun sorterOgHent(oppgaveKø: OppgaveKø): List<Oppgave> {
         if (oppgaveKø.beslutterKø()) {
-            val oppgaver = oppgaveRepository.hentOppgaver(oppgaveKø.oppgaverOgDatoer.map { it.id })
-            return oppgaver.sortedBy {
-                it.aksjonspunkter.beslutterAp()?.opprettetTidspunkt ?: it.behandlingOpprettet
-            }.take(20)
+            val oppgaver: List<Oppgave>
+            val tid = measureTimeMillis {
+                oppgaver = oppgaveRepository.hentOppgaver(oppgaveKø.oppgaverOgDatoer.map { it.id })
+                    .sortedBy {
+                    it.aksjonspunkter.beslutterAp()?.opprettetTidspunkt ?: it.behandlingOpprettet
+                }
+            }
 
+            ReservasjonRepository.RESERVASJON_YTELSE_LOG
+                .info("sortering av beslutterkø med {} oppgaver tok {} ms", oppgaver.size, tid)
+            return oppgaver.take(20)
         }
 
         if (oppgaveKø.sortering == KøSortering.FEILUTBETALT) {

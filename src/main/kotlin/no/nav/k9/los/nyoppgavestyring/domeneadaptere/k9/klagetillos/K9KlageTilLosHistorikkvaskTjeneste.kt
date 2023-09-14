@@ -80,6 +80,7 @@ class K9KlageTilLosHistorikkvaskTjeneste(
         log.info("Historikkvask k9klage ferdig")
 
         behandlingProsessEventKlageRepository.nullstillHistorikkvask()
+        log.info("Nullstilt historikkvaskmarkering k9-klage")
     }
 
     private fun vaskOppgaveForBehandlingUUID(uuid: UUID, eventTellerInn: Long): Long {

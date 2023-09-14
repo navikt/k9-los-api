@@ -36,11 +36,11 @@ class K9SakModellTest {
             eventTid = LocalDateTime.now(),
             eventHendelse = EventHendelse.BEHANDLINGSKONTROLL_EVENT,
             behandlingStatus = BehandlingStatus.UTREDES.kode,
-            behandlinStatus = BehandlingStatus.UTREDES.kode,
             behandlingSteg = BehandlingStegType.INNHENT_REGISTEROPP.kode,
             ytelseTypeKode = FagsakYtelseType.OMSORGSPENGER.kode,
             behandlingTypeKode = BehandlingType.FORSTEGANGSSOKNAD.kode,
             opprettetBehandling = LocalDateTime.now(),
+            eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
             aksjonspunktKoderMedStatusListe = mutableMapOf(),
             aksjonspunktTilstander = emptyList()
         )
@@ -80,11 +80,11 @@ class K9SakModellTest {
             eventTid = LocalDateTime.now(),
             eventHendelse = EventHendelse.BEHANDLINGSKONTROLL_EVENT,
             behandlingStatus = BehandlingStatus.UTREDES.kode,
-            behandlinStatus = BehandlingStatus.UTREDES.kode,
             behandlingSteg = BehandlingStegType.INNHENT_REGISTEROPP.kode,
             ytelseTypeKode = FagsakYtelseType.OMSORGSPENGER.kode,
             behandlingTypeKode = BehandlingType.FORSTEGANGSSOKNAD.kode,
             opprettetBehandling = LocalDateTime.now(),
+            eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
             aksjonspunktKoderMedStatusListe = mutableMapOf(AksjonspunktDefinisjon.FATTER_VEDTAK.kode to AksjonspunktStatus.OPPRETTET.kode),
             aksjonspunktTilstander = emptyList()
         )
@@ -111,11 +111,11 @@ class K9SakModellTest {
             eventTid = LocalDateTime.now(),
             eventHendelse = EventHendelse.BEHANDLINGSKONTROLL_EVENT,
             behandlingStatus = BehandlingStatus.UTREDES.kode,
-            behandlinStatus = BehandlingStatus.UTREDES.kode,
             behandlingSteg = BehandlingStegType.INNHENT_REGISTEROPP.kode,
             ytelseTypeKode = FagsakYtelseType.OMSORGSPENGER.kode,
             behandlingTypeKode = BehandlingType.FORSTEGANGSSOKNAD.kode,
             opprettetBehandling = LocalDateTime.now(),
+            eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
             aksjonspunktKoderMedStatusListe = mutableMapOf(AksjonspunktDefinisjon.FATTER_VEDTAK.kode to AksjonspunktStatus.UTFØRT.kode),
             aksjonspunktTilstander = emptyList()
         )
@@ -143,11 +143,11 @@ class K9SakModellTest {
             eventTid = LocalDateTime.now(),
             eventHendelse = EventHendelse.BEHANDLINGSKONTROLL_EVENT,
             behandlingStatus = BehandlingStatus.UTREDES.kode,
-            behandlinStatus = BehandlingStatus.UTREDES.kode,
             behandlingSteg = BehandlingStegType.INNHENT_REGISTEROPP.kode,
             ytelseTypeKode = FagsakYtelseType.OMSORGSPENGER.kode,
             behandlingTypeKode = BehandlingType.FORSTEGANGSSOKNAD.kode,
             opprettetBehandling = LocalDateTime.now(),
+            eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
             aksjonspunktKoderMedStatusListe = mutableMapOf(AksjonspunktDefinisjon.FATTER_VEDTAK.kode to AksjonspunktStatus.AVBRUTT.kode),
             aksjonspunktTilstander = emptyList()
         )
@@ -174,11 +174,11 @@ class K9SakModellTest {
             eventTid = LocalDateTime.now(),
             eventHendelse = EventHendelse.BEHANDLINGSKONTROLL_EVENT,
             behandlingStatus = BehandlingStatus.UTREDES.kode,
-            behandlinStatus = BehandlingStatus.UTREDES.kode,
             behandlingSteg = BehandlingStegType.INNHENT_REGISTEROPP.kode,
             ytelseTypeKode = FagsakYtelseType.OMSORGSPENGER.kode,
             behandlingTypeKode = BehandlingType.FORSTEGANGSSOKNAD.kode,
             opprettetBehandling = LocalDateTime.now(),
+            eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
             aksjonspunktKoderMedStatusListe = mutableMapOf(AksjonspunktKodeDefinisjon.AUTOMATISK_MARKERING_AV_UTENLANDSSAK_KODE to AksjonspunktStatus.OPPRETTET.kode),
             aksjonspunktTilstander = emptyList()
         )
@@ -205,11 +205,11 @@ class K9SakModellTest {
             eventTid = LocalDateTime.now(),
             eventHendelse = EventHendelse.BEHANDLINGSKONTROLL_EVENT,
             behandlingStatus = BehandlingStatus.UTREDES.kode,
-            behandlinStatus = BehandlingStatus.UTREDES.kode,
             behandlingSteg = BehandlingStegType.INNHENT_REGISTEROPP.kode,
             ytelseTypeKode = FagsakYtelseType.OMSORGSPENGER.kode,
             behandlingTypeKode = BehandlingType.FORSTEGANGSSOKNAD.kode,
             opprettetBehandling = LocalDateTime.now(),
+            eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
             aksjonspunktKoderMedStatusListe = mutableMapOf(AksjonspunktKodeDefinisjon.MANUELL_MARKERING_AV_UTLAND_SAKSTYPE_KODE to AksjonspunktStatus.OPPRETTET.kode),
             aksjonspunktTilstander = emptyList()
         )
@@ -237,11 +237,11 @@ class K9SakModellTest {
             eventTid = LocalDateTime.now(),
             eventHendelse = EventHendelse.BEHANDLINGSKONTROLL_EVENT,
             behandlingStatus = BehandlingStatus.UTREDES.kode,
-            behandlinStatus = BehandlingStatus.UTREDES.kode,
             behandlingSteg = BehandlingStegType.INNHENT_REGISTEROPP.kode,
             ytelseTypeKode = FagsakYtelseType.OMSORGSPENGER.kode,
             behandlingTypeKode = BehandlingType.FORSTEGANGSSOKNAD.kode,
             opprettetBehandling = LocalDateTime.now(),
+            eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
             aksjonspunktKoderMedStatusListe = mutableMapOf(AksjonspunktKodeDefinisjon.VURDER_ÅRSKVANTUM_KVOTE to AksjonspunktStatus.OPPRETTET.kode),
             aksjonspunktTilstander = emptyList()
         )
@@ -268,11 +268,11 @@ class K9SakModellTest {
             eventTid = LocalDateTime.now(),
             eventHendelse = EventHendelse.BEHANDLINGSKONTROLL_EVENT,
             behandlingStatus = BehandlingStatus.UTREDES.kode,
-            behandlinStatus = BehandlingStatus.UTREDES.kode,
             behandlingSteg = BehandlingStegType.INNHENT_REGISTEROPP.kode,
             ytelseTypeKode = FagsakYtelseType.OMSORGSPENGER.kode,
             behandlingTypeKode = BehandlingType.FORSTEGANGSSOKNAD.kode,
             opprettetBehandling = LocalDateTime.now(),
+            eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
             aksjonspunktKoderMedStatusListe = mutableMapOf(AksjonspunktKodeDefinisjon.AVKLAR_FORTSATT_MEDLEMSKAP_KODE to AksjonspunktStatus.OPPRETTET.kode),
             aksjonspunktTilstander = emptyList()
         )
@@ -544,11 +544,11 @@ class K9SakModellReservasjonTestV3 {
             eventTid = LocalDateTime.now(),
             eventHendelse = EventHendelse.BEHANDLINGSKONTROLL_EVENT,
             behandlingStatus = BehandlingStatus.UTREDES.kode,
-            behandlinStatus = BehandlingStatus.UTREDES.kode,
             behandlingSteg = BehandlingStegType.INNHENT_REGISTEROPP.kode,
             ytelseTypeKode = fagsakYtelseType.kode,
             behandlingTypeKode = BehandlingType.FORSTEGANGSSOKNAD.kode,
             opprettetBehandling = LocalDateTime.now(),
+            eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
             aksjonspunktKoderMedStatusListe = aksjonspunkter.toMutableMap(),
             aksjonspunktTilstander = aksjonspunkter.tilAksjonspunktTilstandDtoer()
         )

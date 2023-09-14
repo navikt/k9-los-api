@@ -1,5 +1,6 @@
 package no.nav.k9.los.integrasjon.kafka.dto
 
+import com.fasterxml.jackson.annotation.JsonAlias
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer
@@ -36,8 +37,9 @@ data class BehandlingProsessEventDto(
     @JsonDeserialize(using = LocalDateTimeDeserializer::class)
     val eventTid: LocalDateTime,
     val eventHendelse: EventHendelse,
+
+    @JsonAlias("behandlinStatus")
     val behandlingStatus: String?,
-    val behandlinStatus: String?,
     val behandlingSteg: String?,
     val behandlendeEnhet: String? = null,
     val resultatType: String? = null,
@@ -58,6 +60,13 @@ data class BehandlingProsessEventDto(
     @JsonSerialize(using = ToStringSerializer::class)
     @JsonDeserialize(using = LocalDateTimeDeserializer::class)
     val opprettetBehandling: LocalDateTime,
+
+    /**
+     * Tidspunkt NAV har mottatt dokument som instigerte behandlingen
+     */
+    @JsonSerialize(using = ToStringSerializer::class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer::class)
+    val eldsteDatoMedEndringFraSøker: LocalDateTime?,
 
     /**
      * Map av aksjonspunktkode og statuskode.
@@ -91,7 +100,6 @@ data class BehandlingProsessEventDto(
             eventTid=$eventTid, 
             eventHendelse=$eventHendelse, 
             behandlingStatus=$behandlingStatus, 
-            behandlinStatus=$behandlinStatus, 
             behandlingSteg=$behandlingSteg, 
             behandlendeEnhet=$behandlendeEnhet, 
             resultatType=$resultatType, 
