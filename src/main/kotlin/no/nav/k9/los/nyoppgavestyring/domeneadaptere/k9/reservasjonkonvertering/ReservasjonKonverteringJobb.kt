@@ -57,6 +57,9 @@ class ReservasjonKonverteringJobb(
         reservasjonIder.forEach { gammelReservasjonUuid ->
             val reservasjonV1 = reservasjonRepository.hent(gammelReservasjonUuid)
             //TODO filtrer bort gamle og/eller ugyldige reservasjoner?
+            if (reservasjonV1.reservertTil == null) {
+                return //Logisk slettet reservasjon. Migreres ikke
+            }
             val oppgaveV1 = oppgaveRepository.hent(reservasjonV1.oppgave)
             transactionalManager.transaction { tx ->
                 val gammelReservasjon = reservasjonRepository.hentSisteReservasjonMedLås(gammelReservasjonUuid, tx)
@@ -101,10 +104,6 @@ class ReservasjonKonverteringJobb(
         oppgaveEksternId: String,
         gammelReservasjon: Reservasjon
     ) {
-        if (gammelReservasjon.reservertTil == null) {
-            return //Logisk slettet reservasjon. Migreres ikke
-        }
-
         val gyldigFra = if (gammelReservasjon.reservertTil!!.isAfter(LocalDateTime.now())) {
             LocalDateTime.now().minusHours(24).forskyvReservasjonsDatoBakover()
         } else {
@@ -136,10 +135,6 @@ class ReservasjonKonverteringJobb(
         oppgave: OppgaveV3,
         gammelReservasjon: Reservasjon
     ) {
-        if (gammelReservasjon.reservertTil == null) {
-            return //Logisk slettet reservasjon. Migreres ikke
-        }
-
         val reservertAv = runBlocking {
             saksbehandlerRepository.finnSaksbehandlerMedEpost(
                 gammelReservasjon.flyttetAv ?: gammelReservasjon.reservertAv
@@ -152,13 +147,19 @@ class ReservasjonKonverteringJobb(
             gammelReservasjon.reservertTil!!.minusHours(24).forskyvReservasjonsDatoBakover()
         }
 
+        val flyttetAv = runBlocking {
+            gammelReservasjon.flyttetAv?.let {flyttetAv ->
+                saksbehandlerRepository.finnSaksbehandlerMedIdent(flyttetAv)!!
+            }
+        }
+
         runBlocking {
             reservasjonV3Tjeneste.taReservasjon(
                 reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
                 reserverForId = reservertAv.id!!,
                 gyldigFra = gyldigFra,
                 gyldigTil = gammelReservasjon.reservertTil!!,
-                utføresAvId = 123L
+                utføresAvId = flyttetAv?.let { it.id!! } ?: reservertAv.id!!,
             )
         }
     }
