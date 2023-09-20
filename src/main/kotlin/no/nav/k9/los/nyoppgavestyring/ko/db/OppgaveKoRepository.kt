@@ -124,10 +124,13 @@ class OppgaveKoRepository(val datasource: DataSource) {
                 )
             ).asUpdate
         )
+
         if (rows != 1) {
             throw IllegalStateException("Feil ved oppdatering av oppgavekø: ${oppgaveKo.id}, rows: ${rows}")
         }
+
         lagreKoSaksbehandlere(tx, oppgaveKo)
+
         return hent(tx, oppgaveKo.id)
     }
 
@@ -143,16 +146,9 @@ class OppgaveKoRepository(val datasource: DataSource) {
     }
 
     private fun lagreKoSaksbehandlere(tx: TransactionalSession, oppgaveKo: OppgaveKo) {
-        tx.run(
-            queryOf(
-                "DELETE FROM OPPGAVEKO_SAKSBEHANDLER WHERE oppgaveko_v3_id = :oppgavekoV3Id",
-                mapOf(
-                    "oppgavekoV3Id" to oppgaveKo.id
-                )
-            ).asUpdate
-        )
-        oppgaveKo.saksbehandlere.forEach {
-            tx.run(
+        fjernAlleSaksbehandlereFraOppgaveKo(tx, oppgaveKo.id)
+        tx.run {
+            oppgaveKo.saksbehandlere.forEach {
                 queryOf(
                     "INSERT INTO OPPGAVEKO_SAKSBEHANDLER (oppgaveko_v3_id, saksbehandler_epost) VALUES (:oppgavekoV3Id, :epost)",
                     mapOf(
@@ -160,7 +156,7 @@ class OppgaveKoRepository(val datasource: DataSource) {
                         "epost" to it
                     )
                 ).asUpdate
-            )
+            }
         }
     }
 
@@ -171,11 +167,23 @@ class OppgaveKoRepository(val datasource: DataSource) {
     }
 
     fun slett(tx: TransactionalSession, oppgaveKoId: Long) {
+        fjernAlleSaksbehandlereFraOppgaveKo(tx, oppgaveKoId)
         tx.run(
             queryOf(
                 "DELETE FROM OPPGAVEKO_V3 WHERE id = :id",
                 mapOf(
                     "id" to oppgaveKoId
+                )
+            ).asUpdate
+        )
+    }
+
+    private fun fjernAlleSaksbehandlereFraOppgaveKo(tx: TransactionalSession, oppgaveKoId: Long) {
+        tx.run(
+            queryOf(
+                "DELETE FROM OPPGAVEKO_SAKSBEHANDLER WHERE oppgaveko_v3_id = :oppgavekoV3Id",
+                mapOf(
+                    "oppgavekoV3Id" to oppgaveKoId
                 )
             ).asUpdate
         )
