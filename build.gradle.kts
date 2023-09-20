@@ -3,18 +3,18 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val mainClass = "no.nav.k9.los.K9LosKt"
 val hikariVersion = "5.0.1"
-val flywayVersion = "9.22.0"
+val flywayVersion = "9.22.1"
 val vaultJdbcVersion = "1.3.10"
 val koinVersion = "3.4.3"
 val kotliqueryVersion = "1.9.0"
 val k9SakVersion = "4.1.1"
-val k9KlageVersion = "0.3.0"
+val k9KlageVersion = "0.4.0"
 val fuelVersion = "2.3.1"
 val jacksonVersion = "2.15.2"
 
-val dusseldorfKtorVersion = "4.0.5"
+val dusseldorfKtorVersion = "4.0.8"
 val ktorVersion = "2.3.4"
-val kafkaVersion = "3.2.3"
+val kafkaVersion = "3.5.1"
 
 val navTilgangskontroll = "2.2023.01.09_08.56-ae38750bc0d9"
 
@@ -67,8 +67,8 @@ dependencies {
     // Kontrakter
     implementation("no.nav.k9.sak:kontrakt:$k9SakVersion")
     implementation("no.nav.k9.sak:kodeverk:$k9SakVersion")
-    implementation("no.nav.k9.klage:kontrakt-jakarta:$k9KlageVersion")
-    implementation("no.nav.k9.klage:kodeverk-jakarta:$k9KlageVersion")
+    implementation("no.nav.k9.klage:kontrakt:$k9KlageVersion")
+    implementation("no.nav.k9.klage:kodeverk:$k9KlageVersion")
     implementation("no.nav.k9.statistikk:kontrakter:2.0_20220411110858_dc06dd1")
 
     // Div
@@ -105,13 +105,12 @@ repositories {
         name = "GitHubPackages"
         url = uri("https://maven.pkg.github.com/navikt/dusseldorf-ktor")
         credentials {
-            username = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_USERNAME")
+            username = project.findProperty("gpr.user") as String? ?: "x-access-token"
             password = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_PASSWORD")
         }
     }
 
     mavenCentral()
-    maven("https://packages.confluent.io/maven/")
     maven("https://jitpack.io")
 
     mavenLocal()
@@ -142,7 +141,7 @@ tasks.withType<ShadowJar> {
 }
 
 tasks.withType<Wrapper> {
-    gradleVersion = "8.0"
+    gradleVersion = "8.3"
 }
 
 tasks.withType<Test> {
