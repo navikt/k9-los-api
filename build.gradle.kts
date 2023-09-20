@@ -141,7 +141,7 @@ tasks.withType<ShadowJar> {
 }
 
 tasks.withType<Wrapper> {
-    gradleVersion = "8.0"
+    gradleVersion = "8.3"
 }
 
 tasks.withType<Test> {
