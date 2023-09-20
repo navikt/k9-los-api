@@ -67,8 +67,8 @@ dependencies {
     // Kontrakter
     implementation("no.nav.k9.sak:kontrakt:$k9SakVersion")
     implementation("no.nav.k9.sak:kodeverk:$k9SakVersion")
-    implementation("no.nav.k9.klage:kontrakt-jakarta:$k9KlageVersion")
-    implementation("no.nav.k9.klage:kodeverk-jakarta:$k9KlageVersion")
+    implementation("no.nav.k9.klage:kontrakt:$k9KlageVersion")
+    implementation("no.nav.k9.klage:kodeverk:$k9KlageVersion")
     implementation("no.nav.k9.statistikk:kontrakter:2.0_20220411110858_dc06dd1")
 
     // Div
