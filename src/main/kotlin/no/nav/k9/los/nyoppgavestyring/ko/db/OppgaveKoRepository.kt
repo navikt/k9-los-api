@@ -201,7 +201,9 @@ class OppgaveKoRepository(val datasource: DataSource) {
 
         val oppdatertNyOppgaveko = nyOppgaveKo.copy(
             oppgaveQuery = if (taMedQuery) gammelOppgaveKo.oppgaveQuery else nyOppgaveKo.oppgaveQuery,
-            saksbehandlere = if (taMedSaksbehandlere) gammelOppgaveKo.saksbehandlere else nyOppgaveKo.saksbehandlere
+            saksbehandlere = if (taMedSaksbehandlere) gammelOppgaveKo.saksbehandlere else nyOppgaveKo.saksbehandlere,
+            beskrivelse = gammelOppgaveKo.beskrivelse,
+            frittValgAvOppgave = gammelOppgaveKo.frittValgAvOppgave
         )
 
         return endre(tx, oppdatertNyOppgaveko)
