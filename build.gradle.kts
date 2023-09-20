@@ -105,13 +105,12 @@ repositories {
         name = "GitHubPackages"
         url = uri("https://maven.pkg.github.com/navikt/dusseldorf-ktor")
         credentials {
-            username = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_USERNAME")
+            username = project.findProperty("gpr.user") as String? ?: "x-access-token"
             password = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_PASSWORD")
         }
     }
 
     mavenCentral()
-    maven("https://packages.confluent.io/maven/")
     maven("https://jitpack.io")
 
     mavenLocal()
