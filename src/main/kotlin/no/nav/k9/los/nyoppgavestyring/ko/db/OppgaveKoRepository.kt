@@ -188,4 +188,22 @@ class OppgaveKoRepository(val datasource: DataSource) {
             ).asUpdate
         )
     }
+
+    fun kopier(kopierFraOppgaveId: Long, tittel: String, taMedQuery: Boolean, taMedSaksbehandlere: Boolean): OppgaveKo {
+        return using(sessionOf(datasource)) { it ->
+            it.transaction { tx -> kopier(tx, kopierFraOppgaveId, tittel, taMedQuery, taMedSaksbehandlere) }
+        }
+    }
+
+    private fun kopier(tx: TransactionalSession, kopierFraOppgaveId: Long, tittel: String, taMedQuery: Boolean, taMedSaksbehandlere: Boolean): OppgaveKo {
+        val gammelOppgaveKo = hent(tx, kopierFraOppgaveId)
+        val nyOppgaveKo = leggTil(tx, tittel)
+
+        val oppdatertNyOppgaveko = nyOppgaveKo.copy(
+            oppgaveQuery = if (taMedQuery) gammelOppgaveKo.oppgaveQuery else nyOppgaveKo.oppgaveQuery,
+            saksbehandlere = if (taMedSaksbehandlere) gammelOppgaveKo.saksbehandlere else nyOppgaveKo.saksbehandlere
+        )
+
+        return endre(tx, oppdatertNyOppgaveko)
+    }
 }

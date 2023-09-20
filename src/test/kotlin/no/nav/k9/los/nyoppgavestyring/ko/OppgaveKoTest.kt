@@ -73,6 +73,23 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
         oppgaveKoRepository.slett(oppgaveKoFraDb2.id)
     }
 
+    @Test
+    fun `oppgavekø skal kunne kopieres`() {
+        val oppgaveKoRepository = OppgaveKoRepository(dataSource)
+
+        val tittel = "Testkø"
+        val saksbehandlerepost = "a@b"
+        val oppgaveKo = oppgaveKoRepository.leggTil(tittel)
+        mockLeggTilSaksbehandler(saksbehandlerepost)
+        val gammelOppgaveko = oppgaveKoRepository.endre(oppgaveKo.copy(saksbehandlere = listOf(saksbehandlerepost)))
+
+        val nyTittel = "Ny tittel"
+        val nyOppgaveKo = oppgaveKoRepository.kopier(gammelOppgaveko.id, nyTittel, true, true)
+        assertThat(nyOppgaveKo.saksbehandlere).contains(saksbehandlerepost)
+        assertThat(nyOppgaveKo.saksbehandlere).hasSize(1)
+        assertThat(nyOppgaveKo.tittel).isEqualTo(nyTittel)
+    }
+
     private fun mockLeggTilSaksbehandler(saksbehandlerepost: String) {
         val pepClient = mockk<IPepClient>()
         val saksbehandlerRepository = SaksbehandlerRepository(dataSource, pepClient)
