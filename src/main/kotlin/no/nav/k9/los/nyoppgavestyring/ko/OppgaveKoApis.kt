@@ -8,11 +8,9 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.Route
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.rest.RequestContextService
-import no.nav.k9.los.integrasjon.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OpprettOppgaveKoDto
-import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.tilCsv
 import org.koin.java.KoinJavaComponent
@@ -51,15 +49,25 @@ fun Route.OppgaveKoApis() {
     }
 
     @Location("/{id}")
-    data class HentOppgaveKo(val id: String)
+    data class OppgaveKoParams(val id: String)
 
-    get { hentOppgaveKo: HentOppgaveKo ->
+    get { oppgaveKoParams: OppgaveKoParams ->
         requestContextService.withRequestContext(call) {
             if (!pepClient.erOppgaveStyrer()) {
                 call.respond(HttpStatusCode.Forbidden);
             }
 
-            call.respond(oppgaveKoRepository.hent(hentOppgaveKo.id.toLong()))
+            call.respond(oppgaveKoRepository.hent(oppgaveKoParams.id.toLong()))
+        }
+    }
+
+    delete { oppgaveKoParams: OppgaveKoParams ->
+        requestContextService.withRequestContext(call) {
+            if (!pepClient.erOppgaveStyrer()) {
+                call.respond(HttpStatusCode.Forbidden);
+            }
+
+            call.respond(oppgaveKoRepository.slett(oppgaveKoParams.id.toLong()))
         }
     }
 

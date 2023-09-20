@@ -163,4 +163,21 @@ class OppgaveKoRepository(val datasource: DataSource) {
             )
         }
     }
+
+    fun slett(oppgaveKoId: Long) {
+        using(sessionOf(datasource)) { it ->
+            it.transaction { tx -> slett(tx, oppgaveKoId) }
+        }
+    }
+
+    fun slett(tx: TransactionalSession, oppgaveKoId: Long) {
+        tx.run(
+            queryOf(
+                "DELETE FROM OPPGAVEKO_V3 WHERE id = :id",
+                mapOf(
+                    "id" to oppgaveKoId
+                )
+            ).asUpdate
+        )
+    }
 }
