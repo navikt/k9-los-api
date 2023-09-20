@@ -147,8 +147,8 @@ class OppgaveKoRepository(val datasource: DataSource) {
 
     private fun lagreKoSaksbehandlere(tx: TransactionalSession, oppgaveKo: OppgaveKo) {
         fjernAlleSaksbehandlereFraOppgaveKo(tx, oppgaveKo.id)
-        tx.run {
-            oppgaveKo.saksbehandlere.forEach {
+        oppgaveKo.saksbehandlere.forEach {
+            val updated = tx.run(
                 queryOf(
                     "INSERT INTO OPPGAVEKO_SAKSBEHANDLER (oppgaveko_v3_id, saksbehandler_epost) VALUES (:oppgavekoV3Id, :epost)",
                     mapOf(
@@ -156,7 +156,7 @@ class OppgaveKoRepository(val datasource: DataSource) {
                         "epost" to it
                     )
                 ).asUpdate
-            }
+            )
         }
     }
 

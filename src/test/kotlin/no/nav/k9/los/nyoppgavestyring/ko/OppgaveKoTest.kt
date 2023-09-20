@@ -2,26 +2,19 @@ package no.nav.k9.los.nyoppgavestyring.ko
 
 import assertk.assertFailure
 import assertk.assertThat
-import assertk.assertions.*
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import assertk.assertions.contains
+import assertk.assertions.hasSize
+import assertk.assertions.isEqualTo
+import assertk.assertions.isNotNull
+import io.mockk.coEvery
 import io.mockk.mockk
-import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
+import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.nyoppgavestyring.FeltType
-import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
+import no.nav.k9.los.domene.modell.Saksbehandler
+import no.nav.k9.los.domene.repository.SaksbehandlerRepository
+import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
-import no.nav.k9.los.nyoppgavestyring.query.db.FeltverdiOperator
-import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import org.junit.jupiter.api.Test
-import java.io.StringWriter
-import java.time.LocalDate
-import java.util.*
 
 class OppgaveKoTest : AbstractK9LosIntegrationTest() {
 
@@ -41,4 +34,61 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
         }
     }
 
+    @Test
+    fun `sjekker at oppgavekø kan endres`() {
+        val oppgaveKoRepository = OppgaveKoRepository(dataSource)
+
+        val tittel = "Testkø"
+        val oppgaveKo = oppgaveKoRepository.leggTil(tittel)
+        assertThat(oppgaveKo.tittel).isEqualTo(tittel)
+
+        val beskrivelse = "En god beskrivelse"
+        val oppgaveKoFraDb = oppgaveKoRepository.endre(oppgaveKo.copy(beskrivelse = beskrivelse))
+        assertThat(oppgaveKoFraDb).isNotNull()
+        assertThat(oppgaveKoFraDb.tittel).isEqualTo(tittel)
+        assertThat(oppgaveKoFraDb.beskrivelse).isEqualTo(beskrivelse)
+    }
+
+    @Test
+    fun `sjekker at oppgavekø kan få saksbehandler tilknyttet og fjernet`() {
+        val oppgaveKoRepository = OppgaveKoRepository(dataSource)
+
+        val tittel = "Testkø"
+        val oppgaveKo = oppgaveKoRepository.leggTil(tittel)
+        assertThat(oppgaveKo.tittel).isEqualTo(tittel)
+
+        val saksbehandlerepost = "a@b"
+        mockLeggTilSaksbehandler(saksbehandlerepost)
+
+        val oppgaveKoFraDb = oppgaveKoRepository.endre(oppgaveKo.copy(saksbehandlere = listOf(saksbehandlerepost)))
+        assertThat(oppgaveKoFraDb.saksbehandlere).contains(saksbehandlerepost)
+        assertThat(oppgaveKoFraDb.saksbehandlere).hasSize(1)
+
+        val saksbehandlerepost2 = "b@c"
+        mockLeggTilSaksbehandler(saksbehandlerepost2)
+        val oppgaveKoFraDb2 = oppgaveKoRepository.endre(oppgaveKoFraDb.copy(saksbehandlere = listOf(saksbehandlerepost2)))
+        assertThat(oppgaveKoFraDb2.saksbehandlere).contains(saksbehandlerepost2)
+        assertThat(oppgaveKoFraDb2.saksbehandlere).hasSize(1)
+
+        oppgaveKoRepository.slett(oppgaveKoFraDb2.id)
+    }
+
+    private fun mockLeggTilSaksbehandler(saksbehandlerepost: String) {
+        val pepClient = mockk<IPepClient>()
+        val saksbehandlerRepository = SaksbehandlerRepository(dataSource, pepClient)
+        coEvery {
+            pepClient.harTilgangTilKode6()
+        } returns true
+
+        runBlocking {
+            saksbehandlerRepository.addSaksbehandler(
+                Saksbehandler(
+                    brukerIdent = "Ident$saksbehandlerepost",
+                    navn = "Navn for $saksbehandlerepost",
+                    epost = saksbehandlerepost,
+                    enhet = null
+                )
+            )
+        }
+    }
 }
