@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       packages: write
-      contents: read
+      contents: write # for gradle dep submission
       issues: write
     steps:
       - uses: actions/checkout@v4
@@ -30,6 +30,14 @@ jobs:
           java-version: 17
           distribution: temurin
           cache: gradle
+
+      - name: Setup Gradle to generate and submit dependency graphs
+        uses: gradle/gradle-build-action@v2
+        with:
+          dependency-graph: generate-and-submit
+
+      - name: Run a build, generating the dependency graph snapshot which will be submitted
+        run: ./gradlew build
 
       - name: Kjør tester & bygg JAR
         run: ./gradlew test shadowjar
