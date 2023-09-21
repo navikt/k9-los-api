@@ -37,6 +37,35 @@ class OppgaveRepository(
         return oppgave.fyllDefaultverdier()
     }
 
+    fun hentAlleOppgaverForReservasjonsnøkkel(tx: TransactionalSession, reservasjonsnøkkel: String): List<Oppgave> {
+        val oppgaver = tx.run(
+            queryOf(
+                """
+                select *
+                from oppgave_v3 ov 
+                where reservasjonsnokkel = :reservasjonsnokkel
+                and aktiv = true 
+            """.trimIndent(),
+                mapOf("reservasjonsnokkel" to reservasjonsnøkkel)
+            ).map { row ->
+                val kildeområde = row.string("kildeomrade")
+                val oppgaveTypeId = row.long("oppgavetype_id")
+                Oppgave(
+                    eksternId = row.string("ekstern_id"),
+                    eksternVersjon = row.string("ekstern_versjon"),
+                    oppgavetype = oppgavetypeRepository.hentOppgavetype(kildeområde, oppgaveTypeId, tx),
+                    status = row.string("status"),
+                    endretTidspunkt = row.localDateTime("endret_tidspunkt"),
+                    kildeområde = row.string("kildeomrade"),
+                    felter = hentOppgavefelter(tx, row.long("id")),
+                    reservasjonsnøkkel = row.string("reservasjonsnokkel")
+                )
+            }.asList
+        )
+
+        return oppgaver
+    }
+
     fun hentOppgaveForId(tx: TransactionalSession, id: Long): Oppgave {
         val oppgave = tx.run(
             queryOf(

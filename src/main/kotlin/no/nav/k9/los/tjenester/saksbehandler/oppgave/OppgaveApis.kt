@@ -6,13 +6,13 @@ import io.ktor.server.locations.*
 import io.ktor.server.locations.post
 import io.ktor.server.request.*
 import io.ktor.server.response.*
-import io.ktor.server.routing.Route
+import io.ktor.server.routing.*
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.integrasjon.rest.idToken
-import no.nav.k9.los.nyoppgavestyring.mottak.reservasjon.ReservasjonV3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.koin.ktor.ext.inject
 import org.slf4j.Logger
@@ -117,36 +117,58 @@ internal fun Route.OppgaveApis() {
                 val oppgaveV3 = transactionalManager.transaction { tx ->
                     oppgaveV3Repository.hentNyesteOppgaveForEksternId(tx, oppgaveIdMedOverstyring.oppgaveId)
                 }
-/*
-                val reservasjonStatusDto = reservasjonV3Tjeneste.taReservasjon(
-                    TaReservasjon(
-                        innloggetBruker.id!!,
-                        oppgaveIdMedOverstyring.overstyrIdent?.let { saksbehandlerRepository.finnIdMedEpost(it) },
-                        oppgaveV3.reservasjonsnøkkel,
-                        gyldigFra = reserverFra,
-                        gyldigTil = reserverFra.plusHours(24).forskyvReservasjonsDato()
-                    )
+
+                val reserverForIdent = oppgaveIdMedOverstyring.overstyrIdent ?: innloggetBruker.brukerIdent
+                val reserverForSaksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(reserverForIdent!!)!!
+
+                val reservasjonV3 = reservasjonV3Tjeneste.taReservasjon(
+                    reservasjonsnøkkel = oppgaveV3.reservasjonsnøkkel,
+                    reserverForId = reserverForSaksbehandler.id!!,
+                    gyldigFra = reserverFra,
+                    gyldigTil = reserverFra.plusHours(24).forskyvReservasjonsDato(),
+                    utføresAvId = innloggetBruker.id!!
                 )
                 //TODO: konsistenssjekk mellom tjenesteversjonene --- V3 som master der V3 har oppgave
                 //TODO: sjekke statusobjekt, saksbehandler som holder reservasjon -- feks conflict hvis noen andre hadde reservasjon fra før
+                val saksbehandlerSomHarReservasjon = saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonV3.reservertAv)
                 call.respond(
                     OppgaveStatusDto(
-                        erReservert = reservasjonStatusDto.erReservert,
-                        reservertTilTidspunkt = reservasjonStatusDto.reservertTilTidspunkt,
-                        erReservertAvInnloggetBruker = reservasjonStatusDto.erReservertAvInnloggetBruker,
-                        reservertAv = reservasjonStatusDto.reservertAvEpost,
-                        reservertAvNavn = reservasjonStatusDto.reservertAvNavn,
+                        erReservert = true,
+                        reservertTilTidspunkt = reservasjonV3.gyldigTil,
+                        erReservertAvInnloggetBruker = reservasjonV3.reservertAv == innloggetBruker.id!!,
+                        reservertAv = saksbehandlerSomHarReservasjon.brukerIdent,
+                        reservertAvNavn = saksbehandlerSomHarReservasjon.navn,
                         flyttetReservasjon = null,
-                        kanOverstyres = reser,
-                        beskjed =,
+                        kanOverstyres = reservasjonV3.reservertAv != innloggetBruker.id!!
                     )
-                        oppgaveStatusDto
                 )
-
- */
             }
         }
     }
+
+    @Location("/fa-oppgave-fra-ny-ko")
+    class fåOppgaveFraNyKø
+        post {_: fåOppgaveFraNyKø ->
+            requestContextService.withRequestContext(call) {
+                val params = call.receive<OppgaveKøIdDto>()
+
+                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
+                    kotlin.coroutines.coroutineContext.idToken().getUsername()
+                )!!
+
+                val reservasjonFraKø = reservasjonV3Tjeneste.taReservasjonFraKø(
+                    innloggetBrukerId = innloggetBruker.id!!,
+                    oppgaveKoId = params.oppgaveKøId.toLong()
+                )
+
+                if (reservasjonFraKø != null) {
+                    //log.info("RESERVASJONDEBUG: Lagt til ${innloggetBruker.brukerIdent} oppgave=${oppgaveFraKø.eksternId}, beslutter=${oppgaveFraKø.tilBeslutter}, kø=${params.oppgaveKøId} (neste oppgave)")
+                    call.respond(ReservasjonV3Dto(reservasjonFraKø, innloggetBruker))
+                } else {
+                    call.respond(HttpStatusCode.NotFound, "Fant ingen oppgaver i valgt kø")
+                }
+            }
+        }
 
     @Location("/fa-oppgave-fra-ko")
     class fåOppgaveFraKø

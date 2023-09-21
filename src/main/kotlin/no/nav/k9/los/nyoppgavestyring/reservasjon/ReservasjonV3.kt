@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.mottak.reservasjon
+package no.nav.k9.los.nyoppgavestyring.reservasjon
 
 import no.nav.k9.los.domene.modell.Saksbehandler
 import java.time.LocalDateTime
@@ -32,6 +32,18 @@ class ReservasjonV3(
             gyldigTil
         )
     }
+
+    constructor(
+        saksbehandlerId: Long,
+        reservasjonsnøkkel: String,
+        gyldigFra: LocalDateTime,
+        gyldigTil: LocalDateTime
+    ) : this(
+        reservertAv = saksbehandlerId,
+        reservasjonsnøkkel = reservasjonsnøkkel,
+        gyldigFra = gyldigFra,
+        gyldigTil = gyldigTil,
+    )
 
     constructor(
         saksbehandler: Saksbehandler,

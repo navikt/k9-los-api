@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.mottak.reservasjon
+package no.nav.k9.los.nyoppgavestyring.reservasjon
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
@@ -27,9 +27,9 @@ class ReservasjonV3Repository(
             )
         } catch (e: PSQLException) {
             if (e.sqlState == "23P01") {//exclusion_violation
-                throw IllegalArgumentException("${reservasjonV3.reservasjonsnøkkel} er allerede reservert!")
+                throw AlleredeReservertException("${reservasjonV3.reservasjonsnøkkel} er allerede reservert!")
             } else if (e.sqlState == "23503" && e.message!!.contains("fk_reservasjon_v3_01")) {
-            throw IllegalArgumentException("Saksbehandler med id ${reservasjonV3.reservertAv} finnes ikke")
+                throw IllegalArgumentException("Saksbehandler med id ${reservasjonV3.reservertAv} finnes ikke")
             } else {
                 throw e
             }
