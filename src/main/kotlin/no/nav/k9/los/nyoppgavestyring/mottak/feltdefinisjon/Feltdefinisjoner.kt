@@ -13,9 +13,11 @@ class Feltdefinisjoner(
             Feltdefinisjon(
                 eksternId = feltdefinisjonDto.id,
                 område = område,
+                visningsnavn = feltdefinisjonDto.visningsnavn,
                 listetype = feltdefinisjonDto.listetype,
                 tolkesSom = feltdefinisjonDto.tolkesSom,
                 visTilBruker = feltdefinisjonDto.visTilBruker,
+                kokriterie = feltdefinisjonDto.kokriterie,
                 kodeverkreferanse = feltdefinisjonDto.kodeverkreferanse?.let { kodeverkreferanseDto -> Kodeverkreferanse(kodeverkreferanseDto) }
             )
         }.toSet()

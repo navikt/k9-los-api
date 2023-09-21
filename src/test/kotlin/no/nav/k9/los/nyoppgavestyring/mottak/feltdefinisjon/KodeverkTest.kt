@@ -73,10 +73,12 @@ class KodeverkTest : AbstractK9LosIntegrationTest() {
          return Feltdefinisjon(
              id = null,
              eksternId = testFeltdefinissjonEksternId,
+             visningsnavn = "Test",
              område = område,
              listetype = false,
              tolkesSom = "String",
              visTilBruker = true,
+             kokriterie = false,
              kodeverkreferanse = kodeverkreferanse
          )
     }

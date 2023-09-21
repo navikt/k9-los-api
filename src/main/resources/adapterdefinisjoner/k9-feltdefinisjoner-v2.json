@@ -3,27 +3,35 @@
   "feltdefinisjoner": [
     {
       "id": "behandlingUuid",
-      "listetype": false,
-      "tolkesSom": "String",
-      "visTilBruker": true
-    },
-    {
-      "id": "påklagdBehandlingUuid",
-      "listetype": false,
-      "tolkesSom": "String",
-      "visTilBruker": true
-    },
-    {
-      "id": "aktorId",
-      "listetype": false,
-      "tolkesSom": "String",
-      "visTilBruker": true
-    },
-    {
-      "id": "fagsystem",
+      "visningsnavn": "Behandling",
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
+      "kokriterie": false
+    },
+    {
+      "id": "påklagdBehandlingUuid",
+      "visningsnavn": "Påklaget behandling",
+      "listetype": false,
+      "tolkesSom": "String",
+      "visTilBruker": true,
+      "kokriterie": false
+    },
+    {
+      "id": "aktorId",
+      "visningsnavn": "Søkers aktør-ID",
+      "listetype": false,
+      "tolkesSom": "String",
+      "visTilBruker": false,
+      "kokriterie": false
+    },
+    {
+      "id": "fagsystem",
+      "visningsnavn": "Fagsystem",
+      "listetype": false,
+      "tolkesSom": "String",
+      "visTilBruker": true,
+      "kokriterie": false,
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Fagsystem"
@@ -31,15 +39,19 @@
     },
     {
       "id": "saksnummer",
-      "listetype": false,
-      "tolkesSom": "String",
-      "visTilBruker": true
-    },
-    {
-      "id": "resultattype",
+      "visningsnavn": "Saksnummer",
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
+      "kokriterie": false
+    },
+    {
+      "id": "resultattype",
+      "visningsnavn": "Resultattype",
+      "listetype": false,
+      "tolkesSom": "String",
+      "visTilBruker": true,
+      "kokriterie": false,
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Resultattype"
@@ -47,9 +59,11 @@
     },
     {
       "id": "behandlingssteg",
+      "visningsnavn": "Behandlingssteg",
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
+      "kokriterie": true,
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Behandlingssteg"
@@ -57,9 +71,11 @@
     },
     {
       "id": "ytelsestype",
+      "visningsnavn": "Ytelsestype",
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
+      "kokriterie": true,
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Ytelsetype"
@@ -67,9 +83,11 @@
     },
     {
       "id": "behandlingsstatus",
+      "visningsnavn": "Behandlingsstatus",
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
+      "kokriterie": false,
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Behandlingsstatus"
@@ -77,21 +95,27 @@
     },
     {
       "id": "mottattDato",
+      "visningsnavn": "Mottatt dato",
       "listetype": false,
       "tolkesSom": "Timestamp",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kokriterie": true
     },
     {
       "id": "registrertDato",
+      "visningsnavn": "Registrert dato",
       "listetype": false,
       "tolkesSom": "Timestamp",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kokriterie": true
     },
     {
       "id": "behandlingTypekode",
+      "visningsnavn": "Behandlingstype",
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
+      "kokriterie": true,
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Behandlingtype"
@@ -99,45 +123,59 @@
     },
     {
       "id": "relatertPartAktorid",
+      "visningsnavn": "Relatert part aktør-ID",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true
+      "visTilBruker": false,
+      "kokriterie": false
     },
     {
       "id": "pleietrengendeAktorId",
+      "visningsnavn": "Pleietrengende aktør-ID",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true
+      "visTilBruker": false,
+      "kokriterie": false
     },
     {
       "id": "behandlendeEnhet",
+      "visningsnavn": "Behandlende enhet",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kokriterie": false
     },
     {
       "id": "ansvarligSaksbehandler",
+      "visningsnavn": "Ansvarlig saksbehandler",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kokriterie": false
     },
     {
       "id": "ansvarligBeslutter",
+      "visningsnavn": "Ansvarlig beslutter",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kokriterie": false
     },
     {
       "id": "totrinnskontroll",
+      "visningsnavn": "Må gjennom totrinnskontroll",
       "listetype": false,
       "tolkesSom": "boolean",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kokriterie": false
     },
     {
       "id": "aksjonspunkt",
+      "visningsnavn": "Løsbare, fremtidige og tidligere aksjonspunkt",
       "listetype": true,
       "tolkesSom": "String",
       "visTilBruker": true,
+      "kokriterie": true,
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Aksjonspunkt"
@@ -145,9 +183,11 @@
     },
     {
       "id": "aktivtAksjonspunkt",
+      "visningsnavn": "Løsbare og fremtidige aksjonspunkt",
       "listetype": true,
       "tolkesSom": "String",
       "visTilBruker": true,
+      "kokriterie": false,
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Aksjonspunkt"
@@ -155,9 +195,11 @@
     },
     {
       "id": "løsbartAksjonspunkt",
+      "visningsnavn": "Løsbart aksjonspunkt",
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
+      "kokriterie": true,
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Aksjonspunkt"
@@ -165,81 +207,107 @@
     },
     {
       "id": "avventerSaksbehandler",
+      "visningsnavn": "Avventer saksbehandler",
       "listetype": false,
       "tolkesSom": "boolean",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kokriterie": false
     },
     {
       "id": "avventerSøker",
+      "visningsnavn": "Avventer søker",
       "listetype": false,
       "tolkesSom": "boolean",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kokriterie": false
     },
     {
       "id": "avventerArbeidsgiver",
+      "visningsnavn": "Avventer arbeidsgiver",
       "listetype": false,
       "tolkesSom": "boolean",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kokriterie": false
     },
     {
       "id": "avventerTekniskFeil",
+      "visningsnavn": "Avventer teknisk feil",
       "listetype": false,
       "tolkesSom": "boolean",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kokriterie": false
     },
     {
       "id": "avventerAnnet",
+      "visningsnavn": "Avventer annet",
       "listetype": false,
       "tolkesSom": "boolean",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kokriterie": false
     },
     {
       "id": "avventerAnnetIkkeSaksbehandlingstid",
+      "visningsnavn": "Avventer annet (ikke saksbehandlingstid)",
       "listetype": false,
       "tolkesSom": "boolean",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kokriterie": false
     },
     {
       "id": "akkumulertVentetidSaksbehandlerForTidligereVersjoner",
+      "visningsnavn": "Akkumulert ventetid saksbehandler for tidligere versjoner",
       "listetype": false,
       "tolkesSom": "Duration",
-      "visTilBruker": true
+      "visTilBruker": false,
+      "kokriterie": false
     },
     {
       "id": "akkumulertVentetidSøkerForTidligereVersjoner",
+      "visningsnavn": "Akkumulert ventetid søker for tidligere versjoner",
       "listetype": false,
       "tolkesSom": "Duration",
-      "visTilBruker": true
+      "visTilBruker": false,
+      "kokriterie": false
     },
     {
       "id": "akkumulertVentetidTekniskFeilForTidligereVersjoner",
+      "visningsnavn": "Akkumulert ventetid teknisk feil for tidligere versjoner",
       "listetype": false,
       "tolkesSom": "Duration",
-      "visTilBruker": true
+      "visTilBruker": false,
+      "kokriterie": false
     },
     {
-    "id": "akkumulertVentetidArbeidsgiverForTidligereVersjoner",
-    "listetype": false,
-    "tolkesSom": "Duration",
-    "visTilBruker": true
+      "id": "akkumulertVentetidArbeidsgiverForTidligereVersjoner",
+      "visningsnavn": "Akkumulert ventetid arbeidsgiver for tidligere versjoner",
+      "listetype": false,
+      "tolkesSom": "Duration",
+      "visTilBruker": false,
+      "kokriterie": false
     },
     {
       "id": "akkumulertVentetidAnnetForTidligereVersjoner",
+      "visningsnavn": "Akkumulert ventetid annet for tidligere versjoner",
       "listetype": false,
       "tolkesSom": "Duration",
-      "visTilBruker": true
+      "visTilBruker": false,
+      "kokriterie": false
     },
     {
       "id": "akkumulertVentetidAnnetIkkeSaksbehandlingstidForTidligereVersjoner",
+      "visningsnavn": "Akkumulert ventetid annet (ikke saksbehandlingstid) for tidligere versjoner",
       "listetype": false,
       "tolkesSom": "Duration",
-      "visTilBruker": true
+      "visTilBruker": false,
+      "kokriterie": false
     },
     {
       "id": "aktivVenteårsak",
+      "visningsnavn": "Aktiv venteårsak",
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
+      "kokriterie": false,
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Venteårsak"
@@ -247,39 +315,51 @@
     },
     {
       "id": "aktivVentefrist",
+      "visningsnavn": "Aktiv ventefrist",
       "listetype": false,
       "tolkesSom": "Timestamp",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kokriterie": false
     },
     {
       "id": "helautomatiskBehandlet",
+      "visningsnavn": "Helautomatisk behandlet",
       "listetype": false,
       "tolkesSom": "boolean",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kokriterie": false
     },
     {
       "id": "vedtaksdato",
+      "visningsnavn": "Vedtaksdato",
       "listetype": false,
       "tolkesSom": "Timestamp",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kokriterie": false
     },
     {
       "id": "nyeKrav",
+      "visningsnavn": "Søknad om nye perioder",
       "listetype": false,
       "tolkesSom": "boolean",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kokriterie": true
     },
     {
       "id": "fraEndringsdialog",
+      "visningsnavn": "Oppdatert gjennom endringsdialog",
       "listetype": false,
       "tolkesSom": "boolean",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kokriterie": true
     },
     {
       "id": "hastesak",
+      "visningsnavn": "Hastesak",
       "listetype": false,
       "tolkesSom": "boolean",
-      "visTilBruker": true
+      "visTilBruker": true,
+      "kokriterie": true
     }
   ]
 }

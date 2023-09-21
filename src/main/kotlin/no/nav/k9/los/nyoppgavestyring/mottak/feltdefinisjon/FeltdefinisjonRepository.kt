@@ -28,9 +28,11 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                     id = row.long("id"),
                     eksternId = row.string("ekstern_id"),
                     område = område,
+                    visningsnavn = row.string("visningsnavn"),
                     listetype = row.boolean("liste_type"),
                     tolkesSom = row.string("tolkes_som"),
                     visTilBruker = row.boolean("vis_til_bruker"),
+                    kokriterie = row.boolean("kokriterie"),
                     kodeverkreferanse = row.stringOrNull("kodeverkreferanse")?.let { Kodeverkreferanse(it) }
                 )
             }.asList
@@ -66,14 +68,16 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                 queryOf(
                     """
                     update feltdefinisjon 
-                    set liste_type = :listeType, tolkes_som = :tolkesSom, vis_til_bruker = :visTilBruker, kodeverkreferanse = :kodeverkreferanse
+                    set visningsnavn = :visningsnavn, liste_type = :listeType, tolkes_som = :tolkesSom, vis_til_bruker = :visTilBruker, kokriterie = :kokriterie, kodeverkreferanse = :kodeverkreferanse
                     WHERE omrade_id = :omradeId AND ekstern_id = :eksternId""",
                     mapOf(
                         "eksternId" to datatype.eksternId,
                         "omradeId" to område.id,
+                        "visningsnavn" to datatype.visningsnavn,
                         "listeType" to datatype.listetype,
                         "tolkesSom" to datatype.tolkesSom,
                         "visTilBruker" to datatype.visTilBruker,
+                        "kokriterie" to datatype.kokriterie,
                         "kodeverkreferanse" to datatype.kodeverkreferanse?.let { it.toDatabasestreng() }
                     )
                 ).asUpdate
@@ -86,14 +90,16 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
             tx.run(
                 queryOf(
                     """
-                    insert into feltdefinisjon(ekstern_id, omrade_id, liste_type, tolkes_som, vis_til_bruker, kodeverkreferanse) 
-                    values(:eksternId, :omradeId, :listeType, :tolkesSom, :visTilBruker, :kodeverkreferanse)""",
+                    insert into feltdefinisjon(ekstern_id, omrade_id, visningsnavn, liste_type, tolkes_som, vis_til_bruker, kokriterie, kodeverkreferanse) 
+                    values(:eksternId, :omradeId, :visningsnavn, :listeType, :tolkesSom, :visTilBruker, :kokriterie, :kodeverkreferanse)""",
                     mapOf(
                         "eksternId" to feltdefinisjon.eksternId,
                         "omradeId" to område.id,
+                        "visningsnavn" to feltdefinisjon.visningsnavn,
                         "listeType" to feltdefinisjon.listetype,
                         "tolkesSom" to feltdefinisjon.tolkesSom,
                         "visTilBruker" to feltdefinisjon.visTilBruker,
+                        "kokriterie" to feltdefinisjon.kokriterie,
                         "kodeverkreferanse" to feltdefinisjon.kodeverkreferanse?.let { it.toDatabasestreng() }
                     )
                 ).asUpdate
