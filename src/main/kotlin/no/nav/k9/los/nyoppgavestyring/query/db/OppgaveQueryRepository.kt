@@ -25,23 +25,20 @@ class OppgaveQueryRepository(
         }
     }
 
-    private fun midlertidigFiksVisningsnavn(kode: String): String {
-        val s = kode.replace("([A-ZÆØÅ])".toRegex(), " $1").lowercase();
-        return s.substring(0, 1).uppercase() + s.substring(1)
-    }
-
     private fun hentAlleFelter(tx: TransactionalSession, medKodeverk: Boolean = true): List<Oppgavefelt> {
         val felterFraDatabase = tx.run(
             queryOf(
                 """
                     SELECT DISTINCT fo.ekstern_id as omrade,
                       fd.ekstern_id as kode,
-                      fd.ekstern_id as visningsnavn,
+                      fd.visningsnavn as visningsnavn,
                       fd.tolkes_som as tolkes_som,
+                      fd.kokriterie as kokriterie,
                       fd.kodeverkreferanse as kodeverkreferanse
                     FROM Feltdefinisjon fd INNER JOIN Omrade fo ON (
                       fo.id = fd.omrade_id
                     )
+                    WHERE fd.vis_til_bruker
                 """.trimIndent()
             ).map { row ->
                 val kodeverk = if (medKodeverk) {
@@ -51,8 +48,9 @@ class OppgaveQueryRepository(
                 Oppgavefelt(
                     område = row.string("omrade"),
                     kode = row.string("kode"),
-                    visningsnavn = midlertidigFiksVisningsnavn(row.string("visningsnavn")),
+                    visningsnavn = row.string("visningsnavn"),
                     tolkes_som = row.string("tolkes_som"),
+                    kokriterie = row.boolean("kokriterie"),
                     verdiforklaringerErUttømmende = kodeverk?.uttømmende ?: false,
                     verdiforklaringer = kodeverk?.let { kodeverk ->
                         kodeverk.verdier.map { kodeverkverdi ->
@@ -72,6 +70,7 @@ class OppgaveQueryRepository(
                 "oppgavestatus",
                 "Oppgavestatus",
                 "String",
+                kokriterie = true,
                 verdiforklaringerErUttømmende = true,
                 Oppgavestatus.values().map { oppgavestatus ->
                     Verdiforklaring(
@@ -79,9 +78,9 @@ class OppgaveQueryRepository(
                         visningsnavn = oppgavestatus.visningsnavn
                     )
                 }),
-            Oppgavefelt(null, "kildeområde", "Kildeområde", "String", false, emptyList()),
-            Oppgavefelt(null, "oppgavetype", "Oppgavetype", "String", false, emptyList()),
-            Oppgavefelt(null, "oppgaveområde", "Oppgaveområde", "String", false, emptyList())
+            Oppgavefelt(null, "kildeområde", "Kildeområde", "String", false,false, emptyList()),
+            Oppgavefelt(null, "oppgavetype", "Oppgavetype", "String", true, false, emptyList()),
+            Oppgavefelt(null, "oppgaveområde", "Oppgaveområde", "String", false, false, emptyList())
         )
 
         return (felterFraDatabase + standardfelter).sortedBy { it.visningsnavn };

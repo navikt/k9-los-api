@@ -129,9 +129,11 @@ internal class AkkumulertVentetidTest {
             område = Område(
                 eksternId = "test"
             ),
+            visningsnavn = "Test",
             listetype = false,
             tolkesSom = "Boolean",
             visTilBruker = true,
+            kokriterie = true,
             kodeverkreferanse = null,
         ),
         visPåOppgave = true,

@@ -71,9 +71,11 @@ class OppgavetypeTest {
                             Feltdefinisjon(
                                 eksternId = "saksnummer",
                                 område = område,
+                                visningsnavn = "Test",
                                 listetype = false,
                                 tolkesSom = "String",
                                 visTilBruker = true,
+                                kokriterie = false,
                                 kodeverkreferanse = null
                             ),
                             visPåOppgave = true,
@@ -85,9 +87,11 @@ class OppgavetypeTest {
                             feltDefinisjon = Feltdefinisjon(
                                 eksternId = "saksnummer",
                                 område = område,
+                                visningsnavn = "Test",
                                 listetype = false,
                                 tolkesSom = "String",
                                 visTilBruker = true,
+                                kokriterie = false,
                                 kodeverkreferanse = null
                             ),
                             visPåOppgave = true,
@@ -120,9 +124,11 @@ class OppgavetypeTest {
                             feltDefinisjon = Feltdefinisjon(
                                 eksternId = "saksnummer",
                                 område = område,
+                                visningsnavn = "Test",
                                 listetype = false,
                                 tolkesSom = "String",
                                 visTilBruker = true,
+                                kokriterie = false,
                                 kodeverkreferanse = null
                             ),
                             visPåOppgave = true,
@@ -134,9 +140,11 @@ class OppgavetypeTest {
                             feltDefinisjon = Feltdefinisjon(
                                 eksternId = "saksnummer",
                                 område = område,
+                                visningsnavn = "Test",
                                 listetype = false,
                                 tolkesSom = "String",
                                 visTilBruker = true,
+                                kokriterie = false,
                                 kodeverkreferanse = null
                             ),
                             visPåOppgave = true,
@@ -148,9 +156,11 @@ class OppgavetypeTest {
                             feltDefinisjon = Feltdefinisjon(
                                 eksternId = "aktorId",
                                 område = område,
+                                visningsnavn = "Test",
                                 listetype = false,
                                 tolkesSom = "String",
                                 visTilBruker = true,
+                                kokriterie = false,
                                 kodeverkreferanse = null
                             ),
                             visPåOppgave = true,
@@ -169,9 +179,11 @@ class OppgavetypeTest {
                             feltDefinisjon = Feltdefinisjon(
                                 eksternId = "saksnummer",
                                 område = område,
+                                visningsnavn = "Test",
                                 listetype = false,
                                 tolkesSom = "String",
                                 visTilBruker = true,
+                                kokriterie = false,
                                 kodeverkreferanse = null
                             ),
                             visPåOppgave = true,
@@ -204,9 +216,11 @@ class OppgavetypeTest {
                             feltDefinisjon = Feltdefinisjon(
                                 eksternId = "saksnummer",
                                 område = område,
+                                visningsnavn = "Test",
                                 listetype = false,
                                 tolkesSom = "String",
                                 visTilBruker = true,
+                                kokriterie = false,
                                 kodeverkreferanse = null
                             ),
                             visPåOppgave = true,
@@ -218,9 +232,11 @@ class OppgavetypeTest {
                             feltDefinisjon = Feltdefinisjon(
                                 eksternId = "saksnummer",
                                 område = område,
+                                visningsnavn = "Test",
                                 listetype = false,
                                 tolkesSom = "String",
                                 visTilBruker = true,
+                                kokriterie = false,
                                 kodeverkreferanse = null
                             ),
                             visPåOppgave = true,
@@ -232,9 +248,11 @@ class OppgavetypeTest {
                             feltDefinisjon = Feltdefinisjon(
                                 eksternId = "testverdi",
                                 område = område,
+                                visningsnavn = "Test",
                                 listetype = false,
                                 tolkesSom = "String",
                                 visTilBruker = true,
+                                kokriterie = false,
                                 kodeverkreferanse = null
                             ),
                             visPåOppgave = true,
@@ -253,9 +271,11 @@ class OppgavetypeTest {
                             feltDefinisjon = Feltdefinisjon(
                                 eksternId = "saksnummer",
                                 område = område,
+                                visningsnavn = "Test",
                                 listetype = false,
                                 tolkesSom = "String",
                                 visTilBruker = true,
+                                kokriterie = false,
                                 kodeverkreferanse = null
                             ),
                             visPåOppgave = true,
