@@ -68,7 +68,12 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                 queryOf(
                     """
                     update feltdefinisjon 
-                    set visningsnavn = :visningsnavn, liste_type = :listeType, tolkes_som = :tolkesSom, vis_til_bruker = :visTilBruker, kokriterie = :kokriterie, kodeverkreferanse = :kodeverkreferanse
+                    set visningsnavn = :visningsnavn,
+                      liste_type = :listeType,
+                      tolkes_som = :tolkesSom,
+                      vis_til_bruker = :visTilBruker,
+                      kokriterie = :kokriterie,
+                      kodeverkreferanse = :kodeverkreferanse
                     WHERE omrade_id = :omradeId AND ekstern_id = :eksternId""",
                     mapOf(
                         "eksternId" to datatype.eksternId,
@@ -90,8 +95,26 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
             tx.run(
                 queryOf(
                     """
-                    insert into feltdefinisjon(ekstern_id, omrade_id, visningsnavn, liste_type, tolkes_som, vis_til_bruker, kokriterie, kodeverkreferanse) 
-                    values(:eksternId, :omradeId, :visningsnavn, :listeType, :tolkesSom, :visTilBruker, :kokriterie, :kodeverkreferanse)""",
+                    insert into feltdefinisjon (
+                      ekstern_id,
+                      omrade_id,
+                      visningsnavn,
+                      liste_type,
+                      tolkes_som,
+                      vis_til_bruker,
+                      kokriterie,
+                      kodeverkreferanse
+                    ) 
+                    values (
+                      :eksternId,
+                      :omradeId,
+                      :visningsnavn,
+                      :listeType,
+                      :tolkesSom,
+                      :visTilBruker,
+                      :kokriterie,
+                      :kodeverkreferanse
+                    )""",
                     mapOf(
                         "eksternId" to feltdefinisjon.eksternId,
                         "omradeId" to område.id,
@@ -132,8 +155,8 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
         val kodeverkId = tx.updateAndReturnGeneratedKey(
             queryOf(
                 """
-                    insert into kodeverk(omrade_id, ekstern_id, beskrivelse, uttommende)
-                    values(:omradeId, :eksternId, :beskrivelse, :uttommende)
+                    insert into kodeverk (omrade_id, ekstern_id, beskrivelse, uttommende)
+                    values (:omradeId, :eksternId, :beskrivelse, :uttommende)
                     on conflict (omrade_id, ekstern_id) do update set beskrivelse = :beskrivelse, uttommende = :uttommende 
                 """.trimIndent(),
                 mapOf(
