@@ -98,7 +98,7 @@ fun Application.k9Los() {
     val k9KlageTilLosAdapterTjeneste = koin.get<K9KlageTilLosAdapterTjeneste>()
     k9KlageTilLosAdapterTjeneste.setup()
 
-    if (LocalDateTime.now().isBefore(LocalDateTime.of(2023, 9, 22, 15, 30))) {
+    if (LocalDateTime.now().isBefore(LocalDateTime.of(2023, 9, 22, 17, 30))) {
         //koin.get<K9SakTilLosLukkeFeiloppgaverTjeneste>().kjørFeiloppgaverVask()
         koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
         koin.get<K9KlageTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
