@@ -124,10 +124,13 @@ class OppgaveKoRepository(val datasource: DataSource) {
                 )
             ).asUpdate
         )
+
         if (rows != 1) {
             throw IllegalStateException("Feil ved oppdatering av oppgavekø: ${oppgaveKo.id}, rows: ${rows}")
         }
+
         lagreKoSaksbehandlere(tx, oppgaveKo)
+
         return hent(tx, oppgaveKo.id)
     }
 
@@ -143,16 +146,9 @@ class OppgaveKoRepository(val datasource: DataSource) {
     }
 
     private fun lagreKoSaksbehandlere(tx: TransactionalSession, oppgaveKo: OppgaveKo) {
-        tx.run(
-            queryOf(
-                "DELETE FROM OPPGAVEKO_SAKSBEHANDLER WHERE oppgaveko_v3_id = :oppgavekoV3Id",
-                mapOf(
-                    "oppgavekoV3Id" to oppgaveKo.id
-                )
-            ).asUpdate
-        )
+        fjernAlleSaksbehandlereFraOppgaveKo(tx, oppgaveKo.id)
         oppgaveKo.saksbehandlere.forEach {
-            tx.run(
+            val updated = tx.run(
                 queryOf(
                     "INSERT INTO OPPGAVEKO_SAKSBEHANDLER (oppgaveko_v3_id, saksbehandler_epost) VALUES (:oppgavekoV3Id, :epost)",
                     mapOf(
@@ -162,5 +158,54 @@ class OppgaveKoRepository(val datasource: DataSource) {
                 ).asUpdate
             )
         }
+    }
+
+    fun slett(oppgaveKoId: Long) {
+        using(sessionOf(datasource)) { it ->
+            it.transaction { tx -> slett(tx, oppgaveKoId) }
+        }
+    }
+
+    fun slett(tx: TransactionalSession, oppgaveKoId: Long) {
+        fjernAlleSaksbehandlereFraOppgaveKo(tx, oppgaveKoId)
+        tx.run(
+            queryOf(
+                "DELETE FROM OPPGAVEKO_V3 WHERE id = :id",
+                mapOf(
+                    "id" to oppgaveKoId
+                )
+            ).asUpdate
+        )
+    }
+
+    private fun fjernAlleSaksbehandlereFraOppgaveKo(tx: TransactionalSession, oppgaveKoId: Long) {
+        tx.run(
+            queryOf(
+                "DELETE FROM OPPGAVEKO_SAKSBEHANDLER WHERE oppgaveko_v3_id = :oppgavekoV3Id",
+                mapOf(
+                    "oppgavekoV3Id" to oppgaveKoId
+                )
+            ).asUpdate
+        )
+    }
+
+    fun kopier(kopierFraOppgaveId: Long, tittel: String, taMedQuery: Boolean, taMedSaksbehandlere: Boolean): OppgaveKo {
+        return using(sessionOf(datasource)) { it ->
+            it.transaction { tx -> kopier(tx, kopierFraOppgaveId, tittel, taMedQuery, taMedSaksbehandlere) }
+        }
+    }
+
+    private fun kopier(tx: TransactionalSession, kopierFraOppgaveId: Long, tittel: String, taMedQuery: Boolean, taMedSaksbehandlere: Boolean): OppgaveKo {
+        val gammelOppgaveKo = hent(tx, kopierFraOppgaveId)
+        val nyOppgaveKo = leggTil(tx, tittel)
+
+        val oppdatertNyOppgaveko = nyOppgaveKo.copy(
+            oppgaveQuery = if (taMedQuery) gammelOppgaveKo.oppgaveQuery else nyOppgaveKo.oppgaveQuery,
+            saksbehandlere = if (taMedSaksbehandlere) gammelOppgaveKo.saksbehandlere else nyOppgaveKo.saksbehandlere,
+            beskrivelse = gammelOppgaveKo.beskrivelse,
+            frittValgAvOppgave = gammelOppgaveKo.frittValgAvOppgave
+        )
+
+        return endre(tx, oppdatertNyOppgaveko)
     }
 }

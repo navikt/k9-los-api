@@ -127,36 +127,46 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
             feltdefinisjoner = setOf(
                 FeltdefinisjonDto(
                     id = "aksjonspunkt",
+                    visningsnavn = "Test",
                     listetype = true,
                     tolkesSom = "String",
                     true,
+                    false,
                     kodeverkreferanse = null
                 ),
                 FeltdefinisjonDto(
                     id = "opprettet",
+                    visningsnavn = "Test",
                     listetype = false,
                     tolkesSom = "Date",
                     true,
+                    false,
                     kodeverkreferanse = null
                 ),
                 FeltdefinisjonDto(
                     id = "aktorId",
+                    visningsnavn = "Test",
                     listetype = false,
                     tolkesSom = "String",
                     true,
+                    false,
                     kodeverkreferanse = null
                 ),
                 FeltdefinisjonDto(
                     id = "akkumulertVentetidSaksbehandler",
+                    visningsnavn = "Test",
                     listetype = false,
                     tolkesSom = "Duration",
+                    false,
                     false,
                     kodeverkreferanse = null
                 ),
                 FeltdefinisjonDto(
                     id = "avventerSaksbehandler",
+                    visningsnavn = "Test",
                     listetype = false,
                     tolkesSom = "boolean",
+                    false,
                     false,
                     kodeverkreferanse = null
                 )
