@@ -167,7 +167,8 @@ class EventTilDtoMapper {
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "ansvarligSaksbehandler",
-                verdi = event.ansvarligSaksbehandlerIdent
+                verdi = event.ansvarligSaksbehandlerForTotrinn
+                    ?: event.ansvarligSaksbehandlerIdent
                     ?: forrigeOppgave?.hentVerdi("ansvarligSaksbehandler")
             ),
             OppgaveFeltverdiDto(
