@@ -175,7 +175,7 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         SakOgBehandlingProducer(
-            kafkaConfig = config.getKafkaConfig(),
+            kafkaConfig = config.getProfileAwareKafkaAivenConfig(),
             config = config
         )
     }

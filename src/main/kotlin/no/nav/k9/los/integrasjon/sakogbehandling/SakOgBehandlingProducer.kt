@@ -7,7 +7,7 @@ import no.nav.helse.dusseldorf.ktor.health.UnHealthy
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.aksjonspunktbehandling.objectMapper
-import no.nav.k9.los.integrasjon.kafka.KafkaConfig
+import no.nav.k9.los.integrasjon.kafka.IKafkaConfig
 import no.nav.k9.los.integrasjon.kafka.TopicEntry
 import no.nav.k9.los.integrasjon.kafka.TopicUse
 import no.nav.k9.los.integrasjon.sakogbehandling.kontrakt.BehandlingAvsluttet
@@ -20,7 +20,7 @@ import org.json.JSONObject
 import org.slf4j.LoggerFactory
 
 class SakOgBehandlingProducer constructor(
-    val kafkaConfig: KafkaConfig,
+    val kafkaConfig: IKafkaConfig,
     val config: Configuration
 ) : HealthCheck {
 
@@ -29,7 +29,7 @@ class SakOgBehandlingProducer constructor(
         valueSerializer = SakOgBehandlingSerialier()
     )
     private companion object {
-        private const val NAME = "SakOgBehadlingProducer"
+        private const val NAME = "SakOgBehandlingProducer"
 
         private val log = LoggerFactory.getLogger(SakOgBehandlingProducer::class.java)
     }
@@ -47,12 +47,18 @@ class SakOgBehandlingProducer constructor(
             return
         }
         val melding = objectMapper().writeValueAsString(behandlingOpprettet)
-        val recordMetaData = producer.send(
+        producer.send(
            ProducerRecord(
                 TOPIC_USE_SAK_OG_BEHANDLING.name,
                melding
             )
-        ).get()
+        ) { metadata, exception ->
+            if (exception != null) {
+                log.error("Feil vid publisering av kafka melding til sakogbehandling", exception)
+            } else {
+                log.info("Melding sendt OK til sakogbehandling med offset '${metadata.offset()}' til partition '${metadata.partition()}' topic ${metadata.topic()}")
+            }
+        }.get()
     }
 
     internal fun avsluttetBehandling(
@@ -63,14 +69,12 @@ class SakOgBehandlingProducer constructor(
             return
         }
         val melding = objectMapper().writeValueAsString(behandlingAvsluttet)
-        val recordMetaData = producer.send(
+        producer.send(
             ProducerRecord(
                 TOPIC_USE_SAK_OG_BEHANDLING.name,
                 melding
             )
         ).get()
-//        log.info("Sendt til Topic '${TOPIC_USE_SAK_OG_BEHANDLING.name}' med offset '${recordMetaData.offset()}' til partition '${recordMetaData.partition()}'")
-       // logger.info("AvsluttetBehandling: $melding")
     }
 
 
