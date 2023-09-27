@@ -5,11 +5,9 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKoListeDto
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKoListeelement
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
 import java.lang.IllegalArgumentException
 import java.time.LocalDateTime
