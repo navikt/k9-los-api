@@ -24,9 +24,11 @@ class FeltdefinisjonTest {
                 Feltdefinisjon(
                     eksternId = "saksnummer",
                     område = område,
+                    visningsnavn = "Test",
                     listetype = false,
                     tolkesSom = "String",
                     visTilBruker = true,
+                    kokriterie = false,
                     kodeverkreferanse = null
                 )
             )
@@ -44,17 +46,21 @@ class FeltdefinisjonTest {
                 Feltdefinisjon(
                     eksternId = "saksnummer",
                     område = område,
+                    visningsnavn = "Test",
                     listetype = true,
                     tolkesSom = "String",
                     visTilBruker = true,
+                    kokriterie = false,
                     kodeverkreferanse = null
                 ),
                 Feltdefinisjon(
                     eksternId = "opprettet",
                     område = område,
+                    visningsnavn = "Test",
                     listetype = true,
                     tolkesSom = "Date",
                     visTilBruker = true,
+                    kokriterie = false,
                     kodeverkreferanse = null
                 )
             )
@@ -72,17 +78,21 @@ class FeltdefinisjonTest {
                 Feltdefinisjon(
                     eksternId = "saksnummer",
                     område = område,
+                    visningsnavn = "Test",
                     listetype = false,
                     tolkesSom = "String",
                     visTilBruker = true,
+                    kokriterie = false,
                     kodeverkreferanse = null
                 ),
                 Feltdefinisjon(
                     eksternId = "opprettet",
                     område = område,
+                    visningsnavn = "Test",
                     listetype = false,
                     tolkesSom = "Date",
                     visTilBruker = true,
+                    kokriterie = false,
                     kodeverkreferanse = null
                 )
             )

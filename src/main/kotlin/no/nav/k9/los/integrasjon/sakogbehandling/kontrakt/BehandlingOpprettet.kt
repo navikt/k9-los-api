@@ -9,6 +9,11 @@ import java.time.LocalDateTime
 
 data class BehandlingOpprettet(
     val aktoerREF: List<AktoerREF>,
+    /*val identREF: List<IdentREF>,
+    SOB: Vi har lagt til muligheten for å sende med ident i tillegg til aktør,
+    så om dere har ident tilgjengelig i det dere generer meldingen hadde
+    vi satt stor pris på om dere sendte det med.
+     */
     val ansvarligEnhetREF: String,
     val applikasjonBehandlingREF: String,
     val applikasjonSakREF: String,
@@ -28,6 +33,10 @@ data class BehandlingOpprettet(
 ) {
     data class AktoerREF(
         val aktoerId: String
+    )
+
+    data class IdentREF(
+        val ident: String,
     )
 
     data class Behandlingstema(

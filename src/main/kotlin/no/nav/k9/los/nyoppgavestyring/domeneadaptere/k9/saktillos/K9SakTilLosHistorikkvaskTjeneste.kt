@@ -84,12 +84,15 @@ class K9SakTilLosHistorikkvaskTjeneste(
         var forrigeOppgave: OppgaveV3? = null
         transactionalManager.transaction { tx ->
             val behandlingMedFagsakDto = k9SakBerikerKlient.hentBehandling(UUID.fromString(uuid.toString()))
+
             val hastesak = oppgaveRepositoryV2.hentMerknader(uuid.toString(), false)
                 .filter { merknad -> merknad.merknadKoder.contains("HASTESAK") }.isNotEmpty()
             val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
             behandlingProsessEventer.forEach { event ->
-                if (event.eldsteDatoMedEndringFraSøker == null && behandlingMedFagsakDto != null) {
+                if (event.eldsteDatoMedEndringFraSøker == null && behandlingMedFagsakDto != null && behandlingMedFagsakDto.eldsteDatoMedEndringFraSøker != null) {
                     event.copy(eldsteDatoMedEndringFraSøker = behandlingMedFagsakDto.eldsteDatoMedEndringFraSøker)
+                    //ser ut som noen gamle mottatte dokumenter kan mangle innsendingstidspunkt.
+                    //da faller vi tilbake til å bruke behandling_opprettet i mapperen
                 }
                 var oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
                     .leggTilFeltverdi(

@@ -59,7 +59,7 @@ class SqlOppgaveQuery(
                 queryParams["kildeomrade$index"] = feltverdi
             }
             "oppgavetype" -> {
-                query += "${combineOperator.sql} o.ekstern_id ${operator.sql} (:oppgavetype$index) "
+                query += "${combineOperator.sql} ot.ekstern_id ${operator.sql} (:oppgavetype$index) "
                 queryParams["oppgavetype$index"] = feltverdi
             }
             "oppgaveområde" -> {
@@ -196,7 +196,7 @@ class SqlOppgaveQuery(
                 orderBySql += ", o.kildeomrade "
             }
             "oppgavetype" -> {
-                orderBySql += ", o.ekstern_id "
+                orderBySql += ", ot.ekstern_id "
             }
             "oppgaveområde" -> {
                 orderBySql += ", oppgave_omrade.ekstern_id "
