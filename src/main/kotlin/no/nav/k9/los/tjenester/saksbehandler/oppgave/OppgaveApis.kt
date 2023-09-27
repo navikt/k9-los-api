@@ -12,6 +12,7 @@ import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.integrasjon.rest.idToken
+import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.koin.ktor.ext.inject
@@ -27,6 +28,7 @@ internal fun Route.OppgaveApis() {
     val oppgaveTjeneste by inject<OppgaveTjeneste>()
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
     val reservasjonV3Tjeneste by inject<ReservasjonV3Tjeneste>()
+    val oppgaveKoTjeneste by inject<OppgaveKoTjeneste>()
     val oppgaveV3Repository by inject<OppgaveRepository>()
     val transactionalManager by inject<TransactionalManager>()
     val pepClient by inject<IPepClient>()
@@ -38,6 +40,7 @@ internal fun Route.OppgaveApis() {
         requestContextService.withRequestContext(call) {
             call.respond(
                 oppgaveTjeneste.hentNesteOppgaverIKø(UUID.fromString(queryParameter))
+
             )
         }
     }
@@ -120,7 +123,7 @@ internal fun Route.OppgaveApis() {
 
                 val reserverForIdent = oppgaveIdMedOverstyring.overstyrIdent ?: innloggetBruker.brukerIdent
                 val reserverForSaksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(reserverForIdent!!)!!
-
+                //TODO: try-catch på denne, og hent eksisterende reservasjon og returner hvis man kolliderer pga samtidighet
                 val reservasjonV3 = reservasjonV3Tjeneste.taReservasjon(
                     reservasjonsnøkkel = oppgaveV3.reservasjonsnøkkel,
                     reserverForId = reserverForSaksbehandler.id!!,
@@ -156,7 +159,7 @@ internal fun Route.OppgaveApis() {
                     kotlin.coroutines.coroutineContext.idToken().getUsername()
                 )!!
 
-                val reservasjonFraKø = reservasjonV3Tjeneste.taReservasjonFraKø(
+                val reservasjonFraKø = oppgaveKoTjeneste.taReservasjonFraKø(
                     innloggetBrukerId = innloggetBruker.id!!,
                     oppgaveKoId = params.oppgaveKøId.toLong()
                 )
@@ -165,7 +168,7 @@ internal fun Route.OppgaveApis() {
                     //log.info("RESERVASJONDEBUG: Lagt til ${innloggetBruker.brukerIdent} oppgave=${oppgaveFraKø.eksternId}, beslutter=${oppgaveFraKø.tilBeslutter}, kø=${params.oppgaveKøId} (neste oppgave)")
                     call.respond(ReservasjonV3Dto(reservasjonFraKø, innloggetBruker))
                 } else {
-                    call.respond(HttpStatusCode.NotFound, "Fant ingen oppgaver i valgt kø")
+                    call.respond(HttpStatusCode.NotFound, "Fant ingen oppgave i valgt kø")
                 }
             }
         }

@@ -307,7 +307,7 @@ private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
                 MerknadApi()
             }
 
-            SaksbehandlerOppgavekoApis()
+            SaksbehandlerOppgavekoApis() //TODO denne må slå opp i gamle OG nye køer?
             SaksbehandlerNøkkeltallApis() //TODO oppslag i reservasjon her
         }
         route("avdelingsleder") {

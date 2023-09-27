@@ -4,7 +4,7 @@ import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import java.time.LocalDateTime
 
-data class ReservasjonV3Dto (
+data class ReservasjonV3Dto ( //TODO: WIP avklare med Vebjørn hvor mange felter som trengs jfr OppgaveDto som returneres fra gammel fa-oppgave-fra-ko
     val reservasjonsnøkkel: String,
     val reservertAv: String,
     val reservertFra: LocalDateTime,
