@@ -5,15 +5,26 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKoListeDto
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKoListeelement
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
 import java.lang.IllegalArgumentException
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
 class OppgaveKoRepository(val datasource: DataSource) {
+
+    private val standardOppgaveString: String by lazy {
+        val objectMapper = jacksonObjectMapper()
+        val standardOppgaveQuery = objectMapper.readValue(
+            OppgaveKoRepository::class.java.getResource("/los/standard-ko.json")!!.readText(),
+            OppgaveQuery::class.java
+        )
+        objectMapper.writeValueAsString(standardOppgaveQuery)
+    }
 
     fun hentListe(): OppgaveKoListeDto {
         return using(sessionOf(datasource)) { it ->
@@ -72,7 +83,6 @@ class OppgaveKoRepository(val datasource: DataSource) {
     }
 
     fun leggTil(tx: TransactionalSession, tittel: String): OppgaveKo {
-        val objectMapper = jacksonObjectMapper()
         val oppgaveKoId = tx.run(
             queryOf(
                 """
@@ -80,7 +90,7 @@ class OppgaveKoRepository(val datasource: DataSource) {
                 VALUES (0, :tittel, '', :query, false, :endret_tidspunkt) RETURNING ID""",
                 mapOf(
                     "tittel" to tittel,
-                    "query" to objectMapper.writeValueAsString(OppgaveQuery()),
+                    "query" to standardOppgaveString,
                     "endret_tidspunkt" to LocalDateTime.now()
                 )
             ).map{row -> row.long(1)}.asSingle
