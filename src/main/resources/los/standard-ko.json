@@ -1,0 +1,22 @@
+{
+  "filtere": [
+    {
+      "type": "feltverdi",
+      "område": null,
+      "kode": "oppgavestatus",
+      "operator": "IN",
+      "verdi": [
+        "AAPEN"
+      ]
+    }
+  ],
+  "select": [],
+  "order": [
+    {
+      "type": "enkel",
+      "område": "K9",
+      "kode": "mottattDato",
+      "økende": true
+    }
+  ]
+}
