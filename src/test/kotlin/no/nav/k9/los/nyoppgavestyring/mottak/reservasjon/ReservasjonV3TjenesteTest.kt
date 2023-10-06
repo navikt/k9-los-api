@@ -59,9 +59,10 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
         val reservasjonV3Tjeneste = get<ReservasjonV3Tjeneste>()
 
         val reservasjon = runBlocking {
-            reservasjonV3Tjeneste.taReservasjon(
+            reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(
                 reservasjonsnøkkel = "test1",
                 reserverForId = saksbehandler1.id!!,
+                kommentar = "",
                 gyldigFra = LocalDateTime.now(),
                 gyldigTil = LocalDateTime.now().plusDays(1),
                 utføresAvId = saksbehandlerInnlogget.id!!
@@ -86,16 +87,17 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
         val reservasjonV3Tjeneste = get<ReservasjonV3Tjeneste>()
 
         val reservasjon = runBlocking {
-            reservasjonV3Tjeneste.taReservasjon(
+            reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(
                 reservasjonsnøkkel = "test1",
                 reserverForId = saksbehandler1.id!!,
+                kommentar = "",
                 gyldigFra = LocalDateTime.now(),
                 gyldigTil = LocalDateTime.now().plusDays(1),
                 utføresAvId = saksbehandlerInnlogget.id!!
             )
         }
 
-        reservasjonV3Tjeneste.annullerReservasjon(reservasjonsnøkkel = "test1", annullertAvBrukerId = saksbehandlerInnlogget.id!!)
+        reservasjonV3Tjeneste.annullerReservasjon(reservasjonsnøkkel = "test1", "", annullertAvBrukerId = saksbehandlerInnlogget.id!!)
 
         val aktiveReservasjoner =
             reservasjonV3Tjeneste.hentReservasjonerForSaksbehandler(saksbehandler1.id!!)
@@ -128,6 +130,7 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
         val reservasjon = ReservasjonV3(
             reservertAv = saksbehandler1.id!!,
             reservasjonsnøkkel = "test1",
+            kommentar = "",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
         )
@@ -142,7 +145,8 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
             "test1",
             overførTildato,
             saksbehandler2.id!!,
-            saksbehandler2.id!!
+            saksbehandler2.id!!,
+            ""
         )
 
         transactionalManager.transaction { tx ->
@@ -169,6 +173,7 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
         var reservasjon = ReservasjonV3(
             reservertAv = saksbehandler1.id!!,
             reservasjonsnøkkel = "test1",
+            kommentar = "",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
         )
@@ -184,7 +189,8 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
                 reservasjon.reservasjonsnøkkel,
                 overførTildato,
                 5L,
-                saksbehandler1.id!!
+                saksbehandler1.id!!,
+                ""
             )
         }
 

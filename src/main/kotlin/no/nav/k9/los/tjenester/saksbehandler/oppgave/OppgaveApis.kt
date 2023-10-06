@@ -12,6 +12,7 @@ import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.integrasjon.rest.idToken
+import no.nav.k9.los.nyoppgavestyring.feilhandtering.FinnerIkkeDataException
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
@@ -19,6 +20,7 @@ import org.koin.ktor.ext.inject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.util.*
 
 private val log: Logger = LoggerFactory.getLogger("nav.OppgaveApis")
@@ -30,11 +32,13 @@ internal fun Route.OppgaveApis() {
     val reservasjonV3Tjeneste by inject<ReservasjonV3Tjeneste>()
     val oppgaveKoTjeneste by inject<OppgaveKoTjeneste>()
     val oppgaveV3Repository by inject<OppgaveRepository>()
+    val oppgaveV3Tjeneste by inject<no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveTjeneste>()
     val transactionalManager by inject<TransactionalManager>()
     val pepClient by inject<IPepClient>()
 
     class hentOppgaver
 
+    //erstattet av OppgaveKoApis--/{id}/oppgaver::GET
     get { _: hentOppgaver ->
         val queryParameter = call.request.queryParameters["id"]
         requestContextService.withRequestContext(call) {
@@ -45,7 +49,7 @@ internal fun Route.OppgaveApis() {
         }
     }
 
-    @Location("/behandlede")
+    @Location("/behandlede") //WIP: siste behandlede oppgaver av saksbehandler. Gjenbruke gammel løsning?
     class getBehandledeOppgaver
 
     get { _: getBehandledeOppgaver ->
@@ -59,11 +63,28 @@ internal fun Route.OppgaveApis() {
 
     get { _: getReserverteOppgaver ->
         requestContextService.withRequestContext(call) {
-            call.respond(oppgaveTjeneste.hentSisteReserverteOppgaver())
+            val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
+                kotlin.coroutines.coroutineContext.idToken().getUsername()
+            )!!
+
+            val reservasjoner =
+                reservasjonV3Tjeneste.hentReservasjonerForSaksbehandler(innloggetBruker.id!!)
+
+            val reservasjonV3Dtos = reservasjoner.map { reservasjon ->
+                val oppgaverForReservasjonsnøkkel =
+                    oppgaveV3Tjeneste.hentÅpneOppgaverForReservasjonsnøkkel(reservasjon.reservasjonsnøkkel)
+
+                ReservasjonV3Dto(
+                    reservasjon,
+                    oppgaverForReservasjonsnøkkel,
+                    innloggetBruker
+                )
+            }
+            call.respond(reservasjonV3Dtos)
         }
     }
 
-    @Location("/antall")
+    @Location("/antall") //TODO avklare med Stian/Bjørnar -- OppgaveQueryService.query med tom select i query?
     class hentAntallOppgaverForOppgavekø
 
     get { _: hentAntallOppgaverForOppgavekø ->
@@ -124,16 +145,18 @@ internal fun Route.OppgaveApis() {
                 val reserverForIdent = oppgaveIdMedOverstyring.overstyrIdent ?: innloggetBruker.brukerIdent
                 val reserverForSaksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(reserverForIdent!!)!!
                 //TODO: try-catch på denne, og hent eksisterende reservasjon og returner hvis man kolliderer pga samtidighet
-                val reservasjonV3 = reservasjonV3Tjeneste.taReservasjon(
+                val reservasjonV3 = reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(
                     reservasjonsnøkkel = oppgaveV3.reservasjonsnøkkel,
                     reserverForId = reserverForSaksbehandler.id!!,
                     gyldigFra = reserverFra,
-                    gyldigTil = reserverFra.plusHours(24).forskyvReservasjonsDato(),
-                    utføresAvId = innloggetBruker.id!!
+                    utføresAvId = innloggetBruker.id!!,
+                    kommentar = oppgaveIdMedOverstyring.overstyrBegrunnelse ?: "",
+                    gyldigTil = reserverFra.plusHours(24).forskyvReservasjonsDato()
                 )
                 //TODO: konsistenssjekk mellom tjenesteversjonene --- V3 som master der V3 har oppgave
                 //TODO: sjekke statusobjekt, saksbehandler som holder reservasjon -- feks conflict hvis noen andre hadde reservasjon fra før
-                val saksbehandlerSomHarReservasjon = saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonV3.reservertAv)
+                val saksbehandlerSomHarReservasjon =
+                    saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonV3.reservertAv)
                 call.respond(
                     OppgaveStatusDto(
                         erReservert = true,
@@ -151,27 +174,27 @@ internal fun Route.OppgaveApis() {
 
     @Location("/fa-oppgave-fra-ny-ko")
     class fåOppgaveFraNyKø
-        post {_: fåOppgaveFraNyKø ->
-            requestContextService.withRequestContext(call) {
-                val params = call.receive<OppgaveKøIdDto>()
+    post { _: fåOppgaveFraNyKø ->
+        requestContextService.withRequestContext(call) {
+            val params = call.receive<OppgaveKøIdDto>()
 
-                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
-                    kotlin.coroutines.coroutineContext.idToken().getUsername()
-                )!!
+            val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
+                kotlin.coroutines.coroutineContext.idToken().getUsername()
+            )!!
 
-                val reservasjonFraKø = oppgaveKoTjeneste.taReservasjonFraKø(
-                    innloggetBrukerId = innloggetBruker.id!!,
-                    oppgaveKoId = params.oppgaveKøId.toLong()
-                )
+            val (reservertOppgave, reservasjonFraKø) = oppgaveKoTjeneste.taReservasjonFraKø(
+                innloggetBrukerId = innloggetBruker.id!!,
+                oppgaveKoId = params.oppgaveKøId.toLong()
+            ) ?: Pair(null, null)
 
-                if (reservasjonFraKø != null) {
-                    //log.info("RESERVASJONDEBUG: Lagt til ${innloggetBruker.brukerIdent} oppgave=${oppgaveFraKø.eksternId}, beslutter=${oppgaveFraKø.tilBeslutter}, kø=${params.oppgaveKøId} (neste oppgave)")
-                    call.respond(ReservasjonV3Dto(reservasjonFraKø, innloggetBruker))
-                } else {
-                    call.respond(HttpStatusCode.NotFound, "Fant ingen oppgave i valgt kø")
-                }
+            if (reservasjonFraKø != null) {
+                //log.info("RESERVASJONDEBUG: Lagt til ${innloggetBruker.brukerIdent} oppgave=${oppgaveFraKø.eksternId}, beslutter=${oppgaveFraKø.tilBeslutter}, kø=${params.oppgaveKøId} (neste oppgave)")
+                call.respond(ReservasjonV3FraKøDto(reservasjonFraKø, reservertOppgave!!, innloggetBruker))
+            } else {
+                call.respond(HttpStatusCode.NotFound, "Fant ingen oppgave i valgt kø")
             }
         }
+    }
 
     @Location("/fa-oppgave-fra-ko")
     class fåOppgaveFraKø
@@ -179,14 +202,18 @@ internal fun Route.OppgaveApis() {
         requestContextService.withRequestContext(call) {
             val params = call.receive<OppgaveKøIdDto>()
 
-            val ident = saksbehandlerRepository.finnSaksbehandlerMedEpost(
+            val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(
                 kotlin.coroutines.coroutineContext.idToken().getUsername()
-            )!!.brukerIdent!!
+            )!!
 
-            val oppgaveFraKø = oppgaveTjeneste.fåOppgaveFraKø(params.oppgaveKøId, ident)
+            val oppgaveFraKø = oppgaveTjeneste.fåOppgaveFraKø(
+                oppgaveKøId = params.oppgaveKøId,
+                brukerident = saksbehandler.brukerIdent!!,
+                saksbehandlerEpost = saksbehandler.epost!!
+            )
 
             if (oppgaveFraKø != null) {
-                log.info("RESERVASJONDEBUG: Lagt til $ident oppgave=${oppgaveFraKø.eksternId}, beslutter=${oppgaveFraKø.tilBeslutter}, kø=${params.oppgaveKøId} (neste oppgave)")
+                log.info("RESERVASJONDEBUG: Lagt til ${saksbehandler.brukerIdent} oppgave=${oppgaveFraKø.eksternId}, beslutter=${oppgaveFraKø.tilBeslutter}, kø=${params.oppgaveKøId} (neste oppgave)")
                 call.respond(oppgaveFraKø)
             } else {
                 call.respond(HttpStatusCode.NotFound, "Fant ingen oppgave i valgt kø")
@@ -199,11 +226,24 @@ internal fun Route.OppgaveApis() {
     post { _: opphevReservasjon ->
         requestContextService.withRequestContext(call) {
             val params = call.receive<OpphevReservasjonId>()
-            call.respond(oppgaveTjeneste.frigiReservasjon(UUID.fromString(params.oppgaveId), params.begrunnelse))
+            val gammelReturverdi =
+                oppgaveTjeneste.frigiReservasjon(UUID.fromString(params.oppgaveId), params.begrunnelse)
+
+            val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
+                kotlin.coroutines.coroutineContext.idToken().getUsername()
+            )!!
+
+            val oppgave = oppgaveV3Tjeneste.hentOppgave(params.oppgaveId)
+            reservasjonV3Tjeneste.annullerReservasjon(
+                oppgave.reservasjonsnøkkel,
+                params.begrunnelse,
+                innloggetBruker.id!!
+            )
+            call.respond(HttpStatusCode.OK) //TODO: Hva er evt meningsfullt å returnere her?
         }
     }
 
-    @Location("/oppgaver-på-samme-bruker")
+    @Location("/oppgaver-på-samme-bruker") //TODO: Ikke i bruk?
     class oppgaverPåSammeBruker
     post { _: opphevReservasjon ->
         requestContextService.withRequestContext(call) {
@@ -212,7 +252,7 @@ internal fun Route.OppgaveApis() {
         }
     }
 
-    @Location("/legg-til-behandlet-sak")
+    @Location("/legg-til-behandlet-sak")  //TODO: ny løsning for siste saker?
     class leggTilBehandletSak
 
     post { _: leggTilBehandletSak ->
@@ -231,8 +271,39 @@ internal fun Route.OppgaveApis() {
     class forlengReservasjon
     post { _: forlengReservasjon ->
         requestContextService.withRequestContext(call) {
-            val oppgaveId = call.receive<OppgaveId>()
-            call.respond(oppgaveTjeneste.forlengReservasjonPåOppgave(UUID.fromString(oppgaveId.oppgaveId)))
+            val forlengReservasjonDto = call.receive<ForlengReservasjonDto>()
+            val gammelReturverdi =
+                oppgaveTjeneste.forlengReservasjonPåOppgave(UUID.fromString(forlengReservasjonDto.oppgaveId))
+
+            //TODO oppgaveId er behandlingsUUID?
+            val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
+                kotlin.coroutines.coroutineContext.idToken().getUsername()
+            )!!
+            val oppgave = oppgaveV3Tjeneste.hentOppgave(forlengReservasjonDto.oppgaveId)
+
+            val forlengetReservasjon = try {
+                reservasjonV3Tjeneste.forlengReservasjon(
+                    reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
+                    nyTildato = forlengReservasjonDto.nyTilDato,
+                    utførtAvBrukerId = innloggetBruker.id!!,
+                    kommentar = forlengReservasjonDto.kommentar ?: ""
+                )
+            } catch (e: FinnerIkkeDataException) {
+                call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")
+                null //TODO: Vil denne funksjonen faktisk terminere her?
+            }
+
+            val åpneOppgaverForReservasjonsnøkkel =
+                oppgaveV3Tjeneste.hentÅpneOppgaverForReservasjonsnøkkel(oppgave.reservasjonsnøkkel)
+            val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(forlengetReservasjon!!.reservertAv)!!
+
+            call.respond(
+                ReservasjonV3Dto(
+                    forlengetReservasjon!!,
+                    åpneOppgaverForReservasjonsnøkkel,
+                    reservertAv
+                )
+            )
         }
     }
 
@@ -242,12 +313,44 @@ internal fun Route.OppgaveApis() {
     post { _: flyttReservasjon ->
         requestContextService.withRequestContext(call) {
             val params = call.receive<FlyttReservasjonId>()
-            call.respond(
-                oppgaveTjeneste.flyttReservasjon(
-                    UUID.fromString(params.oppgaveId),
-                    params.brukerIdent,
-                    params.begrunnelse
+            val gammelReturVerdi = oppgaveTjeneste.flyttReservasjon(
+                UUID.fromString(params.oppgaveId),
+                params.brukerIdent,
+                params.begrunnelse
+            )
+
+            val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
+                kotlin.coroutines.coroutineContext.idToken().getUsername()
+            )!!
+            val tilSaksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(
+                params.brukerIdent
+            )!!
+
+            val oppgave = oppgaveV3Tjeneste.hentOppgave(params.oppgaveId)
+            val aktivReservasjon =
+                reservasjonV3Tjeneste.hentAktivReservasjonForReservasjonsnøkkel(oppgave.reservasjonsnøkkel)
+            if (aktivReservasjon == null) {
+                call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")
+            }
+
+            val nyReservasjon = try {
+                reservasjonV3Tjeneste.overførReservasjon(
+                    reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
+                    reserverTil = aktivReservasjon!!.gyldigTil.plusHours(24).forskyvReservasjonsDato(),
+                    tilSaksbehandlerId = tilSaksbehandler.id!!,
+                    utførtAvBrukerId = innloggetBruker.id!!,
+                    kommentar = params.begrunnelse,
                 )
+            } catch (e: FinnerIkkeDataException) {
+                call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")
+                null //TODO: Vil denne funksjonen faktisk terminere her?
+            }
+
+            val åpneOppgaverForReservasjonsnøkkel =
+                oppgaveV3Tjeneste.hentÅpneOppgaverForReservasjonsnøkkel(oppgave.reservasjonsnøkkel)
+
+            call.respond(
+                ReservasjonV3Dto(nyReservasjon!!, åpneOppgaverForReservasjonsnøkkel, tilSaksbehandler)
             )
         }
     }
@@ -258,8 +361,34 @@ internal fun Route.OppgaveApis() {
     post { _: endreReservasjon ->
         requestContextService.withRequestContext(call) {
             val params = call.receive<ReservasjonEndringDto>()
+            oppgaveTjeneste.endreReservasjonPåOppgave(params)
+
+
+            val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
+                kotlin.coroutines.coroutineContext.idToken().getUsername()
+            )!!
+            val tilSaksbehandler = params.brukerIdent?.let { saksbehandlerRepository.finnSaksbehandlerMedIdent(it) }
+
+            val oppgave = oppgaveV3Tjeneste.hentOppgave(params.oppgaveId) //TODO oppgaveId er behandlingsUUID?
+            val nyReservasjon = try {
+                reservasjonV3Tjeneste.endreReservasjon(
+                    reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
+                    endretAvBrukerId = innloggetBruker.id!!,
+                    nyTildato = params.reserverTil?.let { LocalDateTime.of(params.reserverTil, LocalTime.MAX) },
+                    nySaksbehandlerId = tilSaksbehandler?.id,
+                    kommentar = params.begrunnelse
+                )
+            } catch (e: FinnerIkkeDataException) {
+                call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")
+                null //TODO: Vil denne funksjonen faktisk terminere her?
+            }
+
+            val åpneOppgaverForReservasjonsnøkkel =
+                oppgaveV3Tjeneste.hentÅpneOppgaverForReservasjonsnøkkel(oppgave.reservasjonsnøkkel)
+            val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(nyReservasjon!!.reservertAv)
+
             call.respond(
-                oppgaveTjeneste.endreReservasjonPåOppgave(params)
+                ReservasjonV3Dto(nyReservasjon!!, åpneOppgaverForReservasjonsnøkkel, reservertAv)
             )
         }
     }
@@ -276,7 +405,7 @@ internal fun Route.OppgaveApis() {
         }
     }
 
-    @Location("/hent-historiske-reservasjoner-på-oppgave")
+    @Location("/hent-historiske-reservasjoner-på-oppgave") //TODO: Ikke i bruk?
     class hentHistoriskeReservasjonerPåOppgave
 
     post { _: hentHistoriskeReservasjonerPåOppgave ->
@@ -303,7 +432,7 @@ internal fun Route.OppgaveApis() {
         }
     }
 
-    @Location("/oppgaver-for-fagsaker")
+    @Location("/oppgaver-for-fagsaker") //TODO: Ikke i bruk?
     class oppgaverForFagsaker
 
     get { _: oppgaverForFagsaker ->

@@ -5,6 +5,7 @@ import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
+import no.nav.k9.los.nyoppgavestyring.reservasjon.AlleredeReservertException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -41,6 +42,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
+            kommentar = ""
         )
 
         transactionalManager.transaction { tx ->
@@ -98,6 +100,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now().minusDays(5),
             gyldigTil = LocalDateTime.now().minusDays(1),
+            kommentar = ""
         )
 
         val reservasjon2 = ReservasjonV3(
@@ -105,6 +108,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now().plusMinutes(1),
             gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
+            kommentar = ""
         )
 
         transactionalManager.transaction { tx ->
@@ -142,6 +146,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now().minusDays(5),
             gyldigTil = LocalDateTime.now().minusDays(1),
+            kommentar = ""
         )
 
         val reservasjon2 = ReservasjonV3(
@@ -149,6 +154,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
+            kommentar = ""
         )
 
         transactionalManager.transaction { tx ->
@@ -210,6 +216,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
+            kommentar = ""
         )
 
         val reservasjon2 = ReservasjonV3(
@@ -217,6 +224,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now().plusMinutes(1),
             gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
+            kommentar = ""
         )
 
         transactionalManager.transaction { tx ->
@@ -224,7 +232,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         }
 
         val exception =
-            assertThrows<IllegalArgumentException> {
+            assertThrows<AlleredeReservertException> {
                 transactionalManager.transaction { tx ->
                     repo.lagreReservasjon(reservasjon2, tx)
                 }
@@ -273,6 +281,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
+            kommentar = ""
         )
 
         val reservasjon2 = ReservasjonV3(
@@ -280,6 +289,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now().plusMinutes(1),
             gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
+            kommentar = ""
         )
 
         val saksbehandlerInnlogget = runBlocking {
@@ -298,7 +308,7 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
 
         transactionalManager.transaction { tx ->
             val reservasjon = repo.lagreReservasjon(reservasjon1, tx)
-            repo.annullerAktivReservasjonOgLagreEndring(reservasjon, saksbehandlerInnlogget.id!!, tx)
+            repo.annullerAktivReservasjonOgLagreEndring(reservasjon, "", saksbehandlerInnlogget.id!!, tx)
         }
 
         transactionalManager.transaction { tx ->

@@ -12,6 +12,7 @@ import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.koin.test.get
 import java.time.LocalDate
@@ -240,7 +241,8 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveTjeneste.fåOppgaveFraKø(
             oppgaveKøId.toString(),
             brukerIdent,
-            emptyArray<OppgaveDto>().toMutableList()
+            emptyArray<OppgaveDto>().toMutableList(),
+            saksbehandlerEpost =  "test@test.no"
         )
 
         // assert
@@ -329,7 +331,8 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveTjeneste.fåOppgaveFraKø(
             oppgaveKøId.toString(),
             brukerIdent,
-            emptyArray<OppgaveDto>().toMutableList()
+            emptyArray<OppgaveDto>().toMutableList(),
+            saksbehandlerEpost =  "test@test.no"
         )
 
         val reservasjonsHistorikk1 = oppgaveTjeneste.hentReservasjonsHistorikk(oppgave1.eksternId)
@@ -392,7 +395,8 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val oppgaveFraKø = oppgaveTjeneste.fåOppgaveFraKø(
             oppgaveKøId.toString(),
             brukerIdent2,
-            emptyArray<OppgaveDto>().toMutableList()
+            emptyArray<OppgaveDto>().toMutableList(),
+            saksbehandlerEpost =  "test@test.no"
         )
 
         assertNull(oppgaveFraKø)
@@ -766,7 +770,8 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveTjeneste.fåOppgaveFraKø(
             oppgaveKøId.toString(),
             brukerIdent,
-            emptyArray<OppgaveDto>().toMutableList()
+            emptyArray<OppgaveDto>().toMutableList(),
+            saksbehandlerEpost =  "test@test.no"
         )
 
         val reservasjonsHistorikk1 = oppgaveTjeneste.hentReservasjonsHistorikk(oppgave1.eksternId)
@@ -860,7 +865,8 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveTjeneste.fåOppgaveFraKø(
             oppgaveKøId.toString(),
             brukerIdent,
-            emptyArray<OppgaveDto>().toMutableList()
+            emptyArray<OppgaveDto>().toMutableList(),
+            saksbehandlerEpost =  "test@test.no"
         )
 
         val reservasjonsHistorikk2 = oppgaveTjeneste.hentReservasjonsHistorikk(oppgave1.eksternId)
@@ -952,7 +958,8 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveTjeneste.fåOppgaveFraKø(
             oppgaveKøId.toString(),
             brukerIdent,
-            emptyArray<OppgaveDto>().toMutableList()
+            emptyArray<OppgaveDto>().toMutableList(),
+            saksbehandlerEpost =  "test@test.no"
         )
 
         val reservasjonsHistorikk1 = oppgaveTjeneste.hentReservasjonsHistorikk(oppgave1.eksternId)
@@ -1047,7 +1054,8 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveTjeneste.fåOppgaveFraKø(
             oppgaveKøId.toString(),
             brukerIdent,
-            emptyArray<OppgaveDto>().toMutableList()
+            emptyArray<OppgaveDto>().toMutableList(),
+            saksbehandlerEpost =  "test@test.no"
         )
 
         val reservasjonsHistorikk2 = oppgaveTjeneste.hentReservasjonsHistorikk(oppgave1.eksternId)
@@ -1186,7 +1194,8 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveTjeneste.fåOppgaveFraKø(
             oppgaveKøId.toString(),
             brukerIdent,
-            emptyArray<OppgaveDto>().toMutableList()
+            emptyArray<OppgaveDto>().toMutableList(),
+            saksbehandlerEpost =  "test@test.no"
         )
 
         val reservasjonsHistorikk1 = oppgaveTjeneste.hentReservasjonsHistorikk(oppgave1.eksternId)
@@ -1326,7 +1335,8 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveTjeneste.fåOppgaveFraKø(
             oppgaveKøId.toString(),
             ident,
-            emptyArray<OppgaveDto>().toMutableList()
+            emptyArray<OppgaveDto>().toMutableList(),
+            saksbehandlerEpost =  "test@test.no"
         )
 
 
@@ -1503,7 +1513,8 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveTjeneste.fåOppgaveFraKø(
             oppgaveKøId.toString(),
             brukerIdent,
-            emptyArray<OppgaveDto>().toMutableList()
+            emptyArray<OppgaveDto>().toMutableList(),
+            saksbehandlerEpost =  "test@test.no"
         )
 
         val reservasjonsHistorikk1 = oppgaveTjeneste.hentReservasjonsHistorikk(oppgave1.eksternId)

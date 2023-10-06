@@ -1,10 +1,12 @@
 package no.nav.k9.los.nyoppgavestyring.ko
 
+import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.integrasjon.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
-import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgaverad
 import no.nav.k9.los.nyoppgavestyring.reservasjon.AlleredeReservertException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ManglerTilgangException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
@@ -24,6 +26,16 @@ class OppgaveKoTjeneste(
 ) {
     private val log = LoggerFactory.getLogger(OppgaveKoTjeneste::class.java)
 
+    fun hentOppgaverFraKø(
+        oppgaveKoId: Long
+    ) : List<Oppgaverad> {
+        val ko = oppgaveKoRepository.hent(oppgaveKoId)
+        val idToken = runBlocking {
+            kotlin.coroutines.coroutineContext.idToken()
+        }
+        return oppgaveQueryService.query(ko.oppgaveQuery, idToken)
+    }
+
     fun taReservasjonFraKø(
         innloggetBrukerId: Long,
         oppgaveKoId: Long
@@ -38,12 +50,12 @@ class OppgaveKoTjeneste(
         val kandidatOppgaver = oppgaveQueryService.queryForOppgaveId(oppgavekø.oppgaveQuery)
 
         return transactionalManager.transaction { tx ->
-            finnOppgaveFraKø(kandidatOppgaver, tx, innloggetBrukerId)
+            finnReservasjonFraKø(kandidatOppgaver, tx, innloggetBrukerId)
         }
 
     }
 
-    private fun finnOppgaveFraKø(
+    private fun finnReservasjonFraKø(
         kandidatoppgaver: List<Long>,
         tx: TransactionalSession,
         innloggetBrukerId: Long
@@ -66,6 +78,7 @@ class OppgaveKoTjeneste(
                     reservasjonsnøkkel = kandidatoppgave.reservasjonsnøkkel,
                     gyldigFra = LocalDateTime.now(),
                     gyldigTil = LocalDateTime.now().plusHours(24).forskyvReservasjonsDato(),
+                    kommentar = "",
                     tx = tx
                 )
                 return Pair(kandidatoppgave, reservasjon)

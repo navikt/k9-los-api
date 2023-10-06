@@ -12,6 +12,7 @@ import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.ko.dto.KopierOppgaveKoDto
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OpprettOppgaveKoDto
+import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import org.koin.java.KoinJavaComponent
 import org.koin.ktor.ext.inject
 import java.util.*
@@ -19,6 +20,7 @@ import java.util.*
 fun Route.OppgaveKoApis() {
     val requestContextService by inject<RequestContextService>()
     val oppgaveKoRepository by inject<OppgaveKoRepository>()
+    val oppgaveKoTjeneste by inject<OppgaveKoTjeneste>()
     val pepClient by KoinJavaComponent.inject<IPepClient>(IPepClient::class.java)
 
     @Location("/")
@@ -85,6 +87,17 @@ fun Route.OppgaveKoApis() {
             }
 
             call.respond(oppgaveKoRepository.slett(oppgaveKoParams.id.toLong()))
+        }
+    }
+
+    @Location("/{id}/oppgaver")
+    data class OppgaveKoId(val id: String)
+
+    get { oppgaveKoId: OppgaveKoId ->
+        requestContextService.withRequestContext(call) {
+            if (pepClient.harTilgangTilReservingAvOppgaver()) { //TODO: Hvilke felter vil vi eksponere her?
+                oppgaveKoTjeneste.hentOppgaverFraKø(oppgaveKoId.id.toLong())
+            }
         }
     }
 

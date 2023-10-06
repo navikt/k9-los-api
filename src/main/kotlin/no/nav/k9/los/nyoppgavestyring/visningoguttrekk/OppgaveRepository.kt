@@ -2,6 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.visningoguttrekk
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 
 class OppgaveRepository(
@@ -35,6 +36,39 @@ class OppgaveRepository(
         ) ?: throw IllegalStateException("Fant ikke oppgave med eksternId $eksternId")
 
         return oppgave.fyllDefaultverdier()
+    }
+
+    fun hentAlleÅpneOppgaverForReservasjonsnøkkel(tx: TransactionalSession, reservasjonsnøkkel: String) : List<Oppgave> {
+        val oppgaver = tx.run(
+            queryOf(
+                """
+                select *
+                from oppgave_v3 ov 
+                where reservasjonsnokkel = :reservasjonsnokkel
+                and aktiv = true
+                and status != :oppgavestatus
+            """.trimIndent(),
+                mapOf(
+                    "reservasjonsnokkel" to reservasjonsnøkkel,
+                    "oppgavestatus" to Oppgavestatus.LUKKET.kode,
+                )
+            ).map { row ->
+                val kildeområde = row.string("kildeomrade")
+                val oppgaveTypeId = row.long("oppgavetype_id")
+                Oppgave(
+                    eksternId = row.string("ekstern_id"),
+                    eksternVersjon = row.string("ekstern_versjon"),
+                    oppgavetype = oppgavetypeRepository.hentOppgavetype(kildeområde, oppgaveTypeId, tx),
+                    status = row.string("status"),
+                    endretTidspunkt = row.localDateTime("endret_tidspunkt"),
+                    kildeområde = row.string("kildeomrade"),
+                    felter = hentOppgavefelter(tx, row.long("id")),
+                    reservasjonsnøkkel = row.string("reservasjonsnokkel")
+                )
+            }.asList
+        )
+
+        return oppgaver
     }
 
     fun hentAlleOppgaverForReservasjonsnøkkel(tx: TransactionalSession, reservasjonsnøkkel: String): List<Oppgave> {

@@ -9,6 +9,7 @@ class ReservasjonV3(
     val reservertAv: Long,
     val reservasjonsnøkkel: String,
     val annullertFørUtløp: Boolean = false,
+    val kommentar: String,
     gyldigFra: LocalDateTime,
     gyldigTil: LocalDateTime,
 ) {
@@ -20,6 +21,7 @@ class ReservasjonV3(
         reservertAv: Long = this.reservertAv,
         reservasjonsnøkkel: String = this.reservasjonsnøkkel,
         annullertFørUtløp: Boolean = this.annullertFørUtløp,
+        kommentar: String = this.kommentar,
         gyldigFra: LocalDateTime = this.gyldigFra,
         gyldigTil: LocalDateTime = this.gyldigTil
     ): ReservasjonV3 {
@@ -28,6 +30,7 @@ class ReservasjonV3(
             reservertAv,
             reservasjonsnøkkel,
             annullertFørUtløp,
+            kommentar,
             gyldigFra,
             gyldigTil
         )
@@ -36,11 +39,13 @@ class ReservasjonV3(
     constructor(
         saksbehandlerId: Long,
         reservasjonsnøkkel: String,
+        kommentar: String,
         gyldigFra: LocalDateTime,
         gyldigTil: LocalDateTime
     ) : this(
         reservertAv = saksbehandlerId,
         reservasjonsnøkkel = reservasjonsnøkkel,
+        kommentar = kommentar,
         gyldigFra = gyldigFra,
         gyldigTil = gyldigTil,
     )
@@ -48,11 +53,13 @@ class ReservasjonV3(
     constructor(
         saksbehandler: Saksbehandler,
         reservasjonsnøkkel: String,
+        kommentar: String,
         gyldigFra: LocalDateTime,
         gyldigTil: LocalDateTime
     ) : this(
         reservertAv = saksbehandler.id!!,
         reservasjonsnøkkel = reservasjonsnøkkel,
+        kommentar = kommentar,
         gyldigFra = gyldigFra,
         gyldigTil = gyldigTil,
     )

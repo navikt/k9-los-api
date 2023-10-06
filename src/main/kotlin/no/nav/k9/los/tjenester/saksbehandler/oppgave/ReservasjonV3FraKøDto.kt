@@ -5,19 +5,17 @@ import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import java.time.LocalDateTime
 
-data class ReservasjonV3Dto ( //TODO: WIP avklare med Vebjørn hvor mange felter som trengs jfr OppgaveDto som returneres fra gammel fa-oppgave-fra-ko
-    val reserverteOppgaverEksternId: List<String>,
+data class ReservasjonV3FraKøDto ( //TODO: WIP avklare med Vebjørn hvor mange felter som trengs jfr OppgaveDto som returneres fra gammel fa-oppgave-fra-ko
+    val reservertOppgaveEksternId: String,
     val reservasjonsnøkkel: String,
     val reservertAv: String,
-    val kommentar: String,
     val reservertFra: LocalDateTime,
     val reservertTil: LocalDateTime?,
 ) {
-    constructor(reservasjonV3: ReservasjonV3, oppgaver: List<Oppgave>, reservertAv: Saksbehandler) : this (
-        reserverteOppgaverEksternId = oppgaver.map { it.eksternId },
+    constructor(reservasjonV3: ReservasjonV3, oppgave: Oppgave, reservertAv: Saksbehandler) : this (
+        reservertOppgaveEksternId = oppgave.eksternId,
         reservasjonsnøkkel = reservasjonV3.reservasjonsnøkkel,
         reservertAv = reservertAv.epost,
-        kommentar = reservasjonV3.kommentar,
         reservertFra = reservasjonV3.gyldigFra,
         reservertTil = reservasjonV3.gyldigTil
     )

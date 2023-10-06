@@ -22,12 +22,7 @@ class ReservasjonKonverteringJobb(
     private val config: Configuration,
     private val reservasjonRepository: ReservasjonRepository,
     private val oppgaveRepository: OppgaveRepository,
-    private val reservasjonV3Repository: ReservasjonV3Repository,
-    private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
-    private val oppgaveV3Repository: OppgaveV3Repository,
-    private val oppgavetypeRepository: OppgavetypeRepository,
-    private val saksbehandlerRepository: SaksbehandlerRepository,
-    private val transactionalManager: TransactionalManager,
+    private val reservasjonOversetter: ReservasjonOversetter,
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(ReservasjonKonverteringJobb::class.java)
@@ -49,7 +44,7 @@ class ReservasjonKonverteringJobb(
     private fun spillAvReservasjoner() {
 
         log.info("Stareter avspilling av reservasjoner")
-        val tidKjøringStartet = System.currentTimeMillis()
+        val tidKjøringStartet = System.currentTimeMillis() //TODO: Telleverk og logge fremdrift
 
         val reservasjonIder = reservasjonRepository.hentAlleReservasjonUUID()
         log.info("Fant ${reservasjonIder.size} behandlinger")
@@ -61,105 +56,12 @@ class ReservasjonKonverteringJobb(
                 return //Logisk slettet reservasjon. Migreres ikke
             }
             val oppgaveV1 = oppgaveRepository.hent(reservasjonV1.oppgave)
-            transactionalManager.transaction { tx ->
-                val gammelReservasjon = reservasjonRepository.hentSisteReservasjonMedLås(gammelReservasjonUuid, tx)
-                when (oppgaveV1.system) {
-                    "K9SAK" -> {
-                        val oppgaveV3 = oppgaveV3Repository.hentAktivOppgave(
-                            oppgaveV1.eksternId.toString(),
-                            oppgavetypeRepository.hentOppgavetype("K9", "k9sak"),
-                            tx
-                        )
-                            ?: throw IllegalStateException("ReservasjonV1 for kjent oppgavetype SKAL ha oppgave i OppgaveV3.")
-
-                        reserverOppgavetypeSomErStøttetIV3(
-                            oppgaveV3,
-                            gammelReservasjon
-                        )
-                    }
-
-                    "K9KLAGE" -> {
-                        val oppgaveV3 = oppgaveV3Repository.hentAktivOppgave(
-                            oppgaveV1.eksternId.toString(),
-                            oppgavetypeRepository.hentOppgavetype("K9", "k9sak"),
-                            tx
-                        )
-                            ?: throw IllegalStateException("ReservasjonV1 for kjent oppgavetype SKAL ha oppgave i OppgaveV3.")
-
-                        reserverOppgavetypeSomErStøttetIV3(
-                            oppgaveV3,
-                            gammelReservasjon
-                        )
-                    }
-
-                    else -> {
-                        reserverOppgavetypeSomIkkeErStøttetIV3(oppgaveV1.eksternId.toString(), gammelReservasjon)
-                    }
-                }
-            }
-        }
-    }
-
-    private fun reserverOppgavetypeSomIkkeErStøttetIV3(
-        oppgaveEksternId: String,
-        gammelReservasjon: Reservasjon
-    ) {
-        val gyldigFra = if (gammelReservasjon.reservertTil!!.isAfter(LocalDateTime.now())) {
-            LocalDateTime.now().minusHours(24).forskyvReservasjonsDatoBakover()
-        } else {
-            gammelReservasjon.reservertTil!!.minusHours(24).forskyvReservasjonsDatoBakover()
-        }
-
-        val reservertAv = runBlocking {
-            saksbehandlerRepository.finnSaksbehandlerMedIdent(
-                gammelReservasjon.reservertAv
-            )!!
-        }
-
-        val flyttetAv = runBlocking {
-            gammelReservasjon.flyttetAv?.let {flyttetAv ->
-                saksbehandlerRepository.finnSaksbehandlerMedIdent(flyttetAv)!!
-            }
-        }
-
-        reservasjonV3Tjeneste.taReservasjon(
-            reservasjonsnøkkel = "legacy_$oppgaveEksternId",
-            reserverForId = reservertAv.id!!,
-            gyldigFra = gyldigFra,
-            gyldigTil = gammelReservasjon.reservertTil!!,
-            utføresAvId = flyttetAv?.let { it.id!! } ?: reservertAv.id!!,
-        )
-    }
-
-    private fun reserverOppgavetypeSomErStøttetIV3(
-        oppgave: OppgaveV3,
-        gammelReservasjon: Reservasjon
-    ) {
-        val reservertAv = runBlocking {
-            saksbehandlerRepository.finnSaksbehandlerMedEpost(
-                gammelReservasjon.flyttetAv ?: gammelReservasjon.reservertAv
-            )
-        }!!
-
-        val gyldigFra = if (gammelReservasjon.reservertTil!!.isAfter(LocalDateTime.now())) {
-            LocalDateTime.now().minusHours(24).forskyvReservasjonsDatoBakover()
-        } else {
-            gammelReservasjon.reservertTil!!.minusHours(24).forskyvReservasjonsDatoBakover()
-        }
-
-        val flyttetAv = runBlocking {
-            gammelReservasjon.flyttetAv?.let {flyttetAv ->
-                saksbehandlerRepository.finnSaksbehandlerMedIdent(flyttetAv)!!
-            }
-        }
-
-        runBlocking {
-            reservasjonV3Tjeneste.taReservasjon(
-                reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
-                reserverForId = reservertAv.id!!,
-                gyldigFra = gyldigFra,
-                gyldigTil = gammelReservasjon.reservertTil!!,
-                utføresAvId = flyttetAv?.let { it.id!! } ?: reservertAv.id!!,
+            reservasjonOversetter.taNyReservasjonFraGammelKontekst(
+                oppgaveV1 = oppgaveV1,
+                reservertAvEpost = reservasjonV1.reservertAv,
+                reservertTil = reservasjonV1.reservertTil!!,
+                utførtAvIdent = reservasjonV1.flyttetAv,
+                kommentar = reservasjonV1.begrunnelse,
             )
         }
     }

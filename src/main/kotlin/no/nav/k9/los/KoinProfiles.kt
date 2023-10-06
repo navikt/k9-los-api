@@ -41,6 +41,7 @@ import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerKlient
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerKlientLocal
@@ -278,7 +279,18 @@ fun common(app: Application, config: Configuration) = module {
             pepClient = get(),
             azureGraphService = get(),
             statistikkRepository = get(),
-            omsorgspengerService = get()
+            omsorgspengerService = get(),
+            reservasjonOversetter = get()
+        )
+    }
+
+    single {
+        ReservasjonOversetter(
+            transactionalManager = get(),
+            oppgaveV3Repository = get(),
+            oppgavetypeRepository = get(),
+            saksbehandlerRepository = get(),
+            reservasjonV3Tjeneste = get(),
         )
     }
 
@@ -482,12 +494,10 @@ fun common(app: Application, config: Configuration) = module {
         ReservasjonV3Tjeneste(
             transactionalManager = get(),
             reservasjonV3Repository = get(),
-            oppgaveKoRepository = get(),
-            oppgaveQueryService = get(),
             oppgaveRepository = get(),
             pepClient = get(),
             saksbehandlerRepository = get(),
-            auditlogger = get()
+            auditlogger = Auditlogger(config)
         )
     }
 }
