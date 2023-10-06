@@ -7,7 +7,7 @@ class OppgaveQuery(
     val filtere: List<Oppgavefilter>,
     val select: List<SelectFelt> = listOf(),
     val order: List<OrderFelt> = listOf(),
-    val limit: Int = 10
+    val limit: Int = -1
 ) {
 
     constructor() : this(listOf(), listOf(), listOf(), 10);
