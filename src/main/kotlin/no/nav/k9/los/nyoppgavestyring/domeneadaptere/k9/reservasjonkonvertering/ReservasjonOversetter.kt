@@ -3,22 +3,68 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.forskyvReservasjonsDatoBakover
 import java.time.LocalDateTime
+import java.util.*
 
 class ReservasjonOversetter(
     private val transactionalManager: TransactionalManager,
+    private val oppgaveV1Repository: OppgaveRepository,
     private val oppgaveV3Repository: OppgaveV3Repository,
+    private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
     private val oppgavetypeRepository: OppgavetypeRepository,
     private val saksbehandlerRepository: SaksbehandlerRepository,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste
 ) {
+
+    fun hentV1OppgaveFraReservasjon(
+        reservasjon: ReservasjonV3
+    ) : Oppgave {
+        //fjerne "legacy_" fra reservasjonsnøkkelstrengen
+        return oppgaveV1Repository.hent(UUID.fromString(reservasjon.reservasjonsnøkkel.substring(7)))
+    }
+
+    fun hentNyReservasjonFraGammelKontekst(
+        oppgaveV1: Oppgave
+    )
+        : ReservasjonV3 {
+        return transactionalManager.transaction { tx ->
+            when (oppgaveV1.system) {
+                "K9SAK" -> {
+                    val oppgaveV3 =
+                        oppgaveV3Tjeneste.hentAktivOppgave(oppgaveV1.eksternId.toString(), "k9sak", "K9", tx)
+                    reservasjonV3Tjeneste.hentAktivReservasjonForReservasjonsnøkkel(
+                        oppgaveV3.reservasjonsnøkkel,
+                        tx
+                    )!!
+                }
+
+                "K9KLAGE" -> {
+                    val oppgaveV3 =
+                        oppgaveV3Tjeneste.hentAktivOppgave(oppgaveV1.eksternId.toString(), "k9klage", "K9", tx)
+                    reservasjonV3Tjeneste.hentAktivReservasjonForReservasjonsnøkkel(
+                        oppgaveV3.reservasjonsnøkkel,
+                        tx
+                    )!!
+                }
+
+                else -> {
+                    reservasjonV3Tjeneste.hentAktivReservasjonForReservasjonsnøkkel(
+                        "legacy_${oppgaveV1.eksternId}",
+                        tx
+                    )!!
+                }
+            }
+        }
+    }
 
     fun taNyReservasjonFraGammelKontekst(
         oppgaveV1: Oppgave,
@@ -27,7 +73,7 @@ class ReservasjonOversetter(
         utførtAvIdent: String?,
         kommentar: String?
     )
-    : ReservasjonV3 {
+        : ReservasjonV3 {
         return transactionalManager.transaction { tx ->
             when (oppgaveV1.system) {
                 "K9SAK" -> {
@@ -71,7 +117,7 @@ class ReservasjonOversetter(
                         reservertTil = reservertTil,
                         utførtAvIdent = utførtAvIdent,
                         kommentar = kommentar,
-                        )
+                    )
                 }
             }
         }
@@ -83,7 +129,7 @@ class ReservasjonOversetter(
         reservertTil: LocalDateTime,
         utførtAvIdent: String?,
         kommentar: String?
-    ) : ReservasjonV3 {
+    ): ReservasjonV3 {
         val gyldigFra = if (reservertTil.isAfter(LocalDateTime.now())) {
             LocalDateTime.now().minusHours(24).forskyvReservasjonsDatoBakover()
         } else {
@@ -116,7 +162,7 @@ class ReservasjonOversetter(
         reservertTil: LocalDateTime,
         utførtAvIdent: String?,
         kommentar: String?
-    ) : ReservasjonV3 {
+    ): ReservasjonV3 {
         val reservertAv = runBlocking {
             saksbehandlerRepository.finnSaksbehandlerMedEpost(
                 reservertAvEpost

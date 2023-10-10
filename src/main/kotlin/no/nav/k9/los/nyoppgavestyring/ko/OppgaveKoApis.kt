@@ -90,13 +90,19 @@ fun Route.OppgaveKoApis() {
         }
     }
 
+    @Location("/saksbehandlerskoer")
+    class SaksbehandlersKoer
+
+    get { _: SaksbehandlersKoer ->
+        call.respond(HttpStatusCode.OK)
+    }
+
     @Location("/{id}/oppgaver")
     data class OppgaveKoId(val id: String)
-
     get { oppgaveKoId: OppgaveKoId ->
         requestContextService.withRequestContext(call) {
             if (pepClient.harTilgangTilReservingAvOppgaver()) { //TODO: Hvilke felter vil vi eksponere her?
-                oppgaveKoTjeneste.hentOppgaverFraKø(oppgaveKoId.id.toLong())
+                oppgaveKoTjeneste.hentOppgaverFraKø(oppgaveKoId.id.toLong()) //TODO: Denne vil p.t. bare returnere antall, tror jeg?
             }
         }
     }

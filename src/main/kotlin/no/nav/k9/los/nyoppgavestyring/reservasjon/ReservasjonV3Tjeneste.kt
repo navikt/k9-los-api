@@ -162,8 +162,6 @@ class ReservasjonV3Tjeneste(
                 annullertAvBrukerId,
                 tx
             )
-
-
         }
     }
 

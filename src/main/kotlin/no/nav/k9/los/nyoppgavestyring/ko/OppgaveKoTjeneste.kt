@@ -43,10 +43,7 @@ class OppgaveKoTjeneste(
         val oppgavekø = transactionalManager.transaction { tx ->
             oppgaveKoRepository.hent(oppgaveKoId)
         }
-        //TODO: Denne returnerer pt bare de 10 første oppgavene. Dette må kunne overstyres e.l.
-        // vi risikerer å feilaktig gi beskjed om at køen er tom for oppgaver hvis oppgavene opp til limit er reservert allerede
-        // foreslår limit 100 og paginering
-        // alternativt query returnerer bare oppgaver som ikke er reservert idet man spør
+
         val kandidatOppgaver = oppgaveQueryService.queryForOppgaveId(oppgavekø.oppgaveQuery)
 
         return transactionalManager.transaction { tx ->
