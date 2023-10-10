@@ -187,10 +187,9 @@ class OppgaveApisTjeneste(
             reservasjonV3Tjeneste.hentReservasjonerForSaksbehandler(saksbehandler.id!!)
 
         return reservasjoner.map { reservasjon ->
-            if (reservasjon.reservasjonsnøkkel.startsWith("legacy_")) {
-                val oppgaveV1 = reservasjonOversetter.hentV1OppgaveFraReservasjon(reservasjon)
-                ReservasjonV3Dto(reservasjon, oppgaveV1.eksternId.toString(), saksbehandler)
-            } else {
+            // Fjernes når V1 skal vekk
+            val oppgaveV1 = reservasjonOversetter.hentV1OppgaveFraReservasjon(reservasjon)
+            if (oppgaveV1 == null) {
                 val oppgaverForReservasjonsnøkkel =
                     oppgaveV3Tjeneste.hentÅpneOppgaverForReservasjonsnøkkel(reservasjon.reservasjonsnøkkel)
                 ReservasjonV3Dto(
@@ -198,6 +197,8 @@ class OppgaveApisTjeneste(
                     oppgaverForReservasjonsnøkkel,
                     saksbehandler
                 )
+            } else {
+                ReservasjonV3Dto(reservasjon, oppgaveV1.eksternId.toString(), saksbehandler)
             }
         }
     }
