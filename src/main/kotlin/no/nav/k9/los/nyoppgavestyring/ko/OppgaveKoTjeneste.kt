@@ -5,6 +5,7 @@ import kotliquery.TransactionalSession
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.integrasjon.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
+import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgaverad
 import no.nav.k9.los.nyoppgavestyring.reservasjon.AlleredeReservertException
@@ -36,6 +37,21 @@ class OppgaveKoTjeneste(
         return oppgaveQueryService.query(ko.oppgaveQuery, idToken)
     }
 
+    fun hentKøerForSaksbehandler(
+        saksbehandlerEpost: String
+    ): List<OppgaveKo> {
+        return transactionalManager.transaction { tx ->
+            oppgaveKoRepository.hentKoerMedOppgittSaksbehandler(tx, saksbehandlerEpost)
+        }
+    }
+
+    fun hentAntallOppgaveForKø(
+        oppgaveKoId: Long
+    ) : Long {
+        val ko = oppgaveKoRepository.hent(oppgaveKoId)
+        return oppgaveQueryService.queryForAntall(ko.oppgaveQuery)
+    }
+
     fun taReservasjonFraKø(
         innloggetBrukerId: Long,
         oppgaveKoId: Long
@@ -49,7 +65,6 @@ class OppgaveKoTjeneste(
         return transactionalManager.transaction { tx ->
             finnReservasjonFraKø(kandidatOppgaver, tx, innloggetBrukerId)
         }
-
     }
 
     private fun finnReservasjonFraKø(

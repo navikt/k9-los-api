@@ -11,9 +11,11 @@ import java.time.LocalDateTime
 class SqlOppgaveQuery(
     val oppgavefelterKodeOgType: Map<String, Datatype>
 ) {
+    private var selectPrefix = """
+                SELECT o.id as id 
+                """.trimIndent()
 
     private var query = """
-                SELECT o.id as id
                 FROM Oppgave_v3 o INNER JOIN Oppgavetype ot ON (
                     ot.id = o.oppgavetype_id
                   ) INNER JOIN Omrade oppgave_omrade ON (
@@ -31,7 +33,13 @@ class SqlOppgaveQuery(
     private var limit: Int = -1;
 
     fun getQuery(): String {
-        return query + orderBySql
+        return selectPrefix + query + orderBySql
+    }
+
+    fun medAntallSomResultat() {
+        selectPrefix = """
+            SELECT count(*) as antall
+        """.trimIndent()
     }
 
     fun getParams(): Map<String, Any?> {

@@ -4,6 +4,9 @@ import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
+import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
+import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
+import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import java.time.LocalDateTime
@@ -17,6 +20,8 @@ class OppgaveApisTjeneste(
     private val reservasjonOversetter: ReservasjonOversetter,
     private val oppgaveV3Repository: OppgaveRepository,
     private val oppgaveV3Tjeneste: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveTjeneste,
+    private val oppgaveKoRepository: OppgaveKoRepository,
+    private val oppgaveKoTjeneste: OppgaveKoTjeneste,
     private val transactionalManager: TransactionalManager,
 ) {
 
@@ -201,5 +206,9 @@ class OppgaveApisTjeneste(
                 ReservasjonV3Dto(reservasjon, oppgaveV1.eksternId.toString(), saksbehandler)
             }
         }
+    }
+
+    fun hentAntallOppgaverIKø(oppgaveKoId: String) {
+        oppgaveKoTjeneste.hentAntallOppgaveForKø(oppgaveKoId.toLong())
     }
 }

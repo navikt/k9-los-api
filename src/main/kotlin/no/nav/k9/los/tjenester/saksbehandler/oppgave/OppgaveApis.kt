@@ -20,6 +20,11 @@ import java.util.*
 
 private val log: Logger = LoggerFactory.getLogger("nav.OppgaveApis")
 
+//TODO limit 10 på neste oppgaver i kø
+//TODO siste 10 saker for saksbhandler -- nye ppgaver?
+//TODO kode6 filtrering på neste 10 oppgaver fra kø?
+//TODO bare levere reservasjonID til frontend!! Verifiser
+
 internal fun Route.OppgaveApis() {
     val requestContextService by inject<RequestContextService>()
     val oppgaveTjeneste by inject<OppgaveTjeneste>()
@@ -189,13 +194,24 @@ internal fun Route.OppgaveApis() {
         }
     }
 
+    @Location("/antall-oppgaver-i-ko")
+    class hentAntallOppgaverForV3OppgaveKø
+    get {_: hentAntallOppgaverForV3OppgaveKø ->
+        requestContextService.withRequestContext(call) {
+            val oppgaveKøId = call.receive<OppgaveKøIdDto>().oppgaveKøId
+            call.respond(oppgaveApisTjeneste.hentAntallOppgaverIKø(oppgaveKøId))
+        }
+    }
+
+
+    @Deprecated("Gjelder bare for gamle køer. For ny køer, bruk /antall-oppgaver-i-ko")
     @Location("/antall") //TODO avklare med Stian/Bjørnar -- OppgaveQueryService.query med tom select i query?
     class hentAntallOppgaverForOppgavekø
     get { _: hentAntallOppgaverForOppgavekø ->
         requestContextService.withRequestContext(call) {
             var uuid = call.request.queryParameters["id"]
             if (uuid.isNullOrBlank()) {
-                uuid = UUID.randomUUID().toString()
+                uuid = UUID.randomUUID().toString() //TODO: wtf!?
             }
             call.respond(oppgaveTjeneste.hentAntallOppgaver(UUID.fromString(uuid)!!))
         }

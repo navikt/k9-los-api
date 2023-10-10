@@ -15,6 +15,7 @@ import no.nav.k9.los.tjenester.saksbehandler.oppgave.forskyvReservasjonsDatoBako
 import java.time.LocalDateTime
 import java.util.*
 
+// Fjernes når V1 skal vekk
 class ReservasjonOversetter(
     private val transactionalManager: TransactionalManager,
     private val oppgaveV1Repository: OppgaveRepository,

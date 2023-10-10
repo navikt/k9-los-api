@@ -24,6 +24,17 @@ class OppgaveQueryService() {
     val oppgaveRepository by inject<OppgaveRepository>(OppgaveRepository::class.java)
     val pepClient by inject<IPepClient>(IPepClient::class.java)
 
+
+    fun queryForAntall(query: OppgaveQuery): Long {
+        return using(sessionOf(datasource)) { it ->
+            it.transaction { tx -> queryForAntall(tx, query) }
+        }
+    }
+
+    fun queryForAntall(tx: TransactionalSession, query: OppgaveQuery): Long {
+        return oppgaveQueryRepository.queryForAntall(tx, query)
+    }
+
     fun hentAlleFelter(): Oppgavefelter {
         return oppgaveQueryRepository.hentAlleFelter()
     }

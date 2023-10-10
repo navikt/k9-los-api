@@ -15,8 +15,8 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
 import javax.sql.DataSource
 
 class OppgaveQueryRepository(
-        val datasource: DataSource,
-        val feltdefinisjonRepository: FeltdefinisjonRepository
+    val datasource: DataSource,
+    val feltdefinisjonRepository: FeltdefinisjonRepository
 ) {
 
     fun hentAlleFelter(): Oppgavefelter {
@@ -43,8 +43,11 @@ class OppgaveQueryRepository(
             ).map { row ->
                 val kodeverk = if (medKodeverk) {
                     row.stringOrNull("kodeverkreferanse")?.let {
-                        feltdefinisjonRepository.hentKodeverk(Kodeverkreferanse(it), tx) }
-                } else { null }
+                        feltdefinisjonRepository.hentKodeverk(Kodeverkreferanse(it), tx)
+                    }
+                } else {
+                    null
+                }
                 Oppgavefelt(
                     område = row.string("omrade"),
                     kode = row.string("kode"),
@@ -78,7 +81,7 @@ class OppgaveQueryRepository(
                         visningsnavn = oppgavestatus.visningsnavn
                     )
                 }),
-            Oppgavefelt(null, "kildeområde", "Kildeområde", "String", false,false, emptyList()),
+            Oppgavefelt(null, "kildeområde", "Kildeområde", "String", false, false, emptyList()),
             Oppgavefelt(null, "oppgavetype", "Oppgavetype", "String", true, false, emptyList()),
             Oppgavefelt(null, "oppgaveområde", "Oppgaveområde", "String", false, false, emptyList())
         )
@@ -99,6 +102,23 @@ class OppgaveQueryRepository(
         return query(tx, toSqlOppgaveQuery(oppgaveQuery, oppgavefelterKodeOgType))
     }
 
+    fun queryForAntall(tx: TransactionalSession, oppgaveQuery: OppgaveQuery): Long {
+        val oppgavefelterKodeOgType = hentAlleFelter(tx, medKodeverk = false)
+            .associate { felt -> felt.kode to Datatype.fraKode(felt.tolkes_som) }
+
+
+        return queryForAntall(tx, toSqlOppgaveQueryForAntall(oppgaveQuery, oppgavefelterKodeOgType))
+
+    }
+
+    private fun queryForAntall(tx: TransactionalSession, oppgaveQuery: SqlOppgaveQuery): Long {
+        return tx.run(
+            queryOf(
+                oppgaveQuery.getQuery(),
+                oppgaveQuery.getParams()
+            ).map { row -> row.long("antall") }.asSingle
+        )!!
+    }
 
     private fun query(tx: TransactionalSession, oppgaveQuery: SqlOppgaveQuery): List<Long> {
         return tx.run(
@@ -115,6 +135,20 @@ class OppgaveQueryRepository(
         håndterFiltere(query, oppgaveQuery.filtere, combineOperator)
         håndterOrder(query, oppgaveQuery.order)
         query.medLimit(oppgaveQuery.limit)
+
+        return query
+    }
+
+    fun toSqlOppgaveQueryForAntall(
+        oppgaveQuery: OppgaveQuery,
+        oppgavefelterKodeOgType: Map<String, Datatype>
+    ): SqlOppgaveQuery {
+        val query = SqlOppgaveQuery(oppgavefelterKodeOgType)
+        val combineOperator = CombineOperator.AND
+        håndterFiltere(query, oppgaveQuery.filtere, combineOperator)
+        håndterOrder(query, oppgaveQuery.order)
+        query.medLimit(oppgaveQuery.limit)
+        query.medAntallSomResultat()
 
         return query
     }
