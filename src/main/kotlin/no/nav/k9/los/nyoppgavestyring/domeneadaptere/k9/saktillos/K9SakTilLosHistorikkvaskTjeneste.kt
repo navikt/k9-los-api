@@ -1,23 +1,14 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktType
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
-import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -25,9 +16,6 @@ import kotlin.concurrent.thread
 
 class K9SakTilLosHistorikkvaskTjeneste(
     private val behandlingProsessEventK9Repository: BehandlingProsessEventK9Repository,
-    private val områdeRepository: OmrådeRepository,
-    private val feltdefinisjonTjeneste: FeltdefinisjonTjeneste,
-    private val oppgavetypeTjeneste: OppgavetypeTjeneste,
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
     private val config: Configuration,
     private val transactionalManager: TransactionalManager,
@@ -83,14 +71,14 @@ class K9SakTilLosHistorikkvaskTjeneste(
         var eventTeller = eventTellerInn
         var forrigeOppgave: OppgaveV3? = null
         transactionalManager.transaction { tx ->
-            val behandlingMedFagsakDto = k9SakBerikerKlient.hentBehandling(UUID.fromString(uuid.toString()))
+            val nyeBehandlingsopplysningerFraK9Sak = k9SakBerikerKlient.hentBehandling(UUID.fromString(uuid.toString()))
 
             val hastesak = oppgaveRepositoryV2.hentMerknader(uuid.toString(), false)
                 .filter { merknad -> merknad.merknadKoder.contains("HASTESAK") }.isNotEmpty()
             val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
             behandlingProsessEventer.forEach { event ->
-                if (event.eldsteDatoMedEndringFraSøker == null && behandlingMedFagsakDto != null && behandlingMedFagsakDto.eldsteDatoMedEndringFraSøker != null) {
-                    event.copy(eldsteDatoMedEndringFraSøker = behandlingMedFagsakDto.eldsteDatoMedEndringFraSøker)
+                if (event.eldsteDatoMedEndringFraSøker == null && nyeBehandlingsopplysningerFraK9Sak != null && nyeBehandlingsopplysningerFraK9Sak.eldsteDatoMedEndringFraSøker != null) {
+                    event.copy(eldsteDatoMedEndringFraSøker = nyeBehandlingsopplysningerFraK9Sak.eldsteDatoMedEndringFraSøker)
                     //ser ut som noen gamle mottatte dokumenter kan mangle innsendingstidspunkt.
                     //da faller vi tilbake til å bruke behandling_opprettet i mapperen
                 }
@@ -102,7 +90,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
                         )
                     )
 
-                oppgaveDto = k9SakTilLosAdapterTjeneste.ryddOppObsoleteOgResultatfeilFra2020(event, oppgaveDto)
+                oppgaveDto = k9SakTilLosAdapterTjeneste.ryddOppObsoleteOgResultatfeilFra2020(event, oppgaveDto, nyeBehandlingsopplysningerFraK9Sak)
 
                 oppgaveV3Tjeneste.oppdaterEkstisterendeOppgaveversjon(oppgaveDto, tx)
 
