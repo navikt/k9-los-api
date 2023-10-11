@@ -150,16 +150,16 @@ class OppgaveKoRepository(val datasource: DataSource) {
     ): List<OppgaveKo> {
         val objectMapper = jacksonObjectMapper()
         return tx.run(
-            queryOf( //TODO teste spørring når koden kompilerer
+            queryOf(
                 """
-                    select *
+                    select id, versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave, endret_tidspunkt 
                     from OPPGAVEKO_V3 ko
                     where exists (
                         select *
                         from oppgaveko_saksbehandler s
                         where s.oppgaveko_v3_id = ko.id
-                        and s.epost = :saksbehandler_epost
-                    )""",
+                        and s.saksbehandler_epost = :saksbehandler_epost
+                        )""",
                 mapOf(
                     "saksbehandler_epost" to saksbehandler_epost
                 )
