@@ -44,6 +44,10 @@ class BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `Obsolete ytelse på event gir henlagt resultat`() {
+        every { k9SakBerikerKlientLocal.hentBehandling(any()) } returns opprettBehandlingMedFagsakDto(
+            FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
+            BehandlingResultatType.DELVIS_INNVILGET
+        )
         val oppgaveDto = k9SakTilLosAdapterTjeneste.ryddOppObsoleteOgResultatfeilFra2020(
             opprettEvent(FagsakYtelseType.OBSOLETE, BehandlingStatus.UTREDES),
             opprettOppgaveDto(BehandlingResultatType.IKKE_FASTSATT),
