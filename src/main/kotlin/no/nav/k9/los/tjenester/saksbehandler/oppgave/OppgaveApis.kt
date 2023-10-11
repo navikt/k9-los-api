@@ -205,7 +205,7 @@ internal fun Route.OppgaveApis() {
 
 
     @Deprecated("Gjelder bare for gamle køer. For ny køer, bruk /antall-oppgaver-i-ko")
-    @Location("/antall") //TODO avklare med Stian/Bjørnar -- OppgaveQueryService.query med tom select i query?
+    @Location("/antall")
     class hentAntallOppgaverForOppgavekø
     get { _: hentAntallOppgaverForOppgavekø ->
         requestContextService.withRequestContext(call) {

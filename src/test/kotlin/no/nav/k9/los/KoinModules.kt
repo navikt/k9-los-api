@@ -39,6 +39,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerKl
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository
+import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
@@ -393,6 +394,16 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             pepClient = get(),
             saksbehandlerRepository = get(),
             auditlogger = Auditlogger(config)
+        )
+    }
+
+    single {
+        OppgaveKoTjeneste(
+            transactionalManager = get(),
+            oppgaveKoRepository = get(),
+            oppgaveQueryService = get(),
+            oppgaveRepository = get(),
+            reservasjonV3Tjeneste = get(),
         )
     }
 
