@@ -46,7 +46,8 @@ class BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
     fun `Obsolete ytelse på event gir henlagt resultat`() {
         val oppgaveDto = k9SakTilLosAdapterTjeneste.ryddOppObsoleteOgResultatfeilFra2020(
             opprettEvent(FagsakYtelseType.OBSOLETE, BehandlingStatus.UTREDES),
-            opprettOppgaveDto(BehandlingResultatType.IKKE_FASTSATT)
+            opprettOppgaveDto(BehandlingResultatType.IKKE_FASTSATT),
+            k9SakBerikerKlientLocal.hentBehandling(UUID.randomUUID())
         )
 
         assertEquals(BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode, oppgaveDto.feltverdier.filter{ it.nøkkel == "resultattype"}.first().verdi)
@@ -61,7 +62,8 @@ class BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
 
         val oppgaveDto = k9SakTilLosAdapterTjeneste.ryddOppObsoleteOgResultatfeilFra2020(
             opprettEvent(FagsakYtelseType.PLEIEPENGER_SYKT_BARN, BehandlingStatus.AVSLUTTET),
-            opprettOppgaveDto(BehandlingResultatType.IKKE_FASTSATT)
+            opprettOppgaveDto(BehandlingResultatType.IKKE_FASTSATT),
+            k9SakBerikerKlientLocal.hentBehandling(UUID.randomUUID())
         )
 
         assertEquals(BehandlingResultatType.DELVIS_INNVILGET.kode, oppgaveDto.feltverdier.filter{ it.nøkkel == "resultattype"}.first().verdi)
@@ -73,7 +75,8 @@ class BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
 
         val oppgaveDto = k9SakTilLosAdapterTjeneste.ryddOppObsoleteOgResultatfeilFra2020(
             opprettEvent(FagsakYtelseType.PLEIEPENGER_SYKT_BARN, BehandlingStatus.AVSLUTTET),
-            opprettOppgaveDto(BehandlingResultatType.IKKE_FASTSATT)
+            opprettOppgaveDto(BehandlingResultatType.IKKE_FASTSATT),
+            k9SakBerikerKlientLocal.hentBehandling(UUID.randomUUID())
         )
 
         assertEquals(BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode, oppgaveDto.feltverdier.filter{ it.nøkkel == "resultattype"}.first().verdi)
@@ -88,7 +91,8 @@ class BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
 
         val oppgaveDto = k9SakTilLosAdapterTjeneste.ryddOppObsoleteOgResultatfeilFra2020(
             opprettEvent(FagsakYtelseType.PLEIEPENGER_SYKT_BARN, BehandlingStatus.AVSLUTTET),
-            opprettOppgaveDto(BehandlingResultatType.IKKE_FASTSATT)
+            opprettOppgaveDto(BehandlingResultatType.IKKE_FASTSATT),
+            k9SakBerikerKlientLocal.hentBehandling(UUID.randomUUID())
         )
 
         assertEquals(BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode, oppgaveDto.feltverdier.filter{ it.nøkkel == "resultattype"}.first().verdi)
