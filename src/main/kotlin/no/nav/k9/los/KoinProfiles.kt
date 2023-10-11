@@ -69,6 +69,7 @@ import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.los.tjenester.driftsmeldinger.DriftsmeldingTjeneste
 import no.nav.k9.los.tjenester.kodeverk.HentKodeverkTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.merknad.MerknadTjeneste
+import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveApisTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveKøOppdaterer
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
@@ -511,6 +512,20 @@ fun common(app: Application, config: Configuration) = module {
             pepClient = get(),
             saksbehandlerRepository = get(),
             auditlogger = Auditlogger(config)
+        )
+    }
+
+    single {
+        OppgaveApisTjeneste(
+            oppgaveTjeneste = get(),
+            saksbehandlerRepository = get(),
+            reservasjonV3Tjeneste = get(),
+            reservasjonOversetter = get(),
+            oppgaveV3Repository = get(),
+            oppgaveV3Tjeneste = get(),
+            oppgaveKoRepository = get(),
+            oppgaveKoTjeneste = get(),
+            transactionalManager = get(),
         )
     }
 }

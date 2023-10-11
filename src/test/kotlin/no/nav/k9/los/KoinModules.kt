@@ -57,6 +57,7 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.merknad.MerknadTjeneste
+import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveApisTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveKøOppdaterer
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
@@ -421,6 +422,20 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         OppgaveKoRepository(
             datasource = get()
+        )
+    }
+
+    single {
+        OppgaveApisTjeneste(
+            oppgaveTjeneste = get(),
+            saksbehandlerRepository = get(),
+            reservasjonV3Tjeneste = get(),
+            reservasjonOversetter = get(),
+            oppgaveV3Repository = get(),
+            oppgaveV3Tjeneste = get(),
+            oppgaveKoRepository = get(),
+            oppgaveKoTjeneste = get(),
+            transactionalManager = get(),
         )
     }
 }
