@@ -157,7 +157,7 @@ class EventTilDtoMapper {
             oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
         ) {
             åpneAksjonspunkter.firstOrNull { åpentAksjonspunkt ->
-                val aksjonspunktDefinisjon = no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.fraKode(åpentAksjonspunkt.aksjonspunktKode)
+                val aksjonspunktDefinisjon = AksjonspunktDefinisjon.fraKode(åpentAksjonspunkt.aksjonspunktKode)
                 !aksjonspunktDefinisjon.erAutopunkt() && aksjonspunktDefinisjon.behandlingSteg != null && aksjonspunktDefinisjon.behandlingSteg.kode == behandlingSteg
             }?.let {
                 oppgaveFeltverdiDtos.add(
