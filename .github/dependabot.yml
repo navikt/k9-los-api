@@ -23,7 +23,7 @@ updates:
           - "no.nav.k9*"
       koin:
         patterns:
-          - "io.insert-koin*
+          - "io.insert-koin*"
       gradle:
         patterns:
           - "*"
