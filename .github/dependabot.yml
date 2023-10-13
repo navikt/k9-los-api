@@ -16,18 +16,22 @@ updates:
     groups:
       ktor:
         patterns:
-          - "ktor*"
+          - "io.ktor*"
           - "dusseldorf*"
       kontrakt:
         patterns:
           - "no.nav.k9*"
+      koin:
+        patterns:
+          - "io.insert-koin*
       gradle:
         patterns:
           - "*"
         exclude-patterns:
-          - "ktor*"
+          - "io.ktor*"
           - "dusseldorf*"
           - "no.nav.k9*"
+          - "io.insert-koin*" 
 
   - package-ecosystem: github-actions
     directory: "/"
