@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val mainClass = "no.nav.k9.los.K9LosKt"
 val hikariVersion = "5.0.1"
-val flywayVersion = "9.22.1"
+val flywayVersion = "9.22.3"
 val vaultJdbcVersion = "1.3.10"
 val koinVersion = "3.4.3"
 val kotliqueryVersion = "1.9.0"
