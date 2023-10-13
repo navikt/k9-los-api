@@ -13,8 +13,27 @@ updates:
     open-pull-requests-limit: 20
     registries:
       - k9los
+    groups:
+      ktor:
+        patterns:
+          - "ktor*"
+          - "dusseldorf*"
+      kontrakt:
+        patterns:
+          - "no.nav.k9*"
+      gradle:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "ktor*"
+          - "dusseldorf*"
+          - "no.nav.k9*"
+
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
       interval: daily
-    open-pull-requests-limit: 20
+    groups:
+      github:
+        patterns:
+          - "*"
