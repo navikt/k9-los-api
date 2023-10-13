@@ -28,5 +28,4 @@ jobs:
       - name: Kjør tester & bygg JAR
         run: ./gradlew clean test shadowjar
         env:
-          GITHUB_USERNAME: x-access-token
-          GITHUB_PASSWORD: ${{ secrets.READER_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.READER_TOKEN }}
