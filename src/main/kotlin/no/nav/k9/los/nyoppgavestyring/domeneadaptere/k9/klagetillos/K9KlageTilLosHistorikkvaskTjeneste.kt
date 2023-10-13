@@ -35,13 +35,6 @@ class K9KlageTilLosHistorikkvaskTjeneste(
 
     private val log: Logger = LoggerFactory.getLogger(K9KlageTilLosHistorikkvaskTjeneste::class.java)
     private val TRÅDNAVN = "k9-klage-til-los-historikkvask"
-    private val MANUELLE_AKSJONSPUNKTER = AksjonspunktDefinisjon.values().filter { aksjonspunktDefinisjon ->
-        aksjonspunktDefinisjon.aksjonspunktType == AksjonspunktType.MANUELL
-    }.map { aksjonspunktDefinisjon -> aksjonspunktDefinisjon.kode }
-
-    private val AUTOPUNKTER = AksjonspunktDefinisjon.values().filter { aksjonspunktDefinisjon ->
-        aksjonspunktDefinisjon.aksjonspunktType == AksjonspunktType.AUTOPUNKT
-    }.map { aksjonspunktDefinisjon -> aksjonspunktDefinisjon.kode }
 
     fun kjørHistorikkvask() {
         if (config.nyOppgavestyringAktivert()) {
