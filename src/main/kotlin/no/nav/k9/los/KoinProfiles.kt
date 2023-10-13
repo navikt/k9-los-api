@@ -516,6 +516,13 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
+        no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveTjeneste(
+            oppgaveRepository = get(),
+            transactionalManager = get(),
+        )
+    }
+
+    single {
         OppgaveApisTjeneste(
             oppgaveTjeneste = get(),
             saksbehandlerRepository = get(),
