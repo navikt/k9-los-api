@@ -152,20 +152,22 @@ class EventTilDtoMapper {
         }
 
         private fun utledLøsbartAksjonspunkt(
-            behandlingSteg: String,
+            behandlingSteg: String?,
             åpneAksjonspunkter: List<Aksjonspunkttilstand>,
             oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
         ) {
-            åpneAksjonspunkter.firstOrNull { åpentAksjonspunkt ->
-                val aksjonspunktDefinisjon = AksjonspunktDefinisjon.fraKode(åpentAksjonspunkt.aksjonspunktKode)
-                !aksjonspunktDefinisjon.erAutopunkt() && aksjonspunktDefinisjon.behandlingSteg != null && aksjonspunktDefinisjon.behandlingSteg.kode == behandlingSteg
-            }?.let {
-                oppgaveFeltverdiDtos.add(
-                    OppgaveFeltverdiDto(
-                        nøkkel = "løsbartAksjonspunkt",
-                        verdi = AKSJONSPUNKT_PREFIX + it.aksjonspunktKode
+            if(behandlingSteg != null) {
+                åpneAksjonspunkter.firstOrNull { åpentAksjonspunkt ->
+                    val aksjonspunktDefinisjon = AksjonspunktDefinisjon.fraKode(åpentAksjonspunkt.aksjonspunktKode)
+                    !aksjonspunktDefinisjon.erAutopunkt() && aksjonspunktDefinisjon.behandlingSteg != null && aksjonspunktDefinisjon.behandlingSteg.kode == behandlingSteg
+                }?.let {
+                    oppgaveFeltverdiDtos.add(
+                        OppgaveFeltverdiDto(
+                            nøkkel = "løsbartAksjonspunkt",
+                            verdi = AKSJONSPUNKT_PREFIX + it.aksjonspunktKode
+                        )
                     )
-                )
+                }
             }
         }
 
