@@ -107,6 +107,16 @@ fun Route.OppgaveKoApis() {
         }
     }
 
+    @Location("/{id}/saksbehandlere")
+    data class SaksbehandlereForOppgaveKo(val id: String)
+    get {oppgaveKoId: SaksbehandlereForOppgaveKo ->
+        requestContextService.withRequestContext(call) {
+            call.respond(
+                oppgaveKoTjeneste.hentSaksbehandlereForKo(oppgaveKoId.id.toLong())
+            )
+        }
+    }
+
     @Location("")
     class endreOppgaveKo
 

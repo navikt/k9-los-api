@@ -3,6 +3,8 @@ package no.nav.k9.los.nyoppgavestyring.ko
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.domene.modell.Saksbehandler
+import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
@@ -23,13 +25,14 @@ class OppgaveKoTjeneste(
     private val oppgaveKoRepository: OppgaveKoRepository,
     private val oppgaveQueryService: OppgaveQueryService,
     private val oppgaveRepository: OppgaveRepository,
-    private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste
+    private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
+    private val saksbehandlerRepository: SaksbehandlerRepository,
 ) {
     private val log = LoggerFactory.getLogger(OppgaveKoTjeneste::class.java)
 
     fun hentOppgaverFraKø(
         oppgaveKoId: Long
-    ) : List<Oppgaverad> {
+    ): List<Oppgaverad> {
         val ko = oppgaveKoRepository.hent(oppgaveKoId)
         val idToken = runBlocking {
             kotlin.coroutines.coroutineContext.idToken()
@@ -47,7 +50,7 @@ class OppgaveKoTjeneste(
 
     fun hentAntallOppgaveForKø(
         oppgaveKoId: Long
-    ) : Long {
+    ): Long {
         val ko = oppgaveKoRepository.hent(oppgaveKoId)
         return oppgaveQueryService.queryForAntall(ko.oppgaveQuery)
     }
@@ -103,5 +106,14 @@ class OppgaveKoTjeneste(
             }
         }
         return null
+    }
+
+    fun hentSaksbehandlereForKo(oppgaveKoId: Long): List<Saksbehandler> {
+        val oppgaveKo = oppgaveKoRepository.hent(oppgaveKoId)
+        return oppgaveKo.saksbehandlere.map { saksbehandlerEpost: String ->
+            runBlocking {
+                saksbehandlerRepository.finnSaksbehandlerMedEpost(saksbehandlerEpost)
+            }!!
+        }
     }
 }
