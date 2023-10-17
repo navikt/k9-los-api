@@ -6,7 +6,7 @@ import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
-import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Dto
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import java.time.LocalDateTime

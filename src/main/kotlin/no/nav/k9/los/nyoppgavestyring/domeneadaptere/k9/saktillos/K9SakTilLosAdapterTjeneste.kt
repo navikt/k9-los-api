@@ -202,6 +202,7 @@ class K9SakTilLosAdapterTjeneste(
                 .readText(),
             OppgavetyperDto::class.java
         )
+        oppgavetyperDto.oppgavetyper.forEach { it.oppgavebehandlingsUrlTemplate.replace("{baseUrl}", config.k9FrontendUrl()) }
         oppgavetypeTjeneste.oppdater(oppgavetyperDto)
         log.info("opprettet oppgavetype")
     }

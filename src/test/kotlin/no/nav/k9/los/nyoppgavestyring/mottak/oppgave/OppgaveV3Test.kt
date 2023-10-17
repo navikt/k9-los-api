@@ -98,6 +98,7 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
                 oppgavetype = Oppgavetype(
                     dto = oppgaveTypeDto.oppgavetyper.first(),
                     definisjonskilde = "k9-sak-til-los",
+                    oppgavebehandlingsUrlTemplate = "\${baseUrl}/fagsak/\${K9.saksnummer}/behandling/\${K9.behandlingUuid}?fakta=default&punkt=default",
                     område = område,
                     feltdefinisjoner = Feltdefinisjoner(
                         feltdefinisjonerDto = feltdefinisjonDto,
@@ -181,6 +182,7 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
             oppgavetyper = setOf(
                 OppgavetypeDto(
                     id = "aksjonspunkt",
+                    oppgavebehandlingsUrlTemplate = "\${baseUrl}/fagsak/\${K9.saksnummer}/behandling/\${K9.behandlingUuid}?fakta=default&punkt=default",
                     oppgavefelter = setOf(
                         OppgavefeltDto(
                             id = "aksjonspunkt",

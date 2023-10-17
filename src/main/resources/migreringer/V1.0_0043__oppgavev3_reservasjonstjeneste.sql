@@ -1,3 +1,6 @@
+alter table oppgavetype add column oppgavebehandlingsurltemplate varchar(500);
+comment on column oppgavetype.oppgavebehandlingsurltemplate is 'Urltemplate som interpoleres med opplysninger fra oppgaven for å lage en URL frontend kan bruke for å navigere for å behandle en oppgave'
+
 alter table saksbehandler add column id BIGINT GENERATED ALWAYS AS IDENTITY NOT NULL;
 alter table saksbehandler add constraint saksbehandler_id_key UNIQUE (id);
 

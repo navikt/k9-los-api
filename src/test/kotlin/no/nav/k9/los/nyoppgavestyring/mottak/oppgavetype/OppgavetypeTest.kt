@@ -40,6 +40,7 @@ class OppgavetypeTest {
                             eksternId = "test",
                             område = område,
                             definisjonskilde = "ikke-k9-sak-til-los",
+                            oppgavebehandlingsUrlTemplate = "\${baseUrl}/fagsak/\${K9.saksnummer}/behandling/\${K9.behandlingUuid}?fakta=default&punkt=default",
                             oppgavefelter = setOf()
                         )
                     )
@@ -72,6 +73,7 @@ class OppgavetypeTest {
                     eksternId = "aksjonspunkt",
                     område = område,
                     definisjonskilde = "k9-sak-til-los",
+                    oppgavebehandlingsUrlTemplate = "\${baseUrl}/fagsak/\${K9.saksnummer}/behandling/\${K9.behandlingUuid}?fakta=default&punkt=default",
                     oppgavefelter = setOf(
                         Oppgavefelt(
                             feltDefinisjon =
@@ -126,6 +128,7 @@ class OppgavetypeTest {
                     eksternId = "aksjonspunkt",
                     område = område,
                     definisjonskilde = "k9-sak-til-los",
+                    oppgavebehandlingsUrlTemplate = "\${baseUrl}/fagsak/\${K9.saksnummer}/behandling/\${K9.behandlingUuid}?fakta=default&punkt=default",
                     oppgavefelter = setOf(
                         Oppgavefelt(
                             feltDefinisjon = Feltdefinisjon(
@@ -181,6 +184,7 @@ class OppgavetypeTest {
                     eksternId = "test",
                     område = område,
                     definisjonskilde = "k9-sak-til-los",
+                    oppgavebehandlingsUrlTemplate = "\${baseUrl}/fagsak/\${K9.saksnummer}/behandling/\${K9.behandlingUuid}?fakta=default&punkt=default",
                     oppgavefelter = setOf(
                         Oppgavefelt(
                             feltDefinisjon = Feltdefinisjon(
@@ -218,6 +222,7 @@ class OppgavetypeTest {
                     eksternId = "aksjonspunkt",
                     område = område,
                     definisjonskilde = "k9-sak-til-los",
+                    oppgavebehandlingsUrlTemplate = "\${baseUrl}/fagsak/\${K9.saksnummer}/behandling/\${K9.behandlingUuid}?fakta=default&punkt=default",
                     oppgavefelter = setOf(
                         Oppgavefelt(
                             feltDefinisjon = Feltdefinisjon(
@@ -273,6 +278,7 @@ class OppgavetypeTest {
                     eksternId = "test",
                     område = område,
                     definisjonskilde = "k9-sak-til-los",
+                    oppgavebehandlingsUrlTemplate = "\${baseUrl}/fagsak/\${K9.saksnummer}/behandling/\${K9.behandlingUuid}?fakta=default&punkt=default",
                     oppgavefelter = setOf(
                         Oppgavefelt(
                             feltDefinisjon = Feltdefinisjon(

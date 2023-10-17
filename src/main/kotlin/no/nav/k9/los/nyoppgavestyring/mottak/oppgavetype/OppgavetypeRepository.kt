@@ -70,6 +70,7 @@ class OppgavetypeRepository(
                         id = oppgavetypeRow.long("id"),
                         eksternId = oppgavetypeRow.string("ekstern_id"),
                         område = område,
+                        oppgavebehandlingsUrlTemplate = oppgavetypeRow.string("oppgavebehandlingsUrlTemplate"),
                         oppgavefelter = tx.run(
                             queryOf(
                                 """
@@ -145,15 +146,17 @@ class OppgavetypeRepository(
             val oppgavetypeId = tx.run(
                 queryOf(
                     """
-                    insert into oppgavetype(ekstern_id, omrade_id, definisjonskilde)
+                    insert into oppgavetype(ekstern_id, omrade_id, definisjonskilde, oppgavebehandlingsUrlTemplate)
                     values(
                         :eksterntNavn,
                         :omradeId,
-                        :definisjonskilde)""",
+                        :definisjonskilde,
+                        :oppgavebehandlingsUrlTemplate)""",
                     mapOf(
                         "eksterntNavn" to oppgavetype.eksternId,
                         "omradeId" to oppgavetype.område.id,
-                        "definisjonskilde" to oppgavetype.definisjonskilde
+                        "definisjonskilde" to oppgavetype.definisjonskilde,
+                        "oppgavebehandlingsUrlTemplate" to oppgavetype.oppgavebehandlingsUrlTemplate,
                     )
                 ).asUpdateAndReturnGeneratedKey
             )!!
@@ -208,6 +211,23 @@ class OppgavetypeRepository(
             }
             oppdaterFelt(felter.eksisterendeFelt.id!!, felter.innkommendeFelt, tx)
         }
+        oppdaterOppgavebehandlingsUrlTemplate(endring, tx)
+    }
+
+    private fun oppdaterOppgavebehandlingsUrlTemplate(endring: OppgavetypeEndring, tx: TransactionalSession) {
+        tx.run(
+            queryOf(
+                """
+                    update oppgavetype
+                    set oppgavebehandlingsUrlTemplate = :oppgavebehandlingsUrlTemplate
+                    where ekstern_id = :ekstern_id 
+                """.trimIndent(),
+                mapOf(
+                    "oppgavebehandlingsUrlTemplate" to endring.oppgavetype.oppgavebehandlingsUrlTemplate,
+                    "ekstern_id" to endring.oppgavetype.eksternId
+                )
+            ).asUpdate
+        )
     }
 
     private fun oppdaterFelt(id: Long, innkommendeFelt: Oppgavefelt, tx: TransactionalSession) {
