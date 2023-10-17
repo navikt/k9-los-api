@@ -405,6 +405,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgaveQueryService = get(),
             oppgaveRepository = get(),
             reservasjonV3Tjeneste = get(),
+            saksbehandlerRepository = get(),
         )
     }
 
