@@ -8,6 +8,7 @@ data class Oppgave(
     val eksternVersjon: String,
     val reservasjonsnøkkel: String,
     val oppgavetype: Oppgavetype,
+    val oppgavebehandlingsurl: String,
     val status: String, //TODO: definere typer/enum
     val endretTidspunkt: LocalDateTime,
     val kildeområde: String,

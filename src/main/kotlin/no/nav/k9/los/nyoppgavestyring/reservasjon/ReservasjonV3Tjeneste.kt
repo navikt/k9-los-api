@@ -24,7 +24,6 @@ class ReservasjonV3Tjeneste(
     private val oppgaveRepository: OppgaveRepository,
 ) {
 
-
     fun auditlogReservert(brukerId: Long, reservertoppgave: Oppgave) {
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(brukerId)
         auditlogger.logg(

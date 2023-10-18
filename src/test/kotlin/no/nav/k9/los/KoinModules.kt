@@ -437,6 +437,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgaveKoRepository = get(),
             oppgaveKoTjeneste = get(),
             transactionalManager = get(),
+            oppgaveRepository = get(),
+            pdlService = get(),
         )
     }
 }

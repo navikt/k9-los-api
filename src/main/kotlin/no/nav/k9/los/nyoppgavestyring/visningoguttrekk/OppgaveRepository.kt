@@ -1,8 +1,10 @@
 package no.nav.k9.los.nyoppgavestyring.visningoguttrekk
 
+import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 
 class OppgaveRepository(
@@ -20,18 +22,7 @@ class OppgaveRepository(
             """.trimIndent(),
                 mapOf("eksternId" to eksternId)
             ).map { row ->
-                val kildeområde = row.string("kildeomrade")
-                val oppgaveTypeId = row.long("oppgavetype_id")
-                Oppgave(
-                    eksternId = eksternId,
-                    eksternVersjon = row.string("ekstern_versjon"),
-                    reservasjonsnøkkel = row.string("reservasjonsnokkel"),
-                    oppgavetype = oppgavetypeRepository.hentOppgavetype(kildeområde, oppgaveTypeId, tx),
-                    status = row.string("status"),
-                    endretTidspunkt = row.localDateTime("endret_tidspunkt"),
-                    kildeområde = row.string("kildeomrade"),
-                    felter = hentOppgavefelter(tx, row.long("id"))
-                )
+                mapOppgave(row, tx)
             }.asSingle
         ) ?: throw IllegalStateException("Fant ikke oppgave med eksternId $eksternId")
 
@@ -53,18 +44,7 @@ class OppgaveRepository(
                     "oppgavestatus" to Oppgavestatus.LUKKET.kode,
                 )
             ).map { row ->
-                val kildeområde = row.string("kildeomrade")
-                val oppgaveTypeId = row.long("oppgavetype_id")
-                Oppgave(
-                    eksternId = row.string("ekstern_id"),
-                    eksternVersjon = row.string("ekstern_versjon"),
-                    oppgavetype = oppgavetypeRepository.hentOppgavetype(kildeområde, oppgaveTypeId, tx),
-                    status = row.string("status"),
-                    endretTidspunkt = row.localDateTime("endret_tidspunkt"),
-                    kildeområde = row.string("kildeomrade"),
-                    felter = hentOppgavefelter(tx, row.long("id")),
-                    reservasjonsnøkkel = row.string("reservasjonsnokkel")
-                )
+                mapOppgave(row, tx)
             }.asList
         )
 
@@ -82,18 +62,7 @@ class OppgaveRepository(
             """.trimIndent(),
                 mapOf("reservasjonsnokkel" to reservasjonsnøkkel)
             ).map { row ->
-                val kildeområde = row.string("kildeomrade")
-                val oppgaveTypeId = row.long("oppgavetype_id")
-                Oppgave(
-                    eksternId = row.string("ekstern_id"),
-                    eksternVersjon = row.string("ekstern_versjon"),
-                    oppgavetype = oppgavetypeRepository.hentOppgavetype(kildeområde, oppgaveTypeId, tx),
-                    status = row.string("status"),
-                    endretTidspunkt = row.localDateTime("endret_tidspunkt"),
-                    kildeområde = row.string("kildeomrade"),
-                    felter = hentOppgavefelter(tx, row.long("id")),
-                    reservasjonsnøkkel = row.string("reservasjonsnokkel")
-                )
+                mapOppgave(row, tx)
             }.asList
         )
 
@@ -110,18 +79,7 @@ class OppgaveRepository(
             """.trimIndent(),
                 mapOf("id" to id)
             ).map { row ->
-                val kildeområde = row.string("kildeomrade")
-                val oppgaveTypeId = row.long("oppgavetype_id")
-                Oppgave(
-                    eksternId = row.string("ekstern_id"),
-                    eksternVersjon = row.string("ekstern_versjon"),
-                    oppgavetype = oppgavetypeRepository.hentOppgavetype(kildeområde, oppgaveTypeId, tx),
-                    status = row.string("status"),
-                    endretTidspunkt = row.localDateTime("endret_tidspunkt"),
-                    kildeområde = row.string("kildeomrade"),
-                    felter = hentOppgavefelter(tx, row.long("id")),
-                    reservasjonsnøkkel = row.string("reservasjonsnokkel")
-                )
+                mapOppgave(row, tx)
             }.asSingle
         ) ?: throw IllegalStateException("Fant ikke oppgave med id $id")
 
@@ -144,6 +102,27 @@ class OppgaveRepository(
             }
 
         return copy(felter = felter.plus(defaultverdier))
+    }
+
+    private fun mapOppgave(
+        row: Row,
+        tx: TransactionalSession
+    ): Oppgave {
+        val kildeområde = row.string("kildeomrade")
+        val oppgaveTypeId = row.long("oppgavetype_id")
+        val oppgavetype = oppgavetypeRepository.hentOppgavetype(kildeområde, oppgaveTypeId, tx)
+        val oppgavefelter = hentOppgavefelter(tx, row.long("id"))
+        return Oppgave(
+            eksternId = row.string("ekstern_id"),
+            eksternVersjon = row.string("ekstern_versjon"),
+            oppgavetype = oppgavetype,
+            status = row.string("status"),
+            endretTidspunkt = row.localDateTime("endret_tidspunkt"),
+            kildeområde = row.string("kildeomrade"),
+            oppgavebehandlingsurl = utledOppgavebehandlingsurl(oppgavetype, oppgavefelter),
+            felter = oppgavefelter,
+            reservasjonsnøkkel = row.string("reservasjonsnokkel")
+        )
     }
 
     private fun hentOppgavefelter(tx: TransactionalSession, oppgaveId: Long): List<Oppgavefelt> {
@@ -171,4 +150,29 @@ class OppgaveRepository(
         )
     }
 
+    internal fun utledOppgavebehandlingsurl(oppgavetype: Oppgavetype, oppgavefelter: List<Oppgavefelt>): String {
+        var urlTemplate = oppgavetype.oppgavebehandlingsUrlTemplate
+        val matcher = "\\{(.+?)\\}".toRegex()
+        val matches = matcher.findAll(urlTemplate, 0)
+        matches.forEach { match ->
+            val split = match.groupValues[1].split('.')
+            if (split.size == 2) { //Det er frivillig å oppgi område. Brukes om man vil hente felt som hører til et annet område enn oppgaven
+                val område = split[0]
+                val feltnavn = split[1]
+                val oppgavefelt = oppgavefelter.find { oppgavefelt ->
+                    oppgavefelt.område == område && oppgavefelt.eksternId == feltnavn
+                } ?: throw IllegalStateException("Finner ikke omsøkt oppgavefelt $feltnavn på oppgavetype ${oppgavetype.eksternId}")
+                urlTemplate = urlTemplate.replace(match.value, oppgavefelt.verdi)
+            } else if (split.size == 1) {
+                val feltnavn = split[0]
+                val oppgavefelt = oppgavefelter.find { oppgavefelt ->
+                    oppgavefelt.eksternId == feltnavn
+                } ?: throw IllegalStateException("Finner ikke omsøkt oppgavefelt $feltnavn på oppgavetype ${oppgavetype.eksternId}")
+                urlTemplate = urlTemplate.replace(match.value, oppgavefelt.verdi)
+            } else {
+                throw IllegalStateException("Ugyldig format på feltanvisning i urlTemplate: ${match.value}. Format er {feltnavn} eller {område.feltnavn}")
+            }
+        }
+        return urlTemplate
+    }
 }
