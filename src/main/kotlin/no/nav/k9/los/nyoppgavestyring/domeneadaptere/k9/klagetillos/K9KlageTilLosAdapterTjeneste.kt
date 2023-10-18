@@ -158,8 +158,11 @@ class K9KlageTilLosAdapterTjeneste(
                 .readText(),
             OppgavetyperDto::class.java
         )
-        oppgavetyperDto.oppgavetyper.forEach { it.oppgavebehandlingsUrlTemplate.replace("{baseUrl}", config.k9FrontendUrl()) }
-        oppgavetypeTjeneste.oppdater(oppgavetyperDto)
+        oppgavetypeTjeneste.oppdater(oppgavetyperDto.copy(
+            oppgavetyper = oppgavetyperDto.oppgavetyper.map { oppgavetypeDto ->
+                oppgavetypeDto.copy(oppgavebehandlingsUrlTemplate = oppgavetypeDto.oppgavebehandlingsUrlTemplate.replace("{baseUrl}", config.k9FrontendUrl()))
+            }.toSet()
+        ))
         log.info("opprettet oppgavetype")
     }
 }
