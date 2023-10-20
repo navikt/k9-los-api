@@ -1,10 +1,12 @@
 package no.nav.k9.los.nyoppgavestyring.reservasjon
 
+import no.nav.k9.los.domene.modell.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import java.time.LocalDateTime
+
 data class GenerellOppgaveV3Dto(
     val søkersNavn: String,
     val søkersPersonnr: String,
+    val behandlingstype: BehandlingType,
     val saksnummer: String,
     val oppgaveEksternId: String,
     val journalpostId: String?,

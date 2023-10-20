@@ -2,6 +2,7 @@ package no.nav.k9.los.tjenester.saksbehandler.oppgave
 
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.domene.modell.BehandlingType
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.pdl.IPdlService
@@ -209,6 +210,7 @@ class OppgaveApisTjeneste(
                 GenerellOppgaveV3Dto(
                     søkersNavn = person.person!!.navn(),
                     søkersPersonnr = person.person!!.fnr(),
+                    behandlingstype = BehandlingType.fraKode(oppgave.hentVerdi("behandlingTypekode")!!),
                     saksnummer = oppgave.hentVerdi("saksnummer")!!,
                     oppgaveEksternId = oppgave.eksternId,
                     journalpostId = "",
