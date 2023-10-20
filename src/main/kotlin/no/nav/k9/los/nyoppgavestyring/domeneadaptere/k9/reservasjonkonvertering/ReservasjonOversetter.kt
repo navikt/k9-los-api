@@ -141,7 +141,7 @@ class ReservasjonOversetter(
         }
 
         val reservertAv = runBlocking {
-            saksbehandlerRepository.finnSaksbehandlerMedIdent(reservertAvEpost)!!
+            saksbehandlerRepository.finnSaksbehandlerMedEpost(reservertAvEpost)!!
         }
 
         val utførtAv = runBlocking {
