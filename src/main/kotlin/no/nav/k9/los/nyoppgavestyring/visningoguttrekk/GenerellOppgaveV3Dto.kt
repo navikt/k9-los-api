@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.reservasjon
+package no.nav.k9.los.nyoppgavestyring.visningoguttrekk
 
 import no.nav.k9.los.domene.modell.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus

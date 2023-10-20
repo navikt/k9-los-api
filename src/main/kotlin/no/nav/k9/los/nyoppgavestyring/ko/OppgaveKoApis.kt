@@ -8,11 +8,14 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.Route
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.rest.RequestContextService
+import no.nav.k9.los.integrasjon.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.ko.dto.KopierOppgaveKoDto
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OpprettOppgaveKoDto
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
+import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveKøIdDto
+import no.nav.k9.los.tjenester.saksbehandler.oppgave.ReservasjonV3FraKøDto
 import org.koin.java.KoinJavaComponent
 import org.koin.ktor.ext.inject
 import java.util.*
@@ -97,12 +100,13 @@ fun Route.OppgaveKoApis() {
         call.respond(HttpStatusCode.OK)
     }
 
+
     @Location("/{id}/oppgaver")
     data class OppgaveKoId(val id: String)
     get { oppgaveKoId: OppgaveKoId ->
         requestContextService.withRequestContext(call) {
             if (pepClient.harTilgangTilReservingAvOppgaver()) { //TODO: Hvilke felter vil vi eksponere her?
-                oppgaveKoTjeneste.hentOppgaverFraKø(oppgaveKoId.id.toLong()) //TODO: Denne vil p.t. bare returnere antall, tror jeg?
+                oppgaveKoTjeneste.hentOppgaverFraKø(oppgaveKoId.id.toLong(), 10) //Finn et fornuftig antall?
             }
         }
     }

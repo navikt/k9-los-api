@@ -12,7 +12,7 @@ class SqlOppgaveQuery(
     val oppgavefelterKodeOgType: Map<String, Datatype>
 ) {
     private var selectPrefix = """
-                SELECT o.id as id 
+                SELECT o.id as id, o.ekstern_id as ekstern_id 
                 """.trimIndent()
 
     private var query = """

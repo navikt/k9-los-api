@@ -6,12 +6,13 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.koin.test.get
+import java.time.LocalDateTime
 import kotlin.test.assertEquals
 
+//TODO DRY-forbedring
 class UtledOppgavebehandlingsUrlTest : AbstractK9LosIntegrationTest(){
     @Test
     fun `mapUrlTemplateHappycase`() {
-        val oppgaveRepository = get<OppgaveRepository>()
         val oppgavetype = Oppgavetype(
             eksternId = "test123",
             område = Område(eksternId = "K9"),
@@ -35,13 +36,22 @@ class UtledOppgavebehandlingsUrlTest : AbstractK9LosIntegrationTest(){
                 verdi = "beh456"
             ),
         )
-        val url = oppgaveRepository.utledOppgavebehandlingsurl(oppgavetype, oppgavefelter)
+        val oppgave = Oppgave(
+            eksternId = "abc",
+            eksternVersjon = "123",
+            reservasjonsnøkkel = "test",
+            oppgavetype = oppgavetype,
+            status = "test",
+            endretTidspunkt = LocalDateTime.now(),
+            kildeområde = "K9",
+            felter = oppgavefelter
+        )
+        val url = oppgave.getOppgaveBehandlingsurl()
         assertEquals("http://localhost:9000/fagsak/ABC123/behandling/beh456?fakta=default&punkt=default", url)
     }
 
     @Test
     fun `mapUrlUtenOmrådeanvisning`() {
-        val oppgaveRepository = get<OppgaveRepository>()
         val oppgavetype = Oppgavetype(
             eksternId = "test123",
             område = Område(eksternId = "K9"),
@@ -65,13 +75,22 @@ class UtledOppgavebehandlingsUrlTest : AbstractK9LosIntegrationTest(){
                 verdi = "beh456"
             ),
         )
-        val url = oppgaveRepository.utledOppgavebehandlingsurl(oppgavetype, oppgavefelter)
+        val oppgave = Oppgave(
+            eksternId = "abc",
+            eksternVersjon = "123",
+            reservasjonsnøkkel = "test",
+            oppgavetype = oppgavetype,
+            status = "test",
+            endretTidspunkt = LocalDateTime.now(),
+            kildeområde = "K9",
+            felter = oppgavefelter
+        )
+        val url = oppgave.getOppgaveBehandlingsurl()
         assertEquals("http://localhost:9000/fagsak/ABC123/behandling/beh456?fakta=default&punkt=default", url)
     }
 
     @Test
     fun `mapUrlManglerOppgavefelt`() {
-        val oppgaveRepository = get<OppgaveRepository>()
         val oppgavetype = Oppgavetype(
             eksternId = "test123",
             område = Område(eksternId = "K9"),
@@ -95,8 +114,18 @@ class UtledOppgavebehandlingsUrlTest : AbstractK9LosIntegrationTest(){
                 verdi = "9001"
             ),
         )
+        val oppgave = Oppgave(
+            eksternId = "abc",
+            eksternVersjon = "123",
+            reservasjonsnøkkel = "test",
+            oppgavetype = oppgavetype,
+            status = "test",
+            endretTidspunkt = LocalDateTime.now(),
+            kildeområde = "K9",
+            felter = oppgavefelter
+        )
         assertThrows<IllegalStateException> {
-            oppgaveRepository.utledOppgavebehandlingsurl(oppgavetype, oppgavefelter)
+            oppgave.getOppgaveBehandlingsurl()
         }
     }
 }

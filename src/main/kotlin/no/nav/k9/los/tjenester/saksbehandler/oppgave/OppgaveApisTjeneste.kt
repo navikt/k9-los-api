@@ -12,7 +12,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.reservasjon.GenerellOppgaveV3Dto
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.GenerellOppgaveV3Dto
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Dto
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
@@ -28,7 +28,7 @@ class OppgaveApisTjeneste(
     private val reservasjonOversetter: ReservasjonOversetter,
     private val oppgaveRepository: no.nav.k9.los.domene.repository.OppgaveRepository,
     private val oppgaveV3Repository: OppgaveRepository,
-    private val oppgaveV3Tjeneste: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveTjeneste,
+    private val oppgaveV3Tjeneste: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper,
     private val oppgaveKoRepository: OppgaveKoRepository,
     private val oppgaveKoTjeneste: OppgaveKoTjeneste,
     private val transactionalManager: TransactionalManager,
@@ -215,7 +215,7 @@ class OppgaveApisTjeneste(
                     oppgaveEksternId = oppgave.eksternId,
                     journalpostId = "",
                     oppgavestatus = Oppgavestatus.fraKode(oppgave.status),
-                    oppgavebehandlingsUrl = oppgave.oppgavebehandlingsurl
+                    oppgavebehandlingsUrl = oppgave.getOppgaveBehandlingsurl()
                 )
             }
             ReservasjonV3Dto(reservasjon, oppgaveV3Dtos, saksbehandler)

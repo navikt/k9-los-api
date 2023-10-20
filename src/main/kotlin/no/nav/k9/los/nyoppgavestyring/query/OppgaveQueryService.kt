@@ -43,6 +43,10 @@ class OppgaveQueryService() {
         return oppgaveQueryRepository.query(oppgaveQuery)
     }
 
+    fun queryForOppgaveEksternId(oppgaveQuery: OppgaveQuery): List<String> {
+        return oppgaveQueryRepository.queryForEksternId(oppgaveQuery)
+    }
+
     fun queryToFile(tx: TransactionalSession, oppgaveQuery: OppgaveQuery, idToken: IIdToken): String {
         val oppgaver = query(tx, oppgaveQuery, idToken)
         if (oppgaver.isEmpty()) {

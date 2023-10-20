@@ -14,8 +14,10 @@ import no.nav.k9.los.nyoppgavestyring.reservasjon.AlleredeReservertException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ManglerTilgangException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.GenerellOppgaveV3Dto
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.forskyvReservasjonsDato
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -31,13 +33,29 @@ class OppgaveKoTjeneste(
     private val log = LoggerFactory.getLogger(OppgaveKoTjeneste::class.java)
 
     fun hentOppgaverFraKø(
-        oppgaveKoId: Long
+        oppgaveKoId: Long,
+        antallSaker: Int,
     ): List<Oppgaverad> {
         val ko = oppgaveKoRepository.hent(oppgaveKoId)
         val idToken = runBlocking {
             kotlin.coroutines.coroutineContext.idToken()
         }
-        return oppgaveQueryService.query(ko.oppgaveQuery, idToken)
+
+        /*
+        // WIP
+        //TODO: Paging bør flyttes til queryservice?
+        val oppgaveEksternIder = oppgaveQueryService.queryForOppgaveEksternId(ko.oppgaveQuery)
+
+        var oppgaveDtoer: List<GenerellOppgaveV3Dto>
+        //while listeForKort
+            //hent page
+            //iterer og fyll liste
+        while ()
+        oppgaveRepositoryTxWrapper.hentOppgaverPaget(oppgaveEksternIder, antallSaker, i)
+        //oppgaveRepositoryTxWrapper.hentOppgaver(oppgaveIder, true, antallSaker)
+         */
+
+        return oppgaveQueryService.query(ko.oppgaveQuery.copy(limit = antallSaker), idToken)
     }
 
     fun hentKøerForSaksbehandler(

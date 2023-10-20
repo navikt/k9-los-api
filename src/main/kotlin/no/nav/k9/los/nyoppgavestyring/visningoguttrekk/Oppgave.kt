@@ -8,12 +8,39 @@ data class Oppgave(
     val eksternVersjon: String,
     val reservasjonsnøkkel: String,
     val oppgavetype: Oppgavetype,
-    val oppgavebehandlingsurl: String,
     val status: String, //TODO: definere typer/enum
     val endretTidspunkt: LocalDateTime,
     val kildeområde: String,
     val felter: List<Oppgavefelt>
 ) {
+    fun getOppgaveBehandlingsurl(): String {
+        var oppgavebehandlingsUrlTemplate = oppgavetype.oppgavebehandlingsUrlTemplate
+        val matcher = "\\{(.+?)\\}".toRegex()
+        val matches = matcher.findAll(oppgavebehandlingsUrlTemplate, 0)
+        matches.forEach { match ->
+            val split = match.groupValues[1].split('.')
+            if (split.size == 2) { //Det er frivillig å oppgi område. Brukes om man vil hente felt som hører til et annet område enn oppgaven
+                val område = split[0]
+                val feltnavn = split[1]
+                val oppgavefelt = felter.find { oppgavefelt ->
+                    oppgavefelt.område == område && oppgavefelt.eksternId == feltnavn
+                }
+                    ?: throw IllegalStateException("Finner ikke omsøkt oppgavefelt $feltnavn på oppgavetype ${oppgavetype.eksternId}")
+                oppgavebehandlingsUrlTemplate = oppgavebehandlingsUrlTemplate.replace(match.value, oppgavefelt.verdi)
+            } else if (split.size == 1) {
+                val feltnavn = split[0]
+                val oppgavefelt = felter.find { oppgavefelt ->
+                    oppgavefelt.eksternId == feltnavn
+                }
+                    ?: throw IllegalStateException("Finner ikke omsøkt oppgavefelt $feltnavn på oppgavetype ${oppgavetype.eksternId}")
+                oppgavebehandlingsUrlTemplate = oppgavebehandlingsUrlTemplate.replace(match.value, oppgavefelt.verdi)
+            } else {
+                throw IllegalStateException("Ugyldig format på feltanvisning i urlTemplate: ${match.value}. Format er {feltnavn} eller {område.feltnavn}")
+            }
+        }
+        return oppgavebehandlingsUrlTemplate
+    }
+
     fun hentVerdi(feltnavn: String): String? {
         val oppgavefelt = hentOppgavefelt(feltnavn)
 

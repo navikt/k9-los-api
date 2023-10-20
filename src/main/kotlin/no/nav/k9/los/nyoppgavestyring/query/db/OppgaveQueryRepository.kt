@@ -102,6 +102,19 @@ class OppgaveQueryRepository(
         return query(tx, toSqlOppgaveQuery(oppgaveQuery, oppgavefelterKodeOgType))
     }
 
+    fun queryForEksternId(oppgaveQuery: OppgaveQuery): List<String> {
+        return using(sessionOf(datasource)) {
+            it.transaction { tx -> queryForEksternId(tx, oppgaveQuery) }
+        }
+    }
+
+    fun queryForEksternId(tx: TransactionalSession, oppgaveQuery: OppgaveQuery): List<String> {
+        val oppgavefelterKodeOgType = hentAlleFelter(tx, medKodeverk = false)
+            .associate { felt -> felt.kode to Datatype.fraKode(felt.tolkes_som) }
+
+        return queryForEksternId(tx, toSqlOppgaveQuery(oppgaveQuery, oppgavefelterKodeOgType))
+    }
+
     fun queryForAntall(tx: TransactionalSession, oppgaveQuery: OppgaveQuery): Long {
         val oppgavefelterKodeOgType = hentAlleFelter(tx, medKodeverk = false)
             .associate { felt -> felt.kode to Datatype.fraKode(felt.tolkes_som) }
@@ -126,6 +139,15 @@ class OppgaveQueryRepository(
                 oppgaveQuery.getQuery(),
                 oppgaveQuery.getParams()
             ).map { row -> row.long("id") }.asList
+        )
+    }
+
+    private fun queryForEksternId(tx: TransactionalSession, oppgaveQuery: SqlOppgaveQuery): List<String> {
+        return tx.run(
+            queryOf(
+                oppgaveQuery.getQuery(),
+                oppgaveQuery.getParams()
+            ).map { row -> row.string("ekstern_id") }.asList
         )
     }
 

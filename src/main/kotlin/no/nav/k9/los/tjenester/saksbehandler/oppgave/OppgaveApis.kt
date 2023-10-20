@@ -24,6 +24,7 @@ private val log: Logger = LoggerFactory.getLogger("nav.OppgaveApis")
 //TODO siste 10 saker for saksbhandler -- nye ppgaver?
 //TODO kode6 filtrering på neste 10 oppgaver fra kø?
 //TODO bare levere reservasjonID til frontend!! Verifiser
+//TODO Auditlogging
 
 internal fun Route.OppgaveApis() {
     val requestContextService by inject<RequestContextService>()
@@ -39,7 +40,7 @@ internal fun Route.OppgaveApis() {
         val oppgaveIdMedOverstyring = call.receive<OppgaveIdMedOverstyring>()
         requestContextService.withRequestContext(call) {
             if (!pepClient.harTilgangTilReservingAvOppgaver()) {
-                call.respond("") //TODO OppgaveStatusDto med null-felter
+                call.respond(HttpStatusCode.Forbidden)
             } else {
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
                     kotlin.coroutines.coroutineContext.idToken().getUsername()
@@ -63,6 +64,7 @@ internal fun Route.OppgaveApis() {
         }
     }
 
+    //TODO: Flytt til OppgaveKoApis
     @Location("/fa-oppgave-fra-ny-ko")
     class fåOppgaveFraNyKø
     post { _: fåOppgaveFraNyKø ->
@@ -128,7 +130,6 @@ internal fun Route.OppgaveApis() {
             } catch (e: FinnerIkkeDataException) {
                 call.respond(HttpStatusCode.NotFound,"Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")
             }
-
         }
     }
 

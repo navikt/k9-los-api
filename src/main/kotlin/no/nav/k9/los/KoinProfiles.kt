@@ -517,7 +517,7 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveTjeneste(
+        no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper(
             oppgaveRepository = get(),
             transactionalManager = get(),
         )
