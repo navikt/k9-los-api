@@ -198,13 +198,13 @@ internal fun Route.OppgaveApis() {
     class hentAntallOppgaverForV3OppgaveKø
     get {_: hentAntallOppgaverForV3OppgaveKø ->
         requestContextService.withRequestContext(call) {
-            val oppgaveKøId = call.receive<OppgaveKøIdDto>().oppgaveKøId
+            var oppgaveKøId = call.request.queryParameters["oppgaveKoId"]!!
             call.respond(oppgaveApisTjeneste.hentAntallOppgaverIKø(oppgaveKøId))
         }
     }
 
 
-    @Deprecated("Gjelder bare for gamle køer. For ny køer, bruk /antall-oppgaver-i-ko")
+    @Deprecated("Gjelder bare for gamle køer. For nye køer, bruk /antall-oppgaver-i-ko")
     @Location("/antall")
     class hentAntallOppgaverForOppgavekø
     get { _: hentAntallOppgaverForOppgavekø ->
