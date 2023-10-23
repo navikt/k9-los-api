@@ -116,6 +116,7 @@ class K9SakTilLosAdapterTjeneste(
                 .filter { merknad -> merknad.merknadKoder.contains("HASTESAK") }.isNotEmpty()
             val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
             val nyeBehandlingsopplysningerFraK9Sak = k9SakBerikerKlient.hentBehandling(uuid)
+            var tidligereVersjonOppdatert = false;
             behandlingProsessEventer.forEach { event ->
                 var oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
                     .leggTilFeltverdi(
@@ -127,7 +128,15 @@ class K9SakTilLosAdapterTjeneste(
 
                 oppgaveDto = ryddOppObsoleteOgResultatfeilFra2020(event, oppgaveDto, nyeBehandlingsopplysningerFraK9Sak)
 
+                // oppdater oppgave når forrige versjon har blitt oppdatert.
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
+                if (oppgave == null && tidligereVersjonOppdatert) {
+                    oppgaveV3Tjeneste.oppdaterEkstisterendeOppgaveversjon(oppgaveDto, tx)
+                }
+
+                if (oppgave != null) {
+                    tidligereVersjonOppdatert = true;
+                }
 
                 if (oppgave == null) {
                     sisteOppgaveDtoTilHastesakvask = oppgaveDto
