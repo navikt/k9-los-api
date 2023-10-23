@@ -256,7 +256,7 @@ class OppgaveApisTjeneste(
         }
     }
 
-    fun hentAntallOppgaverIKø(oppgaveKoId: String) {
-        oppgaveKoTjeneste.hentAntallOppgaveForKø(oppgaveKoId.toLong())
+    fun hentAntallOppgaverIKø(oppgaveKoId: String): Long {
+        return oppgaveKoTjeneste.hentAntallOppgaveForKø(oppgaveKoId.toLong())
     }
 }
