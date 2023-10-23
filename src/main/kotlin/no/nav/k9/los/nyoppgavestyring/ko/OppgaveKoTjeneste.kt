@@ -4,6 +4,7 @@ import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.modell.Saksbehandler
+import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
@@ -18,9 +19,11 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.GenerellOppgaveV3Dto
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
+import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.forskyvReservasjonsDato
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
+import java.util.*
 
 class OppgaveKoTjeneste(
     private val transactionalManager: TransactionalManager,
@@ -29,6 +32,8 @@ class OppgaveKoTjeneste(
     private val oppgaveRepository: OppgaveRepository,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
     private val saksbehandlerRepository: SaksbehandlerRepository,
+    private val oppgaveTjeneste: OppgaveTjeneste,
+    private val reservasjonRepository: ReservasjonRepository,
 ) {
     private val log = LoggerFactory.getLogger(OppgaveKoTjeneste::class.java)
 
@@ -106,6 +111,20 @@ class OppgaveKoTjeneste(
             }
 
             try {
+                // Fjernes når V1 skal vekk
+                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedId(innloggetBrukerId)
+                val åpneOppgaverForReservasjonsnøkkel =
+                    oppgaveRepository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, kandidatoppgave.reservasjonsnøkkel)
+                val v1Reservasjoner = oppgaveTjeneste.lagReservasjoner(
+                    åpneOppgaverForReservasjonsnøkkel.map { UUID.fromString(it.eksternId) }.toSet(),
+                    innloggetBruker.brukerIdent!!,
+                    null,
+                )
+                reservasjonRepository.lagreFlereReservasjoner(v1Reservasjoner)
+                runBlocking {
+                    saksbehandlerRepository.leggTilFlereReservasjoner(innloggetBruker.brukerIdent, v1Reservasjoner.map { r -> r.oppgave })
+                }
+                // V1-greier til og med denne linjen
                 val reservasjon = reservasjonV3Tjeneste.taReservasjon(
                     reserverForId = innloggetBrukerId,
                     reservasjonsnøkkel = kandidatoppgave.reservasjonsnøkkel,

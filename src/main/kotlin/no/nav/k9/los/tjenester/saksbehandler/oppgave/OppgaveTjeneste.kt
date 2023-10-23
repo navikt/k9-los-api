@@ -67,8 +67,8 @@ class OppgaveTjeneste constructor(
             val tid = measureTimeMillis {
                 oppgaver = oppgaveRepository.hentOppgaver(oppgaveKø.oppgaverOgDatoer.map { it.id })
                     .sortedBy {
-                    it.aksjonspunkter.beslutterAp()?.opprettetTidspunkt ?: it.behandlingOpprettet
-                }
+                        it.aksjonspunkter.beslutterAp()?.opprettetTidspunkt ?: it.behandlingOpprettet
+                    }
             }
 
             ReservasjonRepository.RESERVASJON_YTELSE_LOG
@@ -207,7 +207,7 @@ class OppgaveTjeneste constructor(
         return oppgave.ansvarligBeslutterForTotrinn.lowercase() == ident.lowercase() && !erBeslutterOppgave(oppgave)
     }
 
-    private fun lagReservasjoner(
+    fun lagReservasjoner(
         iderPåOppgaverSomSkalBliReservert: Set<UUID>,
         ident: String,
         overstyrIdent: String?,
@@ -483,6 +483,7 @@ class OppgaveTjeneste constructor(
     fun hentAktivMerknad(eksternId: String): MerknadDto? {
         return oppgaveRepositoryV2.hentMerknader(eksternId, inkluderSlettet = false).firstOrNull().tilDto()
     }
+
     private fun Merknad?.tilDto(): MerknadDto? {
         return this?.let {
             MerknadDto(
@@ -1058,9 +1059,9 @@ class OppgaveTjeneste constructor(
          pepclent.harTilgangTilOppgave -- for alle oppgaver knyttet til nøkkel?
          */
 
-        val hentNesteOppgaverIKø = hentNesteOppgaverIKø(UUID.fromString(oppgaveKøId))
+        val nesteOppgaverIKø = hentNesteOppgaverIKø(UUID.fromString(oppgaveKøId))
 
-        if (hentNesteOppgaverIKø.isEmpty()) {
+        if (nesteOppgaverIKø.isEmpty()) {
             return null
         }
 
@@ -1069,7 +1070,7 @@ class OppgaveTjeneste constructor(
             oppgaveKøId
         )
 
-        val oppgavePar = finnOppgave(prioriterteOppgaver, hentNesteOppgaverIKø, oppgaverSomErBlokert) ?: return null
+        val oppgavePar = finnOppgave(prioriterteOppgaver, nesteOppgaverIKø, oppgaverSomErBlokert) ?: return null
 
         val oppgaveDto: OppgaveDto
 
@@ -1082,7 +1083,13 @@ class OppgaveTjeneste constructor(
                 // skal ikke få oppgave saksbehandler ikke har lestilgang til
                 settSkjermet(oppgavePar.second!!)
                 oppgaverSomErBlokert.add(oppgaveDto)
-                return fåOppgaveFraKø(oppgaveKøId, brukerident, oppgaverSomErBlokert, prioriterteOppgaver, saksbehandlerEpost)
+                return fåOppgaveFraKø(
+                    oppgaveKøId,
+                    brukerident,
+                    oppgaverSomErBlokert,
+                    prioriterteOppgaver,
+                    saksbehandlerEpost
+                )
             }
         } else {
             oppgaveDto = oppgavePar.first!!
@@ -1094,13 +1101,25 @@ class OppgaveTjeneste constructor(
         // beslutter skal ikke få opp oppgave med 5016 eller 5005 de selv har saksbehandlet
         if (innloggetSaksbehandlerHarSaksbehandletOppgaveSomSkalBliBesluttet(oppgaveSomSkalBliReservert, brukerident)) {
             oppgaverSomErBlokert.add(oppgaveDto)
-            return fåOppgaveFraKø(oppgaveKøId, brukerident, oppgaverSomErBlokert, prioriterteOppgaver, saksbehandlerEpost)
+            return fåOppgaveFraKø(
+                oppgaveKøId,
+                brukerident,
+                oppgaverSomErBlokert,
+                prioriterteOppgaver,
+                saksbehandlerEpost
+            )
         }
 
         // beslutter skal ikke få oppgaver de selv har besluttet
         if (innloggetSaksbehandlerHarBesluttetOppgaven(oppgaveSomSkalBliReservert, brukerident)) {
             oppgaverSomErBlokert.add(oppgaveDto)
-            return fåOppgaveFraKø(oppgaveKøId, brukerident, oppgaverSomErBlokert, prioriterteOppgaver, saksbehandlerEpost)
+            return fåOppgaveFraKø(
+                oppgaveKøId,
+                brukerident,
+                oppgaverSomErBlokert,
+                prioriterteOppgaver,
+                saksbehandlerEpost
+            )
         }
 
         val oppgaverSomSkalBliReservert = mutableListOf<OppgaveMedId>()
@@ -1125,21 +1144,39 @@ class OppgaveTjeneste constructor(
         // skal ikke få oppgaver som tilhører en parsak der en av sakene er resvert på en annen saksbehandler
         if (aktiveReservasjoner.isNotEmpty()) {
             oppgaverSomErBlokert.add(oppgaveDto)
-            return fåOppgaveFraKø(oppgaveKøId, brukerident, oppgaverSomErBlokert, prioriterteOppgaver, saksbehandlerEpost)
+            return fåOppgaveFraKø(
+                oppgaveKøId,
+                brukerident,
+                oppgaverSomErBlokert,
+                prioriterteOppgaver,
+                saksbehandlerEpost
+            )
         }
 
         // sjekker også om parsakene har blitt besluttet av beslutter
         if (oppgaverSomSkalBliReservert.map { it.oppgave }
                 .any { innloggetSaksbehandlerHarBesluttetOppgaven(it, brukerident) }) {
             oppgaverSomErBlokert.add(oppgaveDto)
-            return fåOppgaveFraKø(oppgaveKøId, brukerident, oppgaverSomErBlokert, prioriterteOppgaver, saksbehandlerEpost)
+            return fåOppgaveFraKø(
+                oppgaveKøId,
+                brukerident,
+                oppgaverSomErBlokert,
+                prioriterteOppgaver,
+                saksbehandlerEpost
+            )
         }
 
         // sjekker også om parsakene har blitt saksbehandlet av saksbehandler
         if (oppgaverSomSkalBliReservert.map { it.oppgave }
                 .any { innloggetSaksbehandlerHarSaksbehandletOppgaveSomSkalBliBesluttet(it, brukerident) }) {
             oppgaverSomErBlokert.add(oppgaveDto)
-            return fåOppgaveFraKø(oppgaveKøId, brukerident, oppgaverSomErBlokert, prioriterteOppgaver, saksbehandlerEpost)
+            return fåOppgaveFraKø(
+                oppgaveKøId,
+                brukerident,
+                oppgaverSomErBlokert,
+                prioriterteOppgaver,
+                saksbehandlerEpost
+            )
         }
 
         val reservasjoner = lagReservasjoner(iderPåOppgaverSomSkalBliReservert, brukerident, null)
@@ -1170,31 +1207,31 @@ class OppgaveTjeneste constructor(
         oppgaveSomSkalBliReservert: Oppgave,
         ident: String
     ) = oppgaveSomSkalBliReservert.ansvarligBeslutterForTotrinn != null &&
-            oppgaveSomSkalBliReservert.ansvarligBeslutterForTotrinn == ident &&
-            !erBeslutterOppgave(oppgaveSomSkalBliReservert)
+        oppgaveSomSkalBliReservert.ansvarligBeslutterForTotrinn == ident &&
+        !erBeslutterOppgave(oppgaveSomSkalBliReservert)
 
     private fun innloggetSaksbehandlerHarSaksbehandletOppgaveSomSkalBliBesluttet(
         oppgaveSomSkalBliReservert: Oppgave,
         ident: String
     ): Boolean {
         val besluttet = oppgaveSomSkalBliReservert.ansvarligSaksbehandlerForTotrinn != null &&
-                oppgaveSomSkalBliReservert.ansvarligSaksbehandlerForTotrinn.equals(ident, true)
+            oppgaveSomSkalBliReservert.ansvarligSaksbehandlerForTotrinn.equals(ident, true)
 
         //for gamle k9-tilbake behandlinger så er feltet ansvarligSaksbehandlerIdent brukt
         // istedenfor ansvarligSaksbehandlerForTotrinn, så sjekker begge.
         val besluttetK9Tilbake = oppgaveSomSkalBliReservert.ansvarligSaksbehandlerIdent != null &&
-                oppgaveSomSkalBliReservert.ansvarligSaksbehandlerIdent.equals(ident, true)
-                && oppgaveSomSkalBliReservert.system == Fagsystem.K9TILBAKE.kode
+            oppgaveSomSkalBliReservert.ansvarligSaksbehandlerIdent.equals(ident, true)
+            && oppgaveSomSkalBliReservert.system == Fagsystem.K9TILBAKE.kode
 
         return (besluttet || besluttetK9Tilbake) &&
-                erBeslutterOppgave(oppgaveSomSkalBliReservert)
+            erBeslutterOppgave(oppgaveSomSkalBliReservert)
     }
 
 
     private fun erBeslutterOppgave(oppgaveSomSkalBliReservert: Oppgave) =
         oppgaveSomSkalBliReservert.aksjonspunkter.hentAktive().keys.any {
             it == AksjonspunktDefinisjon.FATTER_VEDTAK.kode
-                    || it == AksjonspunktDefinisjonK9Tilbake.FATTE_VEDTAK.kode
+                || it == AksjonspunktDefinisjonK9Tilbake.FATTE_VEDTAK.kode
         }
 
     private suspend fun finnPrioriterteOppgaver(
