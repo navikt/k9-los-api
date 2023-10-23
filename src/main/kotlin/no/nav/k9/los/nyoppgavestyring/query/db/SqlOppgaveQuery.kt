@@ -38,7 +38,7 @@ class SqlOppgaveQuery(
 
     fun medAntallSomResultat() {
         selectPrefix = """
-            SELECT count(*) as antall
+            SELECT count(*) as antall 
         """.trimIndent()
     }
 

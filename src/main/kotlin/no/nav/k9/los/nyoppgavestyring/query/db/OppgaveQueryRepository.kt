@@ -168,8 +168,6 @@ class OppgaveQueryRepository(
         val query = SqlOppgaveQuery(oppgavefelterKodeOgType)
         val combineOperator = CombineOperator.AND
         håndterFiltere(query, oppgaveQuery.filtere, combineOperator)
-        håndterOrder(query, oppgaveQuery.order)
-        query.medLimit(oppgaveQuery.limit)
         query.medAntallSomResultat()
 
         return query
