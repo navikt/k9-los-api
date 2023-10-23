@@ -8,6 +8,7 @@ import java.time.LocalDateTime
 data class ReservasjonV3FraKøDto ( //TODO: WIP avklare med Vebjørn hvor mange felter som trengs jfr OppgaveDto som returneres fra gammel fa-oppgave-fra-ko
     val reservertOppgaveEksternId: String,
     val reservasjonsnøkkel: String,
+    val oppgaveBehandlingsUrl: String,
     val reservertAv: String,
     val reservertFra: LocalDateTime,
     val reservertTil: LocalDateTime?,
@@ -15,6 +16,7 @@ data class ReservasjonV3FraKøDto ( //TODO: WIP avklare med Vebjørn hvor mange 
     constructor(reservasjonV3: ReservasjonV3, oppgave: Oppgave, reservertAv: Saksbehandler) : this (
         reservertOppgaveEksternId = oppgave.eksternId,
         reservasjonsnøkkel = reservasjonV3.reservasjonsnøkkel,
+        oppgaveBehandlingsUrl = oppgave.getOppgaveBehandlingsurl(),
         reservertAv = reservertAv.epost,
         reservertFra = reservasjonV3.gyldigFra,
         reservertTil = reservasjonV3.gyldigTil
