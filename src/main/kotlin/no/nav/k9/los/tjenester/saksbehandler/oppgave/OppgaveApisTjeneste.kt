@@ -255,8 +255,4 @@ class OppgaveApisTjeneste(
             ReservasjonV3Dto(reservasjon, oppgaveV1Dto, saksbehandler)
         }
     }
-
-    fun hentAntallOppgaverIKø(oppgaveKoId: String): Long {
-        return oppgaveKoTjeneste.hentAntallOppgaveForKø(oppgaveKoId.toLong())
-    }
 }

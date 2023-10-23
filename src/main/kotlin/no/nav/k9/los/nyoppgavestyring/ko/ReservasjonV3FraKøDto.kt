@@ -1,4 +1,4 @@
-package no.nav.k9.los.tjenester.saksbehandler.oppgave
+package no.nav.k9.los.nyoppgavestyring.ko
 
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3

@@ -64,30 +64,7 @@ internal fun Route.OppgaveApis() {
         }
     }
 
-    //TODO: Flytt til OppgaveKoApis
-    @Location("/fa-oppgave-fra-ny-ko")
-    class fåOppgaveFraNyKø
-    post { _: fåOppgaveFraNyKø ->
-        requestContextService.withRequestContext(call) {
-            val params = call.receive<OppgaveKøIdDto>()
-
-            val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
-                kotlin.coroutines.coroutineContext.idToken().getUsername()
-            )!!
-
-            val (reservertOppgave, reservasjonFraKø) = oppgaveKoTjeneste.taReservasjonFraKø(
-                innloggetBrukerId = innloggetBruker.id!!,
-                oppgaveKoId = params.oppgaveKøId.toLong()
-            ) ?: Pair(null, null)
-
-            if (reservasjonFraKø != null) {
-                call.respond(ReservasjonV3FraKøDto(reservasjonFraKø, reservertOppgave!!, innloggetBruker))
-            } else {
-                call.respond(HttpStatusCode.NotFound, "Fant ingen oppgave i valgt kø")
-            }
-        }
-    }
-
+    // Fjernes når V1 skal vekk
     @Deprecated("Gjelder bare for de gamle køene, frem til disse er sanert")
     @Location("/fa-oppgave-fra-ko")
     class fåOppgaveFraKø
@@ -195,16 +172,7 @@ internal fun Route.OppgaveApis() {
         }
     }
 
-    @Location("/antall-oppgaver-i-ko")
-    class hentAntallOppgaverForV3OppgaveKø
-    get {_: hentAntallOppgaverForV3OppgaveKø ->
-        requestContextService.withRequestContext(call) {
-            var oppgaveKøId = call.request.queryParameters["oppgaveKoId"]!!
-            call.respond(oppgaveApisTjeneste.hentAntallOppgaverIKø(oppgaveKøId))
-        }
-    }
-
-
+    // Fjernes når V1 skal vekk
     @Deprecated("Gjelder bare for gamle køer. For nye køer, bruk /antall-oppgaver-i-ko")
     @Location("/antall")
     class hentAntallOppgaverForOppgavekø
@@ -218,6 +186,7 @@ internal fun Route.OppgaveApis() {
         }
     }
 
+    // Fjernes når V1 skal vekk
     @Deprecated("Gjelder bare for gamle køer. For nye køer, se OppgaveKoApis./{id}/oppgaver")
     class hentOppgaver
     //erstattet av OppgaveKoApis--/{id}/oppgaver::GET
