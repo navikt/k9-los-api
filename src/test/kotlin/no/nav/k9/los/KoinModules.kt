@@ -141,6 +141,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     every { config.auditEnabled() } returns false
     every { config.auditVendor() } returns "k9"
     every { config.auditProduct() } returns "k9-los-api"
+    every { config.k9FrontendUrl() } returns "http://localhost:9000"
 
     single {
         PdlServiceLocal() as IPdlService
@@ -408,6 +409,9 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             saksbehandlerRepository = get(),
             oppgaveTjeneste = get(),
             reservasjonRepository = get(),
+            oppgaveRepositoryTxWrapper = get(),
+            pepClient = get(),
+            pdlService = get(),
         )
     }
 

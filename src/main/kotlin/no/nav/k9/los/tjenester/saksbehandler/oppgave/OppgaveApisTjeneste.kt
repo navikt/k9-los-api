@@ -5,7 +5,7 @@ import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.modell.BehandlingType
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
-import no.nav.k9.los.integrasjon.pdl.IPdlService
+import no.nav.k9.los.integrasjon.pdl.*
 import no.nav.k9.los.integrasjon.pdl.fnr
 import no.nav.k9.los.integrasjon.pdl.navn
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
@@ -16,6 +16,7 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.GenerellOppgaveV3Dto
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Dto
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -206,17 +207,8 @@ class OppgaveApisTjeneste(
             val oppgaveV3Dtos = oppgaverForReservasjonsnøkkel.map { oppgave ->
                 val person = runBlocking {
                     pdlService.person(oppgave.hentVerdi("aktorId")!!)
-                }
-                GenerellOppgaveV3Dto(
-                    søkersNavn = person.person!!.navn(),
-                    søkersPersonnr = person.person!!.fnr(),
-                    behandlingstype = BehandlingType.fraKode(oppgave.hentVerdi("behandlingTypekode")!!),
-                    saksnummer = oppgave.hentVerdi("saksnummer")!!,
-                    oppgaveEksternId = oppgave.eksternId,
-                    journalpostId = "",
-                    oppgavestatus = Oppgavestatus.fraKode(oppgave.status),
-                    oppgavebehandlingsUrl = oppgave.getOppgaveBehandlingsurl()
-                )
+                }.person!!
+                GenerellOppgaveV3Dto(oppgave, person)
             }
             ReservasjonV3Dto(reservasjon, oppgaveV3Dtos, saksbehandler)
         } else {

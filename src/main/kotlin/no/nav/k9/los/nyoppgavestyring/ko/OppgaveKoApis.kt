@@ -105,7 +105,7 @@ fun Route.OppgaveKoApis() {
     data class OppgaveKoId(val id: String)
     get { oppgaveKoId: OppgaveKoId ->
         requestContextService.withRequestContext(call) {
-            if (pepClient.harTilgangTilReservingAvOppgaver()) { //TODO: Hvilke felter vil vi eksponere her?
+            if (pepClient.harTilgangTilReservingAvOppgaver()) {
                 oppgaveKoTjeneste.hentOppgaverFraKø(oppgaveKoId.id.toLong(), 10) //Finn et fornuftig antall?
             }
         }

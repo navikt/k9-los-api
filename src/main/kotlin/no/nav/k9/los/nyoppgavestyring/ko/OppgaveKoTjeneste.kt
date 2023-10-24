@@ -6,11 +6,13 @@ import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
+import no.nav.k9.los.integrasjon.abac.IPepClient
+import no.nav.k9.los.integrasjon.abac.PepClient
+import no.nav.k9.los.integrasjon.pdl.IPdlService
 import no.nav.k9.los.integrasjon.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgaverad
 import no.nav.k9.los.nyoppgavestyring.reservasjon.AlleredeReservertException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ManglerTilgangException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
@@ -30,37 +32,40 @@ class OppgaveKoTjeneste(
     private val oppgaveKoRepository: OppgaveKoRepository,
     private val oppgaveQueryService: OppgaveQueryService,
     private val oppgaveRepository: OppgaveRepository,
+    private val oppgaveRepositoryTxWrapper: OppgaveRepositoryTxWrapper,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
     private val saksbehandlerRepository: SaksbehandlerRepository,
     private val oppgaveTjeneste: OppgaveTjeneste,
     private val reservasjonRepository: ReservasjonRepository,
+    private val pdlService: IPdlService,
+    private val pepClient: IPepClient,
 ) {
     private val log = LoggerFactory.getLogger(OppgaveKoTjeneste::class.java)
 
     fun hentOppgaverFraKø(
         oppgaveKoId: Long,
-        antallSaker: Int,
-    ): List<Oppgaverad> {
+        ønsketAntallSaker: Int,
+    ): List<GenerellOppgaveV3Dto> {
         val ko = oppgaveKoRepository.hent(oppgaveKoId)
-        val idToken = runBlocking {
-            kotlin.coroutines.coroutineContext.idToken()
-        }
 
-        /*
-        // WIP
-        //TODO: Paging bør flyttes til queryservice?
         val oppgaveEksternIder = oppgaveQueryService.queryForOppgaveEksternId(ko.oppgaveQuery)
 
-        var oppgaveDtoer: List<GenerellOppgaveV3Dto>
-        //while listeForKort
-            //hent page
-            //iterer og fyll liste
-        while ()
-        oppgaveRepositoryTxWrapper.hentOppgaverPaget(oppgaveEksternIder, antallSaker, i)
-        //oppgaveRepositoryTxWrapper.hentOppgaver(oppgaveIder, true, antallSaker)
-         */
-
-        return oppgaveQueryService.query(ko.oppgaveQuery.copy(limit = antallSaker), idToken)
+        var antallOppgaverFunnet = 0
+        return oppgaveEksternIder.takeWhile { antallOppgaverFunnet < ønsketAntallSaker }.mapNotNull { oppgaveEksternId ->
+            val oppgave = oppgaveRepositoryTxWrapper.hentOppgave(oppgaveEksternId)
+            val person = runBlocking {
+                pdlService.person(oppgave.hentVerdi("aktorId")!!)
+            }.person!!
+            val harTilgangTilLesSak = runBlocking { //TODO: harTilgangTilLesSak riktig PEP-spørring, eller bær det være likhetssjekk?
+                pepClient.harTilgangTilLesSak(oppgave.hentVerdi("saksnummer")!!, oppgave.hentVerdi("aktorId")!!)
+            }
+            if (harTilgangTilLesSak) {
+                antallOppgaverFunnet++
+                GenerellOppgaveV3Dto(oppgave, person)
+            } else {
+                null
+            }
+        }
     }
 
     fun hentKøerForSaksbehandler(
