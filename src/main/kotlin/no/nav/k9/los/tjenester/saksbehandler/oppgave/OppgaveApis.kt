@@ -7,8 +7,12 @@ import io.ktor.server.locations.post
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.coroutines.runBlocking
+import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.abac.IPepClient
+import no.nav.k9.los.integrasjon.pdl.IPdlService
+import no.nav.k9.los.integrasjon.pdl.PdlService
 import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.integrasjon.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.FinnerIkkeDataException
@@ -30,9 +34,10 @@ internal fun Route.OppgaveApis() {
     val requestContextService by inject<RequestContextService>()
     val oppgaveTjeneste by inject<OppgaveTjeneste>()
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
-    val oppgaveKoTjeneste by inject<OppgaveKoTjeneste>()
+    val oppgaveRepository by inject<OppgaveRepository>()
     val pepClient by inject<IPepClient>()
     val oppgaveApisTjeneste by inject<OppgaveApisTjeneste>()
+    val pdlService by inject<IPdlService>()
 
     @Location("/reserver")
     class reserverOppgave
@@ -204,11 +209,16 @@ internal fun Route.OppgaveApis() {
     class leggTilBehandletSak
     post { _: leggTilBehandletSak ->
         requestContextService.withRequestContext(call) {
-            val params = call.receive<BehandletOppgave>()
+            val uuid = UUID.fromString(call.request.queryParameters["eksternId"])
+            val oppgave = oppgaveRepository.hent(uuid)
+            val person = runBlocking {
+                pdlService.person(oppgave.aktorId)
+            }.person!!
+            val behandletOppgave = BehandletOppgave(oppgave, person)
             call.respond(
                 oppgaveTjeneste.leggTilBehandletOppgave(
                     coroutineContext.idToken().getUsername(),
-                    params
+                    behandletOppgave
                 )
             )
         }
