@@ -99,7 +99,7 @@ class ReservasjonOversetter(
                 "K9KLAGE" -> {
                     val oppgaveV3 = oppgaveV3Repository.hentAktivOppgave(
                         oppgaveV1.eksternId.toString(),
-                        oppgavetypeRepository.hentOppgavetype("K9", "k9sak"),
+                        oppgavetypeRepository.hentOppgavetype("K9", "k9klage"),
                         tx
                     )
                         ?: throw IllegalStateException("ReservasjonV1 for kjent oppgavetype SKAL ha oppgave i OppgaveV3.")
