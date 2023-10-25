@@ -12,11 +12,9 @@ import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.pdl.IPdlService
-import no.nav.k9.los.integrasjon.pdl.PdlService
 import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.integrasjon.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.FinnerIkkeDataException
-import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import org.koin.ktor.ext.inject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -24,10 +22,9 @@ import java.util.*
 
 private val log: Logger = LoggerFactory.getLogger("nav.OppgaveApis")
 
-//TODO limit 10 på neste oppgaver i kø
-//TODO siste 10 saker for saksbhandler -- nye ppgaver?
-//TODO kode6 filtrering på neste 10 oppgaver fra kø?
-//TODO bare levere reservasjonID til frontend!! Verifiser
+//TODO siste 10 saker for saksbhandler -- nye ppgaver? -- klagesaker funker ikke her p.t.
+//TODO generell sikring kode6 - se etter feil
+//TODO fjern reservasjonsid fra objekter til frontend
 //TODO Auditlogging
 
 internal fun Route.OppgaveApis() {
@@ -149,7 +146,7 @@ internal fun Route.OppgaveApis() {
         }
     }
 
-    @Location("/flytt-til-forrige-saksbehandler") //TODO
+    @Location("/flytt-til-forrige-saksbehandler") //TODO Antatt ikke i bruk
     class flyttReservasjonTilForrigeSaksbehandler
     post { _: flyttReservasjonTilForrigeSaksbehandler ->
         requestContextService.withRequestContext(call) {
@@ -178,7 +175,7 @@ internal fun Route.OppgaveApis() {
     }
 
     // Fjernes når V1 skal vekk
-    @Deprecated("Gjelder bare for gamle køer. For nye køer, bruk /antall-oppgaver-i-ko")
+    @Deprecated("Gjelder bare for gamle køer. For nye køer, bruk OppgaveKoApis./{id}/antall-oppgaver")
     @Location("/antall")
     class hentAntallOppgaverForOppgavekø
     get { _: hentAntallOppgaverForOppgavekø ->
@@ -200,7 +197,6 @@ internal fun Route.OppgaveApis() {
         requestContextService.withRequestContext(call) {
             call.respond(
                 oppgaveTjeneste.hentNesteOppgaverIKø(UUID.fromString(queryParameter))
-
             )
         }
     }
@@ -208,7 +204,7 @@ internal fun Route.OppgaveApis() {
     @Location("/legg-til-behandlet-sak")  //WIP: siste behandlede oppgaver av saksbehandler. Skal virke så lenge vi vedlikeholder data i OppgaveV1. Må erstattes før V1 og V2 kan slettes
     class leggTilBehandletSak
     post { _: leggTilBehandletSak ->
-        requestContextService.withRequestContext(call) {
+        requestContextService.withRequestContext(call) { //TODO klageoppgaver
             val uuid = UUID.fromString(call.request.queryParameters["eksternId"])
             val oppgave = oppgaveRepository.hent(uuid)
             val person = runBlocking {

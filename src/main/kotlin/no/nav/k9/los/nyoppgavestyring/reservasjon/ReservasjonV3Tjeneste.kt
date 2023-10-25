@@ -203,8 +203,6 @@ class ReservasjonV3Tjeneste(
         }
     }
 
-
-
     fun endreReservasjon(
         reservasjonsnøkkel: String,
         endretAvBrukerId: Long,

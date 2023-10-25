@@ -3,6 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.visningoguttrekk
 import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
+import no.nav.k9.los.nyoppgavestyring.feilhandtering.FinnerIkkeDataException
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
@@ -24,7 +25,7 @@ class OppgaveRepository(
             ).map { row ->
                 mapOppgave(row, tx)
             }.asSingle
-        ) ?: throw IllegalStateException("Fant ikke oppgave med eksternId $eksternId")
+        ) ?: throw FinnerIkkeDataException("Fant ikke oppgave med eksternId $eksternId")
 
         return oppgave.fyllDefaultverdier()
     }

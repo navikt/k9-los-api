@@ -28,7 +28,7 @@ class ReservasjonOversetter(
 
     fun hentV1OppgaveFraReservasjon(
         reservasjon: ReservasjonV3
-    ) : Oppgave? {
+    ): Oppgave? {
         if (reservasjon.reservasjonsnøkkel.startsWith("legacy_")) {
             return oppgaveV1Repository.hent(UUID.fromString(reservasjon.reservasjonsnøkkel.substring(7)))
         } else {
@@ -38,8 +38,7 @@ class ReservasjonOversetter(
 
     fun hentNyReservasjonFraGammelKontekst(
         oppgaveV1: Oppgave
-    )
-        : ReservasjonV3 {
+    ): ReservasjonV3 {
         return transactionalManager.transaction { tx ->
             when (oppgaveV1.system) {
                 "K9SAK" -> {

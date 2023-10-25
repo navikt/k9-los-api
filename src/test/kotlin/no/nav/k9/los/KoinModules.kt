@@ -17,7 +17,6 @@ import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveTjenesteV2
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.*
-import no.nav.k9.los.eventhandler.sjekkReserverteJobb
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.abac.PepClientLocal
 import no.nav.k9.los.integrasjon.audit.Auditlogger

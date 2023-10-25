@@ -49,7 +49,7 @@ class OppgaveKoTjeneste(
         val ko = oppgaveKoRepository.hent(oppgaveKoId)
 
         val oppgaveEksternIder = oppgaveQueryService.queryForOppgaveEksternId(ko.oppgaveQuery)
-
+        //TODO Filtrere bort allerede reserverte oppgaver
         var antallOppgaverFunnet = 0
         return oppgaveEksternIder.takeWhile { antallOppgaverFunnet < ønsketAntallSaker }.mapNotNull { oppgaveEksternId ->
             val oppgave = oppgaveRepositoryTxWrapper.hentOppgave(oppgaveEksternId)
@@ -116,6 +116,7 @@ class OppgaveKoTjeneste(
             }
 
             try {
+                //if (kandidatoppgave.oppgavetype.eksternId == "k9klage") //TODO: Hvis klageoppgave/klagekø -- IKKE ta reservasjon i V1. Disse kan ikke speiles
                 // Fjernes når V1 skal vekk
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedId(innloggetBrukerId)
                 val åpneOppgaverForReservasjonsnøkkel =

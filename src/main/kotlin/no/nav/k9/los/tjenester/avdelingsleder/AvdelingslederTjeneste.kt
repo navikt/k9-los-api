@@ -328,18 +328,18 @@ class AvdelingslederTjeneste(
         val list = mutableListOf<ReservasjonDto>()
         for (saksbehandler in saksbehandlerRepository.hentAlleSaksbehandlere()) {
             for (uuid in saksbehandler.reservasjoner) {
+                val reservasjon = reservasjonRepository.hent(uuid)
+                if (reservasjon.reservertTil == null) {
+                    continue
+                }
 
                 val oppgave = oppgaveRepository.hent(uuid)
-
                 if (configuration.koinProfile() != KoinProfile.LOCAL &&
                     !pepClient.harTilgangTilOppgave(oppgave)
                 ) {
                     continue
                 }
-                val reservasjon = reservasjonRepository.hent(uuid)
-                if (reservasjon.reservertTil == null) {
-                    continue
-                }
+
                 list.add(
                     ReservasjonDto(
                         reservertAvUid = saksbehandler.brukerIdent ?: "",
