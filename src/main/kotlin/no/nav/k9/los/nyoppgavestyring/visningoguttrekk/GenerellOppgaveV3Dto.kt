@@ -11,20 +11,20 @@ data class GenerellOppgaveV3Dto(
     val søkersPersonnr: String,
     val behandlingstype: BehandlingType,
     val saksnummer: String,
-    val oppgaveEksternId: String,
+    val oppgaveNøkkel: OppgaveNøkkelDto,
     val journalpostId: String?,
     //val opprettetTidspunkt: LocalDateTime, //TODO enten forsvare fjerning, eller hente fra første oppgaveversjon
     val oppgavestatus: Oppgavestatus,
     val oppgavebehandlingsUrl: String,
 ) {
-    constructor(oppgave: Oppgave, person: PersonPdl) : this(
+    constructor(oppgaveV3: Oppgave, person: PersonPdl) : this(
         søkersNavn = person.navn(),
         søkersPersonnr = person.fnr(),
-        behandlingstype = BehandlingType.fraKode(oppgave.hentVerdi("behandlingTypekode")!!),
-        saksnummer = oppgave.hentVerdi("saksnummer")!!,
-        oppgaveEksternId = oppgave.eksternId,
+        behandlingstype = BehandlingType.fraKode(oppgaveV3.hentVerdi("behandlingTypekode")!!),
+        saksnummer = oppgaveV3.hentVerdi("saksnummer")!!,
+        oppgaveNøkkel = OppgaveNøkkelDto(oppgaveV3),
         journalpostId = "",
-        oppgavestatus = Oppgavestatus.fraKode(oppgave.status),
-        oppgavebehandlingsUrl = oppgave.getOppgaveBehandlingsurl()
+        oppgavestatus = Oppgavestatus.fraKode(oppgaveV3.status),
+        oppgavebehandlingsUrl = oppgaveV3.getOppgaveBehandlingsurl()
     )
 }
