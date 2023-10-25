@@ -14,7 +14,10 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 
 class EventTilDtoMapper {
+
     companion object {
+        const val AKSJONSPUNKT_PREFIX = "KLAGE"
+
         private val MANUELLE_AKSJONSPUNKTER = AksjonspunktDefinisjon.values().filter { aksjonspunktDefinisjon ->
             aksjonspunktDefinisjon.aksjonspunktType == AksjonspunktType.MANUELL
         }.map { aksjonspunktDefinisjon -> aksjonspunktDefinisjon.kode }
@@ -112,6 +115,8 @@ class EventTilDtoMapper {
 
             utledAksjonspunkter(event, oppgaveFeltverdiDtos)
             utledÅpneAksjonspunkter(åpneAksjonspunkter, oppgaveFeltverdiDtos)
+            utledLøsbartAksjonspunkt(event.behandlingSteg, åpneAksjonspunkter, oppgaveFeltverdiDtos)
+
             //automatiskBehandletFlagg er defaultet til False p.t.
             utledAvventerSaksbehandler(harManueltAksjonspunkt, harAutopunkt, oppgaveFeltverdiDtos)
 
@@ -132,7 +137,7 @@ class EventTilDtoMapper {
                     oppgaveFeltverdiDtos.add(
                         OppgaveFeltverdiDto(
                             nøkkel = "aktivtAksjonspunkt",
-                            verdi = åpentAksjonspunkt.aksjonspunktKode
+                            verdi = AKSJONSPUNKT_PREFIX + åpentAksjonspunkt.aksjonspunktKode
                         )
                     )
                 }
@@ -146,6 +151,26 @@ class EventTilDtoMapper {
             }
         }
 
+        private fun utledLøsbartAksjonspunkt(
+            behandlingSteg: String?,
+            åpneAksjonspunkter: List<Aksjonspunkttilstand>,
+            oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
+        ) {
+            if(behandlingSteg != null) {
+                åpneAksjonspunkter.firstOrNull { åpentAksjonspunkt ->
+                    val aksjonspunktDefinisjon = AksjonspunktDefinisjon.fraKode(åpentAksjonspunkt.aksjonspunktKode)
+                    !aksjonspunktDefinisjon.erAutopunkt() && aksjonspunktDefinisjon.behandlingSteg != null && aksjonspunktDefinisjon.behandlingSteg.kode == behandlingSteg
+                }?.let {
+                    oppgaveFeltverdiDtos.add(
+                        OppgaveFeltverdiDto(
+                            nøkkel = "løsbartAksjonspunkt",
+                            verdi = AKSJONSPUNKT_PREFIX + it.aksjonspunktKode
+                        )
+                    )
+                }
+            }
+        }
+
         private fun utledAksjonspunkter(
             event: KlagebehandlingProsessHendelse,
             oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
@@ -154,7 +179,7 @@ class EventTilDtoMapper {
                 oppgaveFeltverdiDtos.addAll(event.aksjonspunkttilstander.map { aksjonspunkttilstand ->
                     OppgaveFeltverdiDto(
                         nøkkel = "aksjonspunkt",
-                        verdi = aksjonspunkttilstand.aksjonspunktKode
+                        verdi = AKSJONSPUNKT_PREFIX + aksjonspunkttilstand.aksjonspunktKode
                     )
                 })
             } else {

@@ -16,6 +16,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
+import no.nav.k9.sak.kontrakt.produksjonsstyring.los.BehandlingMedFagsakDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -114,6 +115,7 @@ class K9SakTilLosAdapterTjeneste(
             val hastesak = oppgaveRepositoryV2.hentMerknader(uuid.toString(), false, tx)
                 .filter { merknad -> merknad.merknadKoder.contains("HASTESAK") }.isNotEmpty()
             val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
+            val nyeBehandlingsopplysningerFraK9Sak = k9SakBerikerKlient.hentBehandling(uuid)
             behandlingProsessEventer.forEach { event ->
                 var oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
                     .leggTilFeltverdi(
@@ -123,7 +125,7 @@ class K9SakTilLosAdapterTjeneste(
                         )
                     )
 
-                oppgaveDto = ryddOppObsoleteOgResultatfeilFra2020(event, oppgaveDto)
+                oppgaveDto = ryddOppObsoleteOgResultatfeilFra2020(event, oppgaveDto, nyeBehandlingsopplysningerFraK9Sak)
 
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
 
@@ -152,8 +154,17 @@ class K9SakTilLosAdapterTjeneste(
 
     internal fun ryddOppObsoleteOgResultatfeilFra2020(
         event: BehandlingProsessEventDto,
-        oppgaveDto: OppgaveDto
+        oppgaveDto: OppgaveDto,
+        nyeBehandlingsopplysningerFraK9Sak: BehandlingMedFagsakDto?,
     ): OppgaveDto {
+        //behandlingen finnes ikke i k9-sak, pga rollback i transaksjon i k9-sak som skulle opprette behandlingen
+        if (nyeBehandlingsopplysningerFraK9Sak == null) {
+            return oppgaveDto.copy(status = "LUKKET").erstattFeltverdi(
+                OppgaveFeltverdiDto(
+                    "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
+                )
+            )
+        }
         if (event.ytelseTypeKode == FagsakYtelseType.OBSOLETE.kode) {
             return oppgaveDto.copy(status = "LUKKET").erstattFeltverdi(
                 OppgaveFeltverdiDto(
@@ -165,14 +176,7 @@ class K9SakTilLosAdapterTjeneste(
         if (event.behandlingStatus == "AVSLU"
             && oppgaveDto.feltverdier.filter { it.nøkkel == "resultattype" }.first().verdi == "IKKE_FASTSATT"
         ) {
-            val behandlingDto = k9SakBerikerKlient.hentBehandling(event.eksternId!!)
-            if (behandlingDto == null) {
-                return oppgaveDto.copy(status = "LUKKET").erstattFeltverdi(
-                    OppgaveFeltverdiDto(
-                        "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
-                    )
-                )
-            } else if (behandlingDto.sakstype == FagsakYtelseType.OBSOLETE) {
+            if (nyeBehandlingsopplysningerFraK9Sak.sakstype == FagsakYtelseType.OBSOLETE) {
                 return oppgaveDto.copy(status = "LUKKET").erstattFeltverdi(
                     OppgaveFeltverdiDto(
                         "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
@@ -181,7 +185,7 @@ class K9SakTilLosAdapterTjeneste(
             } else {
                 return oppgaveDto.erstattFeltverdi(
                     OppgaveFeltverdiDto(
-                        "resultattype", behandlingDto.behandlingResultatType.kode
+                        "resultattype", nyeBehandlingsopplysningerFraK9Sak.behandlingResultatType.kode
                     )
                 )
             }

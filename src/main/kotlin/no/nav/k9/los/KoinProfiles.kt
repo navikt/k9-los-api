@@ -471,9 +471,6 @@ fun common(app: Application, config: Configuration) = module {
     single {
         K9SakTilLosHistorikkvaskTjeneste(
             behandlingProsessEventK9Repository = get(),
-            områdeRepository = get(),
-            feltdefinisjonTjeneste = get(),
-            oppgavetypeTjeneste = get(),
             oppgaveV3Tjeneste = get(),
             config = get(),
             transactionalManager = get(),
