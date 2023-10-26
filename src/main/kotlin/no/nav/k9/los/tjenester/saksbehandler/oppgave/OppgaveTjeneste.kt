@@ -649,7 +649,7 @@ class OppgaveTjeneste constructor(
 
     suspend fun endreReservasjonPåOppgave(resEndring: ReservasjonEndringDto): Reservasjon {
         val identTilInnloggetBruker = azureGraphService.hentIdentTilInnloggetBruker()
-        val oppgavUUID = UUID.fromString(resEndring.oppgaveId)
+        val oppgavUUID = UUID.fromString(resEndring.oppgaveNøkkel.oppgaveEksternId)
         if (resEndring.brukerIdent != null) {
             val reservasjon = reservasjonRepository.hent(oppgavUUID)
             saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)

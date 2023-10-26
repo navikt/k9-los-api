@@ -11,6 +11,7 @@ import no.nav.k9.los.domene.repository.OppgaveKøRepository
 import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -1892,7 +1893,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         oppgaveTjeneste.endreReservasjonPåOppgave(
             ReservasjonEndringDto(
-                oppgaveId = nyOppgave.eksternId.toString(),
+                oppgaveNøkkel = OppgaveNøkkelDto.forV1Oppgave(nyOppgave.eksternId.toString()),
                 brukerIdent = "Bar"
             )
         )
@@ -1921,7 +1922,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         oppgaveTjeneste.endreReservasjonPåOppgave(
             ReservasjonEndringDto(
-                oppgaveId = nyOppgave.eksternId.toString(),
+                oppgaveNøkkel = OppgaveNøkkelDto.forV1Oppgave(nyOppgave.eksternId.toString()),
                 begrunnelse = "test begrunnelse"
             )
         )
@@ -1951,7 +1952,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val nyDato = reservasjon.reservertTil!!.toLocalDate().plusDays(10)
         oppgaveTjeneste.endreReservasjonPåOppgave(
             ReservasjonEndringDto(
-                oppgaveId = nyOppgave.eksternId.toString(),
+                oppgaveNøkkel = OppgaveNøkkelDto.forV1Oppgave(nyOppgave.eksternId.toString()),
                 reserverTil = nyDato
             )
         )

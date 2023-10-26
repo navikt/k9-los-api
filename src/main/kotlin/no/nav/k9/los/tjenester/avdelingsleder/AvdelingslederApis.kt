@@ -9,6 +9,7 @@ import io.ktor.server.routing.post
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.integrasjon.rest.idToken
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.*
 import org.koin.ktor.ext.inject
 import java.util.*
@@ -67,11 +68,11 @@ internal fun Route.AvdelingslederApis() {
 
     post("/reservasjoner/opphev") {
         requestContextService.withRequestContext(call) {
-            val params = call.receive<OppgaveId>()
+            val nøkkel = call.receive<OppgaveNøkkelDto>()
             val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
                 kotlin.coroutines.coroutineContext.idToken().getUsername()
             )!!
-            call.respond(oppgaveApisTjeneste.annullerReservasjon(OpphevReservasjonId(params.oppgaveId, ""), innloggetBruker))
+            call.respond(oppgaveApisTjeneste.annullerReservasjon(OpphevReservasjonId(oppgaveNøkkel = nøkkel, ""), innloggetBruker))
         }
     }
 }
