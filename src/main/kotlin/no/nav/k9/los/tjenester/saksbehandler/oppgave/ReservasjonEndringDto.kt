@@ -1,9 +1,10 @@
 package no.nav.k9.los.tjenester.saksbehandler.oppgave
 
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import java.time.LocalDate
 
 data class ReservasjonEndringDto (
-    val oppgaveId: String,
+    val oppgaveNøkkel: OppgaveNøkkelDto,
     val brukerIdent: String? = null,
     val reserverTil: LocalDate? = null,
     val begrunnelse: String? = null

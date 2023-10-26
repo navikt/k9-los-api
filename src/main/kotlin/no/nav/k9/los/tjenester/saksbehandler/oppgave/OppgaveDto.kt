@@ -31,5 +31,5 @@ class OppgaveDto(
     val fagsakPeriode: Oppgave.FagsakPeriode? = null, // bekreftet i bruk
     val paaVent: Boolean? = null, // bekreftet i bruk
     val merknad: MerknadDto? = null, // bekreftet i bruk,
-    val oppgavenøkkel: OppgaveNøkkelDto = OppgaveNøkkelDto.forV1Oppgave(eksternId.toString())
+    val oppgaveNøkkel: OppgaveNøkkelDto = OppgaveNøkkelDto.forV1Oppgave(eksternId.toString())
 )
