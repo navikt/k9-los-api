@@ -10,6 +10,7 @@ val k9SakVersion = "4.1.2"
 val k9KlageVersion = "0.4.0"
 val fuelVersion = "2.3.1"
 val jacksonVersion = "2.15.3"
+val commonsTextVersion = "1.11.0"
 
 val dusseldorfKtorVersion = "4.1.0"
 val ktorVersion = "2.3.5"
@@ -74,12 +75,13 @@ dependencies {
 
     // Div
     implementation(enforcedPlatform( "com.fasterxml.jackson:jackson-bom:$jacksonVersion"))
-    implementation("info.debatty:java-string-similarity:2.0.0")
+    implementation("org.apache.commons:commons-text:$commonsTextVersion")
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
     implementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
     implementation("com.github.kittinunf.fuel:fuel-coroutines:$fuelVersion"){
         exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
     }
+
 
     // DI
     implementation("io.insert-koin:koin-core:$koinVersion")
