@@ -1,6 +1,5 @@
 package no.nav.k9.los.tjenester.saksbehandler.oppgave
 
-import info.debatty.java.stringsimilarity.Levenshtein
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.los.Configuration
@@ -25,6 +24,7 @@ import no.nav.k9.los.tjenester.saksbehandler.merknad.Merknad
 import no.nav.k9.los.tjenester.saksbehandler.nokkeltall.NyeOgFerdigstilteOppgaverDto
 import no.nav.k9.los.utils.Cache
 import no.nav.k9.los.utils.CacheObject
+import org.apache.commons.text.similarity.LevenshteinDistance
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -961,7 +961,10 @@ class OppgaveTjeneste constructor(
 
     suspend fun sokSaksbehandler(søkestreng: String): Saksbehandler {
         val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere()
-        val levenshtein = Levenshtein()
+
+        fun levenshtein(lhs: CharSequence, rhs: CharSequence): Double {
+            return LevenshteinDistance().apply(lhs, rhs).toDouble()
+        }
 
         var d = Double.MAX_VALUE
         var i = -1
@@ -976,7 +979,7 @@ class OppgaveTjeneste constructor(
                 break
             }
 
-            var distance = levenshtein.distance(
+            var distance = levenshtein(
                 søkestreng.lowercase(Locale.getDefault()),
                 saksbehandler.brukerIdent!!.lowercase(Locale.getDefault())
             )
@@ -984,7 +987,7 @@ class OppgaveTjeneste constructor(
                 d = distance
                 i = index
             }
-            distance = levenshtein.distance(
+            distance = levenshtein(
                 søkestreng.lowercase(Locale.getDefault()),
                 saksbehandler.navn?.lowercase(Locale.getDefault()) ?: ""
             )
@@ -992,7 +995,7 @@ class OppgaveTjeneste constructor(
                 d = distance
                 i = index
             }
-            distance = levenshtein.distance(
+            distance = levenshtein(
                 søkestreng.lowercase(Locale.getDefault()),
                 saksbehandler.epost.lowercase(Locale.getDefault())
             )
