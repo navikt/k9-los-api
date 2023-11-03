@@ -13,11 +13,21 @@ class SqlOppgaveQuery(
 ) {
 
     private var query = """
-                SELECT o.id as id
+                SELECT o.id as id, opc.trenger_sjekk as trenger_sjekk
                 FROM Oppgave_v3 o INNER JOIN Oppgavetype ot ON (
                     ot.id = o.oppgavetype_id
                   ) INNER JOIN Omrade oppgave_omrade ON (
                     oppgave_omrade.id = ot.omrade_id
+                  ) LEFT JOIN (
+                        SELECT id, kode6, kode7, egen_ansatt, true as trenger_sjekk
+                        FROM Oppgave_pep_cache 
+                        WHERE (
+                            kode6 IS true OR
+                            kode7 IS true OR
+                            egen_ansatt IS true
+                        )
+                  ) as opc ON (
+                    o.id = opc.id
                   )
                 WHERE aktiv = true 
             """.trimIndent()
@@ -65,6 +75,22 @@ class SqlOppgaveQuery(
             "oppgaveområde" -> {
                 query += "${combineOperator.sql} oppgave_omrade.ekstern_id ${operator.sql} (:oppgave_omrade$index) "
                 queryParams["oppgave_omrade$index"] = feltverdi
+            }
+            "sikkerhetsklassifisering" -> {
+                when(feltverdi) {
+                    "kode6" -> {
+                        query += "${combineOperator.sql} opc.kode6 ${operator.sql} (:kode6$index) "
+                        queryParams["kode6$index"] = feltverdi
+                    }
+                    "kode7" -> {
+                        query += "${combineOperator.sql} opc.kode7 ${operator.sql} (:kode7$index) "
+                        queryParams["kode7$index"] = feltverdi
+                    }
+                    "egen_ansatt" -> {
+                        query += "${combineOperator.sql} opc.egen_ansatt ${operator.sql} (:egen_ansatt$index) "
+                        queryParams["egen_ansatt$index"] = feltverdi
+                    }
+                }
             }
             else -> throw IllegalStateException("Ukjent feltkode: $feltkode")
         }

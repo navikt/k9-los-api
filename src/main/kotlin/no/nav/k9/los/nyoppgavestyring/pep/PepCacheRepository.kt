@@ -5,24 +5,13 @@ import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import java.time.Duration
 import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
 import javax.sql.DataSource
 
 class PepCacheRepository(
     val dataSource: DataSource
 ) {
-
-    fun hentEldste(antall: Int = 100, tx: TransactionalSession): List<PepCache> {
-        return tx.run(
-            queryOf("""
-                SELECT * FROM OPPGAVE_PEP_CACHE ORDER BY oppdatert LIMIT :antall
-            """, mapOf(
-                    "antall" to antall
-                )
-            ).map { it.tilPepCache() }.asList
-        )
-    }
 
     fun lagre(cache: PepCache, tx: TransactionalSession) {
         tx.run(
@@ -97,8 +86,8 @@ data class PepCache(
     val egenAnsatt: Boolean,
     val oppdatert: LocalDateTime
 ) {
-    fun erGyldig(maksAntallTimer: Int): Boolean {
-        return ChronoUnit.HOURS.between(oppdatert, LocalDateTime.now()) > maksAntallTimer
+    fun erGyldig(maksimalAlder: Duration): Boolean {
+        return oppdatert < (LocalDateTime.now() - maksimalAlder)
     }
 
     fun oppdater(kode6: Boolean, kode7: Boolean, egenAnsatt: Boolean): PepCache {

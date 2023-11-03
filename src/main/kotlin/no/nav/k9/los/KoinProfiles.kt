@@ -400,6 +400,7 @@ fun common(app: Application, config: Configuration) = module {
             oppgaveRepositoryV2 = get(),
             transactionalManager = get(),
             k9SakBerikerKlient = get(),
+            pepCacheService = get()
         )
     }
 

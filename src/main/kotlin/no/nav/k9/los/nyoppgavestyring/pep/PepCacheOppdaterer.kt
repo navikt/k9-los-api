@@ -12,8 +12,7 @@ import java.util.concurrent.Executors
 class PepCacheOppdaterer(
     val transactionalManager: TransactionalManager,
     val oppgaveRepository: OppgaveRepository,
-    val pepCacheRepository: PepCacheRepository,
-    val pepService: PepCacheService
+    val pepCacheService: PepCacheService
 ) {
     private val log = LoggerFactory.getLogger(OppgaveKøRepository::class.java)
 
@@ -21,29 +20,9 @@ class PepCacheOppdaterer(
     fun start() = GlobalScope.launch(Executors.newSingleThreadExecutor().asCoroutineDispatcherWithErrorHandling()) {
         val tidMellomKjøring = Duration.ofMinutes(1)
         while (true) {
-            oppdater()
+            log.info("Oppfrisking av oppgaver")
+            pepCacheService.oppdaterCacheForOppgaverEldreEnn(Duration.ofHours(23))
             delay(tidMellomKjøring.toMillis())
-        }
-    }
-
-    fun oppdater() {
-        transactionalManager.transaction { tx ->
-            runBlocking {
-                log.info("Oppfrisking av oppgaver")
-                pepCacheRepository.hentEldste(100, tx).forEach { pepCache ->
-                    try {
-                        val oppgave = oppgaveRepository.hentNyesteOppgaveForEksternId(
-                            tx,
-                            eksternId = pepCache.eksternId,
-                            kildeområde = pepCache.kildeområde
-                        )
-                        pepService.hentOgOppdaterVedBehov(oppgave, tx)
-                    } catch (e: Exception) {
-                        log.warn("Exception ved oppfrisking av oppgave, sletter cache", e)
-                        pepCacheRepository.slett(pepCache.eksternId, pepCache.kildeområde, tx)
-                    }
-                }
-            }
         }
     }
 }

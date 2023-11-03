@@ -318,6 +318,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgaveRepositoryV2 = get(),
             transactionalManager = get(),
             k9SakBerikerKlient = get(),
+            pepCacheService = get()
         ).setup()
     }
 

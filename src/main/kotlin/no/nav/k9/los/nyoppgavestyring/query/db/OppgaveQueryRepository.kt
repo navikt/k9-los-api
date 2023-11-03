@@ -4,6 +4,7 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.k9.los.nyoppgavestyring.kodeverk.SikkerhetsklassifiseringType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Kodeverkreferanse
@@ -72,15 +73,30 @@ class OppgaveQueryRepository(
                 "String",
                 kokriterie = true,
                 verdiforklaringerErUttømmende = true,
-                Oppgavestatus.values().map { oppgavestatus ->
+                Oppgavestatus.entries.map { oppgavestatus ->
                     Verdiforklaring(
                         verdi = oppgavestatus.kode,
                         visningsnavn = oppgavestatus.visningsnavn
                     )
-                }),
+                }
+            ),
+            Oppgavefelt(
+                område = null,
+                kode = "sikkerhetsklassifisering",
+                visningsnavn =  "Sikkerhetsklassifisering",
+                tolkes_som = "String",
+                kokriterie = true,
+                verdiforklaringerErUttømmende = true,
+                SikkerhetsklassifiseringType.entries.map {
+                    Verdiforklaring(
+                        verdi = it.kode,
+                        visningsnavn = it.beskrivelse
+                    )
+                }
+            ),
             Oppgavefelt(null, "kildeområde", "Kildeområde", "String", false,false, emptyList()),
             Oppgavefelt(null, "oppgavetype", "Oppgavetype", "String", true, false, emptyList()),
-            Oppgavefelt(null, "oppgaveområde", "Oppgaveområde", "String", false, false, emptyList())
+            Oppgavefelt(null, "oppgaveområde", "Oppgaveområde", "String", false, false, emptyList()),
         )
 
         return (felterFraDatabase + standardfelter).sortedBy { it.visningsnavn };

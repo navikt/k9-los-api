@@ -8,22 +8,27 @@ import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
+import java.time.Duration
 import java.time.LocalDateTime
 
 class PepCacheService(
-    val pepClient: IPepClient,
-    val pepCacheRepository: PepCacheRepository,
-    val oppgaveRepository: OppgaveRepository,
-    val transactionalManager: TransactionalManager,
-    ) {
+    private val pepClient: IPepClient,
+    private val pepCacheRepository: PepCacheRepository,
+    private val oppgaveRepository: OppgaveRepository,
+    private val transactionalManager: TransactionalManager,
+) {
 
     fun erOppgaveKode6(oppgave: Oppgave): Boolean {
         return transactionalManager.transaction { tx ->
-            runBlocking {  hentOgOppdaterVedBehov(oppgave, tx).kode6 }
+            runBlocking { hentOgOppdaterVedBehov(tx, oppgave).kode6 }
         }
     }
 
-    fun hentOgOppdaterVedBehov(kildeområde: String, eksternId: String): PepCache {
+    fun hentOgOppdaterVedBehov(
+        kildeområde: String,
+        eksternId: String,
+        maksimalAlder: Duration = Duration.ofMinutes(30)
+    ): PepCache {
         return transactionalManager.transaction { tx ->
             val oppgave = oppgaveRepository.hentNyesteOppgaveForEksternId(
                 tx,
@@ -31,19 +36,44 @@ class PepCacheService(
                 eksternId = eksternId
             )
             runBlocking {
-                hentOgOppdaterVedBehov(oppgave, tx)
+                hentOgOppdaterVedBehov(tx, oppgave, maksimalAlder)
             }
         }
     }
 
-    suspend fun hentOgOppdaterVedBehov(oppgave: Oppgave, tx: TransactionalSession): PepCache {
+    suspend fun hentOgOppdaterVedBehov(tx: TransactionalSession, oppgave: Oppgave, maksimalAlder: Duration = Duration.ofMinutes(30)): PepCache {
         return pepCacheRepository.hent(kildeområde = oppgave.kildeområde, eksternId = oppgave.eksternId, tx).let { pepCache ->
-            if (pepCache?.erGyldig(maksAntallTimer = 2) != true) {
-                pepCache ?: (lagPepCacheFra(oppgave).also { nyPepCache -> pepCacheRepository.lagre(nyPepCache, tx) })
+            if (pepCache?.erGyldig(maksimalAlder) != true) {
+                pepCache ?: oppdater(tx, oppgave)
             } else {
                 pepCache
             }
         }
+    }
+
+    fun oppdaterCacheForOppgaverEldreEnn(gyldighet: Duration = Duration.ofHours(23)) {
+        transactionalManager.transaction { tx ->
+            runBlocking {
+                val oppgaverSomMåOppdateres =
+                    oppgaveRepository.hentÅpneOgVentendeOppgaverMedPepCacheEldreEnn(LocalDateTime.now() - gyldighet, antall = 100, tx)
+                oppgaverSomMåOppdateres.forEach { oppgave -> oppdater(tx, oppgave) }
+            }
+        }
+    }
+
+    fun oppdater(tx: TransactionalSession, kildeområde: String, eksternId: String): PepCache {
+        return runBlocking {
+            val oppgave = oppgaveRepository.hentNyesteOppgaveForEksternId(
+                tx,
+                kildeområde = kildeområde,
+                eksternId = eksternId
+            )
+            oppdater(tx, oppgave)
+        }
+    }
+
+    suspend fun oppdater(tx: TransactionalSession, oppgave: Oppgave): PepCache {
+        return lagPepCacheFra(oppgave).also { nyPepCache -> pepCacheRepository.lagre(nyPepCache, tx) }
     }
 
     private suspend fun lagPepCacheFra(oppgave: Oppgave): PepCache {

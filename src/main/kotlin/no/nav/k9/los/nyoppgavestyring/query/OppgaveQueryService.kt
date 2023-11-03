@@ -17,6 +17,7 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.tjenester.saksbehandler.IIdToken
 import org.koin.java.KoinJavaComponent.inject
+import java.time.Duration
 import java.lang.RuntimeException
 import javax.sql.DataSource
 
@@ -57,8 +58,8 @@ class OppgaveQueryService() {
 
     fun query(tx: TransactionalSession, oppgaveQuery: OppgaveQuery, idToken: IIdToken): List<Oppgaverad> {
         val oppgaverader = runBlocking(context = CoroutineRequestContext(idToken)) {
-        val oppgaver: List<Long> = oppgaveQueryRepository.query(tx, oppgaveQuery)
-            mapOppgaver(tx, oppgaveQuery, oppgaver)
+        val oppgaveIder = oppgaveQueryRepository.query(tx, oppgaveQuery)
+            mapOppgaver(tx, oppgaveQuery, oppgaveIder)
         }
 
         if (oppgaveQuery.select.isEmpty()) {
@@ -88,7 +89,7 @@ class OppgaveQueryService() {
     private suspend fun mapOppgave(tx: TransactionalSession, oppgaveQuery: OppgaveQuery, oppgaveId: Long): Oppgaverad? {
         val oppgave = oppgaveRepository.hentOppgaveForId(tx, oppgaveId)
 
-        val pepCache = pepService.hentOgOppdaterVedBehov(oppgave, tx)
+        val pepCache = pepService.hentOgOppdaterVedBehov(tx, oppgave, maksimalAlder = Duration.ofMinutes(30))
         if (pepCache.måSjekkes()) {
             // TODO: Generaliser ABAC-attributter + sjekk av disse:
             val saksnummer = oppgave.hentVerdi("K9", "saksnummer")
