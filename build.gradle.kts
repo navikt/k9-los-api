@@ -21,7 +21,7 @@ val navTilgangskontroll = "2.2023.01.09_08.56-ae38750bc0d9"
 // Test Dependencies
 val testContainers = "1.19.1"
 val jsonassertVersion = "1.5.1"
-val jupiterVersion = "5.10.0"
+val jupiterVersion = "5.10.1"
 val assertkVersion = "0.26.1"
 val mockkVersion = "1.13.8"
 
