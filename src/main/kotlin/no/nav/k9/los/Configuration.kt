@@ -28,9 +28,6 @@ data class Configuration(private val config: ApplicationConfig) {
 
     internal fun pdlUrl() = URI(config.getRequiredString("nav.register_urls.pdl_url", secret = false))
     internal fun k9Url() = config.getRequiredString("nav.register_urls.k9_url", secret = false)
-    internal fun omsorgspengerUrl() = config.getRequiredString("nav.register_urls.omsorgspenger_url", secret = false)
-
-    internal fun omsorgspengerSakScope() = config.getRequiredString("nav.scopes.omsorgspenger_sak", secret = false)
 
     internal val abacUsername = config.getRequiredString("nav.abac.system_user", secret = false)
     internal val abacPassword = config.getRequiredString("nav.abac.system_user_password", secret = false)

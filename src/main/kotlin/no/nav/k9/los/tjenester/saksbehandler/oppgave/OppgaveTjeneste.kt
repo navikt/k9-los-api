@@ -13,8 +13,6 @@ import no.nav.k9.los.domene.modell.*
 import no.nav.k9.los.domene.repository.*
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
-import no.nav.k9.los.integrasjon.omsorgspenger.IOmsorgspengerService
-import no.nav.k9.los.integrasjon.omsorgspenger.OmsorgspengerSakFnrDto
 import no.nav.k9.los.integrasjon.pdl.*
 import no.nav.k9.los.integrasjon.rest.idToken
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverHistorikk
@@ -46,7 +44,6 @@ class OppgaveTjeneste constructor(
     private val azureGraphService: IAzureGraphService,
     private val pepClient: IPepClient,
     private val statistikkRepository: StatistikkRepository,
-    private val omsorgspengerService: IOmsorgspengerService
 
 ) {
 
@@ -314,11 +311,6 @@ class OppgaveTjeneste constructor(
                 val personDto = mapTilPersonDto(person.person)
                 val oppgaver = hentOppgaver(aktorId)
 
-                //sjekker om det finnes en visningsak i omsorgsdager
-                val oppgaveDto = hentOmsorgsdagerForFnr(query, person.person.navn())
-                if (oppgaveDto != null) {
-                    oppgaver.add(oppgaveDto)
-                }
                 return SokeResultatDto(
                     ikkeTilgang = person.ikkeTilgang,
                     person = personDto,
@@ -370,13 +362,6 @@ class OppgaveTjeneste constructor(
         val res = if (personInfo != null) {
             val personDto = mapTilPersonDto(personInfo)
             val oppgaver: MutableList<OppgaveDto> = hentOppgaver(aktørId)
-            //sjekker om det finnes en visningsak i omsorgsdager
-            log.info("aktor => kaller omsorgspenger app")
-            val oppgaveDto = hentOmsorgsdagerForFnr(personInfo.fnr(), personInfo.navn())
-            log.info("aktor => omsorgspenger oppgave.saksnummer=${oppgaveDto?.saksnummer}")
-            if (oppgaveDto != null) {
-                oppgaver.add(oppgaveDto)
-            }
             SokeResultatDto(
                 ikkeTilgang = person.ikkeTilgang,
                 person = personDto,
@@ -400,47 +385,6 @@ class OppgaveTjeneste constructor(
             null
             //   person.data.hentPerson.doedsfall[0].doedsdato
         )
-    }
-
-    private suspend fun hentOmsorgsdagerForFnr(
-        fnr: String,
-        navn: String
-    ): OppgaveDto? {
-        val omsorgspengerSakDto = omsorgspengerService.hentOmsorgspengerSakDto(OmsorgspengerSakFnrDto(fnr))
-        log.info("Fikk svar fra omsorgsdager=${omsorgspengerSakDto?.saksnummer}")
-        if (omsorgspengerSakDto != null) {
-            val statusDto = OppgaveStatusDto(
-                erReservert = false,
-                reservertTilTidspunkt = null,
-                erReservertAvInnloggetBruker = false,
-                reservertAv = null,
-                reservertAvNavn = null,
-                flyttetReservasjon = null
-            )
-            //TODO fyll ut denne bedre?
-            return OppgaveDto(
-                statusDto,
-                null,
-                null,
-                omsorgspengerSakDto.saksnummer,
-                navn,
-                Fagsystem.OMSORGSPENGER.kode,
-                fnr,
-                BehandlingType.FORSTEGANGSSOKNAD,
-                FagsakYtelseType.OMSORGSDAGER,
-                BehandlingStatus.OPPRETTET,
-                true,
-                LocalDateTime.now(),
-                LocalDateTime.now(),
-                UUID.randomUUID(),
-                tilBeslutter = false,
-                utbetalingTilBruker = false,
-                avklarArbeidsforhold = false,
-                selvstendigFrilans = false,
-                søktGradering = false,
-            )
-        }
-        return null
     }
 
     private suspend fun hentOppgaver(aktorId: String): MutableList<OppgaveDto> {
