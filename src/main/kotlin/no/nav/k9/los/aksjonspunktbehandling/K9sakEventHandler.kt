@@ -8,6 +8,7 @@ import no.nav.k9.los.domene.modell.*
 import no.nav.k9.los.domene.modell.reportMetrics
 import no.nav.k9.los.domene.repository.*
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
+import no.nav.k9.los.integrasjon.kafka.dto.EventHendelse
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
@@ -40,8 +41,12 @@ class K9sakEventHandler constructor(
     )
 
     fun prosesser(
-        event: BehandlingProsessEventDto
+        eventInn: BehandlingProsessEventDto
     ) {
+
+        val event = håndterVaskeevent(eventInn)
+        if (event == null) return
+
         var skalSkippe = false
         val modell = behandlingProsessEventK9Repository.lagre(event.eksternId!!) { k9SakModell ->
             if (k9SakModell == null) {
@@ -78,6 +83,24 @@ class K9sakEventHandler constructor(
         }
         
         k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId)
+    }
+
+    private fun håndterVaskeevent(event: BehandlingProsessEventDto): BehandlingProsessEventDto? {
+        if (event.eventHendelse == EventHendelse.VASKEEVENT) {
+            // Gjøres utenfor transaksjon fordi den ikke muterer data.
+            // Det er ikke mulig å unngå lagring selv om eventet skal ignoreres hvis den skulle ha vært i samme transaksjon (pga on conflict(id) update.. ) i lagre-metoden
+            val eksisterendeEventModell = behandlingProsessEventK9Repository.hent(event.eksternId!!)
+            if (eksisterendeEventModell.eventer.any { tidligereEvent -> tidligereEvent.behandlingStatus == BehandlingStatus.AVSLUTTET.kode }) {
+                return null
+            }
+
+            if (eksisterendeEventModell.eventer.isEmpty()) {
+                log.info("Vaskeeventfiltrering gjelder behandling som ikke tidligere finnes i los ${event.eksternId}")
+            } else {
+                log.info("Vaskeeventfiltrering ${event.behandlingStatus} - ${event.eventTid} - ${event.eksternId}")
+            }
+        }
+        return event.copy(eventTid = event.eventTid.plusNanos(100))
     }
 
 
