@@ -1,29 +1,35 @@
 package no.nav.k9.los.aksjonspunktbehandling
 
 import assertk.assertThat
-import assertk.assertions.isEqualTo
-import assertk.assertions.isSuccess
+import assertk.assertions.*
+import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.los.AbstractK9LosIntegrationTest
+import no.nav.k9.los.domene.modell.BehandlingStatus
 import no.nav.k9.los.domene.modell.Enhet
 import no.nav.k9.los.domene.modell.KøSortering
 import no.nav.k9.los.domene.modell.OppgaveKø
 import no.nav.k9.los.domene.repository.OppgaveKøRepository
 import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
+import no.nav.k9.los.integrasjon.kafka.dto.EventHendelse
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
 import org.koin.test.get
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.*
 import kotlin.test.assertFalse
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class K9sakEventHandlerTest : AbstractK9LosIntegrationTest() {
+
+    val objectMapper = jacksonObjectMapper()
+        .dusseldorfConfigured().setPropertyNamingStrategy(PropertyNamingStrategies.LOWER_CAMEL_CASE)
 
     @Test
     fun `Skal lukke oppgave dersom den ikke har noen aktive aksjonspunkter`() {
@@ -56,8 +62,6 @@ class K9sakEventHandlerTest : AbstractK9LosIntegrationTest() {
                   "aksjonspunktKoderMedStatusListe": {}
                 }
             """.trimIndent()
-        val objectMapper = jacksonObjectMapper()
-            .dusseldorfConfigured().setPropertyNamingStrategy(PropertyNamingStrategy.LOWER_CAMEL_CASE)
 
         val event = objectMapper.readValue(json, BehandlingProsessEventDto::class.java)
 
@@ -96,8 +100,6 @@ class K9sakEventHandlerTest : AbstractK9LosIntegrationTest() {
                 "7030": "OPPR"
               }
             }"""
-        val objectMapper = jacksonObjectMapper()
-            .dusseldorfConfigured().setPropertyNamingStrategy(PropertyNamingStrategy.LOWER_CAMEL_CASE)
 
         val event = objectMapper.readValue(json, BehandlingProsessEventDto::class.java)
 
@@ -138,9 +140,6 @@ class K9sakEventHandlerTest : AbstractK9LosIntegrationTest() {
                 "5080": "OPPR"
               }
             }"""
-        val objectMapper = jacksonObjectMapper()
-            .dusseldorfConfigured().setPropertyNamingStrategy(PropertyNamingStrategy.LOWER_CAMEL_CASE)
-
         val event = objectMapper.readValue(json, BehandlingProsessEventDto::class.java)
 
         k9sakEventHandler.prosesser(event)
@@ -183,9 +182,6 @@ class K9sakEventHandlerTest : AbstractK9LosIntegrationTest() {
                 "5016": "OPPR"
               }
             }"""
-        val objectMapper = jacksonObjectMapper()
-            .dusseldorfConfigured().setPropertyNamingStrategy(PropertyNamingStrategy.LOWER_CAMEL_CASE)
-
         val event = objectMapper.readValue(json, BehandlingProsessEventDto::class.java)
 
         k9sakEventHandler.prosesser(event)
@@ -231,9 +227,6 @@ class K9sakEventHandlerTest : AbstractK9LosIntegrationTest() {
                   "relatertPartAktørId" : "9906098522415"
                   
                 }"""
-        val objectMapper = jacksonObjectMapper()
-            .dusseldorfConfigured().setPropertyNamingStrategy(PropertyNamingStrategy.LOWER_CAMEL_CASE)
-
         val event = objectMapper.readValue(json, BehandlingProsessEventDto::class.java)
 
         assertThat { event.fagsakPeriode?.fom }.isSuccess().isEqualTo(LocalDate.of(2020, 2, 20))
@@ -312,9 +305,6 @@ class K9sakEventHandlerTest : AbstractK9LosIntegrationTest() {
                     "5080": "OPPR"
                   }
                 }"""
-        val objectMapper = jacksonObjectMapper()
-            .dusseldorfConfigured().setPropertyNamingStrategy(PropertyNamingStrategy.LOWER_CAMEL_CASE)
-
         val event = objectMapper.readValue(json, BehandlingProsessEventDto::class.java)
 
         k9sakEventHandler.prosesser(event)
@@ -395,8 +385,6 @@ class K9sakEventHandlerTest : AbstractK9LosIntegrationTest() {
                     "5009": "OPPR"
                   }
                 }"""
-        val objectMapper = jacksonObjectMapper()
-            .dusseldorfConfigured().setPropertyNamingStrategy(PropertyNamingStrategy.LOWER_CAMEL_CASE)
 
         val event = objectMapper.readValue(json, BehandlingProsessEventDto::class.java)
 
@@ -433,5 +421,72 @@ class K9sakEventHandlerTest : AbstractK9LosIntegrationTest() {
             oppgaveKøRepository.hent()
         }
         assertSame(1, i[0].oppgaverOgDatoer.size)
+    }
+
+    @Test
+    fun `Vaskeevent skal ignoreres hvis det allerede finnes event med avsluttet behandling`() {
+        val k9sakEventHandler = get<K9sakEventHandler>()
+
+        val eksternId = UUID.randomUUID().toString()
+
+        val eventTid = LocalDateTime.now().minusDays(1)
+        k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, BehandlingStatus.OPPRETTET, eventTid))
+        k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, BehandlingStatus.UTREDES, eventTid.plusHours(1)))
+        k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, BehandlingStatus.AVSLUTTET, eventTid.plusHours(2)))
+
+        val vaskeevent = lagBehandlingprosessEventMedStatus(eksternId, BehandlingStatus.AVSLUTTET, LocalDateTime.now(), EventHendelse.VASKEEVENT)
+        assertThat(k9sakEventHandler.håndterVaskeevent(vaskeevent)).isNull()
+    }
+
+    @Test
+    fun `Vaskeevent skal brukes hvis det ikke finnes event med avsluttet behandling, og utsetter eventtid 100 mikrosekunder`() {
+        val k9sakEventHandler = get<K9sakEventHandler>()
+
+        val eksternId = UUID.randomUUID().toString()
+
+        val eventTid = LocalDateTime.now().minusDays(1)
+        k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, BehandlingStatus.OPPRETTET, eventTid))
+        k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, BehandlingStatus.UTREDES, eventTid.plusHours(1)))
+
+        val vaskeevent = lagBehandlingprosessEventMedStatus(eksternId, BehandlingStatus.AVSLUTTET, LocalDateTime.now(), EventHendelse.VASKEEVENT)
+        val håndtertEvent = k9sakEventHandler.håndterVaskeevent(vaskeevent)
+        
+        assertThat(håndtertEvent).isNotNull()
+        assertThat(håndtertEvent!!.eventTid).isGreaterThan(vaskeevent.eventTid)
+    }
+
+    private fun lagBehandlingprosessEventMedStatus(
+        eksternId: String,
+        behandlingStatus: BehandlingStatus,
+        eventTid: LocalDateTime = LocalDateTime.now(),
+        eventHendelse: EventHendelse = EventHendelse.BEHANDLINGSKONTROLL_EVENT
+    ): BehandlingProsessEventDto {
+
+        @Language("JSON") val json =
+            """{
+                  "eksternId": "$eksternId",
+                  "fagsystem": {
+                    "kode": "K9SAK",
+                    "kodeverk": "FAGSYSTEM"
+                  },
+                  "saksnummer": "5YC4K",
+                  "aktørId": "9906098522415",
+                  "behandlingId": 1000001,
+                  "eventTid": "$eventTid",
+                  "eventHendelse": "$eventHendelse",
+                  "behandlinStatus": "${behandlingStatus.kode}", 
+                  "behandlingstidFrist": "2020-03-31",
+                  "behandlingStatus": "${behandlingStatus.kode}",
+                  "behandlingSteg": "INREG_AVSL",
+                  "behandlendeEnhet": "0300",
+                  "ytelseTypeKode": "OMP",
+                  "behandlingTypeKode": "BT-002",
+                  "opprettetBehandling": "2020-02-20T07:38:49",
+                  "aksjonspunktKoderMedStatusListe": {
+                    "5009": "OPPR"
+                  }
+            }"""
+
+        return objectMapper.readValue(json, BehandlingProsessEventDto::class.java)
     }
 }

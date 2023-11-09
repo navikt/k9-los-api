@@ -85,7 +85,7 @@ class K9sakEventHandler constructor(
         k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId)
     }
 
-    private fun håndterVaskeevent(event: BehandlingProsessEventDto): BehandlingProsessEventDto? {
+    fun håndterVaskeevent(event: BehandlingProsessEventDto): BehandlingProsessEventDto? {
         if (event.eventHendelse == EventHendelse.VASKEEVENT) {
             // Gjøres utenfor transaksjon fordi den ikke muterer data.
             // Det er ikke mulig å unngå lagring selv om eventet skal ignoreres hvis den skulle ha vært i samme transaksjon (pga on conflict(id) update.. ) i lagre-metoden
@@ -100,7 +100,7 @@ class K9sakEventHandler constructor(
                 log.info("Vaskeeventfiltrering ${event.behandlingStatus} - ${event.eventTid} - ${event.eksternId}")
             }
         }
-        return event.copy(eventTid = event.eventTid.plusNanos(100))
+        return event.copy(eventTid = event.eventTid.plusNanos(100_1000))
     }
 
 
