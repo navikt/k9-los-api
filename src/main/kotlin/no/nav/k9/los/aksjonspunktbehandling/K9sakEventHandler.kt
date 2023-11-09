@@ -86,21 +86,27 @@ class K9sakEventHandler constructor(
     }
 
     fun håndterVaskeevent(event: BehandlingProsessEventDto): BehandlingProsessEventDto? {
-        if (event.eventHendelse == EventHendelse.VASKEEVENT) {
-            // Gjøres utenfor transaksjon fordi den ikke muterer data.
-            // Det er ikke mulig å unngå lagring selv om eventet skal ignoreres hvis den skulle ha vært i samme transaksjon (pga on conflict(id) update.. ) i lagre-metoden
-            val eksisterendeEventModell = behandlingProsessEventK9Repository.hent(event.eksternId!!)
-            if (eksisterendeEventModell.eventer.any { tidligereEvent -> tidligereEvent.behandlingStatus == BehandlingStatus.AVSLUTTET.kode }) {
-                return null
-            }
-
-            if (eksisterendeEventModell.eventer.isEmpty()) {
-                log.info("Vaskeeventfiltrering gjelder behandling som ikke tidligere finnes i los ${event.eksternId}")
-            } else {
-                log.info("Vaskeeventfiltrering ${event.behandlingStatus} - ${event.eventTid} - ${event.eksternId}")
-            }
+        if (event.eventHendelse != EventHendelse.VASKEEVENT) {
+            return event
         }
-        return event.copy(eventTid = event.eventTid.plusNanos(100_1000))
+
+        // Gjøres utenfor transaksjon fordi den ikke muterer data.
+        // Det er ikke mulig å unngå lagring selv om eventet skal ignoreres hvis den skulle ha vært i samme transaksjon (pga on conflict(id) update.. ) i lagre-metoden
+        val eksisterendeEventModell = behandlingProsessEventK9Repository.hent(event.eksternId!!)
+        if (eksisterendeEventModell.eventer.any { tidligereEvent -> tidligereEvent.behandlingStatus == BehandlingStatus.AVSLUTTET.kode }) {
+            return null
+        }
+
+        if (eksisterendeEventModell.eventer.isEmpty()) {
+            log.info("Vaskeeventfiltrering gjelder behandling som ikke tidligere finnes i los ${event.eksternId}")
+            return event
+        }
+
+        log.info("Vaskeeventfiltrering ${event.behandlingStatus} - ${event.eventTid} - ${event.eksternId}")
+        return eksisterendeEventModell.sisteEvent().eventTid
+            .takeIf { sisteEventTid -> sisteEventTid.isAfter(event.eventTid) }
+            ?.let { sisteEventTid -> event.copy(eventTid = sisteEventTid.plusNanos(100_1000)) }
+            ?: event
     }
 
 

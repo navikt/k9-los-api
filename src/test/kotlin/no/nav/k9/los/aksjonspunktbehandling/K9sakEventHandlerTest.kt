@@ -428,7 +428,6 @@ class K9sakEventHandlerTest : AbstractK9LosIntegrationTest() {
         val k9sakEventHandler = get<K9sakEventHandler>()
 
         val eksternId = UUID.randomUUID().toString()
-
         val eventTid = LocalDateTime.now().minusDays(1)
         k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, BehandlingStatus.OPPRETTET, eventTid))
         k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, BehandlingStatus.UTREDES, eventTid.plusHours(1)))
@@ -439,20 +438,35 @@ class K9sakEventHandlerTest : AbstractK9LosIntegrationTest() {
     }
 
     @Test
-    fun `Vaskeevent skal brukes hvis det ikke finnes event med avsluttet behandling, og utsetter eventtid 100 mikrosekunder`() {
+    fun `Vaskeevent skal brukes hvis det ikke finnes event med avsluttet behandling`() {
         val k9sakEventHandler = get<K9sakEventHandler>()
 
         val eksternId = UUID.randomUUID().toString()
-
         val eventTid = LocalDateTime.now().minusDays(1)
         k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, BehandlingStatus.OPPRETTET, eventTid))
         k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, BehandlingStatus.UTREDES, eventTid.plusHours(1)))
 
-        val vaskeevent = lagBehandlingprosessEventMedStatus(eksternId, BehandlingStatus.AVSLUTTET, LocalDateTime.now(), EventHendelse.VASKEEVENT)
+        val vaskeevent = lagBehandlingprosessEventMedStatus(eksternId, BehandlingStatus.AVSLUTTET, eventTid.plusHours(2), EventHendelse.VASKEEVENT)
         val håndtertEvent = k9sakEventHandler.håndterVaskeevent(vaskeevent)
         
         assertThat(håndtertEvent).isNotNull()
-        assertThat(håndtertEvent!!.eventTid).isGreaterThan(vaskeevent.eventTid)
+        assertThat(håndtertEvent!!.eventTid).isEqualTo(eventTid.plusHours(2))
+    }
+
+    @Test
+    fun `Vaskeevent skal brukes hvis det ikke finnes event med avsluttet behandling, og utsetter ikke eventtid eventtid 100 mikrosekunder hvis tidligere eller lik siste event`() {
+        val k9sakEventHandler = get<K9sakEventHandler>()
+
+        val eksternId = UUID.randomUUID().toString()
+        val eventTid = LocalDateTime.now().minusDays(1)
+        k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, BehandlingStatus.OPPRETTET, eventTid))
+        k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, BehandlingStatus.UTREDES, eventTid.plusHours(1)))
+
+        val vaskeevent = lagBehandlingprosessEventMedStatus(eksternId, BehandlingStatus.AVSLUTTET, eventTid.plusMinutes(30), EventHendelse.VASKEEVENT)
+        val håndtertEvent = k9sakEventHandler.håndterVaskeevent(vaskeevent)
+
+        assertThat(håndtertEvent).isNotNull()
+        assertThat(håndtertEvent!!.eventTid).isGreaterThan(eventTid.plusHours(1))
     }
 
     private fun lagBehandlingprosessEventMedStatus(
