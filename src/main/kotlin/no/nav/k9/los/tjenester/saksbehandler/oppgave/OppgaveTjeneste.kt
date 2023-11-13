@@ -315,7 +315,12 @@ class OppgaveTjeneste constructor(
                 val oppgaver = hentOppgaver(aktorId)
 
                 //sjekker om det finnes en visningsak i omsorgsdager
-                val oppgaveDto = hentOmsorgsdagerForFnr(query, person.person.navn())
+                val oppgaveDto = try {
+                    hentOmsorgsdagerForFnr(query, person.person.navn())
+                } catch (e: Exception) {
+                    log.info("Feilet ved søk mot omsorgsdager")
+                    null
+                }
                 if (oppgaveDto != null) {
                     oppgaver.add(oppgaveDto)
                 }
