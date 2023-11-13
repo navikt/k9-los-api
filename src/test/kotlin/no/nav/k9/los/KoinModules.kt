@@ -43,6 +43,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
+import no.nav.k9.los.nyoppgavestyring.pep.PepCacheService
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
@@ -80,10 +81,18 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         K9SakServiceLocal() as IK9SakService
     }
 
+    single { PepCacheRepository(dataSource) }
+    single { PepCacheService(
+        pepClient = get(),
+        pepCacheRepository = get(),
+        oppgaveRepository = get(),
+        transactionalManager = get()
+    )}
+
     single { dataSource }
     single { pepClient }
     single {
-        no.nav.k9.los.domene.repository.OppgaveRepository(
+        OppgaveRepository(
             dataSource = get(),
             pepClient = get(),
             refreshOppgave = get(named("oppgaveRefreshChannel"))

@@ -49,7 +49,7 @@ class PepCacheRepository(
         )
     }
 
-    fun hent(kildeområde: String, eksternId: String) {
+    fun hent(kildeområde: String, eksternId: String): PepCache? {
         return using(sessionOf(dataSource)) {
             it.transaction { tx -> hent(kildeområde, eksternId, tx) }
         }

@@ -161,11 +161,7 @@ fun Application.k9Los() {
             oppgaveKøRepository = koin.get()
         )
 
-    PepCacheOppdaterer(
-        koin.get(),
-        koin.get(),
-        koin.get()
-    ).start()
+    PepCacheOppdaterer(koin.get()).start()
 
     val sjekkReserverteJobb =
         sjekkReserverteJobb(saksbehandlerRepository = koin.get(), reservasjonRepository = koin.get())

@@ -54,8 +54,11 @@ class PepCacheService(
     fun oppdaterCacheForOppgaverEldreEnn(gyldighet: Duration = Duration.ofHours(23)) {
         transactionalManager.transaction { tx ->
             runBlocking {
-                val oppgaverSomMåOppdateres =
-                    oppgaveRepository.hentÅpneOgVentendeOppgaverMedPepCacheEldreEnn(LocalDateTime.now() - gyldighet, antall = 100, tx)
+                val oppgaverSomMåOppdateres = oppgaveRepository.hentÅpneOgVentendeOppgaverMedPepCacheEldreEnn(
+                    tidspunkt = LocalDateTime.now() - gyldighet,
+                    antall = 2,
+                    tx
+                )
                 oppgaverSomMåOppdateres.forEach { oppgave -> oppdater(tx, oppgave) }
             }
         }

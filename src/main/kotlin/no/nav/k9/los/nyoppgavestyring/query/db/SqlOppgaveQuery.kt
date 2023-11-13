@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.query.db
 
+import no.nav.k9.los.nyoppgavestyring.kodeverk.SikkerhetsklassifiseringType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype.*
 import org.postgresql.util.PGInterval
@@ -19,7 +20,7 @@ class SqlOppgaveQuery(
                   ) INNER JOIN Omrade oppgave_omrade ON (
                     oppgave_omrade.id = ot.omrade_id
                   ) LEFT JOIN (
-                        SELECT id, kode6, kode7, egen_ansatt, true as trenger_sjekk
+                        SELECT ekstern_id, kode6, kode7, egen_ansatt, true as trenger_sjekk
                         FROM Oppgave_pep_cache 
                         WHERE (
                             kode6 IS true OR
@@ -27,7 +28,7 @@ class SqlOppgaveQuery(
                             egen_ansatt IS true
                         )
                   ) as opc ON (
-                    o.id = opc.id
+                    o.ekstern_id = opc.ekstern_id
                   )
                 WHERE aktiv = true 
             """.trimIndent()
@@ -78,17 +79,17 @@ class SqlOppgaveQuery(
             }
             "sikkerhetsklassifisering" -> {
                 when(feltverdi) {
-                    "kode6" -> {
+                    SikkerhetsklassifiseringType.KODE6.kode -> {
                         query += "${combineOperator.sql} opc.kode6 ${operator.sql} (:kode6$index) "
-                        queryParams["kode6$index"] = feltverdi
+                        queryParams["kode6$index"] = true
                     }
-                    "kode7" -> {
+                    SikkerhetsklassifiseringType.KODE7.kode -> {
                         query += "${combineOperator.sql} opc.kode7 ${operator.sql} (:kode7$index) "
-                        queryParams["kode7$index"] = feltverdi
+                        queryParams["kode7$index"] = true
                     }
-                    "egen_ansatt" -> {
+                    SikkerhetsklassifiseringType.EGEN_ANSATT.kode -> {
                         query += "${combineOperator.sql} opc.egen_ansatt ${operator.sql} (:egen_ansatt$index) "
-                        queryParams["egen_ansatt$index"] = feltverdi
+                        queryParams["egen_ansatt$index"] = true
                     }
                 }
             }

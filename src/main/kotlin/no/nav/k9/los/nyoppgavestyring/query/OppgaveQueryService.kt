@@ -26,7 +26,7 @@ class OppgaveQueryService() {
     val oppgaveQueryRepository by inject<OppgaveQueryRepository>(OppgaveQueryRepository::class.java)
     val oppgaveRepository by inject<OppgaveRepository>(OppgaveRepository::class.java)
     val pepClient by inject<IPepClient>(IPepClient::class.java)
-    val pepService by inject<PepCacheService>(PepCacheService::class.java)
+    val pepCacheService by inject<PepCacheService>(PepCacheService::class.java)
 
     fun hentAlleFelter(): Oppgavefelter {
         return oppgaveQueryRepository.hentAlleFelter()
@@ -89,7 +89,7 @@ class OppgaveQueryService() {
     private suspend fun mapOppgave(tx: TransactionalSession, oppgaveQuery: OppgaveQuery, oppgaveId: Long): Oppgaverad? {
         val oppgave = oppgaveRepository.hentOppgaveForId(tx, oppgaveId)
 
-        val pepCache = pepService.hentOgOppdaterVedBehov(tx, oppgave, maksimalAlder = Duration.ofMinutes(30))
+        val pepCache = pepCacheService.hentOgOppdaterVedBehov(tx, oppgave, maksimalAlder = Duration.ofMinutes(30))
         if (pepCache.måSjekkes()) {
             // TODO: Generaliser ABAC-attributter + sjekk av disse:
             val saksnummer = oppgave.hentVerdi("K9", "saksnummer")

@@ -33,7 +33,7 @@ class OppgaveRepository(
         val oppgaveTypeId = long("oppgavetype_id")
         val kildeområde = string("kildeomrade")
         return Oppgave(
-            eksternId = string("eksternId"),
+            eksternId = string("ekstern_id"),
             eksternVersjon = string("ekstern_versjon"),
             oppgavetype = oppgavetypeRepository.hentOppgavetype(kildeområde, oppgaveTypeId, tx),
             status = string("status"),
@@ -123,12 +123,12 @@ class OppgaveRepository(
         return tx.run(
             queryOf(
                 """
-                    SELECT o
+                    SELECT o.*
                     FROM oppgave_v3 o 
                     LEFT JOIN OPPGAVE_PEP_CACHE opc ON (
                         o.kildeomrade = opc.kildeomrade AND o.ekstern_id = opc.ekstern_id
                     )
-                    WHERE o.aktiv is true AND o.status IN ('VENTER', 'AAPEN'))
+                    WHERE o.aktiv is true AND o.status IN ('VENTER', 'AAPEN')
                     AND opc.oppdatert < :grense
                     ORDER BY opc.oppdatert
                     LIMIT :limit
