@@ -25,9 +25,6 @@ spec:
     requests:
       cpu: "3000m"
       memory: "6144Mi"
-  ingresses:
-    - https://k9-los-api.nais.adeo.no
-    - https://k9-los-api.prod-fss.nais.io
   replicas:
     min: 1
     max: 1
