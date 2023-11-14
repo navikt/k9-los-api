@@ -5,6 +5,7 @@ val hikariVersion = "5.0.1"
 val flywayVersion = "9.22.3"
 val vaultJdbcVersion = "1.3.10"
 val koinVersion = "3.5.0"
+val koinKtorVersion = "3.5.1"
 val kotliqueryVersion = "1.9.0"
 val k9SakVersion = "4.1.2"
 val k9KlageVersion = "0.4.0"
@@ -85,7 +86,7 @@ dependencies {
 
     // DI
     implementation("io.insert-koin:koin-core:$koinVersion")
-    implementation("io.insert-koin:koin-ktor:$koinVersion")
+    implementation("io.insert-koin:koin-ktor:$koinKtorVersion")
 
     // Test
     testImplementation("org.junit.jupiter:junit-jupiter-api:$jupiterVersion")
