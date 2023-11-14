@@ -56,7 +56,7 @@ class YtelseTest : AbstractK9LosIntegrationTest() {
 
         runBlocking {
             Kjøretid.logg("Sjekk antall oppgaver") {
-                assertThat { oppgaveRepository.hent().size }.isSuccess().isEqualTo(antallOppgaver)
+                assertThat(oppgaveRepository.hent().size).isEqualTo(antallOppgaver)
             }
         }
 
