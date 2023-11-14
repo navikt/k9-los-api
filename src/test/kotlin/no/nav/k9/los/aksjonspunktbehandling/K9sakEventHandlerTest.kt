@@ -229,8 +229,8 @@ class K9sakEventHandlerTest : AbstractK9LosIntegrationTest() {
                 }"""
         val event = objectMapper.readValue(json, BehandlingProsessEventDto::class.java)
 
-        assertThat { event.fagsakPeriode?.fom }.isSuccess().isEqualTo(LocalDate.of(2020, 2, 20))
-        assertThat { event.fagsakPeriode?.tom }.isSuccess().isEqualTo(LocalDate.of(2020, 3, 30))
+        assertThat(event.fagsakPeriode?.fom).isEqualTo(LocalDate.of(2020, 2, 20))
+        assertThat(event.fagsakPeriode?.tom).isEqualTo(LocalDate.of(2020, 3, 30))
     }
 
     @Test
