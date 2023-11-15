@@ -17,7 +17,7 @@ val dusseldorfKtorVersion = "4.1.0"
 val ktorVersion = "2.3.6"
 val kafkaVersion = "3.6.0"
 
-val navTilgangskontroll = "2.2023.01.09_08.56-ae38750bc0d9"
+val navTilgangskontroll = "3.2023.10.23_12.41-bafec3836d28"
 
 // Test Dependencies
 val testContainers = "1.19.1"
