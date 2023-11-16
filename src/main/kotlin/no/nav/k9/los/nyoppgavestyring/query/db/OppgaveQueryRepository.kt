@@ -4,7 +4,7 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.nyoppgavestyring.kodeverk.SikkerhetsklassifiseringType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Kodeverkreferanse
@@ -87,7 +87,7 @@ class OppgaveQueryRepository(
                 tolkes_som = "String",
                 kokriterie = true,
                 verdiforklaringerErUttømmende = true,
-                SikkerhetsklassifiseringType.entries.map {
+                BeskyttelseType.entries.map {
                     Verdiforklaring(
                         verdi = it.kode,
                         visningsnavn = it.beskrivelse

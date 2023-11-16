@@ -4,7 +4,11 @@ import assertk.assertThat
 import assertk.assertions.*
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import io.mockk.*
+import io.mockk.coEvery
+import io.mockk.mockk
+import io.mockk.slot
+import io.mockk.verify
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.los.AbstractPostgresTest
@@ -15,16 +19,17 @@ import no.nav.k9.los.domene.modell.BehandlingStatus
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.los.integrasjon.kafka.dto.EventHendelse
-import no.nav.k9.los.nyoppgavestyring.kodeverk.SikkerhetsklassifiseringType
+import no.nav.k9.los.nyoppgavestyring.FeltType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgavefilterUtvider
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.koin.test.KoinTest
@@ -34,12 +39,9 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 
 class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
-
-    val saksnummerOrdinær = "1111"
-    val saksnummerKode6 = "6666"
 
     val pepClient = mockk<IPepClient>()
     private val logger: Logger = LoggerFactory.getLogger(PepCacheServiceTest::class.java)
@@ -53,23 +55,22 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
     @BeforeEach
     fun setup() {
         runBlocking {
-            gjørSakOrdinær(saksnummerOrdinær)
-            gjørSakKode6(saksnummerKode6)
+            // Gir tilgang til kode6 for å isolere testing av cache-oppdatering
+            coEvery { pepClient.harTilgangTilLesSak(any(), any()) } returns true
         }
     }
 
-    fun gjørSakKode6(saksnummer: String) {
+    fun gjørSakKode6() {
         runBlocking {
-            coEvery { pepClient.erSakKode6(eq(saksnummer)) } returns true
-            coEvery { pepClient.erSakKode7EllerEgenAnsatt(eq(saksnummer)) } returns true
+            coEvery { pepClient.erSakKode6(any()) } returns true
+            coEvery { pepClient.erSakKode7EllerEgenAnsatt(any()) } returns false
         }
     }
 
-
-    fun gjørSakOrdinær(saksnummer: String) {
+    fun gjørSakOrdinær() {
         runBlocking {
-            coEvery { pepClient.erSakKode6(eq(saksnummer)) } returns false
-            coEvery { pepClient.erSakKode7EllerEgenAnsatt(eq(saksnummer)) } returns false
+            coEvery { pepClient.erSakKode6(any()) } returns false
+            coEvery { pepClient.erSakKode7EllerEgenAnsatt(any()) } returns false
         }
     }
 
@@ -79,8 +80,10 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         val k9sakEventHandler = get<K9sakEventHandler>()
         val pepRepository = get<PepCacheRepository>()
 
+        val saksnummer = "TEST1"
         val eksternId = UUID.randomUUID().toString()
-        k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, saksnummerOrdinær))
+        gjørSakOrdinær()
+        k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, saksnummer))
 
         val pepCache = pepRepository.hent("K9", eksternId)!!
         assertThat(pepCache.kode6).isFalse()
@@ -94,13 +97,15 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         val k9sakEventHandler = get<K9sakEventHandler>()
         val pepRepository = get<PepCacheRepository>()
 
+        val saksnummer = "TEST2"
         val eksternId = UUID.randomUUID().toString()
-        k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, saksnummerKode6))
+        gjørSakKode6()
+        k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, saksnummer))
 
         val pepCache = pepRepository.hent("K9", eksternId)!!
         assertThat(pepCache.kode6).isTrue()
-        assertThat(pepCache.kode7).isTrue()
-        assertThat(pepCache.egenAnsatt).isTrue()
+        assertThat(pepCache.kode7).isFalse()
+        assertThat(pepCache.egenAnsatt).isFalse()
         assertThat(pepCache.oppdatert).isGreaterThan(LocalDateTime.now().minusMinutes(1))
     }
 
@@ -109,6 +114,8 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         val k9sakEventHandler = get<K9sakEventHandler>()
         val pepRepository = mockk<PepCacheRepository>(relaxed = true)
 
+        val saksnummer = "TEST3"
+        gjørSakOrdinær()
 
         val pepCacheService = PepCacheService(
             pepCacheRepository = pepRepository,
@@ -117,12 +124,8 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
             transactionalManager = get()
         )
 
-        val saksnummer = UUID.randomUUID().toString()
-        gjørSakOrdinær(saksnummer)
-
         val eksternId = UUID.randomUUID().toString()
         k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, saksnummer))
-        Thread.sleep(1000)
 
         pepCacheService.oppdaterCacheForOppgaverEldreEnn(gyldighet = Duration.ofHours(2))
         verify(exactly = 0) { pepRepository.lagre(any(), any()) }
@@ -135,6 +138,53 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         val slot = slot<PepCache>()
         verify(exactly = 1) { pepRepository.lagre(capture(slot), any()) }
         assertThat(slot.captured.oppdatert).isGreaterThanOrEqualTo(tidspunktForsøktOppdatert)
+    }
+
+    @Test
+    fun `PepCacheService skal oppdatere oppgave når sikkerhetsklassifisering endrer seg`() {
+        val k9sakEventHandler = get<K9sakEventHandler>()
+        val pepRepository = get<PepCacheRepository>()
+        val oppgaveQueryService = get<OppgaveQueryService>()
+
+        val pepCacheService = PepCacheService(
+            pepCacheRepository = pepRepository,
+            pepClient = pepClient,
+            oppgaveRepository = get(),
+            transactionalManager = get()
+        )
+
+        val job = PepCacheOppdaterer(
+            pepCacheService,
+            tidMellomKjøring = Duration.ofMillis(500),
+            alderForOppfriskning = Duration.ofNanos(1)
+        ).start()
+
+        val saksnummer = "TEST4"
+        gjørSakOrdinær()
+
+        val eksternId = UUID.randomUUID().toString()
+        k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, saksnummer))
+
+        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, BeskyttelseType.ORDINÆR)).isNotEmpty()
+        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId)).isNotEmpty()
+        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, BeskyttelseType.KODE6)).isEmpty()
+
+        gjørSakKode6()
+        for (i in 0..10) {
+            Thread.sleep(500)
+            if (i == 10) throw IllegalStateException("Fant ikke pepcache med kode6 innen tidsfristen")
+            if (pepRepository.hent("K9", eksternId)?.kode6 == true) {
+                logger.info("Fant pepcache med kode6")
+                break
+            }
+        }
+
+        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, BeskyttelseType.ORDINÆR)).isEmpty()
+        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId)).isNotEmpty()  // Alle beskyttelsetyper er inkludert hvis ikke beksyttelsetype er spesifisert
+        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, BeskyttelseType.KODE6)).isNotEmpty()
+
+        job.cancel()
+        verify(atLeast = 1) { runBlocking { pepClient.harTilgangTilLesSak(eq(saksnummer), any()) } }
     }
 
     private fun loggAlleOppgaverMedFelterOgCache() {
@@ -152,61 +202,33 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         }
     }
 
-    @Test
-    @Disabled
-    fun `PepCacheService skal oppdatere oppgave når sikkerhetsklassifisering endrer seg`() {
-        val k9sakEventHandler = get<K9sakEventHandler>()
-        val pepCacheService = get<PepCacheService>()
-        val oppgaveQueryService = get<OppgaveQueryService>()
-
-        PepCacheOppdaterer(
-            pepCacheService,
-            tidMellomKjøring = Duration.ofNanos(1),
-            alderForOppfriskning = Duration.ofNanos(1)
-        ).start()
-
-        val saksnummer = UUID.randomUUID().toString()
-        gjørSakOrdinær(saksnummer)
-
-        // Gir tilgang til kode6 for å isolere testing av cache-oppdatering
-        runBlocking { coEvery { pepClient.harTilgangTilLesSak(eq(saksnummer), any()) } returns true }
-
-        val eksternId = UUID.randomUUID().toString()
-        k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, saksnummer))
-
-        loggAlleOppgaverMedFelterOgCache()
-
-        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService)).isNotEmpty()
-        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, SikkerhetsklassifiseringType.KODE6)).isEmpty()
-
-        gjørSakKode6(saksnummer)
-        Thread.sleep(2000)
-
-        loggAlleOppgaverMedFelterOgCache()
-
-        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService)).isEmpty()
-        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, SikkerhetsklassifiseringType.KODE6)).isNotEmpty()
-        verify(exactly = 1) { runBlocking { pepClient.harTilgangTilLesSak(eq(saksnummer), any()) } }
-    }
-
-
     private fun hentOppgaverMedSikkerhetsklassifisering(
         oppgaveQueryService: OppgaveQueryService,
-        vararg sikkerhetsklassifiseringtyper: SikkerhetsklassifiseringType
+        eksternId: String,
+        vararg sikkerhetsklassifiseringtyper: BeskyttelseType
     ): List<Any> {
         val transactionalManager = get<TransactionalManager>()
         return transactionalManager.transaction { tx ->
-            val filtre = FeltverdiOppgavefilter(
-                område = null,
-                kode = "sikkerhetsklassifisering",
-                operator = "IN",
-                verdi = sikkerhetsklassifiseringtyper.map { it.kode }
+            val filtre = listOf(
+                CombineOppgavefilter(combineOperator = "AND", filtere = listOf(
+                    FeltverdiOppgavefilter(
+                        område = null,
+                        kode = FeltType.BESKYTTELSE.eksternId,
+                        operator = "IN",
+                        verdi = sikkerhetsklassifiseringtyper.map { it.kode }
+                    ),
+                    FeltverdiOppgavefilter(område = "K9",
+                        kode = FeltType.BEHANDLINGUUID.eksternId,
+                        operator = "EQUALS",
+                        verdi = listOf(eksternId)
+                    )
+                ))
             )
 
             oppgaveQueryService.query(tx,
                 OppgaveQuery(
                     select = listOf(EnkelSelectFelt(område = "K9", kode = "ekstern_id")),
-                    filtere = OppgavefilterUtvider.utvid(listOf(filtre))
+                    filtere = OppgavefilterUtvider.utvid(filtre)
                 ),
                 mockk(relaxed = true),
             )

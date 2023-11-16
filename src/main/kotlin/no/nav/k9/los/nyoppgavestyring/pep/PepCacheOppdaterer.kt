@@ -15,10 +15,12 @@ class PepCacheOppdaterer(
     private val log = LoggerFactory.getLogger(OppgaveKøRepository::class.java)
 
     @DelicateCoroutinesApi
-    fun start() = GlobalScope.launch(Executors.newSingleThreadExecutor().asCoroutineDispatcherWithErrorHandling()) {
-        while (true) {
-            pepCacheService.oppdaterCacheForOppgaverEldreEnn(alderForOppfriskning)
-            delay(tidMellomKjøring.toMillis())
+    fun start(): Job {
+        return GlobalScope.launch(Executors.newSingleThreadExecutor().asCoroutineDispatcherWithErrorHandling()) {
+            while (true) {
+                pepCacheService.oppdaterCacheForOppgaverEldreEnn(alderForOppfriskning)
+                delay(tidMellomKjøring.toMillis())
+            }
         }
     }
 }

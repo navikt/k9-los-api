@@ -89,14 +89,11 @@ class OppgaveQueryService() {
     private suspend fun mapOppgave(tx: TransactionalSession, oppgaveQuery: OppgaveQuery, oppgaveId: Long): Oppgaverad? {
         val oppgave = oppgaveRepository.hentOppgaveForId(tx, oppgaveId)
 
-        val pepCache = pepCacheService.hentOgOppdaterVedBehov(tx, oppgave, maksimalAlder = Duration.ofMinutes(30))
-        if (pepCache.måSjekkes()) {
-            // TODO: Generaliser ABAC-attributter + sjekk av disse:
-            val saksnummer = oppgave.hentVerdi("K9", "saksnummer")
-            val aktorId = oppgave.hentVerdi("K9", "aktorId")!!
-            if (saksnummer === null || !pepClient.harTilgangTilLesSak(saksnummer, aktorId)) {
-                return null
-            }
+        // TODO: Generaliser ABAC-attributter + sjekk av disse:
+        val saksnummer = oppgave.hentVerdi("K9", "saksnummer")
+        val aktorId = oppgave.hentVerdi("K9", "aktorId")!!
+        if (saksnummer === null || !pepClient.harTilgangTilLesSak(saksnummer, aktorId)) {
+            return null
         }
 
         return if (oppgaveQuery.select.isEmpty()) {

@@ -1,6 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.query.db
 
-import no.nav.k9.los.nyoppgavestyring.kodeverk.SikkerhetsklassifiseringType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.EgenAnsatt
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype.*
 import org.postgresql.util.PGInterval
@@ -14,19 +15,14 @@ class SqlOppgaveQuery(
 ) {
 
     private var query = """
-                SELECT o.id as id, opc.trenger_sjekk as trenger_sjekk
+                SELECT o.id as id
                 FROM Oppgave_v3 o INNER JOIN Oppgavetype ot ON (
                     ot.id = o.oppgavetype_id
                   ) INNER JOIN Omrade oppgave_omrade ON (
                     oppgave_omrade.id = ot.omrade_id
                   ) LEFT JOIN (
-                        SELECT ekstern_id, kode6, kode7, egen_ansatt, true as trenger_sjekk
-                        FROM Oppgave_pep_cache 
-                        WHERE (
-                            kode6 IS true OR
-                            kode7 IS true OR
-                            egen_ansatt IS true
-                        )
+                        SELECT ekstern_id, kode6, kode7, egen_ansatt
+                        FROM Oppgave_pep_cache
                   ) as opc ON (
                     o.ekstern_id = opc.ekstern_id
                   )
@@ -77,23 +73,22 @@ class SqlOppgaveQuery(
                 query += "${combineOperator.sql} oppgave_omrade.ekstern_id ${operator.sql} (:oppgave_omrade$index) "
                 queryParams["oppgave_omrade$index"] = feltverdi
             }
-            "sikkerhetsklassifisering" -> {
+            "beskyttelse" -> {
                 when(feltverdi) {
-                    SikkerhetsklassifiseringType.KODE6.kode -> {
-                        query += "${combineOperator.sql} opc.kode6 ${operator.sql} (:kode6$index) "
-                        queryParams["kode6$index"] = true
-                    }
-                    SikkerhetsklassifiseringType.KODE7.kode -> {
-                        query += "${combineOperator.sql} opc.kode7 ${operator.sql} (:kode7$index) "
-                        queryParams["kode7$index"] = true
-                    }
-                    SikkerhetsklassifiseringType.EGEN_ANSATT.kode -> {
-                        query += "${combineOperator.sql} opc.egen_ansatt ${operator.sql} (:egen_ansatt$index) "
-                        queryParams["egen_ansatt$index"] = true
+                    BeskyttelseType.KODE6.kode -> query += "${combineOperator.sql} opc.kode6 is true "
+                    BeskyttelseType.KODE7.kode -> query += "${combineOperator.sql} opc.kode7 is true "
+                    BeskyttelseType.ORDINÆR.kode -> {
+                        query += "${combineOperator.sql} opc.kode6 is not true AND opc.kode7 is not true "
                     }
                 }
             }
-            else -> throw IllegalStateException("Ukjent feltkode: $feltkode")
+            "egenAnsatt" -> {
+                query += when(feltverdi) {
+                    EgenAnsatt.JA.kode -> "${combineOperator.sql} opc.egen_ansatt is true "
+                    EgenAnsatt.NEI.kode -> "${combineOperator.sql} opc.egen_ansatt is false "
+                    else -> throw IllegalStateException("Ukjent feltkode: $feltkode")
+                }
+            }
         }
     }
 

@@ -54,7 +54,9 @@ class OppgaveTestDataBuilder(
         return transactionManager.transaction { tx ->
             val oppgave = OppgaveV3(
                 id = antall,
-                eksternId = UUID.randomUUID().toString(),
+                eksternId = oppgaveFeltverdier.firstOrNull {
+                    it.oppgavefelt.feltDefinisjon.eksternId == FeltType.BEHANDLINGUUID.eksternId }?.verdi
+                    ?: UUID.randomUUID().toString(),
                 eksternVersjon = "0",
                 oppgavetype = oppgavetype,
                 status = Oppgavestatus.AAPEN,
@@ -74,14 +76,16 @@ enum class FeltType(
     val listetype: Boolean = false,
     val tolkesSom: String = "String"
 ) {
-    behandlingUuid("behandlingUuid"),
-    fagsystem("fagsystem"),
-    aksjonspunkt("aksjonspunkt", true),
-    resultattype("resultattype", true),
-    totrinnskontroll("totrinnskontroll", tolkesSom = "Boolean"),
-    behandlingsstatus("behandlingsstatus", true),
-    ytelsestype("ytelsestype", true),
-    mottattDato("mottattDato"),
-    registrertDato("registrertDato"),
-    avventerArbeidsgiver("avventerArbeidsgiver", tolkesSom = "Boolean")
+    BEHANDLINGUUID("behandlingUuid"),
+    FAGSYSTEM("fagsystem"),
+    AKSJONSPUNKT("aksjonspunkt", true),
+    RESULTAT_TYPE("resultattype", true),
+    TOTRINNSKONTROLL("totrinnskontroll", tolkesSom = "Boolean"),
+    BEHANDLINGSSTATUS("behandlingsstatus", true),
+    YTELSE_TYPE("ytelsestype", true),
+    MOTTATT_DATO("mottattDato"),
+    REGISTRERT_DATO("registrertDato"),
+    AVVENTER_ARBEIDSGIVER("avventerArbeidsgiver", tolkesSom = "Boolean"),
+    BESKYTTELSE("beskyttelse", tolkesSom = "String", listetype = true),
+    EGEN_ANSATT("egenAnsatt", tolkesSom = "String", listetype = true)
 }
