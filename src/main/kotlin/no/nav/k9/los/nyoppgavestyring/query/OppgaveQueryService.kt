@@ -16,6 +16,7 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.tjenester.saksbehandler.IIdToken
 import org.koin.java.KoinJavaComponent.inject
+import java.lang.RuntimeException
 import javax.sql.DataSource
 
 class OppgaveQueryService() {
@@ -133,5 +134,15 @@ class OppgaveQueryService() {
         return using(sessionOf(datasource)) { it ->
             it.transaction { tx -> queryToFile(tx, oppgaveQuery, idToken) }
         }
+    }
+
+    fun validate(oppgaveQuery: OppgaveQuery): Boolean {
+        try {
+            queryForOppgaveId(oppgaveQuery)
+        } catch (e: RuntimeException) {
+            return false
+        }
+
+        return true
     }
 }
