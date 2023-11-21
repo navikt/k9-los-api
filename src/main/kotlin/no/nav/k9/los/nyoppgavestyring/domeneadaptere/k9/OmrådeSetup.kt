@@ -10,6 +10,7 @@ import no.nav.k9.los.domene.modell.BehandlingType
 import no.nav.k9.los.domene.modell.FagsakYtelseType
 import no.nav.k9.los.domene.modell.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.EventTilDtoMapper
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.KodeverkDto
@@ -64,16 +65,30 @@ class OmrådeSetup(
             eksternId = "Aksjonspunkt",
             beskrivelse = null,
             uttømmende = false,
-            verdier = AksjonspunktDefinisjon.values().filterNot { it == AksjonspunktDefinisjon.UNDEFINED }.map { apDefinisjon ->
-                KodeverkVerdiDto(
-                    verdi = apDefinisjon.kode,
-                    visningsnavn = apDefinisjon.navn,
-                    beskrivelse = null,
-                )
-            }
+            verdier = aksjonspunktVerdierK9Sak().plus(aksjonspunktVerdierK9Klage())
         )
         feltdefinisjonTjeneste.oppdater(kodeverkDto)
     }
+
+    private fun aksjonspunktVerdierK9Sak() =
+        AksjonspunktDefinisjon.values().filterNot { it == AksjonspunktDefinisjon.UNDEFINED }.map { apDefinisjon ->
+            KodeverkVerdiDto(
+                verdi = apDefinisjon.kode,
+                visningsnavn = apDefinisjon.navn,
+                beskrivelse = null,
+            )
+        }
+
+    private fun aksjonspunktVerdierK9Klage() =
+        no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.values()
+        .filterNot { it == no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.UNDEFINED }
+        .map { apDefinisjon ->
+            KodeverkVerdiDto(
+                verdi = EventTilDtoMapper.AKSJONSPUNKT_PREFIX + apDefinisjon.kode,
+                visningsnavn = apDefinisjon.navn,
+                beskrivelse = null,
+            )
+        }
 
     private fun kodeverkFagsystem() {
         val kodeverkDto = KodeverkDto(
