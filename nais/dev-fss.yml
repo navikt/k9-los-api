@@ -76,9 +76,6 @@ spec:
     - name: APP_K9SAK_URL
       value: https://k9-sak.nais.preprod.local/k9/sak/api
 
-    - name: APP_OMSORGSPENGER_URL
-      value: https://omsorgspenger-sak.intern.dev.nav.no
-
       # Kafka
     - name: BOOTSTRAP_SERVERS
       value: b27apvl00045.preprod.local:8443,b27apvl00046.preprod.local:8443,b27apvl00047.preprod.local:8443
@@ -125,10 +122,6 @@ spec:
       value: "k9"
     - name: AUDITLOGGER_PRODUCT
       value: "k9-los-api"
-
-      # token scope
-    - name: OMSORGSPENGER_SAK_SCOPE
-      value: "api://dev-gcp.omsorgspenger.omsorgspenger-sak/.default"
 
       # feature toggles
     - name: NY_OPPGAVESTYRING
