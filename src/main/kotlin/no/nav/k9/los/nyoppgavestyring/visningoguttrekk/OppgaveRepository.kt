@@ -28,7 +28,8 @@ class OppgaveRepository(
                     status = row.string("status"),
                     endretTidspunkt = row.localDateTime("endret_tidspunkt"),
                     kildeområde = row.string("kildeomrade"),
-                    felter = hentOppgavefelter(tx, row.long("id"))
+                    felter = hentOppgavefelter(tx, row.long("id")),
+                    versjon = row.int("versjon")
                 )
             }.asSingle
         ) ?: throw IllegalStateException("Fant ikke oppgave med eksternId $eksternId")
@@ -55,7 +56,8 @@ class OppgaveRepository(
                     status = row.string("status"),
                     endretTidspunkt = row.localDateTime("endret_tidspunkt"),
                     kildeområde = row.string("kildeomrade"),
-                    felter = hentOppgavefelter(tx, row.long("id"))
+                    felter = hentOppgavefelter(tx, row.long("id")),
+                    versjon = row.int("versjon")
                 )
             }.asSingle
         ) ?: throw IllegalStateException("Fant ikke oppgave med id $id")

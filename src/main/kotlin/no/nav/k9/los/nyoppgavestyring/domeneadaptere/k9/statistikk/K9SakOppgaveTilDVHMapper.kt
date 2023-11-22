@@ -21,11 +21,12 @@ class K9SakOppgaveTilDVHMapper {
         val behandlingstatus = BehandlingStatus.fraKode(oppgave.hentVerdi("behandlingsstatus"))
         val behandlinger = mutableListOf<Behandling>()
         if (behandlingstatus == BehandlingStatus.AVSLUTTET) {
-            if (oppgave.eksternVersjon.toInt() == 0) {
-                val registrertDato = LocalDateTime.parse(oppgave.hentVerdi("registrertDato")).toLocalDate()
+            if (oppgave.versjon == 0) {
+                val mottattDato = LocalDateTime.parse(oppgave.hentVerdi("mottattDato")).toLocalDate()
                 behandlinger.add(lagBehandling(
                     oppgave,
-                    vedtaksDato = registrertDato,
+                    vedtaksDato = null,
+                    registrertDato = mottattDato,
                     behandlingStatus = BehandlingStatus.OPPRETTET)
                 )
             }
@@ -37,6 +38,7 @@ class K9SakOppgaveTilDVHMapper {
     fun lagBehandling(
         oppgave: Oppgave,
         vedtaksDato: LocalDate? = oppgave.hentVerdi("vedtaksDato")?.let { LocalDate.parse(it) },
+        registrertDato: LocalDate = LocalDateTime.parse(oppgave.hentVerdi("registrertDato")).toLocalDate(),
         behandlingStatus: BehandlingStatus
     ): Behandling {
         return Behandling(
@@ -45,7 +47,7 @@ class K9SakOppgaveTilDVHMapper {
             funksjonellTid = LocalDateTime.parse(oppgave.eksternVersjon).atZone(zoneId).toOffsetDateTime(),
             tekniskTid = OffsetDateTime.now(zoneId),
             mottattDato = LocalDateTime.parse(oppgave.hentVerdi("mottattDato")).toLocalDate(),
-            registrertDato = LocalDateTime.parse(oppgave.hentVerdi("registrertDato")).toLocalDate(),
+            registrertDato = registrertDato,
             vedtaksDato = vedtaksDato,
             relatertBehandlingId = null,
             vedtakId = oppgave.hentVerdi("vedtakId"), //TODO: callback mot K9? evt vedtakstopic, YtelseV1.vedtakReferanse

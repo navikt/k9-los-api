@@ -10,7 +10,8 @@ data class Oppgave(
     val status: String, //TODO: definere typer/enum
     val endretTidspunkt: LocalDateTime,
     val kildeområde: String,
-    val felter: List<Oppgavefelt>
+    val felter: List<Oppgavefelt>,
+    val versjon: Int,
 ) {
     fun hentVerdi(feltnavn: String): String? {
         val oppgavefelt = hentOppgavefelt(feltnavn)
