@@ -17,7 +17,28 @@ class K9SakOppgaveTilDVHMapper {
         val zoneId = ZoneId.of("Europe/Oslo")
     }
 
-    fun lagBehandling(oppgave: Oppgave): Behandling {
+    fun lagBehandlinger(oppgave: Oppgave): List<Behandling> {
+        val behandlingstatus = BehandlingStatus.fraKode(oppgave.hentVerdi("behandlingsstatus"))
+        val behandlinger = mutableListOf<Behandling>()
+        if (behandlingstatus == BehandlingStatus.AVSLUTTET) {
+            if (oppgave.eksternVersjon.toInt() == 0) {
+                val registrertDato = LocalDateTime.parse(oppgave.hentVerdi("registrertDato")).toLocalDate()
+                behandlinger.add(lagBehandling(
+                    oppgave,
+                    vedtaksDato = registrertDato,
+                    behandlingStatus = BehandlingStatus.OPPRETTET)
+                )
+            }
+        }
+        behandlinger.add(lagBehandling(oppgave, behandlingStatus = behandlingstatus))
+        return behandlinger
+    }
+
+    fun lagBehandling(
+        oppgave: Oppgave,
+        vedtaksDato: LocalDate? = oppgave.hentVerdi("vedtaksDato")?.let { LocalDate.parse(it) },
+        behandlingStatus: BehandlingStatus
+    ): Behandling {
         return Behandling(
             sakId = oppgave.hentVerdi("saksnummer"),
             behandlingId = oppgave.eksternId,
@@ -25,14 +46,13 @@ class K9SakOppgaveTilDVHMapper {
             tekniskTid = OffsetDateTime.now(zoneId),
             mottattDato = LocalDateTime.parse(oppgave.hentVerdi("mottattDato")).toLocalDate(),
             registrertDato = LocalDateTime.parse(oppgave.hentVerdi("registrertDato")).toLocalDate(),
-            vedtaksDato = oppgave.hentVerdi("vedtaksDato")
-                ?.let { LocalDate.parse(it) },
+            vedtaksDato = vedtaksDato,
             relatertBehandlingId = null,
             vedtakId = oppgave.hentVerdi("vedtakId"), //TODO: callback mot K9? evt vedtakstopic, YtelseV1.vedtakReferanse
             saksnummer = oppgave.hentVerdi("saksnummer"),
             behandlingType = oppgave.hentVerdi("behandlingTypekode")
                 ?.let { BehandlingType.fraKode(it).kode },
-            behandlingStatus = BehandlingStatus.fraKode(oppgave.hentVerdi("behandlingsstatus")).kode,
+            behandlingStatus = behandlingStatus.kode,
             resultat = oppgave.hentVerdi("resultattype"),
             resultatBegrunnelse = null, //TODO: callback mot K9?
             utenlandstilsnitt = utledUtenlandstilsnitt(oppgave),
