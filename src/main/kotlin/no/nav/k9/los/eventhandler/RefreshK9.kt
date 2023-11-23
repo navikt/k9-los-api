@@ -34,7 +34,7 @@ fun CoroutineScope.refreshK9(
                 )
                 oppgaveListe.clear()
             } catch (e: Exception) {
-                log.error("Feilet ved refresh av oppgaver i k9-sak", e)
+                log.error("Feilet ved refresh av oppgaver i k9-sak: "+oppgaveListe.joinToString(", "), e)
             }
             oppgaveListe.add(channel.receive())
         } else {
