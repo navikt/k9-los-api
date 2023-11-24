@@ -27,7 +27,7 @@ val assertkVersion = "0.27.0"
 val mockkVersion = "1.13.8"
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.9.20"
+    id("org.jetbrains.kotlin.jvm") version "1.9.21"
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
