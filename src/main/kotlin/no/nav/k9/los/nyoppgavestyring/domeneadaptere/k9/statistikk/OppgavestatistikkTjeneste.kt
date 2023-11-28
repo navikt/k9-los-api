@@ -7,6 +7,7 @@ import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
+import no.nav.k9.statistikk.kontrakter.JsonSchemas.behandling
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
@@ -95,9 +96,15 @@ class OppgavestatistikkTjeneste(
         val erKode6 = runBlocking { pepClient.erSakKode6(sak.saksnummer) }
         if (erKode6) {
             sak = nullUtEventuelleSensitiveFelter(sak)
-            behandling = nullUtEventuelleSensitiveFelter(behandling)
         }
-        statistikkPublisher.publiser(sak, behandling)
+
+        behandling.map {
+            if (erKode6) {
+                nullUtEventuelleSensitiveFelter(it)
+            } else it
+        }.forEach {
+            statistikkPublisher.publiser(sak, it)
+        }
     }
 
     private fun nullUtEventuelleSensitiveFelter(sak: Sak): Sak {
@@ -113,26 +120,20 @@ class OppgavestatistikkTjeneste(
         )
     }
 
-    private fun byggOppgavestatistikk(oppgaveId: Long, tx: TransactionalSession): Pair<Sak, Behandling> {
+    private fun byggOppgavestatistikk(oppgaveId: Long, tx: TransactionalSession): Pair<Sak, List<Behandling>> {
         val oppgave = oppgaveRepository.hentOppgaveForId(tx, oppgaveId)
 
-        var behandling: Behandling
-        var sak: Sak
-        when (oppgave.oppgavetype.eksternId) {
-            "k9sak" -> {
-                behandling = K9SakOppgaveTilDVHMapper().lagBehandling(oppgave)
-                sak = K9SakOppgaveTilDVHMapper().lagSak(oppgave)
-            }
-
-            "k9klage" -> {
-                behandling = K9KlageOppgaveTilDVHMapper().lagBehandling(oppgave)
-                sak = K9KlageOppgaveTilDVHMapper().lagSak(oppgave)
-            }
-
+        return when (oppgave.oppgavetype.eksternId) {
+            "k9sak" -> Pair(
+                    K9SakOppgaveTilDVHMapper().lagSak(oppgave),
+                    K9SakOppgaveTilDVHMapper().lagBehandlinger(oppgave)
+                )
+            "k9klage" -> Pair(
+                    K9KlageOppgaveTilDVHMapper().lagSak(oppgave),
+                    listOf(K9KlageOppgaveTilDVHMapper().lagBehandling(oppgave))
+                )
             else -> throw IllegalStateException("Ukjent oppgavetype for sending til DVH: ${oppgave.oppgavetype.eksternId}")
         }
-
-        return Pair(sak, behandling)
     }
 
     fun slettStatistikkgrunnlag() {
