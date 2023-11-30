@@ -70,7 +70,7 @@ class SqlOppgaveQuery(
             return
         }
 
-        val index = queryParams.size;
+        val index = queryParams.size + orderByParams.size
         when (feltkode) {
             "oppgavestatus" -> {
                 query += "${combineOperator.sql} o.status ${operator.sql} (:oppgavestatus$index) "
@@ -96,7 +96,7 @@ class SqlOppgaveQuery(
         var newQuery = sqlMedParams.query
         val newQueryParams = mutableMapOf<String, Any?>()
         sqlMedParams.queryParams.forEach { (oldKey, oldValue) ->
-            val index = queryParams.size + newQueryParams.size
+            val index = queryParams.size + orderByParams.size + newQueryParams.size
             val newKey = ":$oldKey$index"
             newQuery = newQuery.replace(":$oldKey", newKey)
             newQueryParams[newKey] = oldValue
@@ -113,7 +113,7 @@ class SqlOppgaveQuery(
     }
 
     private fun medOppgavefelt(combineOperator: CombineOperator, feltområde: String, feltkode: String, operator: FeltverdiOperator, feltverdi: Any) {
-        val index = queryParams.size
+        val index = queryParams.size + orderByParams.size
 
         query += """
                 ${combineOperator.sql} EXISTS (
@@ -183,7 +183,7 @@ class SqlOppgaveQuery(
     }
 
     private fun utenOppgavefelt(combineOperator: CombineOperator, feltområde: String, feltkode: String, operator: FeltverdiOperator) {
-        val index = queryParams.size
+        val index = queryParams.size + orderByParams.size
 
         queryParams.putAll(mutableMapOf(
             "feltOmrade$index" to feltområde,
@@ -246,12 +246,12 @@ class SqlOppgaveQuery(
             val sqlMedParams = sikreUnikeParams(
                 it.orderBy(OrderByInput(now, feltområde, feltkode, økende))
             )
-            query += ", " + sqlMedParams.query
-            queryParams.putAll(sqlMedParams.queryParams)
+            orderBySql += ", " + sqlMedParams.query
+            orderByParams.putAll(sqlMedParams.queryParams)
             return
         }
 
-        val index = orderByParams.size;
+        val index = queryParams.size + orderByParams.size;
 
         orderByParams.putAll(mutableMapOf(
             "orderByfeltOmrade$index" to feltområde,
