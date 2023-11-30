@@ -110,7 +110,8 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
                     tolkesSom = "String",
                     true,
                     false,
-                    kodeverkreferanse = null
+                    kodeverkreferanse = null,
+                    transientFeltutleder = null,
                 ),
                 FeltdefinisjonDto(
                     id = "opprettet",
@@ -119,7 +120,8 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
                     tolkesSom = "Date",
                     true,
                     false,
-                    kodeverkreferanse = null
+                    kodeverkreferanse = null,
+                    transientFeltutleder = null,
                 ),
                 FeltdefinisjonDto(
                     id = "aktorId",
@@ -128,7 +130,9 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
                     tolkesSom = "String",
                     true,
                     false,
-                    kodeverkreferanse = null
+                    kodeverkreferanse = null,
+                    transientFeltutleder = null,
+
                 ),
                 FeltdefinisjonDto(
                     id = "akkumulertVentetidSaksbehandler",
@@ -137,7 +141,8 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
                     tolkesSom = "Duration",
                     false,
                     false,
-                    kodeverkreferanse = null
+                    kodeverkreferanse = null,
+                    transientFeltutleder = null,
                 ),
                 FeltdefinisjonDto(
                     id = "avventerSaksbehandler",
@@ -146,7 +151,8 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
                     tolkesSom = "boolean",
                     false,
                     false,
-                    kodeverkreferanse = null
+                    kodeverkreferanse = null,
+                    transientFeltutleder = null,
                 )
             )
         )

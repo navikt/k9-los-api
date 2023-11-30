@@ -91,6 +91,11 @@
           "påkrevd": false
         },
         {
+          "id": "liggerHosBeslutter",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
           "id": "totrinnskontroll",
           "visPåOppgave": true,
           "påkrevd": true

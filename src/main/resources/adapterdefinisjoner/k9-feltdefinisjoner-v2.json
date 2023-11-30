@@ -162,6 +162,15 @@
       "kokriterie": false
     },
     {
+      "id": "liggerHosBeslutter",
+      "visningsnavn": "Ligger hos beslutter",
+      "listetype": false,
+      "tolkesSom": "boolean",
+      "visTilBruker": true,
+      "kokriterie": true,
+      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.transientfeltutleder.K9SakBeslutterTransientFeltutleder"
+    },
+    {
       "id": "totrinnskontroll",
       "visningsnavn": "Må gjennom totrinnskontroll",
       "listetype": false,

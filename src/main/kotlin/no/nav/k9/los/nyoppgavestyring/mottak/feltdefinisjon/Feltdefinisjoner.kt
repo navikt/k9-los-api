@@ -1,6 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon
 
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
+import no.nav.k9.los.nyoppgavestyring.transientfeltutleder.GyldigeTransientFeltutleder
 
 class Feltdefinisjoner(
     val område: Område,
@@ -18,7 +19,8 @@ class Feltdefinisjoner(
                 tolkesSom = feltdefinisjonDto.tolkesSom,
                 visTilBruker = feltdefinisjonDto.visTilBruker,
                 kokriterie = feltdefinisjonDto.kokriterie,
-                kodeverkreferanse = feltdefinisjonDto.kodeverkreferanse?.let { kodeverkreferanseDto -> Kodeverkreferanse(kodeverkreferanseDto) }
+                kodeverkreferanse = feltdefinisjonDto.kodeverkreferanse?.let { kodeverkreferanseDto -> Kodeverkreferanse(kodeverkreferanseDto) },
+                transientFeltutleder = feltdefinisjonDto.transientFeltutleder?.let { GyldigeTransientFeltutleder.hentFeltutleder(it) }
             )
         }.toSet()
     )
