@@ -30,9 +30,6 @@ import no.nav.k9.los.integrasjon.k9.IK9SakService
 import no.nav.k9.los.integrasjon.k9.K9SakService
 import no.nav.k9.los.integrasjon.k9.K9SakServiceLocal
 import no.nav.k9.los.integrasjon.kafka.AsynkronProsesseringV1Service
-import no.nav.k9.los.integrasjon.omsorgspenger.IOmsorgspengerService
-import no.nav.k9.los.integrasjon.omsorgspenger.OmsorgspengerService
-import no.nav.k9.los.integrasjon.omsorgspenger.OmsorgspengerServiceLocal
 import no.nav.k9.los.integrasjon.pdl.IPdlService
 import no.nav.k9.los.integrasjon.pdl.PdlService
 import no.nav.k9.los.integrasjon.pdl.PdlServiceLocal
@@ -281,7 +278,6 @@ fun common(app: Application, config: Configuration) = module {
             pepClient = get(),
             azureGraphService = get(),
             statistikkRepository = get(),
-            omsorgspengerService = get(),
             reservasjonOversetter = get()
         )
     }
@@ -558,10 +554,6 @@ fun localDevConfig() = module {
         K9SakServiceLocal()
     }
 
-    single<IOmsorgspengerService> {
-        OmsorgspengerServiceLocal()
-    }
-
     single<K9SakBerikerInterfaceKludge> {
         K9SakBerikerKlientLocal()
     }
@@ -581,13 +573,6 @@ fun preprodConfig(config: Configuration) = module {
         K9SakService(
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().naisSts()
-        )
-    }
-
-    single<IOmsorgspengerService> {
-        OmsorgspengerService(
-            configuration = get(),
-            accessTokenClient = get<AccessTokenClientResolver>().azureV2()
         )
     }
 
@@ -623,13 +608,6 @@ fun prodConfig(config: Configuration) = module {
         K9SakService(
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().naisSts()
-        )
-    }
-
-    single<IOmsorgspengerService> {
-        OmsorgspengerService(
-            configuration = get(),
-            accessTokenClient = get<AccessTokenClientResolver>().azureV2()
         )
     }
 

@@ -65,6 +65,7 @@ import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveApis
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.SaksbehandlerOppgavekoApis
 import no.nav.k9.los.tjenester.sse.RefreshKlienterWebSocket
 import no.nav.k9.los.tjenester.sse.SseEvent
+import org.koin.core.context.GlobalContext
 import org.koin.core.qualifier.named
 import org.koin.ktor.ext.getKoin
 import org.koin.ktor.plugin.Koin
@@ -84,6 +85,7 @@ fun Application.k9Los() {
 
     install(Koin) {
         modules(selectModuleBasedOnProfile(this@k9Los, config = configuration))
+        GlobalContext.startKoin(this)
     }
 
     val koin = getKoin()

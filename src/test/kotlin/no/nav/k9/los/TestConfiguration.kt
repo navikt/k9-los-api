@@ -32,13 +32,13 @@ object TestConfiguration {
 
         map["nav.auth.clients.size"] = "2"
         map["nav.auth.clients.0.alias"] = "nais-sts"
-        map["nav.auth.clients.0.client_id"] = "srvpps-k9-los-api"
-        map["nav.auth.clients.0.client_secret"] = "very-secret"
-        map["nav.auth.clients.0.discovery_endpoint"] =
-            "http://vtp:8060/rest/isso/oauth2/.well-known/openid-configuration"
+        map["nav.auth.clients.0.client_id"] = "k9-los"
+        map["nav.auth.clients.0.private_key_jwk"] = ClientCredentials.ClientA.privateKeyJwk
+        map["nav.auth.clients.0.certificate_hex_thumbprint"] = ClientCredentials.ClientA.certificateHexThumbprint
+        map["nav.auth.clients.0.discovery_endpoint"] = "http://azure-mock:8100/v2.0/.well-known/openid-configuration"
 
         map["nav.auth.clients.1.alias"] = "azure-v2"
-        map["nav.auth.clients.1.client_id"] = "pleiepengesoknad-prosessering"
+        map["nav.auth.clients.1.client_id"] = "k9-los"
         map["nav.auth.clients.1.private_key_jwk"] = ClientCredentials.ClientA.privateKeyJwk
         map["nav.auth.clients.1.certificate_hex_thumbprint"] = ClientCredentials.ClientA.certificateHexThumbprint
         map["nav.auth.clients.1.discovery_endpoint"] = "http://azure-mock:8100/v2.0/.well-known/openid-configuration"

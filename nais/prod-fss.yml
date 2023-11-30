@@ -25,9 +25,6 @@ spec:
     requests:
       cpu: "3000m"
       memory: "6144Mi"
-  ingresses:
-    - https://k9-los-api.nais.adeo.no
-    - https://k9-los-api.prod-fss.nais.io
   replicas:
     min: 1
     max: 1
@@ -81,9 +78,6 @@ spec:
     - name: APP_K9SAK_FRONTEND_URL
       value: https://k9.intern.nav.no/k9/web
 
-    - name: APP_OMSORGSPENGER_URL
-      value: https://omsorgspenger-sak.intern.nav.no
-
       # Kafka
     - name: BOOTSTRAP_SERVERS
       value: a01apvl00145.adeo.no:8443,a01apvl00146.adeo.no:8443,a01apvl00147.adeo.no:8443,a01apvl00148.adeo.no:8443,a01apvl00149.adeo.no:8443,a01apvl00150.adeo.no:8443
@@ -130,10 +124,6 @@ spec:
       value: "k9"
     - name: AUDITLOGGER_PRODUCT
       value: "k9-los-api"
-
-      # token scope
-    - name: OMSORGSPENGER_SAK_SCOPE
-      value: "api://prod-gcp.omsorgspenger.omsorgspenger-sak/.default"
 
       # feature toggles
     - name: NY_OPPGAVESTYRING

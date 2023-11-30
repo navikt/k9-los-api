@@ -27,8 +27,6 @@ import no.nav.k9.los.domene.repository.StatistikkRepository
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.abac.PepClientLocal
 import no.nav.k9.los.integrasjon.azuregraph.AzureGraphService
-import no.nav.k9.los.integrasjon.omsorgspenger.IOmsorgspengerService
-import no.nav.k9.los.integrasjon.omsorgspenger.OmsorgspengerService
 import no.nav.k9.los.integrasjon.pdl.PdlService
 import no.nav.k9.los.integrasjon.pdl.PersonPdl
 import no.nav.k9.los.integrasjon.pdl.PersonPdlResponse
@@ -66,7 +64,6 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
         val oppgaveRepository = get<OppgaveRepository>()
         val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
 
-        val omsorgspengerService = get<IOmsorgspengerService>()
         val oppgaveKøRepository = OppgaveKøRepository(
             dataSource = get(),
             oppgaveRepositoryV2,
@@ -98,7 +95,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             oppgaveKøRepository,
             saksbehandlerRepository,
             pdlService,
-            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, omsorgspengerService, reservasjonOversetter
+            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, reservasjonOversetter
         )
 
         val uuid = UUID.randomUUID()
@@ -213,7 +210,6 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             pepClient = PepClientLocal()
         )
         val pdlService = mockk<PdlService>()
-        val omsorgspengerService = mockk<OmsorgspengerService>()
         val saksbehandlerRepository = SaksbehandlerRepository(dataSource = dataSource,
             pepClient = PepClientLocal())
 
@@ -236,7 +232,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             oppgaveKøRepository,
             saksbehandlerRepository,
             pdlService,
-            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, omsorgspengerService, reservasjonOversetter
+            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, reservasjonOversetter
         )
 
         val oppgave1 = Oppgave(
@@ -272,7 +268,6 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
         coEvery {  azureGraphService.hentIdentTilInnloggetBruker() } returns "123"
         every { config.koinProfile() } returns KoinProfile.LOCAL
         coEvery { pepClient.harTilgangTilOppgave(any()) } returns true
-        coEvery { omsorgspengerService.hentOmsorgspengerSakDto(any()) } returns null
         coEvery { pdlService.person(any()) } returns PersonPdlResponse(false, PersonPdl(data = PersonPdl.Data(
             hentPerson = PersonPdl.Data.HentPerson(
                 folkeregisteridentifikator = listOf(PersonPdl.Data.HentPerson.Folkeregisteridentifikator("12345678901")),
@@ -325,7 +320,6 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
         val reservasjonOversetter = get<ReservasjonOversetter>()
         val config = mockk<Configuration>()
         val pdlService = mockk<PdlService>()
-        val omsorgspengerService = mockk<OmsorgspengerService>()
         val statistikkRepository = StatistikkRepository(dataSource = dataSource)
         val pepClient = mockk<IPepClient>()
         val azureGraphService = mockk<AzureGraphService>()
@@ -337,7 +331,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             oppgaveKøRepository,
             saksbehandlerRepository,
             pdlService,
-            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, omsorgspengerService, reservasjonOversetter
+            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, reservasjonOversetter
         )
 
 

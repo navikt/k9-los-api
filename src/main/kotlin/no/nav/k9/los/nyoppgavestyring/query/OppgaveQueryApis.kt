@@ -6,18 +6,20 @@ import io.ktor.server.locations.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.Route
+import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.integrasjon.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.tilCsv
+import org.koin.java.KoinJavaComponent
 import org.koin.ktor.ext.inject
 import java.util.*
 
 fun Route.OppgaveQueryApis() {
     val requestContextService by inject<RequestContextService>()
-    val oppgaveQueryRepository by inject<OppgaveQueryRepository>()
     val oppgaveQueryService by inject<OppgaveQueryService>()
+    val pepClient by KoinJavaComponent.inject<IPepClient>(IPepClient::class.java)
 
     @Location("/query")
     class queryOppgave
@@ -27,6 +29,19 @@ fun Route.OppgaveQueryApis() {
         requestContextService.withRequestContext(call) {
             val idToken = kotlin.coroutines.coroutineContext.idToken()
             call.respond(oppgaveQueryService.query(oppgaveQuery, idToken))
+        }
+    }
+
+    @Location("/validate")
+    class validateOppgave
+
+    post { _: validateOppgave ->
+        val oppgaveQuery = call.receive<OppgaveQuery>()
+        requestContextService.withRequestContext(call) {
+            if (!pepClient.erOppgaveStyrer()) {
+                call.respond(HttpStatusCode.Forbidden);
+            }
+            call.respond(oppgaveQueryService.validate(oppgaveQuery))
         }
     }
 
