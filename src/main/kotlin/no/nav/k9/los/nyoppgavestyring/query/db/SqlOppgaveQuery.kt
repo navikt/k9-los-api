@@ -28,7 +28,7 @@ class SqlOppgaveQuery(
                   ) INNER JOIN Omrade oppgave_omrade ON (
                     oppgave_omrade.id = ot.omrade_id
                   )
-                WHERE aktiv = true
+                WHERE aktiv = true 
             """.trimIndent()
 
     private var orderBySql = """

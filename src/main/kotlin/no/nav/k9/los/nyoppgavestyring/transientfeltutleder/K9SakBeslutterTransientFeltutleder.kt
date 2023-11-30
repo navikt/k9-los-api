@@ -11,7 +11,7 @@ class K9SakBeslutterTransientFeltutleder: TransientFeltutleder{
     }
 
     override fun where(input: WhereInput): SqlMedParams {
-        val prefix: String = if (input.feltverdi == true) "" else "NOT"
+        val prefix: String = if (input.feltverdi == "true") "" else "NOT"
         val query = """
                 $prefix EXISTS (
                     SELECT 'Y'
@@ -23,9 +23,10 @@ class K9SakBeslutterTransientFeltutleder: TransientFeltutleder{
                       fo.id = fd.omrade_id
                     )
                     WHERE ov.oppgave_id = o.id
-                      AND fo.ekstern_id = "K9""
-                      AND fd.ekstern_id = "løsbartAksjonspunkt"
-                      AND fd.verdi = '5016'
+                      AND fo.ekstern_id = 'K9'
+                      AND fd.ekstern_id = 'løsbartAksjonspunkt'
+                      AND ov.verdi = '5016'
+                )
             """.trimIndent()
         return SqlMedParams(query, mutableMapOf())
     }
@@ -43,9 +44,9 @@ class K9SakBeslutterTransientFeltutleder: TransientFeltutleder{
                       fo.id = fd.omrade_id
                     )
                     WHERE ov.oppgave_id = o.id
-                      AND fo.ekstern_id = "K9""
-                      AND fd.ekstern_id = "løsbartAksjonspunkt"
-                      AND fd.verdi = '5016'
+                      AND fo.ekstern_id = 'K9'
+                      AND fd.ekstern_id = 'løsbartAksjonspunkt'
+                      AND ov.verdi = '5016'
                 ), false) $order
             """.trimIndent()
 
