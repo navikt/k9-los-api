@@ -85,7 +85,7 @@ abstract class LøpendeDurationTransientFeltutleder(
         }
 
         val løpendeDuration = if (skalTelleTidPåSisteVersjon) {
-            akkumulertDuration + Duration.between(input.now, input.oppgave.endretTidspunkt)
+            akkumulertDuration + Duration.between(input.oppgave.endretTidspunkt, input.now)
         } else {
             akkumulertDuration
         }
