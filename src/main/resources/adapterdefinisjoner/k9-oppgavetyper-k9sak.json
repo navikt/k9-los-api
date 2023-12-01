@@ -192,6 +192,36 @@
           "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.AkkumulertVentetidAnnetIkkeSaksbehandlingstid"
         },
         {
+          "id": "akkumulertVentetidAnnetIkkeSaksbehandlingstid",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "akkumulertVentetidAnnet",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "akkumulertVentetidArbeidsgiver",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "akkumulertVentetidSaksbehandler",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "akkumulertVentetidSøker",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "akkumulertVentetidTekniskFeil",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
           "id": "oppgavesaksbehandlingstid",
           "visPåOppgave": true,
           "påkrevd": false
