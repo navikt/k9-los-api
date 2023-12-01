@@ -26,13 +26,49 @@ abstract class LøpendeDurationTransientFeltutleder(
 ): TransientFeltutleder{
 
     private fun sumLøpendeDuration(now: LocalDateTime): SqlMedParams {
-        val minstEtDurationFeltSql = sqlVelgFelt(durationfelter)
-        val løpendetidfelterSql = sqlVelgFelt(løpendetidfelter)
+        val sumDurationFelter = sumDurationfelter()
+        val sumLøpendetidfelter = sumLøpendetidfelter(now)
 
+        val sqlMedParams = listOfNotNull(sumDurationFelter, sumLøpendetidfelter).reduce { a, b ->
+            SqlMedParams("(${a.query} + ${b.query})", a.queryParams + b.queryParams)
+        }
+
+        return sqlMedParams
+    }
+    private fun sumDurationfelter(): SqlMedParams? {
+        if (durationfelter.isEmpty()) {
+            return null
+        }
+
+        val minstEtDurationFeltSql = sqlVelgFelt(durationfelter)
         val query = """
-                (
-                    COALESCE((
-                        SELECT SUM(CAST(ov.verdi AS interval)) 
+            COALESCE((
+                SELECT SUM(CAST(ov.verdi AS interval)) 
+                FROM Oppgavefelt_verdi ov INNER JOIN Oppgavefelt f ON (
+                  f.id = ov.oppgavefelt_id
+                ) INNER JOIN Feltdefinisjon fd ON (
+                  fd.id = f.feltdefinisjon_id
+                ) INNER JOIN Omrade fo ON (
+                  fo.id = fd.omrade_id
+                )
+                WHERE ov.oppgave_id = o.id
+                  AND $minstEtDurationFeltSql
+            ), INTERVAL '0 days')
+            """.trimIndent()
+        return SqlMedParams(query, mapOf())
+    }
+
+    private fun sumLøpendetidfelter(now: LocalDateTime): SqlMedParams? {
+        if (løpendetidfelter.isEmpty()) {
+            return null
+        }
+
+        val løpendetidfelterSql = sqlVelgFelt(løpendetidfelter)
+        val query = """
+            COALESCE((
+                    SELECT (:now - o.endret_tidspunkt)
+                    WHERE EXISTS (
+                        SELECT 'Y'
                         FROM Oppgavefelt_verdi ov INNER JOIN Oppgavefelt f ON (
                           f.id = ov.oppgavefelt_id
                         ) INNER JOIN Feltdefinisjon fd ON (
@@ -41,26 +77,10 @@ abstract class LøpendeDurationTransientFeltutleder(
                           fo.id = fd.omrade_id
                         )
                         WHERE ov.oppgave_id = o.id
-                          AND $minstEtDurationFeltSql
-                    ), INTERVAL '0 days')
-                    +
-                    COALESCE((
-                        SELECT (:now - o.endret_tidspunkt)
-                        WHERE EXISTS (
-                            SELECT 'Y'
-                            FROM Oppgavefelt_verdi ov INNER JOIN Oppgavefelt f ON (
-                              f.id = ov.oppgavefelt_id
-                            ) INNER JOIN Feltdefinisjon fd ON (
-                              fd.id = f.feltdefinisjon_id
-                            ) INNER JOIN Omrade fo ON (
-                              fo.id = fd.omrade_id
-                            )
-                            WHERE ov.oppgave_id = o.id
-                              AND ov.verdi = 'true'
-                              AND $løpendetidfelterSql
-                        )
-                    ), INTERVAL '0 days')
-                )
+                          AND ov.verdi = 'true'
+                          AND $løpendetidfelterSql
+                    )
+            ), INTERVAL '0 days')
             """.trimIndent()
 
         return SqlMedParams(query, mapOf("now" to now))
