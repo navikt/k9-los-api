@@ -97,8 +97,8 @@ class SqlOppgaveQuery(
         val newQueryParams = mutableMapOf<String, Any?>()
         sqlMedParams.queryParams.forEach { (oldKey, oldValue) ->
             val index = queryParams.size + orderByParams.size + newQueryParams.size
-            val newKey = ":$oldKey$index"
-            newQuery = newQuery.replace(":$oldKey", newKey)
+            val newKey = "$oldKey$index"
+            newQuery = newQuery.replace(":$oldKey", ":$newKey")
             newQueryParams[newKey] = oldValue
         }
         return SqlMedParams(newQuery, newQueryParams)
