@@ -3,6 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.transientfeltutleder
 import no.nav.k9.los.nyoppgavestyring.query.db.OmrådeOgKode
 import no.nav.k9.los.spi.felter.*
 import org.postgresql.util.PGInterval
+import java.time.Duration
 import java.time.LocalDateTime
 
 abstract class LøpendeDurationTransientFeltutleder(
@@ -10,7 +11,7 @@ abstract class LøpendeDurationTransientFeltutleder(
      * Felter med durations som alltid skal summeres opp.
      *
      * ADVARSEL: Disse verdiene legges inn direkte inn i SQL uten
-     *           uten prepared statement.
+     *           prepared statement.
      */
     val durationfelter: List<OmrådeOgKode> = listOf(),
 
@@ -19,7 +20,7 @@ abstract class LøpendeDurationTransientFeltutleder(
      * til nå-tid. Det er tilstrekkelig at minst ett felt er true.
      *
      * ADVARSEL: Disse verdiene legges inn direkte inn i SQL uten
-     *           uten prepared statement.
+     *           prepared statement.
      */
     val løpendetidfelter: List<OmrådeOgKode> = listOf()
 ): TransientFeltutleder{
@@ -74,9 +75,22 @@ abstract class LøpendeDurationTransientFeltutleder(
     }
 
     override fun hentVerdi(input: HentVerdiInput): List<String> {
-        val verdi = input.oppgave.hentVerdi("K9", "løsbartAksjonspunkt")
-        val erTilBeslutter = (verdi != null && verdi == "5016").toString()
-        return listOf(erTilBeslutter)
+        val akkumulertDuration = durationfelter.map { områdeOgKode ->
+            val verdi = input.oppgave.hentVerdi(områdeOgKode.område!!, områdeOgKode.kode)
+            verdi?.let { Duration.parse(verdi) } ?: Duration.ZERO
+        }.reduce { d1, d2 -> d1 + d2}
+
+        val skalTelleTidPåSisteVersjon = løpendetidfelter.any { områdeOgKode ->
+            input.oppgave.hentVerdi(områdeOgKode.område!!, områdeOgKode.kode)?.let { it == "true" } ?: false
+        }
+
+        val løpendeDuration = if (skalTelleTidPåSisteVersjon) {
+            akkumulertDuration + Duration.between(input.now, input.oppgave.endretTidspunkt)
+        } else {
+            akkumulertDuration
+        }
+
+        return listOf(løpendeDuration.toString())
     }
 
     override fun where(input: WhereInput): SqlMedParams {
