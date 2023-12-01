@@ -192,6 +192,11 @@
           "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.AkkumulertVentetidAnnetIkkeSaksbehandlingstid"
         },
         {
+          "id": "saksbehandlingstid",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
           "id": "helautomatiskBehandlet",
           "visPåOppgave": false,
           "påkrevd": true
