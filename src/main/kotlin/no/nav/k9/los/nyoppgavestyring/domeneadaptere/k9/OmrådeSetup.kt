@@ -202,6 +202,18 @@ object KodeverkSynlighetRegler {
     fun behandlingType(behandlingType: BehandlingType): KodeverkSynlighet {
         return when (behandlingType) {
             BehandlingType.ANKE -> KodeverkSynlighet.SKJULT
+            BehandlingType.UNNTAKSBEHANDLING,
+            BehandlingType.PAPIRSØKNAD,
+            BehandlingType.PAPIRETTERSENDELSE,
+            BehandlingType.PAPIRINNTEKTSOPPLYSNINGER,
+            BehandlingType.DIGITAL_ETTERSENDELSE,
+            BehandlingType.INNLOGGET_CHAT,
+            BehandlingType.SKRIV_TIL_OSS_SPØRMSÅL,
+            BehandlingType.SKRIV_TIL_OSS_SVAR,
+            BehandlingType.SAMTALEREFERAT,
+            BehandlingType.KOPI,
+            BehandlingType.UTEN_FNR_DNR,
+            BehandlingType.UKJENT -> KodeverkSynlighet.SYNLIG_AVANSERT
             else -> KodeverkSynlighet.SYNLIG
         }
     }
@@ -209,6 +221,8 @@ object KodeverkSynlighetRegler {
     fun ytelseType(ytelseType: FagsakYtelseType): KodeverkSynlighet {
         return when(ytelseType) {
             FagsakYtelseType.FRISINN -> KodeverkSynlighet.SKJULT
+            FagsakYtelseType.OLP,
+            FagsakYtelseType.UKJENT -> KodeverkSynlighet.SYNLIG_AVANSERT
             else -> KodeverkSynlighet.SYNLIG
         }
     }
