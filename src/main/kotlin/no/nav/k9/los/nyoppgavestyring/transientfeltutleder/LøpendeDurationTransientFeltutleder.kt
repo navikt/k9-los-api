@@ -68,11 +68,14 @@ abstract class LøpendeDurationTransientFeltutleder(
 
     private fun sqlVelgFelt(felter: List<OmrådeOgKode>): String {
         return "(" + felter.map {
-            "fo.ekstern_id = '${it.område}' AND fd.ekstern_id = '${it.kode}'"
+            områdeOgKodeSql(it)
         }.reduce { ok1, ok2 ->
             "$ok1 OR $ok2"
         } + ")"
     }
+
+    private fun områdeOgKodeSql(områdeOgKode: OmrådeOgKode) =
+        "fo.ekstern_id = '${områdeOgKode.område}' AND fd.ekstern_id = '${områdeOgKode.kode}'"
 
     override fun hentVerdi(input: HentVerdiInput): List<String> {
         val akkumulertDuration = durationfelter.map { områdeOgKode ->

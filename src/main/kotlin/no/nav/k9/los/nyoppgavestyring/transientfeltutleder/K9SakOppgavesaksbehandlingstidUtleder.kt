@@ -2,7 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.transientfeltutleder
 
 import no.nav.k9.los.nyoppgavestyring.query.db.OmrådeOgKode
 
-class K9SakSaksbehandlingstidUtleder: LøpendeDurationTransientFeltutleder(
+class K9SakOppgavesaksbehandlingstidUtleder: LøpendeDurationTransientFeltutleder(
     durationfelter = listOf(
         OmrådeOgKode("K9", "akkumulertVentetidSaksbehandlerForTidligereVersjoner"),
         OmrådeOgKode("K9", "akkumulertVentetidTekniskFeilForTidligereVersjoner"),
