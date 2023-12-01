@@ -311,13 +311,13 @@
       "kokriterie": false
     },
     {
-      "id": "saksbehandlingstid",
-      "visningsnavn": "Saksbehandlingstid",
+      "id": "oppgavesaksbehandlingstid",
+      "visningsnavn": "Oppgavesaksbehandlingstid",
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": true,
       "kokriterie": true,
-      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.transientfeltutleder.K9SakSaksbehandlingstidUtleder"
+      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.transientfeltutleder.K9SakOppgavesaksbehandlingstidUtleder"
     },
     {
       "id": "aktivVenteårsak",
