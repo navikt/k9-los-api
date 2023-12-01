@@ -3,6 +3,6 @@ package no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon
 data class KodeverkVerdiDto(
     val verdi: String,
     val visningsnavn: String,
-    val avansert: Boolean = false,
+    val favoritt: Boolean = false,
     val beskrivelse: String? = null,
 )

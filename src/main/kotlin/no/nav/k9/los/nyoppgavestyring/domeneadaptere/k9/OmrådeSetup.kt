@@ -109,7 +109,7 @@ class OmrådeSetup(
             eksternId = "Resultattype",
             beskrivelse = null,
             uttømmende = true,
-            verdier = BehandlingResultatType.entries.lagDto(beskrivelse = null)
+            verdier = BehandlingResultatType.entries.lagK9Dto(beskrivelse = null)
         )
         feltdefinisjonTjeneste.oppdater(kodeverkDto)
     }
@@ -153,7 +153,7 @@ class OmrådeSetup(
             eksternId = "Venteårsak",
             beskrivelse = null,
             uttømmende = true,
-            verdier = Venteårsak.entries.lagDto(beskrivelse = null)
+            verdier = Venteårsak.entries.lagK9Dto(beskrivelse = null)
         )
         feltdefinisjonTjeneste.oppdater(kodeverkDto)
     }
@@ -164,14 +164,14 @@ class OmrådeSetup(
             eksternId = "Behandlingssteg",
             beskrivelse = null,
             uttømmende = false,
-            verdier = BehandlingStegType.entries.lagDto(beskrivelse = null)
+            verdier = BehandlingStegType.entries.lagK9Dto(beskrivelse = null)
         )
         feltdefinisjonTjeneste.oppdater(kodeverkDto)
     }
 
     fun <T: Kodeverdi> Collection<T>.lagDto(
         beskrivelse: String?,
-        synlighet: (T) -> KodeverkSynlighet = { KodeverkSynlighet.SYNLIG }
+        synlighet: (T) -> KodeverkSynlighet = { KodeverkSynlighet.SYNLIG_FAVORITT }
     ): List<KodeverkVerdiDto> {
         return associateWith { synlighet(it) }
             .filter { (_, synlighet) -> synlighet != KodeverkSynlighet.SKJULT }
@@ -179,13 +179,13 @@ class OmrådeSetup(
                 verdi = kodeverdi.kode,
                 visningsnavn = kodeverdi.navn,
                 beskrivelse = beskrivelse,
-                avansert = synlighet == KodeverkSynlighet.SYNLIG_AVANSERT
+                favoritt = synlighet == KodeverkSynlighet.SYNLIG_FAVORITT
             )}.sortedBy { it.visningsnavn }
     }
 
-    fun <T: KodeverdiK9Sak> Collection<T>.lagDto(
+    fun <T: KodeverdiK9Sak> Collection<T>.lagK9Dto(
         beskrivelse: String?,
-        synlighet: (T) -> KodeverkSynlighet = { KodeverkSynlighet.SYNLIG }
+        synlighet: (T) -> KodeverkSynlighet = { KodeverkSynlighet.SYNLIG_FAVORITT }
     ): List<KodeverkVerdiDto> {
         return associateWith { synlighet(it) }
             .filter { (_, synlighet) -> synlighet != KodeverkSynlighet.SKJULT }
@@ -193,7 +193,7 @@ class OmrådeSetup(
                 verdi = kodeverdi.kode,
                 visningsnavn = kodeverdi.navn,
                 beskrivelse = beskrivelse,
-                avansert = synlighet == KodeverkSynlighet.SYNLIG_AVANSERT
+                favoritt = synlighet == KodeverkSynlighet.SYNLIG_FAVORITT
             )}.sortedBy { it.visningsnavn }
     }
 }
@@ -213,8 +213,8 @@ object KodeverkSynlighetRegler {
             BehandlingType.SAMTALEREFERAT,
             BehandlingType.KOPI,
             BehandlingType.UTEN_FNR_DNR,
-            BehandlingType.UKJENT -> KodeverkSynlighet.SYNLIG_AVANSERT
-            else -> KodeverkSynlighet.SYNLIG
+            BehandlingType.UKJENT -> KodeverkSynlighet.SYNLIG
+            else -> KodeverkSynlighet.SYNLIG_FAVORITT
         }
     }
 
@@ -222,14 +222,14 @@ object KodeverkSynlighetRegler {
         return when(ytelseType) {
             FagsakYtelseType.FRISINN -> KodeverkSynlighet.SKJULT
             FagsakYtelseType.OLP,
-            FagsakYtelseType.UKJENT -> KodeverkSynlighet.SYNLIG_AVANSERT
-            else -> KodeverkSynlighet.SYNLIG
+            FagsakYtelseType.UKJENT -> KodeverkSynlighet.SYNLIG
+            else -> KodeverkSynlighet.SYNLIG_FAVORITT
         }
     }
 }
 
 enum class KodeverkSynlighet {
     SKJULT,
-    SYNLIG_AVANSERT,
-    SYNLIG;
+    SYNLIG,
+    SYNLIG_FAVORITT;
 }
