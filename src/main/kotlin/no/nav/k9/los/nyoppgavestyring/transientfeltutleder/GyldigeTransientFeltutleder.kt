@@ -9,7 +9,8 @@ class GyldigeTransientFeltutleder {
 
     companion object {
         val feltutledere: Map<String, TransientFeltutleder> = hashMapOf(
-            K9SakBeslutterTransientFeltutleder::class.java.canonicalName to K9SakBeslutterTransientFeltutleder()
+            K9SakBeslutterTransientFeltutleder::class.java.canonicalName to K9SakBeslutterTransientFeltutleder(),
+            K9SakSaksbehandlingstidUtleder::class.java.canonicalName to K9SakSaksbehandlingstidUtleder(),
         )
 
         fun hentFeltutleder(utleder: String): TransientFeltutleder {

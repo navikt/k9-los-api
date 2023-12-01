@@ -28,7 +28,7 @@ class K9SakBeslutterTransientFeltutleder: TransientFeltutleder{
                       AND ov.verdi = '5016'
                 )
             """.trimIndent()
-        return SqlMedParams(query, mutableMapOf())
+        return SqlMedParams(query, mapOf())
     }
 
     override fun orderBy(input: OrderByInput): SqlMedParams {
@@ -50,6 +50,6 @@ class K9SakBeslutterTransientFeltutleder: TransientFeltutleder{
                 ), false) $order
             """.trimIndent()
 
-        return SqlMedParams(query, mutableMapOf())
+        return SqlMedParams(query, mapOf())
     }
 }

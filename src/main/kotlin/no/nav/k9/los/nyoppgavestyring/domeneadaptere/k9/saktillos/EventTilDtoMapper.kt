@@ -272,15 +272,15 @@ class EventTilDtoMapper {
             ventekategori: Ventekategori?
         ): List<OppgaveFeltverdiDto> {
             if (ventekategori == null) {
-                return avventerIngen()
+                return avventerflagg("")
             }
             return when (ventekategori) {
-                Ventekategori.AVVENTER_SØKER -> avventerSøker()
-                Ventekategori.AVVENTER_ARBEIDSGIVER -> avventerArbeidsgiver()
-                Ventekategori.AVVENTER_SAKSBEHANDLER -> avventerSaksbehandler()
-                Ventekategori.AVVENTER_TEKNISK_FEIL -> avventerTekniskFeil()
-                Ventekategori.AVVENTER_ANNET -> avventerAnnet()
-                Ventekategori.AVVENTER_ANNET_IKKE_SAKSBEHANDLINGSTID -> avventerAnnetIkkeSaksbehandlingstid()
+                Ventekategori.AVVENTER_SØKER -> avventerflagg("avventerSøker")
+                Ventekategori.AVVENTER_ARBEIDSGIVER -> avventerflagg("avventerArbeidsgiver")
+                Ventekategori.AVVENTER_SAKSBEHANDLER -> avventerflagg("avventerSaksbehandler")
+                Ventekategori.AVVENTER_TEKNISK_FEIL -> avventerflagg("avventerTekniskFeil")
+                Ventekategori.AVVENTER_ANNET -> avventerflagg("avventerAnnet")
+                Ventekategori.AVVENTER_ANNET_IKKE_SAKSBEHANDLINGSTID -> avventerflagg("avventerAnnetIkkeSaksbehandlingstid")
                 else -> throw IllegalArgumentException("Ukjent ventekategori: ${ventekategori}")
             }
         }
@@ -292,34 +292,6 @@ class EventTilDtoMapper {
             return løsbareAksjonspunkt.firstOrNull { aksjonspunktTilstandDto ->
                 AksjonspunktDefinisjon.fraKode(aksjonspunktTilstandDto.aksjonspunktKode).defaultVentekategori == ventekategori
             } != null
-        }
-
-        private fun avventerSøker(): List<OppgaveFeltverdiDto> {
-            return avventerflagg("avventerSøker")
-        }
-
-        private fun avventerArbeidsgiver(): List<OppgaveFeltverdiDto> {
-            return avventerflagg("avventerArbeidsgiver")
-        }
-
-        private fun avventerSaksbehandler(): List<OppgaveFeltverdiDto> {
-            return avventerflagg("avventerSaksbehandler")
-        }
-
-        private fun avventerTekniskFeil(): List<OppgaveFeltverdiDto> {
-            return avventerflagg("avventerTekniskFeil")
-        }
-
-        private fun avventerAnnet(): List<OppgaveFeltverdiDto> {
-            return avventerflagg("avventerAnnet")
-        }
-
-        private fun avventerAnnetIkkeSaksbehandlingstid(): List<OppgaveFeltverdiDto> {
-            return avventerflagg("avventerAnnetIkkeSaksbehandlingstid")
-        }
-
-        private fun avventerIngen(): List<OppgaveFeltverdiDto> {
-            return avventerflagg("")
         }
 
         private fun avventerflagg(skalSettesTrue: String): List<OppgaveFeltverdiDto> {
