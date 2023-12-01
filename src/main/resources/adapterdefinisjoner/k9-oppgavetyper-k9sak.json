@@ -41,6 +41,11 @@
           "påkrevd": false
         },
         {
+          "id": "tidSidenMottattDato",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
           "id": "registrertDato",
           "visPåOppgave": true,
           "påkrevd": false

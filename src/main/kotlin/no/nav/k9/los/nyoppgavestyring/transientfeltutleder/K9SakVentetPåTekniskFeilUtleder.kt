@@ -6,6 +6,6 @@ class K9SakVentetPåTekniskFeilUtleder: LøpendeDurationTransientFeltutleder(
     durationfelter = listOf(
         OmrådeOgKode("K9", "akkumulertVentetidTekniskFeilForTidligereVersjoner")
     ),
-    løpendetidfelter = listOf(
+    løpendeTidHvisTrueFelter = listOf(
         OmrådeOgKode("K9", "avventerTekniskFeil")
     ))

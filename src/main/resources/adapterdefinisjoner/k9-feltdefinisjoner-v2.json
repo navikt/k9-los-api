@@ -102,6 +102,15 @@
       "kokriterie": true
     },
     {
+      "id": "tidSidenMottattDato",
+      "visningsnavn": "Tid siden mottatt dato",
+      "listetype": false,
+      "tolkesSom": "Duration",
+      "visTilBruker": true,
+      "kokriterie": true,
+      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.transientfeltutleder.K9SakTidSidenMottattDatoUtleder"
+    },
+    {
       "id": "registrertDato",
       "visningsnavn": "Registrert dato",
       "listetype": false,

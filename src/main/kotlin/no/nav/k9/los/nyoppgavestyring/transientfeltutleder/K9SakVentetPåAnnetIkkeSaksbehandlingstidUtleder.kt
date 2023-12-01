@@ -6,6 +6,6 @@ class K9SakVentetPåAnnetIkkeSaksbehandlingstidUtleder: LøpendeDurationTransien
     durationfelter = listOf(
         OmrådeOgKode("K9", "akkumulertVentetidAnnetIkkeSaksbehandlingstidForTidligereVersjoner")
     ),
-    løpendetidfelter = listOf(
+    løpendeTidHvisTrueFelter = listOf(
         OmrådeOgKode("K9", "avventerAnnetIkkeSaksbehandlingstid")
     ))

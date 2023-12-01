@@ -6,6 +6,6 @@ class K9SakVentetPåArbeidsgiverUtleder: LøpendeDurationTransientFeltutleder(
     durationfelter = listOf(
         OmrådeOgKode("K9", "akkumulertVentetidSaksbehandlerForTidligereVersjoner")
     ),
-    løpendetidfelter = listOf(
+    løpendeTidHvisTrueFelter = listOf(
         OmrådeOgKode("K9", "avventerSaksbehandler")
     ))

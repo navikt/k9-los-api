@@ -22,25 +22,36 @@ abstract class LøpendeDurationTransientFeltutleder(
      * ADVARSEL: Disse verdiene legges inn direkte inn i SQL uten
      *           prepared statement.
      */
-    val løpendetidfelter: List<OmrådeOgKode> = listOf()
+    val løpendeTidHvisTrueFelter: List<OmrådeOgKode> = listOf(),
+
+    /**
+     * Felter der vi regner duration ved å ta nå-tid og trekke fra
+     * angitt felt.
+     *
+     * ADVARSEL: Disse verdiene legges inn direkte inn i SQL uten
+     *           prepared statement.
+     */
+    val løpendeTidFelter: List<OmrådeOgKode> = listOf(),
 ): TransientFeltutleder{
 
     private fun sumLøpendeDuration(now: LocalDateTime): SqlMedParams {
         val sumDurationFelter = sumDurationfelter()
+        val sumLøpendTidHvisTruefelter = sumLøpendeTidHvisTruefelter(now)
         val sumLøpendetidfelter = sumLøpendetidfelter(now)
 
-        val sqlMedParams = listOfNotNull(sumDurationFelter, sumLøpendetidfelter).reduce { a, b ->
-            SqlMedParams("(${a.query} + ${b.query})", a.queryParams + b.queryParams)
+        val sqlMedParams = listOfNotNull(sumDurationFelter, sumLøpendTidHvisTruefelter, sumLøpendetidfelter).reduce { a, b ->
+            SqlMedParams("${a.query} + ${b.query}", a.queryParams + b.queryParams)
         }
 
-        return sqlMedParams
+        return SqlMedParams("(${sqlMedParams.query})", sqlMedParams.queryParams)
     }
+
     private fun sumDurationfelter(): SqlMedParams? {
         if (durationfelter.isEmpty()) {
             return null
         }
 
-        val minstEtDurationFeltSql = sqlVelgFelt(durationfelter)
+        val minstEttDurationFeltSql = sqlVelgFelt(durationfelter)
         val query = """
             COALESCE((
                 SELECT SUM(CAST(ov.verdi AS interval)) 
@@ -52,18 +63,18 @@ abstract class LøpendeDurationTransientFeltutleder(
                   fo.id = fd.omrade_id
                 )
                 WHERE ov.oppgave_id = o.id
-                  AND $minstEtDurationFeltSql
+                  AND $minstEttDurationFeltSql
             ), INTERVAL '0 days')
             """.trimIndent()
         return SqlMedParams(query, mapOf())
     }
 
-    private fun sumLøpendetidfelter(now: LocalDateTime): SqlMedParams? {
-        if (løpendetidfelter.isEmpty()) {
+    private fun sumLøpendeTidHvisTruefelter(now: LocalDateTime): SqlMedParams? {
+        if (løpendeTidHvisTrueFelter.isEmpty()) {
             return null
         }
 
-        val løpendetidfelterSql = sqlVelgFelt(løpendetidfelter)
+        val løpendeOppgavetidHvisTrueSql = sqlVelgFelt(løpendeTidHvisTrueFelter)
         val query = """
             COALESCE((
                     SELECT (:now - o.endret_tidspunkt)
@@ -78,10 +89,41 @@ abstract class LøpendeDurationTransientFeltutleder(
                         )
                         WHERE ov.oppgave_id = o.id
                           AND ov.verdi = 'true'
-                          AND $løpendetidfelterSql
+                          AND $løpendeOppgavetidHvisTrueSql
                     )
             ), INTERVAL '0 days')
             """.trimIndent()
+
+        return SqlMedParams(query, mapOf("now" to now))
+    }
+
+    private fun sumLøpendetidfelter(now: LocalDateTime): SqlMedParams? {
+        if (løpendeTidFelter.isEmpty()) {
+            return null
+        }
+
+        val query = "(" + løpendeTidFelter.map { områdeOgKode ->
+            """
+                (
+                    (
+                        :now
+                    ) - (
+                        SELECT CAST(ov.verdi AS timestamp)
+                        FROM Oppgavefelt_verdi ov INNER JOIN Oppgavefelt f ON (
+                          f.id = ov.oppgavefelt_id
+                        ) INNER JOIN Feltdefinisjon fd ON (
+                          fd.id = f.feltdefinisjon_id
+                        ) INNER JOIN Omrade fo ON (
+                          fo.id = fd.omrade_id
+                        )
+                        WHERE ov.oppgave_id = o.id
+                          AND ${områdeOgKodeSql(områdeOgKode)}
+                    )
+                )
+            """.trimIndent()
+        }.reduce { a,b ->
+            "$a + $b"
+        } + ")"
 
         return SqlMedParams(query, mapOf("now" to now))
     }
@@ -98,19 +140,26 @@ abstract class LøpendeDurationTransientFeltutleder(
         "fo.ekstern_id = '${områdeOgKode.område}' AND fd.ekstern_id = '${områdeOgKode.kode}'"
 
     override fun hentVerdi(input: HentVerdiInput): List<String> {
-        val akkumulertDuration = durationfelter.map { områdeOgKode ->
-            val verdi = input.oppgave.hentVerdi(områdeOgKode.område!!, områdeOgKode.kode)
-            verdi?.let { Duration.parse(verdi) } ?: Duration.ZERO
-        }.reduce { d1, d2 -> d1 + d2}
-
-        val skalTelleTidPåSisteVersjon = løpendetidfelter.any { områdeOgKode ->
-            input.oppgave.hentVerdi(områdeOgKode.område!!, områdeOgKode.kode)?.let { it == "true" } ?: false
+        var løpendeDuration = Duration.ZERO
+        if (!durationfelter.isEmpty()) {
+            løpendeDuration += durationfelter.map { områdeOgKode ->
+                val verdi = input.oppgave.hentVerdi(områdeOgKode.område!!, områdeOgKode.kode)
+                verdi?.let { Duration.parse(verdi) } ?: Duration.ZERO
+            }.reduce { d1, d2 -> d1 + d2 }
         }
 
-        val løpendeDuration = if (skalTelleTidPåSisteVersjon) {
-            akkumulertDuration + Duration.between(input.oppgave.endretTidspunkt, input.now)
-        } else {
-            akkumulertDuration
+        val skalTelleTidPåSisteVersjon = løpendeTidHvisTrueFelter.any { områdeOgKode ->
+            input.oppgave.hentVerdi(områdeOgKode.område!!, områdeOgKode.kode)?.let { it == "true" } ?: false
+        }
+        if (skalTelleTidPåSisteVersjon) {
+            løpendeDuration += Duration.between(input.oppgave.endretTidspunkt, input.now)
+        }
+
+        if (!løpendeTidFelter.isEmpty()) {
+            løpendeDuration += løpendeTidFelter.map { områdeOgKode ->
+                val verdi = input.oppgave.hentVerdi(områdeOgKode.område!!, områdeOgKode.kode)
+                verdi?.let { Duration.between(LocalDateTime.parse(verdi as String), input.now) } ?: Duration.ZERO
+            }.reduce { d1, d2 -> d1 + d2 }
         }
 
         return listOf(løpendeDuration.toString())

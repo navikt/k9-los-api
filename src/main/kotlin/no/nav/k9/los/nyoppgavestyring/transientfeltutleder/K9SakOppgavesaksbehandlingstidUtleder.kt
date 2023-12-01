@@ -9,7 +9,7 @@ class K9SakOppgavesaksbehandlingstidUtleder: LøpendeDurationTransientFeltutlede
         OmrådeOgKode("K9", "akkumulertVentetidArbeidsgiverForTidligereVersjoner"),
         OmrådeOgKode("K9", "akkumulertVentetidAnnetForTidligereVersjoner"),
     ),
-    løpendetidfelter = listOf(
+    løpendeTidHvisTrueFelter = listOf(
         OmrådeOgKode("K9", "avventerSaksbehandler"),
         OmrådeOgKode("K9", "avventerTekniskFeil"),
         OmrådeOgKode("K9", "avventerArbeidsgiver"),
