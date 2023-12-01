@@ -41,7 +41,6 @@ abstract class LøpendeDurationTransientFeltutleder(
                         )
                         WHERE ov.oppgave_id = o.id
                           AND $minstEtDurationFeltSql
-                        )
                     ), INTERVAL '0 days')
                     +
                     COALESCE((
@@ -58,18 +57,17 @@ abstract class LøpendeDurationTransientFeltutleder(
                             WHERE ov.oppgave_id = o.id
                               AND ov.verdi = 'true'
                               AND $løpendetidfelterSql
-                            )
                         )
                     ), INTERVAL '0 days')
                 )
             """.trimIndent()
 
-        return SqlMedParams(query, mutableMapOf("now" to now))
+        return SqlMedParams(query, mapOf("now" to now))
     }
 
     private fun sqlVelgFelt(felter: List<OmrådeOgKode>): String {
         return "(" + felter.map {
-            "fo.ekstern_id = ${it.område} AND fd.ekstern_id = ${it.kode}"
+            "fo.ekstern_id = '${it.område}' AND fd.ekstern_id = '${it.kode}'"
         }.reduce { ok1, ok2 ->
             "$ok1 OR $ok2"
         } + ")"
@@ -92,7 +90,6 @@ abstract class LøpendeDurationTransientFeltutleder(
         } catch (e: Exception) { null }
 
         val params = mapOf("inputVerdi" to inputVerdi)
-
         return SqlMedParams(query, (sumLøpendeDuration.queryParams + params))
     }
 
