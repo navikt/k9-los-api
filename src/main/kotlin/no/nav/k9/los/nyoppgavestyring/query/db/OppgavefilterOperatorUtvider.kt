@@ -27,7 +27,12 @@ object OppgavefilterOperatorUtvider {
             return dto
         }
 
-        val operators = when (EksternFeltverdiOperator.valueOf(dto.operator)) {
+        val operator = EksternFeltverdiOperator.valueOf(dto.operator)
+        if (operator == EksternFeltverdiOperator.INTERVAL) {
+            return lagInterval(dto)
+        }
+
+        val operators = when (operator) {
             EksternFeltverdiOperator.IN -> (CombineOperator.OR to FeltverdiOperator.EQUALS)
             EksternFeltverdiOperator.NOT_IN, EksternFeltverdiOperator.NOT_EQUALS -> (CombineOperator.AND to FeltverdiOperator.NOT_EQUALS)
             EksternFeltverdiOperator.EQUALS -> (CombineOperator.AND to FeltverdiOperator.EQUALS)
@@ -42,6 +47,23 @@ object OppgavefilterOperatorUtvider {
                     verdi = listOf(verdi)
                 )
             }
+        )
+    }
+
+    // Forventer at listen er sortert når intervall er brukt
+    private fun lagInterval(dto: FeltverdiOppgavefilter): CombineOppgavefilter {
+        return CombineOppgavefilter(
+            combineOperator = CombineOperator.AND.name,
+            filtere = listOf(
+                dto.copy(
+                    operator = EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS.name,
+                    verdi = listOf(dto.verdi.first()),
+                ),
+                dto.copy(
+                    operator = EksternFeltverdiOperator.LESS_THAN_OR_EQUALS.name,
+                    verdi = listOf(dto.verdi.last()),
+                )
+            )
         )
     }
 }

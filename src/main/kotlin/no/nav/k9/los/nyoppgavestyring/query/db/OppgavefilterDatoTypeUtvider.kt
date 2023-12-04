@@ -34,7 +34,6 @@ object OppgavefilterDatoTypeUtvider {
         // Gjøres for å mappe grensebetingelser individuelt for hver verdi - fremfor alle nedre grenser, deretter alle øvre grenser.
         val nedreØvreGrensebetingelse = when (EksternFeltverdiOperator.valueOf(operator)) {
             EksternFeltverdiOperator.EQUALS,
-            EksternFeltverdiOperator.INTERVAL,
             EksternFeltverdiOperator.IN -> (FeltverdiOperator.GREATER_THAN_OR_EQUALS to FeltverdiOperator.LESS_THAN_OR_EQUALS)
             EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS -> (FeltverdiOperator.GREATER_THAN_OR_EQUALS to null)
             EksternFeltverdiOperator.GREATER_THAN -> (null to FeltverdiOperator.GREATER_THAN)
