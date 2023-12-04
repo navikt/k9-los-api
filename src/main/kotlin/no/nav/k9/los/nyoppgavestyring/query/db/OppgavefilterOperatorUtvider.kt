@@ -27,10 +27,10 @@ object OppgavefilterOperatorUtvider {
             return dto
         }
 
-        val operators = when (FeltverdiOperator.valueOf(dto.operator)) {
-            FeltverdiOperator.IN -> (CombineOperator.OR to FeltverdiOperator.EQUALS)
-            FeltverdiOperator.NOT_IN, FeltverdiOperator.NOT_EQUALS -> (CombineOperator.AND to FeltverdiOperator.NOT_EQUALS)
-            FeltverdiOperator.EQUALS -> (CombineOperator.AND to FeltverdiOperator.EQUALS)
+        val operators = when (EksternFeltverdiOperator.valueOf(dto.operator)) {
+            EksternFeltverdiOperator.IN -> (CombineOperator.OR to FeltverdiOperator.EQUALS)
+            EksternFeltverdiOperator.NOT_IN, EksternFeltverdiOperator.NOT_EQUALS -> (CombineOperator.AND to FeltverdiOperator.NOT_EQUALS)
+            EksternFeltverdiOperator.EQUALS -> (CombineOperator.AND to FeltverdiOperator.EQUALS)
             else -> throw IllegalStateException("Ukjent feltverdiOperator for mengder")
         }
 

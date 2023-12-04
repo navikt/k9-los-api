@@ -32,16 +32,16 @@ object OppgavefilterDatoTypeUtvider {
 
         // Oversetter operator til pair med grensebetingelser. null tilsvarer fravær av grensebetingelse
         // Gjøres for å mappe grensebetingelser individuelt for hver verdi - fremfor alle nedre grenser, deretter alle øvre grenser.
-        val nedreØvreGrensebetingelse = when (operator) {
-            FeltverdiOperator.EQUALS.name,
-            FeltverdiOperator.IN.name -> (FeltverdiOperator.GREATER_THAN_OR_EQUALS to FeltverdiOperator.LESS_THAN_OR_EQUALS)
-            FeltverdiOperator.GREATER_THAN_OR_EQUALS.name -> (FeltverdiOperator.GREATER_THAN_OR_EQUALS to null)
-            FeltverdiOperator.GREATER_THAN.name -> (null to FeltverdiOperator.GREATER_THAN)
-            FeltverdiOperator.LESS_THAN_OR_EQUALS.name -> (null to FeltverdiOperator.LESS_THAN_OR_EQUALS)
-            FeltverdiOperator.LESS_THAN.name -> (FeltverdiOperator.LESS_THAN to null)
-            FeltverdiOperator.NOT_EQUALS.name,
-            FeltverdiOperator.NOT_IN.name -> (FeltverdiOperator.LESS_THAN to FeltverdiOperator.GREATER_THAN)
-
+        val nedreØvreGrensebetingelse = when (EksternFeltverdiOperator.valueOf(operator)) {
+            EksternFeltverdiOperator.EQUALS,
+            EksternFeltverdiOperator.INTERVAL,
+            EksternFeltverdiOperator.IN -> (FeltverdiOperator.GREATER_THAN_OR_EQUALS to FeltverdiOperator.LESS_THAN_OR_EQUALS)
+            EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS -> (FeltverdiOperator.GREATER_THAN_OR_EQUALS to null)
+            EksternFeltverdiOperator.GREATER_THAN -> (null to FeltverdiOperator.GREATER_THAN)
+            EksternFeltverdiOperator.LESS_THAN_OR_EQUALS -> (null to FeltverdiOperator.LESS_THAN_OR_EQUALS)
+            EksternFeltverdiOperator.LESS_THAN -> (FeltverdiOperator.LESS_THAN to null)
+            EksternFeltverdiOperator.NOT_EQUALS,
+            EksternFeltverdiOperator.NOT_IN -> (FeltverdiOperator.LESS_THAN to FeltverdiOperator.GREATER_THAN)
             else -> return listOf(this)
         }
 
