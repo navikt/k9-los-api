@@ -29,7 +29,8 @@ class FeltdefinisjonTest {
                     tolkesSom = "String",
                     visTilBruker = true,
                     kokriterie = false,
-                    kodeverkreferanse = null
+                    kodeverkreferanse = null,
+                    transientFeltutleder = null,
                 )
             )
         )
@@ -51,7 +52,8 @@ class FeltdefinisjonTest {
                     tolkesSom = "String",
                     visTilBruker = true,
                     kokriterie = false,
-                    kodeverkreferanse = null
+                    kodeverkreferanse = null,
+                    transientFeltutleder = null
                 ),
                 Feltdefinisjon(
                     eksternId = "opprettet",
@@ -61,7 +63,8 @@ class FeltdefinisjonTest {
                     tolkesSom = "Date",
                     visTilBruker = true,
                     kokriterie = false,
-                    kodeverkreferanse = null
+                    kodeverkreferanse = null,
+                    transientFeltutleder = null
                 )
             )
         )
@@ -83,7 +86,8 @@ class FeltdefinisjonTest {
                     tolkesSom = "String",
                     visTilBruker = true,
                     kokriterie = false,
-                    kodeverkreferanse = null
+                    kodeverkreferanse = null,
+                    transientFeltutleder = null,
                 ),
                 Feltdefinisjon(
                     eksternId = "opprettet",
@@ -93,7 +97,8 @@ class FeltdefinisjonTest {
                     tolkesSom = "Date",
                     visTilBruker = true,
                     kokriterie = false,
-                    kodeverkreferanse = null
+                    kodeverkreferanse = null,
+                    transientFeltutleder = null,
                 )
             )
         )

@@ -79,7 +79,8 @@ class KodeverkTest : AbstractK9LosIntegrationTest() {
              tolkesSom = "String",
              visTilBruker = true,
              kokriterie = false,
-             kodeverkreferanse = kodeverkreferanse
+             kodeverkreferanse = kodeverkreferanse,
+             transientFeltutleder = null,
          )
     }
 
