@@ -27,10 +27,15 @@ object OppgavefilterOperatorUtvider {
             return dto
         }
 
-        val operators = when (FeltverdiOperator.valueOf(dto.operator)) {
-            FeltverdiOperator.IN -> (CombineOperator.OR to FeltverdiOperator.EQUALS)
-            FeltverdiOperator.NOT_IN, FeltverdiOperator.NOT_EQUALS -> (CombineOperator.AND to FeltverdiOperator.NOT_EQUALS)
-            FeltverdiOperator.EQUALS -> (CombineOperator.AND to FeltverdiOperator.EQUALS)
+        val operator = EksternFeltverdiOperator.valueOf(dto.operator)
+        if (operator == EksternFeltverdiOperator.INTERVAL) {
+            return lagInterval(dto)
+        }
+
+        val operators = when (operator) {
+            EksternFeltverdiOperator.IN -> (CombineOperator.OR to FeltverdiOperator.EQUALS)
+            EksternFeltverdiOperator.NOT_IN, EksternFeltverdiOperator.NOT_EQUALS -> (CombineOperator.AND to FeltverdiOperator.NOT_EQUALS)
+            EksternFeltverdiOperator.EQUALS -> (CombineOperator.AND to FeltverdiOperator.EQUALS)
             else -> throw IllegalStateException("Ukjent feltverdiOperator for mengder")
         }
 
@@ -42,6 +47,23 @@ object OppgavefilterOperatorUtvider {
                     verdi = listOf(verdi)
                 )
             }
+        )
+    }
+
+    // Forventer at listen er sortert når intervall er brukt
+    private fun lagInterval(dto: FeltverdiOppgavefilter): CombineOppgavefilter {
+        return CombineOppgavefilter(
+            combineOperator = CombineOperator.AND.name,
+            filtere = listOf(
+                dto.copy(
+                    operator = EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS.name,
+                    verdi = listOf(dto.verdi.first()),
+                ),
+                dto.copy(
+                    operator = EksternFeltverdiOperator.LESS_THAN_OR_EQUALS.name,
+                    verdi = listOf(dto.verdi.last()),
+                )
+            )
         )
     }
 }
