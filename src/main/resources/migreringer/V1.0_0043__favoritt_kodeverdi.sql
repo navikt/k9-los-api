@@ -1,0 +1,1 @@
+ALTER TABLE kodeverk_verdi ADD COLUMN favoritt BOOLEAN default true;

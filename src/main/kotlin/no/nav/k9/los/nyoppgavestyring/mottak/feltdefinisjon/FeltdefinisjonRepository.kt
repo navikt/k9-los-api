@@ -87,7 +87,7 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                         "tolkesSom" to feltdefinisjon.tolkesSom,
                         "visTilBruker" to feltdefinisjon.visTilBruker,
                         "kokriterie" to feltdefinisjon.kokriterie,
-                        "kodeverkreferanse" to feltdefinisjon.kodeverkreferanse?.let { it.toDatabasestreng() },
+                        "kodeverkreferanse" to feltdefinisjon.kodeverkreferanse?.toDatabasestreng(),
                         "transientFeltutleder" to feltdefinisjon.transientFeltutleder?.let { TransientFeltutleder.hentId(it) }
                     )
                 ).asUpdate
@@ -130,7 +130,7 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                         "tolkesSom" to feltdefinisjon.tolkesSom,
                         "visTilBruker" to feltdefinisjon.visTilBruker,
                         "kokriterie" to feltdefinisjon.kokriterie,
-                        "kodeverkreferanse" to feltdefinisjon.kodeverkreferanse?.let { it.toDatabasestreng() },
+                        "kodeverkreferanse" to feltdefinisjon.kodeverkreferanse?.toDatabasestreng(),
                         "transientFeltutleder" to feltdefinisjon.transientFeltutleder?.let { TransientFeltutleder.hentId(it) }
                     )
                 ).asUpdate
@@ -176,16 +176,17 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
             )
         )
         tx.batchPreparedNamedStatement("""
-            insert into kodeverk_verdi(kodeverk_id, verdi, visningsnavn, beskrivelse)
-            VALUES (:kodeverkId, :verdi, :visningsnavn, :beskrivelse)
-            on conflict(kodeverk_id, verdi) do update set visningsnavn = :visningsnavn, beskrivelse = :beskrivelse
+            insert into kodeverk_verdi(kodeverk_id, verdi, visningsnavn, beskrivelse, favoritt)
+            VALUES (:kodeverkId, :verdi, :visningsnavn, :beskrivelse, :favoritt)
+            on conflict(kodeverk_id, verdi) do update set visningsnavn = :visningsnavn, beskrivelse = :beskrivelse, favoritt = :favoritt
         """.trimIndent(),
             kodeverk.verdier.map { verdi ->
                 mapOf(
                     "kodeverkId" to kodeverkId,
                     "verdi" to verdi.verdi,
                     "visningsnavn" to verdi.visningsnavn,
-                    "beskrivelse" to verdi.beskrivelse
+                    "beskrivelse" to verdi.beskrivelse,
+                    "favoritt" to verdi.favoritt
                 )
             }
         )
@@ -245,7 +246,8 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                 id = kodeverkverdiRow.long("id"),
                 verdi = kodeverkverdiRow.string("verdi"),
                 visningsnavn = kodeverkverdiRow.string("visningsnavn"),
-                beskrivelse = kodeverkverdiRow.stringOrNull("beskrivelse")
+                beskrivelse = kodeverkverdiRow.stringOrNull("beskrivelse"),
+                favoritt = kodeverkverdiRow.boolean("favoritt")
             )
         }.asList
     )
