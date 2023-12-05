@@ -1,0 +1,1 @@
+alter table feltdefinisjon add column if not exists transient_feltutleder varchar(200);
