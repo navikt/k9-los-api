@@ -82,6 +82,9 @@ enum class FeltType(
     behandlingsstatus("behandlingsstatus", true),
     ytelsestype("ytelsestype", true),
     mottattDato("mottattDato"),
+    tidSidenMottattDato("tidSidenMottattDato", false, "Duration"),
     registrertDato("registrertDato"),
-    avventerArbeidsgiver("avventerArbeidsgiver", tolkesSom = "Boolean")
+    avventerArbeidsgiver("avventerArbeidsgiver", tolkesSom = "Boolean"),
+    løsbartAksjonspunkt("løsbartAksjonspunkt"),
+    liggerHosBeslutter("liggerHosBeslutter"),
 }

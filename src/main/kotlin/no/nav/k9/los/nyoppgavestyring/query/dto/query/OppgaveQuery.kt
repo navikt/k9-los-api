@@ -13,4 +13,6 @@ class OppgaveQuery(
     constructor() : this(listOf(), listOf(), listOf(), 10);
 
     constructor(filtere: List<Oppgavefilter>) : this(filtere, listOf(), listOf(), 10);
+
+    constructor(filtere: List<Oppgavefilter>, order: List<OrderFelt>) : this(filtere, listOf(), order, 10)
 }

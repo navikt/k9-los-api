@@ -72,7 +72,10 @@ abstract class AbstractPostgresTest {
                 saksbehandler,
                 siste_behandlinger,
                 OPPGAVEKO_SAKSBEHANDLER,
-                OPPGAVEKO_V3
+                OPPGAVEKO_V3,
+                OPPGAVE_V3,
+                OPPGAVEFELT_VERDI,
+                oppgave_v3_sendt_dvh
         """)
         }
 
