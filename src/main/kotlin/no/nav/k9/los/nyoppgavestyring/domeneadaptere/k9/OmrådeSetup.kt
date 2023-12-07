@@ -5,6 +5,8 @@ import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
+import no.nav.k9.los.domene.lager.oppgave.Kodeverdi
+import no.nav.k9.kodeverk.api.Kodeverdi as KodeverdiK9Sak
 import no.nav.k9.los.domene.modell.BehandlingStatus
 import no.nav.k9.los.domene.modell.BehandlingType
 import no.nav.k9.los.domene.modell.FagsakYtelseType
@@ -71,7 +73,7 @@ class OmrådeSetup(
     }
 
     private fun aksjonspunktVerdierK9Sak() =
-        AksjonspunktDefinisjon.values().filterNot { it == AksjonspunktDefinisjon.UNDEFINED }.map { apDefinisjon ->
+        AksjonspunktDefinisjon.entries.filterNot { it == AksjonspunktDefinisjon.UNDEFINED }.map { apDefinisjon ->
             KodeverkVerdiDto(
                 verdi = apDefinisjon.kode,
                 visningsnavn = apDefinisjon.navn,
@@ -80,7 +82,7 @@ class OmrådeSetup(
         }
 
     private fun aksjonspunktVerdierK9Klage() =
-        no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.values()
+        no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.entries
         .filterNot { it == no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.UNDEFINED }
         .map { apDefinisjon ->
             KodeverkVerdiDto(
@@ -96,13 +98,7 @@ class OmrådeSetup(
             eksternId = "Fagsystem",
             beskrivelse = null,
             uttømmende = true,
-            verdier = Fagsystem.values().map { fagsystem ->
-                KodeverkVerdiDto(
-                    verdi = fagsystem.kode,
-                    visningsnavn = fagsystem.navn,
-                    beskrivelse = null
-                )
-            }
+            verdier = Fagsystem.entries.lagDto(beskrivelse = null)
         )
         feltdefinisjonTjeneste.oppdater(kodeverkDto)
     }
@@ -113,13 +109,7 @@ class OmrådeSetup(
             eksternId = "Resultattype",
             beskrivelse = null,
             uttømmende = true,
-            verdier = BehandlingResultatType.values().map { resultattype ->
-                KodeverkVerdiDto(
-                    verdi = resultattype.kode,
-                    visningsnavn = resultattype.navn,
-                    beskrivelse = null
-                )
-            }
+            verdier = BehandlingResultatType.entries.lagK9Dto(beskrivelse = null)
         )
         feltdefinisjonTjeneste.oppdater(kodeverkDto)
     }
@@ -130,13 +120,7 @@ class OmrådeSetup(
             eksternId = "Ytelsetype",
             beskrivelse = null,
             uttømmende = true,
-            verdier = FagsakYtelseType.values().map { ytelsetype ->
-                KodeverkVerdiDto(
-                    verdi = ytelsetype.kode,
-                    visningsnavn = ytelsetype.navn,
-                    beskrivelse = null
-                )
-            }
+            verdier = FagsakYtelseType.entries.lagDto(null, KodeverkSynlighetRegler::ytelseType)
         )
         feltdefinisjonTjeneste.oppdater(kodeverkDto)
     }
@@ -147,13 +131,7 @@ class OmrådeSetup(
             eksternId = "Behandlingsstatus",
             beskrivelse = null,
             uttømmende = true,
-            verdier = BehandlingStatus.values().map { behandlingstatus ->
-                KodeverkVerdiDto(
-                    verdi = behandlingstatus.kode,
-                    visningsnavn = behandlingstatus.navn,
-                    beskrivelse = null
-                )
-            }
+            verdier = BehandlingStatus.entries.lagDto(beskrivelse = null)
         )
         feltdefinisjonTjeneste.oppdater(kodeverkDto)
     }
@@ -164,13 +142,7 @@ class OmrådeSetup(
             eksternId = "Behandlingtype",
             beskrivelse = null,
             uttømmende = true,
-            verdier = BehandlingType.values().map { behandlingtype ->
-                KodeverkVerdiDto(
-                    verdi = behandlingtype.kode,
-                    visningsnavn = behandlingtype.navn,
-                    beskrivelse = null
-                )
-            }
+            verdier = BehandlingType.entries.lagDto(beskrivelse = null, KodeverkSynlighetRegler::behandlingType)
         )
         feltdefinisjonTjeneste.oppdater(kodeverkDto)
     }
@@ -181,13 +153,7 @@ class OmrådeSetup(
             eksternId = "Venteårsak",
             beskrivelse = null,
             uttømmende = true,
-            verdier = Venteårsak.values().map { venteårsak ->
-                KodeverkVerdiDto(
-                    verdi = venteårsak.kode,
-                    visningsnavn = venteårsak.navn,
-                    beskrivelse = null
-                )
-            }
+            verdier = Venteårsak.entries.lagK9Dto(beskrivelse = null)
         )
         feltdefinisjonTjeneste.oppdater(kodeverkDto)
     }
@@ -198,14 +164,72 @@ class OmrådeSetup(
             eksternId = "Behandlingssteg",
             beskrivelse = null,
             uttømmende = false,
-            verdier = BehandlingStegType.values().map { verdi ->
-                KodeverkVerdiDto(
-                    verdi = verdi.kode,
-                    visningsnavn = verdi.navn,
-                    beskrivelse = null
-                )
-            }
+            verdier = BehandlingStegType.entries.lagK9Dto(beskrivelse = null)
         )
         feltdefinisjonTjeneste.oppdater(kodeverkDto)
     }
+
+    fun <T: Kodeverdi> Collection<T>.lagDto(
+        beskrivelse: String?,
+        synlighet: (T) -> KodeverkSynlighet = { KodeverkSynlighet.SYNLIG_FAVORITT }
+    ): List<KodeverkVerdiDto> {
+        return associateWith { synlighet(it) }
+            .filter { (_, synlighet) -> synlighet != KodeverkSynlighet.SKJULT }
+            .map { (kodeverdi, synlighet) -> KodeverkVerdiDto(
+                verdi = kodeverdi.kode,
+                visningsnavn = kodeverdi.navn,
+                beskrivelse = beskrivelse,
+                favoritt = synlighet == KodeverkSynlighet.SYNLIG_FAVORITT
+            )}.sortedBy { it.visningsnavn }
+    }
+
+    fun <T: KodeverdiK9Sak> Collection<T>.lagK9Dto(
+        beskrivelse: String?,
+        synlighet: (T) -> KodeverkSynlighet = { KodeverkSynlighet.SYNLIG_FAVORITT }
+    ): List<KodeverkVerdiDto> {
+        return associateWith { synlighet(it) }
+            .filter { (_, synlighet) -> synlighet != KodeverkSynlighet.SKJULT }
+            .map { (kodeverdi, synlighet) -> KodeverkVerdiDto(
+                verdi = kodeverdi.kode,
+                visningsnavn = kodeverdi.navn,
+                beskrivelse = beskrivelse,
+                favoritt = synlighet == KodeverkSynlighet.SYNLIG_FAVORITT
+            )}.sortedBy { it.visningsnavn }
+    }
+}
+
+object KodeverkSynlighetRegler {
+    fun behandlingType(behandlingType: BehandlingType): KodeverkSynlighet {
+        return when (behandlingType) {
+            BehandlingType.ANKE -> KodeverkSynlighet.SKJULT
+            BehandlingType.UNNTAKSBEHANDLING,
+            BehandlingType.PAPIRSØKNAD,
+            BehandlingType.PAPIRETTERSENDELSE,
+            BehandlingType.PAPIRINNTEKTSOPPLYSNINGER,
+            BehandlingType.DIGITAL_ETTERSENDELSE,
+            BehandlingType.INNLOGGET_CHAT,
+            BehandlingType.SKRIV_TIL_OSS_SPØRMSÅL,
+            BehandlingType.SKRIV_TIL_OSS_SVAR,
+            BehandlingType.SAMTALEREFERAT,
+            BehandlingType.KOPI,
+            BehandlingType.UTEN_FNR_DNR,
+            BehandlingType.UKJENT -> KodeverkSynlighet.SYNLIG
+            else -> KodeverkSynlighet.SYNLIG_FAVORITT
+        }
+    }
+
+    fun ytelseType(ytelseType: FagsakYtelseType): KodeverkSynlighet {
+        return when(ytelseType) {
+            FagsakYtelseType.FRISINN -> KodeverkSynlighet.SKJULT
+            FagsakYtelseType.OLP,
+            FagsakYtelseType.UKJENT -> KodeverkSynlighet.SYNLIG
+            else -> KodeverkSynlighet.SYNLIG_FAVORITT
+        }
+    }
+}
+
+enum class KodeverkSynlighet {
+    SKJULT,
+    SYNLIG,
+    SYNLIG_FAVORITT;
 }

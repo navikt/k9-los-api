@@ -84,8 +84,11 @@ enum class FeltType(
     BEHANDLINGSSTATUS("behandlingsstatus", true),
     YTELSE_TYPE("ytelsestype", true),
     MOTTATT_DATO("mottattDato"),
+    TID_SIDEN_MOTTATT_DATO("tidSidenMottattDato", false, "Duration"),
     REGISTRERT_DATO("registrertDato"),
     AVVENTER_ARBEIDSGIVER("avventerArbeidsgiver", tolkesSom = "Boolean"),
     BESKYTTELSE("beskyttelse", tolkesSom = "String", listetype = true),
-    EGEN_ANSATT("egenAnsatt", tolkesSom = "String", listetype = true)
+    EGEN_ANSATT("egenAnsatt", tolkesSom = "String", listetype = true),
+    LØSBART_AKSJONSPUNKT("løsbartAksjonspunkt"),
+    LIGGER_HOS_BESLUTTER("liggerHosBeslutter"),
 }

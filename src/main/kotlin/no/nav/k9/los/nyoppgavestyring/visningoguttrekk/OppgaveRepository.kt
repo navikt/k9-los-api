@@ -5,12 +5,13 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import java.time.LocalDateTime
+import no.nav.k9.los.spi.felter.HentVerdiInput
 
 class OppgaveRepository(
     private val oppgavetypeRepository: OppgavetypeRepository
 ) {
 
-    fun hentNyesteOppgaveForEksternId(tx: TransactionalSession, kildeområde: String, eksternId: String): Oppgave {
+    fun hentNyesteOppgaveForEksternId(tx: TransactionalSession, kildeområde: String, eksternId: String, now: LocalDateTime = LocalDateTime.now()): Oppgave {
         val oppgave = tx.run(
             queryOf(
                 """
@@ -26,7 +27,7 @@ class OppgaveRepository(
             ).map { row -> row.mapOppgave(tx) }.asSingle
         ) ?: throw IllegalStateException("Fant ikke oppgave med kilde $kildeområde og eksternId $eksternId")
 
-        return oppgave.fyllDefaultverdier()
+        return oppgave.fyllDefaultverdier().utledTransienteFelter(now)
     }
 
     private fun Row.mapOppgave(tx: TransactionalSession): Oppgave {
@@ -44,7 +45,7 @@ class OppgaveRepository(
         )
     }
 
-    fun hentOppgaveForId(tx: TransactionalSession, id: Long): Oppgave {
+    fun hentOppgaveForId(tx: TransactionalSession, id: Long, now: LocalDateTime = LocalDateTime.now()): Oppgave {
         val oppgave = tx.run(
             queryOf(
                 """
@@ -69,7 +70,31 @@ class OppgaveRepository(
             }.asSingle
         ) ?: throw IllegalStateException("Fant ikke oppgave med id $id")
 
-        return oppgave.fyllDefaultverdier()
+        return oppgave.fyllDefaultverdier().utledTransienteFelter(now)
+    }
+
+    private fun Oppgave.utledTransienteFelter(now: LocalDateTime): Oppgave {
+        val utlededeVerdier: List<Oppgavefelt> = this.oppgavetype.oppgavefelter.flatMap { oppgavefelt ->
+            oppgavefelt.feltDefinisjon.transientFeltutleder?.let { feltutleder ->
+                feltutleder.hentVerdi(
+                    HentVerdiInput(
+                        now,
+                        this,
+                        oppgavefelt.feltDefinisjon.område.eksternId,
+                        oppgavefelt.feltDefinisjon.eksternId
+                    )
+                ).map { verdi ->
+                    Oppgavefelt(
+                        eksternId = oppgavefelt.feltDefinisjon.eksternId,
+                        område = oppgavefelt.feltDefinisjon.område.eksternId,
+                        listetype = oppgavefelt.feltDefinisjon.listetype,
+                        påkrevd = false,
+                        verdi = verdi
+                    )
+                }
+            } ?: listOf()
+        }
+        return copy(felter = felter.plus(utlededeVerdier))
     }
 
     private fun Oppgave.fyllDefaultverdier(): Oppgave {

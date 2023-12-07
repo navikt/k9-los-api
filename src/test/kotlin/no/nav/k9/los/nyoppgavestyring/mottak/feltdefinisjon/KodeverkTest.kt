@@ -79,7 +79,8 @@ class KodeverkTest : AbstractK9LosIntegrationTest() {
              tolkesSom = "String",
              visTilBruker = true,
              kokriterie = false,
-             kodeverkreferanse = kodeverkreferanse
+             kodeverkreferanse = kodeverkreferanse,
+             transientFeltutleder = null,
          )
     }
 
@@ -95,13 +96,15 @@ class KodeverkTest : AbstractK9LosIntegrationTest() {
                     id = null,
                     verdi = "verdi1",
                     visningsnavn = "navn1",
-                    beskrivelse = "beskrivelse1"
+                    beskrivelse = "beskrivelse1",
+                    favoritt = false
                 ),
                 Kodeverkverdi(
                     id = null,
                     verdi = "verdi2",
                     visningsnavn = "navn2",
-                    beskrivelse = "beskrivelse2"
+                    beskrivelse = "beskrivelse2",
+                    favoritt = false
                 )
             )
         )

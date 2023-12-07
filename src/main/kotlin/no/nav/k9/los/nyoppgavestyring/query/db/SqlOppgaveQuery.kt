@@ -4,6 +4,12 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.EgenAnsatt
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype.*
+import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
+import no.nav.k9.los.nyoppgavestyring.transientfeltutleder.K9SakBeslutterTransientFeltutleder
+import no.nav.k9.los.spi.felter.OrderByInput
+import no.nav.k9.los.spi.felter.SqlMedParams
+import no.nav.k9.los.spi.felter.TransientFeltutleder
+import no.nav.k9.los.spi.felter.WhereInput
 import org.postgresql.util.PGInterval
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -11,8 +17,11 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 class SqlOppgaveQuery(
-    val oppgavefelterKodeOgType: Map<String, Datatype>
+    val felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
+    val now: LocalDateTime
 ) {
+
+    private val oppgavefelterKodeOgType = felter.mapValues { Datatype.fraKode(it.value.oppgavefelt.tolkes_som) }
 
     private var query = """
                 SELECT o.id as id
@@ -45,7 +54,20 @@ class SqlOppgaveQuery(
         return (queryParams + orderByParams).toMap()
     }
 
+    private fun hentTransientFeltutleder(feltområde: String?, feltkode: String): TransientFeltutleder? {
+        return felter[OmrådeOgKode(feltområde, feltkode)]!!.transientFeltutleder
+    }
+
     fun medFeltverdi(combineOperator: CombineOperator, feltområde: String?, feltkode: String, operator: FeltverdiOperator, feltverdi: Any?) {
+        hentTransientFeltutleder(feltområde, feltkode)?.let {
+            val sqlMedParams = sikreUnikeParams(
+                it.where(WhereInput(now, feltområde!!, feltkode, operator, feltverdi))
+            )
+            query += "${combineOperator.sql} " + sqlMedParams.query
+            queryParams.putAll(sqlMedParams.queryParams)
+            return
+        }
+
         if (feltområde != null) {
             if (feltverdi == null) {
                 utenOppgavefelt(combineOperator, feltområde, feltkode, operator)
@@ -55,7 +77,7 @@ class SqlOppgaveQuery(
             return
         }
 
-        val index = queryParams.size;
+        val index = queryParams.size + orderByParams.size
         when (feltkode) {
             "oppgavestatus" -> {
                 query += "${combineOperator.sql} o.status ${operator.sql} (:oppgavestatus$index) "
@@ -92,6 +114,18 @@ class SqlOppgaveQuery(
         }
     }
 
+    private fun sikreUnikeParams(sqlMedParams: SqlMedParams): SqlMedParams {
+        var newQuery = sqlMedParams.query
+        val newQueryParams = mutableMapOf<String, Any?>()
+        sqlMedParams.queryParams.forEach { (oldKey, oldValue) ->
+            val index = queryParams.size + orderByParams.size + newQueryParams.size
+            val newKey = "$oldKey$index"
+            newQuery = newQuery.replace(":$oldKey", ":$newKey")
+            newQueryParams[newKey] = oldValue
+        }
+        return SqlMedParams(newQuery, newQueryParams)
+    }
+
     fun medBlokk(combineOperator: CombineOperator, defaultTrue: Boolean, blokk: () -> Unit) {
         query += "${combineOperator.sql} ("
         query += defaultTrue.toString()
@@ -101,7 +135,7 @@ class SqlOppgaveQuery(
     }
 
     private fun medOppgavefelt(combineOperator: CombineOperator, feltområde: String, feltkode: String, operator: FeltverdiOperator, feltverdi: Any) {
-        val index = queryParams.size
+        val index = queryParams.size + orderByParams.size
 
         query += """
                 ${combineOperator.sql} EXISTS (
@@ -125,7 +159,7 @@ class SqlOppgaveQuery(
          * typekonvertering gjør at spørringen feiler.
          */
         val queryVerdiParam: Any?
-        when (oppgavefelterKodeOgType[feltkode]) {
+        when (oppgavefelterKodeOgType[OmrådeOgKode(feltområde, feltkode)]) {
             TIMESTAMP -> {
                 query += "CAST(ov.verdi AS timestamp) ${operator.sql} (:feltverdi$index)"
                 queryVerdiParam = try {
@@ -171,7 +205,7 @@ class SqlOppgaveQuery(
     }
 
     private fun utenOppgavefelt(combineOperator: CombineOperator, feltområde: String, feltkode: String, operator: FeltverdiOperator) {
-        val index = queryParams.size
+        val index = queryParams.size + orderByParams.size
 
         queryParams.putAll(mutableMapOf(
             "feltOmrade$index" to feltområde,
@@ -230,7 +264,16 @@ class SqlOppgaveQuery(
     }
 
     private fun medEnkelOrderAvOppgavefelt(feltområde: String, feltkode: String, økende: Boolean) {
-        val index = orderByParams.size;
+        hentTransientFeltutleder(feltområde, feltkode)?.let {
+            val sqlMedParams = sikreUnikeParams(
+                it.orderBy(OrderByInput(now, feltområde, feltkode, økende))
+            )
+            orderBySql += ", " + sqlMedParams.query
+            orderByParams.putAll(sqlMedParams.queryParams)
+            return
+        }
+
+        val index = queryParams.size + orderByParams.size;
 
         orderByParams.putAll(mutableMapOf(
             "orderByfeltOmrade$index" to feltområde,

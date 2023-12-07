@@ -1,6 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon
 
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
+import no.nav.k9.los.spi.felter.TransientFeltutleder
 
 
 class Feltdefinisjon(
@@ -13,6 +14,7 @@ class Feltdefinisjon(
     val visTilBruker: Boolean,
     val kokriterie: Boolean,
     val kodeverkreferanse: Kodeverkreferanse?,
+    val transientFeltutleder: TransientFeltutleder?
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

@@ -60,17 +60,17 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         }
     }
 
-    fun gjørSakKode6() {
+    fun gjørSakKode6(saksnummer: String) {
         runBlocking {
-            coEvery { pepClient.erSakKode6(any()) } returns true
-            coEvery { pepClient.erSakKode7EllerEgenAnsatt(any()) } returns false
+            coEvery { pepClient.erSakKode6(eq(saksnummer)) } returns true
+            coEvery { pepClient.erSakKode7EllerEgenAnsatt(eq(saksnummer)) } returns false
         }
     }
 
-    fun gjørSakOrdinær() {
+    fun gjørSakOrdinær(saksnummer: String) {
         runBlocking {
-            coEvery { pepClient.erSakKode6(any()) } returns false
-            coEvery { pepClient.erSakKode7EllerEgenAnsatt(any()) } returns false
+            coEvery { pepClient.erSakKode6(eq(saksnummer)) } returns false
+            coEvery { pepClient.erSakKode7EllerEgenAnsatt(eq(saksnummer)) } returns false
         }
     }
 
@@ -82,7 +82,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
         val saksnummer = "TEST1"
         val eksternId = UUID.randomUUID().toString()
-        gjørSakOrdinær()
+        gjørSakOrdinær(saksnummer)
         k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, saksnummer))
 
         val pepCache = pepRepository.hent("K9", eksternId)!!
@@ -99,7 +99,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
         val saksnummer = "TEST2"
         val eksternId = UUID.randomUUID().toString()
-        gjørSakKode6()
+        gjørSakKode6(saksnummer)
         k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, saksnummer))
 
         val pepCache = pepRepository.hent("K9", eksternId)!!
@@ -115,7 +115,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         val pepRepository = mockk<PepCacheRepository>(relaxed = true)
 
         val saksnummer = "TEST3"
-        gjørSakOrdinær()
+        gjørSakOrdinær(saksnummer)
 
         val pepCacheService = PepCacheService(
             pepCacheRepository = pepRepository,
@@ -160,7 +160,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         ).start()
 
         val saksnummer = "TEST4"
-        gjørSakOrdinær()
+        gjørSakOrdinær(saksnummer)
 
         val eksternId = UUID.randomUUID().toString()
         k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, saksnummer))
@@ -169,7 +169,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId)).isNotEmpty()
         assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, BeskyttelseType.KODE6)).isEmpty()
 
-        gjørSakKode6()
+        gjørSakKode6(saksnummer)
         for (i in 0..10) {
             Thread.sleep(500)
             if (i == 10) throw IllegalStateException("Fant ikke pepcache med kode6 innen tidsfristen")
