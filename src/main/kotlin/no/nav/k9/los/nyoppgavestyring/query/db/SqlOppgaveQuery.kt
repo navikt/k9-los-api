@@ -30,10 +30,10 @@ class SqlOppgaveQuery(
                   ) INNER JOIN Omrade oppgave_omrade ON (
                     oppgave_omrade.id = ot.omrade_id
                   ) LEFT JOIN (
-                        SELECT ekstern_id, kode6, kode7, egen_ansatt
-                        FROM Oppgave_pep_cache
+                        SELECT ekstern_id, kildeomrade, kode6, kode7, egen_ansatt
+                        FROM Oppgave_pep_cache 
                   ) as opc ON (
-                    o.ekstern_id = opc.ekstern_id
+                    o.kildeomrade = opc.kildeomrade AND o.ekstern_id = opc.ekstern_id
                   )
                 WHERE aktiv = true 
             """.trimIndent()

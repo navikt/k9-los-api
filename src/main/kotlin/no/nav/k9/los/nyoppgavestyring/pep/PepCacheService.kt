@@ -18,33 +18,10 @@ class PepCacheService(
     private val transactionalManager: TransactionalManager,
 ) {
 
-    fun erOppgaveKode6(oppgave: Oppgave): Boolean {
-        return transactionalManager.transaction { tx ->
-            runBlocking { hentOgOppdaterVedBehov(tx, oppgave).kode6 }
-        }
-    }
-
-    fun hentOgOppdaterVedBehov(
-        kildeområde: String,
-        eksternId: String,
-        maksimalAlder: Duration = Duration.ofMinutes(30)
-    ): PepCache {
-        return transactionalManager.transaction { tx ->
-            val oppgave = oppgaveRepository.hentNyesteOppgaveForEksternId(
-                tx,
-                kildeområde = kildeområde,
-                eksternId = eksternId
-            )
-            runBlocking {
-                hentOgOppdaterVedBehov(tx, oppgave, maksimalAlder)
-            }
-        }
-    }
-
     suspend fun hentOgOppdaterVedBehov(tx: TransactionalSession, oppgave: Oppgave, maksimalAlder: Duration = Duration.ofMinutes(30)): PepCache {
         return pepCacheRepository.hent(kildeområde = oppgave.kildeområde, eksternId = oppgave.eksternId, tx).let { pepCache ->
             if (pepCache?.erGyldig(maksimalAlder) != true) {
-                pepCache ?: oppdater(tx, oppgave)
+                oppdater(tx, oppgave)
             } else {
                 pepCache
             }
@@ -56,7 +33,7 @@ class PepCacheService(
             runBlocking {
                 val oppgaverSomMåOppdateres = oppgaveRepository.hentÅpneOgVentendeOppgaverMedPepCacheEldreEnn(
                     tidspunkt = LocalDateTime.now() - gyldighet,
-                    antall = 2,
+                    antall = 1,
                     tx
                 )
                 oppgaverSomMåOppdateres.forEach { oppgave -> oppdater(tx, oppgave) }

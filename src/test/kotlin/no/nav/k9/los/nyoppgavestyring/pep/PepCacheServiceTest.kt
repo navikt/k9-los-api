@@ -8,7 +8,6 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.los.AbstractPostgresTest
@@ -169,22 +168,17 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId)).isNotEmpty()
         assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, BeskyttelseType.KODE6)).isEmpty()
 
+        verify(exactly = 2) { runBlocking { pepClient.harTilgangTilLesSak(eq(saksnummer), any()) } }
+
         gjørSakKode6(saksnummer)
-        for (i in 0..10) {
-            Thread.sleep(500)
-            if (i == 10) throw IllegalStateException("Fant ikke pepcache med kode6 innen tidsfristen")
-            if (pepRepository.hent("K9", eksternId)?.kode6 == true) {
-                logger.info("Fant pepcache med kode6")
-                break
-            }
-        }
+        ventPåAntallForsøk(10, "Pepcache") { pepRepository.hent("K9", eksternId)?.kode6 == true }
 
         assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, BeskyttelseType.ORDINÆR)).isEmpty()
         assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId)).isNotEmpty()  // Alle beskyttelsetyper er inkludert hvis ikke beksyttelsetype er spesifisert
         assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, BeskyttelseType.KODE6)).isNotEmpty()
 
         job.cancel()
-        verify(atLeast = 1) { runBlocking { pepClient.harTilgangTilLesSak(eq(saksnummer), any()) } }
+        verify(exactly = 4) { runBlocking { pepClient.harTilgangTilLesSak(eq(saksnummer), any()) } }
     }
 
     private fun loggAlleOppgaverMedFelterOgCache() {
@@ -272,5 +266,16 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
             }"""
 
         return objectMapper.readValue(json, BehandlingProsessEventDto::class.java)
+    }
+
+    private fun ventPåAntallForsøk(antall: Int, beskrivelse: String = "", f: () -> Boolean) {
+        for (i in 0..antall) {
+            Thread.sleep(500)
+            if (i == antall) throw IllegalStateException("Ikke oppfylt innen tidsfrist: $beskrivelse")
+            if (f()) {
+                logger.info("Oppfylt innen tidsfrist: $beskrivelse")
+                break
+            }
+        }
     }
 }

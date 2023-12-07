@@ -142,7 +142,7 @@ class OppgaveRepository(
 
     fun hentÅpneOgVentendeOppgaverMedPepCacheEldreEnn(
         tidspunkt: LocalDateTime = LocalDateTime.now(),
-        antall: Int = 100,
+        antall: Int = 1,
         tx: TransactionalSession
     ): List<Oppgave> {
         return tx.run(
