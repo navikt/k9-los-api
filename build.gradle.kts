@@ -2,7 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 val mainClass = "no.nav.k9.los.K9LosKt"
 val hikariVersion = "5.1.0"
-val flywayVersion = "9.22.3"
+val flywayVersion = "10.2.0"
 val vaultJdbcVersion = "1.3.10"
 val koinVersion = "3.5.0"
 val koinKtorVersion = "3.5.1"
@@ -13,9 +13,9 @@ val fuelVersion = "2.3.1"
 val jacksonVersion = "2.16.0"
 val commonsTextVersion = "1.11.0"
 
-val dusseldorfKtorVersion = "4.1.2"
+val dusseldorfKtorVersion = "4.1.3"
 val ktorVersion = "2.3.7"
-val kafkaVersion = "3.6.0"
+val kafkaVersion = "3.6.1"
 
 val navTilgangskontroll = "3.2023.10.23_12.41-bafec3836d28"
 
@@ -23,7 +23,7 @@ val navTilgangskontroll = "3.2023.10.23_12.41-bafec3836d28"
 val testContainers = "1.19.3"
 val jsonassertVersion = "1.5.1"
 val jupiterVersion = "5.10.1"
-val assertkVersion = "0.27.0"
+val assertkVersion = "0.28.0"
 val mockkVersion = "1.13.8"
 
 plugins {
