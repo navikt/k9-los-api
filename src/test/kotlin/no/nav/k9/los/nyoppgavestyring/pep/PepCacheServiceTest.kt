@@ -155,7 +155,8 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         val job = PepCacheOppdaterer(
             pepCacheService,
             tidMellomKjøring = Duration.ofMillis(500),
-            alderForOppfriskning = Duration.ofNanos(1)
+            alderForOppfriskning = Duration.ofNanos(1),
+            forsinketOppstart = Duration.ZERO
         ).start()
 
         val saksnummer = "TEST4"

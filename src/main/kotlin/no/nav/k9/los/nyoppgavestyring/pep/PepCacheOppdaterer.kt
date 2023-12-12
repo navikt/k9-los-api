@@ -1,25 +1,31 @@
 package no.nav.k9.los.nyoppgavestyring.pep
 
-import kotlinx.coroutines.*
 import no.nav.k9.los.domene.repository.OppgaveKøRepository
-import no.nav.k9.los.eventhandler.asCoroutineDispatcherWithErrorHandling
 import org.slf4j.LoggerFactory
 import java.time.Duration
-import java.util.concurrent.Executors
+import java.util.*
+import kotlin.concurrent.timer
 
 class PepCacheOppdaterer(
     val pepCacheService: PepCacheService,
     val tidMellomKjøring: Duration = Duration.ofSeconds(1),
-    val alderForOppfriskning: Duration = Duration.ofHours(23)
+    val alderForOppfriskning: Duration = Duration.ofHours(23),
+    val forsinketOppstart: Duration = Duration.ofMinutes(5)
 ) {
-    private val log = LoggerFactory.getLogger(OppgaveKøRepository::class.java)
+    private val TRÅDNAVN = "k9los-pepcache-oppdaterer"
+    private val log = LoggerFactory.getLogger(PepCacheOppdaterer::class.java)
 
-    @DelicateCoroutinesApi
-    fun start(): Job {
-        return GlobalScope.launch(Executors.newSingleThreadExecutor().asCoroutineDispatcherWithErrorHandling()) {
-            while (true) {
+    fun start(): Timer {
+        return timer(
+            daemon = true,
+            name = TRÅDNAVN,
+            period = tidMellomKjøring.toMillis(),
+            initialDelay = forsinketOppstart.toMillis()
+        ) {
+            try {
                 pepCacheService.oppdaterCacheForOppgaverEldreEnn(alderForOppfriskning)
-                delay(tidMellomKjøring.toMillis())
+            } catch (e: Exception) {
+                log.warn("Feil ved kjøring av PepCacheOppdaterer", e)
             }
         }
     }
