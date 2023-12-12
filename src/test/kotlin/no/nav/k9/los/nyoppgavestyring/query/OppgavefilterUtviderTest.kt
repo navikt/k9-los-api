@@ -21,7 +21,7 @@ class OppgavefilterUtviderTest {
     @Test
     fun `Oppgavefiltre med flere verdier av dato skal utvides med combiner for dato og verdier`() {
         val oppgavefiltre = listOf(
-            FeltverdiOppgavefilter(null, FeltType.mottattDato.eksternId, FeltverdiOperator.IN.name, listOf("2023-05-05", "2023-05-07"))
+            FeltverdiOppgavefilter(null, FeltType.MOTTATT_DATO.eksternId, FeltverdiOperator.IN.name, listOf("2023-05-05", "2023-05-07"))
         )
 
         val combineFilter = OppgavefilterUtvider.utvid(oppgavefiltre).first() as CombineOppgavefilter
@@ -40,7 +40,7 @@ class OppgavefilterUtviderTest {
     @Test
     fun `Oppgavefiltre skal kun gi oppgaver som ikke matche noen av datoerverdier`() {
         val oppgavefiltre = listOf(
-            FeltverdiOppgavefilter(null, FeltType.mottattDato.eksternId, FeltverdiOperator.NOT_EQUALS.name, listOf("2023-05-05", "2023-05-07"))
+            FeltverdiOppgavefilter(null, FeltType.MOTTATT_DATO.eksternId, FeltverdiOperator.NOT_EQUALS.name, listOf("2023-05-05", "2023-05-07"))
         )
 
         val combineFilter = OppgavefilterUtvider.utvid(oppgavefiltre).first() as CombineOppgavefilter
@@ -59,7 +59,7 @@ class OppgavefilterUtviderTest {
     @Test
     fun `Oppgavefiltre skal håndtere intervall-operator`() {
         val oppgavefiltre = listOf(
-            FeltverdiOppgavefilter(null, FeltType.mottattDato.eksternId, EksternFeltverdiOperator.INTERVAL.name, listOf("2023-05-05", "2023-05-07"))
+            FeltverdiOppgavefilter(null, FeltType.MOTTATT_DATO.eksternId, EksternFeltverdiOperator.INTERVAL.name, listOf("2023-05-05", "2023-05-07"))
         )
 
         val combineFilter = OppgavefilterUtvider.utvid(oppgavefiltre).first() as CombineOppgavefilter

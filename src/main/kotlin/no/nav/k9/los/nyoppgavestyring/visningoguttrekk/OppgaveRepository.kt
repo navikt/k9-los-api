@@ -1,42 +1,48 @@
 package no.nav.k9.los.nyoppgavestyring.visningoguttrekk
 
+import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
-import no.nav.k9.los.spi.felter.HentVerdiInput
 import java.time.LocalDateTime
+import no.nav.k9.los.spi.felter.HentVerdiInput
 
 class OppgaveRepository(
     private val oppgavetypeRepository: OppgavetypeRepository
 ) {
 
-    fun hentNyesteOppgaveForEksternId(tx: TransactionalSession, eksternId: String, now: LocalDateTime = LocalDateTime.now()): Oppgave {
+    fun hentNyesteOppgaveForEksternId(tx: TransactionalSession, kildeområde: String, eksternId: String, now: LocalDateTime = LocalDateTime.now()): Oppgave {
         val oppgave = tx.run(
             queryOf(
                 """
                 select * 
                 from oppgave_v3 ov
-                where ov.ekstern_id = :eksternId
+                where ov.kildeomrade = :kildeomrade AND ov.ekstern_id = :eksternId 
                 and ov.versjon = (select max(versjon) from oppgave_v3 ov2 where ov2.ekstern_id = :eksternId)
             """.trimIndent(),
-                mapOf("eksternId" to eksternId)
-            ).map { row ->
-                val kildeområde = row.string("kildeomrade")
-                val oppgaveTypeId = row.long("oppgavetype_id")
-                Oppgave(
-                    eksternId = eksternId,
-                    eksternVersjon = row.string("ekstern_versjon"),
-                    oppgavetype = oppgavetypeRepository.hentOppgavetype(kildeområde, oppgaveTypeId, tx),
-                    status = row.string("status"),
-                    endretTidspunkt = row.localDateTime("endret_tidspunkt"),
-                    kildeområde = row.string("kildeomrade"),
-                    felter = hentOppgavefelter(tx, row.long("id")),
-                    versjon = row.int("versjon")
+                mapOf(
+                    "kildeomrade" to kildeområde,
+                    "eksternId" to eksternId
                 )
-            }.asSingle
-        ) ?: throw IllegalStateException("Fant ikke oppgave med eksternId $eksternId")
+            ).map { row -> row.mapOppgave(tx) }.asSingle
+        ) ?: throw IllegalStateException("Fant ikke oppgave med kilde $kildeområde og eksternId $eksternId")
 
         return oppgave.fyllDefaultverdier().utledTransienteFelter(now)
+    }
+
+    private fun Row.mapOppgave(tx: TransactionalSession): Oppgave {
+        val oppgaveTypeId = long("oppgavetype_id")
+        val kildeområde = string("kildeomrade")
+        return Oppgave(
+            eksternId = string("ekstern_id"),
+            eksternVersjon = string("ekstern_versjon"),
+            oppgavetype = oppgavetypeRepository.hentOppgavetype(kildeområde, oppgaveTypeId, tx),
+            status = string("status"),
+            endretTidspunkt = localDateTime("endret_tidspunkt"),
+            kildeområde = kildeområde,
+            felter = hentOppgavefelter(tx, long("id")),
+            versjon = int("versjon")
+        )
     }
 
     fun hentOppgaveForId(tx: TransactionalSession, id: Long, now: LocalDateTime = LocalDateTime.now()): Oppgave {
@@ -134,4 +140,29 @@ class OppgaveRepository(
         )
     }
 
+    fun hentÅpneOgVentendeOppgaverMedPepCacheEldreEnn(
+        tidspunkt: LocalDateTime = LocalDateTime.now(),
+        antall: Int = 1,
+        tx: TransactionalSession
+    ): List<Oppgave> {
+        return tx.run(
+            queryOf(
+                """
+                    SELECT o.*
+                    FROM oppgave_v3 o 
+                    LEFT JOIN OPPGAVE_PEP_CACHE opc ON (
+                        o.kildeomrade = opc.kildeomrade AND o.ekstern_id = opc.ekstern_id
+                    )
+                    WHERE o.aktiv is true AND o.status IN ('VENTER', 'AAPEN')
+                    AND opc.oppdatert < :grense
+                    ORDER BY opc.oppdatert
+                    LIMIT :limit
+                """.trimIndent(),
+                mapOf(
+                    "grense" to tidspunkt,
+                    "limit" to antall
+                )
+            ).map { row -> row.mapOppgave(tx) }.asList
+        )
+    }
 }

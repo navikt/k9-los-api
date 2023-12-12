@@ -6,6 +6,7 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.rest.CoroutineRequestContext
+import no.nav.k9.los.nyoppgavestyring.pep.PepCacheService
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
@@ -16,6 +17,7 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.tjenester.saksbehandler.IIdToken
 import org.koin.java.KoinJavaComponent.inject
+import java.time.Duration
 import java.lang.RuntimeException
 import java.time.LocalDateTime
 import javax.sql.DataSource
@@ -25,6 +27,7 @@ class OppgaveQueryService() {
     val oppgaveQueryRepository by inject<OppgaveQueryRepository>(OppgaveQueryRepository::class.java)
     val oppgaveRepository by inject<OppgaveRepository>(OppgaveRepository::class.java)
     val pepClient by inject<IPepClient>(IPepClient::class.java)
+    val pepCacheService by inject<PepCacheService>(PepCacheService::class.java)
 
     fun hentAlleFelter(): Oppgavefelter {
         return oppgaveQueryRepository.hentAlleFelter()
@@ -56,10 +59,10 @@ class OppgaveQueryService() {
 
     fun query(tx: TransactionalSession, oppgaveQuery: OppgaveQuery, idToken: IIdToken): List<Oppgaverad> {
         val now = LocalDateTime.now()
-        val oppgaver: List<Long> = oppgaveQueryRepository.query(tx, oppgaveQuery, now)
+        val oppgaveIder = oppgaveQueryRepository.query(tx, oppgaveQuery, now)
 
         val oppgaverader = runBlocking(context = CoroutineRequestContext(idToken)) {
-            mapOppgaver(tx, oppgaveQuery, oppgaver, now)
+            mapOppgaver(tx, oppgaveQuery, oppgaveIder, now)
         }
 
         if (oppgaveQuery.select.isEmpty()) {
@@ -95,11 +98,13 @@ class OppgaveQueryService() {
 
         if (saksnummer === null || !pepClient.harTilgangTilLesSak(saksnummer, aktorId)) {
             return null
-        } else if (oppgaveQuery.select.isEmpty()) {
-            return Oppgaverad(listOf())
+        }
+
+        return if (oppgaveQuery.select.isEmpty()) {
+            Oppgaverad(listOf())
         } else {
             val felter = toOppgavefeltverdier(oppgaveQuery, oppgave)
-            return Oppgaverad(felter)
+            Oppgaverad(felter)
         }
     }
 

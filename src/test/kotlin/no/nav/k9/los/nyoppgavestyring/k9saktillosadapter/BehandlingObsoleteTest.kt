@@ -38,7 +38,8 @@ class BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
             config = get(),
             transactionalManager = get(),
             oppgaveRepositoryV2 = get(),
-            k9SakBerikerKlient = k9SakBerikerKlientLocal
+            k9SakBerikerKlient = k9SakBerikerKlientLocal,
+            pepCacheService = get()
         )
     }
 

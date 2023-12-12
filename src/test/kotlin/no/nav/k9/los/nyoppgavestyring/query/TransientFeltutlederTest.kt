@@ -28,7 +28,6 @@ import org.koin.test.get
 import java.io.StringWriter
 import java.time.Duration
 import java.time.LocalDateTime
-import java.time.temporal.TemporalUnit
 
 class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
 
@@ -45,7 +44,7 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
 
         val oppgaveQuery = OppgaveQuery(
             listOf(
-                byggFilterK9(FeltType.aksjonspunkt, FeltverdiOperator.EQUALS, "5016")
+                byggFilterK9(FeltType.AKSJONSPUNKT, FeltverdiOperator.EQUALS, "5016")
             )
         )
 
@@ -63,7 +62,7 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
 
         val oppgaveQuery = OppgaveQuery(
             listOf(
-                byggFilterK9(FeltType.liggerHosBeslutter, FeltverdiOperator.EQUALS, "true")
+                byggFilterK9(FeltType.LIGGER_HOS_BESLUTTER, FeltverdiOperator.EQUALS, "true")
             )
         )
 
@@ -82,7 +81,7 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
         val oppgaveQuery = OppgaveQuery(
             listOf(),
             listOf(
-                byggOrderK9(FeltType.liggerHosBeslutter, true)
+                byggOrderK9(FeltType.LIGGER_HOS_BESLUTTER, true)
             )
         )
 
@@ -101,7 +100,7 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
         val oppgaveQuery = OppgaveQuery(
             listOf(),
             listOf(
-                byggOrderK9(FeltType.liggerHosBeslutter, false)
+                byggOrderK9(FeltType.LIGGER_HOS_BESLUTTER, false)
             )
         )
 
@@ -120,7 +119,7 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
 
         val oppgaveQuery = OppgaveQuery(
             listOf(
-                byggFilterK9(FeltType.tidSidenMottattDato, FeltverdiOperator.GREATER_THAN_OR_EQUALS, Duration.ofDays(11).toString())
+                byggFilterK9(FeltType.TID_SIDEN_MOTTATT_DATO, FeltverdiOperator.GREATER_THAN_OR_EQUALS, Duration.ofDays(11).toString())
             )
         )
 
@@ -138,10 +137,10 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
 
         val oppgaveQuery = OppgaveQuery(
             listOf(
-                byggFilterK9(FeltType.tidSidenMottattDato, FeltverdiOperator.GREATER_THAN_OR_EQUALS, Duration.ofDays(9).toString())
+                byggFilterK9(FeltType.TID_SIDEN_MOTTATT_DATO, FeltverdiOperator.GREATER_THAN_OR_EQUALS, Duration.ofDays(9).toString())
             ),
             listOf(
-                byggOrderK9(FeltType.tidSidenMottattDato, true)
+                byggOrderK9(FeltType.TID_SIDEN_MOTTATT_DATO, true)
             )
         )
 
@@ -159,10 +158,10 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
 
         val oppgaveQuery = OppgaveQuery(
             listOf(
-                byggFilterK9(FeltType.tidSidenMottattDato, FeltverdiOperator.GREATER_THAN_OR_EQUALS, Duration.ofDays(9).toString())
+                byggFilterK9(FeltType.TID_SIDEN_MOTTATT_DATO, FeltverdiOperator.GREATER_THAN_OR_EQUALS, Duration.ofDays(9).toString())
             ),
             listOf(
-                byggOrderK9(FeltType.tidSidenMottattDato, false)
+                byggOrderK9(FeltType.TID_SIDEN_MOTTATT_DATO, false)
             )
         )
 
@@ -177,22 +176,22 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
 
     private fun testdataLøpendeVarighet() {
         OppgaveTestDataBuilder()
-            .medOppgaveFeltVerdi(FeltType.mottattDato, LocalDateTime.now().minusDays(20).toString())
+            .medOppgaveFeltVerdi(FeltType.MOTTATT_DATO, LocalDateTime.now().minusDays(20).toString())
             .lagOgLagre()
         OppgaveTestDataBuilder()
-            .medOppgaveFeltVerdi(FeltType.mottattDato, LocalDateTime.now().minusDays(10).toString())
+            .medOppgaveFeltVerdi(FeltType.MOTTATT_DATO, LocalDateTime.now().minusDays(10).toString())
             .lagOgLagre()
     }
 
     private fun testdataBeslutter() {
         OppgaveTestDataBuilder()
-            .medOppgaveFeltVerdi(FeltType.aksjonspunkt, "5016")
-            .medOppgaveFeltVerdi(FeltType.løsbartAksjonspunkt, "5016")
+            .medOppgaveFeltVerdi(FeltType.AKSJONSPUNKT, "5016")
+            .medOppgaveFeltVerdi(FeltType.LØSBART_AKSJONSPUNKT, "5016")
             .lagOgLagre()
 
         OppgaveTestDataBuilder()
-            .medOppgaveFeltVerdi(FeltType.aksjonspunkt, "5015")
-            .medOppgaveFeltVerdi(FeltType.løsbartAksjonspunkt, "5015")
+            .medOppgaveFeltVerdi(FeltType.AKSJONSPUNKT, "5015")
+            .medOppgaveFeltVerdi(FeltType.LØSBART_AKSJONSPUNKT, "5015")
             .lagOgLagre()
     }
 

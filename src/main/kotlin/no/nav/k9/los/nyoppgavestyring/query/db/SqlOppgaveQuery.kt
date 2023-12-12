@@ -1,5 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.query.db
 
+import no.nav.k9.los.nyoppgavestyring.kodeverk.EgenAnsatt
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype.*
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
@@ -27,6 +29,11 @@ class SqlOppgaveQuery(
                     ot.id = o.oppgavetype_id
                   ) INNER JOIN Omrade oppgave_omrade ON (
                     oppgave_omrade.id = ot.omrade_id
+                  ) LEFT JOIN (
+                        SELECT ekstern_id, kildeomrade, kode6, kode7, egen_ansatt
+                        FROM Oppgave_pep_cache 
+                  ) as opc ON (
+                    o.kildeomrade = opc.kildeomrade AND o.ekstern_id = opc.ekstern_id
                   )
                 WHERE aktiv = true 
             """.trimIndent()
@@ -88,7 +95,22 @@ class SqlOppgaveQuery(
                 query += "${combineOperator.sql} oppgave_omrade.ekstern_id ${operator.sql} (:oppgave_omrade$index) "
                 queryParams["oppgave_omrade$index"] = feltverdi
             }
-            else -> throw IllegalStateException("Ukjent feltkode: $feltkode")
+            "beskyttelse" -> {
+                when(feltverdi) {
+                    BeskyttelseType.KODE6.kode -> query += "${combineOperator.sql} opc.kode6 is true "
+                    BeskyttelseType.KODE7.kode -> query += "${combineOperator.sql} opc.kode7 is true "
+                    BeskyttelseType.ORDINÆR.kode -> {
+                        query += "${combineOperator.sql} opc.kode6 is not true AND opc.kode7 is not true "
+                    }
+                }
+            }
+            "egenAnsatt" -> {
+                query += when(feltverdi) {
+                    EgenAnsatt.JA.kode -> "${combineOperator.sql} opc.egen_ansatt is true "
+                    EgenAnsatt.NEI.kode -> "${combineOperator.sql} opc.egen_ansatt is false "
+                    else -> throw IllegalStateException("Ukjent feltkode: $feltkode")
+                }
+            }
         }
     }
 

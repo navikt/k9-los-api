@@ -16,6 +16,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
+import no.nav.k9.los.nyoppgavestyring.pep.PepCacheService
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.BehandlingMedFagsakDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -32,6 +33,7 @@ class K9SakTilLosAdapterTjeneste(
     private val transactionalManager: TransactionalManager,
     private val oppgaveRepositoryV2: OppgaveRepositoryV2,
     private val k9SakBerikerKlient: K9SakBerikerInterfaceKludge,
+    private val pepCacheService: PepCacheService
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9SakTilLosAdapterTjeneste::class.java)
@@ -131,9 +133,9 @@ class K9SakTilLosAdapterTjeneste(
 
                 if (oppgave == null) {
                     sisteOppgaveDtoTilHastesakvask = oppgaveDto
-                }
+                } else {
+                    pepCacheService.oppdater(tx, oppgave.kildeområde, oppgave.eksternId)
 
-                oppgave?.let {
                     eventTeller++
                     loggFremgangForHver100(eventTeller, "Prosessert $eventTeller eventer")
                 }
