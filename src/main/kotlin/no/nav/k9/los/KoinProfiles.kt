@@ -1,11 +1,9 @@
 package no.nav.k9.los
 
-import io.ktor.server.application.Application
+import io.ktor.server.application.*
 import kotlinx.coroutines.channels.Channel
 import no.nav.helse.dusseldorf.ktor.health.HealthService
-import no.nav.k9.los.KoinProfile.LOCAL
-import no.nav.k9.los.KoinProfile.PREPROD
-import no.nav.k9.los.KoinProfile.PROD
+import no.nav.k9.los.KoinProfile.*
 import no.nav.k9.los.aksjonspunktbehandling.K9KlageEventHandler
 import no.nav.k9.los.aksjonspunktbehandling.K9TilbakeEventHandler
 import no.nav.k9.los.aksjonspunktbehandling.K9punsjEventHandler
@@ -27,27 +25,26 @@ import no.nav.k9.los.integrasjon.azuregraph.AzureGraphServiceLocal
 import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
 import no.nav.k9.los.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.los.integrasjon.k9.IK9SakService
-import no.nav.k9.los.integrasjon.k9.K9SakService
 import no.nav.k9.los.integrasjon.k9.K9SakServiceLocal
+import no.nav.k9.los.integrasjon.k9.K9SakServiceSystemClient
 import no.nav.k9.los.integrasjon.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.los.integrasjon.pdl.IPdlService
 import no.nav.k9.los.integrasjon.pdl.PdlService
 import no.nav.k9.los.integrasjon.pdl.PdlServiceLocal
 import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
-import no.nav.k9.los.nyoppgavestyring.pep.PepCacheRepository
-import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerInterfaceKludge
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerKlient
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerKlientLocal
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerSystemKlient
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosLukkeFeiloppgaverTjeneste
+import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
@@ -55,6 +52,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
+import no.nav.k9.los.nyoppgavestyring.pep.PepCacheRepository
 import no.nav.k9.los.nyoppgavestyring.pep.PepCacheService
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
@@ -513,9 +511,10 @@ fun preprodConfig(config: Configuration) = module {
         PepClient(azureGraphService = get(), auditlogger = Auditlogger(config), config = config)
     }
     single<IK9SakService> {
-        K9SakService(
+        K9SakServiceSystemClient(
             configuration = get(),
-            accessTokenClient = get<AccessTokenClientResolver>().naisSts()
+            accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+            scope = "api://dev-fss.k9saksbehandling.k9-sak/.default"
         )
     }
 
@@ -530,9 +529,10 @@ fun preprodConfig(config: Configuration) = module {
     }
 
     single<K9SakBerikerInterfaceKludge> {
-        K9SakBerikerKlient(
+        K9SakBerikerSystemKlient(
             configuration = get(),
-            accessTokenClient = get<AccessTokenClientResolver>().naisSts()
+            accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+            scope = "api://dev-fss.k9saksbehandling.k9-sak/.default"
         )
     }
 
@@ -548,9 +548,10 @@ fun prodConfig(config: Configuration) = module {
         PepClient(azureGraphService = get(), auditlogger = Auditlogger(config), config = config)
     }
     single<IK9SakService> {
-        K9SakService(
+        K9SakServiceSystemClient(
             configuration = get(),
-            accessTokenClient = get<AccessTokenClientResolver>().naisSts()
+            accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+            scope = "api://prod-fss.k9saksbehandling.k9-sak/.default"
         )
     }
 
@@ -565,9 +566,10 @@ fun prodConfig(config: Configuration) = module {
     }
 
     single<K9SakBerikerInterfaceKludge> {
-        K9SakBerikerKlient(
+        K9SakBerikerSystemKlient(
             configuration = get(),
-            accessTokenClient = get<AccessTokenClientResolver>().naisSts()
+            accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+            scope = "api://prod-fss.k9saksbehandling.k9-sak/.default"
         )
     }
 }

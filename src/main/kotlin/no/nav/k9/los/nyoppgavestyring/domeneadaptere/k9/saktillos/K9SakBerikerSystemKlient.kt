@@ -15,13 +15,15 @@ import no.nav.k9.sak.kontrakt.produksjonsstyring.los.BehandlingMedFagsakDto
 import org.slf4j.LoggerFactory
 import java.util.*
 
-class K9SakBerikerKlient(
+class K9SakBerikerSystemKlient(
     private val configuration: Configuration,
-    private val accessTokenClient: AccessTokenClient
+    private val accessTokenClient: AccessTokenClient,
+    scope: String
 ) : K9SakBerikerInterfaceKludge {
     val log = LoggerFactory.getLogger("K9SakAdapter")
     private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
     private val url = configuration.k9Url()
+    private val scopes = setOf(scope)
 
     override fun hentBehandling(behandlingUUID: UUID): BehandlingMedFagsakDto? {
         var behandlingDto: BehandlingMedFagsakDto? = null
@@ -34,7 +36,8 @@ class K9SakBerikerKlient(
         val httpRequest = "${url}/los/behandling"
             .httpGet(parameters)
             .header(
-                HttpHeaders.Authorization to cachedAccessTokenClient.getAccessToken(emptySet()).asAuthoriationHeader(),
+                //OBS! Dette kalles bare med system token, og skal ikke brukes ved saksbehandler token
+                HttpHeaders.Authorization to cachedAccessTokenClient.getAccessToken(scopes).asAuthoriationHeader(),
                 HttpHeaders.Accept to "application/json",
                 HttpHeaders.ContentType to "application/json",
                 NavHeaders.CallId to UUID.randomUUID().toString()
