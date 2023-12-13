@@ -6,6 +6,7 @@ import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.integrasjon.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import java.time.Duration
@@ -28,12 +29,24 @@ class PepCacheService(
         }
     }
 
-    fun oppdaterCacheForOppgaverEldreEnn(gyldighet: Duration = Duration.ofHours(23)) {
+    fun oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn(gyldighet: Duration = Duration.ofHours(23)) {
+        oppdaterCacheForOppgaverMedStatusEldreEnn(gyldighet, setOf(Oppgavestatus.VENTER, Oppgavestatus.AAPEN))
+    }
+
+    fun oppdaterCacheForLukkedeOppgaverEldreEnn(gyldighet: Duration = Duration.ofDays(30)) {
+        oppdaterCacheForOppgaverMedStatusEldreEnn(gyldighet, setOf(Oppgavestatus.LUKKET))
+    }
+
+    private fun oppdaterCacheForOppgaverMedStatusEldreEnn(
+        gyldighet: Duration = Duration.ofHours(23),
+        status: Set<Oppgavestatus>
+    ) {
         transactionalManager.transaction { tx ->
             runBlocking {
-                val oppgaverSomMåOppdateres = oppgaveRepository.hentÅpneOgVentendeOppgaverMedPepCacheEldreEnn(
+                val oppgaverSomMåOppdateres = oppgaveRepository.hentOppgaverMedStatusOgPepCacheEldreEnn(
                     tidspunkt = LocalDateTime.now() - gyldighet,
                     antall = 1,
+                    status = status,
                     tx
                 )
                 oppgaverSomMåOppdateres.forEach { oppgave -> oppdater(tx, oppgave) }

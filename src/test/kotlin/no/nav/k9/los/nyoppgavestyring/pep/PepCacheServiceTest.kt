@@ -126,13 +126,13 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         val eksternId = UUID.randomUUID().toString()
         k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, saksnummer))
 
-        pepCacheService.oppdaterCacheForOppgaverEldreEnn(gyldighet = Duration.ofHours(2))
+        pepCacheService.oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn(gyldighet = Duration.ofHours(2))
         verify(exactly = 0) { pepRepository.lagre(any(), any()) }
 
         loggAlleOppgaverMedFelterOgCache()
 
         val tidspunktForsøktOppdatert = LocalDateTime.now()
-        pepCacheService.oppdaterCacheForOppgaverEldreEnn(gyldighet = Duration.ofNanos(1))
+        pepCacheService.oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn(gyldighet = Duration.ofNanos(1))
 
         val slot = slot<PepCache>()
         verify(exactly = 1) { pepRepository.lagre(capture(slot), any()) }
@@ -157,7 +157,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
             tidMellomKjøring = Duration.ofMillis(500),
             alderForOppfriskning = Duration.ofNanos(1),
             forsinketOppstart = Duration.ZERO
-        ).start()
+        ).startOppdateringAvÅpneOgVentende()
 
         val saksnummer = "TEST4"
         gjørSakOrdinær(saksnummer)

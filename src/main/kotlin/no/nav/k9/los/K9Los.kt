@@ -45,9 +45,6 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAda
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkApi
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoApis
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonApi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Api
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeApi
@@ -161,7 +158,10 @@ fun Application.k9Los() {
             oppgaveKøRepository = koin.get()
         )
 
-    PepCacheOppdaterer(koin.get()).start()
+    PepCacheOppdaterer(koin.get()).run {
+        startOppdateringAvÅpneOgVentende()
+        startOppdateringAvLukkedeOppgaver()
+    }
 
     val sjekkReserverteJobb =
         sjekkReserverteJobb(saksbehandlerRepository = koin.get(), reservasjonRepository = koin.get())

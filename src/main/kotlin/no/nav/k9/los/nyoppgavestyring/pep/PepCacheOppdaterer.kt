@@ -1,6 +1,5 @@
 package no.nav.k9.los.nyoppgavestyring.pep
 
-import no.nav.k9.los.domene.repository.OppgaveKøRepository
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.*
@@ -15,7 +14,7 @@ class PepCacheOppdaterer(
     private val TRÅDNAVN = "k9los-pepcache-oppdaterer"
     private val log = LoggerFactory.getLogger(PepCacheOppdaterer::class.java)
 
-    fun start(): Timer {
+    fun startOppdateringAvÅpneOgVentende(): Timer {
         return timer(
             daemon = true,
             name = TRÅDNAVN,
@@ -23,9 +22,24 @@ class PepCacheOppdaterer(
             initialDelay = forsinketOppstart.toMillis()
         ) {
             try {
-                pepCacheService.oppdaterCacheForOppgaverEldreEnn(alderForOppfriskning)
+                pepCacheService.oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn(gyldighet = alderForOppfriskning)
             } catch (e: Exception) {
-                log.warn("Feil ved kjøring av PepCacheOppdaterer", e)
+                log.warn("Feil ved kjøring av PepCacheOppdaterer for åpne og ventene oppgaver", e)
+            }
+        }
+    }
+
+    fun startOppdateringAvLukkedeOppgaver(): Timer {
+        return timer(
+            daemon = true,
+            name = TRÅDNAVN,
+            period = Duration.ofSeconds(2).toMillis(),
+            initialDelay = forsinketOppstart.toMillis()
+        ) {
+            try {
+                pepCacheService.oppdaterCacheForLukkedeOppgaverEldreEnn(gyldighet = Duration.ofDays(30))
+            } catch (e: Exception) {
+                log.warn("Feil ved kjøring av PepCacheOppdaterer for lukkede oppgaver", e)
             }
         }
     }
