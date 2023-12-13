@@ -98,7 +98,15 @@ fun Route.OppgaveKoApis() {
     class SaksbehandlersKoer
 
     get { _: SaksbehandlersKoer ->
-        call.respond(HttpStatusCode.OK)
+        requestContextService.withRequestContext(call) {
+            if (pepClient.harBasisTilgang()) {
+                call.respond(
+                    oppgaveKoTjeneste.hentKøerForSaksbehandler(kotlin.coroutines.coroutineContext.idToken().getUsername())
+                )
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
     }
 
     @Location("/{id}/oppgaver")

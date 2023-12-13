@@ -19,21 +19,6 @@ internal fun Route.SaksbehandlerOppgavekoApis() {
     val oppgaveKøRepository by inject<OppgaveKøRepository>()
     val requestContextService by inject<RequestContextService>()
     val sakslisteTjeneste by inject<SakslisteTjeneste>()
-    val oppgaveKoTjeneste by inject<OppgaveKoTjeneste>()
-
-    @Location("/koer-for-saksbehandler")
-    class getKoerForSaksbehandler
-    get {_: getKoerForSaksbehandler ->
-         requestContextService.withRequestContext(call) {
-             if (pepClient.harBasisTilgang()) {
-                 call.respond(
-                    oppgaveKoTjeneste.hentKøerForSaksbehandler(kotlin.coroutines.coroutineContext.idToken().getUsername())
-                 )
-             } else {
-                 call.respond(HttpStatusCode.Forbidden)
-             }
-         }
-    }
 
     @Deprecated("Brukes kun for gamle køer. Fjernes når V1 er sanert. Kall for nye køer: Se over")
     @Location("/oppgaveko")
