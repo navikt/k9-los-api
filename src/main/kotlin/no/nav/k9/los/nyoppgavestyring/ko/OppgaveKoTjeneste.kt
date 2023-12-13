@@ -53,17 +53,23 @@ class OppgaveKoTjeneste(
         var antallOppgaverFunnet = 0
         return oppgaveEksternIder.takeWhile { antallOppgaverFunnet < ønsketAntallSaker }.mapNotNull { oppgaveEksternId ->
             val oppgave = oppgaveRepositoryTxWrapper.hentOppgave(oppgaveEksternId)
-            val person = runBlocking {
-                pdlService.person(oppgave.hentVerdi("aktorId")!!)
-            }.person!!
-            val harTilgangTilLesSak = runBlocking { //TODO: harTilgangTilLesSak riktig PEP-spørring, eller bær det være likhetssjekk?
-                pepClient.harTilgangTilLesSak(oppgave.hentVerdi("saksnummer")!!, oppgave.hentVerdi("aktorId")!!)
-            }
-            if (harTilgangTilLesSak) {
-                antallOppgaverFunnet++
-                GenerellOppgaveV3Dto(oppgave, person)
-            } else {
+            val aktivReservasjon = reservasjonV3Tjeneste.hentAktivReservasjonForReservasjonsnøkkel(oppgave.reservasjonsnøkkel)
+            if (aktivReservasjon != null) {
                 null
+            } else {
+                val person = runBlocking {
+                    pdlService.person(oppgave.hentVerdi("aktorId")!!)
+                }.person!!
+                val harTilgangTilLesSak =
+                    runBlocking { //TODO: harTilgangTilLesSak riktig PEP-spørring, eller bør det være likhetssjekk?
+                        pepClient.harTilgangTilLesSak(oppgave.hentVerdi("saksnummer")!!, oppgave.hentVerdi("aktorId")!!)
+                    }
+                if (harTilgangTilLesSak) {
+                    antallOppgaverFunnet++
+                    GenerellOppgaveV3Dto(oppgave, person)
+                } else {
+                    null
+                }
             }
         }
     }
