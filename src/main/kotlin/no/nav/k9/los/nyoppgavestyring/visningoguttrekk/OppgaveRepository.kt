@@ -3,6 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.visningoguttrekk
 import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import java.time.LocalDateTime
 import no.nav.k9.los.spi.felter.HentVerdiInput
@@ -140,9 +141,10 @@ class OppgaveRepository(
         )
     }
 
-    fun hentÅpneOgVentendeOppgaverMedPepCacheEldreEnn(
+    fun hentOppgaverMedStatusOgPepCacheEldreEnn(
         tidspunkt: LocalDateTime = LocalDateTime.now(),
         antall: Int = 1,
+        status: Set<Oppgavestatus>,
         tx: TransactionalSession
     ): List<Oppgave> {
         return tx.run(
@@ -153,8 +155,8 @@ class OppgaveRepository(
                     LEFT JOIN OPPGAVE_PEP_CACHE opc ON (
                         o.kildeomrade = opc.kildeomrade AND o.ekstern_id = opc.ekstern_id
                     )
-                    WHERE o.aktiv is true AND o.status IN ('VENTER', 'AAPEN')
-                    AND opc.oppdatert < :grense
+                    WHERE o.aktiv is true AND o.status IN ('${status.joinToString("','")}')
+                    AND (opc.oppdatert is null OR opc.oppdatert < :grense)
                     ORDER BY opc.oppdatert
                     LIMIT :limit
                 """.trimIndent(),
