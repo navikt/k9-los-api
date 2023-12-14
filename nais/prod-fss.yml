@@ -60,10 +60,6 @@ spec:
         - application: k9-sak
           namespace: k9saksbehandling
   env:
-    - name: NAIS_STS_DISCOVERY_ENDPOINT
-      value: https://security-token-service.nais.adeo.no/rest/v1/sts/.well-known/openid-configuration
-    - name: STS_AUDIENCE
-      value: srvk9sak
     - name: OPPGAVE_BASE_URI
       value: https://oppgave.nais.adeo.no
     - name: DB_URL
