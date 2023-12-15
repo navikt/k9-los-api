@@ -1,0 +1,1 @@
+create index aktive_oppgaver_idx on oppgave_v3(aktiv);
