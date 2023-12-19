@@ -56,10 +56,7 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.merknad.MerknadTjeneste
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveApisTjeneste
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveKøOppdaterer
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
+import no.nav.k9.los.tjenester.saksbehandler.oppgave.*
 import no.nav.k9.los.tjenester.sse.SseEvent
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
@@ -297,7 +294,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             reservasjonRepository = get(),
             oppgaveRepository = get(),
             pepClient = get(),
-            configuration = get()
+            reservasjonV3Tjeneste = get(),
+            reservasjonV3DtoBuilder = get(),
         )
     }
 
@@ -398,7 +396,16 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgaveRepository = get(),
             pepClient = get(),
             saksbehandlerRepository = get(),
-            auditlogger = Auditlogger(config)
+            auditlogger = Auditlogger(config),
+        )
+    }
+
+    single {
+        ReservasjonV3DtoBuilder(
+            oppgaveRepositoryTxWrapper = get(),
+            pdlService = get(),
+            reservasjonOversetter = get(),
+            oppgaveTjeneste = get()
         )
     }
 
@@ -440,14 +447,10 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgaveTjeneste = get(),
             saksbehandlerRepository = get(),
             reservasjonV3Tjeneste = get(),
-            reservasjonOversetter = get(),
             oppgaveV3Repository = get(),
-            oppgaveV3Tjeneste = get(),
-            oppgaveKoRepository = get(),
-            oppgaveKoTjeneste = get(),
+            oppgaveV3RepositoryMedTxWrapper = get(),
             transactionalManager = get(),
-            oppgaveRepository = get(),
-            pdlService = get(),
+            reservasjonV3DtoBuilder = get(),
         )
     }
 

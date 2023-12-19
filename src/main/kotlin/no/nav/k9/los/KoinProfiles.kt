@@ -66,10 +66,7 @@ import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.los.tjenester.driftsmeldinger.DriftsmeldingTjeneste
 import no.nav.k9.los.tjenester.kodeverk.HentKodeverkTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.merknad.MerknadTjeneste
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveApisTjeneste
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveKøOppdaterer
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
+import no.nav.k9.los.tjenester.saksbehandler.oppgave.*
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.SakslisteTjeneste
 import no.nav.k9.los.tjenester.sse.RefreshKlienter.initializeRefreshKlienter
 import org.koin.core.module.Module
@@ -309,7 +306,17 @@ fun common(app: Application, config: Configuration) = module {
             reservasjonRepository = get(),
             oppgaveRepository = get(),
             pepClient = get(),
-            configuration = config
+            reservasjonV3Tjeneste = get(),
+            reservasjonV3DtoBuilder = get(),
+        )
+    }
+
+    single {
+        ReservasjonV3DtoBuilder(
+            oppgaveRepositoryTxWrapper = get(),
+            pdlService = get(),
+            reservasjonOversetter = get(),
+            oppgaveTjeneste = get(),
         )
     }
 
@@ -511,7 +518,7 @@ fun common(app: Application, config: Configuration) = module {
             oppgaveRepository = get(),
             pepClient = get(),
             saksbehandlerRepository = get(),
-            auditlogger = Auditlogger(config)
+            auditlogger = Auditlogger(config),
         )
     }
 
@@ -527,14 +534,11 @@ fun common(app: Application, config: Configuration) = module {
             oppgaveTjeneste = get(),
             saksbehandlerRepository = get(),
             reservasjonV3Tjeneste = get(),
-            reservasjonOversetter = get(),
             oppgaveV3Repository = get(),
-            oppgaveV3Tjeneste = get(),
-            oppgaveKoRepository = get(),
-            oppgaveKoTjeneste = get(),
+            oppgaveV3RepositoryMedTxWrapper = get(),
             transactionalManager = get(),
-            oppgaveRepository = get(),
-            pdlService = get())
+            reservasjonV3DtoBuilder = get(),
+        )
     }
 
     single {
