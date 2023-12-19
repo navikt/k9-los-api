@@ -13,6 +13,7 @@ class OmrådeRepository(private val dataSource: DataSource) {
     private val log = LoggerFactory.getLogger(OmrådeRepository::class.java)
     private val områdeCache = Cache<Område>()
 
+
     fun hentOmråde(eksternId: String, tx: TransactionalSession): Område {
         return områdeCache.hent(nøkkel = eksternId) {
             tx.run(

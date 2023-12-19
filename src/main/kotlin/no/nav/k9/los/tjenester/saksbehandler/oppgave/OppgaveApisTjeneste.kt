@@ -58,7 +58,7 @@ class OppgaveApisTjeneste(
         )
 
         val oppgaveV3 = transactionalManager.transaction { tx ->
-            oppgaveV3Repository.hentNyesteOppgaveForEksternId(tx, oppgaveIdMedOverstyring.oppgaveNøkkel.oppgaveEksternId)
+            oppgaveV3Repository.hentNyesteOppgaveForEksternId(tx, oppgaveIdMedOverstyring.oppgaveNøkkel.områdeEksternId, oppgaveIdMedOverstyring.oppgaveNøkkel.oppgaveEksternId)
         }
 
         val reserverForIdent = oppgaveIdMedOverstyring.overstyrIdent ?: innloggetBruker.brukerIdent
@@ -97,7 +97,7 @@ class OppgaveApisTjeneste(
             reservasjonEndringDto.brukerIdent?.let { saksbehandlerRepository.finnSaksbehandlerMedIdent(it) }
 
         val oppgave =
-            oppgaveV3Tjeneste.hentOppgave(reservasjonEndringDto.oppgaveNøkkel.oppgaveEksternId) //TODO oppgaveId er behandlingsUUID?
+            oppgaveV3Tjeneste.hentOppgave(reservasjonEndringDto.oppgaveNøkkel.områdeEksternId, reservasjonEndringDto.oppgaveNøkkel.oppgaveEksternId) //TODO oppgaveId er behandlingsUUID?
         val nyReservasjon =
             reservasjonV3Tjeneste.endreReservasjon(
                 reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
@@ -125,7 +125,7 @@ class OppgaveApisTjeneste(
         oppgaveTjeneste.forlengReservasjonPåOppgave(UUID.fromString(forlengReservasjonDto.oppgaveNøkkel.oppgaveEksternId))
 
         //TODO oppgaveId er behandlingsUUID?
-        val oppgave = oppgaveV3Tjeneste.hentOppgave(forlengReservasjonDto.oppgaveNøkkel.oppgaveEksternId)
+        val oppgave = oppgaveV3Tjeneste.hentOppgave(forlengReservasjonDto.oppgaveNøkkel.områdeEksternId,  forlengReservasjonDto.oppgaveNøkkel.oppgaveEksternId)
         //TODO: Oppgavetype som ikke er støttet i V3 -- utlede reservasjonsnøkkel
 
         val forlengetReservasjon =
@@ -156,7 +156,7 @@ class OppgaveApisTjeneste(
             params.brukerIdent
         )!!
 
-        val oppgave = oppgaveV3Tjeneste.hentOppgave(params.oppgaveNøkkel.oppgaveEksternId)
+        val oppgave = oppgaveV3Tjeneste.hentOppgave(params.oppgaveNøkkel.områdeEksternId, params.oppgaveNøkkel.oppgaveEksternId)
         //TODO: Oppgavetype som ikke er støttet i V3 -- utlede reservasjonsnøkkel
 
         val nyReservasjon = reservasjonV3Tjeneste.overførReservasjon(
@@ -177,7 +177,7 @@ class OppgaveApisTjeneste(
         // Fjernes når V1 skal vekk
         oppgaveTjeneste.frigiReservasjon(UUID.fromString(params.oppgaveNøkkel.oppgaveEksternId), params.begrunnelse)
 
-        val oppgave = oppgaveV3Tjeneste.hentOppgave(params.oppgaveNøkkel.oppgaveEksternId)
+        val oppgave = oppgaveV3Tjeneste.hentOppgave(params.oppgaveNøkkel.områdeEksternId, params.oppgaveNøkkel.oppgaveEksternId)
         reservasjonV3Tjeneste.annullerReservasjon(
             oppgave.reservasjonsnøkkel,
             params.begrunnelse,

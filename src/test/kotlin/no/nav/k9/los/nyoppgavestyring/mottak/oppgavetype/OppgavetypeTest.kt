@@ -85,7 +85,8 @@ class OppgavetypeTest {
                                 tolkesSom = "String",
                                 visTilBruker = true,
                                 kokriterie = false,
-                                kodeverkreferanse = null
+                                kodeverkreferanse = null,
+                                transientFeltutleder = null,
                             ),
                             visPåOppgave = true,
                             påkrevd = true,
@@ -101,7 +102,8 @@ class OppgavetypeTest {
                                 tolkesSom = "String",
                                 visTilBruker = true,
                                 kokriterie = false,
-                                kodeverkreferanse = null
+                                kodeverkreferanse = null,
+                                transientFeltutleder = null,
                             ),
                             visPåOppgave = true,
                             påkrevd = true,
@@ -139,7 +141,8 @@ class OppgavetypeTest {
                                 tolkesSom = "String",
                                 visTilBruker = true,
                                 kokriterie = false,
-                                kodeverkreferanse = null
+                                kodeverkreferanse = null,
+                                transientFeltutleder = null,
                             ),
                             visPåOppgave = true,
                             påkrevd = true,
@@ -155,7 +158,8 @@ class OppgavetypeTest {
                                 tolkesSom = "String",
                                 visTilBruker = true,
                                 kokriterie = false,
-                                kodeverkreferanse = null
+                                kodeverkreferanse = null,
+                                transientFeltutleder = null,
                             ),
                             visPåOppgave = true,
                             påkrevd = true,
@@ -171,7 +175,8 @@ class OppgavetypeTest {
                                 tolkesSom = "String",
                                 visTilBruker = true,
                                 kokriterie = false,
-                                kodeverkreferanse = null
+                                kodeverkreferanse = null,
+                                transientFeltutleder = null,
                             ),
                             visPåOppgave = true,
                             påkrevd = true,
@@ -195,7 +200,8 @@ class OppgavetypeTest {
                                 tolkesSom = "String",
                                 visTilBruker = true,
                                 kokriterie = false,
-                                kodeverkreferanse = null
+                                kodeverkreferanse = null,
+                                transientFeltutleder = null,
                             ),
                             visPåOppgave = true,
                             påkrevd = true,
@@ -233,7 +239,8 @@ class OppgavetypeTest {
                                 tolkesSom = "String",
                                 visTilBruker = true,
                                 kokriterie = false,
-                                kodeverkreferanse = null
+                                kodeverkreferanse = null,
+                                transientFeltutleder = null,
                             ),
                             visPåOppgave = true,
                             påkrevd = true,
@@ -249,7 +256,8 @@ class OppgavetypeTest {
                                 tolkesSom = "String",
                                 visTilBruker = true,
                                 kokriterie = false,
-                                kodeverkreferanse = null
+                                kodeverkreferanse = null,
+                                transientFeltutleder = null,
                             ),
                             visPåOppgave = true,
                             påkrevd = true,
@@ -265,7 +273,8 @@ class OppgavetypeTest {
                                 tolkesSom = "String",
                                 visTilBruker = true,
                                 kokriterie = false,
-                                kodeverkreferanse = null
+                                kodeverkreferanse = null,
+                                transientFeltutleder = null,
                             ),
                             visPåOppgave = true,
                             påkrevd = false,
@@ -289,7 +298,8 @@ class OppgavetypeTest {
                                 tolkesSom = "String",
                                 visTilBruker = true,
                                 kokriterie = false,
-                                kodeverkreferanse = null
+                                kodeverkreferanse = null,
+                                transientFeltutleder = null,
                             ),
                             visPåOppgave = true,
                             påkrevd = true,

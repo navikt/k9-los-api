@@ -44,7 +44,8 @@ class UtledOppgavebehandlingsUrlTest : AbstractK9LosIntegrationTest(){
             status = "test",
             endretTidspunkt = LocalDateTime.now(),
             kildeområde = "K9",
-            felter = oppgavefelter
+            felter = oppgavefelter,
+            versjon = 1
         )
         val url = oppgave.getOppgaveBehandlingsurl()
         assertEquals("http://localhost:9000/fagsak/ABC123/behandling/beh456?fakta=default&punkt=default", url)
@@ -83,7 +84,8 @@ class UtledOppgavebehandlingsUrlTest : AbstractK9LosIntegrationTest(){
             status = "test",
             endretTidspunkt = LocalDateTime.now(),
             kildeområde = "K9",
-            felter = oppgavefelter
+            felter = oppgavefelter,
+            versjon = 1
         )
         val url = oppgave.getOppgaveBehandlingsurl()
         assertEquals("http://localhost:9000/fagsak/ABC123/behandling/beh456?fakta=default&punkt=default", url)
@@ -122,7 +124,8 @@ class UtledOppgavebehandlingsUrlTest : AbstractK9LosIntegrationTest(){
             status = "test",
             endretTidspunkt = LocalDateTime.now(),
             kildeområde = "K9",
-            felter = oppgavefelter
+            felter = oppgavefelter,
+            versjon = 1
         )
         assertThrows<IllegalStateException> {
             oppgave.getOppgaveBehandlingsurl()

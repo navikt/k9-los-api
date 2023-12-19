@@ -17,7 +17,7 @@ class OppgavefilterDatoTypeUtviderTest {
     @Test
     fun `Date-verdier skal oversettes til DateTime ved EQUALS`() {
         val oppgavefiltre = listOf(
-            FeltverdiOppgavefilter(null, FeltType.mottattDato.eksternId, FeltverdiOperator.EQUALS.name, listOf("2023-06-15"))
+            FeltverdiOppgavefilter(null, FeltType.MOTTATT_DATO.eksternId, FeltverdiOperator.EQUALS.name, listOf("2023-06-15"))
         )
 
         val combineFilter = OppgavefilterUtvider.utvid(oppgavefiltre).first() as CombineOppgavefilter
@@ -31,7 +31,7 @@ class OppgavefilterDatoTypeUtviderTest {
     @Test
     fun `Date-verdier skal oversettes til DateTime ved GREATER_THAN_OR_EQAULS`() {
         val oppgavefiltre = listOf(
-            FeltverdiOppgavefilter(null, FeltType.mottattDato.eksternId, GREATER_THAN_OR_EQUALS.name, listOf("2023-06-15"))
+            FeltverdiOppgavefilter(null, FeltType.MOTTATT_DATO.eksternId, GREATER_THAN_OR_EQUALS.name, listOf("2023-06-15"))
         )
 
         val filter = OppgavefilterUtvider.utvid(oppgavefiltre).first() as FeltverdiOppgavefilter
@@ -42,7 +42,7 @@ class OppgavefilterDatoTypeUtviderTest {
     @Test
     fun `Date-verdier skal oversettes til DateTime ved LESS_THAN_OR_EQAULS`() {
         val oppgavefiltre = listOf(
-            FeltverdiOppgavefilter(null, FeltType.mottattDato.eksternId, LESS_THAN_OR_EQUALS.name, listOf("2023-06-15"))
+            FeltverdiOppgavefilter(null, FeltType.MOTTATT_DATO.eksternId, LESS_THAN_OR_EQUALS.name, listOf("2023-06-15"))
         )
 
         val filter = OppgavefilterUtvider.utvid(oppgavefiltre).first() as FeltverdiOppgavefilter
@@ -54,7 +54,7 @@ class OppgavefilterDatoTypeUtviderTest {
     @Test
     fun `Date-verdier skal oversettes til DateTime med foer og etter dato ved NOT_EQUALS`() {
         val oppgavefiltre = listOf(
-            FeltverdiOppgavefilter(null, FeltType.mottattDato.eksternId, FeltverdiOperator.NOT_EQUALS.name, listOf("2023-06-15"))
+            FeltverdiOppgavefilter(null, FeltType.MOTTATT_DATO.eksternId, FeltverdiOperator.NOT_EQUALS.name, listOf("2023-06-15"))
         )
 
         val combineFilter = OppgavefilterUtvider.utvid(oppgavefiltre).first() as CombineOppgavefilter
@@ -68,7 +68,7 @@ class OppgavefilterDatoTypeUtviderTest {
     @Test
     fun `Date-verdier oversettes ikke ved GREATER_THAN`() {
         val oppgavefiltre = listOf(
-            FeltverdiOppgavefilter(null, FeltType.mottattDato.eksternId, FeltverdiOperator.GREATER_THAN.name, listOf("2023-06-15"))
+            FeltverdiOppgavefilter(null, FeltType.MOTTATT_DATO.eksternId, FeltverdiOperator.GREATER_THAN.name, listOf("2023-06-15"))
         )
 
         val filter = OppgavefilterUtvider.utvid(oppgavefiltre).first() as FeltverdiOppgavefilter
@@ -79,7 +79,7 @@ class OppgavefilterDatoTypeUtviderTest {
     @Test
     fun `Date-verdier oversettes ikke ved LESS_THAN`() {
         val oppgavefiltre = listOf(
-            FeltverdiOppgavefilter(null, FeltType.mottattDato.eksternId, FeltverdiOperator.LESS_THAN.name, listOf("2023-06-15"))
+            FeltverdiOppgavefilter(null, FeltType.MOTTATT_DATO.eksternId, FeltverdiOperator.LESS_THAN.name, listOf("2023-06-15"))
         )
 
         val filter = OppgavefilterUtvider.utvid(oppgavefiltre).first() as FeltverdiOppgavefilter
@@ -90,7 +90,7 @@ class OppgavefilterDatoTypeUtviderTest {
     @Test
     fun `Verdier med andre typer endres ikke av date-utvidelse`() {
         val oppgavefiltre = listOf(
-            FeltverdiOppgavefilter(null, FeltType.aksjonspunkt.eksternId, FeltverdiOperator.EQUALS.name, listOf("5016"))
+            FeltverdiOppgavefilter(null, FeltType.AKSJONSPUNKT.eksternId, FeltverdiOperator.EQUALS.name, listOf("5016"))
         )
 
         val filter = OppgavefilterUtvider.utvid(oppgavefiltre).first() as FeltverdiOppgavefilter
@@ -102,8 +102,8 @@ class OppgavefilterDatoTypeUtviderTest {
     fun `Date-verdier i combiner skal utvides`() {
         val oppgavefiltre = listOf(
             CombineOppgavefilter(combineOperator = CombineOperator.AND.kode, filtere = listOf(
-                FeltverdiOppgavefilter(null, FeltType.mottattDato.eksternId, FeltverdiOperator.EQUALS.name, listOf("2023-05-05")),
-                FeltverdiOppgavefilter(null, FeltType.registrertDato.eksternId, LESS_THAN_OR_EQUALS.name, listOf("2023-05-06"))
+                FeltverdiOppgavefilter(null, FeltType.MOTTATT_DATO.eksternId, FeltverdiOperator.EQUALS.name, listOf("2023-05-05")),
+                FeltverdiOppgavefilter(null, FeltType.REGISTRERT_DATO.eksternId, LESS_THAN_OR_EQUALS.name, listOf("2023-05-06"))
             ))
         )
 

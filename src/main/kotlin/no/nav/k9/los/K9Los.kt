@@ -36,6 +36,8 @@ import no.nav.k9.los.eventhandler.sjekkReserverteJobb
 import no.nav.k9.los.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.los.integrasjon.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
+import no.nav.k9.los.nyoppgavestyring.pep.PepCacheOppdaterer
+import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoApis
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosApi
@@ -156,6 +158,11 @@ fun Application.k9Los() {
             oppgaveKøRepository = koin.get()
         )
 
+    PepCacheOppdaterer(koin.get()).run {
+        startOppdateringAvÅpneOgVentende()
+        startOppdateringAvLukkedeOppgaver()
+    }
+
     val sjekkReserverteJobb =
         sjekkReserverteJobb(saksbehandlerRepository = koin.get(), reservasjonRepository = koin.get())
 
@@ -188,7 +195,8 @@ fun Application.k9Los() {
         config = koin.get(),
         transactionalManager = koin.get(),
         oppgaveRepositoryV2 = koin.get(),
-        k9SakBerikerKlient = koin.get()
+        k9SakBerikerKlient = koin.get(),
+        pepCacheService = koin.get()
     ).kjør(kjørSetup = false, kjørUmiddelbart = false)
 
     K9KlageTilLosAdapterTjeneste(

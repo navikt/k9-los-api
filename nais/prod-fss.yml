@@ -57,6 +57,8 @@ spec:
       rules:
         - application: k9-los-oidc-auth-proxy
           namespace: k9saksbehandling
+        - application: k9-sak
+          namespace: k9saksbehandling
   env:
     - name: NAIS_STS_DISCOVERY_ENDPOINT
       value: https://security-token-service.nais.adeo.no/rest/v1/sts/.well-known/openid-configuration

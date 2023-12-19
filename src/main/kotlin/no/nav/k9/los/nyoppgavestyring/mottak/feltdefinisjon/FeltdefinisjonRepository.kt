@@ -6,6 +6,8 @@ import kotliquery.queryOf
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.IllegalDeleteException
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
+import no.nav.k9.los.nyoppgavestyring.transientfeltutleder.GyldigeTransientFeltutleder
+import no.nav.k9.los.spi.felter.TransientFeltutleder
 import no.nav.k9.los.utils.Cache
 import org.postgresql.util.PSQLException
 import org.slf4j.LoggerFactory
@@ -33,7 +35,8 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                     tolkesSom = row.string("tolkes_som"),
                     visTilBruker = row.boolean("vis_til_bruker"),
                     kokriterie = row.boolean("kokriterie"),
-                    kodeverkreferanse = row.stringOrNull("kodeverkreferanse")?.let { Kodeverkreferanse(it) }
+                    kodeverkreferanse = row.stringOrNull("kodeverkreferanse")?.let { Kodeverkreferanse(it) },
+                    transientFeltutleder = row.stringOrNull("transient_feltutleder")?.let { GyldigeTransientFeltutleder.hentFeltutleder(it) }
                 )
             }.asList
         )
@@ -63,7 +66,7 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
     }
 
     fun oppdater(oppdaterListe: Set<Feltdefinisjon>, område: Område, tx: TransactionalSession) {
-        oppdaterListe.forEach { datatype ->
+        oppdaterListe.forEach { feltdefinisjon ->
             tx.run(
                 queryOf(
                     """
@@ -73,17 +76,19 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                       tolkes_som = :tolkesSom,
                       vis_til_bruker = :visTilBruker,
                       kokriterie = :kokriterie,
-                      kodeverkreferanse = :kodeverkreferanse
+                      kodeverkreferanse = :kodeverkreferanse,
+                      transient_feltutleder = :transientFeltutleder
                     WHERE omrade_id = :omradeId AND ekstern_id = :eksternId""",
                     mapOf(
-                        "eksternId" to datatype.eksternId,
+                        "eksternId" to feltdefinisjon.eksternId,
                         "omradeId" to område.id,
-                        "visningsnavn" to datatype.visningsnavn,
-                        "listeType" to datatype.listetype,
-                        "tolkesSom" to datatype.tolkesSom,
-                        "visTilBruker" to datatype.visTilBruker,
-                        "kokriterie" to datatype.kokriterie,
-                        "kodeverkreferanse" to datatype.kodeverkreferanse?.let { it.toDatabasestreng() }
+                        "visningsnavn" to feltdefinisjon.visningsnavn,
+                        "listeType" to feltdefinisjon.listetype,
+                        "tolkesSom" to feltdefinisjon.tolkesSom,
+                        "visTilBruker" to feltdefinisjon.visTilBruker,
+                        "kokriterie" to feltdefinisjon.kokriterie,
+                        "kodeverkreferanse" to feltdefinisjon.kodeverkreferanse?.toDatabasestreng(),
+                        "transientFeltutleder" to feltdefinisjon.transientFeltutleder?.let { TransientFeltutleder.hentId(it) }
                     )
                 ).asUpdate
             )
@@ -103,7 +108,8 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                       tolkes_som,
                       vis_til_bruker,
                       kokriterie,
-                      kodeverkreferanse
+                      kodeverkreferanse,
+                      transient_feltutleder
                     ) 
                     values (
                       :eksternId,
@@ -113,7 +119,8 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                       :tolkesSom,
                       :visTilBruker,
                       :kokriterie,
-                      :kodeverkreferanse
+                      :kodeverkreferanse,
+                      :transientFeltutleder
                     )""",
                     mapOf(
                         "eksternId" to feltdefinisjon.eksternId,
@@ -123,7 +130,8 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                         "tolkesSom" to feltdefinisjon.tolkesSom,
                         "visTilBruker" to feltdefinisjon.visTilBruker,
                         "kokriterie" to feltdefinisjon.kokriterie,
-                        "kodeverkreferanse" to feltdefinisjon.kodeverkreferanse?.let { it.toDatabasestreng() }
+                        "kodeverkreferanse" to feltdefinisjon.kodeverkreferanse?.toDatabasestreng(),
+                        "transientFeltutleder" to feltdefinisjon.transientFeltutleder?.let { TransientFeltutleder.hentId(it) }
                     )
                 ).asUpdate
             )
@@ -168,16 +176,17 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
             )
         )
         tx.batchPreparedNamedStatement("""
-            insert into kodeverk_verdi(kodeverk_id, verdi, visningsnavn, beskrivelse)
-            VALUES (:kodeverkId, :verdi, :visningsnavn, :beskrivelse)
-            on conflict(kodeverk_id, verdi) do update set visningsnavn = :visningsnavn, beskrivelse = :beskrivelse
+            insert into kodeverk_verdi(kodeverk_id, verdi, visningsnavn, beskrivelse, favoritt)
+            VALUES (:kodeverkId, :verdi, :visningsnavn, :beskrivelse, :favoritt)
+            on conflict(kodeverk_id, verdi) do update set visningsnavn = :visningsnavn, beskrivelse = :beskrivelse, favoritt = :favoritt
         """.trimIndent(),
             kodeverk.verdier.map { verdi ->
                 mapOf(
                     "kodeverkId" to kodeverkId,
                     "verdi" to verdi.verdi,
                     "visningsnavn" to verdi.visningsnavn,
-                    "beskrivelse" to verdi.beskrivelse
+                    "beskrivelse" to verdi.beskrivelse,
+                    "favoritt" to verdi.favoritt
                 )
             }
         )
@@ -237,7 +246,8 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                 id = kodeverkverdiRow.long("id"),
                 verdi = kodeverkverdiRow.string("verdi"),
                 visningsnavn = kodeverkverdiRow.string("visningsnavn"),
-                beskrivelse = kodeverkverdiRow.stringOrNull("beskrivelse")
+                beskrivelse = kodeverkverdiRow.stringOrNull("beskrivelse"),
+                favoritt = kodeverkverdiRow.boolean("favoritt")
             )
         }.asList
     )

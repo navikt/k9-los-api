@@ -3,31 +3,32 @@ package no.nav.k9.los.nyoppgavestyring.visningoguttrekk
 import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
-import no.nav.k9.los.nyoppgavestyring.feilhandtering.FinnerIkkeDataException
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
+import java.time.LocalDateTime
+import no.nav.k9.los.spi.felter.HentVerdiInput
 
 class OppgaveRepository(
     private val oppgavetypeRepository: OppgavetypeRepository
 ) {
 
-    fun hentNyesteOppgaveForEksternId(tx: TransactionalSession, eksternId: String): Oppgave {
+    fun hentNyesteOppgaveForEksternId(tx: TransactionalSession, kildeområde: String, eksternId: String, now: LocalDateTime = LocalDateTime.now()): Oppgave {
         val oppgave = tx.run(
             queryOf(
                 """
                 select * 
                 from oppgave_v3 ov
-                where ov.ekstern_id = :eksternId
+                where ov.kildeomrade = :kildeomrade AND ov.ekstern_id = :eksternId 
                 and ov.versjon = (select max(versjon) from oppgave_v3 ov2 where ov2.ekstern_id = :eksternId)
             """.trimIndent(),
-                mapOf("eksternId" to eksternId)
-            ).map { row ->
-                mapOppgave(row, tx)
-            }.asSingle
-        ) ?: throw FinnerIkkeDataException("Fant ikke oppgave med eksternId $eksternId")
+                mapOf(
+                    "kildeomrade" to kildeområde,
+                    "eksternId" to eksternId
+                )
+            ).map { row -> mapOppgave(row, tx) }.asSingle
+        ) ?: throw IllegalStateException("Fant ikke oppgave med kilde $kildeområde og eksternId $eksternId")
 
-        return oppgave.fyllDefaultverdier()
+        return oppgave.fyllDefaultverdier().utledTransienteFelter(now)
     }
 
     fun hentAlleÅpneOppgaverForReservasjonsnøkkel(tx: TransactionalSession, reservasjonsnøkkel: String) : List<Oppgave> {
@@ -70,7 +71,7 @@ class OppgaveRepository(
         return oppgaver
     }
 
-    fun hentOppgaveForId(tx: TransactionalSession, id: Long): Oppgave {
+    fun hentOppgaveForId(tx: TransactionalSession, id: Long, now: LocalDateTime = LocalDateTime.now()): Oppgave {
         val oppgave = tx.run(
             queryOf(
                 """
@@ -84,7 +85,31 @@ class OppgaveRepository(
             }.asSingle
         ) ?: throw IllegalStateException("Fant ikke oppgave med id $id")
 
-        return oppgave.fyllDefaultverdier()
+        return oppgave.fyllDefaultverdier().utledTransienteFelter(now)
+    }
+
+    private fun Oppgave.utledTransienteFelter(now: LocalDateTime): Oppgave {
+        val utlededeVerdier: List<Oppgavefelt> = this.oppgavetype.oppgavefelter.flatMap { oppgavefelt ->
+            oppgavefelt.feltDefinisjon.transientFeltutleder?.let { feltutleder ->
+                feltutleder.hentVerdi(
+                    HentVerdiInput(
+                        now,
+                        this,
+                        oppgavefelt.feltDefinisjon.område.eksternId,
+                        oppgavefelt.feltDefinisjon.eksternId
+                    )
+                ).map { verdi ->
+                    Oppgavefelt(
+                        eksternId = oppgavefelt.feltDefinisjon.eksternId,
+                        område = oppgavefelt.feltDefinisjon.område.eksternId,
+                        listetype = oppgavefelt.feltDefinisjon.listetype,
+                        påkrevd = false,
+                        verdi = verdi
+                    )
+                }
+            } ?: listOf()
+        }
+        return copy(felter = felter.plus(utlededeVerdier))
     }
 
     private fun Oppgave.fyllDefaultverdier(): Oppgave {
@@ -121,7 +146,8 @@ class OppgaveRepository(
             endretTidspunkt = row.localDateTime("endret_tidspunkt"),
             kildeområde = row.string("kildeomrade"),
             felter = oppgavefelter,
-            reservasjonsnøkkel = row.string("reservasjonsnokkel")
+            reservasjonsnøkkel = row.string("reservasjonsnokkel"),
+            versjon = row.int("versjon")
         )
     }
 
@@ -147,6 +173,33 @@ class OppgaveRepository(
                     verdi = row.string("verdi")
                 )
             }.asList
+        )
+    }
+
+    fun hentOppgaverMedStatusOgPepCacheEldreEnn(
+        tidspunkt: LocalDateTime = LocalDateTime.now(),
+        antall: Int = 1,
+        status: Set<Oppgavestatus>,
+        tx: TransactionalSession
+    ): List<Oppgave> {
+        return tx.run(
+            queryOf(
+                """
+                    SELECT o.*
+                    FROM oppgave_v3 o 
+                    LEFT JOIN OPPGAVE_PEP_CACHE opc ON (
+                        o.kildeomrade = opc.kildeomrade AND o.ekstern_id = opc.ekstern_id
+                    )
+                    WHERE o.aktiv is true AND o.status IN ('${status.joinToString("','")}')
+                    AND (opc.oppdatert is null OR opc.oppdatert < :grense)
+                    ORDER BY opc.oppdatert
+                    LIMIT :limit
+                """.trimIndent(),
+                mapOf(
+                    "grense" to tidspunkt,
+                    "limit" to antall
+                )
+            ).map { row -> mapOppgave(row, tx) }.asList
         )
     }
 }

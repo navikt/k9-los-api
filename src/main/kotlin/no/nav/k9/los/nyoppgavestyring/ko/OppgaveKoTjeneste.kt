@@ -48,11 +48,11 @@ class OppgaveKoTjeneste(
     ): List<GenerellOppgaveV3Dto> {
         val ko = oppgaveKoRepository.hent(oppgaveKoId)
 
-        val oppgaveEksternIder = oppgaveQueryService.queryForOppgaveEksternId(ko.oppgaveQuery)
+        val køoppgaveIder = oppgaveQueryService.queryForOppgaveEksternId(ko.oppgaveQuery)
         //TODO Filtrere bort allerede reserverte oppgaver
         var antallOppgaverFunnet = 0
-        return oppgaveEksternIder.takeWhile { antallOppgaverFunnet < ønsketAntallSaker }.mapNotNull { oppgaveEksternId ->
-            val oppgave = oppgaveRepositoryTxWrapper.hentOppgave(oppgaveEksternId)
+        return køoppgaveIder.takeWhile { antallOppgaverFunnet < ønsketAntallSaker }.mapNotNull { køoppgaveId ->
+            val oppgave = oppgaveRepositoryTxWrapper.hentOppgave(køoppgaveId.område, køoppgaveId.eksternId)
             val aktivReservasjon = reservasjonV3Tjeneste.hentAktivReservasjonForReservasjonsnøkkel(oppgave.reservasjonsnøkkel)
             if (aktivReservasjon != null) {
                 null

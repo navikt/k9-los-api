@@ -16,7 +16,6 @@ import java.time.temporal.ChronoUnit
 
 data class Configuration(private val config: ApplicationConfig) {
     companion object {
-        internal const val NAIS_STS_ALIAS = "nais-sts"
         internal const val AZURE_V2_ALIAS = "azure-v2"
     }
 

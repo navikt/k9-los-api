@@ -102,6 +102,15 @@
       "kokriterie": true
     },
     {
+      "id": "tidSidenMottattDato",
+      "visningsnavn": "Tid siden mottatt dato",
+      "listetype": false,
+      "tolkesSom": "Duration",
+      "visTilBruker": true,
+      "kokriterie": true,
+      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.transientfeltutleder.K9SakTidSidenMottattDatoUtleder"
+    },
+    {
       "id": "registrertDato",
       "visningsnavn": "Registrert dato",
       "listetype": false,
@@ -160,6 +169,15 @@
       "tolkesSom": "String",
       "visTilBruker": true,
       "kokriterie": false
+    },
+    {
+      "id": "liggerHosBeslutter",
+      "visningsnavn": "Ligger hos beslutter",
+      "listetype": false,
+      "tolkesSom": "boolean",
+      "visTilBruker": true,
+      "kokriterie": true,
+      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.transientfeltutleder.K9SakBeslutterTransientFeltutleder"
     },
     {
       "id": "totrinnskontroll",
@@ -300,6 +318,69 @@
       "tolkesSom": "Duration",
       "visTilBruker": false,
       "kokriterie": false
+    },
+    {
+      "id": "akkumulertVentetidAnnetIkkeSaksbehandlingstid",
+      "visningsnavn": "Hittil akkumulert ventetid på annet som ikke skal telle som saksbehandlingstid for denne oppgaven",
+      "listetype": false,
+      "tolkesSom": "Duration",
+      "visTilBruker": true,
+      "kokriterie": true,
+      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.transientfeltutleder.K9SakVentetPåAnnetIkkeSaksbehandlingstidUtleder"
+    },
+    {
+      "id": "akkumulertVentetidAnnet",
+      "visningsnavn": "Hittil akkumulert ventetid på annet for denne oppgaven",
+      "listetype": false,
+      "tolkesSom": "Duration",
+      "visTilBruker": true,
+      "kokriterie": true,
+      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.transientfeltutleder.K9SakVentetPåAnnetUtleder"
+    },
+    {
+      "id": "akkumulertVentetidArbeidsgiver",
+      "visningsnavn": "Hittil akkumulert ventetid på arbeidsgiver for denne oppgaven",
+      "listetype": false,
+      "tolkesSom": "Duration",
+      "visTilBruker": true,
+      "kokriterie": true,
+      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.transientfeltutleder.K9SakVentetPåArbeidsgiverUtleder"
+    },
+    {
+      "id": "akkumulertVentetidSaksbehandler",
+      "visningsnavn": "Hittil akkumulert ventetid på saksbehandler for denne oppgaven",
+      "listetype": false,
+      "tolkesSom": "Duration",
+      "visTilBruker": true,
+      "kokriterie": true,
+      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.transientfeltutleder.K9SakVentetPåSaksbehandlerUtleder"
+    },
+    {
+      "id": "akkumulertVentetidSøker",
+      "visningsnavn": "Hittil akkumulert ventetid på søker for denne oppgaven",
+      "listetype": false,
+      "tolkesSom": "Duration",
+      "visTilBruker": true,
+      "kokriterie": true,
+      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.transientfeltutleder.K9SakVentetPåSøkerUtleder"
+    },
+    {
+      "id": "akkumulertVentetidTekniskFeil",
+      "visningsnavn": "Hittil akkumulert ventetid på tekniske feil for denne oppgaven",
+      "listetype": false,
+      "tolkesSom": "Duration",
+      "visTilBruker": true,
+      "kokriterie": true,
+      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.transientfeltutleder.K9SakVentetPåTekniskFeilUtleder"
+    },
+    {
+      "id": "oppgavesaksbehandlingstid",
+      "visningsnavn": "Oppgavesaksbehandlingstid",
+      "listetype": false,
+      "tolkesSom": "Duration",
+      "visTilBruker": true,
+      "kokriterie": true,
+      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.transientfeltutleder.K9SakOppgavesaksbehandlingstidUtleder"
     },
     {
       "id": "aktivVenteårsak",

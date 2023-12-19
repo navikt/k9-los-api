@@ -136,6 +136,7 @@ internal class AkkumulertVentetidTest {
             visTilBruker = true,
             kokriterie = true,
             kodeverkreferanse = null,
+            transientFeltutleder = null,
         ),
         visPåOppgave = true,
         påkrevd = false,

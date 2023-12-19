@@ -75,6 +75,9 @@ abstract class AbstractPostgresTest {
                 OPPGAVEKO_V3,
                 RESERVASJON_V3,
                 RESERVASJON_V3_ENDRING
+                OPPGAVE_V3,
+                OPPGAVE_PEP_CACHE,
+                oppgave_v3_sendt_dvh
         """)
         }
 

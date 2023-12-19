@@ -10,24 +10,26 @@ import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import no.nav.k9.los.integrasjon.rest.NavHeaders
-import no.nav.k9.sak.kontrakt.behandling.BehandlingIdDto
-import no.nav.k9.sak.kontrakt.behandling.BehandlingIdListe
 import no.nav.k9.los.utils.Cache
 import no.nav.k9.los.utils.CacheObject
 import no.nav.k9.los.utils.sha512
+import no.nav.k9.sak.kontrakt.behandling.BehandlingIdDto
+import no.nav.k9.sak.kontrakt.behandling.BehandlingIdListe
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.*
 
-open class K9SakService constructor(
+open class K9SakServiceSystemClient constructor(
     val configuration: Configuration,
-    val accessTokenClient: AccessTokenClient
+    val accessTokenClient: AccessTokenClient,
+    val scope: String
 ) : IK9SakService {
     val log = LoggerFactory.getLogger("K9SakService")!!
     private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
     private val cache = Cache<Boolean>(cacheSize = 10000)
     private val url = configuration.k9Url()
+    private val scopes = setOf(scope)
 
     override suspend fun refreshBehandlinger(behandlingIdList: BehandlingIdListe) {
         // Passer på at vi ikke sender behandlingsider om igjen før det har gått 24 timer
@@ -51,7 +53,7 @@ open class K9SakService constructor(
                 body
             )
             .header(
-                HttpHeaders.Authorization to cachedAccessTokenClient.getAccessToken(emptySet()).asAuthoriationHeader(),
+                HttpHeaders.Authorization to cachedAccessTokenClient.getAccessToken(scopes).asAuthoriationHeader(),
                 HttpHeaders.Accept to "application/json",
                 HttpHeaders.ContentType to "application/json",
                 NavHeaders.CallId to UUID.randomUUID().toString()
@@ -87,4 +89,6 @@ open class K9SakService constructor(
             ) + ")"
         )
     }
+
+
 }
