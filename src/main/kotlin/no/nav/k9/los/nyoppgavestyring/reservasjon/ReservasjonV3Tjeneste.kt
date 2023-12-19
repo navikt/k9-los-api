@@ -11,7 +11,6 @@ import no.nav.k9.los.nyoppgavestyring.feilhandtering.FinnerIkkeDataException
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.forskyvReservasjonsDato
-import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 
@@ -221,6 +220,12 @@ class ReservasjonV3Tjeneste(
                 kommentar = kommentar,
                 tx = tx
                 )
+        }
+    }
+
+    fun hentAlleAktiveReservasjoner() : List<ReservasjonV3> {
+        return transactionalManager.transaction { tx ->
+            reservasjonV3Repository.hentAlleAktiveReservasjoner(tx)
         }
     }
 

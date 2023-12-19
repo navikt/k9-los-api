@@ -1,16 +1,17 @@
 package no.nav.k9.los.tjenester.avdelingsleder
 
-import io.ktor.server.application.call
-import io.ktor.server.request.receive
-import io.ktor.server.response.respond
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.get
-import io.ktor.server.routing.post
+import io.ktor.server.application.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.integrasjon.rest.idToken
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.*
+import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveApisTjeneste
+import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
+import no.nav.k9.los.tjenester.saksbehandler.oppgave.OpphevReservasjonId
 import org.koin.ktor.ext.inject
 import java.util.*
 
@@ -62,7 +63,7 @@ internal fun Route.AvdelingslederApis() {
 
     get("/reservasjoner") {
         requestContextService.withRequestContext(call) {
-            call.respond(avdelingslederTjeneste.hentAlleReservasjoner())  //TODO finner ikke Klageoppgaver. Greit?
+            call.respond(avdelingslederTjeneste.hentAlleAktiveReservasjonerV3())
         }
     }
 

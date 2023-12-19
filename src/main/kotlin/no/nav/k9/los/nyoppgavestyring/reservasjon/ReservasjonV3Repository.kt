@@ -193,6 +193,31 @@ class ReservasjonV3Repository(
         )
     }
 
+    fun hentAlleAktiveReservasjoner(
+        tx: TransactionalSession
+    ): List<ReservasjonV3> {
+        return tx.run(
+            queryOf(
+                """
+                   select r.id, r.reservertAv, r.reservasjonsnokkel, lower(r.gyldig_tidsrom) as fra, upper(r.gyldig_tidsrom) as til, r.annullert_for_utlop, kommentar as kommentar 
+                   from reservasjon_v3 r
+                   where annullert_for_utlop = false
+                   and lower(r.gyldig_tidsrom) < localtimestamp
+                   and upper(r.gyldig_tidsrom) > localtimestamp
+                """.trimIndent()
+            ).map { row ->
+                ReservasjonV3(
+                    id = row.long("id"),
+                    reservertAv = row.long("reservertAv"),
+                    reservasjonsnøkkel = row.string("reservasjonsnokkel"),
+                    kommentar = row.string("kommentar"),
+                    gyldigFra = row.localDateTime("fra"),
+                    gyldigTil = row.localDateTime("til"),
+                )
+            }.asList
+        )
+    }
+
     fun hentAktivReservasjonForReservasjonsnøkkel(nøkkel: String, tx: TransactionalSession): ReservasjonV3? {
         return tx.run(
             queryOf(

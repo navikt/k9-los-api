@@ -48,6 +48,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
+import no.nav.k9.los.tjenester.saksbehandler.oppgave.ReservasjonV3DtoBuilder
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
@@ -287,7 +288,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             reservasjonRepository = get(),
             oppgaveRepository = get(),
             pepClient = get(),
-            configuration = get()
+            reservasjonV3Tjeneste = get(),
+            reservasjonV3DtoBuilder = get(),
         )
     }
 
@@ -387,7 +389,16 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgaveRepository = get(),
             pepClient = get(),
             saksbehandlerRepository = get(),
-            auditlogger = Auditlogger(config)
+            auditlogger = Auditlogger(config),
+        )
+    }
+
+    single {
+        ReservasjonV3DtoBuilder(
+            oppgaveRepositoryTxWrapper = get(),
+            pdlService = get(),
+            reservasjonOversetter = get(),
+            oppgaveTjeneste = get()
         )
     }
 
@@ -431,7 +442,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             reservasjonV3Tjeneste = get(),
             reservasjonOversetter = get(),
             oppgaveV3Repository = get(),
-            oppgaveV3Tjeneste = get(),
+            oppgaveV3RepositoryMedTxWrapper = get(),
             oppgaveKoRepository = get(),
             oppgaveKoTjeneste = get(),
             transactionalManager = get(),

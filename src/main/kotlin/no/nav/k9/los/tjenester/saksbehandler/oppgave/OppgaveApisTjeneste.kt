@@ -2,21 +2,18 @@ package no.nav.k9.los.tjenester.saksbehandler.oppgave
 
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.los.domene.modell.BehandlingType
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
-import no.nav.k9.los.integrasjon.pdl.*
+import no.nav.k9.los.integrasjon.pdl.IPdlService
 import no.nav.k9.los.integrasjon.pdl.fnr
 import no.nav.k9.los.integrasjon.pdl.navn
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.GenerellOppgaveV3Dto
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Dto
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.GenerellOppgaveV3Dto
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -29,7 +26,7 @@ class OppgaveApisTjeneste(
     private val reservasjonOversetter: ReservasjonOversetter,
     private val oppgaveRepository: no.nav.k9.los.domene.repository.OppgaveRepository,
     private val oppgaveV3Repository: OppgaveRepository,
-    private val oppgaveV3Tjeneste: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper,
+    private val oppgaveV3RepositoryMedTxWrapper: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper,
     private val oppgaveKoRepository: OppgaveKoRepository,
     private val oppgaveKoTjeneste: OppgaveKoTjeneste,
     private val transactionalManager: TransactionalManager,
@@ -97,7 +94,7 @@ class OppgaveApisTjeneste(
             reservasjonEndringDto.brukerIdent?.let { saksbehandlerRepository.finnSaksbehandlerMedIdent(it) }
 
         val oppgave =
-            oppgaveV3Tjeneste.hentOppgave(reservasjonEndringDto.oppgaveNøkkel.oppgaveEksternId) //TODO oppgaveId er behandlingsUUID?
+            oppgaveV3RepositoryMedTxWrapper.hentOppgave(reservasjonEndringDto.oppgaveNøkkel.oppgaveEksternId) //TODO oppgaveId er behandlingsUUID?
         val nyReservasjon =
             reservasjonV3Tjeneste.endreReservasjon(
                 reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
@@ -125,7 +122,7 @@ class OppgaveApisTjeneste(
         oppgaveTjeneste.forlengReservasjonPåOppgave(UUID.fromString(forlengReservasjonDto.oppgaveNøkkel.oppgaveEksternId))
 
         //TODO oppgaveId er behandlingsUUID?
-        val oppgave = oppgaveV3Tjeneste.hentOppgave(forlengReservasjonDto.oppgaveNøkkel.oppgaveEksternId)
+        val oppgave = oppgaveV3RepositoryMedTxWrapper.hentOppgave(forlengReservasjonDto.oppgaveNøkkel.oppgaveEksternId)
         //TODO: Oppgavetype som ikke er støttet i V3 -- utlede reservasjonsnøkkel
 
         val forlengetReservasjon =
@@ -156,7 +153,7 @@ class OppgaveApisTjeneste(
             params.brukerIdent
         )!!
 
-        val oppgave = oppgaveV3Tjeneste.hentOppgave(params.oppgaveNøkkel.oppgaveEksternId)
+        val oppgave = oppgaveV3RepositoryMedTxWrapper.hentOppgave(params.oppgaveNøkkel.oppgaveEksternId)
         //TODO: Oppgavetype som ikke er støttet i V3 -- utlede reservasjonsnøkkel
 
         val nyReservasjon = reservasjonV3Tjeneste.overførReservasjon(
@@ -177,7 +174,7 @@ class OppgaveApisTjeneste(
         // Fjernes når V1 skal vekk
         oppgaveTjeneste.frigiReservasjon(UUID.fromString(params.oppgaveNøkkel.oppgaveEksternId), params.begrunnelse)
 
-        val oppgave = oppgaveV3Tjeneste.hentOppgave(params.oppgaveNøkkel.oppgaveEksternId)
+        val oppgave = oppgaveV3RepositoryMedTxWrapper.hentOppgave(params.oppgaveNøkkel.oppgaveEksternId)
         reservasjonV3Tjeneste.annullerReservasjon(
             oppgave.reservasjonsnøkkel,
             params.begrunnelse,
@@ -194,7 +191,7 @@ class OppgaveApisTjeneste(
         }
     }
 
-    private fun byggReservasjonV3Dto(
+    fun byggReservasjonV3Dto(
         reservasjon: ReservasjonV3,
         saksbehandler: Saksbehandler
     ): ReservasjonV3Dto {
@@ -202,7 +199,7 @@ class OppgaveApisTjeneste(
         val oppgaveV1 = reservasjonOversetter.hentV1OppgaveFraReservasjon(reservasjon)
         return if (oppgaveV1 == null) {
             val oppgaverForReservasjonsnøkkel =
-                oppgaveV3Tjeneste.hentÅpneOppgaverForReservasjonsnøkkel(reservasjon.reservasjonsnøkkel)
+                oppgaveV3RepositoryMedTxWrapper.hentÅpneOppgaverForReservasjonsnøkkel(reservasjon.reservasjonsnøkkel)
 
             val oppgaveV3Dtos = oppgaverForReservasjonsnøkkel.map { oppgave ->
                 val person = runBlocking {
