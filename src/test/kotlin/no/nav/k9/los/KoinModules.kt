@@ -48,17 +48,13 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.ReservasjonV3DtoBuilder
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.merknad.MerknadTjeneste
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveApisTjeneste
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveKøOppdaterer
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
+import no.nav.k9.los.tjenester.saksbehandler.oppgave.*
 import no.nav.k9.los.tjenester.sse.SseEvent
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
@@ -440,14 +436,10 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgaveTjeneste = get(),
             saksbehandlerRepository = get(),
             reservasjonV3Tjeneste = get(),
-            reservasjonOversetter = get(),
             oppgaveV3Repository = get(),
             oppgaveV3RepositoryMedTxWrapper = get(),
-            oppgaveKoRepository = get(),
-            oppgaveKoTjeneste = get(),
             transactionalManager = get(),
-            oppgaveRepository = get(),
-            pdlService = get(),
+            reservasjonV3DtoBuilder = get(),
         )
     }
 }
