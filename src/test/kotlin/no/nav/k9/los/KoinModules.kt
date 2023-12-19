@@ -53,6 +53,7 @@ import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.merknad.MerknadTjeneste
@@ -456,5 +457,12 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         PepCacheRepository(dataSource = get())
+    }
+
+    single {
+        OppgaveRepositoryTxWrapper(
+            oppgaveRepository = get(),
+            transactionalManager = get(),
+        )
     }
 }
