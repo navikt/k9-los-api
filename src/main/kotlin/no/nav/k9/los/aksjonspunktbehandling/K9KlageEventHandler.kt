@@ -1,10 +1,8 @@
 package no.nav.k9.los.aksjonspunktbehandling
 
-import no.nav.k9.klage.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.klage.kodeverk.behandling.oppgavetillos.EventHendelse
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.KlagebehandlingProsessHendelse
 import no.nav.k9.los.domene.modell.BehandlingStatus
-import no.nav.k9.los.domene.modell.FagsakYtelseType
 import no.nav.k9.los.domene.modell.K9KlageModell
 import no.nav.k9.los.domene.repository.BehandlingProsessEventKlageRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
@@ -16,16 +14,6 @@ class K9KlageEventHandler constructor(
     private val k9KlageTilLosAdapterTjeneste: K9KlageTilLosAdapterTjeneste,
 ) {
     private val log = LoggerFactory.getLogger(K9KlageEventHandler::class.java)
-
-    private val tillatteYtelseTyper = listOf(
-        FagsakYtelseType.OMSORGSPENGER,
-        FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
-        FagsakYtelseType.OMSORGSPENGER_KS,
-        FagsakYtelseType.OMSORGSPENGER_MA,
-        FagsakYtelseType.OMSORGSPENGER_AO,
-        FagsakYtelseType.OMSORGSDAGER,
-        FagsakYtelseType.PPN
-    )
 
     fun prosesser(
         eventInn: KlagebehandlingProsessHendelse
