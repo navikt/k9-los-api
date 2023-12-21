@@ -36,8 +36,6 @@ import no.nav.k9.los.eventhandler.sjekkReserverteJobb
 import no.nav.k9.los.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.los.integrasjon.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
-import no.nav.k9.los.nyoppgavestyring.pep.PepCacheOppdaterer
-import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoApis
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosApi
@@ -45,9 +43,11 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAda
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkApi
+import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoApis
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonApi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Api
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeApi
+import no.nav.k9.los.nyoppgavestyring.pep.PepCacheOppdaterer
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryApis
 import no.nav.k9.los.tjenester.admin.AdminApis
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederApis
@@ -67,7 +67,6 @@ import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveApis
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.SaksbehandlerOppgavekoApis
 import no.nav.k9.los.tjenester.sse.RefreshKlienterWebSocket
 import no.nav.k9.los.tjenester.sse.SseEvent
-import org.koin.core.context.GlobalContext
 import org.koin.core.qualifier.named
 import org.koin.ktor.ext.getKoin
 import org.koin.ktor.plugin.Koin
@@ -87,7 +86,6 @@ fun Application.k9Los() {
 
     install(Koin) {
         modules(selectModuleBasedOnProfile(this@k9Los, config = configuration))
-        GlobalContext.startKoin(this)
     }
 
     val koin = getKoin()
