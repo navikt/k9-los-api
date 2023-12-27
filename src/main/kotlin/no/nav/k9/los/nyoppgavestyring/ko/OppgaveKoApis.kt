@@ -114,7 +114,7 @@ fun Route.OppgaveKoApis() {
     get { oppgaveKoId: OppgaveKoId ->
         requestContextService.withRequestContext(call) {
             if (pepClient.harTilgangTilReservingAvOppgaver()) {
-                oppgaveKoTjeneste.hentOppgaverFraKø(oppgaveKoId.id.toLong(), 10) //Finn et fornuftig antall?
+                call.respond(oppgaveKoTjeneste.hentOppgaverFraKø(oppgaveKoId.id.toLong(), 10)) //Finn et fornuftig antall?
             }
         }
     }
