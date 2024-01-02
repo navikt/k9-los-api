@@ -51,7 +51,7 @@ class OppgaveKoTjeneste(
         val køoppgaveIder = oppgaveQueryService.queryForOppgaveEksternId(ko.oppgaveQuery)
         //TODO Filtrere bort allerede reserverte oppgaver
         var antallOppgaverFunnet = 0
-        return køoppgaveIder.takeWhile { antallOppgaverFunnet < ønsketAntallSaker }.mapNotNull { køoppgaveId ->
+        return køoppgaveIder.takeWhile { antallOppgaverFunnet <= ønsketAntallSaker }.mapNotNull { køoppgaveId ->
             val oppgave = oppgaveRepositoryTxWrapper.hentOppgave(køoppgaveId.område, køoppgaveId.eksternId)
             val aktivReservasjon = reservasjonV3Tjeneste.hentAktivReservasjonForReservasjonsnøkkel(oppgave.reservasjonsnøkkel)
             if (aktivReservasjon != null) {

@@ -115,6 +115,8 @@ fun Route.OppgaveKoApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.harTilgangTilReservingAvOppgaver()) {
                 call.respond(oppgaveKoTjeneste.hentOppgaverFraKø(oppgaveKoId.id.toLong(), 10)) //Finn et fornuftig antall?
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
             }
         }
     }
