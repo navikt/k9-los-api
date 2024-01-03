@@ -15,6 +15,7 @@ import no.nav.k9.los.integrasjon.pdl.IPdlService
 import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.integrasjon.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.FinnerIkkeDataException
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import org.koin.ktor.ext.inject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -205,8 +206,8 @@ internal fun Route.OppgaveApis() {
     class leggTilBehandletSak
     post { _: leggTilBehandletSak ->
         requestContextService.withRequestContext(call) { //TODO klageoppgaver
-            val uuid = UUID.fromString(call.request.queryParameters["eksternId"])
-            val oppgave = oppgaveRepository.hent(uuid)
+            val oppgavenøkkel = call.receive<OppgaveNøkkelDto>()
+            val oppgave = oppgaveRepository.hent(UUID.fromString(oppgavenøkkel.oppgaveEksternId))
             val person = runBlocking {
                 pdlService.person(oppgave.aktorId)
             }.person!!
