@@ -49,29 +49,34 @@ class OppgaveKoTjeneste(
         val ko = oppgaveKoRepository.hent(oppgaveKoId)
 
         val køoppgaveIder = oppgaveQueryService.queryForOppgaveEksternId(ko.oppgaveQuery)
-        //TODO Filtrere bort allerede reserverte oppgaver
-        var antallOppgaverFunnet = 0
-        return køoppgaveIder.takeWhile { antallOppgaverFunnet <= ønsketAntallSaker }.mapNotNull { køoppgaveId ->
-            val oppgave = oppgaveRepositoryTxWrapper.hentOppgave(køoppgaveId.område, køoppgaveId.eksternId)
-            val aktivReservasjon = reservasjonV3Tjeneste.hentAktivReservasjonForReservasjonsnøkkel(oppgave.reservasjonsnøkkel)
+        var oppgaver = mutableListOf<GenerellOppgaveV3Dto>()
+        for (eksternOppgaveId in køoppgaveIder) {
+            val oppgave = oppgaveRepositoryTxWrapper.hentOppgave(eksternOppgaveId.område, eksternOppgaveId.eksternId)
+
+            val aktivReservasjon =
+                reservasjonV3Tjeneste.hentAktivReservasjonForReservasjonsnøkkel(oppgave.reservasjonsnøkkel)
             if (aktivReservasjon != null) {
-                null
-            } else {
-                val person = runBlocking {
-                    pdlService.person(oppgave.hentVerdi("aktorId")!!)
-                }.person!!
-                val harTilgangTilLesSak =
-                    runBlocking { //TODO: harTilgangTilLesSak riktig PEP-spørring, eller bør det være likhetssjekk?
-                        pepClient.harTilgangTilLesSak(oppgave.hentVerdi("saksnummer")!!, oppgave.hentVerdi("aktorId")!!)
-                    }
-                if (harTilgangTilLesSak) {
-                    antallOppgaverFunnet++
-                    GenerellOppgaveV3Dto(oppgave, person)
-                } else {
-                    null
+                continue
+            }
+
+            val harTilgangTilLesSak =
+                runBlocking { //TODO: harTilgangTilLesSak riktig PEP-spørring, eller bør det være likhetssjekk?
+                    pepClient.harTilgangTilLesSak(oppgave.hentVerdi("saksnummer")!!, oppgave.hentVerdi("aktorId")!!)
                 }
+            if (!harTilgangTilLesSak) {
+                continue
+            }
+
+            val person = runBlocking {
+                pdlService.person(oppgave.hentVerdi("aktorId")!!)
+            }.person!!
+
+            oppgaver.add(GenerellOppgaveV3Dto(oppgave, person))
+            if (oppgaver.size >= ønsketAntallSaker) {
+                break
             }
         }
+        return oppgaver.toList()
     }
 
     fun hentKøerForSaksbehandler(
@@ -134,7 +139,9 @@ class OppgaveKoTjeneste(
                 )
                 reservasjonRepository.lagreFlereReservasjoner(v1Reservasjoner)
                 runBlocking {
-                    saksbehandlerRepository.leggTilFlereReservasjoner(innloggetBruker.brukerIdent, v1Reservasjoner.map { r -> r.oppgave })
+                    saksbehandlerRepository.leggTilFlereReservasjoner(
+                        innloggetBruker.brukerIdent,
+                        v1Reservasjoner.map { r -> r.oppgave })
                 }
                 // V1-greier til og med denne linjen
                 val reservasjon = reservasjonV3Tjeneste.taReservasjon(
