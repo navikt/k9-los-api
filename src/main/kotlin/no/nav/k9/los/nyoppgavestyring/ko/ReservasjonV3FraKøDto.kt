@@ -3,10 +3,11 @@ package no.nav.k9.los.nyoppgavestyring.ko
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import java.time.LocalDateTime
 
 data class ReservasjonV3FraKøDto ( //TODO: WIP avklare med Vebjørn hvor mange felter som trengs jfr OppgaveDto som returneres fra gammel fa-oppgave-fra-ko
-    val reservertOppgaveEksternId: String,
+    val oppgaveNøkkelDto: OppgaveNøkkelDto,
     val reservasjonsnøkkel: String,
     val oppgavebehandlingsUrl: String,
     val reservertAv: String,
@@ -14,7 +15,7 @@ data class ReservasjonV3FraKøDto ( //TODO: WIP avklare med Vebjørn hvor mange 
     val reservertTil: LocalDateTime?,
 ) {
     constructor(reservasjonV3: ReservasjonV3, oppgave: Oppgave, reservertAv: Saksbehandler) : this (
-        reservertOppgaveEksternId = oppgave.eksternId,
+        oppgaveNøkkelDto = OppgaveNøkkelDto(oppgave),
         reservasjonsnøkkel = reservasjonV3.reservasjonsnøkkel,
         oppgavebehandlingsUrl = oppgave.getOppgaveBehandlingsurl(),
         reservertAv = reservertAv.epost,
