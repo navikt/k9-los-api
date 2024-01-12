@@ -32,6 +32,7 @@ import no.nav.k9.los.nyoppgavestyring.pep.PepCacheRepository
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonKonverteringJobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerKlientLocal
@@ -143,6 +144,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     every { config.auditVendor() } returns "k9"
     every { config.auditProduct() } returns "k9-los-api"
     every { config.k9FrontendUrl() } returns "http://localhost:9000"
+    every { config.nyOppgavestyringAktivert() } returns true
 
     single {
         PdlServiceLocal() as IPdlService
@@ -162,6 +164,16 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
         kommentar = ""
     )
+
+    single {
+        ReservasjonKonverteringJobb(
+            config = get(),
+            reservasjonRepository = get(),
+            oppgaveRepository = get(),
+            reservasjonOversetter = get(),
+            saksbehandlerRepository = get(),
+        )
+    }
 
     single {
         OppgaveTjeneste(

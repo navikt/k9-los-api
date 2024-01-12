@@ -56,18 +56,21 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `ta reservasjon`() {
+        val transactionalManager = get<TransactionalManager>()
         val reservasjonV3Tjeneste = get<ReservasjonV3Tjeneste>()
 
-        val reservasjon = runBlocking {
+        val reservasjon = transactionalManager.transaction { tx ->
             reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(
                 reservasjonsnøkkel = "test1",
                 reserverForId = saksbehandler1.id!!,
                 kommentar = "",
                 gyldigFra = LocalDateTime.now(),
                 gyldigTil = LocalDateTime.now().plusDays(1),
-                utføresAvId = saksbehandlerInnlogget.id!!
+                utføresAvId = saksbehandlerInnlogget.id!!,
+                tx = tx
             )
         }
+
 
         assertTrue(reservasjon.reservertAv == saksbehandler1.id)
         assertFalse(reservasjon.reservertAv == saksbehandlerInnlogget.id)
@@ -84,16 +87,18 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `annullerReservasjon`() {
+        val transactionalManager = get<TransactionalManager>()
         val reservasjonV3Tjeneste = get<ReservasjonV3Tjeneste>()
 
-        val reservasjon = runBlocking {
+        transactionalManager.transaction { tx ->
             reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(
                 reservasjonsnøkkel = "test1",
                 reserverForId = saksbehandler1.id!!,
                 kommentar = "",
                 gyldigFra = LocalDateTime.now(),
                 gyldigTil = LocalDateTime.now().plusDays(1),
-                utføresAvId = saksbehandlerInnlogget.id!!
+                utføresAvId = saksbehandlerInnlogget.id!!,
+                tx = tx
             )
         }
 

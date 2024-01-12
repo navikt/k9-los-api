@@ -35,6 +35,7 @@ import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonKonverteringJobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerKlientLocal
@@ -288,6 +289,16 @@ fun common(app: Application, config: Configuration) = module {
             reservasjonV3Tjeneste = get(),
             oppgaveV1Repository = get(),
             oppgaveV3Tjeneste = get(),
+        )
+    }
+
+    single {
+        ReservasjonKonverteringJobb(
+            config = get(),
+            reservasjonRepository = get(),
+            oppgaveRepository = get(),
+            reservasjonOversetter = get(),
+            saksbehandlerRepository = get(),
         )
     }
 

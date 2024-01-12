@@ -1,6 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering
 
 import kotlinx.coroutines.runBlocking
+import kotliquery.TransactionalSession
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.OppgaveRepository
@@ -71,12 +72,11 @@ class ReservasjonOversetter(
 
     fun taNyReservasjonFraGammelKontekst(
         oppgaveV1: Oppgave,
-        reservertAvEpost: String,
+        reserverForSaksbehandlerId: Long,
         reservertTil: LocalDateTime,
-        utførtAvIdent: String?,
+        utførtAvSaksbehandlerId: Long,
         kommentar: String?
-    )
-        : ReservasjonV3 {
+    ): ReservasjonV3 {
         return transactionalManager.transaction { tx ->
             when (oppgaveV1.system) {
                 "K9SAK" -> {
@@ -89,10 +89,11 @@ class ReservasjonOversetter(
 
                     reserverOppgavetypeSomErStøttetIV3(
                         oppgaveV3,
-                        reservertAvEpost = reservertAvEpost,
+                        reservertAvSaksbehandlerId = reserverForSaksbehandlerId,
                         reservertTil = reservertTil,
-                        utførtAvIdent = utførtAvIdent,
+                        utførtAvSaksbehandlerId = utførtAvSaksbehandlerId,
                         kommentar = kommentar,
+                        tx,
                     )
                 }
 
@@ -106,20 +107,22 @@ class ReservasjonOversetter(
 
                     reserverOppgavetypeSomErStøttetIV3(
                         oppgaveV3,
-                        reservertAvEpost = reservertAvEpost,
+                        reservertAvSaksbehandlerId = reserverForSaksbehandlerId,
                         reservertTil = reservertTil,
-                        utførtAvIdent = utførtAvIdent,
+                        utførtAvSaksbehandlerId = utførtAvSaksbehandlerId,
                         kommentar = kommentar,
+                        tx,
                     )
                 }
 
                 else -> {
                     reserverOppgavetypeSomIkkeErStøttetIV3(
                         oppgaveV1.eksternId.toString(),
-                        reservertAvEpost = reservertAvEpost,
+                        reserverForSaksbehandlerId = reserverForSaksbehandlerId,
                         reservertTil = reservertTil,
-                        utførtAvIdent = utførtAvIdent,
+                        utførtAvSaksbehandlerId = utførtAvSaksbehandlerId,
                         kommentar = kommentar,
+                        tx
                     )
                 }
             }
@@ -128,10 +131,11 @@ class ReservasjonOversetter(
 
     private fun reserverOppgavetypeSomIkkeErStøttetIV3(
         oppgaveEksternId: String,
-        reservertAvEpost: String,
+        reserverForSaksbehandlerId: Long,
         reservertTil: LocalDateTime,
-        utførtAvIdent: String?,
-        kommentar: String?
+        utførtAvSaksbehandlerId: Long?,
+        kommentar: String?,
+        tx: TransactionalSession,
     ): ReservasjonV3 {
         val gyldigFra = if (reservertTil.isAfter(LocalDateTime.now())) {
             LocalDateTime.now().minusHours(24).forskyvReservasjonsDatoBakover()
@@ -139,59 +143,40 @@ class ReservasjonOversetter(
             reservertTil!!.minusHours(24).forskyvReservasjonsDatoBakover()
         }
 
-        val reservertAv = runBlocking {
-            saksbehandlerRepository.finnSaksbehandlerMedEpost(reservertAvEpost)!!
-        }
-
-        val utførtAv = runBlocking {
-            utførtAvIdent?.let { utførtAvIdent ->
-                saksbehandlerRepository.finnSaksbehandlerMedIdent(utførtAvIdent)!!
-            }
-        }
-
         return reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(
             reservasjonsnøkkel = "legacy_$oppgaveEksternId",
-            reserverForId = reservertAv.id!!,
+            reserverForId = reserverForSaksbehandlerId,
             gyldigFra = gyldigFra,
             gyldigTil = reservertTil,
-            utføresAvId = utførtAv?.let { it.id!! } ?: reservertAv.id!!,
-            kommentar = kommentar ?: ""
+            utføresAvId = utførtAvSaksbehandlerId ?: reserverForSaksbehandlerId,
+            kommentar = kommentar ?: "",
+            tx = tx
         )
     }
 
     private fun reserverOppgavetypeSomErStøttetIV3(
         oppgave: OppgaveV3,
-        reservertAvEpost: String,
+        reservertAvSaksbehandlerId: Long,
         reservertTil: LocalDateTime,
-        utførtAvIdent: String?,
-        kommentar: String?
+        utførtAvSaksbehandlerId: Long?,
+        kommentar: String?,
+        tx: TransactionalSession,
     ): ReservasjonV3 {
-        val reservertAv = runBlocking {
-            saksbehandlerRepository.finnSaksbehandlerMedEpost(
-                reservertAvEpost
-            )
-        }!!
-
         val gyldigFra = if (reservertTil.isAfter(LocalDateTime.now())) {
             LocalDateTime.now().minusHours(24).forskyvReservasjonsDatoBakover()
         } else {
             reservertTil.minusHours(24).forskyvReservasjonsDatoBakover()
         }
 
-        val flyttetAv = runBlocking {
-            utførtAvIdent?.let { flyttetAv ->
-                saksbehandlerRepository.finnSaksbehandlerMedIdent(flyttetAv)!!
-            }
-        }
-
         return runBlocking {
             reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(
                 reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
-                reserverForId = reservertAv.id!!,
+                reserverForId = reservertAvSaksbehandlerId,
                 gyldigFra = gyldigFra,
                 gyldigTil = reservertTil,
-                utføresAvId = flyttetAv?.let { it.id!! } ?: reservertAv.id!!,
-                kommentar = kommentar ?: ""
+                utføresAvId = utførtAvSaksbehandlerId ?: reservertAvSaksbehandlerId,
+                kommentar = kommentar ?: "",
+                tx = tx
             )
         }
     }

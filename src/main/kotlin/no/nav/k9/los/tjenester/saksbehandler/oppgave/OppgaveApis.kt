@@ -40,7 +40,7 @@ internal fun Route.OppgaveApis() {
     @Location("/reserver")
     class reserverOppgave
     post { _: reserverOppgave ->
-        val oppgaveIdMedOverstyring = call.receive<OppgaveIdMedOverstyring>()
+        val oppgaveIdMedOverstyringDto = call.receive<OppgaveIdMedOverstyringDto>()
         requestContextService.withRequestContext(call) {
             if (!pepClient.harTilgangTilReservingAvOppgaver()) {
                 call.respond(HttpStatusCode.Forbidden)
@@ -49,7 +49,7 @@ internal fun Route.OppgaveApis() {
                     kotlin.coroutines.coroutineContext.idToken().getUsername()
                 )!!
 
-                call.respond(oppgaveApisTjeneste.reserverOppgave(innloggetBruker, oppgaveIdMedOverstyring))
+                call.respond(oppgaveApisTjeneste.reserverOppgave(innloggetBruker, oppgaveIdMedOverstyringDto))
             }
         }
     }
@@ -82,8 +82,7 @@ internal fun Route.OppgaveApis() {
             //reservasjonV3 skjer i enden av oppgaveTjeneste.fåOppgaveFraKø()
             val oppgaveFraKø = oppgaveTjeneste.fåOppgaveFraKø(
                 oppgaveKøId = params.oppgaveKøId,
-                brukerident = saksbehandler.brukerIdent!!,
-                saksbehandlerEpost = saksbehandler.epost!!
+                brukerident = saksbehandler.brukerIdent!!
             )
 
             if (oppgaveFraKø != null) {

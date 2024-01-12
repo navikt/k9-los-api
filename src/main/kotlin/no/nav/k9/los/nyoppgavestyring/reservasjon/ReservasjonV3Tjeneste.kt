@@ -101,45 +101,48 @@ class ReservasjonV3Tjeneste(
         gyldigFra: LocalDateTime,
         gyldigTil: LocalDateTime,
         kommentar: String,
-        utføresAvId: Long
+        utføresAvId: Long,
+        tx: TransactionalSession
     ): ReservasjonV3 {
-        return transactionalManager.transaction { tx ->
-            try {
-                taReservasjon(reservasjonsnøkkel, reserverForId, kommentar = kommentar, gyldigFra, gyldigTil)
-            } catch (e: AlleredeReservertException) {
-                val aktivReservasjon =
-                    reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(
-                        reservasjonsnøkkel,
-                        tx
-                    )!!
-                if (reserverForId != aktivReservasjon.reservertAv) { // reservert av andre
-                    aktivReservasjon
-                } else if (aktivReservasjon.gyldigTil < gyldigTil) {
-                    reservasjonV3Repository.forlengReservasjon(
-                        aktivReservasjon,
-                        endretAvBrukerId = utføresAvId,
-                        nyTildato = gyldigTil,
-                        kommentar = kommentar,
-                        tx
-                    )
-                } else {
-                    //allerede reservert lengre enn ønsket
-                    // TODO: kort ned reservasjon i stedet? Avklaring neste uke. Sjekke opp mot V1-logikken
-                    // Alt 1. - kort ned reservasjon dersom det er innlogget bruker sin reservasjon som endres. Ellers IllegalArgument.
-                    // Alt 2. - Alltid feilmelding eller "ikke utført", for så å tvinge kall mot "endre reservasjon()" eller lignenden
-                    aktivReservasjon
-                }
+        return try {
+            taReservasjon(reservasjonsnøkkel, reserverForId, kommentar = kommentar, gyldigFra, gyldigTil)
+        } catch (e: AlleredeReservertException) {
+            val aktivReservasjon =
+                reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(
+                    reservasjonsnøkkel,
+                    tx
+                )!!
+            if (reserverForId != aktivReservasjon.reservertAv) { // reservert av andre
+                aktivReservasjon
+            } else if (aktivReservasjon.gyldigTil < gyldigTil) {
+                reservasjonV3Repository.forlengReservasjon(
+                    aktivReservasjon,
+                    endretAvBrukerId = utføresAvId,
+                    nyTildato = gyldigTil,
+                    kommentar = kommentar,
+                    tx
+                )
+            } else {
+                //allerede reservert lengre enn ønsket
+                // TODO: kort ned reservasjon i stedet? Avklaring neste uke. Sjekke opp mot V1-logikken
+                // Alt 1. - kort ned reservasjon dersom det er innlogget bruker sin reservasjon som endres. Ellers IllegalArgument.
+                // Alt 2. - Alltid feilmelding eller "ikke utført", for så å tvinge kall mot "endre reservasjon()" eller lignenden
+                aktivReservasjon
             }
         }
+
     }
 
-    fun hentAktivReservasjonForReservasjonsnøkkel(reservasjonsnøkkel: String) : ReservasjonV3? {
+    fun hentAktivReservasjonForReservasjonsnøkkel(reservasjonsnøkkel: String): ReservasjonV3? {
         return transactionalManager.transaction { tx ->
             reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(reservasjonsnøkkel, tx)
         }
     }
 
-    fun hentAktivReservasjonForReservasjonsnøkkel(reservasjonsnøkkel: String, tx: TransactionalSession) : ReservasjonV3? {
+    fun hentAktivReservasjonForReservasjonsnøkkel(
+        reservasjonsnøkkel: String,
+        tx: TransactionalSession
+    ): ReservasjonV3? {
         return reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(reservasjonsnøkkel, tx)
     }
 
@@ -148,7 +151,6 @@ class ReservasjonV3Tjeneste(
             reservasjonV3Repository.hentAktiveReservasjonerForSaksbehandler(saksbehandlerId, tx)
         }
     }
-
 
     fun annullerReservasjon(reservasjonsnøkkel: String, kommentar: String, annullertAvBrukerId: Long) {
         transactionalManager.transaction { tx ->
@@ -168,7 +170,7 @@ class ReservasjonV3Tjeneste(
         nyTildato: LocalDateTime?,
         utførtAvBrukerId: Long,
         kommentar: String,
-    ) : ReservasjonV3 {
+    ): ReservasjonV3 {
         return transactionalManager.transaction { tx ->
             val aktivReservasjon = finnAktivReservasjon(reservasjonsnøkkel, tx)
             reservasjonV3Repository.forlengReservasjon(
@@ -187,7 +189,7 @@ class ReservasjonV3Tjeneste(
         tilSaksbehandlerId: Long,
         utførtAvBrukerId: Long,
         kommentar: String,
-    ) : ReservasjonV3 {
+    ): ReservasjonV3 {
         return transactionalManager.transaction { tx ->
             val aktivReservasjon =
                 finnAktivReservasjon(reservasjonsnøkkel, tx)
@@ -208,7 +210,7 @@ class ReservasjonV3Tjeneste(
         nyTildato: LocalDateTime?,
         nySaksbehandlerId: Long?,
         kommentar: String?
-    ) : ReservasjonV3 {
+    ): ReservasjonV3 {
         return transactionalManager.transaction { tx ->
             val aktivReservasjon = finnAktivReservasjon(reservasjonsnøkkel, tx)
 
@@ -219,11 +221,11 @@ class ReservasjonV3Tjeneste(
                 nySaksbehandlerId = nySaksbehandlerId,
                 kommentar = kommentar,
                 tx = tx
-                )
+            )
         }
     }
 
-    fun hentAlleAktiveReservasjoner() : List<ReservasjonV3> {
+    fun hentAlleAktiveReservasjoner(): List<ReservasjonV3> {
         return transactionalManager.transaction { tx ->
             reservasjonV3Repository.hentAlleAktiveReservasjoner(tx)
         }

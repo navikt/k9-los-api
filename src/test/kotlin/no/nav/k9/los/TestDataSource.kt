@@ -18,7 +18,7 @@ class TestDataSource {
             maximumPoolSize = 3
             minimumIdle = 1
             idleTimeout = 10001
-            connectionTimeout = 5000
+            connectionTimeout = 10000
             maxLifetime = 30001
             driverClassName = "org.postgresql.Driver"
             addDataSourceProperty("cachePrepStmts", "true")

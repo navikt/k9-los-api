@@ -101,7 +101,7 @@ class ReservasjonRepository(
             it!!.reservertTil = null
             it
         }
-        saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
+        saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAvIdent, reservasjon.oppgave)
         val oppgave = oppgaveRepository.hent(reservasjon.oppgave)
         var fjernetFraAntallKøer = 0
         oppgaveKøer.forEach { oppgaveKø ->
@@ -134,10 +134,10 @@ class ReservasjonRepository(
                     it!!.reservertTil = null
                     it
                 }
-                saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
+                saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAvIdent, reservasjon.oppgave)
             }
         } else {
-            saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
+            saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAvIdent, reservasjon.oppgave)
         }
     }
 
@@ -326,11 +326,11 @@ class ReservasjonRepository(
         if (forrigeReservasjon != null) {
             val fr = objectMapper().readValue(forrigeReservasjon, Reservasjon::class.java)
             val nyBegrunnelse = reservasjon.begrunnelse != null && reservasjon.begrunnelse != fr.begrunnelse
-            if (!reservasjon.erAktiv() && fr.erAktiv() && reservasjon.reservertAv == fr.reservertAv) {
-                log.info("RESERVASJONDEBUG: Fjerner ${reservasjon.reservertAv} oppgave=${reservasjon.oppgave} begrunnelse=$nyBegrunnelse i reservasjonstabellen")
+            if (!reservasjon.erAktiv() && fr.erAktiv() && reservasjon.reservertAvIdent == fr.reservertAvIdent) {
+                log.info("RESERVASJONDEBUG: Fjerner ${reservasjon.reservertAvIdent} oppgave=${reservasjon.oppgave} begrunnelse=$nyBegrunnelse i reservasjonstabellen")
             }
-            if (reservasjon.erAktiv() && fr.erAktiv() && reservasjon.reservertAv != fr.reservertAv) {
-                log.info("RESERVASJONDEBUG: Endrer fra ${fr.reservertAv} til ${reservasjon.reservertAv} oppgave=${reservasjon.oppgave} begrunnelse=$nyBegrunnelse i reservasjonstabellen")
+            if (reservasjon.erAktiv() && fr.erAktiv() && reservasjon.reservertAvIdent != fr.reservertAvIdent) {
+                log.info("RESERVASJONDEBUG: Endrer fra ${fr.reservertAvIdent} til ${reservasjon.reservertAvIdent} oppgave=${reservasjon.oppgave} begrunnelse=$nyBegrunnelse i reservasjonstabellen")
             }
         }
     }

@@ -1,10 +1,8 @@
 package no.nav.k9.los.domene.repository
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import kotliquery.Row
-import kotliquery.queryOf
-import kotliquery.sessionOf
-import kotliquery.using
+import kotlinx.coroutines.runBlocking
+import kotliquery.*
 import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.integrasjon.abac.IPepClient
@@ -25,7 +23,8 @@ class SaksbehandlerRepository(
         f: (Saksbehandler?) -> Saksbehandler
     ) {
         val skjermet = pepClient.harTilgangTilKode6()
-        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){ LongAdder() }.increment()
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
 
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
@@ -75,7 +74,8 @@ class SaksbehandlerRepository(
         id: String,
         f: (Saksbehandler?) -> Saksbehandler
     ) {
-        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
 
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
@@ -139,7 +139,8 @@ class SaksbehandlerRepository(
         f: (Saksbehandler?) -> Saksbehandler
     ) {
         val erSkjermet = pepClient.harTilgangTilKode6()
-        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
 
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
@@ -214,7 +215,7 @@ class SaksbehandlerRepository(
         }
         if (finnSaksbehandlerMedIdentIkkeTaHensyn(id) != null) {
             lagreMedIdIkkeTaHensyn(id) { saksbehandler ->
-                val fjernet= saksbehandler!!.reservasjoner.remove(reservasjon)
+                val fjernet = saksbehandler!!.reservasjoner.remove(reservasjon)
                 loggFjernet(fjernet, id, reservasjon)
                 saksbehandler
             }
@@ -246,7 +247,7 @@ class SaksbehandlerRepository(
         return using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
-                    "select * from saksbehandler where id = :id",
+                    """select * from saksbehandler where id = :id""",
                     mapOf("id" to id)
                 ).map { row ->
                     mapSaksbehandler(row)
@@ -256,7 +257,8 @@ class SaksbehandlerRepository(
     }
 
     fun finnIdMedEpost(epost: String): Long? {
-        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
 
         return using(sessionOf(dataSource)) {
             it.run(
@@ -269,44 +271,65 @@ class SaksbehandlerRepository(
         }
     }
 
-    suspend fun finnSaksbehandlerMedEpost(epost: String): Saksbehandler? {
-        val skjermet = pepClient.harTilgangTilKode6()
-        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
-
-        val saksbehandler = using(sessionOf(dataSource)) {
-            it.run(
-                queryOf(
-                    "select * from saksbehandler where lower(epost) = lower(:epost) and skjermet = :skjermet",
-                    mapOf("epost" to epost, "skjermet" to skjermet)
-                )
-                    .map { row ->
-                        mapSaksbehandler(row)
-                    }.asSingle
-            )
+    fun finnSaksbehandlerMedEpost(epost: String): Saksbehandler? {
+        return using(sessionOf(dataSource)) { session ->
+            session.transaction {
+                finnSaksbehandlerMedEpost(epost, it)
+            }
         }
+    }
+
+    fun finnSaksbehandlerMedEpost(epost: String, tx: TransactionalSession): Saksbehandler? {
+        val skjermet = runBlocking {
+            pepClient.harTilgangTilKode6()
+        }
+
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
+
+        val saksbehandler = tx.run(
+            queryOf(
+                "select * from saksbehandler where lower(epost) = lower(:epost) and skjermet = :skjermet",
+                mapOf("epost" to epost, "skjermet" to skjermet)
+            )
+                .map { row ->
+                    mapSaksbehandler(row)
+                }.asSingle
+        )
         return saksbehandler
     }
 
-    suspend fun finnSaksbehandlerMedIdent(ident: String): Saksbehandler? {
-        val skjermet = pepClient.harTilgangTilKode6()
-        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
-
-        val saksbehandler = using(sessionOf(dataSource)) {
-            it.run(
-                queryOf(
-                    "select * from saksbehandler where lower(saksbehandlerid) = lower(:ident) and skjermet = :skjermet",
-                    mapOf("ident" to ident, "skjermet" to skjermet)
-                )
-                    .map { row ->
-                        mapSaksbehandler(row)
-                    }.asSingle
-            )
+    fun finnSaksbehandlerMedIdent(ident: String): Saksbehandler? {
+        return using(sessionOf(dataSource)) { session ->
+            session.transaction {
+                finnSaksbehandlerMedIdent(ident, it)
+            }
         }
+    }
+
+    fun finnSaksbehandlerMedIdent(ident: String, tx: TransactionalSession): Saksbehandler? {
+        val skjermet = runBlocking {
+            pepClient.harTilgangTilKode6()
+        }
+
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
+
+        val saksbehandler = tx.run(
+            queryOf(
+                "select * from saksbehandler where lower(saksbehandlerid) = lower(:ident) and skjermet = :skjermet",
+                mapOf("ident" to ident, "skjermet" to skjermet)
+            )
+                .map { row ->
+                    mapSaksbehandler(row)
+                }.asSingle
+        )
         return saksbehandler
     }
 
     fun finnSaksbehandlerMedIdentIkkeTaHensyn(ident: String): Saksbehandler? {
-        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
 
         val saksbehandler = using(sessionOf(dataSource)) {
             it.run(
@@ -324,7 +347,8 @@ class SaksbehandlerRepository(
 
     suspend fun slettSaksbehandler(epost: String) {
 
-        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
         val skjermet = pepClient.harTilgangTilKode6()
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
@@ -341,7 +365,8 @@ class SaksbehandlerRepository(
     }
 
     suspend fun hentAlleSaksbehandlere(): List<Saksbehandler> {
-        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
         val skjermet = pepClient.harTilgangTilKode6()
         val identer = using(sessionOf(dataSource)) {
             it.run(
@@ -358,7 +383,8 @@ class SaksbehandlerRepository(
     }
 
     fun hentAlleSaksbehandlereIkkeTaHensyn(): List<Saksbehandler> {
-        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
         val identer = using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
