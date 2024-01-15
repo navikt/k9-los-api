@@ -58,6 +58,15 @@ internal fun Route.NavAnsattApis() {
                 )
             }
         } else {
+            saksbehandlerRepository.addSaksbehandler(
+                Saksbehandler(
+                    brukerIdent = "Z123456",
+                    navn = "Saksbehandler Sara",
+                    epost = "saksbehandler@nav.no",
+                    reservasjoner = mutableSetOf(),
+                    enhet = "NAV DRIFT"
+                )
+            )
             call.respond(
                 InnloggetNavAnsattDto(
                     "saksbehandler@nav.no",
