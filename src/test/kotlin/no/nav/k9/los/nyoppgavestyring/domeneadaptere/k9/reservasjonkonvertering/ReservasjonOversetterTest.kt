@@ -94,11 +94,6 @@ class ReservasjonOversetterTest : AbstractK9LosIntegrationTest(){
 
         val saksbehandlerReservertV1 = saksbehandlerRepository.finnSaksbehandlerMedIdent(oppgavestatus.reservertAv!!)!!
         assertEquals(saksbehandlerReservertV1.id, reservasjonV3.reservertAv)
-        teitFunksjon(oppgavestatus, reservasjonV3)
-    }
-
-    private fun teitFunksjon(oppgavestatus: OppgaveStatusDto, reservasjonV3: ReservasjonV3) {
-        System.out.println() //TODO: Feil saksbehandler på V3-reservasjonen?
     }
 
     fun mockEvent(saksnummer: String, aktørId: String, behandlingId: Long, pleietrengendeAktørId: String) : BehandlingProsessEventDto {

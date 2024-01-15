@@ -143,7 +143,7 @@ class ReservasjonV3Repository(
     }
 
     private fun annullerAktivReservasjon(aktivReservasjon: ReservasjonV3, kommentar: String, tx: TransactionalSession): Long {
-        return tx.updateAndReturnGeneratedKey( //TODO: reservasjon allerede utløpt, men ikke annullert? Returnere Long?
+        return tx.updateAndReturnGeneratedKey(
             queryOf(
                 """
                     UPDATE public.reservasjon_v3

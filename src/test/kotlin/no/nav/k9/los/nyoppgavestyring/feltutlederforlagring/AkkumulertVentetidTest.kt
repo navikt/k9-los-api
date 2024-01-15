@@ -89,7 +89,7 @@ internal class AkkumulertVentetidTest {
             kildeområde = "junit",
             endretTidspunkt = endretTidspunkt,
             reservasjonsnøkkel = "reservasjonsnøkkel",
-            felter = ekstraFeltverdi?.let { //TODO: lekrere kotlinkode for dette?
+            felter = ekstraFeltverdi?.let {
                 listOf(
                     lagOppgavefeltverdi("avventerSaksbehandler", avventerSaksbehandler.toString()),
                     ekstraFeltverdi

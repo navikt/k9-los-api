@@ -5,7 +5,7 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.GenerellOppgaveV3Dto
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveDto
 import java.time.LocalDateTime
 
-data class ReservasjonV3Dto ( //TODO: WIP avklare med Vebjørn hvor mange felter som trengs jfr OppgaveDto som returneres fra gammel fa-oppgave-fra-ko
+data class ReservasjonV3Dto (
     val reserverteV3Oppgaver: List<GenerellOppgaveV3Dto>,
 
     // Fjernes når V1 skal vekk

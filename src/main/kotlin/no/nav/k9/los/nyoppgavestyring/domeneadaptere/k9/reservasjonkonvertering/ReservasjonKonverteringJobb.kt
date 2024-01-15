@@ -35,10 +35,12 @@ class ReservasjonKonverteringJobb(
 
     fun spillAvReservasjoner() {
         log.info("Starter avspilling av reservasjoner")
-        val tidKjøringStartet = System.currentTimeMillis() //TODO: Telleverk og logge fremdrift
+        val tidKjøringStartet = System.currentTimeMillis()
 
         val reservasjonIder = reservasjonRepository.hentAlleReservasjonUUID()
         log.info("Fant ${reservasjonIder.size} behandlinger")
+        var reservasjonTeller = 0L
+        var slettetReservasjon = 0L
 
         reservasjonIder.forEach { gammelReservasjonUuid ->
             val reservasjonV1 = reservasjonRepository.hent(gammelReservasjonUuid)
@@ -47,6 +49,7 @@ class ReservasjonKonverteringJobb(
             }!!
             //TODO filtrer bort gamle og/eller ugyldige reservasjoner?
             if (reservasjonV1.reservertTil == null) {
+                slettetReservasjon++
                 return //Logisk slettet reservasjon. Migreres ikke
             }
             val oppgaveV1 = oppgaveRepository.hent(reservasjonV1.oppgave)
@@ -64,6 +67,16 @@ class ReservasjonKonverteringJobb(
                 utførtAvSaksbehandlerId = flyttetAvSaksbehandlerId ?: saksbehandler.id!!,
                 kommentar = reservasjonV1.begrunnelse,
             )
+            reservasjonTeller++
+            loggFremgangForHver100(reservasjonTeller, "Konvertert $reservasjonTeller reservasjoner")
+        }
+        log.info("Antall reservasjoner funnet: ${reservasjonIder.size}, antall konverterte: $reservasjonTeller, antall som var logisk slettet: $slettetReservasjon")
+        log.info("Reservasjonskonvertering ferdig")
+    }
+
+    private fun loggFremgangForHver100(teller: Long, tekst: String) {
+        if (teller.mod(100) == 0) {
+            log.info(tekst)
         }
     }
 }

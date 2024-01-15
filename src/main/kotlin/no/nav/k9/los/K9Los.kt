@@ -308,15 +308,15 @@ private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
         }
         route("saksbehandler") {
             route("oppgaver") {
-                OppgaveApis() //TODO moderskipet for reservasjoner :P
+                OppgaveApis()
                 MerknadApi()
             }
 
-            SaksbehandlerOppgavekoApis() //TODO denne må slå opp i gamle OG nye køer?
-            SaksbehandlerNøkkeltallApis() //TODO oppslag i reservasjon her
+            SaksbehandlerOppgavekoApis()
+            SaksbehandlerNøkkeltallApis()
         }
         route("avdelingsleder") {
-            AvdelingslederApis() //TODO noe reservasjonsgreier her
+            AvdelingslederApis()
             route("oppgavekoer") {
                 AvdelingslederOppgavekøApis() // Erstattet av OppgaveKoApis i V3
             }

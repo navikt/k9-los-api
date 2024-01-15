@@ -241,7 +241,7 @@ class OppgavetypeRepository(
                 mapOf(
                     "pakrevd" to innkommendeFelt.påkrevd,
                     "defaultverdi" to innkommendeFelt.defaultverdi,
-                    "visPaOppgave" to innkommendeFelt.visPåOppgave, //TODO: Denne er ikke i basen ennå
+                    "visPaOppgave" to innkommendeFelt.visPåOppgave,
                     "id" to id,
                     "feltutleder" to innkommendeFelt.feltutleder?.hentFeltutledernavn()
                 )

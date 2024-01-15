@@ -18,8 +18,6 @@ class OppgaveV3Repository(
 
     private val log = LoggerFactory.getLogger(OppgaveV3Repository::class.java)
 
-    //TODO: status enum
-
     fun nyOppgaveversjon(oppgave: OppgaveV3, tx: TransactionalSession) {
         val (eksisterendeId, eksisterendeVersjon) = hentVersjon(tx, oppgave)
 

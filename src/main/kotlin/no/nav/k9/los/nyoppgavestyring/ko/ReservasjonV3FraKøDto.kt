@@ -6,7 +6,7 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import java.time.LocalDateTime
 
-data class ReservasjonV3FraKøDto ( //TODO: WIP avklare med Vebjørn hvor mange felter som trengs jfr OppgaveDto som returneres fra gammel fa-oppgave-fra-ko
+data class ReservasjonV3FraKøDto (
     val oppgaveNøkkelDto: OppgaveNøkkelDto,
     val reservasjonsnøkkel: String,
     val oppgavebehandlingsUrl: String,

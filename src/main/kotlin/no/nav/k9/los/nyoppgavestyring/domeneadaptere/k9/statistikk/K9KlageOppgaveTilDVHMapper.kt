@@ -29,7 +29,7 @@ class K9KlageOppgaveTilDVHMapper {
             vedtaksDato = oppgave.hentVerdi("vedtaksDato")
                 ?.let { LocalDate.parse(it) },
             relatertBehandlingId = oppgave.hentVerdi("påklagdBehandlingUuid"),
-            vedtakId = oppgave.hentVerdi("vedtakId"), //TODO: callback mot K9? evt vedtakstopic, YtelseV1.vedtakReferanse
+            vedtakId = oppgave.hentVerdi("vedtakId"),
             saksnummer = oppgave.hentVerdi("saksnummer"),
             behandlingType = oppgave.hentVerdi("behandlingTypekode")
                 ?.let { BehandlingType.fraKode(it).kode },

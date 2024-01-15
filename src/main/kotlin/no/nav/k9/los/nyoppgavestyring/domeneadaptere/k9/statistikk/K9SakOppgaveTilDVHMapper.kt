@@ -50,7 +50,7 @@ class K9SakOppgaveTilDVHMapper {
             registrertDato = registrertDato,
             vedtaksDato = vedtaksDato,
             relatertBehandlingId = null,
-            vedtakId = oppgave.hentVerdi("vedtakId"), //TODO: callback mot K9? evt vedtakstopic, YtelseV1.vedtakReferanse
+            vedtakId = oppgave.hentVerdi("vedtakId"),
             saksnummer = oppgave.hentVerdi("saksnummer"),
             behandlingType = oppgave.hentVerdi("behandlingTypekode")
                 ?.let { BehandlingType.fraKode(it).kode },
