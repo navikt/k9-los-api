@@ -32,10 +32,6 @@ spec:
   prometheus:
     enabled: true
     path: /metrics
-  fasitResources:
-    used:
-      - alias: appdynamics
-        resourceType: applicationproperties
   vault:
     enabled: true
     paths:
@@ -43,7 +39,6 @@ spec:
         kvPath: /serviceuser/data/dev/srvk9los
       - mountPath: /var/run/secrets/nais.io/vault
         kvPath: /kv/preprod/fss/k9-los-api/k9saksbehandling
-  sidecar: true
   webproxy: true
   kafka:
     pool: nav-dev
