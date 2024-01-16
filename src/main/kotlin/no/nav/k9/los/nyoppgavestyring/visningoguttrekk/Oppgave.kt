@@ -14,8 +14,8 @@ data class Oppgave(
     val felter: List<Oppgavefelt>,
     val versjon: Int,
 ) {
-    fun getOppgaveBehandlingsurl(): String {
-        var oppgavebehandlingsUrlTemplate = oppgavetype.oppgavebehandlingsUrlTemplate
+    fun getOppgaveBehandlingsurl(): String? {
+        var oppgavebehandlingsUrlTemplate: String = oppgavetype.oppgavebehandlingsUrlTemplate ?: return null
         val matcher = "\\{(.+?)\\}".toRegex()
         val matches = matcher.findAll(oppgavebehandlingsUrlTemplate, 0)
         matches.forEach { match ->

@@ -15,7 +15,7 @@ data class GenerellOppgaveV3Dto(
     val journalpostId: String?,
     //val opprettetTidspunkt: LocalDateTime, //TODO enten forsvare fjerning, eller hente fra første oppgaveversjon
     val oppgavestatus: Oppgavestatus,
-    val oppgavebehandlingsUrl: String,
+    val oppgavebehandlingsUrl: String?,
 ) {
     constructor(oppgaveV3: Oppgave, person: PersonPdl) : this(
         søkersNavn = person.navn(),

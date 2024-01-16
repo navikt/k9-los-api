@@ -9,7 +9,7 @@ import java.time.LocalDateTime
 data class ReservasjonV3FraKøDto (
     val oppgaveNøkkelDto: OppgaveNøkkelDto,
     val reservasjonsnøkkel: String,
-    val oppgavebehandlingsUrl: String,
+    val oppgavebehandlingsUrl: String?,
     val reservertAv: String,
     val reservertFra: LocalDateTime,
     val reservertTil: LocalDateTime?,
