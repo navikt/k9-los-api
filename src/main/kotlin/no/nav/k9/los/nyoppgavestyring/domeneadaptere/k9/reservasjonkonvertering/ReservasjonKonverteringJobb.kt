@@ -20,7 +20,7 @@ class ReservasjonKonverteringJobb(
     private val log: Logger = LoggerFactory.getLogger(ReservasjonKonverteringJobb::class.java)
     private val TRÅDNAVN = "reservasjonKonvertering"
 
-    fun kjør() {
+    fun kjørReservasjonskonvertering() {
         if (config.nyOppgavestyringAktivert()) {
             log.info("Spiller av reservasjoner i gammel løsning og skriver til ny modell")
             thread(
