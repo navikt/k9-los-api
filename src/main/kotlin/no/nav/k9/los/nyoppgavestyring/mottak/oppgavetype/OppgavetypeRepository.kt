@@ -70,7 +70,7 @@ class OppgavetypeRepository(
                         id = oppgavetypeRow.long("id"),
                         eksternId = oppgavetypeRow.string("ekstern_id"),
                         område = område,
-                        oppgavebehandlingsUrlTemplate = oppgavetypeRow.string("oppgavebehandlingsUrlTemplate"),
+                        oppgavebehandlingsUrlTemplate = oppgavetypeRow.stringOrNull("oppgavebehandlingsUrlTemplate"),
                         oppgavefelter = tx.run(
                             queryOf(
                                 """
