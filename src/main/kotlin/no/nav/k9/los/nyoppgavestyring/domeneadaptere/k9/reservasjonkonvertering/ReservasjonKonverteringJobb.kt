@@ -60,6 +60,7 @@ class ReservasjonKonverteringJobb(
                 }
             }
 
+            log.info("Konverterer reservasjon for oppgaveUuid: ${reservasjonV1.oppgave}")
             reservasjonOversetter.taNyReservasjonFraGammelKontekst(
                 oppgaveV1 = oppgaveV1,
                 reserverForSaksbehandlerId = saksbehandlerIdSomHolderReservasjonV1,
