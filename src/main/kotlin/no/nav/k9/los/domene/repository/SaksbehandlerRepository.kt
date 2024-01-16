@@ -271,31 +271,24 @@ class SaksbehandlerRepository(
         }
     }
 
-    fun finnSaksbehandlerMedEpost(epost: String): Saksbehandler? {
-        return using(sessionOf(dataSource)) { session ->
-            session.transaction {
-                finnSaksbehandlerMedEpost(epost, it)
-            }
-        }
-    }
-
-    fun finnSaksbehandlerMedEpost(epost: String, tx: TransactionalSession): Saksbehandler? {
-        val skjermet = runBlocking {
-            pepClient.harTilgangTilKode6()
-        }
+    suspend fun finnSaksbehandlerMedEpost(epost: String): Saksbehandler? {
+        val skjermet = pepClient.harTilgangTilKode6()
 
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
 
-        val saksbehandler = tx.run(
-            queryOf(
-                "select * from saksbehandler where lower(epost) = lower(:epost) and skjermet = :skjermet",
-                mapOf("epost" to epost, "skjermet" to skjermet)
-            )
-                .map { row ->
-                    mapSaksbehandler(row)
-                }.asSingle
-        )
+        val saksbehandler = using(sessionOf(dataSource)) { session ->
+            session.transaction { tx ->
+                tx.run(
+                    queryOf(
+                        "select * from saksbehandler where lower(epost) = lower(:epost) and skjermet = :skjermet",
+                        mapOf("epost" to epost, "skjermet" to skjermet)
+                    ).map { row ->
+                        mapSaksbehandler(row)
+                    }.asSingle
+                )
+            }
+        }
         return saksbehandler
     }
 
