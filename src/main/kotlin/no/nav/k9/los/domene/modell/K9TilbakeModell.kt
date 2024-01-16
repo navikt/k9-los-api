@@ -241,7 +241,7 @@ data class K9TilbakeModell(
             && reservasjonRepository.finnes(oppgave.eksternId) && reservasjonRepository.finnes(oppgave.eksternId)
         ) {
             val saksbehandler =
-                saksbehandlerRepository.finnSaksbehandlerMedIdentIkkeTaHensyn(reservasjonRepository.hent(oppgave.eksternId).reservertAvIdent)
+                saksbehandlerRepository.finnSaksbehandlerMedIdentIkkeTaHensyn(reservasjonRepository.hent(oppgave.eksternId).reservertAv)
             saksbehandler?.brukerIdent
         } else {
             ""
@@ -251,7 +251,7 @@ data class K9TilbakeModell(
             if (reservasjonRepository.finnes(oppgave.eksternId)) {
                 val hentMedHistorikk = reservasjonRepository.hentMedHistorikk(oppgave.eksternId)
                 val reservertav = hentMedHistorikk
-                    .map { reservasjon -> reservasjon.reservertAvIdent }.first()
+                    .map { reservasjon -> reservasjon.reservertAv }.first()
                 saksbehandlerRepository.finnSaksbehandlerMedIdentIkkeTaHensyn(reservertav)?.enhet?.substringBefore(" ")
             } else {
                 "SRV"

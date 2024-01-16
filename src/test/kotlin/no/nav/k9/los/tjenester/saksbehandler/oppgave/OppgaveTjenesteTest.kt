@@ -1878,7 +1878,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         )
 
         val reservasjon = reservasjonRepository.hent(nyOppgave.eksternId)
-        assertThat(reservasjon.reservertAvIdent).isEqualTo("Foo")
+        assertThat(reservasjon.reservertAv).isEqualTo("Foo")
 
         oppgaveTjeneste.endreReservasjonPåOppgave(
             ReservasjonEndringDto(
@@ -1888,7 +1888,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         )
 
         val reservasjonEtterEndring = reservasjonRepository.hent(nyOppgave.eksternId)
-        assertThat(reservasjonEtterEndring.reservertAvIdent).isEqualTo("Bar")
+        assertThat(reservasjonEtterEndring.reservertAv).isEqualTo("Bar")
     }
 
     @Test

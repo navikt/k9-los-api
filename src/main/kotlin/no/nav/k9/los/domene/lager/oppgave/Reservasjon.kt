@@ -5,8 +5,8 @@ import java.util.*
 
 data class Reservasjon(
     var reservertTil: LocalDateTime?,
-    var reservertAvIdent: String,
-    var flyttetAvIdent: String?,
+    var reservertAv: String, //ident
+    var flyttetAv: String?, //ident
     var flyttetTidspunkt: LocalDateTime?,
     var begrunnelse: String?,
     val oppgave: UUID
@@ -20,7 +20,7 @@ data class Reservasjon(
     }
 
     fun hentFlyttet(): Flyttet? {
-        return flyttetAvIdent?.takeIf { it.isNotBlank() }?.let {
+        return flyttetAv?.takeIf { it.isNotBlank() }?.let {
             Flyttet(
                 flyttetAv = it,
                 flyttetTidspunkt = flyttetTidspunkt ?: throw IllegalStateException("Flyttet uten å ha satt flyttetTidspunkt"),

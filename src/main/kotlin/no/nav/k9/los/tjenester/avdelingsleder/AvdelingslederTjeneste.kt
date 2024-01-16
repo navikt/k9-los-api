@@ -326,7 +326,7 @@ class AvdelingslederTjeneste(
             it.reservertTil = null
             it
         }
-        saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAvIdent, reservasjon.oppgave)
+        saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
         val oppgave = oppgaveRepository.hent(uuid)
         for (oppgavekø in oppgaveKøRepository.hent()) {
             oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø.id, listOf(oppgave), reservasjonRepository)

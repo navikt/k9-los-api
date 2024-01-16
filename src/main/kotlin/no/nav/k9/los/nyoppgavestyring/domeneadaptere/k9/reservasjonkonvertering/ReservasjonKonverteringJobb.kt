@@ -45,7 +45,7 @@ class ReservasjonKonverteringJobb(
         reservasjonIder.forEach { gammelReservasjonUuid ->
             val reservasjonV1 = reservasjonRepository.hent(gammelReservasjonUuid)
             val saksbehandler = runBlocking {
-                saksbehandlerRepository.finnSaksbehandlerMedIdent(reservasjonV1.reservertAvIdent)
+                saksbehandlerRepository.finnSaksbehandlerMedIdent(reservasjonV1.reservertAv)
             }!!
             //TODO filtrer bort gamle og/eller ugyldige reservasjoner?
             if (reservasjonV1.reservertTil == null) {
@@ -54,7 +54,7 @@ class ReservasjonKonverteringJobb(
             }
             val oppgaveV1 = oppgaveRepository.hent(reservasjonV1.oppgave)
 
-            val flyttetAvSaksbehandlerId = reservasjonV1.flyttetAvIdent?.let {
+            val flyttetAvSaksbehandlerId = reservasjonV1.flyttetAv?.let {
                 runBlocking {
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(it)!!.id!!
                 }
