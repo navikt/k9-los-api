@@ -9,7 +9,7 @@ class Oppgavetype(
     val eksternId: String,
     val område: Område,
     val definisjonskilde: String,
-    val oppgavebehandlingsUrlTemplate: String,
+    val oppgavebehandlingsUrlTemplate: String?,
     val oppgavefelter: Set<Oppgavefelt>,
 ) {
 
