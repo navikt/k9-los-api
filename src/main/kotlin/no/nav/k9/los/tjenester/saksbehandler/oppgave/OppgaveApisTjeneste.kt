@@ -1,0 +1,198 @@
+package no.nav.k9.los.tjenester.saksbehandler.oppgave
+
+import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.domene.modell.Saksbehandler
+import no.nav.k9.los.domene.repository.SaksbehandlerRepository
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Dto
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.util.*
+
+class OppgaveApisTjeneste(
+    private val oppgaveTjeneste: OppgaveTjeneste,
+    private val saksbehandlerRepository: SaksbehandlerRepository,
+    private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
+    private val oppgaveV3Repository: OppgaveRepository,
+    private val oppgaveV3RepositoryMedTxWrapper: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper,
+    private val transactionalManager: TransactionalManager,
+    private val reservasjonV3DtoBuilder: ReservasjonV3DtoBuilder
+) {
+
+    suspend fun reserverOppgave(
+        innloggetBruker: Saksbehandler,
+        oppgaveIdMedOverstyringDto: OppgaveIdMedOverstyringDto
+    ): OppgaveStatusDto {
+        val reserverFra = LocalDateTime.now()
+        /*
+         1. Reserver i V1-modellen
+         2. Reserver i V3-modellen
+         3. Returner status fra V3.
+         -- V1 er i praksis en skyggekopi for sikring av evt rollback
+         */
+
+        // Fjernes når V1 skal vekk
+        val oppgaveStatusDto = oppgaveTjeneste.reserverOppgave(
+            innloggetBruker.brukerIdent!!,
+            oppgaveIdMedOverstyringDto.overstyrIdent,
+            UUID.fromString(oppgaveIdMedOverstyringDto.oppgaveNøkkel.oppgaveEksternId),
+            oppgaveIdMedOverstyringDto.overstyrSjekk,
+            oppgaveIdMedOverstyringDto.overstyrBegrunnelse
+        )
+
+        val reserverForSaksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(
+            oppgaveIdMedOverstyringDto.overstyrIdent ?: innloggetBruker.brukerIdent!!
+        )!!
+
+        val reservasjonV3 = transactionalManager.transaction { tx ->
+            val oppgaveV3 = oppgaveV3Repository.hentNyesteOppgaveForEksternId(
+                tx,
+                oppgaveIdMedOverstyringDto.oppgaveNøkkel.områdeEksternId,
+                oppgaveIdMedOverstyringDto.oppgaveNøkkel.oppgaveEksternId
+            )
+
+            reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(
+                reservasjonsnøkkel = oppgaveV3.reservasjonsnøkkel,
+                reserverForId = reserverForSaksbehandler.id!!,
+                gyldigFra = reserverFra,
+                utføresAvId = innloggetBruker.id!!,
+                kommentar = oppgaveIdMedOverstyringDto.overstyrBegrunnelse ?: "",
+                gyldigTil = reserverFra.plusHours(24).forskyvReservasjonsDato(),
+                tx = tx
+            )
+        }
+
+        val saksbehandlerSomHarReservasjon =
+            saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonV3.reservertAv)
+        return OppgaveStatusDto(
+            erReservert = true,
+            reservertTilTidspunkt = reservasjonV3.gyldigTil,
+            erReservertAvInnloggetBruker = reservasjonV3.reservertAv == innloggetBruker.id!!,
+            reservertAv = saksbehandlerSomHarReservasjon.brukerIdent,
+            reservertAvNavn = saksbehandlerSomHarReservasjon.navn,
+            flyttetReservasjon = null,
+            kanOverstyres = reservasjonV3.reservertAv != innloggetBruker.id!!
+        )
+    }
+
+    suspend fun endreReservasjon(
+        reservasjonEndringDto: ReservasjonEndringDto,
+        innloggetBruker: Saksbehandler
+    ): ReservasjonV3Dto {
+        // Fjernes når V1 skal vekk
+        oppgaveTjeneste.endreReservasjonPåOppgave(reservasjonEndringDto)
+
+        val tilSaksbehandler =
+            reservasjonEndringDto.brukerIdent?.let { saksbehandlerRepository.finnSaksbehandlerMedIdent(it) }
+
+        val oppgave =
+            oppgaveV3RepositoryMedTxWrapper.hentOppgave(
+                reservasjonEndringDto.oppgaveNøkkel.områdeEksternId,
+                reservasjonEndringDto.oppgaveNøkkel.oppgaveEksternId
+            ) //TODO oppgaveId er behandlingsUUID?
+        val nyReservasjon =
+            reservasjonV3Tjeneste.endreReservasjon(
+                reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
+                endretAvBrukerId = innloggetBruker.id!!,
+                nyTildato = reservasjonEndringDto.reserverTil?.let {
+                    LocalDateTime.of(
+                        reservasjonEndringDto.reserverTil,
+                        LocalTime.MAX
+                    )
+                },
+                nySaksbehandlerId = tilSaksbehandler?.id,
+                kommentar = reservasjonEndringDto.begrunnelse
+            )
+
+        val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(nyReservasjon!!.reservertAv)
+
+        return reservasjonV3DtoBuilder.byggReservasjonV3Dto(nyReservasjon, reservertAv)
+    }
+
+    fun forlengReservasjon(
+        forlengReservasjonDto: ForlengReservasjonDto,
+        innloggetBruker: Saksbehandler
+    ): ReservasjonV3Dto {
+        // Fjernes når V1 skal vekk
+        oppgaveTjeneste.forlengReservasjonPåOppgave(UUID.fromString(forlengReservasjonDto.oppgaveNøkkel.oppgaveEksternId))
+
+        //TODO oppgaveId er behandlingsUUID?
+        val oppgave = oppgaveV3RepositoryMedTxWrapper.hentOppgave(
+            forlengReservasjonDto.oppgaveNøkkel.områdeEksternId,
+            forlengReservasjonDto.oppgaveNøkkel.oppgaveEksternId
+        )
+        //TODO: Oppgavetype som ikke er støttet i V3 -- utlede reservasjonsnøkkel
+
+        val forlengetReservasjon =
+            reservasjonV3Tjeneste.forlengReservasjon(
+                reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
+                nyTildato = forlengReservasjonDto.nyTilDato,
+                utførtAvBrukerId = innloggetBruker.id!!,
+                kommentar = forlengReservasjonDto.kommentar ?: ""
+            )
+
+        val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(forlengetReservasjon!!.reservertAv)!!
+
+        return reservasjonV3DtoBuilder.byggReservasjonV3Dto(forlengetReservasjon, reservertAv)
+    }
+
+    suspend fun overførReservasjon(
+        params: FlyttReservasjonId,
+        innloggetBruker: Saksbehandler
+    ): ReservasjonV3Dto {
+        // Fjernes når V1 skal vekk
+        oppgaveTjeneste.flyttReservasjon(
+            UUID.fromString(params.oppgaveNøkkel.oppgaveEksternId),
+            params.brukerIdent,
+            params.begrunnelse
+        )
+
+        val tilSaksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(
+            params.brukerIdent
+        )!!
+
+        val oppgave = oppgaveV3RepositoryMedTxWrapper.hentOppgave(
+            params.oppgaveNøkkel.områdeEksternId,
+            params.oppgaveNøkkel.oppgaveEksternId
+        )
+        //TODO: Oppgavetype som ikke er støttet i V3 -- utlede reservasjonsnøkkel
+
+        val nyReservasjon = reservasjonV3Tjeneste.overførReservasjon(
+            reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
+            reserverTil = LocalDateTime.now().plusHours(24).forskyvReservasjonsDato(),
+            tilSaksbehandlerId = tilSaksbehandler.id!!,
+            utførtAvBrukerId = innloggetBruker.id!!,
+            kommentar = params.begrunnelse,
+        )
+
+        return reservasjonV3DtoBuilder.byggReservasjonV3Dto(nyReservasjon, tilSaksbehandler)
+    }
+
+    suspend fun annullerReservasjon(
+        params: OpphevReservasjonId,
+        innloggetBruker: Saksbehandler
+    ) {
+        // Fjernes når V1 skal vekk
+        oppgaveTjeneste.frigiReservasjon(UUID.fromString(params.oppgaveNøkkel.oppgaveEksternId), params.begrunnelse)
+
+        val oppgave = oppgaveV3RepositoryMedTxWrapper.hentOppgave(
+            params.oppgaveNøkkel.områdeEksternId,
+            params.oppgaveNøkkel.oppgaveEksternId
+        )
+        reservasjonV3Tjeneste.annullerReservasjon(
+            oppgave.reservasjonsnøkkel,
+            params.begrunnelse,
+            innloggetBruker.id!!
+        )
+    }
+
+    fun hentReserverteOppgaverForSaksbehandler(saksbehandler: Saksbehandler): List<ReservasjonV3Dto> {
+        val reservasjoner =
+            reservasjonV3Tjeneste.hentReservasjonerForSaksbehandler(saksbehandler.id!!)
+
+        return reservasjoner.map { reservasjon ->
+            reservasjonV3DtoBuilder.byggReservasjonV3Dto(reservasjon, saksbehandler)
+        }
+    }
+}

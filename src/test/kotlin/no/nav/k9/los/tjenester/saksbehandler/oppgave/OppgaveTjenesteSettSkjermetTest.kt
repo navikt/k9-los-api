@@ -30,6 +30,7 @@ import no.nav.k9.los.integrasjon.azuregraph.AzureGraphService
 import no.nav.k9.los.integrasjon.pdl.PdlService
 import no.nav.k9.los.integrasjon.pdl.PersonPdl
 import no.nav.k9.los.integrasjon.pdl.PersonPdlResponse
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.tjenester.sse.SseEvent
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -81,6 +82,8 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             refreshKlienter = refreshKlienter,
             saksbehandlerRepository = saksbehandlerRepository
         )
+
+        val reservasjonOversetter = get<ReservasjonOversetter>()
         val config = mockk<Configuration>()
         val pdlService = mockk<PdlService>()
         val statistikkRepository = StatistikkRepository(dataSource = get())
@@ -92,7 +95,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             oppgaveKøRepository,
             saksbehandlerRepository,
             pdlService,
-            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository
+            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, reservasjonOversetter
         )
 
         val uuid = UUID.randomUUID()
@@ -222,13 +225,14 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             refreshKlienter = refreshKlienter,
             saksbehandlerRepository = saksbehandlerRepository
         )
+        val reservasjonOversetter = get<ReservasjonOversetter>()
         val oppgaveTjeneste = OppgaveTjeneste(
             oppgaveRepository,
             oppgaveRepositoryV2,
             oppgaveKøRepository,
             saksbehandlerRepository,
             pdlService,
-            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository
+            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, reservasjonOversetter
         )
 
         val oppgave1 = Oppgave(
@@ -313,6 +317,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             refreshKlienter = refreshKlienter,
             saksbehandlerRepository = saksbehandlerRepository
         )
+        val reservasjonOversetter = get<ReservasjonOversetter>()
         val config = mockk<Configuration>()
         val pdlService = mockk<PdlService>()
         val statistikkRepository = StatistikkRepository(dataSource = dataSource)
@@ -326,7 +331,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             oppgaveKøRepository,
             saksbehandlerRepository,
             pdlService,
-            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository
+            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, reservasjonOversetter
         )
 
 
@@ -418,8 +423,8 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
         assert(oppgaver.size == 1)
         val oppgave = oppgaver[0]
 
-        saksbehandlerRepository.addSaksbehandler(Saksbehandler(brukerIdent = "123", navn= null, epost = "test@test.no", enhet = null))
-        saksbehandlerRepository.addSaksbehandler(Saksbehandler(brukerIdent="ny", navn=null,epost =  "test2@test.no",enhet = null))
+        saksbehandlerRepository.addSaksbehandler(Saksbehandler(null, brukerIdent = "123", navn= null, epost = "test@test.no", enhet = null))
+        saksbehandlerRepository.addSaksbehandler(Saksbehandler(null, brukerIdent="ny", navn=null,epost =  "test2@test.no",enhet = null))
 
         oppgaveTjeneste.reserverOppgave("123", null, oppgave.eksternId)
         oppgaveTjeneste.flyttReservasjon(oppgave.eksternId, "ny", "Ville ikke ha oppgaven")

@@ -3,22 +3,28 @@ package no.nav.k9.los.nyoppgavestyring.ko
 import io.ktor.http.*
 import io.ktor.server.application.call
 import io.ktor.server.locations.*
+import io.ktor.server.locations.get
+import io.ktor.server.locations.post
 import io.ktor.server.request.*
 import io.ktor.server.response.*
-import io.ktor.server.routing.Route
+import io.ktor.server.routing.*
+import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.rest.RequestContextService
+import no.nav.k9.los.integrasjon.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.ko.dto.KopierOppgaveKoDto
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OpprettOppgaveKoDto
+import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveKøIdDto
 import org.koin.java.KoinJavaComponent
 import org.koin.ktor.ext.inject
-import java.util.*
 
 fun Route.OppgaveKoApis() {
     val requestContextService by inject<RequestContextService>()
     val oppgaveKoRepository by inject<OppgaveKoRepository>()
+    val oppgaveKoTjeneste by inject<OppgaveKoTjeneste>()
+    val saksbehandlerRepository by inject<SaksbehandlerRepository>()
     val pepClient by KoinJavaComponent.inject<IPepClient>(IPepClient::class.java)
 
     @Location("/")
@@ -85,6 +91,74 @@ fun Route.OppgaveKoApis() {
             }
 
             call.respond(oppgaveKoRepository.slett(oppgaveKoParams.id.toLong()))
+        }
+    }
+
+    @Location("/saksbehandlerskoer")
+    class SaksbehandlersKoer
+
+    get { _: SaksbehandlersKoer ->
+        requestContextService.withRequestContext(call) {
+            if (pepClient.harBasisTilgang()) {
+                call.respond(
+                    oppgaveKoTjeneste.hentKøerForSaksbehandler(kotlin.coroutines.coroutineContext.idToken().getUsername())
+                )
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
+    @Location("/{id}/oppgaver")
+    data class OppgaveKoId(val id: String)
+    get { oppgaveKoId: OppgaveKoId ->
+        requestContextService.withRequestContext(call) {
+            if (pepClient.harTilgangTilReservingAvOppgaver()) {
+                call.respond(oppgaveKoTjeneste.hentOppgaverFraKø(oppgaveKoId.id.toLong(), 10)) //Finn et fornuftig antall?
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
+    @Location("/{id}/saksbehandlere")
+    data class SaksbehandlereForOppgaveKo(val id: String)
+    get {oppgaveKoId: SaksbehandlereForOppgaveKo ->
+        requestContextService.withRequestContext(call) {
+            call.respond(
+                oppgaveKoTjeneste.hentSaksbehandlereForKo(oppgaveKoId.id.toLong())
+            )
+        }
+    }
+
+    @Location("/{id}/antall-oppgaver")
+    data class AntallOppgaverIKo(val id: String)
+    get { oppgaveKoId: AntallOppgaverIKo ->
+        requestContextService.withRequestContext(call) {
+            call.respond(oppgaveKoTjeneste.hentAntallOppgaveForKø(oppgaveKoId.id.toLong()))
+        }
+    }
+
+    @Location("/{id}/fa-oppgave")
+    data class FaOppgaveFraKo(val id: String)
+    post { oppgaveKoId: FaOppgaveFraKo ->
+        requestContextService.withRequestContext(call) {
+            val params = call.receive<OppgaveKøIdDto>()
+
+            val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
+                kotlin.coroutines.coroutineContext.idToken().getUsername()
+            )!!
+
+            val (reservertOppgave, reservasjonFraKø) = oppgaveKoTjeneste.taReservasjonFraKø(
+                innloggetBrukerId = innloggetBruker.id!!,
+                oppgaveKoId = params.oppgaveKøId.toLong()
+            ) ?: Pair(null, null)
+
+            if (reservasjonFraKø != null) {
+                call.respond(ReservasjonV3FraKøDto(reservasjonFraKø, reservertOppgave!!, innloggetBruker))
+            } else {
+                call.respond(HttpStatusCode.NotFound, "Fant ingen oppgave i valgt kø")
+            }
         }
     }
 

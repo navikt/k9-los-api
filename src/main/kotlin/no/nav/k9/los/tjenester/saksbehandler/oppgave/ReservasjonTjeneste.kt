@@ -17,7 +17,7 @@ class ReservasjonTjeneste constructor(
             }
             val reservasjon = reservasjonRepository.hent(oppgave.eksternId)
             saksbehandlerRepository.fjernReservasjonIkkeTaHensyn(
-                reservasjon.reservertAv,
+                reservasjon.reservertAvIdent,
                 reservasjon.oppgave
             )
         }

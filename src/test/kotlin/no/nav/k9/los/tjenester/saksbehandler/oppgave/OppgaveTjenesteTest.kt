@@ -11,6 +11,7 @@ import no.nav.k9.los.domene.repository.OppgaveKøRepository
 import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
 import org.junit.jupiter.api.Test
 import org.koin.test.get
@@ -134,6 +135,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         saksbehandlerRepository.addSaksbehandler(
             Saksbehandler(
+                null,
                 brukerIdent = "123",
                 navn = null,
                 epost = "test@test.no",
@@ -142,6 +144,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         )
         saksbehandlerRepository.addSaksbehandler(
             Saksbehandler(
+                null,
                 brukerIdent = "ny",
                 navn = null,
                 epost = "test2@test.no",
@@ -226,6 +229,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val brukerIdent = "123"
         saksbehandlerRepository.addSaksbehandler(
             Saksbehandler(
+                null,
                 brukerIdent = brukerIdent,
                 navn = null,
                 epost = "test@test.no",
@@ -315,6 +319,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val brukerIdent = "123"
         saksbehandlerRepository.addSaksbehandler(
             Saksbehandler(
+                null,
                 brukerIdent = brukerIdent,
                 navn = null,
                 epost = "test@test.no",
@@ -377,6 +382,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val brukerIdent2 = "1337"
         saksbehandlerRepository.addSaksbehandler(
             Saksbehandler(
+                null,
                 brukerIdent = brukerIdent2,
                 navn = null,
                 epost = "test@test.no",
@@ -402,7 +408,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
             navn = "test",
             sistEndret = LocalDate.now(),
             sortering = KøSortering.FEILUTBETALT,
-            saksbehandlere = mutableListOf(Saksbehandler("OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn))
+            saksbehandlere = mutableListOf(Saksbehandler(null,"OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn))
         )
         val oppgaveId1 = UUID.randomUUID()
         val oppgaveId2 = UUID.randomUUID()
@@ -437,7 +443,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
             sistEndret = LocalDate.now(),
             sortering = KøSortering.OPPRETT_BEHANDLING,
             filtreringAndreKriterierType = andreKriterierDtos(AndreKriterierType.TIL_BESLUTTER),
-            saksbehandlere = mutableListOf(Saksbehandler("OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn))
+            saksbehandlere = mutableListOf(Saksbehandler(null,"OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn))
         )
 
         val oppgaveId1 = UUID.fromString("0000000-0000-0000-0000-000000000001")
@@ -509,7 +515,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
             navn = "test",
             sistEndret = LocalDate.now(),
             sortering = KøSortering.OPPRETT_BEHANDLING,
-            saksbehandlere = mutableListOf(Saksbehandler("OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn))
+            saksbehandlere = mutableListOf(Saksbehandler(null,"OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn))
         )
 
         val oppgaveId1 = UUID.fromString("0000000-0000-0000-0000-000000000001")
@@ -559,7 +565,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
             filtreringAndreKriterierType = mutableListOf(AndreKriterierDto("1", AndreKriterierType.TIL_BESLUTTER, true, false)),
             sistEndret = LocalDate.now(),
             sortering = KøSortering.OPPRETT_BEHANDLING,
-            saksbehandlere = mutableListOf(Saksbehandler("OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn))
+            saksbehandlere = mutableListOf(Saksbehandler(null,"OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn))
         )
 
         val oppgaveId1 = UUID.fromString("0000000-0000-0000-0000-000000000001")
@@ -750,6 +756,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val brukerIdent = "123"
         saksbehandlerRepository.addSaksbehandler(
             Saksbehandler(
+                null,
                 brukerIdent = brukerIdent,
                 navn = null,
                 epost = "test@test.no",
@@ -935,6 +942,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val brukerIdent = "123"
         saksbehandlerRepository.addSaksbehandler(
             Saksbehandler(
+                null,
                 brukerIdent = brukerIdent,
                 navn = null,
                 epost = "test@test.no",
@@ -1126,6 +1134,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val brukerIdent = "123"
         saksbehandlerRepository.addSaksbehandler(
             Saksbehandler(
+                null,
                 brukerIdent = brukerIdent,
                 navn = null,
                 epost = "test@test.no",
@@ -1265,6 +1274,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val ident = "Z990404"
         saksbehandlerRepository.addSaksbehandler(
             Saksbehandler(
+                null,
                 brukerIdent = ident,
                 navn = null,
                 epost = "test@test.no",
@@ -1398,6 +1408,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val brukerIdent = "123"
         saksbehandlerRepository.addSaksbehandler(
             Saksbehandler(
+                null,
                 brukerIdent = brukerIdent,
                 navn = null,
                 epost = "test@test.no",
@@ -1619,6 +1630,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         saksbehandlerRepository.addSaksbehandler(
             Saksbehandler(
+                null,
                 brukerIdent = "123",
                 navn = null,
                 epost = "test@test.no",
@@ -1651,6 +1663,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         saksbehandlerRepository.addSaksbehandler(
             Saksbehandler(
+                null,
                 brukerIdent = "123",
                 navn = null,
                 epost = "test@test.no",
@@ -1865,17 +1878,17 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         )
 
         val reservasjon = reservasjonRepository.hent(nyOppgave.eksternId)
-        assertThat(reservasjon.reservertAv).isEqualTo("Foo")
+        assertThat(reservasjon.reservertAvIdent).isEqualTo("Foo")
 
         oppgaveTjeneste.endreReservasjonPåOppgave(
             ReservasjonEndringDto(
-                oppgaveId = nyOppgave.eksternId.toString(),
+                oppgaveNøkkel = OppgaveNøkkelDto.forV1Oppgave(nyOppgave.eksternId.toString()),
                 brukerIdent = "Bar"
             )
         )
 
         val reservasjonEtterEndring = reservasjonRepository.hent(nyOppgave.eksternId)
-        assertThat(reservasjonEtterEndring.reservertAv).isEqualTo("Bar")
+        assertThat(reservasjonEtterEndring.reservertAvIdent).isEqualTo("Bar")
     }
 
     @Test
@@ -1898,7 +1911,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         oppgaveTjeneste.endreReservasjonPåOppgave(
             ReservasjonEndringDto(
-                oppgaveId = nyOppgave.eksternId.toString(),
+                oppgaveNøkkel = OppgaveNøkkelDto.forV1Oppgave(nyOppgave.eksternId.toString()),
                 begrunnelse = "test begrunnelse"
             )
         )
@@ -1928,7 +1941,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val nyDato = reservasjon.reservertTil!!.toLocalDate().plusDays(10)
         oppgaveTjeneste.endreReservasjonPåOppgave(
             ReservasjonEndringDto(
-                oppgaveId = nyOppgave.eksternId.toString(),
+                oppgaveNøkkel = OppgaveNøkkelDto.forV1Oppgave(nyOppgave.eksternId.toString()),
                 reserverTil = nyDato
             )
         )
@@ -1980,6 +1993,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
         saksbehandlerRepository.addSaksbehandler(
             Saksbehandler(
+                null,
                 brukerIdent = ident,
                 navn = "$ident Testersen",
                 epost = "$ident@test.no",

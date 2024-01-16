@@ -72,6 +72,8 @@ spec:
       # Nav applikasjoner
     - name: APP_K9SAK_URL
       value: https://k9-sak.nais.adeo.no/k9/sak/api
+    - name: APP_K9SAK_FRONTEND_URL
+      value: https://k9.intern.nav.no/k9/web
 
       # Kafka
     - name: BOOTSTRAP_SERVERS

@@ -19,6 +19,7 @@ import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.*
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.abac.PepClientLocal
+import no.nav.k9.los.integrasjon.audit.Auditlogger
 import no.nav.k9.los.integrasjon.azuregraph.AzureGraphServiceLocal
 import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
 import no.nav.k9.los.integrasjon.datavarehus.StatistikkProducer
@@ -31,11 +32,14 @@ import no.nav.k9.los.nyoppgavestyring.pep.PepCacheRepository
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonKonverteringJobb
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakBerikerKlientLocal
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository
+import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
@@ -46,17 +50,20 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nyoppgavestyring.pep.PepCacheService
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.merknad.MerknadTjeneste
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveKøOppdaterer
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
+import no.nav.k9.los.tjenester.saksbehandler.oppgave.*
 import no.nav.k9.los.tjenester.sse.SseEvent
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
 
@@ -133,6 +140,11 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         config
     }
     every { config.koinProfile() } returns KoinProfile.LOCAL
+    every { config.auditEnabled() } returns false
+    every { config.auditVendor() } returns "k9"
+    every { config.auditProduct() } returns "k9-los-api"
+    every { config.k9FrontendUrl() } returns "http://localhost:9000"
+    every { config.nyOppgavestyringAktivert() } returns true
 
     single {
         PdlServiceLocal() as IPdlService
@@ -141,6 +153,28 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         AzureGraphServiceLocal(
         ) as IAzureGraphService
     }
+
+    val reservasjonOversetterMock = mockk<ReservasjonOversetter>()
+    every {
+        reservasjonOversetterMock.taNyReservasjonFraGammelKontekst(any(), any(), any(), any(), any())
+    } returns ReservasjonV3(
+        reservertAv = 123,
+        reservasjonsnøkkel = "test1",
+        gyldigFra = LocalDateTime.now(),
+        gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
+        kommentar = ""
+    )
+
+    single {
+        ReservasjonKonverteringJobb(
+            config = get(),
+            reservasjonRepository = get(),
+            oppgaveRepository = get(),
+            reservasjonOversetter = get(),
+            saksbehandlerRepository = get(),
+        )
+    }
+
     single {
         OppgaveTjeneste(
             oppgaveRepository = get(),
@@ -152,7 +186,21 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             configuration = get(),
             azureGraphService = get(),
             pepClient = get(),
-            statistikkRepository = get()
+            statistikkRepository = get(),
+            reservasjonOversetter = reservasjonOversetterMock
+        )
+    }
+
+
+    single {
+        ReservasjonOversetter(
+            transactionalManager = get(),
+            oppgaveV3Repository = get(),
+            oppgavetypeRepository = get(),
+            saksbehandlerRepository = get(),
+            reservasjonV3Tjeneste = get(),
+            oppgaveV1Repository = get(),
+            oppgaveV3Tjeneste = get(),
         )
     }
 
@@ -259,7 +307,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             reservasjonRepository = get(),
             oppgaveRepository = get(),
             pepClient = get(),
-            configuration = get()
+            reservasjonV3Tjeneste = get(),
+            reservasjonV3DtoBuilder = get(),
         )
     }
 
@@ -271,7 +320,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             feltdefinisjonTjeneste = get()
         ).setup()
     }
-    single { OppgavetypeRepository(feltdefinisjonRepository = get(), områdeRepository = get()) }
+    single { OppgavetypeRepository(dataSource = get(), feltdefinisjonRepository = get(), områdeRepository = get()) }
     single { OppgaveV3Repository(dataSource = get(), oppgavetypeRepository = get()) }
     single { BehandlingProsessEventK9Repository(dataSource = get()) }
     single { BehandlingProsessEventKlageRepository(dataSource = get()) }
@@ -348,6 +397,48 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single {
+        ReservasjonV3Repository(
+
+        )
+    }
+
+    single {
+        ReservasjonV3Tjeneste(
+            transactionalManager = get(),
+            reservasjonV3Repository = get(),
+            oppgaveRepository = get(),
+            pepClient = get(),
+            saksbehandlerRepository = get(),
+            auditlogger = Auditlogger(config),
+        )
+    }
+
+    single {
+        ReservasjonV3DtoBuilder(
+            oppgaveRepositoryTxWrapper = get(),
+            pdlService = get(),
+            reservasjonOversetter = get(),
+            oppgaveTjeneste = get()
+        )
+    }
+
+    single {
+        OppgaveKoTjeneste(
+            transactionalManager = get(),
+            oppgaveKoRepository = get(),
+            oppgaveQueryService = get(),
+            oppgaveRepository = get(),
+            reservasjonV3Tjeneste = get(),
+            saksbehandlerRepository = get(),
+            oppgaveTjeneste = get(),
+            reservasjonRepository = get(),
+            oppgaveRepositoryTxWrapper = get(),
+            pepClient = get(),
+            pdlService = get(),
+        )
+    }
+
+    single {
         OppgaveQueryRepository(
             datasource = get(),
             feltdefinisjonRepository = get()
@@ -365,6 +456,25 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single {
+        OppgaveApisTjeneste(
+            oppgaveTjeneste = get(),
+            saksbehandlerRepository = get(),
+            reservasjonV3Tjeneste = get(),
+            oppgaveV3Repository = get(),
+            oppgaveV3RepositoryMedTxWrapper = get(),
+            transactionalManager = get(),
+            reservasjonV3DtoBuilder = get(),
+        )
+    }
+
+    single {
         PepCacheRepository(dataSource = get())
+    }
+
+    single {
+        OppgaveRepositoryTxWrapper(
+            oppgaveRepository = get(),
+            transactionalManager = get(),
+        )
     }
 }

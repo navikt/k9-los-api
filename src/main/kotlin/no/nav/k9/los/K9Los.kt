@@ -49,7 +49,6 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Api
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeApi
 import no.nav.k9.los.nyoppgavestyring.pep.PepCacheOppdaterer
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryApis
-import no.nav.k9.los.tjenester.admin.AdminApis
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederApis
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.DataeksportApis
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallApis
@@ -301,8 +300,6 @@ private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
     )
 
     route("api") {
-
-        AdminApis()
         route("driftsmeldinger") {
             DriftsmeldingerApis()
         }
@@ -321,7 +318,7 @@ private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
         route("avdelingsleder") {
             AvdelingslederApis()
             route("oppgavekoer") {
-                AvdelingslederOppgavekøApis()
+                AvdelingslederOppgavekøApis() // Erstattet av OppgaveKoApis i V3
             }
             route("nokkeltall") {
                 NokkeltallApis()

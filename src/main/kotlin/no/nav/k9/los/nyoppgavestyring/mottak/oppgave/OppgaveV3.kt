@@ -54,11 +54,7 @@ class OppgaveV3(
                         if (oppgavefelt.feltDefinisjon.listetype) {
                             //skip. lagrer ikke verdier for tomme lister
                         } else {
-                            val sanertOppgaveDto =
-                                oppgaveDto.copy(feltverdier = oppgaveDto.feltverdier.filterNot { it.nøkkel == "aktorId" })
-                            throw IllegalArgumentException("Mangler obligatorisk feltverdi for ${oppgavefelt.feltDefinisjon.eksternId}. \n" +
-                                    jacksonObjectMapper().registerModule(JavaTimeModule()).writeValueAsString(sanertOppgaveDto)
-                            )
+                            throw IllegalArgumentException("Mangler obligatorisk feltverdi for ${oppgavefelt.feltDefinisjon.eksternId}. Oppgavens eksternId: ${oppgaveDto.id}\n")
                         }
                     }
                 } else {

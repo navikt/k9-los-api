@@ -18,8 +18,6 @@ class OppgaveV3Repository(
 
     private val log = LoggerFactory.getLogger(OppgaveV3Repository::class.java)
 
-    //TODO: status enum
-
     fun nyOppgaveversjon(oppgave: OppgaveV3, tx: TransactionalSession) {
         val (eksisterendeId, eksisterendeVersjon) = hentVersjon(tx, oppgave)
 
@@ -162,6 +160,41 @@ class OppgaveV3Repository(
                 row.string("ekstern_id")
             }.asList
         )
+    }
+
+    fun hentOppgaveEksternIderForReservasjonsnøkkel(reservasjonsnøkkel: String, tx: TransactionalSession) : List<String> {
+        return tx.run(
+            queryOf(
+                """
+                    select eksternId
+                    from oppgave_v3
+                    where reservasjonsnokkel = :reservasjonsnokkel
+                    and aktiv = true
+                """.trimIndent(),
+                mapOf(
+                    "reservasjonsnokkel" to reservasjonsnøkkel
+                )
+            ).map { row -> row.string("eksternId")}.asList
+        )
+    }
+
+    fun sjekkOmOppgaverFinnesForReservasjonsnøkkel(reservasjonsnokkel: String, tx: TransactionalSession) : Boolean {
+        val antall = tx.run(
+            queryOf(
+                """
+                    select count(*) as antallOppgaver
+                    from oppgave_v3
+                    where reservasjonsnokkel = :reservasjonsnokkel
+                    and aktiv = true
+                """.trimIndent(),
+                mapOf(
+                    "reservasjonsnokkel" to reservasjonsnokkel
+                )
+            ).map { row -> row.long("antallOppgaver") }.asSingle
+
+        )!!
+
+        return antall > 0
     }
 
     fun oppdaterReservasjonsnøkkel(eksternId: String, eksternVersjon: String, reservasjonsnokkel: String, tx: TransactionalSession) {

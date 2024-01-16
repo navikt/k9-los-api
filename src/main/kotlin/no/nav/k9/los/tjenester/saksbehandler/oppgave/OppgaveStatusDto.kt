@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonFormat
 import java.time.LocalDateTime
 
+//ingen auditlogg på denne, siden den ikke inneholder personidentifiserende informasjon, bortsett fra saksbehandlers ident
 class OppgaveStatusDto(
     val erReservert: Boolean,
     val reservertTilTidspunkt: LocalDateTime?,
