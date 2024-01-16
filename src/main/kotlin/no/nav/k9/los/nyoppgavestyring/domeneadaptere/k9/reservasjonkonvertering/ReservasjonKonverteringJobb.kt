@@ -47,18 +47,21 @@ class ReservasjonKonverteringJobb(
             val saksbehandlerIdSomHolderReservasjonV1 = runBlocking {
                 saksbehandlerRepository.finnSaksbehandlerIdForIdent(reservasjonV1.reservertAv)
             }!!
+            log.info("Hentet saksbehandler som holder reservasjonV1")
             //TODO filtrer bort gamle og/eller ugyldige reservasjoner?
             if (reservasjonV1.reservertTil == null) {
                 slettetReservasjon++
                 return //Logisk slettet reservasjon. Migreres ikke
             }
             val oppgaveV1 = oppgaveRepository.hent(reservasjonV1.oppgave)
+            log.info("Hentet oppgaven hvis reservasjon skal konverteres")
 
             val flyttetAvSaksbehandlerId = reservasjonV1.flyttetAv?.let {
                 runBlocking {
                     saksbehandlerRepository.finnSaksbehandlerIdForIdent(it)!!
                 }
             }
+            log.info("Hentet saksbehandler som flyttet reservasjon")
 
             log.info("Konverterer reservasjon for oppgaveUuid: ${reservasjonV1.oppgave}")
             reservasjonOversetter.taNyReservasjonFraGammelKontekst(
@@ -68,6 +71,7 @@ class ReservasjonKonverteringJobb(
                 utførtAvSaksbehandlerId = flyttetAvSaksbehandlerId ?: saksbehandlerIdSomHolderReservasjonV1,
                 kommentar = reservasjonV1.begrunnelse,
             )
+            log.info("Konvertert reservasjon for oppgaveUuid: ${reservasjonV1.oppgave}")
             reservasjonTeller++
             loggFremgangForHver100(reservasjonTeller, "Konvertert $reservasjonTeller reservasjoner")
         }
