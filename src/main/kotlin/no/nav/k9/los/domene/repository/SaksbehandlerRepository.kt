@@ -299,6 +299,25 @@ class SaksbehandlerRepository(
         return saksbehandler
     }
 
+    fun finnSaksbehandlerIdForIdent(ident: String): Long? {
+        return using(sessionOf(dataSource)) { session ->
+            session.transaction {
+                finnSaksbehandlerIdForIdent(ident, it)
+            }
+        }
+    }
+
+    fun finnSaksbehandlerIdForIdent(ident: String, tx: TransactionalSession): Long? {
+        return tx.run(
+            queryOf(
+                "select * from saksbehandler where lower(saksbehandlerid) = lower(:ident)",
+                mapOf("ident" to ident)
+            ).map { row ->
+                row.longOrNull("id")
+            }.asSingle
+        )
+    }
+
     fun finnSaksbehandlerMedIdent(ident: String): Saksbehandler? {
         return using(sessionOf(dataSource)) { session ->
             session.transaction {
