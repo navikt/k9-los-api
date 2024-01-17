@@ -43,14 +43,13 @@ class ReservasjonKonverteringJobb(
 
         for (gammelReservasjonUuid in reservasjonIder) {
             val reservasjonV1 = reservasjonRepository.hent(gammelReservasjonUuid)
-            val saksbehandlerIdSomHolderReservasjonV1 = runBlocking {
-                saksbehandlerRepository.finnSaksbehandlerIdForIdent(reservasjonV1.reservertAv)
-            }!!
-            //TODO filtrer bort gamle og/eller ugyldige reservasjoner?
             if (!reservasjonV1.erAktiv()) {
                 slettetReservasjon++
                 continue //Logisk slettet reservasjon. Migreres ikke
             }
+            val saksbehandlerIdSomHolderReservasjonV1 = runBlocking {
+                saksbehandlerRepository.finnSaksbehandlerIdForIdent(reservasjonV1.reservertAv)
+            }!!
             val oppgaveV1 = oppgaveRepository.hent(reservasjonV1.oppgave)
 
             val flyttetAvSaksbehandlerId = reservasjonV1.flyttetAv?.let {
