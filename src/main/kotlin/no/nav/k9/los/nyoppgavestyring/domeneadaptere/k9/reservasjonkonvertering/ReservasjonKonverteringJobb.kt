@@ -47,7 +47,7 @@ class ReservasjonKonverteringJobb(
                 saksbehandlerRepository.finnSaksbehandlerIdForIdent(reservasjonV1.reservertAv)
             }!!
             //TODO filtrer bort gamle og/eller ugyldige reservasjoner?
-            if (reservasjonV1.reservertTil == null) {
+            if (reservasjonV1.erAktiv()) {
                 slettetReservasjon++
                 continue //Logisk slettet reservasjon. Migreres ikke
             }
