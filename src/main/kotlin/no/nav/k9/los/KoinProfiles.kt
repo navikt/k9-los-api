@@ -543,12 +543,14 @@ fun common(app: Application, config: Configuration) = module {
     single {
         OppgaveApisTjeneste(
             oppgaveTjeneste = get(),
+            oppgaveV1Repository = get(),
             saksbehandlerRepository = get(),
             reservasjonV3Tjeneste = get(),
             oppgaveV3Repository = get(),
             oppgaveV3RepositoryMedTxWrapper = get(),
             transactionalManager = get(),
             reservasjonV3DtoBuilder = get(),
+            reservasjonOversetter = get(),
         )
     }
 
