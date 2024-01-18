@@ -162,12 +162,12 @@ class OppgaveKoTjeneste(
         return null
     }
 
-    fun hentSaksbehandlereForKo(oppgaveKoId: Long): List<Saksbehandler> {
+    suspend fun hentSaksbehandlereForKo(oppgaveKoId: Long): List<Saksbehandler> {
         val oppgaveKo = oppgaveKoRepository.hent(oppgaveKoId)
-        return oppgaveKo.saksbehandlere.map { saksbehandlerEpost: String ->
-            runBlocking {
-                saksbehandlerRepository.finnSaksbehandlerMedEpost(saksbehandlerEpost)
-            }!!
+        return oppgaveKo.saksbehandlere.mapNotNull { saksbehandlerEpost: String ->
+            saksbehandlerRepository.finnSaksbehandlerMedEpost(saksbehandlerEpost).also {
+                if (it == null) { log.info("Køen $oppgaveKoId inneholder saksbehandler som ikke finnes") }
+            }
         }
     }
 }
