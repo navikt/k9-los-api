@@ -4,6 +4,7 @@ import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Dto
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
@@ -59,15 +60,7 @@ class OppgaveApisTjeneste(
             )
             val saksbehandlerSomHarReservasjon =
                 saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonV3.reservertAv)
-            return OppgaveStatusDto(
-                erReservert = true,
-                reservertTilTidspunkt = reservasjonV3.gyldigTil,
-                erReservertAvInnloggetBruker = reservasjonV3.reservertAv == innloggetBruker.id!!,
-                reservertAv = saksbehandlerSomHarReservasjon.brukerIdent,
-                reservertAvNavn = saksbehandlerSomHarReservasjon.navn,
-                flyttetReservasjon = null,
-                kanOverstyres = reservasjonV3.reservertAv != innloggetBruker.id!!
-            )
+            return OppgaveStatusDto(reservasjonV3, innloggetBruker, saksbehandlerSomHarReservasjon)
         } else {
             val reservasjonV3 = transactionalManager.transaction { tx ->
                 val oppgaveV3 = oppgaveV3Repository.hentNyesteOppgaveForEksternId(
@@ -89,15 +82,7 @@ class OppgaveApisTjeneste(
 
             val saksbehandlerSomHarReservasjon =
                 saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonV3.reservertAv)
-            return OppgaveStatusDto(
-                erReservert = true,
-                reservertTilTidspunkt = reservasjonV3.gyldigTil,
-                erReservertAvInnloggetBruker = reservasjonV3.reservertAv == innloggetBruker.id!!,
-                reservertAv = saksbehandlerSomHarReservasjon.brukerIdent,
-                reservertAvNavn = saksbehandlerSomHarReservasjon.navn,
-                flyttetReservasjon = null,
-                kanOverstyres = reservasjonV3.reservertAv != innloggetBruker.id!!
-            )
+            return OppgaveStatusDto(reservasjonV3, innloggetBruker, saksbehandlerSomHarReservasjon)
         }
     }
 
