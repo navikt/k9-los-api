@@ -81,7 +81,6 @@ class OppgaveKoTjeneste(
         saksbehandlerEpost: String
     ): List<OppgaveKo> {
         return transactionalManager.transaction { tx ->
-            log.info("Henter køer for saksbehandler: $saksbehandlerEpost")
             oppgaveKoRepository.hentKoerMedOppgittSaksbehandler(tx, saksbehandlerEpost)
         }
     }

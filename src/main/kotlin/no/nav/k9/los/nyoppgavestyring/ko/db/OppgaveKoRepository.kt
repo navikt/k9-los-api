@@ -158,7 +158,7 @@ class OppgaveKoRepository(val datasource: DataSource) {
                         select *
                         from oppgaveko_saksbehandler s
                         where s.oppgaveko_v3_id = ko.id
-                        and s.saksbehandler_epost = :saksbehandler_epost
+                        and s.saksbehandler_epost = lower(:saksbehandler_epost)
                         )""",
                 mapOf(
                     "saksbehandler_epost" to saksbehandler_epost
