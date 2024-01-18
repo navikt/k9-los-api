@@ -42,7 +42,7 @@ class OppgaveKoTjeneste(
 ) {
     private val log = LoggerFactory.getLogger(OppgaveKoTjeneste::class.java)
 
-    fun hentOppgaverFraKø(
+    suspend fun hentOppgaverFraKø(
         oppgaveKoId: Long,
         ønsketAntallSaker: Int,
     ): List<GenerellOppgaveV3Dto> {
@@ -59,10 +59,8 @@ class OppgaveKoTjeneste(
                 continue
             }
 
-            val harTilgangTilLesSak =
-                runBlocking { //TODO: harTilgangTilLesSak riktig PEP-spørring, eller bør det være likhetssjekk?
+            val harTilgangTilLesSak = //TODO: harTilgangTilLesSak riktig PEP-spørring, eller bør det være likhetssjekk?
                     pepClient.harTilgangTilLesSak(oppgave.hentVerdi("saksnummer")!!, oppgave.hentVerdi("aktorId")!!)
-                }
             if (!harTilgangTilLesSak) {
                 continue
             }
