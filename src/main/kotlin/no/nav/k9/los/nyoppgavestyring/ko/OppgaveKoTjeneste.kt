@@ -1,5 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.ko
 
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
@@ -135,9 +137,11 @@ class OppgaveKoTjeneste(
                 )
                 reservasjonRepository.lagreFlereReservasjoner(v1Reservasjoner)
                 runBlocking {
-                    saksbehandlerRepository.leggTilFlereReservasjoner(
-                        innloggetBruker.brukerIdent,
-                        v1Reservasjoner.map { r -> r.oppgave })
+                    coroutineScope {
+                        saksbehandlerRepository.leggTilFlereReservasjoner(
+                            innloggetBruker.brukerIdent,
+                            v1Reservasjoner.map { r -> r.oppgave })
+                    }
                 }
                 // V1-greier til og med denne linjen
                 val reservasjon = reservasjonV3Tjeneste.taReservasjon(
