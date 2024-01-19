@@ -1,6 +1,7 @@
 package no.nav.k9.los.domene.repository
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.runBlocking
 import kotliquery.*
 import no.nav.k9.los.aksjonspunktbehandling.objectMapper
@@ -311,31 +312,27 @@ class SaksbehandlerRepository(
         )
     }
 
-    fun finnSaksbehandlerMedIdent(ident: String): Saksbehandler? {
-        return using(sessionOf(dataSource)) { session ->
-            session.transaction {
-                finnSaksbehandlerMedIdent(ident, it)
-            }
-        }
-    }
-
-    fun finnSaksbehandlerMedIdent(ident: String, tx: TransactionalSession): Saksbehandler? {
-        val skjermet = runBlocking {
-            pepClient.harTilgangTilKode6()
-        }
+    suspend fun finnSaksbehandlerMedIdent(ident: String): Saksbehandler? {
+        val skjermet = pepClient.harTilgangTilKode6()
 
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
 
-        val saksbehandler = tx.run(
-            queryOf(
-                "select * from saksbehandler where lower(saksbehandlerid) = lower(:ident) and skjermet = :skjermet",
-                mapOf("ident" to ident, "skjermet" to skjermet)
-            )
-                .map { row ->
-                    mapSaksbehandler(row)
-                }.asSingle
-        )
+        val saksbehandler = using(sessionOf(dataSource)) {
+            it.transaction {tx->
+                tx.run(
+                    queryOf(
+                        "select * from saksbehandler where lower(saksbehandlerid) = lower(:ident) and skjermet = :skjermet",
+                        mapOf("ident" to ident, "skjermet" to skjermet)
+                    )
+                        .map { row ->
+                            mapSaksbehandler(row)
+                        }.asSingle
+                )
+            }
+
+        }
+
         return saksbehandler
     }
 

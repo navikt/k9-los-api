@@ -92,7 +92,9 @@ class ReservasjonOversetterTest : AbstractK9LosIntegrationTest(){
 
         val reservasjonV3 = alleAktiveReservasjoner.get(0)
 
-        val saksbehandlerReservertV1 = saksbehandlerRepository.finnSaksbehandlerMedIdent(oppgavestatus.reservertAv!!)!!
+        val saksbehandlerReservertV1 = runBlocking {
+            saksbehandlerRepository.finnSaksbehandlerMedIdent(oppgavestatus.reservertAv!!)!!
+        }
         assertEquals(saksbehandlerReservertV1.id, reservasjonV3.reservertAv)
     }
 
