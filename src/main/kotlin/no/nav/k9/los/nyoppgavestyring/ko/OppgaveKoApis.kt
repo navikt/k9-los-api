@@ -49,12 +49,14 @@ fun Route.OppgaveKoApis() {
             if (!pepClient.erOppgaveStyrer()) {
                 call.respond(HttpStatusCode.Forbidden);
             }
-            call.respond(oppgaveKoRepository.kopier(
-                kopierOppgaveKoDto.kopierFraOppgaveId,
-                kopierOppgaveKoDto.tittel,
-                kopierOppgaveKoDto.taMedQuery,
-                kopierOppgaveKoDto.taMedSaksbehandlere
-            ))
+            call.respond(
+                oppgaveKoRepository.kopier(
+                    kopierOppgaveKoDto.kopierFraOppgaveId,
+                    kopierOppgaveKoDto.tittel,
+                    kopierOppgaveKoDto.taMedQuery,
+                    kopierOppgaveKoDto.taMedSaksbehandlere
+                )
+            )
         }
     }
 
@@ -101,7 +103,9 @@ fun Route.OppgaveKoApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 call.respond(
-                    oppgaveKoTjeneste.hentKøerForSaksbehandler(kotlin.coroutines.coroutineContext.idToken().getUsername())
+                    oppgaveKoTjeneste.hentKøerForSaksbehandler(
+                        kotlin.coroutines.coroutineContext.idToken().getUsername()
+                    )
                 )
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -114,7 +118,12 @@ fun Route.OppgaveKoApis() {
     get { oppgaveKoId: OppgaveKoId ->
         requestContextService.withRequestContext(call) {
             if (pepClient.harTilgangTilReservingAvOppgaver()) {
-                call.respond(oppgaveKoTjeneste.hentOppgaverFraKø(oppgaveKoId.id.toLong(), 10)) //Finn et fornuftig antall?
+                call.respond(
+                    oppgaveKoTjeneste.hentOppgaverFraKø(
+                        oppgaveKoId.id.toLong(),
+                        10
+                    )
+                ) //Finn et fornuftig antall?
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -123,7 +132,7 @@ fun Route.OppgaveKoApis() {
 
     @Location("/{id}/saksbehandlere")
     data class SaksbehandlereForOppgaveKo(val id: String)
-    get {oppgaveKoId: SaksbehandlereForOppgaveKo ->
+    get { oppgaveKoId: SaksbehandlereForOppgaveKo ->
         requestContextService.withRequestContext(call) {
             call.respond(
                 oppgaveKoTjeneste.hentSaksbehandlereForKo(oppgaveKoId.id.toLong())
@@ -149,16 +158,20 @@ fun Route.OppgaveKoApis() {
                 kotlin.coroutines.coroutineContext.idToken().getUsername()
             )!!
 
-            val (reservertOppgave, reservasjonFraKø) = oppgaveKoTjeneste.taReservasjonFraKø(
-                innloggetBrukerId = innloggetBruker.id!!,
-                oppgaveKoId = params.oppgaveKøId.toLong(),
-                kotlin.coroutines.coroutineContext
-            ) ?: Pair(null, null)
+            if (pepClient.harTilgangTilReservingAvOppgaver()) {
+                val (reservertOppgave, reservasjonFraKø) = oppgaveKoTjeneste.taReservasjonFraKø(
+                    innloggetBrukerId = innloggetBruker.id!!,
+                    oppgaveKoId = params.oppgaveKøId.toLong(),
+                    kotlin.coroutines.coroutineContext
+                ) ?: Pair(null, null)
 
-            if (reservasjonFraKø != null) {
-                call.respond(ReservasjonV3FraKøDto(reservasjonFraKø, reservertOppgave!!, innloggetBruker))
+                if (reservasjonFraKø != null) {
+                    call.respond(ReservasjonV3FraKøDto(reservasjonFraKø, reservertOppgave!!, innloggetBruker))
+                } else {
+                    call.respond(HttpStatusCode.NotFound, "Fant ingen oppgave i valgt kø")
+                }
             } else {
-                call.respond(HttpStatusCode.NotFound, "Fant ingen oppgave i valgt kø")
+                call.respond(HttpStatusCode.Forbidden, "Innlogget bruker mangler tilgang til å reservere oppgaver")
             }
         }
     }
