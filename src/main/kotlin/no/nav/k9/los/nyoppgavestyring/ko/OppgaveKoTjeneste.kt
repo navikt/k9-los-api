@@ -1,9 +1,11 @@
 package no.nav.k9.los.nyoppgavestyring.ko
 
+import io.ktor.server.sessions.*
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
+import no.nav.helse.dusseldorf.ktor.core.RequestContext
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.domene.repository.ReservasjonRepository
@@ -11,6 +13,7 @@ import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.abac.PepClient
 import no.nav.k9.los.integrasjon.pdl.IPdlService
+import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.integrasjon.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
@@ -28,6 +31,7 @@ import no.nav.k9.los.tjenester.saksbehandler.oppgave.forskyvReservasjonsDato
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.*
+import kotlin.coroutines.CoroutineContext
 
 class OppgaveKoTjeneste(
     private val transactionalManager: TransactionalManager,
@@ -62,7 +66,7 @@ class OppgaveKoTjeneste(
             }
 
             val harTilgangTilLesSak = //TODO: harTilgangTilLesSak riktig PEP-spørring, eller bør det være likhetssjekk?
-                    pepClient.harTilgangTilLesSak(oppgave.hentVerdi("saksnummer")!!, oppgave.hentVerdi("aktorId")!!)
+                pepClient.harTilgangTilLesSak(oppgave.hentVerdi("saksnummer")!!, oppgave.hentVerdi("aktorId")!!)
             if (!harTilgangTilLesSak) {
                 continue
             }
@@ -94,7 +98,8 @@ class OppgaveKoTjeneste(
 
     fun taReservasjonFraKø(
         innloggetBrukerId: Long,
-        oppgaveKoId: Long
+        oppgaveKoId: Long,
+        coroutineContext: CoroutineContext
     ): Pair<Oppgave, ReservasjonV3>? {
         val oppgavekø = transactionalManager.transaction { tx ->
             oppgaveKoRepository.hent(oppgaveKoId)
@@ -103,14 +108,15 @@ class OppgaveKoTjeneste(
         val kandidatOppgaver = oppgaveQueryService.queryForOppgaveId(oppgavekø.oppgaveQuery)
 
         return transactionalManager.transaction { tx ->
-            finnReservasjonFraKø(kandidatOppgaver, tx, innloggetBrukerId)
+            finnReservasjonFraKø(kandidatOppgaver, tx, innloggetBrukerId, coroutineContext)
         }
     }
 
     private fun finnReservasjonFraKø(
         kandidatoppgaver: List<Long>,
         tx: TransactionalSession,
-        innloggetBrukerId: Long
+        innloggetBrukerId: Long,
+        coroutineContext: CoroutineContext,
     ): Pair<Oppgave, ReservasjonV3>? {
         for (kandidatoppgaveId in kandidatoppgaver) {
             val kandidatoppgave = oppgaveRepository.hentOppgaveForId(tx, kandidatoppgaveId)
@@ -136,12 +142,11 @@ class OppgaveKoTjeneste(
                     null,
                 )
                 reservasjonRepository.lagreFlereReservasjoner(v1Reservasjoner)
-                runBlocking {
-                    coroutineScope {
-                        saksbehandlerRepository.leggTilFlereReservasjoner(
-                            innloggetBruker.brukerIdent,
-                            v1Reservasjoner.map { r -> r.oppgave })
-                    }
+
+                runBlocking(coroutineContext) {//TODO: Hvis noen har et forslag til en bedre måte å ta vare på coroutinecontext, så er jeg all ears!
+                    saksbehandlerRepository.leggTilFlereReservasjoner(
+                        innloggetBruker.brukerIdent,
+                        v1Reservasjoner.map { r -> r.oppgave })
                 }
                 // V1-greier til og med denne linjen
                 val reservasjon = reservasjonV3Tjeneste.taReservasjon(
@@ -168,7 +173,9 @@ class OppgaveKoTjeneste(
         val oppgaveKo = oppgaveKoRepository.hent(oppgaveKoId)
         return oppgaveKo.saksbehandlere.mapNotNull { saksbehandlerEpost: String ->
             saksbehandlerRepository.finnSaksbehandlerMedEpost(saksbehandlerEpost).also {
-                if (it == null) { log.info("Køen $oppgaveKoId inneholder saksbehandler som ikke finnes") }
+                if (it == null) {
+                    log.info("Køen $oppgaveKoId inneholder saksbehandler som ikke finnes")
+                }
             }
         }
     }

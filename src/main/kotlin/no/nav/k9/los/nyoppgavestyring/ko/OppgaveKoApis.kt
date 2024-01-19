@@ -151,7 +151,8 @@ fun Route.OppgaveKoApis() {
 
             val (reservertOppgave, reservasjonFraKø) = oppgaveKoTjeneste.taReservasjonFraKø(
                 innloggetBrukerId = innloggetBruker.id!!,
-                oppgaveKoId = params.oppgaveKøId.toLong()
+                oppgaveKoId = params.oppgaveKøId.toLong(),
+                kotlin.coroutines.coroutineContext
             ) ?: Pair(null, null)
 
             if (reservasjonFraKø != null) {
