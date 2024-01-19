@@ -225,7 +225,7 @@ class PepClient constructor(
             .addActionAttribute(ACTION_ID, "update")
             .addResourceAttribute("no.nav.abac.attributter.resource.k9.behandlings_uuid", oppgave.eksternId)  //TODO los skal ikke kjenne til denne detaljen. Oppgavetype må utvides med attributtreferanse
             .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
-            .addAccessSubjectAttribute(SUBJECTID, saksbehandler.epost)
+            .addAccessSubjectAttribute(SUBJECTID, saksbehandler.brukerIdent!!)
 
         return evaluate(requestBuilder)
     }
