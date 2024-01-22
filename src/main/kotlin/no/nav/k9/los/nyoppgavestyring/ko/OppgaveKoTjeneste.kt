@@ -1,20 +1,13 @@
 package no.nav.k9.los.nyoppgavestyring.ko
 
-import io.ktor.server.sessions.*
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
-import no.nav.helse.dusseldorf.ktor.core.RequestContext
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.abac.IPepClient
-import no.nav.k9.los.integrasjon.abac.PepClient
 import no.nav.k9.los.integrasjon.pdl.IPdlService
-import no.nav.k9.los.integrasjon.rest.RequestContextService
-import no.nav.k9.los.integrasjon.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
