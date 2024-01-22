@@ -17,7 +17,7 @@ class ReservasjonV3DtoBuilder(
     private val reservasjonOversetter: ReservasjonOversetter,
     private val oppgaveTjeneste: OppgaveTjeneste
 ) {
-    fun byggReservasjonV3Dto(
+    suspend fun byggReservasjonV3Dto(
         reservasjon: ReservasjonV3,
         saksbehandler: Saksbehandler
     ): ReservasjonV3Dto {
@@ -28,16 +28,12 @@ class ReservasjonV3DtoBuilder(
                 oppgaveRepositoryTxWrapper.hentÅpneOppgaverForReservasjonsnøkkel(reservasjon.reservasjonsnøkkel)
 
             val oppgaveV3Dtos = oppgaverForReservasjonsnøkkel.map { oppgave ->
-                val person = runBlocking {
-                    pdlService.person(oppgave.hentVerdi("aktorId")!!)
-                }.person!!
+                val person = pdlService.person(oppgave.hentVerdi("aktorId")!!).person!!
                 GenerellOppgaveV3Dto(oppgave, person)
             }
             ReservasjonV3Dto(reservasjon, oppgaveV3Dtos, saksbehandler)
         } else {
-            val person = runBlocking {
-                pdlService.person(oppgaveV1.aktorId)
-            }
+            val person = pdlService.person(oppgaveV1.aktorId)
             val oppgaveV1Dto = OppgaveDto(
                 status = OppgaveStatusDto(
                     true,

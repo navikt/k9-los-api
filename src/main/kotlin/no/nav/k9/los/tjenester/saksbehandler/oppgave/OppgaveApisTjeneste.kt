@@ -120,7 +120,7 @@ class OppgaveApisTjeneste(
         return reservasjonV3DtoBuilder.byggReservasjonV3Dto(nyReservasjon, reservertAv)
     }
 
-    fun forlengReservasjon(
+    suspend fun forlengReservasjon(
         forlengReservasjonDto: ForlengReservasjonDto,
         innloggetBruker: Saksbehandler
     ): ReservasjonV3Dto {
@@ -197,7 +197,7 @@ class OppgaveApisTjeneste(
         )
     }
 
-    fun hentReserverteOppgaverForSaksbehandler(saksbehandler: Saksbehandler): List<ReservasjonV3Dto> {
+    suspend fun hentReserverteOppgaverForSaksbehandler(saksbehandler: Saksbehandler): List<ReservasjonV3Dto> {
         val reservasjoner =
             reservasjonV3Tjeneste.hentReservasjonerForSaksbehandler(saksbehandler.id!!)
 

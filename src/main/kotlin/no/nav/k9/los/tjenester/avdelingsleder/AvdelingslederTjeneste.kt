@@ -313,7 +313,7 @@ class AvdelingslederTjeneste(
         }
     }
 
-    fun hentAlleAktiveReservasjonerV3(): List<ReservasjonV3Dto> {
+    suspend fun hentAlleAktiveReservasjonerV3(): List<ReservasjonV3Dto> {
         return reservasjonV3Tjeneste.hentAlleAktiveReservasjoner().map { reservasjon ->
             val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(reservasjon.reservertAv)
             reservasjonV3DtoBuilder.byggReservasjonV3Dto(reservasjon, saksbehandler)
