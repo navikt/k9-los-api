@@ -114,7 +114,7 @@ class OppgaveQueryRepository(
                 område = null,
                 kode = "egenAnsatt",
                 visningsnavn =  "Egen ansatt",
-                tolkes_som = "boolean",
+                tolkes_som = "String",
                 kokriterie = true,
                 verdiforklaringerErUttømmende = true,
                 EgenAnsatt.entries.map {
