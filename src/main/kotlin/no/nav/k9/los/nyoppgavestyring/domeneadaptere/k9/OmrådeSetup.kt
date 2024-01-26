@@ -222,7 +222,8 @@ object KodeverkSynlighetRegler {
         return when(ytelseType) {
             FagsakYtelseType.FRISINN -> KodeverkSynlighet.SKJULT
             FagsakYtelseType.OLP,
-            FagsakYtelseType.UKJENT -> KodeverkSynlighet.SYNLIG
+            FagsakYtelseType.UKJENT,
+            FagsakYtelseType.OMSORGSDAGER -> KodeverkSynlighet.SYNLIG
             else -> KodeverkSynlighet.SYNLIG_FAVORITT
         }
     }
