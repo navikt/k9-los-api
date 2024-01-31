@@ -252,6 +252,12 @@
           "visPåOppgave": true,
           "påkrevd": true,
           "defaultverdi": false
+        },
+        {
+          "id": "utenlandstilsnitt",
+          "visPåOppgave": true,
+          "påkrevd": true,
+          "defaultverdi": false
         }
       ]
     }

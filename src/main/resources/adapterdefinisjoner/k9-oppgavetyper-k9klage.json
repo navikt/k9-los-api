@@ -125,6 +125,12 @@
           "id": "helautomatiskBehandlet",
           "visPåOppgave": false,
           "påkrevd": true
+        },
+        {
+          "id": "utenlandstilsnitt",
+          "visPåOppgave": true,
+          "påkrevd": true,
+          "defaultverdi": false
         }
       ]
     }

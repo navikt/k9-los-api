@@ -441,6 +441,14 @@
       "tolkesSom": "boolean",
       "visTilBruker": true,
       "kokriterie": true
+    },
+    {
+      "id": "utenlandstilsnitt",
+      "visningsnavn": "Utenlandstilsnitt",
+      "listetype": false,
+      "tolkesSom": "boolean",
+      "visTilBruker": true,
+      "kokriterie": true
     }
   ]
 }
