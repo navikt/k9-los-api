@@ -4,7 +4,6 @@ import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Dto
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
@@ -96,14 +95,10 @@ class OppgaveApisTjeneste(
         val tilSaksbehandler =
             reservasjonEndringDto.brukerIdent?.let { saksbehandlerRepository.finnSaksbehandlerMedIdent(it) }
 
-        val oppgave =
-            oppgaveV3RepositoryMedTxWrapper.hentOppgave(
-                reservasjonEndringDto.oppgaveNøkkel.områdeEksternId,
-                reservasjonEndringDto.oppgaveNøkkel.oppgaveEksternId
-            ) //TODO oppgaveId er behandlingsUUID?
+        val reservasjonsnøkkel = reservasjonOversetter.hentReservasjonsnøkkelForOppgavenøkkel(reservasjonEndringDto.oppgaveNøkkel)
         val nyReservasjon =
             reservasjonV3Tjeneste.endreReservasjon(
-                reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
+                reservasjonsnøkkel = reservasjonsnøkkel,
                 endretAvBrukerId = innloggetBruker.id!!,
                 nyTildato = reservasjonEndringDto.reserverTil?.let {
                     LocalDateTime.of(
@@ -127,16 +122,11 @@ class OppgaveApisTjeneste(
         // Fjernes når V1 skal vekk
         oppgaveTjeneste.forlengReservasjonPåOppgave(UUID.fromString(forlengReservasjonDto.oppgaveNøkkel.oppgaveEksternId))
 
-        //TODO oppgaveId er behandlingsUUID?
-        val oppgave = oppgaveV3RepositoryMedTxWrapper.hentOppgave(
-            forlengReservasjonDto.oppgaveNøkkel.områdeEksternId,
-            forlengReservasjonDto.oppgaveNøkkel.oppgaveEksternId
-        )
-        //TODO: Oppgavetype som ikke er støttet i V3 -- utlede reservasjonsnøkkel
+        val reservasjonsnøkkel = reservasjonOversetter.hentReservasjonsnøkkelForOppgavenøkkel(forlengReservasjonDto.oppgaveNøkkel)
 
         val forlengetReservasjon =
             reservasjonV3Tjeneste.forlengReservasjon(
-                reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
+                reservasjonsnøkkel = reservasjonsnøkkel,
                 nyTildato = forlengReservasjonDto.nyTilDato,
                 utførtAvBrukerId = innloggetBruker.id!!,
                 kommentar = forlengReservasjonDto.kommentar ?: ""
@@ -162,14 +152,10 @@ class OppgaveApisTjeneste(
             params.brukerIdent
         )!!
 
-        val oppgave = oppgaveV3RepositoryMedTxWrapper.hentOppgave(
-            params.oppgaveNøkkel.områdeEksternId,
-            params.oppgaveNøkkel.oppgaveEksternId
-        )
-        //TODO: Oppgavetype som ikke er støttet i V3 -- utlede reservasjonsnøkkel
+        val reservasjonsnøkkel = reservasjonOversetter.hentReservasjonsnøkkelForOppgavenøkkel(params.oppgaveNøkkel)
 
         val nyReservasjon = reservasjonV3Tjeneste.overførReservasjon(
-            reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
+            reservasjonsnøkkel = reservasjonsnøkkel,
             reserverTil = LocalDateTime.now().plusHours(24).forskyvReservasjonsDato(),
             tilSaksbehandlerId = tilSaksbehandler.id!!,
             utførtAvBrukerId = innloggetBruker.id!!,
@@ -186,12 +172,10 @@ class OppgaveApisTjeneste(
         // Fjernes når V1 skal vekk
         oppgaveTjeneste.frigiReservasjon(UUID.fromString(params.oppgaveNøkkel.oppgaveEksternId), params.begrunnelse)
 
-        val oppgave = oppgaveV3RepositoryMedTxWrapper.hentOppgave(
-            params.oppgaveNøkkel.områdeEksternId,
-            params.oppgaveNøkkel.oppgaveEksternId
-        )
+        val reservasjonsnøkkel = reservasjonOversetter.hentReservasjonsnøkkelForOppgavenøkkel(params.oppgaveNøkkel)
+
         reservasjonV3Tjeneste.annullerReservasjon(
-            oppgave.reservasjonsnøkkel,
+            reservasjonsnøkkel,
             params.begrunnelse,
             innloggetBruker.id!!
         )

@@ -12,6 +12,8 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.forskyvReservasjonsDatoBakover
 import java.time.LocalDateTime
 import java.util.*
@@ -21,6 +23,7 @@ class ReservasjonOversetter(
     private val transactionalManager: TransactionalManager,
     private val oppgaveV1Repository: OppgaveRepository,
     private val oppgaveV3Repository: OppgaveV3Repository,
+    private val oppgaveV3RepositoryMedTxWrapper: OppgaveRepositoryTxWrapper,
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
     private val oppgavetypeRepository: OppgavetypeRepository,
     private val saksbehandlerRepository: SaksbehandlerRepository,
@@ -37,7 +40,21 @@ class ReservasjonOversetter(
         }
     }
 
-    fun hentNyReservasjonFraGammelKontekst(
+    fun hentReservasjonsnøkkelForOppgavenøkkel(
+        oppgaveNøkkel: OppgaveNøkkelDto
+    ): String {
+        return if (oppgaveNøkkel.erV1Oppgave()) {
+            val oppgaveV1 = oppgaveV1Repository.hent(UUID.fromString(oppgaveNøkkel.oppgaveEksternId))
+            hentAktivReservasjonFraGammelKontekst(oppgaveV1).reservasjonsnøkkel
+        } else {
+            oppgaveV3RepositoryMedTxWrapper.hentOppgave(
+                oppgaveNøkkel.områdeEksternId,
+                oppgaveNøkkel.oppgaveEksternId
+            ).reservasjonsnøkkel
+        }
+    }
+
+    fun hentAktivReservasjonFraGammelKontekst(
         oppgaveV1: Oppgave
     ): ReservasjonV3 {
         return transactionalManager.transaction { tx ->
