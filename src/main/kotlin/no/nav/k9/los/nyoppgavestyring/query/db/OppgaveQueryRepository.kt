@@ -85,7 +85,7 @@ class OppgaveQueryRepository(
                 "oppgavestatus",
                 "Oppgavestatus",
                 "String",
-                kokriterie = true,
+                kokriterie = false,
                 verdiforklaringerErUttømmende = true,
                 verdiforklaringer = Oppgavestatus.entries.map { oppgavestatus ->
                     Verdiforklaring(
@@ -100,7 +100,7 @@ class OppgaveQueryRepository(
                 kode = "beskyttelse",
                 visningsnavn =  "Beskyttelse",
                 tolkes_som = "String",
-                kokriterie = true,
+                kokriterie = false,
                 verdiforklaringerErUttømmende = true,
                 BeskyttelseType.entries.map {
                     Verdiforklaring(
@@ -115,7 +115,7 @@ class OppgaveQueryRepository(
                 kode = "egenAnsatt",
                 visningsnavn =  "Egen ansatt",
                 tolkes_som = "String",
-                kokriterie = true,
+                kokriterie = false,
                 verdiforklaringerErUttømmende = true,
                 EgenAnsatt.entries.map {
                     Verdiforklaring(
