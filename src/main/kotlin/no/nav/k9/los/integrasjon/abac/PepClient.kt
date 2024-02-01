@@ -11,6 +11,7 @@ import kotlinx.coroutines.withContext
 import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.ktor.metrics.Operation
 import no.nav.k9.los.Configuration
+import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.modell.Saksbehandler
@@ -227,7 +228,11 @@ class PepClient constructor(
             .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
             .addAccessSubjectAttribute(SUBJECTID, saksbehandler.brukerIdent!!)
 
-        return evaluate(requestBuilder)
+        val tilgang = evaluate(requestBuilder)
+        if (KoinProfile.PREPROD == config.koinProfile() && !tilgang) {
+            log.warn("Ikke tilgang til å reservere oppgaver! Spørring: ${requestBuilder.build()}")
+        }
+        return tilgang
     }
 
     private suspend fun evaluate(xacmlRequestBuilder: XacmlRequestBuilder): Boolean {
