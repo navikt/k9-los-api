@@ -57,7 +57,7 @@ class K9SakOppgaveTilDVHMapper {
             behandlingStatus = behandlingStatus.kode,
             resultat = oppgave.hentVerdi("resultattype"),
             resultatBegrunnelse = null, //TODO: callback mot K9?
-            utenlandstilsnitt = utledUtenlandstilsnitt(oppgave),
+            utenlandstilsnitt = oppgave.hentVerdi("utenlandstilsnitt")?.let { it.toBoolean() },
             behandlingTypeBeskrivelse = BehandlingType.fraKode(oppgave.hentVerdi("behandlingTypekode")!!).navn,
             behandlingStatusBeskrivelse = BehandlingStatus.fraKode(oppgave.hentVerdi("behandlingsstatus")).navn,
             resultatBeskrivelse = BehandlingResultatType.fraKode(oppgave.hentVerdi("resultattype")).navn,
@@ -89,7 +89,7 @@ class K9SakOppgaveTilDVHMapper {
             FagsakYtelseType.OMSORGSPENGER_MA -> "4487"
             FagsakYtelseType.OMSORGSPENGER_AO -> "4487"
             FagsakYtelseType.OPPLÆRINGSPENGER -> "4487"
-            FagsakYtelseType.PÅRØRENDESYKDOM -> "4487"
+            //FagsakYtelseType.PÅRØRENDESYKDOM -> "4487" //Fjernet fra kontrakt 16.01.2024
             FagsakYtelseType.OBSOLETE -> "4487"
             FagsakYtelseType.UDEFINERT -> "4487"
             else -> throw IllegalStateException("Ukjent ytelsestype: ${oppgave.hentVerdi("ytelsestype")}")

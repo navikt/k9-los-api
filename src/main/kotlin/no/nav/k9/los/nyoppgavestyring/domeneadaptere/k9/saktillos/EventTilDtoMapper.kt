@@ -9,6 +9,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktKode
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 
 class EventTilDtoMapper {
@@ -205,6 +206,17 @@ class EventTilDtoMapper {
                         AksjonspunktStatus.AVBRUTT
                     ))
                 }.isNotEmpty().toString()
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "utenlandstilsnitt",
+                verdi = event.aksjonspunktTilstander
+                    .filter { aksjonspunktTilstandDto ->
+                        aksjonspunktTilstandDto.status != AksjonspunktStatus.AVBRUTT
+                    }
+                    .any { aksjonspunktTilstandDto ->
+                        aksjonspunktTilstandDto.aksjonspunktKode == AksjonspunktKodeDefinisjon.AUTOMATISK_MARKERING_AV_UTENLANDSSAK_KODE
+                            || aksjonspunktTilstandDto.aksjonspunktKode == AksjonspunktKodeDefinisjon.MANUELL_MARKERING_AV_UTLAND_SAKSTYPE_KODE
+                    }.toString()
             )
         ).filterNotNull().toMutableList()
 
