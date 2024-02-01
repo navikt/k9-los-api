@@ -36,7 +36,7 @@ class K9KlageOppgaveTilDVHMapper {
             behandlingStatus = utledBehandlingStatus(oppgave),
             resultat = oppgave.hentVerdi("resultattype"),
             resultatBegrunnelse = null, //TODO: callback mot K9?
-            utenlandstilsnitt = oppgave.hentVerdi("utenlandstilsnitt")?.let { it.toBoolean() }, //Ikke i bruk i k9-klage
+            utenlandstilsnitt = oppgave.hentVerdi("utenlandstilsnitt")?.let { it.toBoolean() },
             behandlingTypeBeskrivelse = BehandlingType.fraKode(oppgave.hentVerdi("behandlingTypekode")!!).navn,
             behandlingStatusBeskrivelse = BehandlingStatus.fraKode(oppgave.hentVerdi("behandlingsstatus")).navn,
             resultatBeskrivelse = BehandlingResultatType.fraKode(oppgave.hentVerdi("resultattype")).navn,
