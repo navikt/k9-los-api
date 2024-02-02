@@ -243,10 +243,12 @@ class EventTilDtoMapper {
                 nøkkel = "relatertPartAktorid",
                 verdi = event.relatertPartAktørId?.id
             ),
-            OppgaveFeltverdiDto(
-                nøkkel = "pleietrengendeAktorId",
-                verdi = losOpplysningerSomManglerIKlageDto.pleietrengendeAktørId.aktørId
-            ),
+            losOpplysningerSomManglerIKlageDto.pleietrengendeAktørId?.let {
+                OppgaveFeltverdiDto(
+                    nøkkel = "pleietrengendeAktorId",
+                    verdi = losOpplysningerSomManglerIKlageDto.pleietrengendeAktørId.aktørId
+                )
+            },
             OppgaveFeltverdiDto(
                 nøkkel = "ansvarligSaksbehandler",
                 verdi = event.ansvarligSaksbehandler ?: forrigeOppgave?.hentVerdi("ansvarligSaksbehandler")
@@ -283,7 +285,7 @@ class EventTilDtoMapper {
                 nøkkel = "utenlandstilsnitt",
                 verdi = losOpplysningerSomManglerIKlageDto.isUtenlandstilsnitt.toString()
             )
-        )
+        ).filterNotNull().toMutableList()
 
         private fun utledAvventerSaksbehandler(
             harManueltAksjonspunkt: Boolean,
