@@ -61,6 +61,7 @@ class OppgaveRepository(
                 from oppgave_v3 ov 
                 where reservasjonsnokkel = :reservasjonsnokkel
                 and aktiv = true 
+                and status != 'LUKKET'
             """.trimIndent(),
                 mapOf("reservasjonsnokkel" to reservasjonsnøkkel)
             ).map { row ->
