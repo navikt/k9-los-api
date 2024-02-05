@@ -2,6 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos
 
 import no.nav.k9.klage.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.klage.kodeverk.behandling.BehandlingStatus
+import no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktType
@@ -308,5 +309,34 @@ class EventTilDtoMapper {
                 )
             }
         }
+
+        //TODO Legge inn behandlingsårsak i event fra klage
+        /*
+        private fun utledBehandlingsårsaker(
+            event: KlagebehandlingProsessHendelse,
+            oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
+        ) {
+            val filtrert = event.behandlingsårsaker.filterNot { behandlingsårsak ->
+                behandlingsårsak == BehandlingÅrsakType.UDEFINERT
+            }
+            if (filtrert.isNotEmpty()) {
+                oppgaveFeltverdiDtos.addAll(filtrert.map { behandlingsårsak ->
+                    OppgaveFeltverdiDto(
+                        nøkkel = "behandlingsårsak",
+                        verdi = KLAGE_PREFIX +  behandlingsårsak.kode
+                    )
+                })
+            } else {
+                oppgaveFeltverdiDtos.add(
+                    OppgaveFeltverdiDto(
+                        nøkkel = "behandlingsårsak",
+                        verdi = null
+                    )
+                )
+            }
+        }
+
+         */
+
     }
 }
