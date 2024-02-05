@@ -18,7 +18,8 @@ import no.nav.k9.sak.kontrakt.produksjonsstyring.los.LosOpplysningerSomManglerIK
 class EventTilDtoMapper {
 
     companion object {
-        const val AKSJONSPUNKT_PREFIX = "KLAGE"
+        const val KLAGE_PREFIX = "KLAGE"
+        const val KLAGE_PREFIX_VISNING = "Klage - "
 
         private val MANUELLE_AKSJONSPUNKTER = AksjonspunktDefinisjon.values().filter { aksjonspunktDefinisjon ->
             aksjonspunktDefinisjon.aksjonspunktType == AksjonspunktType.MANUELL
@@ -140,7 +141,7 @@ class EventTilDtoMapper {
                     oppgaveFeltverdiDtos.add(
                         OppgaveFeltverdiDto(
                             nøkkel = "aktivtAksjonspunkt",
-                            verdi = AKSJONSPUNKT_PREFIX + åpentAksjonspunkt.aksjonspunktKode
+                            verdi = KLAGE_PREFIX + åpentAksjonspunkt.aksjonspunktKode
                         )
                     )
                 }
@@ -167,7 +168,7 @@ class EventTilDtoMapper {
                     oppgaveFeltverdiDtos.add(
                         OppgaveFeltverdiDto(
                             nøkkel = "løsbartAksjonspunkt",
-                            verdi = AKSJONSPUNKT_PREFIX + it.aksjonspunktKode
+                            verdi = KLAGE_PREFIX + it.aksjonspunktKode
                         )
                     )
                 }
@@ -182,7 +183,7 @@ class EventTilDtoMapper {
                 oppgaveFeltverdiDtos.addAll(event.aksjonspunkttilstander.map { aksjonspunkttilstand ->
                     OppgaveFeltverdiDto(
                         nøkkel = "aksjonspunkt",
-                        verdi = AKSJONSPUNKT_PREFIX + aksjonspunkttilstand.aksjonspunktKode
+                        verdi = KLAGE_PREFIX + aksjonspunkttilstand.aksjonspunktKode
                     )
                 })
             } else {
