@@ -11,10 +11,7 @@ import no.nav.k9.los.integrasjon.pdl.IPdlService
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
-import no.nav.k9.los.nyoppgavestyring.reservasjon.AlleredeReservertException
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ManglerTilgangException
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.reservasjon.*
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.GenerellOppgaveV3Dto
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
@@ -33,6 +30,7 @@ class OppgaveKoTjeneste(
     private val oppgaveRepository: OppgaveRepository,
     private val oppgaveRepositoryTxWrapper: OppgaveRepositoryTxWrapper,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
+    private val reservasjonV3Repository: ReservasjonV3Repository,
     private val saksbehandlerRepository: SaksbehandlerRepository,
     private val oppgaveTjeneste: OppgaveTjeneste,
     private val reservasjonRepository: ReservasjonRepository,
@@ -82,11 +80,13 @@ class OppgaveKoTjeneste(
         }
     }
 
-    fun hentAntallOppgaveForKø(
+    fun hentAntallUreserverteOppgaveForKø(
         oppgaveKoId: Long
     ): Long {
         val ko = oppgaveKoRepository.hent(oppgaveKoId)
-        return oppgaveQueryService.queryForAntall(ko.oppgaveQuery)
+        val oppgaveIder = oppgaveQueryService.queryForOppgaveId(ko.oppgaveQuery)
+        val ureserverte = reservasjonV3Repository.hentUreserverteOppgaveIder(oppgaveIder)
+        return ureserverte.size.toLong()
     }
 
     fun taReservasjonFraKø(

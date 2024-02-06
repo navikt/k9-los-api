@@ -144,7 +144,7 @@ fun Route.OppgaveKoApis() {
     data class AntallOppgaverIKo(val id: String)
     get { oppgaveKoId: AntallOppgaverIKo ->
         requestContextService.withRequestContext(call) {
-            call.respond(oppgaveKoTjeneste.hentAntallOppgaveForKø(oppgaveKoId.id.toLong()))
+            call.respond(oppgaveKoTjeneste.hentAntallUreserverteOppgaveForKø(oppgaveKoId.id.toLong()))
         }
     }
 

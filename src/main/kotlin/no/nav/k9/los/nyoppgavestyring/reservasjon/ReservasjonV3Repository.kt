@@ -2,10 +2,12 @@ package no.nav.k9.los.nyoppgavestyring.reservasjon
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
+import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import org.postgresql.util.PSQLException
 import java.time.LocalDateTime
 
 class ReservasjonV3Repository(
+    private val transactionalManager: TransactionalManager,
 ) {
     fun lagreReservasjon(reservasjonV3: ReservasjonV3, tx: TransactionalSession): ReservasjonV3 {
         try {
@@ -37,7 +39,14 @@ class ReservasjonV3Repository(
         }
     }
 
-    fun endreReservasjon(reservasjonSomSkalEndres: ReservasjonV3, endretAvBrukerId: Long, nySaksbehandlerId: Long?, nyTildato: LocalDateTime?, kommentar: String?, tx: TransactionalSession) : ReservasjonV3 {
+    fun endreReservasjon(
+        reservasjonSomSkalEndres: ReservasjonV3,
+        endretAvBrukerId: Long,
+        nySaksbehandlerId: Long?,
+        nyTildato: LocalDateTime?,
+        kommentar: String?,
+        tx: TransactionalSession
+    ): ReservasjonV3 {
         val annullertReservasjonId = annullerAktivReservasjon(reservasjonSomSkalEndres, kommentar ?: "", tx)
         val nyReservasjon = lagreReservasjon(
             ReservasjonV3(
@@ -116,7 +125,7 @@ class ReservasjonV3Repository(
         kommentar: String,
         reserverTil: LocalDateTime,
         tx: TransactionalSession
-    ) : ReservasjonV3 {
+    ): ReservasjonV3 {
         val overføringstidspunkt = LocalDateTime.now()
 
         val annullertReservasjonId = annullerAktivReservasjon(aktivReservasjon, kommentar, tx)
@@ -142,7 +151,11 @@ class ReservasjonV3Repository(
         return nyReservasjon
     }
 
-    private fun annullerAktivReservasjon(aktivReservasjon: ReservasjonV3, kommentar: String, tx: TransactionalSession): Long {
+    private fun annullerAktivReservasjon(
+        aktivReservasjon: ReservasjonV3,
+        kommentar: String,
+        tx: TransactionalSession
+    ): Long {
         return tx.updateAndReturnGeneratedKey(
             queryOf(
                 """
@@ -244,6 +257,33 @@ class ReservasjonV3Repository(
                 )
             }.asSingle
         )
+    }
+
+    fun hentUreserverteOppgaveIder(oppgaveIder: List<Long>): List<Long> {
+        return transactionalManager.transaction { tx ->
+            tx.run(
+                queryOf(
+                    """
+                    select distinct ov.id as oppgaveId
+                    from oppgave_v3 ov 
+                    where ov.aktiv = true
+                    and ov.id in (:oppgaveliste)
+                    and not exists (
+                        select * 
+                        from reservasjon_v3 rv 
+                        where rv.reservasjonsnokkel = ov.reservasjonsnokkel
+                        and upper(rv.gyldig_tidsrom) > localtimestamp 
+                        and rv.annullert_for_utlop = false 
+                        )
+                """.trimIndent(),
+                    mapOf(
+                        "oppgaveliste" to oppgaveIder
+                    )
+                ).map { row ->
+                    row.long("oppgaveId")
+                }.asList
+            )
+        }
     }
 
     private fun lagreEndring(endring: ReservasjonV3Endring, tx: TransactionalSession) {
