@@ -123,6 +123,7 @@ class EventTilDtoMapper {
 
             //automatiskBehandletFlagg er defaultet til False p.t.
             utledAvventerSaksbehandler(harManueltAksjonspunkt, harAutopunkt, oppgaveFeltverdiDtos)
+            utledBehandlingsårsaker(event, oppgaveFeltverdiDtos)
 
             return oppgaveFeltverdiDtos
         }
@@ -311,20 +312,18 @@ class EventTilDtoMapper {
             }
         }
 
-        //TODO Legge inn behandlingsårsak i event fra klage
-        /*
         private fun utledBehandlingsårsaker(
             event: KlagebehandlingProsessHendelse,
             oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
         ) {
             val filtrert = event.behandlingsårsaker.filterNot { behandlingsårsak ->
-                behandlingsårsak == BehandlingÅrsakType.UDEFINERT
+                behandlingsårsak == BehandlingÅrsakType.UDEFINERT.kode
             }
             if (filtrert.isNotEmpty()) {
                 oppgaveFeltverdiDtos.addAll(filtrert.map { behandlingsårsak ->
                     OppgaveFeltverdiDto(
                         nøkkel = "behandlingsårsak",
-                        verdi = KLAGE_PREFIX +  behandlingsårsak.kode
+                        verdi = KLAGE_PREFIX +  behandlingsårsak
                     )
                 })
             } else {
@@ -336,8 +335,5 @@ class EventTilDtoMapper {
                 )
             }
         }
-
-         */
-
     }
 }
