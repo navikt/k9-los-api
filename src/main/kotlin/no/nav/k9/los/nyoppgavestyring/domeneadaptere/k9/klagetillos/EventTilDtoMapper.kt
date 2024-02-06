@@ -2,6 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos
 
 import no.nav.k9.klage.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.klage.kodeverk.behandling.BehandlingStatus
+import no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktType
@@ -17,7 +18,8 @@ import no.nav.k9.sak.kontrakt.produksjonsstyring.los.LosOpplysningerSomManglerIK
 class EventTilDtoMapper {
 
     companion object {
-        const val AKSJONSPUNKT_PREFIX = "KLAGE"
+        const val KLAGE_PREFIX = "KLAGE"
+        const val KLAGE_PREFIX_VISNING = "Klage - "
 
         private val MANUELLE_AKSJONSPUNKTER = AksjonspunktDefinisjon.values().filter { aksjonspunktDefinisjon ->
             aksjonspunktDefinisjon.aksjonspunktType == AksjonspunktType.MANUELL
@@ -121,6 +123,7 @@ class EventTilDtoMapper {
 
             //automatiskBehandletFlagg er defaultet til False p.t.
             utledAvventerSaksbehandler(harManueltAksjonspunkt, harAutopunkt, oppgaveFeltverdiDtos)
+            utledBehandlingsårsaker(event, oppgaveFeltverdiDtos)
 
             return oppgaveFeltverdiDtos
         }
@@ -139,7 +142,7 @@ class EventTilDtoMapper {
                     oppgaveFeltverdiDtos.add(
                         OppgaveFeltverdiDto(
                             nøkkel = "aktivtAksjonspunkt",
-                            verdi = AKSJONSPUNKT_PREFIX + åpentAksjonspunkt.aksjonspunktKode
+                            verdi = KLAGE_PREFIX + åpentAksjonspunkt.aksjonspunktKode
                         )
                     )
                 }
@@ -166,7 +169,7 @@ class EventTilDtoMapper {
                     oppgaveFeltverdiDtos.add(
                         OppgaveFeltverdiDto(
                             nøkkel = "løsbartAksjonspunkt",
-                            verdi = AKSJONSPUNKT_PREFIX + it.aksjonspunktKode
+                            verdi = KLAGE_PREFIX + it.aksjonspunktKode
                         )
                     )
                 }
@@ -181,7 +184,7 @@ class EventTilDtoMapper {
                 oppgaveFeltverdiDtos.addAll(event.aksjonspunkttilstander.map { aksjonspunkttilstand ->
                     OppgaveFeltverdiDto(
                         nøkkel = "aksjonspunkt",
-                        verdi = AKSJONSPUNKT_PREFIX + aksjonspunkttilstand.aksjonspunktKode
+                        verdi = KLAGE_PREFIX + aksjonspunkttilstand.aksjonspunktKode
                     )
                 })
             } else {
@@ -304,6 +307,30 @@ class EventTilDtoMapper {
                     OppgaveFeltverdiDto(
                         nøkkel = "avventerSaksbehandler",
                         verdi = "false"
+                    )
+                )
+            }
+        }
+
+        private fun utledBehandlingsårsaker(
+            event: KlagebehandlingProsessHendelse,
+            oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
+        ) {
+            val filtrert = event.behandlingsårsaker.filterNot { behandlingsårsak ->
+                behandlingsårsak == BehandlingÅrsakType.UDEFINERT.kode
+            }
+            if (filtrert.isNotEmpty()) {
+                oppgaveFeltverdiDtos.addAll(filtrert.map { behandlingsårsak ->
+                    OppgaveFeltverdiDto(
+                        nøkkel = "behandlingsårsak",
+                        verdi = KLAGE_PREFIX +  behandlingsårsak
+                    )
+                })
+            } else {
+                oppgaveFeltverdiDtos.add(
+                    OppgaveFeltverdiDto(
+                        nøkkel = "behandlingsårsak",
+                        verdi = null
                     )
                 )
             }

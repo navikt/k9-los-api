@@ -203,4 +203,6 @@ class OppgaveRepository(
             ).map { row -> mapOppgave(row, tx) }.asList
         )
     }
+
+
 }

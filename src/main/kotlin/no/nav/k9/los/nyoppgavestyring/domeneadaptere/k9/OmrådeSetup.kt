@@ -3,8 +3,10 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
+import no.nav.k9.kodeverk.behandling.BehandlingÅrsakType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
+import no.nav.k9.kodeverk.uttak.SøknadÅrsak
 import no.nav.k9.los.domene.lager.oppgave.Kodeverdi
 import no.nav.k9.kodeverk.api.Kodeverdi as KodeverdiK9Sak
 import no.nav.k9.los.domene.modell.BehandlingStatus
@@ -59,6 +61,8 @@ class OmrådeSetup(
         kodeverkBehandlingtype()
         kodeverkVenteårsak()
         kodeverkBehandlingssteg()
+        kodeverkSøknadsårsak()
+        kodeverkBehandlingsårsak()
     }
 
     private fun kodeverkAksjonspunkt() {
@@ -83,14 +87,14 @@ class OmrådeSetup(
 
     private fun aksjonspunktVerdierK9Klage() =
         no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.entries
-        .filterNot { it == no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.UNDEFINED }
-        .map { apDefinisjon ->
-            KodeverkVerdiDto(
-                verdi = EventTilDtoMapper.AKSJONSPUNKT_PREFIX + apDefinisjon.kode,
-                visningsnavn = apDefinisjon.navn,
-                beskrivelse = null,
-            )
-        }
+            .filterNot { it == no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.UNDEFINED }
+            .map { apDefinisjon ->
+                KodeverkVerdiDto(
+                    verdi = EventTilDtoMapper.KLAGE_PREFIX + apDefinisjon.kode,
+                    visningsnavn = EventTilDtoMapper.KLAGE_PREFIX_VISNING + apDefinisjon.navn,
+                    beskrivelse = null,
+                )
+            }
 
     private fun kodeverkFagsystem() {
         val kodeverkDto = KodeverkDto(
@@ -158,6 +162,31 @@ class OmrådeSetup(
         feltdefinisjonTjeneste.oppdater(kodeverkDto)
     }
 
+    private fun kodeverkSøknadsårsak() {
+        val kodeverkDto = KodeverkDto(
+            område = område,
+            eksternId = "søknadsårsak",
+            beskrivelse = "Søknadsårsak gjelder omsorgspengesøknader hvor søker har søkt selv i stedet for (eller i tillegg til) arbeidsgiver",
+            uttømmende = true,
+            verdier = SøknadÅrsak.entries.lagK9Dto(beskrivelse = null, KodeverkSynlighetRegler::søknadÅrsak)
+        )
+        feltdefinisjonTjeneste.oppdater(kodeverkDto)
+    }
+
+    private fun kodeverkBehandlingsårsak() {
+        val k9sakKodeverk = no.nav.k9.kodeverk.behandling.BehandlingÅrsakType.entries.lagK9Dto(beskrivelse = null, KodeverkSynlighetRegler::behandlingsårsak)
+        val k9klageKodeverk = no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.entries.lageK9KlageDto(beskrivelse = null, KodeverkSynlighetRegler::behandlingsårsak)
+        val koder = k9sakKodeverk + k9klageKodeverk
+        val kodeverkDto = KodeverkDto(
+            område = område,
+            eksternId = "behandlingsårsak",
+            beskrivelse = null,
+            uttømmende = true,
+            verdier = koder
+        )
+        feltdefinisjonTjeneste.oppdater(kodeverkDto)
+    }
+
     private fun kodeverkBehandlingssteg() {
         val kodeverkDto = KodeverkDto(
             område = område,
@@ -169,32 +198,52 @@ class OmrådeSetup(
         feltdefinisjonTjeneste.oppdater(kodeverkDto)
     }
 
-    fun <T: Kodeverdi> Collection<T>.lagDto(
+    fun <T : Kodeverdi> Collection<T>.lagDto(
         beskrivelse: String?,
         synlighet: (T) -> KodeverkSynlighet = { KodeverkSynlighet.SYNLIG_FAVORITT }
     ): List<KodeverkVerdiDto> {
         return associateWith { synlighet(it) }
             .filter { (_, synlighet) -> synlighet != KodeverkSynlighet.SKJULT }
-            .map { (kodeverdi, synlighet) -> KodeverkVerdiDto(
-                verdi = kodeverdi.kode,
-                visningsnavn = kodeverdi.navn,
-                beskrivelse = beskrivelse,
-                favoritt = synlighet == KodeverkSynlighet.SYNLIG_FAVORITT
-            )}.sortedBy { it.visningsnavn }
+            .map { (kodeverdi, synlighet) ->
+                KodeverkVerdiDto(
+                    verdi = kodeverdi.kode,
+                    visningsnavn = kodeverdi.navn,
+                    beskrivelse = beskrivelse,
+                    favoritt = synlighet == KodeverkSynlighet.SYNLIG_FAVORITT
+                )
+            }.sortedBy { it.visningsnavn }
     }
 
-    fun <T: KodeverdiK9Sak> Collection<T>.lagK9Dto(
+    fun <T : KodeverdiK9Sak> Collection<T>.lagK9Dto(
         beskrivelse: String?,
         synlighet: (T) -> KodeverkSynlighet = { KodeverkSynlighet.SYNLIG_FAVORITT }
     ): List<KodeverkVerdiDto> {
         return associateWith { synlighet(it) }
             .filter { (_, synlighet) -> synlighet != KodeverkSynlighet.SKJULT }
-            .map { (kodeverdi, synlighet) -> KodeverkVerdiDto(
-                verdi = kodeverdi.kode,
-                visningsnavn = kodeverdi.navn,
-                beskrivelse = beskrivelse,
-                favoritt = synlighet == KodeverkSynlighet.SYNLIG_FAVORITT
-            )}.sortedBy { it.visningsnavn }
+            .map { (kodeverdi, synlighet) ->
+                KodeverkVerdiDto(
+                    verdi = kodeverdi.kode,
+                    visningsnavn = kodeverdi.navn,
+                    beskrivelse = beskrivelse,
+                    favoritt = synlighet == KodeverkSynlighet.SYNLIG_FAVORITT
+                )
+            }.sortedBy { it.visningsnavn }
+    }
+
+    fun <T : no.nav.k9.klage.kodeverk.api.Kodeverdi> Collection<T>.lageK9KlageDto(
+        beskrivelse: String?,
+        synlighet: (T) -> KodeverkSynlighet = { KodeverkSynlighet.SYNLIG_FAVORITT }
+    ): List<KodeverkVerdiDto> {
+        return associateWith { synlighet(it) }
+            .filter { (_, synlighet) -> synlighet != KodeverkSynlighet.SKJULT }
+            .map { (kodeverdi, synlighet) ->
+                KodeverkVerdiDto(
+                    verdi = EventTilDtoMapper.KLAGE_PREFIX + kodeverdi.kode,
+                    visningsnavn =  EventTilDtoMapper.KLAGE_PREFIX_VISNING + kodeverdi.navn,
+                    beskrivelse = beskrivelse,
+                    favoritt = synlighet == KodeverkSynlighet.SYNLIG_FAVORITT
+                )
+            }.sortedBy { it.visningsnavn }
     }
 }
 
@@ -214,16 +263,42 @@ object KodeverkSynlighetRegler {
             BehandlingType.KOPI,
             BehandlingType.UTEN_FNR_DNR,
             BehandlingType.UKJENT -> KodeverkSynlighet.SYNLIG
+
+            else -> KodeverkSynlighet.SYNLIG_FAVORITT
+        }
+    }
+
+    fun søknadÅrsak(søknadÅrsak: SøknadÅrsak): KodeverkSynlighet {
+        return when (søknadÅrsak) {
+            SøknadÅrsak.UDEFINERT -> KodeverkSynlighet.SKJULT
+            else -> KodeverkSynlighet.SYNLIG_FAVORITT
+        }
+    }
+
+    fun behandlingsårsak(søknadÅrsak: BehandlingÅrsakType): KodeverkSynlighet {
+        return when (søknadÅrsak) {
+            BehandlingÅrsakType.RE_HENDELSE_DØD_BARN,
+            BehandlingÅrsakType.RE_HENDELSE_DØD_FORELDER -> KodeverkSynlighet.SYNLIG_FAVORITT
+
+            BehandlingÅrsakType.UDEFINERT -> KodeverkSynlighet.SKJULT
+            else -> KodeverkSynlighet.SYNLIG
+        }
+    }
+
+    fun behandlingsårsak(søknadÅrsak: no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType): KodeverkSynlighet {
+        return when (søknadÅrsak) {
+                no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.UDEFINERT -> KodeverkSynlighet.SKJULT
             else -> KodeverkSynlighet.SYNLIG_FAVORITT
         }
     }
 
     fun ytelseType(ytelseType: FagsakYtelseType): KodeverkSynlighet {
-        return when(ytelseType) {
+        return when (ytelseType) {
             FagsakYtelseType.FRISINN -> KodeverkSynlighet.SKJULT
             FagsakYtelseType.OLP,
             FagsakYtelseType.UKJENT,
             FagsakYtelseType.OMSORGSDAGER -> KodeverkSynlighet.SYNLIG
+
             else -> KodeverkSynlighet.SYNLIG_FAVORITT
         }
     }

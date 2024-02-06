@@ -2,14 +2,15 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos
 
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStatus
+import no.nav.k9.kodeverk.behandling.BehandlingÅrsakType
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.*
+import no.nav.k9.kodeverk.uttak.SøknadÅrsak
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktKode
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 
 class EventTilDtoMapper {
@@ -96,6 +97,8 @@ class EventTilDtoMapper {
             utledÅpneAksjonspunkter(event.behandlingSteg, åpneAksjonspunkter, oppgaveFeltverdiDtos)
             utledVenteÅrsakOgFrist(åpneAksjonspunkter, oppgaveFeltverdiDtos)
             utledAutomatiskBehandletFlagg(forrigeOppgave, oppgaveFeltverdiDtos, harEllerHarHattManueltAksjonspunkt)
+            utledSøknadsårsaker(event, oppgaveFeltverdiDtos)
+            utledBehandlingsårsaker(event, oppgaveFeltverdiDtos)
             oppgaveFeltverdiDtos.addAll(
                 ventekategoriTilFlagg(
                     utledVentetype(
@@ -419,6 +422,54 @@ class EventTilDtoMapper {
                             )
                         )
                     }
+            }
+        }
+
+        private fun utledSøknadsårsaker(
+            event: BehandlingProsessEventDto,
+            oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
+        ) {
+            val filtrert = event.søknadsårsaker.filterNot { søknadÅrsak ->
+                søknadÅrsak == SøknadÅrsak.UDEFINERT
+            }
+            if (filtrert.isNotEmpty()) {
+                oppgaveFeltverdiDtos.addAll(filtrert.map { søknadsårsak ->
+                    OppgaveFeltverdiDto(
+                        nøkkel = "søknadsårsak",
+                        verdi = søknadsårsak.kode
+                    )
+                })
+            } else {
+                oppgaveFeltverdiDtos.add(
+                    OppgaveFeltverdiDto(
+                        nøkkel = "søknadsårsak",
+                        verdi = null
+                    )
+                )
+            }
+        }
+
+        private fun utledBehandlingsårsaker(
+            event: BehandlingProsessEventDto,
+            oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
+        ) {
+            val filtrert = event.behandlingsårsaker.filterNot { behandlingsårsak ->
+                behandlingsårsak == BehandlingÅrsakType.UDEFINERT
+            }
+            if (filtrert.isNotEmpty()) {
+                oppgaveFeltverdiDtos.addAll(filtrert.map { behandlingsårsak ->
+                    OppgaveFeltverdiDto(
+                        nøkkel = "behandlingsårsak",
+                        verdi = behandlingsårsak.kode
+                    )
+                })
+            } else {
+                oppgaveFeltverdiDtos.add(
+                    OppgaveFeltverdiDto(
+                        nøkkel = "behandlingsårsak",
+                        verdi = null
+                    )
+                )
             }
         }
 
