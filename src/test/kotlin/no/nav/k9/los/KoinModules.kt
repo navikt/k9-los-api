@@ -400,7 +400,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         ReservasjonV3Repository(
-
+            transactionalManager = get(),
         )
     }
 
@@ -437,6 +437,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgaveRepositoryTxWrapper = get(),
             pepClient = get(),
             pdlService = get(),
+            reservasjonV3Repository = get(),
         )
     }
 

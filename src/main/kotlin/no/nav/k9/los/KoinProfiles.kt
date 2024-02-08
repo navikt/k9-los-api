@@ -463,6 +463,7 @@ fun common(app: Application, config: Configuration) = module {
             oppgaveRepositoryTxWrapper = get(),
             pepClient = get(),
             pdlService = get(),
+            reservasjonV3Repository = get(),
         )
     }
 
@@ -522,6 +523,7 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         ReservasjonV3Repository(
+            transactionalManager = get(),
         )
     }
 
