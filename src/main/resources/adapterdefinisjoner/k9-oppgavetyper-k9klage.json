@@ -131,6 +131,11 @@
           "visPåOppgave": true,
           "påkrevd": true,
           "defaultverdi": false
+        },
+        {
+          "id": "behandlingsårsak",
+          "visPåOppgave": true,
+          "påkrevd": false
         }
       ]
     }
