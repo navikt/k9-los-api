@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ser.std.ToStringSerializer
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer
 import no.nav.k9.kodeverk.behandling.BehandlingÅrsakType
+import no.nav.k9.kodeverk.produksjonsstyring.UtvidetSøknadÅrsak
 import no.nav.k9.kodeverk.uttak.SøknadÅrsak
 import no.nav.k9.los.domene.modell.Fagsystem
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
@@ -90,7 +91,7 @@ data class BehandlingProsessEventDto(
     val aksjonspunktTilstander: List<AksjonspunktTilstandDto> = emptyList(),
     val nyeKrav: Boolean? = null,
     val fraEndringsdialog: Boolean? = null,
-    val søknadsårsaker : List<SøknadÅrsak> = emptyList(),
+    val søknadsårsaker : List<UtvidetSøknadÅrsak> = emptyList(),
     val behandlingsårsaker: List<BehandlingÅrsakType> = emptyList()
 ) {
 
