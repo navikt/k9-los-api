@@ -434,7 +434,7 @@ class EventTilDtoMapper {
                 oppgaveFeltverdiDtos.addAll(event.søknadsårsaker.map { søknadsårsak ->
                     OppgaveFeltverdiDto(
                         nøkkel = "søknadsårsak",
-                        verdi = søknadsårsak.kode
+                        verdi = søknadsårsak
                     )
                 })
             } else {

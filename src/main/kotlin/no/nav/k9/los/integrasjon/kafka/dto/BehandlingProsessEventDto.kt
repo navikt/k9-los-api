@@ -91,7 +91,7 @@ data class BehandlingProsessEventDto(
     val aksjonspunktTilstander: List<AksjonspunktTilstandDto> = emptyList(),
     val nyeKrav: Boolean? = null,
     val fraEndringsdialog: Boolean? = null,
-    val søknadsårsaker : List<UtvidetSøknadÅrsak> = emptyList(),
+    val søknadsårsaker : List<String> = emptyList(),
     val behandlingsårsaker: List<BehandlingÅrsakType> = emptyList()
 ) {
 
