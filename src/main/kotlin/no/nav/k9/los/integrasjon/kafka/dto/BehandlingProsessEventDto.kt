@@ -92,7 +92,7 @@ data class BehandlingProsessEventDto(
     val nyeKrav: Boolean? = null,
     val fraEndringsdialog: Boolean? = null,
     val søknadsårsaker : List<String> = emptyList(),
-    val behandlingsårsaker: List<BehandlingÅrsakType> = emptyList()
+    val behandlingsårsaker: List<String> = emptyList()
 ) {
 
     // Denne skal ikke ha fnr, aktørider, orgnumre eller beløp som kan identifisere brukeren

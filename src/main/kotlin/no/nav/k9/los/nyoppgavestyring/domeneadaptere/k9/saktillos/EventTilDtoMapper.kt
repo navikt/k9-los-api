@@ -452,13 +452,13 @@ class EventTilDtoMapper {
             oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
         ) {
             val filtrert = event.behandlingsårsaker.filterNot { behandlingsårsak ->
-                behandlingsårsak == BehandlingÅrsakType.UDEFINERT
+                behandlingsårsak == BehandlingÅrsakType.UDEFINERT.toString()
             }
             if (filtrert.isNotEmpty()) {
                 oppgaveFeltverdiDtos.addAll(filtrert.map { behandlingsårsak ->
                     OppgaveFeltverdiDto(
                         nøkkel = "behandlingsårsak",
-                        verdi = behandlingsårsak.kode
+                        verdi = behandlingsårsak
                     )
                 })
             } else {
