@@ -91,7 +91,10 @@ data class BehandlingProsessEventDto(
     val aksjonspunktTilstander: List<AksjonspunktTilstandDto> = emptyList(),
     val nyeKrav: Boolean? = null,
     val fraEndringsdialog: Boolean? = null,
+
+    @JsonDeserialize(using = KodeverkDeserializer::class)
     val søknadsårsaker : List<String> = emptyList(),
+    @JsonDeserialize(using = KodeverkDeserializer::class)
     val behandlingsårsaker: List<String> = emptyList()
 ) {
 
@@ -118,7 +121,8 @@ data class BehandlingProsessEventDto(
             fagsakPeriode=$fagsakPeriode,
             aksjonspunktTilstander=$aksjonspunktTilstander,
             nyeKrav=$nyeKrav
-            fraEndringsdialog=$fraEndringsdialog
+            fraEndringsdialog=$fraEndringsdialog,
+            søknadsårsaker=$søknadsårsaker
             )"""
             .trimMargin()
     }
