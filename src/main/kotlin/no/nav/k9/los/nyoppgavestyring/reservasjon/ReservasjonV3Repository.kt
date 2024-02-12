@@ -267,18 +267,15 @@ class ReservasjonV3Repository(
                     select distinct ov.id as oppgaveId
                     from oppgave_v3 ov 
                     where ov.aktiv = true
-                    and ov.id in (:oppgaveliste)
+                    and ov.id in (${oppgaveIder.joinToString(",")})
                     and not exists (
                         select * 
                         from reservasjon_v3 rv 
                         where rv.reservasjonsnokkel = ov.reservasjonsnokkel
                         and upper(rv.gyldig_tidsrom) > localtimestamp 
                         and rv.annullert_for_utlop = false 
-                        )
-                """.trimIndent(),
-                    mapOf(
-                        "oppgaveliste" to oppgaveIder
                     )
+                """.trimIndent()
                 ).map { row ->
                     row.long("oppgaveId")
                 }.asList
