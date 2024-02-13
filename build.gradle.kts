@@ -40,7 +40,7 @@ dependencies {
 
     // Database
     implementation("com.zaxxer:HikariCP:$hikariVersion")
-    implementation("org.flywaydb:flyway-core:$flywayVersion")
+    implementation("org.flywaydb:flyway-database-postgresql:$flywayVersion")
     implementation("no.nav:vault-jdbc:$vaultJdbcVersion")
     implementation("com.github.seratch:kotliquery:$kotliqueryVersion")
 
@@ -124,30 +124,33 @@ java {
     }
 }
 
-tasks.withType<ShadowJar> {
-    archiveBaseName.set("app")
-    archiveClassifier.set("")
-    isZip64 = true
-    manifest {
-        attributes(
-            mapOf(
-                "Main-Class" to mainClass
+tasks {
+    withType<ShadowJar> {
+        archiveBaseName.set("app")
+        archiveClassifier.set("")
+        isZip64 = true
+        manifest {
+            attributes(
+                mapOf(
+                    "Main-Class" to mainClass
+                )
             )
-        )
+        }
+        mergeServiceFiles()
     }
-}
 
-tasks.withType<Wrapper> {
-    gradleVersion = "8.4"
-}
+    withType<Wrapper> {
+        gradleVersion = "8.6"
+    }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
-    // Always run tests, even when nothing changed.
-    dependsOn("cleanTest")
+    withType<Test> {
+        useJUnitPlatform()
+        // Always run tests, even when nothing changed.
+        dependsOn("cleanTest")
 
-    // Show test results.
-    testLogging {
-        events("passed", "skipped", "failed")
+        // Show test results.
+        testLogging {
+            events("passed", "skipped", "failed")
+        }
     }
 }
