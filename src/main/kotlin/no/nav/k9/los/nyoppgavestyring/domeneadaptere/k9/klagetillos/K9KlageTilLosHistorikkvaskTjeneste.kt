@@ -83,11 +83,15 @@ class K9KlageTilLosHistorikkvaskTjeneste(
         var forrigeOppgave: OppgaveV3? = null
         transactionalManager.transaction { tx ->
             val behandlingProsessEventer = behandlingProsessEventKlageRepository.hentMedLås(tx, uuid).eventer
-            behandlingProsessEventer.forEach { event ->
+            val høyesteInternVersjon =
+                oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9-klage", "K9", tx)!!
+            var eventNrForBehandling = 0L
+            for (event in behandlingProsessEventer) {
+                if (eventNrForBehandling > høyesteInternVersjon) { break }
                 val losOpplysningerSomManglerIKlageDto = k9sakBeriker.berikKlage(event.påklagdBehandlingEksternId)!!
                 val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, losOpplysningerSomManglerIKlageDto, forrigeOppgave)
 
-                oppgaveV3Tjeneste.oppdaterEkstisterendeOppgaveversjon(oppgaveDto, tx)
+                oppgaveV3Tjeneste.oppdaterEkstisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, tx)
 
                 eventTeller++
                 loggFremgangForHver100(eventTeller, "Prosessert $eventTeller eventer")
@@ -95,6 +99,7 @@ class K9KlageTilLosHistorikkvaskTjeneste(
                 forrigeOppgave = oppgaveV3Tjeneste.hentOppgaveversjon(
                     område = "K9", eksternId = oppgaveDto.id, eksternVersjon = oppgaveDto.versjon, tx = tx
                 )
+                eventNrForBehandling++
             }
             forrigeOppgave = null
 

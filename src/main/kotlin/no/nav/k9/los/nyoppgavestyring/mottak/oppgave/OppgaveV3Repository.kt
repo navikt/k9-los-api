@@ -19,7 +19,7 @@ class OppgaveV3Repository(
     private val log = LoggerFactory.getLogger(OppgaveV3Repository::class.java)
 
     fun nyOppgaveversjon(oppgave: OppgaveV3, tx: TransactionalSession) {
-        val (eksisterendeId, eksisterendeVersjon) = hentVersjon(tx, oppgave)
+        val (eksisterendeId, eksisterendeVersjon) = hentOppgaveIdOgHøyesteInternversjon(tx, oppgave.eksternId, oppgave.oppgavetype.eksternId, oppgave.oppgavetype.område.eksternId)
 
         eksisterendeId?.let { deaktiverVersjon(eksisterendeId, oppgave.endretTidspunkt, tx) }
 
@@ -81,7 +81,7 @@ class OppgaveV3Repository(
 
     fun hentOppgaveversjonenFør(
         eksternId: String,
-        eksternVersjon: String,
+        internVersjon: Long,
         oppgavetype: Oppgavetype,
         tx: TransactionalSession
     ): OppgaveV3? {
@@ -91,16 +91,11 @@ class OppgaveV3Repository(
                     select *
                     from oppgave_v3 ov 
                     where ekstern_id = :eksternId
-                    and versjon = (
-                        select versjon - 1
-                        from oppgave_v3 ov 
-                        where ekstern_id = :eksternId 
-                        and ekstern_versjon = :eksternVersjon
-                    )
+                    and versjon = :internVersjon
                 """.trimIndent(),
                 mapOf(
                     "eksternId" to eksternId,
-                    "eksternVersjon" to eksternVersjon
+                    "internVersjon" to internVersjon
                 )
             ).map { row ->
                 OppgaveV3(
@@ -197,19 +192,20 @@ class OppgaveV3Repository(
         return antall > 0
     }
 
-    fun oppdaterReservasjonsnøkkel(eksternId: String, eksternVersjon: String, reservasjonsnokkel: String, tx: TransactionalSession) {
+    fun oppdaterReservasjonsnøkkelOgEksternVersjon(eksternId: String, eksternVersjon: String, internVersjon: Long, reservasjonsnokkel: String, tx: TransactionalSession) {
         tx.run(
             queryOf(
                 """
                     update oppgave_v3 
-                    set reservasjonsnokkel = :reservasjonsnokkel 
+                    set reservasjonsnokkel = :reservasjonsnokkel, eksternVersjon = :eksternVersjon
                     where ekstern_id = :eksternId 
-                    and ekstern_versjon = :eksternVersjon 
+                    and intern_versjon = :internVersjon
                 """.trimIndent(),
                 mapOf(
                     "reservasjonsnokkel" to reservasjonsnokkel,
+                    "eksternVersjon" to eksternVersjon,
                     "eksternId" to eksternId,
-                    "eksternVersjon" to eksternVersjon
+                    "internVersjon" to internVersjon
                 )
             ).asUpdateAndReturnGeneratedKey
         )
@@ -281,7 +277,7 @@ class OppgaveV3Repository(
 
     fun lagreFeltverdier(
         eksternId: String,
-        eksternVersjon: String,
+        internVersjon: Long,
         oppgaveFeltverdier: List<OppgaveFeltverdi>,
         tx: TransactionalSession
     ) {
@@ -292,7 +288,7 @@ class OppgaveV3Repository(
                     SELECT id 
                     FROM oppgave_v3
                     WHERE ekstern_id = :ekstern_id
-                    AND ekstern_versjon = :ekstern_versjon
+                    AND versjon = :intern_versjon
                 ),
                 :oppgavefelt_id,
                 :verdi
@@ -301,7 +297,7 @@ class OppgaveV3Repository(
             oppgaveFeltverdier.map { feltverdi ->
                 mapOf(
                     "ekstern_id" to eksternId,
-                    "ekstern_versjon" to eksternVersjon,
+                    "intern_versjon" to internVersjon,
                     "oppgavefelt_id" to feltverdi.oppgavefelt.id,
                     "verdi" to feltverdi.verdi
                 )
@@ -311,7 +307,7 @@ class OppgaveV3Repository(
 
     fun slettFeltverdier(
         eksternId: String,
-        eksternVersjon: String,
+        internVersjon: Long,
         tx: TransactionalSession
     ) {
         tx.update(
@@ -324,26 +320,28 @@ class OppgaveV3Repository(
                         from oppgavefelt_verdi ov
                             inner join oppgave_v3 o on ov.oppgave_id = o.id
                         where o.ekstern_id = :ekstern_id
-                        and o.ekstern_versjon = :ekstern_versjon
+                        and o.versjon = :intern_versjon
                     )
                     """.trimIndent(),
                 mapOf(
                     "ekstern_id" to eksternId,
-                    "ekstern_versjon" to eksternVersjon
+                    "intern_versjon" to internVersjon
                 )
             )
         )
     }
 
-    private fun hentVersjon(tx: TransactionalSession, oppgave: OppgaveV3): Pair<Long?, Long?> {
-        //TODO: konsistenssjekk - skrive om til å hente alle oppgavene for gitt eksternId og sjekke at en og bare en versjon er aktiv = true
+    fun hentOppgaveIdOgHøyesteInternversjon(tx: TransactionalSession, oppgaveEksternId: String, oppgaveTypeEksternId: String, områdeEksternId: String): Pair<Long?, Long?> {
         return tx.run(
             queryOf(
                 """
-                select versjon, id
+                select versjon, o.id
                 from oppgave_v3 o
-                where o.ekstern_id = :eksternId
-                and o.kildeomrade = :omrade
+                    inner join oppgavetype ot on o.oppgavetype_id = ot.id 
+                    inner join omrade om on ot.omrade_id = om.id 
+                where o.ekstern_id = :ekstern_id
+                and ot.ekstern_id = :oppgavetype_ekstern_id
+                and om.ekstern_id = :omrade_ekstern_id
                 and versjon = 
                     (select max(versjon)
                      from oppgave_v3 oi
@@ -351,8 +349,9 @@ class OppgaveV3Repository(
                      and oi.kildeomrade = o.kildeomrade)
                 """.trimIndent(),
                 mapOf(
-                    "eksternId" to oppgave.eksternId,
-                    "omrade" to oppgave.kildeområde
+                    "ekstern_id" to oppgaveEksternId,
+                    "oppgavetype_ekstern_id" to oppgaveTypeEksternId,
+                    "omrade_ekstern_id" to områdeEksternId
                 )
             ).map { row -> Pair(row.long("id"), row.long("versjon")) }.asSingle
         ) ?: Pair(null, null)

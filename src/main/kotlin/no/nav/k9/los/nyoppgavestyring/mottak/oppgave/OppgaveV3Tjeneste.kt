@@ -86,15 +86,16 @@ class OppgaveV3Tjeneste(
         )
     }
 
-    fun oppdaterEkstisterendeOppgaveversjon(oppgaveDto: OppgaveDto, tx: TransactionalSession) {
+    fun oppdaterEkstisterendeOppgaveversjon(oppgaveDto: OppgaveDto, eventNr: Long, tx: TransactionalSession) {
         val oppgavetype = oppgavetypeRepository.hentOppgavetype(
             område = oppgaveDto.område,
             eksternId = oppgaveDto.type,
             tx = tx
         )
 
-        val forrigeOppgaveversjon =
-            oppgaveV3Repository.hentOppgaveversjonenFør(oppgaveDto.id, oppgaveDto.versjon, oppgavetype, tx)
+        val forrigeOppgaveversjon = if (eventNr >= 2) {
+            oppgaveV3Repository.hentOppgaveversjonenFør(oppgaveDto.id, eventNr, oppgavetype, tx)
+        } else { null }
         var innkommendeOppgave = OppgaveV3(oppgaveDto = oppgaveDto, oppgavetype = oppgavetype)
 
         val utledeteFelter = mutableListOf<OppgaveFeltverdi>()
@@ -110,20 +111,31 @@ class OppgaveV3Tjeneste(
         innkommendeOppgave = OppgaveV3(innkommendeOppgave, innkommendeOppgave.felter.plus(utledeteFelter))
         innkommendeOppgave.valider()
 
+        //historikkvasktjenesten skal sørge for at oppgaven med internVersjon = eventNr faktisk eksisterer
         oppgaveV3Repository.slettFeltverdier(
-            eksternId = oppgaveDto.id,
-            eksternVersjon = oppgaveDto.versjon,
+            eksternId = innkommendeOppgave.eksternId,
+            internVersjon = eventNr,
             tx = tx
         )
 
         oppgaveV3Repository.lagreFeltverdier(
-            eksternId = oppgaveDto.id,
-            eksternVersjon = oppgaveDto.versjon,
+            eksternId = innkommendeOppgave.eksternId,
+            internVersjon = eventNr,
             oppgaveFeltverdier = innkommendeOppgave.felter,
             tx = tx
         )
 
-        oppgaveV3Repository.oppdaterReservasjonsnøkkel(oppgaveDto.id, oppgaveDto.versjon, oppgaveDto.reservasjonsnøkkel, tx)
+        oppgaveV3Repository.oppdaterReservasjonsnøkkelOgEksternVersjon(
+            eksternId = innkommendeOppgave.eksternId,
+            eksternVersjon = innkommendeOppgave.eksternVersjon,
+            internVersjon = eventNr,
+            reservasjonsnokkel = innkommendeOppgave.reservasjonsnøkkel,
+            tx = tx)
+    }
+
+    fun hentHøyesteInternVersjon(oppgaveEksternId: String, opppgaveTypeEksternId: String, områdeEksternId: String, tx: TransactionalSession): Long? {
+        val (_, versjon) = oppgaveV3Repository.hentOppgaveIdOgHøyesteInternversjon(tx, oppgaveEksternId, opppgaveTypeEksternId, områdeEksternId)
+        return versjon
     }
 
     fun nyEksternversjon(oppgaveDto: OppgaveDto, tx: TransactionalSession): Boolean {

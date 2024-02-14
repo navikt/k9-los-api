@@ -119,6 +119,7 @@ class K9SakTilLosAdapterTjeneste(
                 .filter { merknad -> merknad.merknadKoder.contains("HASTESAK") }.isNotEmpty()
             val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
             val nyeBehandlingsopplysningerFraK9Sak = k9SakBerikerKlient.hentBehandling(uuid)
+            var eventNrForBehandling = 0L
             behandlingProsessEventer.forEach { event ->
                 var oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
                     .leggTilFeltverdi(
@@ -141,11 +142,12 @@ class K9SakTilLosAdapterTjeneste(
                     loggFremgangForHver100(eventTeller, "Prosessert $eventTeller eventer")
                 }
                 forrigeOppgave = oppgave
+                eventNrForBehandling++
             }
 
             // Midlertidig påfunn for å sette markør for hastesak. Mer permanent løsning kommer senere, og da kan dette slettes
             if (sisteOppgaveDtoTilHastesakvask != null) {
-                oppgaveV3Tjeneste.oppdaterEkstisterendeOppgaveversjon(sisteOppgaveDtoTilHastesakvask!!, tx)
+                oppgaveV3Tjeneste.oppdaterEkstisterendeOppgaveversjon(sisteOppgaveDtoTilHastesakvask!!, eventNrForBehandling, tx)
             }
 
             forrigeOppgave = null
