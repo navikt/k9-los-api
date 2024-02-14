@@ -12,11 +12,11 @@ val fuelVersion = "2.3.1"
 val jacksonVersion = "2.16.1"
 val commonsTextVersion = "1.11.0"
 
-val dusseldorfKtorVersion = "4.1.3"
+val dusseldorfKtorVersion = "4.2.1"
 val ktorVersion = "2.3.8"
 val kafkaVersion = "3.6.1"
 
-val navTilgangskontroll = "3.2023.10.23_12.41-bafec3836d28"
+val navTilgangskontroll = "3.2024.01.24_10.14-f70bae69bd65"
 
 // Test Dependencies
 val testContainers = "1.19.5"
