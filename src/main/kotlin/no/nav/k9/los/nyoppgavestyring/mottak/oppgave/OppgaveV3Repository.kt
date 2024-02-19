@@ -95,7 +95,7 @@ class OppgaveV3Repository(
                 """.trimIndent(),
                 mapOf(
                     "eksternId" to eksternId,
-                    "internVersjon" to internVersjon
+                    "internVersjon" to internVersjon-1
                 )
             ).map { row ->
                 OppgaveV3(
@@ -197,9 +197,9 @@ class OppgaveV3Repository(
             queryOf(
                 """
                     update oppgave_v3 
-                    set reservasjonsnokkel = :reservasjonsnokkel, eksternVersjon = :eksternVersjon
+                    set reservasjonsnokkel = :reservasjonsnokkel, ekstern_versjon = :eksternVersjon
                     where ekstern_id = :eksternId 
-                    and intern_versjon = :internVersjon
+                    and versjon = :internVersjon
                 """.trimIndent(),
                 mapOf(
                     "reservasjonsnokkel" to reservasjonsnokkel,

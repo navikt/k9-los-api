@@ -93,7 +93,7 @@ class OppgaveV3Tjeneste(
             tx = tx
         )
 
-        val forrigeOppgaveversjon = if (eventNr >= 2) {
+        val forrigeOppgaveversjon = if (eventNr > 0) {
             oppgaveV3Repository.hentOppgaveversjonenFør(oppgaveDto.id, eventNr, oppgavetype, tx)
         } else { null }
         var innkommendeOppgave = OppgaveV3(oppgaveDto = oppgaveDto, oppgavetype = oppgavetype)
