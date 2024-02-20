@@ -60,7 +60,10 @@ internal fun Route.OppgaveV3Api() {
     }
 
     post ( "/{område}/{eksternId}/{eksternVersjon}" ) {
+        call.respond(HttpStatusCode.NotImplemented)
+        /*
         if (config.nyOppgavestyringRestAktivert()) {
+
             requestContextService.withRequestContext(call) {
                 val oppgaveDto = call.receive<OppgaveDto>()
                 transactionalManager.transaction { tx ->
@@ -70,5 +73,7 @@ internal fun Route.OppgaveV3Api() {
         } else {
             call.respond(HttpStatusCode.Locked)
         }
+
+         */
     }
 }

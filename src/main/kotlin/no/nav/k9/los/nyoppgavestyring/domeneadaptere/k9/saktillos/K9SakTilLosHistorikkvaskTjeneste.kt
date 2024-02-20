@@ -76,7 +76,11 @@ class K9SakTilLosHistorikkvaskTjeneste(
             val hastesak = oppgaveRepositoryV2.hentMerknader(uuid.toString(), false)
                 .filter { merknad -> merknad.merknadKoder.contains("HASTESAK") }.isNotEmpty()
             val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
-            behandlingProsessEventer.forEach { event ->
+            val høyesteInternVersjon =
+                oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9-sak", "K9", tx)!!
+            var eventNrForBehandling = 0L
+            for (event in behandlingProsessEventer) {
+                if (eventNrForBehandling > høyesteInternVersjon) { break }
                 if (event.eldsteDatoMedEndringFraSøker == null && nyeBehandlingsopplysningerFraK9Sak != null && nyeBehandlingsopplysningerFraK9Sak.eldsteDatoMedEndringFraSøker != null) {
                     event.copy(eldsteDatoMedEndringFraSøker = nyeBehandlingsopplysningerFraK9Sak.eldsteDatoMedEndringFraSøker)
                     //ser ut som noen gamle mottatte dokumenter kan mangle innsendingstidspunkt.
@@ -92,7 +96,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
 
                 oppgaveDto = k9SakTilLosAdapterTjeneste.ryddOppObsoleteOgResultatfeilFra2020(event, oppgaveDto, nyeBehandlingsopplysningerFraK9Sak)
 
-                oppgaveV3Tjeneste.oppdaterEkstisterendeOppgaveversjon(oppgaveDto, tx)
+                oppgaveV3Tjeneste.oppdaterEkstisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, tx)
 
                 eventTeller++
                 loggFremgangForHver100(eventTeller, "Prosessert $eventTeller eventer")
@@ -100,7 +104,9 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 forrigeOppgave = oppgaveV3Tjeneste.hentOppgaveversjon(
                     område = "K9", eksternId = oppgaveDto.id, eksternVersjon = oppgaveDto.versjon, tx = tx
                 )
+                eventNrForBehandling++
             }
+
             forrigeOppgave = null
 
             behandlingProsessEventK9Repository.markerVasketHistorikk(uuid, tx)
