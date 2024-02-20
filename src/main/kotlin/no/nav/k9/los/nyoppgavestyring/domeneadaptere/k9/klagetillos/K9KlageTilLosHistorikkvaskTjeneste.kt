@@ -84,7 +84,7 @@ class K9KlageTilLosHistorikkvaskTjeneste(
         transactionalManager.transaction { tx ->
             val behandlingProsessEventer = behandlingProsessEventKlageRepository.hentMedLås(tx, uuid).eventer
             val høyesteInternVersjon =
-                oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9-klage", "K9", tx)!!
+                oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9klage", "K9", tx)!!
             var eventNrForBehandling = 0L
             for (event in behandlingProsessEventer) {
                 if (eventNrForBehandling > høyesteInternVersjon) { break }

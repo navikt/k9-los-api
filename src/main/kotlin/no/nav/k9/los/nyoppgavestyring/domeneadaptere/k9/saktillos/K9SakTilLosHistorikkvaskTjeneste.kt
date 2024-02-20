@@ -77,7 +77,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 .filter { merknad -> merknad.merknadKoder.contains("HASTESAK") }.isNotEmpty()
             val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
             val høyesteInternVersjon =
-                oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9-sak", "K9", tx)!!
+                oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9sak", "K9", tx)!!
             var eventNrForBehandling = 0L
             for (event in behandlingProsessEventer) {
                 if (eventNrForBehandling > høyesteInternVersjon) { break }
