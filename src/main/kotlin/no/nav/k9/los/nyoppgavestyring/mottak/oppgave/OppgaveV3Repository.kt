@@ -346,7 +346,7 @@ class OppgaveV3Repository(
                     (select max(versjon)
                      from oppgave_v3 oi
                      where oi.ekstern_id = o.ekstern_id
-                     and oi.kildeomrade = o.kildeomrade)
+                     and oi.oppgavetype_id = o.oppgavetype_id)
                 """.trimIndent(),
                 mapOf(
                     "ekstern_id" to oppgaveEksternId,
