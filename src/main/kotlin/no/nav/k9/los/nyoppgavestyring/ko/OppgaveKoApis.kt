@@ -13,9 +13,7 @@ import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.integrasjon.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
-import no.nav.k9.los.nyoppgavestyring.ko.dto.KopierOppgaveKoDto
-import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
-import no.nav.k9.los.nyoppgavestyring.ko.dto.OpprettOppgaveKoDto
+import no.nav.k9.los.nyoppgavestyring.ko.dto.*
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveKøIdDto
 import org.koin.java.KoinJavaComponent
 import org.koin.ktor.ext.inject
@@ -36,7 +34,19 @@ fun Route.OppgaveKoApis() {
                 call.respond(HttpStatusCode.Forbidden);
             }
 
-            call.respond(oppgaveKoRepository.hentListe())
+            val oppgavekøer = oppgaveKoTjeneste.hentOppgavekøerMedAntall()
+                .map {(oppgaveko, antall) ->
+                    OppgaveKoListeelement(
+                        id = oppgaveko.id,
+                        tittel = oppgaveko.tittel,
+                        query = oppgaveko.oppgaveQuery,
+                        antallSaksbehandlere = oppgaveko.saksbehandlere.size,
+                        antallOppgaver = antall,
+                        sistEndret = oppgaveko.endretTidspunkt
+                    )
+                }
+
+            call.respond(OppgaveKoListeDto(oppgavekøer))
         }
     }
 
