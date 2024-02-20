@@ -316,9 +316,9 @@ class EventTilDtoMapper {
             event: KlagebehandlingProsessHendelse,
             oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
         ) {
-            val filtrert = event.behandlingsårsaker.filterNot { behandlingsårsak ->
+            val filtrert = event.behandlingsårsaker?.filterNot { behandlingsårsak ->
                 behandlingsårsak == BehandlingÅrsakType.UDEFINERT.kode
-            }
+            } ?: emptyList()
             if (filtrert.isNotEmpty()) {
                 oppgaveFeltverdiDtos.addAll(filtrert.map { behandlingsårsak ->
                     OppgaveFeltverdiDto(
