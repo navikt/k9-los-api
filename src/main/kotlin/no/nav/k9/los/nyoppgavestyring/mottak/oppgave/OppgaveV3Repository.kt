@@ -192,18 +192,19 @@ class OppgaveV3Repository(
         return antall > 0
     }
 
-    fun oppdaterReservasjonsnøkkelOgEksternVersjon(eksternId: String, eksternVersjon: String, internVersjon: Long, reservasjonsnokkel: String, tx: TransactionalSession) {
+    fun oppdaterReservasjonsnøkkelStatusOgEksternVersjon(eksternId: String, eksternVersjon: String, status: Oppgavestatus, internVersjon: Long, reservasjonsnokkel: String, tx: TransactionalSession) {
         tx.run(
             queryOf(
                 """
                     update oppgave_v3 
-                    set reservasjonsnokkel = :reservasjonsnokkel, ekstern_versjon = :eksternVersjon
+                    set reservasjonsnokkel = :reservasjonsnokkel, ekstern_versjon = :eksternVersjon, status = :status
                     where ekstern_id = :eksternId 
                     and versjon = :internVersjon
                 """.trimIndent(),
                 mapOf(
                     "reservasjonsnokkel" to reservasjonsnokkel,
                     "eksternVersjon" to eksternVersjon,
+                    "status" to status.kode,
                     "eksternId" to eksternId,
                     "internVersjon" to internVersjon
                 )

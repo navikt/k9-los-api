@@ -125,9 +125,10 @@ class OppgaveV3Tjeneste(
             tx = tx
         )
 
-        oppgaveV3Repository.oppdaterReservasjonsnøkkelOgEksternVersjon(
+        oppgaveV3Repository.oppdaterReservasjonsnøkkelStatusOgEksternVersjon(
             eksternId = innkommendeOppgave.eksternId,
             eksternVersjon = innkommendeOppgave.eksternVersjon,
+            status = innkommendeOppgave.status,
             internVersjon = eventNr,
             reservasjonsnokkel = innkommendeOppgave.reservasjonsnøkkel,
             tx = tx)
