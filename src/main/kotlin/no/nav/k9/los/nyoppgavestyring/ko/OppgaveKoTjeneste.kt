@@ -39,6 +39,13 @@ class OppgaveKoTjeneste(
 ) {
     private val log = LoggerFactory.getLogger(OppgaveKoTjeneste::class.java)
 
+    fun hentOppgavekøerMedAntall(): Map<OppgaveKo, Long> {
+        return oppgaveKoRepository.hentListe()
+            .associateWith {
+                oppgaveQueryService.queryForAntall(it.oppgaveQuery)
+            }
+    }
+
     suspend fun hentOppgaverFraKø(
         oppgaveKoId: Long,
         ønsketAntallSaker: Int,
