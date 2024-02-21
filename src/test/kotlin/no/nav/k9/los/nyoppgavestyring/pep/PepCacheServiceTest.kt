@@ -165,18 +165,19 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         val eksternId = UUID.randomUUID().toString()
         k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, saksnummer))
 
-        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, BeskyttelseType.ORDINÆR)).isNotEmpty()
+        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, BeskyttelseType.ORDINÆR.kode)).isNotEmpty()
         assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId)).isNotEmpty()
-        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, BeskyttelseType.KODE6)).isEmpty()
+        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, "KODE6")).isNotEmpty() // Samme som ordinær frem til håndtert. Kan f.eks gjeninnføres som egen interntype som ikke eksponeres ut
 
-        verify(exactly = 2) { runBlocking { pepClient.harTilgangTilLesSak(eq(saksnummer), any()) } }
+        verify(exactly = 3) { runBlocking { pepClient.harTilgangTilLesSak(eq(saksnummer), any()) } }
 
         gjørSakKode6(saksnummer)
         ventPåAntallForsøk(10, "Pepcache") { pepRepository.hent("K9", eksternId)?.kode6 == true }
 
-        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, BeskyttelseType.ORDINÆR)).isEmpty()
-        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId)).isNotEmpty()  // Alle beskyttelsetyper er inkludert hvis ikke beksyttelsetype er spesifisert
-        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, BeskyttelseType.KODE6)).isNotEmpty()
+        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, BeskyttelseType.ORDINÆR.kode)).isEmpty()
+        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId)).isNotEmpty()  // Alle beskyttelsetyper er inkludert hvis ikke beskyttelsetype er spesifisert
+        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, "KODE6")).isEmpty() // Samme som ordinær frem til håndtert
+
 
         job.cancel()
         verify(exactly = 4) { runBlocking { pepClient.harTilgangTilLesSak(eq(saksnummer), any()) } }
@@ -200,7 +201,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
     private fun hentOppgaverMedSikkerhetsklassifisering(
         oppgaveQueryService: OppgaveQueryService,
         eksternId: String,
-        vararg sikkerhetsklassifiseringtyper: BeskyttelseType
+        vararg sikkerhetsklassifiseringtyper: String
     ): List<Any> {
         val transactionalManager = get<TransactionalManager>()
         return transactionalManager.transaction { tx ->
@@ -210,7 +211,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
                         område = null,
                         kode = FeltType.BESKYTTELSE.eksternId,
                         operator = "IN",
-                        verdi = sikkerhetsklassifiseringtyper.map { it.kode }
+                        verdi = sikkerhetsklassifiseringtyper.toList()
                     ),
                     FeltverdiOppgavefilter(område = "K9",
                         kode = FeltType.BEHANDLINGUUID.eksternId,
