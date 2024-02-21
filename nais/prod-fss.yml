@@ -125,7 +125,7 @@ spec:
       value: "true"
     - name: AUDITLOGGER_VENDOR
       value: "k9"
-    - name: AUDITLOGGER_PRODUCT.no
+    - name: AUDITLOGGER_PRODUCT
       value: "k9-los-api"
 
       # feature toggles
