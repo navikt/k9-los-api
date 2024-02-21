@@ -39,7 +39,6 @@ fun Route.OppgaveKoApis() {
                     OppgaveKoListeelement(
                         id = oppgaveko.id,
                         tittel = oppgaveko.tittel,
-                        query = oppgaveko.oppgaveQuery,
                         antallSaksbehandlere = oppgaveko.saksbehandlere.size,
                         antallOppgaver = antall,
                         sistEndret = oppgaveko.endretTidspunkt

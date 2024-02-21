@@ -6,8 +6,7 @@ import java.time.LocalDateTime
 class OppgaveKoListeelement(
     val id: Long,
     val tittel: String,
-    val query: OppgaveQuery,
     val sistEndret: LocalDateTime?,
     val antallOppgaver: Long,
-    val antallSaksbehandlere: Int,
+    val antallSaksbehandlere: Int
 )
