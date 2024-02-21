@@ -56,7 +56,7 @@ spec:
         - application: k9-los-web
           namespace: k9saksbehandling
           cluster: dev-gcp
-        - application: k9-saks
+        - application: k9-sak
           namespace: k9saksbehandling
   ingresses:
     - https://k9-los-api.dev-fss-pub.nais.io
