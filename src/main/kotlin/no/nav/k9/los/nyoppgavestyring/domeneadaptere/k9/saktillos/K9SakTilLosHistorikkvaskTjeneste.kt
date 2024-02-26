@@ -73,8 +73,6 @@ class K9SakTilLosHistorikkvaskTjeneste(
         transactionalManager.transaction { tx ->
             val nyeBehandlingsopplysningerFraK9Sak = k9SakBerikerKlient.hentBehandling(UUID.fromString(uuid.toString()))
 
-            val hastesak = oppgaveRepositoryV2.hentMerknader(uuid.toString(), false)
-                .filter { merknad -> merknad.merknadKoder.contains("HASTESAK") }.isNotEmpty()
             val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
             val høyesteInternVersjon =
                 oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9sak", "K9", tx)!!
@@ -87,12 +85,6 @@ class K9SakTilLosHistorikkvaskTjeneste(
                     //da faller vi tilbake til å bruke behandling_opprettet i mapperen
                 }
                 var oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
-                    .leggTilFeltverdi(
-                        OppgaveFeltverdiDto(
-                            nøkkel = "hastesak",
-                            verdi = hastesak.toString()
-                        )
-                    )
 
                 oppgaveDto = k9SakTilLosAdapterTjeneste.ryddOppObsoleteOgResultatfeilFra2020(event, oppgaveDto, nyeBehandlingsopplysningerFraK9Sak)
 

@@ -112,42 +112,25 @@ class K9SakTilLosAdapterTjeneste(
         var eventTeller = eventTellerInn
         var forrigeOppgave: OppgaveV3? = null
 
-        var sisteOppgaveDtoTilHastesakvask: OppgaveDto? = null
-
         transactionalManager.transaction { tx ->
-            val hastesak = oppgaveRepositoryV2.hentMerknader(uuid.toString(), false, tx)
-                .filter { merknad -> merknad.merknadKoder.contains("HASTESAK") }.isNotEmpty()
             val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
             val nyeBehandlingsopplysningerFraK9Sak = k9SakBerikerKlient.hentBehandling(uuid)
             var eventNrForBehandling = -1L
             behandlingProsessEventer.forEach { event ->
                 eventNrForBehandling++
                 var oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
-                    .leggTilFeltverdi(
-                        OppgaveFeltverdiDto(
-                            nøkkel = "hastesak",
-                            verdi = hastesak.toString()
-                        )
-                    )
 
                 oppgaveDto = ryddOppObsoleteOgResultatfeilFra2020(event, oppgaveDto, nyeBehandlingsopplysningerFraK9Sak)
 
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
 
-                if (oppgave == null) {
-                    sisteOppgaveDtoTilHastesakvask = oppgaveDto
-                } else {
+                if (oppgave != null) {
                     pepCacheService.oppdater(tx, oppgave.kildeområde, oppgave.eksternId)
 
                     eventTeller++
                     loggFremgangForHver100(eventTeller, "Prosessert $eventTeller eventer")
                 }
                 forrigeOppgave = oppgave
-            }
-
-            // Midlertidig påfunn for å sette markør for hastesak. Mer permanent løsning kommer senere, og da kan dette slettes
-            if (sisteOppgaveDtoTilHastesakvask != null) {
-                oppgaveV3Tjeneste.oppdaterEkstisterendeOppgaveversjon(sisteOppgaveDtoTilHastesakvask!!, eventNrForBehandling, tx)
             }
 
             forrigeOppgave = null
