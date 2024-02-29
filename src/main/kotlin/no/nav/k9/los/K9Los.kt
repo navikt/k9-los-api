@@ -264,10 +264,6 @@ fun Application.k9Los() {
             frequency = Duration.ofMinutes(1)
         )
 
-        route("innsikt") {
-            innsiktGrensesnitt()
-        }
-
         if ((KoinProfile.LOCAL == koin.get<KoinProfile>())) {
             api(sseChannel)
             route("mock") {
@@ -275,6 +271,9 @@ fun Application.k9Los() {
             }
         } else {
             authenticate(*issuers.allIssuers()) {
+                route("innsikt") {
+                    innsiktGrensesnitt()
+                }
                 api(sseChannel)
             }
         }
