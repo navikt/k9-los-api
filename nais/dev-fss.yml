@@ -60,6 +60,7 @@ spec:
           namespace: k9saksbehandling
   ingresses:
     - https://k9-los-api.dev-fss-pub.nais.io
+    - https://intern.dev.nav.no
   env:
     - name: NAIS_STS_DISCOVERY_ENDPOINT
       value: https://security-token-service.nais.preprod.local/rest/v1/sts/.well-known/openid-configuration
