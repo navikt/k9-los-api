@@ -320,16 +320,20 @@ class AvdelingslederTjeneste(
         }
     }
 
-    suspend fun opphevReservasjon(uuid: UUID): Reservasjon {
+    suspend fun opphevReservasjon(uuid: UUID): Reservasjon? {
         val reservasjon = reservasjonRepository.lagre(uuid, true) {
-            it!!.begrunnelse = "Opphevet av en avdelingsleder"
-            it.reservertTil = null
+            it?.let {
+                it.begrunnelse = "Opphevet av en avdelingsleder"
+                it.reservertTil = null
+            }
             it
         }
-        saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
-        val oppgave = oppgaveRepository.hent(uuid)
-        for (oppgavekø in oppgaveKøRepository.hent()) {
-            oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø.id, listOf(oppgave), reservasjonRepository)
+        reservasjon?.let {
+            saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
+            val oppgave = oppgaveRepository.hent(uuid)
+            for (oppgavekø in oppgaveKøRepository.hent()) {
+                oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø.id, listOf(oppgave), reservasjonRepository)
+            }
         }
         return reservasjon
     }

@@ -570,13 +570,17 @@ class OppgaveTjeneste constructor(
         return ret
     }
 
-    suspend fun frigiReservasjon(uuid: UUID, begrunnelse: String): Reservasjon {
+    suspend fun frigiReservasjon(uuid: UUID, begrunnelse: String): Reservasjon? {
         val reservasjon = reservasjonRepository.lagre(uuid, true) {
-            it!!.begrunnelse = begrunnelse
-            it.reservertTil = null
+            it?.let {
+                it.begrunnelse = begrunnelse
+                it.reservertTil = null
+            }
             it
         }
-        saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
+        reservasjon?.let {
+            saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
+        }
         val oppgave = oppgaveRepository.hent(uuid)
         for (oppgavekø in oppgaveKøRepository.hent()) {
             oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø.id, listOf(oppgave), reservasjonRepository)
@@ -584,14 +588,16 @@ class OppgaveTjeneste constructor(
         return reservasjon
     }
 
-    fun forlengReservasjonPåOppgave(uuid: UUID): Reservasjon {
+    fun forlengReservasjonPåOppgave(uuid: UUID): Reservasjon? {
         return reservasjonRepository.lagre(uuid, true) {
-            it!!.reservertTil = it.reservertTil?.plusHours(24)!!.forskyvReservasjonsDato()
+            it?.let {
+                it.reservertTil = it.reservertTil?.plusHours(24)!!.forskyvReservasjonsDato()
+            }
             it
         }
     }
 
-    suspend fun endreReservasjonPåOppgave(resEndring: ReservasjonEndringDto): Reservasjon {
+    suspend fun endreReservasjonPåOppgave(resEndring: ReservasjonEndringDto): Reservasjon? {
         val identTilInnloggetBruker = azureGraphService.hentIdentTilInnloggetBruker()
         val oppgavUUID = UUID.fromString(resEndring.oppgaveNøkkel.oppgaveEksternId)
         if (resEndring.brukerIdent != null) {
@@ -600,33 +606,32 @@ class OppgaveTjeneste constructor(
             saksbehandlerRepository.leggTilReservasjon(resEndring.brukerIdent, reservasjon.oppgave)
         }
         return reservasjonRepository.lagre(oppgavUUID, true) {
-            if (it == null) {
-                throw IllegalArgumentException("Kan ikke oppdatere reservasjon som ikke finnes.")
-            }
-            if (resEndring.reserverTil != null) {
-                it.reservertTil = LocalDateTime.of(
-                    resEndring.reserverTil.year,
-                    resEndring.reserverTil.month,
-                    resEndring.reserverTil.dayOfMonth,
-                    23,
-                    59,
-                    59
-                ).forskyvReservasjonsDato()
+            it?.let {
+                if (resEndring.reserverTil != null) {
+                    it.reservertTil = LocalDateTime.of(
+                        resEndring.reserverTil.year,
+                        resEndring.reserverTil.month,
+                        resEndring.reserverTil.dayOfMonth,
+                        23,
+                        59,
+                        59
+                    ).forskyvReservasjonsDato()
 
-            }
-            if (resEndring.begrunnelse != null) {
-                it.begrunnelse = resEndring.begrunnelse
-            }
-            if (resEndring.brukerIdent != null) {
-                it.flyttetTidspunkt = LocalDateTime.now()
-                it.reservertAv = resEndring.brukerIdent
-                it.flyttetAv = identTilInnloggetBruker
+                }
+                if (resEndring.begrunnelse != null) {
+                    it.begrunnelse = resEndring.begrunnelse
+                }
+                if (resEndring.brukerIdent != null) {
+                    it.flyttetTidspunkt = LocalDateTime.now()
+                    it.reservertAv = resEndring.brukerIdent
+                    it.flyttetAv = identTilInnloggetBruker
+                }
             }
             it
         }
     }
 
-    suspend fun flyttReservasjon(uuid: UUID, ident: String, begrunnelse: String): Reservasjon {
+    suspend fun flyttReservasjon(uuid: UUID, ident: String, begrunnelse: String): Reservasjon? {
         if (ident == "") {
             return reservasjonRepository.hent(uuid)
         }
@@ -635,15 +640,17 @@ class OppgaveTjeneste constructor(
         saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
         saksbehandlerRepository.leggTilReservasjon(ident, reservasjon.oppgave)
         return reservasjonRepository.lagre(uuid, true) {
-            if (it!!.reservertTil == null) {
-                it.reservertTil = LocalDateTime.now().plusHours(24).forskyvReservasjonsDato()
-            } else {
-                it.reservertTil = it.reservertTil?.plusHours(24)!!.forskyvReservasjonsDato()
+            it?.let {
+                if (it!!.reservertTil == null) {
+                    it.reservertTil = LocalDateTime.now().plusHours(24).forskyvReservasjonsDato()
+                } else {
+                    it.reservertTil = it.reservertTil?.plusHours(24)!!.forskyvReservasjonsDato()
+                }
+                it.flyttetTidspunkt = LocalDateTime.now()
+                it.reservertAv = ident
+                it.flyttetAv = hentIdentTilInnloggetBruker
+                it.begrunnelse = begrunnelse
             }
-            it.flyttetTidspunkt = LocalDateTime.now()
-            it.reservertAv = ident
-            it.flyttetAv = hentIdentTilInnloggetBruker
-            it.begrunnelse = begrunnelse
             it
         }
     }
