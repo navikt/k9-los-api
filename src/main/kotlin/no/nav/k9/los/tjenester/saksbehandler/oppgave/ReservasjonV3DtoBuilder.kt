@@ -33,36 +33,40 @@ class ReservasjonV3DtoBuilder(
             }
             ReservasjonV3Dto(reservasjon, oppgaveV3Dtos, saksbehandler)
         } else {
-            val person = pdlService.person(oppgaveV1.aktorId)
-            val oppgaveV1Dto = OppgaveDto(
-                status = OppgaveStatusDto(
-                    true,
-                    reservasjon.gyldigTil,
-                    true,
-                    saksbehandler.brukerIdent,
-                    saksbehandler?.navn,
-                    flyttetReservasjon = null
-                ),
-                behandlingId = oppgaveV1.behandlingId,
-                saksnummer = oppgaveV1.fagsakSaksnummer,
-                journalpostId = oppgaveV1.journalpostId,
-                navn = person.person!!.navn(),
-                system = oppgaveV1.system,
-                personnummer = person.person!!.fnr(),
-                behandlingstype = oppgaveV1.behandlingType,
-                fagsakYtelseType = oppgaveV1.fagsakYtelseType,
-                behandlingStatus = oppgaveV1.behandlingStatus,
-                erTilSaksbehandling = true,
-                opprettetTidspunkt = oppgaveV1.behandlingOpprettet,
-                behandlingsfrist = oppgaveV1.behandlingsfrist,
-                eksternId = oppgaveV1.eksternId,
-                tilBeslutter = oppgaveV1.tilBeslutter,
-                utbetalingTilBruker = oppgaveV1.utbetalingTilBruker,
-                selvstendigFrilans = oppgaveV1.selvstendigFrilans,
-                søktGradering = oppgaveV1.søktGradering,
-                avklarArbeidsforhold = oppgaveV1.avklarArbeidsforhold,
-                merknad = oppgaveTjeneste.hentAktivMerknad(oppgaveV1.eksternId.toString())
-            )
+            val oppgaveV1Dto = if (oppgaveV1.aktiv) {
+                val person = pdlService.person(oppgaveV1.aktorId)
+                OppgaveDto(
+                    status = OppgaveStatusDto(
+                        true,
+                        reservasjon.gyldigTil,
+                        true,
+                        saksbehandler.brukerIdent,
+                        saksbehandler?.navn,
+                        flyttetReservasjon = null
+                    ),
+                    behandlingId = oppgaveV1.behandlingId,
+                    saksnummer = oppgaveV1.fagsakSaksnummer,
+                    journalpostId = oppgaveV1.journalpostId,
+                    navn = person.person!!.navn(),
+                    system = oppgaveV1.system,
+                    personnummer = person.person!!.fnr(),
+                    behandlingstype = oppgaveV1.behandlingType,
+                    fagsakYtelseType = oppgaveV1.fagsakYtelseType,
+                    behandlingStatus = oppgaveV1.behandlingStatus,
+                    erTilSaksbehandling = true,
+                    opprettetTidspunkt = oppgaveV1.behandlingOpprettet,
+                    behandlingsfrist = oppgaveV1.behandlingsfrist,
+                    eksternId = oppgaveV1.eksternId,
+                    tilBeslutter = oppgaveV1.tilBeslutter,
+                    utbetalingTilBruker = oppgaveV1.utbetalingTilBruker,
+                    selvstendigFrilans = oppgaveV1.selvstendigFrilans,
+                    søktGradering = oppgaveV1.søktGradering,
+                    avklarArbeidsforhold = oppgaveV1.avklarArbeidsforhold,
+                    merknad = oppgaveTjeneste.hentAktivMerknad(oppgaveV1.eksternId.toString())
+                )
+            } else {
+                null
+            }
             ReservasjonV3Dto(reservasjon, oppgaveV1Dto, saksbehandler)
         }
     }
