@@ -90,7 +90,12 @@ class OppgaveApisTjeneste(
         innloggetBruker: Saksbehandler
     ): ReservasjonV3Dto {
         // Fjernes når V1 skal vekk
-        oppgaveTjeneste.endreReservasjonPåOppgave(reservasjonEndringDto)
+        try {
+            oppgaveTjeneste.endreReservasjonPåOppgave(reservasjonEndringDto)
+        } catch (e: NullPointerException) {
+            //ReservasjonV1 annullerer noen reservasjoner som V3 ikke annullerer, og da kan det hende at det ikke finnes
+            //noen V1-reservasjon å endre på
+        }
 
         val tilSaksbehandler =
             reservasjonEndringDto.brukerIdent?.let { saksbehandlerRepository.finnSaksbehandlerMedIdent(it) }
@@ -120,7 +125,12 @@ class OppgaveApisTjeneste(
         innloggetBruker: Saksbehandler
     ): ReservasjonV3Dto {
         // Fjernes når V1 skal vekk
-        oppgaveTjeneste.forlengReservasjonPåOppgave(UUID.fromString(forlengReservasjonDto.oppgaveNøkkel.oppgaveEksternId))
+        try {
+            oppgaveTjeneste.forlengReservasjonPåOppgave(UUID.fromString(forlengReservasjonDto.oppgaveNøkkel.oppgaveEksternId))
+        } catch (e: NullPointerException) {
+            //ReservasjonV1 annullerer noen reservasjoner som V3 ikke annullerer, og da kan det hende at det ikke finnes
+            //noen V1-reservasjon å endre på
+        }
 
         val reservasjonsnøkkel = reservasjonOversetter.hentReservasjonsnøkkelForOppgavenøkkel(forlengReservasjonDto.oppgaveNøkkel)
 
@@ -142,11 +152,16 @@ class OppgaveApisTjeneste(
         innloggetBruker: Saksbehandler
     ): ReservasjonV3Dto {
         // Fjernes når V1 skal vekk
-        oppgaveTjeneste.flyttReservasjon(
-            UUID.fromString(params.oppgaveNøkkel.oppgaveEksternId),
-            params.brukerIdent,
-            params.begrunnelse
-        )
+        try {
+            oppgaveTjeneste.flyttReservasjon(
+                UUID.fromString(params.oppgaveNøkkel.oppgaveEksternId),
+                params.brukerIdent,
+                params.begrunnelse
+            )
+        } catch (e: NullPointerException) {
+            //ReservasjonV1 annullerer noen reservasjoner som V3 ikke annullerer, og da kan det hende at det ikke finnes
+            //noen V1-reservasjon å endre på
+        }
 
         val tilSaksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(
             params.brukerIdent
@@ -170,7 +185,12 @@ class OppgaveApisTjeneste(
         innloggetBruker: Saksbehandler
     ) {
         // Fjernes når V1 skal vekk
-        oppgaveTjeneste.frigiReservasjon(UUID.fromString(params.oppgaveNøkkel.oppgaveEksternId), params.begrunnelse)
+        try {
+            oppgaveTjeneste.frigiReservasjon(UUID.fromString(params.oppgaveNøkkel.oppgaveEksternId), params.begrunnelse)
+        } catch (e: NullPointerException) {
+            //ReservasjonV1 annullerer noen reservasjoner som V3 ikke annullerer, og da kan det hende at det ikke finnes
+            //noen V1-reservasjon å endre på
+        }
 
         val reservasjonsnøkkel = reservasjonOversetter.hentReservasjonsnøkkelForOppgavenøkkel(params.oppgaveNøkkel)
 
