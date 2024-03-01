@@ -247,7 +247,7 @@ class ReservasjonRepository(
         return json != null
     }
 
-    fun lagre(uuid: UUID, refresh: Boolean = false, f: (Reservasjon?) -> Reservasjon?): Reservasjon? {
+    fun lagre(uuid: UUID, refresh: Boolean = false, f: (Reservasjon?) -> Reservasjon): Reservasjon {
         var reservasjon: Reservasjon? = null
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
@@ -257,7 +257,7 @@ class ReservasjonRepository(
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
 
-        return reservasjon
+        return reservasjon!!
     }
 
     fun lagreFlereReservasjoner(reservasjon: List<Reservasjon>) {
@@ -276,8 +276,8 @@ class ReservasjonRepository(
         tx: TransactionalSession,
         uuid: UUID,
         refresh: Boolean,
-        f: (Reservasjon?) -> Reservasjon?
-    ): Reservasjon? {
+        f: (Reservasjon?) -> Reservasjon
+    ): Reservasjon {
         val reservasjon: Reservasjon?
         val run = tx.run(
             queryOf(
@@ -295,30 +295,28 @@ class ReservasjonRepository(
         } else {
             f(null)
         }
-        if (reservasjon != null) {
-            val json = objectMapper().writeValueAsString(reservasjon)
+        val json = objectMapper().writeValueAsString(reservasjon)
 
-            tx.run(
-                queryOf(
-                    """
+        tx.run(
+            queryOf(
+                """
                         insert into reservasjon as k (id, data)
                         values (:id, :dataInitial :: jsonb)
                         on conflict (id) do update
                         set data = jsonb_set(k.data, '{reservasjoner,999999}', :data :: jsonb, true)
                      """, mapOf(
-                        "id" to uuid.toString(),
-                        "dataInitial" to "{\"reservasjoner\": [$json]}",
-                        "data" to json
-                    )
-                ).asUpdate
-            )
-            if (refresh && forrigeReservasjon != json) {
-                val refreshTid = measureTimeMillis {
-                    loggFjerningAvReservasjon(reservasjon, forrigeReservasjon)
-                    runBlocking { refreshKlienter.sendOppdaterReserverte() }
-                }
-                RESERVASJON_YTELSE_LOG.info("refresh av reservasjoner tok {}", refreshTid)
+                    "id" to uuid.toString(),
+                    "dataInitial" to "{\"reservasjoner\": [$json]}",
+                    "data" to json
+                )
+            ).asUpdate
+        )
+        if (refresh && forrigeReservasjon != json) {
+            val refreshTid = measureTimeMillis {
+                loggFjerningAvReservasjon(reservasjon, forrigeReservasjon)
+                runBlocking { refreshKlienter.sendOppdaterReserverte() }
             }
+            RESERVASJON_YTELSE_LOG.info("refresh av reservasjoner tok {}", refreshTid)
         }
 
         return reservasjon
