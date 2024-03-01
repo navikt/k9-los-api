@@ -27,7 +27,7 @@ data class ReservasjonV3Dto (
     )
 
     // Fjernes når V1 skal vekk
-    constructor(reservasjonV3: ReservasjonV3, oppgave: OppgaveDto, reservertAv: Saksbehandler) : this (
+    constructor(reservasjonV3: ReservasjonV3, oppgave: OppgaveDto?, reservertAv: Saksbehandler) : this (
         reserverteV3Oppgaver = emptyList(),
         reservertOppgaveV1Dto = oppgave,
         reservasjonsnøkkel = reservasjonV3.reservasjonsnøkkel,
