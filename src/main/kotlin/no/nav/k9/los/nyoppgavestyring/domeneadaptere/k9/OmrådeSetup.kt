@@ -6,6 +6,7 @@ import no.nav.k9.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.kodeverk.behandling.BehandlingÅrsakType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
+import no.nav.k9.kodeverk.produksjonsstyring.UtvidetSøknadÅrsak
 import no.nav.k9.kodeverk.uttak.SøknadÅrsak
 import no.nav.k9.los.domene.lager.oppgave.Kodeverdi
 import no.nav.k9.kodeverk.api.Kodeverdi as KodeverdiK9Sak
@@ -168,7 +169,7 @@ class OmrådeSetup(
             eksternId = "søknadsårsak",
             beskrivelse = "Søknadsårsak gjelder omsorgspengesøknader hvor søker har søkt selv i stedet for (eller i tillegg til) arbeidsgiver",
             uttømmende = true,
-            verdier = SøknadÅrsak.entries.lagK9Dto(beskrivelse = null, KodeverkSynlighetRegler::søknadÅrsak)
+            verdier = UtvidetSøknadÅrsak.entries.lagK9Dto(beskrivelse = null, KodeverkSynlighetRegler::søknadÅrsak)
         )
         feltdefinisjonTjeneste.oppdater(kodeverkDto)
     }
@@ -268,9 +269,8 @@ object KodeverkSynlighetRegler {
         }
     }
 
-    fun søknadÅrsak(søknadÅrsak: SøknadÅrsak): KodeverkSynlighet {
+    fun søknadÅrsak(søknadÅrsak: UtvidetSøknadÅrsak): KodeverkSynlighet {
         return when (søknadÅrsak) {
-            SøknadÅrsak.UDEFINERT -> KodeverkSynlighet.SKJULT
             else -> KodeverkSynlighet.SYNLIG_FAVORITT
         }
     }
