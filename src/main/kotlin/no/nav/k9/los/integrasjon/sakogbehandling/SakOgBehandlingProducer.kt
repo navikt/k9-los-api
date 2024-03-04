@@ -56,7 +56,7 @@ class SakOgBehandlingProducer constructor(
             if (exception != null) {
                 log.error("Feil vid publisering av kafka melding til sakogbehandling", exception)
             } else {
-                log.info("Melding sendt OK til sakogbehandling med offset '${metadata.offset()}' til partition '${metadata.partition()}' topic ${metadata.topic()}")
+                log.trace("Melding sendt OK til sakogbehandling med offset '${metadata.offset()}' til partition '${metadata.partition()}' topic ${metadata.topic()}")
             }
         }.get()
     }

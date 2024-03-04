@@ -8,6 +8,24 @@
       "verdi": [
         "AAPEN"
       ]
+    },
+    {
+      "type": "feltverdi",
+      "område": null,
+      "kode": "beskyttelse",
+      "operator": "IN",
+      "verdi": [
+        "ORDINÆR"
+      ]
+    },
+    {
+      "type": "feltverdi",
+      "område": null,
+      "kode": "egenAnsatt",
+      "operator": "IN",
+      "verdi": [
+        "NEI"
+      ]
     }
   ],
   "select": [],

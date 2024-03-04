@@ -2,6 +2,8 @@ package no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
+import kotliquery.sessionOf
+import kotliquery.using
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.IllegalDeleteException
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.MissingDefaultException
 import no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.GyldigeFeltutledere
@@ -11,8 +13,10 @@ import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.utils.Cache
 import org.postgresql.util.PSQLException
 import org.slf4j.LoggerFactory
+import javax.sql.DataSource
 
 class OppgavetypeRepository(
+    private val dataSource: DataSource,
     private val feltdefinisjonRepository: FeltdefinisjonRepository,
     private val områdeRepository: OmrådeRepository
     ) {
@@ -26,6 +30,14 @@ class OppgavetypeRepository(
             område = område,
             oppgavetyper = oppgavetyper.oppgavetyper.filter { oppgavetype ->  oppgavetype.definisjonskilde == definisjonskilde }.toSet()
         )
+    }
+
+    fun hentOppgavetype(område: String, eksternId: String): Oppgavetype {
+        return using(sessionOf(dataSource)) {
+            it.transaction { tx ->
+                hentOppgavetype(område, eksternId, tx)
+            }
+        }
     }
 
     fun hentOppgavetype(område: String, eksternId: String, tx: TransactionalSession): Oppgavetype {
@@ -58,6 +70,7 @@ class OppgavetypeRepository(
                         id = oppgavetypeRow.long("id"),
                         eksternId = oppgavetypeRow.string("ekstern_id"),
                         område = område,
+                        oppgavebehandlingsUrlTemplate = oppgavetypeRow.stringOrNull("oppgavebehandlingsUrlTemplate"),
                         oppgavefelter = tx.run(
                             queryOf(
                                 """
@@ -133,15 +146,17 @@ class OppgavetypeRepository(
             val oppgavetypeId = tx.run(
                 queryOf(
                     """
-                    insert into oppgavetype(ekstern_id, omrade_id, definisjonskilde)
+                    insert into oppgavetype(ekstern_id, omrade_id, definisjonskilde, oppgavebehandlingsUrlTemplate)
                     values(
                         :eksterntNavn,
                         :omradeId,
-                        :definisjonskilde)""",
+                        :definisjonskilde,
+                        :oppgavebehandlingsUrlTemplate)""",
                     mapOf(
                         "eksterntNavn" to oppgavetype.eksternId,
                         "omradeId" to oppgavetype.område.id,
-                        "definisjonskilde" to oppgavetype.definisjonskilde
+                        "definisjonskilde" to oppgavetype.definisjonskilde,
+                        "oppgavebehandlingsUrlTemplate" to oppgavetype.oppgavebehandlingsUrlTemplate,
                     )
                 ).asUpdateAndReturnGeneratedKey
             )!!
@@ -196,6 +211,23 @@ class OppgavetypeRepository(
             }
             oppdaterFelt(felter.eksisterendeFelt.id!!, felter.innkommendeFelt, tx)
         }
+        oppdaterOppgavebehandlingsUrlTemplate(endring, tx)
+    }
+
+    private fun oppdaterOppgavebehandlingsUrlTemplate(endring: OppgavetypeEndring, tx: TransactionalSession) {
+        tx.run(
+            queryOf(
+                """
+                    update oppgavetype
+                    set oppgavebehandlingsUrlTemplate = :oppgavebehandlingsUrlTemplate
+                    where ekstern_id = :ekstern_id 
+                """.trimIndent(),
+                mapOf(
+                    "oppgavebehandlingsUrlTemplate" to endring.oppgavetype.oppgavebehandlingsUrlTemplate,
+                    "ekstern_id" to endring.oppgavetype.eksternId
+                )
+            ).asUpdate
+        )
     }
 
     private fun oppdaterFelt(id: Long, innkommendeFelt: Oppgavefelt, tx: TransactionalSession) {
@@ -209,7 +241,7 @@ class OppgavetypeRepository(
                 mapOf(
                     "pakrevd" to innkommendeFelt.påkrevd,
                     "defaultverdi" to innkommendeFelt.defaultverdi,
-                    "visPaOppgave" to innkommendeFelt.visPåOppgave, //TODO: Denne er ikke i basen ennå
+                    "visPaOppgave" to innkommendeFelt.visPåOppgave,
                     "id" to id,
                     "feltutleder" to innkommendeFelt.feltutleder?.hentFeltutledernavn()
                 )
