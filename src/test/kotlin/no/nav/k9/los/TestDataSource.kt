@@ -69,6 +69,8 @@ abstract class AbstractPostgresTest {
                 oppgavefelt_verdi,
                 oppgaveko,
                 reservasjon,
+                reservasjon_v3_endring,
+                reservasjon_v3,
                 saksbehandler,
                 siste_behandlinger,
                 OPPGAVEKO_SAKSBEHANDLER,
