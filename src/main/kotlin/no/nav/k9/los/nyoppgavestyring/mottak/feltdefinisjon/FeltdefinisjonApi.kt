@@ -17,8 +17,6 @@ internal fun Route.FeltdefinisjonApi() {
     val feltdefinisjonTjeneste by inject<FeltdefinisjonTjeneste>()
     val config by inject<Configuration>()
 
-    //TODO: definere lovlige datatyper -> tolkes_som. enum i koden
-
     post {
         if (config.nyOppgavestyringRestAktivert()) {
             requestContextService.withRequestContext(call) {

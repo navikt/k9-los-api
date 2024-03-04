@@ -89,7 +89,7 @@ internal class AkkumulertVentetidTest {
             kildeområde = "junit",
             endretTidspunkt = endretTidspunkt,
             reservasjonsnøkkel = "reservasjonsnøkkel",
-            felter = ekstraFeltverdi?.let { //TODO: lekrere kotlinkode for dette?
+            felter = ekstraFeltverdi?.let {
                 listOf(
                     lagOppgavefeltverdi("avventerSaksbehandler", avventerSaksbehandler.toString()),
                     ekstraFeltverdi
@@ -108,6 +108,7 @@ internal class AkkumulertVentetidTest {
             eksternId = "123",
             område = Område(eksternId = "test"),
             definisjonskilde = "junit",
+            oppgavebehandlingsUrlTemplate = "\${baseUrl}/fagsak/\${K9.saksnummer}/behandling/\${K9.behandlingUuid}?fakta=default&punkt=default",
             oppgavefelter = setOf(
                 lagOppgavefelt("avventerSaksbehandler"),
                 lagOppgavefelt("akkumulertVentetidSaksbehandlerForTidligereVersjoner")

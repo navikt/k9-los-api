@@ -1,6 +1,7 @@
 package no.nav.k9.los.integrasjon.abac
 
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
+import no.nav.k9.los.domene.modell.Saksbehandler
 
 class PepClientLocal : IPepClient {
     override suspend fun erOppgaveStyrer(): Boolean {
@@ -48,6 +49,13 @@ class PepClientLocal : IPepClient {
     }
 
     override suspend fun harTilgangTilOppgave(oppgave: Oppgave): Boolean {
+        return true
+    }
+
+    override suspend fun harTilgangTilÅReservereOppgave(
+        oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave,
+        bruker: Saksbehandler
+    ): Boolean {
         return true
     }
 

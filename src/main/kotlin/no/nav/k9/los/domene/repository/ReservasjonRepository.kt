@@ -176,7 +176,24 @@ class ReservasjonRepository(
                 }.asSingle
             )
         }
-        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
+
+        return objectMapper().readValue(json!!, Reservasjon::class.java)
+    }
+
+    fun hentSisteReservasjonMedLås(id: UUID, tx: TransactionalSession): Reservasjon {
+
+        val json: String? = tx.run(
+            queryOf(
+                "select (data ::jsonb -> 'reservasjoner' -> -1) as data from reservasjon where id = :id for update",
+                mapOf("id" to id.toString())
+            ).map { row ->
+                row.string("data")
+            }.asSingle
+        )
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
 
         return objectMapper().readValue(json!!, Reservasjon::class.java)
     }
@@ -192,12 +209,25 @@ class ReservasjonRepository(
                 }.asSingle
             )
         }
-        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
 
         if (json == null) {
             return emptyList()
         }
         return objectMapper().readValue(json)
+    }
+
+    fun hentAlleReservasjonUUID(): List<UUID> {
+        return using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    "select id from reservasjon",
+                ).map { row ->
+                    UUID.fromString(row.string("id"))
+                }.asList
+            )
+        }
     }
 
     fun finnes(id: UUID): Boolean {
@@ -211,7 +241,8 @@ class ReservasjonRepository(
                 }.asSingle
             )
         }
-        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
 
         return json != null
     }
@@ -223,7 +254,8 @@ class ReservasjonRepository(
                 reservasjon = lagreReservasjon(tx, uuid, refresh, f)
             }
         }
-        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
 
         return reservasjon!!
     }
@@ -245,7 +277,7 @@ class ReservasjonRepository(
         uuid: UUID,
         refresh: Boolean,
         f: (Reservasjon?) -> Reservasjon
-    ) : Reservasjon {
+    ): Reservasjon {
         val reservasjon: Reservasjon?
         val run = tx.run(
             queryOf(
@@ -291,7 +323,7 @@ class ReservasjonRepository(
     }
 
     private fun loggFjerningAvReservasjon(reservasjon: Reservasjon, forrigeReservasjon: String?) {
-        if (forrigeReservasjon != null ) {
+        if (forrigeReservasjon != null) {
             val fr = objectMapper().readValue(forrigeReservasjon, Reservasjon::class.java)
             val nyBegrunnelse = reservasjon.begrunnelse != null && reservasjon.begrunnelse != fr.begrunnelse
             if (!reservasjon.erAktiv() && fr.erAktiv() && reservasjon.reservertAv == fr.reservertAv) {

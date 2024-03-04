@@ -2,7 +2,10 @@ package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.*
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonDto
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjoner
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.*
@@ -11,10 +14,11 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.koin.test.get
 import java.time.LocalDateTime
+import kotlin.test.assertEquals
 
 class OppgaveV3Test : AbstractK9LosIntegrationTest() {
 
-    private val områdeDto = Område(eksternId = "K9")
+    private val områdeDto = Område(eksternId = "OppgaveV3Test")
     private lateinit var oppgaveV3Tjeneste: OppgaveV3Tjeneste
     private lateinit var områdeRepository: OmrådeRepository
     private lateinit var feltdefinisjonTjeneste: FeltdefinisjonTjeneste
@@ -34,11 +38,12 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
     @Test
     fun `test at oppgave ikke blir opprettet om området ikke finnes`() {
         val innkommendeOppgaveMedUkjentOmråde = lagOppgaveDto().copy(område = "ukjent-område")
-        assertThrows<IllegalArgumentException>("Området finnes ikke") {
+        val exception = assertThrows<IllegalArgumentException> {
             transactionalManager.transaction { tx ->
                 oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(innkommendeOppgaveMedUkjentOmråde, tx)
             }
         }
+        assertEquals("Området finnes ikke: ukjent-område", exception.message!!)
     }
 
     @Test
@@ -48,11 +53,17 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
         val oppgaveDtoMedUkjentFeltVerdi =
             oppgaveDto.copy(feltverdier = oppgaveDto.feltverdier.plus(ukjentOppgaveFeltVerdi))
 
-        assertThrows<IllegalArgumentException>("Kunne ikke finne matchede oppgavefelt for oppgaveFeltverdi: ${ukjentOppgaveFeltVerdi.nøkkel}\"") {
-            transactionalManager.transaction { tx ->
-                oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDtoMedUkjentFeltVerdi, tx)
+        val exception =
+            assertThrows<IllegalArgumentException> {
+                transactionalManager.transaction { tx ->
+                    oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDtoMedUkjentFeltVerdi, tx)
+                }
             }
-        }
+
+        assertEquals(
+            "Kunne ikke finne matchede oppgavefelt for oppgaveFeltverdi: ${ukjentOppgaveFeltVerdi.nøkkel}",
+            exception.message!!
+        )
 
     }
 
@@ -61,11 +72,17 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
         val feilOppgaveFeltverdi = OppgaveFeltverdiDto(nøkkel = "aktorId", verdi = "test")
         val oppgaveDto = lagOppgaveDto()
         val oppgaveSomManglerObligatoriskFelt = oppgaveDto.copy(feltverdier = listOf(feilOppgaveFeltverdi))
-        assertThrows<IllegalArgumentException>("Kan ikke oppgi feltverdi som ikke er spesifisert i oppgavetypen: ${feilOppgaveFeltverdi.nøkkel}\"") {
-            transactionalManager.transaction { tx ->
-                oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveSomManglerObligatoriskFelt, tx)
+        val exception =
+            assertThrows<IllegalArgumentException> {
+                transactionalManager.transaction { tx ->
+                    oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveSomManglerObligatoriskFelt, tx)
+                }
             }
-        }
+
+        assertEquals(
+            "Oppgaven mangler obligatorisk felt opprettet",
+            exception.message!!
+        )
     }
 
     @Test
@@ -81,6 +98,7 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
                 oppgavetype = Oppgavetype(
                     dto = oppgaveTypeDto.oppgavetyper.first(),
                     definisjonskilde = "k9-sak-til-los",
+                    oppgavebehandlingsUrlTemplate = "\${baseUrl}/fagsak/\${K9.saksnummer}/behandling/\${K9.behandlingUuid}?fakta=default&punkt=default",
                     område = område,
                     feltdefinisjoner = Feltdefinisjoner(
                         feltdefinisjonerDto = feltdefinisjonDto,
@@ -92,11 +110,16 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
     }
 
     private fun byggOppgavemodell() {
-        if (områdeRepository.hent(områdeDto.eksternId) == null) {
-            områdeRepository.lagre(eksternId = områdeDto.eksternId)
-            feltdefinisjonTjeneste.oppdater(lagFeltdefinisjonDto())
-            oppgavetypeTjeneste.oppdater(lagOppgavetypeDto())
-        }
+        områdeRepository.lagre(eksternId = områdeDto.eksternId)
+        oppgavetypeTjeneste.oppdater(
+            OppgavetyperDto(
+                "K9",
+                definisjonskilde = "unittest",
+                oppgavetyper = emptySet()
+            )
+        )
+        feltdefinisjonTjeneste.oppdater(lagFeltdefinisjonDto())
+        oppgavetypeTjeneste.oppdater(lagOppgavetypeDto())
     }
 
     private fun lagFeltdefinisjonDto(): FeltdefinisjonerDto {
@@ -165,6 +188,7 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
             oppgavetyper = setOf(
                 OppgavetypeDto(
                     id = "aksjonspunkt",
+                    oppgavebehandlingsUrlTemplate = "\${baseUrl}/fagsak/\${K9.saksnummer}/behandling/\${K9.behandlingUuid}?fakta=default&punkt=default",
                     oppgavefelter = setOf(
                         OppgavefeltDto(
                             id = "aksjonspunkt",
@@ -205,7 +229,7 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
             område = områdeDto.eksternId,
             kildeområde = "k9-sak-til-los",
             type = "aksjonspunkt",
-            status = "ÅPEN",
+            status = "AAPEN",
             endretTidspunkt = LocalDateTime.now(),
             reservasjonsnøkkel = "test",
             feltverdier = listOf(
