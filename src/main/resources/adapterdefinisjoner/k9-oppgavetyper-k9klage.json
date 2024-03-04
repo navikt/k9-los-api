@@ -4,7 +4,6 @@
   "oppgavetyper": [
     {
       "id": "k9klage",
-      "oppgavebehandlingsUrlTemplate": "{baseUrl}/fagsak/{K9.saksnummer}/behandling/{K9.behandlingUuid}?fakta=default&punkt=default",
       "oppgavefelter": [
         {
           "id": "behandlingUuid",
