@@ -2,31 +2,31 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 val mainClass = "no.nav.k9.los.K9LosKt"
 val hikariVersion = "5.1.0"
-val flywayVersion = "9.22.3"
+val flywayVersion = "10.7.2"
 val vaultJdbcVersion = "1.3.10"
 val koinVersion = "3.5.3"
 val kotliqueryVersion = "1.9.0"
-val k9SakVersion = "4.1.6"
-val k9KlageVersion = "0.4.2"
+val k9SakVersion = "4.1.9"
+val k9KlageVersion = "0.4.3"
 val fuelVersion = "2.3.1"
-val jacksonVersion = "2.16.0"
+val jacksonVersion = "2.16.1"
 val commonsTextVersion = "1.11.0"
 
 val dusseldorfKtorVersion = "4.1.3"
-val ktorVersion = "2.3.7"
+val ktorVersion = "2.3.8"
 val kafkaVersion = "3.6.1"
 
 val navTilgangskontroll = "3.2023.10.23_12.41-bafec3836d28"
 
 // Test Dependencies
-val testContainers = "1.19.3"
+val testContainers = "1.19.5"
 val jsonassertVersion = "1.5.1"
-val jupiterVersion = "5.10.1"
+val jupiterVersion = "5.10.2"
 val assertkVersion = "0.28.0"
-val mockkVersion = "1.13.8"
+val mockkVersion = "1.13.9"
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.9.21"
+    id("org.jetbrains.kotlin.jvm") version "1.9.22"
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
@@ -40,7 +40,7 @@ dependencies {
 
     // Database
     implementation("com.zaxxer:HikariCP:$hikariVersion")
-    implementation("org.flywaydb:flyway-core:$flywayVersion")
+    implementation("org.flywaydb:flyway-database-postgresql:$flywayVersion")
     implementation("no.nav:vault-jdbc:$vaultJdbcVersion")
     implementation("com.github.seratch:kotliquery:$kotliqueryVersion")
 
@@ -124,30 +124,33 @@ java {
     }
 }
 
-tasks.withType<ShadowJar> {
-    archiveBaseName.set("app")
-    archiveClassifier.set("")
-    isZip64 = true
-    manifest {
-        attributes(
-            mapOf(
-                "Main-Class" to mainClass
+tasks {
+    withType<ShadowJar> {
+        archiveBaseName.set("app")
+        archiveClassifier.set("")
+        isZip64 = true
+        manifest {
+            attributes(
+                mapOf(
+                    "Main-Class" to mainClass
+                )
             )
-        )
+        }
+        mergeServiceFiles()
     }
-}
 
-tasks.withType<Wrapper> {
-    gradleVersion = "8.4"
-}
+    withType<Wrapper> {
+        gradleVersion = "8.4"
+    }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
-    // Always run tests, even when nothing changed.
-    dependsOn("cleanTest")
+    withType<Test> {
+        useJUnitPlatform()
+        // Always run tests, even when nothing changed.
+        dependsOn("cleanTest")
 
-    // Show test results.
-    testLogging {
-        events("passed", "skipped", "failed")
+        // Show test results.
+        testLogging {
+            events("passed", "skipped", "failed")
+        }
     }
 }

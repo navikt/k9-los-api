@@ -89,7 +89,6 @@ class K9SakOppgaveTilDVHMapper {
             FagsakYtelseType.OMSORGSPENGER_MA -> "4487"
             FagsakYtelseType.OMSORGSPENGER_AO -> "4487"
             FagsakYtelseType.OPPLÆRINGSPENGER -> "4487"
-            FagsakYtelseType.PÅRØRENDESYKDOM -> "4487"
             FagsakYtelseType.OBSOLETE -> "4487"
             FagsakYtelseType.UDEFINERT -> "4487"
             else -> throw IllegalStateException("Ukjent ytelsestype: ${oppgave.hentVerdi("ytelsestype")}")
