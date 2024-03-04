@@ -11,14 +11,11 @@ import kotlinx.coroutines.withContext
 import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.ktor.metrics.Operation
 import no.nav.k9.los.Configuration
-import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
-import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.integrasjon.audit.*
 import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
 import no.nav.k9.los.integrasjon.rest.NavHeaders
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import no.nav.k9.los.nyoppgavestyring.pep.PepCacheService
 import no.nav.k9.los.utils.Cache
 import no.nav.k9.los.utils.CacheObject
@@ -33,7 +30,6 @@ private val gson = GsonBuilder().setPrettyPrinting().create()
 
 private const val XACML_CONTENT_TYPE = "application/xacml+json"
 private const val DOMENE = "k9"
-
 
 class PepClient constructor(
     private val azureGraphService: IAzureGraphService,
@@ -217,38 +213,6 @@ class PepClient constructor(
             fagsakNummer = oppgave.fagsakSaksnummer,
             aktørid = oppgave.aktorId
         )
-    }
-
-    override suspend fun harTilgangTilÅReservereOppgave(oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave, saksbehandler: Saksbehandler) : Boolean {
-        val requestBuilder = when (oppgave.oppgavetype.eksternId) {
-            "k9sak" -> {
-                XacmlRequestBuilder()
-                    .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
-                    .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
-                    .addResourceAttribute(RESOURCE_TYPE, TILGANG_SAK)
-                    .addActionAttribute(ACTION_ID, "update")
-                    .addResourceAttribute("no.nav.abac.attributter.resource.k9.behandlings_uuid", oppgave.eksternId)  //TODO los skal ikke kjenne til denne detaljen. Oppgavetype må utvides med attributtreferanse
-                    .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
-                    .addAccessSubjectAttribute(SUBJECTID, saksbehandler.brukerIdent!!)
-            }
-            "k9klage" -> {
-                XacmlRequestBuilder()
-                    .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
-                    .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
-                    .addResourceAttribute(RESOURCE_TYPE, TILGANG_SAK)
-                    .addActionAttribute(ACTION_ID, "create")
-                    .addResourceAttribute("no.nav.abac.attributter.resource.k9.saksnr", oppgave.hentVerdi("saksnummer")!!)  //TODO los skal ikke kjenne til denne detaljen. Oppgavetype må utvides med attributtreferanse
-                    .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
-                    .addAccessSubjectAttribute(SUBJECTID, saksbehandler.brukerIdent!!)
-            }
-            else -> throw NotImplementedError("Støtter kun tilgangsoppslag på k9klage og k9sak")
-        }
-
-        val tilgang = evaluate(requestBuilder)
-        if (KoinProfile.PREPROD == config.koinProfile() && !tilgang) {
-            log.warn("Ikke tilgang til å reservere oppgaver! Spørring: ${requestBuilder.build()}")
-        }
-        return tilgang
     }
 
     private suspend fun evaluate(xacmlRequestBuilder: XacmlRequestBuilder): Boolean {

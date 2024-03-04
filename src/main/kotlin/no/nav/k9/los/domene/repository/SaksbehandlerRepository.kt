@@ -1,9 +1,10 @@
 package no.nav.k9.los.domene.repository
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.runBlocking
-import kotliquery.*
+import kotliquery.Row
+import kotliquery.queryOf
+import kotliquery.sessionOf
+import kotliquery.using
 import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.integrasjon.abac.IPepClient
@@ -24,8 +25,7 @@ class SaksbehandlerRepository(
         f: (Saksbehandler?) -> Saksbehandler
     ) {
         val skjermet = pepClient.harTilgangTilKode6()
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
+        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){ LongAdder() }.increment()
 
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
@@ -75,8 +75,7 @@ class SaksbehandlerRepository(
         id: String,
         f: (Saksbehandler?) -> Saksbehandler
     ) {
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
+        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
 
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
@@ -120,28 +119,12 @@ class SaksbehandlerRepository(
         }
     }
 
-    suspend fun addSaksbehandler(saksbehandler: Saksbehandler) {
-        lagreMedEpost(saksbehandler.epost) {
-            if (it == null) {
-                saksbehandler
-            } else {
-                it.id = saksbehandler.id
-                it.brukerIdent = saksbehandler.brukerIdent
-                it.epost = saksbehandler.epost.lowercase(Locale.getDefault())
-                it.navn = saksbehandler.navn
-                it.enhet = saksbehandler.enhet
-                it
-            }
-        }
-    }
-
     private suspend fun lagreMedEpost(
         epost: String,
         f: (Saksbehandler?) -> Saksbehandler
     ) {
         val erSkjermet = pepClient.harTilgangTilKode6()
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
+        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
 
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
@@ -216,7 +199,7 @@ class SaksbehandlerRepository(
         }
         if (finnSaksbehandlerMedIdentIkkeTaHensyn(id) != null) {
             lagreMedIdIkkeTaHensyn(id) { saksbehandler ->
-                val fjernet = saksbehandler!!.reservasjoner.remove(reservasjon)
+                val fjernet= saksbehandler!!.reservasjoner.remove(reservasjon)
                 loggFjernet(fjernet, id, reservasjon)
                 saksbehandler
             }
@@ -244,101 +227,58 @@ class SaksbehandlerRepository(
         if (fjernet) log.info("RESERVASJONDEBUG: Fjernet $id oppgave=${reservasjon} fra saksbehandlertabell")
     }
 
-    fun finnSaksbehandlerMedId(id: Long): Saksbehandler {
-        return using(sessionOf(dataSource)) {
-            it.run(
-                queryOf(
-                    """select * from saksbehandler where id = :id""",
-                    mapOf("id" to id)
-                ).map { row ->
-                    mapSaksbehandler(row)
-                }.asSingle
-            )
-        }!!
-    }
-
-    fun finnIdMedEpost(epost: String): Long? {
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
-        return using(sessionOf(dataSource)) {
-            it.run(
-                queryOf(
-                    "select id from saksbehandler where lower(epost) = lower(:epost)",
-                    mapOf("epost" to epost)
-                )
-                    .map { row -> row.long("id") }.asSingle
-            )
+    suspend fun addSaksbehandler(saksbehandler: Saksbehandler) {
+        lagreMedEpost(saksbehandler.epost) {
+            if (it == null) {
+                saksbehandler
+            } else {
+                it.brukerIdent = saksbehandler.brukerIdent
+                it.epost = saksbehandler.epost.lowercase(Locale.getDefault())
+                it.navn = saksbehandler.navn
+                it.enhet = saksbehandler.enhet
+                it
+            }
         }
     }
 
     suspend fun finnSaksbehandlerMedEpost(epost: String): Saksbehandler? {
         val skjermet = pepClient.harTilgangTilKode6()
+        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
 
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
-        val saksbehandler = using(sessionOf(dataSource)) { session ->
-            session.transaction { tx ->
-                tx.run(
-                    queryOf(
-                        "select * from saksbehandler where lower(epost) = lower(:epost) and skjermet = :skjermet",
-                        mapOf("epost" to epost, "skjermet" to skjermet)
-                    ).map { row ->
+        val saksbehandler = using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    "select * from saksbehandler where lower(epost) = lower(:epost) and skjermet = :skjermet",
+                    mapOf("epost" to epost, "skjermet" to skjermet)
+                )
+                    .map { row ->
                         mapSaksbehandler(row)
                     }.asSingle
-                )
-            }
+            )
         }
         return saksbehandler
-    }
-
-    fun finnSaksbehandlerIdForIdent(ident: String): Long? {
-        return using(sessionOf(dataSource)) { session ->
-            session.transaction {
-                finnSaksbehandlerIdForIdent(ident, it)
-            }
-        }
-    }
-
-    fun finnSaksbehandlerIdForIdent(ident: String, tx: TransactionalSession): Long? {
-        return tx.run(
-            queryOf(
-                "select * from saksbehandler where lower(saksbehandlerid) = lower(:ident)",
-                mapOf("ident" to ident)
-            ).map { row ->
-                row.longOrNull("id")
-            }.asSingle
-        )
     }
 
     suspend fun finnSaksbehandlerMedIdent(ident: String): Saksbehandler? {
         val skjermet = pepClient.harTilgangTilKode6()
-
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
+        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
 
         val saksbehandler = using(sessionOf(dataSource)) {
-            it.transaction {tx->
-                tx.run(
-                    queryOf(
-                        "select * from saksbehandler where lower(saksbehandlerid) = lower(:ident) and skjermet = :skjermet",
-                        mapOf("ident" to ident, "skjermet" to skjermet)
-                    )
-                        .map { row ->
-                            mapSaksbehandler(row)
-                        }.asSingle
+            it.run(
+                queryOf(
+                    "select * from saksbehandler where lower(saksbehandlerid) = lower(:ident) and skjermet = :skjermet",
+                    mapOf("ident" to ident, "skjermet" to skjermet)
                 )
-            }
-
+                    .map { row ->
+                        mapSaksbehandler(row)
+                    }.asSingle
+            )
         }
-
         return saksbehandler
     }
 
     fun finnSaksbehandlerMedIdentIkkeTaHensyn(ident: String): Saksbehandler? {
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
+        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
 
         val saksbehandler = using(sessionOf(dataSource)) {
             it.run(
@@ -356,8 +296,7 @@ class SaksbehandlerRepository(
 
     suspend fun slettSaksbehandler(epost: String) {
 
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
+        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
         val skjermet = pepClient.harTilgangTilKode6()
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
@@ -374,8 +313,7 @@ class SaksbehandlerRepository(
     }
 
     suspend fun hentAlleSaksbehandlere(): List<Saksbehandler> {
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
+        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
         val skjermet = pepClient.harTilgangTilKode6()
         val identer = using(sessionOf(dataSource)) {
             it.run(
@@ -392,8 +330,7 @@ class SaksbehandlerRepository(
     }
 
     fun hentAlleSaksbehandlereIkkeTaHensyn(): List<Saksbehandler> {
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
+        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
         val identer = using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
@@ -412,7 +349,6 @@ class SaksbehandlerRepository(
         val data = row.stringOrNull("data")
         return if (data == null) {
             Saksbehandler(
-                row.long("id"),
                 row.stringOrNull("saksbehandlerid"),
                 row.stringOrNull("navn"),
                 row.string("epost").lowercase(Locale.getDefault()),
@@ -421,7 +357,6 @@ class SaksbehandlerRepository(
             )
         } else {
             Saksbehandler(
-                id = row.long("id"),
                 brukerIdent = objectMapper().readValue<Saksbehandler>(data).brukerIdent,
                 navn = objectMapper().readValue<Saksbehandler>(data).navn,
                 epost = row.string("epost").lowercase(Locale.getDefault()),

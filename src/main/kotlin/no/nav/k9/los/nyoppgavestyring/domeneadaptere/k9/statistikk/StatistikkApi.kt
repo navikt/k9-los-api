@@ -23,4 +23,16 @@ internal fun Route.StatistikkApi() {
             call.respond(HttpStatusCode.Locked)
         }
     }
+
+    //TODO: Til test. Fjernes før prodsetting!
+    delete("/slettStatistikkgrunnlag") {
+        if (config.nyOppgavestyringRestAktivert()) {
+            requestContextService.withRequestContext(call) {
+                oppgavestatistikkTjeneste.slettStatistikkgrunnlag()
+                call.respond("OK")
+            }
+        } else {
+            call.respond(HttpStatusCode.Locked)
+        }
+    }
 }

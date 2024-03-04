@@ -4,7 +4,6 @@
   "oppgavetyper": [
     {
       "id": "k9sak",
-      "oppgavebehandlingsUrlTemplate": "{baseUrl}/fagsak/{K9.saksnummer}/behandling/{K9.behandlingUuid}?fakta=default&punkt=default",
       "oppgavefelter": [
         {
           "id": "behandlingUuid",
@@ -252,22 +251,6 @@
           "visPåOppgave": true,
           "påkrevd": true,
           "defaultverdi": false
-        },
-        {
-          "id": "utenlandstilsnitt",
-          "visPåOppgave": true,
-          "påkrevd": true,
-          "defaultverdi": false
-        },
-        {
-          "id": "søknadsårsak",
-          "visPåOppgave": true,
-          "påkrevd": false
-        },
-        {
-          "id": "behandlingsårsak",
-          "visPåOppgave": true,
-          "påkrevd": false
         }
       ]
     }

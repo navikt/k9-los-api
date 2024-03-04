@@ -2,11 +2,8 @@ package no.nav.k9.los.tjenester.saksbehandler.oppgave
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonFormat
-import no.nav.k9.los.domene.modell.Saksbehandler
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import java.time.LocalDateTime
 
-//ingen auditlogg på denne, siden den ikke inneholder personidentifiserende informasjon, bortsett fra saksbehandlers ident
 class OppgaveStatusDto(
     val erReservert: Boolean,
     val reservertTilTidspunkt: LocalDateTime?,
@@ -16,19 +13,7 @@ class OppgaveStatusDto(
     val flyttetReservasjon: FlyttetReservasjonDto?,
     val kanOverstyres: Boolean? = false,
     val beskjed: Beskjed? = null
-) {
-    constructor(reservasjonV3: ReservasjonV3, innloggetBruker: Saksbehandler, saksbehandlerSomHarReservasjon: Saksbehandler) : this (
-    erReservert = true,
-    reservertTilTidspunkt = reservasjonV3.gyldigTil,
-    erReservertAvInnloggetBruker = reservasjonV3.reservertAv == innloggetBruker.id!!,
-    reservertAv = saksbehandlerSomHarReservasjon.brukerIdent,
-    reservertAvNavn = saksbehandlerSomHarReservasjon.navn,
-    flyttetReservasjon = null,
-    kanOverstyres = reservasjonV3.reservertAv != innloggetBruker.id!!
-    )
-}
-
-
+)
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 enum class Beskjed(val kode: String) {

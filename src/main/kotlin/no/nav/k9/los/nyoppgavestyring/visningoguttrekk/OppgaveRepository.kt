@@ -25,51 +25,25 @@ class OppgaveRepository(
                     "kildeomrade" to kildeområde,
                     "eksternId" to eksternId
                 )
-            ).map { row -> mapOppgave(row, tx) }.asSingle
+            ).map { row -> row.mapOppgave(tx) }.asSingle
         ) ?: throw IllegalStateException("Fant ikke oppgave med kilde $kildeområde og eksternId $eksternId")
 
         return oppgave.fyllDefaultverdier().utledTransienteFelter(now)
     }
 
-    fun hentAlleÅpneOppgaverForReservasjonsnøkkel(tx: TransactionalSession, reservasjonsnøkkel: String) : List<Oppgave> {
-        val oppgaver = tx.run(
-            queryOf(
-                """
-                select *
-                from oppgave_v3 ov 
-                where reservasjonsnokkel = :reservasjonsnokkel
-                and aktiv = true
-                and status != :oppgavestatus
-            """.trimIndent(),
-                mapOf(
-                    "reservasjonsnokkel" to reservasjonsnøkkel,
-                    "oppgavestatus" to Oppgavestatus.LUKKET.kode,
-                )
-            ).map { row ->
-                mapOppgave(row, tx)
-            }.asList
+    private fun Row.mapOppgave(tx: TransactionalSession): Oppgave {
+        val oppgaveTypeId = long("oppgavetype_id")
+        val kildeområde = string("kildeomrade")
+        return Oppgave(
+            eksternId = string("ekstern_id"),
+            eksternVersjon = string("ekstern_versjon"),
+            oppgavetype = oppgavetypeRepository.hentOppgavetype(kildeområde, oppgaveTypeId, tx),
+            status = string("status"),
+            endretTidspunkt = localDateTime("endret_tidspunkt"),
+            kildeområde = kildeområde,
+            felter = hentOppgavefelter(tx, long("id")),
+            versjon = int("versjon")
         )
-
-        return oppgaver
-    }
-
-    fun hentAlleOppgaverForReservasjonsnøkkel(tx: TransactionalSession, reservasjonsnøkkel: String): List<Oppgave> {
-        val oppgaver = tx.run(
-            queryOf(
-                """
-                select *
-                from oppgave_v3 ov 
-                where reservasjonsnokkel = :reservasjonsnokkel
-                and aktiv = true 
-                and status != 'LUKKET'
-            """.trimIndent(),
-                mapOf("reservasjonsnokkel" to reservasjonsnøkkel)
-            ).map { row ->
-                mapOppgave(row, tx)
-            }.asList
-        )
-
-        return oppgaver
     }
 
     fun hentOppgaveForId(tx: TransactionalSession, id: Long, now: LocalDateTime = LocalDateTime.now()): Oppgave {
@@ -82,7 +56,18 @@ class OppgaveRepository(
             """.trimIndent(),
                 mapOf("id" to id)
             ).map { row ->
-                mapOppgave(row, tx)
+                val kildeområde = row.string("kildeomrade")
+                val oppgaveTypeId = row.long("oppgavetype_id")
+                Oppgave(
+                    eksternId = row.string("ekstern_id"),
+                    eksternVersjon = row.string("ekstern_versjon"),
+                    oppgavetype = oppgavetypeRepository.hentOppgavetype(kildeområde, oppgaveTypeId, tx),
+                    status = row.string("status"),
+                    endretTidspunkt = row.localDateTime("endret_tidspunkt"),
+                    kildeområde = row.string("kildeomrade"),
+                    felter = hentOppgavefelter(tx, row.long("id")),
+                    versjon = row.int("versjon")
+                )
             }.asSingle
         ) ?: throw IllegalStateException("Fant ikke oppgave med id $id")
 
@@ -129,27 +114,6 @@ class OppgaveRepository(
             }
 
         return copy(felter = felter.plus(defaultverdier))
-    }
-
-    private fun mapOppgave(
-        row: Row,
-        tx: TransactionalSession
-    ): Oppgave {
-        val kildeområde = row.string("kildeomrade")
-        val oppgaveTypeId = row.long("oppgavetype_id")
-        val oppgavetype = oppgavetypeRepository.hentOppgavetype(kildeområde, oppgaveTypeId, tx)
-        val oppgavefelter = hentOppgavefelter(tx, row.long("id"))
-        return Oppgave(
-            eksternId = row.string("ekstern_id"),
-            eksternVersjon = row.string("ekstern_versjon"),
-            oppgavetype = oppgavetype,
-            status = row.string("status"),
-            endretTidspunkt = row.localDateTime("endret_tidspunkt"),
-            kildeområde = row.string("kildeomrade"),
-            felter = oppgavefelter,
-            reservasjonsnøkkel = row.string("reservasjonsnokkel"),
-            versjon = row.int("versjon")
-        )
     }
 
     private fun hentOppgavefelter(tx: TransactionalSession, oppgaveId: Long): List<Oppgavefelt> {
@@ -200,9 +164,7 @@ class OppgaveRepository(
                     "grense" to tidspunkt,
                     "limit" to antall
                 )
-            ).map { row -> mapOppgave(row, tx) }.asList
+            ).map { row -> row.mapOppgave(tx) }.asList
         )
     }
-
-
 }

@@ -15,7 +15,6 @@ import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
 import no.nav.k9.los.integrasjon.pdl.*
 import no.nav.k9.los.integrasjon.rest.idToken
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverHistorikk
 import no.nav.k9.los.tjenester.fagsak.PersonDto
 import no.nav.k9.los.tjenester.mock.AksjonspunkterMock
@@ -45,7 +44,7 @@ class OppgaveTjeneste constructor(
     private val azureGraphService: IAzureGraphService,
     private val pepClient: IPepClient,
     private val statistikkRepository: StatistikkRepository,
-    private val reservasjonOversetter: ReservasjonOversetter,
+
 ) {
 
     suspend fun hentOppgaver(oppgavekøId: UUID): List<Oppgave> {
@@ -64,8 +63,8 @@ class OppgaveTjeneste constructor(
             val tid = measureTimeMillis {
                 oppgaver = oppgaveRepository.hentOppgaver(oppgaveKø.oppgaverOgDatoer.map { it.id })
                     .sortedBy {
-                        it.aksjonspunkter.beslutterAp()?.opprettetTidspunkt ?: it.behandlingOpprettet
-                    }
+                    it.aksjonspunkter.beslutterAp()?.opprettetTidspunkt ?: it.behandlingOpprettet
+                }
             }
 
             ReservasjonRepository.RESERVASJON_YTELSE_LOG
@@ -101,7 +100,7 @@ class OppgaveTjeneste constructor(
         }
         val oppgaveSomSkalBliReservert = oppgaveRepository.hent(oppgaveUuid)
 
-        /*TODO midlertidig fjernet pga feil
+        /* TODO midlertidig fjernet pga feil
         if (sjekkHvisSaksbehandlerPrøverOgReserverEnOppgaveDeSelvHarBesluttet(ident, oppgaveSomSkalBliReservert)) {
             return OppgaveStatusDto(
                 erReservert = false,
@@ -204,7 +203,7 @@ class OppgaveTjeneste constructor(
         return oppgave.ansvarligBeslutterForTotrinn.lowercase() == ident.lowercase() && !erBeslutterOppgave(oppgave)
     }
 
-    fun lagReservasjoner(
+    private fun lagReservasjoner(
         iderPåOppgaverSomSkalBliReservert: Set<UUID>,
         ident: String,
         overstyrIdent: String?,
@@ -427,7 +426,6 @@ class OppgaveTjeneste constructor(
     fun hentAktivMerknad(eksternId: String): MerknadDto? {
         return oppgaveRepositoryV2.hentMerknader(eksternId, inkluderSlettet = false).firstOrNull().tilDto()
     }
-
     private fun Merknad?.tilDto(): MerknadDto? {
         return this?.let {
             MerknadDto(
@@ -539,7 +537,8 @@ class OppgaveTjeneste constructor(
     }
 
     fun hentBeholdningAvOppgaverPerAntallDager(): List<AlleOppgaverHistorikk> {
-        val ytelsetype = statistikkRepository.hentFerdigstilteOgNyeHistorikkMedYtelsetypeSiste8Uker()
+        val ytelsetype =
+            statistikkRepository.hentFerdigstilteOgNyeHistorikkMedYtelsetypeSiste8Uker()
         val ret = mutableListOf<AlleOppgaverHistorikk>()
         for (ytelseTypeEntry in ytelsetype.groupBy { it.fagsakYtelseType }) {
             val perBehandlingstype = ytelseTypeEntry.value.groupBy { it.behandlingType }
@@ -593,7 +592,7 @@ class OppgaveTjeneste constructor(
 
     suspend fun endreReservasjonPåOppgave(resEndring: ReservasjonEndringDto): Reservasjon {
         val identTilInnloggetBruker = azureGraphService.hentIdentTilInnloggetBruker()
-        val oppgavUUID = UUID.fromString(resEndring.oppgaveNøkkel.oppgaveEksternId)
+        val oppgavUUID = UUID.fromString(resEndring.oppgaveId)
         if (resEndring.brukerIdent != null) {
             val reservasjon = reservasjonRepository.hent(oppgavUUID)
             saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
@@ -993,30 +992,22 @@ class OppgaveTjeneste constructor(
      */
     suspend fun fåOppgaveFraKø(
         oppgaveKøId: String,
-        brukerident: String,
+        ident: String,
         oppgaverSomErBlokert: MutableList<OppgaveDto> = emptyArray<OppgaveDto>().toMutableList(),
-        prioriterOppgaverForSaksbehandler: List<Oppgave>? = null,
+        prioriterOppgaverForSaksbehandler: List<Oppgave>? = null
     ): OppgaveDto? {
+        val hentNesteOppgaverIKø = hentNesteOppgaverIKø(UUID.fromString(oppgaveKøId))
 
-        /* V3-versjon av denne logikken:
-         få oppgave fra kø (V1 eller V3) -- versjonsagnostisk kandidat
-         er nøkkelen reservert? -- neste kandidat  //evt filtrere vekk filtrerte først et annet sted?
-         totrinnskontroll - utelukk beslutt egen saksbehandling og motsatt for alle oppgaver i reservasjon
-         pepclent.harTilgangTilOppgave -- for alle oppgaver knyttet til nøkkel?
-         */
-
-        val nesteOppgaverIKø = hentNesteOppgaverIKø(UUID.fromString(oppgaveKøId))
-
-        if (nesteOppgaverIKø.isEmpty()) {
+        if (hentNesteOppgaverIKø.isEmpty()) {
             return null
         }
 
         val prioriterteOppgaver = prioriterOppgaverForSaksbehandler ?: finnPrioriterteOppgaver(
-            brukerident,
+            ident,
             oppgaveKøId
         )
 
-        val oppgavePar = finnOppgave(prioriterteOppgaver, nesteOppgaverIKø, oppgaverSomErBlokert) ?: return null
+        val oppgavePar = finnOppgave(prioriterteOppgaver, hentNesteOppgaverIKø, oppgaverSomErBlokert) ?: return null
 
         val oppgaveDto: OppgaveDto
 
@@ -1029,12 +1020,7 @@ class OppgaveTjeneste constructor(
                 // skal ikke få oppgave saksbehandler ikke har lestilgang til
                 settSkjermet(oppgavePar.second!!)
                 oppgaverSomErBlokert.add(oppgaveDto)
-                return fåOppgaveFraKø(
-                    oppgaveKøId,
-                    brukerident,
-                    oppgaverSomErBlokert,
-                    prioriterteOppgaver
-                )
+                return fåOppgaveFraKø(oppgaveKøId, ident, oppgaverSomErBlokert, prioriterteOppgaver)
             }
         } else {
             oppgaveDto = oppgavePar.first!!
@@ -1044,25 +1030,15 @@ class OppgaveTjeneste constructor(
         val oppgaveSomSkalBliReservert = oppgaveRepository.hent(oppgaveUuid)
 
         // beslutter skal ikke få opp oppgave med 5016 eller 5005 de selv har saksbehandlet
-        if (innloggetSaksbehandlerHarSaksbehandletOppgaveSomSkalBliBesluttet(oppgaveSomSkalBliReservert, brukerident)) {
+        if (innloggetSaksbehandlerHarSaksbehandletOppgaveSomSkalBliBesluttet(oppgaveSomSkalBliReservert, ident)) {
             oppgaverSomErBlokert.add(oppgaveDto)
-            return fåOppgaveFraKø(
-                oppgaveKøId,
-                brukerident,
-                oppgaverSomErBlokert,
-                prioriterteOppgaver
-            )
+            return fåOppgaveFraKø(oppgaveKøId, ident, oppgaverSomErBlokert, prioriterteOppgaver)
         }
 
         // beslutter skal ikke få oppgaver de selv har besluttet
-        if (innloggetSaksbehandlerHarBesluttetOppgaven(oppgaveSomSkalBliReservert, brukerident)) {
+        if (innloggetSaksbehandlerHarBesluttetOppgaven(oppgaveSomSkalBliReservert, ident)) {
             oppgaverSomErBlokert.add(oppgaveDto)
-            return fåOppgaveFraKø(
-                oppgaveKøId,
-                brukerident,
-                oppgaverSomErBlokert,
-                prioriterteOppgaver
-            )
+            return fåOppgaveFraKø(oppgaveKøId, ident, oppgaverSomErBlokert, prioriterteOppgaver)
         }
 
         val oppgaverSomSkalBliReservert = mutableListOf<OppgaveMedId>()
@@ -1082,57 +1058,32 @@ class OppgaveTjeneste constructor(
         val iderPåOppgaverSomSkalBliReservert = oppgaverSomSkalBliReservert.map { o -> o.id }.toSet()
         val gamleReservasjoner = reservasjonRepository.hent(iderPåOppgaverSomSkalBliReservert)
         val aktiveReservasjoner =
-            gamleReservasjoner.filter { rev -> rev.erAktiv() && rev.reservertAv != brukerident }.toList()
+            gamleReservasjoner.filter { rev -> rev.erAktiv() && rev.reservertAv != ident }.toList()
 
         // skal ikke få oppgaver som tilhører en parsak der en av sakene er resvert på en annen saksbehandler
         if (aktiveReservasjoner.isNotEmpty()) {
             oppgaverSomErBlokert.add(oppgaveDto)
-            return fåOppgaveFraKø(
-                oppgaveKøId,
-                brukerident,
-                oppgaverSomErBlokert,
-                prioriterteOppgaver
-            )
+            return fåOppgaveFraKø(oppgaveKøId, ident, oppgaverSomErBlokert, prioriterteOppgaver)
         }
 
         // sjekker også om parsakene har blitt besluttet av beslutter
         if (oppgaverSomSkalBliReservert.map { it.oppgave }
-                .any { innloggetSaksbehandlerHarBesluttetOppgaven(it, brukerident) }) {
+                .any { innloggetSaksbehandlerHarBesluttetOppgaven(it, ident) }) {
             oppgaverSomErBlokert.add(oppgaveDto)
-            return fåOppgaveFraKø(
-                oppgaveKøId,
-                brukerident,
-                oppgaverSomErBlokert,
-                prioriterteOppgaver
-            )
+            return fåOppgaveFraKø(oppgaveKøId, ident, oppgaverSomErBlokert, prioriterteOppgaver)
         }
 
         // sjekker også om parsakene har blitt saksbehandlet av saksbehandler
         if (oppgaverSomSkalBliReservert.map { it.oppgave }
-                .any { innloggetSaksbehandlerHarSaksbehandletOppgaveSomSkalBliBesluttet(it, brukerident) }) {
+                .any { innloggetSaksbehandlerHarSaksbehandletOppgaveSomSkalBliBesluttet(it, ident) }) {
             oppgaverSomErBlokert.add(oppgaveDto)
-            return fåOppgaveFraKø(
-                oppgaveKøId,
-                brukerident,
-                oppgaverSomErBlokert,
-                prioriterteOppgaver
-            )
+            return fåOppgaveFraKø(oppgaveKøId, ident, oppgaverSomErBlokert, prioriterteOppgaver)
         }
 
-        val reservasjoner = lagReservasjoner(iderPåOppgaverSomSkalBliReservert, brukerident, null)
-
-        //ReservasjonV3 TODO: sanity check - har noen andre reservert i ny modell? Hva skal skje da?
-        val skalHaReservasjon = saksbehandlerRepository.finnSaksbehandlerMedIdent(brukerident)!!
-        reservasjonOversetter.taNyReservasjonFraGammelKontekst(
-            oppgaveV1 = oppgaveSomSkalBliReservert,
-            reserverForSaksbehandlerId = skalHaReservasjon.id!!,
-            reservertTil = LocalDateTime.now().plusHours(24).forskyvReservasjonsDato(),
-            utførtAvSaksbehandlerId = skalHaReservasjon.id!!,
-            kommentar = ""
-        )
+        val reservasjoner = lagReservasjoner(iderPåOppgaverSomSkalBliReservert, ident, null)
 
         reservasjonRepository.lagreFlereReservasjoner(reservasjoner)
-        saksbehandlerRepository.leggTilFlereReservasjoner(brukerident, reservasjoner.map { r -> r.oppgave })
+        saksbehandlerRepository.leggTilFlereReservasjoner(ident, reservasjoner.map { r -> r.oppgave })
 
         for (oppgavekø in oppgaveKøRepository.hentKøIdIkkeTaHensyn()) {
             oppgaveKøRepository.leggTilOppgaverTilKø(
@@ -1148,31 +1099,31 @@ class OppgaveTjeneste constructor(
         oppgaveSomSkalBliReservert: Oppgave,
         ident: String
     ) = oppgaveSomSkalBliReservert.ansvarligBeslutterForTotrinn != null &&
-        oppgaveSomSkalBliReservert.ansvarligBeslutterForTotrinn == ident &&
-        !erBeslutterOppgave(oppgaveSomSkalBliReservert)
+            oppgaveSomSkalBliReservert.ansvarligBeslutterForTotrinn == ident &&
+            !erBeslutterOppgave(oppgaveSomSkalBliReservert)
 
     private fun innloggetSaksbehandlerHarSaksbehandletOppgaveSomSkalBliBesluttet(
         oppgaveSomSkalBliReservert: Oppgave,
         ident: String
     ): Boolean {
         val besluttet = oppgaveSomSkalBliReservert.ansvarligSaksbehandlerForTotrinn != null &&
-            oppgaveSomSkalBliReservert.ansvarligSaksbehandlerForTotrinn.equals(ident, true)
+                oppgaveSomSkalBliReservert.ansvarligSaksbehandlerForTotrinn.equals(ident, true)
 
         //for gamle k9-tilbake behandlinger så er feltet ansvarligSaksbehandlerIdent brukt
         // istedenfor ansvarligSaksbehandlerForTotrinn, så sjekker begge.
         val besluttetK9Tilbake = oppgaveSomSkalBliReservert.ansvarligSaksbehandlerIdent != null &&
-            oppgaveSomSkalBliReservert.ansvarligSaksbehandlerIdent.equals(ident, true)
-            && oppgaveSomSkalBliReservert.system == Fagsystem.K9TILBAKE.kode
+                oppgaveSomSkalBliReservert.ansvarligSaksbehandlerIdent.equals(ident, true)
+                && oppgaveSomSkalBliReservert.system == Fagsystem.K9TILBAKE.kode
 
         return (besluttet || besluttetK9Tilbake) &&
-            erBeslutterOppgave(oppgaveSomSkalBliReservert)
+                erBeslutterOppgave(oppgaveSomSkalBliReservert)
     }
 
 
     private fun erBeslutterOppgave(oppgaveSomSkalBliReservert: Oppgave) =
         oppgaveSomSkalBliReservert.aksjonspunkter.hentAktive().keys.any {
             it == AksjonspunktDefinisjon.FATTER_VEDTAK.kode
-                || it == AksjonspunktDefinisjonK9Tilbake.FATTE_VEDTAK.kode
+                    || it == AksjonspunktDefinisjonK9Tilbake.FATTE_VEDTAK.kode
         }
 
     private suspend fun finnPrioriterteOppgaver(

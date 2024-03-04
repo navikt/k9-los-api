@@ -11,12 +11,3 @@ fun LocalDateTime.forskyvReservasjonsDato(): LocalDateTime {
 
     return localDate.atStartOfDay().plusHours(23).plusMinutes(59)
 }
-
-fun LocalDateTime.forskyvReservasjonsDatoBakover(): LocalDateTime {
-    var localDate = this.toLocalDate()
-    while (localDate.dayOfWeek == DayOfWeek.SATURDAY || localDate.dayOfWeek == DayOfWeek.SUNDAY) {
-        localDate = localDate.minusDays(1)
-    }
-
-    return localDate.atStartOfDay().plusHours(23).plusMinutes(59)
-}

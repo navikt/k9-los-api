@@ -10,6 +10,7 @@ import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.IllegalDeleteException
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.MissingDefaultException
 import org.koin.ktor.ext.inject
+import org.postgresql.util.PSQLException
 
 internal fun Route.OppgavetypeApi() {
     val requestContextService by inject<RequestContextService>()

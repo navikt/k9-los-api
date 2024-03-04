@@ -16,7 +16,6 @@ class Oppgavetyper(
                 dto = oppgavetypeDto,
                 definisjonskilde = dto.definisjonskilde,
                 område = område,
-                oppgavebehandlingsUrlTemplate = oppgavetypeDto.oppgavebehandlingsUrlTemplate,
                 feltdefinisjoner = feltdefinisjoner
             )
         }.toSet()

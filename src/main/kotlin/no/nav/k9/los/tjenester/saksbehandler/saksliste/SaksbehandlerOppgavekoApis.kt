@@ -17,10 +17,9 @@ internal fun Route.SaksbehandlerOppgavekoApis() {
     val requestContextService by inject<RequestContextService>()
     val sakslisteTjeneste by inject<SakslisteTjeneste>()
 
-    @Deprecated("Brukes kun for gamle køer. Fjernes når V1 er sanert. Kall for nye køer: Se over")
     @Location("/oppgaveko")
-    class getKoerForSaksbehandlerV1
-    get { _: getKoerForSaksbehandlerV1 ->
+    class getSakslister
+    get { _: getSakslister ->
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 call.respond(sakslisteTjeneste.hentSaksbehandlersKøer())
@@ -30,9 +29,9 @@ internal fun Route.SaksbehandlerOppgavekoApis() {
         }
     }
 
-    @Deprecated("Gjelder bare for gamla køer frem til disse saneres. Kall for nye køer: OppgaveKoApis::/{id}::GET")
     @Location("/oppgaveko/saksbehandlere")
     class hentSakslistensSaksbehandlere
+
     get { _: hentSakslistensSaksbehandlere ->
         requestContextService.withRequestContext(call) {
             call.respond(

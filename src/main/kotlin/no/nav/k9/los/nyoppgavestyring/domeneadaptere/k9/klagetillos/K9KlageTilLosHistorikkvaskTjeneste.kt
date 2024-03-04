@@ -19,7 +19,6 @@ import org.slf4j.LoggerFactory
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.BehandlingProsessEventKlageRepository
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import java.util.*
 import kotlin.concurrent.thread
@@ -31,8 +30,7 @@ class K9KlageTilLosHistorikkvaskTjeneste(
     private val oppgavetypeTjeneste: OppgavetypeTjeneste,
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
     private val config: Configuration,
-    private val transactionalManager: TransactionalManager,
-    private val k9sakBeriker: K9SakBerikerInterfaceKludge,
+    private val transactionalManager: TransactionalManager
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9KlageTilLosHistorikkvaskTjeneste::class.java)
@@ -83,15 +81,10 @@ class K9KlageTilLosHistorikkvaskTjeneste(
         var forrigeOppgave: OppgaveV3? = null
         transactionalManager.transaction { tx ->
             val behandlingProsessEventer = behandlingProsessEventKlageRepository.hentMedLås(tx, uuid).eventer
-            val høyesteInternVersjon =
-                oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9klage", "K9", tx)!!
-            var eventNrForBehandling = 0L
-            for (event in behandlingProsessEventer) {
-                if (eventNrForBehandling > høyesteInternVersjon) { break }
-                val losOpplysningerSomManglerIKlageDto = k9sakBeriker.berikKlage(event.påklagdBehandlingEksternId)!!
-                val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, losOpplysningerSomManglerIKlageDto, forrigeOppgave)
+            behandlingProsessEventer.forEach { event ->
+                val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
 
-                oppgaveV3Tjeneste.oppdaterEkstisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, tx)
+                oppgaveV3Tjeneste.oppdaterEkstisterendeOppgaveversjon(oppgaveDto, tx)
 
                 eventTeller++
                 loggFremgangForHver100(eventTeller, "Prosessert $eventTeller eventer")
@@ -99,7 +92,6 @@ class K9KlageTilLosHistorikkvaskTjeneste(
                 forrigeOppgave = oppgaveV3Tjeneste.hentOppgaveversjon(
                     område = "K9", eksternId = oppgaveDto.id, eksternVersjon = oppgaveDto.versjon, tx = tx
                 )
-                eventNrForBehandling++
             }
             forrigeOppgave = null
 

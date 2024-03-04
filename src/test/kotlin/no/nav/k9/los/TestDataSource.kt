@@ -18,7 +18,7 @@ class TestDataSource {
             maximumPoolSize = 3
             minimumIdle = 1
             idleTimeout = 10001
-            connectionTimeout = 10000
+            connectionTimeout = 5000
             maxLifetime = 30001
             driverClassName = "org.postgresql.Driver"
             addDataSourceProperty("cachePrepStmts", "true")
@@ -73,8 +73,6 @@ abstract class AbstractPostgresTest {
                 siste_behandlinger,
                 OPPGAVEKO_SAKSBEHANDLER,
                 OPPGAVEKO_V3,
-                RESERVASJON_V3,
-                RESERVASJON_V3_ENDRING,
                 OPPGAVE_V3,
                 OPPGAVE_PEP_CACHE,
                 oppgave_v3_sendt_dvh

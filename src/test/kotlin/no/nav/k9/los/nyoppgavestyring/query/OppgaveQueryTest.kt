@@ -24,7 +24,6 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.koin.test.get
 import org.slf4j.Logger
@@ -294,7 +293,6 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
     }
 
     @Test
-    @Disabled
     fun `Resultat skal kun inneholde kode6-oppgaver når filtre er satt til kode6`() {
         val eksternId = lagOppgave(kode6 = true)
 
@@ -303,7 +301,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
         val query = OppgaveQuery(listOf(
             byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, eksternId),
-            byggGenereltFilter(FeltType.BESKYTTELSE, FeltverdiOperator.IN, "KODE6")
+            byggGenereltFilter(FeltType.BESKYTTELSE, FeltverdiOperator.IN, BeskyttelseType.KODE6.kode)
         ))
 
         assertThat(oppgaveQueryRepository.query(query)).isNotEmpty()
@@ -326,7 +324,6 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
     }
 
     @Test
-    @Disabled
     fun `Resultat skal ikke inneholde kode7 eller ordinære oppgaver når filtre er satt til kode6 oppgaver`() {
         val eksternId7 = lagOppgave(kode7 = true)
         val eksternIdOrdinær = lagOppgave()
@@ -336,7 +333,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
         val query = OppgaveQuery(listOf(
             byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, eksternId7, eksternIdOrdinær),
-            byggGenereltFilter(FeltType.BESKYTTELSE, FeltverdiOperator.IN, "KODE6")
+            byggGenereltFilter(FeltType.BESKYTTELSE, FeltverdiOperator.IN, BeskyttelseType.KODE6.kode)
         ))
 
         assertThat(oppgaveQueryRepository.query(query)).isEmpty()

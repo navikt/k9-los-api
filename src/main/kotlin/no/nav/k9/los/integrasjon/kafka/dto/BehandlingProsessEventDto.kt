@@ -6,9 +6,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer
-import no.nav.k9.kodeverk.behandling.BehandlingÅrsakType
-import no.nav.k9.kodeverk.produksjonsstyring.UtvidetSøknadÅrsak
-import no.nav.k9.kodeverk.uttak.SøknadÅrsak
 import no.nav.k9.los.domene.modell.Fagsystem
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import no.nav.k9.sak.typer.Periode
@@ -90,12 +87,7 @@ data class BehandlingProsessEventDto(
     val relatertPartAktørId: String? = null,
     val aksjonspunktTilstander: List<AksjonspunktTilstandDto> = emptyList(),
     val nyeKrav: Boolean? = null,
-    val fraEndringsdialog: Boolean? = null,
-
-    @JsonDeserialize(using = KodeverkDeserializer::class)
-    val søknadsårsaker : List<String> = emptyList(),
-    @JsonDeserialize(using = KodeverkDeserializer::class)
-    val behandlingsårsaker: List<String> = emptyList()
+    val fraEndringsdialog: Boolean? = null
 ) {
 
     // Denne skal ikke ha fnr, aktørider, orgnumre eller beløp som kan identifisere brukeren
@@ -121,8 +113,7 @@ data class BehandlingProsessEventDto(
             fagsakPeriode=$fagsakPeriode,
             aksjonspunktTilstander=$aksjonspunktTilstander,
             nyeKrav=$nyeKrav
-            fraEndringsdialog=$fraEndringsdialog,
-            søknadsårsaker=$søknadsårsaker
+            fraEndringsdialog=$fraEndringsdialog
             )"""
             .trimMargin()
     }

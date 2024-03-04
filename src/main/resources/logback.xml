@@ -35,7 +35,8 @@
     <logger name="nav" level="INFO"/>
     <logger name="no.nav" level="INFO"/>
     <logger name="io.ktor.auth.jwt" level="TRACE"/>
-
+    <logger name="no.nav.helse.dusseldorf.ktor.core.DefaultStatusPages" level="OFF"/>
+    
     <logger name="auditLogger" level="INFO" additivity="false">
         <appender-ref ref="auditLogger" />
     </logger>

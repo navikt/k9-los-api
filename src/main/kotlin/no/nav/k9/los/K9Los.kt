@@ -39,19 +39,17 @@ import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosApi
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonKonverteringJobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkApi
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoApis
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonApi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Api
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeApi
 import no.nav.k9.los.nyoppgavestyring.pep.PepCacheOppdaterer
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryApis
+import no.nav.k9.los.tjenester.admin.AdminApis
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederApis
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.DataeksportApis
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallApis
@@ -99,12 +97,11 @@ fun Application.k9Los() {
     val k9KlageTilLosAdapterTjeneste = koin.get<K9KlageTilLosAdapterTjeneste>()
     k9KlageTilLosAdapterTjeneste.setup()
 
-    if (LocalDateTime.now().isBefore(LocalDateTime.of(2024, 2, 20, 16, 45))) {
+    if (LocalDateTime.now().isBefore(LocalDateTime.of(2023, 10, 14, 17, 0))) {
         //koin.get<K9SakTilLosLukkeFeiloppgaverTjeneste>().kjørFeiloppgaverVask()
-        koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
-        koin.get<K9KlageTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
-        //koin.get<OppgavestatistikkTjeneste>().slettStatistikkgrunnlag()
-        //koin.get<ReservasjonKonverteringJobb>().kjørReservasjonskonvertering()
+        //koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
+        //koin.get<K9KlageTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
+        koin.get<OppgavestatistikkTjeneste>().slettStatistikkgrunnlag()
     }
 
     install(Authentication) {
@@ -208,7 +205,6 @@ fun Application.k9Los() {
         oppgaveV3Tjeneste = koin.get(),
         transactionalManager = koin.get(),
         config = koin.get(),
-        k9sakBeriker = koin.get(),
     ).kjør(kjørSetup = false, kjørUmiddelbart = false)
 
     OppgavestatistikkTjeneste(
@@ -264,6 +260,10 @@ fun Application.k9Los() {
             frequency = Duration.ofMinutes(1)
         )
 
+        route("innsikt") {
+            innsiktGrensesnitt()
+        }
+
         if ((KoinProfile.LOCAL == koin.get<KoinProfile>())) {
             api(sseChannel)
             route("mock") {
@@ -271,9 +271,6 @@ fun Application.k9Los() {
             }
         } else {
             authenticate(*issuers.allIssuers()) {
-                route("innsikt") {
-                    innsiktGrensesnitt()
-                }
                 api(sseChannel)
             }
         }
@@ -304,6 +301,8 @@ private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
     )
 
     route("api") {
+
+        AdminApis()
         route("driftsmeldinger") {
             DriftsmeldingerApis()
         }
@@ -322,7 +321,7 @@ private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
         route("avdelingsleder") {
             AvdelingslederApis()
             route("oppgavekoer") {
-                AvdelingslederOppgavekøApis() // Erstattet av OppgaveKoApis i V3
+                AvdelingslederOppgavekøApis()
             }
             route("nokkeltall") {
                 NokkeltallApis()
