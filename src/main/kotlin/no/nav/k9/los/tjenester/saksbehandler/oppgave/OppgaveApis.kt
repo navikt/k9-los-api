@@ -15,6 +15,7 @@ import no.nav.k9.los.integrasjon.pdl.IPdlService
 import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.integrasjon.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.FinnerIkkeDataException
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ManglerTilgangException
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import org.koin.ktor.ext.inject
 import org.slf4j.Logger
@@ -48,8 +49,13 @@ internal fun Route.OppgaveApis() {
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
                     kotlin.coroutines.coroutineContext.idToken().getUsername()
                 )!!
-
-                call.respond(oppgaveApisTjeneste.reserverOppgave(innloggetBruker, oppgaveIdMedOverstyringDto))
+                try {
+                    val oppgave =
+                        oppgaveApisTjeneste.reserverOppgave(innloggetBruker, oppgaveIdMedOverstyringDto)
+                    call.respond(oppgave)
+                } catch (e: ManglerTilgangException) {
+                    call.respond(HttpStatusCode.Forbidden)
+                }
             }
         }
     }
