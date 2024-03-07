@@ -594,12 +594,8 @@ class OppgaveTjeneste constructor(
     suspend fun endreReservasjonPåOppgave(resEndring: ReservasjonEndringDto): Reservasjon {
         val identTilInnloggetBruker = azureGraphService.hentIdentTilInnloggetBruker()
         val oppgavUUID = UUID.fromString(resEndring.oppgaveNøkkel.oppgaveEksternId)
-        if (resEndring.brukerIdent != null) {
-            val reservasjon = reservasjonRepository.hent(oppgavUUID)
-            saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
-            saksbehandlerRepository.leggTilReservasjon(resEndring.brukerIdent, reservasjon.oppgave)
-        }
-        return reservasjonRepository.lagre(oppgavUUID, true) {
+
+        val oppdatertReservasjon = reservasjonRepository.lagre(oppgavUUID, true) {
             if (it == null) {
                 throw IllegalArgumentException("Kan ikke oppdatere reservasjon som ikke finnes.")
             }
@@ -624,6 +620,12 @@ class OppgaveTjeneste constructor(
             }
             it
         }
+        if (resEndring.brukerIdent != null) {
+            val reservasjon = reservasjonRepository.hent(oppgavUUID)
+            saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
+            saksbehandlerRepository.leggTilReservasjon(resEndring.brukerIdent, reservasjon.oppgave)
+        }
+        return oppdatertReservasjon
     }
 
     suspend fun flyttReservasjon(uuid: UUID, ident: String, begrunnelse: String): Reservasjon {
@@ -631,10 +633,7 @@ class OppgaveTjeneste constructor(
             return reservasjonRepository.hent(uuid)
         }
         val hentIdentTilInnloggetBruker = azureGraphService.hentIdentTilInnloggetBruker()
-        val reservasjon = reservasjonRepository.hent(uuid)
-        saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
-        saksbehandlerRepository.leggTilReservasjon(ident, reservasjon.oppgave)
-        return reservasjonRepository.lagre(uuid, true) {
+        val oppdatertReservasjon = reservasjonRepository.lagre(uuid, true) {
             if (it!!.reservertTil == null) {
                 it.reservertTil = LocalDateTime.now().plusHours(24).forskyvReservasjonsDato()
             } else {
@@ -646,6 +645,11 @@ class OppgaveTjeneste constructor(
             it.begrunnelse = begrunnelse
             it
         }
+        val reservasjon = reservasjonRepository.hent(uuid)
+        saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
+        saksbehandlerRepository.leggTilReservasjon(ident, reservasjon.oppgave)
+
+        return oppdatertReservasjon
     }
 
     suspend fun hentSisteBehandledeOppgaver(): List<BehandletOppgave> {
