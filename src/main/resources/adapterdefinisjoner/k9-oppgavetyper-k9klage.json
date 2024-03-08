@@ -128,7 +128,7 @@
         {
           "id": "utenlandstilsnitt",
           "visPåOppgave": true,
-          "påkrevd": true,
+          "påkrevd": false,
           "defaultverdi": false
         },
         {
