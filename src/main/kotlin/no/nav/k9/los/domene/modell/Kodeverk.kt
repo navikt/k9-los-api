@@ -171,7 +171,6 @@ enum class BehandlingType(override val kode: String, override val navn: String, 
 
     //gjelder punsj
     PAPIRSØKNAD("PAPIRSØKNAD", "Papirsøknad", "PUNSJ_INNSENDING_TYPE"),
-    DIGITAL_SØKNAD("DIGITAL_SØKNAD", "Digital søknad", "PUNSJ_INNSENDING_TYPE"),
     PAPIRETTERSENDELSE("PAPIRETTERSENDELSE", "Papirettersendelse", "PUNSJ_INNSENDING_TYPE"),
     PAPIRINNTEKTSOPPLYSNINGER("PAPIRINNTEKTSOPPLYSNINGER", "Papirinntektsopplysninger", "PUNSJ_INNSENDING_TYPE"),
     DIGITAL_ETTERSENDELSE("DIGITAL_ETTERSENDELSE", "Digital ettersendelse", "PUNSJ_INNSENDING_TYPE"),

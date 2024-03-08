@@ -1,17 +1,32 @@
 package no.nav.k9.los.tjenester.avdelingsleder
 
+import no.nav.k9.los.Configuration
+import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.domene.lager.oppgave.Reservasjon
-import no.nav.k9.los.domene.modell.*
+import no.nav.k9.los.domene.modell.Enhet
+import no.nav.k9.los.domene.modell.FagsakYtelseType
+import no.nav.k9.los.domene.modell.Intervall
+import no.nav.k9.los.domene.modell.KøKriterierType
+import no.nav.k9.los.domene.modell.KøSortering
+import no.nav.k9.los.domene.modell.OppgaveKø
+import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.domene.repository.OppgaveKøRepository
 import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.abac.IPepClient
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Dto
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
-import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.*
+import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
+import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.BehandlingsTypeDto
+import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.IdDto
+import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.KriteriumDto
+import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.KøSorteringDto
+import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.OppgavekøNavnDto
+import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.SaksbehandlerOppgavekoDto
+import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.SkjermetDto
+import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.SorteringDatoDto
+import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.YtelsesTypeDto
+import no.nav.k9.los.tjenester.avdelingsleder.reservasjoner.ReservasjonDto
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.ReservasjonV3DtoBuilder
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.OppgavekøDto
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.SaksbehandlerDto
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.SorteringDto
@@ -25,8 +40,7 @@ class AvdelingslederTjeneste(
     private val reservasjonRepository: ReservasjonRepository,
     private val oppgaveRepository: OppgaveRepository,
     private val pepClient: IPepClient,
-    private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
-    private val reservasjonV3DtoBuilder: ReservasjonV3DtoBuilder,
+    private val configuration: Configuration
 ) {
     suspend fun hentOppgaveKø(uuid: UUID): OppgavekøDto {
         val oppgaveKø = oppgaveKøRepository.hentOppgavekø(uuid, ignorerSkjerming = false)
@@ -98,7 +112,7 @@ class AvdelingslederTjeneste(
         var saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(epostDto.epost)
         if (saksbehandler == null) {
             saksbehandler = Saksbehandler(
-                null, null, null, epostDto.epost, mutableSetOf(), null
+                null, null, epostDto.epost, mutableSetOf(), null
             )
             saksbehandlerRepository.addSaksbehandler(saksbehandler)
         }
@@ -254,7 +268,6 @@ class AvdelingslederTjeneste(
         when (kriteriumDto.kriterierType) {
             KøKriterierType.FEILUTBETALING ->
                 oppgaveKø.filtreringFeilutbetaling = Intervall(kriteriumDto.fom?.toLong(), kriteriumDto.tom?.toLong())
-
             KøKriterierType.MERKNADTYPE -> oppgaveKø.merknadKoder = kriteriumDto.koder ?: emptyList()
             KøKriterierType.OPPGAVEKODE -> oppgaveKø.oppgaveKoder = kriteriumDto.koder ?: emptyList()
             KøKriterierType.NYE_KRAV -> oppgaveKø.nyeKrav = kriteriumDto.inkluder
@@ -279,13 +292,11 @@ class AvdelingslederTjeneste(
         if (!saksbehandlereDto.all { it.id == saksbehandlerKøId }) {
             throw IllegalArgumentException("Støtter ikke å legge til eller fjerne saksbehandlere fra flere køer samtidig")
         }
-        val saksbehandlereSomSkalLeggesTil = saksbehandlereDto.filter { it.checked }
-            .map { saksbehandlerRepository.finnSaksbehandlerMedEpost(it.epost)!! }
-        val saksbehandlereSomSkalFjernes = saksbehandlereDto.filter { !it.checked }
-            .map { saksbehandlerRepository.finnSaksbehandlerMedEpost(it.epost)!! }
+        val saksbehandlereSomSkalLeggesTil = saksbehandlereDto.filter { it.checked }.map { saksbehandlerRepository.finnSaksbehandlerMedEpost(it.epost)!! }
+        val saksbehandlereSomSkalFjernes = saksbehandlereDto.filter { !it.checked }.map { saksbehandlerRepository.finnSaksbehandlerMedEpost(it.epost)!! }
 
         oppgaveKøRepository.lagre(UUID.fromString(saksbehandlerKøId)) { oppgaveKø ->
-            saksbehandlereSomSkalLeggesTil.forEach { nySaksbehandler ->
+            saksbehandlereSomSkalLeggesTil.forEach{ nySaksbehandler ->
                 oppgaveKø!!.saksbehandlere.find { it.epost == nySaksbehandler.epost }
                     ?: oppgaveKø.saksbehandlere.add(nySaksbehandler)
             }
@@ -313,12 +324,40 @@ class AvdelingslederTjeneste(
         }
     }
 
-    suspend fun hentAlleAktiveReservasjonerV3(): List<ReservasjonV3Dto> {
-        return reservasjonV3Tjeneste.hentAlleAktiveReservasjoner().map { reservasjon ->
-            val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(reservasjon.reservertAv)
-            reservasjonV3DtoBuilder.byggReservasjonV3Dto(reservasjon, saksbehandler)
+    suspend fun hentAlleReservasjoner(): List<ReservasjonDto> {
+        val list = mutableListOf<ReservasjonDto>()
+        for (saksbehandler in saksbehandlerRepository.hentAlleSaksbehandlere()) {
+            for (uuid in saksbehandler.reservasjoner) {
+
+                val oppgave = oppgaveRepository.hent(uuid)
+
+                if (configuration.koinProfile() != KoinProfile.LOCAL &&
+                    !pepClient.harTilgangTilOppgave(oppgave)
+                ) {
+                    continue
+                }
+                val reservasjon = reservasjonRepository.hent(uuid)
+                if (reservasjon.reservertTil == null) {
+                    continue
+                }
+                list.add(
+                    ReservasjonDto(
+                        reservertAvUid = saksbehandler.brukerIdent ?: "",
+                        reservertAvNavn = saksbehandler.navn ?: "",
+                        reservertTilTidspunkt = reservasjon.reservertTil!!,
+                        oppgaveId = reservasjon.oppgave,
+                        saksnummer = oppgave.fagsakSaksnummer,
+                        behandlingType = oppgave.behandlingType,
+                        tilBeslutter = oppgave.tilBeslutter
+                    )
+                )
+
+            }
         }
+
+        return list.sortedWith(compareBy({ it.reservertAvNavn }, { it.reservertTilTidspunkt }))
     }
+
 
     suspend fun opphevReservasjon(uuid: UUID): Reservasjon {
         val reservasjon = reservasjonRepository.lagre(uuid, true) {
@@ -333,4 +372,6 @@ class AvdelingslederTjeneste(
         }
         return reservasjon
     }
+
+
 }

@@ -337,6 +337,14 @@ data class OppgaveKø(
     )
 }
 
+class Saksbehandler(
+    var brukerIdent: String?,
+    var navn: String?,
+    var epost: String,
+    var reservasjoner: MutableSet<UUID> = mutableSetOf(),
+    var enhet: String?
+)
+
 
 
 

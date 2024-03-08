@@ -57,11 +57,6 @@ class K9sakEventHandlerTest : AbstractK9LosIntegrationTest() {
                   "ansvarligBeslutterForTotrinn": null,
                   "ansvarligSaksbehandlerForTotrinn": null,
                   "ytelseTypeKode": "OMP",
-                  "søknadsårsaker": [
-                    {
-                      "kode": "KONFLIKT_MED_ARBEIDSGIVER",
-                      "navn": "Konflikt med arbeidsgiver"
-                    }],
                   "behandlingTypeKode": "BT-002",
                   "opprettetBehandling": "2020-03-31T06:33:48",
                   "aksjonspunktKoderMedStatusListe": {}
@@ -101,7 +96,6 @@ class K9sakEventHandlerTest : AbstractK9LosIntegrationTest() {
               "ytelseTypeKode": "PSB",
               "behandlingTypeKode": "BT-002",
               "opprettetBehandling": "2020-02-20T07:38:49",
-              "søknadsårsaker": ["KONFLIKT_MED_ARBEIDSGIVER"],
               "aksjonspunktKoderMedStatusListe": {
                 "7030": "OPPR"
               }

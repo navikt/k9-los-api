@@ -3,6 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.kodeverk
 import com.fasterxml.jackson.annotation.JsonCreator
 
 enum class BeskyttelseType(val kode: String, val beskrivelse: String) {
+    KODE6("KODE6", "Kode 6"),
     KODE7("KODE7", "Kode 7"),
     ORDINÆR("ORDINÆR", "Vanlig");
 

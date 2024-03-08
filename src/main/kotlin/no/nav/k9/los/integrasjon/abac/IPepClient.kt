@@ -1,7 +1,6 @@
 package no.nav.k9.los.integrasjon.abac
 
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
-import no.nav.k9.los.domene.modell.Saksbehandler
 
 interface IPepClient {
 
@@ -36,6 +35,4 @@ interface IPepClient {
     suspend fun erAktørKode7EllerEgenAnsatt(aktørid: String): Boolean
 
     suspend fun harTilgangTilOppgave(oppgave: Oppgave) : Boolean
-
-    suspend fun harTilgangTilÅReservereOppgave(oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave, bruker: Saksbehandler) : Boolean
 }

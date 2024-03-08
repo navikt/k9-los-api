@@ -34,11 +34,7 @@ internal class AvdelingslederTjenesteTest : AbstractK9LosIntegrationTest() {
     fun `test at vi lagrer flere saksbehandlere på en kø`() {
         runBlocking {
             val saksbehandlere = lagSaksbehandlere()
-            saksbehandlere.forEach {
-                saksbehandlerRepository.addSaksbehandler(it)
-            }
-
-
+            saksbehandlere.forEach { saksbehandlerRepository.addSaksbehandler(it) }
 
             val id = avdelingslederTjeneste.opprettOppgaveKø()
             val saksbehandlerDto = saksbehandlere.map {
@@ -127,7 +123,6 @@ internal class AvdelingslederTjenesteTest : AbstractK9LosIntegrationTest() {
     private fun lagSaksbehandlere(): List<Saksbehandler> {
         return listOf(
             Saksbehandler(
-                id = null,
                 brukerIdent = "ident1",
                 navn = "navn1",
                 epost = "epost1",
@@ -135,20 +130,11 @@ internal class AvdelingslederTjenesteTest : AbstractK9LosIntegrationTest() {
                 enhet = "enhet"
             ),
             Saksbehandler(
-                id = null,
                 brukerIdent = "ident2",
                 navn = "navn2",
                 epost = "epost2",
                 reservasjoner = mutableSetOf(),
                 enhet = "enhet"
-            ),
-            Saksbehandler(
-                id = null,
-                brukerIdent = null,
-                navn = null,
-                epost = "epost2",
-                reservasjoner = mutableSetOf(),
-                enhet = null
             )
         )
     }

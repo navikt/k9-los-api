@@ -1,8 +1,6 @@
 package no.nav.k9.los.tjenester.saksbehandler.oppgave
 
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
-
 data class FlyttReservasjonId(
-    val oppgaveNøkkel: OppgaveNøkkelDto,
+    val oppgaveId: String,
     val brukerIdent: String,
     val begrunnelse: String)

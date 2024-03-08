@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.kittinunf.fuel.coroutines.awaitStringResponseResult
@@ -12,7 +12,6 @@ import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import no.nav.k9.los.integrasjon.rest.NavHeaders
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.BehandlingMedFagsakDto
-import no.nav.k9.sak.kontrakt.produksjonsstyring.los.LosOpplysningerSomManglerIKlageDto
 import org.slf4j.LoggerFactory
 import java.util.*
 
@@ -30,53 +29,6 @@ class K9SakBerikerSystemKlient(
         var behandlingDto: BehandlingMedFagsakDto? = null
         runBlocking { behandlingDto = hent(behandlingUUID) }
         return behandlingDto
-    }
-
-    override fun berikKlage(påklagdBehandlingUUID: UUID): LosOpplysningerSomManglerIKlageDto? {
-        var losOpplysningerSomManglerIKlageDto: LosOpplysningerSomManglerIKlageDto?
-        runBlocking { losOpplysningerSomManglerIKlageDto = hentKlagedata(påklagdBehandlingUUID) }
-        return losOpplysningerSomManglerIKlageDto
-    }
-
-    suspend fun hentKlagedata(påklagdBehandlingUUID: UUID): LosOpplysningerSomManglerIKlageDto? {
-        val parameters = listOf(Pair("behandlingUuid", påklagdBehandlingUUID.toString()))
-        val httpRequest = "${url}/los/klage/berik"
-            .httpGet(parameters)
-            .header(
-                //OBS! Dette kalles bare med system token, og skal ikke brukes ved saksbehandler token
-                HttpHeaders.Authorization to cachedAccessTokenClient.getAccessToken(scopes).asAuthoriationHeader(),
-                HttpHeaders.Accept to "application/json",
-                HttpHeaders.ContentType to "application/json",
-                NavHeaders.CallId to UUID.randomUUID().toString()
-            )
-
-        val (_,response, result) = httpRequest.awaitStringResponseResult()
-        if (response.statusCode == HttpStatusCode.NoContent.value) {
-            return null
-        }
-        val abc = result.fold(
-            { success ->
-                success
-            },
-            { error ->
-                val feiltekst = error.response.body().asString("text/plain")
-                val ignorerManglendeTilgangPgaUtdatertTestdata = configuration.koinProfile == KoinProfile.PREPROD
-                    && feiltekst.contains("MANGLER_TILGANG_FEIL")
-
-                log.error(
-                    (if(ignorerManglendeTilgangPgaUtdatertTestdata) "IGNORERER I DEV: " else "") +
-                        "Error response = '$feiltekst' fra '${httpRequest.url}'"
-                )
-                log.error(error.toString())
-
-                if (ignorerManglendeTilgangPgaUtdatertTestdata) {
-                    return null
-                } else throw IllegalStateException("Feil ved henting av behandling fra k9-sak")
-
-            }
-        )
-
-        return objectMapper().readValue<LosOpplysningerSomManglerIKlageDto>(abc)
     }
 
     suspend fun hent(behandlingUUID: UUID): BehandlingMedFagsakDto? {

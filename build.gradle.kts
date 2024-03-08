@@ -140,7 +140,7 @@ tasks {
     }
 
     withType<Wrapper> {
-        gradleVersion = "8.6"
+        gradleVersion = "8.4"
     }
 
     withType<Test> {

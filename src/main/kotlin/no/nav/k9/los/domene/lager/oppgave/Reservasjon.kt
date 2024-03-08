@@ -5,8 +5,8 @@ import java.util.*
 
 data class Reservasjon(
     var reservertTil: LocalDateTime?,
-    var reservertAv: String, //ident
-    var flyttetAv: String?, //ident
+    var reservertAv: String,
+    var flyttetAv: String?,
     var flyttetTidspunkt: LocalDateTime?,
     var begrunnelse: String?,
     val oppgave: UUID

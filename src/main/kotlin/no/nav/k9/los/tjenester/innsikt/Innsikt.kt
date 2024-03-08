@@ -179,7 +179,7 @@ fun Route.innsiktGrensesnitt() {
 
     }
 
-    get("/oppgaveko") {
+    get("oppgaveko") {
         call.respondHtml {
             val køIder = call.request.queryParameters["id"]?.split(",")
             head {

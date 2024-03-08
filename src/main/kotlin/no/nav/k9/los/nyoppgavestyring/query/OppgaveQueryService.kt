@@ -7,7 +7,6 @@ import kotliquery.using
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.rest.CoroutineRequestContext
 import no.nav.k9.los.nyoppgavestyring.pep.PepCacheService
-import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
@@ -18,6 +17,7 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.tjenester.saksbehandler.IIdToken
 import org.koin.java.KoinJavaComponent.inject
+import java.time.Duration
 import java.lang.RuntimeException
 import java.time.LocalDateTime
 import javax.sql.DataSource
@@ -29,29 +29,12 @@ class OppgaveQueryService() {
     val pepClient by inject<IPepClient>(IPepClient::class.java)
     val pepCacheService by inject<PepCacheService>(PepCacheService::class.java)
 
-
-    fun queryForAntall(query: OppgaveQuery): Long {
-        return using(sessionOf(datasource)) { it ->
-            it.transaction { tx -> queryForAntall(tx, query) }
-        }
-    }
-
-    fun queryForAntall(tx: TransactionalSession, query: OppgaveQuery): Long {
-        val now = LocalDateTime.now()
-        return oppgaveQueryRepository.queryForAntall(tx, query, now)
-    }
-
     fun hentAlleFelter(): Oppgavefelter {
         return oppgaveQueryRepository.hentAlleFelter()
     }
 
     fun queryForOppgaveId(oppgaveQuery: OppgaveQuery): List<Long> {
         return oppgaveQueryRepository.query(oppgaveQuery)
-    }
-
-    fun queryForOppgaveEksternId(oppgaveQuery: OppgaveQuery): List<EksternOppgaveId> {
-        val now = LocalDateTime.now()
-        return oppgaveQueryRepository.queryForEksternId(oppgaveQuery, now)
     }
 
     fun queryToFile(tx: TransactionalSession, oppgaveQuery: OppgaveQuery, idToken: IIdToken): String {

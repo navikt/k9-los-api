@@ -290,7 +290,7 @@ class K9SakModellTest {
 }
 
 
-class K9SakModellReservasjonTestV3 {
+class K9SakModellReservasjonTest {
 
     private val AVBR = AksjonspunktStatus.AVBRUTT.kode
     private val OPPR = AksjonspunktStatus.OPPRETTET.kode

@@ -10,8 +10,6 @@ import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import org.koin.ktor.ext.inject
 
-
-//TODO Er det greit at denne ikke finner klageoppgaver frem til ferdig overgang til V3?
 fun Route.NokkeltallApis() {
     val nokkeltallTjeneste by inject<NokkeltallTjeneste>()
     val oppgaveTjeneste by inject<OppgaveTjeneste>()

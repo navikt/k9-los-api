@@ -29,14 +29,14 @@ class K9KlageOppgaveTilDVHMapper {
             vedtaksDato = oppgave.hentVerdi("vedtaksDato")
                 ?.let { LocalDate.parse(it) },
             relatertBehandlingId = oppgave.hentVerdi("påklagdBehandlingUuid"),
-            vedtakId = oppgave.hentVerdi("vedtakId"),
+            vedtakId = oppgave.hentVerdi("vedtakId"), //TODO: callback mot K9? evt vedtakstopic, YtelseV1.vedtakReferanse
             saksnummer = oppgave.hentVerdi("saksnummer"),
             behandlingType = oppgave.hentVerdi("behandlingTypekode")
                 ?.let { BehandlingType.fraKode(it).kode },
             behandlingStatus = utledBehandlingStatus(oppgave),
             resultat = oppgave.hentVerdi("resultattype"),
             resultatBegrunnelse = null, //TODO: callback mot K9?
-            utenlandstilsnitt = oppgave.hentVerdi("utenlandstilsnitt")?.let { it.toBoolean() },
+            utenlandstilsnitt = null, //Ikke i bruk i k9-klage
             behandlingTypeBeskrivelse = BehandlingType.fraKode(oppgave.hentVerdi("behandlingTypekode")!!).navn,
             behandlingStatusBeskrivelse = BehandlingStatus.fraKode(oppgave.hentVerdi("behandlingsstatus")).navn,
             resultatBeskrivelse = BehandlingResultatType.fraKode(oppgave.hentVerdi("resultattype")).navn,
@@ -59,7 +59,7 @@ class K9KlageOppgaveTilDVHMapper {
     }
 
     private fun utledBehandlingStatus(oppgave: Oppgave): String {
-        return if (oppgave.hentListeverdi("aktivtAksjonspunkt").contains(EventTilDtoMapper.KLAGE_PREFIX + AksjonspunktDefinisjon.AUTO_OVERFØRT_NK.kode)) {
+        return if (oppgave.hentListeverdi("aktivtAksjonspunkt").contains(EventTilDtoMapper.AKSJONSPUNKT_PREFIX + AksjonspunktDefinisjon.AUTO_OVERFØRT_NK.kode)) {
             "OVERFORT_KLAGE_ANKE"
         } else {
             BehandlingStatus.fraKode(oppgave.hentVerdi("behandlingsstatus")).kode

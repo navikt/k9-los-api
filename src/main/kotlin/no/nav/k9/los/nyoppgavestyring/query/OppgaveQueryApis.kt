@@ -32,16 +32,6 @@ fun Route.OppgaveQueryApis() {
         }
     }
 
-    @Location("/query/antall")
-    class queryOppgaveAntall
-
-    post { _: queryOppgave ->
-        val oppgaveQuery = call.receive<OppgaveQuery>()
-        requestContextService.withRequestContext(call) {
-            call.respond(oppgaveQueryService.queryForAntall(oppgaveQuery))
-        }
-    }
-
     @Location("/validate")
     class validateOppgave
 

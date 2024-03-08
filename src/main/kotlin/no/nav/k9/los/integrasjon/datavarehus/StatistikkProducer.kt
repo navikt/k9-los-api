@@ -87,7 +87,7 @@ class StatistikkProducer constructor(
             if (exception != null) {
                 log.error("", exception)
             } else {
-                log.trace("Melding sendt OK til k9-statistikk med offset '${metadata.offset()}' til partition '${metadata.partition()}' topic ${metadata.topic()}")
+                log.info("Melding sendt OK til k9-statistikk med offset '${metadata.offset()}' til partition '${metadata.partition()}' topic ${metadata.topic()}")
             }
         }.get()
 
@@ -111,7 +111,7 @@ class StatistikkProducer constructor(
             if (exception != null) {
                 log.error("", exception)
             } else {
-                log.trace("Melding sendt OK til k9-statistikk med offset '${metadata.offset()}' til partition '${metadata.partition()}' topic ${metadata.topic()}")
+                log.info("Melding sendt OK til k9-statistikk med offset '${metadata.offset()}' til partition '${metadata.partition()}' topic ${metadata.topic()}")
             }
         }.get()
     }
