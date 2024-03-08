@@ -5,8 +5,6 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
-import kotliquery.sessionOf
-import kotliquery.using
 import no.nav.k9.los.*
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
@@ -183,7 +181,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             )
         ))
         coEvery { pepClient.harBasisTilgang() } returns true
-        coEvery { pepClient.harTilgangTilOppgave(any()) } returns true
+        coEvery { pepClient.harTilgangTilOppgaveV3(any()) } returns true
 
         var oppgaver = oppgaveTjeneste.hentNesteOppgaverIKø(oppgaveko.id)
         assert(oppgaver.size == 1)
@@ -279,7 +277,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
 
         coEvery {  azureGraphService.hentIdentTilInnloggetBruker() } returns "123"
         every { config.koinProfile() } returns KoinProfile.LOCAL
-        coEvery { pepClient.harTilgangTilOppgave(any()) } returns true
+        coEvery { pepClient.harTilgangTilOppgaveV3(any()) } returns true
         coEvery { pdlService.person(any()) } returns PersonPdlResponse(false, PersonPdl(data = PersonPdl.Data(
             hentPerson = PersonPdl.Data.HentPerson(
                 folkeregisteridentifikator = listOf(PersonPdl.Data.HentPerson.Folkeregisteridentifikator("12345678901")),
@@ -494,7 +492,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
         }
         every { config.koinProfile() } returns KoinProfile.LOCAL
         coEvery { pepClient.harBasisTilgang() } returns true
-        coEvery { pepClient.harTilgangTilOppgave(any()) } returns true
+        coEvery { pepClient.harTilgangTilOppgaveV3(any()) } returns true
         coEvery { pepClient.harTilgangTilReservingAvOppgaver() } returns true
         coEvery { pdlService.person(any()) } returns PersonPdlResponse(false, PersonPdl(
             data = PersonPdl.Data(

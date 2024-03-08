@@ -7,6 +7,7 @@ import com.github.kittinunf.fuel.httpPost
 import com.google.gson.GsonBuilder
 import io.ktor.http.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.ktor.metrics.Operation
@@ -217,6 +218,14 @@ class PepClient constructor(
             fagsakNummer = oppgave.fagsakSaksnummer,
             aktørid = oppgave.aktorId
         )
+    }
+
+    override fun harTilgangTilOppgaveV3(oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave): Boolean {
+         if (oppgave.hentVerdi("saksnummer") == null) {
+             return true
+         } else return runBlocking {
+             harTilgangTilLesSak(oppgave.hentVerdi("saksnummer")!!, oppgave.hentVerdi("aktorId")!!)
+         }
     }
 
     override suspend fun harTilgangTilÅReservereOppgave(oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave, saksbehandler: Saksbehandler) : Boolean {
