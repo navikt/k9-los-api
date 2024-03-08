@@ -7,39 +7,47 @@ import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import kotlin.test.assertEquals
 
 class OppgavetypeTest {
-    private val område = Område(eksternId = "K9")
+    private val område = Område(eksternId = "OppgavetypeTest")
 
     @Test
     fun `test at det ikke er mulig å opprette oppgavetyper på tvers av områder`() {
         val innkommendeOppgavetyper = lagOppgavetyper()
 
-        assertThrows<IllegalStateException>("Kan ikke sammenligne oppgavetyper på tvers av områder") {
-            Oppgavetyper(
-                område = Område(eksternId = "ikke-k9"),
-                emptySet()
-            ).finnForskjell(innkommendeOppgavetyper)
-        }
+        val exception =
+            assertThrows<IllegalStateException> {
+                Oppgavetyper(
+                    område = Område(eksternId = "Annet Område"),
+                    emptySet()
+                ).finnForskjell(innkommendeOppgavetyper)
+            }
+
+        assertEquals("Kan ikke sammenligne oppgavetyper på tvers av områder", exception.message!!)
     }
 
     @Test
     fun `test at det ikke er mulig å opprette oppgavetyper på tvers av definisjonskilder`() {
         val innkommendeOppgavetyper = lagOppgavetyper()
 
-        assertThrows<IllegalStateException>("Kan ikke sammenligne oppgavetyper på tvers av definisjonskilder") {
-            Oppgavetyper(
-                område = område,
-                setOf(
-                    Oppgavetype(
-                        eksternId = "test",
-                        område = område,
-                        definisjonskilde = "ikke-k9-sak-til-los",
-                        oppgavefelter = setOf()
+        val exception =
+            assertThrows<IllegalStateException> {
+                Oppgavetyper(
+                    område = område,
+                    setOf(
+                        Oppgavetype(
+                            eksternId = "test",
+                            område = område,
+                            definisjonskilde = "ikke-k9-sak-til-los",
+                            oppgavebehandlingsUrlTemplate = "\${baseUrl}/fagsak/\${K9.saksnummer}/behandling/\${K9.behandlingUuid}?fakta=default&punkt=default",
+                            oppgavefelter = setOf()
+                        )
                     )
-                )
-            ).finnForskjell(innkommendeOppgavetyper)
-        }
+                ).finnForskjell(innkommendeOppgavetyper)
+            }
+
+        assertEquals("Kan ikke sammenligne oppgavetyper på tvers av definisjonskilder", exception.message!!)
     }
 
     @Test
@@ -65,6 +73,7 @@ class OppgavetypeTest {
                     eksternId = "aksjonspunkt",
                     område = område,
                     definisjonskilde = "k9-sak-til-los",
+                    oppgavebehandlingsUrlTemplate = "\${baseUrl}/fagsak/\${K9.saksnummer}/behandling/\${K9.behandlingUuid}?fakta=default&punkt=default",
                     oppgavefelter = setOf(
                         Oppgavefelt(
                             feltDefinisjon =
@@ -121,6 +130,7 @@ class OppgavetypeTest {
                     eksternId = "aksjonspunkt",
                     område = område,
                     definisjonskilde = "k9-sak-til-los",
+                    oppgavebehandlingsUrlTemplate = "\${baseUrl}/fagsak/\${K9.saksnummer}/behandling/\${K9.behandlingUuid}?fakta=default&punkt=default",
                     oppgavefelter = setOf(
                         Oppgavefelt(
                             feltDefinisjon = Feltdefinisjon(
@@ -179,6 +189,7 @@ class OppgavetypeTest {
                     eksternId = "test",
                     område = område,
                     definisjonskilde = "k9-sak-til-los",
+                    oppgavebehandlingsUrlTemplate = "\${baseUrl}/fagsak/\${K9.saksnummer}/behandling/\${K9.behandlingUuid}?fakta=default&punkt=default",
                     oppgavefelter = setOf(
                         Oppgavefelt(
                             feltDefinisjon = Feltdefinisjon(
@@ -217,6 +228,7 @@ class OppgavetypeTest {
                     eksternId = "aksjonspunkt",
                     område = område,
                     definisjonskilde = "k9-sak-til-los",
+                    oppgavebehandlingsUrlTemplate = "\${baseUrl}/fagsak/\${K9.saksnummer}/behandling/\${K9.behandlingUuid}?fakta=default&punkt=default",
                     oppgavefelter = setOf(
                         Oppgavefelt(
                             feltDefinisjon = Feltdefinisjon(
@@ -275,6 +287,7 @@ class OppgavetypeTest {
                     eksternId = "test",
                     område = område,
                     definisjonskilde = "k9-sak-til-los",
+                    oppgavebehandlingsUrlTemplate = "\${baseUrl}/fagsak/\${K9.saksnummer}/behandling/\${K9.behandlingUuid}?fakta=default&punkt=default",
                     oppgavefelter = setOf(
                         Oppgavefelt(
                             feltDefinisjon = Feltdefinisjon(

@@ -34,7 +34,7 @@ internal class OppgaveKøTest {
             Enhet.NASJONAL,
             null,
             null,
-            mutableListOf(Saksbehandler("OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn)),
+            mutableListOf(Saksbehandler(id = null, "OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn)),
             false,
             mutableListOf()
         )
@@ -91,7 +91,7 @@ internal class OppgaveKøTest {
             Enhet.NASJONAL,
             null,
             null,
-            mutableListOf(Saksbehandler("OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn)),
+            mutableListOf(Saksbehandler(null,"OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn)),
             false,
             mutableListOf()
         )
@@ -160,7 +160,7 @@ internal class OppgaveKøTest {
             Enhet.NASJONAL,
             null,
             null,
-            mutableListOf(Saksbehandler("OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn)),
+            mutableListOf(Saksbehandler(null, "OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn)),
             false,
             mutableListOf()
         )
@@ -223,7 +223,7 @@ internal class OppgaveKøTest {
             Enhet.NASJONAL,
             null,
             null,
-            mutableListOf(Saksbehandler("OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn)),
+            mutableListOf(Saksbehandler(null, "OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn)),
             false,
             mutableListOf()
         )
@@ -291,7 +291,7 @@ internal class OppgaveKøTest {
             Enhet.NASJONAL,
             null,
             null,
-            mutableListOf(Saksbehandler("OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn)),
+            mutableListOf(Saksbehandler(null, "OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn)),
             false,
             mutableListOf()
         )
@@ -358,7 +358,7 @@ internal class OppgaveKøTest {
             Enhet.NASJONAL,
             null,
             null,
-            mutableListOf(Saksbehandler("OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn)),
+            mutableListOf(Saksbehandler(null,"OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn)),
             false,
             mutableListOf()
         )
@@ -497,7 +497,7 @@ internal class OppgaveKøTest {
             Enhet.NASJONAL,
             køFom,
             køTom,
-            mutableListOf(Saksbehandler("OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn)),
+            mutableListOf(Saksbehandler(null, "OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn)),
             false,
             mutableListOf(),
             filtreringFeilutbetaling = null
@@ -758,7 +758,7 @@ internal class OppgaveKøTest {
         Enhet.NASJONAL,
         null,
         null,
-        mutableListOf(Saksbehandler("OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn)),
+        mutableListOf(Saksbehandler(null, "OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn)),
         false,
         mutableListOf(),
         filtreringFeilutbetaling = feilutbetaling,

@@ -18,11 +18,13 @@ class SqlOppgaveQuery(
     val felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
     val now: LocalDateTime
 ) {
+    private var selectPrefix = """
+                SELECT o.id as id, o.kildeomrade as kildeomrade, o.ekstern_id as ekstern_id 
+                """.trimIndent()
 
     private val oppgavefelterKodeOgType = felter.mapValues { Datatype.fraKode(it.value.oppgavefelt.tolkes_som) }
 
     private var query = """
-                SELECT o.id as id
                 FROM Oppgave_v3 o INNER JOIN Oppgavetype ot ON (
                     ot.id = o.oppgavetype_id
                   ) INNER JOIN Omrade oppgave_omrade ON (
@@ -45,7 +47,13 @@ class SqlOppgaveQuery(
     private var limit: Int = -1;
 
     fun getQuery(): String {
-        return query + orderBySql
+        return selectPrefix + query + orderBySql
+    }
+
+    fun medAntallSomResultat() {
+        selectPrefix = """
+            SELECT count(*) as antall 
+        """.trimIndent()
     }
 
     fun getParams(): Map<String, Any?> {
@@ -95,9 +103,8 @@ class SqlOppgaveQuery(
             }
             "beskyttelse" -> {
                 when(feltverdi) {
-                    BeskyttelseType.KODE6.kode -> query += "${combineOperator.sql} opc.kode6 is true "
                     BeskyttelseType.KODE7.kode -> query += "${combineOperator.sql} opc.kode7 is true "
-                    BeskyttelseType.ORDINÆR.kode -> {
+                    else -> {
                         query += "${combineOperator.sql} opc.kode6 is not true AND opc.kode7 is not true "
                     }
                 }

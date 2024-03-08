@@ -9,13 +9,15 @@ class Oppgavetype(
     val eksternId: String,
     val område: Område,
     val definisjonskilde: String,
-    val oppgavefelter: Set<Oppgavefelt>
+    val oppgavebehandlingsUrlTemplate: String?,
+    val oppgavefelter: Set<Oppgavefelt>,
 ) {
 
-    constructor(dto: OppgavetypeDto, definisjonskilde: String, område: Område, feltdefinisjoner: Feltdefinisjoner) : this(
+    constructor(dto: OppgavetypeDto, definisjonskilde: String, område: Område, oppgavebehandlingsUrlTemplate: String, feltdefinisjoner: Feltdefinisjoner) : this(
         eksternId = dto.id,
         område = område,
         definisjonskilde = definisjonskilde,
+        oppgavebehandlingsUrlTemplate = oppgavebehandlingsUrlTemplate,
         oppgavefelter = dto.oppgavefelter.map { innkommendeFeltdefinisjon ->
             Oppgavefelt(
                 feltDefinisjon = feltdefinisjoner.feltdefinisjoner.find { eksisterendeFeltdefinisjon ->
