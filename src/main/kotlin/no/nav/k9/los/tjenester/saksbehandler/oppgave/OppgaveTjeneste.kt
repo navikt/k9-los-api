@@ -16,6 +16,7 @@ import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
 import no.nav.k9.los.integrasjon.pdl.*
 import no.nav.k9.los.integrasjon.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverHistorikk
 import no.nav.k9.los.tjenester.fagsak.PersonDto
 import no.nav.k9.los.tjenester.mock.AksjonspunkterMock
@@ -406,13 +407,7 @@ class OppgaveTjeneste constructor(
         }.map { oppgave ->
             tilOppgaveDto(
                 oppgave = oppgave,
-                reservasjon = if (reservasjonRepository.finnes(oppgave.eksternId)
-                    && reservasjonRepository.hent(oppgave.eksternId).erAktiv()
-                ) {
-                    reservasjonRepository.hent(oppgave.eksternId)
-                } else {
-                    null
-                },
+                reservasjon = reservasjonOversetter.hentAktivReservasjonFraGammelKontekst(oppgave),
                 merknad = hentAktivMerknad(oppgave.eksternId.toString())
             )
         }.toMutableList()
@@ -441,18 +436,21 @@ class OppgaveTjeneste constructor(
         return azureGraphService.hentIdentTilInnloggetBruker() == ident
     }
 
-    private suspend fun tilOppgaveDto(oppgave: Oppgave, reservasjon: Reservasjon?, merknad: MerknadDto?): OppgaveDto {
+    private suspend fun tilOppgaveDto(oppgave: Oppgave, reservasjon: ReservasjonV3?, merknad: MerknadDto?): OppgaveDto {
         val oppgaveStatus =
-            if (reservasjon != null && (!reservasjon.erAktiv()) || reservasjon == null) {
+            if (reservasjon == null) {
                 OppgaveStatusDto(false, null, false, null, null, null)
             } else {
-                val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(reservasjon.reservertAv)
+                val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(reservasjon.reservertAv)
+                val innloggetBruker  =
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(azureGraphService.hentIdentTilInnloggetBruker())!!
+
                 OppgaveStatusDto(
                     erReservert = true,
-                    reservertTilTidspunkt = reservasjon.reservertTil,
-                    erReservertAvInnloggetBruker = reservertAvMeg(reservasjon.reservertAv),
-                    reservertAv = reservasjon.reservertAv,
-                    reservertAvNavn = saksbehandler?.navn,
+                    reservertTilTidspunkt = reservasjon.gyldigTil,
+                    erReservertAvInnloggetBruker = reservertAv.id == innloggetBruker.id,
+                    reservertAv = reservertAv.brukerIdent,
+                    reservertAvNavn = reservertAv.navn,
                     flyttetReservasjon = null
                 )
             }
@@ -506,13 +504,8 @@ class OppgaveTjeneste constructor(
         return saksnummere.flatMap { oppgaveRepository.hentOppgaverMedSaksnummer(it) }
             .map { oppgave ->
                 tilOppgaveDto(
-                    oppgave = oppgave, reservasjon = if (reservasjonRepository.finnes(oppgave.eksternId)
-                        && reservasjonRepository.hent(oppgave.eksternId).erAktiv()
-                    ) {
-                        reservasjonRepository.hent(oppgave.eksternId)
-                    } else {
-                        null
-                    },
+                    oppgave = oppgave,
+                    reservasjon = reservasjonOversetter.hentAktivReservasjonFraGammelKontekst(oppgave),
                     merknad = hentAktivMerknad(oppgave.eksternId.toString())
                 )
             }.toList()

@@ -5,12 +5,12 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
-import no.nav.k9.los.AbstractPostgresTest
-import no.nav.k9.los.Configuration
-import no.nav.k9.los.KoinProfile
-import no.nav.k9.los.buildAndTestConfig
+import kotliquery.sessionOf
+import kotliquery.using
+import no.nav.k9.los.*
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
+import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.modell.Aksjonspunkter
 import no.nav.k9.los.domene.modell.BehandlingStatus
 import no.nav.k9.los.domene.modell.BehandlingType
@@ -31,6 +31,11 @@ import no.nav.k9.los.integrasjon.pdl.PdlService
 import no.nav.k9.los.integrasjon.pdl.PersonPdl
 import no.nav.k9.los.integrasjon.pdl.PersonPdlResponse
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.tjenester.sse.SseEvent
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -264,6 +269,13 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false
         )
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
+        get<K9SakTilLosAdapterTjeneste>()
+        val oppgaveV3Tjeneste = get<OppgaveV3Tjeneste>()
+
+        val transactionalManager = get<TransactionalManager>()
+        transactionalManager.transaction { tx ->
+            oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(lagOppgaveDto(oppgave1.eksternId.toString()), tx)
+        }
 
         coEvery {  azureGraphService.hentIdentTilInnloggetBruker() } returns "123"
         every { config.koinProfile() } returns KoinProfile.LOCAL
@@ -287,6 +299,97 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             val fagsaker = oppgaveTjeneste.søkFagsaker("Yz647")
             assert(fagsaker.oppgaver.isNotEmpty())
         }
+    }
+
+    private fun lagOppgaveDto(eksternId: String): OppgaveDto {
+        return OppgaveDto(
+            id = eksternId,
+            versjon = LocalDateTime.now().toString(),
+            område = Område(eksternId = "K9").eksternId,
+            kildeområde = "k9-sak-til-los",
+            type = "k9sak",
+            status = "AAPEN",
+            endretTidspunkt = LocalDateTime.now(),
+            reservasjonsnøkkel = "test",
+            feltverdier = listOf(
+                OppgaveFeltverdiDto(
+                    nøkkel = "aksjonspunkt",
+                    verdi = "9001"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "aktorId",
+                    verdi = "SKAL IKKE LOGGES"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "utenlandstilsnitt",
+                    verdi = "false"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "resultattype",
+                    verdi = "test"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "behandlingsstatus",
+                    verdi = "test"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "behandlingTypekode",
+                    verdi = "test"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "totrinnskontroll",
+                    verdi = "false"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "ytelsestype",
+                    verdi = "test"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "saksnummer",
+                    verdi = "false"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "hastesak",
+                    verdi = "false"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "behandlingUuid",
+                    verdi = "false"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "fagsystem",
+                    verdi = "false"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "avventerAnnet",
+                    verdi = "false"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "avventerSaksbehandler",
+                    verdi = "false"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "avventerAnnetIkkeSaksbehandlingstid",
+                    verdi = "false"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "avventerArbeidsgiver",
+                    verdi = "false"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "helautomatiskBehandlet",
+                    verdi = "false"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "avventerTekniskFeil",
+                    verdi = "false"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "avventerSøker",
+                    verdi = "false"
+                ),
+            )
+        )
     }
 
     @Test

@@ -6,11 +6,16 @@ import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
+import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.modell.*
 import no.nav.k9.los.domene.repository.OppgaveKøRepository
 import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
 import org.junit.jupiter.api.Test
@@ -57,6 +62,20 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
             avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false
         )
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
+
+        val saksbehandlerRepository = get<SaksbehandlerRepository>()
+        runBlocking {
+            saksbehandlerRepository.addSaksbehandler(Saksbehandler(123, "saksbehandler@nav.no", "test", "saksbehandler@nav.no", mutableSetOf(), "test"))
+        }
+
+        get<K9SakTilLosAdapterTjeneste>()
+        val oppgaveV3Tjeneste = get<OppgaveV3Tjeneste>()
+
+        val transactionalManager = get<TransactionalManager>()
+        transactionalManager.transaction { tx ->
+            oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(lagOppgaveDto(oppgave1.eksternId.toString()), tx)
+        }
+
 
         runBlocking {
             val fagsaker = oppgaveTjeneste.søkFagsaker("Yz647")
@@ -1807,7 +1826,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
             forsteStonadsdag = LocalDate.now().plusDays(6),
             behandlingStatus = BehandlingStatus.OPPRETTET,
             behandlingType = BehandlingType.FORSTEGANGSSOKNAD,
-            fagsakYtelseType = FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
+            fagsakYtelseType = FagsakYtelseType.FRISINN,
             aktiv = true,
             system = "K9SAK",
             oppgaveAvsluttet = null,
@@ -1836,7 +1855,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
             forsteStonadsdag = LocalDate.now().plusDays(6),
             behandlingStatus = BehandlingStatus.OPPRETTET,
             behandlingType = BehandlingType.FORSTEGANGSSOKNAD,
-            fagsakYtelseType = FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
+            fagsakYtelseType = FagsakYtelseType.FRISINN,
             aktiv = false,
             system = "K9SAK",
             oppgaveAvsluttet = null,
@@ -1856,8 +1875,110 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
         oppgaveRepository.lagre(oppgave2.eksternId) { oppgave2 }
 
+        val saksbehandlerRepository = get<SaksbehandlerRepository>()
+        saksbehandlerRepository.addSaksbehandler(Saksbehandler(123, "saksbehandler@nav.no", "test", "saksbehandler@nav.no", mutableSetOf(), "test"))
+
+        get<K9SakTilLosAdapterTjeneste>()
+        val oppgaveV3Tjeneste = get<OppgaveV3Tjeneste>()
+
+        val transactionalManager = get<TransactionalManager>()
+        transactionalManager.transaction { tx ->
+            oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(lagOppgaveDto(oppgave1.eksternId.toString()), tx)
+        }
+
         val saker = oppgaveTjeneste.søkFagsaker(fagsakSaksnummer)
         assertThat(saker.oppgaver.size).isEqualTo(1)
+    }
+
+    private fun lagOppgaveDto(eksternId: String): no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto {
+        return no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto(
+            id = eksternId,
+            versjon = LocalDateTime.now().toString(),
+            område = Område(eksternId = "K9").eksternId,
+            kildeområde = "k9-sak-til-los",
+            type = "k9sak",
+            status = "AAPEN",
+            endretTidspunkt = LocalDateTime.now(),
+            reservasjonsnøkkel = "K9_b_${FagsakYtelseType.FRISINN}_273857",
+            feltverdier = listOf(
+                OppgaveFeltverdiDto(
+                    nøkkel = "aksjonspunkt",
+                    verdi = "9001"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "aktorId",
+                    verdi = "SKAL IKKE LOGGES"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "utenlandstilsnitt",
+                    verdi = "false"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "resultattype",
+                    verdi = "test"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "behandlingsstatus",
+                    verdi = "test"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "behandlingTypekode",
+                    verdi = "test"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "totrinnskontroll",
+                    verdi = "false"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "ytelsestype",
+                    verdi = "test"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "saksnummer",
+                    verdi = "false"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "hastesak",
+                    verdi = "false"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "behandlingUuid",
+                    verdi = "false"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "fagsystem",
+                    verdi = "false"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "avventerAnnet",
+                    verdi = "false"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "avventerSaksbehandler",
+                    verdi = "false"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "avventerAnnetIkkeSaksbehandlingstid",
+                    verdi = "false"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "avventerArbeidsgiver",
+                    verdi = "false"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "helautomatiskBehandlet",
+                    verdi = "false"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "avventerTekniskFeil",
+                    verdi = "false"
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "avventerSøker",
+                    verdi = "false"
+                ),
+            )
+        )
     }
 
 

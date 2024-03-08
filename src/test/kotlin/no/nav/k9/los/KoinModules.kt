@@ -164,6 +164,15 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
         kommentar = ""
     )
+    every {
+        reservasjonOversetterMock.hentAktivReservasjonFraGammelKontekst(any())
+    } returns ReservasjonV3(
+        reservertAv = 1,
+        reservasjonsnøkkel = "test1",
+        gyldigFra = LocalDateTime.now(),
+        gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
+        kommentar = ""
+    )
 
     single {
         ReservasjonKonverteringJobb(

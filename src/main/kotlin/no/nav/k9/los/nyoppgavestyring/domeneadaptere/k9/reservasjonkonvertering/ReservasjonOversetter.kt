@@ -45,7 +45,7 @@ class ReservasjonOversetter(
     ): String {
         return if (oppgaveNøkkel.erV1Oppgave()) {
             val oppgaveV1 = oppgaveV1Repository.hent(UUID.fromString(oppgaveNøkkel.oppgaveEksternId))
-            hentAktivReservasjonFraGammelKontekst(oppgaveV1).reservasjonsnøkkel
+            hentAktivReservasjonFraGammelKontekst(oppgaveV1)!!.reservasjonsnøkkel
         } else {
             oppgaveV3RepositoryMedTxWrapper.hentOppgave(
                 oppgaveNøkkel.områdeEksternId,
@@ -56,7 +56,7 @@ class ReservasjonOversetter(
 
     fun hentAktivReservasjonFraGammelKontekst(
         oppgaveV1: Oppgave
-    ): ReservasjonV3 {
+    ): ReservasjonV3? {
         return transactionalManager.transaction { tx ->
             when (oppgaveV1.system) {
                 "K9SAK" -> {
@@ -65,7 +65,7 @@ class ReservasjonOversetter(
                     reservasjonV3Tjeneste.hentAktivReservasjonForReservasjonsnøkkel(
                         oppgaveV3.reservasjonsnøkkel,
                         tx
-                    )!!
+                    )
                 }
 
                 "K9KLAGE" -> {
@@ -74,14 +74,14 @@ class ReservasjonOversetter(
                     reservasjonV3Tjeneste.hentAktivReservasjonForReservasjonsnøkkel(
                         oppgaveV3.reservasjonsnøkkel,
                         tx
-                    )!!
+                    )
                 }
 
                 else -> {
                     reservasjonV3Tjeneste.hentAktivReservasjonForReservasjonsnøkkel(
                         "legacy_${oppgaveV1.eksternId}",
                         tx
-                    )!!
+                    )
                 }
             }
         }
