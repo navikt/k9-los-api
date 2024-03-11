@@ -18,6 +18,12 @@ interface IPepClient {
         aktørid: String
     ): Boolean
 
+    fun harTilgangTilLesSak(
+        fagsakNummer: String,
+        aktørid: String,
+        bruker: Saksbehandler
+    ): Boolean
+
     suspend fun harTilgangTilReservingAvOppgaver(): Boolean
 
     suspend fun kanSendeSakTilStatistikk(
@@ -37,7 +43,7 @@ interface IPepClient {
 
     suspend fun harTilgangTilOppgave(oppgave: Oppgave) : Boolean
 
-    fun harTilgangTilOppgaveV3(oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave) : Boolean
+    fun harTilgangTilOppgaveV3(oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave, bruker: Saksbehandler) : Boolean
 
     suspend fun harTilgangTilÅReservereOppgave(oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave, bruker: Saksbehandler) : Boolean
 }

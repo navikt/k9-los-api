@@ -101,9 +101,7 @@ class OppgaveKoTjeneste(
         oppgaveKoId: Long,
         coroutineContext: CoroutineContext
     ): Pair<Oppgave, ReservasjonV3>? {
-        val oppgavekø = transactionalManager.transaction { tx ->
-            oppgaveKoRepository.hent(oppgaveKoId)
-        }
+        val oppgavekø = oppgaveKoRepository.hent(oppgaveKoId)
 
         val kandidatOppgaver = oppgaveQueryService.queryForOppgaveId(oppgavekø.oppgaveQuery)
 
@@ -151,6 +149,7 @@ class OppgaveKoTjeneste(
                 // V1-greier til og med denne linjen
                 val reservasjon = reservasjonV3Tjeneste.taReservasjon(
                     reserverForId = innloggetBrukerId,
+                    utføresAvId = innloggetBrukerId,
                     reservasjonsnøkkel = kandidatoppgave.reservasjonsnøkkel,
                     gyldigFra = LocalDateTime.now(),
                     gyldigTil = LocalDateTime.now().plusHours(24).forskyvReservasjonsDato(),

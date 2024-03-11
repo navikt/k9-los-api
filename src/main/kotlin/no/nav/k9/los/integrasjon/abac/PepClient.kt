@@ -19,8 +19,6 @@ import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.integrasjon.audit.*
 import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
 import no.nav.k9.los.integrasjon.rest.NavHeaders
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
-import no.nav.k9.los.nyoppgavestyring.pep.PepCacheService
 import no.nav.k9.los.utils.Cache
 import no.nav.k9.los.utils.CacheObject
 import org.slf4j.Logger
@@ -128,6 +126,50 @@ class PepClient constructor(
         return decision
     }
 
+    override fun harTilgangTilLesSak(
+        fagsakNummer: String,
+        aktørid: String,
+        bruker: Saksbehandler
+    ): Boolean {
+        val requestBuilder = XacmlRequestBuilder()
+            .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
+            .addResourceAttribute(RESOURCE_TYPE, TILGANG_SAK)
+            .addActionAttribute(ACTION_ID, "read")
+            .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
+            .addAccessSubjectAttribute(SUBJECTID, bruker.brukerIdent!!)
+            .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
+            .addResourceAttribute(RESOURCE_SAKSNR, fagsakNummer)
+        val decision = runBlocking {
+            evaluate(requestBuilder)
+        }
+
+        auditlogger.logg(
+            Auditdata(
+                header = AuditdataHeader(
+                    vendor = auditlogger.defaultVendor,
+                    product = auditlogger.defaultProduct,
+                    eventClassId = EventClassId.AUDIT_SEARCH,
+                    name = "ABAC Sporingslogg",
+                    severity = "INFO"
+                ), fields = setOf(
+                    CefField(CefFieldName.EVENT_TIME, LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) * 1000L),
+                    CefField(CefFieldName.REQUEST, "read"),
+                    CefField(CefFieldName.ABAC_RESOURCE_TYPE, TILGANG_SAK),
+                    CefField(CefFieldName.ABAC_ACTION, "read"),
+                    CefField(CefFieldName.USER_ID, bruker.brukerIdent!!),
+                    CefField(CefFieldName.BERORT_BRUKER_ID, aktørid),
+
+                    CefField(CefFieldName.BEHANDLING_VERDI, "behandlingsid"),
+                    CefField(CefFieldName.BEHANDLING_LABEL, "Behandling"),
+                    CefField(CefFieldName.SAKSNUMMER_VERDI, fagsakNummer),
+                    CefField(CefFieldName.SAKSNUMMER_LABEL, "Saksnummer")
+                )
+            )
+        )
+
+        return decision
+    }
+
     override suspend fun harTilgangTilReservingAvOppgaver(): Boolean {
         val requestBuilder = XacmlRequestBuilder()
             .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
@@ -220,15 +262,15 @@ class PepClient constructor(
         )
     }
 
-    override fun harTilgangTilOppgaveV3(oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave): Boolean {
+    override fun harTilgangTilOppgaveV3(oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave, bruker: Saksbehandler): Boolean {
          if (oppgave.hentVerdi("saksnummer") == null) {
              return true
          } else return runBlocking {
-             harTilgangTilLesSak(oppgave.hentVerdi("saksnummer")!!, oppgave.hentVerdi("aktorId")!!)
+             harTilgangTilLesSak(oppgave.hentVerdi("saksnummer")!!, oppgave.hentVerdi("aktorId")!!, bruker)
          }
     }
 
-    override suspend fun harTilgangTilÅReservereOppgave(oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave, saksbehandler: Saksbehandler) : Boolean {
+    override suspend fun harTilgangTilÅReservereOppgave(oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave, bruker: Saksbehandler) : Boolean {
         val requestBuilder = when (oppgave.oppgavetype.eksternId) {
             "k9sak" -> {
                 XacmlRequestBuilder()
@@ -238,7 +280,7 @@ class PepClient constructor(
                     .addActionAttribute(ACTION_ID, "update")
                     .addResourceAttribute("no.nav.abac.attributter.resource.k9.behandlings_uuid", oppgave.eksternId)  //TODO los skal ikke kjenne til denne detaljen. Oppgavetype må utvides med attributtreferanse
                     .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
-                    .addAccessSubjectAttribute(SUBJECTID, saksbehandler.brukerIdent!!)
+                    .addAccessSubjectAttribute(SUBJECTID, bruker.brukerIdent!!)
             }
             "k9klage" -> {
                 XacmlRequestBuilder()
@@ -248,7 +290,7 @@ class PepClient constructor(
                     .addActionAttribute(ACTION_ID, "create")
                     .addResourceAttribute("no.nav.abac.attributter.resource.k9.saksnr", oppgave.hentVerdi("saksnummer")!!)  //TODO los skal ikke kjenne til denne detaljen. Oppgavetype må utvides med attributtreferanse
                     .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
-                    .addAccessSubjectAttribute(SUBJECTID, saksbehandler.brukerIdent!!)
+                    .addAccessSubjectAttribute(SUBJECTID, bruker.brukerIdent!!)
             }
             else -> throw NotImplementedError("Støtter kun tilgangsoppslag på k9klage og k9sak")
         }

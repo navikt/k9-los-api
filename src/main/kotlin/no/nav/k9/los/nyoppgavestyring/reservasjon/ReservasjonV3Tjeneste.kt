@@ -58,18 +58,20 @@ class ReservasjonV3Tjeneste(
     fun taReservasjon(
         reservasjonsnøkkel: String,
         reserverForId: Long,
+        utføresAvId: Long,
         kommentar: String,
         gyldigFra: LocalDateTime,
         gyldigTil: LocalDateTime
     ): ReservasjonV3 {
         return transactionalManager.transaction { tx ->
-            taReservasjon(reservasjonsnøkkel, reserverForId, gyldigFra, gyldigTil, kommentar, tx)
+            taReservasjon(reservasjonsnøkkel, reserverForId, utføresAvId, gyldigFra, gyldigTil, kommentar, tx)
         }
     }
 
     fun taReservasjon(
         reservasjonsnøkkel: String,
         reserverForId: Long,
+        utføresAvId: Long,
         gyldigFra: LocalDateTime,
         gyldigTil: LocalDateTime,
         kommentar: String,
@@ -78,7 +80,7 @@ class ReservasjonV3Tjeneste(
         //sjekke tilgang på alle oppgaver tilknyttet nøkkel
         val oppgaverForReservasjonsnøkkel =
             oppgaveRepository.hentAlleOppgaverForReservasjonsnøkkel(tx, reservasjonsnøkkel)
-        if (!sjekkTilganger(oppgaverForReservasjonsnøkkel, reserverForId)) {
+        if (!sjekkTilganger(oppgaverForReservasjonsnøkkel, reserverForId, utføresAvId)) {
             throw ManglerTilgangException("Saksbehandler $reserverForId mangler tilgang til å reservere nøkkel $reservasjonsnøkkel")
         }
         //prøv å ta reservasjon
@@ -104,7 +106,7 @@ class ReservasjonV3Tjeneste(
         tx: TransactionalSession
     ): ReservasjonV3 {
         return try {
-            taReservasjon(reservasjonsnøkkel, reserverForId, kommentar = kommentar, gyldigFra, gyldigTil)
+            taReservasjon(reservasjonsnøkkel, reserverForId, utføresAvId, kommentar = kommentar, gyldigFra, gyldigTil)
         } catch (e: AlleredeReservertException) {
             val aktivReservasjon =
                 reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(
@@ -230,13 +232,14 @@ class ReservasjonV3Tjeneste(
         }
     }
 
-    private fun sjekkTilganger(oppgaver: List<Oppgave>, brukerIdSomSkalHaReservasjon: Long): Boolean {
+    private fun sjekkTilganger(oppgaver: List<Oppgave>, brukerIdSomSkalHaReservasjon: Long, utføresAvId: Long): Boolean {
         oppgaver.forEach { oppgave ->
             if (beslutterErSaksbehandler(oppgave, brukerIdSomSkalHaReservasjon)) return false
 
             val saksnummer = oppgave.hentVerdi("saksnummer") //TODO gjøre oppgavetypeagnostisk
             if (saksnummer != null) { //TODO: Oppgaver uten saksnummer?
-                val harTilgang = pepClient.harTilgangTilOppgaveV3(oppgave)
+                val bruker = saksbehandlerRepository.finnSaksbehandlerMedId(utføresAvId)
+                val harTilgang = pepClient.harTilgangTilOppgaveV3(oppgave, bruker)
                 if (!harTilgang) {
                     return false
                 }
