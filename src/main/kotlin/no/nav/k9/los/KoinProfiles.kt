@@ -232,7 +232,10 @@ fun common(app: Application, config: Configuration) = module {
             reservasjonRepository = get(),
             statistikkRepository = get(),
             statistikkChannel = get(named("statistikkRefreshChannel")),
-            reservasjonTjeneste = get()
+            reservasjonTjeneste = get(),
+            reservasjonV3Tjeneste = get(),
+            reservasjonOversetter = get(),
+            saksbehandlerRepository = get(),
         )
     }
 
