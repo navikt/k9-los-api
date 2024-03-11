@@ -1,6 +1,5 @@
 package no.nav.k9.los.nyoppgavestyring.reservasjon
 
-import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
@@ -231,22 +230,34 @@ class ReservasjonV3Tjeneste(
         }
     }
 
-    private fun sjekkTilganger(oppgaver: List<Oppgave>, brukerId: Long): Boolean {
+    private fun sjekkTilganger(oppgaver: List<Oppgave>, brukerIdSomSkalHaReservasjon: Long): Boolean {
         oppgaver.forEach { oppgave ->
+            if (beslutterErSaksbehandler(oppgave, brukerIdSomSkalHaReservasjon)) return false
+
             val saksnummer = oppgave.hentVerdi("saksnummer") //TODO gjøre oppgavetypeagnostisk
             if (saksnummer != null) { //TODO: Oppgaver uten saksnummer?
-                val harTilgang = runBlocking {
-                    pepClient.harTilgangTilÅReservereOppgave(
-                        oppgave,
-                        saksbehandlerRepository.finnSaksbehandlerMedId(brukerId)
-                    )
-                }
+                val harTilgang = pepClient.harTilgangTilOppgaveV3(oppgave)
                 if (!harTilgang) {
                     return false
                 }
             }
         }
         return true
+    }
+
+    private fun beslutterErSaksbehandler(
+        oppgave: Oppgave,
+        brukerIdSomSkalHaReservasjon: Long
+    ): Boolean {
+        val hosBeslutter =
+            oppgave.hentVerdi("liggerHosBeslutter")?.toBoolean() ?: false //TODO gjøre oppgavetypeagnostisk
+        if (!hosBeslutter) return false
+        val ansvarligSaksbehandlerIdent = oppgave.hentVerdi("ansvarligSaksbehandler") //TODO gjøre oppgavetypeagnostisk
+            ?: throw IllegalStateException("Kan ikke beslutte på oppgave uten ansvarlig saksbehandler")
+        val saksbehandlerIdentSomSkalHaReservasjon =
+            saksbehandlerRepository.finnSaksbehandlerMedId(brukerIdSomSkalHaReservasjon).brukerIdent
+
+        return ansvarligSaksbehandlerIdent == saksbehandlerIdentSomSkalHaReservasjon
     }
 
     private fun finnAktivReservasjon(

@@ -37,5 +37,7 @@ interface IPepClient {
 
     suspend fun harTilgangTilOppgave(oppgave: Oppgave) : Boolean
 
+    fun harTilgangTilOppgaveV3(oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave) : Boolean
+
     suspend fun harTilgangTilÅReservereOppgave(oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave, bruker: Saksbehandler) : Boolean
 }
