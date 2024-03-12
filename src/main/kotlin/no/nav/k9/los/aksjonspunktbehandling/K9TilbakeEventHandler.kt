@@ -52,9 +52,11 @@ class K9TilbakeEventHandler(
             val reservasjonV3 =
                 reservasjonOversetter.hentAktivReservasjonFraGammelKontekst(oppgave)
             reservasjonV3?.let {
-                val identSomAnnullerer = if (oppgave.tilBeslutter) { event.ansvarligSaksbehandlerIdent } else { event.ansvarligBeslutterIdent }!!
-                val saksbehandlerSomAnnullerer = saksbehandlerRepository.finnSaksbehandlerMedIdent(identSomAnnullerer)!!
-                reservasjonV3Tjeneste.annullerReservasjon(reservasjonV3.reservasjonsnøkkel, "Tilbakekrav - annullerer ", saksbehandlerSomAnnullerer.id!!)
+                val identSomAnnullerer = if (oppgave.tilBeslutter) { event.ansvarligSaksbehandlerIdent } else { event.ansvarligBeslutterIdent }
+                identSomAnnullerer?.let {
+                    val saksbehandlerSomAnnullerer = saksbehandlerRepository.finnSaksbehandlerMedIdent(identSomAnnullerer)!!
+                    reservasjonV3Tjeneste.annullerReservasjon(reservasjonV3.reservasjonsnøkkel, "Tilbakekrav - annullerer ", saksbehandlerSomAnnullerer.id!!)
+                }
             }
         }
 
