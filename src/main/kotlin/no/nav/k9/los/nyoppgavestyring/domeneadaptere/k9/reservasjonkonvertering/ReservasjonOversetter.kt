@@ -10,6 +10,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ManglerTilgangException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
@@ -161,7 +162,7 @@ class ReservasjonOversetter(
         }
 
         if (beslutterErSaksbehandler(oppgave, reserverForSaksbehandlerId)) {
-            return null
+            throw ManglerTilgangException("Saksbehandler kan ikke være beslutter på egen sak")
         }
 
         return reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(

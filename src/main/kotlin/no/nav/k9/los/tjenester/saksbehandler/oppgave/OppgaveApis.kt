@@ -54,7 +54,7 @@ internal fun Route.OppgaveApis() {
                         oppgaveApisTjeneste.reserverOppgave(innloggetBruker, oppgaveIdMedOverstyringDto)
                     call.respond(oppgave)
                 } catch (e: ManglerTilgangException) {
-                    call.respond(HttpStatusCode.Forbidden)
+                    call.respond(HttpStatusCode.Forbidden, e.message!!)
                 }
             }
         }
