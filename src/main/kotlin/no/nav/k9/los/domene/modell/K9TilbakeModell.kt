@@ -339,12 +339,9 @@ data class AksjonspunkterTilbake(val liste: Map<String, String>) {
     }
 
     fun tilBeslutterTilbake(): Boolean {
-        return this.liste.any {
-            when (it.key) {
-                "5005" -> true
-                else -> false
-            }
-        }
+        //burde egentlig sjekket at behandling er i FVED-status og har 5005-aksjonspunktet (fatte vedtak)
+        return this.liste.containsKey("5005")
+                && liste.size == 1; //hvis det er flere aksjonspunkter, er det noe saksbehandler skal gjøre før beslutter løser 5005
     }
 }
 
