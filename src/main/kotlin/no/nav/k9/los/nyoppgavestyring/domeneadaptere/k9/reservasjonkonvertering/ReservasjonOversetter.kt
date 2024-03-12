@@ -93,7 +93,7 @@ class ReservasjonOversetter(
         reservertTil: LocalDateTime,
         utførtAvSaksbehandlerId: Long,
         kommentar: String?
-    ): ReservasjonV3 {
+    ): ReservasjonV3? {
         return transactionalManager.transaction { tx ->
             when (oppgaveV1.system) {
                 "K9SAK" -> {
@@ -134,7 +134,7 @@ class ReservasjonOversetter(
 
                 else -> {
                     reserverOppgavetypeSomIkkeErStøttetIV3(
-                        oppgaveV1.eksternId.toString(),
+                        oppgaveV1,
                         reserverForSaksbehandlerId = reserverForSaksbehandlerId,
                         reservertTil = reservertTil,
                         utførtAvSaksbehandlerId = utførtAvSaksbehandlerId,
@@ -147,21 +147,25 @@ class ReservasjonOversetter(
     }
 
     private fun reserverOppgavetypeSomIkkeErStøttetIV3(
-        oppgaveEksternId: String,
+        oppgave: Oppgave,
         reserverForSaksbehandlerId: Long,
         reservertTil: LocalDateTime,
         utførtAvSaksbehandlerId: Long?,
         kommentar: String?,
         tx: TransactionalSession,
-    ): ReservasjonV3 {
+    ): ReservasjonV3? {
         val gyldigFra = if (reservertTil.isAfter(LocalDateTime.now())) {
             LocalDateTime.now().minusHours(24).forskyvReservasjonsDatoBakover()
         } else {
             reservertTil!!.minusHours(24).forskyvReservasjonsDatoBakover()
         }
 
+        if (beslutterErSaksbehandler(oppgave, reserverForSaksbehandlerId)) {
+            return null
+        }
+
         return reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(
-            reservasjonsnøkkel = "legacy_$oppgaveEksternId",
+            reservasjonsnøkkel = "legacy_${oppgave.eksternId}",
             reserverForId = reserverForSaksbehandlerId,
             gyldigFra = gyldigFra,
             gyldigTil = reservertTil,
@@ -169,6 +173,18 @@ class ReservasjonOversetter(
             kommentar = kommentar ?: "",
             tx = tx
         )
+    }
+
+    private fun beslutterErSaksbehandler(
+        oppgave: Oppgave,
+        brukerIdSomSkalHaReservasjon: Long
+    ): Boolean {
+        if (!oppgave.tilBeslutter) return false
+
+        val saksbehandlerIdentSomSkalHaReservasjon =
+            saksbehandlerRepository.finnSaksbehandlerMedId(brukerIdSomSkalHaReservasjon).brukerIdent
+
+        return oppgave.ansvarligSaksbehandlerIdent == saksbehandlerIdentSomSkalHaReservasjon
     }
 
     private fun reserverOppgavetypeSomErStøttetIV3(

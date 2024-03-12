@@ -56,7 +56,7 @@ class OppgaveApisTjeneste(
                 reservertTil = reserverFra.plusHours(24).forskyvReservasjonsDato(),
                 utførtAvSaksbehandlerId = innloggetBruker.id!!,
                 kommentar = oppgaveIdMedOverstyringDto.overstyrBegrunnelse ?: "",
-            )
+            )!!
             val saksbehandlerSomHarReservasjon =
                 saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonV3.reservertAv)
             return OppgaveStatusDto(reservasjonV3, innloggetBruker, saksbehandlerSomHarReservasjon)
