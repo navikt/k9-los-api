@@ -191,6 +191,12 @@ data class K9TilbakeModell(
          {
             return true
         }
+
+        //beslutter sendt tilbake til saksbehandler
+        if(forrigeEvent.aktiveAksjonspunkt().tilBeslutterTilbake() &&
+            !sisteEvent().aktiveAksjonspunkt().tilBeslutterTilbake()) {
+            return true
+        }
         // skal fortsette og ligge reservert
         return false
     }
