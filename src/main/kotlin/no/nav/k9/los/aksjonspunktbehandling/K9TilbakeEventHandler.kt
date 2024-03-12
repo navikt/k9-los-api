@@ -53,9 +53,7 @@ class K9TilbakeEventHandler(
                 reservasjonOversetter.hentAktivReservasjonFraGammelKontekst(oppgave)
             reservasjonV3?.let {
                 val identSomAnnullerer = if (oppgave.tilBeslutter) { event.ansvarligSaksbehandlerIdent } else { event.ansvarligBeslutterIdent }!!
-                val saksbehandlerSomAnnullerer = runBlocking {
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(identSomAnnullerer)
-                }!!
+                val saksbehandlerSomAnnullerer = saksbehandlerRepository.finnSaksbehandlerMedIdent(identSomAnnullerer)!!
                 reservasjonV3Tjeneste.annullerReservasjon(reservasjonV3.reservasjonsnøkkel, "Tilbakekrav - annullerer ", saksbehandlerSomAnnullerer.id!!)
             }
         }

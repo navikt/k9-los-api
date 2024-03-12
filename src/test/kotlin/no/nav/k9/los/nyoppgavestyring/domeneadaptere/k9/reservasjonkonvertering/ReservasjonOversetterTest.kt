@@ -78,9 +78,6 @@ class ReservasjonOversetterTest : AbstractK9LosIntegrationTest(){
             )
         }
 
-        val reservasjonRepository = get<ReservasjonRepository>()
-        val alleReservasjonUUID = reservasjonRepository.hentAlleReservasjonUUID()
-
         assertTrue(oppgavestatus.erReservert)
         assertEquals("Saksbehandler Sara", oppgavestatus.reservertAvNavn)
 

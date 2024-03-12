@@ -312,8 +312,8 @@ class SaksbehandlerRepository(
         )
     }
 
-    suspend fun finnSaksbehandlerMedIdent(ident: String): Saksbehandler? {
-        val skjermet = pepClient.harTilgangTilKode6()
+    fun finnSaksbehandlerMedIdent(ident: String): Saksbehandler? {
+        val skjermet = pepClient.harTilgangTilKode6(ident)
 
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()

@@ -32,6 +32,10 @@ class PepClientLocal : IPepClient {
         return false
     }
 
+    override fun harTilgangTilKode6(ident: String): Boolean {
+        return false
+    }
+
     override suspend fun kanSendeSakTilStatistikk(fagsakNummer: String): Boolean {
         return true
     }
