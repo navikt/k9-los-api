@@ -102,7 +102,7 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
             )
         }
 
-        reservasjonV3Tjeneste.annullerReservasjon(reservasjonsnøkkel = "test1", "", annullertAvBrukerId = saksbehandlerInnlogget.id!!)
+        reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(reservasjonsnøkkel = "test1", "", annullertAvBrukerId = saksbehandlerInnlogget.id!!)
 
         val aktiveReservasjoner =
             reservasjonV3Tjeneste.hentReservasjonerForSaksbehandler(saksbehandler1.id!!)

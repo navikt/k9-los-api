@@ -158,7 +158,7 @@ class ReservasjonOversetter(
         val gyldigFra = if (reservertTil.isAfter(LocalDateTime.now())) {
             LocalDateTime.now().minusHours(24).forskyvReservasjonsDatoBakover()
         } else {
-            reservertTil!!.minusHours(24).forskyvReservasjonsDatoBakover()
+            reservertTil.minusHours(24).forskyvReservasjonsDatoBakover()
         }
 
         if (beslutterErSaksbehandler(oppgave, reserverForSaksbehandlerId)) {

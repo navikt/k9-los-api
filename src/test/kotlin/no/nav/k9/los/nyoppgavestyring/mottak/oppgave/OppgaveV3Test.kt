@@ -1,6 +1,9 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 
+import io.mockk.mockk
+import io.mockk.verify
 import no.nav.k9.los.AbstractK9LosIntegrationTest
+import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveStatus
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonDto
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
@@ -9,6 +12,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.*
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -24,10 +28,16 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
     private lateinit var feltdefinisjonTjeneste: FeltdefinisjonTjeneste
     private lateinit var oppgavetypeTjeneste: OppgavetypeTjeneste
     private lateinit var transactionalManager: TransactionalManager
+    private var reservasjonV3Tjenestemock = mockk<ReservasjonV3Tjeneste>()
 
     @BeforeEach
     fun setup() {
-        oppgaveV3Tjeneste = get()
+        oppgaveV3Tjeneste = OppgaveV3Tjeneste(
+            oppgaveV3Repository = get(),
+            oppgavetypeRepository = get(),
+            områdeRepository = get(),
+            reservasjonTjeneste = reservasjonV3Tjenestemock,
+        )
         områdeRepository = get()
         feltdefinisjonTjeneste = get()
         oppgavetypeTjeneste = get()
@@ -107,6 +117,52 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
                 )
             )
         }
+    }
+
+    @Test
+    fun `hvis alle oppgaver på reservasjonsnøkkel er lukket skal reservasjon annulleres -- kun en oppgave`() {
+        transactionalManager.transaction { tx ->
+            oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(lagOppgaveDto(Oppgavestatus.AAPEN.toString()), tx)
+        }
+        verify(exactly = 0) { reservasjonV3Tjenestemock.annullerReservasjonHvisFinnes(any(), any(), any()) }
+        transactionalManager.transaction { tx ->
+            oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(lagOppgaveDto(Oppgavestatus.LUKKET.toString()), tx)
+        }
+        verify(exactly = 1) { reservasjonV3Tjenestemock.annullerReservasjonHvisFinnes(any(), any(), any()) }
+    }
+
+    @Test
+    fun `hvis alle oppgaver på reservasjonsnøkkel er lukket skal reservasjon annulleres -- to oppgaver`() {
+        transactionalManager.transaction { tx ->
+            oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(lagOppgaveDto(
+                id = "test1",
+                status = Oppgavestatus.AAPEN.toString(),
+                reservasjonsnøkkel = "felles"
+            ), tx)
+        }
+        transactionalManager.transaction { tx ->
+            oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(lagOppgaveDto(
+                id = "test2",
+                status = Oppgavestatus.AAPEN.toString(),
+                reservasjonsnøkkel = "felles"
+            ), tx)
+        }
+        transactionalManager.transaction { tx ->
+            oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(lagOppgaveDto(
+                id = "test2",
+                status = Oppgavestatus.LUKKET.toString(),
+                reservasjonsnøkkel = "felles"
+            ), tx)
+        }
+        verify(exactly = 0) { reservasjonV3Tjenestemock.annullerReservasjonHvisFinnes(any(), any(), any()) }
+        transactionalManager.transaction { tx ->
+            oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(lagOppgaveDto(
+                id = "test1",
+                status = Oppgavestatus.LUKKET.toString(),
+                reservasjonsnøkkel = "felles"
+            ), tx)
+        }
+        verify(exactly = 1) { reservasjonV3Tjenestemock.annullerReservasjonHvisFinnes(any(), any(), any()) }
     }
 
     private fun byggOppgavemodell() {
@@ -222,16 +278,16 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
         )
     }
 
-    private fun lagOppgaveDto(): OppgaveDto {
+    private fun lagOppgaveDto(id: String = "test", reservasjonsnøkkel: String = "test", status: String = "AAPEN"): OppgaveDto {
         return OppgaveDto(
-            id = "aksjonspunkt",
+            id = id,
             versjon = LocalDateTime.now().toString(),
             område = områdeDto.eksternId,
             kildeområde = "k9-sak-til-los",
             type = "aksjonspunkt",
-            status = "AAPEN",
+            status = status,
             endretTidspunkt = LocalDateTime.now(),
-            reservasjonsnøkkel = "test",
+            reservasjonsnøkkel = reservasjonsnøkkel,
             feltverdier = listOf(
                 OppgaveFeltverdiDto(
                     nøkkel = "aksjonspunkt",
