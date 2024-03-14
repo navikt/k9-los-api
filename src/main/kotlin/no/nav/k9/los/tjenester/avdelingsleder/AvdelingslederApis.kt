@@ -63,7 +63,10 @@ internal fun Route.AvdelingslederApis() {
 
     get("/reservasjoner") {
         requestContextService.withRequestContext(call) {
-            call.respond(avdelingslederTjeneste.hentAlleAktiveReservasjonerV3())
+            val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
+                kotlin.coroutines.coroutineContext.idToken().getUsername()
+            )!!
+            call.respond(avdelingslederTjeneste.hentAlleAktiveReservasjonerV3(innloggetBruker))
         }
     }
 

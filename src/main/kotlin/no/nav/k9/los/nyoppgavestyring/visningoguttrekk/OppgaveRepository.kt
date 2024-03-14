@@ -67,7 +67,7 @@ class OppgaveRepository(
             }.asSingle
         ) ?: throw IllegalStateException("Fant ikke oppgave med id $id")
 
-        return oppgave.fyllDefaultverdier().utledTransienteFelter(now)
+        return oppgave
     }
 
     private fun Oppgave.utledTransienteFelter(now: LocalDateTime): Oppgave {
