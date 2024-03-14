@@ -79,7 +79,7 @@ class ReservasjonV3Tjeneste(
     ): ReservasjonV3 {
         //sjekke tilgang på alle oppgaver tilknyttet nøkkel
         val oppgaverForReservasjonsnøkkel =
-            oppgaveRepository.hentAlleOppgaverForReservasjonsnøkkel(tx, reservasjonsnøkkel)
+            oppgaveRepository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjonsnøkkel)
         if (!sjekkTilganger(oppgaverForReservasjonsnøkkel, reserverForId, utføresAvId)) {
             throw ManglerTilgangException("Saksbehandler $reserverForId mangler tilgang til å reservere nøkkel $reservasjonsnøkkel")
         }

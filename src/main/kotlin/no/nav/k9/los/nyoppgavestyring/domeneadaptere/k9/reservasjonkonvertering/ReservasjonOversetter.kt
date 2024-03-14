@@ -23,10 +23,8 @@ import java.util.*
 class ReservasjonOversetter(
     private val transactionalManager: TransactionalManager,
     private val oppgaveV1Repository: OppgaveRepository,
-    private val oppgaveV3Repository: OppgaveV3Repository,
+    private val oppgaveV3Repository: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository,
     private val oppgaveV3RepositoryMedTxWrapper: OppgaveRepositoryTxWrapper,
-    private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
-    private val oppgavetypeRepository: OppgavetypeRepository,
     private val saksbehandlerRepository: SaksbehandlerRepository,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste
 ) {
@@ -61,8 +59,7 @@ class ReservasjonOversetter(
         return transactionalManager.transaction { tx ->
             when (oppgaveV1.system) {
                 "K9SAK" -> {
-                    val oppgaveV3 =
-                        oppgaveV3Tjeneste.hentAktivOppgave(oppgaveV1.eksternId.toString(), "k9sak", "K9", tx)
+                    val oppgaveV3 = oppgaveV3Repository.hentNyesteOppgaveForEksternId(tx, "K9", oppgaveV1.eksternId.toString())
                     reservasjonV3Tjeneste.hentAktivReservasjonForReservasjonsnøkkel(
                         oppgaveV3.reservasjonsnøkkel,
                         tx
@@ -70,8 +67,7 @@ class ReservasjonOversetter(
                 }
 
                 "K9KLAGE" -> {
-                    val oppgaveV3 =
-                        oppgaveV3Tjeneste.hentAktivOppgave(oppgaveV1.eksternId.toString(), "k9klage", "K9", tx)
+                    val oppgaveV3 = oppgaveV3Repository.hentNyesteOppgaveForEksternId(tx, "K9", oppgaveV1.eksternId.toString())
                     reservasjonV3Tjeneste.hentAktivReservasjonForReservasjonsnøkkel(
                         oppgaveV3.reservasjonsnøkkel,
                         tx
@@ -98,12 +94,7 @@ class ReservasjonOversetter(
         return transactionalManager.transaction { tx ->
             when (oppgaveV1.system) {
                 "K9SAK" -> {
-                    val oppgaveV3 = oppgaveV3Repository.hentAktivOppgave(
-                        oppgaveV1.eksternId.toString(),
-                        oppgavetypeRepository.hentOppgavetype("K9", "k9sak"),
-                        tx
-                    )
-                        ?: throw IllegalStateException("ReservasjonV1 for kjent oppgavetype SKAL ha oppgave i OppgaveV3.")
+                    val oppgaveV3 = oppgaveV3Repository.hentNyesteOppgaveForEksternId(tx, "K9", oppgaveV1.eksternId.toString())
 
                     reserverOppgavetypeSomErStøttetIV3(
                         oppgaveV3,
@@ -116,12 +107,7 @@ class ReservasjonOversetter(
                 }
 
                 "K9KLAGE" -> {
-                    val oppgaveV3 = oppgaveV3Repository.hentAktivOppgave(
-                        oppgaveV1.eksternId.toString(),
-                        oppgavetypeRepository.hentOppgavetype("K9", "k9klage"),
-                        tx
-                    )
-                        ?: throw IllegalStateException("ReservasjonV1 for kjent oppgavetype SKAL ha oppgave i OppgaveV3.")
+                    val oppgaveV3 = oppgaveV3Repository.hentNyesteOppgaveForEksternId(tx, "K9", oppgaveV1.eksternId.toString())
 
                     reserverOppgavetypeSomErStøttetIV3(
                         oppgaveV3,
@@ -189,7 +175,7 @@ class ReservasjonOversetter(
     }
 
     private fun reserverOppgavetypeSomErStøttetIV3(
-        oppgave: OppgaveV3,
+        oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave,
         reservertAvSaksbehandlerId: Long,
         reservertTil: LocalDateTime,
         utførtAvSaksbehandlerId: Long?,
