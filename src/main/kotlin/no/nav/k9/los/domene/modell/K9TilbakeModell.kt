@@ -350,5 +350,3 @@ data class AksjonspunkterTilbake(val liste: Map<String, String>) {
                 && liste.size == 1; //hvis det er flere aksjonspunkter, er det noe saksbehandler skal gjøre før beslutter løser 5005
     }
 }
-
-
