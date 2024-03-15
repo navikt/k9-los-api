@@ -194,7 +194,7 @@ class OppgaveApisTjeneste(
 
         val reservasjonsnøkkel = reservasjonOversetter.hentReservasjonsnøkkelForOppgavenøkkel(params.oppgaveNøkkel)
 
-        reservasjonV3Tjeneste.annullerReservasjon(
+        reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(
             reservasjonsnøkkel,
             params.begrunnelse,
             innloggetBruker.id!!

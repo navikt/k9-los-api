@@ -47,7 +47,7 @@ class ReservasjonV3Repository(
         kommentar: String?,
         tx: TransactionalSession
     ): ReservasjonV3 {
-        val annullertReservasjonId = annullerAktivReservasjon(reservasjonSomSkalEndres, kommentar ?: "", tx)
+        val annullertReservasjonId = annullerAktivReservasjon(reservasjonSomSkalEndres, kommentar ?: "", tx)!!
         val nyReservasjon = lagreReservasjon(
             ReservasjonV3(
                 reservasjonsnøkkel = reservasjonSomSkalEndres.reservasjonsnøkkel,
@@ -74,18 +74,20 @@ class ReservasjonV3Repository(
     fun annullerAktivReservasjonOgLagreEndring(
         aktivReservasjon: ReservasjonV3,
         kommentar: String,
-        innloggetBrukerId: Long,
+        annullertAvBrukerId: Long?,
         tx: TransactionalSession
     ) {
         val annullertReservasjonId = annullerAktivReservasjon(aktivReservasjon, kommentar, tx)
-        lagreEndring(
-            ReservasjonV3Endring(
-                annullertReservasjonId = annullertReservasjonId,
-                nyReservasjonId = null,
-                endretAv = innloggetBrukerId
-            ),
-            tx
-        )
+        annullertReservasjonId?.let {
+            lagreEndring(
+                ReservasjonV3Endring(
+                    annullertReservasjonId = annullertReservasjonId,
+                    nyReservasjonId = null,
+                    endretAv = annullertAvBrukerId
+                ),
+                tx
+            )
+        }
     }
 
     fun forlengReservasjon(
@@ -95,7 +97,7 @@ class ReservasjonV3Repository(
         kommentar: String,
         tx: TransactionalSession
     ): ReservasjonV3 {
-        val annullertReservasjonId = annullerAktivReservasjon(aktivReservasjon, kommentar, tx)
+        val annullertReservasjonId = annullerAktivReservasjon(aktivReservasjon, kommentar, tx)!!
         val nyReservasjon = lagreReservasjon(
             ReservasjonV3(
                 reservertAv = aktivReservasjon.reservertAv,
@@ -128,7 +130,7 @@ class ReservasjonV3Repository(
     ): ReservasjonV3 {
         val overføringstidspunkt = LocalDateTime.now()
 
-        val annullertReservasjonId = annullerAktivReservasjon(aktivReservasjon, kommentar, tx)
+        val annullertReservasjonId = annullerAktivReservasjon(aktivReservasjon, kommentar, tx)!!
 
         val nyReservasjon = lagreReservasjon(
             ReservasjonV3(
@@ -155,7 +157,7 @@ class ReservasjonV3Repository(
         aktivReservasjon: ReservasjonV3,
         kommentar: String,
         tx: TransactionalSession
-    ): Long {
+    ): Long? {
         return tx.updateAndReturnGeneratedKey(
             queryOf(
                 """
@@ -173,7 +175,7 @@ class ReservasjonV3Repository(
                     "now" to LocalDateTime.now(),
                 )
             )
-        )!!
+        )
     }
 
     fun hentAktiveReservasjonerForSaksbehandler(

@@ -1,0 +1,1 @@
+alter table RESERVASJON_V3_ENDRING alter column endretAv DROP NOT NULL;
