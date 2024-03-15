@@ -25,13 +25,13 @@ class OppgaveRepository(
                     "kildeomrade" to kildeområde,
                     "eksternId" to eksternId
                 )
-            ).map { row -> mapOppgave(row, tx) }.asSingle
+            ).map { row -> mapOppgave(row, now, tx) }.asSingle
         ) ?: throw IllegalStateException("Fant ikke oppgave med kilde $kildeområde og eksternId $eksternId")
 
-        return oppgave.fyllDefaultverdier().utledTransienteFelter(now)
+        return oppgave
     }
 
-    fun hentAlleÅpneOppgaverForReservasjonsnøkkel(tx: TransactionalSession, reservasjonsnøkkel: String) : List<Oppgave> {
+    fun hentAlleÅpneOppgaverForReservasjonsnøkkel(tx: TransactionalSession, reservasjonsnøkkel: String, now: LocalDateTime = LocalDateTime.now()) : List<Oppgave> {
         val oppgaver = tx.run(
             queryOf(
                 """
@@ -46,26 +46,7 @@ class OppgaveRepository(
                     "oppgavestatus" to Oppgavestatus.LUKKET.kode,
                 )
             ).map { row ->
-                mapOppgave(row, tx)
-            }.asList
-        )
-
-        return oppgaver
-    }
-
-    fun hentAlleOppgaverForReservasjonsnøkkel(tx: TransactionalSession, reservasjonsnøkkel: String): List<Oppgave> {
-        val oppgaver = tx.run(
-            queryOf(
-                """
-                select *
-                from oppgave_v3 ov 
-                where reservasjonsnokkel = :reservasjonsnokkel
-                and aktiv = true 
-                and status != 'LUKKET'
-            """.trimIndent(),
-                mapOf("reservasjonsnokkel" to reservasjonsnøkkel)
-            ).map { row ->
-                mapOppgave(row, tx)
+                mapOppgave(row, now, tx)
             }.asList
         )
 
@@ -82,11 +63,11 @@ class OppgaveRepository(
             """.trimIndent(),
                 mapOf("id" to id)
             ).map { row ->
-                mapOppgave(row, tx)
+                mapOppgave(row, now, tx)
             }.asSingle
         ) ?: throw IllegalStateException("Fant ikke oppgave med id $id")
 
-        return oppgave.fyllDefaultverdier().utledTransienteFelter(now)
+        return oppgave
     }
 
     private fun Oppgave.utledTransienteFelter(now: LocalDateTime): Oppgave {
@@ -133,6 +114,7 @@ class OppgaveRepository(
 
     private fun mapOppgave(
         row: Row,
+        now: LocalDateTime,
         tx: TransactionalSession
     ): Oppgave {
         val kildeområde = row.string("kildeomrade")
@@ -149,7 +131,7 @@ class OppgaveRepository(
             felter = oppgavefelter,
             reservasjonsnøkkel = row.string("reservasjonsnokkel"),
             versjon = row.int("versjon")
-        )
+        ).fyllDefaultverdier().utledTransienteFelter(now)
     }
 
     private fun hentOppgavefelter(tx: TransactionalSession, oppgaveId: Long): List<Oppgavefelt> {
@@ -200,7 +182,7 @@ class OppgaveRepository(
                     "grense" to tidspunkt,
                     "limit" to antall
                 )
-            ).map { row -> mapOppgave(row, tx) }.asList
+            ).map { row -> mapOppgave(row, tidspunkt, tx) }.asList
         )
     }
 
