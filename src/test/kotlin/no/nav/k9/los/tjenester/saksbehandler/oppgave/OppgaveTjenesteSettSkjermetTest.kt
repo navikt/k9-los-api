@@ -304,7 +304,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             id = eksternId,
             versjon = LocalDateTime.now().toString(),
             område = Område(eksternId = "K9").eksternId,
-            kildeområde = "k9-sak-til-los",
+            kildeområde = "K9",
             type = "k9sak",
             status = "AAPEN",
             endretTidspunkt = LocalDateTime.now(),

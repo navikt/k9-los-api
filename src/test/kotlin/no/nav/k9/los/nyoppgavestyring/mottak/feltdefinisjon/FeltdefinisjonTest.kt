@@ -5,6 +5,7 @@ import assertk.assertions.hasSize
 import assertk.assertions.isEmpty
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 class FeltdefinisjonTest {
     private val område = Område(eksternId = "K9")
@@ -72,6 +73,50 @@ class FeltdefinisjonTest {
         assertThat(sletteListe).hasSize(0)
         assertThat(oppdaterListe).hasSize(2)
         assertThat(leggTilListe).hasSize(0)
+    }
+
+    @Test
+    fun `hentFeltdefinisjonSomIkkeFinneSkalFeile`() {
+        val feltdefinisjoner = lagFeltdefinisjoner()
+
+        assertThrows<IllegalArgumentException> {
+            feltdefinisjoner.hentFeltdefinisjon("finnesIkke")
+        }
+    }
+
+    @Test
+    fun `sammenligne kodeverk på tvers av områder skal feile`() {
+        val innkommendeFeltdefinisjoner = Feltdefinisjoner(
+            område = Område(eksternId = "NoeAnnet"),
+            feltdefinisjoner = setOf(
+                Feltdefinisjon(
+                    eksternId = "saksnummer",
+                    område = område,
+                    visningsnavn = "Test",
+                    listetype = true,
+                    tolkesSom = "String",
+                    visTilBruker = true,
+                    kokriterie = false,
+                    kodeverkreferanse = null,
+                    transientFeltutleder = null
+                ),
+                Feltdefinisjon(
+                    eksternId = "opprettet",
+                    område = område,
+                    visningsnavn = "Test",
+                    listetype = true,
+                    tolkesSom = "Date",
+                    visTilBruker = true,
+                    kokriterie = false,
+                    kodeverkreferanse = null,
+                    transientFeltutleder = null
+                )
+            )
+        )
+
+        assertThrows<IllegalStateException> {
+            lagFeltdefinisjoner().finnForskjeller(innkommendeFeltdefinisjoner)
+        }
     }
 
     private fun lagFeltdefinisjoner(): Feltdefinisjoner {

@@ -69,298 +69,302 @@ fun Route.MockGrensesnitt() {
     get {
         if (profile == KoinProfile.PROD) {
             call.respond(HttpStatusCode.NotFound)
-        }
+        } else {
+            call.respondHtml {
 
-        call.respondHtml {
-
-            head {
-                title { +"Test app for k9-los" }
-                styleLink("/static/bootstrap.css")
-                script(src = "/static/script.js") {}
-            }
-            body {
-                div {
-                    classes = setOf("container ")
-                    a {
-                        href = "/mock/endreBehandling"
-                        +"Endre behandling"
-                    }
-                    h1 { +"Testside for k9-los" }
-                    p {
-                        +"Aksjonspunkter toggles av og på som hendelser. En behandling regnes som avsluttet dersom den er opprettet og ikke lengre har noen aksjonspunkter som operative"
-                    }
-
-
+                head {
+                    title { +"Test app for k9-los" }
+                    styleLink("/static/bootstrap.css")
+                    script(src = "/static/script.js") {}
+                }
+                body {
                     div {
-                        classes = setOf("input-group", "mb-3")
-                        div {
-                            classes = setOf("input-group-prepend")
-                            span {
-                                classes = setOf("input-group-text")
-                                +"EksternId"
-                            }
+                        classes = setOf("container ")
+                        a {
+                            href = "/mock/endreBehandling"
+                            +"Endre behandling"
                         }
-                        textInput {
-                            classes = setOf("form-control")
-                            id = "uuid"
-                            value = UUID.randomUUID().toString()
+                        h1 { +"Testside for k9-los" }
+                        p {
+                            +"Aksjonspunkter toggles av og på som hendelser. En behandling regnes som avsluttet dersom den er opprettet og ikke lengre har noen aksjonspunkter som operative"
                         }
-                    }
 
-                    div {
-                        classes = setOf("input-group", "mb-3")
-                        div {
-                            classes = setOf("input-group-prepend")
-                            span {
-                                classes = setOf("input-group-text")
-                                +"Aktørid"
-                            }
-                        }
-                        textInput {
-                            classes = setOf("form-control")
-                            id = "aktørid"
-                            value = "26104500284"
-                        }
-                    }
 
-                    for (aksjonspunkt in AksjonspunkterMock().aksjonspunkter()) {
                         div {
-                            classes = setOf("input-group")
+                            classes = setOf("input-group", "mb-3")
                             div {
                                 classes = setOf("input-group-prepend")
-                                div {
+                                span {
                                     classes = setOf("input-group-text")
-                                    input(InputType.checkBox) {
-                                        id = "Checkbox${aksjonspunkt.kode}"
-                                        onClick = "toggle('${aksjonspunkt.kode}')"
-                                    }
+                                    +"EksternId"
                                 }
                             }
+                            textInput {
+                                classes = setOf("form-control")
+                                id = "uuid"
+                                value = UUID.randomUUID().toString()
+                            }
+                        }
+
+                        div {
+                            classes = setOf("input-group", "mb-3")
                             div {
-                                classes = setOf("input-group-text display-4")
-                                +"${aksjonspunkt.kode} ${aksjonspunkt.navn} Type: ${aksjonspunkt.behandlingsstegtype} Plassering: ${aksjonspunkt.plassering} Totrinn: ${aksjonspunkt.totrinn}"
+                                classes = setOf("input-group-prepend")
+                                span {
+                                    classes = setOf("input-group-text")
+                                    +"Aktørid"
+                                }
+                            }
+                            textInput {
+                                classes = setOf("form-control")
+                                id = "aktørid"
+                                value = "26104500284"
+                            }
+                        }
+
+                        for (aksjonspunkt in AksjonspunkterMock().aksjonspunkter()) {
+                            div {
+                                classes = setOf("input-group")
+                                div {
+                                    classes = setOf("input-group-prepend")
+                                    div {
+                                        classes = setOf("input-group-text")
+                                        input(InputType.checkBox) {
+                                            id = "Checkbox${aksjonspunkt.kode}"
+                                            onClick = "toggle('${aksjonspunkt.kode}')"
+                                        }
+                                    }
+                                }
+                                div {
+                                    classes = setOf("input-group-text display-4")
+                                    +"${aksjonspunkt.kode} ${aksjonspunkt.navn} Type: ${aksjonspunkt.behandlingsstegtype} Plassering: ${aksjonspunkt.plassering} Totrinn: ${aksjonspunkt.totrinn}"
+                                }
                             }
                         }
                     }
                 }
             }
+
         }
     }
 
     post("/toggleaksjonspunkt") {
         if (profile == KoinProfile.PROD) {
             call.respond(HttpStatusCode.NotFound)
-        }
-        val aksjonspunktToggle = call.receive<AksjonspunktToggle>()
-
-        // punsj time
-        if (AksjonspunktDefWrapper.aksjonspunkterFraPunsj().map { a -> a.kode }.contains(aksjonspunktToggle.kode)) {
-            val modell = punsjEventK9Repository.hent(UUID.fromString(aksjonspunktToggle.eksternid))
-
-            val punsjEventDto = if (modell.erTom()) {
-                PunsjEventDto(
-                    eksternId = UUID.fromString(aksjonspunktToggle.eksternid),
-                    aksjonspunktKoderMedStatusListe = mutableMapOf(aksjonspunktToggle.kode to "OPPR"),
-                    journalpostId = JournalpostId("133742069666"),
-                    eventTid = LocalDateTime.now(),
-                    aktørId = AktørId(aksjonspunktToggle.aktørid)
-                )
-            } else {
-                val sisteEvent = modell.sisteEvent()
-                sisteEvent.aksjonspunktKoderMedStatusListe[aksjonspunktToggle.kode] =
-                    if (aksjonspunktToggle.toggle) "OPPR" else "AVSL"
-
-                PunsjEventDto(
-                    eksternId = sisteEvent.eksternId,
-                    aksjonspunktKoderMedStatusListe = sisteEvent.aksjonspunktKoderMedStatusListe,
-                    journalpostId = sisteEvent.journalpostId,
-                    eventTid = LocalDateTime.now(),
-                    aktørId = sisteEvent.aktørId
-                )
-            }
-            k9punsjEventHandler.prosesser(punsjEventDto)
-
         } else {
-            val modell = behandlingProsessEventRepository.hent(UUID.fromString(aksjonspunktToggle.eksternid))
+            val aksjonspunktToggle = call.receive<AksjonspunktToggle>()
 
-            val event = if (modell.erTom()) {
-                BehandlingProsessEventDto(
-                    UUID.fromString(aksjonspunktToggle.eksternid),
-                    Fagsystem.K9SAK,
-                    "Saksnummer",
-                    aksjonspunktToggle.aktørid,
-                    vedtaksdato = null,
-                    1234L,
-                    LocalDate.now(),
-                    LocalDateTime.now(),
-                    EventHendelse.AKSJONSPUNKT_OPPRETTET,
-                    behandlingStatus = "UTRED",
-                    aksjonspunktKoderMedStatusListe = mutableMapOf(aksjonspunktToggle.kode to "OPPR"),
-                    behandlingSteg = "",
-                    opprettetBehandling = LocalDateTime.now(),
-                    eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
-                    behandlingTypeKode = "BT-004",
-                    ytelseTypeKode = "OMP",
-                    aksjonspunktTilstander = emptyList()
-                )
+            // punsj time
+            if (AksjonspunktDefWrapper.aksjonspunkterFraPunsj().map { a -> a.kode }.contains(aksjonspunktToggle.kode)) {
+                val modell = punsjEventK9Repository.hent(UUID.fromString(aksjonspunktToggle.eksternid))
+
+                val punsjEventDto = if (modell.erTom()) {
+                    PunsjEventDto(
+                        eksternId = UUID.fromString(aksjonspunktToggle.eksternid),
+                        aksjonspunktKoderMedStatusListe = mutableMapOf(aksjonspunktToggle.kode to "OPPR"),
+                        journalpostId = JournalpostId("133742069666"),
+                        eventTid = LocalDateTime.now(),
+                        aktørId = AktørId(aksjonspunktToggle.aktørid)
+                    )
+                } else {
+                    val sisteEvent = modell.sisteEvent()
+                    sisteEvent.aksjonspunktKoderMedStatusListe[aksjonspunktToggle.kode] =
+                        if (aksjonspunktToggle.toggle) "OPPR" else "AVSL"
+
+                    PunsjEventDto(
+                        eksternId = sisteEvent.eksternId,
+                        aksjonspunktKoderMedStatusListe = sisteEvent.aksjonspunktKoderMedStatusListe,
+                        journalpostId = sisteEvent.journalpostId,
+                        eventTid = LocalDateTime.now(),
+                        aktørId = sisteEvent.aktørId
+                    )
+                }
+                k9punsjEventHandler.prosesser(punsjEventDto)
+
             } else {
-                val sisteEvent = modell.sisteEvent()
-                sisteEvent.aksjonspunktKoderMedStatusListe[aksjonspunktToggle.kode] =
-                    if (aksjonspunktToggle.toggle) "OPPR" else "AVSL"
-                BehandlingProsessEventDto(
-                    sisteEvent.eksternId,
-                    sisteEvent.fagsystem,
-                    sisteEvent.saksnummer,
-                    sisteEvent.aktørId,
-                    vedtaksdato = null,
-                    sisteEvent.behandlingId,
-                    LocalDate.now(),
-                    LocalDateTime.now(),
-                    EventHendelse.AKSJONSPUNKT_OPPRETTET,
-                    behandlingStatus = sisteEvent.behandlingStatus,
-                    aksjonspunktKoderMedStatusListe = sisteEvent.aksjonspunktKoderMedStatusListe,
-                    behandlingSteg = "",
-                    opprettetBehandling = LocalDateTime.now(),
-                    eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
-                    behandlingTypeKode = "BT-004",
-                    ytelseTypeKode = sisteEvent.ytelseTypeKode,
-                    aksjonspunktTilstander = emptyList()
-                )
+                val modell = behandlingProsessEventRepository.hent(UUID.fromString(aksjonspunktToggle.eksternid))
+
+                val event = if (modell.erTom()) {
+                    BehandlingProsessEventDto(
+                        UUID.fromString(aksjonspunktToggle.eksternid),
+                        Fagsystem.K9SAK,
+                        "Saksnummer",
+                        aksjonspunktToggle.aktørid,
+                        vedtaksdato = null,
+                        1234L,
+                        LocalDate.now(),
+                        LocalDateTime.now(),
+                        EventHendelse.AKSJONSPUNKT_OPPRETTET,
+                        behandlingStatus = "UTRED",
+                        aksjonspunktKoderMedStatusListe = mutableMapOf(aksjonspunktToggle.kode to "OPPR"),
+                        behandlingSteg = "",
+                        opprettetBehandling = LocalDateTime.now(),
+                        eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
+                        behandlingTypeKode = "BT-004",
+                        ytelseTypeKode = "OMP",
+                        aksjonspunktTilstander = emptyList()
+                    )
+                } else {
+                    val sisteEvent = modell.sisteEvent()
+                    sisteEvent.aksjonspunktKoderMedStatusListe[aksjonspunktToggle.kode] =
+                        if (aksjonspunktToggle.toggle) "OPPR" else "AVSL"
+                    BehandlingProsessEventDto(
+                        sisteEvent.eksternId,
+                        sisteEvent.fagsystem,
+                        sisteEvent.saksnummer,
+                        sisteEvent.aktørId,
+                        vedtaksdato = null,
+                        sisteEvent.behandlingId,
+                        LocalDate.now(),
+                        LocalDateTime.now(),
+                        EventHendelse.AKSJONSPUNKT_OPPRETTET,
+                        behandlingStatus = sisteEvent.behandlingStatus,
+                        aksjonspunktKoderMedStatusListe = sisteEvent.aksjonspunktKoderMedStatusListe,
+                        behandlingSteg = "",
+                        opprettetBehandling = LocalDateTime.now(),
+                        eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
+                        behandlingTypeKode = "BT-004",
+                        ytelseTypeKode = sisteEvent.ytelseTypeKode,
+                        aksjonspunktTilstander = emptyList()
+                    )
+                }
+                k9sakEventHandler.prosesser(event)
             }
-            k9sakEventHandler.prosesser(event)
+            call.respond(HttpStatusCode.Accepted)
         }
-        call.respond(HttpStatusCode.Accepted)
     }
 
     get("/10000AktiveEventer") {
         if (profile == KoinProfile.PROD) {
             call.respond(HttpStatusCode.NotFound)
-        }
-        for (i in 0..10000 step 1) {
+        } else {
+            for (i in 0..10000 step 1) {
 
-            val event =
-                BehandlingProsessEventDto(
-                    UUID.randomUUID(),
-                    Fagsystem.K9SAK,
-                    "Saksnummer",
-                    UUID.randomUUID().toString(),
-                    vedtaksdato = null,
-                    1234L,
-                    LocalDate.now(),
-                    LocalDateTime.now(),
-                    EventHendelse.AKSJONSPUNKT_OPPRETTET,
-                    behandlingStatus = "UTRED",
-                    aksjonspunktKoderMedStatusListe = mutableMapOf(AksjonspunktDefinisjon.AVKLAR_OPPHOLDSRETT.kode to "OPPR"),
-                    behandlingSteg = "",
-                    opprettetBehandling = LocalDateTime.now(),
-                    eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
-                    behandlingTypeKode = "BT-004",
-                    ytelseTypeKode = "OMP",
-                    aksjonspunktTilstander = emptyList() // TODO skal være lik aksjonspunktKoderMedStatus
-                )
+                val event =
+                    BehandlingProsessEventDto(
+                        UUID.randomUUID(),
+                        Fagsystem.K9SAK,
+                        "Saksnummer",
+                        UUID.randomUUID().toString(),
+                        vedtaksdato = null,
+                        1234L,
+                        LocalDate.now(),
+                        LocalDateTime.now(),
+                        EventHendelse.AKSJONSPUNKT_OPPRETTET,
+                        behandlingStatus = "UTRED",
+                        aksjonspunktKoderMedStatusListe = mutableMapOf(AksjonspunktDefinisjon.AVKLAR_OPPHOLDSRETT.kode to "OPPR"),
+                        behandlingSteg = "",
+                        opprettetBehandling = LocalDateTime.now(),
+                        eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
+                        behandlingTypeKode = "BT-004",
+                        ytelseTypeKode = "OMP",
+                        aksjonspunktTilstander = emptyList() // TODO skal være lik aksjonspunktKoderMedStatus
+                    )
 
-            k9sakEventHandler.prosesser(event)
+                k9sakEventHandler.prosesser(event)
+            }
+            call.respond(HttpStatusCode.Accepted)
         }
-        call.respond(HttpStatusCode.Accepted)
     }
 
     get("/endreBehandling") {
         if (profile == KoinProfile.PROD) {
             call.respond(HttpStatusCode.NotFound)
-        }
-        val valgtKø = call.request.queryParameters["valgtKø"]
-        val ferdigStill = call.request.queryParameters["ferdigstill"]
-        if (ferdigStill != null) {
-            k9sakEventHandler.prosesser(
-                behandlingProsessEventRepository.hent(UUID.fromString(ferdigStill)).sisteEvent()
-                    .copy(
-                        behandlingStatus = BehandlingStatus.AVSLUTTET.kode,
-                        aksjonspunktKoderMedStatusListe = mutableMapOf(),
-                        eventTid = LocalDateTime.now()
-                    )
-            )
-        }
-
-        val oppgavekøer = oppgaveKøRepository.hentIkkeTaHensyn()
-
-        call.respondHtml {
-            head {
-                title { +"Test app for k9-los" }
-                styleLink("/static/bootstrap.css")
-                script(src = "/static/script.js") {}
+        } else {
+            val valgtKø = call.request.queryParameters["valgtKø"]
+            val ferdigStill = call.request.queryParameters["ferdigstill"]
+            if (ferdigStill != null) {
+                k9sakEventHandler.prosesser(
+                    behandlingProsessEventRepository.hent(UUID.fromString(ferdigStill)).sisteEvent()
+                        .copy(
+                            behandlingStatus = BehandlingStatus.AVSLUTTET.kode,
+                            aksjonspunktKoderMedStatusListe = mutableMapOf(),
+                            eventTid = LocalDateTime.now()
+                        )
+                )
             }
-            body {
-                div {
-                    classes = setOf("container ")
-                    a {
-                        href = "/mock"
-                        +"Mock"
-                    }
-                    h1 { +"Endre behandling" }
-                    select {
-                        classes = setOf("form-control")
-                        id = "valgtKø"
-                        //language=JavaScript
-                        onChange = "window.location.search ='?valgtKø=' + document.getElementById('valgtKø').value;"
-                        option {
-                            disabled = true
-                            selected = true
-                            +"Velg kø"
-                        }
-                        option {
-                            selected = "reserverte" == valgtKø
-                            value = "reserverte"
-                            +"Reserverte"
-                        }
-                        for (oppgaveKø in oppgavekøer) {
-                            option {
-                                selected = oppgaveKø.id.toString() == valgtKø
-                                value = oppgaveKø.id.toString()
-                                +oppgaveKø.navn
-                            }
-                        }
-                    }
 
-                    if (valgtKø != null) {
-                        val oppgaver =
-                            runBlocking {
-                                if (valgtKø == "reserverte") {
-                                    oppgaveRepository
-                                        .hentOppgaver(
-                                            saksbehandlerRepository.hentAlleSaksbehandlereIkkeTaHensyn()
-                                                .flatMap { it.reservasjoner })
-                                } else {
-                                    oppgaveRepository
-                                        .hentOppgaver(oppgavekøer.first { it.id == UUID.fromString(valgtKø) }
-                                            .oppgaverOgDatoer.take(20).map { it.id })
+            val oppgavekøer = oppgaveKøRepository.hentIkkeTaHensyn()
+
+            call.respondHtml {
+                head {
+                    title { +"Test app for k9-los" }
+                    styleLink("/static/bootstrap.css")
+                    script(src = "/static/script.js") {}
+                }
+                body {
+                    div {
+                        classes = setOf("container ")
+                        a {
+                            href = "/mock"
+                            +"Mock"
+                        }
+                        h1 { +"Endre behandling" }
+                        select {
+                            classes = setOf("form-control")
+                            id = "valgtKø"
+                            //language=JavaScript
+                            onChange = "window.location.search ='?valgtKø=' + document.getElementById('valgtKø').value;"
+                            option {
+                                disabled = true
+                                selected = true
+                                +"Velg kø"
+                            }
+                            option {
+                                selected = "reserverte" == valgtKø
+                                value = "reserverte"
+                                +"Reserverte"
+                            }
+                            for (oppgaveKø in oppgavekøer) {
+                                option {
+                                    selected = oppgaveKø.id.toString() == valgtKø
+                                    value = oppgaveKø.id.toString()
+                                    +oppgaveKø.navn
                                 }
                             }
-                        table {
-                            classes = setOf("table")
-                            thead {
-                                tr {
-                                    td {
-                                        +"Saksnummer"
-                                    }
-                                    td {
-                                        +"Behandlingstatus"
-                                    }
-                                    td {
-                                        +""
+                        }
+
+                        if (valgtKø != null) {
+                            val oppgaver =
+                                runBlocking {
+                                    if (valgtKø == "reserverte") {
+                                        oppgaveRepository
+                                            .hentOppgaver(
+                                                saksbehandlerRepository.hentAlleSaksbehandlereIkkeTaHensyn()
+                                                    .flatMap { it.reservasjoner })
+                                    } else {
+                                        oppgaveRepository
+                                            .hentOppgaver(oppgavekøer.first { it.id == UUID.fromString(valgtKø) }
+                                                .oppgaverOgDatoer.take(20).map { it.id })
                                     }
                                 }
-                            }
-                            for (oppgave in oppgaver) {
-                                tr {
-                                    td { +oppgave.fagsakSaksnummer }
-                                    td { +oppgave.behandlingStatus.navn }
-                                    td {
-                                        button {
-                                            classes = setOf("btn", "btn-dark")
-                                            //language=JavaScript
-                                            onClick =
-                                                "window.location.search = (window.location.search.lastIndexOf('&') == -1 ? window.location.search : window.location.search.substr(0,window.location.search.lastIndexOf('&'))) +'&ferdigstill=${oppgave.eksternId}';"
-                                            +"Ferdigstill"
+                            table {
+                                classes = setOf("table")
+                                thead {
+                                    tr {
+                                        td {
+                                            +"Saksnummer"
+                                        }
+                                        td {
+                                            +"Behandlingstatus"
+                                        }
+                                        td {
+                                            +""
+                                        }
+                                    }
+                                }
+                                for (oppgave in oppgaver) {
+                                    tr {
+                                        td { +oppgave.fagsakSaksnummer }
+                                        td { +oppgave.behandlingStatus.navn }
+                                        td {
+                                            button {
+                                                classes = setOf("btn", "btn-dark")
+                                                //language=JavaScript
+                                                onClick =
+                                                    "window.location.search = (window.location.search.lastIndexOf('&') == -1 ? window.location.search : window.location.search.substr(0,window.location.search.lastIndexOf('&'))) +'&ferdigstill=${oppgave.eksternId}';"
+                                                +"Ferdigstill"
+                                            }
                                         }
                                     }
                                 }

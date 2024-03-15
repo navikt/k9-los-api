@@ -205,11 +205,9 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         ReservasjonOversetter(
             transactionalManager = get(),
             oppgaveV3Repository = get(),
-            oppgavetypeRepository = get(),
             saksbehandlerRepository = get(),
             reservasjonV3Tjeneste = get(),
             oppgaveV1Repository = get(),
-            oppgaveV3Tjeneste = get(),
             oppgaveV3RepositoryMedTxWrapper = get(),
         )
     }
@@ -368,7 +366,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgaveV3Repository = get(),
             oppgavetypeRepository = get(),
             områdeRepository = get(),
-            transactionalManager = get()
+            reservasjonTjeneste = get(),
         )
     }
     single {

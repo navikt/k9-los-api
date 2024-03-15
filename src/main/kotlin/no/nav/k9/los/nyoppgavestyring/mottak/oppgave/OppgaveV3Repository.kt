@@ -161,7 +161,7 @@ class OppgaveV3Repository(
         return tx.run(
             queryOf(
                 """
-                    select eksternId
+                    select ekstern_id
                     from oppgave_v3
                     where reservasjonsnokkel = :reservasjonsnokkel
                     and aktiv = true
@@ -169,7 +169,7 @@ class OppgaveV3Repository(
                 mapOf(
                     "reservasjonsnokkel" to reservasjonsnøkkel
                 )
-            ).map { row -> row.string("eksternId")}.asList
+            ).map { row -> row.string("ekstern_id")}.asList
         )
     }
 

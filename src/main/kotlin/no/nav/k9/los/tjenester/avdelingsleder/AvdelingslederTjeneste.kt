@@ -1,5 +1,6 @@
 package no.nav.k9.los.tjenester.avdelingsleder
 
+import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.domene.lager.oppgave.Reservasjon
 import no.nav.k9.los.domene.modell.*
 import no.nav.k9.los.domene.repository.OppgaveKøRepository
@@ -313,10 +314,18 @@ class AvdelingslederTjeneste(
         }
     }
 
-    suspend fun hentAlleAktiveReservasjonerV3(): List<ReservasjonV3Dto> {
-        return reservasjonV3Tjeneste.hentAlleAktiveReservasjoner().map { reservasjon ->
+    fun hentAlleAktiveReservasjonerV3(innloggetBruker: Saksbehandler): List<ReservasjonV3Dto> {
+        val innloggetBrukerHarKode6Tilgang = pepClient.harTilgangTilKode6(innloggetBruker.brukerIdent!!)
+
+        return reservasjonV3Tjeneste.hentAlleAktiveReservasjoner().mapNotNull { reservasjon ->
             val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(reservasjon.reservertAv)
-            reservasjonV3DtoBuilder.byggReservasjonV3Dto(reservasjon, saksbehandler)
+            val saksbehandlerHarKode6Tilgang = pepClient.harTilgangTilKode6(saksbehandler.brukerIdent!!)
+
+            if (innloggetBrukerHarKode6Tilgang != saksbehandlerHarKode6Tilgang) {
+                null
+            } else runBlocking {
+                reservasjonV3DtoBuilder.byggReservasjonV3Dto(reservasjon, saksbehandler)
+            }
         }
     }
 
