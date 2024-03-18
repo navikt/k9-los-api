@@ -64,12 +64,18 @@ internal fun Route.OppgaveApis() {
     class getReserverteOppgaver
     get { _: getReserverteOppgaver ->
         requestContextService.withRequestContext(call) {
+            val innloggetBrukernavn = kotlin.coroutines.coroutineContext.idToken().getUsername()
             val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
-                kotlin.coroutines.coroutineContext.idToken().getUsername()
-            )!!
+                innloggetBrukernavn
+            )
 
-            val reservasjonV3Dtos = oppgaveApisTjeneste.hentReserverteOppgaverForSaksbehandler(innloggetBruker)
-            call.respond(reservasjonV3Dtos)
+            if (innloggetBruker != null) {
+                val reservasjonV3Dtos = oppgaveApisTjeneste.hentReserverteOppgaverForSaksbehandler(innloggetBruker)
+                call.respond(reservasjonV3Dtos)
+            } else {
+                log.error("Innlogger bruker med brukernavn $innloggetBrukernavn finnes ikke i saksbehandlertabellen")
+                call.respond(HttpStatusCode.InternalServerError, "Innlogger bruker med brukernavn $innloggetBrukernavn finnes ikke i saksbehandlertabellen")
+            }
         }
     }
 
