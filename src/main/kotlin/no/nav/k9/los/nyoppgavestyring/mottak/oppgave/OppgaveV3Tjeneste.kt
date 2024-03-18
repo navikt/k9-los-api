@@ -52,6 +52,8 @@ class OppgaveV3Tjeneste(
 
         oppgaveV3Repository.nyOppgaveversjon(innkommendeOppgave, tx)
 
+        /* TODO: Denne løsningen var litt for enkel. Vi må ha en variant som ser på reservasjonsnøkkel på tvers av _beslutter postfix.
+             Evt få besluttermekanismen som first class citizen på oppgavemodellen
         if (innkommendeOppgave.status == Oppgavestatus.LUKKET) {
             val oppgaverIderFornøkkel =
                 oppgaveV3Repository.hentOppgaveEksternIderForReservasjonsnøkkel(
@@ -65,6 +67,8 @@ class OppgaveV3Tjeneste(
                     reservasjonTjeneste.annullerReservasjonHvisFinnes(innkommendeOppgave.reservasjonsnøkkel, "Alle oppgaver på nøkkel er avsluttet. Annulleres maskinelt", null)
             }
         }
+
+         */
 
         return innkommendeOppgave
     }

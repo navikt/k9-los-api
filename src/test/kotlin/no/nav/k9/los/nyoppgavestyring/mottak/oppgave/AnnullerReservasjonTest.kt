@@ -16,10 +16,12 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.koin.test.get
 import java.time.LocalDateTime
 
+@Disabled
 class AnnullerReservasjonTest: AbstractK9LosIntegrationTest() {
     private val områdeDto = Område(eksternId = "OppgaveV3Test")
     private lateinit var oppgaveV3Tjeneste: OppgaveV3Tjeneste
