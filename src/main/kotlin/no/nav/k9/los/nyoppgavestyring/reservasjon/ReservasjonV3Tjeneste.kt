@@ -239,7 +239,7 @@ class ReservasjonV3Tjeneste(
 
     private fun sjekkTilganger(oppgaver: List<Oppgave>, brukerIdSomSkalHaReservasjon: Long, utføresAvId: Long): Boolean {
         oppgaver.forEach { oppgave ->
-            if (beslutterErSaksbehandler(oppgave, brukerIdSomSkalHaReservasjon)) throw ManglerTilgangException("Saksbehandler kan ikke være beslutter på egen sak")
+            if (beslutterErSaksbehandler(oppgave, brukerIdSomSkalHaReservasjon)) throw ManglerTilgangException("Saksbehandler kan ikke være beslutter på egen behandling")
 
             val saksnummer = oppgave.hentVerdi("saksnummer") //TODO gjøre oppgavetypeagnostisk
             if (saksnummer != null) { //TODO: Oppgaver uten saksnummer?
