@@ -314,7 +314,7 @@ class AvdelingslederTjeneste(
         }
     }
 
-    fun hentAlleAktiveReservasjonerV3(innloggetBruker: Saksbehandler): List<ReservasjonV3Dto> {
+    suspend fun hentAlleAktiveReservasjonerV3(innloggetBruker: Saksbehandler): List<ReservasjonV3Dto> {
         val innloggetBrukerHarKode6Tilgang = pepClient.harTilgangTilKode6(innloggetBruker.brukerIdent!!)
 
         return reservasjonV3Tjeneste.hentAlleAktiveReservasjoner().mapNotNull { reservasjon ->
@@ -323,7 +323,7 @@ class AvdelingslederTjeneste(
 
             if (innloggetBrukerHarKode6Tilgang != saksbehandlerHarKode6Tilgang) {
                 null
-            } else runBlocking {
+            } else {
                 reservasjonV3DtoBuilder.byggReservasjonV3Dto(reservasjon, saksbehandler)
             }
         }
