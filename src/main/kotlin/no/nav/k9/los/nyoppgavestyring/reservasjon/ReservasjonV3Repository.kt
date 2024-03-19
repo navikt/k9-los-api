@@ -262,6 +262,8 @@ class ReservasjonV3Repository(
     }
 
     fun hentUreserverteOppgaveIder(oppgaveIder: List<Long>): List<Long> {
+        if (oppgaveIder.isEmpty()) return emptyList()
+
         return transactionalManager.transaction { tx ->
             tx.run(
                 queryOf(
