@@ -52,7 +52,7 @@ class EventRepository(
                     """.trimIndent(),
                     mapOf(
                         "ekstern_id" to eksternId,
-                        "eventNr" to eventNr
+                        "eventnr" to eventNr
                     )
                 ).map { row ->
                     row.string("data")
