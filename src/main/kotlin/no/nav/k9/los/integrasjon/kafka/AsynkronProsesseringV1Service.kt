@@ -6,6 +6,8 @@ import no.nav.k9.los.aksjonspunktbehandling.AksjonspunktPunsjStream
 import no.nav.k9.los.aksjonspunktbehandling.AksjonspunktStreamK9
 import no.nav.k9.los.fagsystem.k9sak.K9SakStream
 import no.nav.k9.los.fagsystem.k9sak.K9sakEventHandlerV2
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottakoghistorikk.punsj.AksjonspunktPunsjV3Stream
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottakoghistorikk.punsj.K9punsjEventHandlerV3
 import org.slf4j.LoggerFactory
 
 internal class AsynkronProsesseringV1Service(
@@ -17,6 +19,7 @@ internal class AsynkronProsesseringV1Service(
     k9sakEventHandlerv2: K9sakEventHandlerV2,
     k9TilbakeEventHandler: K9TilbakeEventHandler,
     punsjEventHandler: K9punsjEventHandler,
+    punsjEventV3HandlerV3: K9punsjEventHandlerV3,
 ) {
 
     private companion object {
@@ -51,6 +54,12 @@ internal class AsynkronProsesseringV1Service(
         kafkaConfig = if (configuration.punsjConsumerAiven()) kafkaAivenConfig else kafkaConfig,
         configuration = configuration,
         K9punsjEventHandler = punsjEventHandler
+    )
+
+    private val aksjonspunkPunsjV3Stream = AksjonspunktPunsjV3Stream(
+        kafkaConfig = if (configuration.punsjConsumerAiven()) kafkaAivenConfig else kafkaConfig,
+        configuration = configuration,
+        k9punsjEventHandlerV3 = punsjEventV3HandlerV3,
     )
 
     private val healthChecks = setOf(

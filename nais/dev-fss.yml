@@ -82,8 +82,6 @@ spec:
       value: b27apvl00045.preprod.local:8443,b27apvl00046.preprod.local:8443,b27apvl00047.preprod.local:8443
     - name: KAFKA_AKSJONSPUNKTHENDELSE_TOPIC
       value: k9saksbehandling.k9sak-aksjonspunkthendelse
-    - name: KAFKA_PUNSJ_TIL_LOS_TOPIC
-      value: k9saksbehandling.k9-punsj-til-los
     - name: KAFKA_KLAGE_TIL_LOS_TOPIC
       value: k9saksbehandling.oppgavemeldinger-klage-til-los
     - name: KAFKA_PUNSJAKSJONSPUNKTHENDELSE_TOPIC
@@ -104,6 +102,8 @@ spec:
       value: k9saksbehandling.privat-k9-produksjonsstyring-sak-v1
     - name: KAFKA_K9PUNSJ_TOPIC
       value: k9saksbehandling.privat-k9-produksjonsstyring-punsj-v1
+    - name: KAFKA_PUNSJ_TIL_LOS_TOPIC
+      value: k9saksbehandling.k9-punsj-til-los
 
       # ABAC
     - name: ABAC_PDP_ENDPOINT_URL
