@@ -17,7 +17,7 @@ import java.util.concurrent.Executors
 private val log: Logger =
     LoggerFactory.getLogger("oppdaterStatistikk")
 
-fun CoroutineScope.oppdaterStatistikk(
+fun CoroutineScope. oppdaterStatistikk(
     channel: ReceiveChannel<Boolean>,
     statistikkRepository: StatistikkRepository,
     oppgaveTjeneste: OppgaveTjeneste,

@@ -102,6 +102,8 @@ spec:
       value: k9saksbehandling.privat-k9-produksjonsstyring-sak-v1
     - name: KAFKA_K9PUNSJ_TOPIC
       value: k9saksbehandling.privat-k9-produksjonsstyring-punsj-v1
+    - name: KAFKA_PUNSJ_TIL_LOS_TOPIC
+      value: k9saksbehandling.k9-punsj-til-los
 
       # ABAC
     - name: ABAC_PDP_ENDPOINT_URL

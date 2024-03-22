@@ -34,6 +34,8 @@ import no.nav.k9.los.integrasjon.pdl.PdlServiceLocal
 import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottakoghistorikk.punsj.EventRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottakoghistorikk.punsj.K9punsjEventHandlerV3
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonKonverteringJobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
@@ -253,6 +255,19 @@ fun common(app: Application, config: Configuration) = module {
         )
     }
 
+    single {
+        K9punsjEventHandlerV3(
+            eventRepository = get(),
+        )
+    }
+
+    single {
+        no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottakoghistorikk.punsj.EventRepository(
+            dataSource = get(),
+            transactionalManager = get(),
+        )
+    }
+
 
     single {
         AsynkronProsesseringV1Service(
@@ -264,6 +279,7 @@ fun common(app: Application, config: Configuration) = module {
             k9TilbakeEventHandler = get(),
             punsjEventHandler = get(),
             k9KlageEventHandler = get(),
+            punsjEventV3HandlerV3 = get(),
         )
     }
 

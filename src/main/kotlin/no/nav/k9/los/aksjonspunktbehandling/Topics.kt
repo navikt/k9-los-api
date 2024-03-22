@@ -10,6 +10,7 @@ import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.KlagebehandlingProsessH
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventTilbakeDto
 import no.nav.k9.los.integrasjon.kafka.dto.PunsjEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottakoghistorikk.punsj.PunsjEventV3Dto
 import org.apache.kafka.common.serialization.Deserializer
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.common.serialization.Serializer
@@ -79,6 +80,20 @@ internal class AksjonspunktKlageLaget : SerDes<KlagebehandlingProsessHendelse>()
 
 internal class AksjonspunktPunsjLaget : SerDes<PunsjEventDto>() {
     override fun deserialize(topic: String?, data: ByteArray?): PunsjEventDto? {
+        return data?.let {
+            return try {
+                objectMapper.readValue(it)
+            } catch (e: Exception) {
+                log.warn("", e)
+                log.warn(String(it))
+                throw e
+            }
+        }
+    }
+}
+
+internal class PunsjEventV3SerDes : SerDes<PunsjEventV3Dto>() {
+    override fun deserialize(topic: String?, data: ByteArray?): PunsjEventV3Dto? {
         return data?.let {
             return try {
                 objectMapper.readValue(it)
