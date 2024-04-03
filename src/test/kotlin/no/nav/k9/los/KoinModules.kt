@@ -205,11 +205,9 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         ReservasjonOversetter(
             transactionalManager = get(),
             oppgaveV3Repository = get(),
-            oppgavetypeRepository = get(),
             saksbehandlerRepository = get(),
             reservasjonV3Tjeneste = get(),
             oppgaveV1Repository = get(),
-            oppgaveV3Tjeneste = get(),
             oppgaveV3RepositoryMedTxWrapper = get(),
         )
     }
@@ -270,7 +268,10 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             reservasjonRepository = get(),
             statistikkRepository = get(),
             statistikkChannel = get(named("statistikkRefreshChannel")),
-            reservasjonTjeneste = get()
+            reservasjonTjeneste = get(),
+            reservasjonV3Tjeneste = get(),
+            reservasjonOversetter = get(),
+            saksbehandlerRepository = get(),
         )
     }
 
@@ -328,7 +329,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         OmrådeSetup(
             områdeRepository = get(),
             feltdefinisjonTjeneste = get()
-        ).setup()
+        )
     }
     single { OppgavetypeRepository(dataSource = get(), feltdefinisjonRepository = get(), områdeRepository = get()) }
     single { OppgaveV3Repository(dataSource = get(), oppgavetypeRepository = get()) }
@@ -365,7 +366,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgaveV3Repository = get(),
             oppgavetypeRepository = get(),
             områdeRepository = get(),
-            transactionalManager = get()
+            reservasjonTjeneste = get(),
         )
     }
     single {
@@ -387,7 +388,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             transactionalManager = get(),
             k9SakBerikerKlient = get(),
             pepCacheService = get()
-        ).setup()
+        )
     }
 
     single<K9SakBerikerInterfaceKludge> {

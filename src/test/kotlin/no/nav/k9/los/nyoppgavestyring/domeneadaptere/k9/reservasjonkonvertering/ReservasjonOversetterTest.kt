@@ -12,6 +12,8 @@ import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.los.integrasjon.kafka.dto.EventHendelse
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveStatusDto
@@ -19,12 +21,22 @@ import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
 import org.koin.test.get
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
 class ReservasjonOversetterTest : AbstractK9LosIntegrationTest(){
+
+    @BeforeEach
+    fun setup() {
+        val områdeSetup = get<OmrådeSetup>()
+        områdeSetup.setup()
+        val k9SakTilLosAdapterTjeneste = get<K9SakTilLosAdapterTjeneste>()
+        k9SakTilLosAdapterTjeneste.setup()
+    }
+
     @Test
     fun taNyReservasjonFraGammelKontekstK9Sak() {
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
@@ -77,9 +89,6 @@ class ReservasjonOversetterTest : AbstractK9LosIntegrationTest(){
                 overstyrBegrunnelse = null
             )
         }
-
-        val reservasjonRepository = get<ReservasjonRepository>()
-        val alleReservasjonUUID = reservasjonRepository.hentAlleReservasjonUUID()
 
         assertTrue(oppgavestatus.erReservert)
         assertEquals("Saksbehandler Sara", oppgavestatus.reservertAvNavn)

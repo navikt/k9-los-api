@@ -12,12 +12,14 @@ import no.nav.k9.los.domene.repository.OppgaveKøRepository
 import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
 import java.time.LocalDate
@@ -27,6 +29,14 @@ import kotlin.test.assertNull
 import kotlin.test.asserter
 
 class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
+
+    @BeforeEach
+    fun setup() {
+        val områdeSetup = get<OmrådeSetup>()
+        områdeSetup.setup()
+        val k9SakTilLosAdapterTjeneste = get<K9SakTilLosAdapterTjeneste>()
+        k9SakTilLosAdapterTjeneste.setup()
+    }
 
     @Test
     fun `hent fagsak`() {
@@ -65,7 +75,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
         runBlocking {
-            saksbehandlerRepository.addSaksbehandler(Saksbehandler(123, "saksbehandler@nav.no", "test", "saksbehandler@nav.no", mutableSetOf(), "test"))
+            saksbehandlerRepository.addSaksbehandler(Saksbehandler(123, "Z123456", "test", "saksbehandler@nav.no", mutableSetOf(), "test"))
         }
 
         get<K9SakTilLosAdapterTjeneste>()
@@ -176,7 +186,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val reservasjonsHistorikk = oppgaveTjeneste.hentReservasjonsHistorikk(oppgave.eksternId)
 
         assert(reservasjonsHistorikk.reservasjoner.size == 2)
-        assert(reservasjonsHistorikk.reservasjoner[0].flyttetAv == "saksbehandler@nav.no")
+        assertThat(reservasjonsHistorikk.reservasjoner[0].flyttetAv).isEqualTo("Z123456")
     }
 
     @Test
@@ -1876,7 +1886,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveRepository.lagre(oppgave2.eksternId) { oppgave2 }
 
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
-        saksbehandlerRepository.addSaksbehandler(Saksbehandler(123, "saksbehandler@nav.no", "test", "saksbehandler@nav.no", mutableSetOf(), "test"))
+        saksbehandlerRepository.addSaksbehandler(Saksbehandler(123, "Z123456", "test", "saksbehandler@nav.no", mutableSetOf(), "test"))
 
         get<K9SakTilLosAdapterTjeneste>()
         val oppgaveV3Tjeneste = get<OppgaveV3Tjeneste>()

@@ -232,7 +232,10 @@ fun common(app: Application, config: Configuration) = module {
             reservasjonRepository = get(),
             statistikkRepository = get(),
             statistikkChannel = get(named("statistikkRefreshChannel")),
-            reservasjonTjeneste = get()
+            reservasjonTjeneste = get(),
+            reservasjonV3Tjeneste = get(),
+            reservasjonOversetter = get(),
+            saksbehandlerRepository = get(),
         )
     }
 
@@ -284,11 +287,9 @@ fun common(app: Application, config: Configuration) = module {
         ReservasjonOversetter(
             transactionalManager = get(),
             oppgaveV3Repository = get(),
-            oppgavetypeRepository = get(),
             saksbehandlerRepository = get(),
             reservasjonV3Tjeneste = get(),
             oppgaveV1Repository = get(),
-            oppgaveV3Tjeneste = get(),
             oppgaveV3RepositoryMedTxWrapper = get(),
         )
     }
@@ -407,7 +408,7 @@ fun common(app: Application, config: Configuration) = module {
             oppgaveV3Repository = get(),
             oppgavetypeRepository = get(),
             områdeRepository = get(),
-            transactionalManager = get()
+            reservasjonTjeneste = get()
         )
     }
     single {

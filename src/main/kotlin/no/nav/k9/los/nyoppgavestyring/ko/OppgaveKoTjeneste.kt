@@ -101,9 +101,7 @@ class OppgaveKoTjeneste(
         oppgaveKoId: Long,
         coroutineContext: CoroutineContext
     ): Pair<Oppgave, ReservasjonV3>? {
-        val oppgavekø = transactionalManager.transaction { tx ->
-            oppgaveKoRepository.hent(oppgaveKoId)
-        }
+        val oppgavekø = oppgaveKoRepository.hent(oppgaveKoId)
 
         val kandidatOppgaver = oppgaveQueryService.queryForOppgaveId(oppgavekø.oppgaveQuery)
 
@@ -151,6 +149,7 @@ class OppgaveKoTjeneste(
                 // V1-greier til og med denne linjen
                 val reservasjon = reservasjonV3Tjeneste.taReservasjon(
                     reserverForId = innloggetBrukerId,
+                    utføresAvId = innloggetBrukerId,
                     reservasjonsnøkkel = kandidatoppgave.reservasjonsnøkkel,
                     gyldigFra = LocalDateTime.now(),
                     gyldigTil = LocalDateTime.now().plusHours(24).forskyvReservasjonsDato(),
@@ -162,7 +161,7 @@ class OppgaveKoTjeneste(
                 log.warn("2 saksbehandlere prøvde å reservere nøkkel samtidig, reservasjonsnøkkel: ${kandidatoppgave.reservasjonsnøkkel}")
                 continue //TODO: Ved mange brukere her trenger vi kanskje en eller annen form for backoff, så ikke alle går samtidig på neste kandidat
             } catch (e: ManglerTilgangException) {
-                log.info("Saksbehandler $innloggetBrukerId mangler tilgang til å reservere nøkkel ${kandidatoppgave.reservasjonsnøkkel}")
+                log.info(e.message)
                 continue
             }
         }

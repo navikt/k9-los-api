@@ -20,11 +20,19 @@ class PepClientLocal : IPepClient {
         return true
     }
 
+    override fun harTilgangTilLesSak(fagsakNummer: String, aktørid: String, bruker: Saksbehandler): Boolean {
+        return true
+    }
+
     override suspend fun harTilgangTilReservingAvOppgaver(): Boolean {
         return true
     }
 
     override suspend fun harTilgangTilKode6(): Boolean {
+        return false
+    }
+
+    override fun harTilgangTilKode6(ident: String): Boolean {
         return false
     }
 
@@ -52,7 +60,10 @@ class PepClientLocal : IPepClient {
         return true
     }
 
-    override fun harTilgangTilOppgaveV3(oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave): Boolean {
+    override fun harTilgangTilOppgaveV3(
+        oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave,
+        bruker: Saksbehandler
+    ): Boolean {
         return true
     }
 

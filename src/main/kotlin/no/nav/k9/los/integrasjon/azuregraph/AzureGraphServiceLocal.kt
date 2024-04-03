@@ -3,7 +3,7 @@ package no.nav.k9.los.integrasjon.azuregraph
 open class AzureGraphServiceLocal : IAzureGraphService {
 
     override suspend fun hentIdentTilInnloggetBruker(): String {
-        return "saksbehandler@nav.no"
+        return "Z123456"
     }
 
     override suspend fun hentEnhetForInnloggetBruker(): String {

@@ -10,6 +10,8 @@ import no.nav.k9.los.domene.modell.K9TilbakeModell
 import no.nav.k9.los.domene.repository.*
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventTilbakeDto
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
 import org.slf4j.LoggerFactory
@@ -23,7 +25,10 @@ class K9TilbakeEventHandler(
     private val reservasjonRepository: ReservasjonRepository,
     private val statistikkRepository: StatistikkRepository,
     private val statistikkChannel: Channel<Boolean>,
-    private val reservasjonTjeneste: ReservasjonTjeneste
+    private val reservasjonTjeneste: ReservasjonTjeneste,
+    private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
+    private val reservasjonOversetter: ReservasjonOversetter,
+    private val saksbehandlerRepository: SaksbehandlerRepository,
 ) : EventTeller {
 
     companion object {
@@ -44,6 +49,15 @@ class K9TilbakeEventHandler(
         if (modell.fikkEndretAksjonspunkt()) {
             log.info("Fjerner reservasjon på oppgave ${oppgave.eksternId}")
             reservasjonTjeneste.fjernReservasjon(oppgave)
+            val reservasjonV3 =
+                reservasjonOversetter.hentAktivReservasjonFraGammelKontekst(oppgave)
+            reservasjonV3?.let {
+                val identSomAnnullerer = if (oppgave.tilBeslutter) { event.ansvarligSaksbehandlerIdent } else { event.ansvarligBeslutterIdent ?: event.ansvarligSaksbehandlerIdent }
+                identSomAnnullerer?.let {
+                    val saksbehandlerSomAnnullerer = saksbehandlerRepository.finnSaksbehandlerMedIdent(identSomAnnullerer)!!
+                    reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(reservasjonV3.reservasjonsnøkkel, "Tilbakekrav - annullerer ", saksbehandlerSomAnnullerer.id!!)
+                }
+            }
         }
 
         runBlocking {

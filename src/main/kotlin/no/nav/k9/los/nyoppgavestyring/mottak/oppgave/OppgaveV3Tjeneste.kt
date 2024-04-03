@@ -1,16 +1,16 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 
 import kotliquery.TransactionalSession
-import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import org.slf4j.LoggerFactory
 
 class OppgaveV3Tjeneste(
     private val oppgaveV3Repository: OppgaveV3Repository,
     private val oppgavetypeRepository: OppgavetypeRepository,
     private val områdeRepository: OmrådeRepository,
-    private val transactionalManager: TransactionalManager
+    private val reservasjonTjeneste: ReservasjonV3Tjeneste
 ) {
 
     private val log = LoggerFactory.getLogger(OppgaveV3Tjeneste::class.java)
@@ -49,9 +49,26 @@ class OppgaveV3Tjeneste(
         innkommendeOppgave = OppgaveV3(innkommendeOppgave, innkommendeOppgave.felter.plus(utledeteFelter))
 
         innkommendeOppgave.valider()
-        //oppgavetype.validerInnkommendeOppgave(oppgaveDto)
 
         oppgaveV3Repository.nyOppgaveversjon(innkommendeOppgave, tx)
+
+        /* TODO: Denne løsningen var litt for enkel. Vi må ha en variant som ser på reservasjonsnøkkel på tvers av _beslutter postfix.
+             Evt få besluttermekanismen som first class citizen på oppgavemodellen
+        if (innkommendeOppgave.status == Oppgavestatus.LUKKET) {
+            val oppgaverIderFornøkkel =
+                oppgaveV3Repository.hentOppgaveEksternIderForReservasjonsnøkkel(
+                    innkommendeOppgave.reservasjonsnøkkel,
+                    tx
+                )
+            val oppgaver = oppgaverIderFornøkkel.mapNotNull { eksternId ->
+                oppgaveV3Repository.hentAktivOppgave(eksternId, innkommendeOppgave.oppgavetype, tx)
+            }
+            if (!oppgaver.any { oppgave -> oppgave.status == Oppgavestatus.AAPEN || oppgave.status == Oppgavestatus.VENTER}) { //TODO: hvorfor må oppgave nullsafes her??
+                    reservasjonTjeneste.annullerReservasjonHvisFinnes(innkommendeOppgave.reservasjonsnøkkel, "Alle oppgaver på nøkkel er avsluttet. Annulleres maskinelt", null)
+            }
+        }
+
+         */
 
         return innkommendeOppgave
     }

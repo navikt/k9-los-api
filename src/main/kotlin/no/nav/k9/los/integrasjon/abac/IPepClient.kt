@@ -9,6 +9,8 @@ interface IPepClient {
 
     suspend fun harTilgangTilKode6(): Boolean
 
+    fun harTilgangTilKode6(ident: String): Boolean
+
     suspend fun harBasisTilgang(): Boolean
 
     suspend fun kanLeggeUtDriftsmelding(): Boolean
@@ -16,6 +18,12 @@ interface IPepClient {
     suspend fun harTilgangTilLesSak(
         fagsakNummer: String,
         aktørid: String
+    ): Boolean
+
+    fun harTilgangTilLesSak(
+        fagsakNummer: String,
+        aktørid: String,
+        bruker: Saksbehandler
     ): Boolean
 
     suspend fun harTilgangTilReservingAvOppgaver(): Boolean
@@ -37,7 +45,7 @@ interface IPepClient {
 
     suspend fun harTilgangTilOppgave(oppgave: Oppgave) : Boolean
 
-    fun harTilgangTilOppgaveV3(oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave) : Boolean
+    fun harTilgangTilOppgaveV3(oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave, bruker: Saksbehandler) : Boolean
 
     suspend fun harTilgangTilÅReservereOppgave(oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave, bruker: Saksbehandler) : Boolean
 }
