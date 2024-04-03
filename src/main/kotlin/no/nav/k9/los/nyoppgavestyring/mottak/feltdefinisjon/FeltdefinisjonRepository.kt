@@ -45,6 +45,7 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
 
     fun fjern(sletteListe: Set<Feltdefinisjon>, tx: TransactionalSession) {
         sletteListe.forEach { datatype ->
+            if (datatype.id == null) throw IllegalArgumentException("Kan ikke fjerne feltdefinisjon med ukjent ID")
             try {
                 tx.run(
                     queryOf(
@@ -196,10 +197,6 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
 
     fun hentKodeverk(referanse: Kodeverkreferanse, tx: TransactionalSession) : Kodeverk {
         return hentKodeverk(områdeRepository.hentOmråde(referanse.område, tx), tx).hentKodeverk(referanse.eksternId)
-    }
-
-    fun hentKodeverk(områdeEksternId: String, tx: TransactionalSession): KodeverkForOmråde {
-        return hentKodeverk(områdeRepository.hentOmråde(områdeEksternId, tx), tx)
     }
 
     fun hentKodeverk(område: Område, tx: TransactionalSession): KodeverkForOmråde {

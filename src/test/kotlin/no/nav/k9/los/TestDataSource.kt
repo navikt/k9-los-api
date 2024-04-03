@@ -77,6 +77,14 @@ abstract class AbstractPostgresTest {
                 RESERVASJON_V3_ENDRING,
                 OPPGAVE_V3,
                 OPPGAVE_PEP_CACHE,
+                kodeverk,
+                kodeverk_verdi,
+                omrade,
+                oppgavetype,
+                oppgavefelt,
+                oppgave_v3,
+                oppgavefelt_Verdi,
+                feltdefinisjon,
                 oppgave_v3_sendt_dvh;
                 
             ALTER SEQUENCE saksbehandler_id_seq restart

@@ -26,7 +26,7 @@ class OppgaveTestmodellBuilder(
         områdeRepository.lagre(eksternId = område.eksternId)
         oppgavetypeTjeneste.oppdater(
             OppgavetyperDto(
-                "K9",
+                "OppgaveV3Test",
                 definisjonskilde = "unittest",
                 oppgavetyper = emptySet()
             )

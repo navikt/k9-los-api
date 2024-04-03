@@ -12,12 +12,14 @@ import no.nav.k9.los.domene.repository.OppgaveKøRepository
 import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
 import java.time.LocalDate
@@ -27,6 +29,14 @@ import kotlin.test.assertNull
 import kotlin.test.asserter
 
 class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
+
+    @BeforeEach
+    fun setup() {
+        val områdeSetup = get<OmrådeSetup>()
+        områdeSetup.setup()
+        val k9SakTilLosAdapterTjeneste = get<K9SakTilLosAdapterTjeneste>()
+        k9SakTilLosAdapterTjeneste.setup()
+    }
 
     @Test
     fun `hent fagsak`() {

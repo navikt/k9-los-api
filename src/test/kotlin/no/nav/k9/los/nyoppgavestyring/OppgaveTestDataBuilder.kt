@@ -1,8 +1,10 @@
 package no.nav.k9.los.nyoppgavestyring
 
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
+import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
@@ -14,21 +16,24 @@ import java.time.LocalDateTime
 import java.util.*
 
 class OppgaveTestDataBuilder(
-    val område: Område = Område(1, "K9"),
     val definisjonskilde: String = "k9-sak-til-los",
     val oppgaveTypeNavn: String = "k9sak"
 ): KoinTest {
+    private var område: Område
+    val områdeRepository = get<OmrådeRepository>()
+    val områdeSetup = get<OmrådeSetup>()
     val transactionManager = get<TransactionalManager>()
     val oppgavetypeRepo = get<OppgavetypeRepository>()
     val oppgaverepo = get<OppgaveV3Repository>()
     val k9SakTilLosAdapterTjeneste = get<K9SakTilLosAdapterTjeneste>()
 
     init {
+        områdeSetup.setup()
+        område = områdeRepository.hent("K9")!!
         k9SakTilLosAdapterTjeneste.setup()
     }
 
     val oppgaveFeltverdier = mutableSetOf<OppgaveFeltverdi>()
-
 
     val oppgavetype = transactionManager.transaction { tx ->
         val oppgavetype = oppgavetypeRepo.hent(område, definisjonskilde, tx)

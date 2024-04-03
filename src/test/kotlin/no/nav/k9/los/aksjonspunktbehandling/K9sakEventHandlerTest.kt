@@ -16,7 +16,10 @@ import no.nav.k9.los.domene.repository.OppgaveKøRepository
 import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.los.integrasjon.kafka.dto.EventHendelse
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import org.intellij.lang.annotations.Language
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
 import java.time.LocalDate
@@ -30,6 +33,14 @@ class K9sakEventHandlerTest : AbstractK9LosIntegrationTest() {
 
     val objectMapper = jacksonObjectMapper()
         .dusseldorfConfigured().setPropertyNamingStrategy(PropertyNamingStrategies.LOWER_CAMEL_CASE)
+
+    @BeforeEach
+    fun setup() {
+        val områdeSetup = get<OmrådeSetup>()
+        områdeSetup.setup()
+        val k9SakTilLosAdapterTjeneste = get<K9SakTilLosAdapterTjeneste>()
+        k9SakTilLosAdapterTjeneste.setup()
+    }
 
     @Test
     fun `Skal lukke oppgave dersom den ikke har noen aktive aksjonspunkter`() {

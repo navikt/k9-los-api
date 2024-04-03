@@ -19,6 +19,8 @@ import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.los.integrasjon.kafka.dto.EventHendelse
 import no.nav.k9.los.nyoppgavestyring.FeltType
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgavefilterUtvider
@@ -57,6 +59,11 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
             // Gir tilgang til kode6 for å isolere testing av cache-oppdatering
             coEvery { pepClient.harTilgangTilLesSak(any(), any()) } returns true
         }
+
+        val områdeSetup = get<OmrådeSetup>()
+        områdeSetup.setup()
+        val k9SakTilLosAdapterTjeneste = get<K9SakTilLosAdapterTjeneste>()
+        k9SakTilLosAdapterTjeneste.setup()
     }
 
     fun gjørSakKode6(saksnummer: String) {

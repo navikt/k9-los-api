@@ -329,7 +329,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         OmrådeSetup(
             områdeRepository = get(),
             feltdefinisjonTjeneste = get()
-        ).setup()
+        )
     }
     single { OppgavetypeRepository(dataSource = get(), feltdefinisjonRepository = get(), områdeRepository = get()) }
     single { OppgaveV3Repository(dataSource = get(), oppgavetypeRepository = get()) }
@@ -388,7 +388,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             transactionalManager = get(),
             k9SakBerikerKlient = get(),
             pepCacheService = get()
-        ).setup()
+        )
     }
 
     single<K9SakBerikerInterfaceKludge> {

@@ -28,6 +28,7 @@ import no.nav.k9.los.integrasjon.azuregraph.AzureGraphService
 import no.nav.k9.los.integrasjon.pdl.PdlService
 import no.nav.k9.los.integrasjon.pdl.PersonPdl
 import no.nav.k9.los.integrasjon.pdl.PersonPdlResponse
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
@@ -35,6 +36,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.tjenester.sse.SseEvent
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.koin.test.KoinTest
@@ -45,6 +47,14 @@ import java.time.LocalDateTime
 import java.util.*
 
 class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
+
+    @BeforeEach
+    fun setup() {
+        val områdeSetup = get<OmrådeSetup>()
+        områdeSetup.setup()
+        val k9SakTilLosAdapterTjeneste = get<K9SakTilLosAdapterTjeneste>()
+        k9SakTilLosAdapterTjeneste.setup()
+    }
 
     @JvmField
     @RegisterExtension
