@@ -172,7 +172,7 @@ class OppgaveTjeneste constructor(
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(reserveresAvIdent)
         return OppgaveStatusDto(
             erReservert = true,
-            reservertTilTidspunkt = LocalDateTime.now().plusHours(24).forskyvReservasjonsDato(),
+            reservertTilTidspunkt = LocalDateTime.now().plusHours(48).forskyvReservasjonsDato(),
             erReservertAvInnloggetBruker = reservertAvMeg(reserveresAvIdent),
             reservertAv = reserveresAvIdent,
             reservertAvNavn = saksbehandler?.navn,
@@ -212,7 +212,7 @@ class OppgaveTjeneste constructor(
         begrunnelse: String? = null
     ): List<Reservasjon> {
         return iderPåOppgaverSomSkalBliReservert.map {
-            val reservertTil = LocalDateTime.now().plusHours(24).forskyvReservasjonsDato()
+            val reservertTil = LocalDateTime.now().plusHours(48).forskyvReservasjonsDato()
             if (overstyrIdent != null) {
                 Reservasjon(
                     reservertTil = reservertTil,
@@ -1123,7 +1123,7 @@ class OppgaveTjeneste constructor(
         reservasjonOversetter.taNyReservasjonFraGammelKontekst(
             oppgaveV1 = oppgaveSomSkalBliReservert,
             reserverForSaksbehandlerId = skalHaReservasjon.id!!,
-            reservertTil = LocalDateTime.now().plusHours(24).forskyvReservasjonsDato(),
+            reservertTil = LocalDateTime.now().plusHours(48).forskyvReservasjonsDato(),
             utførtAvSaksbehandlerId = skalHaReservasjon.id!!,
             kommentar = ""
         )

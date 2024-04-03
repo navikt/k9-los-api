@@ -53,7 +53,7 @@ class OppgaveApisTjeneste(
             val reservasjonV3 = reservasjonOversetter.taNyReservasjonFraGammelKontekst(
                 oppgaveV1 = oppgaveV1Repository.hent(UUID.fromString(oppgaveNøkkel.oppgaveEksternId)),
                 reserverForSaksbehandlerId = reserverForSaksbehandler.id!!,
-                reservertTil = reserverFra.plusHours(24).forskyvReservasjonsDato(),
+                reservertTil = reserverFra.plusHours(48).forskyvReservasjonsDato(),
                 utførtAvSaksbehandlerId = innloggetBruker.id!!,
                 kommentar = oppgaveIdMedOverstyringDto.overstyrBegrunnelse ?: "",
             )!!
@@ -74,7 +74,7 @@ class OppgaveApisTjeneste(
                     gyldigFra = reserverFra,
                     utføresAvId = innloggetBruker.id!!,
                     kommentar = oppgaveIdMedOverstyringDto.overstyrBegrunnelse ?: "",
-                    gyldigTil = reserverFra.plusHours(24).forskyvReservasjonsDato(),
+                    gyldigTil = reserverFra.plusHours(48).forskyvReservasjonsDato(),
                     tx = tx
                 )
             }
