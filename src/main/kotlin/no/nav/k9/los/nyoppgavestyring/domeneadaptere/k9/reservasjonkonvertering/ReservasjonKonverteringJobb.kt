@@ -43,6 +43,7 @@ class ReservasjonKonverteringJobb(
 
         for (gammelReservasjonUuid in reservasjonIder) {
             val reservasjonV1 = reservasjonRepository.hent(gammelReservasjonUuid)
+            loggFremgangForHver100(slettetReservasjon, "Hoppet over $slettetReservasjon reservasjoner")
             if (!reservasjonV1.erAktiv()) {
                 slettetReservasjon++
                 continue //Logisk slettet reservasjon. Migreres ikke
