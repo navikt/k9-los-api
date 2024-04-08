@@ -148,7 +148,7 @@ class ReservasjonOversetter(
         }
 
         if (beslutterErSaksbehandler(oppgave, reserverForSaksbehandlerId)) {
-            throw ManglerTilgangException("Saksbehandler kan ikke være beslutter på egen behandling")
+            throw ManglerTilgangException("Saksbehandler kan ikke være beslutter på egen behandling. Saksnummer: ${oppgave.fagsakSaksnummer}")
         }
 
         return reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(
