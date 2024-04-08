@@ -1,0 +1,52 @@
+package no.nav.k9.los.aksjonspunktbehandling
+
+import io.mockk.coEvery
+import io.mockk.mockk
+import kotlinx.coroutines.runBlocking
+import no.nav.k9.los.domene.modell.Saksbehandler
+import no.nav.k9.los.domene.repository.SaksbehandlerRepository
+import no.nav.k9.los.integrasjon.abac.IPepClient
+import org.koin.test.KoinTest
+import org.koin.test.get
+import javax.sql.DataSource
+
+class TestSaksbehandler: KoinTest {
+
+    val datasource = get<DataSource>()
+    val pepClient = mockk<IPepClient>(relaxed = true)
+    val repo = SaksbehandlerRepository(datasource, pepClient = pepClient)
+
+    companion object {
+        val SARA = Saksbehandler(
+            id = 1,
+            brukerIdent = "Z123456",
+            navn = "Sara Saksbehandler",
+            epost = "sara.saksbehandler@nav.no",
+            reservasjoner = mutableSetOf(),
+            enhet = "NAV DRIFT"
+        )
+
+        val KJERSTI_SKJERMET = Saksbehandler(
+            id = 2,
+            brukerIdent = "Z123456",
+            navn = "Kjersti Skjermet",
+            epost = "kjersti.skjermet@nav.no",
+            reservasjoner = mutableSetOf(),
+            enhet = "SKJERMET"
+        )
+
+    }
+
+    fun init() {
+        runBlocking {
+            repo.addSaksbehandler(SARA)
+            leggTilSkjermet()
+        }
+    }
+
+    private suspend fun leggTilSkjermet() {
+        coEvery { pepClient.harTilgangTilKode6() } returns true
+        repo.addSaksbehandler(KJERSTI_SKJERMET)
+        coEvery { pepClient.harTilgangTilKode6() } returns false
+    }
+}

@@ -16,7 +16,7 @@ class AnnullerReservasjonTest: AbstractK9LosIntegrationTest() {
     private lateinit var oppgaveV3Tjeneste: OppgaveV3Tjeneste
     private lateinit var transactionalManager: TransactionalManager
     private var reservasjonV3Tjenestemock = mockk<ReservasjonV3Tjeneste>()
-    private lateinit var oppgavemodellBuilder: OppgaveTestmodellBuilder
+    private lateinit var oppgavemodellBuilder: RedusertOppgaveTestmodellBuilder
 
     @BeforeEach
     fun setup() {
@@ -26,7 +26,7 @@ class AnnullerReservasjonTest: AbstractK9LosIntegrationTest() {
             områdeRepository = get(),
             reservasjonTjeneste = reservasjonV3Tjenestemock,
         )
-        oppgavemodellBuilder = OppgaveTestmodellBuilder()
+        oppgavemodellBuilder = RedusertOppgaveTestmodellBuilder()
         oppgavemodellBuilder.byggOppgavemodell()
         transactionalManager = get()
 
