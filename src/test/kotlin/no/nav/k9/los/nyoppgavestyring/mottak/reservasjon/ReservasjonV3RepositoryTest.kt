@@ -1,5 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.reservasjon
 
+import assertk.assertThat
+import assertk.assertions.isEqualTo
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
@@ -314,5 +316,48 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         transactionalManager.transaction { tx ->
             repo.lagreReservasjon(reservasjon2, tx)
         }
+    }
+
+    @Test
+    fun `forleng reservasjon`() {
+        val saksbehandlerRepository = get<SaksbehandlerRepository>()
+        val reservasjonV3Repository = get<ReservasjonV3Repository>()
+        val transactionalManager = get<TransactionalManager>()
+
+        val saksbehandler = runBlocking {
+            saksbehandlerRepository.addSaksbehandler(
+                Saksbehandler(
+                    id = null,
+                    brukerIdent = null,
+                    navn = null,
+                    epost = "test1@test.no",
+                    reservasjoner = mutableSetOf(),
+                    enhet = null,
+                )
+            )
+
+            saksbehandlerRepository.finnSaksbehandlerMedEpost("test1@test.no")!!
+        }
+
+        val reservasjon = ReservasjonV3(
+            reservertAv = saksbehandler.id!!,
+            reservasjonsnøkkel = "test1",
+            gyldigFra = LocalDateTime.now(),
+            gyldigTil = LocalDateTime.now().plusDays(1),
+            kommentar = ""
+        )
+
+        transactionalManager.transaction { tx ->
+            reservasjonV3Repository.lagreReservasjon(reservasjon, tx)
+        }
+
+        val forlengetReservasjon = transactionalManager.transaction { tx ->
+            val hentetReservasjon =
+                reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel("test1", tx)!!
+            reservasjonV3Repository.forlengReservasjon(hentetReservasjon, 1, hentetReservasjon.gyldigTil.plusDays(1), "testkommentar", tx)
+        }
+
+        assertThat(forlengetReservasjon.gyldigTil).isEqualTo(reservasjon.gyldigTil.plusDays(1))
+        assertThat(forlengetReservasjon.kommentar).isEqualTo("testkommentar")
     }
 }
