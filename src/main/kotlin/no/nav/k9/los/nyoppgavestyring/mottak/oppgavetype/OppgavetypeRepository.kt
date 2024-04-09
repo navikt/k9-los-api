@@ -194,12 +194,13 @@ class OppgavetypeRepository(
     }
 
     fun endre(endring: OppgavetypeEndring, tx: TransactionalSession) {
-        val oppgaveFinnes = sjekkOmOppgaverFinnes(endring.oppgavetype.id!!, tx)
+        val oppgavetypeId = hentOppgavetype(endring.oppgavetype.område, endring.oppgavetype.eksternId, tx).id!!
+        val oppgaveFinnes = sjekkOmOppgaverFinnes(oppgavetypeId, tx)
         endring.felterSomSkalLeggesTil.forEach { felt ->
             if (oppgaveFinnes && felt.påkrevd && felt.defaultverdi.isNullOrEmpty()) {
                 throw MissingDefaultException("Kan ikke legge til påkrevd på eksisterende oppgave uten å oppgi defaultverdi")
             }
-            leggTilOppgavefelt(tx, felt, endring.oppgavetype.id)
+            leggTilOppgavefelt(tx, felt, oppgavetypeId)
         }
 
         endring.felterSomSkalFjernes.forEach { felt ->
