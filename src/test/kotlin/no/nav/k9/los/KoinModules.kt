@@ -320,6 +320,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             pepClient = get(),
             reservasjonV3Tjeneste = get(),
             reservasjonV3DtoBuilder = get(),
+            oppgaveV3Repository = get(),
+            reservasjonOversetter = get(),
         )
     }
 

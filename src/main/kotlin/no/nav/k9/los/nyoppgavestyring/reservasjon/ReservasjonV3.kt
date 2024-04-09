@@ -16,6 +16,10 @@ class ReservasjonV3(
     val gyldigFra = gyldigFra.truncatedTo(ChronoUnit.MICROS)
     val gyldigTil = gyldigTil.truncatedTo(ChronoUnit.MICROS)
 
+    fun erForV1Oppgave() : Boolean {
+        return reservasjonsnøkkel.startsWith("legacy_")
+    }
+
     fun copy(
         id: Long?,
         reservertAv: Long = this.reservertAv,

@@ -5,6 +5,7 @@ import java.time.LocalDateTime
 import java.util.*
 
 data class ReservasjonDto(
+    val reservasjonsnøkkel: String,
     val reservertAvUid: String,
     val reservertAvNavn: String,
     val reservertTilTidspunkt: LocalDateTime,

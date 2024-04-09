@@ -32,7 +32,7 @@ class ReservasjonOversetter(
     fun hentV1OppgaveFraReservasjon(
         reservasjon: ReservasjonV3
     ): Oppgave? {
-        if (reservasjon.reservasjonsnøkkel.startsWith("legacy_")) {
+        if (reservasjon.erForV1Oppgave()) {
             return oppgaveV1Repository.hent(UUID.fromString(reservasjon.reservasjonsnøkkel.substring(7)))
         } else {
             return null

@@ -321,6 +321,8 @@ fun common(app: Application, config: Configuration) = module {
             pepClient = get(),
             reservasjonV3Tjeneste = get(),
             reservasjonV3DtoBuilder = get(),
+            oppgaveV3Repository = get(),
+            reservasjonOversetter = get(),
         )
     }
 
