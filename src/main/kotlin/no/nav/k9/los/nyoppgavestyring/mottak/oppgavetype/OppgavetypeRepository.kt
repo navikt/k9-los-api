@@ -215,6 +215,7 @@ class OppgavetypeRepository(
     }
 
     private fun oppdaterOppgavebehandlingsUrlTemplate(endring: OppgavetypeEndring, tx: TransactionalSession) {
+        log.info("lagrer urltemplate: ${endring.oppgavetype.oppgavebehandlingsUrlTemplate} på oppgavetype ${endring.oppgavetype.eksternId}")
         tx.run(
             queryOf(
                 """
