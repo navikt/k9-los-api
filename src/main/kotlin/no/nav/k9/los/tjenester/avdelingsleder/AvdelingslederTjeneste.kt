@@ -359,7 +359,6 @@ class AvdelingslederTjeneste(
                         )
                     })
                 }
-                reservasjonV3DtoBuilder.byggReservasjonV3Dto(reservasjon, saksbehandler)
             }
         }
         return reservasjonsliste.toList()
