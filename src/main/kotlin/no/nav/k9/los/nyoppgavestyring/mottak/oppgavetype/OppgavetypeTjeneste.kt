@@ -17,7 +17,11 @@ class OppgavetypeTjeneste(
     private val log: Logger = LoggerFactory.getLogger(OppgavetypeTjeneste::class.java)
 
     fun oppdater(innkommendeOppgavetyperDto: OppgavetyperDto) {
-        log.info("mottatt oppgavetypeDto, med behandlingsurlTemplate: ${innkommendeOppgavetyperDto.oppgavetyper.elementAt(0).oppgavebehandlingsUrlTemplate}")
+        if (innkommendeOppgavetyperDto.oppgavetyper.size > 0) {
+            log.info("mottatt oppgavetypeDto, med behandlingsurlTemplate: ${innkommendeOppgavetyperDto.oppgavetyper.elementAt(0).oppgavebehandlingsUrlTemplate}")
+        } else {
+            log.info("OppgavetypeTjeneste.oppdater -- innkommendeOppgavetyperDto.oppgavetyper er tom!")
+        }
         transactionalManager.transaction { tx ->
             val område = områdeRepository.hentOmråde(innkommendeOppgavetyperDto.område, tx)
             // lås feltdefinisjoner for område og hent opp
@@ -28,7 +32,11 @@ class OppgavetypeTjeneste(
             val (sletteListe, leggtilListe, oppdaterListe) = eksisterendeOppgavetyper.finnForskjell(innkommendeOppgavetyper)
             log.info("antall sletteliste oppgavetypedto: ${sletteListe.oppgavetyper.size}")
             log.info("antall leggtilListe oppgavetypedto: ${leggtilListe.oppgavetyper.size}")
-            log.info("urltemplate i oppdaterListe: ${oppdaterListe.get(0).oppgavetype.oppgavebehandlingsUrlTemplate}")
+            if (oppdaterListe.isNotEmpty()) {
+                log.info("urltemplate i oppdaterListe: ${oppdaterListe[0].oppgavetype.oppgavebehandlingsUrlTemplate}")
+            } else {
+                log.info("tom oppdaterliste!")
+            }
             oppgavetypeRepository.fjern(sletteListe, tx)
             oppgavetypeRepository.leggTil(leggtilListe, tx)
             oppdaterListe.forEach { endring ->

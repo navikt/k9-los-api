@@ -143,6 +143,7 @@ class OppgavetypeRepository(
 
     fun leggTil(oppgavetyper: Oppgavetyper, tx: TransactionalSession) {
         oppgavetyper.oppgavetyper.forEach { oppgavetype ->
+            log.info("legger til oppgavetype: ${oppgavetype.eksternId} med behandlingsUrlTemplate: ${oppgavetype.oppgavebehandlingsUrlTemplate}")
             val oppgavetypeId = tx.run(
                 queryOf(
                     """
