@@ -280,12 +280,14 @@ class EventTilDtoMapper {
             )
         ).apply {
             if (losOpplysningerSomManglerIKlageDto != null) {
-                add(
-                    OppgaveFeltverdiDto(
-                        nøkkel = "pleietrengendeAktorId",
-                        verdi = losOpplysningerSomManglerIKlageDto.pleietrengendeAktørId.aktørId
+                if (losOpplysningerSomManglerIKlageDto.pleietrengendeAktørId?.aktørId != null) {
+                    add(
+                        OppgaveFeltverdiDto(
+                            nøkkel = "pleietrengendeAktorId",
+                            verdi = losOpplysningerSomManglerIKlageDto.pleietrengendeAktørId.aktørId
+                        )
                     )
-                )
+                }
                 add(
                     OppgaveFeltverdiDto(
                         nøkkel = "utenlandstilsnitt",
