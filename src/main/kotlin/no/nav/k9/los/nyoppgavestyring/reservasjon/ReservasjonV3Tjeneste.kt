@@ -154,20 +154,23 @@ class ReservasjonV3Tjeneste(
         }
     }
 
+    fun annullerReservasjonHvisFinnes(reservasjonsnøkkel: String, kommentar: String, annullertAvBrukerId: Long?, tx: TransactionalSession) {
+        val aktivReservasjon =
+            reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(reservasjonsnøkkel, tx)
+        aktivReservasjon?.let {
+            reservasjonV3Repository.annullerAktivReservasjonOgLagreEndring(
+                aktivReservasjon,
+                kommentar,
+                annullertAvBrukerId,
+                tx
+            )
+        }
+    }
 
 
     fun annullerReservasjonHvisFinnes(reservasjonsnøkkel: String, kommentar: String, annullertAvBrukerId: Long?) {
         transactionalManager.transaction { tx ->
-            val aktivReservasjon =
-                reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(reservasjonsnøkkel, tx)
-            aktivReservasjon?.let {
-                reservasjonV3Repository.annullerAktivReservasjonOgLagreEndring(
-                    aktivReservasjon,
-                    kommentar,
-                    annullertAvBrukerId,
-                    tx
-                )
-            }
+            annullerReservasjonHvisFinnes(reservasjonsnøkkel, kommentar, annullertAvBrukerId, tx)
         }
     }
 

@@ -2,22 +2,21 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import kotliquery.TransactionalSession
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.los.Configuration
-import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.EventTilDtoMapper
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.*
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
 import no.nav.k9.los.nyoppgavestyring.pep.PepCacheService
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.BehandlingMedFagsakDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -30,9 +29,10 @@ class K9SakTilLosAdapterTjeneste(
     private val behandlingProsessEventK9Repository: BehandlingProsessEventK9Repository,
     private val oppgavetypeTjeneste: OppgavetypeTjeneste,
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
+    private val oppgaveRepository: OppgaveRepository,
+    private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
     private val config: Configuration,
     private val transactionalManager: TransactionalManager,
-    private val oppgaveRepositoryV2: OppgaveRepositoryV2,
     private val k9SakBerikerKlient: K9SakBerikerInterfaceKludge,
     private val pepCacheService: PepCacheService
 ) {
@@ -132,6 +132,10 @@ class K9SakTilLosAdapterTjeneste(
                 if (oppgave != null) {
                     pepCacheService.oppdater(tx, oppgave.kildeområde, oppgave.eksternId)
 
+                    if (oppgave.status == Oppgavestatus.VENTER) {
+                        annullerReservasjonHvisAlleOppgaverPåVentEllerAvsluttet(oppgave.reservasjonsnøkkel, tx)
+                    }
+
                     eventTeller++
                     loggFremgangForHver100(eventTeller, "Prosessert $eventTeller eventer")
                 }
@@ -143,6 +147,20 @@ class K9SakTilLosAdapterTjeneste(
             behandlingProsessEventK9Repository.fjernDirty(uuid, tx)
         }
         return eventTeller
+    }
+
+    private fun annullerReservasjonHvisAlleOppgaverPåVentEllerAvsluttet(reservasjonsnøkkel: String, tx: TransactionalSession) {
+        val åpneOppgaverForReservasjonsnøkkel =
+            oppgaveRepository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjonsnøkkel)
+
+        if (åpneOppgaverForReservasjonsnøkkel.none { oppgave -> oppgave.status != Oppgavestatus.VENTER.kode }) {
+            reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(
+                reservasjonsnøkkel,
+                "Maskinelt annullert reservasjon, siden alle oppgaver på resrvasjonen står på vent eller er avsluttet",
+                null,
+                tx
+            )
+        }
     }
 
     internal fun ryddOppObsoleteOgResultatfeilFra2020(
