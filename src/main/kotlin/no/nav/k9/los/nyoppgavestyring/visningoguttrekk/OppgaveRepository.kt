@@ -39,11 +39,11 @@ class OppgaveRepository(
                 from oppgave_v3 ov 
                 where reservasjonsnokkel = :reservasjonsnokkel
                 and aktiv = true
-                and status = :oppgavestatus
+                and status != :oppgavestatus
             """.trimIndent(),
                 mapOf(
                     "reservasjonsnokkel" to reservasjonsnøkkel,
-                    "oppgavestatus" to Oppgavestatus.AAPEN.kode,
+                    "oppgavestatus" to Oppgavestatus.LUKKET.kode,
                 )
             ).map { row ->
                 mapOppgave(row, now, tx)
