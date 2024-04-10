@@ -153,8 +153,13 @@ class K9SakTilLosAdapterTjeneste(
         val åpneOppgaverForReservasjonsnøkkel =
             oppgaveRepository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjonsnøkkel)
 
-        if (åpneOppgaverForReservasjonsnøkkel.none { oppgave -> oppgave.status == Oppgavestatus.AAPEN.kode }) {
-            reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(reservasjonsnøkkel, "Maskinelt annullert reservasjon, siden alle oppgaver på resrvasjonen står på vent eller er avsluttet", null, tx)
+        if (åpneOppgaverForReservasjonsnøkkel.none { oppgave -> oppgave.status != Oppgavestatus.VENTER.kode }) {
+            reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(
+                reservasjonsnøkkel,
+                "Maskinelt annullert reservasjon, siden alle oppgaver på resrvasjonen står på vent eller er avsluttet",
+                null,
+                tx
+            )
         }
     }
 
