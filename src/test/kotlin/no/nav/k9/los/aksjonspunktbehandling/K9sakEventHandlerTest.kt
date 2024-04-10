@@ -1,7 +1,10 @@
 package no.nav.k9.los.aksjonspunktbehandling
 
 import assertk.assertThat
-import assertk.assertions.*
+import assertk.assertions.isEqualTo
+import assertk.assertions.isGreaterThan
+import assertk.assertions.isNotNull
+import assertk.assertions.isNull
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -209,8 +212,6 @@ class K9sakEventHandlerTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `Skal støtte nytt format`() {
-        val k9sakEventHandler = get<K9sakEventHandler>()
-        val oppgaveRepository = get<OppgaveRepository>()
 
 
         @Language("JSON") val json =
