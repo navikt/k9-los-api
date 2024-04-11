@@ -50,6 +50,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Api
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeApi
 import no.nav.k9.los.nyoppgavestyring.pep.PepCacheOppdaterer
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryApis
+import no.nav.k9.los.observability.CoroutineDefaultDispatcherForsinkelseObserver
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederApis
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.DataeksportApis
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallApis
@@ -160,6 +161,10 @@ fun Application.k9Los() {
     PepCacheOppdaterer(koin.get()).run {
         startOppdateringAvÅpneOgVentende()
         startOppdateringAvLukkedeOppgaver()
+    }
+
+    CoroutineDefaultDispatcherForsinkelseObserver().run {
+        startSjekkAvForsinkelse()
     }
 
     val sjekkReserverteJobb =
