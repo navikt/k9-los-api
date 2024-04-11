@@ -1,5 +1,6 @@
 package no.nav.k9.los.aksjonspunktbehandling
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
@@ -14,6 +15,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAda
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
 import org.slf4j.LoggerFactory
+import kotlin.coroutines.CoroutineContext
 
 
 class K9sakEventHandler constructor(
@@ -75,7 +77,7 @@ class K9sakEventHandler constructor(
             reservasjonTjeneste.fjernReservasjon(oppgave)
         }
         modell.reportMetrics(reservasjonRepository)
-        runBlocking {
+        runBlocking(Dispatchers.IO) {
             for (oppgavekø in oppgaveKøRepository.hentKøIdIkkeTaHensyn()) {
                 oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, listOf(oppgave), reservasjonRepository)
             }

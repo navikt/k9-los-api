@@ -4,6 +4,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.kittinunf.fuel.coroutines.awaitStringResponseResult
 import com.github.kittinunf.fuel.httpGet
 import io.ktor.http.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
@@ -28,13 +29,13 @@ class K9SakBerikerSystemKlient(
 
     override fun hentBehandling(behandlingUUID: UUID): BehandlingMedFagsakDto? {
         var behandlingDto: BehandlingMedFagsakDto? = null
-        runBlocking { behandlingDto = hent(behandlingUUID) }
+        runBlocking (Dispatchers.IO) { behandlingDto = hent(behandlingUUID) }
         return behandlingDto
     }
 
     override fun berikKlage(påklagdBehandlingUUID: UUID): LosOpplysningerSomManglerIKlageDto? {
         var losOpplysningerSomManglerIKlageDto: LosOpplysningerSomManglerIKlageDto?
-        runBlocking { losOpplysningerSomManglerIKlageDto = hentKlagedata(påklagdBehandlingUUID) }
+        runBlocking (Dispatchers.IO) { losOpplysningerSomManglerIKlageDto = hentKlagedata(påklagdBehandlingUUID) }
         return losOpplysningerSomManglerIKlageDto
     }
 

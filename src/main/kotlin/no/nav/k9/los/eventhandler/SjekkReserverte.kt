@@ -1,5 +1,6 @@
 package no.nav.k9.los.eventhandler
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
@@ -15,6 +16,6 @@ fun sjekkReserverteJobb(
         initialDelay = 0, period = 900 * 1000
     ) {
         val reservasjoner = saksbehandlerRepository.hentAlleSaksbehandlereIkkeTaHensyn().flatMap { it.reservasjoner }
-        runBlocking { reservasjonRepository.hent(reservasjoner.toSet()) }
+        runBlocking (Dispatchers.IO) { reservasjonRepository.hent(reservasjoner.toSet()) }
     }
 }

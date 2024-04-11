@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
@@ -93,7 +94,7 @@ class OppgavestatistikkTjeneste(
 
     private fun sendStatistikk(id: Long, tx: TransactionalSession) {
         var (sak, behandling) = byggOppgavestatistikk(id, tx)
-        val erKode6 = runBlocking { pepClient.erSakKode6(sak.saksnummer) }
+        val erKode6 = runBlocking (Dispatchers.IO) { pepClient.erSakKode6(sak.saksnummer) }
         if (erKode6) {
             sak = nullUtEventuelleSensitiveFelter(sak)
         }

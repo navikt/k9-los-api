@@ -1,5 +1,6 @@
 package no.nav.k9.los.integrasjon.datavarehus
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.dusseldorf.ktor.health.HealthCheck
 import no.nav.helse.dusseldorf.ktor.health.Healthy
@@ -58,7 +59,7 @@ class StatistikkProducer constructor(
         if (config.koinProfile() == KoinProfile.LOCAL) {
             return
         }
-        runBlocking {
+        runBlocking (Dispatchers.IO) {
             sendSak(modell.dvhSak())
             sendBehandling(
                 modell.dvhBehandling(

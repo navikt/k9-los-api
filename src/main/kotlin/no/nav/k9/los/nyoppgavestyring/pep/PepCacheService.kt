@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.pep
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
@@ -41,8 +42,8 @@ class PepCacheService(
         gyldighet: Duration = Duration.ofHours(23),
         status: Set<Oppgavestatus>
     ) {
-        transactionalManager.transaction { tx ->
-            runBlocking {
+        transactionalManager.transaction { tx -> //TODO lag transaksjon i runBlocking
+            runBlocking (Dispatchers.IO) {
                 val oppgaverSomMåOppdateres = oppgaveRepository.hentOppgaverMedStatusOgPepCacheEldreEnn(
                     tidspunkt = LocalDateTime.now() - gyldighet,
                     antall = 1,
@@ -55,7 +56,7 @@ class PepCacheService(
     }
 
     fun oppdater(tx: TransactionalSession, kildeområde: String, eksternId: String): PepCache {
-        return runBlocking {
+        return runBlocking (Dispatchers.IO) {
             val oppgave = oppgaveRepository.hentNyesteOppgaveForEksternId(
                 tx,
                 kildeområde = kildeområde,

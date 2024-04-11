@@ -1,6 +1,7 @@
 package no.nav.k9.los.fagsystem.k9punsj
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.aksjonspunktbehandling.SerDes
@@ -57,7 +58,7 @@ internal class K9PunsjStream constructor(
                 ).peek { _, e -> log.info("--> K9PunsjHendelse: ${e.safeToString() }") }
                 .foreach { _, entry ->
                     if (entry != null) {
-                        runBlocking {
+                        runBlocking (Dispatchers.IO) {
                             k9PunsjEventHandler.prosesser(entry)
                         }
                     }

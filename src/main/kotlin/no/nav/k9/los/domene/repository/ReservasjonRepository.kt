@@ -1,6 +1,7 @@
 package no.nav.k9.los.domene.repository
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
@@ -314,7 +315,7 @@ class ReservasjonRepository(
         if (refresh && forrigeReservasjon != json) {
             val refreshTid = measureTimeMillis {
                 loggFjerningAvReservasjon(reservasjon, forrigeReservasjon)
-                runBlocking { refreshKlienter.sendOppdaterReserverte() }
+                runBlocking  (Dispatchers.IO) { refreshKlienter.sendOppdaterReserverte() }
             }
             RESERVASJON_YTELSE_LOG.info("refresh av reservasjoner tok {}", refreshTid)
         }

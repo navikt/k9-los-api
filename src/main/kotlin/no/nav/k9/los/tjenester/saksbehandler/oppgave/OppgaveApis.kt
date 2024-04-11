@@ -7,6 +7,7 @@ import io.ktor.server.locations.post
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
@@ -219,7 +220,7 @@ internal fun Route.OppgaveApis() {
         requestContextService.withRequestContext(call) { //TODO klageoppgaver
             val oppgavenøkkel = call.receive<OppgaveNøkkelDto>()
             val oppgave = oppgaveRepository.hent(UUID.fromString(oppgavenøkkel.oppgaveEksternId))
-            val person = runBlocking {
+            val person = runBlocking (Dispatchers.IO) {
                 pdlService.person(oppgave.aktorId)
             }.person!!
             val behandletOppgave = BehandletOppgave(oppgave, person)

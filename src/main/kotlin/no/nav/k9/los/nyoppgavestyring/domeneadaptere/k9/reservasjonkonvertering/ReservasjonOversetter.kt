@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
@@ -179,7 +180,7 @@ class ReservasjonOversetter(
             reservertTil.minusHours(24).forskyvReservasjonsDatoBakover()
         }
 
-        return runBlocking {
+        return runBlocking (Dispatchers.IO) {
             reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(
                 reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
                 reserverForId = reservertAvSaksbehandlerId,

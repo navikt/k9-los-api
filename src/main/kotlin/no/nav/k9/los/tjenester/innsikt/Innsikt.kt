@@ -4,6 +4,7 @@ import io.ktor.server.application.*
 import io.ktor.server.html.*
 import io.ktor.server.locations.*
 import io.ktor.server.routing.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.html.*
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
@@ -191,7 +192,7 @@ fun Route.innsiktGrensesnitt() {
                 if (køIder.isNullOrEmpty()) div { +"Oppgi køid" }
                 else {
                     h2 { +køIder.let { "Innsikt for køid=$køIder" } }
-                    runBlocking {
+                    runBlocking (Dispatchers.IO) {
                         køIder.map { køId -> oppgavekø(køId) }
                     }
                 }

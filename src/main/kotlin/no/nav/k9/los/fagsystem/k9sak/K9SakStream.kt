@@ -1,6 +1,7 @@
 package no.nav.k9.los.fagsystem.k9sak
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.aksjonspunktbehandling.SerDes
@@ -56,7 +57,7 @@ internal class K9SakStream constructor(
                 ).peek { _, e -> log.info("--> K9SakHendelse: ${e.tryggToString() }") }
                 .foreach { _, entry ->
                     if (entry != null) {
-                        runBlocking {
+                        runBlocking (Dispatchers.IO) {
                             k9sakEventHandler.prosesser(entry)
                         }
                     }

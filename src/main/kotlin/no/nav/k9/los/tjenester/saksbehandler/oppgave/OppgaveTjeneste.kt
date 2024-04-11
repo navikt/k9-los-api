@@ -1,5 +1,6 @@
 package no.nav.k9.los.tjenester.saksbehandler.oppgave
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.los.Configuration
@@ -878,7 +879,7 @@ class OppgaveTjeneste constructor(
         if (!pepClient.harTilgangTilOppgave(oppgave)) {
             reservasjonRepository.lagre(oppgave.eksternId, true) {
                 it!!.reservertTil = null
-                runBlocking { saksbehandlerRepository.fjernReservasjon(it.reservertAv, it.oppgave) }
+                runBlocking (Dispatchers.IO) { saksbehandlerRepository.fjernReservasjon(it.reservertAv, it.oppgave) }
                 it
             }
             settSkjermet(oppgave)

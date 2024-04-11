@@ -1,5 +1,6 @@
 package no.nav.k9.los.domene.repository
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotliquery.queryOf
@@ -195,7 +196,7 @@ class OppgaveKøRepository(
                 //Sorter oppgaver
                 oppgaveKø.oppgaverOgDatoer.sortBy { it.dato }
                 hintRefresh = første20OppgaverSomVar != oppgaveKø.oppgaverOgDatoer.take(20).toList()
-                oppgaveKø.oppgaverOgDatoer.take(20).forEach { runBlocking { oppgaveRefreshChannel.send(it.id) } }
+                oppgaveKø.oppgaverOgDatoer.take(20).forEach { runBlocking (Dispatchers.IO) { oppgaveRefreshChannel.send(it.id) } }
                 tx.run(
                     queryOf(
                         """

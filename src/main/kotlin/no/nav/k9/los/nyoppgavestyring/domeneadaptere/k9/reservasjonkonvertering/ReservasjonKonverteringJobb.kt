@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.repository.OppgaveRepository
@@ -49,13 +50,13 @@ class ReservasjonKonverteringJobb(
                 slettetReservasjon++
                 continue //Logisk slettet reservasjon. Migreres ikke
             }
-            val saksbehandlerIdSomHolderReservasjonV1 = runBlocking {
+            val saksbehandlerIdSomHolderReservasjonV1 = runBlocking (Dispatchers.IO) {
                 saksbehandlerRepository.finnSaksbehandlerIdForIdent(reservasjonV1.reservertAv)
             }!!
             val oppgaveV1 = oppgaveRepository.hent(reservasjonV1.oppgave)
 
             val flyttetAvSaksbehandlerId = reservasjonV1.flyttetAv?.let {
-                runBlocking {
+                runBlocking (Dispatchers.IO) {
                     saksbehandlerRepository.finnSaksbehandlerIdForIdent(it)!!
                 }
             }

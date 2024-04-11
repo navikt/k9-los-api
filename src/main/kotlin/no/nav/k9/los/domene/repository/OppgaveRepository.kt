@@ -1,6 +1,7 @@
 package no.nav.k9.los.domene.repository
 
 import com.fasterxml.jackson.core.type.TypeReference
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotliquery.queryOf
@@ -215,7 +216,7 @@ class OppgaveRepository(
                 } else {
                     f(null)
                 }
-                runBlocking {
+                runBlocking (Dispatchers.IO) {
                     oppgave.kode6 = sjekkKode6(oppgave)
                     oppgave.skjermet = sjekkKode7EllerEgenAnsatt(oppgave)
                 }

@@ -8,6 +8,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.html.InputType
 import kotlinx.html.a
@@ -326,7 +327,7 @@ fun Route.MockGrensesnitt() {
 
                         if (valgtKø != null) {
                             val oppgaver =
-                                runBlocking {
+                                runBlocking (Dispatchers.IO) {
                                     if (valgtKø == "reserverte") {
                                         oppgaveRepository
                                             .hentOppgaver(

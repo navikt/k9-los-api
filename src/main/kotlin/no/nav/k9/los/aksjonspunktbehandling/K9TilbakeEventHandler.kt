@@ -1,5 +1,6 @@
 package no.nav.k9.los.aksjonspunktbehandling
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
@@ -60,7 +61,7 @@ class K9TilbakeEventHandler(
             }
         }
 
-        runBlocking {
+        runBlocking (Dispatchers.IO) {
             for (oppgavekø in oppgaveKøRepository.hentKøIdIkkeTaHensyn()) {
                 oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, listOf(oppgave), reservasjonRepository)
             }
