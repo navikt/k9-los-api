@@ -82,9 +82,9 @@ class K9sakEventHandler constructor(
                 oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, listOf(oppgave), reservasjonRepository)
             }
             statistikkChannel.send(true)
+            k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId)
         }
-        
-        k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId)
+
     }
 
     fun håndterVaskeevent(event: BehandlingProsessEventDto): BehandlingProsessEventDto? {
