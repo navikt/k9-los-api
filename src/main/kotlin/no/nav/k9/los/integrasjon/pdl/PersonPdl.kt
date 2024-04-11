@@ -19,7 +19,8 @@ data class PersonPdl(
             val folkeregisteridentifikator: List<Folkeregisteridentifikator>,
             val navn: List<Navn>,
             val kjoenn: List<Kjoenn>,
-            val doedsfall:List<Doedsfall>
+            val doedsfall:List<Doedsfall>,
+            val adressebeskyttelse:List<Adressebeskyttelse>
         ) {
             data class Kjoenn(
                 val kjoenn: String
@@ -41,6 +42,17 @@ data class PersonPdl(
                 val fornavn: String,
                 val mellomnavn: String?
             )
+
+            data class Adressebeskyttelse(
+                val gradering : AdressebeskyttelseGradering
+            )
+            enum class AdressebeskyttelseGradering {
+                STRENGT_FORTROLIG_UTLAND,
+                STRENGT_FORTROLIG,
+                FORTROLIG,
+                UGRADERT
+            }
+
         }
     }
 }
