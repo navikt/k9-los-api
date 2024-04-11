@@ -317,29 +317,15 @@ class AvdelingslederTjeneste(
     suspend fun hentAlleAktiveReservasjonerV3(innloggetBruker: Saksbehandler): List<ReservasjonV3Dto> {
         val innloggetBrukerHarKode6Tilgang = pepClient.harTilgangTilKode6(innloggetBruker.brukerIdent!!)
 
-        return reservasjonV3Tjeneste.hentAlleAktiveReservasjoner().mapNotNull { reservasjon ->
-            val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(reservasjon.reservertAv)
+        return reservasjonV3Tjeneste.hentAlleAktiveReservasjoner().mapNotNull { reservasjonMedOppgaver ->
+            val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonMedOppgaver.reservasjonV3.reservertAv)
             val saksbehandlerHarKode6Tilgang = pepClient.harTilgangTilKode6(saksbehandler.brukerIdent!!)
 
             if (innloggetBrukerHarKode6Tilgang != saksbehandlerHarKode6Tilgang) {
                 null
             } else {
-                reservasjonV3DtoBuilder.byggReservasjonV3Dto(reservasjon, saksbehandler)
+                reservasjonV3DtoBuilder.byggReservasjonV3Dto(reservasjonMedOppgaver, saksbehandler)
             }
         }
-    }
-
-    suspend fun opphevReservasjon(uuid: UUID): Reservasjon {
-        val reservasjon = reservasjonRepository.lagre(uuid, true) {
-            it!!.begrunnelse = "Opphevet av en avdelingsleder"
-            it.reservertTil = null
-            it
-        }
-        saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
-        val oppgave = oppgaveRepository.hent(uuid)
-        for (oppgavekø in oppgaveKøRepository.hent()) {
-            oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø.id, listOf(oppgave), reservasjonRepository)
-        }
-        return reservasjon
     }
 }

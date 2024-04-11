@@ -419,7 +419,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         ReservasjonV3Tjeneste(
             transactionalManager = get(),
             reservasjonV3Repository = get(),
-            oppgaveRepository = get(),
+            oppgaveV1Repository = get(),
+            oppgaveV3Repository = get(),
             pepClient = get(),
             saksbehandlerRepository = get(),
             auditlogger = Auditlogger(config),
@@ -428,9 +429,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         ReservasjonV3DtoBuilder(
-            oppgaveRepositoryTxWrapper = get(),
             pdlService = get(),
-            reservasjonOversetter = get(),
             oppgaveTjeneste = get()
         )
     }

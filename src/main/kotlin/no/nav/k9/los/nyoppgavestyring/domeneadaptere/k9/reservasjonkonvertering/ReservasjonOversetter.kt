@@ -29,15 +29,6 @@ class ReservasjonOversetter(
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste
 ) {
 
-    fun hentV1OppgaveFraReservasjon(
-        reservasjon: ReservasjonV3
-    ): Oppgave? {
-        if (reservasjon.reservasjonsnøkkel.startsWith("legacy_")) {
-            return oppgaveV1Repository.hent(UUID.fromString(reservasjon.reservasjonsnøkkel.substring(7)))
-        } else {
-            return null
-        }
-    }
 
     fun hentReservasjonsnøkkelForOppgavenøkkel(
         oppgaveNøkkel: OppgaveNøkkelDto

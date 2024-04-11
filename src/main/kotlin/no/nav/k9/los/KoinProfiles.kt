@@ -326,9 +326,7 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         ReservasjonV3DtoBuilder(
-            oppgaveRepositoryTxWrapper = get(),
             pdlService = get(),
-            reservasjonOversetter = get(),
             oppgaveTjeneste = get(),
         )
     }
@@ -534,7 +532,8 @@ fun common(app: Application, config: Configuration) = module {
         ReservasjonV3Tjeneste(
             transactionalManager = get(),
             reservasjonV3Repository = get(),
-            oppgaveRepository = get(),
+            oppgaveV1Repository = get(),
+            oppgaveV3Repository = get(),
             pepClient = get(),
             saksbehandlerRepository = get(),
             auditlogger = Auditlogger(config),
