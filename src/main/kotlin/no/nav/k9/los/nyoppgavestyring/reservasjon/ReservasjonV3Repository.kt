@@ -5,6 +5,7 @@ import kotliquery.queryOf
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import org.postgresql.util.PSQLException
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 
 class ReservasjonV3Repository(
     private val transactionalManager: TransactionalManager,
@@ -172,7 +173,7 @@ class ReservasjonV3Repository(
                     "reservertAv" to aktivReservasjon.reservertAv,
                     "reservasjonsnokkel" to aktivReservasjon.reservasjonsnøkkel,
                     "kommentar" to kommentar,
-                    "now" to LocalDateTime.now(),
+                    "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
                 )
             )
         )
@@ -194,7 +195,7 @@ class ReservasjonV3Repository(
                 """.trimIndent(),
                 mapOf(
                     "reservertAv" to saksbehandlerId,
-                    "now" to LocalDateTime.now(),
+                    "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
                 )
             ).map { row ->
                 ReservasjonV3(
@@ -222,7 +223,7 @@ class ReservasjonV3Repository(
                    and upper(r.gyldig_tidsrom) > :now
                 """.trimIndent(),
                 mapOf(
-                    "now" to LocalDateTime.now(),
+                    "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
                 )
             ).map { row ->
                 ReservasjonV3(
@@ -250,7 +251,7 @@ class ReservasjonV3Repository(
                 """.trimIndent(),
                 mapOf(
                     "nokkel" to nøkkel,
-                    "now" to LocalDateTime.now(),
+                    "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
                 )
             ).map { row ->
                 ReservasjonV3(
@@ -286,7 +287,7 @@ class ReservasjonV3Repository(
                     )
                 """.trimIndent(),
                     mapOf(
-                        "now" to LocalDateTime.now(),
+                        "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
                     )
                 ).map { row ->
                     row.long("oppgaveId")
