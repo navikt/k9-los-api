@@ -110,6 +110,9 @@ class ReservasjonV3Tjeneste(
         tx: TransactionalSession
     ): ReservasjonV3 {
         return try {
+            val nå = LocalDateTime.now()
+            check(gyldigFra <= nå) {"Gyldig fra er ikke før nå, gyldigfra=${gyldigFra} gyldigTil=${gyldigTil}"}
+            check(gyldigTil > nå) {"Gyldig til er ikke etter nå, gyldigfra=${gyldigFra} gyldigTil=${gyldigTil}"}
             taReservasjon(reservasjonsnøkkel, reserverForId, utføresAvId, kommentar = kommentar, gyldigFra, gyldigTil)
         } catch (e: AlleredeReservertException) {
             val aktivReservasjon =
