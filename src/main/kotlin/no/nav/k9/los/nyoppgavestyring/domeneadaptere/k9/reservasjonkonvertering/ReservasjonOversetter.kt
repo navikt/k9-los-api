@@ -132,11 +132,8 @@ class ReservasjonOversetter(
         kommentar: String?,
         tx: TransactionalSession,
     ): ReservasjonV3? {
-        val gyldigFra = if (reservertTil.isAfter(LocalDateTime.now())) {
-            LocalDateTime.now().minusHours(24).forskyvReservasjonsDatoBakover()
-        } else {
-            reservertTil.minusHours(24).forskyvReservasjonsDatoBakover()
-        }
+        check(reservertTil > LocalDateTime.now()) {"Reservert til er i fortiden: $reservertTil"}
+        val gyldigFra = LocalDateTime.now()
 
         if (beslutterErSaksbehandler(oppgave, reserverForSaksbehandlerId)) {
             throw ManglerTilgangException("Saksbehandler kan ikke være beslutter på egen behandling. Saksnummer: ${oppgave.fagsakSaksnummer}")
@@ -173,11 +170,8 @@ class ReservasjonOversetter(
         kommentar: String?,
         tx: TransactionalSession,
     ): ReservasjonV3 {
-        val gyldigFra = if (reservertTil.isAfter(LocalDateTime.now())) {
-            LocalDateTime.now().minusHours(24).forskyvReservasjonsDatoBakover()
-        } else {
-            reservertTil.minusHours(24).forskyvReservasjonsDatoBakover()
-        }
+        check(reservertTil > LocalDateTime.now()) {"Reservert til er i fortiden: $reservertTil"}
+        val gyldigFra = LocalDateTime.now()
 
         return runBlocking {
             reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(
