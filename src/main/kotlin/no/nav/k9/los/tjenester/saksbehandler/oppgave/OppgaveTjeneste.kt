@@ -538,6 +538,7 @@ class OppgaveTjeneste constructor(
             val perBehandlingstype = ytelseTypeEntry.value.groupBy { it.behandlingType }
             for (behandlingTypeEntry in perBehandlingstype) {
                 var aktive =
+                    //TODO kjør i en transaksjon, helst som én spørring med group by
                     oppgaveRepository.hentAktiveOppgaverTotaltPerBehandlingstypeOgYtelseType(
                         fagsakYtelseType = ytelseTypeEntry.key,
                         behandlingType = behandlingTypeEntry.key

@@ -9,12 +9,8 @@ import kotliquery.using
 import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.OppgaveMedId
-import no.nav.k9.los.domene.modell.AksjonspunktDefWrapper
-import no.nav.k9.los.domene.modell.BehandlingStatus
-import no.nav.k9.los.domene.modell.BehandlingType
-import no.nav.k9.los.domene.modell.FagsakYtelseType
+import no.nav.k9.los.domene.modell.*
 import no.nav.k9.los.integrasjon.abac.IPepClient
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleApneBehandlinger
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverDto
 import no.nav.k9.los.tjenester.innsikt.Databasekall
@@ -23,6 +19,8 @@ import no.nav.k9.los.utils.Cache
 import no.nav.k9.los.utils.CacheObject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.atomic.LongAdder
 import javax.sql.DataSource
@@ -57,32 +55,58 @@ class OppgaveRepository(
         return list
     }
 
-    fun hentAllePåVent(): List<Oppgave> {
-        val startSpørring = System.currentTimeMillis()
-        val jsonOppgaver: List<String> = using(sessionOf(dataSource)) {
+    data class GrupperteAksjonspunktVenteårsak(
+        val system : Fagsystem,
+        val fagsakYtelseType: FagsakYtelseType,
+        val behandlingType: BehandlingType,
+        val aksjonspunktKode: String,
+        val frist: LocalDate,
+        val venteårsak: String,
+        val antall: Int
+    )
+
+    fun hentK9SakPåVentGruppert(): List<GrupperteAksjonspunktVenteårsak> {
+        val t0 = System.currentTimeMillis()
+        val oppgaver: List<GrupperteAksjonspunktVenteårsak> = using(sessionOf(dataSource)) {
             it.run(
-                queryOf(
-                    autopunktQuery(),
-                    mapOf()
-                )
+        queryOf(
+         //FIXME? skal denne også sjekke på aktiv? gjorde ikke det i forrige implementasjon - i så fall også oppdater indeks
+         //TODO kan vurdere å fjerne uthenting og gruppering på aksjonspunktkode, beholder inntil videre for evt annen gjenbruk
+         //følgende og henter ut aktive (status OPPR) autopunkter (alle autopunkter og bare autopunkter har frist satt) for en oppgave. Det skal kun kunne være en slik pr behandling/oppgave
+         //   jsonb_path_query(data -> 'aksjonspunkter' -> 'apTilstander', '${'$'}[*] ? (@."status"=="OPPR" && @."frist" != null)')
+         """
+             select 
+                    data -> 'system' as system,
+                    data -> 'fagsakYtelseType' ->> 'kode' as fagsakYtelseType,
+                    data -> 'behandlingType' ->> 'kode' as behandlingType,
+                    jsonb_path_query(data -> 'aksjonspunkter' -> 'apTilstander', '${'$'}[*] ? (@."status"=="OPPR" && @."frist" != null)') ->> 'aksjonspunktKode' as aksjonspunktKode,
+                    jsonb_path_query(data -> 'aksjonspunkter' -> 'apTilstander', '${'$'}[*] ? (@."status"=="OPPR" && @."frist" != null)') ->> 'venteårsak' as venteårsak,
+                    substring(jsonb_path_query(data -> 'aksjonspunkter' -> 'apTilstander', '${'$'}[*] ? (@."status"=="OPPR" && @."frist" != null)') ->> 'frist', 1, 10) as fristDato,
+                    count(*) as antall
+             from oppgave
+             where data -> 'aksjonspunkter' -> 'apTilstander' @? '${'$'}[*] ? (@."status"=="OPPR" && @."frist" != null)'
+             group by 1, 2, 3, 4, 5, 6
+         """.trimIndent()
+     )
                     .map { row ->
-                        row.string("data")
+                        GrupperteAksjonspunktVenteårsak(
+                            system = Fagsystem.fraKode(row.string("system")),
+                            fagsakYtelseType =  FagsakYtelseType.fraKode(row.string("fagsakYtelseType")),
+                            behandlingType =  BehandlingType.fraKode(row.string("behandlingType")),
+                            aksjonspunktKode = row.string("aksjonspunktKode"),
+                            frist = LocalDate.parse(row.string("fristDato"), DateTimeFormatter.ISO_LOCAL_DATE),
+                            venteårsak = row.string("venteårsak"),
+                            antall = row.int("antall")
+                            )
                     }.asList
             )
         }
-        val spørring = System.currentTimeMillis() - startSpørring
-        val startSerialisering = System.currentTimeMillis()
-        val oppgaver = jsonOppgaver.map { s -> objectMapper().readValue(s, Oppgave::class.java) }.toList()
+        val spørringTidsforbrukMs = System.currentTimeMillis() - t0
+
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
-        log.info("Henter oppgaver på vent: " + oppgaver.size + " oppgaver" + " serialisering: " + (System.currentTimeMillis() - startSerialisering) + " spørring: " + spørring)
+        log.info("Henter oppgaver på vent: " + oppgaver.stream().map{it.antall}.reduce(Int::plus).orElse(0) + " oppgaver" + " spørring: " + spørringTidsforbrukMs)
         return oppgaver
-    }
-
-    private fun autopunktQuery(): String {
-        val autopunkt = AksjonspunktDefinisjon.values().filter { it.erAutopunkt() }.map { it.kode }
-        val queryStubs = autopunkt.map {"data -> 'aksjonspunkter' -> 'liste' ->> '$it' = 'OPPR'"}
-        return queryStubs.joinToString(prefix = "select data from oppgave where ", separator = " or ")
     }
 
     fun hent(uuid: UUID): Oppgave {
