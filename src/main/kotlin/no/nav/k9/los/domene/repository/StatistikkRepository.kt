@@ -107,30 +107,6 @@ class StatistikkRepository(
         }
     }
 
-    fun hentFerdigstilte(): List<AlleFerdigstilteOppgaver> {
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-        return using(sessionOf(dataSource)) {
-            it.run(
-                queryOf(
-                    """
-                            select behandlingtype, dato, jsonb_array_length(data) as antall
-                            from ferdigstilte_behandlinger  where dato >= current_date - '7 days'::interval
-                            group by behandlingtype,dato
-                    """.trimIndent(),
-                    mapOf()
-                )
-                    .map { row ->
-                        AlleFerdigstilteOppgaver(
-                            behandlingType = BehandlingType.fraKode(row.string("behandlingType")),
-                            dato = row.localDate("dato"),
-                            antall = row.int("antall")
-                        )
-                    }.asList
-            )
-        }
-    }
-
     fun lagre(
         alleOppgaverNyeOgFerdigstilte: AlleOppgaverNyeOgFerdigstilte,
         f: (AlleOppgaverNyeOgFerdigstilte) -> AlleOppgaverNyeOgFerdigstilte
@@ -281,7 +257,6 @@ class StatistikkRepository(
                     """
                             select behandlingtype, fagsakYtelseType, dato, ferdigstilte, nye, ferdigstiltesaksbehandler
                             from nye_og_ferdigstilte  where dato >= current_date - :antall::interval
-                            group by behandlingtype, fagsakYtelseType, dato
                     """.trimIndent(),
                     mapOf("antall" to "\'${antall} days\'")
                 )
