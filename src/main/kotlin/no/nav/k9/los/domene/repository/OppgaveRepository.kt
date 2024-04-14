@@ -20,10 +20,12 @@ import no.nav.k9.los.utils.CacheObject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.atomic.LongAdder
 import javax.sql.DataSource
+import kotlin.collections.LinkedHashMap
 
 
 class OppgaveRepository(
@@ -32,28 +34,6 @@ class OppgaveRepository(
     private val refreshOppgave: Channel<UUID>
 ) {
     private val log: Logger = LoggerFactory.getLogger(OppgaveRepository::class.java)
-    fun hent(): List<Oppgave> {
-        var spørring = System.currentTimeMillis()
-        val json: List<String> = using(sessionOf(dataSource)) {
-            it.run(
-                queryOf(
-                    "select data from oppgave",
-                    mapOf()
-                )
-                    .map { row ->
-                        row.string("data")
-                    }.asList
-            )
-        }
-        spørring = System.currentTimeMillis() - spørring
-        val serialisering = System.currentTimeMillis()
-        val list = json.map { s -> objectMapper().readValue(s, Oppgave::class.java) }.toList()
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
-        log.info("Henter: " + list.size + " oppgaver" + " serialisering: " + (System.currentTimeMillis() - serialisering) + " spørring: " + spørring)
-        return list
-    }
 
     data class GrupperteAksjonspunktVenteårsak(
         val system : Fagsystem,
@@ -477,23 +457,6 @@ class OppgaveRepository(
         return oppgaver
     }
 
-    fun hentOppgaverMedSaksnummerIkkeTaHensyn(saksnummer: String): List<Oppgave> {
-        val json: List<String> = using(sessionOf(dataSource)) {
-            //language=PostgreSQL
-            it.run(
-                queryOf(
-                    "select data from oppgave where lower(data ->> 'fagsakSaksnummer') = lower(:saksnummer) ",
-                    mapOf("saksnummer" to saksnummer)
-                )
-                    .map { row ->
-                        row.string("data")
-                    }.asList
-            )
-        }
-
-        return json.map { objectMapper().readValue(it, Oppgave::class.java) }
-    }
-
     internal suspend fun hentAktiveOppgaverTotalt(): Int {
         val kode6 = pepClient.harTilgangTilKode6()
         var spørring = System.currentTimeMillis()
@@ -531,30 +494,11 @@ class OppgaveRepository(
             )
         }
         spørring = System.currentTimeMillis() - spørring
-        log.info("Teller aktive oppgaver: $spørring ms")
+        log.info("Teller aktive oppgaver: $spørring ms") //hmmm, hva kan man forstå fra loggen når noen saksbehanlere får mye raskere spørring?
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
 
         return count!!
-    }
-
-    internal fun hentAlleOppgaveForPunsj(): List<Oppgave> {
-        val json: List<String> = using(sessionOf(dataSource)) {
-            //language=PostgreSQL
-            it.run(
-                queryOf(
-                    "select data from oppgave where data ->> 'system' = 'PUNSJ'"
-                )
-                    .map { row ->
-                        row.string("data")
-                    }.asList
-            )
-        }
-        val oppgaver = json.map { objectMapper().readValue(it, Oppgave::class.java) }
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
-        return oppgaver
     }
 
     internal fun hentAktiveOppgaverTotaltPerBehandlingstypeOgYtelseType(
@@ -669,6 +613,9 @@ class OppgaveRepository(
 
     private val aktiveOppgaverCache = Cache<List<Oppgave>>()
     internal fun hentAktiveOppgaver(): List<Oppgave> {
+
+        //TODO/FIXME legge på sist-endret i tabellen og _alltid_ oppfriske oppgaver som er endret
+        //hvis vi gjør det kan mye av det som går mot databasen i spesielle spørringer istedet iterere over cachen
         val cacheObject = aktiveOppgaverCache.get("default")
         if (cacheObject != null) {
             return cacheObject.value
