@@ -46,17 +46,20 @@ class OppgaveRepository(
     )
 
     fun hentK9SakPåVentGruppert(): List<GrupperteAksjonspunktVenteårsak> {
+
         val t0 = System.currentTimeMillis()
         val oppgaver: List<GrupperteAksjonspunktVenteårsak> = using(sessionOf(dataSource)) {
             it.run(
+                //FIXME? skal denne også sjekke på aktiv? gjorde ikke det i forrige implementasjon - i så fall også oppdater indeks
+                //TODO kan vurdere å fjerne uthenting og gruppering på aksjonspunktkode, beholder inntil videre for evt annen gjenbruk
+                //følgende og henter ut aktive (status OPPR) autopunkter (alle autopunkter og bare autopunkter har frist satt) for en oppgave. Det skal kun kunne være en slik pr behandling/oppgave
+                //   jsonb_path_query(data -> 'aksjonspunkter' -> 'apTilstander', '${'$'}[*] ? (@."status"=="OPPR" && @."frist" != null)')
+                //   @?? er @?-operatoren med escaping
+
         queryOf(
-         //FIXME? skal denne også sjekke på aktiv? gjorde ikke det i forrige implementasjon - i så fall også oppdater indeks
-         //TODO kan vurdere å fjerne uthenting og gruppering på aksjonspunktkode, beholder inntil videre for evt annen gjenbruk
-         //følgende og henter ut aktive (status OPPR) autopunkter (alle autopunkter og bare autopunkter har frist satt) for en oppgave. Det skal kun kunne være en slik pr behandling/oppgave
-         //   jsonb_path_query(data -> 'aksjonspunkter' -> 'apTilstander', '${'$'}[*] ? (@."status"=="OPPR" && @."frist" != null)')
          """
              select 
-                    data -> 'system' as system,
+                    data ->> 'system' as system,
                     data -> 'fagsakYtelseType' ->> 'kode' as fagsakYtelseType,
                     data -> 'behandlingType' ->> 'kode' as behandlingType,
                     jsonb_path_query(data -> 'aksjonspunkter' -> 'apTilstander', '${'$'}[*] ? (@."status"=="OPPR" && @."frist" != null)') ->> 'aksjonspunktKode' as aksjonspunktKode,
@@ -64,7 +67,7 @@ class OppgaveRepository(
                     substring(jsonb_path_query(data -> 'aksjonspunkter' -> 'apTilstander', '${'$'}[*] ? (@."status"=="OPPR" && @."frist" != null)') ->> 'frist', 1, 10) as fristDato,
                     count(*) as antall
              from oppgave
-             where data -> 'aksjonspunkter' -> 'apTilstander' @? '${'$'}[*] ? (@."status"=="OPPR" && @."frist" != null)'
+             where data -> 'aksjonspunkter' -> 'apTilstander' @?? '${'$'}[*] ? (@."status"=="OPPR" && @."frist" != null)'
              group by 1, 2, 3, 4, 5, 6
          """.trimIndent()
      )
