@@ -21,11 +21,8 @@ create index oppgave_expr_idx10
 create index oppgave_expr_idx11
     on oppgave (
         (data -> 'kode6'),
-        (data -> 'behandlingType' ->> 'kode'),
-
+        (data -> 'behandlingType' ->> 'kode')
     )
     where (data -> 'aktiv') ::boolean;
-
-
 
 create index nye_og_ferdigstilte_idx1 on nye_og_ferdigstilte (dato);
