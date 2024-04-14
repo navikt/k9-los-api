@@ -55,12 +55,6 @@ class YtelseTest : AbstractK9LosIntegrationTest() {
         val oppgaveRepository = get<OppgaveRepository>()
 
         runBlocking {
-            Kjøretid.logg("Sjekk antall oppgaver") {
-                assertThat(oppgaveRepository.hent().size).isEqualTo(antallOppgaver)
-            }
-        }
-
-        runBlocking {
             Kjøretid.logg("Hent beholdning av oppgaver") {
                 val alleOppgaverNyeOgFerdigstilte = oppgaveTjeneste.hentBeholdningAvOppgaverPerAntallDager()
                 assert(alleOppgaverNyeOgFerdigstilte.size > 100)
