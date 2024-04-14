@@ -80,23 +80,12 @@ class ReservasjonRepository(
 
         return json.map { s -> objectMapper().readValue(s, Reservasjon::class.java) }.toList()
     }
-    private suspend fun fjernReservasjonerSomIkkeLengerErAktive(reservasjoner: List<Reservasjon>): List<Reservasjon> {
-        reservasjoner.forEach { reservasjon ->
-
-            if (!reservasjon.erAktiv()) {
-                fjernInaktivReservasjon(reservasjon, oppgaveKøRepository.hentIkkeTaHensyn())
-            } else {
-                fjernReservasjonPåInaktivOppgave(reservasjon)
-            }
-        }
-
-        return reservasjoner.filter { it.erAktiv() }
-    }
 
     private suspend fun fjernInaktivReservasjon(
         reservasjon: Reservasjon,
         oppgaveKøer: List<OppgaveKø>
     ): Int {
+        //TODO fjerning av en (eller flere) reservasjon bør skje i én transaksjon, nå er det en transaksjon for hver del-operasjon (bl.a. en for hver kø)
         lagre(reservasjon.oppgave) {
             it!!.reservertTil = null
             it
@@ -127,6 +116,7 @@ class ReservasjonRepository(
     }
 
     private fun fjernReservasjonPåInaktivOppgave(reservasjon: Reservasjon) {
+        //TODO fjerning av en reservasjon bør skje i én transaksjon, nå er det en transaksjon for hver del-operasjon
         val oppgave = oppgaveRepository.hentHvis(reservasjon.oppgave)
         if (oppgave != null) {
             if (!oppgave.aktiv) {
@@ -182,21 +172,6 @@ class ReservasjonRepository(
         return objectMapper().readValue(json!!, Reservasjon::class.java)
     }
 
-    fun hentSisteReservasjonMedLås(id: UUID, tx: TransactionalSession): Reservasjon {
-
-        val json: String? = tx.run(
-            queryOf(
-                "select (data ::jsonb -> 'reservasjoner' -> -1) as data from reservasjon where id = :id for update",
-                mapOf("id" to id.toString())
-            ).map { row ->
-                row.string("data")
-            }.asSingle
-        )
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
-        return objectMapper().readValue(json!!, Reservasjon::class.java)
-    }
 
     fun hentMedHistorikk(id: UUID): List<Reservasjon> {
         val json: String? = using(sessionOf(dataSource)) {
