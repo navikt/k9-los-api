@@ -10,6 +10,7 @@ import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.KlagebehandlingProsessH
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventTilbakeDto
 import no.nav.k9.los.integrasjon.kafka.dto.PunsjEventDto
+import no.nav.k9.los.utils.LosObjectMapper
 import org.apache.kafka.common.serialization.Deserializer
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.common.serialization.Serializer
@@ -28,11 +29,8 @@ internal data class Topic<V>(
 }
 
 fun objectMapper(): ObjectMapper {
-    return jacksonObjectMapper()
-        .dusseldorfConfigured()
-        .configure(SerializationFeature.WRITE_DURATIONS_AS_TIMESTAMPS, false)
-        .enable(SerializationFeature.INDENT_OUTPUT)
-        .setPropertyNamingStrategy(PropertyNamingStrategy.LOWER_CAMEL_CASE)
+    //TODO inline
+    return LosObjectMapper.instance
 }
 
 internal abstract class SerDes<V> : Serializer<V>, Deserializer<V> {
