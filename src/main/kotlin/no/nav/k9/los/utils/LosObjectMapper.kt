@@ -11,7 +11,7 @@ class LosObjectMapper {
         val instance = jacksonObjectMapper()
             .dusseldorfConfigured()
             .configure(SerializationFeature.WRITE_DURATIONS_AS_TIMESTAMPS, false)
-            .enable(SerializationFeature.INDENT_OUTPUT)
+            .enable(SerializationFeature.INDENT_OUTPUT) //TODO ønsker å skru av denne by default, og ha egen ObjectMapper der hvor dette trengs
             .setPropertyNamingStrategy(PropertyNamingStrategy.LOWER_CAMEL_CASE)
     }
 }

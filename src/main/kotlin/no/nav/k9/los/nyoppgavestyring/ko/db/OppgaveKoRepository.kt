@@ -11,8 +11,11 @@ import javax.sql.DataSource
 
 class OppgaveKoRepository(val datasource: DataSource) {
 
-    private val standardOppgaveString: String by lazy {
+    companion object {
         val objectMapper = jacksonObjectMapper()
+    }
+
+    private val standardOppgaveString: String by lazy {
         val standardOppgaveQuery = objectMapper.readValue(
             OppgaveKoRepository::class.java.getResource("/los/standard-ko.json")!!.readText(),
             OppgaveQuery::class.java
@@ -27,8 +30,6 @@ class OppgaveKoRepository(val datasource: DataSource) {
     }
 
     fun hentListe(tx: TransactionalSession): List<OppgaveKo> {
-        val objectMapper = jacksonObjectMapper()
-
         return tx.run(
             queryOf(
                 "SELECT id, versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave, endret_tidspunkt FROM OPPGAVEKO_V3"
@@ -44,7 +45,6 @@ class OppgaveKoRepository(val datasource: DataSource) {
     }
 
     fun hent(tx: TransactionalSession, oppgaveKoId: Long): OppgaveKo {
-        val objectMapper = jacksonObjectMapper()
         return tx.run(
             queryOf(
                 "SELECT id, versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave, endret_tidspunkt FROM OPPGAVEKO_V3 WHERE id = :id",
@@ -101,7 +101,6 @@ class OppgaveKoRepository(val datasource: DataSource) {
             throw IllegalArgumentException("Kan ikke oppdatere oppgavekø uten ID.")
         }
 
-        val objectMapper = jacksonObjectMapper()
         val rows = tx.run(
             queryOf(
                 """
@@ -140,7 +139,6 @@ class OppgaveKoRepository(val datasource: DataSource) {
         tx: TransactionalSession,
         saksbehandler_epost: String
     ): List<OppgaveKo> {
-        val objectMapper = jacksonObjectMapper()
         return tx.run(
             queryOf(
                 """

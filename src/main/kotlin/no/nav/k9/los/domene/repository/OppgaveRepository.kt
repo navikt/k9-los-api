@@ -6,7 +6,6 @@ import kotlinx.coroutines.runBlocking
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.OppgaveMedId
 import no.nav.k9.los.domene.modell.*
@@ -17,15 +16,14 @@ import no.nav.k9.los.tjenester.innsikt.Databasekall
 import no.nav.k9.los.tjenester.mock.AksjonspunktMock
 import no.nav.k9.los.utils.Cache
 import no.nav.k9.los.utils.CacheObject
+import no.nav.k9.los.utils.LosObjectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.atomic.LongAdder
 import javax.sql.DataSource
-import kotlin.collections.LinkedHashMap
 
 
 class OppgaveRepository(
@@ -108,7 +106,7 @@ class OppgaveRepository(
             )
         }
         return try {
-            objectMapper().readValue(json!!, Oppgave::class.java)
+            LosObjectMapper.instance.readValue(json!!, Oppgave::class.java)
         } catch (e: NullPointerException) {
             log.error("feiler for denne json $json")
             throw e
@@ -129,7 +127,7 @@ class OppgaveRepository(
                     .map { row ->
                         OppgaveMedId(
                             UUID.fromString(row.string("id")),
-                            objectMapper().readValue(row.string("data"), Oppgave::class.java)
+                            LosObjectMapper.instance.readValue(row.string("data"), Oppgave::class.java)
                         )
                     }.asList
             )
@@ -147,7 +145,7 @@ class OppgaveRepository(
                     .map { row ->
                         OppgaveMedId(
                             UUID.fromString(row.string("id")),
-                            objectMapper().readValue(row.string("data"), Oppgave::class.java)
+                            LosObjectMapper.instance.readValue(row.string("data"), Oppgave::class.java)
                         )
                     }.asList
             )
@@ -170,7 +168,7 @@ class OppgaveRepository(
             )
         }
         return if (json != null) {
-            objectMapper().readValue(json, Oppgave::class.java)
+            LosObjectMapper.instance.readValue(json, Oppgave::class.java)
         } else null
     }
 
@@ -193,7 +191,7 @@ class OppgaveRepository(
                     }.asList
             )
         }
-        val oppgaver = json.map { s -> objectMapper().readValue(s, Oppgave::class.java) }
+        val oppgaver = json.map { s -> LosObjectMapper.instance.readValue(s, Oppgave::class.java) }
             .filter { it.kode6 == kode6 }
 
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
@@ -218,7 +216,7 @@ class OppgaveRepository(
                 )
 
                 val oppgave = if (!run.isNullOrEmpty()) {
-                    f(objectMapper().readValue(run, Oppgave::class.java))
+                    f(LosObjectMapper.instance.readValue(run, Oppgave::class.java))
                 } else {
                     f(null)
                 }
@@ -226,7 +224,7 @@ class OppgaveRepository(
                     oppgave.kode6 = sjekkKode6(oppgave)
                     oppgave.skjermet = sjekkKode7EllerEgenAnsatt(oppgave)
                 }
-                val json = objectMapper().writeValueAsString(oppgave)
+                val json = LosObjectMapper.instance.writeValueAsString(oppgave)
                 tx.run(
                     queryOf(
                         """
@@ -305,7 +303,7 @@ class OppgaveRepository(
             .increment()
 
         return json.filter { it.indexOf("oppgaver") == -1 }
-            .map { s -> objectMapper().readValue(s, Oppgave::class.java) }
+            .map { s -> LosObjectMapper.instance.readValue(s, Oppgave::class.java) }
             .toList()
             .sortedBy { oppgave -> oppgave.behandlingOpprettet }
     }
@@ -431,7 +429,7 @@ class OppgaveRepository(
             )
         }
         val oppgaver =
-            json.map { s -> objectMapper().readValue(s, Oppgave::class.java) }.filter { it.kode6 == kode6 }.toList()
+            json.map { s -> LosObjectMapper.instance.readValue(s, Oppgave::class.java) }.filter { it.kode6 == kode6 }.toList()
         oppgaver.forEach { refreshOppgave.trySend(it.eksternId) }
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
@@ -452,7 +450,7 @@ class OppgaveRepository(
                     }.asList
             )
         }
-        val oppgaver = json.map { objectMapper().readValue(it, Oppgave::class.java) }.filter { it.kode6 == kode6 }
+        val oppgaver = json.map { LosObjectMapper.instance.readValue(it, Oppgave::class.java) }.filter { it.kode6 == kode6 }
         oppgaver.forEach { refreshOppgave.trySend(it.eksternId) }
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
@@ -638,7 +636,7 @@ class OppgaveRepository(
         }
         spørring = System.currentTimeMillis() - spørring
         val serialisering = System.currentTimeMillis()
-        val list = json.map { s -> objectMapper().readValue(s, Oppgave::class.java) }.toList()
+        val list = json.map { s -> LosObjectMapper.instance.readValue(s, Oppgave::class.java) }.toList()
 
         log.info("Henter aktive oppgaver: " + list.size + " oppgaver" + " serialisering: " + (System.currentTimeMillis() - serialisering) + " spørring: " + spørring)
         aktiveOppgaverCache.set("default", CacheObject(list))
@@ -659,7 +657,7 @@ class OppgaveRepository(
                     mapOf()
                 )
                     .map { row ->
-                        val map = objectMapper().readValue(
+                        val map = LosObjectMapper.instance.readValue(
                             row.string("punkt"),
                             object : TypeReference<HashMap<String, String>>() {})
                         val antall = row.int("count")
@@ -706,7 +704,7 @@ class OppgaveRepository(
                     }.asList
             )
         }
-        val oppgaver = json.map { objectMapper().readValue(it, Oppgave::class.java) }.filter { it.kode6 == kode6 }
+        val oppgaver = json.map { LosObjectMapper.instance.readValue(it, Oppgave::class.java) }.filter { it.kode6 == kode6 }
         oppgaver.forEach { refreshOppgave.trySend(it.eksternId) }
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()

@@ -1,11 +1,6 @@
 package no.nav.k9.los.aksjonspunktbehandling
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.PropertyNamingStrategy
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.KlagebehandlingProsessHendelse
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventTilbakeDto
@@ -28,18 +23,11 @@ internal data class Topic<V>(
     val valueSerde = Serdes.serdeFrom(serDes, serDes)!!
 }
 
-fun objectMapper(): ObjectMapper {
-    //TODO inline
-    return LosObjectMapper.instance
-}
-
 internal abstract class SerDes<V> : Serializer<V>, Deserializer<V> {
-    protected val objectMapper = objectMapper()
-
 
     override fun serialize(topic: String?, data: V): ByteArray? {
         return data?.let {
-            objectMapper.writeValueAsBytes(it)
+            LosObjectMapper.instance.writeValueAsBytes(it)
         }
     }
 
@@ -51,7 +39,7 @@ internal class AksjonspunktLaget : SerDes<BehandlingProsessEventDto>() {
     override fun deserialize(topic: String?, data: ByteArray?): BehandlingProsessEventDto? {
         return data?.let {
             return try {
-                objectMapper.readValue(it)
+                LosObjectMapper.instance.readValue(it)
             } catch (e: Exception) {
                 log.warn("", e)
                 log.warn(String(it))
@@ -65,7 +53,7 @@ internal class AksjonspunktKlageLaget : SerDes<KlagebehandlingProsessHendelse>()
     override fun deserialize(topic: String?, data: ByteArray?): KlagebehandlingProsessHendelse? {
         return data?.let {
             return try {
-                objectMapper.readValue(it)
+                LosObjectMapper.instance.readValue(it)
             } catch (e: Exception) {
                 log.warn("", e)
                 log.warn(String(it))
@@ -79,7 +67,7 @@ internal class AksjonspunktPunsjLaget : SerDes<PunsjEventDto>() {
     override fun deserialize(topic: String?, data: ByteArray?): PunsjEventDto? {
         return data?.let {
             return try {
-                objectMapper.readValue(it)
+                LosObjectMapper.instance.readValue(it)
             } catch (e: Exception) {
                 log.warn("", e)
                 log.warn(String(it))
@@ -93,7 +81,7 @@ internal class AksjonspunktLagetTilbake : SerDes<BehandlingProsessEventTilbakeDt
     override fun deserialize(topic: String?, data: ByteArray?): BehandlingProsessEventTilbakeDto? {
         return data?.let {
             return try {
-                objectMapper.readValue<BehandlingProsessEventTilbakeDto>(
+                LosObjectMapper.instance.readValue<BehandlingProsessEventTilbakeDto>(
                     it
                 )
             } catch (e: Exception) {

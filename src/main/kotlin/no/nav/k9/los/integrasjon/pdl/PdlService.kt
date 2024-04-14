@@ -9,11 +9,11 @@ import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.ktor.metrics.Operation
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
-import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import no.nav.k9.los.integrasjon.rest.NavHeaders
 import no.nav.k9.los.integrasjon.rest.idToken
 import no.nav.k9.los.utils.Cache
 import no.nav.k9.los.utils.CacheObject
+import no.nav.k9.los.utils.LosObjectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.net.URI
@@ -43,7 +43,7 @@ class PdlService constructor(
             getStringFromResource("/pdl/hentPerson.graphql"),
             mapOf("ident" to aktorId)
         )
-        val query = objectMapper().writeValueAsString(
+        val query = LosObjectMapper.instance.writeValueAsString(
             queryRequest
         )
         val cachedObject = cache.get(query)
@@ -89,12 +89,12 @@ class PdlService constructor(
                 )
             }
             try {
-                val readValue = objectMapper().readValue<PersonPdl>(json!!)
+                val readValue = LosObjectMapper.instance.readValue<PersonPdl>(json!!)
                 cache.set(query, CacheObject(json, LocalDateTime.now().plusHours(7)))
                 return PersonPdlResponse(false, readValue)
             } catch (e: Exception) {
                 try {
-                    val value = objectMapper().readValue<Error>(json!!)
+                    val value = LosObjectMapper.instance.readValue<Error>(json!!)
                     if (value.errors.any { it.extensions.code == "unauthorized" }) {
                         return PersonPdlResponse(true, null)
                     }
@@ -104,7 +104,7 @@ class PdlService constructor(
                 return PersonPdlResponse(false, null)
             }
         } else {
-            return PersonPdlResponse(false, objectMapper().readValue<PersonPdl>(cachedObject.value))
+            return PersonPdlResponse(false, LosObjectMapper.instance.readValue<PersonPdl>(cachedObject.value))
         }
     }
 
@@ -117,7 +117,7 @@ class PdlService constructor(
                 "grupper" to listOf("AKTORID")
             )
         )
-        val query = objectMapper().writeValueAsString(
+        val query = LosObjectMapper.instance.writeValueAsString(
             queryRequest
         )
 
@@ -162,10 +162,10 @@ class PdlService constructor(
             }
             try {
                 cache.set(query, CacheObject(json!!, LocalDateTime.now().plusDays(7)))
-                return PdlResponse(false, objectMapper().readValue<AktøridPdl>(json))
+                return PdlResponse(false, LosObjectMapper.instance.readValue<AktøridPdl>(json))
             } catch (e: Exception) {
                 try {
-                    val value = objectMapper().readValue<Error>(json!!)
+                    val value = LosObjectMapper.instance.readValue<Error>(json!!)
                     if (value.errors.any { it.extensions.code == "unauthorized" }) {
                         return PdlResponse(true, null)
                     }
@@ -175,7 +175,7 @@ class PdlService constructor(
                 return PdlResponse(false, null)
             }
         } else {
-            return PdlResponse(false, objectMapper().readValue<AktøridPdl>(cachedObject.value))
+            return PdlResponse(false, LosObjectMapper.instance.readValue<AktøridPdl>(cachedObject.value))
         }
     }
 
