@@ -267,8 +267,8 @@ data class OppgaveKø(
         reservasjonRepository: ReservasjonRepository,
         oppgave: Oppgave
     ): Boolean {
-        if (reservasjonRepository.finnes(oppgave.eksternId)) {
-            val reservasjon = reservasjonRepository.hent(oppgave.eksternId)
+        val reservasjon = reservasjonRepository.hentOptional(oppgave.eksternId)
+        if (reservasjon != null) {
             return reservasjon.erAktiv()
         }
         return false

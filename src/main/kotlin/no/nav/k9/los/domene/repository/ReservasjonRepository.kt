@@ -172,6 +172,37 @@ class ReservasjonRepository(
         return LosObjectMapper.instance.readValue(json!!, Reservasjon::class.java)
     }
 
+    fun hentOptional(id: UUID): Reservasjon? {
+        val json: String? = using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    "select (data ::jsonb -> 'reservasjoner' -> -1) as data from reservasjon where id = :id",
+                    mapOf("id" to id.toString())
+                ).map { row ->
+                    row.string("data")
+                }.asSingle
+            )
+        }
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
+
+        return LosObjectMapper.instance.readValue(json!!, Reservasjon::class.java)
+    }
+
+    fun hent(id: UUID, tx: TransactionalSession): Reservasjon? {
+        val json: String? = tx.run(
+            queryOf(
+                "select (data ::jsonb -> 'reservasjoner' -> -1) as data from reservasjon where id = :id",
+                mapOf("id" to id.toString())
+            ).map { row ->
+                row.string("data")
+            }.asSingle
+        )
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
+
+        return if (json == null) null else  LosObjectMapper.instance.readValue(json, Reservasjon::class.java)
+    }
 
     fun hentMedHistorikk(id: UUID): List<Reservasjon> {
         val json: String? = using(sessionOf(dataSource)) {
