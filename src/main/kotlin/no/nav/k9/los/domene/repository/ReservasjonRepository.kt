@@ -186,7 +186,7 @@ class ReservasjonRepository(
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
 
-        return LosObjectMapper.instance.readValue(json!!, Reservasjon::class.java)
+        return if (json==null) null else LosObjectMapper.instance.readValue(json, Reservasjon::class.java)
     }
 
     fun hent(id: UUID, tx: TransactionalSession): Reservasjon? {
