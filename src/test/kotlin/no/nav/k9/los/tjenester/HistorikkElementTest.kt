@@ -83,10 +83,11 @@ class HistorikkElementTest {
             )
         ).feltSelector(VelgbartHistorikkfelt.DATO, VelgbartHistorikkfelt.YTELSETYPE, VelgbartHistorikkfelt.ENHET)
         val result = LosObjectMapper.instance.writeValueAsString(resultat)
+        println(result)
         assertThat(result).contains(
-            """dato" : "2021-01-03""",
-            """behandlendeEnhet" : "4407""",
-            """antall" : 1"""
+            """dato":"2021-01-03""",
+            """behandlendeEnhet":"4407""",
+            """antall":1"""
         )
     }
 }
