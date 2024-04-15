@@ -43,27 +43,34 @@ class EventTilDtoMapper {
                     }
                 },
                 endretTidspunkt = event.eventTid,
-                reservasjonsnøkkel = utledReservasjonsnøkkel(event),
+                reservasjonsnøkkel = utledReservasjonsnøkkel(event, erTilBeslutter(event)),
                 feltverdier = lagFeltverdier(event, forrigeOppgave)
             )
 
-        private fun utledReservasjonsnøkkel(event: BehandlingProsessEventDto): String {
+        fun utledReservasjonsnøkkel(event: BehandlingProsessEventDto, erTilBeslutter: Boolean): String {
             return when (FagsakYtelseType.fraKode(event.ytelseTypeKode)) {
                 FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
                 FagsakYtelseType.PLEIEPENGER_NÆRSTÅENDE,
                 FagsakYtelseType.OMSORGSPENGER_KS,
                 FagsakYtelseType.OMSORGSPENGER_AO,
-                FagsakYtelseType.OPPLÆRINGSPENGER -> if (erTilBeslutter(event)) {
-                    "K9_b_${event.ytelseTypeKode}_${event.pleietrengendeAktørId}_beslutter"
-                } else {
-                    "K9_b_${event.ytelseTypeKode}_${event.pleietrengendeAktørId}"
-                }
+                FagsakYtelseType.OPPLÆRINGSPENGER -> lagNøkkelPleietrengendeAktør(event, erTilBeslutter)
+                else -> lagNøkkelAktør(event, erTilBeslutter)
+            }
+        }
 
-                else -> if (erTilBeslutter(event)) {
-                    "K9_b_${event.ytelseTypeKode}_${event.aktørId}_beslutter"
-                } else {
-                    "K9_b_${event.ytelseTypeKode}_${event.aktørId}"
-                }
+        private fun lagNøkkelPleietrengendeAktør(event: BehandlingProsessEventDto, tilBeslutter: Boolean): String {
+            return if (tilBeslutter)
+                "K9_b_${event.ytelseTypeKode}_${event.pleietrengendeAktørId}_beslutter"
+            else {
+                "K9_b_${event.ytelseTypeKode}_${event.pleietrengendeAktørId}"
+            }
+        }
+
+        private fun lagNøkkelAktør(event: BehandlingProsessEventDto, tilBeslutter: Boolean): String {
+            return if (tilBeslutter) {
+                "K9_b_${event.ytelseTypeKode}_${event.aktørId}_beslutter"
+            } else {
+                "K9_b_${event.ytelseTypeKode}_${event.aktørId}"
             }
         }
 

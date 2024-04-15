@@ -132,8 +132,8 @@ class K9SakTilLosAdapterTjeneste(
                 if (oppgave != null) {
                     pepCacheService.oppdater(tx, oppgave.kildeområde, oppgave.eksternId)
 
-                    if (oppgave.status == Oppgavestatus.VENTER) {
-                        annullerReservasjonHvisAlleOppgaverPåVentEllerAvsluttet(oppgave.reservasjonsnøkkel, tx)
+                    if (oppgave.status == Oppgavestatus.VENTER || oppgave.status == Oppgavestatus.LUKKET) {
+                        annullerReservasjonerHvisAlleOppgaverPåVentEllerAvsluttet(event, tx)
                     }
 
                     eventTeller++
@@ -149,18 +149,30 @@ class K9SakTilLosAdapterTjeneste(
         return eventTeller
     }
 
-    private fun annullerReservasjonHvisAlleOppgaverPåVentEllerAvsluttet(reservasjonsnøkkel: String, tx: TransactionalSession) {
+    private fun annullerReservasjonerHvisAlleOppgaverPåVentEllerAvsluttet(event: BehandlingProsessEventDto, tx: TransactionalSession) {
+        val saksbehandlerNøkkel = EventTilDtoMapper.utledReservasjonsnøkkel(event, erTilBeslutter = false)
+        val beslutterNøkkel = EventTilDtoMapper.utledReservasjonsnøkkel(event, erTilBeslutter = true)
+        val antallAnnullert = annullerReservasjonHvisAlleOppgaverPåVentEllerAvsluttet(listOf(saksbehandlerNøkkel, beslutterNøkkel), tx)
+        if (antallAnnullert > 0) {
+            log.info("Annullerte $antallAnnullert aktive reservasjoner maskinelt på oppgave ${event.saksnummer} som følge av status på innkommende event")
+        }
+    }
+
+    private fun annullerReservasjonHvisAlleOppgaverPåVentEllerAvsluttet(reservasjonsnøkler: List<String>, tx: TransactionalSession): Int {
         val åpneOppgaverForReservasjonsnøkkel =
-            oppgaveRepository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjonsnøkkel)
+            oppgaveRepository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjonsnøkler)
 
         if (åpneOppgaverForReservasjonsnøkkel.none { oppgave -> oppgave.status != Oppgavestatus.VENTER.kode }) {
-            reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(
-                reservasjonsnøkkel,
-                "Maskinelt annullert reservasjon, siden alle oppgaver på resrvasjonen står på vent eller er avsluttet",
-                null,
-                tx
-            )
+            return reservasjonsnøkler.map { reservasjonsnøkkel ->
+                reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(
+                    reservasjonsnøkkel,
+                    "Maskinelt annullert reservasjon, siden alle oppgaver på reservasjonen står på vent eller er avsluttet",
+                    null,
+                    tx
+                )
+            }.count { it }
         }
+        return 0
     }
 
     internal fun ryddOppObsoleteOgResultatfeilFra2020(

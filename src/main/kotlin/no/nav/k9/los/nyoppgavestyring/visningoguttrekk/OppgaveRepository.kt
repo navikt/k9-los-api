@@ -32,19 +32,19 @@ class OppgaveRepository(
     }
 
     fun hentAlleÅpneOppgaverForReservasjonsnøkkel(tx: TransactionalSession, reservasjonsnøkkel: String, now: LocalDateTime = LocalDateTime.now()) : List<Oppgave> {
+        return hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, listOf(reservasjonsnøkkel), now)
+    }
+
+    fun hentAlleÅpneOppgaverForReservasjonsnøkkel(tx: TransactionalSession, reservasjonsnøkler: List<String>, now: LocalDateTime = LocalDateTime.now()) : List<Oppgave> {
         val oppgaver = tx.run(
             queryOf(
                 """
                 select *
                 from oppgave_v3 ov 
-                where reservasjonsnokkel = :reservasjonsnokkel
+                where reservasjonsnokkel in ('${reservasjonsnøkler.joinToString("','")}')
                 and aktiv = true
                 and status in ('VENTER', 'AAPEN')
-            """.trimIndent(),
-                mapOf(
-                    "reservasjonsnokkel" to reservasjonsnøkkel,
-                    //"oppgavestatuser" to listOf(Oppgavestatus.VENTER.kode, Oppgavestatus.AAPEN.kode), //TODO fikse mappingen her
-                )
+            """.trimIndent()
             ).map { row ->
                 mapOppgave(row, now, tx)
             }.asList
