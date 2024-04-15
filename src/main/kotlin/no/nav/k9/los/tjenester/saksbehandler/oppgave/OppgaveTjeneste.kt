@@ -955,9 +955,7 @@ class OppgaveTjeneste constructor(
     }
 
     fun leggTilBehandletOppgave(ident: String, oppgave: BehandletOppgave) {
-        return statistikkRepository.lagreBehandling(ident) {
-            oppgave
-        }
+        return statistikkRepository.lagreBehandling(ident ,oppgave)
     }
 
     suspend fun settSkjermet(oppgave: Oppgave) {

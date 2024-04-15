@@ -26,28 +26,12 @@ class StatistikkRepository(
         val SISTE_8_UKER_I_DAGER = 55
     }
 
-    fun lagreBehandling(brukerIdent: String, f: (BehandletOppgave?) -> BehandletOppgave) {
+    fun lagreBehandling(brukerIdent: String, oppgave: BehandletOppgave) {
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
-                val run = tx.run(
-                    queryOf(
-                        "select (data ::jsonb -> 'siste_behandlinger' -> -1) as data from siste_behandlinger where id = :id for update",
-                        mapOf("id" to brukerIdent)
-                    )
-                        .map { row ->
-                            row.string("data")
-                        }.asSingle
-                )
-
-                val oppgave = if (!run.isNullOrEmpty()) {
-                    f(LosObjectMapper.instance.readValue(run, BehandletOppgave::class.java))
-                } else {
-                    f(null)
-                }
                 val json = LosObjectMapper.instance.writeValueAsString(oppgave)
-
                 tx.run(
                     queryOf(
                         """
