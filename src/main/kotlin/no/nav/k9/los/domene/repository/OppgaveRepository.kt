@@ -443,7 +443,7 @@ class OppgaveRepository(
             )
         }
         spørring = System.currentTimeMillis() - spørring
-        log.info("Teller aktive oppgaver: $spørring ms") //hmmm, hva kan man forstå fra loggen når noen saksbehanlere får mye raskere spørring?
+        log.info("Teller aktive oppgaver: $spørring ms")
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
 
@@ -466,10 +466,11 @@ class OppgaveRepository(
                     }.asSingle
             )
         }
-        return count!!
+
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
 
+        return count!!
     }
 
     internal fun hentMedBehandlingsstatus(behandlingStatus: BehandlingStatus): Int {
@@ -563,8 +564,7 @@ class OppgaveRepository(
     private val aktiveOppgaverCache = Cache<List<Oppgave>>()
     internal fun hentAktiveOppgaver(): List<Oppgave> {
 
-        //TODO/FIXME legge på sist-endret i tabellen og _alltid_ oppfriske oppgaver som er endret
-        //hvis vi gjør det kan mye av det som går mot databasen i spesielle spørringer istedet iterere over cachen
+        //FIXME fjerne eller fikse cache
         val cacheObject = aktiveOppgaverCache.get("default")
         if (cacheObject != null) {
             return cacheObject.value
