@@ -92,7 +92,8 @@ fun common(app: Application, config: Configuration) = module {
     single {
         NokkeltallTjeneste(
             oppgaveRepository = get(),
-            statistikkRepository = get()
+            statistikkRepository = get(),
+            nøkkeltallRepository = get(),
         )
     }
     single(named("oppgaveKøOppdatert")) {
@@ -165,6 +166,10 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         BehandlingProsessEventTilbakeRepository(get())
+    }
+
+    single {
+        NøkkeltallRepository(get())
     }
 
     single {

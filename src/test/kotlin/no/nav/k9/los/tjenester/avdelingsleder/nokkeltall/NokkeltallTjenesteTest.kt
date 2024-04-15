@@ -17,6 +17,7 @@ import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.domene.repository.StatistikkRepository
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
+import no.nav.k9.los.domene.repository.NøkkeltallRepository
 import org.junit.jupiter.api.Test
 import org.koin.test.get
 import java.time.LocalDate
@@ -75,7 +76,8 @@ class NokkeltallTjenesteTest : AbstractK9LosIntegrationTest() {
     @Test
     fun `Hent løste aksjonspunkter bortsett fra de med behandlende enhet 2103`() {
         val statistikkRepository = mockk<StatistikkRepository>()
-        val nøkkeltallTjeneste = NokkeltallTjeneste(mockk(), statistikkRepository)
+        val nøkkeltallRepository = mockk<NøkkeltallRepository>()
+        val nøkkeltallTjeneste = NokkeltallTjeneste(mockk(), statistikkRepository, nøkkeltallRepository)
 
         val ferdigstiltBehandling = FerdigstiltBehandling(
             dato = LocalDate.now(),

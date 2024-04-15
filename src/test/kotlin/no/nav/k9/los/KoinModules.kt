@@ -227,7 +227,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         NokkeltallTjeneste(
             oppgaveRepository = get(),
-            statistikkRepository = get()
+            statistikkRepository = get(),
+            nøkkeltallRepository = get()
         )
     }
 
@@ -339,6 +340,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single { K9KlageOppgaveTilDVHMapper() }
     single { OppgaveRepository(oppgavetypeRepository = get()) }
     single { StatistikkRepository(dataSource = get()) }
+    single { NøkkeltallRepository(dataSource = get()) }
 
     single { mockk<StatistikkPublisher>() }
 

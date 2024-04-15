@@ -5,6 +5,7 @@ import no.nav.k9.los.domene.modell.BehandlingType
 import no.nav.k9.los.domene.modell.FagsakYtelseType
 import no.nav.k9.los.domene.modell.Fagsystem
 import no.nav.k9.los.domene.periode.tidligsteOgSeneste
+import no.nav.k9.los.domene.repository.NøkkeltallRepository
 import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.domene.repository.StatistikkRepository
 import org.slf4j.LoggerFactory
@@ -13,7 +14,8 @@ import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak as VenteårsakK9Sa
 
 class NokkeltallTjeneste constructor(
     private val oppgaveRepository: OppgaveRepository,
-    private val statistikkRepository: StatistikkRepository
+    private val statistikkRepository: StatistikkRepository,
+    private val nøkkeltallRepository: NøkkeltallRepository
 ) {
     private val log = LoggerFactory.getLogger(BehandlingsmigreringTjeneste::class.java)
     suspend fun hentOppgaverUnderArbeid(): List<AlleOppgaverDto> {
@@ -21,7 +23,7 @@ class NokkeltallTjeneste constructor(
     }
 
     fun hentOppgaverPåVentV2(): OppgaverPåVentDto.PåVentResponse {
-        val raw = oppgaveRepository.hentAllePåVentGruppert()
+        val raw = nøkkeltallRepository.hentAllePåVentGruppert()
             //gir ikke helt mening å ha med VENT_PÅ_TILBAKEKREVINGSGRUNNLAG her. Den er vangligvis samtidig med VENT_PÅ_BRUKERTILBAKEMELDING, så ville gitt duplikater her. Frist er også misvisende for aksjonspunktet, k9tilbake vil uansett vente helt til grunnlag kommer
             .filterNot { gruppe -> gruppe.system == Fagsystem.K9TILBAKE && gruppe.aksjonspunktKode ==  "VENT_PÅ_TILBAKEKREVINGSGRUNNLAG"}
 
