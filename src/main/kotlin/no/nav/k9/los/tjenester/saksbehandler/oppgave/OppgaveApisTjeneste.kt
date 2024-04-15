@@ -115,7 +115,7 @@ class OppgaveApisTjeneste(
                 kommentar = reservasjonEndringDto.begrunnelse
             )
 
-        val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(nyReservasjon!!.reservertAv)
+        val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(nyReservasjon!!.reservasjonV3.reservertAv)
 
         return reservasjonV3DtoBuilder.byggReservasjonV3Dto(nyReservasjon, reservertAv)
     }
@@ -142,7 +142,7 @@ class OppgaveApisTjeneste(
                 kommentar = forlengReservasjonDto.kommentar ?: ""
             )
 
-        val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(forlengetReservasjon!!.reservertAv)!!
+        val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(forlengetReservasjon!!.reservasjonV3.reservertAv)!!
 
         return reservasjonV3DtoBuilder.byggReservasjonV3Dto(forlengetReservasjon, reservertAv)
     }
@@ -202,11 +202,11 @@ class OppgaveApisTjeneste(
     }
 
     suspend fun hentReserverteOppgaverForSaksbehandler(saksbehandler: Saksbehandler): List<ReservasjonV3Dto> {
-        val reservasjoner =
+        val reservasjonerMedOppgaver =
             reservasjonV3Tjeneste.hentReservasjonerForSaksbehandler(saksbehandler.id!!)
 
-        return reservasjoner.map { reservasjon ->
-            reservasjonV3DtoBuilder.byggReservasjonV3Dto(reservasjon, saksbehandler)
+        return reservasjonerMedOppgaver.map { reservasjonMedOppgaver ->
+            reservasjonV3DtoBuilder.byggReservasjonV3Dto(reservasjonMedOppgaver, saksbehandler)
         }
     }
 }

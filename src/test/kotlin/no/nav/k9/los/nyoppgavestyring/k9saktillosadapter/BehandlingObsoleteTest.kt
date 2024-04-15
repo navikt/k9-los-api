@@ -37,9 +37,10 @@ class BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
             oppgaveV3Tjeneste = get(),
             config = get(),
             transactionalManager = get(),
-            oppgaveRepositoryV2 = get(),
             k9SakBerikerKlient = k9SakBerikerKlientLocal,
-            pepCacheService = get()
+            pepCacheService = get(),
+            oppgaveRepository = get(),
+            reservasjonV3Tjeneste = get(),
         )
     }
 

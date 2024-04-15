@@ -5,6 +5,7 @@ import no.nav.k9.los.integrasjon.pdl.PersonPdl
 import no.nav.k9.los.integrasjon.pdl.fnr
 import no.nav.k9.los.integrasjon.pdl.navn
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import java.time.LocalDateTime
 
 data class GenerellOppgaveV3Dto(
     val søkersNavn: String,
@@ -13,7 +14,7 @@ data class GenerellOppgaveV3Dto(
     val saksnummer: String,
     val oppgaveNøkkel: OppgaveNøkkelDto,
     val journalpostId: String?,
-    //val opprettetTidspunkt: LocalDateTime, //TODO enten forsvare fjerning, eller hente fra første oppgaveversjon
+    val opprettetTidspunkt: LocalDateTime?,
     val oppgavestatus: Oppgavestatus,
     val oppgavebehandlingsUrl: String?,
 ) {
@@ -25,6 +26,7 @@ data class GenerellOppgaveV3Dto(
         oppgaveNøkkel = OppgaveNøkkelDto(oppgaveV3),
         journalpostId = "",
         oppgavestatus = Oppgavestatus.fraKode(oppgaveV3.status),
+        opprettetTidspunkt = oppgaveV3.hentVerdi("registrertDato")?.let { LocalDateTime.parse(it) },
         oppgavebehandlingsUrl = oppgaveV3.getOppgaveBehandlingsurl()
     )
 }

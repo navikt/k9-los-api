@@ -18,5 +18,5 @@ fun LocalDateTime.forskyvReservasjonsDatoBakover(): LocalDateTime {
         localDate = localDate.minusDays(1)
     }
 
-    return localDate.atStartOfDay().plusHours(23).plusMinutes(59)
+    return localDate.atStartOfDay()
 }
