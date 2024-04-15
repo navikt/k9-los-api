@@ -1,7 +1,6 @@
 package no.nav.k9.los.tjenester.sse
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
 import io.ktor.server.application.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.broadcast
@@ -12,9 +11,6 @@ import java.util.*
 
 internal object RefreshKlienter {
     private val logger = LoggerFactory.getLogger(RefreshKlienter::class.java)
-
-    private val objectMapper = LosObjectMapper.instance.copy() //viktig poeng: copy for å unngå å manipulere orginal som brukes andre steder i los
-            .disable(SerializationFeature.INDENT_OUTPUT)
 
     private inline fun <reified T> ObjectMapper.asString(value: T): String = writeValueAsString(value)
 
@@ -32,7 +28,7 @@ internal object RefreshKlienter {
 
     internal suspend fun Channel<SseEvent>.sendMelding(melding: Melding) {
         sseOperationCo("sendMelding") {
-            val event = SseEvent(data = objectMapper.asString(melding))
+            val event = SseEvent(data = LosObjectMapper.instance.asString(melding))
             send(event)
         }
     }
