@@ -21,7 +21,9 @@ class NokkeltallTjeneste constructor(
     }
 
     fun hentOppgaverPåVentV2(): OppgaverPåVentDto.PåVentResponse {
-        val raw = oppgaveRepository.hentK9SakPåVentGruppert()
+        val raw = oppgaveRepository.hentAllePåVentGruppert()
+            //gir ikke helt mening å ha med VENT_PÅ_TILBAKEKREVINGSGRUNNLAG her. Den er vangligvis samtidig med VENT_PÅ_BRUKERTILBAKEMELDING, så ville gitt duplikater her. Frist er også misvisende for aksjonspunktet, k9tilbake vil uansett vente helt til grunnlag kommer
+            .filterNot { gruppe -> gruppe.system == Fagsystem.K9TILBAKE && gruppe.aksjonspunktKode ==  "VENT_PÅ_TILBAKEKREVINGSGRUNNLAG"}
 
         data class PerBehandling(val f: FagsakYtelseType, val b: BehandlingType, val frist: LocalDate)
         val påVentPerBehandling = raw.groupingBy { PerBehandling( it.fagsakYtelseType, it.behandlingType, it.frist) }

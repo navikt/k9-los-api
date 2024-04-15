@@ -43,7 +43,7 @@ class OppgaveRepository(
         val antall: Int
     )
 
-    fun hentK9SakPåVentGruppert(): List<GrupperteAksjonspunktVenteårsak> {
+    fun hentAllePåVentGruppert(): List<GrupperteAksjonspunktVenteårsak> {
 
         val t0 = System.currentTimeMillis()
         val oppgaver: List<GrupperteAksjonspunktVenteårsak> = using(sessionOf(dataSource)) {
