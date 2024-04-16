@@ -709,6 +709,7 @@ class OppgaveTjeneste constructor(
                     reserverteOppgaverSomHørerTilKø++
                 }
             }
+            log.info("Antall reserverte oppgaver som ble lagt til var $reserverteOppgaverSomHørerTilKø")
         }
         val antall = oppgavekø.oppgaverOgDatoer.size + reserverteOppgaverSomHørerTilKø
         hentAntallOppgaverCache.set(key, CacheObject(antall, LocalDateTime.now().plusMinutes(30)))
