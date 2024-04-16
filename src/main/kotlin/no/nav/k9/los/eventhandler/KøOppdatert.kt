@@ -93,8 +93,9 @@ private suspend fun oppdaterKø(
             k9sakRefreshBehanderListe.addAll(finnK9sakBehandlingIder(neste20oppgaveIder, aktiveOppgaver, oppgaveRepository, log))
             oppgaveKø
         }
-        taTiden(log, "hent antall oppgaver med reserverte") { oppgaveTjeneste.hentAntallOppgaver(oppgavekøId = it, taMedReserverte = true, refresh = true) }
-        taTiden(log, "hent antall oppgaver uten reserverte") { oppgaveTjeneste.hentAntallOppgaver(oppgavekøId = it, taMedReserverte = false, refresh = true) }
+        val antallOppgaverUtenReservasjon = taTiden(log, "hent antall oppgaver med reserverte") { oppgaveTjeneste.hentAntallOppgaver(oppgavekøId = it, taMedReserverte = true, refresh = true) }
+        val antallOppgaverMedReservasjon = taTiden(log, "hent antall oppgaver uten reserverte") { oppgaveTjeneste.hentAntallOppgaver(oppgavekøId = it, taMedReserverte = false, refresh = true) }
+        log.info("Antall oppgaver i køen er $antallOppgaverUtenReservasjon eller $antallOppgaverMedReservasjon med reservasjoner")
         taTiden(log, "refresh ${k9sakRefreshBehanderListe.size} behandlinger") {  k9SakService.refreshBehandlinger(BehandlingIdListe(k9sakRefreshBehanderListe))}
     }
 }
