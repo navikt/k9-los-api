@@ -149,11 +149,13 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         eventHandler.prosesser(behandling1.vurderSykdom().build())
         eventHandler.prosesser(behandling2.vurderSykdom().build())
 
+        // Saksbehandler tar reservasjon på begge sakene på pleietrengende
         assertAntallIKø(kø, 2)
         taReservasjonFra(kø, TestSaksbehandler.SARA)
         assertAntallIKø(kø, 0)
         assertReservasjonMedAntallOppgaver(TestSaksbehandler.SARA, 2)
 
+        // Saksbehandler sender den ene saken til beslutter, og beslutter reserverer oppgaven
         eventHandler.prosesser(behandling1.hosBeslutter().build())
         assertAntallIKø(kø, 1)
         taReservasjonFra(kø, TestSaksbehandler.BIRGER_BESLUTTER)
@@ -162,14 +164,14 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         assertReservasjonMedAntallOppgaver(TestSaksbehandler.SARA, 1)
         assertReservasjonMedAntallOppgaver(TestSaksbehandler.BIRGER_BESLUTTER, 1)
 
+        // Beslutter fatter vedtak
         eventHandler.prosesser(behandling1.avsluttet().build())
-
         assertAntallIKø(kø, 0)
         assertSkjultReservasjon(TestSaksbehandler.BIRGER_BESLUTTER)
         assertReservasjonMedAntallOppgaver(TestSaksbehandler.SARA, 1)
 
+        // Saksbehandler setter den gjenstående oppgaven på vent og både saksbehandlers og den skjulte reservasjonen hos beslutter annulleres
         eventHandler.prosesser(behandling2.venterPåInntektsmelding().build())
-
         assertIngenReservasjon(TestSaksbehandler.SARA)
         assertIngenReservasjon(TestSaksbehandler.BIRGER_BESLUTTER)
     }
@@ -199,7 +201,6 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
 
         // Beslutter sender oppgaven tilbake til saksbehandler
         eventHandler.prosesser(eventBuilder.returFraBeslutter().build())
-        val køinnhold = runBlocking {  oppgaveKøTjeneste.hentOppgaverFraKø(kø.id, 10) }
         assertAntallIKø(kø, 0)
         assertReservasjonMedAntallOppgaver(TestSaksbehandler.SARA, 1)
         assertSkjultReservasjon(TestSaksbehandler.BIRGER_BESLUTTER)
