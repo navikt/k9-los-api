@@ -26,7 +26,7 @@ class ReservasjonV3DtoBuilder(
 
     suspend fun byggForV3(reservasjonMedOppgaver: ReservasjonV3MedOppgaver, saksbehandler: Saksbehandler): ReservasjonV3Dto {
         val oppgaveV3Dtos = reservasjonMedOppgaver.oppgaverV3.map {
-            val person = pdlService.person(it.hentVerdi("aktorId")!!).person!!
+            val person = pdlService.person(it.hentVerdi("aktorId")!!).person
             GenerellOppgaveV3Dto(it, person)
         }
         return ReservasjonV3Dto(reservasjonMedOppgaver.reservasjonV3, oppgaveV3Dtos, saksbehandler)
