@@ -206,10 +206,7 @@ fun Route.innsiktGrensesnitt() {
     class db
     get { _: db ->
         if (køer.isEmpty()) {
-            val alleReservasjoner =
-                saksbehandlerRepository.hentAlleSaksbehandlereIkkeTaHensyn().flatMap { it.reservasjoner }
-            val hentAktiveOppgaver =
-                oppgaveRepository.hentAktiveOppgaver().filterNot { alleReservasjoner.contains(it.eksternId) }
+            val hentAktiveOppgaver = oppgaveRepository.hentAktiveUreserverteOppgaver()
 
             val oppgaveKøer = oppgaveKøRepository.hentIkkeTaHensyn()
             for (oppgaveKø in oppgaveKøer.filterNot { it.kode6 || it.skjermet }) {
@@ -313,14 +310,9 @@ fun Route.innsiktGrensesnitt() {
         }
 
         fun køDistribusjon(): Map<Int, List<Oppgave>> {
-            val aktiveOppgaver = oppgaveRepository.hentAktiveOppgaver()
+            val aktiveOppgaver = oppgaveRepository.hentAktiveUreserverteOppgaver()
             val oppgavekøer = oppgaveKøRepository.hentIkkeTaHensyn().filter { it.oppgaverOgDatoer.isNotEmpty() }
-            val reservasjoner = reservasjonRepository.hentSelvOmDeIkkeErAktive(
-                aktiveOppgaver.map { it.eksternId }.toSet()
-            ).map { it.oppgave }
-
             return aktiveOppgaver
-                .filterNot { reservasjoner.contains(it.eksternId) }
                 .groupBy { oppgave ->
                     oppgavekøer.count { kø ->
                         kø.oppgaverOgDatoer.map { it.id }.contains(oppgave.eksternId)
