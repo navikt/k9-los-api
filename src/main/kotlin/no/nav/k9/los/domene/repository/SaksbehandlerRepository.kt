@@ -255,21 +255,6 @@ class SaksbehandlerRepository(
         }!!
     }
 
-    fun finnIdMedEpost(epost: String): Long? {
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
-        return using(sessionOf(dataSource)) {
-            it.run(
-                queryOf(
-                    "select id from saksbehandler where lower(epost) = lower(:epost)",
-                    mapOf("epost" to epost)
-                )
-                    .map { row -> row.long("id") }.asSingle
-            )
-        }
-    }
-
     suspend fun finnSaksbehandlerMedEpost(epost: String): Saksbehandler? {
         val skjermet = pepClient.harTilgangTilKode6()
 

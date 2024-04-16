@@ -179,32 +179,6 @@ class StatistikkRepository(
         }
     }
 
-
-    fun truncateStatistikk() {
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-        using(sessionOf(dataSource)) {
-            //language=PostgreSQL
-            it.run(
-                queryOf(
-                    """
-                            truncate nye_og_ferdigstilte
-                    """.trimIndent(),
-                    mapOf()
-                ).asUpdate
-            )
-
-            it.run(
-                queryOf(
-                    """
-                            truncate ferdigstilte_behandlinger
-                    """.trimIndent(),
-                    mapOf()
-                ).asUpdate
-            )
-        }
-    }
-
     private val hentFerdigstilteOgNyeHistorikkMedYtelsetypeCache = Cache<List<AlleOppgaverNyeOgFerdigstilte>>()
     fun hentFerdigstilteOgNyeHistorikkMedYtelsetypeSiste8Uker(
         refresh: Boolean = false
@@ -337,27 +311,4 @@ class StatistikkRepository(
         return defaultList
     }
 
-    fun slettAltFraPunsj(): Int {
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-        return using(sessionOf(dataSource)) {
-            //language=PostgreSQL
-            it.run(
-                queryOf(
-                    """
-                        delete from nye_og_ferdigstilte where behandlingtype in ('PAPIRSØKNAD',
-    'PAPIRETTERSENDELSE',
-    'PAPIRINNTEKTSOPPLYSNINGER',
-    'DIGITAL_ETTERSENDELSE',
-    'INNLOGGET_CHAT',
-    'SKRIV_TIL_OSS_SPØRMSÅL',
-    'SKRIV_TIL_OSS_SVAR',
-    'SAMTALEREFERAT',
-    'KOPI',
-    'UKJENT')""".trimIndent(),
-                    mapOf()
-                ).asUpdate
-            )
-        }
-    }
 }
