@@ -137,7 +137,7 @@ fun Application.k9Los() {
             oppgaveRepository = koin.get(),
             oppgaveRepositoryV2 = koin.get(),
             channel = koin.get<Channel<UUID>>(named("oppgaveKøOppdatert")),
-            k9SakService = koin.get(),
+            refreshOppgaveChannel = koin.get<Channel<UUID>>(named("oppgaveRefreshChannel")),
             oppgaveTjeneste = koin.get()
         )
 
@@ -166,7 +166,7 @@ fun Application.k9Los() {
         oppgaveRepository = koin.get(),
         oppgaveKøRepository = koin.get(),
         reservasjonRepository = koin.get(),
-        k9SakService = koin.get(),
+        refreshOppgaveChannel = koin.get<Channel<UUID>>(named("oppgaveRefreshChannel")),
         configuration = koin.get()
     )
 

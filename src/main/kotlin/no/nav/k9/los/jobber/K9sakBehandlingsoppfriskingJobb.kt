@@ -1,12 +1,12 @@
 package no.nav.k9.los.jobber
 
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.domene.repository.OppgaveKøRepository
 import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.domene.repository.ReservasjonRepository
-import no.nav.k9.los.integrasjon.k9.IK9SakService
 import org.slf4j.LoggerFactory
 import java.time.DayOfWeek
 import java.time.Duration
@@ -22,7 +22,7 @@ class K9sakBehandlingsoppfriskingJobb(
     val oppgaveKøRepository: OppgaveKøRepository,
     val oppgaveRepository: OppgaveRepository,
     val reservasjonRepository: ReservasjonRepository,
-    val k9SakService: IK9SakService,
+    val refreshOppgaveChannel: Channel<UUID>,
     val antallFraHverKø: Int = 20,
     val configuration: Configuration,
 ) {
@@ -62,9 +62,14 @@ class K9sakBehandlingsoppfriskingJobb(
 
     fun refresh() {
         val behandlingerTilRefresh = finnK9sakBehandlingerTilRefresh()
+        channelSend(behandlingerTilRefresh)
+    }
+
+    private fun channelSend(behandlingerTilRefresh: Set<UUID>) {
         runBlocking {
-            //TODO send over channel til RefreshK9 i stedet
-            k9SakService.refreshBehandlinger(behandlingerTilRefresh)
+            for (uuid in behandlingerTilRefresh) {
+                refreshOppgaveChannel.send(uuid)
+            }
         }
     }
 

@@ -35,23 +35,15 @@ open class K9SakServiceSystemClient constructor(
     private val cacheObjectDuration = Duration.ofHours(12)
 
     override suspend fun refreshBehandlinger(behandlingUuid: Collection<UUID>) {
-        //TODO la KøOppdatert og K9sakBehandlingsoppfriskingJobb gå gjennom channel til RefreshK9 for å unngå at låsing blir nødvendig her
-        synchronized(cache) {
-            runBlocking {
-                doRefreshBehandlinger(behandlingUuid)
-            }
+        val nå = LocalDateTime.now()
+        log.info("Forespørsel om refresh av ${behandlingUuid.size} behandlinger")
+        val uoppfriskedeBehandlingUuider = behandlingUuid.filter { cache.containsKey(it, nå) }
+        log.info("Kommer til å refreshe ${uoppfriskedeBehandlingUuider.size} behandlinger etter sjekk mot cache av oppfriskede behandlinger, i bolker på 100 stykker")
+        for (uuids in uoppfriskedeBehandlingUuider.chunked(100)) {
+            utførRefreshKallOgOppdaterCache(behandlingUuid)
         }
     }
 
-    private suspend fun doRefreshBehandlinger(behandlinger: Collection<UUID>) {
-        val nå = LocalDateTime.now()
-        log.info("Forespørsel om refresh av ${behandlinger.size} behandlinger")
-        val uoppfriskedeBehandlingUuider = behandlinger.filter { cache.containsKey(it, nå) }
-        log.info("Kommer til å refreshe ${uoppfriskedeBehandlingUuider.size} behandlinger etter sjekk mot cache av oppfriskede behandlinger, i bolker på 100 stykker")
-        for (uuids in uoppfriskedeBehandlingUuider.chunked(100)) {
-            utførRefreshKallOgOppdaterCache(behandlinger)
-        }
-    }
     private suspend fun utførRefreshKallOgOppdaterCache(behandlinger: Collection<UUID>) {
         log.info("Trigger refresh av ${behandlinger.size} behandlinger")
         log.info("Behandlinger som refreshes: $behandlinger")
@@ -85,7 +77,8 @@ open class K9SakServiceSystemClient constructor(
             result.fold(
                 { success ->
                     registrerICache(behandlinger, LocalDateTime.now())
-                    success },
+                    success
+                },
                 { error ->
                     log.error("Error response = '${error.response.body().asString("text/plain")}' fra '${request.url}'")
                     log.error(error.toString())
@@ -94,9 +87,9 @@ open class K9SakServiceSystemClient constructor(
         }
     }
 
-    private fun registrerICache(behandingUuid: Collection<UUID>, now : LocalDateTime) {
+    private fun registrerICache(behandingUuid: Collection<UUID>, now: LocalDateTime) {
         for (uuid in behandingUuid) {
-            cache.set(uuid,  CacheObject(true, now.plus(cacheObjectDuration)))
+            cache.set(uuid, CacheObject(true, now.plus(cacheObjectDuration)))
         }
         log.info("La til ${behandingUuid.size} behandlinger i cache")
     }
