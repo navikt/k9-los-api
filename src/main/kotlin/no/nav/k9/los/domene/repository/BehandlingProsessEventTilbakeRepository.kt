@@ -71,26 +71,4 @@ class BehandlingProsessEventTilbakeRepository(private val dataSource: DataSource
         return modell.copy(eventer = modell.eventer.sortedBy { it.eventTid })
     }
 
-    fun hentAlleEventerIder(
-    ): List<String> {
-
-        val ider = using(sessionOf(dataSource)) {
-            it.transaction { tx ->
-                tx.run(
-                    queryOf(
-                        "select id from behandling_prosess_events_tilbake",
-                        mapOf()
-                    )
-                        .map { row ->
-                            row.string("id")
-                   }.asList
-                )
-            }
-
-        }
-        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
-        return ider
-
-    }
-
 }

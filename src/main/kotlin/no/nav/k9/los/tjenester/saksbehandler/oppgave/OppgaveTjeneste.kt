@@ -195,16 +195,6 @@ class OppgaveTjeneste constructor(
         }
     }
 
-    private fun sjekkHvisSaksbehandlerPrøverOgReserverEnOppgaveDeSelvHarBesluttet(
-        ident: String,
-        oppgave: Oppgave
-    ): Boolean {
-        if (oppgave.ansvarligBeslutterForTotrinn == null) {
-            return false
-        }
-        return oppgave.ansvarligBeslutterForTotrinn.lowercase() == ident.lowercase() && !erBeslutterOppgave(oppgave)
-    }
-
     fun lagReservasjoner(
         iderPåOppgaverSomSkalBliReservert: Set<UUID>,
         ident: String,
@@ -650,27 +640,6 @@ class OppgaveTjeneste constructor(
         return statistikkRepository.hentBehandlinger(coroutineContext.idToken().getUsername())
     }
 
-    suspend fun flyttReservasjonTilForrigeSakbehandler(uuid: UUID) {
-        val reservasjoner = reservasjonRepository.hentMedHistorikk(uuid).reversed()
-        for (reservasjon in reservasjoner) {
-            if (reservasjoner[0].reservertAv != reservasjon.reservertAv) {
-                reservasjonRepository.lagre(uuid, true) {
-
-                    it!!.reservertAv = reservasjon.reservertAv
-                    it.reservertTil = LocalDateTime.now().plusDays(3).forskyvReservasjonsDato()
-                    it
-                }
-
-                saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
-                saksbehandlerRepository.leggTilReservasjon(
-                    reservasjon.reservertAv,
-                    reservasjon.oppgave
-                )
-                return
-            }
-        }
-    }
-
     fun hentReservasjonsHistorikk(uuid: UUID): ReservasjonHistorikkDto {
         val reservasjoner = reservasjonRepository.hentMedHistorikk(uuid).reversed()
         return ReservasjonHistorikkDto(
@@ -784,16 +753,6 @@ class OppgaveTjeneste constructor(
         merknad = hentAktivMerknad(oppgave.eksternId.toString())
     )
 
-    private fun preprodNavn(oppgave: Oppgave): String {
-        val aksjonspunkter = oppgave.aksjonspunkter.hentAktive().entries.map { t ->
-            val a = AksjonspunkterMock().aksjonspunkter()
-                .find { aksjonspunkt -> aksjonspunkt.kode == t.key }
-            "${t.key} ${a?.navn ?: "Ukjent aksjonspunkt"}"
-        }.toList().joinToString(", ")
-
-        return "${oppgave.fagsakSaksnummer} " + aksjonspunkter + "FeilutbetaltBeløp=" + oppgave.feilutbetaltBeløp
-    }
-
     suspend fun hentSisteReserverteOppgaver(): List<OppgaveDto> {
         val list = mutableListOf<OppgaveDto>()
         //Hent reservasjoner for en gitt bruker skriv om til å hente med ident direkte i tabellen
@@ -897,10 +856,6 @@ class OppgaveTjeneste constructor(
             return false
         }
         return true
-    }
-
-    suspend fun sokSaksbehandlerMedIdent(ident: BrukerIdentDto): Saksbehandler? {
-        return saksbehandlerRepository.finnSaksbehandlerMedIdent(ident.brukerIdent)
     }
 
     suspend fun sokSaksbehandler(søkestreng: String): Saksbehandler {

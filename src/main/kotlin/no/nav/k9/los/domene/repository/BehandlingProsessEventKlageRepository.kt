@@ -106,26 +106,6 @@ class BehandlingProsessEventKlageRepository(private val dataSource: DataSource) 
         return sortertModell
     }
 
-    fun hentAlleEventerIder(
-    ): List<UUID> {
-
-        val ider = using(sessionOf(dataSource)) {
-            it.transaction { tx ->
-                tx.run(
-                    queryOf(
-                        "select id from behandling_prosess_events_klage",
-                        mapOf()
-                    )
-                        .map { row ->
-                            UUID.fromString(row.string("id"))
-                        }.asList
-                )
-            }
-
-        }
-        return ider
-    }
-
     fun hentAlleDirtyEventIder(): List<UUID> {
         return using(sessionOf(dataSource)) {
             it.transaction { tx ->
