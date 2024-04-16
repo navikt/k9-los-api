@@ -570,8 +570,7 @@ class OppgaveRepository(
                 queryOf(
                     """"
                         with
-                            reservasjoner as (select id, ((data -> 'reservasjoner' -> -1) ->> 'reservertTil')::timestamp as reservert_til from reservasjon),
-                            aktive_reservasjoner as (select id from reservasjoner where reservert_til is null or reservert_til > :now)
+                            aktive_reservasjoner as (select id from reservasjon where ((data -> 'reservasjoner' -> -1) ->> 'reservertTil')::timestamp > :now)
                          select data from oppgave o
                          where (data -> 'aktiv')::boolean
                          and not exists (select 1 from aktive_reservasjoner ar where ar.id = (o.data ->> 'eksternId')) 
