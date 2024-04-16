@@ -568,8 +568,7 @@ class OppgaveRepository(
         val json: List<String> = using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
-                    """"
-                        with
+                    """"with
                             aktive_reservasjoner as (select id from reservasjon where ((data -> 'reservasjoner' -> -1) ->> 'reservertTil')::timestamp > :now)
                          select data from oppgave o
                          where (data -> 'aktiv')::boolean
