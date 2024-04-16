@@ -7,6 +7,7 @@ import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.kodeverk.uttak.SøknadÅrsak
 import no.nav.k9.los.domene.modell.BehandlingStatus
 import no.nav.k9.los.domene.modell.Fagsystem
+import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.los.integrasjon.kafka.dto.EventHendelse
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
@@ -22,7 +23,7 @@ class BehandlingProsessEventDtoBuilder(
     var pleietrengendeAktørId: String = Random().nextInt(0, 9999999).toString(),
     var vedtaksdato: LocalDate = LocalDate.now(),
     var behandlingstidFrist: LocalDate? = null,
-    var eventTid: LocalDateTime = LocalDateTime.now(),
+    var eventTid: LocalDateTime? = null,
     var eventHendelse: EventHendelse = EventHendelse.BEHANDLINGSKONTROLL_EVENT,
     var behandlingStatus: BehandlingStatus = BehandlingStatus.UTREDES,
     var behandlingSteg: BehandlingStegType = BehandlingStegType.KONTROLLER_FAKTA,
@@ -36,83 +37,95 @@ class BehandlingProsessEventDtoBuilder(
     var søknadÅrsaker: List<SøknadÅrsak> = mutableListOf(),
     var behandlingÅrsaker: List<BehandlingÅrsakType> = mutableListOf(),
     var ansvarligSaksbehandlerIdent: String? = null,
-    var ansvarligSaksbehandlerForTotrinn: String? = null
+    var ansvarligSaksbehandlerForTotrinn: String? = null,
+    private var teller: Long = 0
 ) {
+    fun opprettet(): BehandlingProsessEventDtoBuilder {
+        this.resultatType = BehandlingResultatType.IKKE_FASTSATT
+        this.behandlingStatus = BehandlingStatus.OPPRETTET
+        this.resultatType = BehandlingResultatType.IKKE_FASTSATT
+        this.aksjonspunkter = mutableListOf()
+        this.ansvarligSaksbehandlerIdent = null
+        return this
+    }
 
-    companion object {
-        fun opprettet(uuid: UUID = UUID.randomUUID()) = BehandlingProsessEventDtoBuilder(
-            uuid,
-            resultatType = BehandlingResultatType.IKKE_FASTSATT,
-            behandlingStatus = BehandlingStatus.OPPRETTET,
-            aksjonspunkter = mutableListOf(),
+    fun vurderSykdom(): BehandlingProsessEventDtoBuilder {
+        this.behandlingStatus = BehandlingStatus.UTREDES
+        this.behandlingSteg = BehandlingStegType.VURDER_MEDISINSKE_VILKÅR
+        this.resultatType = BehandlingResultatType.IKKE_FASTSATT
+        this.aksjonspunkter = mutableListOf(
+            AksjonspunktTilstandBuilder.KONTROLLER_LEGEERKLÆRING.medStatus(AksjonspunktStatus.OPPRETTET)
         )
+        return this
+    }
 
-        fun vurderSykdom(uuid: UUID = UUID.randomUUID()) = BehandlingProsessEventDtoBuilder(
-            uuid,
-            behandlingStatus = BehandlingStatus.UTREDES,
-            behandlingSteg = BehandlingStegType.VURDER_MEDISINSKE_VILKÅR,
-            resultatType = BehandlingResultatType.IKKE_FASTSATT,
-            aksjonspunkter = mutableListOf(
-                AksjonspunktTilstandBuilder.KONTROLLER_LEGEERKLÆRING.medStatus(AksjonspunktStatus.OPPRETTET)
-            )
+    fun venterPåInntektsmelding(): BehandlingProsessEventDtoBuilder {
+        this.behandlingStatus = BehandlingStatus.UTREDES
+        this.resultatType = BehandlingResultatType.IKKE_FASTSATT
+        this.aksjonspunkter = mutableListOf(
+            AksjonspunktTilstandBuilder.KONTROLLER_LEGEERKLÆRING.medStatus(AksjonspunktStatus.UTFØRT),
+            AksjonspunktTilstandBuilder.VENTER_PÅ_IM.medStatus(AksjonspunktStatus.OPPRETTET)
         )
+        return this
+    }
 
-        fun venterPåInntektsmelding(uuid: UUID = UUID.randomUUID()) = BehandlingProsessEventDtoBuilder(
-            uuid,
-            behandlingStatus = BehandlingStatus.UTREDES,
-            resultatType = BehandlingResultatType.IKKE_FASTSATT,
-            aksjonspunkter = mutableListOf(
-                AksjonspunktTilstandBuilder.KONTROLLER_LEGEERKLÆRING.medStatus(AksjonspunktStatus.UTFØRT),
-                AksjonspunktTilstandBuilder.VENTER_PÅ_IM.medStatus(AksjonspunktStatus.OPPRETTET)
-            )
+    fun foreslåVedtak(): BehandlingProsessEventDtoBuilder {
+       this.behandlingStatus = BehandlingStatus.UTREDES
+       this.behandlingSteg = BehandlingStegType.FORESLÅ_VEDTAK
+       this.resultatType = BehandlingResultatType.INNVILGET
+       this.aksjonspunkter = mutableListOf(
+            AksjonspunktTilstandBuilder.KONTROLLER_LEGEERKLÆRING.medStatus(AksjonspunktStatus.UTFØRT),
+            AksjonspunktTilstandBuilder.FORESLÅ_VEDTAK.medStatus(AksjonspunktStatus.OPPRETTET)
         )
+        return this
+    }
 
-        fun foreslåVedtak(uuid: UUID = UUID.randomUUID()) = BehandlingProsessEventDtoBuilder(
-            uuid,
-            behandlingStatus = BehandlingStatus.UTREDES,
-            behandlingSteg = BehandlingStegType.FORESLÅ_VEDTAK,
-            resultatType = BehandlingResultatType.INNVILGET,
-            aksjonspunkter = mutableListOf(
-                AksjonspunktTilstandBuilder.KONTROLLER_LEGEERKLÆRING.medStatus(AksjonspunktStatus.UTFØRT),
-                AksjonspunktTilstandBuilder.FORESLÅ_VEDTAK.medStatus(AksjonspunktStatus.OPPRETTET)
-            )
+    fun hosBeslutter(ansvarligSaksbehandler: Saksbehandler? = TestSaksbehandler.SARA): BehandlingProsessEventDtoBuilder {
+        this.behandlingStatus = BehandlingStatus.FATTER_VEDTAK
+        this.behandlingSteg = BehandlingStegType.FATTE_VEDTAK
+        this.resultatType = BehandlingResultatType.INNVILGET
+        this.aksjonspunkter = mutableListOf(
+            AksjonspunktTilstandBuilder.KONTROLLER_LEGEERKLÆRING.medStatus(AksjonspunktStatus.UTFØRT),
+            AksjonspunktTilstandBuilder.FORESLÅ_VEDTAK.medStatus(AksjonspunktStatus.UTFØRT),
+            AksjonspunktTilstandBuilder.FATTER_VEDTAK.medStatus(AksjonspunktStatus.OPPRETTET)
         )
+        this.ansvarligSaksbehandlerIdent = ansvarligSaksbehandler?.brukerIdent
+        return this
+    }
 
-        fun fatterVedtak(uuid: UUID = UUID.randomUUID()) = BehandlingProsessEventDtoBuilder(
-            uuid,
-            behandlingStatus = BehandlingStatus.FATTER_VEDTAK,
-            behandlingSteg = BehandlingStegType.FATTE_VEDTAK,
-            resultatType = BehandlingResultatType.INNVILGET,
-            aksjonspunkter = mutableListOf(
-                AksjonspunktTilstandBuilder.KONTROLLER_LEGEERKLÆRING.medStatus(AksjonspunktStatus.UTFØRT),
-                AksjonspunktTilstandBuilder.FORESLÅ_VEDTAK.medStatus(AksjonspunktStatus.UTFØRT),
-                AksjonspunktTilstandBuilder.FATTER_VEDTAK.medStatus(AksjonspunktStatus.OPPRETTET)
-            )
+    fun returFraBeslutter(): BehandlingProsessEventDtoBuilder{
+        this.behandlingStatus = BehandlingStatus.UTREDES
+        this.behandlingSteg = BehandlingStegType.FORESLÅ_VEDTAK
+        this.resultatType = BehandlingResultatType.INNVILGET
+        this.aksjonspunkter = mutableListOf(
+            AksjonspunktTilstandBuilder.KONTROLLER_LEGEERKLÆRING.medStatus(AksjonspunktStatus.UTFØRT),
+            AksjonspunktTilstandBuilder.FORESLÅ_VEDTAK.medStatus(AksjonspunktStatus.OPPRETTET),
+            AksjonspunktTilstandBuilder.FATTER_VEDTAK.medStatus(AksjonspunktStatus.AVBRUTT)
         )
+        return this
+    }
 
-        fun returFraBeslutter(uuid: UUID = UUID.randomUUID()) = BehandlingProsessEventDtoBuilder(
-            uuid,
-            behandlingStatus = BehandlingStatus.FATTER_VEDTAK,
-            behandlingSteg = BehandlingStegType.FORESLÅ_VEDTAK,
-            resultatType = BehandlingResultatType.INNVILGET,
-            aksjonspunkter = mutableListOf(
-                AksjonspunktTilstandBuilder.KONTROLLER_LEGEERKLÆRING.medStatus(AksjonspunktStatus.UTFØRT),
-                AksjonspunktTilstandBuilder.FORESLÅ_VEDTAK.medStatus(AksjonspunktStatus.OPPRETTET),
-                AksjonspunktTilstandBuilder.FATTER_VEDTAK.medStatus(AksjonspunktStatus.UTFØRT)
-            )
+    fun avsluttet(ansvarligBeslutter: Saksbehandler? = TestSaksbehandler.BIRGER_BESLUTTER): BehandlingProsessEventDtoBuilder {
+        this.behandlingStatus = BehandlingStatus.AVSLUTTET
+        this.behandlingSteg = BehandlingStegType.IVERKSETT_VEDTAK
+        this.resultatType = BehandlingResultatType.INNVILGET
+        this.aksjonspunkter = mutableListOf(
+            AksjonspunktTilstandBuilder.KONTROLLER_LEGEERKLÆRING.medStatus(AksjonspunktStatus.UTFØRT),
+            AksjonspunktTilstandBuilder.FORESLÅ_VEDTAK.medStatus(AksjonspunktStatus.UTFØRT),
+            AksjonspunktTilstandBuilder.FATTER_VEDTAK.medStatus(AksjonspunktStatus.UTFØRT)
         )
+        this.ansvarligSaksbehandlerForTotrinn = ansvarligBeslutter?.brukerIdent
+        return this
+    }
 
-        fun avsluttet(uuid: UUID = UUID.randomUUID()) = BehandlingProsessEventDtoBuilder(
-            uuid,
-            behandlingStatus = BehandlingStatus.AVSLUTTET,
-            behandlingSteg = BehandlingStegType.IVERKSETT_VEDTAK,
-            resultatType = BehandlingResultatType.INNVILGET,
-            aksjonspunkter = mutableListOf(
-                AksjonspunktTilstandBuilder.KONTROLLER_LEGEERKLÆRING.medStatus(AksjonspunktStatus.UTFØRT),
-                AksjonspunktTilstandBuilder.FORESLÅ_VEDTAK.medStatus(AksjonspunktStatus.UTFØRT),
-                AksjonspunktTilstandBuilder.FATTER_VEDTAK.medStatus(AksjonspunktStatus.UTFØRT)
-            )
-        )
+    fun medPleietrengendeAktør(pleietrengendeAktørId: String): BehandlingProsessEventDtoBuilder {
+        this.pleietrengendeAktørId = pleietrengendeAktørId
+        return this
+    }
+
+    fun medEksternId(eksternId: UUID): BehandlingProsessEventDtoBuilder {
+        this.eksternId = eksternId
+        return this
     }
 
     fun build(): BehandlingProsessEventDto {
@@ -139,7 +152,7 @@ class BehandlingProsessEventDtoBuilder(
             behandlingTypeKode = behandlingTypeKode.kode,
             behandlingstidFrist = behandlingstidFrist,
             eventHendelse = eventHendelse,
-            eventTid = eventTid,
+            eventTid = eventTid ?: LocalDateTime.now().plusSeconds(teller++),
             aksjonspunktKoderMedStatusListe = aksjonspunkter.associate { it.kode to it.status.kode }.toMutableMap(),
             ytelseTypeKode = ytelseTypeKode.kode,
             eldsteDatoMedEndringFraSøker = LocalDateTime.now()

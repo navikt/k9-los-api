@@ -26,9 +26,18 @@ class TestSaksbehandler: KoinTest {
             enhet = "NAV DRIFT"
         )
 
-        val KJERSTI_SKJERMET = Saksbehandler(
+        val BIRGER_BESLUTTER = Saksbehandler(
             id = 2,
-            brukerIdent = "Z123456",
+            brukerIdent = "Z654321",
+            navn = "Birger Beslutter",
+            epost = "birger.beslutter@nav.no",
+            reservasjoner = mutableSetOf(),
+            enhet = "NAV DRIFT"
+        )
+
+        val KJERSTI_SKJERMET = Saksbehandler(
+            id = 3,
+            brukerIdent = "Z999999",
             navn = "Kjersti Skjermet",
             epost = "kjersti.skjermet@nav.no",
             reservasjoner = mutableSetOf(),
@@ -40,6 +49,7 @@ class TestSaksbehandler: KoinTest {
     fun init() {
         runBlocking {
             repo.addSaksbehandler(SARA)
+            repo.addSaksbehandler(BIRGER_BESLUTTER)
             leggTilSkjermet()
         }
     }
