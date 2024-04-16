@@ -115,7 +115,7 @@ class K9sakEventHandlerTest : AbstractK9LosIntegrationTest() {
               "ytelseTypeKode": "PSB",
               "behandlingTypeKode": "BT-002",
               "opprettetBehandling": "2020-02-20T07:38:49",
-              "søknadsårsaker": ["KONFLIKT_MED_ARBEIDSGIVER"],
+              "søknadsårsaker": [],
               "aksjonspunktKoderMedStatusListe": {
                 "7030": "OPPR"
               }
@@ -443,13 +443,16 @@ class K9sakEventHandlerTest : AbstractK9LosIntegrationTest() {
     fun `Vaskeevent skal ignoreres hvis det allerede finnes event med avsluttet behandling`() {
         val k9sakEventHandler = get<K9sakEventHandler>()
 
-        val eksternId = UUID.randomUUID().toString()
+        val eksternId = UUID.randomUUID()
         val eventTid = LocalDateTime.now().minusDays(1)
-        k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, BehandlingStatus.OPPRETTET, eventTid))
-        k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, BehandlingStatus.UTREDES, eventTid.plusHours(1)))
-        k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, BehandlingStatus.AVSLUTTET, eventTid.plusHours(2)))
+        k9sakEventHandler.prosesser(BehandlingProsessEventDtoBuilder(eksternId).opprettet().apply { this.eventTid = eventTid }.build())
+        k9sakEventHandler.prosesser(BehandlingProsessEventDtoBuilder(eksternId).foreslåVedtak().apply { this.eventTid = eventTid.plusHours(1) }.build())
+        k9sakEventHandler.prosesser(BehandlingProsessEventDtoBuilder(eksternId).avsluttet().apply { this.eventTid = eventTid.plusHours(2) }.build())
 
-        val vaskeevent = lagBehandlingprosessEventMedStatus(eksternId, BehandlingStatus.AVSLUTTET, LocalDateTime.now(), EventHendelse.VASKEEVENT)
+        val vaskeevent = BehandlingProsessEventDtoBuilder(eksternId).avsluttet().apply {
+            this.eventTid = LocalDateTime.now()
+            this.eventHendelse = EventHendelse.VASKEEVENT
+        }.build()
         assertThat(k9sakEventHandler.håndterVaskeevent(vaskeevent)).isNull()
     }
 
@@ -457,12 +460,16 @@ class K9sakEventHandlerTest : AbstractK9LosIntegrationTest() {
     fun `Vaskeevent skal brukes hvis det ikke finnes event med avsluttet behandling`() {
         val k9sakEventHandler = get<K9sakEventHandler>()
 
-        val eksternId = UUID.randomUUID().toString()
+        val eksternId = UUID.randomUUID()
         val eventTid = LocalDateTime.now().minusDays(1)
-        k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, BehandlingStatus.OPPRETTET, eventTid))
-        k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, BehandlingStatus.UTREDES, eventTid.plusHours(1)))
+        k9sakEventHandler.prosesser(BehandlingProsessEventDtoBuilder(eksternId).opprettet().apply { this.eventTid = eventTid }.build())
+        k9sakEventHandler.prosesser(BehandlingProsessEventDtoBuilder(eksternId).foreslåVedtak().apply { this.eventTid = eventTid.plusHours(1) }.build())
 
-        val vaskeevent = lagBehandlingprosessEventMedStatus(eksternId, BehandlingStatus.AVSLUTTET, eventTid.plusHours(2), EventHendelse.VASKEEVENT)
+        val vaskeevent = BehandlingProsessEventDtoBuilder(eksternId).avsluttet().apply {
+            this.eventTid = eventTid.plusHours(2)
+            this.eventHendelse = EventHendelse.VASKEEVENT
+        }.build()
+
         val håndtertEvent = k9sakEventHandler.håndterVaskeevent(vaskeevent)
         
         assertThat(håndtertEvent).isNotNull()
@@ -473,50 +480,19 @@ class K9sakEventHandlerTest : AbstractK9LosIntegrationTest() {
     fun `Vaskeevent skal brukes hvis det ikke finnes event med avsluttet behandling, og utsetter ikke eventtid eventtid 100 mikrosekunder hvis tidligere eller lik siste event`() {
         val k9sakEventHandler = get<K9sakEventHandler>()
 
-        val eksternId = UUID.randomUUID().toString()
+        val eksternId = UUID.randomUUID()
         val eventTid = LocalDateTime.now().minusDays(1)
-        k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, BehandlingStatus.OPPRETTET, eventTid))
-        k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, BehandlingStatus.UTREDES, eventTid.plusHours(1)))
+        k9sakEventHandler.prosesser(BehandlingProsessEventDtoBuilder(eksternId).opprettet().apply { this.eventTid = eventTid }.build())
+        k9sakEventHandler.prosesser(BehandlingProsessEventDtoBuilder(eksternId).foreslåVedtak().apply { this.eventTid = eventTid.plusHours(1) }.build())
 
-        val vaskeevent = lagBehandlingprosessEventMedStatus(eksternId, BehandlingStatus.AVSLUTTET, eventTid.plusMinutes(30), EventHendelse.VASKEEVENT)
+        val vaskeevent = BehandlingProsessEventDtoBuilder(eksternId).avsluttet().apply {
+            this.eventTid = eventTid.plusMinutes(30)
+            this.eventHendelse = EventHendelse.VASKEEVENT
+        }.build()
+
         val håndtertEvent = k9sakEventHandler.håndterVaskeevent(vaskeevent)
 
         assertThat(håndtertEvent).isNotNull()
         assertThat(håndtertEvent!!.eventTid).isGreaterThan(eventTid.plusHours(1))
-    }
-
-    private fun lagBehandlingprosessEventMedStatus(
-        eksternId: String,
-        behandlingStatus: BehandlingStatus,
-        eventTid: LocalDateTime = LocalDateTime.now(),
-        eventHendelse: EventHendelse = EventHendelse.BEHANDLINGSKONTROLL_EVENT
-    ): BehandlingProsessEventDto {
-
-        @Language("JSON") val json =
-            """{
-                  "eksternId": "$eksternId",
-                  "fagsystem": {
-                    "kode": "K9SAK",
-                    "kodeverk": "FAGSYSTEM"
-                  },
-                  "saksnummer": "5YC4K",
-                  "aktørId": "9906098522415",
-                  "behandlingId": 1000001,
-                  "eventTid": "$eventTid",
-                  "eventHendelse": "$eventHendelse",
-                  "behandlinStatus": "${behandlingStatus.kode}", 
-                  "behandlingstidFrist": "2020-03-31",
-                  "behandlingStatus": "${behandlingStatus.kode}",
-                  "behandlingSteg": "INREG_AVSL",
-                  "behandlendeEnhet": "0300",
-                  "ytelseTypeKode": "OMP",
-                  "behandlingTypeKode": "BT-002",
-                  "opprettetBehandling": "2020-02-20T07:38:49",
-                  "aksjonspunktKoderMedStatusListe": {
-                    "5009": "OPPR"
-                  }
-            }"""
-
-        return objectMapper.readValue(json, BehandlingProsessEventDto::class.java)
     }
 }

@@ -196,7 +196,7 @@ class ReservasjonV3Tjeneste(
         kommentar: String,
         annullertAvBrukerId: Long?,
         tx: TransactionalSession
-    ) {
+    ): Boolean {
         val aktivReservasjon =
             reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(reservasjonsnøkkel, tx)
         aktivReservasjon?.let {
@@ -206,7 +206,9 @@ class ReservasjonV3Tjeneste(
                 annullertAvBrukerId,
                 tx
             )
+            return true
         }
+        return false
     }
 
 
