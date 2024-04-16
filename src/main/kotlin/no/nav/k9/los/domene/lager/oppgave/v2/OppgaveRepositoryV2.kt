@@ -174,7 +174,7 @@ class OppgaveRepositoryV2(
             }}.asList
     }
 
-    data class EksternReferanseMerknad (val eksternReferanse: UUID, val merknad: Merknad)
+    data class EksternReferanseMerknad (val eksternReferanse: String, val merknad: Merknad)
 
     fun hentAlleMerknader(): List<EksternReferanseMerknad> {
         return using(sessionOf(dataSource)) { it.run(hentAlleMerknaderQuery()) }
@@ -202,7 +202,7 @@ class OppgaveRepositoryV2(
                     """,
             mapOf()
         ).map { row -> EksternReferanseMerknad(
-            eksternReferanse = row.uuid("ekstern_referanse"),
+            eksternReferanse = row.string("ekstern_referanse"),
             merknad = Merknad(
                 oppgaveKoder = LosObjectMapper.instance.readValue(row.string("oppgave_koder")),
                 oppgaveIder = LosObjectMapper.instance.readValue(row.string("oppgave_ider")),

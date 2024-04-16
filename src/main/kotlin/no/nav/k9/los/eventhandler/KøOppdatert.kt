@@ -69,7 +69,7 @@ private suspend fun oppdaterKø(
             if (kø.kode6 == oppgave.kode6) {
                 kø.leggOppgaveTilEllerFjernFraKø(
                     oppgave = oppgave,
-                    merknader = merknader.getOrDefault(oppgave.eksternId, emptyList())
+                    merknader = merknader.getOrDefault(oppgave.eksternId.toString(), emptyList())
                 )
             }
         }
@@ -84,7 +84,7 @@ private suspend fun oppdaterKø(
                     if (kø.kode6 == oppgave.kode6) {
                         oppgaveKø.leggOppgaveTilEllerFjernFraKø(
                             oppgave = oppgave,
-                            merknader = merknader.getOrDefault(oppgave.eksternId, emptyList())
+                            merknader = merknader.getOrDefault(oppgave.eksternId.toString(), emptyList())
                         )
                     }
                 }
