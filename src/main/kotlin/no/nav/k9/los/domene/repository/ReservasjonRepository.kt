@@ -7,13 +7,13 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import no.nav.k9.los.domene.lager.oppgave.Reservasjon
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.modell.OppgaveKø
 import no.nav.k9.los.tjenester.innsikt.Databasekall
 import no.nav.k9.los.tjenester.sse.RefreshKlienter.sendOppdaterReserverte
 import no.nav.k9.los.tjenester.sse.SseEvent
+import no.nav.k9.los.utils.LosObjectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -78,7 +78,7 @@ class ReservasjonRepository(
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
 
-        return json.map { s -> objectMapper().readValue(s, Reservasjon::class.java) }.toList()
+        return json.map { s -> LosObjectMapper.instance.readValue(s, Reservasjon::class.java) }.toList()
     }
     private suspend fun fjernReservasjonerSomIkkeLengerErAktive(reservasjoner: List<Reservasjon>): List<Reservasjon> {
         reservasjoner.forEach { reservasjon ->
@@ -179,7 +179,24 @@ class ReservasjonRepository(
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
 
-        return objectMapper().readValue(json!!, Reservasjon::class.java)
+        return LosObjectMapper.instance.readValue(json!!, Reservasjon::class.java)
+    }
+
+    fun hentOptional(id: UUID): Reservasjon? {
+        val json: String? = using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    "select (data ::jsonb -> 'reservasjoner' -> -1) as data from reservasjon where id = :id",
+                    mapOf("id" to id.toString())
+                ).map { row ->
+                    row.string("data")
+                }.asSingle
+            )
+        }
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
+
+        return if (json != null) LosObjectMapper.instance.readValue(json, Reservasjon::class.java) else null
     }
 
     fun hentSisteReservasjonMedLås(id: UUID, tx: TransactionalSession): Reservasjon {
@@ -195,7 +212,7 @@ class ReservasjonRepository(
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
 
-        return objectMapper().readValue(json!!, Reservasjon::class.java)
+        return LosObjectMapper.instance.readValue(json!!, Reservasjon::class.java)
     }
 
     fun hentMedHistorikk(id: UUID): List<Reservasjon> {
@@ -215,7 +232,7 @@ class ReservasjonRepository(
         if (json == null) {
             return emptyList()
         }
-        return objectMapper().readValue(json)
+        return LosObjectMapper.instance.readValue(json)
     }
 
     fun hentAlleReservasjonUUID(): List<UUID> {
@@ -291,11 +308,11 @@ class ReservasjonRepository(
         var forrigeReservasjon: String? = null
         reservasjon = if (!run.isNullOrEmpty()) {
             forrigeReservasjon = run
-            f(objectMapper().readValue(run, Reservasjon::class.java))
+            f(LosObjectMapper.instance.readValue(run, Reservasjon::class.java))
         } else {
             f(null)
         }
-        val json = objectMapper().writeValueAsString(reservasjon)
+        val json = LosObjectMapper.instance.writeValueAsString(reservasjon)
 
         tx.run(
             queryOf(
@@ -324,7 +341,7 @@ class ReservasjonRepository(
 
     private fun loggFjerningAvReservasjon(reservasjon: Reservasjon, forrigeReservasjon: String?) {
         if (forrigeReservasjon != null) {
-            val fr = objectMapper().readValue(forrigeReservasjon, Reservasjon::class.java)
+            val fr = LosObjectMapper.instance.readValue(forrigeReservasjon, Reservasjon::class.java)
             val nyBegrunnelse = reservasjon.begrunnelse != null && reservasjon.begrunnelse != fr.begrunnelse
             if (!reservasjon.erAktiv() && fr.erAktiv() && reservasjon.reservertAv == fr.reservertAv) {
                 log.info("RESERVASJONDEBUG: Fjerner ${reservasjon.reservertAv} oppgave=${reservasjon.oppgave} begrunnelse=$nyBegrunnelse i reservasjonstabellen")

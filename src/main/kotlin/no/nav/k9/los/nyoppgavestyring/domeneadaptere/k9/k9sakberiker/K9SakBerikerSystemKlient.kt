@@ -9,8 +9,8 @@ import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
-import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import no.nav.k9.los.integrasjon.rest.NavHeaders
+import no.nav.k9.los.utils.LosObjectMapper
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.BehandlingMedFagsakDto
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.LosOpplysningerSomManglerIKlageDto
 import org.slf4j.LoggerFactory
@@ -50,7 +50,7 @@ class K9SakBerikerSystemKlient(
                 NavHeaders.CallId to UUID.randomUUID().toString()
             )
 
-        val (_,response, result) = httpRequest.awaitStringResponseResult()
+        val (_, response, result) = httpRequest.awaitStringResponseResult()
         if (response.statusCode == HttpStatusCode.NoContent.value) {
             return null
         }
@@ -61,11 +61,11 @@ class K9SakBerikerSystemKlient(
             { error ->
                 val feiltekst = error.response.body().asString("text/plain")
                 val ignorerManglendeTilgangPgaUtdatertTestdata = configuration.koinProfile == KoinProfile.PREPROD
-                    && feiltekst.contains("MANGLER_TILGANG_FEIL")
+                        && feiltekst.contains("MANGLER_TILGANG_FEIL")
 
                 log.error(
-                    (if(ignorerManglendeTilgangPgaUtdatertTestdata) "IGNORERER I DEV: " else "") +
-                        "Error response = '$feiltekst' fra '${httpRequest.url}'"
+                    (if (ignorerManglendeTilgangPgaUtdatertTestdata) "IGNORERER I DEV: " else "") +
+                            "Error response = '$feiltekst' fra '${httpRequest.url}'"
                 )
                 log.error(error.toString())
 
@@ -76,7 +76,7 @@ class K9SakBerikerSystemKlient(
             }
         )
 
-        return objectMapper().readValue<LosOpplysningerSomManglerIKlageDto>(abc)
+        return LosObjectMapper.instance.readValue<LosOpplysningerSomManglerIKlageDto>(abc)
     }
 
     suspend fun hent(behandlingUUID: UUID): BehandlingMedFagsakDto? {
@@ -91,7 +91,7 @@ class K9SakBerikerSystemKlient(
                 NavHeaders.CallId to UUID.randomUUID().toString()
             )
 
-        val (_,response, result) = httpRequest.awaitStringResponseResult()
+        val (_, response, result) = httpRequest.awaitStringResponseResult()
         if (response.statusCode == HttpStatusCode.NoContent.value) {
             return null
         }
@@ -105,7 +105,7 @@ class K9SakBerikerSystemKlient(
                         && feiltekst.contains("MANGLER_TILGANG_FEIL")
 
                 log.error(
-                    (if(ignorerManglendeTilgangPgaUtdatertTestdata) "IGNORERER I DEV: " else "") +
+                    (if (ignorerManglendeTilgangPgaUtdatertTestdata) "IGNORERER I DEV: " else "") +
                             "Error response = '$feiltekst' fra '${httpRequest.url}'"
                 )
                 log.error(error.toString())
@@ -117,6 +117,6 @@ class K9SakBerikerSystemKlient(
             }
         )
 
-        return objectMapper().readValue<BehandlingMedFagsakDto>(abc)
+        return LosObjectMapper.instance.readValue<BehandlingMedFagsakDto>(abc)
     }
 }

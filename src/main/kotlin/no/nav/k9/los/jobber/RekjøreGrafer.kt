@@ -23,7 +23,7 @@ import java.util.*
 import java.util.concurrent.Executors
 import kotlin.system.measureTimeMillis
 
-
+//TODO død kode. Fjerne eller ha på kommentar som forklarer hvorfor beholde
 fun Application.rekjørEventerForGrafer(
     behandlingProsessEventK9Repository: BehandlingProsessEventK9Repository,
     statistikkRepository: StatistikkRepository

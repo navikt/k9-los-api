@@ -60,6 +60,7 @@ private suspend fun oppdaterKø(
         val opprinnelige = kø.oppgaverOgDatoer.toMutableList()
 
         // dersom den er uendret når vi skal lagre, foreta en check og eventuellt lagre på nytt inne i lås
+        //TODO/FIXME? trenger forklaring på hvorfor det er greit å hente aktiveOppgaver fra cache, vi er i denne metoden fordi det har skjedd noe med en kø
         val aktiveOppgaver = oppgaveRepository.hentAktiveOppgaver()
             .filter { !kø.erOppgavenReservert(reservasjonRepository, it) }
         kø.oppgaverOgDatoer.clear()

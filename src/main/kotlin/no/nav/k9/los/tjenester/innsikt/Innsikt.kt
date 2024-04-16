@@ -20,6 +20,7 @@ import java.time.LocalDateTime
 import java.util.*
 
 fun Route.innsiktGrensesnitt() {
+    //TODO finn ut hvordan bruke i dev/prod
     val oppgaveRepository by inject<OppgaveRepository>()
     val oppgaveRepositoryV2 by inject<OppgaveRepositoryV2>()
     val statistikkRepository by inject<StatistikkRepository>()
