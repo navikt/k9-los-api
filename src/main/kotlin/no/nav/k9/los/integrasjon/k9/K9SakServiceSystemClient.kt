@@ -3,6 +3,7 @@ package no.nav.k9.los.integrasjon.k9
 import com.github.kittinunf.fuel.coroutines.awaitStringResponseResult
 import com.github.kittinunf.fuel.httpPost
 import io.ktor.http.*
+import kotlinx.coroutines.runBlocking
 import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.ktor.metrics.Operation
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
@@ -12,7 +13,6 @@ import no.nav.k9.los.integrasjon.rest.NavHeaders
 import no.nav.k9.los.utils.Cache
 import no.nav.k9.los.utils.CacheObject
 import no.nav.k9.los.utils.LosObjectMapper
-import no.nav.k9.los.utils.sha512
 import no.nav.k9.sak.kontrakt.behandling.BehandlingIdDto
 import no.nav.k9.sak.kontrakt.behandling.BehandlingIdListe
 import org.slf4j.LoggerFactory
@@ -25,28 +25,39 @@ open class K9SakServiceSystemClient constructor(
     val accessTokenClient: AccessTokenClient,
     val scope: String
 ) : IK9SakService {
-    val log = LoggerFactory.getLogger("K9SakService")!!
+    private val log = LoggerFactory.getLogger("K9SakService")!!
+
     private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
-    private val cache = Cache<Boolean>(cacheSize = 10000)
     private val url = configuration.k9Url()
     private val scopes = setOf(scope)
 
+    private val cache = Cache<UUID, Boolean>(cacheSize = 10000)
+    private val cacheObjectDuration = Duration.ofHours(12)
+
     override suspend fun refreshBehandlinger(behandlingIdList: BehandlingIdListe) {
-        // Passer på at vi ikke sender behandlingsider om igjen før det har gått 24 timer
-        val behandlingIdListe =
-            BehandlingIdListe(behandlingIdList.behandlingUuid.filter {
-                cache.setIfEmpty(it.toString(), CacheObject(true, expire = LocalDateTime.now().plusHours(12)))
-            }.map { BehandlingIdDto(it) }.take(999))
 
-        if (behandlingIdListe.behandlinger.isEmpty()) {
-            return
+        //TODO la KøOppdatert gå gjennom channel til RefreshK9 for å unngå at låsing blir nødvendig her
+        synchronized(cache) {
+            runBlocking {
+                doRefreshBehandlinger(behandlingIdList.behandlingUuid)
+            }
         }
-        val body = LosObjectMapper.instance.writeValueAsString(behandlingIdListe)
-        if (cache.get(body.sha512()) != null) {
-            return
+    }
+    private suspend fun doRefreshBehandlinger(behandlinger: List<UUID>) {
+        val nå = LocalDateTime.now()
+        log.info("Forespørsel om refresh av ${behandlinger.size} behandlinger")
+        val uoppfriskedeBehandlingUuider = behandlinger.filter { cache.containsKey(it, nå) }
+        log.info("Kommer til å refreshe ${uoppfriskedeBehandlingUuider.size} behandlinger etter sjekk mot cache av oppfriskede behandlinger, i bolker på 100 stykker")
+        for (uuids in uoppfriskedeBehandlingUuider.chunked(100)) {
+            utførRefreshKallOgOppdaterCache(behandlinger)
         }
-        cache.set(body.sha512(), CacheObject(true, expire = LocalDateTime.now().plusHours(12)))
+    }
+    private suspend fun utførRefreshKallOgOppdaterCache(behandlinger: List<UUID>) {
+        log.info("Trigger refresh av ${behandlinger.size} behandlinger")
+        log.info("Behandlinger som refreshes: $behandlinger")
 
+        val dto = BehandlingIdListe(behandlinger.map { BehandlingIdDto(it) })
+        val body = LosObjectMapper.instance.writeValueAsString(dto)
         val httpRequest = "${url}/behandling/backend-root/refresh"
             .httpPost()
             .body(
@@ -59,7 +70,7 @@ open class K9SakServiceSystemClient constructor(
                 NavHeaders.CallId to UUID.randomUUID().toString()
             )
 
-        val json = Retry.retry(
+        Retry.retry(
             operation = "refresh oppgave",
             initialDelay = Duration.ofMillis(200),
             factor = 2.0,
@@ -73,21 +84,20 @@ open class K9SakServiceSystemClient constructor(
 
             result.fold(
                 { success ->
-                    success
-                },
+                    registrerICache(behandlinger, LocalDateTime.now())
+                    success },
                 { error ->
-                    log.error(
-                        "Error response = '${error.response.body().asString("text/plain")}' fra '${request.url}'"
-                    )
+                    log.error("Error response = '${error.response.body().asString("text/plain")}' fra '${request.url}'")
                     log.error(error.toString())
                 }
             )
         }
-        log.info(
-            "Refreshet " + behandlingIdListe.behandlinger.size + " i k9 sak (" + behandlingIdListe.behandlinger.joinToString(
-                ","
-            ) + ")"
-        )
+    }
+
+    private fun registrerICache(behandingUuid: List<UUID>, now : LocalDateTime) {
+        for (uuid in behandingUuid) {
+            cache.set(uuid,  CacheObject(true, now.plus(cacheObjectDuration)))
+        }
     }
 
 

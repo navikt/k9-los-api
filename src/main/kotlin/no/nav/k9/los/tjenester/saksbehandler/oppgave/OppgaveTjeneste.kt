@@ -656,7 +656,7 @@ class OppgaveTjeneste constructor(
         )
     }
 
-    private val hentAntallOppgaverCache = Cache<Int>()
+    private val hentAntallOppgaverCache = Cache<String, Int>()
     suspend fun hentAntallOppgaver(oppgavekøId: UUID, taMedReserverte: Boolean = false, refresh: Boolean = false): Int {
         val key = oppgavekøId.toString() + taMedReserverte
         if (!refresh) {
