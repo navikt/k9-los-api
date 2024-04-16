@@ -73,7 +73,7 @@ internal fun Route.OppgaveApis() {
                 val reservasjonV3Dtos = oppgaveApisTjeneste.hentReserverteOppgaverForSaksbehandler(innloggetBruker)
                 call.respond(reservasjonV3Dtos)
             } else {
-                log.error("Innlogger bruker med brukernavn $innloggetBrukernavn finnes ikke i saksbehandlertabellen")
+                log.info("Innlogger bruker med brukernavn $innloggetBrukernavn finnes ikke i saksbehandlertabellen")
                 call.respond(HttpStatusCode.InternalServerError, "Innlogger bruker med brukernavn $innloggetBrukernavn finnes ikke i saksbehandlertabellen")
             }
         }
