@@ -16,6 +16,7 @@ import no.nav.k9.los.tjenester.innsikt.Databasekall
 import no.nav.k9.los.tjenester.saksbehandler.merknad.Merknad
 import no.nav.k9.los.utils.LosObjectMapper
 import org.slf4j.LoggerFactory
+import java.util.*
 import java.util.concurrent.atomic.LongAdder
 import javax.sql.DataSource
 
@@ -172,6 +173,51 @@ class OppgaveRepositoryV2(
                 fritekst = row.stringOrNull("fritekst")
             }}.asList
     }
+
+    data class EksternReferanseMerknad (val eksternReferanse: UUID, val merknad: Merknad)
+
+    fun hentAlleMerknader(): List<EksternReferanseMerknad> {
+        return using(sessionOf(dataSource)) { it.run(hentAlleMerknaderQuery()) }
+    }
+
+    fun hentAlleMerknader(tx: TransactionalSession): List<EksternReferanseMerknad> {
+        return tx.run(hentAlleMerknaderQuery())
+    }
+    private fun hentAlleMerknaderQuery() : ListResultQueryAction<EksternReferanseMerknad> {
+        return queryOf(
+            """
+                        select
+                            ekstern_referanse,
+                            id,
+                            merknad_koder,
+                            oppgave_ider,
+                            oppgave_koder,
+                            fritekst,
+                            saksbehandler,
+                            opprettet,
+                            sist_endret,
+                            slettet
+                        from merknad 
+                        WHERE not slettet
+                    """,
+            mapOf()
+        ).map { row -> EksternReferanseMerknad(
+            eksternReferanse = row.uuid("ekstern_referanse"),
+            merknad = Merknad(
+                oppgaveKoder = LosObjectMapper.instance.readValue(row.string("oppgave_koder")),
+                oppgaveIder = LosObjectMapper.instance.readValue(row.string("oppgave_ider")),
+                saksbehandler = row.stringOrNull("saksbehandler"),
+                opprettet = row.localDateTime("opprettet"),
+                sistEndret = row.localDateTimeOrNull("sist_endret"),
+                slettet = row.boolean("slettet")
+            ).apply {
+                id = row.long("id")
+                merknadKoder = LosObjectMapper.instance.readValue(row.string("merknad_koder"))
+                fritekst = row.stringOrNull("fritekst")
+            }
+        )}.asList
+    }
+
 
     fun lagre(behandling: Behandling) {
         using(sessionOf(dataSource)) {

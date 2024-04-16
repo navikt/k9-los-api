@@ -22,6 +22,8 @@ import no.nav.k9.los.utils.CacheObject
 import no.nav.k9.los.utils.LosObjectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.*
 import java.util.concurrent.atomic.LongAdder
 import javax.sql.DataSource
@@ -561,33 +563,34 @@ class OppgaveRepository(
         return count!!
     }
 
-    private val aktiveOppgaverCache = Cache<List<Oppgave>>()
-    internal fun hentAktiveOppgaver(): List<Oppgave> {
-
-        //FIXME fjerne eller fikse cache
-        val cacheObject = aktiveOppgaverCache.get("default")
-        if (cacheObject != null) {
-            return cacheObject.value
-        }
-
-        var spørring = System.currentTimeMillis()
+    internal fun hentAktiveUreserverteOppgaver(): List<Oppgave> {
+        val t0 = System.currentTimeMillis()
         val json: List<String> = using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
-                    "select data from oppgave where (data -> 'aktiv') ::boolean ",
-                    mapOf()
+                    """"
+                        with
+                            reservasjoner as (select id, ((data -> 'reservasjoner' -> -1) ->> 'reservertTil')::timestamp as reservert_til from reservasjon),
+                            aktive_reservasjoner as (select id from reservasjoner where reservert_til is null or reservert_til > :now)
+                         select data from oppgave o
+                         where (data -> 'aktiv')::boolean
+                         and not exists (select 1 from aktive_reservasjoner ar where ar.id = (o.data ->> 'eksternId')) 
+                         """.trimMargin(),
+                    mapOf(
+                        "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
+                    )
                 )
                     .map { row ->
                         row.string("data")
                     }.asList
             )
         }
-        spørring = System.currentTimeMillis() - spørring
-        val serialisering = System.currentTimeMillis()
-        val list = json.map { s -> LosObjectMapper.instance.readValue(s, Oppgave::class.java) }.toList()
+        val t1 = System.currentTimeMillis()
+        val list =
+            json.parallelStream().map { s -> LosObjectMapper.instance.readValue(s, Oppgave::class.java) }.toList()
+        val t2 = System.currentTimeMillis()
 
-        log.info("Henter aktive oppgaver: " + list.size + " oppgaver" + " serialisering: " + (System.currentTimeMillis() - serialisering) + " spørring: " + spørring)
-        aktiveOppgaverCache.set("default", CacheObject(list))
+        log.info("Hentet ${list.size} aktive ureserverte oppgaver. Serialisering: ${t2 - t1} ms, spørring: ${t1 - t0} ms")
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
 
