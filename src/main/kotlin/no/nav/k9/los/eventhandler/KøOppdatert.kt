@@ -96,7 +96,7 @@ private suspend fun oppdaterKø(
         val antallOppgaverUtenReservasjon = taTiden(log, "hent antall oppgaver med reserverte") { oppgaveTjeneste.hentAntallOppgaver(oppgavekøId = it, taMedReserverte = true, refresh = true) }
         val antallOppgaverMedReservasjon = taTiden(log, "hent antall oppgaver uten reserverte") { oppgaveTjeneste.hentAntallOppgaver(oppgavekøId = it, taMedReserverte = false, refresh = true) }
         log.info("Antall oppgaver i køen er $antallOppgaverUtenReservasjon eller $antallOppgaverMedReservasjon med reservasjoner")
-        taTiden(log, "refresh ${k9sakRefreshBehanderListe.size} behandlinger: ${k9sakRefreshBehanderListe.map { it.id }}") {  k9SakService.refreshBehandlinger(BehandlingIdListe(k9sakRefreshBehanderListe))}
+        taTiden(log, "refresh ${k9sakRefreshBehanderListe.size} behandlinger: ${k9sakRefreshBehanderListe.map { it.id }}") {  k9SakService.refreshBehandlinger(k9sakRefreshBehanderListe.map { it.behandlingUuid })}
     }
 }
 suspend fun <T> taTiden(log : Logger, tekst : String, operasjon: suspend () -> T): T {

@@ -16,6 +16,8 @@ import no.nav.k9.los.tjenester.sse.SseEvent
 import no.nav.k9.los.utils.LosObjectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.*
 import java.util.concurrent.atomic.LongAdder
 import javax.sql.DataSource
@@ -168,6 +170,21 @@ class ReservasjonRepository(
             .increment()
 
         return LosObjectMapper.instance.readValue(json!!, Reservasjon::class.java)
+    }
+
+    fun hentOppgaverIdForAlleAktiveReservasjoner(): List<UUID> {
+        return using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    "select (data ::jsonb -> 'reservasjoner' -> -1 -> 'oppgave')::uuid as oppgaveid from reservasjon where (data ::jsonb -> 'reservasjoner' -> -1 -> 'reservertTil) > :now",
+                    mapOf(
+                        "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
+                    )
+                ).map { row ->
+                    UUID.fromString(row.string("id"))
+                }.asList
+            )
+        }
     }
 
     fun hentOptional(id: UUID): Reservasjon? {

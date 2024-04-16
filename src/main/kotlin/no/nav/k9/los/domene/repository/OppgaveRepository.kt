@@ -595,6 +595,31 @@ class OppgaveRepository(
         return list
     }
 
+    internal fun hentAktiveK9sakOppgaver(): List<UUID> {
+        val t0 = System.currentTimeMillis()
+        val resulat : List<UUID> = using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    """  select (data -> 'eksternId')::uuid as ekstern_id from oppgave
+                         where (data -> 'aktiv')::boolean and (data ->> 'system') = 'K9SAK' 
+                         """.trimMargin(),
+                    mapOf(
+                    )
+                )
+                    .map { row ->
+                        row.uuid("ekstern_id")
+                    }.asList
+            )
+        }
+        val t1 = System.currentTimeMillis()
+
+        log.info("Hentet ${resulat.size} aktive behandlingUuid for aktive k9sak-oppgaver oppgaver. Operasjonen tok ${t1 - t0} ms.")
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
+
+        return resulat
+    }
+
     internal fun hentAktiveOppgaversAksjonspunktliste(): List<AksjonspunktMock> {
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()

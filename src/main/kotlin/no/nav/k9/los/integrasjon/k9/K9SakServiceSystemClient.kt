@@ -34,16 +34,16 @@ open class K9SakServiceSystemClient constructor(
     private val cache = Cache<UUID, Boolean>(cacheSize = 10000)
     private val cacheObjectDuration = Duration.ofHours(12)
 
-    override suspend fun refreshBehandlinger(behandlingIdList: BehandlingIdListe) {
-
-        //TODO la KøOppdatert gå gjennom channel til RefreshK9 for å unngå at låsing blir nødvendig her
+    override suspend fun refreshBehandlinger(behandlingUuid: Collection<UUID>) {
+        //TODO la KøOppdatert og K9sakBehandlingsoppfriskingJobb gå gjennom channel til RefreshK9 for å unngå at låsing blir nødvendig her
         synchronized(cache) {
             runBlocking {
-                doRefreshBehandlinger(behandlingIdList.behandlingUuid)
+                doRefreshBehandlinger(behandlingUuid)
             }
         }
     }
-    private suspend fun doRefreshBehandlinger(behandlinger: List<UUID>) {
+
+    private suspend fun doRefreshBehandlinger(behandlinger: Collection<UUID>) {
         val nå = LocalDateTime.now()
         log.info("Forespørsel om refresh av ${behandlinger.size} behandlinger")
         val uoppfriskedeBehandlingUuider = behandlinger.filter { cache.containsKey(it, nå) }
@@ -52,7 +52,7 @@ open class K9SakServiceSystemClient constructor(
             utførRefreshKallOgOppdaterCache(behandlinger)
         }
     }
-    private suspend fun utførRefreshKallOgOppdaterCache(behandlinger: List<UUID>) {
+    private suspend fun utførRefreshKallOgOppdaterCache(behandlinger: Collection<UUID>) {
         log.info("Trigger refresh av ${behandlinger.size} behandlinger")
         log.info("Behandlinger som refreshes: $behandlinger")
 
@@ -94,10 +94,11 @@ open class K9SakServiceSystemClient constructor(
         }
     }
 
-    private fun registrerICache(behandingUuid: List<UUID>, now : LocalDateTime) {
+    private fun registrerICache(behandingUuid: Collection<UUID>, now : LocalDateTime) {
         for (uuid in behandingUuid) {
             cache.set(uuid,  CacheObject(true, now.plus(cacheObjectDuration)))
         }
+        log.info("La til ${behandingUuid.size} behandlinger i cache")
     }
 
 
