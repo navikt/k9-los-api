@@ -10,12 +10,13 @@ import kotliquery.action.UpdateQueryAction
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import no.nav.k9.los.domene.modell.FagsakYtelseType
 import no.nav.k9.los.domene.modell.Fagsystem
 import no.nav.k9.los.tjenester.innsikt.Databasekall
 import no.nav.k9.los.tjenester.saksbehandler.merknad.Merknad
+import no.nav.k9.los.utils.LosObjectMapper
 import org.slf4j.LoggerFactory
+import java.util.*
 import java.util.concurrent.atomic.LongAdder
 import javax.sql.DataSource
 
@@ -160,18 +161,63 @@ class OppgaveRepositoryV2(
                     "slettet" to inkluderSlettet
                 )
             ).map { row -> Merknad(
-                oppgaveKoder = objectMapper().readValue(row.string("oppgave_koder")),
-                oppgaveIder = objectMapper().readValue(row.string("oppgave_ider")),
+                oppgaveKoder = LosObjectMapper.instance.readValue(row.string("oppgave_koder")),
+                oppgaveIder = LosObjectMapper.instance.readValue(row.string("oppgave_ider")),
                 saksbehandler = row.stringOrNull("saksbehandler"),
                 opprettet = row.localDateTime("opprettet"),
                 sistEndret = row.localDateTimeOrNull("sist_endret"),
                 slettet = row.boolean("slettet")
             ).apply {
                 id = row.long("id")
-                merknadKoder = objectMapper().readValue(row.string("merknad_koder"))
+                merknadKoder = LosObjectMapper.instance.readValue(row.string("merknad_koder"))
                 fritekst = row.stringOrNull("fritekst")
             }}.asList
     }
+
+    data class EksternReferanseMerknad (val eksternReferanse: String, val merknad: Merknad)
+
+    fun hentAlleMerknader(): List<EksternReferanseMerknad> {
+        return using(sessionOf(dataSource)) { it.run(hentAlleMerknaderQuery()) }
+    }
+
+    fun hentAlleMerknader(tx: TransactionalSession): List<EksternReferanseMerknad> {
+        return tx.run(hentAlleMerknaderQuery())
+    }
+    private fun hentAlleMerknaderQuery() : ListResultQueryAction<EksternReferanseMerknad> {
+        return queryOf(
+            """
+                        select
+                            ekstern_referanse,
+                            id,
+                            merknad_koder,
+                            oppgave_ider,
+                            oppgave_koder,
+                            fritekst,
+                            saksbehandler,
+                            opprettet,
+                            sist_endret,
+                            slettet
+                        from merknad 
+                        WHERE not slettet
+                    """,
+            mapOf()
+        ).map { row -> EksternReferanseMerknad(
+            eksternReferanse = row.string("ekstern_referanse"),
+            merknad = Merknad(
+                oppgaveKoder = LosObjectMapper.instance.readValue(row.string("oppgave_koder")),
+                oppgaveIder = LosObjectMapper.instance.readValue(row.string("oppgave_ider")),
+                saksbehandler = row.stringOrNull("saksbehandler"),
+                opprettet = row.localDateTime("opprettet"),
+                sistEndret = row.localDateTimeOrNull("sist_endret"),
+                slettet = row.boolean("slettet")
+            ).apply {
+                id = row.long("id")
+                merknadKoder = LosObjectMapper.instance.readValue(row.string("merknad_koder"))
+                fritekst = row.stringOrNull("fritekst")
+            }
+        )}.asList
+    }
+
 
     fun lagre(behandling: Behandling) {
         using(sessionOf(dataSource)) {
@@ -339,14 +385,13 @@ class OppgaveRepositoryV2(
                 "id" to merknad.id,
                 "fritekst" to merknad.fritekst,
                 "sist_endret" to merknad.sistEndret,
-                "merknad_koder" to objectMapper().writeValueAsString(merknad.merknadKoder),
+                "merknad_koder" to LosObjectMapper.instance.writeValueAsString(merknad.merknadKoder),
                 "slettet" to merknad.slettet
             )
         ).asUpdate
     }
 
-    private fun insert(behandlingId: Long, eksternReferanse: String,  merknad: Merknad): Query {
-        val om = objectMapper()
+    private fun insert(behandlingId: Long, eksternReferanse: String, merknad: Merknad): Query {
         return queryOf(
             """
                 insert into merknad (
@@ -373,9 +418,9 @@ class OppgaveRepositoryV2(
                 """, mapOf(
                 "behandling_id" to behandlingId,
                 "ekstern_referanse" to eksternReferanse,
-                "merknad_koder" to om.writeValueAsString(merknad.merknadKoder),
-                "oppgave_koder" to om.writeValueAsString(merknad.oppgaveKoder),
-                "oppgave_ider" to om.writeValueAsString(merknad.oppgaveIder),
+                "merknad_koder" to LosObjectMapper.instance.writeValueAsString(merknad.merknadKoder),
+                "oppgave_koder" to LosObjectMapper.instance.writeValueAsString(merknad.oppgaveKoder),
+                "oppgave_ider" to LosObjectMapper.instance.writeValueAsString(merknad.oppgaveIder),
                 "fritekst" to merknad.fritekst,
                 "saksbehandler" to merknad.saksbehandler,
                 "opprettet" to merknad.opprettet,

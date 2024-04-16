@@ -15,6 +15,8 @@ import kotlin.test.assertTrue
 
 class K9PunsjEventHandlerTest : AbstractK9LosIntegrationTest() {
 
+    val objectMapper = jacksonObjectMapper().dusseldorfConfigured()
+
     @Test
     fun `Skal opprette en oppgave dersom en punsjoppgave har et aktivt aksjonspunkt`() {
 
@@ -32,7 +34,6 @@ class K9PunsjEventHandlerTest : AbstractK9LosIntegrationTest() {
                   }                                                                                                                                                                                                                                                                                             
             }""".trimIndent()
 
-        val objectMapper = jacksonObjectMapper().dusseldorfConfigured()
         val event = objectMapper.readValue(json, PunsjEventDto::class.java)
 
         k9PunsjEventHandler.prosesser(event)
@@ -57,7 +58,7 @@ class K9PunsjEventHandlerTest : AbstractK9LosIntegrationTest() {
                   }
                }""".trimIndent()
 
-        val objectMapper = jacksonObjectMapper().dusseldorfConfigured()
+
         val event = objectMapper.readValue(json, PunsjEventDto::class.java)
 
         k9PunsjEventHandler.prosesser(event)
@@ -82,7 +83,6 @@ class K9PunsjEventHandlerTest : AbstractK9LosIntegrationTest() {
             }
         }""".trimIndent()
 
-        val objectMapper = jacksonObjectMapper().dusseldorfConfigured()
         val event = objectMapper.readValue(json, PunsjEventDto::class.java)
 
         k9PunsjEventHandler.prosesser(event)

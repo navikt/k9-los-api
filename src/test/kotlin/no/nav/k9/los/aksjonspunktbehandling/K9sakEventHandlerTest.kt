@@ -281,8 +281,6 @@ class K9sakEventHandlerTest : AbstractK9LosIntegrationTest() {
                     "5009": "OPPR"
                   }
                 }"""
-        val objectMapper = jacksonObjectMapper()
-            .dusseldorfConfigured().setPropertyNamingStrategy(PropertyNamingStrategy.LOWER_CAMEL_CASE)
 
         val event = objectMapper.readValue(json, BehandlingProsessEventDto::class.java)
 

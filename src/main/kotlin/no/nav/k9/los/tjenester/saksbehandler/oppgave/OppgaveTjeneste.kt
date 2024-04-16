@@ -538,6 +538,7 @@ class OppgaveTjeneste constructor(
             val perBehandlingstype = ytelseTypeEntry.value.groupBy { it.behandlingType }
             for (behandlingTypeEntry in perBehandlingstype) {
                 var aktive =
+                    //TODO kjør i en transaksjon, helst som én spørring med group by
                     oppgaveRepository.hentAktiveOppgaverTotaltPerBehandlingstypeOgYtelseType(
                         fagsakYtelseType = ytelseTypeEntry.key,
                         behandlingType = behandlingTypeEntry.key
@@ -704,10 +705,11 @@ class OppgaveTjeneste constructor(
             )
 
             for (oppgave in oppgaveRepository.hentOppgaver(reservasjoner.map { it.oppgave })) {
-                if (oppgavekø.tilhørerOppgaveTilKø(oppgave, reservasjonRepository, emptyList())) {
+                if (oppgavekø.tilhørerOppgaveTilKø(oppgave, reservasjonRepository, emptyList())) { //FIXME ?? tilhørerOppgaveTilKø sier alltid NEI når en oppgave er reservert, så hvordan virker dette?
                     reserverteOppgaverSomHørerTilKø++
                 }
             }
+            log.info("Antall reserverte oppgaver som ble lagt til var $reserverteOppgaverSomHørerTilKø")
         }
         val antall = oppgavekø.oppgaverOgDatoer.size + reserverteOppgaverSomHørerTilKø
         hentAntallOppgaverCache.set(key, CacheObject(antall, LocalDateTime.now().plusMinutes(30)))
@@ -1145,31 +1147,31 @@ class OppgaveTjeneste constructor(
         oppgaveSomSkalBliReservert: Oppgave,
         ident: String
     ) = oppgaveSomSkalBliReservert.ansvarligBeslutterForTotrinn != null &&
-        oppgaveSomSkalBliReservert.ansvarligBeslutterForTotrinn == ident &&
-        !erBeslutterOppgave(oppgaveSomSkalBliReservert)
+            oppgaveSomSkalBliReservert.ansvarligBeslutterForTotrinn == ident &&
+            !erBeslutterOppgave(oppgaveSomSkalBliReservert)
 
     private fun innloggetSaksbehandlerHarSaksbehandletOppgaveSomSkalBliBesluttet(
         oppgaveSomSkalBliReservert: Oppgave,
         ident: String
     ): Boolean {
         val besluttet = oppgaveSomSkalBliReservert.ansvarligSaksbehandlerForTotrinn != null &&
-            oppgaveSomSkalBliReservert.ansvarligSaksbehandlerForTotrinn.equals(ident, true)
+                oppgaveSomSkalBliReservert.ansvarligSaksbehandlerForTotrinn.equals(ident, true)
 
         //for gamle k9-tilbake behandlinger så er feltet ansvarligSaksbehandlerIdent brukt
         // istedenfor ansvarligSaksbehandlerForTotrinn, så sjekker begge.
         val besluttetK9Tilbake = oppgaveSomSkalBliReservert.ansvarligSaksbehandlerIdent != null &&
-            oppgaveSomSkalBliReservert.ansvarligSaksbehandlerIdent.equals(ident, true)
-            && oppgaveSomSkalBliReservert.system == Fagsystem.K9TILBAKE.kode
+                oppgaveSomSkalBliReservert.ansvarligSaksbehandlerIdent.equals(ident, true)
+                && oppgaveSomSkalBliReservert.system == Fagsystem.K9TILBAKE.kode
 
         return (besluttet || besluttetK9Tilbake) &&
-            erBeslutterOppgave(oppgaveSomSkalBliReservert)
+                erBeslutterOppgave(oppgaveSomSkalBliReservert)
     }
 
 
     private fun erBeslutterOppgave(oppgaveSomSkalBliReservert: Oppgave) =
         oppgaveSomSkalBliReservert.aksjonspunkter.hentAktive().keys.any {
             it == AksjonspunktDefinisjon.FATTER_VEDTAK.kode
-                || it == AksjonspunktDefinisjonK9Tilbake.FATTE_VEDTAK.kode
+                    || it == AksjonspunktDefinisjonK9Tilbake.FATTE_VEDTAK.kode
         }
 
     private suspend fun finnPrioriterteOppgaver(

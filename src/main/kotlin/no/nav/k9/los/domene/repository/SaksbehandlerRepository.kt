@@ -1,13 +1,11 @@
 package no.nav.k9.los.domene.repository
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.runBlocking
 import kotliquery.*
-import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.tjenester.innsikt.Databasekall
+import no.nav.k9.los.utils.LosObjectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -40,13 +38,13 @@ class SaksbehandlerRepository(
                 )
                 val forrige: Saksbehandler?
                 val saksbehandler = if (!run.isNullOrEmpty()) {
-                    forrige = objectMapper().readValue(run, Saksbehandler::class.java)
+                    forrige = LosObjectMapper.instance.readValue(run, Saksbehandler::class.java)
                     f(forrige)
                 } else {
                     f(null)
                 }
 
-                val json = objectMapper().writeValueAsString(saksbehandler)
+                val json = LosObjectMapper.instance.writeValueAsString(saksbehandler)
                 tx.run(
                     queryOf(
                         """
@@ -91,13 +89,13 @@ class SaksbehandlerRepository(
                 )
                 val forrige: Saksbehandler?
                 val saksbehandler = if (!run.isNullOrEmpty()) {
-                    forrige = objectMapper().readValue(run, Saksbehandler::class.java)
+                    forrige = LosObjectMapper.instance.readValue(run, Saksbehandler::class.java)
                     f(forrige)
                 } else {
                     f(null)
                 }
 
-                val json = objectMapper().writeValueAsString(saksbehandler)
+                val json = LosObjectMapper.instance.writeValueAsString(saksbehandler)
                 tx.run(
                     queryOf(
                         """
@@ -156,13 +154,13 @@ class SaksbehandlerRepository(
                 )
                 val forrige: Saksbehandler?
                 val saksbehandler = if (!run.isNullOrEmpty()) {
-                    forrige = objectMapper().readValue(run, Saksbehandler::class.java)
+                    forrige = LosObjectMapper.instance.readValue(run, Saksbehandler::class.java)
                     f(forrige)
                 } else {
                     f(null)
                 }
 
-                val json = objectMapper().writeValueAsString(saksbehandler)
+                val json = LosObjectMapper.instance.writeValueAsString(saksbehandler)
                 tx.run(
                     queryOf(
                         """
@@ -422,11 +420,11 @@ class SaksbehandlerRepository(
         } else {
             Saksbehandler(
                 id = row.long("id"),
-                brukerIdent = objectMapper().readValue<Saksbehandler>(data).brukerIdent,
-                navn = objectMapper().readValue<Saksbehandler>(data).navn,
+                brukerIdent = LosObjectMapper.instance.readValue<Saksbehandler>(data).brukerIdent,
+                navn = LosObjectMapper.instance.readValue<Saksbehandler>(data).navn,
                 epost = row.string("epost").lowercase(Locale.getDefault()),
-                reservasjoner = objectMapper().readValue<Saksbehandler>(data).reservasjoner,
-                enhet = objectMapper().readValue<Saksbehandler>(data).enhet
+                reservasjoner = LosObjectMapper.instance.readValue<Saksbehandler>(data).reservasjoner,
+                enhet = LosObjectMapper.instance.readValue<Saksbehandler>(data).enhet
             )
         }
     }

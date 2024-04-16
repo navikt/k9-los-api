@@ -8,10 +8,10 @@ import no.nav.helse.dusseldorf.ktor.metrics.Operation
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
 import no.nav.k9.los.Configuration
-import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import no.nav.k9.los.integrasjon.rest.NavHeaders
 import no.nav.k9.los.utils.Cache
 import no.nav.k9.los.utils.CacheObject
+import no.nav.k9.los.utils.LosObjectMapper
 import no.nav.k9.los.utils.sha512
 import no.nav.k9.sak.kontrakt.behandling.BehandlingIdDto
 import no.nav.k9.sak.kontrakt.behandling.BehandlingIdListe
@@ -41,7 +41,7 @@ open class K9SakServiceSystemClient constructor(
         if (behandlingIdListe.behandlinger.isEmpty()) {
             return
         }
-        val body = objectMapper().writeValueAsString(behandlingIdListe)
+        val body = LosObjectMapper.instance.writeValueAsString(behandlingIdListe)
         if (cache.get(body.sha512()) != null) {
             return
         }

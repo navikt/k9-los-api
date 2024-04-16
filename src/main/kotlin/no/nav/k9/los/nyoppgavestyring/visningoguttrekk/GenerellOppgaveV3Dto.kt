@@ -18,9 +18,9 @@ data class GenerellOppgaveV3Dto(
     val oppgavestatus: Oppgavestatus,
     val oppgavebehandlingsUrl: String?,
 ) {
-    constructor(oppgaveV3: Oppgave, person: PersonPdl) : this(
-        søkersNavn = person.navn(),
-        søkersPersonnr = person.fnr(),
+    constructor(oppgaveV3: Oppgave, person: PersonPdl?) : this(
+        søkersNavn = person?.navn() ?: "Ukjent navn",
+        søkersPersonnr = person?.fnr() ?: "Ukjent fnummer",
         behandlingstype = BehandlingType.fraKode(oppgaveV3.hentVerdi("behandlingTypekode")!!),
         saksnummer = oppgaveV3.hentVerdi("saksnummer")!!,
         oppgaveNøkkel = OppgaveNøkkelDto(oppgaveV3),
