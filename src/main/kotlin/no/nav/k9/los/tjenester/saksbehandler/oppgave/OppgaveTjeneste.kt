@@ -51,6 +51,7 @@ class OppgaveTjeneste constructor(
 
     suspend fun hentOppgaver(oppgavekøId: UUID): List<Oppgave> {
         return try {
+            log.info("Henter fra oppgavekø $oppgavekøId")
             val oppgaveKø = oppgaveKøRepository.hentOppgavekø(oppgavekøId)
             sorterOgHent(oppgaveKø)
         } catch (e: Exception) {
@@ -79,6 +80,7 @@ class OppgaveTjeneste constructor(
             return oppgaver.sortedByDescending { it.feilutbetaltBeløp }
         }
 
+        log.info("Køen ${oppgaveKø.id} har ${oppgaveKø.oppgaverOgDatoer.size} oppgaver")
         return oppgaveRepository.hentOppgaver(oppgaveKø.oppgaverOgDatoer.take(20).map { it.id })
 
     }

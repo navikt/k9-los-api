@@ -224,24 +224,28 @@ class OppgaveRepository(
 
         val oppgaveiderList = oppgaveider.toList()
         if (oppgaveider.isEmpty()) {
+            log.info("Spurte ikke etter noen oppgaveider")
             return emptyList()
         }
 
         val session = sessionOf(dataSource)
         val json: List<String> = using(session) {
 
+            val spørring : String =
+                "select data from oppgave " +
+                        "where id in (${
+                            IntRange(0, oppgaveiderList.size - 1).joinToString { t -> ":p$t" }
+                        })"
+            val parametre = IntRange(
+                0,
+                oppgaveiderList.size - 1
+            ).associate { t -> "p$t" to oppgaveiderList[t].toString() as Any }
+
+            log.info("Henter oppgaveider med spørring $spørring og parametre $parametre"); //parametre er behandlingUuid-er, så ikke noe sensitivt her
+
             //language=PostgreSQL
             it.run(
-                queryOf(
-                    "select data from oppgave " +
-                            "where id in (${
-                                IntRange(0, oppgaveiderList.size - 1).joinToString { t -> ":p$t" }
-                            })",
-                    IntRange(
-                        0,
-                        oppgaveiderList.size - 1
-                    ).associate { t -> "p$t" to oppgaveiderList[t].toString() as Any }
-                )
+                queryOf(spørring, parametre)
                     .map { row ->
                         row.string("data")
                     }.asList
@@ -249,11 +253,14 @@ class OppgaveRepository(
         }
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
-
-        return json.filter { it.indexOf("oppgaver") == -1 }
+        val resultat = json.filter { it.indexOf("oppgaver") == -1 } //TODO hvorfor?
             .map { s -> LosObjectMapper.instance.readValue(s, Oppgave::class.java) }
             .toList()
-            .sortedBy { oppgave -> oppgave.behandlingOpprettet }
+            .sortedBy { oppgave -> oppgave.behandlingOpprettet } //TODO burde gjøre sortering utenfor, siden det ulike domeneregler for sortering
+
+        log.info("Fant ${json.size} oppgaver, har ${resultat.size} etter filtrering mot 'oppgaver'")
+
+        return resultat
     }
 
     fun hentPleietrengendeAktør(oppgaveider: Collection<UUID>): Map<String, String> {
