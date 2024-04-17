@@ -575,7 +575,7 @@ class OppgaveRepository(
                                 where
                                             reservasjonsnokkel like 'legacy_%'
                                     and not annullert_for_utlop
-                                    and     gyldig_tidsrom @> :now
+                                    and     gyldig_tidsrom @> :now ::timestamp
                             )
                          select data from oppgave o
                          where (data -> 'aktiv')::boolean

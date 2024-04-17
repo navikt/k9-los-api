@@ -326,8 +326,8 @@ class ReservasjonV3Repository(
                      where
                                 reservasjonsnokkel like 'legacy_%'
                         and not annullert_for_utlop
-                        and     gyldig_tidsrom @> :gyldig_paa
-                        and not gyldig_tidsrom @> :ikke_gyldig_paa
+                        and     gyldig_tidsrom @> :gyldig_paa ::timestamp
+                        and not gyldig_tidsrom @> :ikke_gyldig_paa ::timestamp
                 """.trimIndent(),
                     mapOf(
                         "gyldig_paa" to gyldigPåTidspunkt.truncatedTo(ChronoUnit.MICROS),
