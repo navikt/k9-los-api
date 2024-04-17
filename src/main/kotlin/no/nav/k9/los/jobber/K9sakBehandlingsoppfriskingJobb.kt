@@ -15,16 +15,19 @@ import java.util.*
 import kotlin.concurrent.fixedRateTimer
 
 class K9sakBehandlingsoppfriskingJobb(
-
-    val tidMellomKjøring: Duration = Duration.ofHours(1),
-    val ønsketStartid: LocalDateTime = LocalDateTime.now().plusHours(1).withMinute(1).withSecond(0),
-    val forsinketOppstart: Duration = Duration.between(LocalDateTime.now(), ønsketStartid),
+    val tidMellomRefreshProd : Duration = Duration.ofHours(12),
+    val tidMellomRefreshDev : Duration = Duration.ofMinutes(15),
+    val startidApplikasjon : LocalDateTime = LocalDateTime.now(),
+    val ønsketStarttidJobb : LocalDateTime = avrundFremoverTilKvarter(startidApplikasjon).plusMinutes(1), //1 minutt over neste kvarter
+    val tidMellomKjøring: Duration = Duration.ofMinutes(15),
+    val forsinketOppstart: Duration = Duration.between(startidApplikasjon, ønsketStarttidJobb),
     val oppgaveKøRepository: OppgaveKøRepository,
     val oppgaveRepository: OppgaveRepository,
     val reservasjonRepository: ReservasjonRepository,
     val refreshOppgaveChannel: Channel<UUID>,
     val antallFraHverKø: Int = 20,
     val configuration: Configuration,
+    var sisteRefresh : LocalDateTime? = null
 ) {
     private val TRÅDNAVN = "k9los-refresh-k9sak-behandlinger-jobb"
     private val log = LoggerFactory.getLogger(K9sakBehandlingsoppfriskingJobb::class.java)
@@ -46,15 +49,18 @@ class K9sakBehandlingsoppfriskingJobb(
 
     private fun utfør() {
         val nå = LocalDateTime.now()
+        val tidSidenSistRefresh = if (sisteRefresh != null) Duration.between(sisteRefresh, nå) else null
+        val opphold = if (configuration.koinProfile == KoinProfile.PROD) tidMellomRefreshProd else tidMellomRefreshDev
+        val oppholdMedSlack = opphold.minusMinutes(1) //tillater litt slack i tilfelle jobben ikke kjører eksakt på tiden
         if (nå.dayOfWeek == DayOfWeek.SATURDAY || nå.dayOfWeek == DayOfWeek.SUNDAY) {
             log.info("Refresher ikke proaktivt i helg")
-        } else if (configuration.koinProfile == KoinProfile.PROD && (nå.hour < 6 || nå.hour > 17)){
-            //TODO gjør 'cache' i K9SakServiceSystemClient persistent eller gjør andre tiltak for å unngå dobbel-refresh ved restart av applikasjonen
-            log.info("Refresher ikke proaktivt utenfor klokken 06-07 for å unngå dobbel-refresh dersom applikasjonen må restartes")
         } else if (nå.hour < 6 || nå.hour > 17) {
             //kjører refresh oftere i dev for enklere test
             log.info("Refresher ikke proaktivt utenfor klokken 06-18")
+        } else if (tidSidenSistRefresh != null && tidSidenSistRefresh < oppholdMedSlack){
+            log.info("Refresher ikke proaktivt, siden det bare har gått ${tidSidenSistRefresh} siden forrige oppdatering, venter til det har gått $opphold")
         } else {
+            sisteRefresh = nå
             log.info("Starter refresh av k9sak-behandlinger")
             refresh();
         }
@@ -106,6 +112,14 @@ class K9sakBehandlingsoppfriskingJobb(
         } finally {
             val t1 = System.currentTimeMillis()
             log.info("Tidsforbruk for $tekst var ${t1 - t0} ms")
+        }
+    }
+
+    companion object {
+        fun avrundFremoverTilKvarter(tid: LocalDateTime): LocalDateTime {
+            return tid.withMinute(0).withSecond(0).withNano(0)
+                .plusMinutes(15 * (tid.minute.toLong() / 15))
+                .plusMinutes(15)
         }
     }
 
