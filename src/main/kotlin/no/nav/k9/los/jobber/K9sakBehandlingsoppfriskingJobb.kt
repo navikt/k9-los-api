@@ -58,12 +58,13 @@ class K9sakBehandlingsoppfriskingJobb(
         val nå = LocalDateTime.now()
         val tidSidenSistRefresh = if (sisteRefresh != null) Duration.between(sisteRefresh, nå) else null
         val opphold = if (isProd) tidMellomRefreshProd else tidMellomRefreshDev
+        val sisteTime = if (isProd) 16 else 20
         val skipRefreshFraKøer = isProd && nå.hour > 5; //unngå full refresh ved redeploy av applikasjon på dagtid
         val oppholdMedSlack = opphold.minusMinutes(1) //tillater litt slack i tilfelle jobben ikke kjører eksakt på tiden
         if (nå.dayOfWeek == DayOfWeek.SUNDAY) {
             log.info("Refresher ikke proaktivt på søndager")
-        } else if (nå.hour < 5 || nå.hour > 16) {
-            log.info("Refresher ikke proaktivt utenfor klokken 05-16")
+        } else if (nå.hour < 5 || nå.hour > sisteTime) {
+            log.info("Refresher ikke proaktivt utenfor klokken 05-$sisteTime")
         } else if (tidSidenSistRefresh != null && tidSidenSistRefresh < oppholdMedSlack){
             log.info("Refresher ikke proaktivt, siden det bare har gått ${tidSidenSistRefresh} siden forrige oppdatering, venter til det har gått $opphold")
         } else {
