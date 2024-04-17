@@ -4,5 +4,5 @@ import no.nav.k9.sak.kontrakt.behandling.BehandlingIdListe
 import java.util.UUID
 
 interface IK9SakService {
-    suspend fun refreshBehandlinger(behandlingIder: Collection<UUID>)
+    suspend fun refreshBehandlinger(behandlingUuid: Collection<UUID>)
 }

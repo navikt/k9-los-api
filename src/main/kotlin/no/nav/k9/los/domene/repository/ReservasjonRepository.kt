@@ -172,21 +172,6 @@ class ReservasjonRepository(
         return LosObjectMapper.instance.readValue(json!!, Reservasjon::class.java)
     }
 
-    fun hentOppgaverIdForAlleAktiveReservasjoner(): List<UUID> {
-        return using(sessionOf(dataSource)) {
-            it.run(
-                queryOf(
-                    "select (data ::jsonb -> 'reservasjoner' -> -1 -> 'oppgave')::uuid as oppgaveid from reservasjon where (data ::jsonb -> 'reservasjoner' -> -1 -> 'reservertTil) > :now",
-                    mapOf(
-                        "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
-                    )
-                ).map { row ->
-                    UUID.fromString(row.string("id"))
-                }.asList
-            )
-        }
-    }
-
     fun hentOptional(id: UUID): Reservasjon? {
         val json: String? = using(sessionOf(dataSource)) {
             it.run(

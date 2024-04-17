@@ -1,11 +1,10 @@
 package no.nav.k9.los.integrasjon.k9
 
-import no.nav.k9.sak.kontrakt.behandling.BehandlingIdListe
-import java.util.UUID
+import java.util.*
 
 open class K9SakServiceLocal : IK9SakService {
 
-    override suspend fun refreshBehandlinger(behandlingIder: Collection<UUID>) {
+    override suspend fun refreshBehandlinger(behandlingUuid: Collection<UUID>) {
 
     }
 }

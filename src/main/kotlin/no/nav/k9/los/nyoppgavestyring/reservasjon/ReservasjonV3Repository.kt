@@ -6,6 +6,7 @@ import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import org.postgresql.util.PSQLException
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
+import java.util.UUID
 
 class ReservasjonV3Repository(
     private val transactionalManager: TransactionalManager,
@@ -310,5 +311,32 @@ class ReservasjonV3Repository(
                 )
             ).asUpdate
         )
+    }
+
+    fun hentOppgaverIdForAktiveReservasjoner(
+        gyldigPåTidspunkt: LocalDateTime,
+        ikkeGyldigPåTidspukt: LocalDateTime
+    ): List<String> {
+        return transactionalManager.transaction { tx ->
+            tx.run(
+                queryOf(
+                    """
+                    select substring(reservasjonsnokkel, length('legacy_')+1) ekstern_id
+                     from reservasjon_v3 r
+                     where
+                                reservasjonsnokkel like 'legacy_%'
+                        and not annullert_for_utlop
+                        and     gyldig_tidsrom @> :gyldig_paa
+                        and not gyldig_tidsrom @> :ikke_gyldig_paa
+                """.trimIndent(),
+                    mapOf(
+                        "gyldig_paa" to gyldigPåTidspunkt.truncatedTo(ChronoUnit.MICROS),
+                        "ikke_gyldig_paa" to ikkeGyldigPåTidspukt.truncatedTo(ChronoUnit.MICROS),
+                    )
+                ).map { row ->
+                    row.string("ekstern_id")
+                }.asList
+            )
+        }
     }
 }

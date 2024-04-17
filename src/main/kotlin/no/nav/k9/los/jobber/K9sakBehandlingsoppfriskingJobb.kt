@@ -6,7 +6,7 @@ import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.domene.repository.OppgaveKøRepository
 import no.nav.k9.los.domene.repository.OppgaveRepository
-import no.nav.k9.los.domene.repository.ReservasjonRepository
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
 import org.slf4j.LoggerFactory
 import java.time.DayOfWeek
 import java.time.Duration
@@ -23,10 +23,16 @@ class K9sakBehandlingsoppfriskingJobb(
     val forsinketOppstart: Duration = Duration.between(startidApplikasjon, ønsketStarttidJobb),
     val oppgaveKøRepository: OppgaveKøRepository,
     val oppgaveRepository: OppgaveRepository,
-    val reservasjonRepository: ReservasjonRepository,
+    val reservasjonRepository: ReservasjonV3Repository,
     val refreshOppgaveChannel: Channel<UUID>,
-    val antallFraHverKø: Int = 10,
     val configuration: Configuration,
+
+    //domenespesifikk konfigurasjon som tilpasses etter erfaringer i prod
+    val antallFraHverKø: Int = 2,
+    val ignorerReserverteOppgaverSomUtløperEtter : Duration = Duration.ofDays(1),
+    val maksAntallReserverteTilRefresh: Int = 50, //midlertidig begrensning til vi får erfaring fra prod
+
+    //state
     var sisteRefresh : LocalDateTime? = null
 ) {
     private val TRÅDNAVN = "k9los-refresh-k9sak-behandlinger-jobb"
@@ -52,13 +58,12 @@ class K9sakBehandlingsoppfriskingJobb(
         val nå = LocalDateTime.now()
         val tidSidenSistRefresh = if (sisteRefresh != null) Duration.between(sisteRefresh, nå) else null
         val opphold = if (isProd) tidMellomRefreshProd else tidMellomRefreshDev
-        val skipRefreshFraKøer = isProd && nå.hour > 7; //unngå full refresh ved redeploy av applikasjon på dagtid
+        val skipRefreshFraKøer = isProd && nå.hour > 5; //unngå full refresh ved redeploy av applikasjon på dagtid
         val oppholdMedSlack = opphold.minusMinutes(1) //tillater litt slack i tilfelle jobben ikke kjører eksakt på tiden
-        if (nå.dayOfWeek == DayOfWeek.SATURDAY || nå.dayOfWeek == DayOfWeek.SUNDAY) {
-            log.info("Refresher ikke proaktivt i helg")
-        } else if (nå.hour < 6 || nå.hour > 17) {
-            //kjører refresh oftere i dev for enklere test
-            log.info("Refresher ikke proaktivt utenfor klokken 06-18")
+        if (nå.dayOfWeek == DayOfWeek.SUNDAY) {
+            log.info("Refresher ikke proaktivt på søndager")
+        } else if (nå.hour < 5 || nå.hour > 16) {
+            log.info("Refresher ikke proaktivt utenfor klokken 05-16")
         } else if (tidSidenSistRefresh != null && tidSidenSistRefresh < oppholdMedSlack){
             log.info("Refresher ikke proaktivt, siden det bare har gått ${tidSidenSistRefresh} siden forrige oppdatering, venter til det har gått $opphold")
         } else {
@@ -68,22 +73,14 @@ class K9sakBehandlingsoppfriskingJobb(
         }
     }
 
-    fun refresh(skipRefreshFraKøer: Boolean) {
+    private fun refresh(skipRefreshFraKøer: Boolean) {
         val behandlingerTilRefresh = finnK9sakBehandlingerTilRefresh(skipRefreshFraKøer)
         channelSend(behandlingerTilRefresh)
     }
 
-    private fun channelSend(behandlingerTilRefresh: Set<UUID>) {
-        runBlocking {
-            for (uuid in behandlingerTilRefresh) {
-                refreshOppgaveChannel.send(uuid)
-            }
-        }
-    }
-
-    fun finnK9sakBehandlingerTilRefresh(skipRefreshFraKøer: Boolean): Set<UUID> {
+    private fun finnK9sakBehandlingerTilRefresh(skipRefreshFraKøer: Boolean): Set<UUID> {
         val k9sakOppgaver = taTiden("hent k9sak oppgaver ") { oppgaveRepository.hentAktiveK9sakOppgaver().toSet() }
-        val reserverteOppgaver = taTiden("hent reserverte oppgaver") { hentReserverteOppgaver(k9sakOppgaver) }
+        val reserverteOppgaver = taTiden("hent reserverte oppgaver") { hentK9sakReserverteBehandlinger(k9sakOppgaver, ignorerEtter = ignorerReserverteOppgaverSomUtløperEtter) }
         if (skipRefreshFraKøer){
             log.info("Refresher ${reserverteOppgaver.size} reserverte oppgaver")
             return reserverteOppgaver
@@ -94,7 +91,7 @@ class K9sakBehandlingsoppfriskingJobb(
         }
     }
 
-    fun hentOppgaverFørstIKøene(k9sakOppgaver: Set<UUID>): Set<UUID> {
+    private fun hentOppgaverFørstIKøene(k9sakOppgaver: Set<UUID>): Set<UUID> {
         val køene = oppgaveKøRepository.hentIkkeTaHensyn()
         log.info("Hentet ${køene.size} køer")
         return køene.flatMap { kø ->
@@ -107,9 +104,29 @@ class K9sakBehandlingsoppfriskingJobb(
             .toSet()
     }
 
-    fun hentReserverteOppgaver(k9sakOppgaver: Set<UUID>): Set<UUID> {
-        val oppgaveIder = reservasjonRepository.hentOppgaverIdForAlleAktiveReservasjoner()
-        return oppgaveIder.filter { k9sakOppgaver.contains(it) }.toSet()
+    private fun channelSend(behandlingerTilRefresh: Set<UUID>) {
+        runBlocking {
+            for (uuid in behandlingerTilRefresh) {
+                refreshOppgaveChannel.send(uuid)
+            }
+        }
+    }
+
+    fun hentK9sakReserverteBehandlinger(k9sakOppgaver: Set<UUID>, ignorerEtter: Duration): Set<UUID> {
+        val nå = LocalDateTime.now()
+        val oppgaveIder = reservasjonRepository.hentOppgaverIdForAktiveReservasjoner(gyldigPåTidspunkt = nå, ikkeGyldigPåTidspukt = nå.plus(ignorerEtter))
+        val k9sakOppgeveIder = k9sakOppgaver.map { it.toString() }
+        val resultat = oppgaveIder
+            .filter { k9sakOppgeveIder.contains(it) }
+            .map { UUID.fromString(it) }
+            .toSet()
+
+        if (resultat.size > maksAntallReserverteTilRefresh){
+            log.info("Fant ${resultat.size} reservasjoner som kandidat for refresh")
+            return resultat.take(maksAntallReserverteTilRefresh).toSet()
+        } else {
+            return resultat
+        }
     }
 
     fun <T> taTiden(tekst: String, operasjon: () -> T): T {
