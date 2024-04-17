@@ -569,10 +569,17 @@ class OppgaveRepository(
             it.run(
                 queryOf(
                     """with
-                            aktive_reservasjoner as (select id from reservasjon where ((data -> 'reservasjoner' -> -1) ->> 'reservertTil')::timestamp > :now)
+                            aktive_reservasjoner as (
+                                select substring(reservasjonsnokkel, length('legacy_')+1) ekstern_id
+                                from reservasjon_v3 r
+                                where
+                                            reservasjonsnokkel like 'legacy_%'
+                                    and not annullert_for_utlop
+                                    and     gyldig_tidsrom @> :now
+                            )
                          select data from oppgave o
                          where (data -> 'aktiv')::boolean
-                         and not exists (select 1 from aktive_reservasjoner ar where ar.id = (o.data ->> 'eksternId')) 
+                         and not exists (select 1 from aktive_reservasjoner ar where ar.ekstern_id = (o.data ->> 'eksternId')) 
                          """.trimMargin(),
                     mapOf(
                         "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
@@ -593,6 +600,31 @@ class OppgaveRepository(
             .increment()
 
         return list
+    }
+
+    internal fun hentAktiveK9sakOppgaver(): List<UUID> {
+        val t0 = System.currentTimeMillis()
+        val resulat : List<UUID> = using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    """  select (data -> 'eksternId')::uuid as ekstern_id from oppgave
+                         where (data -> 'aktiv')::boolean and (data ->> 'system') = 'K9SAK' 
+                         """.trimMargin(),
+                    mapOf(
+                    )
+                )
+                    .map { row ->
+                        row.uuid("ekstern_id")
+                    }.asList
+            )
+        }
+        val t1 = System.currentTimeMillis()
+
+        log.info("Hentet ${resulat.size} aktive behandlingUuid for aktive k9sak-oppgaver oppgaver. Operasjonen tok ${t1 - t0} ms.")
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
+
+        return resulat
     }
 
     internal fun hentAktiveOppgaversAksjonspunktliste(): List<AksjonspunktMock> {

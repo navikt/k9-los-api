@@ -1,16 +1,15 @@
 package no.nav.k9.los.eventhandler
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.launch
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.repository.OppgaveKøRepository
 import no.nav.k9.los.domene.repository.OppgaveRepository
-import no.nav.k9.los.integrasjon.k9.IK9SakService
 import no.nav.k9.kodeverk.Fagsystem
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.sak.kontrakt.behandling.BehandlingIdDto
-import no.nav.k9.sak.kontrakt.behandling.BehandlingIdListe
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -21,11 +20,11 @@ import kotlin.system.measureTimeMillis
 
 fun CoroutineScope.køOppdatertProsessor(
     channel: ReceiveChannel<UUID>,
+    refreshOppgaveChannel: Channel<UUID>,
     oppgaveKøRepository: OppgaveKøRepository,
     oppgaveRepository: OppgaveRepository,
     oppgaveRepositoryV2: OppgaveRepositoryV2,
-    oppgaveTjeneste: OppgaveTjeneste,
-    k9SakService: IK9SakService
+    oppgaveTjeneste: OppgaveTjeneste
 ) = launch(Executors.newSingleThreadExecutor().asCoroutineDispatcherWithErrorHandling()) {
     val log = LoggerFactory.getLogger("behandleOppgave")
     for (uuid in channel) {
@@ -36,7 +35,7 @@ fun CoroutineScope.køOppdatertProsessor(
                 oppgaveRepository,
                 oppgaveRepositoryV2,
                 oppgaveTjeneste,
-                k9SakService,
+                refreshOppgaveChannel,
                 log
             )
             log.info("tok ${measureTimeMillis}ms å oppdatere køen: $uuid")
@@ -53,7 +52,7 @@ private suspend fun oppdaterKø(
     oppgaveRepository: OppgaveRepository,
     oppgaveRepositoryV2: OppgaveRepositoryV2,
     oppgaveTjeneste: OppgaveTjeneste,
-    k9SakService: IK9SakService,
+    refreshOppgaveChannel: Channel<UUID>,
     log: Logger
 ): Long {
     return measureTimeMillis {
@@ -96,7 +95,13 @@ private suspend fun oppdaterKø(
         val antallOppgaverUtenReservasjon = taTiden(log, "hent antall oppgaver med reserverte") { oppgaveTjeneste.hentAntallOppgaver(oppgavekøId = it, taMedReserverte = true, refresh = true) }
         val antallOppgaverMedReservasjon = taTiden(log, "hent antall oppgaver uten reserverte") { oppgaveTjeneste.hentAntallOppgaver(oppgavekøId = it, taMedReserverte = false, refresh = true) }
         log.info("Antall oppgaver i køen er $antallOppgaverUtenReservasjon eller $antallOppgaverMedReservasjon med reservasjoner")
-        taTiden(log, "refresh ${k9sakRefreshBehanderListe.size} behandlinger") {  k9SakService.refreshBehandlinger(BehandlingIdListe(k9sakRefreshBehanderListe))}
+
+        val behandlingerUuiderTilRefresh = k9sakRefreshBehanderListe.map { it.behandlingUuid }.toSet()
+        log.info("Sender ${behandlingerUuiderTilRefresh.size} videre for refresh")
+        for (uuid in behandlingerUuiderTilRefresh) {
+            refreshOppgaveChannel.send(uuid)
+        }
+        log.info("Ferdig")
     }
 }
 suspend fun <T> taTiden(log : Logger, tekst : String, operasjon: suspend () -> T): T {

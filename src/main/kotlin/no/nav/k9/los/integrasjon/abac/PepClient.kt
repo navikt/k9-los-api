@@ -42,7 +42,7 @@ class PepClient constructor(
 
     private val url = config.abacEndpointUrl
     private val log: Logger = LoggerFactory.getLogger(PepClient::class.java)
-    private val cache = Cache<Boolean>()
+    private val cache = Cache<String, Boolean>()
 
     override suspend fun erOppgaveStyrer(): Boolean {
         val requestBuilder = XacmlRequestBuilder()

@@ -36,6 +36,7 @@ import no.nav.k9.los.eventhandler.sjekkReserverteJobb
 import no.nav.k9.los.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.los.integrasjon.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
+import no.nav.k9.los.jobber.K9sakBehandlingsoppfriskingJobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosApi
@@ -136,7 +137,7 @@ fun Application.k9Los() {
             oppgaveRepository = koin.get(),
             oppgaveRepositoryV2 = koin.get(),
             channel = koin.get<Channel<UUID>>(named("oppgaveKøOppdatert")),
-            k9SakService = koin.get(),
+            refreshOppgaveChannel = koin.get<Channel<UUID>>(named("oppgaveRefreshChannel")),
             oppgaveTjeneste = koin.get()
         )
 
@@ -160,6 +161,14 @@ fun Application.k9Los() {
         startOppdateringAvÅpneOgVentende()
         startOppdateringAvLukkedeOppgaver()
     }
+
+    K9sakBehandlingsoppfriskingJobb(
+        oppgaveRepository = koin.get(),
+        oppgaveKøRepository = koin.get(),
+        reservasjonRepository = koin.get(),
+        refreshOppgaveChannel = koin.get<Channel<UUID>>(named("oppgaveRefreshChannel")),
+        configuration = koin.get()
+    )
 
     val sjekkReserverteJobb =
         sjekkReserverteJobb(saksbehandlerRepository = koin.get(), reservasjonRepository = koin.get())

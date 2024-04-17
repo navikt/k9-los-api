@@ -164,7 +164,7 @@ class StatistikkRepository(
         }
     }
 
-    private val hentFerdigstilteOgNyeHistorikkMedYtelsetypeCache = Cache<List<AlleOppgaverNyeOgFerdigstilte>>()
+    private val hentFerdigstilteOgNyeHistorikkMedYtelsetypeCache = Cache<String, List<AlleOppgaverNyeOgFerdigstilte>>()
     fun hentFerdigstilteOgNyeHistorikkMedYtelsetypeSiste8Uker(
         refresh: Boolean = false
     ): List<AlleOppgaverNyeOgFerdigstilte> {

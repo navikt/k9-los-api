@@ -28,7 +28,7 @@ class PdlService constructor(
     scope: String
 ) : IPdlService {
     private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
-    private val cache = Cache<String>(10_000)
+    private val cache = Cache<String, String>(10_000)
     private val log: Logger = LoggerFactory.getLogger(PdlService::class.java)
 
     private val personUrl = Url.buildURL(

@@ -47,7 +47,5 @@ private suspend fun refreshK9(
     oppgaveListe: List<UUID>,
     k9SakService: IK9SakService
 ) {
-    val behandlingsListe = mutableListOf<BehandlingIdDto>()
-    behandlingsListe.addAll(oppgaveListe.map { BehandlingIdDto(it) })
-    k9SakService.refreshBehandlinger(BehandlingIdListe(behandlingsListe))
+    k9SakService.refreshBehandlinger(oppgaveListe)
 }
