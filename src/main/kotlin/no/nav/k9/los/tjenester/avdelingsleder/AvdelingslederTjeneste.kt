@@ -10,7 +10,9 @@ import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Dto
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.*
+import no.nav.k9.los.tjenester.avdelingsleder.reservasjoner.ReservasjonDto
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.ReservasjonV3DtoBuilder
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.OppgavekøDto
@@ -314,17 +316,40 @@ class AvdelingslederTjeneste(
         }
     }
 
-    suspend fun hentAlleAktiveReservasjonerV3(innloggetBruker: Saksbehandler): List<ReservasjonV3Dto> {
+    suspend fun hentAlleAktiveReservasjonerV3(innloggetBruker: Saksbehandler): List<ReservasjonDto> {
         val innloggetBrukerHarKode6Tilgang = pepClient.harTilgangTilKode6(innloggetBruker.brukerIdent!!)
 
-        return reservasjonV3Tjeneste.hentAlleAktiveReservasjoner().mapNotNull { reservasjonMedOppgaver ->
-            val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonMedOppgaver.reservasjonV3.reservertAv)
+        return reservasjonV3Tjeneste.hentAlleAktiveReservasjoner().flatMap { reservasjonMedOppgaver ->
+            val saksbehandler =
+                saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonMedOppgaver.reservasjonV3.reservertAv)
             val saksbehandlerHarKode6Tilgang = pepClient.harTilgangTilKode6(saksbehandler.brukerIdent!!)
 
             if (innloggetBrukerHarKode6Tilgang != saksbehandlerHarKode6Tilgang) {
-                null
+                emptyList()
             } else {
-                reservasjonV3DtoBuilder.byggReservasjonV3Dto(reservasjonMedOppgaver, saksbehandler)
+                if (reservasjonMedOppgaver.oppgaveV1 != null) {
+                    listOf(
+                        ReservasjonDto(
+                            reservertAvEpost = saksbehandler.epost,
+                            saksnummer = reservasjonMedOppgaver.oppgaveV1.fagsakSaksnummer,
+                            behandlingType = reservasjonMedOppgaver.oppgaveV1.behandlingType,
+                            reservertTilTidspunkt = reservasjonMedOppgaver.reservasjonV3.gyldigTil,
+                            kommentar = reservasjonMedOppgaver.reservasjonV3.kommentar,
+                            oppgavenøkkel = OppgaveNøkkelDto.forV1Oppgave(reservasjonMedOppgaver.oppgaveV1.eksternId.toString()),
+                        )
+                    )
+                } else {
+                    reservasjonMedOppgaver.oppgaverV3.map { oppgave ->
+                        ReservasjonDto(
+                            reservertAvEpost = saksbehandler.epost,
+                            saksnummer = oppgave.hentVerdi("saksnummer")!!, //TODO: Oppgaveagnostisk logikk. Løses antagelig ved å skrive om frontend i dette tilfellet
+                            behandlingType = BehandlingType.fraKode(oppgave.hentVerdi("behandlingTypekode")!!),
+                            reservertTilTidspunkt = reservasjonMedOppgaver.reservasjonV3.gyldigTil,
+                            kommentar = reservasjonMedOppgaver.reservasjonV3.kommentar,
+                            oppgavenøkkel = OppgaveNøkkelDto(oppgave),
+                        )
+                    }.toList()
+                }
             }
         }
     }

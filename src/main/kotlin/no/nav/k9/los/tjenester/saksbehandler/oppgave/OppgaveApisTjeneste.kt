@@ -37,7 +37,7 @@ class OppgaveApisTjeneste(
          */
 
         // Fjernes når V1 skal vekk
-        val oppgaveStatusDto = oppgaveTjeneste.reserverOppgave(
+        oppgaveTjeneste.reserverOppgave(
             innloggetBruker.brukerIdent!!,
             oppgaveIdMedOverstyringDto.overstyrIdent,
             UUID.fromString(oppgaveNøkkel.oppgaveEksternId),
@@ -115,7 +115,7 @@ class OppgaveApisTjeneste(
                 kommentar = reservasjonEndringDto.begrunnelse
             )
 
-        val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(nyReservasjon!!.reservasjonV3.reservertAv)
+        val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(nyReservasjon.reservasjonV3.reservertAv)
 
         return reservasjonV3DtoBuilder.byggReservasjonV3Dto(nyReservasjon, reservertAv)
     }
