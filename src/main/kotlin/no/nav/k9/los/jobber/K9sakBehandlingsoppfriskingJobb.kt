@@ -114,7 +114,7 @@ class K9sakBehandlingsoppfriskingJobb(
 
     fun hentK9sakReserverteBehandlinger(k9sakOppgaver: Set<UUID>, ignorerEtter: Duration): Set<UUID> {
         val nå = LocalDateTime.now()
-        val oppgaveIder = reservasjonRepository.hentOppgaverIdForAktiveReservasjoner(gyldigPåTidspunkt = nå, ikkeGyldigPåTidspukt = nå.plus(ignorerEtter))
+        val oppgaveIder = reservasjonRepository.hentOppgaverIdForAktiveReservasjoner(gyldigPåTidspunkt = nå, utløperInnen = nå.plus(ignorerEtter))
         val k9sakOppgeveIder = k9sakOppgaver.map { it.toString() }
         val resultat = oppgaveIder
             .filter { k9sakOppgeveIder.contains(it) }

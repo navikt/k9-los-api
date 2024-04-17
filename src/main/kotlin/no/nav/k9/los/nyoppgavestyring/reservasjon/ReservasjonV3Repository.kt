@@ -6,7 +6,6 @@ import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import org.postgresql.util.PSQLException
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
-import java.util.UUID
 
 class ReservasjonV3Repository(
     private val transactionalManager: TransactionalManager,
@@ -315,7 +314,7 @@ class ReservasjonV3Repository(
 
     fun hentOppgaverIdForAktiveReservasjoner(
         gyldigPåTidspunkt: LocalDateTime,
-        ikkeGyldigPåTidspukt: LocalDateTime
+        utløperInnen: LocalDateTime
     ): List<String> {
         return transactionalManager.transaction { tx ->
             //TODO denne fungerer eksplisitt kun for oppgave-v1 ('legacy')
@@ -332,7 +331,7 @@ class ReservasjonV3Repository(
                 """.trimIndent(),
                     mapOf(
                         "gyldig_paa" to gyldigPåTidspunkt.truncatedTo(ChronoUnit.MICROS),
-                        "ikke_gyldig_paa" to ikkeGyldigPåTidspukt.truncatedTo(ChronoUnit.MICROS),
+                        "ikke_gyldig_paa" to utløperInnen.truncatedTo(ChronoUnit.MICROS),
                     )
                 ).map { row ->
                     row.string("ekstern_id")
