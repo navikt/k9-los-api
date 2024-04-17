@@ -222,7 +222,7 @@ class ReservasjonV3Tjeneste(
         reservasjonsnøkkel: String,
         nyTildato: LocalDateTime?,
         utførtAvBrukerId: Long,
-        kommentar: String,
+        kommentar: String?,
     ): ReservasjonV3MedOppgaver {
         return transactionalManager.transaction { tx ->
             val aktivReservasjon = finnAktivReservasjon(reservasjonsnøkkel, tx)
@@ -230,7 +230,7 @@ class ReservasjonV3Tjeneste(
                 aktivReservasjon = aktivReservasjon,
                 endretAvBrukerId = utførtAvBrukerId,
                 nyTildato = nyTildato ?: aktivReservasjon.gyldigTil.plusHours(24).forskyvReservasjonsDato(),
-                kommentar = kommentar,
+                kommentar = kommentar ?: aktivReservasjon.kommentar,
                 tx = tx
             )
 

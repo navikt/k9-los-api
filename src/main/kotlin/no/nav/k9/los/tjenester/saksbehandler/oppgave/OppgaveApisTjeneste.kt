@@ -139,10 +139,10 @@ class OppgaveApisTjeneste(
                 reservasjonsnøkkel = reservasjonsnøkkel,
                 nyTildato = forlengReservasjonDto.nyTilDato,
                 utførtAvBrukerId = innloggetBruker.id!!,
-                kommentar = forlengReservasjonDto.kommentar ?: ""
+                kommentar = forlengReservasjonDto.kommentar
             )
 
-        val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(forlengetReservasjon!!.reservasjonV3.reservertAv)!!
+        val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(forlengetReservasjon.reservasjonV3.reservertAv)
 
         return reservasjonV3DtoBuilder.byggReservasjonV3Dto(forlengetReservasjon, reservertAv)
     }
