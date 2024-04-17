@@ -182,15 +182,16 @@ class PepClient constructor(
         return evaluate(requestBuilder)
     }
 
-    override suspend fun harTilgangTilKode6(ident: String): Boolean {
+    override fun harTilgangTilKode6(ident: String): Boolean {
         val requestBuilder = XacmlRequestBuilder()
             .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
             .addResourceAttribute(RESOURCE_TYPE, TILGANG_TIL_KODE_6)
             .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
             .addAccessSubjectAttribute(SUBJECTID, ident)
             .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
-
-            return evaluate(requestBuilder)
+        return runBlocking {
+            evaluate(requestBuilder)
+        }
     }
 
     override suspend fun harTilgangTilKode6(): Boolean {

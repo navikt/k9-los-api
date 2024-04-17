@@ -32,7 +32,7 @@ class PepClientLocal : IPepClient {
         return false
     }
 
-    override suspend fun harTilgangTilKode6(ident: String): Boolean {
+    override fun harTilgangTilKode6(ident: String): Boolean {
         return false
     }
 

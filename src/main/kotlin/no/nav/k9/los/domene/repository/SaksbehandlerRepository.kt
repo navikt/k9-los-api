@@ -1,7 +1,6 @@
 package no.nav.k9.los.domene.repository
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import kotlinx.coroutines.runBlocking
 import kotliquery.*
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.integrasjon.abac.IPepClient
@@ -296,7 +295,7 @@ class SaksbehandlerRepository(
         )
     }
 
-    suspend fun finnSaksbehandlerMedIdent(ident: String): Saksbehandler? {
+    fun finnSaksbehandlerMedIdent(ident: String): Saksbehandler? {
         val skjermet = pepClient.harTilgangTilKode6(ident)
 
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
