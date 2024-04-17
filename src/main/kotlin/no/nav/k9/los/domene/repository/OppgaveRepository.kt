@@ -607,7 +607,7 @@ class OppgaveRepository(
         val resulat : List<UUID> = using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
-                    """  select (data -> 'eksternId')::uuid as ekstern_id from oppgave
+                    """  select (data ->> 'eksternId')::uuid as ekstern_id from oppgave
                          where (data -> 'aktiv')::boolean and (data ->> 'system') = 'K9SAK' 
                          """.trimMargin(),
                     mapOf(
