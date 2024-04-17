@@ -569,10 +569,17 @@ class OppgaveRepository(
             it.run(
                 queryOf(
                     """with
-                            aktive_reservasjoner as (select id from reservasjon where ((data -> 'reservasjoner' -> -1) ->> 'reservertTil')::timestamp > :now)
+                            aktive_reservasjoner as (
+                                select substring(reservasjonsnokkel, length('legacy_')+1) ekstern_id
+                                from reservasjon_v3 r
+                                where
+                                            reservasjonsnokkel like 'legacy_%'
+                                    and not annullert_for_utlop
+                                    and     gyldig_tidsrom @> :now
+                            )
                          select data from oppgave o
                          where (data -> 'aktiv')::boolean
-                         and not exists (select 1 from aktive_reservasjoner ar where ar.id = (o.data ->> 'eksternId')) 
+                         and not exists (select 1 from aktive_reservasjoner ar where ar.ekstern_id = (o.data ->> 'eksternId')) 
                          """.trimMargin(),
                     mapOf(
                         "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),

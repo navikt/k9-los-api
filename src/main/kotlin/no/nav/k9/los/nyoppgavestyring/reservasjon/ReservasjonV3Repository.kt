@@ -318,6 +318,7 @@ class ReservasjonV3Repository(
         ikkeGyldigPåTidspukt: LocalDateTime
     ): List<String> {
         return transactionalManager.transaction { tx ->
+            //TODO denne fungerer eksplisitt kun for oppgave-v1 ('legacy')
             tx.run(
                 queryOf(
                     """
