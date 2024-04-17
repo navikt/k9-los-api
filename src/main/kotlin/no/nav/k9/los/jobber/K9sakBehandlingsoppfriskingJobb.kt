@@ -25,7 +25,7 @@ class K9sakBehandlingsoppfriskingJobb(
     val oppgaveRepository: OppgaveRepository,
     val reservasjonRepository: ReservasjonRepository,
     val refreshOppgaveChannel: Channel<UUID>,
-    val antallFraHverKø: Int = 20,
+    val antallFraHverKø: Int = 10,
     val configuration: Configuration,
     var sisteRefresh : LocalDateTime? = null
 ) {
