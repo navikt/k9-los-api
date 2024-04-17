@@ -168,7 +168,7 @@ fun Application.k9Los() {
         reservasjonRepository = koin.get(),
         refreshOppgaveChannel = koin.get<Channel<UUID>>(named("oppgaveRefreshChannel")),
         configuration = koin.get()
-    )
+    ).run { start() }
 
     val sjekkReserverteJobb =
         sjekkReserverteJobb(saksbehandlerRepository = koin.get(), reservasjonRepository = koin.get())
