@@ -48,9 +48,11 @@ class K9sakBehandlingsoppfriskingJobb(
     }
 
     private fun utfør() {
+        val isProd = configuration.koinProfile == KoinProfile.PROD
         val nå = LocalDateTime.now()
         val tidSidenSistRefresh = if (sisteRefresh != null) Duration.between(sisteRefresh, nå) else null
-        val opphold = if (configuration.koinProfile == KoinProfile.PROD) tidMellomRefreshProd else tidMellomRefreshDev
+        val opphold = if (isProd) tidMellomRefreshProd else tidMellomRefreshDev
+        val skipRefreshFraKøer = isProd && nå.hour > 7; //unngå full refresh ved redeploy av applikasjon på dagtid
         val oppholdMedSlack = opphold.minusMinutes(1) //tillater litt slack i tilfelle jobben ikke kjører eksakt på tiden
         if (nå.dayOfWeek == DayOfWeek.SATURDAY || nå.dayOfWeek == DayOfWeek.SUNDAY) {
             log.info("Refresher ikke proaktivt i helg")
@@ -62,12 +64,12 @@ class K9sakBehandlingsoppfriskingJobb(
         } else {
             sisteRefresh = nå
             log.info("Starter refresh av k9sak-behandlinger")
-            refresh();
+            refresh(skipRefreshFraKøer = skipRefreshFraKøer);
         }
     }
 
-    fun refresh() {
-        val behandlingerTilRefresh = finnK9sakBehandlingerTilRefresh()
+    fun refresh(skipRefreshFraKøer: Boolean) {
+        val behandlingerTilRefresh = finnK9sakBehandlingerTilRefresh(skipRefreshFraKøer)
         channelSend(behandlingerTilRefresh)
     }
 
@@ -79,12 +81,17 @@ class K9sakBehandlingsoppfriskingJobb(
         }
     }
 
-    fun finnK9sakBehandlingerTilRefresh(): Set<UUID> {
+    fun finnK9sakBehandlingerTilRefresh(skipRefreshFraKøer: Boolean): Set<UUID> {
         val k9sakOppgaver = taTiden("hent k9sak oppgaver ") { oppgaveRepository.hentAktiveK9sakOppgaver().toSet() }
-        val oppgaverFørstIKøene = taTiden("hent oppgaver først i køene") { hentOppgaverFørstIKøene(k9sakOppgaver) }
         val reserverteOppgaver = taTiden("hent reserverte oppgaver") { hentReserverteOppgaver(k9sakOppgaver) }
-        log.info("Refresher ${oppgaverFørstIKøene.size} oppgaver da de er først i køer, og ${reserverteOppgaver.size} reserverte oppgaver")
-        return oppgaverFørstIKøene + reserverteOppgaver
+        if (skipRefreshFraKøer){
+            log.info("Refresher ${reserverteOppgaver.size} reserverte oppgaver")
+            return reserverteOppgaver
+        } else {
+            val oppgaverFørstIKøene = taTiden("hent oppgaver først i køene") { hentOppgaverFørstIKøene(k9sakOppgaver) }
+            log.info("Refresher ${oppgaverFørstIKøene.size} oppgaver da de er først i køer, og ${reserverteOppgaver.size} reserverte oppgaver")
+            return oppgaverFørstIKøene + reserverteOppgaver
+        }
     }
 
     fun hentOppgaverFørstIKøene(k9sakOppgaver: Set<UUID>): Set<UUID> {
