@@ -962,6 +962,7 @@ class OppgaveTjeneste constructor(
         val nesteOppgaverIKø = hentNesteOppgaverIKø(UUID.fromString(oppgaveKøId))
 
         if (nesteOppgaverIKø.isEmpty()) {
+            log.info("OppgaveFraKø: Tom kandidatliste. Returnerer null")
             return null
         }
 
