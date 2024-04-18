@@ -173,16 +173,14 @@ class ReservasjonOversetter(
         check(reservertTil > LocalDateTime.now()) {"Reservert til er i fortiden: $reservertTil"}
         val gyldigFra = LocalDateTime.now()
 
-        return runBlocking {
-            reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(
-                reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
-                reserverForId = reservertAvSaksbehandlerId,
-                gyldigFra = gyldigFra,
-                gyldigTil = reservertTil,
-                utføresAvId = utførtAvSaksbehandlerId ?: reservertAvSaksbehandlerId,
-                kommentar = kommentar ?: "",
-                tx = tx
-            )
-        }
+        return reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(
+            reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
+            reserverForId = reservertAvSaksbehandlerId,
+            gyldigFra = gyldigFra,
+            gyldigTil = reservertTil,
+            utføresAvId = utførtAvSaksbehandlerId ?: reservertAvSaksbehandlerId,
+            kommentar = kommentar ?: "",
+            tx = tx
+        )
     }
 }
