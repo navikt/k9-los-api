@@ -1044,7 +1044,7 @@ class OppgaveTjeneste constructor(
 
         // skal ikke få oppgaver som tilhører en parsak der en av sakene er resvert på en annen saksbehandler
         if (aktiveReservasjoner.isNotEmpty()) {
-            log.info("OppgaveFraKø: Prøver å reservere, men oppgaven er allerede reservert")
+            log.info("OppgaveFraKø: Prøver å reservere, men oppgaven er allerede reservert av aktiv reservasjon: ${aktiveReservasjoner.joinToString { it.oppgave.toString()+it.reservertTil }}")
             oppgaverSomErBlokert.add(oppgaveDto)
             return fåOppgaveFraKø(
                 oppgaveKøId,
