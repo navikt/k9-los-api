@@ -6,7 +6,6 @@ import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.abac.TILGANG_SAK
 import no.nav.k9.los.integrasjon.audit.*
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.FinnerIkkeDataException
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
@@ -80,10 +79,8 @@ class ReservasjonV3Tjeneste(
         kommentar: String,
         tx: TransactionalSession
     ): ReservasjonV3 {
-        //sjekke tilgang på alle oppgaver tilknyttet nøkkel
-        val oppgaverForReservasjonsnøkkel =
-            oppgaveV3Repository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjonsnøkkel)
-        if (!sjekkTilganger(oppgaverForReservasjonsnøkkel, reserverForId, utføresAvId)) {
+        //sjekke tilgang på alle V3-oppgaver tilknyttet nøkkel
+        if (!sjekkTilganger(reservasjonsnøkkel, reserverForId, utføresAvId, tx)) {
             val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(reserverForId)
             throw ManglerTilgangException("Saksbehandler ${saksbehandler.navn} mangler tilgang til å reservere nøkkel $reservasjonsnøkkel")
         }
@@ -294,24 +291,22 @@ class ReservasjonV3Tjeneste(
     }
 
     private fun sjekkTilganger(
-        oppgaver: List<Oppgave>,
+        reservasjonsnøkkel: String,
         brukerIdSomSkalHaReservasjon: Long,
-        utføresAvId: Long
+        utføresAvId: Long,
+        tx: TransactionalSession
     ): Boolean {
-        oppgaver.forEach { oppgave ->
-            if (beslutterErSaksbehandler(
-                    oppgave,
-                    brukerIdSomSkalHaReservasjon
-                )
-            ) throw ManglerTilgangException("Saksbehandler kan ikke være beslutter på egen behandling")
+        oppgaveV3Repository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjonsnøkkel).forEach { oppgave ->
+            if (beslutterErSaksbehandler(oppgave, brukerIdSomSkalHaReservasjon))
+                throw ManglerTilgangException("Saksbehandler kan ikke være beslutter på egen behandling")
 
-            val saksnummer = oppgave.hentVerdi("saksnummer") //TODO gjøre oppgavetypeagnostisk
-            if (saksnummer != null) { //TODO: Oppgaver uten saksnummer?
-                val bruker = saksbehandlerRepository.finnSaksbehandlerMedId(utføresAvId)
-                val harTilgang = pepClient.harTilgangTilOppgaveV3(oppgave, bruker)
-                if (!harTilgang) {
-                    return false
-                }
+            oppgave.hentVerdi("saksnummer") //TODO gjøre oppgavetypeagnostisk
+                ?: throw IllegalStateException("Forsøker å gjøre sjekk på v3-oppgave uten saksnummer")
+
+            val bruker = saksbehandlerRepository.finnSaksbehandlerMedId(utføresAvId)
+            val harTilgang = pepClient.harTilgangTilOppgaveV3(oppgave, bruker)
+            if (!harTilgang) {
+                return false
             }
         }
         return true

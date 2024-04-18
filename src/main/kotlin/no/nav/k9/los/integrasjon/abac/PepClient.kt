@@ -275,11 +275,7 @@ class PepClient constructor(
     }
 
     override fun harTilgangTilOppgaveV3(oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave, bruker: Saksbehandler): Boolean {
-         if (oppgave.hentVerdi("saksnummer") == null) {
-             return true
-         } else return runBlocking {
-             harTilgangTilLesSak(oppgave.hentVerdi("saksnummer")!!, oppgave.hentVerdi("aktorId")!!, bruker)
-         }
+        return harTilgangTilLesSak(oppgave.hentVerdi("saksnummer")!!, oppgave.hentVerdi("aktorId")!!, bruker)
     }
 
     override suspend fun harTilgangTilÅReservereOppgave(oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave, bruker: Saksbehandler) : Boolean {

@@ -6,16 +6,12 @@ import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
+import no.nav.k9.los.integrasjon.abac.PepClient
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ManglerTilgangException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.forskyvReservasjonsDatoBakover
 import java.time.LocalDateTime
 import java.util.*
 
@@ -26,7 +22,8 @@ class ReservasjonOversetter(
     private val oppgaveV3Repository: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository,
     private val oppgaveV3RepositoryMedTxWrapper: OppgaveRepositoryTxWrapper,
     private val saksbehandlerRepository: SaksbehandlerRepository,
-    private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste
+    private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
+    private val pepClient: PepClient
 ) {
 
 
@@ -81,7 +78,7 @@ class ReservasjonOversetter(
         reservertTil: LocalDateTime,
         utførtAvSaksbehandlerId: Long,
         kommentar: String?
-    ): ReservasjonV3? {
+    ): ReservasjonV3 {
         return transactionalManager.transaction { tx ->
             when (oppgaveV1.system) {
                 "K9SAK" -> {
@@ -131,9 +128,15 @@ class ReservasjonOversetter(
         utførtAvSaksbehandlerId: Long?,
         kommentar: String?,
         tx: TransactionalSession,
-    ): ReservasjonV3? {
+    ): ReservasjonV3 {
         check(reservertTil > LocalDateTime.now()) {"Reservert til er i fortiden: $reservertTil"}
         val gyldigFra = LocalDateTime.now()
+
+        runBlocking {
+            if (!pepClient.harTilgangTilOppgave(oppgave)) {
+                throw ManglerTilgangException("Saksbehandler forsøker å reservere oppgave(v1), men har ikke tilgang")
+            }
+        }
 
         if (beslutterErSaksbehandler(oppgave, reserverForSaksbehandlerId)) {
             throw ManglerTilgangException("Saksbehandler kan ikke være beslutter på egen behandling. Saksnummer: ${oppgave.fagsakSaksnummer}")
