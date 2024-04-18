@@ -1000,6 +1000,7 @@ class OppgaveTjeneste constructor(
 
         // beslutter skal ikke få opp oppgave med 5016 eller 5005 de selv har saksbehandlet
         if (innloggetSaksbehandlerHarSaksbehandletOppgaveSomSkalBliBesluttet(oppgaveSomSkalBliReservert, brukerident)) {
+            log.info("OppgaveFraKø: Beslutter er saksbehandler på oppgaven")
             oppgaverSomErBlokert.add(oppgaveDto)
             return fåOppgaveFraKø(
                 oppgaveKøId,
@@ -1011,6 +1012,7 @@ class OppgaveTjeneste constructor(
 
         // beslutter skal ikke få oppgaver de selv har besluttet
         if (innloggetSaksbehandlerHarBesluttetOppgaven(oppgaveSomSkalBliReservert, brukerident)) {
+            log.info("OppgaveFraKø: Saksbehandler er beslutter på oppgaven")
             oppgaverSomErBlokert.add(oppgaveDto)
             return fåOppgaveFraKø(
                 oppgaveKøId,
@@ -1054,6 +1056,7 @@ class OppgaveTjeneste constructor(
         // sjekker også om parsakene har blitt besluttet av beslutter
         if (oppgaverSomSkalBliReservert.map { it.oppgave }
                 .any { innloggetSaksbehandlerHarBesluttetOppgaven(it, brukerident) }) {
+            log.info("OppgaveFraKø: Innlogget Saksbehandler har besluttet parsak")
             oppgaverSomErBlokert.add(oppgaveDto)
             return fåOppgaveFraKø(
                 oppgaveKøId,
@@ -1066,6 +1069,7 @@ class OppgaveTjeneste constructor(
         // sjekker også om parsakene har blitt saksbehandlet av saksbehandler
         if (oppgaverSomSkalBliReservert.map { it.oppgave }
                 .any { innloggetSaksbehandlerHarSaksbehandletOppgaveSomSkalBliBesluttet(it, brukerident) }) {
+            log.info("OppgaveFraKø: Innlogget beslutter har saksbehandlet parsak")
             oppgaverSomErBlokert.add(oppgaveDto)
             return fåOppgaveFraKø(
                 oppgaveKøId,
