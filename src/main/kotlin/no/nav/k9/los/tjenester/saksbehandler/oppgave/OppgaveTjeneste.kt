@@ -980,6 +980,7 @@ class OppgaveTjeneste constructor(
 
             oppgaveDto = lagOppgaveDto(oppgavePar.second!!, person.person?.navn() ?: "Ukjent", person.person)
             if (!pepClient.harTilgangTilOppgave(oppgave)) {
+                log.info("OppgaveFraKø: Har ikke tilgang, setter skjermet på person")
                 // skal ikke få oppgave saksbehandler ikke har lestilgang til
                 settSkjermet(oppgavePar.second!!)
                 oppgaverSomErBlokert.add(oppgaveDto)
@@ -1040,6 +1041,7 @@ class OppgaveTjeneste constructor(
 
         // skal ikke få oppgaver som tilhører en parsak der en av sakene er resvert på en annen saksbehandler
         if (aktiveReservasjoner.isNotEmpty()) {
+            log.info("OppgaveFraKø: Prøver å reservere, men oppgaven er allerede reservert")
             oppgaverSomErBlokert.add(oppgaveDto)
             return fåOppgaveFraKø(
                 oppgaveKøId,
