@@ -241,8 +241,6 @@ class OppgaveRepository(
                 oppgaveiderList.size - 1
             ).associate { t -> "p$t" to oppgaveiderList[t].toString() as Any }
 
-            log.info("Henter oppgaveider med spørring $spørring og parametre $parametre"); //parametre er behandlingUuid-er, så ikke noe sensitivt her
-
             //language=PostgreSQL
             it.run(
                 queryOf(spørring, parametre)
@@ -258,7 +256,7 @@ class OppgaveRepository(
             .toList()
             .sortedBy { oppgave -> oppgave.behandlingOpprettet } //TODO burde gjøre sortering utenfor, siden det ulike domeneregler for sortering
 
-        log.info("Fant ${json.size} oppgaver, har ${resultat.size} etter filtrering mot 'oppgaver'")
+        log.info("Hentet ${resultat.size} oppgaver. Etterspurte med ${oppgaveider.toSet().size} uuider. Hadde ${json.size} oppgaver før filtrering mot teksten 'oppgaver'")
 
         return resultat
     }
