@@ -758,111 +758,6 @@ class OppgaveTjeneste constructor(
         merknad = hentAktivMerknad(oppgave.eksternId.toString())
     )
 
-    suspend fun hentSisteReserverteOppgaver(): List<OppgaveDto> {
-        val list = mutableListOf<OppgaveDto>()
-        //Hent reservasjoner for en gitt bruker skriv om til å hente med ident direkte i tabellen
-        val saksbehandlerMedEpost =
-            saksbehandlerRepository.finnSaksbehandlerMedEpost(coroutineContext.idToken().getUsername())
-        val brukerIdent = saksbehandlerMedEpost?.brukerIdent ?: return emptyList()
-        val reservasjoner = reservasjonRepository.hent(brukerIdent)
-        for (reservasjon in reservasjoner
-            .sortedBy { reservasjon -> reservasjon.reservertTil }) {
-            val oppgave = oppgaveRepository.hentHvis(reservasjon.oppgave)
-            if (oppgave == null) {
-                saksbehandlerRepository.fjernReservasjon(brukerIdent, reservasjon.oppgave)
-            } else {
-                if (!tilgangTilSak(oppgave)) continue
-
-                val person = pdlService.person(oppgave.aktorId)
-
-                val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(reservasjon.reservertAv)
-
-                val status =
-                    OppgaveStatusDto(
-                        true,
-                        reservasjon.reservertTil,
-                        true,
-                        reservasjon.reservertAv,
-                        saksbehandler?.navn,
-                        flyttetReservasjon = reservasjon.hentFlyttet()?.let { lagFlyttetReservasjonDto(it) }
-                    )
-                var personNavn: String
-                val navn = if (KoinProfile.PREPROD == configuration.koinProfile()) {
-                    "${oppgave.fagsakSaksnummer} "
-                    //          oppgave.aksjonspunkter.liste.entries.stream().map { t ->
-                    //              val a = Aksjonspunkter().aksjonspunkter()
-                    //                   .find { aksjonspunkt -> aksjonspunkt.kode == t.key }
-                    //               "${t.key} ${a?.navn ?: "Ukjent aksjonspunkt"}"
-                    //           }.toList().joinToString(", ")
-                } else {
-                    person.person?.navn() ?: "Uten navn"
-                }
-                personNavn = navn
-                val personFnummer: String = if (person.person == null) {
-                    "Ukjent fnummer"
-                } else {
-                    person.person.fnr()
-                }
-                list.add(
-                    OppgaveDto(
-                        status = status,
-                        behandlingId = oppgave.behandlingId,
-                        saksnummer = oppgave.fagsakSaksnummer,
-                        journalpostId = oppgave.journalpostId,
-                        navn = personNavn,
-                        system = oppgave.system,
-                        personnummer = personFnummer,
-                        behandlingstype = oppgave.behandlingType,
-                        fagsakYtelseType = oppgave.fagsakYtelseType,
-                        behandlingStatus = oppgave.behandlingStatus,
-                        erTilSaksbehandling = true,
-                        opprettetTidspunkt = oppgave.behandlingOpprettet,
-                        behandlingsfrist = oppgave.behandlingsfrist,
-                        eksternId = oppgave.eksternId,
-                        tilBeslutter = oppgave.tilBeslutter,
-                        utbetalingTilBruker = oppgave.utbetalingTilBruker,
-                        selvstendigFrilans = oppgave.selvstendigFrilans,
-                        søktGradering = oppgave.søktGradering,
-                        avklarArbeidsforhold = oppgave.avklarArbeidsforhold,
-                        merknad = hentAktivMerknad(oppgave.eksternId.toString())
-                    )
-                )
-            }
-        }
-        return list
-    }
-
-    private suspend fun lagFlyttetReservasjonDto(reservasjon: Reservasjon.Flyttet) =
-        FlyttetReservasjonDto(
-            reservasjon.flyttetTidspunkt,
-            reservasjon.flyttetAv,
-            saksbehandlerRepository.finnSaksbehandlerMedIdent(reservasjon.flyttetAv)?.navn ?: reservasjon.flyttetAv,
-            reservasjon.begrunnelse
-        )
-
-    private suspend fun tilgangTilSak(oppgave: Oppgave): Boolean {
-        if (!pepClient.harTilgangTilOppgave(oppgave)) {
-            reservasjonRepository.lagre(oppgave.eksternId, true) {
-                it!!.reservertTil = null
-                runBlocking { saksbehandlerRepository.fjernReservasjon(it.reservertAv, it.oppgave) }
-                it
-            }
-            settSkjermet(oppgave)
-            oppgaveKøRepository.hent().forEach { oppgaveKø ->
-                oppgaveKøRepository.lagre(oppgaveKø.id) {
-                    it!!.leggOppgaveTilEllerFjernFraKø(
-                        oppgave,
-                        reservasjonRepository,
-                        oppgaveRepositoryV2.hentMerknader(oppgave.eksternId.toString())
-                    )
-                    it
-                }
-            }
-            return false
-        }
-        return true
-    }
-
     suspend fun sokSaksbehandler(søkestreng: String): Saksbehandler {
         val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere()
 
@@ -1081,6 +976,10 @@ class OppgaveTjeneste constructor(
                 oppgaverSomErBlokert,
                 prioriterteOppgaver
             )
+        }
+
+        if (oppgaverSomErBlokert.size > 0) {
+            log.info("OppgaveFraKø: Oppgaver som er blokkert: ${oppgaverSomErBlokert.size}")
         }
 
         val reservasjoner = lagReservasjoner(iderPåOppgaverSomSkalBliReservert, brukerident, null)
