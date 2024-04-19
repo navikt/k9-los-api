@@ -10,6 +10,7 @@ import kotliquery.using
 import no.nav.k9.los.domene.lager.oppgave.Reservasjon
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.modell.OppgaveKø
+import no.nav.k9.los.eventhandler.taTiden
 import no.nav.k9.los.tjenester.innsikt.Databasekall
 import no.nav.k9.los.tjenester.sse.RefreshKlienter.sendOppdaterReserverte
 import no.nav.k9.los.tjenester.sse.SseEvent
@@ -93,19 +94,22 @@ class ReservasjonRepository(
         }
         saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
         val oppgave = oppgaveRepository.hent(reservasjon.oppgave)
+        val merknader = oppgaveRepositoryV2.hentAlleMerknader()
+            .groupBy(keySelector = { it.eksternReferanse }, valueTransform = { it.merknad } )
+
         var fjernetFraAntallKøer = 0
         oppgaveKøer.forEach { oppgaveKø ->
             if (oppgaveKø.leggOppgaveTilEllerFjernFraKø(
                     oppgave,
                     this,
-                    oppgaveRepositoryV2.hentMerknader(reservasjon.oppgave.toString())
+                    merknader.getOrDefault(reservasjon.oppgave.toString(), emptyList())
                 )
             ) {
                 oppgaveKøRepository.lagreIkkeTaHensyn(oppgaveKø.id) {
                     it!!.leggOppgaveTilEllerFjernFraKø(
                         oppgave = oppgave,
                         reservasjonRepository = this,
-                        merknader = oppgaveRepositoryV2.hentMerknader(reservasjon.oppgave.toString())
+                        merknader = merknader.getOrDefault(reservasjon.oppgave.toString(), emptyList())
                     )
                     it
                 }
