@@ -317,17 +317,12 @@ class ReservasjonV3Repository(
         utløperInnen: LocalDateTime
     ): List<String> {
         return transactionalManager.transaction { tx ->
-            //TODO denne fungerer eksplisitt kun for oppgave-v1 ('legacy')
+            //TODO denne fungerer eksplisitt kun for oppgave-v1
             tx.run(
                 queryOf(
-                    """
-                    select substring(reservasjonsnokkel, length('legacy_')+1) ekstern_id
-                     from reservasjon_v3 r
-                     where
-                                reservasjonsnokkel like 'legacy_%'
-                        and not annullert_for_utlop
-                        and     gyldig_tidsrom @> :gyldig_paa ::timestamp
-                        and not gyldig_tidsrom @> :ikke_gyldig_paa ::timestamp
+                    """ select id from reservasjon where 
+                             ((data -> 'reservasjoner' -> -1) ->> 'reservertTil')::timestamp > :gyldig_paa
+                         and ((data -> 'reservasjoner' -> -1) ->> 'reservertTil')::timestamp < :ikke_gyldig_paa  
                 """.trimIndent(),
                     mapOf(
                         "gyldig_paa" to gyldigPåTidspunkt.truncatedTo(ChronoUnit.MICROS),
