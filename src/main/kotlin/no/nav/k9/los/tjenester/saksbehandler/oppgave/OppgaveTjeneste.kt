@@ -69,15 +69,18 @@ class OppgaveTjeneste constructor(
                         it.aksjonspunkter.beslutterAp()?.opprettetTidspunkt ?: it.behandlingOpprettet
                     }
             }
-
-            ReservasjonRepository.RESERVASJON_YTELSE_LOG
-                .info("sortering av beslutterkø med {} oppgaver tok {} ms", oppgaver.size, tid)
+            ReservasjonRepository.RESERVASJON_YTELSE_LOG.info("sortering av beslutterkø med {} oppgaver tok {} ms", oppgaver.size, tid)
             return oppgaver.take(20)
         }
 
         if (oppgaveKø.sortering == KøSortering.FEILUTBETALT) {
-            val oppgaver = oppgaveRepository.hentOppgaver(oppgaveKø.oppgaverOgDatoer.map { it.id })
-            return oppgaver.sortedByDescending { it.feilutbetaltBeløp }
+            val oppgaver: List<Oppgave>
+            val tid = measureTimeMillis {
+                oppgaver = oppgaveRepository.hentOppgaver(oppgaveKø.oppgaverOgDatoer.map { it.id })
+                    .sortedByDescending { it.feilutbetaltBeløp }
+            }
+            ReservasjonRepository.RESERVASJON_YTELSE_LOG.info("sortering av tilbakekrevingkø med {} oppgaver tok {} ms", oppgaver.size, tid)
+            return oppgaver
         }
 
         log.info("Køen ${oppgaveKø.id} har ${oppgaveKø.oppgaverOgDatoer.size} oppgaver")
