@@ -329,7 +329,7 @@ class ReservasjonV3Repository(
                         "ikke_gyldig_paa" to utløperInnen.truncatedTo(ChronoUnit.MICROS),
                     )
                 ).map { row ->
-                    row.string("ekstern_id")
+                    row.string("id")
                 }.asList
             )
         }
