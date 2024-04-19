@@ -228,6 +228,8 @@ class OppgaveRepository(
             return emptyList()
         }
 
+        val t0 = System.currentTimeMillis()
+
         val session = sessionOf(dataSource)
         val json: List<String> = using(session) {
 
@@ -249,6 +251,7 @@ class OppgaveRepository(
                     }.asList
             )
         }
+        val t1 = System.currentTimeMillis()
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
         val resultat = json.filter { it.indexOf("oppgaver") == -1 } //TODO hvorfor?
@@ -256,7 +259,9 @@ class OppgaveRepository(
             .toList()
             .sortedBy { oppgave -> oppgave.behandlingOpprettet } //TODO burde gjøre sortering utenfor, siden det ulike domeneregler for sortering
 
-        log.info("Hentet ${resultat.size} oppgaver. Etterspurte med ${oppgaveider.toSet().size} uuider. Hadde ${json.size} oppgaver før filtrering mot teksten 'oppgaver'")
+        val t2 = System.currentTimeMillis()
+
+        log.info("Hentet ${resultat.size} oppgaver. Etterspurte med ${oppgaveider.toSet().size} uuider. Hadde ${json.size} oppgaver før filtrering mot teksten 'oppgaver'. Brukte ${t1-t0} ms på spørring og ${t2-t1} ms på deserialisering")
 
         return resultat
     }
