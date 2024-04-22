@@ -5,7 +5,6 @@ interface IIdToken {
     val jwt: JWTToken?
     fun getName(): String
     fun getUsername(): String
-    fun getSubject() : String
     fun kanBehandleKode6(): Boolean
     fun kanBehandleKode7(): Boolean
     fun kanBehandleEgneAnsatte(): Boolean

@@ -9,6 +9,7 @@ import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.ktor.metrics.Operation
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
+import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
 import no.nav.k9.los.integrasjon.rest.NavHeaders
 import no.nav.k9.los.integrasjon.rest.idToken
 import no.nav.k9.los.utils.Cache
@@ -25,7 +26,8 @@ import kotlin.coroutines.coroutineContext
 class PdlService constructor(
     baseUrl: URI,
     accessTokenClient: AccessTokenClient,
-    scope: String
+    scope: String,
+    val azureGraphService : IAzureGraphService
 ) : IPdlService {
     private val log: Logger = LoggerFactory.getLogger(PdlService::class.java)
     private val scopes = setOf(scope)
@@ -50,7 +52,8 @@ class PdlService constructor(
             graphqlQueryHentPerson,
             mapOf("ident" to aktorId)
         )
-        val saksbehandlerIdent = coroutineContext.idToken().getSubject()
+
+        val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
         val cacheKey = AktørIdTilPersonCacheKey(saksbehandlerIdent, aktorId)
         val cachedObject = aktørIdTilPersonCache.get(cacheKey)
         if (cachedObject != null) {
@@ -122,7 +125,7 @@ class PdlService constructor(
             )
         )
 
-        val saksbehandlerIdent = coroutineContext.idToken().getSubject()
+        val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
         val cacheKey = FrnTilAktørIdCacheKey(saksbehandlerIdent, fnummer)
         val cachedObject = fnrTilAktørIdCache.get(cacheKey)
         if (cachedObject != null) {

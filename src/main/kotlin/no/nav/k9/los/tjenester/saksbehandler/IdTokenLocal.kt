@@ -11,5 +11,4 @@ data class IdTokenLocal(
     override fun kanBehandleKode7(): Boolean = true
     override fun kanBehandleEgneAnsatte(): Boolean = true
     override fun erOppgavebehandler(): Boolean = true
-    override fun getSubject(): String = "Z000001"
 }
