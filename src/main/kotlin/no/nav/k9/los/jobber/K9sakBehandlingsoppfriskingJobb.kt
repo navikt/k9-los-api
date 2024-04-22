@@ -28,9 +28,9 @@ class K9sakBehandlingsoppfriskingJobb(
     val configuration: Configuration,
 
     //domenespesifikk konfigurasjon som tilpasses etter erfaringer i prod
-    val antallFraHverKø: Int = 2,
+    val antallFraHverKø: Int = 5,
     val ignorerReserverteOppgaverSomUtløperEtter : Duration = Duration.ofDays(1),
-    val maksAntallReserverteTilRefresh: Int = 50, //midlertidig begrensning til vi får erfaring fra prod
+    val maksAntallReserverteTilRefresh: Int = 250, //midlertidig begrensning til vi får erfaring fra prod
 
     //state
     var sisteRefresh : LocalDateTime? = null
