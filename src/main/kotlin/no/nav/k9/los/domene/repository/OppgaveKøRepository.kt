@@ -2,6 +2,7 @@ package no.nav.k9.los.domene.repository
 
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
+import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
@@ -98,7 +99,8 @@ class OppgaveKøRepository(
         }?.let { LosObjectMapper.instance.readValue(it, OppgaveKø::class.java) }
             ?: throw IllegalStateException("Fant ikke oppgavekø med id $id")
 
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }.increment()
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
 
         return kø.takeIf { ignorerSkjerming || kø.kode6 == pepClient.harTilgangTilKode6() }
             ?: throw IllegalStateException("Klarte ikke å hente oppgavekø med id $id")
@@ -203,8 +205,10 @@ class OppgaveKøRepository(
                         values (:id, :data :: jsonb, :skjermet)
                         on conflict (id) do update
                         set data = :data :: jsonb
-                     """, mapOf("id" to køUUID.toString(),
-                            "data" to LosObjectMapper.instance.writeValueAsString(oppgaveKø))
+                     """, mapOf(
+                            "id" to køUUID.toString(),
+                            "data" to LosObjectMapper.instance.writeValueAsString(oppgaveKø)
+                        )
                     ).asUpdate
                 )
 
@@ -224,59 +228,61 @@ class OppgaveKøRepository(
         uuid: UUID,
         f: (OppgaveKø?) -> OppgaveKø
     ) {
+        using(sessionOf(dataSource)) { session ->
+            session.transaction { tx -> lagreIkkeTaHensyn(tx, uuid, f) }
+        }
+    }
 
-        var hintRefresh = false
-        var gjennomførteTransaksjon = true
-        using(sessionOf(dataSource)) { it ->
-            it.transaction { tx ->
-                val gammelJson = tx.run(
-                    queryOf(
-                        "select data from oppgaveko where id = :id  for update",
-                        mapOf("id" to uuid.toString())
-                    )
-                        .map { row ->
-                            row.string("data")
-                        }.asSingle
-                )
-                val første20OppgaverSomVar: List<OppgaveIdMedDato>
-                val forrigeOppgavekø: OppgaveKø?
-                val oppgaveKø = if (!gammelJson.isNullOrEmpty()) {
-                    forrigeOppgavekø = LosObjectMapper.instance.readValue(gammelJson, OppgaveKø::class.java)
-                    første20OppgaverSomVar = forrigeOppgavekø.oppgaverOgDatoer.take(20)
-                    f(forrigeOppgavekø)
-                } else {
-                    første20OppgaverSomVar = listOf()
-                    f(null)
-                }
-                //Sorter oppgaver
-                oppgaveKø.oppgaverOgDatoer.sortBy { it.dato }
-                hintRefresh = første20OppgaverSomVar != oppgaveKø.oppgaverOgDatoer.take(20)
-                val json = LosObjectMapper.instance.writeValueAsString(oppgaveKø)
-                if (json == gammelJson) {
-                    log.info("Ingen endring i oppgavekø " + oppgaveKø.navn)
-                    gjennomførteTransaksjon = false
-                    return@transaction
-                }
-                tx.run(
-                    queryOf(
-                        """
+    fun lagreIkkeTaHensyn(
+        tx: TransactionalSession,
+        uuid: UUID,
+        f: (OppgaveKø?) -> OppgaveKø
+    ) {
+        val gammelJson = tx.run(
+            queryOf(
+                "select data from oppgaveko where id = :id  for update",
+                mapOf("id" to uuid.toString())
+            )
+                .map { row ->
+                    row.string("data")
+                }.asSingle
+        )
+        val første20OppgaverSomVar: List<OppgaveIdMedDato>
+        val forrigeOppgavekø: OppgaveKø?
+        val oppgaveKø = if (!gammelJson.isNullOrEmpty()) {
+            forrigeOppgavekø = LosObjectMapper.instance.readValue(gammelJson, OppgaveKø::class.java)
+            første20OppgaverSomVar = forrigeOppgavekø.oppgaverOgDatoer.take(20)
+            f(forrigeOppgavekø)
+        } else {
+            første20OppgaverSomVar = listOf()
+            f(null)
+        }
+        //Sorter oppgaver
+        oppgaveKø.oppgaverOgDatoer.sortBy { it.dato }
+        val hintRefresh = første20OppgaverSomVar != oppgaveKø.oppgaverOgDatoer.take(20)
+        val json = LosObjectMapper.instance.writeValueAsString(oppgaveKø)
+        if (json == gammelJson) {
+            log.info("Ingen endring i oppgavekø " + oppgaveKø.navn)
+        } else {
+            tx.run(
+                queryOf(
+                    """
                         insert into oppgaveko as k (id, data, skjermet)
                         values (:id, :data :: jsonb, :skjermet)
                         on conflict (id) do update
                         set data = :data :: jsonb
                      """, mapOf("id" to uuid.toString(), "data" to json)
-                    ).asUpdate
-                )
-
-            }
-        }
-
-        if (hintRefresh) {
-            refreshKlienter.sendOppdaterTilBehandling(uuid)
-        }
-        if (gjennomførteTransaksjon) {
+                ).asUpdate
+            )
             Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
                 .increment()
+        }
+
+
+        if (hintRefresh) {
+            runBlocking {
+                refreshKlienter.sendOppdaterTilBehandling(uuid)
+            }
         }
     }
 

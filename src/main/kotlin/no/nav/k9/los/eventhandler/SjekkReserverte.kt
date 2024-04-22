@@ -15,6 +15,6 @@ fun sjekkReserverteJobb(
         initialDelay = 0, period = 900 * 1000
     ) {
         val reservasjoner = saksbehandlerRepository.hentAlleSaksbehandlereIkkeTaHensyn().flatMap { it.reservasjoner }
-        runBlocking { reservasjonRepository.hent(reservasjoner.toSet()) }
+        runBlocking { reservasjonRepository.hentOgFjernInaktiveReservasjoner(reservasjoner.toSet()) }
     }
 }

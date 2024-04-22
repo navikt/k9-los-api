@@ -3,6 +3,7 @@ package no.nav.k9.los.domene.repository
 import com.fasterxml.jackson.core.type.TypeReference
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
+import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
@@ -101,20 +102,26 @@ class OppgaveRepository(
     }
 
     fun hentHvis(uuid: UUID): Oppgave? {
+        return using(sessionOf(dataSource)) { session ->
+            session.transaction { tx ->
+                hentHvis(tx, uuid)
+            }
+        }
+    }
+
+    fun hentHvis(tx: TransactionalSession, uuid: UUID): Oppgave? {
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
 
-        val json: String? = using(sessionOf(dataSource)) {
-            it.run(
-                queryOf(
-                    "select data from oppgave where id = :id",
-                    mapOf("id" to uuid.toString())
-                )
-                    .map { row ->
-                        row.string("data")
-                    }.asSingle
+        val json: String? = tx.run(
+            queryOf(
+                "select data from oppgave where id = :id",
+                mapOf("id" to uuid.toString())
             )
-        }
+                .map { row ->
+                    row.string("data")
+                }.asSingle
+        )
         return if (json != null) {
             LosObjectMapper.instance.readValue(json, Oppgave::class.java)
         } else null
@@ -220,37 +227,46 @@ class OppgaveRepository(
         return (søker || pleietrengende)
     }
 
-    fun hentOppgaver(oppgaveider: Collection<UUID>): List<Oppgave> {
-
-        val oppgaveiderList = oppgaveider.toList()
+    fun hentOppgaver(tx: TransactionalSession, oppgaveider: Collection<UUID>): List<Oppgave> {
         if (oppgaveider.isEmpty()) {
             log.info("Spurte ikke etter noen oppgaveider")
             return emptyList()
         }
+        return doHentOppgaver(tx, oppgaveider)
+    }
 
-        val t0 = System.currentTimeMillis()
-
-        val session = sessionOf(dataSource)
-        val json: List<String> = using(session) {
-
-            val spørring : String =
-                "select data from oppgave " +
-                        "where id in (${
-                            IntRange(0, oppgaveiderList.size - 1).joinToString { t -> ":p$t" }
-                        })"
-            val parametre = IntRange(
-                0,
-                oppgaveiderList.size - 1
-            ).associate { t -> "p$t" to oppgaveiderList[t].toString() as Any }
-
-            //language=PostgreSQL
-            it.run(
-                queryOf(spørring, parametre)
-                    .map { row ->
-                        row.string("data")
-                    }.asList
-            )
+    fun hentOppgaver(oppgaveider: Collection<UUID>): List<Oppgave> {
+        if (oppgaveider.isEmpty()) {
+            log.info("Spurte ikke etter noen oppgaveider")
+            return emptyList()
         }
+        return using(sessionOf(dataSource)) {
+            it.transaction { tx ->
+                doHentOppgaver(tx, oppgaveider)
+            }
+        }
+    }
+
+    private fun doHentOppgaver(tx: TransactionalSession, oppgaveider: Collection<UUID>): List<Oppgave> {
+        val oppgaveiderList = oppgaveider.toList()
+        val t0 = System.currentTimeMillis()
+        val spørring: String =
+            "select data from oppgave " +
+                    "where id in (${
+                        IntRange(0, oppgaveiderList.size - 1).joinToString { t -> ":p$t" }
+                    })"
+        val parametre = IntRange(
+            0,
+            oppgaveiderList.size - 1
+        ).associate { t -> "p$t" to oppgaveiderList[t].toString() as Any }
+
+        //language=PostgreSQL
+        val json: List<String> = tx.run(
+            queryOf(spørring, parametre)
+                .map { row ->
+                    row.string("data")
+                }.asList
+        )
         val t1 = System.currentTimeMillis()
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
@@ -261,7 +277,7 @@ class OppgaveRepository(
 
         val t2 = System.currentTimeMillis()
 
-        log.info("Hentet ${resultat.size} oppgaver. Etterspurte med ${oppgaveider.toSet().size} uuider. Hadde ${json.size} oppgaver før filtrering mot teksten 'oppgaver'. Brukte ${t1-t0} ms på spørring og ${t2-t1} ms på deserialisering")
+        log.info("Hentet ${resultat.size} oppgaver. Etterspurte med ${oppgaveider.toSet().size} uuider. Hadde ${json.size} oppgaver før filtrering mot teksten 'oppgaver'. Brukte ${t1 - t0} ms på spørring og ${t2 - t1} ms på deserialisering")
 
         return resultat
     }
@@ -607,7 +623,7 @@ class OppgaveRepository(
 
     internal fun hentAktiveK9sakOppgaver(): List<UUID> {
         val t0 = System.currentTimeMillis()
-        val resulat : List<UUID> = using(sessionOf(dataSource)) {
+        val resulat: List<UUID> = using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
                     """  select (data ->> 'eksternId')::uuid as ekstern_id from oppgave
