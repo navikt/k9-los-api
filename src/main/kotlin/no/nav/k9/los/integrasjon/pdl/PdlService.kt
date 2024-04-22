@@ -67,7 +67,8 @@ class PdlService constructor(
                 HttpHeaders.Accept to "application/json",
                 HttpHeaders.ContentType to "application/json",
                 NavHeaders.Tema to "OMS",
-                NavHeaders.CallId to callId
+                NavHeaders.CallId to callId,
+                NavHeaders.Behandlingsnummer to Behandlingsnummer.entries.map { it.behandlingsnummer }
             )
 
         val json = Retry.retry(
@@ -140,7 +141,8 @@ class PdlService constructor(
                 HttpHeaders.Accept to "application/json",
                 HttpHeaders.ContentType to "application/json",
                 NavHeaders.Tema to "OMS",
-                NavHeaders.CallId to callId
+                NavHeaders.CallId to callId,
+                NavHeaders.Behandlingsnummer to Behandlingsnummer.entries.map { it.behandlingsnummer }
             )
 
         val json = Retry.retry(
