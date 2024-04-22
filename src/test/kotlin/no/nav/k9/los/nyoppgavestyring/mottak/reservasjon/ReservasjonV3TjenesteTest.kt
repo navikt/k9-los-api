@@ -77,11 +77,11 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
         assertTrue(reservasjon.gyldigTil.isAfter(LocalDateTime.now()))
         assertEquals("test1", reservasjon.reservasjonsnøkkel)
 
-        val reservasjoner =
+        val reservasjonerV3MedOppgaver =
             reservasjonV3Tjeneste.hentReservasjonerForSaksbehandler(saksbehandler1.id!!)
 
-        assertEquals(1, reservasjoner.size)
-        assertEquals(saksbehandler1.id, reservasjoner[0].reservertAv)
+        assertEquals(1, reservasjonerV3MedOppgaver.size)
+        assertEquals(saksbehandler1.id, reservasjonerV3MedOppgaver[0].reservasjonV3.reservertAv)
     }
 
 

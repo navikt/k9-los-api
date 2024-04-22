@@ -3,10 +3,10 @@ package no.nav.k9.los.domene.repository
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import no.nav.k9.los.domene.modell.K9TilbakeModell
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventTilbakeDto
 import no.nav.k9.los.tjenester.innsikt.Databasekall
+import no.nav.k9.los.utils.LosObjectMapper
 import java.util.*
 import java.util.concurrent.atomic.LongAdder
 import javax.sql.DataSource
@@ -25,19 +25,20 @@ class BehandlingProsessEventTilbakeRepository(private val dataSource: DataSource
                     }.asSingle
             )
         }
-        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){ LongAdder() }.increment()
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
         if (json.isNullOrEmpty()) {
             return K9TilbakeModell(mutableListOf())
         }
-        val modell = objectMapper().readValue(json, K9TilbakeModell::class.java)
+        val modell = LosObjectMapper.instance.readValue(json, K9TilbakeModell::class.java)
 
-        return K9TilbakeModell(  modell.eventer.sortedBy { it.eventTid }.toMutableList())
+        return K9TilbakeModell(modell.eventer.sortedBy { it.eventTid }.toMutableList())
     }
 
     fun lagre(
         event: BehandlingProsessEventTilbakeDto
     ): K9TilbakeModell {
-        val json = objectMapper().writeValueAsString(event)
+        val json = LosObjectMapper.instance.writeValueAsString(event)
 
         val id = event.eksternId.toString()
         val out = using(sessionOf(dataSource)) {
@@ -64,31 +65,10 @@ class BehandlingProsessEventTilbakeRepository(private val dataSource: DataSource
             }
 
         }
-        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
-        val modell = objectMapper().readValue(out!!, K9TilbakeModell::class.java)
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
+        val modell = LosObjectMapper.instance.readValue(out!!, K9TilbakeModell::class.java)
         return modell.copy(eventer = modell.eventer.sortedBy { it.eventTid })
-    }
-
-    fun hentAlleEventerIder(
-    ): List<String> {
-
-        val ider = using(sessionOf(dataSource)) {
-            it.transaction { tx ->
-                tx.run(
-                    queryOf(
-                        "select id from behandling_prosess_events_tilbake",
-                        mapOf()
-                    )
-                        .map { row ->
-                            row.string("id")
-                   }.asList
-                )
-            }
-
-        }
-        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
-        return ider
-
     }
 
 }

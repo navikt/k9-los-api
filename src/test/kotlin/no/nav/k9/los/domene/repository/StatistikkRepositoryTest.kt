@@ -118,18 +118,10 @@ class StatistikkRepositoryTest : AbstractK9LosIntegrationTest() {
             personnummer = "25678098976",
             saksnummer = ""
         )
-        statistikkRepository.lagreBehandling("238909876"){
-            oppgave
-        }
-        statistikkRepository.lagreBehandling("238909876"){
-            oppgave2
-        }
-        statistikkRepository.lagreBehandling("238909876"){
-            oppgave3
-        }
-        statistikkRepository.lagreBehandling("238909876"){
-            oppgave4
-        }
+        statistikkRepository.lagreBehandling("238909876", oppgave)
+        statistikkRepository.lagreBehandling("238909876", oppgave2)
+        statistikkRepository.lagreBehandling("238909876", oppgave3)
+        statistikkRepository.lagreBehandling("238909876", oppgave4)
         val sistBehandlede = statistikkRepository.hentBehandlinger("238909876")
 
         assertSame(3, sistBehandlede.size)

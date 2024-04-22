@@ -13,7 +13,6 @@ import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.ktor.metrics.Operation
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
-import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.integrasjon.audit.*
@@ -21,6 +20,7 @@ import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
 import no.nav.k9.los.integrasjon.rest.NavHeaders
 import no.nav.k9.los.utils.Cache
 import no.nav.k9.los.utils.CacheObject
+import no.nav.k9.los.utils.LosObjectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -42,7 +42,7 @@ class PepClient constructor(
 
     private val url = config.abacEndpointUrl
     private val log: Logger = LoggerFactory.getLogger(PepClient::class.java)
-    private val cache = Cache<Boolean>()
+    private val cache = Cache<String, Boolean>()
 
     override suspend fun erOppgaveStyrer(): Boolean {
         val requestBuilder = XacmlRequestBuilder()
@@ -182,16 +182,15 @@ class PepClient constructor(
         return evaluate(requestBuilder)
     }
 
-    override fun harTilgangTilKode6(ident: String): Boolean {
+    override suspend fun harTilgangTilKode6(ident: String): Boolean {
         val requestBuilder = XacmlRequestBuilder()
             .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
             .addResourceAttribute(RESOURCE_TYPE, TILGANG_TIL_KODE_6)
             .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
             .addAccessSubjectAttribute(SUBJECTID, ident)
             .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
-        return runBlocking {
-            evaluate(requestBuilder)
-        }
+
+            return evaluate(requestBuilder)
     }
 
     override suspend fun harTilgangTilKode6(): Boolean {
@@ -359,7 +358,7 @@ class PepClient constructor(
                 }
                 //  log.info("abac result: $json \n\n $xacmlJson\n\n" + httpRequest.toString())
                 try {
-                    objectMapper().readValue<Response>(json).response[0].decision == "Permit"
+                    LosObjectMapper.instance.readValue<Response>(json).response[0].decision == "Permit"
                 } catch (e: Exception) {
                     log.error(
                         "Feilet deserialisering", e

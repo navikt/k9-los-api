@@ -5,6 +5,7 @@ import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ManglerTilgangException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import kotlin.concurrent.thread
@@ -43,6 +44,7 @@ class ReservasjonKonverteringJobb(
 
         for (gammelReservasjonUuid in reservasjonIder) {
             val reservasjonV1 = reservasjonRepository.hent(gammelReservasjonUuid)
+            loggFremgangForHver100(slettetReservasjon, "Hoppet over $slettetReservasjon reservasjoner")
             if (!reservasjonV1.erAktiv()) {
                 slettetReservasjon++
                 continue //Logisk slettet reservasjon. Migreres ikke
@@ -58,13 +60,19 @@ class ReservasjonKonverteringJobb(
                 }
             }
 
-            reservasjonOversetter.taNyReservasjonFraGammelKontekst(
-                oppgaveV1 = oppgaveV1,
-                reserverForSaksbehandlerId = saksbehandlerIdSomHolderReservasjonV1,
-                reservertTil = reservasjonV1.reservertTil!!,
-                utførtAvSaksbehandlerId = flyttetAvSaksbehandlerId ?: saksbehandlerIdSomHolderReservasjonV1,
-                kommentar = reservasjonV1.begrunnelse,
-            )
+            try {
+                reservasjonOversetter.taNyReservasjonFraGammelKontekst(
+                    oppgaveV1 = oppgaveV1,
+                    reserverForSaksbehandlerId = saksbehandlerIdSomHolderReservasjonV1,
+                    reservertTil = reservasjonV1.reservertTil!!,
+                    utførtAvSaksbehandlerId = flyttetAvSaksbehandlerId ?: saksbehandlerIdSomHolderReservasjonV1,
+                    kommentar = reservasjonV1.begrunnelse,
+                )
+            } catch (e: ManglerTilgangException) {
+                log.warn(e.message)
+                slettetReservasjon++
+                continue
+            }
             reservasjonTeller++
             loggFremgangForHver100(reservasjonTeller, "Konvertert $reservasjonTeller reservasjoner")
         }

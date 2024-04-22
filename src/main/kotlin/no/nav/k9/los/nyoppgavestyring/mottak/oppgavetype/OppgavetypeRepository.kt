@@ -22,7 +22,7 @@ class OppgavetypeRepository(
     ) {
 
     private val log = LoggerFactory.getLogger(OppgavetypeRepository::class.java)
-    private val oppgavetypeCache = Cache<Oppgavetyper>()
+    private val oppgavetypeCache = Cache<String, Oppgavetyper>()
 
     fun hent(område: Område, definisjonskilde: String, tx: TransactionalSession): Oppgavetyper {
         val oppgavetyper = hent(område, tx)
@@ -143,6 +143,7 @@ class OppgavetypeRepository(
 
     fun leggTil(oppgavetyper: Oppgavetyper, tx: TransactionalSession) {
         oppgavetyper.oppgavetyper.forEach { oppgavetype ->
+            log.info("legger til oppgavetype: ${oppgavetype.eksternId} med behandlingsUrlTemplate: ${oppgavetype.oppgavebehandlingsUrlTemplate}")
             val oppgavetypeId = tx.run(
                 queryOf(
                     """
@@ -193,12 +194,13 @@ class OppgavetypeRepository(
     }
 
     fun endre(endring: OppgavetypeEndring, tx: TransactionalSession) {
-        val oppgaveFinnes = sjekkOmOppgaverFinnes(endring.oppgavetype.id!!, tx)
+        val oppgavetypeId = hentOppgavetype(endring.oppgavetype.område, endring.oppgavetype.eksternId, tx).id!!
+        val oppgaveFinnes = sjekkOmOppgaverFinnes(oppgavetypeId, tx)
         endring.felterSomSkalLeggesTil.forEach { felt ->
             if (oppgaveFinnes && felt.påkrevd && felt.defaultverdi.isNullOrEmpty()) {
                 throw MissingDefaultException("Kan ikke legge til påkrevd på eksisterende oppgave uten å oppgi defaultverdi")
             }
-            leggTilOppgavefelt(tx, felt, endring.oppgavetype.id)
+            leggTilOppgavefelt(tx, felt, oppgavetypeId)
         }
 
         endring.felterSomSkalFjernes.forEach { felt ->
@@ -215,6 +217,7 @@ class OppgavetypeRepository(
     }
 
     private fun oppdaterOppgavebehandlingsUrlTemplate(endring: OppgavetypeEndring, tx: TransactionalSession) {
+        log.info("lagrer urltemplate: ${endring.oppgavetype.oppgavebehandlingsUrlTemplate} på oppgavetype ${endring.oppgavetype.eksternId}")
         tx.run(
             queryOf(
                 """

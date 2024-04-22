@@ -29,15 +29,6 @@ class ReservasjonOversetter(
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste
 ) {
 
-    fun hentV1OppgaveFraReservasjon(
-        reservasjon: ReservasjonV3
-    ): Oppgave? {
-        if (reservasjon.reservasjonsnøkkel.startsWith("legacy_")) {
-            return oppgaveV1Repository.hent(UUID.fromString(reservasjon.reservasjonsnøkkel.substring(7)))
-        } else {
-            return null
-        }
-    }
 
     fun hentReservasjonsnøkkelForOppgavenøkkel(
         oppgaveNøkkel: OppgaveNøkkelDto
@@ -141,14 +132,11 @@ class ReservasjonOversetter(
         kommentar: String?,
         tx: TransactionalSession,
     ): ReservasjonV3? {
-        val gyldigFra = if (reservertTil.isAfter(LocalDateTime.now())) {
-            LocalDateTime.now().minusHours(24).forskyvReservasjonsDatoBakover()
-        } else {
-            reservertTil.minusHours(24).forskyvReservasjonsDatoBakover()
-        }
+        check(reservertTil > LocalDateTime.now()) {"Reservert til er i fortiden: $reservertTil"}
+        val gyldigFra = LocalDateTime.now()
 
         if (beslutterErSaksbehandler(oppgave, reserverForSaksbehandlerId)) {
-            throw ManglerTilgangException("Saksbehandler kan ikke være beslutter på egen behandling")
+            throw ManglerTilgangException("Saksbehandler kan ikke være beslutter på egen behandling. Saksnummer: ${oppgave.fagsakSaksnummer}")
         }
 
         return reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(
@@ -182,22 +170,17 @@ class ReservasjonOversetter(
         kommentar: String?,
         tx: TransactionalSession,
     ): ReservasjonV3 {
-        val gyldigFra = if (reservertTil.isAfter(LocalDateTime.now())) {
-            LocalDateTime.now().minusHours(24).forskyvReservasjonsDatoBakover()
-        } else {
-            reservertTil.minusHours(24).forskyvReservasjonsDatoBakover()
-        }
+        check(reservertTil > LocalDateTime.now()) {"Reservert til er i fortiden: $reservertTil"}
+        val gyldigFra = LocalDateTime.now()
 
-        return runBlocking {
-            reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(
-                reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
-                reserverForId = reservertAvSaksbehandlerId,
-                gyldigFra = gyldigFra,
-                gyldigTil = reservertTil,
-                utføresAvId = utførtAvSaksbehandlerId ?: reservertAvSaksbehandlerId,
-                kommentar = kommentar ?: "",
-                tx = tx
-            )
-        }
+        return reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(
+            reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
+            reserverForId = reservertAvSaksbehandlerId,
+            gyldigFra = gyldigFra,
+            gyldigTil = reservertTil,
+            utføresAvId = utførtAvSaksbehandlerId ?: reservertAvSaksbehandlerId,
+            kommentar = kommentar ?: "",
+            tx = tx
+        )
     }
 }

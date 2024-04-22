@@ -29,7 +29,7 @@ class EventTilDtoMapper {
             aksjonspunktDefinisjon.aksjonspunktType == AksjonspunktType.AUTOPUNKT
         }.map { aksjonspunktDefinisjon -> aksjonspunktDefinisjon.kode }
 
-        internal fun lagOppgaveDto(event: KlagebehandlingProsessHendelse, losOpplysningerSomManglerIKlageDto: LosOpplysningerSomManglerIKlageDto, forrigeOppgave: OppgaveV3?) = OppgaveDto(
+        internal fun lagOppgaveDto(event: KlagebehandlingProsessHendelse, losOpplysningerSomManglerIKlageDto: LosOpplysningerSomManglerIKlageDto?, forrigeOppgave: OppgaveV3?) = OppgaveDto(
             id = event.eksternId.toString(),
             versjon = event.eventTid.toString(),
             område = "K9",
@@ -49,20 +49,20 @@ class EventTilDtoMapper {
                 }
             },
             endretTidspunkt = event.eventTid,
-            reservasjonsnøkkel = utledReservasjonsnøkkel(event, losOpplysningerSomManglerIKlageDto),
+            reservasjonsnøkkel = utledReservasjonsnøkkel(event),
             feltverdier = lagFeltverdier(event, losOpplysningerSomManglerIKlageDto, forrigeOppgave)
         )
 
-        private fun utledReservasjonsnøkkel(event: KlagebehandlingProsessHendelse, losOpplysningerSomManglerIKlageDto: LosOpplysningerSomManglerIKlageDto): String {
+        private fun utledReservasjonsnøkkel(event: KlagebehandlingProsessHendelse): String {
             return when (FagsakYtelseType.fraKode(event.ytelseTypeKode)) {
                 FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
                 FagsakYtelseType.PLEIEPENGER_NÆRSTÅENDE,
                 FagsakYtelseType.OMSORGSPENGER_KS,
                 FagsakYtelseType.OMSORGSPENGER_AO,
                 FagsakYtelseType.OPPLÆRINGSPENGER  -> if (erTilBeslutter(event)) {
-                    "K9_k_${event.ytelseTypeKode}_${losOpplysningerSomManglerIKlageDto.pleietrengendeAktørId}_beslutter"
+                    "K9_k_${event.ytelseTypeKode}_${event.aktørId}_beslutter"
                 } else {
-                    "K9_k_${event.ytelseTypeKode}_${losOpplysningerSomManglerIKlageDto.pleietrengendeAktørId}"
+                    "K9_k_${event.ytelseTypeKode}_${event.aktørId}"
                 }
 
                 else -> if (erTilBeslutter(event)) {
@@ -102,7 +102,7 @@ class EventTilDtoMapper {
 
         private fun lagFeltverdier(
             event: KlagebehandlingProsessHendelse,
-            losOpplysningerSomManglerIKlageDto: LosOpplysningerSomManglerIKlageDto,
+            losOpplysningerSomManglerIKlageDto: LosOpplysningerSomManglerIKlageDto?,
             forrigeOppgave: OppgaveV3?
         ): List<OppgaveFeltverdiDto> {
             val oppgaveFeltverdiDtos = mapEnkeltverdier(event, losOpplysningerSomManglerIKlageDto, forrigeOppgave)
@@ -199,7 +199,7 @@ class EventTilDtoMapper {
 
         private fun mapEnkeltverdier(
             event: KlagebehandlingProsessHendelse,
-            losOpplysningerSomManglerIKlageDto: LosOpplysningerSomManglerIKlageDto,
+            losOpplysningerSomManglerIKlageDto: LosOpplysningerSomManglerIKlageDto?,
             forrigeOppgave: OppgaveV3?
         ) = mutableListOf(
             OppgaveFeltverdiDto(
@@ -246,12 +246,6 @@ class EventTilDtoMapper {
                 nøkkel = "relatertPartAktorid",
                 verdi = event.relatertPartAktørId?.id
             ),
-            losOpplysningerSomManglerIKlageDto.pleietrengendeAktørId?.let {
-                OppgaveFeltverdiDto(
-                    nøkkel = "pleietrengendeAktorId",
-                    verdi = losOpplysningerSomManglerIKlageDto.pleietrengendeAktørId.aktørId
-                )
-            },
             OppgaveFeltverdiDto(
                 nøkkel = "ansvarligSaksbehandler",
                 verdi = event.ansvarligSaksbehandler ?: forrigeOppgave?.hentVerdi("ansvarligSaksbehandler")
@@ -283,12 +277,25 @@ class EventTilDtoMapper {
             OppgaveFeltverdiDto(
                 nøkkel = "helautomatiskBehandlet",
                 verdi = false.toString() //TODO: Påstand - klagesaker er alltid manuelt behandlet?
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "utenlandstilsnitt",
-                verdi = losOpplysningerSomManglerIKlageDto.isUtenlandstilsnitt.toString()
             )
-        ).filterNotNull().toMutableList()
+        ).apply {
+            if (losOpplysningerSomManglerIKlageDto != null) {
+                if (losOpplysningerSomManglerIKlageDto.pleietrengendeAktørId?.aktørId != null) {
+                    add(
+                        OppgaveFeltverdiDto(
+                            nøkkel = "pleietrengendeAktorId",
+                            verdi = losOpplysningerSomManglerIKlageDto.pleietrengendeAktørId.aktørId
+                        )
+                    )
+                }
+                add(
+                    OppgaveFeltverdiDto(
+                        nøkkel = "utenlandstilsnitt",
+                        verdi = losOpplysningerSomManglerIKlageDto.isUtenlandstilsnitt.toString()
+                    )
+                )
+            }
+        }.toMutableList()
 
         private fun utledAvventerSaksbehandler(
             harManueltAksjonspunkt: Boolean,

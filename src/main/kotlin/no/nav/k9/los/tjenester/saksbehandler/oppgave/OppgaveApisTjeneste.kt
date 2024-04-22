@@ -37,7 +37,7 @@ class OppgaveApisTjeneste(
          */
 
         // Fjernes når V1 skal vekk
-        val oppgaveStatusDto = oppgaveTjeneste.reserverOppgave(
+        oppgaveTjeneste.reserverOppgave(
             innloggetBruker.brukerIdent!!,
             oppgaveIdMedOverstyringDto.overstyrIdent,
             UUID.fromString(oppgaveNøkkel.oppgaveEksternId),
@@ -53,7 +53,7 @@ class OppgaveApisTjeneste(
             val reservasjonV3 = reservasjonOversetter.taNyReservasjonFraGammelKontekst(
                 oppgaveV1 = oppgaveV1Repository.hent(UUID.fromString(oppgaveNøkkel.oppgaveEksternId)),
                 reserverForSaksbehandlerId = reserverForSaksbehandler.id!!,
-                reservertTil = reserverFra.plusHours(24).forskyvReservasjonsDato(),
+                reservertTil = reserverFra.plusHours(48).forskyvReservasjonsDato(),
                 utførtAvSaksbehandlerId = innloggetBruker.id!!,
                 kommentar = oppgaveIdMedOverstyringDto.overstyrBegrunnelse ?: "",
             )!!
@@ -74,7 +74,7 @@ class OppgaveApisTjeneste(
                     gyldigFra = reserverFra,
                     utføresAvId = innloggetBruker.id!!,
                     kommentar = oppgaveIdMedOverstyringDto.overstyrBegrunnelse ?: "",
-                    gyldigTil = reserverFra.plusHours(24).forskyvReservasjonsDato(),
+                    gyldigTil = reserverFra.plusHours(48).forskyvReservasjonsDato(),
                     tx = tx
                 )
             }
@@ -115,7 +115,7 @@ class OppgaveApisTjeneste(
                 kommentar = reservasjonEndringDto.begrunnelse
             )
 
-        val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(nyReservasjon!!.reservertAv)
+        val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(nyReservasjon.reservasjonV3.reservertAv)
 
         return reservasjonV3DtoBuilder.byggReservasjonV3Dto(nyReservasjon, reservertAv)
     }
@@ -139,10 +139,10 @@ class OppgaveApisTjeneste(
                 reservasjonsnøkkel = reservasjonsnøkkel,
                 nyTildato = forlengReservasjonDto.nyTilDato,
                 utførtAvBrukerId = innloggetBruker.id!!,
-                kommentar = forlengReservasjonDto.kommentar ?: ""
+                kommentar = forlengReservasjonDto.kommentar
             )
 
-        val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(forlengetReservasjon!!.reservertAv)!!
+        val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(forlengetReservasjon.reservasjonV3.reservertAv)
 
         return reservasjonV3DtoBuilder.byggReservasjonV3Dto(forlengetReservasjon, reservertAv)
     }
@@ -202,11 +202,11 @@ class OppgaveApisTjeneste(
     }
 
     suspend fun hentReserverteOppgaverForSaksbehandler(saksbehandler: Saksbehandler): List<ReservasjonV3Dto> {
-        val reservasjoner =
+        val reservasjonerMedOppgaver =
             reservasjonV3Tjeneste.hentReservasjonerForSaksbehandler(saksbehandler.id!!)
 
-        return reservasjoner.map { reservasjon ->
-            reservasjonV3DtoBuilder.byggReservasjonV3Dto(reservasjon, saksbehandler)
+        return reservasjonerMedOppgaver.map { reservasjonMedOppgaver ->
+            reservasjonV3DtoBuilder.byggReservasjonV3Dto(reservasjonMedOppgaver, saksbehandler)
         }
     }
 }

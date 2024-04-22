@@ -152,7 +152,7 @@ class OppgaveKoTjeneste(
                     utføresAvId = innloggetBrukerId,
                     reservasjonsnøkkel = kandidatoppgave.reservasjonsnøkkel,
                     gyldigFra = LocalDateTime.now(),
-                    gyldigTil = LocalDateTime.now().plusHours(24).forskyvReservasjonsDato(),
+                    gyldigTil = LocalDateTime.now().plusHours(48).forskyvReservasjonsDato(),
                     kommentar = "",
                     tx = tx
                 )

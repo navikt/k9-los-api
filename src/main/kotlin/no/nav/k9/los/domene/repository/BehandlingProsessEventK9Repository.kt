@@ -4,9 +4,9 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import no.nav.k9.los.domene.modell.K9SakModell
 import no.nav.k9.los.tjenester.innsikt.Databasekall
+import no.nav.k9.los.utils.LosObjectMapper
 import java.util.*
 import java.util.concurrent.atomic.LongAdder
 import javax.sql.DataSource
@@ -15,23 +15,23 @@ import javax.sql.DataSource
 class BehandlingProsessEventK9Repository(private val dataSource: DataSource) {
 
     fun hent(uuid: UUID): K9SakModell {
-            val json: String? = using(sessionOf(dataSource)) {
-                it.run(
-                    queryOf(
-                        "select data from behandling_prosess_events_k9 where id = :id",
-                        mapOf("id" to uuid.toString())
-                    )
-                        .map { row ->
-                            row.string("data")
-                        }.asSingle
+        val json: String? = using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    "select data from behandling_prosess_events_k9 where id = :id",
+                    mapOf("id" to uuid.toString())
                 )
-            }
+                    .map { row ->
+                        row.string("data")
+                    }.asSingle
+            )
+        }
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
         if (json.isNullOrEmpty()) {
             return K9SakModell(mutableListOf())
         }
-        val modell = objectMapper().readValue(json, K9SakModell::class.java)
+        val modell = LosObjectMapper.instance.readValue(json, K9SakModell::class.java)
 
         return K9SakModell(modell.eventer.sortedBy { it.eventTid }.toMutableList())
     }
@@ -52,7 +52,7 @@ class BehandlingProsessEventK9Repository(private val dataSource: DataSource) {
         if (json.isNullOrEmpty()) {
             return K9SakModell(mutableListOf())
         }
-        val modell = objectMapper().readValue(json, K9SakModell::class.java)
+        val modell = LosObjectMapper.instance.readValue(json, K9SakModell::class.java)
 
         return K9SakModell(modell.eventer.sortedBy { it.eventTid }.toMutableList())
     }
@@ -92,14 +92,14 @@ class BehandlingProsessEventK9Repository(private val dataSource: DataSource) {
                 )
 
                 val modell = if (!run.isNullOrEmpty()) {
-                    val modell = objectMapper().readValue(run, K9SakModell::class.java)
+                    val modell = LosObjectMapper.instance.readValue(run, K9SakModell::class.java)
                     f(modell.copy(eventer = modell.eventer.sortedBy { it.eventTid }.toMutableList()))
                 } else {
                     f(null)
                 }
                 sortertModell =
                     modell.copy(eventer = (modell.eventer.toSet().toList().sortedBy { it.eventTid }.toMutableList()))
-                val json = objectMapper().writeValueAsString(sortertModell)
+                val json = LosObjectMapper.instance.writeValueAsString(sortertModell)
                 tx.run(
                     queryOf(
                         """
@@ -190,20 +190,4 @@ class BehandlingProsessEventK9Repository(private val dataSource: DataSource) {
         )
     }
 
-    fun lagreNy(uuid: UUID, modell: K9SakModell) {
-        using(sessionOf(dataSource)) {
-            it.transaction { tx ->
-                tx.run(
-                    queryOf(
-                        """
-                    insert into behandling_prosess_events_k9 as k (id, data)
-                    values (:id, :data :: jsonb)
-                    on conflict (id) do update
-                    set data = :data :: jsonb
-                 """, mapOf("id" to uuid.toString(), "data" to objectMapper().writeValueAsString(modell))
-                    ).asUpdate
-                )
-            }
-        }
-    }
 }

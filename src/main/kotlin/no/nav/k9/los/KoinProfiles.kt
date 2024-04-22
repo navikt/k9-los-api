@@ -34,12 +34,12 @@ import no.nav.k9.los.integrasjon.pdl.PdlServiceLocal
 import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonKonverteringJobb
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerKlientLocal
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerSystemKlient
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonKonverteringJobb
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository
@@ -55,12 +55,12 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.pep.PepCacheRepository
 import no.nav.k9.los.nyoppgavestyring.pep.PepCacheService
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
@@ -92,7 +92,8 @@ fun common(app: Application, config: Configuration) = module {
     single {
         NokkeltallTjeneste(
             oppgaveRepository = get(),
-            statistikkRepository = get()
+            statistikkRepository = get(),
+            nøkkeltallRepository = get(),
         )
     }
     single(named("oppgaveKøOppdatert")) {
@@ -165,6 +166,10 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         BehandlingProsessEventTilbakeRepository(get())
+    }
+
+    single {
+        NøkkeltallRepository(get())
     }
 
     single {
@@ -326,9 +331,7 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         ReservasjonV3DtoBuilder(
-            oppgaveRepositoryTxWrapper = get(),
             pdlService = get(),
-            reservasjonOversetter = get(),
             oppgaveTjeneste = get(),
         )
     }
@@ -433,10 +436,12 @@ fun common(app: Application, config: Configuration) = module {
             oppgavetypeTjeneste = get(),
             oppgaveV3Tjeneste = get(),
             config = get(),
-            oppgaveRepositoryV2 = get(),
             transactionalManager = get(),
             k9SakBerikerKlient = get(),
-            pepCacheService = get()
+            pepCacheService = get(),
+            oppgaveRepository = get(),
+            reservasjonV3Tjeneste = get(),
+
         )
     }
 
@@ -532,7 +537,8 @@ fun common(app: Application, config: Configuration) = module {
         ReservasjonV3Tjeneste(
             transactionalManager = get(),
             reservasjonV3Repository = get(),
-            oppgaveRepository = get(),
+            oppgaveV1Repository = get(),
+            oppgaveV3Repository = get(),
             pepClient = get(),
             saksbehandlerRepository = get(),
             auditlogger = Auditlogger(config),

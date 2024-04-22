@@ -5,6 +5,7 @@ import kotliquery.queryOf
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import org.postgresql.util.PSQLException
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 
 class ReservasjonV3Repository(
     private val transactionalManager: TransactionalManager,
@@ -162,17 +163,17 @@ class ReservasjonV3Repository(
             queryOf(
                 """
                     UPDATE public.reservasjon_v3
-                    SET annullert_for_utlop = true, sist_endret = :now, kommentar = :kommentar
+                    SET annullert_for_utlop = true, sist_endret = localtimestamp, kommentar = :kommentar
                     WHERE reservertAv = :reservertAv
                     and reservasjonsnokkel = :reservasjonsnokkel
-                    and upper(gyldig_tidsrom) > localtimestamp
+                    and upper(gyldig_tidsrom) > :now
                     and annullert_for_utlop = false
                     """.trimIndent(),
                 mapOf(
                     "reservertAv" to aktivReservasjon.reservertAv,
                     "reservasjonsnokkel" to aktivReservasjon.reservasjonsnøkkel,
                     "kommentar" to kommentar,
-                    "now" to LocalDateTime.now(),
+                    "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
                 )
             )
         )
@@ -189,11 +190,12 @@ class ReservasjonV3Repository(
                    from reservasjon_v3 r
                    where r.reservertAv = :reservertAv
                    and annullert_for_utlop = false
-                   and lower(r.gyldig_tidsrom) < localtimestamp
-                   and upper(r.gyldig_tidsrom) > localtimestamp
+                   and lower(r.gyldig_tidsrom) <= :now
+                   and upper(r.gyldig_tidsrom) > :now
                 """.trimIndent(),
                 mapOf(
-                    "reservertAv" to saksbehandlerId
+                    "reservertAv" to saksbehandlerId,
+                    "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
                 )
             ).map { row ->
                 ReservasjonV3(
@@ -217,9 +219,12 @@ class ReservasjonV3Repository(
                    select r.id, r.reservertAv, r.reservasjonsnokkel, lower(r.gyldig_tidsrom) as fra, upper(r.gyldig_tidsrom) as til, r.annullert_for_utlop, kommentar as kommentar 
                    from reservasjon_v3 r
                    where annullert_for_utlop = false
-                   and lower(r.gyldig_tidsrom) < localtimestamp
-                   and upper(r.gyldig_tidsrom) > localtimestamp
-                """.trimIndent()
+                   and lower(r.gyldig_tidsrom) <= :now
+                   and upper(r.gyldig_tidsrom) > :now
+                """.trimIndent(),
+                mapOf(
+                    "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
+                )
             ).map { row ->
                 ReservasjonV3(
                     id = row.long("id"),
@@ -241,11 +246,12 @@ class ReservasjonV3Repository(
                    from reservasjon_v3 r
                    where r.reservasjonsnokkel = :nokkel
                    and annullert_for_utlop = false
-                   and lower(r.gyldig_tidsrom) < localtimestamp
-                   and upper(r.gyldig_tidsrom) > localtimestamp
+                   and lower(r.gyldig_tidsrom) <= :now
+                   and upper(r.gyldig_tidsrom) > :now
                 """.trimIndent(),
                 mapOf(
-                    "nokkel" to nøkkel
+                    "nokkel" to nøkkel,
+                    "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
                 )
             ).map { row ->
                 ReservasjonV3(
@@ -276,10 +282,13 @@ class ReservasjonV3Repository(
                         select * 
                         from reservasjon_v3 rv 
                         where rv.reservasjonsnokkel = ov.reservasjonsnokkel
-                        and upper(rv.gyldig_tidsrom) > localtimestamp 
+                        and upper(rv.gyldig_tidsrom) > :now 
                         and rv.annullert_for_utlop = false 
                     )
-                """.trimIndent()
+                """.trimIndent(),
+                    mapOf(
+                        "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
+                    )
                 ).map { row ->
                     row.long("oppgaveId")
                 }.asList
@@ -301,5 +310,28 @@ class ReservasjonV3Repository(
                 )
             ).asUpdate
         )
+    }
+
+    fun hentOppgaverIdForAktiveReservasjoner(
+        gyldigPåTidspunkt: LocalDateTime,
+        utløperInnen: LocalDateTime
+    ): List<String> {
+        return transactionalManager.transaction { tx ->
+            //TODO denne fungerer eksplisitt kun for oppgave-v1
+            tx.run(
+                queryOf(
+                    """ select id from reservasjon where 
+                             ((data -> 'reservasjoner' -> -1) ->> 'reservertTil')::timestamp > :gyldig_paa
+                         and ((data -> 'reservasjoner' -> -1) ->> 'reservertTil')::timestamp < :ikke_gyldig_paa  
+                """.trimIndent(),
+                    mapOf(
+                        "gyldig_paa" to gyldigPåTidspunkt.truncatedTo(ChronoUnit.MICROS),
+                        "ikke_gyldig_paa" to utløperInnen.truncatedTo(ChronoUnit.MICROS),
+                    )
+                ).map { row ->
+                    row.string("id")
+                }.asList
+            )
+        }
     }
 }

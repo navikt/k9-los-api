@@ -7,7 +7,6 @@ import io.ktor.server.locations.post
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.abac.IPepClient
@@ -73,7 +72,7 @@ internal fun Route.OppgaveApis() {
                 val reservasjonV3Dtos = oppgaveApisTjeneste.hentReserverteOppgaverForSaksbehandler(innloggetBruker)
                 call.respond(reservasjonV3Dtos)
             } else {
-                log.error("Innlogger bruker med brukernavn $innloggetBrukernavn finnes ikke i saksbehandlertabellen")
+                log.info("Innlogger bruker med brukernavn $innloggetBrukernavn finnes ikke i saksbehandlertabellen")
                 call.respond(HttpStatusCode.InternalServerError, "Innlogger bruker med brukernavn $innloggetBrukernavn finnes ikke i saksbehandlertabellen")
             }
         }
@@ -219,10 +218,9 @@ internal fun Route.OppgaveApis() {
         requestContextService.withRequestContext(call) { //TODO klageoppgaver
             val oppgavenøkkel = call.receive<OppgaveNøkkelDto>()
             val oppgave = oppgaveRepository.hent(UUID.fromString(oppgavenøkkel.oppgaveEksternId))
-            val person = runBlocking {
-                pdlService.person(oppgave.aktorId)
-            }.person!!
+            val person = pdlService.person(oppgave.aktorId).person!!
             val behandletOppgave = BehandletOppgave(oppgave, person)
+            
             call.respond(
                 oppgaveTjeneste.leggTilBehandletOppgave(
                     coroutineContext.idToken().getUsername(),

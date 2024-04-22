@@ -7,7 +7,6 @@ import no.nav.helse.dusseldorf.ktor.health.Result
 import no.nav.helse.dusseldorf.ktor.health.UnHealthy
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
-import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import no.nav.k9.los.domene.modell.IModell
 import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
@@ -15,6 +14,7 @@ import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.kafka.IKafkaConfig
 import no.nav.k9.los.integrasjon.kafka.TopicEntry
 import no.nav.k9.los.integrasjon.kafka.TopicUse
+import no.nav.k9.los.utils.LosObjectMapper
 import no.nav.k9.statistikk.kontrakter.Behandling
 import no.nav.k9.statistikk.kontrakter.Sak
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -77,7 +77,7 @@ class StatistikkProducer constructor(
             log.info("Lokal kjøring, sender ikke melding til statistikk")
             return
         }
-        val melding = objectMapper().writeValueAsString(sak)
+        val melding = LosObjectMapper.instance.writeValueAsString(sak)
         producer.send(
             ProducerRecord(
                 TOPIC_USE_STATISTIKK_SAK.name,
@@ -101,7 +101,7 @@ class StatistikkProducer constructor(
             return
         }
 
-        val melding = objectMapper().writeValueAsString(behandling)
+        val melding = LosObjectMapper.instance.writeValueAsString(behandling)
         producer.send(
             ProducerRecord(
                 TOPIC_USE_STATISTIKK_BEHANDLING.name,

@@ -227,7 +227,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         NokkeltallTjeneste(
             oppgaveRepository = get(),
-            statistikkRepository = get()
+            statistikkRepository = get(),
+            nøkkeltallRepository = get()
         )
     }
 
@@ -339,6 +340,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single { K9KlageOppgaveTilDVHMapper() }
     single { OppgaveRepository(oppgavetypeRepository = get()) }
     single { StatistikkRepository(dataSource = get()) }
+    single { NøkkeltallRepository(dataSource = get()) }
 
     single { mockk<StatistikkPublisher>() }
 
@@ -384,10 +386,11 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgavetypeTjeneste = get(),
             oppgaveV3Tjeneste = get(),
             config = get(),
-            oppgaveRepositoryV2 = get(),
             transactionalManager = get(),
             k9SakBerikerKlient = get(),
-            pepCacheService = get()
+            pepCacheService = get(),
+            oppgaveRepository = get(),
+            reservasjonV3Tjeneste = get(),
         )
     }
 
@@ -418,7 +421,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         ReservasjonV3Tjeneste(
             transactionalManager = get(),
             reservasjonV3Repository = get(),
-            oppgaveRepository = get(),
+            oppgaveV1Repository = get(),
+            oppgaveV3Repository = get(),
             pepClient = get(),
             saksbehandlerRepository = get(),
             auditlogger = Auditlogger(config),
@@ -427,9 +431,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         ReservasjonV3DtoBuilder(
-            oppgaveRepositoryTxWrapper = get(),
             pdlService = get(),
-            reservasjonOversetter = get(),
             oppgaveTjeneste = get()
         )
     }

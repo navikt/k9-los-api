@@ -13,7 +13,7 @@ import org.koin.test.KoinTest
 import org.koin.test.get
 import java.time.LocalDateTime
 
-class OppgaveTestmodellBuilder(
+class RedusertOppgaveTestmodellBuilder(
     val område: Område = Område(eksternId = "OppgaveV3Test")
 ): KoinTest {
 
@@ -26,7 +26,7 @@ class OppgaveTestmodellBuilder(
         områdeRepository.lagre(eksternId = område.eksternId)
         oppgavetypeTjeneste.oppdater(
             OppgavetyperDto(
-                "OppgaveV3Test",
+                område.eksternId,
                 definisjonskilde = "unittest",
                 oppgavetyper = emptySet()
             )

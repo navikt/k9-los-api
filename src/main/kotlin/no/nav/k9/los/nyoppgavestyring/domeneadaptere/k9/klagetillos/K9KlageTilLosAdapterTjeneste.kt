@@ -109,7 +109,7 @@ class K9KlageTilLosAdapterTjeneste(
         transactionalManager.transaction { tx ->
             val behandlingProsessEventer = behandlingProsessEventKlageRepository.hentMedLås(tx, uuid).eventer
             behandlingProsessEventer.forEach { event ->
-                val losOpplysningerSomManglerIKlageDto = k9sakBeriker.berikKlage(event.påklagdBehandlingEksternId)!!
+                val losOpplysningerSomManglerIKlageDto = k9sakBeriker.berikKlage(event.påklagdBehandlingEksternId)
                 val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, losOpplysningerSomManglerIKlageDto, forrigeOppgave)
 
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)

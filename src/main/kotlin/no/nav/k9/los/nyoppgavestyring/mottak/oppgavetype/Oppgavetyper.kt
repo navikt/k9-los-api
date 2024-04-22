@@ -1,6 +1,5 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype
 
-import kotliquery.TransactionalSession
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjoner
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 
@@ -34,7 +33,7 @@ class Oppgavetyper(
 
         val slettListe = mutableSetOf<Oppgavetype>()
         val leggTilListe = mutableSetOf<Oppgavetype>()
-        val finnFeltforskjellListe = mutableSetOf<OppgavetypeEndring>()
+        val endringsliste = mutableSetOf<OppgavetypeEndring>()
 
         innkommendeOppgavetyper.oppgavetyper.forEach { innkommende ->
             val eksisterende = oppgavetyper.find { it.eksternId.equals(innkommende.eksternId) }
@@ -45,8 +44,8 @@ class Oppgavetyper(
             if (eksisterende == null) {
                 leggTilListe.add(innkommende)
             } else {
-                utledOppdatering(eksisterende, innkommende)?.let { oppdatering ->
-                    finnFeltforskjellListe.add(oppdatering)
+                utledOppdateringPåFelter(eksisterende, innkommende)?.let { oppgavetypeEndring ->
+                    endringsliste.add(oppgavetypeEndring)
                 }
             }
         }
@@ -66,11 +65,11 @@ class Oppgavetyper(
                 område = this.område,
                 oppgavetyper = leggTilListe.toSet()
             ),
-            finnFeltforskjellListe.toList()
+            endringsliste.toList()
         )
     }
 
-    fun utledOppdatering(eksisterendeOppgave: Oppgavetype, innkommendeOppgave: Oppgavetype): OppgavetypeEndring? {
+    fun utledOppdateringPåFelter(eksisterendeOppgave: Oppgavetype, innkommendeOppgave: Oppgavetype): OppgavetypeEndring? {
         val leggTilListe = mutableSetOf<Oppgavefelt>()
         val sletteliste = mutableSetOf<Oppgavefelt>()
         val endreliste = mutableSetOf<OppgavefeltDelta>()
@@ -110,9 +109,8 @@ class Oppgavetyper(
                 sletteliste.add(eksisterendeFelt)
             }
         }
-        return if (leggTilListe.isEmpty() && sletteliste.isEmpty() && endreliste.isEmpty()) null
-        else OppgavetypeEndring(
-            oppgavetype = eksisterendeOppgave,
+        return OppgavetypeEndring(
+            oppgavetype = innkommendeOppgave,
             felterSomSkalLeggesTil = leggTilListe.toList(),
             felterSomSkalFjernes = sletteliste.toList(),
             felterSomSkalEndresMedNyeVerdier = endreliste.toList()
