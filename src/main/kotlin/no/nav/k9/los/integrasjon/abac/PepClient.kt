@@ -87,6 +87,7 @@ class PepClient constructor(
     ): Boolean {
         val identTilInnloggetBruker = azureGraphService.hentIdentTilInnloggetBruker()
         if (identTilInnloggetBruker.isEmpty()) {
+            log.warn("Ingen innlogget bruker")
             return false
         }
         val requestBuilder = XacmlRequestBuilder()

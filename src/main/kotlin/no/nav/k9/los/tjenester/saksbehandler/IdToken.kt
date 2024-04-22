@@ -18,6 +18,7 @@ data class IdToken(
         throw IdTokenInvalidFormatException(this, cause)
     }
 
+    override fun getSubject(): String = jwt.sub
     override fun getName(): String = jwt.name
     override fun getUsername(): String = jwt.preferredUsername
     override fun kanBehandleKode6(): Boolean = jwt.groups.any { s -> s == "87ea7c87-08a2-43bc-83d6-0bfeee92185d" }

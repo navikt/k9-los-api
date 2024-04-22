@@ -27,155 +27,160 @@ class PdlService constructor(
     accessTokenClient: AccessTokenClient,
     scope: String
 ) : IPdlService {
-    private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
-    private val cache = Cache<String, String>(10_000)
     private val log: Logger = LoggerFactory.getLogger(PdlService::class.java)
+    private val scopes = setOf(scope)
 
     private val personUrl = Url.buildURL(
         baseUrl = baseUrl,
         pathParts = listOf()
     ).toString()
 
-    private val scopes = setOf(scope)
+    private val graphqlQueryHentPerson = getStringFromResource("/pdl/hentPerson.graphql")
+    private val graphqlQueryHentIdent = getStringFromResource("/pdl/hentIdent.graphql")
+
+    private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
+    private val pdlCacheVarighet = Duration.ofHours(7)
+    private data class AktørIdTilPersonCacheKey(val saksbehandlerIdent: String, val aktørId: String)
+    private val aktørIdTilPersonCache = Cache<AktørIdTilPersonCacheKey, PersonPdlResponse>(10_000)
+    private data class FrnTilAktørIdCacheKey(val saksbehandlerIdent: String, val fnr: String)
+    private val fnrTilAktørIdCache = Cache<FrnTilAktørIdCacheKey, PdlResponse>(10_000)
 
     override suspend fun person(aktorId: String): PersonPdlResponse {
         val queryRequest = QueryRequest(
-            getStringFromResource("/pdl/hentPerson.graphql"),
+            graphqlQueryHentPerson,
             mapOf("ident" to aktorId)
         )
-        val query = LosObjectMapper.instance.writeValueAsString(
-            queryRequest
-        )
-        val cachedObject = cache.get(query)
-        if (cachedObject == null) {
-            val callId = UUID.randomUUID().toString()
-            val httpRequest = personUrl
-                .httpPost()
-                .body(
-                    query
-                )
-                .header(
-                    HttpHeaders.Authorization to authorizationHeader(),
-                    HttpHeaders.Accept to "application/json",
-                    HttpHeaders.ContentType to "application/json",
-                    NavHeaders.Tema to "OMS",
-                    NavHeaders.CallId to callId
-                )
+        val saksbehandlerIdent = coroutineContext.idToken().getSubject()
+        val cacheKey = AktørIdTilPersonCacheKey(saksbehandlerIdent, aktorId)
+        val cachedObject = aktørIdTilPersonCache.get(cacheKey)
+        if (cachedObject != null) {
+            return cachedObject.value
+        }
+        val callId = UUID.randomUUID().toString()
+        val httpRequest = personUrl
+            .httpPost()
+            .body(
+                LosObjectMapper.instance.writeValueAsString(queryRequest)
+            )
+            .header(
+                HttpHeaders.Authorization to authorizationHeader(),
+                HttpHeaders.Accept to "application/json",
+                HttpHeaders.ContentType to "application/json",
+                NavHeaders.Tema to "OMS",
+                NavHeaders.CallId to callId
+            )
 
-            val json = Retry.retry(
+        val json = Retry.retry(
+            operation = "hente-person",
+            initialDelay = Duration.ofMillis(200),
+            factor = 2.0,
+            logger = log
+        ) {
+            val (request, _, result) = Operation.monitored(
+                app = "k9-los-api",
                 operation = "hente-person",
-                initialDelay = Duration.ofMillis(200),
-                factor = 2.0,
-                logger = log
-            ) {
-                val (request, _, result) = Operation.monitored(
-                    app = "k9-los-api",
-                    operation = "hente-person",
-                    resultResolver = { 200 == it.second.statusCode }
-                ) { httpRequest.awaitStringResponseResult() }
+                resultResolver = { 200 == it.second.statusCode }
+            ) { httpRequest.awaitStringResponseResult() }
 
-                result.fold(
-                    { success -> success },
-                    { error ->
-                        log.warn(
-                            "Error response = '${error.response.body().asString("text/plain")}' fra '${request.url}'"
-                        )
-                        log.warn(
-                            error.toString() + "aktorId callId: " + callId + " " + coroutineContext.idToken()
-                                .getUsername()
-                        )
-                        null
-                    }
-                )
-            }
-            try {
-                val readValue = LosObjectMapper.instance.readValue<PersonPdl>(json!!)
-                cache.set(query, CacheObject(json, LocalDateTime.now().plusHours(7)))
-                return PersonPdlResponse(false, readValue)
-            } catch (e: Exception) {
-                try {
-                    val value = LosObjectMapper.instance.readValue<Error>(json!!)
-                    if (value.errors.any { it.extensions.code == "unauthorized" }) {
-                        return PersonPdlResponse(true, null)
-                    }
-                } catch (e: Exception) {
-                    log.warn("", e)
+            result.fold(
+                { success -> success },
+                { error ->
+                    log.warn("Error response = '${error.response.body().asString("text/plain")}' fra '${request.url}'")
+                    log.warn("${error} aktorId callId: ${callId} ${coroutineContext.idToken().getUsername()}")
+                    null
                 }
-                return PersonPdlResponse(false, null)
+            )
+        }
+        try {
+            val readValue = LosObjectMapper.instance.readValue<PersonPdl>(json!!)
+            val resultat = PersonPdlResponse(false, readValue)
+            aktørIdTilPersonCache.set(cacheKey, CacheObject(resultat, LocalDateTime.now().plus(pdlCacheVarighet)))
+            return resultat
+        } catch (e: Exception) {
+            try {
+                val value = LosObjectMapper.instance.readValue<Error>(json!!)
+                if (value.errors.any { it.extensions.code == "unauthorized" }) {
+                    val resultat = PersonPdlResponse(true, null)
+                    //TODO vurder å cache her også
+                    //aktørIdTilPersonCache.set(cacheKey, CacheObject(resultat, LocalDateTime.now().plus(pdlCacheVarighet)))
+                    return resultat
+                }
+            } catch (e: Exception) {
+                log.warn(e.message, e)
             }
-        } else {
-            return PersonPdlResponse(false, LosObjectMapper.instance.readValue<PersonPdl>(cachedObject.value))
+            return PersonPdlResponse(false, null)
         }
     }
 
     override suspend fun identifikator(fnummer: String): PdlResponse {
         val queryRequest = QueryRequest(
-            getStringFromResource("/pdl/hentIdent.graphql"),
+            graphqlQueryHentIdent,
             mapOf(
                 "ident" to fnummer,
                 "historikk" to "false",
                 "grupper" to listOf("AKTORID")
             )
         )
-        val query = LosObjectMapper.instance.writeValueAsString(
-            queryRequest
-        )
 
-        val cachedObject = cache.get(query)
-        if (cachedObject == null) {
-            val callId = UUID.randomUUID().toString()
-            val httpRequest = personUrl
-                .httpPost()
-                .body(
-                    query
-                )
-                .header(
-                    HttpHeaders.Authorization to authorizationHeader(),
-                    HttpHeaders.Accept to "application/json",
-                    HttpHeaders.ContentType to "application/json",
-                    NavHeaders.Tema to "OMS",
-                    NavHeaders.CallId to callId
-                )
+        val saksbehandlerIdent = coroutineContext.idToken().getSubject()
+        val cacheKey = FrnTilAktørIdCacheKey(saksbehandlerIdent, fnummer)
+        val cachedObject = fnrTilAktørIdCache.get(cacheKey)
+        if (cachedObject != null) {
+            return cachedObject.value
+        }
 
-            val json = Retry.retry(
+        val callId = UUID.randomUUID().toString()
+        val httpRequest = personUrl
+            .httpPost()
+            .body(
+                LosObjectMapper.instance.writeValueAsString(queryRequest)
+            )
+            .header(
+                HttpHeaders.Authorization to authorizationHeader(),
+                HttpHeaders.Accept to "application/json",
+                HttpHeaders.ContentType to "application/json",
+                NavHeaders.Tema to "OMS",
+                NavHeaders.CallId to callId
+            )
+
+        val json = Retry.retry(
+            operation = "hente-ident",
+            initialDelay = Duration.ofMillis(200),
+            factor = 2.0,
+            logger = log
+        ) {
+            val (request, _, result) = Operation.monitored(
+                app = "k9-los-api",
                 operation = "hente-ident",
-                initialDelay = Duration.ofMillis(200),
-                factor = 2.0,
-                logger = log
-            ) {
-                val (request, _, result) = Operation.monitored(
-                    app = "k9-los-api",
-                    operation = "hente-ident",
-                    resultResolver = { 200 == it.second.statusCode }
-                ) { httpRequest.awaitStringResponseResult() }
+                resultResolver = { 200 == it.second.statusCode }
+            ) { httpRequest.awaitStringResponseResult() }
 
-                result.fold(
-                    { success -> success },
-                    { error ->
-                        log.warn(
-                            "Error response = '${error.response.body().asString("text/plain")}' fra '${request.url}'"
-                        )
-                        log.warn(error.toString())
-                        null
-                    }
-                )
-            }
-            try {
-                cache.set(query, CacheObject(json!!, LocalDateTime.now().plusDays(7)))
-                return PdlResponse(false, LosObjectMapper.instance.readValue<AktøridPdl>(json))
-            } catch (e: Exception) {
-                try {
-                    val value = LosObjectMapper.instance.readValue<Error>(json!!)
-                    if (value.errors.any { it.extensions.code == "unauthorized" }) {
-                        return PdlResponse(true, null)
-                    }
-                } catch (e: Exception) {
-                    log.warn("", e)
+            result.fold(
+                { success -> success },
+                { error ->
+                    log.warn("Error response = '${error.response.body().asString("text/plain")}' fra '${request.url}'")
+                    log.warn(error.toString())
+                    null
                 }
-                return PdlResponse(false, null)
+            )
+        }
+        try {
+            val resultat = PdlResponse(false, LosObjectMapper.instance.readValue<AktøridPdl>(json!!))
+            fnrTilAktørIdCache.set(cacheKey, CacheObject(resultat, LocalDateTime.now().plus(pdlCacheVarighet)))
+            return resultat
+        } catch (e: Exception) {
+            try {
+                val value = LosObjectMapper.instance.readValue<Error>(json!!)
+                if (value.errors.any { it.extensions.code == "unauthorized" }) {
+                    val resultat = PdlResponse(true, null)
+                    //TODO vurder å cache her også
+                    //fnrTilAktørIdCache.set(cacheKey, CacheObject(resultat, LocalDateTime.now().plus(pdlCacheVarighet)))
+                    return resultat
+                }
+            } catch (e: Exception) {
+                log.warn("", e)
             }
-        } else {
-            return PdlResponse(false, LosObjectMapper.instance.readValue<AktøridPdl>(cachedObject.value))
+            return PdlResponse(false, null)
         }
     }
 
