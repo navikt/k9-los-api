@@ -625,7 +625,8 @@ fun preprodConfig(config: Configuration) = module {
         PdlService(
             baseUrl = config.pdlUrl(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
-            scope = "api://dev-fss.pdl.pdl-api/.default"
+            scope = "api://dev-fss.pdl.pdl-api/.default",
+            azureGraphService = get<IAzureGraphService>()
         )
     }
 
@@ -662,7 +663,8 @@ fun prodConfig(config: Configuration) = module {
         PdlService(
             baseUrl = config.pdlUrl(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
-            scope = "api://prod-fss.pdl.pdl-api/.default"
+            scope = "api://prod-fss.pdl.pdl-api/.default",
+            azureGraphService = get<IAzureGraphService>()
         )
     }
 
