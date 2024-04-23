@@ -276,6 +276,9 @@ fun Application.k9Los() {
             route("mock") {
                 MockGrensesnitt()
             }
+            route("innsikt") {
+                innsiktGrensesnitt()
+            }
         } else {
             authenticate(*issuers.allIssuers()) {
                 route("innsikt") {
