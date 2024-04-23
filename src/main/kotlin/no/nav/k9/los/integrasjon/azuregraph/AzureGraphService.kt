@@ -32,7 +32,45 @@ open class AzureGraphService constructor(
     val log = LoggerFactory.getLogger("AzureGraphService")!!
 
     override suspend fun hentIdentTilInnloggetBruker(): String {
-        return coroutineContext.idToken().getSubject()
+        val username = IdToken(coroutineContext.idToken().value).getUsername()
+        val cachedObject = cache.get(username)
+        if (cachedObject == null) {
+
+            val httpRequest = "https://graph.microsoft.com/v1.0/me?\$select=onPremisesSamAccountName"
+                .httpGet()
+                .header(
+                    HttpHeaders.Accept to "application/json",
+                    HttpHeaders.Authorization to "Bearer ${accessToken(coroutineContext.idToken()).token}"
+                )
+
+
+            val json = Retry.retry(
+                operation = "hent-ident",
+                initialDelay = Duration.ofMillis(200),
+                factor = 2.0,
+                logger = log
+            ) {
+                val (request, _, result) = Operation.monitored(
+                    app = "k9-los-api",
+                    operation = "hent-ident",
+                    resultResolver = { 200 == it.second.statusCode }
+                ) { httpRequest.awaitStringResponseResult() }
+
+                håndterResultat(result, request)
+            }
+            return try {
+                val onPremisesSamAccountName = LosObjectMapper.instance.readValue<AccountName>(json).onPremisesSamAccountName
+                cache.set(username, CacheObject(onPremisesSamAccountName, LocalDateTime.now().plusDays(180)))
+                return onPremisesSamAccountName
+            } catch (e: Exception) {
+                log.error(
+                    "Feilet deserialisering", e
+                )
+                ""
+            }
+        } else {
+            return cachedObject.value
+        }
     }
 
     private fun håndterResultat(
