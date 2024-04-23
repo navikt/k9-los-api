@@ -49,6 +49,7 @@ internal fun Route.OppgaveApis() {
                     kotlin.coroutines.coroutineContext.idToken().getUsername()
                 )!!
                 try {
+                    log.info("Forsøker å ta reservasjon direkte på ${oppgaveIdMedOverstyringDto.oppgaveNøkkel.oppgaveEksternId} for ${innloggetBruker.brukerIdent}")
                     val oppgave =
                         oppgaveApisTjeneste.reserverOppgave(innloggetBruker, oppgaveIdMedOverstyringDto)
                     call.respond(oppgave)
@@ -115,6 +116,7 @@ internal fun Route.OppgaveApis() {
             )!!
 
             try {
+                log.info("Opphever reservasjonen ${params.oppgaveNøkkel.oppgaveEksternId} (Gjort av ${innloggetBruker.brukerIdent})")
                 oppgaveApisTjeneste.annullerReservasjon(params, innloggetBruker)
                 call.respond(HttpStatusCode.OK) //TODO: Hva er evt meningsfullt å returnere her?
             } catch (e: FinnerIkkeDataException) {

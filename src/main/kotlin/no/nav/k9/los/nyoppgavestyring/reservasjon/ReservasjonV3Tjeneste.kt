@@ -11,6 +11,8 @@ import no.nav.k9.los.nyoppgavestyring.feilhandtering.FinnerIkkeDataException
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.forskyvReservasjonsDato
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.util.*
@@ -24,6 +26,10 @@ class ReservasjonV3Tjeneste(
     private val oppgaveV1Repository: no.nav.k9.los.domene.repository.OppgaveRepository,
     private val oppgaveV3Repository: OppgaveRepository
 ) {
+
+    companion object {
+        private val log: Logger = LoggerFactory.getLogger("ReservasjonV3Tjeneste")
+    }
 
     fun auditlogReservert(brukerId: Long, reservertoppgave: Oppgave) {
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(brukerId)
@@ -120,9 +126,12 @@ class ReservasjonV3Tjeneste(
                     reservasjonsnøkkel,
                     tx
                 )!!
+
             if (reserverForId != aktivReservasjon.reservertAv) { // reservert av andre
+                log.info("ForsøkReservasjonOgReturnerAktiv: AktivReservasjon ${aktivReservasjon.id} reservert av annen saksbehandler ${aktivReservasjon.reservertAv} enn $reserverForId")
                 aktivReservasjon
             } else if (aktivReservasjon.gyldigTil < gyldigTil) {
+                log.info("ForsøkReservasjonOgReturnerAktiv: Sb $reserverForId har allerede reservasjonen med id ${aktivReservasjon.id}. Forlenger")
                 reservasjonV3Repository.forlengReservasjon(
                     aktivReservasjon,
                     endretAvBrukerId = utføresAvId,
@@ -131,6 +140,8 @@ class ReservasjonV3Tjeneste(
                     tx
                 )
             } else {
+                log.info("ForsøkReservasjonOgReturnerAktiv: Sb $reserverForId har allerede reservasjonen med id ${aktivReservasjon.id}")
+
                 //allerede reservert lengre enn ønsket
                 // TODO: kort ned reservasjon i stedet? Avklaring neste uke. Sjekke opp mot V1-logikken
                 // Alt 1. - kort ned reservasjon dersom det er innlogget bruker sin reservasjon som endres. Ellers IllegalArgument.
@@ -206,6 +217,7 @@ class ReservasjonV3Tjeneste(
                 annullertAvBrukerId,
                 tx
             )
+            log.info("Annullerer v3-reservasjon ${aktivReservasjon.id} holdt av ${aktivReservasjon.reservertAv}")
             return true
         }
         return false
