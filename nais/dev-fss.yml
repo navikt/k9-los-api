@@ -48,6 +48,9 @@ spec:
       allowAllUsers: true
       enabled: true
       tenant: trygdeetaten.no
+      claims:
+        extra:
+          - "NAVident"
   accessPolicy:
     inbound:
       rules:
