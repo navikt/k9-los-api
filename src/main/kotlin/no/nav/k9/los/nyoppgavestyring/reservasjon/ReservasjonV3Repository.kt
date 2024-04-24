@@ -267,7 +267,7 @@ class ReservasjonV3Repository(
         )
     }
 
-    fun hentAktiveOgHistoriskeReservasjonerForReservasjonsnøkkel(nøkkel: String, tx: TransactionalSession): ReservasjonV3? {
+    fun hentAktiveOgHistoriskeReservasjonerForReservasjonsnøkkel(nøkkel: String, tx: TransactionalSession): List<ReservasjonV3> {
         return tx.run(
             queryOf(
                 """
@@ -288,7 +288,7 @@ class ReservasjonV3Repository(
                     gyldigFra = row.localDateTime("fra"),
                     gyldigTil = row.localDateTime("til"),
                 )
-            }.asSingle
+            }.asList
         )
     }
 
