@@ -367,7 +367,7 @@ fun Route.innsiktGrensesnitt() {
             val saksnummer = call.parameters["saksnummer"] ?: throw IllegalStateException("Saksnummer ikke oppgitt")
             val medHistorikk = call.request.queryParameters["historikk"]?.let { true } ?: false
 
-            val oppgaver = oppgaveRepository.hentOppgaverSomMatcherSaksnummer(saksnummer)
+            val oppgaver = oppgaveRepository.hentOppgaverSomMatcherSaksnummer(saksnummer).distinct()
             if (oppgaver.size > 1) LOGGER.info("Fant flere enn 1 oppgave på saksnummer $saksnummer")
             val oppgaverMedRelasjoner = oppgaver.flatMap { oppgave -> relaterteOppgaverV1(oppgave, oppgaveRepository) }
 
@@ -399,6 +399,8 @@ fun Route.innsiktGrensesnitt() {
             }
 
             get("v3") {
+                val fagsystem = call.request.queryParameters["fagsystem"]?.let { Fagsystem.fraKode(it) }
+
                 val aktiveV3Reservasjoner = reservasjonv3Tjeneste.hentAlleAktiveReservasjoner()
                     .filterNot {
                         it.saksnummer().any { pepClient.erSakKode7EllerEgenAnsatt(it) }
@@ -411,7 +413,7 @@ fun Route.innsiktGrensesnitt() {
                             classes = setOf("list-group")
                             transactionalManager.transaction { tx ->
                                 aktiveV3Reservasjoner.forEach { r ->
-
+                                    if (fagsystem != Fagsystem.K9SAK || aktiveV3Reservasjoner.any { it.saksnummer().isNotEmpty() }) {
                                     listeelement("""
                                         saksnummer: ${r.saksnummer()}, 
                                         eksternId: ${r.eksternId().joinToString(", ", "[", "]")}, 
@@ -421,6 +423,7 @@ fun Route.innsiktGrensesnitt() {
                                         reservertAv: ${r.reservasjonV3.reservertAv.let { saksbehandlerRepository.finnSaksbehandlerMedId(it).brukerIdent } },
                                         ${r.utledFraReservasjonsnøkkel()}
                                     """.trimMargin())
+                                    }
                                 }
                             }
                         }
