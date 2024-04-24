@@ -267,6 +267,31 @@ class ReservasjonV3Repository(
         )
     }
 
+    fun hentAktiveOgHistoriskeReservasjonerForReservasjonsnøkkel(nøkkel: String, tx: TransactionalSession): ReservasjonV3? {
+        return tx.run(
+            queryOf(
+                """
+                   select r.id, r.reservertAv, r.reservasjonsnokkel, lower(r.gyldig_tidsrom) as fra, upper(r.gyldig_tidsrom) as til, r.annullert_for_utlop , kommentar as kommentar
+                   from reservasjon_v3 r
+                   where r.reservasjonsnokkel = :nokkel
+                """.trimIndent(),
+                mapOf(
+                    "nokkel" to nøkkel
+                )
+            ).map { row ->
+                ReservasjonV3(
+                    id = row.long("id"),
+                    reservertAv = row.long("reservertAv"),
+                    reservasjonsnøkkel = row.string("reservasjonsnokkel"),
+                    kommentar = row.string("kommentar"),
+                    annullertFørUtløp = row.boolean("annullert_for_utlop"),
+                    gyldigFra = row.localDateTime("fra"),
+                    gyldigTil = row.localDateTime("til"),
+                )
+            }.asSingle
+        )
+    }
+
     fun hentUreserverteOppgaveIder(oppgaveIder: List<Long>): List<Long> {
         if (oppgaveIder.isEmpty()) return emptyList()
 

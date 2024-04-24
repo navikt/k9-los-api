@@ -1,18 +1,26 @@
 package no.nav.k9.los.tjenester.innsikt
 
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.html.*
 import io.ktor.server.locations.*
+import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.html.*
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.OppgaveMedId
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
+import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.modell.BehandlingStatus
 import no.nav.k9.los.domene.modell.Fagsystem
 import no.nav.k9.los.domene.modell.OppgaveKø
 import no.nav.k9.los.domene.repository.*
+import no.nav.k9.los.integrasjon.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3MedOppgaver
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.EnheterSomSkalUtelatesFraLos
 import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
@@ -25,11 +33,15 @@ fun Route.innsiktGrensesnitt() {
     val oppgaveRepositoryV2 by inject<OppgaveRepositoryV2>()
     val statistikkRepository by inject<StatistikkRepository>()
     val oppgaveKøRepository by inject<OppgaveKøRepository>()
-    val saksbehandlerRepository by inject<SaksbehandlerRepository>()
     val behandlingProsessEventK9Repository by inject<BehandlingProsessEventK9Repository>()
     val behandlingProsessEventTilbakeRepository by inject<BehandlingProsessEventTilbakeRepository>()
     val punsjEventK9Repository by inject<PunsjEventK9Repository>()
     val reservasjonRepository by inject<ReservasjonRepository>()
+    val reservasjonv3Repository by inject<ReservasjonV3Repository>()
+    val reservasjonv3Tjeneste by inject<ReservasjonV3Tjeneste>()
+    val oppgaveQueryRepository by inject<OppgaveQueryRepository>()
+    val transactionalManager by inject<TransactionalManager>()
+    val pepClient by inject<IPepClient>()
 
     val LOGGER = LoggerFactory.getLogger(StatistikkRepository::class.java)
 
@@ -256,6 +268,156 @@ fun Route.innsiktGrensesnitt() {
         }
     }
 
+
+    suspend fun hentReservasjoner(saksnummer: String, oppgaverMedRelasjoner: List<OppgaveMedId>, call: ApplicationCall) {
+        if (pepClient.erSakKode7EllerEgenAnsatt(saksnummer)) {
+            call.respond(HttpStatusCode.NotFound)
+            return
+        }
+
+        if (oppgaverMedRelasjoner.isEmpty())  {
+            call.respond(HttpStatusCode.NotFound)
+            return
+        }
+
+        val reservasjonerV1 = oppgaverMedRelasjoner.mapNotNull { oppgave -> reservasjonRepository.hentOptional(oppgave.id) }
+
+        val reservasjonerV3 = transactionalManager.transaction { tx ->
+            oppgaverMedRelasjoner.associateWith { (_, oppgave) ->
+                listOf(
+                    reservasjonv3Repository.hentAktiveOgHistoriskeReservasjonerForReservasjonsnøkkel("K9_b_${oppgave.fagsakYtelseType.kode}_${oppgave.pleietrengendeAktørId}", tx) to "Pleietrengende",
+                    reservasjonv3Repository.hentAktiveOgHistoriskeReservasjonerForReservasjonsnøkkel("K9_b_${oppgave.fagsakYtelseType.kode}_${oppgave.pleietrengendeAktørId}_beslutter", tx) to "Pleietrengende_Beslutter",
+                    reservasjonv3Repository.hentAktiveOgHistoriskeReservasjonerForReservasjonsnøkkel("K9_b_${oppgave.fagsakYtelseType.kode}_${oppgave.aktorId}", tx) to "Aktørid",
+                    reservasjonv3Repository.hentAktiveOgHistoriskeReservasjonerForReservasjonsnøkkel("K9_b_${oppgave.fagsakYtelseType.kode}_${oppgave.aktorId}_beslutter", tx) to "Aktørid_Beslutter",
+                    reservasjonv3Repository.hentAktiveOgHistoriskeReservasjonerForReservasjonsnøkkel("legacy_${oppgave.eksternId}", tx) to "Legacy"
+                ).filter { it.first != null }.map { it.first!! to it.second }
+            }
+        }
+
+        call.respondHtml {
+            innsiktHeader("Reservasjoner for saksnummer $saksnummer")
+            body {
+                h2 { +"Reservasjoner V1" }
+                ul {
+                    classes = setOf("list-group")
+                    reservasjonerV1.forEach {
+                        listeelement("oppgaveid: ${it.oppgave}, aktiv: ${it.erAktiv()}, reservertTil: ${it.reservertTil}, reservertAv: ${it.reservertAv} flyttetTidspunkt: ${it.flyttetTidspunkt}")
+                    }
+                }
+
+                h2 { +"Reservasjoner V3" }
+                reservasjonerV3.forEach { oppgave, reservasjon ->
+                    div { +"Reservasjoner for oppgaveid ${oppgave.id}:" }
+                    ul {
+                        classes = setOf("list-group")
+                        reservasjon.forEach { (r, kilde) ->
+                            listeelement("reservasjonsid: ${r.id}, annullertFørUtløp: ${r.annullertFørUtløp}, gyldigPeriode: (${r.gyldigFra}-${r.gyldigTil}), reservertAv: ${r.reservertAv}, reservasjonsnøkkelType: $kilde")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    route("/reservasjoner") {
+        get("/hent/{saksnummer}") {
+            val saksnummer = call.parameters["saksnummer"] ?: throw IllegalStateException("Saksnummer ikke oppgitt")
+            val oppgaver = oppgaveRepository.hentOppgaverSomMatcherSaksnummer(saksnummer)
+            if (oppgaver.size > 1) LOGGER.info("Fant flere enn 1 oppgave på saksnummer $saksnummer")
+            val oppgaverMedRelasjoner = oppgaver.flatMap { oppgave -> relaterteOppgaverV1(oppgave, oppgaveRepository) }
+
+            hentReservasjoner(saksnummer, oppgaverMedRelasjoner, call)
+        }
+
+        route("aktive") {
+            get("v1") {
+                val aktiveV1Reservasjoner = oppgaveRepository.hentAktiveOppgaver()
+                    .mapNotNull { oppgaveId -> reservasjonRepository.hentOptional(oppgaveId)?.let { oppgaveId to it } }
+                    .filterNot { pepClient.erSakKode7EllerEgenAnsatt(oppgaveRepository.hent(it.second.oppgave).fagsakSaksnummer) }
+
+                call.respondHtml {
+                    innsiktHeader("Aktive reservasjoner i v1")
+                    body {
+                        ul {
+                            classes = setOf("list-group")
+                            aktiveV1Reservasjoner.forEach { (id, r) ->
+                                val oppgave = oppgaveRepository.hent(id)
+                                listeelement("saksnummer: ${oppgave.fagsakSaksnummer}, eksternId: $id, aktiv: ${r.erAktiv()}, reservertTil: ${r.reservertTil}, reservertAv: ${r.reservertAv} flyttetTidspunkt: ${r.flyttetTidspunkt}")
+                            }
+                        }
+                    }
+                }
+            }
+
+            get("v3") {
+                val aktiveV3Reservasjoner = reservasjonv3Tjeneste.hentAlleAktiveReservasjoner()
+                    .filterNot {
+                        it.saksnummer().any { pepClient.erSakKode7EllerEgenAnsatt(it) }
+                    }
+
+                call.respondHtml {
+                    innsiktHeader("Aktive reservasjoner i v3")
+                    body {
+                        ul {
+                            classes = setOf("list-group")
+                            aktiveV3Reservasjoner.forEach { r ->
+                                listeelement("saksnummer: ${r.saksnummer()}, eksternId: ${r.oppgaveV1?.eksternId ?: r.oppgaverV3.joinToString(", ", "[", "]") { it.eksternId }}, reservasjonsid: ${r.reservasjonV3.id}, annullertFørUtløp: ${r.reservasjonV3.annullertFørUtløp}, gyldigPeriode: (${r.reservasjonV3.gyldigFra}-${r.reservasjonV3.gyldigTil}), reservertAv: ${r.reservasjonV3.reservertAv}")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        get("status") {
+            val aktiveV1Reservasjoner = oppgaveRepository.hentAktiveOppgaver()
+                .mapNotNull { oppgaveId -> reservasjonRepository.hentOptional(oppgaveId)?.let { it to oppgaveId } }
+                .associate { it.second to it.first }
+
+            val aktiveV3Reservasjoner = reservasjonv3Tjeneste.hentAlleAktiveReservasjoner()
+
+            val aktiveV3ReservasjonerForV1Oppgaver = aktiveV3Reservasjoner
+                .associateWith { it.oppgaverV3.map { UUID.fromString(it.eksternId)!! }.takeIf { it.isNotEmpty() } ?: listOf(it.oppgaveV1!!.eksternId) }
+
+            val aktiveV1nøkler = aktiveV1Reservasjoner.keys
+            val resultatv3ReservasjonerSomIkkeFinnesIV1 = aktiveV3ReservasjonerForV1Oppgaver.filter { (_, eksternIder) -> eksternIder.none { aktiveV1nøkler.contains(it) }}
+
+            val aktiveV3Nøkler = aktiveV3ReservasjonerForV1Oppgaver.values.flatten()
+            val resultatv1ReservasjonerSomIkkeFinnesIV3 = aktiveV1Reservasjoner.filterNot { aktiveV3Nøkler.contains(it.key) }
+
+            call.respondHtml {
+                innsiktHeader("Differanse i reservasjoner v1 til v3")
+                body {
+                    h2 { +"Reservasjoner v1 som mangler i v3" }
+                    ul {
+                        classes = setOf("list-group")
+                        resultatv1ReservasjonerSomIkkeFinnesIV3.forEach {(id, r) ->
+                            val oppgave = oppgaveRepository.hent(id)
+                            runBlocking {
+                                if (!pepClient.erSakKode7EllerEgenAnsatt(oppgave.fagsakSaksnummer)) {
+                                    listeelement("saksnummer: ${oppgave.fagsakSaksnummer}, eksternId: $id, aktiv: ${r.erAktiv()}, reservertTil: ${r.reservertTil}, reservertAv: ${r.reservertAv} flyttetTidspunkt: ${r.flyttetTidspunkt}")
+                                }
+                            }
+                        }
+                    }
+
+                    h2 { +"Reservasjoner i v3 som mangler i v1" }
+                    ul {
+                        classes = setOf("list-group")
+                        resultatv3ReservasjonerSomIkkeFinnesIV1.forEach { (r, ider) ->
+                            val saksnummer = r.saksnummer()
+                            runBlocking {
+                                if (saksnummer.none { pepClient.erSakKode7EllerEgenAnsatt(it) }) {
+                                    listeelement("saksnummer: [${saksnummer.joinToString(", ")}], eksternId: [${r.eksternId()}], reservasjonsid: ${r.reservasjonV3.id}, annullertFørUtløp: ${r.reservasjonV3.annullertFørUtløp}, gyldigPeriode: (${r.reservasjonV3.gyldigFra}-${r.reservasjonV3.gyldigTil}), reservertAv: ${r.reservasjonV3.reservertAv}")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     route("/oppgaver") {
         get("/ferdigstilt/{behandlendeEnhet}") {
             val behandlendeEnhet = call.parameters["behandlendeEnhet"]
@@ -408,6 +570,18 @@ fun Route.innsiktGrensesnitt() {
     }
 }
 
+private fun relaterteOppgaverV1(
+    oppgave: OppgaveMedId,
+    oppgaveRepository: OppgaveRepository
+): List<OppgaveMedId> {
+    val pleietrengendeAktørId = oppgave.oppgave.pleietrengendeAktørId
+    return if (pleietrengendeAktørId != null) {
+        oppgaveRepository.hentOppgaverSomMatcher(pleietrengendeAktørId, oppgave.oppgave.fagsakYtelseType)
+    } else {
+        listOf(oppgave)
+    }
+}
+
 fun HTML.innsiktHeader(tittel: String) = head {
     title { +(tittel) }
     styleLink("/static/bootstrap.css")
@@ -424,4 +598,12 @@ fun UL.listeelement(innhold: String, href: String? = null) = li {
     } else {
         +innhold
     }
+}
+
+fun ReservasjonV3MedOppgaver.eksternId(): List<UUID> {
+    return oppgaverV3.map { UUID.fromString(it.eksternId)!! }.takeIf { it.isNotEmpty() } ?: listOf(oppgaveV1!!.eksternId)
+}
+
+fun ReservasjonV3MedOppgaver.saksnummer(): List<String> {
+    return oppgaverV3.map { it.hentVerdi("saksnummer")!! }.takeIf { it.isNotEmpty() } ?: listOf(oppgaveV1!!.fagsakSaksnummer)
 }

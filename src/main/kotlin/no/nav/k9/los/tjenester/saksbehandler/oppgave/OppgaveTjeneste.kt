@@ -563,6 +563,7 @@ class OppgaveTjeneste constructor(
         val reservasjon = reservasjonRepository.lagre(uuid, true) {
             it!!.begrunnelse = begrunnelse
             it.reservertTil = null
+            log.info("Frigir reservasjonen $uuid som var holdt av ${it.reservertAv}")
             it
         }
         saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
@@ -576,6 +577,7 @@ class OppgaveTjeneste constructor(
     fun forlengReservasjonPåOppgave(uuid: UUID): Reservasjon {
         return reservasjonRepository.lagre(uuid, true) {
             it!!.reservertTil = it.reservertTil?.plusHours(24)!!.forskyvReservasjonsDato()
+            log.info("Forlenger reservasjonen $uuid til ${it.reservertTil}, som var holdt av ${it.reservertAv}")
             it
         }
     }
@@ -936,13 +938,15 @@ class OppgaveTjeneste constructor(
         }
 
         val iderPåOppgaverSomSkalBliReservert = oppgaverSomSkalBliReservert.map { o -> o.id }.toSet()
+        log.info("OppgaveFraKø: Prøver å reservere ${iderPåOppgaverSomSkalBliReservert.joinToString(", ")} for $brukerident")
+
         val gamleReservasjoner = reservasjonRepository.hent(iderPåOppgaverSomSkalBliReservert)
         val aktiveReservasjoner =
             gamleReservasjoner.filter { rev -> rev.erAktiv() && rev.reservertAv != brukerident }.toList()
 
         // skal ikke få oppgaver som tilhører en parsak der en av sakene er resvert på en annen saksbehandler
         if (aktiveReservasjoner.isNotEmpty()) {
-            log.info("OppgaveFraKø: Prøver å reservere, men oppgaven er allerede reservert av aktiv reservasjon: ${aktiveReservasjoner.joinToString { it.oppgave.toString()+it.reservertTil }}")
+            log.info("OppgaveFraKø: Prøver å reservere for $brukerident, men oppgaven er allerede reservert av aktiv reservasjon: ${aktiveReservasjoner.joinToString { it.oppgave.toString()+it.reservertTil }}")
             oppgaverSomErBlokert.add(oppgaveDto)
             return fåOppgaveFraKø(
                 oppgaveKøId,
