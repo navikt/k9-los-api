@@ -4,10 +4,13 @@ import assertk.assertThat
 import assertk.assertions.*
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
+import no.nav.k9.kodeverk.behandling.BehandlingStegType
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.aksjonspunktbehandling.BehandlingProsessEventDtoBuilder
-import no.nav.k9.los.aksjonspunktbehandling.K9sakEventHandler
-import no.nav.k9.los.aksjonspunktbehandling.TestSaksbehandler
+import no.nav.k9.los.aksjonspunktbehandling.*
+import no.nav.k9.los.domene.modell.BehandlingStatus
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.integrasjon.rest.CoroutineRequestContext
 import no.nav.k9.los.nyoppgavestyring.FeltType
@@ -127,15 +130,41 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val antallIKø = oppgaveKøTjeneste.hentAntallUreserverteOppgaveForKø(kø.id)
         assertThat(antallIKø).isEqualTo(1)
 
-        val resultat = oppgaveKøTjeneste.taReservasjonFraKø(
-            TestSaksbehandler.SARA.id!!,
-            kø.id,
-            CoroutineRequestContext(mockk<IIdToken>(relaxed = true))
-        )
+        val resultat = taReservasjonFra(kø, TestSaksbehandler.SARA)
         assertThat(resultat).isNotNull()
 
         val antallIKøEtterRes = oppgaveKøTjeneste.hentAntallUreserverteOppgaveForKø(kø.id)
         assertThat(antallIKøEtterRes).isZero()
+    }
+
+    @Test
+    fun `Reservasjoner skal ikke annulleres ved udefinert venteårsak på manuelt aksjonspunkt`() {
+        val eksternId = UUID.randomUUID()
+        val kø = opprettKøFor(TestSaksbehandler.SARA, querySomKunInneholder(eksternId))
+
+        // Opprettet event
+        val eventBuilder = BehandlingProsessEventDtoBuilder(eksternId)
+        eventHandler.prosesser(eventBuilder.opprettet().build())
+
+        val oppgaveQueryService = get<OppgaveQueryService>()
+        val antallIDb = oppgaveQueryService.queryForAntall(querySomKunInneholder(eksternId))
+        assertThat(antallIDb).isEqualTo(1)
+
+        val antallIKø = oppgaveKøTjeneste.hentAntallUreserverteOppgaveForKø(kø.id)
+        assertThat(antallIKø).isEqualTo(1)
+
+        taReservasjonFra(kø, TestSaksbehandler.SARA)
+        assertReservasjonMedAntallOppgaver(TestSaksbehandler.SARA, 1)
+
+        eventHandler.prosesser(eventBuilder
+            .medAksjonspunkt(AksjonspunktDefinisjon.KONTROLLER_LEGEERKLÆRING.builder()
+                .medVenteårsakOgFrist(Venteårsak.UDEFINERT, null)
+                .medStatus(AksjonspunktStatus.OPPRETTET))
+            .medBehandlingStatus(BehandlingStatus.UTREDES)
+            .medBehandlingSteg(BehandlingStegType.INNHENT_REGISTEROPP)
+        .build())
+
+        assertReservasjonMedAntallOppgaver(TestSaksbehandler.SARA, 1)
     }
 
     @Test

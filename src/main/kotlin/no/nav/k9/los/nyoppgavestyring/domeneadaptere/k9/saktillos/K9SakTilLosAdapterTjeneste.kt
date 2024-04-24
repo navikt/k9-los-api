@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotliquery.TransactionalSession
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
@@ -132,7 +133,9 @@ class K9SakTilLosAdapterTjeneste(
                 if (oppgave != null) {
                     pepCacheService.oppdater(tx, oppgave.kildeområde, oppgave.eksternId)
 
-                    if (oppgave.status == Oppgavestatus.VENTER || oppgave.status == Oppgavestatus.LUKKET) {
+                    // Bruker samme logikk som i v1-modell for å ikke fjerne reservasjoner som midlertidige er på vent med Ventekategori.AVVENTER_ANNET
+                    val erPåVent = event.aksjonspunktTilstander.any { it.status.erÅpentAksjonspunkt() && AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode).erAutopunkt() }
+                    if (erPåVent || oppgave.status == Oppgavestatus.LUKKET) {
                         annullerReservasjonerHvisAlleOppgaverPåVentEllerAvsluttet(event, tx)
                     }
 

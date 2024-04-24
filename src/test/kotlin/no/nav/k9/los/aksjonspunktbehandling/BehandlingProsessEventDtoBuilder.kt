@@ -128,6 +128,21 @@ class BehandlingProsessEventDtoBuilder(
         return this
     }
 
+    fun medAksjonspunkt(vararg aksjonspunkter: AksjonspunktTilstandBuilder): BehandlingProsessEventDtoBuilder {
+        this.aksjonspunkter = aksjonspunkter.toMutableList()
+        return this
+    }
+
+    fun medBehandlingSteg(behandlingSteg: BehandlingStegType): BehandlingProsessEventDtoBuilder {
+        this.behandlingSteg = behandlingSteg
+        return this
+    }
+
+    fun medBehandlingStatus(behandlingStatus: BehandlingStatus): BehandlingProsessEventDtoBuilder {
+        this.behandlingStatus = behandlingStatus
+        return this
+    }
+
     fun build(): BehandlingProsessEventDto {
         return BehandlingProsessEventDto(
             eksternId,
@@ -166,7 +181,7 @@ data class AksjonspunktTilstandBuilder(
     var venteårsak: Venteårsak? = Venteårsak.UDEFINERT,
     var frist: LocalDateTime? = null,
     val opprettet: LocalDateTime = LocalDateTime.now(),
-    val endret: LocalDateTime = LocalDateTime.now(),
+    val endret: LocalDateTime? = LocalDateTime.now(),
 ) {
     fun build(): AksjonspunktTilstandDto {
         return AksjonspunktTilstandDto(

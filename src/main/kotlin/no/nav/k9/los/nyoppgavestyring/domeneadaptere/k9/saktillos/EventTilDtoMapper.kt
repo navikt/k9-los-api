@@ -36,7 +36,7 @@ class EventTilDtoMapper {
                         Oppgavestatus.AAPEN.kode
                     }
                 } else {
-                    if (event.behandlingStatus != BehandlingStatus.AVSLUTTET.getKode() && event.behandlingStatus != BehandlingStatus.IVERKSETTER_VEDTAK.getKode()) {
+                    if (event.behandlingStatus != BehandlingStatus.AVSLUTTET.kode && event.behandlingStatus != BehandlingStatus.IVERKSETTER_VEDTAK.kode) {
                         Oppgavestatus.AAPEN.kode
                     } else {
                         Oppgavestatus.LUKKET.kode
@@ -234,10 +234,6 @@ class EventTilDtoMapper {
             behandlingStatus: String?,
             åpneAksjonspunkter: List<AksjonspunktTilstandDto>
         ): Ventekategori? {
-            if (behandlingStatus != BehandlingStatus.AVSLUTTET.kode && behandlingSteg.isNullOrEmpty() && åpneAksjonspunkter.isEmpty()) {
-                return Ventekategori.AVVENTER_ANNET //TODO: Finne ut hva for et case dette egentlig er?
-            }
-
             if (behandlingStatus == BehandlingStatus.AVSLUTTET.kode) {
                 return null
             }
