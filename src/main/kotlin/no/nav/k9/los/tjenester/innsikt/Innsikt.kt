@@ -39,7 +39,7 @@ fun Route.innsiktGrensesnitt() {
     val reservasjonRepository by inject<ReservasjonRepository>()
     val reservasjonv3Repository by inject<ReservasjonV3Repository>()
     val reservasjonv3Tjeneste by inject<ReservasjonV3Tjeneste>()
-    val oppgaveQueryRepository by inject<OppgaveQueryRepository>()
+    val saksbehandlerRepository by inject<SaksbehandlerRepository>()
     val transactionalManager by inject<TransactionalManager>()
     val pepClient by inject<IPepClient>()
 
@@ -311,7 +311,13 @@ fun Route.innsiktGrensesnitt() {
                     ul {
                         classes = setOf("list-group")
                         reservasjon.forEach { (r, kilde) ->
-                            listeelement("reservasjonsid: ${r.id}, annullertFørUtløp: ${r.annullertFørUtløp}, gyldigPeriode: (${r.gyldigFra}-${r.gyldigTil}), reservertAv: ${r.reservertAv}, reservasjonsnøkkelType: $kilde")
+                            listeelement("""
+                                reservasjonsid: ${r.id}, 
+                                annullertFørUtløp: ${r.annullertFørUtløp}, 
+                                gyldigPeriode: (${r.gyldigFra}-${r.gyldigTil}), 
+                                reservertAv: ${r.reservertAv.let { saksbehandlerRepository.finnSaksbehandlerMedId(it).brukerIdent } }, 
+                                reservasjonsnøkkelType: $kilde
+                            """.trimMargin())
                         }
                     }
                 }
@@ -364,8 +370,18 @@ fun Route.innsiktGrensesnitt() {
                     body {
                         ul {
                             classes = setOf("list-group")
-                            aktiveV3Reservasjoner.forEach { r ->
-                                listeelement("saksnummer: ${r.saksnummer()}, eksternId: ${r.oppgaveV1?.eksternId ?: r.oppgaverV3.joinToString(", ", "[", "]") { it.eksternId }}, reservasjonsid: ${r.reservasjonV3.id}, annullertFørUtløp: ${r.reservasjonV3.annullertFørUtløp}, gyldigPeriode: (${r.reservasjonV3.gyldigFra}-${r.reservasjonV3.gyldigTil}), reservertAv: ${r.reservasjonV3.reservertAv}")
+                            transactionalManager.transaction { tx ->
+                                aktiveV3Reservasjoner.forEach { r ->
+
+                                    listeelement("""
+                                        saksnummer: ${r.saksnummer()}, 
+                                        eksternId: ${r.eksternId().joinToString(", ", "[", "]")}, 
+                                        reservasjonsid: ${r.reservasjonV3.id}, 
+                                        annullertFørUtløp: ${r.reservasjonV3.annullertFørUtløp}, 
+                                        gyldigPeriode: (${r.reservasjonV3.gyldigFra}-${r.reservasjonV3.gyldigTil}), 
+                                        reservertAv: ${r.reservasjonV3.reservertAv.let { saksbehandlerRepository.finnSaksbehandlerMedId(it).brukerIdent } }
+                                    """.trimMargin())
+                                }
                             }
                         }
                     }
@@ -412,7 +428,14 @@ fun Route.innsiktGrensesnitt() {
                             val saksnummer = r.saksnummer()
                             runBlocking {
                                 if (saksnummer.none { pepClient.erSakKode7EllerEgenAnsatt(it) }) {
-                                    listeelement("saksnummer: [${saksnummer.joinToString(", ")}], eksternId: [${r.eksternId()}], reservasjonsid: ${r.reservasjonV3.id}, annullertFørUtløp: ${r.reservasjonV3.annullertFørUtløp}, gyldigPeriode: (${r.reservasjonV3.gyldigFra}-${r.reservasjonV3.gyldigTil}), reservertAv: ${r.reservasjonV3.reservertAv}")
+                                    listeelement("""
+                                        saksnummer: [${saksnummer.joinToString(", ")}], 
+                                        eksternId: [${r.eksternId()}], 
+                                        reservasjonsid: ${r.reservasjonV3.id}, 
+                                        annullertFørUtløp: ${r.reservasjonV3.annullertFørUtløp}, 
+                                        gyldigPeriode: (${r.reservasjonV3.gyldigFra}-${r.reservasjonV3.gyldigTil}), 
+                                        reservertAv: ${r.reservasjonV3.reservertAv.let { saksbehandlerRepository.finnSaksbehandlerMedId(it).brukerIdent } }
+                                        """)
                                 }
                             }
                         }
