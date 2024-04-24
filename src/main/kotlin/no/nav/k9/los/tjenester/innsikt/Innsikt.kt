@@ -331,6 +331,8 @@ fun Route.innsiktGrensesnitt() {
 
         route("aktive") {
             get("v1") {
+                val fagsystem = call.request.queryParameters["fagsystem"]?.let { Fagsystem.fraKode(it) }
+
                 val aktiveV1Reservasjoner = oppgaveRepository.hentAktiveOppgaver()
                     .mapNotNull { oppgaveId -> reservasjonRepository.hentOptional(oppgaveId)?.let { oppgaveId to it } }
                     .filterNot { pepClient.erSakKode7EllerEgenAnsatt(oppgaveRepository.hent(it.second.oppgave).fagsakSaksnummer) }
@@ -342,7 +344,9 @@ fun Route.innsiktGrensesnitt() {
                             classes = setOf("list-group")
                             aktiveV1Reservasjoner.forEach { (id, r) ->
                                 val oppgave = oppgaveRepository.hent(id)
-                                listeelement("saksnummer: ${oppgave.fagsakSaksnummer}, eksternId: $id, aktiv: ${r.erAktiv()}, reservertTil: ${r.reservertTil}, reservertAv: ${r.reservertAv} flyttetTidspunkt: ${r.flyttetTidspunkt}")
+                                if (fagsystem != Fagsystem.K9SAK || oppgave.harFagSaksNummer()) {
+                                    listeelement("saksnummer: ${oppgave.fagsakSaksnummer}, eksternId: $id, aktiv: ${r.erAktiv()}, reservertTil: ${r.reservertTil}, reservertAv: ${r.reservertAv} flyttetTidspunkt: ${r.flyttetTidspunkt}")
+                                }
                             }
                         }
                     }
