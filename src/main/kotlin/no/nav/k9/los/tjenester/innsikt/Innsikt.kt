@@ -302,7 +302,8 @@ fun Route.innsiktGrensesnitt() {
                 ul {
                     classes = setOf("list-group")
                     reservasjonerV1Aktive.forEach {
-                        listeelement("oppgaveid: ${it.oppgave}, aktiv: ${it.erAktiv()}, reservertTil: ${it.reservertTil}, reservertAv: ${it.reservertAv} flyttetTidspunkt: ${it.flyttetTidspunkt}")
+                        val oppgave = oppgaveRepository.hent(it.oppgave)
+                        listeelement("oppgaveid: ${it.oppgave}, aktiv: ${it.erAktiv()}, reservertTil: ${it.reservertTil}, reservertAv: ${it.reservertAv} flyttetTidspunkt: ${it.flyttetTidspunkt}, ${if(oppgave.tilBeslutter) { "beslutter" } else "ordinær"}")
                     }
                 }
 
@@ -311,7 +312,8 @@ fun Route.innsiktGrensesnitt() {
                     ul {
                         classes = setOf("list-group")
                         reservasjonerV1Historiske.forEach {
-                            listeelement("oppgaveid: ${it.oppgave}, aktiv: ${it.erAktiv()}, reservertTil: ${it.reservertTil}, reservertAv: ${it.reservertAv} flyttetTidspunkt: ${it.flyttetTidspunkt}")
+                            val oppgave = oppgaveRepository.hent(it.oppgave)
+                            listeelement("oppgaveid: ${it.oppgave}, aktiv: ${it.erAktiv()}, reservertTil: ${it.reservertTil}, reservertAv: ${it.reservertAv} flyttetTidspunkt: ${it.flyttetTidspunkt}, ${if(oppgave.tilBeslutter) { "beslutter" } else "ordinær"}")
                         }
                     }
                 }
@@ -388,7 +390,7 @@ fun Route.innsiktGrensesnitt() {
                             aktiveV1Reservasjoner.forEach { (id, r) ->
                                 val oppgave = oppgaveRepository.hent(id)
                                 if (fagsystem != Fagsystem.K9SAK || oppgave.harFagSaksNummer()) {
-                                    listeelement("saksnummer: ${oppgave.fagsakSaksnummer}, eksternId: $id, aktiv: ${r.erAktiv()}, reservertTil: ${r.reservertTil}, reservertAv: ${r.reservertAv} flyttetTidspunkt: ${r.flyttetTidspunkt}")
+                                    listeelement("saksnummer: ${oppgave.fagsakSaksnummer}, eksternId: $id, aktiv: ${r.erAktiv()}, reservertTil: ${r.reservertTil}, reservertAv: ${r.reservertAv} flyttetTidspunkt: ${r.flyttetTidspunkt}, ${if(oppgave.tilBeslutter) { "beslutter" } else "ordinær"}")
                                 }
                             }
                         }
@@ -416,7 +418,8 @@ fun Route.innsiktGrensesnitt() {
                                         reservasjonsid: ${r.reservasjonV3.id}, 
                                         annullertFørUtløp: ${r.reservasjonV3.annullertFørUtløp}, 
                                         gyldigPeriode: (${r.reservasjonV3.gyldigFra}-${r.reservasjonV3.gyldigTil}), 
-                                        reservertAv: ${r.reservasjonV3.reservertAv.let { saksbehandlerRepository.finnSaksbehandlerMedId(it).brukerIdent } }
+                                        reservertAv: ${r.reservasjonV3.reservertAv.let { saksbehandlerRepository.finnSaksbehandlerMedId(it).brukerIdent } },
+                                        ${r.utledFraReservasjonsnøkkel()}
                                     """.trimMargin())
                                 }
                             }
@@ -452,7 +455,7 @@ fun Route.innsiktGrensesnitt() {
                             val oppgave = oppgaveRepository.hent(id)
                             runBlocking {
                                 if (!pepClient.erSakKode7EllerEgenAnsatt(oppgave.fagsakSaksnummer)) {
-                                    listeelement("saksnummer: ${oppgave.fagsakSaksnummer}, eksternId: $id, aktiv: ${r.erAktiv()}, reservertTil: ${r.reservertTil}, reservertAv: ${r.reservertAv} flyttetTidspunkt: ${r.flyttetTidspunkt}")
+                                    listeelement("saksnummer: ${oppgave.fagsakSaksnummer}, eksternId: $id, aktiv: ${r.erAktiv()}, reservertTil: ${r.reservertTil}, reservertAv: ${r.reservertAv} flyttetTidspunkt: ${r.flyttetTidspunkt}, ${if(oppgave.tilBeslutter) { "beslutter" } else "ordinær"}")
                                 }
                             }
                         }
@@ -471,7 +474,8 @@ fun Route.innsiktGrensesnitt() {
                                         reservasjonsid: ${r.reservasjonV3.id}, 
                                         annullertFørUtløp: ${r.reservasjonV3.annullertFørUtløp}, 
                                         gyldigPeriode: (${r.reservasjonV3.gyldigFra}-${r.reservasjonV3.gyldigTil}), 
-                                        reservertAv: ${r.reservasjonV3.reservertAv.let { saksbehandlerRepository.finnSaksbehandlerMedId(it).brukerIdent } }
+                                        reservertAv: ${r.reservasjonV3.reservertAv.let { saksbehandlerRepository.finnSaksbehandlerMedId(it).brukerIdent } },
+                                        ${r.utledFraReservasjonsnøkkel()}
                                         """)
                                 }
                             }
@@ -670,4 +674,8 @@ fun ReservasjonV3MedOppgaver.eksternId(): List<UUID> {
 
 fun ReservasjonV3MedOppgaver.saksnummer(): List<String> {
     return oppgaverV3.map { it.hentVerdi("saksnummer")!! }.takeIf { it.isNotEmpty() } ?: listOf(oppgaveV1!!.fagsakSaksnummer)
+}
+
+fun ReservasjonV3MedOppgaver.utledFraReservasjonsnøkkel(): String {
+    return if (reservasjonV3.reservasjonsnøkkel.contains("beslutter")) "beslutter" else if (reservasjonV3.reservasjonsnøkkel.contains("legacy")) "legacy" else "ordinær"
 }
