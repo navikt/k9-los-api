@@ -106,11 +106,12 @@ internal fun Route.OppgaveApis() {
         }
     }
 
+    // TODO: Rename til annuller
     @Location("/opphev")
     class opphevReservasjon
     post { _: opphevReservasjon ->
         requestContextService.withRequestContext(call) {
-            val params = call.receive<OpphevReservasjonId>()
+            val params = call.receive<AnnullerReservasjonId>()
             val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
                 kotlin.coroutines.coroutineContext.idToken().getUsername()
             )!!

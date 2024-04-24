@@ -7,6 +7,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Dto
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
+import no.nav.k9.los.tjenester.avdelingsleder.EndreReservasjonBolk
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -126,6 +127,13 @@ class OppgaveApisTjeneste(
         return reservasjonV3DtoBuilder.byggReservasjonV3Dto(nyReservasjon, reservertAv)
     }
 
+    suspend fun endreReservasjonBolk(
+        dto: EndreReservasjonBolk,
+        innloggetBruker: Saksbehandler
+    ): Collection<ReservasjonV3Dto> {
+        return dto.oppgaveNøkler.map { endreReservasjon(ReservasjonEndringDto(it, dto.brukerIdent, dto.reserverTil, dto.begrunnelse), innloggetBruker) }
+    }
+
     suspend fun forlengReservasjon(
         forlengReservasjonDto: ForlengReservasjonDto,
         innloggetBruker: Saksbehandler
@@ -189,7 +197,7 @@ class OppgaveApisTjeneste(
     }
 
     suspend fun annullerReservasjon(
-        params: OpphevReservasjonId,
+        params: AnnullerReservasjonId,
         innloggetBruker: Saksbehandler
     ) {
         // Fjernes når V1 skal vekk
@@ -208,6 +216,13 @@ class OppgaveApisTjeneste(
             innloggetBruker.id!!
         )
         log.info("annullerReservasjon: ${params.oppgaveNøkkel.oppgaveEksternId}, utførtAv: $innloggetBruker, $annulleringUtført")
+    }
+
+    suspend fun annullerReservasjonBolk(
+        params: AnnullerReservasjonBolk,
+        innloggetBruker: Saksbehandler
+    ): List<Unit> {
+        return params.oppgaveNøkler.map { annullerReservasjon(AnnullerReservasjonId(it, params.begrunnelse), innloggetBruker) }
     }
 
     suspend fun hentReserverteOppgaverForSaksbehandler(saksbehandler: Saksbehandler): List<ReservasjonV3Dto> {

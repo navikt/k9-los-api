@@ -1,6 +1,5 @@
 package no.nav.k9.los.tjenester.saksbehandler.oppgave
 
-import kotlinx.coroutines.runBlocking
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
@@ -19,7 +18,6 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverHistorikk
 import no.nav.k9.los.tjenester.fagsak.PersonDto
-import no.nav.k9.los.tjenester.mock.AksjonspunkterMock
 import no.nav.k9.los.tjenester.saksbehandler.merknad.Merknad
 import no.nav.k9.los.tjenester.saksbehandler.nokkeltall.NyeOgFerdigstilteOppgaverDto
 import no.nav.k9.los.utils.Cache

@@ -273,7 +273,7 @@ class K9TilbakeTilLosIT : AbstractK9LosIntegrationTest() {
         runBlocking {
             oppgaveApisTjeneste.hentReserverteOppgaverForSaksbehandler(saksbehandler).forEach { reservasjon ->
 
-                val nøkkel = OpphevReservasjonId(
+                val nøkkel = AnnullerReservasjonId(
                     reservasjon.reservertOppgaveV1Dto?.oppgaveNøkkel
                         ?: reservasjon.reserverteV3Oppgaver.first().oppgaveNøkkel, "begrunnelsen")
 

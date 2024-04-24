@@ -1,5 +1,6 @@
 package no.nav.k9.los.tjenester.avdelingsleder
 
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -7,11 +8,10 @@ import io.ktor.server.routing.*
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.integrasjon.rest.idToken
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
+import no.nav.k9.los.nyoppgavestyring.feilhandtering.FinnerIkkeDataException
+import no.nav.k9.los.tjenester.saksbehandler.oppgave.AnnullerReservasjonBolk
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveApisTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OpphevReservasjonId
 import org.koin.ktor.ext.inject
 import java.util.*
 
@@ -70,13 +70,28 @@ internal fun Route.AvdelingslederApis() {
         }
     }
 
-    post("/reservasjoner/opphev") {
+    post("/reservasjoner/flytt") {
         requestContextService.withRequestContext(call) {
-            val nøkkel = call.receive<OppgaveNøkkelDto>()
+            val dto = call.receive<EndreReservasjonBolk>()
             val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
                 kotlin.coroutines.coroutineContext.idToken().getUsername()
             )!!
-            call.respond(oppgaveApisTjeneste.annullerReservasjon(OpphevReservasjonId(oppgaveNøkkel = nøkkel, ""), innloggetBruker))
+            try {
+                call.respond(oppgaveApisTjeneste.endreReservasjonBolk(dto, innloggetBruker))
+            } catch (e: FinnerIkkeDataException) {
+                call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitt(e) reservasjonsnøkkel(er)")
+            }
         }
     }
+
+    post("/reservasjoner/opphev") {
+        requestContextService.withRequestContext(call) {
+            val dto = call.receive<AnnullerReservasjonBolk>()
+            val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
+                kotlin.coroutines.coroutineContext.idToken().getUsername()
+            )!!
+            call.respond(oppgaveApisTjeneste.annullerReservasjonBolk(dto, innloggetBruker))
+        }
+    }
+
 }
