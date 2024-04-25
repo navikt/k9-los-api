@@ -2,21 +2,26 @@ package no.nav.k9.los.tjenester.saksbehandler.oppgave
 
 import assertk.assertThat
 import assertk.assertions.*
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
+import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.modell.*
-import no.nav.k9.los.domene.repository.OppgaveKøRepository
-import no.nav.k9.los.domene.repository.OppgaveRepository
-import no.nav.k9.los.domene.repository.ReservasjonRepository
-import no.nav.k9.los.domene.repository.SaksbehandlerRepository
+import no.nav.k9.los.domene.repository.*
+import no.nav.k9.los.integrasjon.abac.IPepClient
+import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
+import no.nav.k9.los.integrasjon.pdl.IPdlService
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
 import org.junit.jupiter.api.BeforeEach
@@ -41,7 +46,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
     @Test
     fun `hent fagsak`() {
         val oppgaveRepository = get<OppgaveRepository>()
-        val oppgaveTjeneste = get<OppgaveTjeneste>()
+        val oppgaveTjeneste = lagOppgaveTjenesteMedMocketV3Kobling()
 
         val oppgave1 = Oppgave(
 
@@ -98,7 +103,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val oppgaveRepository = get<OppgaveRepository>()
         val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
 
-        val oppgaveTjeneste = get<OppgaveTjeneste>()
+        val oppgaveTjeneste = lagOppgaveTjenesteMedMocketV3Kobling()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
         val reservasjonRepository = get<ReservasjonRepository>()
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
@@ -195,7 +200,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val oppgaveRepository = get<OppgaveRepository>()
         val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
 
-        val oppgaveTjeneste = get<OppgaveTjeneste>()
+        val oppgaveTjeneste = lagOppgaveTjenesteMedMocketV3Kobling()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
         val reservasjonRepository = get<ReservasjonRepository>()
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
@@ -285,7 +290,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val oppgaveRepository = get<OppgaveRepository>()
         val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
 
-        val oppgaveTjeneste = get<OppgaveTjeneste>()
+        val oppgaveTjeneste = lagOppgaveTjenesteMedMocketV3Kobling()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
         val reservasjonRepository = get<ReservasjonRepository>()
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
@@ -722,7 +727,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val oppgaveRepository = get<OppgaveRepository>()
         val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
 
-        val oppgaveTjeneste = get<OppgaveTjeneste>()
+        val oppgaveTjeneste = lagOppgaveTjenesteMedMocketV3Kobling()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
         val reservasjonRepository = get<ReservasjonRepository>()
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
@@ -902,13 +907,41 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         assert(reservasjonsHistorikk3.reservasjoner[0].reservertAv == "123")
     }
 
+    private fun lagOppgaveTjenesteMedMocketV3Kobling(): OppgaveTjeneste {
+        val oversetterMock = mockk<ReservasjonOversetter>()
+        every { oversetterMock.hentAktivReservasjonFraGammelKontekst(any()) } returns null
+        every {
+            oversetterMock.taNyReservasjonFraGammelKontekst(any(), any(), any(), any(), any())
+        } returns ReservasjonV3(
+            reservertAv = 123,
+            reservasjonsnøkkel = "test1",
+            gyldigFra = LocalDateTime.now(),
+            gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
+            kommentar = ""
+        )
+
+        return OppgaveTjeneste(
+            get<OppgaveRepository>(),
+            get<OppgaveRepositoryV2>(),
+            get<OppgaveKøRepository>(),
+            get<SaksbehandlerRepository>(),
+            get<IPdlService>(),
+            get<ReservasjonRepository>(),
+            get<Configuration>(),
+            get<IAzureGraphService>(),
+            get<IPepClient>(),
+            get<StatistikkRepository>(),
+            oversetterMock,
+        )
+    }
+
     @Test
     fun skalIkkeFåOppNestesakIListenHvisSaksbehandlerVarBeslutterPåDen() = runBlocking {
         // arrange
         val oppgaveRepository = get<OppgaveRepository>()
         val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
 
-        val oppgaveTjeneste = get<OppgaveTjeneste>()
+        val oppgaveTjeneste = lagOppgaveTjenesteMedMocketV3Kobling()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
         val reservasjonRepository = get<ReservasjonRepository>()
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
@@ -1095,7 +1128,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val oppgaveRepository = get<OppgaveRepository>()
         val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
 
-        val oppgaveTjeneste = get<OppgaveTjeneste>()
+        val oppgaveTjeneste = lagOppgaveTjenesteMedMocketV3Kobling()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
         val reservasjonRepository = get<ReservasjonRepository>()
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
@@ -1233,7 +1266,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val oppgaveRepository = get<OppgaveRepository>()
         val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
 
-        val oppgaveTjeneste = get<OppgaveTjeneste>()
+        val oppgaveTjeneste = lagOppgaveTjenesteMedMocketV3Kobling()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
         val reservasjonRepository = get<ReservasjonRepository>()
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
@@ -1374,7 +1407,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val oppgaveRepository = get<OppgaveRepository>()
         val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
 
-        val oppgaveTjeneste = get<OppgaveTjeneste>()
+        val oppgaveTjeneste = lagOppgaveTjenesteMedMocketV3Kobling()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
         val reservasjonRepository = get<ReservasjonRepository>()
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
@@ -1553,7 +1586,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val oppgaveRepository = get<OppgaveRepository>()
         val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
 
-        val oppgaveTjeneste = get<OppgaveTjeneste>()
+        val oppgaveTjeneste = lagOppgaveTjenesteMedMocketV3Kobling()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
         val reservasjonRepository = get<ReservasjonRepository>()
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
@@ -1685,7 +1718,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val oppgaveRepository = get<OppgaveRepository>()
         val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
 
-        val oppgaveTjeneste = get<OppgaveTjeneste>()
+        val oppgaveTjeneste = lagOppgaveTjenesteMedMocketV3Kobling()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
         val reservasjonRepository = get<ReservasjonRepository>()
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
@@ -1822,7 +1855,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
     @Test
     fun skal_bare_returnere_aktivte_eller_sist_ikke_aktive_oppgave() = runBlocking {
         val oppgaveRepository = get<OppgaveRepository>()
-        val oppgaveTjeneste = get<OppgaveTjeneste>()
+        val oppgaveTjeneste = lagOppgaveTjenesteMedMocketV3Kobling()
 
         val fagsakSaksnummer = "Yz647"
         val oppgave1 = Oppgave(

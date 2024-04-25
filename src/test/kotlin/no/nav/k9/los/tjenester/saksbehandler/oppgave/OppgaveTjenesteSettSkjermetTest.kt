@@ -96,7 +96,9 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             saksbehandlerRepository = saksbehandlerRepository
         )
 
-        val reservasjonOversetter = get<ReservasjonOversetter>()
+        val reservasjonOversetter = mockk<ReservasjonOversetter>()
+        every { reservasjonOversetter.hentAktivReservasjonFraGammelKontekst(any()) } returns null
+
         val config = mockk<Configuration>()
         val pdlService = mockk<PdlService>()
         val statistikkRepository = StatistikkRepository(dataSource = get())
@@ -428,7 +430,9 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             refreshKlienter = refreshKlienter,
             saksbehandlerRepository = saksbehandlerRepository
         )
-        val reservasjonOversetter = get<ReservasjonOversetter>()
+
+        val reservasjonOversetter = mockk<ReservasjonOversetter>()
+        every { reservasjonOversetter.hentAktivReservasjonFraGammelKontekst(any()) } returns null
         val config = mockk<Configuration>()
         val pdlService = mockk<PdlService>()
         val statistikkRepository = StatistikkRepository(dataSource = dataSource)
