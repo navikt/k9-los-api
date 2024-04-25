@@ -440,7 +440,7 @@ fun Route.innsiktGrensesnitt() {
             val aktiveV3Reservasjoner = reservasjonv3Tjeneste.hentAlleAktiveReservasjoner()
 
             val aktiveV3ReservasjonerForV1Oppgaver = aktiveV3Reservasjoner
-                .associateWith { it.oppgaverV3.map { UUID.fromString(it.eksternId)!! }.takeIf { it.isNotEmpty() } ?: listOf(it.oppgaveV1!!.eksternId) }
+                .associateWith { it.eksternId() }
 
             val aktiveV1nøkler = aktiveV1Reservasjoner.keys
             val resultatv3ReservasjonerSomIkkeFinnesIV1 = aktiveV3ReservasjonerForV1Oppgaver.filter { (_, eksternIder) -> eksternIder.none { aktiveV1nøkler.contains(it) }}
@@ -672,11 +672,11 @@ fun UL.listeelement(innhold: String, href: String? = null) = li {
 }
 
 fun ReservasjonV3MedOppgaver.eksternId(): List<UUID> {
-    return oppgaverV3.map { UUID.fromString(it.eksternId)!! }.takeIf { it.isNotEmpty() } ?: listOf(oppgaveV1!!.eksternId)
+    return oppgaverV3.map { UUID.fromString(it.eksternId) }.takeIf { it.isNotEmpty() } ?: listOfNotNull(oppgaveV1?.eksternId)
 }
 
 fun ReservasjonV3MedOppgaver.saksnummer(): List<String> {
-    return oppgaverV3.map { it.hentVerdi("saksnummer")!! }.takeIf { it.isNotEmpty() } ?: listOf(oppgaveV1!!.fagsakSaksnummer)
+    return oppgaverV3.mapNotNull { it.hentVerdi("saksnummer") }.takeIf { it.isNotEmpty() } ?: listOfNotNull(oppgaveV1?.fagsakSaksnummer)
 }
 
 fun ReservasjonV3MedOppgaver.utledFraReservasjonsnøkkel(): String {
