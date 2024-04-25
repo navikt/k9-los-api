@@ -92,7 +92,8 @@ class OppgaveApisTjeneste(
         // Fjernes når V1 skal vekk
         try {
             oppgaveTjeneste.endreReservasjonPåOppgave(reservasjonEndringDto)
-        } catch (e: NullPointerException) {
+        } catch (_: NullPointerException) {
+        } catch (_: IllegalArgumentException) {
             //ReservasjonV1 annullerer noen reservasjoner som V3 ikke annullerer, og da kan det hende at det ikke finnes
             //noen V1-reservasjon å endre på
         }
