@@ -709,6 +709,12 @@ class OppgaveTjeneste constructor(
                         continue
                     }
 
+                    // Sjekker om det finnes en v3-reservasjon. F.eks ved retur fra beslutter der v1-reservasjonen er annullert mens v3-reservasjonen reaktiveres
+                    if (reservasjonOversetter.hentAktivReservasjonFraGammelKontekst(oppgave)?.erAktiv() == true) {
+                        log.info("OppgaveFraKø: Reservasjon v1 er ute av synk med v3. Fjerner oppgave med eksisterende v3-reservasjon fra kandidater ${oppgave.eksternId}")
+                        continue
+                    }
+
                     val person = pdlService.person(oppgave.aktorId)
 
                     val navn = if (person.person != null) person.person.navn() else "Uten navn"
@@ -957,8 +963,7 @@ class OppgaveTjeneste constructor(
         }
 
         // sjekker også om parsakene har blitt besluttet av beslutter
-        if (oppgaverSomSkalBliReservert.map { it.oppgave }
-                .any { innloggetSaksbehandlerHarBesluttetOppgaven(it, brukerident) }) {
+        if (oppgaverSomSkalBliReservert.any { innloggetSaksbehandlerHarBesluttetOppgaven(it.oppgave, brukerident) }) {
             log.info("OppgaveFraKø: Innlogget Saksbehandler har besluttet parsak")
             oppgaverSomErBlokert.add(oppgaveDto)
             return fåOppgaveFraKø(
@@ -970,8 +975,8 @@ class OppgaveTjeneste constructor(
         }
 
         // sjekker også om parsakene har blitt saksbehandlet av saksbehandler
-        if (oppgaverSomSkalBliReservert.map { it.oppgave }
-                .any { innloggetSaksbehandlerHarSaksbehandletOppgaveSomSkalBliBesluttet(it, brukerident) }) {
+        if (oppgaverSomSkalBliReservert
+                .any { innloggetSaksbehandlerHarSaksbehandletOppgaveSomSkalBliBesluttet(it.oppgave, brukerident) }) {
             log.info("OppgaveFraKø: Innlogget beslutter har saksbehandlet parsak")
             oppgaverSomErBlokert.add(oppgaveDto)
             return fåOppgaveFraKø(
