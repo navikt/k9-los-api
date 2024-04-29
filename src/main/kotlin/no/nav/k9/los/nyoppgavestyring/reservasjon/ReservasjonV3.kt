@@ -65,7 +65,7 @@ class ReservasjonV3(
     )
 
     fun erAktiv(): Boolean {
-        return !annullertFørUtløp || gyldigTil.isAfter(LocalDateTime.now())
+        return !annullertFørUtløp && gyldigTil.isAfter(LocalDateTime.now())
     }
 
     override fun equals(other: Any?): Boolean {
