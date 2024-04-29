@@ -8,6 +8,7 @@ import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.domene.modell.BehandlingStatus
 import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerInterfaceKludge
@@ -133,19 +134,23 @@ class K9SakTilLosAdapterTjeneste(
                 if (oppgave != null) {
                     pepCacheService.oppdater(tx, oppgave.kildeområde, oppgave.eksternId)
 
-                    // Bruker samme logikk som i v1-modell for å ikke fjerne reservasjoner som midlertidige er på vent med Ventekategori.AVVENTER_ANNET
-                    val erPåVent = event.aksjonspunktTilstander.any { it.status.erÅpentAksjonspunkt() && AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode).erAutopunkt() }
-                    if (erPåVent || oppgave.status == Oppgavestatus.LUKKET) {
-                        annullerReservasjonerHvisAlleOppgaverPåVentEllerAvsluttet(event, tx)
-                    }
-
                     eventTeller++
                     loggFremgangForHver100(eventTeller, "Prosessert $eventTeller eventer")
                 }
                 forrigeOppgave = oppgave
             }
 
-            forrigeOppgave = null
+            forrigeOppgave?.let { sisteOppgave ->
+                val sisteEvent = behandlingProsessEventer.last()
+
+                // Bruker samme logikk som i v1-modell for å ikke fjerne reservasjoner som midlertidige er på vent med Ventekategori.AVVENTER_ANNET
+                val erPåVent = sisteEvent.aksjonspunktTilstander.any {
+                    it.status.erÅpentAksjonspunkt() && AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode).erAutopunkt()
+                }
+                if (erPåVent || BehandlingStatus.AVSLUTTET.kode == sisteEvent.behandlingStatus || sisteOppgave.status == Oppgavestatus.LUKKET) {
+                    annullerReservasjonerHvisAlleOppgaverPåVentEllerAvsluttet(sisteEvent, tx)
+                }
+            }
 
             behandlingProsessEventK9Repository.fjernDirty(uuid, tx)
         }
