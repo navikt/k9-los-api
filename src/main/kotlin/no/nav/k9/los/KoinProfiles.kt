@@ -441,7 +441,6 @@ fun common(app: Application, config: Configuration) = module {
             pepCacheService = get(),
             oppgaveRepository = get(),
             reservasjonV3Tjeneste = get(),
-
         )
     }
 

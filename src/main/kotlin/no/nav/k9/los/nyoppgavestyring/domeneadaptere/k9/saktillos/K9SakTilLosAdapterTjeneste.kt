@@ -2,6 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import kotlinx.coroutines.channels.Channel
 import kotliquery.TransactionalSession
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
@@ -13,6 +14,7 @@ import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.EventTilDtoMapper
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.*
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
@@ -36,7 +38,8 @@ class K9SakTilLosAdapterTjeneste(
     private val config: Configuration,
     private val transactionalManager: TransactionalManager,
     private val k9SakBerikerKlient: K9SakBerikerInterfaceKludge,
-    private val pepCacheService: PepCacheService
+    private val pepCacheService: PepCacheService,
+    private val historikkvaskChannel: Channel<UUID>
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9SakTilLosAdapterTjeneste::class.java)
@@ -113,10 +116,13 @@ class K9SakTilLosAdapterTjeneste(
     private fun oppdaterOppgaveForBehandlingUuid(uuid: UUID, eventTellerInn: Long): Long {
         var eventTeller = eventTellerInn
         var forrigeOppgave: OppgaveV3? = null
+        var korrigerFeilRekkefølge = false
 
         transactionalManager.transaction { tx ->
             val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
             val nyeBehandlingsopplysningerFraK9Sak = k9SakBerikerKlient.hentBehandling(uuid)
+            val høyesteInternVersjon =
+                oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9sak", "K9", tx)!!
             var eventNrForBehandling = -1L
             behandlingProsessEventer.forEach { event ->
                 eventNrForBehandling++
@@ -131,6 +137,8 @@ class K9SakTilLosAdapterTjeneste(
 
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
 
+                //oppgave er satt bare dersom oppgavemodellen ikke har sett eksternVersjon fra tidligere
+                //Normaltilfelle når adapter kjøres fra eventhandler er at det kun er ett event å oppdatere
                 if (oppgave != null) {
                     pepCacheService.oppdater(tx, oppgave.kildeområde, oppgave.eksternId)
 
@@ -142,13 +150,18 @@ class K9SakTilLosAdapterTjeneste(
 
                     eventTeller++
                     loggFremgangForHver100(eventTeller, "Prosessert $eventTeller eventer")
+                    if (eventNrForBehandling <= høyesteInternVersjon) {
+                        korrigerFeilRekkefølge = true
+                    }
                 }
                 forrigeOppgave = oppgave
             }
 
-            forrigeOppgave = null
-
             behandlingProsessEventK9Repository.fjernDirty(uuid, tx)
+        }
+
+        if (korrigerFeilRekkefølge) {
+            historikkvaskChannel.send(uuid)
         }
         return eventTeller
     }

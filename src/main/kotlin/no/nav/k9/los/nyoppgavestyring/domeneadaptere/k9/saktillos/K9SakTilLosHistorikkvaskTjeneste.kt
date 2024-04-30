@@ -1,17 +1,26 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.launch
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
+import no.nav.k9.los.domene.repository.OppgaveKøRepository
+import no.nav.k9.los.domene.repository.OppgaveRepository
+import no.nav.k9.los.eventhandler.asCoroutineDispatcherWithErrorHandling
+import no.nav.k9.los.eventhandler.oppdaterKø
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
+import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
+import java.util.concurrent.Executors
 import kotlin.concurrent.thread
 
 class K9SakTilLosHistorikkvaskTjeneste(
@@ -19,13 +28,20 @@ class K9SakTilLosHistorikkvaskTjeneste(
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
     private val config: Configuration,
     private val transactionalManager: TransactionalManager,
-    private val oppgaveRepositoryV2: OppgaveRepositoryV2,
     private val k9SakTilLosAdapterTjeneste: K9SakTilLosAdapterTjeneste,
     private val k9SakBerikerKlient: K9SakBerikerInterfaceKludge,
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9SakTilLosHistorikkvaskTjeneste::class.java)
     private val TRÅDNAVN = "k9-sak-til-los-historikkvask"
+
+    fun CoroutineScope.korrigerOutOfOrderProsessor(
+        channel: ReceiveChannel<UUID>,
+    ) = launch(Executors.newSingleThreadExecutor().asCoroutineDispatcherWithErrorHandling()) {
+        for (uuid in channel) {
+            vaskOppgaveForBehandlingUUID(uuid, 0)
+        }
+    }
 
     fun kjørHistorikkvask() {
         if (config.nyOppgavestyringAktivert()) {
@@ -50,7 +66,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
         var behandlingTeller: Long = 0
         var eventTeller: Long = 0
         behandlingsIder.forEach { uuid ->
-            eventTeller = vaskOppgaverForBehandlingUUID(uuid, eventTeller)
+            eventTeller = vaskOppgaveForBehandlingUUID(uuid, eventTeller)
             behandlingTeller++
             loggFremgangForHver100(behandlingTeller, "Vasket $behandlingTeller behandlinger")
         }
@@ -67,7 +83,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
         log.info("Nullstilt historikkvaskmarkering k9-sak")
     }
 
-    private fun vaskOppgaverForBehandlingUUID(uuid: UUID, eventTellerInn: Long): Long {
+    fun vaskOppgaveForBehandlingUUID(uuid: UUID, eventTellerInn: Long): Long {
         var eventTeller = eventTellerInn
         var forrigeOppgave: OppgaveV3? = null
         transactionalManager.transaction { tx ->
