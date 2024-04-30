@@ -336,6 +336,7 @@ class AvdelingslederTjeneste(
                             behandlingType = reservasjonMedOppgaver.oppgaveV1.behandlingType,
                             reservertTilTidspunkt = reservasjonMedOppgaver.reservasjonV3.gyldigTil,
                             kommentar = reservasjonMedOppgaver.reservasjonV3.kommentar,
+                            tilBeslutter = reservasjonMedOppgaver.oppgaveV1.tilBeslutter,
                             oppgavenøkkel = OppgaveNøkkelDto.forV1Oppgave(reservasjonMedOppgaver.oppgaveV1.eksternId.toString()),
                         )
                     )
@@ -348,6 +349,7 @@ class AvdelingslederTjeneste(
                             behandlingType = BehandlingType.fraKode(oppgave.hentVerdi("behandlingTypekode")!!),
                             reservertTilTidspunkt = reservasjonMedOppgaver.reservasjonV3.gyldigTil,
                             kommentar = reservasjonMedOppgaver.reservasjonV3.kommentar,
+                            tilBeslutter = oppgave.hentVerdi("liggerHosBeslutter").toBoolean(),
                             oppgavenøkkel = OppgaveNøkkelDto(oppgave),
                         )
                     }.toList()
