@@ -5,6 +5,7 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import java.time.LocalDateTime
 
 data class ReservasjonDto(
+    val reservertAvIdent: String,
     val reservertAvEpost: String,
     val saksnummer: String?,
     val journalpostId: String?,

@@ -1,14 +1,11 @@
 package no.nav.k9.los.tjenester.avdelingsleder
 
-import kotlinx.coroutines.runBlocking
-import no.nav.k9.los.domene.lager.oppgave.Reservasjon
 import no.nav.k9.los.domene.modell.*
 import no.nav.k9.los.domene.repository.OppgaveKøRepository
 import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.abac.IPepClient
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Dto
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.*
@@ -331,6 +328,7 @@ class AvdelingslederTjeneste(
                     listOf(
                         ReservasjonDto(
                             reservertAvEpost = saksbehandler.epost,
+                            reservertAvIdent = saksbehandler.brukerIdent!!,
                             saksnummer = reservasjonMedOppgaver.oppgaveV1.fagsakSaksnummer,
                             journalpostId = reservasjonMedOppgaver.oppgaveV1.journalpostId,
                             behandlingType = reservasjonMedOppgaver.oppgaveV1.behandlingType,
@@ -344,6 +342,7 @@ class AvdelingslederTjeneste(
                     reservasjonMedOppgaver.oppgaverV3.map { oppgave ->
                         ReservasjonDto(
                             reservertAvEpost = saksbehandler.epost,
+                            reservertAvIdent = saksbehandler.brukerIdent!!,
                             saksnummer = oppgave.hentVerdi("saksnummer")!!, //TODO: Oppgaveagnostisk logikk. Løses antagelig ved å skrive om frontend i dette tilfellet
                             journalpostId = null,
                             behandlingType = BehandlingType.fraKode(oppgave.hentVerdi("behandlingTypekode")!!),
