@@ -10,6 +10,7 @@ import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.Topology
 import org.apache.kafka.streams.kstream.Consumed
 import org.slf4j.LoggerFactory
+import kotlin.system.measureTimeMillis
 
 internal class AksjonspunktStreamK9 constructor(
     kafkaConfig: IKafkaConfig,
@@ -51,7 +52,10 @@ internal class AksjonspunktStreamK9 constructor(
                 ).peek { _, e -> log.info("--> Behandlingsprosesshendelse fra k9sak: ${e.tryggToString() }") }
                 .foreach { _, entry ->
                     if (entry != null) {
-                        k9sakEventHandler.prosesser(entry)
+                        val tid = measureTimeMillis {
+                            k9sakEventHandler.prosesser(entry)
+                        }
+                        log.info("Prosessering av Behandlingsprosesshendelse fra k9sak for ${entry.saksnummer}-${entry.eksternId} tok $tid")
                     }
                 }
             return builder.build()
