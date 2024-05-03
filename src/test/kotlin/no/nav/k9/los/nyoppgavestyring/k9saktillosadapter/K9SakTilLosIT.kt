@@ -23,14 +23,18 @@ import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.db.FeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Dto
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.tjenester.saksbehandler.IIdToken
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveApisTjeneste
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveIdMedOverstyringDto
+import no.nav.k9.los.tjenester.saksbehandler.oppgave.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.koin.test.get
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.*
 
 
@@ -249,21 +253,72 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         assertIngenReservasjon(TestSaksbehandler.BIRGER_BESLUTTER)
     }
 
+
+    @Test
+    fun `Retur fra beslutter skal ikke henge igjen`() {
+        val eksternId = UUID.randomUUID()
+        val kø = opprettKøFor(TestSaksbehandler.SARA, querySomKunInneholder(eksternId, Oppgavestatus.AAPEN))
+
+        val eventBuilder = BehandlingProsessEventDtoBuilder(eksternId)
+
+        // Åpen oppgave plukkes av saksbehandler
+        eventHandler.prosesser(eventBuilder.vurderSykdom().build())
+        taReservasjonFra(kø, TestSaksbehandler.SARA)
+
+        // Simulerer at saksbehandler-reservasjonen gikk ut dagen før
+//        get<TransactionalManager>().transaction { tx ->
+//            val reservasjonRepository = get<ReservasjonV3Repository>()
+//            val reservasjon = reservasjonRepository.hentAktiveReservasjonerForSaksbehandler(TestSaksbehandler.SARA.id!!, tx).first()
+//            reservasjonRepository.annullerAktivReservasjonOgLagreEndring(
+//                reservasjon.copy(
+//                    reservasjon.id,
+//                    gyldigFra = LocalDateTime.now().minusDays(3),
+//                    gyldigTil = LocalDateTime.now().minusDays(1),
+//                ), "",1, tx)
+//        }
+
+        // Behandling sendt til beslutter, beslutter plukken oppgaven
+        eventHandler.prosesser(eventBuilder.hosBeslutter().build())
+        taReservasjonFra(kø, TestSaksbehandler.BIRGER_BESLUTTER)
+
+        val oppgavenøkler = hentEnesteReservasjon(TestSaksbehandler.BIRGER_BESLUTTER).oppgaveNøkkelDtos()
+
+        // Beslutter sender oppgaven tilbake til saksbehandler for ny vurdering av opptjening
+        eventHandler.prosesser(eventBuilder.returFraBeslutterOpptjening().build())
+
+
+        assertReservasjonMedAntallOppgaver(TestSaksbehandler.SARA, 1)
+        assertSkjultReservasjon(TestSaksbehandler.BIRGER_BESLUTTER)
+    }
+
+
     private fun assertAntallIKø(kø: OppgaveKo, forventetAntall: Int) {
         val antallIKøEtterRes = oppgaveKøTjeneste.hentAntallUreserverteOppgaveForKø(kø.id)
         assertThat(antallIKøEtterRes).isEqualTo(forventetAntall.toLong())
     }
 
-    private fun taReservasjonFra(kø: OppgaveKo, saksbehandler: Saksbehandler) {
-        oppgaveKøTjeneste.taReservasjonFraKø(
+    private fun taReservasjonFra(kø: OppgaveKo, saksbehandler: Saksbehandler): Pair<Oppgave, ReservasjonV3>? {
+        return oppgaveKøTjeneste.taReservasjonFraKø(
             saksbehandler.id!!,
             kø.id,
             CoroutineRequestContext(mockk<IIdToken>(relaxed = true))
         )
     }
 
+    private fun hentEnesteReservasjon(saksbehandler: Saksbehandler): ReservasjonV3Dto {
+        val oppgaveApisTjeneste = get<OppgaveApisTjeneste>()
+        return runBlocking {
+            oppgaveApisTjeneste.hentReserverteOppgaverForSaksbehandler(saksbehandler).also {
+                assertThat(it).hasSize(1)
+            }.first()
+        }
+    }
+
     private fun assertIngenReservasjon(saksbehandler: Saksbehandler) {
-        assertReservasjon(saksbehandler, antallReservasjoner = 0, antallOppgaver = 0)
+        val oppgaveApisTjeneste = get<OppgaveApisTjeneste>()
+        runBlocking { assertThat(
+            oppgaveApisTjeneste.hentReserverteOppgaverForSaksbehandler(saksbehandler)
+        ).isEmpty() }
     }
 
     private fun assertSkjultReservasjon(saksbehandler: Saksbehandler) {
@@ -282,6 +337,78 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
             assertThat(it.reserverteV3Oppgaver).hasSize(antallOppgaver)
         }
     }
+
+    private fun leggTilbakeAlleReservasjoner(saksbehandler: Saksbehandler) {
+        val oppgaveApisTjeneste = get<OppgaveApisTjeneste>()
+        runBlocking {
+            oppgaveApisTjeneste.hentReserverteOppgaverForSaksbehandler(saksbehandler).forEach { reservasjon ->
+
+                val nøkkel = OpphevReservasjonId(
+                    reservasjon.reservertOppgaveV1Dto?.oppgaveNøkkel
+                        ?: reservasjon.reserverteV3Oppgaver.first().oppgaveNøkkel, "begrunnelsen")
+
+                oppgaveApisTjeneste.annullerReservasjon(nøkkel, saksbehandler)
+            }
+        }
+    }
+
+    private fun forleng(saksbehandler: Saksbehandler, reservasjon: ReservasjonV3Dto, tilDato: LocalDateTime) {
+        val oppgaveApisTjeneste = get<OppgaveApisTjeneste>()
+        val nøkler = listOfNotNull(reservasjon.reservertOppgaveV1Dto?.oppgaveNøkkel).takeIf { it.isNotEmpty() }
+            ?: reservasjon.reserverteV3Oppgaver.map { it.oppgaveNøkkel }
+
+        runBlocking {
+            nøkler.forEach {
+                oppgaveApisTjeneste.forlengReservasjon(
+                    ForlengReservasjonDto(
+                        it,
+                        "begrunnelse",
+                        tilDato
+                    ), saksbehandler
+                )
+            }
+        }
+    }
+
+
+    private fun endre(saksbehandler: Saksbehandler, nøkler: List<OppgaveNøkkelDto>, tilDato: LocalDate) {
+        val oppgaveApisTjeneste = get<OppgaveApisTjeneste>()
+
+        runBlocking {
+            nøkler.forEach {
+                oppgaveApisTjeneste.endreReservasjon(
+                    ReservasjonEndringDto(
+                        it,
+                        saksbehandler.brukerIdent,
+                        tilDato,
+                        "begrunnelse",
+                    ), saksbehandler
+                )
+            }
+        }
+    }
+
+    private fun ReservasjonV3Dto.oppgaveNøkkelDtos() =
+        (listOfNotNull(reservertOppgaveV1Dto?.oppgaveNøkkel).takeIf { it.isNotEmpty() }
+            ?: reserverteV3Oppgaver.map { it.oppgaveNøkkel })
+
+
+    private fun overfør(saksbehandler: Saksbehandler, nøkler: List<OppgaveNøkkelDto>) {
+        val oppgaveApisTjeneste = get<OppgaveApisTjeneste>()
+
+        runBlocking {
+            nøkler.forEach {
+                oppgaveApisTjeneste.overførReservasjon(
+                    FlyttReservasjonId(
+                        it,
+                        saksbehandler.brukerIdent!!,
+                        "begrunnelse",
+                    ), saksbehandler
+                )
+            }
+        }
+    }
+
 
 
     private fun opprettKøFor(saksbehandler: Saksbehandler, oppgaveQuery: OppgaveQuery): OppgaveKo {
