@@ -55,7 +55,12 @@ internal class AksjonspunktStreamK9 constructor(
                         val tid = measureTimeMillis {
                             k9sakEventHandler.prosesser(entry)
                         }
-                        log.info("Prosessering av Behandlingsprosesshendelse fra k9sak for ${entry.saksnummer}-${entry.eksternId} tok $tid")
+                        if (tid > 5000) {
+                            // Logger som warning ved over 5sekunder fordi det kan oppleves som at oppgaver blir liggende igjen på benken
+                            log.warn("Prosessering av Behandlingsprosesshendelse fra k9sak for ${entry.saksnummer}-${entry.eksternId} tok $tid")
+                        } else {
+                            log.info("Prosessering av Behandlingsprosesshendelse fra k9sak for ${entry.saksnummer}-${entry.eksternId} tok $tid")
+                        }
                     }
                 }
             return builder.build()
