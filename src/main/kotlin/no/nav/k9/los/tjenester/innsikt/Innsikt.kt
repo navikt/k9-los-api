@@ -648,6 +648,7 @@ private fun relaterteOppgaverV1(
     val pleietrengendeAktørId = oppgave.oppgave.pleietrengendeAktørId
     return if (pleietrengendeAktørId != null) {
         oppgaveRepository.hentOppgaverSomMatcher(pleietrengendeAktørId, oppgave.oppgave.fagsakYtelseType)
+            .ifEmpty { listOf(oppgave) }
     } else {
         listOf(oppgave)
     }
