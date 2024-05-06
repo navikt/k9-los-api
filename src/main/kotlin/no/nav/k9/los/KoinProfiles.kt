@@ -441,6 +441,7 @@ fun common(app: Application, config: Configuration) = module {
             pepCacheService = get(),
             oppgaveRepository = get(),
             reservasjonV3Tjeneste = get(),
+            historikkvaskChannel = get(named("historikkvaskChannelK9Sak"))
         )
     }
 
@@ -491,13 +492,16 @@ fun common(app: Application, config: Configuration) = module {
         )
     }
 
+    single(named("historikkvaskChannelK9Sak")) {
+        Channel<Boolean>(Channel.UNLIMITED)
+    }
+
     single {
         K9SakTilLosHistorikkvaskTjeneste(
             behandlingProsessEventK9Repository = get(),
             oppgaveV3Tjeneste = get(),
             config = get(),
             transactionalManager = get(),
-            oppgaveRepositoryV2 = get(),
             k9SakTilLosAdapterTjeneste = get(),
             k9SakBerikerKlient = get()
         )

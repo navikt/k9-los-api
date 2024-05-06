@@ -45,6 +45,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAda
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkApi
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoApis
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonApi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Api
@@ -205,7 +206,20 @@ fun Application.k9Los() {
         pepCacheService = koin.get(),
         oppgaveRepository = koin.get(),
         reservasjonV3Tjeneste = koin.get(),
+        historikkvaskChannel = koin.get<Channel<UUID>>(named(""))
     ).kjør(kjørSetup = false, kjørUmiddelbart = false)
+
+    val k9SakTilLosHistorikkvaskTjeneste = koin.get<K9SakTilLosHistorikkvaskTjeneste>()
+
+    val k9SakKorrigerOutOfOrderProsessor =
+        k9SakTilLosHistorikkvaskTjeneste.k9SakKorrigerOutOfOrderProsessor(
+            oppgaveKøRepository = koin.get(),
+            oppgaveRepository = koin.get(),
+            oppgaveRepositoryV2 = koin.get(),
+            channel = koin.get<Channel<UUID>>(named("oppgaveKøOppdatert")),
+            refreshOppgaveChannel = koin.get<Channel<UUID>>(named("oppgaveRefreshChannel")),
+            oppgaveTjeneste = koin.get()
+        )
 
     K9KlageTilLosAdapterTjeneste(
         behandlingProsessEventKlageRepository = koin.get(),

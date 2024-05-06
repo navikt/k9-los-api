@@ -1,22 +1,16 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos
 
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.launch
 import no.nav.k9.los.Configuration
-import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
-import no.nav.k9.los.domene.repository.OppgaveKøRepository
-import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.eventhandler.asCoroutineDispatcherWithErrorHandling
-import no.nav.k9.los.eventhandler.oppdaterKø
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -34,14 +28,6 @@ class K9SakTilLosHistorikkvaskTjeneste(
 
     private val log: Logger = LoggerFactory.getLogger(K9SakTilLosHistorikkvaskTjeneste::class.java)
     private val TRÅDNAVN = "k9-sak-til-los-historikkvask"
-
-    fun CoroutineScope.korrigerOutOfOrderProsessor(
-        channel: ReceiveChannel<UUID>,
-    ) = launch(Executors.newSingleThreadExecutor().asCoroutineDispatcherWithErrorHandling()) {
-        for (uuid in channel) {
-            vaskOppgaveForBehandlingUUID(uuid, 0)
-        }
-    }
 
     fun kjørHistorikkvask() {
         if (config.nyOppgavestyringAktivert()) {
