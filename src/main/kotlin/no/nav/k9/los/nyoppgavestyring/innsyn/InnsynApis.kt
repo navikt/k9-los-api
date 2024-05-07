@@ -6,36 +6,55 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.domene.modell.Fagsystem
 import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
+import no.nav.k9.los.domene.repository.BehandlingProsessEventKlageRepository
+import no.nav.k9.los.domene.repository.BehandlingProsessEventTilbakeRepository
+import no.nav.k9.los.domene.repository.PunsjEventK9Repository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
 import no.nav.k9.los.utils.LosObjectMapper
 import org.koin.ktor.ext.inject
+import java.util.*
 
 
 fun Route.innsynApis() {
 
     val k9sakEventRepository by inject<BehandlingProsessEventK9Repository>()
+    val k9tilbakeEventRepository by inject<BehandlingProsessEventTilbakeRepository>()
+    val k9klageEventRepository by inject<BehandlingProsessEventKlageRepository>()
+    val k9PunsjEventK9Repository by inject<PunsjEventK9Repository>()
     val oppgaveRepositoryTxWrapper by inject<OppgaveRepositoryTxWrapper>()
     val objectMapper = LosObjectMapper.instance
 
-    get("/eventer") {
+    get("/eventer/{system}/{eksternId}") {
         val fagsystem = Fagsystem.fraKode(call.request.queryParameters["system"]!!)
-        val behandlingUuid = call.request.queryParameters["behandlingUuid"]!!
-        /*call.respond(when (fagsystem) {
+        val eksternId = call.request.queryParameters["behandlingUuid"]!!
+        call.respond(when (fagsystem) {
             Fagsystem.K9SAK -> {
-                val k9SakModell = k9sakEventRepository.hent(UUID.fromString(behandlingUuid))
+                val k9SakModell = k9sakEventRepository.hent(UUID.fromString(eksternId))
                 val eventerIkkeSensitive = k9SakModell.eventer.map { event -> K9SakEventIkkeSensitiv(event) }
                 objectMapper.writeValueAsString(eventerIkkeSensitive)
-
-
-                TODO()
             }
 
-            Fagsystem.K9TILBAKE -> TODO()
-            Fagsystem.FPTILBAKE -> TODO()
-            Fagsystem.PUNSJ -> TODO()
+            Fagsystem.K9TILBAKE -> {
+                val k9TilbakeModell = k9tilbakeEventRepository.hent(UUID.fromString(eksternId))
+                val eventerIkkeSensitive = k9TilbakeModell.eventer.map { event -> K9TilbakeEventIkkeSensitiv(event) }
+                objectMapper.writeValueAsString(eventerIkkeSensitive)
+            }
+
+            Fagsystem.K9KLAGE -> {
+                val k9KlageModell = k9klageEventRepository.hent(UUID.fromString(eksternId))
+                val eventerIkkeSensitive = k9KlageModell.eventer.map { event -> K9KlageEventIkkeSensitiv(event) }
+                objectMapper.writeValueAsString(eventerIkkeSensitive)
+            }
+
+            Fagsystem.PUNSJ -> {
+                val k9PunsjModell = k9PunsjEventK9Repository.hent(UUID.fromString(eksternId))
+                val eventerIkkeSensitive = k9PunsjModell.eventer.map { event -> K9PunsjEventIkkeSensitiv(event) }
+                objectMapper.writeValueAsString(eventerIkkeSensitive)
+            }
+
             Fagsystem.OMSORGSPENGER -> HttpStatusCode.NotImplemented
+            Fagsystem.FPTILBAKE -> HttpStatusCode.NotImplemented
         })
-         */
 
         call.respond(HttpStatusCode.NotImplemented)
     }
