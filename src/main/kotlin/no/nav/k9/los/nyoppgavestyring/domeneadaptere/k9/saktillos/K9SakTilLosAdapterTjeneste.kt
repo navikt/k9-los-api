@@ -136,7 +136,7 @@ class K9SakTilLosAdapterTjeneste(
 
                     // Bruker samme logikk som i v1-modell for å ikke fjerne reservasjoner som midlertidige er på vent med Ventekategori.AVVENTER_ANNET
                     val erPåVent = event.aksjonspunktTilstander.any { it.status.erÅpentAksjonspunkt() && AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode).erAutopunkt() }
-                    if (erPåVent || BehandlingStatus.AVSLUTTET.kode == event.behandlingStatus||  oppgave.status == Oppgavestatus.LUKKET) {
+                    if (erPåVent || BehandlingStatus.AVSLUTTET.kode == event.behandlingStatus ||  oppgave.status == Oppgavestatus.LUKKET) {
                         annullerReservasjonerHvisAlleOppgaverPåVentEllerAvsluttet(event, tx)
                     }
 

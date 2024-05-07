@@ -12,6 +12,7 @@ class OppgaveRepository(
     private val oppgavetypeRepository: OppgavetypeRepository
 ) {
 
+    //TODO: Endre til å bruke oppgavenøkkel
     fun hentNyesteOppgaveForEksternId(tx: TransactionalSession, kildeområde: String, eksternId: String, now: LocalDateTime = LocalDateTime.now()): Oppgave {
         val oppgave = tx.run(
             queryOf(
@@ -181,6 +182,35 @@ class OppgaveRepository(
                 mapOf(
                     "grense" to tidspunkt,
                     "limit" to antall
+                )
+            ).map { row -> mapOppgave(row, tidspunkt, tx) }.asList
+        )
+    }
+
+    fun hentOppgaveTidsserie(
+        tidspunkt: LocalDateTime = LocalDateTime.now(),
+        områdeEksternId: String,
+        oppgaveTypeEksternId: String,
+        oppgaveEksternId: String,
+        tx: TransactionalSession
+    ): List<Oppgave> {
+        val oppgavetype = oppgavetypeRepository.hentOppgavetype(områdeEksternId, oppgaveTypeEksternId)
+        return tx.run(
+            queryOf(
+                """
+                    select *
+                    from oppgave_v3 o
+                    	inner join oppgavetype ot on o.oppgavetype_id = ot.id 
+                    	inner join omrade omr on ot.omrade_id = omr.id 
+                    where omr.ekstern_id = :omrade
+                    and ot.ekstern_id = :oppgavetype
+                    and o.ekstern_id = :oppgaveEksternId
+                    order by o.versjon asc
+                """.trimIndent(),
+                mapOf(
+                    "omrade" to områdeEksternId,
+                    "oppgavetype" to oppgaveTypeEksternId,
+                    "oppgaveEksternId" to oppgaveEksternId,
                 )
             ).map { row -> mapOppgave(row, tidspunkt, tx) }.asList
         )

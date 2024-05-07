@@ -14,6 +14,16 @@ class OppgaveRepositoryTxWrapper(
         }
     }
 
+    fun hentOppgaveTidsserie(områdeEksternId: String, oppgaveTypeEksternId: String, oppgaveEksternId: String): List<Oppgave> {
+        return transactionalManager.transaction { tx ->
+            oppgaveRepository.hentOppgaveTidsserie(
+                områdeEksternId = områdeEksternId,
+                oppgaveTypeEksternId = oppgaveTypeEksternId,
+                oppgaveEksternId = oppgaveEksternId,
+                tx = tx)
+        }
+    }
+
     fun hentÅpneOppgaverForReservasjonsnøkkel(reservasjonsnøkkel: String): List<Oppgave> {
         return transactionalManager.transaction { tx ->
             oppgaveRepository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjonsnøkkel)
