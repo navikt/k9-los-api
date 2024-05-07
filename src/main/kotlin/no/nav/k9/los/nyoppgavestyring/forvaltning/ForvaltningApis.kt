@@ -76,7 +76,7 @@ fun Route.forvaltningApis() {
         }
     }
 
-    post("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}") {
+    post("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}/historikkvask") {
         val område = call.parameters["omrade"]!!
         val oppgavetype = call.parameters["oppgavetype"]!!
         val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
