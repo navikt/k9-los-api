@@ -8,6 +8,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.html.*
+import kotliquery.queryOf
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.OppgaveMedId
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
@@ -17,6 +18,9 @@ import no.nav.k9.los.domene.modell.Fagsystem
 import no.nav.k9.los.domene.modell.OppgaveKø
 import no.nav.k9.los.domene.repository.*
 import no.nav.k9.los.integrasjon.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3MedOppgaver
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
@@ -30,6 +34,8 @@ fun Route.innsiktGrensesnitt() {
     //TODO finn ut hvordan bruke i dev/prod
     val oppgaveRepository by inject<OppgaveRepository>()
     val oppgaveRepositoryV2 by inject<OppgaveRepositoryV2>()
+    val oppgavev3Repository by inject<OppgaveV3Repository>()
+    val oppgavetypeRepository by inject<OppgavetypeRepository>()
     val statistikkRepository by inject<StatistikkRepository>()
     val oppgaveKøRepository by inject<OppgaveKøRepository>()
     val behandlingProsessEventK9Repository by inject<BehandlingProsessEventK9Repository>()
@@ -355,6 +361,62 @@ fun Route.innsiktGrensesnitt() {
                                 """.trimMargin())
                                 }
                             }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    route("/oppgave") {
+        get("aktiv/{eksternid}") {
+            val eksternId = call.parameters["eksternid"] ?: throw IllegalStateException("eksternid ikke oppgitt")
+            val aktivOppgave = transactionalManager.transaction { tx ->
+                val oppgavetype = oppgavetypeRepository.hentOppgavetype(
+                    område = "K9",
+                    eksternId = "k9sak",
+                    tx = tx
+                )
+                oppgavev3Repository.hentAktivOppgave(eksternId, oppgavetype, tx)
+            }
+            call.respondHtml {
+                innsiktHeader("OppgaveV3 for eksternid")
+                body {
+                    div { +"id: ${aktivOppgave?.id}, status: ${aktivOppgave?.status} endret: ${aktivOppgave?.endretTidspunkt}" }
+                }
+            }
+        }
+
+        get("{eksternid}") {
+            val eksternId = call.parameters["eksternid"] ?: throw IllegalStateException("eksternid ikke oppgitt")
+            val oppgaver = transactionalManager.transaction { tx ->
+                tx.run(
+                    queryOf(
+                        "select * from oppgave_v3 where ekstern_id = :eksternId", mapOf("eksternId" to eksternId)
+                    ).map { row ->
+                        Triple(
+                            row.long("id"),
+                            Oppgavestatus.valueOf(row.string("status")),
+                            row.localDateTime("endret_tidspunkt")
+                        ) to row.boolean("aktiv")
+                    }.asList
+                )
+            }
+            call.respondHtml {
+                innsiktHeader("OppgaveV3 for eksternid")
+                body {
+                    h2 { +"Aktive" }
+                    ul {
+                        classes = setOf("list-group")
+                        oppgaver.filter { it.second }.forEach { (oppgave, _) ->
+                            listeelement("id: ${oppgave.first}, status: ${oppgave.second}, sist_endret: ${oppgave.third}")
+                        }
+                    }
+                    h2 { +"Historikk" }
+                    ul {
+                        classes = setOf("list-group")
+                        oppgaver.filterNot { it.second }.forEach { (oppgave, _) ->
+                            listeelement("id: ${oppgave.first}, status: ${oppgave.second}, sist_endret: ${oppgave.third}")
                         }
                     }
                 }
