@@ -12,7 +12,8 @@ data class ReservasjonV3Dto (
     val reservertOppgaveV1Dto: OppgaveDto? = null,
 
     val reservasjonsnøkkel: String,
-    val reservertAv: String,
+    val reservertAvIdent: String,
+    val reservertAvEpost: String,
     val kommentar: String,
     val reservertFra: LocalDateTime,
     val reservertTil: LocalDateTime?,
@@ -20,7 +21,8 @@ data class ReservasjonV3Dto (
     constructor(reservasjonV3: ReservasjonV3, oppgaver: List<GenerellOppgaveV3Dto>, reservertAv: Saksbehandler) : this (
         reserverteV3Oppgaver = oppgaver,
         reservasjonsnøkkel = reservasjonV3.reservasjonsnøkkel,
-        reservertAv = reservertAv.epost,
+        reservertAvIdent = reservertAv.brukerIdent!!,
+        reservertAvEpost = reservertAv.epost,
         kommentar = reservasjonV3.kommentar,
         reservertFra = reservasjonV3.gyldigFra,
         reservertTil = reservasjonV3.gyldigTil
@@ -31,7 +33,8 @@ data class ReservasjonV3Dto (
         reserverteV3Oppgaver = emptyList(),
         reservertOppgaveV1Dto = oppgave,
         reservasjonsnøkkel = reservasjonV3.reservasjonsnøkkel,
-        reservertAv = reservertAv.epost,
+        reservertAvIdent = reservertAv.brukerIdent!!,
+        reservertAvEpost = reservertAv.epost,
         kommentar = reservasjonV3.kommentar,
         reservertFra = reservasjonV3.gyldigFra,
         reservertTil = reservasjonV3.gyldigTil

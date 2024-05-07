@@ -1,7 +1,5 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavefelt
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import java.time.LocalDateTime

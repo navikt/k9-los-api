@@ -144,7 +144,7 @@ class K9SakTilLosAdapterTjeneste(
 
                     // Bruker samme logikk som i v1-modell for å ikke fjerne reservasjoner som midlertidige er på vent med Ventekategori.AVVENTER_ANNET
                     val erPåVent = event.aksjonspunktTilstander.any { it.status.erÅpentAksjonspunkt() && AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode).erAutopunkt() }
-                    if (erPåVent || BehandlingStatus.AVSLUTTET.kode == event.behandlingStatus||  oppgave.status == Oppgavestatus.LUKKET) {
+                    if (erPåVent || BehandlingStatus.AVSLUTTET.kode == event.behandlingStatus ||  oppgave.status == Oppgavestatus.LUKKET) {
                         annullerReservasjonerHvisAlleOppgaverPåVentEllerAvsluttet(event, tx)
                     }
 
@@ -171,15 +171,18 @@ class K9SakTilLosAdapterTjeneste(
         val beslutterNøkkel = EventTilDtoMapper.utledReservasjonsnøkkel(event, erTilBeslutter = true)
         val antallAnnullert = annullerReservasjonHvisAlleOppgaverPåVentEllerAvsluttet(listOf(saksbehandlerNøkkel, beslutterNøkkel), tx)
         if (antallAnnullert > 0) {
-            log.info("Annullerte $antallAnnullert aktive reservasjoner maskinelt på oppgave ${event.saksnummer} som følge av status på innkommende event")
+            log.info("Annullerte $antallAnnullert reservasjoner maskinelt på oppgave ${event.saksnummer} som følge av status på innkommende event")
+        } else {
+            log.info("Annullerte ingen reservasjoner på oppgave ${event.saksnummer} som følge av status på innkommende event")
         }
     }
 
     private fun annullerReservasjonHvisAlleOppgaverPåVentEllerAvsluttet(reservasjonsnøkler: List<String>, tx: TransactionalSession): Int {
         val åpneOppgaverForReservasjonsnøkkel =
             oppgaveRepository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjonsnøkler)
+                .filter { it.status == Oppgavestatus.AAPEN.kode }
 
-        if (åpneOppgaverForReservasjonsnøkkel.none { oppgave -> oppgave.status != Oppgavestatus.VENTER.kode }) {
+        if (åpneOppgaverForReservasjonsnøkkel.isEmpty()) {
             return reservasjonsnøkler.map { reservasjonsnøkkel ->
                 reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(
                     reservasjonsnøkkel,
@@ -189,6 +192,7 @@ class K9SakTilLosAdapterTjeneste(
                 )
             }.count { it }
         }
+        log.info("Oppgave annulleres ikke fordi det finnes andre åpne oppgaver: [${åpneOppgaverForReservasjonsnøkkel.map { it.eksternId }}]")
         return 0
     }
 
