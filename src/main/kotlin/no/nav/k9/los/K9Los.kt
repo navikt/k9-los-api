@@ -183,7 +183,7 @@ fun Application.k9Los() {
     val k9SakKorrigerOutOfOrderProsessor =
         k9SakKorrigerOutOfOrderProsessor(
             k9SakTilLosHistorikkvaskTjeneste = koin.get(),
-            channel = koin.get<Channel<UUID>>(named("oppgaveKøOppdatert")),
+            channel = koin.get<Channel<UUID>>(named("historikkvaskChannelK9Sak")),
         )
 
     environment.monitor.subscribe(ApplicationStopping) {
@@ -215,7 +215,7 @@ fun Application.k9Los() {
         pepCacheService = koin.get(),
         oppgaveRepository = koin.get(),
         reservasjonV3Tjeneste = koin.get(),
-        historikkvaskChannel = koin.get<Channel<UUID>>(named(""))
+        historikkvaskChannel = koin.get<Channel<UUID>>(named("historikkvaskChannelK9Sak"))
     ).kjør(kjørSetup = false, kjørUmiddelbart = false)
 
     K9KlageTilLosAdapterTjeneste(
