@@ -2,14 +2,14 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 val mainClass = "no.nav.k9.los.K9LosKt"
 val hikariVersion = "5.1.0"
-val flywayVersion = "10.11.1"
+val flywayVersion = "10.12.0"
 val vaultJdbcVersion = "1.3.10"
 val koinVersion = "3.5.6"
 val kotliqueryVersion = "1.9.0"
 val k9SakVersion = "4.1.12"
 val k9KlageVersion = "0.4.3"
 val fuelVersion = "2.3.1"
-val jacksonVersion = "2.17.0"
+val jacksonVersion = "2.17.1"
 val commonsTextVersion = "1.12.0"
 
 val dusseldorfKtorVersion = "4.2.4"
