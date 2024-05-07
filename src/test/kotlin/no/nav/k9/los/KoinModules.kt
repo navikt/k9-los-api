@@ -84,6 +84,10 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single(named("statistikkRefreshChannel")) {
         Channel<Boolean>(Channel.CONFLATED)
     }
+    single(named("historikkvaskChannelK9Sak")) {
+        Channel<Boolean>(Channel.UNLIMITED)
+    }
+
     single {
         K9SakServiceLocal() as IK9SakService
     }
@@ -391,6 +395,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             pepCacheService = get(),
             oppgaveRepository = get(),
             reservasjonV3Tjeneste = get(),
+            historikkvaskChannel = get(named("historikkvaskChannelK9Sak"))
         )
     }
 

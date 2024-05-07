@@ -109,6 +109,10 @@ fun common(app: Application, config: Configuration) = module {
         Channel<Boolean>(Channel.CONFLATED)
     }
 
+    single(named("historikkvaskChannelK9Sak")) {
+        Channel<Boolean>(Channel.UNLIMITED)
+    }
+
     single { no.nav.k9.los.domene.repository.OppgaveRepository(get(), get(), get(named("oppgaveRefreshChannel"))) }
 
     single {
@@ -490,10 +494,6 @@ fun common(app: Application, config: Configuration) = module {
             config = get(),
             k9sakBeriker = get(),
         )
-    }
-
-    single(named("historikkvaskChannelK9Sak")) {
-        Channel<Boolean>(Channel.UNLIMITED)
     }
 
     single {
