@@ -39,7 +39,7 @@ class K9SakTilLosAdapterTjeneste(
     private val transactionalManager: TransactionalManager,
     private val k9SakBerikerKlient: K9SakBerikerInterfaceKludge,
     private val pepCacheService: PepCacheService,
-    private val historikkvaskChannel: Channel<UUID>
+    private val historikkvaskChannel: Channel<k9SakEksternId>
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9SakTilLosAdapterTjeneste::class.java)

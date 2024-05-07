@@ -41,6 +41,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLo
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonKonverteringJobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.k9SakEksternId
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosHistorikkvaskTjeneste
@@ -108,9 +109,8 @@ fun common(app: Application, config: Configuration) = module {
     single(named("statistikkRefreshChannel")) {
         Channel<Boolean>(Channel.CONFLATED)
     }
-
     single(named("historikkvaskChannelK9Sak")) {
-        Channel<Boolean>(Channel.UNLIMITED)
+        Channel<k9SakEksternId>(Channel.UNLIMITED)
     }
 
     single { no.nav.k9.los.domene.repository.OppgaveRepository(get(), get(), get(named("oppgaveRefreshChannel"))) }

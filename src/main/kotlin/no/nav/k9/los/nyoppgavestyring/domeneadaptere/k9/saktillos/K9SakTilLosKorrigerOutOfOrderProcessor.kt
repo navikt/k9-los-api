@@ -8,11 +8,16 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHist
 import java.util.*
 import java.util.concurrent.Executors
 
+
 fun CoroutineScope.k9SakKorrigerOutOfOrderProsessor(
     k9SakTilLosHistorikkvaskTjeneste: K9SakTilLosHistorikkvaskTjeneste,
-    channel: ReceiveChannel<UUID>,
+    channel: ReceiveChannel<k9SakEksternId>,
 ) = launch(Executors.newSingleThreadExecutor().asCoroutineDispatcherWithErrorHandling()) {
-    for (uuid in channel) {
-        k9SakTilLosHistorikkvaskTjeneste.vaskOppgaveForBehandlingUUID(uuid, 0)
+    for (eksternId in channel) {
+        k9SakTilLosHistorikkvaskTjeneste.vaskOppgaveForBehandlingUUID(eksternId.eksternId, 0)
     }
 }
+
+data class k9SakEksternId(
+    val eksternId: UUID
+)
