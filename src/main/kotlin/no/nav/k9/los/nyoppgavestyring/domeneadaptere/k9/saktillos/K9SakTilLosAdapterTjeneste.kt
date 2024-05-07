@@ -2,6 +2,8 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
@@ -36,7 +38,8 @@ class K9SakTilLosAdapterTjeneste(
     private val config: Configuration,
     private val transactionalManager: TransactionalManager,
     private val k9SakBerikerKlient: K9SakBerikerInterfaceKludge,
-    private val pepCacheService: PepCacheService
+    private val pepCacheService: PepCacheService,
+    private val historikkvaskChannel: Channel<k9SakEksternId>
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9SakTilLosAdapterTjeneste::class.java)
@@ -113,10 +116,13 @@ class K9SakTilLosAdapterTjeneste(
     private fun oppdaterOppgaveForBehandlingUuid(uuid: UUID, eventTellerInn: Long): Long {
         var eventTeller = eventTellerInn
         var forrigeOppgave: OppgaveV3? = null
+        var korrigerFeilRekkefølge = false
 
         transactionalManager.transaction { tx ->
             val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
             val nyeBehandlingsopplysningerFraK9Sak = k9SakBerikerKlient.hentBehandling(uuid)
+            val høyesteInternVersjon =
+                oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9sak", "K9", tx) ?: -1
             var eventNrForBehandling = -1L
             behandlingProsessEventer.forEach { event ->
                 eventNrForBehandling++
@@ -131,6 +137,8 @@ class K9SakTilLosAdapterTjeneste(
 
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
 
+                //oppgave er satt bare dersom oppgavemodellen ikke har sett eksternVersjon fra tidligere
+                //Normaltilfelle når adapter kjøres fra eventhandler er at det kun er ett event å oppdatere
                 if (oppgave != null) {
                     pepCacheService.oppdater(tx, oppgave.kildeområde, oppgave.eksternId)
 
@@ -142,13 +150,25 @@ class K9SakTilLosAdapterTjeneste(
 
                     eventTeller++
                     loggFremgangForHver100(eventTeller, "Prosessert $eventTeller eventer")
+                    if (høyesteInternVersjon >= 1) { //Ikke aktuelt å vaske eventer i feil rekkefølge før man har minst 2 eventer. Telling starter på 0
+                        if (eventNrForBehandling <= høyesteInternVersjon) {
+                            korrigerFeilRekkefølge = true
+                        }
+                    }
                 }
                 forrigeOppgave = oppgave
             }
 
-            forrigeOppgave = null
-
             behandlingProsessEventK9Repository.fjernDirty(uuid, tx)
+        }
+
+        if (korrigerFeilRekkefølge) {
+            log.warn("OppgaveV3, funnet eventer i feil rekkefølge. Kjør historikkvask for behandlingsUUID: $uuid")
+            /*
+            runBlocking {
+                historikkvaskChannel.send(uuid)
+            }
+             */
         }
         return eventTeller
     }

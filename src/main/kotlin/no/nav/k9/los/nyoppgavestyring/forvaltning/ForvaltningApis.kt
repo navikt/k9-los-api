@@ -9,6 +9,7 @@ import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.los.domene.repository.BehandlingProsessEventKlageRepository
 import no.nav.k9.los.domene.repository.BehandlingProsessEventTilbakeRepository
 import no.nav.k9.los.domene.repository.PunsjEventK9Repository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
 import no.nav.k9.los.utils.LosObjectMapper
 import org.koin.ktor.ext.inject
@@ -22,6 +23,7 @@ fun Route.forvaltningApis() {
     val k9klageEventRepository by inject<BehandlingProsessEventKlageRepository>()
     val k9PunsjEventK9Repository by inject<PunsjEventK9Repository>()
     val oppgaveRepositoryTxWrapper by inject<OppgaveRepositoryTxWrapper>()
+    val k9SakTilLosHistorikkvaskTjeneste by inject<K9SakTilLosHistorikkvaskTjeneste>()
     val objectMapper = LosObjectMapper.instance
 
     get("/eventer/{system}/{eksternId}") {
@@ -71,6 +73,25 @@ fun Route.forvaltningApis() {
         } else {
             val tidsserieIkkeSensitiv = oppgaveTidsserie.map { oppgave -> OppgaveIkkeSensitiv(oppgave) }
             call.respond(objectMapper.writeValueAsString(tidsserieIkkeSensitiv))
+        }
+    }
+
+    post("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}") {
+        val område = call.parameters["omrade"]!!
+        val oppgavetype = call.parameters["oppgavetype"]!!
+        val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
+
+        when(område) {
+            "K9" -> {
+                when(oppgavetype) {
+                    "k9sak" -> {
+                        k9SakTilLosHistorikkvaskTjeneste.vaskOppgaveForBehandlingUUID(UUID.fromString(oppgaveEksternId), 0)
+                        call.respond(HttpStatusCode.OK)
+                    }
+                    else -> call.respond(HttpStatusCode.NotImplemented, "Støtter ikke historikkvask på oppgavetype: $oppgavetype for område: $område")
+                }
+            }
+            else -> call.respond(HttpStatusCode.NotImplemented, "Støtter ikke historikkvask på område: $område")
         }
     }
 }

@@ -43,8 +43,11 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLo
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonKonverteringJobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosApi
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.k9SakEksternId
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.k9SakKorrigerOutOfOrderProsessor
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkApi
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.forvaltning.forvaltningApis
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoApis
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonApi
@@ -178,6 +181,12 @@ fun Application.k9Los() {
     val sakOgBehadlingProducer = koin.get<SakOgBehandlingProducer>()
     val statistikkProducer = koin.get<StatistikkProducer>()
 
+    val k9SakKorrigerOutOfOrderProsessor =
+        k9SakKorrigerOutOfOrderProsessor(
+            k9SakTilLosHistorikkvaskTjeneste = koin.get(),
+            channel = koin.get<Channel<k9SakEksternId>>(named("historikkvaskChannelK9Sak")),
+        )
+
     environment.monitor.subscribe(ApplicationStopping) {
         log.info("Stopper AsynkronProsesseringV1Service.")
         asynkronProsesseringV1Service.stop()
@@ -189,6 +198,7 @@ fun Application.k9Los() {
         køOppdatertProsessorJob.cancel()
         refreshOppgaveJobb.cancel()
         oppdaterStatistikkJobb.cancel()
+        k9SakKorrigerOutOfOrderProsessor.cancel()
     }
 
     OmrådeSetup(
@@ -206,6 +216,7 @@ fun Application.k9Los() {
         pepCacheService = koin.get(),
         oppgaveRepository = koin.get(),
         reservasjonV3Tjeneste = koin.get(),
+        historikkvaskChannel = koin.get<Channel<k9SakEksternId>>(named("historikkvaskChannelK9Sak"))
     ).kjør(kjørSetup = false, kjørUmiddelbart = false)
 
     K9KlageTilLosAdapterTjeneste(

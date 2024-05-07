@@ -19,6 +19,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.BehandlingMedFagsakDto
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.koin.core.qualifier.named
 import org.koin.test.get
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -41,6 +42,7 @@ class BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
             pepCacheService = get(),
             oppgaveRepository = get(),
             reservasjonV3Tjeneste = get(),
+            historikkvaskChannel = get(named("historikkvaskChannelK9Sak")),
         )
     }
 
