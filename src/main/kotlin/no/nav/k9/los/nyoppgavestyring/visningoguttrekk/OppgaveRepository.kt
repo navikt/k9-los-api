@@ -11,8 +11,6 @@ import no.nav.k9.los.spi.felter.HentVerdiInput
 class OppgaveRepository(
     private val oppgavetypeRepository: OppgavetypeRepository
 ) {
-
-    //TODO: Endre til å bruke oppgavenøkkel
     fun hentNyesteOppgaveForEksternId(tx: TransactionalSession, kildeområde: String, eksternId: String, now: LocalDateTime = LocalDateTime.now()): Oppgave {
         val oppgave = tx.run(
             queryOf(
