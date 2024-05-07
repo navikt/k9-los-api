@@ -122,7 +122,7 @@ class K9SakTilLosAdapterTjeneste(
             val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
             val nyeBehandlingsopplysningerFraK9Sak = k9SakBerikerKlient.hentBehandling(uuid)
             val høyesteInternVersjon =
-                oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9sak", "K9", tx)!!
+                oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9sak", "K9", tx) ?: -1
             var eventNrForBehandling = -1L
             behandlingProsessEventer.forEach { event ->
                 eventNrForBehandling++
@@ -150,8 +150,10 @@ class K9SakTilLosAdapterTjeneste(
 
                     eventTeller++
                     loggFremgangForHver100(eventTeller, "Prosessert $eventTeller eventer")
-                    if (eventNrForBehandling <= høyesteInternVersjon) {
-                        korrigerFeilRekkefølge = true
+                    if (høyesteInternVersjon >= 1) { //Ikke aktuelt å vaske eventer i feil rekkefølge før man har minst 2 eventer. Telling starter på 0
+                        if (eventNrForBehandling <= høyesteInternVersjon) {
+                            korrigerFeilRekkefølge = true
+                        }
                     }
                 }
                 forrigeOppgave = oppgave
