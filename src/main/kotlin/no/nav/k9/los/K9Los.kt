@@ -45,7 +45,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAda
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkApi
-import no.nav.k9.los.nyoppgavestyring.innsyn.innsynApis
+import no.nav.k9.los.nyoppgavestyring.forvaltning.forvaltningApis
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoApis
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonApi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Api
@@ -277,15 +277,15 @@ fun Application.k9Los() {
             route("mock") {
                 MockGrensesnitt()
             }
-            route("innsyn") {
+            route("forvaltning") {
                 innsiktGrensesnitt()
-                innsynApis()
+                forvaltningApis()
             }
         } else {
             authenticate(*issuers.allIssuers()) {
-                route("innsyn") {
+                route("forvaltning") {
                     innsiktGrensesnitt()
-                    innsynApis()
+                    forvaltningApis()
                 }
                 api(sseChannel)
             }

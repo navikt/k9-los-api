@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.innsyn
+package no.nav.k9.los.nyoppgavestyring.forvaltning
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize

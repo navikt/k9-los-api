@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.innsyn
+package no.nav.k9.los.nyoppgavestyring.forvaltning
 
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -15,7 +15,7 @@ import org.koin.ktor.ext.inject
 import java.util.*
 
 
-fun Route.innsynApis() {
+fun Route.forvaltningApis() {
 
     val k9sakEventRepository by inject<BehandlingProsessEventK9Repository>()
     val k9tilbakeEventRepository by inject<BehandlingProsessEventTilbakeRepository>()

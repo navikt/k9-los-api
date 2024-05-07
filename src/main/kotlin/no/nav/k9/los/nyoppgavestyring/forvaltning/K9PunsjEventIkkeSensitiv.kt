@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.innsyn
+package no.nav.k9.los.nyoppgavestyring.forvaltning
 
 import no.nav.k9.los.integrasjon.kafka.dto.PunsjEventDto
 import no.nav.k9.sak.typer.JournalpostId
