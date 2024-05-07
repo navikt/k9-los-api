@@ -395,9 +395,9 @@ fun Route.innsiktGrensesnitt() {
                         "select * from oppgave_v3 where ekstern_id = :eksternId", mapOf("eksternId" to eksternId)
                     ).map { row ->
                         Triple(
-                            row.long("id"),
                             Oppgavestatus.valueOf(row.string("status")),
-                            row.localDateTime("endret_tidspunkt")
+                            row.string("reservasjonsnokkel"),
+                            row.localDateTime("endret_tidspunkt"),
                         ) to row.boolean("aktiv")
                     }.asList
                 )
@@ -409,14 +409,14 @@ fun Route.innsiktGrensesnitt() {
                     ul {
                         classes = setOf("list-group")
                         oppgaver.filter { it.second }.forEach { (oppgave, _) ->
-                            listeelement("id: ${oppgave.first}, status: ${oppgave.second}, sist_endret: ${oppgave.third}")
+                            listeelement("status: ${oppgave.first}, sist_endret: ${oppgave.third}, reservasjonstype: ${oppgave.second.utledStatus()}")
                         }
                     }
                     h2 { +"Historikk" }
                     ul {
                         classes = setOf("list-group")
                         oppgaver.filterNot { it.second }.forEach { (oppgave, _) ->
-                            listeelement("id: ${oppgave.first}, status: ${oppgave.second}, sist_endret: ${oppgave.third}")
+                            listeelement("status: ${oppgave.first}, sist_endret: ${oppgave.third}, reservasjonstype: ${oppgave.second.utledStatus()}")
                         }
                     }
                 }
@@ -743,5 +743,9 @@ fun ReservasjonV3MedOppgaver.saksnummer(): List<String> {
 }
 
 fun ReservasjonV3MedOppgaver.utledFraReservasjonsnøkkel(): String {
-    return if (reservasjonV3.reservasjonsnøkkel.contains("beslutter")) "beslutter" else if (reservasjonV3.reservasjonsnøkkel.contains("legacy")) "legacy" else "ordinær"
+    return reservasjonV3.reservasjonsnøkkel.utledStatus()
+}
+
+fun String.utledStatus(): String {
+    return if (contains("beslutter")) "beslutter" else if (contains("legacy")) "legacy" else "ordinær"
 }
