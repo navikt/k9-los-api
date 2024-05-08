@@ -120,9 +120,9 @@ class BehandlingProsessEventDtoBuilder(
         return this
     }
 
-    fun iverksettVedtak(ansvarligBeslutter: Saksbehandler? = TestSaksbehandler.BIRGER_BESLUTTER): BehandlingProsessEventDtoBuilder {
-        this.behandlingStatus = BehandlingStatus.AVSLUTTET
-        this.behandlingSteg = BehandlingStegType.IVERKSETT_VEDTAK
+    fun beslutterGodkjent(ansvarligBeslutter: Saksbehandler? = TestSaksbehandler.BIRGER_BESLUTTER): BehandlingProsessEventDtoBuilder {
+        this.behandlingStatus = BehandlingStatus.UTREDES
+        this.behandlingSteg = BehandlingStegType.FATTE_VEDTAK
         this.resultatType = BehandlingResultatType.INNVILGET
         this.aksjonspunkter = mutableListOf(
             AksjonspunktTilstandBuilder.KONTROLLER_LEGEERKLÆRING.medStatus(AksjonspunktStatus.UTFØRT),
@@ -133,9 +133,9 @@ class BehandlingProsessEventDtoBuilder(
         return this
     }
 
-    fun fatteVedtak(ansvarligBeslutter: Saksbehandler? = TestSaksbehandler.BIRGER_BESLUTTER): BehandlingProsessEventDtoBuilder {
-        this.behandlingStatus = BehandlingStatus.UTREDES
-        this.behandlingSteg = BehandlingStegType.FATTE_VEDTAK
+    fun behandlingAvsluttet(ansvarligBeslutter: Saksbehandler? = TestSaksbehandler.BIRGER_BESLUTTER): BehandlingProsessEventDtoBuilder {
+        this.behandlingStatus = BehandlingStatus.AVSLUTTET
+        this.behandlingSteg = BehandlingStegType.IVERKSETT_VEDTAK
         this.resultatType = BehandlingResultatType.INNVILGET
         this.aksjonspunkter = mutableListOf(
             AksjonspunktTilstandBuilder.KONTROLLER_LEGEERKLÆRING.medStatus(AksjonspunktStatus.UTFØRT),
