@@ -127,12 +127,6 @@ class K9SakTilLosAdapterTjeneste(
             behandlingProsessEventer.forEach { event ->
                 eventNrForBehandling++
                 var oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
-                    .leggTilFeltverdi(
-                        OppgaveFeltverdiDto(
-                            nøkkel = "hastesak",
-                            verdi = "false"
-                        )
-                    )
                 oppgaveDto = ryddOppObsoleteOgResultatfeilFra2020(event, oppgaveDto, nyeBehandlingsopplysningerFraK9Sak)
 
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
