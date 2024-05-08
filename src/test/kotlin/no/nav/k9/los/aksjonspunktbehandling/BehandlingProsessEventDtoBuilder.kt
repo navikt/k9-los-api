@@ -120,9 +120,22 @@ class BehandlingProsessEventDtoBuilder(
         return this
     }
 
-    fun avsluttet(ansvarligBeslutter: Saksbehandler? = TestSaksbehandler.BIRGER_BESLUTTER): BehandlingProsessEventDtoBuilder {
+    fun iverksettVedtak(ansvarligBeslutter: Saksbehandler? = TestSaksbehandler.BIRGER_BESLUTTER): BehandlingProsessEventDtoBuilder {
         this.behandlingStatus = BehandlingStatus.AVSLUTTET
         this.behandlingSteg = BehandlingStegType.IVERKSETT_VEDTAK
+        this.resultatType = BehandlingResultatType.INNVILGET
+        this.aksjonspunkter = mutableListOf(
+            AksjonspunktTilstandBuilder.KONTROLLER_LEGEERKLÆRING.medStatus(AksjonspunktStatus.UTFØRT),
+            AksjonspunktTilstandBuilder.FORESLÅ_VEDTAK.medStatus(AksjonspunktStatus.UTFØRT),
+            AksjonspunktTilstandBuilder.FATTER_VEDTAK.medStatus(AksjonspunktStatus.UTFØRT)
+        )
+        this.ansvarligSaksbehandlerForTotrinn = ansvarligBeslutter?.brukerIdent
+        return this
+    }
+
+    fun fatteVedtak(ansvarligBeslutter: Saksbehandler? = TestSaksbehandler.BIRGER_BESLUTTER): BehandlingProsessEventDtoBuilder {
+        this.behandlingStatus = BehandlingStatus.UTREDES
+        this.behandlingSteg = BehandlingStegType.FATTE_VEDTAK
         this.resultatType = BehandlingResultatType.INNVILGET
         this.aksjonspunkter = mutableListOf(
             AksjonspunktTilstandBuilder.KONTROLLER_LEGEERKLÆRING.medStatus(AksjonspunktStatus.UTFØRT),
@@ -158,7 +171,7 @@ class BehandlingProsessEventDtoBuilder(
         return this
     }
 
-    fun build(): BehandlingProsessEventDto {
+    fun build(overstyrRekkefølge: Long? = null): BehandlingProsessEventDto {
         return BehandlingProsessEventDto(
             eksternId,
             fagsystem,
@@ -182,7 +195,7 @@ class BehandlingProsessEventDtoBuilder(
             behandlingTypeKode = behandlingTypeKode.kode,
             behandlingstidFrist = behandlingstidFrist,
             eventHendelse = eventHendelse,
-            eventTid = eventTid ?: LocalDateTime.now().plusSeconds(teller++),
+            eventTid = eventTid ?: overstyrRekkefølge ?.let { LocalDateTime.now().plusSeconds(overstyrRekkefølge) } ?: LocalDateTime.now().plusSeconds(teller++),
             aksjonspunktKoderMedStatusListe = aksjonspunkter.associate { it.kode to it.status.kode }.toMutableMap(),
             ytelseTypeKode = ytelseType.kode,
             eldsteDatoMedEndringFraSøker = LocalDateTime.now()
