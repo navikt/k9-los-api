@@ -198,7 +198,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         assertReservasjonMedAntallOppgaver(TestSaksbehandler.BIRGER_BESLUTTER, 1)
 
         // Beslutter fatter vedtak
-        eventHandler.prosesser(behandling1.avsluttet().build())
+        eventHandler.prosesser(behandling1.behandlingAvsluttet().build())
         assertAntallIKø(kø, 0)
         assertSkjultReservasjon(TestSaksbehandler.BIRGER_BESLUTTER)
         assertReservasjonMedAntallOppgaver(TestSaksbehandler.SARA, 1)

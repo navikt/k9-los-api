@@ -6,12 +6,10 @@ import assertk.assertions.isGreaterThan
 import assertk.assertions.isNotNull
 import assertk.assertions.isNull
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
-import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.domene.modell.BehandlingStatus
 import no.nav.k9.los.domene.modell.Enhet
 import no.nav.k9.los.domene.modell.KøSortering
 import no.nav.k9.los.domene.modell.OppgaveKø
@@ -447,9 +445,9 @@ class K9sakEventHandlerTest : AbstractK9LosIntegrationTest() {
         val eventTid = LocalDateTime.now().minusDays(1)
         k9sakEventHandler.prosesser(BehandlingProsessEventDtoBuilder(eksternId).opprettet().apply { this.eventTid = eventTid }.build())
         k9sakEventHandler.prosesser(BehandlingProsessEventDtoBuilder(eksternId).foreslåVedtak().apply { this.eventTid = eventTid.plusHours(1) }.build())
-        k9sakEventHandler.prosesser(BehandlingProsessEventDtoBuilder(eksternId).avsluttet().apply { this.eventTid = eventTid.plusHours(2) }.build())
+        k9sakEventHandler.prosesser(BehandlingProsessEventDtoBuilder(eksternId).behandlingAvsluttet().apply { this.eventTid = eventTid.plusHours(2) }.build())
 
-        val vaskeevent = BehandlingProsessEventDtoBuilder(eksternId).avsluttet().apply {
+        val vaskeevent = BehandlingProsessEventDtoBuilder(eksternId).behandlingAvsluttet().apply {
             this.eventTid = LocalDateTime.now()
             this.eventHendelse = EventHendelse.VASKEEVENT
         }.build()
@@ -465,7 +463,7 @@ class K9sakEventHandlerTest : AbstractK9LosIntegrationTest() {
         k9sakEventHandler.prosesser(BehandlingProsessEventDtoBuilder(eksternId).opprettet().apply { this.eventTid = eventTid }.build())
         k9sakEventHandler.prosesser(BehandlingProsessEventDtoBuilder(eksternId).foreslåVedtak().apply { this.eventTid = eventTid.plusHours(1) }.build())
 
-        val vaskeevent = BehandlingProsessEventDtoBuilder(eksternId).avsluttet().apply {
+        val vaskeevent = BehandlingProsessEventDtoBuilder(eksternId).behandlingAvsluttet().apply {
             this.eventTid = eventTid.plusHours(2)
             this.eventHendelse = EventHendelse.VASKEEVENT
         }.build()
@@ -485,7 +483,7 @@ class K9sakEventHandlerTest : AbstractK9LosIntegrationTest() {
         k9sakEventHandler.prosesser(BehandlingProsessEventDtoBuilder(eksternId).opprettet().apply { this.eventTid = eventTid }.build())
         k9sakEventHandler.prosesser(BehandlingProsessEventDtoBuilder(eksternId).foreslåVedtak().apply { this.eventTid = eventTid.plusHours(1) }.build())
 
-        val vaskeevent = BehandlingProsessEventDtoBuilder(eksternId).avsluttet().apply {
+        val vaskeevent = BehandlingProsessEventDtoBuilder(eksternId).behandlingAvsluttet().apply {
             this.eventTid = eventTid.plusMinutes(30)
             this.eventHendelse = EventHendelse.VASKEEVENT
         }.build()
