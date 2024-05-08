@@ -28,12 +28,16 @@ fun Route.forvaltningApis() {
 
     get("/eventer/{system}/{eksternId}") {
         val fagsystem = Fagsystem.fraKode(call.parameters["system"]!!)
-        val eksternId = call.parameters["behandlingUuid"]!!
-        call.respond(when (fagsystem) {
+        val eksternId = call.parameters["eksternId"]
+        when (fagsystem) {
             Fagsystem.K9SAK -> {
                 val k9SakModell = k9sakEventRepository.hent(UUID.fromString(eksternId))
-                val eventerIkkeSensitive = k9SakModell.eventer.map { event -> K9SakEventIkkeSensitiv(event) }
-                objectMapper.writeValueAsString(eventerIkkeSensitive)
+                if (k9SakModell.eventer.isEmpty()) {
+                    call.respond(HttpStatusCode.NotFound)
+                } else {
+                    val eventerIkkeSensitive = k9SakModell.eventer.map { event -> K9SakEventIkkeSensitiv(event) }
+                    call.respond(objectMapper.writeValueAsString(eventerIkkeSensitive))
+                }
             }
 
             Fagsystem.K9TILBAKE -> {
@@ -56,9 +60,7 @@ fun Route.forvaltningApis() {
 
             Fagsystem.OMSORGSPENGER -> HttpStatusCode.NotImplemented
             Fagsystem.FPTILBAKE -> HttpStatusCode.NotImplemented
-        })
-
-        call.respond(HttpStatusCode.NotImplemented)
+        }
     }
 
     get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}") {
@@ -76,7 +78,7 @@ fun Route.forvaltningApis() {
         }
     }
 
-    post("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}/historikkvask") {
+    get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}/historikkvask") {
         val område = call.parameters["omrade"]!!
         val oppgavetype = call.parameters["oppgavetype"]!!
         val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
