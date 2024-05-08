@@ -250,7 +250,7 @@
         {
           "id": "hastesak",
           "visPåOppgave": true,
-          "påkrevd": true,
+          "påkrevd": false,
           "defaultverdi": false
         },
         {
