@@ -27,8 +27,8 @@ fun Route.forvaltningApis() {
     val objectMapper = LosObjectMapper.instance
 
     get("/eventer/{system}/{eksternId}") {
-        val fagsystem = Fagsystem.fraKode(call.request.queryParameters["system"]!!)
-        val eksternId = call.request.queryParameters["behandlingUuid"]!!
+        val fagsystem = Fagsystem.fraKode(call.parameters["system"]!!)
+        val eksternId = call.parameters["behandlingUuid"]!!
         call.respond(when (fagsystem) {
             Fagsystem.K9SAK -> {
                 val k9SakModell = k9sakEventRepository.hent(UUID.fromString(eksternId))
