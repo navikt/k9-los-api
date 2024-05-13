@@ -4,12 +4,17 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import no.nav.k9.kodeverk.behandling.FagsakYtelseType
+import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.modell.Fagsystem
 import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.los.domene.repository.BehandlingProsessEventKlageRepository
 import no.nav.k9.los.domene.repository.BehandlingProsessEventTilbakeRepository
 import no.nav.k9.los.domene.repository.PunsjEventK9Repository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
 import no.nav.k9.los.utils.LosObjectMapper
 import org.koin.ktor.ext.inject
@@ -23,8 +28,11 @@ fun Route.forvaltningApis() {
     val k9klageEventRepository by inject<BehandlingProsessEventKlageRepository>()
     val k9PunsjEventK9Repository by inject<PunsjEventK9Repository>()
     val oppgaveRepositoryTxWrapper by inject<OppgaveRepositoryTxWrapper>()
+    val oppgaveTypeRepository by inject<OppgavetypeRepository>()
     val k9SakTilLosHistorikkvaskTjeneste by inject<K9SakTilLosHistorikkvaskTjeneste>()
-    val objectMapper = LosObjectMapper.instance
+    val reservasjonV3Repository by inject<ReservasjonV3Repository>()
+    val objectMapper = LosObjectMapper.prettyInstance
+    val transactionalManager by inject<TransactionalManager>()
 
     get("/eventer/{system}/{eksternId}") {
         val fagsystem = Fagsystem.fraKode(call.parameters["system"]!!)
@@ -95,5 +103,59 @@ fun Route.forvaltningApis() {
             }
             else -> call.respond(HttpStatusCode.NotImplemented, "Støtter ikke historikkvask på område: $område")
         }
+    }
+
+    get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}/reservasjoner") {
+        val område = call.parameters["omrade"]!!
+        val oppgavetypeEksternId = call.parameters["oppgavetype"]!!
+        val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
+
+        try {
+            oppgaveTypeRepository.hentOppgavetype(område, oppgavetypeEksternId)
+        } catch (e: IllegalArgumentException) {
+            call.respond(HttpStatusCode.NotFound, e.message.toString())
+            return@get
+        }
+
+        val oppgave = oppgaveRepositoryTxWrapper.hentOppgave(område, oppgaveEksternId)
+        val reservasjonsnøkkel = utledReservasjonsnøkkel(oppgave, false)
+        val reservasjonsnøkkel_beslutter = utledReservasjonsnøkkel(oppgave, true)
+        val reservasjonerOrdinær = transactionalManager.transaction { tx ->
+            reservasjonV3Repository.hentReservasjonTidslinjeMedEndringer(reservasjonsnøkkel, tx)
+        }
+        val reservasjonerBeslutter = transactionalManager.transaction { tx ->
+            reservasjonV3Repository.hentReservasjonTidslinjeMedEndringer(reservasjonsnøkkel_beslutter, tx)
+        }
+
+        val reservasjonerSamlet = (reservasjonerOrdinær + reservasjonerBeslutter).sortedBy { it.reservasjonOpprettet }
+        call.respond(objectMapper.writeValueAsString(reservasjonerSamlet))
+    }
+
+}
+
+fun utledReservasjonsnøkkel(oppgave: Oppgave, erTilBeslutter: Boolean): String {
+    return when (FagsakYtelseType.fraKode(oppgave.hentVerdi("ytelsestype"))) {
+        FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
+        FagsakYtelseType.PLEIEPENGER_NÆRSTÅENDE,
+        FagsakYtelseType.OMSORGSPENGER_KS,
+        FagsakYtelseType.OMSORGSPENGER_AO,
+        FagsakYtelseType.OPPLÆRINGSPENGER -> lagNøkkelPleietrengendeAktør(oppgave, erTilBeslutter)
+        else -> lagNøkkelAktør(oppgave, erTilBeslutter)
+    }
+}
+
+fun lagNøkkelPleietrengendeAktør(oppgave: Oppgave, tilBeslutter: Boolean): String {
+    return if (tilBeslutter)
+        "K9_b_${oppgave.hentVerdi("ytelsestype")}_${oppgave.hentVerdi("pleietrengendeAktorId")}_beslutter"
+    else {
+        "K9_b_${oppgave.hentVerdi("ytelsestype")}_${oppgave.hentVerdi("pleietrengendeAktorId")}"
+    }
+}
+
+fun lagNøkkelAktør(oppgave: Oppgave, tilBeslutter: Boolean): String {
+    return if (tilBeslutter) {
+        "K9_b_${oppgave.hentVerdi("ytelsestype")}_${oppgave.hentVerdi("aktorId")}_beslutter"
+    } else {
+        "K9_b_${oppgave.hentVerdi("ytelsestype")}_${oppgave.hentVerdi("aktorId")}"
     }
 }
