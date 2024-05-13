@@ -24,6 +24,7 @@ fun CoroutineScope.k9SakKorrigerOutOfOrderProsessor(
     }
 }
 
-data class k9SakEksternId(
+@JvmInline
+value class k9SakEksternId(
     val eksternId: UUID
 )

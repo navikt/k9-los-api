@@ -96,7 +96,7 @@ fun Route.forvaltningApis() {
                 when(oppgavetype) {
                     "k9sak" -> {
                         k9SakTilLosHistorikkvaskTjeneste.vaskOppgaveForBehandlingUUID(UUID.fromString(oppgaveEksternId), 0)
-                        call.respond(HttpStatusCode.OK)
+                        call.respond(HttpStatusCode.NoContent)
                     }
                     else -> call.respond(HttpStatusCode.NotImplemented, "Støtter ikke historikkvask på oppgavetype: $oppgavetype for område: $område")
                 }
