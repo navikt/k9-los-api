@@ -24,6 +24,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3MedOppgaver
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.reservasjon.Reservasjonsnøkkel
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.EnheterSomSkalUtelatesFraLos
 import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
@@ -747,5 +748,5 @@ fun ReservasjonV3MedOppgaver.utledFraReservasjonsnøkkel(): String {
 }
 
 fun String.utledStatus(): String {
-    return if (contains("beslutter")) "beslutter" else if (contains("legacy")) "legacy" else "ordinær"
+    return Reservasjonsnøkkel(this).toString()
 }

@@ -90,4 +90,16 @@ class ReservasjonV3(
         result = 31 * result + gyldigTil.hashCode()
         return result
     }
+
+    override fun toString(): String {
+        return """
+            Reservasjon(
+            id: $id,
+            reservertAv: $reservertAv,
+            reservasjonsnøkkel: ${Reservasjonsnøkkel(reservasjonsnøkkel)},
+            annullertFørUtløp: $annullertFørUtløp,
+            gyldigFra: $gyldigFra,
+            gyldigTil: $gyldigTil)
+        """.trimIndent()
+    }
 }

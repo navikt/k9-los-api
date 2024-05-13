@@ -87,8 +87,7 @@ class ReservasjonV3Tjeneste(
         tx: TransactionalSession
     ): ReservasjonV3 {
         //sjekke tilgang på alle oppgaver tilknyttet nøkkel
-        val oppgaverForReservasjonsnøkkel =
-            oppgaveV3Repository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjonsnøkkel)
+        val oppgaverForReservasjonsnøkkel = oppgaveV3Repository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjonsnøkkel)
         if (!sjekkTilganger(oppgaverForReservasjonsnøkkel, reserverForId, utføresAvId)) {
             val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(reserverForId)
             throw ManglerTilgangException("Saksbehandler ${saksbehandler.navn} mangler tilgang til å reservere nøkkel $reservasjonsnøkkel")
@@ -102,7 +101,7 @@ class ReservasjonV3Tjeneste(
             kommentar = kommentar,
         )
         val reservasjon = reservasjonV3Repository.lagreReservasjon(reservasjonTilLagring, tx)
-
+        log.info("taReservasjon: Ny reservasjon $reservasjon, utført av $utføresAvId, for saksbehandler $reserverForId")
         return reservasjon
     }
 
@@ -121,17 +120,16 @@ class ReservasjonV3Tjeneste(
             check(gyldigTil > nå) {"Gyldig til er ikke etter nå, gyldigfra=${gyldigFra} gyldigTil=${gyldigTil}"}
             taReservasjon(reservasjonsnøkkel, reserverForId, utføresAvId, kommentar = kommentar, gyldigFra, gyldigTil)
         } catch (e: AlleredeReservertException) {
-            val aktivReservasjon =
-                reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(
+            val aktivReservasjon = reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(
                     reservasjonsnøkkel,
                     tx
                 )!!
 
             if (reserverForId != aktivReservasjon.reservertAv) { // reservert av andre
-                log.info("ForsøkReservasjonOgReturnerAktiv: AktivReservasjon ${aktivReservasjon.id} reservert av annen saksbehandler ${aktivReservasjon.reservertAv} enn $reserverForId")
+                log.info("ForsøkReservasjonOgReturnerAktiv: AktivReservasjon ${aktivReservasjon} allerede reservert av annen saksbehandler. Utført av $utføresAvId, forsøkt reservert for $reserverForId")
                 aktivReservasjon
             } else if (aktivReservasjon.gyldigTil < gyldigTil) {
-                log.info("ForsøkReservasjonOgReturnerAktiv: Sb $reserverForId har allerede reservasjonen med id ${aktivReservasjon.id}. Forlenger")
+                log.info("ForsøkReservasjonOgReturnerAktiv: Sb $reserverForId har allerede reservasjonen ${aktivReservasjon}. Forlenger. Utført av $utføresAvId.")
                 reservasjonV3Repository.forlengReservasjon(
                     aktivReservasjon,
                     endretAvBrukerId = utføresAvId,
@@ -140,7 +138,7 @@ class ReservasjonV3Tjeneste(
                     tx
                 )
             } else {
-                log.info("ForsøkReservasjonOgReturnerAktiv: Sb $reserverForId har allerede reservasjonen med id ${aktivReservasjon.id}")
+                log.info("ForsøkReservasjonOgReturnerAktiv: Sb $reserverForId har allerede reservasjonen med id $aktivReservasjon")
 
                 //allerede reservert lengre enn ønsket
                 // TODO: kort ned reservasjon i stedet? Avklaring neste uke. Sjekke opp mot V1-logikken
@@ -208,8 +206,9 @@ class ReservasjonV3Tjeneste(
         annullertAvBrukerId: Long?,
         tx: TransactionalSession
     ): Boolean {
-        val aktivReservasjon =
-            reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(reservasjonsnøkkel, tx)
+        val aktivReservasjon = reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(reservasjonsnøkkel, tx)
+        log.info("Annullerer v3-reservasjon ${aktivReservasjon}, annulleringsforespørsel av type ${Reservasjonsnøkkel(reservasjonsnøkkel)}")
+
         aktivReservasjon?.let {
             reservasjonV3Repository.annullerAktivReservasjonOgLagreEndring(
                 aktivReservasjon,
@@ -217,15 +216,14 @@ class ReservasjonV3Tjeneste(
                 annullertAvBrukerId,
                 tx
             )
-            log.info("Annullerer v3-reservasjon ${aktivReservasjon.id} holdt av ${aktivReservasjon.reservertAv}")
             return true
         }
         return false
     }
 
 
-    fun annullerReservasjonHvisFinnes(reservasjonsnøkkel: String, kommentar: String, annullertAvBrukerId: Long?) {
-        transactionalManager.transaction { tx ->
+    fun annullerReservasjonHvisFinnes(reservasjonsnøkkel: String, kommentar: String, annullertAvBrukerId: Long?): Boolean {
+        return transactionalManager.transaction { tx ->
             annullerReservasjonHvisFinnes(reservasjonsnøkkel, kommentar, annullertAvBrukerId, tx)
         }
     }
@@ -258,8 +256,7 @@ class ReservasjonV3Tjeneste(
         kommentar: String,
     ): ReservasjonV3MedOppgaver {
         return transactionalManager.transaction { tx ->
-            val aktivReservasjon =
-                finnAktivReservasjon(reservasjonsnøkkel, tx)
+            val aktivReservasjon = finnAktivReservasjon(reservasjonsnøkkel, tx)
             val nyReservasjon = reservasjonV3Repository.overførReservasjon(
                 aktivReservasjon = aktivReservasjon,
                 saksbehandlerSomSkalHaReservasjonId = tilSaksbehandlerId,
@@ -350,7 +347,7 @@ class ReservasjonV3Tjeneste(
     ): ReservasjonV3 {
         val aktivReservasjon =
             reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(reservasjonsnøkkel, tx)
-                ?: throw FinnerIkkeDataException("Fant ikke aktiv reservasjon for angitt reservasjonsnøkkel: $reservasjonsnøkkel") //TODO: Lov å logge/vise reservasjonsnøkkel?
+                ?: throw FinnerIkkeDataException("Fant ikke aktiv reservasjon for angitt reservasjonsnøkkel: ${Reservasjonsnøkkel(reservasjonsnøkkel)}")
         return aktivReservasjon
     }
 }
