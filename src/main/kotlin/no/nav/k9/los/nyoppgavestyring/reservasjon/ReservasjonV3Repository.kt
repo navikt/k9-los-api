@@ -337,6 +337,52 @@ class ReservasjonV3Repository(
         )
     }
 
+    fun hentReservasjonTidslinjeMedEndringer(reservasjonsnøkkel: String, tx: TransactionalSession): List<ReservasjonV3MedEndring> {
+        return tx.run(
+            queryOf(
+                """
+                    select 
+                        r.id as reservasjon_id,
+                        r.reservertav,
+                        r.reservasjonsnokkel,
+                        lower(gyldig_tidsrom) as gyldig_fra,
+                        upper(gyldig_tidsrom) as gyldig_til,
+                        annullert_for_utlop ,
+                        kommentar ,
+                        r.opprettet as reservasjon_opprettet,
+                        r.sist_endret as reservasjon_endret,
+                        re.id as endring_id,
+                        re.annullert_reservasjon_id as annullert_reservasjon_id
+                        re.ny_reservasjon_id as ny_resevasjon_id,
+                        re.endretav as resevasjon_endret_av,
+                        re.opprettet as endring_opprettet
+                    from reservasjon_v3 r
+                        left outer join reservasjon_v3_endring re on re.annullert_reservasjon_id = r.id 
+                    where rv.reservasjonsnokkel = :nokkel
+                    order by r.opprettet ASC
+                """.trimIndent(),
+                mapOf("nokkel" to reservasjonsnøkkel)
+            ).map { row ->
+                ReservasjonV3MedEndring(
+                    id = row.long("reservasjon_id"),
+                    reservertAv = row.long("reservert_av"),
+                    reservasjonsnøkkel = if (row.string("reservasjonsnøkkel").endsWith("beslutter")) { "beslutter" } else { "ordinær" },
+                    annullertFørUtløp = row.boolean("annullert_for_utlop"),
+                    kommentar = row.string("kommentar"),
+                    gyldigFra = row.localDateTime("gyldig_fra"),
+                    gyldigTil = row.localDateTime("gyldig_til"),
+                    reservasjonOpprettet = row.localDateTime("reservasjon_opprettet"),
+                    sist_endret = row.localDateTime("reservasjon_endret"),
+                    endringId = row.long("endring_id"),
+                    annullertReservasjonId = row.long("annullert_reservasjon_id"),
+                    nyReservasjonId = row.long("ny_reservasjon_id"),
+                    endretAv = row.long("reservasjon_endret_av"),
+                    endringOpprettet = row.localDateTime("endring_opprettet")
+                )
+            }.asList
+        )
+    }
+
     fun hentOppgaverIdForAktiveReservasjoner(
         gyldigPåTidspunkt: LocalDateTime,
         utløperInnen: LocalDateTime

@@ -16,5 +16,13 @@ class LosObjectMapper {
             .configure(SerializationFeature.WRITE_DURATIONS_AS_TIMESTAMPS, false)
             .setPropertyNamingStrategy(PropertyNamingStrategies.LOWER_CAMEL_CASE)
             .registerModule(JavaTimeModule())
+
+        val prettyInstance: ObjectMapper = jacksonObjectMapper()
+            .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .configure(SerializationFeature.WRITE_DURATIONS_AS_TIMESTAMPS, false)
+            .setPropertyNamingStrategy(PropertyNamingStrategies.LOWER_CAMEL_CASE)
+            .configure(SerializationFeature.INDENT_OUTPUT, true)
+            .registerModule(JavaTimeModule())
     }
 }
