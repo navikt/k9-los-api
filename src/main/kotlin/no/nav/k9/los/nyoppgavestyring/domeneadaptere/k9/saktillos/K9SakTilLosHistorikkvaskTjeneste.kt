@@ -10,6 +10,10 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.DayOfWeek
+import java.time.Duration
+import java.time.LocalDateTime
+import java.time.LocalTime
 import java.util.*
 import kotlin.concurrent.thread
 
@@ -33,17 +37,37 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 isDaemon = true,
                 name = TRÅDNAVN
             ) {
-                spillAvBehandlingProsessEventer()
+                var ferdig = false
+                while (!ferdig) {
+                    if (skalPauses()) {
+                        log.info("Vaskejobb satt på pause")
+                        Thread.sleep(Duration.ofMinutes(5))
+                        continue
+                    }
+
+                    val behandlingsIder = behandlingProsessEventK9Repository.hentAlleEventIderUtenVasketHistorikk(antall = 10000)
+                    log.info("Fant ${behandlingsIder.size} behandlinger")
+                    if (behandlingsIder.isEmpty()) {
+                        ferdig = true
+                    }
+
+                    spillAvBehandlingProsessEventer(behandlingsIder)
+                }
             }
         } else log.info("Ny oppgavestyring er deaktivert")
     }
 
-    private fun spillAvBehandlingProsessEventer() {
+    fun skalPauses(): Boolean {
+        val nå = LocalTime.now()
+        if (nå > LocalTime.of(6, 0, 0) && nå < LocalTime.of(17, 0,0) && LocalDateTime.now().dayOfWeek <= DayOfWeek.FRIDAY) {
+            return true
+        }
+        return false
+    }
+
+    private fun spillAvBehandlingProsessEventer(behandlingsIder: List<UUID>) {
         log.info("Starter avspilling av historiske BehandlingProsessEventer")
         val tidKjøringStartet = System.currentTimeMillis()
-
-        val behandlingsIder = behandlingProsessEventK9Repository.hentAlleEventIderUtenVasketHistorikk()
-        log.info("Fant ${behandlingsIder.size} behandlinger")
 
         var behandlingTeller: Long = 0
         var eventTeller: Long = 0
