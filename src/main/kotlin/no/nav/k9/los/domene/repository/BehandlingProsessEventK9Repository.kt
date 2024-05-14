@@ -162,7 +162,7 @@ class BehandlingProsessEventK9Repository(private val dataSource: DataSource) {
         }
     }
 
-    fun hentAlleEventIderUtenVasketHistorikk(): List<UUID> {
+    fun hentAlleEventIderUtenVasketHistorikk(antall: Int = 10000): List<UUID> {
         return using(sessionOf(dataSource)) {
             it.transaction { tx ->
                 tx.run(
@@ -171,8 +171,9 @@ class BehandlingProsessEventK9Repository(private val dataSource: DataSource) {
                             select * 
                             from behandling_prosess_events_k9 e
                             where not exists (select * from behandling_prosess_events_k9_historikkvask_ferdig hv where hv.id = e.id)
+                            LIMIT :antall
                              """.trimMargin(),
-                        mapOf()
+                        mapOf("antall" to antall)
                     ).map { row ->
                         UUID.fromString(row.string("id"))
                     }.asList
