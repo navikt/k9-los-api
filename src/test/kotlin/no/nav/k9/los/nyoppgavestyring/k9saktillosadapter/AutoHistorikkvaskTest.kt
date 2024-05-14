@@ -46,8 +46,8 @@ class AutoHistorikkvaskTest : AbstractK9LosIntegrationTest() {
         eventHandler.prosesser(event4)     // Feil rekkefølge i avsluttet behandling fra k9-sak
         eventHandler.prosesser(event3)
 
-        //TODO: Enn så lenge må historikkvask kjøres manuelt, frem til vi har testet mer i Q
-        K9SakTilLosHistorikkvaskTjeneste(get(),get(),get(),get(),get(),get()).vaskOppgaveForBehandlingUUID(eksternId1, 0)
+        //TODO: Håndtere parallellitet
+        K9SakTilLosHistorikkvaskTjeneste(get(),get(),get(),get(),get(),get()).vaskOppgaveForBehandlingUUID(eksternId1)
 
         val oppgave = oppgaveRepositoryTxWrapper.hentOppgave("K9", eksternId1.toString())
         assertThat(oppgave.status).isEqualTo(Oppgavestatus.LUKKET.kode)

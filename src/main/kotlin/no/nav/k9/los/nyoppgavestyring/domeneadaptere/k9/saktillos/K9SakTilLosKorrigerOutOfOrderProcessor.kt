@@ -17,7 +17,7 @@ fun CoroutineScope.k9SakKorrigerOutOfOrderProsessor(
     val log = LoggerFactory.getLogger("k9SakKorrigerOutOfOrderProsessor")
     for (eksternId in channel) {
         try {
-            k9SakTilLosHistorikkvaskTjeneste.vaskOppgaveForBehandlingUUID(eksternId.eksternId, 0)
+            k9SakTilLosHistorikkvaskTjeneste.vaskOppgaveForBehandlingUUID(eksternId.eksternId)
         } catch (e: Exception) {
             log.error("Historikkvask k9-sak feilet for enkeltoppgave med eksternId: ${eksternId.eksternId}")
         }

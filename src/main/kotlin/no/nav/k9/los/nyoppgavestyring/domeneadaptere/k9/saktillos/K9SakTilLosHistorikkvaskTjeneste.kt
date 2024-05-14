@@ -37,70 +37,79 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 isDaemon = true,
                 name = TRÅDNAVN
             ) {
-                var ferdig = false
-                while (!ferdig) {
+                log.info("Starter avspilling av historiske BehandlingProsessEventer")
+
+                val tidKjøringStartet = System.currentTimeMillis()
+                var eventTeller = 0L
+                var behandlingTeller = 0L
+                val antallEventIder = behandlingProsessEventK9Repository.hentAntallEventIderUtenVasketHistorikk()
+                log.info("Fant totalt $antallEventIder behandlingsider som skal rekjøres mot oppgavemodell")
+
+                while (true) {
+                    val behandlingsIder = behandlingProsessEventK9Repository.hentAlleEventIderUtenVasketHistorikk(antall = 1000)
+                    if (behandlingsIder.isEmpty()) {
+                        break
+                    }
+
                     if (skalPauses()) {
                         log.info("Vaskejobb satt på pause")
                         Thread.sleep(Duration.ofMinutes(5))
                         continue
                     }
 
-                    val behandlingsIder = behandlingProsessEventK9Repository.hentAlleEventIderUtenVasketHistorikk(antall = 10000)
-                    log.info("Fant ${behandlingsIder.size} behandlinger")
-                    if (behandlingsIder.isEmpty()) {
-                        ferdig = true
-                    }
-
-                    spillAvBehandlingProsessEventer(behandlingsIder)
+                    log.info("Starter vaskeiterasjon på ${behandlingsIder.size} behandlinger")
+                    eventTeller += spillAvBehandlingProsessEventer(behandlingsIder)
+                    behandlingTeller += behandlingsIder.count()
                 }
+
+                val (antallAlle, antallAktive) = oppgaveV3Tjeneste.tellAntall()
+                log.info("Antall oppgaver etter historikkvask (k9-sak): $antallAlle, antall aktive: $antallAktive, antall vaskede eventer: $eventTeller fordelt på $behandlingTeller behandlinger.")
+
+                val tidHeleKjøringen = System.currentTimeMillis() - tidKjøringStartet
+                if (eventTeller > 0) {
+                    log.info("Gjennomsnittstid pr behandling: ${tidHeleKjøringen / behandlingTeller}ms, Gjennsomsnittstid pr event: ${tidHeleKjøringen / eventTeller}ms")
+                }
+
+                log.info("Historikkvask k9sak ferdig")
+                behandlingProsessEventK9Repository.nullstillHistorikkvask()
+                log.info("Nullstilt historikkvaskmarkering k9-sak")
             }
         } else log.info("Ny oppgavestyring er deaktivert")
     }
 
     fun skalPauses(): Boolean {
         val nå = LocalTime.now()
-        if (nå > LocalTime.of(6, 0, 0) && nå < LocalTime.of(17, 0,0) && LocalDateTime.now().dayOfWeek <= DayOfWeek.FRIDAY) {
+        if (nå > LocalTime.of(6, 0, 0) && nå < LocalTime.of(17, 0, 0) && LocalDateTime.now().dayOfWeek <= DayOfWeek.FRIDAY) {
             return true
         }
         return false
     }
 
-    private fun spillAvBehandlingProsessEventer(behandlingsIder: List<UUID>) {
-        log.info("Starter avspilling av historiske BehandlingProsessEventer")
-        val tidKjøringStartet = System.currentTimeMillis()
+    private fun spillAvBehandlingProsessEventer(behandlingsIder: List<UUID>): Long {
+        var eventTeller = 0L
+        var behandlingTeller = 0L
+        val antallBehandlingerIBatch = behandlingsIder.size
 
-        var behandlingTeller: Long = 0
-        var eventTeller: Long = 0
         behandlingsIder.forEach { uuid ->
             transactionalManager.transaction { tx ->
-                eventTeller = vaskOppgaveForBehandlingUUID(uuid, eventTeller, tx)
+                eventTeller += vaskOppgaveForBehandlingUUID(uuid, tx)
                 behandlingProsessEventK9Repository.markerVasketHistorikk(uuid, tx)
                 behandlingTeller++
-                loggFremgangForHver100(behandlingTeller, "Vasket $behandlingTeller behandlinger")
+                loggFremgangForHver100(behandlingTeller, "Vasket $behandlingTeller behandlinger av $antallBehandlingerIBatch i gjeldende iterasjon")
             }
         }
-
-        val (antallAlle, antallAktive) = oppgaveV3Tjeneste.tellAntall()
-        val tidHeleKjøringen = System.currentTimeMillis() - tidKjøringStartet
-        log.info("Antall oppgaver etter historikkvask (k9-sak): $antallAlle, antall aktive: $antallAktive, antall vaskede eventer: $eventTeller fordelt på $behandlingTeller behandlinger.")
-        if (eventTeller > 0) {
-            log.info("Gjennomsnittstid pr behandling: ${tidHeleKjøringen / behandlingTeller}ms, Gjennsomsnittstid pr event: ${tidHeleKjøringen / eventTeller}ms")
-        }
-        log.info("Historikkvask k9sak ferdig")
-
-        behandlingProsessEventK9Repository.nullstillHistorikkvask()
-        log.info("Nullstilt historikkvaskmarkering k9-sak")
+        return eventTeller
     }
 
-    fun vaskOppgaveForBehandlingUUID(uuid: UUID, eventTellerInn: Long): Long {
+    fun vaskOppgaveForBehandlingUUID(uuid: UUID): Long {
         return transactionalManager.transaction { tx ->
-            vaskOppgaveForBehandlingUUID(uuid, eventTellerInn, tx)
+            vaskOppgaveForBehandlingUUID(uuid, tx)
         }
     }
 
-    fun vaskOppgaveForBehandlingUUID(uuid: UUID, eventTellerInn: Long, tx: TransactionalSession): Long {
+    fun vaskOppgaveForBehandlingUUID(uuid: UUID, tx: TransactionalSession): Long {
         log.info("Vasker historikk for k9sak-oppgave med eksternId: $uuid")
-        var eventTeller = eventTellerInn
+        var eventTeller = 0L
         var forrigeOppgave: OppgaveV3? = null
 
         val nyeBehandlingsopplysningerFraK9Sak = k9SakBerikerKlient.hentBehandling(UUID.fromString(uuid.toString()))

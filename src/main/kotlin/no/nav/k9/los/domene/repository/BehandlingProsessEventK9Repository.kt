@@ -162,6 +162,22 @@ class BehandlingProsessEventK9Repository(private val dataSource: DataSource) {
         }
     }
 
+    fun hentAntallEventIderUtenVasketHistorikk(): Long {
+        return using(sessionOf(dataSource)) {
+            it.transaction { tx ->
+                tx.run(
+                    queryOf(
+                        """
+                            select count(*) as antall
+                            from behandling_prosess_events_k9 e
+                            where not exists (select * from behandling_prosess_events_k9_historikkvask_ferdig hv where hv.id = e.id)
+                             """.trimMargin(),
+                    ).map { it.long("antall") }.asSingle
+                )!!
+            }
+        }
+    }
+
     fun hentAlleEventIderUtenVasketHistorikk(antall: Int = 10000): List<UUID> {
         return using(sessionOf(dataSource)) {
             it.transaction { tx ->
