@@ -40,7 +40,8 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 var ferdig = false
                 while (!ferdig) {
                     if (skalPauses()) {
-                        Thread.sleep(Duration.ofMinutes(1))
+                        log.info("Vaskejobb satt på pause")
+                        Thread.sleep(Duration.ofMinutes(5))
                         continue
                     }
 

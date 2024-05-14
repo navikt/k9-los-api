@@ -42,6 +42,7 @@ internal fun Route.K9SakTilLosApi() {
     put("/startHistorikkvask") {
         requestContextService.withRequestContext(call) {
             k9SakTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
+            call.respond(HttpStatusCode.NoContent)
         }
     }
 }
