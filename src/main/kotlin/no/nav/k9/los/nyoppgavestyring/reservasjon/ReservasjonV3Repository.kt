@@ -353,8 +353,8 @@ class ReservasjonV3Repository(
                         r.sist_endret as reservasjon_endret,
                         re.id as endring_id,
                         re.annullert_reservasjon_id as annullert_reservasjon_id,
-                        re.ny_reservasjon_id as ny_resevasjon_id,
-                        re.endretav as resevasjon_endret_av,
+                        re.ny_reservasjon_id as ny_reservasjon_id,
+                        re.endretav as reservasjon_endret_av,
                         re.opprettet as endring_opprettet
                     from reservasjon_v3 r
                         left outer join reservasjon_v3_endring re on re.annullert_reservasjon_id = r.id 
