@@ -352,7 +352,7 @@ class ReservasjonV3Repository(
                         r.opprettet as reservasjon_opprettet,
                         r.sist_endret as reservasjon_endret,
                         re.id as endring_id,
-                        re.annullert_reservasjon_id as annullert_reservasjon_id
+                        re.annullert_reservasjon_id as annullert_reservasjon_id,
                         re.ny_reservasjon_id as ny_resevasjon_id,
                         re.endretav as resevasjon_endret_av,
                         re.opprettet as endring_opprettet
