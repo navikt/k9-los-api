@@ -373,11 +373,11 @@ class ReservasjonV3Repository(
                     gyldigTil = row.localDateTime("gyldig_til"),
                     reservasjonOpprettet = row.localDateTime("reservasjon_opprettet"),
                     sist_endret = row.localDateTime("reservasjon_endret"),
-                    endringId = row.long("endring_id"),
-                    annullertReservasjonId = row.long("annullert_reservasjon_id"),
-                    nyReservasjonId = row.long("ny_reservasjon_id"),
-                    endretAv = row.long("reservasjon_endret_av"),
-                    endringOpprettet = row.localDateTime("endring_opprettet")
+                    endringId = row.longOrNull("endring_id"),
+                    annullertReservasjonId = row.longOrNull("annullert_reservasjon_id"),
+                    nyReservasjonId = row.longOrNull("ny_reservasjon_id"),
+                    endretAv = row.longOrNull("reservasjon_endret_av"),
+                    endringOpprettet = row.localDateTimeOrNull("endring_opprettet")
                 )
             }.asList
         )
