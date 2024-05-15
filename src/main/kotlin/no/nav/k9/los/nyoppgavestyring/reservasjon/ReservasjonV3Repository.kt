@@ -366,7 +366,7 @@ class ReservasjonV3Repository(
                 ReservasjonV3MedEndring(
                     id = row.long("reservasjon_id"),
                     reservertAv = row.long("reservertav"),
-                    reservasjonsnøkkel = if (row.string("reservasjonsnøkkel").endsWith("beslutter")) { "beslutter" } else { "ordinær" },
+                    reservasjonsnøkkel = if (row.string("reservasjonsnokkel").endsWith("beslutter")) { "beslutter" } else { "ordinær" },
                     annullertFørUtløp = row.boolean("annullert_for_utlop"),
                     kommentar = row.string("kommentar"),
                     gyldigFra = row.localDateTime("gyldig_fra"),
