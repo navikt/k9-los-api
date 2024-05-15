@@ -358,7 +358,7 @@ class ReservasjonV3Repository(
                         re.opprettet as endring_opprettet
                     from reservasjon_v3 r
                         left outer join reservasjon_v3_endring re on re.annullert_reservasjon_id = r.id 
-                    where rv.reservasjonsnokkel = :nokkel
+                    where r.reservasjonsnokkel = :nokkel
                     order by r.opprettet ASC
                 """.trimIndent(),
                 mapOf("nokkel" to reservasjonsnøkkel)
