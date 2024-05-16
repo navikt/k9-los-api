@@ -14,6 +14,8 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelter
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Verdiforklaring
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
 import no.nav.k9.los.nyoppgavestyring.transientfeltutleder.GyldigeTransientFeltutleder
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
@@ -21,6 +23,7 @@ class OppgaveQueryRepository(
     val datasource: DataSource,
     val feltdefinisjonRepository: FeltdefinisjonRepository
 ) {
+    private val log: Logger = LoggerFactory.getLogger("OppgaveQueryRepository")
 
     fun hentAlleFelter(): Oppgavefelter {
         return using(sessionOf(datasource)) { it ->
@@ -177,6 +180,16 @@ class OppgaveQueryRepository(
     }
 
     private fun query(tx: TransactionalSession, oppgaveQuery: SqlOppgaveQuery): List<Long> {
+        log.info("spørring oppgaveQuery for oppgaveId: ${oppgaveQuery.getQuery()}")
+        val explain = tx.run(
+            queryOf(
+                "explain " + oppgaveQuery.getQuery(),
+                oppgaveQuery.getParams()
+            ).map { row ->
+                row.string(1)
+            }.asList
+        ).joinToString("\n")
+        log.info("explain oppgaveQurye for oppgaveId: $explain")
         return tx.run(
             queryOf(
                 oppgaveQuery.getQuery(),
@@ -186,6 +199,16 @@ class OppgaveQueryRepository(
     }
 
     private fun queryForEksternId(tx: TransactionalSession, oppgaveQuery: SqlOppgaveQuery): List<EksternOppgaveId> {
+        log.info("spørring oppgaveQuery for oppgave EksternId: ${oppgaveQuery.getQuery()}")
+        val explain = tx.run(
+            queryOf(
+                "explain " + oppgaveQuery.getQuery(),
+                oppgaveQuery.getParams()
+            ).map { row ->
+                row.string(1)
+            }.asList
+        ).joinToString("\n")
+        log.info("explain oppgaveQuery for oppgaveId: $explain")
         return tx.run(
             queryOf(
                 oppgaveQuery.getQuery(),
