@@ -101,6 +101,7 @@ class OppgaveKoTjeneste(
         oppgaveKoId: Long,
         coroutineContext: CoroutineContext
     ): Pair<Oppgave, ReservasjonV3>? {
+        log.info("taReservasjonFraKø, oppgaveKøId: $oppgaveKoId")
         val oppgavekø = oppgaveKoRepository.hent(oppgaveKoId)
 
         val kandidatOppgaver = oppgaveQueryService.queryForOppgaveId(oppgavekø.oppgaveQuery)

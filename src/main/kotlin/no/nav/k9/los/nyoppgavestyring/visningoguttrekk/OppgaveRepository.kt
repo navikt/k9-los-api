@@ -5,21 +5,39 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
-import java.time.LocalDateTime
 import no.nav.k9.los.spi.felter.HentVerdiInput
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 
 class OppgaveRepository(
     private val oppgavetypeRepository: OppgavetypeRepository
 ) {
+    private val log: Logger = LoggerFactory.getLogger("OppgaveRepository")
     fun hentNyesteOppgaveForEksternId(tx: TransactionalSession, kildeområde: String, eksternId: String, now: LocalDateTime = LocalDateTime.now()): Oppgave {
-        val oppgave = tx.run(
-            queryOf(
-                """
+        val queryString = """
                 select * 
                 from oppgave_v3 ov
                 where ov.kildeomrade = :kildeomrade AND ov.ekstern_id = :eksternId 
                 and ov.versjon = (select max(versjon) from oppgave_v3 ov2 where ov2.ekstern_id = :eksternId)
-            """.trimIndent(),
+            """.trimIndent()
+        log.info("query hentNyesteOppgaveForEksternId: $queryString")
+        val explain = tx.run(
+            queryOf(
+                """explain $queryString""",
+                mapOf(
+                    "kildeomrade" to kildeområde,
+                    "eksternId" to eksternId
+                )
+            ).map { row ->
+                row.string(1)
+            }.asList
+        ).joinToString("\n")
+        log.info("explain ureserverte OppgaveIder: $explain")
+
+        val oppgave = tx.run(
+            queryOf(
+                queryString,
                 mapOf(
                     "kildeomrade" to kildeområde,
                     "eksternId" to eksternId
@@ -35,15 +53,27 @@ class OppgaveRepository(
     }
 
     fun hentAlleÅpneOppgaverForReservasjonsnøkkel(tx: TransactionalSession, reservasjonsnøkler: List<String>, now: LocalDateTime = LocalDateTime.now()) : List<Oppgave> {
-        val oppgaver = tx.run(
-            queryOf(
-                """
+        val queryString = """
                 select *
                 from oppgave_v3 ov 
                 where reservasjonsnokkel in ('${reservasjonsnøkler.joinToString("','")}')
                 and aktiv = true
                 and status in ('VENTER', 'AAPEN')
             """.trimIndent()
+
+        log.info("spørring hentAktivReservasjonForReserajovsnsnøkkel")
+        val explain = tx.run(
+            queryOf(
+                "explain " + queryString
+            ).map { row ->
+                row.string(1)
+            }.asList
+        ).joinToString("\n")
+        log.info("explain hentAktivReservasjonForReserajovsnsnøkkel: $explain")
+
+        val oppgaver = tx.run(
+            queryOf(
+                queryString
             ).map { row ->
                 mapOppgave(row, now, tx)
             }.asList

@@ -4,12 +4,16 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import org.postgresql.util.PSQLException
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
 class ReservasjonV3Repository(
     private val transactionalManager: TransactionalManager,
 ) {
+    private val log: Logger = LoggerFactory.getLogger("ReservasjonV3Repository")
+
     fun lagreReservasjon(reservasjonV3: ReservasjonV3, tx: TransactionalSession): ReservasjonV3 {
         try {
             return reservasjonV3.copy(
@@ -239,16 +243,32 @@ class ReservasjonV3Repository(
     }
 
     fun hentAktivReservasjonForReservasjonsnøkkel(nøkkel: String, tx: TransactionalSession): ReservasjonV3? {
-        return tx.run(
-            queryOf(
-                """
+        val queryString = """
                    select r.id, r.reservertAv, r.reservasjonsnokkel, lower(r.gyldig_tidsrom) as fra, upper(r.gyldig_tidsrom) as til, r.annullert_for_utlop , kommentar as kommentar
                    from reservasjon_v3 r
                    where r.reservasjonsnokkel = :nokkel
                    and annullert_for_utlop = false
                    and lower(r.gyldig_tidsrom) <= :now
                    and upper(r.gyldig_tidsrom) > :now
-                """.trimIndent(),
+                """.trimIndent()
+/*
+        log.info("spørring hentAktivReservasjonForReserajovsnsnøkkel: ${queryString}")
+        val explain = tx.run(
+            queryOf(
+                "explain " + queryString,
+                mapOf(
+                    "nokkel" to nøkkel,
+                    "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
+                )
+            ).map { row ->
+                row.string(1)
+            }.asList
+        ).joinToString("\n")
+        log.info("explain hentAktivReservasjonForReserajovsnsnøkkel: $explain")
+ */
+        return tx.run(
+            queryOf(
+                queryString,
                 mapOf(
                     "nokkel" to nøkkel,
                     "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
@@ -294,11 +314,7 @@ class ReservasjonV3Repository(
 
     fun hentUreserverteOppgaveIder(oppgaveIder: List<Long>): List<Long> {
         if (oppgaveIder.isEmpty()) return emptyList()
-
-        return transactionalManager.transaction { tx ->
-            tx.run(
-                queryOf(
-                    """
+        val queryString = """
                     select distinct ov.id as oppgaveId
                     from oppgave_v3 ov 
                     where ov.aktiv = true
@@ -310,7 +326,26 @@ class ReservasjonV3Repository(
                         and upper(rv.gyldig_tidsrom) > :now 
                         and rv.annullert_for_utlop = false 
                     )
-                """.trimIndent(),
+                """
+
+        return transactionalManager.transaction { tx ->
+
+            log.info("spørring hent ureserverte OppgaveIder: $queryString")
+            val explain = tx.run(
+                queryOf(
+                    """explain $queryString""",
+                    mapOf(
+                        "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
+                    )
+                ).map { row ->
+                    row.string(1)
+                }.asList
+            ).joinToString("\n")
+            log.info("explain ureserverte OppgaveIder: $explain")
+
+            tx.run(
+                queryOf(
+                    queryString,
                     mapOf(
                         "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
                     )
