@@ -1,6 +1,5 @@
 package no.nav.k9.los.tjenester.saksbehandler.oppgave
 
-import kotlinx.coroutines.runBlocking
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
@@ -19,11 +18,12 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverHistorikk
 import no.nav.k9.los.tjenester.fagsak.PersonDto
-import no.nav.k9.los.tjenester.mock.AksjonspunkterMock
 import no.nav.k9.los.tjenester.saksbehandler.merknad.Merknad
 import no.nav.k9.los.tjenester.saksbehandler.nokkeltall.NyeOgFerdigstilteOppgaverDto
 import no.nav.k9.los.utils.Cache
 import no.nav.k9.los.utils.CacheObject
+import no.nav.k9.los.utils.forskyvReservasjonsDato
+import no.nav.k9.los.utils.leggTilDagerHoppOverHelg
 import org.apache.commons.text.similarity.LevenshteinDistance
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -177,7 +177,7 @@ class OppgaveTjeneste constructor(
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(reserveresAvIdent)
         return OppgaveStatusDto(
             erReservert = true,
-            reservertTilTidspunkt = LocalDateTime.now().plusHours(48).forskyvReservasjonsDato(),
+            reservertTilTidspunkt = LocalDateTime.now().leggTilDagerHoppOverHelg(2),
             erReservertAvInnloggetBruker = reservertAvMeg(reserveresAvIdent),
             reservertAv = reserveresAvIdent,
             reservertAvNavn = saksbehandler?.navn,
@@ -207,7 +207,7 @@ class OppgaveTjeneste constructor(
         begrunnelse: String? = null
     ): List<Reservasjon> {
         return iderPåOppgaverSomSkalBliReservert.map {
-            val reservertTil = LocalDateTime.now().plusHours(48).forskyvReservasjonsDato()
+            val reservertTil = LocalDateTime.now().leggTilDagerHoppOverHelg(2)
             if (overstyrIdent != null) {
                 Reservasjon(
                     reservertTil = reservertTil,
@@ -576,7 +576,7 @@ class OppgaveTjeneste constructor(
 
     fun forlengReservasjonPåOppgave(uuid: UUID): Reservasjon {
         return reservasjonRepository.lagre(uuid, true) {
-            it!!.reservertTil = it.reservertTil?.plusHours(24)!!.forskyvReservasjonsDato()
+            it!!.reservertTil = it.reservertTil?.leggTilDagerHoppOverHelg(1)
             log.info("Forlenger reservasjonen $uuid til ${it.reservertTil}, som var holdt av ${it.reservertAv}")
             it
         }
@@ -626,9 +626,9 @@ class OppgaveTjeneste constructor(
         val hentIdentTilInnloggetBruker = azureGraphService.hentIdentTilInnloggetBruker()
         val oppdatertReservasjon = reservasjonRepository.lagre(uuid, true) {
             if (it!!.reservertTil == null) {
-                it.reservertTil = LocalDateTime.now().plusHours(24).forskyvReservasjonsDato()
+                it.reservertTil = LocalDateTime.now().leggTilDagerHoppOverHelg(1)
             } else {
-                it.reservertTil = it.reservertTil?.plusHours(24)!!.forskyvReservasjonsDato()
+                it.reservertTil = it.reservertTil?.leggTilDagerHoppOverHelg(1)
             }
             it.flyttetTidspunkt = LocalDateTime.now()
             it.reservertAv = ident
@@ -998,7 +998,7 @@ class OppgaveTjeneste constructor(
         reservasjonOversetter.taNyReservasjonFraGammelKontekst(
             oppgaveV1 = oppgaveSomSkalBliReservert,
             reserverForSaksbehandlerId = skalHaReservasjon.id!!,
-            reservertTil = LocalDateTime.now().plusHours(48).forskyvReservasjonsDato(),
+            reservertTil = LocalDateTime.now().leggTilDagerHoppOverHelg(2),
             utførtAvSaksbehandlerId = skalHaReservasjon.id!!,
             kommentar = ""
         )
