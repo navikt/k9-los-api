@@ -296,7 +296,7 @@ internal fun Route.OppgaveApis() {
     @Deprecated("Antatt ikke i bruk. Verifiser og fjern")
     @Location("/oppgaver-på-samme-bruker")
     class oppgaverPåSammeBruker
-    post { _: opphevReservasjoner ->
+    post { _: oppgaverPåSammeBruker ->
         requestContextService.withRequestContext(call) {
             val params = call.receive<OppgaveId>()
             call.respond(oppgaveTjeneste.aktiveOppgaverPåSammeBruker(UUID.fromString(params.oppgaveId)))

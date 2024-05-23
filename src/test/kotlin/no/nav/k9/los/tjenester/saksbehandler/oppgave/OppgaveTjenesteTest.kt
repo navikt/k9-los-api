@@ -2046,7 +2046,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         oppgaveTjeneste.endreReservasjonPåOppgave(
             oppgaveNøkkel = OppgaveNøkkelDto.forV1Oppgave(nyOppgave.eksternId.toString()),
-            brukerIdent = "Bar"
+            tilBrukerIdent = "Bar"
         )
 
         val reservasjonEtterEndring = reservasjonRepository.hent(nyOppgave.eksternId)

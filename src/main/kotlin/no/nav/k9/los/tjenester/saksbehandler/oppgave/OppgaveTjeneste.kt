@@ -584,7 +584,7 @@ class OppgaveTjeneste constructor(
 
     suspend fun endreReservasjonPåOppgave(
         oppgaveNøkkel: OppgaveNøkkelDto,
-        brukerIdent: String? = null,
+        tilBrukerIdent: String? = null,
         reserverTil: LocalDate? = null,
         begrunnelse: String? = null): Reservasjon {
         val identTilInnloggetBruker = azureGraphService.hentIdentTilInnloggetBruker()
@@ -608,17 +608,17 @@ class OppgaveTjeneste constructor(
             if (begrunnelse != null) {
                 it.begrunnelse = begrunnelse
             }
-            if (brukerIdent != null) {
+            if (tilBrukerIdent != null) {
                 it.flyttetTidspunkt = LocalDateTime.now()
-                it.reservertAv = brukerIdent
+                it.reservertAv = tilBrukerIdent
                 it.flyttetAv = identTilInnloggetBruker
             }
             it
         }
-        if (brukerIdent != null) {
+        if (tilBrukerIdent != null) {
             val reservasjon = reservasjonRepository.hent(oppgavUUID)
             saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
-            saksbehandlerRepository.leggTilReservasjon(brukerIdent, reservasjon.oppgave)
+            saksbehandlerRepository.leggTilReservasjon(tilBrukerIdent, reservasjon.oppgave)
         }
         return oppdatertReservasjon
     }

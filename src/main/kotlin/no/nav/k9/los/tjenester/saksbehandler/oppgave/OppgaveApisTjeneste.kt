@@ -110,13 +110,13 @@ class OppgaveApisTjeneste(
     private suspend fun endreReservasjon(
         innloggetBruker: Saksbehandler,
         oppgaveNøkkel: OppgaveNøkkelDto,
-        brukerIdent: String? = null,
+        tilBrukerIdent: String? = null,
         reserverTil: LocalDate? = null,
         begrunnelse: String? = null
     ): ReservasjonV3Dto {
         // Fjernes når V1 skal vekk
         try {
-            oppgaveTjeneste.endreReservasjonPåOppgave(oppgaveNøkkel, brukerIdent, reserverTil, begrunnelse)
+            oppgaveTjeneste.endreReservasjonPåOppgave(oppgaveNøkkel, tilBrukerIdent, reserverTil, begrunnelse)
         } catch (_: NullPointerException) {
         } catch (_: IllegalArgumentException) {
             //ReservasjonV1 annullerer noen reservasjoner som V3 ikke annullerer, og da kan det hende at det ikke finnes
@@ -124,7 +124,7 @@ class OppgaveApisTjeneste(
         }
 
         val tilSaksbehandler =
-            brukerIdent?.let { saksbehandlerRepository.finnSaksbehandlerMedIdent(it) }
+            tilBrukerIdent?.let { saksbehandlerRepository.finnSaksbehandlerMedIdent(it) }
 
         val reservasjonsnøkkel = reservasjonOversetter.hentReservasjonsnøkkelForOppgavenøkkel(oppgaveNøkkel)
         val nyReservasjon = reservasjonV3Tjeneste.endreReservasjon(
