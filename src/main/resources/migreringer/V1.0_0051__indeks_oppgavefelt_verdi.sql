@@ -1,1 +1,0 @@
-create index oppgavefelt_verdi_verdi_oppgavefelt_id_oppgave_id on public.oppgavefelt_verdi(verdi, oppgavefelt_id, oppgave_id)
