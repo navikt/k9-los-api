@@ -4,6 +4,7 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotliquery.queryOf
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.modell.Fagsystem
@@ -22,7 +23,6 @@ import java.util.*
 
 
 fun Route.forvaltningApis() {
-
     val k9sakEventRepository by inject<BehandlingProsessEventK9Repository>()
     val k9tilbakeEventRepository by inject<BehandlingProsessEventTilbakeRepository>()
     val k9klageEventRepository by inject<BehandlingProsessEventKlageRepository>()
@@ -33,6 +33,47 @@ fun Route.forvaltningApis() {
     val reservasjonV3Repository by inject<ReservasjonV3Repository>()
     val objectMapper = LosObjectMapper.prettyInstance
     val transactionalManager by inject<TransactionalManager>()
+
+    get("/index_oversikt") {
+        val list = mutableListOf<String>()
+        transactionalManager.transaction { tx ->
+            tx.run(
+                queryOf(
+                    """
+                    SELECT
+                    relname AS table_name,
+                    indexrelname AS index_name,
+                    pg_size_pretty(pg_relation_size(indexrelid)) AS index_size,
+                    idx_scan AS index_scan_count
+                    FROM
+                    pg_stat_user_indexes
+                    ORDER BY
+                    index_scan_count ASC,
+                    pg_relation_size(indexrelid) DESC;
+                """.trimIndent()
+                ).map { row ->
+                    if (list.isEmpty()) {
+                        list.add(
+                            buildString {
+                                append("${row.underlying.metaData.getColumnLabel(1)} ,")
+                                append("${row.underlying.metaData.getColumnLabel(2)} ,")
+                                append("${row.underlying.metaData.getColumnLabel(3)} ,")
+                                append(row.underlying.metaData.getColumnLabel(4))
+                            }
+                        )
+                    }
+                    list.add(
+                        buildString {
+                            append("${row.string(1)} ,")
+                            append("${row.string(2)} ,")
+                            append("${row.string(3)} ,")
+                            append(row.string(4))
+                        }
+                    )
+                }.asList
+            )
+        }
+    }
 
     get("/eventer/{system}/{eksternId}") {
         val fagsystem = Fagsystem.fraKode(call.parameters["system"]!!)
@@ -91,16 +132,21 @@ fun Route.forvaltningApis() {
         val oppgavetype = call.parameters["oppgavetype"]!!
         val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
 
-        when(område) {
+        when (område) {
             "K9" -> {
-                when(oppgavetype) {
+                when (oppgavetype) {
                     "k9sak" -> {
                         k9SakTilLosHistorikkvaskTjeneste.vaskOppgaveForBehandlingUUID(UUID.fromString(oppgaveEksternId))
                         call.respond(HttpStatusCode.NoContent)
                     }
-                    else -> call.respond(HttpStatusCode.NotImplemented, "Støtter ikke historikkvask på oppgavetype: $oppgavetype for område: $område")
+
+                    else -> call.respond(
+                        HttpStatusCode.NotImplemented,
+                        "Støtter ikke historikkvask på oppgavetype: $oppgavetype for område: $område"
+                    )
                 }
             }
+
             else -> call.respond(HttpStatusCode.NotImplemented, "Støtter ikke historikkvask på område: $område")
         }
     }
@@ -140,6 +186,7 @@ fun utledReservasjonsnøkkel(oppgave: Oppgave, erTilBeslutter: Boolean): String 
         FagsakYtelseType.OMSORGSPENGER_KS,
         FagsakYtelseType.OMSORGSPENGER_AO,
         FagsakYtelseType.OPPLÆRINGSPENGER -> lagNøkkelPleietrengendeAktør(oppgave, erTilBeslutter)
+
         else -> lagNøkkelAktør(oppgave, erTilBeslutter)
     }
 }

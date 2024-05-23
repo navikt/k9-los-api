@@ -18,8 +18,9 @@ class OppgaveRepository(
         val queryString = """
                 select * 
                 from oppgave_v3 ov
-                where ov.kildeomrade = :kildeomrade AND ov.ekstern_id = :eksternId 
-                and ov.versjon = (select max(versjon) from oppgave_v3 ov2 where ov2.ekstern_id = :eksternId)
+                where ov.kildeomrade = :kildeomrade 
+                 AND ov.ekstern_id = :eksternId 
+                and ov.aktiv = true
             """.trimIndent()
         log.info("query hentNyesteOppgaveForEksternId: $queryString")
         val explain = tx.run(
