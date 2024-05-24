@@ -13,6 +13,7 @@ class OppgaveV3(
     val endretTidspunkt: LocalDateTime,
     val kildeområde: String,
     val reservasjonsnøkkel: String,
+    val aktiv: Boolean,
     val felter: List<OppgaveFeltverdi>
 ) {
     constructor(oppgaveDto: OppgaveDto, oppgavetype: Oppgavetype) : this(
@@ -23,6 +24,7 @@ class OppgaveV3(
         endretTidspunkt = oppgaveDto.endretTidspunkt,
         kildeområde = oppgaveDto.kildeområde,
         reservasjonsnøkkel = oppgaveDto.reservasjonsnøkkel,
+        aktiv = true,
         felter = lagFelter(oppgaveDto, oppgavetype)
     )
 
@@ -35,6 +37,7 @@ class OppgaveV3(
         endretTidspunkt = oppgave.endretTidspunkt,
         kildeområde = oppgave.kildeområde,
         reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
+        aktiv = oppgave.aktiv,
         felter = oppgavefelter
     )
 

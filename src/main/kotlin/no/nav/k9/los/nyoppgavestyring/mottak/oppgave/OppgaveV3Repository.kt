@@ -66,6 +66,7 @@ class OppgaveV3Repository(
                     endretTidspunkt = row.localDateTime("endret_tidspunkt"),
                     kildeområde = row.string("kildeomrade"),
                     reservasjonsnøkkel = row.stringOrNull("reservasjonsnokkel") ?: "mangler_historikkvask",
+                    aktiv = row.boolean("aktiv"),
                     felter = hentFeltverdier(
                         row.long("id"),
                         oppgavetypeRepository.hentOppgavetype(
@@ -108,6 +109,7 @@ class OppgaveV3Repository(
                     endretTidspunkt = row.localDateTime("endret_tidspunkt"),
                     kildeområde = row.string("kildeomrade"),
                     reservasjonsnøkkel = row.stringOrNull("reservasjonsnokkel") ?: "mangler_historikkvask",
+                    aktiv = row.boolean("aktiv"),
                     felter = hentFeltverdier(row.long("id"), oppgavetype, tx)
                 )
             }.asSingle
@@ -130,6 +132,7 @@ class OppgaveV3Repository(
                     endretTidspunkt = row.localDateTime("endret_tidspunkt"),
                     kildeområde = row.string("kildeomrade"),
                     reservasjonsnøkkel = row.stringOrNull("reservasjonsnokkel") ?: "mangler_historikkvask",
+                    aktiv = row.boolean("aktiv"),
                     felter = hentFeltverdier(row.long("id"), oppgavetype, tx)
                 )
             }.asSingle
@@ -253,7 +256,9 @@ class OppgaveV3Repository(
                     oppgavefelt = oppgavetype.oppgavefelter.first { oppgavefelt ->
                         oppgavefelt.id == row.long("oppgavefelt_id")
                     },
-                    verdi = row.string("verdi")
+                    verdi = row.string("verdi"),
+                    aktiv = row.boolean("aktiv"),
+                    oppgavestatus = Oppgavestatus.fraKode(row.string("oppgavestatus"))
                 )
             }.asList
         )
