@@ -68,6 +68,18 @@ class BehandlingProsessEventDtoBuilder(
         return this
     }
 
+    fun manueltSattPåVentMedisinskeOpplysninger(): BehandlingProsessEventDtoBuilder {
+        this.behandlingStatus = BehandlingStatus.UTREDES
+        this.eventHendelse = EventHendelse.AKSJONSPUNKT_OPPRETTET
+        this.behandlingSteg = BehandlingStegType.VURDER_MEDISINSKE_VILKÅR
+        this.resultatType = BehandlingResultatType.IKKE_FASTSATT
+        this.aksjonspunkter = mutableListOf(
+            AksjonspunktTilstandBuilder.KONTROLLER_LEGEERKLÆRING.medStatus(AksjonspunktStatus.UTFØRT),
+            AksjonspunktDefinisjon.AUTO_MANUELT_SATT_PÅ_VENT.builder().medStatus(AksjonspunktStatus.OPPRETTET)
+        )
+        return this
+    }
+
     fun foreslåVedtak(): BehandlingProsessEventDtoBuilder {
        this.behandlingStatus = BehandlingStatus.UTREDES
        this.behandlingSteg = BehandlingStegType.FORESLÅ_VEDTAK
@@ -120,6 +132,7 @@ class BehandlingProsessEventDtoBuilder(
         return this
     }
 
+    // Transient tilstand under iverksetting av vedtak. Brukes f.eks i tester som sjekker toleranse for rekkefølgefeil i eventer fra k9-sak.
     fun beslutterGodkjent(ansvarligBeslutter: Saksbehandler? = TestSaksbehandler.BIRGER_BESLUTTER): BehandlingProsessEventDtoBuilder {
         this.behandlingStatus = BehandlingStatus.UTREDES
         this.behandlingSteg = BehandlingStegType.FATTE_VEDTAK
@@ -133,7 +146,7 @@ class BehandlingProsessEventDtoBuilder(
         return this
     }
 
-    fun behandlingAvsluttet(ansvarligBeslutter: Saksbehandler? = TestSaksbehandler.BIRGER_BESLUTTER): BehandlingProsessEventDtoBuilder {
+    fun avsluttet(ansvarligBeslutter: Saksbehandler? = TestSaksbehandler.BIRGER_BESLUTTER): BehandlingProsessEventDtoBuilder {
         this.behandlingStatus = BehandlingStatus.AVSLUTTET
         this.behandlingSteg = BehandlingStegType.IVERKSETT_VEDTAK
         this.resultatType = BehandlingResultatType.INNVILGET
