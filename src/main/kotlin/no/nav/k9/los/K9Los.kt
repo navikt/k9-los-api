@@ -370,4 +370,5 @@ private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
             route("k9klagetillos") { K9KlageTilLosApi() }
         }
     }
+    
 }
