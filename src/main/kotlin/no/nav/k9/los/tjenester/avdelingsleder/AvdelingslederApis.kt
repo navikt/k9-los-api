@@ -7,11 +7,7 @@ import io.ktor.server.routing.*
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.integrasjon.rest.idToken
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveApisTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OpphevReservasjonId
 import org.koin.ktor.ext.inject
 import java.util.*
 
@@ -19,7 +15,6 @@ internal fun Route.AvdelingslederApis() {
     val oppgaveTjeneste by inject<OppgaveTjeneste>()
     val avdelingslederTjeneste by inject<AvdelingslederTjeneste>()
     val requestContextService by inject<RequestContextService>()
-    val oppgaveApisTjeneste by inject<OppgaveApisTjeneste>()
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
 
     get("/oppgaver/antall-totalt") {
@@ -67,16 +62,6 @@ internal fun Route.AvdelingslederApis() {
                 kotlin.coroutines.coroutineContext.idToken().getUsername()
             )!!
             call.respond(avdelingslederTjeneste.hentAlleAktiveReservasjonerV3(innloggetBruker))
-        }
-    }
-
-    post("/reservasjoner/opphev") {
-        requestContextService.withRequestContext(call) {
-            val nøkkel = call.receive<OppgaveNøkkelDto>()
-            val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
-                kotlin.coroutines.coroutineContext.idToken().getUsername()
-            )!!
-            call.respond(oppgaveApisTjeneste.annullerReservasjon(OpphevReservasjonId(oppgaveNøkkel = nøkkel, ""), innloggetBruker))
         }
     }
 }

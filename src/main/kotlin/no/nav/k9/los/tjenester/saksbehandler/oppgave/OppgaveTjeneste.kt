@@ -1,6 +1,5 @@
 package no.nav.k9.los.tjenester.saksbehandler.oppgave
 
-import kotlinx.coroutines.runBlocking
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
@@ -17,9 +16,9 @@ import no.nav.k9.los.integrasjon.pdl.*
 import no.nav.k9.los.integrasjon.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverHistorikk
 import no.nav.k9.los.tjenester.fagsak.PersonDto
-import no.nav.k9.los.tjenester.mock.AksjonspunkterMock
 import no.nav.k9.los.tjenester.saksbehandler.merknad.Merknad
 import no.nav.k9.los.tjenester.saksbehandler.nokkeltall.NyeOgFerdigstilteOppgaverDto
 import no.nav.k9.los.utils.Cache
@@ -27,6 +26,7 @@ import no.nav.k9.los.utils.CacheObject
 import org.apache.commons.text.similarity.LevenshteinDistance
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.coroutines.coroutineContext
@@ -582,39 +582,43 @@ class OppgaveTjeneste constructor(
         }
     }
 
-    suspend fun endreReservasjonPåOppgave(resEndring: ReservasjonEndringDto): Reservasjon {
+    suspend fun endreReservasjonPåOppgave(
+        oppgaveNøkkel: OppgaveNøkkelDto,
+        tilBrukerIdent: String? = null,
+        reserverTil: LocalDate? = null,
+        begrunnelse: String? = null): Reservasjon {
         val identTilInnloggetBruker = azureGraphService.hentIdentTilInnloggetBruker()
-        val oppgavUUID = UUID.fromString(resEndring.oppgaveNøkkel.oppgaveEksternId)
+        val oppgavUUID = UUID.fromString(oppgaveNøkkel.oppgaveEksternId)
 
         val oppdatertReservasjon = reservasjonRepository.lagre(oppgavUUID, true) {
             if (it == null) {
                 throw IllegalArgumentException("Kan ikke oppdatere reservasjon som ikke finnes.")
             }
-            if (resEndring.reserverTil != null) {
+            if (reserverTil != null) {
                 it.reservertTil = LocalDateTime.of(
-                    resEndring.reserverTil.year,
-                    resEndring.reserverTil.month,
-                    resEndring.reserverTil.dayOfMonth,
+                    reserverTil.year,
+                    reserverTil.month,
+                    reserverTil.dayOfMonth,
                     23,
                     59,
                     59
                 ).forskyvReservasjonsDato()
 
             }
-            if (resEndring.begrunnelse != null) {
-                it.begrunnelse = resEndring.begrunnelse
+            if (begrunnelse != null) {
+                it.begrunnelse = begrunnelse
             }
-            if (resEndring.brukerIdent != null) {
+            if (tilBrukerIdent != null) {
                 it.flyttetTidspunkt = LocalDateTime.now()
-                it.reservertAv = resEndring.brukerIdent
+                it.reservertAv = tilBrukerIdent
                 it.flyttetAv = identTilInnloggetBruker
             }
             it
         }
-        if (resEndring.brukerIdent != null) {
+        if (tilBrukerIdent != null) {
             val reservasjon = reservasjonRepository.hent(oppgavUUID)
             saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
-            saksbehandlerRepository.leggTilReservasjon(resEndring.brukerIdent, reservasjon.oppgave)
+            saksbehandlerRepository.leggTilReservasjon(tilBrukerIdent, reservasjon.oppgave)
         }
         return oppdatertReservasjon
     }

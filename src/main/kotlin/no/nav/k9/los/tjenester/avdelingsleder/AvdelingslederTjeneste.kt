@@ -2,8 +2,6 @@ package no.nav.k9.los.tjenester.avdelingsleder
 
 import no.nav.k9.los.domene.modell.*
 import no.nav.k9.los.domene.repository.OppgaveKøRepository
-import no.nav.k9.los.domene.repository.OppgaveRepository
-import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
@@ -22,8 +20,6 @@ class AvdelingslederTjeneste(
     private val oppgaveKøRepository: OppgaveKøRepository,
     private val saksbehandlerRepository: SaksbehandlerRepository,
     private val oppgaveTjeneste: OppgaveTjeneste,
-    private val reservasjonRepository: ReservasjonRepository,
-    private val oppgaveRepository: OppgaveRepository,
     private val pepClient: IPepClient,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
     private val reservasjonV3DtoBuilder: ReservasjonV3DtoBuilder,

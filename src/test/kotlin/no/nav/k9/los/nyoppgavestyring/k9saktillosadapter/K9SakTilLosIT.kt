@@ -343,11 +343,11 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         runBlocking {
             oppgaveApisTjeneste.hentReserverteOppgaverForSaksbehandler(saksbehandler).forEach { reservasjon ->
 
-                val nøkkel = OpphevReservasjonId(
-                    reservasjon.reservertOppgaveV1Dto?.oppgaveNøkkel
-                        ?: reservasjon.reserverteV3Oppgaver.first().oppgaveNøkkel, "begrunnelsen")
+                val nøkkel = AnnullerReservasjoner(
+                    setOf(reservasjon.reservertOppgaveV1Dto?.oppgaveNøkkel
+                        ?: reservasjon.reserverteV3Oppgaver.first().oppgaveNøkkel), "begrunnelsen")
 
-                oppgaveApisTjeneste.annullerReservasjon(nøkkel, saksbehandler)
+                oppgaveApisTjeneste.annullerReservasjoner(nøkkel, saksbehandler)
             }
         }
     }
@@ -375,16 +375,14 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val oppgaveApisTjeneste = get<OppgaveApisTjeneste>()
 
         runBlocking {
-            nøkler.forEach {
-                oppgaveApisTjeneste.endreReservasjon(
-                    ReservasjonEndringDto(
-                        it,
-                        saksbehandler.brukerIdent,
-                        tilDato,
-                        "begrunnelse",
-                    ), saksbehandler
-                )
-            }
+            oppgaveApisTjeneste.endreReservasjoner(
+                ReservasjonEndringDto(
+                    nøkler.toSet(),
+                    saksbehandler.brukerIdent,
+                    tilDato,
+                    "begrunnelse",
+                ), saksbehandler
+            )
         }
     }
 

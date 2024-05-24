@@ -106,21 +106,22 @@ internal fun Route.OppgaveApis() {
         }
     }
 
+    // TODO: Rename til annuller
     @Location("/opphev")
-    class opphevReservasjon
-    post { _: opphevReservasjon ->
+    class opphevReservasjoner
+    post { _: opphevReservasjoner ->
         requestContextService.withRequestContext(call) {
-            val params = call.receive<OpphevReservasjonId>()
+            val params = call.receive<AnnullerReservasjoner>()
             val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
                 kotlin.coroutines.coroutineContext.idToken().getUsername()
             )!!
 
             try {
-                log.info("Opphever reservasjonen ${params.oppgaveNøkkel.oppgaveEksternId} (Gjort av ${innloggetBruker.brukerIdent})")
-                oppgaveApisTjeneste.annullerReservasjon(params, innloggetBruker)
+                log.info("Opphever reservasjonen ${params.oppgaveNøkkel.joinToString(", ")} (Gjort av ${innloggetBruker.brukerIdent})")
+                oppgaveApisTjeneste.annullerReservasjoner(params, innloggetBruker)
                 call.respond(HttpStatusCode.OK) //TODO: Hva er evt meningsfullt å returnere her?
             } catch (e: FinnerIkkeDataException) {
-                call.respond(HttpStatusCode.NotFound,"Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")
+                call.respond(HttpStatusCode.NotFound,"Fant ingen aktiv reservasjon for angitte reservasjonsnøkler")
             }
         }
     }
@@ -180,7 +181,7 @@ internal fun Route.OppgaveApis() {
                 kotlin.coroutines.coroutineContext.idToken().getUsername()
             )!!
             try {
-                call.respond(oppgaveApisTjeneste.endreReservasjon(reservasjonEndringDto, innloggetBruker))
+                call.respond(oppgaveApisTjeneste.endreReservasjoner(reservasjonEndringDto, innloggetBruker))
             } catch (e: FinnerIkkeDataException) {
                 call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")
             }
@@ -295,7 +296,7 @@ internal fun Route.OppgaveApis() {
     @Deprecated("Antatt ikke i bruk. Verifiser og fjern")
     @Location("/oppgaver-på-samme-bruker")
     class oppgaverPåSammeBruker
-    post { _: opphevReservasjon ->
+    post { _: oppgaverPåSammeBruker ->
         requestContextService.withRequestContext(call) {
             val params = call.receive<OppgaveId>()
             call.respond(oppgaveTjeneste.aktiveOppgaverPåSammeBruker(UUID.fromString(params.oppgaveId)))
