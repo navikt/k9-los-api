@@ -57,23 +57,26 @@ class OppgaveTestDataBuilder(
     fun lagOgLagre(): OppgaveV3 {
         val antall = oppgaverepo.tellAntall().first
         return transactionManager.transaction { tx ->
-            val oppgave = OppgaveV3(
-                id = antall,
-                eksternId = oppgaveFeltverdier.firstOrNull {
-                    it.oppgavefelt.feltDefinisjon.eksternId == FeltType.BEHANDLINGUUID.eksternId }?.verdi
-                    ?: UUID.randomUUID().toString(),
-                eksternVersjon = "0",
-                oppgavetype = oppgavetype,
-                status = Oppgavestatus.AAPEN,
-                endretTidspunkt = LocalDateTime.now(),
-                kildeområde = område.eksternId,
-                felter = oppgaveFeltverdier.toList(),
-                reservasjonsnøkkel = ""
-            )
+            val oppgave = lag(antall)
             oppgaverepo.nyOppgaveversjon(oppgave, tx)
             oppgave
         }
     }
+
+    fun lag(antall: Long) = OppgaveV3(
+        id = antall,
+        eksternId = oppgaveFeltverdier.firstOrNull {
+            it.oppgavefelt.feltDefinisjon.eksternId == FeltType.BEHANDLINGUUID.eksternId
+        }?.verdi
+            ?: UUID.randomUUID().toString(),
+        eksternVersjon = "0",
+        oppgavetype = oppgavetype,
+        status = Oppgavestatus.AAPEN,
+        endretTidspunkt = LocalDateTime.now(),
+        kildeområde = område.eksternId,
+        felter = oppgaveFeltverdier.toList(),
+        reservasjonsnøkkel = ""
+    )
 }
 
 enum class FeltType(

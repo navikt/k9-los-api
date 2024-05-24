@@ -7,6 +7,7 @@ import kotliquery.using
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
+import org.jetbrains.annotations.VisibleForTesting
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import javax.sql.DataSource
@@ -212,7 +213,8 @@ class OppgaveV3Repository(
         )
     }
 
-    private fun nyOppgaveversjon(oppgave: OppgaveV3, nyVersjon: Long, tx: TransactionalSession): Long {
+    @VisibleForTesting
+    fun nyOppgaveversjon(oppgave: OppgaveV3, nyVersjon: Long, tx: TransactionalSession): Long {
         return tx.updateAndReturnGeneratedKey(
             queryOf(
                 """
@@ -358,7 +360,8 @@ class OppgaveV3Repository(
         ) ?: Pair(null, null)
     }
 
-    private fun deaktiverVersjon(eksisterendeId: Long, deaktivertTidspunkt: LocalDateTime, tx: TransactionalSession) {
+    @VisibleForTesting
+    fun deaktiverVersjon(eksisterendeId: Long, deaktivertTidspunkt: LocalDateTime, tx: TransactionalSession) {
         tx.run(
             queryOf(
                 """
