@@ -63,6 +63,8 @@ class OppgaveV3(
                         OppgaveFeltverdi(
                             oppgavefelt = oppgavefelt,
                             verdi = oppgaveFeltverdiDto.verdi,
+                            aktiv = true,
+                            oppgavestatus = Oppgavestatus.fraKode(oppgaveDto.status)
                         )
                     )
                 }
@@ -71,12 +73,12 @@ class OppgaveV3(
         }
     }
 
-    fun hentFelt(eksternId: String) : Oppgavefelt {
-        return oppgavetype.oppgavefelter.first { it.feltDefinisjon.eksternId == eksternId }
+    fun hentFelt(feltEksternId: String) : Oppgavefelt {
+        return oppgavetype.oppgavefelter.first { it.feltDefinisjon.eksternId == feltEksternId }
     }
 
     fun hentVerdi(feltnavn: String): String? {
-        val oppgavefelt = hentOppgavefelt(feltnavn)
+        val oppgavefelt = hentOppgavefeltverdi(feltnavn)
 
         if (oppgavefelt?.oppgavefelt?.feltDefinisjon?.listetype == true) {
             throw IllegalStateException("Kan ikke hente listetype av $feltnavn som enkeltverdi")
@@ -86,7 +88,7 @@ class OppgaveV3(
     }
 
     fun hentListeverdi(feltnavn: String): List<String> {
-        val oppgavefelt = hentOppgavefelt(feltnavn)
+        val oppgavefelt = hentOppgavefeltverdi(feltnavn)
 
         if (oppgavefelt != null) {
             if (!oppgavefelt.oppgavefelt.feltDefinisjon.listetype) {
@@ -99,7 +101,7 @@ class OppgaveV3(
         }.map { it.verdi }
     }
 
-    private fun hentOppgavefelt(feltnavn: String): OppgaveFeltverdi? {
+    fun hentOppgavefeltverdi(feltnavn: String): OppgaveFeltverdi? {
         return felter.find { oppgavefelter ->
             oppgavefelter.oppgavefelt.feltDefinisjon.eksternId == feltnavn
         }

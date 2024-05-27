@@ -6,7 +6,6 @@ import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
@@ -29,7 +28,8 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
             .lag(1)
 
         transactionalManager.transaction { tx ->
-            oppgaveV3Repository.nyOppgaveversjon(oppgaveV3, 0, tx)
+            val oppgaveId = oppgaveV3Repository.nyOppgaveversjon(oppgaveV3, 0, tx)
+            oppgaveV3Repository.lagreFeltverdier(oppgaveId, oppgaveV3, tx)
         }
 
         val lagretOppgave = transactionalManager.transaction { tx ->
@@ -38,7 +38,7 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
                 )
         }!!
 
-        assertThat(oppgaveV3.hentFelt(FeltType.BEHANDLINGUUID.eksternId)).isEqualTo(lagretOppgave.hentFelt(FeltType.BEHANDLINGUUID.eksternId))
+        assertThat(lagretOppgave.hentVerdi(FeltType.BEHANDLINGUUID.eksternId)).isEqualTo(oppgaveV3.hentVerdi(FeltType.BEHANDLINGUUID.eksternId))
     }
 
     @Test
@@ -48,11 +48,14 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
             .lag(1)
 
         val oppgaveId = transactionalManager.transaction { tx ->
-            oppgaveV3Repository.nyOppgaveversjon(oppgaveV3, 0, tx)
+            val oppgaveId = oppgaveV3Repository.nyOppgaveversjon(oppgaveV3, 0, tx)
+            oppgaveV3Repository.lagreFeltverdier(oppgaveId, oppgaveV3, tx)
+            oppgaveId
         }
 
         transactionalManager.transaction { tx ->
             oppgaveV3Repository.deaktiverVersjon(oppgaveId, LocalDateTime.now(), tx)
+            oppgaveV3Repository.oppdaterOppgavefelterMedOppgavestatus(oppgaveId, aktiv = false, oppgaveV3.status, tx)
         }
 
         val lagretOppgave = transactionalManager.transaction { tx ->
@@ -65,6 +68,6 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
         }
 
         assertThat(lagretOppgave.aktiv).isEqualTo(false)
-        assertThat(lagretOppgave.hentFelt(FeltType.BEHANDLINGUUID.eksternId).aktiv).isEqualTo(false)
+        assertThat(lagretOppgave.hentOppgavefeltverdi(FeltType.BEHANDLINGUUID.eksternId)!!.aktiv).isEqualTo(false)
     }
 }

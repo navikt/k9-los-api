@@ -27,7 +27,7 @@ class OppgaveV3Repository(
         val nyVersjon = eksisterendeVersjon?.plus(1) ?: 0
 
         val oppgaveId = nyOppgaveversjon(oppgave, nyVersjon, tx)
-        lagreFeltverdier(oppgaveId, oppgave.felter, tx)
+        lagreFeltverdier(oppgaveId, oppgave, tx)
     }
 
     fun hentOppgaveversjon(
@@ -264,20 +264,23 @@ class OppgaveV3Repository(
         )
     }
 
+    @VisibleForTesting
     fun lagreFeltverdier(
         oppgaveId: Long,
-        oppgaveFeltverdier: List<OppgaveFeltverdi>,
+        oppgave: OppgaveV3,
         tx: TransactionalSession
     ) {
         tx.batchPreparedNamedStatement("""
-            insert into oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi)
-                    VALUES (:oppgaveId, :oppgavefeltId, :verdi)
+            insert into oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi, aktiv, oppgavestatus)
+                    VALUES (:oppgaveId, :oppgavefeltId, :verdi, :aktiv, :oppgavestatus)
         """.trimIndent(),
-            oppgaveFeltverdier.map { feltverdi ->
+            oppgave.felter.map { feltverdi ->
                 mapOf(
                     "oppgaveId" to oppgaveId,
                     "oppgavefeltId" to feltverdi.oppgavefelt.id,
-                    "verdi" to feltverdi.verdi
+                    "verdi" to feltverdi.verdi,
+                    "aktiv" to oppgave.aktiv,
+                    "oppgavestatus" to oppgave.status.kode
                 )
             }
         )
@@ -375,6 +378,23 @@ class OppgaveV3Repository(
                 mapOf(
                     "id" to eksisterendeId,
                     "deaktivertTidspunkt" to deaktivertTidspunkt
+                )
+            ).asUpdate
+        )
+    }
+
+    @VisibleForTesting
+    fun oppdaterOppgavefelterMedOppgavestatus(oppgaveId: Long, aktiv: Boolean, oppgavestatus: Oppgavestatus, tx: TransactionalSession) {
+        tx.run(
+            queryOf("""
+                update oppgavefelt_verdi
+                set aktiv = :aktiv, oppgavestatus = :oppgavestatus
+                where oppgave_id = :oppgave_id 
+            """.trimIndent(),
+                mapOf(
+                    "aktiv" to aktiv,
+                    "oppgavestatus" to oppgavestatus.kode,
+                    "oppgave_id" to oppgaveId
                 )
             ).asUpdate
         )

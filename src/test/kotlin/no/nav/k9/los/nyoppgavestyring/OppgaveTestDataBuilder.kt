@@ -48,7 +48,7 @@ class OppgaveTestDataBuilder(
             ?: throw IllegalStateException("Fant ikke ønsket feltdefinisjon i db")
 
         oppgaveFeltverdier.add(
-            OppgaveFeltverdi(null, oppgavefelter, verdi)
+            OppgaveFeltverdi(null, oppgavefelter, verdi, aktiv = true, Oppgavestatus.AAPEN)
         )
         return this
     }
@@ -75,7 +75,8 @@ class OppgaveTestDataBuilder(
         endretTidspunkt = LocalDateTime.now(),
         kildeområde = område.eksternId,
         felter = oppgaveFeltverdier.toList(),
-        reservasjonsnøkkel = ""
+        reservasjonsnøkkel = "",
+        aktiv = true
     )
 }
 
