@@ -8,6 +8,8 @@ import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Dto
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
+import no.nav.k9.los.utils.forskyvReservasjonsDato
+import no.nav.k9.los.utils.leggTilDagerHoppOverHelg
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
@@ -60,7 +62,7 @@ class OppgaveApisTjeneste(
             val reservasjonV3 = reservasjonOversetter.taNyReservasjonFraGammelKontekst(
                 oppgaveV1 = oppgaveV1Repository.hent(UUID.fromString(oppgaveNøkkel.oppgaveEksternId)),
                 reserverForSaksbehandlerId = reserverForSaksbehandler.id!!,
-                reservertTil = reserverFra.plusHours(48).forskyvReservasjonsDato(),
+                reservertTil = reserverFra.leggTilDagerHoppOverHelg(2),
                 utførtAvSaksbehandlerId = innloggetBruker.id!!,
                 kommentar = oppgaveIdMedOverstyringDto.overstyrBegrunnelse ?: "",
             )!!
@@ -81,7 +83,7 @@ class OppgaveApisTjeneste(
                     gyldigFra = reserverFra,
                     utføresAvId = innloggetBruker.id!!,
                     kommentar = oppgaveIdMedOverstyringDto.overstyrBegrunnelse ?: "",
-                    gyldigTil = reserverFra.plusHours(48).forskyvReservasjonsDato(),
+                    gyldigTil = reserverFra.leggTilDagerHoppOverHelg(2),
                     tx = tx
                 )
             }
@@ -198,7 +200,7 @@ class OppgaveApisTjeneste(
 
         val nyReservasjon = reservasjonV3Tjeneste.overførReservasjon(
             reservasjonsnøkkel = reservasjonsnøkkel,
-            reserverTil = LocalDateTime.now().plusHours(24).forskyvReservasjonsDato(),
+            reserverTil = LocalDateTime.now().leggTilDagerHoppOverHelg(1),
             tilSaksbehandlerId = tilSaksbehandler.id!!,
             utførtAvBrukerId = innloggetBruker.id!!,
             kommentar = params.begrunnelse,
