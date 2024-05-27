@@ -20,9 +20,12 @@ class OppgaveV3Repository(
     private val log = LoggerFactory.getLogger(OppgaveV3Repository::class.java)
 
     fun nyOppgaveversjon(oppgave: OppgaveV3, tx: TransactionalSession) {
-        val (eksisterendeId, eksisterendeVersjon) = hentOppgaveIdOgHøyesteInternversjon(tx, oppgave.eksternId, oppgave.oppgavetype.eksternId, oppgave.oppgavetype.område.eksternId)
+        val (eksisterendeId, eksisterendeOppgavestatus,  eksisterendeVersjon) = hentOppgaveIdStatusOgHøyesteInternversjon(tx, oppgave.eksternId, oppgave.oppgavetype.eksternId, oppgave.oppgavetype.område.eksternId)
 
-        eksisterendeId?.let { deaktiverVersjon(eksisterendeId, oppgave.endretTidspunkt, tx) }
+        eksisterendeId?.let {
+            deaktiverVersjon(eksisterendeId, oppgave.endretTidspunkt, tx)
+            oppdaterOppgavefelterMedOppgavestatus(eksisterendeId, false, eksisterendeOppgavestatus!!, tx)
+        }
 
         val nyVersjon = eksisterendeVersjon?.plus(1) ?: 0
 
@@ -342,11 +345,11 @@ class OppgaveV3Repository(
         )
     }
 
-    fun hentOppgaveIdOgHøyesteInternversjon(tx: TransactionalSession, oppgaveEksternId: String, oppgaveTypeEksternId: String, områdeEksternId: String): Pair<Long?, Long?> {
+    fun hentOppgaveIdStatusOgHøyesteInternversjon(tx: TransactionalSession, oppgaveEksternId: String, oppgaveTypeEksternId: String, områdeEksternId: String): Triple<Long?, Oppgavestatus?, Long?> {
         return tx.run(
             queryOf(
                 """
-                select versjon, o.id
+                select versjon, o.id, o.status
                 from oppgave_v3 o
                     inner join oppgavetype ot on o.oppgavetype_id = ot.id 
                     inner join omrade om on ot.omrade_id = om.id 
@@ -364,8 +367,8 @@ class OppgaveV3Repository(
                     "oppgavetype_ekstern_id" to oppgaveTypeEksternId,
                     "omrade_ekstern_id" to områdeEksternId
                 )
-            ).map { row -> Pair(row.long("id"), row.long("versjon")) }.asSingle
-        ) ?: Pair(null, null)
+            ).map { row -> Triple(row.long("id"), Oppgavestatus.fraKode(row.string("status")), row.long("versjon")) }.asSingle
+        ) ?: Triple(null, null, null)
     }
 
     @VisibleForTesting

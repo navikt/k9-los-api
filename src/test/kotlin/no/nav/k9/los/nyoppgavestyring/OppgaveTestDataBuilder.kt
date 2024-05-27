@@ -63,21 +63,23 @@ class OppgaveTestDataBuilder(
         }
     }
 
-    fun lag(antall: Long) = OppgaveV3(
-        id = antall,
-        eksternId = oppgaveFeltverdier.firstOrNull {
-            it.oppgavefelt.feltDefinisjon.eksternId == FeltType.BEHANDLINGUUID.eksternId
-        }?.verdi
-            ?: UUID.randomUUID().toString(),
-        eksternVersjon = "0",
-        oppgavetype = oppgavetype,
-        status = Oppgavestatus.AAPEN,
-        endretTidspunkt = LocalDateTime.now(),
-        kildeområde = område.eksternId,
-        felter = oppgaveFeltverdier.toList(),
-        reservasjonsnøkkel = "",
-        aktiv = true
-    )
+fun lag(antall: Long, status: Oppgavestatus = Oppgavestatus.AAPEN): OppgaveV3 {
+        return OppgaveV3(
+            id = antall,
+            eksternId = oppgaveFeltverdier.firstOrNull {
+                it.oppgavefelt.feltDefinisjon.eksternId == FeltType.BEHANDLINGUUID.eksternId
+            }?.verdi
+                ?: UUID.randomUUID().toString(),
+            eksternVersjon = antall.toString(),
+            oppgavetype = oppgavetype,
+            status = status,
+            endretTidspunkt = LocalDateTime.now(),
+            kildeområde = område.eksternId,
+            felter = oppgaveFeltverdier.toList(),
+            reservasjonsnøkkel = "",
+            aktiv = true
+        )
+    }
 }
 
 enum class FeltType(

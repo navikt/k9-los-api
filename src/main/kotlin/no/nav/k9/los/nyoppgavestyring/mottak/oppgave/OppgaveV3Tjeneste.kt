@@ -152,7 +152,7 @@ class OppgaveV3Tjeneste(
     }
 
     fun hentHøyesteInternVersjon(oppgaveEksternId: String, opppgaveTypeEksternId: String, områdeEksternId: String, tx: TransactionalSession): Long? {
-        val (_, versjon) = oppgaveV3Repository.hentOppgaveIdOgHøyesteInternversjon(tx, oppgaveEksternId, opppgaveTypeEksternId, områdeEksternId)
+        val (_, _, versjon) = oppgaveV3Repository.hentOppgaveIdStatusOgHøyesteInternversjon(tx, oppgaveEksternId, opppgaveTypeEksternId, områdeEksternId)
         return versjon
     }
 
