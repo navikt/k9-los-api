@@ -123,7 +123,7 @@ class PdlService constructor(
             graphqlQueryHentIdent,
             mapOf(
                 "ident" to fnummer,
-                "historikk" to "false",
+                "historikk" to false,
                 "grupper" to listOf("AKTORID")
             )
         )
