@@ -85,8 +85,7 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
             .medOppgaveFeltVerdi(FeltType.AKSJONSPUNKT, "5015")
             .lag(2)
 
-        val oppgave3 = oppgave2
-            OppgaveTestDataBuilder()
+        val oppgave3 = OppgaveTestDataBuilder()
             .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, "test123")
             .lag(3, Oppgavestatus.LUKKET)
 
