@@ -57,7 +57,7 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
 
         transactionalManager.transaction { tx ->
             oppgaveV3Repository.deaktiverVersjon(oppgaveId, LocalDateTime.now(), tx)
-            oppgaveV3Repository.oppdaterOppgavefelterMedOppgavestatus(oppgaveId, aktiv = false, oppgaveV3.status, tx)
+            oppgaveV3Repository.deaktiverOppgavefelter(oppgaveId, tx)
         }
 
         val lagretOppgave = transactionalManager.transaction { tx ->
@@ -71,6 +71,7 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
 
         assertThat(lagretOppgave.aktiv).isEqualTo(false)
         assertThat(lagretOppgave.hentOppgavefeltverdi(FeltType.BEHANDLINGUUID.eksternId)!!.aktiv).isEqualTo(false)
+        assertThat(lagretOppgave.hentOppgavefeltverdi(FeltType.BEHANDLINGUUID.eksternId)!!.oppgavestatus).isEqualTo(lagretOppgave.status)
     }
 
     @Test
@@ -125,5 +126,70 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
         assertThat(lagretOppgave3.status).isEqualTo(Oppgavestatus.LUKKET)
         assertThat(lagretOppgave3.hentOppgavefeltverdi(FeltType.BEHANDLINGUUID.eksternId)!!.aktiv).isTrue()
         assertThat(lagretOppgave3.hentOppgavefeltverdi(FeltType.BEHANDLINGUUID.eksternId)!!.oppgavestatus).isEqualTo(Oppgavestatus.LUKKET)
+    }
+
+    @Test
+    fun `hentOppgaveversjonenFør`() {
+        val oppgave1 = OppgaveTestDataBuilder()
+            .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, "test123")
+            .medOppgaveFeltVerdi(FeltType.AKSJONSPUNKT, "9001")
+            .lag(1)
+
+        val oppgave2 = OppgaveTestDataBuilder()
+            .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, "test123")
+            .medOppgaveFeltVerdi(FeltType.AKSJONSPUNKT, "5015")
+            .lag(2)
+
+        val oppgave3 = OppgaveTestDataBuilder()
+            .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, "test123")
+            .lag(3, Oppgavestatus.LUKKET)
+
+        transactionalManager.transaction { tx ->
+            oppgaveV3Repository.nyOppgaveversjon(oppgave1, tx)
+            oppgaveV3Repository.nyOppgaveversjon(oppgave2, tx)
+            oppgaveV3Repository.nyOppgaveversjon(oppgave3, tx)
+        }
+        val lagretOppgave1 = transactionalManager.transaction { tx ->
+            oppgaveV3Repository.hentOppgaveversjonenFør(
+                eksternId = oppgave2.eksternId,
+                internVersjon = 1, //første opppgave er internversjon 0
+                oppgavetype = oppgave2.oppgavetype,
+                tx
+            )
+        }!!
+
+        assertThat(lagretOppgave1.hentListeverdi(FeltType.AKSJONSPUNKT.eksternId)[0]).isEqualTo(oppgave1.hentListeverdi(FeltType.AKSJONSPUNKT.eksternId)[0])
+
+        val lagretOppgave2 = transactionalManager.transaction { tx ->
+            oppgaveV3Repository.hentOppgaveversjonenFør(
+                eksternId = oppgave3.eksternId,
+                internVersjon = 2, //første opppgave er internversjon 0
+                oppgavetype = oppgave3.oppgavetype,
+                tx
+            )
+        }!!
+
+        assertThat(lagretOppgave2.hentListeverdi(FeltType.AKSJONSPUNKT.eksternId)[0]).isEqualTo(oppgave2.hentListeverdi(FeltType.AKSJONSPUNKT.eksternId)[0])
+    }
+
+    @Test
+    fun `lagreFeltverdierForDatavask`() {
+        val oppgave1 = OppgaveTestDataBuilder()
+            .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, "test123")
+            .medOppgaveFeltVerdi(FeltType.AKSJONSPUNKT, "9001")
+            .lag(1)
+
+        transactionalManager.transaction { tx ->
+            oppgaveV3Repository.nyOppgaveversjon(oppgave1, tx)
+        }
+
+        val vasketOppgave = transactionalManager.transaction { tx ->
+            oppgaveV3Repository.slettFeltverdier(oppgave1.eksternId, 0, tx)
+            oppgaveV3Repository.lagreFeltverdierForDatavask(oppgave1.eksternId, 0, oppgave1.aktiv, oppgave1.status, oppgave1.felter, tx)
+            oppgaveV3Repository.hentAktivOppgave(oppgave1.eksternId, oppgave1.oppgavetype, tx)
+        }!!
+
+        assertThat(vasketOppgave.hentOppgavefeltverdi(FeltType.BEHANDLINGUUID.eksternId)!!.oppgavestatus).isEqualTo(oppgave1.status)
+        assertThat(vasketOppgave.hentOppgavefeltverdi(FeltType.BEHANDLINGUUID.eksternId)!!.aktiv).isEqualTo(oppgave1.aktiv)
     }
 }

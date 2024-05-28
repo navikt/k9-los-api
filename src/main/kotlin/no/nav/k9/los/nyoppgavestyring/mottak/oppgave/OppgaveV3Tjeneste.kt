@@ -103,7 +103,7 @@ class OppgaveV3Tjeneste(
         )
     }
 
-    fun oppdaterEksisterendeOppgaveversjon(oppgaveDto: OppgaveDto, eventNr: Long, tx: TransactionalSession) {
+    fun oppdaterEksisterendeOppgaveversjon(oppgaveDto: OppgaveDto, eventNr: Long, høyesteInternVersjon: Long, tx: TransactionalSession) {
         val oppgavetype = oppgavetypeRepository.hentOppgavetype(
             område = oppgaveDto.område,
             eksternId = oppgaveDto.type,
@@ -135,10 +135,12 @@ class OppgaveV3Tjeneste(
             tx = tx
         )
 
-        oppgaveV3Repository.lagreFeltverdier(
+        oppgaveV3Repository.lagreFeltverdierForDatavask(
             eksternId = innkommendeOppgave.eksternId,
             internVersjon = eventNr,
             oppgaveFeltverdier = innkommendeOppgave.felter,
+            aktiv = eventNr == høyesteInternVersjon,
+            oppgavestatus = Oppgavestatus.fraKode(oppgaveDto.status),
             tx = tx
         )
 
@@ -162,11 +164,5 @@ class OppgaveV3Tjeneste(
 
     fun tellAntall(): Pair<Long, Long> {
         return oppgaveV3Repository.tellAntall()
-    }
-
-    fun destruktivSlettAvAlleOppgaveData() {
-        log.info("trunkerer oppgavedata")
-        oppgaveV3Repository.slettOppgaverOgFelter()
-        log.info("oppgavedata trunkert")
     }
 }

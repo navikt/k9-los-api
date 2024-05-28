@@ -24,7 +24,7 @@ class OppgaveV3Repository(
 
         eksisterendeId?.let {
             deaktiverVersjon(eksisterendeId, oppgave.endretTidspunkt, tx)
-            oppdaterOppgavefelterMedOppgavestatus(eksisterendeId, false, eksisterendeOppgavestatus!!, tx)
+            deaktiverOppgavefelter(eksisterendeId, tx)
         }
 
         val nyVersjon = eksisterendeVersjon?.plus(1) ?: 0
@@ -164,41 +164,6 @@ class OppgaveV3Repository(
         )
     }
 
-    fun hentOppgaveEksternIderForReservasjonsnøkkel(reservasjonsnøkkel: String, tx: TransactionalSession) : List<String> {
-        return tx.run(
-            queryOf(
-                """
-                    select ekstern_id
-                    from oppgave_v3
-                    where reservasjonsnokkel = :reservasjonsnokkel
-                    and aktiv = true
-                """.trimIndent(),
-                mapOf(
-                    "reservasjonsnokkel" to reservasjonsnøkkel
-                )
-            ).map { row -> row.string("ekstern_id")}.asList
-        )
-    }
-
-    fun sjekkOmOppgaverFinnesForReservasjonsnøkkel(reservasjonsnokkel: String, tx: TransactionalSession) : Boolean {
-        val antall = tx.run(
-            queryOf(
-                """
-                    select count(*) as antallOppgaver
-                    from oppgave_v3
-                    where reservasjonsnokkel = :reservasjonsnokkel
-                    and aktiv = true
-                """.trimIndent(),
-                mapOf(
-                    "reservasjonsnokkel" to reservasjonsnokkel
-                )
-            ).map { row -> row.long("antallOppgaver") }.asSingle
-
-        )!!
-
-        return antall > 0
-    }
-
     fun oppdaterReservasjonsnøkkelStatusOgEksternVersjon(eksternId: String, eksternVersjon: String, status: Oppgavestatus, internVersjon: Long, reservasjonsnokkel: String, tx: TransactionalSession) {
         tx.run(
             queryOf(
@@ -289,14 +254,16 @@ class OppgaveV3Repository(
         )
     }
 
-    fun lagreFeltverdier(
+    fun lagreFeltverdierForDatavask(
         eksternId: String,
         internVersjon: Long,
+        aktiv: Boolean,
+        oppgavestatus: Oppgavestatus,
         oppgaveFeltverdier: List<OppgaveFeltverdi>,
         tx: TransactionalSession
     ) {
         tx.batchPreparedNamedStatement("""
-            INSERT INTO oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi)
+            INSERT INTO oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi, aktiv, oppgavestatus)
             VALUES (
                 (
                     SELECT id 
@@ -305,7 +272,9 @@ class OppgaveV3Repository(
                     AND versjon = :intern_versjon
                 ),
                 :oppgavefelt_id,
-                :verdi
+                :verdi,
+                :aktiv,
+                :oppgavestatus
             )
         """.trimIndent(),
             oppgaveFeltverdier.map { feltverdi ->
@@ -313,7 +282,9 @@ class OppgaveV3Repository(
                     "ekstern_id" to eksternId,
                     "intern_versjon" to internVersjon,
                     "oppgavefelt_id" to feltverdi.oppgavefelt.id,
-                    "verdi" to feltverdi.verdi
+                    "verdi" to feltverdi.verdi,
+                    "aktiv" to aktiv,
+                    "oppgavestatus" to oppgavestatus.kode
                 )
             }
         )
@@ -387,16 +358,14 @@ class OppgaveV3Repository(
     }
 
     @VisibleForTesting
-    fun oppdaterOppgavefelterMedOppgavestatus(oppgaveId: Long, aktiv: Boolean, oppgavestatus: Oppgavestatus, tx: TransactionalSession) {
+    fun deaktiverOppgavefelter(oppgaveId: Long, tx: TransactionalSession) {
         tx.run(
             queryOf("""
                 update oppgavefelt_verdi
-                set aktiv = :aktiv, oppgavestatus = :oppgavestatus
+                set aktiv = false
                 where oppgave_id = :oppgave_id 
             """.trimIndent(),
                 mapOf(
-                    "aktiv" to aktiv,
-                    "oppgavestatus" to oppgavestatus.kode,
                     "oppgave_id" to oppgaveId
                 )
             ).asUpdate
@@ -421,30 +390,6 @@ class OppgaveV3Repository(
             ).map { row -> row.boolean(1) }.asSingle
         )!!
     }
-
-    fun slettOppgaverOgFelter() {
-        using(sessionOf(dataSource)) { session ->
-            log.info("trunkerer oppgavetabeller")
-            session.transaction { tx ->
-                tx.run(
-                    queryOf("""truncate table oppgave_v3_sendt_dvh, oppgavefelt_verdi, oppgave_v3, oppgavefelt, oppgavetype, feltdefinisjon""").asUpdate
-                )
-            }
-            log.info("resetter dirtyflagg på k9sak-eventer")
-            session.transaction { tx ->
-                tx.run(
-                    queryOf("""update behandling_prosess_events_k9 set dirty = true""").asUpdate
-                )
-            }
-            log.info("resetter dirtyflagg på k9klage-eventer")
-            session.transaction { tx ->
-                tx.run(
-                    queryOf("""update behandling_prosess_events_klage set dirty = true""").asUpdate
-                )
-            }
-        }
-    }
-
 
     fun tellAntall(): Pair<Long, Long> {
         return using(sessionOf(dataSource)) {
