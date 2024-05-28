@@ -5,7 +5,7 @@ data class Error(
     val errors: List<Error>
 ) {
     data class Error(
-        val extensions: Extensions,
+        val extensions: Extensions?,
         val locations: List<Location>,
         val message: String,
         val path: List<String>
