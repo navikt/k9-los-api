@@ -152,7 +152,9 @@ internal fun Route.OppgaveApis() {
             val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
                 kotlin.coroutines.coroutineContext.idToken().getUsername()
             )!!
+
             try {
+                log.info("Flytter reservasjonen ${params.oppgaveNøkkel.oppgaveEksternId} til ${params.brukerIdent} (Gjort av ${innloggetBruker.brukerIdent})")
                 call.respond(oppgaveApisTjeneste.overførReservasjon(params, innloggetBruker))
             } catch (e: FinnerIkkeDataException) {
                 call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")

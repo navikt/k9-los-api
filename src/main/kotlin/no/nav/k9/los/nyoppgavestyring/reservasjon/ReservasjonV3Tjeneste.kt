@@ -6,11 +6,11 @@ import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.abac.TILGANG_SAK
 import no.nav.k9.los.integrasjon.audit.*
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.FinnerIkkeDataException
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.forskyvReservasjonsDato
+import no.nav.k9.los.utils.forskyvReservasjonsDato
+import no.nav.k9.los.utils.leggTilDagerHoppOverHelg
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -239,7 +239,7 @@ class ReservasjonV3Tjeneste(
             val nyReservasjon = reservasjonV3Repository.forlengReservasjon(
                 aktivReservasjon = aktivReservasjon,
                 endretAvBrukerId = utførtAvBrukerId,
-                nyTildato = nyTildato ?: aktivReservasjon.gyldigTil.plusHours(24).forskyvReservasjonsDato(),
+                nyTildato = nyTildato ?: aktivReservasjon.gyldigTil.leggTilDagerHoppOverHelg(1),
                 kommentar = kommentar ?: aktivReservasjon.kommentar,
                 tx = tx
             )

@@ -17,7 +17,8 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.forskyvReservasjonsDato
+import no.nav.k9.los.utils.forskyvReservasjonsDato
+import no.nav.k9.los.utils.leggTilDagerHoppOverHelg
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.*
@@ -153,7 +154,7 @@ class OppgaveKoTjeneste(
                     utføresAvId = innloggetBrukerId,
                     reservasjonsnøkkel = kandidatoppgave.reservasjonsnøkkel,
                     gyldigFra = LocalDateTime.now(),
-                    gyldigTil = LocalDateTime.now().plusHours(48).forskyvReservasjonsDato(),
+                    gyldigTil = LocalDateTime.now().leggTilDagerHoppOverHelg(2),
                     kommentar = "",
                     tx = tx
                 )
