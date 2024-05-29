@@ -226,7 +226,10 @@ class OppgaveV3Repository(
                     },
                     verdi = row.string("verdi"),
                     aktiv = row.boolean("aktiv"),
-                    oppgavestatus = Oppgavestatus.fraKode(row.string("oppgavestatus"))
+                    oppgavestatus = row.stringOrNull("oppgavestatus")?.let {
+                        Oppgavestatus.fraKode(it)
+                    }
+
                 )
             }.asList
         )

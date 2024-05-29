@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.k9saktillosadapter
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9saktillos.k9saktillosadapter
 
 import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
