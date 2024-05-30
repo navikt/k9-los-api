@@ -1,0 +1,1 @@
+create index oppgavefelt_verdi_verdi_oppgavefelt_id_oppgave_id_partiell on public.oppgavefelt_verdi using btree (verdi, oppgavefelt_id, oppgave_id) where aktiv = true and oppgavestatus in ('AAPEN', 'VENTER')
