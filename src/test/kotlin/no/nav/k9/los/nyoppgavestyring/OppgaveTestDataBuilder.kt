@@ -48,7 +48,7 @@ class OppgaveTestDataBuilder(
             ?: throw IllegalStateException("Fant ikke ønsket feltdefinisjon i db")
 
         oppgaveFeltverdier.add(
-            OppgaveFeltverdi(null, oppgavefelter, verdi)
+            OppgaveFeltverdi(null, oppgavefelter, verdi, aktiv = true, Oppgavestatus.AAPEN)
         )
         return this
     }
@@ -57,22 +57,28 @@ class OppgaveTestDataBuilder(
     fun lagOgLagre(): OppgaveV3 {
         val antall = oppgaverepo.tellAntall().first
         return transactionManager.transaction { tx ->
-            val oppgave = OppgaveV3(
-                id = antall,
-                eksternId = oppgaveFeltverdier.firstOrNull {
-                    it.oppgavefelt.feltDefinisjon.eksternId == FeltType.BEHANDLINGUUID.eksternId }?.verdi
-                    ?: UUID.randomUUID().toString(),
-                eksternVersjon = "0",
-                oppgavetype = oppgavetype,
-                status = Oppgavestatus.AAPEN,
-                endretTidspunkt = LocalDateTime.now(),
-                kildeområde = område.eksternId,
-                felter = oppgaveFeltverdier.toList(),
-                reservasjonsnøkkel = ""
-            )
+            val oppgave = lag(antall)
             oppgaverepo.nyOppgaveversjon(oppgave, tx)
             oppgave
         }
+    }
+
+fun lag(antall: Long, status: Oppgavestatus = Oppgavestatus.AAPEN): OppgaveV3 {
+        return OppgaveV3(
+            id = antall,
+            eksternId = oppgaveFeltverdier.firstOrNull {
+                it.oppgavefelt.feltDefinisjon.eksternId == FeltType.BEHANDLINGUUID.eksternId
+            }?.verdi
+                ?: UUID.randomUUID().toString(),
+            eksternVersjon = antall.toString(),
+            oppgavetype = oppgavetype,
+            status = status,
+            endretTidspunkt = LocalDateTime.now(),
+            kildeområde = område.eksternId,
+            felter = oppgaveFeltverdier.toList(),
+            reservasjonsnøkkel = "",
+            aktiv = true
+        )
     }
 }
 

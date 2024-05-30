@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.k9tilbaketillosadapter
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9tilbaketillos.k9tilbaketillosadapter
 
 import assertk.assertThat
 import assertk.assertions.*
