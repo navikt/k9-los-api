@@ -250,7 +250,7 @@ class OppgaveV3Repository(
                     "oppgaveId" to oppgaveId,
                     "oppgavefeltId" to feltverdi.oppgavefelt.id,
                     "verdi" to feltverdi.verdi,
-                    "aktiv" to oppgave.aktiv,
+                    "aktiv" to true,
                     "oppgavestatus" to oppgave.status.kode
                 )
             }
