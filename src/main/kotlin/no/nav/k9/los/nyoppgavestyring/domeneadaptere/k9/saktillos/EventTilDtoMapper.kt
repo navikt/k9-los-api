@@ -407,7 +407,8 @@ class EventTilDtoMapper {
             if (åpneAksjonspunkter.isNotEmpty()) {
                 åpneAksjonspunkter
                     .filter { aksjonspunktTilstandDto ->
-                        aksjonspunktTilstandDto.venteårsak != Venteårsak.UDEFINERT
+                        (aksjonspunktTilstandDto.venteårsak != Venteårsak.UDEFINERT &&
+                                aksjonspunktTilstandDto.venteårsak != null)
                             && aksjonspunktTilstandDto.status == AksjonspunktStatus.OPPRETTET
                     }
                     .singleOrNull { aksjonspunktTilstandDto ->
