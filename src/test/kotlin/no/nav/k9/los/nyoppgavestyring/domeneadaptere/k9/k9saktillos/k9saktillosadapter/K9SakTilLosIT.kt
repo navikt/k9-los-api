@@ -30,7 +30,6 @@ import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Dto
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.tjenester.saksbehandler.IIdToken
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.*
 import org.junit.jupiter.api.BeforeEach
@@ -99,6 +98,21 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         }
 
         assertThat(reservasjoner.isNotEmpty())
+    }
+
+
+    @Test //Basert på prodfeil der k9sak sendte opprettet aksjonspunkt med frist og venteårsak null, som gjorde at konsument stoppet
+    fun `Behandling med aksjonspunkt med ventekode NULL skal ikke kaste exception under mottak`() {
+        val eksternId = UUID.randomUUID()
+        val kø = opprettKøFor(TestSaksbehandler.SARA, querySomKunInneholder(eksternId, Oppgavestatus.AAPEN))
+
+        val opprettetAksjonspunktMedNullVenteårsak = BehandlingProsessEventDtoBuilder(eksternId).opprettet()
+            .medAksjonspunkt(AksjonspunktDefinisjon.KONTROLLER_LEGEERKLÆRING.builder()
+                .medStatus(AksjonspunktStatus.OPPRETTET)
+                .medVenteårsakOgFrist(null, frist = LocalDateTime.now().plusWeeks(1)))
+            .build()
+
+        eventHandler.prosesser(opprettetAksjonspunktMedNullVenteårsak)
     }
 
     @Test

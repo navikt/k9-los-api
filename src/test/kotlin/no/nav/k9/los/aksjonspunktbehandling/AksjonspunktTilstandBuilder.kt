@@ -31,7 +31,7 @@ data class AksjonspunktTilstandBuilder(
         return this
     }
 
-    fun medVenteårsakOgFrist(venteårsak: Venteårsak, frist: LocalDateTime? = LocalDateTime.now().plusWeeks(1)): AksjonspunktTilstandBuilder {
+    fun medVenteårsakOgFrist(venteårsak: Venteårsak?, frist: LocalDateTime? = LocalDateTime.now().plusWeeks(1)): AksjonspunktTilstandBuilder {
         this.venteårsak = venteårsak
         this.frist = frist
         return this
