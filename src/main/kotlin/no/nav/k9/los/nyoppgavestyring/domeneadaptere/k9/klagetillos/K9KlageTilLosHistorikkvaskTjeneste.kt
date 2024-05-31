@@ -2,19 +2,19 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
-import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
+import no.nav.k9.los.nyoppgavestyring.datainnlasting.feltdefinisjon.FeltdefinisjonTjeneste
+import no.nav.k9.los.nyoppgavestyring.datainnlasting.feltdefinisjon.FeltdefinisjonerDto
+import no.nav.k9.los.nyoppgavestyring.datainnlasting.omraade.OmrådeRepository
+import no.nav.k9.los.nyoppgavestyring.datainnlasting.oppgave.OppgaveV3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.datainnlasting.oppgavetype.OppgavetypeTjeneste
+import no.nav.k9.los.nyoppgavestyring.datainnlasting.oppgavetype.OppgavetyperDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.BehandlingProsessEventKlageRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerInterfaceKludge
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
+import no.nav.k9.los.nyoppgavestyring.datainnlasting.oppgave.OppgaveV3
 import java.util.*
 import kotlin.concurrent.thread
 

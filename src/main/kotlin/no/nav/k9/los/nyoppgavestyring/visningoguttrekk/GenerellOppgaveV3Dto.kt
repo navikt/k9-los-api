@@ -4,7 +4,7 @@ import no.nav.k9.los.domene.modell.BehandlingType
 import no.nav.k9.los.integrasjon.pdl.PersonPdl
 import no.nav.k9.los.integrasjon.pdl.fnr
 import no.nav.k9.los.integrasjon.pdl.navn
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.datainnlasting.oppgave.Oppgavestatus
 import java.time.LocalDateTime
 
 data class GenerellOppgaveV3Dto(

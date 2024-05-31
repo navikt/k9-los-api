@@ -3,8 +3,8 @@ package no.nav.k9.los.nyoppgavestyring.visningoguttrekk
 import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
+import no.nav.k9.los.nyoppgavestyring.datainnlasting.oppgave.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.datainnlasting.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.spi.felter.HentVerdiInput
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

@@ -2,8 +2,8 @@ package no.nav.k9.los.nyoppgavestyring.query.db
 
 import no.nav.k9.los.nyoppgavestyring.kodeverk.EgenAnsatt
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype.*
+import no.nav.k9.los.nyoppgavestyring.datainnlasting.feltdefinisjon.Datatype
+import no.nav.k9.los.nyoppgavestyring.datainnlasting.feltdefinisjon.Datatype.*
 import no.nav.k9.los.spi.felter.OrderByInput
 import no.nav.k9.los.spi.felter.SqlMedParams
 import no.nav.k9.los.spi.felter.TransientFeltutleder

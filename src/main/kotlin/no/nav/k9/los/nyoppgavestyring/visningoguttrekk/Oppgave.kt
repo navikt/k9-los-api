@@ -1,6 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.visningoguttrekk
 
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
+import no.nav.k9.los.nyoppgavestyring.datainnlasting.oppgavetype.Oppgavetype
 import java.time.LocalDateTime
 
 data class Oppgave(

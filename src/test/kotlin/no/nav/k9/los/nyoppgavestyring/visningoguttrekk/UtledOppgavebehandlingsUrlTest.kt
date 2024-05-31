@@ -1,11 +1,10 @@
 package no.nav.k9.los.nyoppgavestyring.visningoguttrekk
 
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
+import no.nav.k9.los.nyoppgavestyring.datainnlasting.omraade.Område
+import no.nav.k9.los.nyoppgavestyring.datainnlasting.oppgavetype.Oppgavetype
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.koin.test.get
 import java.time.LocalDateTime
 import kotlin.test.assertEquals
 

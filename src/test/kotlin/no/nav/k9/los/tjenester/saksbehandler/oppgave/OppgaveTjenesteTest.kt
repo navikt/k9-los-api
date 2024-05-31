@@ -18,9 +18,9 @@ import no.nav.k9.los.integrasjon.pdl.IPdlService
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.datainnlasting.omraade.Område
+import no.nav.k9.los.nyoppgavestyring.datainnlasting.oppgave.OppgaveFeltverdiDto
+import no.nav.k9.los.nyoppgavestyring.datainnlasting.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
@@ -1933,8 +1933,8 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         assertThat(saker.oppgaver.size).isEqualTo(1)
     }
 
-    private fun lagOppgaveDto(eksternId: String): no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto {
-        return no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto(
+    private fun lagOppgaveDto(eksternId: String): no.nav.k9.los.nyoppgavestyring.datainnlasting.oppgave.OppgaveDto {
+        return no.nav.k9.los.nyoppgavestyring.datainnlasting.oppgave.OppgaveDto(
             id = eksternId,
             versjon = LocalDateTime.now().toString(),
             område = Område(eksternId = "K9").eksternId,

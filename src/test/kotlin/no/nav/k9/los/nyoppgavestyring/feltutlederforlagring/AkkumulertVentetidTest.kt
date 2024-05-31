@@ -1,12 +1,12 @@
 package no.nav.k9.los.nyoppgavestyring.feltutlederforlagring
 
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjon
-import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdi
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavefelt
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
+import no.nav.k9.los.nyoppgavestyring.datainnlasting.feltdefinisjon.Feltdefinisjon
+import no.nav.k9.los.nyoppgavestyring.datainnlasting.omraade.Område
+import no.nav.k9.los.nyoppgavestyring.datainnlasting.oppgave.OppgaveFeltverdi
+import no.nav.k9.los.nyoppgavestyring.datainnlasting.oppgave.OppgaveV3
+import no.nav.k9.los.nyoppgavestyring.datainnlasting.oppgave.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.datainnlasting.oppgavetype.Oppgavefelt
+import no.nav.k9.los.nyoppgavestyring.datainnlasting.oppgavetype.Oppgavetype
 import org.junit.jupiter.api.Assertions.*
 
 import org.junit.jupiter.api.Test
