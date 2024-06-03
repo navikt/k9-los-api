@@ -12,8 +12,9 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelter
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Verdiforklaring
+import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgaveQueryToSqlMapper
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
-import no.nav.k9.los.nyoppgavestyring.transientfeltutleder.GyldigeTransientFeltutleder
+import no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.GyldigeTransientFeltutleder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -146,7 +147,7 @@ class OppgaveQueryRepository(
         val felter = hentAlleFelterMedMer(tx, medKodeverk = false)
             .associate { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) to felt }
 
-        return query(tx, toSqlOppgaveQuery(oppgaveQuery, felter, now))
+        return query(tx, OppgaveQueryToSqlMapper.toSqlOppgaveQuery(oppgaveQuery, felter, now))
     }
 
     fun queryForEksternId(oppgaveQuery: OppgaveQuery, now: LocalDateTime): List<EksternOppgaveId> {
@@ -159,14 +160,14 @@ class OppgaveQueryRepository(
         val felter = hentAlleFelterMedMer(tx, medKodeverk = false)
             .associate { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) to felt }
 
-        return queryForEksternId(tx, toSqlOppgaveQuery(oppgaveQuery, felter, now))
+        return queryForEksternId(tx, OppgaveQueryToSqlMapper.toSqlOppgaveQuery(oppgaveQuery, felter, now))
     }
 
     fun queryForAntall(tx: TransactionalSession, oppgaveQuery: OppgaveQuery, now: LocalDateTime): Long {
         val felter = hentAlleFelterMedMer(tx, medKodeverk = false)
             .associate { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) to felt }
 
-        return queryForAntall(tx, toSqlOppgaveQueryForAntall(oppgaveQuery, felter, now))
+        return queryForAntall(tx, OppgaveQueryToSqlMapper.toSqlOppgaveQueryForAntall(oppgaveQuery, felter, now))
 
     }
 
@@ -189,7 +190,7 @@ class OppgaveQueryRepository(
                 row.string(1)
             }.asList
         ).joinToString("\n")
-        log.info("explain oppgaveQurye for oppgaveId: $explain")
+        log.info("explain oppgaveQuery for oppgaveId: $explain")
         return tx.run(
             queryOf(
                 oppgaveQuery.getQuery(),
@@ -218,64 +219,5 @@ class OppgaveQueryRepository(
                 row.string("ekstern_id")
             ) }.asList
         )
-    }
-
-    fun toSqlOppgaveQuery(oppgaveQuery: OppgaveQuery, felter: Map<OmrådeOgKode, OppgavefeltMedMer>, now: LocalDateTime): SqlOppgaveQuery {
-        val query = SqlOppgaveQuery(felter, now)
-        val combineOperator = CombineOperator.AND
-        håndterFiltere(query, oppgaveQuery.filtere, combineOperator)
-        håndterOrder(query, oppgaveQuery.order)
-        query.medLimit(oppgaveQuery.limit)
-
-        return query
-    }
-
-    fun toSqlOppgaveQueryForAntall(
-        oppgaveQuery: OppgaveQuery,
-        felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
-        now: LocalDateTime
-    ): SqlOppgaveQuery {
-        val query = SqlOppgaveQuery(felter, now)
-        val combineOperator = CombineOperator.AND
-        håndterFiltere(query, oppgaveQuery.filtere, combineOperator)
-        query.medAntallSomResultat()
-
-        return query
-    }
-
-    private fun håndterFiltere(
-        query: SqlOppgaveQuery,
-        filtere: List<Oppgavefilter>,
-        combineOperator: CombineOperator
-    ) {
-        for (filter in OppgavefilterUtvider.utvid(filtere)) {
-            when (filter) {
-                is FeltverdiOppgavefilter -> query.medFeltverdi(
-                    combineOperator,
-                    filter.område,
-                    filter.kode,
-                    FeltverdiOperator.valueOf(filter.operator),
-                    filter.verdi.first()
-                )
-
-                is CombineOppgavefilter -> {
-                    val newCombineOperator = CombineOperator.valueOf(filter.combineOperator)
-                    query.medBlokk(combineOperator, newCombineOperator.defaultValue) {
-                        håndterFiltere(query, filter.filtere, newCombineOperator)
-                    }
-                }
-
-                else -> throw IllegalStateException("Ukjent filter: " + filter::class.qualifiedName)
-            }
-        }
-    }
-
-    private fun håndterOrder(query: SqlOppgaveQuery, orderBys: List<OrderFelt>) {
-        for (orderBy in orderBys) {
-            when (orderBy) {
-                is EnkelOrderFelt -> query.medEnkelOrder(orderBy.område, orderBy.kode, orderBy.økende)
-                else -> throw IllegalStateException("Ukjent OrderFelt: " + orderBy::class.qualifiedName)
-            }
-        }
     }
 }

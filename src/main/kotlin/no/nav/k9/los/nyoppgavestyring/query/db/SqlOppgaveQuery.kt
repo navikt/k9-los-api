@@ -4,6 +4,9 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.EgenAnsatt
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype.*
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.query.mapping.CombineOperator
+import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
 import no.nav.k9.los.spi.felter.OrderByInput
 import no.nav.k9.los.spi.felter.SqlMedParams
 import no.nav.k9.los.spi.felter.TransientFeltutleder
@@ -42,7 +45,7 @@ class SqlOppgaveQuery(
                 ORDER BY TRUE 
             """.trimIndent()
 
-    private val queryParams: MutableMap<String, Any?> = mutableMapOf()
+    private val queryParams: MutableMap<String, Any?> = mutableMapOf(Pair("oppgavestatus", Oppgavestatus.entries.joinToString { oppgavestatus -> oppgavestatus.kode }))
     private val orderByParams: MutableMap<String, Any?> = mutableMapOf()
     private var limit: Int = -1;
 
@@ -88,6 +91,7 @@ class SqlOppgaveQuery(
             "oppgavestatus" -> {
                 query += "${combineOperator.sql} o.status ${operator.sql} (:oppgavestatus$index) "
                 queryParams["oppgavestatus$index"] = feltverdi
+                queryParams["oppgavestatus"] = feltverdi //dette parameteret brukes av index på oppgavefeltverdi. Spørringer som ser på lukkede oppgaver er ikke indekserte, og vil være trege
             }
             "kildeområde" -> {
                 query += "${combineOperator.sql} o.kildeomrade ${operator.sql} (:kildeomrade$index) "
@@ -155,6 +159,8 @@ class SqlOppgaveQuery(
                     WHERE ov.oppgave_id = o.id
                       AND fo.ekstern_id = :feltOmrade$index
                       AND fd.ekstern_id = :feltkode$index
+                      AND ov.aktiv = true
+                      AND ov.oppgavestatus in (:oppgavestatus)
                       AND 
             """.trimIndent()
 
@@ -255,6 +261,8 @@ class SqlOppgaveQuery(
                     WHERE ov.oppgave_id = o.id
                       AND fo.ekstern_id = :feltOmrade$index
                       AND fd.ekstern_id = :feltkode$index
+                      AND ov.aktiv = true
+                      AND ov.oppgavestatus in (:oppgavestatus)
                   )
             """.trimIndent()
     }
@@ -315,6 +323,8 @@ class SqlOppgaveQuery(
                   WHERE ov.oppgave_id = o.id
                     AND fo.ekstern_id = :orderByfeltOmrade$index
                     AND fd.ekstern_id = :orderByfeltkode$index
+                    AND ov.aktiv = true
+                    AND ov.oppgavestatus in (:oppgavestatus)
                 ) 
             """.trimIndent()
 

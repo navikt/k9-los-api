@@ -2,6 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.query
 
 import assertk.assertThat
 import assertk.assertions.isEmpty
+import assertk.assertions.isEqualTo
 import assertk.assertions.isNotNull
 import assertk.assertions.isNotEmpty
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -13,19 +14,23 @@ import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.pep.PepCache
 import no.nav.k9.los.nyoppgavestyring.pep.PepCacheRepository
 import no.nav.k9.los.nyoppgavestyring.pep.TestRepository
-import no.nav.k9.los.nyoppgavestyring.query.db.FeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.query.db.OmrådeOgKode
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
+import no.nav.k9.los.nyoppgavestyring.query.db.OppgavefeltMedMer
+import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgaveQueryToSqlMapper
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.koin.test.get
@@ -325,6 +330,42 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         ))
 
         assertThat(oppgaveQueryRepository.query(query)).isEmpty()
+    }
+
+    @Test
+    fun `ytelse - oppgavequery uten filter på oppgavestatus må ha param for oppgavequery for bruk av index i oppgavefelt_verdi`() {
+        OppgaveTestDataBuilder()
+            .lagOgLagre()
+
+        val oppgaveQueryRepository = OppgaveQueryRepository(mockk(), mockk<FeltdefinisjonRepository>())
+
+        val oppgaveQuery = OppgaveQuery(
+            listOf(
+                byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.LESS_THAN_OR_EQUALS, "2023-05-16"),
+            )
+        )
+
+        val områdeOgKodeOppgavefeltMedMerMap = mapOf(
+            Pair(
+                OmrådeOgKode("K9", FeltType.MOTTATT_DATO.eksternId),
+                OppgavefeltMedMer(
+                    Oppgavefelt(
+                        område = "K9",
+                        kode = FeltType.MOTTATT_DATO.eksternId,
+                        "dette er en test",
+                        tolkes_som = Datatype.TIMESTAMP.kode,
+                        kokriterie = false,
+                        verdiforklaringerErUttømmende = false,
+                        verdiforklaringer = null
+                    ),
+                    null
+                )
+            )
+        )
+
+        val sqlOppgaveQuery = OppgaveQueryToSqlMapper.toSqlOppgaveQuery(oppgaveQuery, områdeOgKodeOppgavefeltMedMerMap, LocalDateTime.now())
+
+        assertThat(sqlOppgaveQuery.getParams().get("oppgavestatus")).isEqualTo(listOf(Oppgavestatus.entries))
     }
 
     @Test

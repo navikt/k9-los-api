@@ -1,7 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon
 
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
-import no.nav.k9.los.nyoppgavestyring.transientfeltutleder.GyldigeTransientFeltutleder
+import no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.GyldigeTransientFeltutleder
 
 class Feltdefinisjoner(
     val område: Område,
