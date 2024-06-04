@@ -45,7 +45,7 @@ class SqlOppgaveQuery(
                 ORDER BY TRUE 
             """.trimIndent()
 
-    private val queryParams: MutableMap<String, Any?> = mutableMapOf(Pair("oppgavestatus", Oppgavestatus.entries.joinToString { oppgavestatus -> oppgavestatus.kode }))
+    private val queryParams: MutableMap<String, Any?> = mutableMapOf()
     private val orderByParams: MutableMap<String, Any?> = mutableMapOf()
     private var limit: Int = -1;
 
@@ -61,6 +61,10 @@ class SqlOppgaveQuery(
 
     fun getParams(): Map<String, Any?> {
         return (queryParams + orderByParams).toMap()
+    }
+
+    fun erstattQueryParam(nøkkel: String, verdi: Any) {
+        queryParams[nøkkel] = verdi
     }
 
     private fun hentTransientFeltutleder(feltområde: String?, feltkode: String): TransientFeltutleder? {
@@ -91,7 +95,6 @@ class SqlOppgaveQuery(
             "oppgavestatus" -> {
                 query += "${combineOperator.sql} o.status ${operator.sql} (:oppgavestatus$index) "
                 queryParams["oppgavestatus$index"] = feltverdi
-                queryParams["oppgavestatus"] = feltverdi //dette parameteret brukes av index på oppgavefeltverdi. Spørringer som ser på lukkede oppgaver er ikke indekserte, og vil være trege
             }
             "kildeområde" -> {
                 query += "${combineOperator.sql} o.kildeomrade ${operator.sql} (:kildeomrade$index) "
@@ -160,7 +163,7 @@ class SqlOppgaveQuery(
                       AND fo.ekstern_id = :feltOmrade$index
                       AND fd.ekstern_id = :feltkode$index
                       AND ov.aktiv = true
-                      AND ov.oppgavestatus in (:oppgavestatus)
+                      AND ov.oppgavestatus in (${(queryParams["oppgavestatus"] as List<Oppgavestatus>).joinToString(prefix = "'", separator = ", ", postfix = "'") { oppgavestatus -> oppgavestatus.kode }})
                       AND 
             """.trimIndent()
 
@@ -262,7 +265,7 @@ class SqlOppgaveQuery(
                       AND fo.ekstern_id = :feltOmrade$index
                       AND fd.ekstern_id = :feltkode$index
                       AND ov.aktiv = true
-                      AND ov.oppgavestatus in (:oppgavestatus)
+                      AND ov.oppgavestatus in (${(queryParams["oppgavestatus"] as List<Oppgavestatus>).joinToString(prefix = "'", separator = ", ", postfix = "'") { oppgavestatus -> oppgavestatus.kode }})
                   )
             """.trimIndent()
     }
@@ -324,7 +327,7 @@ class SqlOppgaveQuery(
                     AND fo.ekstern_id = :orderByfeltOmrade$index
                     AND fd.ekstern_id = :orderByfeltkode$index
                     AND ov.aktiv = true
-                    AND ov.oppgavestatus in (:oppgavestatus)
+                    AND ov.oppgavestatus in (${(queryParams["oppgavestatus"] as List<Oppgavestatus>).joinToString(prefix = "'", separator = ", ", postfix = "'") { oppgavestatus -> oppgavestatus.kode }})
                 ) 
             """.trimIndent()
 

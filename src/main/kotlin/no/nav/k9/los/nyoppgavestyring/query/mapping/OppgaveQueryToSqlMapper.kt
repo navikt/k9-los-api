@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.query.mapping
 
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.db.*
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
 import java.time.LocalDateTime
@@ -9,11 +10,38 @@ object OppgaveQueryToSqlMapper {
         val query = SqlOppgaveQuery(felter, now)
         val combineOperator = CombineOperator.AND
 
+        val samletOppgavestatuserAnvendt = traverserFiltereOgFinnOppgavestatuser(oppgaveQuery)
+        //dette parameteret brukes av index på oppgavefeltverdi. Spørringer som ser på lukkede oppgaver er ikke indekserte, og vil være trege
+        if (samletOppgavestatuserAnvendt.isNotEmpty()) {
+            query.erstattQueryParam("oppgavestatus", samletOppgavestatuserAnvendt)
+        } else {
+            query.erstattQueryParam("oppgavestatus", Oppgavestatus.entries)
+        }
+
         håndterFiltere(query, oppgaveQuery.filtere, combineOperator)
         håndterOrder(query, oppgaveQuery.order)
         query.medLimit(oppgaveQuery.limit)
 
         return query
+    }
+
+    private fun traverserFiltereOgFinnOppgavestatuser(oppgaveQuery: OppgaveQuery): List<Oppgavestatus> {
+        val statuser = mutableSetOf<Oppgavestatus>()
+        rekursivtSøk(oppgaveQuery.filtere, statuser)
+        return statuser.toList()
+    }
+
+    private fun rekursivtSøk(
+        filtere: List<Oppgavefilter>,
+        statuser: MutableSet<Oppgavestatus>
+    ) {
+        for (filter in filtere) {
+            if (filter is FeltverdiOppgavefilter && filter.kode == "oppgavestatus") {
+                statuser.addAll(filter.verdi.map { verdi -> Oppgavestatus.fraKode(verdi.toString()) })
+            } else if (filter is CombineOppgavefilter) {
+                rekursivtSøk(filter.filtere, statuser)
+            }
+        }
     }
 
     fun toSqlOppgaveQueryForAntall(

@@ -54,10 +54,10 @@ class OppgaveTestDataBuilder(
     }
 
 
-    fun lagOgLagre(): OppgaveV3 {
+    fun lagOgLagre(status: Oppgavestatus = Oppgavestatus.AAPEN): OppgaveV3 {
         val antall = oppgaverepo.tellAntall().first
         return transactionManager.transaction { tx ->
-            val oppgave = lag(antall)
+            val oppgave = lag(antall, status)
             oppgaverepo.nyOppgaveversjon(oppgave, tx)
             oppgave
         }

@@ -333,7 +333,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
     }
 
     @Test
-    fun `ytelse - oppgavequery uten filter på oppgavestatus må ha param for oppgavequery for bruk av index i oppgavefelt_verdi`() {
+    fun `ytelse - oppgavequery uten filter på oppgavestatus skal ikke filtrere vekk oppgave`() {
         OppgaveTestDataBuilder()
             .lagOgLagre()
 
@@ -345,27 +345,45 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        val områdeOgKodeOppgavefeltMedMerMap = mapOf(
-            Pair(
-                OmrådeOgKode("K9", FeltType.MOTTATT_DATO.eksternId),
-                OppgavefeltMedMer(
-                    Oppgavefelt(
-                        område = "K9",
-                        kode = FeltType.MOTTATT_DATO.eksternId,
-                        "dette er en test",
-                        tolkes_som = Datatype.TIMESTAMP.kode,
-                        kokriterie = false,
-                        verdiforklaringerErUttømmende = false,
-                        verdiforklaringer = null
-                    ),
-                    null
-                )
+        val oppgaveId = oppgaveQueryRepository.query(oppgaveQuery)
+
+        assertThat(oppgaveId.size).isEqualTo(1)
+    }
+
+    @Test
+    fun `ytelse - oppgavequery med filter på oppgavestatus skal ikke filtrere vekk oppgave med samme status`() {
+        OppgaveTestDataBuilder()
+            .lagOgLagre()
+
+        OppgaveTestDataBuilder()
+            .lagOgLagre(Oppgavestatus.LUKKET)
+
+        val oppgaveQueryRepository = OppgaveQueryRepository(mockk(), mockk<FeltdefinisjonRepository>())
+
+        val oppgaveQuery = OppgaveQuery(
+            listOf(
+                byggGenereltFilter(FeltType.OPPGAVE_STATUS, FeltverdiOperator.IN, Oppgavestatus.AAPEN.kode),
             )
         )
 
-        val sqlOppgaveQuery = OppgaveQueryToSqlMapper.toSqlOppgaveQuery(oppgaveQuery, områdeOgKodeOppgavefeltMedMerMap, LocalDateTime.now())
+        assertThat(oppgaveQueryRepository.query(oppgaveQuery).size).isEqualTo(1)
 
-        assertThat(sqlOppgaveQuery.getParams().get("oppgavestatus")).isEqualTo(listOf(Oppgavestatus.entries))
+
+        val oppgaveQuery2 = OppgaveQuery(
+            listOf(
+                byggGenereltFilter(FeltType.OPPGAVE_STATUS, FeltverdiOperator.IN, Oppgavestatus.LUKKET.kode),
+            )
+        )
+
+        assertThat(oppgaveQueryRepository.query(oppgaveQuery2).size).isEqualTo(1)
+
+        val oppgaveQuery3 = OppgaveQuery(
+            listOf(
+                byggGenereltFilter(FeltType.OPPGAVE_STATUS, FeltverdiOperator.IN, Oppgavestatus.VENTER.kode),
+            )
+        )
+
+        assertThat(oppgaveQueryRepository.query(oppgaveQuery3).size).isEqualTo(0)
     }
 
     @Test
