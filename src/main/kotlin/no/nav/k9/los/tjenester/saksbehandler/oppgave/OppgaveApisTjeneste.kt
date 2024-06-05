@@ -8,7 +8,6 @@ import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Dto
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
-import no.nav.k9.los.utils.forskyvReservasjonsDato
 import no.nav.k9.los.utils.leggTilDagerHoppOverHelg
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -95,16 +94,16 @@ class OppgaveApisTjeneste(
     }
 
     suspend fun endreReservasjoner(
-        reservasjonEndringDto: ReservasjonEndringDto,
+        reservasjonEndringDto: List<ReservasjonEndringDto>,
         innloggetBruker: Saksbehandler
     ) {
-        reservasjonEndringDto.oppgaveNøkkel.forEach { oppgaveNøkkel ->
+        reservasjonEndringDto.forEach {
             endreReservasjon(
                 innloggetBruker,
-                oppgaveNøkkel,
-                reservasjonEndringDto.brukerIdent,
-                reservasjonEndringDto.reserverTil,
-                reservasjonEndringDto.begrunnelse
+                it.oppgaveNøkkel,
+                it.brukerIdent,
+                it.reserverTil,
+                it.begrunnelse
             )
         }
     }
@@ -234,14 +233,14 @@ class OppgaveApisTjeneste(
     }
 
     suspend fun annullerReservasjoner(
-        params: AnnullerReservasjoner,
+        params: List<AnnullerReservasjon>,
         innloggetBruker: Saksbehandler
     ) {
-        params.oppgaveNøkkel.forEach { oppgaveNøkkel ->
+        params.forEach {
             annullerReservasjon(
                 innloggetBruker,
-                oppgaveNøkkel,
-                params.begrunnelse
+                it.oppgaveNøkkel,
+                it.begrunnelse
             )
         }
     }
