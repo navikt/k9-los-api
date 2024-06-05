@@ -2045,10 +2045,8 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         assertThat(reservasjon.reservertAv).isEqualTo("Foo")
 
         oppgaveTjeneste.endreReservasjonPåOppgave(
-            ReservasjonEndringDto(
-                oppgaveNøkkel = OppgaveNøkkelDto.forV1Oppgave(nyOppgave.eksternId.toString()),
-                brukerIdent = "Bar"
-            )
+            oppgaveNøkkel = OppgaveNøkkelDto.forV1Oppgave(nyOppgave.eksternId.toString()),
+            tilBrukerIdent = "Bar"
         )
 
         val reservasjonEtterEndring = reservasjonRepository.hent(nyOppgave.eksternId)
@@ -2074,10 +2072,8 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         assertThat(reservasjon.begrunnelse).isNull()
 
         oppgaveTjeneste.endreReservasjonPåOppgave(
-            ReservasjonEndringDto(
-                oppgaveNøkkel = OppgaveNøkkelDto.forV1Oppgave(nyOppgave.eksternId.toString()),
-                begrunnelse = "test begrunnelse"
-            )
+            oppgaveNøkkel = OppgaveNøkkelDto.forV1Oppgave(nyOppgave.eksternId.toString()),
+            begrunnelse = "test begrunnelse"
         )
 
         val reservasjonEtterEndring = reservasjonRepository.hent(nyOppgave.eksternId)
@@ -2103,11 +2099,10 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         assertThat(reservasjon.begrunnelse).isNull()
 
         val nyDato = reservasjon.reservertTil!!.toLocalDate().plusDays(10)
+
         oppgaveTjeneste.endreReservasjonPåOppgave(
-            ReservasjonEndringDto(
-                oppgaveNøkkel = OppgaveNøkkelDto.forV1Oppgave(nyOppgave.eksternId.toString()),
-                reserverTil = nyDato
-            )
+            oppgaveNøkkel = OppgaveNøkkelDto.forV1Oppgave(nyOppgave.eksternId.toString()),
+            reserverTil = nyDato
         )
 
         val reservasjonEtterEndring = reservasjonRepository.hent(nyOppgave.eksternId)

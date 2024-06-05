@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.k9saktillosadapter
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9saktillos.k9saktillosadapter
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
@@ -40,7 +40,7 @@ class AutoHistorikkvaskTest : AbstractK9LosIntegrationTest() {
         val event1 = behandling1.vurderSykdom().build(1)
         val event2 = behandling1.hosBeslutter().build(2)
         val event3 = behandling1.beslutterGodkjent().build(3)
-        val event4 = behandling1.behandlingAvsluttet().build(4)
+        val event4 = behandling1.avsluttet().build(4)
         eventHandler.prosesser(event1)
         eventHandler.prosesser(event2)
         eventHandler.prosesser(event4)     // Feil rekkefølge i avsluttet behandling fra k9-sak

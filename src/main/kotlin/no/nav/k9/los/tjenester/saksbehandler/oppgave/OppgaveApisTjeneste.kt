@@ -6,9 +6,13 @@ import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Dto
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
+import no.nav.k9.los.utils.forskyvReservasjonsDato
+import no.nav.k9.los.utils.leggTilDagerHoppOverHelg
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.*
@@ -58,7 +62,7 @@ class OppgaveApisTjeneste(
             val reservasjonV3 = reservasjonOversetter.taNyReservasjonFraGammelKontekst(
                 oppgaveV1 = oppgaveV1Repository.hent(UUID.fromString(oppgaveNøkkel.oppgaveEksternId)),
                 reserverForSaksbehandlerId = reserverForSaksbehandler.id!!,
-                reservertTil = reserverFra.plusHours(48).forskyvReservasjonsDato(),
+                reservertTil = reserverFra.leggTilDagerHoppOverHelg(2),
                 utførtAvSaksbehandlerId = innloggetBruker.id!!,
                 kommentar = oppgaveIdMedOverstyringDto.overstyrBegrunnelse ?: "",
             )!!
@@ -79,7 +83,7 @@ class OppgaveApisTjeneste(
                     gyldigFra = reserverFra,
                     utføresAvId = innloggetBruker.id!!,
                     kommentar = oppgaveIdMedOverstyringDto.overstyrBegrunnelse ?: "",
-                    gyldigTil = reserverFra.plusHours(48).forskyvReservasjonsDato(),
+                    gyldigTil = reserverFra.leggTilDagerHoppOverHelg(2),
                     tx = tx
                 )
             }
@@ -90,13 +94,31 @@ class OppgaveApisTjeneste(
         }
     }
 
-    suspend fun endreReservasjon(
+    suspend fun endreReservasjoner(
         reservasjonEndringDto: ReservasjonEndringDto,
         innloggetBruker: Saksbehandler
+    ) {
+        reservasjonEndringDto.oppgaveNøkkel.forEach { oppgaveNøkkel ->
+            endreReservasjon(
+                innloggetBruker,
+                oppgaveNøkkel,
+                reservasjonEndringDto.brukerIdent,
+                reservasjonEndringDto.reserverTil,
+                reservasjonEndringDto.begrunnelse
+            )
+        }
+    }
+
+    private suspend fun endreReservasjon(
+        innloggetBruker: Saksbehandler,
+        oppgaveNøkkel: OppgaveNøkkelDto,
+        tilBrukerIdent: String? = null,
+        reserverTil: LocalDate? = null,
+        begrunnelse: String? = null
     ): ReservasjonV3Dto {
         // Fjernes når V1 skal vekk
         try {
-            oppgaveTjeneste.endreReservasjonPåOppgave(reservasjonEndringDto)
+            oppgaveTjeneste.endreReservasjonPåOppgave(oppgaveNøkkel, tilBrukerIdent, reserverTil, begrunnelse)
         } catch (_: NullPointerException) {
         } catch (_: IllegalArgumentException) {
             //ReservasjonV1 annullerer noen reservasjoner som V3 ikke annullerer, og da kan det hende at det ikke finnes
@@ -104,24 +126,24 @@ class OppgaveApisTjeneste(
         }
 
         val tilSaksbehandler =
-            reservasjonEndringDto.brukerIdent?.let { saksbehandlerRepository.finnSaksbehandlerMedIdent(it) }
+            tilBrukerIdent?.let { saksbehandlerRepository.finnSaksbehandlerMedIdent(it) }
 
-        val reservasjonsnøkkel = reservasjonOversetter.hentReservasjonsnøkkelForOppgavenøkkel(reservasjonEndringDto.oppgaveNøkkel)
+        val reservasjonsnøkkel = reservasjonOversetter.hentReservasjonsnøkkelForOppgavenøkkel(oppgaveNøkkel)
         val nyReservasjon = reservasjonV3Tjeneste.endreReservasjon(
                 reservasjonsnøkkel = reservasjonsnøkkel,
                 endretAvBrukerId = innloggetBruker.id!!,
-                nyTildato = reservasjonEndringDto.reserverTil?.let {
+                nyTildato = reserverTil?.let {
                     LocalDateTime.of(
-                        reservasjonEndringDto.reserverTil,
+                        reserverTil,
                         LocalTime.MAX
                     )
                 },
                 nySaksbehandlerId = tilSaksbehandler?.id,
-                kommentar = reservasjonEndringDto.begrunnelse
+                kommentar = begrunnelse
             )
 
         val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(nyReservasjon.reservasjonV3.reservertAv)
-        log.info("endreReservasjon: ${reservasjonEndringDto.oppgaveNøkkel.oppgaveEksternId}, ${nyReservasjon.reservasjonV3}, reservertAv: $reservertAv")
+        log.info("endreReservasjon: ${oppgaveNøkkel.oppgaveEksternId}, ${nyReservasjon.reservasjonV3}, reservertAv: $reservertAv")
 
         return reservasjonV3DtoBuilder.byggReservasjonV3Dto(nyReservasjon, reservertAv)
     }
@@ -178,7 +200,7 @@ class OppgaveApisTjeneste(
 
         val nyReservasjon = reservasjonV3Tjeneste.overførReservasjon(
             reservasjonsnøkkel = reservasjonsnøkkel,
-            reserverTil = LocalDateTime.now().plusHours(24).forskyvReservasjonsDato(),
+            reserverTil = LocalDateTime.now().leggTilDagerHoppOverHelg(1),
             tilSaksbehandlerId = tilSaksbehandler.id!!,
             utførtAvBrukerId = innloggetBruker.id!!,
             kommentar = params.begrunnelse,
@@ -188,26 +210,40 @@ class OppgaveApisTjeneste(
         return reservasjonV3DtoBuilder.byggReservasjonV3Dto(nyReservasjon, tilSaksbehandler)
     }
 
-    suspend fun annullerReservasjon(
-        params: OpphevReservasjonId,
-        innloggetBruker: Saksbehandler
+    private suspend fun annullerReservasjon(
+        innloggetBruker: Saksbehandler,
+        oppgaveNøkkelDto: OppgaveNøkkelDto,
+        begrunnelse: String
     ) {
         // Fjernes når V1 skal vekk
         try {
-            oppgaveTjeneste.frigiReservasjon(UUID.fromString(params.oppgaveNøkkel.oppgaveEksternId), params.begrunnelse)
+            oppgaveTjeneste.frigiReservasjon(UUID.fromString(oppgaveNøkkelDto.oppgaveEksternId), begrunnelse)
         } catch (e: NullPointerException) {
             //ReservasjonV1 annullerer noen reservasjoner som V3 ikke annullerer, og da kan det hende at det ikke finnes
             //noen V1-reservasjon å endre på
         }
 
-        val reservasjonsnøkkel = reservasjonOversetter.hentReservasjonsnøkkelForOppgavenøkkel(params.oppgaveNøkkel)
+        val reservasjonsnøkkel = reservasjonOversetter.hentReservasjonsnøkkelForOppgavenøkkel(oppgaveNøkkelDto)
 
         val annulleringUtført = reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(
             reservasjonsnøkkel,
-            params.begrunnelse,
+            begrunnelse,
             innloggetBruker.id!!
         )
-        log.info("annullerReservasjon: ${params.oppgaveNøkkel.oppgaveEksternId}, utførtAv: $innloggetBruker, $annulleringUtført")
+        log.info("annullerReservasjon: ${oppgaveNøkkelDto.oppgaveEksternId}, utførtAv: $innloggetBruker, $annulleringUtført")
+    }
+
+    suspend fun annullerReservasjoner(
+        params: AnnullerReservasjoner,
+        innloggetBruker: Saksbehandler
+    ) {
+        params.oppgaveNøkkel.forEach { oppgaveNøkkel ->
+            annullerReservasjon(
+                innloggetBruker,
+                oppgaveNøkkel,
+                params.begrunnelse
+            )
+        }
     }
 
     suspend fun hentReserverteOppgaverForSaksbehandler(saksbehandler: Saksbehandler): List<ReservasjonV3Dto> {

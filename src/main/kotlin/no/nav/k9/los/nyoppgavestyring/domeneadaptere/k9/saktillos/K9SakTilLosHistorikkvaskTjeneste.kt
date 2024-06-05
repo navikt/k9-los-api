@@ -135,7 +135,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 nyeBehandlingsopplysningerFraK9Sak
             )
 
-            oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, tx)
+            oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, høyesteInternVersjon, tx)
 
             eventTeller++
             loggFremgangForHver100(eventTeller, "Prosessert $eventTeller eventer")

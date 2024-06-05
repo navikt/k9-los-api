@@ -103,7 +103,9 @@ class PdlService constructor(
         } catch (e: Exception) {
             try {
                 val value = LosObjectMapper.instance.readValue<Error>(json!!)
-                if (value.errors.any { it.extensions.code == "unauthorized" }) {
+                log.warn("Fikk pdl-feil ${value.errors.joinToString(",")}", e)
+
+                if (value.errors.any { it.extensions?.code == "unauthorized" }) {
                     val resultat = PersonPdlResponse(true, null)
                     //TODO vurder å cache her også
                     //aktørIdTilPersonCache.set(cacheKey, CacheObject(resultat, LocalDateTime.now().plus(pdlCacheVarighet)))
@@ -121,7 +123,7 @@ class PdlService constructor(
             graphqlQueryHentIdent,
             mapOf(
                 "ident" to fnummer,
-                "historikk" to "false",
+                "historikk" to false,
                 "grupper" to listOf("AKTORID")
             )
         )
@@ -176,7 +178,9 @@ class PdlService constructor(
         } catch (e: Exception) {
             try {
                 val value = LosObjectMapper.instance.readValue<Error>(json!!)
-                if (value.errors.any { it.extensions.code == "unauthorized" }) {
+                log.warn("Fikk pdl-feil ${value.errors.joinToString(",")}", e)
+
+                if (value.errors.any { it.extensions?.code == "unauthorized" }) {
                     val resultat = PdlResponse(true, null)
                     //TODO vurder å cache her også
                     //fnrTilAktørIdCache.set(cacheKey, CacheObject(resultat, LocalDateTime.now().plus(pdlCacheVarighet)))
