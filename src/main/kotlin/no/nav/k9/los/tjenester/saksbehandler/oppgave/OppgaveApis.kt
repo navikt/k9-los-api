@@ -111,13 +111,13 @@ internal fun Route.OppgaveApis() {
     class opphevReservasjoner
     post { _: opphevReservasjoner ->
         requestContextService.withRequestContext(call) {
-            val params = call.receive<AnnullerReservasjoner>()
+            val params = call.receive<List<AnnullerReservasjon>>()
             val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
                 kotlin.coroutines.coroutineContext.idToken().getUsername()
             )!!
 
             try {
-                log.info("Opphever reservasjonen ${params.oppgaveNøkkel.joinToString(", ")} (Gjort av ${innloggetBruker.brukerIdent})")
+                log.info("Opphever reservasjoner ${params.map { it.oppgaveNøkkel }.joinToString(", ")} (Gjort av ${innloggetBruker.brukerIdent})")
                 oppgaveApisTjeneste.annullerReservasjoner(params, innloggetBruker)
                 call.respond(HttpStatusCode.OK) //TODO: Hva er evt meningsfullt å returnere her?
             } catch (e: FinnerIkkeDataException) {
@@ -178,7 +178,7 @@ internal fun Route.OppgaveApis() {
     class endreReservasjon
     post { _: endreReservasjon ->
         requestContextService.withRequestContext(call) {
-            val reservasjonEndringDto = call.receive<ReservasjonEndringDto>()
+            val reservasjonEndringDto = call.receive<List<ReservasjonEndringDto>>()
             val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
                 kotlin.coroutines.coroutineContext.idToken().getUsername()
             )!!
