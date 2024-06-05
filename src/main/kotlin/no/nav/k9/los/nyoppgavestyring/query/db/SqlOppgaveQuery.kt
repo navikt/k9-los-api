@@ -19,6 +19,7 @@ import java.time.LocalDateTime
 
 class SqlOppgaveQuery(
     val felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
+    val oppgavestatusFilter: List<Oppgavestatus>,
     val now: LocalDateTime
 ) {
     private var selectPrefix = """
@@ -61,10 +62,6 @@ class SqlOppgaveQuery(
 
     fun getParams(): Map<String, Any?> {
         return (queryParams + orderByParams).toMap()
-    }
-
-    fun erstattQueryParam(nøkkel: String, verdi: Any) {
-        queryParams[nøkkel] = verdi
     }
 
     private fun hentTransientFeltutleder(feltområde: String?, feltkode: String): TransientFeltutleder? {
@@ -163,7 +160,7 @@ class SqlOppgaveQuery(
                       AND fo.ekstern_id = :feltOmrade$index
                       AND fd.ekstern_id = :feltkode$index
                       AND ov.aktiv = true
-                      AND ov.oppgavestatus in (${(queryParams["oppgavestatus"] as List<Oppgavestatus>).joinToString(prefix = "'", separator = ", ", postfix = "'") { oppgavestatus -> oppgavestatus.kode }})
+                      AND ov.oppgavestatus in (${oppgavestatusFilter.joinToString(prefix = "'", separator = "', '", postfix = "'") { oppgavestatus -> oppgavestatus.kode }})
                       AND 
             """.trimIndent()
 
@@ -265,7 +262,7 @@ class SqlOppgaveQuery(
                       AND fo.ekstern_id = :feltOmrade$index
                       AND fd.ekstern_id = :feltkode$index
                       AND ov.aktiv = true
-                      AND ov.oppgavestatus in (${(queryParams["oppgavestatus"] as List<Oppgavestatus>).joinToString(prefix = "'", separator = ", ", postfix = "'") { oppgavestatus -> oppgavestatus.kode }})
+                      AND ov.oppgavestatus in (${oppgavestatusFilter.joinToString(prefix = "'", separator = "', '", postfix = "'") { oppgavestatus -> oppgavestatus.kode }})
                   )
             """.trimIndent()
     }
@@ -327,7 +324,7 @@ class SqlOppgaveQuery(
                     AND fo.ekstern_id = :orderByfeltOmrade$index
                     AND fd.ekstern_id = :orderByfeltkode$index
                     AND ov.aktiv = true
-                    AND ov.oppgavestatus in (${(queryParams["oppgavestatus"] as List<Oppgavestatus>).joinToString(prefix = "'", separator = ", ", postfix = "'") { oppgavestatus -> oppgavestatus.kode }})
+                    AND ov.oppgavestatus in (${oppgavestatusFilter.joinToString(prefix = "'", separator = "', '", postfix = "'") { oppgavestatus -> oppgavestatus.kode }})
                 ) 
             """.trimIndent()
 

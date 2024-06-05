@@ -50,7 +50,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         OppgaveTestDataBuilder()
         val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
         val oppgaveQuery = OppgaveQuery(listOf(
-            FeltverdiOppgavefilter(null, "oppgavestatus", "EQUALS", listOf("OPPR")),
+            FeltverdiOppgavefilter(null, "oppgavestatus", "EQUALS", listOf(Oppgavestatus.AAPEN.kode)),
             FeltverdiOppgavefilter(null, "kildeområde", "EQUALS", listOf("K9")),
             FeltverdiOppgavefilter(null, "oppgavetype", "EQUALS", listOf("aksjonspunkt")),
             FeltverdiOppgavefilter(null, "oppgaveområde", "EQUALS", listOf("aksjonspunkt")),
@@ -333,24 +333,6 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
     }
 
     @Test
-    fun `ytelse - oppgavequery uten filter på oppgavestatus skal ikke filtrere vekk oppgave`() {
-        OppgaveTestDataBuilder()
-            .lagOgLagre()
-
-        val oppgaveQueryRepository = OppgaveQueryRepository(mockk(), mockk<FeltdefinisjonRepository>())
-
-        val oppgaveQuery = OppgaveQuery(
-            listOf(
-                byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.LESS_THAN_OR_EQUALS, "2023-05-16"),
-            )
-        )
-
-        val oppgaveId = oppgaveQueryRepository.query(oppgaveQuery)
-
-        assertThat(oppgaveId.size).isEqualTo(1)
-    }
-
-    @Test
     fun `ytelse - oppgavequery med filter på oppgavestatus skal ikke filtrere vekk oppgave med samme status`() {
         OppgaveTestDataBuilder()
             .lagOgLagre()
@@ -358,7 +340,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         OppgaveTestDataBuilder()
             .lagOgLagre(Oppgavestatus.LUKKET)
 
-        val oppgaveQueryRepository = OppgaveQueryRepository(mockk(), mockk<FeltdefinisjonRepository>())
+        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
 
         val oppgaveQuery = OppgaveQuery(
             listOf(
@@ -384,6 +366,21 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         )
 
         assertThat(oppgaveQueryRepository.query(oppgaveQuery3).size).isEqualTo(0)
+
+        val oppgaveQuery4 = OppgaveQuery(
+            listOf(
+            )
+        )
+
+        assertThat(oppgaveQueryRepository.query(oppgaveQuery4).size).isEqualTo(2)
+
+        val oppgaveQuery5 = OppgaveQuery(
+            listOf(
+                byggGenereltFilter(FeltType.OPPGAVE_STATUS, FeltverdiOperator.IN, Oppgavestatus.LUKKET.kode, Oppgavestatus.AAPEN.kode),
+            )
+        )
+
+        assertThat(oppgaveQueryRepository.query(oppgaveQuery5).size).isEqualTo(2)
     }
 
     @Test

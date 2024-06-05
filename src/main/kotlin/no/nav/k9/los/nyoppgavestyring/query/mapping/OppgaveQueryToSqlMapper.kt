@@ -7,16 +7,9 @@ import java.time.LocalDateTime
 
 object OppgaveQueryToSqlMapper {
     fun toSqlOppgaveQuery(oppgaveQuery: OppgaveQuery, felter: Map<OmrådeOgKode, OppgavefeltMedMer>, now: LocalDateTime): SqlOppgaveQuery {
-        val query = SqlOppgaveQuery(felter, now)
+        val query = SqlOppgaveQuery(felter, traverserFiltereOgFinnOppgavestatusfilter(oppgaveQuery), now)
         val combineOperator = CombineOperator.AND
 
-        val samletOppgavestatuserAnvendt = traverserFiltereOgFinnOppgavestatuser(oppgaveQuery)
-        //dette parameteret brukes av index på oppgavefeltverdi. Spørringer som ser på lukkede oppgaver er ikke indekserte, og vil være trege
-        if (samletOppgavestatuserAnvendt.isNotEmpty()) {
-            query.erstattQueryParam("oppgavestatus", samletOppgavestatuserAnvendt)
-        } else {
-            query.erstattQueryParam("oppgavestatus", Oppgavestatus.entries)
-        }
 
         håndterFiltere(query, oppgaveQuery.filtere, combineOperator)
         håndterOrder(query, oppgaveQuery.order)
@@ -25,10 +18,18 @@ object OppgaveQueryToSqlMapper {
         return query
     }
 
-    private fun traverserFiltereOgFinnOppgavestatuser(oppgaveQuery: OppgaveQuery): List<Oppgavestatus> {
+    private fun traverserFiltereOgFinnOppgavestatusfilter(oppgaveQuery: OppgaveQuery): List<Oppgavestatus> {
         val statuser = mutableSetOf<Oppgavestatus>()
         rekursivtSøk(oppgaveQuery.filtere, statuser)
-        return statuser.toList()
+
+        //dette parameteret brukes av index på oppgavefeltverdi. Spørringer som ser på lukkede oppgaver er ikke indekserte, og vil være trege
+        //Dersom spørringen filterer på oppgavestatus, så matcher vi det.
+        //Hvis spørringen ikke filterer på oppgavestatus, må vi tillate alle verdier, for at spørringen skal fungere riktig
+        return if (statuser.isNotEmpty()) {
+            statuser.toList()
+        } else {
+            Oppgavestatus.entries
+        }
     }
 
     private fun rekursivtSøk(
@@ -49,7 +50,7 @@ object OppgaveQueryToSqlMapper {
         felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
         now: LocalDateTime
     ): SqlOppgaveQuery {
-        val query = SqlOppgaveQuery(felter, now)
+        val query = SqlOppgaveQuery(felter, traverserFiltereOgFinnOppgavestatusfilter(oppgaveQuery), now)
         val combineOperator = CombineOperator.AND
         håndterFiltere(query, oppgaveQuery.filtere, combineOperator)
         query.medAntallSomResultat()
