@@ -23,7 +23,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
-import no.nav.k9.los.nyoppgavestyring.query.db.OppgavefilterUtvider
+import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgavefilterUtvider
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter

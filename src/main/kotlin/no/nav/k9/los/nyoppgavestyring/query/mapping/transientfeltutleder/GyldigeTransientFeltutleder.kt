@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.transientfeltutleder
+package no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder
 
 import no.nav.k9.los.spi.felter.TransientFeltutleder
 

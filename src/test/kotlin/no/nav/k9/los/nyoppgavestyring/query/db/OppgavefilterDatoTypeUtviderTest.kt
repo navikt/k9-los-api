@@ -3,12 +3,15 @@ package no.nav.k9.los.nyoppgavestyring.query.db
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import no.nav.k9.los.nyoppgavestyring.FeltType
-import no.nav.k9.los.nyoppgavestyring.query.db.FeltverdiOperator.GREATER_THAN_OR_EQUALS
-import no.nav.k9.los.nyoppgavestyring.query.db.FeltverdiOperator.LESS_THAN_OR_EQUALS
+import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator.GREATER_THAN_OR_EQUALS
+import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator.LESS_THAN_OR_EQUALS
+import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgavefilterUtvider
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.hentFørsteMedOperator
 import no.nav.k9.los.nyoppgavestyring.query.isEqualToDate
+import no.nav.k9.los.nyoppgavestyring.query.mapping.CombineOperator
+import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 

@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.query.db
+package no.nav.k9.los.nyoppgavestyring.query.mapping
 
 enum class FeltverdiOperator(val sql: String) {
     EQUALS("="),
