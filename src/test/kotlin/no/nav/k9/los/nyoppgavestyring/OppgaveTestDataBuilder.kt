@@ -18,7 +18,7 @@ import java.util.*
 class OppgaveTestDataBuilder(
     val definisjonskilde: String = "k9-sak-til-los",
     val oppgaveTypeNavn: String = "k9sak"
-): KoinTest {
+) : KoinTest {
     private var område: Område
     val områdeRepository = get<OmrådeRepository>()
     val områdeSetup = get<OmrådeSetup>()
@@ -54,16 +54,16 @@ class OppgaveTestDataBuilder(
     }
 
 
-    fun lagOgLagre(): OppgaveV3 {
+    fun lagOgLagre(status: Oppgavestatus = Oppgavestatus.AAPEN): OppgaveV3 {
         val antall = oppgaverepo.tellAntall().first
         return transactionManager.transaction { tx ->
-            val oppgave = lag(antall)
+            val oppgave = lag(antall, status)
             oppgaverepo.nyOppgaveversjon(oppgave, tx)
             oppgave
         }
     }
 
-fun lag(antall: Long, status: Oppgavestatus = Oppgavestatus.AAPEN): OppgaveV3 {
+    fun lag(antall: Long, status: Oppgavestatus = Oppgavestatus.AAPEN): OppgaveV3 {
         return OppgaveV3(
             id = antall,
             eksternId = oppgaveFeltverdier.firstOrNull {

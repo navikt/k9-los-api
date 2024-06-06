@@ -4,6 +4,9 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.EgenAnsatt
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype.*
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.query.mapping.CombineOperator
+import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
 import no.nav.k9.los.spi.felter.OrderByInput
 import no.nav.k9.los.spi.felter.SqlMedParams
 import no.nav.k9.los.spi.felter.TransientFeltutleder
@@ -16,6 +19,7 @@ import java.time.LocalDateTime
 
 class SqlOppgaveQuery(
     val felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
+    val oppgavestatusFilter: List<Oppgavestatus>,
     val now: LocalDateTime
 ) {
     private var selectPrefix = """
@@ -155,6 +159,8 @@ class SqlOppgaveQuery(
                     WHERE ov.oppgave_id = o.id
                       AND fo.ekstern_id = :feltOmrade$index
                       AND fd.ekstern_id = :feltkode$index
+                      AND ov.aktiv = true
+                      AND ov.oppgavestatus in (${oppgavestatusFilter.joinToString(prefix = "'", separator = "', '", postfix = "'") { oppgavestatus -> oppgavestatus.kode }})
                       AND 
             """.trimIndent()
 
@@ -255,6 +261,8 @@ class SqlOppgaveQuery(
                     WHERE ov.oppgave_id = o.id
                       AND fo.ekstern_id = :feltOmrade$index
                       AND fd.ekstern_id = :feltkode$index
+                      AND ov.aktiv = true
+                      AND ov.oppgavestatus in (${oppgavestatusFilter.joinToString(prefix = "'", separator = "', '", postfix = "'") { oppgavestatus -> oppgavestatus.kode }})
                   )
             """.trimIndent()
     }
@@ -315,6 +323,8 @@ class SqlOppgaveQuery(
                   WHERE ov.oppgave_id = o.id
                     AND fo.ekstern_id = :orderByfeltOmrade$index
                     AND fd.ekstern_id = :orderByfeltkode$index
+                    AND ov.aktiv = true
+                    AND ov.oppgavestatus in (${oppgavestatusFilter.joinToString(prefix = "'", separator = "', '", postfix = "'") { oppgavestatus -> oppgavestatus.kode }})
                 ) 
             """.trimIndent()
 

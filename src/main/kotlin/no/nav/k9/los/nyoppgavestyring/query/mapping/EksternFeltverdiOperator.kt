@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.query.db
+package no.nav.k9.los.nyoppgavestyring.query.mapping
 
 enum class EksternFeltverdiOperator(val kode: String) {
     EQUALS("EQUALS"),

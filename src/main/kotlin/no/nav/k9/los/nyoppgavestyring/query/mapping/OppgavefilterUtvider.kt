@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.query.db
+package no.nav.k9.los.nyoppgavestyring.query.mapping
 
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
 
