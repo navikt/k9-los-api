@@ -12,6 +12,7 @@ data class ReservasjonV3Dto (
     val reservertOppgaveV1Dto: OppgaveDto? = null,
 
     val reservasjonsnøkkel: String,
+    val reservertAvNavn: String?,
     val reservertAvIdent: String,
     val reservertAvEpost: String,
     val kommentar: String,
@@ -23,6 +24,7 @@ data class ReservasjonV3Dto (
         reservasjonsnøkkel = reservasjonV3.reservasjonsnøkkel,
         reservertAvIdent = reservertAv.brukerIdent!!,
         reservertAvEpost = reservertAv.epost,
+        reservertAvNavn = reservertAv.navn,
         kommentar = reservasjonV3.kommentar,
         reservertFra = reservasjonV3.gyldigFra,
         reservertTil = reservasjonV3.gyldigTil
@@ -35,6 +37,7 @@ data class ReservasjonV3Dto (
         reservasjonsnøkkel = reservasjonV3.reservasjonsnøkkel,
         reservertAvIdent = reservertAv.brukerIdent!!,
         reservertAvEpost = reservertAv.epost,
+        reservertAvNavn = reservertAv.navn,
         kommentar = reservasjonV3.kommentar,
         reservertFra = reservasjonV3.gyldigFra,
         reservertTil = reservasjonV3.gyldigTil

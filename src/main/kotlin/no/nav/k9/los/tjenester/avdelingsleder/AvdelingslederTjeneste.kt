@@ -325,6 +325,7 @@ class AvdelingslederTjeneste(
                         ReservasjonDto(
                             reservertAvEpost = saksbehandler.epost,
                             reservertAvIdent = saksbehandler.brukerIdent!!,
+                            reservertAvNavn = saksbehandler.navn,
                             saksnummer = reservasjonMedOppgaver.oppgaveV1.fagsakSaksnummer,
                             journalpostId = reservasjonMedOppgaver.oppgaveV1.journalpostId,
                             behandlingType = reservasjonMedOppgaver.oppgaveV1.behandlingType,
@@ -339,6 +340,7 @@ class AvdelingslederTjeneste(
                         ReservasjonDto(
                             reservertAvEpost = saksbehandler.epost,
                             reservertAvIdent = saksbehandler.brukerIdent!!,
+                            reservertAvNavn = saksbehandler.navn,
                             saksnummer = oppgave.hentVerdi("saksnummer")!!, //TODO: Oppgaveagnostisk logikk. Løses antagelig ved å skrive om frontend i dette tilfellet
                             journalpostId = null,
                             behandlingType = BehandlingType.fraKode(oppgave.hentVerdi("behandlingTypekode")!!),
