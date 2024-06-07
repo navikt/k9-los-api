@@ -28,10 +28,8 @@ internal fun Route.K9KlageTilLosApi() {
     }
 
     put("/startHistorikkvask") {
-        if (config.nyOppgavestyringRestAktivert()) {
-            requestContextService.withRequestContext(call) {
-                k9KlageTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
-            }
+        requestContextService.withRequestContext(call) {
+            k9KlageTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
         }
     }
 }
