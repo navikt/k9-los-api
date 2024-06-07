@@ -48,6 +48,11 @@ class PdlService constructor(
     private val fnrTilAktørIdCache = Cache<FrnTilAktørIdCacheKey, PdlResponse>(10_000)
 
     override suspend fun person(aktorId: String): PersonPdlResponse {
+        if (aktorId.isEmpty()) {
+            log.info("Forsøker å hente person med tom aktorId")
+            return PersonPdlResponse(false, null)
+        }
+
         val queryRequest = QueryRequest(
             graphqlQueryHentPerson,
             mapOf("ident" to aktorId)
