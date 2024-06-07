@@ -1,7 +1,12 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import kotliquery.TransactionalSession
+import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.EventTilDtoMapper
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.test.YtelsetestBuilder
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import org.slf4j.LoggerFactory
@@ -10,8 +15,21 @@ class OppgaveV3Tjeneste(
     private val oppgaveV3Repository: OppgaveV3Repository,
     private val oppgavetypeRepository: OppgavetypeRepository,
     private val områdeRepository: OmrådeRepository,
-    private val reservasjonTjeneste: ReservasjonV3Tjeneste
+    private val reservasjonTjeneste: ReservasjonV3Tjeneste,
+    private val transactionalManager: TransactionalManager
 ) {
+//    init {
+//        for(i in 0..100000) {
+//            GlobalScope.launch {
+//                transactionalManager.transaction { tx ->
+//                    val eventer = YtelsetestBuilder().opprettEventserie()
+//                    eventer.forEach {
+//                        lagreNyOppgaveversjon(EventTilDtoMapper.lagOppgaveDto(it, null), tx)
+//                    }
+//                }
+//            }
+//        }
+//    }
 
     private val log = LoggerFactory.getLogger(OppgaveV3Tjeneste::class.java)
 

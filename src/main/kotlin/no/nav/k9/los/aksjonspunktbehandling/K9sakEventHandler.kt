@@ -43,7 +43,6 @@ class K9sakEventHandler constructor(
     fun prosesser(
         eventInn: BehandlingProsessEventDto
     ) {
-
         val event = håndterVaskeevent(eventInn)
         if (event == null) return
 
