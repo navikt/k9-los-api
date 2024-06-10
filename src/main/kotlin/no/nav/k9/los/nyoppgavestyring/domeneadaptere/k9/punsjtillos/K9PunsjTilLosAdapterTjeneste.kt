@@ -1,10 +1,12 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos
 
+import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.PunsjEventK9Repository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
@@ -72,7 +74,9 @@ class K9PunsjTilLosAdapterTjeneste(
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
 
                 if (oppgave != null) {
-                    //annullerReservasjoner hvis oppgave avsluttet.. andre tilfeller?
+                    annullerReservasjonHvisAvsluttet(oppgave, tx)
+                    // Flere tilfeller som skal håndteres her?
+
                     eventTeller++
                 }
 
@@ -82,5 +86,25 @@ class K9PunsjTilLosAdapterTjeneste(
         }
 
         return eventTeller
+    }
+
+    private fun annullerReservasjonHvisAvsluttet(
+        oppgave: OppgaveV3,
+        tx: TransactionalSession
+    ) {
+        if (oppgave.status == Oppgavestatus.LUKKET) {
+            reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(
+                oppgave.reservasjonsnøkkel,
+                "Maskinelt annullert reservasjon, siden oppgave på reservasjonen er avsluttet",
+                null,
+                tx
+            )
+        }
+    }
+
+    private fun loggFremgangForHver100(teller: Long, tekst: String) {
+        if (teller.mod(100) == 0) {
+            log.info(tekst)
+        }
     }
 }

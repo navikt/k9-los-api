@@ -37,7 +37,7 @@ class EventTilDtoMapper {
         }
 
         fun utledReservasjonsnøkkel(event: PunsjEventDto): String {
-            return "K9_p_${event.eksternId.toString()}"
+            return "K9_p_${event.eksternId}"
         }
 
 
