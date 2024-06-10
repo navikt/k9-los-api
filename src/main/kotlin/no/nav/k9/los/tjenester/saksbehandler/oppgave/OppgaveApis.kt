@@ -7,6 +7,7 @@ import io.ktor.server.locations.post
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.abac.IPepClient
@@ -16,6 +17,7 @@ import no.nav.k9.los.integrasjon.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.FinnerIkkeDataException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ManglerTilgangException
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
+import okhttp3.internal.immutableListOf
 import org.koin.ktor.ext.inject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -74,7 +76,10 @@ internal fun Route.OppgaveApis() {
                 call.respond(reservasjonV3Dtos)
             } else {
                 log.info("Innlogger bruker med brukernavn $innloggetBrukernavn finnes ikke i saksbehandlertabellen")
-                call.respond(HttpStatusCode.InternalServerError, "Innlogger bruker med brukernavn $innloggetBrukernavn finnes ikke i saksbehandlertabellen")
+                call.respond(
+                    HttpStatusCode.InternalServerError,
+                    "Innlogger bruker med brukernavn $innloggetBrukernavn finnes ikke i saksbehandlertabellen"
+                )
             }
         }
     }
@@ -121,7 +126,7 @@ internal fun Route.OppgaveApis() {
                 oppgaveApisTjeneste.annullerReservasjoner(params, innloggetBruker)
                 call.respond(HttpStatusCode.OK) //TODO: Hva er evt meningsfullt å returnere her?
             } catch (e: FinnerIkkeDataException) {
-                call.respond(HttpStatusCode.NotFound,"Fant ingen aktiv reservasjon for angitte reservasjonsnøkler")
+                call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitte reservasjonsnøkler")
             }
         }
     }
@@ -225,7 +230,7 @@ internal fun Route.OppgaveApis() {
             val oppgave = oppgaveRepository.hent(UUID.fromString(oppgavenøkkel.oppgaveEksternId))
             val person = pdlService.person(oppgave.aktorId).person!!
             val behandletOppgave = BehandletOppgave(oppgave, person)
-            
+
             call.respond(
                 oppgaveTjeneste.leggTilBehandletOppgave(
                     coroutineContext.idToken().getUsername(),
@@ -247,13 +252,17 @@ internal fun Route.OppgaveApis() {
     class getAlleSaksbehandlere
     get { _: getAlleSaksbehandlere ->
         requestContextService.withRequestContext(call) {
-            val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere()
-            val saksbehandlerDtoListe =
-                alleSaksbehandlere.filter { saksbehandler -> !saksbehandler.navn.isNullOrBlank() && !saksbehandler.brukerIdent.isNullOrBlank() }
-                    .map { saksbehandler ->
-                        SaksbehandlerDto(saksbehandler.brukerIdent!!, saksbehandler.navn!!)
-                    }
-            call.respond(saksbehandlerDtoListe)
+            if (pepClient.harBasisTilgang()) {
+                val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere()
+                val saksbehandlerDtoListe =
+                    alleSaksbehandlere.filter { saksbehandler -> !saksbehandler.navn.isNullOrBlank() && !saksbehandler.brukerIdent.isNullOrBlank() }
+                        .map { saksbehandler ->
+                            SaksbehandlerDto(saksbehandler.brukerIdent!!, saksbehandler.navn!!)
+                        }
+                call.respond(saksbehandlerDtoListe)
+            } else {
+                call.respond(emptyList<SaksbehandlerDto>())
+            }
         }
     }
 
