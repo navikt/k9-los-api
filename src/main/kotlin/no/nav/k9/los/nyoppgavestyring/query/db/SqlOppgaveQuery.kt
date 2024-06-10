@@ -115,8 +115,8 @@ class SqlOppgaveQuery(
             }
             "egenAnsatt" -> {
                 query += when(feltverdi) {
-                    EgenAnsatt.JA.kode -> "${combineOperator.sql} opc.egen_ansatt is true "
-                    EgenAnsatt.NEI.kode -> "${combineOperator.sql} opc.egen_ansatt is false "
+                    EgenAnsatt.JA.kode -> "${combineOperator.sql} opc.egen_ansatt is not false "
+                    EgenAnsatt.NEI.kode -> "${combineOperator.sql} opc.egen_ansatt is not true "
                     else -> throw IllegalStateException("Ukjent feltkode: $feltkode")
                 }
             }
