@@ -243,17 +243,17 @@ internal fun Route.OppgaveApis() {
         }
     }
 
-    @Location("/flytt/sok")
-    class søkSaksbehandler
-    post { _: søkSaksbehandler ->
+    @Location("/saksbehandlere")
+    class getAlleSaksbehandlere
+    get { _: getAlleSaksbehandlere ->
         requestContextService.withRequestContext(call) {
-            val params = call.receive<BrukerIdentDto>()
-            val sokSaksbehandlerMedIdent = oppgaveTjeneste.sokSaksbehandler(params.brukerIdent)
-            if (sokSaksbehandlerMedIdent == null) {
-                call.respond("")
-            } else {
-                call.respond(sokSaksbehandlerMedIdent)
-            }
+            val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere()
+            val saksbehandlerDtoListe =
+                alleSaksbehandlere.filter { saksbehandler -> !saksbehandler.navn.isNullOrBlank() && !saksbehandler.brukerIdent.isNullOrBlank() }
+                    .map { saksbehandler ->
+                        SaksbehandlerDto(saksbehandler.brukerIdent!!, saksbehandler.navn!!)
+                    }
+            call.respond(saksbehandlerDtoListe)
         }
     }
 
