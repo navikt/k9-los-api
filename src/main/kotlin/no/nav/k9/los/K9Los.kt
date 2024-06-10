@@ -232,7 +232,7 @@ fun Application.k9Los() {
     ).kjør(kjørSetup = false, kjørUmiddelbart = false)
 
     K9PunsjTilLosAdapterTjeneste(
-        behandlingProsessEventK9Repository = koin.get(),
+        eventRepository = koin.get(),
         oppgavetypeTjeneste = koin.get(),
         oppgaveV3Tjeneste = koin.get(),
         config = koin.get(),

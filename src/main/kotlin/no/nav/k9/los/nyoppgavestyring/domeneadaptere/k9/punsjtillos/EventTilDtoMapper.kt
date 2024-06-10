@@ -1,11 +1,11 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos
 
-import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStatus
-import no.nav.k9.kodeverk.behandling.BehandlingÅrsakType
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.*
+import no.nav.k9.los.domene.modell.BehandlingType
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
+import no.nav.k9.los.integrasjon.kafka.dto.PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
@@ -15,207 +15,87 @@ import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 class EventTilDtoMapper {
     companion object {
 
-        fun lagOppgaveDto(event: BehandlingProsessEventDto, forrigeOppgave: OppgaveV3?) =
-            OppgaveDto(
+        fun lagOppgaveDto(event: PunsjEventDto, forrigeOppgave: OppgaveV3?): OppgaveDto {
+            return OppgaveDto(
                 id = event.eksternId.toString(),
                 versjon = event.eventTid.toString(),
                 område = "K9",
                 kildeområde = "K9",
                 type = "k9punsj",
-                status = if (event.aksjonspunktTilstander.any { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.status.erÅpentAksjonspunkt() }) {
-                    if (oppgaveSkalHaVentestatus(event)) {
-                        Oppgavestatus.VENTER.kode
-                    } else {
-                        Oppgavestatus.AAPEN.kode
-                    }
+                status =
+                if (event.sendtInn == true) {
+                    Oppgavestatus.LUKKET.kode
+                } else if (oppgaveSkalHaVentestatus(event)) {
+                    Oppgavestatus.VENTER.kode
                 } else {
-                    if (event.behandlingStatus != BehandlingStatus.AVSLUTTET.kode && event.behandlingStatus != BehandlingStatus.IVERKSETTER_VEDTAK.kode) {
-                        Oppgavestatus.AAPEN.kode
-                    } else {
-                        Oppgavestatus.LUKKET.kode
-                    }
+                    Oppgavestatus.AAPEN.kode
                 },
                 endretTidspunkt = event.eventTid,
-                reservasjonsnøkkel = utledReservasjonsnøkkel(event, erTilBeslutter(event)),
+                reservasjonsnøkkel = utledReservasjonsnøkkel(event),
                 feltverdier = lagFeltverdier(event, forrigeOppgave)
             )
-
-        fun utledReservasjonsnøkkel(event: BehandlingProsessEventDto, erTilBeslutter: Boolean): String {
-            return when (FagsakYtelseType.fraKode(event.ytelseTypeKode)) {
-                FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
-                FagsakYtelseType.PLEIEPENGER_NÆRSTÅENDE,
-                FagsakYtelseType.OMSORGSPENGER_KS,
-                FagsakYtelseType.OMSORGSPENGER_AO,
-                FagsakYtelseType.OPPLÆRINGSPENGER -> lagNøkkelPleietrengendeAktør(event, erTilBeslutter)
-                else -> lagNøkkelAktør(event, erTilBeslutter)
-            }
         }
 
-        private fun lagNøkkelPleietrengendeAktør(event: BehandlingProsessEventDto, tilBeslutter: Boolean): String {
-            return if (tilBeslutter)
-                "K9_b_${event.ytelseTypeKode}_${event.pleietrengendeAktørId}_beslutter"
-            else {
-                "K9_b_${event.ytelseTypeKode}_${event.pleietrengendeAktørId}"
-            }
+        fun utledReservasjonsnøkkel(event: PunsjEventDto): String {
+            return "K9_p_${event.eksternId.toString()}"
         }
 
-        private fun lagNøkkelAktør(event: BehandlingProsessEventDto, tilBeslutter: Boolean): String {
-            return if (tilBeslutter) {
-                "K9_b_${event.ytelseTypeKode}_${event.aktørId}_beslutter"
-            } else {
-                "K9_b_${event.ytelseTypeKode}_${event.aktørId}"
-            }
-        }
 
-        private fun erTilBeslutter(event: BehandlingProsessEventDto): Boolean {
-            return getåpneAksjonspunkter(event).firstOrNull { ap ->
-                ap.aksjonspunktKode.equals(AksjonspunktDefinisjon.FATTER_VEDTAK.kode)
-            } != null
-        }
-
-        private fun oppgaveSkalHaVentestatus(event: BehandlingProsessEventDto): Boolean {
-            val åpneAksjonspunkter = getåpneAksjonspunkter(event)
-
-            val ventetype = utledVentetype(event.behandlingSteg, event.behandlingStatus, åpneAksjonspunkter)
-            return ventetype != Ventekategori.AVVENTER_SAKSBEHANDLER
+        private fun oppgaveSkalHaVentestatus(event: PunsjEventDto): Boolean {
+            return event.aksjonspunktKoderMedStatusListe.filter { entry -> entry.value == AksjonspunktStatus.OPPRETTET.kode }
+                .containsKey("MER_INFORMASJON")
         }
 
         private fun lagFeltverdier(
-            event: BehandlingProsessEventDto,
+            event: PunsjEventDto,
             forrigeOppgave: OppgaveV3?
         ): List<OppgaveFeltverdiDto> {
-            val oppgaveFeltverdiDtos = mapEnkeltverdier(event, forrigeOppgave)
-
-            val åpneAksjonspunkter = getåpneAksjonspunkter(event)
-
-            utledAksjonspunkter(event, oppgaveFeltverdiDtos)
-            utledÅpneAksjonspunkter(event.behandlingSteg, åpneAksjonspunkter, oppgaveFeltverdiDtos)
-            utledVenteÅrsakOgFrist(åpneAksjonspunkter, oppgaveFeltverdiDtos)
-            utledSøknadsårsaker(event, oppgaveFeltverdiDtos)
-            utledBehandlingsårsaker(event, oppgaveFeltverdiDtos)
-            oppgaveFeltverdiDtos.addAll(
-                ventekategoriTilFlagg(
-                    utledVentetype(
-                        event.behandlingSteg,
-                        event.behandlingStatus,
-                        åpneAksjonspunkter
+            return listOfNotNull(
+                event.aktørId?.let {
+                    OppgaveFeltverdiDto(
+                        nøkkel = "aktorId",
+                        verdi = it.toString(),
                     )
-                )
+                },
+                event.pleietrengendeAktørId?.let {
+                    OppgaveFeltverdiDto(
+                        nøkkel = "pleietrengendeAktorId",
+                        verdi = it,
+                    )
+                },
+                event.type?.let {
+                    OppgaveFeltverdiDto(
+                        nøkkel = "behandlingTypekode",
+                        verdi = BehandlingType.fraKode(it).kode,
+                    )
+                },
+                event.ytelse?.let {
+                    OppgaveFeltverdiDto(
+                        nøkkel = "ytelsestype",
+                        verdi = FagsakYtelseType.fraKode(event.ytelse).kode,
+                    )
+                },
+                event.ferdigstiltAv?.let {
+                    OppgaveFeltverdiDto(
+                        nøkkel = "ansvarligSaksbehandler",
+                        verdi = event.ferdigstiltAv,
+                    )
+                },
+                OppgaveFeltverdiDto(
+                    nøkkel = "journalfort",
+                    verdi = "false",
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "journalfortTidspunkt",
+                    verdi = "",
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "registrertDato",
+                    verdi = forrigeOppgave?.let { forrigeOppgave.hentVerdi("registrertDato") } ?: event.eventTid.toString(),
+                ),
             )
 
-            return oppgaveFeltverdiDtos
         }
-
-        private fun getåpneAksjonspunkter(event: BehandlingProsessEventDto) =
-            event.aksjonspunktTilstander.filter { aksjonspunktTilstand ->
-                aksjonspunktTilstand.status.erÅpentAksjonspunkt()
-            }
-
-        private fun mapEnkeltverdier(
-            event: BehandlingProsessEventDto,
-            forrigeOppgave: OppgaveV3?
-        ) = mutableListOf(
-            OppgaveFeltverdiDto(
-                nøkkel = "behandlingUuid",
-                verdi = event.eksternId.toString()
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "aktorId",
-                verdi = event.aktørId
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "fagsystem",
-                verdi = event.fagsystem.kode
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "saksnummer",
-                verdi = event.saksnummer
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "resultattype",
-                verdi = event.resultatType ?: BehandlingResultatType.IKKE_FASTSATT.kode
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "ytelsestype",
-                verdi = event.ytelseTypeKode
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "behandlingsstatus",
-                verdi = event.behandlingStatus ?: BehandlingStatus.UTREDES.kode
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "behandlingssteg",
-                verdi = event.behandlingSteg
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "behandlingTypekode",
-                verdi = event.behandlingTypeKode
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "relatertPartAktorid",
-                verdi = event.relatertPartAktørId
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "pleietrengendeAktorId",
-                verdi = event.pleietrengendeAktørId
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "ansvarligBeslutter",
-                verdi = event.ansvarligBeslutterForTotrinn ?: forrigeOppgave?.hentVerdi("ansvarligBeslutter")
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "ansvarligSaksbehandler",
-                verdi = event.ansvarligSaksbehandlerForTotrinn
-                    ?: event.ansvarligSaksbehandlerIdent
-                    ?: forrigeOppgave?.hentVerdi("ansvarligSaksbehandler")
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "mottattDato",
-                verdi = event.eldsteDatoMedEndringFraSøker?.toString()
-                    ?: forrigeOppgave?.hentVerdi("mottattDato")
-                    ?: forrigeOppgave?.hentVerdi("registrertDato")
-                    ?: event.opprettetBehandling.toString()
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "registrertDato",
-                verdi = forrigeOppgave?.hentVerdi("registrertDato") ?: event.opprettetBehandling.toString()
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "vedtaksdato",
-                verdi = event.vedtaksdato?.toString() ?: forrigeOppgave?.hentVerdi("vedtaksdato")
-            ),
-            event.nyeKrav?.let {
-                OppgaveFeltverdiDto(
-                    nøkkel = "nyeKrav",
-                    verdi = event.nyeKrav.toString()
-                )
-            },
-            event.fraEndringsdialog?.let {
-                OppgaveFeltverdiDto(
-                    nøkkel = "fraEndringsdialog",
-                    verdi = event.fraEndringsdialog.toString()
-                )
-            },
-            OppgaveFeltverdiDto(
-                nøkkel = "totrinnskontroll",
-                verdi = event.aksjonspunktTilstander.filter { aksjonspunktTilstandDto ->
-                    aksjonspunktTilstandDto.aksjonspunktKode.equals("5015") && aksjonspunktTilstandDto.status !in (listOf(
-                        AksjonspunktStatus.AVBRUTT
-                    ))
-                }.isNotEmpty().toString()
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "utenlandstilsnitt",
-                verdi = event.aksjonspunktTilstander
-                    .filter { aksjonspunktTilstandDto ->
-                        aksjonspunktTilstandDto.status != AksjonspunktStatus.AVBRUTT
-                    }
-                    .any { aksjonspunktTilstandDto ->
-                        aksjonspunktTilstandDto.aksjonspunktKode == AksjonspunktKodeDefinisjon.AUTOMATISK_MARKERING_AV_UTENLANDSSAK_KODE
-                            || aksjonspunktTilstandDto.aksjonspunktKode == AksjonspunktKodeDefinisjon.MANUELL_MARKERING_AV_UTLAND_SAKSTYPE_KODE
-                    }.toString()
-            )
-        ).filterNotNull().toMutableList()
 
         internal fun utledVentetype(
             behandlingSteg: String?,
@@ -327,159 +207,6 @@ class EventTilDtoMapper {
             }
 
             return oppgavefelter
-        }
-
-        private fun utledAutomatiskBehandletFlagg(
-            forrigeOppgave: OppgaveV3?,
-            oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>,
-            harManueltAksjonspunkt: Boolean
-        ) {
-            if (forrigeOppgave != null && forrigeOppgave.hentVerdi("helautomatiskBehandlet").toBoolean().not()) {
-                oppgaveFeltverdiDtos.add(
-                    OppgaveFeltverdiDto(
-                        nøkkel = "helautomatiskBehandlet",
-                        verdi = false.toString()
-                    )
-                )
-            } else {
-                oppgaveFeltverdiDtos.add(
-                    OppgaveFeltverdiDto(
-                        nøkkel = "helautomatiskBehandlet",
-                        verdi = if (harManueltAksjonspunkt) false.toString() else true.toString()
-                    )
-                )
-            }
-        }
-
-        private fun utledÅpneAksjonspunkter(
-            behandlingSteg: String?,
-            åpneAksjonspunkter: List<AksjonspunktTilstandDto>,
-            oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
-        ) {
-            if (åpneAksjonspunkter.isNotEmpty()) {
-                åpneAksjonspunkter.map { åpentAksjonspunkt ->
-                    oppgaveFeltverdiDtos.add(
-                        OppgaveFeltverdiDto(
-                            nøkkel = "aktivtAksjonspunkt",
-                            verdi = åpentAksjonspunkt.aksjonspunktKode
-                        )
-                    )
-                }
-                if (behandlingSteg != null) {
-                    åpneAksjonspunkter.firstOrNull { åpentAksjonspunkt ->
-                        val aksjonspunktDefinisjon = AksjonspunktDefinisjon.fraKode(åpentAksjonspunkt.aksjonspunktKode)
-                        !aksjonspunktDefinisjon.erAutopunkt() && aksjonspunktDefinisjon.behandlingSteg != null && aksjonspunktDefinisjon.behandlingSteg.kode == behandlingSteg
-                    }?.let {
-                        oppgaveFeltverdiDtos.add(
-                            OppgaveFeltverdiDto(
-                                nøkkel = "løsbartAksjonspunkt",
-                                verdi = it.aksjonspunktKode
-                            )
-                        )
-                    }
-                }
-            } else {
-                oppgaveFeltverdiDtos.add(
-                    OppgaveFeltverdiDto(
-                        nøkkel = "aktivtAksjonspunkt",
-                        verdi = null
-                    )
-                )
-            }
-        }
-
-        private fun utledVenteÅrsakOgFrist(
-            åpneAksjonspunkter: List<AksjonspunktTilstandDto>,
-            oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
-        ) {
-            if (åpneAksjonspunkter.isNotEmpty()) {
-                åpneAksjonspunkter
-                    .filter { aksjonspunktTilstandDto ->
-                        (aksjonspunktTilstandDto.venteårsak != Venteårsak.UDEFINERT &&
-                                aksjonspunktTilstandDto.venteårsak != null)
-                            && aksjonspunktTilstandDto.status == AksjonspunktStatus.OPPRETTET
-                    }
-                    .singleOrNull { aksjonspunktTilstandDto ->
-                        oppgaveFeltverdiDtos.add(
-                            OppgaveFeltverdiDto(
-                                nøkkel = "aktivVenteårsak",
-                                verdi = aksjonspunktTilstandDto.venteårsak.kode.toString()
-                            )
-                        )
-                        oppgaveFeltverdiDtos.add(
-                            OppgaveFeltverdiDto(
-                                nøkkel = "aktivVentefrist",
-                                verdi = aksjonspunktTilstandDto.fristTid.toString()
-                            )
-                        )
-                    }
-            }
-        }
-
-        private fun utledSøknadsårsaker(
-            event: BehandlingProsessEventDto,
-            oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
-        ) {
-            if (event.søknadsårsaker.isNotEmpty()) {
-                oppgaveFeltverdiDtos.addAll(event.søknadsårsaker.map { søknadsårsak ->
-                    OppgaveFeltverdiDto(
-                        nøkkel = "søknadsårsak",
-                        verdi = søknadsårsak
-                    )
-                })
-            } else {
-                oppgaveFeltverdiDtos.add(
-                    OppgaveFeltverdiDto(
-                        nøkkel = "søknadsårsak",
-                        verdi = null
-                    )
-                )
-            }
-        }
-
-        private fun utledBehandlingsårsaker(
-            event: BehandlingProsessEventDto,
-            oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
-        ) {
-            val filtrert = event.behandlingsårsaker.filterNot { behandlingsårsak ->
-                behandlingsårsak == BehandlingÅrsakType.UDEFINERT.toString()
-            }
-            if (filtrert.isNotEmpty()) {
-                oppgaveFeltverdiDtos.addAll(filtrert.map { behandlingsårsak ->
-                    OppgaveFeltverdiDto(
-                        nøkkel = "behandlingsårsak",
-                        verdi = behandlingsårsak
-                    )
-                })
-            } else {
-                oppgaveFeltverdiDtos.add(
-                    OppgaveFeltverdiDto(
-                        nøkkel = "behandlingsårsak",
-                        verdi = null
-                    )
-                )
-            }
-        }
-
-        private fun utledAksjonspunkter(
-            event: BehandlingProsessEventDto,
-            oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
-        ) {
-            if (event.aksjonspunktTilstander.isNotEmpty()) {
-                oppgaveFeltverdiDtos.addAll(event.aksjonspunktTilstander.map { aksjonspunktTilstand ->
-                    OppgaveFeltverdiDto(
-                        nøkkel = "aksjonspunkt",
-                        verdi = aksjonspunktTilstand.aksjonspunktKode
-                    )
-                })
-            } else {
-                oppgaveFeltverdiDtos.add(
-                    OppgaveFeltverdiDto(
-                        nøkkel = "aksjonspunkt",
-                        verdi = null
-                    )
-                )
-            }
         }
     }
 }

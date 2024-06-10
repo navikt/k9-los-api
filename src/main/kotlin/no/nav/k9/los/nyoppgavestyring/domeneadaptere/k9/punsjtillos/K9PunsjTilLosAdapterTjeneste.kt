@@ -2,17 +2,19 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos
 
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
+import no.nav.k9.los.domene.repository.PunsjEventK9Repository
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.util.*
 import kotlin.concurrent.thread
 
 class K9PunsjTilLosAdapterTjeneste(
-    private val behandlingProsessEventK9Repository: BehandlingProsessEventK9Repository,
+    private val eventRepository: PunsjEventK9Repository,
     private val oppgavetypeTjeneste: OppgavetypeTjeneste,
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
     private val oppgaveRepository: OppgaveRepository,
@@ -39,13 +41,13 @@ class K9PunsjTilLosAdapterTjeneste(
         log.info("Starter avspilling av BehandlingProsessEventer")
         val tidKjøringStartet = System.currentTimeMillis()
 
-        val behandlingsIder = behandlingProsessEventK9Repository.hentAlleDirtyEventIder()
+        val behandlingsIder = eventRepository.hentAlleDirtyEventIder()
         log.info("Fant ${behandlingsIder.size} behandlinger")
 
         var behandlingTeller: Long = 0
         var eventTeller: Long = 0
         behandlingsIder.forEach { uuid ->
-            eventTeller = oppdaterOppgaveForBehandlingUuid(uuid, eventTeller)
+            eventTeller = oppdaterOppgaveForEksternId(uuid, eventTeller)
             behandlingTeller++
             loggFremgangForHver100(behandlingTeller, "Forsert $behandlingTeller behandlinger")
         }
@@ -59,4 +61,26 @@ class K9PunsjTilLosAdapterTjeneste(
         log.info("Avspilling av BehandlingProsessEventer ferdig")
     }
 
+    fun oppdaterOppgaveForEksternId(uuid: UUID, eventTellerInn: Long): Long {
+        var eventTeller = eventTellerInn
+        var forrigeOppgaveversjon: OppgaveV3? = null
+
+        transactionalManager.transaction { tx ->
+            val punsjEventer = eventRepository.hentMedLås(tx, uuid)
+            for (event in punsjEventer.eventer) {
+                val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgaveversjon)
+                val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
+
+                if (oppgave != null) {
+                    //annullerReservasjoner hvis oppgave avsluttet.. andre tilfeller?
+                    eventTeller++
+                }
+
+                forrigeOppgaveversjon = oppgave
+            }
+            eventRepository.fjernDirty(uuid, tx)
+        }
+
+        return eventTeller
+    }
 }
