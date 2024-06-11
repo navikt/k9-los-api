@@ -109,11 +109,7 @@ class K9SakTilLosAdapterTjeneste(
         log.info("Avspilling av BehandlingProsessEventer ferdig")
     }
 
-    fun oppdaterOppgaveForBehandlingUuid(uuid: UUID) {
-        oppdaterOppgaveForBehandlingUuid(uuid, 0L)
-    }
-
-    private fun oppdaterOppgaveForBehandlingUuid(uuid: UUID, eventTellerInn: Long): Long {
+    fun oppdaterOppgaveForBehandlingUuid(uuid: UUID, eventTellerInn: Long = 0): Long {
         var eventTeller = eventTellerInn
         var forrigeOppgave: OppgaveV3? = null
         var korrigerFeilRekkefølge = false
