@@ -180,7 +180,7 @@ class PunsjEventK9Repository(private val dataSource: DataSource) {
                     queryOf(
                         """
                             select count(*) as antall
-                            from behandling_prosess_events_k9 e
+                            from behandling_prosess_events_k9_punsj e
                             where not exists (select * from behandling_prosess_events_k9_punsj_historikkvask_ferdig hv where hv.id = e.id)
                              """.trimMargin(),
                     ).map { it.long("antall") }.asSingle
@@ -196,7 +196,7 @@ class PunsjEventK9Repository(private val dataSource: DataSource) {
                     queryOf(
                         """
                             select * 
-                            from behandling_prosess_events_k9 e
+                            from behandling_prosess_events_k9_punsj e
                             where not exists (select * from behandling_prosess_events_k9_punsj_historikkvask_ferdig hv where hv.id = e.id)
                             LIMIT :antall
                              """.trimMargin(),
