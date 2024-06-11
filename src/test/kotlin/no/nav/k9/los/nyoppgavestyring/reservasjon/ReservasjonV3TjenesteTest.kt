@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.mottak.reservasjon
+package no.nav.k9.los.nyoppgavestyring.reservasjon
 
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
