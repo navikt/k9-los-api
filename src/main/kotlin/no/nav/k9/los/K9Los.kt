@@ -238,7 +238,8 @@ fun Application.k9Los() {
         config = koin.get(),
         transactionalManager = koin.get(),
         oppgaveRepository = koin.get(),
-        reservasjonV3Tjeneste = koin.get()
+        reservasjonV3Tjeneste = koin.get(),
+        pepCacheService = koin.get()
     ).kjør(kjørSetup = false, kjørUmiddelbart = false)
 
     OppgavestatistikkTjeneste(

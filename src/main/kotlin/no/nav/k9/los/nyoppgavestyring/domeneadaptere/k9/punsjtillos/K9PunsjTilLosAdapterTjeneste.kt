@@ -8,6 +8,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
+import no.nav.k9.los.nyoppgavestyring.pep.PepCacheService
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.slf4j.Logger
@@ -23,6 +24,7 @@ class K9PunsjTilLosAdapterTjeneste(
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
     private val config: Configuration,
     private val transactionalManager: TransactionalManager,
+    private val pepCacheService: PepCacheService,
 ) {
     private val log: Logger = LoggerFactory.getLogger(K9PunsjTilLosAdapterTjeneste::class.java)
     private val TRÅDNAVN = "k9-punsj-til-los"
@@ -63,7 +65,7 @@ class K9PunsjTilLosAdapterTjeneste(
         log.info("Avspilling av BehandlingProsessEventer ferdig")
     }
 
-    fun oppdaterOppgaveForEksternId(uuid: UUID, eventTellerInn: Long): Long {
+    fun oppdaterOppgaveForEksternId(uuid: UUID, eventTellerInn: Long = 0): Long {
         var eventTeller = eventTellerInn
         var forrigeOppgaveversjon: OppgaveV3? = null
 
@@ -74,7 +76,9 @@ class K9PunsjTilLosAdapterTjeneste(
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
 
                 if (oppgave != null) {
-                    annullerReservasjonHvisAvsluttet(oppgave, tx)
+                    pepCacheService.oppdater(tx, oppgave.kildeområde, oppgave.eksternId)
+
+                    annullerReservasjonHvisPåVentEllerAvsluttet(oppgave, tx)
                     // Flere tilfeller som skal håndteres her?
 
                     eventTeller++
@@ -88,14 +92,14 @@ class K9PunsjTilLosAdapterTjeneste(
         return eventTeller
     }
 
-    private fun annullerReservasjonHvisAvsluttet(
+    private fun annullerReservasjonHvisPåVentEllerAvsluttet(
         oppgave: OppgaveV3,
         tx: TransactionalSession
     ) {
-        if (oppgave.status == Oppgavestatus.LUKKET) {
+        if (oppgave.status == Oppgavestatus.LUKKET || oppgave.status == Oppgavestatus.VENTER) {
             reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(
                 oppgave.reservasjonsnøkkel,
-                "Maskinelt annullert reservasjon, siden oppgave på reservasjonen er avsluttet",
+                "Maskinelt annullert reservasjon, siden oppgave på reservasjonen er avsluttet eller på vent",
                 null,
                 tx
             )
