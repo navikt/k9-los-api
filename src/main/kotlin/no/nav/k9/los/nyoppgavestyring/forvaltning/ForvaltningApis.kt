@@ -13,7 +13,9 @@ import no.nav.k9.los.domene.repository.BehandlingProsessEventKlageRepository
 import no.nav.k9.los.domene.repository.BehandlingProsessEventTilbakeRepository
 import no.nav.k9.los.domene.repository.PunsjEventK9Repository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
+import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
@@ -29,6 +31,8 @@ fun Route.forvaltningApis() {
     val k9PunsjEventK9Repository by inject<PunsjEventK9Repository>()
     val oppgaveRepositoryTxWrapper by inject<OppgaveRepositoryTxWrapper>()
     val oppgaveTypeRepository by inject<OppgavetypeRepository>()
+    val oppgaveKoTjeneste by inject<OppgaveKoTjeneste>()
+    val oppgaveQueryService by inject<OppgaveQueryService>()
     val k9SakTilLosHistorikkvaskTjeneste by inject<K9SakTilLosHistorikkvaskTjeneste>()
     val reservasjonV3Repository by inject<ReservasjonV3Repository>()
     val objectMapper = LosObjectMapper.prettyInstance
@@ -175,6 +179,19 @@ fun Route.forvaltningApis() {
 
         val reservasjonerSamlet = (reservasjonerOrdinær + reservasjonerBeslutter).sortedBy { it.reservasjonOpprettet }
         call.respond(objectMapper.writeValueAsString(reservasjonerSamlet))
+    }
+
+    route("/ytelse") {
+        get("/oppgaveoversikt") {
+            val antall = oppgaveKoTjeneste.hentOppgavekøerMedAntall().size
+            call.respond(antall)
+        }
+
+        get("/oppgaveko/{ko}/antall") {
+            val antall = call.parameters["ko"]!!.toLong()
+            val resultat = oppgaveKoTjeneste.hentAntallUreserverteOppgaveForKø(antall)
+            call.respond(if (resultat > 10) resultat else -1)
+        }
     }
 
 }
