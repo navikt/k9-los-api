@@ -94,16 +94,16 @@ class OppgaveApisTjeneste(
     }
 
     suspend fun endreReservasjoner(
-        reservasjonEndringDto: ReservasjonEndringDto,
+        reservasjonEndringDto: List<ReservasjonEndringDto>,
         innloggetBruker: Saksbehandler
     ) {
-        reservasjonEndringDto.oppgaveNøkkel.forEach { oppgaveNøkkel ->
+        reservasjonEndringDto.forEach {
             endreReservasjon(
                 innloggetBruker,
-                oppgaveNøkkel,
-                reservasjonEndringDto.brukerIdent,
-                reservasjonEndringDto.reserverTil,
-                reservasjonEndringDto.begrunnelse
+                it.oppgaveNøkkel,
+                it.brukerIdent,
+                it.reserverTil,
+                it.begrunnelse
             )
         }
     }
@@ -212,11 +212,13 @@ class OppgaveApisTjeneste(
     private suspend fun annullerReservasjon(
         innloggetBruker: Saksbehandler,
         oppgaveNøkkelDto: OppgaveNøkkelDto,
-        begrunnelse: String
     ) {
         // Fjernes når V1 skal vekk
         try {
-            oppgaveTjeneste.frigiReservasjon(UUID.fromString(oppgaveNøkkelDto.oppgaveEksternId), begrunnelse)
+            oppgaveTjeneste.frigiReservasjon(
+                uuid = UUID.fromString(oppgaveNøkkelDto.oppgaveEksternId),
+                begrunnelse = ""
+            )
         } catch (e: NullPointerException) {
             //ReservasjonV1 annullerer noen reservasjoner som V3 ikke annullerer, og da kan det hende at det ikke finnes
             //noen V1-reservasjon å endre på
@@ -225,22 +227,21 @@ class OppgaveApisTjeneste(
         val reservasjonsnøkkel = reservasjonOversetter.hentReservasjonsnøkkelForOppgavenøkkel(oppgaveNøkkelDto)
 
         val annulleringUtført = reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(
-            reservasjonsnøkkel,
-            begrunnelse,
-            innloggetBruker.id!!
+            reservasjonsnøkkel = reservasjonsnøkkel,
+            kommentar = "",
+            annullertAvBrukerId = innloggetBruker.id!!
         )
         log.info("annullerReservasjon: ${oppgaveNøkkelDto.oppgaveEksternId}, utførtAv: $innloggetBruker, $annulleringUtført")
     }
 
     suspend fun annullerReservasjoner(
-        params: AnnullerReservasjoner,
+        params: List<AnnullerReservasjon>,
         innloggetBruker: Saksbehandler
     ) {
-        params.oppgaveNøkkel.forEach { oppgaveNøkkel ->
+        params.forEach {
             annullerReservasjon(
                 innloggetBruker,
-                oppgaveNøkkel,
-                params.begrunnelse
+                it.oppgaveNøkkel,
             )
         }
     }

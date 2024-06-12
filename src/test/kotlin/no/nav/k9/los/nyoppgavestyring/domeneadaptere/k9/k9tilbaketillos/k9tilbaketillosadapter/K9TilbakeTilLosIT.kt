@@ -273,9 +273,9 @@ class K9TilbakeTilLosIT : AbstractK9LosIntegrationTest() {
         runBlocking {
             oppgaveApisTjeneste.hentReserverteOppgaverForSaksbehandler(saksbehandler).forEach { reservasjon ->
 
-                val params = AnnullerReservasjoner(
-                    setOf(reservasjon.reservertOppgaveV1Dto?.oppgaveNøkkel
-                        ?: reservasjon.reserverteV3Oppgaver.first().oppgaveNøkkel), "begrunnelsen")
+                val params =
+                    listOf(AnnullerReservasjon(reservasjon.reservertOppgaveV1Dto?.oppgaveNøkkel
+                        ?: reservasjon.reserverteV3Oppgaver.first().oppgaveNøkkel))
 
                 oppgaveApisTjeneste.annullerReservasjoner(params, saksbehandler)
             }
@@ -306,12 +306,12 @@ class K9TilbakeTilLosIT : AbstractK9LosIntegrationTest() {
 
         runBlocking {
             oppgaveApisTjeneste.endreReservasjoner(
-                ReservasjonEndringDto(
-                    nøkler.toSet(),
+                nøkler.map { ReservasjonEndringDto(
+                    it,
                     saksbehandler.brukerIdent,
                     tilDato,
                     "begrunnelse",
-                ), saksbehandler
+                )}, saksbehandler
             )
         }
     }
