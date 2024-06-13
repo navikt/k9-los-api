@@ -81,7 +81,7 @@ class OppgaveApisTjeneste(
                     reserverForId = reserverForSaksbehandler.id!!,
                     gyldigFra = reserverFra,
                     utføresAvId = innloggetBruker.id!!,
-                    kommentar = oppgaveIdMedOverstyringDto.overstyrBegrunnelse ?: "",
+                    kommentar = oppgaveIdMedOverstyringDto.overstyrBegrunnelse,
                     gyldigTil = reserverFra.leggTilDagerHoppOverHelg(2),
                     tx = tx
                 )
@@ -228,7 +228,7 @@ class OppgaveApisTjeneste(
 
         val annulleringUtført = reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(
             reservasjonsnøkkel = reservasjonsnøkkel,
-            kommentar = "",
+            null,
             annullertAvBrukerId = innloggetBruker.id!!
         )
         log.info("annullerReservasjon: ${oppgaveNøkkelDto.oppgaveEksternId}, utførtAv: $innloggetBruker, $annulleringUtført")

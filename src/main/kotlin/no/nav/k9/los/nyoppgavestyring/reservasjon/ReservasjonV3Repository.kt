@@ -78,7 +78,7 @@ class ReservasjonV3Repository(
 
     fun annullerAktivReservasjonOgLagreEndring(
         aktivReservasjon: ReservasjonV3,
-        kommentar: String,
+        kommentar: String?,
         annullertAvBrukerId: Long?,
         tx: TransactionalSession
     ) {
@@ -99,7 +99,7 @@ class ReservasjonV3Repository(
         aktivReservasjon: ReservasjonV3,
         endretAvBrukerId: Long,
         nyTildato: LocalDateTime,
-        kommentar: String,
+        kommentar: String?,
         tx: TransactionalSession
     ): ReservasjonV3 {
         val annullertReservasjonId = annullerAktivReservasjon(aktivReservasjon, kommentar, tx)!!
@@ -160,7 +160,7 @@ class ReservasjonV3Repository(
 
     private fun annullerAktivReservasjon(
         aktivReservasjon: ReservasjonV3,
-        kommentar: String,
+        kommentar: String?,
         tx: TransactionalSession
     ): Long? {
         return tx.updateAndReturnGeneratedKey(
