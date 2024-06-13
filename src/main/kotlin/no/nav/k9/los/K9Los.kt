@@ -67,6 +67,7 @@ import no.nav.k9.los.tjenester.innsikt.innsiktGrensesnitt
 import no.nav.k9.los.tjenester.kodeverk.KodeverkApis
 import no.nav.k9.los.tjenester.konfig.KonfigApis
 import no.nav.k9.los.tjenester.mock.MockGrensesnitt
+import no.nav.k9.los.tjenester.mock.initMock
 import no.nav.k9.los.tjenester.saksbehandler.NavAnsattApis
 import no.nav.k9.los.tjenester.saksbehandler.merknad.MerknadApi
 import no.nav.k9.los.tjenester.saksbehandler.nokkeltall.SaksbehandlerNøkkeltallApis
@@ -287,6 +288,7 @@ fun Application.k9Los() {
         )
 
         if ((KoinProfile.LOCAL == koin.get<KoinProfile>())) {
+            initMock.initSaksbehandlere()
             api(sseChannel)
             route("mock") {
                 MockGrensesnitt()
@@ -373,5 +375,5 @@ private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
             route("k9klagetillos") { K9KlageTilLosApi() }
         }
     }
-    
+
 }
