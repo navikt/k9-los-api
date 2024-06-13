@@ -25,6 +25,7 @@ import no.nav.k9.los.utils.Cache
 import no.nav.k9.los.utils.CacheObject
 import no.nav.k9.los.utils.forskyvReservasjonsDato
 import no.nav.k9.los.utils.leggTilDagerHoppOverHelg
+import org.apache.commons.text.similarity.LevenshteinDistance
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
@@ -771,6 +772,53 @@ class OppgaveTjeneste constructor(
         merknad = hentAktivMerknad(oppgave.eksternId.toString())
     )
 
+    suspend fun sokSaksbehandler(søkestreng: String): Saksbehandler {
+        val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere()
+
+        fun levenshtein(lhs: CharSequence, rhs: CharSequence): Double {
+            return LevenshteinDistance().apply(lhs, rhs).toDouble()
+        }
+
+        var d = Double.MAX_VALUE
+        var i = -1
+        for ((index, saksbehandler) in alleSaksbehandlere.withIndex()) {
+            if (saksbehandler.brukerIdent == null) {
+                continue
+            }
+            if (saksbehandler.navn != null && saksbehandler.navn!!.lowercase(Locale.getDefault())
+                    .contains(søkestreng, true)
+            ) {
+                i = index
+                break
+            }
+
+            var distance = levenshtein(
+                søkestreng.lowercase(Locale.getDefault()),
+                saksbehandler.brukerIdent!!.lowercase(Locale.getDefault())
+            )
+            if (distance < d) {
+                d = distance
+                i = index
+            }
+            distance = levenshtein(
+                søkestreng.lowercase(Locale.getDefault()),
+                saksbehandler.navn?.lowercase(Locale.getDefault()) ?: ""
+            )
+            if (distance < d) {
+                d = distance
+                i = index
+            }
+            distance = levenshtein(
+                søkestreng.lowercase(Locale.getDefault()),
+                saksbehandler.epost.lowercase(Locale.getDefault())
+            )
+            if (distance < d) {
+                d = distance
+                i = index
+            }
+        }
+        return alleSaksbehandlere[i]
+    }
 
     suspend fun hentOppgaveKøer(): List<OppgaveKø> {
         return oppgaveKøRepository.hent()
