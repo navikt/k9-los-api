@@ -120,7 +120,11 @@ internal fun Route.OppgaveApis() {
             )!!
 
             try {
-                log.info("Opphever reservasjoner ${params.map { it.oppgaveNøkkel }.joinToString(", ")} (Gjort av ${innloggetBruker.brukerIdent})")
+                log.info(
+                    "Opphever reservasjoner ${
+                        params.map { it.oppgaveNøkkel }.joinToString(", ")
+                    } (Gjort av ${innloggetBruker.brukerIdent})"
+                )
                 oppgaveApisTjeneste.annullerReservasjoner(params, innloggetBruker)
                 call.respond(HttpStatusCode.OK) //TODO: Hva er evt meningsfullt å returnere her?
             } catch (e: FinnerIkkeDataException) {
@@ -243,6 +247,18 @@ internal fun Route.OppgaveApis() {
     get { _: getBehandledeOppgaver ->
         requestContextService.withRequestContext(call) {
             call.respond(oppgaveTjeneste.hentSisteBehandledeOppgaver())
+        }
+    }
+
+    @Location("/flytt/sok")
+    class søkSaksbehandler
+    post { _: søkSaksbehandler ->
+        val params = call.receive<BrukerIdentDto>()
+        val sokSaksbehandlerMedIdent = oppgaveTjeneste.sokSaksbehandler(params.brukerIdent)
+        if (sokSaksbehandlerMedIdent == null) {
+            call.respond("")
+        } else {
+            call.respond(sokSaksbehandlerMedIdent)
         }
     }
 
