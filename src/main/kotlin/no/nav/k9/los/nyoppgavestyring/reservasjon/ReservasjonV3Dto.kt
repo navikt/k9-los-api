@@ -25,7 +25,7 @@ data class ReservasjonV3Dto (
         reservertAvIdent = reservertAv.brukerIdent!!,
         reservertAvEpost = reservertAv.epost,
         reservertAvNavn = reservertAv.navn,
-        kommentar = reservasjonV3.kommentar,
+        kommentar = reservasjonV3.kommentar ?: "",
         reservertFra = reservasjonV3.gyldigFra,
         reservertTil = reservasjonV3.gyldigTil
     )
@@ -38,7 +38,7 @@ data class ReservasjonV3Dto (
         reservertAvIdent = reservertAv.brukerIdent!!,
         reservertAvEpost = reservertAv.epost,
         reservertAvNavn = reservertAv.navn,
-        kommentar = reservasjonV3.kommentar,
+        kommentar = reservasjonV3.kommentar ?: "",
         reservertFra = reservasjonV3.gyldigFra,
         reservertTil = reservasjonV3.gyldigTil
     )
