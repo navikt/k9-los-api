@@ -23,6 +23,7 @@ import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
+import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
@@ -64,7 +65,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         eventHandler.prosesser(opprettetUtenÅpneAksjonspunkter)
 
         val oppgaveQueryService = get<OppgaveQueryService>()
-        val antallIDb = oppgaveQueryService.queryForAntall(querySomKunInneholder(eksternId))
+        val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
         val antallIKø = oppgaveKøTjeneste.hentAntallUreserverteOppgaveForKø(kø.id)
@@ -80,7 +81,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         eventHandler.prosesser(opprettetUtenÅpneAksjonspunkter)
 
         val oppgaveQueryService = get<OppgaveQueryService>()
-        val antallIDb = oppgaveQueryService.queryForAntall(querySomKunInneholder(eksternId))
+        val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
         val antallIKø = oppgaveKøTjeneste.hentAntallUreserverteOppgaveForKø(kø.id)
@@ -124,7 +125,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         eventHandler.prosesser(opprettetUtenÅpneAksjonspunkter)
 
         val oppgaveQueryService = get<OppgaveQueryService>()
-        val antallIDb = oppgaveQueryService.queryForAntall(querySomKunInneholder(eksternId))
+        val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
         val antallIKø = oppgaveKøTjeneste.hentAntallUreserverteOppgaveForKø(kø.id)
@@ -146,7 +147,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         eventHandler.prosesser(BehandlingProsessEventDtoBuilder(eksternId).vurderSykdom().build())
 
         val oppgaveQueryService = get<OppgaveQueryService>()
-        val antallIDb = oppgaveQueryService.queryForAntall(querySomKunInneholder(eksternId))
+        val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
         val antallIKø = oppgaveKøTjeneste.hentAntallUreserverteOppgaveForKø(kø.id)
@@ -169,7 +170,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         eventHandler.prosesser(eventBuilder.opprettet().build())
 
         val oppgaveQueryService = get<OppgaveQueryService>()
-        val antallIDb = oppgaveQueryService.queryForAntall(querySomKunInneholder(eksternId))
+        val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
         val antallIKø = oppgaveKøTjeneste.hentAntallUreserverteOppgaveForKø(kø.id)

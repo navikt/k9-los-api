@@ -233,7 +233,7 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
         val sw = StringWriter()
         om.writeValue(sw, oppgaveQuery)
 
-        val result = oppgaveQueryRepository.query(oppgaveQuery)
+        val result = oppgaveQueryRepository.query(QueryRequest(oppgaveQuery))
         return result
     }
 }

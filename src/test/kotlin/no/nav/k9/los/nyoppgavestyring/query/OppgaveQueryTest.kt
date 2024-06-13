@@ -1,35 +1,31 @@
 package no.nav.k9.los.nyoppgavestyring.query
 
 import assertk.assertThat
-import assertk.assertions.isEmpty
-import assertk.assertions.isEqualTo
-import assertk.assertions.isNotNull
-import assertk.assertions.isNotEmpty
+import assertk.assertions.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.mockk.mockk
+import kotlinx.coroutines.runBlocking
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.domene.modell.Saksbehandler
+import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.pep.PepCache
 import no.nav.k9.los.nyoppgavestyring.pep.PepCacheRepository
 import no.nav.k9.los.nyoppgavestyring.pep.TestRepository
 import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
-import no.nav.k9.los.nyoppgavestyring.query.db.OmrådeOgKode
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
-import no.nav.k9.los.nyoppgavestyring.query.db.OppgavefeltMedMer
-import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
-import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgaveQueryToSqlMapper
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -73,7 +69,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         val json = sw.toString()
         om.readValue(json, OppgaveQuery::class.java)
 
-        val result = oppgaveQueryRepository.query(oppgaveQuery)
+        val result = oppgaveQueryRepository.query(QueryRequest(oppgaveQuery))
         assertThat(result).isEmpty()
     }
 
@@ -94,7 +90,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         val sw = StringWriter()
         om.writeValue(sw, oppgaveQuery)
 
-        val result = oppgaveQueryRepository.query(oppgaveQuery)
+        val result = oppgaveQueryRepository.query(QueryRequest(oppgaveQuery))
         assertThat(result).isNotEmpty()
     }
 
@@ -106,21 +102,21 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
 
-        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
             byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.GREATER_THAN, "2023-05-14T00:00:00.000"),
-        )))).isNotEmpty()
+        ))))).isNotEmpty()
 
-        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
             byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.LESS_THAN, "2023-05-15T00:00:00.000"),
-        )))).isEmpty()
+        ))))).isEmpty()
 
-        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
             byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.GREATER_THAN, "2023-05-15T00:00:00.000"),
-        )))).isEmpty()
+        ))))).isEmpty()
 
-        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
             byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.LESS_THAN, "2023-05-16T00:00:00.000"),
-        )))).isNotEmpty()
+        ))))).isNotEmpty()
     }
 
     @Test
@@ -131,17 +127,17 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
 
-        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
             byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.LESS_THAN_OR_EQUALS, "2023-05-15T00:00:00.000"),
-        )))).isNotEmpty()
+        ))))).isNotEmpty()
 
-        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
             byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.EQUALS, "2023-05-15T00:00:00.000"),
-        )))).isNotEmpty()
+        ))))).isNotEmpty()
 
-        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
             byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.GREATER_THAN_OR_EQUALS, "2023-05-15T00:00:00.000"),
-        )))).isNotEmpty()
+        ))))).isNotEmpty()
     }
 
 
@@ -153,17 +149,17 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
 
-        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
             byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.LESS_THAN_OR_EQUALS, "2023-05-16"),
-        )))).isNotEmpty()
+        ))))).isNotEmpty()
 
-        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
             byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.EQUALS, "2023-05-15"),
-        )))).isNotEmpty()
+        ))))).isNotEmpty()
 
-        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
             byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.GREATER_THAN_OR_EQUALS, "2023-05-14"),
-        )))).isNotEmpty()
+        ))))).isNotEmpty()
     }
 
     @Test
@@ -175,35 +171,35 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
 
-        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
             byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
             byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.EQUALS, null),
-        )))).isNotEmpty()
+        ))))).isNotEmpty()
 
-        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
             byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
             byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.IN, null),
-        )))).isNotEmpty()
+        ))))).isNotEmpty()
 
-        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
             byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
             byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.IN, null, "true"),
-        )))).isNotEmpty()
+        ))))).isNotEmpty()
 
-        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
             byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
             byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.IN, "true"),
-        )))).isEmpty()
+        ))))).isEmpty()
 
-        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
             byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
             byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.EQUALS, "true"),
-        )))).isEmpty()
+        ))))).isEmpty()
 
-        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
             byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
             byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.EQUALS, "false"),
-        )))).isEmpty()
+        ))))).isEmpty()
     }
 
     @Test
@@ -216,35 +212,35 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
 
-        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
             byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
             byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.EQUALS, null),
-        )))).isEmpty()
+        ))))).isEmpty()
 
-        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
             byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
             byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.IN, null),
-        )))).isEmpty()
+        ))))).isEmpty()
 
-        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
             byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
             byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.IN, null, "true"),
-        )))).isNotEmpty()
+        ))))).isNotEmpty()
 
-        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
             byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
             byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.EQUALS, "true"),
-        )))).isNotEmpty()
+        ))))).isNotEmpty()
 
-        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
             byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
             byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.IN, "true"),
-        )))).isNotEmpty()
+        ))))).isNotEmpty()
 
-        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
             byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
             byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.EQUALS, "false"),
-        )))).isEmpty()
+        ))))).isEmpty()
     }
 
     @Test
@@ -257,20 +253,20 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
 
-        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
             byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
             byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.NOT_EQUALS, "2023-05-15T00:00:00.000"),
-        )))).isEmpty()
+        ))))).isEmpty()
 
-        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
             byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
             byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.NOT_EQUALS, "2023-05-15T00:00:00.000", "2023-05-16T00:00:00.000"),
-        )))).isEmpty()
+        ))))).isEmpty()
 
-        assertThat(oppgaveQueryRepository.query(OppgaveQuery(listOf(
+        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
             byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
             byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.NOT_EQUALS, "2023-05-14T00:00:00.000", "2023-05-16T00:00:00.000"),
-        )))).isNotEmpty()
+        ))))).isNotEmpty()
     }
 
     @Test // Query er ikke ment som tilgangskontroll, men en kjapp måte å utføre filtrering før tilgangssjekk gjøres på resultatet
@@ -282,7 +278,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, eksternId),
         ))
 
-        assertThat(oppgaveQueryRepository.query(query)).isNotEmpty()
+        assertThat(oppgaveQueryRepository.query(QueryRequest(query))).isNotEmpty()
     }
 
     @Test
@@ -297,7 +293,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             byggGenereltFilter(FeltType.BESKYTTELSE, FeltverdiOperator.IN, BeskyttelseType.ORDINÆR.kode)
         ))
 
-        assertThat(oppgaveQueryRepository.query(query)).isNotEmpty()
+        assertThat(oppgaveQueryRepository.query(QueryRequest(query))).isNotEmpty()
     }
 
     @Test
@@ -313,7 +309,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             byggGenereltFilter(FeltType.BESKYTTELSE, FeltverdiOperator.IN, "KODE6")
         ))
 
-        assertThat(oppgaveQueryRepository.query(query)).isNotEmpty()
+        assertThat(oppgaveQueryRepository.query(QueryRequest(query))).isNotEmpty()
     }
 
     @Test
@@ -329,8 +325,93 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             byggGenereltFilter(FeltType.BESKYTTELSE, FeltverdiOperator.IN, BeskyttelseType.ORDINÆR.kode)
         ))
 
-        assertThat(oppgaveQueryRepository.query(query)).isEmpty()
+        assertThat(oppgaveQueryRepository.query(QueryRequest(query))).isEmpty()
     }
+
+    @Test
+    fun `queryRequest som vil fjerne reserverte oppgaver skal kun få ureserverte`() {
+        val saksbehandlerRepository = get<SaksbehandlerRepository>()
+
+        val saksbehandler = runBlocking {
+            val ident = "test"
+            saksbehandlerRepository.addSaksbehandler(
+                Saksbehandler(
+                    null,
+                    ident,
+                    ident,
+                    ident + "@nav.no",
+                    enhet = "1234"
+                )
+            )
+            saksbehandlerRepository.hentAlleSaksbehandlere()
+        }.get(0)
+
+        val builder = OppgaveTestDataBuilder()
+        builder.lagOgLagre(Oppgavestatus.AAPEN)
+        builder.lagre(builder.lag(reservasjonsnøkkel = "test"))
+
+        val reservasjonstjeneste = get<ReservasjonV3Tjeneste>()
+        reservasjonstjeneste.taReservasjon(
+            "test",
+            saksbehandler.id!!,
+            saksbehandler.id!!,
+            "test",
+            LocalDateTime.now(),
+            LocalDateTime.now().plusDays(2)
+        )
+
+        val query = OppgaveQuery(
+            listOf(
+                byggGenereltFilter(
+                    FeltType.OPPGAVE_STATUS,
+                    FeltverdiOperator.IN,
+                    Oppgavestatus.AAPEN.kode
+                )
+            )
+        )
+
+        val queryService = get<OppgaveQueryService>()
+
+        assertThat(queryService.queryForAntall(QueryRequest(query, fjernReserverte = true))).isEqualTo(1)
+
+        assertThat(queryService.queryForAntall(QueryRequest(query, fjernReserverte = false))).isEqualTo(2)
+    }
+
+    @Test
+    fun `queryRequest limit og paginering`() {
+        val builder = OppgaveTestDataBuilder()
+        val oppgave1 = builder.lagOgLagre(Oppgavestatus.AAPEN)
+        val oppgave2 = builder.lagOgLagre(Oppgavestatus.AAPEN)
+
+        val query = OppgaveQuery(
+            listOf(
+                byggGenereltFilter(
+                    FeltType.OPPGAVE_STATUS,
+                    FeltverdiOperator.IN,
+                    Oppgavestatus.AAPEN.kode
+                )
+            )
+        )
+
+        val queryService = get<OppgaveQueryService>()
+
+        assertThat(queryService.queryForAntall(QueryRequest(query))).isEqualTo(2)
+
+        assertThat(queryService.queryForOppgaveId(QueryRequest(query, avgrensning = Avgrensning.maxAntall(1))).size).isEqualTo(1)
+
+        assertThat(queryService.queryForAntall(QueryRequest(query))).isEqualTo(2)
+
+        val søk1 = queryService.queryForOppgaveEksternId(QueryRequest(query, avgrensning = Avgrensning.paginert(1, 1)))
+        val søk2 = queryService.queryForOppgaveEksternId(QueryRequest(query, avgrensning = Avgrensning.paginert(1, 2)))
+
+        assertThat(søk1.size).isEqualTo(1)
+        assertThat(søk2.size).isEqualTo(1)
+
+        assertThat(søk1.get(0)).isNotEqualTo(søk2.get(0))
+        assertThat(søk1.get(0).eksternId).isIn(oppgave1.eksternId, oppgave2.eksternId)
+        assertThat(søk2.get(0).eksternId).isIn(oppgave1.eksternId, oppgave2.eksternId)
+    }
+
 
     @Test
     fun `ytelse - oppgavequery med filter på oppgavestatus skal ikke filtrere vekk oppgave med samme status`() {
@@ -348,7 +429,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        assertThat(oppgaveQueryRepository.query(oppgaveQuery).size).isEqualTo(1)
+        assertThat(oppgaveQueryRepository.query(QueryRequest(oppgaveQuery)).size).isEqualTo(1)
 
 
         val oppgaveQuery2 = OppgaveQuery(
@@ -357,7 +438,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        assertThat(oppgaveQueryRepository.query(oppgaveQuery2).size).isEqualTo(1)
+        assertThat(oppgaveQueryRepository.query(QueryRequest(oppgaveQuery2)).size).isEqualTo(1)
 
         val oppgaveQuery3 = OppgaveQuery(
             listOf(
@@ -365,14 +446,14 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        assertThat(oppgaveQueryRepository.query(oppgaveQuery3).size).isEqualTo(0)
+        assertThat(oppgaveQueryRepository.query(QueryRequest(oppgaveQuery3)).size).isEqualTo(0)
 
         val oppgaveQuery4 = OppgaveQuery(
             listOf(
             )
         )
 
-        assertThat(oppgaveQueryRepository.query(oppgaveQuery4).size).isEqualTo(2)
+        assertThat(oppgaveQueryRepository.query(QueryRequest(oppgaveQuery4)).size).isEqualTo(2)
 
         val oppgaveQuery5 = OppgaveQuery(
             listOf(
@@ -380,7 +461,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        assertThat(oppgaveQueryRepository.query(oppgaveQuery5).size).isEqualTo(2)
+        assertThat(oppgaveQueryRepository.query(QueryRequest(oppgaveQuery5)).size).isEqualTo(2)
     }
 
     @Test
@@ -397,7 +478,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             byggGenereltFilter(FeltType.BESKYTTELSE, FeltverdiOperator.IN, "KODE6")
         ))
 
-        assertThat(oppgaveQueryRepository.query(query)).isEmpty()
+        assertThat(oppgaveQueryRepository.query(QueryRequest(query))).isEmpty()
     }
 
 

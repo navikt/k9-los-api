@@ -10,7 +10,9 @@ import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.pdl.IPdlService
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
+import no.nav.k9.los.nyoppgavestyring.query.Avgrensning
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
+import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.reservasjon.*
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.GenerellOppgaveV3Dto
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
@@ -43,17 +45,18 @@ class OppgaveKoTjeneste(
     fun hentOppgavekøerMedAntall(): Map<OppgaveKo, Long> {
         return oppgaveKoRepository.hentListe()
             .associateWith {
-                oppgaveQueryService.queryForAntall(it.oppgaveQuery)
+                oppgaveQueryService.queryForAntall( QueryRequest(it.oppgaveQuery, fjernReserverte = false ) )
             }
     }
 
     suspend fun hentOppgaverFraKø(
         oppgaveKoId: Long,
-        ønsketAntallSaker: Int,
+        ønsketAntallSaker: Long,
+        fjernReserverte: Boolean = false
     ): List<GenerellOppgaveV3Dto> {
         val ko = oppgaveKoRepository.hent(oppgaveKoId)
 
-        val køoppgaveIder = oppgaveQueryService.queryForOppgaveEksternId(ko.oppgaveQuery)
+        val køoppgaveIder = oppgaveQueryService.queryForOppgaveEksternId(QueryRequest(ko.oppgaveQuery, fjernReserverte = fjernReserverte, Avgrensning.maxAntall(ønsketAntallSaker)))
         var oppgaver = mutableListOf<GenerellOppgaveV3Dto>()
         for (eksternOppgaveId in køoppgaveIder) {
             val oppgave = oppgaveRepositoryTxWrapper.hentOppgave(eksternOppgaveId.område, eksternOppgaveId.eksternId)
@@ -92,9 +95,7 @@ class OppgaveKoTjeneste(
         oppgaveKoId: Long
     ): Long {
         val ko = oppgaveKoRepository.hent(oppgaveKoId)
-        val oppgaveIder = oppgaveQueryService.queryForOppgaveId(ko.oppgaveQuery)
-        val ureserverte = reservasjonV3Repository.hentUreserverteOppgaveIder(oppgaveIder)
-        return ureserverte.size.toLong()
+        return oppgaveQueryService.queryForAntall(QueryRequest(ko.oppgaveQuery, fjernReserverte = true))
     }
 
     fun taReservasjonFraKø(
@@ -105,7 +106,7 @@ class OppgaveKoTjeneste(
         log.info("taReservasjonFraKø, oppgaveKøId: $oppgaveKoId")
         val oppgavekø = oppgaveKoRepository.hent(oppgaveKoId)
 
-        val kandidatOppgaver = oppgaveQueryService.queryForOppgaveId(oppgavekø.oppgaveQuery)
+        val kandidatOppgaver = oppgaveQueryService.queryForOppgaveId(QueryRequest(oppgavekø.oppgaveQuery, fjernReserverte = true))
 
         return transactionalManager.transaction { tx ->
             finnReservasjonFraKø(kandidatOppgaver, tx, innloggetBrukerId, coroutineContext)

@@ -27,7 +27,7 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
     fun `lagre oppgaveVersjon`() {
         val oppgaveV3 = OppgaveTestDataBuilder()
             .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, "test123")
-            .lag(1)
+            .lag()
 
         transactionalManager.transaction { tx ->
             val oppgaveId = oppgaveV3Repository.nyOppgaveversjon(oppgaveV3, 0, tx)
@@ -47,7 +47,7 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
     fun `deaktiverOppgaveVersjon`() {
         val oppgaveV3 = OppgaveTestDataBuilder()
             .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, "test123")
-            .lag(1)
+            .lag()
 
         val oppgaveId = transactionalManager.transaction { tx ->
             val oppgaveId = oppgaveV3Repository.nyOppgaveversjon(oppgaveV3, 0, tx)
@@ -79,16 +79,16 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val oppgave1 = OppgaveTestDataBuilder()
             .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, "test123")
             .medOppgaveFeltVerdi(FeltType.AKSJONSPUNKT, "9001")
-            .lag(1)
+            .lag()
 
         val oppgave2 = OppgaveTestDataBuilder()
             .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, "test123")
             .medOppgaveFeltVerdi(FeltType.AKSJONSPUNKT, "5015")
-            .lag(2)
+            .lag()
 
         val oppgave3 = OppgaveTestDataBuilder()
             .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, "test123")
-            .lag(3, Oppgavestatus.LUKKET)
+            .lag(Oppgavestatus.LUKKET)
 
         transactionalManager.transaction { tx ->
             oppgaveV3Repository.nyOppgaveversjon(oppgave1, tx)
@@ -133,16 +133,16 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val oppgave1 = OppgaveTestDataBuilder()
             .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, "test123")
             .medOppgaveFeltVerdi(FeltType.AKSJONSPUNKT, "9001")
-            .lag(1)
+            .lag()
 
         val oppgave2 = OppgaveTestDataBuilder()
             .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, "test123")
             .medOppgaveFeltVerdi(FeltType.AKSJONSPUNKT, "5015")
-            .lag(2)
+            .lag()
 
         val oppgave3 = OppgaveTestDataBuilder()
             .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, "test123")
-            .lag(3, Oppgavestatus.LUKKET)
+            .lag(Oppgavestatus.LUKKET)
 
         transactionalManager.transaction { tx ->
             oppgaveV3Repository.nyOppgaveversjon(oppgave1, tx)
@@ -177,7 +177,7 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val oppgave1 = OppgaveTestDataBuilder()
             .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, "test123")
             .medOppgaveFeltVerdi(FeltType.AKSJONSPUNKT, "9001")
-            .lag(1)
+            .lag()
 
         transactionalManager.transaction { tx ->
             oppgaveV3Repository.nyOppgaveversjon(oppgave1, tx)

@@ -29,32 +29,28 @@ class OppgaveQueryService() {
     val pepClient by inject<IPepClient>(IPepClient::class.java)
     val pepCacheService by inject<PepCacheService>(PepCacheService::class.java)
 
-
-    fun queryForAntall(query: OppgaveQuery): Long {
-        return using(sessionOf(datasource)) { it ->
-            it.transaction { tx -> queryForAntall(tx, query) }
-        }
-    }
-
-    fun queryForAntall(tx: TransactionalSession, query: OppgaveQuery): Long {
-        val now = LocalDateTime.now()
-        return oppgaveQueryRepository.queryForAntall(tx, query, now)
-    }
-
-    fun hentAlleFelter(): Oppgavefelter {
-        return oppgaveQueryRepository.hentAlleFelter()
-    }
-
-    fun queryForOppgaveId(oppgaveQuery: OppgaveQuery): List<Long> {
+    fun queryForOppgaveId(oppgaveQuery: QueryRequest): List<Long> {
         return oppgaveQueryRepository.query(oppgaveQuery)
     }
 
-    fun queryForOppgaveEksternId(oppgaveQuery: OppgaveQuery): List<EksternOppgaveId> {
+    fun queryForAntall(request: QueryRequest, now : LocalDateTime = LocalDateTime.now()): Long {
+        return using(sessionOf(datasource)) { it ->
+            it.transaction { tx -> oppgaveQueryRepository.queryForAntall(tx, request, now) }
+        }
+    }
+
+    fun queryForOppgaveEksternId(oppgaveQuery: QueryRequest): List<EksternOppgaveId> {
         val now = LocalDateTime.now()
         return oppgaveQueryRepository.queryForEksternId(oppgaveQuery, now)
     }
 
-    fun queryToFile(tx: TransactionalSession, oppgaveQuery: OppgaveQuery, idToken: IIdToken): String {
+    fun queryToFile(oppgaveQuery: QueryRequest, idToken: IIdToken): String {
+        return using(sessionOf(datasource)) { it ->
+            it.transaction { tx -> queryToFile(tx, oppgaveQuery, idToken) }
+        }
+    }
+
+    fun queryToFile(tx: TransactionalSession, oppgaveQuery: QueryRequest, idToken: IIdToken): String {
         val oppgaver = query(tx, oppgaveQuery, idToken)
         if (oppgaver.isEmpty()) {
             return ""
@@ -74,27 +70,37 @@ class OppgaveQueryService() {
         }
     }
 
-    fun query(tx: TransactionalSession, oppgaveQuery: OppgaveQuery, idToken: IIdToken): List<Oppgaverad> {
+    fun query(oppgaveQuery: QueryRequest, idToken: IIdToken): List<Oppgaverad> {
+        return using(sessionOf(datasource)) { it ->
+            it.transaction { tx -> query(tx, oppgaveQuery, idToken) }
+        }
+    }
+
+    fun query(tx: TransactionalSession, request: QueryRequest, idToken: IIdToken): List<Oppgaverad> {
         val now = LocalDateTime.now()
-        val oppgaveIder = oppgaveQueryRepository.query(tx, oppgaveQuery, now)
+        val oppgaveIder = oppgaveQueryRepository.query(tx, request, now)
 
         val oppgaverader = runBlocking(context = CoroutineRequestContext(idToken)) {
-            mapOppgaver(tx, oppgaveQuery, oppgaveIder, now)
+            mapOppgaver(tx, request, oppgaveIder, now)
         }
 
-        if (oppgaveQuery.select.isEmpty()) {
+        if (request.oppgaveQuery.select.isEmpty()) {
             return listOf(Oppgaverad(listOf(Oppgavefeltverdi(null, "Antall", oppgaverader.size))))
         }
 
         return oppgaverader
     }
 
-    private suspend fun mapOppgaver(tx: TransactionalSession, oppgaveQuery: OppgaveQuery, oppgaveIder: List<Long>, now: LocalDateTime): List<Oppgaverad> {
+    fun hentAlleFelter(): Oppgavefelter {
+        return oppgaveQueryRepository.hentAlleFelter()
+    }
+
+    private suspend fun mapOppgaver(tx: TransactionalSession, request: QueryRequest, oppgaveIder: List<Long>, now: LocalDateTime): List<Oppgaverad> {
         val oppgaverader = mutableListOf<Oppgaverad>()
-        val limit = oppgaveQuery.limit
+        val limit = request.avgrensning?.limit ?: -1
         var antall = 0
         for (oppgaveId in oppgaveIder) {
-            val oppgaverad = mapOppgave(tx, oppgaveQuery, oppgaveId, now)
+            val oppgaverad = mapOppgave(tx, request.oppgaveQuery, oppgaveId, now)
             if (oppgaverad != null) {
                 oppgaverader.add(oppgaverad)
                 antall++
@@ -148,21 +154,9 @@ class OppgaveQueryService() {
         }
     }
 
-    fun query(oppgaveQuery: OppgaveQuery, idToken: IIdToken): List<Oppgaverad> {
-        return using(sessionOf(datasource)) { it ->
-            it.transaction { tx -> query(tx, oppgaveQuery, idToken) }
-        }
-    }
-
-    fun queryToFile(oppgaveQuery: OppgaveQuery, idToken: IIdToken): String {
-        return using(sessionOf(datasource)) { it ->
-            it.transaction { tx -> queryToFile(tx, oppgaveQuery, idToken) }
-        }
-    }
-
-    fun validate(oppgaveQuery: OppgaveQuery): Boolean {
+    fun validate(request: QueryRequest): Boolean {
         try {
-            queryForOppgaveId(oppgaveQuery)
+            queryForAntall(request)
         } catch (e: RuntimeException) {
             return false
         }
