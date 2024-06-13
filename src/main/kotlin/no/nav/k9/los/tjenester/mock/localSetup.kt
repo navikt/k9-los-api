@@ -36,7 +36,7 @@ val saksbehandlere = listOf(
     )
 )
 
-object initMock : KoinComponent {
+object localSetup : KoinComponent {
     val saksbehandlerRepository: SaksbehandlerRepository by inject()
     val oppgaveKøRepository: OppgaveKøRepository by inject()
     val profile: KoinProfile by inject()
@@ -49,14 +49,6 @@ object initMock : KoinComponent {
                         saksbehandler
                     )
                 }
-
-            }
-        }
-    }
-
-    fun initKøer() {
-        if (profile == KoinProfile.LOCAL) {
-            runBlocking {
 
             }
         }
