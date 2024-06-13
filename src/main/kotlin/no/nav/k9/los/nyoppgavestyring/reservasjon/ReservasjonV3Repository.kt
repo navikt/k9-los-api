@@ -78,7 +78,7 @@ class ReservasjonV3Repository(
 
     fun annullerAktivReservasjonOgLagreEndring(
         aktivReservasjon: ReservasjonV3,
-        kommentar: String,
+        kommentar: String?,
         annullertAvBrukerId: Long?,
         tx: TransactionalSession
     ) {
@@ -99,7 +99,7 @@ class ReservasjonV3Repository(
         aktivReservasjon: ReservasjonV3,
         endretAvBrukerId: Long,
         nyTildato: LocalDateTime,
-        kommentar: String,
+        kommentar: String?,
         tx: TransactionalSession
     ): ReservasjonV3 {
         val annullertReservasjonId = annullerAktivReservasjon(aktivReservasjon, kommentar, tx)!!
@@ -160,7 +160,7 @@ class ReservasjonV3Repository(
 
     private fun annullerAktivReservasjon(
         aktivReservasjon: ReservasjonV3,
-        kommentar: String,
+        kommentar: String?,
         tx: TransactionalSession
     ): Long? {
         return tx.updateAndReturnGeneratedKey(
@@ -206,7 +206,7 @@ class ReservasjonV3Repository(
                     id = row.long("id"),
                     reservertAv = row.long("reservertAv"),
                     reservasjonsnøkkel = row.string("reservasjonsnokkel"),
-                    kommentar = row.string("kommentar"),
+                    kommentar = row.stringOrNull("kommentar"),
                     gyldigFra = row.localDateTime("fra"),
                     gyldigTil = row.localDateTime("til"),
                 )
@@ -234,7 +234,7 @@ class ReservasjonV3Repository(
                     id = row.long("id"),
                     reservertAv = row.long("reservertAv"),
                     reservasjonsnøkkel = row.string("reservasjonsnokkel"),
-                    kommentar = row.string("kommentar"),
+                    kommentar = row.stringOrNull("kommentar"),
                     gyldigFra = row.localDateTime("fra"),
                     gyldigTil = row.localDateTime("til"),
                 )
@@ -278,7 +278,7 @@ class ReservasjonV3Repository(
                     id = row.long("id"),
                     reservertAv = row.long("reservertAv"),
                     reservasjonsnøkkel = row.string("reservasjonsnokkel"),
-                    kommentar = row.string("kommentar"),
+                    kommentar = row.stringOrNull("kommentar"),
                     annullertFørUtløp = row.boolean("annullert_for_utlop"),
                     gyldigFra = row.localDateTime("fra"),
                     gyldigTil = row.localDateTime("til"),
@@ -303,7 +303,7 @@ class ReservasjonV3Repository(
                     id = row.long("id"),
                     reservertAv = row.long("reservertAv"),
                     reservasjonsnøkkel = row.string("reservasjonsnokkel"),
-                    kommentar = row.string("kommentar"),
+                    kommentar = row.stringOrNull("kommentar"),
                     annullertFørUtløp = row.boolean("annullert_for_utlop"),
                     gyldigFra = row.localDateTime("fra"),
                     gyldigTil = row.localDateTime("til"),
@@ -403,7 +403,7 @@ class ReservasjonV3Repository(
                     reservertAv = row.long("reservertav"),
                     reservasjonsnøkkel = if (row.string("reservasjonsnokkel").endsWith("beslutter")) { "beslutter" } else { "ordinær" },
                     annullertFørUtløp = row.boolean("annullert_for_utlop"),
-                    kommentar = row.string("kommentar"),
+                    kommentar = row.stringOrNull("kommentar"),
                     gyldigFra = row.localDateTime("gyldig_fra"),
                     gyldigTil = row.localDateTime("gyldig_til"),
                     reservasjonOpprettet = row.localDateTime("reservasjon_opprettet"),

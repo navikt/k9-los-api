@@ -1,12 +1,10 @@
 package no.nav.k9.los.tjenester.saksbehandler.oppgave
 
-import com.fasterxml.jackson.annotation.JsonFormat
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import java.time.LocalDate
 
 data class ReservasjonEndringDto (
-    @JsonFormat(with = [JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY])
-    val oppgaveNøkkel: Set<OppgaveNøkkelDto>,
+    val oppgaveNøkkel: OppgaveNøkkelDto,
     val brukerIdent: String? = null,
     val reserverTil: LocalDate? = null,
     val begrunnelse: String? = null

@@ -68,7 +68,7 @@ class ReservasjonV3Tjeneste(
         reservasjonsnøkkel: String,
         reserverForId: Long,
         utføresAvId: Long,
-        kommentar: String,
+        kommentar: String?,
         gyldigFra: LocalDateTime,
         gyldigTil: LocalDateTime
     ): ReservasjonV3 {
@@ -83,7 +83,7 @@ class ReservasjonV3Tjeneste(
         utføresAvId: Long,
         gyldigFra: LocalDateTime,
         gyldigTil: LocalDateTime,
-        kommentar: String,
+        kommentar: String?,
         tx: TransactionalSession
     ): ReservasjonV3 {
         //sjekke tilgang på alle oppgaver tilknyttet nøkkel
@@ -110,7 +110,7 @@ class ReservasjonV3Tjeneste(
         reserverForId: Long,
         gyldigFra: LocalDateTime,
         gyldigTil: LocalDateTime,
-        kommentar: String,
+        kommentar: String?,
         utføresAvId: Long,
         tx: TransactionalSession
     ): ReservasjonV3 {
@@ -134,7 +134,7 @@ class ReservasjonV3Tjeneste(
                     aktivReservasjon,
                     endretAvBrukerId = utføresAvId,
                     nyTildato = gyldigTil,
-                    kommentar = kommentar,
+                    kommentar = kommentar ?: aktivReservasjon.kommentar,
                     tx
                 )
             } else {
@@ -202,7 +202,7 @@ class ReservasjonV3Tjeneste(
 
     fun annullerReservasjonHvisFinnes(
         reservasjonsnøkkel: String,
-        kommentar: String,
+        kommentar: String?,
         annullertAvBrukerId: Long?,
         tx: TransactionalSession
     ): Boolean {
@@ -222,7 +222,7 @@ class ReservasjonV3Tjeneste(
     }
 
 
-    fun annullerReservasjonHvisFinnes(reservasjonsnøkkel: String, kommentar: String, annullertAvBrukerId: Long?): Boolean {
+    fun annullerReservasjonHvisFinnes(reservasjonsnøkkel: String, kommentar: String?, annullertAvBrukerId: Long?): Boolean {
         return transactionalManager.transaction { tx ->
             annullerReservasjonHvisFinnes(reservasjonsnøkkel, kommentar, annullertAvBrukerId, tx)
         }

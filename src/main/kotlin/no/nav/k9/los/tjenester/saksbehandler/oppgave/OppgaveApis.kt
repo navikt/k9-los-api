@@ -74,7 +74,10 @@ internal fun Route.OppgaveApis() {
                 call.respond(reservasjonV3Dtos)
             } else {
                 log.info("Innlogger bruker med brukernavn $innloggetBrukernavn finnes ikke i saksbehandlertabellen")
-                call.respond(HttpStatusCode.InternalServerError, "Innlogger bruker med brukernavn $innloggetBrukernavn finnes ikke i saksbehandlertabellen")
+                call.respond(
+                    HttpStatusCode.InternalServerError,
+                    "Innlogger bruker med brukernavn $innloggetBrukernavn finnes ikke i saksbehandlertabellen"
+                )
             }
         }
     }
@@ -111,17 +114,21 @@ internal fun Route.OppgaveApis() {
     class opphevReservasjoner
     post { _: opphevReservasjoner ->
         requestContextService.withRequestContext(call) {
-            val params = call.receive<AnnullerReservasjoner>()
+            val params = call.receive<List<AnnullerReservasjon>>()
             val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
                 kotlin.coroutines.coroutineContext.idToken().getUsername()
             )!!
 
             try {
-                log.info("Opphever reservasjonen ${params.oppgaveNøkkel.joinToString(", ")} (Gjort av ${innloggetBruker.brukerIdent})")
+                log.info(
+                    "Opphever reservasjoner ${
+                        params.map { it.oppgaveNøkkel }.joinToString(", ")
+                    } (Gjort av ${innloggetBruker.brukerIdent})"
+                )
                 oppgaveApisTjeneste.annullerReservasjoner(params, innloggetBruker)
                 call.respond(HttpStatusCode.OK) //TODO: Hva er evt meningsfullt å returnere her?
             } catch (e: FinnerIkkeDataException) {
-                call.respond(HttpStatusCode.NotFound,"Fant ingen aktiv reservasjon for angitte reservasjonsnøkler")
+                call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitte reservasjonsnøkler")
             }
         }
     }
@@ -178,7 +185,7 @@ internal fun Route.OppgaveApis() {
     class endreReservasjon
     post { _: endreReservasjon ->
         requestContextService.withRequestContext(call) {
-            val reservasjonEndringDto = call.receive<ReservasjonEndringDto>()
+            val reservasjonEndringDto = call.receive<List<ReservasjonEndringDto>>()
             val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
                 kotlin.coroutines.coroutineContext.idToken().getUsername()
             )!!
@@ -225,7 +232,7 @@ internal fun Route.OppgaveApis() {
             val oppgave = oppgaveRepository.hent(UUID.fromString(oppgavenøkkel.oppgaveEksternId))
             val person = pdlService.person(oppgave.aktorId).person!!
             val behandletOppgave = BehandletOppgave(oppgave, person)
-            
+
             call.respond(
                 oppgaveTjeneste.leggTilBehandletOppgave(
                     coroutineContext.idToken().getUsername(),
@@ -246,13 +253,29 @@ internal fun Route.OppgaveApis() {
     @Location("/flytt/sok")
     class søkSaksbehandler
     post { _: søkSaksbehandler ->
+        val params = call.receive<BrukerIdentDto>()
+        val sokSaksbehandlerMedIdent = oppgaveTjeneste.sokSaksbehandler(params.brukerIdent)
+        if (sokSaksbehandlerMedIdent == null) {
+            call.respond("")
+        } else {
+            call.respond(sokSaksbehandlerMedIdent)
+        }
+    }
+
+    @Location("/saksbehandlere")
+    class getAlleSaksbehandlere
+    get { _: getAlleSaksbehandlere ->
         requestContextService.withRequestContext(call) {
-            val params = call.receive<BrukerIdentDto>()
-            val sokSaksbehandlerMedIdent = oppgaveTjeneste.sokSaksbehandler(params.brukerIdent)
-            if (sokSaksbehandlerMedIdent == null) {
-                call.respond("")
+            if (pepClient.harBasisTilgang()) {
+                val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere()
+                val saksbehandlerDtoListe =
+                    alleSaksbehandlere.filter { saksbehandler -> !saksbehandler.navn.isNullOrBlank() && !saksbehandler.brukerIdent.isNullOrBlank() }
+                        .map { saksbehandler ->
+                            SaksbehandlerDto(saksbehandler.brukerIdent!!, saksbehandler.navn!!)
+                        }
+                call.respond(saksbehandlerDtoListe)
             } else {
-                call.respond(sokSaksbehandlerMedIdent)
+                call.respond(emptyList<SaksbehandlerDto>())
             }
         }
     }
