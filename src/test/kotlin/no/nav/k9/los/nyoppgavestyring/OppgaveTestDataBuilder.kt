@@ -65,13 +65,13 @@ class OppgaveTestDataBuilder(
         }
     }
 
-    fun lag(status: Oppgavestatus = Oppgavestatus.AAPEN, reservasjonsnøkkel: String = ""): OppgaveV3 {
+    fun lag(status: Oppgavestatus = Oppgavestatus.AAPEN, reservasjonsnøkkel: String = "", eksternVersjon: String? = null): OppgaveV3 {
         return OppgaveV3(
             eksternId = oppgaveFeltverdier.firstOrNull {
                 it.oppgavefelt.feltDefinisjon.eksternId == FeltType.BEHANDLINGUUID.eksternId
             }?.verdi
                 ?: UUID.randomUUID().toString(),
-            eksternVersjon = eksternVersjonTeller++.toString(),
+            eksternVersjon = eksternVersjon?.let { it } ?: eksternVersjonTeller++.toString(),
             oppgavetype = oppgavetype,
             status = status,
             endretTidspunkt = LocalDateTime.now(),

@@ -79,16 +79,16 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val oppgave1 = OppgaveTestDataBuilder()
             .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, "test123")
             .medOppgaveFeltVerdi(FeltType.AKSJONSPUNKT, "9001")
-            .lag()
+            .lag(eksternVersjon = "1")
 
         val oppgave2 = OppgaveTestDataBuilder()
             .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, "test123")
             .medOppgaveFeltVerdi(FeltType.AKSJONSPUNKT, "5015")
-            .lag()
+            .lag(eksternVersjon = "2")
 
         val oppgave3 = OppgaveTestDataBuilder()
             .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, "test123")
-            .lag(Oppgavestatus.LUKKET)
+            .lag(Oppgavestatus.LUKKET, eksternVersjon = "3")
 
         transactionalManager.transaction { tx ->
             oppgaveV3Repository.nyOppgaveversjon(oppgave1, tx)
