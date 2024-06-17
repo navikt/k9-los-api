@@ -22,7 +22,7 @@ class OppgaveRepository(
                  AND ov.ekstern_id = :eksternId 
                 and ov.aktiv = true
             """.trimIndent()
-        log.info("query hentNyesteOppgaveForEksternId: $queryString")
+        //log.info("query hentNyesteOppgaveForEksternId: $queryString")
         /* val explain = tx.run(
             queryOf(
                 """explain $queryString""",
