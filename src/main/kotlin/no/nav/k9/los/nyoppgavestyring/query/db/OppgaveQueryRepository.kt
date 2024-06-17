@@ -182,7 +182,7 @@ class OppgaveQueryRepository(
 
     private fun query(tx: TransactionalSession, oppgaveQuery: OppgaveQuerySqlBuilder): List<Long> {
         log.info("spørring oppgaveQuery for oppgaveId: ${oppgaveQuery.getQuery()}")
-        val explain = tx.run(
+        /* val explain = tx.run(
             queryOf(
                 "explain " + oppgaveQuery.getQuery(),
                 oppgaveQuery.getParams()
@@ -190,7 +190,7 @@ class OppgaveQueryRepository(
                 row.string(1)
             }.asList
         ).joinToString("\n")
-        log.info("explain oppgaveQuery for oppgaveId: $explain")
+        log.info("explain oppgaveQuery for oppgaveId: $explain") */
         return tx.run(
             queryOf(
                 oppgaveQuery.getQuery(),
@@ -201,7 +201,7 @@ class OppgaveQueryRepository(
 
     private fun queryForEksternId(tx: TransactionalSession, oppgaveQuery: OppgaveQuerySqlBuilder): List<EksternOppgaveId> {
         log.info("spørring oppgaveQuery for oppgave EksternId: ${oppgaveQuery.getQuery()}")
-        val explain = tx.run(
+        /*  val explain = tx.run(
             queryOf(
                 "explain " + oppgaveQuery.getQuery(),
                 oppgaveQuery.getParams()
@@ -209,7 +209,7 @@ class OppgaveQueryRepository(
                 row.string(1)
             }.asList
         ).joinToString("\n")
-        log.info("explain oppgaveQuery for oppgaveId: $explain")
+        log.info("explain oppgaveQuery for oppgaveId: $explain") */
         return tx.run(
             queryOf(
                 oppgaveQuery.getQuery(),
