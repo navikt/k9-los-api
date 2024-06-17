@@ -25,10 +25,9 @@ fun Route.OppgaveKoApis() {
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
     val pepClient by KoinJavaComponent.inject<IPepClient>(IPepClient::class.java)
 
-    @Location("/")
-    class hentOppgaveKoer
+    data class OppgaveKoId(val id: String)
 
-    get { _: hentOppgaveKoer ->
+    get("/") {
         requestContextService.withRequestContext(call) {
             if (!pepClient.erOppgaveStyrer()) {
                 call.respond(HttpStatusCode.Forbidden);
@@ -49,10 +48,7 @@ fun Route.OppgaveKoApis() {
         }
     }
 
-    @Location("/kopier")
-    class kopierOppgaveKo
-
-    post { _: kopierOppgaveKo ->
+    post("/kopier") {
         val kopierOppgaveKoDto = call.receive<KopierOppgaveKoDto>()
         requestContextService.withRequestContext(call) {
             if (!pepClient.erOppgaveStyrer()) {
@@ -69,10 +65,7 @@ fun Route.OppgaveKoApis() {
         }
     }
 
-    @Location("/opprett")
-    class opprettOppgaveKo
-
-    post { _: opprettOppgaveKo ->
+    post("/opprett") {
         val opprettOppgaveKoDto = call.receive<OpprettOppgaveKoDto>()
         requestContextService.withRequestContext(call) {
             if (!pepClient.erOppgaveStyrer()) {
@@ -82,33 +75,29 @@ fun Route.OppgaveKoApis() {
         }
     }
 
-    @Location("/{id}")
-    data class OppgaveKoParams(val id: String)
-
-    get { oppgaveKoParams: OppgaveKoParams ->
+    get("/{id}") {
         requestContextService.withRequestContext(call) {
+            val oppgavekøId = call.parameters["id"]!!
             if (!pepClient.erOppgaveStyrer()) {
                 call.respond(HttpStatusCode.Forbidden);
             }
 
-            call.respond(oppgaveKoRepository.hent(oppgaveKoParams.id.toLong()))
+            call.respond(oppgaveKoRepository.hent(oppgavekøId.toLong()))
         }
     }
 
-    delete { oppgaveKoParams: OppgaveKoParams ->
+    delete("/{id}") {
         requestContextService.withRequestContext(call) {
+            val oppgavekøId = call.parameters["id"]!!
             if (!pepClient.erOppgaveStyrer()) {
                 call.respond(HttpStatusCode.Forbidden);
             }
 
-            call.respond(oppgaveKoRepository.slett(oppgaveKoParams.id.toLong()))
+            call.respond(oppgaveKoRepository.slett(oppgavekøId.toLong()))
         }
     }
 
-    @Location("/saksbehandlerskoer")
-    class SaksbehandlersKoer
-
-    get { _: SaksbehandlersKoer ->
+    get("/saksbehandlerskoer") {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 call.respond(
@@ -122,14 +111,13 @@ fun Route.OppgaveKoApis() {
         }
     }
 
-    @Location("/{id}/oppgaver")
-    data class OppgaveKoId(val id: String)
-    get { oppgaveKoId: OppgaveKoId ->
+    get("/{id}/oppgaver") {
         requestContextService.withRequestContext(call) {
+            val oppgavekøId = call.parameters["id"]!!
             if (pepClient.harTilgangTilReservingAvOppgaver()) {
                 call.respond(
                     oppgaveKoTjeneste.hentOppgaverFraKø(
-                        oppgaveKoId.id.toLong(),
+                        oppgavekøId.toLong(),
                         10,
                         fjernReserverte = true
                     )
@@ -140,29 +128,26 @@ fun Route.OppgaveKoApis() {
         }
     }
 
-    @Location("/{id}/saksbehandlere")
-    data class SaksbehandlereForOppgaveKo(val id: String)
-    get { oppgaveKoId: SaksbehandlereForOppgaveKo ->
+
+    get("/{id}/saksbehandlere") {
         requestContextService.withRequestContext(call) {
+            val oppgavekøId = call.parameters["id"]!!
             call.respond(
-                oppgaveKoTjeneste.hentSaksbehandlereForKo(oppgaveKoId.id.toLong())
+                oppgaveKoTjeneste.hentSaksbehandlereForKo(oppgavekøId.toLong())
             )
         }
     }
 
-    @Location("/{id}/antall-oppgaver")
-    data class AntallOppgaverIKo(val id: String)
-    get { oppgaveKoId: AntallOppgaverIKo ->
+    get("/{id}/antall-oppgaver") {
         requestContextService.withRequestContext(call) {
-            call.respond(oppgaveKoTjeneste.hentAntallUreserverteOppgaveForKø(oppgaveKoId.id.toLong()))
+            val oppgavekøId = call.parameters["id"]!!
+            call.respond(oppgaveKoTjeneste.hentAntallUreserverteOppgaveForKø(oppgavekøId.toLong()))
         }
     }
 
-    @Location("/{id}/fa-oppgave")
-    data class FaOppgaveFraKo(val id: String)
-    post { oppgaveKoId: FaOppgaveFraKo ->
+    post("/{id}/fa-oppgave") {
         requestContextService.withRequestContext(call) {
-            val params = call.receive<OppgaveKøIdDto>()
+            val oppgavekøId = call.parameters["id"]!!
 
             val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
                 kotlin.coroutines.coroutineContext.idToken().getUsername()
@@ -171,7 +156,7 @@ fun Route.OppgaveKoApis() {
             if (pepClient.harTilgangTilReservingAvOppgaver()) {
                 val (reservertOppgave, reservasjonFraKø) = oppgaveKoTjeneste.taReservasjonFraKø(
                     innloggetBrukerId = innloggetBruker.id!!,
-                    oppgaveKoId = params.oppgaveKøId.toLong(),
+                    oppgaveKoId = oppgavekøId.toLong(),
                     kotlin.coroutines.coroutineContext
                 ) ?: Pair(null, null)
 
@@ -186,10 +171,7 @@ fun Route.OppgaveKoApis() {
         }
     }
 
-    @Location("")
-    class endreOppgaveKo
-
-    post { _: endreOppgaveKo ->
+    post("") {
         val oppgaveKo = call.receive<OppgaveKo>()
         requestContextService.withRequestContext(call) {
             if (!pepClient.erOppgaveStyrer()) {
