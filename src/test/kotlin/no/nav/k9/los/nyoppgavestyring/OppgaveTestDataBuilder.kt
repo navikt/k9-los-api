@@ -10,6 +10,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.*
+import no.nav.k9.los.nyoppgavestyring.reservasjon.Reservasjonsnøkkel
 import org.koin.test.KoinTest
 import org.koin.test.get
 import java.time.LocalDateTime
@@ -26,6 +27,8 @@ class OppgaveTestDataBuilder(
     val oppgavetypeRepo = get<OppgavetypeRepository>()
     val oppgaverepo = get<OppgaveV3Repository>()
     val k9SakTilLosAdapterTjeneste = get<K9SakTilLosAdapterTjeneste>()
+
+    var eksternVersjonTeller = 0
 
     init {
         områdeSetup.setup()
@@ -55,30 +58,35 @@ class OppgaveTestDataBuilder(
 
 
     fun lagOgLagre(status: Oppgavestatus = Oppgavestatus.AAPEN): OppgaveV3 {
-        val antall = oppgaverepo.tellAntall().first
         return transactionManager.transaction { tx ->
-            val oppgave = lag(antall, status)
+            val oppgave = lag(status)
             oppgaverepo.nyOppgaveversjon(oppgave, tx)
             oppgave
         }
     }
 
-    fun lag(antall: Long, status: Oppgavestatus = Oppgavestatus.AAPEN): OppgaveV3 {
+    fun lag(status: Oppgavestatus = Oppgavestatus.AAPEN, reservasjonsnøkkel: String = "", eksternVersjon: String? = null): OppgaveV3 {
         return OppgaveV3(
-            id = antall,
             eksternId = oppgaveFeltverdier.firstOrNull {
                 it.oppgavefelt.feltDefinisjon.eksternId == FeltType.BEHANDLINGUUID.eksternId
             }?.verdi
                 ?: UUID.randomUUID().toString(),
-            eksternVersjon = antall.toString(),
+            eksternVersjon = eksternVersjon?.let { it } ?: eksternVersjonTeller++.toString(),
             oppgavetype = oppgavetype,
             status = status,
             endretTidspunkt = LocalDateTime.now(),
             kildeområde = område.eksternId,
             felter = oppgaveFeltverdier.toList(),
-            reservasjonsnøkkel = "",
+            reservasjonsnøkkel = reservasjonsnøkkel,
             aktiv = true
         )
+    }
+
+    fun lagre(oppgave: OppgaveV3) {
+        return transactionManager.transaction { tx ->
+            oppgaverepo.nyOppgaveversjon(oppgave, tx)
+            oppgave
+        }
     }
 }
 

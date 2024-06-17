@@ -25,7 +25,7 @@ fun Route.OppgaveQueryApis() {
         val oppgaveQuery = call.receive<OppgaveQuery>()
         requestContextService.withRequestContext(call) {
             val idToken = kotlin.coroutines.coroutineContext.idToken()
-            call.respond(oppgaveQueryService.query(oppgaveQuery, idToken))
+            call.respond(oppgaveQueryService.query(QueryRequest(oppgaveQuery), idToken))
         }
     }
 
@@ -35,7 +35,7 @@ fun Route.OppgaveQueryApis() {
     post { _: queryOppgaveAntall ->
         val oppgaveQuery = call.receive<OppgaveQuery>()
         requestContextService.withRequestContext(call) {
-            call.respond(oppgaveQueryService.queryForAntall(oppgaveQuery))
+            call.respond(oppgaveQueryService.queryForAntall(QueryRequest(oppgaveQuery, false)))
         }
     }
 
@@ -48,7 +48,7 @@ fun Route.OppgaveQueryApis() {
             if (!pepClient.erOppgaveStyrer()) {
                 call.respond(HttpStatusCode.Forbidden);
             }
-            call.respond(oppgaveQueryService.validate(oppgaveQuery))
+            call.respond(oppgaveQueryService.validate(QueryRequest(oppgaveQuery)))
         }
     }
 
@@ -66,7 +66,7 @@ fun Route.OppgaveQueryApis() {
                     ContentDisposition.Parameters.FileName, "oppgaver.csv"
                 ).toString()
             )
-            call.respondText(oppgaveQueryService.queryToFile(oppgaveQuery, idToken))
+            call.respondText(oppgaveQueryService.queryToFile(QueryRequest(oppgaveQuery), idToken))
         }
     }
 
