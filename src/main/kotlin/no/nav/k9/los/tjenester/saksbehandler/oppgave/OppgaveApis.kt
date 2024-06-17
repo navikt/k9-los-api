@@ -253,11 +253,9 @@ internal fun Route.OppgaveApis() {
     @Location("/flytt/sok")
     class søkSaksbehandler
     post { _: søkSaksbehandler ->
+        requestContextService.withRequestContext(call) {
         val params = call.receive<BrukerIdentDto>()
         val sokSaksbehandlerMedIdent = oppgaveTjeneste.sokSaksbehandler(params.brukerIdent)
-        if (sokSaksbehandlerMedIdent == null) {
-            call.respond("")
-        } else {
             call.respond(sokSaksbehandlerMedIdent)
         }
     }
