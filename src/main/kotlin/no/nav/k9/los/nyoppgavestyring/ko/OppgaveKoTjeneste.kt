@@ -61,12 +61,6 @@ class OppgaveKoTjeneste(
         for (eksternOppgaveId in køoppgaveIder) {
             val oppgave = oppgaveRepositoryTxWrapper.hentOppgave(eksternOppgaveId.område, eksternOppgaveId.eksternId)
 
-            val aktivReservasjon =
-                reservasjonV3Tjeneste.hentAktivReservasjonForReservasjonsnøkkel(oppgave.reservasjonsnøkkel)
-            if (aktivReservasjon != null) {
-                continue
-            }
-
             val harTilgangTilLesSak = //TODO: harTilgangTilLesSak riktig PEP-spørring, eller bør det være likhetssjekk?
                 pepClient.harTilgangTilLesSak(oppgave.hentVerdi("saksnummer")!!, oppgave.hentVerdi("aktorId")!!)
             if (!harTilgangTilLesSak) {
@@ -121,15 +115,6 @@ class OppgaveKoTjeneste(
     ): Pair<Oppgave, ReservasjonV3>? {
         for (kandidatoppgaveId in kandidatoppgaver) {
             val kandidatoppgave = oppgaveRepository.hentOppgaveForId(tx, kandidatoppgaveId)
-            //reservert allerede?
-            val aktivReservasjon =
-                reservasjonV3Tjeneste.hentAktivReservasjonForReservasjonsnøkkel(
-                    kandidatoppgave.reservasjonsnøkkel,
-                    tx
-                )
-            if (aktivReservasjon != null) {
-                continue
-            }
 
             try {
                 //if (kandidatoppgave.oppgavetype.eksternId == "k9klage") //TODO: Hvis klageoppgave/klagekø -- IKKE ta reservasjon i V1. Disse kan ikke speiles
