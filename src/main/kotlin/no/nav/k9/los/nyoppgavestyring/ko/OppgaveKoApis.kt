@@ -3,8 +3,6 @@ package no.nav.k9.los.nyoppgavestyring.ko
 import io.ktor.http.*
 import io.ktor.server.application.call
 import io.ktor.server.locations.*
-import io.ktor.server.locations.get
-import io.ktor.server.locations.post
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -14,7 +12,6 @@ import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.integrasjon.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.ko.dto.*
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveKøIdDto
 import org.koin.java.KoinJavaComponent
 import org.koin.ktor.ext.inject
 
@@ -25,21 +22,18 @@ fun Route.OppgaveKoApis() {
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
     val pepClient by KoinJavaComponent.inject<IPepClient>(IPepClient::class.java)
 
-    data class OppgaveKoId(val id: String)
-
     get("/") {
         requestContextService.withRequestContext(call) {
             if (!pepClient.erOppgaveStyrer()) {
                 call.respond(HttpStatusCode.Forbidden);
             }
 
-            val oppgavekøer = oppgaveKoTjeneste.hentOppgavekøerMedAntall()
-                .map {(oppgaveko, antall) ->
+            val oppgavekøer = oppgaveKoTjeneste.hentOppgavekøer()
+                .map { oppgaveko ->
                     OppgaveKoListeelement(
                         id = oppgaveko.id,
                         tittel = oppgaveko.tittel,
                         antallSaksbehandlere = oppgaveko.saksbehandlere.size,
-                        antallOppgaver = antall,
                         sistEndret = oppgaveko.endretTidspunkt
                     )
                 }
@@ -141,7 +135,9 @@ fun Route.OppgaveKoApis() {
     get("/{id}/antall-oppgaver") {
         requestContextService.withRequestContext(call) {
             val oppgavekøId = call.parameters["id"]!!
-            call.respond(oppgaveKoTjeneste.hentAntallUreserverteOppgaveForKø(oppgavekøId.toLong()))
+            val filtrerReserverte = call.request.queryParameters["filtrer_reserverte"]?.let { it.toBoolean() } ?: true
+
+            call.respond(oppgaveKoTjeneste.hentAntallOppgaverForKø(oppgavekøId.toLong(), filtrerReserverte))
         }
     }
 
