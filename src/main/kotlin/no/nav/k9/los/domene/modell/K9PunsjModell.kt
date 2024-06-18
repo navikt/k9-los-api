@@ -65,6 +65,7 @@ data class K9PunsjModell(
 
     fun oppgave(sisteEvent: PunsjEventDto = sisteEvent()): Oppgave {
         val førsteEvent = eventer.first()
+        val førsteEventMedJournalførtTidspunktSatt = eventer.firstOrNull { it.journalførtTidspunkt != null }
 
         var aktiv = sisteEvent.aksjonspunktKoderMedStatusListe.any { aksjonspunkt -> aksjonspunkt.value == "OPPR" }
 
@@ -107,7 +108,8 @@ data class K9PunsjModell(
             ansvarligSaksbehandlerForTotrinn = null,
             ansvarligSaksbehandlerIdent = null,
             kombinert = false,
-            pleietrengendeAktørId = sisteEvent.pleietrengendeAktørId
+            pleietrengendeAktørId = sisteEvent.pleietrengendeAktørId,
+            journalførtTidspunkt = førsteEventMedJournalførtTidspunktSatt?.journalførtTidspunkt
         )
     }
 
