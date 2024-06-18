@@ -38,6 +38,8 @@ class K9TilbakeEventHandler(
     fun prosesser(
         event: BehandlingProsessEventTilbakeDto
     ) {
+        val t0 = System.currentTimeMillis()
+
         val modell = behandlingProsessEventTilbakeRepository.lagre(event)
         val oppgave = modell.oppgave(modell.sisteEvent())
 
@@ -66,6 +68,8 @@ class K9TilbakeEventHandler(
             }
             statistikkChannel.send(true)
         }
+
+        Metrics.k9tilbakeHendelseMetrikkGjennomført.observe((System.currentTimeMillis() - t0).toDouble())
     }
 
     private fun nyFerdigstilltAvSaksbehandler(oppgave: Oppgave) {

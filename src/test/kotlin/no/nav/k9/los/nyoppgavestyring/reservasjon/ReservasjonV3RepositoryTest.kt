@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.mottak.reservasjon
+package no.nav.k9.los.nyoppgavestyring.reservasjon
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
@@ -7,9 +7,6 @@ import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
-import no.nav.k9.los.nyoppgavestyring.reservasjon.AlleredeReservertException
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test

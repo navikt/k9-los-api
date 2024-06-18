@@ -3,14 +3,10 @@ package no.nav.k9.los.nyoppgavestyring.query.mapping
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import io.mockk.mockk
-import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.AbstractPostgresTest
 import no.nav.k9.los.nyoppgavestyring.FeltType
-import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.db.OmrådeOgKode
-import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgavefeltMedMer
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
@@ -40,7 +36,11 @@ class OppgaveQueryToSqlMapperTest {
             OmrådeOgKode("K9", FeltType.MOTTATT_DATO.eksternId) to mockk(relaxed = true),
         )
 
-        val sqlOppgaveQuery = OppgaveQueryToSqlMapper.toSqlOppgaveQuery(oppgaveQuery, felter, LocalDateTime.now())
+        val sqlOppgaveQuery = OppgaveQueryToSqlMapper.toSqlOppgaveQuery(
+            QueryRequest(oppgaveQuery),
+            felter,
+            LocalDateTime.now()
+        )
 
         assertThat(sqlOppgaveQuery.oppgavestatusFilter).isEqualTo(listOf(Oppgavestatus.AAPEN, Oppgavestatus.LUKKET))
     }
@@ -52,7 +52,11 @@ class OppgaveQueryToSqlMapperTest {
                 byggFilterK9(FeltType.OPPGAVE_STATUS, FeltverdiOperator.IN, Oppgavestatus.AAPEN.kode, Oppgavestatus.VENTER.kode))
         )
 
-        val sqlOppgaveQuery = OppgaveQueryToSqlMapper.toSqlOppgaveQuery(oppgaveQuery, mapOf(OmrådeOgKode("K9", FeltType.OPPGAVE_STATUS.eksternId) to mockk(relaxed = true)), LocalDateTime.now())
+        val sqlOppgaveQuery = OppgaveQueryToSqlMapper.toSqlOppgaveQuery(
+            QueryRequest(oppgaveQuery),
+            mapOf(OmrådeOgKode("K9", FeltType.OPPGAVE_STATUS.eksternId) to mockk(relaxed = true)),
+            LocalDateTime.now()
+        )
 
         assertThat(sqlOppgaveQuery.oppgavestatusFilter).isEqualTo(listOf(Oppgavestatus.AAPEN, Oppgavestatus.VENTER))
     }

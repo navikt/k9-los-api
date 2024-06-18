@@ -17,7 +17,7 @@ import java.math.BigInteger
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-class SqlOppgaveQuery(
+class OppgaveQuerySqlBuilder(
     val felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
     val oppgavestatusFilter: List<Oppgavestatus>,
     val now: LocalDateTime
@@ -29,18 +29,25 @@ class SqlOppgaveQuery(
     private val oppgavefelterKodeOgType = felter.mapValues { Datatype.fraKode(it.value.oppgavefelt.tolkes_som) }
 
     private var query = """
-                FROM Oppgave_v3 o INNER JOIN Oppgavetype ot ON (
-                    ot.id = o.oppgavetype_id
-                  ) INNER JOIN Omrade oppgave_omrade ON (
-                    oppgave_omrade.id = ot.omrade_id
-                  ) LEFT JOIN (
-                        SELECT ekstern_id, kildeomrade, kode6, kode7, egen_ansatt
-                        FROM Oppgave_pep_cache 
-                  ) as opc ON (
-                    o.kildeomrade = opc.kildeomrade AND o.ekstern_id = opc.ekstern_id
-                  )
-                WHERE aktiv = true 
+        FROM Oppgave_v3 o
+        INNER JOIN Oppgavetype ot ON ( ot.id = o.oppgavetype_id )
+        INNER JOIN Omrade oppgave_omrade ON (oppgave_omrade.id = ot.omrade_id )
+        LEFT JOIN (
+                SELECT ekstern_id, kildeomrade, kode6, kode7, egen_ansatt
+                FROM Oppgave_pep_cache 
+          ) as opc ON (o.kildeomrade = opc.kildeomrade AND o.ekstern_id = opc.ekstern_id)
+        WHERE aktiv = true 
             """.trimIndent()
+
+    private val filtrerReserverteOppgaver = """
+        AND NOT EXISTS (
+            select * 
+            from reservasjon_v3 rv 
+            where rv.reservasjonsnokkel = o.reservasjonsnokkel
+            and upper(rv.gyldig_tidsrom) > :now 
+            and rv.annullert_for_utlop = false 
+        )
+    """.trimIndent()
 
     private var orderBySql = """
                 ORDER BY TRUE 
@@ -48,16 +55,21 @@ class SqlOppgaveQuery(
 
     private val queryParams: MutableMap<String, Any?> = mutableMapOf()
     private val orderByParams: MutableMap<String, Any?> = mutableMapOf()
-    private var limit: Int = -1;
+    private var paging: String = ""
 
     fun getQuery(): String {
-        return selectPrefix + query + orderBySql
+        return selectPrefix + query + orderBySql + paging
     }
 
     fun medAntallSomResultat() {
         selectPrefix = """
             SELECT count(*) as antall 
         """.trimIndent()
+    }
+
+    fun utenReservasjoner() {
+        query += filtrerReserverteOppgaver
+        queryParams.put("now", now)
     }
 
     fun getParams(): Map<String, Any?> {
@@ -115,8 +127,8 @@ class SqlOppgaveQuery(
             }
             "egenAnsatt" -> {
                 query += when(feltverdi) {
-                    EgenAnsatt.JA.kode -> "${combineOperator.sql} opc.egen_ansatt is true "
-                    EgenAnsatt.NEI.kode -> "${combineOperator.sql} opc.egen_ansatt is false "
+                    EgenAnsatt.JA.kode -> "${combineOperator.sql} opc.egen_ansatt is not false "
+                    EgenAnsatt.NEI.kode -> "${combineOperator.sql} opc.egen_ansatt is not true "
                     else -> throw IllegalStateException("Ukjent feltkode: $feltkode")
                 }
             }
@@ -331,7 +343,13 @@ class SqlOppgaveQuery(
         orderBySql += if (økende) "ASC" else "DESC"
     }
 
-    fun medLimit(limit: Int) {
-        this.limit = limit;
+    fun medPaging(limit: Long, offset: Long) {
+        if (limit < 0) {
+            return
+        } else if (limit > 0 && offset < 0) {
+            this.paging = "LIMIT $limit"
+        } else if (limit > 0 && offset >= 0) {
+            this.paging = "LIMIT $limit OFFSET $offset"
+        }
     }
 }

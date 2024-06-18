@@ -9,7 +9,7 @@ class ReservasjonV3(
     val reservertAv: Long,
     val reservasjonsnøkkel: String,
     val annullertFørUtløp: Boolean = false,
-    val kommentar: String,
+    val kommentar: String?,
     gyldigFra: LocalDateTime,
     gyldigTil: LocalDateTime,
 ) {
@@ -21,7 +21,7 @@ class ReservasjonV3(
         reservertAv: Long = this.reservertAv,
         reservasjonsnøkkel: String = this.reservasjonsnøkkel,
         annullertFørUtløp: Boolean = this.annullertFørUtløp,
-        kommentar: String = this.kommentar,
+        kommentar: String? = this.kommentar,
         gyldigFra: LocalDateTime = this.gyldigFra,
         gyldigTil: LocalDateTime = this.gyldigTil
     ): ReservasjonV3 {

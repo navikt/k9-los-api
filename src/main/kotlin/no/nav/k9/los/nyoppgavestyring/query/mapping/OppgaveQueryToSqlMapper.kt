@@ -1,26 +1,44 @@
 package no.nav.k9.los.nyoppgavestyring.query.mapping
 
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.db.*
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
 import java.time.LocalDateTime
 
 object OppgaveQueryToSqlMapper {
-    fun toSqlOppgaveQuery(oppgaveQuery: OppgaveQuery, felter: Map<OmrådeOgKode, OppgavefeltMedMer>, now: LocalDateTime): SqlOppgaveQuery {
-        val query = SqlOppgaveQuery(felter, traverserFiltereOgFinnOppgavestatusfilter(oppgaveQuery), now)
+    fun toSqlOppgaveQuery(request: QueryRequest, felter: Map<OmrådeOgKode, OppgavefeltMedMer>, now: LocalDateTime): OppgaveQuerySqlBuilder {
+        val query = OppgaveQuerySqlBuilder(felter, traverserFiltereOgFinnOppgavestatusfilter(request), now)
         val combineOperator = CombineOperator.AND
 
-
-        håndterFiltere(query, oppgaveQuery.filtere, combineOperator)
-        håndterOrder(query, oppgaveQuery.order)
-        query.medLimit(oppgaveQuery.limit)
+        håndterFiltere(query, request.oppgaveQuery.filtere, combineOperator)
+        håndterOrder(query, request.oppgaveQuery.order)
+        if (request.fjernReserverte) {
+            query.utenReservasjoner()
+        }
+        request.avgrensning?.let { query.medPaging(it.limit, it.offset) }
 
         return query
     }
 
-    private fun traverserFiltereOgFinnOppgavestatusfilter(oppgaveQuery: OppgaveQuery): List<Oppgavestatus> {
+    fun toSqlOppgaveQueryForAntall(
+        request: QueryRequest,
+        felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
+        now: LocalDateTime
+    ): OppgaveQuerySqlBuilder {
+        val query = OppgaveQuerySqlBuilder(felter, traverserFiltereOgFinnOppgavestatusfilter(request), now)
+        val combineOperator = CombineOperator.AND
+        håndterFiltere(query, request.oppgaveQuery.filtere, combineOperator)
+        if (request.fjernReserverte) { query.utenReservasjoner() }
+        request.avgrensning?.let { query.medPaging(it.limit, it.offset) }
+        query.medAntallSomResultat()
+
+        return query
+    }
+
+    private fun traverserFiltereOgFinnOppgavestatusfilter(queryRequest: QueryRequest): List<Oppgavestatus> {
         val statuser = mutableSetOf<Oppgavestatus>()
-        rekursivtSøk(oppgaveQuery.filtere, statuser)
+        rekursivtSøk(queryRequest.oppgaveQuery.filtere, statuser)
 
         //dette parameteret brukes av index på oppgavefeltverdi. Spørringer som ser på lukkede oppgaver er ikke indekserte, og vil være trege
         //Dersom spørringen filterer på oppgavestatus, så matcher vi det.
@@ -45,21 +63,8 @@ object OppgaveQueryToSqlMapper {
         }
     }
 
-    fun toSqlOppgaveQueryForAntall(
-        oppgaveQuery: OppgaveQuery,
-        felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
-        now: LocalDateTime
-    ): SqlOppgaveQuery {
-        val query = SqlOppgaveQuery(felter, traverserFiltereOgFinnOppgavestatusfilter(oppgaveQuery), now)
-        val combineOperator = CombineOperator.AND
-        håndterFiltere(query, oppgaveQuery.filtere, combineOperator)
-        query.medAntallSomResultat()
-
-        return query
-    }
-
     private fun håndterFiltere(
-        query: SqlOppgaveQuery,
+        query: OppgaveQuerySqlBuilder,
         filtere: List<Oppgavefilter>,
         combineOperator: CombineOperator
     ) {
@@ -85,7 +90,7 @@ object OppgaveQueryToSqlMapper {
         }
     }
 
-    private fun håndterOrder(query: SqlOppgaveQuery, orderBys: List<OrderFelt>) {
+    private fun håndterOrder(query: OppgaveQuerySqlBuilder, orderBys: List<OrderFelt>) {
         for (orderBy in orderBys) {
             when (orderBy) {
                 is EnkelOrderFelt -> query.medEnkelOrder(orderBy.område, orderBy.kode, orderBy.økende)
