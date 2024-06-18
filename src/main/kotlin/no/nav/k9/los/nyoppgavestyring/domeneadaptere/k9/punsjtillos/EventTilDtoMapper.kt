@@ -81,20 +81,21 @@ class EventTilDtoMapper {
                         verdi = event.ferdigstiltAv,
                     )
                 },
+                event.journalførtTidspunkt?.let {
+                    OppgaveFeltverdiDto(
+                        nøkkel = "journalfortTidspunkt",
+                        verdi = it.toString(),
+                    )
+                },
                 OppgaveFeltverdiDto(
                     nøkkel = "journalfort",
                     verdi = "false",
                 ),
                 OppgaveFeltverdiDto(
-                    nøkkel = "journalfortTidspunkt",
-                    verdi = "",
-                ),
-                OppgaveFeltverdiDto(
                     nøkkel = "registrertDato",
                     verdi = forrigeOppgave?.let { forrigeOppgave.hentVerdi("registrertDato") } ?: event.eventTid.toString(),
-                ),
+                )
             )
-
         }
 
         internal fun utledVentetype(
