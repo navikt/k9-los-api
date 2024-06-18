@@ -345,7 +345,7 @@ fun common(app: Application, config: Configuration) = module {
         SakslisteTjeneste(oppgaveTjeneste = get())
     }
     single {
-        HentKodeverkTjeneste()
+        HentKodeverkTjeneste(configuration = get())
     }
 
     single { OppgaveKøOppdaterer(get(), get(), get()) }
