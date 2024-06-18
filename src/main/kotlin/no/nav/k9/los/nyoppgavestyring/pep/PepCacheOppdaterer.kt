@@ -7,12 +7,12 @@ import java.util.*
 import kotlin.concurrent.timer
 
 private val tidsforbrukMetrikkÅpne = Histogram.build()
-    .name("los-pepcache-oppdaterer-aapne")
+    .name("los_pepcache_oppdaterer_aapne")
     .help("Tidsforbruk PepCacheOppdaterer åpne")
     .register()
 
 private val tidsforbrukMetrikkLukkede = Histogram.build()
-    .name("los-pepcache-oppdaterer-lukkede")
+    .name("los_pepcache_oppdaterer_lukkede")
     .help("Tidsforbruk PepCacheOppdaterer lukkede")
     .register()
 

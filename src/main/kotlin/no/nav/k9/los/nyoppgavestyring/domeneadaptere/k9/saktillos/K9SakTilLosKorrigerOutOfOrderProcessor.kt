@@ -11,7 +11,7 @@ import java.util.*
 import java.util.concurrent.Executors
 
 private val tidsforbrukMetrikk = Histogram.build()
-    .name("los-k9SakKorrigerOutOfOrderProsessor")
+    .name("los_k9SakKorrigerOutOfOrderProsessor")
     .help("Tidsforbruk k9SakKorrigerOutOfOrderProsessor")
     .register()
 

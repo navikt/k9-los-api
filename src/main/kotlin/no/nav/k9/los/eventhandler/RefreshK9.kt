@@ -12,7 +12,7 @@ import java.util.*
 import java.util.concurrent.Executors
 
 private val tidsforbrukMetrikk = Histogram.build()
-    .name("los-refreshk9")
+    .name("los_refreshk9")
     .help("Tidsforbruk refreshK9")
     .register()
 

@@ -20,7 +20,7 @@ private val log: Logger =
     LoggerFactory.getLogger("oppdaterStatistikk")
 
 private val tidsforbrukMetrikk = Histogram.build()
-    .name("los-oppdaterStatistikk")
+    .name("los_oppdaterStatistikk")
     .help("Tidsforbruk oppdaterStatistikk")
     .register()
 

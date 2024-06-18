@@ -7,17 +7,17 @@ class Metrics {
     companion object {
 
         val k9punsjHendelseMetrikkBehandlingOpprettet = Histogram.build()
-            .name("los-k9punsj-hendelse-behandling-opprettet")
+            .name("los_k9punsj_hendelse_behandling_opprettet")
             .help("Tidsforbruk k9punsj hendelse (behandling opprettet)")
             .register()
 
         val k9punsjHendelseMetrikkBehandlingAvbrutt = Histogram.build()
-            .name("los-k9punsj-hendelse-behandling-avbrutt")
+            .name("los_k9punsj_hendelse_behandling_avbrutt")
             .help("Tidsforbruk k9punsj hendelse (behandling avbrutt)")
             .register()
 
         val k9punsjHendelseMetrikkBehandlingFerdigstilt = Histogram.build()
-            .name("los-k9punsj-hendelse-behandling-ferdigstilt")
+            .name("los_k9punsj_hendelse_behandling_ferdigstilt")
             .help("Tidsforbruk k9punsj hendelse (behandling ferdigstilt)")
             .register()
     }

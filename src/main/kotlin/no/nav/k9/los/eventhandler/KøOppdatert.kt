@@ -19,7 +19,7 @@ import java.util.concurrent.Executors
 import kotlin.system.measureTimeMillis
 
 private val tidsforbrukMetrikk = Histogram.build()
-    .name("los-oppdater-koe")
+    .name("los_oppdater_koe")
     .help("Tidsforbruk køOppdatertProsessor")
     .register()
 
