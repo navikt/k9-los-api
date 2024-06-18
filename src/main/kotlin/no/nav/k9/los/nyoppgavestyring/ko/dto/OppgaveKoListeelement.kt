@@ -6,6 +6,5 @@ class OppgaveKoListeelement(
     val id: Long,
     val tittel: String,
     val sistEndret: LocalDateTime?,
-    val antallOppgaver: Long,
     val antallSaksbehandlere: Int
 )

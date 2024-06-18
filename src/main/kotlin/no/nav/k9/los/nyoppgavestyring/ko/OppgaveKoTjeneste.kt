@@ -19,7 +19,6 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
-import no.nav.k9.los.utils.forskyvReservasjonsDato
 import no.nav.k9.los.utils.leggTilDagerHoppOverHelg
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -42,11 +41,8 @@ class OppgaveKoTjeneste(
 ) {
     private val log = LoggerFactory.getLogger(OppgaveKoTjeneste::class.java)
 
-    fun hentOppgavekøerMedAntall(): Map<OppgaveKo, Long> {
+    fun hentOppgavekøer(): List<OppgaveKo> {
         return oppgaveKoRepository.hentListe()
-            .associateWith {
-                oppgaveQueryService.queryForAntall( QueryRequest(it.oppgaveQuery, fjernReserverte = false ) )
-            }
     }
 
     suspend fun hentOppgaverFraKø(
@@ -83,6 +79,14 @@ class OppgaveKoTjeneste(
         return transactionalManager.transaction { tx ->
             oppgaveKoRepository.hentKoerMedOppgittSaksbehandler(tx, saksbehandlerEpost)
         }
+    }
+
+    fun hentAntallOppgaverForKø(
+        oppgaveKoId: Long,
+        filtrerReserverte: Boolean
+    ): Long {
+        val ko = oppgaveKoRepository.hent(oppgaveKoId)
+        return oppgaveQueryService.queryForAntall(QueryRequest(ko.oppgaveQuery, fjernReserverte = filtrerReserverte))
     }
 
     fun hentAntallUreserverteOppgaveForKø(
