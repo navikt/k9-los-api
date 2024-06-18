@@ -31,6 +31,7 @@ class K9sakEventHandlerV2(
     }
 
     private fun håndterBehandlingOpprettet(hendelse: ProduksjonsstyringBehandlingOpprettetHendelse) {
+        val t0 = System.currentTimeMillis()
         if (hendelse.ytelseType == FagsakYtelseType.FRISINN.kode) {
             return // Skal ikke opprette oppgaver for frisinn
         }
@@ -47,9 +48,12 @@ class K9sakEventHandlerV2(
                 tidspunkt = hendelse.hendelseTid
             )
         )
+        val tidsforbrukMillis = System.currentTimeMillis() - t0
+        Metrics.k9sakHendelseMetrikkBehandlingOpprettet.observe(tidsforbrukMillis.toDouble())
     }
 
     private fun håndterBehandlingAvsluttet(hendelse: ProduksjonsstyringBehandlingAvsluttetHendelse) {
+        val t0 = System.currentTimeMillis()
         log.info("Behandling avsluttet hendelse: ${hendelse.behandlingResultatType}, ${hendelse.tryggToString()} ${hendelse.eksternId}")
 
         try {
@@ -62,9 +66,13 @@ class K9sakEventHandlerV2(
         } catch (e: IllegalStateException) {
             log.warn("Feilet ved håndtering av behandlingavsluttet hendelse", e)
         }
+
+        val tidsforbrukMillis = System.currentTimeMillis() - t0
+        Metrics.k9sakHendelseMetrikkBehandlingAvsluttet.observe(tidsforbrukMillis.toDouble())
     }
 
     private suspend fun håndterNyttAksjonspunkt(hendelse: ProduksjonsstyringAksjonspunktHendelse) {
+        val t0 = System.currentTimeMillis()
         log.info("Aksjonspunkthendelse: ${hendelse.aksjonspunktTilstander.joinToString(", ")} ${hendelse.eksternId}")
 
         val aksjonspunkter = hendelse.aksjonspunktTilstander.associateBy { it }
@@ -78,6 +86,9 @@ class K9sakEventHandlerV2(
         } catch (e: IllegalStateException) {
             log.warn("Feilet ved håndtering av aksjonspunkthendelser", e)
         }
+
+        val tidsforbrukMillis = System.currentTimeMillis() - t0
+        Metrics.k9sakHendelseMetrikkAksjonspunkt.observe(tidsforbrukMillis.toDouble())
     }
 
     private fun håndterNyttDokument(dokumenthendelse: ProduksjonsstyringDokumentHendelse) {

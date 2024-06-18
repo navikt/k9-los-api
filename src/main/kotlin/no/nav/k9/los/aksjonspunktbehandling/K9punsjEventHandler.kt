@@ -35,6 +35,8 @@ class K9punsjEventHandler constructor(
     }
 
     fun prosesser(event: PunsjEventDto) {
+        val t0 = System.currentTimeMillis()
+
         log.info(event.safePrint())
         val modell = punsjEventK9Repository.lagre(event = event)
         val oppgave = modell.oppgave()
@@ -55,6 +57,8 @@ class K9punsjEventHandler constructor(
 
             oppdaterOppgaveV2(event, modell)
         }
+
+        Metrics.k9punsjHendelseMetrikkGjennomført.observe((System.currentTimeMillis() - t0).toDouble())
     }
 
     override fun tellEvent(modell: IModell, oppgave: Oppgave) {
