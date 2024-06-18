@@ -1,22 +1,27 @@
 package no.nav.k9.los.eventhandler
 
+import io.prometheus.client.Histogram
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.launch
+import no.nav.k9.kodeverk.Fagsystem
+import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.repository.OppgaveKøRepository
 import no.nav.k9.los.domene.repository.OppgaveRepository
-import no.nav.k9.kodeverk.Fagsystem
-import no.nav.k9.los.domene.lager.oppgave.Oppgave
-import no.nav.k9.sak.kontrakt.behandling.BehandlingIdDto
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
+import no.nav.k9.sak.kontrakt.behandling.BehandlingIdDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.Executors
-import kotlin.collections.ArrayList
 import kotlin.system.measureTimeMillis
+
+private val tidsforbrukMetrikk = Histogram.build()
+    .name("los-oppdater-koe")
+    .help("Tidsforbruk køOppdatertProsessor")
+    .register()
 
 fun CoroutineScope.køOppdatertProsessor(
     channel: ReceiveChannel<UUID>,
@@ -39,7 +44,7 @@ fun CoroutineScope.køOppdatertProsessor(
                 log
             )
             log.info("tok ${measureTimeMillis}ms å oppdatere køen: $uuid")
-
+            tidsforbrukMetrikk.observe(measureTimeMillis.toDouble())
         } catch (e: Exception) {
             log.error("Feilet ved oppdatering av kø $uuid", e)
         }

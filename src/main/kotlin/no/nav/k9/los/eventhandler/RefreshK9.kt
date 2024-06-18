@@ -1,17 +1,20 @@
 package no.nav.k9.los.eventhandler
 
+import io.prometheus.client.Histogram
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.launch
 import no.nav.k9.los.domene.modell.Fagsystem
 import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.integrasjon.k9.IK9SakService
-import no.nav.k9.sak.kontrakt.behandling.BehandlingIdDto
-import no.nav.k9.sak.kontrakt.behandling.BehandlingIdListe
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.Executors
 
+private val tidsforbrukMetrikk = Histogram.build()
+    .name("los-refreshk9")
+    .help("Tidsforbruk refreshK9")
+    .register()
 
 fun CoroutineScope.refreshK9(
     channel: ReceiveChannel<UUID>,
@@ -26,12 +29,14 @@ fun CoroutineScope.refreshK9(
         val oppgaveId = channel.tryReceive().getOrNull()
         if (oppgaveId == null) {
             try {
+                val t0 = System.currentTimeMillis()
                 refreshK9(oppgaveListe
                     .map { oppgaveRepository.hent(it) }
                     .filter { it.system == Fagsystem.K9SAK.kode }
                     .map { it.eksternId },
                     k9SakService
                 )
+                tidsforbrukMetrikk.observe((System.currentTimeMillis() - t0).toDouble())
                 oppgaveListe.clear()
             } catch (e: Exception) {
                 log.error("Feilet ved refresh av oppgaver i k9-sak: "+oppgaveListe.joinToString(", "), e)
