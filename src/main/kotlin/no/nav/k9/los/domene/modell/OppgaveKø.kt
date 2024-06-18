@@ -209,6 +209,11 @@ data class OppgaveKø(
             return true
         }
 
+        if (oppgave.journalførtTidspunkt != null && kriterier.map { it.andreKriterierType }
+                .contains(AndreKriterierType.JOURNALFØRT)) {
+            return true
+        }
+
         if (oppgave.aksjonspunkter.harAktivtAksjonspunkt(AVKLAR_KOMPLETT_NOK_FOR_BEREGNING)
             && kriterier.map { it.andreKriterierType }
                 .contains(AndreKriterierType.AVKLAR_INNTEKTSMELDING_BEREGNING)
