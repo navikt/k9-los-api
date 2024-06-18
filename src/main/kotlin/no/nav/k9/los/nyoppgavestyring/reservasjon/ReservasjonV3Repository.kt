@@ -331,7 +331,7 @@ class ReservasjonV3Repository(
         return transactionalManager.transaction { tx ->
 
             log.info("spørring hent ureserverte OppgaveIder: $queryString")
-            val explain = tx.run(
+            /* val explain = tx.run(
                 queryOf(
                     """explain $queryString""",
                     mapOf(
@@ -341,7 +341,7 @@ class ReservasjonV3Repository(
                     row.string(1)
                 }.asList
             ).joinToString("\n")
-            log.info("explain ureserverte OppgaveIder: $explain")
+            log.info("explain ureserverte OppgaveIder: $explain")  */
 
             tx.run(
                 queryOf(

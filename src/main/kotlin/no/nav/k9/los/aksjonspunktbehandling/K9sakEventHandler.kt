@@ -43,9 +43,13 @@ class K9sakEventHandler constructor(
     fun prosesser(
         eventInn: BehandlingProsessEventDto
     ) {
+        val t0 = System.currentTimeMillis()
 
         val event = håndterVaskeevent(eventInn)
-        if (event == null) return
+        if (event == null) {
+            Metrics.k9sakHendelseMetrikkVaskeevent.observe((System.currentTimeMillis() - t0).toDouble())
+            return
+        }
 
         var skalSkippe = false
         val modell = behandlingProsessEventK9Repository.lagre(event.eksternId!!) { k9SakModell ->
@@ -66,6 +70,7 @@ class K9sakEventHandler constructor(
             oppgave
         }
         if (skalSkippe) {
+            Metrics.k9sakHendelseMetrikkSkip.observe((System.currentTimeMillis() - t0).toDouble())
             return
         }
         tellEvent(modell, oppgave)
@@ -83,6 +88,7 @@ class K9sakEventHandler constructor(
         }
         
         k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId)
+        Metrics.k9sakHendelseMetrikkGjennomført.observe((System.currentTimeMillis() - t0).toDouble())
     }
 
     fun håndterVaskeevent(event: BehandlingProsessEventDto): BehandlingProsessEventDto? {

@@ -22,8 +22,8 @@ class OppgaveRepository(
                  AND ov.ekstern_id = :eksternId 
                 and ov.aktiv = true
             """.trimIndent()
-        log.info("query hentNyesteOppgaveForEksternId: $queryString")
-        val explain = tx.run(
+        //log.info("query hentNyesteOppgaveForEksternId: $queryString")
+        /* val explain = tx.run(
             queryOf(
                 """explain $queryString""",
                 mapOf(
@@ -34,7 +34,7 @@ class OppgaveRepository(
                 row.string(1)
             }.asList
         ).joinToString("\n")
-        log.info("explain ureserverte OppgaveIder: $explain")
+        log.info("explain ureserverte OppgaveIder: $explain") */
 
         val oppgave = tx.run(
             queryOf(
@@ -63,14 +63,14 @@ class OppgaveRepository(
             """.trimIndent()
 
         log.info("spørring hentAktivReservasjonForReserajovsnsnøkkel")
-        val explain = tx.run(
+        /* val explain = tx.run(
             queryOf(
                 "explain " + queryString
             ).map { row ->
                 row.string(1)
             }.asList
         ).joinToString("\n")
-        log.info("explain hentAktivReservasjonForReserajovsnsnøkkel: $explain")
+        log.info("explain hentAktivReservasjonForReserajovsnsnøkkel: $explain") */
 
         val oppgaver = tx.run(
             queryOf(
