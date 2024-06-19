@@ -1,0 +1,52 @@
+CREATE TABLE if not exists OPPGAVE_V3_AKTIV
+(
+    id                          BIGINT GENERATED ALWAYS AS IDENTITY     NOT NULL PRIMARY KEY,
+    ekstern_id                  VARCHAR(100)                            NOT NULL,
+    ekstern_versjon             VARCHAR(100)                            NOT NULL,
+    oppgavetype_id              BIGINT                                  NOT NULL,
+    status                      VARCHAR(50)                             NOT NULL,
+    kildeomrade                 VARCHAR(30)                             NOT NULL,
+    versjon                     int                                     NOT NULL,
+    endret_tidspunkt            timestamp(3)                            NOT NULL,
+    reservasjonsnokkel          varchar(50)                             NOT NULL,
+    CONSTRAINT FK_OPPGAVE_01
+        FOREIGN KEY(oppgavetype_id) REFERENCES OPPGAVETYPE(id),
+    UNIQUE(kildeomrade, ekstern_id)
+);
+
+comment on table OPPGAVE_V3_AKTIV is 'Den aktive versjonen av en konkret instans av en definert oppgavetype. Historiske versjoner (inkl aktiv) ligger i Oppgave_V3';
+comment on column OPPGAVE_V3_AKTIV.ekstern_id is 'Ekstern nøkkel for å unikt identifisere en oppgave. Eies av adapterne. Må være unik for en gitt oppgave, og ikke kollidere med feks andre oppgaver på samme område.';
+comment on column OPPGAVE_V3_AKTIV.ekstern_versjon is 'Ekstern versjonsindikator for versjonering/idempotens av oppgaver. Eies av adapterne';
+comment on column OPPGAVE_V3_AKTIV.status is 'Status på oppgaven. Enum styrt av los. Feks ÅPEN, UTFØRT';
+comment on column OPPGAVE_V3_AKTIV.versjon is 'Generasjonsteller for oppdateringer av en konkret oppgave.';
+comment on column OPPGAVE_V3_AKTIV.endret_tidspunkt is 'Tidspunktet den aktuelle versjonen av oppgaven ble opprettet. Angis av adapter';
+comment on column OPPGAVE_V3_AKTIV.reservasjonsnokkel is 'Nøkkel, definert av domeneadapter som eier oppgaven, som saksbehandler låser oppgaven (og andre oppgaver med samme reservasjonsnøkkel) med når de reserverer';
+
+CREATE INDEX oppgave_v3_aktiv_status_reservasjonsnokkel ON oppgave_v3_aktiv(status, reservasjonsnokkel);
+CREATE INDEX oppgave_v3_kildeomrade_ekstern_id_where_aktiv ON oppgave_v3_aktiv USING btree (kildeomrade, ekstern_id);
+
+CREATE TABLE if not exists OPPGAVEFELT_VERDI_AKTIV
+(
+    id                          BIGINT GENERATED ALWAYS AS IDENTITY     NOT NULL PRIMARY KEY,
+    oppgave_id                  BIGINT                                  NOT NULL,
+    oppgavefelt_id              BIGINT                                  NOT NULL,
+    verdi                       VARCHAR(100)                            NOT NULL,
+    oppgavestatus               VARCHAR(50)                             NOT NULL,
+    CONSTRAINT FK_OPPGAVEFELT_VERDI_01
+        FOREIGN KEY(oppgave_id) REFERENCES OPPGAVE_V3_AKTIV(id),
+    CONSTRAINT FK_OPPGAVEFELT_VERDI_02
+        FOREIGN KEY(oppgavefelt_id) REFERENCES OPPGAVEFELT(id)
+);
+
+comment on table OPPGAVEFELT_VERDI_AKTIV is 'Konkrete verdier på en oppgave, som predefinert i OPPGAVEFELT.';
+comment on column OPPGAVEFELT_VERDI_AKTIV.verdi is 'Verdiens egenskaper bestemmes av tabellen DATATYPE via fremmednøkkel i oppgavefelt.'
+
+create index oppgavefelt_verdi_oppgave_id_oppgavefelt_id_verdi_oppgave_aapen
+    on OPPGAVEFELT_VERDI_AKTIV
+        using btree (oppgave_id, oppgavefelt_id, verdi)
+    where oppgavestatus = 'AAPEN';
+
+create index oppgavefelt_verdi_oppgave_id_oppgavefelt_id_verdi_oppgaveventer
+    on OPPGAVEFELT_VERDI_AKTIV
+        using btree (oppgave_id, oppgavefelt_id, verdi)
+    where oppgavestatus = 'VENTER';
