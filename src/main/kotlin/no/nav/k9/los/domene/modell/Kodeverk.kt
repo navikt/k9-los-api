@@ -28,7 +28,7 @@ enum class AndreKriterierType(override val kode: String, override val navn: Stri
         "Forlengelser fra infotrygd aksjonspunkt"
     ),
     AARSKVANTUM("AARSKVANTUM", "Årskvantum"),
-    JOURNALFØRT("JOURNALFØRT", "Journalført")
+    IKKE_JOURNALFØRT("IKKE_JOURNALFØRT", "Ikke journalført")
     ;
 
     override val kodeverk = "ANDRE_KRITERIER_TYPE"
