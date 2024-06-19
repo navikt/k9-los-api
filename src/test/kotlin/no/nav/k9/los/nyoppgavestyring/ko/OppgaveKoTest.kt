@@ -22,7 +22,7 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
     fun `sjekker at oppgavekø kan opprettes og slettes`() {
         val oppgaveKoRepository = OppgaveKoRepository(dataSource)
 
-        val oppgaveKo = oppgaveKoRepository.leggTil("Testkø")
+        val oppgaveKo = oppgaveKoRepository.leggTil("Testkø", skjermet = false)
         assertThat(oppgaveKo.tittel).isEqualTo("Testkø")
 
         val oppgaveKoFraDb = oppgaveKoRepository.hent(oppgaveKo.id)
@@ -39,7 +39,7 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
         val oppgaveKoRepository = OppgaveKoRepository(dataSource)
 
         val tittel = "Testkø"
-        val oppgaveKo = oppgaveKoRepository.leggTil(tittel)
+        val oppgaveKo = oppgaveKoRepository.leggTil(tittel, skjermet = false)
         assertThat(oppgaveKo.tittel).isEqualTo(tittel)
 
         val beskrivelse = "En god beskrivelse"
@@ -54,7 +54,7 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
         val oppgaveKoRepository = OppgaveKoRepository(dataSource)
 
         val tittel = "Testkø"
-        val oppgaveKo = oppgaveKoRepository.leggTil(tittel)
+        val oppgaveKo = oppgaveKoRepository.leggTil(tittel, skjermet = false)
         assertThat(oppgaveKo.tittel).isEqualTo(tittel)
 
         val saksbehandlerepost = "a@b"
@@ -79,7 +79,7 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
 
         val tittel = "Testkø"
         val saksbehandlerepost = "a@b"
-        val oppgaveKo = oppgaveKoRepository.leggTil(tittel)
+        val oppgaveKo = oppgaveKoRepository.leggTil(tittel, skjermet = false)
         mockLeggTilSaksbehandler(saksbehandlerepost)
         val gammelOppgaveko = oppgaveKoRepository.endre(oppgaveKo.copy(saksbehandlere = listOf(saksbehandlerepost)))
 

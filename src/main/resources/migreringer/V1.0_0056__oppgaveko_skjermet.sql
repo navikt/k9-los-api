@@ -1,0 +1,1 @@
+ALTER TABLE OPPGAVEKO_V3 ADD COLUMN skjermet BOOLEAN default false

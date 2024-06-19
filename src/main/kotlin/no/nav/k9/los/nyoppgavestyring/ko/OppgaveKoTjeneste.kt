@@ -41,8 +41,8 @@ class OppgaveKoTjeneste(
 ) {
     private val log = LoggerFactory.getLogger(OppgaveKoTjeneste::class.java)
 
-    fun hentOppgavekøer(): List<OppgaveKo> {
-        return oppgaveKoRepository.hentListe()
+    fun hentOppgavekøer(skjermet: Boolean = false): List<OppgaveKo> {
+        return oppgaveKoRepository.hentListe(skjermet)
     }
 
     suspend fun hentOppgaverFraKø(

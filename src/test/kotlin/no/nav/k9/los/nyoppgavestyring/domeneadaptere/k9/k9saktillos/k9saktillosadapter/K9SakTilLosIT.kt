@@ -481,7 +481,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
 
     private fun opprettKøFor(saksbehandler: Saksbehandler, oppgaveQuery: OppgaveQuery): OppgaveKo {
         val oppgaveKoRepository = get<OppgaveKoRepository>()
-        val nyKø = oppgaveKoRepository.leggTil("Test").copy(
+        val nyKø = oppgaveKoRepository.leggTil("Test", skjermet = false).copy(
             saksbehandlere = listOf(saksbehandler.epost),
             oppgaveQuery = oppgaveQuery
         )
