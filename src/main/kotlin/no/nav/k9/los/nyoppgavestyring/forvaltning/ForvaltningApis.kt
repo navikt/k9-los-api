@@ -183,7 +183,7 @@ fun Route.forvaltningApis() {
 
     route("/ytelse") {
         get("/oppgaveoversikt") {
-            val antall = oppgaveKoTjeneste.hentOppgavekøerMedAntall().size
+            val antall = oppgaveKoTjeneste.hentOppgavekøer().size
             call.respond(antall)
         }
 

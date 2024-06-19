@@ -72,6 +72,124 @@ internal class OppgaveKøTest {
     }
 
     @Test
+    fun `Ikke journalført punsjoppgave skal med i køen med dette filter oppsettet`() {
+        val oppgaveKø = OppgaveKø(
+            UUID.randomUUID(),
+            "Ikke journalførte punsjoppgaver",
+            LocalDate.now(),
+            KøSortering.OPPRETT_BEHANDLING,
+            mutableListOf(),
+            mutableListOf(
+                FagsakYtelseType.OMSORGSPENGER,
+                FagsakYtelseType.OMSORGSDAGER,
+                FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
+                FagsakYtelseType.UKJENT
+            ),
+            mutableListOf(
+                AndreKriterierDto("1", AndreKriterierType.IKKE_JOURNALFØRT, checked = true, inkluder = true)
+            ),
+            Enhet.NASJONAL,
+            null,
+            null,
+            mutableListOf(Saksbehandler(id = null, "OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn)),
+            false,
+            mutableListOf()
+        )
+
+        val ikkeJournalførtPunsjoppgave = Oppgave(
+            fagsakSaksnummer = "",
+            aktorId = "273857",
+            journalpostId = "234234535",
+            behandlendeEnhet = "Enhet",
+            behandlingsfrist = LocalDateTime.now(),
+            behandlingOpprettet = LocalDateTime.now().minusDays(23),
+            forsteStonadsdag = LocalDate.now().plusDays(6),
+            behandlingStatus = BehandlingStatus.OPPRETTET,
+            behandlingType = BehandlingType.UKJENT,
+            fagsakYtelseType = FagsakYtelseType.UKJENT,
+            aktiv = true,
+            system = "PUNSJ",
+            journalførtTidspunkt = null,
+            oppgaveAvsluttet = null,
+            utfortFraAdmin = false,
+            eksternId = UUID.randomUUID(),
+            oppgaveEgenskap = emptyList(),
+            aksjonspunkter = Aksjonspunkter(emptyMap(), emptyList()),
+            tilBeslutter = false,
+            utbetalingTilBruker = false,
+            selvstendigFrilans = false,
+            kombinert = false,
+            søktGradering = false,
+            årskvantum = false,
+            avklarArbeidsforhold = false,
+            avklarMedlemskap = false,
+            utenlands = false,
+        )
+
+        val ikkeJournalførtPunsjoppgaveErIKøen = oppgaveKø.tilhørerOppgaveTilKø(ikkeJournalførtPunsjoppgave, null, emptyList())
+        assertTrue(ikkeJournalførtPunsjoppgaveErIKøen)
+    }
+
+    @Test
+    fun `Journalført punsjoppgave skal ikke med i køen med dette filter oppsettet`() {
+        val oppgaveKø = OppgaveKø(
+            UUID.randomUUID(),
+            "Ikke journalførte punsjoppgaver",
+            LocalDate.now(),
+            KøSortering.OPPRETT_BEHANDLING,
+            mutableListOf(),
+            mutableListOf(
+                FagsakYtelseType.OMSORGSPENGER,
+                FagsakYtelseType.OMSORGSDAGER,
+                FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
+                FagsakYtelseType.UKJENT
+            ),
+            mutableListOf(
+                AndreKriterierDto("1", AndreKriterierType.IKKE_JOURNALFØRT, checked = true, inkluder = true)
+            ),
+            Enhet.NASJONAL,
+            null,
+            null,
+            mutableListOf(Saksbehandler(id = null, "OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn)),
+            false,
+            mutableListOf()
+        )
+
+        val ikkeJournalførtPunsjoppgave = Oppgave(
+            fagsakSaksnummer = "",
+            aktorId = "273857",
+            journalpostId = "234234535",
+            behandlendeEnhet = "Enhet",
+            behandlingsfrist = LocalDateTime.now(),
+            behandlingOpprettet = LocalDateTime.now().minusDays(23),
+            forsteStonadsdag = LocalDate.now().plusDays(6),
+            behandlingStatus = BehandlingStatus.OPPRETTET,
+            behandlingType = BehandlingType.UKJENT,
+            fagsakYtelseType = FagsakYtelseType.UKJENT,
+            aktiv = true,
+            system = "PUNSJ",
+            journalførtTidspunkt = LocalDateTime.now(),
+            oppgaveAvsluttet = null,
+            utfortFraAdmin = false,
+            eksternId = UUID.randomUUID(),
+            oppgaveEgenskap = emptyList(),
+            aksjonspunkter = Aksjonspunkter(emptyMap(), emptyList()),
+            tilBeslutter = false,
+            utbetalingTilBruker = false,
+            selvstendigFrilans = false,
+            kombinert = false,
+            søktGradering = false,
+            årskvantum = false,
+            avklarArbeidsforhold = false,
+            avklarMedlemskap = false,
+            utenlands = false,
+        )
+
+        val journalførtPunsjoppgaveErIKøen = oppgaveKø.tilhørerOppgaveTilKø(ikkeJournalførtPunsjoppgave, null, emptyList())
+        assertFalse(journalførtPunsjoppgaveErIKøen)
+    }
+
+    @Test
     fun `skal ta med oppgaver som ligger til beslutter og som inneholder en av 9005, 9008 elle 9007`() {
         val oppgaveKø = OppgaveKø(
             UUID.randomUUID(),

@@ -18,7 +18,7 @@ private val tidsforbrukMetrikkLukkede = Histogram.build()
 
 class PepCacheOppdaterer(
     val pepCacheService: PepCacheService,
-    val tidMellomKjøring: Duration = Duration.ofSeconds(1),
+    val tidMellomKjøring: Duration = Duration.ofSeconds(4),
     val alderForOppfriskning: Duration = Duration.ofHours(23),
     val forsinketOppstart: Duration = Duration.ofMinutes(5)
 ) {
@@ -46,7 +46,7 @@ class PepCacheOppdaterer(
         return timer(
             daemon = true,
             name = TRÅDNAVN,
-            period = Duration.ofSeconds(2).toMillis(),
+            period = tidMellomKjøring.toMillis(),
             initialDelay = forsinketOppstart.toMillis()
         ) {
             try {

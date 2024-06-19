@@ -130,6 +130,10 @@ data class Configuration(private val config: ApplicationConfig) {
         return config.getOptionalString("nav.features.k9SakConsumerAiven", secret = false).toBoolean()
     }
 
+    internal fun journalførtKriterieEnabled(): Boolean {
+        return config.getOptionalString("nav.features.journalførtKriterie", secret = false).toBoolean()
+    }
+
     internal fun getKafkaConfig() =
         config.getRequiredString("nav.kafka.bootstrap_servers", secret = false).let { bootstrapServers ->
             val trustStore = config.getRequiredString("nav.trust_store.path", secret = false).let { trustStorePath ->
