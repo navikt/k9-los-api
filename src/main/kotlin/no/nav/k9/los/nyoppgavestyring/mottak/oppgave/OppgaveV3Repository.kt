@@ -232,8 +232,8 @@ class OppgaveV3Repository(
         val oppgaveId =  tx.updateAndReturnGeneratedKey(
             queryOf(
                 """
-                    insert into oppgave_v3_aktiv (ekstern_id, ekstern_versjon, oppgavetype_id, status, versjon, endret_tidspunkt, reservasjonsnokkel)
-                    values(:eksternId, :eksternVersjon, :oppgavetypeId, :status, :versjon, :aktiv, :kildeomrade, :endretTidspunkt, :reservasjonsnokkel)
+                    insert into oppgave_v3_aktiv (ekstern_id, ekstern_versjon, oppgavetype_id, status, versjon, kildeomrade, endret_tidspunkt, reservasjonsnokkel)
+                    values(:eksternId, :eksternVersjon, :oppgavetypeId, :status, :versjon, :kildeomrade, :endretTidspunkt, :reservasjonsnokkel)
                     on conflict (ekstern_id, kildeomrade)
                     do update set
                         ekstern_versjon = :eksternVersjon,
@@ -292,8 +292,8 @@ class OppgaveV3Repository(
         oppgaveId: Long
     ) {
         tx.batchPreparedNamedStatement("""
-                insert into oppgavefelt_verdi_aktiv(oppgave_id, oppgavefelt_id, verdi, aktiv, oppgavestatus)
-                        VALUES (:oppgaveId, :oppgavefeltId, :verdi, :aktiv, :oppgavestatus)
+                insert into oppgavefelt_verdi_aktiv(oppgave_id, oppgavefelt_id, verdi, oppgavestatus)
+                        VALUES (:oppgaveId, :oppgavefeltId, :verdi, :oppgavestatus)
             """.trimIndent(),
             oppgave.felter.map { feltverdi ->
                 mapOf(

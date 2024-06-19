@@ -17,24 +17,10 @@ class OppgaveRepository(
     fun hentNyesteOppgaveForEksternId(tx: TransactionalSession, kildeområde: String, eksternId: String, now: LocalDateTime = LocalDateTime.now()): Oppgave {
         val queryString = """
                 select * 
-                from oppgave_v3 ov
+                from oppgave_v3_aktiv ov
                 where ov.kildeomrade = :kildeomrade 
                  AND ov.ekstern_id = :eksternId 
-                and ov.aktiv = true
             """.trimIndent()
-        //log.info("query hentNyesteOppgaveForEksternId: $queryString")
-        /* val explain = tx.run(
-            queryOf(
-                """explain $queryString""",
-                mapOf(
-                    "kildeomrade" to kildeområde,
-                    "eksternId" to eksternId
-                )
-            ).map { row ->
-                row.string(1)
-            }.asList
-        ).joinToString("\n")
-        log.info("explain ureserverte OppgaveIder: $explain") */
 
         val oppgave = tx.run(
             queryOf(
@@ -56,21 +42,10 @@ class OppgaveRepository(
     fun hentAlleÅpneOppgaverForReservasjonsnøkkel(tx: TransactionalSession, reservasjonsnøkler: List<String>, now: LocalDateTime = LocalDateTime.now()) : List<Oppgave> {
         val queryString = """
                 select *
-                from oppgave_v3 ov 
+                from oppgave_v3_aktiv ov 
                 where reservasjonsnokkel in ('${reservasjonsnøkler.joinToString("','")}')
-                and aktiv = true
                 and status in ('VENTER', 'AAPEN')
             """.trimIndent()
-
-        log.info("spørring hentAktivReservasjonForReserajovsnsnøkkel")
-        /* val explain = tx.run(
-            queryOf(
-                "explain " + queryString
-            ).map { row ->
-                row.string(1)
-            }.asList
-        ).joinToString("\n")
-        log.info("explain hentAktivReservasjonForReserajovsnsnøkkel: $explain") */
 
         val oppgaver = tx.run(
             queryOf(
@@ -88,7 +63,7 @@ class OppgaveRepository(
             queryOf(
                 """
                 select * 
-                from oppgave_v3 ov
+                from oppgave_v3_aktiv ov
                 where ov.id = :id
             """.trimIndent(),
                 mapOf("id" to id)
@@ -169,7 +144,7 @@ class OppgaveRepository(
             queryOf(
                 """
                 select fd.ekstern_id as ekstern_id, o.ekstern_id as omrade, fd.liste_type, f.pakrevd, ov.verdi
-                from oppgavefelt_verdi ov 
+                from oppgavefelt_verdi_aktiv ov 
                     inner join oppgavefelt f on ov.oppgavefelt_id = f.id 
                     inner join feltdefinisjon fd on f.feltdefinisjon_id = fd.id 
                     inner join omrade o on fd.omrade_id = o.id 
@@ -199,7 +174,7 @@ class OppgaveRepository(
             queryOf(
                 """
                     SELECT o.*
-                    FROM oppgave_v3 o 
+                    FROM oppgave_v3_aktiv o 
                     LEFT JOIN OPPGAVE_PEP_CACHE opc ON (
                         o.kildeomrade = opc.kildeomrade AND o.ekstern_id = opc.ekstern_id
                     )

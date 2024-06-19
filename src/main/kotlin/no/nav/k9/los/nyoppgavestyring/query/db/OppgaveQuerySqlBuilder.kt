@@ -29,7 +29,7 @@ class OppgaveQuerySqlBuilder(
     private val oppgavefelterKodeOgType = felter.mapValues { Datatype.fraKode(it.value.oppgavefelt.tolkes_som) }
 
     private var query = """
-        FROM Oppgave_v3 o
+        FROM Oppgave_v3_aktiv o
         INNER JOIN Oppgavetype ot ON ( ot.id = o.oppgavetype_id )
         INNER JOIN Omrade oppgave_omrade ON (oppgave_omrade.id = ot.omrade_id )
         LEFT JOIN (
@@ -161,7 +161,7 @@ class OppgaveQuerySqlBuilder(
         query += """
                 ${combineOperator.sql} EXISTS (
                     SELECT 'Y'
-                    FROM Oppgavefelt_verdi ov INNER JOIN Oppgavefelt f ON (
+                    FROM Oppgavefelt_verdi_aktiv ov INNER JOIN Oppgavefelt f ON (
                       f.id = ov.oppgavefelt_id
                     ) INNER JOIN Feltdefinisjon fd ON (
                       fd.id = f.feltdefinisjon_id
@@ -171,7 +171,6 @@ class OppgaveQuerySqlBuilder(
                     WHERE ov.oppgave_id = o.id
                       AND fo.ekstern_id = :feltOmrade$index
                       AND fd.ekstern_id = :feltkode$index
-                      AND ov.aktiv = true
                       AND ov.oppgavestatus in (${oppgavestatusFilter.joinToString(prefix = "'", separator = "', '", postfix = "'") { oppgavestatus -> oppgavestatus.kode }})
                       AND 
             """.trimIndent()
@@ -263,7 +262,7 @@ class OppgaveQuerySqlBuilder(
         query += """
                 ${combineOperator.sql}$invertertOperator EXISTS (
                     SELECT 'Y'
-                    FROM Oppgavefelt_verdi ov INNER JOIN Oppgavefelt f ON (
+                    FROM Oppgavefelt_verdi_aktiv ov INNER JOIN Oppgavefelt f ON (
                       f.id = ov.oppgavefelt_id
                     ) INNER JOIN Feltdefinisjon fd ON (
                       fd.id = f.feltdefinisjon_id
@@ -273,7 +272,6 @@ class OppgaveQuerySqlBuilder(
                     WHERE ov.oppgave_id = o.id
                       AND fo.ekstern_id = :feltOmrade$index
                       AND fd.ekstern_id = :feltkode$index
-                      AND ov.aktiv = true
                       AND ov.oppgavestatus in (${oppgavestatusFilter.joinToString(prefix = "'", separator = "', '", postfix = "'") { oppgavestatus -> oppgavestatus.kode }})
                   )
             """.trimIndent()
@@ -325,7 +323,7 @@ class OppgaveQuerySqlBuilder(
         orderBySql += """
                 , (
                   SELECT $typeConversion                    
-                  FROM Oppgavefelt_verdi ov INNER JOIN Oppgavefelt f ON (
+                  FROM Oppgavefelt_verdi_aktiv ov INNER JOIN Oppgavefelt f ON (
                     f.id = ov.oppgavefelt_id
                   ) INNER JOIN Feltdefinisjon fd ON (
                     fd.id = f.feltdefinisjon_id
@@ -335,7 +333,6 @@ class OppgaveQuerySqlBuilder(
                   WHERE ov.oppgave_id = o.id
                     AND fo.ekstern_id = :orderByfeltOmrade$index
                     AND fd.ekstern_id = :orderByfeltkode$index
-                    AND ov.aktiv = true
                     AND ov.oppgavestatus in (${oppgavestatusFilter.joinToString(prefix = "'", separator = "', '", postfix = "'") { oppgavestatus -> oppgavestatus.kode }})
                 ) 
             """.trimIndent()

@@ -44,12 +44,6 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
         }!!
 
         assertThat(lagretOppgave.hentVerdi(FeltType.BEHANDLINGUUID.eksternId)).isEqualTo(oppgaveV3.hentVerdi(FeltType.BEHANDLINGUUID.eksternId))
-
-        val oppgaveFraUttrekk = transactionalManager.transaction { tx ->
-            oppgaveUttrekkRepository.hentNyesteOppgaveForEksternId(tx, "K9", oppgaveV3.eksternId)
-        }
-
-        assertThat(oppgaveFraUttrekk.hentVerdi(FeltType.BEHANDLINGUUID.eksternId)).isEqualTo(oppgaveV3.hentVerdi(FeltType.BEHANDLINGUUID.eksternId))
     }
 
     @Test
@@ -112,6 +106,14 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
                 )
         }
 
+        var oppgaveFraUttrekk = transactionalManager.transaction { tx ->
+            oppgaveUttrekkRepository.hentNyesteOppgaveForEksternId(tx, "K9", oppgave1.eksternId)
+        }
+
+        assertThat(oppgaveFraUttrekk.hentVerdi(FeltType.BEHANDLINGUUID.eksternId)).isEqualTo(oppgave1.hentVerdi(FeltType.BEHANDLINGUUID.eksternId))
+        assertThat(oppgaveFraUttrekk.versjon).isEqualTo(1)
+        assertThat(oppgaveFraUttrekk.eksternVersjon).isEqualTo(oppgave2.eksternVersjon)
+
         assertThat(lagretOppgave1.aktiv).isFalse()
         assertThat(lagretOppgave1.hentOppgavefeltverdi(FeltType.BEHANDLINGUUID.eksternId)!!.aktiv).isFalse()
         assertThat(lagretOppgave1.hentOppgavefeltverdi(FeltType.BEHANDLINGUUID.eksternId)!!.oppgavestatus).isEqualTo(Oppgavestatus.AAPEN)
@@ -135,6 +137,14 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
         assertThat(lagretOppgave3.status).isEqualTo(Oppgavestatus.LUKKET)
         assertThat(lagretOppgave3.hentOppgavefeltverdi(FeltType.BEHANDLINGUUID.eksternId)!!.aktiv).isTrue()
         assertThat(lagretOppgave3.hentOppgavefeltverdi(FeltType.BEHANDLINGUUID.eksternId)!!.oppgavestatus).isEqualTo(Oppgavestatus.LUKKET)
+
+        oppgaveFraUttrekk = transactionalManager.transaction { tx ->
+            oppgaveUttrekkRepository.hentNyesteOppgaveForEksternId(tx, "K9", oppgave1.eksternId)
+        }
+
+        assertThat(oppgaveFraUttrekk.hentVerdi(FeltType.BEHANDLINGUUID.eksternId)).isEqualTo(oppgave1.hentVerdi(FeltType.BEHANDLINGUUID.eksternId))
+        assertThat(oppgaveFraUttrekk.versjon).isEqualTo(2)
+        assertThat(oppgaveFraUttrekk.eksternVersjon).isEqualTo(oppgave3.eksternVersjon)
     }
 
     @Test
