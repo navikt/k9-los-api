@@ -22,8 +22,10 @@ comment on column OPPGAVE_V3_AKTIV.versjon is 'Generasjonsteller for oppdatering
 comment on column OPPGAVE_V3_AKTIV.endret_tidspunkt is 'Tidspunktet den aktuelle versjonen av oppgaven ble opprettet. Angis av adapter';
 comment on column OPPGAVE_V3_AKTIV.reservasjonsnokkel is 'Nøkkel, definert av domeneadapter som eier oppgaven, som saksbehandler låser oppgaven (og andre oppgaver med samme reservasjonsnøkkel) med når de reserverer';
 
+drop index oppgave_v3_aktiv_status_reservasjonsnokkel;
 CREATE INDEX oppgave_v3_aktiv_status_reservasjonsnokkel ON oppgave_v3_aktiv(status, reservasjonsnokkel);
-CREATE INDEX oppgave_v3_kildeomrade_ekstern_id_where_aktiv ON oppgave_v3_aktiv USING btree (kildeomrade, ekstern_id);
+drop index oppgave_v3_kildeomrade_ekstern_id_where_aktiv;
+CREATE INDEX oppgave_v3_aktiv_kildeomrade_ekstern_id ON oppgave_v3_aktiv USING btree (kildeomrade, ekstern_id);
 
 CREATE TABLE if not exists OPPGAVEFELT_VERDI_AKTIV
 (
@@ -39,14 +41,14 @@ CREATE TABLE if not exists OPPGAVEFELT_VERDI_AKTIV
 );
 
 comment on table OPPGAVEFELT_VERDI_AKTIV is 'Konkrete verdier på en oppgave, som predefinert i OPPGAVEFELT.';
-comment on column OPPGAVEFELT_VERDI_AKTIV.verdi is 'Verdiens egenskaper bestemmes av tabellen DATATYPE via fremmednøkkel i oppgavefelt.'
+comment on column OPPGAVEFELT_VERDI_AKTIV.verdi is 'Verdiens egenskaper bestemmes av tabellen DATATYPE via fremmednøkkel i oppgavefelt.';
 
-create index oppgavefelt_verdi_oppgave_id_oppgavefelt_id_verdi_oppgave_aapen
+create index ofv_aktiv_oppgave_id_oppgavefelt_id_verdi_oppgave_aapen
     on OPPGAVEFELT_VERDI_AKTIV
         using btree (oppgave_id, oppgavefelt_id, verdi)
     where oppgavestatus = 'AAPEN';
 
-create index oppgavefelt_verdi_oppgave_id_oppgavefelt_id_verdi_oppgaveventer
+create index ofv_aktiv_oppgave_id_oppgavefelt_id_verdi_oppgave_venter
     on OPPGAVEFELT_VERDI_AKTIV
         using btree (oppgave_id, oppgavefelt_id, verdi)
     where oppgavestatus = 'VENTER';

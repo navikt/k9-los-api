@@ -8,6 +8,7 @@ import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
@@ -16,11 +17,13 @@ import java.time.LocalDateTime
 class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
     private lateinit var oppgaveV3Repository: OppgaveV3Repository
     private lateinit var transactionalManager: TransactionalManager
+    private lateinit var oppgaveUttrekkRepository: OppgaveRepository
 
     @BeforeEach
     fun setup() {
         oppgaveV3Repository = get<OppgaveV3Repository>()
         transactionalManager = get<TransactionalManager>()
+        oppgaveUttrekkRepository = get<OppgaveRepository>()
     }
 
     @Test
@@ -41,6 +44,12 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
         }!!
 
         assertThat(lagretOppgave.hentVerdi(FeltType.BEHANDLINGUUID.eksternId)).isEqualTo(oppgaveV3.hentVerdi(FeltType.BEHANDLINGUUID.eksternId))
+
+        val oppgaveFraUttrekk = transactionalManager.transaction { tx ->
+            oppgaveUttrekkRepository.hentNyesteOppgaveForEksternId(tx, "K9", oppgaveV3.eksternId)
+        }
+
+        assertThat(oppgaveFraUttrekk.hentVerdi(FeltType.BEHANDLINGUUID.eksternId)).isEqualTo(oppgaveV3.hentVerdi(FeltType.BEHANDLINGUUID.eksternId))
     }
 
     @Test
