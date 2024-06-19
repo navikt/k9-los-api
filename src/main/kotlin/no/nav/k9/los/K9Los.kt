@@ -296,10 +296,10 @@ fun Application.k9Los() {
                 innsiktGrensesnitt()
                 forvaltningApis()
                 route("/swagger") {
-                    route("myApi.json") {
+                    route("openapi.json") {
                         openApiSpec()
                     }
-                    swaggerUI("myApi.json")
+                    swaggerUI("openapi.json")
                 }
             }
         } else {
