@@ -271,7 +271,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
     @Test // Query er ikke ment som tilgangskontroll, men en kjapp måte å utføre filtrering før tilgangssjekk gjøres på resultatet
     fun  `Resultat skal inneholde alle sikkerhetsklassifiseringer når ikke beskyttelse eller egen ansatt er spesifisert i filtre`() {
-        val eksternId = lagOppgave(kode6 = true, kode7 = true, egenAnsatt = true)
+        val eksternId = lagOppgaveMedPepCache(kode6 = true, kode7 = true, egenAnsatt = true)
 
         val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
         val query = OppgaveQuery(listOf(
@@ -281,9 +281,22 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         assertThat(oppgaveQueryRepository.query(QueryRequest(query))).isNotEmpty()
     }
 
+    @Test // Ikke tilgangskontroll, men kun ment for ytelsesoptimalisering
+    fun  `Resultat skal inneholde alle resultat uavhengig av forespurt sikkerhetsklassifisering hvis pepcache mangler`() {
+        val eksternId = lagOppgave()
+
+        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
+        val query = OppgaveQuery(listOf(
+            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, eksternId),
+            byggGenereltFilter(FeltType.BESKYTTELSE, FeltverdiOperator.IN, "KODE7")
+        ))
+
+        assertThat(oppgaveQueryRepository.query(QueryRequest(query))).isNotEmpty()
+    }
+
     @Test
     fun `Resultat skal kun inneholde ordinære oppgaver når filtre er satt`() {
-        val eksternId = lagOppgave()
+        val eksternId = lagOppgaveMedPepCache()
 
         loggAlleOppgaverMedFelterOgCache()
 
@@ -299,7 +312,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
     @Test
     @Disabled
     fun `Resultat skal kun inneholde kode6-oppgaver når filtre er satt til kode6`() {
-        val eksternId = lagOppgave(kode6 = true)
+        val eksternId = lagOppgaveMedPepCache(kode6 = true)
 
         loggAlleOppgaverMedFelterOgCache()
 
@@ -314,8 +327,8 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `Resultat skal ikke inneholde kode6- eller kode7oppgaver når filtre er satt til ordinære oppgaver`() {
-        val eksternId6 = lagOppgave(kode6 = true)
-        val eksternId7 = lagOppgave(kode7 = true)
+        val eksternId6 = lagOppgaveMedPepCache(kode6 = true)
+        val eksternId7 = lagOppgaveMedPepCache(kode7 = true)
 
         loggAlleOppgaverMedFelterOgCache()
 
@@ -467,8 +480,8 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
     @Test
     @Disabled
     fun `Resultat skal ikke inneholde kode7 eller ordinære oppgaver når filtre er satt til kode6 oppgaver`() {
-        val eksternId7 = lagOppgave(kode7 = true)
-        val eksternIdOrdinær = lagOppgave()
+        val eksternId7 = lagOppgaveMedPepCache(kode7 = true)
+        val eksternIdOrdinær = lagOppgaveMedPepCache()
 
         loggAlleOppgaverMedFelterOgCache()
 
@@ -483,13 +496,22 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
 
 
-    private fun lagOppgave(
+    private fun lagOppgaveMedPepCache(
         kode6: Boolean = false,
         kode7: Boolean = false,
         egenAnsatt: Boolean = false
     ): String {
         val eksternId = UUID.randomUUID().toString()
         lagPepCacheFor(eksternId, kode6, kode7, egenAnsatt)
+
+        OppgaveTestDataBuilder()
+            .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, eksternId)
+            .lagOgLagre()
+        return eksternId
+    }
+
+    private fun lagOppgave(): String {
+        val eksternId = UUID.randomUUID().toString()
 
         OppgaveTestDataBuilder()
             .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, eksternId)
