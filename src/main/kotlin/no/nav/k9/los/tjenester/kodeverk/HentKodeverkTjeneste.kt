@@ -23,7 +23,7 @@ class HentKodeverkTjeneste(
         koder[FagsakStatus::class.java.simpleName] = FagsakStatus.values().asList()
 
         val andreKriterierTypes = if (!configuration.journalførtKriterieEnabled()) AndreKriterierType.values()
-            .filterNot { it == AndreKriterierType.JOURNALFØRT }
+            .filterNot { it == AndreKriterierType.IKKE_JOURNALFØRT }
         else AndreKriterierType.values().asList()
 
         koder[AndreKriterierType::class.java.simpleName] = andreKriterierTypes

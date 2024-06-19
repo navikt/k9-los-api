@@ -209,8 +209,8 @@ data class OppgaveKø(
             return true
         }
 
-        if (oppgave.journalførtTidspunkt != null && kriterier.map { it.andreKriterierType }
-                .contains(AndreKriterierType.JOURNALFØRT)) {
+        if (oppgave.journalførtTidspunkt == null && kriterier.map { it.andreKriterierType }
+                .contains(AndreKriterierType.IKKE_JOURNALFØRT)) {
             return true
         }
 
