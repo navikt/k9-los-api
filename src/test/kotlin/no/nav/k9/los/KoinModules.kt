@@ -36,6 +36,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerKlientLocal
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository
@@ -281,6 +282,21 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single {
+        K9punsjEventHandler(
+            oppgaveRepository = get(),
+            oppgaveTjenesteV2 = get(),
+            punsjEventK9Repository = get(),
+            statistikkChannel = get(),
+            reservasjonRepository = get(),
+            oppgaveKøRepository = get(),
+            reservasjonTjeneste = get(),
+            statistikkRepository = get(),
+            azureGraphService = get(),
+            punsjTilLosAdapterTjeneste = get()
+        )
+    }
+
+    single {
         ReservasjonTjeneste(
             reservasjonRepository = get(),
             saksbehandlerRepository = get()
@@ -339,6 +355,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single { OppgaveV3Repository(dataSource = get(), oppgavetypeRepository = get()) }
     single { BehandlingProsessEventK9Repository(dataSource = get()) }
     single { BehandlingProsessEventKlageRepository(dataSource = get()) }
+    single { PunsjEventK9Repository(dataSource = get()) }
     single { K9SakOppgaveTilDVHMapper() }
     single { K9KlageOppgaveTilDVHMapper() }
     single { OppgaveRepository(oppgavetypeRepository = get()) }
@@ -412,6 +429,19 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             transactionalManager = get(),
             config = get(),
             k9sakBeriker = get()
+        )
+    }
+
+    single {
+        K9PunsjTilLosAdapterTjeneste(
+            eventRepository = get(),
+            oppgavetypeTjeneste = get(),
+            oppgaveV3Tjeneste = get(),
+            oppgaveRepository = get(),
+            reservasjonV3Tjeneste = get(),
+            config = config,
+            transactionalManager = get(),
+            pepCacheService = get()
         )
     }
 

@@ -54,7 +54,7 @@ class EventTilDtoMapper {
                 event.aktørId?.let {
                     OppgaveFeltverdiDto(
                         nøkkel = "aktorId",
-                        verdi = it.toString(),
+                        verdi = it.aktørId,
                     )
                 },
                 event.pleietrengendeAktørId?.let {
@@ -89,7 +89,7 @@ class EventTilDtoMapper {
                 },
                 OppgaveFeltverdiDto(
                     nøkkel = "journalfort",
-                    verdi = "false",
+                    verdi = (event.journalførtTidspunkt != null).toString(),
                 ),
                 OppgaveFeltverdiDto(
                     nøkkel = "registrertDato",

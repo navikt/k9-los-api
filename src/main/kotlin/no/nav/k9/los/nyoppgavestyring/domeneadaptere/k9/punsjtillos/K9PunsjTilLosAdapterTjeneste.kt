@@ -1,13 +1,17 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.PunsjEventK9Repository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
 import no.nav.k9.los.nyoppgavestyring.pep.PepCacheService
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
@@ -76,7 +80,8 @@ class K9PunsjTilLosAdapterTjeneste(
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
 
                 if (oppgave != null) {
-                    pepCacheService.oppdater(tx, oppgave.kildeområde, oppgave.eksternId)
+                    // TODO: Sjekk denne
+//                    pepCacheService.oppdater(tx, oppgave.kildeområde, oppgave.eksternId)
 
                     annullerReservasjonHvisPåVentEllerAvsluttet(oppgave, tx)
                     // Flere tilfeller som skal håndteres her?
@@ -110,5 +115,25 @@ class K9PunsjTilLosAdapterTjeneste(
         if (teller.mod(100) == 0) {
             log.info(tekst)
         }
+    }
+
+    fun setup(): K9PunsjTilLosAdapterTjeneste {
+        val objectMapper = jacksonObjectMapper()
+        opprettOppgavetype(objectMapper)
+        return this
+    }
+
+    private fun opprettOppgavetype(objectMapper: ObjectMapper) {
+        val oppgavetyperDto = objectMapper.readValue(
+            K9PunsjTilLosAdapterTjeneste::class.java.getResource("/adapterdefinisjoner/k9-oppgavetyper-k9punsj.json")!!
+                .readText(),
+            OppgavetyperDto::class.java
+        )
+        oppgavetypeTjeneste.oppdater(oppgavetyperDto.copy(
+            oppgavetyper = oppgavetyperDto.oppgavetyper.map { oppgavetypeDto ->
+                oppgavetypeDto.copy(oppgavebehandlingsUrlTemplate = oppgavetypeDto.oppgavebehandlingsUrlTemplate.replace("{baseUrl}", config.k9FrontendUrl()))
+            }.toSet()
+        ))
+        log.info("opprettet oppgavetype")
     }
 }
