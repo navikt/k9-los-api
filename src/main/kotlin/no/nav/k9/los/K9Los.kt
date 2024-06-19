@@ -3,6 +3,10 @@ package no.nav.k9.los
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import com.fasterxml.jackson.databind.SerializationFeature
+import io.github.smiley4.ktorswaggerui.SwaggerUI
+import io.github.smiley4.ktorswaggerui.dsl.routing.route
+import io.github.smiley4.ktorswaggerui.routing.openApiSpec
+import io.github.smiley4.ktorswaggerui.routing.swaggerUI
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -65,7 +69,6 @@ import no.nav.k9.los.tjenester.fagsak.FagsakApis
 import no.nav.k9.los.tjenester.innsikt.innsiktGrensesnitt
 import no.nav.k9.los.tjenester.kodeverk.KodeverkApis
 import no.nav.k9.los.tjenester.konfig.KonfigApis
-import no.nav.k9.los.tjenester.mock.MockGrensesnitt
 import no.nav.k9.los.tjenester.mock.localSetup
 import no.nav.k9.los.tjenester.saksbehandler.NavAnsattApis
 import no.nav.k9.los.tjenester.saksbehandler.merknad.MerknadApi
@@ -289,12 +292,15 @@ fun Application.k9Los() {
         if ((KoinProfile.LOCAL == koin.get<KoinProfile>())) {
             localSetup.initSaksbehandlere()
             api(sseChannel)
-            route("mock") {
-                MockGrensesnitt()
-            }
-            route("forvaltning") {
+            route("/forvaltning") {
                 innsiktGrensesnitt()
                 forvaltningApis()
+                route("/swagger") {
+                    route("myApi.json") {
+                        openApiSpec()
+                    }
+                    swaggerUI("myApi.json")
+                }
             }
         } else {
             authenticate(*issuers.allIssuers()) {
@@ -323,6 +329,9 @@ fun Application.k9Los() {
     install(CallId) {
         fromXCorrelationIdHeader()
     }
+
+    install(SwaggerUI) {
+    }
 }
 
 private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
@@ -331,7 +340,9 @@ private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
         sseChannel = sseChannel
     )
 
-    route("api") {
+    route("api", {
+        hidden = true
+    }) {
         route("driftsmeldinger") {
             DriftsmeldingerApis()
         }
