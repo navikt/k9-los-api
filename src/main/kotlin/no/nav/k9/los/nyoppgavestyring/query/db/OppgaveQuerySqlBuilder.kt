@@ -119,7 +119,7 @@ class OppgaveQuerySqlBuilder(
             }
             "beskyttelse" -> {
                 when(feltverdi) {
-                    BeskyttelseType.KODE7.kode -> query += "${combineOperator.sql} opc.kode7 is true "
+                    BeskyttelseType.KODE7.kode -> query += "${combineOperator.sql} opc.kode7 is not false "
                     else -> {
                         query += "${combineOperator.sql} opc.kode6 is not true AND opc.kode7 is not true "
                     }
