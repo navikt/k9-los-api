@@ -18,7 +18,9 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
+import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
+import kotlin.concurrent.timer
 
 class K9PunsjTilLosAdapterTjeneste(
     private val eventRepository: PunsjEventK9Repository,
@@ -35,14 +37,40 @@ class K9PunsjTilLosAdapterTjeneste(
 
     fun kjør(kjørSetup: Boolean = false, kjørUmiddelbart: Boolean = false) {
         if (config.nyOppgavestyringAktivert()) {
-            thread(
-                start = true,
-                isDaemon = true,
-                name = TRÅDNAVN
-            ) {
-                spillAvBehandlingProsessEventer()
+            when (kjørUmiddelbart) {
+                true -> spillAvUmiddelbart()
+                false -> schedulerAvspilling(kjørSetup)
             }
         } else log.info("Ny oppgavestyring er deaktivert")
+    }
+
+    private fun spillAvUmiddelbart() {
+        log.info("Spiller av BehandlingProsessEventer umiddelbart")
+        thread(
+            start = true,
+            isDaemon = true,
+            name = TRÅDNAVN
+        ) {
+            spillAvBehandlingProsessEventer()
+        }
+    }
+    private fun schedulerAvspilling(kjørSetup: Boolean) {
+        log.info("Schedulerer avspilling av BehandlingProsessEventer til å kjøre 2m fra nå, hver time")
+        timer(
+            name = TRÅDNAVN,
+            daemon = true,
+            initialDelay = TimeUnit.MINUTES.toMillis(2),
+            period = TimeUnit.HOURS.toMillis(1)
+        ) {
+            if (kjørSetup) {
+                setup()
+            }
+            try {
+                spillAvBehandlingProsessEventer()
+            } catch (e: Exception) {
+                log.warn("Avspilling av k9punsj-eventer til oppgaveV3 feilet. Retry om en time", e)
+            }
+        }
     }
 
     private fun spillAvBehandlingProsessEventer() {
