@@ -1,0 +1,18 @@
+{
+  "eventer": [
+    {
+      "type": "KOPI",
+      "ytelse": "PSB",
+      "aktørId": "2291033899760",
+      "eventTid": "2024-04-22T17:33:31.863097991",
+      "sendtInn": null,
+      "eksternId": "cd30c403-ba53-45e4-9d4f-ad1ed7bdf370",
+      "ferdigstiltAv": null,
+      "journalpostId": "637607240",
+      "pleietrengendeAktørId": null,
+      "aksjonspunktKoderMedStatusListe": {
+        "PUNSJ": "OPPR"
+      }
+    }
+  ]
+}

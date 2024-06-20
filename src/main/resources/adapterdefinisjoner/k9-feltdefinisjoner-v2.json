@@ -473,6 +473,22 @@
         "område": "K9",
         "eksternId": "behandlingsårsak"
       }
+    },
+    {
+      "id": "journalfort",
+      "visningsnavn": "Journalført",
+      "listetype": false,
+      "tolkesSom": "boolean",
+      "visTilBruker": true,
+      "kokriterie": true
+    },
+    {
+      "id": "journalfortTidspunkt",
+      "visningsnavn": "Journalført tidspunkt",
+      "listetype": false,
+      "tolkesSom": "Timestamp",
+      "visTilBruker": true,
+      "kokriterie": true
     }
   ]
 }

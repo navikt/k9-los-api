@@ -41,15 +41,14 @@ import no.nav.k9.los.jobber.K9sakBehandlingsoppfriskingJobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosApi
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.k9SakEksternId
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.k9SakKorrigerOutOfOrderProsessor
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkApi
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAktivvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.forvaltning.forvaltningApis
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoApis
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonApi
@@ -233,6 +232,17 @@ fun Application.k9Los() {
         transactionalManager = koin.get(),
         config = koin.get(),
         k9sakBeriker = koin.get(),
+    ).kjør(kjørSetup = false, kjørUmiddelbart = false)
+
+    K9PunsjTilLosAdapterTjeneste(
+        eventRepository = koin.get(),
+        oppgavetypeTjeneste = koin.get(),
+        oppgaveV3Tjeneste = koin.get(),
+        config = koin.get(),
+        transactionalManager = koin.get(),
+        oppgaveRepository = koin.get(),
+        reservasjonV3Tjeneste = koin.get(),
+        pepCacheService = koin.get()
     ).kjør(kjørSetup = false, kjørUmiddelbart = false)
 
     OppgavestatistikkTjeneste(

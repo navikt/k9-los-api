@@ -58,7 +58,7 @@ class OppgaveQuerySqlBuilder(
     private var paging: String = ""
 
     fun getQuery(): String {
-        return selectPrefix + query + orderBySql + paging
+        return "$selectPrefix $query $orderBySql $paging"
     }
 
     fun medAntallSomResultat() {
