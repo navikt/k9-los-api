@@ -104,6 +104,8 @@ fun Application.k9Los() {
     k9SakTilLosAdapterTjeneste.setup()
     val k9KlageTilLosAdapterTjeneste = koin.get<K9KlageTilLosAdapterTjeneste>()
     k9KlageTilLosAdapterTjeneste.setup()
+    val k9PunsjTilLosAdapterTjeneste = koin.get<K9PunsjTilLosAdapterTjeneste>()
+    k9PunsjTilLosAdapterTjeneste.setup()
 
     if (LocalDateTime.now().isBefore(LocalDateTime.of(2024, 5, 31, 16, 30))) {
         //koin.get<K9SakTilLosLukkeFeiloppgaverTjeneste>().kjørFeiloppgaverVask()
@@ -238,12 +240,11 @@ fun Application.k9Los() {
         eventRepository = koin.get(),
         oppgavetypeTjeneste = koin.get(),
         oppgaveV3Tjeneste = koin.get(),
+        reservasjonV3Tjeneste = koin.get(),
         config = koin.get(),
         transactionalManager = koin.get(),
-        oppgaveRepository = koin.get(),
-        reservasjonV3Tjeneste = koin.get(),
         pepCacheService = koin.get()
-    ).kjør(kjørSetup = false, kjørUmiddelbart = false)
+    ).kjør(kjørUmiddelbart = false)
 
     OppgavestatistikkTjeneste(
         oppgaveRepository = koin.get(),
