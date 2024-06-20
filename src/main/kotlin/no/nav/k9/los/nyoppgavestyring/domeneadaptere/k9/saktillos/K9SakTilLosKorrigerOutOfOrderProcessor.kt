@@ -1,20 +1,14 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos
 
-import io.prometheus.client.Histogram
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.launch
 import no.nav.k9.los.eventhandler.asCoroutineDispatcherWithErrorHandling
+import no.nav.k9.los.eventhandler.ChannelMetrikker
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.Executors
-
-private val tidsforbrukMetrikk = Histogram.build()
-    .name("los_k9SakKorrigerOutOfOrderProsessor")
-    .help("Tidsforbruk k9SakKorrigerOutOfOrderProsessor")
-    .register()
-
 
 fun CoroutineScope.k9SakKorrigerOutOfOrderProsessor(
     k9SakTilLosHistorikkvaskTjeneste: K9SakTilLosHistorikkvaskTjeneste,
@@ -23,9 +17,9 @@ fun CoroutineScope.k9SakKorrigerOutOfOrderProsessor(
     val log = LoggerFactory.getLogger("k9SakKorrigerOutOfOrderProsessor")
     for (eksternId in channel) {
         try {
-            val t0 = System.currentTimeMillis()
-            k9SakTilLosHistorikkvaskTjeneste.vaskOppgaveForBehandlingUUID(eksternId.eksternId)
-            tidsforbrukMetrikk.observe((System.currentTimeMillis() - t0).toDouble())
+            ChannelMetrikker.time("los_k9SakKorrigerOutOfOrderProsessor") {
+                k9SakTilLosHistorikkvaskTjeneste.vaskOppgaveForBehandlingUUID(eksternId.eksternId)
+            }
         } catch (e: Exception) {
             log.error("Historikkvask k9-sak feilet for enkeltoppgave med eksternId: ${eksternId.eksternId}")
         }

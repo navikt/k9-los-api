@@ -1,7 +1,7 @@
 package no.nav.k9.los.jobber
 
-import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.domene.repository.OppgaveKøRepository
@@ -38,6 +38,7 @@ class K9sakBehandlingsoppfriskingJobb(
     private val TRÅDNAVN = "k9los-refresh-k9sak-behandlinger-jobb"
     private val log = LoggerFactory.getLogger(K9sakBehandlingsoppfriskingJobb::class.java)
 
+
     fun start(): Timer {
         return fixedRateTimer(
             daemon = true,
@@ -70,7 +71,9 @@ class K9sakBehandlingsoppfriskingJobb(
         } else {
             sisteRefresh = nå
             log.info("Starter refresh av k9sak-behandlinger")
-            refresh(skipRefreshFraKøer = skipRefreshFraKøer);
+            JobbMetrikker.time(TRÅDNAVN) {
+                refresh(skipRefreshFraKøer = skipRefreshFraKøer);
+            }
         }
     }
 
