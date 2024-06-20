@@ -178,7 +178,7 @@ class OppgaveRepository(
                     LEFT JOIN OPPGAVE_PEP_CACHE opc ON (
                         o.kildeomrade = opc.kildeomrade AND o.ekstern_id = opc.ekstern_id
                     )
-                    WHERE o.aktiv is true AND o.status IN ('${status.joinToString("','")}')
+                    WHERE o.status IN ('${status.joinToString("','")}')
                     AND (opc.oppdatert is null OR opc.oppdatert < :grense)
                     ORDER BY opc.oppdatert NULLS FIRST
                     LIMIT :limit

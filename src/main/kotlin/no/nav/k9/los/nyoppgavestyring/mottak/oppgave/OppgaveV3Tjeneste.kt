@@ -103,7 +103,25 @@ class OppgaveV3Tjeneste(
         )
     }
 
-    fun oppdaterEksisterendeOppgaveversjon(oppgaveDto: OppgaveDto, eventNr: Long, høyesteInternVersjon: Long, tx: TransactionalSession) {
+    fun hentOppgaveVersjonenFør(eksternId: String, eventNr: Long, oppgaveType: String, område: String, tx: TransactionalSession): OppgaveV3 {
+        val hentetOppgavetype = oppgavetypeRepository.hentOppgavetype(område, oppgaveType)
+        if (eventNr < 1) {
+            throw IllegalArgumentException("Kan ikke hente oppgaveversjon før første oppgaveversjon")
+        }
+        return oppgaveV3Repository.hentOppgaveversjonenFør(eksternId, internVersjon = eventNr, hentetOppgavetype, tx)!!
+    }
+
+    fun upsertAktivOppgave(oppgaveDto: OppgaveDto, internVersjon: Long, tx: TransactionalSession) {
+        val oppgavetype = oppgavetypeRepository.hentOppgavetype(
+            område = oppgaveDto.område,
+            eksternId = oppgaveDto.type,
+            tx = tx
+        )
+        val innkommendeOppgave = OppgaveV3(oppgaveDto, oppgavetype)
+        oppgaveV3Repository.upsertAktivOppgave(innkommendeOppgave, internVersjon, tx)
+    }
+
+fun oppdaterEksisterendeOppgaveversjon(oppgaveDto: OppgaveDto, eventNr: Long, høyesteInternVersjon: Long, tx: TransactionalSession) {
         val oppgavetype = oppgavetypeRepository.hentOppgavetype(
             område = oppgaveDto.område,
             eksternId = oppgaveDto.type,

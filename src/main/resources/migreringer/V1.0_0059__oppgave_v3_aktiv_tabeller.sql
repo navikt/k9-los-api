@@ -1,9 +1,9 @@
 CREATE TABLE if not exists OPPGAVE_V3_AKTIV
 (
-    id                          BIGINT GENERATED ALWAYS AS IDENTITY     NOT NULL PRIMARY KEY,
+    id                          integer GENERATED ALWAYS AS IDENTITY    NOT NULL PRIMARY KEY,
     ekstern_id                  VARCHAR(100)                            NOT NULL,
     ekstern_versjon             VARCHAR(100)                            NOT NULL,
-    oppgavetype_id              BIGINT                                  NOT NULL,
+    oppgavetype_id              integer                                 NOT NULL,
     status                      VARCHAR(50)                             NOT NULL,
     kildeomrade                 VARCHAR(30)                             NOT NULL,
     versjon                     int                                     NOT NULL,
@@ -29,7 +29,7 @@ CREATE INDEX oppgave_v3_aktiv_kildeomrade_ekstern_id ON oppgave_v3_aktiv USING b
 
 CREATE TABLE if not exists OPPGAVEFELT_VERDI_AKTIV
 (
-    id                          BIGINT GENERATED ALWAYS AS IDENTITY     NOT NULL PRIMARY KEY,
+    id                          integer GENERATED ALWAYS AS IDENTITY     NOT NULL PRIMARY KEY,
     oppgave_id                  BIGINT                                  NOT NULL,
     oppgavefelt_id              BIGINT                                  NOT NULL,
     verdi                       VARCHAR(100)                            NOT NULL,
@@ -52,3 +52,25 @@ create index ofv_aktiv_oppgave_id_oppgavefelt_id_verdi_oppgave_venter
     on OPPGAVEFELT_VERDI_AKTIV
         using btree (oppgave_id, oppgavefelt_id, verdi)
     where oppgavestatus = 'VENTER';
+
+
+CREATE TABLE if not exists behandling_prosess_events_k9_sak_aktivvask_ferdig
+(
+    id                          VARCHAR(100)     NOT NULL PRIMARY KEY,
+    CONSTRAINT fk_bpe_k9_aktivvask_ferdig
+        FOREIGN KEY(id) references behandling_prosess_events_k9(id)
+);
+
+CREATE TABLE if not exists behandling_prosess_events_k9_klage_aktivvask_ferdig
+(
+    id                          VARCHAR(100)     NOT NULL PRIMARY KEY,
+    CONSTRAINT fk_bpe_klage_aktivvask_ferdig
+        FOREIGN KEY(id) references behandling_prosess_events_klage(id)
+);
+
+CREATE TABLE if not exists behandling_prosess_events_k9_punsj_aktivkvask_ferdig
+(
+    id                          VARCHAR(100)     NOT NULL PRIMARY KEY,
+    CONSTRAINT fk_bpe_k9_aktivvask_ferdig
+        FOREIGN KEY(id) references behandling_prosess_events_k9_punsj(id)
+);

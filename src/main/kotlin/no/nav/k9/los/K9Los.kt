@@ -48,6 +48,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.k9SakKorrigerO
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAktivvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.forvaltning.forvaltningApis
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoApis
@@ -104,12 +105,13 @@ fun Application.k9Los() {
     val k9KlageTilLosAdapterTjeneste = koin.get<K9KlageTilLosAdapterTjeneste>()
     k9KlageTilLosAdapterTjeneste.setup()
 
-    if (LocalDateTime.now().isBefore(LocalDateTime.of(2024, 5, 31, 16, 30))) {
+    if (LocalDateTime.now().isBefore(LocalDateTime.of(2024, 6, 21, 16, 30))) {
         //koin.get<K9SakTilLosLukkeFeiloppgaverTjeneste>().kjørFeiloppgaverVask()
-        koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
-        koin.get<K9KlageTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
+        //koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
+        //koin.get<K9KlageTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
         //koin.get<OppgavestatistikkTjeneste>().slettStatistikkgrunnlag()
         //koin.get<ReservasjonKonverteringJobb>().kjørReservasjonskonvertering()
+        koin.get<K9SakTilLosAktivvaskTjeneste>().kjørAktivvask()
     }
 
     install(Authentication) {
