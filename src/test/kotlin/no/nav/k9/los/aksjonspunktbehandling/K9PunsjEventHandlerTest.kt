@@ -77,7 +77,7 @@ class K9PunsjEventHandlerTest : AbstractK9LosIntegrationTest() {
         val felter = oppgaveV3.felter.sortedBy { it.eksternId }
         assertThat(felter).hasSize(4)
         assertThat(felter[0].eksternId).isEqualTo("aktorId")
-        assertThat(felter[0].verdi).isEqualTo("27078522688")
+        assertThat(felter[0].verdi).isEqualTo(aktørId)
         assertThat(felter[1].eksternId).isEqualTo("journalfort")
         assertThat(felter[1].verdi).isEqualTo("true")
         assertThat(felter[2].eksternId).isEqualTo("journalfortTidspunkt")
