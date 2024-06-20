@@ -10,6 +10,7 @@ import no.nav.k9.los.domene.modell.Fagsystem
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
@@ -42,6 +43,7 @@ class K9TilbakeTilLosIT : AbstractK9LosIntegrationTest() {
         oppgaveApisTjeneste = get<OppgaveApisTjeneste>()
         TestSaksbehandler().init()
         OppgaveTestDataBuilder()
+        get<K9PunsjTilLosAdapterTjeneste>().setup()
     }
 
     @Test

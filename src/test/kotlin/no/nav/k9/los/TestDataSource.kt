@@ -62,6 +62,7 @@ abstract class AbstractPostgresTest {
                 behandling_prosess_events_klage_historikkvask_ferdig,
                 behandling_prosess_events_k9_punsj_historikkvask_ferdig,
                 behandling_prosess_events_k9_punsj,
+                behandling_prosess_events_k9_punsj_historikkvask_ferdig,
                 behandling_prosess_events_tilbake,
                 driftsmeldinger,
                 ferdigstilte_behandlinger,

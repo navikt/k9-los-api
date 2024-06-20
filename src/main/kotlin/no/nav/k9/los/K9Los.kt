@@ -48,6 +48,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.k9SakKorrigerO
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.forvaltning.forvaltningApis
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoApis
@@ -231,6 +232,17 @@ fun Application.k9Los() {
         transactionalManager = koin.get(),
         config = koin.get(),
         k9sakBeriker = koin.get(),
+    ).kjør(kjørSetup = false, kjørUmiddelbart = false)
+
+    K9PunsjTilLosAdapterTjeneste(
+        eventRepository = koin.get(),
+        oppgavetypeTjeneste = koin.get(),
+        oppgaveV3Tjeneste = koin.get(),
+        config = koin.get(),
+        transactionalManager = koin.get(),
+        oppgaveRepository = koin.get(),
+        reservasjonV3Tjeneste = koin.get(),
+        pepCacheService = koin.get()
     ).kjør(kjørSetup = false, kjørUmiddelbart = false)
 
     OppgavestatistikkTjeneste(
