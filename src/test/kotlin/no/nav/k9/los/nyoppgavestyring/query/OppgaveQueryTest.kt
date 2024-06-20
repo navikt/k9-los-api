@@ -23,6 +23,7 @@ import no.nav.k9.los.nyoppgavestyring.pep.TestRepository
 import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
@@ -397,12 +398,15 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         val oppgave2 = builder.lagOgLagre(Oppgavestatus.AAPEN)
 
         val query = OppgaveQuery(
-            listOf(
+            filtere = listOf(
                 byggGenereltFilter(
                     FeltType.OPPGAVE_STATUS,
                     FeltverdiOperator.IN,
                     Oppgavestatus.AAPEN.kode
                 )
+            ),
+            order = listOf(
+                EnkelOrderFelt(område = "K9", kode = FeltType.MOTTATT_DATO.eksternId, økende = true)
             )
         )
 
