@@ -30,7 +30,7 @@ CREATE INDEX oppgave_v3_aktiv_kildeomrade_ekstern_id ON oppgave_v3_aktiv USING b
 CREATE TABLE if not exists OPPGAVEFELT_VERDI_AKTIV
 (
     id                          integer GENERATED ALWAYS AS IDENTITY     NOT NULL PRIMARY KEY,
-    oppgave_id                  BIGINT                                  NOT NULL,
+    oppgave_id                  integer                                 NOT NULL,
     oppgavefelt_id              BIGINT                                  NOT NULL,
     verdi                       VARCHAR(100)                            NOT NULL,
     oppgavestatus               VARCHAR(50)                             NOT NULL,
