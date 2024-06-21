@@ -37,7 +37,7 @@ class OppgaveV3Repository(
         val oppgaveId = nyOppgaveversjon(oppgave, nyVersjon, tx)
         lagreFeltverdier(oppgaveId, oppgave, tx)
 
-        upsertAktivOppgave(oppgave, nyVersjon, tx)
+        AktivOppgaveRepository.ajourholdAktivOppgave(oppgave, nyVersjon, tx)
     }
 
     fun hentOppgaveversjon(
@@ -225,85 +225,6 @@ class OppgaveV3Repository(
                 )
             )
         )!!
-    }
-
-    @VisibleForTesting
-    fun upsertAktivOppgave(oppgave: OppgaveV3, nyVersjon: Long, tx: TransactionalSession): Long {
-        val oppgaveId =  tx.updateAndReturnGeneratedKey(
-            queryOf(
-                """
-                    insert into oppgave_v3_aktiv (ekstern_id, ekstern_versjon, oppgavetype_id, status, versjon, kildeomrade, endret_tidspunkt, reservasjonsnokkel)
-                    values(:eksternId, :eksternVersjon, :oppgavetypeId, :status, :versjon, :kildeomrade, :endretTidspunkt, :reservasjonsnokkel)
-                    on conflict (ekstern_id, kildeomrade)
-                    do update set
-                        ekstern_versjon = :eksternVersjon,
-                        status = :status,
-                        versjon = :versjon,
-                        endret_tidspunkt = :endretTidspunkt,
-                        reservasjonsnokkel = :reservasjonsnokkel;
-                """.trimIndent(),
-                mapOf(
-                    "eksternId" to oppgave.eksternId,
-                    "eksternVersjon" to oppgave.eksternVersjon,
-                    "oppgavetypeId" to oppgave.oppgavetype.id,
-                    "status" to oppgave.status.toString(),
-                    "endretTidspunkt" to oppgave.endretTidspunkt,
-                    "versjon" to nyVersjon,
-                    "kildeomrade" to oppgave.kildeområde,
-                    "reservasjonsnokkel" to oppgave.reservasjonsnøkkel,
-                )
-            )
-        )!!
-
-        oppdaterAktivOppgavefelter(oppgaveId, oppgave, nyVersjon, tx)
-        return oppgaveId
-    }
-
-    private fun oppdaterAktivOppgavefelter(
-        oppgaveId: Long,
-        oppgave: OppgaveV3,
-        nyVersjon: Long,
-        tx: TransactionalSession
-    ) {
-        if (nyVersjon == 0L) {
-            insertOppgavefeltVerdiAktiv(tx, oppgave, oppgaveId)
-        } else if (nyVersjon >= 1) {
-            deleteOppgavefeltVerdiAktiv(tx, oppgaveId)
-            insertOppgavefeltVerdiAktiv(tx, oppgave, oppgaveId)
-        } else {
-            throw IllegalArgumentException("Nyversjon må være 0 eller høyere: $nyVersjon")
-        }
-    }
-
-    private fun deleteOppgavefeltVerdiAktiv(tx: TransactionalSession, oppgaveId: Long) {
-        tx.run(
-            queryOf(
-                """
-                            delete from oppgavefelt_verdi_aktiv where oppgave_id = :oppgave_id 
-                        """.trimIndent(),
-                mapOf("oppgave_id" to oppgaveId)
-            ).asUpdate
-        )
-    }
-
-    private fun insertOppgavefeltVerdiAktiv(
-        tx: TransactionalSession,
-        oppgave: OppgaveV3,
-        oppgaveId: Long
-    ) {
-        tx.batchPreparedNamedStatement("""
-                insert into oppgavefelt_verdi_aktiv(oppgave_id, oppgavefelt_id, verdi, oppgavestatus)
-                        VALUES (:oppgaveId, :oppgavefeltId, :verdi, :oppgavestatus)
-            """.trimIndent(),
-            oppgave.felter.map { feltverdi ->
-                mapOf(
-                    "oppgaveId" to oppgaveId,
-                    "oppgavefeltId" to feltverdi.oppgavefelt.id,
-                    "verdi" to feltverdi.verdi,
-                    "oppgavestatus" to oppgave.status.kode
-                )
-            }
-        )
     }
 
     private fun hentFeltverdier(

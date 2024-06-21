@@ -24,7 +24,6 @@ class AnnullerReservasjonTest: AbstractK9LosIntegrationTest() {
             oppgaveV3Repository = get(),
             oppgavetypeRepository = get(),
             områdeRepository = get(),
-            reservasjonTjeneste = reservasjonV3Tjenestemock,
         )
         oppgavemodellBuilder = RedusertOppgaveTestmodellBuilder()
         oppgavemodellBuilder.byggOppgavemodell()

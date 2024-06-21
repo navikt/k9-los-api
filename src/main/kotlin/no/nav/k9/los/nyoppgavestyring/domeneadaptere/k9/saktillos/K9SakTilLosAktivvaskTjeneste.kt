@@ -143,7 +143,7 @@ class K9SakTilLosAktivvaskTjeneste(
             nyeBehandlingsopplysningerFraK9Sak
         )
 
-        oppgaveV3Tjeneste.upsertAktivOppgave(oppgaveDto, eventNrForBehandling.toLong(), tx)
+        oppgaveV3Tjeneste.ajourholdAktivOppgave(oppgaveDto, eventNrForBehandling.toLong(), tx)
 
         return 1
     }

@@ -6,6 +6,7 @@ import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import org.slf4j.Logger
@@ -118,6 +119,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
         val høyesteInternVersjon =
             oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9sak", "K9", tx)!!
         var eventNrForBehandling = 0L
+        var oppgaveDto: OppgaveDto? = null
         for (event in behandlingProsessEventer) {
             if (eventNrForBehandling > høyesteInternVersjon) {
                 break
@@ -127,7 +129,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 //ser ut som noen gamle mottatte dokumenter kan mangle innsendingstidspunkt.
                 //da faller vi tilbake til å bruke behandling_opprettet i mapperen
             }
-            var oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+            oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
 
             oppgaveDto = k9SakTilLosAdapterTjeneste.ryddOppObsoleteOgResultatfeilFra2020(
                 event,
@@ -144,6 +146,10 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 område = "K9", eksternId = oppgaveDto.id, eksternVersjon = oppgaveDto.versjon, tx = tx
             )
             eventNrForBehandling++
+        }
+
+        oppgaveDto?.let {
+            oppgaveV3Tjeneste.ajourholdAktivOppgave(oppgaveDto, eventNrForBehandling, tx)
         }
 
         return eventTeller
