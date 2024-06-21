@@ -439,7 +439,6 @@ fun common(app: Application, config: Configuration) = module {
             eventRepository = get(),
             oppgavetypeTjeneste = get(),
             oppgaveV3Tjeneste = get(),
-            oppgaveRepository = get(),
             reservasjonV3Tjeneste = get(),
             config = get(),
             transactionalManager = get(),

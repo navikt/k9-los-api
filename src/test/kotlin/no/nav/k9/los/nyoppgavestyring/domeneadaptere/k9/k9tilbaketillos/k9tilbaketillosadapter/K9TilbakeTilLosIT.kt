@@ -43,7 +43,6 @@ class K9TilbakeTilLosIT : AbstractK9LosIntegrationTest() {
         oppgaveApisTjeneste = get<OppgaveApisTjeneste>()
         TestSaksbehandler().init()
         OppgaveTestDataBuilder()
-        get<K9PunsjTilLosAdapterTjeneste>().setup()
     }
 
     @Test

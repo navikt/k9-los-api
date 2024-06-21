@@ -13,6 +13,7 @@ import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.modell.BehandlingStatus
 import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
+import no.nav.k9.los.jobber.JobbMetrikker
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.EventTilDtoMapper
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.*
@@ -78,7 +79,9 @@ class K9SakTilLosAdapterTjeneste(
                 setup()
             }
             try {
-                spillAvBehandlingProsessEventer()
+                JobbMetrikker.time("spill_av_behandlingprosesseventer_k9sak") {
+                    spillAvBehandlingProsessEventer()
+                }
             } catch (e: Exception) {
                 log.warn("Avspilling av k9sak-eventer til oppgaveV3 feilet. Retry om en time", e)
             }
@@ -133,8 +136,11 @@ class K9SakTilLosAdapterTjeneste(
                     pepCacheService.oppdater(tx, oppgave.kildeområde, oppgave.eksternId)
 
                     // Bruker samme logikk som i v1-modell for å ikke fjerne reservasjoner som midlertidige er på vent med Ventekategori.AVVENTER_ANNET
-                    val erPåVent = event.aksjonspunktTilstander.any { it.status.erÅpentAksjonspunkt() && AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode).erAutopunkt() }
-                    if (erPåVent || BehandlingStatus.AVSLUTTET.kode == event.behandlingStatus ||  oppgave.status == Oppgavestatus.LUKKET) {
+                    val erPåVent = event.aksjonspunktTilstander.any {
+                        it.status.erÅpentAksjonspunkt() && AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode)
+                            .erAutopunkt()
+                    }
+                    if (erPåVent || BehandlingStatus.AVSLUTTET.kode == event.behandlingStatus || oppgave.status == Oppgavestatus.LUKKET) {
                         annullerReservasjonerHvisAlleOppgaverPåVentEllerAvsluttet(event, tx)
                     }
 
@@ -161,10 +167,14 @@ class K9SakTilLosAdapterTjeneste(
         return eventTeller
     }
 
-    private fun annullerReservasjonerHvisAlleOppgaverPåVentEllerAvsluttet(event: BehandlingProsessEventDto, tx: TransactionalSession) {
+    private fun annullerReservasjonerHvisAlleOppgaverPåVentEllerAvsluttet(
+        event: BehandlingProsessEventDto,
+        tx: TransactionalSession
+    ) {
         val saksbehandlerNøkkel = EventTilDtoMapper.utledReservasjonsnøkkel(event, erTilBeslutter = false)
         val beslutterNøkkel = EventTilDtoMapper.utledReservasjonsnøkkel(event, erTilBeslutter = true)
-        val antallAnnullert = annullerReservasjonHvisAlleOppgaverPåVentEllerAvsluttet(listOf(saksbehandlerNøkkel, beslutterNøkkel), tx)
+        val antallAnnullert =
+            annullerReservasjonHvisAlleOppgaverPåVentEllerAvsluttet(listOf(saksbehandlerNøkkel, beslutterNøkkel), tx)
         if (antallAnnullert > 0) {
             log.info("Annullerte $antallAnnullert reservasjoner maskinelt på oppgave ${event.saksnummer} som følge av status på innkommende event")
         } else {
@@ -172,7 +182,10 @@ class K9SakTilLosAdapterTjeneste(
         }
     }
 
-    private fun annullerReservasjonHvisAlleOppgaverPåVentEllerAvsluttet(reservasjonsnøkler: List<String>, tx: TransactionalSession): Int {
+    private fun annullerReservasjonHvisAlleOppgaverPåVentEllerAvsluttet(
+        reservasjonsnøkler: List<String>,
+        tx: TransactionalSession
+    ): Int {
         val åpneOppgaverForReservasjonsnøkkel =
             oppgaveRepository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjonsnøkler)
                 .filter { it.status == Oppgavestatus.AAPEN.kode }
@@ -245,11 +258,18 @@ class K9SakTilLosAdapterTjeneste(
                 .readText(),
             OppgavetyperDto::class.java
         )
-        oppgavetypeTjeneste.oppdater(oppgavetyperDto.copy(
-            oppgavetyper = oppgavetyperDto.oppgavetyper.map { oppgavetypeDto ->
-                oppgavetypeDto.copy(oppgavebehandlingsUrlTemplate = oppgavetypeDto.oppgavebehandlingsUrlTemplate.replace("{baseUrl}", config.k9FrontendUrl()))
-            }.toSet()
-        ))
+        oppgavetypeTjeneste.oppdater(
+            oppgavetyperDto.copy(
+                oppgavetyper = oppgavetyperDto.oppgavetyper.map { oppgavetypeDto ->
+                    oppgavetypeDto.copy(
+                        oppgavebehandlingsUrlTemplate = oppgavetypeDto.oppgavebehandlingsUrlTemplate.replace(
+                            "{baseUrl}",
+                            config.k9FrontendUrl()
+                        )
+                    )
+                }.toSet()
+            )
+        )
         log.info("opprettet oppgavetype")
     }
 

@@ -1,15 +1,16 @@
 package no.nav.k9.los.fagsystem.k9sak
 
-import no.nav.k9.los.aksjonspunktbehandling.EventTeller
-import no.nav.k9.los.domene.lager.oppgave.Oppgave
-import no.nav.k9.los.domene.modell.FagsakYtelseType
-import no.nav.k9.los.domene.modell.Fagsystem
-import no.nav.k9.los.domene.modell.IModell
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
+import no.nav.k9.los.aksjonspunktbehandling.EventTeller
+import no.nav.k9.los.aksjonspunktbehandling.EventHandlerMetrics
+import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.v2.BehandlingEndret
 import no.nav.k9.los.domene.lager.oppgave.v2.FerdigstillBehandling
 import no.nav.k9.los.domene.lager.oppgave.v2.Ident
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveTjenesteV2
+import no.nav.k9.los.domene.modell.FagsakYtelseType
+import no.nav.k9.los.domene.modell.Fagsystem
+import no.nav.k9.los.domene.modell.IModell
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.*
 import org.slf4j.LoggerFactory
 
@@ -31,48 +32,44 @@ class K9sakEventHandlerV2(
     }
 
     private fun håndterBehandlingOpprettet(hendelse: ProduksjonsstyringBehandlingOpprettetHendelse) {
-        val t0 = System.currentTimeMillis()
         if (hendelse.ytelseType == FagsakYtelseType.FRISINN.kode) {
             return // Skal ikke opprette oppgaver for frisinn
         }
         log.info("Behandling opprettet hendelse: ${hendelse.behandlingType}, ${hendelse.ytelseType}, ${hendelse.saksnummer},  ${hendelse.behandlingstidFrist}, ${hendelse.tryggToString()}  ${hendelse.eksternId}")
-
-        val eksternId = hendelse.eksternId.toString()
-        oppgaveTjenesteV2.nyOppgaveHendelse(
-            eksternId, BehandlingEndret(
-                eksternReferanse = eksternId,
-                fagsystem = Fagsystem.K9SAK,
-                ytelseType = FagsakYtelseType.fraKode(hendelse.ytelseType),
-                behandlingType = hendelse.behandlingType,
-                søkersId = Ident(id = hendelse.søkersAktørId.aktørId, Ident.IdType.AKTØRID),
-                tidspunkt = hendelse.hendelseTid
+        EventHandlerMetrics.time("k9sak", "behandlingOpprettet") {
+            val eksternId = hendelse.eksternId.toString()
+            oppgaveTjenesteV2.nyOppgaveHendelse(
+                eksternId, BehandlingEndret(
+                    eksternReferanse = eksternId,
+                    fagsystem = Fagsystem.K9SAK,
+                    ytelseType = FagsakYtelseType.fraKode(hendelse.ytelseType),
+                    behandlingType = hendelse.behandlingType,
+                    søkersId = Ident(id = hendelse.søkersAktørId.aktørId, Ident.IdType.AKTØRID),
+                    tidspunkt = hendelse.hendelseTid
+                )
             )
-        )
-        val tidsforbrukMillis = System.currentTimeMillis() - t0
-        Metrics.k9sakHendelseMetrikkBehandlingOpprettet.observe(tidsforbrukMillis.toDouble())
+        }
     }
 
     private fun håndterBehandlingAvsluttet(hendelse: ProduksjonsstyringBehandlingAvsluttetHendelse) {
-        val t0 = System.currentTimeMillis()
         log.info("Behandling avsluttet hendelse: ${hendelse.behandlingResultatType}, ${hendelse.tryggToString()} ${hendelse.eksternId}")
-
         try {
-            val eksternId = hendelse.eksternId.toString()
-            oppgaveTjenesteV2.nyOppgaveHendelse(eksternId,
-                FerdigstillBehandling(
-                   tidspunkt = hendelse.hendelseTid
+            EventHandlerMetrics.time("k9sak", "behandlingAvsluttet") {
+                val eksternId = hendelse.eksternId.toString()
+                oppgaveTjenesteV2.nyOppgaveHendelse(
+                    eksternId,
+                    FerdigstillBehandling(
+                        tidspunkt = hendelse.hendelseTid
+                    )
                 )
-            )
+            }
         } catch (e: IllegalStateException) {
             log.warn("Feilet ved håndtering av behandlingavsluttet hendelse", e)
         }
-
-        val tidsforbrukMillis = System.currentTimeMillis() - t0
-        Metrics.k9sakHendelseMetrikkBehandlingAvsluttet.observe(tidsforbrukMillis.toDouble())
     }
 
     private suspend fun håndterNyttAksjonspunkt(hendelse: ProduksjonsstyringAksjonspunktHendelse) {
-        val t0 = System.currentTimeMillis()
+        val t0 = System.nanoTime()
         log.info("Aksjonspunkthendelse: ${hendelse.aksjonspunktTilstander.joinToString(", ")} ${hendelse.eksternId}")
 
         val aksjonspunkter = hendelse.aksjonspunktTilstander.associateBy { it }
@@ -81,14 +78,13 @@ class K9sakEventHandlerV2(
             }
 
         try {
-            val nyeHendelser = aksjonspunktHendelseMapper.hentOppgavehendelser(hendelse, aksjonspunkter).toList()
-            oppgaveTjenesteV2.nyeOppgaveHendelser(hendelse.eksternId.toString(), nyeHendelser)
+            EventHandlerMetrics.timeSuspended("k9sak", "aksjonspunkt", starttid = t0) {
+                val nyeHendelser = aksjonspunktHendelseMapper.hentOppgavehendelser(hendelse, aksjonspunkter).toList()
+                oppgaveTjenesteV2.nyeOppgaveHendelser(hendelse.eksternId.toString(), nyeHendelser)
+            }
         } catch (e: IllegalStateException) {
             log.warn("Feilet ved håndtering av aksjonspunkthendelser", e)
         }
-
-        val tidsforbrukMillis = System.currentTimeMillis() - t0
-        Metrics.k9sakHendelseMetrikkAksjonspunkt.observe(tidsforbrukMillis.toDouble())
     }
 
     private fun håndterNyttDokument(dokumenthendelse: ProduksjonsstyringDokumentHendelse) {
