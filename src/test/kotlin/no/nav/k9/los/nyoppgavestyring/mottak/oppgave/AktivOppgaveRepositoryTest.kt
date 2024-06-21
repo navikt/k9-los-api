@@ -13,8 +13,8 @@ class AktivOppgaveRepositoryTest {
     @Test
     fun `når det er ingen forskjell skal diff være tom`() {
         val eksisterende = listOf(
-            mockOppgaveFeltverdi("aksjonspunkt", listetype = true, "9001").copy(id = 2),
-            mockOppgaveFeltverdi("aksjonspunkt", listetype = true, "9003").copy(id = 3),
+            mockOppgaveFeltverdi("aksjonspunkt", listetype = true, "9001", id = 2),
+            mockOppgaveFeltverdi("aksjonspunkt", listetype = true, "9003", id = 3),
         )
         val nye = listOf(
             mockOppgaveFeltverdi("aksjonspunkt", listetype = true, verdi = "9001"),
@@ -45,8 +45,8 @@ class AktivOppgaveRepositoryTest {
     @Test
     fun `når det finnes gamle elementer men ingen nye skal alle slettes`() {
         val eksisterende = listOf(
-            mockOppgaveFeltverdi("aksjonspunkt", listetype = true, "9001").copy(id = 2),
-            mockOppgaveFeltverdi("aksjonspunkt", listetype = true, "9003").copy(id = 3),
+            mockOppgaveFeltverdi("aksjonspunkt", listetype = true, "9001", id = 2),
+            mockOppgaveFeltverdi("aksjonspunkt", listetype = true, "9003", id = 3),
         )
         val nye = listOf<OppgaveFeltverdi>()
         val diffResultat = AktivOppgaveRepository.regnUtDiff(eksisterende, nye)
@@ -58,8 +58,8 @@ class AktivOppgaveRepositoryTest {
     @Test
     fun `når det er endring på ett element skal det oppdateres `() {
         val eksisterende = listOf(
-            mockOppgaveFeltverdi("aksjonspunkt", listetype = true, "9001").copy(id = 2),
-            mockOppgaveFeltverdi("aksjonspunkt", listetype = true, "9003").copy(id = 3),
+            mockOppgaveFeltverdi("aksjonspunkt", listetype = true, "9001", id = 2),
+            mockOppgaveFeltverdi("aksjonspunkt", listetype = true, "9003", id = 3),
         )
         val nye = listOf(
             mockOppgaveFeltverdi("aksjonspunkt", listetype = true, verdi = "9001"),
@@ -74,10 +74,10 @@ class AktivOppgaveRepositoryTest {
     @Test
     fun `grisecase`() {
         val eksisterende = listOf(
-            mockOppgaveFeltverdi(eksternId = "aksjonspunkt", oppgavefeltId = 1, listetype = true, verdi = "9001").copy(id = 2),
-            mockOppgaveFeltverdi(eksternId = "aksjonspunkt", oppgavefeltId = 1, listetype = true, verdi = "9002").copy(id = 3),
-            mockOppgaveFeltverdi(eksternId = "aksjonspunkt", oppgavefeltId = 1, listetype = true, verdi = "9003").copy(id = 4),
-            mockOppgaveFeltverdi(eksternId = "test", oppgavefeltId = 2, listetype = false, verdi = "test").copy(id = 5),
+            mockOppgaveFeltverdi(eksternId = "aksjonspunkt", oppgavefeltId = 1, listetype = true, verdi = "9001", id = 2),
+            mockOppgaveFeltverdi(eksternId = "aksjonspunkt", oppgavefeltId = 1, listetype = true, verdi = "9002", id = 3),
+            mockOppgaveFeltverdi(eksternId = "aksjonspunkt", oppgavefeltId = 1, listetype = true, verdi = "9003", id = 4),
+            mockOppgaveFeltverdi(eksternId = "test", oppgavefeltId = 2, listetype = false, verdi = "test", id = 5),
         )
         val nye = listOf(
             mockOppgaveFeltverdi(eksternId = "aksjonspunkt", oppgavefeltId = 1, listetype = true, verdi = "9001"),
@@ -93,11 +93,11 @@ class AktivOppgaveRepositoryTest {
         assertThat(diffResultat.inserts).containsOnly(AktivOppgaveRepository.Verdi("test2", 3))
     }
 
-    fun mockOppgaveFeltverdi(eksternId: String, listetype: Boolean, verdi: String, oppgavefeltId: Long = 1): OppgaveFeltverdi {
+    fun mockOppgaveFeltverdi(eksternId: String, listetype: Boolean, verdi: String, oppgavefeltId: Long = 1, id : Long? = null): OppgaveFeltverdi {
         return OppgaveFeltverdi(
+            id = id,
             oppgavefelt = mockOppgavefelt(eksternId, listetype, oppgavefeltId),
-            verdi = verdi,
-            oppgavestatus = null,
+            verdi = verdi
         )
     }
 

@@ -31,8 +31,7 @@ abstract class AkkumulerDuration(
 
         return OppgaveFeltverdi(
                 oppgavefelt = innkommendeOppgave.hentFelt(målfelt),
-                verdi = akkumulertVentetidSaksbehandler.toString(),
-                oppgavestatus = innkommendeOppgave.status
+                verdi = akkumulertVentetidSaksbehandler.toString()
             )
     }
 }

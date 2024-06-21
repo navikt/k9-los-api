@@ -73,7 +73,6 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
         }
 
         assertThat(lagretOppgave.aktiv).isEqualTo(false)
-        assertThat(lagretOppgave.hentOppgavefeltverdi(FeltType.BEHANDLINGUUID.eksternId)!!.oppgavestatus).isEqualTo(lagretOppgave.status)
     }
 
     @Test
@@ -114,7 +113,6 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
         assertThat(oppgaveFraUttrekk.eksternVersjon).isEqualTo(oppgave2.eksternVersjon)
 
         assertThat(lagretOppgave1.aktiv).isFalse()
-        assertThat(lagretOppgave1.hentOppgavefeltverdi(FeltType.BEHANDLINGUUID.eksternId)!!.oppgavestatus).isEqualTo(Oppgavestatus.AAPEN)
 
         transactionalManager.transaction { tx ->
             oppgaveV3Repository.nyOppgaveversjon(oppgave3, tx)
@@ -124,7 +122,6 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
         }
 
         assertThat(lagretOppgave2.aktiv).isFalse()
-        assertThat(lagretOppgave2.hentOppgavefeltverdi(FeltType.BEHANDLINGUUID.eksternId)!!.oppgavestatus).isEqualTo(Oppgavestatus.AAPEN)
 
         val lagretOppgave3 = transactionalManager.transaction { tx ->
             oppgaveV3Repository.hentOppgaveversjon(oppgave3.oppgavetype.område, oppgave3.eksternId, oppgave3.eksternVersjon, tx)
@@ -132,7 +129,6 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
 
         assertThat(lagretOppgave3.aktiv).isTrue()
         assertThat(lagretOppgave3.status).isEqualTo(Oppgavestatus.LUKKET)
-        assertThat(lagretOppgave3.hentOppgavefeltverdi(FeltType.BEHANDLINGUUID.eksternId)!!.oppgavestatus).isEqualTo(Oppgavestatus.LUKKET)
 
         oppgaveFraUttrekk = transactionalManager.transaction { tx ->
             oppgaveUttrekkRepository.hentNyesteOppgaveForEksternId(tx, "K9", oppgave1.eksternId)
@@ -204,6 +200,5 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
             oppgaveV3Repository.hentAktivOppgave(oppgave1.eksternId, oppgave1.oppgavetype, tx)
         }!!
 
-        assertThat(vasketOppgave.hentOppgavefeltverdi(FeltType.BEHANDLINGUUID.eksternId)!!.oppgavestatus).isEqualTo(oppgave1.status)
     }
 }

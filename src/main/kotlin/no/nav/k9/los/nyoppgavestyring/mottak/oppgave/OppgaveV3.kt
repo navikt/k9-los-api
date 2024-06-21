@@ -63,7 +63,6 @@ class OppgaveV3(
                         OppgaveFeltverdi(
                             oppgavefelt = oppgavefelt,
                             verdi = oppgaveFeltverdiDto.verdi,
-                            oppgavestatus = Oppgavestatus.fraKode(oppgaveDto.status)
                         )
                     )
                 }

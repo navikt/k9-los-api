@@ -74,13 +74,11 @@ class OppgaveV3TjenesteTest : AbstractK9LosIntegrationTest() {
         assertThat(vasketOppgave1.aktiv).isFalse()
         vasketOppgave1.hentOppgavefeltverdi("aksjonspunkt")!!.let { aksjonspunkt ->
             assertThat(aksjonspunkt.verdi).isEqualTo("9001")
-            assertThat(aksjonspunkt.oppgavestatus).isEqualTo(Oppgavestatus.AAPEN)
         }
 
         assertThat(vasketOppgave2.aktiv).isTrue()
         vasketOppgave2.hentOppgavefeltverdi("aksjonspunkt")!!.let { aksjonspunkt ->
             assertThat(aksjonspunkt.verdi).isEqualTo("5015")
-            assertThat(aksjonspunkt.oppgavestatus).isEqualTo(Oppgavestatus.AAPEN)
         }
     }
 

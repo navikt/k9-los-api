@@ -244,8 +244,7 @@ class OppgaveV3Repository(
                     oppgavefelt = oppgavetype.oppgavefelter.first { oppgavefelt ->
                         oppgavefelt.id == row.long("oppgavefelt_id")
                     },
-                    verdi = row.string("verdi"),
-                    oppgavestatus = row.stringOrNull("oppgavestatus")?.let { Oppgavestatus.fraKode(it) }
+                    verdi = row.string("verdi")
                 )
             }.asList
         )

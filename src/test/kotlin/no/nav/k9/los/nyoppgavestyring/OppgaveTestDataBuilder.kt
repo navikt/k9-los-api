@@ -55,7 +55,7 @@ class OppgaveTestDataBuilder(
             ?: throw IllegalStateException("Fant ikke ønsket feltdefinisjon i db")
 
         oppgaveFeltverdier.add(
-            OppgaveFeltverdi(null, oppgavefelter, verdi, Oppgavestatus.AAPEN)
+            OppgaveFeltverdi(null, oppgavefelter, verdi)
         )
         return this
     }
