@@ -68,7 +68,7 @@ CREATE TABLE if not exists behandling_prosess_events_k9_klage_aktivvask_ferdig
         FOREIGN KEY(id) references behandling_prosess_events_klage(id)
 );
 
-CREATE TABLE if not exists behandling_prosess_events_k9_punsj_aktivkvask_ferdig
+CREATE TABLE if not exists behandling_prosess_events_k9_punsj_aktivvask_ferdig
 (
     id                          VARCHAR(100)     NOT NULL PRIMARY KEY,
     CONSTRAINT fk_bpe_k9_aktivvask_ferdig
