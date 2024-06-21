@@ -72,13 +72,13 @@ class EventTilDtoMapper {
                 event.ytelse?.let {
                     OppgaveFeltverdiDto(
                         nøkkel = "ytelsestype",
-                        verdi = FagsakYtelseType.fraKode(event.ytelse).kode,
+                        verdi = it,
                     )
                 },
                 event.ferdigstiltAv?.let {
                     OppgaveFeltverdiDto(
                         nøkkel = "ansvarligSaksbehandler",
-                        verdi = event.ferdigstiltAv,
+                        verdi = it,
                     )
                 },
                 event.journalførtTidspunkt?.let {
