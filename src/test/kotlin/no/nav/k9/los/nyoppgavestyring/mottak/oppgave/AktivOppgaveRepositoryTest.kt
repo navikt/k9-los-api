@@ -97,7 +97,6 @@ class AktivOppgaveRepositoryTest {
         return OppgaveFeltverdi(
             oppgavefelt = mockOppgavefelt(eksternId, listetype, oppgavefeltId),
             verdi = verdi,
-            aktiv = true,
             oppgavestatus = null,
         )
     }

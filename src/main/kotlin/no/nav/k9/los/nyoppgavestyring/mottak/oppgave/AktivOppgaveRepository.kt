@@ -72,7 +72,6 @@ object AktivOppgaveRepository {
                         oppgavefelt.id == row.long("oppgavefelt_id")
                     },
                     verdi = row.string("verdi"),
-                    aktiv = true,
                     oppgavestatus = row.stringOrNull("oppgavestatus")?.let { Oppgavestatus.fraKode(it) }
                 )
             }.asList

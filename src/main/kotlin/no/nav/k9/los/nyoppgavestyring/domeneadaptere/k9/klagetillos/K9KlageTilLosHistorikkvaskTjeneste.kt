@@ -87,11 +87,11 @@ class K9KlageTilLosHistorikkvaskTjeneste(
                 oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9klage", "K9", tx)!!
             var eventNrForBehandling = 0L
             for (event in behandlingProsessEventer) {
-                if (eventNrForBehandling > høyesteInternVersjon) { break }
+                if (eventNrForBehandling > høyesteInternVersjon) { break } //TODO hvordan kan eventNr > høyesteInternVersjon?
                 val losOpplysningerSomManglerIKlageDto = event.påklagdBehandlingEksternId?.let { k9sakBeriker.berikKlage(it) }
                 val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, losOpplysningerSomManglerIKlageDto, forrigeOppgave)
 
-                oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, høyesteInternVersjon, tx)
+                oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, tx)
 
                 eventTeller++
                 loggFremgangForHver100(eventTeller, "Prosessert $eventTeller eventer")

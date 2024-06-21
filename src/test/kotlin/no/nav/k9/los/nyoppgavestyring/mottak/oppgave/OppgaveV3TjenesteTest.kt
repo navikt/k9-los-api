@@ -59,8 +59,8 @@ class OppgaveV3TjenesteTest : AbstractK9LosIntegrationTest() {
         transactionalManager.transaction { tx ->
             oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveVersjon1, tx)
             oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveVersjon2, tx)
-            oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveVersjon1korrigert, 0, 1, tx)
-            oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveVersjon2korrigert, 1, 1, tx)
+            oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveVersjon1korrigert, 0, tx)
+            oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveVersjon2korrigert, 1, tx)
         }
 
         val vasketOppgave1 = transactionalManager.transaction { tx ->
@@ -74,14 +74,12 @@ class OppgaveV3TjenesteTest : AbstractK9LosIntegrationTest() {
         assertThat(vasketOppgave1.aktiv).isFalse()
         vasketOppgave1.hentOppgavefeltverdi("aksjonspunkt")!!.let { aksjonspunkt ->
             assertThat(aksjonspunkt.verdi).isEqualTo("9001")
-            assertThat(aksjonspunkt.aktiv).isFalse()
             assertThat(aksjonspunkt.oppgavestatus).isEqualTo(Oppgavestatus.AAPEN)
         }
 
         assertThat(vasketOppgave2.aktiv).isTrue()
         vasketOppgave2.hentOppgavefeltverdi("aksjonspunkt")!!.let { aksjonspunkt ->
             assertThat(aksjonspunkt.verdi).isEqualTo("5015")
-            assertThat(aksjonspunkt.aktiv).isTrue()
             assertThat(aksjonspunkt.oppgavestatus).isEqualTo(Oppgavestatus.AAPEN)
         }
     }

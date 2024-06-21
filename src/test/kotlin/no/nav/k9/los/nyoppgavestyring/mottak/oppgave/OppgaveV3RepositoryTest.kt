@@ -73,7 +73,6 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
         }
 
         assertThat(lagretOppgave.aktiv).isEqualTo(false)
-        assertThat(lagretOppgave.hentOppgavefeltverdi(FeltType.BEHANDLINGUUID.eksternId)!!.aktiv).isEqualTo(false)
         assertThat(lagretOppgave.hentOppgavefeltverdi(FeltType.BEHANDLINGUUID.eksternId)!!.oppgavestatus).isEqualTo(lagretOppgave.status)
     }
 
@@ -115,7 +114,6 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
         assertThat(oppgaveFraUttrekk.eksternVersjon).isEqualTo(oppgave2.eksternVersjon)
 
         assertThat(lagretOppgave1.aktiv).isFalse()
-        assertThat(lagretOppgave1.hentOppgavefeltverdi(FeltType.BEHANDLINGUUID.eksternId)!!.aktiv).isFalse()
         assertThat(lagretOppgave1.hentOppgavefeltverdi(FeltType.BEHANDLINGUUID.eksternId)!!.oppgavestatus).isEqualTo(Oppgavestatus.AAPEN)
 
         transactionalManager.transaction { tx ->
@@ -126,7 +124,6 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
         }
 
         assertThat(lagretOppgave2.aktiv).isFalse()
-        assertThat(lagretOppgave2.hentOppgavefeltverdi(FeltType.BEHANDLINGUUID.eksternId)!!.aktiv).isFalse()
         assertThat(lagretOppgave2.hentOppgavefeltverdi(FeltType.BEHANDLINGUUID.eksternId)!!.oppgavestatus).isEqualTo(Oppgavestatus.AAPEN)
 
         val lagretOppgave3 = transactionalManager.transaction { tx ->
@@ -135,7 +132,6 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
 
         assertThat(lagretOppgave3.aktiv).isTrue()
         assertThat(lagretOppgave3.status).isEqualTo(Oppgavestatus.LUKKET)
-        assertThat(lagretOppgave3.hentOppgavefeltverdi(FeltType.BEHANDLINGUUID.eksternId)!!.aktiv).isTrue()
         assertThat(lagretOppgave3.hentOppgavefeltverdi(FeltType.BEHANDLINGUUID.eksternId)!!.oppgavestatus).isEqualTo(Oppgavestatus.LUKKET)
 
         oppgaveFraUttrekk = transactionalManager.transaction { tx ->
@@ -204,11 +200,10 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
 
         val vasketOppgave = transactionalManager.transaction { tx ->
             oppgaveV3Repository.slettFeltverdier(oppgave1.eksternId, 0, tx)
-            oppgaveV3Repository.lagreFeltverdierForDatavask(oppgave1.eksternId, 0, oppgave1.aktiv, oppgave1.status, oppgave1.felter, tx)
+            oppgaveV3Repository.lagreFeltverdierForDatavask(oppgave1.eksternId, 0, oppgave1.status, oppgave1.felter, tx)
             oppgaveV3Repository.hentAktivOppgave(oppgave1.eksternId, oppgave1.oppgavetype, tx)
         }!!
 
         assertThat(vasketOppgave.hentOppgavefeltverdi(FeltType.BEHANDLINGUUID.eksternId)!!.oppgavestatus).isEqualTo(oppgave1.status)
-        assertThat(vasketOppgave.hentOppgavefeltverdi(FeltType.BEHANDLINGUUID.eksternId)!!.aktiv).isEqualTo(oppgave1.aktiv)
     }
 }

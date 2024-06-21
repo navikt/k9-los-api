@@ -130,7 +130,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
         var oppgaveDto: OppgaveDto? = null
         for (event in behandlingProsessEventer) {
             if (eventNrForBehandling > høyesteInternVersjon) {
-                break
+                break //TODO hvordan, og er det riktig i så fall?
             }
             if (event.eldsteDatoMedEndringFraSøker == null && nyeBehandlingsopplysningerFraK9Sak != null && nyeBehandlingsopplysningerFraK9Sak.eldsteDatoMedEndringFraSøker != null) {
                 event.copy(eldsteDatoMedEndringFraSøker = nyeBehandlingsopplysningerFraK9Sak.eldsteDatoMedEndringFraSøker)
@@ -145,7 +145,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 nyeBehandlingsopplysningerFraK9Sak
             )
 
-            oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, høyesteInternVersjon, tx)
+            oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, tx)
 
             eventTeller++
             loggFremgangForHver100(eventTeller, "Prosessert $eventTeller eventer")

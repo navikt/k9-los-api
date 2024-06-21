@@ -102,7 +102,7 @@ class OppgaveV3Tjeneste(
         AktivOppgaveRepository.ajourholdAktivOppgave(innkommendeOppgave, internVersjon, tx)
     }
 
-fun oppdaterEksisterendeOppgaveversjon(oppgaveDto: OppgaveDto, eventNr: Long, høyesteInternVersjon: Long, tx: TransactionalSession) {
+fun oppdaterEksisterendeOppgaveversjon(oppgaveDto: OppgaveDto, eventNr: Long, tx: TransactionalSession) {
         val oppgavetype = oppgavetypeRepository.hentOppgavetype(
             område = oppgaveDto.område,
             eksternId = oppgaveDto.type,
@@ -138,7 +138,6 @@ fun oppdaterEksisterendeOppgaveversjon(oppgaveDto: OppgaveDto, eventNr: Long, h�
             eksternId = innkommendeOppgave.eksternId,
             internVersjon = eventNr,
             oppgaveFeltverdier = innkommendeOppgave.felter,
-            aktiv = eventNr == høyesteInternVersjon,
             oppgavestatus = Oppgavestatus.fraKode(oppgaveDto.status),
             tx = tx
         )
