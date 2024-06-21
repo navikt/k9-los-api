@@ -36,7 +36,7 @@ class OppgaveQuerySqlBuilder(
                 SELECT ekstern_id, kildeomrade, kode6, kode7, egen_ansatt
                 FROM Oppgave_pep_cache 
           ) as opc ON (o.kildeomrade = opc.kildeomrade AND o.ekstern_id = opc.ekstern_id)
-        WHERE aktiv = true 
+        WHERE true 
             """.trimIndent()
 
     private val filtrerReserverteOppgaver = """
@@ -102,7 +102,7 @@ class OppgaveQuerySqlBuilder(
         val index = queryParams.size + orderByParams.size
         when (feltkode) {
             "oppgavestatus" -> {
-                query += "${combineOperator.sql} o.status ${operator.sql} (:oppgavestatus$index) "
+                query += "${combineOperator.sql} o.status ${operator.sql} cast (:oppgavestatus$index as oppgavestatus) "
                 queryParams["oppgavestatus$index"] = feltverdi
             }
             "kildeområde" -> {
@@ -171,7 +171,7 @@ class OppgaveQuerySqlBuilder(
                     WHERE ov.oppgave_id = o.id
                       AND fo.ekstern_id = :feltOmrade$index
                       AND fd.ekstern_id = :feltkode$index
-                      AND ov.oppgavestatus in (${oppgavestatusFilter.joinToString(prefix = "'", separator = "', '", postfix = "'") { oppgavestatus -> oppgavestatus.kode }})
+                      AND ov.oppgavestatus in (${oppgavestatusInClause(oppgavestatusFilter)})
                       AND 
             """.trimIndent()
 
@@ -272,7 +272,7 @@ class OppgaveQuerySqlBuilder(
                     WHERE ov.oppgave_id = o.id
                       AND fo.ekstern_id = :feltOmrade$index
                       AND fd.ekstern_id = :feltkode$index
-                      AND ov.oppgavestatus in (${oppgavestatusFilter.joinToString(prefix = "'", separator = "', '", postfix = "'") { oppgavestatus -> oppgavestatus.kode }})
+                      AND ov.oppgavestatus in (${oppgavestatusInClause(oppgavestatusFilter)})
                   )
             """.trimIndent()
     }
@@ -333,11 +333,16 @@ class OppgaveQuerySqlBuilder(
                   WHERE ov.oppgave_id = o.id
                     AND fo.ekstern_id = :orderByfeltOmrade$index
                     AND fd.ekstern_id = :orderByfeltkode$index
-                    AND ov.oppgavestatus in (${oppgavestatusFilter.joinToString(prefix = "'", separator = "', '", postfix = "'") { oppgavestatus -> oppgavestatus.kode }})
+                    AND ov.oppgavestatus in (${oppgavestatusInClause(oppgavestatusFilter)})
                 ) 
             """.trimIndent()
 
         orderBySql += if (økende) "ASC" else "DESC"
+    }
+
+    private fun oppgavestatusInClause(oppgavestatus : List<Oppgavestatus>) : String {
+        check(oppgavestatus.isNotEmpty()){"Filtrerer bort alle oppgaver, siden ingen oppgavestatuser er valgt"}
+        return oppgavestatus.map { "cast ('${it.kode}' as oppgavestatus)" }.joinToString (separator = ",")
     }
 
     fun medPaging(limit: Long, offset: Long) {
