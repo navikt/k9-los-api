@@ -6,6 +6,7 @@ import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.PunsjEventK9Repository
+import no.nav.k9.los.jobber.JobbMetrikker
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
@@ -60,7 +61,9 @@ class K9PunsjTilLosAdapterTjeneste(
             period = TimeUnit.HOURS.toMillis(1)
         ) {
             try {
-                spillAvBehandlingProsessEventer()
+                JobbMetrikker.time("spill_av_behandlingprosesseventer_k9punsj") {
+                    spillAvBehandlingProsessEventer()
+                }
             } catch (e: Exception) {
                 log.warn("Avspilling av k9punsj-eventer til oppgaveV3 feilet. Retry om en time", e)
             }
@@ -151,11 +154,18 @@ class K9PunsjTilLosAdapterTjeneste(
                 .readText(),
             OppgavetyperDto::class.java
         )
-        oppgavetypeTjeneste.oppdater(oppgavetyperDto.copy(
-            oppgavetyper = oppgavetyperDto.oppgavetyper.map { oppgavetypeDto ->
-                oppgavetypeDto.copy(oppgavebehandlingsUrlTemplate = oppgavetypeDto.oppgavebehandlingsUrlTemplate.replace("{baseUrl}", config.k9FrontendUrl()))
-            }.toSet()
-        ))
+        oppgavetypeTjeneste.oppdater(
+            oppgavetyperDto.copy(
+                oppgavetyper = oppgavetyperDto.oppgavetyper.map { oppgavetypeDto ->
+                    oppgavetypeDto.copy(
+                        oppgavebehandlingsUrlTemplate = oppgavetypeDto.oppgavebehandlingsUrlTemplate.replace(
+                            "{baseUrl}",
+                            config.k9FrontendUrl()
+                        )
+                    )
+                }.toSet()
+            )
+        )
         log.info("opprettet oppgavetype")
     }
 }

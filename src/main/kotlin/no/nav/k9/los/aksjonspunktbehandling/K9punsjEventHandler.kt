@@ -37,28 +37,30 @@ class K9punsjEventHandler constructor(
     }
 
     fun prosesser(event: PunsjEventDto) {
-        log.info(event.safePrint())
-        val modell = punsjEventK9Repository.lagre(event = event)
-        val oppgave = modell.oppgave()
-        oppgaveRepository.lagre(oppgave.eksternId){
-            tellEvent(modell, oppgave)
-            oppgave
-        }
-
-        if (modell.fikkEndretAksjonspunkt()) {
-            reservasjonTjeneste.fjernReservasjon(oppgave)
-        }
-
-        runBlocking {
-            for (oppgavekø in oppgaveKøRepository.hentKøIdIkkeTaHensyn()) {
-                oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, listOf(oppgave), reservasjonRepository)
+        EventHandlerMetrics.time("k9punsj", "gjennomført") {
+            log.info(event.safePrint())
+            val modell = punsjEventK9Repository.lagre(event = event)
+            val oppgave = modell.oppgave()
+            oppgaveRepository.lagre(oppgave.eksternId) {
+                tellEvent(modell, oppgave)
+                oppgave
             }
-            statistikkChannel.send(true)
 
-            oppdaterOppgaveV2(event, modell)
+            if (modell.fikkEndretAksjonspunkt()) {
+                reservasjonTjeneste.fjernReservasjon(oppgave)
+            }
+
+            runBlocking {
+                for (oppgavekø in oppgaveKøRepository.hentKøIdIkkeTaHensyn()) {
+                    oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, listOf(oppgave), reservasjonRepository)
+                }
+                statistikkChannel.send(true)
+
+                oppdaterOppgaveV2(event, modell)
+            }
+
+            punsjTilLosAdapterTjeneste.oppdaterOppgaveForEksternId(event.eksternId)
         }
-
-        punsjTilLosAdapterTjeneste.oppdaterOppgaveForEksternId(event.eksternId)
     }
 
     override fun tellEvent(modell: IModell, oppgave: Oppgave) {

@@ -4,6 +4,7 @@ import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.HistorikkvaskMetrikker
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
@@ -27,6 +28,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9SakTilLosHistorikkvaskTjeneste::class.java)
+
     private val TRÅDNAVN = "k9-sak-til-los-historikkvask"
 
     fun kjørHistorikkvask() {
@@ -40,6 +42,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 log.info("Starter avspilling av historiske BehandlingProsessEventer")
 
                 val tidKjøringStartet = System.currentTimeMillis()
+                var t0 = System.nanoTime()
                 var eventTeller = 0L
                 var behandlingTeller = 0L
                 val antallEventIder = behandlingProsessEventK9Repository.hentAntallEventIderUtenVasketHistorikk()
@@ -52,14 +55,18 @@ class K9SakTilLosHistorikkvaskTjeneste(
                     }
 
                     if (skalPauses()) {
+                        HistorikkvaskMetrikker.observe(TRÅDNAVN, t0)
                         log.info("Vaskejobb satt på pause")
                         Thread.sleep(Duration.ofMinutes(5))
+                        t0 = System.nanoTime()
                         continue
                     }
 
                     log.info("Starter vaskeiterasjon på ${behandlingsIder.size} behandlinger")
                     eventTeller += spillAvBehandlingProsessEventer(behandlingsIder)
                     behandlingTeller += behandlingsIder.count()
+                    HistorikkvaskMetrikker.observe(TRÅDNAVN, t0)
+                    t0 = System.nanoTime()
                 }
 
                 val (antallAlle, antallAktive) = oppgaveV3Tjeneste.tellAntall()
@@ -73,6 +80,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 log.info("Historikkvask k9sak ferdig")
                 behandlingProsessEventK9Repository.nullstillHistorikkvask()
                 log.info("Nullstilt historikkvaskmarkering k9-sak")
+                HistorikkvaskMetrikker.observe(TRÅDNAVN, t0)
             }
         } else log.info("Ny oppgavestyring er deaktivert")
     }

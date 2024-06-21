@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.BehandlingProsessEventKlageRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.HistorikkvaskMetrikker
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import java.util.*
@@ -48,6 +49,7 @@ class K9KlageTilLosHistorikkvaskTjeneste(
     private fun spillAvBehandlingProsessEventer() {
         log.info("Starter avspilling av BehandlingProsessEventer")
         val tidKjøringStartet = System.currentTimeMillis()
+        var t0 = System.nanoTime()
 
         val behandlingsIder = behandlingProsessEventKlageRepository.hentAlleEventIderUtenVasketHistorikk()
         log.info("Fant ${behandlingsIder.size} behandlinger")
@@ -58,6 +60,8 @@ class K9KlageTilLosHistorikkvaskTjeneste(
             eventTeller = vaskOppgaveForBehandlingUUID(uuid, eventTeller)
             behandlingTeller++
             loggFremgangForHver100(behandlingTeller, "Forsert $behandlingTeller behandlinger")
+            HistorikkvaskMetrikker.observe(TRÅDNAVN, t0)
+            t0 = System.nanoTime()
         }
 
         val (antallAlle, antallAktive) = oppgaveV3Tjeneste.tellAntall()
@@ -70,6 +74,8 @@ class K9KlageTilLosHistorikkvaskTjeneste(
 
         behandlingProsessEventKlageRepository.nullstillHistorikkvask()
         log.info("Nullstilt historikkvaskmarkering k9-klage")
+
+        HistorikkvaskMetrikker.observe(TRÅDNAVN, t0)
     }
 
     private fun vaskOppgaveForBehandlingUUID(uuid: UUID, eventTellerInn: Long): Long {

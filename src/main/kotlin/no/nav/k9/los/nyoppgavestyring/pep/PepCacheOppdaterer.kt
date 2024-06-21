@@ -1,20 +1,10 @@
 package no.nav.k9.los.nyoppgavestyring.pep
 
-import io.prometheus.client.Histogram
+import no.nav.k9.los.jobber.JobbMetrikker
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.*
 import kotlin.concurrent.timer
-
-private val tidsforbrukMetrikkÅpne = Histogram.build()
-    .name("los_pepcache_oppdaterer_aapne")
-    .help("Tidsforbruk PepCacheOppdaterer åpne")
-    .register()
-
-private val tidsforbrukMetrikkLukkede = Histogram.build()
-    .name("los_pepcache_oppdaterer_lukkede")
-    .help("Tidsforbruk PepCacheOppdaterer lukkede")
-    .register()
 
 class PepCacheOppdaterer(
     val pepCacheService: PepCacheService,
@@ -32,10 +22,11 @@ class PepCacheOppdaterer(
             period = tidMellomKjøring.toMillis(),
             initialDelay = forsinketOppstart.toMillis()
         ) {
+
             try {
-                val t0 = System.currentTimeMillis()
-                pepCacheService.oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn(gyldighet = alderForOppfriskning)
-                tidsforbrukMetrikkÅpne.observe((System.currentTimeMillis()-t0).toDouble())
+                JobbMetrikker.time("pepcache_oppdaterer_aapne_og_venter") {
+                    pepCacheService.oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn(gyldighet = alderForOppfriskning)
+                }
             } catch (e: Exception) {
                 log.warn("Feil ved kjøring av PepCacheOppdaterer for åpne og ventene oppgaver", e)
             }
@@ -50,9 +41,9 @@ class PepCacheOppdaterer(
             initialDelay = forsinketOppstart.toMillis()
         ) {
             try {
-                val t0 = System.currentTimeMillis()
-                pepCacheService.oppdaterCacheForLukkedeOppgaverEldreEnn(gyldighet = Duration.ofDays(30))
-                tidsforbrukMetrikkLukkede.observe((System.currentTimeMillis()-t0).toDouble())
+                JobbMetrikker.time("pepcache_oppdaterer_lukkede") {
+                    pepCacheService.oppdaterCacheForLukkedeOppgaverEldreEnn(gyldighet = Duration.ofDays(30))
+                }
             } catch (e: Exception) {
                 log.warn("Feil ved kjøring av PepCacheOppdaterer for lukkede oppgaver", e)
             }

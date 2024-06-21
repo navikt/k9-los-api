@@ -5,6 +5,7 @@ import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.PunsjEventK9Repository
 import no.nav.k9.los.integrasjon.kafka.dto.PunsjEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.HistorikkvaskMetrikker
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import org.slf4j.Logger
@@ -37,6 +38,7 @@ class K9PunsjTilLosHistorikkvaskTjenester(
                 log.info("Starter avspilling av historiske BehandlingProsessEventer")
 
                 val tidKjøringStartet = System.currentTimeMillis()
+                var t0 = System.nanoTime()
                 var eventTeller = 0L
                 var behandlingTeller = 0L
                 val antallEventIder = eventRepository.hentAntallEventIderUtenVasketHistorikk()
@@ -49,14 +51,18 @@ class K9PunsjTilLosHistorikkvaskTjenester(
                     }
 
                     if (skalPauses()) {
+                        HistorikkvaskMetrikker.observe(TRÅDNAVN, t0)
                         log.info("Vaskejobb satt på pause")
                         Thread.sleep(Duration.ofMinutes(5))
+                        t0 = System.nanoTime()
                         continue
                     }
 
                     log.info("Starter vaskeiterasjon på ${behandlingsIder.size} behandlinger")
                     eventTeller += spillAvBehandlingProsessEventer(behandlingsIder)
                     behandlingTeller += behandlingsIder.count()
+                    HistorikkvaskMetrikker.observe(TRÅDNAVN, t0)
+                    t0 = System.nanoTime()
                 }
 
                 val (antallAlle, antallAktive) = oppgaveV3Tjeneste.tellAntall()
@@ -70,6 +76,7 @@ class K9PunsjTilLosHistorikkvaskTjenester(
                 log.info("Historikkvask k9punsj ferdig")
                 eventRepository.nullstillHistorikkvask()
                 log.info("Nullstilt historikkvaskmarkering k9-punsj")
+                HistorikkvaskMetrikker.observe(TRÅDNAVN, t0)
             }
         } else log.info("Ny oppgavestyring er deaktivert")
     }
