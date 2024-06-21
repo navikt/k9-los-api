@@ -11,11 +11,11 @@ object AktivOppgaveRepository {
             queryOf(
                 """
                     insert into oppgave_v3_aktiv (ekstern_id, ekstern_versjon, oppgavetype_id, status, versjon, kildeomrade, endret_tidspunkt, reservasjonsnokkel)
-                    values(:eksternId, :eksternVersjon, :oppgavetypeId, :status, :versjon, :kildeomrade, :endretTidspunkt, :reservasjonsnokkel)
+                    values(:eksternId, :eksternVersjon, :oppgavetypeId, cast(:status as oppgavestatus), :versjon, :kildeomrade, :endretTidspunkt, :reservasjonsnokkel)
                     on conflict (ekstern_id, kildeomrade)
                     do update set
                         ekstern_versjon = :eksternVersjon,
-                        status = :status,
+                        status = cast(:status as oppgavestatus),
                         versjon = :versjon,
                         endret_tidspunkt = :endretTidspunkt,
                         reservasjonsnokkel = :reservasjonsnokkel;
@@ -90,7 +90,7 @@ object AktivOppgaveRepository {
         }
         tx.batchPreparedNamedStatement("""
                 insert into oppgavefelt_verdi_aktiv(oppgave_id, oppgavefelt_id, verdi, oppgavestatus)
-                        VALUES (:oppgaveId, :oppgavefeltId, :verdi, :oppgavestatus)
+                        VALUES (:oppgaveId, :oppgavefeltId, :verdi, cast(:oppgavestatus as oppgavestatus))
             """.trimIndent(),
             inserts.map { verdi ->
                 mapOf(

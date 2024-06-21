@@ -1,10 +1,12 @@
+CREATE TYPE oppgavestatus AS ENUM ('AAPEN', 'VENTER', 'LUKKET');
+
 CREATE TABLE if not exists OPPGAVE_V3_AKTIV
 (
     id                          integer GENERATED ALWAYS AS IDENTITY    NOT NULL PRIMARY KEY,
     ekstern_id                  VARCHAR(100)                            NOT NULL,
     ekstern_versjon             VARCHAR(100)                            NOT NULL,
     oppgavetype_id              integer                                 NOT NULL,
-    status                      VARCHAR(50)                             NOT NULL,
+    status                      oppgavestatus                           NOT NULL,
     kildeomrade                 VARCHAR(30)                             NOT NULL,
     versjon                     int                                     NOT NULL,
     endret_tidspunkt            timestamp(3)                            NOT NULL,
@@ -29,16 +31,17 @@ CREATE INDEX oppgave_v3_aktiv_kildeomrade_ekstern_id ON oppgave_v3_aktiv USING b
 
 CREATE TABLE if not exists OPPGAVEFELT_VERDI_AKTIV
 (
-    id                          integer GENERATED ALWAYS AS IDENTITY     NOT NULL PRIMARY KEY,
+    id                          integer GENERATED ALWAYS AS IDENTITY    NOT NULL PRIMARY KEY,
     oppgave_id                  integer                                 NOT NULL,
-    oppgavefelt_id              BIGINT                                  NOT NULL,
+    oppgavestatus               oppgavestatus                           NOT NULL,
+    oppgavefelt_id              smallint                                NOT NULL,
     verdi                       VARCHAR(100)                            NOT NULL,
-    oppgavestatus               VARCHAR(50)                             NOT NULL,
+
     CONSTRAINT FK_OPPGAVEFELT_VERDI_01
-        FOREIGN KEY(oppgave_id) REFERENCES OPPGAVE_V3_AKTIV(id),
+    FOREIGN KEY(oppgave_id) REFERENCES OPPGAVE_V3_AKTIV(id),
     CONSTRAINT FK_OPPGAVEFELT_VERDI_02
-        FOREIGN KEY(oppgavefelt_id) REFERENCES OPPGAVEFELT(id)
-);
+    FOREIGN KEY(oppgavefelt_id) REFERENCES OPPGAVEFELT(id)
+    );
 
 comment on table OPPGAVEFELT_VERDI_AKTIV is 'Konkrete verdier på en oppgave, som predefinert i OPPGAVEFELT.';
 comment on column OPPGAVEFELT_VERDI_AKTIV.verdi is 'Verdiens egenskaper bestemmes av tabellen DATATYPE via fremmednøkkel i oppgavefelt.';
