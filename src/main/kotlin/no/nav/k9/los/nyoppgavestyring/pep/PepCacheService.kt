@@ -73,14 +73,14 @@ class PepCacheService(
         val pep = PepCache(
             eksternId = oppgave.eksternId,
             kildeområde = oppgave.kildeområde,
-            kode6 = true,
-            kode7 = true,
-            egenAnsatt = true,
+            kode6 = false,
+            kode7 = false,
+            egenAnsatt = false,
             oppdatert = LocalDateTime.now()
         )
 
         val saksnummer = oppgave.hentVerdi(oppgave.kildeområde, "saksnummer")
-            ?: throw IllegalStateException("Kan ikke gjøre oppslag uten saksnummer ${oppgave.eksternId}")
+            ?: return pep
 
         return pep.oppdater(saksnummer)
     }
