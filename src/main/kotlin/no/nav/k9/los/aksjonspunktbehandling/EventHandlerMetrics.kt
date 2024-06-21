@@ -8,7 +8,7 @@ class EventHandlerMetrics {
     companion object {
         private val tidsforbruk = Histogram.build()
             .name("k9los_event_handler")
-            .labelNames("avsenderSystem", "hendelse", "status")
+            .labelNames("avsenderSystem", "hendelse", "resultat")
             .help("Tidsforbruk håndtering av kafka hendelse til k9los")
             .exponentialBuckets(0.001, Math.pow(10.0, 1.0/3.0), 12 )
             .register()

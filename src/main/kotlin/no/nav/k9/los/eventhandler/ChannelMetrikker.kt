@@ -9,7 +9,7 @@ class ChannelMetrikker {
         private val tidsforbruk = Histogram.build()
             .name("k9los_channel")
             .help("Tidsforbruk prosessering av channels i k9los")
-            .labelNames("channel", "status")
+            .labelNames("channel", "resultat")
             .exponentialBuckets(0.01, Math.pow(10.0, 1.0/3.0), 12 )
             .register()
 
