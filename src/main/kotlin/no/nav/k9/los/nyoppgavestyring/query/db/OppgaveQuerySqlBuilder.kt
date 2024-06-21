@@ -102,7 +102,7 @@ class OppgaveQuerySqlBuilder(
         val index = queryParams.size + orderByParams.size
         when (feltkode) {
             "oppgavestatus" -> {
-                query += "${combineOperator.sql} o.status ${operator.sql} cast (:oppgavestatus$index as oppgavestatus) "
+                query += "${combineOperator.sql} o.status ${operator.sql} (cast (:oppgavestatus$index as oppgavestatus)) "
                 queryParams["oppgavestatus$index"] = feltverdi
             }
             "kildeområde" -> {

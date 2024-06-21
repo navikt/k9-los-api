@@ -29,7 +29,7 @@ class OppgaveRepository(
                     "kildeomrade" to kildeområde,
                     "eksternId" to eksternId
                 )
-            ).map { row -> mapOppgave(row, now, tx) }.asSingle
+            ).map { row -> mapAktivOppgave(row, now, tx) }.asSingle
         ) ?: throw IllegalStateException("Fant ikke oppgave med kilde $kildeområde og eksternId $eksternId")
 
         return oppgave
@@ -51,7 +51,7 @@ class OppgaveRepository(
             queryOf(
                 queryString
             ).map { row ->
-                mapOppgave(row, now, tx)
+                mapAktivOppgave(row, now, tx)
             }.asList
         )
 
@@ -68,7 +68,7 @@ class OppgaveRepository(
             """.trimIndent(),
                 mapOf("id" to id)
             ).map { row ->
-                mapOppgave(row, now, tx)
+                mapAktivOppgave(row, now, tx)
             }.asSingle
         ) ?: throw IllegalStateException("Fant ikke oppgave med id $id")
 
@@ -139,7 +139,54 @@ class OppgaveRepository(
         ).fyllDefaultverdier().utledTransienteFelter(now)
     }
 
+    private fun mapAktivOppgave(
+        row: Row,
+        now: LocalDateTime,
+        tx: TransactionalSession
+    ): Oppgave {
+        val kildeområde = row.string("kildeomrade")
+        val oppgaveTypeId = row.long("oppgavetype_id")
+        val oppgavetype = oppgavetypeRepository.hentOppgavetype(kildeområde, oppgaveTypeId, tx)
+        val oppgavefelter = hentOppgavefelterAktiv(tx, row.long("id"))
+        return Oppgave(
+            eksternId = row.string("ekstern_id"),
+            eksternVersjon = row.string("ekstern_versjon"),
+            oppgavetype = oppgavetype,
+            status = row.string("status"),
+            endretTidspunkt = row.localDateTime("endret_tidspunkt"),
+            kildeområde = row.string("kildeomrade"),
+            felter = oppgavefelter,
+            reservasjonsnøkkel = row.string("reservasjonsnokkel"),
+            versjon = row.int("versjon")
+        ).fyllDefaultverdier().utledTransienteFelter(now)
+    }
+
     private fun hentOppgavefelter(tx: TransactionalSession, oppgaveId: Long): List<Oppgavefelt> {
+        return tx.run(
+            queryOf(
+                """
+                select fd.ekstern_id as ekstern_id, o.ekstern_id as omrade, fd.liste_type, f.pakrevd, ov.verdi
+                from oppgavefelt_verdi ov 
+                    inner join oppgavefelt f on ov.oppgavefelt_id = f.id 
+                    inner join feltdefinisjon fd on f.feltdefinisjon_id = fd.id 
+                    inner join omrade o on fd.omrade_id = o.id 
+                where ov.oppgave_id = :oppgaveId
+                order by fd.ekstern_id
+                """.trimIndent(),
+                mapOf("oppgaveId" to oppgaveId)
+            ).map { row ->
+                Oppgavefelt(
+                    eksternId = row.string("ekstern_id"),
+                    område = row.string("omrade"),
+                    listetype = row.boolean("liste_type"),
+                    påkrevd = row.boolean("pakrevd"),
+                    verdi = row.string("verdi")
+                )
+            }.asList
+        )
+    }
+
+    private fun hentOppgavefelterAktiv(tx: TransactionalSession, oppgaveId: Long): List<Oppgavefelt> {
         return tx.run(
             queryOf(
                 """
@@ -187,7 +234,7 @@ class OppgaveRepository(
                     "grense" to tidspunkt,
                     "limit" to antall
                 )
-            ).map { row -> mapOppgave(row, tidspunkt, tx) }.asList
+            ).map { row -> mapAktivOppgave(row, tidspunkt, tx) }.asList
         )
     }
 
@@ -198,7 +245,6 @@ class OppgaveRepository(
         oppgaveEksternId: String,
         tx: TransactionalSession
     ): List<Oppgave> {
-        val oppgavetype = oppgavetypeRepository.hentOppgavetype(områdeEksternId, oppgaveTypeEksternId)
         return tx.run(
             queryOf(
                 """
