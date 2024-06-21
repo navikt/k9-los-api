@@ -2,6 +2,7 @@ package no.nav.k9.los.nyoppgavestyring
 
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
@@ -10,7 +11,6 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.*
-import no.nav.k9.los.nyoppgavestyring.reservasjon.Reservasjonsnøkkel
 import org.koin.test.KoinTest
 import org.koin.test.get
 import java.time.LocalDateTime
@@ -28,12 +28,16 @@ class OppgaveTestDataBuilder(
     val oppgaverepo = get<OppgaveV3Repository>()
     val k9SakTilLosAdapterTjeneste = get<K9SakTilLosAdapterTjeneste>()
 
+    // Skal denne klassen håndtere både k9sak og k9punsj?
+    val k9PunsjTilLosAdapterTjeneste = get<K9PunsjTilLosAdapterTjeneste>()
+
     var eksternVersjonTeller = 0
 
     init {
         områdeSetup.setup()
         område = områdeRepository.hent("K9")!!
         k9SakTilLosAdapterTjeneste.setup()
+        k9PunsjTilLosAdapterTjeneste.setup()
     }
 
     val oppgaveFeltverdier = mutableSetOf<OppgaveFeltverdi>()
