@@ -1,7 +1,6 @@
 package no.nav.k9.los.aksjonspunktbehandling
 
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
-import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.los.aksjonspunktbehandling.AksjonspunktDefinisjonK9Tilbake.Companion.AVKLART_FAKTA_FEILUTBETALING
 import no.nav.k9.los.aksjonspunktbehandling.AksjonspunktDefinisjonK9Tilbake.Companion.FATTE_VEDTAK
@@ -11,6 +10,7 @@ import no.nav.k9.los.aksjonspunktbehandling.AksjonspunktDefinisjonK9Tilbake.Comp
 import no.nav.k9.los.aksjonspunktbehandling.AksjonspunktDefinisjonK9Tilbake.Companion.VURDER_FORELDELSE
 import no.nav.k9.los.aksjonspunktbehandling.AksjonspunktDefinisjonK9Tilbake.Companion.VURDER_TILBAKEKREVING
 import no.nav.k9.los.domene.modell.BehandlingStatus
+import no.nav.k9.los.domene.modell.FagsakYtelseType
 import no.nav.k9.los.domene.modell.Fagsystem
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventTilbakeDto

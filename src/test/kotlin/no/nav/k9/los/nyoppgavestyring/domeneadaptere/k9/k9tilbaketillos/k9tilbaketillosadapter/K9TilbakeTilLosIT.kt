@@ -3,14 +3,13 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9tilbaketillos.k9tilba
 import assertk.assertThat
 import assertk.assertions.*
 import kotlinx.coroutines.runBlocking
-import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.aksjonspunktbehandling.*
+import no.nav.k9.los.domene.modell.FagsakYtelseType
 import no.nav.k9.los.domene.modell.Fagsystem
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
