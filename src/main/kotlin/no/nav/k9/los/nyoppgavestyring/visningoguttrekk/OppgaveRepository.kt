@@ -145,7 +145,7 @@ class OppgaveRepository(
                 mapOf(
                     "grense" to tidspunkt,
                     "limit" to antall
-                ) + InClauseHjelper.parameternavnTilVerdierMap(status, "status")
+                ) + InClauseHjelper.parameternavnTilVerdierMap(status.map { it.kode }, "status")
             ).map { row -> mapAktivOppgave(row, tidspunkt, tx) }.asList
         )
     }
