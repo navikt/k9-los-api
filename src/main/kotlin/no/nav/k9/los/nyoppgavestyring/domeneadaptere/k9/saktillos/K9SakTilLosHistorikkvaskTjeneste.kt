@@ -130,7 +130,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
         var oppgaveDto: OppgaveDto? = null
         for (event in behandlingProsessEventer) {
             if (eventNrForBehandling > høyesteInternVersjon) {
-                break //TODO hvordan, og er det riktig i så fall?
+                break //Historikkvasken har funnet eventer som ennå ikke er lastet inn med normalflyt. Dirty eventer skal håndteres av vanlig adaptertjeneste
             }
             if (event.eldsteDatoMedEndringFraSøker == null && nyeBehandlingsopplysningerFraK9Sak != null && nyeBehandlingsopplysningerFraK9Sak.eldsteDatoMedEndringFraSøker != null) {
                 event.copy(eldsteDatoMedEndringFraSøker = nyeBehandlingsopplysningerFraK9Sak.eldsteDatoMedEndringFraSøker)

@@ -87,7 +87,7 @@ class K9KlageTilLosHistorikkvaskTjeneste(
                 oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9klage", "K9", tx)!!
             var eventNrForBehandling = 0L
             for (event in behandlingProsessEventer) {
-                if (eventNrForBehandling > høyesteInternVersjon) { break } //TODO hvordan kan eventNr > høyesteInternVersjon?
+                if (eventNrForBehandling > høyesteInternVersjon) { break }  //Historikkvasken har funnet eventer som ennå ikke er lastet inn med normalflyt. Dirty eventer skal håndteres av vanlig adaptertjeneste
                 val losOpplysningerSomManglerIKlageDto = event.påklagdBehandlingEksternId?.let { k9sakBeriker.berikKlage(it) }
                 val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, losOpplysningerSomManglerIKlageDto, forrigeOppgave)
 

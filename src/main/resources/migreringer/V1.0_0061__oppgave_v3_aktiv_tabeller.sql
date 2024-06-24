@@ -14,7 +14,7 @@ CREATE TABLE if not exists OPPGAVE_V3_AKTIV
     CONSTRAINT FK_OPPGAVE_01
         FOREIGN KEY(oppgavetype_id) REFERENCES OPPGAVETYPE(id),
     UNIQUE(kildeomrade, ekstern_id)
-);
+) with (FILLFACTOR = 90);
 
 comment on table OPPGAVE_V3_AKTIV is 'Den aktive versjonen av en konkret instans av en definert oppgavetype. Historiske versjoner (inkl aktiv) ligger i Oppgave_V3';
 comment on column OPPGAVE_V3_AKTIV.ekstern_id is 'Ekstern nøkkel for å unikt identifisere en oppgave. Eies av adapterne. Må være unik for en gitt oppgave, og ikke kollidere med feks andre oppgaver på samme område.';
@@ -41,7 +41,7 @@ CREATE TABLE if not exists OPPGAVEFELT_VERDI_AKTIV
     FOREIGN KEY(oppgave_id) REFERENCES OPPGAVE_V3_AKTIV(id),
     CONSTRAINT FK_OPPGAVEFELT_VERDI_02
     FOREIGN KEY(oppgavefelt_id) REFERENCES OPPGAVEFELT(id)
-    );
+    ) with (FILLFACTOR = 90);
 
 comment on table OPPGAVEFELT_VERDI_AKTIV is 'Konkrete verdier på en oppgave, som predefinert i OPPGAVEFELT.';
 comment on column OPPGAVEFELT_VERDI_AKTIV.verdi is 'Verdiens egenskaper bestemmes av tabellen DATATYPE via fremmednøkkel i oppgavefelt.';
