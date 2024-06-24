@@ -6,6 +6,7 @@ import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.PunsjEventK9Repository
 import no.nav.k9.los.integrasjon.kafka.dto.PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.HistorikkvaskMetrikker
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import org.slf4j.Logger
@@ -124,9 +125,11 @@ class K9PunsjTilLosHistorikkvaskTjenester(
         var eventTeller = 0L
         var forrigeOppgave: OppgaveV3? = null
 
+        var eventNrForBehandling = 0L
+        var oppgaveDto: OppgaveDto? = null
         val behandlingProsessEventer: List<PunsjEventDto> = eventRepository.hentMedLås(tx, uuid).eventer
         for (event in behandlingProsessEventer) {
-            val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+            oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
 
 //            oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, høyesteInternVersjon, tx)
 
@@ -138,6 +141,9 @@ class K9PunsjTilLosHistorikkvaskTjenester(
             )
         }
 
+        oppgaveDto?.let {
+            oppgaveV3Tjeneste.ajourholdAktivOppgave(oppgaveDto, eventNrForBehandling, tx)
+        }
 
         return eventTeller
     }
