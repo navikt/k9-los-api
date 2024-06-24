@@ -3,9 +3,9 @@ package no.nav.k9.los.nyoppgavestyring.visningoguttrekk
 import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
+import no.nav.k9.los.db.util.InClauseHjelper
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
-import no.nav.k9.los.spi.felter.HentVerdiInput
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -43,13 +43,14 @@ class OppgaveRepository(
         val queryString = """
                 select *
                 from oppgave_v3_aktiv ov 
-                where reservasjonsnokkel in ('${reservasjonsnøkler.joinToString("','")}')
+                where reservasjonsnokkel in (${InClauseHjelper.tilParameternavn(reservasjonsnøkler, "n")})
                 and status in ('VENTER', 'AAPEN')
             """.trimIndent()
 
         val oppgaver = tx.run(
             queryOf(
-                queryString
+                queryString,
+                InClauseHjelper.parameternavnTilVerdierMap(reservasjonsnøkler, "n")
             ).map { row ->
                 mapAktivOppgave(row, now, tx)
             }.asList
@@ -136,7 +137,7 @@ class OppgaveRepository(
                     LEFT JOIN OPPGAVE_PEP_CACHE opc ON (
                         o.kildeomrade = opc.kildeomrade AND o.ekstern_id = opc.ekstern_id
                     )
-                    WHERE o.status IN ('${status.joinToString("','")}')
+                    WHERE o.status IN (${InClauseHjelper.tilParameternavnMedCast(status, "status", "oppgavestatus")})
                     AND (opc.oppdatert is null OR opc.oppdatert < :grense)
                     ORDER BY opc.oppdatert NULLS FIRST
                     LIMIT :limit
@@ -144,7 +145,7 @@ class OppgaveRepository(
                 mapOf(
                     "grense" to tidspunkt,
                     "limit" to antall
-                )
+                ) + InClauseHjelper.parameternavnTilVerdierMap(status.map { it.kode }, "status")
             ).map { row -> mapAktivOppgave(row, tidspunkt, tx) }.asList
         )
     }
