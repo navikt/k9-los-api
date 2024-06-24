@@ -2,6 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos
 
 import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
+import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerInterfaceKludge
@@ -80,6 +81,9 @@ class K9SakTilLosAktivvaskTjeneste(
     }
 
     fun skalPauses(): Boolean {
+        if (KoinProfile.PREPROD == config.koinProfile()) {
+            return false
+        }
         val nå = LocalTime.now()
         if (nå > LocalTime.of(6, 0, 0) && nå < LocalTime.of(
                 17,
