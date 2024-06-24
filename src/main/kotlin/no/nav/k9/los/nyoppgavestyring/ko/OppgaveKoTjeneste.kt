@@ -118,7 +118,7 @@ class OppgaveKoTjeneste(
         coroutineContext: CoroutineContext,
     ): Pair<Oppgave, ReservasjonV3>? {
         for (kandidatoppgaveId in kandidatoppgaver) {
-            val kandidatoppgave = oppgaveRepository.hentOppgaveForId(tx, kandidatoppgaveId)
+            val kandidatoppgave = oppgaveRepository.hentAktivOppgaveForId(tx, kandidatoppgaveId)
 
             try {
                 //if (kandidatoppgave.oppgavetype.eksternId == "k9klage") //TODO: Hvis klageoppgave/klagekø -- IKKE ta reservasjon i V1. Disse kan ikke speiles

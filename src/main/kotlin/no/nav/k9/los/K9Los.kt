@@ -42,13 +42,16 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonKonverteringJobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.k9SakEksternId
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.k9SakKorrigerOutOfOrderProsessor
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkApi
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAktivvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.forvaltning.forvaltningApis
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoApis
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonApi
@@ -107,11 +110,13 @@ fun Application.k9Los() {
     k9PunsjTilLosAdapterTjeneste.setup()
 
     if (LocalDateTime.now().isBefore(LocalDateTime.of(2024, 6, 21, 16, 30))) {
-        //koin.get<K9SakTilLosLukkeFeiloppgaverTjeneste>().kjørFeiloppgaverVask()
-        //koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
-        //koin.get<K9KlageTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
-        //koin.get<OppgavestatistikkTjeneste>().slettStatistikkgrunnlag()
-        //koin.get<ReservasjonKonverteringJobb>().kjørReservasjonskonvertering()
+        if (1 == 0) { //HAXX for å ikke kjøre jobb, men indikere at koden er i bruk og dermed ikke slettes
+            koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
+            koin.get<K9KlageTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
+            koin.get<OppgavestatistikkTjeneste>().slettStatistikkgrunnlag()
+            //koin.get<ReservasjonKonverteringJobb>().kjørReservasjonskonvertering() //TODO slette
+            //koin.get<K9SakTilLosLukkeFeiloppgaverTjeneste>().kjørFeiloppgaverVask() //TODO slette
+        }
         koin.get<K9SakTilLosAktivvaskTjeneste>().kjørAktivvask()
     }
 
@@ -247,7 +252,6 @@ fun Application.k9Los() {
     ).kjør(kjørUmiddelbart = false)
 
     OppgavestatistikkTjeneste(
-        oppgaveRepository = koin.get(),
         oppgavetypeRepository = koin.get(),
         statistikkPublisher = koin.get(),
         transactionalManager = koin.get(),
@@ -262,21 +266,6 @@ fun Application.k9Los() {
             send(oppgaverOppdatertEvent)
         }
     }.broadcast()
-
-//  Synkroniser oppgaver
-//    regenererOppgaver(
-//        oppgaveRepository = koin.get(),
-//        behandlingProsessEventK9Repository = koin.get(),
-//        reservasjonRepository = koin.get(),
-//        oppgaveKøRepository = koin.get(),
-//        saksbehhandlerRepository = koin.get(),
-//        punsjEventK9Repository = koin.get(),
-//        behandlingProsessEventTilbakeRepository = koin.get()
-//    )
-
-//    rekjørEventerForGrafer(koin.get(), koin.get(), koin.get())
-
-//    rekjørEventerForGraferFraPunsj(koin.get(), koin.get())
 
     install(CallIdRequired)
 

@@ -37,6 +37,7 @@ fun Route.forvaltningApis() {
     val reservasjonV3Repository by inject<ReservasjonV3Repository>()
     val objectMapper = LosObjectMapper.prettyInstance
     val transactionalManager by inject<TransactionalManager>()
+    val forvaltningRepository by inject<ForvaltningRepository>()
 
     get("/index_oversikt") {
         val list = mutableListOf<String>()
@@ -122,7 +123,13 @@ fun Route.forvaltningApis() {
         val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
 
         val oppgaveTidsserie =
-            oppgaveRepositoryTxWrapper.hentOppgaveTidsserie(område, oppgavetype, oppgaveEksternId)
+            transactionalManager.transaction { tx ->
+                forvaltningRepository.hentOppgaveTidsserie(
+                    områdeEksternId = område,
+                    oppgaveTypeEksternId = oppgavetype,
+                    oppgaveEksternId = oppgaveEksternId,
+                    tx = tx)
+            }
         if (oppgaveTidsserie.isEmpty()) {
             call.respond(HttpStatusCode.NotFound)
         } else {
