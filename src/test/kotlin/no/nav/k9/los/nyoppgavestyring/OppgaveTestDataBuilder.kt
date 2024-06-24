@@ -31,7 +31,7 @@ class OppgaveTestDataBuilder(
     // Skal denne klassen håndtere både k9sak og k9punsj?
     val k9PunsjTilLosAdapterTjeneste = get<K9PunsjTilLosAdapterTjeneste>()
 
-    var eksternVersjonTeller = 0
+    var eksternVersjonTeller = 1000000
 
     init {
         områdeSetup.setup()
@@ -55,7 +55,7 @@ class OppgaveTestDataBuilder(
             ?: throw IllegalStateException("Fant ikke ønsket feltdefinisjon i db")
 
         oppgaveFeltverdier.add(
-            OppgaveFeltverdi(null, oppgavefelter, verdi, aktiv = true, Oppgavestatus.AAPEN)
+            OppgaveFeltverdi(null, oppgavefelter, verdi)
         )
         return this
     }

@@ -17,24 +17,10 @@ class OppgaveRepository(
     fun hentNyesteOppgaveForEksternId(tx: TransactionalSession, kildeområde: String, eksternId: String, now: LocalDateTime = LocalDateTime.now()): Oppgave {
         val queryString = """
                 select * 
-                from oppgave_v3 ov
+                from oppgave_v3_aktiv ov
                 where ov.kildeomrade = :kildeomrade 
                  AND ov.ekstern_id = :eksternId 
-                and ov.aktiv = true
             """.trimIndent()
-        //log.info("query hentNyesteOppgaveForEksternId: $queryString")
-        /* val explain = tx.run(
-            queryOf(
-                """explain $queryString""",
-                mapOf(
-                    "kildeomrade" to kildeområde,
-                    "eksternId" to eksternId
-                )
-            ).map { row ->
-                row.string(1)
-            }.asList
-        ).joinToString("\n")
-        log.info("explain ureserverte OppgaveIder: $explain") */
 
         val oppgave = tx.run(
             queryOf(
@@ -43,7 +29,7 @@ class OppgaveRepository(
                     "kildeomrade" to kildeområde,
                     "eksternId" to eksternId
                 )
-            ).map { row -> mapOppgave(row, now, tx) }.asSingle
+            ).map { row -> mapAktivOppgave(row, now, tx) }.asSingle
         ) ?: throw IllegalStateException("Fant ikke oppgave med kilde $kildeområde og eksternId $eksternId")
 
         return oppgave
@@ -56,93 +42,40 @@ class OppgaveRepository(
     fun hentAlleÅpneOppgaverForReservasjonsnøkkel(tx: TransactionalSession, reservasjonsnøkler: List<String>, now: LocalDateTime = LocalDateTime.now()) : List<Oppgave> {
         val queryString = """
                 select *
-                from oppgave_v3 ov 
+                from oppgave_v3_aktiv ov 
                 where reservasjonsnokkel in ('${reservasjonsnøkler.joinToString("','")}')
-                and aktiv = true
                 and status in ('VENTER', 'AAPEN')
             """.trimIndent()
-
-        log.info("spørring hentAktivReservasjonForReserajovsnsnøkkel")
-        /* val explain = tx.run(
-            queryOf(
-                "explain " + queryString
-            ).map { row ->
-                row.string(1)
-            }.asList
-        ).joinToString("\n")
-        log.info("explain hentAktivReservasjonForReserajovsnsnøkkel: $explain") */
 
         val oppgaver = tx.run(
             queryOf(
                 queryString
             ).map { row ->
-                mapOppgave(row, now, tx)
+                mapAktivOppgave(row, now, tx)
             }.asList
         )
 
         return oppgaver
     }
 
-    fun hentOppgaveForId(tx: TransactionalSession, id: Long, now: LocalDateTime = LocalDateTime.now()): Oppgave {
+    fun hentAktivOppgaveForId(tx: TransactionalSession, id: Long, now: LocalDateTime = LocalDateTime.now()): Oppgave {
         val oppgave = tx.run(
             queryOf(
                 """
                 select * 
-                from oppgave_v3 ov
+                from oppgave_v3_aktiv ov
                 where ov.id = :id
             """.trimIndent(),
                 mapOf("id" to id)
             ).map { row ->
-                mapOppgave(row, now, tx)
+                mapAktivOppgave(row, now, tx)
             }.asSingle
         ) ?: throw IllegalStateException("Fant ikke oppgave med id $id")
 
         return oppgave
     }
 
-    private fun Oppgave.utledTransienteFelter(now: LocalDateTime): Oppgave {
-        val utlededeVerdier: List<Oppgavefelt> = this.oppgavetype.oppgavefelter.flatMap { oppgavefelt ->
-            oppgavefelt.feltDefinisjon.transientFeltutleder?.let { feltutleder ->
-                feltutleder.hentVerdi(
-                    HentVerdiInput(
-                        now,
-                        this,
-                        oppgavefelt.feltDefinisjon.område.eksternId,
-                        oppgavefelt.feltDefinisjon.eksternId
-                    )
-                ).map { verdi ->
-                    Oppgavefelt(
-                        eksternId = oppgavefelt.feltDefinisjon.eksternId,
-                        område = oppgavefelt.feltDefinisjon.område.eksternId,
-                        listetype = oppgavefelt.feltDefinisjon.listetype,
-                        påkrevd = false,
-                        verdi = verdi
-                    )
-                }
-            } ?: listOf()
-        }
-        return copy(felter = felter.plus(utlededeVerdier))
-    }
-
-    private fun Oppgave.fyllDefaultverdier(): Oppgave {
-        val defaultverdier = oppgavetype.oppgavefelter
-            .filter { oppgavefelt -> oppgavefelt.påkrevd }
-            .mapNotNull { påkrevdFelt ->
-                if (felter.find { it.eksternId == påkrevdFelt.feltDefinisjon.eksternId && !påkrevdFelt.feltDefinisjon.listetype } == null) {
-                    Oppgavefelt(
-                        eksternId = påkrevdFelt.feltDefinisjon.eksternId,
-                        område = kildeområde,
-                        listetype = false, //listetyper er aldri påkrevd
-                        påkrevd = true,
-                        verdi = påkrevdFelt.defaultverdi.toString()
-                    )
-                } else null
-            }
-
-        return copy(felter = felter.plus(defaultverdier))
-    }
-
-    private fun mapOppgave(
+    private fun mapAktivOppgave(
         row: Row,
         now: LocalDateTime,
         tx: TransactionalSession
@@ -150,7 +83,7 @@ class OppgaveRepository(
         val kildeområde = row.string("kildeomrade")
         val oppgaveTypeId = row.long("oppgavetype_id")
         val oppgavetype = oppgavetypeRepository.hentOppgavetype(kildeområde, oppgaveTypeId, tx)
-        val oppgavefelter = hentOppgavefelter(tx, row.long("id"))
+        val oppgavefelter = hentOppgavefelterAktiv(tx, row.long("id"))
         return Oppgave(
             eksternId = row.string("ekstern_id"),
             eksternVersjon = row.string("ekstern_versjon"),
@@ -164,12 +97,12 @@ class OppgaveRepository(
         ).fyllDefaultverdier().utledTransienteFelter(now)
     }
 
-    private fun hentOppgavefelter(tx: TransactionalSession, oppgaveId: Long): List<Oppgavefelt> {
+    private fun hentOppgavefelterAktiv(tx: TransactionalSession, oppgaveId: Long): List<Oppgavefelt> {
         return tx.run(
             queryOf(
                 """
                 select fd.ekstern_id as ekstern_id, o.ekstern_id as omrade, fd.liste_type, f.pakrevd, ov.verdi
-                from oppgavefelt_verdi ov 
+                from oppgavefelt_verdi_aktiv ov 
                     inner join oppgavefelt f on ov.oppgavefelt_id = f.id 
                     inner join feltdefinisjon fd on f.feltdefinisjon_id = fd.id 
                     inner join omrade o on fd.omrade_id = o.id 
@@ -199,11 +132,11 @@ class OppgaveRepository(
             queryOf(
                 """
                     SELECT o.*
-                    FROM oppgave_v3 o 
+                    FROM oppgave_v3_aktiv o 
                     LEFT JOIN OPPGAVE_PEP_CACHE opc ON (
                         o.kildeomrade = opc.kildeomrade AND o.ekstern_id = opc.ekstern_id
                     )
-                    WHERE o.aktiv is true AND o.status IN ('${status.joinToString("','")}')
+                    WHERE o.status IN ('${status.joinToString("','")}')
                     AND (opc.oppdatert is null OR opc.oppdatert < :grense)
                     ORDER BY opc.oppdatert NULLS FIRST
                     LIMIT :limit
@@ -212,38 +145,7 @@ class OppgaveRepository(
                     "grense" to tidspunkt,
                     "limit" to antall
                 )
-            ).map { row -> mapOppgave(row, tidspunkt, tx) }.asList
+            ).map { row -> mapAktivOppgave(row, tidspunkt, tx) }.asList
         )
     }
-
-    fun hentOppgaveTidsserie(
-        tidspunkt: LocalDateTime = LocalDateTime.now(),
-        områdeEksternId: String,
-        oppgaveTypeEksternId: String,
-        oppgaveEksternId: String,
-        tx: TransactionalSession
-    ): List<Oppgave> {
-        val oppgavetype = oppgavetypeRepository.hentOppgavetype(områdeEksternId, oppgaveTypeEksternId)
-        return tx.run(
-            queryOf(
-                """
-                    select *
-                    from oppgave_v3 o
-                    	inner join oppgavetype ot on o.oppgavetype_id = ot.id 
-                    	inner join omrade omr on ot.omrade_id = omr.id 
-                    where omr.ekstern_id = :omrade
-                    and ot.ekstern_id = :oppgavetype
-                    and o.ekstern_id = :oppgaveEksternId
-                    order by o.versjon asc
-                """.trimIndent(),
-                mapOf(
-                    "omrade" to områdeEksternId,
-                    "oppgavetype" to oppgaveTypeEksternId,
-                    "oppgaveEksternId" to oppgaveEksternId,
-                )
-            ).map { row -> mapOppgave(row, tidspunkt, tx) }.asList
-        )
-    }
-
-
 }

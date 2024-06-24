@@ -1,74 +1,45 @@
-package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk
+package no.nav.k9.los.nyoppgavestyring.forvaltning
 
-import kotliquery.*
+import kotliquery.Row
+import kotliquery.TransactionalSession
+import kotliquery.queryOf
+import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgavefelt
 import java.time.LocalDateTime
-import javax.sql.DataSource
 
-class StatistikkRepository(
-    private val dataSource: DataSource,
-    private val oppgavetypeRepository: OppgavetypeRepository
+class ForvaltningRepository(
+    private val oppgavetypeRepository: OppgavetypeRepository,
+    private val transactionalManager: TransactionalManager,
 ) {
 
-    fun hentOppgaverSomIkkeErSendt(): List<Long> {
-        return using(sessionOf(dataSource)) {
-            it.run(
-                queryOf(
-                    """
-                        select ov.id
-                        from oppgave_v3 ov
-                            	join oppgavetype o ON ov.oppgavetype_id = o.id 
-                        where o.ekstern_id in ('k9sak', 'k9klage')
-                        and not exists (select * from OPPGAVE_V3_SENDT_DVH os where os.id = ov.id)
-                    """.trimIndent()
-                )
-                    .map { row ->
-                        row.long("id")
-                    }.asList
-            )
-        }
-    }
-
-    fun kvitterSending(id: Long) {
-        using(sessionOf(dataSource)) {
-            it.run(
-                queryOf(
-                    """
-                        insert into OPPGAVE_V3_SENDT_DVH(id) values (:id)
-                    """.trimIndent(),
-                    mapOf("id" to id)
-                ).asUpdate
-            )
-        }
-    }
-
-    fun fjernSendtMarkering() {
-        using(sessionOf(dataSource)) {
-            it.run(
-                queryOf(
-                    """delete from oppgave_v3_sendt_dvh"""
-                ).asUpdate
-            )
-        }
-    }
-
-    fun hentOppgaveForId(tx: TransactionalSession, id: Long, now: LocalDateTime = LocalDateTime.now()): Oppgave {
-        val oppgave = tx.run(
+    fun hentOppgaveTidsserie(
+        tidspunkt: LocalDateTime = LocalDateTime.now(),
+        områdeEksternId: String,
+        oppgaveTypeEksternId: String,
+        oppgaveEksternId: String,
+        tx: TransactionalSession
+    ): List<Oppgave> {
+        return tx.run(
             queryOf(
                 """
-                select * 
-                from oppgave_v3 ov
-                where ov.id = :id
-            """.trimIndent(),
-                mapOf("id" to id)
-            ).map { row ->
-                mapOppgave(row, now, tx)
-            }.asSingle
-        ) ?: throw IllegalStateException("Fant ikke oppgave med id $id")
-
-        return oppgave
+                    select *
+                    from oppgave_v3 o
+                    	inner join oppgavetype ot on o.oppgavetype_id = ot.id 
+                    	inner join omrade omr on ot.omrade_id = omr.id 
+                    where omr.ekstern_id = :omrade
+                    and ot.ekstern_id = :oppgavetype
+                    and o.ekstern_id = :oppgaveEksternId
+                    order by o.versjon asc
+                """.trimIndent(),
+                mapOf(
+                    "omrade" to områdeEksternId,
+                    "oppgavetype" to oppgaveTypeEksternId,
+                    "oppgaveEksternId" to oppgaveEksternId,
+                )
+            ).map { row -> mapOppgave(row, tidspunkt, tx) }.asList
+        )
     }
 
     private fun mapOppgave(
@@ -92,6 +63,7 @@ class StatistikkRepository(
             versjon = row.int("versjon")
         ).fyllDefaultverdier().utledTransienteFelter(now)
     }
+
 
     private fun hentOppgavefelter(tx: TransactionalSession, oppgaveId: Long): List<Oppgavefelt> {
         return tx.run(
@@ -117,4 +89,5 @@ class StatistikkRepository(
             }.asList
         )
     }
+
 }

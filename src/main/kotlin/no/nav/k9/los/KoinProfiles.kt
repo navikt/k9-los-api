@@ -46,8 +46,10 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.k9SakEksternId
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAktivvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosLukkeFeiloppgaverTjeneste
+import no.nav.k9.los.nyoppgavestyring.forvaltning.ForvaltningRepository
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
@@ -382,7 +384,12 @@ fun common(app: Application, config: Configuration) = module {
     single { K9SakOppgaveTilDVHMapper() }
     single { K9KlageOppgaveTilDVHMapper() }
     single { OppgaveRepository(oppgavetypeRepository = get()) }
-    single { StatistikkRepository(dataSource = get()) }
+    single {
+        StatistikkRepository(
+            dataSource = get(),
+            oppgavetypeRepository = get(),
+        )
+    }
 
     single {
         StatistikkPublisher(
@@ -393,7 +400,6 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         OppgavestatistikkTjeneste(
-            oppgaveRepository = get(),
             oppgavetypeRepository = get(),
             statistikkPublisher = get(),
             transactionalManager = get(),
@@ -415,7 +421,6 @@ fun common(app: Application, config: Configuration) = module {
             oppgaveV3Repository = get(),
             oppgavetypeRepository = get(),
             områdeRepository = get(),
-            reservasjonTjeneste = get()
         )
     }
     single {
@@ -510,6 +515,17 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         K9SakTilLosHistorikkvaskTjeneste(
+            behandlingProsessEventK9Repository = get(),
+            oppgaveV3Tjeneste = get(),
+            config = get(),
+            transactionalManager = get(),
+            k9SakTilLosAdapterTjeneste = get(),
+            k9SakBerikerKlient = get()
+        )
+    }
+
+    single {
+        K9SakTilLosAktivvaskTjeneste(
             behandlingProsessEventK9Repository = get(),
             oppgaveV3Tjeneste = get(),
             config = get(),
@@ -652,6 +668,12 @@ fun preprodConfig(config: Configuration) = module {
         )
     }
 
+    single<ForvaltningRepository> {
+        ForvaltningRepository(
+            oppgavetypeRepository = get(),
+            transactionalManager = get(),
+        )
+    }
 }
 
 fun prodConfig(config: Configuration) = module {

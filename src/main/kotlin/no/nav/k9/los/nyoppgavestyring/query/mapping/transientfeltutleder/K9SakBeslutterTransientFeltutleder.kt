@@ -15,7 +15,7 @@ class K9SakBeslutterTransientFeltutleder: TransientFeltutleder{
         val query = """
                 $prefix EXISTS (
                     SELECT 'Y'
-                    FROM Oppgavefelt_verdi ov INNER JOIN Oppgavefelt f ON (
+                    FROM Oppgavefelt_verdi_aktiv ov INNER JOIN Oppgavefelt f ON (
                       f.id = ov.oppgavefelt_id
                     ) INNER JOIN Feltdefinisjon fd ON (
                       fd.id = f.feltdefinisjon_id
@@ -36,7 +36,7 @@ class K9SakBeslutterTransientFeltutleder: TransientFeltutleder{
         val query = """
                 COALESCE((
                     SELECT true
-                    FROM Oppgavefelt_verdi ov INNER JOIN Oppgavefelt f ON (
+                    FROM Oppgavefelt_verdi_aktiv ov INNER JOIN Oppgavefelt f ON (
                       f.id = ov.oppgavefelt_id
                     ) INNER JOIN Feltdefinisjon fd ON (
                       fd.id = f.feltdefinisjon_id

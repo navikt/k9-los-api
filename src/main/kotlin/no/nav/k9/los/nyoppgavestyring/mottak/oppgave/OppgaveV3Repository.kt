@@ -36,6 +36,8 @@ class OppgaveV3Repository(
 
         val oppgaveId = nyOppgaveversjon(oppgave, nyVersjon, tx)
         lagreFeltverdier(oppgaveId, oppgave, tx)
+
+        AktivOppgaveRepository.ajourholdAktivOppgave(oppgave, nyVersjon, tx)
     }
 
     fun hentOppgaveversjon(
@@ -242,9 +244,7 @@ class OppgaveV3Repository(
                     oppgavefelt = oppgavetype.oppgavefelter.first { oppgavefelt ->
                         oppgavefelt.id == row.long("oppgavefelt_id")
                     },
-                    verdi = row.string("verdi"),
-                    aktiv = row.boolean("aktiv"),
-                    oppgavestatus = row.stringOrNull("oppgavestatus")?.let { Oppgavestatus.fraKode(it) }
+                    verdi = row.string("verdi")
                 )
             }.asList
         )
@@ -257,15 +257,14 @@ class OppgaveV3Repository(
         tx: TransactionalSession
     ) {
         tx.batchPreparedNamedStatement("""
-            insert into oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi, aktiv, oppgavestatus)
-                    VALUES (:oppgaveId, :oppgavefeltId, :verdi, :aktiv, :oppgavestatus)
+            insert into oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi, oppgavestatus)
+                    VALUES (:oppgaveId, :oppgavefeltId, :verdi, :oppgavestatus)
         """.trimIndent(),
             oppgave.felter.map { feltverdi ->
                 mapOf(
                     "oppgaveId" to oppgaveId,
                     "oppgavefeltId" to feltverdi.oppgavefelt.id,
                     "verdi" to feltverdi.verdi,
-                    "aktiv" to true,
                     "oppgavestatus" to oppgave.status.kode
                 )
             }
@@ -275,13 +274,12 @@ class OppgaveV3Repository(
     fun lagreFeltverdierForDatavask(
         eksternId: String,
         internVersjon: Long,
-        aktiv: Boolean,
         oppgavestatus: Oppgavestatus,
         oppgaveFeltverdier: List<OppgaveFeltverdi>,
         tx: TransactionalSession
     ) {
         tx.batchPreparedNamedStatement("""
-            INSERT INTO oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi, aktiv, oppgavestatus)
+            INSERT INTO oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi, oppgavestatus)
             VALUES (
                 (
                     SELECT id 
@@ -291,7 +289,6 @@ class OppgaveV3Repository(
                 ),
                 :oppgavefelt_id,
                 :verdi,
-                :aktiv,
                 :oppgavestatus
             )
         """.trimIndent(),
@@ -301,7 +298,6 @@ class OppgaveV3Repository(
                     "intern_versjon" to internVersjon,
                     "oppgavefelt_id" to feltverdi.oppgavefelt.id,
                     "verdi" to feltverdi.verdi,
-                    "aktiv" to aktiv,
                     "oppgavestatus" to oppgavestatus.kode
                 )
             }
