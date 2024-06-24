@@ -56,7 +56,7 @@ object AktivOppgaveRepository {
                 )
             )
                 .map { row -> row.long("id") }.asSingle
-        )!!
+        ) ?: return opprettOppgaveV3Aktiv(tx, oppgave, nyVersjon)
 
         tx.run(
             queryOf(
