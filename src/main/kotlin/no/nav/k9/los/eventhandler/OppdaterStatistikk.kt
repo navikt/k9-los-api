@@ -25,12 +25,12 @@ fun CoroutineScope.oppdaterStatistikk(
 ) = launch(Executors.newSingleThreadExecutor().asCoroutineDispatcher()) {
     try {
         for (skalOppdatereStatistikk in channel) {
-            delay(500)
+            delay(60_000)
             ChannelMetrikker.timeSuspended("oppdaterStatistikk") {
-                oppgaveKøRepository.hentIkkeTaHensyn().forEach {
-                    refreshHentAntallOppgaver(oppgaveTjeneste, it)
+                DetaljerMetrikker.timeSuspended("oppdaterStatistikk", "hent", {oppgaveKøRepository.hentIkkeTaHensyn()}).forEach {
+                    DetaljerMetrikker.timeSuspended("oppdaterStatistikk", "refreshAntallOppgaver") {refreshHentAntallOppgaver(oppgaveTjeneste, it)}
                 }
-                statistikkRepository.hentFerdigstilteOgNyeHistorikkMedYtelsetypeSiste8Uker(refresh = true)
+                DetaljerMetrikker.timeSuspended("oppdaterStatistikk", "siste8uker") { statistikkRepository.hentFerdigstilteOgNyeHistorikkMedYtelsetypeSiste8Uker(refresh = true) }
             }
         }
     } catch (e: Exception) {
