@@ -94,12 +94,14 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single { PepCacheRepository(dataSource) }
-    single { PepCacheService(
-        pepClient = get(),
-        pepCacheRepository = get(),
-        oppgaveRepository = get(),
-        transactionalManager = get()
-    )}
+    single {
+        PepCacheService(
+            pepClient = get(),
+            pepCacheRepository = get(),
+            oppgaveRepository = get(),
+            transactionalManager = get()
+        )
+    }
 
     single { dataSource }
     single { pepClient }
@@ -465,7 +467,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         ReservasjonV3DtoBuilder(
             pdlService = get(),
-            oppgaveTjeneste = get()
+            oppgaveTjeneste = get(),
+            saksbehandlerRepository = get()
         )
     }
 

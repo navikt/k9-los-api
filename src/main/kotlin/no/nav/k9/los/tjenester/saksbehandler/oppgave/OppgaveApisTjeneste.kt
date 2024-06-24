@@ -129,17 +129,17 @@ class OppgaveApisTjeneste(
 
         val reservasjonsnøkkel = reservasjonOversetter.hentReservasjonsnøkkelForOppgavenøkkel(oppgaveNøkkel)
         val nyReservasjon = reservasjonV3Tjeneste.endreReservasjon(
-                reservasjonsnøkkel = reservasjonsnøkkel,
-                endretAvBrukerId = innloggetBruker.id!!,
-                nyTildato = reserverTil?.let {
-                    LocalDateTime.of(
-                        reserverTil,
-                        LocalTime.MAX
-                    )
-                },
-                nySaksbehandlerId = tilSaksbehandler?.id,
-                kommentar = begrunnelse
-            )
+            reservasjonsnøkkel = reservasjonsnøkkel,
+            endretAvBrukerId = innloggetBruker.id!!,
+            nyTildato = reserverTil?.let {
+                LocalDateTime.of(
+                    reserverTil,
+                    LocalTime.MAX
+                )
+            },
+            nySaksbehandlerId = tilSaksbehandler?.id,
+            kommentar = begrunnelse
+        )
 
         val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(nyReservasjon.reservasjonV3.reservertAv)
         log.info("endreReservasjon: ${oppgaveNøkkel.oppgaveEksternId}, ${nyReservasjon.reservasjonV3}, reservertAv: $reservertAv")
@@ -159,7 +159,8 @@ class OppgaveApisTjeneste(
             //noen V1-reservasjon å endre på
         }
 
-        val reservasjonsnøkkel = reservasjonOversetter.hentReservasjonsnøkkelForOppgavenøkkel(forlengReservasjonDto.oppgaveNøkkel)
+        val reservasjonsnøkkel =
+            reservasjonOversetter.hentReservasjonsnøkkelForOppgavenøkkel(forlengReservasjonDto.oppgaveNøkkel)
 
         val forlengetReservasjon =
             reservasjonV3Tjeneste.forlengReservasjon(
@@ -250,8 +251,9 @@ class OppgaveApisTjeneste(
         val reservasjonerMedOppgaver =
             reservasjonV3Tjeneste.hentReservasjonerForSaksbehandler(saksbehandler.id!!)
 
+
         return reservasjonerMedOppgaver.map { reservasjonMedOppgaver ->
-            reservasjonV3DtoBuilder.byggReservasjonV3Dto(reservasjonMedOppgaver, saksbehandler)
+            reservasjonV3DtoBuilder.byggReservasjonV3MedEndringDto(reservasjonMedOppgaver, saksbehandler)
         }
     }
 }
