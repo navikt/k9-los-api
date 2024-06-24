@@ -140,5 +140,3 @@ spec:
       value: "true"
     - name: TILBAKE_CONSUMER_AIVEN
       value: "true"
-    - name: JOURNALFORT_KRITERIE
-      value: "true"
