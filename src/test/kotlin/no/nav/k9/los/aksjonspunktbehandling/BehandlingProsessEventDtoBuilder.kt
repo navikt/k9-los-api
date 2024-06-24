@@ -1,11 +1,15 @@
 package no.nav.k9.los.aksjonspunktbehandling
 
-import no.nav.k9.kodeverk.behandling.*
+import no.nav.k9.kodeverk.behandling.BehandlingResultatType
+import no.nav.k9.kodeverk.behandling.BehandlingStegType
+import no.nav.k9.kodeverk.behandling.BehandlingType
+import no.nav.k9.kodeverk.behandling.BehandlingÅrsakType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.kodeverk.uttak.SøknadÅrsak
 import no.nav.k9.los.domene.modell.BehandlingStatus
+import no.nav.k9.los.domene.modell.FagsakYtelseType
 import no.nav.k9.los.domene.modell.Fagsystem
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto

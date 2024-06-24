@@ -22,11 +22,7 @@ class HentKodeverkTjeneste(
         koder[KøSortering::class.java.simpleName] = KøSortering.values().asList()
         koder[FagsakStatus::class.java.simpleName] = FagsakStatus.values().asList()
 
-        val andreKriterierTypes = if (!configuration.journalførtKriterieEnabled()) AndreKriterierType.values()
-            .filterNot { it == AndreKriterierType.IKKE_JOURNALFØRT }
-        else AndreKriterierType.values().asList()
-
-        koder[AndreKriterierType::class.java.simpleName] = andreKriterierTypes
+        koder[AndreKriterierType::class.java.simpleName] = AndreKriterierType.values().asList()
         koder[BehandlingStatus::class.java.simpleName] = BehandlingStatus.values().asList()
         koder[Venteårsak::class.java.simpleName] = Venteårsak.values().asList()
         koder[KøKriterierType::class.java.simpleName] = KøKriterierType.values().asList()
