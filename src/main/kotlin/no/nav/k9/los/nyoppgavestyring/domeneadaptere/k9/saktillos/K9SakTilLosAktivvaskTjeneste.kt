@@ -79,6 +79,8 @@ class K9SakTilLosAktivvaskTjeneste(
     }
 
     fun skalPauses(): Boolean {
+        return false
+        /*
         if (KoinProfile.PREPROD == config.koinProfile()) {
             return false
         }
@@ -92,6 +94,8 @@ class K9SakTilLosAktivvaskTjeneste(
             return true
         }
         return false
+        
+         */
     }
 
     private fun spillAvBehandlingProsessEventer(behandlingsIder: List<UUID>): Long {
