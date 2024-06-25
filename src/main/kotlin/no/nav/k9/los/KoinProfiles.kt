@@ -608,6 +608,13 @@ fun common(app: Application, config: Configuration) = module {
             transactionalManager = get()
         )
     }
+
+    single<ForvaltningRepository> {
+        ForvaltningRepository(
+            oppgavetypeRepository = get(),
+            transactionalManager = get(),
+        )
+    }
 }
 
 fun localDevConfig() = module {
@@ -665,13 +672,6 @@ fun preprodConfig(config: Configuration) = module {
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://dev-fss.k9saksbehandling.k9-sak/.default"
-        )
-    }
-
-    single<ForvaltningRepository> {
-        ForvaltningRepository(
-            oppgavetypeRepository = get(),
-            transactionalManager = get(),
         )
     }
 }
