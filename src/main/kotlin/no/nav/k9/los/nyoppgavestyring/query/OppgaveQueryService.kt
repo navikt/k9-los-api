@@ -113,7 +113,7 @@ class OppgaveQueryService() {
     }
 
     private suspend fun mapOppgave(tx: TransactionalSession, oppgaveQuery: OppgaveQuery, oppgaveId: Long, now: LocalDateTime): Oppgaverad? {
-        val oppgave = oppgaveRepository.hentAktivOppgaveForId(tx, oppgaveId, now)
+        val oppgave = oppgaveRepository.hentOppgaveForId(tx, oppgaveId, now)
 
         // TODO: Generaliser ABAC-attributter + sjekk av disse:
         val saksnummer = oppgave.hentVerdi("K9", "saksnummer")

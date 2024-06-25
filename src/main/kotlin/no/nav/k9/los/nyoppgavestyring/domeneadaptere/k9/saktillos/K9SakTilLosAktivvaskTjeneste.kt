@@ -54,7 +54,7 @@ class K9SakTilLosAktivvaskTjeneste(
                         break
                     }
 
-                    if (skalPauses()) {
+                        if (skalPauses()) {
                         log.info("Vaskejobb satt på pause")
                         Thread.sleep(Duration.ofMinutes(5))
                         continue
@@ -74,8 +74,6 @@ class K9SakTilLosAktivvaskTjeneste(
                 }
 
                 log.info("Aktivvask k9sak ferdig")
-                behandlingProsessEventK9Repository.nullstillAktivvask()
-                log.info("Nullstilt aktivvaskmarkering k9-sak")
             }
         } else log.info("Ny oppgavestyring er deaktivert")
     }
@@ -104,7 +102,6 @@ class K9SakTilLosAktivvaskTjeneste(
         behandlingsIder.forEach { uuid ->
             transactionalManager.transaction { tx ->
                 oppgaveteller += vaskOppgaveForBehandlingUUID(uuid, tx)
-                behandlingProsessEventK9Repository.markerVasketAktiv(uuid, tx)
             }
             behandlingTeller++
             loggFremgangForHver100(

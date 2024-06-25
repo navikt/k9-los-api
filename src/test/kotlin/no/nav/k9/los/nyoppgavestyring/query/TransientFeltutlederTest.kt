@@ -199,7 +199,7 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
         val oppgaveRepository = get<OppgaveRepository>()
 
         val oppgave = transactionalManager.transaction { tx ->
-            oppgaveRepository.hentAktivOppgaveForId(tx, id)
+            oppgaveRepository.hentOppgaveForId(tx, id)
         }
         return oppgave
     }

@@ -310,6 +310,9 @@ fun Application.k9Los() {
                 route("forvaltning") {
                     innsiktGrensesnitt()
                     forvaltningApis()
+                    route("k9saktillos") { K9SakTilLosApi() }
+                    route("k9klagetillos") { K9KlageTilLosApi() }
+                    route("statistikk") { StatistikkApi() }
                     route("/swagger") {
                         route("openapi.json") {
                             openApiSpec()
@@ -389,10 +392,6 @@ private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
             route("feltdefinisjon") { FeltdefinisjonApi() }
             route("oppgavetype") { OppgavetypeApi() }
             route("oppgave-v3") { OppgaveV3Api() }
-            route("statistikk") { StatistikkApi() }
-            route("k9saktillos") { K9SakTilLosApi() }
-            route("k9klagetillos") { K9KlageTilLosApi() }
         }
     }
-
 }
