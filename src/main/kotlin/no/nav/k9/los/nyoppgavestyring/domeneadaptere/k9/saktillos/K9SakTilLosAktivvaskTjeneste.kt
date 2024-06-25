@@ -96,7 +96,7 @@ class K9SakTilLosAktivvaskTjeneste(
             return true
         }
         return false
-        
+
          */
     }
 
@@ -123,17 +123,14 @@ class K9SakTilLosAktivvaskTjeneste(
 
         val høyesteInternVersjon =
             oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9sak", "K9", tx)!!
-        if (høyesteInternVersjon == 0L) {
-            return 0
-        }
+
         var eventNrForBehandling = behandlingProsessEventer.size-1
         if (eventNrForBehandling > høyesteInternVersjon) {
             return 0 //ligge unna oppgaver som ikke er oppdatert. De blir straks oppdatert av normalflyt
         }
 
         val event = behandlingProsessEventer.last()
-        val forrigeOppgave =
-            oppgaveV3Tjeneste.hentOppgaveVersjonenFør(uuid.toString(), høyesteInternVersjon, "k9sak", "K9", tx)
+        val forrigeOppgave = if (eventNrForBehandling > 0) { oppgaveV3Tjeneste.hentOppgaveVersjonenFør(uuid.toString(), høyesteInternVersjon, "k9sak", "K9", tx) } else null
 
         val nyeBehandlingsopplysningerFraK9Sak = k9SakBerikerKlient.hentBehandling(UUID.fromString(uuid.toString()))
         if (event.eldsteDatoMedEndringFraSøker == null && nyeBehandlingsopplysningerFraK9Sak != null && nyeBehandlingsopplysningerFraK9Sak.eldsteDatoMedEndringFraSøker != null) {

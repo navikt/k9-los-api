@@ -297,6 +297,9 @@ fun Application.k9Los() {
             route("/forvaltning") {
                 innsiktGrensesnitt()
                 forvaltningApis()
+                route("k9saktillos") { K9SakTilLosApi() }
+                route("k9klagetillos") { K9KlageTilLosApi() }
+                route("statistikk") { StatistikkApi() }
                 route("/swagger") {
                     route("openapi.json") {
                         openApiSpec()
