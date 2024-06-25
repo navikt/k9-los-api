@@ -62,6 +62,7 @@ class K9SakTilLosAktivvaskTjeneste(
 
                     log.info("Starter vaskeiterasjon på ${behandlingsIder.size} behandlinger")
                     eventTeller += spillAvBehandlingProsessEventer(behandlingsIder)
+                    log.info("Iterasjon ferdig. Endret $eventTeller behandlinger")
                     behandlingTeller += behandlingsIder.count()
                     AktivvaskMetrikker.observe(TRÅDNAVN, t0)
                     t0 = System.nanoTime()
@@ -126,6 +127,7 @@ class K9SakTilLosAktivvaskTjeneste(
 
         var eventNrForBehandling = behandlingProsessEventer.size-1
         if (eventNrForBehandling > høyesteInternVersjon) {
+            log.warn("Skipper aktivvask av behandling: $uuid")
             return 0 //ligge unna oppgaver som ikke er oppdatert. De blir straks oppdatert av normalflyt
         }
 
@@ -148,7 +150,7 @@ class K9SakTilLosAktivvaskTjeneste(
         )
 
         oppgaveV3Tjeneste.ajourholdAktivOppgave(oppgaveDto, eventNrForBehandling.toLong(), tx)
-
+        log.info("Ajourholdt aktiv oppgave for behandling: $uuid")
         return 1
     }
 
