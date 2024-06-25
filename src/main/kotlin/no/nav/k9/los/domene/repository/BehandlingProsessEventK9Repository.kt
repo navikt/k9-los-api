@@ -216,7 +216,7 @@ class BehandlingProsessEventK9Repository(private val dataSource: DataSource) {
                             select count(*) as antall
                             from behandling_prosess_events_k9 e
                             where not exists (
-                                select * 
+                                select 1
                                 from oppgave_v3_aktiv ova
                                     inner join oppgave_v3 ov 
                                         on ov.ekstern_id = ova.ekstern_id
@@ -242,7 +242,7 @@ class BehandlingProsessEventK9Repository(private val dataSource: DataSource) {
                             select * 
                             from behandling_prosess_events_k9 e
                             where not exists (
-                                select * 
+                                select 1
                                 from oppgave_v3_aktiv ova
                                     inner join oppgave_v3 ov 
                                         on ov.ekstern_id = ova.ekstern_id
