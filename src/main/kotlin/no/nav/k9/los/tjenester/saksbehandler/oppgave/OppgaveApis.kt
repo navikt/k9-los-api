@@ -49,6 +49,7 @@ internal fun Route.OppgaveApis() {
                     kotlin.coroutines.coroutineContext.idToken().getUsername()
                 )!!
                 try {
+                    log.info("Forsøker å ta reservasjon direkte på ${oppgaveIdMedOverstyringDto.oppgaveNøkkel.oppgaveEksternId} for ${innloggetBruker.brukerIdent}")
                     val oppgave =
                         oppgaveApisTjeneste.reserverOppgave(innloggetBruker, oppgaveIdMedOverstyringDto)
                     call.respond(oppgave)
@@ -73,7 +74,10 @@ internal fun Route.OppgaveApis() {
                 call.respond(reservasjonV3Dtos)
             } else {
                 log.info("Innlogger bruker med brukernavn $innloggetBrukernavn finnes ikke i saksbehandlertabellen")
-                call.respond(HttpStatusCode.InternalServerError, "Innlogger bruker med brukernavn $innloggetBrukernavn finnes ikke i saksbehandlertabellen")
+                call.respond(
+                    HttpStatusCode.InternalServerError,
+                    "Innlogger bruker med brukernavn $innloggetBrukernavn finnes ikke i saksbehandlertabellen"
+                )
             }
         }
     }
@@ -105,20 +109,26 @@ internal fun Route.OppgaveApis() {
         }
     }
 
+    // TODO: Rename til annuller
     @Location("/opphev")
-    class opphevReservasjon
-    post { _: opphevReservasjon ->
+    class opphevReservasjoner
+    post { _: opphevReservasjoner ->
         requestContextService.withRequestContext(call) {
-            val params = call.receive<OpphevReservasjonId>()
+            val params = call.receive<List<AnnullerReservasjon>>()
             val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
                 kotlin.coroutines.coroutineContext.idToken().getUsername()
             )!!
 
             try {
-                oppgaveApisTjeneste.annullerReservasjon(params, innloggetBruker)
+                log.info(
+                    "Opphever reservasjoner ${
+                        params.map { it.oppgaveNøkkel }.joinToString(", ")
+                    } (Gjort av ${innloggetBruker.brukerIdent})"
+                )
+                oppgaveApisTjeneste.annullerReservasjoner(params, innloggetBruker)
                 call.respond(HttpStatusCode.OK) //TODO: Hva er evt meningsfullt å returnere her?
             } catch (e: FinnerIkkeDataException) {
-                call.respond(HttpStatusCode.NotFound,"Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")
+                call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitte reservasjonsnøkler")
             }
         }
     }
@@ -149,7 +159,9 @@ internal fun Route.OppgaveApis() {
             val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
                 kotlin.coroutines.coroutineContext.idToken().getUsername()
             )!!
+
             try {
+                log.info("Flytter reservasjonen ${params.oppgaveNøkkel.oppgaveEksternId} til ${params.brukerIdent} (Gjort av ${innloggetBruker.brukerIdent})")
                 call.respond(oppgaveApisTjeneste.overførReservasjon(params, innloggetBruker))
             } catch (e: FinnerIkkeDataException) {
                 call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")
@@ -173,12 +185,12 @@ internal fun Route.OppgaveApis() {
     class endreReservasjon
     post { _: endreReservasjon ->
         requestContextService.withRequestContext(call) {
-            val reservasjonEndringDto = call.receive<ReservasjonEndringDto>()
+            val reservasjonEndringDto = call.receive<List<ReservasjonEndringDto>>()
             val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
                 kotlin.coroutines.coroutineContext.idToken().getUsername()
             )!!
             try {
-                call.respond(oppgaveApisTjeneste.endreReservasjon(reservasjonEndringDto, innloggetBruker))
+                call.respond(oppgaveApisTjeneste.endreReservasjoner(reservasjonEndringDto, innloggetBruker))
             } catch (e: FinnerIkkeDataException) {
                 call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")
             }
@@ -220,7 +232,7 @@ internal fun Route.OppgaveApis() {
             val oppgave = oppgaveRepository.hent(UUID.fromString(oppgavenøkkel.oppgaveEksternId))
             val person = pdlService.person(oppgave.aktorId).person!!
             val behandletOppgave = BehandletOppgave(oppgave, person)
-            
+
             call.respond(
                 oppgaveTjeneste.leggTilBehandletOppgave(
                     coroutineContext.idToken().getUsername(),
@@ -242,12 +254,26 @@ internal fun Route.OppgaveApis() {
     class søkSaksbehandler
     post { _: søkSaksbehandler ->
         requestContextService.withRequestContext(call) {
-            val params = call.receive<BrukerIdentDto>()
-            val sokSaksbehandlerMedIdent = oppgaveTjeneste.sokSaksbehandler(params.brukerIdent)
-            if (sokSaksbehandlerMedIdent == null) {
-                call.respond("")
+        val params = call.receive<BrukerIdentDto>()
+        val sokSaksbehandlerMedIdent = oppgaveTjeneste.sokSaksbehandler(params.brukerIdent)
+            call.respond(sokSaksbehandlerMedIdent)
+        }
+    }
+
+    @Location("/saksbehandlere")
+    class getAlleSaksbehandlere
+    get { _: getAlleSaksbehandlere ->
+        requestContextService.withRequestContext(call) {
+            if (pepClient.harBasisTilgang()) {
+                val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere()
+                val saksbehandlerDtoListe =
+                    alleSaksbehandlere.filter { saksbehandler -> !saksbehandler.navn.isNullOrBlank() && !saksbehandler.brukerIdent.isNullOrBlank() }
+                        .map { saksbehandler ->
+                            SaksbehandlerDto(saksbehandler.brukerIdent!!, saksbehandler.navn!!)
+                        }
+                call.respond(saksbehandlerDtoListe)
             } else {
-                call.respond(sokSaksbehandlerMedIdent)
+                call.respond(emptyList<SaksbehandlerDto>())
             }
         }
     }
@@ -293,7 +319,7 @@ internal fun Route.OppgaveApis() {
     @Deprecated("Antatt ikke i bruk. Verifiser og fjern")
     @Location("/oppgaver-på-samme-bruker")
     class oppgaverPåSammeBruker
-    post { _: opphevReservasjon ->
+    post { _: oppgaverPåSammeBruker ->
         requestContextService.withRequestContext(call) {
             val params = call.receive<OppgaveId>()
             call.respond(oppgaveTjeneste.aktiveOppgaverPåSammeBruker(UUID.fromString(params.oppgaveId)))

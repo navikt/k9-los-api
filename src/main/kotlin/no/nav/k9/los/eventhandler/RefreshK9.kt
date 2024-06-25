@@ -6,12 +6,9 @@ import kotlinx.coroutines.launch
 import no.nav.k9.los.domene.modell.Fagsystem
 import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.integrasjon.k9.IK9SakService
-import no.nav.k9.sak.kontrakt.behandling.BehandlingIdDto
-import no.nav.k9.sak.kontrakt.behandling.BehandlingIdListe
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.Executors
-
 
 fun CoroutineScope.refreshK9(
     channel: ReceiveChannel<UUID>,
@@ -26,13 +23,15 @@ fun CoroutineScope.refreshK9(
         val oppgaveId = channel.tryReceive().getOrNull()
         if (oppgaveId == null) {
             try {
-                refreshK9(oppgaveListe
-                    .map { oppgaveRepository.hent(it) }
-                    .filter { it.system == Fagsystem.K9SAK.kode }
-                    .map { it.eksternId },
-                    k9SakService
-                )
-                oppgaveListe.clear()
+                ChannelMetrikker.timeSuspended("refresh_k9sak") {
+                    refreshK9(oppgaveListe
+                        .map { oppgaveRepository.hent(it) }
+                        .filter { it.system == Fagsystem.K9SAK.kode }
+                        .map { it.eksternId },
+                        k9SakService
+                    )
+                    oppgaveListe.clear()
+                }
             } catch (e: Exception) {
                 log.error("Feilet ved refresh av oppgaver i k9-sak: "+oppgaveListe.joinToString(", "), e)
             }

@@ -23,7 +23,8 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
-import no.nav.k9.los.nyoppgavestyring.query.db.OppgavefilterUtvider
+import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
+import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgavefilterUtvider
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
@@ -229,10 +230,10 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
             )
 
             oppgaveQueryService.query(tx,
-                OppgaveQuery(
+                QueryRequest(OppgaveQuery(
                     select = listOf(EnkelSelectFelt(område = "K9", kode = "ekstern_id")),
                     filtere = OppgavefilterUtvider.utvid(filtre)
-                ),
+                )),
                 mockk(relaxed = true),
             )
         }

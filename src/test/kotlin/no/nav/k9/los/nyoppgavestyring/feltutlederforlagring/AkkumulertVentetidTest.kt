@@ -99,7 +99,8 @@ internal class AkkumulertVentetidTest {
                     "avventerSaksbehandler",
                     avventerSaksbehandler.toString()
                 )
-            )
+            ),
+            aktiv = true
         )
     }
 
@@ -119,7 +120,7 @@ internal class AkkumulertVentetidTest {
     fun lagOppgavefeltverdi(eksternId: String, verdi: String): OppgaveFeltverdi {
         return OppgaveFeltverdi(
             oppgavefelt = lagOppgavefelt(eksternId),
-            verdi = verdi.toString()
+            verdi = verdi
         )
 
     }

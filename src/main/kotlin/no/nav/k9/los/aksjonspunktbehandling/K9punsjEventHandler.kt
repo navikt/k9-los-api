@@ -12,6 +12,7 @@ import no.nav.k9.los.domene.lager.oppgave.v2.*
 import no.nav.k9.los.domene.modell.*
 import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
 import no.nav.k9.los.integrasjon.kafka.dto.PunsjEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosAdapterTjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
 import org.slf4j.LoggerFactory
@@ -27,6 +28,7 @@ class K9punsjEventHandler constructor(
     private val reservasjonTjeneste: ReservasjonTjeneste,
     private val statistikkRepository: StatistikkRepository,
     private val azureGraphService: IAzureGraphService,
+    private val punsjTilLosAdapterTjeneste: K9PunsjTilLosAdapterTjeneste
 ) : EventTeller {
     private val log = LoggerFactory.getLogger(K9punsjEventHandler::class.java)
 
@@ -35,25 +37,29 @@ class K9punsjEventHandler constructor(
     }
 
     fun prosesser(event: PunsjEventDto) {
-        log.info(event.safePrint())
-        val modell = punsjEventK9Repository.lagre(event = event)
-        val oppgave = modell.oppgave()
-        oppgaveRepository.lagre(oppgave.eksternId){
-            tellEvent(modell, oppgave)
-            oppgave
-        }
-
-        if (modell.fikkEndretAksjonspunkt()) {
-            reservasjonTjeneste.fjernReservasjon(oppgave)
-        }
-
-        runBlocking {
-            for (oppgavekø in oppgaveKøRepository.hentKøIdIkkeTaHensyn()) {
-                oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, listOf(oppgave), reservasjonRepository)
+        EventHandlerMetrics.time("k9punsj", "gjennomført") {
+            log.info(event.safePrint())
+            val modell = punsjEventK9Repository.lagre(event = event)
+            val oppgave = modell.oppgave()
+            oppgaveRepository.lagre(oppgave.eksternId) {
+                tellEvent(modell, oppgave)
+                oppgave
             }
-            statistikkChannel.send(true)
 
-            oppdaterOppgaveV2(event, modell)
+            if (modell.fikkEndretAksjonspunkt()) {
+                reservasjonTjeneste.fjernReservasjon(oppgave)
+            }
+
+            runBlocking {
+                for (oppgavekø in oppgaveKøRepository.hentKøIdIkkeTaHensyn()) {
+                    oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, listOf(oppgave), reservasjonRepository)
+                }
+                statistikkChannel.send(true)
+
+                oppdaterOppgaveV2(event, modell)
+            }
+
+            punsjTilLosAdapterTjeneste.oppdaterOppgaveForEksternId(event.eksternId)
         }
     }
 

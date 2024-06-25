@@ -4,18 +4,17 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.launch
+import no.nav.k9.kodeverk.Fagsystem
+import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.repository.OppgaveKøRepository
 import no.nav.k9.los.domene.repository.OppgaveRepository
-import no.nav.k9.kodeverk.Fagsystem
-import no.nav.k9.los.domene.lager.oppgave.Oppgave
-import no.nav.k9.sak.kontrakt.behandling.BehandlingIdDto
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
+import no.nav.k9.sak.kontrakt.behandling.BehandlingIdDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.Executors
-import kotlin.collections.ArrayList
 import kotlin.system.measureTimeMillis
 
 fun CoroutineScope.køOppdatertProsessor(
@@ -29,17 +28,18 @@ fun CoroutineScope.køOppdatertProsessor(
     val log = LoggerFactory.getLogger("behandleOppgave")
     for (uuid in channel) {
         try {
-            val measureTimeMillis = oppdaterKø(
-                oppgaveKøRepository,
-                uuid,
-                oppgaveRepository,
-                oppgaveRepositoryV2,
-                oppgaveTjeneste,
-                refreshOppgaveChannel,
-                log
-            )
-            log.info("tok ${measureTimeMillis}ms å oppdatere køen: $uuid")
-
+            ChannelMetrikker.timeSuspended("oppdaterKoe") {
+                val measureTimeMillis = oppdaterKø(
+                    oppgaveKøRepository,
+                    uuid,
+                    oppgaveRepository,
+                    oppgaveRepositoryV2,
+                    oppgaveTjeneste,
+                    refreshOppgaveChannel,
+                    log
+                )
+                log.info("tok ${measureTimeMillis}ms å oppdatere køen: $uuid")
+            }
         } catch (e: Exception) {
             log.error("Feilet ved oppdatering av kø $uuid", e)
         }
@@ -92,9 +92,7 @@ private suspend fun oppdaterKø(
             k9sakRefreshBehanderListe.addAll(finnK9sakBehandlingIder(neste20oppgaveIder, aktiveOppgaver, oppgaveRepository, log))
             oppgaveKø
         }
-        val antallOppgaverUtenReservasjon = taTiden(log, "hent antall oppgaver med reserverte") { oppgaveTjeneste.hentAntallOppgaver(oppgavekøId = it, taMedReserverte = true, refresh = true) }
-        val antallOppgaverMedReservasjon = taTiden(log, "hent antall oppgaver uten reserverte") { oppgaveTjeneste.hentAntallOppgaver(oppgavekøId = it, taMedReserverte = false, refresh = true) }
-        log.info("Antall oppgaver i køen er $antallOppgaverUtenReservasjon eller $antallOppgaverMedReservasjon med reservasjoner")
+        taTiden(log, "refresh antall oppgaver med reserverte og uten reserverte") { oppgaveTjeneste.refreshAntallOppgaverForKø(kø) }
 
         val behandlingerUuiderTilRefresh = k9sakRefreshBehanderListe.map { it.behandlingUuid }.toSet()
         log.info("Sender ${behandlingerUuiderTilRefresh.size} videre for refresh")

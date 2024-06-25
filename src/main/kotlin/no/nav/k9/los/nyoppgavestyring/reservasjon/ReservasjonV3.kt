@@ -9,7 +9,7 @@ class ReservasjonV3(
     val reservertAv: Long,
     val reservasjonsnøkkel: String,
     val annullertFørUtløp: Boolean = false,
-    val kommentar: String,
+    val kommentar: String?,
     gyldigFra: LocalDateTime,
     gyldigTil: LocalDateTime,
 ) {
@@ -21,7 +21,7 @@ class ReservasjonV3(
         reservertAv: Long = this.reservertAv,
         reservasjonsnøkkel: String = this.reservasjonsnøkkel,
         annullertFørUtløp: Boolean = this.annullertFørUtløp,
-        kommentar: String = this.kommentar,
+        kommentar: String? = this.kommentar,
         gyldigFra: LocalDateTime = this.gyldigFra,
         gyldigTil: LocalDateTime = this.gyldigTil
     ): ReservasjonV3 {
@@ -64,6 +64,10 @@ class ReservasjonV3(
         gyldigTil = gyldigTil,
     )
 
+    fun erAktiv(): Boolean {
+        return !annullertFørUtløp && gyldigTil.isAfter(LocalDateTime.now())
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -85,5 +89,17 @@ class ReservasjonV3(
         result = 31 * result + gyldigFra.hashCode()
         result = 31 * result + gyldigTil.hashCode()
         return result
+    }
+
+    override fun toString(): String {
+        return """
+            Reservasjon(
+            id: $id,
+            reservertAv: $reservertAv,
+            reservasjonsnøkkel: ${Reservasjonsnøkkel(reservasjonsnøkkel)},
+            annullertFørUtløp: $annullertFørUtløp,
+            gyldigFra: $gyldigFra,
+            gyldigTil: $gyldigTil)
+        """.trimIndent()
     }
 }

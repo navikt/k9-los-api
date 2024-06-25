@@ -10,14 +10,16 @@ import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.pdl.IPdlService
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
+import no.nav.k9.los.nyoppgavestyring.query.Avgrensning
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
+import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.reservasjon.*
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.GenerellOppgaveV3Dto
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.forskyvReservasjonsDato
+import no.nav.k9.los.utils.leggTilDagerHoppOverHelg
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.*
@@ -39,29 +41,21 @@ class OppgaveKoTjeneste(
 ) {
     private val log = LoggerFactory.getLogger(OppgaveKoTjeneste::class.java)
 
-    fun hentOppgavekøerMedAntall(): Map<OppgaveKo, Long> {
+    fun hentOppgavekøer(): List<OppgaveKo> {
         return oppgaveKoRepository.hentListe()
-            .associateWith {
-                oppgaveQueryService.queryForAntall(it.oppgaveQuery)
-            }
     }
 
     suspend fun hentOppgaverFraKø(
         oppgaveKoId: Long,
-        ønsketAntallSaker: Int,
+        ønsketAntallSaker: Long,
+        fjernReserverte: Boolean = false
     ): List<GenerellOppgaveV3Dto> {
         val ko = oppgaveKoRepository.hent(oppgaveKoId)
 
-        val køoppgaveIder = oppgaveQueryService.queryForOppgaveEksternId(ko.oppgaveQuery)
+        val køoppgaveIder = oppgaveQueryService.queryForOppgaveEksternId(QueryRequest(ko.oppgaveQuery, fjernReserverte = fjernReserverte, Avgrensning.maxAntall(ønsketAntallSaker)))
         var oppgaver = mutableListOf<GenerellOppgaveV3Dto>()
         for (eksternOppgaveId in køoppgaveIder) {
             val oppgave = oppgaveRepositoryTxWrapper.hentOppgave(eksternOppgaveId.område, eksternOppgaveId.eksternId)
-
-            val aktivReservasjon =
-                reservasjonV3Tjeneste.hentAktivReservasjonForReservasjonsnøkkel(oppgave.reservasjonsnøkkel)
-            if (aktivReservasjon != null) {
-                continue
-            }
 
             val harTilgangTilLesSak = //TODO: harTilgangTilLesSak riktig PEP-spørring, eller bør det være likhetssjekk?
                 pepClient.harTilgangTilLesSak(oppgave.hentVerdi("saksnummer")!!, oppgave.hentVerdi("aktorId")!!)
@@ -87,13 +81,19 @@ class OppgaveKoTjeneste(
         }
     }
 
+    fun hentAntallOppgaverForKø(
+        oppgaveKoId: Long,
+        filtrerReserverte: Boolean
+    ): Long {
+        val ko = oppgaveKoRepository.hent(oppgaveKoId)
+        return oppgaveQueryService.queryForAntall(QueryRequest(ko.oppgaveQuery, fjernReserverte = filtrerReserverte))
+    }
+
     fun hentAntallUreserverteOppgaveForKø(
         oppgaveKoId: Long
     ): Long {
         val ko = oppgaveKoRepository.hent(oppgaveKoId)
-        val oppgaveIder = oppgaveQueryService.queryForOppgaveId(ko.oppgaveQuery)
-        val ureserverte = reservasjonV3Repository.hentUreserverteOppgaveIder(oppgaveIder)
-        return ureserverte.size.toLong()
+        return oppgaveQueryService.queryForAntall(QueryRequest(ko.oppgaveQuery, fjernReserverte = true))
     }
 
     fun taReservasjonFraKø(
@@ -101,9 +101,10 @@ class OppgaveKoTjeneste(
         oppgaveKoId: Long,
         coroutineContext: CoroutineContext
     ): Pair<Oppgave, ReservasjonV3>? {
+        log.info("taReservasjonFraKø, oppgaveKøId: $oppgaveKoId")
         val oppgavekø = oppgaveKoRepository.hent(oppgaveKoId)
 
-        val kandidatOppgaver = oppgaveQueryService.queryForOppgaveId(oppgavekø.oppgaveQuery)
+        val kandidatOppgaver = oppgaveQueryService.queryForOppgaveId(QueryRequest(oppgavekø.oppgaveQuery, fjernReserverte = true))
 
         return transactionalManager.transaction { tx ->
             finnReservasjonFraKø(kandidatOppgaver, tx, innloggetBrukerId, coroutineContext)
@@ -118,15 +119,6 @@ class OppgaveKoTjeneste(
     ): Pair<Oppgave, ReservasjonV3>? {
         for (kandidatoppgaveId in kandidatoppgaver) {
             val kandidatoppgave = oppgaveRepository.hentOppgaveForId(tx, kandidatoppgaveId)
-            //reservert allerede?
-            val aktivReservasjon =
-                reservasjonV3Tjeneste.hentAktivReservasjonForReservasjonsnøkkel(
-                    kandidatoppgave.reservasjonsnøkkel,
-                    tx
-                )
-            if (aktivReservasjon != null) {
-                continue
-            }
 
             try {
                 //if (kandidatoppgave.oppgavetype.eksternId == "k9klage") //TODO: Hvis klageoppgave/klagekø -- IKKE ta reservasjon i V1. Disse kan ikke speiles
@@ -152,7 +144,7 @@ class OppgaveKoTjeneste(
                     utføresAvId = innloggetBrukerId,
                     reservasjonsnøkkel = kandidatoppgave.reservasjonsnøkkel,
                     gyldigFra = LocalDateTime.now(),
-                    gyldigTil = LocalDateTime.now().plusHours(48).forskyvReservasjonsDato(),
+                    gyldigTil = LocalDateTime.now().leggTilDagerHoppOverHelg(2),
                     kommentar = "",
                     tx = tx
                 )

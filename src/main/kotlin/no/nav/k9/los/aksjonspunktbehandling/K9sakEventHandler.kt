@@ -3,10 +3,9 @@ package no.nav.k9.los.aksjonspunktbehandling
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
-import no.nav.k9.los.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.los.domene.modell.*
-import no.nav.k9.los.domene.modell.reportMetrics
 import no.nav.k9.los.domene.repository.*
+import no.nav.k9.los.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.los.integrasjon.kafka.dto.EventHendelse
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
@@ -43,9 +42,13 @@ class K9sakEventHandler constructor(
     fun prosesser(
         eventInn: BehandlingProsessEventDto
     ) {
+        val t0 = System.nanoTime()
 
         val event = håndterVaskeevent(eventInn)
-        if (event == null) return
+        if (event == null) {
+            EventHandlerMetrics.observe("k9sak", "vaskeevent", t0)
+            return
+        }
 
         var skalSkippe = false
         val modell = behandlingProsessEventK9Repository.lagre(event.eksternId!!) { k9SakModell ->
@@ -66,6 +69,7 @@ class K9sakEventHandler constructor(
             oppgave
         }
         if (skalSkippe) {
+            EventHandlerMetrics.observe("k9sak", "skipper", t0)
             return
         }
         tellEvent(modell, oppgave)
@@ -83,6 +87,7 @@ class K9sakEventHandler constructor(
         }
         
         k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId)
+        EventHandlerMetrics.observe("k9sak", "gjennomført", t0)
     }
 
     fun håndterVaskeevent(event: BehandlingProsessEventDto): BehandlingProsessEventDto? {

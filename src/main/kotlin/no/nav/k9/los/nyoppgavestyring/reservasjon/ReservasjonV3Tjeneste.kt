@@ -6,11 +6,13 @@ import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.abac.TILGANG_SAK
 import no.nav.k9.los.integrasjon.audit.*
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.FinnerIkkeDataException
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.forskyvReservasjonsDato
+import no.nav.k9.los.utils.forskyvReservasjonsDato
+import no.nav.k9.los.utils.leggTilDagerHoppOverHelg
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.util.*
@@ -24,6 +26,10 @@ class ReservasjonV3Tjeneste(
     private val oppgaveV1Repository: no.nav.k9.los.domene.repository.OppgaveRepository,
     private val oppgaveV3Repository: OppgaveRepository
 ) {
+
+    companion object {
+        private val log: Logger = LoggerFactory.getLogger("ReservasjonV3Tjeneste")
+    }
 
     fun auditlogReservert(brukerId: Long, reservertoppgave: Oppgave) {
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(brukerId)
@@ -62,7 +68,7 @@ class ReservasjonV3Tjeneste(
         reservasjonsnøkkel: String,
         reserverForId: Long,
         utføresAvId: Long,
-        kommentar: String,
+        kommentar: String?,
         gyldigFra: LocalDateTime,
         gyldigTil: LocalDateTime
     ): ReservasjonV3 {
@@ -77,12 +83,11 @@ class ReservasjonV3Tjeneste(
         utføresAvId: Long,
         gyldigFra: LocalDateTime,
         gyldigTil: LocalDateTime,
-        kommentar: String,
+        kommentar: String?,
         tx: TransactionalSession
     ): ReservasjonV3 {
         //sjekke tilgang på alle oppgaver tilknyttet nøkkel
-        val oppgaverForReservasjonsnøkkel =
-            oppgaveV3Repository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjonsnøkkel)
+        val oppgaverForReservasjonsnøkkel = oppgaveV3Repository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjonsnøkkel)
         if (!sjekkTilganger(oppgaverForReservasjonsnøkkel, reserverForId, utføresAvId)) {
             val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(reserverForId)
             throw ManglerTilgangException("Saksbehandler ${saksbehandler.navn} mangler tilgang til å reservere nøkkel $reservasjonsnøkkel")
@@ -96,7 +101,7 @@ class ReservasjonV3Tjeneste(
             kommentar = kommentar,
         )
         val reservasjon = reservasjonV3Repository.lagreReservasjon(reservasjonTilLagring, tx)
-
+        log.info("taReservasjon: Ny reservasjon $reservasjon, utført av $utføresAvId, for saksbehandler $reserverForId")
         return reservasjon
     }
 
@@ -105,7 +110,7 @@ class ReservasjonV3Tjeneste(
         reserverForId: Long,
         gyldigFra: LocalDateTime,
         gyldigTil: LocalDateTime,
-        kommentar: String,
+        kommentar: String?,
         utføresAvId: Long,
         tx: TransactionalSession
     ): ReservasjonV3 {
@@ -115,22 +120,26 @@ class ReservasjonV3Tjeneste(
             check(gyldigTil > nå) {"Gyldig til er ikke etter nå, gyldigfra=${gyldigFra} gyldigTil=${gyldigTil}"}
             taReservasjon(reservasjonsnøkkel, reserverForId, utføresAvId, kommentar = kommentar, gyldigFra, gyldigTil)
         } catch (e: AlleredeReservertException) {
-            val aktivReservasjon =
-                reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(
+            val aktivReservasjon = reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(
                     reservasjonsnøkkel,
                     tx
                 )!!
+
             if (reserverForId != aktivReservasjon.reservertAv) { // reservert av andre
+                log.info("ForsøkReservasjonOgReturnerAktiv: AktivReservasjon ${aktivReservasjon} allerede reservert av annen saksbehandler. Utført av $utføresAvId, forsøkt reservert for $reserverForId")
                 aktivReservasjon
             } else if (aktivReservasjon.gyldigTil < gyldigTil) {
+                log.info("ForsøkReservasjonOgReturnerAktiv: Sb $reserverForId har allerede reservasjonen ${aktivReservasjon}. Forlenger. Utført av $utføresAvId.")
                 reservasjonV3Repository.forlengReservasjon(
                     aktivReservasjon,
                     endretAvBrukerId = utføresAvId,
                     nyTildato = gyldigTil,
-                    kommentar = kommentar,
+                    kommentar = kommentar ?: aktivReservasjon.kommentar,
                     tx
                 )
             } else {
+                log.info("ForsøkReservasjonOgReturnerAktiv: Sb $reserverForId har allerede reservasjonen med id $aktivReservasjon")
+
                 //allerede reservert lengre enn ønsket
                 // TODO: kort ned reservasjon i stedet? Avklaring neste uke. Sjekke opp mot V1-logikken
                 // Alt 1. - kort ned reservasjon dersom det er innlogget bruker sin reservasjon som endres. Ellers IllegalArgument.
@@ -193,12 +202,13 @@ class ReservasjonV3Tjeneste(
 
     fun annullerReservasjonHvisFinnes(
         reservasjonsnøkkel: String,
-        kommentar: String,
+        kommentar: String?,
         annullertAvBrukerId: Long?,
         tx: TransactionalSession
     ): Boolean {
-        val aktivReservasjon =
-            reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(reservasjonsnøkkel, tx)
+        val aktivReservasjon = reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(reservasjonsnøkkel, tx)
+        log.info("Annullerer v3-reservasjon ${aktivReservasjon}, annulleringsforespørsel av type ${Reservasjonsnøkkel(reservasjonsnøkkel)}")
+
         aktivReservasjon?.let {
             reservasjonV3Repository.annullerAktivReservasjonOgLagreEndring(
                 aktivReservasjon,
@@ -212,8 +222,8 @@ class ReservasjonV3Tjeneste(
     }
 
 
-    fun annullerReservasjonHvisFinnes(reservasjonsnøkkel: String, kommentar: String, annullertAvBrukerId: Long?) {
-        transactionalManager.transaction { tx ->
+    fun annullerReservasjonHvisFinnes(reservasjonsnøkkel: String, kommentar: String?, annullertAvBrukerId: Long?): Boolean {
+        return transactionalManager.transaction { tx ->
             annullerReservasjonHvisFinnes(reservasjonsnøkkel, kommentar, annullertAvBrukerId, tx)
         }
     }
@@ -229,7 +239,7 @@ class ReservasjonV3Tjeneste(
             val nyReservasjon = reservasjonV3Repository.forlengReservasjon(
                 aktivReservasjon = aktivReservasjon,
                 endretAvBrukerId = utførtAvBrukerId,
-                nyTildato = nyTildato ?: aktivReservasjon.gyldigTil.plusHours(24).forskyvReservasjonsDato(),
+                nyTildato = nyTildato ?: aktivReservasjon.gyldigTil.leggTilDagerHoppOverHelg(1),
                 kommentar = kommentar ?: aktivReservasjon.kommentar,
                 tx = tx
             )
@@ -246,8 +256,7 @@ class ReservasjonV3Tjeneste(
         kommentar: String,
     ): ReservasjonV3MedOppgaver {
         return transactionalManager.transaction { tx ->
-            val aktivReservasjon =
-                finnAktivReservasjon(reservasjonsnøkkel, tx)
+            val aktivReservasjon = finnAktivReservasjon(reservasjonsnøkkel, tx)
             val nyReservasjon = reservasjonV3Repository.overførReservasjon(
                 aktivReservasjon = aktivReservasjon,
                 saksbehandlerSomSkalHaReservasjonId = tilSaksbehandlerId,
@@ -338,7 +347,7 @@ class ReservasjonV3Tjeneste(
     ): ReservasjonV3 {
         val aktivReservasjon =
             reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(reservasjonsnøkkel, tx)
-                ?: throw FinnerIkkeDataException("Fant ikke aktiv reservasjon for angitt reservasjonsnøkkel: $reservasjonsnøkkel") //TODO: Lov å logge/vise reservasjonsnøkkel?
+                ?: throw FinnerIkkeDataException("Fant ikke aktiv reservasjon for angitt reservasjonsnøkkel: ${Reservasjonsnøkkel(reservasjonsnøkkel)}")
         return aktivReservasjon
     }
 }

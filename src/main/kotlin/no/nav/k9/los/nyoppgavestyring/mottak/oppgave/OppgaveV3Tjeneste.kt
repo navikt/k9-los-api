@@ -9,8 +9,7 @@ import org.slf4j.LoggerFactory
 class OppgaveV3Tjeneste(
     private val oppgaveV3Repository: OppgaveV3Repository,
     private val oppgavetypeRepository: OppgavetypeRepository,
-    private val områdeRepository: OmrådeRepository,
-    private val reservasjonTjeneste: ReservasjonV3Tjeneste
+    private val områdeRepository: OmrådeRepository
 ) {
 
     private val log = LoggerFactory.getLogger(OppgaveV3Tjeneste::class.java)
@@ -52,24 +51,6 @@ class OppgaveV3Tjeneste(
 
         oppgaveV3Repository.nyOppgaveversjon(innkommendeOppgave, tx)
 
-        /* TODO: Denne løsningen var litt for enkel. Vi må ha en variant som ser på reservasjonsnøkkel på tvers av _beslutter postfix.
-             Evt få besluttermekanismen som first class citizen på oppgavemodellen
-        if (innkommendeOppgave.status == Oppgavestatus.LUKKET) {
-            val oppgaverIderFornøkkel =
-                oppgaveV3Repository.hentOppgaveEksternIderForReservasjonsnøkkel(
-                    innkommendeOppgave.reservasjonsnøkkel,
-                    tx
-                )
-            val oppgaver = oppgaverIderFornøkkel.mapNotNull { eksternId ->
-                oppgaveV3Repository.hentAktivOppgave(eksternId, innkommendeOppgave.oppgavetype, tx)
-            }
-            if (!oppgaver.any { oppgave -> oppgave.status == Oppgavestatus.AAPEN || oppgave.status == Oppgavestatus.VENTER}) { //TODO: hvorfor må oppgave nullsafes her??
-                    reservasjonTjeneste.annullerReservasjonHvisFinnes(innkommendeOppgave.reservasjonsnøkkel, "Alle oppgaver på nøkkel er avsluttet. Annulleres maskinelt", null)
-            }
-        }
-
-         */
-
         return innkommendeOppgave
     }
 
@@ -103,7 +84,25 @@ class OppgaveV3Tjeneste(
         )
     }
 
-    fun oppdaterEkstisterendeOppgaveversjon(oppgaveDto: OppgaveDto, eventNr: Long, tx: TransactionalSession) {
+    fun hentOppgaveVersjonenFør(eksternId: String, eventNr: Long, oppgaveType: String, område: String, tx: TransactionalSession): OppgaveV3 {
+        val hentetOppgavetype = oppgavetypeRepository.hentOppgavetype(område, oppgaveType)
+        if (eventNr < 1) {
+            throw IllegalArgumentException("Kan ikke hente oppgaveversjon før første oppgaveversjon")
+        }
+        return oppgaveV3Repository.hentOppgaveversjonenFør(eksternId, internVersjon = eventNr, hentetOppgavetype, tx)!!
+    }
+
+    fun ajourholdAktivOppgave(oppgaveDto: OppgaveDto, internVersjon: Long, tx: TransactionalSession) {
+        val oppgavetype = oppgavetypeRepository.hentOppgavetype(
+            område = oppgaveDto.område,
+            eksternId = oppgaveDto.type,
+            tx = tx
+        )
+        val innkommendeOppgave = OppgaveV3(oppgaveDto, oppgavetype)
+        AktivOppgaveRepository.ajourholdAktivOppgave(innkommendeOppgave, internVersjon, tx)
+    }
+
+fun oppdaterEksisterendeOppgaveversjon(oppgaveDto: OppgaveDto, eventNr: Long, tx: TransactionalSession) {
         val oppgavetype = oppgavetypeRepository.hentOppgavetype(
             område = oppgaveDto.område,
             eksternId = oppgaveDto.type,
@@ -135,10 +134,11 @@ class OppgaveV3Tjeneste(
             tx = tx
         )
 
-        oppgaveV3Repository.lagreFeltverdier(
+        oppgaveV3Repository.lagreFeltverdierForDatavask(
             eksternId = innkommendeOppgave.eksternId,
             internVersjon = eventNr,
             oppgaveFeltverdier = innkommendeOppgave.felter,
+            oppgavestatus = Oppgavestatus.fraKode(oppgaveDto.status),
             tx = tx
         )
 
@@ -152,7 +152,7 @@ class OppgaveV3Tjeneste(
     }
 
     fun hentHøyesteInternVersjon(oppgaveEksternId: String, opppgaveTypeEksternId: String, områdeEksternId: String, tx: TransactionalSession): Long? {
-        val (_, versjon) = oppgaveV3Repository.hentOppgaveIdOgHøyesteInternversjon(tx, oppgaveEksternId, opppgaveTypeEksternId, områdeEksternId)
+        val (_, _, versjon) = oppgaveV3Repository.hentOppgaveIdStatusOgHøyesteInternversjon(tx, oppgaveEksternId, opppgaveTypeEksternId, områdeEksternId)
         return versjon
     }
 
@@ -162,11 +162,5 @@ class OppgaveV3Tjeneste(
 
     fun tellAntall(): Pair<Long, Long> {
         return oppgaveV3Repository.tellAntall()
-    }
-
-    fun destruktivSlettAvAlleOppgaveData() {
-        log.info("trunkerer oppgavedata")
-        oppgaveV3Repository.slettOppgaverOgFelter()
-        log.info("oppgavedata trunkert")
     }
 }

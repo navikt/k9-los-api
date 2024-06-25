@@ -1,14 +1,9 @@
 package no.nav.k9.los.tjenester.avdelingsleder
 
-import kotlinx.coroutines.runBlocking
-import no.nav.k9.los.domene.lager.oppgave.Reservasjon
 import no.nav.k9.los.domene.modell.*
 import no.nav.k9.los.domene.repository.OppgaveKøRepository
-import no.nav.k9.los.domene.repository.OppgaveRepository
-import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.abac.IPepClient
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Dto
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.*
@@ -25,8 +20,6 @@ class AvdelingslederTjeneste(
     private val oppgaveKøRepository: OppgaveKøRepository,
     private val saksbehandlerRepository: SaksbehandlerRepository,
     private val oppgaveTjeneste: OppgaveTjeneste,
-    private val reservasjonRepository: ReservasjonRepository,
-    private val oppgaveRepository: OppgaveRepository,
     private val pepClient: IPepClient,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
     private val reservasjonV3DtoBuilder: ReservasjonV3DtoBuilder,
@@ -331,11 +324,14 @@ class AvdelingslederTjeneste(
                     listOf(
                         ReservasjonDto(
                             reservertAvEpost = saksbehandler.epost,
+                            reservertAvIdent = saksbehandler.brukerIdent!!,
+                            reservertAvNavn = saksbehandler.navn,
                             saksnummer = reservasjonMedOppgaver.oppgaveV1.fagsakSaksnummer,
                             journalpostId = reservasjonMedOppgaver.oppgaveV1.journalpostId,
                             behandlingType = reservasjonMedOppgaver.oppgaveV1.behandlingType,
                             reservertTilTidspunkt = reservasjonMedOppgaver.reservasjonV3.gyldigTil,
-                            kommentar = reservasjonMedOppgaver.reservasjonV3.kommentar,
+                            kommentar = reservasjonMedOppgaver.reservasjonV3.kommentar ?: "",
+                            tilBeslutter = reservasjonMedOppgaver.oppgaveV1.tilBeslutter,
                             oppgavenøkkel = OppgaveNøkkelDto.forV1Oppgave(reservasjonMedOppgaver.oppgaveV1.eksternId.toString()),
                         )
                     )
@@ -343,11 +339,14 @@ class AvdelingslederTjeneste(
                     reservasjonMedOppgaver.oppgaverV3.map { oppgave ->
                         ReservasjonDto(
                             reservertAvEpost = saksbehandler.epost,
+                            reservertAvIdent = saksbehandler.brukerIdent!!,
+                            reservertAvNavn = saksbehandler.navn,
                             saksnummer = oppgave.hentVerdi("saksnummer")!!, //TODO: Oppgaveagnostisk logikk. Løses antagelig ved å skrive om frontend i dette tilfellet
                             journalpostId = null,
                             behandlingType = BehandlingType.fraKode(oppgave.hentVerdi("behandlingTypekode")!!),
                             reservertTilTidspunkt = reservasjonMedOppgaver.reservasjonV3.gyldigTil,
-                            kommentar = reservasjonMedOppgaver.reservasjonV3.kommentar,
+                            kommentar = reservasjonMedOppgaver.reservasjonV3.kommentar ?: "",
+                            tilBeslutter = oppgave.hentVerdi("liggerHosBeslutter").toBoolean(),
                             oppgavenøkkel = OppgaveNøkkelDto(oppgave),
                         )
                     }.toList()

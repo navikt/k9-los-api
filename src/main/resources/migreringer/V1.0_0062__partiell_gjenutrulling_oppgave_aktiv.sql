@@ -1,0 +1,6 @@
+drop table if exists behandling_prosess_events_k9_sak_aktivvask_ferdig;
+
+drop table if exists behandling_prosess_events_k9_klage_aktivvask_ferdig;
+
+drop table if exists behandling_prosess_events_k9_punsj_aktivvask_ferdig;
+

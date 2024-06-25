@@ -2,6 +2,8 @@ package no.nav.k9.los.nyoppgavestyring.query.db
 
 import assertk.assertThat
 import assertk.assertions.containsAll
+import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
 import org.junit.jupiter.api.Test
 
 class EksternFeltverdiOperatorTest {

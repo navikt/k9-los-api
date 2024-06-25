@@ -15,7 +15,7 @@ import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
-import no.nav.k9.los.nyoppgavestyring.query.db.FeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
@@ -233,7 +233,7 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
         val sw = StringWriter()
         om.writeValue(sw, oppgaveQuery)
 
-        val result = oppgaveQueryRepository.query(oppgaveQuery)
+        val result = oppgaveQueryRepository.query(QueryRequest(oppgaveQuery))
         return result
     }
 }

@@ -1,16 +1,19 @@
 package no.nav.k9.los.aksjonspunktbehandling
 
-import no.nav.k9.kodeverk.behandling.*
+import no.nav.k9.kodeverk.behandling.BehandlingResultatType
+import no.nav.k9.kodeverk.behandling.BehandlingStegType
+import no.nav.k9.kodeverk.behandling.BehandlingType
+import no.nav.k9.kodeverk.behandling.BehandlingÅrsakType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.kodeverk.uttak.SøknadÅrsak
 import no.nav.k9.los.domene.modell.BehandlingStatus
+import no.nav.k9.los.domene.modell.FagsakYtelseType
 import no.nav.k9.los.domene.modell.Fagsystem
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.los.integrasjon.kafka.dto.EventHendelse
-import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -29,7 +32,7 @@ class BehandlingProsessEventDtoBuilder(
     var behandlingSteg: BehandlingStegType = BehandlingStegType.KONTROLLER_FAKTA,
     var behandlendeEnhet: String? = null,
     var resultatType: BehandlingResultatType = BehandlingResultatType.IKKE_FASTSATT,
-    var ytelseTypeKode: FagsakYtelseType = FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
+    var ytelseType: FagsakYtelseType = FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
     var behandlingTypeKode: BehandlingType = BehandlingType.FØRSTEGANGSSØKNAD,
     var opprettetBehandling: LocalDateTime = LocalDateTime.now(),
     var aksjonspunkter: MutableList<AksjonspunktTilstandBuilder> = mutableListOf(),
@@ -69,6 +72,18 @@ class BehandlingProsessEventDtoBuilder(
         return this
     }
 
+    fun manueltSattPåVentMedisinskeOpplysninger(): BehandlingProsessEventDtoBuilder {
+        this.behandlingStatus = BehandlingStatus.UTREDES
+        this.eventHendelse = EventHendelse.AKSJONSPUNKT_OPPRETTET
+        this.behandlingSteg = BehandlingStegType.VURDER_MEDISINSKE_VILKÅR
+        this.resultatType = BehandlingResultatType.IKKE_FASTSATT
+        this.aksjonspunkter = mutableListOf(
+            AksjonspunktTilstandBuilder.KONTROLLER_LEGEERKLÆRING.medStatus(AksjonspunktStatus.UTFØRT),
+            AksjonspunktDefinisjon.AUTO_MANUELT_SATT_PÅ_VENT.builder().medStatus(AksjonspunktStatus.OPPRETTET)
+        )
+        return this
+    }
+
     fun foreslåVedtak(): BehandlingProsessEventDtoBuilder {
        this.behandlingStatus = BehandlingStatus.UTREDES
        this.behandlingSteg = BehandlingStegType.FORESLÅ_VEDTAK
@@ -99,9 +114,39 @@ class BehandlingProsessEventDtoBuilder(
         this.resultatType = BehandlingResultatType.INNVILGET
         this.aksjonspunkter = mutableListOf(
             AksjonspunktTilstandBuilder.KONTROLLER_LEGEERKLÆRING.medStatus(AksjonspunktStatus.UTFØRT),
-            AksjonspunktTilstandBuilder.FORESLÅ_VEDTAK.medStatus(AksjonspunktStatus.OPPRETTET),
-            AksjonspunktTilstandBuilder.FATTER_VEDTAK.medStatus(AksjonspunktStatus.AVBRUTT)
+            AksjonspunktTilstandBuilder.FORESLÅ_VEDTAK.medStatus(AksjonspunktStatus.AVBRUTT),
+            AksjonspunktTilstandBuilder.FATTER_VEDTAK.medStatus(AksjonspunktStatus.UTFØRT)
         )
+        return this
+    }
+
+    // Basert på eventer ved retur vurder opptjening på nytt
+    fun returFraBeslutterOpptjening(): BehandlingProsessEventDtoBuilder{
+        this.behandlingStatus = BehandlingStatus.UTREDES
+        this.behandlingSteg = BehandlingStegType.VURDER_OPPTJENINGSVILKÅR
+        this.resultatType = BehandlingResultatType.IKKE_FASTSATT
+        this.aksjonspunkter = mutableListOf(
+            AksjonspunktDefinisjon.VURDER_OPPTJENINGSVILKÅRET.builder().medStatus(AksjonspunktStatus.OPPRETTET),
+            AksjonspunktDefinisjon.FASTSETT_BEREGNINGSGRUNNLAG_ARBEIDSTAKER_FRILANS.builder().medStatus(AksjonspunktStatus.AVBRUTT),
+            AksjonspunktTilstandBuilder.KONTROLLER_LEGEERKLÆRING.medStatus(AksjonspunktStatus.UTFØRT),
+            AksjonspunktTilstandBuilder.FORESLÅ_VEDTAK.medStatus(AksjonspunktStatus.AVBRUTT),
+            AksjonspunktTilstandBuilder.FATTER_VEDTAK.medStatus(AksjonspunktStatus.UTFØRT),
+            AksjonspunktDefinisjon.AUTO_MANUELT_SATT_PÅ_VENT.builder().medStatus(AksjonspunktStatus.UTFØRT).medVenteårsakOgFrist(Venteårsak.AVV_DOK, LocalDateTime.now().minusDays(1))
+        )
+        return this
+    }
+
+    // Transient tilstand under iverksetting av vedtak. Brukes f.eks i tester som sjekker toleranse for rekkefølgefeil i eventer fra k9-sak.
+    fun beslutterGodkjent(ansvarligBeslutter: Saksbehandler? = TestSaksbehandler.BIRGER_BESLUTTER): BehandlingProsessEventDtoBuilder {
+        this.behandlingStatus = BehandlingStatus.UTREDES
+        this.behandlingSteg = BehandlingStegType.FATTE_VEDTAK
+        this.resultatType = BehandlingResultatType.INNVILGET
+        this.aksjonspunkter = mutableListOf(
+            AksjonspunktTilstandBuilder.KONTROLLER_LEGEERKLÆRING.medStatus(AksjonspunktStatus.UTFØRT),
+            AksjonspunktTilstandBuilder.FORESLÅ_VEDTAK.medStatus(AksjonspunktStatus.UTFØRT),
+            AksjonspunktTilstandBuilder.FATTER_VEDTAK.medStatus(AksjonspunktStatus.UTFØRT)
+        )
+        this.ansvarligSaksbehandlerForTotrinn = ansvarligBeslutter?.brukerIdent
         return this
     }
 
@@ -128,7 +173,22 @@ class BehandlingProsessEventDtoBuilder(
         return this
     }
 
-    fun build(): BehandlingProsessEventDto {
+    fun medAksjonspunkt(vararg aksjonspunkter: AksjonspunktTilstandBuilder): BehandlingProsessEventDtoBuilder {
+        this.aksjonspunkter = aksjonspunkter.toMutableList()
+        return this
+    }
+
+    fun medBehandlingSteg(behandlingSteg: BehandlingStegType): BehandlingProsessEventDtoBuilder {
+        this.behandlingSteg = behandlingSteg
+        return this
+    }
+
+    fun medBehandlingStatus(behandlingStatus: BehandlingStatus): BehandlingProsessEventDtoBuilder {
+        this.behandlingStatus = behandlingStatus
+        return this
+    }
+
+    fun build(overstyrRekkefølge: Long? = null): BehandlingProsessEventDto {
         return BehandlingProsessEventDto(
             eksternId,
             fagsystem,
@@ -152,55 +212,10 @@ class BehandlingProsessEventDtoBuilder(
             behandlingTypeKode = behandlingTypeKode.kode,
             behandlingstidFrist = behandlingstidFrist,
             eventHendelse = eventHendelse,
-            eventTid = eventTid ?: LocalDateTime.now().plusSeconds(teller++),
+            eventTid = eventTid ?: overstyrRekkefølge ?.let { LocalDateTime.now().plusSeconds(overstyrRekkefølge) } ?: LocalDateTime.now().plusSeconds(teller++),
             aksjonspunktKoderMedStatusListe = aksjonspunkter.associate { it.kode to it.status.kode }.toMutableMap(),
-            ytelseTypeKode = ytelseTypeKode.kode,
+            ytelseTypeKode = ytelseType.kode,
             eldsteDatoMedEndringFraSøker = LocalDateTime.now()
         )
     }
-}
-
-data class AksjonspunktTilstandBuilder(
-    val kode: String,
-    var status: AksjonspunktStatus = AksjonspunktStatus.OPPRETTET,
-    var venteårsak: Venteårsak? = Venteårsak.UDEFINERT,
-    var frist: LocalDateTime? = null,
-    val opprettet: LocalDateTime = LocalDateTime.now(),
-    val endret: LocalDateTime = LocalDateTime.now(),
-) {
-    fun build(): AksjonspunktTilstandDto {
-        return AksjonspunktTilstandDto(
-            kode,
-            status,
-            venteårsak,
-            "saksbehandler",
-            frist,
-            opprettet,
-            endret
-        )
-    }
-
-    fun medStatus(status: AksjonspunktStatus): AksjonspunktTilstandBuilder {
-        this.status = status
-        return this
-    }
-
-    fun medVenteårsakOgFrist(venteårsak: Venteårsak, frist: LocalDateTime? = LocalDateTime.now().plusWeeks(1)): AksjonspunktTilstandBuilder {
-        this.venteårsak = venteårsak
-        this.frist = frist
-        return this
-    }
-
-    companion object {
-        val KONTROLLER_LEGEERKLÆRING = AksjonspunktDefinisjon.KONTROLLER_LEGEERKLÆRING.builder().medStatus(AksjonspunktStatus.OPPRETTET)
-        val VENTER_PÅ_IM = AksjonspunktDefinisjon.AUTO_VENT_ETTERLYST_INNTEKTSMELDING.builder()
-            .medStatus(AksjonspunktStatus.OPPRETTET)
-            .medVenteårsakOgFrist(Venteårsak.VENTER_PÅ_ETTERLYST_INNTEKTSMELDINGER)
-        val FORESLÅ_VEDTAK = AksjonspunktDefinisjon.FORESLÅ_VEDTAK.builder().medStatus(AksjonspunktStatus.OPPRETTET)
-        val FATTER_VEDTAK = AksjonspunktDefinisjon.FATTER_VEDTAK.builder().medStatus(AksjonspunktStatus.OPPRETTET)
-    }
-}
-
-fun AksjonspunktDefinisjon.builder(): AksjonspunktTilstandBuilder {
-    return AksjonspunktTilstandBuilder(kode)
 }

@@ -18,8 +18,12 @@ class K9KlageEventHandler constructor(
     fun prosesser(
         eventInn: KlagebehandlingProsessHendelse
     ) {
+        val t0 = System.nanoTime()
         val event = håndterVaskeevent(eventInn)
-        if (event == null) return
+        if (event == null) {
+            EventHandlerMetrics.observe("k9klage", "vaskeevent", t0)
+            return
+        }
 
         behandlingProsessEventKlageRepository.lagre(event.eksternId!!) { k9KlageModell ->
             if (k9KlageModell == null) {
@@ -33,6 +37,7 @@ class K9KlageEventHandler constructor(
             k9KlageModell
         }
         k9KlageTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId)
+        EventHandlerMetrics.observe("k9klage", "gjennomført", t0)
     }
 
     fun håndterVaskeevent(event: KlagebehandlingProsessHendelse): KlagebehandlingProsessHendelse? {

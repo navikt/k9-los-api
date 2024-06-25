@@ -35,6 +35,7 @@
     <logger name="nav" level="INFO"/>
     <logger name="no.nav" level="INFO"/>
     <logger name="io.ktor.auth.jwt" level="TRACE"/>
+    <logger name="no.nav.k9.kodeverk.TempAvledeKode" level="WARN"/>
 
     <logger name="auditLogger" level="INFO" additivity="false">
         <appender-ref ref="auditLogger" />

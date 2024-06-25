@@ -38,33 +38,35 @@ class K9TilbakeEventHandler(
     fun prosesser(
         event: BehandlingProsessEventTilbakeDto
     ) {
-        val modell = behandlingProsessEventTilbakeRepository.lagre(event)
-        val oppgave = modell.oppgave(modell.sisteEvent())
+        EventHandlerMetrics.time("k9tilbake", "gjennomført") {
+            val modell = behandlingProsessEventTilbakeRepository.lagre(event)
+            val oppgave = modell.oppgave(modell.sisteEvent())
 
-        oppgaveRepository.lagre(oppgave.eksternId) {
-            tellEvent(modell, oppgave)
-            oppgave
-        }
+            oppgaveRepository.lagre(oppgave.eksternId) {
+                tellEvent(modell, oppgave)
+                oppgave
+            }
 
-        if (modell.fikkEndretAksjonspunkt()) {
-            log.info("Fjerner reservasjon på oppgave ${oppgave.eksternId}")
-            reservasjonTjeneste.fjernReservasjon(oppgave)
-            val reservasjonV3 =
-                reservasjonOversetter.hentAktivReservasjonFraGammelKontekst(oppgave)
-            reservasjonV3?.let {
-                val identSomAnnullerer = if (oppgave.tilBeslutter) { event.ansvarligSaksbehandlerIdent } else { event.ansvarligBeslutterIdent ?: event.ansvarligSaksbehandlerIdent }
-                identSomAnnullerer?.let {
-                    val saksbehandlerSomAnnullerer = runBlocking { saksbehandlerRepository.finnSaksbehandlerMedIdent(identSomAnnullerer)!! }
-                    reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(reservasjonV3.reservasjonsnøkkel, "Tilbakekrav - annullerer ", saksbehandlerSomAnnullerer.id!!)
+            if (modell.fikkEndretAksjonspunkt()) {
+                log.info("Fjerner reservasjon på oppgave ${oppgave.eksternId}")
+                reservasjonTjeneste.fjernReservasjon(oppgave)
+                val reservasjonV3 =
+                    reservasjonOversetter.hentAktivReservasjonFraGammelKontekst(oppgave)
+                reservasjonV3?.let {
+                    val identSomAnnullerer = if (oppgave.tilBeslutter) { event.ansvarligSaksbehandlerIdent } else { event.ansvarligBeslutterIdent ?: event.ansvarligSaksbehandlerIdent }
+                    identSomAnnullerer?.let {
+                        val saksbehandlerSomAnnullerer = runBlocking { saksbehandlerRepository.finnSaksbehandlerMedIdent(identSomAnnullerer)!! }
+                        reservasjonV3Tjeneste.annullerReservasjonHvisFinnes( reservasjonV3.reservasjonsnøkkel, "Tilbakekrav - annullerer ", saksbehandlerSomAnnullerer.id!!)
+                    }
                 }
             }
-        }
 
-        runBlocking {
-            for (oppgavekø in oppgaveKøRepository.hentKøIdIkkeTaHensyn()) {
-                oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, listOf(oppgave), reservasjonRepository)
+            runBlocking {
+                for (oppgavekø in oppgaveKøRepository.hentKøIdIkkeTaHensyn()) {
+                    oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, listOf(oppgave), reservasjonRepository)
+                }
+                statistikkChannel.send(true)
             }
-            statistikkChannel.send(true)
         }
     }
 

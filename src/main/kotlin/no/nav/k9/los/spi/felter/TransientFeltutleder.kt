@@ -1,6 +1,6 @@
 package no.nav.k9.los.spi.felter
 
-import no.nav.k9.los.nyoppgavestyring.query.db.FeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import java.time.LocalDateTime
 

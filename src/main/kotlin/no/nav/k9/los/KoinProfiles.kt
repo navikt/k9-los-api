@@ -38,14 +38,18 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerike
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerKlientLocal
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerSystemKlient
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonKonverteringJobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.k9SakEksternId
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAktivvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosLukkeFeiloppgaverTjeneste
+import no.nav.k9.los.nyoppgavestyring.forvaltning.ForvaltningRepository
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
@@ -107,6 +111,9 @@ fun common(app: Application, config: Configuration) = module {
     }
     single(named("statistikkRefreshChannel")) {
         Channel<Boolean>(Channel.CONFLATED)
+    }
+    single(named("historikkvaskChannelK9Sak")) {
+        Channel<k9SakEksternId>(Channel.UNLIMITED)
     }
 
     single { no.nav.k9.los.domene.repository.OppgaveRepository(get(), get(), get(named("oppgaveRefreshChannel"))) }
@@ -254,7 +261,8 @@ fun common(app: Application, config: Configuration) = module {
             reservasjonRepository = get(),
             reservasjonTjeneste = get(),
             statistikkRepository = get(),
-            azureGraphService = get()
+            azureGraphService = get(),
+            punsjTilLosAdapterTjeneste = get()
         )
     }
 
@@ -321,8 +329,6 @@ fun common(app: Application, config: Configuration) = module {
             oppgaveKøRepository = get(),
             saksbehandlerRepository = get(),
             oppgaveTjeneste = get(),
-            reservasjonRepository = get(),
-            oppgaveRepository = get(),
             pepClient = get(),
             reservasjonV3Tjeneste = get(),
             reservasjonV3DtoBuilder = get(),
@@ -343,7 +349,7 @@ fun common(app: Application, config: Configuration) = module {
         SakslisteTjeneste(oppgaveTjeneste = get())
     }
     single {
-        HentKodeverkTjeneste()
+        HentKodeverkTjeneste(configuration = get())
     }
 
     single { OppgaveKøOppdaterer(get(), get(), get()) }
@@ -378,7 +384,12 @@ fun common(app: Application, config: Configuration) = module {
     single { K9SakOppgaveTilDVHMapper() }
     single { K9KlageOppgaveTilDVHMapper() }
     single { OppgaveRepository(oppgavetypeRepository = get()) }
-    single { StatistikkRepository(dataSource = get()) }
+    single {
+        StatistikkRepository(
+            dataSource = get(),
+            oppgavetypeRepository = get(),
+        )
+    }
 
     single {
         StatistikkPublisher(
@@ -389,7 +400,6 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         OppgavestatistikkTjeneste(
-            oppgaveRepository = get(),
             oppgavetypeRepository = get(),
             statistikkPublisher = get(),
             transactionalManager = get(),
@@ -411,7 +421,6 @@ fun common(app: Application, config: Configuration) = module {
             oppgaveV3Repository = get(),
             oppgavetypeRepository = get(),
             områdeRepository = get(),
-            reservasjonTjeneste = get()
         )
     }
     single {
@@ -431,6 +440,18 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
+        K9PunsjTilLosAdapterTjeneste(
+            eventRepository = get(),
+            oppgavetypeTjeneste = get(),
+            oppgaveV3Tjeneste = get(),
+            reservasjonV3Tjeneste = get(),
+            config = get(),
+            transactionalManager = get(),
+            pepCacheService = get()
+        )
+    }
+
+    single {
         K9SakTilLosAdapterTjeneste(
             behandlingProsessEventK9Repository = get(),
             oppgavetypeTjeneste = get(),
@@ -441,7 +462,7 @@ fun common(app: Application, config: Configuration) = module {
             pepCacheService = get(),
             oppgaveRepository = get(),
             reservasjonV3Tjeneste = get(),
-
+            historikkvaskChannel = get(named("historikkvaskChannelK9Sak"))
         )
     }
 
@@ -498,7 +519,17 @@ fun common(app: Application, config: Configuration) = module {
             oppgaveV3Tjeneste = get(),
             config = get(),
             transactionalManager = get(),
-            oppgaveRepositoryV2 = get(),
+            k9SakTilLosAdapterTjeneste = get(),
+            k9SakBerikerKlient = get()
+        )
+    }
+
+    single {
+        K9SakTilLosAktivvaskTjeneste(
+            behandlingProsessEventK9Repository = get(),
+            oppgaveV3Tjeneste = get(),
+            config = get(),
+            transactionalManager = get(),
             k9SakTilLosAdapterTjeneste = get(),
             k9SakBerikerKlient = get()
         )
@@ -559,7 +590,6 @@ fun common(app: Application, config: Configuration) = module {
             saksbehandlerRepository = get(),
             reservasjonV3Tjeneste = get(),
             oppgaveV3Repository = get(),
-            oppgaveV3RepositoryMedTxWrapper = get(),
             transactionalManager = get(),
             reservasjonV3DtoBuilder = get(),
             reservasjonOversetter = get(),
@@ -625,7 +655,8 @@ fun preprodConfig(config: Configuration) = module {
         PdlService(
             baseUrl = config.pdlUrl(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
-            scope = "api://dev-fss.pdl.pdl-api/.default"
+            scope = "api://dev-fss.pdl.pdl-api/.default",
+            azureGraphService = get<IAzureGraphService>()
         )
     }
 
@@ -637,6 +668,12 @@ fun preprodConfig(config: Configuration) = module {
         )
     }
 
+    single<ForvaltningRepository> {
+        ForvaltningRepository(
+            oppgavetypeRepository = get(),
+            transactionalManager = get(),
+        )
+    }
 }
 
 fun prodConfig(config: Configuration) = module {
@@ -662,7 +699,8 @@ fun prodConfig(config: Configuration) = module {
         PdlService(
             baseUrl = config.pdlUrl(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
-            scope = "api://prod-fss.pdl.pdl-api/.default"
+            scope = "api://prod-fss.pdl.pdl-api/.default",
+            azureGraphService = get<IAzureGraphService>()
         )
     }
 

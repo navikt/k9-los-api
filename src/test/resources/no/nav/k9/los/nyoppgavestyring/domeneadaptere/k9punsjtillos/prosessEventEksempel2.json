@@ -1,0 +1,45 @@
+{
+  "eventer": [
+    {
+      "type": "PAPIRSØKNAD",
+      "ytelse": "PSB",
+      "aktørId": "2566121347906",
+      "eventTid": "2024-01-23T14:21:31.262471127",
+      "sendtInn": null,
+      "eksternId": "b0de30d4-df5f-4abb-9b2e-6641de76550e",
+      "ferdigstiltAv": null,
+      "journalpostId": "637576045",
+      "pleietrengendeAktørId": null,
+      "aksjonspunktKoderMedStatusListe": {
+        "PUNSJ": "OPPR"
+      }
+    },
+    {
+      "type": "PAPIRSØKNAD",
+      "ytelse": "PSB",
+      "aktørId": "2566121347906",
+      "eventTid": "2024-01-23T14:22:34.443515245",
+      "sendtInn": null,
+      "eksternId": "b0de30d4-df5f-4abb-9b2e-6641de76550e",
+      "ferdigstiltAv": null,
+      "journalpostId": "637576045",
+      "journalfortTidspunkt": "2024-01-23T14:22:34.443515245",
+      "pleietrengendeAktørId": null,
+      "aksjonspunktKoderMedStatusListe": {
+        "PUNSJ": "OPPR"
+      }
+    },
+    {
+      "type": null,
+      "ytelse": null,
+      "aktørId": "2566121347906",
+      "eventTid": "2024-01-23T14:33:41.965984564",
+      "sendtInn": true,
+      "eksternId": "b0de30d4-df5f-4abb-9b2e-6641de76550e",
+      "ferdigstiltAv": "Z994145",
+      "journalpostId": "637576045",
+      "pleietrengendeAktørId": null,
+      "aksjonspunktKoderMedStatusListe": {}
+    }
+  ]
+}
