@@ -215,7 +215,17 @@ class BehandlingProsessEventK9Repository(private val dataSource: DataSource) {
                         """
                             select count(*) as antall
                             from behandling_prosess_events_k9 e
-                            where not exists (select * from behandling_prosess_events_k9_sak_aktivvask_ferdig hv where hv.id = e.id)
+                            where not exists (
+                                select * 
+                                from oppgave_v3_aktiv ova
+                                    inner join oppgave_v3 ov 
+                                        on ov.ekstern_id = ova.ekstern_id
+                                            and ov.oppgavetype_id = ova.oppgavetype_id
+                                            and ov.kildeomrade = ova.kildeomrade 
+                                            and ova.versjon = ov.versjon 
+                                            and ov.aktiv
+                                where e.id = ov.ekstern_id 
+                                )
                              """.trimMargin(),
                     ).map { it.long("antall") }.asSingle
                 )!!
@@ -231,7 +241,17 @@ class BehandlingProsessEventK9Repository(private val dataSource: DataSource) {
                         """
                             select * 
                             from behandling_prosess_events_k9 e
-                            where not exists (select * from behandling_prosess_events_k9_sak_aktivvask_ferdig hv where hv.id = e.id)
+                            where not exists (
+                                select * 
+                                from oppgave_v3_aktiv ova
+                                    inner join oppgave_v3 ov 
+                                        on ov.ekstern_id = ova.ekstern_id
+                                            and ov.oppgavetype_id = ova.oppgavetype_id
+                                            and ov.kildeomrade = ova.kildeomrade 
+                                            and ova.versjon = ov.versjon 
+                                            and ov.aktiv
+                                where e.id = ov.ekstern_id 
+                                )
                             and e.dirty = false
                             LIMIT :antall
                              """.trimMargin(),
@@ -239,27 +259,6 @@ class BehandlingProsessEventK9Repository(private val dataSource: DataSource) {
                     ).map { row ->
                         UUID.fromString(row.string("id"))
                     }.asList
-                )
-            }
-        }
-    }
-
-    fun markerVasketAktiv(uuid: UUID, tx: TransactionalSession) {
-        tx.run(
-            queryOf(
-                """insert into behandling_prosess_events_k9_sak_aktivvask_ferdig(id) values (:uuid)""",
-                mapOf("uuid" to uuid.toString())
-            ).asUpdate
-        )
-    }
-
-    fun nullstillAktivvask() {
-        using(sessionOf(dataSource)) {
-            it.transaction { tx ->
-                tx.run(
-                    queryOf(
-                        """delete from behandling_prosess_events_k9_sak_aktivvask_ferdig"""
-                    ).asUpdate
                 )
             }
         }
