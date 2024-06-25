@@ -45,7 +45,7 @@ class OppgaveRepository(
         val queryString = """
                 select *
                 from oppgave_v3 ov 
-                where reservasjonsnokkel in ('${reservasjonsnøkler.joinToString("','")}')
+                where reservasjonsnokkel in (${InClauseHjelper.tilParameternavn(reservasjonsnøkler, "n")})
                 and aktiv = true
                 and status in ('VENTER', 'AAPEN')
             """.trimIndent()
