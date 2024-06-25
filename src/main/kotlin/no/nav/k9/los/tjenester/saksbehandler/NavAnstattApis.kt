@@ -31,12 +31,7 @@ internal fun Route.NavAnsattApis() {
                     token.getUsername(),
                     token.getName(),
                     brukerIdent = saksbehandlerIdent,
-                    kanSaksbehandle = pepClient.harBasisTilgang(),
-                    kanVeilede = pepClient.harBasisTilgang(),
-                    kanBeslutte = pepClient.harBasisTilgang(),
-                    kanBehandleKodeEgenAnsatt = pepClient.harBasisTilgang(),
-                    kanBehandleKode6 = pepClient.harBasisTilgang(),
-                    kanBehandleKode7 = pepClient.harBasisTilgang(),
+                    kanSaksbehandle = pepClient.harBasisTilgang(), //TODO mismatch mellom navnet 'kanSaksbehandle' og at alle som har tilgang til systemet har basistilgang
                     kanOppgavestyre = pepClient.erOppgaveStyrer(),
                     kanReservere = pepClient.harTilgangTilReservingAvOppgaver(),
                     kanDrifte = pepClient.kanLeggeUtDriftsmelding()
@@ -64,11 +59,6 @@ internal fun Route.NavAnsattApis() {
                     "Saksbehandler Sara",
                     "Z123456",
                     kanSaksbehandle = true,
-                    kanVeilede = true,
-                    kanBeslutte = true,
-                    kanBehandleKodeEgenAnsatt = true,
-                    kanBehandleKode6 = true,
-                    kanBehandleKode7 = true,
                     kanOppgavestyre = true,
                     kanReservere = true,
                     kanDrifte = true
