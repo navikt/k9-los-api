@@ -307,6 +307,12 @@ fun Application.k9Los() {
                 route("forvaltning") {
                     innsiktGrensesnitt()
                     forvaltningApis()
+                    route("/swagger") {
+                        route("openapi.json") {
+                            openApiSpec()
+                        }
+                        swaggerUI("openapi.json")
+                    }
                 }
                 api(sseChannel)
             }
