@@ -123,16 +123,10 @@ class K9SakTilLosAktivvaskTjeneste(
         val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
 
         val høyesteInternVersjon =
-            oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9sak", "K9", tx)!!
-
-        val eventNrForBehandling = behandlingProsessEventer.size-1
-        if (eventNrForBehandling > høyesteInternVersjon) {
-            log.warn("Skipper aktivvask av behandling: $uuid, eventNrForBehandling: $eventNrForBehandling, høyesteInternVersjon: $høyesteInternVersjon")
-            return 0 //ligge unna oppgaver som ikke er oppdatert. De blir straks oppdatert av normalflyt
-        }
+            oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9sak", "K9", tx)
 
         val event = behandlingProsessEventer.last()
-        val forrigeOppgave = if (eventNrForBehandling > 0) { oppgaveV3Tjeneste.hentOppgaveVersjonenFør(uuid.toString(), høyesteInternVersjon, "k9sak", "K9", tx) } else null
+        val forrigeOppgave = if (høyesteInternVersjon != null) { oppgaveV3Tjeneste.hentOppgaveVersjonenFør(uuid.toString(), høyesteInternVersjon, "k9sak", "K9", tx) } else null
 
         val nyeBehandlingsopplysningerFraK9Sak = k9SakBerikerKlient.hentBehandling(UUID.fromString(uuid.toString()))
         if (event.eldsteDatoMedEndringFraSøker == null && nyeBehandlingsopplysningerFraK9Sak != null && nyeBehandlingsopplysningerFraK9Sak.eldsteDatoMedEndringFraSøker != null) {
@@ -149,7 +143,7 @@ class K9SakTilLosAktivvaskTjeneste(
             nyeBehandlingsopplysningerFraK9Sak
         )
 
-        oppgaveV3Tjeneste.ajourholdAktivOppgave(oppgaveDto, eventNrForBehandling.toLong(), tx)
+        oppgaveV3Tjeneste.ajourholdAktivOppgave(oppgaveDto, høyesteInternVersjon ?: 0, tx)
         log.info("Ajourholdt aktiv oppgave for behandling: $uuid")
         return 1
     }
