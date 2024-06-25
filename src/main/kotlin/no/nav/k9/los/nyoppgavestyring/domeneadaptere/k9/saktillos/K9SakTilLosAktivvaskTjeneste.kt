@@ -62,6 +62,7 @@ class K9SakTilLosAktivvaskTjeneste(
 
                     log.info("Starter vaskeiterasjon på ${behandlingsIder.size} behandlinger")
                     eventTeller += spillAvBehandlingProsessEventer(behandlingsIder)
+                    log.info("Iterasjon ferdig. Endret $eventTeller behandlinger")
                     behandlingTeller += behandlingsIder.count()
                     AktivvaskMetrikker.observe(TRÅDNAVN, t0)
                     t0 = System.nanoTime()
