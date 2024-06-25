@@ -172,8 +172,7 @@ fun Application.k9Los() {
         oppdaterStatistikk(
             channel = koin.get<Channel<Boolean>>(named("statistikkRefreshChannel")),
             statistikkRepository = koin.get(),
-            oppgaveTjeneste = koin.get(),
-            oppgaveKøRepository = koin.get()
+            oppgaveTjeneste = koin.get()
         )
 
     PepCacheOppdaterer(koin.get()).run {
