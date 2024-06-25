@@ -66,7 +66,12 @@ data class ReservasjonV3Dto(
         endretAvNavn = endretAvNavn ?: ""
     )
 
-    constructor(reservasjonV3: ReservasjonV3MedEndring, oppgave: OppgaveDto?, reservertAv: Saksbehandler) : this(
+    constructor(
+        reservasjonV3: ReservasjonV3MedEndring,
+        oppgave: OppgaveDto?,
+        reservertAv: Saksbehandler,
+        endretAvNavn: String?
+    ) : this(
         reserverteV3Oppgaver = emptyList(),
         reservertOppgaveV1Dto = oppgave,
         reservasjonsnøkkel = reservasjonV3.reservasjonsnøkkel,
@@ -76,7 +81,7 @@ data class ReservasjonV3Dto(
         kommentar = reservasjonV3.kommentar ?: "",
         reservertFra = reservasjonV3.gyldigFra,
         reservertTil = reservasjonV3.gyldigTil,
-        endretAvNavn = ""
+        endretAvNavn = endretAvNavn ?: ""
 
     )
 }
