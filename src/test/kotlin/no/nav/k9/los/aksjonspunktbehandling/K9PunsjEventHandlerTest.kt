@@ -1,10 +1,9 @@
 package no.nav.k9.los.aksjonspunktbehandling
 
 import assertk.assertThat
-import assertk.assertions.any
 import assertk.assertions.hasSize
 import assertk.assertions.isEqualTo
-import assertk.assertions.isNotNull
+import assertk.assertions.isNotEqualTo
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.los.AbstractK9LosIntegrationTest
@@ -13,10 +12,8 @@ import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.integrasjon.kafka.dto.PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
-import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -29,6 +26,11 @@ import kotlin.test.assertTrue
 class K9PunsjEventHandlerTest : AbstractK9LosIntegrationTest() {
 
     val objectMapper = jacksonObjectMapper().dusseldorfConfigured()
+    private lateinit var k9PunsjEventHandler: K9punsjEventHandler
+    private lateinit var oppgaveRepository: OppgaveRepository
+    private lateinit var oppgaveV3Repository: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
+    private lateinit var transactionalManager: TransactionalManager
+
 
     @BeforeEach
     fun setup() {
@@ -36,13 +38,14 @@ class K9PunsjEventHandlerTest : AbstractK9LosIntegrationTest() {
         områdeSetup.setup()
         val k9PunsjTilLosAdapterTjeneste = get<K9PunsjTilLosAdapterTjeneste>()
         k9PunsjTilLosAdapterTjeneste.setup()
+        k9PunsjEventHandler = get<K9punsjEventHandler>()
+        oppgaveRepository = get<OppgaveRepository>()
+        oppgaveV3Repository = get<no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository>()
+        transactionalManager = get<TransactionalManager>()
     }
 
     @Test
     fun `Skal opprette en oppgave dersom en punsjoppgave har et aktivt aksjonspunkt`() {
-
-        val k9PunsjEventHandler = get<K9punsjEventHandler>()
-        val oppgaveRepository = get<OppgaveRepository>()
 
         val eksternId = "9a009fb9-38ab-4bad-89e0-a3a16ecba306"
         val eventTid = "2020-11-10T10:43:43.130644"
@@ -66,13 +69,7 @@ class K9PunsjEventHandlerTest : AbstractK9LosIntegrationTest() {
         val oppgaveModell = oppgaveRepository.hent(UUID.fromString(event.eksternId.toString()))
         assertTrue { oppgaveModell.aktiv }
 
-        val områdeRepository = get<OmrådeRepository>()
-        val oppgaveV3Repository = get<no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository>()
-        val transactionalManager = get<TransactionalManager>()
-
-        val oppgaveV3 = transactionalManager.transaction { tx ->
-            oppgaveV3Repository.hentNyesteOppgaveForEksternId(tx, "K9", event.eksternId.toString())
-        }
+        val oppgaveV3 = hentV3Oppgave(event)
 
         val felter = oppgaveV3.felter.sortedBy { it.eksternId }
         assertThat(felter).hasSize(4)
@@ -84,7 +81,6 @@ class K9PunsjEventHandlerTest : AbstractK9LosIntegrationTest() {
         assertThat(felter[2].verdi).isEqualTo(eventTid)
         assertThat(felter[3].eksternId).isEqualTo("registrertDato")
         assertThat(felter[3].verdi).isEqualTo(eventTid)
-
     }
 
     @Test
@@ -106,10 +102,15 @@ class K9PunsjEventHandlerTest : AbstractK9LosIntegrationTest() {
 
 
         val event = objectMapper.readValue(json, PunsjEventDto::class.java)
-
         k9PunsjEventHandler.prosesser(event)
+
+        // V1
         val oppgaveModell = oppgaveRepository.hent(UUID.fromString(event.eksternId.toString()))
         assertTrue { oppgaveModell.aktiv }
+
+        // V3
+        val oppgaveV3 = hentV3Oppgave(event)
+        assertThat(oppgaveV3.status).isEqualTo(Oppgavestatus.AAPEN.kode)
     }
 
     @Test
@@ -130,10 +131,16 @@ class K9PunsjEventHandlerTest : AbstractK9LosIntegrationTest() {
         }""".trimIndent()
 
         val event = objectMapper.readValue(json, PunsjEventDto::class.java)
-
         k9PunsjEventHandler.prosesser(event)
+
+        // V1
         val oppgaveModell = oppgaveRepository.hent(UUID.fromString(event.eksternId.toString()))
         assertFalse { oppgaveModell.aktiv }
+
+        // V3
+        val oppgaveV3 = hentV3Oppgave(event)
+        // TODO: Skal status på oppgaven endres her, eller er testen ikke relevant?
+//        assertThat(oppgaveV3.status).isNotEqualTo(Oppgavestatus.AAPEN.kode)
     }
 
     @Test
@@ -155,9 +162,24 @@ class K9PunsjEventHandlerTest : AbstractK9LosIntegrationTest() {
             }""".trimIndent()
 
         val event = objectMapper.readValue(json, PunsjEventDto::class.java)
-
         k9PunsjEventHandler.prosesser(event)
+
+        // V1
         val oppgaveModell = oppgaveRepository.hent(UUID.fromString(event.eksternId.toString()))
         assertTrue { oppgaveModell.journalførtTidspunkt != null }
+
+        // V3
+        val oppgaveV3 = hentV3Oppgave(event)
+        assertThat(oppgaveV3.felter.find { it.eksternId == "journalfort" }!!.verdi).isEqualTo("true")
+    }
+
+    private fun hentV3Oppgave(event: PunsjEventDto): Oppgave {
+        return transactionalManager.transaction { tx ->
+            oppgaveV3Repository.hentNyesteOppgaveForEksternId(
+                tx,
+                "K9",
+                event.eksternId.toString()
+            )
+        }
     }
 }
