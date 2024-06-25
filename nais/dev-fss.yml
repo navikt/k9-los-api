@@ -21,10 +21,10 @@ spec:
   resources:
     limits:
       cpu: "4000m"
-      memory: "4096Mi"
+      memory: "600Mi"
     requests:
       cpu: "1000m"
-      memory: "2048Mi"
+      memory: "600Mi"
   replicas:
     min: 1
     max: 1
