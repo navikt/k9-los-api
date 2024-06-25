@@ -125,9 +125,9 @@ class K9SakTilLosAktivvaskTjeneste(
         val høyesteInternVersjon =
             oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9sak", "K9", tx)!!
 
-        var eventNrForBehandling = behandlingProsessEventer.size-1
+        val eventNrForBehandling = behandlingProsessEventer.size-1
         if (eventNrForBehandling > høyesteInternVersjon) {
-            log.warn("Skipper aktivvask av behandling: $uuid")
+            log.warn("Skipper aktivvask av behandling: $uuid, eventNrForBehandling: $eventNrForBehandling, høyesteInternVersjon: $høyesteInternVersjon")
             return 0 //ligge unna oppgaver som ikke er oppdatert. De blir straks oppdatert av normalflyt
         }
 
