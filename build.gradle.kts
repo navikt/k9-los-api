@@ -82,6 +82,8 @@ dependencies {
         exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
     }
 
+    implementation( "io.github.smiley4:ktor-swagger-ui:3.0.0")
+
 
     // DI
     implementation("io.insert-koin:koin-core:$koinVersion")
