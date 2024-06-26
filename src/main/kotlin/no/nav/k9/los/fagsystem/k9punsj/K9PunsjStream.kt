@@ -12,6 +12,7 @@ import no.nav.k9.los.integrasjon.kafka.ManagedStreamHealthy
 import no.nav.k9.los.integrasjon.kafka.ManagedStreamReady
 import no.nav.k9.los.integrasjon.kafka.IKafkaConfig
 import no.nav.k9.los.utils.LosObjectMapper
+import no.nav.k9.los.utils.TransientFeilHåndterer
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.Topology
@@ -58,8 +59,9 @@ internal class K9PunsjStream constructor(
                 ).peek { _, e -> log.info("--> K9PunsjHendelse: ${e.safeToString() }") }
                 .foreach { _, entry ->
                     if (entry != null) {
-                        runBlocking {
-                            k9PunsjEventHandler.prosesser(entry)
+                        TransientFeilHåndterer().utfør(NAME) {
+                            runBlocking {
+                             k9PunsjEventHandler.prosesser(entry) }
                         }
                     }
                 }
