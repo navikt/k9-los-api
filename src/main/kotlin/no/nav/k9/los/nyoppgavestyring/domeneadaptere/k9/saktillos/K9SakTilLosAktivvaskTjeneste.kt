@@ -126,7 +126,7 @@ class K9SakTilLosAktivvaskTjeneste(
             oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9sak", "K9", tx)
 
         val event = behandlingProsessEventer.last()
-        val forrigeOppgave = if (høyesteInternVersjon != null) { oppgaveV3Tjeneste.hentOppgaveVersjonenFør(uuid.toString(), høyesteInternVersjon, "k9sak", "K9", tx) } else null
+        val forrigeOppgave = if (høyesteInternVersjon != null && høyesteInternVersjon > 0) { oppgaveV3Tjeneste.hentOppgaveVersjonenFør(uuid.toString(), høyesteInternVersjon, "k9sak", "K9", tx) } else null
 
         val nyeBehandlingsopplysningerFraK9Sak = k9SakBerikerKlient.hentBehandling(UUID.fromString(uuid.toString()))
         if (event.eldsteDatoMedEndringFraSøker == null && nyeBehandlingsopplysningerFraK9Sak != null && nyeBehandlingsopplysningerFraK9Sak.eldsteDatoMedEndringFraSøker != null) {
