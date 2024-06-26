@@ -46,9 +46,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.k9SakEksternId
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAktivvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosLukkeFeiloppgaverTjeneste
 import no.nav.k9.los.nyoppgavestyring.forvaltning.ForvaltningRepository
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
@@ -525,17 +523,6 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        K9SakTilLosAktivvaskTjeneste(
-            behandlingProsessEventK9Repository = get(),
-            oppgaveV3Tjeneste = get(),
-            config = get(),
-            transactionalManager = get(),
-            k9SakTilLosAdapterTjeneste = get(),
-            k9SakBerikerKlient = get()
-        )
-    }
-
-    single {
         K9KlageTilLosHistorikkvaskTjeneste(
             behandlingProsessEventKlageRepository = get(),
             områdeRepository = get(),
@@ -545,16 +532,6 @@ fun common(app: Application, config: Configuration) = module {
             config = get(),
             transactionalManager = get(),
             k9sakBeriker = get(),
-        )
-    }
-
-    single {
-        K9SakTilLosLukkeFeiloppgaverTjeneste(
-            behandlingProsessEventK9Repository = get(),
-            oppgaveV3Tjeneste = get(),
-            config = get(),
-            transactionalManager = get(),
-            k9SakBerikerKlient = get(),
         )
     }
 
