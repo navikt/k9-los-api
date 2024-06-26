@@ -141,7 +141,7 @@ class OppgaveTjeneste constructor(
         }
 
         var iderPåOppgaverSomSkalBliReservert = oppgaverSomSkalBliReservert.map { o -> o.id }.toSet()
-        val gamleReservasjoner = reservasjonRepository.hent(iderPåOppgaverSomSkalBliReservert)
+        val gamleReservasjoner = reservasjonRepository.hentOgFjernInaktiveReservasjoner(iderPåOppgaverSomSkalBliReservert)
         val reserveresAvIdent = overstyrIdent ?: ident
         val aktiveReservasjoner =
             gamleReservasjoner.filter { rev -> rev.erAktiv() && rev.reservertAv != reserveresAvIdent }.toList()
@@ -985,9 +985,9 @@ class OppgaveTjeneste constructor(
         }
 
         val iderPåOppgaverSomSkalBliReservert = oppgaverSomSkalBliReservert.map { o -> o.id }.toSet()
-        log.info("OppgaveFraKø: Prøver å reservere ${iderPåOppgaverSomSkalBliReservert.joinToString(", ")} for $brukerident")
 
-        val gamleReservasjoner = reservasjonRepository.hent(iderPåOppgaverSomSkalBliReservert)
+        val gamleReservasjoner = reservasjonRepository.hentOgFjernInaktiveReservasjoner(iderPåOppgaverSomSkalBliReservert)
+
         val aktiveReservasjoner =
             gamleReservasjoner.filter { rev -> rev.erAktiv() && rev.reservertAv != brukerident }.toList()
 
@@ -1093,7 +1093,7 @@ class OppgaveTjeneste constructor(
         ident: String,
         oppgaveKøId: String
     ): List<Oppgave> {
-        val reservasjoneneTilSaksbehandler = reservasjonRepository.hent(ident).map { it.oppgave }
+        val reservasjoneneTilSaksbehandler = reservasjonRepository.hentOgFjernInaktiveReservasjonerForSaksbehandler(ident).map { it.oppgave }
         if (reservasjoneneTilSaksbehandler.isEmpty()) {
             return emptyList()
         }

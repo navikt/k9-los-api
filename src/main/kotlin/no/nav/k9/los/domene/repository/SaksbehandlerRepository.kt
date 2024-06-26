@@ -1,7 +1,6 @@
 package no.nav.k9.los.domene.repository
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import kotlinx.coroutines.runBlocking
 import kotliquery.*
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.integrasjon.abac.IPepClient
@@ -74,32 +73,43 @@ class SaksbehandlerRepository(
         id: String,
         f: (Saksbehandler?) -> Saksbehandler
     ) {
+        using(sessionOf(dataSource)) {
+            it.transaction { tx ->
+                lagreMedIdIkkeTaHensyn(tx, id, f)
+            }
+        }
+    }
+
+    private fun lagreMedIdIkkeTaHensyn(
+        tx: TransactionalSession,
+        id: String,
+        f: (Saksbehandler?) -> Saksbehandler
+    ) {
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
 
-        using(sessionOf(dataSource)) {
-            it.transaction { tx ->
-                val run = tx.run(
-                    queryOf(
-                        "select data from saksbehandler where saksbehandlerid = :saksbehandlerid for update",
-                        mapOf("saksbehandlerid" to id)
-                    )
-                        .map { row ->
-                            row.stringOrNull("data")
-                        }.asSingle
-                )
-                val forrige: Saksbehandler?
-                val saksbehandler = if (!run.isNullOrEmpty()) {
-                    forrige = LosObjectMapper.instance.readValue(run, Saksbehandler::class.java)
-                    f(forrige)
-                } else {
-                    f(null)
-                }
 
-                val json = LosObjectMapper.instance.writeValueAsString(saksbehandler)
-                tx.run(
-                    queryOf(
-                        """
+        val run = tx.run(
+            queryOf(
+                "select data from saksbehandler where saksbehandlerid = :saksbehandlerid for update",
+                mapOf("saksbehandlerid" to id)
+            )
+                .map { row ->
+                    row.stringOrNull("data")
+                }.asSingle
+        )
+        val forrige: Saksbehandler?
+        val saksbehandler = if (!run.isNullOrEmpty()) {
+            forrige = LosObjectMapper.instance.readValue(run, Saksbehandler::class.java)
+            f(forrige)
+        } else {
+            f(null)
+        }
+
+        val json = LosObjectMapper.instance.writeValueAsString(saksbehandler)
+        tx.run(
+            queryOf(
+                """
                         insert into saksbehandler as k (saksbehandlerid,navn, epost, data, skjermet)
                         values (:saksbehandlerid,:navn,:epost, :data :: jsonb, :skjermet)
                         on conflict (epost) do update
@@ -107,16 +117,14 @@ class SaksbehandlerRepository(
                             saksbehandlerid = :saksbehandlerid,
                             navn = :navn
                      """,
-                        mapOf(
-                            "saksbehandlerid" to id,
-                            "epost" to saksbehandler.epost,
-                            "navn" to saksbehandler.navn,
-                            "data" to json
-                        )
-                    ).asUpdate
+                mapOf(
+                    "saksbehandlerid" to id,
+                    "epost" to saksbehandler.epost,
+                    "navn" to saksbehandler.navn,
+                    "data" to json
                 )
-            }
-        }
+            ).asUpdate
+        )
     }
 
     suspend fun addSaksbehandler(saksbehandler: Saksbehandler) {
@@ -222,6 +230,21 @@ class SaksbehandlerRepository(
         }
     }
 
+    fun fjernReservasjoner(tx: TransactionalSession, saksbehandlerId: String?, reservasjoner: List<UUID>) {
+        if (saksbehandlerId == null) {
+            return
+        }
+        if (finnSaksbehandlerMedIdentIkkeTaHensyn(tx, saksbehandlerId) != null) {
+            lagreMedIdIkkeTaHensyn(tx, saksbehandlerId) { saksbehandler ->
+                reservasjoner.forEach {
+                    val fjernet = saksbehandler!!.reservasjoner.remove(it)
+                    loggFjernet(fjernet, saksbehandlerId, it)
+                }
+                saksbehandler!!
+            }
+        }
+    }
+
     fun fjernReservasjonIkkeTaHensyn(id: String?, reservasjon: UUID) {
         if (id == null) {
             return
@@ -303,7 +326,7 @@ class SaksbehandlerRepository(
             .increment()
 
         val saksbehandler = using(sessionOf(dataSource)) {
-            it.transaction {tx->
+            it.transaction { tx ->
                 tx.run(
                     queryOf(
                         "select * from saksbehandler where lower(saksbehandlerid) = lower(:ident) and skjermet = :skjermet",
@@ -317,6 +340,23 @@ class SaksbehandlerRepository(
 
         }
 
+        return saksbehandler
+    }
+
+
+    fun finnSaksbehandlerMedIdentIkkeTaHensyn(tx: TransactionalSession, ident: String): Saksbehandler? {
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
+
+        val saksbehandler = tx.run(
+            queryOf(
+                "select * from saksbehandler where lower(saksbehandlerid) = lower(:ident)",
+                mapOf("ident" to ident)
+            )
+                .map { row ->
+                    mapSaksbehandler(row)
+                }.asSingle
+        )
         return saksbehandler
     }
 

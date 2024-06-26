@@ -17,7 +17,7 @@ fun sjekkReserverteJobb(
     ) {
         JobbMetrikker.time("sjekk_reserverte") {
             val reservasjoner = saksbehandlerRepository.hentAlleSaksbehandlereIkkeTaHensyn().flatMap { it.reservasjoner }
-            runBlocking { reservasjonRepository.hent(reservasjoner.toSet()) }
+            runBlocking { reservasjonRepository.hentOgFjernInaktiveReservasjoner(reservasjoner.toSet()) }
         }
     }
 }
