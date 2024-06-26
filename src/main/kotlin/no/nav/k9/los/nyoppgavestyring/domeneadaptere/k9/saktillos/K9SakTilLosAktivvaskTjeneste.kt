@@ -2,18 +2,15 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos
 
 import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
-import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.AktivvaskMetrikker
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.time.DayOfWeek
 import java.time.Duration
-import java.time.LocalDateTime
-import java.time.LocalTime
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
@@ -42,6 +39,7 @@ class K9SakTilLosAktivvaskTjeneste(
                 log.info("Starter avspilling av historiske BehandlingProsessEventer")
 
                 val tidKjøringStartet = System.currentTimeMillis()
+                var t0 = System.nanoTime()
                 var eventTeller = 0L
                 var behandlingTeller = 0L
                 val antallEventIder = behandlingProsessEventK9Repository.hentAntallEventIderUtenVasketAktiv()
@@ -55,14 +53,19 @@ class K9SakTilLosAktivvaskTjeneste(
                     }
 
                     if (skalPauses()) {
+                        AktivvaskMetrikker.observe(TRÅDNAVN, t0)
                         log.info("Vaskejobb satt på pause")
                         Thread.sleep(Duration.ofMinutes(5))
+                        t0 = System.nanoTime()
                         continue
                     }
 
                     log.info("Starter vaskeiterasjon på ${behandlingsIder.size} behandlinger")
                     eventTeller += spillAvBehandlingProsessEventer(behandlingsIder)
+                    log.info("Iterasjon ferdig. Endret $eventTeller behandlinger")
                     behandlingTeller += behandlingsIder.count()
+                    AktivvaskMetrikker.observe(TRÅDNAVN, t0)
+                    t0 = System.nanoTime()
                 }
 
                 val (antallAlle, antallAktive) = oppgaveV3Tjeneste.tellAntall()
@@ -72,15 +75,15 @@ class K9SakTilLosAktivvaskTjeneste(
                 if (eventTeller > 0) {
                     log.info("Gjennomsnittstid pr behandling: ${tidHeleKjøringen / behandlingTeller}ms, Gjennsomsnittstid pr event: ${tidHeleKjøringen / eventTeller}ms")
                 }
-
+                AktivvaskMetrikker.observe(TRÅDNAVN, t0)
                 log.info("Aktivvask k9sak ferdig")
-                behandlingProsessEventK9Repository.nullstillAktivvask()
-                log.info("Nullstilt aktivvaskmarkering k9-sak")
             }
         } else log.info("Ny oppgavestyring er deaktivert")
     }
 
     fun skalPauses(): Boolean {
+        return false
+        /*
         if (KoinProfile.PREPROD == config.koinProfile()) {
             return false
         }
@@ -94,6 +97,8 @@ class K9SakTilLosAktivvaskTjeneste(
             return true
         }
         return false
+
+         */
     }
 
     private fun spillAvBehandlingProsessEventer(behandlingsIder: List<UUID>): Long {
@@ -104,7 +109,6 @@ class K9SakTilLosAktivvaskTjeneste(
         behandlingsIder.forEach { uuid ->
             transactionalManager.transaction { tx ->
                 oppgaveteller += vaskOppgaveForBehandlingUUID(uuid, tx)
-                behandlingProsessEventK9Repository.markerVasketAktiv(uuid, tx)
             }
             behandlingTeller++
             loggFremgangForHver100(
@@ -119,18 +123,10 @@ class K9SakTilLosAktivvaskTjeneste(
         val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
 
         val høyesteInternVersjon =
-            oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9sak", "K9", tx)!!
-        if (høyesteInternVersjon == 0L) {
-            return 0
-        }
-        var eventNrForBehandling = behandlingProsessEventer.size-1
-        if (eventNrForBehandling > høyesteInternVersjon) {
-            return 0 //ligge unna oppgaver som ikke er oppdatert. De blir straks oppdatert av normalflyt
-        }
+            oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9sak", "K9", tx)
 
         val event = behandlingProsessEventer.last()
-        val forrigeOppgave =
-            oppgaveV3Tjeneste.hentOppgaveVersjonenFør(uuid.toString(), høyesteInternVersjon, "k9sak", "K9", tx)
+        val forrigeOppgave = if (høyesteInternVersjon != null && høyesteInternVersjon > 0) { oppgaveV3Tjeneste.hentOppgaveVersjonenFør(uuid.toString(), høyesteInternVersjon, "k9sak", "K9", tx) } else null
 
         val nyeBehandlingsopplysningerFraK9Sak = k9SakBerikerKlient.hentBehandling(UUID.fromString(uuid.toString()))
         if (event.eldsteDatoMedEndringFraSøker == null && nyeBehandlingsopplysningerFraK9Sak != null && nyeBehandlingsopplysningerFraK9Sak.eldsteDatoMedEndringFraSøker != null) {
@@ -147,8 +143,8 @@ class K9SakTilLosAktivvaskTjeneste(
             nyeBehandlingsopplysningerFraK9Sak
         )
 
-        oppgaveV3Tjeneste.ajourholdAktivOppgave(oppgaveDto, eventNrForBehandling.toLong(), tx)
-
+        oppgaveV3Tjeneste.ajourholdAktivOppgave(oppgaveDto, høyesteInternVersjon ?: 0, tx)
+        log.info("Ajourholdt aktiv oppgave for behandling: $uuid")
         return 1
     }
 
