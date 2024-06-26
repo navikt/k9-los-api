@@ -15,6 +15,7 @@ import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.BehandlingProsessEventKlageRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.HistorikkvaskMetrikker
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerInterfaceKludge
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import java.util.*
 import kotlin.concurrent.thread
@@ -86,12 +87,13 @@ class K9KlageTilLosHistorikkvaskTjeneste(
             val høyesteInternVersjon =
                 oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9klage", "K9", tx)!!
             var eventNrForBehandling = 0L
+            var oppgaveDto: OppgaveDto? = null
             for (event in behandlingProsessEventer) {
-                if (eventNrForBehandling > høyesteInternVersjon) { break }
+                if (eventNrForBehandling > høyesteInternVersjon) { break }  //Historikkvasken har funnet eventer som ennå ikke er lastet inn med normalflyt. Dirty eventer skal håndteres av vanlig adaptertjeneste
                 val losOpplysningerSomManglerIKlageDto = event.påklagdBehandlingEksternId?.let { k9sakBeriker.berikKlage(it) }
-                val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, losOpplysningerSomManglerIKlageDto, forrigeOppgave)
+                oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, losOpplysningerSomManglerIKlageDto, forrigeOppgave)
 
-                oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, høyesteInternVersjon, tx)
+                oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, tx)
 
                 eventTeller++
                 loggFremgangForHver100(eventTeller, "Prosessert $eventTeller eventer")
@@ -104,7 +106,12 @@ class K9KlageTilLosHistorikkvaskTjeneste(
             forrigeOppgave = null
 
             behandlingProsessEventKlageRepository.markerVasketHistorikk(uuid, tx)
+
+            oppgaveDto?.let {
+                oppgaveV3Tjeneste.ajourholdAktivOppgave(oppgaveDto, eventNrForBehandling, tx)
+            }
         }
+
         return eventTeller
     }
 

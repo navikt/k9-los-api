@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.forvaltning
 
+import io.github.smiley4.ktorswaggerui.dsl.routing.get
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
@@ -37,8 +38,17 @@ fun Route.forvaltningApis() {
     val reservasjonV3Repository by inject<ReservasjonV3Repository>()
     val objectMapper = LosObjectMapper.prettyInstance
     val transactionalManager by inject<TransactionalManager>()
+    val forvaltningRepository by inject<ForvaltningRepository>()
 
-    get("/index_oversikt") {
+
+    get("/index_oversikt", {
+        description = "index_oversikt"
+        response {
+            HttpStatusCode.OK to {
+                description = "test test test"
+            }
+        }
+    }) {
         val list = mutableListOf<String>()
         transactionalManager.transaction { tx ->
             tx.run(
@@ -77,6 +87,7 @@ fun Route.forvaltningApis() {
                 }.asList
             )
         }
+        call.respond(list)
     }
 
     get("/eventer/{system}/{eksternId}") {
@@ -122,7 +133,13 @@ fun Route.forvaltningApis() {
         val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
 
         val oppgaveTidsserie =
-            oppgaveRepositoryTxWrapper.hentOppgaveTidsserie(område, oppgavetype, oppgaveEksternId)
+            transactionalManager.transaction { tx ->
+                forvaltningRepository.hentOppgaveTidsserie(
+                    områdeEksternId = område,
+                    oppgaveTypeEksternId = oppgavetype,
+                    oppgaveEksternId = oppgaveEksternId,
+                    tx = tx)
+            }
         if (oppgaveTidsserie.isEmpty()) {
             call.respond(HttpStatusCode.NotFound)
         } else {

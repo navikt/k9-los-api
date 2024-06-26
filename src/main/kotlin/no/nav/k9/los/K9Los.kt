@@ -3,6 +3,10 @@ package no.nav.k9.los
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import com.fasterxml.jackson.databind.SerializationFeature
+import io.github.smiley4.ktorswaggerui.SwaggerUI
+import io.github.smiley4.ktorswaggerui.dsl.routing.route
+import io.github.smiley4.ktorswaggerui.routing.openApiSpec
+import io.github.smiley4.ktorswaggerui.routing.swaggerUI
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -41,6 +45,8 @@ import no.nav.k9.los.jobber.K9sakBehandlingsoppfriskingJobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosApi
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.k9SakEksternId
@@ -48,7 +54,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.k9SakKorrigerO
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAktivvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.forvaltning.forvaltningApis
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoApis
@@ -66,7 +72,6 @@ import no.nav.k9.los.tjenester.fagsak.FagsakApis
 import no.nav.k9.los.tjenester.innsikt.innsiktGrensesnitt
 import no.nav.k9.los.tjenester.kodeverk.KodeverkApis
 import no.nav.k9.los.tjenester.konfig.KonfigApis
-import no.nav.k9.los.tjenester.mock.MockGrensesnitt
 import no.nav.k9.los.tjenester.mock.localSetup
 import no.nav.k9.los.tjenester.saksbehandler.NavAnsattApis
 import no.nav.k9.los.tjenester.saksbehandler.merknad.MerknadApi
@@ -107,12 +112,16 @@ fun Application.k9Los() {
     val k9PunsjTilLosAdapterTjeneste = koin.get<K9PunsjTilLosAdapterTjeneste>()
     k9PunsjTilLosAdapterTjeneste.setup()
 
-    if (LocalDateTime.now().isBefore(LocalDateTime.of(2024, 5, 31, 16, 30))) {
-        //koin.get<K9SakTilLosLukkeFeiloppgaverTjeneste>().kjørFeiloppgaverVask()
-        koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
-        koin.get<K9KlageTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
-        //koin.get<OppgavestatistikkTjeneste>().slettStatistikkgrunnlag()
-        //koin.get<ReservasjonKonverteringJobb>().kjørReservasjonskonvertering()
+    if (LocalDateTime.now().isBefore(LocalDateTime.of(2024, 6, 26, 8, 0))) {
+        if (1 == 0) { //HAXX for å ikke kjøre jobb, men indikere at koden er i bruk og dermed ikke slettes
+            koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
+            koin.get<K9KlageTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
+            koin.get<OppgavestatistikkTjeneste>().slettStatistikkgrunnlag()
+            //koin.get<ReservasjonKonverteringJobb>().kjørReservasjonskonvertering() //TODO slette
+            //koin.get<K9SakTilLosLukkeFeiloppgaverTjeneste>().kjørFeiloppgaverVask() //TODO slette
+        }
+        koin.get<K9SakTilLosAktivvaskTjeneste>().kjørAktivvask()
+        //koin.get<K9KlageTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
     }
 
     install(Authentication) {
@@ -163,8 +172,7 @@ fun Application.k9Los() {
         oppdaterStatistikk(
             channel = koin.get<Channel<Boolean>>(named("statistikkRefreshChannel")),
             statistikkRepository = koin.get(),
-            oppgaveTjeneste = koin.get(),
-            oppgaveKøRepository = koin.get()
+            oppgaveTjeneste = koin.get()
         )
 
     PepCacheOppdaterer(koin.get()).run {
@@ -247,7 +255,6 @@ fun Application.k9Los() {
     ).kjør(kjørUmiddelbart = false)
 
     OppgavestatistikkTjeneste(
-        oppgaveRepository = koin.get(),
         oppgavetypeRepository = koin.get(),
         statistikkPublisher = koin.get(),
         transactionalManager = koin.get(),
@@ -262,21 +269,6 @@ fun Application.k9Los() {
             send(oppgaverOppdatertEvent)
         }
     }.broadcast()
-
-//  Synkroniser oppgaver
-//    regenererOppgaver(
-//        oppgaveRepository = koin.get(),
-//        behandlingProsessEventK9Repository = koin.get(),
-//        reservasjonRepository = koin.get(),
-//        oppgaveKøRepository = koin.get(),
-//        saksbehhandlerRepository = koin.get(),
-//        punsjEventK9Repository = koin.get(),
-//        behandlingProsessEventTilbakeRepository = koin.get()
-//    )
-
-//    rekjørEventerForGrafer(koin.get(), koin.get(), koin.get())
-
-//    rekjørEventerForGraferFraPunsj(koin.get(), koin.get())
 
     install(CallIdRequired)
 
@@ -302,18 +294,33 @@ fun Application.k9Los() {
         if ((KoinProfile.LOCAL == koin.get<KoinProfile>())) {
             localSetup.initSaksbehandlere()
             api(sseChannel)
-            route("mock") {
-                MockGrensesnitt()
-            }
-            route("forvaltning") {
+            route("/forvaltning") {
                 innsiktGrensesnitt()
                 forvaltningApis()
+                route("k9saktillos") { K9SakTilLosApi() }
+                route("k9klagetillos") { K9KlageTilLosApi() }
+                route("statistikk") { StatistikkApi() }
+                route("/swagger") {
+                    route("openapi.json") {
+                        openApiSpec()
+                    }
+                    swaggerUI("openapi.json")
+                }
             }
         } else {
             authenticate(*issuers.allIssuers()) {
                 route("forvaltning") {
                     innsiktGrensesnitt()
                     forvaltningApis()
+                    route("k9saktillos") { K9SakTilLosApi() }
+                    route("k9klagetillos") { K9KlageTilLosApi() }
+                    route("statistikk") { StatistikkApi() }
+                    route("/swagger") {
+                        route("openapi.json") {
+                            openApiSpec()
+                        }
+                        swaggerUI("openapi.json")
+                    }
                 }
                 api(sseChannel)
             }
@@ -336,6 +343,9 @@ fun Application.k9Los() {
     install(CallId) {
         fromXCorrelationIdHeader()
     }
+
+    install(SwaggerUI) {
+    }
 }
 
 private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
@@ -344,7 +354,9 @@ private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
         sseChannel = sseChannel
     )
 
-    route("api") {
+    route("api", {
+        hidden = true
+    }) {
         route("driftsmeldinger") {
             DriftsmeldingerApis()
         }
@@ -382,10 +394,6 @@ private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
             route("feltdefinisjon") { FeltdefinisjonApi() }
             route("oppgavetype") { OppgavetypeApi() }
             route("oppgave-v3") { OppgaveV3Api() }
-            route("statistikk") { StatistikkApi() }
-            route("k9saktillos") { K9SakTilLosApi() }
-            route("k9klagetillos") { K9KlageTilLosApi() }
         }
     }
-
 }

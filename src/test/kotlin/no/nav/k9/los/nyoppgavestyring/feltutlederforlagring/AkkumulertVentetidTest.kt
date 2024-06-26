@@ -120,9 +120,7 @@ internal class AkkumulertVentetidTest {
     fun lagOppgavefeltverdi(eksternId: String, verdi: String): OppgaveFeltverdi {
         return OppgaveFeltverdi(
             oppgavefelt = lagOppgavefelt(eksternId),
-            verdi = verdi,
-            aktiv = true,
-            oppgavestatus = Oppgavestatus.AAPEN
+            verdi = verdi
         )
 
     }

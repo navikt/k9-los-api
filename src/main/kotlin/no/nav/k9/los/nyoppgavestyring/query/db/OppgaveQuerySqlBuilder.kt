@@ -171,8 +171,6 @@ class OppgaveQuerySqlBuilder(
                     WHERE ov.oppgave_id = o.id
                       AND fo.ekstern_id = :feltOmrade$index
                       AND fd.ekstern_id = :feltkode$index
-                      AND ov.aktiv = true
-                      AND ov.oppgavestatus in (${oppgavestatusFilter.joinToString(prefix = "'", separator = "', '", postfix = "'") { oppgavestatus -> oppgavestatus.kode }})
                       AND 
             """.trimIndent()
 
@@ -273,8 +271,6 @@ class OppgaveQuerySqlBuilder(
                     WHERE ov.oppgave_id = o.id
                       AND fo.ekstern_id = :feltOmrade$index
                       AND fd.ekstern_id = :feltkode$index
-                      AND ov.aktiv = true
-                      AND ov.oppgavestatus in (${oppgavestatusFilter.joinToString(prefix = "'", separator = "', '", postfix = "'") { oppgavestatus -> oppgavestatus.kode }})
                   )
             """.trimIndent()
     }
@@ -335,12 +331,15 @@ class OppgaveQuerySqlBuilder(
                   WHERE ov.oppgave_id = o.id
                     AND fo.ekstern_id = :orderByfeltOmrade$index
                     AND fd.ekstern_id = :orderByfeltkode$index
-                    AND ov.aktiv = true
-                    AND ov.oppgavestatus in (${oppgavestatusFilter.joinToString(prefix = "'", separator = "', '", postfix = "'") { oppgavestatus -> oppgavestatus.kode }})
                 ) 
             """.trimIndent()
 
         orderBySql += if (økende) "ASC" else "DESC"
+    }
+
+    private fun oppgavestatusInClause(oppgavestatus : List<Oppgavestatus>) : String {
+        check(oppgavestatus.isNotEmpty()){"Filtrerer bort alle oppgaver, siden ingen oppgavestatuser er valgt"}
+        return oppgavestatus.map { "cast ('${it.kode}' as oppgavestatus)" }.joinToString (separator = ",")
     }
 
     fun medPaging(limit: Long, offset: Long) {

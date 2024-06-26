@@ -58,7 +58,7 @@ abstract class AbstractPostgresTest {
             it.createStatement().execute("""
             truncate 
                 behandling_prosess_events_k9,
-                behandling_prosess_events_k9_historikkvask_ferdig,
+                behandling_prosess_events_k9_historikkvask_ferdig,                
                 behandling_prosess_events_klage_historikkvask_ferdig,
                 behandling_prosess_events_k9_punsj_historikkvask_ferdig,
                 behandling_prosess_events_k9_punsj,
@@ -86,6 +86,8 @@ abstract class AbstractPostgresTest {
                 oppgavefelt,
                 oppgave_v3,
                 oppgavefelt_Verdi,
+                oppgave_v3_aktiv,
+                oppgavefelt_verdi_aktiv,
                 feltdefinisjon,
                 oppgave_v3_sendt_dvh;
                 
