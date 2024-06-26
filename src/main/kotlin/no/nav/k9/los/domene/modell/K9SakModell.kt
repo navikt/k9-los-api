@@ -34,6 +34,7 @@ import kotlin.math.min
 data class K9SakModell(
     val eventer: MutableList<BehandlingProsessEventDto>
 ) : IModell {
+
     private val `Omsorgspenger, Pleiepenger og opplæringspenger` = "ab0271"
 
     override fun oppgave(): Oppgave {

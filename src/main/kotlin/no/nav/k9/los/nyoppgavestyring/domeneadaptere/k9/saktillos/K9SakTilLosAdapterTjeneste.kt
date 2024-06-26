@@ -23,6 +23,7 @@ import no.nav.k9.los.nyoppgavestyring.pep.PepCacheService
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.BehandlingMedFagsakDto
+import org.jetbrains.annotations.VisibleForTesting
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -118,7 +119,7 @@ class K9SakTilLosAdapterTjeneste(
         var korrigerFeilRekkefølge = false
 
         transactionalManager.transaction { tx ->
-            val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
+            val behandlingProsessEventer = sjekkOgLagUnike(behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer)
             val nyeBehandlingsopplysningerFraK9Sak = k9SakBerikerKlient.hentBehandling(uuid)
             val høyesteInternVersjon =
                 oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9sak", "K9", tx) ?: -1
@@ -165,6 +166,17 @@ class K9SakTilLosAdapterTjeneste(
             }
         }
         return eventTeller
+    }
+
+    @VisibleForTesting
+    fun sjekkOgLagUnike(eventer: List<BehandlingProsessEventDto>): List<BehandlingProsessEventDto> {
+        val gruppertPåTid = eventer.groupBy { it.eventTid }
+
+        gruppertPåTid.forEach { (_, eventerMedSammeEventtid) ->
+            check(eventerMedSammeEventtid.all { it.equals(eventerMedSammeEventtid[0]) })
+        }
+
+        return gruppertPåTid.map { (_, eventerMedSammeEventtid) -> eventerMedSammeEventtid[0] }
     }
 
     private fun annullerReservasjonerHvisAlleOppgaverPåVentEllerAvsluttet(
