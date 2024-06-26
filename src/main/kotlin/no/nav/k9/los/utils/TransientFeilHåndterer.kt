@@ -35,7 +35,7 @@ class TransientFeilHåndterer(
                     log.info("Operasjonen $beskrivelse feilet, venter og prøver på nytt. Har forsøkt $forsøk ganger og ventet totalt $pauseTotal")
                 }
             }
-            suspend { pause }
+            Thread.sleep(pause.inWholeMilliseconds)
             pauseTotal += pause
             forsøk++
             pause = minOf(pauseMaks, pause * 2)
