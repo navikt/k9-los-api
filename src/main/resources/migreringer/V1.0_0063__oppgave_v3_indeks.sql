@@ -1,2 +1,2 @@
 
-CREATE INDEX idx_oppgave_v3_aktiv_status_reservasjonsnokkel ON oppgave_v3(aktiv, status, reservasjonsnokkel);
+CREATE INDEX idx_oppgave_v3_reservasjonsnokkel_aktiv_status ON oppgave_v3(reservasjonsnokkel, aktiv, status);
