@@ -27,18 +27,6 @@ class ReservasjonV3DtoBuilder(
         }
     }
 
-    suspend fun byggReservasjonV3MedEndringDto(
-        reservasjonMedOppgaver: ReservasjonV3EndringMedOppgaver,
-        saksbehandler: Saksbehandler
-    ): ReservasjonV3Dto {
-        if (reservasjonMedOppgaver.oppgaveV1 == null) {
-            return byggForV3MedEndring(reservasjonMedOppgaver, saksbehandler)
-        } else {
-            // Fjernes når V1 skal vekk
-            return byggForV1MedEndring(reservasjonMedOppgaver, saksbehandler)
-        }
-    }
-
 
     suspend fun byggForV3(
         reservasjonMedOppgaver: ReservasjonV3MedOppgaver,
@@ -51,23 +39,6 @@ class ReservasjonV3DtoBuilder(
         return ReservasjonV3Dto(reservasjonMedOppgaver.reservasjonV3, oppgaveV3Dtos, saksbehandler)
     }
 
-    suspend fun byggForV3MedEndring(
-        reservasjonMedOppgaver: ReservasjonV3EndringMedOppgaver,
-        saksbehandler: Saksbehandler
-    ): ReservasjonV3Dto {
-        val oppgaveV3Dtos = reservasjonMedOppgaver.oppgaverV3.map {
-            val person = pdlService.person(it.hentVerdi("aktorId")!!).person
-            GenerellOppgaveV3Dto(it, person)
-        }
-             var endretAvNavn: String?;
-        if (reservasjonMedOppgaver.reservasjonV3.endretAv != null) {
-            endretAvNavn =
-                saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonMedOppgaver.reservasjonV3.endretAv).navn
-
-            return ReservasjonV3Dto(reservasjonMedOppgaver.reservasjonV3, oppgaveV3Dtos, saksbehandler, endretAvNavn)
-        }
-        return ReservasjonV3Dto(reservasjonMedOppgaver.reservasjonV3, oppgaveV3Dtos, saksbehandler, null)
-    }
 
     suspend fun byggForV1(
         reservasjonMedOppgaver: ReservasjonV3MedOppgaver,
@@ -109,53 +80,5 @@ class ReservasjonV3DtoBuilder(
             null
         }
         return ReservasjonV3Dto(reservasjonMedOppgaver.reservasjonV3, oppgaveV1Dto, saksbehandler)
-    }
-
-    suspend fun byggForV1MedEndring(
-        reservasjonMedOppgaver: ReservasjonV3EndringMedOppgaver,
-        saksbehandler: Saksbehandler
-    ): ReservasjonV3Dto {
-        val oppgaveV1 = reservasjonMedOppgaver.oppgaveV1!!
-        val oppgaveV1Dto = if (oppgaveV1.aktiv) {
-            var endretAvNavn: String? = null;
-            if (reservasjonMedOppgaver.reservasjonV3.endretAv != null) {
-                endretAvNavn =
-                    saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonMedOppgaver.reservasjonV3.endretAv).navn
-            }
-            val person = pdlService.person(oppgaveV1.aktorId)
-            OppgaveDto(
-                status = OppgaveStatusDto(
-                    true,
-                    reservasjonMedOppgaver.reservasjonV3.gyldigTil,
-                    true,
-                    saksbehandler.brukerIdent,
-                    saksbehandler?.navn,
-                    flyttetReservasjon = null
-                ),
-                behandlingId = oppgaveV1.behandlingId,
-                saksnummer = oppgaveV1.fagsakSaksnummer,
-                journalpostId = oppgaveV1.journalpostId,
-                navn = person.person?.navn() ?: "Ukjent navn",
-                system = oppgaveV1.system,
-                personnummer = person.person?.fnr() ?: "Ukjent fnummer",
-                behandlingstype = oppgaveV1.behandlingType,
-                fagsakYtelseType = oppgaveV1.fagsakYtelseType,
-                behandlingStatus = oppgaveV1.behandlingStatus,
-                erTilSaksbehandling = true,
-                opprettetTidspunkt = oppgaveV1.behandlingOpprettet,
-                behandlingsfrist = oppgaveV1.behandlingsfrist,
-                eksternId = oppgaveV1.eksternId,
-                tilBeslutter = oppgaveV1.tilBeslutter,
-                utbetalingTilBruker = oppgaveV1.utbetalingTilBruker,
-                selvstendigFrilans = oppgaveV1.selvstendigFrilans,
-                søktGradering = oppgaveV1.søktGradering,
-                avklarArbeidsforhold = oppgaveV1.avklarArbeidsforhold,
-                merknad = oppgaveTjeneste.hentAktivMerknad(oppgaveV1.eksternId.toString()),
-                endretAvNavn = endretAvNavn
-            )
-        } else {
-            null
-        }
-        return ReservasjonV3Dto(reservasjonMedOppgaver.reservasjonV3, oppgaveV1Dto, saksbehandler, null)
     }
 }

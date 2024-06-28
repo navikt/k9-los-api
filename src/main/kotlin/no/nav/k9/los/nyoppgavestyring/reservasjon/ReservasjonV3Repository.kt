@@ -60,6 +60,7 @@ class ReservasjonV3Repository(
                 kommentar = kommentar ?: reservasjonSomSkalEndres.kommentar,
                 gyldigFra = reservasjonSomSkalEndres.gyldigFra,
                 gyldigTil = nyTildato ?: reservasjonSomSkalEndres.gyldigTil,
+                endretAv = null
             ),
             tx
         )
@@ -110,6 +111,7 @@ class ReservasjonV3Repository(
                 kommentar = kommentar,
                 gyldigFra = aktivReservasjon.gyldigFra,
                 gyldigTil = nyTildato,
+                endretAv = null
             ),
             tx
         )
@@ -143,7 +145,8 @@ class ReservasjonV3Repository(
                 reservasjonsnøkkel = aktivReservasjon.reservasjonsnøkkel,
                 kommentar = kommentar,
                 gyldigFra = overføringstidspunkt,
-                gyldigTil = reserverTil
+                gyldigTil = reserverTil,
+                endretAv = null
             ),
             tx
         )
@@ -190,13 +193,13 @@ class ReservasjonV3Repository(
         return tx.run(
             queryOf(
                 """
-                   select r.id, r.reservertAv, r.reservasjonsnokkel, lower(r.gyldig_tidsrom) as fra, upper(r.gyldig_tidsrom) as til, r.annullert_for_utlop, kommentar as kommentar 
-                   from reservasjon_v3 r
+                   select r.id, r.reservertAv, r.reservasjonsnokkel, lower(r.gyldig_tidsrom) as fra, upper(r.gyldig_tidsrom) as til, r.annullert_for_utlop, r.kommentar as kommentar, re.endretAv
+                   from reservasjon_v3 r left outer join reservasjon_v3_endring re on re.ny_reservasjon_id = r.id
                    where r.reservertAv = :reservertAv
-                   and annullert_for_utlop = false
-                   and lower(r.gyldig_tidsrom) <= :now
-                   and upper(r.gyldig_tidsrom) > :now
-                """.trimIndent(),
+                       and annullert_for_utlop = false
+                       and lower(r.gyldig_tidsrom) <= :now
+                       and upper(r.gyldig_tidsrom) > :now
+                    """.trimIndent(),
                 mapOf(
                     "reservertAv" to saksbehandlerId,
                     "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
@@ -209,60 +212,7 @@ class ReservasjonV3Repository(
                     kommentar = row.stringOrNull("kommentar"),
                     gyldigFra = row.localDateTime("fra"),
                     gyldigTil = row.localDateTime("til"),
-                )
-            }.asList
-        )
-    }
-
-    fun hentAktiveReservasjonerMedEndringForSaksbehandler(
-        saksbehandlerId: Long,
-        tx: TransactionalSession
-    ): List<ReservasjonV3MedEndring> {
-        return tx.run(
-            queryOf(
-                """
-                    select 
-                        r.id as reservasjon_id,
-                        r.reservertav,
-                        r.reservasjonsnokkel,
-                        lower(gyldig_tidsrom) as gyldig_fra,
-                        upper(gyldig_tidsrom) as gyldig_til,
-                        annullert_for_utlop ,
-                        kommentar ,
-                        r.opprettet as reservasjon_opprettet,
-                        r.sist_endret as reservasjon_endret,
-                        re.id as endring_id,
-                        re.annullert_reservasjon_id as annullert_reservasjon_id,
-                        re.ny_reservasjon_id as ny_reservasjon_id,
-                        re.endretav as reservasjon_endret_av,
-                        re.opprettet as endring_opprettet
-                   from reservasjon_v3 r
-                        left outer join reservasjon_v3_endring re on re.ny_reservasjon_id = r.id
-                   where r.reservertAv = :reservertAv
-                   and annullert_for_utlop = false
-                   and lower(r.gyldig_tidsrom) <= :now
-                   and upper(r.gyldig_tidsrom) > :now
-                """.trimIndent(),
-                mapOf(
-                    "reservertAv" to saksbehandlerId,
-                    "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
-                )
-            ).map { row ->
-                ReservasjonV3MedEndring(
-                    id = row.long("reservasjon_id"),
-                    reservertAv = row.long("reservertav"),
-                    reservasjonsnøkkel = row.string("reservasjonsnokkel"),
-                    annullertFørUtløp = row.boolean("annullert_for_utlop"),
-                    kommentar = row.stringOrNull("kommentar"),
-                    gyldigFra = row.localDateTime("gyldig_fra"),
-                    gyldigTil = row.localDateTime("gyldig_til"),
-                    reservasjonOpprettet = row.localDateTime("reservasjon_opprettet"),
-                    sist_endret = row.localDateTime("reservasjon_endret"),
-                    endringId = row.longOrNull("endring_id"),
-                    annullertReservasjonId = row.longOrNull("annullert_reservasjon_id"),
-                    nyReservasjonId = row.longOrNull("ny_reservasjon_id"),
-                    endretAv = row.longOrNull("reservasjon_endret_av"),
-                    endringOpprettet = row.localDateTimeOrNull("endring_opprettet")
+                    endretAv = row.longOrNull("endretAv")
                 )
             }.asList
         )
@@ -274,11 +224,19 @@ class ReservasjonV3Repository(
         return tx.run(
             queryOf(
                 """
-                   select r.id, r.reservertAv, r.reservasjonsnokkel, lower(r.gyldig_tidsrom) as fra, upper(r.gyldig_tidsrom) as til, r.annullert_for_utlop, kommentar as kommentar 
-                   from reservasjon_v3 r
+                   select r.id, 
+                       r.reservertAv, 
+                       r.reservasjonsnokkel, 
+                       lower(r.gyldig_tidsrom) as fra, 
+                       upper(r.gyldig_tidsrom) as til, 
+                       r.annullert_for_utlop, 
+                       r.kommentar as kommentar, 
+                       re.endretav as reservasjon_endret_av,
+                  from reservasjon_v3 r
+                        left outer join reservasjon_v3_endring re on re.ny_reservasjon_id = r.id
                    where annullert_for_utlop = false
-                   and lower(r.gyldig_tidsrom) <= :now
-                   and upper(r.gyldig_tidsrom) > :now
+                       and lower(r.gyldig_tidsrom) <= :now
+                       and upper(r.gyldig_tidsrom) > :now
                 """.trimIndent(),
                 mapOf(
                     "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
@@ -291,6 +249,7 @@ class ReservasjonV3Repository(
                     kommentar = row.stringOrNull("kommentar"),
                     gyldigFra = row.localDateTime("fra"),
                     gyldigTil = row.localDateTime("til"),
+                    endretAv = row.longOrNull("reservasjon_endret_av")
                 )
             }.asList
         )
@@ -298,12 +257,12 @@ class ReservasjonV3Repository(
 
     fun hentAktivReservasjonForReservasjonsnøkkel(nøkkel: String, tx: TransactionalSession): ReservasjonV3? {
         val queryString = """
-                   select r.id, r.reservertAv, r.reservasjonsnokkel, lower(r.gyldig_tidsrom) as fra, upper(r.gyldig_tidsrom) as til, r.annullert_for_utlop , kommentar as kommentar
-                   from reservasjon_v3 r
-                   where r.reservasjonsnokkel = :nokkel
-                   and annullert_for_utlop = false
-                   and lower(r.gyldig_tidsrom) <= :now
-                   and upper(r.gyldig_tidsrom) > :now
+                   select r.id, r.reservertAv, r.reservasjonsnokkel, lower(r.gyldig_tidsrom) as fra, upper(r.gyldig_tidsrom) as til, r.annullert_for_utlop , kommentar as kommentar, re.endretAv
+                   from reservasjon_v3 r left outer join r
+                   where r.reservasjonsnokkel = :nokkel left outer join reservasjon_v3_endring re on re.ny_reservasjon_id = r.id
+                       and annullert_for_utlop = false
+                       and lower(r.gyldig_tidsrom) <= :now
+                       and upper(r.gyldig_tidsrom) > :now
                 """.trimIndent()
         /*
                 log.info("spørring hentAktivReservasjonForReserajovsnsnøkkel: ${queryString}")
@@ -336,6 +295,7 @@ class ReservasjonV3Repository(
                     annullertFørUtløp = row.boolean("annullert_for_utlop"),
                     gyldigFra = row.localDateTime("fra"),
                     gyldigTil = row.localDateTime("til"),
+                    endretAv = row.longOrNull("endretAv")
                 )
             }.asSingle
         )
@@ -348,9 +308,11 @@ class ReservasjonV3Repository(
         return tx.run(
             queryOf(
                 """
-                   select r.id, r.reservertAv, r.reservasjonsnokkel, lower(r.gyldig_tidsrom) as fra, upper(r.gyldig_tidsrom) as til, r.annullert_for_utlop , kommentar as kommentar
+                   select r.id, r.reservertAv, r.reservasjonsnokkel, lower(r.gyldig_tidsrom) as fra, upper(r.gyldig_tidsrom) as til, r.annullert_for_utlop , kommentar as kommentar, re.endretAv
                    from reservasjon_v3 r
-                   where r.reservasjonsnokkel = :nokkel
+                   where r.reservasjonsnokkel = :nokkel left outer join reservasjon_v3_endring re on re.ny_reservasjon_id = r.id
+                       and lower(r.gyldig_tidsrom) <= :now
+                       and upper(r.gyldig_tidsrom) > :now
                 """.trimIndent(),
                 mapOf(
                     "nokkel" to nøkkel
@@ -364,6 +326,7 @@ class ReservasjonV3Repository(
                     annullertFørUtløp = row.boolean("annullert_for_utlop"),
                     gyldigFra = row.localDateTime("fra"),
                     gyldigTil = row.localDateTime("til"),
+                    endretAv = row.longOrNull("endretAv")
                 )
             }.asList
         )

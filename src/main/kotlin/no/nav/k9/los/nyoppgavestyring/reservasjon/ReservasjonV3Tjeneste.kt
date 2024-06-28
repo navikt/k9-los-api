@@ -100,6 +100,7 @@ class ReservasjonV3Tjeneste(
             gyldigFra = gyldigFra,
             gyldigTil = gyldigTil,
             kommentar = kommentar,
+            endretAv = null
         )
         val reservasjon = reservasjonV3Repository.lagreReservasjon(reservasjonTilLagring, tx)
         log.info("taReservasjon: Ny reservasjon $reservasjon, utført av $utføresAvId, for saksbehandler $reserverForId")
@@ -164,33 +165,18 @@ class ReservasjonV3Tjeneste(
         return reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(reservasjonsnøkkel, tx)
     }
 
-    fun hentReservasjonerForSaksbehandler(saksbehandlerId: Long): List<ReservasjonV3EndringMedOppgaver> {
+    fun hentReservasjonerForSaksbehandler(saksbehandlerId: Long): List<ReservasjonV3MedOppgaver> {
         return transactionalManager.transaction { tx ->
             val reservasjoner =
-                reservasjonV3Repository.hentAktiveReservasjonerMedEndringForSaksbehandler(saksbehandlerId, tx)
+                reservasjonV3Repository.hentAktiveReservasjonerForSaksbehandler(saksbehandlerId, tx)
 
             reservasjoner.map { reservasjon ->
-                reservasjonV3EndringMedOppgaver(reservasjon, tx)
+                reservasjonV3MedOppgaver(reservasjon, tx)
             }
 
         }
     }
 
-    fun reservasjonV3EndringMedOppgaver(
-        reservasjon: ReservasjonV3MedEndring,
-        tx: TransactionalSession
-    ): ReservasjonV3EndringMedOppgaver {
-        val oppgaveV1 = hentV1OppgaveFraReservasjonMedEndring(reservasjon)
-        return if (oppgaveV1 != null) {
-            ReservasjonV3EndringMedOppgaver(reservasjon, emptyList(), oppgaveV1)
-        } else {
-            ReservasjonV3EndringMedOppgaver(
-                reservasjon,
-                oppgaveV3Repository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjon.reservasjonsnøkkel),
-                null
-            )
-        }
-    }
 
     fun reservasjonV3MedOppgaver(
         reservasjon: ReservasjonV3,
