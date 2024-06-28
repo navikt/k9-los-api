@@ -170,7 +170,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         reservasjonsnøkkel = "test1",
         gyldigFra = LocalDateTime.now(),
         gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
-        kommentar = ""
+        kommentar = "",
+        endretAv = null
     )
     every {
         reservasjonOversetterMock.hentAktivReservasjonFraGammelKontekst(any())
@@ -179,7 +180,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         reservasjonsnøkkel = "test1",
         gyldigFra = LocalDateTime.now(),
         gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
-        kommentar = ""
+        kommentar = "",
+        endretAv = null
     )
 
     single {

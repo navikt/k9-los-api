@@ -41,7 +41,8 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
-            kommentar = ""
+            kommentar = "",
+            endretAv = null
         )
 
         transactionalManager.transaction { tx ->
@@ -54,7 +55,8 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         }
 
         transactionalManager.transaction { tx ->
-            val reservasjonerHentet = reservasjonV3Repository.hentAktiveReservasjonerForSaksbehandler(saksbehandler.id!!, tx)
+            val reservasjonerHentet =
+                reservasjonV3Repository.hentAktiveReservasjonerForSaksbehandler(saksbehandler.id!!, tx)
             assertEquals(reservasjon, reservasjonerHentet[0])
         }
     }
@@ -99,7 +101,8 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now().minusDays(5),
             gyldigTil = LocalDateTime.now().minusDays(1),
-            kommentar = ""
+            kommentar = "",
+            endretAv = null
         )
 
         val reservasjon2 = ReservasjonV3(
@@ -107,7 +110,8 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now().plusMinutes(1),
             gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
-            kommentar = ""
+            kommentar = "",
+            endretAv = null
         )
 
         transactionalManager.transaction { tx ->
@@ -145,7 +149,8 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now().minusDays(5),
             gyldigTil = LocalDateTime.now().minusDays(1),
-            kommentar = ""
+            kommentar = "",
+            endretAv = null
         )
 
         val reservasjon2 = ReservasjonV3(
@@ -153,7 +158,8 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
-            kommentar = ""
+            kommentar = "",
+            endretAv = null
         )
 
         transactionalManager.transaction { tx ->
@@ -215,7 +221,8 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
-            kommentar = ""
+            kommentar = "",
+            endretAv = null
         )
 
         val reservasjon2 = ReservasjonV3(
@@ -223,7 +230,8 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now().plusMinutes(1),
             gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
-            kommentar = ""
+            kommentar = "",
+            endretAv = null
         )
 
         transactionalManager.transaction { tx ->
@@ -280,7 +288,8 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
-            kommentar = ""
+            kommentar = "",
+            endretAv = null
         )
 
         val reservasjon2 = ReservasjonV3(
@@ -288,7 +297,8 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now().plusMinutes(1),
             gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
-            kommentar = ""
+            kommentar = "",
+            endretAv = null
         )
 
         val saksbehandlerInnlogget = runBlocking {
@@ -341,7 +351,8 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
-            kommentar = ""
+            kommentar = "",
+            endretAv = null
         )
 
         transactionalManager.transaction { tx ->
@@ -351,7 +362,13 @@ class ReservasjonV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val forlengetReservasjon = transactionalManager.transaction { tx ->
             val hentetReservasjon =
                 reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel("test1", tx)!!
-            reservasjonV3Repository.forlengReservasjon(hentetReservasjon, 1, hentetReservasjon.gyldigTil.plusDays(1), "testkommentar", tx)
+            reservasjonV3Repository.forlengReservasjon(
+                hentetReservasjon,
+                1,
+                hentetReservasjon.gyldigTil.plusDays(1),
+                "testkommentar",
+                tx
+            )
         }
 
         assertThat(forlengetReservasjon.gyldigTil).isEqualTo(reservasjon.gyldigTil.plusDays(1))

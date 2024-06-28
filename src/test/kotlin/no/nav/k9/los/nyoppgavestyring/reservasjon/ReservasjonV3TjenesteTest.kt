@@ -102,7 +102,11 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
             )
         }
 
-        reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(reservasjonsnøkkel = "test1", "", annullertAvBrukerId = saksbehandlerInnlogget.id!!)
+        reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(
+            reservasjonsnøkkel = "test1",
+            "",
+            annullertAvBrukerId = saksbehandlerInnlogget.id!!
+        )
 
         val aktiveReservasjoner =
             reservasjonV3Tjeneste.hentReservasjonerForSaksbehandler(saksbehandler1.id!!)
@@ -138,6 +142,7 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
             kommentar = "",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
+            endretAv = null
         )
 
         transactionalManager.transaction { tx ->
@@ -181,6 +186,7 @@ class ReservasjonV3TjenesteTest : AbstractK9LosIntegrationTest() {
             kommentar = "",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1),
+            endretAv = null
         )
 
         transactionalManager.transaction { tx ->
