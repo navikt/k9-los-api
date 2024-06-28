@@ -32,11 +32,18 @@ class ReservasjonV3DtoBuilder(
         reservasjonMedOppgaver: ReservasjonV3MedOppgaver,
         saksbehandler: Saksbehandler
     ): ReservasjonV3Dto {
+        var endretAvNavn: String? = null;
+        if (reservasjonMedOppgaver.reservasjonV3.endretAv != null) {
+            endretAvNavn =
+                saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonMedOppgaver.reservasjonV3.endretAv).navn
+        }
+
         val oppgaveV3Dtos = reservasjonMedOppgaver.oppgaverV3.map {
+
             val person = pdlService.person(it.hentVerdi("aktorId")!!).person
             GenerellOppgaveV3Dto(it, person)
         }
-        return ReservasjonV3Dto(reservasjonMedOppgaver.reservasjonV3, oppgaveV3Dtos, saksbehandler)
+        return ReservasjonV3Dto(reservasjonMedOppgaver.reservasjonV3, oppgaveV3Dtos, saksbehandler, endretAvNavn)
     }
 
 
@@ -45,6 +52,12 @@ class ReservasjonV3DtoBuilder(
         saksbehandler: Saksbehandler
     ): ReservasjonV3Dto {
         val oppgaveV1 = reservasjonMedOppgaver.oppgaveV1!!
+        var endretAvNavn: String? = null;
+        if (reservasjonMedOppgaver.reservasjonV3.endretAv != null) {
+            endretAvNavn =
+                saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonMedOppgaver.reservasjonV3.endretAv).navn
+        }
+
         val oppgaveV1Dto = if (oppgaveV1.aktiv) {
             val person = pdlService.person(oppgaveV1.aktorId)
             OppgaveDto(
@@ -79,6 +92,6 @@ class ReservasjonV3DtoBuilder(
         } else {
             null
         }
-        return ReservasjonV3Dto(reservasjonMedOppgaver.reservasjonV3, oppgaveV1Dto, saksbehandler)
+        return ReservasjonV3Dto(reservasjonMedOppgaver.reservasjonV3, oppgaveV1Dto, saksbehandler, endretAvNavn)
     }
 }

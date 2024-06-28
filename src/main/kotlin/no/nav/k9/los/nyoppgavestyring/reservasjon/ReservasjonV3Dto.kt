@@ -21,36 +21,7 @@ data class ReservasjonV3Dto(
     val endretAvNavn: String?
 ) {
     constructor(
-        reservasjonV3: ReservasjonV3, oppgaver: List<GenerellOppgaveV3Dto>, reservertAv: Saksbehandler
-    ) : this(
-        reserverteV3Oppgaver = oppgaver,
-        reservasjonsnøkkel = reservasjonV3.reservasjonsnøkkel,
-        reservertAvIdent = reservertAv.brukerIdent!!,
-        reservertAvEpost = reservertAv.epost,
-        reservertAvNavn = reservertAv.navn,
-        kommentar = reservasjonV3.kommentar ?: "",
-        reservertFra = reservasjonV3.gyldigFra,
-        reservertTil = reservasjonV3.gyldigTil,
-        endretAvNavn = ""
-    )
-
-    // Fjernes når V1 skal vekk
-    constructor(reservasjonV3: ReservasjonV3, oppgave: OppgaveDto?, reservertAv: Saksbehandler) : this(
-        reserverteV3Oppgaver = emptyList(),
-        reservertOppgaveV1Dto = oppgave,
-        reservasjonsnøkkel = reservasjonV3.reservasjonsnøkkel,
-        reservertAvIdent = reservertAv.brukerIdent!!,
-        reservertAvEpost = reservertAv.epost,
-        reservertAvNavn = reservertAv.navn,
-        kommentar = reservasjonV3.kommentar ?: "",
-        reservertFra = reservasjonV3.gyldigFra,
-        reservertTil = reservasjonV3.gyldigTil,
-        endretAvNavn = ""
-
-    )
-
-    constructor(
-        reservasjonV3: ReservasjonV3MedEndring,
+        reservasjonV3: ReservasjonV3,
         oppgaver: List<GenerellOppgaveV3Dto>,
         reservertAv: Saksbehandler,
         endretAvNavn: String?
@@ -63,11 +34,12 @@ data class ReservasjonV3Dto(
         kommentar = reservasjonV3.kommentar ?: "",
         reservertFra = reservasjonV3.gyldigFra,
         reservertTil = reservasjonV3.gyldigTil,
-        endretAvNavn = endretAvNavn ?: ""
+        endretAvNavn = endretAvNavn ?: null
     )
 
+    // Fjernes når V1 skal vekk
     constructor(
-        reservasjonV3: ReservasjonV3MedEndring,
+        reservasjonV3: ReservasjonV3,
         oppgave: OppgaveDto?,
         reservertAv: Saksbehandler,
         endretAvNavn: String?
@@ -81,7 +53,7 @@ data class ReservasjonV3Dto(
         kommentar = reservasjonV3.kommentar ?: "",
         reservertFra = reservasjonV3.gyldigFra,
         reservertTil = reservasjonV3.gyldigTil,
-        endretAvNavn = endretAvNavn ?: ""
+        endretAvNavn = endretAvNavn ?: null
 
     )
 }
