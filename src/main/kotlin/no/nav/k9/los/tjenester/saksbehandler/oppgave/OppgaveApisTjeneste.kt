@@ -253,7 +253,7 @@ class OppgaveApisTjeneste(
 
 
         return reservasjonerMedOppgaver.map { reservasjonMedOppgaver ->
-            reservasjonV3DtoBuilder.byggReservasjonV3MedEndringDto(reservasjonMedOppgaver, saksbehandler)
+            reservasjonV3DtoBuilder.byggReservasjonV3Dto(reservasjonMedOppgaver, saksbehandler)
         }
     }
 }
