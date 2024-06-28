@@ -233,7 +233,7 @@ class ReservasjonV3Repository(
                        r.kommentar as kommentar, 
                        re.endretav as reservasjon_endret_av,
                   from reservasjon_v3 r
-                        left outer join reservasjon_v3_endring re on re.ny_reservasjon_id = r.id
+                  left outer join reservasjon_v3_endring re on re.ny_reservasjon_id = r.id
                    where annullert_for_utlop = false
                        and lower(r.gyldig_tidsrom) <= :now
                        and upper(r.gyldig_tidsrom) > :now
@@ -258,8 +258,9 @@ class ReservasjonV3Repository(
     fun hentAktivReservasjonForReservasjonsnøkkel(nøkkel: String, tx: TransactionalSession): ReservasjonV3? {
         val queryString = """
                    select r.id, r.reservertAv, r.reservasjonsnokkel, lower(r.gyldig_tidsrom) as fra, upper(r.gyldig_tidsrom) as til, r.annullert_for_utlop , kommentar as kommentar, re.endretAv
-                   from reservasjon_v3 r left outer join r
-                   where r.reservasjonsnokkel = :nokkel left outer join reservasjon_v3_endring re on re.ny_reservasjon_id = r.id
+                   from reservasjon_v3 r
+                   left outer join reservasjon_v3_endring re on re.ny_reservasjon_id = r.id
+                   where r.reservasjonsnokkel = :nokkel 
                        and annullert_for_utlop = false
                        and lower(r.gyldig_tidsrom) <= :now
                        and upper(r.gyldig_tidsrom) > :now
@@ -310,7 +311,8 @@ class ReservasjonV3Repository(
                 """
                    select r.id, r.reservertAv, r.reservasjonsnokkel, lower(r.gyldig_tidsrom) as fra, upper(r.gyldig_tidsrom) as til, r.annullert_for_utlop , kommentar as kommentar, re.endretAv
                    from reservasjon_v3 r
-                   where r.reservasjonsnokkel = :nokkel left outer join reservasjon_v3_endring re on re.ny_reservasjon_id = r.id
+                   left outer join reservasjon_v3_endring re on re.ny_reservasjon_id = r.id
+                   where r.reservasjonsnokkel = :nokkel 
                        and lower(r.gyldig_tidsrom) <= :now
                        and upper(r.gyldig_tidsrom) > :now
                 """.trimIndent(),
@@ -416,7 +418,7 @@ class ReservasjonV3Repository(
                         re.endretav as reservasjon_endret_av,
                         re.opprettet as endring_opprettet
                     from reservasjon_v3 r
-                        left outer join reservasjon_v3_endring re on re.annullert_reservasjon_id = r.id 
+                    left outer join reservasjon_v3_endring re on re.annullert_reservasjon_id = r.id 
                     where r.reservasjonsnokkel = :nokkel
                     order by r.opprettet ASC
                 """.trimIndent(),
