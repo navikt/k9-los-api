@@ -15,7 +15,12 @@ class OppgaveRepository(
     private val oppgavetypeRepository: OppgavetypeRepository
 ) {
     private val log: Logger = LoggerFactory.getLogger("OppgaveRepository")
+
     fun hentNyesteOppgaveForEksternId(tx: TransactionalSession, kildeområde: String, eksternId: String, now: LocalDateTime = LocalDateTime.now()): Oppgave {
+        return hentNyesteOppgaveForEksternIdHvisFinnes(tx, kildeområde, eksternId, now) ?: throw IllegalStateException("Fant ikke oppgave med kilde $kildeområde og eksternId $eksternId")
+    }
+
+    fun hentNyesteOppgaveForEksternIdHvisFinnes(tx: TransactionalSession, kildeområde: String, eksternId: String, now: LocalDateTime = LocalDateTime.now()): Oppgave? {
         val queryString = """
                 select * 
                 from oppgave_v3 ov
@@ -32,8 +37,7 @@ class OppgaveRepository(
                     "eksternId" to eksternId
                 )
             ).map { row -> mapOppgave(row, now, tx) }.asSingle
-        ) ?: throw IllegalStateException("Fant ikke oppgave med kilde $kildeområde og eksternId $eksternId")
-
+        )
         return oppgave
     }
 
