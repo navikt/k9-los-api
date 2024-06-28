@@ -231,7 +231,7 @@ class ReservasjonV3Repository(
                        upper(r.gyldig_tidsrom) as til, 
                        r.annullert_for_utlop, 
                        r.kommentar as kommentar, 
-                       re.endretav as reservasjon_endret_av,
+                       re.endretav as reservasjon_endret_av
                   from reservasjon_v3 r
                   left outer join reservasjon_v3_endring re on re.ny_reservasjon_id = r.id
                    where annullert_for_utlop = false
