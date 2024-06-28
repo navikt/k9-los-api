@@ -204,17 +204,6 @@ class ReservasjonV3Tjeneste(
         }
     }
 
-    fun hentV1OppgaveFraReservasjonMedEndring(
-        reservasjon: ReservasjonV3MedEndring
-    ): no.nav.k9.los.domene.lager.oppgave.Oppgave? {
-        if (reservasjon.reservasjonsnøkkel.startsWith("legacy_")) {
-            return oppgaveV1Repository.hent(UUID.fromString(reservasjon.reservasjonsnøkkel.substring(7)))
-        } else {
-            return null
-        }
-    }
-
-
     fun annullerReservasjonHvisFinnes(
         reservasjonsnøkkel: String,
         kommentar: String?,
