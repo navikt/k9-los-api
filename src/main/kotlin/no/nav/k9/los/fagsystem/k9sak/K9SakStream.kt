@@ -10,6 +10,7 @@ import no.nav.k9.los.integrasjon.kafka.ManagedStreamHealthy
 import no.nav.k9.los.integrasjon.kafka.ManagedStreamReady
 import no.nav.k9.los.integrasjon.kafka.IKafkaConfig
 import no.nav.k9.los.utils.LosObjectMapper
+import no.nav.k9.los.utils.TransientFeilHåndterer
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.ProduksjonsstyringHendelse
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import org.apache.kafka.streams.StreamsBuilder
@@ -54,11 +55,13 @@ internal class K9SakStream constructor(
                 .stream(
                     fromTopic.name,
                     Consumed.with(fromTopic.keySerde, fromTopic.valueSerde)
-                ).peek { _, e -> log.info("--> K9SakHendelse: ${e.tryggToString() }") }
+                ).peek { _, e -> log.info("--> K9SakHendelse: ${e.tryggToString()}") }
                 .foreach { _, entry ->
                     if (entry != null) {
-                        runBlocking {
-                            k9sakEventHandler.prosesser(entry)
+                        TransientFeilHåndterer().utfør(NAME) {
+                            runBlocking {
+                                k9sakEventHandler.prosesser(entry)
+                            }
                         }
                     }
                 }

@@ -34,10 +34,7 @@ import no.nav.helse.dusseldorf.ktor.jackson.JacksonStatusPages
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.helse.dusseldorf.ktor.metrics.MetricsRoute
 import no.nav.helse.dusseldorf.ktor.metrics.init
-import no.nav.k9.los.eventhandler.køOppdatertProsessor
-import no.nav.k9.los.eventhandler.oppdaterStatistikk
-import no.nav.k9.los.eventhandler.refreshK9
-import no.nav.k9.los.eventhandler.sjekkReserverteJobb
+import no.nav.k9.los.eventhandler.*
 import no.nav.k9.los.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.los.integrasjon.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
@@ -160,13 +157,11 @@ fun Application.k9Los() {
             oppgaveTjeneste = koin.get()
         )
 
-
-    val refreshOppgaveJobb =
-        refreshK9(
-            channel = koin.get<Channel<UUID>>(named("oppgaveRefreshChannel")),
-            k9SakService = koin.get(),
-            oppgaveRepository = koin.get()
-        )
+    val refreshOppgaveJobb = with(RefreshK9(
+        k9SakService = koin.get(),
+        oppgaveRepository = koin.get(),
+        transactionalManager = koin.get()
+    )) { start(koin.get<Channel<UUID>>(named("oppgaveRefreshChannel"))) }
 
     val oppdaterStatistikkJobb =
         oppdaterStatistikk(
