@@ -87,9 +87,6 @@ class ReservasjonOversetterTest : AbstractK9LosIntegrationTest(){
         assertTrue(oppgavestatus.erReservert)
         assertEquals("Saksbehandler Sara", oppgavestatus.reservertAvNavn)
 
-        val reservasjonKonverteringJobb = get<ReservasjonKonverteringJobb>()
-        reservasjonKonverteringJobb.spillAvReservasjoner()
-
         val reservasjonV3Tjeneste = get<ReservasjonV3Tjeneste>()
         val alleAktiveReservasjoner = reservasjonV3Tjeneste.hentAlleAktiveReservasjoner()
 
