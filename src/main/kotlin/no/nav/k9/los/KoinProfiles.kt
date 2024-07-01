@@ -339,6 +339,7 @@ fun common(app: Application, config: Configuration) = module {
         ReservasjonV3DtoBuilder(
             pdlService = get(),
             oppgaveTjeneste = get(),
+            saksbehandlerRepository = get()
         )
     }
 

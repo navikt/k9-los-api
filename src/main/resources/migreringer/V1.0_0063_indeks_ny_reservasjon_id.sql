@@ -1,0 +1,1 @@
+CREATE INDEX ny_reservasjon_id_idx ON reservasjon_v3_endring(ny_reservasjon_id);
