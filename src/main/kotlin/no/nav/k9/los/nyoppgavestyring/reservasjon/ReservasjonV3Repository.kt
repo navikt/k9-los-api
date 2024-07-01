@@ -313,8 +313,6 @@ class ReservasjonV3Repository(
                    from reservasjon_v3 r
                    left outer join reservasjon_v3_endring re on re.ny_reservasjon_id = r.id
                    where r.reservasjonsnokkel = :nokkel 
-                       and lower(r.gyldig_tidsrom) <= :now
-                       and upper(r.gyldig_tidsrom) > :now
                 """.trimIndent(),
                 mapOf(
                     "nokkel" to nøkkel

@@ -34,7 +34,7 @@ data class ReservasjonV3Dto(
         kommentar = reservasjonV3.kommentar ?: "",
         reservertFra = reservasjonV3.gyldigFra,
         reservertTil = reservasjonV3.gyldigTil,
-        endretAvNavn = endretAvNavn ?: null
+        endretAvNavn = endretAvNavn
     )
 
     // Fjernes når V1 skal vekk

@@ -32,5 +32,5 @@ class OppgaveDto(
     val paaVent: Boolean? = null, // bekreftet i bruk
     val merknad: MerknadDto? = null, // bekreftet i bruk,
     val oppgaveNøkkel: OppgaveNøkkelDto = OppgaveNøkkelDto.forV1Oppgave(eksternId.toString()),
-    val endretAvNavn: String? = ""
+    val endretAvNavn: String? = null
 )
