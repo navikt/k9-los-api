@@ -14,13 +14,13 @@ val commonsTextVersion = "1.12.0"
 
 val dusseldorfKtorVersion = "5.0.1"
 val ktorVersion = "2.3.12"
-val kafkaVersion = "3.7.0"
+val kafkaVersion = "3.7.1"
 
 val navTilgangskontroll = "3.2024.01.24_10.14-f70bae69bd65"
 
 // Test Dependencies
 val testContainers = "1.19.8"
-val jsonassertVersion = "1.5.2"
+val jsonassertVersion = "1.5.3"
 val jupiterVersion = "5.10.3"
 val assertkVersion = "0.28.1"
 val mockkVersion = "1.13.11"
@@ -82,7 +82,7 @@ dependencies {
         exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
     }
 
-    implementation( "io.github.smiley4:ktor-swagger-ui:3.0.1")
+    implementation( "io.github.smiley4:ktor-swagger-ui:3.1.0")
 
 
     // DI
