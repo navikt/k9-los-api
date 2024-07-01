@@ -33,7 +33,7 @@ class BehandlingProsessEventK9Repository(private val dataSource: DataSource) {
         }
         val modell = LosObjectMapper.instance.readValue(json, K9SakModell::class.java)
 
-        return K9SakModell(modell.eventer.sortedBy { it.eventTid }.toMutableList())
+        return K9SakModell(modell.eventer.distinct().sortedBy { it.eventTid }.toMutableList())
     }
 
     fun hentMedLås(tx: TransactionalSession, uuid: UUID): K9SakModell {
@@ -54,7 +54,7 @@ class BehandlingProsessEventK9Repository(private val dataSource: DataSource) {
         }
         val modell = LosObjectMapper.instance.readValue(json, K9SakModell::class.java)
 
-        return K9SakModell(modell.eventer.sortedBy { it.eventTid }.toMutableList())
+        return K9SakModell(modell.eventer.distinct().sortedBy { it.eventTid }.toMutableList())
     }
 
     fun fjernDirty(uuid: UUID, tx: TransactionalSession) {
@@ -93,12 +93,12 @@ class BehandlingProsessEventK9Repository(private val dataSource: DataSource) {
 
                 val modell = if (!run.isNullOrEmpty()) {
                     val modell = LosObjectMapper.instance.readValue(run, K9SakModell::class.java)
-                    f(modell.copy(eventer = modell.eventer.sortedBy { it.eventTid }.toMutableList()))
+                    f(modell.copy(eventer = modell.eventer.distinct().sortedBy { it.eventTid }.toMutableList()))
                 } else {
                     f(null)
                 }
                 sortertModell =
-                    modell.copy(eventer = (modell.eventer.toSet().toList().sortedBy { it.eventTid }.toMutableList()))
+                    modell.copy(eventer = (modell.eventer.distinct().sortedBy { it.eventTid }.toMutableList()))
                 val json = LosObjectMapper.instance.writeValueAsString(sortertModell)
                 tx.run(
                     queryOf(
