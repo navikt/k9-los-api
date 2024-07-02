@@ -75,7 +75,7 @@ dependencies {
 
     // Div
     implementation(enforcedPlatform( "com.fasterxml.jackson:jackson-bom:$jacksonVersion"))
-    implementation("org.apache.commons:commons-text:$commonsTextVersion")
+    implementation("org.apache.commons:commons-text:$commonsTextVersion" )
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
     implementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
     implementation("com.github.kittinunf.fuel:fuel-coroutines:$fuelVersion"){
@@ -103,6 +103,8 @@ dependencies {
 
     testImplementation("org.testcontainers:postgresql:$testContainers")
     testImplementation("io.insert-koin:koin-test-junit5:$koinVersion")
+
+    testImplementation("org.apache.commons:commons-compress:1.26.2")
 }
 
 repositories {
