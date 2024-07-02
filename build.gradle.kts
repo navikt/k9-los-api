@@ -103,7 +103,6 @@ dependencies {
 
     testImplementation("org.testcontainers:postgresql:$testContainers")
     testImplementation("io.insert-koin:koin-test-junit5:$koinVersion")
-    testImplementation("org.testcontainers:postgresql:$testContainers")
 
     testImplementation("org.apache.commons:commons-compress:1.26.2")
 }
