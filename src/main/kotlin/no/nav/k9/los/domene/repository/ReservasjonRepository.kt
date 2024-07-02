@@ -67,6 +67,8 @@ class ReservasjonRepository(
             //ikke vits å gjøre noe spørring når alt uansett filtreres bort
             return emptySet();
         }
+        var nå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS).toString();
+        log.info("Filtrerer bort reservasjoner utgått før $nå")
         return using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
@@ -76,7 +78,7 @@ class ReservasjonRepository(
                          and id in (${InClauseHjelper.tilParameternavn(reservasjoner, "r")})
                         """
                     ,
-                    mapOf("reservertTil" to LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS).toString())
+                    mapOf("reservertTil" to nå)
                     +
                     InClauseHjelper.parameternavnTilVerdierMap(reservasjoner.map { it.toString() }, "r")
                 )

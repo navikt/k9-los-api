@@ -678,10 +678,22 @@ class OppgaveTjeneste constructor(
             { oppgaveKøRepository.hentIkkeTaHensyn() }
         val reservasjonIder = DetaljerMetrikker.timeSuspended("refreshAntallForAlleKøer", "hentReservasjonIder")
             { saksbehandlerRepository.hentAlleSaksbehandlereIkkeTaHensyn().flatMap { saksbehandler -> saksbehandler.reservasjoner }.toSet() }
-        val reserverteOppgaveIder = DetaljerMetrikker.timeSuspended("refreshAntallForAlleKøer", "hentUUIDForOppgaverMedAktivReservasjon")
+        log.info("Refresh køer: hentet ${reservasjonIder.size} reservasjonsId-er fra saksbehandler-objekt")
+        val reserverteOppgaveIderDirekte = DetaljerMetrikker.timeSuspended("refreshAntallForAlleKøer", "hentUUIDForOppgaverMedAktivReservasjon")
             { reservasjonRepository.hentOppgaveUuidMedAktivReservasjon(reservasjonIder) }
+        val reservasjoner = DetaljerMetrikker.timeSuspended("refreshAntallForAlleKøer", "hentReservasjoner")
+            { reservasjonRepository.hentSelvOmDeIkkeErAktive(reservasjonIder) }
+        log.info("Refresh køer: hentet opp ${reservasjoner.size} reservasjoner fra reservasjonId-er")
+        val aktiveReservasjoner = reservasjoner.filter { it.erAktiv() }
+        log.info("Refresh køer: ${aktiveReservasjoner.size} aktive reservasjoner funnet")
+
+        log.info("Refresh køer: ${reserverteOppgaveIderDirekte.size} aktive reservasjoner funnet ved direkte oppslag")
+
+        val reserverteOppgaveIder = reservasjoner.map { it.oppgave }.toSet()
         val reserverteOppgaver = DetaljerMetrikker.timeSuspended("refreshAntallForAlleKøer", "hentReserverteOppgaver")
             { oppgaveRepository.hentOppgaver(reserverteOppgaveIder) }
+
+        log.info("Refresh køer: hentet opp ${reserverteOppgaver.size} oppgaver som er reserverte")
         køene.forEach {
             DetaljerMetrikker.timeSuspended("refreshAntallForAlleKøer", "refreshHentAntallOppgaverForKo") { refreshHentAntallOppgaverForKø(it, reserverteOppgaver) }
         }
@@ -704,7 +716,7 @@ class OppgaveTjeneste constructor(
         hentAntallOppgaverCache.set(CacheKey(oppgavekø.id, false), CacheObject(antallUtenReserverte, LocalDateTime.now().plusMinutes(30)))
         hentAntallOppgaverCache.set(CacheKey(oppgavekø.id, true), CacheObject(antallMedReserverte, LocalDateTime.now().plusMinutes(30)))
 
-        log.info("Refreshet antall for kø ${oppgavekø.id}. Antall i kø er ${antallUtenReserverte} og i tilleg kommer {$antallReserverteOppgaverSomTilhørerKø} reserverte oppgaver som tilhører køen")
+        log.info("Refreshet antall for kø ${oppgavekø.id}. Antall i kø er ${antallUtenReserverte} og i tillegg kommer ${antallReserverteOppgaverSomTilhørerKø} reserverte oppgaver som tilhører køen")
     }
 
     suspend fun hentAntallOppgaver(oppgavekøId: UUID, taMedReserverte: Boolean = false, refresh: Boolean = false): Int {
