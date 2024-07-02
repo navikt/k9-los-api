@@ -125,20 +125,25 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
         var eventTeller = 0L
         var forrigeOppgave: OppgaveV3? = null
 
+        val eventer = eventRepository.hentMedLås(tx, uuid).eventer
         var eventNrForBehandling = 0L
+        val høyesteInternVersjon =
+            oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9punsj", "K9", tx)!!
         var oppgaveDto: OppgaveDto? = null
-        val behandlingProsessEventer: List<PunsjEventDto> = eventRepository.hentMedLås(tx, uuid).eventer
-        for (event in behandlingProsessEventer) {
+        for (event in eventer) {
+            if (eventNrForBehandling > høyesteInternVersjon) { break }  //Historikkvasken har funnet eventer som ennå ikke er lastet inn med normalflyt. Dirty eventer skal håndteres av vanlig adaptertjeneste
+
             oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
 
-//            oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, høyesteInternVersjon, tx)
+            oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, tx)
+
+            eventTeller++
+            loggFremgangForHver100(eventTeller, "Prosessert $eventTeller eventer")
 
             forrigeOppgave = oppgaveV3Tjeneste.hentOppgaveversjon(
-                område = "k9",
-                eksternId = oppgaveDto.id,
-                eksternVersjon = oppgaveDto.versjon,
-                tx = tx
+                område = "K9", eksternId = oppgaveDto.id, eksternVersjon = oppgaveDto.versjon, tx = tx
             )
+            eventNrForBehandling++
         }
 
         oppgaveDto?.let {
