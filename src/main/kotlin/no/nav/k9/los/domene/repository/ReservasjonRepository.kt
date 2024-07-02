@@ -78,7 +78,7 @@ class ReservasjonRepository(
                     ,
                     mapOf("reservertTil" to LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS).toString())
                     +
-                    InClauseHjelper.parameternavnTilVerdierMap(reservasjoner, "r")
+                    InClauseHjelper.parameternavnTilVerdierMap(reservasjoner.map { it.toString() }, "r")
                 )
                     .map { row ->
                         UUID.fromString(row.string("oppgaveUuid"))
