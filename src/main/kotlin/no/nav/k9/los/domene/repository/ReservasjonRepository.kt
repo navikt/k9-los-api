@@ -74,7 +74,7 @@ class ReservasjonRepository(
                 queryOf(
                     """
                         select (data ::jsonb -> 'reservasjoner' -> -1 ->> 'oppgave') as oppgaveUuid from reservasjon
-                         where (data ::jsonb -> 'reservasjoner' -> -1 ->> 'reservertTil') > :nowString
+                         where (data ::jsonb -> 'reservasjoner' -> -1 ->> 'reservertTil') > :reservertTil
                          and id in (${InClauseHjelper.tilParameternavn(reservasjoner, "r")})
                         """
                     ,
