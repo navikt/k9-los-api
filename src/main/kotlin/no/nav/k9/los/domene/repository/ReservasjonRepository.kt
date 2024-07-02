@@ -62,6 +62,10 @@ class ReservasjonRepository(
         return hentReservasjoner(reservasjoner)
     }
 
+    fun hentAktiveReservasjoner(reservasjoner: Set<UUID>): List<Reservasjon> {
+        return hentReservasjoner(reservasjoner).filter { it.erAktiv() }
+    }
+
     private fun hentReservasjoner(set: Set<UUID>): List<Reservasjon> {
         val json: List<String> = using(sessionOf(dataSource)) {
             it.run(

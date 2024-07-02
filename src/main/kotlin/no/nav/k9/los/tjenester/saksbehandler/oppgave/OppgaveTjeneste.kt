@@ -679,7 +679,7 @@ class OppgaveTjeneste constructor(
         val reservasjonIder = DetaljerMetrikker.timeSuspended("refreshAntallForAlleKøer", "hentReservasjonIder")
             { saksbehandlerRepository.hentAlleSaksbehandlereIkkeTaHensyn().flatMap { saksbehandler -> saksbehandler.reservasjoner }.toSet() }
         val reservasjoner = DetaljerMetrikker.timeSuspended("refreshAntallForAlleKøer", "hentReservasjoner")
-            { reservasjonRepository.hentSelvOmDeIkkeErAktive(reservasjonIder) }
+            { reservasjonRepository.hentAktiveReservasjoner(reservasjonIder) }
         val reserverteOppgaveIder = reservasjoner.map { it.oppgave }.toSet()
         val reserverteOppgaver = DetaljerMetrikker.timeSuspended("refreshAntallForAlleKøer", "hentReserverteOppgaver")
             { oppgaveRepository.hentOppgaver(reserverteOppgaveIder) }
@@ -690,7 +690,7 @@ class OppgaveTjeneste constructor(
 
     fun refreshAntallOppgaverForKø(oppgavekø: OppgaveKø) {
         val reservasjonIder = saksbehandlerRepository.hentAlleSaksbehandlereIkkeTaHensyn().flatMap { saksbehandler -> saksbehandler.reservasjoner }.toSet()
-        val reservasjoner = reservasjonRepository.hentSelvOmDeIkkeErAktive(reservasjonIder)
+        val reservasjoner = reservasjonRepository.hentAktiveReservasjoner(reservasjonIder)
         val reserverteOppgaveIder = reservasjoner.map { it.oppgave }.toSet()
         val reserverteOppgaver = oppgaveRepository.hentOppgaver(reserverteOppgaveIder)
         refreshHentAntallOppgaverForKø(oppgavekø, reserverteOppgaver)
@@ -721,7 +721,7 @@ class OppgaveTjeneste constructor(
         var antallReserverteOppgaverSomTilhørerKø = 0
         if (taMedReserverte) {
             val reservasjonIder = saksbehandlerRepository.hentAlleSaksbehandlereIkkeTaHensyn().flatMap { saksbehandler -> saksbehandler.reservasjoner }.toSet()
-            val reservasjoner = reservasjonRepository.hentSelvOmDeIkkeErAktive(reservasjonIder)
+            val reservasjoner = reservasjonRepository.hentAktiveReservasjoner(reservasjonIder)
             val reserverteOppgaveIder = reservasjoner.map { it.oppgave }.toSet()
             val reserverteOppgaver = oppgaveRepository.hentOppgaver(reserverteOppgaveIder)
 
