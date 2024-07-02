@@ -441,12 +441,12 @@ class OppgaveTjeneste constructor(
             } else {
                 val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(reservasjon.reservertAv)
                 val innloggetBruker =
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(azureGraphService.hentIdentTilInnloggetBruker())!!
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(azureGraphService.hentIdentTilInnloggetBruker())
 
                 OppgaveStatusDto(
                     erReservert = true,
                     reservertTilTidspunkt = reservasjon.gyldigTil,
-                    erReservertAvInnloggetBruker = reservertAv.id == innloggetBruker.id,
+                    erReservertAvInnloggetBruker = innloggetBruker?.let { reservertAv.id == it.id } ?: false,
                     reservertAv = reservertAv.brukerIdent,
                     reservertAvNavn = reservertAv.navn,
                     flyttetReservasjon = null
