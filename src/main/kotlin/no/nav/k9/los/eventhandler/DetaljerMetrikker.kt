@@ -22,8 +22,7 @@ object DetaljerMetrikker {
             status = e.javaClass.simpleName
             throw e;
         } finally {
-            tidsforbruk.labels(label1, label2, status)
-                .observe(SimpleTimer.elapsedSecondsFromNanos(t0, System.nanoTime()))
+            observe(t0, label1, label2, status)
         }
     }
 
@@ -37,8 +36,12 @@ object DetaljerMetrikker {
             status = e.javaClass.simpleName
             throw e;
         } finally {
-            tidsforbruk.labels(label1, label2, status)
-                .observe(SimpleTimer.elapsedSecondsFromNanos(t0, System.nanoTime()))
+            observe(t0, label1, label2, status)
         }
+    }
+
+    fun observe(starttidNanos : Long, label1: String, label2: String, status : String= "OK") {
+        tidsforbruk.labels(label1, label2, status)
+            .observe(SimpleTimer.elapsedSecondsFromNanos(starttidNanos, System.nanoTime()))
     }
 }
