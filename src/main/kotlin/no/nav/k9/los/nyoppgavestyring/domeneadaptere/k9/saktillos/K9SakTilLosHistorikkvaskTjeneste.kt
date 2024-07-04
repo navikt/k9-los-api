@@ -121,7 +121,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
         var eventTeller = 0L
         var forrigeOppgave: OppgaveV3? = null
 
-        val nyeBehandlingsopplysningerFraK9Sak = k9SakBerikerKlient.hentBehandling(UUID.fromString(uuid.toString()))
+        val nyeBehandlingsopplysningerFraK9Sak = k9SakBerikerKlient.hentBehandling(UUID.fromString(uuid.toString()), antallForsøk = 8)
 
         val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
         val høyesteInternVersjon =
