@@ -235,7 +235,7 @@ internal fun Route.OppgaveApis() {
 
             if (person == null) {
                 log.warn("Fant ikke personen som er på oppgaven med eksternId $eksternUuid")
-                call.respond(HttpStatusCode.ExpectationFailed, "Fant ikke personen på oppgaven")
+                call.respond(HttpStatusCode.InternalServerError, "Fant ikke personen på oppgaven")
             } else {
                 val behandletOppgave = BehandletOppgave(oppgave, person)
                 call.respond(
