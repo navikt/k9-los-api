@@ -5,6 +5,8 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import no.nav.k9.los.Configuration
+import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.domene.repository.StatistikkRepository
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import org.slf4j.Logger
@@ -16,6 +18,7 @@ private val log: Logger = LoggerFactory.getLogger("oppdaterStatistikk")
 
 fun CoroutineScope.oppdaterStatistikk(
     channel: ReceiveChannel<Boolean>,
+    configuration: Configuration,
     statistikkRepository: StatistikkRepository,
     oppgaveTjeneste: OppgaveTjeneste
 
@@ -27,7 +30,11 @@ fun CoroutineScope.oppdaterStatistikk(
                 DetaljerMetrikker.timeSuspended("oppdaterStatistikk","refreshAntallForAlleKøer",{ oppgaveTjeneste.refreshAntallForAlleKøer() })
                 DetaljerMetrikker.timeSuspended("oppdaterStatistikk", "siste8uker") { statistikkRepository.hentFerdigstilteOgNyeHistorikkMedYtelsetypeSiste8Uker(refresh = true) }
             }
-            delay(27_000)
+            if (configuration.koinProfile == KoinProfile.PROD) {
+                delay(57_000) //redusert hyppighet i prod for å unngå å bruke for mye ressurser
+            } else {
+                delay(5_000)
+            }
         }
     } catch (e: Exception) {
         log.error("Feil ved oppdatering av statistikk", e)
