@@ -12,10 +12,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.time.DayOfWeek
-import java.time.Duration
-import java.time.LocalDateTime
-import java.time.LocalTime
+import java.time.*
 import java.util.*
 import kotlin.concurrent.thread
 
@@ -87,8 +84,10 @@ class K9SakTilLosHistorikkvaskTjeneste(
     }
 
     fun skalPauses(): Boolean {
-        val nå = LocalTime.now()
-        if (nå > LocalTime.of(6, 0, 0) && nå < LocalTime.of(17, 0, 0) && LocalDateTime.now().dayOfWeek <= DayOfWeek.FRIDAY) {
+        val zone = ZoneId.of("Europe/Oslo")
+        val nå = ZonedDateTime.now().withZoneSameInstant(zone)
+
+        if (nå.toLocalTime() > LocalTime.of(6, 0, 0) && nå.toLocalTime() < LocalTime.of(17, 0, 0) && nå.dayOfWeek <= DayOfWeek.FRIDAY) {
             return true
         }
         return false
@@ -121,7 +120,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
         var eventTeller = 0L
         var forrigeOppgave: OppgaveV3? = null
 
-        val nyeBehandlingsopplysningerFraK9Sak = k9SakBerikerKlient.hentBehandling(UUID.fromString(uuid.toString()))
+        val nyeBehandlingsopplysningerFraK9Sak = k9SakBerikerKlient.hentBehandling(UUID.fromString(uuid.toString()), antallForsøk = 8)
 
         val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
         val høyesteInternVersjon =

@@ -7,10 +7,10 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.k9.los.db.util.InClauseHjelper
 import no.nav.k9.los.domene.lager.oppgave.Reservasjon
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.modell.OppgaveKø
-import no.nav.k9.los.eventhandler.taTiden
 import no.nav.k9.los.tjenester.innsikt.Databasekall
 import no.nav.k9.los.tjenester.sse.RefreshKlienter.sendOppdaterReserverte
 import no.nav.k9.los.tjenester.sse.SseEvent
@@ -60,6 +60,33 @@ class ReservasjonRepository(
 
     fun hentSelvOmDeIkkeErAktive(reservasjoner: Set<UUID>): List<Reservasjon> {
         return hentReservasjoner(reservasjoner)
+    }
+
+    fun hentOppgaveUuidMedAktivReservasjon(reservasjoner: Set<UUID>): Set<UUID> {
+        if (reservasjoner.isEmpty()){
+            //ikke vits å gjøre noe spørring når alt uansett filtreres bort
+            return emptySet();
+        }
+        var nå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS).toString();
+        log.info("Filtrerer bort reservasjoner utgått før $nå")
+        return using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    """
+                        select (data ::jsonb -> 'reservasjoner' -> -1 ->> 'oppgave') as oppgaveUuid from reservasjon
+                         where (data ::jsonb -> 'reservasjoner' -> -1 ->> 'reservertTil') > :reservertTil
+                         and id in (${InClauseHjelper.tilParameternavn(reservasjoner, "r")})
+                        """
+                    ,
+                    mapOf("reservertTil" to nå)
+                    +
+                    InClauseHjelper.parameternavnTilVerdierMap(reservasjoner.map { it.toString() }, "r")
+                )
+                    .map { row ->
+                        UUID.fromString(row.string("oppgaveUuid"))
+                    }.asList
+            ).toSet()
+        }
     }
 
     private fun hentReservasjoner(set: Set<UUID>): List<Reservasjon> {

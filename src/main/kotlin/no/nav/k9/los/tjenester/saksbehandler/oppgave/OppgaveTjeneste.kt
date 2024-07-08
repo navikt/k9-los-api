@@ -441,12 +441,12 @@ class OppgaveTjeneste constructor(
             } else {
                 val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(reservasjon.reservertAv)
                 val innloggetBruker =
-                    saksbehandlerRepository.finnSaksbehandlerMedIdent(azureGraphService.hentIdentTilInnloggetBruker())!!
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(azureGraphService.hentIdentTilInnloggetBruker())
 
                 OppgaveStatusDto(
                     erReservert = true,
                     reservertTilTidspunkt = reservasjon.gyldigTil,
-                    erReservertAvInnloggetBruker = reservertAv.id == innloggetBruker.id,
+                    erReservertAvInnloggetBruker = innloggetBruker?.let { reservertAv.id == it.id } ?: false,
                     reservertAv = reservertAv.brukerIdent,
                     reservertAvNavn = reservertAv.navn,
                     flyttetReservasjon = null
@@ -678,11 +678,10 @@ class OppgaveTjeneste constructor(
             { oppgaveKøRepository.hentIkkeTaHensyn() }
         val reservasjonIder = DetaljerMetrikker.timeSuspended("refreshAntallForAlleKøer", "hentReservasjonIder")
             { saksbehandlerRepository.hentAlleSaksbehandlereIkkeTaHensyn().flatMap { saksbehandler -> saksbehandler.reservasjoner }.toSet() }
-        val reservasjoner = DetaljerMetrikker.timeSuspended("refreshAntallForAlleKøer", "hentReservasjoner")
-            { reservasjonRepository.hentSelvOmDeIkkeErAktive(reservasjonIder) }
-        val reserverteOppgaveIder = reservasjoner.map { it.oppgave }.toSet()
+        val reserverteOppgaveIderDirekte = DetaljerMetrikker.timeSuspended("refreshAntallForAlleKøer", "hentUUIDForOppgaverMedAktivReservasjon")
+            { reservasjonRepository.hentOppgaveUuidMedAktivReservasjon(reservasjonIder) }
         val reserverteOppgaver = DetaljerMetrikker.timeSuspended("refreshAntallForAlleKøer", "hentReserverteOppgaver")
-            { oppgaveRepository.hentOppgaver(reserverteOppgaveIder) }
+            { oppgaveRepository.hentOppgaver(reserverteOppgaveIderDirekte) }
         køene.forEach {
             DetaljerMetrikker.timeSuspended("refreshAntallForAlleKøer", "refreshHentAntallOppgaverForKo") { refreshHentAntallOppgaverForKø(it, reserverteOppgaver) }
         }
@@ -690,8 +689,7 @@ class OppgaveTjeneste constructor(
 
     fun refreshAntallOppgaverForKø(oppgavekø: OppgaveKø) {
         val reservasjonIder = saksbehandlerRepository.hentAlleSaksbehandlereIkkeTaHensyn().flatMap { saksbehandler -> saksbehandler.reservasjoner }.toSet()
-        val reservasjoner = reservasjonRepository.hentSelvOmDeIkkeErAktive(reservasjonIder)
-        val reserverteOppgaveIder = reservasjoner.map { it.oppgave }.toSet()
+        val reserverteOppgaveIder = reservasjonRepository.hentOppgaveUuidMedAktivReservasjon(reservasjonIder)
         val reserverteOppgaver = oppgaveRepository.hentOppgaver(reserverteOppgaveIder)
         refreshHentAntallOppgaverForKø(oppgavekø, reserverteOppgaver)
     }
@@ -706,7 +704,7 @@ class OppgaveTjeneste constructor(
         hentAntallOppgaverCache.set(CacheKey(oppgavekø.id, false), CacheObject(antallUtenReserverte, LocalDateTime.now().plusMinutes(30)))
         hentAntallOppgaverCache.set(CacheKey(oppgavekø.id, true), CacheObject(antallMedReserverte, LocalDateTime.now().plusMinutes(30)))
 
-        log.info("Refreshet antall for kø ${oppgavekø.id}. Antall i kø er ${antallUtenReserverte} og i tilleg kommer {$antallReserverteOppgaverSomTilhørerKø} reserverte oppgaver som tilhører køen")
+        log.info("Refreshet antall for kø ${oppgavekø.id}. Antall i kø er ${antallUtenReserverte} og i tillegg kommer ${antallReserverteOppgaverSomTilhørerKø} reserverte oppgaver som tilhører køen")
     }
 
     suspend fun hentAntallOppgaver(oppgavekøId: UUID, taMedReserverte: Boolean = false, refresh: Boolean = false): Int {
@@ -721,8 +719,7 @@ class OppgaveTjeneste constructor(
         var antallReserverteOppgaverSomTilhørerKø = 0
         if (taMedReserverte) {
             val reservasjonIder = saksbehandlerRepository.hentAlleSaksbehandlereIkkeTaHensyn().flatMap { saksbehandler -> saksbehandler.reservasjoner }.toSet()
-            val reservasjoner = reservasjonRepository.hentSelvOmDeIkkeErAktive(reservasjonIder)
-            val reserverteOppgaveIder = reservasjoner.map { it.oppgave }.toSet()
+            val reserverteOppgaveIder = reservasjonRepository.hentOppgaveUuidMedAktivReservasjon(reservasjonIder)
             val reserverteOppgaver = oppgaveRepository.hentOppgaver(reserverteOppgaveIder)
 
             val antallReserverteOppgaverSomTilhørerKø = reserverteOppgaver.count { oppgavekø.tilhørerOppgaveTilKø(it, null, emptyList() ) }
@@ -897,6 +894,8 @@ class OppgaveTjeneste constructor(
         brukerident: String,
         oppgaverSomErBlokert: MutableList<OppgaveDto> = emptyArray<OppgaveDto>().toMutableList(),
         prioriterOppgaverForSaksbehandler: List<Oppgave>? = null,
+        rekusjon : String = "rekursjon_",
+        starttid : Long = System.nanoTime(),
     ): OppgaveDto? {
 
         /* V3-versjon av denne logikken:
@@ -910,6 +909,7 @@ class OppgaveTjeneste constructor(
 
         if (nesteOppgaverIKø.isEmpty()) {
             log.info("OppgaveFraKø: Tom kandidatliste. Returnerer null")
+            DetaljerMetrikker.observe(starttid, "faaOppgaveFraKo", rekusjon)
             return null
         }
 
@@ -936,7 +936,9 @@ class OppgaveTjeneste constructor(
                     oppgaveKøId,
                     brukerident,
                     oppgaverSomErBlokert,
-                    prioriterteOppgaver
+                    prioriterteOppgaver,
+                    rekusjon = rekusjon + "t",
+                    starttid = starttid
                 )
             }
         } else {
@@ -954,7 +956,9 @@ class OppgaveTjeneste constructor(
                 oppgaveKøId,
                 brukerident,
                 oppgaverSomErBlokert,
-                prioriterteOppgaver
+                prioriterteOppgaver,
+                rekusjon = rekusjon + "b",
+                starttid = starttid
             )
         }
 
@@ -966,7 +970,9 @@ class OppgaveTjeneste constructor(
                 oppgaveKøId,
                 brukerident,
                 oppgaverSomErBlokert,
-                prioriterteOppgaver
+                prioriterteOppgaver,
+                rekusjon = rekusjon + "s",
+                starttid = starttid
             )
         }
 
@@ -999,7 +1005,9 @@ class OppgaveTjeneste constructor(
                 oppgaveKøId,
                 brukerident,
                 oppgaverSomErBlokert,
-                prioriterteOppgaver
+                prioriterteOppgaver,
+                rekusjon = rekusjon + "r",
+                starttid = starttid
             )
         }
 
@@ -1011,7 +1019,9 @@ class OppgaveTjeneste constructor(
                 oppgaveKøId,
                 brukerident,
                 oppgaverSomErBlokert,
-                prioriterteOppgaver
+                prioriterteOppgaver,
+                rekusjon = rekusjon + "p",
+                starttid = starttid
             )
         }
 
@@ -1025,7 +1035,9 @@ class OppgaveTjeneste constructor(
                 oppgaveKøId,
                 brukerident,
                 oppgaverSomErBlokert,
-                prioriterteOppgaver
+                prioriterteOppgaver,
+                rekusjon = rekusjon + "x",
+                starttid = starttid
             )
         }
 
@@ -1037,24 +1049,34 @@ class OppgaveTjeneste constructor(
 
         //ReservasjonV3 TODO: sanity check - har noen andre reservert i ny modell? Hva skal skje da?
         val skalHaReservasjon = saksbehandlerRepository.finnSaksbehandlerMedIdent(brukerident)!!
-        reservasjonOversetter.taNyReservasjonFraGammelKontekst(
-            oppgaveV1 = oppgaveSomSkalBliReservert,
-            reserverForSaksbehandlerId = skalHaReservasjon.id!!,
-            reservertTil = LocalDateTime.now().leggTilDagerHoppOverHelg(2),
-            utførtAvSaksbehandlerId = skalHaReservasjon.id!!,
-            kommentar = ""
-        )
-
-        reservasjonRepository.lagreFlereReservasjoner(reservasjoner)
-        saksbehandlerRepository.leggTilFlereReservasjoner(brukerident, reservasjoner.map { r -> r.oppgave })
-
-        for (oppgavekø in oppgaveKøRepository.hentKøIdIkkeTaHensyn()) {
-            oppgaveKøRepository.leggTilOppgaverTilKø(
-                oppgavekø,
-                oppgaverSomSkalBliReservert.map { o -> o.oppgave },
-                reservasjonRepository
+        DetaljerMetrikker.timeSuspended("faaOppgaveFraKo", "taNyReservasjonFraGammelKontekst") {
+            reservasjonOversetter.taNyReservasjonFraGammelKontekst(
+                oppgaveV1 = oppgaveSomSkalBliReservert,
+                reserverForSaksbehandlerId = skalHaReservasjon.id!!,
+                reservertTil = LocalDateTime.now().leggTilDagerHoppOverHelg(2),
+                utførtAvSaksbehandlerId = skalHaReservasjon.id!!,
+                kommentar = ""
             )
         }
+
+        DetaljerMetrikker.timeSuspended("faaOppgaveFraKo", "lagreFlereReservasjoner") {
+            reservasjonRepository.lagreFlereReservasjoner(reservasjoner)
+        }
+        DetaljerMetrikker.timeSuspended("faaOppgaveFraKo", "leggTilFlereReservasjoner") {
+            saksbehandlerRepository.leggTilFlereReservasjoner(brukerident, reservasjoner.map { r -> r.oppgave })
+        }
+        DetaljerMetrikker.timeSuspended("faaOppgaveFraKo", "leggTilOppgaverTilKø") {
+            for (oppgavekø in oppgaveKøRepository.hentKøIdIkkeTaHensyn()) {
+                oppgaveKøRepository.leggTilOppgaverTilKø(
+                    oppgavekø,
+                    oppgaverSomSkalBliReservert.map { o -> o.oppgave },
+                    reservasjonRepository
+                )
+            }
+        }
+
+        DetaljerMetrikker.observe(starttid, "faaOppgaveFraKo", rekusjon)
+
         return oppgaveDto
     }
 

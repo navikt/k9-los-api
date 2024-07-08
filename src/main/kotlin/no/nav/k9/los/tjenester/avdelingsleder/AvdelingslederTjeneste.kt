@@ -52,6 +52,7 @@ class AvdelingslederTjeneste(
         sistEndret = oppgaveKø.sistEndret,
         skjermet = oppgaveKø.skjermet,
         antallBehandlinger = oppgaveTjeneste.hentAntallOppgaver(oppgavekøId = oppgaveKø.id, taMedReserverte = true),
+        antallUreserverteOppgaver = oppgaveTjeneste.hentAntallOppgaver(oppgavekøId = oppgaveKø.id, taMedReserverte = false),
         saksbehandlere = oppgaveKø.saksbehandlere,
         kriterier = oppgaveKø.lagKriterier()
     )
@@ -151,7 +152,8 @@ class AvdelingslederTjeneste(
                         behandlingTyper = oppgaveKø.filtreringBehandlingTyper,
                         fagsakYtelseTyper = oppgaveKø.filtreringYtelseTyper,
                         saksbehandlere = oppgaveKø.saksbehandlere,
-                        antallBehandlinger = oppgaveKø.oppgaverOgDatoer.size,
+                        antallBehandlinger = oppgaveKø.oppgaverOgDatoer.size, //TODO dette feltet i DTO-en brukers annet sted til å sende antall inkludert reserverte, her er det ekskludert reserverte
+                        antallUreserverteOppgaver = oppgaveKø.oppgaverOgDatoer.size,
                         sistEndret = oppgaveKø.sistEndret,
                         skjermet = oppgaveKø.skjermet,
                         sortering = SorteringDto(oppgaveKø.sortering, oppgaveKø.fomDato, oppgaveKø.tomDato),
