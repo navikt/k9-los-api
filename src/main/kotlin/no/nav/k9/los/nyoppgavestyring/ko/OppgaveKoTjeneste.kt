@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.ko
 
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
@@ -38,6 +39,7 @@ class OppgaveKoTjeneste(
     private val reservasjonRepository: ReservasjonRepository,
     private val pdlService: IPdlService,
     private val pepClient: IPepClient,
+    private val statistikkChannel: Channel<Boolean>,
 ) {
     private val log = LoggerFactory.getLogger(OppgaveKoTjeneste::class.java)
 
@@ -137,6 +139,7 @@ class OppgaveKoTjeneste(
                     saksbehandlerRepository.leggTilFlereReservasjoner(
                         innloggetBruker.brukerIdent,
                         v1Reservasjoner.map { r -> r.oppgave })
+                    statistikkChannel.send(true)
                 }
                 // V1-greier til og med denne linjen
                 val reservasjon = reservasjonV3Tjeneste.taReservasjon(

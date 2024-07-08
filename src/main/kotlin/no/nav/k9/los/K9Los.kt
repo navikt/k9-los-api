@@ -166,6 +166,7 @@ fun Application.k9Los() {
     val oppdaterStatistikkJobb =
         oppdaterStatistikk(
             channel = koin.get<Channel<Boolean>>(named("statistikkRefreshChannel")),
+            configuration = configuration,
             statistikkRepository = koin.get(),
             oppgaveTjeneste = koin.get()
         )

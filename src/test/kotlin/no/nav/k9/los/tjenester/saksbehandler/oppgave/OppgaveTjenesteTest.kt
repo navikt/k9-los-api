@@ -26,6 +26,7 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.koin.core.qualifier.named
 import org.koin.test.get
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -932,6 +933,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
             get<IPepClient>(),
             get<StatistikkRepository>(),
             oversetterMock,
+            statistikkChannel = get(named("statistikkRefreshChannel")),
         )
     }
 

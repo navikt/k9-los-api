@@ -1,5 +1,6 @@
 package no.nav.k9.los.tjenester.saksbehandler.oppgave
 
+import kotlinx.coroutines.channels.Channel
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
@@ -50,6 +51,7 @@ class OppgaveTjeneste constructor(
     private val pepClient: IPepClient,
     private val statistikkRepository: StatistikkRepository,
     private val reservasjonOversetter: ReservasjonOversetter,
+    private val statistikkChannel: Channel<Boolean>,
 ) {
 
     suspend fun hentOppgaver(oppgavekøId: UUID): List<Oppgave> {
@@ -176,6 +178,7 @@ class OppgaveTjeneste constructor(
                 reservasjonRepository
             )
         }
+        statistikkChannel.send(true)
 
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(reserveresAvIdent)
         return OppgaveStatusDto(
@@ -1074,6 +1077,8 @@ class OppgaveTjeneste constructor(
                 )
             }
         }
+
+        statistikkChannel.send(true)
 
         DetaljerMetrikker.observe(starttid, "faaOppgaveFraKo", rekusjon)
 
