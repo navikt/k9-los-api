@@ -12,6 +12,7 @@ class ReservasjonV3(
     val kommentar: String?,
     gyldigFra: LocalDateTime,
     gyldigTil: LocalDateTime,
+    val endretAv: Long?,
 ) {
     val gyldigFra = gyldigFra.truncatedTo(ChronoUnit.MICROS)
     val gyldigTil = gyldigTil.truncatedTo(ChronoUnit.MICROS)
@@ -23,7 +24,8 @@ class ReservasjonV3(
         annullertFørUtløp: Boolean = this.annullertFørUtløp,
         kommentar: String? = this.kommentar,
         gyldigFra: LocalDateTime = this.gyldigFra,
-        gyldigTil: LocalDateTime = this.gyldigTil
+        gyldigTil: LocalDateTime = this.gyldigTil,
+        endretAv: Long? = this.endretAv
     ): ReservasjonV3 {
         return ReservasjonV3(
             id,
@@ -32,7 +34,8 @@ class ReservasjonV3(
             annullertFørUtløp,
             kommentar,
             gyldigFra,
-            gyldigTil
+            gyldigTil,
+            endretAv
         )
     }
 
@@ -41,13 +44,15 @@ class ReservasjonV3(
         reservasjonsnøkkel: String,
         kommentar: String,
         gyldigFra: LocalDateTime,
-        gyldigTil: LocalDateTime
+        gyldigTil: LocalDateTime,
+        endretAv: Long?
     ) : this(
         reservertAv = saksbehandlerId,
         reservasjonsnøkkel = reservasjonsnøkkel,
         kommentar = kommentar,
         gyldigFra = gyldigFra,
         gyldigTil = gyldigTil,
+        endretAv = endretAv
     )
 
     constructor(
@@ -55,13 +60,15 @@ class ReservasjonV3(
         reservasjonsnøkkel: String,
         kommentar: String,
         gyldigFra: LocalDateTime,
-        gyldigTil: LocalDateTime
+        gyldigTil: LocalDateTime,
+        endretAv: Long?
     ) : this(
         reservertAv = saksbehandler.id!!,
         reservasjonsnøkkel = reservasjonsnøkkel,
         kommentar = kommentar,
         gyldigFra = gyldigFra,
         gyldigTil = gyldigTil,
+        endretAv = endretAv
     )
 
     fun erAktiv(): Boolean {

@@ -127,7 +127,8 @@ class BeslutterSkalIkkePlukkeEgenSakTest : AbstractK9LosIntegrationTest() {
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
-            kommentar = ""
+            kommentar = "",
+            endretAv = null
         )
 
         return OppgaveTjeneste(

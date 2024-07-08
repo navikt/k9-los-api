@@ -151,7 +151,7 @@ class ReservasjonOversetter(
         if (!oppgave.tilBeslutter) return false
 
         val saksbehandlerIdentSomSkalHaReservasjon =
-            saksbehandlerRepository.finnSaksbehandlerMedId(brukerIdSomSkalHaReservasjon).brukerIdent
+            saksbehandlerRepository.finnSaksbehandlerMedId(brukerIdSomSkalHaReservasjon)?.brukerIdent
 
         return oppgave.ansvarligSaksbehandlerIdent == saksbehandlerIdentSomSkalHaReservasjon
     }
