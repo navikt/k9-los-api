@@ -243,7 +243,7 @@ class SaksbehandlerRepository(
         if (fjernet) log.info("RESERVASJONDEBUG: Fjernet $id oppgave=${reservasjon} fra saksbehandlertabell")
     }
 
-    fun finnSaksbehandlerMedId(id: Long): Saksbehandler {
+    fun finnSaksbehandlerMedId(id: Long): Saksbehandler? {
         return using(sessionOf(dataSource)) {
             it.run(
                 queryOf(

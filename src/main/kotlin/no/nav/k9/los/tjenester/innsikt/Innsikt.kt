@@ -341,7 +341,7 @@ fun Route.innsiktGrensesnitt() {
                                 reservasjonsid: ${r.id}, 
                                 annullertFørUtløp: ${r.annullertFørUtløp}, 
                                 gyldigPeriode: (${r.gyldigFra}-${r.gyldigTil}), 
-                                reservertAv: ${r.reservertAv.let { saksbehandlerRepository.finnSaksbehandlerMedId(it).brukerIdent }}, 
+                                reservertAv: ${r.reservertAv.let { saksbehandlerRepository.finnSaksbehandlerMedId(it)!!.brukerIdent }}, 
                                 reservasjonsnøkkelType: $kilde
                             """.trimMargin())
                             }
@@ -357,7 +357,7 @@ fun Route.innsiktGrensesnitt() {
                                     reservasjonsid: ${r.id}, 
                                     annullertFørUtløp: ${r.annullertFørUtløp}, 
                                     gyldigPeriode: (${r.gyldigFra}-${r.gyldigTil}), 
-                                    reservertAv: ${r.reservertAv.let { saksbehandlerRepository.finnSaksbehandlerMedId(it).brukerIdent }}, 
+                                    reservertAv: ${r.reservertAv.let { saksbehandlerRepository.finnSaksbehandlerMedId(it)!!.brukerIdent }}, 
                                     reservasjonsnøkkelType: $kilde
                                 """.trimMargin())
                                 }
@@ -483,7 +483,7 @@ fun Route.innsiktGrensesnitt() {
                                         reservasjonsid: ${r.reservasjonV3.id}, 
                                         annullertFørUtløp: ${r.reservasjonV3.annullertFørUtløp}, 
                                         gyldigPeriode: (${r.reservasjonV3.gyldigFra}-${r.reservasjonV3.gyldigTil}), 
-                                        reservertAv: ${r.reservasjonV3.reservertAv.let { saksbehandlerRepository.finnSaksbehandlerMedId(it).brukerIdent } },
+                                        reservertAv: ${r.reservasjonV3.reservertAv.let { saksbehandlerRepository.finnSaksbehandlerMedId(it)!!.brukerIdent } },
                                         ${r.utledFraReservasjonsnøkkel()}
                                     """.trimMargin())
                                     }
@@ -540,7 +540,7 @@ fun Route.innsiktGrensesnitt() {
                                         reservasjonsid: ${r.reservasjonV3.id}, 
                                         annullertFørUtløp: ${r.reservasjonV3.annullertFørUtløp}, 
                                         gyldigPeriode: (${r.reservasjonV3.gyldigFra}-${r.reservasjonV3.gyldigTil}), 
-                                        reservertAv: ${r.reservasjonV3.reservertAv.let { saksbehandlerRepository.finnSaksbehandlerMedId(it).brukerIdent } },
+                                        reservertAv: ${r.reservasjonV3.reservertAv.let { saksbehandlerRepository.finnSaksbehandlerMedId(it)!!.brukerIdent } },
                                         ${r.utledFraReservasjonsnøkkel()}
                                         """)
                                 }

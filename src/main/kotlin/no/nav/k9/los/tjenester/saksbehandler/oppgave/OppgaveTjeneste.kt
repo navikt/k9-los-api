@@ -72,7 +72,11 @@ class OppgaveTjeneste constructor(
                         it.aksjonspunkter.beslutterAp()?.opprettetTidspunkt ?: it.behandlingOpprettet
                     }
             }
-            ReservasjonRepository.RESERVASJON_YTELSE_LOG.info("sortering av beslutterkø med {} oppgaver tok {} ms", oppgaver.size, tid)
+            ReservasjonRepository.RESERVASJON_YTELSE_LOG.info(
+                "sortering av beslutterkø med {} oppgaver tok {} ms",
+                oppgaver.size,
+                tid
+            )
             return oppgaver.take(20)
         }
 
@@ -82,7 +86,11 @@ class OppgaveTjeneste constructor(
                 oppgaver = oppgaveRepository.hentOppgaver(oppgaveKø.oppgaverOgDatoer.map { it.id })
                     .sortedByDescending { it.feilutbetaltBeløp }
             }
-            ReservasjonRepository.RESERVASJON_YTELSE_LOG.info("sortering av tilbakekrevingkø med {} oppgaver tok {} ms", oppgaver.size, tid)
+            ReservasjonRepository.RESERVASJON_YTELSE_LOG.info(
+                "sortering av tilbakekrevingkø med {} oppgaver tok {} ms",
+                oppgaver.size,
+                tid
+            )
             return oppgaver
         }
 
@@ -439,7 +447,7 @@ class OppgaveTjeneste constructor(
             if (reservasjon == null) {
                 OppgaveStatusDto(false, null, false, null, null, null)
             } else {
-                val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(reservasjon.reservertAv)
+                val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(reservasjon.reservertAv)!!
                 val innloggetBruker =
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(azureGraphService.hentIdentTilInnloggetBruker())
 
@@ -447,8 +455,8 @@ class OppgaveTjeneste constructor(
                     erReservert = true,
                     reservertTilTidspunkt = reservasjon.gyldigTil,
                     erReservertAvInnloggetBruker = innloggetBruker?.let { reservertAv.id == it.id } ?: false,
-                    reservertAv = reservertAv.brukerIdent,
-                    reservertAvNavn = reservertAv.navn,
+                    reservertAv = reservertAv?.brukerIdent,
+                    reservertAvNavn = reservertAv?.navn,
                     flyttetReservasjon = null
                 )
             }
@@ -589,7 +597,8 @@ class OppgaveTjeneste constructor(
         oppgaveNøkkel: OppgaveNøkkelDto,
         tilBrukerIdent: String? = null,
         reserverTil: LocalDate? = null,
-        begrunnelse: String? = null): Reservasjon {
+        begrunnelse: String? = null
+    ): Reservasjon {
         val identTilInnloggetBruker = azureGraphService.hentIdentTilInnloggetBruker()
         val oppgavUUID = UUID.fromString(oppgaveNøkkel.oppgaveEksternId)
 
@@ -670,25 +679,34 @@ class OppgaveTjeneste constructor(
         )
     }
 
-    private data class CacheKey (val kø: UUID, val medReserverte : Boolean)
+    private data class CacheKey(val kø: UUID, val medReserverte: Boolean)
+
     private val hentAntallOppgaverCache = Cache<CacheKey, Int>()
 
     suspend fun refreshAntallForAlleKøer() {
         val køene = DetaljerMetrikker.timeSuspended("refreshAntallForAlleKøer", "hent")
-            { oppgaveKøRepository.hentIkkeTaHensyn() }
+        { oppgaveKøRepository.hentIkkeTaHensyn() }
         val reservasjonIder = DetaljerMetrikker.timeSuspended("refreshAntallForAlleKøer", "hentReservasjonIder")
-            { saksbehandlerRepository.hentAlleSaksbehandlereIkkeTaHensyn().flatMap { saksbehandler -> saksbehandler.reservasjoner }.toSet() }
-        val reserverteOppgaveIderDirekte = DetaljerMetrikker.timeSuspended("refreshAntallForAlleKøer", "hentUUIDForOppgaverMedAktivReservasjon")
+        {
+            saksbehandlerRepository.hentAlleSaksbehandlereIkkeTaHensyn()
+                .flatMap { saksbehandler -> saksbehandler.reservasjoner }.toSet()
+        }
+        val reserverteOppgaveIderDirekte =
+            DetaljerMetrikker.timeSuspended("refreshAntallForAlleKøer", "hentUUIDForOppgaverMedAktivReservasjon")
             { reservasjonRepository.hentOppgaveUuidMedAktivReservasjon(reservasjonIder) }
         val reserverteOppgaver = DetaljerMetrikker.timeSuspended("refreshAntallForAlleKøer", "hentReserverteOppgaver")
-            { oppgaveRepository.hentOppgaver(reserverteOppgaveIderDirekte) }
+        { oppgaveRepository.hentOppgaver(reserverteOppgaveIderDirekte) }
         køene.forEach {
-            DetaljerMetrikker.timeSuspended("refreshAntallForAlleKøer", "refreshHentAntallOppgaverForKo") { refreshHentAntallOppgaverForKø(it, reserverteOppgaver) }
+            DetaljerMetrikker.timeSuspended(
+                "refreshAntallForAlleKøer",
+                "refreshHentAntallOppgaverForKo"
+            ) { refreshHentAntallOppgaverForKø(it, reserverteOppgaver) }
         }
     }
 
     fun refreshAntallOppgaverForKø(oppgavekø: OppgaveKø) {
-        val reservasjonIder = saksbehandlerRepository.hentAlleSaksbehandlereIkkeTaHensyn().flatMap { saksbehandler -> saksbehandler.reservasjoner }.toSet()
+        val reservasjonIder = saksbehandlerRepository.hentAlleSaksbehandlereIkkeTaHensyn()
+            .flatMap { saksbehandler -> saksbehandler.reservasjoner }.toSet()
         val reserverteOppgaveIder = reservasjonRepository.hentOppgaveUuidMedAktivReservasjon(reservasjonIder)
         val reserverteOppgaver = oppgaveRepository.hentOppgaver(reserverteOppgaveIder)
         refreshHentAntallOppgaverForKø(oppgavekø, reserverteOppgaver)
@@ -698,11 +716,18 @@ class OppgaveTjeneste constructor(
         oppgavekø: OppgaveKø,
         reserverteOppgaver: List<Oppgave>
     ) {
-        val antallReserverteOppgaverSomTilhørerKø = reserverteOppgaver.count { oppgavekø.tilhørerOppgaveTilKø(it, null, emptyList() ) }
+        val antallReserverteOppgaverSomTilhørerKø =
+            reserverteOppgaver.count { oppgavekø.tilhørerOppgaveTilKø(it, null, emptyList()) }
         val antallUtenReserverte = oppgavekø.oppgaverOgDatoer.size
         val antallMedReserverte = oppgavekø.oppgaverOgDatoer.size + antallReserverteOppgaverSomTilhørerKø
-        hentAntallOppgaverCache.set(CacheKey(oppgavekø.id, false), CacheObject(antallUtenReserverte, LocalDateTime.now().plusMinutes(30)))
-        hentAntallOppgaverCache.set(CacheKey(oppgavekø.id, true), CacheObject(antallMedReserverte, LocalDateTime.now().plusMinutes(30)))
+        hentAntallOppgaverCache.set(
+            CacheKey(oppgavekø.id, false),
+            CacheObject(antallUtenReserverte, LocalDateTime.now().plusMinutes(30))
+        )
+        hentAntallOppgaverCache.set(
+            CacheKey(oppgavekø.id, true),
+            CacheObject(antallMedReserverte, LocalDateTime.now().plusMinutes(30))
+        )
 
         log.info("Refreshet antall for kø ${oppgavekø.id}. Antall i kø er ${antallUtenReserverte} og i tillegg kommer ${antallReserverteOppgaverSomTilhørerKø} reserverte oppgaver som tilhører køen")
     }
@@ -718,11 +743,13 @@ class OppgaveTjeneste constructor(
         val oppgavekø = oppgaveKøRepository.hentOppgavekø(oppgavekøId, ignorerSkjerming = true)
         var antallReserverteOppgaverSomTilhørerKø = 0
         if (taMedReserverte) {
-            val reservasjonIder = saksbehandlerRepository.hentAlleSaksbehandlereIkkeTaHensyn().flatMap { saksbehandler -> saksbehandler.reservasjoner }.toSet()
+            val reservasjonIder = saksbehandlerRepository.hentAlleSaksbehandlereIkkeTaHensyn()
+                .flatMap { saksbehandler -> saksbehandler.reservasjoner }.toSet()
             val reserverteOppgaveIder = reservasjonRepository.hentOppgaveUuidMedAktivReservasjon(reservasjonIder)
             val reserverteOppgaver = oppgaveRepository.hentOppgaver(reserverteOppgaveIder)
 
-            val antallReserverteOppgaverSomTilhørerKø = reserverteOppgaver.count { oppgavekø.tilhørerOppgaveTilKø(it, null, emptyList() ) }
+            val antallReserverteOppgaverSomTilhørerKø =
+                reserverteOppgaver.count { oppgavekø.tilhørerOppgaveTilKø(it, null, emptyList()) }
             log.info("Antall reserverte oppgaver som ble lagt til var $antallReserverteOppgaverSomTilhørerKø")
         }
         val antall = oppgavekø.oppgaverOgDatoer.size + antallReserverteOppgaverSomTilhørerKø
@@ -894,8 +921,8 @@ class OppgaveTjeneste constructor(
         brukerident: String,
         oppgaverSomErBlokert: MutableList<OppgaveDto> = emptyArray<OppgaveDto>().toMutableList(),
         prioriterOppgaverForSaksbehandler: List<Oppgave>? = null,
-        rekusjon : String = "rekursjon_",
-        starttid : Long = System.nanoTime(),
+        rekusjon: String = "rekursjon_",
+        starttid: Long = System.nanoTime(),
     ): OppgaveDto? {
 
         /* V3-versjon av denne logikken:

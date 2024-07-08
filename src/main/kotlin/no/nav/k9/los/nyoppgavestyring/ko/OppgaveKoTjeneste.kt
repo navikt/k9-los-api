@@ -123,7 +123,7 @@ class OppgaveKoTjeneste(
             try {
                 //if (kandidatoppgave.oppgavetype.eksternId == "k9klage") //TODO: Hvis klageoppgave/klagekø -- IKKE ta reservasjon i V1. Disse kan ikke speiles
                 // Fjernes når V1 skal vekk
-                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedId(innloggetBrukerId)
+                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedId(innloggetBrukerId)!!
                 val åpneOppgaverForReservasjonsnøkkel =
                     oppgaveRepository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, kandidatoppgave.reservasjonsnøkkel)
                 val v1Reservasjoner = oppgaveTjeneste.lagReservasjoner(

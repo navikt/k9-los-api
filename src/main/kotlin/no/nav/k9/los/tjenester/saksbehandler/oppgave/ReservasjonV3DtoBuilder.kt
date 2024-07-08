@@ -35,7 +35,7 @@ class ReservasjonV3DtoBuilder(
         var endretAvNavn: String? = null;
         if (reservasjonMedOppgaver.reservasjonV3.endretAv != null) {
             endretAvNavn =
-                saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonMedOppgaver.reservasjonV3.endretAv).navn
+                saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonMedOppgaver.reservasjonV3.endretAv)?.navn
         }
 
         val oppgaveV3Dtos = reservasjonMedOppgaver.oppgaverV3.map {
@@ -55,7 +55,7 @@ class ReservasjonV3DtoBuilder(
         var endretAvNavn: String? = null;
         if (reservasjonMedOppgaver.reservasjonV3.endretAv != null) {
             endretAvNavn =
-                saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonMedOppgaver.reservasjonV3.endretAv).navn
+                saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonMedOppgaver.reservasjonV3.endretAv)?.navn
         }
 
         val oppgaveV1Dto = if (oppgaveV1.aktiv) {

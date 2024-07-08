@@ -32,7 +32,7 @@ class ReservasjonV3Tjeneste(
     }
 
     fun auditlogReservert(brukerId: Long, reservertoppgave: Oppgave) {
-        val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(brukerId)
+        val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(brukerId)!!
         auditlogger.logg(
             Auditdata(
                 header = AuditdataHeader(
@@ -90,7 +90,7 @@ class ReservasjonV3Tjeneste(
         val oppgaverForReservasjonsnøkkel =
             oppgaveV3Repository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjonsnøkkel)
         if (!sjekkTilganger(oppgaverForReservasjonsnøkkel, reserverForId, utføresAvId)) {
-            val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(reserverForId)
+            val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(reserverForId)!!
             throw ManglerTilgangException("Saksbehandler ${saksbehandler.navn} mangler tilgang til å reservere nøkkel $reservasjonsnøkkel")
         }
         //prøv å ta reservasjon
@@ -330,7 +330,7 @@ class ReservasjonV3Tjeneste(
 
             val saksnummer = oppgave.hentVerdi("saksnummer") //TODO gjøre oppgavetypeagnostisk
             if (saksnummer != null) { //TODO: Oppgaver uten saksnummer?
-                val bruker = saksbehandlerRepository.finnSaksbehandlerMedId(utføresAvId)
+                val bruker = saksbehandlerRepository.finnSaksbehandlerMedId(utføresAvId)!!
                 val harTilgang = pepClient.harTilgangTilOppgaveV3(oppgave, bruker)
                 if (!harTilgang) {
                     return false
@@ -350,7 +350,7 @@ class ReservasjonV3Tjeneste(
         val ansvarligSaksbehandlerIdent = oppgave.hentVerdi("ansvarligSaksbehandler") //TODO gjøre oppgavetypeagnostisk
             ?: throw IllegalStateException("Kan ikke beslutte på oppgave uten ansvarlig saksbehandler")
         val saksbehandlerIdentSomSkalHaReservasjon =
-            saksbehandlerRepository.finnSaksbehandlerMedId(brukerIdSomSkalHaReservasjon).brukerIdent
+            saksbehandlerRepository.finnSaksbehandlerMedId(brukerIdSomSkalHaReservasjon)!!.brukerIdent
 
         return ansvarligSaksbehandlerIdent == saksbehandlerIdentSomSkalHaReservasjon
     }

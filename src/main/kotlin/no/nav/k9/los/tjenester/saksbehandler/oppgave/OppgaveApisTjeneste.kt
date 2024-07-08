@@ -66,7 +66,7 @@ class OppgaveApisTjeneste(
                 kommentar = oppgaveIdMedOverstyringDto.overstyrBegrunnelse ?: "",
             )!!
             val saksbehandlerSomHarReservasjon =
-                saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonV3.reservertAv)
+                saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonV3.reservertAv)!!
             return OppgaveStatusDto(reservasjonV3, innloggetBruker, saksbehandlerSomHarReservasjon)
         } else {
             val reservasjonV3 = transactionalManager.transaction { tx ->
@@ -88,7 +88,7 @@ class OppgaveApisTjeneste(
             }
 
             val saksbehandlerSomHarReservasjon =
-                saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonV3.reservertAv)
+                saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonV3.reservertAv)!!
             return OppgaveStatusDto(reservasjonV3, innloggetBruker, saksbehandlerSomHarReservasjon)
         }
     }
@@ -141,7 +141,7 @@ class OppgaveApisTjeneste(
             kommentar = begrunnelse
         )
 
-        val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(nyReservasjon.reservasjonV3.reservertAv)
+        val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(nyReservasjon.reservasjonV3.reservertAv)!!
         log.info("endreReservasjon: ${oppgaveNøkkel.oppgaveEksternId}, ${nyReservasjon.reservasjonV3}, reservertAv: $reservertAv")
 
         return reservasjonV3DtoBuilder.byggReservasjonV3Dto(nyReservasjon, reservertAv)
@@ -170,7 +170,7 @@ class OppgaveApisTjeneste(
                 kommentar = forlengReservasjonDto.kommentar
             )
 
-        val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(forlengetReservasjon.reservasjonV3.reservertAv)
+        val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(forlengetReservasjon.reservasjonV3.reservertAv)!!
         log.info("forlengReservasjon: ${forlengReservasjonDto.oppgaveNøkkel.oppgaveEksternId}, ${forlengetReservasjon.reservasjonV3}, reservertAv: $reservertAv")
 
         return reservasjonV3DtoBuilder.byggReservasjonV3Dto(forlengetReservasjon, reservertAv)
