@@ -292,7 +292,8 @@ fun common(app: Application, config: Configuration) = module {
             pepClient = get(),
             azureGraphService = get(),
             statistikkRepository = get(),
-            reservasjonOversetter = get()
+            reservasjonOversetter = get(),
+            statistikkChannel = get(named("statistikkRefreshChannel")),
         )
     }
 
@@ -491,6 +492,7 @@ fun common(app: Application, config: Configuration) = module {
             pepClient = get(),
             pdlService = get(),
             reservasjonV3Repository = get(),
+            statistikkChannel = get(named("statistikkRefreshChannel"))
         )
     }
 

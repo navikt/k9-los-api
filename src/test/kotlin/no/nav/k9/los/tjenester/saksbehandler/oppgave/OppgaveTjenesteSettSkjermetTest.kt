@@ -5,7 +5,10 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
-import no.nav.k9.los.*
+import no.nav.k9.los.AbstractPostgresTest
+import no.nav.k9.los.Configuration
+import no.nav.k9.los.KoinProfile
+import no.nav.k9.los.buildAndTestConfig
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
@@ -17,11 +20,7 @@ import no.nav.k9.los.domene.modell.FagsakYtelseType
 import no.nav.k9.los.domene.modell.KøSortering
 import no.nav.k9.los.domene.modell.OppgaveKø
 import no.nav.k9.los.domene.modell.Saksbehandler
-import no.nav.k9.los.domene.repository.OppgaveKøRepository
-import no.nav.k9.los.domene.repository.OppgaveRepository
-import no.nav.k9.los.domene.repository.ReservasjonRepository
-import no.nav.k9.los.domene.repository.SaksbehandlerRepository
-import no.nav.k9.los.domene.repository.StatistikkRepository
+import no.nav.k9.los.domene.repository.*
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.abac.PepClientLocal
 import no.nav.k9.los.integrasjon.azuregraph.AzureGraphService
@@ -73,6 +72,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
         val oppgaveKøOppdatert = Channel<UUID>(1)
         val oppgaveRefreshOppdatert = Channel<UUID>(100)
         val refreshKlienter = Channel<SseEvent>(1000)
+        val statistikkChannel = Channel<Boolean>(Channel.CONFLATED)
 
         val oppgaveRepository = get<OppgaveRepository>()
         val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
@@ -110,7 +110,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             oppgaveKøRepository,
             saksbehandlerRepository,
             pdlService,
-            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, reservasjonOversetter
+            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, reservasjonOversetter, statistikkChannel
         )
 
         val uuid = UUID.randomUUID()
@@ -212,6 +212,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
         val oppgaveKøOppdatert = Channel<UUID>(1)
         val refreshKlienter = Channel<SseEvent>(1000)
         val oppgaverRefresh = Channel<UUID>(1000)
+        val statistikkChannel = Channel<Boolean>(Channel.CONFLATED)
 
         val oppgaveRepository = OppgaveRepository(dataSource = dataSource,pepClient = PepClientLocal(), refreshOppgave = oppgaverRefresh)
         val oppgaveRepositoryV2 = OppgaveRepositoryV2(dataSource = dataSource)
@@ -247,7 +248,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             oppgaveKøRepository,
             saksbehandlerRepository,
             pdlService,
-            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, reservasjonOversetter
+            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, reservasjonOversetter, statistikkChannel
         )
 
         val oppgave1 = Oppgave(
@@ -408,6 +409,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
         val refreshKlienter = Channel<SseEvent>(1000)
 
         val oppgaverRefresh = Channel<UUID>(1000)
+        val statistikkChannel = Channel<Boolean>(Channel.CONFLATED)
 
         val oppgaveRepository = OppgaveRepository(dataSource = dataSource,pepClient = PepClientLocal(), refreshOppgave = oppgaverRefresh)
         val oppgaveRepositoryV2 = OppgaveRepositoryV2(dataSource = dataSource)
@@ -446,7 +448,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             oppgaveKøRepository,
             saksbehandlerRepository,
             pdlService,
-            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, reservasjonOversetter
+            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, reservasjonOversetter, statistikkChannel
         )
 
 

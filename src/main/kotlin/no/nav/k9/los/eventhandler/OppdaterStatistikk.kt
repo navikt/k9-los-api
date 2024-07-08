@@ -22,11 +22,12 @@ fun CoroutineScope.oppdaterStatistikk(
 ) = launch(Executors.newSingleThreadExecutor().asCoroutineDispatcher()) {
     try {
         for (skalOppdatereStatistikk in channel) {
-            delay(60_000)
+            delay(500)
             ChannelMetrikker.timeSuspended("oppdaterStatistikk") {
                 DetaljerMetrikker.timeSuspended("oppdaterStatistikk","refreshAntallForAlleKøer",{ oppgaveTjeneste.refreshAntallForAlleKøer() })
                 DetaljerMetrikker.timeSuspended("oppdaterStatistikk", "siste8uker") { statistikkRepository.hentFerdigstilteOgNyeHistorikkMedYtelsetypeSiste8Uker(refresh = true) }
             }
+            delay(27_000)
         }
     } catch (e: Exception) {
         log.error("Feil ved oppdatering av statistikk", e)

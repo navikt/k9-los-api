@@ -202,7 +202,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             azureGraphService = get(),
             pepClient = get(),
             statistikkRepository = get(),
-            reservasjonOversetter = reservasjonOversetterMock
+            reservasjonOversetter = reservasjonOversetterMock,
+            statistikkChannel = get(named("statistikkRefreshChannel"))
         )
     }
 
@@ -487,6 +488,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             pepClient = get(),
             pdlService = get(),
             reservasjonV3Repository = get(),
+            statistikkChannel = get(named("statistikkRefreshChannel"))
         )
     }
 
