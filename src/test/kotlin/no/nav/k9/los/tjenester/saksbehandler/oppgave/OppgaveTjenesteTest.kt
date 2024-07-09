@@ -284,8 +284,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         // act
         oppgaveTjeneste.fåOppgaveFraKø(
             oppgaveKøId.toString(),
-            brukerIdent,
-            emptyArray<OppgaveDto>().toMutableList()
+            brukerIdent
         )
 
         // assert
@@ -374,7 +373,6 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveTjeneste.fåOppgaveFraKø(
             oppgaveKøId.toString(),
             brukerIdent,
-            emptyArray<OppgaveDto>().toMutableList()
         )
 
         val reservasjonsHistorikk1 = oppgaveTjeneste.hentReservasjonsHistorikk(oppgave1.eksternId)
@@ -436,8 +434,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         val oppgaveFraKø = oppgaveTjeneste.fåOppgaveFraKø(
             oppgaveKøId.toString(),
-            brukerIdent2,
-            emptyArray<OppgaveDto>().toMutableList()
+            brukerIdent2
         )
 
         assertNull(oppgaveFraKø)
@@ -841,8 +838,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         oppgaveTjeneste.fåOppgaveFraKø(
             oppgaveKøId.toString(),
-            brukerIdent,
-            emptyArray<OppgaveDto>().toMutableList()
+            brukerIdent
         )
 
         val reservasjonsHistorikk1 = oppgaveTjeneste.hentReservasjonsHistorikk(oppgave1.eksternId)
@@ -935,8 +931,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         oppgaveTjeneste.fåOppgaveFraKø(
             oppgaveKøId.toString(),
-            brukerIdent,
-            emptyArray<OppgaveDto>().toMutableList()
+            brukerIdent
         )
 
         val reservasjonsHistorikk2 = oppgaveTjeneste.hentReservasjonsHistorikk(oppgave1.eksternId)
@@ -1057,8 +1052,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         oppgaveTjeneste.fåOppgaveFraKø(
             oppgaveKøId.toString(),
-            brukerIdent,
-            emptyArray<OppgaveDto>().toMutableList()
+            brukerIdent
         )
 
         val reservasjonsHistorikk1 = oppgaveTjeneste.hentReservasjonsHistorikk(oppgave1.eksternId)
@@ -1152,8 +1146,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         oppgaveTjeneste.fåOppgaveFraKø(
             oppgaveKøId.toString(),
-            brukerIdent,
-            emptyArray<OppgaveDto>().toMutableList()
+            brukerIdent
         )
 
         val reservasjonsHistorikk2 = oppgaveTjeneste.hentReservasjonsHistorikk(oppgave1.eksternId)
@@ -1291,8 +1284,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         oppgaveTjeneste.fåOppgaveFraKø(
             oppgaveKøId.toString(),
-            brukerIdent,
-            emptyArray<OppgaveDto>().toMutableList()
+            brukerIdent
         )
 
         val reservasjonsHistorikk1 = oppgaveTjeneste.hentReservasjonsHistorikk(oppgave1.eksternId)
@@ -1431,8 +1423,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         oppgaveTjeneste.fåOppgaveFraKø(
             oppgaveKøId.toString(),
-            ident,
-            emptyArray<OppgaveDto>().toMutableList()
+            ident
         )
 
 
@@ -1608,8 +1599,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         oppgaveTjeneste.fåOppgaveFraKø(
             oppgaveKøId.toString(),
-            brukerIdent,
-            emptyArray<OppgaveDto>().toMutableList()
+            brukerIdent
         )
 
         val reservasjonsHistorikk1 = oppgaveTjeneste.hentReservasjonsHistorikk(oppgave1.eksternId)
