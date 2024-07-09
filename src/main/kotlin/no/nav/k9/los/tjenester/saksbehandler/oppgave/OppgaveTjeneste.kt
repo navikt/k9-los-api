@@ -65,6 +65,15 @@ class OppgaveTjeneste constructor(
         }
     }
 
+    fun hentOppgaver(oppgaveKø: OppgaveKø): List<Oppgave> {
+        return try {
+            sorterOgHent(oppgaveKø)
+        } catch (e: Exception) {
+            log.error("Henting av oppgave feilet, returnerer en tom oppgaveliste", e)
+            emptyList()
+        }
+    }
+
     private fun sorterOgHent(oppgaveKø: OppgaveKø): List<Oppgave> {
         if (oppgaveKø.beslutterKø()) {
             val oppgaver: List<Oppgave>
@@ -923,8 +932,9 @@ class OppgaveTjeneste constructor(
             log.warn("har ikke basistilgang")
             return null;
         }
-        val prioriterteOppgaver = DetaljerMetrikker.timeSuspended("faaOppgaveFraKo", "finnPrioriterteOppgaver") { finnPrioriterteOppgaver(brukerident,oppgaveKøId) }
-        val oppgaverPlukketFraKø = DetaljerMetrikker.timeSuspended("faaOppgaveFraKo", "hentOppgaver") { hentOppgaver(UUID.fromString(oppgaveKøId)) }
+        val oppgaveKø = DetaljerMetrikker.timeSuspended("faaOppgaveFraKo", "hentOppgaveKø") { oppgaveKøRepository.hentOppgavekø(UUID.fromString(oppgaveKøId)) }
+        val prioriterteOppgaver = DetaljerMetrikker.timeSuspended("faaOppgaveFraKo", "finnPrioriterteOppgaver") { finnPrioriterteOppgaver(brukerident, oppgaveKø) }
+        val oppgaverPlukketFraKø = DetaljerMetrikker.timeSuspended("faaOppgaveFraKo", "hentOppgaver") { hentOppgaver(oppgaveKø) }
 
         var antallOppgaverSjekket = 0
         for (oppgave in prioriterteOppgaver + oppgaverPlukketFraKø) {
@@ -1050,22 +1060,19 @@ class OppgaveTjeneste constructor(
 
     private suspend fun finnPrioriterteOppgaver(
         ident: String,
-        oppgaveKøId: String
+        oppgaveKø: OppgaveKø
     ): List<Oppgave> {
         val reservasjoneneTilSaksbehandler = reservasjonRepository.hent(ident).map { it.oppgave }
         if (reservasjoneneTilSaksbehandler.isEmpty()) {
             return emptyList()
         }
 
-        val aktørIdFraReservasjonene =
+        val aktørIdFraReservasjonene = DetaljerMetrikker.timeSuspended("faaOppgaveFraKo", "aktørIdFraReservasjonene") {
             oppgaveRepository.hentOppgaver(reservasjoneneTilSaksbehandler).filter { it.pleietrengendeAktørId != null }
                 .map { it.pleietrengendeAktørId!! }
+        }
 
-        val køen = oppgaveKøRepository.hentOppgavekø(UUID.fromString(oppgaveKøId))
-        val hentPleietrengendeAktør = oppgaveRepository.hentPleietrengendeAktør(køen.oppgaverOgDatoer.map { it.id })
-        val oppgaverIder = aktørIdFraReservasjonene.mapNotNull { hentPleietrengendeAktør["\"" + it + "\""] }
-            .map { UUID.fromString(it) }
-
+        val oppgaverIder = DetaljerMetrikker.timeSuspended("faaOppgaveFraKo", "oppgaverForPleietrengendeAktør") { oppgaveRepository.hentOppgaverForPleietrengendeAktør(oppgaveKø.oppgaverOgDatoer.map { it.id }, aktørIdFraReservasjonene) }
         return oppgaveRepository.hentOppgaver(oppgaverIder)
     }
 

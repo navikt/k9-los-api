@@ -6,6 +6,7 @@ import kotlinx.coroutines.runBlocking
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.k9.los.db.util.InClauseHjelper
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.OppgaveMedId
 import no.nav.k9.los.domene.modell.AksjonspunktDefWrapper
@@ -17,8 +18,6 @@ import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleApneBehandlinger
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverDto
 import no.nav.k9.los.tjenester.innsikt.Databasekall
 import no.nav.k9.los.tjenester.mock.AksjonspunktMock
-import no.nav.k9.los.utils.Cache
-import no.nav.k9.los.utils.CacheObject
 import no.nav.k9.los.utils.LosObjectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -266,41 +265,46 @@ class OppgaveRepository(
         return resultat
     }
 
-    fun hentPleietrengendeAktør(oppgaveider: Collection<UUID>): Map<String, String> {
-        val oppgaveiderList = oppgaveider.toList()
-        if (oppgaveider.isEmpty()) {
-            return emptyMap()
+    fun hentOppgaverForPleietrengendeAktør(oppgaveIder: Collection<UUID>, aktørIder: Collection<String>): Set<UUID> {
+        if (oppgaveIder.isEmpty() || aktørIder.isEmpty()) {
+            return emptySet()
         }
+        val unikeAktørIder = aktørIder.toSet()
+        val unikeOppgaveIder = oppgaveIder.toSet()
 
         val session = sessionOf(dataSource)
-        val res: List<Pair<String, String>> = using(session) {
+        val alleOppgaverForAktørene: List<OppgaveIdAktørId> = using(session) {
 
             //language=PostgreSQL
             it.run(
                 queryOf(
-                    "select id, data->'pleietrengendeAktørId' as aktor from oppgave " +
-                            "where id in (${
-                                IntRange(0, oppgaveiderList.size - 1).joinToString { t -> ":p$t" }
-                            }) and data->>'pleietrengendeAktørId' is not null",
-                    IntRange(
-                        0,
-                        oppgaveiderList.size - 1
-                    ).associate { t -> "p$t" to oppgaveiderList[t].toString() as Any }
+                    """
+                         select id, data->'pleietrengendeAktørId' as aktor
+                          from oppgave 
+                          where data->>'pleietrengendeAktørId' in (${InClauseHjelper.tilParameternavn(unikeAktørIder, "a")})
+                          """,
+                    InClauseHjelper.parameternavnTilVerdierMap(aktørIder, "a")
                 )
                     .map { row ->
-                        Pair(row.string("id"), row.string("aktor"))
+                        OppgaveIdAktørId(UUID.fromString(row.string("id")), row.string("aktor"))
                     }.asList
             )
         }
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
 
-        val mapOf = mutableMapOf<String, String>()
+        val resultat = alleOppgaverForAktørene
+            .filter { unikeOppgaveIder.contains(it.oppgaveId) }
+            .map { it.oppgaveId }
+            .toSet()
 
-        res.forEach {
-            mapOf[it.second] = it.first
-        }
-        return mapOf
+        log.info("Spurte med ${oppgaveIder.size} oppgaver og ${aktørIder.size} aktører. Fant ${alleOppgaverForAktørene.size} oppgaver for aktørene, returnerer ${resultat.size} etter filtrering mot aktuelle oppgaver")
+
+        return resultat
+    }
+
+    data class OppgaveIdAktørId (val oppgaveId : UUID, val aktørId : String) {
+
     }
 
     suspend fun hentAlleOppgaverUnderArbeid(): List<AlleOppgaverDto> {
