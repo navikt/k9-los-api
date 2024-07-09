@@ -283,7 +283,7 @@ class OppgaveRepository(
                           from oppgave 
                           where data->>'pleietrengendeAktørId' in (${InClauseHjelper.tilParameternavn(unikeAktørIder, "a")})
                           """,
-                    InClauseHjelper.parameternavnTilVerdierMap(aktørIder, "a")
+                    InClauseHjelper.parameternavnTilVerdierMap(unikeAktørIder, "a")
                 )
                     .map { row ->
                         OppgaveIdAktørId(UUID.fromString(row.string("id")), row.string("aktor"))
