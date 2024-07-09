@@ -1069,27 +1069,6 @@ class OppgaveTjeneste constructor(
         return oppgaveRepository.hentOppgaver(oppgaverIder)
     }
 
-    private fun finnOppgave(
-        prioriterOppgaver: List<Oppgave>,
-        oppgaver: List<OppgaveDto>,
-        oppgaverSomErBlokkert: MutableList<OppgaveDto>
-    ): Pair<OppgaveDto?, Oppgave?>? {
-        val prioriterteOppgaverSomIKkeErBlokkert =
-            prioriterOppgaver.filter { !oppgaverSomErBlokkert.map { it2 -> it2.eksternId }.contains(it.eksternId) }
-
-        val oppgaverSomIKkeErBlokkert =
-            oppgaver.filter { !oppgaverSomErBlokkert.map { it2 -> it2.eksternId }.contains(it.eksternId) }
-
-        if (prioriterteOppgaverSomIKkeErBlokkert.isNotEmpty()) {
-            val oppgave = prioriterteOppgaverSomIKkeErBlokkert.first()
-            return Pair(null, oppgave)
-        }
-        if (oppgaverSomIKkeErBlokkert.isEmpty()) {
-            return null
-        }
-        return Pair(oppgaverSomIKkeErBlokkert.first(), null)
-    }
-
 }
 
 private fun BehandlingStatus.underBehandling() = this != BehandlingStatus.AVSLUTTET && this != BehandlingStatus.LUKKET
