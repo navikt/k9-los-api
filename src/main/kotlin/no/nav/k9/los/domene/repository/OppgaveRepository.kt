@@ -265,11 +265,11 @@ class OppgaveRepository(
         return resultat
     }
 
-    fun hentOppgaverForPleietrengendeAktør(oppgaveIder: Collection<UUID>, aktørIder: Collection<String>): Set<UUID> {
-        if (oppgaveIder.isEmpty() || aktørIder.isEmpty()) {
+    fun hentOppgaverForPleietrengendeAktør(oppgaveIder: Collection<UUID>, pleietrengendeAktørIder: Collection<String>): Set<UUID> {
+        if (oppgaveIder.isEmpty() || pleietrengendeAktørIder.isEmpty()) {
             return emptySet()
         }
-        val unikeAktørIder = aktørIder.toSet()
+        val unikeAktørIder = pleietrengendeAktørIder.toSet()
         val unikeOppgaveIder = oppgaveIder.toSet()
 
         val session = sessionOf(dataSource)
@@ -279,7 +279,7 @@ class OppgaveRepository(
             it.run(
                 queryOf(
                     """
-                         select id, data->'pleietrengendeAktørId' as aktor
+                         select id, data->>'pleietrengendeAktørId' as aktor
                           from oppgave 
                           where data->>'pleietrengendeAktørId' in (${InClauseHjelper.tilParameternavn(unikeAktørIder, "a")})
                           """,
@@ -298,7 +298,7 @@ class OppgaveRepository(
             .map { it.oppgaveId }
             .toSet()
 
-        log.info("Spurte med ${oppgaveIder.size} oppgaver og ${aktørIder.size} aktører. Fant ${alleOppgaverForAktørene.size} oppgaver for aktørene, returnerer ${resultat.size} etter filtrering mot aktuelle oppgaver")
+        log.info("Spurte med ${oppgaveIder.size} oppgaver og ${pleietrengendeAktørIder.size} aktører. Fant ${alleOppgaverForAktørene.size} oppgaver for aktørene, returnerer ${resultat.size} etter filtrering mot aktuelle oppgaver")
 
         return resultat
     }
