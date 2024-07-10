@@ -45,7 +45,7 @@ class ReservasjonRepository(
         return hent(saksbehandler.reservasjoner, saksbehandlersIdent)
     }
 
-    suspend fun hent(reservasjonIder: Set<UUID>, saksbehandlersIdent: String): List<Reservasjon> {
+    suspend fun hent(reservasjonIder: Set<UUID>, saksbehandlersIdent: String? = null): List<Reservasjon> {
         var fjernede: List<Reservasjon>
         var reservasjoner: List<Reservasjon>
 
@@ -57,24 +57,10 @@ class ReservasjonRepository(
             RESERVASJON_YTELSE_LOG.info("inkonsistent datamodell, ${andres.size} reservasjoner registrert i saksbehandlerobjektet med annen reservertAv av ${reservasjoner.size}")
         }
         val tidFjerne = measureTimeMillis {
-            fjernede = fjernReservasjonerSomIkkeLengerErAktive2(reservasjoner)
+            fjernede = fjernReservasjonerSomIkkeLengerErAktive2(reservasjoner, saksbehandlersIdent)
         }
 
         RESERVASJON_YTELSE_LOG.info("henting og fjerning av {} reservasjoner tok {} ms for fjerning og {} ms for henting", reservasjonIder.size, tidFjerne, tidHente)
-        return fjernede
-    }
-
-
-    suspend fun hent(reservasjoner: Set<UUID>): List<Reservasjon> {
-        var fjernede: List<Reservasjon>
-
-        val tid = measureTimeMillis {
-            fjernede = fjernReservasjonerSomIkkeLengerErAktive2(
-                hentReservasjoner(reservasjoner)
-            )
-        }
-
-        RESERVASJON_YTELSE_LOG.info("henting og fjerning av {} reservasjoner tok {} ms", reservasjoner.size, tid)
         return fjernede
     }
 
@@ -133,13 +119,17 @@ class ReservasjonRepository(
 
     private suspend fun fjernInaktivReservasjon(
         reservasjon: Reservasjon,
-        oppgaveKøer: List<OppgaveKø>
+        oppgaveKøer: List<OppgaveKø>,
+        saksbehandlersIdent: String?
     ): Int {
         lagre(reservasjon.oppgave) {
             it!!.reservertTil = null
             it
         }
         saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
+        if (saksbehandlersIdent != null && reservasjon.reservertAv != saksbehandlersIdent) {
+            saksbehandlerRepository.fjernReservasjon(saksbehandlersIdent, reservasjon.oppgave)
+        }
         val oppgave = oppgaveRepository.hent(reservasjon.oppgave)
         val merknader = oppgaveRepositoryV2.hentAlleMerknader()
             .groupBy(keySelector = { it.eksternReferanse }, valueTransform = { it.merknad } )
@@ -182,7 +172,7 @@ class ReservasjonRepository(
         }
     }
 
-    private suspend fun fjernReservasjonerSomIkkeLengerErAktive2(reservasjoner: List<Reservasjon>): List<Reservasjon> {
+    private suspend fun fjernReservasjonerSomIkkeLengerErAktive2(reservasjoner: List<Reservasjon>, saksbehandlersIdent: String?): List<Reservasjon> {
         val reservasjonPrAktive = reservasjoner.groupBy { it.erAktiv() }
         val inaktive = reservasjonPrAktive[false] ?: emptyList()
         var totalAntallFjerninger = 0
@@ -190,7 +180,7 @@ class ReservasjonRepository(
             val oppgaveKøer = oppgaveKøRepository.hentIkkeTaHensyn()
             val tid = measureTimeMillis {
                 inaktive.forEach { reservasjon ->
-                    totalAntallFjerninger += fjernInaktivReservasjon(reservasjon, oppgaveKøer)
+                    totalAntallFjerninger += fjernInaktivReservasjon(reservasjon, oppgaveKøer, saksbehandlersIdent)
 
                 }
             }
