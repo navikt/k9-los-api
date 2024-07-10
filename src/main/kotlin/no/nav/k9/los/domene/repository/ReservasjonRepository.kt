@@ -42,8 +42,28 @@ class ReservasjonRepository(
         if (saksbehandler.reservasjoner.isEmpty()) {
             return emptyList()
         }
-        return hent(saksbehandler.reservasjoner)
+        return hent(saksbehandler.reservasjoner, saksbehandlersIdent)
     }
+
+    suspend fun hent(reservasjonIder: Set<UUID>, saksbehandlersIdent: String): List<Reservasjon> {
+        var fjernede: List<Reservasjon>
+        var reservasjoner: List<Reservasjon>
+
+        val tidHente = measureTimeMillis {
+            reservasjoner = hentReservasjoner(reservasjonIder);
+        }
+        val andres = reservasjoner.filter { it.reservertAv != saksbehandlersIdent }
+        if (andres.isNotEmpty()) {
+            RESERVASJON_YTELSE_LOG.info("inkonsistent datamodell, ${andres.size} reservasjoner registrert i saksbehandlerobjektet med annen reservertAv av ${reservasjoner.size}")
+        }
+        val tidFjerne = measureTimeMillis {
+            fjernede = fjernReservasjonerSomIkkeLengerErAktive2(reservasjoner)
+        }
+
+        RESERVASJON_YTELSE_LOG.info("henting og fjerning av {} reservasjoner tok {} ms for fjerning og {} ms for henting", reservasjonIder.size, tidFjerne, tidHente)
+        return fjernede
+    }
+
 
     suspend fun hent(reservasjoner: Set<UUID>): List<Reservasjon> {
         var fjernede: List<Reservasjon>
