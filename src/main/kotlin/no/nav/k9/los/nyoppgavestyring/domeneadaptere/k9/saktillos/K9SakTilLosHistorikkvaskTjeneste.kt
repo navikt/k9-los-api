@@ -4,6 +4,7 @@ import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
+import no.nav.k9.los.eventhandler.DetaljerMetrikker
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.HistorikkvaskMetrikker
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
@@ -110,8 +111,10 @@ class K9SakTilLosHistorikkvaskTjeneste(
     }
 
     fun vaskOppgaveForBehandlingUUID(uuid: UUID): Long {
-        return transactionalManager.transaction { tx ->
-            vaskOppgaveForBehandlingUUID(uuid, tx)
+        return DetaljerMetrikker.time("k9sakHistorikkvask", "vaskOppgaveForBehandling") {
+            transactionalManager.transaction { tx ->
+                vaskOppgaveForBehandlingUUID(uuid, tx)
+            }
         }
     }
 
@@ -120,15 +123,17 @@ class K9SakTilLosHistorikkvaskTjeneste(
         var eventTeller = 0L
         var forrigeOppgave: OppgaveV3? = null
 
-        val nyeBehandlingsopplysningerFraK9Sak = k9SakBerikerKlient.hentBehandling(UUID.fromString(uuid.toString()), antallForsøk = 8)
+        val nyeBehandlingsopplysningerFraK9Sak = DetaljerMetrikker.time("k9sakHistorikkvask", "hentOpplysningerFraK9sak") { k9SakBerikerKlient.hentBehandling(UUID.fromString(uuid.toString()), antallForsøk = 8) }
 
-        val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
-        val høyesteInternVersjon =
+        val behandlingProsessEventer = DetaljerMetrikker.time("k9sakHistorikkvask", "hentEventer") { behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer }
+        val høyesteInternVersjon = DetaljerMetrikker.time("k9sakHistorikkvask", "hentHøyesteInternVersjon") {
             oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9sak", "K9", tx)!!
+        }
         var eventNrForBehandling = 0L
         var oppgaveDto: OppgaveDto? = null
         for (event in behandlingProsessEventer) {
             if (eventNrForBehandling > høyesteInternVersjon) {
+                log.info("Avbryter historikkvask for ${event.eksternId} ved eventTid ${event.eventTid}. Forventer at håndteres av vanlig adaptertjeneste.")
                 break //Historikkvasken har funnet eventer som ennå ikke er lastet inn med normalflyt. Dirty eventer skal håndteres av vanlig adaptertjeneste
             }
             if (event.eldsteDatoMedEndringFraSøker == null && nyeBehandlingsopplysningerFraK9Sak != null && nyeBehandlingsopplysningerFraK9Sak.eldsteDatoMedEndringFraSøker != null) {
@@ -144,21 +149,23 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 nyeBehandlingsopplysningerFraK9Sak
             )
 
-            oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, tx)
+            DetaljerMetrikker.time("k9sakHistorikkvask", "oppdaterEksisterendeOppgaveversjon") { oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, tx) }
 
             eventTeller++
             loggFremgangForHver100(eventTeller, "Prosessert $eventTeller eventer")
 
-            forrigeOppgave = oppgaveV3Tjeneste.hentOppgaveversjon(
-                område = "K9", eksternId = oppgaveDto.id, eksternVersjon = oppgaveDto.versjon, tx = tx
-            )
+            forrigeOppgave = DetaljerMetrikker.time("k9sakHistorikkvask", "hentOppgaveversjon") {
+                oppgaveV3Tjeneste.hentOppgaveversjon(
+                    område = "K9", eksternId = oppgaveDto.id, eksternVersjon = oppgaveDto.versjon, tx = tx
+                )
+            }
             eventNrForBehandling++
         }
 
         oppgaveDto?.let {
             oppgaveV3Tjeneste.ajourholdAktivOppgave(oppgaveDto, eventNrForBehandling, tx)
         }
-
+        log.info("Vasket $eventTeller hendelser for k9sak-oppgave med eksternId: $uuid")
         return eventTeller
     }
 
