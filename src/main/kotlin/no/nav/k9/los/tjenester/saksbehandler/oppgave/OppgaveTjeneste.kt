@@ -793,11 +793,8 @@ class OppgaveTjeneste constructor(
                     }
 
                     val person = pdlService.person(oppgave.aktorId)
-
-                    val navn = if (person.person != null) person.person.navn() else "Uten navn"
-
                     list.add(
-                        lagOppgaveDto(oppgave, navn, person.person)
+                        lagOppgaveDto(oppgave, person.person)
                     )
                 }
             }
@@ -811,7 +808,6 @@ class OppgaveTjeneste constructor(
 
     private fun lagOppgaveDto(
         oppgave: Oppgave,
-        navn: String,
         person: PersonPdl?,
     ) = OppgaveDto(
         status = OppgaveStatusDto(
@@ -825,7 +821,7 @@ class OppgaveTjeneste constructor(
         behandlingId = oppgave.behandlingId,
         saksnummer = oppgave.fagsakSaksnummer,
         journalpostId = oppgave.journalpostId,
-        navn = navn,
+        navn = person?.navn() ?: "Uten navn",
         system = oppgave.system,
         personnummer = person?.fnr() ?: "Ukjent fnummer",
         behandlingstype = oppgave.behandlingType,
@@ -1011,9 +1007,8 @@ class OppgaveTjeneste constructor(
                         }
                     }
 
-                    val person = DetaljerMetrikker.timeSuspended("faaOppgaveFraKo", "hentPerson") { pdlService.person(oppgave.aktorId) }
-                    val navn = if (person.person != null) person.person.navn() else "Uten navn"
-                    val oppgaveDto = DetaljerMetrikker.timeSuspended("faaOppgaveFraKo", "lagOppgaveDto") { lagOppgaveDto(oppgave, navn, person.person) }
+                    val person = null //evt. personinfo returnert her vises ikke i frontend
+                    val oppgaveDto = DetaljerMetrikker.timeSuspended("faaOppgaveFraKo", "lagOppgaveDto") { lagOppgaveDto(oppgave, person) }
 
                     statistikkChannel.send(true)
 
