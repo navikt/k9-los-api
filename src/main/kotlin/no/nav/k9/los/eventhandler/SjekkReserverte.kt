@@ -16,8 +16,9 @@ fun sjekkReserverteJobb(
         initialDelay = 0, period = 900 * 1000
     ) {
         JobbMetrikker.time("sjekk_reserverte") {
-            val reservasjoner = saksbehandlerRepository.hentAlleSaksbehandlereIkkeTaHensyn().flatMap { it.reservasjoner }
-            runBlocking { reservasjonRepository.hent(reservasjoner.toSet()) }
+            for (saksbehandler in saksbehandlerRepository.hentAlleSaksbehandlereIkkeTaHensyn()) {
+                runBlocking { reservasjonRepository.hent(saksbehandler.reservasjoner, saksbehandler.brukerIdent) }
+            }
         }
     }
 }
