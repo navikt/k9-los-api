@@ -37,15 +37,15 @@ class ReservasjonRepository(
     }
     private val log: Logger = LoggerFactory.getLogger(ReservasjonRepository::class.java)
 
-    suspend fun hent(saksbehandlersIdent: String): List<Reservasjon> {
+    suspend fun hentOgFjernInaktiveReservasjoner(saksbehandlersIdent: String): List<Reservasjon> {
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(ident = saksbehandlersIdent)!!
         if (saksbehandler.reservasjoner.isEmpty()) {
             return emptyList()
         }
-        return hent(saksbehandler.reservasjoner, saksbehandlersIdent)
+        return hentOgFjernInaktiveReservasjoner(saksbehandler.reservasjoner, saksbehandlersIdent)
     }
 
-    suspend fun hent(reservasjonIder: Set<UUID>, saksbehandlersIdent: String? = null): List<Reservasjon> {
+    suspend fun hentOgFjernInaktiveReservasjoner(reservasjonIder: Set<UUID>, saksbehandlersIdent: String? = null): List<Reservasjon> {
         var fjernede: List<Reservasjon>
         var reservasjoner: List<Reservasjon>
 
@@ -57,7 +57,7 @@ class ReservasjonRepository(
             RESERVASJON_YTELSE_LOG.info("inkonsistent datamodell, ${andres.size} reservasjoner registrert i saksbehandlerobjektet med annen reservertAv av ${reservasjoner.size}")
         }
         val tidFjerne = measureTimeMillis {
-            fjernede = fjernReservasjonerSomIkkeLengerErAktive2(reservasjoner, saksbehandlersIdent)
+            fjernede = fjernInaktiveReservasjoner(reservasjoner, saksbehandlersIdent)
         }
 
         RESERVASJON_YTELSE_LOG.info("henting og fjerning av {} reservasjoner tok {} ms for fjerning og {} ms for henting", reservasjonIder.size, tidFjerne, tidHente)
@@ -172,7 +172,7 @@ class ReservasjonRepository(
         }
     }
 
-    private suspend fun fjernReservasjonerSomIkkeLengerErAktive2(reservasjoner: List<Reservasjon>, saksbehandlersIdent: String?): List<Reservasjon> {
+    private suspend fun fjernInaktiveReservasjoner(reservasjoner: List<Reservasjon>, saksbehandlersIdent: String?): List<Reservasjon> {
         val reservasjonPrAktive = reservasjoner.groupBy { it.erAktiv() }
         val inaktive = reservasjonPrAktive[false] ?: emptyList()
         var totalAntallFjerninger = 0

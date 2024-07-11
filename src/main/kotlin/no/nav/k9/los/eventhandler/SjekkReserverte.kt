@@ -17,7 +17,7 @@ fun sjekkReserverteJobb(
     ) {
         JobbMetrikker.time("sjekk_reserverte") {
             for (saksbehandler in saksbehandlerRepository.hentAlleSaksbehandlereIkkeTaHensyn()) {
-                runBlocking { reservasjonRepository.hent(saksbehandler.reservasjoner, saksbehandler.brukerIdent) }
+                runBlocking { reservasjonRepository.hentOgFjernInaktiveReservasjoner(saksbehandler.reservasjoner, saksbehandler.brukerIdent) }
             }
         }
     }
