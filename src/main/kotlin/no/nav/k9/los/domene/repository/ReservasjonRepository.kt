@@ -54,7 +54,7 @@ class ReservasjonRepository(
         }
         val andres = reservasjoner.filter { it.reservertAv != saksbehandlersIdent }
         if (andres.isNotEmpty()) {
-            RESERVASJON_YTELSE_LOG.info("inkonsistent datamodell, ${andres.size} reservasjoner registrert i saksbehandlerobjektet med annen reservertAv av ${reservasjoner.size}")
+            RESERVASJON_YTELSE_LOG.info("inkonsistent data for reservasjoner, ${andres.size} reservasjoner registrert i saksbehandlerobjektet til ${saksbehandlersIdent} med reservertAv av: ${andres.map { it.reservertAv }.distinct()}")
         }
         val tidFjerne = measureTimeMillis {
             fjernede = fjernInaktiveReservasjoner(reservasjoner, saksbehandlersIdent)
