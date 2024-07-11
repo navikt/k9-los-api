@@ -28,7 +28,6 @@ object BehandlingProsessEventK9DuplikatUtil {
                 resultat.addAll(leggesTil)
                 if (leggesTil.size > 1){
                     flerePåSammeTid = true
-
                 }
             }
         }
