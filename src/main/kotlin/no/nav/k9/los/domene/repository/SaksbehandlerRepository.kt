@@ -404,13 +404,14 @@ class SaksbehandlerRepository(
                 enhet = null
             )
         } else {
+            val saksbehandler = LosObjectMapper.instance.readValue<Saksbehandler>(data)
             Saksbehandler(
                 id = row.long("id"),
-                brukerIdent = LosObjectMapper.instance.readValue<Saksbehandler>(data).brukerIdent,
-                navn = LosObjectMapper.instance.readValue<Saksbehandler>(data).navn,
+                brukerIdent = saksbehandler.brukerIdent,
+                navn = saksbehandler.navn,
                 epost = row.string("epost").lowercase(Locale.getDefault()),
-                reservasjoner = LosObjectMapper.instance.readValue<Saksbehandler>(data).reservasjoner,
-                enhet = LosObjectMapper.instance.readValue<Saksbehandler>(data).enhet
+                reservasjoner = saksbehandler.reservasjoner,
+                enhet = saksbehandler.enhet
             )
         }
     }
