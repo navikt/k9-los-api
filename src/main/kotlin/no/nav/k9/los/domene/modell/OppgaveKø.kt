@@ -37,16 +37,34 @@ data class OppgaveKø(
 
     companion object {
         private val log = LoggerFactory.getLogger(OppgaveKø::class.java)
+        fun erOppgavenReservert(
+            reservasjonRepository: ReservasjonRepository,
+            oppgave: Oppgave
+        ): Boolean {
+            val reservasjon = reservasjonRepository.hentOptional(oppgave.eksternId)
+            if (reservasjon != null) {
+                return reservasjon.erAktiv()
+            }
+            return false
+        }
     }
 
     fun leggOppgaveTilEllerFjernFraKø(
         oppgave: Oppgave,
-        reservasjonRepository: ReservasjonRepository? = null,
+        reservasjonRepository: ReservasjonRepository,
+        merknader: List<Merknad>
+    ): Boolean {
+        return leggOppgaveTilEllerFjernFraKø(oppgave, { erOppgavenReservert(reservasjonRepository, it) }, merknader)
+    }
+
+    fun leggOppgaveTilEllerFjernFraKø(
+        oppgave: Oppgave,
+        erOppgavenReservertSjekk : (Oppgave) -> Boolean,
         merknader: List<Merknad>
     ): Boolean {
         val tilhørerOppgaveTilKø = tilhørerOppgaveTilKø(
             oppgave = oppgave,
-            reservasjonRepository = reservasjonRepository,
+            erOppgavenReservertSjekk = erOppgavenReservertSjekk,
             merknader
         )
         if (tilhørerOppgaveTilKø) {
@@ -76,14 +94,22 @@ data class OppgaveKø(
 
     fun tilhørerOppgaveTilKø(
         oppgave: Oppgave,
-        reservasjonRepository: ReservasjonRepository?,
+        reservasjonRepository: ReservasjonRepository,
+        merknader: List<Merknad>
+    ): Boolean {
+        return tilhørerOppgaveTilKø(oppgave, { erOppgavenReservert(reservasjonRepository, it) } , merknader )
+    }
+
+    fun tilhørerOppgaveTilKø(
+        oppgave: Oppgave,
+        erOppgavenReservertSjekk : (Oppgave) -> Boolean,
         merknader: List<Merknad>
     ): Boolean {
         if (!oppgave.aktiv) {
             return false
         }
 
-        if (reservasjonRepository != null && erOppgavenReservert(reservasjonRepository, oppgave)) {
+        if (erOppgavenReservertSjekk.invoke(oppgave)) {
             return false
         }
         if (!erInnenforOppgavekøensPeriode(oppgave)) {
@@ -268,16 +294,6 @@ data class OppgaveKø(
         .map { it.andreKriterierType }
         .contains(AndreKriterierType.TIL_BESLUTTER)
 
-    fun erOppgavenReservert(
-        reservasjonRepository: ReservasjonRepository,
-        oppgave: Oppgave
-    ): Boolean {
-        val reservasjon = reservasjonRepository.hentOptional(oppgave.eksternId)
-        if (reservasjon != null) {
-            return reservasjon.erAktiv()
-        }
-        return false
-    }
 
 
     fun lagKriterier(): List<KriteriumDto> {

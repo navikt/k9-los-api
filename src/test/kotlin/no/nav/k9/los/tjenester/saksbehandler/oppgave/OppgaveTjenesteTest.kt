@@ -677,6 +677,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaver.forEach { o ->
             beslutterKø.leggOppgaveTilEllerFjernFraKø(
                 o,
+                erOppgavenReservertSjekk = {false},
                 merknader = emptyList()
             )
             oppgaveRepository.lagre(o.eksternId) { o }

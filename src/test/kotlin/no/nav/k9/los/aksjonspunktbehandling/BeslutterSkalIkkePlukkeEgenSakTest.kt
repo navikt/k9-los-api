@@ -102,6 +102,7 @@ class BeslutterSkalIkkePlukkeEgenSakTest : AbstractK9LosIntegrationTest() {
         val nesteOppgaverIKø = runBlocking {
             oppgaveKø.leggOppgaveTilEllerFjernFraKø(
                 oppgave,
+                erOppgavenReservertSjekk = {false},
                 merknader = oppgaveRepositoryV2.hentMerknader(oppgave.eksternId.toString())
             )
 

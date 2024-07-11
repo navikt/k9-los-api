@@ -156,7 +156,15 @@ class OppgaveKøRepository(
     suspend fun leggTilOppgaverTilKø(
         køUUID: UUID,
         oppgaver: List<Oppgave>,
-        reservasjonRepository: ReservasjonRepository
+        reservasjonRepository: ReservasjonRepository,
+    ) {
+        return leggTilOppgaverTilKø(køUUID, oppgaver) { OppgaveKø.erOppgavenReservert(reservasjonRepository, it) }
+    }
+
+    suspend fun leggTilOppgaverTilKø(
+        køUUID: UUID,
+        oppgaver: List<Oppgave>,
+        erOppgavenReservertSjekk : (Oppgave) -> Boolean,
     ) {
         var hintRefresh = false
         var gjennomførteTransaksjon = true
@@ -179,7 +187,7 @@ class OppgaveKøRepository(
                     if (oppgaveKø.kode6 == oppgave.kode6) {
                         val oppgavekøHarEndring = oppgaveKø.leggOppgaveTilEllerFjernFraKø(
                             oppgave = oppgave,
-                            reservasjonRepository = reservasjonRepository,
+                            erOppgavenReservertSjekk = erOppgavenReservertSjekk,
                             merknader = oppgaveRepositoryV2.hentMerknader(oppgave.eksternId.toString())
                         )
 

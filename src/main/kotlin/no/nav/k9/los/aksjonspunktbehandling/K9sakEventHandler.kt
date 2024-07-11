@@ -74,14 +74,20 @@ class K9sakEventHandler constructor(
         }
         tellEvent(modell, oppgave)
 
+        var reservasjonFjernet = false;
         if (modell.fikkEndretAksjonspunkt()) {
             log.info("Fjerner reservasjon på oppgave ${oppgave.eksternId}")
             reservasjonTjeneste.fjernReservasjon(oppgave)
+            reservasjonFjernet = true
         }
         modell.reportMetrics(reservasjonRepository)
         runBlocking {
             for (oppgavekø in oppgaveKøRepository.hentKøIdIkkeTaHensyn()) {
-                oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, listOf(oppgave), reservasjonRepository)
+                if (reservasjonFjernet){
+                    oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, listOf(oppgave), erOppgavenReservertSjekk = {false}) //reservasjon nettopp fjernet, trenger ikke sjekke mot repository
+                } else {
+                    oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, listOf(oppgave), reservasjonRepository)
+                }
             }
             statistikkChannel.send(true)
         }

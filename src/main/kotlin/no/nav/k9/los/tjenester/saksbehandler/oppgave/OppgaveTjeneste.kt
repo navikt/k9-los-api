@@ -192,7 +192,7 @@ class OppgaveTjeneste constructor(
             oppgaveKøRepository.leggTilOppgaverTilKø(
                 oppgavekø,
                 oppgaverSomSkalBliReservert.map { o -> o.oppgave },
-                reservasjonRepository
+                erOppgavenReservertSjekk = { true } //reserveres rett over
             )
         }
         statistikkChannel.send(true)
@@ -592,7 +592,7 @@ class OppgaveTjeneste constructor(
         saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
         val oppgave = oppgaveRepository.hent(uuid)
         for (oppgavekø in oppgaveKøRepository.hent()) {
-            oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø.id, listOf(oppgave), reservasjonRepository)
+            oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø.id, listOf(oppgave), erOppgavenReservertSjekk = {false}) //reservasjon ble nettopp fjernet
         }
         return reservasjon
     }
@@ -729,7 +729,7 @@ class OppgaveTjeneste constructor(
         reserverteOppgaver: List<Oppgave>
     ) {
         val antallReserverteOppgaverSomTilhørerKø =
-            reserverteOppgaver.count { oppgavekø.tilhørerOppgaveTilKø(it, null, emptyList()) }
+            reserverteOppgaver.count { oppgavekø.tilhørerOppgaveTilKø(it, erOppgavenReservertSjekk = {false}, emptyList()) } //må spesifikt si at oppgaven ikke er reservert for å telle den reserverte oppgaven
         val antallUtenReserverte = oppgavekø.oppgaverOgDatoer.size
         val antallMedReserverte = oppgavekø.oppgaverOgDatoer.size + antallReserverteOppgaverSomTilhørerKø
         hentAntallOppgaverCache.set(
@@ -761,7 +761,7 @@ class OppgaveTjeneste constructor(
             val reserverteOppgaver = oppgaveRepository.hentOppgaver(reserverteOppgaveIder)
 
             val antallReserverteOppgaverSomTilhørerKø =
-                reserverteOppgaver.count { oppgavekø.tilhørerOppgaveTilKø(it, null, emptyList()) }
+                reserverteOppgaver.count { oppgavekø.tilhørerOppgaveTilKø(it, erOppgavenReservertSjekk = {false}, emptyList()) } //må spesifikt si at oppgaven ikke er reservert for å telle den reserverte oppgaven
             log.info("Antall reserverte oppgaver som ble lagt til var $antallReserverteOppgaverSomTilhørerKø")
         }
         val antall = oppgavekø.oppgaverOgDatoer.size + antallReserverteOppgaverSomTilhørerKø
@@ -1002,7 +1002,7 @@ class OppgaveTjeneste constructor(
                             oppgaveKøRepository.leggTilOppgaverTilKø(
                                 oppgavekø,
                                 oppgaverSomSkalBliReservert.map { o -> o.oppgave },
-                                reservasjonRepository
+                                erOppgavenReservertSjekk = {true} //vi har reservert oppgavene rett over, så kan hardkode her at oppgaven er reservert
                             )
                         }
                     }
