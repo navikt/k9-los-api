@@ -20,7 +20,7 @@ object BehandlingProsessEventK9DuplikatUtil {
                 val leggesTil: MutableSet<BehandlingProsessEventDto> = mutableSetOf()
                 for (event in eventerMedLikTid) {
                     if (leggesTil.any { erFunksjoneltLike(event, it) }) {
-                        //ignorerer duplikat
+                        log.info("Ignorerer en funksjonelt duplikat hendelse. Gjaldt eksternId ${event.eksternId} eventTid ${event.eventTid}")
                     } else {
                         leggesTil.add(event)
                     }
