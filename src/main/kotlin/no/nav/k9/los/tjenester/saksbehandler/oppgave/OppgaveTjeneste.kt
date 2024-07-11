@@ -928,7 +928,7 @@ class OppgaveTjeneste constructor(
         brukerident: String,
     ): OppgaveDto? {
         val starttid = System.nanoTime()
-        if (!pepClient.harBasisTilgang()) {
+        if (DetaljerMetrikker.timeSuspended("faaOppgaveFraKo", "basistilgang") {  !pepClient.harBasisTilgang() }) {
             log.warn("har ikke basistilgang")
             return null;
         }
@@ -941,10 +941,10 @@ class OppgaveTjeneste constructor(
             antallOppgaverSjekket++
             val oppgaveUuid = oppgave.eksternId
             val fraVanligKø = prioriterteOppgaver.none() { it.eksternId == oppgaveUuid }
-            if (!pepClient.harTilgangTilOppgave(oppgave)){
+            if (DetaljerMetrikker.timeSuspended("faaOppgaveFraKo", "tilgangTilOppgave") {!pepClient.harTilgangTilOppgave(oppgave)}){
                 settSkjermet(oppgave)
                 log.info("OppgaveFraKø: Har ikke tilgang, setter skjermet på oppgaven")
-            } else if (fraVanligKø && reservasjonOversetter.hentAktivReservasjonFraGammelKontekst(oppgave)?.erAktiv() == true) {
+            } else if (fraVanligKø && DetaljerMetrikker.timeSuspended("faaOppgaveFraKo", "hentAktivReservasjonFraGammelKontekst") {reservasjonOversetter.hentAktivReservasjonFraGammelKontekst(oppgave)?.erAktiv() == true}) {
                 log.info("OppgaveFraKø: Reservasjon v1 er ute av synk med v3. Hopper over oppgave med eksisterende v3-reservasjon $oppgaveUuid")
             } else if (innloggetSaksbehandlerHarSaksbehandletOppgaveSomSkalBliBesluttet(oppgave, brukerident)) {
                 log.info("OppgaveFraKø: Beslutter er saksbehandler på oppgaven")
@@ -984,7 +984,7 @@ class OppgaveTjeneste constructor(
                     val reservasjoner = DetaljerMetrikker.timeSuspended("faaOppgaveFraKo", "lagReservasjoner") { lagReservasjoner(iderPåOppgaverSomSkalBliReservert, brukerident, null)}
 
                     //ReservasjonV3 TODO: sanity check - har noen andre reservert i ny modell? Hva skal skje da?
-                    val skalHaReservasjon = saksbehandlerRepository.finnSaksbehandlerMedIdent(brukerident)!!
+                    val skalHaReservasjon = DetaljerMetrikker.timeSuspended("faaOppgaveFraKo", "finnSaksbehandlerMedIdent") {  saksbehandlerRepository.finnSaksbehandlerMedIdent(brukerident)!! }
                     DetaljerMetrikker.timeSuspended("faaOppgaveFraKo", "taNyReservasjonFraGammelKontekst") {
                         reservasjonOversetter.taNyReservasjonFraGammelKontekst(
                             oppgaveV1 = oppgave,
