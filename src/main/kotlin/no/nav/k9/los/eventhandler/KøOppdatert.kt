@@ -68,6 +68,7 @@ private suspend fun oppdaterKø(
             if (kø.kode6 == oppgave.kode6) {
                 kø.leggOppgaveTilEllerFjernFraKø(
                     oppgave = oppgave,
+                    erOppgavenReservertSjekk = {false}, //har spesifikt hentet ureserverte oppgaver over
                     merknader = merknader.getOrDefault(oppgave.eksternId.toString(), emptyList())
                 )
             }
@@ -83,6 +84,7 @@ private suspend fun oppdaterKø(
                     if (kø.kode6 == oppgave.kode6) {
                         oppgaveKø.leggOppgaveTilEllerFjernFraKø(
                             oppgave = oppgave,
+                            erOppgavenReservertSjekk = {false}, //har spesifikt hentet ureserverte oppgaver over
                             merknader = merknader.getOrDefault(oppgave.eksternId.toString(), emptyList())
                         )
                     }

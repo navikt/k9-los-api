@@ -232,6 +232,7 @@ fun Route.innsiktGrensesnitt() {
                 for (oppgave in hentAktiveOppgaver) {
                     oppgaveKø.leggOppgaveTilEllerFjernFraKø(
                         oppgave,
+                        erOppgavenReservertSjekk = {false},
                         merknader = oppgaveRepositoryV2.hentMerknader(oppgave.eksternId.toString())
                     )
                 }
