@@ -1,5 +1,6 @@
 package no.nav.k9.los.eventhandler
 
+import io.prometheus.client.Counter
 import io.prometheus.client.Histogram
 import io.prometheus.client.SimpleTimer
 
@@ -10,6 +11,13 @@ object DetaljerMetrikker {
         .help("Tidsforbruk diverse internt")
         .labelNames("label1", "label2", "resultat")
         .exponentialBuckets(0.01, Math.pow(10.0, 1.0 / 3.0), 12)
+        .register()
+
+    private val teller = Histogram.build()
+        .name("k9los_internal_teller")
+        .help("Teller diverse internt")
+        .labelNames("label1", "label2")
+        .exponentialBuckets(1.0, 2.0, 10)
         .register()
 
     fun <T> time(label1: String, label2: String, operasjon: (() -> T)): T {
@@ -43,5 +51,10 @@ object DetaljerMetrikker {
     fun observe(starttidNanos : Long, label1: String, label2: String, status : String= "OK") {
         tidsforbruk.labels(label1, label2, status)
             .observe(SimpleTimer.elapsedSecondsFromNanos(starttidNanos, System.nanoTime()))
+    }
+
+    fun observeTeller(label1: String, label2: String, antall : Number) {
+        teller.labels(label1, label2)
+            .observe(antall.toDouble())
     }
 }

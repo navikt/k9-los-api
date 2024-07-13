@@ -2,18 +2,20 @@ package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
+import no.nav.k9.los.eventhandler.DetaljerMetrikker
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import org.jetbrains.annotations.VisibleForTesting
 
 object AktivOppgaveRepository {
 
     fun ajourholdAktivOppgave(oppgave: OppgaveV3, nyVersjon: Long, tx: TransactionalSession): Long {
+
         val oppgaveId = if (nyVersjon == 0L) {
-            opprettOppgaveV3Aktiv(tx, oppgave, nyVersjon)
+            DetaljerMetrikker.time("k9sakHistorikkvask", "opprettOppgaveV3Aktiv") {  opprettOppgaveV3Aktiv(tx, oppgave, nyVersjon) }
         } else {
-            oppdaterOppgaveV3Aktiv(tx, oppgave, nyVersjon)
+            DetaljerMetrikker.time("k9sakHistorikkvask", "oppdaterOppgaveV3Aktiv") {  oppdaterOppgaveV3Aktiv(tx, oppgave, nyVersjon) }
         }
-        oppdaterAktivOppgavefelter(oppgaveId, oppgave, nyVersjon, tx)
+        DetaljerMetrikker.time("k9sakHistorikkvask", "oppdaterAktivOppgavefelter") { oppdaterAktivOppgavefelter(oppgaveId, oppgave, nyVersjon, tx) }
         return oppgaveId
     }
 
@@ -95,12 +97,15 @@ object AktivOppgaveRepository {
         check(nyVersjon >= 0) { "Ny versjon må være 0 eller høyere: $nyVersjon" }
 
         val eksisterendeFelter: List<OppgaveFeltverdi> = if (nyVersjon == 0L) emptyList()
-        else hentFeltverdier(oppgaveId, oppgave.oppgavetype, tx)
+        else DetaljerMetrikker.time("k9sakHistorikkvask", "hentFeltverdier") { hentFeltverdier(oppgaveId, oppgave.oppgavetype, tx) }
 
-        val diffResultat = regnUtDiff(eksisterendeFelter, oppgave.felter)
-        insertFelter(diffResultat.inserts, oppgave, oppgaveId, tx)
-        oppdaterFelter(diffResultat.updates, tx)
-        slettFelter(diffResultat.deletes, tx)
+        val diffResultat = DetaljerMetrikker.time("k9sakHistorikkvask", "regnUtDiff") { regnUtDiff(eksisterendeFelter, oppgave.felter) }
+        DetaljerMetrikker.time("k9sakHistorikkvask", "insertFelter") { insertFelter(diffResultat.inserts, oppgave, oppgaveId, tx) }
+        DetaljerMetrikker.time("k9sakHistorikkvask", "oppdaterFelter") { oppdaterFelter(diffResultat.updates, tx) }
+        DetaljerMetrikker.time("k9sakHistorikkvask", "slettFelter") { slettFelter(diffResultat.deletes, tx) }
+        DetaljerMetrikker.observeTeller("k9sakHistorikkvask", "insertFelter", diffResultat.inserts.size)
+        DetaljerMetrikker.observeTeller("k9sakHistorikkvask", "oppdaterFelter", diffResultat.updates.size)
+        DetaljerMetrikker.observeTeller("k9sakHistorikkvask", "slettFelter", diffResultat.deletes.size)
     }
 
     private fun hentFeltverdier(
