@@ -83,8 +83,6 @@ import org.koin.ktor.plugin.Koin
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.*
-import kotlin.time.DurationUnit
-import kotlin.time.toDuration
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
@@ -120,7 +118,6 @@ fun Application.k9Los() {
             //koin.get<K9SakTilLosLukkeFeiloppgaverTjeneste>().kjørFeiloppgaverVask() //TODO slette
         }
         val historikkvaskTjeneste = koin.get<K9SakTilLosHistorikkvaskTjeneste>()
-        Thread.sleep(5.toDuration(DurationUnit.MINUTES).inWholeMilliseconds) //vent til gammel instans er stanset
         historikkvaskTjeneste.nullstillhistorikkvask();
         historikkvaskTjeneste.kjørHistorikkvask()
     }
