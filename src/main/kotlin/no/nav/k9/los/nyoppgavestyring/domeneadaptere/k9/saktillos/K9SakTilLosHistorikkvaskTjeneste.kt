@@ -16,6 +16,8 @@ import org.slf4j.LoggerFactory
 import java.time.*
 import java.util.*
 import kotlin.concurrent.thread
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 class K9SakTilLosHistorikkvaskTjeneste(
     private val behandlingProsessEventK9Repository: BehandlingProsessEventK9Repository,
@@ -38,6 +40,14 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 isDaemon = true,
                 name = TRÅDNAVN
             ) {
+
+                Thread.sleep(5.toDuration(DurationUnit.MINUTES).inWholeMilliseconds)
+
+                if (LocalDateTime.now().isBefore(LocalDateTime.of(2024, 7, 13, 13, 0))) {
+                    nullstillhistorikkvask()
+                }
+
+
                 log.info("Starter avspilling av historiske BehandlingProsessEventer")
 
                 val tidKjøringStartet = System.currentTimeMillis()

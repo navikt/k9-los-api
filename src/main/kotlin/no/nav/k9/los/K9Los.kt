@@ -118,7 +118,6 @@ fun Application.k9Los() {
             //koin.get<K9SakTilLosLukkeFeiloppgaverTjeneste>().kjørFeiloppgaverVask() //TODO slette
         }
         val historikkvaskTjeneste = koin.get<K9SakTilLosHistorikkvaskTjeneste>()
-        historikkvaskTjeneste.nullstillhistorikkvask();
         historikkvaskTjeneste.kjørHistorikkvask()
     }
 
