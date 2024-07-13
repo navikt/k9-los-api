@@ -45,11 +45,10 @@ object BehandlingProsessEventK9DuplikatUtil {
             return false;
         }
 
-        //behandle resultattype IKKE_FASTSATT og null som like
-        if (a.resultatType == BehandlingResultatType.IKKE_FASTSATT.kode && b.resultatType == null){
+        if (a.resultatType != null && b.resultatType == null){
             return a.copy(resultatType = null) == b;
         }
-        if (b.resultatType == BehandlingResultatType.IKKE_FASTSATT.kode && a.resultatType == null){
+        if (b.resultatType != null && a.resultatType == null){
             return b.copy(resultatType = null) == a;
         }
 
