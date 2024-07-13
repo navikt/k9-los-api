@@ -165,7 +165,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
         }
 
         oppgaveDto?.let {
-            oppgaveV3Tjeneste.ajourholdAktivOppgave(oppgaveDto, eventNrForBehandling, tx)
+            DetaljerMetrikker.time("k9sakHistorikkvask", "ajourholdAktivOppgave") { oppgaveV3Tjeneste.ajourholdAktivOppgave(oppgaveDto, eventNrForBehandling, tx) }
         }
         log.info("Vasket $eventTeller hendelser for k9sak-oppgave med eksternId: $uuid")
         return eventTeller
