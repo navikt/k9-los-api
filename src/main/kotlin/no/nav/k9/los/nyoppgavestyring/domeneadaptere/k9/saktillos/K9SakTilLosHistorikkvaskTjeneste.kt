@@ -48,7 +48,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 log.info("Fant totalt $antallEventIder behandlingsider som skal rekjøres mot oppgavemodell")
 
                 while (true) {
-                    val behandlingsIder = behandlingProsessEventK9Repository.hentAlleEventIderUtenVasketHistorikk(antall = 1000)
+                    val behandlingsIder = DetaljerMetrikker.time("k9sakHistorikkvask", "hentBehandlinger") { behandlingProsessEventK9Repository.hentAlleEventIderUtenVasketHistorikk(antall = 1000) }
                     if (behandlingsIder.isEmpty()) {
                         break
                     }
@@ -100,11 +100,13 @@ class K9SakTilLosHistorikkvaskTjeneste(
         val antallBehandlingerIBatch = behandlingsIder.size
 
         behandlingsIder.forEach { uuid ->
-            transactionalManager.transaction { tx ->
-                eventTeller += vaskOppgaveForBehandlingUUID(uuid, tx)
-                behandlingProsessEventK9Repository.markerVasketHistorikk(uuid, tx)
-                behandlingTeller++
-                loggFremgangForHver100(behandlingTeller, "Vasket $behandlingTeller behandlinger av $antallBehandlingerIBatch i gjeldende iterasjon")
+            DetaljerMetrikker.time("k9sakHistorikkvask", "vaskOppgaveForBehandlingKomplett") {
+                transactionalManager.transaction { tx ->
+                    eventTeller += DetaljerMetrikker.time("k9sakHistorikkvask", "vaskOppgaveForBehandling") { vaskOppgaveForBehandlingUUID(uuid, tx) }
+                    behandlingProsessEventK9Repository.markerVasketHistorikk(uuid, tx)
+                    behandlingTeller++
+                    loggFremgangForHver100(behandlingTeller, "Vasket $behandlingTeller behandlinger av $antallBehandlingerIBatch i gjeldende iterasjon")
+                }
             }
         }
         return eventTeller
