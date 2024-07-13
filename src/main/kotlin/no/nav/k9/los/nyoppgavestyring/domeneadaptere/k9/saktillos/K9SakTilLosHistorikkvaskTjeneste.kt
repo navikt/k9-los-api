@@ -43,11 +43,6 @@ class K9SakTilLosHistorikkvaskTjeneste(
 
                 Thread.sleep(5.toDuration(DurationUnit.MINUTES).inWholeMilliseconds)
 
-                if (LocalDateTime.now().isBefore(LocalDateTime.of(2024, 7, 13, 13, 0))) {
-                    nullstillhistorikkvask()
-                }
-
-
                 log.info("Starter avspilling av historiske BehandlingProsessEventer")
 
                 val tidKjøringStartet = System.currentTimeMillis()
