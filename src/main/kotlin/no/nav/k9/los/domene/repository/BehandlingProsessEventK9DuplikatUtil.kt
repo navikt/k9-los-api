@@ -1,9 +1,9 @@
 package no.nav.k9.los.domene.repository
 
-import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.los.domene.lager.oppgave.v2.BehandlingsmigreringTjeneste
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 
 object BehandlingProsessEventK9DuplikatUtil {
 
@@ -12,8 +12,8 @@ object BehandlingProsessEventK9DuplikatUtil {
     fun fjernDuplikater(eventer : Collection<BehandlingProsessEventDto>) : Set<BehandlingProsessEventDto> {
         val gruppert = eventer.groupBy { it.eventTid }
         val resultat : MutableSet<BehandlingProsessEventDto> = mutableSetOf()
-        var flerePåSammeTid = false
-        for ((_, eventerMedLikTid) in gruppert) {
+        var tidspunktMedFlere : MutableSet<LocalDateTime> = mutableSetOf()
+        for ((tidspunkt, eventerMedLikTid) in gruppert) {
             if (eventerMedLikTid.size == 1){
                 resultat.addAll(eventerMedLikTid)
             } else {
@@ -26,13 +26,13 @@ object BehandlingProsessEventK9DuplikatUtil {
                     }
                 }
                 resultat.addAll(leggesTil)
-                if (leggesTil.size > 1){
-                    flerePåSammeTid = true
+                if (leggesTil.size > 1) {
+                    tidspunktMedFlere.add(tidspunkt)
                 }
             }
         }
-        if (flerePåSammeTid){
-            log.warn("Har ulike eventer på samme tidspunkt. Gjelder eksternId ${resultat.first().eksternId}")
+        if (tidspunktMedFlere.isNotEmpty()){
+            log.warn("Har ulike eventer på samme tidspunkt. Gjelder eksternId ${resultat.first().eksternId} og tidspunkt ${tidspunktMedFlere}")
         }
         return resultat
     }
