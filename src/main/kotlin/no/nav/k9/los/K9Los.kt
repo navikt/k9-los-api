@@ -117,7 +117,9 @@ fun Application.k9Los() {
             //koin.get<ReservasjonKonverteringJobb>().kjørReservasjonskonvertering() //TODO slette
             //koin.get<K9SakTilLosLukkeFeiloppgaverTjeneste>().kjørFeiloppgaverVask() //TODO slette
         }
-        koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
+        val historikkvaskTjeneste = koin.get<K9SakTilLosHistorikkvaskTjeneste>()
+        historikkvaskTjeneste.nullstillhistorikkvask();
+        historikkvaskTjeneste.kjørHistorikkvask()
     }
 
     install(Authentication) {

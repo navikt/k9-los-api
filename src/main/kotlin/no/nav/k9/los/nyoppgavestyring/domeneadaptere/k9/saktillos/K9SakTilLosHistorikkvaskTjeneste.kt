@@ -77,11 +77,15 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 }
 
                 log.info("Historikkvask k9sak ferdig")
-                behandlingProsessEventK9Repository.nullstillHistorikkvask()
-                log.info("Nullstilt historikkvaskmarkering k9-sak")
+                nullstillhistorikkvask()
                 HistorikkvaskMetrikker.observe(TRÅDNAVN, t0)
             }
         } else log.info("Ny oppgavestyring er deaktivert")
+    }
+
+    fun nullstillhistorikkvask(){
+        behandlingProsessEventK9Repository.nullstillHistorikkvask()
+        log.info("Nullstilt historikkvaskmarkering k9-sak")
     }
 
     fun skalPauses(): Boolean {
