@@ -1,5 +1,6 @@
 package no.nav.k9.los.domene.repository
 
+import kotlinx.coroutines.*
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -46,6 +47,10 @@ object BehandlingProsessEventK9DuplikatUtil {
         }
         if (a.eventTid != b.eventTid){
             return false;
+        }
+        if (a.eventTid.year < 2021){
+            //ignorer duplikater fra 2020 eller tidligere
+            return true;
         }
         val eventA = medSorterteDedupliserteLister(a)
         val eventB = medSorterteDedupliserteLister(b)
