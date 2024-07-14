@@ -43,11 +43,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 name = TRÅDNAVN
             ) {
 
-                Thread.sleep(5.toDuration(DurationUnit.MINUTES).inWholeMilliseconds)
-
-                if (LocalDateTime.now().isBefore(LocalDateTime.of(2024, 7, 18, 0, 0))) {
-                    nullstillhistorikkvask()
-                }
+                Thread.sleep(2.toDuration(DurationUnit.MINUTES).inWholeMilliseconds)
 
                 val dispatcher = newFixedThreadPoolContext(3, "Historikkvask k9sak")
 
@@ -61,7 +57,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 log.info("Fant totalt $antallEventIder behandlingsider som skal rekjøres mot oppgavemodell")
 
                 while (true) {
-                    val behandlingsIder = DetaljerMetrikker.time("k9sakHistorikkvask", "hentBehandlinger") { behandlingProsessEventK9Repository.hentAlleEventIderUtenVasketHistorikk(antall = 100) }
+                    val behandlingsIder = DetaljerMetrikker.time("k9sakHistorikkvask", "hentBehandlinger") { behandlingProsessEventK9Repository.hentAlleEventIderUtenVasketHistorikk(antall = 2000) }
                     if (behandlingsIder.isEmpty()) {
                         break
                     }
