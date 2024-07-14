@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos
 
+import kotlinx.coroutines.*
 import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
@@ -11,6 +12,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAda
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
+import no.nav.k9.sak.kontrakt.produksjonsstyring.los.BehandlingMedFagsakDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.*
@@ -47,6 +49,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
                     nullstillhistorikkvask()
                 }
 
+                val dispatcher = newFixedThreadPoolContext(3, "Historikkvask k9sak")
 
                 log.info("Starter avspilling av historiske BehandlingProsessEventer")
 
@@ -58,7 +61,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 log.info("Fant totalt $antallEventIder behandlingsider som skal rekjøres mot oppgavemodell")
 
                 while (true) {
-                    val behandlingsIder = DetaljerMetrikker.time("k9sakHistorikkvask", "hentBehandlinger") { behandlingProsessEventK9Repository.hentAlleEventIderUtenVasketHistorikk(antall = 1000) }
+                    val behandlingsIder = DetaljerMetrikker.time("k9sakHistorikkvask", "hentBehandlinger") { behandlingProsessEventK9Repository.hentAlleEventIderUtenVasketHistorikk(antall = 100) }
                     if (behandlingsIder.isEmpty()) {
                         break
                     }
@@ -72,8 +75,9 @@ class K9SakTilLosHistorikkvaskTjeneste(
                     }
 
                     log.info("Starter vaskeiterasjon på ${behandlingsIder.size} behandlinger")
-                    eventTeller += spillAvBehandlingProsessEventer(behandlingsIder)
+                    eventTeller += spillAvBehandlingProsessEventer(dispatcher, behandlingsIder)
                     behandlingTeller += behandlingsIder.count()
+                    log.info("Vasket iterasjon med $behandlingTeller behandlinger")
                     HistorikkvaskMetrikker.observe(TRÅDNAVN, t0)
                     t0 = System.nanoTime()
                 }
@@ -108,19 +112,26 @@ class K9SakTilLosHistorikkvaskTjeneste(
         return false
     }
 
-    private fun spillAvBehandlingProsessEventer(behandlingsIder: List<UUID>): Long {
-        var eventTeller = 0L
-        var behandlingTeller = 0L
-        val antallBehandlingerIBatch = behandlingsIder.size
+    private fun spillAvBehandlingProsessEventer(dispatcher: ExecutorCoroutineDispatcher, behandlingsIder: List<UUID>): Long {
+        val scope = CoroutineScope(dispatcher)
 
-        behandlingsIder.forEach { uuid ->
-            DetaljerMetrikker.time("k9sakHistorikkvask", "vaskOppgaveForBehandlingKomplett") {
-                transactionalManager.transaction { tx ->
-                    eventTeller += DetaljerMetrikker.time("k9sakHistorikkvask", "vaskOppgaveForBehandling") { vaskOppgaveForBehandlingUUID(uuid, tx) }
-                    behandlingProsessEventK9Repository.markerVasketHistorikk(uuid, tx)
-                    behandlingTeller++
-                    loggFremgangForHver100(behandlingTeller, "Vasket $behandlingTeller behandlinger av $antallBehandlingerIBatch i gjeldende iterasjon")
-                }
+        val jobber = behandlingsIder.map {
+            scope.async { runBlocking { vaskOppgaveForBehandlingUUIDOgMarkerVasket(it) } }
+        }.toList()
+
+        val eventTeller = runBlocking {
+            jobber.map { it.await() }.sum()
+        }
+        return eventTeller
+    }
+
+    fun vaskOppgaveForBehandlingUUIDOgMarkerVasket(uuid: UUID): Long {
+        var eventTeller = 0L;
+        DetaljerMetrikker.time("k9sakHistorikkvask", "vaskOppgaveForBehandlingKomplett") {
+            val nyeBehandlingsopplysningerFraK9Sak = DetaljerMetrikker.time("k9sakHistorikkvask", "hentOpplysningerFraK9sak") { k9SakBerikerKlient.hentBehandling(UUID.fromString(uuid.toString()), antallForsøk = 8) }
+            transactionalManager.transaction { tx ->
+                eventTeller = DetaljerMetrikker.time("k9sakHistorikkvask", "vaskOppgaveForBehandling") { vaskOppgaveForBehandlingUUID(uuid, nyeBehandlingsopplysningerFraK9Sak, tx) }
+                behandlingProsessEventK9Repository.markerVasketHistorikk(uuid, tx)
             }
         }
         return eventTeller
@@ -128,18 +139,16 @@ class K9SakTilLosHistorikkvaskTjeneste(
 
     fun vaskOppgaveForBehandlingUUID(uuid: UUID): Long {
         return DetaljerMetrikker.time("k9sakHistorikkvask", "vaskOppgaveForBehandling") {
+            val nyeBehandlingsopplysningerFraK9Sak = DetaljerMetrikker.time("k9sakHistorikkvask", "hentOpplysningerFraK9sak") { k9SakBerikerKlient.hentBehandling(UUID.fromString(uuid.toString()), antallForsøk = 8) }
             transactionalManager.transaction { tx ->
-                vaskOppgaveForBehandlingUUID(uuid, tx)
+                vaskOppgaveForBehandlingUUID(uuid, nyeBehandlingsopplysningerFraK9Sak, tx)
             }
         }
     }
 
-    fun vaskOppgaveForBehandlingUUID(uuid: UUID, tx: TransactionalSession): Long {
+    fun vaskOppgaveForBehandlingUUID(uuid: UUID, nyeBehandlingsopplysningerFraK9Sak : BehandlingMedFagsakDto?,  tx: TransactionalSession): Long {
         log.info("Vasker historikk for k9sak-oppgave med eksternId: $uuid")
-        var eventTeller = 0L
         var forrigeOppgave: OppgaveV3? = null
-
-        val nyeBehandlingsopplysningerFraK9Sak = DetaljerMetrikker.time("k9sakHistorikkvask", "hentOpplysningerFraK9sak") { k9SakBerikerKlient.hentBehandling(UUID.fromString(uuid.toString()), antallForsøk = 8) }
 
         val behandlingProsessEventer = DetaljerMetrikker.time("k9sakHistorikkvask", "hentEventer") { behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer }
         val høyesteInternVersjon = DetaljerMetrikker.time("k9sakHistorikkvask", "hentHøyesteInternVersjon") {
@@ -167,9 +176,6 @@ class K9SakTilLosHistorikkvaskTjeneste(
 
             DetaljerMetrikker.time("k9sakHistorikkvask", "oppdaterEksisterendeOppgaveversjon") { oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, tx) }
 
-            eventTeller++
-            loggFremgangForHver100(eventTeller, "Prosessert $eventTeller eventer")
-
             forrigeOppgave = DetaljerMetrikker.time("k9sakHistorikkvask", "hentOppgaveversjon") {
                 oppgaveV3Tjeneste.hentOppgaveversjon(
                     område = "K9", eksternId = oppgaveDto.id, eksternVersjon = oppgaveDto.versjon, tx = tx
@@ -181,14 +187,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
         oppgaveDto?.let {
             DetaljerMetrikker.time("k9sakHistorikkvask", "ajourholdAktivOppgave") { oppgaveV3Tjeneste.ajourholdAktivOppgave(oppgaveDto, eventNrForBehandling, tx) }
         }
-        log.info("Vasket $eventTeller hendelser for k9sak-oppgave med eksternId: $uuid")
-        return eventTeller
+        log.info("Vasket $eventNrForBehandling hendelser for k9sak-oppgave med eksternId: $uuid")
+        return eventNrForBehandling
     }
-
-    private fun loggFremgangForHver100(teller: Long, tekst: String) {
-        if (teller.mod(100) == 0) {
-            log.info(tekst)
-        }
-    }
-
 }
