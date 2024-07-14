@@ -77,7 +77,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
                     log.info("Starter vaskeiterasjon på ${behandlingsIder.size} behandlinger")
                     eventTeller += spillAvBehandlingProsessEventer(dispatcher, behandlingsIder)
                     behandlingTeller += behandlingsIder.count()
-                    log.info("Vasket iterasjon med $behandlingTeller behandlinger")
+                    log.info("Vasket iterasjon med ${behandlingsIder.size} behandlinger, har vasket totalt $behandlingTeller av $antallEventIder")
                     HistorikkvaskMetrikker.observe(TRÅDNAVN, t0)
                     t0 = System.nanoTime()
                 }
