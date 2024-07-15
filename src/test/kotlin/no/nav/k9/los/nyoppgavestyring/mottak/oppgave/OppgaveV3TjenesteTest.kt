@@ -59,8 +59,12 @@ class OppgaveV3TjenesteTest : AbstractK9LosIntegrationTest() {
         transactionalManager.transaction { tx ->
             oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveVersjon1, tx)
             oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveVersjon2, tx)
-            oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveVersjon1korrigert, 0, tx)
-            oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveVersjon2korrigert, 1, tx)
+
+            val oppgave1korrigert = oppgaveV3Tjeneste.utledEksisterendeOppgaveversjon(oppgaveVersjon1korrigert, 0, tx)
+            oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgave1korrigert, 0, tx)
+
+            val oppgave2korrigert = oppgaveV3Tjeneste.utledEksisterendeOppgaveversjon(oppgaveVersjon2korrigert, 1, tx)
+            oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgave2korrigert, 1, tx)
         }
 
         val vasketOppgave1 = transactionalManager.transaction { tx ->
