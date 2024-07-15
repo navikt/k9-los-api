@@ -45,7 +45,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
 
                 Thread.sleep(2.toDuration(DurationUnit.MINUTES).inWholeMilliseconds)
 
-                val dispatcher = newFixedThreadPoolContext(3, "Historikkvask k9sak")
+                val dispatcher = newFixedThreadPoolContext(5, "Historikkvask k9sak")
 
                 log.info("Starter avspilling av historiske BehandlingProsessEventer")
 
