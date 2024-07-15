@@ -122,10 +122,12 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
         var eventNrForBehandling = 0L
         var oppgaveDto: OppgaveDto? = null
         val behandlingProsessEventer: List<PunsjEventDto> = eventRepository.hentMedLås(tx, uuid).eventer
+        var oppgaveV3: OppgaveV3? = null
         for (event in behandlingProsessEventer) {
             oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
 
-//            oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, høyesteInternVersjon, tx)
+            oppgaveV3 = oppgaveV3Tjeneste.utledEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, tx)
+            oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveV3, eventNrForBehandling, tx)
 
             forrigeOppgave = oppgaveV3Tjeneste.hentOppgaveversjon(
                 område = "k9",
@@ -135,8 +137,8 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
             )
         }
 
-        oppgaveDto?.let {
-            oppgaveV3Tjeneste.ajourholdAktivOppgave(oppgaveDto, eventNrForBehandling, tx)
+        oppgaveV3?.let {
+            oppgaveV3Tjeneste.ajourholdAktivOppgave(it, eventNrForBehandling, tx)
         }
 
         return eventTeller
