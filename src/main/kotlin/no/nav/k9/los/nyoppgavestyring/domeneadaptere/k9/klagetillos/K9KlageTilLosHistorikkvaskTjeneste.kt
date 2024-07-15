@@ -87,13 +87,14 @@ class K9KlageTilLosHistorikkvaskTjeneste(
             val høyesteInternVersjon =
                 oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9klage", "K9", tx)!!
             var eventNrForBehandling = 0L
-            var oppgaveDto: OppgaveDto? = null
+            var oppgaveV3: OppgaveV3? = null
             for (event in behandlingProsessEventer) {
                 if (eventNrForBehandling > høyesteInternVersjon) { break }  //Historikkvasken har funnet eventer som ennå ikke er lastet inn med normalflyt. Dirty eventer skal håndteres av vanlig adaptertjeneste
                 val losOpplysningerSomManglerIKlageDto = event.påklagdBehandlingEksternId?.let { k9sakBeriker.berikKlage(it) }
-                oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, losOpplysningerSomManglerIKlageDto, forrigeOppgave)
+                var oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, losOpplysningerSomManglerIKlageDto, forrigeOppgave)
 
-                oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, tx)
+                oppgaveV3 = oppgaveV3Tjeneste.utledEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, tx)
+                oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveV3, eventNrForBehandling, tx)
 
                 eventTeller++
                 loggFremgangForHver100(eventTeller, "Prosessert $eventTeller eventer")
@@ -107,8 +108,8 @@ class K9KlageTilLosHistorikkvaskTjeneste(
 
             behandlingProsessEventKlageRepository.markerVasketHistorikk(uuid, tx)
 
-            oppgaveDto?.let {
-                oppgaveV3Tjeneste.ajourholdAktivOppgave(oppgaveDto, eventNrForBehandling, tx)
+            oppgaveV3?.let {
+                oppgaveV3Tjeneste.ajourholdAktivOppgave(oppgaveV3, eventNrForBehandling, tx)
             }
         }
 

@@ -45,7 +45,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
 
                 Thread.sleep(2.toDuration(DurationUnit.MINUTES).inWholeMilliseconds)
 
-                val dispatcher = newFixedThreadPoolContext(3, "Historikkvask k9sak")
+                val dispatcher = newFixedThreadPoolContext(5, "Historikkvask k9sak")
 
                 log.info("Starter avspilling av historiske BehandlingProsessEventer")
 
@@ -151,7 +151,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
             oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9sak", "K9", tx)!!
         }
         var eventNrForBehandling = 0L
-        var oppgaveDto: OppgaveDto? = null
+        var oppgaveV3 : OppgaveV3? = null
         for (event in behandlingProsessEventer) {
             if (eventNrForBehandling > høyesteInternVersjon) {
                 log.info("Avbryter historikkvask for ${event.eksternId} ved eventTid ${event.eventTid}. Forventer at håndteres av vanlig adaptertjeneste.")
@@ -162,7 +162,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 //ser ut som noen gamle mottatte dokumenter kan mangle innsendingstidspunkt.
                 //da faller vi tilbake til å bruke behandling_opprettet i mapperen
             }
-            oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+            var oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
 
             oppgaveDto = k9SakTilLosAdapterTjeneste.ryddOppObsoleteOgResultatfeilFra2020(
                 event,
@@ -170,7 +170,8 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 nyeBehandlingsopplysningerFraK9Sak
             )
 
-            DetaljerMetrikker.time("k9sakHistorikkvask", "oppdaterEksisterendeOppgaveversjon") { oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, tx) }
+            oppgaveV3 = DetaljerMetrikker.time("k9sakHistorikkvask", "utledEksisterendeOppgaveversjon") { oppgaveV3Tjeneste.utledEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, tx) }
+            DetaljerMetrikker.time("k9sakHistorikkvask", "oppdaterEksisterendeOppgaveversjon") { oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveV3, eventNrForBehandling, tx) }
 
             forrigeOppgave = DetaljerMetrikker.time("k9sakHistorikkvask", "hentOppgaveversjon") {
                 oppgaveV3Tjeneste.hentOppgaveversjon(
@@ -180,8 +181,8 @@ class K9SakTilLosHistorikkvaskTjeneste(
             eventNrForBehandling++
         }
 
-        oppgaveDto?.let {
-            DetaljerMetrikker.time("k9sakHistorikkvask", "ajourholdAktivOppgave") { oppgaveV3Tjeneste.ajourholdAktivOppgave(oppgaveDto, eventNrForBehandling, tx) }
+        oppgaveV3?.let {
+            DetaljerMetrikker.time("k9sakHistorikkvask", "ajourholdAktivOppgave") { oppgaveV3Tjeneste.ajourholdAktivOppgave(oppgaveV3, eventNrForBehandling, tx) }
         }
         log.info("Vasket $eventNrForBehandling hendelser for k9sak-oppgave med eksternId: $uuid")
         return eventNrForBehandling
