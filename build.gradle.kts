@@ -82,7 +82,7 @@ dependencies {
         exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
     }
 
-    implementation( "io.github.smiley4:ktor-swagger-ui:3.1.0")
+    implementation( "io.github.smiley4:ktor-swagger-ui:3.2.0")
 
 
     // DI
