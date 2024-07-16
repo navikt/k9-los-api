@@ -177,7 +177,7 @@ class OppgaveQueryRepository(
             Oppgavefelt(null, "oppgaveområde", "Oppgaveområde", "String", false, false, emptyList()),
         ).map { OppgavefeltMedMer(it, null) }
 
-        return (felterFraDatabase + standardfelter).sortedBy { it.oppgavefelt.visningsnavn };
+        return (felterFraDatabase + standardfelter).sortedBy { it.oppgavefelt.visningsnavn }
     }
 
     private fun query(tx: TransactionalSession, oppgaveQuery: OppgaveQuerySqlBuilder): List<Long> {

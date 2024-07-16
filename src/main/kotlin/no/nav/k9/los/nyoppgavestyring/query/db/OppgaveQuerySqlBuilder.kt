@@ -301,7 +301,7 @@ class OppgaveQuerySqlBuilder(
             return
         }
 
-        val index = queryParams.size + orderByParams.size;
+        val index = queryParams.size + orderByParams.size
 
         orderByParams.putAll(mutableMapOf(
             "orderByfeltOmrade$index" to feltområde,

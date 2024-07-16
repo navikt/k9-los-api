@@ -17,7 +17,7 @@ class TransientFeilHåndterer(
 ) {
 
     fun utfør(beskrivelse: String, operasjon: () -> Unit) {
-        var pause = pauseInitiell;
+        var pause = pauseInitiell
         var pauseTotal = Duration.ZERO
         var forsøk = 1
         do {
@@ -25,7 +25,7 @@ class TransientFeilHåndterer(
                 return operasjon.invoke()
             } catch (e: Exception) {
                 if (!antarErTransientFeil(e)) {
-                    throw e;
+                    throw e
                 }
                 if (pauseTotal > giOppEtter) {
                     throw RuntimeException("Operasjonen $beskrivelse feilet. Har forsøkt $forsøk ganger og ventet totalt $pauseTotal", e)
@@ -48,7 +48,7 @@ class TransientFeilHåndterer(
         }
         return e is InterruptedIOException
                 || e is SocketException
-                || e is SQLException;
+                || e is SQLException
     }
 
     companion object {

@@ -27,14 +27,13 @@ class OppgaveQueryService() {
     val oppgaveQueryRepository by inject<OppgaveQueryRepository>(OppgaveQueryRepository::class.java)
     val oppgaveRepository by inject<OppgaveRepository>(OppgaveRepository::class.java)
     val pepClient by inject<IPepClient>(IPepClient::class.java)
-    val pepCacheService by inject<PepCacheService>(PepCacheService::class.java)
 
     fun queryForOppgaveId(oppgaveQuery: QueryRequest): List<Long> {
         return oppgaveQueryRepository.query(oppgaveQuery)
     }
 
     fun queryForAntall(request: QueryRequest, now : LocalDateTime = LocalDateTime.now()): Long {
-        return using(sessionOf(datasource)) { it ->
+        return using(sessionOf(datasource)) {
             it.transaction { tx -> oppgaveQueryRepository.queryForAntall(tx, request, now) }
         }
     }
@@ -45,7 +44,7 @@ class OppgaveQueryService() {
     }
 
     fun queryToFile(oppgaveQuery: QueryRequest, idToken: IIdToken): String {
-        return using(sessionOf(datasource)) { it ->
+        return using(sessionOf(datasource)) {
             it.transaction { tx -> queryToFile(tx, oppgaveQuery, idToken) }
         }
     }
@@ -71,7 +70,7 @@ class OppgaveQueryService() {
     }
 
     fun query(oppgaveQuery: QueryRequest, idToken: IIdToken): List<Oppgaverad> {
-        return using(sessionOf(datasource)) { it ->
+        return using(sessionOf(datasource)) {
             it.transaction { tx -> query(tx, oppgaveQuery, idToken) }
         }
     }
@@ -104,7 +103,7 @@ class OppgaveQueryService() {
             if (oppgaverad != null) {
                 oppgaverader.add(oppgaverad)
                 antall++
-                if (limit >= 0 && antall >= limit) {
+                if (limit in 0..antall) {
                     return oppgaverader
                 }
             }

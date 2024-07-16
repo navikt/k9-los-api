@@ -132,7 +132,7 @@ abstract class LøpendeDurationTransientFeltutleder(
 
     override fun hentVerdi(input: HentVerdiInput): List<String> {
         var løpendeDuration = Duration.ZERO
-        if (!durationfelter.isEmpty()) {
+        if (durationfelter.isNotEmpty()) {
             løpendeDuration += durationfelter.map { områdeOgKode ->
                 val verdi = input.oppgave.hentVerdi(områdeOgKode.område!!, områdeOgKode.kode)
                 verdi?.let { Duration.parse(verdi) } ?: Duration.ZERO
@@ -146,10 +146,10 @@ abstract class LøpendeDurationTransientFeltutleder(
             løpendeDuration += Duration.between(input.oppgave.endretTidspunkt, input.now)
         }
 
-        if (!løpendeTidFelter.isEmpty()) {
+        if (løpendeTidFelter.isNotEmpty()) {
             løpendeDuration += løpendeTidFelter.map { områdeOgKode ->
                 val verdi = input.oppgave.hentVerdi(områdeOgKode.område!!, områdeOgKode.kode)
-                verdi?.let { Duration.between(LocalDateTime.parse(verdi as String), input.now) } ?: Duration.ZERO
+                verdi?.let { Duration.between(LocalDateTime.parse(verdi), input.now) } ?: Duration.ZERO
             }.reduce { d1, d2 -> d1 + d2 }
         }
 

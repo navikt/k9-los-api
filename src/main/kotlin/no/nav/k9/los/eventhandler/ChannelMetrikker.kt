@@ -2,6 +2,7 @@ package no.nav.k9.los.eventhandler
 
 import io.prometheus.client.Histogram
 import io.prometheus.client.SimpleTimer
+import kotlin.math.pow
 
 class ChannelMetrikker {
     companion object {
@@ -10,7 +11,7 @@ class ChannelMetrikker {
             .name("k9los_channel")
             .help("Tidsforbruk prosessering av channels i k9los")
             .labelNames("channel", "resultat")
-            .exponentialBuckets(0.01, Math.pow(10.0, 1.0/3.0), 12 )
+            .exponentialBuckets(0.01, 10.0.pow(1.0 / 3.0), 12 )
             .register()
 
         fun <T> time(channel: String, operasjon: (() -> T)): T {
@@ -21,7 +22,7 @@ class ChannelMetrikker {
                 return resultat
             } catch (e: Exception) {
                 status = e.javaClass.simpleName
-                throw e;
+                throw e
             } finally {
                 tidsforbruk.labels(channel, status).observe(SimpleTimer.elapsedSecondsFromNanos(t0, System.nanoTime()))
             }
@@ -34,7 +35,7 @@ class ChannelMetrikker {
                 return operasjon.invoke()
             } catch (e: Exception) {
                 status = e.javaClass.simpleName
-                throw e;
+                throw e
             } finally {
                 tidsforbruk.labels(channel, status).observe(SimpleTimer.elapsedSecondsFromNanos(t0, System.nanoTime()))
             }

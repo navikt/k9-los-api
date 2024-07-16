@@ -27,7 +27,7 @@ fun CoroutineScope.oppdaterStatistikk(
         for (skalOppdatereStatistikk in channel) {
             delay(500)
             ChannelMetrikker.timeSuspended("oppdaterStatistikk") {
-                DetaljerMetrikker.timeSuspended("oppdaterStatistikk","refreshAntallForAlleKøer",{ oppgaveTjeneste.refreshAntallForAlleKøer() })
+                DetaljerMetrikker.timeSuspended("oppdaterStatistikk","refreshAntallForAlleKøer") { oppgaveTjeneste.refreshAntallForAlleKøer() }
                 DetaljerMetrikker.timeSuspended("oppdaterStatistikk", "siste8uker") { statistikkRepository.hentFerdigstilteOgNyeHistorikkMedYtelsetypeSiste8Uker(refresh = true) }
             }
             if (configuration.koinProfile == KoinProfile.PROD) {
