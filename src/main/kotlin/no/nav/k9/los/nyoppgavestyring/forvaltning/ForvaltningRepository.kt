@@ -71,9 +71,9 @@ class ForvaltningRepository(
                 """
                 select fd.ekstern_id as ekstern_id, o.ekstern_id as omrade, fd.liste_type, f.pakrevd, ov.verdi
                 from oppgavefelt_verdi ov 
-                    inner join oppgavefelt f on ov.oppgavefelt_id = f.id 
-                    inner join feltdefinisjon fd on f.feltdefinisjon_id = fd.id 
-                    inner join omrade o on fd.omrade_id = o.id 
+                inner join oppgavefelt f on ov.oppgavefelt_id = f.id 
+                inner join feltdefinisjon fd on f.feltdefinisjon_id = fd.id 
+                inner join omrade o on fd.omrade_id = o.id 
                 where ov.oppgave_id = :oppgaveId
                 order by fd.ekstern_id
                 """.trimIndent(),

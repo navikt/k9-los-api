@@ -317,9 +317,9 @@ class OppgaveV3Repository(
                     where oppgavefelt_verdi.id in (
                         select ov.id
                         from oppgavefelt_verdi ov
-                            inner join oppgave_v3 o on ov.oppgave_id = o.id
+                        inner join oppgave_v3 o on ov.oppgave_id = o.id
                         where o.ekstern_id = :ekstern_id
-                        and o.versjon = :intern_versjon
+                          and o.versjon = :intern_versjon
                     )
                     """.trimIndent(),
                 mapOf(
@@ -341,16 +341,16 @@ class OppgaveV3Repository(
                 """
                 select versjon, o.id, o.status
                 from oppgave_v3 o
-                    inner join oppgavetype ot on o.oppgavetype_id = ot.id 
-                    inner join omrade om on ot.omrade_id = om.id 
+                inner join oppgavetype ot on o.oppgavetype_id = ot.id 
+                inner join omrade om on ot.omrade_id = om.id 
                 where o.ekstern_id = :ekstern_id
-                and ot.ekstern_id = :oppgavetype_ekstern_id
-                and om.ekstern_id = :omrade_ekstern_id
-                and versjon = 
+                  and ot.ekstern_id = :oppgavetype_ekstern_id
+                  and om.ekstern_id = :omrade_ekstern_id
+                  and versjon = 
                     (select max(versjon)
                      from oppgave_v3 oi
                      where oi.ekstern_id = o.ekstern_id
-                     and oi.oppgavetype_id = o.oppgavetype_id)
+                       and oi.oppgavetype_id = o.oppgavetype_id)
                 """.trimIndent(),
                 mapOf(
                     "ekstern_id" to oppgaveEksternId,

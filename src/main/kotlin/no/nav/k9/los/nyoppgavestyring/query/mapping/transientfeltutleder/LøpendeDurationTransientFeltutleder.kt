@@ -55,13 +55,10 @@ abstract class LøpendeDurationTransientFeltutleder(
         val query = """
             COALESCE((
                 SELECT SUM(CAST(ov.verdi AS interval)) 
-                FROM Oppgavefelt_verdi ov INNER JOIN Oppgavefelt f ON (
-                  f.id = ov.oppgavefelt_id
-                ) INNER JOIN Feltdefinisjon fd ON (
-                  fd.id = f.feltdefinisjon_id
-                ) INNER JOIN Omrade fo ON (
-                  fo.id = fd.omrade_id
-                )
+                FROM Oppgavefelt_verdi ov 
+                INNER JOIN Oppgavefelt f ON (f.id = ov.oppgavefelt_id) 
+                INNER JOIN Feltdefinisjon fd ON (fd.id = f.feltdefinisjon_id) 
+                INNER JOIN Omrade fo ON (fo.id = fd.omrade_id)
                 WHERE ov.oppgave_id = o.id
                   AND $minstEttDurationFeltSql
             ), INTERVAL '0 days')
@@ -77,20 +74,17 @@ abstract class LøpendeDurationTransientFeltutleder(
         val løpendeOppgavetidHvisTrueSql = sqlVelgFelt(løpendeTidHvisTrueFelter)
         val query = """
             COALESCE((
-                    SELECT (:now - o.endret_tidspunkt)
-                    WHERE EXISTS (
-                        SELECT 'Y'
-                        FROM Oppgavefelt_verdi ov INNER JOIN Oppgavefelt f ON (
-                          f.id = ov.oppgavefelt_id
-                        ) INNER JOIN Feltdefinisjon fd ON (
-                          fd.id = f.feltdefinisjon_id
-                        ) INNER JOIN Omrade fo ON (
-                          fo.id = fd.omrade_id
-                        )
-                        WHERE ov.oppgave_id = o.id
-                          AND ov.verdi = 'true'
-                          AND $løpendeOppgavetidHvisTrueSql
-                    )
+                SELECT (:now - o.endret_tidspunkt)
+                WHERE EXISTS (
+                    SELECT 'Y'
+                    FROM Oppgavefelt_verdi ov 
+                    INNER JOIN Oppgavefelt f ON (f.id = ov.oppgavefelt_id) 
+                    INNER JOIN Feltdefinisjon fd ON (fd.id = f.feltdefinisjon_id) 
+                    INNER JOIN Omrade fo ON (fo.id = fd.omrade_id)
+                    WHERE ov.oppgave_id = o.id
+                      AND ov.verdi = 'true'
+                      AND $løpendeOppgavetidHvisTrueSql
+                )
             ), INTERVAL '0 days')
             """.trimIndent()
 
@@ -109,13 +103,10 @@ abstract class LøpendeDurationTransientFeltutleder(
                         :now
                     ) - (
                         SELECT CAST(ov.verdi AS timestamp)
-                        FROM Oppgavefelt_verdi ov INNER JOIN Oppgavefelt f ON (
-                          f.id = ov.oppgavefelt_id
-                        ) INNER JOIN Feltdefinisjon fd ON (
-                          fd.id = f.feltdefinisjon_id
-                        ) INNER JOIN Omrade fo ON (
-                          fo.id = fd.omrade_id
-                        )
+                        FROM Oppgavefelt_verdi ov 
+                        INNER JOIN Oppgavefelt f ON (f.id = ov.oppgavefelt_id) 
+                        INNER JOIN Feltdefinisjon fd ON (fd.id = f.feltdefinisjon_id) 
+                        INNER JOIN Omrade fo ON (fo.id = fd.omrade_id)
                         WHERE ov.oppgave_id = o.id
                           AND ${områdeOgKodeSql(områdeOgKode)}
                     )

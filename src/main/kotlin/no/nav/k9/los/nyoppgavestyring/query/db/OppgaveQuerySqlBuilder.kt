@@ -161,13 +161,10 @@ class OppgaveQuerySqlBuilder(
         query += """
                 ${combineOperator.sql} EXISTS (
                     SELECT 'Y'
-                    FROM Oppgavefelt_verdi ov INNER JOIN Oppgavefelt f ON (
-                      f.id = ov.oppgavefelt_id
-                    ) INNER JOIN Feltdefinisjon fd ON (
-                      fd.id = f.feltdefinisjon_id
-                    ) INNER JOIN Omrade fo ON (
-                      fo.id = fd.omrade_id
-                    )
+                    FROM Oppgavefelt_verdi ov 
+                    INNER JOIN Oppgavefelt f ON (f.id = ov.oppgavefelt_id) 
+                    INNER JOIN Feltdefinisjon fd ON (fd.id = f.feltdefinisjon_id) 
+                    INNER JOIN Omrade fo ON (fo.id = fd.omrade_id)
                     WHERE ov.oppgave_id = o.id
                       AND fo.ekstern_id = :feltOmrade$index
                       AND fd.ekstern_id = :feltkode$index
@@ -261,13 +258,10 @@ class OppgaveQuerySqlBuilder(
         query += """
                 ${combineOperator.sql}$invertertOperator EXISTS (
                     SELECT 'Y'
-                    FROM Oppgavefelt_verdi ov INNER JOIN Oppgavefelt f ON (
-                      f.id = ov.oppgavefelt_id
-                    ) INNER JOIN Feltdefinisjon fd ON (
-                      fd.id = f.feltdefinisjon_id
-                    ) INNER JOIN Omrade fo ON (
-                      fo.id = fd.omrade_id
-                    )
+                    FROM Oppgavefelt_verdi ov 
+                    INNER JOIN Oppgavefelt f ON (f.id = ov.oppgavefelt_id) 
+                    INNER JOIN Feltdefinisjon fd ON (fd.id = f.feltdefinisjon_id) 
+                    INNER JOIN Omrade fo ON (fo.id = fd.omrade_id)
                     WHERE ov.oppgave_id = o.id
                       AND fo.ekstern_id = :feltOmrade$index
                       AND fd.ekstern_id = :feltkode$index
@@ -321,13 +315,10 @@ class OppgaveQuerySqlBuilder(
         orderBySql += """
                 , (
                   SELECT $typeConversion                    
-                  FROM Oppgavefelt_verdi ov INNER JOIN Oppgavefelt f ON (
-                    f.id = ov.oppgavefelt_id
-                  ) INNER JOIN Feltdefinisjon fd ON (
-                    fd.id = f.feltdefinisjon_id
-                  ) INNER JOIN Omrade fo ON (
-                    fo.id = fd.omrade_id
-                  )
+                  FROM Oppgavefelt_verdi ov 
+                  INNER JOIN Oppgavefelt f ON (f.id = ov.oppgavefelt_id) 
+                  INNER JOIN Feltdefinisjon fd ON (fd.id = f.feltdefinisjon_id) 
+                  INNER JOIN Omrade fo ON (fo.id = fd.omrade_id)
                   WHERE ov.oppgave_id = o.id
                     AND fo.ekstern_id = :orderByfeltOmrade$index
                     AND fd.ekstern_id = :orderByfeltkode$index
