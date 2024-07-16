@@ -32,10 +32,7 @@ class OppgaveQuerySqlBuilder(
         FROM Oppgave_v3 o
         INNER JOIN Oppgavetype ot ON ( ot.id = o.oppgavetype_id )
         INNER JOIN Omrade oppgave_omrade ON (oppgave_omrade.id = ot.omrade_id )
-        LEFT JOIN (
-                SELECT ekstern_id, kildeomrade, kode6, kode7, egen_ansatt
-                FROM Oppgave_pep_cache 
-          ) as opc ON (o.kildeomrade = opc.kildeomrade AND o.ekstern_id = opc.ekstern_id)
+        LEFT JOIN Oppgave_pep_cache opc ON (o.kildeomrade = opc.kildeomrade AND o.ekstern_id = opc.ekstern_id)
         WHERE aktiv = true 
             """.trimIndent()
 
