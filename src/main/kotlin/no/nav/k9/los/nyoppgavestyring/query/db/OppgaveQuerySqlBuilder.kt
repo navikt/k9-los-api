@@ -328,11 +328,6 @@ class OppgaveQuerySqlBuilder(
         orderBySql += if (økende) "ASC" else "DESC"
     }
 
-    private fun oppgavestatusInClause(oppgavestatus : List<Oppgavestatus>) : String {
-        check(oppgavestatus.isNotEmpty()){"Filtrerer bort alle oppgaver, siden ingen oppgavestatuser er valgt"}
-        return oppgavestatus.map { "cast ('${it.kode}' as oppgavestatus)" }.joinToString (separator = ",")
-    }
-
     fun medPaging(limit: Long, offset: Long) {
         if (limit < 0) {
             return
