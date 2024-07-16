@@ -23,7 +23,7 @@ val testContainers = "1.19.8"
 val jsonassertVersion = "1.5.3"
 val jupiterVersion = "5.10.3"
 val assertkVersion = "0.28.1"
-val mockkVersion = "1.13.11"
+val mockkVersion = "1.13.12"
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "2.0.0"
