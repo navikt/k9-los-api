@@ -99,16 +99,11 @@ class ReservasjonRepository(
         val json: List<String> = using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
-                    "select (data ::jsonb -> 'reservasjoner' -> -1) as data from reservasjon \n" +
-                            "where id in " + set.joinToString(
-                        separator = "\', \'",
-                        prefix = "(\'",
-                        postfix = "\')"
-                    )
+                    "select (data ::jsonb -> 'reservasjoner' -> -1) as data from reservasjon where id in (" + InClauseHjelper.tilParameternavn(set, "r") + ")",
+                    InClauseHjelper.parameternavnTilVerdierMap(set.map { it.toString() }, "r")
                 )
-                    .map { row ->
-                        row.string("data")
-                    }.asList
+                    .map { row ->row.string("data")}
+                    .asList
             )
         }
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
