@@ -22,8 +22,7 @@ class EventTilDtoMapper {
                 område = "K9",
                 kildeområde = "K9",
                 type = "k9punsj",
-                status =
-                if (event.sendtInn == true) {
+                status = if (event.sendtInn == true) {
                     Oppgavestatus.LUKKET.kode
                 } else if (oppgaveSkalHaVentestatus(event)) {
                     Oppgavestatus.VENTER.kode
@@ -36,7 +35,7 @@ class EventTilDtoMapper {
             )
         }
 
-        fun utledReservasjonsnøkkel(event: PunsjEventDto): String {
+        private fun utledReservasjonsnøkkel(event: PunsjEventDto): String {
             return "K9_p_${event.eksternId}"
         }
 
