@@ -121,11 +121,16 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
         var eventNrForBehandling = 0L
         val behandlingProsessEventer: List<PunsjEventDto> = eventRepository.hentMedLås(tx, uuid).eventer
         var oppgaveV3: OppgaveV3? = null
+
+        log.info("Vasker ${behandlingProsessEventer.size} hendelser for k9punsj-oppgave med eksternId: $uuid")
         for (event in behandlingProsessEventer) {
             var oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+            log.info("Utledet oppgave DTO")
 
             oppgaveV3 = oppgaveV3Tjeneste.utledEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, tx)
+            log.info("Utledet oppgave V3")
             oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveV3, eventNrForBehandling, tx)
+            log.info("Oppdaterte eksisterende oppgaversjon")
 
             forrigeOppgave = oppgaveV3Tjeneste.hentOppgaveversjon(
                 område = "k9",
@@ -133,11 +138,14 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
                 eksternVersjon = oppgaveDto.versjon,
                 tx = tx
             )
+            log.info("Hentet oppgave")
         }
+        log.info("Vasker aktiv oppgave for k9punsj-oppgave med eksternId: $uuid")
 
         oppgaveV3?.let {
             oppgaveV3Tjeneste.ajourholdAktivOppgave(it, eventNrForBehandling, tx)
         }
+        log.info("Vasket historikk for k9punsj-oppgave med eksternId: $uuid")
 
         return eventTeller
     }
