@@ -1012,7 +1012,7 @@ class OppgaveTjeneste constructor(
 
                     statistikkChannel.send(true)
 
-                    DetaljerMetrikker.observe(starttid, "faaOppgaveFraKo", "iterasjoner_${antallOppgaverSjekket}")
+                    DetaljerMetrikker.observe(starttid, "faaOppgaveFraKo", "iterasjoner", "${antallOppgaverSjekket}")
                     return oppgaveDto
                 }
 

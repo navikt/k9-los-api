@@ -7,6 +7,7 @@ import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
+import no.nav.k9.los.eventhandler.DetaljerMetrikker
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.pdl.IPdlService
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
@@ -106,13 +107,46 @@ class OppgaveKoTjeneste(
         oppgaveKoId: Long,
         coroutineContext: CoroutineContext
     ): Pair<Oppgave, ReservasjonV3>? {
+        return DetaljerMetrikker.time("taReservasjonFraKø", "hele", "$oppgaveKoId" ) {
+            doTaReservasjonFraKø(innloggetBrukerId, oppgaveKoId, coroutineContext)
+        }
+    }
+
+    fun doTaReservasjonFraKø(
+        innloggetBrukerId: Long,
+        oppgaveKoId: Long,
+        coroutineContext: CoroutineContext
+    ): Pair<Oppgave, ReservasjonV3>? {
         log.info("taReservasjonFraKø, oppgaveKøId: $oppgaveKoId")
-        val oppgavekø = oppgaveKoRepository.hent(oppgaveKoId)
 
-        val kandidatOppgaver = oppgaveQueryService.queryForOppgaveId(QueryRequest(oppgavekø.oppgaveQuery, fjernReserverte = true))
+        val oppgavekø = DetaljerMetrikker.time("taReservasjonFraKø", "hentKø", "$oppgaveKoId" ) { oppgaveKoRepository.hent(oppgaveKoId) }
 
-        return transactionalManager.transaction { tx ->
-            finnReservasjonFraKø(kandidatOppgaver, tx, innloggetBrukerId, coroutineContext)
+        var antallKandidaterEtterspurt = 1
+        while (true) {
+            val kandidatOppgaver = DetaljerMetrikker.time("taReservasjonFraKø", "queryForOppgaveId","$oppgaveKoId" ) {
+                oppgaveQueryService.queryForOppgaveId(
+                    QueryRequest(
+                        oppgavekø.oppgaveQuery,
+                        fjernReserverte = true,
+                        avgrensning = Avgrensning(limit = antallKandidaterEtterspurt.toLong())
+                    )
+                )
+            }
+            log.info("Spurte etter $antallKandidaterEtterspurt kandidater fra køen med id $oppgaveKoId, fikk ${kandidatOppgaver.size}")
+            val reservasjon =  DetaljerMetrikker.time("taReservasjonFraKø", "finnReservasjonFraKø","$oppgaveKoId" ) {
+                transactionalManager.transaction { tx ->
+                    finnReservasjonFraKø(kandidatOppgaver, tx, innloggetBrukerId, coroutineContext)
+                }
+            }
+            if (reservasjon != null){
+                return reservasjon
+            }
+            if (kandidatOppgaver.size < antallKandidaterEtterspurt) {
+                //vi hentet alle oppgavene i køen, ikke vits å prøve mer
+                return null
+            }
+            log.info("Hadde ${kandidatOppgaver.size} uten å klare å ta reservasjon, forsøker igjen med flere kandidater")
+            antallKandidaterEtterspurt *= 2
         }
     }
 
