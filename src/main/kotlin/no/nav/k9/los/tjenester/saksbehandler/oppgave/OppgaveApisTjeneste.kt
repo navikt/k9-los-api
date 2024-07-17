@@ -251,9 +251,13 @@ class OppgaveApisTjeneste(
         val reservasjonerMedOppgaver =
             reservasjonV3Tjeneste.hentReservasjonerForSaksbehandler(saksbehandler.id!!)
 
-
         return reservasjonerMedOppgaver.map { reservasjonMedOppgaver ->
-            reservasjonV3DtoBuilder.byggReservasjonV3Dto(reservasjonMedOppgaver, saksbehandler)
+            try {
+                reservasjonV3DtoBuilder.byggReservasjonV3Dto(reservasjonMedOppgaver, saksbehandler)
+            } catch (e : Exception){
+                log.warn("Klarte ikke tolke reservasjon med id ${reservasjonMedOppgaver.reservasjonV3.id}, v1-oppgave: ${reservasjonMedOppgaver.oppgaveV1?.eksternId} v3-oppgaver: ${reservasjonMedOppgaver.oppgaverV3.map { it.eksternId } }")
+                throw e;
+            }
         }
     }
 }
