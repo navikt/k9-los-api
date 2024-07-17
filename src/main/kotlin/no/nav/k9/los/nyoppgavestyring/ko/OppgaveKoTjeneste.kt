@@ -11,6 +11,8 @@ import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.pdl.IPdlService
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveId
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.query.Avgrensning
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
@@ -31,6 +33,7 @@ class OppgaveKoTjeneste(
     private val oppgaveKoRepository: OppgaveKoRepository,
     private val oppgaveQueryService: OppgaveQueryService,
     private val oppgaveRepository: OppgaveRepository,
+    private val aktivOppgaveRepository: AktivOppgaveRepository,
     private val oppgaveRepositoryTxWrapper: OppgaveRepositoryTxWrapper,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
     private val reservasjonV3Repository: ReservasjonV3Repository,
@@ -114,13 +117,13 @@ class OppgaveKoTjeneste(
     }
 
     private fun finnReservasjonFraKø(
-        kandidatoppgaver: List<Long>,
+        kandidatoppgaver: List<AktivOppgaveId>,
         tx: TransactionalSession,
         innloggetBrukerId: Long,
         coroutineContext: CoroutineContext,
     ): Pair<Oppgave, ReservasjonV3>? {
         for (kandidatoppgaveId in kandidatoppgaver) {
-            val kandidatoppgave = oppgaveRepository.hentOppgaveForId(tx, kandidatoppgaveId)
+            val kandidatoppgave = aktivOppgaveRepository.hentOppgaveForId(tx, kandidatoppgaveId)
 
             try {
                 //if (kandidatoppgave.oppgavetype.eksternId == "k9klage") //TODO: Hvis klageoppgave/klagekø -- IKKE ta reservasjon i V1. Disse kan ikke speiles

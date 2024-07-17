@@ -492,6 +492,7 @@ fun common(app: Application, config: Configuration) = module {
             pepClient = get(),
             pdlService = get(),
             reservasjonV3Repository = get(),
+            aktivOppgaveRepository = get(),
             statistikkChannel = get(named("statistikkRefreshChannel"))
         )
     }

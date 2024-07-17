@@ -45,6 +45,7 @@ import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
@@ -113,6 +114,11 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             refreshOppgave = get(named("oppgaveRefreshChannel"))
         )
     }
+    single { AktivOppgaveRepository(
+        oppgavetypeRepository = get()
+        )
+    }
+
     single { DriftsmeldingRepository(get()) }
     single { no.nav.k9.los.domene.repository.StatistikkRepository(get()) }
 
@@ -493,6 +499,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             pepClient = get(),
             pdlService = get(),
             reservasjonV3Repository = get(),
+            aktivOppgaveRepository = get(),
             statistikkChannel = get(named("statistikkRefreshChannel"))
         )
     }

@@ -55,7 +55,7 @@ abstract class LøpendeDurationTransientFeltutleder(
         val query = """
             COALESCE((
                 SELECT SUM(CAST(ov.verdi AS interval)) 
-                FROM Oppgavefelt_verdi ov 
+                FROM Oppgavefelt_verdi_aktiv ov 
                 INNER JOIN Oppgavefelt f ON (f.id = ov.oppgavefelt_id) 
                 INNER JOIN Feltdefinisjon fd ON (fd.id = f.feltdefinisjon_id) 
                 INNER JOIN Omrade fo ON (fo.id = fd.omrade_id)
@@ -77,7 +77,7 @@ abstract class LøpendeDurationTransientFeltutleder(
                 SELECT (:now - o.endret_tidspunkt)
                 WHERE EXISTS (
                     SELECT 'Y'
-                    FROM Oppgavefelt_verdi ov 
+                    FROM Oppgavefelt_verdi_aktiv ov 
                     INNER JOIN Oppgavefelt f ON (f.id = ov.oppgavefelt_id) 
                     INNER JOIN Feltdefinisjon fd ON (fd.id = f.feltdefinisjon_id) 
                     INNER JOIN Omrade fo ON (fo.id = fd.omrade_id)
@@ -103,7 +103,7 @@ abstract class LøpendeDurationTransientFeltutleder(
                         :now
                     ) - (
                         SELECT CAST(ov.verdi AS timestamp)
-                        FROM Oppgavefelt_verdi ov 
+                        FROM Oppgavefelt_verdi_aktiv ov 
                         INNER JOIN Oppgavefelt f ON (f.id = ov.oppgavefelt_id) 
                         INNER JOIN Feltdefinisjon fd ON (fd.id = f.feltdefinisjon_id) 
                         INNER JOIN Omrade fo ON (fo.id = fd.omrade_id)

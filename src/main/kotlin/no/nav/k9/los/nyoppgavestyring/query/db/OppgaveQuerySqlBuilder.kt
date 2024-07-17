@@ -29,11 +29,11 @@ class OppgaveQuerySqlBuilder(
     private val oppgavefelterKodeOgType = felter.mapValues { Datatype.fraKode(it.value.oppgavefelt.tolkes_som) }
 
     private var query = """
-        FROM Oppgave_v3 o
+        FROM Oppgave_v3_aktiv o
         INNER JOIN Oppgavetype ot ON ( ot.id = o.oppgavetype_id )
         INNER JOIN Omrade oppgave_omrade ON (oppgave_omrade.id = ot.omrade_id )
         LEFT JOIN Oppgave_pep_cache opc ON (o.kildeomrade = opc.kildeomrade AND o.ekstern_id = opc.ekstern_id)
-        WHERE aktiv = true 
+        WHERE true 
             """.trimIndent()
 
     private val filtrerReserverteOppgaver = """
@@ -99,7 +99,7 @@ class OppgaveQuerySqlBuilder(
         val index = queryParams.size + orderByParams.size
         when (feltkode) {
             "oppgavestatus" -> {
-                query += "${combineOperator.sql} o.status ${operator.sql} (:oppgavestatus$index) "
+                query += "${combineOperator.sql} o.status ${operator.sql} (cast(:oppgavestatus$index as oppgavestatus)) "
                 queryParams["oppgavestatus$index"] = feltverdi
             }
             "kildeområde" -> {
@@ -158,7 +158,7 @@ class OppgaveQuerySqlBuilder(
         query += """
                 ${combineOperator.sql} EXISTS (
                     SELECT 'Y'
-                    FROM Oppgavefelt_verdi ov 
+                    FROM Oppgavefelt_verdi_aktiv ov 
                     INNER JOIN Oppgavefelt f ON (f.id = ov.oppgavefelt_id) 
                     INNER JOIN Feltdefinisjon fd ON (fd.id = f.feltdefinisjon_id) 
                     INNER JOIN Omrade fo ON (fo.id = fd.omrade_id)
@@ -255,7 +255,7 @@ class OppgaveQuerySqlBuilder(
         query += """
                 ${combineOperator.sql}$invertertOperator EXISTS (
                     SELECT 'Y'
-                    FROM Oppgavefelt_verdi ov 
+                    FROM Oppgavefelt_verdi_aktiv ov 
                     INNER JOIN Oppgavefelt f ON (f.id = ov.oppgavefelt_id) 
                     INNER JOIN Feltdefinisjon fd ON (fd.id = f.feltdefinisjon_id) 
                     INNER JOIN Omrade fo ON (fo.id = fd.omrade_id)
@@ -312,7 +312,7 @@ class OppgaveQuerySqlBuilder(
         orderBySql += """
                 , (
                   SELECT $typeConversion                    
-                  FROM Oppgavefelt_verdi ov 
+                  FROM Oppgavefelt_verdi_aktiv ov 
                   INNER JOIN Oppgavefelt f ON (f.id = ov.oppgavefelt_id) 
                   INNER JOIN Feltdefinisjon fd ON (fd.id = f.feltdefinisjon_id) 
                   INNER JOIN Omrade fo ON (fo.id = fd.omrade_id)
