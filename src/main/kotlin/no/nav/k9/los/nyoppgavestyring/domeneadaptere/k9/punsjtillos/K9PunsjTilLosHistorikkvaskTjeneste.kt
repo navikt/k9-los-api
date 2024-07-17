@@ -133,7 +133,7 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
             log.info("Oppdaterte eksisterende oppgaversjon")
 
             forrigeOppgave = oppgaveV3Tjeneste.hentOppgaveversjon(
-                område = "k9",
+                område = "K9",
                 eksternId = oppgaveDto.id,
                 eksternVersjon = oppgaveDto.versjon,
                 tx = tx
