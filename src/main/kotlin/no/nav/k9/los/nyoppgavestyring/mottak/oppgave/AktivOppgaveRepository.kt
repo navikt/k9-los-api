@@ -17,23 +17,12 @@ class AktivOppgaveRepository (val oppgavetypeRepository: OppgavetypeRepository) 
 
     companion object {
         fun ajourholdAktivOppgave(oppgave: OppgaveV3, nyVersjon: Long, tx: TransactionalSession): AktivOppgaveId {
-
-            val oppgaveId = if (nyVersjon == 0L) {
-                DetaljerMetrikker.time("k9sakHistorikkvask", "opprettOppgaveV3Aktiv") {
-                    opprettOppgaveV3Aktiv(
-                        tx,
-                        oppgave,
-                        nyVersjon
-                    )
-                }
-            } else {
-                DetaljerMetrikker.time("k9sakHistorikkvask", "oppdaterOppgaveV3Aktiv") {
-                    oppdaterOppgaveV3Aktiv(
-                        tx,
-                        oppgave,
-                        nyVersjon
-                    )
-                }
+            val oppgaveId = DetaljerMetrikker.time("k9sakHistorikkvask", "oppdaterOppgaveV3Aktiv") {
+                oppdaterOppgaveV3Aktiv(
+                    tx,
+                    oppgave,
+                    nyVersjon
+                )
             }
             DetaljerMetrikker.time("k9sakHistorikkvask", "oppdaterAktivOppgavefelter") {
                 oppdaterAktivOppgavefelter(
