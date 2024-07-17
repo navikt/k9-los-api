@@ -64,7 +64,7 @@ class OppgaveV3Repository(
                 )
             ).map { row ->
                 OppgaveV3(
-                    id = row.long("id"),
+                    id = OppgaveId(row.long("id")),
                     eksternId = row.string("ekstern_id"),
                     eksternVersjon = row.string("ekstern_versjon"),
                     oppgavetype = oppgavetypeRepository.hentOppgavetype(
@@ -78,7 +78,7 @@ class OppgaveV3Repository(
                     reservasjonsnøkkel = row.stringOrNull("reservasjonsnokkel") ?: "mangler_historikkvask",
                     aktiv = row.boolean("aktiv"),
                     felter = hentFeltverdier(
-                        row.long("id"),
+                        OppgaveId(row.long("id")),
                         oppgavetypeRepository.hentOppgavetype(
                             område = område.eksternId,
                             row.long("oppgavetype_id"),
@@ -112,7 +112,7 @@ class OppgaveV3Repository(
                 )
             ).map { row ->
                 OppgaveV3(
-                    id = row.long("id"),
+                    id = OppgaveId(row.long("id")),
                     eksternId = row.string("ekstern_id"),
                     eksternVersjon = row.string("ekstern_versjon"),
                     oppgavetype = oppgavetype,
@@ -121,7 +121,7 @@ class OppgaveV3Repository(
                     kildeområde = row.string("kildeomrade"),
                     reservasjonsnøkkel = row.stringOrNull("reservasjonsnokkel") ?: "mangler_historikkvask",
                     aktiv = row.boolean("aktiv"),
-                    felter = hentFeltverdier(row.long("id"), oppgavetype, tx)
+                    felter = hentFeltverdier(OppgaveId(row.long("id")), oppgavetype, tx)
                 )
             }.asSingle
         )
@@ -135,7 +135,7 @@ class OppgaveV3Repository(
                 """.trimIndent(), mapOf("eksternId" to eksternId)
             ).map { row ->
                 OppgaveV3(
-                    id = row.long("id"),
+                    id = OppgaveId(row.long("id")),
                     eksternId = row.string("ekstern_id"),
                     eksternVersjon = row.string("ekstern_versjon"),
                     oppgavetype = oppgavetype,
@@ -144,7 +144,7 @@ class OppgaveV3Repository(
                     kildeområde = row.string("kildeomrade"),
                     reservasjonsnøkkel = row.stringOrNull("reservasjonsnokkel") ?: "mangler_historikkvask",
                     aktiv = row.boolean("aktiv"),
-                    felter = hentFeltverdier(row.long("id"), oppgavetype, tx)
+                    felter = hentFeltverdier(OppgaveId(row.long("id")), oppgavetype, tx)
                 )
             }.asSingle
         )
@@ -205,8 +205,8 @@ class OppgaveV3Repository(
     }
 
     @VisibleForTesting
-    fun nyOppgaveversjon(oppgave: OppgaveV3, nyVersjon: Long, tx: TransactionalSession): Long {
-        return tx.updateAndReturnGeneratedKey(
+    fun nyOppgaveversjon(oppgave: OppgaveV3, nyVersjon: Long, tx: TransactionalSession): OppgaveId {
+        return OppgaveId(tx.updateAndReturnGeneratedKey(
             queryOf(
                 """
                     insert into oppgave_v3(ekstern_id, ekstern_versjon, oppgavetype_id, status, versjon, aktiv, kildeomrade, endret_tidspunkt, reservasjonsnokkel)
@@ -224,11 +224,11 @@ class OppgaveV3Repository(
                     "reservasjonsnokkel" to oppgave.reservasjonsnøkkel,
                 )
             )
-        )!!
+        )!!)
     }
 
     private fun hentFeltverdier(
-        oppgaveId: Long,
+        oppgaveId: OppgaveId,
         oppgavetype: Oppgavetype,
         tx: TransactionalSession
     ): List<OppgaveFeltverdi> {
@@ -237,7 +237,7 @@ class OppgaveV3Repository(
                 """
                     select * from oppgavefelt_verdi where oppgave_id = :oppgaveId
                 """.trimIndent(),
-                mapOf("oppgaveId" to oppgaveId)
+                mapOf("oppgaveId" to oppgaveId.id)
             ).map { row ->
                 OppgaveFeltverdi(
                     id = row.long("id"),
@@ -252,7 +252,7 @@ class OppgaveV3Repository(
 
     @VisibleForTesting
     fun lagreFeltverdier(
-        oppgaveId: Long,
+        oppgaveId: OppgaveId,
         oppgave: OppgaveV3,
         tx: TransactionalSession
     ) {
@@ -262,7 +262,7 @@ class OppgaveV3Repository(
         """.trimIndent(),
             oppgave.felter.map { feltverdi ->
                 mapOf(
-                    "oppgaveId" to oppgaveId,
+                    "oppgaveId" to oppgaveId.id,
                     "oppgavefeltId" to feltverdi.oppgavefelt.id,
                     "verdi" to feltverdi.verdi,
                     "oppgavestatus" to oppgave.status.kode
@@ -335,7 +335,7 @@ class OppgaveV3Repository(
         oppgaveEksternId: String,
         oppgaveTypeEksternId: String,
         områdeEksternId: String
-    ): Triple<Long?, Oppgavestatus?, Long?> {
+    ): Triple<OppgaveId?, Oppgavestatus?, Long?> {
         return tx.run(
             queryOf(
                 """
@@ -359,7 +359,7 @@ class OppgaveV3Repository(
                 )
             ).map { row ->
                 Triple(
-                    row.long("id"),
+                    OppgaveId(row.long("id")),
                     Oppgavestatus.fraKode(row.string("status")),
                     row.long("versjon")
                 )
@@ -368,14 +368,14 @@ class OppgaveV3Repository(
     }
 
     @VisibleForTesting
-    fun deaktiverVersjon(eksisterendeId: Long, deaktivertTidspunkt: LocalDateTime, tx: TransactionalSession) {
+    fun deaktiverVersjon(eksisterendeId: OppgaveId, deaktivertTidspunkt: LocalDateTime, tx: TransactionalSession) {
         tx.run(
             queryOf(
                 """
                 update oppgave_v3 set aktiv = false, deaktivert_tidspunkt = :deaktivertTidspunkt where id = :id
             """.trimIndent(),
                 mapOf(
-                    "id" to eksisterendeId,
+                    "id" to eksisterendeId.id,
                     "deaktivertTidspunkt" to deaktivertTidspunkt
                 )
             ).asUpdate
@@ -383,7 +383,7 @@ class OppgaveV3Repository(
     }
 
     @VisibleForTesting
-    fun deaktiverOppgavefelter(oppgaveId: Long, tx: TransactionalSession) {
+    fun deaktiverOppgavefelter(oppgaveId: OppgaveId, tx: TransactionalSession) {
         tx.run(
             queryOf(
                 """
@@ -392,7 +392,7 @@ class OppgaveV3Repository(
                 where oppgave_id = :oppgave_id 
             """.trimIndent(),
                 mapOf(
-                    "oppgave_id" to oppgaveId
+                    "oppgave_id" to oppgaveId.id
                 )
             ).asUpdate
         )

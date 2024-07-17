@@ -8,6 +8,7 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.EgenAnsatt
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Kodeverkreferanse
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveId
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
@@ -26,13 +27,13 @@ class OppgaveQueryRepository(
 ) {
     private val log: Logger = LoggerFactory.getLogger("OppgaveQueryRepository")
 
-    fun query(request: QueryRequest): List<Long> {
+    fun query(request: QueryRequest): List<AktivOppgaveId> {
         return using(sessionOf(datasource)) {
             it.transaction { tx -> query(tx, request, LocalDateTime.now()) }
         }
     }
 
-    fun query(tx: TransactionalSession, request: QueryRequest, now: LocalDateTime): List<Long> {
+    fun query(tx: TransactionalSession, request: QueryRequest, now: LocalDateTime): List<AktivOppgaveId> {
         val felter = hentAlleFelterMedMer(tx, medKodeverk = false)
             .associate { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) to felt }
 
@@ -180,7 +181,7 @@ class OppgaveQueryRepository(
         return (felterFraDatabase + standardfelter).sortedBy { it.oppgavefelt.visningsnavn }
     }
 
-    private fun query(tx: TransactionalSession, oppgaveQuery: OppgaveQuerySqlBuilder): List<Long> {
+    private fun query(tx: TransactionalSession, oppgaveQuery: OppgaveQuerySqlBuilder): List<AktivOppgaveId> {
         log.info("spørring oppgaveQuery for oppgaveId: ${oppgaveQuery.getQuery()}")
         /* val explain = tx.run(
             queryOf(
@@ -195,7 +196,7 @@ class OppgaveQueryRepository(
             queryOf(
                 oppgaveQuery.getQuery(),
                 oppgaveQuery.getParams()
-            ).map { row -> row.long("id") }.asList
+            ).map { row -> AktivOppgaveId(row.long("id")) }.asList
         )
     }
 
