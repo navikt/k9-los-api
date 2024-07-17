@@ -2,6 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos
 
 import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
+import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.PunsjEventK9Repository
 import no.nav.k9.los.integrasjon.kafka.dto.PunsjEventDto
@@ -106,7 +107,7 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
         val zone = ZoneId.of("Europe/Oslo")
         val nå = ZonedDateTime.now().withZoneSameInstant(zone)
 
-        if (nå.toLocalTime() > LocalTime.of(6, 0, 0) && nå.toLocalTime() < LocalTime.of(17, 0, 0) && nå.dayOfWeek <= DayOfWeek.FRIDAY) {
+        if (config.koinProfile == KoinProfile.PROD && nå.toLocalTime() > LocalTime.of(6, 0, 0) && nå.toLocalTime() < LocalTime.of(17, 0, 0) && nå.dayOfWeek <= DayOfWeek.FRIDAY) {
             return true
         }
         return false
