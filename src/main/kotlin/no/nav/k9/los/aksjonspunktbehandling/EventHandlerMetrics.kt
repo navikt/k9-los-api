@@ -2,6 +2,7 @@ package no.nav.k9.los.aksjonspunktbehandling
 
 import io.prometheus.client.Histogram
 import io.prometheus.client.SimpleTimer
+import kotlin.math.pow
 
 class EventHandlerMetrics {
 
@@ -10,7 +11,7 @@ class EventHandlerMetrics {
             .name("k9los_event_handler")
             .labelNames("avsenderSystem", "hendelse", "resultat")
             .help("Tidsforbruk håndtering av kafka hendelse til k9los")
-            .exponentialBuckets(0.001, Math.pow(10.0, 1.0/3.0), 12 )
+            .exponentialBuckets(0.001, 10.0.pow(1.0 / 3.0), 12 )
             .register()
 
         fun observe(avsenderSystem : String, hendelse : String, starttidNanos : Long, status : String = "OK"){
@@ -24,7 +25,7 @@ class EventHandlerMetrics {
                 return resultat
             } catch (e : Exception){
                 status = e.javaClass.simpleName
-                throw e;
+                throw e
             } finally {
                 tidsforbruk.labels(avsenderSystem, hendelse, status).observe(SimpleTimer.elapsedSecondsFromNanos(starttid, System.nanoTime()))
             }
@@ -37,7 +38,7 @@ class EventHandlerMetrics {
                 return resultat
             } catch (e : Exception){
                 status = e.javaClass.simpleName
-                throw e;
+                throw e
             } finally {
                 tidsforbruk.labels(avsenderSystem, hendelse, status).observe(SimpleTimer.elapsedSecondsFromNanos(starttid, System.nanoTime()))
             }

@@ -85,7 +85,7 @@ object AktivOppgaveRepository {
             ).asUpdate
         )
 
-        return id;
+        return id
     }
 
     private fun oppdaterAktivOppgavefelter(

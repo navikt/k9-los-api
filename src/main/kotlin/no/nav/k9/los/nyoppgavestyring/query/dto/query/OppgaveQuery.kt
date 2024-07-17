@@ -9,9 +9,9 @@ data class OppgaveQuery(
     val order: List<OrderFelt> = listOf(),
 ) {
 
-    constructor() : this(listOf(), listOf(), listOf());
+    constructor() : this(listOf(), listOf(), listOf())
 
-    constructor(filtere: List<Oppgavefilter>) : this(filtere, listOf(), listOf());
+    constructor(filtere: List<Oppgavefilter>) : this(filtere, listOf(), listOf())
 
     constructor(filtere: List<Oppgavefilter>, order: List<OrderFelt>) : this(filtere, listOf(), order)
 }

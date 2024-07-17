@@ -47,7 +47,7 @@ class OppgaveV3(
 
             oppgaveDto.feltverdier.forEach { oppgaveFeltverdiDto ->
                 val oppgavefelt = oppgavetype.oppgavefelter.find {
-                    it.feltDefinisjon.eksternId.equals(oppgaveFeltverdiDto.nøkkel)
+                    it.feltDefinisjon.eksternId == oppgaveFeltverdiDto.nøkkel
                 } ?: throw IllegalArgumentException("Kunne ikke finne matchede oppgavefelt for oppgaveFeltverdi: ${oppgaveFeltverdiDto.nøkkel}")
 
                 if (oppgaveFeltverdiDto.verdi == null) {
@@ -110,7 +110,7 @@ class OppgaveV3(
             .filter { it.påkrevd && !it.feltDefinisjon.listetype }
             .forEach { obligatoriskFelt ->
                 felter.find {
-                    it.oppgavefelt.equals(obligatoriskFelt)
+                    it.oppgavefelt == obligatoriskFelt
                 } ?: throw IllegalArgumentException("Oppgaven mangler obligatorisk felt " + obligatoriskFelt.feltDefinisjon.eksternId)
             }
     }

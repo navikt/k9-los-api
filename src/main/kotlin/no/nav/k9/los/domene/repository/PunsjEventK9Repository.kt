@@ -46,8 +46,7 @@ class PunsjEventK9Repository(private val dataSource: DataSource) {
     }
 
     fun hentMedLås(tx: TransactionalSession, uuid: UUID): K9PunsjModell {
-        val json: String? = using(sessionOf(dataSource)) {
-            it.run(
+        val json: String? =tx.run(
                 queryOf(
                     "select data from behandling_prosess_events_k9_punsj where id = :id for update",
                     mapOf("id" to uuid.toString())
@@ -56,7 +55,6 @@ class PunsjEventK9Repository(private val dataSource: DataSource) {
                         row.string("data")
                     }.asSingle
             )
-        }
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
         if (json.isNullOrEmpty()) {
@@ -175,7 +173,7 @@ class PunsjEventK9Repository(private val dataSource: DataSource) {
 
     fun hentAntallEventIderUtenVasketHistorikk(): Long {
         return using(sessionOf(dataSource)) {
-            it.transaction { tx ->
+            session -> session.transaction { tx ->
                 tx.run(
                     queryOf(
                         """

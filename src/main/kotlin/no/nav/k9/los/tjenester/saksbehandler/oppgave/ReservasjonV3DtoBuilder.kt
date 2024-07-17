@@ -32,7 +32,7 @@ class ReservasjonV3DtoBuilder(
         reservasjonMedOppgaver: ReservasjonV3MedOppgaver,
         saksbehandler: Saksbehandler
     ): ReservasjonV3Dto {
-        var endretAvNavn: String? = null;
+        var endretAvNavn: String? = null
         if (reservasjonMedOppgaver.reservasjonV3.endretAv != null) {
             endretAvNavn =
                 saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonMedOppgaver.reservasjonV3.endretAv)?.navn
@@ -52,7 +52,7 @@ class ReservasjonV3DtoBuilder(
         saksbehandler: Saksbehandler
     ): ReservasjonV3Dto {
         val oppgaveV1 = reservasjonMedOppgaver.oppgaveV1!!
-        var endretAvNavn: String? = null;
+        var endretAvNavn: String? = null
         if (reservasjonMedOppgaver.reservasjonV3.endretAv != null) {
             endretAvNavn =
                 saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonMedOppgaver.reservasjonV3.endretAv)?.navn

@@ -926,7 +926,7 @@ class OppgaveTjeneste constructor(
         val starttid = System.nanoTime()
         if (DetaljerMetrikker.timeSuspended("faaOppgaveFraKo", "basistilgang") {  !pepClient.harBasisTilgang() }) {
             log.warn("har ikke basistilgang")
-            return null;
+            return null
         }
         val oppgaveKø = DetaljerMetrikker.timeSuspended("faaOppgaveFraKo", "hentOppgaveKø") { oppgaveKøRepository.hentOppgavekø(UUID.fromString(oppgaveKøId)) }
         val prioriterteOppgaver = DetaljerMetrikker.timeSuspended("faaOppgaveFraKo", "finnPrioriterteOppgaver") { finnPrioriterteOppgaver(brukerident, oppgaveKø) }

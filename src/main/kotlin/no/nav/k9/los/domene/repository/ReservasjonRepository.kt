@@ -50,7 +50,7 @@ class ReservasjonRepository(
         var reservasjoner: List<Reservasjon>
 
         val tidHente = measureTimeMillis {
-            reservasjoner = hentReservasjoner(reservasjonIder);
+            reservasjoner = hentReservasjoner(reservasjonIder)
         }
         val andres = reservasjoner.filter { it.reservertAv != saksbehandlersIdent }
         if (andres.isNotEmpty()) {
@@ -71,12 +71,12 @@ class ReservasjonRepository(
     fun hentOppgaveUuidMedAktivReservasjon(reservasjoner: Set<UUID>): Set<UUID> {
         if (reservasjoner.isEmpty()){
             //ikke vits å gjøre noe spørring når alt uansett filtreres bort
-            return emptySet();
+            return emptySet()
         }
-        var nå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS).toString();
+        val nå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS).toString()
         log.info("Filtrerer bort reservasjoner utgått før $nå")
         return using(sessionOf(dataSource)) {
-            it.run(
+            session -> session.run(
                 queryOf(
                     """
                         select (data ::jsonb -> 'reservasjoner' -> -1 ->> 'oppgave') as oppgaveUuid from reservasjon

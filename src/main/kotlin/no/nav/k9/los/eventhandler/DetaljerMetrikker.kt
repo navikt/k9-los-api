@@ -3,6 +3,7 @@ package no.nav.k9.los.eventhandler
 import io.prometheus.client.Counter
 import io.prometheus.client.Histogram
 import io.prometheus.client.SimpleTimer
+import kotlin.math.pow
 
 object DetaljerMetrikker {
 
@@ -10,7 +11,7 @@ object DetaljerMetrikker {
         .name("k9los_internal")
         .help("Tidsforbruk diverse internt")
         .labelNames("label1", "label2", "resultat")
-        .exponentialBuckets(0.01, Math.pow(10.0, 1.0 / 3.0), 12)
+        .exponentialBuckets(0.01, 10.0.pow(1.0 / 3.0), 12)
         .register()
 
     private val teller = Histogram.build()
@@ -28,7 +29,7 @@ object DetaljerMetrikker {
             return resultat
         } catch (e: Exception) {
             status = e.javaClass.simpleName
-            throw e;
+            throw e
         } finally {
             observe(t0, label1, label2, status)
         }
@@ -42,7 +43,7 @@ object DetaljerMetrikker {
             return resultat
         } catch (e: Exception) {
             status = e.javaClass.simpleName
-            throw e;
+            throw e
         } finally {
             observe(t0, label1, label2, status)
         }

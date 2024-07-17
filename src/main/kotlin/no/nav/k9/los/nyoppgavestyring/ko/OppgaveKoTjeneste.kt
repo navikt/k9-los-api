@@ -55,7 +55,7 @@ class OppgaveKoTjeneste(
         val ko = oppgaveKoRepository.hent(oppgaveKoId)
 
         val køoppgaveIder = oppgaveQueryService.queryForOppgaveEksternId(QueryRequest(ko.oppgaveQuery, fjernReserverte = fjernReserverte, Avgrensning.maxAntall(ønsketAntallSaker)))
-        var oppgaver = mutableListOf<GenerellOppgaveV3Dto>()
+        val oppgaver = mutableListOf<GenerellOppgaveV3Dto>()
         for (eksternOppgaveId in køoppgaveIder) {
             val oppgave = oppgaveRepositoryTxWrapper.hentOppgave(eksternOppgaveId.område, eksternOppgaveId.eksternId)
 

@@ -74,7 +74,7 @@ class K9sakEventHandler constructor(
         }
         tellEvent(modell, oppgave)
 
-        var reservasjonFjernet = false;
+        var reservasjonFjernet = false
         if (modell.fikkEndretAksjonspunkt()) {
             log.info("Fjerner reservasjon på oppgave ${oppgave.eksternId}")
             reservasjonTjeneste.fjernReservasjon(oppgave)

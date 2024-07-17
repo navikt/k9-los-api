@@ -92,18 +92,6 @@ class OppgaveV3Tjeneste(
         return oppgaveV3Repository.hentOppgaveversjonenFør(eksternId, internVersjon = eventNr, hentetOppgavetype, tx)!!
     }
 
-
-    @Deprecated("Fungerer ikke med utledede feltverdier")
-    fun ajourholdAktivOppgave(oppgaveDto: OppgaveDto, internVersjon: Long, tx: TransactionalSession) {
-        val oppgavetype = oppgavetypeRepository.hentOppgavetype(
-            område = oppgaveDto.område,
-            eksternId = oppgaveDto.type,
-            tx = tx
-        )
-        val innkommendeOppgave = OppgaveV3(oppgaveDto, oppgavetype)
-        ajourholdAktivOppgave(innkommendeOppgave, internVersjon, tx)
-    }
-
     fun ajourholdAktivOppgave(innkommendeOppgave: OppgaveV3, internVersjon: Long, tx: TransactionalSession) {
         AktivOppgaveRepository.ajourholdAktivOppgave(innkommendeOppgave, internVersjon, tx)
     }

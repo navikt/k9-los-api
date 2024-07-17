@@ -122,7 +122,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
     }
 
     fun vaskOppgaveForBehandlingUUIDOgMarkerVasket(uuid: UUID): Long {
-        var eventTeller = 0L;
+        var eventTeller = 0L
         DetaljerMetrikker.time("k9sakHistorikkvask", "vaskOppgaveForBehandlingKomplett") {
             val nyeBehandlingsopplysningerFraK9Sak = DetaljerMetrikker.time("k9sakHistorikkvask", "hentOpplysningerFraK9sak") { k9SakBerikerKlient.hentBehandling(UUID.fromString(uuid.toString()), antallForsøk = 8) }
             transactionalManager.transaction { tx ->

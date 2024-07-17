@@ -17,4 +17,4 @@ class EnkelOrderFelt(
     val område: String?,
     val kode: String,
     val økende: Boolean
-): OrderFelt();
+): OrderFelt()

@@ -12,7 +12,7 @@ object BehandlingProsessEventK9DuplikatUtil {
     fun fjernDuplikater(eventer : Collection<BehandlingProsessEventDto>) : Set<BehandlingProsessEventDto> {
         val gruppert = eventer.groupBy { it.eventTid }
         val resultat : MutableSet<BehandlingProsessEventDto> = mutableSetOf()
-        var tidspunktMedFlere : MutableSet<LocalDateTime> = mutableSetOf()
+        val tidspunktMedFlere : MutableSet<LocalDateTime> = mutableSetOf()
         for ((tidspunkt, eventerMedLikTid) in gruppert) {
             if (eventerMedLikTid.size == 1){
                 resultat.addAll(eventerMedLikTid)
@@ -43,14 +43,14 @@ object BehandlingProsessEventK9DuplikatUtil {
 
     fun erFunksjoneltLike(a : BehandlingProsessEventDto, b: BehandlingProsessEventDto) : Boolean{
         if (a == b) {
-            return true;
+            return true
         }
         if (a.eventTid != b.eventTid){
-            return false;
+            return false
         }
         if (a.eventTid.year < 2021){
             //ignorer duplikater fra 2020 eller tidligere
-            return true;
+            return true
         }
         val eventA = medSorterteDedupliserteLister(a)
         val eventB = medSorterteDedupliserteLister(b)
@@ -65,14 +65,14 @@ object BehandlingProsessEventK9DuplikatUtil {
             return eventB.copy(resultatType = null) == eventA
         }
 
-        return false;
+        return false
     }
 
     fun medSorterteDedupliserteLister(event : BehandlingProsessEventDto) : BehandlingProsessEventDto {
         return event
             .copy(søknadsårsaker = event.søknadsårsaker.distinct().sorted().toList())
             .copy(behandlingsårsaker = event.behandlingsårsaker.distinct().sorted().toList())
-            .copy(aksjonspunktTilstander = event.aksjonspunktTilstander.distinct().sortedBy({it.opprettetTidspunkt}).toList())
+            .copy(aksjonspunktTilstander = event.aksjonspunktTilstander.distinct().sortedBy { it.opprettetTidspunkt }.toList())
     }
 
     fun ulikeFelter(a : BehandlingProsessEventDto, b: BehandlingProsessEventDto) : List<String> {

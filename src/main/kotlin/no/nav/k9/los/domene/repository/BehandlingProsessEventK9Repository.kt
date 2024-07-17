@@ -157,7 +157,7 @@ class BehandlingProsessEventK9Repository(private val dataSource: DataSource) {
 
     fun hentAntallEventIderUtenVasketHistorikk(): Long {
         return using(sessionOf(dataSource)) {
-            it.transaction { tx ->
+            session -> session.transaction { tx ->
                 tx.run(
                     queryOf(
                         """
