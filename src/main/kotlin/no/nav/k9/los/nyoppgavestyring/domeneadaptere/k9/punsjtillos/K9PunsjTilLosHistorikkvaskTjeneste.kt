@@ -32,6 +32,12 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
                 isDaemon = true,
                 name = TRÅDNAVN
             ) {
+
+                if (LocalDateTime.now().isBefore(LocalDateTime.of(2024,7,17,16,30))) {
+                    eventRepository.nullstillHistorikkvask()
+                    log.info("Nullstilt historikkvaskmarkering k9-punsj")
+                }
+
                 log.info("Starter avspilling av historiske BehandlingProsessEventer")
 
                 val tidKjøringStartet = System.currentTimeMillis()
