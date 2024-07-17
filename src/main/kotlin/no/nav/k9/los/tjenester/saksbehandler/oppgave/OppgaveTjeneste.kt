@@ -760,9 +760,9 @@ class OppgaveTjeneste constructor(
             val reserverteOppgaveIder = reservasjonRepository.hentOppgaveUuidMedAktivReservasjon(reservasjonIder)
             val reserverteOppgaver = oppgaveRepository.hentOppgaver(reserverteOppgaveIder)
 
-            val antallReserverteOppgaverSomTilhørerKø =
+            antallReserverteOppgaverSomTilhørerKø =
                 reserverteOppgaver.count { oppgavekø.tilhørerOppgaveTilKø(it, erOppgavenReservertSjekk = {false}, emptyList()) } //må spesifikt si at oppgaven ikke er reservert for å telle den reserverte oppgaven
-            log.info("Antall reserverte oppgaver som ble lagt til var $antallReserverteOppgaverSomTilhørerKø")
+            log.info("Antall reserverte oppgaver som ble lagt til var $antallReserverteOppgaverSomTilhørerKø for køen ${oppgavekø.navn}")
         }
         val antall = oppgavekø.oppgaverOgDatoer.size + antallReserverteOppgaverSomTilhørerKø
         hentAntallOppgaverCache.set(key, CacheObject(antall, LocalDateTime.now().plusMinutes(30)))
