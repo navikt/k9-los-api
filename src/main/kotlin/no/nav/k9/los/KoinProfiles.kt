@@ -39,6 +39,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerike
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerSystemKlient
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonKonverteringJobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
@@ -530,6 +531,15 @@ fun common(app: Application, config: Configuration) = module {
             transactionalManager = get(),
             k9SakTilLosAdapterTjeneste = get(),
             k9SakBerikerKlient = get()
+        )
+    }
+
+    single {
+        K9PunsjTilLosHistorikkvaskTjeneste(
+            eventRepository = get(),
+            oppgaveV3Tjeneste = get(),
+            config = get(),
+            transactionalManager = get()
         )
     }
 

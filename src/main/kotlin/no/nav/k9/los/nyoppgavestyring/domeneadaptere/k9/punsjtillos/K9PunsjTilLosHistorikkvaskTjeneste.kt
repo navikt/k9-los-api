@@ -6,7 +6,6 @@ import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.PunsjEventK9Repository
 import no.nav.k9.los.integrasjon.kafka.dto.PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.HistorikkvaskMetrikker
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import org.slf4j.Logger
@@ -19,8 +18,7 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
     private val eventRepository: PunsjEventK9Repository,
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
     private val config: Configuration,
-    private val transactionalManager: TransactionalManager,
-    private val k9PunsjTilLosAdapterTjeneste: K9PunsjTilLosAdapterTjeneste,
+    private val transactionalManager: TransactionalManager
 ) {
     private val log: Logger = LoggerFactory.getLogger(K9PunsjTilLosHistorikkvaskTjeneste::class.java)
     private val TRÅDNAVN = "k9-punsj-til-los-historikkvask"

@@ -46,6 +46,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.k9SakEksternId
@@ -110,16 +111,18 @@ fun Application.k9Los() {
     val k9PunsjTilLosAdapterTjeneste = koin.get<K9PunsjTilLosAdapterTjeneste>()
     k9PunsjTilLosAdapterTjeneste.setup()
 
-    if (LocalDateTime.now().isBefore(LocalDateTime.of(2024, 7, 15, 22, 0))) {
+    if (LocalDateTime.now().isBefore(LocalDateTime.of(2024, 7, 17, 14, 30))) {
         if (1 == 0) { //HAXX for å ikke kjøre jobb, men indikere at koden er i bruk og dermed ikke slettes
             koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
             koin.get<K9KlageTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
             koin.get<OppgavestatistikkTjeneste>().slettStatistikkgrunnlag()
             //koin.get<ReservasjonKonverteringJobb>().kjørReservasjonskonvertering() //TODO slette
             //koin.get<K9SakTilLosLukkeFeiloppgaverTjeneste>().kjørFeiloppgaverVask() //TODO slette
+            koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
         }
-        val historikkvaskTjeneste = koin.get<K9SakTilLosHistorikkvaskTjeneste>()
-        historikkvaskTjeneste.kjørHistorikkvask()
+        if (configuration.koinProfile() == KoinProfile.PREPROD) {
+            koin.get<K9PunsjTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
+        }
     }
 
     install(Authentication) {
