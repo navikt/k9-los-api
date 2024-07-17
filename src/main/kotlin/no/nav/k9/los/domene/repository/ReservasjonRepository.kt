@@ -96,6 +96,9 @@ class ReservasjonRepository(
     }
 
     private fun hentReservasjoner(set: Set<UUID>): List<Reservasjon> {
+        if (set.isEmpty()){
+            return emptyList()
+        }
         val json: List<String> = using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
