@@ -343,8 +343,8 @@ class AvdelingslederTjeneste(
                             reservertAvEpost = saksbehandler.epost,
                             reservertAvIdent = saksbehandler.brukerIdent!!,
                             reservertAvNavn = saksbehandler.navn,
-                            saksnummer = oppgave.hentVerdi("saksnummer")!!, //TODO: Oppgaveagnostisk logikk. Løses antagelig ved å skrive om frontend i dette tilfellet
-                            journalpostId = null,
+                            saksnummer = oppgave.hentVerdi("saksnummer"), //TODO: Oppgaveagnostisk logikk. Løses antagelig ved å skrive om frontend i dette tilfellet
+                            journalpostId = oppgave.hentVerdi("journalpostId"),
                             behandlingType = BehandlingType.fraKode(oppgave.hentVerdi("behandlingTypekode")!!),
                             reservertTilTidspunkt = reservasjonMedOppgaver.reservasjonV3.gyldigTil,
                             kommentar = reservasjonMedOppgaver.reservasjonV3.kommentar ?: "",
