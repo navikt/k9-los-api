@@ -412,7 +412,7 @@ class EventTilDtoMapper {
                                 aksjonspunktTilstandDto.venteårsak != null)
                             && aksjonspunktTilstandDto.status == AksjonspunktStatus.OPPRETTET
                     }
-                    .singleOrNull { aksjonspunktTilstandDto ->
+                    .singleOrNull()?.let { aksjonspunktTilstandDto ->
                         oppgaveFeltverdiDtos.add(
                             OppgaveFeltverdiDto(
                                 nøkkel = "aktivVenteårsak",
