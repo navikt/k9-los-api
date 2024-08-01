@@ -65,7 +65,8 @@ fun Route.OppgaveKoApis() {
             if (!pepClient.erOppgaveStyrer()) {
                 call.respond(HttpStatusCode.Forbidden)
             }
-            call.respond(oppgaveKoRepository.leggTil(opprettOppgaveKoDto.tittel))
+            val harSkjermetTilgang = pepClient.harTilgangTilKode6()
+            call.respond(oppgaveKoRepository.leggTil(opprettOppgaveKoDto.tittel, skjermet = harSkjermetTilgang))
         }
     }
 
