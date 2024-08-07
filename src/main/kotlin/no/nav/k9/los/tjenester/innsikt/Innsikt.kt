@@ -118,9 +118,7 @@ fun Route.innsiktGrensesnitt() {
             Fagsystem.PUNSJ.kode -> punsjEventK9Repository.hent(oppgaveMedId1.id)
                 .eventer.map { InnsiktEvent(it.aksjonspunktKoderMedStatusListe, it.eventTid) }
 
-            Fagsystem.K9TILBAKE.kode, Fagsystem.FPTILBAKE.kode -> behandlingProsessEventTilbakeRepository.hent(
-                oppgaveMedId1.id
-            )
+            Fagsystem.K9TILBAKE.kode -> behandlingProsessEventTilbakeRepository.hent(oppgaveMedId1.id)
                 .eventer.map { InnsiktEvent(it.aksjonspunktKoderMedStatusListe, it.eventTid) }
 
             else -> behandlingProsessEventK9Repository.hent(oppgaveMedId1.id)

@@ -41,7 +41,7 @@ data class K9SakModell(
     }
 
     fun oppgave(sisteEvent: BehandlingProsessEventDto = sisteEvent()): Oppgave {
-        val eventResultat = sisteEvent.tilAktiveAksjonspunkter().eventResultat()
+        val eventResultat = sisteEvent.tilAktiveAksjonspunkter().eventResultat(Fagsystem.K9SAK)
         var aktiv = true
         var oppgaveAvsluttet: LocalDateTime? = null
 
@@ -337,7 +337,7 @@ data class K9SakModell(
 
         // har blitt satt på vent
         if (sisteEvent().ytelseTypeKode == FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode
-            && sisteEvent().tilAksjonspunkter().påVent())
+            && sisteEvent().tilAksjonspunkter().påVent(Fagsystem.K9SAK))
             return true
 
         val beslutterFerdig =

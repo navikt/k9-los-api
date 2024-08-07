@@ -121,9 +121,6 @@ fun Route.forvaltningApis() {
                 val eventerIkkeSensitive = k9PunsjModell.eventer.map { event -> K9PunsjEventIkkeSensitiv(event) }
                 objectMapper.writeValueAsString(eventerIkkeSensitive)
             }
-
-            Fagsystem.OMSORGSPENGER -> HttpStatusCode.NotImplemented
-            Fagsystem.FPTILBAKE -> HttpStatusCode.NotImplemented
         }
     }
 

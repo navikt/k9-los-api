@@ -173,7 +173,7 @@ class K9sakEventHandler constructor(
         }
 
         // teller bare først event hvis det er aksjonspunkt
-        if (k9SakModell.starterSak() && !oppgave.aksjonspunkter.erIngenAktive() && !oppgave.aksjonspunkter.påVent()) {
+        if (k9SakModell.starterSak() && !oppgave.aksjonspunkter.erIngenAktive() && !oppgave.aksjonspunkter.påVent(Fagsystem.K9SAK)) {
             beholdningOpp(oppgave)
         }
 
