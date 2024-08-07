@@ -475,12 +475,7 @@ class OppgaveTjeneste constructor(
             }
         val person = pdlService.person(oppgave.aktorId)
 
-        return if (oppgave.system == "PUNSJ") {
-            val paaVent = oppgave.aksjonspunkter.hentAktive()["MER_INFORMASJON"]?.let { it == "OPPR" } == true
-            oppgave.tilDto(oppgaveStatus, person, paaVent = paaVent, merknad = merknad)
-        } else {
-            oppgave.tilDto(oppgaveStatus, person, paaVent = oppgave.aksjonspunkter.påVent(), merknad = merknad)
-        }
+        return oppgave.tilDto(oppgaveStatus, person, paaVent = oppgave.aksjonspunkter.påVent(Fagsystem.fraKode(oppgave.system)), merknad = merknad)
     }
 
     private fun Oppgave.tilDto(

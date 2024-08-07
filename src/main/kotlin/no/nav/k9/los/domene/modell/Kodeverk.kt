@@ -339,10 +339,8 @@ enum class KøSortering(
 enum class Fagsystem(override val kode: String, override val kodeverk: String, override val navn: String): Kodeverdi {
     K9SAK("K9SAK", "FAGSYSTEM", "K9-sak"),
     K9TILBAKE("K9TILBAKE", "FAGSYSTEM", "K9-tilbake"),
-    FPTILBAKE("FPTILBAKE", "FAGSYSTEM", "FP-tilbake"),
     K9KLAGE("K9KLAGE", "FAGSYSTEM", "K9-klage"),
-    PUNSJ("PUNSJ", "FAGSYSTEM", "K9-punsj"),
-    OMSORGSPENGER("OMSORGSPENGER", "FAGSYSTEM", "Omsorgspenger");
+    PUNSJ("PUNSJ", "FAGSYSTEM", "K9-punsj");
 
     companion object {
         @JsonCreator(mode = JsonCreator.Mode.DELEGATING)

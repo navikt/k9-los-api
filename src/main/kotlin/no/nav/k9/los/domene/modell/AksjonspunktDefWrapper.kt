@@ -8,14 +8,10 @@ class AksjonspunktDefWrapper {
 
     companion object {
 
-        fun fraKode(kode: String): AksjonspunktDefinisjon? {
-            return AksjonspunktDefinisjon.fraKode(kode)
-        }
-
-        fun påVent(liste: Map<String, String>): Boolean {
+        fun påVent(fagsystem: Fagsystem, liste: Map<String, String>): Boolean {
             return liste.filter { entry -> entry.value == "OPPR" }
-                .map { entry -> AksjonspunktDefinisjon.fraKode(entry.key) }
-                .any { it.erAutopunkt() }
+                .map { entry -> FagsystemAksjonspunktDefinisjoner.fraKode(fagsystem, entry.key) }
+                .any { it.erAutopunkt }
         }
 
         fun tilBeslutter(liste: Map<String, String>): Boolean {
@@ -24,25 +20,10 @@ class AksjonspunktDefWrapper {
                 .all { it == AksjonspunktDefinisjon.FATTER_VEDTAK }
         }
 
-        fun manuelleAksjonspunkter(liste: Map<String, String>): Map<AksjonspunktDefinisjon, String> {
-            return liste.mapKeys { AksjonspunktDefinisjon.fraKode(it.key) }
-                .filter { (k, v) -> !k.erAutopunkt() && v == "OPPR"}
-        }
-
         fun inneholderEtAktivtAksjonspunktMedKoden(liste: Map<String, String>, def: AksjonspunktDefinisjon): Boolean {
             val definisjon = liste.filter { entry -> entry.value == "OPPR" }
                 .map { entry -> entry.key }
                 .find { kode -> kode == def.kode }
-            return definisjon != null
-        }
-
-        fun inneholderEtAvAktivtAksjonspunktMedKoden(
-            liste: Map<String, String>,
-            def: List<AksjonspunktDefinisjon>
-        ): Boolean {
-            val definisjon = liste.filter { entry -> entry.value == "OPPR" }
-                .map { entry -> entry.key }
-                .find { kode -> def.map { it.kode }.contains(kode) }
             return definisjon != null
         }
 

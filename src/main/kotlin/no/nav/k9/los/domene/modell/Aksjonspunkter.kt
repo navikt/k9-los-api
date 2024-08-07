@@ -18,16 +18,12 @@ data class Aksjonspunkter(
         return liste.filter { entry -> entry.value == AKTIV }.size
     }
 
-    fun hentAlle(): Map<String, String> {
-        return liste
-    }
-
     fun hentAktive(): Map<String, String> {
         return liste.filter { entry -> entry.value == AKTIV }
     }
 
-    fun påVent(): Boolean {
-        return AksjonspunktDefWrapper.påVent(this.liste)
+    fun påVent(fagsystem: Fagsystem): Boolean {
+        return AksjonspunktDefWrapper.påVent(fagsystem, this.liste)
     }
 
     fun erIngenAktive(): Boolean {
@@ -46,10 +42,6 @@ data class Aksjonspunkter(
         return AksjonspunktDefWrapper.inneholderEtInaktivtAksjonspunktMedKoden(this.liste, def)
     }
 
-    fun harEtAvAktivtAksjonspunkt(vararg def: AksjonspunktDefinisjon): Boolean {
-        return AksjonspunktDefWrapper.inneholderEtAvAktivtAksjonspunktMedKoden(this.liste, def.toList())
-    }
-
     fun harEtAvAksjonspunkt(vararg def: AksjonspunktDefinisjon): Boolean {
         return AksjonspunktDefWrapper.inneholderEtAvAksjonspunktUavheningStatusMedKoden(this.liste, def.toList())
     }
@@ -58,12 +50,12 @@ data class Aksjonspunkter(
         return AksjonspunktDefWrapper.inneholderEtAvInaktivtAksjonspunkterMedKoder(this.liste, def.toList())
     }
 
-    fun eventResultat(): EventResultat {
+    fun eventResultat(fagsystem: Fagsystem): EventResultat {
         if (erIngenAktive()) {
             return EventResultat.LUKK_OPPGAVE
         }
 
-        if (påVent()) {
+        if (påVent(fagsystem)) {
             return EventResultat.LUKK_OPPGAVE_VENT
         }
 
