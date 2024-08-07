@@ -23,6 +23,9 @@ object FagsystemAksjonspunktDefinisjoner {
         val liste = ArrayList<FagsystemAksjonspunktDefinisjon>()
 
         for (k9sakAksjonspunktDefinisjon in no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.entries) {
+            if (k9sakAksjonspunktDefinisjon == no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.UNDEFINED){
+                continue //kan ikke legge til da aksjonspunktkode er null
+            }
             liste.add(
                 FagsystemAksjonspunktDefinisjon(
                     Fagsystem.K9SAK,
@@ -33,6 +36,9 @@ object FagsystemAksjonspunktDefinisjoner {
             )
         }
         for (k9klageAksjonspunktDefinisjon in no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.entries) {
+            if (k9klageAksjonspunktDefinisjon == no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.UNDEFINED){
+                continue //kan ikke legge til da aksjonspunktkode er null
+            }
             liste.add(
                 FagsystemAksjonspunktDefinisjon(
                     Fagsystem.K9KLAGE,
