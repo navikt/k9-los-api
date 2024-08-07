@@ -478,8 +478,10 @@ class OppgaveTjeneste constructor(
         return if (oppgave.system == "PUNSJ") {
             val paaVent = oppgave.aksjonspunkter.hentAktive()["MER_INFORMASJON"]?.let { it == "OPPR" } == true
             oppgave.tilDto(oppgaveStatus, person, paaVent = paaVent, merknad = merknad)
-        } else {
+        } else if (oppgave.system == "K9SAK"){
             oppgave.tilDto(oppgaveStatus, person, paaVent = oppgave.aksjonspunkter.påVent(), merknad = merknad)
+        } else {
+            oppgave.tilDto(oppgaveStatus, person, merknad = merknad)
         }
     }
 
