@@ -104,6 +104,9 @@ data class Behandling(
     @JsonProperty("avsender")
     val avsender: String? = null,
 
+    @JsonProperty("oversendtKabal")
+    val oversendtKabal: LocalDate? = null,
+
     @JsonProperty("versjon")
     val versjon: Long? = null
 ) {
@@ -118,7 +121,10 @@ data class Behandling(
 }
 
 class BehandlingBuilder(behandlingId: String, saksnummer: String) {
-    private var behandling = Behandling(behandlingId = behandlingId, saksnummer = saksnummer)
+    private var behandling = Behandling(
+        behandlingId = behandlingId,
+        saksnummer = saksnummer,
+    )
 
     fun build(): Behandling = behandling
     fun buildJson(): String = build().toJson()
@@ -250,6 +256,11 @@ class BehandlingBuilder(behandlingId: String, saksnummer: String) {
 
     fun avsender(avsender: String?): BehandlingBuilder {
         behandling = behandling.copy(avsender = avsender)
+        return this
+    }
+
+    fun oversendtKabal(oversendtKabal: LocalDate?): BehandlingBuilder {
+        behandling = behandling.copy(oversendtKabal = oversendtKabal)
         return this
     }
 

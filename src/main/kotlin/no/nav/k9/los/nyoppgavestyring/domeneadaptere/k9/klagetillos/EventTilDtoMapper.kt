@@ -6,6 +6,7 @@ import no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktType
+import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.Aksjonspunkttilstand
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.KlagebehandlingProsessHendelse
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
@@ -121,11 +122,37 @@ class EventTilDtoMapper {
             utledÅpneAksjonspunkter(åpneAksjonspunkter, oppgaveFeltverdiDtos)
             utledLøsbartAksjonspunkt(event.behandlingSteg, åpneAksjonspunkter, oppgaveFeltverdiDtos)
 
+            utledTidspunktOversendtKabal(event, oppgaveFeltverdiDtos)
+
+            utledVenteÅrsakOgFrist(åpneAksjonspunkter, oppgaveFeltverdiDtos)
             //automatiskBehandletFlagg er defaultet til False p.t.
             utledAvventerSaksbehandler(harManueltAksjonspunkt, harAutopunkt, oppgaveFeltverdiDtos)
             utledBehandlingsårsaker(event, oppgaveFeltverdiDtos)
 
             return oppgaveFeltverdiDtos
+        }
+
+        private fun utledVenteÅrsakOgFrist(
+            åpneAksjonspunkter: List<Aksjonspunkttilstand>,
+            oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
+        ) {
+            åpneAksjonspunkter.filter { aksjonspunktTilstandDto ->
+                    aksjonspunktTilstandDto.venteårsak != Venteårsak.UDEFINERT &&
+                    aksjonspunktTilstandDto.venteårsak != null
+            }.singleOrNull { aksjonspunktTilstandDto ->
+                oppgaveFeltverdiDtos.add(
+                    OppgaveFeltverdiDto(
+                        nøkkel = "aktivVenteårsak",
+                        verdi = aksjonspunktTilstandDto.venteårsak.kode.toString()
+                    )
+                )
+                oppgaveFeltverdiDtos.add(
+                    OppgaveFeltverdiDto(
+                        nøkkel = "aktivVentefrist",
+                        verdi = aksjonspunktTilstandDto.fristTid.toString()
+                    )
+                )
+            }
         }
 
         private fun getåpneAksjonspunkter(event: KlagebehandlingProsessHendelse) =
@@ -195,6 +222,24 @@ class EventTilDtoMapper {
                     )
                 )
             }
+        }
+
+        // Sjekker også lukkede aksjonspunkter for å få med tidspunktet for oversendelser for historiske klagebehandlinger til dvh
+        private fun utledTidspunktOversendtKabal(
+            event: KlagebehandlingProsessHendelse,
+            oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
+        ) {
+            event.aksjonspunkttilstander
+                .filter { apt -> apt.venteårsak == Venteårsak.OVERSENDT_KABAL }
+                .sortedBy { it.opprettetTidspunkt }
+                .firstOrNull()?.let {
+                    oppgaveFeltverdiDtos.add(
+                        OppgaveFeltverdiDto(
+                            nøkkel = "oversendtKabalTidspunkt",
+                            verdi = it.opprettetTidspunkt?.toString()
+                        )
+                    )
+                }
         }
 
         private fun mapEnkeltverdier(
