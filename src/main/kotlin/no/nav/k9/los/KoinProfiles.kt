@@ -25,6 +25,7 @@ import no.nav.k9.los.integrasjon.azuregraph.AzureGraphServiceLocal
 import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
 import no.nav.k9.los.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.los.integrasjon.k9.IK9SakService
+import no.nav.k9.los.integrasjon.k9.K9SakBehandlingOppfrisketRepostiory
 import no.nav.k9.los.integrasjon.k9.K9SakServiceLocal
 import no.nav.k9.los.integrasjon.k9.K9SakServiceSystemClient
 import no.nav.k9.los.integrasjon.kafka.AsynkronProsesseringV1Service
@@ -609,6 +610,10 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
+        K9SakBehandlingOppfrisketRepostiory(dataSource = get())
+    }
+
+    single {
         PepCacheService(
             pepClient = get(),
             pepCacheRepository = get(),
@@ -660,7 +665,8 @@ fun preprodConfig(config: Configuration) = module {
         K9SakServiceSystemClient(
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
-            scope = "api://dev-fss.k9saksbehandling.k9-sak/.default"
+            scope = "api://dev-fss.k9saksbehandling.k9-sak/.default",
+            k9SakBehandlingOppfrisketRepostiory = get()
         )
     }
 
@@ -697,7 +703,8 @@ fun prodConfig(config: Configuration) = module {
         K9SakServiceSystemClient(
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
-            scope = "api://prod-fss.k9saksbehandling.k9-sak/.default"
+            scope = "api://prod-fss.k9saksbehandling.k9-sak/.default",
+            k9SakBehandlingOppfrisketRepostiory = get()
         )
     }
 
