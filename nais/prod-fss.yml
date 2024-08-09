@@ -93,12 +93,8 @@ spec:
       value: k9saksbehandling.tilbakekreving-hendelse-los
     - name: KAFKA_SAKOGBEHANDLING_TOPIC
       value: personoversikt.modia-soknadsstatus-hendelse
-    - name: KAFKA_STATISTIKK_SAK_TOPIC
-      value: k9saksbehandling.privat-k9statistikk-sak
     - name: KAFKA_AAPEN_STATISTIKK_SAK_TOPIC
       value: k9saksbehandling.aapen-k9statistikk-sak-v2
-    - name: KAFKA_STATISTIKK_BEHANDLING_TOPIC
-      value: k9saksbehandling.privat-k9statistikk-behandling
     - name: KAFKA_AAPEN_STATISTIKK_BEHANDLING_TOPIC
       value: k9saksbehandling.aapen-k9statistikk-behandling-v2
     - name: KAFKA_K9SAK_TOPIC

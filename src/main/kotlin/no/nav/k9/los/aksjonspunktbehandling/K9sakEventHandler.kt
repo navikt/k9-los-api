@@ -5,7 +5,6 @@ import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.modell.*
 import no.nav.k9.los.domene.repository.*
-import no.nav.k9.los.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.los.integrasjon.kafka.dto.EventHendelse
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
@@ -21,7 +20,6 @@ class K9sakEventHandler constructor(
     private val sakOgBehandlingProducer: SakOgBehandlingProducer,
     private val oppgaveKøRepository: OppgaveKøRepository,
     private val reservasjonRepository: ReservasjonRepository,
-    private val statistikkProducer: StatistikkProducer,
     private val statistikkChannel: Channel<Boolean>,
     private val statistikkRepository: StatistikkRepository,
     private val reservasjonTjeneste: ReservasjonTjeneste,
@@ -64,10 +62,8 @@ class K9sakEventHandler constructor(
             k9SakModell
         }
         val oppgave = modell.oppgave(modell.sisteEvent())
-        oppgaveRepository.lagre(oppgave.eksternId) {
-            statistikkProducer.send(modell)
-            oppgave
-        }
+        oppgaveRepository.lagre(oppgave.eksternId) { oppgave }
+
         if (skalSkippe) {
             EventHandlerMetrics.observe("k9sak", "skipper", t0)
             return

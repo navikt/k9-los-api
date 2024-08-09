@@ -46,7 +46,6 @@ object TestConfiguration {
         map["nav.trust_store.password"] = "changeit"
 
         map["nav.kafka.statistikkSakTopic"] = "privat-k9statistikk-sak-v1"
-        map["nav.kafka.statistikkBehandlingTopic"] = "privat-k9statistikk-behandling-v1"
 
         map["nav.db.url"] = "jdbc:postgresql://localhost:5432/k9los_unit"
         map["nav.db.username"] = "k9los_unit"
