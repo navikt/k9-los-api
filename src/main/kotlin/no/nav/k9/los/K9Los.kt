@@ -35,7 +35,6 @@ import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.helse.dusseldorf.ktor.metrics.MetricsRoute
 import no.nav.helse.dusseldorf.ktor.metrics.init
 import no.nav.k9.los.eventhandler.*
-import no.nav.k9.los.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.los.integrasjon.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
 import no.nav.k9.los.jobber.K9sakBehandlingsoppfriskingJobb
@@ -195,7 +194,6 @@ fun Application.k9Los() {
 
     val asynkronProsesseringV1Service = koin.get<AsynkronProsesseringV1Service>()
     val sakOgBehadlingProducer = koin.get<SakOgBehandlingProducer>()
-    val statistikkProducer = koin.get<StatistikkProducer>()
 
     val k9SakKorrigerOutOfOrderProsessor =
         k9SakKorrigerOutOfOrderProsessor(
@@ -207,7 +205,6 @@ fun Application.k9Los() {
         log.info("Stopper AsynkronProsesseringV1Service.")
         asynkronProsesseringV1Service.stop()
         sakOgBehadlingProducer.stop()
-        statistikkProducer.stop()
         sjekkReserverteJobb.cancel()
         log.info("AsynkronProsesseringV1Service Stoppet.")
         log.info("Stopper pipeline")
