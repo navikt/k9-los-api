@@ -12,7 +12,7 @@ val fuelVersion = "2.3.1"
 val jacksonVersion = "2.17.2"
 val commonsTextVersion = "1.12.0"
 
-val dusseldorfKtorVersion = "5.0.4"
+val dusseldorfKtorVersion = "5.0.5"
 val ktorVersion = "2.3.12"
 val kafkaVersion = "3.8.0"
 
@@ -104,7 +104,7 @@ dependencies {
     testImplementation("org.testcontainers:postgresql:$testContainers")
     testImplementation("io.insert-koin:koin-test-junit5:$koinVersion")
 
-    testImplementation("org.apache.commons:commons-compress:1.26.2")
+    testImplementation("org.apache.commons:commons-compress:1.27.0")
 }
 
 repositories {
