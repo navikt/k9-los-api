@@ -99,7 +99,8 @@ class OppgavestatistikkTjeneste(
             if (erKode6) {
                 nullUtEventuelleSensitiveFelter(it)
             } else it
-        }.forEach {
+        }.onEach { behandling -> behandling.oversendtKabal?.let { log.info(behandling.saksnummer+": oversendKabalTidspunkt"+it) } }
+            .forEach {
             statistikkPublisher.publiser(sak, it)
         }
     }
