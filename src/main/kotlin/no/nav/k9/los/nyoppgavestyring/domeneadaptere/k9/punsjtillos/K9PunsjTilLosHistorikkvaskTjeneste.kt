@@ -120,23 +120,22 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
 
     fun vaskOppgaveForBehandlingUUID(uuid: UUID, tx: TransactionalSession): Long {
         log.info("Vasker historikk for k9punsj-oppgave med eksternId: $uuid")
-        var eventTeller = 0L
         var forrigeOppgave: OppgaveV3? = null
 
         val eventer = eventRepository.hentMedLås(tx, uuid).eventer
         var eventNrForBehandling = 0L
         val høyesteInternVersjon =
             oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9punsj", "K9", tx)!!
-        var oppgaveDto: OppgaveDto? = null
+        var oppgaveV3 : OppgaveV3? = null
         for (event in eventer) {
             if (eventNrForBehandling > høyesteInternVersjon) { break }  //Historikkvasken har funnet eventer som ennå ikke er lastet inn med normalflyt. Dirty eventer skal håndteres av vanlig adaptertjeneste
 
-            oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+            val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
 
-            oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, tx)
+            oppgaveV3 = oppgaveV3Tjeneste.utledEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, tx)
+            oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveV3, eventNrForBehandling, tx)
 
-            eventTeller++
-            loggFremgangForHver100(eventTeller, "Prosessert $eventTeller eventer")
+            loggFremgangForHver100(eventNrForBehandling, "Prosessert $eventNrForBehandling eventer")
 
             forrigeOppgave = oppgaveV3Tjeneste.hentOppgaveversjon(
                 område = "K9", eksternId = oppgaveDto.id, eksternVersjon = oppgaveDto.versjon, tx = tx
@@ -144,11 +143,11 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
             eventNrForBehandling++
         }
 
-        oppgaveDto?.let {
-            oppgaveV3Tjeneste.ajourholdAktivOppgave(oppgaveDto, eventNrForBehandling, tx)
+        oppgaveV3?.let {
+            oppgaveV3Tjeneste.ajourholdAktivOppgave(it, eventNrForBehandling, tx)
         }
 
-        return eventTeller
+        return eventNrForBehandling
     }
 
     private fun loggFremgangForHver100(teller: Long, tekst: String) {
