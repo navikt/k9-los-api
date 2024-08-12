@@ -182,7 +182,12 @@ class K9SakTilLosHistorikkvaskTjeneste(
         }
 
         oppgaveV3?.let {
-            DetaljerMetrikker.time("k9sakHistorikkvask", "ajourholdAktivOppgave") { oppgaveV3Tjeneste.ajourholdAktivOppgave(oppgaveV3, eventNrForBehandling, tx) }
+            if (OppgaveV3.gjelderFRISINN(oppgaveV3)) {
+                DetaljerMetrikker.time("k9sakHistorikkvask","slettAktivOppgave") { oppgaveV3Tjeneste.slettAktivOppgave(oppgaveV3, tx) }
+                log.info("oppgave ${oppgaveV3.eksternId} gjelder FRISINN, fjerner oppgaven fra aktiv-tabellene")
+            } else {
+                DetaljerMetrikker.time("k9sakHistorikkvask","ajourholdAktivOppgave") { oppgaveV3Tjeneste.ajourholdAktivOppgave(oppgaveV3, eventNrForBehandling, tx) }
+            }
         }
         log.info("Vasket $eventNrForBehandling hendelser for k9sak-oppgave med eksternId: $uuid")
         return eventNrForBehandling
