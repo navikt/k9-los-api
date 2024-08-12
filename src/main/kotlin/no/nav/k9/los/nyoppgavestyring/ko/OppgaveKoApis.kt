@@ -25,7 +25,7 @@ fun Route.OppgaveKoApis() {
     get("/") {
         requestContextService.withRequestContext(call) {
             if (!pepClient.erOppgaveStyrer()) {
-                call.respond(HttpStatusCode.Forbidden);
+                call.respond(HttpStatusCode.Forbidden)
             }
 
             val oppgavekøer = oppgaveKoTjeneste.hentOppgavekøer()
@@ -46,7 +46,7 @@ fun Route.OppgaveKoApis() {
         val kopierOppgaveKoDto = call.receive<KopierOppgaveKoDto>()
         requestContextService.withRequestContext(call) {
             if (!pepClient.erOppgaveStyrer()) {
-                call.respond(HttpStatusCode.Forbidden);
+                call.respond(HttpStatusCode.Forbidden)
             }
             call.respond(
                 oppgaveKoRepository.kopier(
@@ -63,9 +63,10 @@ fun Route.OppgaveKoApis() {
         val opprettOppgaveKoDto = call.receive<OpprettOppgaveKoDto>()
         requestContextService.withRequestContext(call) {
             if (!pepClient.erOppgaveStyrer()) {
-                call.respond(HttpStatusCode.Forbidden);
+                call.respond(HttpStatusCode.Forbidden)
             }
-            call.respond(oppgaveKoRepository.leggTil(opprettOppgaveKoDto.tittel))
+            val harSkjermetTilgang = pepClient.harTilgangTilKode6()
+            call.respond(oppgaveKoRepository.leggTil(opprettOppgaveKoDto.tittel, skjermet = harSkjermetTilgang))
         }
     }
 
@@ -73,7 +74,7 @@ fun Route.OppgaveKoApis() {
         requestContextService.withRequestContext(call) {
             val oppgavekøId = call.parameters["id"]!!
             if (!pepClient.erOppgaveStyrer()) {
-                call.respond(HttpStatusCode.Forbidden);
+                call.respond(HttpStatusCode.Forbidden)
             }
 
             call.respond(oppgaveKoRepository.hent(oppgavekøId.toLong()))
@@ -84,7 +85,7 @@ fun Route.OppgaveKoApis() {
         requestContextService.withRequestContext(call) {
             val oppgavekøId = call.parameters["id"]!!
             if (!pepClient.erOppgaveStyrer()) {
-                call.respond(HttpStatusCode.Forbidden);
+                call.respond(HttpStatusCode.Forbidden)
             }
 
             call.respond(oppgaveKoRepository.slett(oppgavekøId.toLong()))
@@ -171,7 +172,7 @@ fun Route.OppgaveKoApis() {
         val oppgaveKo = call.receive<OppgaveKo>()
         requestContextService.withRequestContext(call) {
             if (!pepClient.erOppgaveStyrer()) {
-                call.respond(HttpStatusCode.Forbidden);
+                call.respond(HttpStatusCode.Forbidden)
             }
             call.respond(oppgaveKoRepository.endre(oppgaveKo))
         }

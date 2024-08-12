@@ -19,9 +19,9 @@ class StatistikkRepository(
                     """
                         select ov.id
                         from oppgave_v3 ov
-                            	join oppgavetype o ON ov.oppgavetype_id = o.id 
+                        join oppgavetype o ON ov.oppgavetype_id = o.id 
                         where o.ekstern_id in ('k9sak', 'k9klage')
-                        and not exists (select * from OPPGAVE_V3_SENDT_DVH os where os.id = ov.id)
+                          and not exists (select * from OPPGAVE_V3_SENDT_DVH os where os.id = ov.id)
                     """.trimIndent()
                 )
                     .map { row ->
@@ -99,9 +99,9 @@ class StatistikkRepository(
                 """
                 select fd.ekstern_id as ekstern_id, o.ekstern_id as omrade, fd.liste_type, f.pakrevd, ov.verdi
                 from oppgavefelt_verdi ov 
-                    inner join oppgavefelt f on ov.oppgavefelt_id = f.id 
-                    inner join feltdefinisjon fd on f.feltdefinisjon_id = fd.id 
-                    inner join omrade o on fd.omrade_id = o.id 
+                inner join oppgavefelt f on ov.oppgavefelt_id = f.id 
+                inner join feltdefinisjon fd on f.feltdefinisjon_id = fd.id 
+                inner join omrade o on fd.omrade_id = o.id 
                 where ov.oppgave_id = :oppgaveId
                 order by fd.ekstern_id
                 """.trimIndent(),

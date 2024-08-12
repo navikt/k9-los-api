@@ -31,18 +31,18 @@ class Feltdefinisjoner(
     }
 
     fun finnForskjeller(innkommendeFeltdefinisjoner: Feltdefinisjoner): Triple<Set<Feltdefinisjon>, Set<Feltdefinisjon>, Set<Feltdefinisjon>> {
-        if (!innkommendeFeltdefinisjoner.område.equals(this.område)) {
+        if (innkommendeFeltdefinisjoner.område != this.område) {
             throw IllegalStateException("Kan ikke sammenligne datatyper på tvers av områder. Dette skal være separate sett")
         }
         val leggtilListe = mutableSetOf<Feltdefinisjon>()
         val oppdaterListe = mutableSetOf<Feltdefinisjon>()
         val slettListe = mutableSetOf<Feltdefinisjon>()
         innkommendeFeltdefinisjoner.feltdefinisjoner.forEach { innkommende ->
-            val eksisterende = feltdefinisjoner.find { it.eksternId.equals(innkommende.eksternId) }
+            val eksisterende = feltdefinisjoner.find { it.eksternId == innkommende.eksternId }
             if (eksisterende == null) {
                 leggtilListe.add(innkommende)
             } else { // finnes i liste, men kanskje forskjellig?
-                val ulikeVerdier = !eksisterende.equals(innkommende)
+                val ulikeVerdier = eksisterende != innkommende
                 if (ulikeVerdier) {
                     oppdaterListe.add(innkommende)
                 }
@@ -51,7 +51,7 @@ class Feltdefinisjoner(
 
         feltdefinisjoner.forEach{ eksisterende ->
             innkommendeFeltdefinisjoner.feltdefinisjoner.find { innkommendeFeltdefinisjon ->
-                innkommendeFeltdefinisjon.eksternId.equals(eksisterende.eksternId)
+                innkommendeFeltdefinisjon.eksternId == eksisterende.eksternId
             }?: slettListe.add(eksisterende)
         }
 

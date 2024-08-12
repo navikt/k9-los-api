@@ -5,6 +5,7 @@ import com.github.kittinunf.fuel.coroutines.awaitStringResponseResult
 import com.github.kittinunf.fuel.httpGet
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
+import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
 import no.nav.k9.los.Configuration
@@ -14,6 +15,7 @@ import no.nav.k9.los.utils.LosObjectMapper
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.BehandlingMedFagsakDto
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.LosOpplysningerSomManglerIKlageDto
 import org.slf4j.LoggerFactory
+import java.time.Duration
 import java.util.*
 
 class K9SakBerikerSystemKlient(
@@ -26,19 +28,15 @@ class K9SakBerikerSystemKlient(
     private val url = configuration.k9Url()
     private val scopes = setOf(scope)
 
-    override fun hentBehandling(behandlingUUID: UUID): BehandlingMedFagsakDto? {
-        var behandlingDto: BehandlingMedFagsakDto? = null
-        runBlocking { behandlingDto = hent(behandlingUUID) }
-        return behandlingDto
+    override fun hentBehandling(behandlingUUID: UUID, antallForsøk: Int): BehandlingMedFagsakDto? {
+        return runBlocking {  hent(behandlingUUID, antallForsøk) }
     }
 
-    override fun berikKlage(påklagdBehandlingUUID: UUID): LosOpplysningerSomManglerIKlageDto? {
-        var losOpplysningerSomManglerIKlageDto: LosOpplysningerSomManglerIKlageDto?
-        runBlocking { losOpplysningerSomManglerIKlageDto = hentKlagedata(påklagdBehandlingUUID) }
-        return losOpplysningerSomManglerIKlageDto
+    override fun berikKlage(påklagdBehandlingUUID: UUID, antallForsøk: Int): LosOpplysningerSomManglerIKlageDto? {
+        return runBlocking { hentKlagedata(påklagdBehandlingUUID, antallForsøk) }
     }
 
-    suspend fun hentKlagedata(påklagdBehandlingUUID: UUID): LosOpplysningerSomManglerIKlageDto? {
+    suspend fun hentKlagedata(påklagdBehandlingUUID: UUID, antallForsøk: Int = 3): LosOpplysningerSomManglerIKlageDto? {
         val parameters = listOf(Pair("behandlingUuid", påklagdBehandlingUUID.toString()))
         val httpRequest = "${url}/los/klage/berik"
             .httpGet(parameters)
@@ -50,7 +48,14 @@ class K9SakBerikerSystemKlient(
                 NavHeaders.CallId to UUID.randomUUID().toString()
             )
 
-        val (_, response, result) = httpRequest.awaitStringResponseResult()
+        val (_, response, result) = Retry.retry(
+            tries = antallForsøk,
+            operation = "berik",
+            initialDelay = Duration.ofMillis(200),
+            factor = 2.0,
+            logger = log
+        ) {  httpRequest.awaitStringResponseResult() }
+
         if (response.statusCode == HttpStatusCode.NoContent.value) {
             return null
         }
@@ -79,7 +84,7 @@ class K9SakBerikerSystemKlient(
         return LosObjectMapper.instance.readValue<LosOpplysningerSomManglerIKlageDto>(abc)
     }
 
-    suspend fun hent(behandlingUUID: UUID): BehandlingMedFagsakDto? {
+    suspend fun hent(behandlingUUID: UUID, antallForsøk: Int = 3): BehandlingMedFagsakDto? {
         val parameters = listOf<Pair<String, String>>(Pair("behandlingUuid", behandlingUUID.toString()))
         val httpRequest = "${url}/los/behandling"
             .httpGet(parameters)
@@ -90,8 +95,14 @@ class K9SakBerikerSystemKlient(
                 HttpHeaders.ContentType to "application/json",
                 NavHeaders.CallId to UUID.randomUUID().toString()
             )
+        val (_, response, result) = Retry.retry(
+            tries = antallForsøk,
+            operation = "berik",
+            initialDelay = Duration.ofMillis(200),
+            factor = 2.0,
+            logger = log
+        ) { httpRequest.awaitStringResponseResult() }
 
-        val (_, response, result) = httpRequest.awaitStringResponseResult()
         if (response.statusCode == HttpStatusCode.NoContent.value) {
             return null
         }

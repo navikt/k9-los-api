@@ -15,6 +15,8 @@ import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveId
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
@@ -195,11 +197,11 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
             .lagOgLagre()
     }
 
-    private fun hentOppgave(id: Long): Oppgave {
-        val oppgaveRepository = get<OppgaveRepository>()
+    private fun hentOppgave(id: AktivOppgaveId): Oppgave {
+        val aktivOppgaveRepository = get<AktivOppgaveRepository>()
 
         val oppgave = transactionalManager.transaction { tx ->
-            oppgaveRepository.hentOppgaveForId(tx, id)
+            aktivOppgaveRepository.hentOppgaveForId(tx, id)
         }
         return oppgave
     }
@@ -225,7 +227,7 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
         )
     }
 
-    private fun kjørQuery(oppgaveQuery: OppgaveQuery): List<Long> {
+    private fun kjørQuery(oppgaveQuery: OppgaveQuery): List<AktivOppgaveId> {
         val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
         val om = ObjectMapper().dusseldorfConfigured()
             .enable(SerializationFeature.INDENT_OUTPUT)

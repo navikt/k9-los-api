@@ -5,7 +5,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import java.time.LocalDateTime
 
 class OppgaveV3(
-    val id: Long? = null,
+    val id: OppgaveId? = null, //TODO fjerne? blir kun brukt i innsikt-tjenesten
     val eksternId: String,
     val eksternVersjon: String,
     val oppgavetype: Oppgavetype,
@@ -47,7 +47,7 @@ class OppgaveV3(
 
             oppgaveDto.feltverdier.forEach { oppgaveFeltverdiDto ->
                 val oppgavefelt = oppgavetype.oppgavefelter.find {
-                    it.feltDefinisjon.eksternId.equals(oppgaveFeltverdiDto.nøkkel)
+                    it.feltDefinisjon.eksternId == oppgaveFeltverdiDto.nøkkel
                 } ?: throw IllegalArgumentException("Kunne ikke finne matchede oppgavefelt for oppgaveFeltverdi: ${oppgaveFeltverdiDto.nøkkel}")
 
                 if (oppgaveFeltverdiDto.verdi == null) {
@@ -110,7 +110,7 @@ class OppgaveV3(
             .filter { it.påkrevd && !it.feltDefinisjon.listetype }
             .forEach { obligatoriskFelt ->
                 felter.find {
-                    it.oppgavefelt.equals(obligatoriskFelt)
+                    it.oppgavefelt == obligatoriskFelt
                 } ?: throw IllegalArgumentException("Oppgaven mangler obligatorisk felt " + obligatoriskFelt.feltDefinisjon.eksternId)
             }
     }

@@ -2,19 +2,15 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos
 
 import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
+import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.PunsjEventK9Repository
-import no.nav.k9.los.integrasjon.kafka.dto.PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.HistorikkvaskMetrikker
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.time.DayOfWeek
-import java.time.Duration
-import java.time.LocalDateTime
-import java.time.LocalTime
+import java.time.*
 import java.util.*
 import kotlin.concurrent.thread
 
@@ -22,8 +18,7 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
     private val eventRepository: PunsjEventK9Repository,
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
     private val config: Configuration,
-    private val transactionalManager: TransactionalManager,
-    private val k9PunsjTilLosAdapterTjeneste: K9PunsjTilLosAdapterTjeneste,
+    private val transactionalManager: TransactionalManager
 ) {
     private val log: Logger = LoggerFactory.getLogger(K9PunsjTilLosHistorikkvaskTjeneste::class.java)
     private val TRÅDNAVN = "k9-punsj-til-los-historikkvask"
@@ -36,6 +31,12 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
                 isDaemon = true,
                 name = TRÅDNAVN
             ) {
+
+                if (LocalDateTime.now().isBefore(LocalDateTime.of(2024,7,17,16,30))) {
+                    eventRepository.nullstillHistorikkvask()
+                    log.info("Nullstilt historikkvaskmarkering k9-punsj")
+                }
+
                 log.info("Starter avspilling av historiske BehandlingProsessEventer")
 
                 val tidKjøringStartet = System.currentTimeMillis()
@@ -108,13 +109,10 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
     }
 
     fun skalPauses(): Boolean {
-        val nå = LocalTime.now()
-        if (nå > LocalTime.of(6, 0, 0) && nå < LocalTime.of(
-                17,
-                0,
-                0
-            ) && LocalDateTime.now().dayOfWeek <= DayOfWeek.FRIDAY
-        ) {
+        val zone = ZoneId.of("Europe/Oslo")
+        val nå = ZonedDateTime.now().withZoneSameInstant(zone)
+
+        if (config.koinProfile == KoinProfile.PROD && nå.toLocalTime() > LocalTime.of(6, 0, 0) && nå.toLocalTime() < LocalTime.of(17, 0, 0) && nå.dayOfWeek <= DayOfWeek.FRIDAY) {
             return true
         }
         return false

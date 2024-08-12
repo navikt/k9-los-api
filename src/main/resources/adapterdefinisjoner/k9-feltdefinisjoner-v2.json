@@ -489,6 +489,14 @@
       "tolkesSom": "Timestamp",
       "visTilBruker": true,
       "kokriterie": true
+    },
+    {
+      "id": "oversendtKabalTidspunkt",
+      "visningsnavn": "Tidspunkt for eventuell overføring til kabal",
+      "listetype": false,
+      "tolkesSom": "Timestamp",
+      "visTilBruker": false,
+      "kokriterie": false
     }
   ]
 }

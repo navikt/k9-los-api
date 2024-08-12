@@ -15,13 +15,10 @@ class K9SakBeslutterTransientFeltutleder: TransientFeltutleder{
         val query = """
                 $prefix EXISTS (
                     SELECT 'Y'
-                    FROM Oppgavefelt_verdi ov INNER JOIN Oppgavefelt f ON (
-                      f.id = ov.oppgavefelt_id
-                    ) INNER JOIN Feltdefinisjon fd ON (
-                      fd.id = f.feltdefinisjon_id
-                    ) INNER JOIN Omrade fo ON (
-                      fo.id = fd.omrade_id
-                    )
+                    FROM Oppgavefelt_verdi_aktiv ov 
+                    INNER JOIN Oppgavefelt f ON (f.id = ov.oppgavefelt_id) 
+                    INNER JOIN Feltdefinisjon fd ON (fd.id = f.feltdefinisjon_id) 
+                    INNER JOIN Omrade fo ON (fo.id = fd.omrade_id)
                     WHERE ov.oppgave_id = o.id
                       AND fo.ekstern_id = 'K9'
                       AND fd.ekstern_id = 'løsbartAksjonspunkt'
@@ -36,13 +33,10 @@ class K9SakBeslutterTransientFeltutleder: TransientFeltutleder{
         val query = """
                 COALESCE((
                     SELECT true
-                    FROM Oppgavefelt_verdi ov INNER JOIN Oppgavefelt f ON (
-                      f.id = ov.oppgavefelt_id
-                    ) INNER JOIN Feltdefinisjon fd ON (
-                      fd.id = f.feltdefinisjon_id
-                    ) INNER JOIN Omrade fo ON (
-                      fo.id = fd.omrade_id
-                    )
+                    FROM Oppgavefelt_verdi_aktiv ov 
+                    INNER JOIN Oppgavefelt f ON (f.id = ov.oppgavefelt_id) 
+                    INNER JOIN Feltdefinisjon fd ON (fd.id = f.feltdefinisjon_id) 
+                    INNER JOIN Omrade fo ON (fo.id = fd.omrade_id)
                     WHERE ov.oppgave_id = o.id
                       AND fo.ekstern_id = 'K9'
                       AND fd.ekstern_id = 'løsbartAksjonspunkt'

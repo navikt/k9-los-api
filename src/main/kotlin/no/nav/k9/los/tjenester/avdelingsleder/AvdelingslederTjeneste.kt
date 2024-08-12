@@ -52,6 +52,7 @@ class AvdelingslederTjeneste(
         sistEndret = oppgaveKø.sistEndret,
         skjermet = oppgaveKø.skjermet,
         antallBehandlinger = oppgaveTjeneste.hentAntallOppgaver(oppgavekøId = oppgaveKø.id, taMedReserverte = true),
+        antallUreserverteOppgaver = oppgaveTjeneste.hentAntallOppgaver(oppgavekøId = oppgaveKø.id, taMedReserverte = false),
         saksbehandlere = oppgaveKø.saksbehandlere,
         kriterier = oppgaveKø.lagKriterier()
     )
@@ -151,7 +152,8 @@ class AvdelingslederTjeneste(
                         behandlingTyper = oppgaveKø.filtreringBehandlingTyper,
                         fagsakYtelseTyper = oppgaveKø.filtreringYtelseTyper,
                         saksbehandlere = oppgaveKø.saksbehandlere,
-                        antallBehandlinger = oppgaveKø.oppgaverOgDatoer.size,
+                        antallBehandlinger = oppgaveKø.oppgaverOgDatoer.size, //TODO dette feltet i DTO-en brukers annet sted til å sende antall inkludert reserverte, her er det ekskludert reserverte
+                        antallUreserverteOppgaver = oppgaveKø.oppgaverOgDatoer.size,
                         sistEndret = oppgaveKø.sistEndret,
                         skjermet = oppgaveKø.skjermet,
                         sortering = SorteringDto(oppgaveKø.sortering, oppgaveKø.fomDato, oppgaveKø.tomDato),
@@ -314,7 +316,7 @@ class AvdelingslederTjeneste(
 
         return reservasjonV3Tjeneste.hentAlleAktiveReservasjoner().flatMap { reservasjonMedOppgaver ->
             val saksbehandler =
-                saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonMedOppgaver.reservasjonV3.reservertAv)
+                saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonMedOppgaver.reservasjonV3.reservertAv)!!
             val saksbehandlerHarKode6Tilgang = pepClient.harTilgangTilKode6(saksbehandler.brukerIdent!!)
 
             if (innloggetBrukerHarKode6Tilgang != saksbehandlerHarKode6Tilgang) {
@@ -341,8 +343,8 @@ class AvdelingslederTjeneste(
                             reservertAvEpost = saksbehandler.epost,
                             reservertAvIdent = saksbehandler.brukerIdent!!,
                             reservertAvNavn = saksbehandler.navn,
-                            saksnummer = oppgave.hentVerdi("saksnummer")!!, //TODO: Oppgaveagnostisk logikk. Løses antagelig ved å skrive om frontend i dette tilfellet
-                            journalpostId = null,
+                            saksnummer = oppgave.hentVerdi("saksnummer"), //TODO: Oppgaveagnostisk logikk. Løses antagelig ved å skrive om frontend i dette tilfellet
+                            journalpostId = oppgave.hentVerdi("journalpostId"),
                             behandlingType = BehandlingType.fraKode(oppgave.hentVerdi("behandlingTypekode")!!),
                             reservertTilTidspunkt = reservasjonMedOppgaver.reservasjonV3.gyldigTil,
                             kommentar = reservasjonMedOppgaver.reservasjonV3.kommentar ?: "",

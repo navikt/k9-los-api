@@ -11,6 +11,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
+import java.time.temporal.ChronoUnit
 
 class EventTilDtoMapper {
     companion object {
@@ -183,14 +184,14 @@ class EventTilDtoMapper {
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "mottattDato",
-                verdi = event.eldsteDatoMedEndringFraSøker?.toString()
+                verdi = event.eldsteDatoMedEndringFraSøker?.truncatedTo(ChronoUnit.SECONDS)?.toString() //TODO feltet heter *dato, avrunde til dato?
                     ?: forrigeOppgave?.hentVerdi("mottattDato")
                     ?: forrigeOppgave?.hentVerdi("registrertDato")
-                    ?: event.opprettetBehandling.toString()
+                    ?: event.opprettetBehandling.truncatedTo(ChronoUnit.SECONDS).toString() //TODO feltet heter *dato, avrunde til dato?
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "registrertDato",
-                verdi = forrigeOppgave?.hentVerdi("registrertDato") ?: event.opprettetBehandling.toString()
+                verdi = forrigeOppgave?.hentVerdi("registrertDato") ?: event.opprettetBehandling.truncatedTo(ChronoUnit.SECONDS) .toString() //TODO feltet heter *dato, avrunde til dato?
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "vedtaksdato",
@@ -411,7 +412,7 @@ class EventTilDtoMapper {
                                 aksjonspunktTilstandDto.venteårsak != null)
                             && aksjonspunktTilstandDto.status == AksjonspunktStatus.OPPRETTET
                     }
-                    .singleOrNull { aksjonspunktTilstandDto ->
+                    .singleOrNull()?.let { aksjonspunktTilstandDto ->
                         oppgaveFeltverdiDtos.add(
                             OppgaveFeltverdiDto(
                                 nøkkel = "aktivVenteårsak",

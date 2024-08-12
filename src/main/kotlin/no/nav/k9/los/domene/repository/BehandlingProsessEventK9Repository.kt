@@ -4,7 +4,9 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.los.domene.modell.K9SakModell
+import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.los.tjenester.innsikt.Databasekall
 import no.nav.k9.los.utils.LosObjectMapper
 import java.util.*
@@ -33,7 +35,8 @@ class BehandlingProsessEventK9Repository(private val dataSource: DataSource) {
         }
         val modell = LosObjectMapper.instance.readValue(json, K9SakModell::class.java)
 
-        return K9SakModell(modell.eventer.sortedBy { it.eventTid }.toMutableList())
+        val unikeEventer = BehandlingProsessEventK9DuplikatUtil.fjernDuplikater(modell.eventer)
+        return K9SakModell(unikeEventer.sortedBy { it.eventTid }.toMutableList())
     }
 
     fun hentMedLås(tx: TransactionalSession, uuid: UUID): K9SakModell {
@@ -53,9 +56,11 @@ class BehandlingProsessEventK9Repository(private val dataSource: DataSource) {
             return K9SakModell(mutableListOf())
         }
         val modell = LosObjectMapper.instance.readValue(json, K9SakModell::class.java)
-
-        return K9SakModell(modell.eventer.sortedBy { it.eventTid }.toMutableList())
+        val unikeEventer = BehandlingProsessEventK9DuplikatUtil.fjernDuplikater(modell.eventer)
+        return K9SakModell(unikeEventer.sortedBy { it.eventTid }.toMutableList())
     }
+
+
 
     fun fjernDirty(uuid: UUID, tx: TransactionalSession) {
         tx.run(
@@ -93,12 +98,12 @@ class BehandlingProsessEventK9Repository(private val dataSource: DataSource) {
 
                 val modell = if (!run.isNullOrEmpty()) {
                     val modell = LosObjectMapper.instance.readValue(run, K9SakModell::class.java)
-                    f(modell.copy(eventer = modell.eventer.sortedBy { it.eventTid }.toMutableList()))
+                    f(modell.copy(eventer = BehandlingProsessEventK9DuplikatUtil.fjernDuplikater(modell.eventer).sortedBy { it.eventTid }.toMutableList()))
                 } else {
                     f(null)
                 }
                 sortertModell =
-                    modell.copy(eventer = (modell.eventer.toSet().toList().sortedBy { it.eventTid }.toMutableList()))
+                    modell.copy(eventer = (BehandlingProsessEventK9DuplikatUtil.fjernDuplikater(modell.eventer).sortedBy { it.eventTid }.toMutableList()))
                 val json = LosObjectMapper.instance.writeValueAsString(sortertModell)
                 tx.run(
                     queryOf(
@@ -152,7 +157,7 @@ class BehandlingProsessEventK9Repository(private val dataSource: DataSource) {
 
     fun hentAntallEventIderUtenVasketHistorikk(): Long {
         return using(sessionOf(dataSource)) {
-            it.transaction { tx ->
+            session -> session.transaction { tx ->
                 tx.run(
                     queryOf(
                         """
@@ -207,60 +212,4 @@ class BehandlingProsessEventK9Repository(private val dataSource: DataSource) {
         }
     }
 
-    fun hentAntallEventIderUtenVasketAktiv(): Long {
-        return using(sessionOf(dataSource)) {
-            it.transaction { tx ->
-                tx.run(
-                    queryOf(
-                        """
-                            select count(*) as antall
-                            from behandling_prosess_events_k9 e
-                            where not exists (
-                                select 1
-                                from oppgave_v3_aktiv ova
-                                    inner join oppgave_v3 ov 
-                                        on ov.ekstern_id = ova.ekstern_id
-                                            and ov.oppgavetype_id = ova.oppgavetype_id
-                                            and ov.kildeomrade = ova.kildeomrade 
-                                            and ova.versjon = ov.versjon 
-                                            and ov.aktiv
-                                where e.id = ov.ekstern_id 
-                                )
-                             """.trimMargin(),
-                    ).map { it.long("antall") }.asSingle
-                )!!
-            }
-        }
-    }
-
-    fun hentAlleEventIderUtenVasketAktivOgIkkeDirty(antall: Int = 10000): List<UUID> {
-        return using(sessionOf(dataSource)) {
-            it.transaction { tx ->
-                tx.run(
-                    queryOf(
-                        """
-                            select * 
-                            from behandling_prosess_events_k9 e
-                            where not exists (
-                                select 1
-                                from oppgave_v3_aktiv ova
-                                    inner join oppgave_v3 ov 
-                                        on ov.ekstern_id = ova.ekstern_id
-                                            and ov.oppgavetype_id = ova.oppgavetype_id
-                                            and ov.kildeomrade = ova.kildeomrade 
-                                            and ova.versjon = ov.versjon 
-                                            and ov.aktiv
-                                where e.id = ov.ekstern_id 
-                                )
-                            and e.dirty = false
-                            LIMIT :antall
-                             """.trimMargin(),
-                        mapOf("antall" to antall)
-                    ).map { row ->
-                        UUID.fromString(row.string("id"))
-                    }.asList
-                )
-            }
-        }
-    }
 }

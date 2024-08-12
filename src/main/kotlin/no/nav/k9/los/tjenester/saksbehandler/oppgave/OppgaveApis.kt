@@ -45,13 +45,13 @@ internal fun Route.OppgaveApis() {
             if (!pepClient.harTilgangTilReservingAvOppgaver()) {
                 call.respond(HttpStatusCode.Forbidden)
             } else {
-                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
-                    kotlin.coroutines.coroutineContext.idToken().getUsername()
-                )!!
+                val brukernavn = kotlin.coroutines.coroutineContext.idToken().getUsername()
+                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(brukernavn)
+                    ?: throw IllegalStateException("Fant ikke saksbehandler $brukernavn ved forsøk på å reservasjon av oppgave")
+
                 try {
                     log.info("Forsøker å ta reservasjon direkte på ${oppgaveIdMedOverstyringDto.oppgaveNøkkel.oppgaveEksternId} for ${innloggetBruker.brukerIdent}")
-                    val oppgave =
-                        oppgaveApisTjeneste.reserverOppgave(innloggetBruker, oppgaveIdMedOverstyringDto)
+                    val oppgave = oppgaveApisTjeneste.reserverOppgave(innloggetBruker, oppgaveIdMedOverstyringDto)
                     call.respond(oppgave)
                 } catch (e: ManglerTilgangException) {
                     call.respond(HttpStatusCode.Forbidden, e.message!!)
@@ -229,16 +229,22 @@ internal fun Route.OppgaveApis() {
     post { _: leggTilBehandletSak ->
         requestContextService.withRequestContext(call) { //TODO klageoppgaver
             val oppgavenøkkel = call.receive<OppgaveNøkkelDto>()
-            val oppgave = oppgaveRepository.hent(UUID.fromString(oppgavenøkkel.oppgaveEksternId))
-            val person = pdlService.person(oppgave.aktorId).person!!
-            val behandletOppgave = BehandletOppgave(oppgave, person)
+            val eksternUuid = UUID.fromString(oppgavenøkkel.oppgaveEksternId)
+            val oppgave = oppgaveRepository.hent(eksternUuid)
+            val person = pdlService.person(oppgave.aktorId).person
 
-            call.respond(
-                oppgaveTjeneste.leggTilBehandletOppgave(
-                    coroutineContext.idToken().getUsername(),
-                    behandletOppgave
+            if (person == null) {
+                log.warn("Fant ikke personen som er på oppgaven med eksternId $eksternUuid")
+                call.respond(HttpStatusCode.InternalServerError, "Fant ikke personen på oppgaven")
+            } else {
+                val behandletOppgave = BehandletOppgave(oppgave, person)
+                call.respond(
+                    oppgaveTjeneste.leggTilBehandletOppgave(
+                        coroutineContext.idToken().getUsername(),
+                        behandletOppgave
+                    )
                 )
-            )
+            }
         }
     }
 
@@ -254,8 +260,8 @@ internal fun Route.OppgaveApis() {
     class søkSaksbehandler
     post { _: søkSaksbehandler ->
         requestContextService.withRequestContext(call) {
-        val params = call.receive<BrukerIdentDto>()
-        val sokSaksbehandlerMedIdent = oppgaveTjeneste.sokSaksbehandler(params.brukerIdent)
+            val params = call.receive<BrukerIdentDto>()
+            val sokSaksbehandlerMedIdent = oppgaveTjeneste.sokSaksbehandler(params.brukerIdent)
             call.respond(sokSaksbehandlerMedIdent)
         }
     }

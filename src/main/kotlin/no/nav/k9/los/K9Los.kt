@@ -34,9 +34,9 @@ import no.nav.helse.dusseldorf.ktor.jackson.JacksonStatusPages
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.helse.dusseldorf.ktor.metrics.MetricsRoute
 import no.nav.helse.dusseldorf.ktor.metrics.init
+import no.nav.k9.los.eventhandler.RefreshK9
 import no.nav.k9.los.eventhandler.køOppdatertProsessor
 import no.nav.k9.los.eventhandler.oppdaterStatistikk
-import no.nav.k9.los.eventhandler.refreshK9
 import no.nav.k9.los.eventhandler.sjekkReserverteJobb
 import no.nav.k9.los.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.los.integrasjon.kafka.AsynkronProsesseringV1Service
@@ -54,7 +54,6 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.k9SakKorrigerO
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAktivvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.forvaltning.forvaltningApis
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoApis
@@ -112,16 +111,18 @@ fun Application.k9Los() {
     val k9PunsjTilLosAdapterTjeneste = koin.get<K9PunsjTilLosAdapterTjeneste>()
     k9PunsjTilLosAdapterTjeneste.setup()
 
-    if (LocalDateTime.now().isBefore(LocalDateTime.of(2024, 6, 26, 8, 0))) {
+    if (LocalDateTime.now().isBefore(LocalDateTime.of(2024, 7, 17, 16, 30))) {
         if (1 == 0) { //HAXX for å ikke kjøre jobb, men indikere at koden er i bruk og dermed ikke slettes
             koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
             koin.get<K9KlageTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
             koin.get<OppgavestatistikkTjeneste>().slettStatistikkgrunnlag()
             //koin.get<ReservasjonKonverteringJobb>().kjørReservasjonskonvertering() //TODO slette
             //koin.get<K9SakTilLosLukkeFeiloppgaverTjeneste>().kjørFeiloppgaverVask() //TODO slette
+            koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
         }
-        koin.get<K9SakTilLosAktivvaskTjeneste>().kjørAktivvask()
-        //koin.get<K9KlageTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
+        if (configuration.koinProfile() == KoinProfile.PREPROD) {
+            koin.get<K9PunsjTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
+        }
     }
 
     install(Authentication) {
@@ -160,17 +161,16 @@ fun Application.k9Los() {
             oppgaveTjeneste = koin.get()
         )
 
-
-    val refreshOppgaveJobb =
-        refreshK9(
-            channel = koin.get<Channel<UUID>>(named("oppgaveRefreshChannel")),
-            k9SakService = koin.get(),
-            oppgaveRepository = koin.get()
-        )
+    val refreshOppgaveJobb = with(RefreshK9(
+        k9SakService = koin.get(),
+        oppgaveRepository = koin.get(),
+        transactionalManager = koin.get()
+    )) { start(koin.get<Channel<UUID>>(named("oppgaveRefreshChannel"))) }
 
     val oppdaterStatistikkJobb =
         oppdaterStatistikk(
             channel = koin.get<Channel<Boolean>>(named("statistikkRefreshChannel")),
+            configuration = configuration,
             statistikkRepository = koin.get(),
             oppgaveTjeneste = koin.get()
         )

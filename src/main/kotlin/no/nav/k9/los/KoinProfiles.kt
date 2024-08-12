@@ -25,6 +25,7 @@ import no.nav.k9.los.integrasjon.azuregraph.AzureGraphServiceLocal
 import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
 import no.nav.k9.los.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.los.integrasjon.k9.IK9SakService
+import no.nav.k9.los.integrasjon.k9.K9SakBehandlingOppfrisketRepostiory
 import no.nav.k9.los.integrasjon.k9.K9SakServiceLocal
 import no.nav.k9.los.integrasjon.k9.K9SakServiceSystemClient
 import no.nav.k9.los.integrasjon.kafka.AsynkronProsesseringV1Service
@@ -39,6 +40,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerike
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerSystemKlient
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonKonverteringJobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
@@ -46,7 +48,6 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.k9SakEksternId
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosAktivvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosLukkeFeiloppgaverTjeneste
 import no.nav.k9.los.nyoppgavestyring.forvaltning.ForvaltningRepository
@@ -55,6 +56,7 @@ import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
@@ -116,7 +118,12 @@ fun common(app: Application, config: Configuration) = module {
         Channel<k9SakEksternId>(Channel.UNLIMITED)
     }
 
-    single { no.nav.k9.los.domene.repository.OppgaveRepository(get(), get(), get(named("oppgaveRefreshChannel"))) }
+    single { OppgaveRepository(get(), get(), get(named("oppgaveRefreshChannel"))) }
+
+    single { AktivOppgaveRepository(
+            oppgavetypeRepository = get()
+        )
+    }
 
     single {
         OppgaveKøRepository(
@@ -292,7 +299,8 @@ fun common(app: Application, config: Configuration) = module {
             pepClient = get(),
             azureGraphService = get(),
             statistikkRepository = get(),
-            reservasjonOversetter = get()
+            reservasjonOversetter = get(),
+            statistikkChannel = get(named("statistikkRefreshChannel")),
         )
     }
 
@@ -339,6 +347,7 @@ fun common(app: Application, config: Configuration) = module {
         ReservasjonV3DtoBuilder(
             pdlService = get(),
             oppgaveTjeneste = get(),
+            saksbehandlerRepository = get()
         )
     }
 
@@ -491,6 +500,8 @@ fun common(app: Application, config: Configuration) = module {
             pepClient = get(),
             pdlService = get(),
             reservasjonV3Repository = get(),
+            aktivOppgaveRepository = get(),
+            statistikkChannel = get(named("statistikkRefreshChannel"))
         )
     }
 
@@ -525,13 +536,11 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        K9SakTilLosAktivvaskTjeneste(
-            behandlingProsessEventK9Repository = get(),
+        K9PunsjTilLosHistorikkvaskTjeneste(
+            eventRepository = get(),
             oppgaveV3Tjeneste = get(),
             config = get(),
-            transactionalManager = get(),
-            k9SakTilLosAdapterTjeneste = get(),
-            k9SakBerikerKlient = get()
+            transactionalManager = get()
         )
     }
 
@@ -601,6 +610,10 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
+        K9SakBehandlingOppfrisketRepostiory(dataSource = get())
+    }
+
+    single {
         PepCacheService(
             pepClient = get(),
             pepCacheRepository = get(),
@@ -652,7 +665,8 @@ fun preprodConfig(config: Configuration) = module {
         K9SakServiceSystemClient(
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
-            scope = "api://dev-fss.k9saksbehandling.k9-sak/.default"
+            scope = "api://dev-fss.k9saksbehandling.k9-sak/.default",
+            k9SakBehandlingOppfrisketRepostiory = get()
         )
     }
 
@@ -689,7 +703,8 @@ fun prodConfig(config: Configuration) = module {
         K9SakServiceSystemClient(
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
-            scope = "api://prod-fss.k9saksbehandling.k9-sak/.default"
+            scope = "api://prod-fss.k9saksbehandling.k9-sak/.default",
+            k9SakBehandlingOppfrisketRepostiory = get()
         )
     }
 

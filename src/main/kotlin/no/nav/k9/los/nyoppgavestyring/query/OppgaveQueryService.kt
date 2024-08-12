@@ -6,7 +6,8 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.rest.CoroutineRequestContext
-import no.nav.k9.los.nyoppgavestyring.pep.PepCacheService
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveId
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelter
@@ -25,16 +26,16 @@ import javax.sql.DataSource
 class OppgaveQueryService() {
     val datasource by inject<DataSource>(DataSource::class.java)
     val oppgaveQueryRepository by inject<OppgaveQueryRepository>(OppgaveQueryRepository::class.java)
+    val aktivOppgaveRepository by inject<AktivOppgaveRepository>(AktivOppgaveRepository::class.java)
     val oppgaveRepository by inject<OppgaveRepository>(OppgaveRepository::class.java)
     val pepClient by inject<IPepClient>(IPepClient::class.java)
-    val pepCacheService by inject<PepCacheService>(PepCacheService::class.java)
 
-    fun queryForOppgaveId(oppgaveQuery: QueryRequest): List<Long> {
+    fun queryForOppgaveId(oppgaveQuery: QueryRequest): List<AktivOppgaveId> {
         return oppgaveQueryRepository.query(oppgaveQuery)
     }
 
     fun queryForAntall(request: QueryRequest, now : LocalDateTime = LocalDateTime.now()): Long {
-        return using(sessionOf(datasource)) { it ->
+        return using(sessionOf(datasource)) {
             it.transaction { tx -> oppgaveQueryRepository.queryForAntall(tx, request, now) }
         }
     }
@@ -45,7 +46,7 @@ class OppgaveQueryService() {
     }
 
     fun queryToFile(oppgaveQuery: QueryRequest, idToken: IIdToken): String {
-        return using(sessionOf(datasource)) { it ->
+        return using(sessionOf(datasource)) {
             it.transaction { tx -> queryToFile(tx, oppgaveQuery, idToken) }
         }
     }
@@ -71,7 +72,7 @@ class OppgaveQueryService() {
     }
 
     fun query(oppgaveQuery: QueryRequest, idToken: IIdToken): List<Oppgaverad> {
-        return using(sessionOf(datasource)) { it ->
+        return using(sessionOf(datasource)) {
             it.transaction { tx -> query(tx, oppgaveQuery, idToken) }
         }
     }
@@ -81,7 +82,7 @@ class OppgaveQueryService() {
         val oppgaveIder = oppgaveQueryRepository.query(tx, request, now)
 
         val oppgaverader = runBlocking(context = CoroutineRequestContext(idToken)) {
-            mapOppgaver(tx, request, oppgaveIder, now)
+            mapAktiveOppgaver(tx, request, oppgaveIder, now)
         }
 
         if (request.oppgaveQuery.select.isEmpty()) {
@@ -95,16 +96,16 @@ class OppgaveQueryService() {
         return oppgaveQueryRepository.hentAlleFelter()
     }
 
-    private suspend fun mapOppgaver(tx: TransactionalSession, request: QueryRequest, oppgaveIder: List<Long>, now: LocalDateTime): List<Oppgaverad> {
+    private suspend fun mapAktiveOppgaver(tx: TransactionalSession, request: QueryRequest, oppgaveIder: List<AktivOppgaveId>, now: LocalDateTime): List<Oppgaverad> {
         val oppgaverader = mutableListOf<Oppgaverad>()
         val limit = request.avgrensning?.limit ?: -1
         var antall = 0
         for (oppgaveId in oppgaveIder) {
-            val oppgaverad = mapOppgave(tx, request.oppgaveQuery, oppgaveId, now)
+            val oppgaverad = mapAktivOppgave(tx, request.oppgaveQuery, oppgaveId, now)
             if (oppgaverad != null) {
                 oppgaverader.add(oppgaverad)
                 antall++
-                if (limit >= 0 && antall >= limit) {
+                if (limit in 0..antall) {
                     return oppgaverader
                 }
             }
@@ -112,8 +113,8 @@ class OppgaveQueryService() {
         return oppgaverader
     }
 
-    private suspend fun mapOppgave(tx: TransactionalSession, oppgaveQuery: OppgaveQuery, oppgaveId: Long, now: LocalDateTime): Oppgaverad? {
-        val oppgave = oppgaveRepository.hentOppgaveForId(tx, oppgaveId, now)
+    private suspend fun mapAktivOppgave(tx: TransactionalSession, oppgaveQuery: OppgaveQuery, oppgaveId: AktivOppgaveId, now: LocalDateTime): Oppgaverad? {
+        val oppgave = aktivOppgaveRepository.hentOppgaveForId(tx, oppgaveId, now)
 
         // TODO: Generaliser ABAC-attributter + sjekk av disse:
         val saksnummer = oppgave.hentVerdi("K9", "saksnummer")

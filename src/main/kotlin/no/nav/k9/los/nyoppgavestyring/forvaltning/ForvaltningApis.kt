@@ -121,9 +121,6 @@ fun Route.forvaltningApis() {
                 val eventerIkkeSensitive = k9PunsjModell.eventer.map { event -> K9PunsjEventIkkeSensitiv(event) }
                 objectMapper.writeValueAsString(eventerIkkeSensitive)
             }
-
-            Fagsystem.OMSORGSPENGER -> HttpStatusCode.NotImplemented
-            Fagsystem.FPTILBAKE -> HttpStatusCode.NotImplemented
         }
     }
 
@@ -199,15 +196,21 @@ fun Route.forvaltningApis() {
     }
 
     route("/ytelse") {
-        get("/oppgaveoversikt") {
-            val antall = oppgaveKoTjeneste.hentOppgavekøer().size
+        get("/oppgaveko/antall") {
+            val antall = oppgaveKoTjeneste.hentOppgavekøer().map {
+                oppgaveKoTjeneste.hentAntallOppgaverForKø(it.id, false) }.size
             call.respond(antall)
         }
 
+        get("/oppgaveko") {
+            call.respond(oppgaveKoTjeneste.hentOppgavekøer().map { it.id })
+        }
+
         get("/oppgaveko/{ko}/antall") {
-            val antall = call.parameters["ko"]!!.toLong()
-            val resultat = oppgaveKoTjeneste.hentAntallUreserverteOppgaveForKø(antall)
-            call.respond(if (resultat > 10) resultat else -1)
+            val køId = call.parameters["ko"]!!.toLong()
+            val medReserverte = call.request.queryParameters["reserverte"]?.toBoolean() ?: false
+            val antall = oppgaveKoTjeneste.hentAntallOppgaverForKø(køId, medReserverte)
+            call.respond(if (antall > 10) antall else -1)
         }
     }
 

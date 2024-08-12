@@ -5,6 +5,7 @@ import no.nav.k9.los.integrasjon.kafka.IKafkaConfig
 import no.nav.k9.los.integrasjon.kafka.ManagedKafkaStreams
 import no.nav.k9.los.integrasjon.kafka.ManagedStreamHealthy
 import no.nav.k9.los.integrasjon.kafka.ManagedStreamReady
+import no.nav.k9.los.utils.TransientFeilHåndterer
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.Topology
@@ -51,7 +52,7 @@ internal class AksjonspunktTilbakeStream constructor(
                 .foreach { _, entry ->
                     if (entry != null) {
                         log.info("Prosesserer entry fra tilbakekreving ${entry.tryggPrint()}")
-                        k9TilbakeEventHandler.prosesser(entry)
+                        TransientFeilHåndterer().utfør(NAME) { k9TilbakeEventHandler.prosesser(entry) }
                     }
                 }
             return builder.build()

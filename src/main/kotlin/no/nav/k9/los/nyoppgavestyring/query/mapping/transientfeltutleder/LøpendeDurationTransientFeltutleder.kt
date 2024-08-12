@@ -55,13 +55,10 @@ abstract class LøpendeDurationTransientFeltutleder(
         val query = """
             COALESCE((
                 SELECT SUM(CAST(ov.verdi AS interval)) 
-                FROM Oppgavefelt_verdi ov INNER JOIN Oppgavefelt f ON (
-                  f.id = ov.oppgavefelt_id
-                ) INNER JOIN Feltdefinisjon fd ON (
-                  fd.id = f.feltdefinisjon_id
-                ) INNER JOIN Omrade fo ON (
-                  fo.id = fd.omrade_id
-                )
+                FROM Oppgavefelt_verdi_aktiv ov 
+                INNER JOIN Oppgavefelt f ON (f.id = ov.oppgavefelt_id) 
+                INNER JOIN Feltdefinisjon fd ON (fd.id = f.feltdefinisjon_id) 
+                INNER JOIN Omrade fo ON (fo.id = fd.omrade_id)
                 WHERE ov.oppgave_id = o.id
                   AND $minstEttDurationFeltSql
             ), INTERVAL '0 days')
@@ -77,20 +74,17 @@ abstract class LøpendeDurationTransientFeltutleder(
         val løpendeOppgavetidHvisTrueSql = sqlVelgFelt(løpendeTidHvisTrueFelter)
         val query = """
             COALESCE((
-                    SELECT (:now - o.endret_tidspunkt)
-                    WHERE EXISTS (
-                        SELECT 'Y'
-                        FROM Oppgavefelt_verdi ov INNER JOIN Oppgavefelt f ON (
-                          f.id = ov.oppgavefelt_id
-                        ) INNER JOIN Feltdefinisjon fd ON (
-                          fd.id = f.feltdefinisjon_id
-                        ) INNER JOIN Omrade fo ON (
-                          fo.id = fd.omrade_id
-                        )
-                        WHERE ov.oppgave_id = o.id
-                          AND ov.verdi = 'true'
-                          AND $løpendeOppgavetidHvisTrueSql
-                    )
+                SELECT (:now - o.endret_tidspunkt)
+                WHERE EXISTS (
+                    SELECT 'Y'
+                    FROM Oppgavefelt_verdi_aktiv ov 
+                    INNER JOIN Oppgavefelt f ON (f.id = ov.oppgavefelt_id) 
+                    INNER JOIN Feltdefinisjon fd ON (fd.id = f.feltdefinisjon_id) 
+                    INNER JOIN Omrade fo ON (fo.id = fd.omrade_id)
+                    WHERE ov.oppgave_id = o.id
+                      AND ov.verdi = 'true'
+                      AND $løpendeOppgavetidHvisTrueSql
+                )
             ), INTERVAL '0 days')
             """.trimIndent()
 
@@ -109,13 +103,10 @@ abstract class LøpendeDurationTransientFeltutleder(
                         :now
                     ) - (
                         SELECT CAST(ov.verdi AS timestamp)
-                        FROM Oppgavefelt_verdi ov INNER JOIN Oppgavefelt f ON (
-                          f.id = ov.oppgavefelt_id
-                        ) INNER JOIN Feltdefinisjon fd ON (
-                          fd.id = f.feltdefinisjon_id
-                        ) INNER JOIN Omrade fo ON (
-                          fo.id = fd.omrade_id
-                        )
+                        FROM Oppgavefelt_verdi_aktiv ov 
+                        INNER JOIN Oppgavefelt f ON (f.id = ov.oppgavefelt_id) 
+                        INNER JOIN Feltdefinisjon fd ON (fd.id = f.feltdefinisjon_id) 
+                        INNER JOIN Omrade fo ON (fo.id = fd.omrade_id)
                         WHERE ov.oppgave_id = o.id
                           AND ${områdeOgKodeSql(områdeOgKode)}
                     )
@@ -141,7 +132,7 @@ abstract class LøpendeDurationTransientFeltutleder(
 
     override fun hentVerdi(input: HentVerdiInput): List<String> {
         var løpendeDuration = Duration.ZERO
-        if (!durationfelter.isEmpty()) {
+        if (durationfelter.isNotEmpty()) {
             løpendeDuration += durationfelter.map { områdeOgKode ->
                 val verdi = input.oppgave.hentVerdi(områdeOgKode.område!!, områdeOgKode.kode)
                 verdi?.let { Duration.parse(verdi) } ?: Duration.ZERO
@@ -155,10 +146,10 @@ abstract class LøpendeDurationTransientFeltutleder(
             løpendeDuration += Duration.between(input.oppgave.endretTidspunkt, input.now)
         }
 
-        if (!løpendeTidFelter.isEmpty()) {
+        if (løpendeTidFelter.isNotEmpty()) {
             løpendeDuration += løpendeTidFelter.map { områdeOgKode ->
                 val verdi = input.oppgave.hentVerdi(områdeOgKode.område!!, områdeOgKode.kode)
-                verdi?.let { Duration.between(LocalDateTime.parse(verdi as String), input.now) } ?: Duration.ZERO
+                verdi?.let { Duration.between(LocalDateTime.parse(verdi), input.now) } ?: Duration.ZERO
             }.reduce { d1, d2 -> d1 + d2 }
         }
 

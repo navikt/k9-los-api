@@ -118,9 +118,7 @@ fun Route.innsiktGrensesnitt() {
             Fagsystem.PUNSJ.kode -> punsjEventK9Repository.hent(oppgaveMedId1.id)
                 .eventer.map { InnsiktEvent(it.aksjonspunktKoderMedStatusListe, it.eventTid) }
 
-            Fagsystem.K9TILBAKE.kode, Fagsystem.FPTILBAKE.kode -> behandlingProsessEventTilbakeRepository.hent(
-                oppgaveMedId1.id
-            )
+            Fagsystem.K9TILBAKE.kode -> behandlingProsessEventTilbakeRepository.hent(oppgaveMedId1.id)
                 .eventer.map { InnsiktEvent(it.aksjonspunktKoderMedStatusListe, it.eventTid) }
 
             else -> behandlingProsessEventK9Repository.hent(oppgaveMedId1.id)
@@ -232,6 +230,7 @@ fun Route.innsiktGrensesnitt() {
                 for (oppgave in hentAktiveOppgaver) {
                     oppgaveKø.leggOppgaveTilEllerFjernFraKø(
                         oppgave,
+                        erOppgavenReservertSjekk = {false},
                         merknader = oppgaveRepositoryV2.hentMerknader(oppgave.eksternId.toString())
                     )
                 }
@@ -341,7 +340,7 @@ fun Route.innsiktGrensesnitt() {
                                 reservasjonsid: ${r.id}, 
                                 annullertFørUtløp: ${r.annullertFørUtløp}, 
                                 gyldigPeriode: (${r.gyldigFra}-${r.gyldigTil}), 
-                                reservertAv: ${r.reservertAv.let { saksbehandlerRepository.finnSaksbehandlerMedId(it).brukerIdent }}, 
+                                reservertAv: ${r.reservertAv.let { saksbehandlerRepository.finnSaksbehandlerMedId(it)!!.brukerIdent }}, 
                                 reservasjonsnøkkelType: $kilde
                             """.trimMargin())
                             }
@@ -357,7 +356,7 @@ fun Route.innsiktGrensesnitt() {
                                     reservasjonsid: ${r.id}, 
                                     annullertFørUtløp: ${r.annullertFørUtløp}, 
                                     gyldigPeriode: (${r.gyldigFra}-${r.gyldigTil}), 
-                                    reservertAv: ${r.reservertAv.let { saksbehandlerRepository.finnSaksbehandlerMedId(it).brukerIdent }}, 
+                                    reservertAv: ${r.reservertAv.let { saksbehandlerRepository.finnSaksbehandlerMedId(it)!!.brukerIdent }}, 
                                     reservasjonsnøkkelType: $kilde
                                 """.trimMargin())
                                 }
@@ -483,7 +482,7 @@ fun Route.innsiktGrensesnitt() {
                                         reservasjonsid: ${r.reservasjonV3.id}, 
                                         annullertFørUtløp: ${r.reservasjonV3.annullertFørUtløp}, 
                                         gyldigPeriode: (${r.reservasjonV3.gyldigFra}-${r.reservasjonV3.gyldigTil}), 
-                                        reservertAv: ${r.reservasjonV3.reservertAv.let { saksbehandlerRepository.finnSaksbehandlerMedId(it).brukerIdent } },
+                                        reservertAv: ${r.reservasjonV3.reservertAv.let { saksbehandlerRepository.finnSaksbehandlerMedId(it)!!.brukerIdent } },
                                         ${r.utledFraReservasjonsnøkkel()}
                                     """.trimMargin())
                                     }
@@ -540,7 +539,7 @@ fun Route.innsiktGrensesnitt() {
                                         reservasjonsid: ${r.reservasjonV3.id}, 
                                         annullertFørUtløp: ${r.reservasjonV3.annullertFørUtløp}, 
                                         gyldigPeriode: (${r.reservasjonV3.gyldigFra}-${r.reservasjonV3.gyldigTil}), 
-                                        reservertAv: ${r.reservasjonV3.reservertAv.let { saksbehandlerRepository.finnSaksbehandlerMedId(it).brukerIdent } },
+                                        reservertAv: ${r.reservasjonV3.reservertAv.let { saksbehandlerRepository.finnSaksbehandlerMedId(it)!!.brukerIdent } },
                                         ${r.utledFraReservasjonsnøkkel()}
                                         """)
                                 }

@@ -46,7 +46,7 @@ fun Route.OppgaveQueryApis() {
         val oppgaveQuery = call.receive<OppgaveQuery>()
         requestContextService.withRequestContext(call) {
             if (!pepClient.erOppgaveStyrer()) {
-                call.respond(HttpStatusCode.Forbidden);
+                call.respond(HttpStatusCode.Forbidden)
             }
             call.respond(oppgaveQueryService.validate(QueryRequest(oppgaveQuery)))
         }

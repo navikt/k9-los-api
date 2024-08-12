@@ -20,14 +20,8 @@ class Oppgavetyper(
             )
         }.toSet()
     )
-
-    fun hentOppgavetype(oppgavetypeId: Long): Oppgavetype {
-        return oppgavetyper.find { it.id!!.equals(oppgavetypeId) }
-            ?: throw java.lang.IllegalStateException("Finner ikke omsøkt oppgavetype")
-    }
-
     fun finnForskjell(innkommendeOppgavetyper: Oppgavetyper): Triple<Oppgavetyper, Oppgavetyper, List<OppgavetypeEndring>> {
-        if (!innkommendeOppgavetyper.område.equals(this.område)) {
+        if (innkommendeOppgavetyper.område != this.område) {
             throw IllegalStateException("Kan ikke sammenligne oppgavetyper på tvers av områder")
         }
 
@@ -36,8 +30,8 @@ class Oppgavetyper(
         val endringsliste = mutableSetOf<OppgavetypeEndring>()
 
         innkommendeOppgavetyper.oppgavetyper.forEach { innkommende ->
-            val eksisterende = oppgavetyper.find { it.eksternId.equals(innkommende.eksternId) }
-            if (eksisterende?.definisjonskilde != null && !eksisterende.definisjonskilde.equals(innkommende.definisjonskilde)) {
+            val eksisterende = oppgavetyper.find { it.eksternId == innkommende.eksternId }
+            if (eksisterende?.definisjonskilde != null && eksisterende.definisjonskilde != innkommende.definisjonskilde) {
                 //?. - hvis eksisterende ikke finnes gir det ikke mening å sammenligne, siden det er en ny oppgavetype
                 throw IllegalStateException("Kan ikke sammenligne oppgavetyper på tvers av definisjonskilder")
             }
@@ -51,7 +45,7 @@ class Oppgavetyper(
         }
 
         oppgavetyper.forEach { eksistereende ->
-            val innkommende = innkommendeOppgavetyper.oppgavetyper.find { it.eksternId.equals(eksistereende.eksternId) }
+            val innkommende = innkommendeOppgavetyper.oppgavetyper.find { it.eksternId == eksistereende.eksternId }
             if (innkommende == null) {
                 slettListe.add(eksistereende)
             }
@@ -76,20 +70,20 @@ class Oppgavetyper(
 
         innkommendeOppgave.oppgavefelter.forEach { innkommendeFelt ->
             val eksisterendeOppgavefelt = eksisterendeOppgave.oppgavefelter.find { oppgavefelt ->
-                oppgavefelt.feltDefinisjon.equals(innkommendeFelt.feltDefinisjon)
+                oppgavefelt.feltDefinisjon == innkommendeFelt.feltDefinisjon
             }
 
             if (eksisterendeOppgavefelt == null) {
                 leggTilListe.add(innkommendeFelt)
             } else {
-                if (!innkommendeFelt.påkrevd.equals(eksisterendeOppgavefelt.påkrevd)) {
+                if (innkommendeFelt.påkrevd != eksisterendeOppgavefelt.påkrevd) {
                     endreliste.add(
                         OppgavefeltDelta(
                             eksisterendeFelt = eksisterendeOppgavefelt,
                             innkommendeFelt = innkommendeFelt
                         )
                     )
-                } else if (!innkommendeFelt.visPåOppgave.equals(eksisterendeOppgavefelt.visPåOppgave)) {
+                } else if (innkommendeFelt.visPåOppgave != eksisterendeOppgavefelt.visPåOppgave) {
                     endreliste.add(
                         OppgavefeltDelta(
                             eksisterendeFelt = eksisterendeOppgavefelt,
@@ -102,7 +96,7 @@ class Oppgavetyper(
 
         eksisterendeOppgave.oppgavefelter.forEach { eksisterendeFelt ->
             val innkommendeOppgavefelt = innkommendeOppgave.oppgavefelter.find { oppgavefelt ->
-                oppgavefelt.feltDefinisjon.equals(eksisterendeFelt.feltDefinisjon)
+                oppgavefelt.feltDefinisjon == eksisterendeFelt.feltDefinisjon
             }
 
             if (innkommendeOppgavefelt == null) {

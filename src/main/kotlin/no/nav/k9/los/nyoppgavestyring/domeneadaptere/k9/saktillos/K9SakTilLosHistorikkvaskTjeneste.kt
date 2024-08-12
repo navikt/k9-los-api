@@ -1,23 +1,25 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos
 
+import kotlinx.coroutines.*
 import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
+import no.nav.k9.los.eventhandler.DetaljerMetrikker
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.HistorikkvaskMetrikker
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
+import no.nav.k9.sak.kontrakt.produksjonsstyring.los.BehandlingMedFagsakDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.time.DayOfWeek
-import java.time.Duration
-import java.time.LocalDateTime
-import java.time.LocalTime
+import java.time.*
 import java.util.*
 import kotlin.concurrent.thread
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 class K9SakTilLosHistorikkvaskTjeneste(
     private val behandlingProsessEventK9Repository: BehandlingProsessEventK9Repository,
@@ -40,6 +42,11 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 isDaemon = true,
                 name = TRÅDNAVN
             ) {
+
+                Thread.sleep(2.toDuration(DurationUnit.MINUTES).inWholeMilliseconds)
+
+                val dispatcher = newFixedThreadPoolContext(5, "Historikkvask k9sak")
+
                 log.info("Starter avspilling av historiske BehandlingProsessEventer")
 
                 val tidKjøringStartet = System.currentTimeMillis()
@@ -50,7 +57,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 log.info("Fant totalt $antallEventIder behandlingsider som skal rekjøres mot oppgavemodell")
 
                 while (true) {
-                    val behandlingsIder = behandlingProsessEventK9Repository.hentAlleEventIderUtenVasketHistorikk(antall = 1000)
+                    val behandlingsIder = DetaljerMetrikker.time("k9sakHistorikkvask", "hentBehandlinger") { behandlingProsessEventK9Repository.hentAlleEventIderUtenVasketHistorikk(antall = 2000) }
                     if (behandlingsIder.isEmpty()) {
                         break
                     }
@@ -64,8 +71,9 @@ class K9SakTilLosHistorikkvaskTjeneste(
                     }
 
                     log.info("Starter vaskeiterasjon på ${behandlingsIder.size} behandlinger")
-                    eventTeller += spillAvBehandlingProsessEventer(behandlingsIder)
+                    eventTeller += spillAvBehandlingProsessEventer(dispatcher, behandlingsIder)
                     behandlingTeller += behandlingsIder.count()
+                    log.info("Vasket iterasjon med ${behandlingsIder.size} behandlinger, har vasket totalt $behandlingTeller av $antallEventIder")
                     HistorikkvaskMetrikker.observe(TRÅDNAVN, t0)
                     t0 = System.nanoTime()
                 }
@@ -79,57 +87,74 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 }
 
                 log.info("Historikkvask k9sak ferdig")
-                behandlingProsessEventK9Repository.nullstillHistorikkvask()
-                log.info("Nullstilt historikkvaskmarkering k9-sak")
+                nullstillhistorikkvask()
                 HistorikkvaskMetrikker.observe(TRÅDNAVN, t0)
             }
         } else log.info("Ny oppgavestyring er deaktivert")
     }
 
+    fun nullstillhistorikkvask(){
+        behandlingProsessEventK9Repository.nullstillHistorikkvask()
+        log.info("Nullstilt historikkvaskmarkering k9-sak")
+    }
+
     fun skalPauses(): Boolean {
-        val nå = LocalTime.now()
-        if (nå > LocalTime.of(6, 0, 0) && nå < LocalTime.of(17, 0, 0) && LocalDateTime.now().dayOfWeek <= DayOfWeek.FRIDAY) {
+        val zone = ZoneId.of("Europe/Oslo")
+        val nå = ZonedDateTime.now().withZoneSameInstant(zone)
+
+        if (nå.toLocalTime() > LocalTime.of(6, 0, 0) && nå.toLocalTime() < LocalTime.of(17, 0, 0) && nå.dayOfWeek <= DayOfWeek.FRIDAY) {
             return true
         }
         return false
     }
 
-    private fun spillAvBehandlingProsessEventer(behandlingsIder: List<UUID>): Long {
-        var eventTeller = 0L
-        var behandlingTeller = 0L
-        val antallBehandlingerIBatch = behandlingsIder.size
+    private fun spillAvBehandlingProsessEventer(dispatcher: ExecutorCoroutineDispatcher, behandlingsIder: List<UUID>): Long {
+        val scope = CoroutineScope(dispatcher)
 
-        behandlingsIder.forEach { uuid ->
+        val jobber = behandlingsIder.map {
+            scope.async { runBlocking { vaskOppgaveForBehandlingUUIDOgMarkerVasket(it) } }
+        }.toList()
+
+        val eventTeller = runBlocking {
+            jobber.map { it.await() }.sum()
+        }
+        return eventTeller
+    }
+
+    fun vaskOppgaveForBehandlingUUIDOgMarkerVasket(uuid: UUID): Long {
+        var eventTeller = 0L
+        DetaljerMetrikker.time("k9sakHistorikkvask", "vaskOppgaveForBehandlingKomplett") {
+            val nyeBehandlingsopplysningerFraK9Sak = DetaljerMetrikker.time("k9sakHistorikkvask", "hentOpplysningerFraK9sak") { k9SakBerikerKlient.hentBehandling(UUID.fromString(uuid.toString()), antallForsøk = 8) }
             transactionalManager.transaction { tx ->
-                eventTeller += vaskOppgaveForBehandlingUUID(uuid, tx)
+                eventTeller = DetaljerMetrikker.time("k9sakHistorikkvask", "vaskOppgaveForBehandling") { vaskOppgaveForBehandlingUUID(uuid, nyeBehandlingsopplysningerFraK9Sak, tx) }
                 behandlingProsessEventK9Repository.markerVasketHistorikk(uuid, tx)
-                behandlingTeller++
-                loggFremgangForHver100(behandlingTeller, "Vasket $behandlingTeller behandlinger av $antallBehandlingerIBatch i gjeldende iterasjon")
             }
         }
         return eventTeller
     }
 
     fun vaskOppgaveForBehandlingUUID(uuid: UUID): Long {
-        return transactionalManager.transaction { tx ->
-            vaskOppgaveForBehandlingUUID(uuid, tx)
+        return DetaljerMetrikker.time("k9sakHistorikkvask", "vaskOppgaveForBehandling") {
+            val nyeBehandlingsopplysningerFraK9Sak = DetaljerMetrikker.time("k9sakHistorikkvask", "hentOpplysningerFraK9sak") { k9SakBerikerKlient.hentBehandling(UUID.fromString(uuid.toString()), antallForsøk = 8) }
+            transactionalManager.transaction { tx ->
+                vaskOppgaveForBehandlingUUID(uuid, nyeBehandlingsopplysningerFraK9Sak, tx)
+            }
         }
     }
 
-    fun vaskOppgaveForBehandlingUUID(uuid: UUID, tx: TransactionalSession): Long {
+    fun vaskOppgaveForBehandlingUUID(uuid: UUID, nyeBehandlingsopplysningerFraK9Sak : BehandlingMedFagsakDto?,  tx: TransactionalSession): Long {
         log.info("Vasker historikk for k9sak-oppgave med eksternId: $uuid")
-        var eventTeller = 0L
         var forrigeOppgave: OppgaveV3? = null
 
-        val nyeBehandlingsopplysningerFraK9Sak = k9SakBerikerKlient.hentBehandling(UUID.fromString(uuid.toString()))
-
-        val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
-        val høyesteInternVersjon =
+        val behandlingProsessEventer = DetaljerMetrikker.time("k9sakHistorikkvask", "hentEventer") { behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer }
+        val høyesteInternVersjon = DetaljerMetrikker.time("k9sakHistorikkvask", "hentHøyesteInternVersjon") {
             oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9sak", "K9", tx)!!
+        }
         var eventNrForBehandling = 0L
-        var oppgaveDto: OppgaveDto? = null
+        var oppgaveV3 : OppgaveV3? = null
         for (event in behandlingProsessEventer) {
             if (eventNrForBehandling > høyesteInternVersjon) {
+                log.info("Avbryter historikkvask for ${event.eksternId} ved eventTid ${event.eventTid}. Forventer at håndteres av vanlig adaptertjeneste.")
                 break //Historikkvasken har funnet eventer som ennå ikke er lastet inn med normalflyt. Dirty eventer skal håndteres av vanlig adaptertjeneste
             }
             if (event.eldsteDatoMedEndringFraSøker == null && nyeBehandlingsopplysningerFraK9Sak != null && nyeBehandlingsopplysningerFraK9Sak.eldsteDatoMedEndringFraSøker != null) {
@@ -137,7 +162,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 //ser ut som noen gamle mottatte dokumenter kan mangle innsendingstidspunkt.
                 //da faller vi tilbake til å bruke behandling_opprettet i mapperen
             }
-            oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+            var oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
 
             oppgaveDto = k9SakTilLosAdapterTjeneste.ryddOppObsoleteOgResultatfeilFra2020(
                 event,
@@ -145,28 +170,21 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 nyeBehandlingsopplysningerFraK9Sak
             )
 
-            oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, tx)
+            oppgaveV3 = DetaljerMetrikker.time("k9sakHistorikkvask", "utledEksisterendeOppgaveversjon") { oppgaveV3Tjeneste.utledEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, tx) }
+            DetaljerMetrikker.time("k9sakHistorikkvask", "oppdaterEksisterendeOppgaveversjon") { oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveV3, eventNrForBehandling, tx) }
 
-            eventTeller++
-            loggFremgangForHver100(eventTeller, "Prosessert $eventTeller eventer")
-
-            forrigeOppgave = oppgaveV3Tjeneste.hentOppgaveversjon(
-                område = "K9", eksternId = oppgaveDto.id, eksternVersjon = oppgaveDto.versjon, tx = tx
-            )
+            forrigeOppgave = DetaljerMetrikker.time("k9sakHistorikkvask", "hentOppgaveversjon") {
+                oppgaveV3Tjeneste.hentOppgaveversjon(
+                    område = "K9", eksternId = oppgaveDto.id, eksternVersjon = oppgaveDto.versjon, tx = tx
+                )
+            }
             eventNrForBehandling++
         }
 
-        oppgaveDto?.let {
-            oppgaveV3Tjeneste.ajourholdAktivOppgave(oppgaveDto, eventNrForBehandling, tx)
+        oppgaveV3?.let {
+            DetaljerMetrikker.time("k9sakHistorikkvask", "ajourholdAktivOppgave") { oppgaveV3Tjeneste.ajourholdAktivOppgave(oppgaveV3, eventNrForBehandling, tx) }
         }
-
-        return eventTeller
+        log.info("Vasket $eventNrForBehandling hendelser for k9sak-oppgave med eksternId: $uuid")
+        return eventNrForBehandling
     }
-
-    private fun loggFremgangForHver100(teller: Long, tekst: String) {
-        if (teller.mod(100) == 0) {
-            log.info(tekst)
-        }
-    }
-
 }

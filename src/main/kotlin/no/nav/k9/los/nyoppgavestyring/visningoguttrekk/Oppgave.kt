@@ -72,23 +72,9 @@ data class Oppgave(
             return oppgavefelt.verdi
         } else {
             return felter.filter { feltverdi ->
-                feltverdi.område.equals(område) && feltverdi.eksternId.equals(feltnavn)
+                feltverdi.område == område && feltverdi.eksternId == feltnavn
             }.map { it.verdi }
         }
-    }
-
-    fun hentListeverdi(område: String, feltnavn: String): List<String> {
-        val oppgavefelt = hentOppgavefelt(område, feltnavn)
-        if (oppgavefelt == null) {
-            return listOf()
-        }
-        if (!oppgavefelt.listetype) {
-            throw IllegalStateException("Kan ikke hente enkeltverdi av $feltnavn som listetype")
-        }
-
-        return felter.filter { feltverdi ->
-            feltverdi.område.equals(område) && feltverdi.eksternId.equals(feltnavn)
-        }.map { it.verdi }
     }
 
     fun hentListeverdi(feltnavn: String): List<String> {
@@ -101,19 +87,19 @@ data class Oppgave(
         }
 
         return felter.filter { feltverdi ->
-            feltverdi.eksternId.equals(feltnavn)
+            feltverdi.eksternId == feltnavn
         }.map { it.verdi }
     }
 
     private fun hentOppgavefelt(feltnavn: String): Oppgavefelt? {
         return felter.find { oppgavefelt ->
-            oppgavefelt.eksternId.equals(feltnavn)
+            oppgavefelt.eksternId == feltnavn
         }
     }
 
     private fun hentOppgavefelt(område: String, feltnavn: String): Oppgavefelt? {
         return felter.find { oppgavefelt ->
-            oppgavefelt.område.equals(område) && oppgavefelt.eksternId.equals(feltnavn)
+            oppgavefelt.område == område && oppgavefelt.eksternId == feltnavn
         }
     }
 

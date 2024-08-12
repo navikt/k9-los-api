@@ -2,6 +2,7 @@ package no.nav.k9.los.jobber
 
 import io.prometheus.client.Histogram
 import io.prometheus.client.SimpleTimer
+import kotlin.math.pow
 
 class JobbMetrikker {
     companion object {
@@ -10,7 +11,7 @@ class JobbMetrikker {
             .name("k9los_jobb")
             .help("Tidsforbruk jobber i k9los")
             .labelNames("jobbnavn", "resultat")
-            .exponentialBuckets(0.01, Math.pow(10.0, 1.0/3.0), 12 )
+            .exponentialBuckets(0.01, 10.0.pow(1.0 / 3.0), 12 )
             .register()
 
 
@@ -26,7 +27,7 @@ class JobbMetrikker {
                 return resultat
             } catch (e : Exception){
                 status = e.javaClass.simpleName
-                throw e;
+                throw e
             } finally {
                 tidsforbruk.labels(jobb, status).observe(SimpleTimer.elapsedSecondsFromNanos(t0, System.nanoTime()))
             }

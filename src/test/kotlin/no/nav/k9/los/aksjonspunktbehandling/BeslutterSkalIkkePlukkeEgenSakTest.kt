@@ -24,6 +24,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import org.junit.jupiter.api.Test
+import org.koin.core.qualifier.named
 import org.koin.test.get
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -101,6 +102,7 @@ class BeslutterSkalIkkePlukkeEgenSakTest : AbstractK9LosIntegrationTest() {
         val nesteOppgaverIKø = runBlocking {
             oppgaveKø.leggOppgaveTilEllerFjernFraKø(
                 oppgave,
+                erOppgavenReservertSjekk = {false},
                 merknader = oppgaveRepositoryV2.hentMerknader(oppgave.eksternId.toString())
             )
 
@@ -126,7 +128,8 @@ class BeslutterSkalIkkePlukkeEgenSakTest : AbstractK9LosIntegrationTest() {
             reservasjonsnøkkel = "test1",
             gyldigFra = LocalDateTime.now(),
             gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
-            kommentar = ""
+            kommentar = "",
+            endretAv = null
         )
 
         return OppgaveTjeneste(
@@ -141,6 +144,7 @@ class BeslutterSkalIkkePlukkeEgenSakTest : AbstractK9LosIntegrationTest() {
             get<IPepClient>(),
             get<StatistikkRepository>(),
             oversetterMock,
+            get(named("statistikkRefreshChannel"))
         )
     }
 }

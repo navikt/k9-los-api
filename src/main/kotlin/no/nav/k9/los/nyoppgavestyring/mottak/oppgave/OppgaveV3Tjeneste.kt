@@ -92,17 +92,12 @@ class OppgaveV3Tjeneste(
         return oppgaveV3Repository.hentOppgaveversjonenFør(eksternId, internVersjon = eventNr, hentetOppgavetype, tx)!!
     }
 
-    fun ajourholdAktivOppgave(oppgaveDto: OppgaveDto, internVersjon: Long, tx: TransactionalSession) {
-        val oppgavetype = oppgavetypeRepository.hentOppgavetype(
-            område = oppgaveDto.område,
-            eksternId = oppgaveDto.type,
-            tx = tx
-        )
-        val innkommendeOppgave = OppgaveV3(oppgaveDto, oppgavetype)
+    fun ajourholdAktivOppgave(innkommendeOppgave: OppgaveV3, internVersjon: Long, tx: TransactionalSession) {
         AktivOppgaveRepository.ajourholdAktivOppgave(innkommendeOppgave, internVersjon, tx)
     }
 
-fun oppdaterEksisterendeOppgaveversjon(oppgaveDto: OppgaveDto, eventNr: Long, tx: TransactionalSession) {
+
+    fun utledEksisterendeOppgaveversjon(oppgaveDto: OppgaveDto, eventNr: Long, tx: TransactionalSession) : OppgaveV3 {
         val oppgavetype = oppgavetypeRepository.hentOppgavetype(
             område = oppgaveDto.område,
             eksternId = oppgaveDto.type,
@@ -111,7 +106,9 @@ fun oppdaterEksisterendeOppgaveversjon(oppgaveDto: OppgaveDto, eventNr: Long, tx
 
         val forrigeOppgaveversjon = if (eventNr > 0) {
             oppgaveV3Repository.hentOppgaveversjonenFør(oppgaveDto.id, eventNr, oppgavetype, tx)
-        } else { null }
+        } else {
+            null
+        }
         var innkommendeOppgave = OppgaveV3(oppgaveDto = oppgaveDto, oppgavetype = oppgavetype)
 
         val utledeteFelter = mutableListOf<OppgaveFeltverdi>()
@@ -126,6 +123,10 @@ fun oppdaterEksisterendeOppgaveversjon(oppgaveDto: OppgaveDto, eventNr: Long, tx
 
         innkommendeOppgave = OppgaveV3(innkommendeOppgave, innkommendeOppgave.felter.plus(utledeteFelter))
         innkommendeOppgave.valider()
+        return innkommendeOppgave
+    }
+
+    fun oppdaterEksisterendeOppgaveversjon(innkommendeOppgave: OppgaveV3, eventNr: Long, tx: TransactionalSession)  {
 
         //historikkvasktjenesten skal sørge for at oppgaven med internVersjon = eventNr faktisk eksisterer
         oppgaveV3Repository.slettFeltverdier(
@@ -138,7 +139,7 @@ fun oppdaterEksisterendeOppgaveversjon(oppgaveDto: OppgaveDto, eventNr: Long, tx
             eksternId = innkommendeOppgave.eksternId,
             internVersjon = eventNr,
             oppgaveFeltverdier = innkommendeOppgave.felter,
-            oppgavestatus = Oppgavestatus.fraKode(oppgaveDto.status),
+            oppgavestatus = innkommendeOppgave.status,
             tx = tx
         )
 

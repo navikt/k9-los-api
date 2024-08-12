@@ -45,6 +45,7 @@ import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
@@ -95,12 +96,14 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single { PepCacheRepository(dataSource) }
-    single { PepCacheService(
-        pepClient = get(),
-        pepCacheRepository = get(),
-        oppgaveRepository = get(),
-        transactionalManager = get()
-    )}
+    single {
+        PepCacheService(
+            pepClient = get(),
+            pepCacheRepository = get(),
+            oppgaveRepository = get(),
+            transactionalManager = get()
+        )
+    }
 
     single { dataSource }
     single { pepClient }
@@ -111,6 +114,11 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             refreshOppgave = get(named("oppgaveRefreshChannel"))
         )
     }
+    single { AktivOppgaveRepository(
+        oppgavetypeRepository = get()
+        )
+    }
+
     single { DriftsmeldingRepository(get()) }
     single { no.nav.k9.los.domene.repository.StatistikkRepository(get()) }
 
@@ -168,7 +176,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         reservasjonsnøkkel = "test1",
         gyldigFra = LocalDateTime.now(),
         gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
-        kommentar = ""
+        kommentar = "",
+        endretAv = null
     )
     every {
         reservasjonOversetterMock.hentAktivReservasjonFraGammelKontekst(any())
@@ -177,7 +186,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         reservasjonsnøkkel = "test1",
         gyldigFra = LocalDateTime.now(),
         gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
-        kommentar = ""
+        kommentar = "",
+        endretAv = null
     )
 
     single {
@@ -202,7 +212,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             azureGraphService = get(),
             pepClient = get(),
             statistikkRepository = get(),
-            reservasjonOversetter = reservasjonOversetterMock
+            reservasjonOversetter = reservasjonOversetterMock,
+            statistikkChannel = get(named("statistikkRefreshChannel"))
         )
     }
 
@@ -469,7 +480,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         ReservasjonV3DtoBuilder(
             pdlService = get(),
-            oppgaveTjeneste = get()
+            oppgaveTjeneste = get(),
+            saksbehandlerRepository = get()
         )
     }
 
@@ -487,6 +499,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             pepClient = get(),
             pdlService = get(),
             reservasjonV3Repository = get(),
+            aktivOppgaveRepository = get(),
+            statistikkChannel = get(named("statistikkRefreshChannel"))
         )
     }
 

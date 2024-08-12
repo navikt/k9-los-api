@@ -83,7 +83,7 @@ class OppgavestatistikkTjeneste(
         val kjøretid = tidStatistikksendingFerdig - tidStatistikksendingStartet
         log.info("Sending av saks- og behanlingsstatistikk ferdig")
         log.info("Sendt ${oppgaverSomIkkeErSendt.size} oppgaversjoner. Totalt tidsbruk: ${kjøretid} ms")
-        if (oppgaverSomIkkeErSendt.size > 0) {
+        if (oppgaverSomIkkeErSendt.isNotEmpty()) {
             log.info("Gjennomsnitt tidsbruk: ${kjøretid / oppgaverSomIkkeErSendt.size} ms pr oppgaveversjon")
         }
     }
@@ -99,7 +99,8 @@ class OppgavestatistikkTjeneste(
             if (erKode6) {
                 nullUtEventuelleSensitiveFelter(it)
             } else it
-        }.forEach {
+        }.onEach { behandling -> behandling.oversendtKabal?.let { log.info(behandling.saksnummer+": oversendKabalTidspunkt"+it) } }
+            .forEach {
             statistikkPublisher.publiser(sak, it)
         }
     }

@@ -15,7 +15,12 @@ class OppgaveRepository(
     private val oppgavetypeRepository: OppgavetypeRepository
 ) {
     private val log: Logger = LoggerFactory.getLogger("OppgaveRepository")
+
     fun hentNyesteOppgaveForEksternId(tx: TransactionalSession, kildeområde: String, eksternId: String, now: LocalDateTime = LocalDateTime.now()): Oppgave {
+        return hentNyesteOppgaveForEksternIdHvisFinnes(tx, kildeområde, eksternId, now) ?: throw IllegalStateException("Fant ikke oppgave med kilde $kildeområde og eksternId $eksternId")
+    }
+
+    fun hentNyesteOppgaveForEksternIdHvisFinnes(tx: TransactionalSession, kildeområde: String, eksternId: String, now: LocalDateTime = LocalDateTime.now()): Oppgave? {
         val queryString = """
                 select * 
                 from oppgave_v3 ov
@@ -32,8 +37,7 @@ class OppgaveRepository(
                     "eksternId" to eksternId
                 )
             ).map { row -> mapOppgave(row, now, tx) }.asSingle
-        ) ?: throw IllegalStateException("Fant ikke oppgave med kilde $kildeområde og eksternId $eksternId")
-
+        )
         return oppgave
     }
 
@@ -107,9 +111,9 @@ class OppgaveRepository(
                 """
                 select fd.ekstern_id as ekstern_id, o.ekstern_id as omrade, fd.liste_type, f.pakrevd, ov.verdi
                 from oppgavefelt_verdi ov 
-                    inner join oppgavefelt f on ov.oppgavefelt_id = f.id 
-                    inner join feltdefinisjon fd on f.feltdefinisjon_id = fd.id 
-                    inner join omrade o on fd.omrade_id = o.id 
+                inner join oppgavefelt f on ov.oppgavefelt_id = f.id 
+                inner join feltdefinisjon fd on f.feltdefinisjon_id = fd.id 
+                inner join omrade o on fd.omrade_id = o.id 
                 where ov.oppgave_id = :oppgaveId
                 order by fd.ekstern_id
                 """.trimIndent(),

@@ -1,12 +1,5 @@
 package no.nav.k9.los.tjenester.mock
 
-import no.nav.k9.los.domene.modell.AksjonspunktDefWrapper
-
-class AksjonspunkterMock {
-    fun aksjonspunkter(): List<AksjonspunktMock> {
-        return AksjonspunktDefWrapper.finnAlleAksjonspunkter()
-    }
-}
 
 data class AksjonspunktMock(
     val kode: String,
