@@ -1,5 +1,6 @@
 package no.nav.k9.los.integrasjon.k9
 
+import no.nav.k9.los.eventhandler.DetaljerMetrikker
 import no.nav.k9.los.utils.Cache
 import no.nav.k9.los.utils.CacheObject
 import org.slf4j.LoggerFactory
@@ -16,25 +17,34 @@ class K9SakBehandlingOppfrisketCache (private val repo : K9SakBehandlingOppfrisk
 
     private val memoryCache by lazy { //lazy for å unngå databasekall under oppstart av applikasjonen
         val cache = Cache<UUID, Boolean>(cacheSize = 10000)
-        val dbCache = repo.hentAlleOppfrisketEtter(LocalDateTime.now().minus(cacheObjectDuration))
+        val dbCache = repo.hentAlleOppfrisketEtter(LocalDateTime.now() - cacheObjectDuration)
         for (entry in dbCache) {
-            cache.set(entry.behandlingUuid, CacheObject(true, entry.tidspunkt.plus(cacheObjectDuration)))
+            cache.set(entry.behandlingUuid, CacheObject(true, entry.tidspunkt + cacheObjectDuration))
         }
         log.info("Opprettet K9SakBehandlingOppfrisketCache med ${dbCache.size} elementer fra database")
         cache
     }
     fun registrerBehandlingerOppfrisket(behandlinger: Collection<UUID>) {
-        val tidspunkt = LocalDateTime.now()
-        repo.registrerOppfrisket(behandlinger.map { K9sakBehandlingOppfrisketTidspunkt(it, tidspunkt) })
-        behandlinger.forEach {memoryCache.set(it, CacheObject(true, tidspunkt.plus(cacheObjectDuration))) }
+        val nå = LocalDateTime.now()
+        repo.registrerOppfrisket(behandlinger.map { K9sakBehandlingOppfrisketTidspunkt(it, nå) })
+        behandlinger.forEach {memoryCache.set(it, CacheObject(true, nå + cacheObjectDuration)) }
         log.info("La til ${behandlinger.size} behandlinger i cache")
 
-        if (tidspunkt.isAfter(sistSlettetGamleTidspunkt.plus(hyppighetSletting))){
-            repo.slettOppfrisketFør(tidspunkt.minus(cacheObjectDuration))
+        if (nå.isAfter(sistSlettetGamleTidspunkt + hyppighetSletting)){
+            val slettFra = nå - cacheObjectDuration
+            repo.slettOppfrisketFør(slettFra)
+            sistSlettetGamleTidspunkt = nå
+            log.info("Slettet elementer i cache opprettet før $slettFra")
         }
     }
 
-    fun containsKey(key : UUID, tidspunkt: LocalDateTime) : Boolean{
+    fun filterNotInCache(keys: Collection<UUID>) : List<UUID> {
+        DetaljerMetrikker.observeTeller("K9SakBehandlingOppfrisketCache", "antallKall", 1)
+        val nå = LocalDateTime.now()
+        return keys.filterNot { containsKey(it, nå) }
+    }
+
+    private fun containsKey(key : UUID, tidspunkt: LocalDateTime) : Boolean{
         return memoryCache.containsKey(key, tidspunkt)
     }
     companion object {

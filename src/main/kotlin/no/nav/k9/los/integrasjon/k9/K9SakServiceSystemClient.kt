@@ -34,7 +34,7 @@ open class K9SakServiceSystemClient constructor(
     override suspend fun refreshBehandlinger(behandlingUuid: Collection<UUID>) {
         val nå = LocalDateTime.now()
         log.info("Forespørsel om refresh av ${behandlingUuid.size} behandlinger")
-        val uoppfriskedeBehandlingUuider = behandlingUuid.filterNot { cache.containsKey(it, nå) }
+        val uoppfriskedeBehandlingUuider = cache.filterNotInCache(behandlingUuid)
         log.info("Kommer til å refreshe ${uoppfriskedeBehandlingUuider.size} behandlinger etter sjekk mot cache av oppfriskede behandlinger, i bolker på 100 stykker")
         for (uuids in uoppfriskedeBehandlingUuider.chunked(100)) {
             utførRefreshKallOgOppdaterCache(uuids)
