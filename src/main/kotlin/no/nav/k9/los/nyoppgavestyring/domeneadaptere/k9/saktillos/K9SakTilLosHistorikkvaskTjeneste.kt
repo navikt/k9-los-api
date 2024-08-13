@@ -181,7 +181,10 @@ class K9SakTilLosHistorikkvaskTjeneste(
         }
 
         oppgaveV3?.let {
-            if (nyeBehandlingsopplysningerFraK9Sak?.sakstype == no.nav.k9.kodeverk.behandling.FagsakYtelseType.FRISINN) {
+            val sakstypekodefraK9sakKall = nyeBehandlingsopplysningerFraK9Sak?.sakstype?.kode
+            val ytelsetypefraOppgaven = oppgaveV3.felter.filter { it.oppgavefelt.feltDefinisjon.eksternId == "ytelsestype" }.map { it.verdi }.firstOrNull()
+            log.info("sakstype fra kall er $sakstypekodefraK9sakKall og fra oppgaven er det $ytelsetypefraOppgaven")
+            if (sakstypekodefraK9sakKall == no.nav.k9.kodeverk.behandling.FagsakYtelseType.FRISINN.kode || ytelsetypefraOppgaven == no.nav.k9.kodeverk.behandling.FagsakYtelseType.FRISINN.kode ) {
                 DetaljerMetrikker.time("k9sakHistorikkvask","slettAktivOppgave") { oppgaveV3Tjeneste.slettAktivOppgave(oppgaveV3, tx) }
                 log.info("oppgave ${oppgaveV3.eksternId} gjelder FRISINN, fjerner oppgaven fra aktiv-tabellene")
             } else {
