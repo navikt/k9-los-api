@@ -110,6 +110,12 @@ spec:
     - name: ABAC_PDP_ENDPOINT_URL
       value: http://abac-k9.k9saksbehandling.svc.nais.local/application/authorize
 
+      # open telemetry, kommenter inn og fjern appdynamics-config (og fra Dockerfile) når testet ut nok i dev
+    #- name: "OTEL_EXPORTER_OTLP_ENDPOINT"
+    #  value: "https://elastic-apm.adeo.no"
+    #- name: "OTEL_METRICS_EXPORTER"
+    #  value: "otlp"
+
     - name: APPDYNAMICS_CONTROLLER_HOST_NAME
       value: appdynamics.adeo.no
     - name: APPDYNAMICS_CONTROLLER_PORT
@@ -118,6 +124,9 @@ spec:
       value: "true"
     - name: APPDYNAMICS_AGENT_ACCOUNT_NAME
       value: PROD
+    - name: APPD_ENABLED
+      value: true
+
 
       # Audit logging
     - name: AUDITLOGGER_ENABLED
