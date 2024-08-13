@@ -109,7 +109,7 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
         }
     }
 
-    fun skalPauses(): Boolean {
+    private fun skalPauses(): Boolean {
         val zone = ZoneId.of("Europe/Oslo")
         val nå = ZonedDateTime.now().withZoneSameInstant(zone)
 
@@ -119,24 +119,23 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
         return false
     }
 
-    fun vaskOppgaveForBehandlingUUID(uuid: UUID, tx: TransactionalSession): Long {
+    private fun vaskOppgaveForBehandlingUUID(uuid: UUID, tx: TransactionalSession): Long {
         log.info("Vasker historikk for k9punsj-oppgave med eksternId: $uuid")
         var eventTeller = 0L
         var forrigeOppgave: OppgaveV3? = null
 
-        var eventNrForBehandling = 0L
         val behandlingProsessEventer: List<PunsjEventDto> = eventRepository.hentMedLås(tx, uuid).eventer
         var oppgaveV3: OppgaveV3? = null
 
         log.info("Vasker ${behandlingProsessEventer.size} hendelser for k9punsj-oppgave med eksternId: $uuid")
         for (event in behandlingProsessEventer) {
-            var oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+            val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
             log.info("Utledet oppgave DTO")
 
-            oppgaveV3 = oppgaveV3Tjeneste.utledEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, tx)
+            oppgaveV3 = oppgaveV3Tjeneste.utledEksisterendeOppgaveversjon(oppgaveDto, eventTeller, tx)
             log.info("Utledet oppgave V3")
-            oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveV3, eventNrForBehandling, tx)
-            log.info("Oppdaterte eksisterende oppgaversjon")
+            oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveV3, eventTeller, tx)
+            log.info("Oppdaterte eksisterende oppgaveversjon")
 
             forrigeOppgave = oppgaveV3Tjeneste.hentOppgaveversjon(
                 område = "K9",
@@ -145,14 +144,14 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
                 tx = tx
             )
             log.info("Hentet oppgave")
+            eventTeller++
         }
         log.info("Vasker aktiv oppgave for k9punsj-oppgave med eksternId: $uuid")
 
         oppgaveV3?.let {
-            oppgaveV3Tjeneste.ajourholdAktivOppgave(it, eventNrForBehandling, tx)
+            oppgaveV3Tjeneste.ajourholdAktivOppgave(it, eventTeller, tx)
         }
-        log.info("Vasket historikk for k9punsj-oppgave med eksternId: $uuid")
-
+        log.info("Vasket $eventTeller hendelser for k9punsj-oppgave med eksternId: $uuid")
         return eventTeller
     }
 
