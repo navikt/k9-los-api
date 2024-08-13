@@ -37,7 +37,12 @@ class OppgaveV3Repository(
         val oppgaveId = nyOppgaveversjon(oppgave, nyVersjon, tx)
         lagreFeltverdier(oppgaveId, oppgave, tx)
 
-        AktivOppgaveRepository.ajourholdAktivOppgave(oppgave, nyVersjon, tx)
+        val ignorerForKøer = gjelderFRISINN(oppgave)
+        if (ignorerForKøer) {
+            log.info("Oppdaterer ikke aktiv oppgave, da hendelsen gjaldt frisinn for oppgaveId ${oppgave.eksternId}")
+        } else {
+            AktivOppgaveRepository.ajourholdAktivOppgave(oppgave, nyVersjon, tx)
+        }
     }
 
     fun hentOppgaveversjon(

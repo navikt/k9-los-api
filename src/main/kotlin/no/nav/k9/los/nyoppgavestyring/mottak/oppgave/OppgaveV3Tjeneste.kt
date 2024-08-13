@@ -96,6 +96,10 @@ class OppgaveV3Tjeneste(
         AktivOppgaveRepository.ajourholdAktivOppgave(innkommendeOppgave, internVersjon, tx)
     }
 
+    fun slettAktivOppgave(innkommendeOppgave: OppgaveV3, tx: TransactionalSession){
+        AktivOppgaveRepository.slettAktivOppgave(tx, innkommendeOppgave)
+    }
+
 
     fun utledEksisterendeOppgaveversjon(oppgaveDto: OppgaveDto, eventNr: Long, tx: TransactionalSession) : OppgaveV3 {
         val oppgavetype = oppgavetypeRepository.hentOppgavetype(

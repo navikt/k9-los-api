@@ -69,6 +69,8 @@ class OppgaveV3(
             }
             return oppgavefelter
         }
+
+
     }
 
     fun hentFelt(feltEksternId: String) : Oppgavefelt {

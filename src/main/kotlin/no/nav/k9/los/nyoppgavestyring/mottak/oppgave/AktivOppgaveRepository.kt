@@ -7,10 +7,8 @@ import no.nav.k9.los.eventhandler.DetaljerMetrikker
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgavefelt
 import org.jetbrains.annotations.VisibleForTesting
-import org.koin.java.KoinJavaComponent
 import java.time.LocalDateTime
 
 class AktivOppgaveRepository (val oppgavetypeRepository: OppgavetypeRepository)  {
@@ -33,6 +31,28 @@ class AktivOppgaveRepository (val oppgavetypeRepository: OppgavetypeRepository) 
                 )
             }
             return oppgaveId
+        }
+
+        fun slettAktivOppgave(tx: TransactionalSession, oppgave: OppgaveV3) {
+            val id = hentOppgaveV3AktivId(tx, oppgave)
+            if (id != null){
+                tx.run(
+                    queryOf(
+                        "delete from oppgavefelt_verdi_aktiv where oppgave_id = :id",
+                        mapOf(
+                            "id" to id.id
+                        )
+                    ).asUpdate
+                )
+                tx.run(
+                    queryOf(
+                        "delete from oppgave_v3_aktiv where id = :id",
+                        mapOf(
+                            "id" to id.id
+                        )
+                    ).asUpdate
+                )
+            }
         }
 
         private fun opprettOppgaveV3Aktiv(
@@ -60,12 +80,9 @@ class AktivOppgaveRepository (val oppgavetypeRepository: OppgavetypeRepository) 
             )!!)
         }
 
-        private fun oppdaterOppgaveV3Aktiv(
-            tx: TransactionalSession,
-            oppgave: OppgaveV3,
-            nyVersjon: Long,
-        ): AktivOppgaveId {
-            val id = tx.run(
+        private fun hentOppgaveV3AktivId( tx: TransactionalSession,
+                                          oppgave: OppgaveV3): AktivOppgaveId? {
+            return tx.run(
                 queryOf(
                     """ select id from oppgave_v3_aktiv where ekstern_id = :eksternId and kildeomrade = :kildeomrade """,
                     mapOf(
@@ -74,7 +91,15 @@ class AktivOppgaveRepository (val oppgavetypeRepository: OppgavetypeRepository) 
                     )
                 )
                     .map { row -> AktivOppgaveId(row.long("id")) }.asSingle
-            ) ?: return opprettOppgaveV3Aktiv(tx, oppgave, nyVersjon)
+            )
+        }
+
+        private fun oppdaterOppgaveV3Aktiv(
+            tx: TransactionalSession,
+            oppgave: OppgaveV3,
+            nyVersjon: Long,
+        ): AktivOppgaveId {
+            val id = hentOppgaveV3AktivId(tx, oppgave) ?: return opprettOppgaveV3Aktiv(tx, oppgave, nyVersjon)
 
             tx.run(
                 queryOf(
