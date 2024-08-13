@@ -9,9 +9,9 @@ import no.nav.k9.los.eventhandler.DetaljerMetrikker
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.HistorikkvaskMetrikker
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.gjelderFRISINN
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.BehandlingMedFagsakDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -182,7 +182,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
         }
 
         oppgaveV3?.let {
-            if (OppgaveV3.gjelderFRISINN(oppgaveV3)) {
+            if (gjelderFRISINN(oppgaveV3)) {
                 DetaljerMetrikker.time("k9sakHistorikkvask","slettAktivOppgave") { oppgaveV3Tjeneste.slettAktivOppgave(oppgaveV3, tx) }
                 log.info("oppgave ${oppgaveV3.eksternId} gjelder FRISINN, fjerner oppgaven fra aktiv-tabellene")
             } else {

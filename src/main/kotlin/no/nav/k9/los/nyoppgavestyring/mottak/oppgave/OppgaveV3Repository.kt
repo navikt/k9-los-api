@@ -37,7 +37,7 @@ class OppgaveV3Repository(
         val oppgaveId = nyOppgaveversjon(oppgave, nyVersjon, tx)
         lagreFeltverdier(oppgaveId, oppgave, tx)
 
-        val ignorerForKøer = OppgaveV3.gjelderFRISINN(oppgave) && oppgave.oppgavetype.eksternId == "k9sak"
+        val ignorerForKøer = gjelderFRISINN(oppgave)
         if (ignorerForKøer) {
             log.info("Oppdaterer ikke aktiv oppgave, da hendelsen gjaldt frisinn for oppgaveId ${oppgave.eksternId}")
         } else {

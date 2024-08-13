@@ -70,9 +70,7 @@ class OppgaveV3(
             return oppgavefelter
         }
 
-        fun gjelderFRISINN( oppgave : OppgaveV3) : Boolean {
-            return oppgave.felter.any { it.oppgavefelt.feltDefinisjon.kodeverkreferanse?.eksternId == "Ytelsetype" && it.verdi == "FRISINN" }
-        }
+
     }
 
     fun hentFelt(feltEksternId: String) : Oppgavefelt {
