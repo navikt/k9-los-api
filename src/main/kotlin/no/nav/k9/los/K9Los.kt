@@ -111,18 +111,16 @@ fun Application.k9Los() {
     val k9PunsjTilLosAdapterTjeneste = koin.get<K9PunsjTilLosAdapterTjeneste>()
     k9PunsjTilLosAdapterTjeneste.setup()
 
-    if (LocalDateTime.now().isBefore(LocalDateTime.of(2024, 8, 13, 11, 30))) {
+    if (LocalDateTime.now().isBefore(LocalDateTime.of(2024, 8, 13, 18, 30))) {
         if (1 == 0) { //HAXX for å ikke kjøre jobb, men indikere at koden er i bruk og dermed ikke slettes
-            koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
             koin.get<K9KlageTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
             koin.get<OppgavestatistikkTjeneste>().slettStatistikkgrunnlag()
             //koin.get<ReservasjonKonverteringJobb>().kjørReservasjonskonvertering() //TODO slette
             //koin.get<K9SakTilLosLukkeFeiloppgaverTjeneste>().kjørFeiloppgaverVask() //TODO slette
             koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
-        }
-        if (configuration.koinProfile() == KoinProfile.PREPROD) {
             koin.get<K9PunsjTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
         }
+        koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
     }
 
     install(Authentication) {
@@ -161,11 +159,13 @@ fun Application.k9Los() {
             oppgaveTjeneste = koin.get()
         )
 
-    val refreshOppgaveJobb = with(RefreshK9(
-        k9SakService = koin.get(),
-        oppgaveRepository = koin.get(),
-        transactionalManager = koin.get()
-    )) { start(koin.get<Channel<UUID>>(named("oppgaveRefreshChannel"))) }
+    val refreshOppgaveJobb = with(
+        RefreshK9(
+            k9SakService = koin.get(),
+            oppgaveRepository = koin.get(),
+            transactionalManager = koin.get()
+        )
+    ) { start(koin.get<Channel<UUID>>(named("oppgaveRefreshChannel"))) }
 
     val oppdaterStatistikkJobb =
         oppdaterStatistikk(
