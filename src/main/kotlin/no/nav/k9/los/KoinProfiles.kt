@@ -14,6 +14,7 @@ import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveTjenesteV2
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.*
+import no.nav.k9.los.eventhandler.RefreshK9v3Tjeneste
 import no.nav.k9.los.fagsystem.k9sak.AksjonspunktHendelseMapper
 import no.nav.k9.los.fagsystem.k9sak.K9sakEventHandlerV2
 import no.nav.k9.los.integrasjon.abac.IPepClient
@@ -51,6 +52,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLos
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosLukkeFeiloppgaverTjeneste
 import no.nav.k9.los.nyoppgavestyring.forvaltning.ForvaltningRepository
+import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
@@ -110,6 +112,9 @@ fun common(app: Application, config: Configuration) = module {
     }
     single(named("oppgaveRefreshChannel")) {
         Channel<UUID>(Channel.UNLIMITED)
+    }
+    single(named("KøpåvirkendeHendelseChannel")) {
+        Channel<KøpåvirkendeHendelse>(Channel.UNLIMITED)
     }
     single(named("statistikkRefreshChannel")) {
         Channel<Boolean>(Channel.CONFLATED)
@@ -232,6 +237,7 @@ fun common(app: Application, config: Configuration) = module {
             statistikkRepository = get(),
             reservasjonTjeneste = get(),
             k9SakTilLosAdapterTjeneste = get(),
+            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
@@ -239,6 +245,7 @@ fun common(app: Application, config: Configuration) = module {
         K9KlageEventHandler(
             behandlingProsessEventKlageRepository = get(),
             k9KlageTilLosAdapterTjeneste = get(),
+            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
@@ -255,6 +262,7 @@ fun common(app: Application, config: Configuration) = module {
             reservasjonV3Tjeneste = get(),
             reservasjonOversetter = get(),
             saksbehandlerRepository = get(),
+            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
@@ -269,7 +277,8 @@ fun common(app: Application, config: Configuration) = module {
             reservasjonTjeneste = get(),
             statistikkRepository = get(),
             azureGraphService = get(),
-            punsjTilLosAdapterTjeneste = get()
+            punsjTilLosAdapterTjeneste = get(),
+            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
@@ -499,9 +508,9 @@ fun common(app: Application, config: Configuration) = module {
             oppgaveRepositoryTxWrapper = get(),
             pepClient = get(),
             pdlService = get(),
-            reservasjonV3Repository = get(),
             aktivOppgaveRepository = get(),
-            statistikkChannel = get(named("statistikkRefreshChannel"))
+            statistikkChannel = get(named("statistikkRefreshChannel")),
+            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
@@ -582,6 +591,7 @@ fun common(app: Application, config: Configuration) = module {
             pepClient = get(),
             saksbehandlerRepository = get(),
             auditlogger = Auditlogger(config),
+            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
@@ -626,6 +636,16 @@ fun common(app: Application, config: Configuration) = module {
         ForvaltningRepository(
             oppgavetypeRepository = get(),
             transactionalManager = get(),
+        )
+    }
+
+    single {
+        RefreshK9v3Tjeneste(
+            k9SakService = get(),
+            oppgaveQueryService = get(),
+            aktivOppgaveRepository = get(),
+            oppgaveKoRepository = get(),
+            transactionalManager = get()
         )
     }
 }

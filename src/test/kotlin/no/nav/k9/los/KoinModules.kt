@@ -17,6 +17,7 @@ import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveTjenesteV2
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.*
+import no.nav.k9.los.eventhandler.RefreshK9v3Tjeneste
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.abac.PepClientLocal
 import no.nav.k9.los.integrasjon.audit.Auditlogger
@@ -41,6 +42,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAda
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository
 import no.nav.k9.los.nyoppgavestyring.forvaltning.ForvaltningRepository
+import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
@@ -83,6 +85,9 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
     single(named("oppgaveRefreshChannel")) {
         Channel<Oppgave>(Channel.UNLIMITED)
+    }
+    single(named("KøpåvirkendeHendelseChannel")) {
+        Channel<KøpåvirkendeHendelse>(Channel.UNLIMITED)
     }
     single(named("statistikkRefreshChannel")) {
         Channel<Boolean>(Channel.CONFLATED)
@@ -267,13 +272,15 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             statistikkRepository = get(),
             reservasjonTjeneste = get(),
             k9SakTilLosAdapterTjeneste = get(),
+            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
     single {
         K9KlageEventHandler(
             BehandlingProsessEventKlageRepository(dataSource = get()),
-            k9KlageTilLosAdapterTjeneste = get()
+            k9KlageTilLosAdapterTjeneste = get(),
+            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
@@ -290,6 +297,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             reservasjonV3Tjeneste = get(),
             reservasjonOversetter = get(),
             saksbehandlerRepository = get(),
+            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
@@ -304,7 +312,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             reservasjonTjeneste = get(),
             statistikkRepository = get(),
             azureGraphService = get(),
-            punsjTilLosAdapterTjeneste = get()
+            punsjTilLosAdapterTjeneste = get(),
+            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
@@ -326,7 +335,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             reservasjonTjeneste = get(),
             statistikkRepository = get(),
             azureGraphService = get(),
-            punsjTilLosAdapterTjeneste = get()
+            punsjTilLosAdapterTjeneste = get(),
+            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
@@ -474,6 +484,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             pepClient = get(),
             saksbehandlerRepository = get(),
             auditlogger = Auditlogger(config),
+            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
@@ -498,9 +509,9 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgaveRepositoryTxWrapper = get(),
             pepClient = get(),
             pdlService = get(),
-            reservasjonV3Repository = get(),
             aktivOppgaveRepository = get(),
-            statistikkChannel = get(named("statistikkRefreshChannel"))
+            statistikkChannel = get(named("statistikkRefreshChannel")),
+            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
@@ -549,6 +560,16 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         ForvaltningRepository(
             oppgavetypeRepository = get(),
             transactionalManager = get(),
+        )
+    }
+
+    single {
+        RefreshK9v3Tjeneste(
+            k9SakService = get(),
+            oppgaveQueryService = get(),
+            aktivOppgaveRepository = get(),
+            oppgaveKoRepository = get(),
+            transactionalManager = get()
         )
     }
 }

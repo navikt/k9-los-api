@@ -37,13 +37,13 @@ class OppgaveKoTjeneste(
     private val aktivOppgaveRepository: AktivOppgaveRepository,
     private val oppgaveRepositoryTxWrapper: OppgaveRepositoryTxWrapper,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
-    private val reservasjonV3Repository: ReservasjonV3Repository,
     private val saksbehandlerRepository: SaksbehandlerRepository,
     private val oppgaveTjeneste: OppgaveTjeneste,
     private val reservasjonRepository: ReservasjonRepository,
     private val pdlService: IPdlService,
     private val pepClient: IPepClient,
     private val statistikkChannel: Channel<Boolean>,
+    private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
 ) {
     private val log = LoggerFactory.getLogger(OppgaveKoTjeneste::class.java)
 
@@ -210,4 +210,40 @@ class OppgaveKoTjeneste(
             }
         }
     }
+
+    fun kopier(kopierFraOppgaveId: Long, tittel: String, taMedQuery: Boolean, taMedSaksbehandlere: Boolean): OppgaveKo {
+        val kø = oppgaveKoRepository.kopier(kopierFraOppgaveId, tittel, taMedQuery, taMedSaksbehandlere)
+        runBlocking {
+            køpåvirkendeHendelseChannel.send(Kødefinisjon(kø.id))
+        }
+        return kø
+    }
+
+    fun leggTil(tittel: String, skjermet: Boolean): OppgaveKo {
+        val kø = oppgaveKoRepository.leggTil(tittel, skjermet)
+        runBlocking {
+            køpåvirkendeHendelseChannel.send(Kødefinisjon(kø.id))
+        }
+        return kø
+    }
+
+    fun hent(oppgaveKoId: Long): OppgaveKo {
+        return oppgaveKoRepository.hent(oppgaveKoId)
+    }
+
+    fun slett(oppgaveKoId: Long) {
+        oppgaveKoRepository.slett(oppgaveKoId)
+        runBlocking {
+            køpåvirkendeHendelseChannel.send(KødefinisjonSlettet(oppgaveKoId))
+        }
+    }
+
+    fun endre(oppgaveKo: OppgaveKo): OppgaveKo {
+        val kø = oppgaveKoRepository.endre(oppgaveKo)
+        runBlocking {
+            køpåvirkendeHendelseChannel.send(Kødefinisjon(kø.id))
+        }
+        return kø
+    }
+
 }

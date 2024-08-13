@@ -13,6 +13,9 @@ import no.nav.k9.los.domene.modell.*
 import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
 import no.nav.k9.los.integrasjon.kafka.dto.PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
+import no.nav.k9.los.nyoppgavestyring.ko.OppgaveHendelseMottatt
+import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
 import org.slf4j.LoggerFactory
@@ -28,7 +31,8 @@ class K9punsjEventHandler constructor(
     private val reservasjonTjeneste: ReservasjonTjeneste,
     private val statistikkRepository: StatistikkRepository,
     private val azureGraphService: IAzureGraphService,
-    private val punsjTilLosAdapterTjeneste: K9PunsjTilLosAdapterTjeneste
+    private val punsjTilLosAdapterTjeneste: K9PunsjTilLosAdapterTjeneste,
+    private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
 ) : EventTeller {
     private val log = LoggerFactory.getLogger(K9punsjEventHandler::class.java)
 
@@ -60,6 +64,9 @@ class K9punsjEventHandler constructor(
             }
 
             punsjTilLosAdapterTjeneste.oppdaterOppgaveForEksternId(event.eksternId)
+            runBlocking {
+                køpåvirkendeHendelseChannel.send(OppgaveHendelseMottatt(Fagsystem.PUNSJ, EksternOppgaveId("K9", event.eksternId.toString())))
+            }
         }
     }
 

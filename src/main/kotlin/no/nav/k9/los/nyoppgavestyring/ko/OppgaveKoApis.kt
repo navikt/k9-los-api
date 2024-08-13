@@ -1,8 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.ko
 
 import io.ktor.http.*
-import io.ktor.server.application.call
-import io.ktor.server.locations.*
+import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -10,14 +9,12 @@ import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.integrasjon.rest.idToken
-import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.ko.dto.*
 import org.koin.java.KoinJavaComponent
 import org.koin.ktor.ext.inject
 
 fun Route.OppgaveKoApis() {
     val requestContextService by inject<RequestContextService>()
-    val oppgaveKoRepository by inject<OppgaveKoRepository>()
     val oppgaveKoTjeneste by inject<OppgaveKoTjeneste>()
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
     val pepClient by KoinJavaComponent.inject<IPepClient>(IPepClient::class.java)
@@ -49,7 +46,7 @@ fun Route.OppgaveKoApis() {
                 call.respond(HttpStatusCode.Forbidden)
             }
             call.respond(
-                oppgaveKoRepository.kopier(
+                oppgaveKoTjeneste.kopier(
                     kopierOppgaveKoDto.kopierFraOppgaveId,
                     kopierOppgaveKoDto.tittel,
                     kopierOppgaveKoDto.taMedQuery,
@@ -66,7 +63,7 @@ fun Route.OppgaveKoApis() {
                 call.respond(HttpStatusCode.Forbidden)
             }
             val harSkjermetTilgang = pepClient.harTilgangTilKode6()
-            call.respond(oppgaveKoRepository.leggTil(opprettOppgaveKoDto.tittel, skjermet = harSkjermetTilgang))
+            call.respond(oppgaveKoTjeneste.leggTil(opprettOppgaveKoDto.tittel, skjermet = harSkjermetTilgang))
         }
     }
 
@@ -77,7 +74,7 @@ fun Route.OppgaveKoApis() {
                 call.respond(HttpStatusCode.Forbidden)
             }
 
-            call.respond(oppgaveKoRepository.hent(oppgavekøId.toLong()))
+            call.respond(oppgaveKoTjeneste.hent(oppgavekøId.toLong()))
         }
     }
 
@@ -88,7 +85,7 @@ fun Route.OppgaveKoApis() {
                 call.respond(HttpStatusCode.Forbidden)
             }
 
-            call.respond(oppgaveKoRepository.slett(oppgavekøId.toLong()))
+            call.respond(oppgaveKoTjeneste.slett(oppgavekøId.toLong()))
         }
     }
 
@@ -174,7 +171,7 @@ fun Route.OppgaveKoApis() {
             if (!pepClient.erOppgaveStyrer()) {
                 call.respond(HttpStatusCode.Forbidden)
             }
-            call.respond(oppgaveKoRepository.endre(oppgaveKo))
+            call.respond(oppgaveKoTjeneste.endre(oppgaveKo))
         }
     }
 }

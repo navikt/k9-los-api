@@ -3,9 +3,12 @@ package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
+import no.nav.k9.los.db.util.InClauseHjelper
 import no.nav.k9.los.eventhandler.DetaljerMetrikker
+import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
+import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgavefelt
@@ -282,6 +285,28 @@ class AktivOppgaveRepository (val oppgavetypeRepository: OppgavetypeRepository) 
 
         return oppgave
     }
+
+    fun hentK9sakParsakOppgaver(tx: TransactionalSession, oppgaver : Collection<AktivOppgaveId>) : Set<EksternOppgaveId> {
+        return tx.run(
+            queryOf("""                
+                select oppg.ekstern_id as ekstern_id
+                 from oppgave_v3_aktiv oppg
+                 join oppgavetype ot on oppg.oppgavetype_id = ot.id
+                 where 
+                    ot.ekstern_id = 'k9sak'
+                 and 
+                    reservasjonsnokkel in (
+                       select reservasjonsnokkel from oppgave_v3_aktiv where id in (${InClauseHjelper.tilParameternavn(oppgaver, "o")})
+                    )
+            """.trimIndent(),
+            InClauseHjelper.parameternavnTilVerdierMap(oppgaver.map { it.id }, "o")
+        ).map {
+            row -> EksternOppgaveId("K9", row.string("ekstern_id"))
+        }.asList
+        ).toSet()
+    }
+
+
     private fun mapOppgave(
         row: Row,
         now: LocalDateTime,

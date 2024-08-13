@@ -1,5 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.reservasjon
 
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
@@ -7,9 +9,12 @@ import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.abac.TILGANG_SAK
 import no.nav.k9.los.integrasjon.audit.*
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.FinnerIkkeDataException
+import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
+import no.nav.k9.los.nyoppgavestyring.ko.ReservasjonAnnullert
+import no.nav.k9.los.nyoppgavestyring.ko.ReservasjonEndret
+import no.nav.k9.los.nyoppgavestyring.ko.ReservasjonTatt
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
-import no.nav.k9.los.utils.forskyvReservasjonsDato
 import no.nav.k9.los.utils.leggTilDagerHoppOverHelg
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -24,7 +29,8 @@ class ReservasjonV3Tjeneste(
     private val saksbehandlerRepository: SaksbehandlerRepository,
     private val auditlogger: Auditlogger,
     private val oppgaveV1Repository: no.nav.k9.los.domene.repository.OppgaveRepository,
-    private val oppgaveV3Repository: OppgaveRepository
+    private val oppgaveV3Repository: OppgaveRepository,
+    private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
 ) {
 
     companion object {
@@ -104,6 +110,9 @@ class ReservasjonV3Tjeneste(
         )
         val reservasjon = reservasjonV3Repository.lagreReservasjon(reservasjonTilLagring, tx)
         log.info("taReservasjon: Ny reservasjon $reservasjon, utført av $utføresAvId, for saksbehandler $reserverForId")
+        runBlocking {
+            køpåvirkendeHendelseChannel.send(ReservasjonTatt(reservasjonsnøkkel = reservasjonsnøkkel))
+        }
         return reservasjon
     }
 
@@ -226,6 +235,9 @@ class ReservasjonV3Tjeneste(
                 annullertAvBrukerId,
                 tx
             )
+            runBlocking {
+                køpåvirkendeHendelseChannel.send(ReservasjonAnnullert(reservasjonsnøkkel = reservasjonsnøkkel))
+            }
             return true
         }
         return false
@@ -279,7 +291,6 @@ class ReservasjonV3Tjeneste(
                 kommentar = kommentar,
                 tx = tx
             )
-
             reservasjonV3MedOppgaver(nyReservasjon, tx)
         }
     }
@@ -302,7 +313,9 @@ class ReservasjonV3Tjeneste(
                 kommentar = kommentar,
                 tx = tx
             )
-
+            runBlocking {
+                køpåvirkendeHendelseChannel.send(ReservasjonEndret(reservasjonsnøkkel = reservasjonsnøkkel))
+            }
             reservasjonV3MedOppgaver(nyReservasjon, tx)
         }
     }
