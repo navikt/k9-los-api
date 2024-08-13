@@ -99,10 +99,9 @@ class OppgavestatistikkTjeneste(
             if (erKode6) {
                 nullUtEventuelleSensitiveFelter(it)
             } else it
-        }.onEach { behandling -> behandling.oversendtKabal?.let { log.info(behandling.saksnummer+": oversendKabalTidspunkt"+it) } }
-            .forEach {
-            statistikkPublisher.publiser(sak, it)
         }
+            .onEach { log.info("Utgående DvhBehandling: "+ it.tryggToString()) }
+            .forEach { statistikkPublisher.publiser(sak, it) }
     }
 
     private fun nullUtEventuelleSensitiveFelter(sak: Sak): Sak {
