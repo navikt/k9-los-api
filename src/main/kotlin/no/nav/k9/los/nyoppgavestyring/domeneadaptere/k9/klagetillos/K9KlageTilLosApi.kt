@@ -20,7 +20,7 @@ internal fun Route.K9KlageTilLosApi() {
         if (config.nyOppgavestyringRestAktivert()) {
             requestContextService.withRequestContext(call) {
                 k9KlageTilLosAdapterTjeneste.kjør(kjørUmiddelbart = true)
-                call.respond("OK")
+                call.respond(HttpStatusCode.NoContent)
             }
         } else {
             call.respond(HttpStatusCode.Locked)
@@ -30,6 +30,7 @@ internal fun Route.K9KlageTilLosApi() {
     put("/startHistorikkvask") {
         requestContextService.withRequestContext(call) {
             k9KlageTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
+            call.respond(HttpStatusCode.NoContent)
         }
     }
 }

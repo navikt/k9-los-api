@@ -112,7 +112,6 @@ fun Application.k9Los() {
     if (LocalDateTime.now().isBefore(LocalDateTime.of(2024, 8, 13, 21, 30))) {
         if (1 == 0) { //HAXX for å ikke kjøre jobb, men indikere at koden er i bruk og dermed ikke slettes
             koin.get<K9KlageTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
-            koin.get<OppgavestatistikkTjeneste>().slettStatistikkgrunnlag()
             //koin.get<ReservasjonKonverteringJobb>().kjørReservasjonskonvertering() //TODO slette
             //koin.get<K9SakTilLosLukkeFeiloppgaverTjeneste>().kjørFeiloppgaverVask() //TODO slette
             koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
