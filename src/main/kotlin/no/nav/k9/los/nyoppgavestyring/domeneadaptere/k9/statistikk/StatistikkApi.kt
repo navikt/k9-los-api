@@ -17,10 +17,17 @@ internal fun Route.StatistikkApi() {
         if (config.nyOppgavestyringRestAktivert()) {
             requestContextService.withRequestContext(call) {
                 oppgavestatistikkTjeneste.kjør(kjørUmiddelbart = true)
-                call.respond("OK")
+                call.respond(HttpStatusCode.NoContent)
             }
         } else {
             call.respond(HttpStatusCode.Locked)
+        }
+    }
+
+    put("resendStatistikkFraStart") {
+        requestContextService.withRequestContext(call) {
+            oppgavestatistikkTjeneste.slettStatistikkgrunnlag()
+            call.respond(HttpStatusCode.NoContent)
         }
     }
 }
