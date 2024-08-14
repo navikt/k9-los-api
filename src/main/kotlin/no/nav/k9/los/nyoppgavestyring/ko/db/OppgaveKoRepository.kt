@@ -3,9 +3,8 @@ package no.nav.k9.los.nyoppgavestyring.ko.db
 import com.fasterxml.jackson.databind.ObjectMapper
 import kotliquery.*
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.utils.LosObjectMapper
-import java.lang.IllegalArgumentException
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
@@ -56,7 +55,7 @@ class OppgaveKoRepository(val datasource: DataSource) {
                     "id" to oppgaveKoId,
                     "skjermet" to skjermet
                 )
-            ).map { it.tilOppgaveKo(objectMapper, tx) to it.boolean("skjermet")}.asSingle
+            ).map { it.tilOppgaveKo(objectMapper, tx) to it.boolean("skjermet") }.asSingle
         ) ?: throw IllegalStateException("Feil ved henting av oppgavekø: $oppgaveKoId")
     }
 

@@ -6,6 +6,7 @@ import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.domene.repository.OppgaveKøRepository
 import no.nav.k9.los.domene.repository.OppgaveRepository
+import no.nav.k9.los.eventhandler.RefreshK9v3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
 import org.slf4j.LoggerFactory
 import java.time.DayOfWeek
@@ -24,6 +25,7 @@ class K9sakBehandlingsoppfriskingJobb(
     val oppgaveKøRepository: OppgaveKøRepository,
     val oppgaveRepository: OppgaveRepository,
     val reservasjonRepository: ReservasjonV3Repository,
+    val refreshK9v3Tjeneste: RefreshK9v3Tjeneste,
     val refreshOppgaveChannel: Channel<UUID>,
     val configuration: Configuration,
 
@@ -89,13 +91,16 @@ class K9sakBehandlingsoppfriskingJobb(
             log.info("Refresher ${reserverteOppgaver.size} reserverte oppgaver")
             return reserverteOppgaver
         } else {
-            val oppgaverFørstIKøene = taTiden("hent oppgaver først i køene") { hentOppgaverFørstIKøene(k9sakOppgaver) }
-            log.info("Refresher ${oppgaverFørstIKøene.size} oppgaver da de er først i køer, og ${reserverteOppgaver.size} reserverte oppgaver")
-            return oppgaverFørstIKøene + reserverteOppgaver
+            val oppgaverFørstIGamleKøer = taTiden("hent oppgaver først i køene") { hentOppgaverFørstIGamleKøer(k9sakOppgaver) }
+            val oppgaverFørstINyeKøer = taTiden("hent oppgaver først i nye køer") { refreshK9v3Tjeneste.behandlingerTilOppfriskning(antallFraHverKø) }
+            val oppgaverFørstIKøer = oppgaverFørstINyeKøer + oppgaverFørstIGamleKøer
+            log.info("Fant ${oppgaverFørstIGamleKøer.size} oppgaver først i gamle køer, og ${oppgaverFørstINyeKøer.size} oppgaver først i nye køer")
+            log.info("Refresher ${oppgaverFørstIKøer.size} oppgaver da de er først i køer, og ${reserverteOppgaver.size} reserverte oppgaver")
+            return oppgaverFørstIKøer + reserverteOppgaver
         }
     }
 
-    private fun hentOppgaverFørstIKøene(k9sakOppgaver: Set<UUID>): Set<UUID> {
+    private fun hentOppgaverFørstIGamleKøer(k9sakOppgaver: Set<UUID>): Set<UUID> {
         val køene = oppgaveKøRepository.hentIkkeTaHensyn()
         log.info("Hentet ${køene.size} køer")
         return køene.flatMap { kø ->

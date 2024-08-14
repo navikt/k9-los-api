@@ -34,10 +34,7 @@ import no.nav.helse.dusseldorf.ktor.jackson.JacksonStatusPages
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.helse.dusseldorf.ktor.metrics.MetricsRoute
 import no.nav.helse.dusseldorf.ktor.metrics.init
-import no.nav.k9.los.eventhandler.RefreshK9
-import no.nav.k9.los.eventhandler.køOppdatertProsessor
-import no.nav.k9.los.eventhandler.oppdaterStatistikk
-import no.nav.k9.los.eventhandler.sjekkReserverteJobb
+import no.nav.k9.los.eventhandler.*
 import no.nav.k9.los.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.los.integrasjon.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
@@ -56,6 +53,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.forvaltning.forvaltningApis
+import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoApis
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonApi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Api
@@ -167,6 +165,10 @@ fun Application.k9Los() {
         )
     ) { start(koin.get<Channel<UUID>>(named("oppgaveRefreshChannel"))) }
 
+    val refreshOppgaveV3Jobb = with(RefreshK9v3(
+        refreshK9v3Tjeneste = koin.get()
+    )) { start(koin.get<Channel<KøpåvirkendeHendelse>>(named("KøpåvirkendeHendelseChannel"))) }
+
     val oppdaterStatistikkJobb =
         oppdaterStatistikk(
             channel = koin.get<Channel<Boolean>>(named("statistikkRefreshChannel")),
@@ -184,6 +186,7 @@ fun Application.k9Los() {
         oppgaveRepository = koin.get(),
         oppgaveKøRepository = koin.get(),
         reservasjonRepository = koin.get(),
+        refreshK9v3Tjeneste = koin.get(),
         refreshOppgaveChannel = koin.get<Channel<UUID>>(named("oppgaveRefreshChannel")),
         configuration = koin.get()
     ).run { start() }
@@ -211,6 +214,7 @@ fun Application.k9Los() {
         log.info("Stopper pipeline")
         køOppdatertProsessorJob.cancel()
         refreshOppgaveJobb.cancel()
+        refreshOppgaveV3Jobb.cancel()
         oppdaterStatistikkJobb.cancel()
         k9SakKorrigerOutOfOrderProsessor.cancel()
     }

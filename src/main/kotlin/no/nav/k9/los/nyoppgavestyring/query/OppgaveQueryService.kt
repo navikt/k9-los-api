@@ -34,6 +34,10 @@ class OppgaveQueryService() {
         return oppgaveQueryRepository.query(oppgaveQuery)
     }
 
+    fun queryForOppgaveId(tx: TransactionalSession, oppgaveQuery: QueryRequest): List<AktivOppgaveId> {
+        return oppgaveQueryRepository.query(tx, oppgaveQuery, LocalDateTime.now())
+    }
+
     fun queryForAntall(request: QueryRequest, now : LocalDateTime = LocalDateTime.now()): Long {
         return using(sessionOf(datasource)) {
             it.transaction { tx -> oppgaveQueryRepository.queryForAntall(tx, request, now) }

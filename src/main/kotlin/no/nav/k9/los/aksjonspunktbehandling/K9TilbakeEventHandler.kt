@@ -3,14 +3,14 @@ package no.nav.k9.los.aksjonspunktbehandling
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
-import no.nav.k9.los.domene.modell.BehandlingStatus
-import no.nav.k9.los.domene.modell.FagsakYtelseType
-import no.nav.k9.los.domene.modell.IModell
-import no.nav.k9.los.domene.modell.K9TilbakeModell
+import no.nav.k9.los.domene.modell.*
 import no.nav.k9.los.domene.repository.*
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventTilbakeDto
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
+import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
+import no.nav.k9.los.nyoppgavestyring.ko.OppgaveHendelseMottatt
+import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
@@ -29,6 +29,7 @@ class K9TilbakeEventHandler(
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
     private val reservasjonOversetter: ReservasjonOversetter,
     private val saksbehandlerRepository: SaksbehandlerRepository,
+    private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
 ) : EventTeller {
 
     companion object {
@@ -66,6 +67,7 @@ class K9TilbakeEventHandler(
                     oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, listOf(oppgave), reservasjonRepository)
                 }
                 statistikkChannel.send(true)
+                køpåvirkendeHendelseChannel.send(OppgaveHendelseMottatt(Fagsystem.K9TILBAKE, EksternOppgaveId("K9", event.eksternId.toString())))
             }
         }
     }
