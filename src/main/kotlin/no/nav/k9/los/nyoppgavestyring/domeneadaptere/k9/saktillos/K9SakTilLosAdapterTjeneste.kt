@@ -159,7 +159,7 @@ class K9SakTilLosAdapterTjeneste(
         }
 
         if (korrigerFeilRekkefølge) {
-            log.warn("OppgaveV3, funnet eventer i feil rekkefølge. Kjør historikkvask for behandlingsUUID: $uuid")
+            log.info("OppgaveV3, funnet eventer i feil rekkefølge. Kjører historikkvask for behandlingsUUID: $uuid")
             runBlocking {
                 historikkvaskChannel.send(k9SakEksternId(uuid))
             }
