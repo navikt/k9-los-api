@@ -115,6 +115,12 @@ spec:
     #  value: "https://elastic-apm.adeo.no"
     #- name: "OTEL_METRICS_EXPORTER"
     #  value: "otlp"
+    #- name: "OTEL_LOGS_EXPORTER"
+    #  value: "none"
+    #- name: "OTEL_RESOURCE_ATTRIBUTES"
+    #  value: "service.name=k9-los-api,service.version=k9-los-api,deployment.environment=p"
+    #- name: "OTEL_TRACES_EXPORTER"
+    #  value: "otlp"
 
     - name: APPDYNAMICS_CONTROLLER_HOST_NAME
       value: appdynamics.adeo.no
