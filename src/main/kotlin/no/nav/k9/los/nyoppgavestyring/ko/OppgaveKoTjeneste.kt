@@ -8,6 +8,7 @@ import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.eventhandler.DetaljerMetrikker
+import no.nav.k9.los.integrasjon.abac.Action
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.pdl.IPdlService
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
@@ -63,9 +64,8 @@ class OppgaveKoTjeneste(
         for (eksternOppgaveId in køoppgaveIder) {
             val oppgave = oppgaveRepositoryTxWrapper.hentOppgave(eksternOppgaveId.område, eksternOppgaveId.eksternId)
 
-            val harTilgangTilLesSak = //TODO: harTilgangTilLesSak riktig PEP-spørring, eller bør det være likhetssjekk?
-                pepClient.harTilgangTilLesSak(oppgave.hentVerdi("saksnummer")!!, oppgave.hentVerdi("aktorId")!!)
-            if (!harTilgangTilLesSak) {
+            val harTilgangTilOppgave = pepClient.harTilgangTilOppgaveV3(oppgave, Action.read, auditlogging = true)
+            if (!harTilgangTilOppgave) {
                 continue
             }
 

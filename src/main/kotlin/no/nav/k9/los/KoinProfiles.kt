@@ -14,7 +14,6 @@ import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveTjenesteV2
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.*
-import no.nav.k9.los.eventhandler.RefreshK9v3Tjeneste
 import no.nav.k9.los.fagsystem.k9sak.AksjonspunktHendelseMapper
 import no.nav.k9.los.fagsystem.k9sak.K9sakEventHandlerV2
 import no.nav.k9.los.integrasjon.abac.IPepClient
@@ -501,16 +500,16 @@ fun common(app: Application, config: Configuration) = module {
             oppgaveKoRepository = get(),
             oppgaveQueryService = get(),
             oppgaveRepository = get(),
+            aktivOppgaveRepository = get(),
+            oppgaveRepositoryTxWrapper = get(),
             reservasjonV3Tjeneste = get(),
             saksbehandlerRepository = get(),
             oppgaveTjeneste = get(),
             reservasjonRepository = get(),
-            oppgaveRepositoryTxWrapper = get(),
-            pepClient = get(),
             pdlService = get(),
-            aktivOppgaveRepository = get(),
             statistikkChannel = get(named("statistikkRefreshChannel")),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
+            pepClient = get(),
         )
     }
 
@@ -591,7 +590,6 @@ fun common(app: Application, config: Configuration) = module {
             pepClient = get(),
             saksbehandlerRepository = get(),
             auditlogger = Auditlogger(config),
-            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
@@ -638,16 +636,6 @@ fun common(app: Application, config: Configuration) = module {
             transactionalManager = get(),
         )
     }
-
-    single {
-        RefreshK9v3Tjeneste(
-            k9SakService = get(),
-            oppgaveQueryService = get(),
-            aktivOppgaveRepository = get(),
-            oppgaveKoRepository = get(),
-            transactionalManager = get()
-        )
-    }
 }
 
 fun localDevConfig() = module {
@@ -679,7 +667,7 @@ fun preprodConfig(config: Configuration) = module {
         )
     }
     single<IPepClient> {
-        PepClient(azureGraphService = get(), auditlogger = Auditlogger(config), config = config)
+        PepClient(azureGraphService = get(), config = config, k9Auditlogger = get())
     }
     single<IK9SakService> {
         K9SakServiceSystemClient(
@@ -717,7 +705,7 @@ fun prodConfig(config: Configuration) = module {
         )
     }
     single<IPepClient> {
-        PepClient(azureGraphService = get(), auditlogger = Auditlogger(config), config = config)
+        PepClient(azureGraphService = get(), config = config, k9Auditlogger = get())
     }
     single<IK9SakService> {
         K9SakServiceSystemClient(

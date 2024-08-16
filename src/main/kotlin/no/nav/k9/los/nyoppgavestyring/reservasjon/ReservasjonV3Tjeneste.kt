@@ -5,6 +5,7 @@ import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
+import no.nav.k9.los.integrasjon.abac.Action
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.abac.TILGANG_SAK
 import no.nav.k9.los.integrasjon.audit.*
@@ -95,7 +96,7 @@ class ReservasjonV3Tjeneste(
         //sjekke tilgang på alle oppgaver tilknyttet nøkkel
         val oppgaverForReservasjonsnøkkel =
             oppgaveV3Repository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjonsnøkkel)
-        if (!sjekkTilganger(oppgaverForReservasjonsnøkkel, reserverForId, utføresAvId)) {
+        if (!sjekkTilganger(oppgaverForReservasjonsnøkkel, reserverForId)) {
             val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(reserverForId)!!
             throw ManglerTilgangException("Saksbehandler ${saksbehandler.navn} mangler tilgang til å reservere nøkkel $reservasjonsnøkkel")
         }
@@ -331,26 +332,17 @@ class ReservasjonV3Tjeneste(
 
     private fun sjekkTilganger(
         oppgaver: List<Oppgave>,
-        brukerIdSomSkalHaReservasjon: Long,
-        utføresAvId: Long
+        brukerIdSomSkalHaReservasjon: Long
     ): Boolean {
-        oppgaver.forEach { oppgave ->
+        return oppgaver.all { oppgave ->
             if (beslutterErSaksbehandler(
                     oppgave,
                     brukerIdSomSkalHaReservasjon
                 )
             ) throw ManglerTilgangException("Saksbehandler kan ikke være beslutter på egen behandling")
 
-            val saksnummer = oppgave.hentVerdi("saksnummer") //TODO gjøre oppgavetypeagnostisk
-            if (saksnummer != null) { //TODO: Oppgaver uten saksnummer?
-                val bruker = saksbehandlerRepository.finnSaksbehandlerMedId(utføresAvId)!!
-                val harTilgang = pepClient.harTilgangTilOppgaveV3(oppgave, bruker)
-                if (!harTilgang) {
-                    return false
-                }
-            }
+            runBlocking { pepClient.harTilgangTilOppgaveV3(oppgave, Action.reserver, false) }
         }
-        return true
     }
 
     private fun beslutterErSaksbehandler(

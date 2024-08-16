@@ -1,6 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.pep
 
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
@@ -93,10 +94,10 @@ class PepCacheService(
             val kode7EllerEgenAnsattRequest = async {
                 pepClient.erSakKode7EllerEgenAnsatt(fagsakNummer = saksnummer)
             }
-            val kode7EllerEgenAnsatt = kode7EllerEgenAnsattRequest.await()
 
+            val (kode6, kode7EllerEgenAnsatt) = awaitAll(kode6Request, kode7EllerEgenAnsattRequest)
             val oppdatertPepCache = oppdater(
-                kode6 = kode6Request.await(),
+                kode6 = kode6,
                 kode7 = kode7EllerEgenAnsatt,
                 egenAnsatt = kode7EllerEgenAnsatt,
             )

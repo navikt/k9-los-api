@@ -1,7 +1,6 @@
 package no.nav.k9.los.integrasjon.abac
 
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
-import no.nav.k9.los.domene.modell.Saksbehandler
 
 interface IPepClient {
 
@@ -14,17 +13,6 @@ interface IPepClient {
     suspend fun harBasisTilgang(): Boolean
 
     suspend fun kanLeggeUtDriftsmelding(): Boolean
-
-    suspend fun harTilgangTilLesSak(
-        fagsakNummer: String,
-        aktørid: String
-    ): Boolean
-
-    fun harTilgangTilLesSak(
-        fagsakNummer: String,
-        aktørid: String,
-        bruker: Saksbehandler
-    ): Boolean
 
     suspend fun harTilgangTilReservingAvOppgaver(): Boolean
 
@@ -45,7 +33,9 @@ interface IPepClient {
 
     suspend fun harTilgangTilOppgave(oppgave: Oppgave) : Boolean
 
-    fun harTilgangTilOppgaveV3(oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave, bruker: Saksbehandler) : Boolean
-
-    suspend fun harTilgangTilÅReservereOppgave(oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave, bruker: Saksbehandler) : Boolean
+    suspend fun harTilgangTilOppgaveV3(
+        oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave,
+        action: Action,
+        auditlogging: Boolean
+    ) : Boolean
 }
