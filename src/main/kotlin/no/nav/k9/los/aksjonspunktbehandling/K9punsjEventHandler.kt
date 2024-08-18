@@ -1,5 +1,6 @@
 package no.nav.k9.los.aksjonspunktbehandling
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
@@ -40,6 +41,7 @@ class K9punsjEventHandler constructor(
         private val typer = BehandlingType.values().filter { it.kodeverk == "PUNSJ_INNSENDING_TYPE" }
     }
 
+    @WithSpan
     fun prosesser(event: PunsjEventDto) {
         EventHandlerMetrics.time("k9punsj", "gjennomført") {
             log.info(event.safePrint())

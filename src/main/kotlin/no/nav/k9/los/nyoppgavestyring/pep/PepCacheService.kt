@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.pep
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
@@ -29,10 +30,12 @@ class PepCacheService(
         }
     }
 
+    @WithSpan
     fun oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn(gyldighet: Duration = Duration.ofHours(23)) {
         oppdaterCacheForOppgaverMedStatusEldreEnn(gyldighet, setOf(Oppgavestatus.VENTER, Oppgavestatus.AAPEN))
     }
 
+    @WithSpan
     fun oppdaterCacheForLukkedeOppgaverEldreEnn(gyldighet: Duration = Duration.ofDays(30)) {
         oppdaterCacheForOppgaverMedStatusEldreEnn(gyldighet, setOf(Oppgavestatus.LUKKET))
     }

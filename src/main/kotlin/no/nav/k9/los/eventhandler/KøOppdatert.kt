@@ -1,5 +1,7 @@
 package no.nav.k9.los.eventhandler
 
+import io.opentelemetry.instrumentation.annotations.SpanAttribute
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
@@ -46,9 +48,10 @@ fun CoroutineScope.køOppdatertProsessor(
     }
 }
 
+@WithSpan(value = "koOppdatertProsessor.oppdaterKo")
 private suspend fun oppdaterKø(
     oppgaveKøRepository: OppgaveKøRepository,
-    it: UUID,
+    @SpanAttribute("koUuid") it: UUID,
     oppgaveRepository: OppgaveRepository,
     oppgaveRepositoryV2: OppgaveRepositoryV2,
     oppgaveTjeneste: OppgaveTjeneste,
