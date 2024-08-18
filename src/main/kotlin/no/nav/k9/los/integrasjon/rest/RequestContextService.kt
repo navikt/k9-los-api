@@ -32,7 +32,7 @@ internal class RequestContextService(
 
     internal suspend fun <T> withRequestContext(call: ApplicationCall, block: suspend CoroutineScope.() -> T) =
         withContext(
-            context = if (profile == KoinProfile.PROD) establish(call) else establish(call) + Span.current().asContextElement(),
+            context = if (profile == KoinProfile.PROD) establish(call) else (establish(call) + Span.current().asContextElement()),
             block = block
         )
 
