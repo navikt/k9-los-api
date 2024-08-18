@@ -1,6 +1,8 @@
 package no.nav.k9.los.integrasjon.rest
 
 import io.ktor.server.application.*
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.withContext
 import no.nav.k9.los.KoinProfile
@@ -30,7 +32,7 @@ internal class RequestContextService(
 
     internal suspend fun <T> withRequestContext(call: ApplicationCall, block: suspend CoroutineScope.() -> T) =
         withContext(
-            context = establish(call),
+            context = if (profile == KoinProfile.PROD) establish(call) else establish(call) + Span.current().asContextElement(),
             block = block
         )
 
