@@ -56,7 +56,7 @@ internal class AksjonspunktStreamK9 constructor(
                 ).peek { _, e -> log.info("--> Behandlingsprosesshendelse fra k9sak: ${e.tryggToString() }") }
                 .foreach { _, entry ->
                     if (entry != null) {
-                        OpentelemetrySpanUtil.span("AksjonspunktStreamK9") {
+                        OpentelemetrySpanUtil.span("NAME", mapOf("saksnummer" to entry.saksnummer)) {
                             val tid = measureTimeMillis {
                                 TransientFeilHåndterer(warningEtter = 5.toDuration(DurationUnit.SECONDS)).utfør(NAME) {k9sakEventHandler.prosesser(entry) }
                             }

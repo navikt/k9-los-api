@@ -1,5 +1,6 @@
 package no.nav.k9.los.aksjonspunktbehandling
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.klage.kodeverk.behandling.oppgavetillos.EventHendelse
@@ -22,6 +23,7 @@ class K9KlageEventHandler constructor(
 ) {
     private val log = LoggerFactory.getLogger(K9KlageEventHandler::class.java)
 
+    @WithSpan
     fun prosesser(
         eventInn: KlagebehandlingProsessHendelse
     ) {

@@ -1,5 +1,6 @@
 package no.nav.k9.los.eventhandler
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
@@ -26,11 +27,10 @@ class RefreshK9v3Tjeneste(
     val antallPrKø: Int = 10
 ) {
 
+    @WithSpan
     fun refreshK9(hendelser: List<KøpåvirkendeHendelse>) {
-        OpentelemetrySpanUtil.span("refreshk9") {
-            transactionalManager.transaction { tx ->
-                refreshK9(tx, hendelser)
-            }
+        transactionalManager.transaction { tx ->
+            refreshK9(tx, hendelser)
         }
     }
 

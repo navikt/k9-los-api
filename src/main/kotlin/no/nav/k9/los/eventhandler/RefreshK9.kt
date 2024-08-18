@@ -1,5 +1,6 @@
 package no.nav.k9.los.eventhandler
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
@@ -27,11 +28,7 @@ class RefreshK9(
                 if (oppgaveId == null) {
                     try {
                         ChannelMetrikker.timeSuspended("refresh_k9sak") {
-                            refreshK9(
-                                oppgaveListe.fold(mutableSetOf()) { acc: MutableSet<UUID>, uuid: UUID ->
-                                    acc.apply { addAll(hentTilhørendeOppgaverFraK9sak(uuid)) }
-                                }.toList()
-                            )
+                            oppfrisk(oppgaveListe)
                             oppgaveListe.clear()
                         }
                     } catch (e: Exception) {
@@ -43,6 +40,16 @@ class RefreshK9(
                 }
             }
         }
+
+
+    @WithSpan("refreshK9.oppfrisk")
+    private suspend fun oppfrisk(oppgaveListe : List<UUID>) {
+        refreshK9(
+            oppgaveListe.fold(mutableSetOf()) { acc: MutableSet<UUID>, uuid: UUID ->
+                acc.apply { addAll(hentTilhørendeOppgaverFraK9sak(uuid)) }
+            }.toList()
+        )
+    }
 
     private fun hentTilhørendeOppgaverFraK9sak(eksternId: UUID): Set<UUID> {
         return transactionalManager.transaction { tx ->

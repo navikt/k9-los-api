@@ -1,5 +1,6 @@
 package no.nav.k9.los.aksjonspunktbehandling
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
@@ -43,6 +44,7 @@ class K9sakEventHandler constructor(
         FagsakYtelseType.PPN
     )
 
+    @WithSpan
     fun prosesser(
         eventInn: BehandlingProsessEventDto
     ) {
