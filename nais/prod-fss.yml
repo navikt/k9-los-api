@@ -131,7 +131,7 @@ spec:
     - name: APPDYNAMICS_AGENT_ACCOUNT_NAME
       value: PROD
     - name: APPD_ENABLED
-      value: true
+      value: "true"
 
 
       # Audit logging
