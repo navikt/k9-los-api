@@ -73,6 +73,10 @@ dependencies {
     implementation("no.nav.k9.klage:kodeverk:$k9KlageVersion")
     implementation("no.nav.k9.statistikk:kontrakter:2.0_20220411110858_dc06dd1")
 
+    // opentelemetry
+    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api:2.6.0")
+    implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.41.0")
+
     // Div
     implementation(enforcedPlatform( "com.fasterxml.jackson:jackson-bom:$jacksonVersion"))
     implementation("org.apache.commons:commons-text:$commonsTextVersion" )

@@ -13,6 +13,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.query.Avgrensning
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
+import no.nav.k9.los.utils.OpentelemetrySpanUtil
 import org.slf4j.LoggerFactory
 import java.util.*
 
@@ -26,8 +27,10 @@ class RefreshK9v3Tjeneste(
 ) {
 
     fun refreshK9(hendelser: List<KøpåvirkendeHendelse>) {
-        transactionalManager.transaction { tx ->
-            refreshK9(tx, hendelser)
+        OpentelemetrySpanUtil.span("refreshk9") {
+            transactionalManager.transaction { tx ->
+                refreshK9(tx, hendelser)
+            }
         }
     }
 

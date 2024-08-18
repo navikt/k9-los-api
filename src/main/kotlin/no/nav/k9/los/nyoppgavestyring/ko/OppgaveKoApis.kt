@@ -10,6 +10,7 @@ import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.integrasjon.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.ko.dto.*
+import no.nav.k9.los.utils.OpentelemetrySpanUtil
 import org.koin.java.KoinJavaComponent
 import org.koin.ktor.ext.inject
 
@@ -135,7 +136,13 @@ fun Route.OppgaveKoApis() {
             val oppgavekøId = call.parameters["id"]!!
             val filtrerReserverte = call.request.queryParameters["filtrer_reserverte"]?.let { it.toBoolean() } ?: true
 
-            call.respond(oppgaveKoTjeneste.hentAntallOppgaverForKø(oppgavekøId.toLong(), filtrerReserverte))
+            val antall = OpentelemetrySpanUtil.span("OppgaveKoTjeneste.hentAntallOppgaverForKø") {
+                oppgaveKoTjeneste.hentAntallOppgaverForKø(
+                    oppgavekøId.toLong(),
+                    filtrerReserverte
+                )
+            }
+            call.respond(antall)
         }
     }
 
