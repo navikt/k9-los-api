@@ -69,9 +69,10 @@ class OppgaveQueryRepository(
         val params = oppgaveQuery.getParams()
 
         val spanAttributes = mutableMapOf<String, String>()
-        spanAttributes.put("preparedStmt", query.encodeBase64())
+        log.info("Spørring for antall: " + query.encodeBase64())
         for (param in oppgaveQuery.getParams()) {
             spanAttributes.put("param_" + param.key, if (param.value == null) "_null_" else param.value.toString() )
+            log.info("parameter: ${param.key} til ${param.value}")
         }
 
         return OpentelemetrySpanUtil.span("queryForAntall", spanAttributes) {
