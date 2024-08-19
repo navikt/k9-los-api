@@ -21,7 +21,7 @@ val navTilgangskontroll = "3.2024.01.24_10.14-f70bae69bd65"
 // Test Dependencies
 val testContainers = "1.20.1"
 val jsonassertVersion = "1.5.3"
-val jupiterVersion = "5.10.3"
+val jupiterVersion = "5.11.0"
 val assertkVersion = "0.28.1"
 val mockkVersion = "1.13.12"
 
@@ -72,6 +72,11 @@ dependencies {
     implementation("no.nav.k9.klage:kontrakt:$k9KlageVersion")
     implementation("no.nav.k9.klage:kodeverk:$k9KlageVersion")
     implementation("no.nav.k9.statistikk:kontrakter:2.0_20220411110858_dc06dd1")
+
+    // opentelemetry
+    implementation("io.opentelemetry:opentelemetry-api:1.41.0")
+    implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.41.0")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.6.0")
 
     // Div
     implementation(enforcedPlatform( "com.fasterxml.jackson:jackson-bom:$jacksonVersion"))

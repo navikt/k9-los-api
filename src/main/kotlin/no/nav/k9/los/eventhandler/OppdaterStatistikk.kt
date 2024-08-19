@@ -9,6 +9,7 @@ import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.domene.repository.StatistikkRepository
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
+import no.nav.k9.los.utils.OpentelemetrySpanUtil
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.Executors
@@ -26,9 +27,11 @@ fun CoroutineScope.oppdaterStatistikk(
     try {
         for (skalOppdatereStatistikk in channel) {
             delay(500)
-            ChannelMetrikker.timeSuspended("oppdaterStatistikk") {
-                DetaljerMetrikker.timeSuspended("oppdaterStatistikk","refreshAntallForAlleKøer") { oppgaveTjeneste.refreshAntallForAlleKøer() }
-                DetaljerMetrikker.timeSuspended("oppdaterStatistikk", "siste8uker") { statistikkRepository.hentFerdigstilteOgNyeHistorikkMedYtelsetypeSiste8Uker(refresh = true) }
+            OpentelemetrySpanUtil.spanSuspend("oppdaterStatistikk", emptyMap()) {
+                ChannelMetrikker.timeSuspended("oppdaterStatistikk") {
+                    DetaljerMetrikker.timeSuspended("oppdaterStatistikk","refreshAntallForAlleKøer") { oppgaveTjeneste.refreshAntallForAlleKøer() }
+                    DetaljerMetrikker.timeSuspended("oppdaterStatistikk","siste8uker") { statistikkRepository.hentFerdigstilteOgNyeHistorikkMedYtelsetypeSiste8Uker(refresh = true) }
+                }
             }
             if (configuration.koinProfile == KoinProfile.PROD) {
                 delay(57_000) //redusert hyppighet i prod for å unngå å bruke for mye ressurser

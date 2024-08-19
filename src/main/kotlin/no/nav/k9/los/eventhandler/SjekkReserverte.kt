@@ -4,6 +4,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.jobber.JobbMetrikker
+import no.nav.k9.los.utils.OpentelemetrySpanUtil
 import java.util.*
 import kotlin.concurrent.fixedRateTimer
 
@@ -15,9 +16,11 @@ fun sjekkReserverteJobb(
         name = "sjekkReserverteTimer", daemon = true,
         initialDelay = 0, period = 900 * 1000
     ) {
-        JobbMetrikker.time("sjekk_reserverte") {
-            for (saksbehandler in saksbehandlerRepository.hentAlleSaksbehandlereIkkeTaHensyn()) {
-                runBlocking { reservasjonRepository.hentOgFjernInaktiveReservasjoner(saksbehandler.reservasjoner, saksbehandler.brukerIdent) }
+        OpentelemetrySpanUtil.span("sjekkReserverteJobb", emptyMap())  {
+            JobbMetrikker.time("sjekk_reserverte") {
+                for (saksbehandler in saksbehandlerRepository.hentAlleSaksbehandlereIkkeTaHensyn()) {
+                    runBlocking { reservasjonRepository.hentOgFjernInaktiveReservasjoner(saksbehandler.reservasjoner, saksbehandler.brukerIdent) }
+                }
             }
         }
     }

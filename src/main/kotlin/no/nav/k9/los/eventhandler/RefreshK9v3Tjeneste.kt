@@ -1,5 +1,6 @@
 package no.nav.k9.los.eventhandler
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
@@ -13,6 +14,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.query.Avgrensning
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
+import no.nav.k9.los.utils.OpentelemetrySpanUtil
 import org.slf4j.LoggerFactory
 import java.util.*
 
@@ -25,6 +27,7 @@ class RefreshK9v3Tjeneste(
     val antallPrKø: Int = 10
 ) {
 
+    @WithSpan
     fun refreshK9(hendelser: List<KøpåvirkendeHendelse>) {
         transactionalManager.transaction { tx ->
             refreshK9(tx, hendelser)

@@ -1,5 +1,6 @@
 package no.nav.k9.los.aksjonspunktbehandling
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
@@ -36,6 +37,7 @@ class K9TilbakeEventHandler(
         private val log = LoggerFactory.getLogger(K9TilbakeEventHandler::class.java)
     }
 
+    @WithSpan
     fun prosesser(
         event: BehandlingProsessEventTilbakeDto
     ) {
