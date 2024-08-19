@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.query.db
 
+import io.ktor.util.*
 import io.opentelemetry.api.trace.StatusCode
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
@@ -64,43 +65,22 @@ class OppgaveQueryRepository(
     }
 
     private fun queryForAntall(tx: TransactionalSession, oppgaveQuery: OppgaveQuerySqlBuilder): Long {
-        var spanBuilder = OpentelemetrySpanUtil.tracer.spanBuilder("queryForAntall")
-
         val query = oppgaveQuery.getQuery()
         val params = oppgaveQuery.getParams()
 
-        spanBuilder = spanBuilder.setAttribute("preparedStmt", query)
-        for (param in params) {
-            val key = param.key
-            val value = param.value
-            if (value is Boolean) {
-                spanBuilder = spanBuilder.setAttribute(key, value)
-            } else if (value is Long) {
-                spanBuilder = spanBuilder.setAttribute(key, value)
-            } else if (value is Int) {
-                spanBuilder = spanBuilder.setAttribute(key, value.toLong())
-            } else {
-                spanBuilder = spanBuilder.setAttribute(key, value.toString())
-            }
+        val spanAttributes = mutableMapOf<String, String>()
+        spanAttributes.put("preparedStmt", query.encodeBase64())
+        for (param in oppgaveQuery.getParams()) {
+            spanAttributes.put("param_" + param.key, if (param.value == null) "_null_" else param.value.toString() )
         }
-        val span = spanBuilder.startSpan()
-        span.makeCurrent().use {
-            try {
-                val antall = tx.run(
-                    queryOf(
-                        query,
-                        params
-                    ).map { row -> row.long("antall") }.asSingle
-                )!!
-                span.addEvent("antall=$antall")
-                return antall
-            } catch (throwable: Throwable) {
-                span.setStatus(StatusCode.ERROR, throwable.javaClass.name)
-                span.recordException(throwable)
-                throw throwable
-            } finally {
-                span.end()
-            }
+
+        return OpentelemetrySpanUtil.span("queryForAntall", spanAttributes) {
+            tx.run(
+                queryOf(
+                    query,
+                    params
+                ).map { row -> row.long("antall") }.asSingle
+            )!!
         }
     }
 
