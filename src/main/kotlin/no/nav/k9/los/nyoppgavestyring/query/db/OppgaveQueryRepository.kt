@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.query.db
 
+import io.opentelemetry.api.trace.StatusCode
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -98,6 +99,10 @@ class OppgaveQueryRepository(
                 )!!
                 span.addEvent("antall=$antall")
                 return antall
+            } catch (throwable : Throwable) {
+                span.setStatus(StatusCode.ERROR, throwable.javaClass.name)
+                span.recordException(throwable)
+                throw throwable
             } finally {
                 span.end()
             }
