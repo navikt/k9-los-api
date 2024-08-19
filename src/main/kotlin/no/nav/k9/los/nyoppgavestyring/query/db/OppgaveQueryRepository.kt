@@ -4,6 +4,8 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.k9.los.Configuration
+import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.EgenAnsatt
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
@@ -16,12 +18,14 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelter
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Verdiforklaring
 import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgaveQueryToSqlMapper
 import no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.GyldigeTransientFeltutleder
+import no.nav.k9.los.utils.OpentelemetrySpanUtil
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
 class OppgaveQueryRepository(
+    val configuration: Configuration,
     val datasource: DataSource,
     val feltdefinisjonRepository: FeltdefinisjonRepository
 ) {
@@ -62,12 +66,42 @@ class OppgaveQueryRepository(
     }
 
     private fun queryForAntall(tx: TransactionalSession, oppgaveQuery: OppgaveQuerySqlBuilder): Long {
-        return tx.run(
-            queryOf(
-                oppgaveQuery.getQuery(),
-                oppgaveQuery.getParams()
-            ).map { row -> row.long("antall") }.asSingle
-        )!!
+        var spanBuilder = OpentelemetrySpanUtil.tracer.spanBuilder("queryForAntall")
+
+        val query = oppgaveQuery.getQuery()
+        val params = oppgaveQuery.getParams()
+
+        if (configuration.koinProfile == KoinProfile.PREPROD) {
+            spanBuilder = spanBuilder.setAttribute("preparedStmt", query)
+            for (param in params) {
+                val key = param.key
+                val value = param.value
+                if (value is Boolean) {
+                    spanBuilder = spanBuilder.setAttribute(key, value)
+                } else if (value is Long) {
+                    spanBuilder = spanBuilder.setAttribute(key, value)
+                } else if (value is Int) {
+                    spanBuilder = spanBuilder.setAttribute(key, value.toLong())
+                } else {
+                    spanBuilder = spanBuilder.setAttribute(key, value.toString())
+                }
+            }
+        }
+        val span = spanBuilder.startSpan()
+        span.makeCurrent().use {
+            try {
+                val antall = tx.run(
+                    queryOf(
+                        query,
+                        params
+                    ).map { row -> row.long("antall") }.asSingle
+                )!!
+                span.addEvent("antall=$antall")
+                return antall
+            } finally {
+                span.end()
+            }
+        }
     }
 
     fun hentAlleFelter(): Oppgavefelter {
