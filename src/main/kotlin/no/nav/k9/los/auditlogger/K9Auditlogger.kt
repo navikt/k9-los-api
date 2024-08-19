@@ -52,7 +52,6 @@ class K9Auditlogger(
                     CefField(CefFieldName.ABAC_ACTION, action.name),
                     CefField(CefFieldName.USER_ID, identTilInnloggetBruker),
                     CefField(CefFieldName.BERORT_BRUKER_ID, aktorId),
-
                 )
             )
         )

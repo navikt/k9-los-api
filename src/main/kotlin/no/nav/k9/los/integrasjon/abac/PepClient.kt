@@ -172,7 +172,7 @@ class PepClient(
     }
 
     override suspend fun harTilgangTilOppgave(oppgave: Oppgave): Boolean {
-        return harTilgang("k9sak", Action.read, oppgave.fagsakSaksnummer, oppgave.aktorId, Auditlogging.IKKE_LOGG)
+        return harTilgang("k9sak", Action.read, oppgave.fagsakSaksnummer, oppgave.aktorId, oppgave.pleietrengendeAktørId, Auditlogging.IKKE_LOGG)
     }
 
     override suspend fun harTilgangTilOppgaveV3(
@@ -180,14 +180,22 @@ class PepClient(
         action: Action,
         auditlogging: Auditlogging
     ): Boolean {
-        return harTilgang(oppgave.oppgavetype.eksternId, action, oppgave.hentVerdi("saksnummer"), oppgave.hentVerdi("aktorId"), auditlogging)
+        return harTilgang(
+            oppgave.oppgavetype.eksternId,
+            action,
+            oppgave.hentVerdi("saksnummer"),
+            oppgave.hentVerdi("aktorId"),
+            oppgave.hentVerdi("pleietrengendeAktorId"),
+            auditlogging
+        )
     }
 
     private suspend fun harTilgang(
         oppgavetype: String,
         action: Action,
         saksnummer: String?,
-        aktorId: String?,
+        aktørIdSøker: String?,
+        aktørIdPleietrengende: String?,
         auditlogging: Auditlogging
     ): Boolean {
         val identTilInnloggetBruker = azureGraphService.hentIdentTilInnloggetBruker()
@@ -204,7 +212,7 @@ class PepClient(
                         .addResourceAttribute(RESOURCE_SAKSNR, saksnummer!!)
                 )
                 if (auditlogging == Auditlogging.ALLTID_LOGG || (tilgang && (auditlogging == Auditlogging.LOGG_VED_PERMIT))) {
-                    k9Auditlogger.loggTilgangK9Sak(saksnummer, aktorId!!, identTilInnloggetBruker, action)
+                    k9Auditlogger.loggTilgangK9Sak(saksnummer, aktørIdSøker!!, identTilInnloggetBruker, action)
                 }
 
                 tilgang
@@ -217,13 +225,14 @@ class PepClient(
                         XacmlRequestBuilder()
                             .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
                             .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
-                            .addResourceAttribute(RESOURCE_TYPE, TILGANG_SAK_KODE6)
+                            .addResourceAttribute(RESOURCE_TYPE, TILGANG_SAK)
                             .addActionAttribute(ACTION_ID, action)
                             .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
                             .addAccessSubjectAttribute(SUBJECTID, identTilInnloggetBruker)
+                            .addResourceAttribute(RESOURCE_AKTØR_ID, aktørIdSøker!!)
                     )
 
-                val tilgangForPleietrengende =
+                val tilgangForPleietrengende = if (aktørIdPleietrengende != null)
                     evaluate(
                         XacmlRequestBuilder()
                             .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
@@ -232,11 +241,12 @@ class PepClient(
                             .addActionAttribute(ACTION_ID, action)
                             .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
                             .addAccessSubjectAttribute(SUBJECTID, identTilInnloggetBruker)
-                    )
+                            .addResourceAttribute(RESOURCE_AKTØR_ID, aktørIdPleietrengende)
+                    ) else true
 
                 val tilgang = tilgangForSøker && tilgangForPleietrengende
                 if (auditlogging == Auditlogging.ALLTID_LOGG || (tilgang && auditlogging == Auditlogging.LOGG_VED_PERMIT)) {
-                    k9Auditlogger.loggTilgangK9Punsj(aktorId!!, identTilInnloggetBruker, action)
+                    k9Auditlogger.loggTilgangK9Punsj(aktørIdSøker, identTilInnloggetBruker, action)
                 }
                 tilgang
             }
