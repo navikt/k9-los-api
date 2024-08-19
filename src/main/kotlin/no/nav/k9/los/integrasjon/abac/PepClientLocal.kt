@@ -55,7 +55,7 @@ class PepClientLocal : IPepClient {
     override suspend fun harTilgangTilOppgaveV3(
         oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave,
         action: Action,
-        auditlogging: Boolean
+        auditlogging: Auditlogging
     ): Boolean {
         return true
     }

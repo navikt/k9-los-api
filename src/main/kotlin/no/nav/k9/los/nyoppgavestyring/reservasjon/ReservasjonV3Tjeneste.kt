@@ -6,6 +6,7 @@ import kotliquery.TransactionalSession
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.abac.Action
+import no.nav.k9.los.integrasjon.abac.Auditlogging
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.abac.TILGANG_SAK
 import no.nav.k9.los.integrasjon.audit.*
@@ -341,7 +342,7 @@ class ReservasjonV3Tjeneste(
                 )
             ) throw ManglerTilgangException("Saksbehandler kan ikke være beslutter på egen behandling")
 
-            runBlocking { pepClient.harTilgangTilOppgaveV3(oppgave, Action.reserver, false) }
+            runBlocking { pepClient.harTilgangTilOppgaveV3(oppgave, Action.reserver, Auditlogging.IKKE_LOGG) }
         }
     }
 

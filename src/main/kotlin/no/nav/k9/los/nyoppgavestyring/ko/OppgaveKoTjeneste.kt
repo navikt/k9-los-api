@@ -9,6 +9,7 @@ import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.eventhandler.DetaljerMetrikker
 import no.nav.k9.los.integrasjon.abac.Action
+import no.nav.k9.los.integrasjon.abac.Auditlogging
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.pdl.IPdlService
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
@@ -64,8 +65,7 @@ class OppgaveKoTjeneste(
         for (eksternOppgaveId in køoppgaveIder) {
             val oppgave = oppgaveRepositoryTxWrapper.hentOppgave(eksternOppgaveId.område, eksternOppgaveId.eksternId)
 
-            val harTilgangTilOppgave = pepClient.harTilgangTilOppgaveV3(oppgave, Action.read, auditlogging = true)
-            if (!harTilgangTilOppgave) {
+            if (!pepClient.harTilgangTilOppgaveV3(oppgave, Action.read, Auditlogging.LOGG_VED_PERMIT)) {
                 continue
             }
 

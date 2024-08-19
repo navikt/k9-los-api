@@ -172,13 +172,13 @@ class PepClient(
     }
 
     override suspend fun harTilgangTilOppgave(oppgave: Oppgave): Boolean {
-        return harTilgang("k9sak", Action.read, oppgave.fagsakSaksnummer, oppgave.aktorId, false)
+        return harTilgang("k9sak", Action.read, oppgave.fagsakSaksnummer, oppgave.aktorId, Auditlogging.IKKE_LOGG)
     }
 
     override suspend fun harTilgangTilOppgaveV3(
         oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave,
         action: Action,
-        auditlogging: Boolean
+        auditlogging: Auditlogging
     ): Boolean {
         return harTilgang(oppgave.oppgavetype.eksternId, action, oppgave.hentVerdi("saksnummer"), oppgave.hentVerdi("aktorId"), auditlogging)
     }
@@ -188,21 +188,26 @@ class PepClient(
         action: Action,
         saksnummer: String?,
         aktorId: String?,
-        auditlogging: Boolean
+        auditlogging: Auditlogging
     ): Boolean {
         val identTilInnloggetBruker = azureGraphService.hentIdentTilInnloggetBruker()
         return when (oppgavetype) {
-            "k9sak", "k9klage" -> {
-                if (auditlogging) k9Auditlogger.loggTilgangK9Sak(saksnummer!!, aktorId!!, identTilInnloggetBruker, action)
-                evaluate(XacmlRequestBuilder()
-                    .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
-                    .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
-                    .addResourceAttribute(RESOURCE_TYPE, TILGANG_SAK)
-                    .addActionAttribute(ACTION_ID, action)
-                    .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
-                    .addAccessSubjectAttribute(SUBJECTID, identTilInnloggetBruker)
-                    .addResourceAttribute(RESOURCE_SAKSNR, saksnummer!!)
+            "k9sak", "k9klage", "k9tilbake" -> {
+                val tilgang = evaluate(
+                    XacmlRequestBuilder()
+                        .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
+                        .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
+                        .addResourceAttribute(RESOURCE_TYPE, TILGANG_SAK)
+                        .addActionAttribute(ACTION_ID, action)
+                        .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
+                        .addAccessSubjectAttribute(SUBJECTID, identTilInnloggetBruker)
+                        .addResourceAttribute(RESOURCE_SAKSNR, saksnummer!!)
                 )
+                if (auditlogging == Auditlogging.ALLTID_LOGG || (tilgang && (auditlogging == Auditlogging.LOGG_VED_PERMIT))) {
+                    k9Auditlogger.loggTilgangK9Sak(saksnummer, aktorId!!, identTilInnloggetBruker, action)
+                }
+
+                tilgang
             }
             "k9punsj" -> {
                 // ABAC bør støtte tilgangssjekk på punsj-oppgaver med journalpostId, for å unngå to kall og logikk her
@@ -212,7 +217,7 @@ class PepClient(
                         XacmlRequestBuilder()
                             .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
                             .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
-                            .addResourceAttribute(RESOURCE_TYPE, TILGANG_SAK)
+                            .addResourceAttribute(RESOURCE_TYPE, TILGANG_SAK_KODE6)
                             .addActionAttribute(ACTION_ID, action)
                             .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
                             .addAccessSubjectAttribute(SUBJECTID, identTilInnloggetBruker)
@@ -229,11 +234,13 @@ class PepClient(
                             .addAccessSubjectAttribute(SUBJECTID, identTilInnloggetBruker)
                     )
 
-                if (auditlogging) k9Auditlogger.loggTilgangK9Punsj(aktorId!!, identTilInnloggetBruker, action)
-
-                return tilgangForSøker && tilgangForPleietrengende
+                val tilgang = tilgangForSøker && tilgangForPleietrengende
+                if (auditlogging == Auditlogging.ALLTID_LOGG || (tilgang && auditlogging == Auditlogging.LOGG_VED_PERMIT)) {
+                    k9Auditlogger.loggTilgangK9Punsj(aktorId!!, identTilInnloggetBruker, action)
+                }
+                tilgang
             }
-            else -> throw NotImplementedError("Støtter kun tilgangsoppslag på k9klage, k9sak og k9punsj")
+            else -> throw NotImplementedError("Støtter kun tilgangsoppslag på k9klage, k9sak, k9tilbake og k9punsj")
         }
     }
 
@@ -297,3 +304,4 @@ class PepClient(
         }
     }
 }
+
