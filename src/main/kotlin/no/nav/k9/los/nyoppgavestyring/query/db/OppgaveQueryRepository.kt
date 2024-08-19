@@ -5,8 +5,6 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.Configuration
-import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.EgenAnsatt
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
@@ -26,7 +24,6 @@ import java.time.LocalDateTime
 import javax.sql.DataSource
 
 class OppgaveQueryRepository(
-    val configuration: Configuration,
     val datasource: DataSource,
     val feltdefinisjonRepository: FeltdefinisjonRepository
 ) {
@@ -72,20 +69,18 @@ class OppgaveQueryRepository(
         val query = oppgaveQuery.getQuery()
         val params = oppgaveQuery.getParams()
 
-        if (configuration.koinProfile == KoinProfile.PREPROD) {
-            spanBuilder = spanBuilder.setAttribute("preparedStmt", query)
-            for (param in params) {
-                val key = param.key
-                val value = param.value
-                if (value is Boolean) {
-                    spanBuilder = spanBuilder.setAttribute(key, value)
-                } else if (value is Long) {
-                    spanBuilder = spanBuilder.setAttribute(key, value)
-                } else if (value is Int) {
-                    spanBuilder = spanBuilder.setAttribute(key, value.toLong())
-                } else {
-                    spanBuilder = spanBuilder.setAttribute(key, value.toString())
-                }
+        spanBuilder = spanBuilder.setAttribute("preparedStmt", query)
+        for (param in params) {
+            val key = param.key
+            val value = param.value
+            if (value is Boolean) {
+                spanBuilder = spanBuilder.setAttribute(key, value)
+            } else if (value is Long) {
+                spanBuilder = spanBuilder.setAttribute(key, value)
+            } else if (value is Int) {
+                spanBuilder = spanBuilder.setAttribute(key, value.toLong())
+            } else {
+                spanBuilder = spanBuilder.setAttribute(key, value.toString())
             }
         }
         val span = spanBuilder.startSpan()
@@ -99,7 +94,7 @@ class OppgaveQueryRepository(
                 )!!
                 span.addEvent("antall=$antall")
                 return antall
-            } catch (throwable : Throwable) {
+            } catch (throwable: Throwable) {
                 span.setStatus(StatusCode.ERROR, throwable.javaClass.name)
                 span.recordException(throwable)
                 throw throwable
@@ -185,7 +180,7 @@ class OppgaveQueryRepository(
             Oppgavefelt(
                 område = null,
                 kode = "beskyttelse",
-                visningsnavn =  "Beskyttelse",
+                visningsnavn = "Beskyttelse",
                 tolkes_som = "String",
                 kokriterie = false,
                 verdiforklaringerErUttømmende = true,
@@ -200,7 +195,7 @@ class OppgaveQueryRepository(
             Oppgavefelt(
                 område = null,
                 kode = "egenAnsatt",
-                visningsnavn =  "Egen ansatt",
+                visningsnavn = "Egen ansatt",
                 tolkes_som = "String",
                 kokriterie = false,
                 verdiforklaringerErUttømmende = true,
@@ -239,7 +234,10 @@ class OppgaveQueryRepository(
         )
     }
 
-    private fun queryForEksternId(tx: TransactionalSession, oppgaveQuery: OppgaveQuerySqlBuilder): List<EksternOppgaveId> {
+    private fun queryForEksternId(
+        tx: TransactionalSession,
+        oppgaveQuery: OppgaveQuerySqlBuilder
+    ): List<EksternOppgaveId> {
         log.info("spørring oppgaveQuery for oppgave EksternId: ${oppgaveQuery.getQuery()}")
         /*  val explain = tx.run(
             queryOf(
@@ -254,10 +252,12 @@ class OppgaveQueryRepository(
             queryOf(
                 oppgaveQuery.getQuery(),
                 oppgaveQuery.getParams()
-            ).map { row -> EksternOppgaveId(
-                row.string("kildeomrade"),
-                row.string("ekstern_id")
-            ) }.asList
+            ).map { row ->
+                EksternOppgaveId(
+                    row.string("kildeomrade"),
+                    row.string("ekstern_id")
+                )
+            }.asList
         )
     }
 }
