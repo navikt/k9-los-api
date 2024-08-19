@@ -36,6 +36,7 @@ class K9Auditlogger(
     }
 
     fun loggTilgangK9Punsj(aktorId: String, identTilInnloggetBruker: String, action: Action) {
+        // Loggingen her må gås opp, usikkert om dette er tilstrekkelig
         auditlogger.logg(
             Auditdata(
                 header = AuditdataHeader(
