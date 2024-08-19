@@ -1,7 +1,5 @@
 package no.nav.k9.los.nyoppgavestyring.query.db
 
-import io.ktor.util.*
-import io.opentelemetry.api.trace.StatusCode
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -18,7 +16,6 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelter
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Verdiforklaring
 import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgaveQueryToSqlMapper
 import no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.GyldigeTransientFeltutleder
-import no.nav.k9.los.utils.OpentelemetrySpanUtil
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -65,24 +62,12 @@ class OppgaveQueryRepository(
     }
 
     private fun queryForAntall(tx: TransactionalSession, oppgaveQuery: OppgaveQuerySqlBuilder): Long {
-        val query = oppgaveQuery.getQuery()
-        val params = oppgaveQuery.getParams()
-
-        val spanAttributes = mutableMapOf<String, String>()
-        log.info("Spørring for antall: " + query.encodeBase64())
-        for (param in oppgaveQuery.getParams()) {
-            spanAttributes.put("param_" + param.key, if (param.value == null) "_null_" else param.value.toString() )
-            log.info("parameter: ${param.key} til ${param.value}")
-        }
-
-        return OpentelemetrySpanUtil.span("queryForAntall", spanAttributes) {
-            tx.run(
-                queryOf(
-                    query,
-                    params
-                ).map { row -> row.long("antall") }.asSingle
-            )!!
-        }
+        return tx.run(
+            queryOf(
+                oppgaveQuery.getQuery(),
+                oppgaveQuery.getParams()
+            ).map { row -> row.long("antall") }.asSingle
+        )!!
     }
 
     fun hentAlleFelter(): Oppgavefelter {
