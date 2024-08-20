@@ -23,7 +23,7 @@
         },
         {
           "id": "fagsystem",
-          "visPåOppgave": true,
+          "visPåOppgave": false,
           "påkrevd": true
         },
         {
