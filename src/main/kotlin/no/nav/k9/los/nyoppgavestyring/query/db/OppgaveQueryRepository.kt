@@ -146,7 +146,7 @@ class OppgaveQueryRepository(
             Oppgavefelt(
                 område = null,
                 kode = "beskyttelse",
-                visningsnavn =  "Beskyttelse",
+                visningsnavn = "Beskyttelse",
                 tolkes_som = "String",
                 kokriterie = false,
                 verdiforklaringerErUttømmende = true,
@@ -161,7 +161,7 @@ class OppgaveQueryRepository(
             Oppgavefelt(
                 område = null,
                 kode = "egenAnsatt",
-                visningsnavn =  "Egen ansatt",
+                visningsnavn = "Egen ansatt",
                 tolkes_som = "String",
                 kokriterie = false,
                 verdiforklaringerErUttømmende = true,
@@ -200,7 +200,10 @@ class OppgaveQueryRepository(
         )
     }
 
-    private fun queryForEksternId(tx: TransactionalSession, oppgaveQuery: OppgaveQuerySqlBuilder): List<EksternOppgaveId> {
+    private fun queryForEksternId(
+        tx: TransactionalSession,
+        oppgaveQuery: OppgaveQuerySqlBuilder
+    ): List<EksternOppgaveId> {
         log.info("spørring oppgaveQuery for oppgave EksternId: ${oppgaveQuery.getQuery()}")
         /*  val explain = tx.run(
             queryOf(
@@ -215,10 +218,12 @@ class OppgaveQueryRepository(
             queryOf(
                 oppgaveQuery.getQuery(),
                 oppgaveQuery.getParams()
-            ).map { row -> EksternOppgaveId(
-                row.string("kildeomrade"),
-                row.string("ekstern_id")
-            ) }.asList
+            ).map { row ->
+                EksternOppgaveId(
+                    row.string("kildeomrade"),
+                    row.string("ekstern_id")
+                )
+            }.asList
         )
     }
 }
