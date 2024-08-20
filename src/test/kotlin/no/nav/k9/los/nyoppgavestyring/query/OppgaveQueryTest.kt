@@ -270,6 +270,54 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         ))))).isNotEmpty()
     }
 
+    @Test
+    fun `sjekker at ekskluderer-verdi-query finner oppgaver som ikke har feltet`() {
+        val testbuilder = OppgaveTestDataBuilder()
+            testbuilder.medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, UUID.randomUUID().toString())
+            //denne har IKKE fagsystem
+            .lagOgLagre()
+
+        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
+        val oppgaveQuery = OppgaveQuery(listOf(
+            FeltverdiOppgavefilter("K9", "fagsystem", "NOT_EQUALS", listOf("K9PUNSJ"))
+        ))
+
+        val result = oppgaveQueryRepository.query(QueryRequest(oppgaveQuery))
+        assertThat(result).hasSize(1)
+    }
+
+    @Test
+    fun `sjekker at ekskluderer-verdi-query finner oppgaver som har feltet men annen verdi enn angitt`() {
+        val testbuilder = OppgaveTestDataBuilder()
+        testbuilder.medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, UUID.randomUUID().toString())
+            .medOppgaveFeltVerdi(FeltType.FAGSYSTEM, "K9SAK")
+            .lagOgLagre()
+
+        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
+        val oppgaveQuery = OppgaveQuery(listOf(
+            FeltverdiOppgavefilter("K9", "fagsystem", "NOT_EQUALS", listOf("K9PUNSJ"))
+        ))
+
+        val result = oppgaveQueryRepository.query(QueryRequest(oppgaveQuery))
+        assertThat(result).hasSize(1)
+    }
+
+    @Test
+    fun `sjekker at ekskluderer-verdi-query ikke finner oppgaver som har feltet med angitt verdi`() {
+        val testbuilder = OppgaveTestDataBuilder()
+        testbuilder.medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, UUID.randomUUID().toString())
+            .medOppgaveFeltVerdi(FeltType.FAGSYSTEM, "K9PUNSJ")
+            .lagOgLagre()
+
+        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
+        val oppgaveQuery = OppgaveQuery(listOf(
+            FeltverdiOppgavefilter("K9", "fagsystem", "NOT_EQUALS", listOf("K9PUNSJ"))
+        ))
+
+        val result = oppgaveQueryRepository.query(QueryRequest(oppgaveQuery))
+        assertThat(result).isEmpty()
+    }
+
     @Test // Query er ikke ment som tilgangskontroll, men en kjapp måte å utføre filtrering før tilgangssjekk gjøres på resultatet
     fun  `Resultat skal inneholde alle sikkerhetsklassifiseringer når ikke beskyttelse eller egen ansatt er spesifisert i filtre`() {
         val eksternId = lagOppgaveMedPepCache(kode6 = true, kode7 = true, egenAnsatt = true)
