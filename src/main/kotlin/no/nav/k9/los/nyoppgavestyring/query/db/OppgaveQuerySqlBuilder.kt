@@ -196,9 +196,6 @@ class OppgaveQuerySqlBuilder(
             INTEGER -> {
                 return "CAST(ov.verdi AS integer)"
             }
-            DOUBLE -> {
-                return "CAST(ov.verdi AS DOUBLE PRECISION)"
-            }
             else -> {
                 return "ov.verdi"
             }
@@ -222,11 +219,6 @@ class OppgaveQuerySqlBuilder(
             INTEGER -> {
                 return try {
                     BigInteger(feltverdi as String)
-                } catch (e: Exception) { null }
-            }
-            DOUBLE -> {
-                return try {
-                    BigDecimal(feltverdi as String)
                 } catch (e: Exception) { null }
             }
             else -> {
