@@ -53,7 +53,7 @@ internal class AksjonspunktKlageStream constructor(
                 ).peek { _, e -> log.info("--> Behandlingsprosesshendelse fra k9klage: ${e.tryggToString() }") }
                 .foreach { _, entry ->
                     if (entry != null) {
-                        OpentelemetrySpanUtil.span("NAME", mapOf("saksnummer" to entry.saksnummer)) {
+                        OpentelemetrySpanUtil.span(NAME, mapOf("saksnummer" to entry.saksnummer)) {
                             TransientFeilHåndterer().utfør(NAME) { k9KlageEventHandler.prosesser(entry) }
                         }
                     }
