@@ -113,7 +113,7 @@ fun Route.OppgaveKoApis() {
                     oppgaveKoTjeneste.hentOppgaverFraKø(
                         oppgavekøId.toLong(),
                         10,
-                        fjernReserverte = true,
+                        fjernReserverte = true
                     )
                 ) //Finn et fornuftig antall?
             } else {
