@@ -591,7 +591,6 @@ fun common(app: Application, config: Configuration) = module {
             oppgaveV3Repository = get(),
             pepClient = get(),
             saksbehandlerRepository = get(),
-            auditlogger = Auditlogger(config),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }

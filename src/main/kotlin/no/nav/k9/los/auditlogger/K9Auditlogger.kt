@@ -10,9 +10,9 @@ import java.time.ZoneOffset
 class K9Auditlogger(
     private val auditlogger: Auditlogger
 ) {
-    fun betingetLogging(tilgang: Boolean, auditlogging: Auditlogging, callback: () -> Unit) {
+    fun betingetLogging(tilgang: Boolean, auditlogging: Auditlogging, callback: K9Auditlogger.() -> Unit) {
         if (auditlogging == Auditlogging.ALLTID_LOGG || (tilgang && (auditlogging == Auditlogging.LOGG_VED_PERMIT))) {
-            callback()
+            callback(this)
         }
     }
 

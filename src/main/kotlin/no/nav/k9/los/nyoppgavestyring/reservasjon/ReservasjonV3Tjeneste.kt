@@ -8,8 +8,6 @@ import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.abac.Action
 import no.nav.k9.los.integrasjon.abac.Auditlogging
 import no.nav.k9.los.integrasjon.abac.IPepClient
-import no.nav.k9.los.integrasjon.abac.TILGANG_SAK
-import no.nav.k9.los.integrasjon.audit.*
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.FinnerIkkeDataException
 import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.ReservasjonAnnullert
@@ -21,7 +19,6 @@ import no.nav.k9.los.utils.leggTilDagerHoppOverHelg
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
-import java.time.ZoneOffset
 import java.util.*
 
 class ReservasjonV3Tjeneste(
@@ -29,7 +26,6 @@ class ReservasjonV3Tjeneste(
     private val reservasjonV3Repository: ReservasjonV3Repository,
     private val pepClient: IPepClient,
     private val saksbehandlerRepository: SaksbehandlerRepository,
-    private val auditlogger: Auditlogger,
     private val oppgaveV1Repository: no.nav.k9.los.domene.repository.OppgaveRepository,
     private val oppgaveV3Repository: OppgaveRepository,
     private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
@@ -37,39 +33,6 @@ class ReservasjonV3Tjeneste(
 
     companion object {
         private val log: Logger = LoggerFactory.getLogger("ReservasjonV3Tjeneste")
-    }
-
-    fun auditlogReservert(brukerId: Long, reservertoppgave: Oppgave) {
-        val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(brukerId)!!
-        auditlogger.logg(
-            Auditdata(
-                header = AuditdataHeader(
-                    vendor = auditlogger.defaultVendor,
-                    product = auditlogger.defaultProduct,
-                    eventClassId = EventClassId.AUDIT_SEARCH,
-                    name = "ABAC Sporingslogg",
-                    severity = "INFO"
-                ), fields = setOf(
-                    CefField(CefFieldName.EVENT_TIME, LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) * 1000L),
-                    CefField(CefFieldName.REQUEST, "read"),
-                    CefField(CefFieldName.ABAC_RESOURCE_TYPE, TILGANG_SAK),
-                    CefField(CefFieldName.ABAC_ACTION, "read"),
-                    CefField(CefFieldName.USER_ID, saksbehandler.brukerIdent),
-                    CefField(
-                        CefFieldName.BERORT_BRUKER_ID,
-                        reservertoppgave.hentVerdi("aktorId")
-                    ), //TODO gjøre oppgavetypeagnostisk
-
-                    CefField(CefFieldName.BEHANDLING_VERDI, "behandlingsid"),
-                    CefField(CefFieldName.BEHANDLING_LABEL, "Behandling"),
-                    CefField(
-                        CefFieldName.SAKSNUMMER_VERDI,
-                        reservertoppgave.hentVerdi("saksnummer")
-                    ), //TODO gjøre oppgavetypeagnostisk
-                    CefField(CefFieldName.SAKSNUMMER_LABEL, "Saksnummer"),
-                )
-            )
-        )
     }
 
     fun taReservasjon(

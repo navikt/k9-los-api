@@ -20,7 +20,6 @@ import no.nav.k9.los.domene.repository.*
 import no.nav.k9.los.eventhandler.RefreshK9v3Tjeneste
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.abac.PepClientLocal
-import no.nav.k9.los.integrasjon.audit.Auditlogger
 import no.nav.k9.los.integrasjon.azuregraph.AzureGraphServiceLocal
 import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
 import no.nav.k9.los.integrasjon.datavarehus.StatistikkProducer
@@ -483,7 +482,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgaveV3Repository = get(),
             pepClient = get(),
             saksbehandlerRepository = get(),
-            auditlogger = Auditlogger(config),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
