@@ -76,8 +76,8 @@ dependencies {
     // opentelemetry
     implementation("io.opentelemetry:opentelemetry-api:1.41.0")
     implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.41.0")
-    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.6.0")
-    implementation("io.opentelemetry.instrumentation:opentelemetry-kafka-clients-2.6:2.6.0-alpha")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.7.0")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-kafka-clients-2.6:2.7.0-alpha")
 
     // Div
     implementation(enforcedPlatform( "com.fasterxml.jackson:jackson-bom:$jacksonVersion"))
@@ -88,7 +88,7 @@ dependencies {
         exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
     }
 
-    implementation( "io.github.smiley4:ktor-swagger-ui:3.2.0")
+    implementation( "io.github.smiley4:ktor-swagger-ui:3.3.0")
 
 
     // DI
@@ -110,7 +110,7 @@ dependencies {
     testImplementation("org.testcontainers:postgresql:$testContainers")
     testImplementation("io.insert-koin:koin-test-junit5:$koinVersion")
 
-    testImplementation("org.apache.commons:commons-compress:1.27.0")
+    testImplementation("org.apache.commons:commons-compress:1.27.1")
 }
 
 repositories {
