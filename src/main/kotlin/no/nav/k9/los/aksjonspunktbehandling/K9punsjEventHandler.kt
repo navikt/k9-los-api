@@ -19,6 +19,7 @@ import no.nav.k9.los.nyoppgavestyring.ko.OppgaveHendelseMottatt
 import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
+import no.nav.k9.los.utils.OpentelemetrySpanUtil
 import org.slf4j.LoggerFactory
 
 
@@ -65,7 +66,7 @@ class K9punsjEventHandler constructor(
                 oppdaterOppgaveV2(event, modell)
             }
 
-            punsjTilLosAdapterTjeneste.oppdaterOppgaveForEksternId(event.eksternId)
+            OpentelemetrySpanUtil.span("punsjTilLosAdapterTjeneste.oppdaterOppgaveForEksternId") { punsjTilLosAdapterTjeneste.oppdaterOppgaveForEksternId(event.eksternId) }
             runBlocking {
                 køpåvirkendeHendelseChannel.send(OppgaveHendelseMottatt(Fagsystem.PUNSJ, EksternOppgaveId("K9", event.eksternId.toString())))
             }

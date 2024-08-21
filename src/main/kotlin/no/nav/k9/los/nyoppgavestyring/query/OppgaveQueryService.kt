@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.query
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import kotliquery.sessionOf
@@ -30,31 +31,36 @@ class OppgaveQueryService() {
     val oppgaveRepository by inject<OppgaveRepository>(OppgaveRepository::class.java)
     val pepClient by inject<IPepClient>(IPepClient::class.java)
 
+    @WithSpan
     fun queryForOppgaveId(oppgaveQuery: QueryRequest): List<AktivOppgaveId> {
         return oppgaveQueryRepository.query(oppgaveQuery)
     }
 
+    @WithSpan
     fun queryForOppgaveId(tx: TransactionalSession, oppgaveQuery: QueryRequest): List<AktivOppgaveId> {
         return oppgaveQueryRepository.query(tx, oppgaveQuery, LocalDateTime.now())
     }
 
+    @WithSpan
     fun queryForAntall(request: QueryRequest, now : LocalDateTime = LocalDateTime.now()): Long {
         return using(sessionOf(datasource)) {
             it.transaction { tx -> oppgaveQueryRepository.queryForAntall(tx, request, now) }
         }
     }
 
+    @WithSpan
     fun queryForOppgaveEksternId(oppgaveQuery: QueryRequest): List<EksternOppgaveId> {
         val now = LocalDateTime.now()
         return oppgaveQueryRepository.queryForEksternId(oppgaveQuery, now)
     }
-
+    @WithSpan
     fun queryToFile(oppgaveQuery: QueryRequest, idToken: IIdToken): String {
         return using(sessionOf(datasource)) {
             it.transaction { tx -> queryToFile(tx, oppgaveQuery, idToken) }
         }
     }
 
+    @WithSpan
     fun queryToFile(tx: TransactionalSession, oppgaveQuery: QueryRequest, idToken: IIdToken): String {
         val oppgaver = query(tx, oppgaveQuery, idToken)
         if (oppgaver.isEmpty()) {
@@ -75,12 +81,13 @@ class OppgaveQueryService() {
         }
     }
 
+    @WithSpan
     fun query(oppgaveQuery: QueryRequest, idToken: IIdToken): List<Oppgaverad> {
         return using(sessionOf(datasource)) {
             it.transaction { tx -> query(tx, oppgaveQuery, idToken) }
         }
     }
-
+    @WithSpan
     fun query(tx: TransactionalSession, request: QueryRequest, idToken: IIdToken): List<Oppgaverad> {
         val now = LocalDateTime.now()
         val oppgaveIder = oppgaveQueryRepository.query(tx, request, now)
@@ -96,10 +103,12 @@ class OppgaveQueryService() {
         return oppgaverader
     }
 
+    @WithSpan
     fun hentAlleFelter(): Oppgavefelter {
         return oppgaveQueryRepository.hentAlleFelter()
     }
 
+    @WithSpan
     private suspend fun mapAktiveOppgaver(tx: TransactionalSession, request: QueryRequest, oppgaveIder: List<AktivOppgaveId>, now: LocalDateTime): List<Oppgaverad> {
         val oppgaverader = mutableListOf<Oppgaverad>()
         val limit = request.avgrensning?.limit ?: -1
@@ -117,6 +126,7 @@ class OppgaveQueryService() {
         return oppgaverader
     }
 
+    @WithSpan
     private suspend fun mapAktivOppgave(tx: TransactionalSession, oppgaveQuery: OppgaveQuery, oppgaveId: AktivOppgaveId, now: LocalDateTime): Oppgaverad? {
         val oppgave = aktivOppgaveRepository.hentOppgaveForId(tx, oppgaveId, now)
 
