@@ -16,7 +16,13 @@ class K9Auditlogger(
         }
     }
 
-    fun loggTilgangK9Sak(fagsakNummer: String, aktorId: String, identTilInnloggetBruker: String, action: Action) {
+    fun loggTilgangK9Sak(
+        fagsakNummer: String,
+        aktorId: String,
+        identTilInnloggetBruker: String,
+        action: Action,
+        tilgang: Boolean
+    ) {
         auditlogger.logg(
             Auditdata(
                 header = AuditdataHeader(
@@ -24,7 +30,7 @@ class K9Auditlogger(
                     product = auditlogger.defaultProduct,
                     eventClassId = EventClassId.AUDIT_SEARCH,
                     name = "ABAC Sporingslogg",
-                    severity = "INFO"
+                    severity = if (tilgang) "INFO" else "WARN"
                 ), fields = setOf(
                     CefField(CefFieldName.EVENT_TIME, LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) * 1000L),
                     CefField(CefFieldName.REQUEST, "read"),
@@ -42,7 +48,7 @@ class K9Auditlogger(
         )
     }
 
-    fun loggTilgangK9Punsj(aktorId: String, identTilInnloggetBruker: String, action: Action) {
+    fun loggTilgangK9Punsj(aktorId: String, identTilInnloggetBruker: String, action: Action, tilgang: Boolean) {
         // Loggingen her må gås opp, usikkert om dette er tilstrekkelig
         auditlogger.logg(
             Auditdata(
@@ -51,7 +57,7 @@ class K9Auditlogger(
                     product = auditlogger.defaultProduct,
                     eventClassId = EventClassId.AUDIT_SEARCH,
                     name = "ABAC Sporingslogg",
-                    severity = "INFO"
+                    severity = if (tilgang) "INFO" else "WARN"
                 ), fields = setOf(
                     CefField(CefFieldName.EVENT_TIME, LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) * 1000L),
                     CefField(CefFieldName.REQUEST, "read"),

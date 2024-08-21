@@ -213,7 +213,7 @@ class PepClient(
                 )
 
                 k9Auditlogger.betingetLogging(tilgang, auditlogging) {
-                    loggTilgangK9Sak(saksnummer, aktørIdSøker!!, identTilInnloggetBruker, action)
+                    loggTilgangK9Sak(saksnummer, aktørIdSøker!!, identTilInnloggetBruker, action, tilgang)
                 }
 
                 tilgang
@@ -232,7 +232,7 @@ class PepClient(
                             .addResourceAttribute(RESOURCE_AKTØR_ID, setOfNotNull(aktørIdSøker, aktørIdPleietrengende))
                     )
                 k9Auditlogger.betingetLogging(tilgang, auditlogging) {
-                    loggTilgangK9Punsj(aktørIdSøker!!, identTilInnloggetBruker, action)
+                    loggTilgangK9Punsj(aktørIdSøker!!, identTilInnloggetBruker, action, tilgang)
                 }
 
                 tilgang
