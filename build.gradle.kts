@@ -76,8 +76,8 @@ dependencies {
     // opentelemetry
     implementation("io.opentelemetry:opentelemetry-api:1.41.0")
     implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.41.0")
-    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.6.0")
-    implementation("io.opentelemetry.instrumentation:opentelemetry-kafka-clients-2.6:2.6.0-alpha")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.7.0")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-kafka-clients-2.7:2.7.0-alpha")
 
     // Div
     implementation(enforcedPlatform( "com.fasterxml.jackson:jackson-bom:$jacksonVersion"))
