@@ -1,4 +1,4 @@
-FROM ghcr.io/navikt/baseimages/temurin:21-appdynamics
+FROM ghcr.io/navikt/baseimages/temurin:21
 
 LABEL org.opencontainers.image.source=https://github.com/navikt/k9-los-api
 
