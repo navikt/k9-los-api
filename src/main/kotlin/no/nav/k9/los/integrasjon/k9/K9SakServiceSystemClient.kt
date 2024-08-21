@@ -3,6 +3,7 @@ package no.nav.k9.los.integrasjon.k9
 import com.github.kittinunf.fuel.coroutines.awaitStringResponseResult
 import com.github.kittinunf.fuel.httpPost
 import io.ktor.http.*
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.ktor.metrics.Operation
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
@@ -31,8 +32,8 @@ open class K9SakServiceSystemClient constructor(
 
     private val cache = K9SakBehandlingOppfrisketCache(k9SakBehandlingOppfrisketRepostiory)
 
+    @WithSpan
     override suspend fun refreshBehandlinger(behandlingUuid: Collection<UUID>) {
-        val nå = LocalDateTime.now()
         log.info("Forespørsel om refresh av ${behandlingUuid.size} behandlinger")
         val uoppfriskedeBehandlingUuider = cache.filterNotInCache(behandlingUuid)
         log.info("Kommer til å refreshe ${uoppfriskedeBehandlingUuider.size} behandlinger etter sjekk mot cache av oppfriskede behandlinger, i bolker på 100 stykker")
@@ -41,6 +42,7 @@ open class K9SakServiceSystemClient constructor(
         }
     }
 
+    @WithSpan
     private suspend fun utførRefreshKallOgOppdaterCache(behandlinger: Collection<UUID>) {
         log.info("Trigger refresh av ${behandlinger.size} behandlinger")
         log.info("Behandlinger som refreshes: $behandlinger")

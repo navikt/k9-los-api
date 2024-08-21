@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.ko
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
@@ -49,10 +50,12 @@ class OppgaveKoTjeneste(
 ) {
     private val log = LoggerFactory.getLogger(OppgaveKoTjeneste::class.java)
 
+    @WithSpan
     fun hentOppgavekøer(skjermet: Boolean = false): List<OppgaveKo> {
         return oppgaveKoRepository.hentListe(skjermet)
     }
 
+    @WithSpan
     suspend fun hentOppgaverFraKø(
         oppgaveKoId: Long,
         ønsketAntallSaker: Long,
@@ -79,6 +82,7 @@ class OppgaveKoTjeneste(
         return oppgaver.toList()
     }
 
+    @WithSpan
     fun hentKøerForSaksbehandler(
         saksbehandlerEpost: String
     ): List<OppgaveKo> {
@@ -87,6 +91,7 @@ class OppgaveKoTjeneste(
         }
     }
 
+    @WithSpan
     fun hentAntallOppgaverForKø(
         oppgaveKoId: Long,
         filtrerReserverte: Boolean
@@ -95,6 +100,7 @@ class OppgaveKoTjeneste(
         return oppgaveQueryService.queryForAntall(QueryRequest(ko.oppgaveQuery, fjernReserverte = filtrerReserverte))
     }
 
+    @WithSpan
     fun hentAntallUreserverteOppgaveForKø(
         oppgaveKoId: Long
     ): Long {
@@ -102,6 +108,7 @@ class OppgaveKoTjeneste(
         return oppgaveQueryService.queryForAntall(QueryRequest(ko.oppgaveQuery, fjernReserverte = true))
     }
 
+    @WithSpan
     fun taReservasjonFraKø(
         innloggetBrukerId: Long,
         oppgaveKoId: Long,
@@ -112,7 +119,7 @@ class OppgaveKoTjeneste(
         }
     }
 
-    fun doTaReservasjonFraKø(
+    private fun doTaReservasjonFraKø(
         innloggetBrukerId: Long,
         oppgaveKoId: Long,
         coroutineContext: CoroutineContext
@@ -150,6 +157,7 @@ class OppgaveKoTjeneste(
         }
     }
 
+    @WithSpan
     private fun finnReservasjonFraKø(
         kandidatoppgaver: List<AktivOppgaveId>,
         tx: TransactionalSession,
@@ -200,6 +208,7 @@ class OppgaveKoTjeneste(
         return null
     }
 
+    @WithSpan
     suspend fun hentSaksbehandlereForKo(oppgaveKoId: Long): List<Saksbehandler> {
         val oppgaveKo = oppgaveKoRepository.hent(oppgaveKoId)
         return oppgaveKo.saksbehandlere.mapNotNull { saksbehandlerEpost: String ->
@@ -211,6 +220,7 @@ class OppgaveKoTjeneste(
         }
     }
 
+    @WithSpan
     fun kopier(kopierFraOppgaveId: Long, tittel: String, taMedQuery: Boolean, taMedSaksbehandlere: Boolean): OppgaveKo {
         val kø = oppgaveKoRepository.kopier(kopierFraOppgaveId, tittel, taMedQuery, taMedSaksbehandlere)
         runBlocking {
@@ -219,6 +229,7 @@ class OppgaveKoTjeneste(
         return kø
     }
 
+    @WithSpan
     fun leggTil(tittel: String, skjermet: Boolean): OppgaveKo {
         val kø = oppgaveKoRepository.leggTil(tittel, skjermet)
         runBlocking {
@@ -227,10 +238,12 @@ class OppgaveKoTjeneste(
         return kø
     }
 
+    @WithSpan
     fun hent(oppgaveKoId: Long): OppgaveKo {
         return oppgaveKoRepository.hent(oppgaveKoId)
     }
 
+    @WithSpan
     fun slett(oppgaveKoId: Long) {
         oppgaveKoRepository.slett(oppgaveKoId)
         runBlocking {

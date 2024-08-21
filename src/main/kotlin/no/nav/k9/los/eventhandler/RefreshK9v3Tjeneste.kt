@@ -79,6 +79,7 @@ class RefreshK9v3Tjeneste(
         }
     }
 
+    @WithSpan
     fun behandlingerTilOppfriskning(tx: TransactionalSession, antallPrKø: Int) : Set<UUID> {
         return DetaljerMetrikker.time("RefreshK9V3", "refreshForKøer", "alle") {
             val alleKøer = oppgaveKoRepository.hentListe(false) + oppgaveKoRepository.hentListe(true)
@@ -88,6 +89,7 @@ class RefreshK9v3Tjeneste(
         }
     }
 
+    @WithSpan
     fun behandlingerTilOppfriskningForKøer(tx: TransactionalSession, køId: List<Long>, antallPrKø: Int) : Set<UUID>{
         return DetaljerMetrikker.time("RefreshK9V3", "refreshForKøer", køId.size.toString()) {
             val køer = køId.map { oppgaveKoRepository.hent(it) }

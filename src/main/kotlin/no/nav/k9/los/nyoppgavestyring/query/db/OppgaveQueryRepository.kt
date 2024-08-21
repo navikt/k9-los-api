@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.query.db
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -27,12 +28,14 @@ class OppgaveQueryRepository(
 ) {
     private val log: Logger = LoggerFactory.getLogger("OppgaveQueryRepository")
 
+    @WithSpan
     fun query(request: QueryRequest): List<AktivOppgaveId> {
         return using(sessionOf(datasource)) {
             it.transaction { tx -> query(tx, request, LocalDateTime.now()) }
         }
     }
 
+    @WithSpan
     fun query(tx: TransactionalSession, request: QueryRequest, now: LocalDateTime): List<AktivOppgaveId> {
         val felter = hentAlleFelterMedMer(tx, medKodeverk = false)
             .associate { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) to felt }
@@ -40,12 +43,14 @@ class OppgaveQueryRepository(
         return query(tx, OppgaveQueryToSqlMapper.toSqlOppgaveQuery(request, felter, now))
     }
 
+    @WithSpan
     fun queryForEksternId(request: QueryRequest, now: LocalDateTime): List<EksternOppgaveId> {
         return using(sessionOf(datasource)) {
             it.transaction { tx -> queryForEksternId(tx, request, now) }
         }
     }
 
+    @WithSpan
     fun queryForEksternId(tx: TransactionalSession, request: QueryRequest, now: LocalDateTime): List<EksternOppgaveId> {
         val felter = hentAlleFelterMedMer(tx, medKodeverk = false)
             .associate { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) to felt }
@@ -53,6 +58,7 @@ class OppgaveQueryRepository(
         return queryForEksternId(tx, OppgaveQueryToSqlMapper.toSqlOppgaveQuery(request, felter, now))
     }
 
+    @WithSpan
     fun queryForAntall(tx: TransactionalSession, oppgaveQuery: QueryRequest, now: LocalDateTime): Long {
         val felter = hentAlleFelterMedMer(tx, medKodeverk = false)
             .associate { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) to felt }
@@ -61,6 +67,7 @@ class OppgaveQueryRepository(
 
     }
 
+    @WithSpan
     private fun queryForAntall(tx: TransactionalSession, oppgaveQuery: OppgaveQuerySqlBuilder): Long {
         return tx.run(
             queryOf(
@@ -70,16 +77,19 @@ class OppgaveQueryRepository(
         )!!
     }
 
+    @WithSpan
     fun hentAlleFelter(): Oppgavefelter {
         return using(sessionOf(datasource)) { it ->
             it.transaction { tx -> Oppgavefelter(hentAlleFelter(tx)) }
         }
     }
 
+    @WithSpan
     private fun hentAlleFelter(tx: TransactionalSession, medKodeverk: Boolean = true): List<Oppgavefelt> {
         return hentAlleFelterMedMer(tx, medKodeverk).map { it.oppgavefelt }
     }
 
+    @WithSpan
     private fun hentAlleFelterMedMer(tx: TransactionalSession, medKodeverk: Boolean = true): List<OppgavefeltMedMer> {
         val felterFraDatabase = tx.run(
             queryOf(

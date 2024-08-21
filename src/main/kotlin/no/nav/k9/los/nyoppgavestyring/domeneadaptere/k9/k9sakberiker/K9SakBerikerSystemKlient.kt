@@ -4,6 +4,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.kittinunf.fuel.coroutines.awaitStringResponseResult
 import com.github.kittinunf.fuel.httpGet
 import io.ktor.http.*
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
@@ -28,15 +29,17 @@ class K9SakBerikerSystemKlient(
     private val url = configuration.k9Url()
     private val scopes = setOf(scope)
 
+    @WithSpan
     override fun hentBehandling(behandlingUUID: UUID, antallForsøk: Int): BehandlingMedFagsakDto? {
         return runBlocking {  hent(behandlingUUID, antallForsøk) }
     }
 
+    @WithSpan
     override fun berikKlage(påklagdBehandlingUUID: UUID, antallForsøk: Int): LosOpplysningerSomManglerIKlageDto? {
         return runBlocking { hentKlagedata(påklagdBehandlingUUID, antallForsøk) }
     }
 
-    suspend fun hentKlagedata(påklagdBehandlingUUID: UUID, antallForsøk: Int = 3): LosOpplysningerSomManglerIKlageDto? {
+    private suspend fun hentKlagedata(påklagdBehandlingUUID: UUID, antallForsøk: Int = 3): LosOpplysningerSomManglerIKlageDto? {
         val parameters = listOf(Pair("behandlingUuid", påklagdBehandlingUUID.toString()))
         val httpRequest = "${url}/los/klage/berik"
             .httpGet(parameters)
@@ -84,7 +87,7 @@ class K9SakBerikerSystemKlient(
         return LosObjectMapper.instance.readValue<LosOpplysningerSomManglerIKlageDto>(abc)
     }
 
-    suspend fun hent(behandlingUUID: UUID, antallForsøk: Int = 3): BehandlingMedFagsakDto? {
+    private suspend fun hent(behandlingUUID: UUID, antallForsøk: Int = 3): BehandlingMedFagsakDto? {
         val parameters = listOf<Pair<String, String>>(Pair("behandlingUuid", behandlingUUID.toString()))
         val httpRequest = "${url}/los/behandling"
             .httpGet(parameters)
