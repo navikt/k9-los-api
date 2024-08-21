@@ -1,6 +1,7 @@
 package no.nav.k9.los.auditlogger
 
 import no.nav.k9.los.integrasjon.abac.Action
+import no.nav.k9.los.integrasjon.abac.Auditlogging
 import no.nav.k9.los.integrasjon.abac.TILGANG_SAK
 import no.nav.k9.los.integrasjon.audit.*
 import java.time.LocalDateTime
@@ -9,6 +10,12 @@ import java.time.ZoneOffset
 class K9Auditlogger(
     private val auditlogger: Auditlogger
 ) {
+    fun betingetLogging(tilgang: Boolean, auditlogging: Auditlogging, callback: () -> Unit) {
+        if (auditlogging == Auditlogging.ALLTID_LOGG || (tilgang && (auditlogging == Auditlogging.LOGG_VED_PERMIT))) {
+            callback()
+        }
+    }
+
     fun loggTilgangK9Sak(fagsakNummer: String, aktorId: String, identTilInnloggetBruker: String, action: Action) {
         auditlogger.logg(
             Auditdata(

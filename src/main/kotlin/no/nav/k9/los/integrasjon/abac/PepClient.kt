@@ -211,16 +211,16 @@ class PepClient(
                         .addAccessSubjectAttribute(SUBJECTID, identTilInnloggetBruker)
                         .addResourceAttribute(RESOURCE_SAKSNR, saksnummer!!)
                 )
-                if (auditlogging == Auditlogging.ALLTID_LOGG || (tilgang && (auditlogging == Auditlogging.LOGG_VED_PERMIT))) {
+
+                k9Auditlogger.betingetLogging(tilgang, auditlogging) {
                     k9Auditlogger.loggTilgangK9Sak(saksnummer, aktørIdSøker!!, identTilInnloggetBruker, action)
                 }
 
                 tilgang
             }
+
             "k9punsj" -> {
-                // ABAC bør støtte tilgangssjekk på punsj-oppgaver med journalpostId, for å unngå to kall og logikk her
-
-                val tilgangForSøker =
+                val tilgang =
                     evaluate(
                         XacmlRequestBuilder()
                             .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
@@ -229,27 +229,15 @@ class PepClient(
                             .addActionAttribute(ACTION_ID, action)
                             .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
                             .addAccessSubjectAttribute(SUBJECTID, identTilInnloggetBruker)
-                            .addResourceAttribute(RESOURCE_AKTØR_ID, aktørIdSøker!!)
+                            .addResourceAttribute(RESOURCE_AKTØR_ID, setOfNotNull(aktørIdSøker, aktørIdPleietrengende))
                     )
-
-                val tilgangForPleietrengende = if (aktørIdPleietrengende != null)
-                    evaluate(
-                        XacmlRequestBuilder()
-                            .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
-                            .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
-                            .addResourceAttribute(RESOURCE_TYPE, TILGANG_SAK)
-                            .addActionAttribute(ACTION_ID, action)
-                            .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
-                            .addAccessSubjectAttribute(SUBJECTID, identTilInnloggetBruker)
-                            .addResourceAttribute(RESOURCE_AKTØR_ID, aktørIdPleietrengende)
-                    ) else true
-
-                val tilgang = tilgangForSøker && tilgangForPleietrengende
-                if (auditlogging == Auditlogging.ALLTID_LOGG || (tilgang && auditlogging == Auditlogging.LOGG_VED_PERMIT)) {
-                    k9Auditlogger.loggTilgangK9Punsj(aktørIdSøker, identTilInnloggetBruker, action)
+                k9Auditlogger.betingetLogging(tilgang, auditlogging) {
+                    k9Auditlogger.loggTilgangK9Punsj(aktørIdSøker!!, identTilInnloggetBruker, action)
                 }
+
                 tilgang
             }
+
             else -> throw NotImplementedError("Støtter kun tilgangsoppslag på k9klage, k9sak, k9tilbake og k9punsj")
         }
     }
