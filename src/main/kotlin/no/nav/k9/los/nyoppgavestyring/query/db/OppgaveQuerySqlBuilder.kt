@@ -156,7 +156,7 @@ class OppgaveQuerySqlBuilder(
         val index = queryParams.size + orderByParams.size
 
         query += """
-                ${combineOperator.sql} EXISTS (
+                ${combineOperator.sql} ${if (operator.negasjonAv != null) "NOT" else "" } EXISTS (
                     SELECT 'Y'
                     FROM Oppgavefelt_verdi_aktiv ov 
                     INNER JOIN Oppgavefelt f ON (f.id = ov.oppgavefelt_id) 
@@ -173,7 +173,7 @@ class OppgaveQuerySqlBuilder(
          * typekonverteringen blir gjort ved opprettelse av spørring og at feilende
          * typekonvertering gjør at spørringen feiler.
          */
-        query += "${databaseverdiMedCasting(feltområde, feltkode)} ${operator.sql} (:feltverdi$index)"
+        query += "${databaseverdiMedCasting(feltområde, feltkode)} ${operator.negasjonAv?.sql ?: operator.sql} (:feltverdi$index)"
         val queryVerdiParam = castTilRiktigKotlintype(feltområde, feltkode, feltverdi)
 
         query += ") "
@@ -195,9 +195,6 @@ class OppgaveQuerySqlBuilder(
             }
             INTEGER -> {
                 return "CAST(ov.verdi AS integer)"
-            }
-            DOUBLE -> {
-                return "CAST(ov.verdi AS DOUBLE PRECISION)"
             }
             else -> {
                 return "ov.verdi"
@@ -222,11 +219,6 @@ class OppgaveQuerySqlBuilder(
             INTEGER -> {
                 return try {
                     BigInteger(feltverdi as String)
-                } catch (e: Exception) { null }
-            }
-            DOUBLE -> {
-                return try {
-                    BigDecimal(feltverdi as String)
                 } catch (e: Exception) { null }
             }
             else -> {

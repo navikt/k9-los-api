@@ -2,7 +2,6 @@ package no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon
 
 enum class Datatype(val kode: String) {
     INTEGER("Integer"),
-    DOUBLE("Double"),
     DURATION("Duration"),
     TIMESTAMP("Timestamp"),
     BOOLEAN("boolean"),

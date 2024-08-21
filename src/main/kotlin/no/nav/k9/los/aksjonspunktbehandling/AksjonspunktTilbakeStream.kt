@@ -52,7 +52,7 @@ internal class AksjonspunktTilbakeStream constructor(
                 )
                 .foreach { _, entry ->
                     if (entry != null) {
-                        OpentelemetrySpanUtil.span("NAME", mapOf("saksnummer" to entry.saksnummer)) {
+                        OpentelemetrySpanUtil.span(NAME, mapOf("saksnummer" to entry.saksnummer)) {
                             log.info("Prosesserer entry fra tilbakekreving ${entry.tryggPrint()}")
                             TransientFeilHåndterer().utfør(NAME) { k9TilbakeEventHandler.prosesser(entry) }
                         }

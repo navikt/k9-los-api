@@ -53,7 +53,7 @@ internal class AksjonspunktPunsjStream constructor(
                 )
                 .foreach { _, entry ->
                     if (entry != null) {
-                        OpentelemetrySpanUtil.span("NAME", mapOf("journalpostId" to entry.journalpostId.verdi)) {
+                        OpentelemetrySpanUtil.span(NAME, mapOf("journalpostId" to entry.journalpostId.verdi)) {
                             val spørring = System.currentTimeMillis()
                             logger.info("--> Mottatt hendelse fra punsj: ${entry.eksternId} - ${entry.journalpostId}")
                             TransientFeilHåndterer().utfør(NAME) { K9punsjEventHandler.prosesser(entry) }
