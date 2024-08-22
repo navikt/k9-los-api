@@ -49,7 +49,7 @@
         {
           "id": "mottattDato",
           "visPåOppgave": true,
-          "påkrevd": true
+          "påkrevd": false
         }
       ]
     }
