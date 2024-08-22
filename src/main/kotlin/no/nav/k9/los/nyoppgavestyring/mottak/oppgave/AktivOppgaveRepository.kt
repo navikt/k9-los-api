@@ -312,6 +312,9 @@ class AktivOppgaveRepository (val oppgavetypeRepository: OppgavetypeRepository) 
     }
 
     fun hentK9sakParsakOppgaver(tx: TransactionalSession, oppgaver : Collection<AktivOppgaveId>) : Set<EksternOppgaveId> {
+        if (oppgaver.isEmpty()){
+            return emptySet()
+        }
         return tx.run(
             queryOf("""                
                 select oppg.ekstern_id as ekstern_id
