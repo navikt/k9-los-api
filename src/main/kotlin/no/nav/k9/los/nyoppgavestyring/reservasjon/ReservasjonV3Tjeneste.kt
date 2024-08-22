@@ -4,6 +4,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.abac.Action
 import no.nav.k9.los.integrasjon.abac.Auditlogging
@@ -298,28 +299,28 @@ class ReservasjonV3Tjeneste(
         oppgaver: List<Oppgave>,
         brukerIdSomSkalHaReservasjon: Long
     ): Boolean {
+        val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(brukerIdSomSkalHaReservasjon)!!
         return oppgaver.all { oppgave ->
             if (beslutterErSaksbehandler(
                     oppgave,
-                    brukerIdSomSkalHaReservasjon
+                    saksbehandler
                 )
             ) throw ManglerTilgangException("Saksbehandler kan ikke være beslutter på egen behandling")
 
-            runBlocking { pepClient.harTilgangTilOppgaveV3(oppgave, Action.reserver, Auditlogging.IKKE_LOGG) }
+            pepClient.harTilgangTilOppgaveV3(oppgave, saksbehandler, Action.reserver, Auditlogging.IKKE_LOGG)
         }
     }
 
     private fun beslutterErSaksbehandler(
         oppgave: Oppgave,
-        brukerIdSomSkalHaReservasjon: Long
+        saksbehandler: Saksbehandler
     ): Boolean {
         val hosBeslutter =
             oppgave.hentVerdi("liggerHosBeslutter")?.toBoolean() ?: false //TODO gjøre oppgavetypeagnostisk
         if (!hosBeslutter) return false
         val ansvarligSaksbehandlerIdent = oppgave.hentVerdi("ansvarligSaksbehandler") //TODO gjøre oppgavetypeagnostisk
             ?: throw IllegalStateException("Kan ikke beslutte på oppgave uten ansvarlig saksbehandler")
-        val saksbehandlerIdentSomSkalHaReservasjon =
-            saksbehandlerRepository.finnSaksbehandlerMedId(brukerIdSomSkalHaReservasjon)!!.brukerIdent
+        val saksbehandlerIdentSomSkalHaReservasjon = saksbehandler.brukerIdent
 
         return ansvarligSaksbehandlerIdent == saksbehandlerIdentSomSkalHaReservasjon
     }

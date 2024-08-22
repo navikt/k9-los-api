@@ -7,12 +7,14 @@ import com.github.kittinunf.fuel.httpPost
 import com.google.gson.GsonBuilder
 import io.ktor.http.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.ktor.metrics.Operation
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.auditlogger.K9Auditlogger
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
+import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
 import no.nav.k9.los.integrasjon.rest.NavHeaders
 import no.nav.k9.los.utils.Cache
@@ -172,7 +174,15 @@ class PepClient(
     }
 
     override suspend fun harTilgangTilOppgave(oppgave: Oppgave): Boolean {
-        return harTilgang("k9sak", Action.read, oppgave.fagsakSaksnummer, oppgave.aktorId, oppgave.pleietrengendeAktørId, Auditlogging.IKKE_LOGG)
+        return harTilgang(
+            "k9sak",
+            azureGraphService.hentIdentTilInnloggetBruker(),
+            Action.read,
+            oppgave.fagsakSaksnummer,
+            oppgave.aktorId,
+            oppgave.pleietrengendeAktørId,
+            Auditlogging.IKKE_LOGG
+        )
     }
 
     override suspend fun harTilgangTilOppgaveV3(
@@ -182,6 +192,7 @@ class PepClient(
     ): Boolean {
         return harTilgang(
             oppgave.oppgavetype.eksternId,
+            azureGraphService.hentIdentTilInnloggetBruker(),
             action,
             oppgave.hentVerdi("saksnummer"),
             oppgave.hentVerdi("aktorId"),
@@ -190,15 +201,34 @@ class PepClient(
         )
     }
 
+    override fun harTilgangTilOppgaveV3(
+        oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave,
+        saksbehandler: Saksbehandler,
+        action: Action,
+        auditlogging: Auditlogging
+    ): Boolean {
+        return runBlocking {
+            harTilgang(
+                oppgave.oppgavetype.eksternId,
+                saksbehandler.brukerIdent!!,
+                action,
+                oppgave.hentVerdi("saksnummer"),
+                oppgave.hentVerdi("aktorId"),
+                oppgave.hentVerdi("pleietrengendeAktorId"),
+                auditlogging
+            )
+        }
+    }
+
     private suspend fun harTilgang(
         oppgavetype: String,
+        identTilInnloggetBruker: String,
         action: Action,
         saksnummer: String?,
         aktørIdSøker: String?,
         aktørIdPleietrengende: String?,
         auditlogging: Auditlogging
     ): Boolean {
-        val identTilInnloggetBruker = azureGraphService.hentIdentTilInnloggetBruker()
         return when (oppgavetype) {
             "k9sak", "k9klage", "k9tilbake" -> {
                 val tilgang = evaluate(

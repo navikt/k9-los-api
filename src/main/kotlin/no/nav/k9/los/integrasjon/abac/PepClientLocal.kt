@@ -60,4 +60,13 @@ class PepClientLocal : IPepClient {
         return true
     }
 
+    override fun harTilgangTilOppgaveV3(
+        oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave,
+        saksbehandler: Saksbehandler,
+        action: Action,
+        auditlogging: Auditlogging
+    ): Boolean {
+        return true
+    }
+
 }
