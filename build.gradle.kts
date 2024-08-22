@@ -87,7 +87,7 @@ dependencies {
         exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
     }
 
-    implementation( "io.github.smiley4:ktor-swagger-ui:3.2.0")
+    implementation( "io.github.smiley4:ktor-swagger-ui:3.3.0")
 
 
     // DI
@@ -109,7 +109,7 @@ dependencies {
     testImplementation("org.testcontainers:postgresql:$testContainers")
     testImplementation("io.insert-koin:koin-test-junit5:$koinVersion")
 
-    testImplementation("org.apache.commons:commons-compress:1.27.0")
+    testImplementation("org.apache.commons:commons-compress:1.27.1")
 }
 
 repositories {
