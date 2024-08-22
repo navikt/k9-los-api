@@ -24,7 +24,6 @@ import no.nav.k9.los.integrasjon.audit.Auditlogger
 import no.nav.k9.los.integrasjon.azuregraph.AzureGraphService
 import no.nav.k9.los.integrasjon.azuregraph.AzureGraphServiceLocal
 import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
-import no.nav.k9.los.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.los.integrasjon.k9.IK9SakService
 import no.nav.k9.los.integrasjon.k9.K9SakBehandlingOppfrisketRepostiory
 import no.nav.k9.los.integrasjon.k9.K9SakServiceLocal
@@ -209,16 +208,6 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        StatistikkProducer(
-            kafkaConfig = config.getProfileAwareKafkaAivenConfig(),
-            config = config,
-            pepClient = get(),
-            saksbehandlerRepository = get(),
-            reservasjonRepository = get()
-        )
-    }
-
-    single {
         K9sakEventHandlerV2(
             oppgaveTjenesteV2 = get(),
             aksjonspunktHendelseMapper = get()
@@ -232,7 +221,6 @@ fun common(app: Application, config: Configuration) = module {
             sakOgBehandlingProducer = get(),
             oppgaveKøRepository = get(),
             reservasjonRepository = get(),
-            statistikkProducer = get(),
             statistikkChannel = get(named("statistikkRefreshChannel")),
             statistikkRepository = get(),
             reservasjonTjeneste = get(),

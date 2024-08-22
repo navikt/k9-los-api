@@ -23,7 +23,6 @@ import no.nav.k9.los.integrasjon.abac.PepClientLocal
 import no.nav.k9.los.integrasjon.audit.Auditlogger
 import no.nav.k9.los.integrasjon.azuregraph.AzureGraphServiceLocal
 import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
-import no.nav.k9.los.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.los.integrasjon.k9.IK9SakService
 import no.nav.k9.los.integrasjon.k9.K9SakServiceLocal
 import no.nav.k9.los.integrasjon.pdl.IPdlService
@@ -255,10 +254,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     val sakOgBehadlingProducer = mockk<SakOgBehandlingProducer>()
-    val statistikkProducer = mockk<StatistikkProducer>()
     every { sakOgBehadlingProducer.behandlingOpprettet(any()) } just runs
     every { sakOgBehadlingProducer.avsluttetBehandling(any()) } just runs
-    every { statistikkProducer.send(any()) } just runs
 
     single {
         K9sakEventHandler(
@@ -267,7 +264,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             sakOgBehandlingProducer = sakOgBehadlingProducer,
             oppgaveKøRepository = get(),
             reservasjonRepository = get(),
-            statistikkProducer = statistikkProducer,
             statistikkChannel = get(named("statistikkRefreshChannel")),
             statistikkRepository = get(),
             reservasjonTjeneste = get(),
