@@ -1,7 +1,6 @@
 package no.nav.k9.los.utils
 
 import java.time.LocalDateTime
-import javax.naming.ldap.LdapName
 
 class Cache <K, V>(val cacheSize : Int = 1000){
     private val map =

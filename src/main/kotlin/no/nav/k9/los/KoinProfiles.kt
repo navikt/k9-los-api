@@ -8,6 +8,7 @@ import no.nav.k9.los.aksjonspunktbehandling.K9KlageEventHandler
 import no.nav.k9.los.aksjonspunktbehandling.K9TilbakeEventHandler
 import no.nav.k9.los.aksjonspunktbehandling.K9punsjEventHandler
 import no.nav.k9.los.aksjonspunktbehandling.K9sakEventHandler
+import no.nav.k9.los.auditlogger.K9Auditlogger
 import no.nav.k9.los.db.hikariConfig
 import no.nav.k9.los.domene.lager.oppgave.v2.BehandlingsmigreringTjeneste
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
@@ -125,8 +126,8 @@ fun common(app: Application, config: Configuration) = module {
     single { OppgaveRepository(get(), get(), get(named("oppgaveRefreshChannel"))) }
 
     single { AktivOppgaveRepository(
-            oppgavetypeRepository = get()
-        )
+        oppgavetypeRepository = get()
+    )
     }
 
     single {
@@ -578,7 +579,6 @@ fun common(app: Application, config: Configuration) = module {
             oppgaveV3Repository = get(),
             pepClient = get(),
             saksbehandlerRepository = get(),
-            auditlogger = Auditlogger(config),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
@@ -667,7 +667,7 @@ fun preprodConfig(config: Configuration) = module {
         )
     }
     single<IPepClient> {
-        PepClient(azureGraphService = get(), auditlogger = Auditlogger(config), config = config)
+        PepClient(azureGraphService = get(), config = config, k9Auditlogger = K9Auditlogger(Auditlogger(config)))
     }
     single<IK9SakService> {
         K9SakServiceSystemClient(
@@ -705,7 +705,7 @@ fun prodConfig(config: Configuration) = module {
         )
     }
     single<IPepClient> {
-        PepClient(azureGraphService = get(), auditlogger = Auditlogger(config), config = config)
+        PepClient(azureGraphService = get(), config = config, k9Auditlogger = K9Auditlogger(Auditlogger(config)))
     }
     single<IK9SakService> {
         K9SakServiceSystemClient(

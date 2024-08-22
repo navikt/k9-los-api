@@ -1,6 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.ko
 
 import io.ktor.http.*
+import io.ktor.server.application.call
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*

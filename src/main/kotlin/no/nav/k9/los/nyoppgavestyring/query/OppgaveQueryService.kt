@@ -5,6 +5,8 @@ import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.k9.los.integrasjon.abac.Action
+import no.nav.k9.los.integrasjon.abac.Auditlogging
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.rest.CoroutineRequestContext
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveId
@@ -130,11 +132,7 @@ class OppgaveQueryService() {
     private suspend fun mapAktivOppgave(tx: TransactionalSession, oppgaveQuery: OppgaveQuery, oppgaveId: AktivOppgaveId, now: LocalDateTime): Oppgaverad? {
         val oppgave = aktivOppgaveRepository.hentOppgaveForId(tx, oppgaveId, now)
 
-        // TODO: Generaliser ABAC-attributter + sjekk av disse:
-        val saksnummer = oppgave.hentVerdi("K9", "saksnummer")
-        val aktorId = oppgave.hentVerdi("K9", "aktorId")!!
-
-        if (saksnummer === null || !pepClient.harTilgangTilLesSak(saksnummer, aktorId)) {
+        if (!pepClient.harTilgangTilOppgaveV3(oppgave = oppgave, action = Action.read, auditlogging = Auditlogging.LOGG_VED_PERMIT)) {
             return null
         }
 

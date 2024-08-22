@@ -7,15 +7,12 @@ import com.github.kittinunf.fuel.httpPost
 import com.google.gson.GsonBuilder
 import io.ktor.http.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.ktor.metrics.Operation
 import no.nav.k9.los.Configuration
-import no.nav.k9.los.KoinProfile
+import no.nav.k9.los.auditlogger.K9Auditlogger
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
-import no.nav.k9.los.domene.modell.Saksbehandler
-import no.nav.k9.los.integrasjon.audit.*
 import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
 import no.nav.k9.los.integrasjon.rest.NavHeaders
 import no.nav.k9.los.utils.Cache
@@ -25,7 +22,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.LocalDateTime
-import java.time.ZoneOffset
 import java.util.*
 
 private val gson = GsonBuilder().setPrettyPrinting().create()
@@ -34,10 +30,10 @@ private const val XACML_CONTENT_TYPE = "application/xacml+json"
 private const val DOMENE = "k9"
 
 
-class PepClient constructor(
+class PepClient(
     private val azureGraphService: IAzureGraphService,
-    private val auditlogger: Auditlogger,
-    private val config: Configuration
+    private val config: Configuration,
+    private val k9Auditlogger: K9Auditlogger
 ) : IPepClient {
 
     private val url = config.abacEndpointUrl
@@ -56,11 +52,10 @@ class PepClient constructor(
     }
 
     override suspend fun harBasisTilgang(): Boolean {
-
         val requestBuilder = XacmlRequestBuilder()
             .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
             .addResourceAttribute(RESOURCE_TYPE, BASIS_TILGANG)
-            .addActionAttribute(ACTION_ID, "read")
+            .addActionAttribute(ACTION_ID, Action.read)
             .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
             .addAccessSubjectAttribute(SUBJECTID, azureGraphService.hentIdentTilInnloggetBruker())
             .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
@@ -69,11 +64,10 @@ class PepClient constructor(
     }
 
     override suspend fun kanLeggeUtDriftsmelding(): Boolean {
-
         val requestBuilder = XacmlRequestBuilder()
             .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
             .addResourceAttribute(RESOURCE_TYPE, DRIFTSMELDING)
-            .addActionAttribute(ACTION_ID, "create")
+            .addActionAttribute(ACTION_ID, Action.create)
             .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
             .addAccessSubjectAttribute(SUBJECTID, azureGraphService.hentIdentTilInnloggetBruker())
             .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
@@ -81,101 +75,11 @@ class PepClient constructor(
         return evaluate(requestBuilder)
     }
 
-    override suspend fun harTilgangTilLesSak(
-        fagsakNummer: String,
-        aktørid: String
-    ): Boolean {
-        val identTilInnloggetBruker = azureGraphService.hentIdentTilInnloggetBruker()
-        if (identTilInnloggetBruker.isEmpty()) {
-            log.warn("Ingen innlogget bruker")
-            return false
-        }
-        val requestBuilder = XacmlRequestBuilder()
-            .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
-            .addResourceAttribute(RESOURCE_TYPE, TILGANG_SAK)
-            .addActionAttribute(ACTION_ID, "read")
-            .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
-            .addAccessSubjectAttribute(SUBJECTID, identTilInnloggetBruker)
-            .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
-            .addResourceAttribute(RESOURCE_SAKSNR, fagsakNummer)
-        val decision = evaluate(requestBuilder)
-
-        auditlogger.logg(
-            Auditdata(
-                header = AuditdataHeader(
-                    vendor = auditlogger.defaultVendor,
-                    product = auditlogger.defaultProduct,
-                    eventClassId = EventClassId.AUDIT_SEARCH,
-                    name = "ABAC Sporingslogg",
-                    severity = "INFO"
-                ), fields = setOf(
-                    CefField(CefFieldName.EVENT_TIME, LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) * 1000L),
-                    CefField(CefFieldName.REQUEST, "read"),
-                    CefField(CefFieldName.ABAC_RESOURCE_TYPE, TILGANG_SAK),
-                    CefField(CefFieldName.ABAC_ACTION, "read"),
-                    CefField(CefFieldName.USER_ID, identTilInnloggetBruker),
-                    CefField(CefFieldName.BERORT_BRUKER_ID, aktørid),
-
-                    CefField(CefFieldName.BEHANDLING_VERDI, "behandlingsid"),
-                    CefField(CefFieldName.BEHANDLING_LABEL, "Behandling"),
-                    CefField(CefFieldName.SAKSNUMMER_VERDI, fagsakNummer),
-                    CefField(CefFieldName.SAKSNUMMER_LABEL, "Saksnummer")
-                )
-            )
-        )
-
-        return decision
-    }
-
-    override fun harTilgangTilLesSak(
-        fagsakNummer: String,
-        aktørid: String,
-        bruker: Saksbehandler
-    ): Boolean {
-        val requestBuilder = XacmlRequestBuilder()
-            .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
-            .addResourceAttribute(RESOURCE_TYPE, TILGANG_SAK)
-            .addActionAttribute(ACTION_ID, "read")
-            .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
-            .addAccessSubjectAttribute(SUBJECTID, bruker.brukerIdent!!)
-            .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
-            .addResourceAttribute(RESOURCE_SAKSNR, fagsakNummer)
-        val decision = runBlocking {
-            evaluate(requestBuilder)
-        }
-
-        auditlogger.logg(
-            Auditdata(
-                header = AuditdataHeader(
-                    vendor = auditlogger.defaultVendor,
-                    product = auditlogger.defaultProduct,
-                    eventClassId = EventClassId.AUDIT_SEARCH,
-                    name = "ABAC Sporingslogg",
-                    severity = "INFO"
-                ), fields = setOf(
-                    CefField(CefFieldName.EVENT_TIME, LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) * 1000L),
-                    CefField(CefFieldName.REQUEST, "read"),
-                    CefField(CefFieldName.ABAC_RESOURCE_TYPE, TILGANG_SAK),
-                    CefField(CefFieldName.ABAC_ACTION, "read"),
-                    CefField(CefFieldName.USER_ID, bruker.brukerIdent!!),
-                    CefField(CefFieldName.BERORT_BRUKER_ID, aktørid),
-
-                    CefField(CefFieldName.BEHANDLING_VERDI, "behandlingsid"),
-                    CefField(CefFieldName.BEHANDLING_LABEL, "Behandling"),
-                    CefField(CefFieldName.SAKSNUMMER_VERDI, fagsakNummer),
-                    CefField(CefFieldName.SAKSNUMMER_LABEL, "Saksnummer")
-                )
-            )
-        )
-
-        return decision
-    }
-
     override suspend fun harTilgangTilReservingAvOppgaver(): Boolean {
         val requestBuilder = XacmlRequestBuilder()
             .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
             .addResourceAttribute(RESOURCE_TYPE, TILGANG_SAK)
-            .addActionAttribute(ACTION_ID, "reserver")
+            .addActionAttribute(ACTION_ID, Action.reserver)
             .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
             .addAccessSubjectAttribute(SUBJECTID, azureGraphService.hentIdentTilInnloggetBruker())
             .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
@@ -210,7 +114,7 @@ class PepClient constructor(
         val requestBuilder = XacmlRequestBuilder()
             .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
             .addResourceAttribute(RESOURCE_TYPE, TILGANG_SAK)
-            .addActionAttribute(ACTION_ID, "read")
+            .addActionAttribute(ACTION_ID, Action.read)
             .addAccessSubjectAttribute(SUBJECT_TYPE, KAFKATOPIC)
             .addAccessSubjectAttribute(SUBJECTID, KAFKATOPIC_STATISTIKK)
             .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
@@ -268,50 +172,74 @@ class PepClient constructor(
     }
 
     override suspend fun harTilgangTilOppgave(oppgave: Oppgave): Boolean {
-        return !oppgave.harFagSaksNummer() || harTilgangTilLesSak(
-            fagsakNummer = oppgave.fagsakSaksnummer,
-            aktørid = oppgave.aktorId
+        return harTilgang("k9sak", Action.read, oppgave.fagsakSaksnummer, oppgave.aktorId, oppgave.pleietrengendeAktørId, Auditlogging.IKKE_LOGG)
+    }
+
+    override suspend fun harTilgangTilOppgaveV3(
+        oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave,
+        action: Action,
+        auditlogging: Auditlogging
+    ): Boolean {
+        return harTilgang(
+            oppgave.oppgavetype.eksternId,
+            action,
+            oppgave.hentVerdi("saksnummer"),
+            oppgave.hentVerdi("aktorId"),
+            oppgave.hentVerdi("pleietrengendeAktorId"),
+            auditlogging
         )
     }
 
-    override fun harTilgangTilOppgaveV3(oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave, bruker: Saksbehandler): Boolean {
-         if (oppgave.hentVerdi("saksnummer") == null) {
-             return true
-         } else return runBlocking {
-             harTilgangTilLesSak(oppgave.hentVerdi("saksnummer")!!, oppgave.hentVerdi("aktorId")!!, bruker)
-         }
-    }
+    private suspend fun harTilgang(
+        oppgavetype: String,
+        action: Action,
+        saksnummer: String?,
+        aktørIdSøker: String?,
+        aktørIdPleietrengende: String?,
+        auditlogging: Auditlogging
+    ): Boolean {
+        val identTilInnloggetBruker = azureGraphService.hentIdentTilInnloggetBruker()
+        return when (oppgavetype) {
+            "k9sak", "k9klage", "k9tilbake" -> {
+                val tilgang = evaluate(
+                    XacmlRequestBuilder()
+                        .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
+                        .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
+                        .addResourceAttribute(RESOURCE_TYPE, TILGANG_SAK)
+                        .addActionAttribute(ACTION_ID, action)
+                        .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
+                        .addAccessSubjectAttribute(SUBJECTID, identTilInnloggetBruker)
+                        .addResourceAttribute(RESOURCE_SAKSNR, saksnummer!!)
+                )
 
-    override suspend fun harTilgangTilÅReservereOppgave(oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave, bruker: Saksbehandler) : Boolean {
-        val requestBuilder = when (oppgave.oppgavetype.eksternId) {
-            "k9sak" -> {
-                XacmlRequestBuilder()
-                    .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
-                    .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
-                    .addResourceAttribute(RESOURCE_TYPE, TILGANG_SAK)
-                    .addActionAttribute(ACTION_ID, "update")
-                    .addResourceAttribute("no.nav.abac.attributter.resource.k9.behandlings_uuid", oppgave.eksternId)  //TODO los skal ikke kjenne til denne detaljen. Oppgavetype må utvides med attributtreferanse
-                    .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
-                    .addAccessSubjectAttribute(SUBJECTID, bruker.brukerIdent!!)
-            }
-            "k9klage" -> {
-                XacmlRequestBuilder()
-                    .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
-                    .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
-                    .addResourceAttribute(RESOURCE_TYPE, TILGANG_SAK)
-                    .addActionAttribute(ACTION_ID, "create")
-                    .addResourceAttribute("no.nav.abac.attributter.resource.k9.saksnr", oppgave.hentVerdi("saksnummer")!!)  //TODO los skal ikke kjenne til denne detaljen. Oppgavetype må utvides med attributtreferanse
-                    .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
-                    .addAccessSubjectAttribute(SUBJECTID, bruker.brukerIdent!!)
-            }
-            else -> throw NotImplementedError("Støtter kun tilgangsoppslag på k9klage og k9sak")
-        }
+                k9Auditlogger.betingetLogging(tilgang, auditlogging) {
+                    loggTilgangK9Sak(saksnummer, aktørIdSøker!!, identTilInnloggetBruker, action, tilgang)
+                }
 
-        val tilgang = evaluate(requestBuilder)
-        if (KoinProfile.PREPROD == config.koinProfile() && !tilgang) {
-            log.warn("Ikke tilgang til å reservere oppgaver! Spørring: ${requestBuilder.build()}")
+                tilgang
+            }
+
+            "k9punsj" -> {
+                val tilgang =
+                    evaluate(
+                        XacmlRequestBuilder()
+                            .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
+                            .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
+                            .addResourceAttribute(RESOURCE_TYPE, TILGANG_SAK)
+                            .addActionAttribute(ACTION_ID, action)
+                            .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
+                            .addAccessSubjectAttribute(SUBJECTID, identTilInnloggetBruker)
+                            .addResourceAttribute(RESOURCE_AKTØR_ID, setOfNotNull(aktørIdSøker, aktørIdPleietrengende))
+                    )
+                k9Auditlogger.betingetLogging(tilgang, auditlogging) {
+                    loggTilgangK9Punsj(aktørIdSøker!!, identTilInnloggetBruker, action, tilgang)
+                }
+
+                tilgang
+            }
+
+            else -> throw NotImplementedError("Støtter kun tilgangsoppslag på k9klage, k9sak, k9tilbake og k9punsj")
         }
-        return tilgang
     }
 
     private suspend fun evaluate(xacmlRequestBuilder: XacmlRequestBuilder): Boolean {
@@ -374,3 +302,4 @@ class PepClient constructor(
         }
     }
 }
+

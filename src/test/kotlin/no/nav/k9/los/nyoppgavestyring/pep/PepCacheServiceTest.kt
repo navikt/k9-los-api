@@ -15,6 +15,7 @@ import no.nav.k9.los.aksjonspunktbehandling.K9sakEventHandler
 import no.nav.k9.los.buildAndTestConfig
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.modell.BehandlingStatus
+import no.nav.k9.los.integrasjon.abac.Action
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.los.integrasjon.kafka.dto.EventHendelse
@@ -24,11 +25,11 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAda
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
-import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgavefilterUtvider
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgavefilterUtvider
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeEach
@@ -58,7 +59,8 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
     fun setup() {
         runBlocking {
             // Gir tilgang til kode6 for å isolere testing av cache-oppdatering
-            coEvery { pepClient.harTilgangTilLesSak(any(), any()) } returns true
+            coEvery { pepClient.harTilgangTilOppgave(any()) } returns true
+            coEvery { pepClient.harTilgangTilOppgaveV3(any(), any(), any()) } returns true
         }
 
         val områdeSetup = get<OmrådeSetup>()
@@ -177,7 +179,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId)).isNotEmpty()
         assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, "KODE6")).isNotEmpty() // Samme som ordinær frem til håndtert. Kan f.eks gjeninnføres som egen interntype som ikke eksponeres ut
 
-        verify(exactly = 3) { runBlocking { pepClient.harTilgangTilLesSak(eq(saksnummer), any()) } }
+        verify(exactly = 3) { runBlocking { pepClient.harTilgangTilOppgaveV3(any(), Action.read, any()) } }
 
         gjørSakKode6(saksnummer)
         ventPåAntallForsøk(10, "Pepcache") { pepRepository.hent("K9", eksternId)?.kode6 == true }
@@ -188,7 +190,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
 
         job.cancel()
-        verify(exactly = 4) { runBlocking { pepClient.harTilgangTilLesSak(eq(saksnummer), any()) } }
+        verify(exactly = 4) { runBlocking { pepClient.harTilgangTilOppgaveV3(any(), any(), any()) } }
     }
 
     private fun loggAlleOppgaverMedFelterOgCache() {
