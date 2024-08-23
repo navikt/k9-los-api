@@ -1,6 +1,7 @@
 package no.nav.k9.los.domene.modell
 
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.*
+import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
@@ -92,62 +93,67 @@ data class OppgaveKø(
         return false
     }
 
-    fun tilhørerOppgaveTilKø(
-        oppgave: Oppgave,
-        reservasjonRepository: ReservasjonRepository,
-        merknader: List<Merknad>
-    ): Boolean {
-        return tilhørerOppgaveTilKø(oppgave, { erOppgavenReservert(reservasjonRepository, it) } , merknader )
-    }
 
     fun tilhørerOppgaveTilKø(
         oppgave: Oppgave,
         erOppgavenReservertSjekk : (Oppgave) -> Boolean,
-        merknader: List<Merknad>
+        merknader: List<Merknad>,
+        koinProfile: KoinProfile? = null
     ): Boolean {
         if (!oppgave.aktiv) {
+            logÅrsakDev(koinProfile, oppgave, false, "ikke aktiv")
             return false
         }
 
         if (erOppgavenReservertSjekk.invoke(oppgave)) {
+            logÅrsakDev(koinProfile, oppgave, false, "er reservert")
             return false
         }
         if (!erInnenforOppgavekøensPeriode(oppgave)) {
+            logÅrsakDev(koinProfile, oppgave, false, "ikke i køens periode")
             return false
         }
 
         if (filtreringYtelseTyper.isNotEmpty() && !filtreringYtelseTyper.contains(oppgave.fagsakYtelseType)) {
+            logÅrsakDev(koinProfile, oppgave, false, "ikke riktg ytelsetype")
             return false
         }
 
         if (filtreringBehandlingTyper.isNotEmpty() && !filtreringBehandlingTyper.contains(oppgave.behandlingType)) {
+            logÅrsakDev(koinProfile, oppgave, false, "ikke riktig behandlingstype")
             return false
         }
 
         if (oppgave.skjermet != this.skjermet) {
+            logÅrsakDev(koinProfile, oppgave, false, "ikke treff på skjeming")
             return false
         }
 
         if (oppgave.kode6 != this.kode6) {
+            logÅrsakDev(koinProfile, oppgave, false, "ikke samsvar tilgang")
             return false
         }
 
         if (merknadKoder.isEmpty() && merknader.isNotEmpty() || !merknader.flatMap { it.merknadKoder }
                 .containsAll(merknadKoder)) {
+            logÅrsakDev(koinProfile, oppgave, false, "ikke samsvar merknad")
             return false
         }
 
         if (oppgave.feilutbetaltBeløp != null && filtreringFeilutbetaling != null
             && filtreringFeilutbetaling!!.erUtenfor(oppgave.feilutbetaltBeløp)
         ) {
+            logÅrsakDev(koinProfile, oppgave, false, "utenfor feilutbetalt beløp")
             return false
         }
 
         if (nyeKrav != null && nyeKrav != oppgave.nyeKrav) {
+            logÅrsakDev(koinProfile, oppgave, false, "ikke nye krav")
             return false
         }
 
         if (fraEndringsdialog != null && fraEndringsdialog != oppgave.fraEndringsdialog) {
+            logÅrsakDev(koinProfile, oppgave, false, "ikke fra endringsdialog")
             return false
         }
 
@@ -155,26 +161,37 @@ data class OppgaveKø(
             oppgaveKoder.isNotEmpty() && oppgave.aksjonspunkter.hentAktive().isNotEmpty() &&
             !oppgaveKoder.containsAll(oppgave.aksjonspunkter.hentAktive().keys)
         ) {
+            logÅrsakDev(koinProfile, oppgave, false, "ikke match aksjonspunkter")
             return false
         }
 
         if (filtreringAndreKriterierType.isEmpty()) {
+            logÅrsakDev(koinProfile, oppgave, true, "andre kritererer")
             return true
         }
 
-        if (ekskluderer(oppgave)) {
+        if (ekskluderer(oppgave, koinProfile)) {
+            logÅrsakDev(koinProfile, oppgave, false, "ekskluderer")
             return false
         }
 
         if (filtreringAndreKriterierType.none { it.inkluder }) {
+            logÅrsakDev(koinProfile, oppgave, true, "inkluderer andre kriterier")
             return true
         }
 
-        if (inkluderer(oppgave)) {
+        if (inkluderer(oppgave, koinProfile)) {
+            logÅrsakDev(koinProfile, oppgave, true, "inkluderer")
             return true
         }
-
+        logÅrsakDev(koinProfile, oppgave, false, "fallthrough")
         return false
+    }
+
+    private fun logÅrsakDev(koinProfile: KoinProfile?, oppgave: Oppgave, tilhører:Boolean, melding: String){
+        if (koinProfile == KoinProfile.PREPROD){
+            log.info("Oppgaven ${oppgave.eksternId} tilhører ${if (tilhører) "" else "ikke "} køen $id $navn: $melding")
+        }
     }
 
     private fun erInnenforOppgavekøensPeriode(oppgave: Oppgave): Boolean {
@@ -200,43 +217,49 @@ data class OppgaveKø(
         return true
     }
 
-    private fun inkluderer(oppgave: Oppgave): Boolean {
+    private fun inkluderer(oppgave: Oppgave, koinProfile: KoinProfile?): Boolean {
         val inkluderKriterier = filtreringAndreKriterierType.filter { it.inkluder }
-        return sjekkOppgavensKriterier(oppgave, inkluderKriterier, true)
+        return sjekkOppgavensKriterier(oppgave, inkluderKriterier, true, koinProfile)
     }
 
-    private fun ekskluderer(oppgave: Oppgave): Boolean {
+    private fun ekskluderer(oppgave: Oppgave, koinProfile: KoinProfile?): Boolean {
         val ekskluderKriterier = filtreringAndreKriterierType.filter { !it.inkluder }
-        return sjekkOppgavensKriterier(oppgave, ekskluderKriterier, false)
+        return sjekkOppgavensKriterier(oppgave, ekskluderKriterier, false, koinProfile)
     }
 
     private fun sjekkOppgavensKriterier(
         oppgave: Oppgave,
         kriterier: List<AndreKriterierDto>,
-        skalMed: Boolean
+        skalMed: Boolean,
+        koinProfile: KoinProfile?
     ): Boolean {
         if (oppgave.tilBeslutter && kriterier.map { it.andreKriterierType }
                 .contains(AndreKriterierType.TIL_BESLUTTER)) {
+            logÅrsakDev(koinProfile, oppgave, true, "kriterer beslutter")
             return true
         }
 
         if (oppgave.avklarMedlemskap && kriterier.map { it.andreKriterierType }
                 .contains(AndreKriterierType.AVKLAR_MEDLEMSKAP)) {
+            logÅrsakDev(koinProfile, oppgave, true, "kriterer medlemskap")
             return true
         }
 
         if (oppgave.årskvantum && kriterier.map { it.andreKriterierType }
                 .contains(AndreKriterierType.AARSKVANTUM)) {
+            logÅrsakDev(koinProfile, oppgave, true, "kriterer årskvantum")
             return true
         }
 
         if (oppgave.system == Fagsystem.PUNSJ.kode && kriterier.map { it.andreKriterierType }
                 .contains(AndreKriterierType.FRA_PUNSJ)) {
+            logÅrsakDev(koinProfile, oppgave, true, "kritere fra punsj")
             return true
         }
 
         if (oppgave.journalførtTidspunkt == null && kriterier.map { it.andreKriterierType }
                 .contains(AndreKriterierType.IKKE_JOURNALFØRT)) {
+            logÅrsakDev(koinProfile, oppgave, true, "kritere ikke journalført")
             return true
         }
 
@@ -244,18 +267,21 @@ data class OppgaveKø(
             && kriterier.map { it.andreKriterierType }
                 .contains(AndreKriterierType.AVKLAR_INNTEKTSMELDING_BEREGNING)
         ) {
+            logÅrsakDev(koinProfile, oppgave, true, "kriterie avklar IM")
             return true
         }
 
         if (oppgave.aksjonspunkter.harAktivtAksjonspunkt(AUTO_VENTER_PÅ_KOMPLETT_SØKNAD)
             && kriterier.map { it.andreKriterierType }.contains(AndreKriterierType.VENTER_PÅ_KOMPLETT_SØKNAD)
         ) {
+            logÅrsakDev(koinProfile, oppgave, true, "kriterie venter søknad")
             return true
         }
 
         if (oppgave.aksjonspunkter.harAktivtAksjonspunkt(ENDELIG_AVKLAR_KOMPLETT_NOK_FOR_BEREGNING)
             && kriterier.map { it.andreKriterierType }.contains(AndreKriterierType.ENDELIG_BEH_AV_INNTEKTSMELDING)
         ) {
+            logÅrsakDev(koinProfile, oppgave, true, "kriterer beh IM")
             return true
         }
 
@@ -263,6 +289,7 @@ data class OppgaveKø(
             && kriterier.map { it.andreKriterierType }.contains(AndreKriterierType.VENTER_PÅ_ANNEN_PARTS_SAK)
 
         ) {
+            logÅrsakDev(koinProfile, oppgave, true, "kriterer annen sak")
             return true
         }
 
@@ -273,6 +300,7 @@ data class OppgaveKø(
             ) && kriterier.map { it.andreKriterierType }.contains(AndreKriterierType.FORLENGELSER_FRA_INFOTRYGD)
             && oppgave.tilBeslutter
         ) {
+            logÅrsakDev(koinProfile, oppgave, true, "kriterie forlengelse infotrygd")
             return true
         }
 
@@ -284,6 +312,7 @@ data class OppgaveKø(
                 .contains(AndreKriterierType.FORLENGELSER_FRA_INFOTRYGD_AKSJONSPUNKT)
             && !oppgave.tilBeslutter
         ) {
+            logÅrsakDev(koinProfile, oppgave, true, "kriterer forlengelser infotyrgd 2")
             return true
         }
         return false
