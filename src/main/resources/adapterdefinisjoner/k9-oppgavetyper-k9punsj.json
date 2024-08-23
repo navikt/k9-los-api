@@ -42,6 +42,11 @@
           "påkrevd": false
         },
         {
+          "id": "journalpostId",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
           "id": "registrertDato",
           "visPåOppgave": true,
           "påkrevd": true

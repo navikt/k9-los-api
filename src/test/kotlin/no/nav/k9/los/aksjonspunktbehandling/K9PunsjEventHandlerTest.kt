@@ -47,11 +47,12 @@ class K9PunsjEventHandlerTest : AbstractK9LosIntegrationTest() {
         val eksternId = "9a009fb9-38ab-4bad-89e0-a3a16ecba306"
         val eventTid = "2020-11-10T10:43:43.130644"
         val aktørId = "27078522688"
+        val journalpostId = "466988237"
 
         @Language("JSON") val json =
             """{                                                                                                                                                                                                                                                            
                 "eksternId" : "$eksternId",                                                                                                                                                                                                                                                                                                                    
-                "journalpostId" : "466988237",                                                                                                                                                                                                                                                                                                                                           
+                "journalpostId" : "$journalpostId",                                                                                                                                                                                                                                                                                                                                           
                 "aktørId" : "$aktørId",                                                                                                                                                                                                                                                                                                                                               
                 "eventTid" : "$eventTid",                                                                                                                                                                                                                                                                                                                               
                 "journalførtTidspunkt": "$eventTid", 
@@ -75,17 +76,19 @@ class K9PunsjEventHandlerTest : AbstractK9LosIntegrationTest() {
         }
 
         val felter = oppgaveV3.felter.sortedBy { it.eksternId }
-        assertThat(felter).hasSize(5)
+        assertThat(felter).hasSize(6)
         assertThat(felter[0].eksternId).isEqualTo("aktorId")
         assertThat(felter[0].verdi).isEqualTo(aktørId)
         assertThat(felter[1].eksternId).isEqualTo("journalfort")
         assertThat(felter[1].verdi).isEqualTo("true")
         assertThat(felter[2].eksternId).isEqualTo("journalfortTidspunkt")
         assertThat(felter[2].verdi).isEqualTo(eventTid)
-        assertThat(felter[3].eksternId).isEqualTo("mottattDato")
-        assertThat(felter[3].verdi).isEqualTo(eventTid)
-        assertThat(felter[4].eksternId).isEqualTo("registrertDato")
+        assertThat(felter[3].eksternId).isEqualTo("journalpostId")
+        assertThat(felter[3].verdi).isEqualTo(journalpostId)
+        assertThat(felter[4].eksternId).isEqualTo("mottattDato")
         assertThat(felter[4].verdi).isEqualTo(eventTid)
+        assertThat(felter[5].eksternId).isEqualTo("registrertDato")
+        assertThat(felter[5].verdi).isEqualTo(eventTid)
     }
 
     @Test
