@@ -694,13 +694,24 @@ class OppgaveTjeneste constructor(
 
     private val hentAntallOppgaverCache = Cache<CacheKey, Int>()
 
-    fun refreshAntallForAlleKøer() {
-        val køene = oppgaveKøRepository.hentIkkeTaHensyn()
-        val reservasjonIder = saksbehandlerRepository.hentAlleSaksbehandlereIkkeTaHensyn().flatMap { saksbehandler -> saksbehandler.reservasjoner }.toSet()
-        val reserverteOppgaveIderDirekte = reservasjonRepository.hentOppgaveUuidMedAktivReservasjon(reservasjonIder)
-        val reserverteOppgaver = oppgaveRepository.hentOppgaver(reserverteOppgaveIderDirekte)
+    suspend fun refreshAntallForAlleKøer() {
+        val køene = DetaljerMetrikker.timeSuspended("refreshAntallForAlleKøer", "hent")
+        { oppgaveKøRepository.hentIkkeTaHensyn() }
+        val reservasjonIder = DetaljerMetrikker.timeSuspended("refreshAntallForAlleKøer", "hentReservasjonIder")
+        {
+            saksbehandlerRepository.hentAlleSaksbehandlereIkkeTaHensyn()
+                .flatMap { saksbehandler -> saksbehandler.reservasjoner }.toSet()
+        }
+        val reserverteOppgaveIderDirekte =
+            DetaljerMetrikker.timeSuspended("refreshAntallForAlleKøer", "hentUUIDForOppgaverMedAktivReservasjon")
+            { reservasjonRepository.hentOppgaveUuidMedAktivReservasjon(reservasjonIder) }
+        val reserverteOppgaver = DetaljerMetrikker.timeSuspended("refreshAntallForAlleKøer", "hentReserverteOppgaver")
+        { oppgaveRepository.hentOppgaver(reserverteOppgaveIderDirekte) }
         køene.forEach {
-            refreshHentAntallOppgaverForKø(it, reserverteOppgaver)
+            DetaljerMetrikker.timeSuspended(
+                "refreshAntallForAlleKøer",
+                "refreshHentAntallOppgaverForKo"
+            ) { refreshHentAntallOppgaverForKø(it, reserverteOppgaver) }
         }
     }
 
@@ -716,16 +727,14 @@ class OppgaveTjeneste constructor(
         oppgavekø: OppgaveKø,
         reserverteOppgaver: List<Oppgave>
     ) {
-        var antallReserverteOppgaverSomTilhørerKø = 0;
-        for (oppgave in reserverteOppgaver) {
-            val tilhørerKø = oppgavekø.tilhørerOppgaveTilKø(oppgave, erOppgavenReservertSjekk = { false }, emptyList(), configuration.koinProfile)
-            if (tilhørerKø){
-                antallReserverteOppgaverSomTilhørerKø++
-            }
-            if (configuration.koinProfile == KoinProfile.PREPROD){
-                log.info("Tilhører reservert oppgave ${oppgave.eksternId} til kø ${oppgavekø.id} ${oppgavekø.navn}?  ${tilhørerKø}")
-            }
-        }
+        val antallReserverteOppgaverSomTilhørerKø =
+            reserverteOppgaver.count {
+                oppgavekø.tilhørerOppgaveTilKø(
+                    it,
+                    erOppgavenReservertSjekk = { false },
+                    emptyList()
+                )
+            } //må spesifikt si at oppgaven ikke er reservert for å telle den reserverte oppgaven
         val antallUtenReserverte = oppgavekø.oppgaverOgDatoer.size
         val antallMedReserverte = oppgavekø.oppgaverOgDatoer.size + antallReserverteOppgaverSomTilhørerKø
         hentAntallOppgaverCache.set(
@@ -761,8 +770,7 @@ class OppgaveTjeneste constructor(
                     oppgavekø.tilhørerOppgaveTilKø(
                         it,
                         erOppgavenReservertSjekk = { false },
-                        emptyList(),
-                        configuration.koinProfile
+                        emptyList()
                     )
                 } //må spesifikt si at oppgaven ikke er reservert for å telle den reserverte oppgaven
             log.info("Antall reserverte oppgaver som ble lagt til var $antallReserverteOppgaverSomTilhørerKø for køen ${oppgavekø.navn}")
