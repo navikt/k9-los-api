@@ -2,7 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 val mainClass = "no.nav.k9.los.K9LosKt"
 val hikariVersion = "5.1.0"
-val flywayVersion = "10.17.1"
+val flywayVersion = "10.17.2"
 val vaultJdbcVersion = "1.3.10"
 val koinVersion = "3.5.6"
 val kotliqueryVersion = "1.9.0"
@@ -26,7 +26,7 @@ val assertkVersion = "0.28.1"
 val mockkVersion = "1.13.12"
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "2.0.10"
+    id("org.jetbrains.kotlin.jvm") version "2.0.20"
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
