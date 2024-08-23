@@ -42,7 +42,7 @@ class PepClient(
 
     private val url = config.abacEndpointUrl
     private val log: Logger = LoggerFactory.getLogger(PepClient::class.java)
-    private val cache = Cache<String, Boolean>()
+    private val cache = Cache<String, Boolean>(cacheSizeLimit = 1000)
 
     override suspend fun erOppgaveStyrer(): Boolean {
         val requestBuilder = XacmlRequestBuilder()
@@ -327,7 +327,9 @@ class PepClient(
                     false
                 }
             }
-            cache.set(xacmlJson, CacheObject(result, LocalDateTime.now().plusHours(1)))
+            val now = LocalDateTime.now()
+            cache.removeExpiredObjects(now)
+            cache.set(xacmlJson, CacheObject(result, now.plusHours(1)))
             return result
         } else {
             return get.value
