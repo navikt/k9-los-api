@@ -27,14 +27,20 @@ class RefreshK9v3Tjeneste(
     val antallPrKø: Int = 10
 ) {
 
+    enum class RefreshUtført {
+        ALLE_KØER,
+        NOEN_KØER,
+        INGENTING
+    }
+
     @WithSpan
-    fun refreshK9(hendelser: List<KøpåvirkendeHendelse>) {
-        transactionalManager.transaction { tx ->
+    fun refreshK9(hendelser: List<KøpåvirkendeHendelse>) : RefreshUtført{
+        return transactionalManager.transaction { tx ->
             refreshK9(tx, hendelser)
         }
     }
 
-    private fun refreshK9(tx: TransactionalSession, hendelser: List<KøpåvirkendeHendelse>) {
+    private fun refreshK9(tx: TransactionalSession, hendelser: List<KøpåvirkendeHendelse>): RefreshUtført {
 
         val aktuelleHendelser = hendelser
             .filterNot { it is OppgaveHendelseMottatt && it.fagsystem != Fagsystem.K9SAK  }
@@ -43,7 +49,7 @@ class RefreshK9v3Tjeneste(
 
         if (aktuelleHendelser.isEmpty()){
             log.info("Fikk ${hendelser.size}, ingen var aktuelle for å refreshe k9sak")
-            return;
+            return RefreshUtført.INGENTING;
         }
 
         val oppfriskerFraAlleKøer : Boolean
@@ -65,11 +71,10 @@ class RefreshK9v3Tjeneste(
             }
         }
 
-        if (oppfriskerFraAlleKøer) {
-            //ta litt pause for å ikke lage unødvendig høy last
-            //TODO tilpasse når vi har fått erfaring fra prod
-            //kan fjernes dersom vi får på plass å bare hente oppgaver fra køer som er direkte påvirket
-            Thread.sleep(15000)
+        return if (oppfriskerFraAlleKøer) {
+            RefreshUtført.ALLE_KØER
+        } else {
+            RefreshUtført.NOEN_KØER
         }
     }
 

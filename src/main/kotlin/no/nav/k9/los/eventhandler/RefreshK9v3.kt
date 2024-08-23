@@ -19,9 +19,15 @@ class RefreshK9v3(
                 val hendelse = channel.tryReceive().getOrNull()
                 if (hendelse == null) {
                     try {
-                        ChannelMetrikker.timeSuspended("refresh_k9sak_v3") {
-                            refreshK9v3Tjeneste.refreshK9(hendelser)
-                            hendelser.clear()
+                        val refreshUtført = ChannelMetrikker.timeSuspended("refresh_k9sak_v3") {
+                             refreshK9v3Tjeneste.refreshK9(hendelser)
+                        }
+                        hendelser.clear()
+                        if (refreshUtført == RefreshK9v3Tjeneste.RefreshUtført.ALLE_KØER){
+                            //ta litt pause for å ikke lage unødvendig høy last
+                            //TODO tilpasse når vi har fått erfaring fra prod
+                            //kan fjernes dersom vi får på plass å bare hente oppgaver fra køer som er direkte påvirket
+                            Thread.sleep(15000)
                         }
                     } catch (e: Exception) {
                         log.error("Feilet ved refresh av oppgaver i k9-sak: " + hendelser.joinToString(", "), e)
