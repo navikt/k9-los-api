@@ -6,6 +6,8 @@ import com.github.kittinunf.fuel.coroutines.awaitStringResponseResult
 import com.github.kittinunf.fuel.httpPost
 import com.google.gson.GsonBuilder
 import io.ktor.http.*
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -276,7 +278,7 @@ class PepClient(
         val xacmlJson = gson.toJson(xacmlRequestBuilder.build())
         val get = cache.get(xacmlJson)
         if (get == null) {
-            val result = withContext(Dispatchers.IO) {
+            val result = withContext(Dispatchers.IO + Span.current().asContextElement()) {
                 val httpRequest = url
                     .httpPost()
                     .authentication()
