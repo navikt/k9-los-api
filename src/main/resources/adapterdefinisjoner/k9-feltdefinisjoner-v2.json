@@ -491,6 +491,14 @@
       "kokriterie": true
     },
     {
+      "id": "journalpostId",
+      "visningsnavn": "Journalpost-ID",
+      "listetype": false,
+      "tolkesSom": "String",
+      "visTilBruker": true,
+      "kokriterie": false
+    },
+    {
       "id": "oversendtKabalTidspunkt",
       "visningsnavn": "Tidspunkt for eventuell overføring til kabal",
       "listetype": false,
