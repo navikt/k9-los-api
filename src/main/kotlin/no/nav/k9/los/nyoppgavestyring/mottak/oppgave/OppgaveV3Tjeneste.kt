@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotliquery.TransactionalSession
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository

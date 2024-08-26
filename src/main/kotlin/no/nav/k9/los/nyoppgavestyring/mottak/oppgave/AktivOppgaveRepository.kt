@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
@@ -17,6 +18,7 @@ import java.time.LocalDateTime
 class AktivOppgaveRepository (val oppgavetypeRepository: OppgavetypeRepository)  {
 
     companion object {
+        @WithSpan
         fun ajourholdAktivOppgave(oppgave: OppgaveV3, nyVersjon: Long, tx: TransactionalSession): AktivOppgaveId {
             val oppgaveId = DetaljerMetrikker.time("k9sakHistorikkvask", "oppdaterOppgaveV3Aktiv") {
                 oppdaterOppgaveV3Aktiv(
@@ -36,6 +38,7 @@ class AktivOppgaveRepository (val oppgavetypeRepository: OppgavetypeRepository) 
             return oppgaveId
         }
 
+        @WithSpan
         fun slettAktivOppgave(tx: TransactionalSession, oppgave: OppgaveV3) {
             val id = hentOppgaveV3AktivId(tx, oppgave)
             if (id != null){
@@ -227,7 +230,6 @@ class AktivOppgaveRepository (val oppgavetypeRepository: OppgavetypeRepository) 
             )
         }
 
-
         private fun slettFelter(deletes: Collection<Long>, tx: TransactionalSession) {
             if (deletes.isEmpty()) {
                 return
@@ -237,10 +239,6 @@ class AktivOppgaveRepository (val oppgavetypeRepository: OppgavetypeRepository) 
                 deletes.map { mapOf("id" to it) }.toList()
             )
         }
-
-
-
-
 
         private fun hentOppgavefelter(tx: TransactionalSession, oppgaveId: Long): List<Oppgavefelt> {
             return tx.run(
@@ -294,6 +292,7 @@ class AktivOppgaveRepository (val oppgavetypeRepository: OppgavetypeRepository) 
 
     }
 
+    @WithSpan
     fun hentOppgaveForId(tx: TransactionalSession, aktivOppgaveId: AktivOppgaveId, now: LocalDateTime = LocalDateTime.now()): Oppgave {
         val oppgave = tx.run(
             queryOf(
@@ -311,6 +310,7 @@ class AktivOppgaveRepository (val oppgavetypeRepository: OppgavetypeRepository) 
         return oppgave
     }
 
+    @WithSpan
     fun hentK9sakParsakOppgaver(tx: TransactionalSession, oppgaver : Collection<AktivOppgaveId>) : Set<EksternOppgaveId> {
         if (oppgaver.isEmpty()){
             return emptySet()

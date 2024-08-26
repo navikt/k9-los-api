@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
@@ -90,6 +91,7 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
             .sum()
     }
 
+    @WithSpan
     fun vaskOgMarkerOppgaveForBehandlingUUID(uuid: UUID) : Long{
         return transactionalManager.transaction { tx ->
             var eventTeller =  0L;
@@ -153,12 +155,6 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
         }
         log.info("Vasket $eventTeller hendelser for k9punsj-oppgave med eksternId: $uuid")
         return eventTeller
-    }
-
-    private fun loggFremgangForHver100(teller: Long, tekst: String) {
-        if (teller.mod(100) == 0) {
-            log.info(tekst)
-        }
     }
 
 }
