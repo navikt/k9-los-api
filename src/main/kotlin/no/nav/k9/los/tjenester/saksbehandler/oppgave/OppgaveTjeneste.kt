@@ -692,7 +692,7 @@ class OppgaveTjeneste constructor(
 
     private data class CacheKey(val kø: UUID, val medReserverte: Boolean)
 
-    private val hentAntallOppgaverCache = Cache<CacheKey, Int>()
+    private val hentAntallOppgaverCache = Cache<CacheKey, Int>(cacheSizeLimit = 1000)
 
     suspend fun refreshAntallForAlleKøer() {
         val køene = DetaljerMetrikker.timeSuspended("refreshAntallForAlleKøer", "hent")

@@ -22,7 +22,7 @@ class OppgavetypeRepository(
     ) {
 
     private val log = LoggerFactory.getLogger(OppgavetypeRepository::class.java)
-    private val oppgavetypeCache = Cache<String, Oppgavetyper>()
+    private val oppgavetypeCache = Cache<String, Oppgavetyper>(cacheSizeLimit = null)
 
     fun hent(område: Område, definisjonskilde: String, tx: TransactionalSession): Oppgavetyper {
         val oppgavetyper = hent(område, tx)

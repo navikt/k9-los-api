@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory
 
 class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
     private val log = LoggerFactory.getLogger(FeltdefinisjonRepository::class.java)
-    private val kodeverkCache = Cache<String, KodeverkForOmråde>()
+    private val kodeverkCache = Cache<String, KodeverkForOmråde>(cacheSizeLimit = null)
 
     fun hent(område: Område, tx: TransactionalSession): Feltdefinisjoner {
         val feltdefinisjoner = tx.run(
