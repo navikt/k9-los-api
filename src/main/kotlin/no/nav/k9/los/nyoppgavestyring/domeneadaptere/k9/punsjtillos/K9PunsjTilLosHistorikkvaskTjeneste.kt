@@ -12,6 +12,8 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.sql.BatchUpdateException
+import java.sql.SQLException
 import java.time.*
 import java.util.*
 import kotlin.concurrent.thread
@@ -100,7 +102,12 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
                 eventTeller
             }
         } catch (e : Exception){
-            log.warn("Historikkvask for $uuid fra punsj feilet", e)
+            val melding = "Historikkvask for $uuid fra punsj feilet";
+            if (e is BatchUpdateException){
+                logAllExceptions(melding, e)
+            } else {
+                log.warn(melding, e)
+            }
 
             transactionalManager.transaction { tx ->
                 //marker som vasket for å unngå evig løkke
@@ -109,6 +116,20 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
             }
             return 0;
         }
+    }
+
+    private fun logAllExceptions(melding: String, exception: BatchUpdateException) {
+        var nummer = 1
+        var e : SQLException? = exception
+        do {
+            nummer++
+            log.warn(melding + " exception nr $nummer", exception)
+            if (e is BatchUpdateException){
+                e = e.nextException
+            } else {
+                e = null
+            }
+        } while (e is BatchUpdateException)
     }
 
     fun vaskOppgaveForBehandlingUUID(uuid: UUID): Long {
