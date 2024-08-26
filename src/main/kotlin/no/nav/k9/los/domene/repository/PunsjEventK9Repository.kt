@@ -38,7 +38,8 @@ class PunsjEventK9Repository(private val dataSource: DataSource) {
         }
         return try {
             val modell = LosObjectMapper.instance.readValue(json, K9PunsjModell::class.java)
-            K9PunsjModell(modell.eventer.sortedBy { it.eventTid })
+            val unikeEventer = BehandlingProsessEventK9PunsjDuplikatUtil.fjernDuplikater(modell.eventer)
+            K9PunsjModell(unikeEventer.sortedBy { it.eventTid })
         } catch (e: Exception) {
             log.error("", e)
             K9PunsjModell(emptyList())
@@ -46,7 +47,7 @@ class PunsjEventK9Repository(private val dataSource: DataSource) {
     }
 
     fun hentMedLås(tx: TransactionalSession, uuid: UUID): K9PunsjModell {
-        val json: String? =tx.run(
+        val json: String? = tx.run(
                 queryOf(
                     "select data from behandling_prosess_events_k9_punsj where id = :id for update",
                     mapOf("id" to uuid.toString())
@@ -62,7 +63,8 @@ class PunsjEventK9Repository(private val dataSource: DataSource) {
         }
         return try {
             val modell = LosObjectMapper.instance.readValue(json, K9PunsjModell::class.java)
-            K9PunsjModell(modell.eventer.sortedBy { it.eventTid })
+            val unikeEventer = BehandlingProsessEventK9PunsjDuplikatUtil.fjernDuplikater(modell.eventer)
+            K9PunsjModell(unikeEventer.sortedBy { it.eventTid })
         } catch (e: Exception) {
             log.error("", e)
             K9PunsjModell(emptyList())
@@ -120,28 +122,8 @@ class PunsjEventK9Repository(private val dataSource: DataSource) {
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
         val modell = LosObjectMapper.instance.readValue(out!!, K9PunsjModell::class.java)
-        return modell.copy(eventer = modell.eventer.sortedBy { it.eventTid })
-    }
-
-    ///
-    fun hentAlleEventerIder(
-    ): List<UUID> {
-
-        val ider = using(sessionOf(dataSource)) {
-            it.transaction { tx ->
-                tx.run(
-                    queryOf(
-                        "select id from behandling_prosess_events_k9_punsj",
-                        mapOf()
-                    )
-                        .map { row ->
-                            UUID.fromString(row.string("id"))
-                        }.asList
-                )
-            }
-
-        }
-        return ider
+        val unikeEventer = BehandlingProsessEventK9PunsjDuplikatUtil.fjernDuplikater(modell.eventer)
+        return modell.copy(eventer = unikeEventer.sortedBy { it.eventTid })
     }
 
     fun hentAlleDirtyEventIder(): List<UUID> {
