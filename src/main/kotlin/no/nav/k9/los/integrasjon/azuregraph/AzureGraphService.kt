@@ -146,7 +146,12 @@ open class AzureGraphService constructor(
                     val result = LosObjectMapper.instance.readValue<OfficeLocationFilterResult>(json).value.also {
                         if (it.size > 1) log.warn("Flere enn 1 treff på ident")
                     }
-                    result.first().officeLocation
+                    if (result.isEmpty()){
+                        log.warn("Fant ingen treff på enhet for bruker")
+                        ""
+                    } else {
+                        result.first().officeLocation
+                    }
                 }
                 officeLocationCache.set(key, CacheObject(officeLocation, LocalDateTime.now().plusDays(180)))
                 return officeLocation
