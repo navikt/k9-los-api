@@ -85,22 +85,22 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
     }
 
     private fun spillAvBehandlingProsessEventer(behandlingsIder: List<UUID>): Long {
-        var eventTeller = 0L
-        var behandlingTeller = 0L
-        val antallBehandlingerIBatch = behandlingsIder.size
+        return behandlingsIder
+            .map { uuid -> vaskOgMarkerOppgaveForBehandlingUUID(uuid) }
+            .sum()
+    }
 
-        behandlingsIder.forEach { uuid ->
-            transactionalManager.transaction { tx ->
-                eventTeller += vaskOppgaveForBehandlingUUID(uuid, tx)
-                eventRepository.markerVasketHistorikk(uuid, tx)
-                behandlingTeller++
-                loggFremgangForHver100(
-                    behandlingTeller,
-                    "Vasket $behandlingTeller behandlinger av $antallBehandlingerIBatch i gjeldende iterasjon"
-                )
+    fun vaskOgMarkerOppgaveForBehandlingUUID(uuid: UUID) : Long{
+        return transactionalManager.transaction { tx ->
+            var eventTeller =  0L;
+            try {
+                eventTeller = vaskOppgaveForBehandlingUUID(uuid, tx)
+            } catch (e : Exception){
+                log.warn("Historikkvask for $uuid fra punsj feilet", e)
             }
+            eventRepository.markerVasketHistorikk(uuid, tx)
+            eventTeller
         }
-        return eventTeller
     }
 
     fun vaskOppgaveForBehandlingUUID(uuid: UUID): Long {
