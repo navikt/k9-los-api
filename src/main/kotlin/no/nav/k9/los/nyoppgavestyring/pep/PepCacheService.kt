@@ -1,5 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.pep
 
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -90,10 +92,10 @@ class PepCacheService(
 
     private suspend fun PepCache.oppdater(saksnummer: String): PepCache {
         return coroutineScope {
-            val kode6Request = async {
+            val kode6Request = async (Span.current().asContextElement()) {
                 pepClient.erSakKode6(fagsakNummer = saksnummer)
             }
-            val kode7EllerEgenAnsattRequest = async {
+            val kode7EllerEgenAnsattRequest = async (Span.current().asContextElement()) {
                 pepClient.erSakKode7EllerEgenAnsatt(fagsakNummer = saksnummer)
             }
             val kode7EllerEgenAnsatt = kode7EllerEgenAnsattRequest.await()
