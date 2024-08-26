@@ -147,7 +147,7 @@ open class AzureGraphService constructor(
                         if (it.size > 1) log.warn("Flere enn 1 treff på ident")
                     }
                     if (result.isEmpty()){
-                        log.warn("Fant ingen treff på enhet for saksbehandler, bruker tom streng som enhet")
+                        log.warn("Fant ingen treff på enhet for saksbehandler $brukernavn, bruker tom streng som enhet")
                         ""
                     } else {
                         result.first().officeLocation
@@ -156,7 +156,7 @@ open class AzureGraphService constructor(
                 officeLocationCache.set(key, CacheObject(officeLocation, LocalDateTime.now().plusDays(180)))
                 return officeLocation
             } catch (e: Exception) {
-                log.warn("Feilet i oppslag av enhet for saksbehandler, bruker tom streng som enhet", e)
+                log.warn("Feilet i oppslag av enhet for saksbehandler $brukernavn, bruker tom streng som enhet", e)
                 ""
             }
         } else {
