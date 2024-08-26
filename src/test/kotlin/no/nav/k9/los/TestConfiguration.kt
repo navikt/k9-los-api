@@ -21,6 +21,7 @@ object TestConfiguration {
 
         map["nav.register_urls.k9_url"] = "http://localhost:8080"
         map["nav.register_urls.k9_frontend_url"] = "http://localhost:9000"
+        map["nav.register_urls.k9_punsj_frontend_url"] = "http://localhost:8080"
         map["nav.audit.enabled"] = "false"
         map["nav.audit.vendor"] = "test"
         map["nav.audit.product"] = "test"

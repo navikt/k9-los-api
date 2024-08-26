@@ -160,7 +160,7 @@ class K9PunsjTilLosAdapterTjeneste(
                     oppgavetypeDto.copy(
                         oppgavebehandlingsUrlTemplate = oppgavetypeDto.oppgavebehandlingsUrlTemplate.replace(
                             "{baseUrl}",
-                            config.k9FrontendUrl()
+                            config.k9PunsjFrontendUrl()
                         )
                     )
                 }.toSet()
