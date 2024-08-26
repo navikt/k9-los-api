@@ -108,7 +108,7 @@
       "tolkesSom": "Duration",
       "visTilBruker": true,
       "kokriterie": true,
-      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.transientfeltutleder.K9SakTidSidenMottattDatoUtleder"
+      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakTidSidenMottattDatoUtleder"
     },
     {
       "id": "registrertDato",
@@ -177,7 +177,7 @@
       "tolkesSom": "boolean",
       "visTilBruker": true,
       "kokriterie": true,
-      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.transientfeltutleder.K9SakBeslutterTransientFeltutleder"
+      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakBeslutterTransientFeltutleder"
     },
     {
       "id": "totrinnskontroll",
@@ -326,7 +326,7 @@
       "tolkesSom": "Duration",
       "visTilBruker": true,
       "kokriterie": true,
-      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.transientfeltutleder.K9SakVentetPåAnnetIkkeSaksbehandlingstidUtleder"
+      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakVentetPåAnnetIkkeSaksbehandlingstidUtleder"
     },
     {
       "id": "akkumulertVentetidAnnet",
@@ -335,7 +335,7 @@
       "tolkesSom": "Duration",
       "visTilBruker": true,
       "kokriterie": true,
-      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.transientfeltutleder.K9SakVentetPåAnnetUtleder"
+      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakVentetPåAnnetUtleder"
     },
     {
       "id": "akkumulertVentetidArbeidsgiver",
@@ -344,7 +344,7 @@
       "tolkesSom": "Duration",
       "visTilBruker": true,
       "kokriterie": true,
-      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.transientfeltutleder.K9SakVentetPåArbeidsgiverUtleder"
+      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakVentetPåArbeidsgiverUtleder"
     },
     {
       "id": "akkumulertVentetidSaksbehandler",
@@ -353,7 +353,7 @@
       "tolkesSom": "Duration",
       "visTilBruker": true,
       "kokriterie": true,
-      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.transientfeltutleder.K9SakVentetPåSaksbehandlerUtleder"
+      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakVentetPåSaksbehandlerUtleder"
     },
     {
       "id": "akkumulertVentetidSøker",
@@ -362,7 +362,7 @@
       "tolkesSom": "Duration",
       "visTilBruker": true,
       "kokriterie": true,
-      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.transientfeltutleder.K9SakVentetPåSøkerUtleder"
+      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakVentetPåSøkerUtleder"
     },
     {
       "id": "akkumulertVentetidTekniskFeil",
@@ -371,7 +371,7 @@
       "tolkesSom": "Duration",
       "visTilBruker": true,
       "kokriterie": true,
-      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.transientfeltutleder.K9SakVentetPåTekniskFeilUtleder"
+      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakVentetPåTekniskFeilUtleder"
     },
     {
       "id": "oppgavesaksbehandlingstid",
@@ -380,7 +380,7 @@
       "tolkesSom": "Duration",
       "visTilBruker": true,
       "kokriterie": true,
-      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.transientfeltutleder.K9SakOppgavesaksbehandlingstidUtleder"
+      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakOppgavesaksbehandlingstidUtleder"
     },
     {
       "id": "aktivVenteårsak",
@@ -473,6 +473,30 @@
         "område": "K9",
         "eksternId": "behandlingsårsak"
       }
+    },
+    {
+      "id": "journalfort",
+      "visningsnavn": "Journalført",
+      "listetype": false,
+      "tolkesSom": "boolean",
+      "visTilBruker": true,
+      "kokriterie": true
+    },
+    {
+      "id": "journalfortTidspunkt",
+      "visningsnavn": "Journalført tidspunkt",
+      "listetype": false,
+      "tolkesSom": "Timestamp",
+      "visTilBruker": true,
+      "kokriterie": true
+    },
+    {
+      "id": "oversendtKabalTidspunkt",
+      "visningsnavn": "Tidspunkt for eventuell overføring til kabal",
+      "listetype": false,
+      "tolkesSom": "Timestamp",
+      "visTilBruker": false,
+      "kokriterie": false
     }
   ]
 }

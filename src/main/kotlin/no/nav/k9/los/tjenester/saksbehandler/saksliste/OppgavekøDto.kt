@@ -18,6 +18,7 @@ class OppgavekøDto(
     var skjermet: Boolean,
     var sistEndret: LocalDate,
     var antallBehandlinger: Int,
+    var antallUreserverteOppgaver: Int,
     var saksbehandlere: MutableList<Saksbehandler>,
     var kriterier: List<KriteriumDto>
 )

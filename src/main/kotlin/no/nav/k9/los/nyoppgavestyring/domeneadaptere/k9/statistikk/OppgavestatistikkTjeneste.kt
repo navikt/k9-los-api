@@ -6,8 +6,6 @@ import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
-import no.nav.k9.statistikk.kontrakter.JsonSchemas.behandling
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
@@ -15,7 +13,6 @@ import kotlin.concurrent.thread
 import kotlin.concurrent.timer
 
 class OppgavestatistikkTjeneste(
-    private val oppgaveRepository: OppgaveRepository,
     private val oppgavetypeRepository: OppgavetypeRepository,
     private val statistikkPublisher: StatistikkPublisher,
     private val transactionalManager: TransactionalManager,
@@ -86,7 +83,7 @@ class OppgavestatistikkTjeneste(
         val kjøretid = tidStatistikksendingFerdig - tidStatistikksendingStartet
         log.info("Sending av saks- og behanlingsstatistikk ferdig")
         log.info("Sendt ${oppgaverSomIkkeErSendt.size} oppgaversjoner. Totalt tidsbruk: ${kjøretid} ms")
-        if (oppgaverSomIkkeErSendt.size > 0) {
+        if (oppgaverSomIkkeErSendt.isNotEmpty()) {
             log.info("Gjennomsnitt tidsbruk: ${kjøretid / oppgaverSomIkkeErSendt.size} ms pr oppgaveversjon")
         }
     }
@@ -102,9 +99,9 @@ class OppgavestatistikkTjeneste(
             if (erKode6) {
                 nullUtEventuelleSensitiveFelter(it)
             } else it
-        }.forEach {
-            statistikkPublisher.publiser(sak, it)
         }
+            .onEach { log.info("Utgående DvhBehandling: "+ it.tryggToString()) }
+            .forEach { statistikkPublisher.publiser(sak, it) }
     }
 
     private fun nullUtEventuelleSensitiveFelter(sak: Sak): Sak {
@@ -121,7 +118,7 @@ class OppgavestatistikkTjeneste(
     }
 
     private fun byggOppgavestatistikk(oppgaveId: Long, tx: TransactionalSession): Pair<Sak, List<Behandling>> {
-        val oppgave = oppgaveRepository.hentOppgaveForId(tx, oppgaveId)
+        val oppgave = statistikkRepository.hentOppgaveForId(tx, oppgaveId)
 
         return when (oppgave.oppgavetype.eksternId) {
             "k9sak" -> Pair(
@@ -135,6 +132,8 @@ class OppgavestatistikkTjeneste(
             else -> throw IllegalStateException("Ukjent oppgavetype for sending til DVH: ${oppgave.oppgavetype.eksternId}")
         }
     }
+
+
 
     fun slettStatistikkgrunnlag() {
         statistikkRepository.fjernSendtMarkering()

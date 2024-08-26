@@ -5,11 +5,16 @@ import no.nav.k9.los.integrasjon.kafka.IKafkaConfig
 import no.nav.k9.los.integrasjon.kafka.ManagedKafkaStreams
 import no.nav.k9.los.integrasjon.kafka.ManagedStreamHealthy
 import no.nav.k9.los.integrasjon.kafka.ManagedStreamReady
+import no.nav.k9.los.utils.OpentelemetrySpanUtil
+import no.nav.k9.los.utils.TransientFeilHåndterer
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.Topology
 import org.apache.kafka.streams.kstream.Consumed
 import org.slf4j.LoggerFactory
+import kotlin.system.measureTimeMillis
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 internal class AksjonspunktStreamK9 constructor(
     kafkaConfig: IKafkaConfig,
@@ -51,7 +56,17 @@ internal class AksjonspunktStreamK9 constructor(
                 ).peek { _, e -> log.info("--> Behandlingsprosesshendelse fra k9sak: ${e.tryggToString() }") }
                 .foreach { _, entry ->
                     if (entry != null) {
-                        k9sakEventHandler.prosesser(entry)
+                        OpentelemetrySpanUtil.span(NAME, mapOf("saksnummer" to entry.saksnummer)) {
+                            val tid = measureTimeMillis {
+                                TransientFeilHåndterer(warningEtter = 5.toDuration(DurationUnit.SECONDS)).utfør(NAME) {k9sakEventHandler.prosesser(entry) }
+                            }
+                            if (tid > 5000) {
+                                // Logger som warning ved over 5sekunder fordi det kan oppleves som at oppgaver blir liggende igjen på benken
+                                log.warn("Prosessering av Behandlingsprosesshendelse fra k9sak for ${entry.saksnummer}-${entry.eksternId} tok $tid")
+                            } else {
+                                log.info("Prosessering av Behandlingsprosesshendelse fra k9sak for ${entry.saksnummer}-${entry.eksternId} tok $tid")
+                            }
+                        }
                     }
                 }
             return builder.build()

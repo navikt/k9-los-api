@@ -4,16 +4,15 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import no.nav.k9.los.domene.modell.BehandlingType
 import no.nav.k9.los.domene.modell.FagsakYtelseType
-import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleFerdigstilteOppgaver
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.FerdigstiltBehandling
 import no.nav.k9.los.tjenester.innsikt.Databasekall
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.BehandletOppgave
 import no.nav.k9.los.utils.Cache
 import no.nav.k9.los.utils.CacheObject
+import no.nav.k9.los.utils.LosObjectMapper
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -27,28 +26,13 @@ class StatistikkRepository(
         val SISTE_8_UKER_I_DAGER = 55
     }
 
-    fun lagreBehandling(brukerIdent: String, f: (BehandletOppgave?) -> BehandletOppgave) {
+    fun lagreBehandling(brukerIdent: String, oppgave : BehandletOppgave) {
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
-                val run = tx.run(
-                    queryOf(
-                        "select (data ::jsonb -> 'siste_behandlinger' -> -1) as data from siste_behandlinger where id = :id for update",
-                        mapOf("id" to brukerIdent)
-                    )
-                        .map { row ->
-                            row.string("data")
-                        }.asSingle
-                )
 
-                val oppgave = if (!run.isNullOrEmpty()) {
-                    f(objectMapper().readValue(run, BehandletOppgave::class.java))
-                } else {
-                    f(null)
-                }
-                val json = objectMapper().writeValueAsString(oppgave)
-
+                val json = LosObjectMapper.instance.writeValueAsString(oppgave)
                 tx.run(
                     queryOf(
                         """
@@ -69,10 +53,17 @@ class StatistikkRepository(
         val json = using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
-                    """select data, timestamp from (
-                            select distinct on (saksnummer) (data ::jsonb -> 'saksnummer') as saksnummer , (data ::jsonb -> 'timestamp') as timestamp, data from (
-                            select jsonb_array_elements_text(data ::jsonb -> 'siste_behandlinger') as data
-                                from siste_behandlinger where id = :id) as saker order by saksnummer, timestamp desc ) as s order by timestamp desc limit 10""".trimIndent(),
+                    """
+                        select data, timestamp from (
+                            select distinct on (saksnummer) 
+                                (data -> 'saksnummer') as saksnummer, 
+                                (data -> 'timestamp') as timestamp, 
+                                data from (select jsonb_array_elements(data -> 'siste_behandlinger') as data from siste_behandlinger where id = :id) as saker 
+                                order by saksnummer, timestamp desc 
+                             ) as s 
+                         order by timestamp desc
+                         limit 10
+                    """.trimIndent(),
                     mapOf("id" to ident)
                 )
                     .map { row ->
@@ -80,7 +71,7 @@ class StatistikkRepository(
                     }.asList
             )
         }
-        return json.map { objectMapper().readValue(it, BehandletOppgave::class.java) }
+        return json.map { LosObjectMapper.instance.readValue(it, BehandletOppgave::class.java) }
     }
 
     fun lagreFerdigstilt(bt: String, eksternId: UUID, dato: LocalDate) {
@@ -107,30 +98,6 @@ class StatistikkRepository(
         }
     }
 
-    fun hentFerdigstilte(): List<AlleFerdigstilteOppgaver> {
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-        return using(sessionOf(dataSource)) {
-            it.run(
-                queryOf(
-                    """
-                            select behandlingtype, dato, jsonb_array_length(data) as antall
-                            from ferdigstilte_behandlinger  where dato >= current_date - '7 days'::interval
-                            group by behandlingtype,dato
-                    """.trimIndent(),
-                    mapOf()
-                )
-                    .map { row ->
-                        AlleFerdigstilteOppgaver(
-                            behandlingType = BehandlingType.fraKode(row.string("behandlingType")),
-                            dato = row.localDate("dato"),
-                            antall = row.int("antall")
-                        )
-                    }.asList
-            )
-        }
-    }
-
     fun lagre(
         alleOppgaverNyeOgFerdigstilte: AlleOppgaverNyeOgFerdigstilte,
         f: (AlleOppgaverNyeOgFerdigstilte) -> AlleOppgaverNyeOgFerdigstilte
@@ -153,11 +120,13 @@ class StatistikkRepository(
                                 behandlingType = BehandlingType.fraKode(row.string("behandlingType")),
                                 fagsakYtelseType = FagsakYtelseType.fraKode(row.string("fagsakYtelseType")),
                                 dato = row.localDate("dato"),
-                                ferdigstilte = objectMapper().readValue(row.stringOrNull("ferdigstilte") ?: "[]"),
-                                ferdigstilteSaksbehandler = objectMapper().readValue(
+                                ferdigstilte = LosObjectMapper.instance.readValue(
+                                    row.stringOrNull("ferdigstilte") ?: "[]"
+                                ),
+                                ferdigstilteSaksbehandler = LosObjectMapper.instance.readValue(
                                     row.stringOrNull("ferdigstiltesaksbehandler") ?: "[]"
                                 ),
-                                nye = objectMapper().readValue(row.stringOrNull("nye") ?: "[]")
+                                nye = LosObjectMapper.instance.readValue(row.stringOrNull("nye") ?: "[]")
                             )
                         }.asSingle
                 )
@@ -178,11 +147,13 @@ class StatistikkRepository(
                             "behandlingType" to alleOppgaverNyeOgFerdigstilteSomPersisteres.behandlingType.kode,
                             "fagsakYtelseType" to alleOppgaverNyeOgFerdigstilteSomPersisteres.fagsakYtelseType.kode,
                             "dato" to alleOppgaverNyeOgFerdigstilteSomPersisteres.dato,
-                            "nye" to objectMapper().writeValueAsString(alleOppgaverNyeOgFerdigstilteSomPersisteres.nye),
-                            "ferdigstilte" to objectMapper().writeValueAsString(
+                            "nye" to LosObjectMapper.instance.writeValueAsString(
+                                alleOppgaverNyeOgFerdigstilteSomPersisteres.nye
+                            ),
+                            "ferdigstilte" to LosObjectMapper.instance.writeValueAsString(
                                 alleOppgaverNyeOgFerdigstilteSomPersisteres.ferdigstilte
                             ),
-                            "ferdigstiltesaksbehandler" to objectMapper().writeValueAsString(
+                            "ferdigstiltesaksbehandler" to LosObjectMapper.instance.writeValueAsString(
                                 alleOppgaverNyeOgFerdigstilteSomPersisteres.ferdigstilteSaksbehandler
                             )
                         )
@@ -193,33 +164,7 @@ class StatistikkRepository(
         }
     }
 
-
-    fun truncateStatistikk() {
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-        using(sessionOf(dataSource)) {
-            //language=PostgreSQL
-            it.run(
-                queryOf(
-                    """
-                            truncate nye_og_ferdigstilte
-                    """.trimIndent(),
-                    mapOf()
-                ).asUpdate
-            )
-
-            it.run(
-                queryOf(
-                    """
-                            truncate ferdigstilte_behandlinger
-                    """.trimIndent(),
-                    mapOf()
-                ).asUpdate
-            )
-        }
-    }
-
-    private val hentFerdigstilteOgNyeHistorikkMedYtelsetypeCache = Cache<List<AlleOppgaverNyeOgFerdigstilte>>()
+    private val hentFerdigstilteOgNyeHistorikkMedYtelsetypeCache = Cache<String, List<AlleOppgaverNyeOgFerdigstilte>>()
     fun hentFerdigstilteOgNyeHistorikkMedYtelsetypeSiste8Uker(
         refresh: Boolean = false
     ): List<AlleOppgaverNyeOgFerdigstilte> {
@@ -281,7 +226,6 @@ class StatistikkRepository(
                     """
                             select behandlingtype, fagsakYtelseType, dato, ferdigstilte, nye, ferdigstiltesaksbehandler
                             from nye_og_ferdigstilte  where dato >= current_date - :antall::interval
-                            group by behandlingtype, fagsakYtelseType, dato
                     """.trimIndent(),
                     mapOf("antall" to "\'${antall} days\'")
                 )
@@ -290,9 +234,11 @@ class StatistikkRepository(
                             behandlingType = BehandlingType.fraKode(row.string("behandlingType")),
                             fagsakYtelseType = FagsakYtelseType.fraKode(row.string("fagsakYtelseType")),
                             dato = row.localDate("dato"),
-                            ferdigstilte = objectMapper().readValue(row.stringOrNull("ferdigstilte") ?: "[]"),
-                            nye = objectMapper().readValue(row.stringOrNull("nye") ?: "[]"),
-                            ferdigstilteSaksbehandler = objectMapper().readValue(row.stringOrNull("ferdigstiltesaksbehandler") ?: "[]"),
+                            ferdigstilte = LosObjectMapper.instance.readValue(row.stringOrNull("ferdigstilte") ?: "[]"),
+                            nye = LosObjectMapper.instance.readValue(row.stringOrNull("nye") ?: "[]"),
+                            ferdigstilteSaksbehandler = LosObjectMapper.instance.readValue(
+                                row.stringOrNull("ferdigstiltesaksbehandler") ?: "[]"
+                            ),
                         )
                     }.asList
             )
@@ -350,27 +296,4 @@ class StatistikkRepository(
         return defaultList
     }
 
-    fun slettAltFraPunsj(): Int {
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-        return using(sessionOf(dataSource)) {
-            //language=PostgreSQL
-            it.run(
-                queryOf(
-                    """
-                        delete from nye_og_ferdigstilte where behandlingtype in ('PAPIRSØKNAD',
-    'PAPIRETTERSENDELSE',
-    'PAPIRINNTEKTSOPPLYSNINGER',
-    'DIGITAL_ETTERSENDELSE',
-    'INNLOGGET_CHAT',
-    'SKRIV_TIL_OSS_SPØRMSÅL',
-    'SKRIV_TIL_OSS_SVAR',
-    'SAMTALEREFERAT',
-    'KOPI',
-    'UKJENT')""".trimIndent(),
-                    mapOf()
-                ).asUpdate
-            )
-        }
-    }
 }

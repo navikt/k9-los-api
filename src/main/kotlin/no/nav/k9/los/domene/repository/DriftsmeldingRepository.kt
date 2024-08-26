@@ -89,8 +89,9 @@ class DriftsmeldingRepository(
         }
     }
 
-    fun slett(id: UUID){
-        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
+    fun slett(id: UUID) {
+        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
+            .increment()
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
 
@@ -106,28 +107,6 @@ class DriftsmeldingRepository(
                     ).asUpdate
                 )
             }
-        }
-    }
-
-    fun finnDriftsmelding(melding: String): DriftsmeldingDto? {
-        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
-
-        return using(sessionOf(dataSource)) {
-            it.run(
-                    queryOf(
-                            "select * from driftsmeldinger where lower(melding) = lower(:melding)",
-                            mapOf("melding" to melding)
-                    )
-                            .map { row ->
-                                DriftsmeldingDto(
-                                        id = UUID.fromString(row.string("id")),
-                                        melding = row.string("melding"),
-                                        aktiv = row.boolean("aktiv"),
-                                        dato = row.localDateTime("dato"),
-                                        aktivert = row.localDateTime("aktivert")
-                                )
-                            }.asSingle
-            )
         }
     }
 

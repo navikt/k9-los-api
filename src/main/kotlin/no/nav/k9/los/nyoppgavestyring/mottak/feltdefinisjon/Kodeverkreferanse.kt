@@ -20,7 +20,7 @@ class Kodeverkreferanse(
     )
 
     fun toDatabasestreng(): String {
-        return område + "." + eksternId
+        return "$område.$eksternId"
     }
 
     override fun equals(other: Any?): Boolean {

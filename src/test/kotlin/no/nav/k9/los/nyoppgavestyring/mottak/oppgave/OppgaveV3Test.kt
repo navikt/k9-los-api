@@ -14,13 +14,13 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
 
     private lateinit var oppgaveV3Tjeneste: OppgaveV3Tjeneste
     private lateinit var transactionalManager: TransactionalManager
-    private lateinit var oppgavemodellBuilder: OppgaveTestmodellBuilder
+    private lateinit var oppgavemodellBuilder: RedusertOppgaveTestmodellBuilder
 
     @BeforeEach
     fun setup() {
         oppgaveV3Tjeneste = get()
         transactionalManager = get()
-        oppgavemodellBuilder = OppgaveTestmodellBuilder()
+        oppgavemodellBuilder = RedusertOppgaveTestmodellBuilder()
         oppgavemodellBuilder.byggOppgavemodell()
     }
 

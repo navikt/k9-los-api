@@ -5,6 +5,8 @@ import no.nav.k9.los.integrasjon.kafka.*
 import no.nav.k9.los.integrasjon.kafka.ManagedKafkaStreams
 import no.nav.k9.los.integrasjon.kafka.ManagedStreamHealthy
 import no.nav.k9.los.integrasjon.kafka.ManagedStreamReady
+import no.nav.k9.los.utils.OpentelemetrySpanUtil
+import no.nav.k9.los.utils.TransientFeilHåndterer
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.Topology
@@ -51,7 +53,9 @@ internal class AksjonspunktKlageStream constructor(
                 ).peek { _, e -> log.info("--> Behandlingsprosesshendelse fra k9klage: ${e.tryggToString() }") }
                 .foreach { _, entry ->
                     if (entry != null) {
-                        k9KlageEventHandler.prosesser(entry)
+                        OpentelemetrySpanUtil.span(NAME, mapOf("saksnummer" to entry.saksnummer)) {
+                            TransientFeilHåndterer().utfør(NAME) { k9KlageEventHandler.prosesser(entry) }
+                        }
                     }
                 }
             return builder.build()

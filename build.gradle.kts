@@ -2,31 +2,31 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 val mainClass = "no.nav.k9.los.K9LosKt"
 val hikariVersion = "5.1.0"
-val flywayVersion = "10.7.2"
+val flywayVersion = "10.17.2"
 val vaultJdbcVersion = "1.3.10"
-val koinVersion = "3.5.3"
+val koinVersion = "3.5.6"
 val kotliqueryVersion = "1.9.0"
-val k9SakVersion = "4.1.9"
-val k9KlageVersion = "0.4.3"
+val k9SakVersion = "4.2.0"
+val k9KlageVersion = "0.4.4"
 val fuelVersion = "2.3.1"
-val jacksonVersion = "2.16.1"
-val commonsTextVersion = "1.11.0"
+val jacksonVersion = "2.17.2"
+val commonsTextVersion = "1.12.0"
 
-val dusseldorfKtorVersion = "4.1.3"
-val ktorVersion = "2.3.8"
-val kafkaVersion = "3.6.1"
+val dusseldorfKtorVersion = "5.0.5"
+val ktorVersion = "2.3.12"
+val kafkaVersion = "3.8.0"
 
-val navTilgangskontroll = "3.2023.10.23_12.41-bafec3836d28"
+val navTilgangskontroll = "3.2024.01.24_10.14-f70bae69bd65"
 
 // Test Dependencies
-val testContainers = "1.19.5"
-val jsonassertVersion = "1.5.1"
-val jupiterVersion = "5.10.2"
-val assertkVersion = "0.28.0"
-val mockkVersion = "1.13.9"
+val testContainers = "1.20.1"
+val jsonassertVersion = "1.5.3"
+val jupiterVersion = "5.11.0"
+val assertkVersion = "0.28.1"
+val mockkVersion = "1.13.12"
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.9.22"
+    id("org.jetbrains.kotlin.jvm") version "2.0.20"
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
@@ -64,7 +64,7 @@ dependencies {
     // Tilgangskontroll
     implementation("no.nav.common:auth:$navTilgangskontroll")
     implementation("no.nav.common:rest:$navTilgangskontroll")
-    implementation("com.google.code.gson:gson:2.10.1")
+    implementation("com.google.code.gson:gson:2.11.0")
 
     // Kontrakter
     implementation("no.nav.k9.sak:kontrakt:$k9SakVersion")
@@ -73,14 +73,21 @@ dependencies {
     implementation("no.nav.k9.klage:kodeverk:$k9KlageVersion")
     implementation("no.nav.k9.statistikk:kontrakter:2.0_20220411110858_dc06dd1")
 
+    // opentelemetry
+    implementation("io.opentelemetry:opentelemetry-api:1.41.0")
+    implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.41.0")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.7.0")
+
     // Div
     implementation(enforcedPlatform( "com.fasterxml.jackson:jackson-bom:$jacksonVersion"))
-    implementation("org.apache.commons:commons-text:$commonsTextVersion")
+    implementation("org.apache.commons:commons-text:$commonsTextVersion" )
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
     implementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
     implementation("com.github.kittinunf.fuel:fuel-coroutines:$fuelVersion"){
         exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
     }
+
+    implementation( "io.github.smiley4:ktor-swagger-ui:3.3.0")
 
 
     // DI
@@ -101,6 +108,8 @@ dependencies {
 
     testImplementation("org.testcontainers:postgresql:$testContainers")
     testImplementation("io.insert-koin:koin-test-junit5:$koinVersion")
+
+    testImplementation("org.apache.commons:commons-compress:1.27.1")
 }
 
 repositories {
@@ -120,7 +129,7 @@ repositories {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
 

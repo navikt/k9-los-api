@@ -1,7 +1,10 @@
 package no.nav.k9.los.aksjonspunktbehandling
 
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
+import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.modell.AksjonspunktStatus
@@ -13,10 +16,15 @@ import no.nav.k9.los.domene.modell.Enhet
 import no.nav.k9.los.domene.modell.FagsakYtelseType
 import no.nav.k9.los.domene.modell.KøSortering
 import no.nav.k9.los.domene.modell.OppgaveKø
-import no.nav.k9.los.domene.repository.OppgaveKøRepository
-import no.nav.k9.los.domene.repository.OppgaveRepository
+import no.nav.k9.los.domene.repository.*
+import no.nav.k9.los.integrasjon.abac.IPepClient
+import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
+import no.nav.k9.los.integrasjon.pdl.IPdlService
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import org.junit.jupiter.api.Test
+import org.koin.core.qualifier.named
 import org.koin.test.get
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -32,7 +40,7 @@ class BeslutterSkalIkkePlukkeEgenSakTest : AbstractK9LosIntegrationTest() {
         val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
 
-        val oppgaveTjeneste = get<OppgaveTjeneste>()
+        val oppgaveTjeneste = lagOppgaveTjenesteMedMocketV3Kobling()
         val oppgave = Oppgave(
             behandlingId = null,
             fagsakSaksnummer = "123456",
@@ -94,6 +102,7 @@ class BeslutterSkalIkkePlukkeEgenSakTest : AbstractK9LosIntegrationTest() {
         val nesteOppgaverIKø = runBlocking {
             oppgaveKø.leggOppgaveTilEllerFjernFraKø(
                 oppgave,
+                erOppgavenReservertSjekk = {false},
                 merknader = oppgaveRepositoryV2.hentMerknader(oppgave.eksternId.toString())
             )
 
@@ -108,4 +117,34 @@ class BeslutterSkalIkkePlukkeEgenSakTest : AbstractK9LosIntegrationTest() {
         assertSame(1, nesteOppgaverIKø.size )
     }
 
+
+    private fun lagOppgaveTjenesteMedMocketV3Kobling(): OppgaveTjeneste {
+        val oversetterMock = mockk<ReservasjonOversetter>()
+        every { oversetterMock.hentAktivReservasjonFraGammelKontekst(any()) } returns null
+        every {
+            oversetterMock.taNyReservasjonFraGammelKontekst(any(), any(), any(), any(), any())
+        } returns ReservasjonV3(
+            reservertAv = 123,
+            reservasjonsnøkkel = "test1",
+            gyldigFra = LocalDateTime.now(),
+            gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
+            kommentar = "",
+            endretAv = null
+        )
+
+        return OppgaveTjeneste(
+            get<OppgaveRepository>(),
+            get<OppgaveRepositoryV2>(),
+            get<OppgaveKøRepository>(),
+            get<SaksbehandlerRepository>(),
+            get<IPdlService>(),
+            get<ReservasjonRepository>(),
+            get<Configuration>(),
+            get<IAzureGraphService>(),
+            get<IPepClient>(),
+            get<StatistikkRepository>(),
+            oversetterMock,
+            get(named("statistikkRefreshChannel"))
+        )
+    }
 }

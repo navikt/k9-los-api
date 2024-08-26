@@ -1,22 +1,16 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering
 
 import kotlinx.coroutines.runBlocking
-import no.nav.common.types.identer.AktorId
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.aksjonspunktbehandling.K9sakEventHandler
-import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.modell.*
-import no.nav.k9.los.domene.repository.OppgaveRepository
-import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.los.integrasjon.kafka.dto.EventHendelse
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveStatusDto
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import org.junit.jupiter.api.Test
 
@@ -99,12 +93,12 @@ class ReservasjonOversetterTest : AbstractK9LosIntegrationTest(){
         val reservasjonV3Tjeneste = get<ReservasjonV3Tjeneste>()
         val alleAktiveReservasjoner = reservasjonV3Tjeneste.hentAlleAktiveReservasjoner()
 
-        val reservasjonV3 = alleAktiveReservasjoner.get(0)
+        val reservasjonV3MedOppgaver = alleAktiveReservasjoner.get(0)
 
         val saksbehandlerReservertV1 = runBlocking {
             saksbehandlerRepository.finnSaksbehandlerMedIdent(oppgavestatus.reservertAv!!)!!
         }
-        assertEquals(saksbehandlerReservertV1.id, reservasjonV3.reservertAv)
+        assertEquals(saksbehandlerReservertV1.id, reservasjonV3MedOppgaver.reservasjonV3.reservertAv)
     }
 
     fun mockEvent(saksnummer: String, aktørId: String, behandlingId: Long, pleietrengendeAktørId: String) : BehandlingProsessEventDto {

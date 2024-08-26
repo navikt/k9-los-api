@@ -18,7 +18,7 @@
         },
         {
           "id": "fagsystem",
-          "visPåOppgave": true,
+          "visPåOppgave": false,
           "påkrevd": true
         },
         {
@@ -250,7 +250,7 @@
         {
           "id": "hastesak",
           "visPåOppgave": true,
-          "påkrevd": true,
+          "påkrevd": false,
           "defaultverdi": false
         },
         {

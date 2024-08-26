@@ -12,27 +12,15 @@ import org.koin.ktor.ext.inject
 
 internal fun Route.K9KlageTilLosApi() {
     val requestContextService by inject<RequestContextService>()
-    val oppgaveV3Tjeneste by inject<OppgaveV3Tjeneste>()
     val k9KlageTilLosAdapterTjeneste by inject<K9KlageTilLosAdapterTjeneste>()
     val k9KlageTilLosHistorikkvaskTjeneste by inject<K9KlageTilLosHistorikkvaskTjeneste>()
     val config by inject<Configuration>()
-
-    delete("/slettOppgavedata") {
-        if (config.nyOppgavestyringRestAktivert()) {
-            requestContextService.withRequestContext(call) {
-                oppgaveV3Tjeneste.destruktivSlettAvAlleOppgaveData()
-                call.respond("OK")
-            }
-        } else {
-            call.respond(HttpStatusCode.Locked)
-        }
-    }
 
     put("/startOppgaveprosessering") {
         if (config.nyOppgavestyringRestAktivert()) {
             requestContextService.withRequestContext(call) {
                 k9KlageTilLosAdapterTjeneste.kjør(kjørUmiddelbart = true)
-                call.respond("OK")
+                call.respond(HttpStatusCode.NoContent)
             }
         } else {
             call.respond(HttpStatusCode.Locked)
@@ -40,10 +28,9 @@ internal fun Route.K9KlageTilLosApi() {
     }
 
     put("/startHistorikkvask") {
-        if (config.nyOppgavestyringRestAktivert()) {
-            requestContextService.withRequestContext(call) {
-                k9KlageTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
-            }
+        requestContextService.withRequestContext(call) {
+            k9KlageTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
+            call.respond(HttpStatusCode.NoContent)
         }
     }
 }

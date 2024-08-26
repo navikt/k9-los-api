@@ -2,13 +2,18 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.domene.modell.BehandlingStatus
 import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
+import no.nav.k9.los.jobber.JobbMetrikker
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.EventTilDtoMapper
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.*
@@ -34,7 +39,8 @@ class K9SakTilLosAdapterTjeneste(
     private val config: Configuration,
     private val transactionalManager: TransactionalManager,
     private val k9SakBerikerKlient: K9SakBerikerInterfaceKludge,
-    private val pepCacheService: PepCacheService
+    private val pepCacheService: PepCacheService,
+    private val historikkvaskChannel: Channel<k9SakEksternId>
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9SakTilLosAdapterTjeneste::class.java)
@@ -73,7 +79,9 @@ class K9SakTilLosAdapterTjeneste(
                 setup()
             }
             try {
-                spillAvBehandlingProsessEventer()
+                JobbMetrikker.time("spill_av_behandlingprosesseventer_k9sak") {
+                    spillAvBehandlingProsessEventer()
+                }
             } catch (e: Exception) {
                 log.warn("Avspilling av k9sak-eventer til oppgaveV3 feilet. Retry om en time", e)
             }
@@ -104,63 +112,96 @@ class K9SakTilLosAdapterTjeneste(
         log.info("Avspilling av BehandlingProsessEventer ferdig")
     }
 
-    fun oppdaterOppgaveForBehandlingUuid(uuid: UUID) {
-        oppdaterOppgaveForBehandlingUuid(uuid, 0L)
-    }
-
-    private fun oppdaterOppgaveForBehandlingUuid(uuid: UUID, eventTellerInn: Long): Long {
+    fun oppdaterOppgaveForBehandlingUuid(uuid: UUID, eventTellerInn: Long = 0): Long {
         var eventTeller = eventTellerInn
         var forrigeOppgave: OppgaveV3? = null
+        var korrigerFeilRekkefølge = false
 
         transactionalManager.transaction { tx ->
             val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
             val nyeBehandlingsopplysningerFraK9Sak = k9SakBerikerKlient.hentBehandling(uuid)
+            val høyesteInternVersjon =
+                oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9sak", "K9", tx) ?: -1
             var eventNrForBehandling = -1L
             behandlingProsessEventer.forEach { event ->
                 eventNrForBehandling++
                 var oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
-                    .leggTilFeltverdi(
-                        OppgaveFeltverdiDto(
-                            nøkkel = "hastesak",
-                            verdi = "false"
-                        )
-                    )
                 oppgaveDto = ryddOppObsoleteOgResultatfeilFra2020(event, oppgaveDto, nyeBehandlingsopplysningerFraK9Sak)
 
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
 
+                //oppgave er satt bare dersom oppgavemodellen ikke har sett eksternVersjon fra tidligere
+                //Normaltilfelle når adapter kjøres fra eventhandler er at det kun er ett event å oppdatere
                 if (oppgave != null) {
                     pepCacheService.oppdater(tx, oppgave.kildeområde, oppgave.eksternId)
 
-                    if (oppgave.status == Oppgavestatus.VENTER) {
-                        annullerReservasjonHvisAlleOppgaverPåVentEllerAvsluttet(oppgave.reservasjonsnøkkel, tx)
+                    // Bruker samme logikk som i v1-modell for å ikke fjerne reservasjoner som midlertidige er på vent med Ventekategori.AVVENTER_ANNET
+                    val erPåVent = event.aksjonspunktTilstander.any {
+                        it.status.erÅpentAksjonspunkt() && AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode)
+                            .erAutopunkt()
+                    }
+                    if (erPåVent || BehandlingStatus.AVSLUTTET.kode == event.behandlingStatus || oppgave.status == Oppgavestatus.LUKKET) {
+                        annullerReservasjonerHvisAlleOppgaverPåVentEllerAvsluttet(event, tx)
                     }
 
                     eventTeller++
                     loggFremgangForHver100(eventTeller, "Prosessert $eventTeller eventer")
+                    if (høyesteInternVersjon >= 1) { //Ikke aktuelt å vaske eventer i feil rekkefølge før man har minst 2 eventer. Telling starter på 0
+                        if (eventNrForBehandling <= høyesteInternVersjon) {
+                            korrigerFeilRekkefølge = true
+                        }
+                    }
                 }
                 forrigeOppgave = oppgave
             }
 
-            forrigeOppgave = null
-
             behandlingProsessEventK9Repository.fjernDirty(uuid, tx)
+        }
+
+        if (korrigerFeilRekkefølge) {
+            log.info("OppgaveV3, funnet eventer i feil rekkefølge. Kjører historikkvask for behandlingsUUID: $uuid")
+            runBlocking {
+                historikkvaskChannel.send(k9SakEksternId(uuid))
+            }
         }
         return eventTeller
     }
 
-    private fun annullerReservasjonHvisAlleOppgaverPåVentEllerAvsluttet(reservasjonsnøkkel: String, tx: TransactionalSession) {
-        val åpneOppgaverForReservasjonsnøkkel =
-            oppgaveRepository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjonsnøkkel)
-
-        if (åpneOppgaverForReservasjonsnøkkel.none { oppgave -> oppgave.status != Oppgavestatus.VENTER.kode }) {
-            reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(
-                reservasjonsnøkkel,
-                "Maskinelt annullert reservasjon, siden alle oppgaver på resrvasjonen står på vent eller er avsluttet",
-                null,
-                tx
-            )
+    private fun annullerReservasjonerHvisAlleOppgaverPåVentEllerAvsluttet(
+        event: BehandlingProsessEventDto,
+        tx: TransactionalSession
+    ) {
+        val saksbehandlerNøkkel = EventTilDtoMapper.utledReservasjonsnøkkel(event, erTilBeslutter = false)
+        val beslutterNøkkel = EventTilDtoMapper.utledReservasjonsnøkkel(event, erTilBeslutter = true)
+        val antallAnnullert =
+            annullerReservasjonHvisAlleOppgaverPåVentEllerAvsluttet(listOf(saksbehandlerNøkkel, beslutterNøkkel), tx)
+        if (antallAnnullert > 0) {
+            log.info("Annullerte $antallAnnullert reservasjoner maskinelt på oppgave ${event.saksnummer} som følge av status på innkommende event")
+        } else {
+            log.info("Annullerte ingen reservasjoner på oppgave ${event.saksnummer} som følge av status på innkommende event")
         }
+    }
+
+    private fun annullerReservasjonHvisAlleOppgaverPåVentEllerAvsluttet(
+        reservasjonsnøkler: List<String>,
+        tx: TransactionalSession
+    ): Int {
+        val åpneOppgaverForReservasjonsnøkkel =
+            oppgaveRepository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjonsnøkler)
+                .filter { it.status == Oppgavestatus.AAPEN.kode }
+
+        if (åpneOppgaverForReservasjonsnøkkel.isEmpty()) {
+            return reservasjonsnøkler.map { reservasjonsnøkkel ->
+                reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(
+                    reservasjonsnøkkel,
+                    "Maskinelt annullert reservasjon, siden alle oppgaver på reservasjonen står på vent eller er avsluttet",
+                    null,
+                    tx
+                )
+            }.count { it }
+        }
+        log.info("Oppgave annulleres ikke fordi det finnes andre åpne oppgaver: [${åpneOppgaverForReservasjonsnøkkel.map { it.eksternId }}]")
+        return 0
     }
 
     internal fun ryddOppObsoleteOgResultatfeilFra2020(
@@ -217,11 +258,18 @@ class K9SakTilLosAdapterTjeneste(
                 .readText(),
             OppgavetyperDto::class.java
         )
-        oppgavetypeTjeneste.oppdater(oppgavetyperDto.copy(
-            oppgavetyper = oppgavetyperDto.oppgavetyper.map { oppgavetypeDto ->
-                oppgavetypeDto.copy(oppgavebehandlingsUrlTemplate = oppgavetypeDto.oppgavebehandlingsUrlTemplate.replace("{baseUrl}", config.k9FrontendUrl()))
-            }.toSet()
-        ))
+        oppgavetypeTjeneste.oppdater(
+            oppgavetyperDto.copy(
+                oppgavetyper = oppgavetyperDto.oppgavetyper.map { oppgavetypeDto ->
+                    oppgavetypeDto.copy(
+                        oppgavebehandlingsUrlTemplate = oppgavetypeDto.oppgavebehandlingsUrlTemplate.replace(
+                            "{baseUrl}",
+                            config.k9FrontendUrl()
+                        )
+                    )
+                }.toSet()
+            )
+        )
         log.info("opprettet oppgavetype")
     }
 

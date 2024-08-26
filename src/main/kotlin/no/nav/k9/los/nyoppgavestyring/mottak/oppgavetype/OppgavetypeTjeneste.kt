@@ -17,7 +17,7 @@ class OppgavetypeTjeneste(
     private val log: Logger = LoggerFactory.getLogger(OppgavetypeTjeneste::class.java)
 
     fun oppdater(innkommendeOppgavetyperDto: OppgavetyperDto) {
-        if (innkommendeOppgavetyperDto.oppgavetyper.size > 0) {
+        if (innkommendeOppgavetyperDto.oppgavetyper.isNotEmpty()) {
             log.info("mottatt oppgavetypeDto, med behandlingsurlTemplate: ${innkommendeOppgavetyperDto.oppgavetyper.elementAt(0).oppgavebehandlingsUrlTemplate}")
         } else {
             log.info("OppgavetypeTjeneste.oppdater -- innkommendeOppgavetyperDto.oppgavetyper er tom!")

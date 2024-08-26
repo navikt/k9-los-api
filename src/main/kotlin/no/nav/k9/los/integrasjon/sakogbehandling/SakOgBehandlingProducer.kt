@@ -6,12 +6,12 @@ import no.nav.helse.dusseldorf.ktor.health.Result
 import no.nav.helse.dusseldorf.ktor.health.UnHealthy
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
-import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import no.nav.k9.los.integrasjon.kafka.IKafkaConfig
 import no.nav.k9.los.integrasjon.kafka.TopicEntry
 import no.nav.k9.los.integrasjon.kafka.TopicUse
 import no.nav.k9.los.integrasjon.sakogbehandling.kontrakt.BehandlingAvsluttet
 import no.nav.k9.los.integrasjon.sakogbehandling.kontrakt.BehandlingOpprettet
+import no.nav.k9.los.utils.LosObjectMapper
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.Serializer
@@ -46,11 +46,11 @@ class SakOgBehandlingProducer constructor(
         if (KoinProfile.LOCAL == config.koinProfile()) {
             return
         }
-        val melding = objectMapper().writeValueAsString(behandlingOpprettet)
+        val melding = LosObjectMapper.instance.writeValueAsString(behandlingOpprettet)
         producer.send(
-           ProducerRecord(
+            ProducerRecord(
                 TOPIC_USE_SAK_OG_BEHANDLING.name,
-               melding
+                melding
             )
         ) { metadata, exception ->
             if (exception != null) {
@@ -68,7 +68,7 @@ class SakOgBehandlingProducer constructor(
             log.info("Lokal kjøring, sender ikke melding til sak og behandling")
             return
         }
-        val melding = objectMapper().writeValueAsString(behandlingAvsluttet)
+        val melding = LosObjectMapper.instance.writeValueAsString(behandlingAvsluttet)
         producer.send(
             ProducerRecord(
                 TOPIC_USE_SAK_OG_BEHANDLING.name,

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.BehandlingProsessEventKlageRepository
+import no.nav.k9.los.jobber.JobbMetrikker
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.EventTilDtoMapper
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
@@ -68,7 +69,9 @@ class K9KlageTilLosAdapterTjeneste(
                 setup()
             }
             try {
-                spillAvBehandlingProsessEventer()
+                JobbMetrikker.time("spill_av_behandlingprosesseventer_k9klage") {
+                    spillAvBehandlingProsessEventer()
+                }
             } catch (e: Exception) {
                 log.warn("Avspilling av k9klage-eventer til oppgaveV3 feilet. Retry om en time", e)
             }
@@ -109,8 +112,10 @@ class K9KlageTilLosAdapterTjeneste(
         transactionalManager.transaction { tx ->
             val behandlingProsessEventer = behandlingProsessEventKlageRepository.hentMedLås(tx, uuid).eventer
             behandlingProsessEventer.forEach { event ->
-                val losOpplysningerSomManglerIKlageDto = k9sakBeriker.berikKlage(event.påklagdBehandlingEksternId)
-                val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, losOpplysningerSomManglerIKlageDto, forrigeOppgave)
+                val losOpplysningerSomManglerIKlageDto =
+                    event.påklagdBehandlingEksternId?.let { k9sakBeriker.berikKlage(it) }
+                val oppgaveDto =
+                    EventTilDtoMapper.lagOppgaveDto(event, losOpplysningerSomManglerIKlageDto, forrigeOppgave)
 
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
 
@@ -161,11 +166,18 @@ class K9KlageTilLosAdapterTjeneste(
                 .readText(),
             OppgavetyperDto::class.java
         )
-        oppgavetypeTjeneste.oppdater(oppgavetyperDto.copy(
-            oppgavetyper = oppgavetyperDto.oppgavetyper.map { oppgavetypeDto ->
-                oppgavetypeDto.copy(oppgavebehandlingsUrlTemplate = oppgavetypeDto.oppgavebehandlingsUrlTemplate.replace("{baseUrl}", config.k9FrontendUrl()))
-            }.toSet()
-        ))
+        oppgavetypeTjeneste.oppdater(
+            oppgavetyperDto.copy(
+                oppgavetyper = oppgavetyperDto.oppgavetyper.map { oppgavetypeDto ->
+                    oppgavetypeDto.copy(
+                        oppgavebehandlingsUrlTemplate = oppgavetypeDto.oppgavebehandlingsUrlTemplate.replace(
+                            "{baseUrl}",
+                            config.k9FrontendUrl()
+                        )
+                    )
+                }.toSet()
+            )
+        )
         log.info("opprettet oppgavetype")
     }
 }

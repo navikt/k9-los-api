@@ -11,6 +11,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
+import java.time.temporal.ChronoUnit
 
 class EventTilDtoMapper {
     companion object {
@@ -36,34 +37,41 @@ class EventTilDtoMapper {
                         Oppgavestatus.AAPEN.kode
                     }
                 } else {
-                    if (event.behandlingStatus != BehandlingStatus.AVSLUTTET.getKode() && event.behandlingStatus != BehandlingStatus.IVERKSETTER_VEDTAK.getKode()) {
+                    if (event.behandlingStatus != BehandlingStatus.AVSLUTTET.kode && event.behandlingStatus != BehandlingStatus.IVERKSETTER_VEDTAK.kode) {
                         Oppgavestatus.AAPEN.kode
                     } else {
                         Oppgavestatus.LUKKET.kode
                     }
                 },
                 endretTidspunkt = event.eventTid,
-                reservasjonsnøkkel = utledReservasjonsnøkkel(event),
+                reservasjonsnøkkel = utledReservasjonsnøkkel(event, erTilBeslutter(event)),
                 feltverdier = lagFeltverdier(event, forrigeOppgave)
             )
 
-        private fun utledReservasjonsnøkkel(event: BehandlingProsessEventDto): String {
+        fun utledReservasjonsnøkkel(event: BehandlingProsessEventDto, erTilBeslutter: Boolean): String {
             return when (FagsakYtelseType.fraKode(event.ytelseTypeKode)) {
                 FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
                 FagsakYtelseType.PLEIEPENGER_NÆRSTÅENDE,
                 FagsakYtelseType.OMSORGSPENGER_KS,
                 FagsakYtelseType.OMSORGSPENGER_AO,
-                FagsakYtelseType.OPPLÆRINGSPENGER -> if (erTilBeslutter(event)) {
-                    "K9_b_${event.ytelseTypeKode}_${event.pleietrengendeAktørId}_beslutter"
-                } else {
-                    "K9_b_${event.ytelseTypeKode}_${event.pleietrengendeAktørId}"
-                }
+                FagsakYtelseType.OPPLÆRINGSPENGER -> lagNøkkelPleietrengendeAktør(event, erTilBeslutter)
+                else -> lagNøkkelAktør(event, erTilBeslutter)
+            }
+        }
 
-                else -> if (erTilBeslutter(event)) {
-                    "K9_b_${event.ytelseTypeKode}_${event.aktørId}_beslutter"
-                } else {
-                    "K9_b_${event.ytelseTypeKode}_${event.aktørId}"
-                }
+        private fun lagNøkkelPleietrengendeAktør(event: BehandlingProsessEventDto, tilBeslutter: Boolean): String {
+            return if (tilBeslutter)
+                "K9_b_${event.ytelseTypeKode}_${event.pleietrengendeAktørId}_beslutter"
+            else {
+                "K9_b_${event.ytelseTypeKode}_${event.pleietrengendeAktørId}"
+            }
+        }
+
+        private fun lagNøkkelAktør(event: BehandlingProsessEventDto, tilBeslutter: Boolean): String {
+            return if (tilBeslutter) {
+                "K9_b_${event.ytelseTypeKode}_${event.aktørId}_beslutter"
+            } else {
+                "K9_b_${event.ytelseTypeKode}_${event.aktørId}"
             }
         }
 
@@ -176,14 +184,14 @@ class EventTilDtoMapper {
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "mottattDato",
-                verdi = event.eldsteDatoMedEndringFraSøker?.toString()
+                verdi = event.eldsteDatoMedEndringFraSøker?.truncatedTo(ChronoUnit.SECONDS)?.toString() //TODO feltet heter *dato, avrunde til dato?
                     ?: forrigeOppgave?.hentVerdi("mottattDato")
                     ?: forrigeOppgave?.hentVerdi("registrertDato")
-                    ?: event.opprettetBehandling.toString()
+                    ?: event.opprettetBehandling.truncatedTo(ChronoUnit.SECONDS).toString() //TODO feltet heter *dato, avrunde til dato?
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "registrertDato",
-                verdi = forrigeOppgave?.hentVerdi("registrertDato") ?: event.opprettetBehandling.toString()
+                verdi = forrigeOppgave?.hentVerdi("registrertDato") ?: event.opprettetBehandling.truncatedTo(ChronoUnit.SECONDS) .toString() //TODO feltet heter *dato, avrunde til dato?
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "vedtaksdato",
@@ -227,10 +235,6 @@ class EventTilDtoMapper {
             behandlingStatus: String?,
             åpneAksjonspunkter: List<AksjonspunktTilstandDto>
         ): Ventekategori? {
-            if (behandlingStatus != BehandlingStatus.AVSLUTTET.kode && behandlingSteg.isNullOrEmpty() && åpneAksjonspunkter.isEmpty()) {
-                return Ventekategori.AVVENTER_ANNET //TODO: Finne ut hva for et case dette egentlig er?
-            }
-
             if (behandlingStatus == BehandlingStatus.AVSLUTTET.kode) {
                 return null
             }
@@ -240,7 +244,7 @@ class EventTilDtoMapper {
             }
 
             val førsteAPMedFristOgVenteårsak = åpneAksjonspunkter
-                .filter { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.fristTid != null }
+                .filter { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.fristTid != null && aksjonspunktTilstandDto.venteårsak != null }
                 .sortedBy { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.fristTid }
                 .firstOrNull()
 
@@ -404,10 +408,11 @@ class EventTilDtoMapper {
             if (åpneAksjonspunkter.isNotEmpty()) {
                 åpneAksjonspunkter
                     .filter { aksjonspunktTilstandDto ->
-                        aksjonspunktTilstandDto.venteårsak != Venteårsak.UDEFINERT
+                        (aksjonspunktTilstandDto.venteårsak != Venteårsak.UDEFINERT &&
+                                aksjonspunktTilstandDto.venteårsak != null)
                             && aksjonspunktTilstandDto.status == AksjonspunktStatus.OPPRETTET
                     }
-                    .singleOrNull { aksjonspunktTilstandDto ->
+                    .singleOrNull()?.let { aksjonspunktTilstandDto ->
                         oppgaveFeltverdiDtos.add(
                             OppgaveFeltverdiDto(
                                 nøkkel = "aktivVenteårsak",

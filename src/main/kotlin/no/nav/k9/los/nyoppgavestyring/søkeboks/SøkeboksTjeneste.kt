@@ -1,6 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.søkeboks
 
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
+import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
@@ -23,7 +24,7 @@ class SøkeboksTjeneste(
                 )
             )
         )
-        val oppgaveEksternIder = queryService.queryForOppgaveEksternId(query)
+        val oppgaveEksternIder = queryService.queryForOppgaveEksternId(QueryRequest(query))
         return oppgaveRepository.hentOppgaverPaget(
             eksternoppgaveIder = oppgaveEksternIder,
             antallPrPage = antallPrPage,

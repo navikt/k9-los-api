@@ -1,0 +1,57 @@
+{
+  "område": "K9",
+  "definisjonskilde": "k9-punsj-til-los",
+  "oppgavetyper": [
+    {
+      "id": "k9punsj",
+      "oppgavebehandlingsUrlTemplate": "",
+      "oppgavefelter": [
+        {
+          "id": "aktorId",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "pleietrengendeAktorId",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "behandlingTypekode",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "ytelsestype",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "ansvarligSaksbehandler",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "journalfort",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "journalfortTidspunkt",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "registrertDato",
+          "visPåOppgave": true,
+          "påkrevd": true
+        },
+        {
+          "id": "mottattDato",
+          "visPåOppgave": true,
+          "påkrevd": false
+        }
+      ]
+    }
+  ]
+}

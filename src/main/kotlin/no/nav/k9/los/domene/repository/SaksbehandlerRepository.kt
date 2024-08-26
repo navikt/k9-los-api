@@ -1,13 +1,12 @@
 package no.nav.k9.los.domene.repository
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.runBlocking
 import kotliquery.*
-import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.tjenester.innsikt.Databasekall
+import no.nav.k9.los.utils.LosObjectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -40,13 +39,13 @@ class SaksbehandlerRepository(
                 )
                 val forrige: Saksbehandler?
                 val saksbehandler = if (!run.isNullOrEmpty()) {
-                    forrige = objectMapper().readValue(run, Saksbehandler::class.java)
+                    forrige = LosObjectMapper.instance.readValue(run, Saksbehandler::class.java)
                     f(forrige)
                 } else {
                     f(null)
                 }
 
-                val json = objectMapper().writeValueAsString(saksbehandler)
+                val json = LosObjectMapper.instance.writeValueAsString(saksbehandler)
                 tx.run(
                     queryOf(
                         """
@@ -91,13 +90,13 @@ class SaksbehandlerRepository(
                 )
                 val forrige: Saksbehandler?
                 val saksbehandler = if (!run.isNullOrEmpty()) {
-                    forrige = objectMapper().readValue(run, Saksbehandler::class.java)
+                    forrige = LosObjectMapper.instance.readValue(run, Saksbehandler::class.java)
                     f(forrige)
                 } else {
                     f(null)
                 }
 
-                val json = objectMapper().writeValueAsString(saksbehandler)
+                val json = LosObjectMapper.instance.writeValueAsString(saksbehandler)
                 tx.run(
                     queryOf(
                         """
@@ -156,13 +155,13 @@ class SaksbehandlerRepository(
                 )
                 val forrige: Saksbehandler?
                 val saksbehandler = if (!run.isNullOrEmpty()) {
-                    forrige = objectMapper().readValue(run, Saksbehandler::class.java)
+                    forrige = LosObjectMapper.instance.readValue(run, Saksbehandler::class.java)
                     f(forrige)
                 } else {
                     f(null)
                 }
 
-                val json = objectMapper().writeValueAsString(saksbehandler)
+                val json = LosObjectMapper.instance.writeValueAsString(saksbehandler)
                 tx.run(
                     queryOf(
                         """
@@ -244,7 +243,7 @@ class SaksbehandlerRepository(
         if (fjernet) log.info("RESERVASJONDEBUG: Fjernet $id oppgave=${reservasjon} fra saksbehandlertabell")
     }
 
-    fun finnSaksbehandlerMedId(id: Long): Saksbehandler {
+    fun finnSaksbehandlerMedId(id: Long): Saksbehandler? {
         return using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
@@ -255,21 +254,6 @@ class SaksbehandlerRepository(
                 }.asSingle
             )
         }!!
-    }
-
-    fun finnIdMedEpost(epost: String): Long? {
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
-        return using(sessionOf(dataSource)) {
-            it.run(
-                queryOf(
-                    "select id from saksbehandler where lower(epost) = lower(:epost)",
-                    mapOf("epost" to epost)
-                )
-                    .map { row -> row.long("id") }.asSingle
-            )
-        }
     }
 
     suspend fun finnSaksbehandlerMedEpost(epost: String): Saksbehandler? {
@@ -312,7 +296,7 @@ class SaksbehandlerRepository(
         )
     }
 
-    fun finnSaksbehandlerMedIdent(ident: String): Saksbehandler? {
+    suspend fun finnSaksbehandlerMedIdent(ident: String): Saksbehandler? {
         val skjermet = pepClient.harTilgangTilKode6(ident)
 
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
@@ -420,13 +404,14 @@ class SaksbehandlerRepository(
                 enhet = null
             )
         } else {
+            val saksbehandler = LosObjectMapper.instance.readValue<Saksbehandler>(data)
             Saksbehandler(
                 id = row.long("id"),
-                brukerIdent = objectMapper().readValue<Saksbehandler>(data).brukerIdent,
-                navn = objectMapper().readValue<Saksbehandler>(data).navn,
+                brukerIdent = saksbehandler.brukerIdent,
+                navn = saksbehandler.navn,
                 epost = row.string("epost").lowercase(Locale.getDefault()),
-                reservasjoner = objectMapper().readValue<Saksbehandler>(data).reservasjoner,
-                enhet = objectMapper().readValue<Saksbehandler>(data).enhet
+                reservasjoner = saksbehandler.reservasjoner,
+                enhet = saksbehandler.enhet
             )
         }
     }

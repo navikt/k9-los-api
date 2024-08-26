@@ -3,16 +3,14 @@ package no.nav.k9.los.integrasjon.k9
 import com.github.kittinunf.fuel.coroutines.awaitStringResponseResult
 import com.github.kittinunf.fuel.httpPost
 import io.ktor.http.*
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.ktor.metrics.Operation
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
 import no.nav.k9.los.Configuration
-import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import no.nav.k9.los.integrasjon.rest.NavHeaders
-import no.nav.k9.los.utils.Cache
-import no.nav.k9.los.utils.CacheObject
-import no.nav.k9.los.utils.sha512
+import no.nav.k9.los.utils.LosObjectMapper
 import no.nav.k9.sak.kontrakt.behandling.BehandlingIdDto
 import no.nav.k9.sak.kontrakt.behandling.BehandlingIdListe
 import org.slf4j.LoggerFactory
@@ -23,30 +21,34 @@ import java.util.*
 open class K9SakServiceSystemClient constructor(
     val configuration: Configuration,
     val accessTokenClient: AccessTokenClient,
-    val scope: String
+    val scope: String,
+    k9SakBehandlingOppfrisketRepostiory: K9SakBehandlingOppfrisketRepostiory
 ) : IK9SakService {
-    val log = LoggerFactory.getLogger("K9SakService")!!
+    private val log = LoggerFactory.getLogger("K9SakService")!!
+
     private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
-    private val cache = Cache<Boolean>(cacheSize = 10000)
     private val url = configuration.k9Url()
     private val scopes = setOf(scope)
 
-    override suspend fun refreshBehandlinger(behandlingIdList: BehandlingIdListe) {
-        // Passer på at vi ikke sender behandlingsider om igjen før det har gått 24 timer
-        val behandlingIdListe =
-            BehandlingIdListe(behandlingIdList.behandlingUuid.filter {
-                cache.setIfEmpty(it.toString(), CacheObject(true, expire = LocalDateTime.now().plusHours(12)))
-            }.map { BehandlingIdDto(it) }.take(999))
+    private val cache = K9SakBehandlingOppfrisketCache(k9SakBehandlingOppfrisketRepostiory)
 
-        if (behandlingIdListe.behandlinger.isEmpty()) {
-            return
+    @WithSpan
+    override suspend fun refreshBehandlinger(behandlingUuid: Collection<UUID>) {
+        log.info("Forespørsel om refresh av ${behandlingUuid.size} behandlinger")
+        val uoppfriskedeBehandlingUuider = cache.filterNotInCache(behandlingUuid)
+        log.info("Kommer til å refreshe ${uoppfriskedeBehandlingUuider.size} behandlinger etter sjekk mot cache av oppfriskede behandlinger, i bolker på 100 stykker")
+        for (uuids in uoppfriskedeBehandlingUuider.chunked(100)) {
+            utførRefreshKallOgOppdaterCache(uuids)
         }
-        val body = objectMapper().writeValueAsString(behandlingIdListe)
-        if (cache.get(body.sha512()) != null) {
-            return
-        }
-        cache.set(body.sha512(), CacheObject(true, expire = LocalDateTime.now().plusHours(12)))
+    }
 
+    @WithSpan
+    private suspend fun utførRefreshKallOgOppdaterCache(behandlinger: Collection<UUID>) {
+        log.info("Trigger refresh av ${behandlinger.size} behandlinger")
+        log.info("Behandlinger som refreshes: $behandlinger")
+
+        val dto = BehandlingIdListe(behandlinger.map { BehandlingIdDto(it) })
+        val body = LosObjectMapper.instance.writeValueAsString(dto)
         val httpRequest = "${url}/behandling/backend-root/refresh"
             .httpPost()
             .body(
@@ -59,7 +61,7 @@ open class K9SakServiceSystemClient constructor(
                 NavHeaders.CallId to UUID.randomUUID().toString()
             )
 
-        val json = Retry.retry(
+        Retry.retry(
             operation = "refresh oppgave",
             initialDelay = Duration.ofMillis(200),
             factor = 2.0,
@@ -73,21 +75,15 @@ open class K9SakServiceSystemClient constructor(
 
             result.fold(
                 { success ->
+                    cache.registrerBehandlingerOppfrisket(behandlinger)
                     success
                 },
                 { error ->
-                    log.error(
-                        "Error response = '${error.response.body().asString("text/plain")}' fra '${request.url}'"
-                    )
+                    log.error("Error response = '${error.response.body().asString("text/plain")}' fra '${request.url}'")
                     log.error(error.toString())
                 }
             )
         }
-        log.info(
-            "Refreshet " + behandlingIdListe.behandlinger.size + " i k9 sak (" + behandlingIdListe.behandlinger.joinToString(
-                ","
-            ) + ")"
-        )
     }
 
 

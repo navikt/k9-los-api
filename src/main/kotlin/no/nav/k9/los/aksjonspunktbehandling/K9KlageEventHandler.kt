@@ -1,25 +1,39 @@
 package no.nav.k9.los.aksjonspunktbehandling
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.runBlocking
 import no.nav.k9.klage.kodeverk.behandling.oppgavetillos.EventHendelse
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.KlagebehandlingProsessHendelse
 import no.nav.k9.los.domene.modell.BehandlingStatus
+import no.nav.k9.los.domene.modell.Fagsystem
 import no.nav.k9.los.domene.modell.K9KlageModell
 import no.nav.k9.los.domene.repository.BehandlingProsessEventKlageRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
+import no.nav.k9.los.nyoppgavestyring.ko.OppgaveHendelseMottatt
+import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
+import no.nav.k9.los.utils.OpentelemetrySpanUtil
 import org.slf4j.LoggerFactory
 
 
 class K9KlageEventHandler constructor(
     private val behandlingProsessEventKlageRepository: BehandlingProsessEventKlageRepository,
     private val k9KlageTilLosAdapterTjeneste: K9KlageTilLosAdapterTjeneste,
+    private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
 ) {
     private val log = LoggerFactory.getLogger(K9KlageEventHandler::class.java)
 
+    @WithSpan
     fun prosesser(
         eventInn: KlagebehandlingProsessHendelse
     ) {
+        val t0 = System.nanoTime()
         val event = håndterVaskeevent(eventInn)
-        if (event == null) return
+        if (event == null) {
+            EventHandlerMetrics.observe("k9klage", "vaskeevent", t0)
+            return
+        }
 
         behandlingProsessEventKlageRepository.lagre(event.eksternId!!) { k9KlageModell ->
             if (k9KlageModell == null) {
@@ -32,7 +46,11 @@ class K9KlageEventHandler constructor(
             k9KlageModell.eventer.add(event)
             k9KlageModell
         }
-        k9KlageTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId)
+        OpentelemetrySpanUtil.span("k9KlageTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid") { k9KlageTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId) }
+        runBlocking {
+            køpåvirkendeHendelseChannel.send(OppgaveHendelseMottatt(Fagsystem.K9KLAGE, EksternOppgaveId("K9", event.eksternId.toString())))
+        }
+        EventHandlerMetrics.observe("k9klage", "gjennomført", t0)
     }
 
     fun håndterVaskeevent(event: KlagebehandlingProsessHendelse): KlagebehandlingProsessHendelse? {

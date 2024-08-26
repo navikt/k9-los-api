@@ -22,7 +22,7 @@ class OppgavetypeRepository(
     ) {
 
     private val log = LoggerFactory.getLogger(OppgavetypeRepository::class.java)
-    private val oppgavetypeCache = Cache<Oppgavetyper>()
+    private val oppgavetypeCache = Cache<String, Oppgavetyper>()
 
     fun hent(område: Område, definisjonskilde: String, tx: TransactionalSession): Oppgavetyper {
         val oppgavetyper = hent(område, tx)
@@ -45,13 +45,13 @@ class OppgavetypeRepository(
     }
 
     fun hentOppgavetype(område: Område, eksternId: String, tx: TransactionalSession): Oppgavetype {
-        return hent(område, tx).oppgavetyper.find { it.eksternId.equals(eksternId) }
+        return hent(område, tx).oppgavetyper.find { it.eksternId == eksternId }
             ?: throw IllegalArgumentException("Finner ikke oppgavetype: ${eksternId} for område: ${område}")
     }
 
     fun hentOppgavetype(område: String, oppgavetypeId: Long, tx: TransactionalSession): Oppgavetype {
-        return hent(områdeRepository.hentOmråde(område, tx), tx).oppgavetyper.find { it.id!!.equals(oppgavetypeId) }
-            ?: throw java.lang.IllegalStateException("Finner ikke omsøkt oppgavetypeId: ${oppgavetypeId} for område: ${område}")
+        return hent(områdeRepository.hentOmråde(område, tx), tx).oppgavetyper.find { it.id!! == oppgavetypeId }
+            ?: throw IllegalArgumentException("Finner ikke omsøkt oppgavetypeId: ${oppgavetypeId} for område: ${område}")
     }
 
     fun hent(område: Område, tx: TransactionalSession): Oppgavetyper {
@@ -82,7 +82,7 @@ class OppgavetypeRepository(
                                 Oppgavefelt(
                                     id = row.long("id"),
                                     feltDefinisjon = feltdefinisjoner.feltdefinisjoner.find { feltdefinisjon ->
-                                        feltdefinisjon.id!!.equals(row.long("feltdefinisjon_id"))
+                                        feltdefinisjon.id!! == row.long("feltdefinisjon_id")
                                     }
                                         ?: throw IllegalStateException("Oppgavetypens oppgavefelt referer til udefinert feltdefinisjon eller feltdefinisjon utenfor området"),
                                     påkrevd = row.boolean("pakrevd"),

@@ -7,15 +7,18 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.aksjonspunktbehandling.objectMapper
+import no.nav.k9.los.db.util.InClauseHjelper
 import no.nav.k9.los.domene.lager.oppgave.Reservasjon
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.modell.OppgaveKø
 import no.nav.k9.los.tjenester.innsikt.Databasekall
 import no.nav.k9.los.tjenester.sse.RefreshKlienter.sendOppdaterReserverte
 import no.nav.k9.los.tjenester.sse.SseEvent
+import no.nav.k9.los.utils.LosObjectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.*
 import java.util.concurrent.atomic.LongAdder
 import javax.sql.DataSource
@@ -34,24 +37,30 @@ class ReservasjonRepository(
     }
     private val log: Logger = LoggerFactory.getLogger(ReservasjonRepository::class.java)
 
-    suspend fun hent(saksbehandlersIdent: String): List<Reservasjon> {
+    suspend fun hentOgFjernInaktiveReservasjoner(saksbehandlersIdent: String): List<Reservasjon> {
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(ident = saksbehandlersIdent)!!
         if (saksbehandler.reservasjoner.isEmpty()) {
             return emptyList()
         }
-        return hent(saksbehandler.reservasjoner)
+        return hentOgFjernInaktiveReservasjoner(saksbehandler.reservasjoner, saksbehandlersIdent)
     }
 
-    suspend fun hent(reservasjoner: Set<UUID>): List<Reservasjon> {
+    suspend fun hentOgFjernInaktiveReservasjoner(reservasjonIder: Set<UUID>, saksbehandlersIdent: String? = null): List<Reservasjon> {
         var fjernede: List<Reservasjon>
+        var reservasjoner: List<Reservasjon>
 
-        val tid = measureTimeMillis {
-            fjernede = fjernReservasjonerSomIkkeLengerErAktive2(
-                hentReservasjoner(reservasjoner)
-            )
+        val tidHente = measureTimeMillis {
+            reservasjoner = hentReservasjoner(reservasjonIder)
+        }
+        val andres = reservasjoner.filter { it.reservertAv != saksbehandlersIdent }
+        if (andres.isNotEmpty()) {
+            RESERVASJON_YTELSE_LOG.info("inkonsistent data for reservasjoner, ${andres.size} reservasjoner registrert i saksbehandlerobjektet til ${saksbehandlersIdent} med reservertAv av: ${andres.map { it.reservertAv }.distinct()}")
+        }
+        val tidFjerne = measureTimeMillis {
+            fjernede = fjernInaktiveReservasjoner(reservasjoner, saksbehandlersIdent)
         }
 
-        RESERVASJON_YTELSE_LOG.info("henting og fjerning av {} reservasjoner tok {} ms", reservasjoner.size, tid)
+        RESERVASJON_YTELSE_LOG.info("henting og fjerning av {} reservasjoner tok {} ms for fjerning og {} ms for henting", reservasjonIder.size, tidFjerne, tidHente)
         return fjernede
     }
 
@@ -59,63 +68,83 @@ class ReservasjonRepository(
         return hentReservasjoner(reservasjoner)
     }
 
+    fun hentOppgaveUuidMedAktivReservasjon(reservasjoner: Set<UUID>): Set<UUID> {
+        if (reservasjoner.isEmpty()){
+            //ikke vits å gjøre noe spørring når alt uansett filtreres bort
+            return emptySet()
+        }
+        val nå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS).toString()
+        log.info("Filtrerer bort reservasjoner utgått før $nå")
+        return using(sessionOf(dataSource)) {
+            session -> session.run(
+                queryOf(
+                    """
+                        select (data ::jsonb -> 'reservasjoner' -> -1 ->> 'oppgave') as oppgaveUuid from reservasjon
+                         where (data ::jsonb -> 'reservasjoner' -> -1 ->> 'reservertTil') > :reservertTil
+                         and id in (${InClauseHjelper.tilParameternavn(reservasjoner, "r")})
+                        """
+                    ,
+                    mapOf("reservertTil" to nå)
+                    +
+                    InClauseHjelper.parameternavnTilVerdierMap(reservasjoner.map { it.toString() }, "r")
+                )
+                    .map { row ->
+                        UUID.fromString(row.string("oppgaveUuid"))
+                    }.asList
+            ).toSet()
+        }
+    }
+
     private fun hentReservasjoner(set: Set<UUID>): List<Reservasjon> {
+        if (set.isEmpty()){
+            return emptyList()
+        }
         val json: List<String> = using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
-                    "select (data ::jsonb -> 'reservasjoner' -> -1) as data from reservasjon \n" +
-                            "where id in " + set.joinToString(
-                        separator = "\', \'",
-                        prefix = "(\'",
-                        postfix = "\')"
-                    )
+                    "select (data ::jsonb -> 'reservasjoner' -> -1) as data from reservasjon where id in (" + InClauseHjelper.tilParameternavn(set, "r") + ")",
+                    InClauseHjelper.parameternavnTilVerdierMap(set.map { it.toString() }, "r")
                 )
-                    .map { row ->
-                        row.string("data")
-                    }.asList
+                    .map { row ->row.string("data")}
+                    .asList
             )
         }
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
 
-        return json.map { s -> objectMapper().readValue(s, Reservasjon::class.java) }.toList()
-    }
-    private suspend fun fjernReservasjonerSomIkkeLengerErAktive(reservasjoner: List<Reservasjon>): List<Reservasjon> {
-        reservasjoner.forEach { reservasjon ->
-
-            if (!reservasjon.erAktiv()) {
-                fjernInaktivReservasjon(reservasjon, oppgaveKøRepository.hentIkkeTaHensyn())
-            } else {
-                fjernReservasjonPåInaktivOppgave(reservasjon)
-            }
-        }
-
-        return reservasjoner.filter { it.erAktiv() }
+        return json.map { s -> LosObjectMapper.instance.readValue(s, Reservasjon::class.java) }.toList()
     }
 
     private suspend fun fjernInaktivReservasjon(
         reservasjon: Reservasjon,
-        oppgaveKøer: List<OppgaveKø>
+        oppgaveKøer: List<OppgaveKø>,
+        saksbehandlersIdent: String?
     ): Int {
         lagre(reservasjon.oppgave) {
             it!!.reservertTil = null
             it
         }
         saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
+        if (saksbehandlersIdent != null && reservasjon.reservertAv != saksbehandlersIdent) {
+            saksbehandlerRepository.fjernReservasjon(saksbehandlersIdent, reservasjon.oppgave)
+        }
         val oppgave = oppgaveRepository.hent(reservasjon.oppgave)
+        val merknader = oppgaveRepositoryV2.hentAlleMerknader()
+            .groupBy(keySelector = { it.eksternReferanse }, valueTransform = { it.merknad } )
+
         var fjernetFraAntallKøer = 0
         oppgaveKøer.forEach { oppgaveKø ->
             if (oppgaveKø.leggOppgaveTilEllerFjernFraKø(
                     oppgave,
                     this,
-                    oppgaveRepositoryV2.hentMerknader(reservasjon.oppgave.toString())
+                    merknader.getOrDefault(reservasjon.oppgave.toString(), emptyList())
                 )
             ) {
                 oppgaveKøRepository.lagreIkkeTaHensyn(oppgaveKø.id) {
                     it!!.leggOppgaveTilEllerFjernFraKø(
                         oppgave = oppgave,
                         reservasjonRepository = this,
-                        merknader = oppgaveRepositoryV2.hentMerknader(reservasjon.oppgave.toString())
+                        merknader = merknader.getOrDefault(reservasjon.oppgave.toString(), emptyList())
                     )
                     it
                 }
@@ -141,7 +170,7 @@ class ReservasjonRepository(
         }
     }
 
-    private suspend fun fjernReservasjonerSomIkkeLengerErAktive2(reservasjoner: List<Reservasjon>): List<Reservasjon> {
+    private suspend fun fjernInaktiveReservasjoner(reservasjoner: List<Reservasjon>, saksbehandlersIdent: String?): List<Reservasjon> {
         val reservasjonPrAktive = reservasjoner.groupBy { it.erAktiv() }
         val inaktive = reservasjonPrAktive[false] ?: emptyList()
         var totalAntallFjerninger = 0
@@ -149,7 +178,7 @@ class ReservasjonRepository(
             val oppgaveKøer = oppgaveKøRepository.hentIkkeTaHensyn()
             val tid = measureTimeMillis {
                 inaktive.forEach { reservasjon ->
-                    totalAntallFjerninger += fjernInaktivReservasjon(reservasjon, oppgaveKøer)
+                    totalAntallFjerninger += fjernInaktivReservasjon(reservasjon, oppgaveKøer, saksbehandlersIdent)
 
                 }
             }
@@ -179,23 +208,24 @@ class ReservasjonRepository(
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
 
-        return objectMapper().readValue(json!!, Reservasjon::class.java)
+        return LosObjectMapper.instance.readValue(json!!, Reservasjon::class.java)
     }
 
-    fun hentSisteReservasjonMedLås(id: UUID, tx: TransactionalSession): Reservasjon {
-
-        val json: String? = tx.run(
-            queryOf(
-                "select (data ::jsonb -> 'reservasjoner' -> -1) as data from reservasjon where id = :id for update",
-                mapOf("id" to id.toString())
-            ).map { row ->
-                row.string("data")
-            }.asSingle
-        )
+    fun hentOptional(id: UUID): Reservasjon? {
+        val json: String? = using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    "select (data ::jsonb -> 'reservasjoner' -> -1) as data from reservasjon where id = :id",
+                    mapOf("id" to id.toString())
+                ).map { row ->
+                    row.string("data")
+                }.asSingle
+            )
+        }
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
 
-        return objectMapper().readValue(json!!, Reservasjon::class.java)
+        return if (json != null) LosObjectMapper.instance.readValue(json, Reservasjon::class.java) else null
     }
 
     fun hentMedHistorikk(id: UUID): List<Reservasjon> {
@@ -215,7 +245,7 @@ class ReservasjonRepository(
         if (json == null) {
             return emptyList()
         }
-        return objectMapper().readValue(json)
+        return LosObjectMapper.instance.readValue(json)
     }
 
     fun hentAlleReservasjonUUID(): List<UUID> {
@@ -291,11 +321,11 @@ class ReservasjonRepository(
         var forrigeReservasjon: String? = null
         reservasjon = if (!run.isNullOrEmpty()) {
             forrigeReservasjon = run
-            f(objectMapper().readValue(run, Reservasjon::class.java))
+            f(LosObjectMapper.instance.readValue(run, Reservasjon::class.java))
         } else {
             f(null)
         }
-        val json = objectMapper().writeValueAsString(reservasjon)
+        val json = LosObjectMapper.instance.writeValueAsString(reservasjon)
 
         tx.run(
             queryOf(
@@ -324,7 +354,7 @@ class ReservasjonRepository(
 
     private fun loggFjerningAvReservasjon(reservasjon: Reservasjon, forrigeReservasjon: String?) {
         if (forrigeReservasjon != null) {
-            val fr = objectMapper().readValue(forrigeReservasjon, Reservasjon::class.java)
+            val fr = LosObjectMapper.instance.readValue(forrigeReservasjon, Reservasjon::class.java)
             val nyBegrunnelse = reservasjon.begrunnelse != null && reservasjon.begrunnelse != fr.begrunnelse
             if (!reservasjon.erAktiv() && fr.erAktiv() && reservasjon.reservertAv == fr.reservertAv) {
                 log.info("RESERVASJONDEBUG: Fjerner ${reservasjon.reservertAv} oppgave=${reservasjon.oppgave} begrunnelse=$nyBegrunnelse i reservasjonstabellen")

@@ -9,4 +9,8 @@ class Saksbehandler(
     var epost: String,
     var reservasjoner: MutableSet<UUID> = mutableSetOf(),
     var enhet: String?
-)
+) {
+    override fun toString(): String {
+        return brukerIdent ?: ""
+    }
+}

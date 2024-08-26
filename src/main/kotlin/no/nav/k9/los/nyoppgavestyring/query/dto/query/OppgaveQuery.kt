@@ -7,12 +7,11 @@ data class OppgaveQuery(
     val filtere: List<Oppgavefilter>,
     val select: List<SelectFelt> = listOf(),
     val order: List<OrderFelt> = listOf(),
-    val limit: Int = -1
 ) {
 
-    constructor() : this(listOf(), listOf(), listOf(), 10);
+    constructor() : this(listOf(), listOf(), listOf())
 
-    constructor(filtere: List<Oppgavefilter>) : this(filtere, listOf(), listOf(), 10);
+    constructor(filtere: List<Oppgavefilter>) : this(filtere, listOf(), listOf())
 
-    constructor(filtere: List<Oppgavefilter>, order: List<OrderFelt>) : this(filtere, listOf(), order, 10)
+    constructor(filtere: List<Oppgavefilter>, order: List<OrderFelt>) : this(filtere, listOf(), order)
 }

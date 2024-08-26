@@ -16,6 +16,8 @@ import no.nav.k9.los.domene.modell.FagsakYtelseType
 import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.domene.repository.StatistikkRepository
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
+import no.nav.k9.los.domene.repository.NøkkeltallRepository
 import org.junit.jupiter.api.Test
 import org.koin.test.get
 import java.time.LocalDate
@@ -33,7 +35,7 @@ class NokkeltallTjenesteTest : AbstractK9LosIntegrationTest() {
         val nøkkeltallTjeneste = get<NokkeltallTjeneste>()
 
         //Lag en oppgave uten aksjonspunkt
-        opprettOppgave(mapOf())
+        opprettOppgave(Aksjonspunkter(mapOf()))
 
         val oppgaverPåVent = nøkkeltallTjeneste.hentOppgaverPåVentV2().påVent
 
@@ -44,8 +46,8 @@ class NokkeltallTjenesteTest : AbstractK9LosIntegrationTest() {
     fun `Hent oppgaver på vent - 1 oppgave med aksjonspunkt som ikke er autopunkt skal gi 0 oppgaver på vent`() {
         val nøkkeltallTjeneste = get<NokkeltallTjeneste>()
 
-        //Lag en oppgave uten aksjonspunkt
-        opprettOppgave(mapOf(AksjonspunktDefinisjon.FATTER_VEDTAK.kode to "OPPR"))
+        //Lag en oppgave med aksjonspunkt
+        opprettOppgave(Aksjonspunkter(mapOf(AksjonspunktDefinisjon.FATTER_VEDTAK.kode to "OPPR")))
 
         val oppgaverPåVent = nøkkeltallTjeneste.hentOppgaverPåVentV2().påVent
 
@@ -56,8 +58,12 @@ class NokkeltallTjenesteTest : AbstractK9LosIntegrationTest() {
     fun `Hent oppgaver på vent - 1 oppgave med aksjonspunkt som er autopunkt skal gi 1 oppgaver på vent`() {
         val nøkkeltallTjeneste = get<NokkeltallTjeneste>()
 
-        //Lag en oppgave uten aksjonspunkt
-        opprettOppgave(mapOf(AksjonspunktDefinisjon.AUTO_MANUELT_SATT_PÅ_VENT.kode to "OPPR"))
+        //Lag en oppgave med autopunkt
+        val apKode = AksjonspunktDefinisjon.AUTO_MANUELT_SATT_PÅ_VENT.kode
+        opprettOppgave(Aksjonspunkter(
+            liste = mapOf(apKode to "OPPR"),
+            apTilstander = listOf(AksjonspunktTilstand(apKode, AksjonspunktStatus.OPPRETTET, Venteårsak.AVV_DOK.kode, frist = LocalDateTime.now().plusDays(1))))
+        )
 
         val oppgaverPåVent = nøkkeltallTjeneste.hentOppgaverPåVentV2().påVent
 
@@ -70,7 +76,8 @@ class NokkeltallTjenesteTest : AbstractK9LosIntegrationTest() {
     @Test
     fun `Hent løste aksjonspunkter bortsett fra de med behandlende enhet 2103`() {
         val statistikkRepository = mockk<StatistikkRepository>()
-        val nøkkeltallTjeneste = NokkeltallTjeneste(mockk(), statistikkRepository)
+        val nøkkeltallRepository = mockk<NøkkeltallRepository>()
+        val nøkkeltallTjeneste = NokkeltallTjeneste(mockk(), statistikkRepository, nøkkeltallRepository)
 
         val ferdigstiltBehandling = FerdigstiltBehandling(
             dato = LocalDate.now(),
@@ -92,9 +99,9 @@ class NokkeltallTjenesteTest : AbstractK9LosIntegrationTest() {
         assertThat(ferdigstilteoppgaver).doesNotContain(ferdigstiltBehandling.dato to mapOf("2103 VIKEN" to 1))
     }
 
-    private fun opprettOppgave(aksjonspunkter: Map<String, String>) {
+    private fun opprettOppgave(aksjonspunkter: Aksjonspunkter) {
         val oppgaveRepo = get<OppgaveRepository>()
-        val oppgave = mockOppgave().copy(aksjonspunkter = Aksjonspunkter(aksjonspunkter, aksjonspunkter.map { AksjonspunktTilstand(it.key, AksjonspunktStatus.fraKode(it.value)) }))
+        val oppgave = mockOppgave().copy(aksjonspunkter = aksjonspunkter)
         oppgaveRepo.lagre(oppgave.eksternId) {oppgave}
     }
 

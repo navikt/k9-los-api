@@ -6,7 +6,7 @@ import kotliquery.queryOf
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.IllegalDeleteException
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
-import no.nav.k9.los.nyoppgavestyring.transientfeltutleder.GyldigeTransientFeltutleder
+import no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.GyldigeTransientFeltutleder
 import no.nav.k9.los.spi.felter.TransientFeltutleder
 import no.nav.k9.los.utils.Cache
 import org.postgresql.util.PSQLException
@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory
 
 class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
     private val log = LoggerFactory.getLogger(FeltdefinisjonRepository::class.java)
-    private val kodeverkCache = Cache<KodeverkForOmråde>()
+    private val kodeverkCache = Cache<String, KodeverkForOmråde>()
 
     fun hent(område: Område, tx: TransactionalSession): Feltdefinisjoner {
         val feltdefinisjoner = tx.run(

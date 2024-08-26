@@ -1,21 +1,15 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering
 
-import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ManglerTilgangException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.forskyvReservasjonsDatoBakover
 import java.time.LocalDateTime
 import java.util.*
 
@@ -29,15 +23,6 @@ class ReservasjonOversetter(
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste
 ) {
 
-    fun hentV1OppgaveFraReservasjon(
-        reservasjon: ReservasjonV3
-    ): Oppgave? {
-        if (reservasjon.reservasjonsnøkkel.startsWith("legacy_")) {
-            return oppgaveV1Repository.hent(UUID.fromString(reservasjon.reservasjonsnøkkel.substring(7)))
-        } else {
-            return null
-        }
-    }
 
     fun hentReservasjonsnøkkelForOppgavenøkkel(
         oppgaveNøkkel: OppgaveNøkkelDto
@@ -141,11 +126,8 @@ class ReservasjonOversetter(
         kommentar: String?,
         tx: TransactionalSession,
     ): ReservasjonV3? {
-        val gyldigFra = if (reservertTil.isAfter(LocalDateTime.now())) {
-            LocalDateTime.now().minusHours(24).forskyvReservasjonsDatoBakover()
-        } else {
-            reservertTil.minusHours(24).forskyvReservasjonsDatoBakover()
-        }
+        check(reservertTil > LocalDateTime.now()) {"Reservert til er i fortiden: $reservertTil"}
+        val gyldigFra = LocalDateTime.now()
 
         if (beslutterErSaksbehandler(oppgave, reserverForSaksbehandlerId)) {
             throw ManglerTilgangException("Saksbehandler kan ikke være beslutter på egen behandling. Saksnummer: ${oppgave.fagsakSaksnummer}")
@@ -169,7 +151,7 @@ class ReservasjonOversetter(
         if (!oppgave.tilBeslutter) return false
 
         val saksbehandlerIdentSomSkalHaReservasjon =
-            saksbehandlerRepository.finnSaksbehandlerMedId(brukerIdSomSkalHaReservasjon).brukerIdent
+            saksbehandlerRepository.finnSaksbehandlerMedId(brukerIdSomSkalHaReservasjon)?.brukerIdent
 
         return oppgave.ansvarligSaksbehandlerIdent == saksbehandlerIdentSomSkalHaReservasjon
     }
@@ -182,22 +164,17 @@ class ReservasjonOversetter(
         kommentar: String?,
         tx: TransactionalSession,
     ): ReservasjonV3 {
-        val gyldigFra = if (reservertTil.isAfter(LocalDateTime.now())) {
-            LocalDateTime.now().minusHours(24).forskyvReservasjonsDatoBakover()
-        } else {
-            reservertTil.minusHours(24).forskyvReservasjonsDatoBakover()
-        }
+        check(reservertTil > LocalDateTime.now()) {"Reservert til er i fortiden: $reservertTil"}
+        val gyldigFra = LocalDateTime.now()
 
-        return runBlocking {
-            reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(
-                reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
-                reserverForId = reservertAvSaksbehandlerId,
-                gyldigFra = gyldigFra,
-                gyldigTil = reservertTil,
-                utføresAvId = utførtAvSaksbehandlerId ?: reservertAvSaksbehandlerId,
-                kommentar = kommentar ?: "",
-                tx = tx
-            )
-        }
+        return reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(
+            reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
+            reserverForId = reservertAvSaksbehandlerId,
+            gyldigFra = gyldigFra,
+            gyldigTil = reservertTil,
+            utføresAvId = utførtAvSaksbehandlerId ?: reservertAvSaksbehandlerId,
+            kommentar = kommentar ?: "",
+            tx = tx
+        )
     }
 }

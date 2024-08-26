@@ -2,6 +2,7 @@ package no.nav.k9.los.nyoppgavestyring
 
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
@@ -18,7 +19,7 @@ import java.util.*
 class OppgaveTestDataBuilder(
     val definisjonskilde: String = "k9-sak-til-los",
     val oppgaveTypeNavn: String = "k9sak"
-): KoinTest {
+) : KoinTest {
     private var område: Område
     val områdeRepository = get<OmrådeRepository>()
     val områdeSetup = get<OmrådeSetup>()
@@ -27,10 +28,16 @@ class OppgaveTestDataBuilder(
     val oppgaverepo = get<OppgaveV3Repository>()
     val k9SakTilLosAdapterTjeneste = get<K9SakTilLosAdapterTjeneste>()
 
+    // Skal denne klassen håndtere både k9sak og k9punsj?
+    val k9PunsjTilLosAdapterTjeneste = get<K9PunsjTilLosAdapterTjeneste>()
+
+    var eksternVersjonTeller = 1000000
+
     init {
         områdeSetup.setup()
         område = områdeRepository.hent("K9")!!
         k9SakTilLosAdapterTjeneste.setup()
+        k9PunsjTilLosAdapterTjeneste.setup()
     }
 
     val oppgaveFeltverdier = mutableSetOf<OppgaveFeltverdi>()
@@ -54,22 +61,33 @@ class OppgaveTestDataBuilder(
     }
 
 
-    fun lagOgLagre(): OppgaveV3 {
-        val antall = oppgaverepo.tellAntall().first
+    fun lagOgLagre(status: Oppgavestatus = Oppgavestatus.AAPEN): OppgaveV3 {
         return transactionManager.transaction { tx ->
-            val oppgave = OppgaveV3(
-                id = antall,
-                eksternId = oppgaveFeltverdier.firstOrNull {
-                    it.oppgavefelt.feltDefinisjon.eksternId == FeltType.BEHANDLINGUUID.eksternId }?.verdi
-                    ?: UUID.randomUUID().toString(),
-                eksternVersjon = "0",
-                oppgavetype = oppgavetype,
-                status = Oppgavestatus.AAPEN,
-                endretTidspunkt = LocalDateTime.now(),
-                kildeområde = område.eksternId,
-                felter = oppgaveFeltverdier.toList(),
-                reservasjonsnøkkel = ""
-            )
+            val oppgave = lag(status)
+            oppgaverepo.nyOppgaveversjon(oppgave, tx)
+            oppgave
+        }
+    }
+
+    fun lag(status: Oppgavestatus = Oppgavestatus.AAPEN, reservasjonsnøkkel: String = "", eksternVersjon: String? = null): OppgaveV3 {
+        return OppgaveV3(
+            eksternId = oppgaveFeltverdier.firstOrNull {
+                it.oppgavefelt.feltDefinisjon.eksternId == FeltType.BEHANDLINGUUID.eksternId
+            }?.verdi
+                ?: UUID.randomUUID().toString(),
+            eksternVersjon = eksternVersjon?.let { it } ?: eksternVersjonTeller++.toString(),
+            oppgavetype = oppgavetype,
+            status = status,
+            endretTidspunkt = LocalDateTime.now(),
+            kildeområde = område.eksternId,
+            felter = oppgaveFeltverdier.toList(),
+            reservasjonsnøkkel = reservasjonsnøkkel,
+            aktiv = true
+        )
+    }
+
+    fun lagre(oppgave: OppgaveV3) {
+        return transactionManager.transaction { tx ->
             oppgaverepo.nyOppgaveversjon(oppgave, tx)
             oppgave
         }
@@ -82,6 +100,7 @@ enum class FeltType(
     val tolkesSom: String = "String"
 ) {
     BEHANDLINGUUID("behandlingUuid"),
+    OPPGAVE_STATUS("oppgavestatus", listetype = true),
     FAGSYSTEM("fagsystem"),
     AKSJONSPUNKT("aksjonspunkt", true),
     RESULTAT_TYPE("resultattype", true),

@@ -1,7 +1,7 @@
 package no.nav.k9.los.repository
 
-import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import no.nav.k9.los.integrasjon.pdl.PdlService
+import no.nav.k9.los.utils.LosObjectMapper
 import org.junit.jupiter.api.Test
 
 class OppgaveRepositoryTest {
@@ -14,7 +14,7 @@ class OppgaveRepositoryTest {
             mapOf("ident" to "Attributt.ident.value")
         )
 
-        println(objectMapper().writeValueAsString(queryRequest))
+        println(LosObjectMapper.instance.writeValueAsString(queryRequest))
 
     }
 

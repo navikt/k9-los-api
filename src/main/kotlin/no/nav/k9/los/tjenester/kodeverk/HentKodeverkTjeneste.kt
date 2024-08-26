@@ -1,11 +1,14 @@
 package no.nav.k9.los.tjenester.kodeverk
 
+import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.Kodeverdi
 import no.nav.k9.los.domene.modell.*
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.Venteårsak
 
-class HentKodeverkTjeneste  {
-     fun hentGruppertKodeliste(): MutableMap<String, Collection<out Kodeverdi>> {
+class HentKodeverkTjeneste(
+    private val configuration: Configuration,
+) {
+    fun hentGruppertKodeliste(): MutableMap<String, Collection<out Kodeverdi>> {
         return KODEVERK_ENUM
     }
 
@@ -18,6 +21,7 @@ class HentKodeverkTjeneste  {
         koder[FagsakYtelseType::class.java.simpleName] = FagsakYtelseType.values().asList()
         koder[KøSortering::class.java.simpleName] = KøSortering.values().asList()
         koder[FagsakStatus::class.java.simpleName] = FagsakStatus.values().asList()
+
         koder[AndreKriterierType::class.java.simpleName] = AndreKriterierType.values().asList()
         koder[BehandlingStatus::class.java.simpleName] = BehandlingStatus.values().asList()
         koder[Venteårsak::class.java.simpleName] = Venteårsak.values().asList()

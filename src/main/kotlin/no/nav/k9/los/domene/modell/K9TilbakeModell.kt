@@ -243,11 +243,9 @@ data class K9TilbakeModell(
         reservasjonRepository: ReservasjonRepository
     ): Behandling {
         val oppgave = oppgave(sisteEvent())
-        val beslutter = if (oppgave.tilBeslutter
-            && reservasjonRepository.finnes(oppgave.eksternId) && reservasjonRepository.finnes(oppgave.eksternId)
-        ) {
-            val saksbehandler =
-                saksbehandlerRepository.finnSaksbehandlerMedIdentIkkeTaHensyn(reservasjonRepository.hent(oppgave.eksternId).reservertAv)
+        val reservasjon = reservasjonRepository.hentOptional(oppgave.eksternId)
+        val beslutter = if (oppgave.tilBeslutter && reservasjon != null) {
+            val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdentIkkeTaHensyn(reservasjon.reservertAv)
             saksbehandler?.brukerIdent
         } else {
             ""
@@ -256,8 +254,7 @@ data class K9TilbakeModell(
         val behandldendeEnhet =
             if (reservasjonRepository.finnes(oppgave.eksternId)) {
                 val hentMedHistorikk = reservasjonRepository.hentMedHistorikk(oppgave.eksternId)
-                val reservertav = hentMedHistorikk
-                    .map { reservasjon -> reservasjon.reservertAv }.first()
+                val reservertav = hentMedHistorikk.map { it.reservertAv }.first()
                 saksbehandlerRepository.finnSaksbehandlerMedIdentIkkeTaHensyn(reservertav)?.enhet?.substringBefore(" ")
             } else {
                 "SRV"
@@ -347,6 +344,6 @@ data class AksjonspunkterTilbake(val liste: Map<String, String>) {
     fun tilBeslutterTilbake(): Boolean {
         //burde egentlig sjekket at behandling er i FVED-status og har 5005-aksjonspunktet (fatte vedtak)
         return this.liste.containsKey("5005")
-                && liste.size == 1; //hvis det er flere aksjonspunkter, er det noe saksbehandler skal gjøre før beslutter løser 5005
+                && liste.size == 1 //hvis det er flere aksjonspunkter, er det noe saksbehandler skal gjøre før beslutter løser 5005
     }
 }

@@ -5,6 +5,8 @@ import no.nav.k9.los.integrasjon.kafka.*
 import no.nav.k9.los.integrasjon.kafka.ManagedKafkaStreams
 import no.nav.k9.los.integrasjon.kafka.ManagedStreamHealthy
 import no.nav.k9.los.integrasjon.kafka.ManagedStreamReady
+import no.nav.k9.los.utils.OpentelemetrySpanUtil
+import no.nav.k9.los.utils.TransientFeilHåndterer
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.Topology
@@ -51,10 +53,12 @@ internal class AksjonspunktPunsjStream constructor(
                 )
                 .foreach { _, entry ->
                     if (entry != null) {
-                        val spørring = System.currentTimeMillis()
-                        logger.info("--> Mottatt hendelse fra punsj: ${entry.eksternId} - ${entry.journalpostId}")
-                        K9punsjEventHandler.prosesser(entry)
-                        logger.info("Ferdig prosessert hendelse fra punsj etter ${System.currentTimeMillis() - spørring}ms: ${entry.eksternId} - ${entry.journalpostId}.")
+                        OpentelemetrySpanUtil.span(NAME, mapOf("journalpostId" to entry.journalpostId.verdi)) {
+                            val spørring = System.currentTimeMillis()
+                            logger.info("--> Mottatt hendelse fra punsj: ${entry.eksternId} - ${entry.journalpostId}")
+                            TransientFeilHåndterer().utfør(NAME) { K9punsjEventHandler.prosesser(entry) }
+                            logger.info("Ferdig prosessert hendelse fra punsj etter ${System.currentTimeMillis() - spørring}ms: ${entry.eksternId} - ${entry.journalpostId}.")
+                        }
                     }
                 }
             return builder.build()

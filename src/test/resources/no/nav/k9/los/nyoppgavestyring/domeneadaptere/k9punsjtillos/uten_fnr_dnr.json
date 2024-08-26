@@ -1,0 +1,44 @@
+{
+  "eventer": [
+    {
+      "type": "UTEN_FNR_DNR",
+      "ytelse": "PSB",
+      "aktørId": "2381804391085",
+      "eventTid": "2024-05-13T11:12:43.671272694",
+      "sendtInn": null,
+      "eksternId": "8003741a-5ded-4725-b97c-2ecc9b34c52f",
+      "ferdigstiltAv": null,
+      "journalpostId": "638013052",
+      "pleietrengendeAktørId": null,
+      "aksjonspunktKoderMedStatusListe": {
+        "PUNSJ": "OPPR"
+      }
+    },
+    {
+      "type": "UTEN_FNR_DNR",
+      "ytelse": "PSB",
+      "aktørId": "2381804391085",
+      "eventTid": "2024-05-13T14:55:54.487108156",
+      "sendtInn": null,
+      "eksternId": "8003741a-5ded-4725-b97c-2ecc9b34c52f",
+      "ferdigstiltAv": null,
+      "journalpostId": "638013052",
+      "pleietrengendeAktørId": null,
+      "aksjonspunktKoderMedStatusListe": {
+        "PUNSJ": "OPPR"
+      }
+    },
+    {
+      "type": "UTEN_FNR_DNR",
+      "ytelse": null,
+      "aktørId": "2381804391085",
+      "eventTid": "2024-05-13T14:56:35.848341431",
+      "sendtInn": false,
+      "eksternId": "8003741a-5ded-4725-b97c-2ecc9b34c52f",
+      "ferdigstiltAv": null,
+      "journalpostId": "638013052",
+      "pleietrengendeAktørId": null,
+      "aksjonspunktKoderMedStatusListe": {}
+    }
+  ]
+}

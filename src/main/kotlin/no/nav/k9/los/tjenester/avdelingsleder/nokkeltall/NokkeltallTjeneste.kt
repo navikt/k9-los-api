@@ -1,62 +1,56 @@
 package no.nav.k9.los.tjenester.avdelingsleder.nokkeltall
 
-import no.nav.k9.los.domene.lager.oppgave.Oppgave
+import no.nav.k9.los.domene.lager.oppgave.v2.BehandlingsmigreringTjeneste
 import no.nav.k9.los.domene.modell.BehandlingType
 import no.nav.k9.los.domene.modell.FagsakYtelseType
 import no.nav.k9.los.domene.modell.Fagsystem
 import no.nav.k9.los.domene.periode.tidligsteOgSeneste
+import no.nav.k9.los.domene.repository.NøkkeltallRepository
 import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.domene.repository.StatistikkRepository
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
-import java.time.LocalDateTime
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak as VenteårsakK9Sak
 
 class NokkeltallTjeneste constructor(
     private val oppgaveRepository: OppgaveRepository,
-    private val statistikkRepository: StatistikkRepository
+    private val statistikkRepository: StatistikkRepository,
+    private val nøkkeltallRepository: NøkkeltallRepository
 ) {
-
+    private val log = LoggerFactory.getLogger(BehandlingsmigreringTjeneste::class.java)
     suspend fun hentOppgaverUnderArbeid(): List<AlleOppgaverDto> {
         return oppgaveRepository.hentAlleOppgaverUnderArbeid()
     }
 
     fun hentOppgaverPåVentV2(): OppgaverPåVentDto.PåVentResponse {
-        val oppgaverPåVent = oppgaveRepository.hentAllePåVent()
-        val påVentPerBehandling = antallOppgaverPåVent(oppgaverPåVent)
-        val påVentPerVenteårsak = antallOppgaverPåVentMedÅrsak(oppgaverPåVent)
+        val raw = nøkkeltallRepository.hentAllePåVentGruppert()
+            //gir ikke helt mening å ha med VENT_PÅ_TILBAKEKREVINGSGRUNNLAG her. Den er vangligvis samtidig med VENT_PÅ_BRUKERTILBAKEMELDING, så ville gitt duplikater her. Frist er også misvisende for aksjonspunktet, k9tilbake vil uansett vente helt til grunnlag kommer
+            .filterNot { gruppe -> gruppe.system == Fagsystem.K9TILBAKE && gruppe.aksjonspunktKode ==  "VENT_PÅ_TILBAKEKREVINGSGRUNNLAG"}
+
+        data class PerBehandling(val f: FagsakYtelseType, val b: BehandlingType, val frist: LocalDate)
+        val påVentPerBehandling = raw.groupingBy { PerBehandling( it.fagsakYtelseType, it.behandlingType, it.frist) }
+            .aggregate { key, accumulator : Int?, element, first -> if (first) element.antall else accumulator!! + element.antall }
+            .entries.map { OppgaverPåVentDto.PerBehandlingDto(it.key.f, it.key.b, it.key.frist, it.value) }
+
+        data class PerVenteårsak(val f: FagsakYtelseType, val b: BehandlingType, val frist: LocalDate, val venteårsak: Venteårsak)
+        val påVentPerVenteårsak = raw.groupingBy { PerVenteårsak(it.fagsakYtelseType, it.behandlingType, it.frist, tilVenteårsak(it.system, it.venteårsak)) }
+            .aggregate { key, accumulator : Int?, element, first -> if (first) element.antall else accumulator!! + element.antall }
+            .entries.map { OppgaverPåVentDto.PerVenteårsakDto(it.key.f, it.key.b, it.key.frist, it.key.venteårsak, it.value) }
+
         return OppgaverPåVentDto.PåVentResponse(påVentPerBehandling, påVentPerVenteårsak)
     }
 
-    private fun antallOppgaverPåVent(oppgaverPåVent: List<Oppgave>): List<OppgaverPåVentDto.PerBehandlingDto> {
-        data class PerBehandling(val f: FagsakYtelseType, val b: BehandlingType, val frist: LocalDate)
-        return oppgaverPåVent.groupingBy {
-            val autopunkt = finnAutopunkt(it)
-            PerBehandling(it.fagsakYtelseType, it.behandlingType, autopunkt?.frist?.toLocalDate() ?: it.behandlingsfrist.toLocalDate())
+    private fun tilVenteårsak(system: Fagsystem, venteårsakkode:String) : Venteårsak =
+        when (system) {
+            Fagsystem.K9SAK -> venteårsakkode.tilVenteårsakK9sak()
+            Fagsystem.K9TILBAKE -> venteårsakkode.tilVenteårsakK9Tilbake()
+            else -> {
+                log.warn("Mangler mapping for system {} for venteårsakskode {} går videre med UKJENT", system, venteårsakkode)
+                Venteårsak.UKJENT
+            }
         }
-            .eachCount()
-            .map { (vo, antall) -> OppgaverPåVentDto.PerBehandlingDto(vo.f, vo.b, vo.frist, antall) }
-    }
 
-    private fun antallOppgaverPåVentMedÅrsak(oppgaverPåVent: List<Oppgave>): List<OppgaverPåVentDto.PerVenteårsakDto> {
-        data class PerVenteårsak(val f: FagsakYtelseType, val b: BehandlingType, val frist: LocalDate, val venteårsak: Venteårsak)
-
-        return oppgaverPåVent.groupingBy {
-            val autopunkt = finnAutopunkt(it) //Tilbakekreving er ikke håndtert enda
-            PerVenteårsak(
-                it.fagsakYtelseType,
-                it.behandlingType,
-                autopunkt?.frist?.toLocalDate() ?: it.behandlingsfrist.toLocalDate(),
-                autopunkt?.venteårsak?.tilVenteårsak() ?: Venteårsak.UKJENT
-            )
-        }
-            .eachCount()
-            .map { (vo, antall) -> OppgaverPåVentDto.PerVenteårsakDto(vo.f, vo.b, vo.frist, vo.venteårsak, antall) }
-    }
-
-    private fun finnAutopunkt(it: Oppgave) =
-        if (it.system == Fagsystem.K9SAK.kode) it.aksjonspunkter.aktivAutopunkt() else null //Tilbakekreving er ikke håndtert enda
-
-    private fun String.tilVenteårsak(): Venteårsak =
+    private fun String.tilVenteårsakK9sak(): Venteårsak =
         when (this) {
             VenteårsakK9Sak.AVV_DOK.kode,
             VenteårsakK9Sak.UTV_FRIST.kode,
@@ -77,6 +71,23 @@ class NokkeltallTjeneste constructor(
             -> Venteårsak.AUTOMATISK_SATT_PA_VENT
         }
 
+
+
+    private fun String.tilVenteårsakK9Tilbake(): Venteårsak =
+        when (this) {
+            "VENT_PÅ_BRUKERTILBAKEMELDING" -> Venteårsak.AVV_DOK //TODO venter på svar fra bruker, lage egen venteårsak?
+            "VENT_PÅ_TILBAKEKREVINGSGRUNNLAG" -> Venteårsak.VENTER_SVAR_INTERNT //TODO venter på (maskinell) prosess som skal gå, lage egen venteårsak?
+            "AVV_DOK" -> Venteårsak.AVV_DOK
+            "UTV_TIL_FRIST" -> Venteårsak.AVV_DOK //TODO venter på svar fra bruker, lage egen venteårsak?
+            "ENDRE_TILKJENT_YTELSE" -> Venteårsak.VENTER_SVAR_INTERNT
+            "VENT_PÅ_MULIG_MOTREGNING" -> Venteårsak.VENTER_SVAR_INTERNT //TODO venter på prosess som skal gå, lage egen venteårsak?
+            "-" -> Venteårsak.UKJENT
+            else -> {
+                log.warn("Fikk ikke-støttet venteårsak for K9tilbake {}", this)
+                Venteårsak.UKJENT
+            }
+        }
+
     fun hentNyeFerdigstilteOppgaverOppsummering(): List<AlleOppgaverNyeOgFerdigstilteDto> {
         return statistikkRepository.hentFerdigstilteOgNyeHistorikkPerAntallDager(7).map {
             AlleOppgaverNyeOgFerdigstilteDto(
@@ -95,13 +106,6 @@ class NokkeltallTjeneste constructor(
             it.fagsakSaksnummer + ", " + it.fagsakYtelseType + ", " + it.behandlingOpprettet
         }.joinToString("\n")
     }
-
-    data class HasteOppgaveDto(
-        val saksnummer: String,
-        val ytelseType: FagsakYtelseType,
-        val opprettet: LocalDateTime
-    )
-
 
     fun hentFerdigstilteOppgaverHistorikk(
         vararg historikkType: VelgbartHistorikkfelt,

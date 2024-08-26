@@ -4,12 +4,12 @@ import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.hasSize
 import assertk.assertions.isEqualTo
-import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import no.nav.k9.los.domene.modell.BehandlingType
 import no.nav.k9.los.domene.modell.FagsakYtelseType
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.FerdigstiltBehandling
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.VelgbartHistorikkfelt
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.feltSelector
+import no.nav.k9.los.utils.LosObjectMapper
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -82,11 +82,12 @@ class HistorikkElementTest {
                 behandlendeEnhet = "4407"
             )
         ).feltSelector(VelgbartHistorikkfelt.DATO, VelgbartHistorikkfelt.YTELSETYPE, VelgbartHistorikkfelt.ENHET)
-        val result = objectMapper().writeValueAsString(resultat)
+        val result = LosObjectMapper.instance.writeValueAsString(resultat)
+        println(result)
         assertThat(result).contains(
-            """dato" : "2021-01-03""",
-            """behandlendeEnhet" : "4407""",
-            """antall" : 1"""
+            """dato":"2021-01-03""",
+            """behandlendeEnhet":"4407""",
+            """antall":1"""
         )
     }
 }

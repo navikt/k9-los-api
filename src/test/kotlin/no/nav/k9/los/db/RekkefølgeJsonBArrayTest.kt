@@ -23,7 +23,7 @@ class RekkefølgeJsonBArrayTest : AbstractK9LosIntegrationTest() {
         val eksternId = UUID.randomUUID()
         IntRange(1, 10).forEach {
             lagreOppgave(eksternId, oppgaveRepository, it)
-            assert(oppgaveRepository.hent()[0].behandlendeEnhet == "Enhet$it")
+            assert(oppgaveRepository.hent(eksternId).behandlendeEnhet == "Enhet$it")
         }
 
     }

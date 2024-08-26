@@ -23,7 +23,7 @@
         },
         {
           "id": "fagsystem",
-          "visPåOppgave": true,
+          "visPåOppgave": false,
           "påkrevd": true
         },
         {
@@ -112,6 +112,16 @@
           "påkrevd": false
         },
         {
+          "id": "aktivVenteårsak",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "aktivVentefrist",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
           "id": "løsbartAksjonspunkt",
           "visPåOppgave": true,
           "påkrevd": false
@@ -135,6 +145,11 @@
         {
           "id": "behandlingsårsak",
           "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "oversendtKabalTidspunkt",
+          "visPåOppgave": false,
           "påkrevd": false
         }
       ]

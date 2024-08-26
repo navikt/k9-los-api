@@ -28,14 +28,14 @@ class SakslisteTjeneste(
                     behandlingTyper = oppgaveKø.filtreringBehandlingTyper,
                     fagsakYtelseTyper = oppgaveKø.filtreringYtelseTyper,
                     saksbehandlere = oppgaveKø.saksbehandlere,
-                    antallBehandlinger = oppgaveKø.oppgaverOgDatoer.size,
+                    antallBehandlinger = oppgaveKø.oppgaverOgDatoer.size, //TODO dette feltet i DTO-en brukers annet sted til å sende antall inkludert reserverte, her er det ekskludert reserverte
+                    antallUreserverteOppgaver = oppgaveKø.oppgaverOgDatoer.size,
                     sistEndret = oppgaveKø.sistEndret,
                     skjermet = oppgaveKø.skjermet,
                     sortering = sortering,
                     andreKriterier = oppgaveKø.filtreringAndreKriterierType,
                     kriterier = oppgaveKø.lagKriterier()
                 )
-
             }
     }
 }

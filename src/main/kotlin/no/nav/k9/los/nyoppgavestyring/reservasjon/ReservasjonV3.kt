@@ -9,9 +9,10 @@ class ReservasjonV3(
     val reservertAv: Long,
     val reservasjonsnøkkel: String,
     val annullertFørUtløp: Boolean = false,
-    val kommentar: String,
+    val kommentar: String?,
     gyldigFra: LocalDateTime,
     gyldigTil: LocalDateTime,
+    val endretAv: Long?,
 ) {
     val gyldigFra = gyldigFra.truncatedTo(ChronoUnit.MICROS)
     val gyldigTil = gyldigTil.truncatedTo(ChronoUnit.MICROS)
@@ -21,9 +22,10 @@ class ReservasjonV3(
         reservertAv: Long = this.reservertAv,
         reservasjonsnøkkel: String = this.reservasjonsnøkkel,
         annullertFørUtløp: Boolean = this.annullertFørUtløp,
-        kommentar: String = this.kommentar,
+        kommentar: String? = this.kommentar,
         gyldigFra: LocalDateTime = this.gyldigFra,
-        gyldigTil: LocalDateTime = this.gyldigTil
+        gyldigTil: LocalDateTime = this.gyldigTil,
+        endretAv: Long? = this.endretAv
     ): ReservasjonV3 {
         return ReservasjonV3(
             id,
@@ -32,7 +34,8 @@ class ReservasjonV3(
             annullertFørUtløp,
             kommentar,
             gyldigFra,
-            gyldigTil
+            gyldigTil,
+            endretAv
         )
     }
 
@@ -41,13 +44,15 @@ class ReservasjonV3(
         reservasjonsnøkkel: String,
         kommentar: String,
         gyldigFra: LocalDateTime,
-        gyldigTil: LocalDateTime
+        gyldigTil: LocalDateTime,
+        endretAv: Long?
     ) : this(
         reservertAv = saksbehandlerId,
         reservasjonsnøkkel = reservasjonsnøkkel,
         kommentar = kommentar,
         gyldigFra = gyldigFra,
         gyldigTil = gyldigTil,
+        endretAv = endretAv
     )
 
     constructor(
@@ -55,14 +60,20 @@ class ReservasjonV3(
         reservasjonsnøkkel: String,
         kommentar: String,
         gyldigFra: LocalDateTime,
-        gyldigTil: LocalDateTime
+        gyldigTil: LocalDateTime,
+        endretAv: Long?
     ) : this(
         reservertAv = saksbehandler.id!!,
         reservasjonsnøkkel = reservasjonsnøkkel,
         kommentar = kommentar,
         gyldigFra = gyldigFra,
         gyldigTil = gyldigTil,
+        endretAv = endretAv
     )
+
+    fun erAktiv(): Boolean {
+        return !annullertFørUtløp && gyldigTil.isAfter(LocalDateTime.now())
+    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -85,5 +96,17 @@ class ReservasjonV3(
         result = 31 * result + gyldigFra.hashCode()
         result = 31 * result + gyldigTil.hashCode()
         return result
+    }
+
+    override fun toString(): String {
+        return """
+            Reservasjon(
+            id: $id,
+            reservertAv: $reservertAv,
+            reservasjonsnøkkel: ${Reservasjonsnøkkel(reservasjonsnøkkel)},
+            annullertFørUtløp: $annullertFørUtløp,
+            gyldigFra: $gyldigFra,
+            gyldigTil: $gyldigTil)
+        """.trimIndent()
     }
 }

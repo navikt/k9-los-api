@@ -15,8 +15,8 @@ fun Route.KonfigApis() {
     val refreshUrlDev = "wss://k9-los-oidc-auth-proxy.dev.intern.nav.no/ws/k9-los-api"
     val refreshUrlProd = "wss://k9-los-oidc-auth-proxy.intern.nav.no/ws/k9-los-api"
     val refreshUrlLocal = "ws://localhost:8020/ws"
-    val k9punsjUrlDev = "https://k9-punsj-frontend.dev.adeo.no/journalpost"
-    val k9punsjUrlProd = "https://k9-punsj-frontend.nais.adeo.no/journalpost"
+    val k9punsjUrlDev = "https://k9-punsj-frontend.intern.dev.nav.no/journalpost"
+    val k9punsjUrlProd = "https://k9-punsj-frontend.intern.nav.no/journalpost"
 
     @Location("/k9-sak-url")
     class hentK9SakUrl

@@ -6,10 +6,10 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.support.fail
 import no.nav.k9.los.domene.lager.oppgave.v2.equalsWithPrecision
 import no.nav.k9.los.nyoppgavestyring.FeltType
-import no.nav.k9.los.nyoppgavestyring.query.db.CombineOperator
-import no.nav.k9.los.nyoppgavestyring.query.db.EksternFeltverdiOperator
-import no.nav.k9.los.nyoppgavestyring.query.db.FeltverdiOperator
-import no.nav.k9.los.nyoppgavestyring.query.db.OppgavefilterUtvider
+import no.nav.k9.los.nyoppgavestyring.query.mapping.CombineOperator
+import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgavefilterUtvider
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 

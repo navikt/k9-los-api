@@ -41,7 +41,7 @@ data class K9SakModell(
     }
 
     fun oppgave(sisteEvent: BehandlingProsessEventDto = sisteEvent()): Oppgave {
-        val eventResultat = sisteEvent.tilAktiveAksjonspunkter().eventResultat()
+        val eventResultat = sisteEvent.tilAktiveAksjonspunkter().eventResultat(Fagsystem.K9SAK)
         var aktiv = true
         var oppgaveAvsluttet: LocalDateTime? = null
 
@@ -271,21 +271,18 @@ data class K9SakModell(
         reservasjonRepository: ReservasjonRepository
     ): Behandling {
         val oppgave = oppgave()
-        val beslutter = if (oppgave.tilBeslutter
-            && reservasjonRepository.finnes(oppgave.eksternId) && reservasjonRepository.finnes(oppgave.eksternId)
-        ) {
-            val saksbehandler =
-                saksbehandlerRepository.finnSaksbehandlerMedIdentIkkeTaHensyn(reservasjonRepository.hent(oppgave.eksternId).reservertAv)
+        val reservasjon = reservasjonRepository.hentOptional(oppgave.eksternId)
+        val beslutter = if (oppgave.tilBeslutter && reservasjon != null) {
+            val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdentIkkeTaHensyn(reservasjon.reservertAv)
             saksbehandler?.brukerIdent
         } else {
             ""
         }
 
         val behandldendeEnhet =
-            if (reservasjonRepository.finnes(oppgave.eksternId)) {
+            if (reservasjon != null) {
                 val hentMedHistorikk = reservasjonRepository.hentMedHistorikk(oppgave.eksternId)
-                val reservertav = hentMedHistorikk
-                    .map { reservasjon -> reservasjon.reservertAv }.first()
+                val reservertav = hentMedHistorikk.map { it.reservertAv }.first()
                 saksbehandlerRepository.finnSaksbehandlerMedIdentIkkeTaHensyn(reservertav)?.enhet?.substringBefore(" ")
             } else {
                 "SRV"
@@ -340,7 +337,7 @@ data class K9SakModell(
 
         // har blitt satt på vent
         if (sisteEvent().ytelseTypeKode == FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode
-            && sisteEvent().tilAksjonspunkter().påVent())
+            && sisteEvent().tilAksjonspunkter().påVent(Fagsystem.K9SAK))
             return true
 
         val beslutterFerdig =

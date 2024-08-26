@@ -29,6 +29,10 @@ const val KAFKATOPIC = "KafkaTopic"
 const val NONE = "None"
 const val RESOURCE_SAKSNR = "no.nav.abac.attributter.resource.k9.saksnr"
 
+enum class Action {
+    read, update, create, reserver
+}
+
 enum class Category {
     Resource,
     Action,
@@ -57,7 +61,7 @@ class XacmlRequestBuilder {
 
     fun addEnvironmentAttribute(id: String, value: Any): XacmlRequestBuilder = addAttributeToCategory(Category.Environment, id, value)
 
-    fun addActionAttribute(id: String, value: Any): XacmlRequestBuilder = addAttributeToCategory(Category.Action, id, value)
+    fun addActionAttribute(id: String, value: Action): XacmlRequestBuilder = addAttributeToCategory(Category.Action, id, value)
 
     fun build(): Map<String, Map<Category, CategoryAttribute>> {
         return mapOf("Request" to requestAttributes)

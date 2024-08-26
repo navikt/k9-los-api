@@ -2,15 +2,9 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
-import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktType
-import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.Aksjonspunkttilstand
-import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.KlagebehandlingProsessHendelse
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
@@ -19,7 +13,9 @@ import org.slf4j.LoggerFactory
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.BehandlingProsessEventKlageRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.HistorikkvaskMetrikker
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerInterfaceKludge
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import java.util.*
 import kotlin.concurrent.thread
@@ -54,6 +50,7 @@ class K9KlageTilLosHistorikkvaskTjeneste(
     private fun spillAvBehandlingProsessEventer() {
         log.info("Starter avspilling av BehandlingProsessEventer")
         val tidKjøringStartet = System.currentTimeMillis()
+        var t0 = System.nanoTime()
 
         val behandlingsIder = behandlingProsessEventKlageRepository.hentAlleEventIderUtenVasketHistorikk()
         log.info("Fant ${behandlingsIder.size} behandlinger")
@@ -64,6 +61,8 @@ class K9KlageTilLosHistorikkvaskTjeneste(
             eventTeller = vaskOppgaveForBehandlingUUID(uuid, eventTeller)
             behandlingTeller++
             loggFremgangForHver100(behandlingTeller, "Forsert $behandlingTeller behandlinger")
+            HistorikkvaskMetrikker.observe(TRÅDNAVN, t0)
+            t0 = System.nanoTime()
         }
 
         val (antallAlle, antallAktive) = oppgaveV3Tjeneste.tellAntall()
@@ -76,6 +75,8 @@ class K9KlageTilLosHistorikkvaskTjeneste(
 
         behandlingProsessEventKlageRepository.nullstillHistorikkvask()
         log.info("Nullstilt historikkvaskmarkering k9-klage")
+
+        HistorikkvaskMetrikker.observe(TRÅDNAVN, t0)
     }
 
     private fun vaskOppgaveForBehandlingUUID(uuid: UUID, eventTellerInn: Long): Long {
@@ -86,12 +87,14 @@ class K9KlageTilLosHistorikkvaskTjeneste(
             val høyesteInternVersjon =
                 oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9klage", "K9", tx)!!
             var eventNrForBehandling = 0L
+            var oppgaveV3: OppgaveV3? = null
             for (event in behandlingProsessEventer) {
-                if (eventNrForBehandling > høyesteInternVersjon) { break }
-                val losOpplysningerSomManglerIKlageDto = k9sakBeriker.berikKlage(event.påklagdBehandlingEksternId)!!
+                if (eventNrForBehandling > høyesteInternVersjon) { break }  //Historikkvasken har funnet eventer som ennå ikke er lastet inn med normalflyt. Dirty eventer skal håndteres av vanlig adaptertjeneste
+                val losOpplysningerSomManglerIKlageDto = event.påklagdBehandlingEksternId?.let { k9sakBeriker.berikKlage(it) }
                 val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, losOpplysningerSomManglerIKlageDto, forrigeOppgave)
 
-                oppgaveV3Tjeneste.oppdaterEkstisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, tx)
+                oppgaveV3 = oppgaveV3Tjeneste.utledEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, tx)
+                oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveV3, eventNrForBehandling, tx)
 
                 eventTeller++
                 loggFremgangForHver100(eventTeller, "Prosessert $eventTeller eventer")
@@ -104,7 +107,12 @@ class K9KlageTilLosHistorikkvaskTjeneste(
             forrigeOppgave = null
 
             behandlingProsessEventKlageRepository.markerVasketHistorikk(uuid, tx)
+
+            oppgaveV3?.let {
+                oppgaveV3Tjeneste.ajourholdAktivOppgave(oppgaveV3, eventNrForBehandling, tx)
+            }
         }
+
         return eventTeller
     }
 

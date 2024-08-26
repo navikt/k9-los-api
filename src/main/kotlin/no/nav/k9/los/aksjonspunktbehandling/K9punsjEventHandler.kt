@@ -1,5 +1,6 @@
 package no.nav.k9.los.aksjonspunktbehandling
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
@@ -12,8 +13,13 @@ import no.nav.k9.los.domene.lager.oppgave.v2.*
 import no.nav.k9.los.domene.modell.*
 import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
 import no.nav.k9.los.integrasjon.kafka.dto.PunsjEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
+import no.nav.k9.los.nyoppgavestyring.ko.OppgaveHendelseMottatt
+import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
+import no.nav.k9.los.utils.OpentelemetrySpanUtil
 import org.slf4j.LoggerFactory
 
 
@@ -27,6 +33,8 @@ class K9punsjEventHandler constructor(
     private val reservasjonTjeneste: ReservasjonTjeneste,
     private val statistikkRepository: StatistikkRepository,
     private val azureGraphService: IAzureGraphService,
+    private val punsjTilLosAdapterTjeneste: K9PunsjTilLosAdapterTjeneste,
+    private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
 ) : EventTeller {
     private val log = LoggerFactory.getLogger(K9punsjEventHandler::class.java)
 
@@ -34,26 +42,34 @@ class K9punsjEventHandler constructor(
         private val typer = BehandlingType.values().filter { it.kodeverk == "PUNSJ_INNSENDING_TYPE" }
     }
 
+    @WithSpan
     fun prosesser(event: PunsjEventDto) {
-        log.info(event.safePrint())
-        val modell = punsjEventK9Repository.lagre(event = event)
-        val oppgave = modell.oppgave()
-        oppgaveRepository.lagre(oppgave.eksternId){
-            tellEvent(modell, oppgave)
-            oppgave
-        }
-
-        if (modell.fikkEndretAksjonspunkt()) {
-            reservasjonTjeneste.fjernReservasjon(oppgave)
-        }
-
-        runBlocking {
-            for (oppgavekø in oppgaveKøRepository.hentKøIdIkkeTaHensyn()) {
-                oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, listOf(oppgave), reservasjonRepository)
+        EventHandlerMetrics.time("k9punsj", "gjennomført") {
+            log.info(event.safePrint())
+            val modell = punsjEventK9Repository.lagre(event = event)
+            val oppgave = modell.oppgave()
+            oppgaveRepository.lagre(oppgave.eksternId) {
+                tellEvent(modell, oppgave)
+                oppgave
             }
-            statistikkChannel.send(true)
 
-            oppdaterOppgaveV2(event, modell)
+            if (modell.fikkEndretAksjonspunkt()) {
+                reservasjonTjeneste.fjernReservasjon(oppgave)
+            }
+
+            runBlocking {
+                for (oppgavekø in oppgaveKøRepository.hentKøIdIkkeTaHensyn()) {
+                    oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, listOf(oppgave), reservasjonRepository)
+                }
+                statistikkChannel.send(true)
+
+                oppdaterOppgaveV2(event, modell)
+            }
+
+            OpentelemetrySpanUtil.span("punsjTilLosAdapterTjeneste.oppdaterOppgaveForEksternId") { punsjTilLosAdapterTjeneste.oppdaterOppgaveForEksternId(event.eksternId) }
+            runBlocking {
+                køpåvirkendeHendelseChannel.send(OppgaveHendelseMottatt(Fagsystem.PUNSJ, EksternOppgaveId("K9", event.eksternId.toString())))
+            }
         }
     }
 

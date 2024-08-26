@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.pep
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
@@ -29,10 +30,12 @@ class PepCacheService(
         }
     }
 
+    @WithSpan
     fun oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn(gyldighet: Duration = Duration.ofHours(23)) {
         oppdaterCacheForOppgaverMedStatusEldreEnn(gyldighet, setOf(Oppgavestatus.VENTER, Oppgavestatus.AAPEN))
     }
 
+    @WithSpan
     fun oppdaterCacheForLukkedeOppgaverEldreEnn(gyldighet: Duration = Duration.ofDays(30)) {
         oppdaterCacheForOppgaverMedStatusEldreEnn(gyldighet, setOf(Oppgavestatus.LUKKET))
     }
@@ -73,14 +76,14 @@ class PepCacheService(
         val pep = PepCache(
             eksternId = oppgave.eksternId,
             kildeområde = oppgave.kildeområde,
-            kode6 = true,
-            kode7 = true,
-            egenAnsatt = true,
+            kode6 = false,
+            kode7 = false,
+            egenAnsatt = false,
             oppdatert = LocalDateTime.now()
         )
 
         val saksnummer = oppgave.hentVerdi(oppgave.kildeområde, "saksnummer")
-            ?: throw IllegalStateException("Kan ikke gjøre oppslag uten saksnummer ${oppgave.eksternId}")
+            ?: return pep
 
         return pep.oppdater(saksnummer)
     }

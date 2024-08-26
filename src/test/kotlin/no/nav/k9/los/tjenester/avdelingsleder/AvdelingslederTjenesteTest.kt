@@ -38,8 +38,6 @@ internal class AvdelingslederTjenesteTest : AbstractK9LosIntegrationTest() {
                 saksbehandlerRepository.addSaksbehandler(it)
             }
 
-
-
             val id = avdelingslederTjeneste.opprettOppgaveKø()
             val saksbehandlerDto = saksbehandlere.map {
                 SaksbehandlerOppgavekoDto(id.id, it.epost, true)

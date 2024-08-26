@@ -1,7 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.query
 
 import io.ktor.http.*
-import io.ktor.server.application.call
+import io.ktor.server.application.*
 import io.ktor.server.locations.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -9,12 +9,9 @@ import io.ktor.server.routing.Route
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.integrasjon.rest.idToken
-import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
-import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.tilCsv
 import org.koin.java.KoinJavaComponent
 import org.koin.ktor.ext.inject
-import java.util.*
 
 fun Route.OppgaveQueryApis() {
     val requestContextService by inject<RequestContextService>()
@@ -28,17 +25,17 @@ fun Route.OppgaveQueryApis() {
         val oppgaveQuery = call.receive<OppgaveQuery>()
         requestContextService.withRequestContext(call) {
             val idToken = kotlin.coroutines.coroutineContext.idToken()
-            call.respond(oppgaveQueryService.query(oppgaveQuery, idToken))
+            call.respond(oppgaveQueryService.query(QueryRequest(oppgaveQuery), idToken))
         }
     }
 
     @Location("/query/antall")
     class queryOppgaveAntall
 
-    post { _: queryOppgave ->
+    post { _: queryOppgaveAntall ->
         val oppgaveQuery = call.receive<OppgaveQuery>()
         requestContextService.withRequestContext(call) {
-            call.respond(oppgaveQueryService.queryForAntall(oppgaveQuery))
+            call.respond(oppgaveQueryService.queryForAntall(QueryRequest(oppgaveQuery, false)))
         }
     }
 
@@ -49,9 +46,9 @@ fun Route.OppgaveQueryApis() {
         val oppgaveQuery = call.receive<OppgaveQuery>()
         requestContextService.withRequestContext(call) {
             if (!pepClient.erOppgaveStyrer()) {
-                call.respond(HttpStatusCode.Forbidden);
+                call.respond(HttpStatusCode.Forbidden)
             }
-            call.respond(oppgaveQueryService.validate(oppgaveQuery))
+            call.respond(oppgaveQueryService.validate(QueryRequest(oppgaveQuery)))
         }
     }
 
@@ -69,7 +66,7 @@ fun Route.OppgaveQueryApis() {
                     ContentDisposition.Parameters.FileName, "oppgaver.csv"
                 ).toString()
             )
-            call.respondText(oppgaveQueryService.queryToFile(oppgaveQuery, idToken))
+            call.respondText(oppgaveQueryService.queryToFile(QueryRequest(oppgaveQuery), idToken))
         }
     }
 

@@ -1,16 +1,17 @@
 package no.nav.k9.los.aksjonspunktbehandling
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
-import no.nav.k9.los.domene.modell.BehandlingStatus
-import no.nav.k9.los.domene.modell.FagsakYtelseType
-import no.nav.k9.los.domene.modell.IModell
-import no.nav.k9.los.domene.modell.K9TilbakeModell
+import no.nav.k9.los.domene.modell.*
 import no.nav.k9.los.domene.repository.*
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventTilbakeDto
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
+import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
+import no.nav.k9.los.nyoppgavestyring.ko.OppgaveHendelseMottatt
+import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
@@ -29,42 +30,47 @@ class K9TilbakeEventHandler(
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
     private val reservasjonOversetter: ReservasjonOversetter,
     private val saksbehandlerRepository: SaksbehandlerRepository,
+    private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
 ) : EventTeller {
 
     companion object {
         private val log = LoggerFactory.getLogger(K9TilbakeEventHandler::class.java)
     }
 
+    @WithSpan
     fun prosesser(
         event: BehandlingProsessEventTilbakeDto
     ) {
-        val modell = behandlingProsessEventTilbakeRepository.lagre(event)
-        val oppgave = modell.oppgave(modell.sisteEvent())
+        EventHandlerMetrics.time("k9tilbake", "gjennomført") {
+            val modell = behandlingProsessEventTilbakeRepository.lagre(event)
+            val oppgave = modell.oppgave(modell.sisteEvent())
 
-        oppgaveRepository.lagre(oppgave.eksternId) {
-            tellEvent(modell, oppgave)
-            oppgave
-        }
+            oppgaveRepository.lagre(oppgave.eksternId) {
+                tellEvent(modell, oppgave)
+                oppgave
+            }
 
-        if (modell.fikkEndretAksjonspunkt()) {
-            log.info("Fjerner reservasjon på oppgave ${oppgave.eksternId}")
-            reservasjonTjeneste.fjernReservasjon(oppgave)
-            val reservasjonV3 =
-                reservasjonOversetter.hentAktivReservasjonFraGammelKontekst(oppgave)
-            reservasjonV3?.let {
-                val identSomAnnullerer = if (oppgave.tilBeslutter) { event.ansvarligSaksbehandlerIdent } else { event.ansvarligBeslutterIdent ?: event.ansvarligSaksbehandlerIdent }
-                identSomAnnullerer?.let {
-                    val saksbehandlerSomAnnullerer = saksbehandlerRepository.finnSaksbehandlerMedIdent(identSomAnnullerer)!!
-                    reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(reservasjonV3.reservasjonsnøkkel, "Tilbakekrav - annullerer ", saksbehandlerSomAnnullerer.id!!)
+            if (modell.fikkEndretAksjonspunkt()) {
+                log.info("Fjerner reservasjon på oppgave ${oppgave.eksternId}")
+                reservasjonTjeneste.fjernReservasjon(oppgave)
+                val reservasjonV3 =
+                    reservasjonOversetter.hentAktivReservasjonFraGammelKontekst(oppgave)
+                reservasjonV3?.let {
+                    val identSomAnnullerer = if (oppgave.tilBeslutter) { event.ansvarligSaksbehandlerIdent } else { event.ansvarligBeslutterIdent ?: event.ansvarligSaksbehandlerIdent }
+                    identSomAnnullerer?.let {
+                        val saksbehandlerSomAnnullerer = runBlocking { saksbehandlerRepository.finnSaksbehandlerMedIdent(identSomAnnullerer)!! }
+                        reservasjonV3Tjeneste.annullerReservasjonHvisFinnes( reservasjonV3.reservasjonsnøkkel, "Tilbakekrav - annullerer ", saksbehandlerSomAnnullerer.id!!)
+                    }
                 }
             }
-        }
 
-        runBlocking {
-            for (oppgavekø in oppgaveKøRepository.hentKøIdIkkeTaHensyn()) {
-                oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, listOf(oppgave), reservasjonRepository)
+            runBlocking {
+                for (oppgavekø in oppgaveKøRepository.hentKøIdIkkeTaHensyn()) {
+                    oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, listOf(oppgave), reservasjonRepository)
+                }
+                statistikkChannel.send(true)
+                køpåvirkendeHendelseChannel.send(OppgaveHendelseMottatt(Fagsystem.K9TILBAKE, EksternOppgaveId("K9", event.eksternId.toString())))
             }
-            statistikkChannel.send(true)
         }
     }
 

@@ -1,6 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.visningoguttrekk
 
-data class OppgaveNøkkelDto private constructor(
+data class OppgaveNøkkelDto(
     val oppgaveEksternId: String,
     val oppgaveTypeEksternId: String,
     val områdeEksternId: String,

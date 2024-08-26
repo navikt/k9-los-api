@@ -1,18 +1,21 @@
 package no.nav.k9.los.aksjonspunktbehandling
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
-import no.nav.k9.los.integrasjon.datavarehus.StatistikkProducer
 import no.nav.k9.los.domene.modell.*
-import no.nav.k9.los.domene.modell.reportMetrics
 import no.nav.k9.los.domene.repository.*
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.los.integrasjon.kafka.dto.EventHendelse
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
+import no.nav.k9.los.nyoppgavestyring.ko.OppgaveHendelseMottatt
+import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
+import no.nav.k9.los.utils.OpentelemetrySpanUtil
 import org.slf4j.LoggerFactory
 
 
@@ -22,11 +25,11 @@ class K9sakEventHandler constructor(
     private val sakOgBehandlingProducer: SakOgBehandlingProducer,
     private val oppgaveKøRepository: OppgaveKøRepository,
     private val reservasjonRepository: ReservasjonRepository,
-    private val statistikkProducer: StatistikkProducer,
     private val statistikkChannel: Channel<Boolean>,
     private val statistikkRepository: StatistikkRepository,
     private val reservasjonTjeneste: ReservasjonTjeneste,
     private val k9SakTilLosAdapterTjeneste: K9SakTilLosAdapterTjeneste,
+    private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
 ) : EventTeller {
     private val log = LoggerFactory.getLogger(K9sakEventHandler::class.java)
 
@@ -40,12 +43,17 @@ class K9sakEventHandler constructor(
         FagsakYtelseType.PPN
     )
 
+    @WithSpan
     fun prosesser(
         eventInn: BehandlingProsessEventDto
     ) {
+        val t0 = System.nanoTime()
 
         val event = håndterVaskeevent(eventInn)
-        if (event == null) return
+        if (event == null) {
+            EventHandlerMetrics.observe("k9sak", "vaskeevent", t0)
+            return
+        }
 
         var skalSkippe = false
         val modell = behandlingProsessEventK9Repository.lagre(event.eksternId!!) { k9SakModell ->
@@ -61,28 +69,38 @@ class K9sakEventHandler constructor(
             k9SakModell
         }
         val oppgave = modell.oppgave(modell.sisteEvent())
-        oppgaveRepository.lagre(oppgave.eksternId) {
-            statistikkProducer.send(modell)
-            oppgave
-        }
+        oppgaveRepository.lagre(oppgave.eksternId) { oppgave }
+
         if (skalSkippe) {
+            EventHandlerMetrics.observe("k9sak", "skipper", t0)
             return
         }
         tellEvent(modell, oppgave)
 
+        var reservasjonFjernet = false
         if (modell.fikkEndretAksjonspunkt()) {
             log.info("Fjerner reservasjon på oppgave ${oppgave.eksternId}")
             reservasjonTjeneste.fjernReservasjon(oppgave)
+            reservasjonFjernet = true
         }
         modell.reportMetrics(reservasjonRepository)
         runBlocking {
             for (oppgavekø in oppgaveKøRepository.hentKøIdIkkeTaHensyn()) {
-                oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, listOf(oppgave), reservasjonRepository)
+                if (reservasjonFjernet){
+                    oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, listOf(oppgave), erOppgavenReservertSjekk = {false}) //reservasjon nettopp fjernet, trenger ikke sjekke mot repository
+                } else {
+                    oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, listOf(oppgave), reservasjonRepository)
+                }
             }
             statistikkChannel.send(true)
         }
-        
-        k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId)
+
+        OpentelemetrySpanUtil.span("k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid") { k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId) }
+
+        runBlocking {
+            køpåvirkendeHendelseChannel.send(OppgaveHendelseMottatt(Fagsystem.K9SAK, EksternOppgaveId("K9", event.eksternId.toString())))
+        }
+        EventHandlerMetrics.observe("k9sak", "gjennomført", t0)
     }
 
     fun håndterVaskeevent(event: BehandlingProsessEventDto): BehandlingProsessEventDto? {
@@ -162,7 +180,7 @@ class K9sakEventHandler constructor(
         }
 
         // teller bare først event hvis det er aksjonspunkt
-        if (k9SakModell.starterSak() && !oppgave.aksjonspunkter.erIngenAktive() && !oppgave.aksjonspunkter.påVent()) {
+        if (k9SakModell.starterSak() && !oppgave.aksjonspunkter.erIngenAktive() && !oppgave.aksjonspunkter.påVent(Fagsystem.K9SAK)) {
             beholdningOpp(oppgave)
         }
 

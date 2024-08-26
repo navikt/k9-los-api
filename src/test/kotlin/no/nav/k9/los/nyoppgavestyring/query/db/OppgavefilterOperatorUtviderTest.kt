@@ -3,8 +3,11 @@ package no.nav.k9.los.nyoppgavestyring.query.db
 import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
+import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgavefilterOperatorUtvider
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
+import no.nav.k9.los.nyoppgavestyring.query.mapping.CombineOperator
+import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
 import org.junit.jupiter.api.Test
 
 class OppgavefilterOperatorUtviderTest {
@@ -15,7 +18,8 @@ class OppgavefilterOperatorUtviderTest {
             FeltverdiOppgavefilter(null, "oppgavestatus", FeltverdiOperator.IN.name, listOf("OPPR", "AVSLU"))
         )
         assertThat(OppgavefilterOperatorUtvider.utvid(oppgavefiltre).first()).isEqualTo(
-            CombineOppgavefilter(CombineOperator.OR.kode, filtere = listOf(
+            CombineOppgavefilter(
+                CombineOperator.OR.kode, filtere = listOf(
                 FeltverdiOppgavefilter(null, "oppgavestatus", FeltverdiOperator.EQUALS.name, listOf("OPPR")),
                 FeltverdiOppgavefilter(null, "oppgavestatus", FeltverdiOperator.EQUALS.name, listOf("AVSLU"))
             ))
@@ -29,7 +33,8 @@ class OppgavefilterOperatorUtviderTest {
         )
         val resultat = OppgavefilterOperatorUtvider.utvid(oppgavefiltre)
         assertThat(resultat).containsExactly(
-            CombineOppgavefilter(CombineOperator.AND.kode, filtere = listOf(
+            CombineOppgavefilter(
+                CombineOperator.AND.kode, filtere = listOf(
                 FeltverdiOppgavefilter(null, "aksjonspunkt", FeltverdiOperator.EQUALS.name, listOf("5053")),
                 FeltverdiOppgavefilter(null, "aksjonspunkt", FeltverdiOperator.EQUALS.name, listOf("5016"))
             ))
@@ -42,7 +47,8 @@ class OppgavefilterOperatorUtviderTest {
             FeltverdiOppgavefilter(null, "oppgavestatus", FeltverdiOperator.NOT_IN.name, listOf("OPPR", "AVSLU"))
         )
         assertThat(OppgavefilterOperatorUtvider.utvid(oppgavefiltre).first()).isEqualTo(
-            CombineOppgavefilter(CombineOperator.AND.kode, filtere = listOf(
+            CombineOppgavefilter(
+                CombineOperator.AND.kode, filtere = listOf(
                 FeltverdiOppgavefilter(null, "oppgavestatus", FeltverdiOperator.NOT_EQUALS.name, listOf("OPPR")),
                 FeltverdiOppgavefilter(null, "oppgavestatus", FeltverdiOperator.NOT_EQUALS.name, listOf("AVSLU"))
             ))
@@ -52,19 +58,23 @@ class OppgavefilterOperatorUtviderTest {
     @Test
     fun `Nested oppgavefiltre med 'IN' skal utvides`() {
         val oppgavefiltre = listOf(
-            CombineOppgavefilter(CombineOperator.OR.kode, filtere = listOf(
+            CombineOppgavefilter(
+                CombineOperator.OR.kode, filtere = listOf(
                 FeltverdiOppgavefilter(null, "oppgavestatus", FeltverdiOperator.IN.name, listOf("OPPR", "AVSLU")),
                 FeltverdiOppgavefilter(null, "aksjonspunkt", FeltverdiOperator.EQUALS.name, listOf("5053", "5016"))
             ))
         )
 
         assertThat(OppgavefilterOperatorUtvider.utvid(oppgavefiltre).first()).isEqualTo(
-            CombineOppgavefilter(CombineOperator.OR.kode, filtere = listOf(
-                CombineOppgavefilter(CombineOperator.OR.kode, filtere = listOf(
+            CombineOppgavefilter(
+                CombineOperator.OR.kode, filtere = listOf(
+                CombineOppgavefilter(
+                    CombineOperator.OR.kode, filtere = listOf(
                     FeltverdiOppgavefilter(null, "oppgavestatus", FeltverdiOperator.EQUALS.name, listOf("OPPR")),
                     FeltverdiOppgavefilter(null, "oppgavestatus", FeltverdiOperator.EQUALS.name, listOf("AVSLU"))
                 )),
-                CombineOppgavefilter(CombineOperator.AND.kode, filtere = listOf(
+                CombineOppgavefilter(
+                    CombineOperator.AND.kode, filtere = listOf(
                     FeltverdiOppgavefilter(null, "aksjonspunkt", FeltverdiOperator.EQUALS.name, listOf("5053")),
                     FeltverdiOppgavefilter(null, "aksjonspunkt", FeltverdiOperator.EQUALS.name, listOf("5016"))
                 ))

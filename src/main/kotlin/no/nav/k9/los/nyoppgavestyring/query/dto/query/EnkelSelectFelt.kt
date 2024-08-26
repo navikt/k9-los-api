@@ -16,4 +16,4 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 class EnkelSelectFelt(
     val område: String?,
     val kode: String
-): SelectFelt();
+): SelectFelt()

@@ -51,6 +51,7 @@ data class Oppgave(
     val feilutbetaltBeløp: Long? = null,
     val nyeKrav: Boolean? = null,
     var fraEndringsdialog: Boolean? = false,
+    val journalførtTidspunkt: LocalDateTime? = null
 ) {
     fun avluttet(): Boolean {
         return behandlingStatus == BehandlingStatus.AVSLUTTET

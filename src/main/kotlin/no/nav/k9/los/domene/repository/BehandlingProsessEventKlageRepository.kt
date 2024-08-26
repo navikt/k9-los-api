@@ -4,9 +4,9 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import no.nav.k9.los.domene.modell.K9KlageModell
 import no.nav.k9.los.tjenester.innsikt.Databasekall
+import no.nav.k9.los.utils.LosObjectMapper
 import java.util.*
 import java.util.concurrent.atomic.LongAdder
 import javax.sql.DataSource
@@ -15,23 +15,23 @@ import javax.sql.DataSource
 class BehandlingProsessEventKlageRepository(private val dataSource: DataSource) {
 
     fun hent(uuid: UUID): K9KlageModell {
-            val json: String? = using(sessionOf(dataSource)) {
-                it.run(
-                    queryOf(
-                        "select data from behandling_prosess_events_klage where id = :id",
-                        mapOf("id" to uuid.toString())
-                    )
-                        .map { row ->
-                            row.string("data")
-                        }.asSingle
+        val json: String? = using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    "select data from behandling_prosess_events_klage where id = :id",
+                    mapOf("id" to uuid.toString())
                 )
-            }
+                    .map { row ->
+                        row.string("data")
+                    }.asSingle
+            )
+        }
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
         if (json.isNullOrEmpty()) {
             return K9KlageModell(mutableListOf())
         }
-        val modell = objectMapper().readValue(json, K9KlageModell::class.java)
+        val modell = LosObjectMapper.instance.readValue(json, K9KlageModell::class.java)
 
         return K9KlageModell(modell.eventer.sortedBy { it.eventTid }.toMutableList())
     }
@@ -52,7 +52,7 @@ class BehandlingProsessEventKlageRepository(private val dataSource: DataSource) 
         if (json.isNullOrEmpty()) {
             return K9KlageModell(mutableListOf())
         }
-        val modell = objectMapper().readValue(json, K9KlageModell::class.java)
+        val modell = LosObjectMapper.instance.readValue(json, K9KlageModell::class.java)
 
         return K9KlageModell(modell.eventer.sortedBy { it.eventTid }.toMutableList())
     }
@@ -83,14 +83,14 @@ class BehandlingProsessEventKlageRepository(private val dataSource: DataSource) 
                 )
 
                 val modell = if (!run.isNullOrEmpty()) {
-                    val modell = objectMapper().readValue(run, K9KlageModell::class.java)
+                    val modell = LosObjectMapper.instance.readValue(run, K9KlageModell::class.java)
                     f(modell.copy(eventer = modell.eventer.sortedBy { it.eventTid }.toMutableList()))
                 } else {
                     f(null)
                 }
                 sortertModell =
                     modell.copy(eventer = (modell.eventer.toSet().toList().sortedBy { it.eventTid }.toMutableList()))
-                val json = objectMapper().writeValueAsString(sortertModell)
+                val json = LosObjectMapper.instance.writeValueAsString(sortertModell)
                 tx.run(
                     queryOf(
                         """
@@ -104,26 +104,6 @@ class BehandlingProsessEventKlageRepository(private val dataSource: DataSource) 
             }
         }
         return sortertModell
-    }
-
-    fun hentAlleEventerIder(
-    ): List<UUID> {
-
-        val ider = using(sessionOf(dataSource)) {
-            it.transaction { tx ->
-                tx.run(
-                    queryOf(
-                        "select id from behandling_prosess_events_klage",
-                        mapOf()
-                    )
-                        .map { row ->
-                            UUID.fromString(row.string("id"))
-                        }.asList
-                )
-            }
-
-        }
-        return ider
     }
 
     fun hentAlleDirtyEventIder(): List<UUID> {
@@ -191,7 +171,7 @@ class BehandlingProsessEventKlageRepository(private val dataSource: DataSource) 
                     values (:id, :data :: jsonb)
                     on conflict (id) do update
                     set data = :data :: jsonb
-                 """, mapOf("id" to uuid.toString(), "data" to objectMapper().writeValueAsString(modell))
+                 """, mapOf("id" to uuid.toString(), "data" to LosObjectMapper.instance.writeValueAsString(modell))
                     ).asUpdate
                 )
             }

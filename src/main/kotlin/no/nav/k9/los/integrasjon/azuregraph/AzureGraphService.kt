@@ -12,13 +12,13 @@ import no.nav.helse.dusseldorf.ktor.metrics.Operation
 import no.nav.helse.dusseldorf.oauth2.client.AccessToken
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
-import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import no.nav.k9.los.integrasjon.rest.idToken
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.EnheterSomSkalUtelatesFraLos
 import no.nav.k9.los.tjenester.saksbehandler.IIdToken
 import no.nav.k9.los.tjenester.saksbehandler.IdToken
 import no.nav.k9.los.utils.Cache
 import no.nav.k9.los.utils.CacheObject
+import no.nav.k9.los.utils.LosObjectMapper
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.LocalDateTime
@@ -28,7 +28,7 @@ open class AzureGraphService constructor(
     accessTokenClient: AccessTokenClient
 ) : IAzureGraphService {
     private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
-    private val cache = Cache<String>()
+    private val cache = Cache<String, String>()
     val log = LoggerFactory.getLogger("AzureGraphService")!!
 
     override suspend fun hentIdentTilInnloggetBruker(): String {
@@ -59,7 +59,7 @@ open class AzureGraphService constructor(
                 håndterResultat(result, request)
             }
             return try {
-                val onPremisesSamAccountName = objectMapper().readValue<AccountName>(json).onPremisesSamAccountName
+                val onPremisesSamAccountName = LosObjectMapper.instance.readValue<AccountName>(json).onPremisesSamAccountName
                 cache.set(username, CacheObject(onPremisesSamAccountName, LocalDateTime.now().plusDays(180)))
                 return onPremisesSamAccountName
             } catch (e: Exception) {
@@ -140,9 +140,9 @@ open class AzureGraphService constructor(
             }
             return try {
                 val officeLocation = if (onBehalfOf != null) {
-                    objectMapper().readValue<OfficeLocation>(json).officeLocation
+                    LosObjectMapper.instance.readValue<OfficeLocation>(json).officeLocation
                 } else {
-                    val result = objectMapper().readValue<OfficeLocationFilterResult>(json).value.also {
+                    val result = LosObjectMapper.instance.readValue<OfficeLocationFilterResult>(json).value.also {
                         if (it.size > 1) log.warn("Flere enn 1 treff på ident")
                     }
                     result.first().officeLocation

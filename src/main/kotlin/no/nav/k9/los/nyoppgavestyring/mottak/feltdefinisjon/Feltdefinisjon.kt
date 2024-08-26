@@ -30,6 +30,7 @@ class Feltdefinisjon(
         if (visTilBruker != other.visTilBruker) return false
         if (kokriterie != other.kokriterie) return false
         if (kodeverkreferanse != other.kodeverkreferanse) return false
+        if (transientFeltutleder != other.transientFeltutleder) return false
 
         return true
     }
