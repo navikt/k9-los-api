@@ -93,15 +93,21 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
 
     @WithSpan
     fun vaskOgMarkerOppgaveForBehandlingUUID(uuid: UUID) : Long{
-        return transactionalManager.transaction { tx ->
-            var eventTeller =  0L;
-            try {
-                eventTeller = vaskOppgaveForBehandlingUUID(uuid, tx)
-            } catch (e : Exception){
-                log.warn("Historikkvask for $uuid fra punsj feilet", e)
+        try {
+            return transactionalManager.transaction { tx ->
+                val eventTeller = vaskOppgaveForBehandlingUUID(uuid, tx)
+                eventRepository.markerVasketHistorikk(uuid, tx)
+                eventTeller
             }
-            eventRepository.markerVasketHistorikk(uuid, tx)
-            eventTeller
+        } catch (e : Exception){
+            log.warn("Historikkvask for $uuid fra punsj feilet", e)
+
+            transactionalManager.transaction { tx ->
+                //marker som vasket for å unngå evig løkke
+                //manglende historikkvask må fanges opp fra WARNINGs i loggen
+                eventRepository.markerVasketHistorikk(uuid, tx)
+            }
+            return 0;
         }
     }
 
