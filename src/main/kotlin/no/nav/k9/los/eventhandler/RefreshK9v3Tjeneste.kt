@@ -1,5 +1,7 @@
 package no.nav.k9.los.eventhandler
 
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
@@ -14,7 +16,6 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.query.Avgrensning
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
-import no.nav.k9.los.utils.OpentelemetrySpanUtil
 import org.slf4j.LoggerFactory
 import java.util.*
 
@@ -66,7 +67,7 @@ class RefreshK9v3Tjeneste(
         }
 
         DetaljerMetrikker.time("RefreshK9V3", "refreshForKøer", "k9SakService") {
-            runBlocking {
+            runBlocking (Span.current().asContextElement())  {
                 k9SakService.refreshBehandlinger(behandlinger)
             }
         }
