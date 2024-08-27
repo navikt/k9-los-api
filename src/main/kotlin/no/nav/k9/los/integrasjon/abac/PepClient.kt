@@ -323,6 +323,9 @@ class PepClient(
                 }
                 //  log.info("abac result: $json \n\n $xacmlJson\n\n" + httpRequest.toString())
                 try {
+                    if (config.koinProfile == KoinProfile.PREPROD){
+                        log.info("tilgangssvar: $json")
+                    }
                     LosObjectMapper.instance.readValue<Response>(json).response[0].decision == "Permit"
                 } catch (e: Exception) {
                     log.error(
