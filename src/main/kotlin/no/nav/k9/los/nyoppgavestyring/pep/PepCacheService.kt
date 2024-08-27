@@ -85,9 +85,12 @@ class PepCacheService(
         )
 
         val saksnummer = oppgave.hentVerdi(oppgave.kildeområde, "saksnummer")
-            ?: return pep
-
-        return pep.oppdater(saksnummer)
+        return if (saksnummer != null){
+            pep.oppdater(saksnummer)
+        } else {
+            val aktører = validerMinstEn(hentAktører(oppgave))
+            pep.oppdater(aktører)
+        }
     }
 
     private suspend fun PepCache.oppdater(saksnummer: String): PepCache {
@@ -108,5 +111,52 @@ class PepCacheService(
             oppdatertPepCache
         }
     }
+
+    private suspend fun PepCache.oppdater(aktører: List<AktørId>): PepCache {
+        return coroutineScope {
+            val kode6Request = aktører.map {
+                async (Span.current().asContextElement()) {
+                    pepClient.erAktørKode6(it.aktørId)
+                }
+            }
+            val kode7EllerEgenAnsattRequest = aktører.map {
+                async (Span.current().asContextElement()) {
+                    pepClient.erSakKode7EllerEgenAnsatt(it.aktørId)
+                }
+            }
+
+            val minsteEnKode6 = kode6Request
+                .map { it.await() }
+                .reduce {a, b -> a || b}
+            val minsteEnKode7EllerEgenAnsatt = kode7EllerEgenAnsattRequest
+                .map { it.await() }
+                .reduce {a, b -> a || b}
+
+            val oppdatertPepCache = oppdater(
+                kode6 = minsteEnKode6,
+                kode7 = minsteEnKode7EllerEgenAnsatt,
+                egenAnsatt = minsteEnKode7EllerEgenAnsatt,
+            )
+            oppdatertPepCache
+        }
+    }
+
+    private fun <E, T : Collection<E>> validerMinstEn(input : T) : T {
+        if (input.isEmpty() ){
+            throw IllegalArgumentException("Forventet minst ett element, fikk ingen")
+        }
+        return input
+    }
+
+    private fun hentAktører(oppgave: Oppgave) : List<AktørId> {
+        return listOfNotNull(
+            oppgave.hentVerdi(oppgave.kildeområde, "aktorId"),
+            oppgave.hentVerdi(oppgave.kildeområde, "pleietrengendeAktorId"),
+            oppgave.hentVerdi(oppgave.kildeområde, "relatertPartAktorid")
+        ).map { AktørId(it) }
+    }
+
+
+    private data class AktørId (val aktørId: String)
 }
 
