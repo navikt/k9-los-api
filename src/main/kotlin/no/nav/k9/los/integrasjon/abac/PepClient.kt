@@ -271,7 +271,7 @@ class PepClient(
                 val tilgangTilSøker = evaluate(builderTilgangSøker)
                 if (aktørIdPleietrengende == null){
                     k9Auditlogger.betingetLogging(tilgangTilSøker, auditlogging) {
-                        loggTilgangK9Punsj(aktørIdSøker, identTilInnloggetBruker, action, tilgangTilSøker)
+                        loggTilgangK9Punsj(aktørIdSøker!!, identTilInnloggetBruker, action, tilgangTilSøker)
                     }
                     tilgangTilSøker
                 } else {
@@ -290,8 +290,8 @@ class PepClient(
                     val tilgangTilPleietrengende = evaluate(builderTilgangPleietrengende)
                     val tilgang = tilgangTilPleietrengende && tilgangTilSøker
                     k9Auditlogger.betingetLogging(tilgang, auditlogging) {
-                        loggTilgangK9Punsj(aktørIdSøker, identTilInnloggetBruker, action, tilgang)
-                        loggTilgangK9Punsj(aktørIdPleietrengende, identTilInnloggetBruker, action, tilgang)
+                        loggTilgangK9Punsj(aktørIdSøker!!, identTilInnloggetBruker, action, tilgang)
+                        loggTilgangK9Punsj(aktørIdPleietrengende!!, identTilInnloggetBruker, action, tilgang)
                     }
                     tilgang
                 }
