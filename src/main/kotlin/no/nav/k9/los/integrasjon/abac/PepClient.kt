@@ -253,25 +253,48 @@ class PepClient(
             }
 
             "k9punsj" -> {
-
-                val builder = XacmlRequestBuilder()
+                if (aktørIdSøker == null){
+                    throw IllegalArgumentException("søker må være satt")
+                }
+                val builderTilgangSøker = XacmlRequestBuilder()
                     .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
                     .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
                     .addResourceAttribute(RESOURCE_TYPE, TILGANG_SAK)
                     .addActionAttribute(ACTION_ID, action)
                     .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
                     .addAccessSubjectAttribute(SUBJECTID, identTilInnloggetBruker)
-                    .addResourceAttribute(RESOURCE_AKTØR_ID, setOfNotNull(aktørIdSøker, aktørIdPleietrengende))
+                    .addResourceAttribute(RESOURCE_AKTØR_ID, aktørIdSøker)
                 if (config.koinProfile == KoinProfile.PREPROD){
-                    val xacmlJson = gson.toJson(builder.build())
-                    log.info("Tilgangssforespørsel k9punsj: " + xacmlJson)
+                    val xacmlJson = gson.toJson(builderTilgangSøker.build())
+                    log.info("Tilgangssforespørsel k9punsj for søker: " + xacmlJson)
                 }
-                val tilgang = evaluate(builder)
-                k9Auditlogger.betingetLogging(tilgang, auditlogging) {
-                    loggTilgangK9Punsj(aktørIdSøker!!, identTilInnloggetBruker, action, tilgang)
+                val tilgangTilSøker = evaluate(builderTilgangSøker)
+                if (aktørIdPleietrengende == null){
+                    k9Auditlogger.betingetLogging(tilgangTilSøker, auditlogging) {
+                        loggTilgangK9Punsj(aktørIdSøker!!, identTilInnloggetBruker, action, tilgangTilSøker)
+                    }
+                    tilgangTilSøker
+                } else {
+                    val builderTilgangPleietrengende = XacmlRequestBuilder()
+                        .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
+                        .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
+                        .addResourceAttribute(RESOURCE_TYPE, TILGANG_SAK)
+                        .addActionAttribute(ACTION_ID, action)
+                        .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
+                        .addAccessSubjectAttribute(SUBJECTID, identTilInnloggetBruker)
+                        .addResourceAttribute(RESOURCE_AKTØR_ID, aktørIdPleietrengende)
+                    if (config.koinProfile == KoinProfile.PREPROD) {
+                        val xacmlJson = gson.toJson(builderTilgangPleietrengende.build())
+                        log.info("Tilgangssforespørsel k9punsj for pleietrengende: " + xacmlJson)
+                    }
+                    val tilgangTilPleietrengende = evaluate(builderTilgangPleietrengende)
+                    val tilgang = tilgangTilPleietrengende && tilgangTilSøker
+                    k9Auditlogger.betingetLogging(tilgang, auditlogging) {
+                        loggTilgangK9Punsj(aktørIdSøker!!, identTilInnloggetBruker, action, tilgang)
+                        loggTilgangK9Punsj(aktørIdPleietrengende!!, identTilInnloggetBruker, action, tilgang)
+                    }
+                    tilgang
                 }
-
-                tilgang
             }
 
             else -> throw NotImplementedError("Støtter kun tilgangsoppslag på k9klage, k9sak, k9tilbake og k9punsj")
