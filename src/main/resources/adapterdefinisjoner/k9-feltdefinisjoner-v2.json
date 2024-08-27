@@ -500,11 +500,20 @@
     },
     {
       "id": "oversendtKabalTidspunkt",
-      "visningsnavn": "Tidspunkt for eventuell overføring til kabal",
+      "visningsnavn": "Tidspunkt for eventuell overføring til klageinstans",
+      "listetype": false,
+      "tolkesSom": "Timestamp",
+      "visTilBruker": false,
+      "kokriterie": false
+    },
+    {
+      "id": "oversendtKlageinstansTidspunkt",
+      "visningsnavn": "Tidspunkt for eventuell overføring til klageinstans",
       "listetype": false,
       "tolkesSom": "Timestamp",
       "visTilBruker": false,
       "kokriterie": false
     }
+
   ]
 }

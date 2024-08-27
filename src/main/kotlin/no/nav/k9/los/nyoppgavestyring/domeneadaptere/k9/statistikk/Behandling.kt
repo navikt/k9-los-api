@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import no.nav.k9.statistikk.kontrakter.JsonSchemas
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -105,7 +106,7 @@ data class Behandling(
     val avsender: String? = null,
 
     @JsonProperty("oversendtKabal")
-    val oversendtKabal: LocalDate? = null,
+    val oversendtKlageinstans: LocalDateTime? = null,
 
     @JsonProperty("versjon")
     val versjon: Long? = null
@@ -128,7 +129,7 @@ data class Behandling(
             registrertDato=$registrertDato,
             vedtaksDato=$vedtaksDato,
             avsender=$avsender,
-            oversendtKabal=$oversendtKabal
+            oversendtKlageinstans=$oversendtKlageinstans
         )""".trimIndent()
     }
 
