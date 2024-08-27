@@ -80,7 +80,7 @@ spec:
     - name: APP_K9SAK_FRONTEND_URL
       value: https://k9.dev.intern.nav.no/k9/web
     - name: APP_K9PUNSJ_FRONTEND_URL
-      value: https://k9-punsj-frontend.dev.intern.nav.no
+      value: https://k9-punsj-frontend.intern.dev.nav.no
 
       # Kafka
     - name: BOOTSTRAP_SERVERS
