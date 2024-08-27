@@ -14,6 +14,7 @@ import kotlinx.coroutines.withContext
 import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.ktor.metrics.Operation
 import no.nav.k9.los.Configuration
+import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.auditlogger.K9Auditlogger
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.modell.Saksbehandler
@@ -252,17 +253,20 @@ class PepClient(
             }
 
             "k9punsj" -> {
-                val tilgang =
-                    evaluate(
-                        XacmlRequestBuilder()
-                            .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
-                            .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
-                            .addResourceAttribute(RESOURCE_TYPE, TILGANG_SAK)
-                            .addActionAttribute(ACTION_ID, action)
-                            .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
-                            .addAccessSubjectAttribute(SUBJECTID, identTilInnloggetBruker)
-                            .addResourceAttribute(RESOURCE_AKTØR_ID, setOfNotNull(aktørIdSøker, aktørIdPleietrengende))
-                    )
+
+                val builder = XacmlRequestBuilder()
+                    .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
+                    .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
+                    .addResourceAttribute(RESOURCE_TYPE, TILGANG_SAK)
+                    .addActionAttribute(ACTION_ID, action)
+                    .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
+                    .addAccessSubjectAttribute(SUBJECTID, identTilInnloggetBruker)
+                    .addResourceAttribute(RESOURCE_AKTØR_ID, setOfNotNull(aktørIdSøker, aktørIdPleietrengende))
+                if (config.koinProfile == KoinProfile.PREPROD){
+                    val xacmlJson = gson.toJson(builder.build())
+                    log.info("Tilgangssforespørsel k9punsj: " + xacmlJson)
+                }
+                val tilgang = evaluate(builder)
                 k9Auditlogger.betingetLogging(tilgang, auditlogging) {
                     loggTilgangK9Punsj(aktørIdSøker!!, identTilInnloggetBruker, action, tilgang)
                 }
