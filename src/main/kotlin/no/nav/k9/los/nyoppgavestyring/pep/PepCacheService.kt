@@ -103,6 +103,9 @@ class PepCacheService(
     }
 
     private suspend fun PepCache.oppdater(aktører: List<AktørId>): PepCache {
+        if (aktører.isEmpty()){
+            return oppdater(kode6 = false, kode7 = false, egenAnsatt = false)
+        }
         return coroutineScope {
             val kode6Request = aktører.map {
                 async(Span.current().asContextElement()) {
@@ -121,13 +124,11 @@ class PepCacheService(
             val minsteEnKode7EllerEgenAnsatt = kode7EllerEgenAnsattRequest
                 .map { it.await() }
                 .reduce { a, b -> a || b }
-
-            val oppdatertPepCache = oppdater(
+            oppdater(
                 kode6 = minsteEnKode6,
                 kode7 = minsteEnKode7EllerEgenAnsatt,
                 egenAnsatt = minsteEnKode7EllerEgenAnsatt,
             )
-            oppdatertPepCache
         }
     }
 
