@@ -53,7 +53,7 @@ class K9KlageOppgaveTilDVHMapper {
             datoForUtbetaling = null, //TODO: trengs ikke?
             totrinnsbehandling = oppgave.hentVerdi("totrinnskontroll").toBoolean(),
             helautomatiskBehandlet = oppgave.hentVerdi("helautomatiskBehandlet").toBoolean(),
-            oversendtKabal = oppgave.hentVerdi("oversendtKabalTidspunkt")?.run(LocalDateTime::parse)?.toLocalDate(),
+            oversendtKlageinstans = oppgave.hentVerdi("oversendtKlageinstansTidspunkt")?.run(LocalDateTime::parse),
             avsender = "K9klage",
             versjon = 1, //TODO: Ikke i bruk?
         )

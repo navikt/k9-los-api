@@ -22,7 +22,7 @@ class OppgavetypeRepository(
     ) {
 
     private val log = LoggerFactory.getLogger(OppgavetypeRepository::class.java)
-    private val oppgavetypeCache = Cache<String, Oppgavetyper>()
+    private val oppgavetypeCache = Cache<String, Oppgavetyper>(cacheSizeLimit = null)
 
     fun hent(område: Område, definisjonskilde: String, tx: TransactionalSession): Oppgavetyper {
         val oppgavetyper = hent(område, tx)
@@ -46,7 +46,7 @@ class OppgavetypeRepository(
 
     fun hentOppgavetype(område: Område, eksternId: String, tx: TransactionalSession): Oppgavetype {
         return hent(område, tx).oppgavetyper.find { it.eksternId == eksternId }
-            ?: throw IllegalArgumentException("Finner ikke oppgavetype: ${eksternId} for område: ${område}")
+            ?: throw IllegalArgumentException("Finner ikke oppgavetype: ${eksternId} for område: ${område.eksternId}")
     }
 
     fun hentOppgavetype(område: String, oppgavetypeId: Long, tx: TransactionalSession): Oppgavetype {

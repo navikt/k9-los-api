@@ -11,6 +11,8 @@ import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.los.AbstractPostgresTest
+import no.nav.k9.los.Configuration
+import no.nav.k9.los.aksjonspunktbehandling.K9punsjEventHandler
 import no.nav.k9.los.aksjonspunktbehandling.K9sakEventHandler
 import no.nav.k9.los.buildAndTestConfig
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
@@ -19,8 +21,11 @@ import no.nav.k9.los.integrasjon.abac.Action
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.los.integrasjon.kafka.dto.EventHendelse
+import no.nav.k9.los.integrasjon.kafka.dto.PunsjEventDto
+import no.nav.k9.los.integrasjon.kafka.dto.PunsjId
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
@@ -31,6 +36,8 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgavefilterUtvider
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
+import no.nav.k9.sak.typer.AktørId
+import no.nav.k9.sak.typer.JournalpostId
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -67,6 +74,8 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         områdeSetup.setup()
         val k9SakTilLosAdapterTjeneste = get<K9SakTilLosAdapterTjeneste>()
         k9SakTilLosAdapterTjeneste.setup()
+        val k9PunsjTilLosAdapterTjeneste = get<K9PunsjTilLosAdapterTjeneste>()
+        k9PunsjTilLosAdapterTjeneste.setup()
     }
 
     fun gjørSakKode6(saksnummer: String) {
@@ -80,6 +89,27 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         runBlocking {
             coEvery { pepClient.erSakKode6(eq(saksnummer)) } returns false
             coEvery { pepClient.erSakKode7EllerEgenAnsatt(eq(saksnummer)) } returns false
+        }
+    }
+
+    fun gjørAktørKode6(aktørId: String) {
+        runBlocking {
+            coEvery { pepClient.erAktørKode6(eq(aktørId)) } returns true
+            coEvery { pepClient.erAktørKode7EllerEgenAnsatt(eq(aktørId)) } returns false
+        }
+    }
+
+    fun gjørAktørKode7(aktørId: String) {
+        runBlocking {
+            coEvery { pepClient.erAktørKode6(eq(aktørId)) } returns false
+            coEvery { pepClient.erAktørKode7EllerEgenAnsatt(eq(aktørId)) } returns true
+        }
+    }
+
+    fun gjørAktørOrdinær(aktørId: String) {
+        runBlocking {
+            coEvery { pepClient.erAktørKode6(eq(aktørId)) } returns false
+            coEvery { pepClient.erAktørKode7EllerEgenAnsatt(eq(aktørId)) } returns false
         }
     }
 
@@ -98,6 +128,56 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         assertThat(pepCache.kode6).isFalse()
         assertThat(pepCache.kode7).isFalse()
         assertThat(pepCache.egenAnsatt).isFalse()
+        assertThat(pepCache.oppdatert).isGreaterThan(LocalDateTime.now().minusMinutes(1))
+    }
+
+    @Test
+    fun `Alle ordinære eventer på K9punsjEventHandler skal oppdatere pepcache for å alltid få med aktørendringer i sak`() {
+        val k9punsjEventHandler = get<K9punsjEventHandler>()
+        val pepRepository = get<PepCacheRepository>()
+
+        val aktørId = "1234567890123"
+        val eksternId = UUID.randomUUID().toString()
+        gjørAktørOrdinær(aktørId)
+        k9punsjEventHandler.prosesser(lagPunsjBehandlingprosessEventMedStatus(eksternId, aktørId))
+
+        val pepCache = pepRepository.hent("K9", eksternId)!!
+        assertThat(pepCache.kode6).isFalse()
+        assertThat(pepCache.kode7).isFalse()
+        assertThat(pepCache.egenAnsatt).isFalse()
+        assertThat(pepCache.oppdatert).isGreaterThan(LocalDateTime.now().minusMinutes(1))
+    }
+
+    @Test
+    fun `Eventer i K9punsjEventHandler med kode6 skal oppdatere pepcache`() {
+        val k9punsjEventHandler = get<K9punsjEventHandler>()
+        val pepRepository = get<PepCacheRepository>()
+
+        val aktørId = "1234567890123"
+        val eksternId = UUID.randomUUID().toString()
+        gjørAktørKode6(aktørId)
+        k9punsjEventHandler.prosesser(lagPunsjBehandlingprosessEventMedStatus(eksternId, aktørId))
+
+        val pepCache = pepRepository.hent("K9", eksternId)!!
+        assertThat(pepCache.kode6).isTrue()
+        assertThat(pepCache.kode7).isFalse()
+        assertThat(pepCache.egenAnsatt).isFalse()
+        assertThat(pepCache.oppdatert).isGreaterThan(LocalDateTime.now().minusMinutes(1))
+    }
+
+    @Test
+    fun `Eventer i K9punsjEventHandler med kode7 skal oppdatere pepcache`() {
+        val k9punsjEventHandler = get<K9punsjEventHandler>()
+        val pepRepository = get<PepCacheRepository>()
+
+        val aktørId = "1234567890123"
+        val eksternId = UUID.randomUUID().toString()
+        gjørAktørKode7(aktørId)
+        k9punsjEventHandler.prosesser(lagPunsjBehandlingprosessEventMedStatus(eksternId, aktørId))
+
+        val pepCache = pepRepository.hent("K9", eksternId)!!
+        assertThat(pepCache.kode6).isFalse()
+        assertThat(pepCache.kode7).isTrue()
         assertThat(pepCache.oppdatert).isGreaterThan(LocalDateTime.now().minusMinutes(1))
     }
 
@@ -278,6 +358,21 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
             }"""
 
         return objectMapper.readValue(json, BehandlingProsessEventDto::class.java)
+    }
+
+    private fun lagPunsjBehandlingprosessEventMedStatus(
+        eksternId: String,
+        aktørId: String,
+        eventTid: LocalDateTime = LocalDateTime.now(),
+    ): PunsjEventDto {
+
+        return PunsjEventDto(
+            eksternId = UUID.fromString(eksternId),
+            journalpostId = JournalpostId("1"),
+            eventTid = eventTid,
+            aktørId = AktørId(aktørId),
+            aksjonspunktKoderMedStatusListe = mutableMapOf(),
+        )
     }
 
     private fun ventPåAntallForsøk(antall: Int, beskrivelse: String = "", f: () -> Boolean) {

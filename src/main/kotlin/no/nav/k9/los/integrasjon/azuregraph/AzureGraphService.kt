@@ -28,12 +28,13 @@ open class AzureGraphService constructor(
     accessTokenClient: AccessTokenClient
 ) : IAzureGraphService {
     private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
-    private val cache = Cache<String, String>()
-    val log = LoggerFactory.getLogger("AzureGraphService")!!
+    private val identCache = Cache<String, String>(cacheSizeLimit = 1000)
+    private val officeLocationCache = Cache<String, String>(cacheSizeLimit = 1000)
+    private val log = LoggerFactory.getLogger("AzureGraphService")!!
 
     override suspend fun hentIdentTilInnloggetBruker(): String {
         val username = IdToken(coroutineContext.idToken().value).getUsername()
-        val cachedObject = cache.get(username)
+        val cachedObject = identCache.get(username)
         if (cachedObject == null) {
 
             val httpRequest = "https://graph.microsoft.com/v1.0/me?\$select=onPremisesSamAccountName"
@@ -60,7 +61,7 @@ open class AzureGraphService constructor(
             }
             return try {
                 val onPremisesSamAccountName = LosObjectMapper.instance.readValue<AccountName>(json).onPremisesSamAccountName
-                cache.set(username, CacheObject(onPremisesSamAccountName, LocalDateTime.now().plusDays(180)))
+                identCache.set(username, CacheObject(onPremisesSamAccountName, LocalDateTime.now().plusDays(180)))
                 return onPremisesSamAccountName
             } catch (e: Exception) {
                 log.error(
@@ -106,7 +107,7 @@ open class AzureGraphService constructor(
 
     private suspend fun hentEnhetForBruker(brukernavn: String, onBehalfOf: IIdToken? = null): String {
         val key = brukernavn + "_office_location"
-        val cachedOfficeLocation = cache.get(key)
+        val cachedOfficeLocation = officeLocationCache.get(key)
         if (cachedOfficeLocation == null) {
             val accessToken = accessToken(onBehalfOf)
 
@@ -147,7 +148,7 @@ open class AzureGraphService constructor(
                     }
                     result.first().officeLocation
                 }
-                cache.set(key, CacheObject(officeLocation, LocalDateTime.now().plusDays(180)))
+                officeLocationCache.set(key, CacheObject(officeLocation, LocalDateTime.now().plusDays(180)))
                 return officeLocation
             } catch (e: Exception) {
                 log.error(

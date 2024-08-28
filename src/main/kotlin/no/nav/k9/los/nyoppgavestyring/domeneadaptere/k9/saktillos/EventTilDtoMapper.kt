@@ -6,6 +6,7 @@ import no.nav.k9.kodeverk.behandling.BehandlingÅrsakType
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.*
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
+import no.nav.k9.los.integrasjon.kafka.dto.EventHendelse
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
@@ -227,7 +228,15 @@ class EventTilDtoMapper {
                         aksjonspunktTilstandDto.aksjonspunktKode == AksjonspunktKodeDefinisjon.AUTOMATISK_MARKERING_AV_UTENLANDSSAK_KODE
                             || aksjonspunktTilstandDto.aksjonspunktKode == AksjonspunktKodeDefinisjon.MANUELL_MARKERING_AV_UTLAND_SAKSTYPE_KODE
                     }.toString()
-            )
+            ),
+            if (forrigeOppgave?.hentVerdi("hastesak") == "true" && event.eventHendelse != EventHendelse.HASTESAK_MERKNAD_FJERNET || event.eventHendelse == EventHendelse.HASTESAK_MERKNAD_NY ) {
+                OppgaveFeltverdiDto(
+                    nøkkel = "hastesak",
+                    verdi = "true"
+                )
+            } else {
+                null //ikke hastesak
+            }
         ).filterNotNull().toMutableList()
 
         internal fun utledVentetype(

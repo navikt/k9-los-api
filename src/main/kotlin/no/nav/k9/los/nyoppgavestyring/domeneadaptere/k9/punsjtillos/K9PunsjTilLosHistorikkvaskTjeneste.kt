@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
@@ -85,22 +86,29 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
     }
 
     private fun spillAvBehandlingProsessEventer(behandlingsIder: List<UUID>): Long {
-        var eventTeller = 0L
-        var behandlingTeller = 0L
-        val antallBehandlingerIBatch = behandlingsIder.size
+        return behandlingsIder
+            .map { uuid -> vaskOgMarkerOppgaveForBehandlingUUID(uuid) }
+            .sum()
+    }
 
-        behandlingsIder.forEach { uuid ->
-            transactionalManager.transaction { tx ->
-                eventTeller += vaskOppgaveForBehandlingUUID(uuid, tx)
+    @WithSpan
+    fun vaskOgMarkerOppgaveForBehandlingUUID(uuid: UUID) : Long{
+        try {
+            return transactionalManager.transaction { tx ->
+                val eventTeller = vaskOppgaveForBehandlingUUID(uuid, tx)
                 eventRepository.markerVasketHistorikk(uuid, tx)
-                behandlingTeller++
-                loggFremgangForHver100(
-                    behandlingTeller,
-                    "Vasket $behandlingTeller behandlinger av $antallBehandlingerIBatch i gjeldende iterasjon"
-                )
+                eventTeller
             }
+        } catch (e : Exception){
+            log.warn("Historikkvask for $uuid fra punsj feilet", e)
+
+            transactionalManager.transaction { tx ->
+                //marker som vasket for å unngå evig løkke
+                //manglende historikkvask må fanges opp fra WARNINGs i loggen
+                eventRepository.markerVasketHistorikk(uuid, tx)
+            }
+            return 0;
         }
-        return eventTeller
     }
 
     fun vaskOppgaveForBehandlingUUID(uuid: UUID): Long {
@@ -153,12 +161,6 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
         }
         log.info("Vasket $eventTeller hendelser for k9punsj-oppgave med eksternId: $uuid")
         return eventTeller
-    }
-
-    private fun loggFremgangForHver100(teller: Long, tekst: String) {
-        if (teller.mod(100) == 0) {
-            log.info(tekst)
-        }
     }
 
 }

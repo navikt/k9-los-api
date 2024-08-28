@@ -14,6 +14,7 @@ import kotlinx.coroutines.withContext
 import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.ktor.metrics.Operation
 import no.nav.k9.los.Configuration
+import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.auditlogger.K9Auditlogger
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.modell.Saksbehandler
@@ -22,6 +23,7 @@ import no.nav.k9.los.integrasjon.rest.NavHeaders
 import no.nav.k9.los.utils.Cache
 import no.nav.k9.los.utils.CacheObject
 import no.nav.k9.los.utils.LosObjectMapper
+import no.nav.k9.sak.typer.AktørId
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -42,7 +44,7 @@ class PepClient(
 
     private val url = config.abacEndpointUrl
     private val log: Logger = LoggerFactory.getLogger(PepClient::class.java)
-    private val cache = Cache<String, Boolean>()
+    private val cache = Cache<String, Boolean>(cacheSizeLimit = 1000)
 
     override suspend fun erOppgaveStyrer(): Boolean {
         val requestBuilder = XacmlRequestBuilder()
@@ -252,17 +254,20 @@ class PepClient(
             }
 
             "k9punsj" -> {
-                val tilgang =
-                    evaluate(
-                        XacmlRequestBuilder()
-                            .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
-                            .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
-                            .addResourceAttribute(RESOURCE_TYPE, TILGANG_SAK)
-                            .addActionAttribute(ACTION_ID, action)
-                            .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
-                            .addAccessSubjectAttribute(SUBJECTID, identTilInnloggetBruker)
-                            .addResourceAttribute(RESOURCE_AKTØR_ID, setOfNotNull(aktørIdSøker, aktørIdPleietrengende))
-                    )
+
+                val builder = XacmlRequestBuilder()
+                    .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
+                    .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
+                    .addResourceAttribute(RESOURCE_TYPE, TILGANG_SAK)
+                    .addActionAttribute(ACTION_ID, action)
+                    .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
+                    .addAccessSubjectAttribute(SUBJECTID, identTilInnloggetBruker)
+                    .addResourceAttribute(RESOURCE_AKTØR_ID, setOfNotNull(aktørIdSøker, aktørIdPleietrengende))
+                if (config.koinProfile == KoinProfile.PREPROD){
+                    val xacmlJson = gson.toJson(builder.build())
+                    log.info("Tilgangssforespørsel k9punsj: " + xacmlJson)
+                }
+                val tilgang = evaluate(builder)
                 k9Auditlogger.betingetLogging(tilgang, auditlogging) {
                     loggTilgangK9Punsj(aktørIdSøker!!, identTilInnloggetBruker, action, tilgang)
                 }
@@ -319,6 +324,9 @@ class PepClient(
                 }
                 //  log.info("abac result: $json \n\n $xacmlJson\n\n" + httpRequest.toString())
                 try {
+                    if (config.koinProfile == KoinProfile.PREPROD){
+                        log.info("tilgangssvar: $json")
+                    }
                     LosObjectMapper.instance.readValue<Response>(json).response[0].decision == "Permit"
                 } catch (e: Exception) {
                     log.error(
@@ -327,7 +335,9 @@ class PepClient(
                     false
                 }
             }
-            cache.set(xacmlJson, CacheObject(result, LocalDateTime.now().plusHours(1)))
+            val now = LocalDateTime.now()
+            cache.removeExpiredObjects(now)
+            cache.set(xacmlJson, CacheObject(result, now.plusHours(1)))
             return result
         } else {
             return get.value

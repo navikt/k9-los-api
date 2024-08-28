@@ -103,7 +103,9 @@ class PdlService constructor(
         try {
             val readValue = LosObjectMapper.instance.readValue<PersonPdl>(json!!)
             val resultat = PersonPdlResponse(false, readValue)
-            aktørIdTilPersonCache.set(cacheKey, CacheObject(resultat, LocalDateTime.now().plus(pdlCacheVarighet)))
+            val now = LocalDateTime.now()
+            aktørIdTilPersonCache.removeExpiredObjects(now)
+            aktørIdTilPersonCache.set(cacheKey, CacheObject(resultat, now.plus(pdlCacheVarighet)))
             return resultat
         } catch (e: Exception) {
             try {
@@ -178,7 +180,9 @@ class PdlService constructor(
         }
         try {
             val resultat = PdlResponse(false, LosObjectMapper.instance.readValue<AktøridPdl>(json!!))
-            fnrTilAktørIdCache.set(cacheKey, CacheObject(resultat, LocalDateTime.now().plus(pdlCacheVarighet)))
+            val now = LocalDateTime.now()
+            fnrTilAktørIdCache.removeExpiredObjects(now)
+            fnrTilAktørIdCache.set(cacheKey, CacheObject(resultat, now.plus(pdlCacheVarighet)))
             return resultat
         } catch (e: Exception) {
             try {

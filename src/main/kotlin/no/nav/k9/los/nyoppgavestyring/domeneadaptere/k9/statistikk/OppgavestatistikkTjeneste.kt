@@ -1,5 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk
 
+import io.opentelemetry.instrumentation.annotations.SpanAttribute
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
@@ -71,10 +73,7 @@ class OppgavestatistikkTjeneste(
         val oppgaverSomIkkeErSendt = statistikkRepository.hentOppgaverSomIkkeErSendt()
         log.info("Fant ${oppgaverSomIkkeErSendt.size} oppgaveversjoner som ikke er sendt til DVH")
         oppgaverSomIkkeErSendt.forEachIndexed { index, oppgaveId ->
-            transactionalManager.transaction { tx ->
-                sendStatistikk(oppgaveId, tx)
-                statistikkRepository.kvitterSending(oppgaveId)
-            }
+            sendStatistikk(oppgaveId)
             if (index.mod(100) == 0) {
                 log.info("Sendt $index eventer")
             }
@@ -85,6 +84,14 @@ class OppgavestatistikkTjeneste(
         log.info("Sendt ${oppgaverSomIkkeErSendt.size} oppgaversjoner. Totalt tidsbruk: ${kjøretid} ms")
         if (oppgaverSomIkkeErSendt.isNotEmpty()) {
             log.info("Gjennomsnitt tidsbruk: ${kjøretid / oppgaverSomIkkeErSendt.size} ms pr oppgaveversjon")
+        }
+    }
+
+    @WithSpan
+    private fun sendStatistikk(@SpanAttribute oppgaveId : Long){
+        transactionalManager.transaction { tx ->
+            sendStatistikk(oppgaveId, tx)
+            statistikkRepository.kvitterSending(oppgaveId)
         }
     }
 

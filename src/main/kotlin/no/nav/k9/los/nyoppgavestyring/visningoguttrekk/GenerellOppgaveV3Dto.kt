@@ -24,7 +24,7 @@ data class GenerellOppgaveV3Dto(
         behandlingstype = BehandlingType.fraKode(oppgaveV3.hentVerdi("behandlingTypekode")!!),
         saksnummer = oppgaveV3.hentVerdi("saksnummer"),
         oppgaveNøkkel = OppgaveNøkkelDto(oppgaveV3),
-        journalpostId = "",
+        journalpostId = oppgaveV3.hentVerdi("journalpostId"),
         oppgavestatus = Oppgavestatus.fraKode(oppgaveV3.status),
         opprettetTidspunkt = oppgaveV3.hentVerdi("registrertDato")?.let { LocalDateTime.parse(it) },
         oppgavebehandlingsUrl = oppgaveV3.getOppgaveBehandlingsurl()

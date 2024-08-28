@@ -16,9 +16,9 @@ class K9SakBehandlingOppfrisketCache (private val repo : K9SakBehandlingOppfrisk
     private var sistSlettetGamleTidspunkt = LocalDateTime.MIN
 
     private val memoryCache by lazy { //lazy for å unngå databasekall under oppstart av applikasjonen
-        val cache = Cache<UUID, Boolean>(cacheSize = 10000)
+        val cache = Cache<UUID, Boolean>(cacheSizeLimit = null)
         val dbCache = repo.hentAlleOppfrisketEtter(LocalDateTime.now() - cacheObjectDuration)
-        for (entry in dbCache) {
+        for (entry in dbCache.sortedBy { it.tidspunkt }) {
             cache.set(entry.behandlingUuid, CacheObject(true, entry.tidspunkt + cacheObjectDuration))
         }
         log.info("Opprettet K9SakBehandlingOppfrisketCache med ${dbCache.size} elementer fra database")
@@ -27,7 +27,8 @@ class K9SakBehandlingOppfrisketCache (private val repo : K9SakBehandlingOppfrisk
     fun registrerBehandlingerOppfrisket(behandlinger: Collection<UUID>) {
         val nå = LocalDateTime.now()
         repo.registrerOppfrisket(behandlinger.map { K9sakBehandlingOppfrisketTidspunkt(it, nå) })
-        behandlinger.forEach {memoryCache.set(it, CacheObject(true, nå + cacheObjectDuration)) }
+        memoryCache.removeExpiredObjects(nå)
+        behandlinger.forEach { memoryCache.set(it, CacheObject(true, nå + cacheObjectDuration)) }
         log.info("La til ${behandlinger.size} behandlinger i cache")
 
         if (nå.isAfter(sistSlettetGamleTidspunkt + hyppighetSletting)){

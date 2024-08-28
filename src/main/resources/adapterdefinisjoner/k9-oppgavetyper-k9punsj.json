@@ -4,7 +4,7 @@
   "oppgavetyper": [
     {
       "id": "k9punsj",
-      "oppgavebehandlingsUrlTemplate": "",
+      "oppgavebehandlingsUrlTemplate": "{baseUrl}/journalpost/{journalpostId}/",
       "oppgavefelter": [
         {
           "id": "aktorId",
@@ -38,6 +38,11 @@
         },
         {
           "id": "journalfortTidspunkt",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "journalpostId",
           "visPåOppgave": true,
           "påkrevd": false
         },

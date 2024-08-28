@@ -1,5 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.pep
 
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -17,18 +19,8 @@ class PepCacheService(
     private val pepClient: IPepClient,
     private val pepCacheRepository: PepCacheRepository,
     private val oppgaveRepository: OppgaveRepository,
-    private val transactionalManager: TransactionalManager,
+    private val transactionalManager: TransactionalManager
 ) {
-
-    suspend fun hentOgOppdaterVedBehov(tx: TransactionalSession, oppgave: Oppgave, maksimalAlder: Duration = Duration.ofMinutes(30)): PepCache {
-        return pepCacheRepository.hent(kildeområde = oppgave.kildeområde, eksternId = oppgave.eksternId, tx).let { pepCache ->
-            if (pepCache?.erGyldig(maksimalAlder) != true) {
-                oppdater(tx, oppgave)
-            } else {
-                pepCache
-            }
-        }
-    }
 
     @WithSpan
     fun oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn(gyldighet: Duration = Duration.ofHours(23)) {
@@ -83,17 +75,20 @@ class PepCacheService(
         )
 
         val saksnummer = oppgave.hentVerdi(oppgave.kildeområde, "saksnummer")
-            ?: return pep
-
-        return pep.oppdater(saksnummer)
+        return if (saksnummer != null) {
+            pep.oppdater(saksnummer)
+        } else {
+            val aktører = hentAktører(oppgave)
+            pep.oppdater(aktører)
+        }
     }
 
     private suspend fun PepCache.oppdater(saksnummer: String): PepCache {
         return coroutineScope {
-            val kode6Request = async {
+            val kode6Request = async(Span.current().asContextElement()) {
                 pepClient.erSakKode6(fagsakNummer = saksnummer)
             }
-            val kode7EllerEgenAnsattRequest = async {
+            val kode7EllerEgenAnsattRequest = async(Span.current().asContextElement()) {
                 pepClient.erSakKode7EllerEgenAnsatt(fagsakNummer = saksnummer)
             }
             val kode7EllerEgenAnsatt = kode7EllerEgenAnsattRequest.await()
@@ -106,5 +101,46 @@ class PepCacheService(
             oppdatertPepCache
         }
     }
+
+    private suspend fun PepCache.oppdater(aktører: List<AktørId>): PepCache {
+        if (aktører.isEmpty()){
+            return oppdater(kode6 = false, kode7 = false, egenAnsatt = false)
+        }
+        return coroutineScope {
+            val kode6Request = aktører.map {
+                async(Span.current().asContextElement()) {
+                    pepClient.erAktørKode6(it.aktørId)
+                }
+            }
+            val kode7EllerEgenAnsattRequest = aktører.map {
+                async(Span.current().asContextElement()) {
+                    pepClient.erAktørKode7EllerEgenAnsatt(it.aktørId)
+                }
+            }
+
+            val minsteEnKode6 = kode6Request
+                .map { it.await() }
+                .reduce { a, b -> a || b }
+            val minsteEnKode7EllerEgenAnsatt = kode7EllerEgenAnsattRequest
+                .map { it.await() }
+                .reduce { a, b -> a || b }
+            oppdater(
+                kode6 = minsteEnKode6,
+                kode7 = minsteEnKode7EllerEgenAnsatt,
+                egenAnsatt = minsteEnKode7EllerEgenAnsatt,
+            )
+        }
+    }
+
+    private fun hentAktører(oppgave: Oppgave): List<AktørId> {
+        return listOfNotNull(
+            oppgave.hentVerdi(oppgave.kildeområde, "aktorId"),
+            oppgave.hentVerdi(oppgave.kildeområde, "pleietrengendeAktorId"),
+            oppgave.hentVerdi(oppgave.kildeområde, "relatertPartAktorid")
+        ).map { AktørId(it) }
+    }
+
+    private data class AktørId(val aktørId: String)
+
 }
 

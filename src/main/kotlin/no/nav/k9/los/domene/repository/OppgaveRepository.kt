@@ -53,7 +53,7 @@ class OppgaveRepository(
         return try {
             LosObjectMapper.instance.readValue(json!!, Oppgave::class.java)
         } catch (e: NullPointerException) {
-            log.error("feiler for denne json $json")
+            log.error("Feiler for oppgave ${uuid} med denne json: $json", e)
             throw e
         }
     }
