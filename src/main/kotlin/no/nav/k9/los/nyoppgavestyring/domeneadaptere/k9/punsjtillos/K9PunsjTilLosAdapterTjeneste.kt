@@ -2,6 +2,8 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import io.opentelemetry.instrumentation.annotations.SpanAttribute
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
@@ -70,6 +72,7 @@ class K9PunsjTilLosAdapterTjeneste(
         }
     }
 
+    @WithSpan
     private fun spillAvBehandlingProsessEventer() {
         log.info("Starter avspilling av BehandlingProsessEventer")
         val tidKjøringStartet = System.currentTimeMillis()
@@ -94,7 +97,8 @@ class K9PunsjTilLosAdapterTjeneste(
         log.info("Avspilling av BehandlingProsessEventer ferdig")
     }
 
-    fun oppdaterOppgaveForEksternId(uuid: UUID, eventTellerInn: Long = 0): Long {
+    @WithSpan
+    fun oppdaterOppgaveForEksternId(@SpanAttribute uuid: UUID, eventTellerInn: Long = 0): Long {
         var eventTeller = eventTellerInn
         var forrigeOppgaveversjon: OppgaveV3? = null
 
@@ -142,6 +146,7 @@ class K9PunsjTilLosAdapterTjeneste(
         }
     }
 
+    @WithSpan
     fun setup(): K9PunsjTilLosAdapterTjeneste {
         val objectMapper = jacksonObjectMapper()
         opprettOppgavetype(objectMapper)
