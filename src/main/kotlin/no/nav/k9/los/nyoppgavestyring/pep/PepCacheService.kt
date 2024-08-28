@@ -23,21 +23,6 @@ class PepCacheService(
     private val transactionalManager: TransactionalManager
 ) {
 
-    suspend fun hentOgOppdaterVedBehov(
-        tx: TransactionalSession,
-        oppgave: Oppgave,
-        maksimalAlder: Duration = Duration.ofMinutes(30)
-    ): PepCache {
-        return pepCacheRepository.hent(kildeområde = oppgave.kildeområde, eksternId = oppgave.eksternId, tx)
-            .let { pepCache ->
-                if (pepCache?.erGyldig(maksimalAlder) != true) {
-                    oppdater(tx, oppgave)
-                } else {
-                    pepCache
-                }
-            }
-    }
-
     @WithSpan
     fun oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn(gyldighet: Duration = Duration.ofHours(23)) {
         oppdaterCacheForOppgaverMedStatusEldreEnn(gyldighet, setOf(Oppgavestatus.VENTER, Oppgavestatus.AAPEN))
