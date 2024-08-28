@@ -72,6 +72,8 @@ import javax.sql.DataSource
 
 fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClientLocal()): Module = module {
 
+    val config = mockk<Configuration>()
+
     single(named("oppgaveKøOppdatert")) {
         Channel<UUID>(Channel.UNLIMITED)
     }
@@ -152,7 +154,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             saksbehandlerRepository = get()
         )
     }
-    val config = mockk<Configuration>()
+
     single {
         config
     }

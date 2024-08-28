@@ -7,6 +7,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
+import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
@@ -19,17 +20,22 @@ class PepCacheService(
     private val pepClient: IPepClient,
     private val pepCacheRepository: PepCacheRepository,
     private val oppgaveRepository: OppgaveRepository,
-    private val transactionalManager: TransactionalManager,
+    private val transactionalManager: TransactionalManager
 ) {
 
-    suspend fun hentOgOppdaterVedBehov(tx: TransactionalSession, oppgave: Oppgave, maksimalAlder: Duration = Duration.ofMinutes(30)): PepCache {
-        return pepCacheRepository.hent(kildeområde = oppgave.kildeområde, eksternId = oppgave.eksternId, tx).let { pepCache ->
-            if (pepCache?.erGyldig(maksimalAlder) != true) {
-                oppdater(tx, oppgave)
-            } else {
-                pepCache
+    suspend fun hentOgOppdaterVedBehov(
+        tx: TransactionalSession,
+        oppgave: Oppgave,
+        maksimalAlder: Duration = Duration.ofMinutes(30)
+    ): PepCache {
+        return pepCacheRepository.hent(kildeområde = oppgave.kildeområde, eksternId = oppgave.eksternId, tx)
+            .let { pepCache ->
+                if (pepCache?.erGyldig(maksimalAlder) != true) {
+                    oppdater(tx, oppgave)
+                } else {
+                    pepCache
+                }
             }
-        }
     }
 
     @WithSpan
@@ -85,7 +91,7 @@ class PepCacheService(
         )
 
         val saksnummer = oppgave.hentVerdi(oppgave.kildeområde, "saksnummer")
-        return if (saksnummer != null){
+        return if (saksnummer != null) {
             pep.oppdater(saksnummer)
         } else {
             val aktører = validerMinstEn(hentAktører(oppgave))
@@ -95,10 +101,10 @@ class PepCacheService(
 
     private suspend fun PepCache.oppdater(saksnummer: String): PepCache {
         return coroutineScope {
-            val kode6Request = async (Span.current().asContextElement()) {
+            val kode6Request = async(Span.current().asContextElement()) {
                 pepClient.erSakKode6(fagsakNummer = saksnummer)
             }
-            val kode7EllerEgenAnsattRequest = async (Span.current().asContextElement()) {
+            val kode7EllerEgenAnsattRequest = async(Span.current().asContextElement()) {
                 pepClient.erSakKode7EllerEgenAnsatt(fagsakNummer = saksnummer)
             }
             val kode7EllerEgenAnsatt = kode7EllerEgenAnsattRequest.await()
@@ -115,22 +121,22 @@ class PepCacheService(
     private suspend fun PepCache.oppdater(aktører: List<AktørId>): PepCache {
         return coroutineScope {
             val kode6Request = aktører.map {
-                async (Span.current().asContextElement()) {
+                async(Span.current().asContextElement()) {
                     pepClient.erAktørKode6(it.aktørId)
                 }
             }
             val kode7EllerEgenAnsattRequest = aktører.map {
-                async (Span.current().asContextElement()) {
-                    pepClient.erSakKode7EllerEgenAnsatt(it.aktørId)
+                async(Span.current().asContextElement()) {
+                    pepClient.erAktørKode7EllerEgenAnsatt(it.aktørId)
                 }
             }
 
             val minsteEnKode6 = kode6Request
                 .map { it.await() }
-                .reduce {a, b -> a || b}
+                .reduce { a, b -> a || b }
             val minsteEnKode7EllerEgenAnsatt = kode7EllerEgenAnsattRequest
                 .map { it.await() }
-                .reduce {a, b -> a || b}
+                .reduce { a, b -> a || b }
 
             val oppdatertPepCache = oppdater(
                 kode6 = minsteEnKode6,
@@ -141,14 +147,14 @@ class PepCacheService(
         }
     }
 
-    private fun <E, T : Collection<E>> validerMinstEn(input : T) : T {
-        if (input.isEmpty() ){
+    private fun <E, T : Collection<E>> validerMinstEn(input: T): T {
+        if (input.isEmpty()) {
             throw IllegalArgumentException("Forventet minst ett element, fikk ingen")
         }
         return input
     }
 
-    private fun hentAktører(oppgave: Oppgave) : List<AktørId> {
+    private fun hentAktører(oppgave: Oppgave): List<AktørId> {
         return listOfNotNull(
             oppgave.hentVerdi(oppgave.kildeområde, "aktorId"),
             oppgave.hentVerdi(oppgave.kildeområde, "pleietrengendeAktorId"),
@@ -156,7 +162,7 @@ class PepCacheService(
         ).map { AktørId(it) }
     }
 
+    private data class AktørId(val aktørId: String)
 
-    private data class AktørId (val aktørId: String)
 }
 
