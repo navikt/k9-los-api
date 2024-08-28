@@ -4,6 +4,7 @@ import no.nav.k9.klage.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.klage.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
+import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktType
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.Venteårsak
@@ -229,17 +230,23 @@ class EventTilDtoMapper {
             event: KlagebehandlingProsessHendelse,
             oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
         ) {
+
+            val oversendtKlageinstansKabalEllerBehandletIK9 = event.aksjonspunkttilstander
+                .firstOrNull { apt -> apt.aksjonspunktKode == AksjonspunktDefinisjon.AUTO_OVERFØRT_NK.kode } ?:
             event.aksjonspunkttilstander
-                .filter { apt -> apt.venteårsak == Venteårsak.OVERSENDT_KABAL }
-                .sortedBy { it.opprettetTidspunkt }
-                .firstOrNull()?.let {
-                    oppgaveFeltverdiDtos.add(
-                        OppgaveFeltverdiDto(
-                            nøkkel = "oversendtKabalTidspunkt",
-                            verdi = it.opprettetTidspunkt?.toString()
-                        )
-                    )
+                .firstOrNull { apt ->
+                    apt.aksjonspunktKode == AksjonspunktDefinisjon.VURDERING_AV_FORMKRAV_KLAGE_KA.kode &&
+                            setOf(AksjonspunktStatus.OPPRETTET, AksjonspunktStatus.UTFØRT).contains(apt.status)
                 }
+
+            (oversendtKlageinstansKabalEllerBehandletIK9)?.let {
+                oppgaveFeltverdiDtos.add(
+                    OppgaveFeltverdiDto(
+                        nøkkel = "oversendtKlageinstansTidspunkt",
+                        verdi = it.opprettetTidspunkt?.toString()
+                    )
+                )
+            }
         }
 
         private fun mapEnkeltverdier(

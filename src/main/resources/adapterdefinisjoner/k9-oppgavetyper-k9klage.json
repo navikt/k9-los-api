@@ -148,7 +148,7 @@
           "påkrevd": false
         },
         {
-          "id": "oversendtKabalTidspunkt",
+          "id": "oversendtKlageinstansTidspunkt",
           "visPåOppgave": false,
           "påkrevd": false
         }
