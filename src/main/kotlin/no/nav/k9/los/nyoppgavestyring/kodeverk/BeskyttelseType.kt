@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 
 enum class BeskyttelseType(val kode: String, val beskrivelse: String) {
     KODE7("KODE7", "Kode 7"),
-    ORDINÆR("ORDINÆR", "Vanlig");
+    ORDINÆR("ORDINÆR", "Ikke beskyttet");
 
     companion object {
         @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
