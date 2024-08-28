@@ -54,6 +54,7 @@ class K9PunsjTilLosAdapterTjeneste(
             spillAvBehandlingProsessEventer()
         }
     }
+
     private fun schedulerAvspilling() {
         log.info("Schedulerer avspilling av BehandlingProsessEventer til å kjøre 3m fra nå, hver time")
         timer(
@@ -109,8 +110,7 @@ class K9PunsjTilLosAdapterTjeneste(
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
 
                 if (oppgave != null) {
-                    // TODO: Kallet under fungerer ikke, siden den er avhengig av feltverdi 'saksnummer'. Vurder om skal endres eller slettes.
-                    // pepCacheService.oppdater(tx, oppgave.kildeområde, oppgave.eksternId)
+                    pepCacheService.oppdater(tx, oppgave.kildeområde, oppgave.eksternId)
 
                     annullerReservasjonHvisPåVentEllerAvsluttet(oppgave, tx)
                     // Flere tilfeller som skal håndteres her?

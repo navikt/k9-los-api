@@ -46,7 +46,7 @@ class OppgavetypeRepository(
 
     fun hentOppgavetype(område: Område, eksternId: String, tx: TransactionalSession): Oppgavetype {
         return hent(område, tx).oppgavetyper.find { it.eksternId == eksternId }
-            ?: throw IllegalArgumentException("Finner ikke oppgavetype: ${eksternId} for område: ${område}")
+            ?: throw IllegalArgumentException("Finner ikke oppgavetype: ${eksternId} for område: ${område.eksternId}")
     }
 
     fun hentOppgavetype(område: String, oppgavetypeId: Long, tx: TransactionalSession): Oppgavetype {
