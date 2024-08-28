@@ -78,7 +78,7 @@ class PepCacheService(
         return if (saksnummer != null) {
             pep.oppdater(saksnummer)
         } else {
-            val aktører = validerMinstEn(hentAktører(oppgave))
+            val aktører = hentAktører(oppgave)
             pep.oppdater(aktører)
         }
     }
@@ -129,13 +129,6 @@ class PepCacheService(
             )
             oppdatertPepCache
         }
-    }
-
-    private fun <E, T : Collection<E>> validerMinstEn(input: T): T {
-        if (input.isEmpty()) {
-            throw IllegalArgumentException("Forventet minst ett element, fikk ingen")
-        }
-        return input
     }
 
     private fun hentAktører(oppgave: Oppgave): List<AktørId> {
