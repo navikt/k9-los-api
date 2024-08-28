@@ -103,7 +103,6 @@ class BeslutterSkalIkkePlukkeEgenSakTest : AbstractK9LosIntegrationTest() {
             oppgaveKø.leggOppgaveTilEllerFjernFraKø(
                 oppgave,
                 erOppgavenReservertSjekk = {false},
-                merknader = oppgaveRepositoryV2.hentMerknader(oppgave.eksternId.toString())
             )
 
             oppgaveKøRepository.lagreIkkeTaHensyn(oppgaveKø.id) {

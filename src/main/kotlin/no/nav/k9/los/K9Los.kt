@@ -70,7 +70,6 @@ import no.nav.k9.los.tjenester.kodeverk.KodeverkApis
 import no.nav.k9.los.tjenester.konfig.KonfigApis
 import no.nav.k9.los.tjenester.mock.localSetup
 import no.nav.k9.los.tjenester.saksbehandler.NavAnsattApis
-import no.nav.k9.los.tjenester.saksbehandler.merknad.MerknadApi
 import no.nav.k9.los.tjenester.saksbehandler.nokkeltall.SaksbehandlerNøkkeltallApis
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveApis
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.SaksbehandlerOppgavekoApis
@@ -369,7 +368,6 @@ private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
         route("saksbehandler") {
             route("oppgaver") {
                 OppgaveApis()
-                MerknadApi()
             }
 
             SaksbehandlerOppgavekoApis()

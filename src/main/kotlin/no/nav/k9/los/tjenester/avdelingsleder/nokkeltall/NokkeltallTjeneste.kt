@@ -100,13 +100,6 @@ class NokkeltallTjeneste constructor(
         }
     }
 
-    suspend fun hentHastesaker(): String {
-        return "saksnummer, ytelsetype, behandling_opprettet\n" +
-        oppgaveRepository.hentHasteoppgaver().map {
-            it.fagsakSaksnummer + ", " + it.fagsakYtelseType + ", " + it.behandlingOpprettet
-        }.joinToString("\n")
-    }
-
     fun hentFerdigstilteOppgaverHistorikk(
         vararg historikkType: VelgbartHistorikkfelt,
         antallDagerHistorikk: Int = StatistikkRepository.SISTE_8_UKER_I_DAGER

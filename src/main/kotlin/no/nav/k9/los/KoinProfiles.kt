@@ -74,7 +74,6 @@ import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.los.tjenester.driftsmeldinger.DriftsmeldingTjeneste
 import no.nav.k9.los.tjenester.kodeverk.HentKodeverkTjeneste
-import no.nav.k9.los.tjenester.saksbehandler.merknad.MerknadTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.*
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.SakslisteTjeneste
 import no.nav.k9.los.tjenester.sse.RefreshKlienter.initializeRefreshKlienter
@@ -360,18 +359,6 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single { OppgaveKøOppdaterer(get(), get(), get()) }
-
-    single {
-        MerknadTjeneste(
-            oppgaveRepositoryV2 = get(),
-            oppgaveKøOppdaterer = get(),
-            azureGraphService = get(),
-            migreringstjeneste = get(),
-            k9SakTilLosAdapterTjeneste = get(),
-            behandlingProsessEventK9Repository = get(),
-            tm = get()
-        )
-    }
 
     single {
         HealthService(

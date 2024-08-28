@@ -187,8 +187,7 @@ class OppgaveKøRepository(
                     if (oppgaveKø.kode6 == oppgave.kode6) {
                         val oppgavekøHarEndring = oppgaveKø.leggOppgaveTilEllerFjernFraKø(
                             oppgave = oppgave,
-                            erOppgavenReservertSjekk = erOppgavenReservertSjekk,
-                            merknader = oppgaveRepositoryV2.hentMerknader(oppgave.eksternId.toString())
+                            erOppgavenReservertSjekk = erOppgavenReservertSjekk
                         )
 
                         if (oppgavekøHarEndring) {
