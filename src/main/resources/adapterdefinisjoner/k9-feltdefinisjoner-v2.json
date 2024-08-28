@@ -513,6 +513,22 @@
       "tolkesSom": "Timestamp",
       "visTilBruker": false,
       "kokriterie": false
+    },
+    {
+      "id": "førsteFeilutbetalingDato",
+      "visningsnavn": "Føste dato som har feilutbetaling",
+      "listetype": false,
+      "tolkesSom": "Timestamp",
+      "visTilBruker": true,
+      "kokriterie": true
+    },
+    {
+      "id": "feilutbetaltBeløp",
+      "visningsnavn": "Feilutbetalt beløp",
+      "listetype": false,
+      "tolkesSom": "Integer",
+      "visTilBruker": true,
+      "kokriterie": true
     }
 
   ]
