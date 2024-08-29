@@ -51,7 +51,7 @@ class OppgaveKoTjeneste(
     private val log = LoggerFactory.getLogger(OppgaveKoTjeneste::class.java)
 
     @WithSpan
-    fun hentOppgavekøer(skjermet: Boolean = false): List<OppgaveKo> {
+    fun hentOppgavekøer(skjermet: Boolean): List<OppgaveKo> {
         return oppgaveKoRepository.hentListe(skjermet)
     }
 
@@ -61,7 +61,7 @@ class OppgaveKoTjeneste(
         ønsketAntallSaker: Long,
         fjernReserverte: Boolean = false
     ): List<GenerellOppgaveV3Dto> {
-        val ko = oppgaveKoRepository.hent(oppgaveKoId)
+        val ko = hent(oppgaveKoId)
 
         val køoppgaveIder = oppgaveQueryService.queryForOppgaveEksternId(QueryRequest(ko.oppgaveQuery, fjernReserverte = fjernReserverte, Avgrensning.maxAntall(ønsketAntallSaker)))
         val oppgaver = mutableListOf<GenerellOppgaveV3Dto>()
@@ -83,50 +83,57 @@ class OppgaveKoTjeneste(
     }
 
     @WithSpan
-    fun hentKøerForSaksbehandler(
+    suspend fun hentKøerForSaksbehandler(
         saksbehandlerEpost: String
     ): List<OppgaveKo> {
+        val harSkjermetTilgang = pepClient.harTilgangTilKode6()
+
         return transactionalManager.transaction { tx ->
-            oppgaveKoRepository.hentKoerMedOppgittSaksbehandler(tx, saksbehandlerEpost)
+            oppgaveKoRepository.hentKoerMedOppgittSaksbehandler(tx, saksbehandlerEpost, skjermet = harSkjermetTilgang)
         }
     }
 
     @WithSpan
-    fun hentAntallOppgaverForKø(
+    suspend fun hentAntallOppgaverForKø(
         oppgaveKoId: Long,
         filtrerReserverte: Boolean
     ): Long {
-        val ko = oppgaveKoRepository.hent(oppgaveKoId)
+        val ko = hent(oppgaveKoId)
         return oppgaveQueryService.queryForAntall(QueryRequest(ko.oppgaveQuery, fjernReserverte = filtrerReserverte))
     }
 
     @WithSpan
-    fun hentAntallUreserverteOppgaveForKø(
+    suspend fun hentAntallUreserverteOppgaveForKø(
         oppgaveKoId: Long
     ): Long {
-        val ko = oppgaveKoRepository.hent(oppgaveKoId)
+        val ko = hent(oppgaveKoId)
         return oppgaveQueryService.queryForAntall(QueryRequest(ko.oppgaveQuery, fjernReserverte = true))
     }
 
     @WithSpan
-    fun taReservasjonFraKø(
+    suspend fun taReservasjonFraKø(
         innloggetBrukerId: Long,
         oppgaveKoId: Long,
         coroutineContext: CoroutineContext
     ): Pair<Oppgave, ReservasjonV3>? {
+        val harSkjermetTilgang = pepClient.harTilgangTilKode6()
+
         return DetaljerMetrikker.time("taReservasjonFraKø", "hele", "$oppgaveKoId" ) {
-            doTaReservasjonFraKø(innloggetBrukerId, oppgaveKoId, coroutineContext)
+            doTaReservasjonFraKø(innloggetBrukerId, oppgaveKoId, coroutineContext, skjermet = harSkjermetTilgang)
         }
     }
 
     private fun doTaReservasjonFraKø(
         innloggetBrukerId: Long,
         oppgaveKoId: Long,
-        coroutineContext: CoroutineContext
+        coroutineContext: CoroutineContext,
+        skjermet: Boolean
     ): Pair<Oppgave, ReservasjonV3>? {
         log.info("taReservasjonFraKø, oppgaveKøId: $oppgaveKoId")
 
-        val oppgavekø = DetaljerMetrikker.time("taReservasjonFraKø", "hentKø", "$oppgaveKoId" ) { oppgaveKoRepository.hent(oppgaveKoId) }
+        val oppgavekø = DetaljerMetrikker.time("taReservasjonFraKø", "hentKø", "$oppgaveKoId" ) {
+            oppgaveKoRepository.hent(oppgaveKoId, skjermet = skjermet)
+        }
 
         var antallKandidaterEtterspurt = 1
         while (true) {
@@ -210,7 +217,7 @@ class OppgaveKoTjeneste(
 
     @WithSpan
     suspend fun hentSaksbehandlereForKo(oppgaveKoId: Long): List<Saksbehandler> {
-        val oppgaveKo = oppgaveKoRepository.hent(oppgaveKoId)
+        val oppgaveKo = hent(oppgaveKoId)
         return oppgaveKo.saksbehandlere.mapNotNull { saksbehandlerEpost: String ->
             saksbehandlerRepository.finnSaksbehandlerMedEpost(saksbehandlerEpost).also {
                 if (it == null) {
@@ -221,26 +228,27 @@ class OppgaveKoTjeneste(
     }
 
     @WithSpan
-    fun kopier(kopierFraOppgaveId: Long, tittel: String, taMedQuery: Boolean, taMedSaksbehandlere: Boolean): OppgaveKo {
-        val kø = oppgaveKoRepository.kopier(kopierFraOppgaveId, tittel, taMedQuery, taMedSaksbehandlere)
-        runBlocking {
-            køpåvirkendeHendelseChannel.send(Kødefinisjon(kø.id))
-        }
+    suspend fun kopier(kopierFraOppgaveId: Long, tittel: String, taMedQuery: Boolean, taMedSaksbehandlere: Boolean): OppgaveKo {
+        val harSkjermetTilgang = pepClient.harTilgangTilKode6()
+        val kø = oppgaveKoRepository.kopier(kopierFraOppgaveId, tittel, taMedQuery, taMedSaksbehandlere, harSkjermetTilgang = harSkjermetTilgang)
+
+        køpåvirkendeHendelseChannel.send(Kødefinisjon(kø.id))
         return kø
     }
 
     @WithSpan
-    fun leggTil(tittel: String, skjermet: Boolean): OppgaveKo {
-        val kø = oppgaveKoRepository.leggTil(tittel, skjermet)
-        runBlocking {
-            køpåvirkendeHendelseChannel.send(Kødefinisjon(kø.id))
-        }
+    suspend fun leggTil(tittel: String): OppgaveKo {
+        val harSkjermetTilgang = pepClient.harTilgangTilKode6()
+        val kø = oppgaveKoRepository.leggTil(tittel, skjermet = harSkjermetTilgang)
+
+        køpåvirkendeHendelseChannel.send(Kødefinisjon(kø.id))
         return kø
     }
 
     @WithSpan
-    fun hent(oppgaveKoId: Long): OppgaveKo {
-        return oppgaveKoRepository.hent(oppgaveKoId)
+    suspend fun hent(oppgaveKoId: Long): OppgaveKo {
+        val harSkjermetTilgang = pepClient.harTilgangTilKode6()
+        return oppgaveKoRepository.hent(oppgaveKoId, skjermet = harSkjermetTilgang)
     }
 
     @WithSpan
@@ -251,11 +259,11 @@ class OppgaveKoTjeneste(
         }
     }
 
-    fun endre(oppgaveKo: OppgaveKo): OppgaveKo {
-        val kø = oppgaveKoRepository.endre(oppgaveKo)
-        runBlocking {
-            køpåvirkendeHendelseChannel.send(Kødefinisjon(kø.id))
-        }
+    suspend fun endre(oppgaveKo: OppgaveKo): OppgaveKo {
+        val harSkjermetTilgang = pepClient.harTilgangTilKode6()
+        val kø = oppgaveKoRepository.endre(oppgaveKo, harSkjermetTilgang)
+
+        køpåvirkendeHendelseChannel.send(Kødefinisjon(kø.id))
         return kø
     }
 

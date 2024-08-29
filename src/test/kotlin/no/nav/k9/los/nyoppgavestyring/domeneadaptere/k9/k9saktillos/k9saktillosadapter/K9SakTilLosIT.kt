@@ -68,7 +68,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
-        val antallIKø = oppgaveKøTjeneste.hentAntallUreserverteOppgaveForKø(kø.id)
+        val antallIKø = runBlocking { oppgaveKøTjeneste.hentAntallUreserverteOppgaveForKø(kø.id) }
         assertThat(antallIKø).isEqualTo(0)
     }
 
@@ -84,7 +84,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
-        val antallIKø = oppgaveKøTjeneste.hentAntallUreserverteOppgaveForKø(kø.id)
+        val antallIKø = runBlocking { oppgaveKøTjeneste.hentAntallUreserverteOppgaveForKø(kø.id) }
         assertThat(antallIKø).isEqualTo(0)
 
         val reservasjonTjeneste = get<OppgaveApisTjeneste>()
@@ -128,14 +128,15 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
-        val antallIKø = oppgaveKøTjeneste.hentAntallUreserverteOppgaveForKø(kø.id)
+        val antallIKø = runBlocking { oppgaveKøTjeneste.hentAntallUreserverteOppgaveForKø(kø.id) }
         assertThat(antallIKø).isEqualTo(0)
 
-        val resultat = oppgaveKøTjeneste.taReservasjonFraKø(
+        val resultat = runBlocking { oppgaveKøTjeneste.taReservasjonFraKø(
             TestSaksbehandler.SARA.id!!,
             kø.id,
             CoroutineRequestContext(mockk<IIdToken>(relaxed = true))
         )
+            }
         assertThat(resultat).isNull()
     }
 
@@ -150,13 +151,13 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
-        val antallIKø = oppgaveKøTjeneste.hentAntallUreserverteOppgaveForKø(kø.id)
+        val antallIKø = runBlocking { oppgaveKøTjeneste.hentAntallUreserverteOppgaveForKø(kø.id) }
         assertThat(antallIKø).isEqualTo(1)
 
         val resultat = taReservasjonFra(kø, TestSaksbehandler.SARA)
         assertThat(resultat).isNotNull()
 
-        val antallIKøEtterRes = oppgaveKøTjeneste.hentAntallUreserverteOppgaveForKø(kø.id)
+        val antallIKøEtterRes = runBlocking { oppgaveKøTjeneste.hentAntallUreserverteOppgaveForKø(kø.id) }
         assertThat(antallIKøEtterRes).isZero()
     }
 
@@ -173,7 +174,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
-        val antallIKø = oppgaveKøTjeneste.hentAntallUreserverteOppgaveForKø(kø.id)
+        val antallIKø = runBlocking { oppgaveKøTjeneste.hentAntallUreserverteOppgaveForKø(kø.id) }
         assertThat(antallIKø).isEqualTo(1)
 
         taReservasjonFra(kø, TestSaksbehandler.SARA)
@@ -363,16 +364,18 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
 
 
     private fun assertAntallIKø(kø: OppgaveKo, forventetAntall: Int) {
-        val antallIKøEtterRes = oppgaveKøTjeneste.hentAntallUreserverteOppgaveForKø(kø.id)
+        val antallIKøEtterRes = runBlocking { oppgaveKøTjeneste.hentAntallUreserverteOppgaveForKø(kø.id) }
         assertThat(antallIKøEtterRes).isEqualTo(forventetAntall.toLong())
     }
 
     private fun taReservasjonFra(kø: OppgaveKo, saksbehandler: Saksbehandler): Pair<Oppgave, ReservasjonV3>? {
-        return oppgaveKøTjeneste.taReservasjonFraKø(
-            saksbehandler.id!!,
-            kø.id,
-            CoroutineRequestContext(mockk<IIdToken>(relaxed = true))
-        )
+        return runBlocking {
+            oppgaveKøTjeneste.taReservasjonFraKø(
+                saksbehandler.id!!,
+                kø.id,
+                CoroutineRequestContext(mockk<IIdToken>(relaxed = true))
+            )
+        }
     }
 
     private fun hentEnesteReservasjon(saksbehandler: Saksbehandler): ReservasjonV3Dto {
@@ -485,7 +488,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
             saksbehandlere = listOf(saksbehandler.epost),
             oppgaveQuery = oppgaveQuery
         )
-        return oppgaveKoRepository.endre(nyKø)
+        return oppgaveKoRepository.endre(nyKø, false)
     }
 
     private fun querySomKunInneholder(eksternId: UUID, vararg status: Oppgavestatus = emptyArray()): OppgaveQuery {

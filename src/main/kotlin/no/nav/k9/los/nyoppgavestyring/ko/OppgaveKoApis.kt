@@ -27,7 +27,8 @@ fun Route.OppgaveKoApis() {
                 call.respond(HttpStatusCode.Forbidden)
             }
 
-            val oppgavekøer = oppgaveKoTjeneste.hentOppgavekøer()
+            val harSkjermetTilgang = pepClient.harTilgangTilKode6()
+            val oppgavekøer = oppgaveKoTjeneste.hentOppgavekøer(skjermet = harSkjermetTilgang)
                 .map { oppgaveko ->
                     OppgaveKoListeelement(
                         id = oppgaveko.id,
@@ -64,8 +65,7 @@ fun Route.OppgaveKoApis() {
             if (!pepClient.erOppgaveStyrer()) {
                 call.respond(HttpStatusCode.Forbidden)
             }
-            val harSkjermetTilgang = pepClient.harTilgangTilKode6()
-            call.respond(oppgaveKoTjeneste.leggTil(opprettOppgaveKoDto.tittel, skjermet = harSkjermetTilgang))
+            call.respond(oppgaveKoTjeneste.leggTil(opprettOppgaveKoDto.tittel))
         }
     }
 
@@ -75,7 +75,6 @@ fun Route.OppgaveKoApis() {
             if (!pepClient.erOppgaveStyrer()) {
                 call.respond(HttpStatusCode.Forbidden)
             }
-
             call.respond(oppgaveKoTjeneste.hent(oppgavekøId.toLong()))
         }
     }
@@ -135,9 +134,9 @@ fun Route.OppgaveKoApis() {
     get("/{id}/antall-oppgaver") {
         requestContextService.withRequestContext(call) {
             val oppgavekøId = call.parameters["id"]!!
-            val filtrerReserverte = call.request.queryParameters["filtrer_reserverte"]?.let { it.toBoolean() } ?: true
+            val filtrerReserverte = call.request.queryParameters["filtrer_reserverte"]?.toBoolean() ?: true
 
-            val antall = OpentelemetrySpanUtil.span("OppgaveKoTjeneste.hentAntallOppgaverForKø") {
+            val antall = OpentelemetrySpanUtil.spanSuspend("OppgaveKoTjeneste.hentAntallOppgaverForKø") {
                 oppgaveKoTjeneste.hentAntallOppgaverForKø(
                     oppgavekøId.toLong(),
                     filtrerReserverte
@@ -179,6 +178,7 @@ fun Route.OppgaveKoApis() {
             if (!pepClient.erOppgaveStyrer()) {
                 call.respond(HttpStatusCode.Forbidden)
             }
+
             call.respond(oppgaveKoTjeneste.endre(oppgaveKo))
         }
     }
