@@ -1,0 +1,1 @@
+ALTER TABLE oppgaveko_v3 RENAME COLUMN skjermet TO kode6;

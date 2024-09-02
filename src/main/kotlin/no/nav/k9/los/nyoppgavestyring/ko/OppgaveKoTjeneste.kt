@@ -51,8 +51,8 @@ class OppgaveKoTjeneste(
     private val log = LoggerFactory.getLogger(OppgaveKoTjeneste::class.java)
 
     @WithSpan
-    fun hentOppgavekøer(skjermet: Boolean): List<OppgaveKo> {
-        return oppgaveKoRepository.hentListe(skjermet)
+    fun hentOppgavekøer(kode6: Boolean): List<OppgaveKo> {
+        return oppgaveKoRepository.hentListe(kode6)
     }
 
     @WithSpan
@@ -86,10 +86,10 @@ class OppgaveKoTjeneste(
     suspend fun hentKøerForSaksbehandler(
         saksbehandlerEpost: String
     ): List<OppgaveKo> {
-        val harSkjermetTilgang = pepClient.harTilgangTilKode6()
+        val harTilgangTilKode6 = pepClient.harTilgangTilKode6()
 
         return transactionalManager.transaction { tx ->
-            oppgaveKoRepository.hentKoerMedOppgittSaksbehandler(tx, saksbehandlerEpost, skjermet = harSkjermetTilgang)
+            oppgaveKoRepository.hentKoerMedOppgittSaksbehandler(tx, saksbehandlerEpost, kode6 = harTilgangTilKode6)
         }
     }
 
@@ -116,10 +116,10 @@ class OppgaveKoTjeneste(
         oppgaveKoId: Long,
         coroutineContext: CoroutineContext
     ): Pair<Oppgave, ReservasjonV3>? {
-        val harSkjermetTilgang = pepClient.harTilgangTilKode6()
+        val harTilgangTilKode6 = pepClient.harTilgangTilKode6()
 
         return DetaljerMetrikker.time("taReservasjonFraKø", "hele", "$oppgaveKoId" ) {
-            doTaReservasjonFraKø(innloggetBrukerId, oppgaveKoId, coroutineContext, skjermet = harSkjermetTilgang)
+            doTaReservasjonFraKø(innloggetBrukerId, oppgaveKoId, coroutineContext, kode6 = harTilgangTilKode6)
         }
     }
 
@@ -127,12 +127,12 @@ class OppgaveKoTjeneste(
         innloggetBrukerId: Long,
         oppgaveKoId: Long,
         coroutineContext: CoroutineContext,
-        skjermet: Boolean
+        kode6: Boolean
     ): Pair<Oppgave, ReservasjonV3>? {
         log.info("taReservasjonFraKø, oppgaveKøId: $oppgaveKoId")
 
         val oppgavekø = DetaljerMetrikker.time("taReservasjonFraKø", "hentKø", "$oppgaveKoId" ) {
-            oppgaveKoRepository.hent(oppgaveKoId, skjermet = skjermet)
+            oppgaveKoRepository.hent(oppgaveKoId, kode6 = kode6)
         }
 
         var antallKandidaterEtterspurt = 1
@@ -229,8 +229,8 @@ class OppgaveKoTjeneste(
 
     @WithSpan
     suspend fun kopier(kopierFraOppgaveId: Long, tittel: String, taMedQuery: Boolean, taMedSaksbehandlere: Boolean): OppgaveKo {
-        val harSkjermetTilgang = pepClient.harTilgangTilKode6()
-        val kø = oppgaveKoRepository.kopier(kopierFraOppgaveId, tittel, taMedQuery, taMedSaksbehandlere, harSkjermetTilgang = harSkjermetTilgang)
+        val harTilgangTilKode6 = pepClient.harTilgangTilKode6()
+        val kø = oppgaveKoRepository.kopier(kopierFraOppgaveId, tittel, taMedQuery, taMedSaksbehandlere, harkode6Tilgang = harTilgangTilKode6)
 
         køpåvirkendeHendelseChannel.send(Kødefinisjon(kø.id))
         return kø
@@ -238,8 +238,8 @@ class OppgaveKoTjeneste(
 
     @WithSpan
     suspend fun leggTil(tittel: String): OppgaveKo {
-        val harSkjermetTilgang = pepClient.harTilgangTilKode6()
-        val kø = oppgaveKoRepository.leggTil(tittel, skjermet = harSkjermetTilgang)
+        val harTilgangTilKode6 = pepClient.harTilgangTilKode6()
+        val kø = oppgaveKoRepository.leggTil(tittel, kode6 = harTilgangTilKode6)
 
         køpåvirkendeHendelseChannel.send(Kødefinisjon(kø.id))
         return kø
@@ -247,8 +247,8 @@ class OppgaveKoTjeneste(
 
     @WithSpan
     suspend fun hent(oppgaveKoId: Long): OppgaveKo {
-        val harSkjermetTilgang = pepClient.harTilgangTilKode6()
-        return oppgaveKoRepository.hent(oppgaveKoId, skjermet = harSkjermetTilgang)
+        val harTilgangTilKode6 = pepClient.harTilgangTilKode6()
+        return oppgaveKoRepository.hent(oppgaveKoId, kode6 = harTilgangTilKode6)
     }
 
     @WithSpan
@@ -260,8 +260,8 @@ class OppgaveKoTjeneste(
     }
 
     suspend fun endre(oppgaveKo: OppgaveKo): OppgaveKo {
-        val harSkjermetTilgang = pepClient.harTilgangTilKode6()
-        val kø = oppgaveKoRepository.endre(oppgaveKo, harSkjermetTilgang)
+        val harTilgangTilKode6 = pepClient.harTilgangTilKode6()
+        val kø = oppgaveKoRepository.endre(oppgaveKo, harTilgangTilKode6)
 
         køpåvirkendeHendelseChannel.send(Kødefinisjon(kø.id))
         return kø
