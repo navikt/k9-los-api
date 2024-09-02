@@ -129,6 +129,7 @@ data class Behandling(
             registrertDato=$registrertDato,
             vedtaksDato=$vedtaksDato,
             avsender=$avsender,
+            resultatBeskrivelse=$resultatBeskrivelse,
             oversendtKlageinstans=$oversendtKlageinstans
         )""".trimIndent()
     }
