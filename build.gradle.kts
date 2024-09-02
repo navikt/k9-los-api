@@ -12,7 +12,7 @@ val fuelVersion = "2.3.1"
 val jacksonVersion = "2.17.2"
 val commonsTextVersion = "1.12.0"
 
-val dusseldorfKtorVersion = "5.0.6"
+val dusseldorfKtorVersion = "5.0.7"
 val ktorVersion = "2.3.12"
 val kafkaVersion = "3.8.0"
 
@@ -87,7 +87,7 @@ dependencies {
         exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
     }
 
-    implementation( "io.github.smiley4:ktor-swagger-ui:3.3.0")
+    implementation( "io.github.smiley4:ktor-swagger-ui:3.3.1")
 
 
     // DI
