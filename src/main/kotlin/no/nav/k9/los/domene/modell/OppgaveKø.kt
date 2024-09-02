@@ -5,7 +5,6 @@ import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.KriteriumDto
-import no.nav.k9.los.tjenester.saksbehandler.merknad.Merknad
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -52,20 +51,17 @@ data class OppgaveKø(
     fun leggOppgaveTilEllerFjernFraKø(
         oppgave: Oppgave,
         reservasjonRepository: ReservasjonRepository,
-        merknader: List<Merknad>
     ): Boolean {
-        return leggOppgaveTilEllerFjernFraKø(oppgave, { erOppgavenReservert(reservasjonRepository, it) }, merknader)
+        return leggOppgaveTilEllerFjernFraKø(oppgave, { erOppgavenReservert(reservasjonRepository, it) })
     }
 
     fun leggOppgaveTilEllerFjernFraKø(
         oppgave: Oppgave,
         erOppgavenReservertSjekk : (Oppgave) -> Boolean,
-        merknader: List<Merknad>
     ): Boolean {
         val tilhørerOppgaveTilKø = tilhørerOppgaveTilKø(
             oppgave = oppgave,
             erOppgavenReservertSjekk = erOppgavenReservertSjekk,
-            merknader
         )
         if (tilhørerOppgaveTilKø) {
             if (this.oppgaverOgDatoer.none { it.id == oppgave.eksternId }) {
@@ -95,15 +91,13 @@ data class OppgaveKø(
     fun tilhørerOppgaveTilKø(
         oppgave: Oppgave,
         reservasjonRepository: ReservasjonRepository,
-        merknader: List<Merknad>
     ): Boolean {
-        return tilhørerOppgaveTilKø(oppgave, { erOppgavenReservert(reservasjonRepository, it) } , merknader )
+        return tilhørerOppgaveTilKø(oppgave, { erOppgavenReservert(reservasjonRepository, it) }  )
     }
 
     fun tilhørerOppgaveTilKø(
         oppgave: Oppgave,
         erOppgavenReservertSjekk : (Oppgave) -> Boolean,
-        merknader: List<Merknad>
     ): Boolean {
         if (!oppgave.aktiv) {
             return false
@@ -129,11 +123,6 @@ data class OppgaveKø(
         }
 
         if (oppgave.kode6 != this.kode6) {
-            return false
-        }
-
-        if (merknadKoder.isEmpty() && merknader.isNotEmpty() || !merknader.flatMap { it.merknadKoder }
-                .containsAll(merknadKoder)) {
             return false
         }
 

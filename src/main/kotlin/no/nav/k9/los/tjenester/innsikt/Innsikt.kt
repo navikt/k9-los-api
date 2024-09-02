@@ -231,7 +231,6 @@ fun Route.innsiktGrensesnitt() {
                     oppgaveKø.leggOppgaveTilEllerFjernFraKø(
                         oppgave,
                         erOppgavenReservertSjekk = {false},
-                        merknader = oppgaveRepositoryV2.hentMerknader(oppgave.eksternId.toString())
                     )
                 }
             }

@@ -86,8 +86,7 @@ class ReservasjonV3DtoBuilder(
                 utbetalingTilBruker = oppgaveV1.utbetalingTilBruker,
                 selvstendigFrilans = oppgaveV1.selvstendigFrilans,
                 søktGradering = oppgaveV1.søktGradering,
-                avklarArbeidsforhold = oppgaveV1.avklarArbeidsforhold,
-                merknad = oppgaveTjeneste.hentAktivMerknad(oppgaveV1.eksternId.toString())
+                avklarArbeidsforhold = oppgaveV1.avklarArbeidsforhold
             )
         } else {
             null

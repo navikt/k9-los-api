@@ -5,7 +5,6 @@ import assertk.assertions.isFalse
 import assertk.assertions.isTrue
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
-import no.nav.k9.los.tjenester.saksbehandler.merknad.Merknad
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -67,7 +66,7 @@ internal class OppgaveKøTest {
             avklarMedlemskap = false, kode6 = false, utenlands = false, vurderopptjeningsvilkåret = false
         )
 
-        val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, erOppgavenReservertSjekk = {false}, emptyList())
+        val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, erOppgavenReservertSjekk = {false})
         assertTrue(tilhørerOppgaveTilKø)
     }
 
@@ -126,7 +125,7 @@ internal class OppgaveKøTest {
             utenlands = false,
         )
 
-        val ikkeJournalførtPunsjoppgaveErIKøen = oppgaveKø.tilhørerOppgaveTilKø(ikkeJournalførtPunsjoppgave, erOppgavenReservertSjekk = {false}, emptyList())
+        val ikkeJournalførtPunsjoppgaveErIKøen = oppgaveKø.tilhørerOppgaveTilKø(ikkeJournalførtPunsjoppgave, erOppgavenReservertSjekk = {false})
         assertTrue(ikkeJournalførtPunsjoppgaveErIKøen)
     }
 
@@ -185,7 +184,7 @@ internal class OppgaveKøTest {
             utenlands = false,
         )
 
-        val journalførtPunsjoppgaveErIKøen = oppgaveKø.tilhørerOppgaveTilKø(ikkeJournalførtPunsjoppgave, erOppgavenReservertSjekk = {false}, emptyList())
+        val journalførtPunsjoppgaveErIKøen = oppgaveKø.tilhørerOppgaveTilKø(ikkeJournalførtPunsjoppgave, erOppgavenReservertSjekk = {false})
         assertFalse(journalførtPunsjoppgaveErIKøen)
     }
 
@@ -254,7 +253,7 @@ internal class OppgaveKøTest {
             eksternId = UUID.randomUUID(),
         )
 
-        val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, erOppgavenReservertSjekk = {false}, emptyList())
+        val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, erOppgavenReservertSjekk = {false})
         assertTrue(tilhørerOppgaveTilKø)
     }
 
@@ -317,7 +316,7 @@ internal class OppgaveKøTest {
             eksternId = UUID.randomUUID(),
         )
 
-        val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, erOppgavenReservertSjekk = {false}, emptyList())
+        val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, erOppgavenReservertSjekk = {false})
         assertFalse(tilhørerOppgaveTilKø)
     }
 
@@ -379,7 +378,7 @@ internal class OppgaveKøTest {
             eksternId = UUID.randomUUID(),
         )
 
-        val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, erOppgavenReservertSjekk = {false}, emptyList())
+        val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, erOppgavenReservertSjekk = {false})
         assertTrue(tilhørerOppgaveTilKø)
     }
 
@@ -452,7 +451,7 @@ internal class OppgaveKøTest {
             eksternId = UUID.randomUUID(),
         )
 
-        val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, erOppgavenReservertSjekk = {false}, emptyList())
+        val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, erOppgavenReservertSjekk = {false})
         assertFalse(tilhørerOppgaveTilKø)
     }
 
@@ -515,66 +514,66 @@ internal class OppgaveKøTest {
             eksternId = UUID.randomUUID(),
         )
 
-        val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, erOppgavenReservertSjekk = {false}, emptyList())
+        val tilhørerOppgaveTilKø = oppgaveKø.tilhørerOppgaveTilKø(oppgave, erOppgavenReservertSjekk = {false})
         assertFalse(tilhørerOppgaveTilKø)
     }
 
     @Test
     fun `skal ta med feilutbetaling intervall`() {
-        assertTrue(lagOppgaveKø(Intervall(50, 100)).tilhørerOppgaveTilKø(feilutb_oppg(70), erOppgavenReservertSjekk = {false}, emptyList()))
-        assertFalse(lagOppgaveKø(Intervall(50, 100)).tilhørerOppgaveTilKø(feilutb_oppg(200), erOppgavenReservertSjekk = {false}, emptyList()))
-        assertTrue(lagOppgaveKø(Intervall(50, null)).tilhørerOppgaveTilKø(feilutb_oppg(200), erOppgavenReservertSjekk = {false}, emptyList()))
-        assertFalse(lagOppgaveKø(Intervall(50, null)).tilhørerOppgaveTilKø(feilutb_oppg(49), erOppgavenReservertSjekk = {false}, emptyList()))
-        assertTrue(lagOppgaveKø(Intervall(50, 100)).tilhørerOppgaveTilKø(feilutb_oppg(50), erOppgavenReservertSjekk = {false}, emptyList()))
-        assertTrue(lagOppgaveKø(Intervall(50, 100)).tilhørerOppgaveTilKø(feilutb_oppg(100), erOppgavenReservertSjekk = {false}, emptyList()))
+        assertTrue(lagOppgaveKø(Intervall(50, 100)).tilhørerOppgaveTilKø(feilutb_oppg(70), erOppgavenReservertSjekk = {false}))
+        assertFalse(lagOppgaveKø(Intervall(50, 100)).tilhørerOppgaveTilKø(feilutb_oppg(200), erOppgavenReservertSjekk = {false}))
+        assertTrue(lagOppgaveKø(Intervall(50, null)).tilhørerOppgaveTilKø(feilutb_oppg(200), erOppgavenReservertSjekk = {false}))
+        assertFalse(lagOppgaveKø(Intervall(50, null)).tilhørerOppgaveTilKø(feilutb_oppg(49), erOppgavenReservertSjekk = {false}))
+        assertTrue(lagOppgaveKø(Intervall(50, 100)).tilhørerOppgaveTilKø(feilutb_oppg(50), erOppgavenReservertSjekk = {false}))
+        assertTrue(lagOppgaveKø(Intervall(50, 100)).tilhørerOppgaveTilKø(feilutb_oppg(100), erOppgavenReservertSjekk = {false}))
     }
 
     @Test
     fun `skal håndtere med nytt krav, med og uten kombinasjon med andre kriterier`() {
 
-        assertTrue(lagOppgaveKø(nyeKrav = true).tilhørerOppgaveTilKø(nye_krav_oppg(true), erOppgavenReservertSjekk = {false}, emptyList()))
-        assertTrue(lagOppgaveKø(nyeKrav = false).tilhørerOppgaveTilKø(nye_krav_oppg(false), erOppgavenReservertSjekk = {false}, emptyList()))
-        assertFalse(lagOppgaveKø(nyeKrav = false).tilhørerOppgaveTilKø(nye_krav_oppg(true), erOppgavenReservertSjekk = {false}, emptyList()))
-        assertFalse(lagOppgaveKø(nyeKrav = true).tilhørerOppgaveTilKø(nye_krav_oppg(false), erOppgavenReservertSjekk = {false}, emptyList()))
+        assertTrue(lagOppgaveKø(nyeKrav = true).tilhørerOppgaveTilKø(nye_krav_oppg(true), erOppgavenReservertSjekk = {false}))
+        assertTrue(lagOppgaveKø(nyeKrav = false).tilhørerOppgaveTilKø(nye_krav_oppg(false), erOppgavenReservertSjekk = {false}))
+        assertFalse(lagOppgaveKø(nyeKrav = false).tilhørerOppgaveTilKø(nye_krav_oppg(true), erOppgavenReservertSjekk = {false}))
+        assertFalse(lagOppgaveKø(nyeKrav = true).tilhørerOppgaveTilKø(nye_krav_oppg(false), erOppgavenReservertSjekk = {false}))
 
         assertTrue(
             lagOppgaveKø(nyeKrav = null, andreKriterierDto = kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
-                .tilhørerOppgaveTilKø(nye_krav_oppg(true, avklarMedlemskap = true), erOppgavenReservertSjekk = {false}, emptyList())
+                .tilhørerOppgaveTilKø(nye_krav_oppg(true, avklarMedlemskap = true), erOppgavenReservertSjekk = {false})
         )
 
         assertTrue(
             lagOppgaveKø(nyeKrav = null, andreKriterierDto = kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
-                .tilhørerOppgaveTilKø(nye_krav_oppg(false, avklarMedlemskap = true), erOppgavenReservertSjekk = {false}, emptyList())
+                .tilhørerOppgaveTilKø(nye_krav_oppg(false, avklarMedlemskap = true), erOppgavenReservertSjekk = {false})
         )
 
         assertFalse(
             lagOppgaveKø(nyeKrav = true, andreKriterierDto = kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
-                .tilhørerOppgaveTilKø(nye_krav_oppg(true, avklarMedlemskap = false), erOppgavenReservertSjekk = {false}, emptyList())
+                .tilhørerOppgaveTilKø(nye_krav_oppg(true, avklarMedlemskap = false), erOppgavenReservertSjekk = {false})
         )
 
         assertFalse(
             lagOppgaveKø(nyeKrav = true, andreKriterierDto = kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
-                .tilhørerOppgaveTilKø(nye_krav_oppg(false, avklarMedlemskap = true), erOppgavenReservertSjekk = {false}, emptyList())
+                .tilhørerOppgaveTilKø(nye_krav_oppg(false, avklarMedlemskap = true), erOppgavenReservertSjekk = {false})
         )
 
         assertTrue(
             lagOppgaveKø(nyeKrav = true, andreKriterierDto = kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
-                .tilhørerOppgaveTilKø(nye_krav_oppg(true, avklarMedlemskap = true), erOppgavenReservertSjekk = {false}, emptyList())
+                .tilhørerOppgaveTilKø(nye_krav_oppg(true, avklarMedlemskap = true), erOppgavenReservertSjekk = {false})
         )
 
         assertTrue(
             lagOppgaveKø(nyeKrav = false, andreKriterierDto = kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
-                .tilhørerOppgaveTilKø(nye_krav_oppg(false, avklarMedlemskap = true), erOppgavenReservertSjekk = {false}, emptyList())
+                .tilhørerOppgaveTilKø(nye_krav_oppg(false, avklarMedlemskap = true), erOppgavenReservertSjekk = {false})
         )
 
         assertFalse(
             lagOppgaveKø(nyeKrav = true, andreKriterierDto = kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
-                .tilhørerOppgaveTilKø(nye_krav_oppg(null, avklarMedlemskap = true), erOppgavenReservertSjekk = {false}, emptyList())
+                .tilhørerOppgaveTilKø(nye_krav_oppg(null, avklarMedlemskap = true), erOppgavenReservertSjekk = {false})
         )
 
         assertFalse(
             lagOppgaveKø(nyeKrav = false, andreKriterierDto = kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
-                .tilhørerOppgaveTilKø(nye_krav_oppg(null, avklarMedlemskap = true), erOppgavenReservertSjekk = {false}, emptyList())
+                .tilhørerOppgaveTilKø(nye_krav_oppg(null, avklarMedlemskap = true), erOppgavenReservertSjekk = {false})
         )
 
 
@@ -586,17 +585,17 @@ internal class OppgaveKøTest {
     fun `feilutbetaling filter i kombinasjon med andre kriterie`() {
         assertTrue(
             lagOppgaveKø(Intervall(50, 100), kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
-                .tilhørerOppgaveTilKø(feilutb_oppg(70, true), erOppgavenReservertSjekk = {false}, emptyList())
+                .tilhørerOppgaveTilKø(feilutb_oppg(70, true), erOppgavenReservertSjekk = {false})
         )
 
         assertFalse(
             lagOppgaveKø(Intervall(50, 100), kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
-                .tilhørerOppgaveTilKø(feilutb_oppg(200, true), erOppgavenReservertSjekk = {false}, emptyList())
+                .tilhørerOppgaveTilKø(feilutb_oppg(200, true), erOppgavenReservertSjekk = {false})
         )
 
         assertFalse(
             lagOppgaveKø(Intervall(50, 100), kriterie(AndreKriterierType.AVKLAR_MEDLEMSKAP))
-                .tilhørerOppgaveTilKø(feilutb_oppg(70, false), erOppgavenReservertSjekk = {false}, emptyList())
+                .tilhørerOppgaveTilKø(feilutb_oppg(70, false), erOppgavenReservertSjekk = {false})
         )
     }
 
@@ -655,52 +654,7 @@ internal class OppgaveKøTest {
             eksternId = UUID.randomUUID(),
             feilutbetaltBeløp = null
         )
-        assertTrue(oppgaveKø.tilhørerOppgaveTilKø(oppgave, erOppgavenReservertSjekk = {false}, emptyList()))
-    }
-
-    private val HASTESAK = "HASTESAK"
-    private val VANSKELIG = "VANSKELIG"
-
-    @Test
-    fun `Skal inkludere markerte oppgaver hvis det finnes merknad i køen`() {
-        val oppgave = merknadOppgave(FagsakYtelseType.PLEIEPENGER_SYKT_BARN)
-
-        val hastekø = lagOppgaveKø(merknadKoder = listOf(HASTESAK))
-        assertTrue(hastekø.tilhørerOppgaveTilKø(oppgave, erOppgavenReservertSjekk = {false}, merknadMed(HASTESAK)))
-        assertTrue(hastekø.tilhørerOppgaveTilKø(oppgave, erOppgavenReservertSjekk = {false}, merknadMed(HASTESAK, VANSKELIG)))
-        assertFalse(hastekø.tilhørerOppgaveTilKø(oppgave, erOppgavenReservertSjekk = {false}, merknadMed(VANSKELIG)))
-        assertFalse(hastekø.tilhørerOppgaveTilKø(oppgave, erOppgavenReservertSjekk = {false}, emptyList()))
-
-        val vanskeligeHasteKø = lagOppgaveKø(merknadKoder = listOf(HASTESAK, VANSKELIG))
-        assertTrue(vanskeligeHasteKø.tilhørerOppgaveTilKø(oppgave, erOppgavenReservertSjekk = {false}, merknadMed(VANSKELIG, HASTESAK)))
-        assertFalse(vanskeligeHasteKø.tilhørerOppgaveTilKø(oppgave, erOppgavenReservertSjekk = {false}, merknadMed(VANSKELIG)))
-        assertFalse(vanskeligeHasteKø.tilhørerOppgaveTilKø(oppgave, erOppgavenReservertSjekk = {false}, merknadMed(HASTESAK)))
-        assertFalse(vanskeligeHasteKø.tilhørerOppgaveTilKø(oppgave, erOppgavenReservertSjekk = {false}, emptyList()))
-
-    }
-
-    @Test
-    fun `markerte oppgaver i kombinasjon med andre kriterier`() {
-        val psbOppgave = merknadOppgave(FagsakYtelseType.PLEIEPENGER_SYKT_BARN)
-        val psbHastekø = lagOppgaveKø(merknadKoder = listOf(HASTESAK), fagsakYtelseTyper = mutableListOf(
-            FagsakYtelseType.PLEIEPENGER_SYKT_BARN))
-        val pilsHastekø = lagOppgaveKø(merknadKoder = listOf(HASTESAK), fagsakYtelseTyper = mutableListOf(
-            FagsakYtelseType.PPN))
-
-        assertThat(psbHastekø.tilhørerOppgaveTilKø(psbOppgave, erOppgavenReservertSjekk = {false}, merknadMed(HASTESAK))).isTrue()
-        assertThat(pilsHastekø.tilhørerOppgaveTilKø(psbOppgave, erOppgavenReservertSjekk = {false}, merknadMed(HASTESAK))).isFalse()
-
-    }
-
-    @Test
-    fun `vanlige køer skal ikke ha med markerte oppgaver`() {
-        val oppgave = merknadOppgave(FagsakYtelseType.PLEIEPENGER_SYKT_BARN)
-        val vanligPsbKø = lagOppgaveKø(fagsakYtelseTyper = mutableListOf(FagsakYtelseType.PLEIEPENGER_SYKT_BARN))
-
-        assertThat(vanligPsbKø.tilhørerOppgaveTilKø(oppgave, erOppgavenReservertSjekk = {false}, merknadMed(VANSKELIG, HASTESAK))).isFalse()
-        assertThat(vanligPsbKø.tilhørerOppgaveTilKø(oppgave, erOppgavenReservertSjekk = {false}, merknadMed(HASTESAK))).isFalse()
-        assertThat(vanligPsbKø.tilhørerOppgaveTilKø(oppgave, erOppgavenReservertSjekk = {false}, emptyList())).isTrue()
-
+        assertTrue(oppgaveKø.tilhørerOppgaveTilKø(oppgave, erOppgavenReservertSjekk = {false}))
     }
 
     @Test
@@ -708,7 +662,7 @@ internal class OppgaveKøTest {
         val oppgave = oppgaveMedAksjonspunkter(Aksjonspunkter(liste = mapOf("9001" to "OPPR")))
         val køMedSykdomKriterie = lagOppgaveKø(fagsakYtelseTyper = mutableListOf(FagsakYtelseType.PLEIEPENGER_SYKT_BARN), oppgaveKoder = listOf("9001"))
 
-        assertThat(køMedSykdomKriterie.tilhørerOppgaveTilKø(oppgave, erOppgavenReservertSjekk = {false}, emptyList())).isTrue()
+        assertThat(køMedSykdomKriterie.tilhørerOppgaveTilKø(oppgave, erOppgavenReservertSjekk = {false})).isTrue()
     }
 
     @Test
@@ -716,7 +670,7 @@ internal class OppgaveKøTest {
         val oppgave = oppgaveMedAksjonspunkter(Aksjonspunkter(liste = emptyMap()))
         val køMedSykdomKriterie = lagOppgaveKø(fagsakYtelseTyper = mutableListOf(FagsakYtelseType.PLEIEPENGER_SYKT_BARN), oppgaveKoder = listOf("9001"))
 
-        assertThat(køMedSykdomKriterie.tilhørerOppgaveTilKø(oppgave, erOppgavenReservertSjekk = {false}, emptyList())).isFalse()
+        assertThat(køMedSykdomKriterie.tilhørerOppgaveTilKø(oppgave, erOppgavenReservertSjekk = {false})).isFalse()
     }
 
     @Test
@@ -725,8 +679,8 @@ internal class OppgaveKøTest {
         val oppgaveMedEtterlysIMAksjonsPunkt = oppgaveMedAksjonspunkter(Aksjonspunkter(liste = mapOf("9068" to "OPPR")))
         val køMedSykdomKriterie = lagOppgaveKø(fagsakYtelseTyper = mutableListOf(FagsakYtelseType.PLEIEPENGER_SYKT_BARN), oppgaveKoder = listOf("9001"))
 
-        assertThat(køMedSykdomKriterie.tilhørerOppgaveTilKø(oppgaveMedUtførtSykdomsAksjonsPunkt, erOppgavenReservertSjekk = {false}, emptyList())).isFalse()
-        assertThat(køMedSykdomKriterie.tilhørerOppgaveTilKø(oppgaveMedEtterlysIMAksjonsPunkt, erOppgavenReservertSjekk = {false}, emptyList())).isFalse()
+        assertThat(køMedSykdomKriterie.tilhørerOppgaveTilKø(oppgaveMedUtførtSykdomsAksjonsPunkt, erOppgavenReservertSjekk = {false})).isFalse()
+        assertThat(køMedSykdomKriterie.tilhørerOppgaveTilKø(oppgaveMedEtterlysIMAksjonsPunkt, erOppgavenReservertSjekk = {false})).isFalse()
     }
 
     private fun oppgaveMedAksjonspunkter(aksjonspunkter: Aksjonspunkter) = Oppgave(
@@ -883,18 +837,6 @@ internal class OppgaveKøTest {
         merknadKoder = merknadKoder,
         oppgaveKoder = oppgaveKoder,
         nyeKrav = nyeKrav
-    )
-
-    private fun merknadMed(vararg merknadKoder: String) = listOf(
-        Merknad(
-            merknadKoder = merknadKoder.toList(),
-            oppgaveKoder = emptyList(),
-            oppgaveIder = emptyList(),
-            saksbehandler = "",
-            opprettet = LocalDateTime.now()
-        ).also {
-            it.id = 123456L
-        }
     )
 
 }
