@@ -116,8 +116,6 @@ spec:
       value: http://abac-k9.k9saksbehandling.svc.nais.local/application/authorize
 
       # open telemetry
-    - name: "OTEL_EXPORTER_OTLP_ENDPOINT"
-      value: "https://elastic-apm.adeo.no"
     - name: "OTEL_METRICS_EXPORTER"
       value: "otlp"
     - name: "OTEL_LOGS_EXPORTER"
