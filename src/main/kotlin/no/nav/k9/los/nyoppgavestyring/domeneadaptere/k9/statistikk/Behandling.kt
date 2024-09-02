@@ -105,7 +105,7 @@ data class Behandling(
     @JsonProperty("avsender")
     val avsender: String? = null,
 
-    @JsonProperty("oversendtKabal")
+    @JsonProperty("oversendtKlageinstans")
     val oversendtKlageinstans: LocalDateTime? = null,
 
     @JsonProperty("versjon")
