@@ -2,7 +2,6 @@ package no.nav.k9.los.nyoppgavestyring.ko
 
 import io.ktor.http.*
 import io.ktor.server.application.call
-import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -132,6 +131,7 @@ fun Route.OppgaveKoApis() {
         }
     }
 
+    // TODO: Slett dette endepunktet når /antall blir tatt i bruk
     get("/{id}/antall-oppgaver") {
         requestContextService.withRequestContext(call) {
             val oppgavekøId = call.parameters["id"]!!
@@ -144,6 +144,26 @@ fun Route.OppgaveKoApis() {
                 )
             }
             call.respond(antall)
+        }
+    }
+
+    get("/{id}/antall") {
+        requestContextService.withRequestContext(call) {
+            val oppgavekøId = call.parameters["id"]!!
+
+            val antallUtenReserverte = OpentelemetrySpanUtil.span("OppgaveKoTjeneste.hentAntallOppgaverForKø") {
+                oppgaveKoTjeneste.hentAntallOppgaverForKø(
+                    oppgavekøId.toLong(),
+                    true
+                )
+            }
+            val antallMedReserverte = OpentelemetrySpanUtil.span("OppgaveKoTjeneste.hentAntallOppgaverForKø") {
+                oppgaveKoTjeneste.hentAntallOppgaverForKø(
+                    oppgavekøId.toLong(),
+                    false
+                )
+            }
+            call.respond(AntallOppgaverOgReserverte(antallUtenReserverte, antallMedReserverte))
         }
     }
 
