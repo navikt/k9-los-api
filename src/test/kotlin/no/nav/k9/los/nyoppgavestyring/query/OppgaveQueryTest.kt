@@ -271,6 +271,22 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
     }
 
     @Test
+    fun `Filtere uten feltverdier skal ha samme resultat som om filtret ikke er brukt`() {
+        val behandlingUuid = UUID.randomUUID().toString()
+        OppgaveTestDataBuilder()
+            .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, behandlingUuid)
+            .lagOgLagre()
+
+        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
+
+        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf())))).isNotEmpty()
+
+        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
+            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.IN),
+        ))))).isNotEmpty()
+    }
+
+    @Test
     fun `sjekker at ekskluderer-verdi-query finner oppgaver som ikke har feltet`() {
         val testbuilder = OppgaveTestDataBuilder()
             testbuilder.medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, UUID.randomUUID().toString())
@@ -545,8 +561,6 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         assertThat(oppgaveQueryRepository.query(QueryRequest(query))).isEmpty()
     }
-
-
 
     private fun lagOppgaveMedPepCache(
         kode6: Boolean = false,
