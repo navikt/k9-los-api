@@ -161,8 +161,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
         oppgaveko.leggOppgaveTilEllerFjernFraKø(
             oppgave1,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
@@ -500,8 +499,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
         oppgaveko.leggOppgaveTilEllerFjernFraKø(
             oppgave1,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko

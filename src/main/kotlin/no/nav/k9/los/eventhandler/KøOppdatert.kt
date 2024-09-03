@@ -63,8 +63,6 @@ private suspend fun oppdaterKø(
         val opprinnelige = kø.oppgaverOgDatoer.toMutableList()
 
         val aktiveOppgaver = oppgaveRepository.hentAktiveUreserverteOppgaver()
-        val merknader = taTiden(log, "hent alle merknader") { oppgaveRepositoryV2.hentAlleMerknader() }
-            .groupBy(keySelector = { it.eksternReferanse }, valueTransform = { it.merknad } )
 
         kø.oppgaverOgDatoer.clear()
         for (oppgave in aktiveOppgaver) {
@@ -72,7 +70,6 @@ private suspend fun oppdaterKø(
                 kø.leggOppgaveTilEllerFjernFraKø(
                     oppgave = oppgave,
                     erOppgavenReservertSjekk = {false}, //har spesifikt hentet ureserverte oppgaver over
-                    merknader = merknader.getOrDefault(oppgave.eksternId.toString(), emptyList())
                 )
             }
         }
@@ -88,7 +85,6 @@ private suspend fun oppdaterKø(
                         oppgaveKø.leggOppgaveTilEllerFjernFraKø(
                             oppgave = oppgave,
                             erOppgavenReservertSjekk = {false}, //har spesifikt hentet ureserverte oppgaver over
-                            merknader = merknader.getOrDefault(oppgave.eksternId.toString(), emptyList())
                         )
                     }
                 }

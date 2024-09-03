@@ -32,6 +32,13 @@ spec:
   prometheus:
     enabled: true
     path: /metrics
+  observability:
+    autoInstrumentation:
+      enabled: true
+      runtime: java
+      destinations:
+        - id: "grafana-lgtm"
+        - id: "elastic-apm"
   vault:
     enabled: true
     paths:
@@ -109,8 +116,6 @@ spec:
       value: http://abac-k9.k9saksbehandling.svc.nais.local/application/authorize
 
       # open telemetry
-    - name: "OTEL_EXPORTER_OTLP_ENDPOINT"
-      value: "https://elastic-apm.adeo.no"
     - name: "OTEL_METRICS_EXPORTER"
       value: "otlp"
     - name: "OTEL_LOGS_EXPORTER"

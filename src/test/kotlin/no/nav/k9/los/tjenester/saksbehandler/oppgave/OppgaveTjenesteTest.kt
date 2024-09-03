@@ -165,8 +165,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
         oppgaveko.leggOppgaveTilEllerFjernFraKø(
             oppgave1,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
@@ -263,8 +262,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
         oppgaveko.leggOppgaveTilEllerFjernFraKø(
             oppgave1,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
@@ -352,8 +350,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
         oppgaveko.leggOppgaveTilEllerFjernFraKø(
             oppgave1,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
@@ -414,8 +411,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         hentOppgavekø.leggOppgaveTilEllerFjernFraKø(
             oppgave2,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave2.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(hentOppgavekø.id) {
             hentOppgavekø
@@ -677,8 +673,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaver.forEach { o ->
             beslutterKø.leggOppgaveTilEllerFjernFraKø(
                 o,
-                erOppgavenReservertSjekk = {false},
-                merknader = emptyList()
+                erOppgavenReservertSjekk = {false}
             )
             oppgaveRepository.lagre(o.eksternId) { o }
             oppgaveKøRepository.lagre(beslutterKø.id) { beslutterKø }
@@ -819,8 +814,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
         oppgaveko.leggOppgaveTilEllerFjernFraKø(
             oppgave1,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
@@ -881,8 +875,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         hentOppgavekø.leggOppgaveTilEllerFjernFraKø(
             oppgave2,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave2.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(hentOppgavekø.id) {
             hentOppgavekø
@@ -923,8 +916,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         hentOppgavekø2.leggOppgaveTilEllerFjernFraKø(
             oppgave3,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave3.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(hentOppgavekø2.id) {
             hentOppgavekø2
@@ -1033,8 +1025,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
         oppgaveko.leggOppgaveTilEllerFjernFraKø(
             oppgave1,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
@@ -1096,8 +1087,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         hentOppgavekø.leggOppgaveTilEllerFjernFraKø(
             oppgave2,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave2.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(hentOppgavekø.id) {
             hentOppgavekø
@@ -1138,8 +1128,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         hentOppgavekø2.leggOppgaveTilEllerFjernFraKø(
             oppgave3,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave3.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(hentOppgavekø2.id) {
             hentOppgavekø2
@@ -1223,8 +1212,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
         oppgaveko.leggOppgaveTilEllerFjernFraKø(
             oppgave1,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
@@ -1276,8 +1264,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         hentOppgavekø.leggOppgaveTilEllerFjernFraKø(
             oppgave2,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave2.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(hentOppgavekø.id) {
             hentOppgavekø
@@ -1362,8 +1349,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveRepository.lagre(oppgaveSomSkalIgnoreres.eksternId) { oppgaveSomSkalIgnoreres }
         oppgaveko.leggOppgaveTilEllerFjernFraKø(
             oppgaveSomSkalIgnoreres,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgaveSomSkalIgnoreres.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
@@ -1415,8 +1401,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         hentOppgavekø.leggOppgaveTilEllerFjernFraKø(
             oppgaveSomSkalVelges,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgaveSomSkalVelges.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(hentOppgavekø.id) {
             hentOppgavekø
@@ -1495,8 +1480,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
         oppgaveko.leggOppgaveTilEllerFjernFraKø(
             oppgave1,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
@@ -1549,8 +1533,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         hentOppgavekø.leggOppgaveTilEllerFjernFraKø(
             oppgave2,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave2.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(hentOppgavekø.id) {
             hentOppgavekø
@@ -1591,8 +1574,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         hentOppgavekø2.leggOppgaveTilEllerFjernFraKø(
             oppgave3,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave3.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(hentOppgavekø2.id) {
             hentOppgavekø2
@@ -1673,8 +1655,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
         oppgaveko.leggOppgaveTilEllerFjernFraKø(
             oppgave1,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
@@ -1712,8 +1693,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveRepository.lagre(oppgave2.eksternId) { oppgave2 }
         oppgaveko.leggOppgaveTilEllerFjernFraKø(
             oppgave2,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave2.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
@@ -1815,8 +1795,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
         oppgaveko.leggOppgaveTilEllerFjernFraKø(
             oppgave1,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
@@ -1860,8 +1839,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveRepository.lagre(oppgave2.eksternId) { oppgave2 }
         oppgaveKø.leggOppgaveTilEllerFjernFraKø(
             oppgave2,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave2.eksternId.toString())
+            reservasjonRepository
         )
 
         oppgaveKøRepository.lagre(oppgaveKø.id) {

@@ -50,6 +50,6 @@ data class K9KlageEventIkkeSensitiv(
         fagsakPeriode = event.fagsakPeriode,
         aksjonspunkttilstander = event.aksjonspunkttilstander,
         vedtaksdato = event.vedtaksdato,
-        behandlingsårsaker = event.behandlingsårsaker,
+        behandlingsårsaker = event.behandlingsårsaker ?: emptyList(),
     )
 }

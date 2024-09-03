@@ -129,22 +129,19 @@ class ReservasjonRepository(
             saksbehandlerRepository.fjernReservasjon(saksbehandlersIdent, reservasjon.oppgave)
         }
         val oppgave = oppgaveRepository.hent(reservasjon.oppgave)
-        val merknader = oppgaveRepositoryV2.hentAlleMerknader()
-            .groupBy(keySelector = { it.eksternReferanse }, valueTransform = { it.merknad } )
+
 
         var fjernetFraAntallKøer = 0
         oppgaveKøer.forEach { oppgaveKø ->
             if (oppgaveKø.leggOppgaveTilEllerFjernFraKø(
                     oppgave,
                     this,
-                    merknader.getOrDefault(reservasjon.oppgave.toString(), emptyList())
                 )
             ) {
                 oppgaveKøRepository.lagreIkkeTaHensyn(oppgaveKø.id) {
                     it!!.leggOppgaveTilEllerFjernFraKø(
                         oppgave = oppgave,
                         reservasjonRepository = this,
-                        merknader = merknader.getOrDefault(reservasjon.oppgave.toString(), emptyList())
                     )
                     it
                 }

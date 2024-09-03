@@ -131,13 +131,11 @@ class OppgavekoTest : AbstractK9LosIntegrationTest() {
 
         oppgaveko.leggOppgaveTilEllerFjernFraKø(
             oppgave1,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveko.leggOppgaveTilEllerFjernFraKø(
             oppgave2,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave2.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(oppgaveko.id) {
              oppgaveko

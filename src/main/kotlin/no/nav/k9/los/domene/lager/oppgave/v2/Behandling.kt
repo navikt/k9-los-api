@@ -3,8 +3,6 @@ package no.nav.k9.los.domene.lager.oppgave.v2
 import com.fasterxml.jackson.databind.JsonNode
 import no.nav.k9.los.domene.modell.FagsakYtelseType
 import no.nav.k9.los.domene.modell.Fagsystem
-import no.nav.k9.los.tjenester.saksbehandler.merknad.Merknad
-import no.nav.k9.los.tjenester.saksbehandler.merknad.MerknadEndret
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -22,7 +20,6 @@ open class Behandling constructor(
     val søkersId: Ident?,
     val kode6: Boolean = false,
     val skjermet: Boolean = false,
-    var merknad: Merknad?,
     private val data: JsonNode?
 ) {
     var ferdigstilt: LocalDateTime? = null
@@ -52,7 +49,6 @@ open class Behandling constructor(
                 søkersId = søkersId,
                 kode6 = false,
                 skjermet = false,
-                merknad = null,
                 data = null
             )
         }
@@ -92,8 +88,6 @@ open class Behandling constructor(
         sistEndret = LocalDateTime.now()
         log.info("Ferdigstiller behandling $eksternReferanse")
         lukkAlleAktiveOppgaver(ferdigstillelse)
-        if (merknad != null) { slettMerknad() }
-
         ferdigstilt = ferdigstillelse.tidspunkt
     }
 
@@ -193,27 +187,6 @@ open class Behandling constructor(
         return oppgaver.any { it.oppgaveKode == nyOppgave.oppgaveKode && it.opprettet.equalsWithPrecision(nyOppgave.tidspunkt, 50L) }
     }
 
-    fun lagreMerknad(merknadEndring: MerknadEndret, saksbehandlerIdent: String?) {
-        if (merknadEndring.merknadKoder.isEmpty()) {
-            slettMerknad()
-            return
-        }
-
-        if (merknad == null) {
-            merknad = merknadEndring.nyMerknad(saksbehandlerIdent, aktiveOppgaver())
-            return
-        }
-        merknad?.oppdater(merknadEndring.merknadKoder, merknadEndring.fritekst)
-    }
-
-    private fun slettMerknad() {
-        if (merknad == null)  {
-            log.warn("Prøver å slette merknad som ikke finnes eller allerede er slettet")
-            return
-        }
-        log.info("Sletter merknad $eksternReferanse")
-        merknad?.slett()
-    }
 }
 
 fun LocalDateTime.equalsWithPrecision(annen: LocalDateTime, errorMs: Long = 50L): Boolean {

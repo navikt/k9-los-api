@@ -60,7 +60,6 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
-import no.nav.k9.los.tjenester.saksbehandler.merknad.MerknadTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.*
 import no.nav.k9.los.tjenester.sse.SseEvent
 import org.koin.core.module.Module
@@ -71,6 +70,8 @@ import java.util.*
 import javax.sql.DataSource
 
 fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClientLocal()): Module = module {
+
+    val config = mockk<Configuration>()
 
     single(named("oppgaveKøOppdatert")) {
         Channel<UUID>(Channel.UNLIMITED)
@@ -152,7 +153,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             saksbehandlerRepository = get()
         )
     }
-    val config = mockk<Configuration>()
+
     single {
         config
     }
@@ -333,18 +334,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             azureGraphService = get(),
             punsjTilLosAdapterTjeneste = get(),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
-        )
-    }
-
-    single {
-        MerknadTjeneste(
-            oppgaveRepositoryV2 = get(),
-            azureGraphService = get(),
-            oppgaveKøOppdaterer = get(),
-            migreringstjeneste = get(),
-            k9SakTilLosAdapterTjeneste = get(),
-            behandlingProsessEventK9Repository = get(),
-            tm = get()
         )
     }
 
