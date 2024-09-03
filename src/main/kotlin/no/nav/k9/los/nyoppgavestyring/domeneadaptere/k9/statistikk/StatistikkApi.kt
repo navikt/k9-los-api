@@ -5,6 +5,7 @@ import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.Configuration
+import no.nav.k9.los.domene.modell.Fagsystem
 import no.nav.k9.los.integrasjon.rest.RequestContextService
 import org.koin.ktor.ext.inject
 
@@ -24,9 +25,10 @@ internal fun Route.StatistikkApi() {
         }
     }
 
-    put("resendStatistikkFraStart") {
+    put("resendStatistikkFraStart/{fagsystem}") {
         requestContextService.withRequestContext(call) {
-            oppgavestatistikkTjeneste.slettStatistikkgrunnlag()
+            val fagsystem = call.parameters["fagsystem"]?.let { Fagsystem.valueOf(it) }
+            oppgavestatistikkTjeneste.slettStatistikkgrunnlag(fagsystem)
             call.respond(HttpStatusCode.NoContent)
         }
     }
