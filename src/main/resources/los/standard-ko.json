@@ -26,6 +26,20 @@
       "verdi": [
         "NEI"
       ]
+    },
+    {
+      "type": "feltverdi",
+      "område": "K9",
+      "kode": "ytelsestype",
+      "operator": "IN",
+      "verdi": []
+    },
+    {
+      "type": "feltverdi",
+      "område": "K9",
+      "kode": "liggerHosBeslutter",
+      "operator": "IN",
+      "verdi": []
     }
   ],
   "select": [],
