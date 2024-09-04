@@ -360,6 +360,7 @@ class SaksbehandlerRepository(
     suspend fun hentAlleSaksbehandlere(): List<Saksbehandler> {
         Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
             .increment()
+        pepClient.kanLeggeUtDriftsmelding()
         val skjermet = pepClient.harTilgangTilKode6()
         val identer = using(sessionOf(dataSource)) {
             it.run(

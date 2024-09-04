@@ -107,7 +107,7 @@
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": true,
-      "kokriterie": true,
+      "kokriterie": false,
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakTidSidenMottattDatoUtleder"
     },
     {
@@ -325,7 +325,7 @@
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": true,
-      "kokriterie": true,
+      "kokriterie": false,
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakVentetPåAnnetIkkeSaksbehandlingstidUtleder"
     },
     {
@@ -334,7 +334,7 @@
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": true,
-      "kokriterie": true,
+      "kokriterie": false,
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakVentetPåAnnetUtleder"
     },
     {
@@ -343,7 +343,7 @@
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": true,
-      "kokriterie": true,
+      "kokriterie": false,
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakVentetPåArbeidsgiverUtleder"
     },
     {
@@ -352,7 +352,7 @@
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": true,
-      "kokriterie": true,
+      "kokriterie": false,
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakVentetPåSaksbehandlerUtleder"
     },
     {
@@ -361,7 +361,7 @@
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": true,
-      "kokriterie": true,
+      "kokriterie": false,
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakVentetPåSøkerUtleder"
     },
     {
@@ -370,7 +370,7 @@
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": true,
-      "kokriterie": true,
+      "kokriterie": false,
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakVentetPåTekniskFeilUtleder"
     },
     {
@@ -379,7 +379,7 @@
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": true,
-      "kokriterie": true,
+      "kokriterie": false,
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakOppgavesaksbehandlingstidUtleder"
     },
     {
@@ -448,7 +448,7 @@
       "listetype": false,
       "tolkesSom": "boolean",
       "visTilBruker": true,
-      "kokriterie": true
+      "kokriterie": false
     },
     {
       "id": "søknadsårsak",
@@ -488,7 +488,7 @@
       "listetype": false,
       "tolkesSom": "Timestamp",
       "visTilBruker": true,
-      "kokriterie": true
+      "kokriterie": false
     },
     {
       "id": "journalpostId",
