@@ -113,7 +113,7 @@ spec:
 
       # opentelemetry
     - name: "OTEL_RESOURCE_ATTRIBUTES"
-      value: "service.name=k9-los-api,service.namespace=k9saksbehandling,deployment.environment=q"
+      value: "service.name=k9-los-api,service.namespace=k9saksbehandling,deployment.environment=q,nais.backend=elastic-apm;grafana-lgtm"
 
       # ABAC
     - name: ABAC_PDP_ENDPOINT_URL
