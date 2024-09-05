@@ -155,8 +155,10 @@ class K9SakTilLosAdapterTjeneste(
                             korrigerFeilRekkefølge = true
                         }
                     }
+                    forrigeOppgave = oppgave
+                } else {
+                    forrigeOppgave = oppgaveV3Tjeneste.hentOppgaveversjon("K9", oppgaveDto.id, oppgaveDto.versjon, tx)
                 }
-                forrigeOppgave = oppgave
             }
 
             behandlingProsessEventK9Repository.fjernDirty(uuid, tx)
