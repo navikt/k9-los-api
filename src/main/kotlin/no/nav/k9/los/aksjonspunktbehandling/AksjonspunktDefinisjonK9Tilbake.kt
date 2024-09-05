@@ -18,6 +18,10 @@ data class AksjonspunktDefinisjonK9Tilbake (val kode: String, val totrinn:Boolea
         fun alle() : List<AksjonspunktDefinisjonK9Tilbake> {
             return listOf(VURDER_TILBAKEKREVING, VURDER_FORELDELSE, FORESLÅ_VEDTAK, FATTE_VEDTAK, AVKLAR_VERGE, VENT_PÅ_BRUKERTILBAKEMELDING, VENT_PÅ_TILBAKEKREVINGSGRUNNLAG, AVKLART_FAKTA_FEILUTBETALING, VURDER_HENLEGGELSE_MANGLER_KRAVGRUNNLAG)
         }
+
+        fun fraKode(kode : String) : AksjonspunktDefinisjonK9Tilbake {
+            return alle().first { it.kode == kode }
+        }
     }
 
 }

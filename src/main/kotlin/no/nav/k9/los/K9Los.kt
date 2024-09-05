@@ -49,6 +49,8 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.k9SakEksternId
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.k9SakKorrigerOutOfOrderProsessor
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkApi
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.tilbaketillos.k9TilbakeEksternId
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.tilbaketillos.k9tilbakeKorrigerOutOfOrderProsessor
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.forvaltning.forvaltningApis
@@ -202,6 +204,12 @@ fun Application.k9Los() {
             channel = koin.get<Channel<k9SakEksternId>>(named("historikkvaskChannelK9Sak")),
         )
 
+    val k9TilbakeKorrigerOutOfOrderProsessor =
+        k9tilbakeKorrigerOutOfOrderProsessor(
+            k9TilbakeTilLosHistorikkvaskTjeneste = koin.get(),
+            channel = koin.get<Channel<k9TilbakeEksternId>>(named("historikkvaskChannelK9Tilbake")),
+        )
+
     environment.monitor.subscribe(ApplicationStopping) {
         log.info("Stopper AsynkronProsesseringV1Service.")
         asynkronProsesseringV1Service.stop()
@@ -214,6 +222,7 @@ fun Application.k9Los() {
         refreshOppgaveV3Jobb.cancel()
         oppdaterStatistikkJobb.cancel()
         k9SakKorrigerOutOfOrderProsessor.cancel()
+        k9TilbakeKorrigerOutOfOrderProsessor.cancel()
     }
 
     OmrådeSetup(
