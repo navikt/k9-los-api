@@ -111,6 +111,10 @@ spec:
     - name: KAFKA_K9PUNSJ_TOPIC
       value: k9saksbehandling.privat-k9-produksjonsstyring-punsj-v1
 
+      # opentelemetry
+    - name: "OTEL_RESOURCE_ATTRIBUTES"
+      value: "service.name=k9-los-api,service.namespace=k9saksbehandling,deployment.environment=q"
+
       # ABAC
     - name: ABAC_PDP_ENDPOINT_URL
       value: http://abac-k9.k9saksbehandling.svc.nais.local/application/authorize
