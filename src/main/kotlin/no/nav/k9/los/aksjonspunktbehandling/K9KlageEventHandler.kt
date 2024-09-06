@@ -61,9 +61,9 @@ class K9KlageEventHandler constructor(
         // Gjøres utenfor transaksjon fordi den ikke muterer data.
         // Det er ikke mulig å unngå lagring selv om eventet skal ignoreres hvis den skulle ha vært i samme transaksjon (pga on conflict(id) update.. ) i lagre-metoden
         val eksisterendeEventModell = behandlingProsessEventKlageRepository.hent(event.eksternId!!)
-//        if (eksisterendeEventModell.eventer.any { tidligereEvent -> tidligereEvent.behandlingStatus == BehandlingStatus.AVSLUTTET.kode }) {
-//            return null
-//        }
+        if (eksisterendeEventModell.eventer.any { tidligereEvent -> tidligereEvent.behandlingStatus == BehandlingStatus.AVSLUTTET.kode }) {
+            return null
+        }
 
         if (eksisterendeEventModell.eventer.isEmpty()) {
             log.info("Vaskeeventfiltrering gjelder behandling som ikke tidligere finnes i los ${event.eksternId}")
