@@ -433,7 +433,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         K9TilbakeTilLosAdapterTjeneste(
-            behandlingProsessEventTilbakeRepository = get(),
+            behandlingProsessEventTilbakeRepository = BehandlingProsessEventTilbakeRepository(get()),
             oppgavetypeTjeneste = get(),
             oppgaveV3Tjeneste = get(),
             config = get(),
