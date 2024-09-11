@@ -74,8 +74,8 @@ dependencies {
     implementation("no.nav.k9.statistikk:kontrakter:2.0_20220411110858_dc06dd1")
 
     // opentelemetry
-    implementation("io.opentelemetry:opentelemetry-api:1.41.0")
-    implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.41.0")
+    implementation("io.opentelemetry:opentelemetry-api:1.42.1")
+    implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.42.1")
     implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.7.0")
 
     // Div
