@@ -76,7 +76,7 @@ class K9TilbakeTilLosHistorikkvaskTjeneste(
                 }
 
                 val (antallAlle, antallAktive) = oppgaveV3Tjeneste.tellAntall()
-                log.info("Antall oppgaver etter historikkvask (k9-sak): $antallAlle, antall aktive: $antallAktive, antall vaskede eventer: $eventTeller fordelt på $behandlingTeller behandlinger.")
+                log.info("Antall oppgaver etter historikkvask k9-tilbake: $antallAlle, antall aktive: $antallAktive, antall vaskede eventer: $eventTeller fordelt på $behandlingTeller behandlinger.")
 
                 val tidHeleKjøringen = System.currentTimeMillis() - tidKjøringStartet
                 if (eventTeller > 0) {
@@ -92,7 +92,7 @@ class K9TilbakeTilLosHistorikkvaskTjeneste(
 
     fun nullstillhistorikkvask(){
         behandlingProsessEventTilbakeRepository.nullstillHistorikkvask()
-        log.info("Nullstilt historikkvaskmarkering k9-sak")
+        log.info("Nullstilt historikkvaskmarkering k9-tilbake")
     }
 
     fun skalPauses(): Boolean {

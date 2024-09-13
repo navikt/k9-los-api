@@ -21,7 +21,7 @@ fun CoroutineScope.k9tilbakeKorrigerOutOfOrderProsessor(
                 k9TilbakeTilLosHistorikkvaskTjeneste.vaskOppgaveForBehandlingUUID(eksternId.eksternId)
             }
         } catch (e: Exception) {
-            log.error("Historikkvask k9-sak feilet for enkeltoppgave med eksternId: ${eksternId.eksternId}")
+            log.error("Historikkvask k9-tilbake feilet for enkeltoppgave med eksternId: ${eksternId.eksternId}")
         }
     }
 }
