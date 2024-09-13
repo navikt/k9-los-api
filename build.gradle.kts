@@ -2,7 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 val mainClass = "no.nav.k9.los.K9LosKt"
 val hikariVersion = "5.1.0"
-val flywayVersion = "10.17.3"
+val flywayVersion = "10.18.0"
 val vaultJdbcVersion = "1.3.10"
 val koinVersion = "3.5.6"
 val kotliqueryVersion = "1.9.0"
@@ -74,8 +74,8 @@ dependencies {
     implementation("no.nav.k9.statistikk:kontrakter:2.0_20220411110858_dc06dd1")
 
     // opentelemetry
-    implementation("io.opentelemetry:opentelemetry-api:1.41.0")
-    implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.41.0")
+    implementation("io.opentelemetry:opentelemetry-api:1.42.1")
+    implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.42.1")
     implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.7.0")
 
     // Div
