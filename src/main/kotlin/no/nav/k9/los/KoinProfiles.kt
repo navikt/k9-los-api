@@ -48,9 +48,12 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAda
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.k9SakEksternId
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.tilbaketillos.k9TilbakeEksternId
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosLukkeFeiloppgaverTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9tilbaketillos.K9TilbakeTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.forvaltning.ForvaltningRepository
 import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
@@ -120,6 +123,9 @@ fun common(app: Application, config: Configuration) = module {
     }
     single(named("historikkvaskChannelK9Sak")) {
         Channel<k9SakEksternId>(Channel.UNLIMITED)
+    }
+    single(named("historikkvaskChannelK9Tilbake")) {
+        Channel<k9TilbakeEksternId>(Channel.UNLIMITED)
     }
 
     single { OppgaveRepository(get(), get(), get(named("oppgaveRefreshChannel"))) }
@@ -251,6 +257,7 @@ fun common(app: Application, config: Configuration) = module {
             reservasjonOversetter = get(),
             saksbehandlerRepository = get(),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
+            k9TilbakeTilLosAdapterTjeneste = get(),
         )
     }
 
@@ -459,6 +466,19 @@ fun common(app: Application, config: Configuration) = module {
             historikkvaskChannel = get(named("historikkvaskChannelK9Sak"))
         )
     }
+    single {
+        K9TilbakeTilLosAdapterTjeneste(
+            behandlingProsessEventTilbakeRepository = get(),
+            oppgavetypeTjeneste = get(),
+            oppgaveV3Tjeneste = get(),
+            config = get(),
+            transactionalManager = get(),
+            pepCacheService = get(),
+            oppgaveRepository = get(),
+            reservasjonV3Tjeneste = get(),
+            historikkvaskChannel = get(named("historikkvaskChannelK9Tilbake"))
+        )
+    }
 
     single {
         OppgaveQueryRepository(
@@ -539,6 +559,15 @@ fun common(app: Application, config: Configuration) = module {
             config = get(),
             transactionalManager = get(),
             k9sakBeriker = get(),
+        )
+    }
+
+    single {
+        K9TilbakeTilLosHistorikkvaskTjeneste(
+            behandlingProsessEventTilbakeRepository = get(),
+            oppgaveV3Tjeneste = get(),
+            config = get(),
+            transactionalManager = get(),
         )
     }
 

@@ -177,7 +177,7 @@
       "tolkesSom": "boolean",
       "visTilBruker": true,
       "kokriterie": true,
-      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakBeslutterTransientFeltutleder"
+      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9BeslutterTransientFeltutleder"
     },
     {
       "id": "totrinnskontroll",
@@ -513,6 +513,22 @@
       "tolkesSom": "Timestamp",
       "visTilBruker": false,
       "kokriterie": false
+    },
+    {
+      "id": "førsteFeilutbetalingDato",
+      "visningsnavn": "Føste dato som har feilutbetaling",
+      "listetype": false,
+      "tolkesSom": "Timestamp",
+      "visTilBruker": true,
+      "kokriterie": true
+    },
+    {
+      "id": "feilutbetaltBeløp",
+      "visningsnavn": "Feilutbetalt beløp",
+      "listetype": false,
+      "tolkesSom": "Integer",
+      "visTilBruker": true,
+      "kokriterie": true
     }
 
   ]

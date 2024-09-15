@@ -80,15 +80,6 @@ class PunsjEventK9Repository(private val dataSource: DataSource) {
         )
     }
 
-    fun settDirty(uuid: UUID, tx: TransactionalSession) {
-        tx.run(
-            queryOf(
-                """update behandling_prosess_events_k9_punsj set dirty = true where id = :id""",
-                mapOf("id" to uuid.toString())
-            ).asUpdate
-        )
-    }
-
     fun lagre(
         event: PunsjEventDto
     ): K9PunsjModell {

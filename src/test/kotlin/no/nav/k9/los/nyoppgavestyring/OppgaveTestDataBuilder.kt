@@ -2,8 +2,10 @@ package no.nav.k9.los.nyoppgavestyring
 
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdi
@@ -27,9 +29,9 @@ class OppgaveTestDataBuilder(
     val oppgavetypeRepo = get<OppgavetypeRepository>()
     val oppgaverepo = get<OppgaveV3Repository>()
     val k9SakTilLosAdapterTjeneste = get<K9SakTilLosAdapterTjeneste>()
-
-    // Skal denne klassen håndtere både k9sak og k9punsj?
     val k9PunsjTilLosAdapterTjeneste = get<K9PunsjTilLosAdapterTjeneste>()
+    val k9TilbakeTilLosAdapterTjeneste = get<K9TilbakeTilLosAdapterTjeneste>()
+    val k9KlageTilLosAdapterTjeneste = get<K9KlageTilLosAdapterTjeneste>()
 
     var eksternVersjonTeller = 1000000
 
@@ -38,6 +40,8 @@ class OppgaveTestDataBuilder(
         område = områdeRepository.hent("K9")!!
         k9SakTilLosAdapterTjeneste.setup()
         k9PunsjTilLosAdapterTjeneste.setup()
+        k9KlageTilLosAdapterTjeneste.setup()
+        k9TilbakeTilLosAdapterTjeneste.setup()
     }
 
     val oppgaveFeltverdier = mutableSetOf<OppgaveFeltverdi>()

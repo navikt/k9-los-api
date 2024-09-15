@@ -161,20 +161,4 @@ class BehandlingProsessEventKlageRepository(private val dataSource: DataSource) 
         )
     }
 
-    fun lagreNy(uuid: UUID, modell: K9KlageModell) {
-        using(sessionOf(dataSource)) {
-            it.transaction { tx ->
-                tx.run(
-                    queryOf(
-                        """
-                    insert into behandling_prosess_events_klage as k (id, data)
-                    values (:id, :data :: jsonb)
-                    on conflict (id) do update
-                    set data = :data :: jsonb
-                 """, mapOf("id" to uuid.toString(), "data" to LosObjectMapper.instance.writeValueAsString(modell))
-                    ).asUpdate
-                )
-            }
-        }
-    }
 }
