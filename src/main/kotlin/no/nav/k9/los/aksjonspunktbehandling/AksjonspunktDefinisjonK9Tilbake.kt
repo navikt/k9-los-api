@@ -20,7 +20,11 @@ data class AksjonspunktDefinisjonK9Tilbake (val kode: String, val totrinn:Boolea
         }
 
         fun fraKode(kode : String) : AksjonspunktDefinisjonK9Tilbake {
-            return alle().first { it.kode == kode }
+            val match = alle().filter { it.kode == kode }
+            if (match.isNotEmpty()) {
+                return match[0]
+            }
+            throw IllegalArgumentException("Har ikke AksjonspunktDefinisjon for tilbake med kode $kode");
         }
     }
 

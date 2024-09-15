@@ -310,6 +310,22 @@ class AktivOppgaveRepository (val oppgavetypeRepository: OppgavetypeRepository) 
         return oppgave
     }
 
+    @VisibleForTesting
+    fun hentOppgaveForEksternId(tx: TransactionalSession, eksternOppgaveId: EksternOppgaveId, now: LocalDateTime = LocalDateTime.now()): Oppgave? {
+        return tx.run(
+            queryOf(
+                """
+                select * 
+                from oppgave_v3_aktiv ov
+                where ov.ekstern_id = :ekstern_id
+            """.trimIndent(),
+                mapOf("ekstern_id" to eksternOppgaveId.eksternId)
+            ).map { row ->
+                mapOppgave(row, now, tx)
+            }.asSingle
+        )
+    }
+
     @WithSpan
     fun hentK9sakParsakOppgaver(tx: TransactionalSession, oppgaver : Collection<AktivOppgaveId>) : Set<EksternOppgaveId> {
         if (oppgaver.isEmpty()){
