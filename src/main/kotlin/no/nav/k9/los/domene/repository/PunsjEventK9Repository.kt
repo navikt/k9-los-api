@@ -6,7 +6,6 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.los.domene.modell.K9PunsjModell
 import no.nav.k9.los.integrasjon.kafka.dto.PunsjEventDto
-import no.nav.k9.los.tjenester.innsikt.Databasekall
 import no.nav.k9.los.tjenester.innsikt.Mapping
 import no.nav.k9.los.utils.LosObjectMapper
 import org.slf4j.Logger
@@ -31,8 +30,6 @@ class PunsjEventK9Repository(private val dataSource: DataSource) {
                     }.asSingle
             )
         }
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
         if (json.isNullOrEmpty()) {
             return K9PunsjModell(emptyList())
         }
@@ -56,8 +53,6 @@ class PunsjEventK9Repository(private val dataSource: DataSource) {
                         row.string("data")
                     }.asSingle
             )
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
         if (json.isNullOrEmpty()) {
             return K9PunsjModell(emptyList())
         }
@@ -110,8 +105,6 @@ class PunsjEventK9Repository(private val dataSource: DataSource) {
             }
 
         }
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
         val modell = LosObjectMapper.instance.readValue(out!!, K9PunsjModell::class.java)
         val unikeEventer = BehandlingProsessEventK9PunsjDuplikatUtil.fjernDuplikater(modell.eventer)
         return modell.copy(eventer = unikeEventer.sortedBy { it.eventTid })

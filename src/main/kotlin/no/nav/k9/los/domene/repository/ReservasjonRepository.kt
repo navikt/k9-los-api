@@ -11,7 +11,6 @@ import no.nav.k9.los.db.util.InClauseHjelper
 import no.nav.k9.los.domene.lager.oppgave.Reservasjon
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.modell.OppgaveKø
-import no.nav.k9.los.tjenester.innsikt.Databasekall
 import no.nav.k9.los.tjenester.sse.RefreshKlienter.sendOppdaterReserverte
 import no.nav.k9.los.tjenester.sse.SseEvent
 import no.nav.k9.los.utils.LosObjectMapper
@@ -109,8 +108,6 @@ class ReservasjonRepository(
                     .asList
             )
         }
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
 
         return json.map { s -> LosObjectMapper.instance.readValue(s, Reservasjon::class.java) }.toList()
     }
@@ -202,9 +199,6 @@ class ReservasjonRepository(
                 }.asSingle
             )
         }
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
         return LosObjectMapper.instance.readValue(json!!, Reservasjon::class.java)
     }
 
@@ -219,9 +213,6 @@ class ReservasjonRepository(
                 }.asSingle
             )
         }
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
         return if (json != null) LosObjectMapper.instance.readValue(json, Reservasjon::class.java) else null
     }
 
@@ -236,9 +227,6 @@ class ReservasjonRepository(
                 }.asSingle
             )
         }
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
         if (json == null) {
             return emptyList()
         }
@@ -268,9 +256,6 @@ class ReservasjonRepository(
                 }.asSingle
             )
         }
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
         return json != null
     }
 
@@ -281,9 +266,6 @@ class ReservasjonRepository(
                 reservasjon = lagreReservasjon(tx, uuid, refresh, f)
             }
         }
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
         return reservasjon!!
     }
 

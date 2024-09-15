@@ -6,7 +6,6 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.los.domene.modell.K9TilbakeModell
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventTilbakeDto
-import no.nav.k9.los.tjenester.innsikt.Databasekall
 import no.nav.k9.los.utils.LosObjectMapper
 import java.util.*
 import java.util.concurrent.atomic.LongAdder
@@ -26,8 +25,6 @@ class BehandlingProsessEventTilbakeRepository(private val dataSource: DataSource
                     }.asSingle
             )
         }
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
         if (json.isNullOrEmpty()) {
             return K9TilbakeModell(mutableListOf())
         }
@@ -66,8 +63,6 @@ class BehandlingProsessEventTilbakeRepository(private val dataSource: DataSource
             }
 
         }
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
         val modell = LosObjectMapper.instance.readValue(out!!, K9TilbakeModell::class.java)
         val unikeEventer = BehandlingProsessEventK9TilbakeDuplikatUtil.fjernDuplikater(modell.eventer)
         return K9TilbakeModell(unikeEventer.sortedBy { it.eventTid }.toMutableList())
@@ -142,8 +137,6 @@ class BehandlingProsessEventTilbakeRepository(private val dataSource: DataSource
                 }.asSingle
         )
 
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
         if (json.isNullOrEmpty()) {
             return K9TilbakeModell(mutableListOf())
         }
