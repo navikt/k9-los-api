@@ -16,10 +16,12 @@ import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.pep.PepCache
 import no.nav.k9.los.nyoppgavestyring.pep.PepCacheRepository
 import no.nav.k9.los.nyoppgavestyring.pep.TestRepository
+import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
 import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
@@ -404,6 +406,52 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         ))
 
         assertThat(oppgaveQueryRepository.query(QueryRequest(query))).isEmpty()
+    }
+
+    @Test
+    fun `Beslutter-kø skal inneholde oppgaver for k9sak-behandlinger med aksjonspunkt 5016`() {
+        OppgaveTestDataBuilder()
+            .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, UUID.randomUUID().toString())
+            .medOppgaveFeltVerdi(FeltType.LØSBART_AKSJONSPUNKT, "5016")
+            .lagOgLagre()
+
+        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
+        val query = OppgaveQuery(listOf(
+            byggFilterK9(FeltType.LIGGER_HOS_BESLUTTER, FeltverdiOperator.EQUALS, "true"),
+            byggGenereltFilter(FeltType.BESKYTTELSE, FeltverdiOperator.IN, BeskyttelseType.ORDINÆR.kode)
+        ))
+        assertThat(oppgaveQueryRepository.query(QueryRequest(query))).hasSize(1)
+    }
+
+    @Test
+    fun `Beslutter-kø skal inneholde oppgaver for k9klage-behandlinger med aksjonspunkt 5016`() {
+        OppgaveTestDataBuilder(definisjonskilde = "k9-klage-til-los", oppgaveTypeNavn = "k9klage")
+            .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, UUID.randomUUID().toString())
+            .medOppgaveFeltVerdi(FeltType.LØSBART_AKSJONSPUNKT, "5016")
+            .lagOgLagre()
+
+        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
+        val query = OppgaveQuery(listOf(
+            byggFilterK9(FeltType.LIGGER_HOS_BESLUTTER, FeltverdiOperator.EQUALS, "true"),
+            byggGenereltFilter(FeltType.BESKYTTELSE, FeltverdiOperator.IN, BeskyttelseType.ORDINÆR.kode)
+        ))
+        assertThat(oppgaveQueryRepository.query(QueryRequest(query))).hasSize(1)
+    }
+
+    @Test
+    fun `Beslutter-kø for skal inneholde oppgaver for k9-tilbake-behandlinger med aksjonspunkt 5005`() {
+        val eksternId = UUID.randomUUID().toString()
+        OppgaveTestDataBuilder(definisjonskilde = "k9-tilbake-til-los", oppgaveTypeNavn = "k9tilbake")
+            .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, eksternId)
+            .medOppgaveFeltVerdi(FeltType.LØSBART_AKSJONSPUNKT, "5005")
+            .lagOgLagre()
+
+        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
+        val query = OppgaveQuery(listOf(
+            byggFilterK9(FeltType.LIGGER_HOS_BESLUTTER, FeltverdiOperator.EQUALS, "true"),
+            byggGenereltFilter(FeltType.BESKYTTELSE, FeltverdiOperator.IN, BeskyttelseType.ORDINÆR.kode)
+        ))
+        assertThat(oppgaveQueryRepository.query(QueryRequest(query))).hasSize(1)
     }
 
     @Test
