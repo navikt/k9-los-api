@@ -49,7 +49,8 @@ internal class AksjonspunktTilbakeStream constructor(
                 .stream(
                     fromTopic.name,
                     Consumed.with(fromTopic.keySerde, fromTopic.valueSerde)
-                )
+                 )
+                .peek { _, e -> log.info("--> Behandlingsprosesshendelse fra k9tilbake: ${e.saksnummer} ${e.eksternId}") }
                 .foreach { _, entry ->
                     if (entry != null) {
                         OpentelemetrySpanUtil.span(NAME, mapOf("saksnummer" to entry.saksnummer)) {
