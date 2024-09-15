@@ -80,7 +80,7 @@ class K9TilbakeEventHandlerTest : AbstractK9LosIntegrationTest() {
         assertTrue { !oppgave.aktiv } //oppgaven er ikke aktiv, siden behandlngen har autopunkt 7001
         val oppgaveV3 = transactionalManager.transaction { tx ->
             aktivOppgaveRepository.hentOppgaveForEksternId(tx,EksternOppgaveId("K9", "29cbdc33-0e59-4559-96a8-c2154bf17e5a"))}
-        assertThat(oppgaveV3!!.status).isEqualTo(Oppgavestatus.VENTER.kode)
+        assertThat(oppgaveV3).isNull()
     }
 
     @Test
