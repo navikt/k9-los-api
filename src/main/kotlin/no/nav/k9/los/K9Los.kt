@@ -233,6 +233,7 @@ fun Application.k9Los() {
         feltdefinisjonTjeneste = koin.get()
     )
 
+    //TODO bruk injection for å finne adapterne (se koin.get<K9TilbakeTilLosAdapterTjeneste>().kjør
     K9SakTilLosAdapterTjeneste(
         behandlingProsessEventK9Repository = koin.get(),
         oppgavetypeTjeneste = koin.get(),
@@ -268,19 +269,11 @@ fun Application.k9Los() {
     ).kjør(kjørUmiddelbart = false)
 
 
-    //TODO bruk injection for å finne adapterne, for eksempel
-    // koin.get<K9TilbakeTilLosAdapterTjeneste>().kjør()
-    K9TilbakeTilLosAdapterTjeneste(
-        behandlingProsessEventTilbakeRepository = koin.get(),
-        oppgavetypeTjeneste = koin.get(),
-        oppgaveV3Tjeneste = koin.get(),
-        oppgaveRepository = koin.get(),
-        reservasjonV3Tjeneste = koin.get(),
-        config = koin.get(),
-        transactionalManager = koin.get(),
-        pepCacheService = koin.get(),
-        historikkvaskChannel = koin.get<Channel<k9TilbakeEksternId>>(named("historikkvaskChannelK9Tilbake")),
-    ).kjør(kjørSetup = false, kjørUmiddelbart = false)
+
+    //TODO fjern sjekk når klart for prod
+    if (configuration.koinProfile == KoinProfile.PREPROD || configuration.koinProfile == KoinProfile.LOCAL) {
+        koin.get<K9TilbakeTilLosAdapterTjeneste>().kjør(kjørSetup = false, kjørUmiddelbart = false)
+    }
 
     OppgavestatistikkTjeneste(
         oppgavetypeRepository = koin.get(),

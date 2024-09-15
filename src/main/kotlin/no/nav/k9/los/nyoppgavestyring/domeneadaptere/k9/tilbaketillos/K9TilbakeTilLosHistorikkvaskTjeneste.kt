@@ -24,7 +24,6 @@ class K9TilbakeTilLosHistorikkvaskTjeneste(
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
     private val config: Configuration,
     private val transactionalManager: TransactionalManager,
-    private val k9TilbakeTilLosAdapterTjeneste: K9TilbakeTilLosAdapterTjeneste,
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9TilbakeTilLosHistorikkvaskTjeneste::class.java)
