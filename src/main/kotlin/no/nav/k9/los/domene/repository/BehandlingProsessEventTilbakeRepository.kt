@@ -50,7 +50,7 @@ class BehandlingProsessEventTilbakeRepository(private val dataSource: DataSource
                     insert into behandling_prosess_events_tilbake as k (id, data)
                     values (:id, :dataInitial :: jsonb)
                     on conflict (id) do update
-                    set data = jsonb_set(k.data, '{eventer,999999}', :data :: jsonb, true)
+                    set data = jsonb_set(k.data, '{eventer,999999}', :data :: jsonb, true), dirty = true
                  """, mapOf("id" to id, "dataInitial" to "{\"eventer\": [$json]}", "data" to json)
                     ).asUpdate
                 )
