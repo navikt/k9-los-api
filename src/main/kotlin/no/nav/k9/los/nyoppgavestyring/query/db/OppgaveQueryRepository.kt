@@ -7,6 +7,7 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.EgenAnsatt
+import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Kodeverkreferanse
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveId
@@ -157,6 +158,21 @@ class OppgaveQueryRepository(
                     Verdiforklaring(
                         verdi = oppgavestatus.kode,
                         visningsnavn = oppgavestatus.visningsnavn,
+                        sekundærvalg = false
+                    )
+                }
+            ),
+            Oppgavefelt(
+                område = null,
+                kode = "personbeskyttelse",
+                visningsnavn = "Beskyttelse",
+                tolkes_som = "String",
+                kokriterie = false,
+                verdiforklaringerErUttømmende = true,
+                PersonBeskyttelseType.entries.map {
+                    Verdiforklaring(
+                        verdi = it.kode,
+                        visningsnavn = it.beskrivelse,
                         sekundærvalg = false
                     )
                 }
