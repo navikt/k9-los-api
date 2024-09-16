@@ -172,7 +172,7 @@
     },
     {
       "id": "liggerHosBeslutter",
-      "visningsnavn": "Ligger hos beslutter",
+      "visningsnavn": "Til beslutter",
       "listetype": false,
       "tolkesSom": "boolean",
       "visTilBruker": true,
@@ -213,7 +213,7 @@
     },
     {
       "id": "løsbartAksjonspunkt",
-      "visningsnavn": "Løsbart aksjonspunkt",
+      "visningsnavn": "Aksjonspunkt som kan løses",
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
