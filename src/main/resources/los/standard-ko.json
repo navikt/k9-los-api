@@ -12,19 +12,10 @@
     {
       "type": "feltverdi",
       "område": null,
-      "kode": "beskyttelse",
+      "kode": "personbeskyttelse",
       "operator": "IN",
       "verdi": [
-        "ORDINÆR"
-      ]
-    },
-    {
-      "type": "feltverdi",
-      "område": null,
-      "kode": "egenAnsatt",
-      "operator": "IN",
-      "verdi": [
-        "NEI"
+        "UGRADERT"
       ]
     },
     {
