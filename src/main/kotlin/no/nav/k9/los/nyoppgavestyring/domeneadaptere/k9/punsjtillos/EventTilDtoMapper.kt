@@ -85,7 +85,12 @@ class EventTilDtoMapper {
                     nøkkel = "journalpostId",
                     verdi = event.journalpostId.verdi.toString(),
                 ),
-                event.journalførtTidspunkt?.let {
+                forrigeOppgave?.hentVerdi("journalfortTidspunkt")?.let {
+                    OppgaveFeltverdiDto(
+                        nøkkel = "journalfortTidspunkt",
+                        verdi = it,
+                    )
+                } ?: event.journalførtTidspunkt?.let {
                     OppgaveFeltverdiDto(
                         nøkkel = "journalfortTidspunkt",
                         verdi = it.toString(),
@@ -93,7 +98,7 @@ class EventTilDtoMapper {
                 },
                 OppgaveFeltverdiDto(
                     nøkkel = "journalfort",
-                    verdi = (event.journalførtTidspunkt != null).toString(),
+                    verdi = forrigeOppgave?.let { forrigeOppgave.hentVerdi("journalfort") } ?: (event.journalførtTidspunkt != null).toString(),
                 ),
                 OppgaveFeltverdiDto(
                     nøkkel = "registrertDato",
