@@ -281,7 +281,7 @@ object KodeverkSynlighetRegler {
             BehandlingÅrsakType.RE_HENDELSE_DØD_FORELDER -> KodeverkSynlighet.SYNLIG_FAVORITT
 
             BehandlingÅrsakType.UDEFINERT -> KodeverkSynlighet.SKJULT
-            else -> KodeverkSynlighet.SYNLIG
+            else -> KodeverkSynlighet.SYNLIG_FAVORITT
         }
     }
 
