@@ -281,14 +281,14 @@ object KodeverkSynlighetRegler {
             BehandlingÅrsakType.RE_HENDELSE_DØD_FORELDER -> KodeverkSynlighet.SYNLIG_FAVORITT
 
             BehandlingÅrsakType.UDEFINERT -> KodeverkSynlighet.SKJULT
-            else -> KodeverkSynlighet.SYNLIG_FAVORITT
+            else -> KodeverkSynlighet.SYNLIG
         }
     }
 
     fun behandlingsårsak(søknadÅrsak: no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType): KodeverkSynlighet {
         return when (søknadÅrsak) {
                 no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.UDEFINERT -> KodeverkSynlighet.SKJULT
-            else -> KodeverkSynlighet.SYNLIG
+            else -> KodeverkSynlighet.SYNLIG_FAVORITT
         }
     }
 
