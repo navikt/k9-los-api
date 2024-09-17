@@ -1,0 +1,45 @@
+{
+  "filtere": [
+    {
+      "type": "feltverdi",
+      "område": null,
+      "kode": "oppgavestatus",
+      "operator": "IN",
+      "verdi": [
+        "AAPEN"
+      ]
+    },
+    {
+      "type": "feltverdi",
+      "område": null,
+      "kode": "personbeskyttelse",
+      "operator": "IN",
+      "verdi": [
+        "KODE6"
+      ]
+    },
+    {
+      "type": "feltverdi",
+      "område": "K9",
+      "kode": "ytelsestype",
+      "operator": "IN",
+      "verdi": []
+    },
+    {
+      "type": "feltverdi",
+      "område": "K9",
+      "kode": "liggerHosBeslutter",
+      "operator": "IN",
+      "verdi": []
+    }
+  ],
+  "select": [],
+  "order": [
+    {
+      "type": "enkel",
+      "område": "K9",
+      "kode": "mottattDato",
+      "økende": true
+    }
+  ]
+}

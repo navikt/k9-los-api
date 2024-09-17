@@ -21,6 +21,13 @@ class OppgaveKoRepository(val datasource: DataSource) {
         )
         objectMapper.writeValueAsString(standardOppgaveQuery)
     }
+    private val kode6OppgaveString: String by lazy {
+        val kode6OppgaveQuery = objectMapper.readValue(
+            OppgaveKoRepository::class.java.getResource("/los/kode6-ko.json")!!.readText(),
+            OppgaveQuery::class.java
+        )
+        objectMapper.writeValueAsString(kode6OppgaveQuery)
+    }
 
     fun hentListe(medSkjermet: Boolean = false): List<OppgaveKo> {
         return using(sessionOf(datasource)) {
@@ -79,6 +86,7 @@ class OppgaveKoRepository(val datasource: DataSource) {
     }
 
     fun leggTil(tx: TransactionalSession, tittel: String, skjermet: Boolean): OppgaveKo {
+        val queryString = if (skjermet) kode6OppgaveString else standardOppgaveString
         val oppgaveKoId = tx.run(
             queryOf(
                 """
@@ -86,7 +94,7 @@ class OppgaveKoRepository(val datasource: DataSource) {
                 VALUES (0, :tittel, '', :query, false, :endret_tidspunkt, :skjermet) RETURNING ID""",
                 mapOf(
                     "tittel" to tittel,
-                    "query" to standardOppgaveString,
+                    "query" to queryString,
                     "endret_tidspunkt" to LocalDateTime.now(),
                     "skjermet" to skjermet
                 )
