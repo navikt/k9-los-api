@@ -157,7 +157,7 @@ class OppgaveKoRepository(val datasource: DataSource) {
         return tx.run(
             queryOf(
                 """
-                    select id, versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave, endret_tidspunkt 
+                    select id, versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave, endret_tidspunkt, skjermet
                     from OPPGAVEKO_V3 ko
                     where skjermet = :skjermet AND
                     exists (
