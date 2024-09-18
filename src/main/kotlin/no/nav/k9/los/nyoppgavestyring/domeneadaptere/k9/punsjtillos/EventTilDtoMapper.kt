@@ -23,7 +23,7 @@ class EventTilDtoMapper {
                 kildeområde = "K9",
                 type = "k9punsj",
                 status =
-                if (event.sendtInn == true) {
+                if (event.sendtInn == true || event.status == Oppgavestatus.LUKKET) {
                     Oppgavestatus.LUKKET.kode
                 } else if (oppgaveSkalHaVentestatus(event)) {
                     Oppgavestatus.VENTER.kode
