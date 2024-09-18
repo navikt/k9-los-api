@@ -22,40 +22,59 @@ class OppgaveKoRepository(val datasource: DataSource) {
         objectMapper.writeValueAsString(standardOppgaveQuery)
     }
 
-    fun hentListe(medSkjermet: Boolean = false): List<OppgaveKo> {
+    fun hentListe(kode6: Boolean): List<OppgaveKo> {
         return using(sessionOf(datasource)) {
-            it.transaction { tx -> hentListe(tx, medSkjermet) }
+            it.transaction { tx -> hentListe(tx, kode6) }
         }
     }
 
-    fun hentListe(tx: TransactionalSession, skjermet: Boolean = false): List<OppgaveKo> {
+    fun hentListe(tx: TransactionalSession, kode6: Boolean): List<OppgaveKo> {
         return tx.run(
             queryOf(
-                """SELECT id, versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave, endret_tidspunkt, skjermet 
-                    FROM OPPGAVEKO_V3 WHERE skjermet = :medSkjermet""",
-                mapOf("medSkjermet" to skjermet)
+                """SELECT id, versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave, endret_tidspunkt, kode6 
+                    FROM OPPGAVEKO_V3 WHERE kode6 = :kode6""",
+                mapOf("kode6" to kode6)
             ).map { row -> row.tilOppgaveKo(objectMapper, tx) }.asList
         )
 
     }
 
-    fun hent(oppgaveKoId: Long): OppgaveKo {
+    fun hentUavhengigAvSkjerming(oppgaveKoId: Long): Pair<OppgaveKo, Boolean> {
         return using(sessionOf(datasource)) {
-            it.transaction { tx -> hent(tx, oppgaveKoId).first }
+            it.transaction { tx -> hentUavhengigAvSkjerming(tx, oppgaveKoId) }
         }
     }
 
-    fun hent(tx: TransactionalSession, oppgaveKoId: Long, skjermet: Boolean = false): Pair<OppgaveKo, Boolean> {
+    fun hentUavhengigAvSkjerming(tx: TransactionalSession, oppgaveKoId: Long): Pair<OppgaveKo, Boolean> {
         return tx.run(
             queryOf(
-                """SELECT id, versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave, endret_tidspunkt, skjermet
+                """SELECT id, versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave, endret_tidspunkt, kode6
                         FROM OPPGAVEKO_V3 
-                        WHERE id = :id AND skjermet = :skjermet""",
+                        WHERE id = :id""",
+                mapOf(
+                    "id" to oppgaveKoId
+                )
+            ).map { it.tilOppgaveKo(objectMapper, tx) to it.boolean("kode6") }.asSingle)
+            ?: throw IllegalStateException("Feil ved henting av oppgavekø: $oppgaveKoId")
+    }
+
+    fun hent(oppgaveKoId: Long, kode6: Boolean): OppgaveKo {
+        return using(sessionOf(datasource)) {
+            it.transaction { tx -> hent(tx, oppgaveKoId, kode6) }
+        }
+    }
+
+    fun hent(tx: TransactionalSession, oppgaveKoId: Long, kode6: Boolean): OppgaveKo {
+        return tx.run(
+            queryOf(
+                """SELECT id, versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave, endret_tidspunkt, kode6
+                        FROM OPPGAVEKO_V3 
+                        WHERE id = :id AND kode6 = :kode6""",
                 mapOf(
                     "id" to oppgaveKoId,
-                    "skjermet" to skjermet
+                    "kode6" to kode6
                 )
-            ).map { it.tilOppgaveKo(objectMapper, tx) to it.boolean("skjermet") }.asSingle
+            ).map { it.tilOppgaveKo(objectMapper, tx) }.asSingle
         ) ?: throw IllegalStateException("Feil ved henting av oppgavekø: $oppgaveKoId")
     }
 
@@ -72,36 +91,36 @@ class OppgaveKoRepository(val datasource: DataSource) {
         )
     }
 
-    fun leggTil(tittel: String, skjermet: Boolean): OppgaveKo {
+    fun leggTil(tittel: String, kode6: Boolean): OppgaveKo {
         return using(sessionOf(datasource)) { it ->
-            it.transaction { tx -> leggTil(tx, tittel, skjermet) }
+            it.transaction { tx -> leggTil(tx, tittel, kode6) }
         }
     }
 
-    fun leggTil(tx: TransactionalSession, tittel: String, skjermet: Boolean): OppgaveKo {
+    fun leggTil(tx: TransactionalSession, tittel: String, kode6: Boolean): OppgaveKo {
         val oppgaveKoId = tx.run(
             queryOf(
                 """
-                INSERT INTO OPPGAVEKO_V3 (versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave, endret_tidspunkt, skjermet) 
-                VALUES (0, :tittel, '', :query, false, :endret_tidspunkt, :skjermet) RETURNING ID""",
+                INSERT INTO OPPGAVEKO_V3 (versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave, endret_tidspunkt, kode6) 
+                VALUES (0, :tittel, '', :query, false, :endret_tidspunkt, :kode6) RETURNING ID""",
                 mapOf(
                     "tittel" to tittel,
                     "query" to standardOppgaveString,
                     "endret_tidspunkt" to LocalDateTime.now(),
-                    "skjermet" to skjermet
+                    "kode6" to kode6
                 )
             ).map { row -> row.long(1) }.asSingle
         ) ?: throw IllegalStateException("Feil ved opprettelse av ny oppgavekø.")
-        return hent(tx, oppgaveKoId).first
+        return hent(tx, oppgaveKoId, kode6)
     }
 
-    fun endre(oppgaveKo: OppgaveKo): OppgaveKo {
+    fun endre(oppgaveKo: OppgaveKo, kode6: Boolean): OppgaveKo {
         return using(sessionOf(datasource)) { it ->
-            it.transaction { tx -> endre(tx, oppgaveKo) }
+            it.transaction { tx -> endre(tx, oppgaveKo, kode6) }
         }
     }
 
-    fun endre(tx: TransactionalSession, oppgaveKo: OppgaveKo): OppgaveKo {
+    fun endre(tx: TransactionalSession, oppgaveKo: OppgaveKo, kode6: Boolean): OppgaveKo {
         if (oppgaveKo.id == null) {
             throw IllegalArgumentException("Kan ikke oppdatere oppgavekø uten ID.")
         }
@@ -137,20 +156,20 @@ class OppgaveKoRepository(val datasource: DataSource) {
 
         lagreKoSaksbehandlere(tx, oppgaveKo)
 
-        return hent(tx, oppgaveKo.id).first
+        return hent(tx, oppgaveKo.id, kode6)
     }
 
     fun hentKoerMedOppgittSaksbehandler(
         tx: TransactionalSession,
         saksbehandler_epost: String,
-        skjermet: Boolean = false
+        kode6: Boolean
     ): List<OppgaveKo> {
         return tx.run(
             queryOf(
                 """
                     select id, versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave, endret_tidspunkt 
                     from OPPGAVEKO_V3 ko
-                    where skjermet = :skjermet AND
+                    where kode6 = :kode6 AND
                     exists (
                         select *
                         from oppgaveko_saksbehandler s
@@ -159,7 +178,7 @@ class OppgaveKoRepository(val datasource: DataSource) {
                         )""",
                 mapOf(
                     "saksbehandler_epost" to saksbehandler_epost,
-                    "skjermet" to skjermet
+                    "kode6" to kode6
                 )
             ).map { row ->
                 OppgaveKo(
@@ -231,9 +250,18 @@ class OppgaveKoRepository(val datasource: DataSource) {
         )
     }
 
-    fun kopier(kopierFraOppgaveId: Long, tittel: String, taMedQuery: Boolean, taMedSaksbehandlere: Boolean): OppgaveKo {
+    fun kopier(kopierFraOppgaveId: Long, tittel: String, taMedQuery: Boolean, taMedSaksbehandlere: Boolean, harkode6Tilgang: Boolean): OppgaveKo {
         return using(sessionOf(datasource)) { it ->
-            it.transaction { tx -> kopier(tx, kopierFraOppgaveId, tittel, taMedQuery, taMedSaksbehandlere) }
+            it.transaction { tx ->
+                kopier(
+                    tx,
+                    kopierFraOppgaveId = kopierFraOppgaveId,
+                    tittel = tittel,
+                    taMedQuery = taMedQuery,
+                    taMedSaksbehandlere = taMedSaksbehandlere,
+                    saksbehandlersSkjermetTilgang = harkode6Tilgang
+                )
+            }
         }
     }
 
@@ -242,10 +270,14 @@ class OppgaveKoRepository(val datasource: DataSource) {
         kopierFraOppgaveId: Long,
         tittel: String,
         taMedQuery: Boolean,
-        taMedSaksbehandlere: Boolean
+        taMedSaksbehandlere: Boolean,
+        saksbehandlersSkjermetTilgang: Boolean
     ): OppgaveKo {
-        val (gammelOppgaveKo, skjermet) = hent(tx, kopierFraOppgaveId)
-        val nyOppgaveKo = leggTil(tx, tittel, skjermet)
+        val (gammelOppgaveKo, køensSkjermetTilgang) = hentUavhengigAvSkjerming(tx, kopierFraOppgaveId)
+        if (saksbehandlersSkjermetTilgang != køensSkjermetTilgang) {
+            throw IllegalStateException("Har ikke tilgang til å kopiere køen")
+        }
+        val nyOppgaveKo = leggTil(tx, tittel, køensSkjermetTilgang)
 
         val oppdatertNyOppgaveko = nyOppgaveKo.copy(
             oppgaveQuery = if (taMedQuery) gammelOppgaveKo.oppgaveQuery else nyOppgaveKo.oppgaveQuery,
@@ -254,6 +286,6 @@ class OppgaveKoRepository(val datasource: DataSource) {
             frittValgAvOppgave = gammelOppgaveKo.frittValgAvOppgave
         )
 
-        return endre(tx, oppdatertNyOppgaveko)
+        return endre(tx, oppdatertNyOppgaveko, køensSkjermetTilgang)
     }
 }

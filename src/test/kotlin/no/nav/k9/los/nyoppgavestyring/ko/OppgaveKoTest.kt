@@ -22,15 +22,15 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
     fun `sjekker at oppgavekø kan opprettes og slettes`() {
         val oppgaveKoRepository = OppgaveKoRepository(dataSource)
 
-        val oppgaveKo = oppgaveKoRepository.leggTil("Testkø", skjermet = false)
+        val oppgaveKo = oppgaveKoRepository.leggTil("Testkø", kode6 = false)
         assertThat(oppgaveKo.tittel).isEqualTo("Testkø")
 
-        val oppgaveKoFraDb = oppgaveKoRepository.hent(oppgaveKo.id)
+        val oppgaveKoFraDb = oppgaveKoRepository.hent(oppgaveKo.id, false)
         assertThat(oppgaveKoFraDb).isNotNull()
 
         oppgaveKoRepository.slett(oppgaveKo.id)
         assertFailure {
-            oppgaveKoRepository.hent(oppgaveKo.id)
+            oppgaveKoRepository.hent(oppgaveKo.id, false)
         }
     }
 
@@ -39,11 +39,11 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
         val oppgaveKoRepository = OppgaveKoRepository(dataSource)
 
         val tittel = "Testkø"
-        val oppgaveKo = oppgaveKoRepository.leggTil(tittel, skjermet = false)
+        val oppgaveKo = oppgaveKoRepository.leggTil(tittel, kode6 = false)
         assertThat(oppgaveKo.tittel).isEqualTo(tittel)
 
         val beskrivelse = "En god beskrivelse"
-        val oppgaveKoFraDb = oppgaveKoRepository.endre(oppgaveKo.copy(beskrivelse = beskrivelse))
+        val oppgaveKoFraDb = oppgaveKoRepository.endre(oppgaveKo.copy(beskrivelse = beskrivelse), false)
         assertThat(oppgaveKoFraDb).isNotNull()
         assertThat(oppgaveKoFraDb.tittel).isEqualTo(tittel)
         assertThat(oppgaveKoFraDb.beskrivelse).isEqualTo(beskrivelse)
@@ -54,19 +54,19 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
         val oppgaveKoRepository = OppgaveKoRepository(dataSource)
 
         val tittel = "Testkø"
-        val oppgaveKo = oppgaveKoRepository.leggTil(tittel, skjermet = false)
+        val oppgaveKo = oppgaveKoRepository.leggTil(tittel, kode6 = false)
         assertThat(oppgaveKo.tittel).isEqualTo(tittel)
 
         val saksbehandlerepost = "a@b"
         mockLeggTilSaksbehandler(saksbehandlerepost)
 
-        val oppgaveKoFraDb = oppgaveKoRepository.endre(oppgaveKo.copy(saksbehandlere = listOf(saksbehandlerepost)))
+        val oppgaveKoFraDb = oppgaveKoRepository.endre(oppgaveKo.copy(saksbehandlere = listOf(saksbehandlerepost)), false)
         assertThat(oppgaveKoFraDb.saksbehandlere).contains(saksbehandlerepost)
         assertThat(oppgaveKoFraDb.saksbehandlere).hasSize(1)
 
         val saksbehandlerepost2 = "b@c"
         mockLeggTilSaksbehandler(saksbehandlerepost2)
-        val oppgaveKoFraDb2 = oppgaveKoRepository.endre(oppgaveKoFraDb.copy(saksbehandlere = listOf(saksbehandlerepost2)))
+        val oppgaveKoFraDb2 = oppgaveKoRepository.endre(oppgaveKoFraDb.copy(saksbehandlere = listOf(saksbehandlerepost2)), false)
         assertThat(oppgaveKoFraDb2.saksbehandlere).contains(saksbehandlerepost2)
         assertThat(oppgaveKoFraDb2.saksbehandlere).hasSize(1)
 
@@ -79,12 +79,12 @@ class OppgaveKoTest : AbstractK9LosIntegrationTest() {
 
         val tittel = "Testkø"
         val saksbehandlerepost = "a@b"
-        val oppgaveKo = oppgaveKoRepository.leggTil(tittel, skjermet = false)
+        val oppgaveKo = oppgaveKoRepository.leggTil(tittel, kode6 = false)
         mockLeggTilSaksbehandler(saksbehandlerepost)
-        val gammelOppgaveko = oppgaveKoRepository.endre(oppgaveKo.copy(saksbehandlere = listOf(saksbehandlerepost)))
+        val gammelOppgaveko = oppgaveKoRepository.endre(oppgaveKo.copy(saksbehandlere = listOf(saksbehandlerepost)), false)
 
         val nyTittel = "Ny tittel"
-        val nyOppgaveKo = oppgaveKoRepository.kopier(gammelOppgaveko.id, nyTittel, true, true)
+        val nyOppgaveKo = oppgaveKoRepository.kopier(gammelOppgaveko.id, nyTittel, true, true, false)
         assertThat(nyOppgaveKo.saksbehandlere).contains(saksbehandlerepost)
         assertThat(nyOppgaveKo.saksbehandlere).hasSize(1)
         assertThat(nyOppgaveKo.tittel).isEqualTo(nyTittel)
