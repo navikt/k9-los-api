@@ -172,7 +172,7 @@
     },
     {
       "id": "liggerHosBeslutter",
-      "visningsnavn": "Ligger hos beslutter",
+      "visningsnavn": "Til beslutter",
       "listetype": false,
       "tolkesSom": "boolean",
       "visTilBruker": true,
@@ -193,7 +193,7 @@
       "listetype": true,
       "tolkesSom": "String",
       "visTilBruker": true,
-      "kokriterie": true,
+      "kokriterie": false,
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Aksjonspunkt"
@@ -213,7 +213,7 @@
     },
     {
       "id": "løsbartAksjonspunkt",
-      "visningsnavn": "Løsbart aksjonspunkt",
+      "visningsnavn": "Aksjonspunkt som kan løses",
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
