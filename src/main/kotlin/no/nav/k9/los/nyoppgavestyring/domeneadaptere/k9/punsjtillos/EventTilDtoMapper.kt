@@ -50,6 +50,8 @@ class EventTilDtoMapper {
             event: PunsjEventDto,
             forrigeOppgave: OppgaveV3?
         ): List<OppgaveFeltverdiDto> {
+            val journalførtTidspunkt = forrigeOppgave?.hentVerdi("journalfortTidspunkt") ?: event.journalførtTidspunkt?.toString()
+
             return listOfNotNull(
                 event.aktørId?.let {
                     OppgaveFeltverdiDto(
@@ -85,15 +87,13 @@ class EventTilDtoMapper {
                     nøkkel = "journalpostId",
                     verdi = event.journalpostId.verdi.toString(),
                 ),
-                event.journalførtTidspunkt?.let {
-                    OppgaveFeltverdiDto(
-                        nøkkel = "journalfortTidspunkt",
-                        verdi = it.toString(),
-                    )
-                },
+                OppgaveFeltverdiDto(
+                    nøkkel = "journalfortTidspunkt",
+                    verdi = journalførtTidspunkt,
+                ),
                 OppgaveFeltverdiDto(
                     nøkkel = "journalfort",
-                    verdi = (event.journalførtTidspunkt != null).toString(),
+                    verdi = (journalførtTidspunkt != null).toString(),
                 ),
                 OppgaveFeltverdiDto(
                     nøkkel = "registrertDato",
