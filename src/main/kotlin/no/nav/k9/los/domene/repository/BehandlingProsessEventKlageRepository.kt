@@ -5,7 +5,6 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.los.domene.modell.K9KlageModell
-import no.nav.k9.los.tjenester.innsikt.Databasekall
 import no.nav.k9.los.utils.LosObjectMapper
 import java.util.*
 import java.util.concurrent.atomic.LongAdder
@@ -26,8 +25,6 @@ class BehandlingProsessEventKlageRepository(private val dataSource: DataSource) 
                     }.asSingle
             )
         }
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
         if (json.isNullOrEmpty()) {
             return K9KlageModell(mutableListOf())
         }
@@ -47,8 +44,6 @@ class BehandlingProsessEventKlageRepository(private val dataSource: DataSource) 
                 }.asSingle
         )
 
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
         if (json.isNullOrEmpty()) {
             return K9KlageModell(mutableListOf())
         }
@@ -67,8 +62,6 @@ class BehandlingProsessEventKlageRepository(private val dataSource: DataSource) 
     }
 
     fun lagre(uuid: UUID, f: (K9KlageModell?) -> K9KlageModell): K9KlageModell {
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
         var sortertModell = K9KlageModell(mutableListOf())
         using(sessionOf(dataSource)) { it ->
             it.transaction { tx ->

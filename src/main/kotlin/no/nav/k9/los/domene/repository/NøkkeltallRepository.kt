@@ -6,7 +6,6 @@ import kotliquery.using
 import no.nav.k9.los.domene.modell.BehandlingType
 import no.nav.k9.los.domene.modell.FagsakYtelseType
 import no.nav.k9.los.domene.modell.Fagsystem
-import no.nav.k9.los.tjenester.innsikt.Databasekall
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
@@ -64,8 +63,6 @@ class NøkkeltallRepository(private val dataSource: DataSource) {
         }
         val spørringTidsforbrukMs = System.currentTimeMillis() - t0
 
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
         log.info("Henter oppgaver på vent: " + oppgaver.stream().map{it.antall}.reduce(Int::plus).orElse(0) + " oppgaver" + " spørring: " + spørringTidsforbrukMs)
         return oppgaver
     }

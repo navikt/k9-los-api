@@ -8,7 +8,6 @@ import no.nav.k9.los.domene.modell.BehandlingType
 import no.nav.k9.los.domene.modell.FagsakYtelseType
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.FerdigstiltBehandling
-import no.nav.k9.los.tjenester.innsikt.Databasekall
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.BehandletOppgave
 import no.nav.k9.los.utils.Cache
 import no.nav.k9.los.utils.CacheObject
@@ -27,8 +26,6 @@ class StatistikkRepository(
     }
 
     fun lagreBehandling(brukerIdent: String, oppgave : BehandletOppgave) {
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
 
@@ -48,8 +45,6 @@ class StatistikkRepository(
     }
 
     fun hentBehandlinger(ident: String): List<BehandletOppgave> {
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
         val json = using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
@@ -75,8 +70,6 @@ class StatistikkRepository(
     }
 
     fun lagreFerdigstilt(bt: String, eksternId: UUID, dato: LocalDate) {
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
                 //language=PostgreSQL
@@ -102,8 +95,6 @@ class StatistikkRepository(
         alleOppgaverNyeOgFerdigstilte: AlleOppgaverNyeOgFerdigstilte,
         f: (AlleOppgaverNyeOgFerdigstilte) -> AlleOppgaverNyeOgFerdigstilte
     ) {
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
                 val run = tx.run(
@@ -175,8 +166,6 @@ class StatistikkRepository(
             }
         }
 
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }.increment()
-
         val ferdigstilteOgNyeOppgavehistorikk = hentFerdigstilteOgNyeHistorikkPerAntallDager(SISTE_8_UKER_I_DAGER)
         val datoMap = ferdigstilteOgNyeOppgavehistorikk.groupBy { it.dato }
         val ret = mutableListOf<AlleOppgaverNyeOgFerdigstilte>()
@@ -217,8 +206,6 @@ class StatistikkRepository(
     }
 
     fun hentFerdigstilteOgNyeHistorikkPerAntallDager(antall: Int = SISTE_8_UKER_I_DAGER): List<AlleOppgaverNyeOgFerdigstilte> {
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }.increment()
-
         return using(sessionOf(dataSource)) {
             //language=PostgreSQL
             it.run(
@@ -246,8 +233,6 @@ class StatistikkRepository(
     }
 
     fun hentFerdigstiltOppgavehistorikk(antallDagerHistorikk: Int = SISTE_8_UKER_I_DAGER): List<FerdigstiltBehandling> {
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }.increment()
-
         val startDato = LocalDate.now().minusDays(antallDagerHistorikk.toLong())
 
         val list = using(sessionOf(dataSource)) {

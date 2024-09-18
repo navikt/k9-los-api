@@ -261,15 +261,6 @@ fun Route.innsiktGrensesnitt() {
                             }
                         }
                     }
-
-                    ul {
-                        for (mutableEntry in Databasekall.map.entries.toList()
-                            .sortedByDescending { mutableEntry -> mutableEntry.value.sum() }) {
-                            li {
-                                +"${mutableEntry.key}: ${mutableEntry.value} "
-                            }
-                        }
-                    }
                     køer = emptyList()
                 }
             }

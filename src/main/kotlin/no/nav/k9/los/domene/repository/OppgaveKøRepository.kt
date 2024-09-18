@@ -10,7 +10,6 @@ import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.modell.OppgaveIdMedDato
 import no.nav.k9.los.domene.modell.OppgaveKø
 import no.nav.k9.los.integrasjon.abac.IPepClient
-import no.nav.k9.los.tjenester.innsikt.Databasekall
 import no.nav.k9.los.tjenester.sse.RefreshKlienter.sendOppdaterTilBehandling
 import no.nav.k9.los.tjenester.sse.SseEvent
 import no.nav.k9.los.utils.LosObjectMapper
@@ -43,9 +42,6 @@ class OppgaveKøRepository(
                     }.asList
             )
         }
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
         return json.map { s -> LosObjectMapper.instance.readValue(s, OppgaveKø::class.java) }.toList()
     }
 
@@ -61,9 +57,6 @@ class OppgaveKøRepository(
                     }.asList
             )
         }
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
         return json.map { s -> LosObjectMapper.instance.readValue(s, OppgaveKø::class.java) }.toList()
     }
 
@@ -79,8 +72,6 @@ class OppgaveKøRepository(
                     }.asList
             )
         }
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
 
         return uuidListe
     }
@@ -97,8 +88,6 @@ class OppgaveKøRepository(
             )
         }?.let { LosObjectMapper.instance.readValue(it, OppgaveKø::class.java) }
             ?: throw IllegalStateException("Fant ikke oppgavekø med id $id")
-
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }.increment()
 
         return kø.takeIf { ignorerSkjerming || kø.kode6 == pepClient.harTilgangTilKode6() }
             ?: throw IllegalStateException("Klarte ikke å hente oppgavekø med id $id")
@@ -149,8 +138,6 @@ class OppgaveKøRepository(
         if (refresh) {
             refreshKlienter.sendOppdaterTilBehandling(uuid)
         }
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
     }
 
     suspend fun leggTilOppgaverTilKø(
@@ -167,7 +154,6 @@ class OppgaveKøRepository(
         erOppgavenReservertSjekk : (Oppgave) -> Boolean,
     ) {
         var hintRefresh = false
-        var gjennomførteTransaksjon = true
         using(sessionOf(dataSource)) { it ->
             it.transaction { tx ->
                 val gammelJson = tx.run(
@@ -196,7 +182,6 @@ class OppgaveKøRepository(
                     }
                 }
                 if (!finnesOppgavekøMedEndring) {
-                    gjennomførteTransaksjon = false
                     return@transaction
                 }
                 //Sorter oppgaver
@@ -221,10 +206,6 @@ class OppgaveKøRepository(
         if (hintRefresh) {
             refreshKlienter.sendOppdaterTilBehandling(køUUID)
         }
-        if (gjennomførteTransaksjon) {
-            Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-                .increment()
-        }
     }
 
     suspend fun lagreIkkeTaHensyn(
@@ -233,7 +214,6 @@ class OppgaveKøRepository(
     ) {
 
         var hintRefresh = false
-        var gjennomførteTransaksjon = true
         using(sessionOf(dataSource)) { it ->
             it.transaction { tx ->
                 val gammelJson = tx.run(
@@ -261,7 +241,6 @@ class OppgaveKøRepository(
                 val json = LosObjectMapper.instance.writeValueAsString(oppgaveKø)
                 if (json == gammelJson) {
                     log.info("Ingen endring i oppgavekø " + oppgaveKø.navn)
-                    gjennomførteTransaksjon = false
                     return@transaction
                 }
                 tx.run(
@@ -281,10 +260,6 @@ class OppgaveKøRepository(
         if (hintRefresh) {
             refreshKlienter.sendOppdaterTilBehandling(uuid)
         }
-        if (gjennomførteTransaksjon) {
-            Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-                .increment()
-        }
     }
 
     suspend fun slett(id: UUID) {
@@ -301,9 +276,6 @@ class OppgaveKøRepository(
                 )
             }
         }
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
     }
 
     suspend fun oppdaterKøMedOppgaver(uuid: UUID) {

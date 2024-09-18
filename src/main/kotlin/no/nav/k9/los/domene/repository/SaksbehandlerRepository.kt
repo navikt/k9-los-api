@@ -5,7 +5,6 @@ import kotlinx.coroutines.runBlocking
 import kotliquery.*
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.integrasjon.abac.IPepClient
-import no.nav.k9.los.tjenester.innsikt.Databasekall
 import no.nav.k9.los.utils.LosObjectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -23,9 +22,6 @@ class SaksbehandlerRepository(
         f: (Saksbehandler?) -> Saksbehandler
     ) {
         val skjermet = pepClient.harTilgangTilKode6()
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
                 val run = tx.run(
@@ -74,9 +70,6 @@ class SaksbehandlerRepository(
         id: String,
         f: (Saksbehandler?) -> Saksbehandler
     ) {
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
                 val run = tx.run(
@@ -139,8 +132,6 @@ class SaksbehandlerRepository(
         f: (Saksbehandler?) -> Saksbehandler
     ) {
         val erSkjermet = pepClient.harTilgangTilKode6()
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
 
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
@@ -259,9 +250,6 @@ class SaksbehandlerRepository(
     suspend fun finnSaksbehandlerMedEpost(epost: String): Saksbehandler? {
         val skjermet = pepClient.harTilgangTilKode6()
 
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
         val saksbehandler = using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 tx.run(
@@ -299,9 +287,6 @@ class SaksbehandlerRepository(
     suspend fun finnSaksbehandlerMedIdent(ident: String): Saksbehandler? {
         val skjermet = pepClient.harTilgangTilKode6(ident)
 
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
         val saksbehandler = using(sessionOf(dataSource)) {
             it.transaction {tx->
                 tx.run(
@@ -321,9 +306,6 @@ class SaksbehandlerRepository(
     }
 
     fun finnSaksbehandlerMedIdentIkkeTaHensyn(ident: String): Saksbehandler? {
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
         val saksbehandler = using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
@@ -340,8 +322,6 @@ class SaksbehandlerRepository(
 
     suspend fun slettSaksbehandler(epost: String) {
 
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
         val skjermet = pepClient.harTilgangTilKode6()
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
@@ -358,8 +338,6 @@ class SaksbehandlerRepository(
     }
 
     suspend fun hentAlleSaksbehandlere(): List<Saksbehandler> {
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
         val skjermet = pepClient.harTilgangTilKode6()
         val identer = using(sessionOf(dataSource)) {
             it.run(
@@ -376,8 +354,6 @@ class SaksbehandlerRepository(
     }
 
     fun hentAlleSaksbehandlereIkkeTaHensyn(): List<Saksbehandler> {
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
         val identer = using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
