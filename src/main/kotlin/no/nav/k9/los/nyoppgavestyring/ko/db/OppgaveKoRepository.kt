@@ -75,7 +75,8 @@ class OppgaveKoRepository(val datasource: DataSource) {
             oppgaveQuery = objectMapper.readValue(string("query"), OppgaveQuery::class.java),
             frittValgAvOppgave = boolean("fritt_valg_av_oppgave"),
             saksbehandlere = hentKoSaksbehandlere(tx, long("id")),
-            endretTidspunkt = localDateTimeOrNull("endret_tidspunkt")
+            endretTidspunkt = localDateTimeOrNull("endret_tidspunkt"),
+            skjermet = boolean("skjermet")
         )
     }
 
@@ -178,7 +179,8 @@ class OppgaveKoRepository(val datasource: DataSource) {
                     oppgaveQuery = objectMapper.readValue(row.string("query"), OppgaveQuery::class.java),
                     frittValgAvOppgave = row.boolean("fritt_valg_av_oppgave"),
                     saksbehandlere = hentKoSaksbehandlere(tx, row.long("id")),
-                    endretTidspunkt = row.localDateTimeOrNull("endret_tidspunkt")
+                    endretTidspunkt = row.localDateTimeOrNull("endret_tidspunkt"),
+                    skjermet = row.boolean("skjermet")
                 )
             }.asList
         )
