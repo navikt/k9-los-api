@@ -252,25 +252,11 @@ object KodeverkSynlighetRegler {
     fun behandlingType(behandlingType: BehandlingType): KodeverkSynlighet {
         return when (behandlingType) {
             BehandlingType.ANKE -> KodeverkSynlighet.SKJULT
-            BehandlingType.REVURDERING,
-            BehandlingType.DIGITAL_SØKNAD,
-            BehandlingType.INNSYN,
-            BehandlingType.INNTEKTSMELDING_UTGÅTT,
-            BehandlingType.TILBAKE,
-            BehandlingType.UNNTAKSBEHANDLING,
-            BehandlingType.PAPIRSØKNAD,
-            BehandlingType.PAPIRETTERSENDELSE,
-            BehandlingType.PAPIRINNTEKTSOPPLYSNINGER,
-            BehandlingType.DIGITAL_ETTERSENDELSE,
-            BehandlingType.INNLOGGET_CHAT,
-            BehandlingType.SKRIV_TIL_OSS_SPØRMSÅL,
-            BehandlingType.SKRIV_TIL_OSS_SVAR,
-            BehandlingType.SAMTALEREFERAT,
-            BehandlingType.KOPI,
-            BehandlingType.UTEN_FNR_DNR,
-            BehandlingType.UKJENT -> KodeverkSynlighet.SYNLIG
+            BehandlingType.FORSTEGANGSSOKNAD,
+            BehandlingType.KLAGE,
+            BehandlingType.REVURDERING_TILBAKEKREVING -> KodeverkSynlighet.SYNLIG_FAVORITT
 
-            else -> KodeverkSynlighet.SYNLIG_FAVORITT
+            else -> KodeverkSynlighet.SYNLIG
         }
     }
 
