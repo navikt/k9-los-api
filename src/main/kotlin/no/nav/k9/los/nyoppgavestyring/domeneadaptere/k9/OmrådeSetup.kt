@@ -240,7 +240,7 @@ class OmrådeSetup(
             .map { (kodeverdi, synlighet) ->
                 KodeverkVerdiDto(
                     verdi = EventTilDtoMapper.KLAGE_PREFIX + kodeverdi.kode,
-                    visningsnavn =  EventTilDtoMapper.KLAGE_PREFIX_VISNING + kodeverdi.navn,
+                    visningsnavn = EventTilDtoMapper.KLAGE_PREFIX_VISNING + kodeverdi.navn,
                     beskrivelse = beskrivelse,
                     favoritt = synlighet == KodeverkSynlighet.SYNLIG_FAVORITT
                 )
@@ -252,6 +252,11 @@ object KodeverkSynlighetRegler {
     fun behandlingType(behandlingType: BehandlingType): KodeverkSynlighet {
         return when (behandlingType) {
             BehandlingType.ANKE -> KodeverkSynlighet.SKJULT
+            BehandlingType.REVURDERING,
+            BehandlingType.DIGITAL_SØKNAD,
+            BehandlingType.INNSYN,
+            BehandlingType.INNTEKTSMELDING_UTGÅTT,
+            BehandlingType.TILBAKE,
             BehandlingType.UNNTAKSBEHANDLING,
             BehandlingType.PAPIRSØKNAD,
             BehandlingType.PAPIRETTERSENDELSE,
@@ -287,7 +292,7 @@ object KodeverkSynlighetRegler {
 
     fun behandlingsårsak(søknadÅrsak: no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType): KodeverkSynlighet {
         return when (søknadÅrsak) {
-                no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.UDEFINERT -> KodeverkSynlighet.SKJULT
+            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.UDEFINERT -> KodeverkSynlighet.SKJULT
             else -> KodeverkSynlighet.SYNLIG
         }
     }
