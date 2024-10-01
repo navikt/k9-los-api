@@ -152,13 +152,14 @@ class K9SakTilLosHistorikkvaskTjeneste(
         }
         var eventNrForBehandling = 0L
         var oppgaveV3 : OppgaveV3? = null
-        for (event in behandlingProsessEventer) {
+        for (e in behandlingProsessEventer) {
+            var event = e
             if (eventNrForBehandling > høyesteInternVersjon) {
                 log.info("Avbryter historikkvask for ${event.eksternId} ved eventTid ${event.eventTid}. Forventer at håndteres av vanlig adaptertjeneste.")
                 break //Historikkvasken har funnet eventer som ennå ikke er lastet inn med normalflyt. Dirty eventer skal håndteres av vanlig adaptertjeneste
             }
             if (event.eldsteDatoMedEndringFraSøker == null && nyeBehandlingsopplysningerFraK9Sak != null && nyeBehandlingsopplysningerFraK9Sak.eldsteDatoMedEndringFraSøker != null) {
-                event.copy(eldsteDatoMedEndringFraSøker = nyeBehandlingsopplysningerFraK9Sak.eldsteDatoMedEndringFraSøker)
+                event = event.copy(eldsteDatoMedEndringFraSøker = nyeBehandlingsopplysningerFraK9Sak.eldsteDatoMedEndringFraSøker)
                 //ser ut som noen gamle mottatte dokumenter kan mangle innsendingstidspunkt.
                 //da faller vi tilbake til å bruke behandling_opprettet i mapperen
             }
