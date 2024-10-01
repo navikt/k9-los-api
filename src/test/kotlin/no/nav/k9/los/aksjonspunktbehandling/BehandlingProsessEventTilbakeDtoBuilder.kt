@@ -107,21 +107,6 @@ class BehandlingProsessEventTilbakeDtoBuilder(
         return this
     }
 
-    fun medEksternId(eksternId: UUID): BehandlingProsessEventTilbakeDtoBuilder {
-        this.eksternId = eksternId
-        return this
-    }
-
-    fun medBehandlingSteg(behandlingSteg: String): BehandlingProsessEventTilbakeDtoBuilder {
-        this.behandlingSteg = behandlingSteg
-        return this
-    }
-
-    fun medBehandlingStatus(behandlingStatus: BehandlingStatus): BehandlingProsessEventTilbakeDtoBuilder {
-        this.behandlingStatus = behandlingStatus
-        return this
-    }
-
     fun build(): BehandlingProsessEventTilbakeDto {
         return BehandlingProsessEventTilbakeDto(
             eksternId = eksternId,
