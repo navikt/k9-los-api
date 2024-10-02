@@ -107,7 +107,7 @@
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": true,
-      "kokriterie": true,
+      "kokriterie": false,
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakTidSidenMottattDatoUtleder"
     },
     {
@@ -120,7 +120,7 @@
     },
     {
       "id": "behandlingTypekode",
-      "visningsnavn": "Behandlingstype",
+      "visningsnavn": "Behandlingstype nivå 2",
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
@@ -172,12 +172,12 @@
     },
     {
       "id": "liggerHosBeslutter",
-      "visningsnavn": "Ligger hos beslutter",
+      "visningsnavn": "Til beslutter",
       "listetype": false,
       "tolkesSom": "boolean",
       "visTilBruker": true,
       "kokriterie": true,
-      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakBeslutterTransientFeltutleder"
+      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9BeslutterTransientFeltutleder"
     },
     {
       "id": "totrinnskontroll",
@@ -193,7 +193,7 @@
       "listetype": true,
       "tolkesSom": "String",
       "visTilBruker": true,
-      "kokriterie": true,
+      "kokriterie": false,
       "kodeverkreferanse": {
         "område": "K9",
         "eksternId": "Aksjonspunkt"
@@ -213,7 +213,7 @@
     },
     {
       "id": "løsbartAksjonspunkt",
-      "visningsnavn": "Løsbart aksjonspunkt",
+      "visningsnavn": "Aksjonspunkt som kan løses",
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": true,
@@ -325,7 +325,7 @@
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": true,
-      "kokriterie": true,
+      "kokriterie": false,
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakVentetPåAnnetIkkeSaksbehandlingstidUtleder"
     },
     {
@@ -334,7 +334,7 @@
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": true,
-      "kokriterie": true,
+      "kokriterie": false,
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakVentetPåAnnetUtleder"
     },
     {
@@ -343,7 +343,7 @@
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": true,
-      "kokriterie": true,
+      "kokriterie": false,
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakVentetPåArbeidsgiverUtleder"
     },
     {
@@ -352,7 +352,7 @@
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": true,
-      "kokriterie": true,
+      "kokriterie": false,
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakVentetPåSaksbehandlerUtleder"
     },
     {
@@ -361,7 +361,7 @@
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": true,
-      "kokriterie": true,
+      "kokriterie": false,
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakVentetPåSøkerUtleder"
     },
     {
@@ -370,7 +370,7 @@
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": true,
-      "kokriterie": true,
+      "kokriterie": false,
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakVentetPåTekniskFeilUtleder"
     },
     {
@@ -379,7 +379,7 @@
       "listetype": false,
       "tolkesSom": "Duration",
       "visTilBruker": true,
-      "kokriterie": true,
+      "kokriterie": false,
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9SakOppgavesaksbehandlingstidUtleder"
     },
     {
@@ -448,7 +448,7 @@
       "listetype": false,
       "tolkesSom": "boolean",
       "visTilBruker": true,
-      "kokriterie": true
+      "kokriterie": false
     },
     {
       "id": "søknadsårsak",
@@ -488,7 +488,7 @@
       "listetype": false,
       "tolkesSom": "Timestamp",
       "visTilBruker": true,
-      "kokriterie": true
+      "kokriterie": false
     },
     {
       "id": "journalpostId",
@@ -513,6 +513,22 @@
       "tolkesSom": "Timestamp",
       "visTilBruker": false,
       "kokriterie": false
+    },
+    {
+      "id": "førsteFeilutbetalingDato",
+      "visningsnavn": "Føste dato som har feilutbetaling",
+      "listetype": false,
+      "tolkesSom": "Timestamp",
+      "visTilBruker": true,
+      "kokriterie": true
+    },
+    {
+      "id": "feilutbetaltBeløp",
+      "visningsnavn": "Feilutbetalt beløp",
+      "listetype": false,
+      "tolkesSom": "Integer",
+      "visTilBruker": true,
+      "kokriterie": true
     }
 
   ]

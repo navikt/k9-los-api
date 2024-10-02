@@ -47,5 +47,7 @@ class Feltdefinisjon(
         return result
     }
 
-
+    override fun toString(): String {
+        return "Feltdefinisjon: eksternId $eksternId område ${område.eksternId}"
+    }
 }

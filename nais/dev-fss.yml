@@ -32,6 +32,13 @@ spec:
   prometheus:
     enabled: true
     path: /metrics
+  observability:
+    autoInstrumentation:
+      enabled: true
+      runtime: java
+      destinations:
+        - id: "grafana-lgtm"
+        - id: "elastic-apm"
   vault:
     enabled: true
     paths:
@@ -104,22 +111,13 @@ spec:
     - name: KAFKA_K9PUNSJ_TOPIC
       value: k9saksbehandling.privat-k9-produksjonsstyring-punsj-v1
 
+      # opentelemetry
+    - name: "OTEL_RESOURCE_ATTRIBUTES"
+      value: "service.name=k9-los-api,service.namespace=k9saksbehandling,deployment.environment=q,nais.backend=elastic-apm;grafana-lgtm"
+
       # ABAC
     - name: ABAC_PDP_ENDPOINT_URL
       value: http://abac-k9.k9saksbehandling.svc.nais.local/application/authorize
-
-      # open telemetry
-    - name: "OTEL_EXPORTER_OTLP_ENDPOINT"
-      value: "https://elastic-apm.adeo.no"
-    - name: "OTEL_METRICS_EXPORTER"
-      value: "otlp"
-    - name: "OTEL_LOGS_EXPORTER"
-      value: "none"
-    - name: "OTEL_RESOURCE_ATTRIBUTES"
-      value: "service.name=k9-los-api,service.version=k9-los-api,deployment.environment=q"
-    - name: "OTEL_TRACES_EXPORTER"
-      value: "otlp"
-
 
       # Audit logging
     - name: AUDITLOGGER_ENABLED

@@ -15,7 +15,7 @@
       "kode": "personbeskyttelse",
       "operator": "IN",
       "verdi": [
-        "UGRADERT"
+        "KODE6"
       ]
     },
     {

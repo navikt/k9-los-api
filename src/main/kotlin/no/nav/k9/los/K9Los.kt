@@ -49,8 +49,12 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.k9SakEksternId
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.k9SakKorrigerOutOfOrderProsessor
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkApi
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.tilbaketillos.k9TilbakeEksternId
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.tilbaketillos.k9tilbakeKorrigerOutOfOrderProsessor
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9tilbaketillos.K9TilbakeTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.forvaltning.forvaltningApis
 import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoApis
@@ -70,7 +74,6 @@ import no.nav.k9.los.tjenester.kodeverk.KodeverkApis
 import no.nav.k9.los.tjenester.konfig.KonfigApis
 import no.nav.k9.los.tjenester.mock.localSetup
 import no.nav.k9.los.tjenester.saksbehandler.NavAnsattApis
-import no.nav.k9.los.tjenester.saksbehandler.merknad.MerknadApi
 import no.nav.k9.los.tjenester.saksbehandler.nokkeltall.SaksbehandlerNøkkeltallApis
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveApis
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.SaksbehandlerOppgavekoApis
@@ -107,14 +110,17 @@ fun Application.k9Los() {
     k9KlageTilLosAdapterTjeneste.setup()
     val k9PunsjTilLosAdapterTjeneste = koin.get<K9PunsjTilLosAdapterTjeneste>()
     k9PunsjTilLosAdapterTjeneste.setup()
+    val k9TilbakeTilLosAdapterTjeneste = koin.get<K9TilbakeTilLosAdapterTjeneste>()
+    k9TilbakeTilLosAdapterTjeneste.setup()
 
-    if (LocalDateTime.now().isBefore(LocalDateTime.of(2024, 8, 26, 17, 20))) {
+    if (LocalDateTime.now().isBefore(LocalDateTime.of(2024, 9, 18, 11, 30))) {
         if (1 == 0) { //HAXX for å ikke kjøre jobb, men indikere at koden er i bruk og dermed ikke slettes
-            koin.get<K9KlageTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
             //koin.get<ReservasjonKonverteringJobb>().kjørReservasjonskonvertering() //TODO slette
             //koin.get<K9SakTilLosLukkeFeiloppgaverTjeneste>().kjørFeiloppgaverVask() //TODO slette
             koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
             koin.get<K9PunsjTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
+            koin.get<K9KlageTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
+            koin.get<K9TilbakeTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
         }
         if (configuration.koinProfile == KoinProfile.PREPROD) {
             koin.get<K9PunsjTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
@@ -203,6 +209,12 @@ fun Application.k9Los() {
             channel = koin.get<Channel<k9SakEksternId>>(named("historikkvaskChannelK9Sak")),
         )
 
+    val k9TilbakeKorrigerOutOfOrderProsessor =
+        k9tilbakeKorrigerOutOfOrderProsessor(
+            k9TilbakeTilLosHistorikkvaskTjeneste = koin.get(),
+            channel = koin.get<Channel<k9TilbakeEksternId>>(named("historikkvaskChannelK9Tilbake")),
+        )
+
     environment.monitor.subscribe(ApplicationStopping) {
         log.info("Stopper AsynkronProsesseringV1Service.")
         asynkronProsesseringV1Service.stop()
@@ -215,6 +227,7 @@ fun Application.k9Los() {
         refreshOppgaveV3Jobb.cancel()
         oppdaterStatistikkJobb.cancel()
         k9SakKorrigerOutOfOrderProsessor.cancel()
+        k9TilbakeKorrigerOutOfOrderProsessor.cancel()
     }
 
     OmrådeSetup(
@@ -222,6 +235,7 @@ fun Application.k9Los() {
         feltdefinisjonTjeneste = koin.get()
     )
 
+    //TODO bruk injection for å finne adapterne (se koin.get<K9TilbakeTilLosAdapterTjeneste>().kjør
     K9SakTilLosAdapterTjeneste(
         behandlingProsessEventK9Repository = koin.get(),
         oppgavetypeTjeneste = koin.get(),
@@ -255,6 +269,13 @@ fun Application.k9Los() {
         transactionalManager = koin.get(),
         pepCacheService = koin.get()
     ).kjør(kjørUmiddelbart = false)
+
+
+
+    //TODO fjern sjekk når klart for prod
+    if (configuration.koinProfile == KoinProfile.PREPROD || configuration.koinProfile == KoinProfile.LOCAL) {
+        koin.get<K9TilbakeTilLosAdapterTjeneste>().kjør(kjørSetup = false, kjørUmiddelbart = false)
+    }
 
     OppgavestatistikkTjeneste(
         oppgavetypeRepository = koin.get(),
@@ -369,7 +390,6 @@ private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
         route("saksbehandler") {
             route("oppgaver") {
                 OppgaveApis()
-                MerknadApi()
             }
 
             SaksbehandlerOppgavekoApis()

@@ -14,21 +14,20 @@ import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
-import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.pep.PepCache
 import no.nav.k9.los.nyoppgavestyring.pep.PepCacheRepository
 import no.nav.k9.los.nyoppgavestyring.pep.TestRepository
-import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.koin.test.get
 import org.slf4j.Logger
@@ -46,20 +45,26 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
     fun `sjekker at oppgave-query kan kjøres mot database`() {
         OppgaveTestDataBuilder()
         val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
-        val oppgaveQuery = OppgaveQuery(listOf(
-            FeltverdiOppgavefilter(null, "oppgavestatus", "EQUALS", listOf(Oppgavestatus.AAPEN.kode)),
-            FeltverdiOppgavefilter(null, "kildeområde", "EQUALS", listOf("K9")),
-            FeltverdiOppgavefilter(null, "oppgavetype", "EQUALS", listOf("aksjonspunkt")),
-            FeltverdiOppgavefilter(null, "oppgaveområde", "EQUALS", listOf("aksjonspunkt")),
-            FeltverdiOppgavefilter("K9", "fagsystem", "NOT_EQUALS", listOf("Tullball")),
-            CombineOppgavefilter("OR", listOf(
-                FeltverdiOppgavefilter("K9", "helautomatiskBehandlet", "NOT_EQUALS", listOf("false")),
-                FeltverdiOppgavefilter("K9", "mottattDato", "LESS_THAN", listOf(LocalDate.of(2022, 1, 1))),
-                CombineOppgavefilter("AND", listOf(
-                    FeltverdiOppgavefilter("K9", "totrinnskontroll", "EQUALS", listOf("true")),
-                ))
-            ))
-        ))
+        val oppgaveQuery = OppgaveQuery(
+            listOf(
+                FeltverdiOppgavefilter(null, "oppgavestatus", "EQUALS", listOf(Oppgavestatus.AAPEN.kode)),
+                FeltverdiOppgavefilter(null, "kildeområde", "EQUALS", listOf("K9")),
+                FeltverdiOppgavefilter(null, "oppgavetype", "EQUALS", listOf("aksjonspunkt")),
+                FeltverdiOppgavefilter(null, "oppgaveområde", "EQUALS", listOf("aksjonspunkt")),
+                FeltverdiOppgavefilter("K9", "fagsystem", "NOT_EQUALS", listOf("Tullball")),
+                CombineOppgavefilter(
+                    "OR", listOf(
+                        FeltverdiOppgavefilter("K9", "helautomatiskBehandlet", "NOT_EQUALS", listOf("false")),
+                        FeltverdiOppgavefilter("K9", "mottattDato", "LESS_THAN", listOf(LocalDate.of(2022, 1, 1))),
+                        CombineOppgavefilter(
+                            "AND", listOf(
+                                FeltverdiOppgavefilter("K9", "totrinnskontroll", "EQUALS", listOf("true")),
+                            )
+                        )
+                    )
+                )
+            )
+        )
 
         // Verifiserer at det ikke blir exceptions ved serialisering + deserialisering:
         val om = ObjectMapper().dusseldorfConfigured()
@@ -81,9 +86,11 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             .lagOgLagre()
 
         val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
-        val oppgaveQuery = OppgaveQuery(listOf(
-            byggFilterK9(FeltType.AKSJONSPUNKT, FeltverdiOperator.EQUALS, "5016")
-        ))
+        val oppgaveQuery = OppgaveQuery(
+            listOf(
+                byggFilterK9(FeltType.AKSJONSPUNKT, FeltverdiOperator.EQUALS, "5016")
+            )
+        )
 
         val om = ObjectMapper().dusseldorfConfigured()
             .enable(SerializationFeature.INDENT_OUTPUT)
@@ -103,21 +110,61 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
 
-        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
-            byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.GREATER_THAN, "2023-05-14T00:00:00.000"),
-        ))))).isNotEmpty()
+        assertThat(
+            oppgaveQueryRepository.query(
+                QueryRequest(
+                    OppgaveQuery(
+                        listOf(
+                            byggFilterK9(
+                                FeltType.MOTTATT_DATO,
+                                FeltverdiOperator.GREATER_THAN,
+                                "2023-05-14T00:00:00.000"
+                            ),
+                        )
+                    )
+                )
+            )
+        ).isNotEmpty()
 
-        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
-            byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.LESS_THAN, "2023-05-15T00:00:00.000"),
-        ))))).isEmpty()
+        assertThat(
+            oppgaveQueryRepository.query(
+                QueryRequest(
+                    OppgaveQuery(
+                        listOf(
+                            byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.LESS_THAN, "2023-05-15T00:00:00.000"),
+                        )
+                    )
+                )
+            )
+        ).isEmpty()
 
-        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
-            byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.GREATER_THAN, "2023-05-15T00:00:00.000"),
-        ))))).isEmpty()
+        assertThat(
+            oppgaveQueryRepository.query(
+                QueryRequest(
+                    OppgaveQuery(
+                        listOf(
+                            byggFilterK9(
+                                FeltType.MOTTATT_DATO,
+                                FeltverdiOperator.GREATER_THAN,
+                                "2023-05-15T00:00:00.000"
+                            ),
+                        )
+                    )
+                )
+            )
+        ).isEmpty()
 
-        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
-            byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.LESS_THAN, "2023-05-16T00:00:00.000"),
-        ))))).isNotEmpty()
+        assertThat(
+            oppgaveQueryRepository.query(
+                QueryRequest(
+                    OppgaveQuery(
+                        listOf(
+                            byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.LESS_THAN, "2023-05-16T00:00:00.000"),
+                        )
+                    )
+                )
+            )
+        ).isNotEmpty()
     }
 
     @Test
@@ -128,17 +175,49 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
 
-        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
-            byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.LESS_THAN_OR_EQUALS, "2023-05-15T00:00:00.000"),
-        ))))).isNotEmpty()
+        assertThat(
+            oppgaveQueryRepository.query(
+                QueryRequest(
+                    OppgaveQuery(
+                        listOf(
+                            byggFilterK9(
+                                FeltType.MOTTATT_DATO,
+                                FeltverdiOperator.LESS_THAN_OR_EQUALS,
+                                "2023-05-15T00:00:00.000"
+                            ),
+                        )
+                    )
+                )
+            )
+        ).isNotEmpty()
 
-        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
-            byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.EQUALS, "2023-05-15T00:00:00.000"),
-        ))))).isNotEmpty()
+        assertThat(
+            oppgaveQueryRepository.query(
+                QueryRequest(
+                    OppgaveQuery(
+                        listOf(
+                            byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.EQUALS, "2023-05-15T00:00:00.000"),
+                        )
+                    )
+                )
+            )
+        ).isNotEmpty()
 
-        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
-            byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.GREATER_THAN_OR_EQUALS, "2023-05-15T00:00:00.000"),
-        ))))).isNotEmpty()
+        assertThat(
+            oppgaveQueryRepository.query(
+                QueryRequest(
+                    OppgaveQuery(
+                        listOf(
+                            byggFilterK9(
+                                FeltType.MOTTATT_DATO,
+                                FeltverdiOperator.GREATER_THAN_OR_EQUALS,
+                                "2023-05-15T00:00:00.000"
+                            ),
+                        )
+                    )
+                )
+            )
+        ).isNotEmpty()
     }
 
 
@@ -150,17 +229,41 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
 
-        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
-            byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.LESS_THAN_OR_EQUALS, "2023-05-16"),
-        ))))).isNotEmpty()
+        assertThat(
+            oppgaveQueryRepository.query(
+                QueryRequest(
+                    OppgaveQuery(
+                        listOf(
+                            byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.LESS_THAN_OR_EQUALS, "2023-05-16"),
+                        )
+                    )
+                )
+            )
+        ).isNotEmpty()
 
-        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
-            byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.EQUALS, "2023-05-15"),
-        ))))).isNotEmpty()
+        assertThat(
+            oppgaveQueryRepository.query(
+                QueryRequest(
+                    OppgaveQuery(
+                        listOf(
+                            byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.EQUALS, "2023-05-15"),
+                        )
+                    )
+                )
+            )
+        ).isNotEmpty()
 
-        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
-            byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.GREATER_THAN_OR_EQUALS, "2023-05-14"),
-        ))))).isNotEmpty()
+        assertThat(
+            oppgaveQueryRepository.query(
+                QueryRequest(
+                    OppgaveQuery(
+                        listOf(
+                            byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.GREATER_THAN_OR_EQUALS, "2023-05-14"),
+                        )
+                    )
+                )
+            )
+        ).isNotEmpty()
     }
 
     @Test
@@ -172,35 +275,83 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
 
-        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
-            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
-            byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.EQUALS, null),
-        ))))).isNotEmpty()
+        assertThat(
+            oppgaveQueryRepository.query(
+                QueryRequest(
+                    OppgaveQuery(
+                        listOf(
+                            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
+                            byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.EQUALS, null),
+                        )
+                    )
+                )
+            )
+        ).isNotEmpty()
 
-        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
-            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
-            byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.IN, null),
-        ))))).isNotEmpty()
+        assertThat(
+            oppgaveQueryRepository.query(
+                QueryRequest(
+                    OppgaveQuery(
+                        listOf(
+                            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
+                            byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.IN, null),
+                        )
+                    )
+                )
+            )
+        ).isNotEmpty()
 
-        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
-            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
-            byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.IN, null, "true"),
-        ))))).isNotEmpty()
+        assertThat(
+            oppgaveQueryRepository.query(
+                QueryRequest(
+                    OppgaveQuery(
+                        listOf(
+                            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
+                            byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.IN, null, "true"),
+                        )
+                    )
+                )
+            )
+        ).isNotEmpty()
 
-        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
-            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
-            byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.IN, "true"),
-        ))))).isEmpty()
+        assertThat(
+            oppgaveQueryRepository.query(
+                QueryRequest(
+                    OppgaveQuery(
+                        listOf(
+                            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
+                            byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.IN, "true"),
+                        )
+                    )
+                )
+            )
+        ).isEmpty()
 
-        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
-            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
-            byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.EQUALS, "true"),
-        ))))).isEmpty()
+        assertThat(
+            oppgaveQueryRepository.query(
+                QueryRequest(
+                    OppgaveQuery(
+                        listOf(
+                            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
+                            byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.EQUALS, "true"),
+                        )
+                    )
+                )
+            )
+        ).isEmpty()
 
-        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
-            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
-            byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.EQUALS, "false"),
-        ))))).isEmpty()
+        assertThat(
+            oppgaveQueryRepository.query(
+                QueryRequest(
+                    OppgaveQuery(
+                        listOf(
+                            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
+                            byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.EQUALS, "false"),
+                        )
+                    )
+                )
+            )
+        ).isEmpty()
     }
 
     @Test
@@ -213,35 +364,83 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
 
-        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
-            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
-            byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.EQUALS, null),
-        ))))).isEmpty()
+        assertThat(
+            oppgaveQueryRepository.query(
+                QueryRequest(
+                    OppgaveQuery(
+                        listOf(
+                            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
+                            byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.EQUALS, null),
+                        )
+                    )
+                )
+            )
+        ).isEmpty()
 
-        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
-            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
-            byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.IN, null),
-        ))))).isEmpty()
+        assertThat(
+            oppgaveQueryRepository.query(
+                QueryRequest(
+                    OppgaveQuery(
+                        listOf(
+                            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
+                            byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.IN, null),
+                        )
+                    )
+                )
+            )
+        ).isEmpty()
 
-        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
-            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
-            byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.IN, null, "true"),
-        ))))).isNotEmpty()
+        assertThat(
+            oppgaveQueryRepository.query(
+                QueryRequest(
+                    OppgaveQuery(
+                        listOf(
+                            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
+                            byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.IN, null, "true"),
+                        )
+                    )
+                )
+            )
+        ).isNotEmpty()
 
-        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
-            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
-            byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.EQUALS, "true"),
-        ))))).isNotEmpty()
+        assertThat(
+            oppgaveQueryRepository.query(
+                QueryRequest(
+                    OppgaveQuery(
+                        listOf(
+                            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
+                            byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.EQUALS, "true"),
+                        )
+                    )
+                )
+            )
+        ).isNotEmpty()
 
-        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
-            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
-            byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.IN, "true"),
-        ))))).isNotEmpty()
+        assertThat(
+            oppgaveQueryRepository.query(
+                QueryRequest(
+                    OppgaveQuery(
+                        listOf(
+                            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
+                            byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.IN, "true"),
+                        )
+                    )
+                )
+            )
+        ).isNotEmpty()
 
-        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
-            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
-            byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.EQUALS, "false"),
-        ))))).isEmpty()
+        assertThat(
+            oppgaveQueryRepository.query(
+                QueryRequest(
+                    OppgaveQuery(
+                        listOf(
+                            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
+                            byggFilterK9(FeltType.AVVENTER_ARBEIDSGIVER, FeltverdiOperator.EQUALS, "false"),
+                        )
+                    )
+                )
+            )
+        ).isEmpty()
     }
 
     @Test
@@ -254,33 +453,97 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
 
-        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
-            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
-            byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.NOT_EQUALS, "2023-05-15T00:00:00.000"),
-        ))))).isEmpty()
+        assertThat(
+            oppgaveQueryRepository.query(
+                QueryRequest(
+                    OppgaveQuery(
+                        listOf(
+                            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
+                            byggFilterK9(
+                                FeltType.MOTTATT_DATO,
+                                FeltverdiOperator.NOT_EQUALS,
+                                "2023-05-15T00:00:00.000"
+                            ),
+                        )
+                    )
+                )
+            )
+        ).isEmpty()
 
-        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
-            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
-            byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.NOT_EQUALS, "2023-05-15T00:00:00.000", "2023-05-16T00:00:00.000"),
-        ))))).isEmpty()
+        assertThat(
+            oppgaveQueryRepository.query(
+                QueryRequest(
+                    OppgaveQuery(
+                        listOf(
+                            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
+                            byggFilterK9(
+                                FeltType.MOTTATT_DATO,
+                                FeltverdiOperator.NOT_EQUALS,
+                                "2023-05-15T00:00:00.000",
+                                "2023-05-16T00:00:00.000"
+                            ),
+                        )
+                    )
+                )
+            )
+        ).isEmpty()
 
-        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf(
-            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
-            byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.NOT_EQUALS, "2023-05-14T00:00:00.000", "2023-05-16T00:00:00.000"),
-        ))))).isNotEmpty()
+        assertThat(
+            oppgaveQueryRepository.query(
+                QueryRequest(
+                    OppgaveQuery(
+                        listOf(
+                            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, behandlingUuid),
+                            byggFilterK9(
+                                FeltType.MOTTATT_DATO,
+                                FeltverdiOperator.NOT_EQUALS,
+                                "2023-05-14T00:00:00.000",
+                                "2023-05-16T00:00:00.000"
+                            ),
+                        )
+                    )
+                )
+            )
+        ).isNotEmpty()
+    }
+
+    @Test
+    fun `Filtere uten feltverdier skal ha samme resultat som om filtret ikke er brukt`() {
+        val behandlingUuid = UUID.randomUUID().toString()
+        OppgaveTestDataBuilder()
+            .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, behandlingUuid)
+            .lagOgLagre()
+
+        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
+
+        assertThat(oppgaveQueryRepository.query(QueryRequest(OppgaveQuery(listOf())))).isNotEmpty()
+
+        assertThat(
+            oppgaveQueryRepository.query(
+                QueryRequest(
+                    OppgaveQuery(
+                        listOf(
+                            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.IN),
+                        )
+                    )
+                )
+            )
+        ).isNotEmpty()
     }
 
     @Test
     fun `sjekker at ekskluderer-verdi-query finner oppgaver som ikke har feltet`() {
         val testbuilder = OppgaveTestDataBuilder()
-            testbuilder.medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, UUID.randomUUID().toString())
+        testbuilder.medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, UUID.randomUUID().toString())
             //denne har IKKE fagsystem
             .lagOgLagre()
 
         val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
-        val oppgaveQuery = OppgaveQuery(listOf(
-            FeltverdiOppgavefilter("K9", "fagsystem", "NOT_EQUALS", listOf("K9PUNSJ"))
-        ))
+        val oppgaveQuery = OppgaveQuery(
+            listOf(
+                FeltverdiOppgavefilter("K9", "fagsystem", "NOT_EQUALS", listOf("K9PUNSJ"))
+            )
+        )
 
         val result = oppgaveQueryRepository.query(QueryRequest(oppgaveQuery))
         assertThat(result).hasSize(1)
@@ -294,9 +557,11 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             .lagOgLagre()
 
         val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
-        val oppgaveQuery = OppgaveQuery(listOf(
-            FeltverdiOppgavefilter("K9", "fagsystem", "NOT_EQUALS", listOf("K9PUNSJ"))
-        ))
+        val oppgaveQuery = OppgaveQuery(
+            listOf(
+                FeltverdiOppgavefilter("K9", "fagsystem", "NOT_EQUALS", listOf("K9PUNSJ"))
+            )
+        )
 
         val result = oppgaveQueryRepository.query(QueryRequest(oppgaveQuery))
         assertThat(result).hasSize(1)
@@ -310,35 +575,45 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             .lagOgLagre()
 
         val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
-        val oppgaveQuery = OppgaveQuery(listOf(
-            FeltverdiOppgavefilter("K9", "fagsystem", "NOT_EQUALS", listOf("K9PUNSJ"))
-        ))
+        val oppgaveQuery = OppgaveQuery(
+            listOf(
+                FeltverdiOppgavefilter("K9", "fagsystem", "NOT_EQUALS", listOf("K9PUNSJ"))
+            )
+        )
 
         val result = oppgaveQueryRepository.query(QueryRequest(oppgaveQuery))
         assertThat(result).isEmpty()
     }
 
     @Test // Query er ikke ment som tilgangskontroll, men en kjapp måte å utføre filtrering før tilgangssjekk gjøres på resultatet
-    fun  `Resultat skal inneholde alle sikkerhetsklassifiseringer når ikke beskyttelse eller egen ansatt er spesifisert i filtre`() {
+    fun `Resultat skal inneholde alle sikkerhetsklassifiseringer når ikke beskyttelse eller egen ansatt er spesifisert i filtre`() {
         val eksternId = lagOppgaveMedPepCache(kode6 = true, kode7 = true, egenAnsatt = true)
 
         val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
-        val query = OppgaveQuery(listOf(
-            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, eksternId),
-        ))
+        val query = OppgaveQuery(
+            listOf(
+                byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, eksternId),
+            )
+        )
 
         assertThat(oppgaveQueryRepository.query(QueryRequest(query))).isNotEmpty()
     }
 
     @Test // Ikke tilgangskontroll, men kun ment for ytelsesoptimalisering
-    fun  `Resultat skal inneholde alle resultat uavhengig av forespurt sikkerhetsklassifisering hvis pepcache mangler`() {
+    fun `Resultat skal inneholde alle resultat uavhengig av forespurt sikkerhetsklassifisering hvis pepcache mangler`() {
         val eksternId = lagOppgave()
 
         val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
-        val query = OppgaveQuery(listOf(
-            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, eksternId),
-            byggGenereltFilter(FeltType.BESKYTTELSE, FeltverdiOperator.IN, "KODE7")
-        ))
+        val query = OppgaveQuery(
+            listOf(
+                byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, eksternId),
+                byggGenereltFilter(
+                    FeltType.PERSONBESKYTTELSE,
+                    FeltverdiOperator.EQUALS,
+                    PersonBeskyttelseType.KODE7_ELLER_EGEN_ANSATT.kode
+                )
+            )
+        )
 
         assertThat(oppgaveQueryRepository.query(QueryRequest(query))).isNotEmpty()
     }
@@ -350,26 +625,37 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         loggAlleOppgaverMedFelterOgCache()
 
         val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
-        val query = OppgaveQuery(listOf(
-            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, eksternId),
-            byggGenereltFilter(FeltType.BESKYTTELSE, FeltverdiOperator.IN, BeskyttelseType.ORDINÆR.kode)
-        ))
+        val query = OppgaveQuery(
+            listOf(
+                byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, eksternId),
+                byggGenereltFilter(
+                    FeltType.PERSONBESKYTTELSE,
+                    FeltverdiOperator.EQUALS,
+                    PersonBeskyttelseType.UGRADERT.kode
+                )
+            )
+        )
 
         assertThat(oppgaveQueryRepository.query(QueryRequest(query))).isNotEmpty()
     }
 
     @Test
-    @Disabled
     fun `Resultat skal kun inneholde kode6-oppgaver når filtre er satt til kode6`() {
         val eksternId = lagOppgaveMedPepCache(kode6 = true)
 
         loggAlleOppgaverMedFelterOgCache()
 
         val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
-        val query = OppgaveQuery(listOf(
-            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, eksternId),
-            byggGenereltFilter(FeltType.BESKYTTELSE, FeltverdiOperator.IN, "KODE6")
-        ))
+        val query = OppgaveQuery(
+            listOf(
+                byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, eksternId),
+                byggGenereltFilter(
+                    FeltType.PERSONBESKYTTELSE,
+                    FeltverdiOperator.EQUALS,
+                    PersonBeskyttelseType.KODE6.kode
+                )
+            )
+        )
 
         assertThat(oppgaveQueryRepository.query(QueryRequest(query))).isNotEmpty()
     }
@@ -382,12 +668,82 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         loggAlleOppgaverMedFelterOgCache()
 
         val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
-        val query = OppgaveQuery(listOf(
-            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, eksternId6, eksternId7),
-            byggGenereltFilter(FeltType.BESKYTTELSE, FeltverdiOperator.IN, BeskyttelseType.ORDINÆR.kode)
-        ))
+        val query = OppgaveQuery(
+            listOf(
+                byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, eksternId6, eksternId7),
+                byggGenereltFilter(
+                    FeltType.PERSONBESKYTTELSE,
+                    FeltverdiOperator.EQUALS,
+                    PersonBeskyttelseType.UGRADERT.kode
+                )
+            )
+        )
 
         assertThat(oppgaveQueryRepository.query(QueryRequest(query))).isEmpty()
+    }
+
+    @Test
+    fun `Beslutter-kø skal inneholde oppgaver for k9sak-behandlinger med aksjonspunkt 5016`() {
+        OppgaveTestDataBuilder()
+            .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, UUID.randomUUID().toString())
+            .medOppgaveFeltVerdi(FeltType.LØSBART_AKSJONSPUNKT, "5016")
+            .lagOgLagre()
+
+        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
+        val query = OppgaveQuery(
+            listOf(
+                byggFilterK9(FeltType.LIGGER_HOS_BESLUTTER, FeltverdiOperator.EQUALS, "true"),
+                byggGenereltFilter(
+                    FeltType.PERSONBESKYTTELSE,
+                    FeltverdiOperator.EQUALS,
+                    PersonBeskyttelseType.UGRADERT.kode
+                )
+            )
+        )
+        assertThat(oppgaveQueryRepository.query(QueryRequest(query))).hasSize(1)
+    }
+
+    @Test
+    fun `Beslutter-kø skal inneholde oppgaver for k9klage-behandlinger med aksjonspunkt 5016`() {
+        OppgaveTestDataBuilder(definisjonskilde = "k9-klage-til-los", oppgaveTypeNavn = "k9klage")
+            .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, UUID.randomUUID().toString())
+            .medOppgaveFeltVerdi(FeltType.LØSBART_AKSJONSPUNKT, "5016")
+            .lagOgLagre()
+
+        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
+        val query = OppgaveQuery(
+            listOf(
+                byggFilterK9(FeltType.LIGGER_HOS_BESLUTTER, FeltverdiOperator.EQUALS, "true"),
+                byggGenereltFilter(
+                    FeltType.PERSONBESKYTTELSE,
+                    FeltverdiOperator.EQUALS,
+                    PersonBeskyttelseType.UGRADERT.kode
+                )
+            )
+        )
+        assertThat(oppgaveQueryRepository.query(QueryRequest(query))).hasSize(1)
+    }
+
+    @Test
+    fun `Beslutter-kø for skal inneholde oppgaver for k9-tilbake-behandlinger med aksjonspunkt 5005`() {
+        val eksternId = UUID.randomUUID().toString()
+        OppgaveTestDataBuilder(definisjonskilde = "k9-tilbake-til-los", oppgaveTypeNavn = "k9tilbake")
+            .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, eksternId)
+            .medOppgaveFeltVerdi(FeltType.LØSBART_AKSJONSPUNKT, "5005")
+            .lagOgLagre()
+
+        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
+        val query = OppgaveQuery(
+            listOf(
+                byggFilterK9(FeltType.LIGGER_HOS_BESLUTTER, FeltverdiOperator.EQUALS, "true"),
+                byggGenereltFilter(
+                    FeltType.PERSONBESKYTTELSE,
+                    FeltverdiOperator.EQUALS,
+                    PersonBeskyttelseType.UGRADERT.kode
+                )
+            )
+        )
+        assertThat(oppgaveQueryRepository.query(QueryRequest(query))).hasSize(1)
     }
 
     @Test
@@ -462,7 +818,14 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         assertThat(queryService.queryForAntall(QueryRequest(query))).isEqualTo(2)
 
-        assertThat(queryService.queryForOppgaveId(QueryRequest(query, avgrensning = Avgrensning.maxAntall(1))).size).isEqualTo(1)
+        assertThat(
+            queryService.queryForOppgaveId(
+                QueryRequest(
+                    query,
+                    avgrensning = Avgrensning.maxAntall(1)
+                )
+            ).size
+        ).isEqualTo(1)
 
         assertThat(queryService.queryForAntall(QueryRequest(query))).isEqualTo(2)
 
@@ -522,7 +885,12 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         val oppgaveQuery5 = OppgaveQuery(
             listOf(
-                byggGenereltFilter(FeltType.OPPGAVE_STATUS, FeltverdiOperator.IN, Oppgavestatus.LUKKET.kode, Oppgavestatus.AAPEN.kode),
+                byggGenereltFilter(
+                    FeltType.OPPGAVE_STATUS,
+                    FeltverdiOperator.IN,
+                    Oppgavestatus.LUKKET.kode,
+                    Oppgavestatus.AAPEN.kode
+                ),
             )
         )
 
@@ -530,7 +898,6 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
     }
 
     @Test
-    @Disabled
     fun `Resultat skal ikke inneholde kode7 eller ordinære oppgaver når filtre er satt til kode6 oppgaver`() {
         val eksternId7 = lagOppgaveMedPepCache(kode7 = true)
         val eksternIdOrdinær = lagOppgaveMedPepCache()
@@ -538,15 +905,19 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         loggAlleOppgaverMedFelterOgCache()
 
         val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
-        val query = OppgaveQuery(listOf(
-            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, eksternId7, eksternIdOrdinær),
-            byggGenereltFilter(FeltType.BESKYTTELSE, FeltverdiOperator.IN, "KODE6")
-        ))
+        val query = OppgaveQuery(
+            listOf(
+                byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, eksternId7, eksternIdOrdinær),
+                byggGenereltFilter(
+                    FeltType.PERSONBESKYTTELSE,
+                    FeltverdiOperator.EQUALS,
+                    PersonBeskyttelseType.KODE6.kode
+                )
+            )
+        )
 
         assertThat(oppgaveQueryRepository.query(QueryRequest(query))).isEmpty()
     }
-
-
 
     private fun lagOppgaveMedPepCache(
         kode6: Boolean = false,
@@ -594,7 +965,11 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
     }
 
 
-    private fun byggFilterK9(feltType: FeltType, feltverdiOperator: FeltverdiOperator, vararg verdier: String?): FeltverdiOppgavefilter {
+    private fun byggFilterK9(
+        feltType: FeltType,
+        feltverdiOperator: FeltverdiOperator,
+        vararg verdier: String?
+    ): FeltverdiOppgavefilter {
         return FeltverdiOppgavefilter(
             "K9",
             feltType.eksternId,
@@ -603,7 +978,11 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         )
     }
 
-    private fun byggGenereltFilter(feltType: FeltType, feltverdiOperator: FeltverdiOperator, vararg verdier: String?): FeltverdiOppgavefilter {
+    private fun byggGenereltFilter(
+        feltType: FeltType,
+        feltverdiOperator: FeltverdiOperator,
+        vararg verdier: String?
+    ): FeltverdiOppgavefilter {
         return FeltverdiOppgavefilter(
             null,
             feltType.eksternId,
@@ -647,8 +1026,15 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         transactionalManager.transaction { tx ->
             testRepository.hentEksternIdForAlleOppgaver(tx).forEach { eksternId ->
                 logger.info("eksternId $eksternId")
-                logger.info("Oppgave: "+oppgaveRepository.hentNyesteOppgaveForEksternId(tx, "K9", eksternId).felter.joinToString(", ") { it.eksternId + "-" + it.verdi })
-                logger.info("Pep: "+pepCache.hent("K9", eksternId, tx)?.run { "kode6-$kode6, kode7-$kode7, egenansatt-$egenAnsatt, oppdater-$oppdatert" })
+                logger.info(
+                    "Oppgave: " + oppgaveRepository.hentNyesteOppgaveForEksternId(
+                        tx,
+                        "K9",
+                        eksternId
+                    ).felter.joinToString(", ") { it.eksternId + "-" + it.verdi })
+                logger.info(
+                    "Pep: " + pepCache.hent("K9", eksternId, tx)
+                        ?.run { "kode6-$kode6, kode7-$kode7, egenansatt-$egenAnsatt, oppdater-$oppdatert" })
             }
         }
     }

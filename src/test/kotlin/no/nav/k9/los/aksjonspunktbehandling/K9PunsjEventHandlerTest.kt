@@ -1,11 +1,11 @@
 package no.nav.k9.los.aksjonspunktbehandling
 
 import assertk.assertThat
-import assertk.assertions.any
 import assertk.assertions.hasSize
 import assertk.assertions.isEqualTo
-import assertk.assertions.isNotNull
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import kotliquery.sessionOf
+import kotliquery.using
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
@@ -13,15 +13,15 @@ import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.integrasjon.kafka.dto.PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
 import java.util.*
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -163,5 +163,54 @@ class K9PunsjEventHandlerTest : AbstractK9LosIntegrationTest() {
         k9PunsjEventHandler.prosesser(event)
         val oppgaveModell = oppgaveRepository.hent(UUID.fromString(event.eksternId.toString()))
         assertTrue { oppgaveModell.journalførtTidspunkt != null }
+    }
+
+    @Test
+    fun `Skal opprette oppgave med journalførtTidspunkt satt på eventet, og så uten`() {
+
+        val k9PunsjEventHandler = get<K9punsjEventHandler>()
+        val oppgaveV3Repository = get<OppgaveV3Repository>()
+        val oppgavetypeRepository = get<OppgavetypeRepository>()
+
+        @Language("JSON") val json1 =
+            """{
+                  "eksternId": "9a009fb9-38ab-4bad-89e0-a3a16ecba306",
+                  "journalpostId": "466988237",
+                  "aktørId": "27078522688",
+                  "eventTid": "2020-11-10T10:43:43.130644",
+                  "aksjonspunktKoderMedStatusListe": {
+                    "PUNSJ": "OPPR"
+                  },
+                  "journalførtTidspunkt": "2020-11-10T10:43:43.130644"
+            }""".trimIndent()
+
+        val event1 = objectMapper.readValue(json1, PunsjEventDto::class.java)
+
+        @Language("JSON") val json2 =
+            """{
+                  "eksternId": "9a009fb9-38ab-4bad-89e0-a3a16ecba306",
+                  "journalpostId": "466988237",
+                  "aktørId": "27078522688",
+                  "eventTid": "2020-11-10T10:43:44.130644",
+                  "aksjonspunktKoderMedStatusListe": {
+                    "PUNSJ": "OPPR",
+                    "MER_INFORMASJON": "OPPR"
+                  },
+                  "journalførtTidspunkt": null
+            }""".trimIndent()
+
+        val event2 = objectMapper.readValue(json2, PunsjEventDto::class.java)
+
+        k9PunsjEventHandler.prosesser(event1)
+        k9PunsjEventHandler.prosesser(event2)
+
+        return using(sessionOf(dataSource)) { it ->
+            it.transaction { tx ->
+                val oppgavetype = oppgavetypeRepository.hentOppgavetype("K9", "k9punsj")
+                val oppgaveV3 = oppgaveV3Repository.hentAktivOppgave(event1.eksternId.toString(), oppgavetype, tx)
+                assertEquals(oppgaveV3?.hentVerdi("journalfort"), "true")
+                assertEquals(oppgaveV3?.hentVerdi("journalfortTidspunkt"), "2020-11-10T10:43:43.130644")
+            }
+        }
     }
 }

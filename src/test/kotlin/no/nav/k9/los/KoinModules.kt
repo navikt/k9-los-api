@@ -37,6 +37,8 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.tilbaketillos.k9TilbakeEksternId
 import no.nav.k9.los.nyoppgavestyring.forvaltning.ForvaltningRepository
 import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
@@ -60,7 +62,6 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
-import no.nav.k9.los.tjenester.saksbehandler.merknad.MerknadTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.*
 import no.nav.k9.los.tjenester.sse.SseEvent
 import org.koin.core.module.Module
@@ -94,6 +95,9 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
     single(named("historikkvaskChannelK9Sak")) {
         Channel<Boolean>(Channel.UNLIMITED)
+    }
+    single(named("historikkvaskChannelK9Tilbake")) {
+        Channel<k9TilbakeEksternId>(Channel.UNLIMITED)
     }
 
     single {
@@ -296,6 +300,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             reservasjonOversetter = get(),
             saksbehandlerRepository = get(),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
+            k9TilbakeTilLosAdapterTjeneste = get(),
         )
     }
 
@@ -335,18 +340,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             azureGraphService = get(),
             punsjTilLosAdapterTjeneste = get(),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
-        )
-    }
-
-    single {
-        MerknadTjeneste(
-            oppgaveRepositoryV2 = get(),
-            azureGraphService = get(),
-            oppgaveKøOppdaterer = get(),
-            migreringstjeneste = get(),
-            k9SakTilLosAdapterTjeneste = get(),
-            behandlingProsessEventK9Repository = get(),
-            tm = get()
         )
     }
 
@@ -435,6 +428,20 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgaveRepository = get(),
             reservasjonV3Tjeneste = get(),
             historikkvaskChannel = get(named("historikkvaskChannelK9Sak"))
+        )
+    }
+
+    single {
+        K9TilbakeTilLosAdapterTjeneste(
+            behandlingProsessEventTilbakeRepository = BehandlingProsessEventTilbakeRepository(get()),
+            oppgavetypeTjeneste = get(),
+            oppgaveV3Tjeneste = get(),
+            config = get(),
+            transactionalManager = get(),
+            pepCacheService = get(),
+            oppgaveRepository = get(),
+            reservasjonV3Tjeneste = get(),
+            historikkvaskChannel = get(named("historikkvaskChannelK9Tilbake"))
         )
     }
 

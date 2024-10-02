@@ -30,7 +30,6 @@ class OppgaveDto(
     val søktGradering: Boolean,
     val fagsakPeriode: Oppgave.FagsakPeriode? = null, // bekreftet i bruk
     val paaVent: Boolean? = null, // bekreftet i bruk
-    val merknad: MerknadDto? = null, // bekreftet i bruk,
     val oppgaveNøkkel: OppgaveNøkkelDto = OppgaveNøkkelDto.forV1Oppgave(eksternId.toString()),
     val endretAvNavn: String? = null
 )

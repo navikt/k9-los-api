@@ -56,21 +56,6 @@ fun Route.NokkeltallApis() {
         call.respond(nokkeltallTjeneste.hentFerdigstilteSiste8Uker())
     }
 
-    @Location("/hastesaker")
-    class HentHastesaker
-
-    get { _: HentHastesaker ->
-        requestContextService.withRequestContext(call) {
-            call.response.header(
-                HttpHeaders.ContentDisposition,
-                ContentDisposition.Attachment.withParameter(
-                    ContentDisposition.Parameters.FileName, "hastesaker.csv"
-                ).toString()
-            )
-            call.respond(nokkeltallTjeneste.hentHastesaker())
-        }
-    }
-
     @Location("/aksjonspunkter-per-enhet-historikk")
     class HentFullførteOppgaverPrEnhetOgYtelse
 

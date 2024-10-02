@@ -240,7 +240,7 @@ class OmrådeSetup(
             .map { (kodeverdi, synlighet) ->
                 KodeverkVerdiDto(
                     verdi = EventTilDtoMapper.KLAGE_PREFIX + kodeverdi.kode,
-                    visningsnavn =  EventTilDtoMapper.KLAGE_PREFIX_VISNING + kodeverdi.navn,
+                    visningsnavn = EventTilDtoMapper.KLAGE_PREFIX_VISNING + kodeverdi.navn,
                     beskrivelse = beskrivelse,
                     favoritt = synlighet == KodeverkSynlighet.SYNLIG_FAVORITT
                 )
@@ -252,20 +252,11 @@ object KodeverkSynlighetRegler {
     fun behandlingType(behandlingType: BehandlingType): KodeverkSynlighet {
         return when (behandlingType) {
             BehandlingType.ANKE -> KodeverkSynlighet.SKJULT
-            BehandlingType.UNNTAKSBEHANDLING,
-            BehandlingType.PAPIRSØKNAD,
-            BehandlingType.PAPIRETTERSENDELSE,
-            BehandlingType.PAPIRINNTEKTSOPPLYSNINGER,
-            BehandlingType.DIGITAL_ETTERSENDELSE,
-            BehandlingType.INNLOGGET_CHAT,
-            BehandlingType.SKRIV_TIL_OSS_SPØRMSÅL,
-            BehandlingType.SKRIV_TIL_OSS_SVAR,
-            BehandlingType.SAMTALEREFERAT,
-            BehandlingType.KOPI,
-            BehandlingType.UTEN_FNR_DNR,
-            BehandlingType.UKJENT -> KodeverkSynlighet.SYNLIG
+            BehandlingType.FORSTEGANGSSOKNAD,
+            BehandlingType.KLAGE,
+            BehandlingType.REVURDERING_TILBAKEKREVING -> KodeverkSynlighet.SYNLIG_FAVORITT
 
-            else -> KodeverkSynlighet.SYNLIG_FAVORITT
+            else -> KodeverkSynlighet.SYNLIG
         }
     }
 
@@ -287,8 +278,8 @@ object KodeverkSynlighetRegler {
 
     fun behandlingsårsak(søknadÅrsak: no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType): KodeverkSynlighet {
         return when (søknadÅrsak) {
-                no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.UDEFINERT -> KodeverkSynlighet.SKJULT
-            else -> KodeverkSynlighet.SYNLIG_FAVORITT
+            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.UDEFINERT -> KodeverkSynlighet.SKJULT
+            else -> KodeverkSynlighet.SYNLIG
         }
     }
 

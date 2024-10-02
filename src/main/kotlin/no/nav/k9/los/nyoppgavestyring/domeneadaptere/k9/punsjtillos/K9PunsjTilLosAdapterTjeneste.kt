@@ -116,9 +116,10 @@ class K9PunsjTilLosAdapterTjeneste(
                     // Flere tilfeller som skal håndteres her?
 
                     eventTeller++
+                    forrigeOppgaveversjon = oppgave
+                } else {
+                    forrigeOppgaveversjon = oppgaveV3Tjeneste.hentOppgaveversjon("K9", oppgaveDto.id, oppgaveDto.versjon, tx)
                 }
-
-                forrigeOppgaveversjon = oppgave
             }
             eventRepository.fjernDirty(uuid, tx)
         }

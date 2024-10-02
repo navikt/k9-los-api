@@ -21,7 +21,6 @@ import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverHistorikk
 import no.nav.k9.los.tjenester.fagsak.PersonDto
-import no.nav.k9.los.tjenester.saksbehandler.merknad.Merknad
 import no.nav.k9.los.tjenester.saksbehandler.nokkeltall.NyeOgFerdigstilteOppgaverDto
 import no.nav.k9.los.utils.Cache
 import no.nav.k9.los.utils.CacheObject
@@ -427,35 +426,21 @@ class OppgaveTjeneste constructor(
             tilOppgaveDto(
                 oppgave = oppgave,
                 reservasjon = reservasjonOversetter.hentAktivReservasjonFraGammelKontekst(oppgave),
-                merknad = hentAktivMerknad(oppgave.eksternId.toString())
             )
         }.toMutableList()
 
         return OppgaverResultat(
             ikkeTilgang,
-            oppgaver,
-            oppgaver.any { it.merknad != null }
+            oppgaver
         )
     }
 
-    fun hentAktivMerknad(eksternId: String): MerknadDto? {
-        return oppgaveRepositoryV2.hentMerknader(eksternId, inkluderSlettet = false).firstOrNull().tilDto()
-    }
-
-    private fun Merknad?.tilDto(): MerknadDto? {
-        return this?.let {
-            MerknadDto(
-                merknadKoder = it.merknadKoder,
-                fritekst = it.fritekst ?: ""
-            )
-        }
-    }
 
     private suspend fun reservertAvMeg(ident: String?): Boolean {
         return azureGraphService.hentIdentTilInnloggetBruker() == ident
     }
 
-    private suspend fun tilOppgaveDto(oppgave: Oppgave, reservasjon: ReservasjonV3?, merknad: MerknadDto?): OppgaveDto {
+    private suspend fun tilOppgaveDto(oppgave: Oppgave, reservasjon: ReservasjonV3?): OppgaveDto {
         val oppgaveStatus =
             if (reservasjon == null) {
                 OppgaveStatusDto(false, null, false, null, null, null)
@@ -475,14 +460,17 @@ class OppgaveTjeneste constructor(
             }
         val person = pdlService.person(oppgave.aktorId)
 
-        return oppgave.tilDto(oppgaveStatus, person, paaVent = oppgave.aksjonspunkter.påVent(Fagsystem.fraKode(oppgave.system)), merknad = merknad)
+        return oppgave.tilDto(
+            oppgaveStatus,
+            person,
+            paaVent = oppgave.aksjonspunkter.påVent(Fagsystem.fraKode(oppgave.system))
+        )
     }
 
     private fun Oppgave.tilDto(
         oppgaveStatus: OppgaveStatusDto,
         person: PersonPdlResponse,
         paaVent: Boolean? = null,
-        merknad: MerknadDto?
     ): OppgaveDto {
         return OppgaveDto(
             status = oppgaveStatus,
@@ -509,8 +497,7 @@ class OppgaveTjeneste constructor(
             søktGradering = this.søktGradering,
             avklarArbeidsforhold = this.avklarArbeidsforhold,
             fagsakPeriode = this.fagsakPeriode,
-            paaVent = paaVent,
-            merknad = merknad
+            paaVent = paaVent
         )
     }
 
@@ -520,7 +507,6 @@ class OppgaveTjeneste constructor(
                 tilOppgaveDto(
                     oppgave = oppgave,
                     reservasjon = reservasjonOversetter.hentAktivReservasjonFraGammelKontekst(oppgave),
-                    merknad = hentAktivMerknad(oppgave.eksternId.toString())
                 )
             }.toList()
     }
@@ -732,7 +718,6 @@ class OppgaveTjeneste constructor(
                 oppgavekø.tilhørerOppgaveTilKø(
                     it,
                     erOppgavenReservertSjekk = { false },
-                    emptyList()
                 )
             } //må spesifikt si at oppgaven ikke er reservert for å telle den reserverte oppgaven
         val antallUtenReserverte = oppgavekø.oppgaverOgDatoer.size
@@ -770,7 +755,6 @@ class OppgaveTjeneste constructor(
                     oppgavekø.tilhørerOppgaveTilKø(
                         it,
                         erOppgavenReservertSjekk = { false },
-                        emptyList()
                     )
                 } //må spesifikt si at oppgaven ikke er reservert for å telle den reserverte oppgaven
             log.info("Antall reserverte oppgaver som ble lagt til var $antallReserverteOppgaverSomTilhørerKø for køen ${oppgavekø.navn}")
@@ -846,8 +830,7 @@ class OppgaveTjeneste constructor(
         utbetalingTilBruker = oppgave.utbetalingTilBruker,
         søktGradering = oppgave.søktGradering,
         selvstendigFrilans = oppgave.selvstendigFrilans,
-        avklarArbeidsforhold = oppgave.avklarArbeidsforhold,
-        merknad = hentAktivMerknad(oppgave.eksternId.toString())
+        avklarArbeidsforhold = oppgave.avklarArbeidsforhold
     )
 
     suspend fun sokSaksbehandler(søkestreng: String): Saksbehandler {
@@ -915,14 +898,12 @@ class OppgaveTjeneste constructor(
             val skalOppdareKø = oppgaveKø.leggOppgaveTilEllerFjernFraKø(
                 oppaveSkjermet,
                 reservasjonRepository,
-                oppgaveRepositoryV2.hentMerknader(oppgave.eksternId.toString())
             )
             if (skalOppdareKø) {
                 oppgaveKøRepository.lagre(oppgaveKø.id) {
                     it!!.leggOppgaveTilEllerFjernFraKø(
                         oppaveSkjermet,
                         reservasjonRepository,
-                        oppgaveRepositoryV2.hentMerknader(oppgave.eksternId.toString())
                     )
                     it
                 }

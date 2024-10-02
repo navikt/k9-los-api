@@ -105,7 +105,7 @@ data class Behandling(
     @JsonProperty("avsender")
     val avsender: String? = null,
 
-    @JsonProperty("oversendtKabal")
+    @JsonProperty("oversendtKlageinstans")
     val oversendtKlageinstans: LocalDateTime? = null,
 
     @JsonProperty("versjon")
@@ -129,6 +129,7 @@ data class Behandling(
             registrertDato=$registrertDato,
             vedtaksDato=$vedtaksDato,
             avsender=$avsender,
+            resultatBeskrivelse=$resultatBeskrivelse,
             oversendtKlageinstans=$oversendtKlageinstans
         )""".trimIndent()
     }

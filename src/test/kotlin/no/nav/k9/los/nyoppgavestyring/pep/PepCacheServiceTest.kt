@@ -28,6 +28,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
@@ -255,22 +256,22 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         val eksternId = UUID.randomUUID().toString()
         k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, saksnummer))
 
-        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, BeskyttelseType.ORDINÆR.kode)).isNotEmpty()
-        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId)).isNotEmpty()
-        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, "KODE6")).isNotEmpty() // Samme som ordinær frem til håndtert. Kan f.eks gjeninnføres som egen interntype som ikke eksponeres ut
-
-        verify(exactly = 3) { runBlocking { pepClient.harTilgangTilOppgaveV3(any(), Action.read, any()) } }
+        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, PersonBeskyttelseType.UGRADERT)).isNotEmpty()
+        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, PersonBeskyttelseType.UTEN_KODE6)).isNotEmpty()
+        verify(exactly = 2) { runBlocking { pepClient.harTilgangTilOppgaveV3(any(), Action.read, any()) } } //oppgaven hentet ut 2 ganger fra kø, gir to kall til pep klient
+        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, PersonBeskyttelseType.KODE6)).isEmpty()
+        verify(exactly = 2) { runBlocking { pepClient.harTilgangTilOppgaveV3(any(), Action.read, any()) } } //oppgaven var ikke i køa, så gjør ikke ekstra kall til pep-klent
 
         gjørSakKode6(saksnummer)
         ventPåAntallForsøk(10, "Pepcache") { pepRepository.hent("K9", eksternId)?.kode6 == true }
 
-        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, BeskyttelseType.ORDINÆR.kode)).isEmpty()
-        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId)).isNotEmpty()  // Alle beskyttelsetyper er inkludert hvis ikke beskyttelsetype er spesifisert
-        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, "KODE6")).isEmpty() // Samme som ordinær frem til håndtert
-
+        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, PersonBeskyttelseType.UGRADERT)).isEmpty()
+        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, PersonBeskyttelseType.KODE7_ELLER_EGEN_ANSATT)).isEmpty()
+        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, PersonBeskyttelseType.UTEN_KODE6)).isEmpty()
+        assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, PersonBeskyttelseType.KODE6)).isNotEmpty()
 
         job.cancel()
-        verify(exactly = 4) { runBlocking { pepClient.harTilgangTilOppgaveV3(any(), any(), any()) } }
+        verify(exactly = 3) { runBlocking { pepClient.harTilgangTilOppgaveV3(any(), any(), any()) } } //oppgaven var bare i kode6-køa, så ble ett ekstra kall til pep-klent
     }
 
     private fun loggAlleOppgaverMedFelterOgCache() {
@@ -291,7 +292,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
     private fun hentOppgaverMedSikkerhetsklassifisering(
         oppgaveQueryService: OppgaveQueryService,
         eksternId: String,
-        vararg sikkerhetsklassifiseringtyper: String
+        sikkerhetsklassifiseringtype: PersonBeskyttelseType
     ): List<Any> {
         val transactionalManager = get<TransactionalManager>()
         return transactionalManager.transaction { tx ->
@@ -299,9 +300,9 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
                 CombineOppgavefilter(combineOperator = "AND", filtere = listOf(
                     FeltverdiOppgavefilter(
                         område = null,
-                        kode = FeltType.BESKYTTELSE.eksternId,
-                        operator = "IN",
-                        verdi = sikkerhetsklassifiseringtyper.toList()
+                        kode = FeltType.PERSONBESKYTTELSE.eksternId,
+                        operator = "EQUALS",
+                        verdi = listOf(sikkerhetsklassifiseringtype.kode)
                     ),
                     FeltverdiOppgavefilter(område = "K9",
                         kode = FeltType.BEHANDLINGUUID.eksternId,

@@ -2,6 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.query.db
 
 import no.nav.k9.los.nyoppgavestyring.kodeverk.EgenAnsatt
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype.*
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
@@ -102,30 +103,49 @@ class OppgaveQuerySqlBuilder(
                 query += "${combineOperator.sql} o.status ${operator.sql} (cast(:oppgavestatus$index as oppgavestatus)) "
                 queryParams["oppgavestatus$index"] = feltverdi
             }
+
             "kildeområde" -> {
                 query += "${combineOperator.sql} o.kildeomrade ${operator.sql} (:kildeomrade$index) "
                 queryParams["kildeomrade$index"] = feltverdi
             }
+
             "oppgavetype" -> {
                 query += "${combineOperator.sql} ot.ekstern_id ${operator.sql} (:oppgavetype$index) "
                 queryParams["oppgavetype$index"] = feltverdi
             }
+
             "oppgaveområde" -> {
                 query += "${combineOperator.sql} oppgave_omrade.ekstern_id ${operator.sql} (:oppgave_omrade$index) "
                 queryParams["oppgave_omrade$index"] = feltverdi
             }
+
+            //deprecated - for removal - bruk "personbeskyttelse" istedet
             "beskyttelse" -> {
-                when(feltverdi) {
+                when (feltverdi) {
                     BeskyttelseType.KODE7.kode -> query += "${combineOperator.sql} opc.kode7 is not false "
                     else -> {
                         query += "${combineOperator.sql} opc.kode6 is not true AND opc.kode7 is not true "
                     }
                 }
             }
+
+            //deprecated - for removal - bruk "personbeskyttelse" istedet
             "egenAnsatt" -> {
-                query += when(feltverdi) {
+                query += when (feltverdi) {
                     EgenAnsatt.JA.kode -> "${combineOperator.sql} opc.egen_ansatt is not false "
                     EgenAnsatt.NEI.kode -> "${combineOperator.sql} opc.egen_ansatt is not true "
+                    else -> throw IllegalStateException("Ukjent feltkode: $feltkode")
+                }
+            }
+
+            "personbeskyttelse" -> {
+                query += when (feltverdi) {
+                    //Dette er ikke tilgangskontroll, men tilordning av oppgaver til køer. Tilgangskontroll skjer når saksbehandlere plukker/ser på hva som er i køene.
+                    //Negeringer i uttrykkene er for å slippe gjennom treff mot null (skjer om PEP_CACHE ikke er populert/er utdatert).
+                    PersonBeskyttelseType.KODE6.kode -> "${combineOperator.sql} opc.kode6 is not false "
+                    PersonBeskyttelseType.UTEN_KODE6.kode -> "${combineOperator.sql} opc.kode6 is not true "
+                    PersonBeskyttelseType.KODE7_ELLER_EGEN_ANSATT.kode -> "${combineOperator.sql} (opc.kode6 is not true AND (opc.kode7 is not false OR opc.egen_ansatt is not false)) "
+                    PersonBeskyttelseType.UGRADERT.kode -> "${combineOperator.sql} (opc.kode6 is not true AND opc.kode7 is not true AND opc.egen_ansatt is not true )"
                     else -> throw IllegalStateException("Ukjent feltkode: $feltkode")
                 }
             }

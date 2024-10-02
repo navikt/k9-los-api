@@ -22,10 +22,3 @@ then
         export "$KEY"="$VALUE"
     done
 fi
-
-#start opentelemetyr-agenten dersom konfigurert
-set +u
-if [ ! -z "${OTEL_EXPORTER_OTLP_ENDPOINT}" ]; then
-    echo "Configuring attatchment of opentelemetry-agent"
-    JAVA_OPTS="${JAVA_OPTS} -javaagent:/app/opentelemetry-javaagent.jar"
-fi

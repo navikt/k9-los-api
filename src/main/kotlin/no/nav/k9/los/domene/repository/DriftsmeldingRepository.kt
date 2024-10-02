@@ -5,7 +5,6 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.los.tjenester.driftsmeldinger.DriftsmeldingDto
 import no.nav.k9.los.tjenester.driftsmeldinger.DriftsmeldingSwitch
-import no.nav.k9.los.tjenester.innsikt.Databasekall
 import java.time.LocalDateTime
 import java.util.*
 import java.util.concurrent.atomic.LongAdder
@@ -37,7 +36,6 @@ class DriftsmeldingRepository(
                 )
             }
         }
-        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){ LongAdder() }.increment()
 
     }
 
@@ -63,13 +61,10 @@ class DriftsmeldingRepository(
                 )
             }
         }
-        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
 
     }
 
     fun hentAlle(): List<DriftsmeldingDto> {
-        Databasekall.map.computeIfAbsent(object{}.javaClass.name + object{}.javaClass.enclosingMethod.name){LongAdder()}.increment()
-
         return using(sessionOf(dataSource)) {
             //language=PostgreSQL
             it.run(
@@ -90,8 +85,6 @@ class DriftsmeldingRepository(
     }
 
     fun slett(id: UUID) {
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
 

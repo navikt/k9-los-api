@@ -41,6 +41,7 @@ fun Route.innsiktGrensesnitt() {
     val oppgaveKøRepository by inject<OppgaveKøRepository>()
     val behandlingProsessEventK9Repository by inject<BehandlingProsessEventK9Repository>()
     val behandlingProsessEventTilbakeRepository by inject<BehandlingProsessEventTilbakeRepository>()
+    val behandlingProsessEventKlageRepository by inject<BehandlingProsessEventKlageRepository>()
     val punsjEventK9Repository by inject<PunsjEventK9Repository>()
     val reservasjonRepository by inject<ReservasjonRepository>()
     val reservasjonv3Repository by inject<ReservasjonV3Repository>()
@@ -120,6 +121,9 @@ fun Route.innsiktGrensesnitt() {
 
             Fagsystem.K9TILBAKE.kode -> behandlingProsessEventTilbakeRepository.hent(oppgaveMedId1.id)
                 .eventer.map { InnsiktEvent(it.aksjonspunktKoderMedStatusListe, it.eventTid) }
+
+            Fagsystem.K9KLAGE.kode -> behandlingProsessEventKlageRepository.hent(oppgaveMedId1.id)
+                .eventer.map { InnsiktEvent(it.aksjonspunkttilstander.associate { it.aksjonspunktKode to it.status.kode }, it.eventTid) }
 
             else -> behandlingProsessEventK9Repository.hent(oppgaveMedId1.id)
                 .eventer.map { InnsiktEvent(it.aksjonspunktKoderMedStatusListe, it.eventTid) }
@@ -231,7 +235,6 @@ fun Route.innsiktGrensesnitt() {
                     oppgaveKø.leggOppgaveTilEllerFjernFraKø(
                         oppgave,
                         erOppgavenReservertSjekk = {false},
-                        merknader = oppgaveRepositoryV2.hentMerknader(oppgave.eksternId.toString())
                     )
                 }
             }
@@ -255,15 +258,6 @@ fun Route.innsiktGrensesnitt() {
 
                             li {
                                 +"${l.navn}: ${l.oppgaverOgDatoer.size} vs $size - id=${l.id}"
-                            }
-                        }
-                    }
-
-                    ul {
-                        for (mutableEntry in Databasekall.map.entries.toList()
-                            .sortedByDescending { mutableEntry -> mutableEntry.value.sum() }) {
-                            li {
-                                +"${mutableEntry.key}: ${mutableEntry.value} "
                             }
                         }
                     }

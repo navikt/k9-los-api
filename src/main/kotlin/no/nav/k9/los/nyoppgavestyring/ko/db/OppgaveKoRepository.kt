@@ -21,6 +21,13 @@ class OppgaveKoRepository(val datasource: DataSource) {
         )
         objectMapper.writeValueAsString(standardOppgaveQuery)
     }
+    private val kode6OppgaveString: String by lazy {
+        val kode6OppgaveQuery = objectMapper.readValue(
+            OppgaveKoRepository::class.java.getResource("/los/kode6-ko.json")!!.readText(),
+            OppgaveQuery::class.java
+        )
+        objectMapper.writeValueAsString(kode6OppgaveQuery)
+    }
 
     fun hentListe(medSkjermet: Boolean = false): List<OppgaveKo> {
         return using(sessionOf(datasource)) {
@@ -68,7 +75,8 @@ class OppgaveKoRepository(val datasource: DataSource) {
             oppgaveQuery = objectMapper.readValue(string("query"), OppgaveQuery::class.java),
             frittValgAvOppgave = boolean("fritt_valg_av_oppgave"),
             saksbehandlere = hentKoSaksbehandlere(tx, long("id")),
-            endretTidspunkt = localDateTimeOrNull("endret_tidspunkt")
+            endretTidspunkt = localDateTimeOrNull("endret_tidspunkt"),
+            skjermet = boolean("skjermet")
         )
     }
 
@@ -79,6 +87,7 @@ class OppgaveKoRepository(val datasource: DataSource) {
     }
 
     fun leggTil(tx: TransactionalSession, tittel: String, skjermet: Boolean): OppgaveKo {
+        val queryString = if (skjermet) kode6OppgaveString else standardOppgaveString
         val oppgaveKoId = tx.run(
             queryOf(
                 """
@@ -86,7 +95,7 @@ class OppgaveKoRepository(val datasource: DataSource) {
                 VALUES (0, :tittel, '', :query, false, :endret_tidspunkt, :skjermet) RETURNING ID""",
                 mapOf(
                     "tittel" to tittel,
-                    "query" to standardOppgaveString,
+                    "query" to queryString,
                     "endret_tidspunkt" to LocalDateTime.now(),
                     "skjermet" to skjermet
                 )
@@ -148,7 +157,7 @@ class OppgaveKoRepository(val datasource: DataSource) {
         return tx.run(
             queryOf(
                 """
-                    select id, versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave, endret_tidspunkt 
+                    select id, versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave, endret_tidspunkt, skjermet
                     from OPPGAVEKO_V3 ko
                     where skjermet = :skjermet AND
                     exists (
@@ -170,7 +179,8 @@ class OppgaveKoRepository(val datasource: DataSource) {
                     oppgaveQuery = objectMapper.readValue(row.string("query"), OppgaveQuery::class.java),
                     frittValgAvOppgave = row.boolean("fritt_valg_av_oppgave"),
                     saksbehandlere = hentKoSaksbehandlere(tx, row.long("id")),
-                    endretTidspunkt = row.localDateTimeOrNull("endret_tidspunkt")
+                    endretTidspunkt = row.localDateTimeOrNull("endret_tidspunkt"),
+                    skjermet = row.boolean("skjermet")
                 )
             }.asList
         )

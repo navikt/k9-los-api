@@ -7,7 +7,6 @@ import kotliquery.using
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.los.domene.modell.K9SakModell
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
-import no.nav.k9.los.tjenester.innsikt.Databasekall
 import no.nav.k9.los.utils.LosObjectMapper
 import java.util.*
 import java.util.concurrent.atomic.LongAdder
@@ -28,8 +27,6 @@ class BehandlingProsessEventK9Repository(private val dataSource: DataSource) {
                     }.asSingle
             )
         }
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
         if (json.isNullOrEmpty()) {
             return K9SakModell(mutableListOf())
         }
@@ -50,8 +47,6 @@ class BehandlingProsessEventK9Repository(private val dataSource: DataSource) {
                 }.asSingle
         )
 
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
         if (json.isNullOrEmpty()) {
             return K9SakModell(mutableListOf())
         }
@@ -71,18 +66,7 @@ class BehandlingProsessEventK9Repository(private val dataSource: DataSource) {
         )
     }
 
-    fun settDirty(uuid: UUID, tx: TransactionalSession) {
-        tx.run(
-            queryOf(
-                """update behandling_prosess_events_k9 set dirty = true where id = :id""",
-                mapOf("id" to uuid.toString())
-            ).asUpdate
-        )
-    }
-
     fun lagre(uuid: UUID, f: (K9SakModell?) -> K9SakModell): K9SakModell {
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
         var sortertModell = K9SakModell(mutableListOf())
         using(sessionOf(dataSource)) { it ->
             it.transaction { tx ->

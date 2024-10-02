@@ -107,19 +107,19 @@ fun Route.forvaltningApis() {
             Fagsystem.K9TILBAKE -> {
                 val k9TilbakeModell = k9tilbakeEventRepository.hent(UUID.fromString(eksternId))
                 val eventerIkkeSensitive = k9TilbakeModell.eventer.map { event -> K9TilbakeEventIkkeSensitiv(event) }
-                objectMapper.writeValueAsString(eventerIkkeSensitive)
+                call.respond(objectMapper.writeValueAsString(eventerIkkeSensitive))
             }
 
             Fagsystem.K9KLAGE -> {
                 val k9KlageModell = k9klageEventRepository.hent(UUID.fromString(eksternId))
                 val eventerIkkeSensitive = k9KlageModell.eventer.map { event -> K9KlageEventIkkeSensitiv(event) }
-                objectMapper.writeValueAsString(eventerIkkeSensitive)
+                call.respond(objectMapper.writeValueAsString(eventerIkkeSensitive))
             }
 
             Fagsystem.PUNSJ -> {
                 val k9PunsjModell = k9PunsjEventK9Repository.hent(UUID.fromString(eksternId))
                 val eventerIkkeSensitive = k9PunsjModell.eventer.map { event -> K9PunsjEventIkkeSensitiv(event) }
-                objectMapper.writeValueAsString(eventerIkkeSensitive)
+                call.respond(objectMapper.writeValueAsString(eventerIkkeSensitive))
             }
         }
     }
