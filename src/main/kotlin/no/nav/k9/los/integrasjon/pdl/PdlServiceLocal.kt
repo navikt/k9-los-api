@@ -1,7 +1,5 @@
 package no.nav.k9.los.integrasjon.pdl
 
-import java.time.LocalDate
-
 
 class PdlServiceLocal : IPdlService {
 
