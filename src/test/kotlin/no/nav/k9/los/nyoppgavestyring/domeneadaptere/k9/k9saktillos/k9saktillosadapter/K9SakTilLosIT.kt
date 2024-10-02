@@ -375,15 +375,6 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         )
     }
 
-    private fun hentEnesteReservasjon(saksbehandler: Saksbehandler): ReservasjonV3Dto {
-        val oppgaveApisTjeneste = get<OppgaveApisTjeneste>()
-        return runBlocking {
-            oppgaveApisTjeneste.hentReserverteOppgaverForSaksbehandler(saksbehandler).also {
-                assertThat(it).hasSize(1)
-            }.first()
-        }
-    }
-
     private fun assertIngenReservasjon(saksbehandler: Saksbehandler) {
         val oppgaveApisTjeneste = get<OppgaveApisTjeneste>()
         runBlocking { assertThat(
@@ -407,77 +398,6 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
             assertThat(it.reserverteV3Oppgaver.filter { it.oppgavestatus ==  Oppgavestatus.AAPEN}).hasSize(antallOppgaver)
         }
     }
-
-    private fun leggTilbakeAlleReservasjoner(saksbehandler: Saksbehandler) {
-        val oppgaveApisTjeneste = get<OppgaveApisTjeneste>()
-        runBlocking {
-            oppgaveApisTjeneste.hentReserverteOppgaverForSaksbehandler(saksbehandler).forEach { reservasjon ->
-
-                val params =
-                    listOf(AnnullerReservasjon(reservasjon.reservertOppgaveV1Dto?.oppgaveNøkkel
-                        ?: reservasjon.reserverteV3Oppgaver.first().oppgaveNøkkel))
-
-                oppgaveApisTjeneste.annullerReservasjoner(params, saksbehandler)
-            }
-        }
-    }
-
-    private fun forleng(saksbehandler: Saksbehandler, reservasjon: ReservasjonV3Dto, tilDato: LocalDateTime) {
-        val oppgaveApisTjeneste = get<OppgaveApisTjeneste>()
-        val nøkler = listOfNotNull(reservasjon.reservertOppgaveV1Dto?.oppgaveNøkkel).takeIf { it.isNotEmpty() }
-            ?: reservasjon.reserverteV3Oppgaver.map { it.oppgaveNøkkel }
-
-        runBlocking {
-            nøkler.forEach {
-                oppgaveApisTjeneste.forlengReservasjon(
-                    ForlengReservasjonDto(
-                        it,
-                        "begrunnelse",
-                        tilDato
-                    ), saksbehandler
-                )
-            }
-        }
-    }
-
-
-    private fun endre(saksbehandler: Saksbehandler, nøkler: List<OppgaveNøkkelDto>, tilDato: LocalDate) {
-        val oppgaveApisTjeneste = get<OppgaveApisTjeneste>()
-
-        runBlocking {
-            oppgaveApisTjeneste.endreReservasjoner(
-                nøkler.map { ReservasjonEndringDto(
-                    it,
-                    saksbehandler.brukerIdent,
-                    tilDato,
-                    "begrunnelse",
-                )}, saksbehandler
-            )
-        }
-    }
-
-    private fun ReservasjonV3Dto.oppgaveNøkkelDtos() =
-        (listOfNotNull(reservertOppgaveV1Dto?.oppgaveNøkkel).takeIf { it.isNotEmpty() }
-            ?: reserverteV3Oppgaver.map { it.oppgaveNøkkel })
-
-
-    private fun overfør(saksbehandler: Saksbehandler, nøkler: List<OppgaveNøkkelDto>) {
-        val oppgaveApisTjeneste = get<OppgaveApisTjeneste>()
-
-        runBlocking {
-            nøkler.forEach {
-                oppgaveApisTjeneste.overførReservasjon(
-                    FlyttReservasjonId(
-                        it,
-                        saksbehandler.brukerIdent!!,
-                        "begrunnelse",
-                    ), saksbehandler
-                )
-            }
-        }
-    }
-
-
 
     private fun opprettKøFor(saksbehandler: Saksbehandler, oppgaveQuery: OppgaveQuery): OppgaveKo {
         val oppgaveKoRepository = get<OppgaveKoRepository>()
@@ -507,23 +427,6 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         }
         return OppgaveQuery(filtre)
     }
-
-    fun hentOppgaver(eksternId: UUID): Map<Triple<Oppgavestatus, String, LocalDateTime>, Boolean> {
-        return get<TransactionalManager>().transaction {  tx ->
-            tx.run(
-                queryOf(
-                    "select * from oppgave_v3 where ekstern_id = :eksternId", mapOf("eksternId" to eksternId.toString())
-                ).map { row ->
-                    Triple(
-                        Oppgavestatus.valueOf(row.string("status")),
-                        row.string("reservasjonsnokkel"),
-                        row.localDateTime("endret_tidspunkt"),
-                    ) to row.boolean("aktiv")
-                }.asList
-            ).toMap()
-        }
-    }
-
 }
 
 object TestOppgaveNøkkel {

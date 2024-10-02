@@ -143,25 +143,9 @@ class BehandlingBuilder(behandlingId: String, saksnummer: String) {
     )
 
     fun build(): Behandling = behandling
-    fun buildJson(): String = build().toJson()
-
-    fun sakId(sakId: String?): BehandlingBuilder {
-        behandling = behandling.copy(sakId = sakId)
-        return this
-    }
 
     fun behandlingId(behandlingId: String): BehandlingBuilder {
         behandling = behandling.copy(behandlingId = behandlingId)
-        return this
-    }
-
-    fun funksjonellTid(funksjonellTid: OffsetDateTime?): BehandlingBuilder {
-        behandling = behandling.copy(funksjonellTid = funksjonellTid)
-        return this
-    }
-
-    fun tekniskTid(tekniskTid: OffsetDateTime?): BehandlingBuilder {
-        behandling = behandling.copy(tekniskTid = tekniskTid)
         return this
     }
 
@@ -172,21 +156,6 @@ class BehandlingBuilder(behandlingId: String, saksnummer: String) {
 
     fun registrertDato(registrertDato: LocalDate?): BehandlingBuilder {
         behandling = behandling.copy(registrertDato = registrertDato)
-        return this
-    }
-
-    fun vedtaksDato(vedtaksDato: LocalDate?): BehandlingBuilder {
-        behandling = behandling.copy(vedtaksDato = vedtaksDato)
-        return this
-    }
-
-    fun relatertBehandlingId(relatertBehandlingId: String?): BehandlingBuilder {
-        behandling = behandling.copy(relatertBehandlingId = relatertBehandlingId)
-        return this
-    }
-
-    fun vedtakId(vedtakId: String?): BehandlingBuilder {
-        behandling = behandling.copy(vedtakId = vedtakId)
         return this
     }
 

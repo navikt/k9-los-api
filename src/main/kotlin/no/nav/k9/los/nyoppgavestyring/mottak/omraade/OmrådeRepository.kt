@@ -10,7 +10,6 @@ import javax.sql.DataSource
 
 class OmrådeRepository(private val dataSource: DataSource) {
 
-    private val log = LoggerFactory.getLogger(OmrådeRepository::class.java)
     private val områdeCache = Cache<String, Område>(cacheSizeLimit = null)
 
 

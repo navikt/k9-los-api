@@ -34,11 +34,3 @@ fun LocalDateTime.leggTilDagerHoppOverHelg(dager: Int): LocalDateTime {
     return nyDato.atTime(23, 59)
 }
 
-fun LocalDateTime.forskyvReservasjonsDatoBakover(): LocalDateTime {
-    var localDate = this.toLocalDate()
-    while (localDate.dayOfWeek == DayOfWeek.SATURDAY || localDate.dayOfWeek == DayOfWeek.SUNDAY) {
-        localDate = localDate.minusDays(1)
-    }
-
-    return localDate.atStartOfDay()
-}

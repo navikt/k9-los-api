@@ -26,10 +26,6 @@ import java.util.*
 
 class NokkeltallTjenesteTest : AbstractK9LosIntegrationTest() {
 
-    val DAG1 = LocalDate.now().minusDays(2)
-    val DAG2 = LocalDate.now().minusDays(1)
-    val DAG3 = LocalDate.now()
-
     @Test
     fun `Hent oppgaver på vent - 1 oppgave uten aksjonspunkt skal gi 0 oppgaver på vent`() {
         val nøkkeltallTjeneste = get<NokkeltallTjeneste>()
