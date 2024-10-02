@@ -63,6 +63,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Api
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeApi
 import no.nav.k9.los.nyoppgavestyring.pep.PepCacheOppdaterer
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryApis
+import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksApi
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederApis
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.DataeksportApis
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallApis
@@ -324,12 +325,12 @@ fun Application.k9Los() {
                 route("k9saktillos") { K9SakTilLosApi() }
                 route("k9klagetillos") { K9KlageTilLosApi() }
                 route("statistikk") { StatistikkApi() }
-                route("/swagger") {
-                    route("openapi.json") {
-                        openApiSpec()
-                    }
-                    swaggerUI("openapi.json")
+            }
+            route("/swagger") {
+                route("openapi.json") {
+                    openApiSpec()
                 }
+                swaggerUI("openapi.json")
             }
         } else {
             authenticate(*issuers.allIssuers()) {
@@ -378,16 +379,14 @@ private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
         sseChannel = sseChannel
     )
 
-    route("api", {
-        hidden = true
-    }) {
-        route("driftsmeldinger") {
+    route("api") {
+        route("driftsmeldinger", { hidden = true }) {
             DriftsmeldingerApis()
         }
-        route("fagsak") {
+        route("fagsak", { hidden = true }) {
             FagsakApis()
         }
-        route("saksbehandler") {
+        route("saksbehandler", { hidden = true }) {
             route("oppgaver") {
                 OppgaveApis()
             }
@@ -395,7 +394,7 @@ private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
             SaksbehandlerOppgavekoApis()
             SaksbehandlerNøkkeltallApis()
         }
-        route("avdelingsleder") {
+        route("avdelingsleder", { hidden = true }) {
             AvdelingslederApis()
             route("oppgavekoer") {
                 AvdelingslederOppgavekøApis() // Erstattet av OppgaveKoApis i V3
@@ -408,15 +407,16 @@ private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
 
         NavAnsattApis()
 
-        route("konfig") { KonfigApis() }
+        route("konfig", { hidden = true }) { KonfigApis() }
         KodeverkApis()
 
         route("ny-oppgavestyring") {
-            route("ko") { OppgaveKoApis() }
-            route("oppgave") { OppgaveQueryApis() }
-            route("feltdefinisjon") { FeltdefinisjonApi() }
-            route("oppgavetype") { OppgavetypeApi() }
-            route("oppgave-v3") { OppgaveV3Api() }
+            route("ko", { hidden = true }) { OppgaveKoApis() }
+            route("oppgave", { hidden = true }) { OppgaveQueryApis() }
+            route("feltdefinisjon", { hidden = true }) { FeltdefinisjonApi() }
+            route("oppgavetype", { hidden = true }) { OppgavetypeApi() }
+            route("oppgave-v3", { hidden = true }) { OppgaveV3Api() }
+            route("sok") { SøkeboksApi() }
         }
     }
 }

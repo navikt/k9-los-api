@@ -325,6 +325,14 @@ class ReservasjonV3Tjeneste(
         return ansvarligSaksbehandlerIdent == saksbehandlerIdentSomSkalHaReservasjon
     }
 
+    fun finnAktivReservasjon(
+        reservasjonsnøkkel: String,
+    ): ReservasjonV3? {
+        return transactionalManager.transaction { tx ->
+            reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(reservasjonsnøkkel, tx)
+        }
+    }
+
     private fun finnAktivReservasjon(
         reservasjonsnøkkel: String,
         tx: TransactionalSession

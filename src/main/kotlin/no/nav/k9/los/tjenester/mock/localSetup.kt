@@ -67,14 +67,14 @@ object localSetup : KoinComponent {
             runBlocking {
                 punsjEventHandler.prosesser(PunsjEventDto(
                     eksternId = UUID.randomUUID(),
-                    journalpostId = JournalpostId("12345678"),
+                    journalpostId = JournalpostId("123456789"),
                     eventTid = LocalDateTime.now(),
                     status = Oppgavestatus.AAPEN,
-                    aktørId = AktørId("123"),
+                    aktørId = AktørId("2392173967319"),
                     aksjonspunktKoderMedStatusListe = mutableMapOf(),
                     pleietrengendeAktørId = null,
                     type = "PAPIRSØKNAD",
-                    ytelse = null,
+                    ytelse = "UKJENT",
                     sendtInn = null,
                     ferdigstiltAv = null,
                     journalførtTidspunkt = null

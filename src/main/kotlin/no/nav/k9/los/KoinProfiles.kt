@@ -72,6 +72,7 @@ import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksTjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
@@ -650,6 +651,17 @@ fun common(app: Application, config: Configuration) = module {
             aktivOppgaveRepository = get(),
             oppgaveKoRepository = get(),
             transactionalManager = get()
+        )
+    }
+
+    single {
+        SøkeboksTjeneste(
+            queryService = get(),
+            oppgaveRepository = get(),
+            pdlService = get(),
+            pepClient = get(),
+            reservasjonV3Tjeneste = get(),
+            saksbehandlerRepository = get()
         )
     }
 }

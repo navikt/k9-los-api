@@ -75,7 +75,7 @@ class OppgaveQuerySqlBuilder(
     }
 
     private fun hentTransientFeltutleder(feltområde: String?, feltkode: String): TransientFeltutleder? {
-        return felter[OmrådeOgKode(feltområde, feltkode)]!!.transientFeltutleder
+        return felter[OmrådeOgKode(feltområde, feltkode)]?.transientFeltutleder
     }
 
     fun medFeltverdi(combineOperator: CombineOperator, feltområde: String?, feltkode: String, operator: FeltverdiOperator, feltverdi: Any?) {

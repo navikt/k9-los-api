@@ -56,3 +56,7 @@ internal fun PersonPdl.fnr(): String {
 internal fun PersonPdl.kjoenn(): String {
     return if(data.hentPerson.kjoenn.isNotEmpty()) data.hentPerson.kjoenn[0].kjoenn else "Uten kjønn"
 }
+
+internal fun PersonPdl.doedsdato(): LocalDate? {
+    return if(data.hentPerson.doedsfall.isNotEmpty()) data.hentPerson.doedsfall[0].doedsdato else null
+}
