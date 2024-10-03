@@ -5,7 +5,6 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 data class QueryRequest(
     val oppgaveQuery: OppgaveQuery,
     val fjernReserverte: Boolean = false,
-
     val avgrensning: Avgrensning? = null,
 )
 

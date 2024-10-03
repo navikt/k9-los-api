@@ -1,16 +1,12 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos
 
-import no.nav.k9.kodeverk.behandling.BehandlingStatus
-import no.nav.k9.kodeverk.behandling.FagsakYtelseType
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.*
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.los.domene.modell.BehandlingType
-import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.los.integrasjon.kafka.dto.PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 
 class EventTilDtoMapper {
     companion object {
@@ -71,12 +67,10 @@ class EventTilDtoMapper {
                         verdi = BehandlingType.fraKode(it).kode,
                     )
                 },
-                event.ytelse?.let {
-                    OppgaveFeltverdiDto(
-                        nøkkel = "ytelsestype",
-                        verdi = it,
-                    )
-                },
+                OppgaveFeltverdiDto(
+                    nøkkel = "ytelsestype",
+                    verdi = event.ytelse,
+                ),
                 event.ferdigstiltAv?.let {
                     OppgaveFeltverdiDto(
                         nøkkel = "ansvarligSaksbehandler",
@@ -104,118 +98,6 @@ class EventTilDtoMapper {
                     verdi = forrigeOppgave?.let { forrigeOppgave.hentVerdi("mottattDato") } ?: event.eventTid.toString(),
                 )
             )
-        }
-
-        internal fun utledVentetype(
-            behandlingSteg: String?,
-            behandlingStatus: String?,
-            åpneAksjonspunkter: List<AksjonspunktTilstandDto>
-        ): Ventekategori? {
-            if (behandlingStatus == BehandlingStatus.AVSLUTTET.kode) {
-                return null
-            }
-
-            if (åpneAksjonspunkter.isEmpty()) {
-                return Ventekategori.AVVENTER_ANNET
-            }
-
-            val førsteAPMedFristOgVenteårsak = åpneAksjonspunkter
-                .filter { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.fristTid != null && aksjonspunktTilstandDto.venteårsak != null }
-                .sortedBy { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.fristTid }
-                .firstOrNull()
-
-            if (førsteAPMedFristOgVenteårsak != null) {
-                return førsteAPMedFristOgVenteårsak.venteårsak.ventekategori
-            }
-
-            val autopunkter = åpneAksjonspunkter.filter { åpentAksjonspunkt ->
-                val aksjonspunktDefinisjon = AksjonspunktDefinisjon.fraKode(åpentAksjonspunkt.aksjonspunktKode)
-                aksjonspunktDefinisjon.erAutopunkt()
-            }
-
-            val ventekategorierPrioritert = listOf(
-                Ventekategori.AVVENTER_TEKNISK_FEIL,
-                Ventekategori.AVVENTER_SAKSBEHANDLER,
-                Ventekategori.AVVENTER_ANNET,
-                Ventekategori.AVVENTER_ARBEIDSGIVER,
-                Ventekategori.AVVENTER_SØKER,
-                Ventekategori.AVVENTER_ANNET_IKKE_SAKSBEHANDLINGSTID
-            )
-
-            // Prioriter autopunkter fremfor andre aksjonspunkter
-            ventekategorierPrioritert.forEach { ventekategori ->
-                if (apInneholder(autopunkter, ventekategori)) {
-                    return ventekategori
-                }
-            }
-
-            val løsbareManuelleAksjonspunkter = åpneAksjonspunkter.filter { åpentAksjonspunkt ->
-                val aksjonspunktDefinisjon = AksjonspunktDefinisjon.fraKode(åpentAksjonspunkt.aksjonspunktKode)
-                aksjonspunktDefinisjon.behandlingSteg != null && aksjonspunktDefinisjon.behandlingSteg.kode == behandlingSteg
-            }
-            ventekategorierPrioritert.forEach { ventekategori ->
-                if (apInneholder(løsbareManuelleAksjonspunkter, ventekategori)) {
-                    return ventekategori
-                }
-            }
-
-            return Ventekategori.AVVENTER_ANNET
-        }
-
-        private fun ventekategoriTilFlagg(
-            ventekategori: Ventekategori?
-        ): List<OppgaveFeltverdiDto> {
-            if (ventekategori == null) {
-                return avventerflagg("")
-            }
-            return when (ventekategori) {
-                Ventekategori.AVVENTER_SØKER -> avventerflagg("avventerSøker")
-                Ventekategori.AVVENTER_ARBEIDSGIVER -> avventerflagg("avventerArbeidsgiver")
-                Ventekategori.AVVENTER_SAKSBEHANDLER -> avventerflagg("avventerSaksbehandler")
-                Ventekategori.AVVENTER_TEKNISK_FEIL -> avventerflagg("avventerTekniskFeil")
-                Ventekategori.AVVENTER_ANNET -> avventerflagg("avventerAnnet")
-                Ventekategori.AVVENTER_ANNET_IKKE_SAKSBEHANDLINGSTID -> avventerflagg("avventerAnnetIkkeSaksbehandlingstid")
-                else -> throw IllegalArgumentException("Ukjent ventekategori: ${ventekategori}")
-            }
-        }
-
-        private fun apInneholder(
-            løsbareAksjonspunkt: List<AksjonspunktTilstandDto>,
-            ventekategori: Ventekategori
-        ): Boolean {
-            return løsbareAksjonspunkt.firstOrNull { aksjonspunktTilstandDto ->
-                AksjonspunktDefinisjon.fraKode(aksjonspunktTilstandDto.aksjonspunktKode).defaultVentekategori == ventekategori
-            } != null
-        }
-
-        private fun avventerflagg(skalSettesTrue: String): List<OppgaveFeltverdiDto> {
-            val oppgavefelter = mutableListOf<OppgaveFeltverdiDto>()
-            listOf(
-                "avventerSøker",
-                "avventerArbeidsgiver",
-                "avventerSaksbehandler",
-                "avventerTekniskFeil",
-                "avventerAnnet",
-                "avventerAnnetIkkeSaksbehandlingstid"
-            ).forEach {
-                if (skalSettesTrue == it) {
-                    oppgavefelter.add(
-                        OppgaveFeltverdiDto(
-                            nøkkel = it,
-                            verdi = true.toString()
-                        )
-                    )
-                } else {
-                    oppgavefelter.add(
-                        OppgaveFeltverdiDto(
-                            nøkkel = it,
-                            verdi = false.toString()
-                        )
-                    )
-                }
-            }
-
-            return oppgavefelter
         }
     }
 }
