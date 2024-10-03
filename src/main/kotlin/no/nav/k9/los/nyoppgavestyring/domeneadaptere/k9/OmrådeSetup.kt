@@ -254,6 +254,7 @@ object KodeverkSynlighetRegler {
             BehandlingType.ANKE -> KodeverkSynlighet.SKJULT
             BehandlingType.FORSTEGANGSSOKNAD,
             BehandlingType.KLAGE,
+            BehandlingType.REVURDERING,
             BehandlingType.REVURDERING_TILBAKEKREVING -> KodeverkSynlighet.SYNLIG_FAVORITT
 
             else -> KodeverkSynlighet.SYNLIG
