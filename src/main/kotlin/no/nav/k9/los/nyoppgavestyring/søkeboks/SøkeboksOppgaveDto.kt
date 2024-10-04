@@ -42,7 +42,7 @@ data class SøkeboksOppgaveDto(
         fnr = person?.fnr() ?: "Ukjent fnummer",
         kjønn = person?.kjoenn() ?: "Ukjent kjønn",
         dødsdato = person?.doedsdato(),
-        ytelsestype = FagsakYtelseType.fraKode(oppgaveV3.hentVerdi("ytelsestype")!!),
+        ytelsestype = oppgaveV3.hentVerdi("ytelsestype")?.let { FagsakYtelseType.fraKode(it) } ?: FagsakYtelseType.UKJENT,
         behandlingstype = BehandlingType.fraKode(oppgaveV3.hentVerdi("behandlingTypekode")!!),
         saksnummer = oppgaveV3.hentVerdi("saksnummer"),
         hastesak = oppgaveV3.hentVerdi("hastesak") == "true",
