@@ -1,6 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.søkeboks
 
 import com.fasterxml.jackson.annotation.JsonFormat
+import no.nav.k9.los.domene.modell.BehandlingStatus
 import no.nav.k9.los.domene.modell.BehandlingType
 import no.nav.k9.los.domene.modell.FagsakYtelseType
 import no.nav.k9.los.domene.modell.Saksbehandler
@@ -31,6 +32,7 @@ data class SøkeboksOppgaveDto(
     val journalpostId: String?,
     val opprettetTidspunkt: LocalDateTime?,
     val oppgavestatus: OppgavestatusMedNavn,
+    val behandlingsstatus: BehandlingStatus?,
     val oppgavebehandlingsUrl: String?,
     val reservasjonsnøkkel: String,
     val reservertAvSaksbehandlerNavn: String?,
@@ -50,6 +52,7 @@ data class SøkeboksOppgaveDto(
         journalpostId = oppgaveV3.hentVerdi("journalpostId"),
         opprettetTidspunkt = oppgaveV3.hentVerdi("registrertDato")?.let { LocalDateTime.parse(it) },
         oppgavestatus = OppgavestatusMedNavn.valueOf(oppgaveV3.status),
+        behandlingsstatus = oppgaveV3.hentVerdi("behandlingsstatus")?.let { BehandlingStatus.fraKode(it) },
         oppgavebehandlingsUrl = oppgaveV3.getOppgaveBehandlingsurl(),
         reservasjonsnøkkel = oppgaveV3.reservasjonsnøkkel,
         reservertAvSaksbehandlerNavn = reservertAv?.navn,
