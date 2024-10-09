@@ -128,116 +128,120 @@ class EventTilDtoMapper {
         private fun mapEnkeltverdier(
             event: BehandlingProsessEventDto,
             forrigeOppgave: OppgaveV3?
-        ) = mutableListOf(
-            OppgaveFeltverdiDto(
-                nøkkel = "behandlingUuid",
-                verdi = event.eksternId.toString()
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "aktorId",
-                verdi = event.aktørId
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "fagsystem",
-                verdi = event.fagsystem.kode
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "saksnummer",
-                verdi = event.saksnummer
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "resultattype",
-                verdi = event.resultatType ?: BehandlingResultatType.IKKE_FASTSATT.kode
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "ytelsestype",
-                verdi = event.ytelseTypeKode
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "behandlingsstatus",
-                verdi = event.behandlingStatus ?: BehandlingStatus.UTREDES.kode
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "behandlingssteg",
-                verdi = event.behandlingSteg
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "behandlingTypekode",
-                verdi = event.behandlingTypeKode
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "relatertPartAktorid",
-                verdi = event.relatertPartAktørId
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "pleietrengendeAktorId",
-                verdi = event.pleietrengendeAktørId
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "ansvarligBeslutter",
-                verdi = event.ansvarligBeslutterForTotrinn ?: forrigeOppgave?.hentVerdi("ansvarligBeslutter")
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "ansvarligSaksbehandler",
-                verdi = event.ansvarligSaksbehandlerForTotrinn
-                    ?: event.ansvarligSaksbehandlerIdent
-                    ?: forrigeOppgave?.hentVerdi("ansvarligSaksbehandler")
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "mottattDato",
-                verdi = event.eldsteDatoMedEndringFraSøker?.truncatedTo(ChronoUnit.SECONDS)?.toString() //TODO feltet heter *dato, avrunde til dato?
-                    ?: forrigeOppgave?.hentVerdi("mottattDato")
-                    ?: forrigeOppgave?.hentVerdi("registrertDato")
-                    ?: event.opprettetBehandling.truncatedTo(ChronoUnit.SECONDS).toString() //TODO feltet heter *dato, avrunde til dato?
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "registrertDato",
-                verdi = forrigeOppgave?.hentVerdi("registrertDato") ?: event.opprettetBehandling.truncatedTo(ChronoUnit.SECONDS) .toString() //TODO feltet heter *dato, avrunde til dato?
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "vedtaksdato",
-                verdi = event.vedtaksdato?.toString() ?: forrigeOppgave?.hentVerdi("vedtaksdato")
-            ),
-            event.nyeKrav?.let {
+        ): MutableList<OppgaveFeltverdiDto> {
+            val behandlingsstatus = event.behandlingStatus ?: BehandlingStatus.UTREDES.kode
+            return mutableListOf(
                 OppgaveFeltverdiDto(
-                    nøkkel = "nyeKrav",
-                    verdi = event.nyeKrav.toString()
-                )
-            },
-            event.fraEndringsdialog?.let {
+                    nøkkel = "behandlingUuid",
+                    verdi = event.eksternId.toString()
+                ),
                 OppgaveFeltverdiDto(
-                    nøkkel = "fraEndringsdialog",
-                    verdi = event.fraEndringsdialog.toString()
-                )
-            },
-            OppgaveFeltverdiDto(
-                nøkkel = "totrinnskontroll",
-                verdi = event.aksjonspunktTilstander.filter { aksjonspunktTilstandDto ->
-                    aksjonspunktTilstandDto.aksjonspunktKode.equals("5015") && aksjonspunktTilstandDto.status !in (listOf(
-                        AksjonspunktStatus.AVBRUTT
-                    ))
-                }.isNotEmpty().toString()
-            ),
-            OppgaveFeltverdiDto(
-                nøkkel = "utenlandstilsnitt",
-                verdi = event.aksjonspunktTilstander
-                    .filter { aksjonspunktTilstandDto ->
-                        aksjonspunktTilstandDto.status != AksjonspunktStatus.AVBRUTT
-                    }
-                    .any { aksjonspunktTilstandDto ->
-                        aksjonspunktTilstandDto.aksjonspunktKode == AksjonspunktKodeDefinisjon.AUTOMATISK_MARKERING_AV_UTENLANDSSAK_KODE
-                            || aksjonspunktTilstandDto.aksjonspunktKode == AksjonspunktKodeDefinisjon.MANUELL_MARKERING_AV_UTLAND_SAKSTYPE_KODE
-                    }.toString()
-            ),
-            if (forrigeOppgave?.hentVerdi("hastesak") == "true" && event.eventHendelse != EventHendelse.HASTESAK_MERKNAD_FJERNET || event.eventHendelse == EventHendelse.HASTESAK_MERKNAD_NY ) {
+                    nøkkel = "aktorId",
+                    verdi = event.aktørId
+                ),
                 OppgaveFeltverdiDto(
-                    nøkkel = "hastesak",
-                    verdi = "true"
-                )
-            } else {
-                null //ikke hastesak
-            }
-        ).filterNotNull().toMutableList()
+                    nøkkel = "fagsystem",
+                    verdi = event.fagsystem.kode
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "saksnummer",
+                    verdi = event.saksnummer
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "resultattype",
+                    verdi = event.resultatType ?: BehandlingResultatType.IKKE_FASTSATT.kode
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "ytelsestype",
+                    verdi = event.ytelseTypeKode
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "behandlingsstatus",
+                    verdi = behandlingsstatus
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "behandlingssteg",
+                    verdi = event.behandlingSteg
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "behandlingTypekode",
+                    verdi = event.behandlingTypeKode
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "relatertPartAktorid",
+                    verdi = event.relatertPartAktørId
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "pleietrengendeAktorId",
+                    verdi = event.pleietrengendeAktørId
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "ansvarligBeslutter",
+                    verdi = event.ansvarligBeslutterForTotrinn ?: forrigeOppgave?.hentVerdi("ansvarligBeslutter")
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "ansvarligSaksbehandler",
+                    verdi = event.ansvarligSaksbehandlerForTotrinn
+                        ?: event.ansvarligSaksbehandlerIdent
+                        ?: forrigeOppgave?.hentVerdi("ansvarligSaksbehandler")
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "mottattDato",
+                    verdi = event.eldsteDatoMedEndringFraSøker?.truncatedTo(ChronoUnit.SECONDS)?.toString() //TODO feltet heter *dato, avrunde til dato?
+                        ?: forrigeOppgave?.hentVerdi("mottattDato")
+                        ?: forrigeOppgave?.hentVerdi("registrertDato")
+                        ?: event.opprettetBehandling.truncatedTo(ChronoUnit.SECONDS).toString() //TODO feltet heter *dato, avrunde til dato?
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "registrertDato",
+                    verdi = forrigeOppgave?.hentVerdi("registrertDato") ?: event.opprettetBehandling.truncatedTo(ChronoUnit.SECONDS) .toString() //TODO feltet heter *dato, avrunde til dato?
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "vedtaksdato",
+                    verdi = event.vedtaksdato?.toString() ?: forrigeOppgave?.hentVerdi("vedtaksdato")
+                ),
+                event.nyeKrav?.let {
+                    OppgaveFeltverdiDto(
+                        nøkkel = "nyeKrav",
+                        verdi = event.nyeKrav.toString()
+                    )
+                },
+                event.fraEndringsdialog?.let {
+                    val kriterieOppfylt = it && BehandlingStatus.getFerdigbehandletStatuser().map(BehandlingStatus::getKode).contains(behandlingsstatus)
+                    OppgaveFeltverdiDto(
+                        nøkkel = "fraEndringsdialog",
+                        verdi = kriterieOppfylt.toString()
+                    )
+                },
+                OppgaveFeltverdiDto(
+                    nøkkel = "totrinnskontroll",
+                    verdi = event.aksjonspunktTilstander.filter { aksjonspunktTilstandDto ->
+                        aksjonspunktTilstandDto.aksjonspunktKode.equals("5015") && aksjonspunktTilstandDto.status !in (listOf(
+                            AksjonspunktStatus.AVBRUTT
+                        ))
+                    }.isNotEmpty().toString()
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "utenlandstilsnitt",
+                    verdi = event.aksjonspunktTilstander
+                        .filter { aksjonspunktTilstandDto ->
+                            aksjonspunktTilstandDto.status != AksjonspunktStatus.AVBRUTT
+                        }
+                        .any { aksjonspunktTilstandDto ->
+                            aksjonspunktTilstandDto.aksjonspunktKode == AksjonspunktKodeDefinisjon.AUTOMATISK_MARKERING_AV_UTENLANDSSAK_KODE
+                                    || aksjonspunktTilstandDto.aksjonspunktKode == AksjonspunktKodeDefinisjon.MANUELL_MARKERING_AV_UTLAND_SAKSTYPE_KODE
+                        }.toString()
+                ),
+                if (forrigeOppgave?.hentVerdi("hastesak") == "true" && event.eventHendelse != EventHendelse.HASTESAK_MERKNAD_FJERNET || event.eventHendelse == EventHendelse.HASTESAK_MERKNAD_NY ) {
+                    OppgaveFeltverdiDto(
+                        nøkkel = "hastesak",
+                        verdi = "true"
+                    )
+                } else {
+                    null //ikke hastesak
+                }
+            ).filterNotNull().toMutableList()
+        }
 
         internal fun utledVentetype(
             behandlingSteg: String?,
