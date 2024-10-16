@@ -13,7 +13,7 @@ spec:
         - apiURL:
             key: apiUrl
             name: slack-webhook
-          channel: '#k9-los-alerts'
+          channel: '{{ slack_channel }}'
           username: 'Alert k9-los-api {{ cluster }}'
           iconEmoji: ':error:'
           sendResolved: true
