@@ -194,7 +194,7 @@ class EventTilDtoMapper {
                 ),
                 OppgaveFeltverdiDto(
                     nøkkel = "registrertDato",
-                    verdi = forrigeOppgave?.hentVerdi("registrertDato") ?: event.opprettetBehandling.truncatedTo(ChronoUnit.SECONDS) .toString() //TODO feltet heter *dato, avrunde til dato?
+                    verdi = forrigeOppgave?.hentVerdi("registrertDato") ?: event.opprettetBehandling.truncatedTo(ChronoUnit.SECONDS).toString() //TODO feltet heter *dato, avrunde til dato?
                 ),
                 OppgaveFeltverdiDto(
                     nøkkel = "vedtaksdato",
