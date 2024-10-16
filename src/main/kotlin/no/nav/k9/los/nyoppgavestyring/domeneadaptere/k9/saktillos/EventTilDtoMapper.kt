@@ -207,10 +207,10 @@ class EventTilDtoMapper {
                     )
                 },
                 event.fraEndringsdialog?.let {
-                    val kriterieOppfylt = it && BehandlingStatus.getFerdigbehandletStatuser().map(BehandlingStatus::getKode).contains(behandlingsstatus)
                     OppgaveFeltverdiDto(
                         nøkkel = "fraEndringsdialog",
-                        verdi = kriterieOppfylt.toString()
+                        // verdien er 'sticky': dersom satt fra før skal den ikke endres
+                        verdi = forrigeOppgave?.hentVerdi("fraEndringsdialog") ?: it.toString()
                     )
                 },
                 OppgaveFeltverdiDto(
