@@ -129,7 +129,6 @@ class EventTilDtoMapper {
             event: BehandlingProsessEventDto,
             forrigeOppgave: OppgaveV3?
         ): MutableList<OppgaveFeltverdiDto> {
-            val behandlingsstatus = event.behandlingStatus ?: BehandlingStatus.UTREDES.kode
             return mutableListOf(
                 OppgaveFeltverdiDto(
                     nøkkel = "behandlingUuid",
@@ -157,7 +156,7 @@ class EventTilDtoMapper {
                 ),
                 OppgaveFeltverdiDto(
                     nøkkel = "behandlingsstatus",
-                    verdi = behandlingsstatus
+                    verdi = event.behandlingStatus ?: BehandlingStatus.UTREDES.kode
                 ),
                 OppgaveFeltverdiDto(
                     nøkkel = "behandlingssteg",
