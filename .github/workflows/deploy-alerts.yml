@@ -21,9 +21,7 @@ jobs:
           APIKEY: ${{ secrets.DEPLOY_KEY }}
           CLUSTER: ${{ matrix.cluster }}
           RESOURCE: nais/alerts/alert-manager.yml
-          VAR: |
-             cluster=${{ matrix.cluster }}
-             slack_channel=${{ matrix.cluster == 'prod-fss' && '#k9-los-alerts' || '#k9-los-alerts-dev' }}
+          VAR: cluster=${{ matrix.cluster }}, slack_channel=${{ matrix.cluster == 'prod-fss' && '#k9-los-alerts' || '#k9-los-alerts-dev' }}
       - uses: nais/deploy/actions/deploy@v1
         env:
           APIKEY: ${{ secrets.DEPLOY_KEY }}
