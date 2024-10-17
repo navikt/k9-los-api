@@ -23,10 +23,10 @@ val testContainers = "1.20.2"
 val jsonassertVersion = "1.5.3"
 val jupiterVersion = "5.11.2"
 val assertkVersion = "0.28.1"
-val mockkVersion = "1.13.12"
+val mockkVersion = "1.13.13"
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "2.0.20"
+    id("org.jetbrains.kotlin.jvm") version "2.0.21"
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
@@ -74,8 +74,8 @@ dependencies {
     implementation("no.nav.k9.statistikk:kontrakter:2.0_20220411110858_dc06dd1")
 
     // opentelemetry
-    implementation("io.opentelemetry:opentelemetry-api:1.42.1")
-    implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.42.1")
+    implementation("io.opentelemetry:opentelemetry-api:1.43.0")
+    implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.43.0")
     implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.8.0")
 
     // Div
@@ -87,7 +87,7 @@ dependencies {
         exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
     }
 
-    implementation( "io.github.smiley4:ktor-swagger-ui:3.5.0")
+    implementation( "io.github.smiley4:ktor-swagger-ui:3.5.1")
 
 
     // DI
