@@ -48,7 +48,7 @@ class OppgaveQuerySqlBuilder(
     """.trimIndent()
 
     private var orderBySql = """
-                ORDER BY TRUE 
+                ORDER BY (select null) 
             """.trimIndent()
 
     private val queryParams: MutableMap<String, Any?> = mutableMapOf()
