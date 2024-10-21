@@ -253,7 +253,6 @@ object KodeverkSynlighetRegler {
         return when (behandlingType) {
             BehandlingType.ANKE -> KodeverkSynlighet.SKJULT
             BehandlingType.FORSTEGANGSSOKNAD,
-            BehandlingType.KLAGE,
             BehandlingType.REVURDERING,
             BehandlingType.REVURDERING_TILBAKEKREVING -> KodeverkSynlighet.SYNLIG_FAVORITT
 
