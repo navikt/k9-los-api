@@ -245,6 +245,9 @@ enum class OppgaveKode(override val kode: String, override val navn: String, val
     VURDERE_ANNEN_YTELSE_FØR_VEDTAK_KODE("5033", "Sjekk VKY", OppgaveKodeGruppe.FATTE_VEDTAK.navn),
     VURDER_DOKUMENT("5034", "Vurder dokument", OppgaveKodeGruppe.FATTE_VEDTAK.navn),
 
+    // Uttak
+    VURDER_DATO_NY_REGEL_UTTAK("9291", "Ny inntekt", OppgaveKodeGruppe.UTTAK.navn),
+
     // Uspesifisert
     KONTROLL_MANUELL_REVURDERING("5056", "Kontroll manuell revurdering", OppgaveKodeGruppe.USPESIFISERT.navn),
     VURDER_REFUSJON_BERGRUNN_KODE("5059", "Mangler navn", OppgaveKodeGruppe.USPESIFISERT.navn);
@@ -256,7 +259,7 @@ enum class OppgaveKode(override val kode: String, override val navn: String, val
         @JvmStatic
         fun fraKode(o: Any): OppgaveKode {
             val kode = TempAvledeKode.getVerdi(o)
-            return OppgaveKode.values().find { it.kode == kode }
+            return entries.find { it.kode == kode }
                 ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
         }
     }
@@ -269,7 +272,9 @@ enum class OppgaveKodeGruppe(val navn: String) {
     BEREGNING("Beregning"),
     FLYTTESAKER("Flyttesaker"),
     FATTE_VEDTAK("Fatte vedtak"),
-    USPESIFISERT("Uspesifisert");
+    USPESIFISERT("Uspesifisert"),
+    UTTAK("Uttak")
+    ;
 }
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)

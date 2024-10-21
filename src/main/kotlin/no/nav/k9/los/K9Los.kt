@@ -408,7 +408,7 @@ private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
         NavAnsattApis()
 
         route("konfig", { hidden = true }) { KonfigApis() }
-        KodeverkApis()
+        route("kodeverk") { KodeverkApis() }
 
         route("ny-oppgavestyring") {
             route("ko", { hidden = true }) { OppgaveKoApis() }
