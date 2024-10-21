@@ -38,6 +38,7 @@ internal fun Route.AvdelingslederApis() {
 
     get("/saksbehandlere") {
         requestContextService.withRequestContext(call) {
+            println("/saksbehandlere")
             call.respond(avdelingslederTjeneste.hentSaksbehandlere())
         }
     }
@@ -52,7 +53,7 @@ internal fun Route.AvdelingslederApis() {
     post("/saksbehandlere/slett") {
         requestContextService.withRequestContext(call) {
             val epost = call.receive<EpostDto>()
-            call.respond(avdelingslederTjeneste.fjernSaksbehandler(epost.epost))
+            call.respond(avdelingslederTjeneste.slettSaksbehandler(epost.epost))
         }
     }
 

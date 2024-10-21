@@ -8,7 +8,9 @@ import no.nav.k9.los.utils.LosObjectMapper
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
-class OppgaveKoRepository(val datasource: DataSource) {
+class OppgaveKoRepository(
+    private val datasource: DataSource
+) {
 
     companion object {
         val objectMapper = LosObjectMapper.instance
@@ -151,7 +153,7 @@ class OppgaveKoRepository(val datasource: DataSource) {
 
     fun hentKoerMedOppgittSaksbehandler(
         tx: TransactionalSession,
-        saksbehandler_epost: String,
+        saksbehandlerEpost: String,
         skjermet: Boolean = false
     ): List<OppgaveKo> {
         return tx.run(
@@ -167,7 +169,7 @@ class OppgaveKoRepository(val datasource: DataSource) {
                         and s.saksbehandler_epost = lower(:saksbehandler_epost)
                         )""",
                 mapOf(
-                    "saksbehandler_epost" to saksbehandler_epost,
+                    "saksbehandler_epost" to saksbehandlerEpost,
                     "skjermet" to skjermet
                 )
             ).map { row ->

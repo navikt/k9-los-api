@@ -1,15 +1,16 @@
 package no.nav.k9.los.tjenester.avdelingsleder
 
+import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.modell.*
 import no.nav.k9.los.domene.repository.OppgaveKøRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.*
 import no.nav.k9.los.tjenester.avdelingsleder.reservasjoner.ReservasjonDto
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.ReservasjonV3DtoBuilder
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.OppgavekøDto
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.SaksbehandlerDto
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.SorteringDto
@@ -17,12 +18,13 @@ import java.time.LocalDate
 import java.util.*
 
 class AvdelingslederTjeneste(
+    private val transactionalManager: TransactionalManager,
     private val oppgaveKøRepository: OppgaveKøRepository,
+    private val oppgaveKøV3Repository: OppgaveKoRepository,
     private val saksbehandlerRepository: SaksbehandlerRepository,
     private val oppgaveTjeneste: OppgaveTjeneste,
     private val pepClient: IPepClient,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
-    private val reservasjonV3DtoBuilder: ReservasjonV3DtoBuilder,
 ) {
     suspend fun hentOppgaveKø(uuid: UUID): OppgavekøDto {
         val oppgaveKø = oppgaveKøRepository.hentOppgavekø(uuid, ignorerSkjerming = false)
@@ -52,7 +54,10 @@ class AvdelingslederTjeneste(
         sistEndret = oppgaveKø.sistEndret,
         skjermet = oppgaveKø.skjermet,
         antallBehandlinger = oppgaveTjeneste.hentAntallOppgaver(oppgavekøId = oppgaveKø.id, taMedReserverte = true),
-        antallUreserverteOppgaver = oppgaveTjeneste.hentAntallOppgaver(oppgavekøId = oppgaveKø.id, taMedReserverte = false),
+        antallUreserverteOppgaver = oppgaveTjeneste.hentAntallOppgaver(
+            oppgavekøId = oppgaveKø.id,
+            taMedReserverte = false
+        ),
         saksbehandlere = oppgaveKø.saksbehandlere,
         kriterier = oppgaveKø.lagKriterier()
     )
@@ -102,8 +107,26 @@ class AvdelingslederTjeneste(
         return saksbehandler
     }
 
-    suspend fun fjernSaksbehandler(epost: String) {
-        saksbehandlerRepository.slettSaksbehandler(epost)
+    suspend fun slettSaksbehandler(
+        epost: String,
+    ) {
+        val skjermet = pepClient.harTilgangTilKode6()
+
+        transactionalManager.transaction { tx ->
+            // V3-modellen: Sletter køer saksbehandler er med i
+            oppgaveKøV3Repository.hentKoerMedOppgittSaksbehandler(tx, epost, skjermet).forEach {
+                oppgaveKøV3Repository.endre(tx, it.copy(saksbehandlere = it.saksbehandlere - epost))
+            }
+
+            // Sletter fra saksbehandler-tabellen
+            saksbehandlerRepository.slettSaksbehandler(
+                tx,
+                epost,
+                skjermet
+            )
+        }
+
+        // V1-modellen: Sletter køer saksbehandler er med i. (Lager sin egen transaksjon.)
         oppgaveKøRepository.hent().forEach { t: OppgaveKø ->
             oppgaveKøRepository.lagre(t.id) { oppgaveKø ->
                 oppgaveKø!!.saksbehandlere =
@@ -251,7 +274,8 @@ class AvdelingslederTjeneste(
     private fun leggTilEllerEndreKriterium(kriteriumDto: KriteriumDto, oppgaveKø: OppgaveKø) {
         when (kriteriumDto.kriterierType) {
             KøKriterierType.FEILUTBETALING ->
-                oppgaveKø.filtreringFeilutbetaling = Intervall(kriteriumDto.fom?.toLong(), kriteriumDto.tom?.toLong())
+                oppgaveKø.filtreringFeilutbetaling =
+                    Intervall(kriteriumDto.fom?.toLong(), kriteriumDto.tom?.toLong())
 
             KøKriterierType.MERKNADTYPE -> oppgaveKø.merknadKoder = kriteriumDto.koder ?: emptyList()
             KøKriterierType.OPPGAVEKODE -> oppgaveKø.oppgaveKoder = kriteriumDto.koder ?: emptyList()
