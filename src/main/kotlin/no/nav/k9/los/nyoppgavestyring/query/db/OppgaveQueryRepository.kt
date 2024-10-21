@@ -165,7 +165,7 @@ class OppgaveQueryRepository(
             Oppgavefelt(
                 område = null,
                 kode = "personbeskyttelse",
-                visningsnavn = "Beskyttelse",
+                visningsnavn = "Kode 7 eller egen ansatt",
                 tolkes_som = "String",
                 kokriterie = false,
                 verdiforklaringerErUttømmende = true,
