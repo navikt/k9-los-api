@@ -91,11 +91,11 @@ class EventTilDtoMapper {
                 ),
                 OppgaveFeltverdiDto(
                     nøkkel = "registrertDato",
-                    verdi = forrigeOppgave?.let { forrigeOppgave.hentVerdi("registrertDato") } ?: event.eventTid.toString(),
+                    verdi = forrigeOppgave?.hentVerdi("registrertDato") ?: event.eventTid.toString(),
                 ),
                 OppgaveFeltverdiDto(
                     nøkkel = "mottattDato",
-                    verdi = forrigeOppgave?.let { forrigeOppgave.hentVerdi("mottattDato") } ?: event.eventTid.toString(),
+                    verdi = forrigeOppgave?.hentVerdi("mottattDato") ?: event.eventTid.toString(),
                 )
             )
         }

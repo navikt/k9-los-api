@@ -128,7 +128,7 @@ class EventTilDtoMapper {
         private fun mapEnkeltverdier(
             event: BehandlingProsessEventDto,
             forrigeOppgave: OppgaveV3?
-        ) = mutableListOf(
+        ): MutableList<OppgaveFeltverdiDto> = mutableListOf(
             OppgaveFeltverdiDto(
                 nøkkel = "behandlingUuid",
                 verdi = event.eksternId.toString()
@@ -192,7 +192,7 @@ class EventTilDtoMapper {
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "registrertDato",
-                verdi = forrigeOppgave?.hentVerdi("registrertDato") ?: event.opprettetBehandling.truncatedTo(ChronoUnit.SECONDS) .toString() //TODO feltet heter *dato, avrunde til dato?
+                verdi = forrigeOppgave?.hentVerdi("registrertDato") ?: event.opprettetBehandling.truncatedTo(ChronoUnit.SECONDS).toString() //TODO feltet heter *dato, avrunde til dato?
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "vedtaksdato",
@@ -207,7 +207,8 @@ class EventTilDtoMapper {
             event.fraEndringsdialog?.let {
                 OppgaveFeltverdiDto(
                     nøkkel = "fraEndringsdialog",
-                    verdi = event.fraEndringsdialog.toString()
+                    // verdien er 'sticky': dersom satt fra før skal den ikke endres
+                    verdi = forrigeOppgave?.hentVerdi("fraEndringsdialog") ?: it.toString()
                 )
             },
             OppgaveFeltverdiDto(
@@ -226,7 +227,7 @@ class EventTilDtoMapper {
                     }
                     .any { aksjonspunktTilstandDto ->
                         aksjonspunktTilstandDto.aksjonspunktKode == AksjonspunktKodeDefinisjon.AUTOMATISK_MARKERING_AV_UTENLANDSSAK_KODE
-                            || aksjonspunktTilstandDto.aksjonspunktKode == AksjonspunktKodeDefinisjon.MANUELL_MARKERING_AV_UTLAND_SAKSTYPE_KODE
+                                || aksjonspunktTilstandDto.aksjonspunktKode == AksjonspunktKodeDefinisjon.MANUELL_MARKERING_AV_UTLAND_SAKSTYPE_KODE
                     }.toString()
             ),
             if (forrigeOppgave?.hentVerdi("hastesak") == "true" && event.eventHendelse != EventHendelse.HASTESAK_MERKNAD_FJERNET || event.eventHendelse == EventHendelse.HASTESAK_MERKNAD_NY ) {
