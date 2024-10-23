@@ -1,7 +1,6 @@
 package no.nav.k9.los.domene.repository
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import kotlinx.coroutines.runBlocking
 import kotliquery.*
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.integrasjon.abac.IPepClient
@@ -9,7 +8,6 @@ import no.nav.k9.los.utils.LosObjectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
-import java.util.concurrent.atomic.LongAdder
 import javax.sql.DataSource
 
 class SaksbehandlerRepository(
@@ -265,10 +263,26 @@ class SaksbehandlerRepository(
         return saksbehandler
     }
 
+    suspend fun finnSaksbehandlerMedEpost(
+        tx: TransactionalSession,
+        epost: String
+    ): Saksbehandler? {
+        val skjermet = pepClient.harTilgangTilKode6()
+
+        return tx.run(
+            queryOf(
+                "select * from saksbehandler where lower(epost) = lower(:epost) and skjermet = :skjermet",
+                mapOf("epost" to epost, "skjermet" to skjermet)
+            ).map { row ->
+                mapSaksbehandler(row)
+            }.asSingle
+        )
+    }
+
     fun finnSaksbehandlerIdForIdent(ident: String): Long? {
         return using(sessionOf(dataSource)) { session ->
-            session.transaction {
-                finnSaksbehandlerIdForIdent(ident, it)
+            session.transaction { tx->
+                finnSaksbehandlerIdForIdent(ident, tx)
             }
         }
     }
@@ -320,21 +334,15 @@ class SaksbehandlerRepository(
         return saksbehandler
     }
 
-    suspend fun slettSaksbehandler(epost: String) {
-
-        val skjermet = pepClient.harTilgangTilKode6()
-        using(sessionOf(dataSource)) {
-            it.transaction { tx ->
-                tx.run(
-                    queryOf(
-                        """
+    fun slettSaksbehandler(tx: TransactionalSession, epost: String, skjermet: Boolean) {
+        tx.run(
+            queryOf(
+                """
                             delete from saksbehandler 
                             where lower(epost) = lower(:epost) and skjermet = :skjermet""",
-                        mapOf("epost" to epost.lowercase(Locale.getDefault()), "skjermet" to skjermet)
-                    ).asUpdate
-                )
-            }
-        }
+                mapOf("epost" to epost.lowercase(Locale.getDefault()), "skjermet" to skjermet)
+            ).asUpdate
+        )
     }
 
     suspend fun hentAlleSaksbehandlere(): List<Saksbehandler> {

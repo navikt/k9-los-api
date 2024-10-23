@@ -339,12 +339,13 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         AvdelingslederTjeneste(
+            transactionalManager = get(),
             oppgaveKøRepository = get(),
+            oppgaveKøV3Repository = get(),
             saksbehandlerRepository = get(),
             oppgaveTjeneste = get(),
             pepClient = get(),
             reservasjonV3Tjeneste = get(),
-            reservasjonV3DtoBuilder = get(),
         )
     }
 
