@@ -6,6 +6,7 @@ import no.nav.k9.los.domene.repository.OppgaveKøRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
+import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.*
@@ -114,8 +115,8 @@ class AvdelingslederTjeneste(
 
         transactionalManager.transaction { tx ->
             // V3-modellen: Sletter køer saksbehandler er med i
-            oppgaveKøV3Repository.hentKoerMedOppgittSaksbehandler(tx, epost, skjermet).forEach {
-                oppgaveKøV3Repository.endre(tx, it.copy(saksbehandlere = it.saksbehandlere - epost))
+            oppgaveKøV3Repository.hentKoerMedOppgittSaksbehandler(tx, epost, skjermet).forEach { kø ->
+                oppgaveKøV3Repository.endre(tx, kø.copy(saksbehandlere = kø.saksbehandlere - epost))
             }
 
             // Sletter fra saksbehandler-tabellen
