@@ -16,7 +16,7 @@ jobs:
 
       - name: Henter informasjon fra issuet
         id: issue_comment
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             github.rest.issues.get( {
@@ -43,7 +43,7 @@ jobs:
           ref: ${{ steps.issue_comment.outputs.sha }}
 
       - name: Promoter til cluster og namespace
-        uses: nais/deploy/actions/deploy@v1
+        uses: nais/deploy/actions/deploy@v2
         env:
           APIKEY: ${{ secrets.DEPLOY_KEY }}
           CLUSTER: ${{ env.CLUSTER }}
@@ -51,7 +51,7 @@ jobs:
 
       - name: Oppdater kommentar med deployment status ved feil
         if: failure()
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             const issue = { owner: context.issue.owner,
@@ -65,7 +65,7 @@ jobs:
 
       - name: Oppdater kommentar med deployment status
         if: success()
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             const issue = { owner: context.issue.owner,
@@ -81,7 +81,7 @@ jobs:
           echo "COMMIT_SHA=$(git rev-parse ${{ env.TAG }})" >> $GITHUB_ENV
       - name: Tagg prodsatt commit
         if: success() && env.CLUSTER == 'prod-fss'
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
