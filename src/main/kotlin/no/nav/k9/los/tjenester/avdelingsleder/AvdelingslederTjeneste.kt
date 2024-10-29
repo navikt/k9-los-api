@@ -25,14 +25,15 @@ class AvdelingslederTjeneste(
     private val reservasjonV3DtoBuilder: ReservasjonV3DtoBuilder,
 ) {
     suspend fun hentOppgaveKø(uuid: UUID): OppgavekøDto {
+        sjekkTilgang()
+
         val oppgaveKø = oppgaveKøRepository.hentOppgavekø(uuid, ignorerSkjerming = false)
         return lagOppgaveKøDto(oppgaveKø)
     }
 
     suspend fun hentOppgaveKøer(): List<OppgavekøDto> {
-        if (!erOppgaveStyrer()) {
-            return emptyList()
-        }
+        sjekkTilgang()
+
         return oppgaveKøRepository.hent().map {
             lagOppgaveKøDto(it)
         }.sortedBy { it.navn }
@@ -52,7 +53,10 @@ class AvdelingslederTjeneste(
         sistEndret = oppgaveKø.sistEndret,
         skjermet = oppgaveKø.skjermet,
         antallBehandlinger = oppgaveTjeneste.hentAntallOppgaver(oppgavekøId = oppgaveKø.id, taMedReserverte = true),
-        antallUreserverteOppgaver = oppgaveTjeneste.hentAntallOppgaver(oppgavekøId = oppgaveKø.id, taMedReserverte = false),
+        antallUreserverteOppgaver = oppgaveTjeneste.hentAntallOppgaver(
+            oppgavekøId = oppgaveKø.id,
+            taMedReserverte = false
+        ),
         saksbehandlere = oppgaveKø.saksbehandlere,
         kriterier = oppgaveKø.lagKriterier()
     )
@@ -60,9 +64,7 @@ class AvdelingslederTjeneste(
     private suspend fun erOppgaveStyrer() = (pepClient.erOppgaveStyrer())
 
     suspend fun opprettOppgaveKø(): IdDto {
-        if (!erOppgaveStyrer()) {
-            return IdDto(UUID.randomUUID().toString())
-        }
+        sjekkTilgang()
 
         val uuid = UUID.randomUUID()
         oppgaveKøRepository.lagre(uuid) {
@@ -85,9 +87,8 @@ class AvdelingslederTjeneste(
     }
 
     suspend fun slettOppgavekø(uuid: UUID) {
-        if (!erOppgaveStyrer()) {
-            return
-        }
+        sjekkTilgang()
+
         oppgaveKøRepository.slett(uuid)
     }
 
@@ -103,6 +104,8 @@ class AvdelingslederTjeneste(
     }
 
     suspend fun fjernSaksbehandler(epost: String) {
+        sjekkTilgang()
+
         saksbehandlerRepository.slettSaksbehandler(epost)
         oppgaveKøRepository.hent().forEach { t: OppgaveKø ->
             oppgaveKøRepository.lagre(t.id) { oppgaveKø ->
@@ -115,6 +118,8 @@ class AvdelingslederTjeneste(
     }
 
     suspend fun hentSaksbehandlere(): List<SaksbehandlerDto> {
+        sjekkTilgang()
+
         val saksbehandlersKoer = hentSaksbehandlersOppgavekoer()
         return saksbehandlersKoer.entries.map {
             SaksbehandlerDto(
@@ -127,6 +132,8 @@ class AvdelingslederTjeneste(
     }
 
     suspend fun endreBehandlingsTyper(behandling: BehandlingsTypeDto) {
+        sjekkTilgang()
+
         oppgaveKøRepository.lagre(UUID.fromString(behandling.id)) { oppgaveKø ->
             oppgaveKø!!.filtreringBehandlingTyper =
                 behandling.behandlingsTyper.filter { it.checked }
@@ -137,6 +144,8 @@ class AvdelingslederTjeneste(
     }
 
     private suspend fun hentSaksbehandlersOppgavekoer(): Map<Saksbehandler, List<OppgavekøDto>> {
+        sjekkTilgang()
+
         val koer = oppgaveTjeneste.hentOppgaveKøer()
         val saksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere()
         val map = mutableMapOf<Saksbehandler, List<OppgavekøDto>>()
@@ -166,6 +175,8 @@ class AvdelingslederTjeneste(
     }
 
     suspend fun endreSkjerming(skjermet: SkjermetDto) {
+        sjekkTilgang()
+
         oppgaveKøRepository.lagre(UUID.fromString(skjermet.id)) { oppgaveKø ->
             oppgaveKø!!.skjermet = skjermet.skjermet
             oppgaveKø
@@ -174,6 +185,8 @@ class AvdelingslederTjeneste(
     }
 
     suspend fun endreYtelsesType(ytelse: YtelsesTypeDto) {
+        sjekkTilgang()
+
         val omsorgsdagerYtelser = listOf(
             FagsakYtelseType.OMSORGSDAGER,
             FagsakYtelseType.OMSORGSPENGER_KS,
@@ -197,6 +210,8 @@ class AvdelingslederTjeneste(
     }
 
     suspend fun endreKriterium(kriteriumDto: AndreKriterierDto) {
+        sjekkTilgang()
+
         oppgaveKøRepository.lagre(UUID.fromString(kriteriumDto.id))
         { oppgaveKø ->
             if (kriteriumDto.checked) {
@@ -213,6 +228,8 @@ class AvdelingslederTjeneste(
     }
 
     suspend fun endreOppgavekøNavn(køNavn: OppgavekøNavnDto) {
+        sjekkTilgang()
+
         oppgaveKøRepository.lagre(UUID.fromString(køNavn.id)) { oppgaveKø ->
             oppgaveKø!!.navn = køNavn.navn
             oppgaveKø
@@ -220,6 +237,8 @@ class AvdelingslederTjeneste(
     }
 
     suspend fun endreKøSortering(køSortering: KøSorteringDto) {
+        sjekkTilgang()
+
         oppgaveKøRepository.lagre(UUID.fromString(køSortering.id)) { oppgaveKø ->
             oppgaveKø!!.sortering = køSortering.oppgavekoSorteringValg
             oppgaveKø
@@ -229,6 +248,8 @@ class AvdelingslederTjeneste(
     }
 
     suspend fun endreKøSorteringDato(datoSortering: SorteringDatoDto) {
+        sjekkTilgang()
+
         oppgaveKøRepository.lagre(UUID.fromString(datoSortering.id)) { oppgaveKø ->
             oppgaveKø!!.fomDato = datoSortering.fomDato
             oppgaveKø.tomDato = datoSortering.tomDato
@@ -238,6 +259,8 @@ class AvdelingslederTjeneste(
     }
 
     suspend fun endreKøKriterier(kriteriumDto: KriteriumDto) {
+        sjekkTilgang()
+
         kriteriumDto.valider()
         oppgaveKøRepository.lagre(UUID.fromString(kriteriumDto.id)) { oppgaveKø ->
             if (kriteriumDto.checked != null && kriteriumDto.checked == false)
@@ -273,6 +296,8 @@ class AvdelingslederTjeneste(
     }
 
     suspend fun leggFjernSaksbehandlereFraOppgaveKø(saksbehandlereDto: Array<SaksbehandlerOppgavekoDto>) {
+        sjekkTilgang()
+
         val saksbehandlerKøId = saksbehandlereDto.first().id
         if (!saksbehandlereDto.all { it.id == saksbehandlerKøId }) {
             throw IllegalArgumentException("Støtter ikke å legge til eller fjerne saksbehandlere fra flere køer samtidig")
@@ -295,6 +320,8 @@ class AvdelingslederTjeneste(
     }
 
     suspend fun leggFjernSaksbehandlerOppgavekø(saksbehandlerKø: SaksbehandlerOppgavekoDto) {
+        sjekkTilgang()
+
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(
             saksbehandlerKø.epost
         )!!
@@ -355,5 +382,9 @@ class AvdelingslederTjeneste(
                 }
             }
         }
+    }
+
+    private suspend fun sjekkTilgang() {
+        if (!erOppgaveStyrer()) throw IllegalStateException("Er ikke oppgavestyrer")
     }
 }
