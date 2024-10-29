@@ -48,16 +48,3 @@ spec:
             severity: critical
             special_type_to_use_in_alertmanager_config: k9-los-alert-manager
             alert_type: custom
-        - alert: Dette er en testalert for k9-los-api
-          expr: container_memory_working_set_bytes{namespace="k9saksbehandling", container="k9-los-api"} > 99
-          for: 1m
-          annotations:
-            consequence: "_*{{ $labels.container }}*_ has a working set of {{ $value }} bytes, there is no consequence"
-            action: "no need to do _anything_"
-            documentation: "https://prometheus.io/docs/prometheus/latest/querying/basics/"
-            summary: "Container _*{{ $labels.container }}*_ has a working set of {{ $value }} bytes."
-            sla: "no need to respond"
-          labels:
-            severity: "info"
-            special_type_to_use_in_alertmanager_config: k9-los-alert-manager
-            alert_type: custom
