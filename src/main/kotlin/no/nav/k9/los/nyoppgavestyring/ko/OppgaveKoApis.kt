@@ -124,46 +124,38 @@ fun Route.OppgaveKoApis() {
 
     get("/{id}/saksbehandlere") {
         requestContextService.withRequestContext(call) {
-            val oppgavekøId = call.parameters["id"]!!
-            call.respond(
-                oppgaveKoTjeneste.hentSaksbehandlereForKo(oppgavekøId.toLong())
-            )
-        }
-    }
-
-    // TODO: Slett dette endepunktet når /antall blir tatt i bruk
-    get("/{id}/antall-oppgaver") {
-        requestContextService.withRequestContext(call) {
-            val oppgavekøId = call.parameters["id"]!!
-            val filtrerReserverte = call.request.queryParameters["filtrer_reserverte"]?.let { it.toBoolean() } ?: true
-
-            val antall = OpentelemetrySpanUtil.span("OppgaveKoTjeneste.hentAntallOppgaverForKø") {
-                oppgaveKoTjeneste.hentAntallOppgaverForKø(
-                    oppgavekøId.toLong(),
-                    filtrerReserverte
+            if (pepClient.harBasisTilgang()) {
+                val oppgavekøId = call.parameters["id"]!!
+                call.respond(
+                    oppgaveKoTjeneste.hentSaksbehandlereForKo(oppgavekøId.toLong())
                 )
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
             }
-            call.respond(antall)
         }
     }
 
     get("/{id}/antall") {
         requestContextService.withRequestContext(call) {
-            val oppgavekøId = call.parameters["id"]!!
+            if (pepClient.harBasisTilgang()) {
+                val oppgavekøId = call.parameters["id"]!!
 
-            val antallUtenReserverte = OpentelemetrySpanUtil.span("OppgaveKoTjeneste.hentAntallOppgaverForKø") {
-                oppgaveKoTjeneste.hentAntallOppgaverForKø(
-                    oppgavekøId.toLong(),
-                    true
-                )
+                val antallUtenReserverte = OpentelemetrySpanUtil.span("OppgaveKoTjeneste.hentAntallOppgaverForKø") {
+                    oppgaveKoTjeneste.hentAntallOppgaverForKø(
+                        oppgavekøId.toLong(),
+                        true
+                    )
+                }
+                val antallMedReserverte = OpentelemetrySpanUtil.span("OppgaveKoTjeneste.hentAntallOppgaverForKø") {
+                    oppgaveKoTjeneste.hentAntallOppgaverForKø(
+                        oppgavekøId.toLong(),
+                        false
+                    )
+                }
+                call.respond(AntallOppgaverOgReserverte(antallUtenReserverte, antallMedReserverte))
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
             }
-            val antallMedReserverte = OpentelemetrySpanUtil.span("OppgaveKoTjeneste.hentAntallOppgaverForKø") {
-                oppgaveKoTjeneste.hentAntallOppgaverForKø(
-                    oppgavekøId.toLong(),
-                    false
-                )
-            }
-            call.respond(AntallOppgaverOgReserverte(antallUtenReserverte, antallMedReserverte))
         }
     }
 
