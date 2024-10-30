@@ -11,7 +11,6 @@ import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.http.content.*
-import io.ktor.server.locations.*
 import io.ktor.server.metrics.micrometer.*
 import io.ktor.server.plugins.callid.*
 import io.ktor.server.plugins.callloging.*
@@ -70,7 +69,7 @@ import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallApis
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.AvdelingslederOppgavekøApis
 import no.nav.k9.los.tjenester.driftsmeldinger.DriftsmeldingerApis
 import no.nav.k9.los.tjenester.fagsak.FagsakApis
-import no.nav.k9.los.tjenester.innsikt.innsiktGrensesnitt
+import no.nav.k9.los.tjenester.innsikt.InnsiktApis
 import no.nav.k9.los.tjenester.kodeverk.KodeverkApis
 import no.nav.k9.los.tjenester.konfig.KonfigApis
 import no.nav.k9.los.tjenester.mock.localSetup
@@ -301,8 +300,6 @@ fun Application.k9Los() {
         logRequests()
     }
 
-    install(Locations)
-
     install(Routing) {
 
         MetricsRoute()
@@ -320,7 +317,7 @@ fun Application.k9Los() {
 //            localSetup.initPunsjoppgave()
             api(sseChannel)
             route("/forvaltning") {
-                innsiktGrensesnitt()
+                InnsiktApis()
                 forvaltningApis()
                 route("k9saktillos") { K9SakTilLosApi() }
                 route("k9klagetillos") { K9KlageTilLosApi() }
@@ -335,7 +332,7 @@ fun Application.k9Los() {
         } else {
             authenticate(*issuers.allIssuers()) {
                 route("forvaltning") {
-                    innsiktGrensesnitt()
+                    InnsiktApis()
                     forvaltningApis()
                     route("k9saktillos") { K9SakTilLosApi() }
                     route("k9klagetillos") { K9KlageTilLosApi() }
@@ -413,9 +410,9 @@ private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
         route("ny-oppgavestyring") {
             route("ko", { hidden = true }) { OppgaveKoApis() }
             route("oppgave", { hidden = true }) { OppgaveQueryApis() }
-            route("feltdefinisjon", { hidden = true }) { FeltdefinisjonApi() }
-            route("oppgavetype", { hidden = true }) { OppgavetypeApi() }
-            route("oppgave-v3", { hidden = true }) { OppgaveV3Api() }
+            route("feltdefinisjon", { hidden = true }) { FeltdefinisjonApi() } // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
+            route("oppgavetype", { hidden = true }) { OppgavetypeApi() } // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
+            route("oppgave-v3", { hidden = true }) { OppgaveV3Api() } // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
             route("sok") { SøkeboksApi() }
         }
     }

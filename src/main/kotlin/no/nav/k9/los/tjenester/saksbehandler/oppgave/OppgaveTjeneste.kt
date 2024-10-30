@@ -116,7 +116,7 @@ class OppgaveTjeneste constructor(
         overstyrSjekk: Boolean = false,
         overstyrBegrunnelse: String? = null
     ): OppgaveStatusDto {
-        if (!pepClient.harTilgangTilReservingAvOppgaver()) {
+        if (!pepClient.harTilgangTilReserveringAvOppgaver()) {
             return OppgaveStatusDto(
                 erReservert = false,
                 reservertTilTidspunkt = null,
@@ -288,14 +288,6 @@ class OppgaveTjeneste constructor(
                 oppgaveResultat.oppgaver
             )
         )
-    }
-
-    suspend fun aktiveOppgaverPåSammeBruker(oppgaveId: UUID): List<JournalpostId> {
-        val oppgave = oppgaveRepository.hent(oppgaveId)
-        val hentOppgaverMedAktorId = oppgaveRepository.hentOppgaverMedAktorId(oppgave.aktorId)
-        return hentOppgaverMedAktorId.filter { o -> o.aktiv && o.system == Fagsystem.PUNSJ.kode && o.journalpostId != oppgave.journalpostId }
-            .map { o -> JournalpostId(o.journalpostId!!) }
-            .toList()
     }
 
     private fun filtrerOppgaverForSaksnummerOgJournalpostIder(dto: SokeResultatDto): SokeResultatDto {
@@ -499,16 +491,6 @@ class OppgaveTjeneste constructor(
             fagsakPeriode = this.fagsakPeriode,
             paaVent = paaVent
         )
-    }
-
-    suspend fun hentOppgaverFraListe(saksnummere: List<String>): List<OppgaveDto> {
-        return saksnummere.flatMap { oppgaveRepository.hentOppgaverMedSaksnummer(it) }
-            .map { oppgave ->
-                tilOppgaveDto(
-                    oppgave = oppgave,
-                    reservasjon = reservasjonOversetter.hentAktivReservasjonFraGammelKontekst(oppgave),
-                )
-            }.toList()
     }
 
     suspend fun hentNyeOgFerdigstilteOppgaver(): List<NyeOgFerdigstilteOppgaverDto> {

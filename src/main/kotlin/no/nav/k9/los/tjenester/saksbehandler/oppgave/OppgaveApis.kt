@@ -2,8 +2,6 @@ package no.nav.k9.los.tjenester.saksbehandler.oppgave
 
 import io.ktor.http.*
 import io.ktor.server.application.*
-import io.ktor.server.locations.*
-import io.ktor.server.locations.post
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -37,14 +35,10 @@ internal fun Route.OppgaveApis() {
     val oppgaveApisTjeneste by inject<OppgaveApisTjeneste>()
     val pdlService by inject<IPdlService>()
 
-    @Location("/reserver")
-    class reserverOppgave
-    post { _: reserverOppgave ->
-        val oppgaveIdMedOverstyringDto = call.receive<OppgaveIdMedOverstyringDto>()
+    post("/reserver") {
         requestContextService.withRequestContext(call) {
-            if (!pepClient.harTilgangTilReservingAvOppgaver()) {
-                call.respond(HttpStatusCode.Forbidden)
-            } else {
+            if (pepClient.harTilgangTilReserveringAvOppgaver()) {
+                val oppgaveIdMedOverstyringDto = call.receive<OppgaveIdMedOverstyringDto>()
                 val brukernavn = kotlin.coroutines.coroutineContext.idToken().getUsername()
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(brukernavn)
                     ?: throw IllegalStateException("Fant ikke saksbehandler $brukernavn ved forsøk på å reservasjon av oppgave")
@@ -56,219 +50,225 @@ internal fun Route.OppgaveApis() {
                 } catch (e: ManglerTilgangException) {
                     call.respond(HttpStatusCode.Forbidden, e.message!!)
                 }
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
             }
         }
     }
 
-    @Location("/reserverte")
-    class getReserverteOppgaver
-    get { _: getReserverteOppgaver ->
+    get("/reserverte") {
         requestContextService.withRequestContext(call) {
-            val innloggetBrukernavn = kotlin.coroutines.coroutineContext.idToken().getUsername()
-            val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
-                innloggetBrukernavn
-            )
-
-            if (innloggetBruker != null) {
-                val reservasjonV3Dtos = oppgaveApisTjeneste.hentReserverteOppgaverForSaksbehandler(innloggetBruker)
-                call.respond(reservasjonV3Dtos)
-            } else {
-                log.info("Innlogger bruker med brukernavn $innloggetBrukernavn finnes ikke i saksbehandlertabellen")
-                call.respond(
-                    HttpStatusCode.InternalServerError,
-                    "Innlogger bruker med brukernavn $innloggetBrukernavn finnes ikke i saksbehandlertabellen"
+            if (pepClient.harBasisTilgang()) {
+                val innloggetBrukernavn = kotlin.coroutines.coroutineContext.idToken().getUsername()
+                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
+                    innloggetBrukernavn
                 )
-            }
-        }
-    }
 
-    // Fjernes når V1 skal vekk
-    @Deprecated("Gjelder bare for de gamle køene, frem til disse er sanert")
-    @Location("/fa-oppgave-fra-ko")
-    class fåOppgaveFraKø
-    post { _: fåOppgaveFraKø ->
-        requestContextService.withRequestContext(call) {
-            val params = call.receive<OppgaveKøIdDto>()
-
-            val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(
-                kotlin.coroutines.coroutineContext.idToken().getUsername()
-            )!!
-
-            //reservasjonV3 skjer i enden av oppgaveTjeneste.fåOppgaveFraKø()
-            val oppgaveFraKø = oppgaveTjeneste.fåOppgaveFraKø(
-                oppgaveKøId = params.oppgaveKøId,
-                brukerident = saksbehandler.brukerIdent!!
-            )
-
-            if (oppgaveFraKø != null) {
-                log.info("RESERVASJONDEBUG: Lagt til ${saksbehandler.brukerIdent} oppgave=${oppgaveFraKø.eksternId}, beslutter=${oppgaveFraKø.tilBeslutter}, kø=${params.oppgaveKøId} (neste oppgave)")
-                call.respond(oppgaveFraKø)
-            } else {
-                call.respond(HttpStatusCode.NotFound, "Fant ingen oppgave i valgt kø")
-            }
-        }
-    }
-
-    // TODO: Rename til annuller
-    @Location("/opphev")
-    class opphevReservasjoner
-    post { _: opphevReservasjoner ->
-        requestContextService.withRequestContext(call) {
-            val params = call.receive<List<AnnullerReservasjon>>()
-            val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
-                kotlin.coroutines.coroutineContext.idToken().getUsername()
-            )!!
-
-            try {
-                log.info(
-                    "Opphever reservasjoner ${
-                        params.map { it.oppgaveNøkkel }.joinToString(", ")
-                    } (Gjort av ${innloggetBruker.brukerIdent})"
-                )
-                oppgaveApisTjeneste.annullerReservasjoner(params, innloggetBruker)
-                call.respond(HttpStatusCode.OK) //TODO: Hva er evt meningsfullt å returnere her?
-            } catch (e: FinnerIkkeDataException) {
-                call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitte reservasjonsnøkler")
-            }
-        }
-    }
-
-    @Location("/forleng")  //TODO maks 1 uke inntil videre?
-    class forlengReservasjon
-    post { _: forlengReservasjon ->
-        requestContextService.withRequestContext(call) {
-            val forlengReservasjonDto = call.receive<ForlengReservasjonDto>()
-            val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
-                kotlin.coroutines.coroutineContext.idToken().getUsername()
-            )!!
-
-            try {
-                call.respond(oppgaveApisTjeneste.forlengReservasjon(forlengReservasjonDto, innloggetBruker))
-            } catch (e: FinnerIkkeDataException) {
-                call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")
-            }
-        }
-    }
-
-    @Location("/flytt")
-    class flyttReservasjon
-    post { _: flyttReservasjon ->
-        requestContextService.withRequestContext(call) {
-            val params = call.receive<FlyttReservasjonId>()
-
-            val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
-                kotlin.coroutines.coroutineContext.idToken().getUsername()
-            )!!
-
-            try {
-                log.info("Flytter reservasjonen ${params.oppgaveNøkkel.oppgaveEksternId} til ${params.brukerIdent} (Gjort av ${innloggetBruker.brukerIdent})")
-                call.respond(oppgaveApisTjeneste.overførReservasjon(params, innloggetBruker))
-            } catch (e: FinnerIkkeDataException) {
-                call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")
-            }
-        }
-    }
-
-    @Location("/flytt-til-forrige-saksbehandler") //TODO Antatt ikke i bruk
-    class flyttReservasjonTilForrigeSaksbehandler
-    post { _: flyttReservasjonTilForrigeSaksbehandler ->
-        requestContextService.withRequestContext(call) {
-            val params = call.receive<OppgaveId>()
-            call.respond(
-                HttpStatusCode.NotImplemented
-                //oppgaveTjeneste.flyttReservasjonTilForrigeSakbehandler(UUID.fromString(params.oppgaveId))
-            )
-        }
-    }
-
-    @Location("/reservasjon/endre")
-    class endreReservasjon
-    post { _: endreReservasjon ->
-        requestContextService.withRequestContext(call) {
-            val reservasjonEndringDto = call.receive<List<ReservasjonEndringDto>>()
-            val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
-                kotlin.coroutines.coroutineContext.idToken().getUsername()
-            )!!
-            try {
-                call.respond(oppgaveApisTjeneste.endreReservasjoner(reservasjonEndringDto, innloggetBruker))
-            } catch (e: FinnerIkkeDataException) {
-                call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")
-            }
-        }
-    }
-
-    // Fjernes når V1 skal vekk
-    @Deprecated("Gjelder bare for gamle køer. For nye køer, bruk OppgaveKoApis./{id}/antall-oppgaver")
-    @Location("/antall")
-    class hentAntallOppgaverForOppgavekø
-    get { _: hentAntallOppgaverForOppgavekø ->
-        requestContextService.withRequestContext(call) {
-            var uuid = call.request.queryParameters["id"]
-            if (uuid.isNullOrBlank()) {
-                uuid = UUID.randomUUID().toString() //TODO: wtf!?
-            }
-            call.respond(oppgaveTjeneste.hentAntallOppgaver(UUID.fromString(uuid)!!))
-        }
-    }
-
-    // Fjernes når V1 skal vekk
-    @Deprecated("Gjelder bare for gamle køer. For nye køer, se OppgaveKoApis./{id}/oppgaver")
-    class hentOppgaver
-    //erstattet av OppgaveKoApis--/{id}/oppgaver::GET
-    get { _: hentOppgaver ->
-        val queryParameter = call.request.queryParameters["id"]
-        requestContextService.withRequestContext(call) {
-            call.respond(
-                oppgaveTjeneste.hentNesteOppgaverIKø(UUID.fromString(queryParameter))
-            )
-        }
-    }
-
-    @Location("/legg-til-behandlet-sak")  //WIP: siste behandlede oppgaver av saksbehandler. Skal virke så lenge vi vedlikeholder data i OppgaveV1. Må erstattes før V1 og V2 kan slettes
-    class leggTilBehandletSak
-    post { _: leggTilBehandletSak ->
-        requestContextService.withRequestContext(call) { //TODO klageoppgaver
-            val oppgavenøkkel = call.receive<OppgaveNøkkelDto>()
-            val eksternUuid = UUID.fromString(oppgavenøkkel.oppgaveEksternId)
-            val oppgave = oppgaveRepository.hent(eksternUuid)
-            val person = pdlService.person(oppgave.aktorId).person
-
-            if (person == null) {
-                log.warn("Fant ikke personen som er på oppgaven med eksternId $eksternUuid")
-                call.respond(HttpStatusCode.InternalServerError, "Fant ikke personen på oppgaven")
-            } else {
-                val behandletOppgave = BehandletOppgave(oppgave, person)
-                call.respond(
-                    oppgaveTjeneste.leggTilBehandletOppgave(
-                        coroutineContext.idToken().getUsername(),
-                        behandletOppgave
+                if (innloggetBruker != null) {
+                    val reservasjonV3Dtos = oppgaveApisTjeneste.hentReserverteOppgaverForSaksbehandler(innloggetBruker)
+                    call.respond(reservasjonV3Dtos)
+                } else {
+                    log.info("Innlogger bruker med brukernavn $innloggetBrukernavn finnes ikke i saksbehandlertabellen")
+                    call.respond(
+                        HttpStatusCode.InternalServerError,
+                        "Innlogger bruker med brukernavn $innloggetBrukernavn finnes ikke i saksbehandlertabellen"
                     )
-                )
+                }
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
             }
         }
     }
 
-    @Location("/behandlede") //WIP: siste behandlede oppgaver av saksbehandler. Skal virke så lenge vi vedlikeholder data i OppgaveV1. Må erstattes før V1 og V2 kan slettes
-    class getBehandledeOppgaver
-    get { _: getBehandledeOppgaver ->
+    // Fjernes når V1 skal vekk
+    post("/fa-oppgave-fra-ko") {
         requestContextService.withRequestContext(call) {
-            call.respond(oppgaveTjeneste.hentSisteBehandledeOppgaver())
+            if (pepClient.harTilgangTilReserveringAvOppgaver()) {
+                val params = call.receive<OppgaveKøIdDto>()
+
+                val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(
+                    kotlin.coroutines.coroutineContext.idToken().getUsername()
+                )!!
+
+                //reservasjonV3 skjer i enden av oppgaveTjeneste.fåOppgaveFraKø()
+                val oppgaveFraKø = oppgaveTjeneste.fåOppgaveFraKø(
+                    oppgaveKøId = params.oppgaveKøId,
+                    brukerident = saksbehandler.brukerIdent!!
+                )
+
+                if (oppgaveFraKø != null) {
+                    log.info("RESERVASJONDEBUG: Lagt til ${saksbehandler.brukerIdent} oppgave=${oppgaveFraKø.eksternId}, beslutter=${oppgaveFraKø.tilBeslutter}, kø=${params.oppgaveKøId} (neste oppgave)")
+                    call.respond(oppgaveFraKø)
+                } else {
+                    call.respond(HttpStatusCode.NotFound, "Fant ingen oppgave i valgt kø")
+                }
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
         }
     }
 
-    @Location("/flytt/sok")
-    class søkSaksbehandler
-    post { _: søkSaksbehandler ->
+    post("/opphev") {
         requestContextService.withRequestContext(call) {
-            val params = call.receive<BrukerIdentDto>()
-            val sokSaksbehandlerMedIdent = oppgaveTjeneste.sokSaksbehandler(params.brukerIdent)
-            call.respond(sokSaksbehandlerMedIdent)
+            if (pepClient.harBasisTilgang()) {
+                val params = call.receive<List<AnnullerReservasjon>>()
+                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
+                    kotlin.coroutines.coroutineContext.idToken().getUsername()
+                )!!
+
+                try {
+                    log.info(
+                        "Opphever reservasjoner ${
+                            params.map { it.oppgaveNøkkel }.joinToString(", ")
+                        } (Gjort av ${innloggetBruker.brukerIdent})"
+                    )
+                    oppgaveApisTjeneste.annullerReservasjoner(params, innloggetBruker)
+                    call.respond(HttpStatusCode.OK) //TODO: Hva er evt meningsfullt å returnere her?
+                } catch (e: FinnerIkkeDataException) {
+                    call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitte reservasjonsnøkler")
+                }
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
         }
     }
 
-    @Location("/saksbehandlere")
-    class getAlleSaksbehandlere
-    get { _: getAlleSaksbehandlere ->
+    post("/forleng") {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.harBasisTilgang()) {
+                val forlengReservasjonDto = call.receive<ForlengReservasjonDto>()
+                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
+                    kotlin.coroutines.coroutineContext.idToken().getUsername()
+                )!!
+
+                try {
+                    call.respond(oppgaveApisTjeneste.forlengReservasjon(forlengReservasjonDto, innloggetBruker))
+                } catch (e: FinnerIkkeDataException) {
+                    call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")
+                }
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
+    post("/flytt") {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.harBasisTilgang()) {
+                val params = call.receive<FlyttReservasjonId>()
+
+                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
+                    kotlin.coroutines.coroutineContext.idToken().getUsername()
+                )!!
+
+                try {
+                    log.info("Flytter reservasjonen ${params.oppgaveNøkkel.oppgaveEksternId} til ${params.brukerIdent} (Gjort av ${innloggetBruker.brukerIdent})")
+                    call.respond(oppgaveApisTjeneste.overførReservasjon(params, innloggetBruker))
+                } catch (e: FinnerIkkeDataException) {
+                    call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")
+                }
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
+    post("/reservasjon/endre") {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.harBasisTilgang()) {
+                val reservasjonEndringDto = call.receive<List<ReservasjonEndringDto>>()
+                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
+                    kotlin.coroutines.coroutineContext.idToken().getUsername()
+                )!!
+                try {
+                    call.respond(oppgaveApisTjeneste.endreReservasjoner(reservasjonEndringDto, innloggetBruker))
+                } catch (e: FinnerIkkeDataException) {
+                    call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")
+                }
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
+    // Fjernes når V1 skal vekk
+    get("/antall") {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.harBasisTilgang()) {
+                val uuid = call.request.queryParameters["id"]!!
+                call.respond(oppgaveTjeneste.hentAntallOppgaver(UUID.fromString(uuid)))
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
+    // Fjernes når V1 skal vekk
+    //erstattet av OppgaveKoApis--/{id}/oppgaver::GET
+    get {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.harBasisTilgang()) {
+                val queryParameter = call.request.queryParameters["id"]
+                call.respond(
+                    oppgaveTjeneste.hentNesteOppgaverIKø(UUID.fromString(queryParameter))
+                )
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
+    //WIP: siste behandlede oppgaver av saksbehandler. Skal virke så lenge vi vedlikeholder data i OppgaveV1. Må erstattes før V1 og V2 kan slettes
+    post("/legg-til-behandlet-sak") {
+        requestContextService.withRequestContext(call) { //TODO klageoppgaver
+            if (pepClient.harBasisTilgang()) {
+                val oppgavenøkkel = call.receive<OppgaveNøkkelDto>()
+                val eksternUuid = UUID.fromString(oppgavenøkkel.oppgaveEksternId)
+                val oppgave = oppgaveRepository.hent(eksternUuid)
+                val person = pdlService.person(oppgave.aktorId).person
+
+                if (person == null) {
+                    log.warn("Fant ikke personen som er på oppgaven med eksternId $eksternUuid")
+                    call.respond(HttpStatusCode.InternalServerError, "Fant ikke personen på oppgaven")
+                } else {
+                    val behandletOppgave = BehandletOppgave(oppgave, person)
+                    call.respond(
+                        oppgaveTjeneste.leggTilBehandletOppgave(
+                            coroutineContext.idToken().getUsername(),
+                            behandletOppgave
+                        )
+                    )
+                }
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
+    //WIP: siste behandlede oppgaver av saksbehandler. Skal virke så lenge vi vedlikeholder data i OppgaveV1. Må erstattes før V1 og V2 kan slettes
+    get("/behandlede") {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.harBasisTilgang()) {
+                call.respond(oppgaveTjeneste.hentSisteBehandledeOppgaver())
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
+    post("/flytt/sok") {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.harBasisTilgang()) {
+                val params = call.receive<BrukerIdentDto>()
+                val sokSaksbehandlerMedIdent = oppgaveTjeneste.sokSaksbehandler(params.brukerIdent)
+                call.respond(sokSaksbehandlerMedIdent)
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
+    get("/saksbehandlere") {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val alleSaksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere()
@@ -279,56 +279,8 @@ internal fun Route.OppgaveApis() {
                         }
                 call.respond(saksbehandlerDtoListe)
             } else {
-                call.respond(emptyList<SaksbehandlerDto>())
+                call.respond(HttpStatusCode.Forbidden)
             }
-        }
-    }
-
-    @Deprecated("Antatt ikke i bruk. Verifiser og fjern")
-    @Location("/hent-historiske-reservasjoner-på-oppgave")
-    class hentHistoriskeReservasjonerPåOppgave
-    post { _: hentHistoriskeReservasjonerPåOppgave ->
-        requestContextService.withRequestContext(call) {
-            val params = call.receive<OppgaveId>()
-            call.respond(
-                oppgaveTjeneste.hentReservasjonsHistorikk(UUID.fromString(params.oppgaveId))
-            )
-        }
-    }
-
-    @Deprecated("Antatt ikke i bruk. Verifiser og fjern")
-    @Location("/oppgaver-for-fagsaker")
-    class oppgaverForFagsaker
-    get { _: oppgaverForFagsaker ->
-        requestContextService.withRequestContext(call) {
-            val saker = call.request.queryParameters["saksnummerListe"]
-            val saksnummerliste = saker?.split(",") ?: emptyList()
-            val oppgaver = oppgaveTjeneste.hentOppgaverFraListe(saksnummerliste)
-            val result = mutableListOf<OppgaveDto>()
-            if (oppgaver.isNotEmpty()) {
-                val oppgaverBySaksnummer = oppgaver.groupBy { it.saksnummer }
-                for (entry in oppgaverBySaksnummer.entries) {
-                    val x = entry.value.firstOrNull { oppgaveDto -> oppgaveDto.erTilSaksbehandling }
-                    if (x != null) {
-                        result.add(x)
-                    } else {
-                        result.add(entry.value.first())
-                    }
-                }
-                call.respond(result)
-            } else {
-                call.respond(oppgaver)
-            }
-        }
-    }
-
-    @Deprecated("Antatt ikke i bruk. Verifiser og fjern")
-    @Location("/oppgaver-på-samme-bruker")
-    class oppgaverPåSammeBruker
-    post { _: oppgaverPåSammeBruker ->
-        requestContextService.withRequestContext(call) {
-            val params = call.receive<OppgaveId>()
-            call.respond(oppgaveTjeneste.aktiveOppgaverPåSammeBruker(UUID.fromString(params.oppgaveId)))
         }
     }
 }

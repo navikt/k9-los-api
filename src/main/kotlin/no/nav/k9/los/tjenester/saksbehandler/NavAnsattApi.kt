@@ -1,7 +1,6 @@
 package no.nav.k9.los.tjenester.saksbehandler
 
 import io.ktor.server.application.*
-import io.ktor.server.locations.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.Configuration
@@ -20,9 +19,7 @@ internal fun Route.NavAnsattApis() {
     val azureGraphService by inject<IAzureGraphService>()
     val configuration by inject<Configuration>()
 
-    @Location("/saksbehandler")
-    class getInnloggetBruker
-    get { _: getInnloggetBruker ->
+    get("/saksbehandler") {
         if (configuration.koinProfile() != KoinProfile.LOCAL) {
             requestContextService.withRequestContext(call) {
                 val token = call.idToken()
@@ -33,7 +30,7 @@ internal fun Route.NavAnsattApis() {
                     brukerIdent = saksbehandlerIdent,
                     kanSaksbehandle = pepClient.harBasisTilgang(), //TODO mismatch mellom navnet 'kanSaksbehandle' og at alle som har tilgang til systemet har basistilgang
                     kanOppgavestyre = pepClient.erOppgaveStyrer(),
-                    kanReservere = pepClient.harTilgangTilReservingAvOppgaver(),
+                    kanReservere = pepClient.harTilgangTilReserveringAvOppgaver(),
                     kanDrifte = pepClient.kanLeggeUtDriftsmelding()
                 )
                 if (saksbehandlerRepository.finnSaksbehandlerMedEpost(token.getUsername()) != null) {
