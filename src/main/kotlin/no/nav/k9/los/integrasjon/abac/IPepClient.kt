@@ -15,7 +15,7 @@ interface IPepClient {
 
     suspend fun kanLeggeUtDriftsmelding(): Boolean
 
-    suspend fun harTilgangTilReservingAvOppgaver(): Boolean
+    suspend fun harTilgangTilReserveringAvOppgaver(): Boolean
 
     suspend fun kanSendeSakTilStatistikk(
         fagsakNummer: String

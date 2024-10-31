@@ -2,10 +2,9 @@ package no.nav.k9.los.nyoppgavestyring.query
 
 import io.ktor.http.*
 import io.ktor.server.application.*
-import io.ktor.server.locations.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
-import io.ktor.server.routing.Route
+import io.ktor.server.routing.*
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.integrasjon.rest.idToken
@@ -18,64 +17,65 @@ fun Route.OppgaveQueryApis() {
     val oppgaveQueryService by inject<OppgaveQueryService>()
     val pepClient by KoinJavaComponent.inject<IPepClient>(IPepClient::class.java)
 
-    @Location("/query")
-    class queryOppgave
-
-    post { _: queryOppgave ->
-        val oppgaveQuery = call.receive<OppgaveQuery>()
+    post("/query") {
         requestContextService.withRequestContext(call) {
-            val idToken = kotlin.coroutines.coroutineContext.idToken()
-            call.respond(oppgaveQueryService.query(QueryRequest(oppgaveQuery), idToken))
-        }
-    }
-
-    @Location("/query/antall")
-    class queryOppgaveAntall
-
-    post { _: queryOppgaveAntall ->
-        val oppgaveQuery = call.receive<OppgaveQuery>()
-        requestContextService.withRequestContext(call) {
-            call.respond(oppgaveQueryService.queryForAntall(QueryRequest(oppgaveQuery, false)))
-        }
-    }
-
-    @Location("/validate")
-    class validateOppgave
-
-    post { _: validateOppgave ->
-        val oppgaveQuery = call.receive<OppgaveQuery>()
-        requestContextService.withRequestContext(call) {
-            if (!pepClient.erOppgaveStyrer()) {
+            if (pepClient.harBasisTilgang()) {
+                val oppgaveQuery = call.receive<OppgaveQuery>()
+                val idToken = kotlin.coroutines.coroutineContext.idToken()
+                call.respond(oppgaveQueryService.query(QueryRequest(oppgaveQuery), idToken))
+            } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
-            call.respond(oppgaveQueryService.validate(QueryRequest(oppgaveQuery)))
         }
     }
 
-    @Location("/queryToFile")
-    class queryOppgaveToFile
-
-    post { _: queryOppgaveToFile ->
-        val oppgaveQuery = call.receive<OppgaveQuery>()
+    post("/query/antall") {
         requestContextService.withRequestContext(call) {
-            val idToken = kotlin.coroutines.coroutineContext.idToken()
-
-            call.response.header(
-                HttpHeaders.ContentDisposition,
-                ContentDisposition.Attachment.withParameter(
-                    ContentDisposition.Parameters.FileName, "oppgaver.csv"
-                ).toString()
-            )
-            call.respondText(oppgaveQueryService.queryToFile(QueryRequest(oppgaveQuery), idToken))
+            if (pepClient.harBasisTilgang()) {
+                val oppgaveQuery = call.receive<OppgaveQuery>()
+                call.respond(oppgaveQueryService.queryForAntall(QueryRequest(oppgaveQuery, false)))
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
         }
     }
 
-    @Location("/felter")
-    class hentAlleFelter
-
-    get { _: hentAlleFelter ->
+    post("/validate") {
         requestContextService.withRequestContext(call) {
-            call.respond(oppgaveQueryService.hentAlleFelter())
+            if (pepClient.harBasisTilgang()) {
+                val oppgaveQuery = call.receive<OppgaveQuery>()
+                call.respond(oppgaveQueryService.validate(QueryRequest(oppgaveQuery)))
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
+    post("/queryToFile") {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.harBasisTilgang()) {
+                val oppgaveQuery = call.receive<OppgaveQuery>()
+                val idToken = kotlin.coroutines.coroutineContext.idToken()
+                call.response.header(
+                    HttpHeaders.ContentDisposition,
+                    ContentDisposition.Attachment.withParameter(
+                        ContentDisposition.Parameters.FileName, "oppgaver.csv"
+                    ).toString()
+                )
+                call.respondText(oppgaveQueryService.queryToFile(QueryRequest(oppgaveQuery), idToken))
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
+    get("/felter") {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.harBasisTilgang()) {
+                call.respond(oppgaveQueryService.hentAlleFelter())
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
         }
     }
 }

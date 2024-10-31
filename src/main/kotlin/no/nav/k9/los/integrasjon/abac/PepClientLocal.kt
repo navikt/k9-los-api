@@ -16,7 +16,7 @@ class PepClientLocal : IPepClient {
         return true
     }
 
-    override suspend fun harTilgangTilReservingAvOppgaver(): Boolean {
+    override suspend fun harTilgangTilReserveringAvOppgaver(): Boolean {
         return true
     }
 

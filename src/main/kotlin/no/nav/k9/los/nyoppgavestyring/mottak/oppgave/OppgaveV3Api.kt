@@ -1,7 +1,5 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -9,19 +7,14 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.los.domene.modell.K9SakModell
-import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.los.integrasjon.rest.RequestContextService
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import org.koin.ktor.ext.inject
-import java.time.LocalDateTime
-import java.util.*
 
+// Må legge til tilgangskontroll dersom disse endepunktene aktiveres
 internal fun Route.OppgaveV3Api() {
     val requestContextService by inject<RequestContextService>()
     val oppgaveV3Tjeneste by inject<OppgaveV3Tjeneste>()
     val transactionalManager by inject<TransactionalManager>()
-    val behandlingProsessEventK9Repository by inject<BehandlingProsessEventK9Repository>()
     val config by inject<Configuration>()
 
     put {
