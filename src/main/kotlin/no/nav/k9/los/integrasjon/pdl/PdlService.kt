@@ -110,16 +110,17 @@ class PdlService constructor(
         } catch (e: Exception) {
             try {
                 val value = LosObjectMapper.instance.readValue<Error>(json!!)
-                log.warn("Fikk pdl-feil ${value.errors.joinToString(",")}", e)
 
                 if (value.errors.any { it.extensions?.code == "unauthorized" }) {
                     val resultat = PersonPdlResponse(true, null)
                     //TODO vurder å cache her også
                     //aktørIdTilPersonCache.set(cacheKey, CacheObject(resultat, LocalDateTime.now().plus(pdlCacheVarighet)))
                     return resultat
+                } else {
+                    log.warn("Fikk ukjent error fra pdl (noe annet enn 'unauthorized'): ${value.errors.joinToString(",")}", e)
                 }
             } catch (e: Exception) {
-                log.warn(e.message, e)
+                log.warn("Ukjent feil ved tolkning av error fra pdl", e)
             }
             return PersonPdlResponse(false, null)
         }
