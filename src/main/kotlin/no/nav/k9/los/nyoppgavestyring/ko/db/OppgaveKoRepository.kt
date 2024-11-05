@@ -31,21 +31,20 @@ class OppgaveKoRepository(
         objectMapper.writeValueAsString(kode6OppgaveQuery)
     }
 
-    fun hentListe(medSkjermet: Boolean = false): List<OppgaveKo> {
+    fun hentListe(medSkjermet: Boolean = false, medSaksbehandlere: Boolean = true): List<OppgaveKo> {
         return using(sessionOf(datasource)) {
-            it.transaction { tx -> hentListe(tx, medSkjermet) }
+            it.transaction { tx -> hentListe(tx, medSaksbehandlere, medSkjermet) }
         }
     }
 
-    fun hentListe(tx: TransactionalSession, skjermet: Boolean = false): List<OppgaveKo> {
+    fun hentListe(tx: TransactionalSession, medSaksbehandlere: Boolean, skjermet: Boolean = false): List<OppgaveKo> {
         return tx.run(
             queryOf(
                 """SELECT id, versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave, endret_tidspunkt, skjermet 
                     FROM OPPGAVEKO_V3 WHERE skjermet = :medSkjermet""",
                 mapOf("medSkjermet" to skjermet)
-            ).map { row -> row.tilOppgaveKo(objectMapper, tx) }.asList
+            ).map { row -> row.tilOppgaveKo(objectMapper, medSaksbehandlere, tx) }.asList
         )
-
     }
 
     fun hent(oppgaveKoId: Long): OppgaveKo {
@@ -64,11 +63,11 @@ class OppgaveKoRepository(
                     "id" to oppgaveKoId,
                     "skjermet" to skjermet
                 )
-            ).map { it.tilOppgaveKo(objectMapper, tx) to it.boolean("skjermet") }.asSingle
+            ).map { it.tilOppgaveKo(objectMapper, true, tx) to it.boolean("skjermet") }.asSingle
         ) ?: throw IllegalStateException("Feil ved henting av oppgavekø: $oppgaveKoId")
     }
 
-    fun Row.tilOppgaveKo(objectMapper: ObjectMapper, tx: TransactionalSession): OppgaveKo {
+    fun Row.tilOppgaveKo(objectMapper: ObjectMapper, medSaksbehandlere: Boolean = true, tx: TransactionalSession): OppgaveKo {
         return OppgaveKo(
             id = long("id"),
             versjon = long("versjon"),
@@ -76,7 +75,7 @@ class OppgaveKoRepository(
             beskrivelse = string("beskrivelse"),
             oppgaveQuery = objectMapper.readValue(string("query"), OppgaveQuery::class.java),
             frittValgAvOppgave = boolean("fritt_valg_av_oppgave"),
-            saksbehandlere = hentKoSaksbehandlere(tx, long("id")),
+            saksbehandlere = if (medSaksbehandlere) hentKoSaksbehandlere(tx, long("id")) else emptyList(),
             endretTidspunkt = localDateTimeOrNull("endret_tidspunkt"),
             skjermet = boolean("skjermet")
         )
@@ -154,7 +153,8 @@ class OppgaveKoRepository(
     fun hentKoerMedOppgittSaksbehandler(
         tx: TransactionalSession,
         saksbehandlerEpost: String,
-        skjermet: Boolean = false
+        skjermet: Boolean = false,
+        medSaksbehandlere: Boolean = true
     ): List<OppgaveKo> {
         return tx.run(
             queryOf(
@@ -173,17 +173,36 @@ class OppgaveKoRepository(
                     "skjermet" to skjermet
                 )
             ).map { row ->
-                OppgaveKo(
-                    id = row.long("id"),
-                    versjon = row.long("versjon"),
-                    tittel = row.string("tittel"),
-                    beskrivelse = row.string("beskrivelse"),
-                    oppgaveQuery = objectMapper.readValue(row.string("query"), OppgaveQuery::class.java),
-                    frittValgAvOppgave = row.boolean("fritt_valg_av_oppgave"),
-                    saksbehandlere = hentKoSaksbehandlere(tx, row.long("id")),
-                    endretTidspunkt = row.localDateTimeOrNull("endret_tidspunkt"),
-                    skjermet = row.boolean("skjermet")
+                row.tilOppgaveKo(objectMapper, medSaksbehandlere, tx)
+            }.asList
+        )
+    }
+
+    fun hentKoerMedOppgittSaksbehandler(
+        tx: TransactionalSession,
+        saksbehandlerId: Long,
+        skjermet: Boolean = false,
+        medSaksbehandlere: Boolean = true
+    ): List<OppgaveKo> {
+        return tx.run(
+            queryOf(
+                """
+                    select id, versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave, endret_tidspunkt, skjermet
+                    from OPPGAVEKO_V3 ko
+                    where skjermet = :skjermet AND      
+                    exists (
+                        select 1
+                        from oppgaveko_saksbehandler os
+                        inner join saksbehandler s on s.epost = os.saksbehandler_epost
+                        where os.oppgaveko_v3_id = ko.id
+                        and s.id = :saksbehandler_id
+                        )""",
+                mapOf(
+                    "saksbehandler_id" to saksbehandlerId,
+                    "skjermet" to skjermet
                 )
+            ).map { row ->
+                row.tilOppgaveKo(objectMapper, medSaksbehandlere, tx)
             }.asList
         )
     }
