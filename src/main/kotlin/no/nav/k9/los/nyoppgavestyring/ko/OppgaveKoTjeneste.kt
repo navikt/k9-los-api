@@ -20,7 +20,10 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.query.Avgrensning
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
-import no.nav.k9.los.nyoppgavestyring.reservasjon.*
+import no.nav.k9.los.nyoppgavestyring.reservasjon.AlleredeReservertException
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ManglerTilgangException
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.GenerellOppgaveV3Dto
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
@@ -87,16 +90,27 @@ class OppgaveKoTjeneste(
         saksbehandlerEpost: String
     ): List<OppgaveKo> {
         return transactionalManager.transaction { tx ->
-            oppgaveKoRepository.hentKoerMedOppgittSaksbehandler(tx, saksbehandlerEpost, medSaksbehandlere = false)
+            oppgaveKoRepository.hentKoerMedOppgittSaksbehandler(
+                tx = tx,
+                saksbehandlerEpost = saksbehandlerEpost,
+                medSaksbehandlere = false,
+                skjermet = false
+            )
         }
     }
 
     @WithSpan
     fun hentKøerForSaksbehandler(
-        saksbehandlerId: Long
+        saksbehandlerId: Long,
+        skjermet: Boolean
     ): List<OppgaveKo> {
         return transactionalManager.transaction { tx ->
-            oppgaveKoRepository.hentKoerMedOppgittSaksbehandler(tx, saksbehandlerId, medSaksbehandlere = false)
+            oppgaveKoRepository.hentKoerMedOppgittSaksbehandler(
+                tx = tx,
+                saksbehandlerId = saksbehandlerId,
+                medSaksbehandlere = false,
+                skjermet = skjermet
+            )
         }
     }
 

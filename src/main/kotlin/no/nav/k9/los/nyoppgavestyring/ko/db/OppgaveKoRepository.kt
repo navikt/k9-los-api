@@ -67,7 +67,7 @@ class OppgaveKoRepository(
         ) ?: throw IllegalStateException("Feil ved henting av oppgavekø: $oppgaveKoId")
     }
 
-    fun Row.tilOppgaveKo(objectMapper: ObjectMapper, medSaksbehandlere: Boolean = true, tx: TransactionalSession): OppgaveKo {
+    private fun Row.tilOppgaveKo(objectMapper: ObjectMapper, medSaksbehandlere: Boolean = true, tx: TransactionalSession): OppgaveKo {
         return OppgaveKo(
             id = long("id"),
             versjon = long("versjon"),
@@ -181,8 +181,8 @@ class OppgaveKoRepository(
     fun hentKoerMedOppgittSaksbehandler(
         tx: TransactionalSession,
         saksbehandlerId: Long,
-        skjermet: Boolean = false,
-        medSaksbehandlere: Boolean = true
+        skjermet: Boolean,
+        medSaksbehandlere: Boolean
     ): List<OppgaveKo> {
         return tx.run(
             queryOf(

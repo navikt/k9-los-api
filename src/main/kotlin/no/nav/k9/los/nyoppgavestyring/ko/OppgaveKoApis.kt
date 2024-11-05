@@ -109,7 +109,10 @@ fun Route.OppgaveKoApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
                 call.respond(
-                    oppgaveKoTjeneste.hentKøerForSaksbehandler(call.parameters["id"]?.toLong()!!).map {
+                    oppgaveKoTjeneste.hentKøerForSaksbehandler(
+                        call.parameters["id"]?.toLong()!!,
+                        pepClient.harTilgangTilKode6()
+                    ).map {
                         OppgaveKoIdOgTittel(
                             id = it.id,
                             tittel = it.tittel
