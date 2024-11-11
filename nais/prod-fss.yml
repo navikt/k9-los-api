@@ -37,6 +37,8 @@ spec:
       runtime: java
       destinations:
         - id: "elastic-apm"
+        - id: "grafana-lgtm"
+
   vault:
     enabled: true
     paths:
