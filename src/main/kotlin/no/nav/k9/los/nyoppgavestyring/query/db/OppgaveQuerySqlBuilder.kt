@@ -193,9 +193,7 @@ class OppgaveQuerySqlBuilder(
          * typekonvertering gjør at spørringen feiler.
          */
         query += "${databaseverdiMedCasting(feltområde, feltkode)} ${operator.negasjonAv?.sql ?: operator.sql} (:feltverdi$index)"
-//        query += "ov.verdi ${operator.negasjonAv?.sql ?: operator.sql} (:feltverdi$index)"
         val queryVerdiParam = castTilRiktigKotlintype(feltområde, feltkode, feltverdi)
-//        val queryVerdiParam = feltverdi
 
         query += " END) "
 

@@ -17,9 +17,7 @@ import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.pep.PepCache
 import no.nav.k9.los.nyoppgavestyring.pep.PepCacheRepository
 import no.nav.k9.los.nyoppgavestyring.pep.TestRepository
@@ -36,7 +34,6 @@ import org.koin.test.get
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.StringWriter
-import java.sql.Timestamp
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -44,66 +41,6 @@ import java.util.*
 class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
     val logger: Logger = LoggerFactory.getLogger(OppgaveQueryTest::class.java)
-
-//    @Test
-    fun testeBasic() {
-        val behandlingUuid = UUID.randomUUID().toString()
-        OppgaveTestDataBuilder()
-            .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, behandlingUuid)
-            .medOppgaveFeltVerdi(FeltType.MOTTATT_DATO, "2023-05-15T12:00:00.000")
-            .lagOgLagre()
-
-        val pstmt = dataSource.connection.prepareStatement(
-            """
-            SELECT o.id as id, o.kildeomrade as kildeomrade, o.ekstern_id as ekstern_id  FROM Oppgave_v3_aktiv o
-                                                                                      INNER JOIN Oppgavetype ot ON ( ot.id = o.oppgavetype_id )
-                                                                                      INNER JOIN Omrade oppgave_omrade ON (oppgave_omrade.id = ot.omrade_id )
-                                                                                      LEFT JOIN Oppgave_pep_cache opc ON (o.kildeomrade = opc.kildeomrade AND o.ekstern_id = opc.ekstern_id)
-WHERE true AND  EXISTS (
-    SELECT 'Y'
-    FROM Oppgavefelt_verdi_aktiv ov
-             INNER JOIN Oppgavefelt f ON (f.id = ov.oppgavefelt_id)
-             INNER JOIN Feltdefinisjon fd ON (fd.id = f.feltdefinisjon_id)
-             INNER JOIN Omrade fo ON (fo.id = fd.omrade_id)
-    WHERE ov.oppgave_id = o.id
-      AND fo.ekstern_id = ?
-      AND fd.ekstern_id = ?
-      AND ov.verdi = ?) AND (false OR  EXISTS (
-    SELECT 'Y'
-    FROM Oppgavefelt_verdi_aktiv ov
-             INNER JOIN Oppgavefelt f ON (f.id = ov.oppgavefelt_id)
-             INNER JOIN Feltdefinisjon fd ON (fd.id = f.feltdefinisjon_id)
-             INNER JOIN Omrade fo ON (fo.id = fd.omrade_id)
-    WHERE ov.oppgave_id = o.id
-      AND fo.ekstern_id = ?
-      AND fd.ekstern_id = ?
-      AND CAST(ov.verdi AS timestamp without time zone) < (?)) OR  EXISTS (
-    SELECT 'Y'
-    FROM Oppgavefelt_verdi_aktiv ov
-             INNER JOIN Oppgavefelt f ON (f.id = ov.oppgavefelt_id)
-             INNER JOIN Feltdefinisjon fd ON (fd.id = f.feltdefinisjon_id)
-             INNER JOIN Omrade fo ON (fo.id = fd.omrade_id)
-    WHERE ov.oppgave_id = o.id
-      AND fo.ekstern_id = ?
-      AND fd.ekstern_id = ?
-      AND CAST(ov.verdi AS timestamp without time zone) > (?)) )  ORDER BY (select null)
-        """.trimIndent()
-        )
-
-        var i = 0
-        pstmt.setString(++i, "K9")
-        pstmt.setString(++i, "behandlingUuid")
-        pstmt.setString(++i, behandlingUuid)
-        pstmt.setString(++i, "K9")
-        pstmt.setString(++i, "mottattDato")
-        pstmt.setTimestamp(++i, Timestamp.valueOf(LocalDateTime.now().minusDays(1)))
-        pstmt.setString(++i, "K9")
-        pstmt.setString(++i, "mottattDato")
-        pstmt.setTimestamp(++i, Timestamp.valueOf(LocalDateTime.now().plusDays(1)))
-
-        val executeQuery = pstmt.executeQuery()
-        executeQuery.row
-    }
 
     @Test
     fun `sjekker at oppgave-query kan kjøres mot database`() {
@@ -162,9 +99,7 @@ WHERE true AND  EXISTS (
 
     @Test
     fun `sjekker at oppgave-query kan sammenligne timestamp`() {
-        val mottattDato = LocalDateTime.now()
         OppgaveTestDataBuilder()
-//            .medOppgaveFeltVerdi(FeltType.MOTTATT_DATO, mottattDato.toString())
             .medOppgaveFeltVerdi(FeltType.MOTTATT_DATO, "2023-05-15T00:00:00.000")
             .lagOgLagre()
 
@@ -173,13 +108,6 @@ WHERE true AND  EXISTS (
             områdeRepository
         )
         val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, feltdefinisjonRepository)
-        val oppgavetypeRepository = OppgavetypeRepository(
-            dataSource, feltdefinisjonRepository, områdeRepository
-        )
-        val oppgaveV3Repository = OppgaveV3Repository(dataSource, oppgavetypeRepository)
-
-        val alleOppgaver =
-            TransactionalManager(dataSource).transaction { tx -> oppgaveV3Repository.hentAlleOppgaver(tx) }
 
         assertThat(
             oppgaveQueryRepository.query(
