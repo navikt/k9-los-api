@@ -84,8 +84,6 @@ object OppgaveQueryToSqlMapper {
                         håndterFiltere(queryBuilder, filter.filtere, newCombineOperator)
                     }
                 }
-
-                else -> throw IllegalStateException("Ukjent filter: " + filter::class.qualifiedName)
             }
         }
     }
@@ -94,8 +92,6 @@ object OppgaveQueryToSqlMapper {
         for (orderBy in orderBys) {
             when (orderBy) {
                 is EnkelOrderFelt -> query.medEnkelOrder(orderBy.område, orderBy.kode, orderBy.økende)
-//                is NumeriskOrderFelt -> query.medNumeriskOrder(orderBy.område, orderBy.kode, orderBy.økende)
-                else -> throw IllegalStateException("Ukjent OrderFelt: " + orderBy::class.qualifiedName)
             }
         }
     }
