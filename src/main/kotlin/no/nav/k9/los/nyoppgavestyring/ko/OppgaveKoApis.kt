@@ -160,6 +160,24 @@ fun Route.OppgaveKoApis() {
         }
     }
 
+    get("/{id}/antall-uten-reserverte") {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.harBasisTilgang()) {
+                val oppgavekøId = call.parameters["id"]!!
+
+                val antallUtenReserverte = OpentelemetrySpanUtil.span("OppgaveKoTjeneste.hentAntallOppgaverForKø") {
+                    oppgaveKoTjeneste.hentAntallOppgaverForKø(
+                        oppgavekøId.toLong(),
+                        true
+                    )
+                }
+                call.respond(AntallOppgaver(antallUtenReserverte))
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
     post("/{id}/fa-oppgave") {
         requestContextService.withRequestContext(call) {
             if (pepClient.harTilgangTilReserveringAvOppgaver()) {
