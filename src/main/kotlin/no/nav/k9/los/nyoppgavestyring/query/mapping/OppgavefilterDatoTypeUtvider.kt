@@ -23,12 +23,11 @@ object OppgavefilterDatoTypeUtvider {
                         filter.filtere.utvidListe()
                     )
                 )
-                else -> throw IllegalStateException("Ukjent filter: " + filter::class.qualifiedName)
             }
         }
     }
 
-    fun FeltverdiOppgavefilter.map(): List<Oppgavefilter> {
+    private fun FeltverdiOppgavefilter.map(): List<Oppgavefilter> {
 
         // Oversetter operator til pair med grensebetingelser. null tilsvarer fravær av grensebetingelse
         // Gjøres for å mappe grensebetingelser individuelt for hver verdi - fremfor alle nedre grenser, deretter alle øvre grenser.
@@ -46,7 +45,7 @@ object OppgavefilterDatoTypeUtvider {
 
         val datoverdier = verdi.map {
             try {
-                LocalDateTime.parse(it as String).toLocalDate()
+                LocalDateTime.parse(it as String)
             } catch (e: Exception) { null } ?:
             try {
                 LocalDate.parse(it as String)
@@ -54,19 +53,22 @@ object OppgavefilterDatoTypeUtvider {
         }
 
         // Antar at alle verdiene er av samme type
-        if (datoverdier.any { it == null }) return listOf(this)
-
-        return datoverdier.map { oversettDateTilDateTimeIntervall(it, nedreØvreGrensebetingelse) }
+        return when {
+            datoverdier.any { it == null } -> listOf(this)
+            datoverdier.any { it is LocalDateTime } -> listOf(this)
+            else -> datoverdier.map { oversettDateTilDateTimeIntervall(it as LocalDate, nedreØvreGrensebetingelse) }
+        }
     }
 
-    fun FeltverdiOppgavefilter.oversettDateTilDateTimeIntervall(
-        verdi: LocalDate?,
+    private fun FeltverdiOppgavefilter.oversettDateTilDateTimeIntervall(
+        dato: LocalDate,
         nedreØvreGrensebetingelse: Pair<FeltverdiOperator?, FeltverdiOperator?>,
     ): Oppgavefilter {
+        val (nedreGrense, øvreGrense) = nedreØvreGrensebetingelse
 
         val filtre = mutableListOf<FeltverdiOppgavefilter>()
-        kopiMedFelter(nedreØvreGrensebetingelse.first, LocalTime.MIN, verdi)?.let { filtre.add(it) }
-        kopiMedFelter(nedreØvreGrensebetingelse.second, LocalTime.MAX, verdi)?.let { filtre.add(it) }
+        kopiMedFelter(nedreGrense, LocalTime.MIN, dato)?.let { filtre.add(it) }
+        kopiMedFelter(øvreGrense, LocalTime.MAX, dato)?.let { filtre.add(it) }
 
         return filtre.takeIf { it.size == 1 }?.first() ?: CombineOppgavefilter(
             combineOperator = hentCombineoperator().name,
@@ -81,7 +83,7 @@ object OppgavefilterDatoTypeUtvider {
             else -> CombineOperator.AND
         }
 
-    fun FeltverdiOppgavefilter.kopiMedFelter(
+    private fun FeltverdiOppgavefilter.kopiMedFelter(
         operator: FeltverdiOperator?,
         tidsgrense: LocalTime,
         verdi: LocalDate?

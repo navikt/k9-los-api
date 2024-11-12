@@ -39,7 +39,7 @@ class OppgaveQueryRepository(
     @WithSpan
     fun query(tx: TransactionalSession, request: QueryRequest, now: LocalDateTime): List<AktivOppgaveId> {
         val felter = hentAlleFelterMedMer(tx, medKodeverk = false)
-            .associate { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) to felt }
+            .associateBy { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) }
 
         return query(tx, OppgaveQueryToSqlMapper.toSqlOppgaveQuery(request, felter, now))
     }

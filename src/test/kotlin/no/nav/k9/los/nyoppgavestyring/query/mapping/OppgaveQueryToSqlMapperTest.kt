@@ -8,6 +8,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.db.OmrådeOgKode
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgavefeltMedMer
+import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
@@ -31,9 +32,33 @@ class OppgaveQueryToSqlMapperTest {
         ))
 
         val felter = mapOf<OmrådeOgKode, OppgavefeltMedMer>(
-            OmrådeOgKode("K9", FeltType.OPPGAVE_STATUS.eksternId) to mockk(relaxed = true),
-            OmrådeOgKode("K9", FeltType.FAGSYSTEM.eksternId) to mockk(relaxed = true),
-            OmrådeOgKode("K9", FeltType.MOTTATT_DATO.eksternId) to mockk(relaxed = true),
+            OmrådeOgKode("K9", FeltType.OPPGAVE_STATUS.eksternId) to OppgavefeltMedMer(Oppgavefelt(
+                område = "K9",
+                kode = FeltType.OPPGAVE_STATUS.eksternId,
+                visningsnavn = FeltType.OPPGAVE_STATUS.name,
+                tolkes_som = FeltType.OPPGAVE_STATUS.tolkesSom,
+                kokriterie = true,
+                verdiforklaringerErUttømmende = false,
+                verdiforklaringer = emptyList()
+            ), null),
+            OmrådeOgKode("K9", FeltType.FAGSYSTEM.eksternId) to OppgavefeltMedMer(Oppgavefelt(
+                område = "K9",
+                kode = FeltType.FAGSYSTEM.eksternId,
+                visningsnavn = FeltType.FAGSYSTEM.name,
+                tolkes_som = FeltType.FAGSYSTEM.tolkesSom,
+                kokriterie = true,
+                verdiforklaringerErUttømmende = false,
+                verdiforklaringer = emptyList()
+            ), null),
+            OmrådeOgKode("K9", FeltType.MOTTATT_DATO.eksternId) to OppgavefeltMedMer(Oppgavefelt(
+                område = "K9",
+                kode = FeltType.MOTTATT_DATO.eksternId,
+                visningsnavn = FeltType.MOTTATT_DATO.name,
+                tolkes_som = FeltType.MOTTATT_DATO.tolkesSom,
+                kokriterie = true,
+                verdiforklaringerErUttømmende = false,
+                verdiforklaringer = emptyList()
+            ), null),
         )
 
         val sqlOppgaveQuery = OppgaveQueryToSqlMapper.toSqlOppgaveQuery(
@@ -52,9 +77,18 @@ class OppgaveQueryToSqlMapperTest {
                 byggFilterK9(FeltType.OPPGAVE_STATUS, FeltverdiOperator.IN, Oppgavestatus.AAPEN.kode, Oppgavestatus.VENTER.kode))
         )
 
+        val oppgavefelt = Oppgavefelt(
+            område = "K9",
+            kode = FeltType.OPPGAVE_STATUS.eksternId,
+            visningsnavn = FeltType.OPPGAVE_STATUS.name,
+            tolkes_som = FeltType.OPPGAVE_STATUS.tolkesSom,
+            kokriterie = true,
+            verdiforklaringerErUttømmende = false,
+            verdiforklaringer = emptyList()
+        )
         val sqlOppgaveQuery = OppgaveQueryToSqlMapper.toSqlOppgaveQuery(
             QueryRequest(oppgaveQuery),
-            mapOf(OmrådeOgKode("K9", FeltType.OPPGAVE_STATUS.eksternId) to mockk(relaxed = true)),
+            mapOf(OmrådeOgKode("K9", FeltType.OPPGAVE_STATUS.eksternId) to OppgavefeltMedMer(oppgavefelt, null)),
             LocalDateTime.now()
         )
 

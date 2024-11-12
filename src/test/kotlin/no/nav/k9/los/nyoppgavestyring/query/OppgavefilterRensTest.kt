@@ -9,14 +9,14 @@ import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.query.mapping.CombineOperator
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
-import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgavefilterUtvider
+import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgavefilterRens
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
-class OppgavefilterUtviderTest {
+class OppgavefilterRensTest {
 
     @Test
     fun `Oppgavefiltre med flere verdier av dato skal utvides med combiner for dato og verdier`() {
@@ -24,7 +24,7 @@ class OppgavefilterUtviderTest {
             FeltverdiOppgavefilter(null, FeltType.MOTTATT_DATO.eksternId, FeltverdiOperator.IN.name, listOf("2023-05-05", "2023-05-07"))
         )
 
-        val combineFilter = OppgavefilterUtvider.utvid(oppgavefiltre).first() as CombineOppgavefilter
+        val combineFilter = OppgavefilterRens.rens(oppgavefiltre).first() as CombineOppgavefilter
         assertThat(combineFilter.combineOperator).isEqualTo(CombineOperator.OR.kode)
 
         val (førsteDatoKombiner, sisteDatoKombiner) = combineFilter.filtere.map { it as CombineOppgavefilter }.apply { first() to last() }
@@ -43,7 +43,7 @@ class OppgavefilterUtviderTest {
             FeltverdiOppgavefilter(null, FeltType.MOTTATT_DATO.eksternId, FeltverdiOperator.NOT_EQUALS.name, listOf("2023-05-05", "2023-05-07"))
         )
 
-        val combineFilter = OppgavefilterUtvider.utvid(oppgavefiltre).first() as CombineOppgavefilter
+        val combineFilter = OppgavefilterRens.rens(oppgavefiltre).first() as CombineOppgavefilter
         assertThat(combineFilter.combineOperator).isEqualTo(CombineOperator.AND.kode)
 
         val (førsteDatoKombiner, sisteDatoKombiner) = combineFilter.filtere.map { it as CombineOppgavefilter }.apply { first() to last() }
@@ -62,7 +62,7 @@ class OppgavefilterUtviderTest {
             FeltverdiOppgavefilter(null, FeltType.MOTTATT_DATO.eksternId, EksternFeltverdiOperator.INTERVAL.name, listOf("2023-05-05", "2023-05-07"))
         )
 
-        val combineFilter = OppgavefilterUtvider.utvid(oppgavefiltre).first() as CombineOppgavefilter
+        val combineFilter = OppgavefilterRens.rens(oppgavefiltre).first() as CombineOppgavefilter
         assertThat(combineFilter.combineOperator).isEqualTo(CombineOperator.AND.kode)
 
         val (førsteDatoKombiner, sisteDatoKombiner) = combineFilter.filtere.map { it as FeltverdiOppgavefilter }.apply { first() to last() }

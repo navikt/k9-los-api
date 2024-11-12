@@ -1,7 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.query.db
 
-import no.nav.k9.los.nyoppgavestyring.kodeverk.EgenAnsatt
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.EgenAnsatt
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype.*
@@ -13,7 +13,6 @@ import no.nav.k9.los.spi.felter.SqlMedParams
 import no.nav.k9.los.spi.felter.TransientFeltutleder
 import no.nav.k9.los.spi.felter.WhereInput
 import org.postgresql.util.PGInterval
-import java.math.BigDecimal
 import java.math.BigInteger
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -182,10 +181,10 @@ class OppgaveQuerySqlBuilder(
                     INNER JOIN Oppgavefelt f ON (f.id = ov.oppgavefelt_id) 
                     INNER JOIN Feltdefinisjon fd ON (fd.id = f.feltdefinisjon_id) 
                     INNER JOIN Omrade fo ON (fo.id = fd.omrade_id)
-                    WHERE ov.oppgave_id = o.id
+                    WHERE CASE WHEN ov.oppgave_id = o.id
                       AND fo.ekstern_id = :feltOmrade$index
                       AND fd.ekstern_id = :feltkode$index
-                      AND 
+                      THEN 
             """.trimIndent()
 
         /*
@@ -194,9 +193,11 @@ class OppgaveQuerySqlBuilder(
          * typekonvertering gjør at spørringen feiler.
          */
         query += "${databaseverdiMedCasting(feltområde, feltkode)} ${operator.negasjonAv?.sql ?: operator.sql} (:feltverdi$index)"
+//        query += "ov.verdi ${operator.negasjonAv?.sql ?: operator.sql} (:feltverdi$index)"
         val queryVerdiParam = castTilRiktigKotlintype(feltområde, feltkode, feltverdi)
+//        val queryVerdiParam = feltverdi
 
-        query += ") "
+        query += " END) "
 
         queryParams.putAll(mapOf(
             "feltOmrade$index" to feltområde,
@@ -208,7 +209,7 @@ class OppgaveQuerySqlBuilder(
     private fun databaseverdiMedCasting(feltområde: String, feltkode: String): String {
         when (oppgavefelterKodeOgType[OmrådeOgKode(feltområde, feltkode)]) {
             TIMESTAMP -> {
-                return "CAST(ov.verdi AS timestamp)"
+                return "CAST(ov.verdi AS timestamp without time zone)"
             }
             DURATION -> {
                 return "CAST(ov.verdi AS interval)"

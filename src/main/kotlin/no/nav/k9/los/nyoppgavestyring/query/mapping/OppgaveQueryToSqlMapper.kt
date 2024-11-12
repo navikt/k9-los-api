@@ -64,24 +64,24 @@ object OppgaveQueryToSqlMapper {
     }
 
     private fun håndterFiltere(
-        query: OppgaveQuerySqlBuilder,
+        queryBuilder: OppgaveQuerySqlBuilder,
         filtere: List<Oppgavefilter>,
         combineOperator: CombineOperator
     ) {
-        for (filter in OppgavefilterUtvider.utvid(filtere)) {
+        for (filter in OppgavefilterRens.rens(filtere)) {
             when (filter) {
-                is FeltverdiOppgavefilter -> query.medFeltverdi(
+                is FeltverdiOppgavefilter -> queryBuilder.medFeltverdi(
                     combineOperator,
                     filter.område,
                     filter.kode,
                     FeltverdiOperator.valueOf(filter.operator),
-                    filter.verdi.first()
+                    filter.verdi.firstOrNull()
                 )
 
                 is CombineOppgavefilter -> {
                     val newCombineOperator = CombineOperator.valueOf(filter.combineOperator)
-                    query.medBlokk(combineOperator, newCombineOperator.defaultValue) {
-                        håndterFiltere(query, filter.filtere, newCombineOperator)
+                    queryBuilder.medBlokk(combineOperator, newCombineOperator.defaultValue) {
+                        håndterFiltere(queryBuilder, filter.filtere, newCombineOperator)
                     }
                 }
 
@@ -94,6 +94,7 @@ object OppgaveQueryToSqlMapper {
         for (orderBy in orderBys) {
             when (orderBy) {
                 is EnkelOrderFelt -> query.medEnkelOrder(orderBy.område, orderBy.kode, orderBy.økende)
+//                is NumeriskOrderFelt -> query.medNumeriskOrder(orderBy.område, orderBy.kode, orderBy.økende)
                 else -> throw IllegalStateException("Ukjent OrderFelt: " + orderBy::class.qualifiedName)
             }
         }

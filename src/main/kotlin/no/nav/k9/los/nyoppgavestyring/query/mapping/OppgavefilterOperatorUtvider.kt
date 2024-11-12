@@ -17,7 +17,6 @@ object OppgavefilterOperatorUtvider {
                     combineOperator = filter.combineOperator,
                     filter.filtere.utvidListe()
                 )
-                else -> throw IllegalStateException("Ukjent filter: " + filter::class.qualifiedName)
             }
         }
     }

@@ -44,7 +44,7 @@ class OppgaveTestDataBuilder(
         k9TilbakeTilLosAdapterTjeneste.setup()
     }
 
-    val oppgaveFeltverdier = mutableSetOf<OppgaveFeltverdi>()
+    val oppgaveFeltverdier = mutableMapOf<FeltType, OppgaveFeltverdi>()
 
     val oppgavetype = transactionManager.transaction { tx ->
         val oppgavetype = oppgavetypeRepo.hent(område, definisjonskilde, tx)
@@ -54,13 +54,11 @@ class OppgaveTestDataBuilder(
     }
 
     fun medOppgaveFeltVerdi(feltTypeKode: FeltType, verdi: String): OppgaveTestDataBuilder {
-        val oppgavefelter = oppgavetype.oppgavefelter
+        val oppgavefelt = oppgavetype.oppgavefelter
             .firstOrNull { it.feltDefinisjon.eksternId == feltTypeKode.eksternId }
             ?: throw IllegalStateException("Fant ikke ønsket feltdefinisjon i db")
 
-        oppgaveFeltverdier.add(
-            OppgaveFeltverdi(null, oppgavefelter, verdi)
-        )
+        oppgaveFeltverdier[feltTypeKode] = OppgaveFeltverdi(null, oppgavefelt, verdi)
         return this
     }
 
@@ -75,16 +73,13 @@ class OppgaveTestDataBuilder(
 
     fun lag(status: Oppgavestatus = Oppgavestatus.AAPEN, reservasjonsnøkkel: String = "", eksternVersjon: String? = null): OppgaveV3 {
         return OppgaveV3(
-            eksternId = oppgaveFeltverdier.firstOrNull {
-                it.oppgavefelt.feltDefinisjon.eksternId == FeltType.BEHANDLINGUUID.eksternId
-            }?.verdi
-                ?: UUID.randomUUID().toString(),
-            eksternVersjon = eksternVersjon?.let { it } ?: eksternVersjonTeller++.toString(),
+            eksternId = oppgaveFeltverdier[FeltType.BEHANDLINGUUID]?.verdi ?: UUID.randomUUID().toString(),
+            eksternVersjon = eksternVersjon ?: eksternVersjonTeller++.toString(),
             oppgavetype = oppgavetype,
             status = status,
             endretTidspunkt = LocalDateTime.now(),
             kildeområde = område.eksternId,
-            felter = oppgaveFeltverdier.toList(),
+            felter = oppgaveFeltverdier.values.toList(),
             reservasjonsnøkkel = reservasjonsnøkkel,
             aktiv = true
         )
