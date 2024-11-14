@@ -4,6 +4,7 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import io.mockk.mockk
 import no.nav.k9.los.nyoppgavestyring.FeltType
+import no.nav.k9.los.nyoppgavestyring.felter
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.db.OmrådeOgKode
@@ -30,36 +31,6 @@ class OppgaveQueryToSqlMapperTest {
                 ))
             ))
         ))
-
-        val felter = mapOf<OmrådeOgKode, OppgavefeltMedMer>(
-            OmrådeOgKode("K9", FeltType.OPPGAVE_STATUS.eksternId) to OppgavefeltMedMer(Oppgavefelt(
-                område = "K9",
-                kode = FeltType.OPPGAVE_STATUS.eksternId,
-                visningsnavn = FeltType.OPPGAVE_STATUS.name,
-                tolkes_som = FeltType.OPPGAVE_STATUS.tolkesSom,
-                kokriterie = true,
-                verdiforklaringerErUttømmende = false,
-                verdiforklaringer = emptyList()
-            ), null),
-            OmrådeOgKode("K9", FeltType.FAGSYSTEM.eksternId) to OppgavefeltMedMer(Oppgavefelt(
-                område = "K9",
-                kode = FeltType.FAGSYSTEM.eksternId,
-                visningsnavn = FeltType.FAGSYSTEM.name,
-                tolkes_som = FeltType.FAGSYSTEM.tolkesSom,
-                kokriterie = true,
-                verdiforklaringerErUttømmende = false,
-                verdiforklaringer = emptyList()
-            ), null),
-            OmrådeOgKode("K9", FeltType.MOTTATT_DATO.eksternId) to OppgavefeltMedMer(Oppgavefelt(
-                område = "K9",
-                kode = FeltType.MOTTATT_DATO.eksternId,
-                visningsnavn = FeltType.MOTTATT_DATO.name,
-                tolkes_som = FeltType.MOTTATT_DATO.tolkesSom,
-                kokriterie = true,
-                verdiforklaringerErUttømmende = false,
-                verdiforklaringer = emptyList()
-            ), null),
-        )
 
         val sqlOppgaveQuery = OppgaveQueryToSqlMapper.toSqlOppgaveQuery(
             QueryRequest(oppgaveQuery),

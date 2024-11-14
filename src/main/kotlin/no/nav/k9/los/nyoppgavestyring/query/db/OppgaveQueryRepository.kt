@@ -123,8 +123,8 @@ class OppgaveQueryRepository(
                         tolkes_som = row.string("tolkes_som"),
                         kokriterie = row.boolean("kokriterie"),
                         verdiforklaringerErUttømmende = kodeverk?.uttømmende ?: false,
-                        verdiforklaringer = kodeverk?.let { kodeverk ->
-                            kodeverk.verdier.map { kodeverkverdi ->
+                        verdiforklaringer = kodeverk?.let {
+                            it.verdier.map { kodeverkverdi ->
                                 Verdiforklaring(
                                     verdi = kodeverkverdi.verdi,
                                     visningsnavn = kodeverkverdi.visningsnavn,

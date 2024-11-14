@@ -133,7 +133,7 @@ internal class AkkumulertVentetidTest {
             ),
             visningsnavn = "Test",
             listetype = false,
-            tolkesSom = "Boolean",
+            tolkesSom = "boolean",
             visTilBruker = true,
             kokriterie = true,
             kodeverkreferanse = null,

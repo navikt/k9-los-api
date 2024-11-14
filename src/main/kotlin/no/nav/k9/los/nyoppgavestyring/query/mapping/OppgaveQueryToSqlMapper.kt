@@ -11,7 +11,7 @@ object OppgaveQueryToSqlMapper {
         val query = OppgaveQuerySqlBuilder(felter, traverserFiltereOgFinnOppgavestatusfilter(request), now)
         val combineOperator = CombineOperator.AND
 
-        håndterFiltere(query, request.oppgaveQuery.filtere, combineOperator)
+        håndterFiltere(query, felter, request.oppgaveQuery.filtere, combineOperator)
         håndterOrder(query, request.oppgaveQuery.order)
         if (request.fjernReserverte) {
             query.utenReservasjoner()
@@ -28,7 +28,7 @@ object OppgaveQueryToSqlMapper {
     ): OppgaveQuerySqlBuilder {
         val query = OppgaveQuerySqlBuilder(felter, traverserFiltereOgFinnOppgavestatusfilter(request), now)
         val combineOperator = CombineOperator.AND
-        håndterFiltere(query, request.oppgaveQuery.filtere, combineOperator)
+        håndterFiltere(query, felter, request.oppgaveQuery.filtere, combineOperator)
         if (request.fjernReserverte) { query.utenReservasjoner() }
         request.avgrensning?.let { query.medPaging(it.limit, it.offset) }
         query.medAntallSomResultat()
@@ -65,23 +65,24 @@ object OppgaveQueryToSqlMapper {
 
     private fun håndterFiltere(
         queryBuilder: OppgaveQuerySqlBuilder,
+        felter:  Map<OmrådeOgKode, OppgavefeltMedMer>,
         filtere: List<Oppgavefilter>,
         combineOperator: CombineOperator
     ) {
-        for (filter in OppgavefilterRens.rens(filtere)) {
+        for (filter in OppgavefilterRens.rens(felter, filtere)) {
             when (filter) {
                 is FeltverdiOppgavefilter -> queryBuilder.medFeltverdi(
                     combineOperator,
                     filter.område,
                     filter.kode,
                     FeltverdiOperator.valueOf(filter.operator),
-                    filter.verdi.firstOrNull()
+                    filter.verdi.first()
                 )
 
                 is CombineOppgavefilter -> {
                     val newCombineOperator = CombineOperator.valueOf(filter.combineOperator)
                     queryBuilder.medBlokk(combineOperator, newCombineOperator.defaultValue) {
-                        håndterFiltere(queryBuilder, filter.filtere, newCombineOperator)
+                        håndterFiltere(queryBuilder, felter, filter.filtere, newCombineOperator)
                     }
                 }
             }

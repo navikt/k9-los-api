@@ -14,6 +14,7 @@ import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
+import no.nav.k9.los.nyoppgavestyring.felter
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
@@ -27,6 +28,7 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgavefilterRens
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.junit.jupiter.api.Test
@@ -240,15 +242,17 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         ).isNotEmpty()
 
+        val request = QueryRequest(
+            OppgaveQuery(
+                listOf(
+                    byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.EQUALS, "2023-05-15"),
+                )
+            )
+        )
+        val renset = OppgavefilterRens.rens(felter, request.oppgaveQuery.filtere)
         assertThat(
             oppgaveQueryRepository.query(
-                QueryRequest(
-                    OppgaveQuery(
-                        listOf(
-                            byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.EQUALS, "2023-05-15"),
-                        )
-                    )
-                )
+                request
             )
         ).isNotEmpty()
 
