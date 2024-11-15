@@ -12,9 +12,6 @@ import no.nav.k9.los.spi.felter.OrderByInput
 import no.nav.k9.los.spi.felter.SqlMedParams
 import no.nav.k9.los.spi.felter.TransientFeltutleder
 import no.nav.k9.los.spi.felter.WhereInput
-import org.postgresql.util.PGInterval
-import java.math.BigInteger
-import java.time.LocalDate
 import java.time.LocalDateTime
 
 class OppgaveQuerySqlBuilder(
