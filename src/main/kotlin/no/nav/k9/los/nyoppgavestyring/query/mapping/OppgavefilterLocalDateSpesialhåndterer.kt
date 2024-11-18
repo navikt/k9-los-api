@@ -28,6 +28,16 @@ object OppgavefilterLocalDateSpesialhåndterer {
     }
 
     private fun mapFeltverdiFilter(filter: FeltverdiOppgavefilter): Oppgavefilter {
+        // TODO: Rydd opp og forenkle litt
+        if (filter.verdi.size > 1) {
+            return filter.copy(verdi = filter.verdi.map {
+                try {
+                    if (it is String) LocalDate.parse(it).atTime(LocalTime.MIN) else it
+                } catch (ex: DateTimeParseException) {
+                    it
+                }
+            })
+        }
         val verdi = filter.verdi[0]
         if (verdi !is String) {
             return filter

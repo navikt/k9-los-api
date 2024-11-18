@@ -34,7 +34,7 @@ data class WhereInput(
     val feltområde: String,
     val feltkode: String,
     val operator: FeltverdiOperator, // TODO: Egen eksponert enum her.
-    val feltverdi: Any?
+    val feltverdi: List<Any?>
 )
 
 data class OrderByInput(

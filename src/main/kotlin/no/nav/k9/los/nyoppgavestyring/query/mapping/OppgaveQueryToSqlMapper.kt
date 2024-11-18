@@ -72,11 +72,11 @@ object OppgaveQueryToSqlMapper {
         for (filter in filtere) {
             when (filter) {
                 is FeltverdiOppgavefilter -> queryBuilder.medFeltverdi(
-                    combineOperator,
-                    filter.område,
-                    filter.kode,
-                    FeltverdiOperator.valueOf(filter.operator),
-                    filter.verdi.first()
+                    combineOperator = combineOperator,
+                    feltområde = filter.område,
+                    feltkode = filter.kode,
+                    operator = FeltverdiOperator.valueOf(filter.operator),
+                    feltverdiListe = filter.verdi
                 )
 
                 is CombineOppgavefilter -> {

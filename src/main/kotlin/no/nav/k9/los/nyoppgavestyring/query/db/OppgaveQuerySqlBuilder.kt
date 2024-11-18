@@ -74,10 +74,10 @@ class OppgaveQuerySqlBuilder(
         return felter[OmrådeOgKode(feltområde, feltkode)]?.transientFeltutleder
     }
 
-    fun medFeltverdi(combineOperator: CombineOperator, feltområde: String?, feltkode: String, operator: FeltverdiOperator, feltverdi: Any?) {
+    fun medFeltverdi(combineOperator: CombineOperator, feltområde: String?, feltkode: String, operator: FeltverdiOperator, feltverdiListe: List<Any?>) {
         hentTransientFeltutleder(feltområde, feltkode)?.let {
             val sqlMedParams = sikreUnikeParams(
-                it.where(WhereInput(now, feltområde!!, feltkode, operator, feltverdi))
+                it.where(WhereInput(now, feltområde!!, feltkode, operator, feltverdiListe))
             )
             query += "${combineOperator.sql} " + sqlMedParams.query
             queryParams.putAll(sqlMedParams.queryParams)
@@ -85,66 +85,74 @@ class OppgaveQuerySqlBuilder(
         }
 
         if (feltområde != null) {
-            if (feltverdi == null) {
-                utenOppgavefelt(combineOperator, feltområde, feltkode, operator)
-            } else {
-                medOppgavefelt(combineOperator, feltområde, feltkode, operator, feltverdi)
-            }
+//            if (feltverdi == null) {
+//                utenOppgavefelt(combineOperator, feltområde, feltkode, operator)
+//            } else {
+                medOppgavefelt(
+                    combineOperator = combineOperator,
+                    feltområde = feltområde,
+                    feltkode = feltkode,
+                    operator = operator,
+                    feltverdi = feltverdiListe
+                )
+//            }
             return
         }
 
-        val index = queryParams.size + orderByParams.size
-        when (feltkode) {
-            "oppgavestatus" -> {
-                query += "${combineOperator.sql} o.status ${operator.sql} (cast(:oppgavestatus$index as oppgavestatus)) "
-                queryParams["oppgavestatus$index"] = feltverdi
-            }
+        feltverdiListe.forEach { feltverdi ->
+            val index = queryParams.size + orderByParams.size
+            when (feltkode) {
+                "oppgavestatus" -> {
+                    query += "${combineOperator.sql} o.status ${operator.sql} (cast(:oppgavestatus$index as oppgavestatus)) "
+                    queryParams["oppgavestatus$index"] = feltverdi
+                }
 
-            "kildeområde" -> {
-                query += "${combineOperator.sql} o.kildeomrade ${operator.sql} (:kildeomrade$index) "
-                queryParams["kildeomrade$index"] = feltverdi
-            }
+                "kildeområde" -> {
+                    query += "${combineOperator.sql} o.kildeomrade ${operator.sql} (:kildeomrade$index) "
+                    queryParams["kildeomrade$index"] = feltverdi
+                }
 
-            "oppgavetype" -> {
-                query += "${combineOperator.sql} ot.ekstern_id ${operator.sql} (:oppgavetype$index) "
-                queryParams["oppgavetype$index"] = feltverdi
-            }
+                "oppgavetype" -> {
+                    query += "${combineOperator.sql} ot.ekstern_id ${operator.sql} (:oppgavetype$index) "
+                    queryParams["oppgavetype$index"] = feltverdi
+                }
 
-            "oppgaveområde" -> {
-                query += "${combineOperator.sql} oppgave_omrade.ekstern_id ${operator.sql} (:oppgave_omrade$index) "
-                queryParams["oppgave_omrade$index"] = feltverdi
-            }
+                "oppgaveområde" -> {
+                    query += "${combineOperator.sql} oppgave_omrade.ekstern_id ${operator.sql} (:oppgave_omrade$index) "
+                    queryParams["oppgave_omrade$index"] = feltverdi
+                }
 
-            //deprecated - for removal - bruk "personbeskyttelse" istedet
-            "beskyttelse" -> {
-                when (feltverdi) {
-                    BeskyttelseType.KODE7.kode -> query += "${combineOperator.sql} opc.kode7 is not false "
-                    else -> {
-                        query += "${combineOperator.sql} opc.kode6 is not true AND opc.kode7 is not true "
+                //deprecated - for removal - bruk "personbeskyttelse" istedet
+                "beskyttelse" -> {
+                    when (feltverdi) {
+                        BeskyttelseType.KODE7.kode -> query += "${combineOperator.sql} opc.kode7 is not false "
+                        else -> {
+                            query += "${combineOperator.sql} opc.kode6 is not true AND opc.kode7 is not true "
+                        }
                     }
                 }
-            }
 
-            //deprecated - for removal - bruk "personbeskyttelse" istedet
-            "egenAnsatt" -> {
-                query += when (feltverdi) {
-                    EgenAnsatt.JA.kode -> "${combineOperator.sql} opc.egen_ansatt is not false "
-                    EgenAnsatt.NEI.kode -> "${combineOperator.sql} opc.egen_ansatt is not true "
-                    else -> throw IllegalStateException("Ukjent feltkode: $feltkode")
+                //deprecated - for removal - bruk "personbeskyttelse" istedet
+                "egenAnsatt" -> {
+                    query += when (feltverdi) {
+                        EgenAnsatt.JA.kode -> "${combineOperator.sql} opc.egen_ansatt is not false "
+                        EgenAnsatt.NEI.kode -> "${combineOperator.sql} opc.egen_ansatt is not true "
+                        else -> throw IllegalStateException("Ukjent feltkode: $feltkode")
+                    }
                 }
-            }
 
-            "personbeskyttelse" -> {
-                query += when (feltverdi) {
-                    //Dette er ikke tilgangskontroll, men tilordning av oppgaver til køer. Tilgangskontroll skjer når saksbehandlere plukker/ser på hva som er i køene.
-                    //Negeringer i uttrykkene er for å slippe gjennom treff mot null (skjer om PEP_CACHE ikke er populert/er utdatert).
-                    PersonBeskyttelseType.KODE6.kode -> "${combineOperator.sql} opc.kode6 is not false "
-                    PersonBeskyttelseType.UTEN_KODE6.kode -> "${combineOperator.sql} opc.kode6 is not true "
-                    PersonBeskyttelseType.KODE7_ELLER_EGEN_ANSATT.kode -> "${combineOperator.sql} (opc.kode6 is not true AND (opc.kode7 is not false OR opc.egen_ansatt is not false)) "
-                    PersonBeskyttelseType.UGRADERT.kode -> "${combineOperator.sql} (opc.kode6 is not true AND opc.kode7 is not true AND opc.egen_ansatt is not true )"
-                    else -> throw IllegalStateException("Ukjent feltkode: $feltkode")
+                "personbeskyttelse" -> {
+                    query += when (feltverdi) {
+                        //Dette er ikke tilgangskontroll, men tilordning av oppgaver til køer. Tilgangskontroll skjer når saksbehandlere plukker/ser på hva som er i køene.
+                        //Negeringer i uttrykkene er for å slippe gjennom treff mot null (skjer om PEP_CACHE ikke er populert/er utdatert).
+                        PersonBeskyttelseType.KODE6.kode -> "${combineOperator.sql} opc.kode6 is not false "
+                        PersonBeskyttelseType.UTEN_KODE6.kode -> "${combineOperator.sql} opc.kode6 is not true "
+                        PersonBeskyttelseType.KODE7_ELLER_EGEN_ANSATT.kode -> "${combineOperator.sql} (opc.kode6 is not true AND (opc.kode7 is not false OR opc.egen_ansatt is not false)) "
+                        PersonBeskyttelseType.UGRADERT.kode -> "${combineOperator.sql} (opc.kode6 is not true AND opc.kode7 is not true AND opc.egen_ansatt is not true )"
+                        else -> throw IllegalStateException("Ukjent feltkode: $feltkode")
+                    }
                 }
-            }
+        }
         }
     }
 
@@ -168,7 +176,7 @@ class OppgaveQuerySqlBuilder(
         query += ") "
     }
 
-    private fun medOppgavefelt(combineOperator: CombineOperator, feltområde: String, feltkode: String, operator: FeltverdiOperator, feltverdi: Any) {
+    private fun medOppgavefelt(combineOperator: CombineOperator, feltområde: String, feltkode: String, operator: FeltverdiOperator, feltverdi: List<Any?>) {
         val index = queryParams.size + orderByParams.size
 
         query += """
@@ -189,13 +197,18 @@ class OppgaveQuerySqlBuilder(
          * typekonverteringen blir gjort ved opprettelse av spørring og at feilende
          * typekonvertering gjør at spørringen feiler.
          */
-        query += "${databaseverdiMedCasting(feltområde, feltkode)} ${operator.negasjonAv?.sql ?: operator.sql} (:feltverdi$index) END) "
 
-        queryParams.putAll(mapOf(
-            "feltOmrade$index" to feltområde,
-            "feltkode$index" to feltkode,
-            "feltverdi$index" to feltverdi
-        ))
+        val feltverdiParametre = feltverdi.mapIndexed { i, verdi -> "feltverdi" + (index + i) to verdi }
+
+        // inneholder f.eks. (:feltverdi0, :feltverdi1, :feltverdi2)
+        val verdiParametre = feltverdiParametre.joinToString(
+            ", "
+        ) { (parameter) -> ":$parameter" }
+        query += "${databaseverdiMedCasting(feltområde, feltkode)} ${operator.negasjonAv?.sql ?: operator.sql} ($verdiParametre) END) "
+
+        queryParams["feltOmrade$index"] = feltområde
+        queryParams["feltkode$index"] = feltkode
+        queryParams.putAll(feltverdiParametre)
     }
 
     private fun databaseverdiMedCasting(feltområde: String, feltkode: String): String {

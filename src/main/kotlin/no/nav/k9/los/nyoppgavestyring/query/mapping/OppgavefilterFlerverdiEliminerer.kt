@@ -4,7 +4,7 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
 
-object OppgavefilterListeEliminerer {
+object OppgavefilterFlerverdiEliminerer {
     fun eliminer(oppgavefiltere: List<Oppgavefilter>): List<Oppgavefilter> {
         return oppgavefiltere.map { filter ->
             when (filter) {
@@ -18,27 +18,18 @@ object OppgavefilterListeEliminerer {
     }
 
     private fun map(filter: FeltverdiOppgavefilter): Oppgavefilter {
-        if (filter.verdi.size <= 1) {
+        if (filter.verdi.size <= 1 || filter.operator == EksternFeltverdiOperator.IN.name || filter.operator == EksternFeltverdiOperator.NOT_IN.name) {
             return filter
         }
 
-        val operator = EksternFeltverdiOperator.valueOf(filter.operator)
-        if (operator == EksternFeltverdiOperator.INTERVAL) {
+        if (filter.operator == EksternFeltverdiOperator.INTERVAL.name) {
             return lagInterval(filter)
         }
 
-        val (combineOperator, feltverdiOperator) = when (operator) {
-            EksternFeltverdiOperator.IN -> (CombineOperator.OR to FeltverdiOperator.EQUALS)
-            EksternFeltverdiOperator.NOT_IN, EksternFeltverdiOperator.NOT_EQUALS -> (CombineOperator.AND to FeltverdiOperator.NOT_EQUALS)
-            EksternFeltverdiOperator.EQUALS -> (CombineOperator.AND to FeltverdiOperator.EQUALS)
-            else -> throw IllegalStateException("Ukjent feltverdioperator for mengder")
-        }
-
         return CombineOppgavefilter(
-            combineOperator = combineOperator.kode,
+            combineOperator = CombineOperator.AND.name,
             filtere = filter.verdi.map { verdi ->
                 filter.copy(
-                    operator = feltverdiOperator.name,
                     verdi = listOf(verdi)
                 )
             }

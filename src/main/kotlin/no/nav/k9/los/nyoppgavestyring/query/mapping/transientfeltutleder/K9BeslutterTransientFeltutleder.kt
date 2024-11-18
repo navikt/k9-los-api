@@ -14,7 +14,7 @@ class K9BeslutterTransientFeltutleder: TransientFeltutleder{
     }
 
     override fun where(input: WhereInput): SqlMedParams {
-        val prefix: String = if (input.feltverdi as Boolean) "" else "NOT"
+        val prefix: String = if (input.feltverdi[0] as Boolean) "" else "NOT"
         val query = """
                 $prefix EXISTS (
                     SELECT 1

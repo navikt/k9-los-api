@@ -110,7 +110,7 @@ class OppgaveQueryToSqlMapperTest {
 
         val sql = byggSql(sqlBuilder)
         assertThat(sqlBuilder.getQuery()).contains(sqlBuilder.getParams().keys)
-        assertThat(sqlBuilder.getParams()).hasSize(8 * 3) // totalt 8 betingelser, hver av de har parameter for feltkode, område og verdi
+        assertThat(sqlBuilder.getParams()).hasSize(16) // totalt x betingelser, hver av de har parameter for feltkode, område og verdi
     }
 
     private fun byggSql(sqlBuilder: OppgaveQuerySqlBuilder): String {
