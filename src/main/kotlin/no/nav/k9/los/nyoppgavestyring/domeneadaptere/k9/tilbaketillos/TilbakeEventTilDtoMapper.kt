@@ -121,8 +121,12 @@ class TilbakeEventTilDtoMapper {
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "registrertDato",
-                //TODO feltet heter *dato, avrunde til dato?
                 verdi = forrigeOppgave?.hentVerdi("registrertDato")
+                    ?: event.opprettetBehandling.truncatedTo(ChronoUnit.SECONDS).toString()
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "mottattDato",
+                verdi = forrigeOppgave?.hentVerdi("mottattDato")
                     ?: event.opprettetBehandling.truncatedTo(ChronoUnit.SECONDS).toString()
             ),
             OppgaveFeltverdiDto(
