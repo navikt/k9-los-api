@@ -105,6 +105,26 @@ fun Route.OppgaveKoApis() {
         }
     }
 
+    get("/andre-saksbehandleres-koer") {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.erOppgaveStyrer()) {
+                call.respond(
+                    oppgaveKoTjeneste.hentKøerForSaksbehandler(
+                        call.parameters["id"]?.toLong()!!,
+                        pepClient.harTilgangTilKode6()
+                    ).map {
+                        OppgaveKoIdOgTittel(
+                            id = it.id,
+                            tittel = it.tittel
+                        )
+                    }
+                )
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
     get("/{id}/oppgaver") {
         requestContextService.withRequestContext(call) {
             if (pepClient.harTilgangTilReserveringAvOppgaver()) {
