@@ -20,5 +20,8 @@ spec:
       application: k9-sak
       access: write
     - team: k9saksbehandling
+      application: ung-sak
+      access: write
+    - team: k9saksbehandling
       application: k9-los-api
       access: read

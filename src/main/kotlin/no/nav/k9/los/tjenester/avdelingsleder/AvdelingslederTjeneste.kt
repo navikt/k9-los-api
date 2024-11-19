@@ -6,7 +6,6 @@ import no.nav.k9.los.domene.repository.OppgaveKøRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
-import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.*
@@ -33,9 +32,6 @@ class AvdelingslederTjeneste(
     }
 
     suspend fun hentOppgaveKøer(): List<OppgavekøDto> {
-        if (!erOppgaveStyrer()) {
-            return emptyList()
-        }
         return oppgaveKøRepository.hent().map {
             lagOppgaveKøDto(it)
         }.sortedBy { it.navn }
@@ -63,13 +59,7 @@ class AvdelingslederTjeneste(
         kriterier = oppgaveKø.lagKriterier()
     )
 
-    private suspend fun erOppgaveStyrer() = (pepClient.erOppgaveStyrer())
-
     suspend fun opprettOppgaveKø(): IdDto {
-        if (!erOppgaveStyrer()) {
-            return IdDto(UUID.randomUUID().toString())
-        }
-
         val uuid = UUID.randomUUID()
         oppgaveKøRepository.lagre(uuid) {
             OppgaveKø(
@@ -91,12 +81,10 @@ class AvdelingslederTjeneste(
     }
 
     suspend fun slettOppgavekø(uuid: UUID) {
-        if (!erOppgaveStyrer()) {
-            return
-        }
         oppgaveKøRepository.slett(uuid)
     }
 
+    // TODO: slett når frontend har begynt å bruke nytt endepunkt
     suspend fun søkSaksbehandler(epostDto: EpostDto): Saksbehandler {
         var saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(epostDto.epost)
         if (saksbehandler == null) {
@@ -106,6 +94,15 @@ class AvdelingslederTjeneste(
             saksbehandlerRepository.addSaksbehandler(saksbehandler)
         }
         return saksbehandler
+    }
+
+    suspend fun leggTilSaksbehandler(epost: String) {
+        if (saksbehandlerRepository.finnSaksbehandlerMedEpost(epost) != null) {
+            throw IllegalStateException("Saksbehandler finnes fra før")
+        }
+        // lagrer med tomme verdier, disse blir populert etter at saksbehandleren har logget seg inn
+        val saksbehandler = Saksbehandler(null, null, null, epost, mutableSetOf(), null)
+        saksbehandlerRepository.addSaksbehandler(saksbehandler)
     }
 
     suspend fun slettSaksbehandler(
@@ -221,8 +218,7 @@ class AvdelingslederTjeneste(
     }
 
     suspend fun endreKriterium(kriteriumDto: AndreKriterierDto) {
-        oppgaveKøRepository.lagre(UUID.fromString(kriteriumDto.id))
-        { oppgaveKø ->
+        oppgaveKøRepository.lagre(UUID.fromString(kriteriumDto.id)) { oppgaveKø ->
             if (kriteriumDto.checked) {
                 oppgaveKø!!.filtreringAndreKriterierType = oppgaveKø.filtreringAndreKriterierType.filter {
                     it.andreKriterierType != kriteriumDto.andreKriterierType

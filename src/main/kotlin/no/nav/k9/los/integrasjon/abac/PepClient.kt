@@ -81,7 +81,7 @@ class PepClient(
         return evaluate(requestBuilder)
     }
 
-    override suspend fun harTilgangTilReservingAvOppgaver(): Boolean {
+    override suspend fun harTilgangTilReserveringAvOppgaver(): Boolean {
         val requestBuilder = XacmlRequestBuilder()
             .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
             .addResourceAttribute(RESOURCE_TYPE, TILGANG_SAK)

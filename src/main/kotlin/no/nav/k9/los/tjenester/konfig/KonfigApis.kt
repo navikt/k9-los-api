@@ -1,7 +1,6 @@
 package no.nav.k9.los.tjenester.konfig
 
 import io.ktor.server.application.*
-import io.ktor.server.locations.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.Configuration
@@ -18,28 +17,19 @@ fun Route.KonfigApis() {
     val k9punsjUrlDev = "https://k9-punsj-frontend.intern.dev.nav.no/journalpost"
     val k9punsjUrlProd = "https://k9-punsj-frontend.intern.nav.no/journalpost"
 
-    @Location("/k9-sak-url")
-    class hentK9SakUrl
-
-    get { _: hentK9SakUrl ->
+    get("/k9-sak-url") {
         if (KoinProfile.PREPROD == configuration.koinProfile()) call.respond(Konfig(k9sakUrlDev)) else call.respond(
             Konfig(k9sakUrlProd)
         )
     }
 
-    @Location("/k9-punsj-url")
-    class hentK9PunsjUrl
-
-    get { _: hentK9PunsjUrl ->
+    get("/k9-punsj-url") {
         if (KoinProfile.PREPROD == configuration.koinProfile()) call.respond(Konfig(k9punsjUrlDev)) else call.respond(
             Konfig(k9punsjUrlProd)
         )
     }
 
-    @Location("/refresh-url")
-    class hentSseUrl
-
-    get { _: hentSseUrl ->
+    get("/refresh-url") {
         when {
             configuration.koinProfile() == KoinProfile.PROD -> {
                 call.respond(Konfig(refreshUrlProd))

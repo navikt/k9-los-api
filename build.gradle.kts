@@ -1,27 +1,27 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 val mainClass = "no.nav.k9.los.K9LosKt"
-val hikariVersion = "6.0.0"
-val flywayVersion = "10.19.0"
+val hikariVersion = "6.1.0"
+val flywayVersion = "10.21.0"
 val vaultJdbcVersion = "1.3.10"
 val koinVersion = "4.0.0"
 val kotliqueryVersion = "1.9.0"
-val k9SakVersion = "5.0.1"
+val k9SakVersion = "5.1.1"
 val k9KlageVersion = "0.4.5"
 val fuelVersion = "2.3.1"
 val jacksonVersion = "2.17.2"
 val commonsTextVersion = "1.12.0"
 
-val dusseldorfKtorVersion = "5.0.9"
+val dusseldorfKtorVersion = "5.0.10"
 val ktorVersion = "2.3.12"
-val kafkaVersion = "3.8.0"
+val kafkaVersion = "3.9.0"
 
 val navTilgangskontroll = "3.2024.01.24_10.14-f70bae69bd65"
 
 // Test Dependencies
-val testContainers = "1.20.2"
+val testContainers = "1.20.3"
 val jsonassertVersion = "1.5.3"
-val jupiterVersion = "5.11.2"
+val jupiterVersion = "5.11.3"
 val assertkVersion = "0.28.1"
 val mockkVersion = "1.13.13"
 
@@ -48,7 +48,6 @@ dependencies {
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
     implementation("io.ktor:ktor-server-cors:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
-    implementation("io.ktor:ktor-server-locations-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-html-builder-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-websockets-jvm:$ktorVersion")
     implementation("io.ktor:ktor-client-auth-jvm:$ktorVersion")
@@ -74,9 +73,9 @@ dependencies {
     implementation("no.nav.k9.statistikk:kontrakter:2.0_20220411110858_dc06dd1")
 
     // opentelemetry
-    implementation("io.opentelemetry:opentelemetry-api:1.43.0")
-    implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.43.0")
-    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.8.0")
+    implementation("io.opentelemetry:opentelemetry-api:1.44.1")
+    implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.44.1")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.10.0")
 
     // Div
     implementation(enforcedPlatform( "com.fasterxml.jackson:jackson-bom:$jacksonVersion"))

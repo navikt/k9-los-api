@@ -507,7 +507,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
         every { config.koinProfile() } returns KoinProfile.LOCAL
         coEvery { pepClient.harBasisTilgang() } returns true
         coEvery { pepClient.harTilgangTilOppgave(any()) } returns true
-        coEvery { pepClient.harTilgangTilReservingAvOppgaver() } returns true
+        coEvery { pepClient.harTilgangTilReserveringAvOppgaver() } returns true
         coEvery { pdlService.person(any()) } returns PersonPdlResponse(false, PersonPdl(
             data = PersonPdl.Data(
                 hentPerson = PersonPdl.Data.HentPerson(

@@ -4,14 +4,13 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.post
+import io.ktor.server.routing.*
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.IllegalDeleteException
 import org.koin.ktor.ext.inject
-import org.postgresql.util.PSQLException
 
+// Må legge til tilgangskontroll dersom disse endepunktene aktiveres
 internal fun Route.FeltdefinisjonApi() {
     val requestContextService by inject<RequestContextService>()
     val feltdefinisjonTjeneste by inject<FeltdefinisjonTjeneste>()

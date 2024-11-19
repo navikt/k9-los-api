@@ -3,7 +3,6 @@ package no.nav.k9.los.tjenester.innsikt
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.html.*
-import io.ktor.server.locations.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.runBlocking
@@ -31,7 +30,7 @@ import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.*
 
-fun Route.innsiktGrensesnitt() {
+fun Route.InnsiktApis() {
     //TODO finn ut hvordan bruke i dev/prod
     val oppgaveRepository by inject<OppgaveRepository>()
     val oppgaveRepositoryV2 by inject<OppgaveRepositoryV2>()
@@ -52,8 +51,7 @@ fun Route.innsiktGrensesnitt() {
 
     val LOGGER = LoggerFactory.getLogger(StatistikkRepository::class.java)
 
-    class main
-    get { _: main ->
+    get {
         call.respondHtml {
             head {
                 title { +"Innsikt i k9-los" }
@@ -222,9 +220,7 @@ fun Route.innsiktGrensesnitt() {
 
     var køer = listOf<OppgaveKø>()
 
-    @Location("/db")
-    class db
-    get { _: db ->
+    get("/db") {
         if (køer.isEmpty()) {
             val hentAktiveOppgaver = oppgaveRepository.hentAktiveUreserverteOppgaver()
 

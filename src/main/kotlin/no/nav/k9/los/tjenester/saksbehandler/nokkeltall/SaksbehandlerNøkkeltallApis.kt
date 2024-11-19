@@ -1,7 +1,6 @@
 package no.nav.k9.los.tjenester.saksbehandler.nokkeltall
 
 import io.ktor.server.application.*
-import io.ktor.server.locations.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.integrasjon.rest.RequestContextService
@@ -12,10 +11,7 @@ fun Route.SaksbehandlerNøkkeltallApis() {
     val requestContextService by inject<RequestContextService>()
     val oppgaveTjeneste by inject<OppgaveTjeneste>()
 
-    @Location("/nokkeltall/nye-og-ferdigstilte-oppgaver")
-    class getNyeOgFerdigstilteOppgaver
-
-    get { _: getNyeOgFerdigstilteOppgaver ->
+    get("/nokkeltall/nye-og-ferdigstilte-oppgaver") {
         requestContextService.withRequestContext(call) {
             call.respond(oppgaveTjeneste.hentNyeOgFerdigstilteOppgaver())
         }
