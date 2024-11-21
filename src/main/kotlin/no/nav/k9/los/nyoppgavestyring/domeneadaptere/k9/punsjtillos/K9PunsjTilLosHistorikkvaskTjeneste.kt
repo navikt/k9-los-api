@@ -33,12 +33,6 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
                 isDaemon = true,
                 name = TRÅDNAVN
             ) {
-
-                if (LocalDateTime.now().isBefore(LocalDateTime.of(2024,7,17,16,30))) {
-                    eventRepository.nullstillHistorikkvask()
-                    log.info("Nullstilt historikkvaskmarkering k9-punsj")
-                }
-
                 log.info("Starter avspilling av historiske BehandlingProsessEventer")
 
                 val tidKjøringStartet = System.currentTimeMillis()
@@ -57,7 +51,7 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
                     if (skalPauses()) {
                         HistorikkvaskMetrikker.observe(TRÅDNAVN, t0)
                         log.info("Vaskejobb satt på pause")
-                        Thread.sleep(Duration.ofMinutes(5))
+                        Thread.sleep(Duration.ofMinutes(1))
                         t0 = System.nanoTime()
                         continue
                     }
