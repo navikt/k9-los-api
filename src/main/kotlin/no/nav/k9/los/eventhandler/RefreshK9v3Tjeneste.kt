@@ -88,7 +88,8 @@ class RefreshK9v3Tjeneste(
     @WithSpan
     fun behandlingerTilOppfriskning(tx: TransactionalSession, antallPrKø: Int) : Set<UUID> {
         return DetaljerMetrikker.time("RefreshK9V3", "refreshForKøer", "alle") {
-            val alleKøer = oppgaveKoRepository.hentListe(false) + oppgaveKoRepository.hentListe(true)
+            val alleKøer = oppgaveKoRepository.hentListe(medSkjermet = false, medSaksbehandlere = false) +
+                    oppgaveKoRepository.hentListe(medSkjermet = true, medSaksbehandlere = false)
             val behandlinger = behandlingerTilOppfriskning(tx, alleKøer, antallPrKø)
             log.info("Hentet ${behandlinger.size} oppgaver fra ${alleKøer.size} køer")
             behandlinger

@@ -105,6 +105,26 @@ fun Route.OppgaveKoApis() {
         }
     }
 
+    get("/andre-saksbehandleres-koer") {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.erOppgaveStyrer()) {
+                call.respond(
+                    oppgaveKoTjeneste.hentKøerForSaksbehandler(
+                        call.parameters["id"]?.toLong()!!,
+                        pepClient.harTilgangTilKode6()
+                    ).map {
+                        OppgaveKoIdOgTittel(
+                            id = it.id,
+                            tittel = it.tittel
+                        )
+                    }
+                )
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
     get("/{id}/oppgaver") {
         requestContextService.withRequestContext(call) {
             if (pepClient.harTilgangTilReserveringAvOppgaver()) {
@@ -154,6 +174,24 @@ fun Route.OppgaveKoApis() {
                     )
                 }
                 call.respond(AntallOppgaverOgReserverte(antallUtenReserverte, antallMedReserverte))
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
+    get("/{id}/antall-uten-reserverte") {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.harBasisTilgang()) {
+                val oppgavekøId = call.parameters["id"]!!
+
+                val antallUtenReserverte = OpentelemetrySpanUtil.span("OppgaveKoTjeneste.hentAntallOppgaverForKø") {
+                    oppgaveKoTjeneste.hentAntallOppgaverForKø(
+                        oppgavekøId.toLong(),
+                        true
+                    )
+                }
+                call.respond(AntallOppgaver(antallUtenReserverte))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

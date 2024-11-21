@@ -38,9 +38,9 @@ class K9TilbakeTilLosHistorikkvaskTjeneste(
                 name = TRÅDNAVN
             ) {
 
-                Thread.sleep(2.toDuration(DurationUnit.MINUTES).inWholeMilliseconds)
+                Thread.sleep(1.toDuration(DurationUnit.MINUTES).inWholeMilliseconds)
 
-                val dispatcher = newFixedThreadPoolContext(5, "Historikkvask k9tilbake")
+                val dispatcher = newFixedThreadPoolContext(1, "Historikkvask k9tilbake")
 
                 log.info("Starter avspilling av historiske BehandlingProsessEventer")
 
@@ -141,16 +141,16 @@ class K9TilbakeTilLosHistorikkvaskTjeneste(
 
         val behandlingProsessEventer = DetaljerMetrikker.time("k9tilbakeHistorikkvask", "hentEventer") { behandlingProsessEventTilbakeRepository.hentMedLås(tx, uuid).eventer }
         val høyesteInternVersjon = DetaljerMetrikker.time("k9tilbakeHistorikkvask", "hentHøyesteInternVersjon") {
-            oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9tilbake", "K9", tx)!!
+            oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9tilbake", "K9", tx)
         }
         var eventNrForBehandling = 0L
         var oppgaveV3 : OppgaveV3? = null
         for (event in behandlingProsessEventer) {
-            if (eventNrForBehandling > høyesteInternVersjon) {
+            if (høyesteInternVersjon != null && eventNrForBehandling > høyesteInternVersjon) {
                 log.info("Avbryter historikkvask for ${event.eksternId} ved eventTid ${event.eventTid}. Forventer at håndteres av vanlig adaptertjeneste.")
                 break //Historikkvasken har funnet eventer som ennå ikke er lastet inn med normalflyt. Dirty eventer skal håndteres av vanlig adaptertjeneste
             }
-            var oppgaveDto = TilbakeEventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+            val oppgaveDto = TilbakeEventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
 
             oppgaveV3 = DetaljerMetrikker.time("k9tilbakeHistorikkvask", "utledEksisterendeOppgaveversjon") { oppgaveV3Tjeneste.utledEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, tx) }
             DetaljerMetrikker.time("k9tilbakeHistorikkvask", "oppdaterEksisterendeOppgaveversjon") { oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveV3, eventNrForBehandling, tx) }

@@ -5,7 +5,7 @@ Oppgavestyrere definerer kriterier som ligger til grunn for køer som fordeler o
 
 # Bygge og kjøre lokalt
 
-1. Start k9-verdikjede. Er avhengig av vtp, postgresql og nav-auth-mock.
+1. Start k9-verdikjede. Er avhengig av vtp, postgresql og azure-mock.
 
 
 

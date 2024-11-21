@@ -37,6 +37,11 @@
           "påkrevd": false
         },
         {
+          "id": "mottattDato",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
           "id": "registrertDato",
           "visPåOppgave": true,
           "påkrevd": false
