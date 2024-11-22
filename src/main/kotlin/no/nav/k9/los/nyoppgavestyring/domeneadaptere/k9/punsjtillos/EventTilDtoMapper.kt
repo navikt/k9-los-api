@@ -61,12 +61,10 @@ class EventTilDtoMapper {
                         verdi = it,
                     )
                 },
-                event.type?.let {
-                    OppgaveFeltverdiDto(
-                        nøkkel = "behandlingTypekode",
-                        verdi = BehandlingType.fraKode(it).kode,
-                    )
-                },
+                OppgaveFeltverdiDto(
+                    nøkkel = "behandlingTypekode",
+                    verdi = (event.type?.let { BehandlingType.fraKode(it) } ?: BehandlingType.UKJENT).kode,
+                ),
                 OppgaveFeltverdiDto(
                     nøkkel = "ytelsestype",
                     verdi = event.ytelse,

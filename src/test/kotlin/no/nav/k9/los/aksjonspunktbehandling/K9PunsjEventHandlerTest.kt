@@ -76,19 +76,21 @@ class K9PunsjEventHandlerTest : AbstractK9LosIntegrationTest() {
         }
 
         val felter = oppgaveV3.felter.sortedBy { it.eksternId }
-        assertThat(felter).hasSize(6)
+        assertThat(felter).hasSize(7)
         assertThat(felter[0].eksternId).isEqualTo("aktorId")
         assertThat(felter[0].verdi).isEqualTo(aktørId)
-        assertThat(felter[1].eksternId).isEqualTo("journalfort")
-        assertThat(felter[1].verdi).isEqualTo("true")
-        assertThat(felter[2].eksternId).isEqualTo("journalfortTidspunkt")
-        assertThat(felter[2].verdi).isEqualTo(eventTid)
-        assertThat(felter[3].eksternId).isEqualTo("journalpostId")
-        assertThat(felter[3].verdi).isEqualTo(journalpostId)
-        assertThat(felter[4].eksternId).isEqualTo("mottattDato")
-        assertThat(felter[4].verdi).isEqualTo(eventTid)
-        assertThat(felter[5].eksternId).isEqualTo("registrertDato")
+        assertThat(felter[1].eksternId).isEqualTo("behandlingTypekode")
+        assertThat(felter[1].verdi).isEqualTo("UKJENT")
+        assertThat(felter[2].eksternId).isEqualTo("journalfort")
+        assertThat(felter[2].verdi).isEqualTo("true")
+        assertThat(felter[3].eksternId).isEqualTo("journalfortTidspunkt")
+        assertThat(felter[3].verdi).isEqualTo(eventTid)
+        assertThat(felter[4].eksternId).isEqualTo("journalpostId")
+        assertThat(felter[4].verdi).isEqualTo(journalpostId)
+        assertThat(felter[5].eksternId).isEqualTo("mottattDato")
         assertThat(felter[5].verdi).isEqualTo(eventTid)
+        assertThat(felter[6].eksternId).isEqualTo("registrertDato")
+        assertThat(felter[6].verdi).isEqualTo(eventTid)
     }
 
     @Test
