@@ -64,7 +64,7 @@ class OppgaveKoTjeneste(
         ønsketAntallSaker: Long,
         fjernReserverte: Boolean = false
     ): List<GenerellOppgaveV3Dto> {
-        val ko = oppgaveKoRepository.hent(oppgaveKoId)
+        val ko = oppgaveKoRepository.hent(oppgaveKoId, pepClient.harTilgangTilKode6())
 
         val køoppgaveIder = oppgaveQueryService.queryForOppgaveEksternId(QueryRequest(ko.oppgaveQuery, fjernReserverte = fjernReserverte, Avgrensning.maxAntall(ønsketAntallSaker)))
         val oppgaver = mutableListOf<GenerellOppgaveV3Dto>()
@@ -117,9 +117,10 @@ class OppgaveKoTjeneste(
     @WithSpan
     fun hentAntallOppgaverForKø(
         oppgaveKoId: Long,
-        filtrerReserverte: Boolean
+        filtrerReserverte: Boolean,
+        skjermet: Boolean
     ): Long {
-        val ko = oppgaveKoRepository.hent(oppgaveKoId)
+        val ko = oppgaveKoRepository.hent(oppgaveKoId, skjermet)
         return oppgaveQueryService.queryForAntall(QueryRequest(ko.oppgaveQuery, fjernReserverte = filtrerReserverte))
     }
 
@@ -127,7 +128,7 @@ class OppgaveKoTjeneste(
     fun hentAntallUreserverteOppgaveForKø(
         oppgaveKoId: Long
     ): Long {
-        val ko = oppgaveKoRepository.hent(oppgaveKoId)
+        val ko = oppgaveKoRepository.hent(oppgaveKoId, runBlocking { pepClient.harTilgangTilKode6() })
         return oppgaveQueryService.queryForAntall(QueryRequest(ko.oppgaveQuery, fjernReserverte = true))
     }
 
@@ -148,8 +149,8 @@ class OppgaveKoTjeneste(
         coroutineContext: CoroutineContext
     ): Pair<Oppgave, ReservasjonV3>? {
         log.info("taReservasjonFraKø, oppgaveKøId: $oppgaveKoId")
-
-        val oppgavekø = DetaljerMetrikker.time("taReservasjonFraKø", "hentKø", "$oppgaveKoId" ) { oppgaveKoRepository.hent(oppgaveKoId) }
+        val skjermet = runBlocking(coroutineContext) { pepClient.harTilgangTilKode6() }
+        val oppgavekø = DetaljerMetrikker.time("taReservasjonFraKø", "hentKø", "$oppgaveKoId" ) { oppgaveKoRepository.hent(oppgaveKoId, skjermet) }
 
         var antallKandidaterEtterspurt = 1
         while (true) {
@@ -233,7 +234,7 @@ class OppgaveKoTjeneste(
 
     @WithSpan
     suspend fun hentSaksbehandlereForKo(oppgaveKoId: Long): List<Saksbehandler> {
-        val oppgaveKo = oppgaveKoRepository.hent(oppgaveKoId)
+        val oppgaveKo = oppgaveKoRepository.hent(oppgaveKoId, pepClient.harTilgangTilKode6())
         return oppgaveKo.saksbehandlere.mapNotNull { saksbehandlerEpost: String ->
             saksbehandlerRepository.finnSaksbehandlerMedEpost(saksbehandlerEpost).also {
                 if (it == null) {
@@ -244,8 +245,8 @@ class OppgaveKoTjeneste(
     }
 
     @WithSpan
-    fun kopier(kopierFraOppgaveId: Long, tittel: String, taMedQuery: Boolean, taMedSaksbehandlere: Boolean): OppgaveKo {
-        val kø = oppgaveKoRepository.kopier(kopierFraOppgaveId, tittel, taMedQuery, taMedSaksbehandlere)
+    fun kopier(kopierFraOppgaveId: Long, tittel: String, taMedQuery: Boolean, taMedSaksbehandlere: Boolean, skjermet: Boolean): OppgaveKo {
+        val kø = oppgaveKoRepository.kopier(kopierFraOppgaveId, tittel, taMedQuery, taMedSaksbehandlere, skjermet)
         runBlocking {
             køpåvirkendeHendelseChannel.send(Kødefinisjon(kø.id))
         }
@@ -262,8 +263,8 @@ class OppgaveKoTjeneste(
     }
 
     @WithSpan
-    fun hent(oppgaveKoId: Long): OppgaveKo {
-        return oppgaveKoRepository.hent(oppgaveKoId)
+    fun hent(oppgaveKoId: Long, harTilgangTilKode6: Boolean): OppgaveKo {
+        return oppgaveKoRepository.hent(oppgaveKoId, harTilgangTilKode6)
     }
 
     @WithSpan
@@ -274,8 +275,8 @@ class OppgaveKoTjeneste(
         }
     }
 
-    fun endre(oppgaveKo: OppgaveKo): OppgaveKo {
-        val kø = oppgaveKoRepository.endre(oppgaveKo)
+    fun endre(oppgaveKo: OppgaveKo, skjermet: Boolean): OppgaveKo {
+        val kø = oppgaveKoRepository.endre(oppgaveKo, skjermet)
         runBlocking {
             køpåvirkendeHendelseChannel.send(Kødefinisjon(kø.id))
         }

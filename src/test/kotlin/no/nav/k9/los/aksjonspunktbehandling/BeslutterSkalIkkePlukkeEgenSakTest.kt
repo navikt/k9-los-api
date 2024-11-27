@@ -105,7 +105,7 @@ class BeslutterSkalIkkePlukkeEgenSakTest : AbstractK9LosIntegrationTest() {
                 erOppgavenReservertSjekk = {false},
             )
 
-            oppgaveKøRepository.lagreIkkeTaHensyn(oppgaveKø.id) {
+            oppgaveKøRepository.lagreInkluderKode6(oppgaveKø.id) {
                 oppgaveKø
             }
 

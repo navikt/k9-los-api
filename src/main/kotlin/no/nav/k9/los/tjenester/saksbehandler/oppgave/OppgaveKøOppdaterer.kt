@@ -13,7 +13,7 @@ class OppgaveKøOppdaterer(
 
     suspend fun oppdater(oppgaveId: UUID) {
         val oppgave = oppgaveRepository.hent(oppgaveId)
-        for (oppgavekø in oppgaveKøRepository.hentIkkeTaHensyn()) {
+        for (oppgavekø in oppgaveKøRepository.hentAlleInkluderKode6()) {
             oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø.id, listOf(oppgave), reservasjonRepository)
         }
     }

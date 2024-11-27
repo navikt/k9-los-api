@@ -74,7 +74,7 @@ private suspend fun oppdaterKø(
             }
         }
         val k9sakRefreshBehanderListe = mutableListOf<BehandlingIdDto>()
-        oppgaveKøRepository.lagreIkkeTaHensyn(it) { oppgaveKø ->
+        oppgaveKøRepository.lagreInkluderKode6(it) { oppgaveKø ->
             checkNotNull(oppgaveKø) { "Fant ikke kø ved køoppdatering" }
             if (oppgaveKø.oppgaverOgDatoer == opprinnelige) {
                 oppgaveKø.oppgaverOgDatoer = kø.oppgaverOgDatoer

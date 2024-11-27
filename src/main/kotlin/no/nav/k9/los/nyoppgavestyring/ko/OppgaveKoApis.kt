@@ -48,7 +48,8 @@ fun Route.OppgaveKoApis() {
                         kopierOppgaveKoDto.kopierFraOppgaveId,
                         kopierOppgaveKoDto.tittel,
                         kopierOppgaveKoDto.taMedQuery,
-                        kopierOppgaveKoDto.taMedSaksbehandlere
+                        kopierOppgaveKoDto.taMedSaksbehandlere,
+                        pepClient.harTilgangTilKode6()
                     )
                 )
             } else {
@@ -73,7 +74,7 @@ fun Route.OppgaveKoApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
                 val oppgavekøId = call.parameters["id"]!!
-                call.respond(oppgaveKoTjeneste.hent(oppgavekøId.toLong()))
+                call.respond(oppgaveKoTjeneste.hent(oppgavekøId.toLong(), pepClient.harTilgangTilKode6()))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -160,17 +161,19 @@ fun Route.OppgaveKoApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val oppgavekøId = call.parameters["id"]!!
-
+                val skjermet = pepClient.harTilgangTilKode6()
                 val antallUtenReserverte = OpentelemetrySpanUtil.span("OppgaveKoTjeneste.hentAntallOppgaverForKø") {
                     oppgaveKoTjeneste.hentAntallOppgaverForKø(
                         oppgavekøId.toLong(),
-                        true
+                        true,
+                        skjermet
                     )
                 }
                 val antallMedReserverte = OpentelemetrySpanUtil.span("OppgaveKoTjeneste.hentAntallOppgaverForKø") {
                     oppgaveKoTjeneste.hentAntallOppgaverForKø(
                         oppgavekøId.toLong(),
-                        false
+                        false,
+                        skjermet
                     )
                 }
                 call.respond(AntallOppgaverOgReserverte(antallUtenReserverte, antallMedReserverte))
@@ -184,11 +187,12 @@ fun Route.OppgaveKoApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val oppgavekøId = call.parameters["id"]!!
-
+                val skjermet = pepClient.harTilgangTilKode6()
                 val antallUtenReserverte = OpentelemetrySpanUtil.span("OppgaveKoTjeneste.hentAntallOppgaverForKø") {
                     oppgaveKoTjeneste.hentAntallOppgaverForKø(
                         oppgavekøId.toLong(),
-                        true
+                        true,
+                        skjermet
                     )
                 }
                 call.respond(AntallOppgaver(antallUtenReserverte))
@@ -226,7 +230,7 @@ fun Route.OppgaveKoApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
                 val oppgaveKo = call.receive<OppgaveKo>()
-                call.respond(oppgaveKoTjeneste.endre(oppgaveKo))
+                call.respond(oppgaveKoTjeneste.endre(oppgaveKo, pepClient.harTilgangTilKode6()))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

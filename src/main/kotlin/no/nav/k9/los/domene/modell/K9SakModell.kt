@@ -273,7 +273,7 @@ data class K9SakModell(
         val oppgave = oppgave()
         val reservasjon = reservasjonRepository.hentOptional(oppgave.eksternId)
         val beslutter = if (oppgave.tilBeslutter && reservasjon != null) {
-            val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdentIkkeTaHensyn(reservasjon.reservertAv)
+            val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdentInkluderKode6(reservasjon.reservertAv)
             saksbehandler?.brukerIdent
         } else {
             ""
@@ -283,7 +283,7 @@ data class K9SakModell(
             if (reservasjon != null) {
                 val hentMedHistorikk = reservasjonRepository.hentMedHistorikk(oppgave.eksternId)
                 val reservertav = hentMedHistorikk.map { it.reservertAv }.first()
-                saksbehandlerRepository.finnSaksbehandlerMedIdentIkkeTaHensyn(reservertav)?.enhet?.substringBefore(" ")
+                saksbehandlerRepository.finnSaksbehandlerMedIdentInkluderKode6(reservertav)?.enhet?.substringBefore(" ")
             } else {
                 "SRV"
             }

@@ -85,7 +85,7 @@ class K9sakEventHandler constructor(
         }
         modell.reportMetrics(reservasjonRepository)
         runBlocking {
-            for (oppgavekø in oppgaveKøRepository.hentKøIdIkkeTaHensyn()) {
+            for (oppgavekø in oppgaveKøRepository.hentKøIdInkluderKode6()) {
                 if (reservasjonFjernet){
                     oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, listOf(oppgave), erOppgavenReservertSjekk = {false}) //reservasjon nettopp fjernet, trenger ikke sjekke mot repository
                 } else {
