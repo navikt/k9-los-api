@@ -67,13 +67,13 @@ class OppgaveKoRepository(
         ) ?: throw IllegalStateException("Feil ved henting av oppgavekø: $oppgaveKoId")
     }
 
-    fun hentIkkeTaHensyn(oppgaveKoId: Long): OppgaveKo {
+    fun hentInkluderKode6(oppgaveKoId: Long): OppgaveKo {
         return using(sessionOf(datasource)) {
-            it.transaction { tx -> hentIkkeTaHensyn(tx, oppgaveKoId).first }
+            it.transaction { tx -> hentInkluderKode6(tx, oppgaveKoId).first }
         }
     }
 
-    fun hentIkkeTaHensyn(tx: TransactionalSession, oppgaveKoId: Long): Pair<OppgaveKo, Boolean> {
+    fun hentInkluderKode6(tx: TransactionalSession, oppgaveKoId: Long): Pair<OppgaveKo, Boolean> {
         return tx.run(
             queryOf(
                 """SELECT id, versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave, endret_tidspunkt, skjermet

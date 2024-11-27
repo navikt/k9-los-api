@@ -17,7 +17,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.util.*
-import java.util.concurrent.atomic.LongAdder
 import javax.sql.DataSource
 
 class OppgaveKøRepository(
@@ -29,7 +28,7 @@ class OppgaveKøRepository(
     private val pepClient: IPepClient
 ) {
     private val log: Logger = LoggerFactory.getLogger(OppgaveKøRepository::class.java)
-    suspend fun hent(): List<OppgaveKø> {
+    suspend fun hentAlle(): List<OppgaveKø> {
         val skjermet = pepClient.harTilgangTilKode6()
         val json: List<String> = using(sessionOf(dataSource)) {
             it.run(
@@ -45,7 +44,7 @@ class OppgaveKøRepository(
         return json.map { s -> LosObjectMapper.instance.readValue(s, OppgaveKø::class.java) }.toList()
     }
 
-    fun hentIkkeTaHensyn(): List<OppgaveKø> {
+    fun hentAlleInkluderKode6(): List<OppgaveKø> {
         val json: List<String> = using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
@@ -60,7 +59,7 @@ class OppgaveKøRepository(
         return json.map { s -> LosObjectMapper.instance.readValue(s, OppgaveKø::class.java) }.toList()
     }
 
-    fun hentKøIdIkkeTaHensyn(): List<UUID> {
+    fun hentKøIdInkluderKode6(): List<UUID> {
         val uuidListe: List<UUID> = using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
@@ -208,7 +207,7 @@ class OppgaveKøRepository(
         }
     }
 
-    suspend fun lagreIkkeTaHensyn(
+    suspend fun lagreInkluderKode6(
         uuid: UUID,
         f: (OppgaveKø?) -> OppgaveKø
     ) {

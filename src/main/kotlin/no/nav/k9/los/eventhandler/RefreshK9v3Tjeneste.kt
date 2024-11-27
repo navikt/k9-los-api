@@ -99,7 +99,7 @@ class RefreshK9v3Tjeneste(
     @WithSpan
     fun behandlingerTilOppfriskningForKøer(tx: TransactionalSession, køId: List<Long>, antallPrKø: Int) : Set<UUID>{
         return DetaljerMetrikker.time("RefreshK9V3", "refreshForKøer", køId.size.toString()) {
-            val køer = køId.map { oppgaveKoRepository.hentIkkeTaHensyn(it) }
+            val køer = køId.map { oppgaveKoRepository.hentInkluderKode6(it) }
             behandlingerTilOppfriskning(tx, køer, antallPrKø)
         }
     }

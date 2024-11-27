@@ -64,7 +64,7 @@ class SaksbehandlerRepository(
         }
     }
 
-    private fun lagreMedIdIkkeTaHensyn(
+    private fun lagreMedIdInkluderKode6(
         id: String,
         f: (Saksbehandler?) -> Saksbehandler
     ) {
@@ -202,8 +202,8 @@ class SaksbehandlerRepository(
         if (id == null) {
             return
         }
-        if (finnSaksbehandlerMedIdentIkkeTaHensyn(id) != null) {
-            lagreMedIdIkkeTaHensyn(id) { saksbehandler ->
+        if (finnSaksbehandlerMedIdentInkluderKode6(id) != null) {
+            lagreMedIdInkluderKode6(id) { saksbehandler ->
                 val fjernet = saksbehandler!!.reservasjoner.remove(reservasjon)
                 loggFjernet(fjernet, id, reservasjon)
                 saksbehandler
@@ -211,12 +211,12 @@ class SaksbehandlerRepository(
         }
     }
 
-    fun fjernReservasjonIkkeTaHensyn(id: String?, reservasjon: UUID) {
+    fun fjernReservasjonInkluderKode6(id: String?, reservasjon: UUID) {
         if (id == null) {
             return
         }
-        if (finnSaksbehandlerMedIdentIkkeTaHensyn(id) != null) {
-            lagreMedIdIkkeTaHensyn(id) { saksbehandler ->
+        if (finnSaksbehandlerMedIdentInkluderKode6(id) != null) {
+            lagreMedIdInkluderKode6(id) { saksbehandler ->
                 val fjernet = saksbehandler!!.reservasjoner.remove(reservasjon)
                 loggFjernet(fjernet, id, reservasjon)
                 saksbehandler
@@ -319,7 +319,7 @@ class SaksbehandlerRepository(
         return saksbehandler
     }
 
-    fun finnSaksbehandlerMedIdentIkkeTaHensyn(ident: String): Saksbehandler? {
+    fun finnSaksbehandlerMedIdentInkluderKode6(ident: String): Saksbehandler? {
         val saksbehandler = using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
@@ -361,7 +361,7 @@ class SaksbehandlerRepository(
         return identer
     }
 
-    fun hentAlleSaksbehandlereIkkeTaHensyn(): List<Saksbehandler> {
+    fun hentAlleSaksbehandlereInkluderKode6(): List<Saksbehandler> {
         val identer = using(sessionOf(dataSource)) {
             it.run(
                 queryOf(

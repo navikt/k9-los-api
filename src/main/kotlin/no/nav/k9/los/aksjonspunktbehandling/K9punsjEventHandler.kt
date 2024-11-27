@@ -58,7 +58,7 @@ class K9punsjEventHandler constructor(
             }
 
             runBlocking {
-                for (oppgavekø in oppgaveKøRepository.hentKøIdIkkeTaHensyn()) {
+                for (oppgavekø in oppgaveKøRepository.hentKøIdInkluderKode6()) {
                     oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, listOf(oppgave), reservasjonRepository)
                 }
                 statistikkChannel.send(true)

@@ -390,7 +390,7 @@ class K9sakEventHandlerTest : AbstractK9LosIntegrationTest() {
         assertTrue(oppgave.aksjonspunkter.hentLengde() == 1)
 
         val i = runBlocking {
-            oppgaveKøRepository.hent()
+            oppgaveKøRepository.hentAlle()
         }
         assertSame(1, i[0].oppgaverOgDatoer.size)
     }

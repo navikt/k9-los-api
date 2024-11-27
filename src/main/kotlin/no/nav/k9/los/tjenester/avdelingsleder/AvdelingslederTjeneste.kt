@@ -32,7 +32,7 @@ class AvdelingslederTjeneste(
     }
 
     suspend fun hentOppgaveKøer(): List<OppgavekøDto> {
-        return oppgaveKøRepository.hent().map {
+        return oppgaveKøRepository.hentAlle().map {
             lagOppgaveKøDto(it)
         }.sortedBy { it.navn }
     }
@@ -125,7 +125,7 @@ class AvdelingslederTjeneste(
         }
 
         // V1-modellen: Sletter køer saksbehandler er med i. (Lager sin egen transaksjon.)
-        oppgaveKøRepository.hent().forEach { t: OppgaveKø ->
+        oppgaveKøRepository.hentAlle().forEach { t: OppgaveKø ->
             oppgaveKøRepository.lagre(t.id) { oppgaveKø ->
                 oppgaveKø!!.saksbehandlere =
                     oppgaveKø.saksbehandlere.filter { it.epost != epost }

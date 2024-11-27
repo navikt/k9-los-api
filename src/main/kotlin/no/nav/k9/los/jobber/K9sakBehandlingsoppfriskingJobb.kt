@@ -101,7 +101,7 @@ class K9sakBehandlingsoppfriskingJobb(
     }
 
     private fun hentOppgaverFørstIGamleKøer(k9sakOppgaver: Set<UUID>): Set<UUID> {
-        val køene = oppgaveKøRepository.hentIkkeTaHensyn()
+        val køene = oppgaveKøRepository.hentAlleInkluderKode6()
         log.info("Hentet ${køene.size} køer")
         return køene.flatMap { kø ->
             kø.oppgaverOgDatoer
