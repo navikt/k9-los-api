@@ -113,7 +113,7 @@ class AvdelingslederTjeneste(
         transactionalManager.transaction { tx ->
             // V3-modellen: Sletter køer saksbehandler er med i
             oppgaveKøV3Repository.hentKoerMedOppgittSaksbehandler(tx, epost, skjermet, true).forEach { kø ->
-                oppgaveKøV3Repository.endre(tx, kø.copy(saksbehandlere = kø.saksbehandlere - epost))
+                oppgaveKøV3Repository.endre(tx, kø.copy(saksbehandlere = kø.saksbehandlere - epost), skjermet)
             }
 
             // Sletter fra saksbehandler-tabellen
