@@ -49,11 +49,11 @@ class OppgaveKoRepository(
 
     fun hent(oppgaveKoId: Long, skjermet: Boolean): OppgaveKo {
         return using(sessionOf(datasource)) {
-            it.transaction { tx -> hent(tx, oppgaveKoId, skjermet).first }
+            it.transaction { tx -> hent(tx, oppgaveKoId, skjermet) }
         }
     }
 
-    fun hent(tx: TransactionalSession, oppgaveKoId: Long, skjermet: Boolean): Pair<OppgaveKo, Boolean> {
+    fun hent(tx: TransactionalSession, oppgaveKoId: Long, skjermet: Boolean): OppgaveKo {
         return tx.run(
             queryOf(
                 """SELECT id, versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave, endret_tidspunkt, skjermet
@@ -63,7 +63,7 @@ class OppgaveKoRepository(
                     "id" to oppgaveKoId,
                     "skjermet" to skjermet
                 )
-            ).map { it.tilOppgaveKo(objectMapper, true, tx) to it.boolean("skjermet") }.asSingle
+            ).map { it.tilOppgaveKo(objectMapper, true, tx) }.asSingle
         ) ?: throw IllegalStateException("Feil ved henting av oppgavekø: $oppgaveKoId")
     }
 
@@ -101,8 +101,8 @@ class OppgaveKoRepository(
     }
 
     fun leggTil(tittel: String, skjermet: Boolean): OppgaveKo {
-        return using(sessionOf(datasource)) { it ->
-            it.transaction { tx -> leggTil(tx, tittel, skjermet) }
+        return using(sessionOf(datasource)) { session ->
+            session.transaction { tx -> leggTil(tx, tittel, skjermet) }
         }
     }
 
@@ -121,7 +121,7 @@ class OppgaveKoRepository(
                 )
             ).map { row -> row.long(1) }.asSingle
         ) ?: throw IllegalStateException("Feil ved opprettelse av ny oppgavekø.")
-        return hent(tx, oppgaveKoId, skjermet).first
+        return hent(tx, oppgaveKoId, skjermet)
     }
 
     fun endre(oppgaveKo: OppgaveKo, skjermet: Boolean): OppgaveKo {
@@ -158,12 +158,12 @@ class OppgaveKoRepository(
         )
 
         if (rows != 1) {
-            throw IllegalStateException("Feil ved oppdatering av oppgavekø: ${oppgaveKo.id}, rows: ${rows}")
+            throw IllegalStateException("Feil ved oppdatering av oppgavekø: ${oppgaveKo.id}, rows: $rows")
         }
 
         lagreKoSaksbehandlere(tx, oppgaveKo)
 
-        return hent(tx, oppgaveKo.id, skjermet).first
+        return hent(tx, oppgaveKo.id, skjermet)
     }
 
     fun hentKoerMedOppgittSaksbehandler(
@@ -237,7 +237,7 @@ class OppgaveKoRepository(
     private fun lagreKoSaksbehandlere(tx: TransactionalSession, oppgaveKo: OppgaveKo) {
         fjernAlleSaksbehandlereFraOppgaveKo(tx, oppgaveKo.id)
         oppgaveKo.saksbehandlere.forEach {
-            val updated = tx.run(
+            tx.run(
                 queryOf(
                     "INSERT INTO OPPGAVEKO_SAKSBEHANDLER (oppgaveko_v3_id, saksbehandler_epost) VALUES (:oppgavekoV3Id, :epost)",
                     mapOf(
@@ -250,8 +250,8 @@ class OppgaveKoRepository(
     }
 
     fun slett(oppgaveKoId: Long) {
-        using(sessionOf(datasource)) { it ->
-            it.transaction { tx -> slett(tx, oppgaveKoId) }
+        using(sessionOf(datasource)) { session ->
+            session.transaction { tx -> slett(tx, oppgaveKoId) }
         }
     }
 
@@ -279,8 +279,8 @@ class OppgaveKoRepository(
     }
 
     fun kopier(kopierFraOppgaveId: Long, tittel: String, taMedQuery: Boolean, taMedSaksbehandlere: Boolean, skjermet: Boolean): OppgaveKo {
-        return using(sessionOf(datasource)) { it ->
-            it.transaction { tx -> kopier(tx, kopierFraOppgaveId, tittel, taMedQuery, taMedSaksbehandlere, skjermet) }
+        return using(sessionOf(datasource)) { session ->
+            session.transaction { tx -> kopier(tx, kopierFraOppgaveId, tittel, taMedQuery, taMedSaksbehandlere, skjermet) }
         }
     }
 
@@ -292,7 +292,7 @@ class OppgaveKoRepository(
         taMedSaksbehandlere: Boolean,
         skjermet: Boolean
     ): OppgaveKo {
-        val (gammelOppgaveKo) = hent(tx, kopierFraOppgaveId, skjermet)
+        val gammelOppgaveKo = hent(tx, kopierFraOppgaveId, skjermet)
         val nyOppgaveKo = leggTil(tx, tittel, skjermet)
 
         val oppdatertNyOppgaveko = nyOppgaveKo.copy(
