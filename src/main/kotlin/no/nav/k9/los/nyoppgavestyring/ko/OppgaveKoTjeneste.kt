@@ -75,7 +75,7 @@ class OppgaveKoTjeneste(
                 continue
             }
 
-            val person = pdlService.person(oppgave.hentVerdi("aktorId")!!).person!!
+            val person = oppgave.hentVerdi("aktorId")?.let { pdlService.person(it).person }
 
             oppgaver.add(GenerellOppgaveV3Dto(oppgave, person))
             if (oppgaver.size >= ønsketAntallSaker) {
