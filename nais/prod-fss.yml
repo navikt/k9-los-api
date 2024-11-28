@@ -61,8 +61,6 @@ spec:
   accessPolicy:
     inbound:
       rules:
-        - application: k9-los-oidc-auth-proxy
-          namespace: k9saksbehandling
         - application: k9-los-web
           namespace: k9saksbehandling
           cluster: prod-gcp

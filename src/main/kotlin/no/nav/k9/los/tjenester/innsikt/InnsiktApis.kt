@@ -224,7 +224,7 @@ fun Route.InnsiktApis() {
         if (køer.isEmpty()) {
             val hentAktiveOppgaver = oppgaveRepository.hentAktiveUreserverteOppgaver()
 
-            val oppgaveKøer = oppgaveKøRepository.hentIkkeTaHensyn()
+            val oppgaveKøer = oppgaveKøRepository.hentAlleInkluderKode6()
             for (oppgaveKø in oppgaveKøer.filterNot { it.kode6 || it.skjermet }) {
                 oppgaveKø.oppgaverOgDatoer.clear()
                 for (oppgave in hentAktiveOppgaver) {
@@ -245,7 +245,7 @@ fun Route.InnsiktApis() {
                 }
                 body {
                     val list =
-                        oppgaveKøRepository.hentIkkeTaHensyn().filterNot { it.kode6 || it.skjermet }
+                        oppgaveKøRepository.hentAlleInkluderKode6().filterNot { it.kode6 || it.skjermet }
                     ul {
                         for (l in list) {
                             val oppgaverOgDatoer = køer.first { it.navn == l.navn }.oppgaverOgDatoer
@@ -596,7 +596,7 @@ fun Route.InnsiktApis() {
 
         fun køDistribusjon(): Map<Int, List<Oppgave>> {
             val aktiveOppgaver = oppgaveRepository.hentAktiveUreserverteOppgaver()
-            val oppgavekøer = oppgaveKøRepository.hentIkkeTaHensyn().filter { it.oppgaverOgDatoer.isNotEmpty() }
+            val oppgavekøer = oppgaveKøRepository.hentAlleInkluderKode6().filter { it.oppgaverOgDatoer.isNotEmpty() }
             return aktiveOppgaver
                 .groupBy { oppgave ->
                     oppgavekøer.count { kø ->
@@ -658,7 +658,7 @@ fun Route.InnsiktApis() {
                     val oppgavekøer = if (oppgave.kode6 || oppgave.skjermet) {
                         listOf()
                     } else {
-                        oppgaveKøRepository.hentIkkeTaHensyn().filterNot { it.kode6 || it.skjermet }
+                        oppgaveKøRepository.hentAlleInkluderKode6().filterNot { it.kode6 || it.skjermet }
                     }
 
                     val køerSomInneholderOppgave = oppgavekøer.filter { kø ->

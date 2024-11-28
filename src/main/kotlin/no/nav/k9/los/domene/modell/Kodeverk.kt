@@ -193,7 +193,7 @@ enum class BehandlingType(override val kode: String, override val navn: String, 
         @JvmStatic
         fun fraKode(o: Any): BehandlingType {
             val kode = TempAvledeKode.getVerdi(o)
-            return values().find { it.kode == kode } ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
+            return entries.find { it.kode == kode } ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
         }
     }
 }

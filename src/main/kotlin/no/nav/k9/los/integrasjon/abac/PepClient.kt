@@ -255,6 +255,7 @@ class PepClient(
 
             "k9punsj" -> {
 
+                val berørteAktørId = setOfNotNull(aktørIdSøker, aktørIdPleietrengende)
                 val builder = XacmlRequestBuilder()
                     .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
                     .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
@@ -262,14 +263,17 @@ class PepClient(
                     .addActionAttribute(ACTION_ID, action)
                     .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
                     .addAccessSubjectAttribute(SUBJECTID, identTilInnloggetBruker)
-                    .addResourceAttribute(RESOURCE_AKTØR_ID, setOfNotNull(aktørIdSøker, aktørIdPleietrengende))
+                    .addResourceAttribute(RESOURCE_AKTØR_ID, berørteAktørId)
                 if (config.koinProfile == KoinProfile.PREPROD){
                     val xacmlJson = gson.toJson(builder.build())
                     log.info("Tilgangssforespørsel k9punsj: " + xacmlJson)
                 }
                 val tilgang = evaluate(builder)
-                k9Auditlogger.betingetLogging(tilgang, auditlogging) {
-                    loggTilgangK9Punsj(aktørIdSøker!!, identTilInnloggetBruker, action, tilgang)
+
+                berørteAktørId.firstOrNull()?.let { aktørId ->
+                    k9Auditlogger.betingetLogging(tilgang, auditlogging) {
+                        loggTilgangK9Punsj(aktørId, identTilInnloggetBruker, action, tilgang)
+                    }
                 }
 
                 tilgang

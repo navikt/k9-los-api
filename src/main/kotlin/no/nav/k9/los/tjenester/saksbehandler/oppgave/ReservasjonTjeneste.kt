@@ -16,7 +16,7 @@ class ReservasjonTjeneste constructor(
                 reservasjon
             }
             val reservasjon = reservasjonRepository.hent(oppgave.eksternId)
-            saksbehandlerRepository.fjernReservasjonIkkeTaHensyn(
+            saksbehandlerRepository.fjernReservasjonInkluderKode6(
                 reservasjon.reservertAv,
                 reservasjon.oppgave
             )

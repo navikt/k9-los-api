@@ -18,7 +18,7 @@ fun sjekkReserverteJobb(
     ) {
         OpentelemetrySpanUtil.span("sjekkReserverteJobb", emptyMap())  {
             JobbMetrikker.time("sjekk_reserverte") {
-                for (saksbehandler in saksbehandlerRepository.hentAlleSaksbehandlereIkkeTaHensyn()) {
+                for (saksbehandler in saksbehandlerRepository.hentAlleSaksbehandlereInkluderKode6()) {
                     runBlocking { reservasjonRepository.hentOgFjernInaktiveReservasjoner(saksbehandler.reservasjoner, saksbehandler.brukerIdent) }
                 }
             }

@@ -19,7 +19,6 @@ import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.*
-import java.util.concurrent.atomic.LongAdder
 import javax.sql.DataSource
 import kotlin.system.measureTimeMillis
 
@@ -135,7 +134,7 @@ class ReservasjonRepository(
                     this,
                 )
             ) {
-                oppgaveKøRepository.lagreIkkeTaHensyn(oppgaveKø.id) {
+                oppgaveKøRepository.lagreInkluderKode6(oppgaveKø.id) {
                     it!!.leggOppgaveTilEllerFjernFraKø(
                         oppgave = oppgave,
                         reservasjonRepository = this,
@@ -169,7 +168,7 @@ class ReservasjonRepository(
         val inaktive = reservasjonPrAktive[false] ?: emptyList()
         var totalAntallFjerninger = 0
         if (inaktive.isNotEmpty()) {
-            val oppgaveKøer = oppgaveKøRepository.hentIkkeTaHensyn()
+            val oppgaveKøer = oppgaveKøRepository.hentAlleInkluderKode6()
             val tid = measureTimeMillis {
                 inaktive.forEach { reservasjon ->
                     totalAntallFjerninger += fjernInaktivReservasjon(reservasjon, oppgaveKøer, saksbehandlersIdent)

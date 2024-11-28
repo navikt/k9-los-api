@@ -32,7 +32,7 @@ class AvdelingslederTjeneste(
     }
 
     suspend fun hentOppgaveKøer(): List<OppgavekøDto> {
-        return oppgaveKøRepository.hent().map {
+        return oppgaveKøRepository.hentAlle().map {
             lagOppgaveKøDto(it)
         }.sortedBy { it.navn }
     }
@@ -112,8 +112,8 @@ class AvdelingslederTjeneste(
 
         transactionalManager.transaction { tx ->
             // V3-modellen: Sletter køer saksbehandler er med i
-            oppgaveKøV3Repository.hentKoerMedOppgittSaksbehandler(tx, epost, skjermet).forEach { kø ->
-                oppgaveKøV3Repository.endre(tx, kø.copy(saksbehandlere = kø.saksbehandlere - epost))
+            oppgaveKøV3Repository.hentKoerMedOppgittSaksbehandler(tx, epost, skjermet, true).forEach { kø ->
+                oppgaveKøV3Repository.endre(tx, kø.copy(saksbehandlere = kø.saksbehandlere - epost), skjermet)
             }
 
             // Sletter fra saksbehandler-tabellen
@@ -125,7 +125,7 @@ class AvdelingslederTjeneste(
         }
 
         // V1-modellen: Sletter køer saksbehandler er med i. (Lager sin egen transaksjon.)
-        oppgaveKøRepository.hent().forEach { t: OppgaveKø ->
+        oppgaveKøRepository.hentAlle().forEach { t: OppgaveKø ->
             oppgaveKøRepository.lagre(t.id) { oppgaveKø ->
                 oppgaveKø!!.saksbehandlere =
                     oppgaveKø.saksbehandlere.filter { it.epost != epost }
@@ -139,6 +139,7 @@ class AvdelingslederTjeneste(
         val saksbehandlersKoer = hentSaksbehandlersOppgavekoer()
         return saksbehandlersKoer.entries.map {
             SaksbehandlerDto(
+                id = it.key.id,
                 brukerIdent = it.key.brukerIdent,
                 navn = it.key.navn,
                 epost = it.key.epost,

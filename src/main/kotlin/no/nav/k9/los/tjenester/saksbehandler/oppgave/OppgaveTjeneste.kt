@@ -188,7 +188,7 @@ class OppgaveTjeneste constructor(
         reservasjonRepository.lagreFlereReservasjoner(reservasjoner)
         saksbehandlerRepository.leggTilFlereReservasjoner(reserveresAvIdent, reservasjoner.map { r -> r.oppgave })
 
-        for (oppgavekø in oppgaveKøRepository.hentKøIdIkkeTaHensyn()) {
+        for (oppgavekø in oppgaveKøRepository.hentKøIdInkluderKode6()) {
             oppgaveKøRepository.leggTilOppgaverTilKø(
                 oppgavekø,
                 oppgaverSomSkalBliReservert.map { o -> o.oppgave },
@@ -555,7 +555,7 @@ class OppgaveTjeneste constructor(
         }
         saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
         val oppgave = oppgaveRepository.hent(uuid)
-        for (oppgavekø in oppgaveKøRepository.hent()) {
+        for (oppgavekø in oppgaveKøRepository.hentAlle()) {
             oppgaveKøRepository.leggTilOppgaverTilKø(
                 oppgavekø.id,
                 listOf(oppgave),
@@ -664,10 +664,10 @@ class OppgaveTjeneste constructor(
 
     suspend fun refreshAntallForAlleKøer() {
         val køene = DetaljerMetrikker.timeSuspended("refreshAntallForAlleKøer", "hent")
-        { oppgaveKøRepository.hentIkkeTaHensyn() }
+        { oppgaveKøRepository.hentAlleInkluderKode6() }
         val reservasjonIder = DetaljerMetrikker.timeSuspended("refreshAntallForAlleKøer", "hentReservasjonIder")
         {
-            saksbehandlerRepository.hentAlleSaksbehandlereIkkeTaHensyn()
+            saksbehandlerRepository.hentAlleSaksbehandlereInkluderKode6()
                 .flatMap { saksbehandler -> saksbehandler.reservasjoner }.toSet()
         }
         val reserverteOppgaveIderDirekte =
@@ -684,7 +684,7 @@ class OppgaveTjeneste constructor(
     }
 
     fun refreshAntallOppgaverForKø(oppgavekø: OppgaveKø) {
-        val reservasjonIder = saksbehandlerRepository.hentAlleSaksbehandlereIkkeTaHensyn()
+        val reservasjonIder = saksbehandlerRepository.hentAlleSaksbehandlereInkluderKode6()
             .flatMap { saksbehandler -> saksbehandler.reservasjoner }.toSet()
         val reserverteOppgaveIder = reservasjonRepository.hentOppgaveUuidMedAktivReservasjon(reservasjonIder)
         val reserverteOppgaver = oppgaveRepository.hentOppgaver(reserverteOppgaveIder)
@@ -727,7 +727,7 @@ class OppgaveTjeneste constructor(
         val oppgavekø = oppgaveKøRepository.hentOppgavekø(oppgavekøId, ignorerSkjerming = true)
         var antallReserverteOppgaverSomTilhørerKø = 0
         if (taMedReserverte) {
-            val reservasjonIder = saksbehandlerRepository.hentAlleSaksbehandlereIkkeTaHensyn()
+            val reservasjonIder = saksbehandlerRepository.hentAlleSaksbehandlereInkluderKode6()
                 .flatMap { saksbehandler -> saksbehandler.reservasjoner }.toSet()
             val reserverteOppgaveIder = reservasjonRepository.hentOppgaveUuidMedAktivReservasjon(reservasjonIder)
             val reserverteOppgaver = oppgaveRepository.hentOppgaver(reserverteOppgaveIder)
@@ -864,7 +864,7 @@ class OppgaveTjeneste constructor(
     }
 
     suspend fun hentOppgaveKøer(): List<OppgaveKø> {
-        return oppgaveKøRepository.hent()
+        return oppgaveKøRepository.hentAlle()
     }
 
     fun leggTilBehandletOppgave(ident: String, oppgave: BehandletOppgave) {
@@ -876,7 +876,7 @@ class OppgaveTjeneste constructor(
             it!!
         }
         val oppaveSkjermet = oppgaveRepository.hent(oppgave.eksternId)
-        for (oppgaveKø in oppgaveKøRepository.hent()) {
+        for (oppgaveKø in oppgaveKøRepository.hentAlle()) {
             val skalOppdareKø = oppgaveKø.leggOppgaveTilEllerFjernFraKø(
                 oppaveSkjermet,
                 reservasjonRepository,
@@ -1014,7 +1014,7 @@ class OppgaveTjeneste constructor(
                             reservasjoner.map { r -> r.oppgave })
                     }
                     DetaljerMetrikker.timeSuspended("faaOppgaveFraKo", "leggTilOppgaverTilKø") {
-                        for (oppgavekø in oppgaveKøRepository.hentKøIdIkkeTaHensyn()) {
+                        for (oppgavekø in oppgaveKøRepository.hentKøIdInkluderKode6()) {
                             oppgaveKøRepository.leggTilOppgaverTilKø(
                                 oppgavekø,
                                 oppgaverSomSkalBliReservert.map { o -> o.oppgave },

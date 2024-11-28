@@ -198,7 +198,7 @@ fun Route.forvaltningApis() {
     route("/ytelse") {
         get("/oppgaveko/antall") {
             val antall = oppgaveKoTjeneste.hentOppgavekøer().map {
-                oppgaveKoTjeneste.hentAntallOppgaverForKø(it.id, false) }.size
+                oppgaveKoTjeneste.hentAntallOppgaverForKø(oppgaveKoId = it.id, filtrerReserverte = false, skjermet = false) }.size
             call.respond(antall)
         }
 
@@ -209,7 +209,7 @@ fun Route.forvaltningApis() {
         get("/oppgaveko/{ko}/antall") {
             val køId = call.parameters["ko"]!!.toLong()
             val medReserverte = call.request.queryParameters["reserverte"]?.toBoolean() ?: false
-            val antall = oppgaveKoTjeneste.hentAntallOppgaverForKø(køId, medReserverte)
+            val antall = oppgaveKoTjeneste.hentAntallOppgaverForKø(køId, medReserverte, false)
             call.respond(if (antall > 10) antall else -1)
         }
     }

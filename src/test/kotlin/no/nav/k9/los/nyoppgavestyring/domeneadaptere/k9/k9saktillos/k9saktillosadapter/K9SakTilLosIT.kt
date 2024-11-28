@@ -405,7 +405,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
             saksbehandlere = listOf(saksbehandler.epost),
             oppgaveQuery = oppgaveQuery
         )
-        return oppgaveKoRepository.endre(nyKø)
+        return oppgaveKoRepository.endre(nyKø, false)
     }
 
     private fun querySomKunInneholder(eksternId: UUID, vararg status: Oppgavestatus = emptyArray()): OppgaveQuery {
