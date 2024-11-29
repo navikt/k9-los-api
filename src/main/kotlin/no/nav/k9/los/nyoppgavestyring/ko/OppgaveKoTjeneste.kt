@@ -54,7 +54,7 @@ class OppgaveKoTjeneste(
     private val log = LoggerFactory.getLogger(OppgaveKoTjeneste::class.java)
 
     @WithSpan
-    fun hentOppgavekøer(skjermet: Boolean = false): List<OppgaveKo> {
+    fun hentOppgavekøer(skjermet: Boolean): List<OppgaveKo> {
         return oppgaveKoRepository.hentListe(skjermet)
     }
 

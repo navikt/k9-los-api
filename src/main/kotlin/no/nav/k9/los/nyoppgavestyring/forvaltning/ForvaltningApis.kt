@@ -197,13 +197,13 @@ fun Route.forvaltningApis() {
 
     route("/ytelse") {
         get("/oppgaveko/antall") {
-            val antall = oppgaveKoTjeneste.hentOppgavekøer().map {
+            val antall = oppgaveKoTjeneste.hentOppgavekøer(skjermet = false).map {
                 oppgaveKoTjeneste.hentAntallOppgaverForKø(oppgaveKoId = it.id, filtrerReserverte = false, skjermet = false) }.size
             call.respond(antall)
         }
 
         get("/oppgaveko") {
-            call.respond(oppgaveKoTjeneste.hentOppgavekøer().map { it.id })
+            call.respond(oppgaveKoTjeneste.hentOppgavekøer(skjermet = false).map { it.id })
         }
 
         get("/oppgaveko/{ko}/antall") {
