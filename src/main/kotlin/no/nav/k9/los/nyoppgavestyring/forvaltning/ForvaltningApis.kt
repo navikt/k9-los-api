@@ -209,7 +209,7 @@ fun Route.forvaltningApis() {
         get("/oppgaveko/{ko}/antall") {
             val køId = call.parameters["ko"]!!.toLong()
             val medReserverte = call.request.queryParameters["reserverte"]?.toBoolean() ?: false
-            val antall = oppgaveKoTjeneste.hentAntallOppgaverForKø(køId, medReserverte, false)
+            val antall = oppgaveKoTjeneste.hentAntallOppgaverForKø(oppgaveKoId = køId, filtrerReserverte = medReserverte, skjermet = false)
             call.respond(if (antall > 10) antall else -1)
         }
     }
