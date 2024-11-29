@@ -97,7 +97,8 @@ fun Route.OppgaveKoApis() {
             if (pepClient.harBasisTilgang()) {
                 call.respond(
                     oppgaveKoTjeneste.hentKøerForSaksbehandler(
-                        kotlin.coroutines.coroutineContext.idToken().getUsername()
+                        kotlin.coroutines.coroutineContext.idToken().getUsername(),
+                        pepClient.harTilgangTilKode6()
                     )
                 )
             } else {

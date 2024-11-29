@@ -169,7 +169,7 @@ class OppgaveKoRepository(
     fun hentKoerMedOppgittSaksbehandler(
         tx: TransactionalSession,
         saksbehandlerEpost: String,
-        skjermet: Boolean = false,
+        skjermet: Boolean,
         medSaksbehandlere: Boolean = true
     ): List<OppgaveKo> {
         return tx.run(
