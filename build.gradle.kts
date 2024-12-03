@@ -13,7 +13,7 @@ val jacksonVersion = "2.17.2"
 val commonsTextVersion = "1.12.0"
 
 val dusseldorfKtorVersion = "5.0.10"
-val ktorVersion = "2.3.12"
+val ktorVersion = "2.3.13"
 val kafkaVersion = "3.9.0"
 
 val navTilgangskontroll = "3.2024.01.24_10.14-f70bae69bd65"
