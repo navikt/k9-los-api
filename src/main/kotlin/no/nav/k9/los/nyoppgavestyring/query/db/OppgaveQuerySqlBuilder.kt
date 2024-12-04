@@ -1,7 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.query.db
 
-import no.nav.k9.los.nyoppgavestyring.kodeverk.EgenAnsatt
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.EgenAnsatt
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype.*
@@ -179,10 +179,10 @@ class OppgaveQuerySqlBuilder(
                 ${combineOperator.sql} ${if (operator.negasjonAv != null) "NOT" else "" } EXISTS (
                     SELECT 'Y'
                     FROM Oppgavefelt_verdi_aktiv ov
-                    WHERE ov.oppgave_id = o.id
+                    WHERE CASE ov.oppgave_id = o.id
                       AND ov.omrade_ekstern_id = :feltOmrade$index
                       AND ov.feltdefinisjon_ekstern_id = :feltkode$index
-                      AND 
+                      THEN 
             """.trimIndent()
 
         /*
@@ -190,57 +190,22 @@ class OppgaveQuerySqlBuilder(
          * typekonverteringen blir gjort ved opprettelse av spørring og at feilende
          * typekonvertering gjør at spørringen feiler.
          */
-        query += "${databaseverdiMedCasting(feltområde, feltkode)} ${operator.negasjonAv?.sql ?: operator.sql} (:feltverdi$index)"
-        val queryVerdiParam = castTilRiktigKotlintype(feltområde, feltkode, feltverdi)
-
-        query += ") "
+        query += "${databaseverdiMedCasting(feltområde, feltkode)} ${operator.negasjonAv?.sql ?: operator.sql} (:feltverdi$index) END) "
 
         queryParams.putAll(mapOf(
             "feltOmrade$index" to feltområde,
             "feltkode$index" to feltkode,
-            "feltverdi$index" to queryVerdiParam
+            "feltverdi$index" to feltverdi
         ))
     }
 
     private fun databaseverdiMedCasting(feltområde: String, feltkode: String): String {
-        when (oppgavefelterKodeOgType[OmrådeOgKode(feltområde, feltkode)]) {
-            TIMESTAMP -> {
-                return "CAST(ov.verdi AS timestamp)"
-            }
-            DURATION -> {
-                return "CAST(ov.verdi AS interval)"
-            }
-            INTEGER -> {
-                return "CAST(ov.verdi AS integer)"
-            }
-            else -> {
-                return "ov.verdi"
-            }
-        }
-    }
-
-    private fun castTilRiktigKotlintype(feltområde: String, feltkode: String, feltverdi: Any): Any? {
-        when (oppgavefelterKodeOgType[OmrådeOgKode(feltområde, feltkode)]) {
-            TIMESTAMP -> {
-                return try {
-                    LocalDateTime.parse(feltverdi as String)
-                } catch (e: Exception) { null } ?: try {
-                    LocalDate.parse(feltverdi as String)
-                } catch (e: Exception) { null }
-            }
-            DURATION -> {
-                return try {
-                    PGInterval(feltverdi as String)
-                } catch (e: Exception) { null }
-            }
-            INTEGER -> {
-                return try {
-                    BigInteger(feltverdi as String)
-                } catch (e: Exception) { null }
-            }
-            else -> {
-                return feltverdi
-            }
+        return when (oppgavefelterKodeOgType[OmrådeOgKode(feltområde, feltkode)]) {
+            TIMESTAMP -> "CAST(ov.verdi AS timestamp without time zone)"
+            DURATION -> "CAST(ov.verdi AS interval)"
+            INTEGER -> "CAST(ov.verdi AS integer)"
+            BOOLEAN -> "CAST(ov.verdi AS boolean)"
+            else -> "ov.verdi"
         }
     }
 
