@@ -22,7 +22,7 @@ fun Route.OppgaveKoApis() {
     get("/") {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
-                val oppgavekøer = oppgaveKoTjeneste.hentOppgavekøer(pepClient.harTilgangTilKode6())
+                val oppgavekøer = oppgaveKoTjeneste.hentOppgavekøer(skjermet = pepClient.harTilgangTilKode6())
                     .map { oppgaveko ->
                         OppgaveKoListeelement(
                             id = oppgaveko.id,
@@ -97,7 +97,8 @@ fun Route.OppgaveKoApis() {
             if (pepClient.harBasisTilgang()) {
                 call.respond(
                     oppgaveKoTjeneste.hentKøerForSaksbehandler(
-                        kotlin.coroutines.coroutineContext.idToken().getUsername()
+                        kotlin.coroutines.coroutineContext.idToken().getUsername(),
+                        pepClient.harTilgangTilKode6()
                     )
                 )
             } else {

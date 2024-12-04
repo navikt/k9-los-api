@@ -54,7 +54,7 @@ class OppgaveKoTjeneste(
     private val log = LoggerFactory.getLogger(OppgaveKoTjeneste::class.java)
 
     @WithSpan
-    fun hentOppgavekøer(skjermet: Boolean = false): List<OppgaveKo> {
+    fun hentOppgavekøer(skjermet: Boolean): List<OppgaveKo> {
         return oppgaveKoRepository.hentListe(skjermet)
     }
 
@@ -75,7 +75,7 @@ class OppgaveKoTjeneste(
                 continue
             }
 
-            val person = pdlService.person(oppgave.hentVerdi("aktorId")!!).person!!
+            val person = oppgave.hentVerdi("aktorId")?.let { pdlService.person(it).person }
 
             oppgaver.add(GenerellOppgaveV3Dto(oppgave, person))
             if (oppgaver.size >= ønsketAntallSaker) {
@@ -87,14 +87,15 @@ class OppgaveKoTjeneste(
 
     @WithSpan
     fun hentKøerForSaksbehandler(
-        saksbehandlerEpost: String
+        saksbehandlerEpost: String,
+        skjermet: Boolean
     ): List<OppgaveKo> {
         return transactionalManager.transaction { tx ->
             oppgaveKoRepository.hentKoerMedOppgittSaksbehandler(
                 tx = tx,
                 saksbehandlerEpost = saksbehandlerEpost,
                 medSaksbehandlere = false,
-                skjermet = false
+                skjermet = skjermet
             )
         }
     }

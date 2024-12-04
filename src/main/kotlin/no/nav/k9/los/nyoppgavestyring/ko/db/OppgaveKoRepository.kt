@@ -31,13 +31,13 @@ class OppgaveKoRepository(
         objectMapper.writeValueAsString(kode6OppgaveQuery)
     }
 
-    fun hentListe(medSkjermet: Boolean = false, medSaksbehandlere: Boolean = true): List<OppgaveKo> {
+    fun hentListe(skjermet: Boolean, medSaksbehandlere: Boolean = true): List<OppgaveKo> {
         return using(sessionOf(datasource)) {
-            it.transaction { tx -> hentListe(tx, medSaksbehandlere, medSkjermet) }
+            it.transaction { tx -> hentListe(tx = tx, medSaksbehandlere = medSaksbehandlere, skjermet = skjermet) }
         }
     }
 
-    fun hentListe(tx: TransactionalSession, medSaksbehandlere: Boolean, skjermet: Boolean = false): List<OppgaveKo> {
+    fun hentListe(tx: TransactionalSession, medSaksbehandlere: Boolean, skjermet: Boolean): List<OppgaveKo> {
         return tx.run(
             queryOf(
                 """SELECT id, versjon, tittel, beskrivelse, query, fritt_valg_av_oppgave, endret_tidspunkt, skjermet 
@@ -169,7 +169,7 @@ class OppgaveKoRepository(
     fun hentKoerMedOppgittSaksbehandler(
         tx: TransactionalSession,
         saksbehandlerEpost: String,
-        skjermet: Boolean = false,
+        skjermet: Boolean,
         medSaksbehandlere: Boolean = true
     ): List<OppgaveKo> {
         return tx.run(
