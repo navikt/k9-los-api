@@ -39,7 +39,7 @@ class OppgaveQueryRepository(
     @WithSpan
     fun query(tx: TransactionalSession, request: QueryRequest, now: LocalDateTime): List<AktivOppgaveId> {
         val felter = hentAlleFelterMedMer(tx, medKodeverk = false)
-            .associate { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) to felt }
+            .associateBy { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) }
 
         return query(tx, OppgaveQueryToSqlMapper.toSqlOppgaveQuery(request, felter, now))
     }
@@ -123,8 +123,8 @@ class OppgaveQueryRepository(
                         tolkes_som = row.string("tolkes_som"),
                         kokriterie = row.boolean("kokriterie"),
                         verdiforklaringerErUttømmende = kodeverk?.uttømmende ?: false,
-                        verdiforklaringer = kodeverk?.let { kodeverk ->
-                            kodeverk.verdier.map { kodeverkverdi ->
+                        verdiforklaringer = kodeverk?.let {
+                            it.verdier.map { kodeverkverdi ->
                                 Verdiforklaring(
                                     verdi = kodeverkverdi.verdi,
                                     visningsnavn = kodeverkverdi.visningsnavn,

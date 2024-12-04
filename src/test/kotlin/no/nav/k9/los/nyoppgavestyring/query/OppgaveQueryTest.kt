@@ -14,8 +14,10 @@ import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
+import no.nav.k9.los.nyoppgavestyring.felter
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
+import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.pep.PepCache
 import no.nav.k9.los.nyoppgavestyring.pep.PepCacheRepository
@@ -26,6 +28,7 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgavefilterRens
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.junit.jupiter.api.Test
@@ -92,12 +95,6 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        val om = ObjectMapper().dusseldorfConfigured()
-            .enable(SerializationFeature.INDENT_OUTPUT)
-            .registerKotlinModule()
-        val sw = StringWriter()
-        om.writeValue(sw, oppgaveQuery)
-
         val result = oppgaveQueryRepository.query(QueryRequest(oppgaveQuery))
         assertThat(result).isNotEmpty()
     }
@@ -108,7 +105,11 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             .medOppgaveFeltVerdi(FeltType.MOTTATT_DATO, "2023-05-15T00:00:00.000")
             .lagOgLagre()
 
-        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
+        val områdeRepository = OmrådeRepository(dataSource)
+        val feltdefinisjonRepository = FeltdefinisjonRepository(
+            områdeRepository
+        )
+        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, feltdefinisjonRepository)
 
         assertThat(
             oppgaveQueryRepository.query(
@@ -241,15 +242,17 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         ).isNotEmpty()
 
+        val request = QueryRequest(
+            OppgaveQuery(
+                listOf(
+                    byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.EQUALS, "2023-05-15"),
+                )
+            )
+        )
+        val renset = OppgavefilterRens.rens(felter, request.oppgaveQuery.filtere)
         assertThat(
             oppgaveQueryRepository.query(
-                QueryRequest(
-                    OppgaveQuery(
-                        listOf(
-                            byggFilterK9(FeltType.MOTTATT_DATO, FeltverdiOperator.EQUALS, "2023-05-15"),
-                        )
-                    )
-                )
+                request
             )
         ).isNotEmpty()
 
@@ -462,7 +465,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                             byggFilterK9(
                                 FeltType.MOTTATT_DATO,
                                 FeltverdiOperator.NOT_EQUALS,
-                                "2023-05-15T00:00:00.000"
+                                "2023-05-15"
                             ),
                         )
                     )
@@ -479,8 +482,8 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                             byggFilterK9(
                                 FeltType.MOTTATT_DATO,
                                 FeltverdiOperator.NOT_EQUALS,
-                                "2023-05-15T00:00:00.000",
-                                "2023-05-16T00:00:00.000"
+                                "2023-05-15",
+                                "2023-05-16"
                             ),
                         )
                     )
