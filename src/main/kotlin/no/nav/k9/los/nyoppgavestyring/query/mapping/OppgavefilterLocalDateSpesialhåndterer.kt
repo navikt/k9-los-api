@@ -11,9 +11,7 @@ import java.time.format.DateTimeParseException
 // Vurder om det skal være spesialhåndtering av datoer. Nødvendig hvis vi kun har timestamp.
 object OppgavefilterLocalDateSpesialhåndterer {
 
-    // Antagelse om input:
-    //   - alle filtere har kun en verdi, kan være null
-    //   - ingen mengdeoperatorer
+    // Antagelse om input: alle filtere har kun en verdi, kan være null
     fun spesialhåndter(
         oppgavefiltere: List<Oppgavefilter>
     ): List<Oppgavefilter> {
