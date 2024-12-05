@@ -9,7 +9,11 @@ enum class Datatype(val kode: String) {
 
     companion object {
         fun fraKode(kode: String): Datatype {
-            return entries.first { it.kode == kode }
+            return try {
+                Datatype.valueOf(kode)
+            } catch (e: IllegalArgumentException ) {
+                STRING
+            }
         }
     }
 }

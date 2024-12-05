@@ -1,7 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.query.db
 
-import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.EgenAnsatt
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype.*
@@ -12,6 +12,10 @@ import no.nav.k9.los.spi.felter.OrderByInput
 import no.nav.k9.los.spi.felter.SqlMedParams
 import no.nav.k9.los.spi.felter.TransientFeltutleder
 import no.nav.k9.los.spi.felter.WhereInput
+import org.postgresql.util.PGInterval
+import java.math.BigDecimal
+import java.math.BigInteger
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 class OppgaveQuerySqlBuilder(
@@ -178,10 +182,10 @@ class OppgaveQuerySqlBuilder(
                     INNER JOIN Oppgavefelt f ON (f.id = ov.oppgavefelt_id) 
                     INNER JOIN Feltdefinisjon fd ON (fd.id = f.feltdefinisjon_id) 
                     INNER JOIN Omrade fo ON (fo.id = fd.omrade_id)
-                    WHERE CASE WHEN ov.oppgave_id = o.id
+                    WHERE ov.oppgave_id = o.id
                       AND fo.ekstern_id = :feltOmrade$index
                       AND fd.ekstern_id = :feltkode$index
-                      THEN 
+                      AND 
             """.trimIndent()
 
         /*
@@ -189,22 +193,57 @@ class OppgaveQuerySqlBuilder(
          * typekonverteringen blir gjort ved opprettelse av spørring og at feilende
          * typekonvertering gjør at spørringen feiler.
          */
-        query += "${databaseverdiMedCasting(feltområde, feltkode)} ${operator.negasjonAv?.sql ?: operator.sql} (:feltverdi$index) END) "
+        query += "${databaseverdiMedCasting(feltområde, feltkode)} ${operator.negasjonAv?.sql ?: operator.sql} (:feltverdi$index)"
+        val queryVerdiParam = castTilRiktigKotlintype(feltområde, feltkode, feltverdi)
+
+        query += ") "
 
         queryParams.putAll(mapOf(
             "feltOmrade$index" to feltområde,
             "feltkode$index" to feltkode,
-            "feltverdi$index" to feltverdi
+            "feltverdi$index" to queryVerdiParam
         ))
     }
 
     private fun databaseverdiMedCasting(feltområde: String, feltkode: String): String {
-        return when (oppgavefelterKodeOgType[OmrådeOgKode(feltområde, feltkode)]) {
-            TIMESTAMP -> "CAST(ov.verdi AS timestamp without time zone)"
-            DURATION -> "CAST(ov.verdi AS interval)"
-            INTEGER -> "CAST(ov.verdi AS integer)"
-            BOOLEAN -> "CAST(ov.verdi AS boolean)"
-            else -> "ov.verdi"
+        when (oppgavefelterKodeOgType[OmrådeOgKode(feltområde, feltkode)]) {
+            TIMESTAMP -> {
+                return "CAST(ov.verdi AS timestamp)"
+            }
+            DURATION -> {
+                return "CAST(ov.verdi AS interval)"
+            }
+            INTEGER -> {
+                return "CAST(ov.verdi AS integer)"
+            }
+            else -> {
+                return "ov.verdi"
+            }
+        }
+    }
+
+    private fun castTilRiktigKotlintype(feltområde: String, feltkode: String, feltverdi: Any): Any? {
+        when (oppgavefelterKodeOgType[OmrådeOgKode(feltområde, feltkode)]) {
+            TIMESTAMP -> {
+                return try {
+                    LocalDateTime.parse(feltverdi as String)
+                } catch (e: Exception) { null } ?: try {
+                    LocalDate.parse(feltverdi as String)
+                } catch (e: Exception) { null }
+            }
+            DURATION -> {
+                return try {
+                    PGInterval(feltverdi as String)
+                } catch (e: Exception) { null }
+            }
+            INTEGER -> {
+                return try {
+                    BigInteger(feltverdi as String)
+                } catch (e: Exception) { null }
+            }
+            else -> {
+                return feltverdi
+            }
         }
     }
 

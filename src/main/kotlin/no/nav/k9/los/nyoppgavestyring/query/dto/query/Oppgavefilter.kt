@@ -17,4 +17,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
     setterVisibility = JsonAutoDetect.Visibility.NONE,
     fieldVisibility = JsonAutoDetect.Visibility.ANY
 )
-sealed class Oppgavefilter
+open class Oppgavefilter {
+
+}

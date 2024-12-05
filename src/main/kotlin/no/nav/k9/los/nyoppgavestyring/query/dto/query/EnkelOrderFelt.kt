@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName
     fieldVisibility = JsonAutoDetect.Visibility.ANY
 )
 @JsonTypeName("enkel")
-data class EnkelOrderFelt(
+class EnkelOrderFelt(
     val område: String?,
     val kode: String,
     val økende: Boolean

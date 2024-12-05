@@ -137,7 +137,8 @@ class TilbakeEventTilDtoMapper {
                 nøkkel = "førsteFeilutbetalingDato",
                 verdi = event.førsteFeilutbetaling ?: forrigeOppgave?.hentVerdi("førsteFeilutbetalingDato")
             ),
-        )
+
+            ).filterNotNull().toMutableList()
 
         private fun utledAutomatiskBehandletFlagg(
             event: BehandlingProsessEventTilbakeDto,

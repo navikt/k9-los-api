@@ -4,41 +4,46 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
 
-object OppgavefilterListeEliminerer {
-    fun eliminer(oppgavefiltere: List<Oppgavefilter>): List<Oppgavefilter> {
-        return oppgavefiltere.map { filter ->
+object OppgavefilterOperatorUtvider {
+    fun utvid(oppgavefiltere: List<Oppgavefilter>): List<Oppgavefilter> {
+        return oppgavefiltere.utvidListe()
+    }
+
+    private fun List<Oppgavefilter>.utvidListe(): List<Oppgavefilter> {
+        return map { filter ->
             when (filter) {
                 is FeltverdiOppgavefilter -> map(filter)
                 is CombineOppgavefilter -> CombineOppgavefilter(
                     combineOperator = filter.combineOperator,
-                    filtere = eliminer(filter.filtere)
+                    filter.filtere.utvidListe()
                 )
+                else -> throw IllegalStateException("Ukjent filter: " + filter::class.qualifiedName)
             }
         }
     }
 
-    private fun map(filter: FeltverdiOppgavefilter): Oppgavefilter {
-        if (filter.verdi.size <= 1) {
-            return filter
+    private fun map(dto: FeltverdiOppgavefilter): Oppgavefilter {
+        if (dto.verdi.size <= 1) {
+            return dto
         }
 
-        val operator = EksternFeltverdiOperator.valueOf(filter.operator)
+        val operator = EksternFeltverdiOperator.valueOf(dto.operator)
         if (operator == EksternFeltverdiOperator.INTERVAL) {
-            return lagInterval(filter)
+            return lagInterval(dto)
         }
 
-        val (combineOperator, feltverdiOperator) = when (operator) {
+        val operators = when (operator) {
             EksternFeltverdiOperator.IN -> (CombineOperator.OR to FeltverdiOperator.EQUALS)
             EksternFeltverdiOperator.NOT_IN, EksternFeltverdiOperator.NOT_EQUALS -> (CombineOperator.AND to FeltverdiOperator.NOT_EQUALS)
             EksternFeltverdiOperator.EQUALS -> (CombineOperator.AND to FeltverdiOperator.EQUALS)
-            else -> throw IllegalStateException("Ukjent feltverdioperator for mengder")
+            else -> throw IllegalStateException("Ukjent feltverdiOperator for mengder")
         }
 
         return CombineOppgavefilter(
-            combineOperator = combineOperator.kode,
-            filtere = filter.verdi.map { verdi ->
-                filter.copy(
-                    operator = feltverdiOperator.name,
+            combineOperator = operators.first.kode,
+            filtere = dto.verdi.map { verdi ->
+                dto.copy(
+                    operator = operators.second.name,
                     verdi = listOf(verdi)
                 )
             }
