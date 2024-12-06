@@ -79,10 +79,18 @@ open class K9SakServiceSystemClient constructor(
                     success
                 },
                 { error ->
-                    log.error("Error response = '${error.response.body().asString("text/plain")}' fra '${request.url}'")
-                    log.error(error.toString())
+                    log.error("Error response = '${begrensLengde(error.response.body().asString("text/plain"), 1000)}' fra '${request.url}'", error.exception)
+                    throw RuntimeException("Kunne ikke gjøre refresh-kall til k9sak", error)
                 }
             )
+        }
+    }
+
+    private fun begrensLengde(input : String, maxLengde : Int): String {
+        return if (input.length > maxLengde) {
+            input.substring(0, maxLengde)
+        } else {
+            input
         }
     }
 
