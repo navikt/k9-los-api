@@ -5,6 +5,7 @@ import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.channels.toList
 import kotlinx.coroutines.launch
 import no.nav.k9.kodeverk.Fagsystem
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
@@ -100,6 +101,7 @@ private suspend fun oppdaterKø(
         for (uuid in behandlingerUuiderTilRefresh) {
             refreshOppgaveChannel.send(uuid)
         }
+        log.info("Antall oppgaver i refreshOppgaveChannel er nå ${refreshOppgaveChannel.toList().size}")
         log.info("Ferdig")
     }
 }

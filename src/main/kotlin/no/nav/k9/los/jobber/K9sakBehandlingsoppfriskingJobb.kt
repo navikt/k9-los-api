@@ -1,6 +1,7 @@
 package no.nav.k9.los.jobber
 
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.toList
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
@@ -118,6 +119,7 @@ class K9sakBehandlingsoppfriskingJobb(
             for (uuid in behandlingerTilRefresh) {
                 refreshOppgaveChannel.send(uuid)
             }
+            log.info("Antall oppgaver i refreshOppgaveChannel er nå ${refreshOppgaveChannel.toList().size}")
         }
     }
 
