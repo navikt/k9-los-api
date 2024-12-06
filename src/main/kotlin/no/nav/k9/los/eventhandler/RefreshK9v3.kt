@@ -20,7 +20,8 @@ class RefreshK9v3(
                 if (hendelse == null) {
                     try {
                         val refreshUtført = ChannelMetrikker.timeSuspended("refresh_k9sak_v3") {
-                             refreshK9v3Tjeneste.refreshK9(hendelser)
+                            log.info("Behandler ${hendelser.size} oppgaver")
+                            refreshK9v3Tjeneste.refreshK9(hendelser)
                         }
                         hendelser.clear()
                         if (refreshUtført == RefreshK9v3Tjeneste.RefreshUtført.ALLE_KØER){

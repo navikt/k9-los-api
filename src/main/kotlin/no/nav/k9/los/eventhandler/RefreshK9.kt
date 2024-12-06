@@ -37,9 +37,12 @@ class RefreshK9(
                             oppgaveListe.clear()
                         }
                     } catch (e: Exception) {
-                        log.error("Feilet ved refresh av oppgaver i k9-sak: " + oppgaveListe.joinToString(", "), e)
+                        log.error("Feilet ved refresh av ${oppgaveListe.size} oppgaver i k9-sak", e)
+                        for (uuid in oppgaveListe) {
+                            log.warn("Feilet ved refresh av $uuid i k9-sak");
+                        }
                     } catch (t : Throwable) {
-                        log.error("Feilet hardt (Throwable) ved refresh av oppgaver (v1) mot k9-sak, avslutter tråden", t)
+                        log.error("Feilet hardt (Throwable) ved refresh av ${oppgaveListe.size} oppgaver (v1) mot k9-sak, avslutter tråden", t)
                         throw t;
                     }
                     oppgaveListe.add(channel.receive())
