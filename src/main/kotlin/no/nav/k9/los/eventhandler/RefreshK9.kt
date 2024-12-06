@@ -8,6 +8,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.eventhandler.RefreshK9v3.Companion
 import no.nav.k9.los.integrasjon.k9.IK9SakService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.slf4j.LoggerFactory
@@ -37,6 +38,9 @@ class RefreshK9(
                         }
                     } catch (e: Exception) {
                         log.error("Feilet ved refresh av oppgaver i k9-sak: " + oppgaveListe.joinToString(", "), e)
+                    } catch (t : Throwable) {
+                        log.error("Feilet hardt (Throwable) ved refresh av oppgaver (v1) mot k9-sak, avslutter tråden", t)
+                        throw t;
                     }
                     oppgaveListe.add(channel.receive())
                 } else {
