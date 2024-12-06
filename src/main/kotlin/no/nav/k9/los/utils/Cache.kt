@@ -40,7 +40,7 @@ class Cache<K, V>(val cacheSizeLimit: Int?) {
     fun containsKey(key: K, now: LocalDateTime): Boolean {
         val cacheObject = withReadLock { keyValueMap[key] } ?: return false
         if (cacheObject.expire.isBefore(now)) {
-            withReadLock { remove(key) }
+            withWriteLock { remove(key) }
             return false
         }
         return true
