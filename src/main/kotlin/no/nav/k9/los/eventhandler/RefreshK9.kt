@@ -33,6 +33,7 @@ class RefreshK9(
                 if (oppgaveId == null) {
                     try {
                         ChannelMetrikker.timeSuspended("refresh_k9sak") {
+                            log.info("Behandler ${oppgaveListe.size} oppgaver")
                             oppfrisk(oppgaveListe)
                             oppgaveListe.clear()
                         }
