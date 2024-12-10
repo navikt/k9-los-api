@@ -370,6 +370,9 @@ fun Application.k9Los() {
 
 private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
 
+
+
+    System.out.println("Hello, World!")
     RefreshKlienterWebSocket(
         sseChannel = sseChannel
     )
