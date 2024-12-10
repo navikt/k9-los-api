@@ -1,10 +1,12 @@
 package no.nav.k9.los.utils
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
+import java.time.Duration
 import java.time.LocalDateTime
+import java.util.concurrent.locks.ReentrantLock
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
-class Cache<K, V>(val cacheSizeLimit: Int?) {
+open class Cache<K, V>(val cacheSizeLimit: Int?) {
 
     private val readWriteLock = ReentrantReadWriteLock()
 
@@ -13,6 +15,7 @@ class Cache<K, V>(val cacheSizeLimit: Int?) {
             return cacheSizeLimit != null && size > cacheSizeLimit
         }
     }
+    private val låserForHentFunksjon: MutableMap<K, ReentrantLock> = HashMap()
 
     fun set(key: K, value: CacheObject<V>) {
         withWriteLock {
@@ -59,19 +62,41 @@ class Cache<K, V>(val cacheSizeLimit: Int?) {
     }
 
     fun hent(nøkkel: K, populerCache: () -> V): V {
-        return withWriteLock {
-            val verdi = this.get(nøkkel)
-            if (verdi == null) {
-                val hentetVerdi = populerCache.invoke()
-                this.set(nøkkel, CacheObject(value = hentetVerdi, expire = LocalDateTime.now().plusMinutes(30)))
-                hentetVerdi
-            } else {
-                verdi.value
-            }
+        return hent(nøkkel, Duration.ofMinutes(30), populerCache)
+    }
+
+    fun hent(nøkkel: K, duration: Duration, populerCache: () -> V): V {
+        get(nøkkel)?.let { return it.value }
+
+        //egen lås pr nøkkel for å kunne oppdatere for flere nøkler samtidig, og unngå at flere tråder forsøker å kjøre unødvendige kall for samme nøkkel
+        val låsForHenting = finnLåsForHenting(nøkkel)
+        låsForHenting.lock()
+        try {
+            //sjekk på nytt for å unngå å hente om en annen tråd allerde har gjort det
+            get(nøkkel)?.let { return it.value }
+
+            val hentetVerdi = populerCache.invoke()
+            this.set(nøkkel, CacheObject(value = hentetVerdi, expire = LocalDateTime.now().plus(duration)))
+            return hentetVerdi
+        } finally {
+            låsForHenting.unlock()
+            withWriteLock { låserForHentFunksjon.remove(nøkkel) }
         }
     }
 
-    private fun <V> withReadLock(operasjon: () -> V): V {
+    private fun finnLåsForHenting(nøkkel: K) = withWriteLock {
+        var lås = låserForHentFunksjon.get(nøkkel)
+        if (lås == null) {
+            lås = ReentrantLock()
+            låserForHentFunksjon.put(nøkkel, lås)
+        }
+        lås
+    }
+
+    protected fun <V> withReadLock(operasjon: () -> V): V {
+        if (readWriteLock.isWriteLockedByCurrentThread) {
+            throw IllegalStateException("Deadlock beskyttelse, får ikke lov å ta read lock når write lock er tatt (siden motsatt rekkefølge tillates)")
+        }
         readWriteLock.readLock().lock()
         try {
             return operasjon.invoke();
@@ -80,7 +105,8 @@ class Cache<K, V>(val cacheSizeLimit: Int?) {
         }
     }
 
-    private fun <V> withWriteLock(operasjon: () -> V): V {
+    protected fun <V> withWriteLock(operasjon: () -> V): V {
+
         readWriteLock.writeLock().lock()
         try {
             return operasjon.invoke();
