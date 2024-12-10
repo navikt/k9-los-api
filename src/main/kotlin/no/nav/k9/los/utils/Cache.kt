@@ -8,7 +8,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 
 open class Cache<K, V>(val cacheSizeLimit: Int?) {
 
-    private val readWriteLock = ReentrantReadWriteLock()
+    private val readWriteLock = ReentrantReadWriteLock(true)
 
     private val keyValueMap = object : LinkedHashMap<K, CacheObject<V>>() {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<K, CacheObject<V>>): Boolean {
@@ -68,7 +68,7 @@ open class Cache<K, V>(val cacheSizeLimit: Int?) {
     fun hent(nøkkel: K, duration: Duration, populerCache: () -> V): V {
         get(nøkkel)?.let { return it.value }
 
-        //egen lås pr nøkkel for å kunne oppdatere for flere nøkler samtidig, og unngå at flere tråder forsøker å kjøre unødvendige kall for samme nøkkel
+        //egen lås pr nøkkel for å kunne oppdatere for flere nøkler samtidig, og samtidig unngå at flere tråder forsøker å kjøre unødvendige kall for samme nøkkel
         val låsForHenting = finnLåsForHenting(nøkkel)
         låsForHenting.lock()
         try {

@@ -127,7 +127,8 @@ class OppgaveKoTjeneste(
         skjermet: Boolean
     ): Long {
         val ko = oppgaveKoRepository.hent(oppgaveKoId, skjermet)
-        return antallOppgaverCache.hent(AntallOppgaverForKøCacheKey(oppgaveKoId, filtrerReserverte), antallOppgaverCacheVarighet) { oppgaveQueryService.queryForAntall(QueryRequest(ko.oppgaveQuery, fjernReserverte = filtrerReserverte))}
+        return antallOppgaverCache.hent(AntallOppgaverForKøCacheKey(oppgaveKoId, filtrerReserverte), antallOppgaverCacheVarighet)
+                { oppgaveQueryService.queryForAntall(QueryRequest(ko.oppgaveQuery, fjernReserverte = filtrerReserverte))}
     }
 
     @WithSpan
@@ -135,7 +136,8 @@ class OppgaveKoTjeneste(
         oppgaveKoId: Long
     ): Long {
         val ko = oppgaveKoRepository.hent(oppgaveKoId, runBlocking { pepClient.harTilgangTilKode6() })
-        return antallOppgaverCache.hent(AntallOppgaverForKøCacheKey(oppgaveKoId, true), antallOppgaverCacheVarighet) { oppgaveQueryService.queryForAntall(QueryRequest(ko.oppgaveQuery, fjernReserverte = true))}
+        return antallOppgaverCache.hent(AntallOppgaverForKøCacheKey(oppgaveKoId, true), antallOppgaverCacheVarighet)
+                { oppgaveQueryService.queryForAntall(QueryRequest(ko.oppgaveQuery, fjernReserverte = true))}
     }
 
     @WithSpan
