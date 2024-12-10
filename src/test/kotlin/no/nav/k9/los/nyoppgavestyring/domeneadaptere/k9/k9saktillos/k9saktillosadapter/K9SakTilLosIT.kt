@@ -363,6 +363,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
 
 
     private fun assertAntallIKø(kø: OppgaveKo, forventetAntall: Int) {
+        oppgaveKøTjeneste.clearCache()
         val antallIKøEtterRes = oppgaveKøTjeneste.hentAntallUreserverteOppgaveForKø(kø.id)
         assertThat(antallIKøEtterRes).isEqualTo(forventetAntall.toLong())
     }
