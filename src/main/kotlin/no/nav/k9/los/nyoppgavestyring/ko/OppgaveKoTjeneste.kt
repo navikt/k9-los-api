@@ -293,6 +293,10 @@ class OppgaveKoTjeneste(
         return kø
     }
 
+    fun clearCache(){
+        antallOppgaverCache.clear()
+    }
+
     data class AntallOppgaverForKøCacheKey (val oppgaveKoId : Long, val filtrerReserverte: Boolean)
 
     class AntallOppgaverForKøCache : Cache<AntallOppgaverForKøCacheKey, Long>(cacheSizeLimit = null) {
