@@ -29,8 +29,10 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
+import no.nav.k9.los.utils.Cache
 import no.nav.k9.los.utils.leggTilDagerHoppOverHelg
 import org.slf4j.LoggerFactory
+import java.time.Duration
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.coroutines.CoroutineContext
@@ -52,6 +54,9 @@ class OppgaveKoTjeneste(
     private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
 ) {
     private val log = LoggerFactory.getLogger(OppgaveKoTjeneste::class.java)
+
+    private val antallOppgaverCache = AntallOppgaverForKøCache()
+    private val antallOppgaverCacheVarighet = Duration.ofMinutes(5)
 
     @WithSpan
     fun hentOppgavekøer(skjermet: Boolean): List<OppgaveKo> {
@@ -122,7 +127,11 @@ class OppgaveKoTjeneste(
         skjermet: Boolean
     ): Long {
         val ko = oppgaveKoRepository.hent(oppgaveKoId, skjermet)
-        return oppgaveQueryService.queryForAntall(QueryRequest(ko.oppgaveQuery, fjernReserverte = filtrerReserverte))
+        return antallOppgaverCache.hent(
+            AntallOppgaverForKøCacheKey(oppgaveKoId, filtrerReserverte),
+            antallOppgaverCacheVarighet
+        )
+        { oppgaveQueryService.queryForAntall(QueryRequest(ko.oppgaveQuery, fjernReserverte = filtrerReserverte)) }
     }
 
     @WithSpan
@@ -130,7 +139,8 @@ class OppgaveKoTjeneste(
         oppgaveKoId: Long
     ): Long {
         val ko = oppgaveKoRepository.hent(oppgaveKoId, runBlocking { pepClient.harTilgangTilKode6() })
-        return oppgaveQueryService.queryForAntall(QueryRequest(ko.oppgaveQuery, fjernReserverte = true))
+        return antallOppgaverCache.hent(AntallOppgaverForKøCacheKey(oppgaveKoId, true), antallOppgaverCacheVarighet)
+        { oppgaveQueryService.queryForAntall(QueryRequest(ko.oppgaveQuery, fjernReserverte = true)) }
     }
 
     @WithSpan
@@ -139,8 +149,9 @@ class OppgaveKoTjeneste(
         oppgaveKoId: Long,
         coroutineContext: CoroutineContext
     ): Pair<Oppgave, ReservasjonV3>? {
-        return DetaljerMetrikker.time("taReservasjonFraKø", "hele", "$oppgaveKoId" ) {
+        return DetaljerMetrikker.time("taReservasjonFraKø", "hele", "$oppgaveKoId") {
             doTaReservasjonFraKø(innloggetBrukerId, oppgaveKoId, coroutineContext)
+                .also { it.let { antallOppgaverCache.decrementValue(AntallOppgaverForKøCacheKey(oppgaveKoId, filtrerReserverte = true)) } } //oppdater cache ved å redusere antall dersom reservasjon ble tatt
         }
     }
 
@@ -155,7 +166,7 @@ class OppgaveKoTjeneste(
 
         var antallKandidaterEtterspurt = 1
         while (true) {
-            val kandidatOppgaver = DetaljerMetrikker.time("taReservasjonFraKø", "queryForOppgaveId","$oppgaveKoId" ) {
+            val kandidatOppgaver = DetaljerMetrikker.time("taReservasjonFraKø", "queryForOppgaveId", "$oppgaveKoId") {
                 oppgaveQueryService.queryForOppgaveId(
                     QueryRequest(
                         oppgavekø.oppgaveQuery,
@@ -165,12 +176,12 @@ class OppgaveKoTjeneste(
                 )
             }
             log.info("Spurte etter $antallKandidaterEtterspurt kandidater fra køen med id $oppgaveKoId, fikk ${kandidatOppgaver.size}")
-            val reservasjon =  DetaljerMetrikker.time("taReservasjonFraKø", "finnReservasjonFraKø","$oppgaveKoId" ) {
+            val reservasjon = DetaljerMetrikker.time("taReservasjonFraKø", "finnReservasjonFraKø", "$oppgaveKoId") {
                 transactionalManager.transaction { tx ->
                     finnReservasjonFraKø(kandidatOppgaver, tx, innloggetBrukerId, coroutineContext)
                 }
             }
-            if (reservasjon != null){
+            if (reservasjon != null) {
                 return reservasjon
             }
             if (kandidatOppgaver.size < antallKandidaterEtterspurt) {
@@ -274,6 +285,7 @@ class OppgaveKoTjeneste(
         runBlocking {
             køpåvirkendeHendelseChannel.send(KødefinisjonSlettet(oppgaveKoId))
         }
+        antallOppgaverCache.slettForKøId(oppgaveKoId)
     }
 
     fun endre(oppgaveKo: OppgaveKo, skjermet: Boolean): OppgaveKo {
@@ -281,7 +293,34 @@ class OppgaveKoTjeneste(
         runBlocking {
             køpåvirkendeHendelseChannel.send(Kødefinisjon(kø.id))
         }
+        antallOppgaverCache.slettForKøId(kø.id)
         return kø
     }
 
+    fun clearCache() {
+        antallOppgaverCache.clear()
+    }
+
+    data class AntallOppgaverForKøCacheKey(val oppgaveKoId: Long, val filtrerReserverte: Boolean)
+
+    class AntallOppgaverForKøCache : Cache<AntallOppgaverForKøCacheKey, Long>(cacheSizeLimit = null) {
+
+        fun slettForKøId(køId: Long) {
+            withWriteLock {
+                remove(AntallOppgaverForKøCacheKey(køId, false))
+                remove(AntallOppgaverForKøCacheKey(køId, true))
+            }
+        }
+
+        fun decrementValue(nøkkel: AntallOppgaverForKøCacheKey) {
+            withWriteLock {
+                val cacheObject = keyValueMap[nøkkel]
+                if (cacheObject != null && cacheObject.value > 0) {
+                    keyValueMap[nøkkel] = cacheObject.copy(value = cacheObject.value - 1)
+                }
+            }
+        }
+
+
+    }
 }
