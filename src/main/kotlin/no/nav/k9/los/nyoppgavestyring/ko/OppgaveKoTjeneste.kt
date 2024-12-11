@@ -55,7 +55,7 @@ class OppgaveKoTjeneste(
 ) {
     private val log = LoggerFactory.getLogger(OppgaveKoTjeneste::class.java)
 
-    private val antallOppgaverCache  = AntallOppgaverForKøCache()
+    private val antallOppgaverCache = AntallOppgaverForKøCache()
     private val antallOppgaverCacheVarighet = Duration.ofMinutes(5)
 
     @WithSpan
@@ -127,8 +127,11 @@ class OppgaveKoTjeneste(
         skjermet: Boolean
     ): Long {
         val ko = oppgaveKoRepository.hent(oppgaveKoId, skjermet)
-        return antallOppgaverCache.hent(AntallOppgaverForKøCacheKey(oppgaveKoId, filtrerReserverte), antallOppgaverCacheVarighet)
-                { oppgaveQueryService.queryForAntall(QueryRequest(ko.oppgaveQuery, fjernReserverte = filtrerReserverte))}
+        return antallOppgaverCache.hent(
+            AntallOppgaverForKøCacheKey(oppgaveKoId, filtrerReserverte),
+            antallOppgaverCacheVarighet
+        )
+        { oppgaveQueryService.queryForAntall(QueryRequest(ko.oppgaveQuery, fjernReserverte = filtrerReserverte)) }
     }
 
     @WithSpan
@@ -137,7 +140,7 @@ class OppgaveKoTjeneste(
     ): Long {
         val ko = oppgaveKoRepository.hent(oppgaveKoId, runBlocking { pepClient.harTilgangTilKode6() })
         return antallOppgaverCache.hent(AntallOppgaverForKøCacheKey(oppgaveKoId, true), antallOppgaverCacheVarighet)
-                { oppgaveQueryService.queryForAntall(QueryRequest(ko.oppgaveQuery, fjernReserverte = true))}
+        { oppgaveQueryService.queryForAntall(QueryRequest(ko.oppgaveQuery, fjernReserverte = true)) }
     }
 
     @WithSpan
@@ -146,8 +149,9 @@ class OppgaveKoTjeneste(
         oppgaveKoId: Long,
         coroutineContext: CoroutineContext
     ): Pair<Oppgave, ReservasjonV3>? {
-        return DetaljerMetrikker.time("taReservasjonFraKø", "hele", "$oppgaveKoId" ) {
-            doTaReservasjonFraKø(innloggetBrukerId, oppgaveKoId, coroutineContext).also { antallOppgaverCache.slettForKøId(oppgaveKoId) }
+        return DetaljerMetrikker.time("taReservasjonFraKø", "hele", "$oppgaveKoId") {
+            doTaReservasjonFraKø(innloggetBrukerId, oppgaveKoId, coroutineContext)
+                .also { it.let { antallOppgaverCache.decrementValue(AntallOppgaverForKøCacheKey(oppgaveKoId, filtrerReserverte = true)) } } //oppdater cache ved å redusere antall dersom reservasjon ble tatt
         }
     }
 
@@ -162,7 +166,7 @@ class OppgaveKoTjeneste(
 
         var antallKandidaterEtterspurt = 1
         while (true) {
-            val kandidatOppgaver = DetaljerMetrikker.time("taReservasjonFraKø", "queryForOppgaveId","$oppgaveKoId" ) {
+            val kandidatOppgaver = DetaljerMetrikker.time("taReservasjonFraKø", "queryForOppgaveId", "$oppgaveKoId") {
                 oppgaveQueryService.queryForOppgaveId(
                     QueryRequest(
                         oppgavekø.oppgaveQuery,
@@ -172,12 +176,12 @@ class OppgaveKoTjeneste(
                 )
             }
             log.info("Spurte etter $antallKandidaterEtterspurt kandidater fra køen med id $oppgaveKoId, fikk ${kandidatOppgaver.size}")
-            val reservasjon =  DetaljerMetrikker.time("taReservasjonFraKø", "finnReservasjonFraKø","$oppgaveKoId" ) {
+            val reservasjon = DetaljerMetrikker.time("taReservasjonFraKø", "finnReservasjonFraKø", "$oppgaveKoId") {
                 transactionalManager.transaction { tx ->
                     finnReservasjonFraKø(kandidatOppgaver, tx, innloggetBrukerId, coroutineContext)
                 }
             }
-            if (reservasjon != null){
+            if (reservasjon != null) {
                 return reservasjon
             }
             if (kandidatOppgaver.size < antallKandidaterEtterspurt) {
@@ -293,20 +297,30 @@ class OppgaveKoTjeneste(
         return kø
     }
 
-    fun clearCache(){
+    fun clearCache() {
         antallOppgaverCache.clear()
     }
 
-    data class AntallOppgaverForKøCacheKey (val oppgaveKoId : Long, val filtrerReserverte: Boolean)
+    data class AntallOppgaverForKøCacheKey(val oppgaveKoId: Long, val filtrerReserverte: Boolean)
 
     class AntallOppgaverForKøCache : Cache<AntallOppgaverForKøCacheKey, Long>(cacheSizeLimit = null) {
 
-        fun slettForKøId(køId  : Long){
+        fun slettForKøId(køId: Long) {
             withWriteLock {
                 remove(AntallOppgaverForKøCacheKey(køId, false))
                 remove(AntallOppgaverForKøCacheKey(køId, true))
             }
         }
+
+        fun decrementValue(nøkkel: AntallOppgaverForKøCacheKey) {
+            withWriteLock {
+                val cacheObject = keyValueMap[nøkkel]
+                if (cacheObject != null && cacheObject.value > 0) {
+                    keyValueMap[nøkkel] = cacheObject.copy(value = cacheObject.value - 1)
+                }
+            }
+        }
+
 
     }
 }

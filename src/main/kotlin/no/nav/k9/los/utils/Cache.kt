@@ -10,7 +10,7 @@ open class Cache<K, V>(val cacheSizeLimit: Int?) {
 
     private val readWriteLock = ReentrantReadWriteLock(true)
 
-    private val keyValueMap = object : LinkedHashMap<K, CacheObject<V>>() {
+    protected val keyValueMap = object : LinkedHashMap<K, CacheObject<V>>() {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<K, CacheObject<V>>): Boolean {
             return cacheSizeLimit != null && size > cacheSizeLimit
         }
@@ -65,6 +65,7 @@ open class Cache<K, V>(val cacheSizeLimit: Int?) {
         return hent(nøkkel, Duration.ofMinutes(30), populerCache)
     }
 
+    @WithSpan
     fun hent(nøkkel: K, duration: Duration, populerCache: () -> V): V {
         get(nøkkel)?.let { return it.value }
 
@@ -75,7 +76,7 @@ open class Cache<K, V>(val cacheSizeLimit: Int?) {
             //sjekk på nytt for å unngå å hente om en annen tråd allerde har gjort det
             get(nøkkel)?.let { return it.value }
 
-            val hentetVerdi = populerCache.invoke()
+            val hentetVerdi = OpentelemetrySpanUtil.span("cache-hent-verdi")  { populerCache.invoke() }
             this.set(nøkkel, CacheObject(value = hentetVerdi, expire = LocalDateTime.now().plus(duration)))
             return hentetVerdi
         } finally {
