@@ -38,6 +38,7 @@ import no.nav.k9.los.integrasjon.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
 import no.nav.k9.los.jobber.K9sakBehandlingsoppfriskingJobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.aktivvask.Aktivvask
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosAdapterTjeneste
@@ -113,7 +114,7 @@ fun Application.k9Los() {
     val k9TilbakeTilLosAdapterTjeneste = koin.get<K9TilbakeTilLosAdapterTjeneste>()
     k9TilbakeTilLosAdapterTjeneste.setup()
 
-    if (LocalDateTime.now().isBefore(LocalDateTime.of(2024, 11, 22, 18, 0))) {
+    if (LocalDateTime.now().isBefore(LocalDateTime.of(2024, 12, 13, 18, 0))) {
         if (1 == 0) { //HAXX for å ikke kjøre jobb, men indikere at koden er i bruk og dermed ikke slettes
             //koin.get<ReservasjonKonverteringJobb>().kjørReservasjonskonvertering() //TODO slette
             //koin.get<K9SakTilLosLukkeFeiloppgaverTjeneste>().kjørFeiloppgaverVask() //TODO slette
@@ -121,8 +122,9 @@ fun Application.k9Los() {
             koin.get<K9PunsjTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
             koin.get<K9KlageTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
             koin.get<K9TilbakeTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
+            koin.get<K9PunsjTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
         }
-        koin.get<K9PunsjTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
+        koin.get<Aktivvask>().kjørAktivvask()
     }
 
     install(Authentication) {
