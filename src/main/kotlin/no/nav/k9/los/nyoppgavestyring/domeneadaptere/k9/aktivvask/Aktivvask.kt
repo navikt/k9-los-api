@@ -25,7 +25,7 @@ class Aktivvask(private val dataSource: DataSource) {
             isDaemon = true,
             name = TRÅDNAVN
         ) {
-            Thread.sleep(2.toDuration(DurationUnit.SECONDS).inWholeMilliseconds)
+            Thread.sleep(1.toDuration(DurationUnit.MINUTES).inWholeMilliseconds)
 
             val antallPrRunde = 100
             do {
