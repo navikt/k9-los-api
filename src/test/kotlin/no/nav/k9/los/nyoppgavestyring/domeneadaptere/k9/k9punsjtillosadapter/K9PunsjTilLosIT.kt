@@ -2,6 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9punsjtillosadapter
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import assertk.assertions.isNull
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.aksjonspunktbehandling.K9punsjEventHandler
 import no.nav.k9.los.aksjonspunktbehandling.PunsjEventDtoBuilder
@@ -99,7 +100,7 @@ class K9PunsjTilLosIT : AbstractK9LosIntegrationTest() {
         eventHandler.prosesser(event3)
 
         val aktivOppgave = transactionalManager.transaction { tx -> aktivOppgaveRepository.hentOppgaveForEksternId(tx, EksternOppgaveId("K9", punsjId.toString())) }
-        assertThat(aktivOppgave!!.status).isEqualTo("LUKKET")
+        assertThat(aktivOppgave).isNull() //når oppgaven lukkes fjernes den også fra aktiv-tabellene
 
     }
 }
