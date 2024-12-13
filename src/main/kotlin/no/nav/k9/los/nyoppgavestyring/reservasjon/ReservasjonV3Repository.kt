@@ -39,6 +39,7 @@ class ReservasjonV3Repository(
             } else if (e.sqlState == "23503" && e.message!!.contains("fk_reservasjon_v3_01")) {
                 throw IllegalArgumentException("Saksbehandler med id ${reservasjonV3.reservertAv} finnes ikke")
             } else {
+                log.error("PSQLEXception, uventet feilkode: ${e.sqlState}")
                 throw e
             }
         }
