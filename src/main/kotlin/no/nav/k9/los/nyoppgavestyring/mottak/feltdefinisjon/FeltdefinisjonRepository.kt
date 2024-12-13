@@ -60,6 +60,7 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                 if (e.sqlState.equals("23503")) {
                     throw IllegalDeleteException("Kan ikke slette feltdefinisjon som brukes av oppgavetype", e)
                 } else {
+                    log.error("PSQLEXception, uventet feilkode: ${e.sqlState}", e)
                     throw e
                 }
             }

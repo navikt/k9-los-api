@@ -122,6 +122,7 @@ class OppgavetypeRepository(
                     if (e.sqlState.equals("23503")) {
                         throw IllegalDeleteException("Kan ikke slette oppgavefelt som brukes av oppgave", e)
                     } else {
+                        log.error("PSQLEXception, uventet feilkode: ${e.sqlState}", e)
                         throw e
                     }
                 }
