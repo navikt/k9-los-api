@@ -1,19 +1,14 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 
-import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotliquery.TransactionalSession
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
-import org.slf4j.LoggerFactory
 
 class OppgaveV3Tjeneste(
     private val oppgaveV3Repository: OppgaveV3Repository,
     private val oppgavetypeRepository: OppgavetypeRepository,
     private val områdeRepository: OmrådeRepository
 ) {
-
-    private val log = LoggerFactory.getLogger(OppgaveV3Tjeneste::class.java)
 
     fun sjekkDuplikatOgProsesser(dto: OppgaveDto, tx: TransactionalSession): OppgaveV3? {
         var oppgave: OppgaveV3? = null
@@ -83,14 +78,6 @@ class OppgaveV3Tjeneste(
             eksternVersjon = eksternVersjon,
             tx = tx
         )
-    }
-
-    fun hentOppgaveVersjonenFør(eksternId: String, eventNr: Long, oppgaveType: String, område: String, tx: TransactionalSession): OppgaveV3 {
-        val hentetOppgavetype = oppgavetypeRepository.hentOppgavetype(område, oppgaveType)
-        if (eventNr < 1) {
-            throw IllegalArgumentException("Kan ikke hente oppgaveversjon før første oppgaveversjon")
-        }
-        return oppgaveV3Repository.hentOppgaveversjonenFør(eksternId, internVersjon = eventNr, hentetOppgavetype, tx)!!
     }
 
     fun ajourholdAktivOppgave(innkommendeOppgave: OppgaveV3, internVersjon: Long, tx: TransactionalSession) {

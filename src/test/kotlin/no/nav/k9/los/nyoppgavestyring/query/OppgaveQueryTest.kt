@@ -840,6 +840,23 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         assertThat(søk2.get(0).eksternId).isIn(oppgave1.eksternId, oppgave2.eksternId)
     }
 
+    @Test
+    fun `ytelse - kan ikke finne lukkede oppgaver fordi de ikke ligger i tabell som brukes for søket - pga ytelse`() {
+        OppgaveTestDataBuilder()
+            .lagOgLagre()
+
+        OppgaveTestDataBuilder()
+            .lagOgLagre(Oppgavestatus.LUKKET)
+
+        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
+        val oppgaveQuery = OppgaveQuery(
+            listOf(
+                byggGenereltFilter(FeltType.OPPGAVE_STATUS, FeltverdiOperator.IN, Oppgavestatus.LUKKET.kode),
+            )
+        )
+
+        assertThat(oppgaveQueryRepository.query(QueryRequest(oppgaveQuery)).size).isEqualTo(0)
+    }
 
     @Test
     fun `ytelse - oppgavequery med filter på oppgavestatus skal ikke filtrere vekk oppgave med samme status`() {
@@ -859,29 +876,20 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
 
         assertThat(oppgaveQueryRepository.query(QueryRequest(oppgaveQuery)).size).isEqualTo(1)
 
-
         val oppgaveQuery2 = OppgaveQuery(
-            listOf(
-                byggGenereltFilter(FeltType.OPPGAVE_STATUS, FeltverdiOperator.IN, Oppgavestatus.LUKKET.kode),
-            )
-        )
-
-        assertThat(oppgaveQueryRepository.query(QueryRequest(oppgaveQuery2)).size).isEqualTo(1)
-
-        val oppgaveQuery3 = OppgaveQuery(
             listOf(
                 byggGenereltFilter(FeltType.OPPGAVE_STATUS, FeltverdiOperator.IN, Oppgavestatus.VENTER.kode),
             )
         )
 
-        assertThat(oppgaveQueryRepository.query(QueryRequest(oppgaveQuery3)).size).isEqualTo(0)
+        assertThat(oppgaveQueryRepository.query(QueryRequest(oppgaveQuery2)).size).isEqualTo(0)
 
         val oppgaveQuery4 = OppgaveQuery(
             listOf(
             )
         )
 
-        assertThat(oppgaveQueryRepository.query(QueryRequest(oppgaveQuery4)).size).isEqualTo(2)
+        assertThat(oppgaveQueryRepository.query(QueryRequest(oppgaveQuery4)).size).isEqualTo(1)
 
         val oppgaveQuery5 = OppgaveQuery(
             listOf(
@@ -894,7 +902,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        assertThat(oppgaveQueryRepository.query(QueryRequest(oppgaveQuery5)).size).isEqualTo(2)
+        assertThat(oppgaveQueryRepository.query(QueryRequest(oppgaveQuery5)).size).isEqualTo(1)
     }
 
     @Test

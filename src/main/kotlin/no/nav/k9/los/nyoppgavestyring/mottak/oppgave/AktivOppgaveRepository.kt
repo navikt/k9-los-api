@@ -5,43 +5,51 @@ import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.db.util.InClauseHjelper
+import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveV2
 import no.nav.k9.los.eventhandler.DetaljerMetrikker
-import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgavefelt
 import org.jetbrains.annotations.VisibleForTesting
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
-class AktivOppgaveRepository (val oppgavetypeRepository: OppgavetypeRepository)  {
+class AktivOppgaveRepository(val oppgavetypeRepository: OppgavetypeRepository) {
 
     companion object {
+
+        private val log = LoggerFactory.getLogger(AktivOppgaveRepository::class.java)
+
         @WithSpan
-        fun ajourholdAktivOppgave(oppgave: OppgaveV3, nyVersjon: Long, tx: TransactionalSession): AktivOppgaveId {
-            val oppgaveId = DetaljerMetrikker.time("k9sakHistorikkvask", "oppdaterOppgaveV3Aktiv") {
-                oppdaterOppgaveV3Aktiv(
-                    tx,
-                    oppgave,
-                    nyVersjon
-                )
+        fun ajourholdAktivOppgave(oppgave: OppgaveV3, nyVersjon: Long, tx: TransactionalSession) {
+            if (oppgave.status == Oppgavestatus.AAPEN || oppgave.status == Oppgavestatus.VENTER) {
+                val oppgaveId = DetaljerMetrikker.time("k9sakHistorikkvask", "oppdaterOppgaveV3Aktiv") {
+                    oppdaterOppgaveV3Aktiv(
+                        tx,
+                        oppgave,
+                        nyVersjon
+                    )
+                }
+                DetaljerMetrikker.time("k9sakHistorikkvask", "oppdaterAktivOppgavefelter") {
+                    oppdaterAktivOppgavefelter(
+                        oppgaveId,
+                        oppgave,
+                        nyVersjon,
+                        tx
+                    )
+                }
+            } else {
+                slettAktivOppgave(tx, oppgave, "Oppgave ${oppgave.id} har status ${oppgave.status} og fjernes derfor fra aktiv-tabellene")
             }
-            DetaljerMetrikker.time("k9sakHistorikkvask", "oppdaterAktivOppgavefelter") {
-                oppdaterAktivOppgavefelter(
-                    oppgaveId,
-                    oppgave,
-                    nyVersjon,
-                    tx
-                )
-            }
-            return oppgaveId
         }
 
         @WithSpan
-        fun slettAktivOppgave(tx: TransactionalSession, oppgave: OppgaveV3) {
+        fun slettAktivOppgave(tx: TransactionalSession, oppgave: OppgaveV3, loggmeldingVedSlett : String? = null) {
             val id = hentOppgaveV3AktivId(tx, oppgave)
-            if (id != null){
+            if (id != null) {
+                loggmeldingVedSlett?.let { log.info(loggmeldingVedSlett) }
                 tx.run(
                     queryOf(
                         "delete from oppgavefelt_verdi_aktiv where oppgave_id = :id",
@@ -66,28 +74,32 @@ class AktivOppgaveRepository (val oppgavetypeRepository: OppgavetypeRepository) 
             oppgave: OppgaveV3,
             nyVersjon: Long
         ): AktivOppgaveId {
-            return AktivOppgaveId(tx.updateAndReturnGeneratedKey(
-                queryOf(
-                    """
+            return AktivOppgaveId(
+                tx.updateAndReturnGeneratedKey(
+                    queryOf(
+                        """
                         insert into oppgave_v3_aktiv (ekstern_id, ekstern_versjon, oppgavetype_id, status, versjon, kildeomrade, endret_tidspunkt, reservasjonsnokkel)
                         values(:eksternId, :eksternVersjon, :oppgavetypeId, cast(:status as oppgavestatus), :versjon, :kildeomrade, :endretTidspunkt, :reservasjonsnokkel)                   
                     """.trimIndent(),
-                    mapOf(
-                        "eksternId" to oppgave.eksternId,
-                        "eksternVersjon" to oppgave.eksternVersjon,
-                        "oppgavetypeId" to oppgave.oppgavetype.id,
-                        "status" to oppgave.status.toString(),
-                        "endretTidspunkt" to oppgave.endretTidspunkt,
-                        "versjon" to nyVersjon,
-                        "kildeomrade" to oppgave.kildeområde,
-                        "reservasjonsnokkel" to oppgave.reservasjonsnøkkel,
+                        mapOf(
+                            "eksternId" to oppgave.eksternId,
+                            "eksternVersjon" to oppgave.eksternVersjon,
+                            "oppgavetypeId" to oppgave.oppgavetype.id,
+                            "status" to oppgave.status.toString(),
+                            "endretTidspunkt" to oppgave.endretTidspunkt,
+                            "versjon" to nyVersjon,
+                            "kildeomrade" to oppgave.kildeområde,
+                            "reservasjonsnokkel" to oppgave.reservasjonsnøkkel,
+                        )
                     )
-                )
-            )!!)
+                )!!
+            )
         }
 
-        private fun hentOppgaveV3AktivId( tx: TransactionalSession,
-                                          oppgave: OppgaveV3): AktivOppgaveId? {
+        private fun hentOppgaveV3AktivId(
+            tx: TransactionalSession,
+            oppgave: OppgaveV3
+        ): AktivOppgaveId? {
             return tx.run(
                 queryOf(
                     """ select id from oppgave_v3_aktiv where ekstern_id = :eksternId and kildeomrade = :kildeomrade """,
@@ -205,7 +217,8 @@ class AktivOppgaveRepository (val oppgavetypeRepository: OppgavetypeRepository) 
             if (inserts.isEmpty()) {
                 return
             }
-            tx.batchPreparedNamedStatement("""
+            tx.batchPreparedNamedStatement(
+                """
                 insert into oppgavefelt_verdi_aktiv(oppgave_id, oppgavefelt_id, verdi, oppgavestatus)
                         VALUES (:oppgaveId, :oppgavefeltId, :verdi, cast(:oppgavestatus as oppgavestatus))
             """.trimIndent(),
@@ -293,7 +306,11 @@ class AktivOppgaveRepository (val oppgavetypeRepository: OppgavetypeRepository) 
     }
 
     @WithSpan
-    fun hentOppgaveForId(tx: TransactionalSession, aktivOppgaveId: AktivOppgaveId, now: LocalDateTime = LocalDateTime.now()): Oppgave {
+    fun hentOppgaveForId(
+        tx: TransactionalSession,
+        aktivOppgaveId: AktivOppgaveId,
+        now: LocalDateTime = LocalDateTime.now()
+    ): Oppgave {
         val oppgave = tx.run(
             queryOf(
                 """
@@ -311,7 +328,11 @@ class AktivOppgaveRepository (val oppgavetypeRepository: OppgavetypeRepository) 
     }
 
     @VisibleForTesting
-    fun hentOppgaveForEksternId(tx: TransactionalSession, eksternOppgaveId: EksternOppgaveId, now: LocalDateTime = LocalDateTime.now()): Oppgave? {
+    fun hentOppgaveForEksternId(
+        tx: TransactionalSession,
+        eksternOppgaveId: EksternOppgaveId,
+        now: LocalDateTime = LocalDateTime.now()
+    ): Oppgave? {
         return tx.run(
             queryOf(
                 """
@@ -327,12 +348,13 @@ class AktivOppgaveRepository (val oppgavetypeRepository: OppgavetypeRepository) 
     }
 
     @WithSpan
-    fun hentK9sakParsakOppgaver(tx: TransactionalSession, oppgaver : Collection<AktivOppgaveId>) : Set<EksternOppgaveId> {
-        if (oppgaver.isEmpty()){
+    fun hentK9sakParsakOppgaver(tx: TransactionalSession, oppgaver: Collection<AktivOppgaveId>): Set<EksternOppgaveId> {
+        if (oppgaver.isEmpty()) {
             return emptySet()
         }
         return tx.run(
-            queryOf("""                
+            queryOf(
+                """                
                 select oppg.ekstern_id as ekstern_id
                  from oppgave_v3_aktiv oppg
                  join oppgavetype ot on oppg.oppgavetype_id = ot.id
@@ -340,13 +362,18 @@ class AktivOppgaveRepository (val oppgavetypeRepository: OppgavetypeRepository) 
                     ot.ekstern_id = 'k9sak'
                  and 
                     reservasjonsnokkel in (
-                       select reservasjonsnokkel from oppgave_v3_aktiv where id in (${InClauseHjelper.tilParameternavn(oppgaver, "o")})
+                       select reservasjonsnokkel from oppgave_v3_aktiv where id in (${
+                    InClauseHjelper.tilParameternavn(
+                        oppgaver,
+                        "o"
+                    )
+                })
                     )
             """.trimIndent(),
-            InClauseHjelper.parameternavnTilVerdierMap(oppgaver.map { it.id }, "o")
-        ).map {
-            row -> EksternOppgaveId("K9", row.string("ekstern_id"))
-        }.asList
+                InClauseHjelper.parameternavnTilVerdierMap(oppgaver.map { it.id }, "o")
+            ).map { row ->
+                EksternOppgaveId("K9", row.string("ekstern_id"))
+            }.asList
         ).toSet()
     }
 
@@ -372,7 +399,6 @@ class AktivOppgaveRepository (val oppgavetypeRepository: OppgavetypeRepository) 
             versjon = row.int("versjon")
         ).fyllDefaultverdier().utledTransienteFelter(now)
     }
-
 
 
     data class DiffResultat(
