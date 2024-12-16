@@ -26,12 +26,14 @@ class Aktivvask(private val dataSource: DataSource) {
             name = TRÅDNAVN
         ) {
             Thread.sleep(1.toDuration(DurationUnit.MINUTES).inWholeMilliseconds)
-
-            val antallPrRunde = 100
-            do {
-                var antallMigrert = migrerInntil(antallPrRunde);
-            } while (antallMigrert == antallPrRunde);
-
+            try {
+                val antallPrRunde = 100
+                do {
+                    var antallMigrert = migrerInntil(antallPrRunde);
+                } while (antallMigrert == antallPrRunde);
+            } catch (ex: Exception) {
+                log.warn("Fikk feil under aktivvask, avbryter aktivvask", ex)
+            }
             log.info("Aktivvask ferdig")
         }
 
@@ -49,8 +51,8 @@ class Aktivvask(private val dataSource: DataSource) {
             )
 
             if (!idLukketAktivOppgave.isEmpty()) {
-                tx.run ( queryOf("delete from oppgavefelt_verdi_aktiv where oppgave_id in ${InClauseHjelper.tilParameternavn(idLukketAktivOppgave, "id")}", InClauseHjelper.parameternavnTilVerdierMap(idLukketAktivOppgave, "id")).asUpdate )
-                tx.run ( queryOf("delete from oppgave_v3_aktiv where id in ${InClauseHjelper.tilParameternavn(idLukketAktivOppgave, "id")}", InClauseHjelper.parameternavnTilVerdierMap(idLukketAktivOppgave, "id")).asUpdate )
+                tx.run ( queryOf("delete from oppgavefelt_verdi_aktiv where oppgave_id in (${InClauseHjelper.tilParameternavn(idLukketAktivOppgave, "id")})", InClauseHjelper.parameternavnTilVerdierMap(idLukketAktivOppgave, "id")).asUpdate )
+                tx.run ( queryOf("delete from oppgave_v3_aktiv where id in (${InClauseHjelper.tilParameternavn(idLukketAktivOppgave, "id")})", InClauseHjelper.parameternavnTilVerdierMap(idLukketAktivOppgave, "id")).asUpdate )
                 log.info("Aktivvask slettet fra aktiv-tabellene for ${idLukketAktivOppgave.size} oppgaver")
             } else {
                 log.info("Ingenting å slette fra aktiv-tabellene")
