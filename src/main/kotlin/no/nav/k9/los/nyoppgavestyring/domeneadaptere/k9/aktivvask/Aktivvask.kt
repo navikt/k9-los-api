@@ -6,6 +6,7 @@ import kotliquery.using
 import no.nav.k9.los.db.util.InClauseHjelper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.Duration
 import javax.sql.DataSource
 import kotlin.concurrent.thread
 import kotlin.time.DurationUnit
@@ -30,11 +31,12 @@ class Aktivvask(private val dataSource: DataSource) {
                 val antallPrRunde = 100
                 do {
                     var antallMigrert = migrerInntil(antallPrRunde);
+                    Thread.sleep(Duration.ofSeconds(1))
                 } while (antallMigrert == antallPrRunde);
+                log.info("Aktivvask ferdig")
             } catch (ex: Exception) {
                 log.warn("Fikk feil under aktivvask, avbryter aktivvask", ex)
             }
-            log.info("Aktivvask ferdig")
         }
 
     }
