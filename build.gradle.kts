@@ -9,10 +9,10 @@ val kotliqueryVersion = "1.9.0"
 val k9SakVersion = "5.2.1"
 val k9KlageVersion = "0.4.5"
 val fuelVersion = "2.3.1"
-val jacksonVersion = "2.17.2"
-val commonsTextVersion = "1.12.0"
+val jacksonVersion = "2.18.2"
+val commonsTextVersion = "1.13.0"
 
-val dusseldorfKtorVersion = "5.0.14"
+val dusseldorfKtorVersion = "5.0.15"
 val ktorVersion = "2.3.13"
 val kafkaVersion = "3.9.0"
 
@@ -21,7 +21,7 @@ val navTilgangskontroll = "3.2024.01.24_10.14-f70bae69bd65"
 // Test Dependencies
 val testContainers = "1.20.4"
 val jsonassertVersion = "1.5.3"
-val jupiterVersion = "5.11.3"
+val jupiterVersion = "5.11.4"
 val assertkVersion = "0.28.1"
 val mockkVersion = "1.13.13"
 
