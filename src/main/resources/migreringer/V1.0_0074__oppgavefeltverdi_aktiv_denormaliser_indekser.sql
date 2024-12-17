@@ -1,0 +1,4 @@
+
+create index idx_oppgavefelt_verdi_aktiv_denorm_1 on oppgavefelt_verdi_aktiv(oppgave_id, omrade_ekstern_id, feltdefinisjon_ekstern_id);
+create index idx_oppgavefelt_verdi_aktiv_denorm_2 on oppgavefelt_verdi_aktiv(oppgave_id, verdi);
+create index idx_oppgavefelt_verdi_aktiv_denorm_3 on oppgavefelt_verdi_aktiv(oppgave_id, omrade_ekstern_id, feltdefinisjon_ekstern_id, oppgavetype_ekstern_id, verdi);

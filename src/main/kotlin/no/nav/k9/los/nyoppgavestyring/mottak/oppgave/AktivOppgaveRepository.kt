@@ -260,13 +260,12 @@ class AktivOppgaveRepository(val oppgavetypeRepository: OppgavetypeRepository) {
             return tx.run(
                 queryOf(
                     """
-                select fd.ekstern_id as ekstern_id, o.ekstern_id as omrade, fd.liste_type, f.pakrevd, ov.verdi
+                select ov.feltdefinisjon_ekstern_id as ekstern_id, ov.omrade_ekstern_id as omrade, fd.liste_type, f.pakrevd, ov.verdi
                 from oppgavefelt_verdi_aktiv ov 
                 inner join oppgavefelt f on ov.oppgavefelt_id = f.id 
-                inner join feltdefinisjon fd on f.feltdefinisjon_id = fd.id 
-                inner join omrade o on fd.omrade_id = o.id 
+                inner join feltdefinisjon fd on f.feltdefinisjon_id = fd.id
                 where ov.oppgave_id = :oppgaveId
-                order by fd.ekstern_id
+                order by ov.feltdefinisjon_ekstern_id
                 """.trimIndent(),
                     mapOf("oppgaveId" to oppgaveId)
                 ).map { row ->
