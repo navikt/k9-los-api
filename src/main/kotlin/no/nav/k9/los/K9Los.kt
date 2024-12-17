@@ -114,17 +114,16 @@ fun Application.k9Los() {
     val k9TilbakeTilLosAdapterTjeneste = koin.get<K9TilbakeTilLosAdapterTjeneste>()
     k9TilbakeTilLosAdapterTjeneste.setup()
 
-    if (LocalDateTime.now().isBefore(LocalDateTime.of(2024, 12, 16, 19, 0))) {
+    if (LocalDateTime.now().isBefore(LocalDateTime.of(2024, 12, 17, 19, 0))) {
         if (1 == 0) { //HAXX for å ikke kjøre jobb, men indikere at koden er i bruk og dermed ikke slettes
             //koin.get<ReservasjonKonverteringJobb>().kjørReservasjonskonvertering() //TODO slette
             //koin.get<K9SakTilLosLukkeFeiloppgaverTjeneste>().kjørFeiloppgaverVask() //TODO slette
             koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
-            koin.get<K9PunsjTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
             koin.get<K9KlageTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
             koin.get<K9TilbakeTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
-            koin.get<K9PunsjTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
+            koin.get<Aktivvask>().kjørAktivvask()
         }
-        koin.get<Aktivvask>().kjørAktivvask()
+        koin.get<K9PunsjTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
     }
 
     install(Authentication) {
@@ -271,11 +270,7 @@ fun Application.k9Los() {
     ).kjør(kjørUmiddelbart = false)
 
 
-
-    //TODO fjern sjekk når klart for prod
-    if (configuration.koinProfile == KoinProfile.PREPROD || configuration.koinProfile == KoinProfile.LOCAL) {
-        koin.get<K9TilbakeTilLosAdapterTjeneste>().kjør(kjørSetup = false, kjørUmiddelbart = false)
-    }
+    koin.get<K9TilbakeTilLosAdapterTjeneste>().kjør(kjørSetup = false, kjørUmiddelbart = false)
 
     OppgavestatistikkTjeneste(
         oppgavetypeRepository = koin.get(),
