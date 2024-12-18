@@ -78,9 +78,6 @@ abstract class LøpendeDurationTransientFeltutleder(
                 WHERE EXISTS (
                     SELECT 'Y'
                     FROM Oppgavefelt_verdi_aktiv ov 
-                    INNER JOIN Oppgavefelt f ON (f.id = ov.oppgavefelt_id) 
-                    INNER JOIN Feltdefinisjon fd ON (fd.id = f.feltdefinisjon_id) 
-                    INNER JOIN Omrade fo ON (fo.id = fd.omrade_id)
                     WHERE ov.oppgave_id = o.id
                       AND ov.verdi = 'true'
                       AND $løpendeOppgavetidHvisTrueSql
@@ -104,9 +101,6 @@ abstract class LøpendeDurationTransientFeltutleder(
                     ) - (
                         SELECT CAST(ov.verdi AS timestamp)
                         FROM Oppgavefelt_verdi_aktiv ov 
-                        INNER JOIN Oppgavefelt f ON (f.id = ov.oppgavefelt_id) 
-                        INNER JOIN Feltdefinisjon fd ON (fd.id = f.feltdefinisjon_id) 
-                        INNER JOIN Omrade fo ON (fo.id = fd.omrade_id)
                         WHERE ov.oppgave_id = o.id
                           AND ${områdeOgKodeSql(områdeOgKode)}
                     )
@@ -128,7 +122,7 @@ abstract class LøpendeDurationTransientFeltutleder(
     }
 
     private fun områdeOgKodeSql(områdeOgKode: OmrådeOgKode) =
-        "fo.ekstern_id = '${områdeOgKode.område}' AND fd.ekstern_id = '${områdeOgKode.kode}'"
+        "ov.omrade_ekstern_id = '${områdeOgKode.område}' AND ov.feltdefinisjon_ekstern_id = '${områdeOgKode.kode}'"
 
     override fun hentVerdi(input: HentVerdiInput): List<String> {
         var løpendeDuration = Duration.ZERO

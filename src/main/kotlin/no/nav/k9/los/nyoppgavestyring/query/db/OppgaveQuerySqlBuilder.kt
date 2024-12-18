@@ -178,13 +178,10 @@ class OppgaveQuerySqlBuilder(
         query += """
                 ${combineOperator.sql} ${if (operator.negasjonAv != null) "NOT" else "" } EXISTS (
                     SELECT 'Y'
-                    FROM Oppgavefelt_verdi_aktiv ov 
-                    INNER JOIN Oppgavefelt f ON (f.id = ov.oppgavefelt_id) 
-                    INNER JOIN Feltdefinisjon fd ON (fd.id = f.feltdefinisjon_id) 
-                    INNER JOIN Omrade fo ON (fo.id = fd.omrade_id)
+                    FROM Oppgavefelt_verdi_aktiv ov
                     WHERE ov.oppgave_id = o.id
-                      AND fo.ekstern_id = :feltOmrade$index
-                      AND fd.ekstern_id = :feltkode$index
+                      AND ov.omrade_ekstern_id = :feltOmrade$index
+                      AND ov.feltdefinisjon_ekstern_id = :feltkode$index
                       AND 
             """.trimIndent()
 
@@ -268,12 +265,9 @@ class OppgaveQuerySqlBuilder(
                 ${combineOperator.sql}$invertertOperator EXISTS (
                     SELECT 'Y'
                     FROM Oppgavefelt_verdi_aktiv ov 
-                    INNER JOIN Oppgavefelt f ON (f.id = ov.oppgavefelt_id) 
-                    INNER JOIN Feltdefinisjon fd ON (fd.id = f.feltdefinisjon_id) 
-                    INNER JOIN Omrade fo ON (fo.id = fd.omrade_id)
                     WHERE ov.oppgave_id = o.id
-                      AND fo.ekstern_id = :feltOmrade$index
-                      AND fd.ekstern_id = :feltkode$index
+                      AND ov.omrade_ekstern_id = :feltOmrade$index
+                      AND ov.feltdefinisjon_ekstern_id = :feltkode$index
                   )
             """.trimIndent()
     }
@@ -325,12 +319,9 @@ class OppgaveQuerySqlBuilder(
                 , (
                   SELECT $typeConversion                    
                   FROM Oppgavefelt_verdi_aktiv ov 
-                  INNER JOIN Oppgavefelt f ON (f.id = ov.oppgavefelt_id) 
-                  INNER JOIN Feltdefinisjon fd ON (fd.id = f.feltdefinisjon_id) 
-                  INNER JOIN Omrade fo ON (fo.id = fd.omrade_id)
                   WHERE ov.oppgave_id = o.id
-                    AND fo.ekstern_id = :orderByfeltOmrade$index
-                    AND fd.ekstern_id = :orderByfeltkode$index
+                    AND ov.omrade_ekstern_id = :orderByfeltOmrade$index
+                    AND ov.feltdefinisjon_ekstern_id = :orderByfeltkode$index
                 ) 
             """.trimIndent()
 
