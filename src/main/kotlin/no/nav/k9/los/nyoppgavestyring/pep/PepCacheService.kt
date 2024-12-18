@@ -27,11 +27,6 @@ class PepCacheService(
         oppdaterCacheForOppgaverMedStatusEldreEnn(gyldighet, setOf(Oppgavestatus.VENTER, Oppgavestatus.AAPEN))
     }
 
-    @WithSpan
-    fun oppdaterCacheForLukkedeOppgaverEldreEnn(gyldighet: Duration = Duration.ofDays(30)) {
-        oppdaterCacheForOppgaverMedStatusEldreEnn(gyldighet, setOf(Oppgavestatus.LUKKET))
-    }
-
     private fun oppdaterCacheForOppgaverMedStatusEldreEnn(
         gyldighet: Duration = Duration.ofHours(23),
         status: Set<Oppgavestatus>

@@ -32,21 +32,4 @@ class PepCacheOppdaterer(
             }
         }
     }
-
-    fun startOppdateringAvLukkedeOppgaver(): Timer {
-        return timer(
-            daemon = true,
-            name = TRÅDNAVN,
-            period = tidMellomKjøring.toMillis(),
-            initialDelay = forsinketOppstart.toMillis()
-        ) {
-            try {
-                JobbMetrikker.time("pepcache_oppdaterer_lukkede") {
-                    pepCacheService.oppdaterCacheForLukkedeOppgaverEldreEnn(gyldighet = Duration.ofDays(30))
-                }
-            } catch (e: Exception) {
-                log.warn("Feil ved kjøring av PepCacheOppdaterer for lukkede oppgaver", e)
-            }
-        }
-    }
 }
