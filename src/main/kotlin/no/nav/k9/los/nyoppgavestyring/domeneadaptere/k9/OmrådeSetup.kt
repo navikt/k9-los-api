@@ -175,8 +175,14 @@ class OmrådeSetup(
     }
 
     private fun kodeverkBehandlingsårsak() {
-        val k9sakKodeverk = no.nav.k9.kodeverk.behandling.BehandlingÅrsakType.entries.lagK9Dto(beskrivelse = null, KodeverkSynlighetRegler::behandlingsårsak)
-        val k9klageKodeverk = no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.entries.lageK9KlageDto(beskrivelse = null, KodeverkSynlighetRegler::behandlingsårsak)
+        val k9sakKodeverk = no.nav.k9.kodeverk.behandling.BehandlingÅrsakType.entries.lagK9Dto(
+            beskrivelse = null,
+            KodeverkSynlighetRegler::behandlingsårsak
+        )
+        val k9klageKodeverk = no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.entries.lageK9KlageDto(
+            beskrivelse = null,
+            KodeverkSynlighetRegler::behandlingsårsak
+        )
         val koder = k9sakKodeverk + k9klageKodeverk
         val kodeverkDto = KodeverkDto(
             område = område,
@@ -285,7 +291,9 @@ object KodeverkSynlighetRegler {
 
     fun ytelseType(ytelseType: FagsakYtelseType): KodeverkSynlighet {
         return when (ytelseType) {
-            FagsakYtelseType.FRISINN -> KodeverkSynlighet.SKJULT
+            FagsakYtelseType.FRISINN,
+            FagsakYtelseType.UNGDOMSYTELSE -> KodeverkSynlighet.SKJULT
+
             FagsakYtelseType.OLP,
             FagsakYtelseType.UKJENT,
             FagsakYtelseType.OMSORGSDAGER -> KodeverkSynlighet.SYNLIG
