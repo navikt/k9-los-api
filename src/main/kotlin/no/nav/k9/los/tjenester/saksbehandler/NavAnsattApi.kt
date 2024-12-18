@@ -24,6 +24,8 @@ internal fun Route.NavAnsattApis() {
             requestContextService.withRequestContext(call) {
                 val token = call.idToken()
                 val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
+                val finnesISaksbehandlerTabell =
+                    saksbehandlerRepository.finnSaksbehandlerMedEpost(token.getUsername()) != null
                 val innloggetNavAnsattDto = InnloggetNavAnsattDto(
                     token.getUsername(),
                     token.getName(),
@@ -31,9 +33,11 @@ internal fun Route.NavAnsattApis() {
                     kanSaksbehandle = pepClient.harBasisTilgang(), //TODO mismatch mellom navnet 'kanSaksbehandle' og at alle som har tilgang til systemet har basistilgang
                     kanOppgavestyre = pepClient.erOppgaveStyrer(),
                     kanReservere = pepClient.harTilgangTilReserveringAvOppgaver(),
-                    kanDrifte = pepClient.kanLeggeUtDriftsmelding()
+                    kanDrifte = pepClient.kanLeggeUtDriftsmelding(),
+                    finnesISaksbehandlerTabell = finnesISaksbehandlerTabell
                 )
-                if (saksbehandlerRepository.finnSaksbehandlerMedEpost(token.getUsername()) != null) {
+                if (finnesISaksbehandlerTabell) {
+                    //  oppdaterer saksbehandler i tabell etter at epost er lagt inn av avdelingsleder
                     saksbehandlerRepository.addSaksbehandler(
                         Saksbehandler(
                             id = null,
@@ -58,7 +62,8 @@ internal fun Route.NavAnsattApis() {
                     kanSaksbehandle = true,
                     kanOppgavestyre = true,
                     kanReservere = true,
-                    kanDrifte = true
+                    kanDrifte = true,
+                    finnesISaksbehandlerTabell = true
                 )
             )
         }

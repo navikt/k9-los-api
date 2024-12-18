@@ -7,5 +7,6 @@ data class InnloggetNavAnsattDto(
     val kanSaksbehandle: Boolean,
     val kanOppgavestyre: Boolean,
     val kanReservere: Boolean,
-    val kanDrifte: Boolean
+    val kanDrifte: Boolean,
+    val finnesISaksbehandlerTabell: Boolean
 )
