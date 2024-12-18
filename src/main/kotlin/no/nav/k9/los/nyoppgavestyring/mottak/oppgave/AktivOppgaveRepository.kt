@@ -219,15 +219,18 @@ class AktivOppgaveRepository(val oppgavetypeRepository: OppgavetypeRepository) {
             }
             tx.batchPreparedNamedStatement(
                 """
-                insert into oppgavefelt_verdi_aktiv(oppgave_id, oppgavefelt_id, verdi, oppgavestatus)
-                        VALUES (:oppgaveId, :oppgavefeltId, :verdi, cast(:oppgavestatus as oppgavestatus))
+                insert into oppgavefelt_verdi_aktiv(oppgave_id, oppgavefelt_id, verdi, oppgavestatus, feltdefinisjon_ekstern_id, omrade_ekstern_id, oppgavetype_ekstern_id)
+                        VALUES (:oppgaveId, :oppgavefeltId, :verdi, cast(:oppgavestatus as oppgavestatus), :feltdefinisjon_ekstern_id, :omrade_ekstern_id, :oppgavetype_ekstern_id)
             """.trimIndent(),
                 inserts.map { verdi ->
                     mapOf(
                         "oppgaveId" to oppgaveId.id,
                         "oppgavefeltId" to verdi.oppgavefeltId,
                         "verdi" to verdi.verdi,
-                        "oppgavestatus" to oppgave.status.kode
+                        "oppgavestatus" to oppgave.status.kode,
+                        "feltdefinisjon_ekstern_id" to verdi.oppgavefeltEksternId,
+                        "omrade_ekstern_id" to oppgave.kildeområde,
+                        "oppgavetype_ekstern_id" to oppgave.oppgavetype.eksternId,
                     )
                 }
             )
@@ -257,13 +260,12 @@ class AktivOppgaveRepository(val oppgavetypeRepository: OppgavetypeRepository) {
             return tx.run(
                 queryOf(
                     """
-                select fd.ekstern_id as ekstern_id, o.ekstern_id as omrade, fd.liste_type, f.pakrevd, ov.verdi
+                select ov.feltdefinisjon_ekstern_id as ekstern_id, ov.omrade_ekstern_id as omrade, fd.liste_type, f.pakrevd, ov.verdi
                 from oppgavefelt_verdi_aktiv ov 
                 inner join oppgavefelt f on ov.oppgavefelt_id = f.id 
-                inner join feltdefinisjon fd on f.feltdefinisjon_id = fd.id 
-                inner join omrade o on fd.omrade_id = o.id 
+                inner join feltdefinisjon fd on f.feltdefinisjon_id = fd.id
                 where ov.oppgave_id = :oppgaveId
-                order by fd.ekstern_id
+                order by ov.feltdefinisjon_ekstern_id
                 """.trimIndent(),
                     mapOf("oppgaveId" to oppgaveId)
                 ).map { row ->
@@ -280,11 +282,11 @@ class AktivOppgaveRepository(val oppgavetypeRepository: OppgavetypeRepository) {
 
         @VisibleForTesting
         fun regnUtDiff(eksisterende: List<OppgaveFeltverdi>, nye: List<OppgaveFeltverdi>): DiffResultat {
-            val nyeVerdier = nye.map { Verdi(it.verdi, it.oppgavefelt.id!!) }.toSet()
+            val nyeVerdier = nye.map { Verdi(it.verdi, it.oppgavefelt.id!!, it.oppgavefelt.feltDefinisjon.eksternId) }.toSet()
             if (eksisterende.isEmpty()) {
                 return DiffResultat(deletes = emptyList(), inserts = nyeVerdier, updates = emptyMap())
             }
-            val eksisterendeVerdier = eksisterende.associate { Pair(Verdi(it.verdi, it.oppgavefelt.id!!), it.id!!) }
+            val eksisterendeVerdier = eksisterende.associate { Pair(Verdi(it.verdi, it.oppgavefelt.id!!, it.oppgavefelt.feltDefinisjon.eksternId), it.id!!) }
             val verdierBeggeSteder = eksisterendeVerdier.keys.intersect(nyeVerdier)
 
             val oppdaterMap: MutableMap<Long, Verdi> = HashMap()
@@ -407,5 +409,5 @@ class AktivOppgaveRepository(val oppgavetypeRepository: OppgavetypeRepository) {
         val updates: Map<Long, Verdi>
     )
 
-    data class Verdi(val verdi: String, val oppgavefeltId: Long)
+    data class Verdi(val verdi: String, val oppgavefeltId: Long, val oppgavefeltEksternId: String)
 }

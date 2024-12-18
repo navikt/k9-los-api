@@ -19,14 +19,10 @@ class K9BeslutterTransientFeltutleder: TransientFeltutleder{
                 $prefix EXISTS (
                     SELECT 1
                     FROM oppgavefelt_verdi_aktiv ov 
-                    INNER JOIN oppgavefelt f ON (f.id = ov.oppgavefelt_id)
-                    INNER JOIN oppgavetype ot ON (ot.id = f.oppgavetype_id)
-                    INNER JOIN feltdefinisjon fd ON (fd.id = f.feltdefinisjon_id) 
-                    INNER JOIN omrade fo ON (fo.id = fd.omrade_id)
                     WHERE ov.oppgave_id = o.id
-                      AND fo.ekstern_id = 'K9'
-                      AND fd.ekstern_id = 'løsbartAksjonspunkt'
-                      AND (ot.ekstern_id in ('k9sak','k9klage') AND ov.verdi = '5016' OR ot.ekstern_id = 'k9tilbake' AND ov.verdi = '5005') 
+                      AND ov.omrade_ekstern_id = 'K9'
+                      AND ov.feltdefinisjon_ekstern_id = 'løsbartAksjonspunkt'
+                      AND (ov.oppgavetype_ekstern_id in ('k9sak','k9klage') AND ov.verdi = '5016' OR ov.oppgavetype_ekstern_id = 'k9tilbake' AND ov.verdi = '5005') 
                 )
             """.trimIndent()
         return SqlMedParams(query, mapOf())
@@ -38,14 +34,10 @@ class K9BeslutterTransientFeltutleder: TransientFeltutleder{
                 COALESCE((
                     SELECT true
                     FROM oppgavefelt_verdi_aktiv ov 
-                    INNER JOIN oppgavefelt f ON (f.id = ov.oppgavefelt_id)
-                    INNER JOIN oppgavetype ot ON (ot.id = f.oppgavetype_id)
-                    INNER JOIN feltdefinisjon fd ON (fd.id = f.feltdefinisjon_id) 
-                    INNER JOIN omrade fo ON (fo.id = fd.omrade_id)
                     WHERE ov.oppgave_id = o.id
-                      AND fo.ekstern_id = 'K9'
-                      AND fd.ekstern_id = 'løsbartAksjonspunkt'
-                      AND (ot.ekstern_id in ('k9sak','k9klage') AND ov.verdi = '5016' OR ot.ekstern_id = 'k9tilbake' AND ov.verdi = '5005')
+                      AND ov.omrade_ekstern_id = 'K9'
+                      AND ov.feltdefinisjon_ekstern_id = 'løsbartAksjonspunkt'
+                      AND (ov.oppgavetype_ekstern_id in ('k9sak','k9klage') AND ov.verdi = '5016' OR ov.oppgavetype_ekstern_id = 'k9tilbake' AND ov.verdi = '5005')
                 ), false) $order
             """.trimIndent()
 

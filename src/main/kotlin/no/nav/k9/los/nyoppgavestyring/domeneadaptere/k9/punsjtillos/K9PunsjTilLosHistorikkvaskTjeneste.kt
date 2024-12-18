@@ -48,14 +48,6 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
                         break
                     }
 
-                    if (skalPauses()) {
-                        HistorikkvaskMetrikker.observe(TRÅDNAVN, t0)
-                        log.info("Vaskejobb satt på pause")
-                        Thread.sleep(Duration.ofMinutes(1))
-                        t0 = System.nanoTime()
-                        continue
-                    }
-
                     log.info("Starter vaskeiterasjon på ${behandlingsIder.size} behandlinger")
                     eventTeller += spillAvBehandlingProsessEventer(behandlingsIder)
                     behandlingTeller += behandlingsIder.count()
@@ -109,16 +101,6 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
         return transactionalManager.transaction { tx ->
             vaskOppgaveForBehandlingUUID(uuid, tx)
         }
-    }
-
-    private fun skalPauses(): Boolean {
-        val zone = ZoneId.of("Europe/Oslo")
-        val nå = ZonedDateTime.now().withZoneSameInstant(zone)
-
-        if (config.koinProfile == KoinProfile.PROD && nå.toLocalTime() > LocalTime.of(6, 0, 0) && nå.toLocalTime() < LocalTime.of(17, 0, 0) && nå.dayOfWeek <= DayOfWeek.FRIDAY) {
-            return true
-        }
-        return false
     }
 
     private fun vaskOppgaveForBehandlingUUID(uuid: UUID, tx: TransactionalSession): Long {

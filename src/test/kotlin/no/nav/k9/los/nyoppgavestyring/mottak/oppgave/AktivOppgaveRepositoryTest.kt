@@ -38,8 +38,8 @@ class AktivOppgaveRepositoryTest {
         assertThat(diffResultat.deletes).isEmpty()
         assertThat(diffResultat.updates).isEmpty()
         assertThat(diffResultat.inserts).containsOnly(
-            AktivOppgaveRepository.Verdi( "9001", 1),
-            AktivOppgaveRepository.Verdi( "9003", 1))
+            AktivOppgaveRepository.Verdi( "9001", 1, "aksjonspunkt"),
+            AktivOppgaveRepository.Verdi( "9003", 1, "aksjonspunkt"))
     }
 
     @Test
@@ -67,7 +67,7 @@ class AktivOppgaveRepositoryTest {
         )
         val diffResultat = AktivOppgaveRepository.regnUtDiff(eksisterende, nye)
         assertThat(diffResultat.deletes).isEmpty()
-        assertThat(diffResultat.updates).containsOnly(Pair(3L, AktivOppgaveRepository.Verdi("1111", 1)))
+        assertThat(diffResultat.updates).containsOnly(Pair(3L, AktivOppgaveRepository.Verdi("1111", 1, "aksjonspunkt")))
         assertThat(diffResultat.inserts).isEmpty()
     }
 
@@ -87,10 +87,10 @@ class AktivOppgaveRepositoryTest {
         val diffResultat = AktivOppgaveRepository.regnUtDiff(eksisterende, nye)
         assertThat(diffResultat.deletes.size).isEqualTo(2)
         assertThat(diffResultat.updates.entries.size).isEqualTo(1)
-        assertThat(diffResultat.updates.values.first()).isEqualTo(AktivOppgaveRepository.Verdi("1111", 1))
+        assertThat(diffResultat.updates.values.first()).isEqualTo(AktivOppgaveRepository.Verdi("1111", 1, "aksjonspunkt"))
         //vi bryr oss ikke om hvilke av aksjonspunktverdiene (3 og 4) som gjenbrukes, men en skal slettes og en skal oppdateres
         assertThat(diffResultat.updates.keys + diffResultat.deletes).containsOnly(3L, 4L, 5L)
-        assertThat(diffResultat.inserts).containsOnly(AktivOppgaveRepository.Verdi("test2", 3))
+        assertThat(diffResultat.inserts).containsOnly(AktivOppgaveRepository.Verdi("test2", 3, "test2"))
     }
 
     fun mockOppgaveFeltverdi(eksternId: String, listetype: Boolean, verdi: String, oppgavefeltId: Long = 1, id : Long? = null): OppgaveFeltverdi {
