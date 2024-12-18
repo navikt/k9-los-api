@@ -184,7 +184,6 @@ fun Application.k9Los() {
 
     PepCacheOppdaterer(koin.get()).run {
         startOppdateringAvÅpneOgVentende()
-        startOppdateringAvLukkedeOppgaver()
     }
 
     K9sakBehandlingsoppfriskingJobb(
