@@ -1,6 +1,7 @@
 package no.nav.k9.los.domene.repository
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
@@ -8,6 +9,7 @@ import no.nav.k9.los.domene.modell.BehandlingType
 import no.nav.k9.los.domene.modell.FagsakYtelseType
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.FerdigstiltBehandling
+import no.nav.k9.los.tjenester.saksbehandler.oppgave.BehandledeOppgaver
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.BehandletOppgave
 import no.nav.k9.los.utils.Cache
 import no.nav.k9.los.utils.CacheObject
@@ -15,7 +17,6 @@ import no.nav.k9.los.utils.LosObjectMapper
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
-import java.util.concurrent.atomic.LongAdder
 import javax.sql.DataSource
 
 class StatistikkRepository(
@@ -23,50 +24,75 @@ class StatistikkRepository(
 ) {
     companion object {
         val SISTE_8_UKER_I_DAGER = 55
+        val ANTALL = 10
     }
 
-    fun lagreBehandling(brukerIdent: String, oppgave : BehandletOppgave) {
+    fun lagreBehandling(brukerIdent: String, oppgave: BehandletOppgave) {
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
+                val resultat: MutableList<BehandletOppgave> = ArrayList()
+                val tidligere = hentBehandlinger(brukerIdent, tx, ANTALL - 1)
+                resultat.addAll(tidligere)
+                resultat.add(oppgave)
 
-                val json = LosObjectMapper.instance.writeValueAsString(oppgave)
-                tx.run(
-                    queryOf(
-                        """
-                    insert into siste_behandlinger as k (id, data)
-                    values (:id, :dataInitial :: jsonb)
-                    on conflict (id) do update
-                    set data = jsonb_set(k.data, '{siste_behandlinger,999999}', :data :: jsonb, true)
-                 """, mapOf("id" to brukerIdent, "dataInitial" to "{\"siste_behandlinger\": [$json]}", "data" to json)
-                    ).asUpdate
-                )
+                val json = LosObjectMapper.instance.writeValueAsString(resultat)
+
+                if (tidligere.isEmpty()) {
+                    tx.run(
+                        queryOf(
+                            """
+                    insert into siste_behandlinger (id, data) values (:id, :data :: jsonb)
+                 """, mapOf("id" to brukerIdent, "data" to "{\"siste_behandlinger\": $json}")
+                        ).asUpdate
+                    )
+                } else {
+                    tx.run(
+                        queryOf(
+                            """
+                    update siste_behandlinger set data = :data :: jsonb where id = :id
+                 """, mapOf("id" to brukerIdent, "data" to "{\"siste_behandlinger\": $json}")
+                        ).asUpdate
+                    )
+                }
             }
         }
     }
 
-    fun hentBehandlinger(ident: String): List<BehandletOppgave> {
-        val json = using(sessionOf(dataSource)) {
-            it.run(
-                queryOf(
-                    """
-                        select data, timestamp from (
-                            select distinct on (saksnummer) 
-                                (data -> 'saksnummer') as saksnummer, 
-                                (data -> 'timestamp') as timestamp, 
-                                data from (select jsonb_array_elements(data -> 'siste_behandlinger') as data from siste_behandlinger where id = :id) as saker 
-                                order by saksnummer, timestamp desc 
-                             ) as s 
-                         order by timestamp desc
-                         limit 10
-                    """.trimIndent(),
-                    mapOf("id" to ident)
-                )
-                    .map { row ->
-                        row.string("data")
-                    }.asList
-            )
+    fun hentBehandlinger(ident: String, antall: Int = ANTALL): List<BehandletOppgave> {
+        return using(sessionOf(dataSource)) {
+            it.transaction { tx -> hentBehandlinger(ident, tx, antall) }
         }
-        return json.map { LosObjectMapper.instance.readValue(it, BehandletOppgave::class.java) }
+    }
+
+    fun hentBehandlinger(ident: String, tx: TransactionalSession, antall: Int = ANTALL): List<BehandletOppgave> {
+        val jsonData = tx.run(
+            queryOf(
+                """
+                        select data from siste_behandlinger where id = :id
+                        for update
+                    """.trimIndent(),
+                mapOf(
+                    "id" to ident,
+                    "antall" to antall
+                )
+            )
+                .map { row ->
+                    row.string("data")
+                }
+                .asSingle
+        )
+        if (jsonData == null) {
+            return emptyList()
+        } else {
+            println(jsonData)
+            val medEvtDuplikater =
+                LosObjectMapper.instance.readValue(jsonData, BehandledeOppgaver::class.java).siste_behandlinger
+            val nyestePrSak: MutableList<BehandletOppgave> = mutableListOf()
+            medEvtDuplikater.groupBy { it.saksnummer }.entries.forEach {
+                nyestePrSak.add(it.value.toMutableList().sortedBy { it.timestamp }.last())
+            }
+            return nyestePrSak.sortedBy { it.timestamp }.reversed().stream().limit(antall.toLong()).toList()
+        }
     }
 
     fun lagreFerdigstilt(bt: String, eksternId: UUID, dato: LocalDate) {
@@ -155,7 +181,9 @@ class StatistikkRepository(
         }
     }
 
-    private val hentFerdigstilteOgNyeHistorikkMedYtelsetypeCache = Cache<String, List<AlleOppgaverNyeOgFerdigstilte>>(cacheSizeLimit = 1000)
+    private val hentFerdigstilteOgNyeHistorikkMedYtelsetypeCache =
+        Cache<String, List<AlleOppgaverNyeOgFerdigstilte>>(cacheSizeLimit = 1000)
+
     fun hentFerdigstilteOgNyeHistorikkMedYtelsetypeSiste8Uker(
         refresh: Boolean = false
     ): List<AlleOppgaverNyeOgFerdigstilte> {
@@ -221,7 +249,9 @@ class StatistikkRepository(
                             behandlingType = BehandlingType.fraKode(row.string("behandlingType")),
                             fagsakYtelseType = FagsakYtelseType.fraKode(row.string("fagsakYtelseType")),
                             dato = row.localDate("dato"),
-                            ferdigstilte = LosObjectMapper.instance.readValue(row.stringOrNull("ferdigstilte") ?: "[]"),
+                            ferdigstilte = LosObjectMapper.instance.readValue(
+                                row.stringOrNull("ferdigstilte") ?: "[]"
+                            ),
                             nye = LosObjectMapper.instance.readValue(row.stringOrNull("nye") ?: "[]"),
                             ferdigstilteSaksbehandler = LosObjectMapper.instance.readValue(
                                 row.stringOrNull("ferdigstiltesaksbehandler") ?: "[]"
