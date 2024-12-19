@@ -9,7 +9,6 @@ import no.nav.k9.los.domene.modell.BehandlingType
 import no.nav.k9.los.domene.modell.FagsakYtelseType
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.FerdigstiltBehandling
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.BehandledeOppgaver
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.BehandletOppgave
 import no.nav.k9.los.utils.Cache
 import no.nav.k9.los.utils.CacheObject
@@ -31,8 +30,9 @@ class StatistikkRepository(
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
                 val resultat: MutableList<BehandletOppgave> = ArrayList()
-                val tidligere = hentBehandlinger(brukerIdent, tx, ANTALL - 1)
-                resultat.addAll(tidligere)
+                taLås(brukerIdent, tx) //tar lås siden oppdatering skjer stegvis (read - modify - update) for å unngår samtidighetsproblemer
+                val tidligere = hentBehandlinger(brukerIdent, tx, ANTALL)
+                resultat.addAll(tidligere.filterNot { it.saksnummer == oppgave.saksnummer })
                 resultat.add(oppgave)
 
                 val json = LosObjectMapper.instance.writeValueAsString(resultat)
@@ -64,12 +64,19 @@ class StatistikkRepository(
         }
     }
 
-    fun hentBehandlinger(ident: String, tx: TransactionalSession, antall: Int = ANTALL): List<BehandletOppgave> {
-        val jsonData = tx.run(
+    fun hentBehandlinger(ident: String, tx: TransactionalSession, antall: Int): List<BehandletOppgave> {
+        val json = tx.run(
             queryOf(
                 """
-                        select data from siste_behandlinger where id = :id
-                        for update
+                        select data, timestamp from (
+                            select distinct on (saksnummer) 
+                                (data -> 'saksnummer') as saksnummer, 
+                                (data -> 'timestamp') as timestamp, 
+                                data from (select jsonb_array_elements(data -> 'siste_behandlinger') as data from siste_behandlinger where id = :id) as saker 
+                                order by saksnummer, timestamp desc 
+                             ) as s 
+                         order by timestamp desc
+                         limit :antall
                     """.trimIndent(),
                 mapOf(
                     "id" to ident,
@@ -78,21 +85,24 @@ class StatistikkRepository(
             )
                 .map { row ->
                     row.string("data")
-                }
-                .asSingle
+                }.asList
         )
-        if (jsonData == null) {
-            return emptyList()
-        } else {
-            println(jsonData)
-            val medEvtDuplikater =
-                LosObjectMapper.instance.readValue(jsonData, BehandledeOppgaver::class.java).siste_behandlinger
-            val nyestePrSak: MutableList<BehandletOppgave> = mutableListOf()
-            medEvtDuplikater.groupBy { it.saksnummer }.entries.forEach {
-                nyestePrSak.add(it.value.toMutableList().sortedBy { it.timestamp }.last())
-            }
-            return nyestePrSak.sortedBy { it.timestamp }.reversed().stream().limit(antall.toLong()).toList()
-        }
+        return json.map { LosObjectMapper.instance.readValue(it, BehandletOppgave::class.java) }
+    }
+
+    fun taLås(ident: String, tx: TransactionalSession) {
+        tx.run(
+            queryOf(
+                """
+                        select 1 from siste_behandlinger where id = :id for update
+                    """.trimIndent(),
+                mapOf(
+                    "id" to ident
+                )
+            )
+                .map { row -> null}
+                .asList
+        )
     }
 
     fun lagreFerdigstilt(bt: String, eksternId: UUID, dato: LocalDate) {
