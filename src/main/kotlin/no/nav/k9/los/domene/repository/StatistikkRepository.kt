@@ -30,18 +30,19 @@ class StatistikkRepository(
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
                 val resultat: MutableList<BehandletOppgave> = ArrayList()
-                taLås(brukerIdent, tx) //tar lås siden oppdatering skjer stegvis (read - modify - update) for å unngår samtidighetsproblemer
+                val låstIdent = taLås(brukerIdent, tx) //tar lås siden oppdatering skjer stegvis (read - modify - update) for å unngår samtidighetsproblemer
+                val harInnslagFraFør = låstIdent != null
                 val tidligere = hentBehandlinger(brukerIdent, tx, ANTALL)
                 resultat.addAll(tidligere.filterNot { it.saksnummer == oppgave.saksnummer })
                 resultat.add(oppgave)
 
                 val json = LosObjectMapper.instance.writeValueAsString(resultat)
 
-                if (tidligere.isEmpty()) {
+                if (harInnslagFraFør) {
                     tx.run(
                         queryOf(
                             """
-                    insert into siste_behandlinger (id, data) values (:id, :data :: jsonb)
+                    update siste_behandlinger set data = :data :: jsonb where id = :id
                  """, mapOf("id" to brukerIdent, "data" to "{\"siste_behandlinger\": $json}")
                         ).asUpdate
                     )
@@ -49,7 +50,7 @@ class StatistikkRepository(
                     tx.run(
                         queryOf(
                             """
-                    update siste_behandlinger set data = :data :: jsonb where id = :id
+                    insert into siste_behandlinger (id, data) values (:id, :data :: jsonb)
                  """, mapOf("id" to brukerIdent, "data" to "{\"siste_behandlinger\": $json}")
                         ).asUpdate
                     )
@@ -90,18 +91,18 @@ class StatistikkRepository(
         return json.map { LosObjectMapper.instance.readValue(it, BehandletOppgave::class.java) }
     }
 
-    fun taLås(ident: String, tx: TransactionalSession) {
-        tx.run(
+    fun taLås(ident: String, tx: TransactionalSession): String? {
+        return tx.run(
             queryOf(
                 """
-                        select 1 from siste_behandlinger where id = :id for update
+                        select id from siste_behandlinger where id = :id for update
                     """.trimIndent(),
                 mapOf(
                     "id" to ident
                 )
             )
-                .map { row -> null}
-                .asList
+                .map { row -> row.string("id")}
+                .asSingle
         )
     }
 
