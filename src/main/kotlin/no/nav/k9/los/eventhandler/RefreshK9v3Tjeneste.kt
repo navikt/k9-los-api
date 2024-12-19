@@ -16,6 +16,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.query.Avgrensning
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
+import no.nav.k9.los.utils.OpentelemetrySpanUtil
 import org.slf4j.LoggerFactory
 import java.util.*
 
@@ -109,15 +110,17 @@ class RefreshK9v3Tjeneste(
             val førsteOppgaveIder = mutableSetOf<AktivOppgaveId>()
             for (kø in køer) {
                 DetaljerMetrikker.time("RefreshK9V3", "refreshForKøer", "hentFørsteOppgaverIterativt") {
-                    val førsteOppgaverIKøen = oppgaveQueryService.queryForOppgaveId(
-                        tx,
-                        QueryRequest(
-                            kø.oppgaveQuery,
-                            fjernReserverte = true,
-                            Avgrensning.maxAntall(antall = antallPrKø.toLong())
+                    OpentelemetrySpanUtil.span("hentFørsteUreserverteFraKø", mapOf("køId" to kø.id.toString(), "antall" to antallPrKø.toString())) {
+                        val førsteOppgaverIKøen = oppgaveQueryService.queryForOppgaveId(
+                            tx,
+                            QueryRequest(
+                                kø.oppgaveQuery,
+                                fjernReserverte = true,
+                                Avgrensning.maxAntall(antall = antallPrKø.toLong())
+                            )
                         )
-                    )
-                    førsteOppgaveIder.addAll(førsteOppgaverIKøen)
+                        førsteOppgaveIder.addAll(førsteOppgaverIKøen)
+                    }
                 }
             }
             DetaljerMetrikker.time("RefreshK9V3", "refreshForKøer", "parsaker") {
