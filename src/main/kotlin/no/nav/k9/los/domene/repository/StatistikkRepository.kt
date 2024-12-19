@@ -31,8 +31,8 @@ class StatistikkRepository(
             it.transaction { tx ->
                 val resultat: MutableList<BehandletOppgave> = ArrayList()
                 taLås(brukerIdent, tx) //tar lås siden oppdatering skjer stegvis (read - modify - update) for å unngår samtidighetsproblemer
-                val tidligere = hentBehandlinger(brukerIdent, tx, ANTALL - 1)
-                resultat.addAll(tidligere)
+                val tidligere = hentBehandlinger(brukerIdent, tx, ANTALL)
+                resultat.addAll(tidligere.filterNot { it.saksnummer == oppgave.saksnummer })
                 resultat.add(oppgave)
 
                 val json = LosObjectMapper.instance.writeValueAsString(resultat)
