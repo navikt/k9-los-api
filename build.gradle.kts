@@ -9,7 +9,7 @@ val kotliqueryVersion = "1.9.0"
 val k9SakVersion = "5.2.1"
 val k9KlageVersion = "0.4.5"
 val fuelVersion = "2.3.1"
-val jacksonVersion = "2.17.2"
+val jacksonVersion = "2.18.2"
 val commonsTextVersion = "1.13.0"
 
 val dusseldorfKtorVersion = "5.0.15"
@@ -23,7 +23,7 @@ val testContainers = "1.20.4"
 val jsonassertVersion = "1.5.3"
 val jupiterVersion = "5.11.4"
 val assertkVersion = "0.28.1"
-val mockkVersion = "1.13.13"
+val mockkVersion = "1.13.14"
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "2.0.21" //kan ikke gå for 2.1+ pga ktor som har avhengighet til kotlin-stdlib-common, og den er tilsynelatende ikke tilgjengelig i 2.1+
