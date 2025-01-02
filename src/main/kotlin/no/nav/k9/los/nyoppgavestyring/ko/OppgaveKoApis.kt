@@ -163,21 +163,7 @@ fun Route.OppgaveKoApis() {
             if (pepClient.harBasisTilgang()) {
                 val oppgavekøId = call.parameters["id"]!!
                 val skjermet = pepClient.harTilgangTilKode6()
-                val antallUtenReserverte = OpentelemetrySpanUtil.span("OppgaveKoTjeneste.hentAntallOppgaverForKø") {
-                    oppgaveKoTjeneste.hentAntallOppgaverForKø(
-                        oppgavekøId.toLong(),
-                        true,
-                        skjermet
-                    )
-                }
-                val antallMedReserverte = OpentelemetrySpanUtil.span("OppgaveKoTjeneste.hentAntallOppgaverForKø") {
-                    oppgaveKoTjeneste.hentAntallOppgaverForKø(
-                        oppgavekøId.toLong(),
-                        false,
-                        skjermet
-                    )
-                }
-                call.respond(AntallOppgaverOgReserverte(antallUtenReserverte, antallMedReserverte))
+                call.respond(oppgaveKoTjeneste.hentAntallMedOgUtenReserverteForKø(oppgavekøId.toLong(), skjermet))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -190,11 +176,11 @@ fun Route.OppgaveKoApis() {
                 val oppgavekøId = call.parameters["id"]!!
                 val skjermet = pepClient.harTilgangTilKode6()
                 val antallUtenReserverte = OpentelemetrySpanUtil.span("OppgaveKoTjeneste.hentAntallOppgaverForKø") {
-                    oppgaveKoTjeneste.hentAntallOppgaverForKø(
-                        oppgavekøId.toLong(),
-                        true,
-                        skjermet
-                    )
+                        oppgaveKoTjeneste.hentAntallOppgaverForKø(
+                            oppgavekøId.toLong(),
+                            true,
+                            skjermet
+                        )
                 }
                 call.respond(AntallOppgaver(antallUtenReserverte))
             } else {
