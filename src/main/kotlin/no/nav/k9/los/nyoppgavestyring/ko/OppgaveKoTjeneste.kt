@@ -1,5 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.ko
 
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -129,10 +131,10 @@ class OppgaveKoTjeneste(
         skjermet: Boolean,
     ): AntallOppgaverOgReserverte {
         return coroutineScope {
-            val antallUtenReserverte = async(Dispatchers.IO) {
+            val antallUtenReserverte = async(Dispatchers.IO + Span.current().asContextElement()) {
                 hentAntallOppgaverForKø(oppgaveKoId, true, skjermet)
             }
-            val antallMedReserverte = async(Dispatchers.IO) {
+            val antallMedReserverte = async(Dispatchers.IO + Span.current().asContextElement()) {
                 hentAntallOppgaverForKø(oppgaveKoId, false, skjermet)
             }
 
