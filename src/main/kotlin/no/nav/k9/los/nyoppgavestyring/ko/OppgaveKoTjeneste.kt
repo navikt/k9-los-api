@@ -1,7 +1,12 @@
 package no.nav.k9.los.nyoppgavestyring.ko
 
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.instrumentation.annotations.WithSpan
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
@@ -116,6 +121,26 @@ class OppgaveKoTjeneste(
                 saksbehandlerId = saksbehandlerId,
                 medSaksbehandlere = false,
                 skjermet = skjermet
+            )
+        }
+    }
+
+    @WithSpan
+    suspend fun hentAntallMedOgUtenReserverteForKø(
+        oppgaveKoId: Long,
+        skjermet: Boolean,
+    ): AntallOppgaverOgReserverte {
+        return coroutineScope {
+            val antallUtenReserverte = async(Dispatchers.IO + Span.current().asContextElement()) {
+                hentAntallOppgaverForKø(oppgaveKoId, true, skjermet)
+            }
+            val antallMedReserverte = async(Dispatchers.IO + Span.current().asContextElement()) {
+                hentAntallOppgaverForKø(oppgaveKoId, false, skjermet)
+            }
+
+            AntallOppgaverOgReserverte(
+                antallUtenReserverte.await(),
+                antallMedReserverte.await()
             )
         }
     }
@@ -257,7 +282,13 @@ class OppgaveKoTjeneste(
     }
 
     @WithSpan
-    fun kopier(kopierFraOppgaveId: Long, tittel: String, taMedQuery: Boolean, taMedSaksbehandlere: Boolean, skjermet: Boolean): OppgaveKo {
+    fun kopier(
+        kopierFraOppgaveId: Long,
+        tittel: String,
+        taMedQuery: Boolean,
+        taMedSaksbehandlere: Boolean,
+        skjermet: Boolean
+    ): OppgaveKo {
         val kø = oppgaveKoRepository.kopier(kopierFraOppgaveId, tittel, taMedQuery, taMedSaksbehandlere, skjermet)
         runBlocking {
             køpåvirkendeHendelseChannel.send(Kødefinisjon(kø.id))
