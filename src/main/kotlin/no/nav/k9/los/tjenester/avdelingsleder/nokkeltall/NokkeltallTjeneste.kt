@@ -183,7 +183,11 @@ class NokkeltallTjeneste constructor(
         } else {
             val harTilgangTilKode6 = pepClient.harTilgangTilKode6()
             val grupperte =  oppgaverGruppertRepository.hentAntallÅpneOppgaverPrOppgavetypeBehandlingstype(harTilgangTilKode6)
-            return grupperte.map { AlleApneBehandlinger(BehandlingType.fraKode(it.behandlistype!!), it.antall) }
+            val (medbehandlingType, utenBehandlingType) = grupperte.partition { it.behandlistype != null }
+            if (utenBehandlingType.isNotEmpty()) {
+                log.warn("Fant ${utenBehandlingType.map {it.antall}.reduce(Int::plus)} oppgaver uten behandlingstype, de blir ikke med oversikt som viser antall")
+            }
+            return medbehandlingType.map { AlleApneBehandlinger(BehandlingType.fraKode(it.behandlistype!!), it.antall) }
 
         }
     }

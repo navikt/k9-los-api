@@ -20,6 +20,12 @@ class OppgaverGruppertRepository(private val dataSource: DataSource) {
         val antall: Int
     )
 
+    fun hentTotaltAntallÅpneOppgaver(kode6 : Boolean): Int {
+        return hentAntallÅpneOppgaverPrOppgavetypeBehandlingstype(kode6)
+            .map { it.antall }
+            .reduce(Int::plus)
+    }
+
     fun hentAntallÅpneOppgaverPrOppgavetypeBehandlingstype(kode6 : Boolean): List<BehandlingstypeAntallDto> {
         return cacheAntallÅpneOppgaverPrOppgavetypeBehandlingstype.hent(
             nøkkel = kode6,

@@ -5,6 +5,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.Configuration
+import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.modell.AksjonspunktStatus
@@ -22,6 +23,7 @@ import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
 import no.nav.k9.los.integrasjon.pdl.IPdlService
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.OppgaverGruppertRepository
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import org.junit.jupiter.api.Test
 import org.koin.core.qualifier.named
@@ -133,7 +135,7 @@ class BeslutterSkalIkkePlukkeEgenSakTest : AbstractK9LosIntegrationTest() {
 
         return OppgaveTjeneste(
             get<OppgaveRepository>(),
-            get<OppgaveRepositoryV2>(),
+            get<OppgaverGruppertRepository>(),
             get<OppgaveKøRepository>(),
             get<SaksbehandlerRepository>(),
             get<IPdlService>(),
@@ -143,7 +145,8 @@ class BeslutterSkalIkkePlukkeEgenSakTest : AbstractK9LosIntegrationTest() {
             get<IPepClient>(),
             get<StatistikkRepository>(),
             oversetterMock,
-            get(named("statistikkRefreshChannel"))
+            get(named("statistikkRefreshChannel")),
+            KoinProfile.LOCAL
         )
     }
 }
