@@ -112,7 +112,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             oppgaveKøRepository,
             saksbehandlerRepository,
             pdlService,
-            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, reservasjonOversetter, statistikkChannel, KoinProfile.PROD
+            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, reservasjonOversetter, statistikkChannel, KoinProfile.LOCAL
         )
 
         val uuid = UUID.randomUUID()
@@ -250,7 +250,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             oppgaveKøRepository,
             saksbehandlerRepository,
             pdlService,
-            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, reservasjonOversetter, statistikkChannel, KoinProfile.PROD
+            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, reservasjonOversetter, statistikkChannel, KoinProfile.LOCAL
         )
 
         val oppgave1 = Oppgave(
@@ -451,7 +451,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             oppgaveKøRepository,
             saksbehandlerRepository,
             pdlService,
-            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, reservasjonOversetter, statistikkChannel, KoinProfile.PROD
+            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, reservasjonOversetter, statistikkChannel, KoinProfile.LOCAL
         )
 
 
