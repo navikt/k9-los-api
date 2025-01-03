@@ -37,10 +37,8 @@ class K9sakEventHandlerTest : AbstractK9LosIntegrationTest() {
 
     @BeforeEach
     fun setup() {
-        val områdeSetup = get<OmrådeSetup>()
-        områdeSetup.setup()
-        val k9SakTilLosAdapterTjeneste = get<K9SakTilLosAdapterTjeneste>()
-        k9SakTilLosAdapterTjeneste.setup()
+        get<OmrådeSetup>().setup()
+        get<K9SakTilLosAdapterTjeneste>().setup()
     }
 
     @Test

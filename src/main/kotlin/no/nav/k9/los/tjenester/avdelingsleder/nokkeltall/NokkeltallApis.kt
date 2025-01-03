@@ -53,6 +53,6 @@ fun Route.NokkeltallApis() {
     }
 
     get("/alle-paa-vent_v2") {
-        call.respond(nokkeltallTjeneste.hentOppgaverPåVentV2())
+        call.respond(nokkeltallTjeneste.hentOppgaverPåVent())
     }
 }
