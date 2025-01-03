@@ -18,7 +18,7 @@ class NøkkeltallRepositoryV3 (private val dataSource: DataSource) {
 
     private val log: Logger = LoggerFactory.getLogger(NøkkeltallRepositoryV3::class.java)
 
-    val cache = Cache<Boolean, List<GrupperteAksjonspunktVenteårsak>>(cacheSizeLimit = null)
+    private val cache = Cache<Boolean, List<GrupperteAksjonspunktVenteårsak>>(cacheSizeLimit = null)
 
     data class GrupperteAksjonspunktVenteårsak(
         val system: Fagsystem,
