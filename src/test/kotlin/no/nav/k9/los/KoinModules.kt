@@ -216,7 +216,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         OppgaveTjeneste(
             oppgaveRepository = get(),
-            oppgaveRepositoryV2 = get(),
+            oppgaverGruppertRepository = get(),
             oppgaveKøRepository = get(),
             saksbehandlerRepository = get(),
             pdlService = get(),
@@ -226,7 +226,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             pepClient = get(),
             statistikkRepository = get(),
             reservasjonOversetter = reservasjonOversetterMock,
-            statistikkChannel = get(named("statistikkRefreshChannel"))
+            statistikkChannel = get(named("statistikkRefreshChannel")),
+            koinProfile = config.koinProfile(),
         )
     }
 

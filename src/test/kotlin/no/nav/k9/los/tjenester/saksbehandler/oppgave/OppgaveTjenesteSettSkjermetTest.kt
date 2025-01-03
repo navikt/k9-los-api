@@ -34,6 +34,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.OppgaverGruppertRepository
 import no.nav.k9.los.tjenester.sse.SseEvent
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -76,6 +77,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
 
         val oppgaveRepository = get<OppgaveRepository>()
         val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
+        val oppgaverGruppertRepository = get<OppgaverGruppertRepository>()
 
         val oppgaveKøRepository = OppgaveKøRepository(
             dataSource = get(),
@@ -106,11 +108,11 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
         val azureGraphService = mockk<AzureGraphService>()
         val oppgaveTjeneste = OppgaveTjeneste(
             oppgaveRepository,
-            oppgaveRepositoryV2,
+            oppgaverGruppertRepository,
             oppgaveKøRepository,
             saksbehandlerRepository,
             pdlService,
-            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, reservasjonOversetter, statistikkChannel
+            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, reservasjonOversetter, statistikkChannel, KoinProfile.PROD
         )
 
         val uuid = UUID.randomUUID()
@@ -215,6 +217,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
 
         val oppgaveRepository = OppgaveRepository(dataSource = dataSource,pepClient = PepClientLocal(), refreshOppgave = oppgaverRefresh)
         val oppgaveRepositoryV2 = OppgaveRepositoryV2(dataSource = dataSource)
+        val oppgaverGruppertRepository = get<OppgaverGruppertRepository>()
 
         val oppgaveKøRepository = OppgaveKøRepository(
             dataSource = dataSource,
@@ -243,11 +246,11 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
         val reservasjonOversetter = get<ReservasjonOversetter>()
         val oppgaveTjeneste = OppgaveTjeneste(
             oppgaveRepository,
-            oppgaveRepositoryV2,
+            oppgaverGruppertRepository,
             oppgaveKøRepository,
             saksbehandlerRepository,
             pdlService,
-            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, reservasjonOversetter, statistikkChannel
+            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, reservasjonOversetter, statistikkChannel, KoinProfile.PROD
         )
 
         val oppgave1 = Oppgave(
@@ -412,6 +415,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
 
         val oppgaveRepository = OppgaveRepository(dataSource = dataSource,pepClient = PepClientLocal(), refreshOppgave = oppgaverRefresh)
         val oppgaveRepositoryV2 = OppgaveRepositoryV2(dataSource = dataSource)
+        val oppgaverGruppertRepository = get<OppgaverGruppertRepository>()
 
         val oppgaveKøRepository = OppgaveKøRepository(
             dataSource = dataSource,
@@ -443,11 +447,11 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
         coEvery {  azureGraphService.hentIdentTilInnloggetBruker() } returns "123"
         val oppgaveTjeneste = OppgaveTjeneste(
             oppgaveRepository,
-            oppgaveRepositoryV2,
+            oppgaverGruppertRepository,
             oppgaveKøRepository,
             saksbehandlerRepository,
             pdlService,
-            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, reservasjonOversetter, statistikkChannel
+            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, reservasjonOversetter, statistikkChannel, KoinProfile.PROD
         )
 
 

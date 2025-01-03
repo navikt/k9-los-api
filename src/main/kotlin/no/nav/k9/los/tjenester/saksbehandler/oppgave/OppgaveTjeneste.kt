@@ -19,6 +19,7 @@ import no.nav.k9.los.integrasjon.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.OppgaverGruppertRepository
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverHistorikk
 import no.nav.k9.los.tjenester.fagsak.PersonDto
 import no.nav.k9.los.tjenester.saksbehandler.nokkeltall.NyeOgFerdigstilteOppgaverDto
@@ -40,7 +41,7 @@ private val log: Logger =
 
 class OppgaveTjeneste constructor(
     private val oppgaveRepository: OppgaveRepository,
-    private val oppgaveRepositoryV2: OppgaveRepositoryV2,
+    private val oppgaverGruppertRepository: OppgaverGruppertRepository,
     private val oppgaveKøRepository: OppgaveKøRepository,
     private val saksbehandlerRepository: SaksbehandlerRepository,
     private val pdlService: IPdlService,
@@ -51,6 +52,7 @@ class OppgaveTjeneste constructor(
     private val statistikkRepository: StatistikkRepository,
     private val reservasjonOversetter: ReservasjonOversetter,
     private val statistikkChannel: Channel<Boolean>,
+    private val koinProfile: KoinProfile
 ) {
 
     suspend fun hentOppgaver(oppgavekøId: UUID): List<Oppgave> {
@@ -747,7 +749,12 @@ class OppgaveTjeneste constructor(
     }
 
     suspend fun hentAntallOppgaverTotalt(): Int {
-        return oppgaveRepository.hentAktiveOppgaverTotalt()
+        if (koinProfile == KoinProfile.PROD) {
+            return oppgaveRepository.hentAktiveOppgaverTotalt()
+        } else {
+            val harTilgangTilKode6 = pepClient.harTilgangTilKode6()
+            return oppgaverGruppertRepository.hentTotaltAntallÅpneOppgaver(harTilgangTilKode6)
+        }
     }
 
     suspend fun hentNesteOppgaverIKø(kø: UUID): List<OppgaveDto> {

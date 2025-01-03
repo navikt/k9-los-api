@@ -310,7 +310,7 @@ fun common(app: Application, config: Configuration) = module {
     single {
         OppgaveTjeneste(
             oppgaveRepository = get(),
-            oppgaveRepositoryV2 = get(),
+            oppgaverGruppertRepository = get(),
             oppgaveKøRepository = get(),
             saksbehandlerRepository = get(),
             reservasjonRepository = get(),
@@ -321,6 +321,7 @@ fun common(app: Application, config: Configuration) = module {
             statistikkRepository = get(),
             reservasjonOversetter = get(),
             statistikkChannel = get(named("statistikkRefreshChannel")),
+            koinProfile = config.koinProfile,
         )
     }
 
