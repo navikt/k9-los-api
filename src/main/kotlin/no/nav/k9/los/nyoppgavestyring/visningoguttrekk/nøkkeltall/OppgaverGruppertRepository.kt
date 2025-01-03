@@ -50,7 +50,7 @@ class OppgaverGruppertRepository(private val dataSource: DataSource) {
                 )
                     .map {
                         BehandlingstypeAntallDto(
-                            it.stringOrNull("behandlingstype"),
+                            it.stringOrNull("behandlingType"),
                             it.int("antall")
                         )
                     }
