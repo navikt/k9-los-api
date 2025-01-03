@@ -262,8 +262,8 @@ class OppgaveV3Repository(
         tx: TransactionalSession
     ) {
         tx.batchPreparedNamedStatement("""
-            insert into oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi, oppgavestatus)
-                    VALUES (:oppgaveId, :oppgavefeltId, :verdi, :oppgavestatus)
+            insert into oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi, verdi_int, oppgavestatus)
+                    VALUES (:oppgaveId, :oppgavefeltId, :verdi, try_cast_int(:verdi), :oppgavestatus)
         """.trimIndent(),
             oppgave.felter.map { feltverdi ->
                 mapOf(
@@ -284,7 +284,7 @@ class OppgaveV3Repository(
         tx: TransactionalSession
     ) {
         tx.batchPreparedNamedStatement("""
-            INSERT INTO oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi, oppgavestatus)
+            INSERT INTO oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi, verdi_int, oppgavestatus)
             VALUES (
                 (
                     SELECT id 
@@ -294,6 +294,7 @@ class OppgaveV3Repository(
                 ),
                 :oppgavefelt_id,
                 :verdi,
+                try_cast_int(:verdi),
                 :oppgavestatus
             )
         """.trimIndent(),

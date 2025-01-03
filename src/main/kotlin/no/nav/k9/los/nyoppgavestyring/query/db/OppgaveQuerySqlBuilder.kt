@@ -12,10 +12,6 @@ import no.nav.k9.los.spi.felter.OrderByInput
 import no.nav.k9.los.spi.felter.SqlMedParams
 import no.nav.k9.los.spi.felter.TransientFeltutleder
 import no.nav.k9.los.spi.felter.WhereInput
-import org.postgresql.util.PGInterval
-import java.math.BigDecimal
-import java.math.BigInteger
-import java.time.LocalDate
 import java.time.LocalDateTime
 
 class OppgaveQuerySqlBuilder(
@@ -179,18 +175,12 @@ class OppgaveQuerySqlBuilder(
                 ${combineOperator.sql} ${if (operator.negasjonAv != null) "NOT" else "" } EXISTS (
                     SELECT 'Y'
                     FROM Oppgavefelt_verdi_aktiv ov
-                    WHERE CASE ov.oppgave_id = o.id
+                    WHERE ov.oppgave_id = o.id
                       AND ov.omrade_ekstern_id = :feltOmrade$index
                       AND ov.feltdefinisjon_ekstern_id = :feltkode$index
-                      THEN 
+                      AND ${verdifelt(feltområde, feltkode)} ${operator.negasjonAv?.sql ?: operator.sql} (:feltverdi$index)
+                    ) 
             """.trimIndent()
-
-        /*
-         * Postgres støtter ikke betinget typekonvertering av queryparametere. Dette fordi
-         * typekonverteringen blir gjort ved opprettelse av spørring og at feilende
-         * typekonvertering gjør at spørringen feiler.
-         */
-        query += "${databaseverdiMedCasting(feltområde, feltkode)} ${operator.negasjonAv?.sql ?: operator.sql} (:feltverdi$index) END) "
 
         queryParams.putAll(mapOf(
             "feltOmrade$index" to feltområde,
@@ -199,12 +189,9 @@ class OppgaveQuerySqlBuilder(
         ))
     }
 
-    private fun databaseverdiMedCasting(feltområde: String, feltkode: String): String {
+    private fun verdifelt(feltområde: String, feltkode: String): String {
         return when (oppgavefelterKodeOgType[OmrådeOgKode(feltområde, feltkode)]) {
-            TIMESTAMP -> "CAST(ov.verdi AS timestamp without time zone)"
-            DURATION -> "CAST(ov.verdi AS interval)"
-            INTEGER -> "CAST(ov.verdi AS integer)"
-            BOOLEAN -> "CAST(ov.verdi AS boolean)"
+            INTEGER -> "ov.verdi_int"
             else -> "ov.verdi"
         }
     }
@@ -279,7 +266,7 @@ class OppgaveQuerySqlBuilder(
             "orderByfeltkode$index" to feltkode
         ))
 
-        val typeConversion = databaseverdiMedCasting(feltområde, feltkode)
+        val typeConversion = verdifelt(feltområde, feltkode)
         orderBySql += """
                 , (
                   SELECT $typeConversion                    

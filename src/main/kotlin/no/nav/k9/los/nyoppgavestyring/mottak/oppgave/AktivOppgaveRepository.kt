@@ -219,8 +219,8 @@ class AktivOppgaveRepository(val oppgavetypeRepository: OppgavetypeRepository) {
             }
             tx.batchPreparedNamedStatement(
                 """
-                insert into oppgavefelt_verdi_aktiv(oppgave_id, oppgavefelt_id, verdi, oppgavestatus, feltdefinisjon_ekstern_id, omrade_ekstern_id, oppgavetype_ekstern_id)
-                        VALUES (:oppgaveId, :oppgavefeltId, :verdi, cast(:oppgavestatus as oppgavestatus), :feltdefinisjon_ekstern_id, :omrade_ekstern_id, :oppgavetype_ekstern_id)
+                insert into oppgavefelt_verdi_aktiv(oppgave_id, oppgavefelt_id, verdi, verdi_int, oppgavestatus, feltdefinisjon_ekstern_id, omrade_ekstern_id, oppgavetype_ekstern_id)
+                        VALUES (:oppgaveId, :oppgavefeltId, :verdi, try_cast_int(:verdi), cast(:oppgavestatus as oppgavestatus), :feltdefinisjon_ekstern_id, :omrade_ekstern_id, :oppgavetype_ekstern_id)
             """.trimIndent(),
                 inserts.map { verdi ->
                     mapOf(

@@ -7,8 +7,10 @@ import no.nav.k9.los.nyoppgavestyring.query.db.OmrådeOgKode
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgavefeltMedMer
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import java.math.BigInteger
 import java.time.LocalDateTime
 
 class OppgavefilterDatatypeMapperTest {
@@ -36,10 +38,23 @@ class OppgavefilterDatatypeMapperTest {
                 verdiforklaringer = null
             ),
             transientFeltutleder = null
+        ),
+        OmrådeOgKode("K9", "testfeltInteger") to OppgavefeltMedMer(
+            oppgavefelt = Oppgavefelt(
+                område = "K9",
+                kode = "testfeltInteger",
+                visningsnavn = "Testet felt",
+                tolkes_som = "Integer",
+                kokriterie = true,
+                verdiforklaringerErUttømmende = false,
+                verdiforklaringer = null
+            ),
+            transientFeltutleder = null
         )
     )
 
     @Nested
+    @Disabled("Kun nyttig hvis det skal være egen kolonne for verdi_boolean, slett dersom string holder")
     inner class Boolean {
         @Test
         fun `skal mappe til true`() {
@@ -67,6 +82,7 @@ class OppgavefilterDatatypeMapperTest {
     }
 
     @Nested
+    @Disabled("Kun nyttig hvis det skal være egen kolonne for verdi_date, slett dersom string holder")
     inner class LocalDateTime {
         @Test
         fun `skal mappe til riktig tidspunkt`() {
@@ -74,6 +90,17 @@ class OppgavefilterDatatypeMapperTest {
                 felter, listOf(FeltverdiOppgavefilter(område = "K9", kode = "testfeltLDT", "EQUALS", listOf("2020-01-01T12:34:56.789")))
             )
             assertThat((mappet[0] as FeltverdiOppgavefilter).verdi[0]).isEqualTo(java.time.LocalDateTime.of(2020, 1, 1, 12, 34, 56, 789000000))
+        }
+    }
+
+    @Nested
+    inner class Integer {
+        @Test
+        fun `skal mappe til riktig tall`() {
+            val mappet = OppgavefilterDatatypeMapper.map(
+                felter, listOf(FeltverdiOppgavefilter(område = "K9", kode = "testfeltInteger", "EQUALS", listOf("2020202020")))
+            )
+            assertThat((mappet[0] as FeltverdiOppgavefilter).verdi[0]).isEqualTo(BigInteger.valueOf(2020202020))
         }
     }
 

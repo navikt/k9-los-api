@@ -34,8 +34,8 @@ object OppgavefilterDatatypeMapper {
         return when (datatype) {
             Datatype.INTEGER -> filter.copy(verdi = listOf(verdi.toBigInteger()))
             Datatype.DURATION -> filter.copy(verdi = listOf(PGInterval(verdi)))
-            Datatype.TIMESTAMP -> filter.copy(verdi = listOf(LocalDateTime.parse(verdi)))
-            Datatype.BOOLEAN -> filter.copy(verdi = listOf(verdi.toBoolean()))
+            // Datatype.TIMESTAMP -> filter.copy(verdi = listOf(LocalDateTime.parse(verdi)))
+            // Datatype.BOOLEAN -> filter.copy(verdi = listOf(verdi.toBoolean()))
             else -> filter
         }
     }
