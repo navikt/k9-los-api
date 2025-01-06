@@ -7,6 +7,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.Configuration
+import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
@@ -23,6 +24,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.OppgaverGruppertRepository
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -952,7 +954,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         return OppgaveTjeneste(
             get<OppgaveRepository>(),
-            get<OppgaveRepositoryV2>(),
+            get<OppgaverGruppertRepository>(),
             get<OppgaveKøRepository>(),
             get<SaksbehandlerRepository>(),
             get<IPdlService>(),
@@ -963,6 +965,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
             get<StatistikkRepository>(),
             oversetterMock,
             statistikkChannel = get(named("statistikkRefreshChannel")),
+            KoinProfile.LOCAL,
         )
     }
 
