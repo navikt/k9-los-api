@@ -12,6 +12,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
+import org.jetbrains.annotations.VisibleForTesting
 import java.time.temporal.ChronoUnit
 
 class EventTilDtoMapper {
@@ -177,6 +178,7 @@ class EventTilDtoMapper {
                 nøkkel = "ansvarligBeslutter",
                 verdi = event.ansvarligBeslutterForTotrinn ?: forrigeOppgave?.hentVerdi("ansvarligBeslutter")
             ),
+            utledTidFørsteGangHosBeslutter(forrigeOppgave, event),
             OppgaveFeltverdiDto(
                 nøkkel = "ansvarligSaksbehandler",
                 verdi = event.ansvarligSaksbehandlerForTotrinn
@@ -239,6 +241,24 @@ class EventTilDtoMapper {
                 null //ikke hastesak
             }
         ).filterNotNull().toMutableList()
+
+        @VisibleForTesting
+        fun utledTidFørsteGangHosBeslutter(
+            forrigeOppgave: OppgaveV3?,
+            event: BehandlingProsessEventDto
+        ) = forrigeOppgave?.hentVerdi("tidFørsteGangHosBeslutter")?.let {
+            OppgaveFeltverdiDto(
+                nøkkel = "tidFørsteGangHosBeslutter",
+                verdi = forrigeOppgave.hentVerdi("tidFørsteGangHosBeslutter")
+            )
+        } ?: if (erTilBeslutter(event)) {
+            OppgaveFeltverdiDto(
+                nøkkel = "tidFørsteGangHosBeslutter",
+                verdi = event.eventTid.toString()
+            )
+        } else {
+            null
+        }
 
         internal fun utledVentetype(
             behandlingSteg: String?,

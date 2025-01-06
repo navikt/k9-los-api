@@ -82,6 +82,11 @@
           "påkrevd": false
         },
         {
+          "id": "tidFørsteGangHosBeslutter",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
           "id": "løsbartAksjonspunkt",
           "visPåOppgave": true,
           "påkrevd": false

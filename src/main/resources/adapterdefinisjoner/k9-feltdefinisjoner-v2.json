@@ -180,6 +180,14 @@
       "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9BeslutterTransientFeltutleder"
     },
     {
+      "id": "tidFørsteGangHosBeslutter",
+      "visningsnavn": "Tidspunkt oppgaven gikk til beslutter første gang",
+      "listetype": false,
+      "tolkesSom": "Timestamp",
+      "visTilBruker": true,
+      "kokriterie": true
+    },
+    {
       "id": "totrinnskontroll",
       "visningsnavn": "Må gjennom totrinnskontroll",
       "listetype": false,

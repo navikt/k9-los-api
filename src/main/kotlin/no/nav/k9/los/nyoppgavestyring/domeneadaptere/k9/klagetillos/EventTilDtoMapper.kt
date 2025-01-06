@@ -11,11 +11,15 @@ import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.Aksjonspunkttilstand
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.KlagebehandlingProsessHendelse
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
+import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.EventTilDtoMapper
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.EventTilDtoMapper.Companion
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.LosOpplysningerSomManglerIKlageDto
+import org.jetbrains.annotations.VisibleForTesting
 
 class EventTilDtoMapper {
 
@@ -326,6 +330,7 @@ class EventTilDtoMapper {
                     ).not()
                 }.isNotEmpty().toString()
             ),
+            utledTidFørsteGangHosBeslutter(forrigeOppgave, event),
             OppgaveFeltverdiDto(
                 nøkkel = "helautomatiskBehandlet",
                 verdi = false.toString() //TODO: Påstand - klagesaker er alltid manuelt behandlet?
@@ -347,7 +352,25 @@ class EventTilDtoMapper {
                     )
                 )
             }
-        }.toMutableList()
+        }.filterNotNull().toMutableList()
+
+        @VisibleForTesting
+        fun utledTidFørsteGangHosBeslutter(
+            forrigeOppgave: OppgaveV3?,
+            event: KlagebehandlingProsessHendelse
+        ) = forrigeOppgave?.hentVerdi("tidFørsteGangHosBeslutter")?.let {
+            OppgaveFeltverdiDto(
+                nøkkel = "tidFørsteGangHosBeslutter",
+                verdi = forrigeOppgave.hentVerdi("tidFørsteGangHosBeslutter")
+            )
+        } ?: if (erTilBeslutter(event)) {
+            OppgaveFeltverdiDto(
+                nøkkel = "tidFørsteGangHosBeslutter",
+                verdi = event.eventTid.toString()
+            )
+        } else {
+            null
+        }
 
         private fun utledAvventerSaksbehandler(
             harManueltAksjonspunkt: Boolean,
