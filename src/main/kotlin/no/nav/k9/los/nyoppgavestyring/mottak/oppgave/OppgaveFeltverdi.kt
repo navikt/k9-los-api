@@ -10,4 +10,6 @@ data class OppgaveFeltverdi(
     override fun toString(): String {
         return "OppgaveFeltverdi(id=$id, oppgavefeltnavn=${oppgavefelt.feltDefinisjon.eksternId}, verdi='$verdi')"
     }
+
+    fun verdiInt() = if (oppgavefelt.feltDefinisjon.tolkesSom === "Integer") verdi.toInt() else null
 }

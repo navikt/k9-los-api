@@ -263,13 +263,14 @@ class OppgaveV3Repository(
     ) {
         tx.batchPreparedNamedStatement("""
             insert into oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi, verdi_int, oppgavestatus)
-                    VALUES (:oppgaveId, :oppgavefeltId, :verdi, try_cast_int(:verdi), :oppgavestatus)
+                    VALUES (:oppgaveId, :oppgavefeltId, :verdi, :verdi_int, :oppgavestatus)
         """.trimIndent(),
             oppgave.felter.map { feltverdi ->
                 mapOf(
                     "oppgaveId" to oppgaveId.id,
                     "oppgavefeltId" to feltverdi.oppgavefelt.id,
                     "verdi" to feltverdi.verdi,
+                    "verdi_int" to feltverdi.verdiInt(),
                     "oppgavestatus" to oppgave.status.kode
                 )
             }
@@ -294,7 +295,7 @@ class OppgaveV3Repository(
                 ),
                 :oppgavefelt_id,
                 :verdi,
-                try_cast_int(:verdi),
+                :verdi_int,
                 :oppgavestatus
             )
         """.trimIndent(),
@@ -304,6 +305,7 @@ class OppgaveV3Repository(
                     "intern_versjon" to internVersjon,
                     "oppgavefelt_id" to feltverdi.oppgavefelt.id,
                     "verdi" to feltverdi.verdi,
+                    "verdi_int" to feltverdi.verdiInt(),
                     "oppgavestatus" to oppgavestatus.kode
                 )
             }
