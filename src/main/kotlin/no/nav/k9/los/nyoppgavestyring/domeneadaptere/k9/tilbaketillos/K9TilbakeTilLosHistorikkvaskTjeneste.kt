@@ -57,13 +57,13 @@ class K9TilbakeTilLosHistorikkvaskTjeneste(
                         break
                     }
 
-                    if (skalPauses()) {
+                    /*if (skalPauses()) {
                         HistorikkvaskMetrikker.observe(TRÅDNAVN, t0)
                         log.info("Vaskejobb satt på pause")
                         Thread.sleep(Duration.ofMinutes(5).toMillis())
                         t0 = System.nanoTime()
                         continue
-                    }
+                    }*/
 
                     log.info("Starter vaskeiterasjon på ${behandlingsIder.size} behandlinger")
                     eventTeller += spillAvBehandlingProsessEventer(dispatcher, behandlingsIder)

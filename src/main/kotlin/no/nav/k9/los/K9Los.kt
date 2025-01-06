@@ -120,11 +120,11 @@ fun Application.k9Los() {
             //koin.get<K9SakTilLosLukkeFeiloppgaverTjeneste>().kjørFeiloppgaverVask() //TODO slette
             koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
             koin.get<K9KlageTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
-            koin.get<K9TilbakeTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
             koin.get<Aktivvask>().kjørAktivvask()
         }
         koin.get<K9PunsjTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
     }
+    koin.get<K9TilbakeTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
 
     install(Authentication) {
         multipleJwtIssuers(issuers)
@@ -269,7 +269,7 @@ fun Application.k9Los() {
     ).kjør(kjørUmiddelbart = false)
 
 
-    koin.get<K9TilbakeTilLosAdapterTjeneste>().kjør(kjørSetup = false, kjørUmiddelbart = false)
+    koin.get<K9TilbakeTilLosAdapterTjeneste>().kjør(kjørSetup = false, kjørUmiddelbart = true)
 
     OppgavestatistikkTjeneste(
         oppgavetypeRepository = koin.get(),
@@ -308,6 +308,7 @@ fun Application.k9Los() {
 
         if ((KoinProfile.LOCAL == koin.get<KoinProfile>())) {
             localSetup.initSaksbehandlere()
+            localSetup.initTilbakeoppgaver(10)
 //            localSetup.initPunsjoppgave()
             api(sseChannel)
             route("/forvaltning") {
