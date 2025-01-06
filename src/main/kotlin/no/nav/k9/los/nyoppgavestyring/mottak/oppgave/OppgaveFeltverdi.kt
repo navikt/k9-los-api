@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavefelt
 
 data class OppgaveFeltverdi(
@@ -11,5 +12,5 @@ data class OppgaveFeltverdi(
         return "OppgaveFeltverdi(id=$id, oppgavefeltnavn=${oppgavefelt.feltDefinisjon.eksternId}, verdi='$verdi')"
     }
 
-    fun verdiInt() = if (oppgavefelt.feltDefinisjon.tolkesSom === "Integer") verdi.toInt() else null
+    fun verdiInt() = if (oppgavefelt.feltDefinisjon.tolkesSom == Datatype.INTEGER.kode) verdi.toInt() else null
 }
