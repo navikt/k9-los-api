@@ -61,12 +61,12 @@ class NokkeltallTjeneste constructor(
             //gir ikke helt mening å ha med VENT_PÅ_TILBAKEKREVINGSGRUNNLAG her. Den er vangligvis samtidig med VENT_PÅ_BRUKERTILBAKEMELDING, så ville gitt duplikater her. Frist er også misvisende for aksjonspunktet, k9tilbake vil uansett vente helt til grunnlag kommer
             .filterNot { gruppe -> gruppe.system == Fagsystem.K9TILBAKE && gruppe.aksjonspunktKode ==  "VENT_PÅ_TILBAKEKREVINGSGRUNNLAG"}
 
-        data class PerBehandling(val f: FagsakYtelseType, val b: BehandlingType, val frist: LocalDate)
+        data class PerBehandling(val f: FagsakYtelseType, val b: BehandlingType, val frist: LocalDate?)
         val påVentPerBehandling = raw.groupingBy { PerBehandling( it.fagsakYtelseType, it.behandlingType, it.frist) }
             .aggregate { key, accumulator : Int?, element, first -> if (first) element.antall else accumulator!! + element.antall }
             .entries.map { OppgaverPåVentDto.PerBehandlingDto(it.key.f, it.key.b, it.key.frist, it.value) }
 
-        data class PerVenteårsak(val f: FagsakYtelseType, val b: BehandlingType, val frist: LocalDate, val venteårsak: Venteårsak)
+        data class PerVenteårsak(val f: FagsakYtelseType, val b: BehandlingType, val frist: LocalDate?, val venteårsak: Venteårsak)
         val påVentPerVenteårsak = raw.groupingBy { PerVenteårsak(it.fagsakYtelseType, it.behandlingType, it.frist, tilVenteårsak(it.system, it.venteårsak)) }
             .aggregate { key, accumulator : Int?, element, first -> if (first) element.antall else accumulator!! + element.antall }
             .entries.map { OppgaverPåVentDto.PerVenteårsakDto(it.key.f, it.key.b, it.key.frist, it.key.venteårsak, it.value) }

@@ -15,14 +15,14 @@ object OppgaverPåVentDto {
     data class PerBehandlingDto(
         val fagsakYtelseType: FagsakYtelseType,
         val behandlingType: BehandlingType,
-        val frist: LocalDate,
+        val frist: LocalDate?,
         val antall: Int
     )
 
     data class PerVenteårsakDto(
         val fagsakYtelseType: FagsakYtelseType,
         val behandlingType: BehandlingType,
-        val frist: LocalDate,
+        val frist: LocalDate?,
         val venteårsak: Venteårsak,
         val antall: Int
     )

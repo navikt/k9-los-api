@@ -25,7 +25,7 @@ class NøkkeltallRepositoryV3 (private val dataSource: DataSource) {
         val fagsakYtelseType: FagsakYtelseType,
         val behandlingType: BehandlingType,
         val aksjonspunktKode: String,
-        val frist: LocalDate,
+        val frist: LocalDate?,
         val venteårsak: String,
         val antall: Int
     )
@@ -36,7 +36,8 @@ class NøkkeltallRepositoryV3 (private val dataSource: DataSource) {
 
     fun internalHentAllePåVentGruppert(): List<GrupperteAksjonspunktVenteårsak> {
         //TODO ha en egen med/uten kode6 ?
-        val oppgaver: List<GrupperteAksjonspunktVenteårsak> = using(sessionOf(dataSource)) {it.run(
+        val oppgaver: List<GrupperteAksjonspunktVenteårsak> = using(sessionOf(dataSource)) { session ->
+            session.run(
                 queryOf(
                     """
                        with oppgaver as (
@@ -65,11 +66,11 @@ class NøkkeltallRepositoryV3 (private val dataSource: DataSource) {
                     .map { row ->
                         GrupperteAksjonspunktVenteårsak(
                             system = mapOppgavetypeTilFagsystem(row.string("oppgavetype")),
-                            fagsakYtelseType = FagsakYtelseType.fraKode(row.string("ytelsestype")),
-                            behandlingType = BehandlingType.fraKode(row.string("behandlingType")),
-                            aksjonspunktKode = row.string("aksjonspunktKode"),
-                            frist = LocalDate.parse(row.string("ventefristDato"), DateTimeFormatter.ISO_LOCAL_DATE),
-                            venteårsak = row.string("venteårsak"),
+                            fagsakYtelseType = row.stringOrNull("ytelsestype")?.let { FagsakYtelseType.fraKode(it) } ?: FagsakYtelseType.UKJENT,
+                            behandlingType = row.stringOrNull("behandlingType")?.let { BehandlingType.fraKode(it) } ?: BehandlingType.UKJENT,
+                            aksjonspunktKode = row.stringOrNull("aksjonspunktKode") ?: "UKJENT",
+                            frist = row.stringOrNull("ventefristDato")?.let {LocalDate.parse(it, DateTimeFormatter.ISO_LOCAL_DATE) },
+                            venteårsak = row.stringOrNull("venteårsak") ?: "UKJENT",
                             antall = row.int("antall")
                         )
                     }.asList
