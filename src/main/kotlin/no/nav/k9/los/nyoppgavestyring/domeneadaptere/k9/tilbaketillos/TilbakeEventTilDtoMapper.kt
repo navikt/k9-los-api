@@ -1,14 +1,18 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos
 
+import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.KlagebehandlingProsessHendelse
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.los.aksjonspunktbehandling.AksjonspunktDefinisjonK9Tilbake
 import no.nav.k9.los.domene.modell.AksjonspunktStatus.OPPRETTET
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventTilbakeDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.EventTilDtoMapper
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.EventTilDtoMapper.Companion
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import org.jetbrains.annotations.VisibleForTesting
 import java.time.temporal.ChronoUnit
 
 class TilbakeEventTilDtoMapper {
@@ -137,8 +141,26 @@ class TilbakeEventTilDtoMapper {
                 nøkkel = "førsteFeilutbetalingDato",
                 verdi = event.førsteFeilutbetaling ?: forrigeOppgave?.hentVerdi("førsteFeilutbetalingDato")
             ),
-
+            utledTidFørsteGangHosBeslutter(forrigeOppgave, event),
             ).filterNotNull().toMutableList()
+
+        @VisibleForTesting
+        fun utledTidFørsteGangHosBeslutter(
+            forrigeOppgave: OppgaveV3?,
+            event: BehandlingProsessEventTilbakeDto
+        ) = forrigeOppgave?.hentVerdi("tidFørsteGangHosBeslutter")?.let {
+            OppgaveFeltverdiDto(
+                nøkkel = "tidFørsteGangHosBeslutter",
+                verdi = forrigeOppgave.hentVerdi("tidFørsteGangHosBeslutter")
+            )
+        } ?: if (erTilBeslutter(event)) {
+            OppgaveFeltverdiDto(
+                nøkkel = "tidFørsteGangHosBeslutter",
+                verdi = event.eventTid.toString()
+            )
+        } else {
+            null
+        }
 
         private fun utledAutomatiskBehandletFlagg(
             event: BehandlingProsessEventTilbakeDto,

@@ -97,6 +97,11 @@
           "påkrevd": false
         },
         {
+          "id": "tidFørsteGangHosBeslutter",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
           "id": "totrinnskontroll",
           "visPåOppgave": true,
           "påkrevd": true

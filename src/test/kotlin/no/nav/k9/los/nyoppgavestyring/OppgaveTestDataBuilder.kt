@@ -118,4 +118,5 @@ enum class FeltType(
     PERSONBESKYTTELSE("personbeskyttelse", tolkesSom = "String", listetype = false),
     LØSBART_AKSJONSPUNKT("løsbartAksjonspunkt"),
     LIGGER_HOS_BESLUTTER("liggerHosBeslutter"),
+    TID_FORSTE_GANG_HOS_BESLUTTER("tidFørsteGangHosBeslutter"),
 }
