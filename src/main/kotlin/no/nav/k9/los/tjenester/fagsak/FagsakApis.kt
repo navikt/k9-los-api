@@ -25,15 +25,4 @@ internal fun Route.FagsakApis() {
             }
         }
     }
-
-    post("/aktoerid-sok") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val param = call.receive<AktoerIdDto>()
-                call.respond(oppgaveTjeneste.finnOppgaverBasertPåAktørId(param.aktoerId))
-            } else {
-                call.respond(HttpStatusCode.Forbidden)
-            }
-        }
-    }
 }
