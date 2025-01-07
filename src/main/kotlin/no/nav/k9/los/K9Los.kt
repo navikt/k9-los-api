@@ -308,7 +308,7 @@ fun Application.k9Los() {
 
         if ((KoinProfile.LOCAL == koin.get<KoinProfile>())) {
             localSetup.initSaksbehandlere()
-            localSetup.initTilbakeoppgaver(10)
+            localSetup.initTilbakeoppgaver(2000)
 //            localSetup.initPunsjoppgave()
             api(sseChannel)
             route("/forvaltning") {

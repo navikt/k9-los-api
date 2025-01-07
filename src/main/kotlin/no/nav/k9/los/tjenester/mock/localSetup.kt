@@ -21,6 +21,7 @@ import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
@@ -72,33 +73,34 @@ object localSetup : KoinComponent {
         }
     }
 
+    @Suppress("unused")
     fun initTilbakeoppgaver(antall: Int) {
         if (profile == KoinProfile.LOCAL) {
             runBlocking {
-                for (i in 0..antall) {
+                for (i in 0..<antall) {
                     val event = BehandlingProsessEventTilbakeDto(
                         eksternId = UUID.randomUUID(),
-                        saksnummer = Random().nextInt(0, 200).toString(),
+                        saksnummer = Random().nextInt(0, 200 * antall).toString(),
                         behandlingId = 123L,
                         resultatType = null,
                         behandlendeEnhet = null,
                         ansvarligSaksbehandlerIdent = null,
                         opprettetBehandling = LocalDateTime.now(),
-                        aktørId = Random().nextInt(0, 9999999).toString(),
+                        aktørId = Random().nextLong(1_000_000_000_000, 9_000_000_000_000).toString(),
                         behandlingStatus = BehandlingStatus.UTREDES.kode,
+                        behandlinStatus = BehandlingStatus.UTREDES.kode,
                         behandlingSteg = BehandlingStegType.FATTE_VEDTAK.kode,
                         behandlingTypeKode = "BT-007",
                         behandlingstidFrist = null,
                         eventHendelse = EventHendelse.AKSJONSPUNKT_OPPRETTET,
-                        eventTid = LocalDateTime.now().plusSeconds(i.toLong()),
+                        eventTid = LocalDateTime.now().minusSeconds((antall - i).toLong()),
                         aksjonspunktKoderMedStatusListe = mutableMapOf(AksjonspunktDefinisjonK9Tilbake.VURDER_TILBAKEKREVING.kode to AksjonspunktStatus.OPPRETTET.kode),
                         ytelseTypeKode = FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode,
                         ansvarligBeslutterIdent = null,
-                        førsteFeilutbetaling = null,
+                        førsteFeilutbetaling = LocalDate.now().minusDays(Random().nextLong(100)).toString(),
                         feilutbetaltBeløp = Random().nextLong(1000, 20000),
                         href = null,
                         fagsystem = Fagsystem.K9TILBAKE.kode,
-                        behandlinStatus = BehandlingStatus.UTREDES.kode
                     )
                     tilbakeEventHandler.prosesser(event)
                 }
@@ -106,6 +108,7 @@ object localSetup : KoinComponent {
         }
     }
 
+    @Suppress("unused")
     fun initPunsjoppgave() {
         if (profile == KoinProfile.LOCAL) {
             runBlocking {
