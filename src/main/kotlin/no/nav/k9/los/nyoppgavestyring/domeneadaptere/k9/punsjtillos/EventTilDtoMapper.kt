@@ -2,6 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos
 
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.los.domene.modell.BehandlingType
+import no.nav.k9.los.domene.modell.FagsakYtelseType
 import no.nav.k9.los.integrasjon.kafka.dto.PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
@@ -63,11 +64,11 @@ class EventTilDtoMapper {
                 },
                 OppgaveFeltverdiDto(
                     nøkkel = "behandlingTypekode",
-                    verdi = (event.type?.let { BehandlingType.fraKode(it) } ?: BehandlingType.UKJENT).kode,
+                    verdi = event.type ?: forrigeOppgave?.hentVerdi("behandlingTypekode") ?: BehandlingType.UKJENT.kode,
                 ),
                 OppgaveFeltverdiDto(
                     nøkkel = "ytelsestype",
-                    verdi = event.ytelse,
+                    verdi = event.ytelse ?: forrigeOppgave?.hentVerdi("ytelsestype") ?: FagsakYtelseType.UKJENT.kode,
                 ),
                 event.ferdigstiltAv?.let {
                     OppgaveFeltverdiDto(
