@@ -146,7 +146,6 @@ class BeslutterSkalIkkePlukkeEgenSakTest : AbstractK9LosIntegrationTest() {
             get<StatistikkRepository>(),
             oversetterMock,
             get(named("statistikkRefreshChannel")),
-            KoinProfile.LOCAL
         )
     }
 }

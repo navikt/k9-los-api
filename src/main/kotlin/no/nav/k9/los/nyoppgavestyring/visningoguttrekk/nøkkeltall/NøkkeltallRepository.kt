@@ -14,9 +14,9 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import javax.sql.DataSource
 
-class NøkkeltallRepositoryV3 (private val dataSource: DataSource) {
+class NøkkeltallRepository (private val dataSource: DataSource) {
 
-    private val log: Logger = LoggerFactory.getLogger(NøkkeltallRepositoryV3::class.java)
+    private val log: Logger = LoggerFactory.getLogger(NøkkeltallRepository::class.java)
 
     private val cache = Cache<Boolean, List<GrupperteAksjonspunktVenteårsak>>(cacheSizeLimit = null)
 

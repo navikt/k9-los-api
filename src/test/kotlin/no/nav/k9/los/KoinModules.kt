@@ -62,7 +62,7 @@ import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksTjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.OppgaverGruppertRepository
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallRepositoryV3
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallRepository
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.*
@@ -227,7 +227,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             statistikkRepository = get(),
             reservasjonOversetter = reservasjonOversetterMock,
             statistikkChannel = get(named("statistikkRefreshChannel")),
-            koinProfile = config.koinProfile(),
         )
     }
 
@@ -262,8 +261,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgaveRepository = get(),
             statistikkRepository = get(),
             nøkkeltallRepository = get(),
-            nøkkeltallRepositoryV3 = get(),
-            koinProfile = config.koinProfile(),
         )
     }
 
@@ -387,9 +384,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgavetypeRepository = get()
         )
     }
-    single { NøkkeltallRepository(dataSource = get()) }
 
-    single { NøkkeltallRepositoryV3(dataSource = get()) }
+    single { NøkkeltallRepository(dataSource = get()) }
 
     single { OppgaverGruppertRepository(dataSource = get()) }
 
