@@ -61,6 +61,8 @@ import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksTjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.OppgaverGruppertRepository
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallRepositoryV3
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.*
@@ -214,7 +216,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         OppgaveTjeneste(
             oppgaveRepository = get(),
-            oppgaveRepositoryV2 = get(),
+            oppgaverGruppertRepository = get(),
             oppgaveKøRepository = get(),
             saksbehandlerRepository = get(),
             pdlService = get(),
@@ -224,7 +226,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             pepClient = get(),
             statistikkRepository = get(),
             reservasjonOversetter = reservasjonOversetterMock,
-            statistikkChannel = get(named("statistikkRefreshChannel"))
+            statistikkChannel = get(named("statistikkRefreshChannel")),
+            koinProfile = config.koinProfile(),
         )
     }
 
@@ -254,9 +257,13 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         NokkeltallTjeneste(
+            pepClient = get(),
+            oppgaverGruppertRepository = get(),
             oppgaveRepository = get(),
             statistikkRepository = get(),
-            nøkkeltallRepository = get()
+            nøkkeltallRepository = get(),
+            nøkkeltallRepositoryV3 = get(),
+            koinProfile = config.koinProfile(),
         )
     }
 
@@ -381,6 +388,10 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         )
     }
     single { NøkkeltallRepository(dataSource = get()) }
+
+    single { NøkkeltallRepositoryV3(dataSource = get()) }
+
+    single { OppgaverGruppertRepository(dataSource = get()) }
 
     single { mockk<StatistikkPublisher>() }
 

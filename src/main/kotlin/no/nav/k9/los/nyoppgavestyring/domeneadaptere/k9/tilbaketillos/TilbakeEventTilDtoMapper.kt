@@ -9,6 +9,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import org.jetbrains.annotations.VisibleForTesting
 import java.time.temporal.ChronoUnit
 
 class TilbakeEventTilDtoMapper {
@@ -137,7 +138,26 @@ class TilbakeEventTilDtoMapper {
                 nøkkel = "førsteFeilutbetalingDato",
                 verdi = event.førsteFeilutbetaling ?: forrigeOppgave?.hentVerdi("førsteFeilutbetalingDato")
             ),
-        )
+            utledTidFørsteGangHosBeslutter(forrigeOppgave, event),
+            ).filterNotNull().toMutableList()
+
+        @VisibleForTesting
+        fun utledTidFørsteGangHosBeslutter(
+            forrigeOppgave: OppgaveV3?,
+            event: BehandlingProsessEventTilbakeDto
+        ) = forrigeOppgave?.hentVerdi("tidFørsteGangHosBeslutter")?.let {
+            OppgaveFeltverdiDto(
+                nøkkel = "tidFørsteGangHosBeslutter",
+                verdi = forrigeOppgave.hentVerdi("tidFørsteGangHosBeslutter")
+            )
+        } ?: if (erTilBeslutter(event)) {
+            OppgaveFeltverdiDto(
+                nøkkel = "tidFørsteGangHosBeslutter",
+                verdi = event.eventTid.toString()
+            )
+        } else {
+            null
+        }
 
         private fun utledAutomatiskBehandletFlagg(
             event: BehandlingProsessEventTilbakeDto,

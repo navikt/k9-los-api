@@ -10,7 +10,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.concurrent.atomic.LongAdder
 import javax.sql.DataSource
 
 class NøkkeltallRepository(private val dataSource: DataSource) {
@@ -66,4 +65,5 @@ class NøkkeltallRepository(private val dataSource: DataSource) {
         log.info("Henter oppgaver på vent: " + oppgaver.stream().map{it.antall}.reduce(Int::plus).orElse(0) + " oppgaver" + " spørring: " + spørringTidsforbrukMs)
         return oppgaver
     }
+
 }

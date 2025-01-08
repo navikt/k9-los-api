@@ -12,7 +12,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.*
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.query.db.OmrådeOgKode
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgavefeltMedMer
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
@@ -115,6 +115,7 @@ enum class FeltType(
     PERSONBESKYTTELSE("personbeskyttelse", tolkesSom = "String"),
     LØSBART_AKSJONSPUNKT("løsbartAksjonspunkt"),
     LIGGER_HOS_BESLUTTER("liggerHosBeslutter", tolkesSom = "boolean"),
+    TID_FORSTE_GANG_HOS_BESLUTTER("tidFørsteGangHosBeslutter"),
 }
 
 val felter: Map<OmrådeOgKode, OppgavefeltMedMer> = mapOf(
