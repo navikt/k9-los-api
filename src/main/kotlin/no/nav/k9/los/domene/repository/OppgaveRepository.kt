@@ -299,36 +299,6 @@ class OppgaveRepository(
         }
     }
 
-    suspend fun hentApneBehandlingerPerBehandlingtypeIdag(): List<AlleApneBehandlinger> {
-        val kode6 = pepClient.harTilgangTilKode6()
-        try {
-            val json = using(sessionOf(dataSource)) {
-                it.run(
-                    queryOf(
-                        """
-                        select count(*) as antall,
-                        (data -> 'behandlingType' ->> 'kode') as behandlingType
-                        from oppgave o where (data -> 'aktiv') ::boolean and (data -> 'kode6'):: Boolean =:kode6
-                        group by  behandlingType
-                    """.trimIndent(),
-                        mapOf("kode6" to kode6)
-                    )
-                        .map { row ->
-                            AlleApneBehandlinger(
-                                BehandlingType.fraKode(row.string("behandlingType")),
-                                row.int("antall")
-                            )
-                        }.asList
-                )
-            }
-            return json
-        } catch (e: Exception) {
-            log.error("", e)
-            return emptyList()
-        }
-    }
-
-
     suspend fun hentOppgaverMedAktorId(aktørId: String): List<Oppgave> {
         val kode6 = pepClient.harTilgangTilKode6()
         val json: List<String> = using(sessionOf(dataSource)) {

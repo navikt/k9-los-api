@@ -965,7 +965,6 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
             get<StatistikkRepository>(),
             oversetterMock,
             statistikkChannel = get(named("statistikkRefreshChannel")),
-            KoinProfile.LOCAL,
         )
     }
 

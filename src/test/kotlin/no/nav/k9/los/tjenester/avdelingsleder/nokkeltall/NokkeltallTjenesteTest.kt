@@ -8,6 +8,8 @@ import io.mockk.mockk
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.modell.AksjonspunktStatus
@@ -18,20 +20,12 @@ import no.nav.k9.los.domene.modell.BehandlingType
 import no.nav.k9.los.domene.modell.FagsakYtelseType
 import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.domene.repository.StatistikkRepository
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
-import no.nav.k9.los.KoinProfile
-import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveStatus
-import no.nav.k9.los.domene.repository.NøkkeltallRepository
-import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.*
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetyper
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallRepositoryV3
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
@@ -101,8 +95,7 @@ class NokkeltallTjenesteTest : AbstractK9LosIntegrationTest() {
     fun `Hent løste aksjonspunkter bortsett fra de med behandlende enhet 2103`() {
         val statistikkRepository = mockk<StatistikkRepository>()
         val nøkkeltallRepository = mockk<NøkkeltallRepository>()
-        val nøkkeltallRepositoryV3 = mockk<NøkkeltallRepositoryV3>()
-        val nøkkeltallTjeneste = NokkeltallTjeneste(mockk(), mockk(), mockk(), statistikkRepository, nøkkeltallRepository, nøkkeltallRepositoryV3, KoinProfile.PROD)
+        val nøkkeltallTjeneste = NokkeltallTjeneste(mockk(), mockk(), mockk(), statistikkRepository, nøkkeltallRepository)
 
         val ferdigstiltBehandling = FerdigstiltBehandling(
             dato = LocalDate.now(),

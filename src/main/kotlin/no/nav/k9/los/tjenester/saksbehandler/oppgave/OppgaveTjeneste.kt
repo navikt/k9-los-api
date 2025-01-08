@@ -52,7 +52,6 @@ class OppgaveTjeneste constructor(
     private val statistikkRepository: StatistikkRepository,
     private val reservasjonOversetter: ReservasjonOversetter,
     private val statistikkChannel: Channel<Boolean>,
-    private val koinProfile: KoinProfile
 ) {
 
     suspend fun hentOppgaver(oppgavekøId: UUID): List<Oppgave> {
@@ -749,12 +748,8 @@ class OppgaveTjeneste constructor(
     }
 
     suspend fun hentAntallOppgaverTotalt(): Int {
-        if (koinProfile == KoinProfile.PROD) {
-            return oppgaveRepository.hentAktiveOppgaverTotalt()
-        } else {
-            val harTilgangTilKode6 = pepClient.harTilgangTilKode6()
-            return oppgaverGruppertRepository.hentTotaltAntallÅpneOppgaver(harTilgangTilKode6)
-        }
+        val harTilgangTilKode6 = pepClient.harTilgangTilKode6()
+        return oppgaverGruppertRepository.hentTotaltAntallÅpneOppgaver(harTilgangTilKode6)
     }
 
     suspend fun hentNesteOppgaverIKø(kø: UUID): List<OppgaveDto> {

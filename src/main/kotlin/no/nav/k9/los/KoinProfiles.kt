@@ -76,7 +76,7 @@ import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksTjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.OppgaverGruppertRepository
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallRepositoryV3
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallRepository
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.los.tjenester.driftsmeldinger.DriftsmeldingTjeneste
@@ -110,8 +110,6 @@ fun common(app: Application, config: Configuration) = module {
             oppgaveRepository = get(),
             statistikkRepository = get(),
             nøkkeltallRepository = get(),
-            nøkkeltallRepositoryV3 = get(),
-            koinProfile = config.koinProfile(),
         )
     }
     single(named("oppgaveKøOppdatert")) {
@@ -202,10 +200,6 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         NøkkeltallRepository(get())
-    }
-
-    single {
-        NøkkeltallRepositoryV3(get())
     }
 
     single {
@@ -321,7 +315,6 @@ fun common(app: Application, config: Configuration) = module {
             statistikkRepository = get(),
             reservasjonOversetter = get(),
             statistikkChannel = get(named("statistikkRefreshChannel")),
-            koinProfile = config.koinProfile,
         )
     }
 
