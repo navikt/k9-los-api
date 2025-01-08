@@ -104,6 +104,7 @@ enum class FeltType(
     val tolkesSom: String = "String"
 ) {
     BEHANDLINGUUID("behandlingUuid"),
+    BEHANDLING_TYPE("behandlingTypekode"),
     OPPGAVE_STATUS("oppgavestatus", listetype = true),
     FAGSYSTEM("fagsystem"),
     AKSJONSPUNKT("aksjonspunkt", true),
