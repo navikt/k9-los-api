@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak as VenteårsakK9Sak
 
-class NokkeltallTjeneste constructor(
+class NokkeltallTjeneste(
     private val pepClient: IPepClient,
     private val oppgaveRepository: OppgaveRepository,
     private val oppgaverGruppertRepository: OppgaverGruppertRepository,
@@ -26,9 +26,6 @@ class NokkeltallTjeneste constructor(
     private val koinProfile: KoinProfile
 ) {
     private val log = LoggerFactory.getLogger(BehandlingsmigreringTjeneste::class.java)
-    suspend fun hentOppgaverUnderArbeid(): List<AlleOppgaverDto> {
-        return oppgaveRepository.hentAlleOppgaverUnderArbeid()
-    }
 
     fun hentOppgaverPåVent(): OppgaverPåVentDto.PåVentResponse {
         return if (koinProfile == KoinProfile.PROD){
@@ -153,30 +150,6 @@ class NokkeltallTjeneste constructor(
             }.fyllTommeDagerMedVerdi(emptyMap())
     }
 
-    fun hentFerdigstilteSiste8Uker(): List<AlleOppgaverHistorikk> {
-        return statistikkRepository.hentFerdigstilteOgNyeHistorikkPerAntallDager(StatistikkRepository.SISTE_8_UKER_I_DAGER)
-            .map {
-                AlleOppgaverHistorikk(
-                    it.fagsakYtelseType,
-                    it.behandlingType,
-                    it.dato,
-                    it.ferdigstilteSaksbehandler.size
-                )
-            }
-    }
-
-    fun hentNyeSiste8Uker(): List<AlleOppgaverHistorikk> {
-        return statistikkRepository.hentFerdigstilteOgNyeHistorikkPerAntallDager(StatistikkRepository.SISTE_8_UKER_I_DAGER)
-            .map {
-                AlleOppgaverHistorikk(
-                    it.fagsakYtelseType,
-                    it.behandlingType,
-                    it.dato,
-                    it.nye.size
-                )
-            }
-    }
-
     suspend fun hentDagensTall(): List<AlleApneBehandlinger> {
         if (koinProfile == KoinProfile.PROD) {
             return oppgaveRepository.hentApneBehandlingerPerBehandlingtypeIdag()
@@ -193,7 +166,7 @@ class NokkeltallTjeneste constructor(
     }
 }
 
-fun <T> Map<LocalDate, T>.fyllTommeDagerMedVerdi(verdi: T): Map<LocalDate, T> {
+private fun <T> Map<LocalDate, T>.fyllTommeDagerMedVerdi(verdi: T): Map<LocalDate, T> {
     val resultat = this.toSortedMap()
 
     tidligsteOgSeneste()?.datoerIPeriode()?.forEach {

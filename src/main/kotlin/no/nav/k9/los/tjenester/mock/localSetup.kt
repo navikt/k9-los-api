@@ -71,7 +71,7 @@ object localSetup : KoinComponent {
                     eventTid = LocalDateTime.now(),
                     status = Oppgavestatus.AAPEN,
                     aktørId = AktørId("2392173967319"),
-                    aksjonspunktKoderMedStatusListe = mutableMapOf(),
+                    aksjonspunktKoderMedStatusListe = mutableMapOf("PUNSJ" to "OPPR"),
                     pleietrengendeAktørId = null,
                     type = "PAPIRSØKNAD",
                     ytelse = "UKJENT",

@@ -22,8 +22,7 @@ class OppgaverGruppertRepository(private val dataSource: DataSource) {
 
     fun hentTotaltAntallÅpneOppgaver(kode6 : Boolean): Int {
         return hentAntallÅpneOppgaverPrOppgavetypeBehandlingstype(kode6)
-            .map { it.antall }
-            .reduce(Int::plus)
+            .sumOf { it.antall }
     }
 
     fun hentAntallÅpneOppgaverPrOppgavetypeBehandlingstype(kode6 : Boolean): List<BehandlingstypeAntallDto> {
@@ -34,8 +33,8 @@ class OppgaverGruppertRepository(private val dataSource: DataSource) {
     }
 
     private fun doHentAntallÅpneOppgaverPrOppgavetypeBehandlingstype(kode6: Boolean): List<BehandlingstypeAntallDto> {
-        val resultat = using(sessionOf(dataSource)) {
-            it.run(
+        val resultat = using(sessionOf(dataSource)) { session ->
+            session.run(
                 queryOf(
                     /***
                      * kan også gruppere på oppgavetype (k9sak/punsj/k9klage/k9tilbake) ved å legge til
@@ -64,7 +63,7 @@ class OppgaverGruppertRepository(private val dataSource: DataSource) {
             )
         }
         if (resultat.any {it.behandlistype == null} ){
-            log.warn("Fant ${resultat.filter {it.behandlistype == null} .map {it.antall}.reduce(Int::plus)} oppgaver uten behandlingstype, de blir ikke med oversikt som viser antall")
+            log.warn("Fant ${resultat.filter {it.behandlistype == null}.sumOf { it.antall }} oppgaver uten behandlingstype, de blir ikke med oversikt som viser antall")
             return resultat.filter { it.behandlistype != null }
         } else {
             return resultat
