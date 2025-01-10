@@ -341,56 +341,6 @@ class OppgaveTjeneste constructor(
         return SokeResultatDto(false, null, mutableListOf())
     }
 
-    suspend fun finnOppgaverBasertPåAktørId(aktørId: String): SokeResultatDto {
-        var person = pdlService.person(aktørId)
-        if (configuration.koinProfile() == KoinProfile.LOCAL) {
-            person = PersonPdlResponse(
-                false, PersonPdl(
-                    data = PersonPdl.Data(
-                        hentPerson = PersonPdl.Data.HentPerson(
-                            folkeregisteridentifikator = listOf(
-                                PersonPdl.Data.HentPerson.Folkeregisteridentifikator(
-                                    "2392173967319"
-                                )
-                            ),
-                            navn = listOf(
-                                PersonPdl.Data.HentPerson.Navn(
-                                    "Talentfull",
-                                    null,
-                                    "Dorull",
-                                    null
-                                )
-                            ),
-                            kjoenn = listOf(
-                                PersonPdl.Data.HentPerson.Kjoenn(
-                                    "MANN"
-                                )
-                            ),
-                            doedsfall = listOf()
-                        )
-                    )
-                )
-            )
-        }
-        val personInfo = person.person
-        val res = if (personInfo != null) {
-            val personDto = mapTilPersonDto(personInfo)
-            val oppgaver: MutableList<OppgaveDto> = hentOppgaver(aktørId)
-            SokeResultatDto(
-                ikkeTilgang = person.ikkeTilgang,
-                person = personDto,
-                oppgaver = oppgaver
-            )
-        } else {
-            SokeResultatDto(
-                ikkeTilgang = person.ikkeTilgang,
-                person = null,
-                oppgaver = mutableListOf()
-            )
-        }
-        return filtrerOppgaverForSaksnummerOgJournalpostIder(res)
-    }
-
     private fun mapTilPersonDto(person: PersonPdl): PersonDto {
         return PersonDto(
             person.navn(),
