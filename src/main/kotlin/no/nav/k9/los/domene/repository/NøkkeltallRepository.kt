@@ -62,7 +62,7 @@ class NøkkeltallRepository(private val dataSource: DataSource) {
         }
         val spørringTidsforbrukMs = System.currentTimeMillis() - t0
 
-        log.info("Henter oppgaver på vent: " + oppgaver.stream().map{it.antall}.reduce(Int::plus).orElse(0) + " oppgaver" + " spørring: " + spørringTidsforbrukMs)
+        log.info("Henter oppgaver på vent: " + oppgaver.sumOf { it.antall } + " oppgaver" + " spørring: " + spørringTidsforbrukMs)
         return oppgaver
     }
 
