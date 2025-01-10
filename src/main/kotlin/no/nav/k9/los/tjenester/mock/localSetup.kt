@@ -112,22 +112,20 @@ object localSetup : KoinComponent {
     fun initPunsjoppgave() {
         if (profile == KoinProfile.LOCAL) {
             runBlocking {
-                punsjEventHandler.prosesser(
-                    PunsjEventDto(
-                        eksternId = UUID.randomUUID(),
-                        journalpostId = JournalpostId("123456789"),
-                        eventTid = LocalDateTime.now(),
-                        status = Oppgavestatus.AAPEN,
-                        aktørId = AktørId("2392173967319"),
-                        aksjonspunktKoderMedStatusListe = mutableMapOf(),
-                        pleietrengendeAktørId = null,
-                        type = "PAPIRSØKNAD",
-                        ytelse = "UKJENT",
-                        sendtInn = null,
-                        ferdigstiltAv = null,
-                        journalførtTidspunkt = null
-                    )
-                )
+                punsjEventHandler.prosesser(PunsjEventDto(
+                    eksternId = UUID.randomUUID(),
+                    journalpostId = JournalpostId("123456789"),
+                    eventTid = LocalDateTime.now(),
+                    status = Oppgavestatus.AAPEN,
+                    aktørId = AktørId("2392173967319"),
+                    aksjonspunktKoderMedStatusListe = mutableMapOf("PUNSJ" to "OPPR"),
+                    pleietrengendeAktørId = null,
+                    type = "PAPIRSØKNAD",
+                    ytelse = "UKJENT",
+                    sendtInn = null,
+                    ferdigstiltAv = null,
+                    journalførtTidspunkt = null
+                ))
             }
         }
     }
