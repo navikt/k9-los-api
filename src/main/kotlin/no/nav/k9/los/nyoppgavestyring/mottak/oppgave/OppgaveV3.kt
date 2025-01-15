@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavefelt
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import java.time.LocalDateTime
@@ -63,6 +64,7 @@ class OppgaveV3(
                         OppgaveFeltverdi(
                             oppgavefelt = oppgavefelt,
                             verdi = oppgaveFeltverdiDto.verdi,
+                            verdiBigInt = if (oppgavefelt.feltDefinisjon.tolkesSom == Datatype.INTEGER.kode) oppgaveFeltverdiDto.verdi.toLong() else null,
                         )
                     )
                 }

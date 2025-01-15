@@ -156,9 +156,7 @@ abstract class LøpendeDurationTransientFeltutleder(
                 ${sumLøpendeDuration.query} ${input.operator.sql} (:inputVerdi)
             """.trimIndent()
 
-        val inputVerdi = try {
-            PGInterval(input.feltverdi as String)
-        } catch (e: Exception) { null }
+        val inputVerdi = input.feltverdi as PGInterval
 
         val params = mapOf("inputVerdi" to inputVerdi)
         return SqlMedParams(query, (sumLøpendeDuration.queryParams + params))

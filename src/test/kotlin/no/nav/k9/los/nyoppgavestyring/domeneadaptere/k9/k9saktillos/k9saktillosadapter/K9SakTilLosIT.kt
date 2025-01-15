@@ -4,16 +4,15 @@ import assertk.assertThat
 import assertk.assertions.*
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
-import kotliquery.queryOf
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.aksjonspunktbehandling.*
-import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.modell.BehandlingStatus
 import no.nav.k9.los.domene.modell.Saksbehandler
+import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.rest.CoroutineRequestContext
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
@@ -28,7 +27,6 @@ import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Dto
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.tjenester.saksbehandler.IIdToken
@@ -37,7 +35,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.koin.test.get
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
@@ -46,11 +43,13 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
 
     lateinit var eventHandler: K9sakEventHandler
     lateinit var oppgaveKøTjeneste: OppgaveKoTjeneste
+    lateinit var pepClient: IPepClient
 
     @BeforeEach
     fun setup() {
         eventHandler = get<K9sakEventHandler>()
         oppgaveKøTjeneste = get<OppgaveKoTjeneste>()
+        pepClient = get<IPepClient>()
         TestSaksbehandler().init()
         OppgaveTestDataBuilder()
     }
@@ -68,7 +67,13 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
-        val antallIKø = oppgaveKøTjeneste.hentAntallUreserverteOppgaveForKø(kø.id)
+        val skjermet = runBlocking { pepClient.harTilgangTilKode6() }
+        val filtrerReserverte = true
+        val antallIKø = oppgaveKøTjeneste.hentAntallOppgaverForKø(
+            oppgaveKoId = kø.id,
+            filtrerReserverte = filtrerReserverte,
+            skjermet = skjermet
+        )
         assertThat(antallIKø).isEqualTo(0)
     }
 
@@ -77,14 +82,21 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val eksternId = UUID.randomUUID()
         val kø = opprettKøFor(TestSaksbehandler.SARA, querySomKunInneholder(eksternId, Oppgavestatus.AAPEN))
 
-        val opprettetUtenÅpneAksjonspunkter = BehandlingProsessEventDtoBuilder(eksternId).venterPåInntektsmelding().build()
+        val opprettetUtenÅpneAksjonspunkter =
+            BehandlingProsessEventDtoBuilder(eksternId).venterPåInntektsmelding().build()
         eventHandler.prosesser(opprettetUtenÅpneAksjonspunkter)
 
         val oppgaveQueryService = get<OppgaveQueryService>()
         val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
-        val antallIKø = oppgaveKøTjeneste.hentAntallUreserverteOppgaveForKø(kø.id)
+        val skjermet = runBlocking { pepClient.harTilgangTilKode6() }
+        val filtrerReserverte = true
+        val antallIKø = oppgaveKøTjeneste.hentAntallOppgaverForKø(
+            oppgaveKoId = kø.id,
+            filtrerReserverte = filtrerReserverte,
+            skjermet = skjermet
+        )
         assertThat(antallIKø).isEqualTo(0)
 
         val reservasjonTjeneste = get<OppgaveApisTjeneste>()
@@ -121,14 +133,21 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val eksternId = UUID.randomUUID()
         val kø = opprettKøFor(TestSaksbehandler.SARA, querySomKunInneholder(eksternId, Oppgavestatus.AAPEN))
 
-        val opprettetUtenÅpneAksjonspunkter = BehandlingProsessEventDtoBuilder(eksternId).venterPåInntektsmelding().build()
+        val opprettetUtenÅpneAksjonspunkter =
+            BehandlingProsessEventDtoBuilder(eksternId).venterPåInntektsmelding().build()
         eventHandler.prosesser(opprettetUtenÅpneAksjonspunkter)
 
         val oppgaveQueryService = get<OppgaveQueryService>()
         val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
-        val antallIKø = oppgaveKøTjeneste.hentAntallUreserverteOppgaveForKø(kø.id)
+        val skjermet = runBlocking { pepClient.harTilgangTilKode6() }
+        val filtrerReserverte = true
+        val antallIKø = oppgaveKøTjeneste.hentAntallOppgaverForKø(
+            oppgaveKoId = kø.id,
+            filtrerReserverte = filtrerReserverte,
+            skjermet = skjermet
+        )
         assertThat(antallIKø).isEqualTo(0)
 
         val resultat = oppgaveKøTjeneste.taReservasjonFraKø(
@@ -150,13 +169,24 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
-        val antallIKø = oppgaveKøTjeneste.hentAntallUreserverteOppgaveForKø(kø.id)
+        val skjermet = runBlocking { pepClient.harTilgangTilKode6() }
+        val filtrerReserverte = true
+        val antallIKø = oppgaveKøTjeneste.hentAntallOppgaverForKø(
+            oppgaveKoId = kø.id,
+            filtrerReserverte = filtrerReserverte,
+            skjermet = skjermet
+        )
         assertThat(antallIKø).isEqualTo(1)
 
         val resultat = taReservasjonFra(kø, TestSaksbehandler.SARA)
         assertThat(resultat).isNotNull()
 
-        val antallIKøEtterRes = oppgaveKøTjeneste.hentAntallUreserverteOppgaveForKø(kø.id)
+        val skjermet1 = runBlocking { pepClient.harTilgangTilKode6() }
+        val filtrerReserverte1 = true
+        val antallIKøEtterRes = oppgaveKøTjeneste.hentAntallOppgaverForKø(kø.id,
+            filtrerReserverte = filtrerReserverte1,
+            skjermet = skjermet1
+        )
         assertThat(antallIKøEtterRes).isZero()
     }
 
@@ -173,20 +203,30 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
-        val antallIKø = oppgaveKøTjeneste.hentAntallUreserverteOppgaveForKø(kø.id)
+        val skjermet = runBlocking<Boolean> { pepClient.harTilgangTilKode6() }
+        val filtrerReserverte = true
+        val antallIKø = oppgaveKøTjeneste.hentAntallOppgaverForKø(
+            oppgaveKoId = kø.id,
+            filtrerReserverte = filtrerReserverte,
+            skjermet = skjermet
+        )
         assertThat(antallIKø).isEqualTo(1)
 
         taReservasjonFra(kø, TestSaksbehandler.SARA)
         assertReservasjonMedAntallOppgaver(TestSaksbehandler.SARA, 1)
 
         // Transient tilstand mens k9-sak jobber
-        eventHandler.prosesser(eventBuilder
-            .medAksjonspunkt(AksjonspunktDefinisjon.KONTROLLER_LEGEERKLÆRING.builder()
-                .medVenteårsakOgFrist(Venteårsak.UDEFINERT, null)
-                .medStatus(AksjonspunktStatus.OPPRETTET))
-            .medBehandlingStatus(BehandlingStatus.UTREDES)
-            .medBehandlingSteg(BehandlingStegType.INNHENT_REGISTEROPP)
-        .build())
+        eventHandler.prosesser(
+            eventBuilder
+                .medAksjonspunkt(
+                    AksjonspunktDefinisjon.KONTROLLER_LEGEERKLÆRING.builder()
+                        .medVenteårsakOgFrist(Venteårsak.UDEFINERT, null)
+                        .medStatus(AksjonspunktStatus.OPPRETTET)
+                )
+                .medBehandlingStatus(BehandlingStatus.UTREDES)
+                .medBehandlingSteg(BehandlingStegType.INNHENT_REGISTEROPP)
+                .build()
+        )
 
         assertSkjultReservasjon(TestSaksbehandler.SARA)
         eventHandler.prosesser(eventBuilder.vurderSykdom().build())
@@ -364,7 +404,13 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
 
     private fun assertAntallIKø(kø: OppgaveKo, forventetAntall: Int) {
         oppgaveKøTjeneste.clearCache()
-        val antallIKøEtterRes = oppgaveKøTjeneste.hentAntallUreserverteOppgaveForKø(kø.id)
+        val skjermet = runBlocking { pepClient.harTilgangTilKode6() }
+        val filtrerReserverte = true
+        val antallIKøEtterRes = oppgaveKøTjeneste.hentAntallOppgaverForKø(
+            oppgaveKoId = kø.id,
+            filtrerReserverte = filtrerReserverte,
+            skjermet = skjermet
+        )
         assertThat(antallIKøEtterRes).isEqualTo(forventetAntall.toLong())
     }
 
@@ -402,11 +448,13 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
 
     private fun opprettKøFor(saksbehandler: Saksbehandler, oppgaveQuery: OppgaveQuery): OppgaveKo {
         val oppgaveKoRepository = get<OppgaveKoRepository>()
-        val nyKø = oppgaveKoRepository.leggTil("Test", skjermet = false).copy(
+        val pepClient = get<IPepClient>()
+        val skjermet = runBlocking { pepClient.harTilgangTilKode6() }
+        val nyKø = oppgaveKoRepository.leggTil("Test", skjermet = skjermet).copy(
             saksbehandlere = listOf(saksbehandler.epost),
             oppgaveQuery = oppgaveQuery
         )
-        return oppgaveKoRepository.endre(nyKø, false)
+        return oppgaveKoRepository.endre(nyKø, skjermet)
     }
 
     private fun querySomKunInneholder(eksternId: UUID, vararg status: Oppgavestatus = emptyArray()): OppgaveQuery {

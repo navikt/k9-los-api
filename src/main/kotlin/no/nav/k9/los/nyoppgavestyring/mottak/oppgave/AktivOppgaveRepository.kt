@@ -5,7 +5,6 @@ import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.db.util.InClauseHjelper
-import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveV2
 import no.nav.k9.los.eventhandler.DetaljerMetrikker
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
@@ -155,8 +154,7 @@ class AktivOppgaveRepository(val oppgavetypeRepository: OppgavetypeRepository) {
         ) {
             check(nyVersjon >= 0) { "Ny versjon må være 0 eller høyere: $nyVersjon" }
 
-            val eksisterendeFelter: List<OppgaveFeltverdi> = if (nyVersjon == 0L) emptyList()
-            else DetaljerMetrikker.time("k9sakHistorikkvask", "hentFeltverdier") {
+            val eksisterendeFelter: List<OppgaveFeltverdi> = DetaljerMetrikker.time("k9sakHistorikkvask", "hentFeltverdier") {
                 hentFeltverdier(
                     oppgaveId,
                     oppgave.oppgavetype,
@@ -202,7 +200,8 @@ class AktivOppgaveRepository(val oppgavetypeRepository: OppgavetypeRepository) {
                         oppgavefelt = oppgavetype.oppgavefelter.first { oppgavefelt ->
                             oppgavefelt.id == row.long("oppgavefelt_id")
                         },
-                        verdi = row.string("verdi")
+                        verdi = row.string("verdi"),
+                        verdiBigInt = row.longOrNull("verdi_bigint"),
                     )
                 }.asList
             )
@@ -219,14 +218,15 @@ class AktivOppgaveRepository(val oppgavetypeRepository: OppgavetypeRepository) {
             }
             tx.batchPreparedNamedStatement(
                 """
-                insert into oppgavefelt_verdi_aktiv(oppgave_id, oppgavefelt_id, verdi, oppgavestatus, feltdefinisjon_ekstern_id, omrade_ekstern_id, oppgavetype_ekstern_id)
-                        VALUES (:oppgaveId, :oppgavefeltId, :verdi, cast(:oppgavestatus as oppgavestatus), :feltdefinisjon_ekstern_id, :omrade_ekstern_id, :oppgavetype_ekstern_id)
+                insert into oppgavefelt_verdi_aktiv(oppgave_id, oppgavefelt_id, verdi, verdi_bigint, oppgavestatus, feltdefinisjon_ekstern_id, omrade_ekstern_id, oppgavetype_ekstern_id)
+                        VALUES (:oppgaveId, :oppgavefeltId, :verdi, :verdi_bigint, cast(:oppgavestatus as oppgavestatus), :feltdefinisjon_ekstern_id, :omrade_ekstern_id, :oppgavetype_ekstern_id)
             """.trimIndent(),
                 inserts.map { verdi ->
                     mapOf(
                         "oppgaveId" to oppgaveId.id,
                         "oppgavefeltId" to verdi.oppgavefeltId,
                         "verdi" to verdi.verdi,
+                        "verdi_bigint" to verdi.verdiBigInt,
                         "oppgavestatus" to oppgave.status.kode,
                         "feltdefinisjon_ekstern_id" to verdi.oppgavefeltEksternId,
                         "omrade_ekstern_id" to oppgave.kildeområde,
@@ -241,8 +241,8 @@ class AktivOppgaveRepository(val oppgavetypeRepository: OppgavetypeRepository) {
                 return
             }
             tx.batchPreparedNamedStatement(
-                "update oppgavefelt_verdi_aktiv set verdi = :verdi where id = :id",
-                updates.map { mapOf("id" to it.key, "verdi" to it.value.verdi) }.toList()
+                "update oppgavefelt_verdi_aktiv set verdi = :verdi, verdi_bigint = :verdi_bigint where id = :id",
+                updates.map { mapOf("id" to it.key, "verdi" to it.value.verdi, "verdi_bigint" to it.value.verdiBigInt) }.toList()
             )
         }
 
@@ -260,7 +260,7 @@ class AktivOppgaveRepository(val oppgavetypeRepository: OppgavetypeRepository) {
             return tx.run(
                 queryOf(
                     """
-                select ov.feltdefinisjon_ekstern_id as ekstern_id, ov.omrade_ekstern_id as omrade, fd.liste_type, f.pakrevd, ov.verdi
+                select ov.feltdefinisjon_ekstern_id as ekstern_id, ov.omrade_ekstern_id as omrade, fd.liste_type, f.pakrevd, ov.verdi, ov.verdi_bigint
                 from oppgavefelt_verdi_aktiv ov 
                 inner join oppgavefelt f on ov.oppgavefelt_id = f.id 
                 inner join feltdefinisjon fd on f.feltdefinisjon_id = fd.id
@@ -274,7 +274,8 @@ class AktivOppgaveRepository(val oppgavetypeRepository: OppgavetypeRepository) {
                         område = row.string("omrade"),
                         listetype = row.boolean("liste_type"),
                         påkrevd = row.boolean("pakrevd"),
-                        verdi = row.string("verdi")
+                        verdi = row.string("verdi"),
+                        verdiBigInt = row.longOrNull("verdi_bigint"),
                     )
                 }.asList
             )
@@ -282,11 +283,11 @@ class AktivOppgaveRepository(val oppgavetypeRepository: OppgavetypeRepository) {
 
         @VisibleForTesting
         fun regnUtDiff(eksisterende: List<OppgaveFeltverdi>, nye: List<OppgaveFeltverdi>): DiffResultat {
-            val nyeVerdier = nye.map { Verdi(it.verdi, it.oppgavefelt.id!!, it.oppgavefelt.feltDefinisjon.eksternId) }.toSet()
+            val nyeVerdier = nye.map { Verdi(it.verdi, it.verdiBigInt, it.oppgavefelt.id!!, it.oppgavefelt.feltDefinisjon.eksternId) }.toSet()
             if (eksisterende.isEmpty()) {
                 return DiffResultat(deletes = emptyList(), inserts = nyeVerdier, updates = emptyMap())
             }
-            val eksisterendeVerdier = eksisterende.associate { Pair(Verdi(it.verdi, it.oppgavefelt.id!!, it.oppgavefelt.feltDefinisjon.eksternId), it.id!!) }
+            val eksisterendeVerdier = eksisterende.associate { Pair(Verdi(it.verdi, it.verdiBigInt, it.oppgavefelt.id!!, it.oppgavefelt.feltDefinisjon.eksternId), it.id!!) }
             val verdierBeggeSteder = eksisterendeVerdier.keys.intersect(nyeVerdier)
 
             val oppdaterMap: MutableMap<Long, Verdi> = HashMap()
@@ -409,5 +410,5 @@ class AktivOppgaveRepository(val oppgavetypeRepository: OppgavetypeRepository) {
         val updates: Map<Long, Verdi>
     )
 
-    data class Verdi(val verdi: String, val oppgavefeltId: Long, val oppgavefeltEksternId: String)
+    data class Verdi(val verdi: String, val verdiBigInt: Long?, val oppgavefeltId: Long, val oppgavefeltEksternId: String)
 }

@@ -177,9 +177,9 @@ fun Route.OppgaveKoApis() {
                 val skjermet = pepClient.harTilgangTilKode6()
                 val antallUtenReserverte = OpentelemetrySpanUtil.span("OppgaveKoTjeneste.hentAntallOppgaverForKø") {
                         oppgaveKoTjeneste.hentAntallOppgaverForKø(
-                            oppgavekøId.toLong(),
-                            true,
-                            skjermet
+                            oppgaveKoId = oppgavekøId.toLong(),
+                            filtrerReserverte = true,
+                            skjermet = skjermet
                         )
                 }
                 call.respond(AntallOppgaver(antallUtenReserverte))

@@ -5,7 +5,6 @@ import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.koin.test.get
 import java.time.LocalDateTime
 import kotlin.test.assertEquals
 
@@ -26,14 +25,16 @@ class UtledOppgavebehandlingsUrlTest : AbstractK9LosIntegrationTest(){
                 område = "K9",
                 listetype = false,
                 påkrevd = false,
-                verdi = "ABC123"
+                verdi = "ABC123",
+                verdiBigInt = null,
             ),
             Oppgavefelt(
                 eksternId = "behandlingUuid",
                 område = "K9",
                 listetype = false,
                 påkrevd = false,
-                verdi = "beh456"
+                verdi = "beh456",
+                verdiBigInt = null,
             ),
         )
         val oppgave = Oppgave(
@@ -66,14 +67,16 @@ class UtledOppgavebehandlingsUrlTest : AbstractK9LosIntegrationTest(){
                 område = "K9",
                 listetype = false,
                 påkrevd = false,
-                verdi = "ABC123"
+                verdi = "ABC123",
+                verdiBigInt = null,
             ),
             Oppgavefelt(
                 eksternId = "behandlingUuid",
                 område = "K9",
                 listetype = false,
                 påkrevd = false,
-                verdi = "beh456"
+                verdi = "beh456",
+                verdiBigInt = null,
             ),
         )
         val oppgave = Oppgave(
@@ -106,14 +109,16 @@ class UtledOppgavebehandlingsUrlTest : AbstractK9LosIntegrationTest(){
                 område = "K9",
                 listetype = false,
                 påkrevd = false,
-                verdi = "ABC123"
+                verdi = "ABC123",
+                verdiBigInt = null,
             ),
             Oppgavefelt(
                 eksternId = "løsbartAksjonspunkt",
                 område = "K9",
                 listetype = false,
                 påkrevd = false,
-                verdi = "9001"
+                verdi = "9001",
+                verdiBigInt = null,
             ),
         )
         val oppgave = Oppgave(

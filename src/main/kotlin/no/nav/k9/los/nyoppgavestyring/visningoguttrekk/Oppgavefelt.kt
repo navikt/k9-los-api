@@ -5,6 +5,6 @@ class Oppgavefelt(
     val område: String,
     val listetype: Boolean,
     val påkrevd: Boolean,
-    val verdi: String
-) {
-}
+    val verdi: String,
+    val verdiBigInt: Long?
+)
