@@ -1,18 +1,19 @@
 package no.nav.k9.los.tjenester.mock
 
 import kotlinx.coroutines.runBlocking
+import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
+import no.nav.k9.kodeverk.behandling.BehandlingÅrsakType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
+import no.nav.k9.kodeverk.uttak.SøknadÅrsak
 import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.aksjonspunktbehandling.AksjonspunktDefinisjonK9Tilbake
 import no.nav.k9.los.aksjonspunktbehandling.K9TilbakeEventHandler
 import no.nav.k9.los.aksjonspunktbehandling.K9punsjEventHandler
-import no.nav.k9.los.domene.modell.BehandlingStatus
-import no.nav.k9.los.domene.modell.FagsakYtelseType
-import no.nav.k9.los.domene.modell.Fagsystem
-import no.nav.k9.los.domene.modell.Saksbehandler
-import no.nav.k9.los.domene.repository.OppgaveKøRepository
+import no.nav.k9.los.aksjonspunktbehandling.K9sakEventHandler
+import no.nav.k9.los.domene.modell.*
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
+import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventTilbakeDto
 import no.nav.k9.los.integrasjon.kafka.dto.EventHendelse
 import no.nav.k9.los.integrasjon.kafka.dto.PunsjEventDto
@@ -54,11 +55,11 @@ val saksbehandlere = listOf(
 )
 
 object localSetup : KoinComponent {
-    val saksbehandlerRepository: SaksbehandlerRepository by inject()
-    val oppgaveKøRepository: OppgaveKøRepository by inject()
-    val punsjEventHandler: K9punsjEventHandler by inject()
-    val tilbakeEventHandler: K9TilbakeEventHandler by inject()
-    val profile: KoinProfile by inject()
+    private val saksbehandlerRepository: SaksbehandlerRepository by inject()
+    private val punsjEventHandler: K9punsjEventHandler by inject()
+    private val tilbakeEventHandler: K9TilbakeEventHandler by inject()
+    private val sakEventHandler: K9sakEventHandler by inject()
+    private val profile: KoinProfile by inject()
 
     fun initSaksbehandlere() {
         if (profile == KoinProfile.LOCAL) {
@@ -68,66 +69,99 @@ object localSetup : KoinComponent {
                         saksbehandler
                     )
                 }
-
             }
         }
     }
 
-    @Suppress("unused")
+    fun initK9SakOppgaver(antall: Int) {
+        if (profile == KoinProfile.LOCAL) {
+            for (i in 0..<antall) {
+                sakEventHandler.prosesser(
+                    BehandlingProsessEventDto(
+                        UUID.randomUUID(),
+                        Fagsystem.K9SAK,
+                        Random().nextInt(0, 200).toString(),
+                        behandlingId = 123L,
+                        fraEndringsdialog = false,
+                        resultatType = BehandlingResultatType.IKKE_FASTSATT.kode,
+                        behandlendeEnhet = null as String?,
+                        aksjonspunktTilstander = emptyList(), //mutableListOf<AksjonspunktTilstandDto>().map { it.build() },
+                        søknadsårsaker = mutableListOf<SøknadÅrsak>().map { it.kode },
+                        behandlingsårsaker = mutableListOf<BehandlingÅrsakType>().map { it.kode },
+                        ansvarligSaksbehandlerIdent = null as String?,
+                        ansvarligBeslutterForTotrinn = null as String?,
+                        ansvarligSaksbehandlerForTotrinn = null as String?,
+                        opprettetBehandling = LocalDateTime.now(),
+                        vedtaksdato = LocalDate.now(),
+                        pleietrengendeAktørId = Random().nextInt(0, 9999999).toString(),
+                        aktørId = Random().nextInt(0, 9999999).toString(),
+                        behandlingStatus = BehandlingStatus.UTREDES.kode,
+                        behandlingSteg = BehandlingStegType.KONTROLLER_FAKTA.kode,
+                        behandlingTypeKode = no.nav.k9.kodeverk.behandling.BehandlingType.FØRSTEGANGSSØKNAD.kode,
+                        behandlingstidFrist = null,
+                        eventHendelse = EventHendelse.BEHANDLINGSKONTROLL_EVENT,
+                        eventTid = LocalDateTime.now().minusSeconds((antall - i).toLong()),
+                        aksjonspunktKoderMedStatusListe = mutableMapOf(),
+                        ytelseTypeKode = FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode,
+                        eldsteDatoMedEndringFraSøker = LocalDateTime.now()
+                    )
+                )
+            }
+        }
+    }
+
     fun initTilbakeoppgaver(antall: Int) {
         if (profile == KoinProfile.LOCAL) {
-            runBlocking {
-                for (i in 0..<antall) {
-                    val event = BehandlingProsessEventTilbakeDto(
-                        eksternId = UUID.randomUUID(),
-                        saksnummer = Random().nextInt(0, 200 * antall).toString(),
-                        behandlingId = 123L,
-                        resultatType = null,
-                        behandlendeEnhet = null,
-                        ansvarligSaksbehandlerIdent = null,
-                        opprettetBehandling = LocalDateTime.now(),
-                        aktørId = Random().nextLong(1_000_000_000_000, 9_000_000_000_000).toString(),
-                        behandlingStatus = BehandlingStatus.UTREDES.kode,
-                        behandlinStatus = BehandlingStatus.UTREDES.kode,
-                        behandlingSteg = BehandlingStegType.FATTE_VEDTAK.kode,
-                        behandlingTypeKode = "BT-007",
-                        behandlingstidFrist = null,
-                        eventHendelse = EventHendelse.AKSJONSPUNKT_OPPRETTET,
-                        eventTid = LocalDateTime.now().minusSeconds((antall - i).toLong()),
-                        aksjonspunktKoderMedStatusListe = mutableMapOf(AksjonspunktDefinisjonK9Tilbake.VURDER_TILBAKEKREVING.kode to AksjonspunktStatus.OPPRETTET.kode),
-                        ytelseTypeKode = FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode,
-                        ansvarligBeslutterIdent = null,
-                        førsteFeilutbetaling = LocalDate.now().minusDays(Random().nextLong(100)).toString(),
-                        feilutbetaltBeløp = Random().nextLong(1000, 20000),
-                        href = null,
-                        fagsystem = Fagsystem.K9TILBAKE.kode,
-                    )
-                    tilbakeEventHandler.prosesser(event)
-                }
+            for (i in 0..<antall) {
+                val event = BehandlingProsessEventTilbakeDto(
+                    eksternId = UUID.randomUUID(),
+                    saksnummer = Random().nextInt(0, 200 * antall).toString(),
+                    behandlingId = 123L,
+                    resultatType = null,
+                    behandlendeEnhet = null,
+                    ansvarligSaksbehandlerIdent = null,
+                    opprettetBehandling = LocalDateTime.now(),
+                    aktørId = Random().nextLong(1_000_000_000_000, 9_000_000_000_000).toString(),
+                    behandlingStatus = BehandlingStatus.UTREDES.kode,
+                    behandlinStatus = BehandlingStatus.UTREDES.kode,
+                    behandlingSteg = BehandlingStegType.FATTE_VEDTAK.kode,
+                    behandlingTypeKode = "BT-007",
+                    behandlingstidFrist = null,
+                    eventHendelse = EventHendelse.AKSJONSPUNKT_OPPRETTET,
+                    eventTid = LocalDateTime.now().minusSeconds((antall - i).toLong()),
+                    aksjonspunktKoderMedStatusListe = mutableMapOf(AksjonspunktDefinisjonK9Tilbake.VURDER_TILBAKEKREVING.kode to AksjonspunktStatus.OPPRETTET.kode),
+                    ytelseTypeKode = FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode,
+                    ansvarligBeslutterIdent = null,
+                    førsteFeilutbetaling = LocalDate.now().minusDays(Random().nextLong(100)).toString(),
+                    feilutbetaltBeløp = Random().nextLong(1000, 20000),
+                    href = null,
+                    fagsystem = Fagsystem.K9TILBAKE.kode,
+                )
+                tilbakeEventHandler.prosesser(event)
             }
         }
     }
 
-    @Suppress("unused")
-    fun initPunsjoppgave() {
+    fun initPunsjoppgaver(antall: Int) {
         if (profile == KoinProfile.LOCAL) {
-            runBlocking {
-                punsjEventHandler.prosesser(PunsjEventDto(
-                    eksternId = UUID.randomUUID(),
-                    journalpostId = JournalpostId("123456789"),
-                    eventTid = LocalDateTime.now(),
-                    status = Oppgavestatus.AAPEN,
-                    aktørId = AktørId("2392173967319"),
-                    aksjonspunktKoderMedStatusListe = mutableMapOf("PUNSJ" to "OPPR"),
-                    pleietrengendeAktørId = null,
-                    type = "PAPIRSØKNAD",
-                    ytelse = "UKJENT",
-                    sendtInn = null,
-                    ferdigstiltAv = null,
-                    journalførtTidspunkt = null
-                ))
+            for (i in 0..<antall) {
+                punsjEventHandler.prosesser(
+                    PunsjEventDto(
+                        eksternId = UUID.randomUUID(),
+                        journalpostId = JournalpostId(Random().nextLong(100000000, 999999999).toString()),
+                        eventTid = LocalDateTime.now(),
+                        status = Oppgavestatus.AAPEN,
+                        aktørId = AktørId(Random().nextLong(1_000_000_000_000, 9_000_000_000_000).toString()),
+                        aksjonspunktKoderMedStatusListe = mutableMapOf("PUNSJ" to "OPPR"),
+                        pleietrengendeAktørId = null,
+                        type = BehandlingType.entries.shuffled().first().kode,
+                        ytelse = FagsakYtelseType.entries.shuffled().first().kode,
+                        sendtInn = null,
+                        ferdigstiltAv = null,
+                        journalførtTidspunkt = listOf(LocalDateTime.now(), null).shuffled().first(),
+                    )
+                )
             }
         }
     }
 }
-
