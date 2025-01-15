@@ -1,2 +1,5 @@
-alter table oppgavefelt_verdi add column verdi_int int;
-alter table oppgavefelt_verdi_aktiv add column verdi_int int;
+alter table oppgavefelt_verdi add column verdi_bigint bigint;
+alter table oppgavefelt_verdi_aktiv add column verdi_bigint bigint;
+
+create index idx_oppgavefelt_verdi_aktiv_denorm_3_int on oppgavefelt_verdi_aktiv(oppgave_id, omrade_ekstern_id, feltdefinisjon_ekstern_id, oppgavetype_ekstern_id, verdi_bigint);
+create index idx_oppgavefelt_verdi_aktiv_denorm_4_int on oppgavefelt_verdi_aktiv(feltdefinisjon_ekstern_id, verdi_bigint);
