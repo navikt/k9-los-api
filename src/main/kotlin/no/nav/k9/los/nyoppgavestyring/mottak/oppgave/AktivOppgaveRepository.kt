@@ -5,7 +5,6 @@ import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.db.util.InClauseHjelper
-import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveV2
 import no.nav.k9.los.eventhandler.DetaljerMetrikker
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
@@ -219,15 +218,15 @@ class AktivOppgaveRepository(val oppgavetypeRepository: OppgavetypeRepository) {
             }
             tx.batchPreparedNamedStatement(
                 """
-                insert into oppgavefelt_verdi_aktiv(oppgave_id, oppgavefelt_id, verdi, verdi_int, oppgavestatus, feltdefinisjon_ekstern_id, omrade_ekstern_id, oppgavetype_ekstern_id)
-                        VALUES (:oppgaveId, :oppgavefeltId, :verdi, :verdi_int, cast(:oppgavestatus as oppgavestatus), :feltdefinisjon_ekstern_id, :omrade_ekstern_id, :oppgavetype_ekstern_id)
+                insert into oppgavefelt_verdi_aktiv(oppgave_id, oppgavefelt_id, verdi, verdi_bigint, oppgavestatus, feltdefinisjon_ekstern_id, omrade_ekstern_id, oppgavetype_ekstern_id)
+                        VALUES (:oppgaveId, :oppgavefeltId, :verdi, :verdi_bigint, cast(:oppgavestatus as oppgavestatus), :feltdefinisjon_ekstern_id, :omrade_ekstern_id, :oppgavetype_ekstern_id)
             """.trimIndent(),
                 inserts.map { verdi ->
                     mapOf(
                         "oppgaveId" to oppgaveId.id,
                         "oppgavefeltId" to verdi.oppgavefeltId,
                         "verdi" to verdi.verdi,
-                        "verdi_int" to verdi.verdiInt,
+                        "verdi_bigint" to verdi.verdiBigInt,
                         "oppgavestatus" to oppgave.status.kode,
                         "feltdefinisjon_ekstern_id" to verdi.oppgavefeltEksternId,
                         "omrade_ekstern_id" to oppgave.kildeområde,
@@ -283,11 +282,11 @@ class AktivOppgaveRepository(val oppgavetypeRepository: OppgavetypeRepository) {
 
         @VisibleForTesting
         fun regnUtDiff(eksisterende: List<OppgaveFeltverdi>, nye: List<OppgaveFeltverdi>): DiffResultat {
-            val nyeVerdier = nye.map { Verdi(it.verdi, it.verdiInt(), it.oppgavefelt.id!!, it.oppgavefelt.feltDefinisjon.eksternId) }.toSet()
+            val nyeVerdier = nye.map { Verdi(it.verdi, it.verdiBigInt(), it.oppgavefelt.id!!, it.oppgavefelt.feltDefinisjon.eksternId) }.toSet()
             if (eksisterende.isEmpty()) {
                 return DiffResultat(deletes = emptyList(), inserts = nyeVerdier, updates = emptyMap())
             }
-            val eksisterendeVerdier = eksisterende.associate { Pair(Verdi(it.verdi, it.verdiInt(), it.oppgavefelt.id!!, it.oppgavefelt.feltDefinisjon.eksternId), it.id!!) }
+            val eksisterendeVerdier = eksisterende.associate { Pair(Verdi(it.verdi, it.verdiBigInt(), it.oppgavefelt.id!!, it.oppgavefelt.feltDefinisjon.eksternId), it.id!!) }
             val verdierBeggeSteder = eksisterendeVerdier.keys.intersect(nyeVerdier)
 
             val oppdaterMap: MutableMap<Long, Verdi> = HashMap()
@@ -410,5 +409,5 @@ class AktivOppgaveRepository(val oppgavetypeRepository: OppgavetypeRepository) {
         val updates: Map<Long, Verdi>
     )
 
-    data class Verdi(val verdi: String, val verdiInt: Int?, val oppgavefeltId: Long, val oppgavefeltEksternId: String)
+    data class Verdi(val verdi: String, val verdiBigInt: Long?, val oppgavefeltId: Long, val oppgavefeltEksternId: String)
 }

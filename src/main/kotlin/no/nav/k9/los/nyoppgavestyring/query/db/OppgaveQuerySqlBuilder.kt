@@ -191,7 +191,7 @@ class OppgaveQuerySqlBuilder(
 
     private fun verdifelt(feltområde: String, feltkode: String): String {
         return when (oppgavefelterKodeOgType[OmrådeOgKode(feltområde, feltkode)]) {
-            INTEGER -> "ov.verdi_int"
+            INTEGER -> "ov.verdi_bigint"
             else -> "ov.verdi"
         }
     }
@@ -289,4 +289,17 @@ class OppgaveQuerySqlBuilder(
             this.paging = "LIMIT $limit OFFSET $offset"
         }
     }
+
+    /** Skal bare brukes til debugging, siden parametrene settes inn ukritisk */
+    fun unsafeDebug(): String {
+        var queryWithParams = getQuery()
+
+        // erstatter placeholdere reversert siden f.eks. ':feltverdi1' også matcher ':feltverdi10'
+        for ((key, value) in getParams().toSortedMap().reversed()) {
+            queryWithParams = queryWithParams.replace(":$key", if (value is Int) value.toString() else "'" + value.toString() + "'")
+        }
+
+        return queryWithParams
+    }
+
 }

@@ -12,5 +12,5 @@ data class OppgaveFeltverdi(
         return "OppgaveFeltverdi(id=$id, oppgavefeltnavn=${oppgavefelt.feltDefinisjon.eksternId}, verdi='$verdi')"
     }
 
-    fun verdiInt() = if (oppgavefelt.feltDefinisjon.tolkesSom == Datatype.INTEGER.kode) verdi.toInt() else null
+    fun verdiBigInt() = if (oppgavefelt.feltDefinisjon.tolkesSom == Datatype.INTEGER.kode) verdi.toLong() else null
 }

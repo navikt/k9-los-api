@@ -262,15 +262,15 @@ class OppgaveV3Repository(
         tx: TransactionalSession
     ) {
         tx.batchPreparedNamedStatement("""
-            insert into oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi, verdi_int, oppgavestatus)
-                    VALUES (:oppgaveId, :oppgavefeltId, :verdi, :verdi_int, :oppgavestatus)
+            insert into oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi, verdi_bigint, oppgavestatus)
+                    VALUES (:oppgaveId, :oppgavefeltId, :verdi, :verdi_bigint, :oppgavestatus)
         """.trimIndent(),
             oppgave.felter.map { feltverdi ->
                 mapOf(
                     "oppgaveId" to oppgaveId.id,
                     "oppgavefeltId" to feltverdi.oppgavefelt.id,
                     "verdi" to feltverdi.verdi,
-                    "verdi_int" to feltverdi.verdiInt(),
+                    "verdi_bigint" to feltverdi.verdiBigInt(),
                     "oppgavestatus" to oppgave.status.kode
                 )
             }
@@ -285,7 +285,7 @@ class OppgaveV3Repository(
         tx: TransactionalSession
     ) {
         tx.batchPreparedNamedStatement("""
-            INSERT INTO oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi, verdi_int, oppgavestatus)
+            INSERT INTO oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi, verdi_bigint, oppgavestatus)
             VALUES (
                 (
                     SELECT id 
@@ -295,7 +295,7 @@ class OppgaveV3Repository(
                 ),
                 :oppgavefelt_id,
                 :verdi,
-                :verdi_int,
+                :verdi_bigint,
                 :oppgavestatus
             )
         """.trimIndent(),
@@ -305,7 +305,7 @@ class OppgaveV3Repository(
                     "intern_versjon" to internVersjon,
                     "oppgavefelt_id" to feltverdi.oppgavefelt.id,
                     "verdi" to feltverdi.verdi,
-                    "verdi_int" to feltverdi.verdiInt(),
+                    "verdi_bigint" to feltverdi.verdiBigInt(),
                     "oppgavestatus" to oppgavestatus.kode
                 )
             }

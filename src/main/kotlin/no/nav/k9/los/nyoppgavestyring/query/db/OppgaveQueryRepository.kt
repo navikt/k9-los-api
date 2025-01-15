@@ -224,16 +224,6 @@ class OppgaveQueryRepository(
     }
 
     private fun query(tx: TransactionalSession, oppgaveQuery: OppgaveQuerySqlBuilder): List<AktivOppgaveId> {
-        log.info("spørring oppgaveQuery for oppgaveId: ${oppgaveQuery.getQuery()}")
-        /* val explain = tx.run(
-            queryOf(
-                "explain " + oppgaveQuery.getQuery(),
-                oppgaveQuery.getParams()
-            ).map { row ->
-                row.string(1)
-            }.asList
-        ).joinToString("\n")
-        log.info("explain oppgaveQuery for oppgaveId: $explain") */
         return tx.run(
             queryOf(
                 oppgaveQuery.getQuery(),
@@ -246,16 +236,7 @@ class OppgaveQueryRepository(
         tx: TransactionalSession,
         oppgaveQuery: OppgaveQuerySqlBuilder
     ): List<EksternOppgaveId> {
-        log.info("spørring oppgaveQuery for oppgave EksternId: ${oppgaveQuery.getQuery()}")
-        /*  val explain = tx.run(
-            queryOf(
-                "explain " + oppgaveQuery.getQuery(),
-                oppgaveQuery.getParams()
-            ).map { row ->
-                row.string(1)
-            }.asList
-        ).joinToString("\n")
-        log.info("explain oppgaveQuery for oppgaveId: $explain") */
+        log.info(oppgaveQuery.unsafeDebug())
         return tx.run(
             queryOf(
                 oppgaveQuery.getQuery(),

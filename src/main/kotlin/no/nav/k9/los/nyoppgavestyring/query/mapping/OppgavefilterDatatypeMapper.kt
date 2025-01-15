@@ -7,9 +7,6 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
 import org.postgresql.util.PGInterval
-import java.math.BigInteger
-import java.time.LocalDateTime
-import kotlin.time.Duration
 
 object OppgavefilterDatatypeMapper {
     fun map(felter: Map<OmrådeOgKode, OppgavefeltMedMer>, oppgavefiltere: List<Oppgavefilter>): List<Oppgavefilter> {
@@ -32,7 +29,7 @@ object OppgavefilterDatatypeMapper {
         val verdi = filter.verdi[0]
         if (verdi == null || verdi !is String) return filter // er enten null eller har blitt konvertert tidligere
         return when (datatype) {
-            Datatype.INTEGER -> filter.copy(verdi = listOf(verdi.toBigInteger()))
+            Datatype.INTEGER -> filter.copy(verdi = listOf(verdi.toLong()))
             Datatype.DURATION -> filter.copy(verdi = listOf(PGInterval(verdi)))
             // Datatype.TIMESTAMP -> filter.copy(verdi = listOf(LocalDateTime.parse(verdi)))
             // Datatype.BOOLEAN -> filter.copy(verdi = listOf(verdi.toBoolean()))

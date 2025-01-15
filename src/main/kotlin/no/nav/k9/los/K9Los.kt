@@ -50,11 +50,11 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.k9SakKorrigerO
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.tilbaketillos.K9TilbakeTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.tilbaketillos.k9TilbakeEksternId
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.tilbaketillos.k9tilbakeKorrigerOutOfOrderProsessor
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.tilbaketillos.K9TilbakeTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.forvaltning.forvaltningApis
 import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoApis
@@ -121,10 +121,10 @@ fun Application.k9Los() {
             koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
             koin.get<K9KlageTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
             koin.get<Aktivvask>().kjørAktivvask()
+            koin.get<K9PunsjTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
+            koin.get<K9TilbakeTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
         }
-        koin.get<K9PunsjTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
     }
-    koin.get<K9TilbakeTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
 
     install(Authentication) {
         multipleJwtIssuers(issuers)
@@ -170,9 +170,11 @@ fun Application.k9Los() {
         )
     ) { start(koin.get<Channel<UUID>>(named("oppgaveRefreshChannel"))) }
 
-    val refreshOppgaveV3Jobb = with(RefreshK9v3(
-        refreshK9v3Tjeneste = koin.get()
-    )) { start(koin.get<Channel<KøpåvirkendeHendelse>>(named("KøpåvirkendeHendelseChannel"))) }
+    val refreshOppgaveV3Jobb = with(
+        RefreshK9v3(
+            refreshK9v3Tjeneste = koin.get()
+        )
+    ) { start(koin.get<Channel<KøpåvirkendeHendelse>>(named("KøpåvirkendeHendelseChannel"))) }
 
     val oppdaterStatistikkJobb =
         oppdaterStatistikk(
@@ -308,8 +310,9 @@ fun Application.k9Los() {
 
         if ((KoinProfile.LOCAL == koin.get<KoinProfile>())) {
             localSetup.initSaksbehandlere()
-            localSetup.initTilbakeoppgaver(2000)
-//            localSetup.initPunsjoppgave()
+            localSetup.initK9SakOppgaver(1000)
+            localSetup.initTilbakeoppgaver(1000)
+            localSetup.initPunsjoppgaver(1000)
             api(sseChannel)
             route("/forvaltning") {
                 InnsiktApis()

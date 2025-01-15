@@ -160,15 +160,6 @@ class OppgaveKoTjeneste(
     }
 
     @WithSpan
-    fun hentAntallUreserverteOppgaveForKø(
-        oppgaveKoId: Long
-    ): Long {
-        val ko = oppgaveKoRepository.hent(oppgaveKoId, runBlocking { pepClient.harTilgangTilKode6() })
-        return antallOppgaverCache.hent(AntallOppgaverForKøCacheKey(oppgaveKoId, true), antallOppgaverCacheVarighet)
-        { oppgaveQueryService.queryForAntall(QueryRequest(ko.oppgaveQuery, fjernReserverte = true)) }
-    }
-
-    @WithSpan
     fun taReservasjonFraKø(
         innloggetBrukerId: Long,
         oppgaveKoId: Long,
