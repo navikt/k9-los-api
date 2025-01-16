@@ -1,7 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.query.db
 
-import no.nav.k9.los.nyoppgavestyring.kodeverk.EgenAnsatt
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.EgenAnsatt
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype.*
@@ -12,10 +12,6 @@ import no.nav.k9.los.spi.felter.OrderByInput
 import no.nav.k9.los.spi.felter.SqlMedParams
 import no.nav.k9.los.spi.felter.TransientFeltutleder
 import no.nav.k9.los.spi.felter.WhereInput
-import org.postgresql.util.PGInterval
-import java.math.BigDecimal
-import java.math.BigInteger
-import java.time.LocalDate
 import java.time.LocalDateTime
 
 class OppgaveQuerySqlBuilder(
@@ -182,65 +178,21 @@ class OppgaveQuerySqlBuilder(
                     WHERE ov.oppgave_id = o.id
                       AND ov.omrade_ekstern_id = :feltOmrade$index
                       AND ov.feltdefinisjon_ekstern_id = :feltkode$index
-                      AND 
+                      AND ${verdifelt(feltområde, feltkode)} ${operator.negasjonAv?.sql ?: operator.sql} (:feltverdi$index)
+                    ) 
             """.trimIndent()
-
-        /*
-         * Postgres støtter ikke betinget typekonvertering av queryparametere. Dette fordi
-         * typekonverteringen blir gjort ved opprettelse av spørring og at feilende
-         * typekonvertering gjør at spørringen feiler.
-         */
-        query += "${databaseverdiMedCasting(feltområde, feltkode)} ${operator.negasjonAv?.sql ?: operator.sql} (:feltverdi$index)"
-        val queryVerdiParam = castTilRiktigKotlintype(feltområde, feltkode, feltverdi)
-
-        query += ") "
 
         queryParams.putAll(mapOf(
             "feltOmrade$index" to feltområde,
             "feltkode$index" to feltkode,
-            "feltverdi$index" to queryVerdiParam
+            "feltverdi$index" to feltverdi
         ))
     }
 
-    private fun databaseverdiMedCasting(feltområde: String, feltkode: String): String {
-        when (oppgavefelterKodeOgType[OmrådeOgKode(feltområde, feltkode)]) {
-            TIMESTAMP -> {
-                return "CAST(ov.verdi AS timestamp)"
-            }
-            DURATION -> {
-                return "CAST(ov.verdi AS interval)"
-            }
-            INTEGER -> {
-                return "CAST(ov.verdi AS integer)"
-            }
-            else -> {
-                return "ov.verdi"
-            }
-        }
-    }
-
-    private fun castTilRiktigKotlintype(feltområde: String, feltkode: String, feltverdi: Any): Any? {
-        when (oppgavefelterKodeOgType[OmrådeOgKode(feltområde, feltkode)]) {
-            TIMESTAMP -> {
-                return try {
-                    LocalDateTime.parse(feltverdi as String)
-                } catch (e: Exception) { null } ?: try {
-                    LocalDate.parse(feltverdi as String)
-                } catch (e: Exception) { null }
-            }
-            DURATION -> {
-                return try {
-                    PGInterval(feltverdi as String)
-                } catch (e: Exception) { null }
-            }
-            INTEGER -> {
-                return try {
-                    BigInteger(feltverdi as String)
-                } catch (e: Exception) { null }
-            }
-            else -> {
-                return feltverdi
-            }
+    private fun verdifelt(feltområde: String, feltkode: String): String {
+        return when (oppgavefelterKodeOgType[OmrådeOgKode(feltområde, feltkode)]) {
+            INTEGER -> "ov.verdi_bigint"
+            else -> "ov.verdi"
         }
     }
 
@@ -314,10 +266,10 @@ class OppgaveQuerySqlBuilder(
             "orderByfeltkode$index" to feltkode
         ))
 
-        val typeConversion = databaseverdiMedCasting(feltområde, feltkode)
+        val verdifelt = verdifelt(feltområde, feltkode)
         orderBySql += """
                 , (
-                  SELECT $typeConversion                    
+                  SELECT $verdifelt                    
                   FROM Oppgavefelt_verdi_aktiv ov 
                   WHERE ov.oppgave_id = o.id
                     AND ov.omrade_ekstern_id = :orderByfeltOmrade$index
@@ -337,4 +289,17 @@ class OppgaveQuerySqlBuilder(
             this.paging = "LIMIT $limit OFFSET $offset"
         }
     }
+
+    /** Skal bare brukes til debugging, siden parametrene settes inn ukritisk */
+    fun unsafeDebug(): String {
+        var queryWithParams = getQuery()
+
+        // erstatter placeholdere reversert siden f.eks. ':feltverdi1' også matcher ':feltverdi10'
+        for ((key, value) in getParams().toSortedMap().reversed()) {
+            queryWithParams = queryWithParams.replace(":$key", if (value is Number) value.toString() else "'" + value.toString() + "'")
+        }
+
+        return queryWithParams
+    }
+
 }

@@ -120,10 +120,10 @@ fun Application.k9Los() {
             //koin.get<K9SakTilLosLukkeFeiloppgaverTjeneste>().kjørFeiloppgaverVask() //TODO slette
             koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
             koin.get<K9KlageTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
-            koin.get<K9TilbakeTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
             koin.get<Aktivvask>().kjørAktivvask()
+            koin.get<K9PunsjTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
+            koin.get<K9TilbakeTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
         }
-        koin.get<K9PunsjTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
     }
 
     install(Authentication) {

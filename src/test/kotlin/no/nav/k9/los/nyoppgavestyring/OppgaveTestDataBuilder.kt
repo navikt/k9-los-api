@@ -6,13 +6,17 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLo
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.*
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
+import no.nav.k9.los.nyoppgavestyring.query.db.OmrådeOgKode
+import no.nav.k9.los.nyoppgavestyring.query.db.OppgavefeltMedMer
+import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
 import org.koin.test.KoinTest
 import org.koin.test.get
 import java.time.LocalDateTime
@@ -44,7 +48,7 @@ class OppgaveTestDataBuilder(
         k9TilbakeTilLosAdapterTjeneste.setup()
     }
 
-    val oppgaveFeltverdier = mutableSetOf<OppgaveFeltverdi>()
+    val oppgaveFeltverdier = mutableMapOf<FeltType, OppgaveFeltverdi>()
 
     val oppgavetype = transactionManager.transaction { tx ->
         val oppgavetype = oppgavetypeRepo.hent(område, definisjonskilde, tx)
@@ -54,13 +58,11 @@ class OppgaveTestDataBuilder(
     }
 
     fun medOppgaveFeltVerdi(feltTypeKode: FeltType, verdi: String): OppgaveTestDataBuilder {
-        val oppgavefelter = oppgavetype.oppgavefelter
+        val oppgavefelt = oppgavetype.oppgavefelter
             .firstOrNull { it.feltDefinisjon.eksternId == feltTypeKode.eksternId }
             ?: throw IllegalStateException("Fant ikke ønsket feltdefinisjon i db")
 
-        oppgaveFeltverdier.add(
-            OppgaveFeltverdi(null, oppgavefelter, verdi)
-        )
+        oppgaveFeltverdier[feltTypeKode] = OppgaveFeltverdi(null, oppgavefelt, verdi, if (oppgavefelt.feltDefinisjon.tolkesSom == Datatype.INTEGER.kode) verdi.toLong() else null)
         return this
     }
 
@@ -75,16 +77,13 @@ class OppgaveTestDataBuilder(
 
     fun lag(status: Oppgavestatus = Oppgavestatus.AAPEN, reservasjonsnøkkel: String = "", eksternVersjon: String? = null): OppgaveV3 {
         return OppgaveV3(
-            eksternId = oppgaveFeltverdier.firstOrNull {
-                it.oppgavefelt.feltDefinisjon.eksternId == FeltType.BEHANDLINGUUID.eksternId
-            }?.verdi
-                ?: UUID.randomUUID().toString(),
-            eksternVersjon = eksternVersjon?.let { it } ?: eksternVersjonTeller++.toString(),
+            eksternId = oppgaveFeltverdier[FeltType.BEHANDLINGUUID]?.verdi ?: UUID.randomUUID().toString(),
+            eksternVersjon = eksternVersjon ?: eksternVersjonTeller++.toString(),
             oppgavetype = oppgavetype,
             status = status,
             endretTidspunkt = LocalDateTime.now(),
             kildeområde = område.eksternId,
-            felter = oppgaveFeltverdier.toList(),
+            felter = oppgaveFeltverdier.values.toList(),
             reservasjonsnøkkel = reservasjonsnøkkel,
             aktiv = true
         )
@@ -100,24 +99,66 @@ class OppgaveTestDataBuilder(
 
 enum class FeltType(
     val eksternId: String,
-    val listetype: Boolean = false,
     val tolkesSom: String = "String"
 ) {
     BEHANDLINGUUID("behandlingUuid"),
     BEHANDLING_TYPE("behandlingTypekode"),
-    OPPGAVE_STATUS("oppgavestatus", listetype = true),
+    OPPGAVE_STATUS("oppgavestatus"),
     FAGSYSTEM("fagsystem"),
-    AKSJONSPUNKT("aksjonspunkt", true),
-    RESULTAT_TYPE("resultattype", true),
-    TOTRINNSKONTROLL("totrinnskontroll", tolkesSom = "Boolean"),
-    BEHANDLINGSSTATUS("behandlingsstatus", true),
-    YTELSE_TYPE("ytelsestype", true),
-    MOTTATT_DATO("mottattDato"),
-    TID_SIDEN_MOTTATT_DATO("tidSidenMottattDato", false, "Duration"),
-    REGISTRERT_DATO("registrertDato"),
-    AVVENTER_ARBEIDSGIVER("avventerArbeidsgiver", tolkesSom = "Boolean"),
-    PERSONBESKYTTELSE("personbeskyttelse", tolkesSom = "String", listetype = false),
+    AKSJONSPUNKT("aksjonspunkt"),
+    RESULTAT_TYPE("resultattype"),
+    TOTRINNSKONTROLL("totrinnskontroll", tolkesSom = "boolean"),
+    BEHANDLINGSSTATUS("behandlingsstatus"),
+    YTELSE_TYPE("ytelsestype"),
+    MOTTATT_DATO("mottattDato", tolkesSom = "Timestamp"),
+    TID_SIDEN_MOTTATT_DATO("tidSidenMottattDato", "Duration"),
+    REGISTRERT_DATO("registrertDato", tolkesSom = "Timestamp"),
+    AVVENTER_ARBEIDSGIVER("avventerArbeidsgiver", tolkesSom = "boolean"),
+    PERSONBESKYTTELSE("personbeskyttelse", tolkesSom = "String"),
     LØSBART_AKSJONSPUNKT("løsbartAksjonspunkt"),
-    LIGGER_HOS_BESLUTTER("liggerHosBeslutter"),
+    LIGGER_HOS_BESLUTTER("liggerHosBeslutter", tolkesSom = "boolean"),
     TID_FORSTE_GANG_HOS_BESLUTTER("tidFørsteGangHosBeslutter"),
 }
+
+val felter: Map<OmrådeOgKode, OppgavefeltMedMer> = mapOf(
+    OmrådeOgKode("K9", FeltType.OPPGAVE_STATUS.eksternId) to OppgavefeltMedMer(
+        Oppgavefelt(
+        område = "K9",
+        kode = FeltType.OPPGAVE_STATUS.eksternId,
+        visningsnavn = FeltType.OPPGAVE_STATUS.name,
+        tolkes_som = FeltType.OPPGAVE_STATUS.tolkesSom,
+        kokriterie = true,
+        verdiforklaringerErUttømmende = false,
+        verdiforklaringer = emptyList()
+    ), null),
+    OmrådeOgKode("K9", FeltType.FAGSYSTEM.eksternId) to OppgavefeltMedMer(
+        Oppgavefelt(
+        område = "K9",
+        kode = FeltType.FAGSYSTEM.eksternId,
+        visningsnavn = FeltType.FAGSYSTEM.name,
+        tolkes_som = FeltType.FAGSYSTEM.tolkesSom,
+        kokriterie = true,
+        verdiforklaringerErUttømmende = false,
+        verdiforklaringer = emptyList()
+    ), null),
+    OmrådeOgKode("K9", FeltType.MOTTATT_DATO.eksternId) to OppgavefeltMedMer(
+        Oppgavefelt(
+        område = "K9",
+        kode = FeltType.MOTTATT_DATO.eksternId,
+        visningsnavn = FeltType.MOTTATT_DATO.name,
+        tolkes_som = FeltType.MOTTATT_DATO.tolkesSom,
+        kokriterie = true,
+        verdiforklaringerErUttømmende = false,
+        verdiforklaringer = emptyList()
+    ), null),
+    OmrådeOgKode("K9", FeltType.LIGGER_HOS_BESLUTTER.eksternId) to OppgavefeltMedMer(
+        Oppgavefelt(
+        område = "K9",
+        kode = FeltType.LIGGER_HOS_BESLUTTER.eksternId,
+        visningsnavn = FeltType.LIGGER_HOS_BESLUTTER.name,
+        tolkes_som = FeltType.LIGGER_HOS_BESLUTTER.tolkesSom,
+        kokriterie = true,
+        verdiforklaringerErUttømmende = false,
+        verdiforklaringer = emptyList()
+    ), null),
+)

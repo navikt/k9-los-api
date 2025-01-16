@@ -69,7 +69,7 @@ class ForvaltningRepository(
         return tx.run(
             queryOf(
                 """
-                select fd.ekstern_id as ekstern_id, o.ekstern_id as omrade, fd.liste_type, f.pakrevd, ov.verdi
+                select fd.ekstern_id as ekstern_id, o.ekstern_id as omrade, fd.liste_type, f.pakrevd, ov.verdi, ov.verdi_bigint
                 from oppgavefelt_verdi ov 
                 inner join oppgavefelt f on ov.oppgavefelt_id = f.id 
                 inner join feltdefinisjon fd on f.feltdefinisjon_id = fd.id 
@@ -84,7 +84,8 @@ class ForvaltningRepository(
                     område = row.string("omrade"),
                     listetype = row.boolean("liste_type"),
                     påkrevd = row.boolean("pakrevd"),
-                    verdi = row.string("verdi")
+                    verdi = row.string("verdi"),
+                    verdiBigInt = row.longOrNull("verdi_bigint"),
                 )
             }.asList
         )

@@ -11,7 +11,7 @@ object OppgaveQueryToSqlMapper {
         val query = OppgaveQuerySqlBuilder(felter, traverserFiltereOgFinnOppgavestatusfilter(request), now)
         val combineOperator = CombineOperator.AND
 
-        håndterFiltere(query, request.oppgaveQuery.filtere, combineOperator)
+        håndterFiltere(query, felter, OppgavefilterRens.rens(felter, request.oppgaveQuery.filtere), combineOperator)
         håndterOrder(query, request.oppgaveQuery.order)
         if (request.fjernReserverte) {
             query.utenReservasjoner()
@@ -26,14 +26,14 @@ object OppgaveQueryToSqlMapper {
         felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
         now: LocalDateTime
     ): OppgaveQuerySqlBuilder {
-        val query = OppgaveQuerySqlBuilder(felter, traverserFiltereOgFinnOppgavestatusfilter(request), now)
+        val queryBuilder = OppgaveQuerySqlBuilder(felter, traverserFiltereOgFinnOppgavestatusfilter(request), now)
         val combineOperator = CombineOperator.AND
-        håndterFiltere(query, request.oppgaveQuery.filtere, combineOperator)
-        if (request.fjernReserverte) { query.utenReservasjoner() }
-        request.avgrensning?.let { query.medPaging(it.limit, it.offset) }
-        query.medAntallSomResultat()
+        håndterFiltere(queryBuilder, felter, OppgavefilterRens.rens(felter, request.oppgaveQuery.filtere), combineOperator)
+        if (request.fjernReserverte) { queryBuilder.utenReservasjoner() }
+        request.avgrensning?.let { queryBuilder.medPaging(it.limit, it.offset) }
+        queryBuilder.medAntallSomResultat()
 
-        return query
+        return queryBuilder
     }
 
     private fun traverserFiltereOgFinnOppgavestatusfilter(queryRequest: QueryRequest): List<Oppgavestatus> {
@@ -64,13 +64,14 @@ object OppgaveQueryToSqlMapper {
     }
 
     private fun håndterFiltere(
-        query: OppgaveQuerySqlBuilder,
+        queryBuilder: OppgaveQuerySqlBuilder,
+        felter:  Map<OmrådeOgKode, OppgavefeltMedMer>,
         filtere: List<Oppgavefilter>,
         combineOperator: CombineOperator
     ) {
-        for (filter in OppgavefilterUtvider.utvid(filtere)) {
+        for (filter in filtere) {
             when (filter) {
-                is FeltverdiOppgavefilter -> query.medFeltverdi(
+                is FeltverdiOppgavefilter -> queryBuilder.medFeltverdi(
                     combineOperator,
                     filter.område,
                     filter.kode,
@@ -80,12 +81,10 @@ object OppgaveQueryToSqlMapper {
 
                 is CombineOppgavefilter -> {
                     val newCombineOperator = CombineOperator.valueOf(filter.combineOperator)
-                    query.medBlokk(combineOperator, newCombineOperator.defaultValue) {
-                        håndterFiltere(query, filter.filtere, newCombineOperator)
+                    queryBuilder.medBlokk(combineOperator, newCombineOperator.defaultValue) {
+                        håndterFiltere(queryBuilder, felter, filter.filtere, newCombineOperator)
                     }
                 }
-
-                else -> throw IllegalStateException("Ukjent filter: " + filter::class.qualifiedName)
             }
         }
     }
@@ -94,7 +93,6 @@ object OppgaveQueryToSqlMapper {
         for (orderBy in orderBys) {
             when (orderBy) {
                 is EnkelOrderFelt -> query.medEnkelOrder(orderBy.område, orderBy.kode, orderBy.økende)
-                else -> throw IllegalStateException("Ukjent OrderFelt: " + orderBy::class.qualifiedName)
             }
         }
     }

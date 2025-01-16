@@ -249,7 +249,8 @@ class OppgaveV3Repository(
                     oppgavefelt = oppgavetype.oppgavefelter.first { oppgavefelt ->
                         oppgavefelt.id == row.long("oppgavefelt_id")
                     },
-                    verdi = row.string("verdi")
+                    verdi = row.string("verdi"),
+                    verdiBigInt = row.longOrNull("verdi_bigint")
                 )
             }.asList
         )
@@ -262,14 +263,15 @@ class OppgaveV3Repository(
         tx: TransactionalSession
     ) {
         tx.batchPreparedNamedStatement("""
-            insert into oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi, oppgavestatus)
-                    VALUES (:oppgaveId, :oppgavefeltId, :verdi, :oppgavestatus)
+            insert into oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi, verdi_bigint, oppgavestatus)
+                    VALUES (:oppgaveId, :oppgavefeltId, :verdi, :verdi_bigint, :oppgavestatus)
         """.trimIndent(),
             oppgave.felter.map { feltverdi ->
                 mapOf(
                     "oppgaveId" to oppgaveId.id,
                     "oppgavefeltId" to feltverdi.oppgavefelt.id,
                     "verdi" to feltverdi.verdi,
+                    "verdi_bigint" to feltverdi.verdiBigInt,
                     "oppgavestatus" to oppgave.status.kode
                 )
             }
@@ -284,7 +286,7 @@ class OppgaveV3Repository(
         tx: TransactionalSession
     ) {
         tx.batchPreparedNamedStatement("""
-            INSERT INTO oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi, oppgavestatus)
+            INSERT INTO oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi, verdi_bigint, oppgavestatus)
             VALUES (
                 (
                     SELECT id 
@@ -294,6 +296,7 @@ class OppgaveV3Repository(
                 ),
                 :oppgavefelt_id,
                 :verdi,
+                :verdi_bigint,
                 :oppgavestatus
             )
         """.trimIndent(),
@@ -303,6 +306,7 @@ class OppgaveV3Repository(
                     "intern_versjon" to internVersjon,
                     "oppgavefelt_id" to feltverdi.oppgavefelt.id,
                     "verdi" to feltverdi.verdi,
+                    "verdi_bigint" to feltverdi.verdiBigInt,
                     "oppgavestatus" to oppgavestatus.kode
                 )
             }

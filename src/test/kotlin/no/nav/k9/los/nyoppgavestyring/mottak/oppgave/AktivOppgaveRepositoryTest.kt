@@ -38,8 +38,8 @@ class AktivOppgaveRepositoryTest {
         assertThat(diffResultat.deletes).isEmpty()
         assertThat(diffResultat.updates).isEmpty()
         assertThat(diffResultat.inserts).containsOnly(
-            AktivOppgaveRepository.Verdi( "9001", 1, "aksjonspunkt"),
-            AktivOppgaveRepository.Verdi( "9003", 1, "aksjonspunkt"))
+            AktivOppgaveRepository.Verdi( "9001", null, 1, "aksjonspunkt"),
+            AktivOppgaveRepository.Verdi( "9003", null, 1, "aksjonspunkt"))
     }
 
     @Test
@@ -67,7 +67,7 @@ class AktivOppgaveRepositoryTest {
         )
         val diffResultat = AktivOppgaveRepository.regnUtDiff(eksisterende, nye)
         assertThat(diffResultat.deletes).isEmpty()
-        assertThat(diffResultat.updates).containsOnly(Pair(3L, AktivOppgaveRepository.Verdi("1111", 1, "aksjonspunkt")))
+        assertThat(diffResultat.updates).containsOnly(Pair(3L, AktivOppgaveRepository.Verdi("1111", null, 1, "aksjonspunkt")))
         assertThat(diffResultat.inserts).isEmpty()
     }
 
@@ -78,26 +78,30 @@ class AktivOppgaveRepositoryTest {
             mockOppgaveFeltverdi(eksternId = "aksjonspunkt", oppgavefeltId = 1, listetype = true, verdi = "9002", id = 3),
             mockOppgaveFeltverdi(eksternId = "aksjonspunkt", oppgavefeltId = 1, listetype = true, verdi = "9003", id = 4),
             mockOppgaveFeltverdi(eksternId = "test", oppgavefeltId = 2, listetype = false, verdi = "test", id = 5),
+            mockOppgaveFeltverdi(eksternId = "tallfeltOppdater", oppgavefeltId = 6, listetype = false, verdi = "14", id = 6, verdiBigInt = null),
         )
         val nye = listOf(
             mockOppgaveFeltverdi(eksternId = "aksjonspunkt", oppgavefeltId = 1, listetype = true, verdi = "9001"),
             mockOppgaveFeltverdi(eksternId = "aksjonspunkt", oppgavefeltId = 1, listetype = true, verdi = "1111"),
             mockOppgaveFeltverdi(eksternId = "test2", oppgavefeltId = 3, listetype = false, verdi = "test2"),
-        )
+            mockOppgaveFeltverdi(eksternId = "tallfeltOppdater", oppgavefeltId = 6, listetype = false, verdi = "14", id = 6, verdiBigInt = 14),
+            mockOppgaveFeltverdi(eksternId = "tallfeltNy", oppgavefeltId = 7, listetype = false, verdi = "99", id = 7, verdiBigInt = 99),
+            )
         val diffResultat = AktivOppgaveRepository.regnUtDiff(eksisterende, nye)
         assertThat(diffResultat.deletes.size).isEqualTo(2)
-        assertThat(diffResultat.updates.entries.size).isEqualTo(1)
-        assertThat(diffResultat.updates.values.first()).isEqualTo(AktivOppgaveRepository.Verdi("1111", 1, "aksjonspunkt"))
+        assertThat(diffResultat.updates.entries.size).isEqualTo(2)
+        assertThat(diffResultat.updates.values).containsOnly(AktivOppgaveRepository.Verdi("1111", null, 1, "aksjonspunkt"), AktivOppgaveRepository.Verdi("14", 14, 6, "tallfeltOppdater"))
         //vi bryr oss ikke om hvilke av aksjonspunktverdiene (3 og 4) som gjenbrukes, men en skal slettes og en skal oppdateres
-        assertThat(diffResultat.updates.keys + diffResultat.deletes).containsOnly(3L, 4L, 5L)
-        assertThat(diffResultat.inserts).containsOnly(AktivOppgaveRepository.Verdi("test2", 3, "test2"))
+        assertThat(diffResultat.updates.keys + diffResultat.deletes).containsOnly(3L, 4L, 5L, 6L)
+        assertThat(diffResultat.inserts).containsOnly(AktivOppgaveRepository.Verdi("test2", null, 3, "test2"), AktivOppgaveRepository.Verdi("99", 99, 7, "tallfeltNy"))
     }
 
-    fun mockOppgaveFeltverdi(eksternId: String, listetype: Boolean, verdi: String, oppgavefeltId: Long = 1, id : Long? = null): OppgaveFeltverdi {
+    fun mockOppgaveFeltverdi(eksternId: String, listetype: Boolean, verdi: String, oppgavefeltId: Long = 1, id: Long? = null, verdiBigInt: Long? = null): OppgaveFeltverdi {
         return OppgaveFeltverdi(
             id = id,
             oppgavefelt = mockOppgavefelt(eksternId, listetype, oppgavefeltId),
-            verdi = verdi
+            verdi = verdi,
+            verdiBigInt = verdiBigInt
         )
     }
 
