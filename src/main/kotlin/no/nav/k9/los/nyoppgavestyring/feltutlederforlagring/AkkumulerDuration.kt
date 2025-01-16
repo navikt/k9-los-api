@@ -4,7 +4,6 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import java.time.Duration
 import java.time.temporal.ChronoUnit
-import java.time.temporal.TemporalUnit
 
 abstract class AkkumulerDuration(
     val beslutningsfelt: String,
@@ -33,8 +32,9 @@ abstract class AkkumulerDuration(
         val avrundet = akkumulertVentetidSaksbehandler.truncatedTo(ChronoUnit.SECONDS)
 
         return OppgaveFeltverdi(
-                oppgavefelt = innkommendeOppgave.hentFelt(målfelt),
-                verdi = avrundet.toString()
-            )
+            oppgavefelt = innkommendeOppgave.hentFelt(målfelt),
+            verdi = avrundet.toString(),
+            verdiBigInt = null
+        )
     }
 }

@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.visningoguttrekk
 
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import no.nav.k9.los.spi.felter.HentVerdiInput
 import java.time.LocalDateTime
@@ -119,7 +120,8 @@ data class Oppgave(
                         område = oppgavefelt.feltDefinisjon.område.eksternId,
                         listetype = oppgavefelt.feltDefinisjon.listetype,
                         påkrevd = false,
-                        verdi = verdi
+                        verdi = verdi,
+                        verdiBigInt = if (oppgavefelt.feltDefinisjon.tolkesSom === Datatype.INTEGER.kode) verdi.toLong() else null
                     )
                 }
             } ?: listOf()
@@ -137,7 +139,8 @@ data class Oppgave(
                         område = kildeområde,
                         listetype = false, //listetyper er aldri påkrevd
                         påkrevd = true,
-                        verdi = påkrevdFelt.defaultverdi.toString()
+                        verdi = påkrevdFelt.defaultverdi.toString(),
+                        verdiBigInt = null
                     )
                 } else null
             }

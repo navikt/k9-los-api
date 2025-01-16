@@ -132,10 +132,10 @@ class OppgaveKoTjeneste(
     ): AntallOppgaverOgReserverte {
         return coroutineScope {
             val antallUtenReserverte = async(Dispatchers.IO + Span.current().asContextElement()) {
-                hentAntallOppgaverForKø(oppgaveKoId, true, skjermet)
+                hentAntallOppgaverForKø(oppgaveKoId = oppgaveKoId, filtrerReserverte = true, skjermet = skjermet)
             }
             val antallMedReserverte = async(Dispatchers.IO + Span.current().asContextElement()) {
-                hentAntallOppgaverForKø(oppgaveKoId, false, skjermet)
+                hentAntallOppgaverForKø(oppgaveKoId = oppgaveKoId, filtrerReserverte = false, skjermet = skjermet)
             }
 
             AntallOppgaverOgReserverte(
@@ -157,15 +157,6 @@ class OppgaveKoTjeneste(
             antallOppgaverCacheVarighet
         )
         { oppgaveQueryService.queryForAntall(QueryRequest(ko.oppgaveQuery, fjernReserverte = filtrerReserverte)) }
-    }
-
-    @WithSpan
-    fun hentAntallUreserverteOppgaveForKø(
-        oppgaveKoId: Long
-    ): Long {
-        val ko = oppgaveKoRepository.hent(oppgaveKoId, runBlocking { pepClient.harTilgangTilKode6() })
-        return antallOppgaverCache.hent(AntallOppgaverForKøCacheKey(oppgaveKoId, true), antallOppgaverCacheVarighet)
-        { oppgaveQueryService.queryForAntall(QueryRequest(ko.oppgaveQuery, fjernReserverte = true)) }
     }
 
     @WithSpan

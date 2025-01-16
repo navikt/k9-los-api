@@ -120,7 +120,8 @@ internal class AkkumulertVentetidTest {
     fun lagOppgavefeltverdi(eksternId: String, verdi: String): OppgaveFeltverdi {
         return OppgaveFeltverdi(
             oppgavefelt = lagOppgavefelt(eksternId),
-            verdi = verdi
+            verdi = verdi,
+            verdiBigInt = null
         )
 
     }
@@ -133,7 +134,7 @@ internal class AkkumulertVentetidTest {
             ),
             visningsnavn = "Test",
             listetype = false,
-            tolkesSom = "Boolean",
+            tolkesSom = "boolean",
             visTilBruker = true,
             kokriterie = true,
             kodeverkreferanse = null,

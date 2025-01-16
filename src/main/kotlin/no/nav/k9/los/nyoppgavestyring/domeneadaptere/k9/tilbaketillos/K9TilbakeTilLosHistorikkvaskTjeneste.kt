@@ -29,9 +29,10 @@ class K9TilbakeTilLosHistorikkvaskTjeneste(
 
     private val TRÅDNAVN = "k9-tilbake-til-los-historikkvask"
 
-    fun kjørHistorikkvask() {
+    fun kjørHistorikkvask(pauseHvisDagtid: Boolean = false) {
         if (config.nyOppgavestyringAktivert()) {
             log.info("Starter vask av oppgaver mot historiske k9tilbake-hendelser")
+            val start = System.currentTimeMillis()
             thread(
                 start = true,
                 isDaemon = true,
@@ -40,7 +41,7 @@ class K9TilbakeTilLosHistorikkvaskTjeneste(
 
                 Thread.sleep(1.toDuration(DurationUnit.MINUTES).inWholeMilliseconds)
 
-                val dispatcher = newFixedThreadPoolContext(1, "Historikkvask k9tilbake")
+                val dispatcher = newFixedThreadPoolContext(2, "Historikkvask k9tilbake")
 
                 log.info("Starter avspilling av historiske BehandlingProsessEventer")
 
@@ -57,7 +58,7 @@ class K9TilbakeTilLosHistorikkvaskTjeneste(
                         break
                     }
 
-                    if (skalPauses()) {
+                    if (pauseHvisDagtid && skalPauses()) {
                         HistorikkvaskMetrikker.observe(TRÅDNAVN, t0)
                         log.info("Vaskejobb satt på pause")
                         Thread.sleep(Duration.ofMinutes(5).toMillis())
@@ -81,7 +82,7 @@ class K9TilbakeTilLosHistorikkvaskTjeneste(
                     log.info("Gjennomsnittstid pr behandling: ${tidHeleKjøringen / behandlingTeller}ms, Gjennsomsnittstid pr event: ${tidHeleKjøringen / eventTeller}ms")
                 }
 
-                log.info("Historikkvask k9tilbake ferdig")
+                log.info("Historikkvask k9tilbake ferdig, tid brukt: {} ms", (System.currentTimeMillis() - start))
                 nullstillhistorikkvask()
                 HistorikkvaskMetrikker.observe(TRÅDNAVN, t0)
             }
