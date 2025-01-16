@@ -2,17 +2,17 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 val mainClass = "no.nav.k9.los.K9LosKt"
 val hikariVersion = "6.2.1"
-val flywayVersion = "11.1.0"
+val flywayVersion = "11.1.1"
 val vaultJdbcVersion = "1.3.10"
 val koinVersion = "4.0.1"
-val kotliqueryVersion = "1.9.0"
+val kotliqueryVersion = "1.9.1"
 val k9SakVersion = "5.2.2"
 val k9KlageVersion = "0.4.5"
 val fuelVersion = "2.3.1"
 val jacksonVersion = "2.17.2"
 val commonsTextVersion = "1.13.0"
 
-val dusseldorfKtorVersion = "5.0.15"
+val dusseldorfKtorVersion = "5.0.17"
 val ktorVersion = "2.3.13"
 val kafkaVersion = "3.9.0"
 
@@ -23,7 +23,7 @@ val testContainers = "1.20.4"
 val jsonassertVersion = "1.5.3"
 val jupiterVersion = "5.11.4"
 val assertkVersion = "0.28.1"
-val mockkVersion = "1.13.13"
+val mockkVersion = "1.13.16"
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "2.0.21" //kan ikke gå for 2.1+ pga ktor som har avhengighet til kotlin-stdlib-common, og den er tilsynelatende ikke tilgjengelig i 2.1+
@@ -73,9 +73,9 @@ dependencies {
     implementation("no.nav.k9.statistikk:kontrakter:2.0_20220411110858_dc06dd1")
 
     // opentelemetry
-    implementation("io.opentelemetry:opentelemetry-api:1.45.0")
-    implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.45.0")
-    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.10.0")
+    implementation("io.opentelemetry:opentelemetry-api:1.46.0")
+    implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.46.0")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.11.0")
 
     // Div
     implementation(enforcedPlatform( "com.fasterxml.jackson:jackson-bom:$jacksonVersion"))
@@ -86,7 +86,7 @@ dependencies {
         exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
     }
 
-    implementation( "io.github.smiley4:ktor-swagger-ui:3.6.0")
+    implementation( "io.github.smiley4:ktor-swagger-ui:3.6.1")
 
 
     // DI
