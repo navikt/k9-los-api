@@ -121,9 +121,9 @@ fun Application.k9Los() {
             koin.get<Aktivvask>().kjørAktivvask()
             koin.get<K9PunsjTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
             koin.get<K9TilbakeTilLosHistorikkvaskTjeneste>().kjørHistorikkvask(pauseHvisDagtid = true)
-            koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask(pauseHvisDagtid = true)
+            koin.get<K9KlageTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
         }
-        koin.get<K9KlageTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
+        koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask(pauseHvisDagtid = true)
     }
 
     install(Authentication) {
