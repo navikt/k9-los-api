@@ -33,7 +33,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
 
     private val TRÅDNAVN = "k9-sak-til-los-historikkvask"
 
-    fun kjørHistorikkvask() {
+    fun kjørHistorikkvask(pauseHvisDagtid: Boolean = true) {
         if (config.nyOppgavestyringAktivert()) {
             log.info("Starter vask av oppgaver mot historiske k9sak-hendelser")
             thread(
@@ -41,7 +41,6 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 isDaemon = true,
                 name = TRÅDNAVN
             ) {
-
                 Thread.sleep(2.toDuration(DurationUnit.MINUTES).inWholeMilliseconds)
 
                 val dispatcher = newFixedThreadPoolContext(5, "Historikkvask k9sak")
@@ -61,7 +60,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
                         break
                     }
 
-                    if (skalPauses()) {
+                    if (pauseHvisDagtid && skalPauses()) {
                         HistorikkvaskMetrikker.observe(TRÅDNAVN, t0)
                         log.info("Vaskejobb satt på pause")
                         Thread.sleep(Duration.ofMinutes(5))

@@ -29,7 +29,7 @@ class K9TilbakeTilLosHistorikkvaskTjeneste(
 
     private val TRÅDNAVN = "k9-tilbake-til-los-historikkvask"
 
-    fun kjørHistorikkvask(pauseHvisDagtid: Boolean = false) {
+    fun kjørHistorikkvask(pauseHvisDagtid: Boolean = true) {
         if (config.nyOppgavestyringAktivert()) {
             log.info("Starter vask av oppgaver mot historiske k9tilbake-hendelser")
             val start = System.currentTimeMillis()
