@@ -114,7 +114,7 @@ fun Application.k9Los() {
     val k9TilbakeTilLosAdapterTjeneste = koin.get<K9TilbakeTilLosAdapterTjeneste>()
     k9TilbakeTilLosAdapterTjeneste.setup()
 
-    if (LocalDateTime.now().isBefore(LocalDateTime.of(2025, 1, 9, 13, 0))) {
+    if (LocalDateTime.now().isBefore(LocalDateTime.of(2025, 1, 16, 15, 0))) {
         if (1 == 0) { //HAXX for å ikke kjøre jobb, men indikere at koden er i bruk og dermed ikke slettes
             //koin.get<ReservasjonKonverteringJobb>().kjørReservasjonskonvertering() //TODO slette
             //koin.get<K9SakTilLosLukkeFeiloppgaverTjeneste>().kjørFeiloppgaverVask() //TODO slette
@@ -122,8 +122,8 @@ fun Application.k9Los() {
             koin.get<K9KlageTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
             koin.get<Aktivvask>().kjørAktivvask()
             koin.get<K9PunsjTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
-            koin.get<K9TilbakeTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
         }
+        koin.get<K9TilbakeTilLosHistorikkvaskTjeneste>().kjørHistorikkvask(pauseHvisDagtid = false)
     }
 
     install(Authentication) {
