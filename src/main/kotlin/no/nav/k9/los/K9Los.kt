@@ -387,7 +387,7 @@ private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
             SaksbehandlerOppgavekoApis()
             SaksbehandlerNøkkeltallApis()
         }
-        route("avdelingsleder", { hidden = true }) {
+        route("avdelingsleder") {
             AvdelingslederApis()
             route("oppgavekoer") {
                 AvdelingslederOppgavekøApis() // Erstattet av OppgaveKoApis i V3
