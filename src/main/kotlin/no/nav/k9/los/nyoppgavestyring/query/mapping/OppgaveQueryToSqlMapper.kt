@@ -8,7 +8,7 @@ import java.time.LocalDateTime
 
 object OppgaveQueryToSqlMapper {
     fun toSqlOppgaveQuery(request: QueryRequest, felter: Map<OmrådeOgKode, OppgavefeltMedMer>, now: LocalDateTime): OppgaveQuerySqlBuilder {
-        val query = OppgaveQuerySqlBuilder(felter, traverserFiltereOgFinnOppgavestatusfilter(request), now)
+        val query = OppgaveQuerySqlBuilder(felter, traverserFiltereOgFinnOppgavestatusfilter(request), now, request.fraAktiv)
         val combineOperator = CombineOperator.AND
 
         håndterFiltere(query, felter, OppgavefilterRens.rens(felter, request.oppgaveQuery.filtere), combineOperator)
@@ -26,7 +26,7 @@ object OppgaveQueryToSqlMapper {
         felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
         now: LocalDateTime
     ): OppgaveQuerySqlBuilder {
-        val queryBuilder = OppgaveQuerySqlBuilder(felter, traverserFiltereOgFinnOppgavestatusfilter(request), now)
+        val queryBuilder = OppgaveQuerySqlBuilder(felter, traverserFiltereOgFinnOppgavestatusfilter(request), now, request.fraAktiv)
         val combineOperator = CombineOperator.AND
         håndterFiltere(queryBuilder, felter, OppgavefilterRens.rens(felter, request.oppgaveQuery.filtere), combineOperator)
         if (request.fjernReserverte) { queryBuilder.utenReservasjoner() }

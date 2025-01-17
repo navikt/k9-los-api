@@ -17,7 +17,8 @@ import java.time.LocalDateTime
 class OppgaveQuerySqlBuilder(
     val felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
     val oppgavestatusFilter: List<Oppgavestatus>,
-    val now: LocalDateTime
+    val now: LocalDateTime,
+    val fraAktiv: Boolean = true
 ) {
     private var selectPrefix = """
                 SELECT o.id as id, o.kildeomrade as kildeomrade, o.ekstern_id as ekstern_id 
@@ -25,13 +26,27 @@ class OppgaveQuerySqlBuilder(
 
     private val oppgavefelterKodeOgType = felter.mapValues { Datatype.fraKode(it.value.oppgavefelt.tolkes_som) }
 
-    private var query = """
+    private var queryFraAktiv = """
         FROM Oppgave_v3_aktiv o
         INNER JOIN Oppgavetype ot ON ( ot.id = o.oppgavetype_id )
         INNER JOIN Omrade oppgave_omrade ON (oppgave_omrade.id = ot.omrade_id )
         LEFT JOIN Oppgave_pep_cache opc ON (o.kildeomrade = opc.kildeomrade AND o.ekstern_id = opc.ekstern_id)
         WHERE true 
-            """.trimIndent()
+    """.trimIndent()
+
+    private var queryFraHistorisk = """
+        FROM Oppgave_v3 o
+        INNER JOIN Oppgavetype ot ON ( ot.id = o.oppgavetype_id )
+        INNER JOIN Omrade oppgave_omrade ON (oppgave_omrade.id = ot.omrade_id )
+        LEFT JOIN Oppgave_pep_cache opc ON (o.kildeomrade = opc.kildeomrade AND o.ekstern_id = opc.ekstern_id)
+        WHERE o.aktiv = true
+    """.trimIndent()
+
+    private var query = if (fraAktiv) {
+        queryFraAktiv
+    } else {
+        queryFraHistorisk
+    }
 
     private val filtrerReserverteOppgaver = """
         AND NOT EXISTS (
@@ -95,6 +110,11 @@ class OppgaveQuerySqlBuilder(
 
         val index = queryParams.size + orderByParams.size
         when (feltkode) {
+            "sistEndret" -> {
+                query += "${combineOperator.sql} o.endret_tidspunkt ${operator.sql} (timestamp :sistEndret$index)) "
+                queryParams["sistEndret$index"] = feltverdi
+            }
+
             "oppgavestatus" -> {
                 query += "${combineOperator.sql} o.status ${operator.sql} (cast(:oppgavestatus$index as oppgavestatus)) "
                 queryParams["oppgavestatus$index"] = feltverdi
@@ -171,22 +191,52 @@ class OppgaveQuerySqlBuilder(
     private fun medOppgavefelt(combineOperator: CombineOperator, feltområde: String, feltkode: String, operator: FeltverdiOperator, feltverdi: Any) {
         val index = queryParams.size + orderByParams.size
 
-        query += """
-                ${combineOperator.sql} ${if (operator.negasjonAv != null) "NOT" else "" } EXISTS (
+        query += if (fraAktiv) {
+            """
+                ${combineOperator.sql} ${if (operator.negasjonAv != null) "NOT" else ""} EXISTS (
                     SELECT 'Y'
                     FROM Oppgavefelt_verdi_aktiv ov
                     WHERE ov.oppgave_id = o.id
                       AND ov.omrade_ekstern_id = :feltOmrade$index
                       AND ov.feltdefinisjon_ekstern_id = :feltkode$index
-                      AND ${verdifelt(feltområde, feltkode)} ${operator.negasjonAv?.sql ?: operator.sql} (:feltverdi$index)
+                      AND ${
+                verdifelt(
+                    feltområde,
+                    feltkode
+                )
+            } ${operator.negasjonAv?.sql ?: operator.sql} (:feltverdi$index)
                     ) 
             """.trimIndent()
 
-        queryParams.putAll(mapOf(
-            "feltOmrade$index" to feltområde,
-            "feltkode$index" to feltkode,
-            "feltverdi$index" to feltverdi
-        ))
+        } else { """
+            ${combineOperator.sql} ${if (operator.negasjonAv != null) "NOT" else "" } EXISTS (
+                    SELECT 'Y'
+            FROM Oppgavefelt_verdi ov
+            INNER JOIN Oppgavefelt f ON (f.id = ov.oppgavefelt_id)
+            INNER JOIN Feltdefinisjon fd ON (fd.id = f.feltdefinisjon_id)
+            INNER JOIN Omrade fo ON (fo.id = fd.omrade_id)
+            FROM Oppgavefelt_verdi ov
+            WHERE ov.oppgave_id = o.id
+                    AND fo.ekstern_id = :feltOmrade$index
+            AND fd.ekstern_id = :feltkode$index
+            AND ov.omrade_ekstern_id = :feltOmrade$index
+            AND ov.feltdefinisjon_ekstern_id = :feltkode$index
+            AND ${
+            verdifelt(
+                feltområde,
+                feltkode
+            )
+        } ${operator.negasjonAv?.sql ?: operator.sql} (:feltverdi$index)
+            """.trimIndent()
+        }
+        
+        queryParams.putAll(
+            mapOf(
+                "feltOmrade$index" to feltområde,
+                "feltkode$index" to feltkode,
+                "feltverdi$index" to feltverdi
+            )
+        )
     }
 
     private fun verdifelt(feltområde: String, feltkode: String): String {
@@ -213,7 +263,8 @@ class OppgaveQuerySqlBuilder(
             else -> throw IllegalArgumentException("Ugyldig operator for tom verdi.")
         }
 
-        query += """
+        query += if (fraAktiv) {
+            """
                 ${combineOperator.sql}$invertertOperator EXISTS (
                     SELECT 'Y'
                     FROM Oppgavefelt_verdi_aktiv ov 
@@ -222,6 +273,22 @@ class OppgaveQuerySqlBuilder(
                       AND ov.feltdefinisjon_ekstern_id = :feltkode$index
                   )
             """.trimIndent()
+        } else {
+            """
+                ${combineOperator.sql}$invertertOperator EXISTS (
+                    SELECT 'Y'
+                    FROM Oppgavefelt_verdi ov 
+                    INNER JOIN Oppgavefelt f ON (f.id = ov.oppgavefelt_id) 
+                    INNER JOIN Feltdefinisjon fd ON (fd.id = f.feltdefinisjon_id) 
+                    INNER JOIN Omrade fo ON (fo.id = fd.omrade_id)
+                    WHERE ov.oppgave_id = o.id
+                      AND fo.ekstern_id = :feltOmrade$index
+                      AND fd.ekstern_id = :feltkode$index
+                      AND ov.omrade_ekstern_id = :feltOmrade$index
+                      AND ov.feltdefinisjon_ekstern_id = :feltkode$index
+                  )
+            """.trimIndent()
+        }
     }
 
     fun medEnkelOrder(feltområde: String?, feltkode: String, økende: Boolean) {
@@ -267,7 +334,8 @@ class OppgaveQuerySqlBuilder(
         ))
 
         val verdifelt = verdifelt(feltområde, feltkode)
-        orderBySql += """
+        orderBySql += if (fraAktiv) {
+            """
                 , (
                   SELECT $verdifelt                    
                   FROM Oppgavefelt_verdi_aktiv ov 
@@ -276,6 +344,22 @@ class OppgaveQuerySqlBuilder(
                     AND ov.feltdefinisjon_ekstern_id = :orderByfeltkode$index
                 ) 
             """.trimIndent()
+        } else {
+            """
+                , (
+                  SELECT $verdifelt                    
+                  FROM Oppgavefelt_verdi ov 
+                  INNER JOIN Oppgavefelt f ON (f.id = ov.oppgavefelt_id) 
+                  INNER JOIN Feltdefinisjon fd ON (fd.id = f.feltdefinisjon_id) 
+                  INNER JOIN Omrade fo ON (fo.id = fd.omrade_id)
+                  WHERE ov.oppgave_id = o.id
+                    AND fo.ekstern_id = :orderByfeltOmrade$index
+                    AND fd.ekstern_id = :orderByfeltkode$index
+                    AND ov.omrade_ekstern_id = :orderByfeltOmrade$index
+                    AND ov.feltdefinisjon_ekstern_id = :orderByfeltkode$index
+                ) 
+            """.trimIndent()
+        }
 
         orderBySql += if (økende) "ASC" else "DESC"
     }
