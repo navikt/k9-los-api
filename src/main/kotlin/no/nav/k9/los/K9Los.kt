@@ -64,6 +64,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeApi
 import no.nav.k9.los.nyoppgavestyring.pep.PepCacheOppdaterer
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryApis
 import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksApi
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallV3Apis
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederApis
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallApis
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.AvdelingslederOppgavekøApis
@@ -408,7 +409,7 @@ private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
             route("oppgavetype", { hidden = true }) { OppgavetypeApi() } // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
             route("oppgave-v3", { hidden = true }) { OppgaveV3Api() } // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
             route("sok") { SøkeboksApi() }
-            //route("nøkkeltall") { NøkkeltallV3Apis()}
+            route("nøkkeltall") { NøkkeltallV3Apis() }
         }
     }
 }
