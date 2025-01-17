@@ -8,10 +8,25 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
+import kotlin.concurrent.fixedRateTimer
 
 class NøkkeltallService(
     val queryService: OppgaveQueryService
 ) {
+    fun daemon() {
+        fixedRateTimer(
+            name = "NøkkeltallCacheoppdaterer",
+            daemon = true,
+            period = TimeUnit.MINUTES.toMillis(5),
+        ) {
+            val nå = LocalDateTime.now()
+            val dagensTall = dagensTall()
+            //lagre
+        }
+    }
+
     fun dagensTall() : List<DagensTallDto> {
         val ytelser = listOf(
             FagsakYtelseType.OMSORGSPENGER,
