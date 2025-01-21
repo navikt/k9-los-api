@@ -74,7 +74,7 @@ spec:
           # 0000-GA-k9-drift
           - id: 0bc9661c-975c-4adb-86d1-a97172490662
           # 0000-GA-k9-oppgavestyrer
-          - id: TODO
+          - id: dfcd9962-1b94-4b6f-bdac-09dcca355be7
         extra:
           - "NAVident"
   accessPolicy:
@@ -171,7 +171,7 @@ spec:
       value: 0bc9661c-975c-4adb-86d1-a97172490662
     # 0000-GA-k9-oppgavestyrer
     - name: BRUKER_GRUPPE_ID_OPPGAVESTYRER
-      value: TODO
+      value: dfcd9962-1b94-4b6f-bdac-09dcca355be7
 
       # feature toggles
     - name: NY_OPPGAVESTYRING
