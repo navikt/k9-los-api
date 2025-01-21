@@ -17,10 +17,6 @@ interface IPepClient {
 
     suspend fun harTilgangTilReserveringAvOppgaver(): Boolean
 
-    suspend fun kanSendeSakTilStatistikk(
-        fagsakNummer: String
-    ): Boolean
-
     suspend fun erSakKode6(
         fagsakNummer: String
     ): Boolean

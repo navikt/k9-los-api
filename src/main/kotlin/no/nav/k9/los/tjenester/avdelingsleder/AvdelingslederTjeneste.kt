@@ -333,8 +333,8 @@ class AvdelingslederTjeneste(
         }
     }
 
-    suspend fun hentAlleAktiveReservasjonerV3(innloggetBruker: Saksbehandler): List<ReservasjonDto> {
-        val innloggetBrukerHarKode6Tilgang = pepClient.harTilgangTilKode6(innloggetBruker.brukerIdent!!)
+    suspend fun hentAlleAktiveReservasjonerV3(): List<ReservasjonDto> {
+        val innloggetBrukerHarKode6Tilgang = pepClient.harTilgangTilKode6()
 
         return reservasjonV3Tjeneste.hentAlleAktiveReservasjoner().flatMap { reservasjonMedOppgaver ->
             val saksbehandler =

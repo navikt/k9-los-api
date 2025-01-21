@@ -20,15 +20,16 @@ import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
 import no.nav.k9.los.integrasjon.rest.NavHeaders
+import no.nav.k9.los.integrasjon.rest.idToken
 import no.nav.k9.los.utils.Cache
 import no.nav.k9.los.utils.CacheObject
 import no.nav.k9.los.utils.LosObjectMapper
-import no.nav.k9.sak.typer.AktørId
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.*
+import kotlin.coroutines.coroutineContext
 
 private val gson = GsonBuilder().setPrettyPrinting().create()
 
@@ -47,86 +48,41 @@ class PepClient(
     private val cache = Cache<String, Boolean>(cacheSizeLimit = 1000)
 
     override suspend fun erOppgaveStyrer(): Boolean {
-        val requestBuilder = XacmlRequestBuilder()
-            .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
-            .addResourceAttribute(RESOURCE_TYPE, OPPGAVESTYRER)
-            .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
-            .addAccessSubjectAttribute(SUBJECTID, azureGraphService.hentIdentTilInnloggetBruker())
-            .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
-
-        return evaluate(requestBuilder)
+        //TODO inline metode
+        return kotlin.coroutines.coroutineContext.idToken().erOppgavebehandler()
     }
 
     override suspend fun harBasisTilgang(): Boolean {
-        val requestBuilder = XacmlRequestBuilder()
-            .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
-            .addResourceAttribute(RESOURCE_TYPE, BASIS_TILGANG)
-            .addActionAttribute(ACTION_ID, Action.read)
-            .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
-            .addAccessSubjectAttribute(SUBJECTID, azureGraphService.hentIdentTilInnloggetBruker())
-            .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
-
-        return evaluate(requestBuilder)
+        //TODO inline metode
+        return kotlin.coroutines.coroutineContext.idToken().harBasistilgang()
     }
 
     override suspend fun kanLeggeUtDriftsmelding(): Boolean {
-        val requestBuilder = XacmlRequestBuilder()
-            .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
-            .addResourceAttribute(RESOURCE_TYPE, DRIFTSMELDING)
-            .addActionAttribute(ACTION_ID, Action.create)
-            .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
-            .addAccessSubjectAttribute(SUBJECTID, azureGraphService.hentIdentTilInnloggetBruker())
-            .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
-
-        return evaluate(requestBuilder)
+        //TODO inline metode
+        return coroutineContext.idToken().erDrifter()
     }
 
     override suspend fun harTilgangTilReserveringAvOppgaver(): Boolean {
-        val requestBuilder = XacmlRequestBuilder()
-            .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
-            .addResourceAttribute(RESOURCE_TYPE, TILGANG_SAK)
-            .addActionAttribute(ACTION_ID, Action.reserver)
-            .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
-            .addAccessSubjectAttribute(SUBJECTID, azureGraphService.hentIdentTilInnloggetBruker())
-            .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
-
-        return evaluate(requestBuilder)
+        //TODO inline metode
+        return kotlin.coroutines.coroutineContext.idToken().erSaksbehandler()
     }
 
     override suspend fun harTilgangTilKode6(ident: String): Boolean {
+        if (ident == kotlin.coroutines.coroutineContext.idToken().getNavIdent()){
+            return harTilgangTilKode6();
+        }
         val requestBuilder = XacmlRequestBuilder()
             .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
             .addResourceAttribute(RESOURCE_TYPE, TILGANG_TIL_KODE_6)
             .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
             .addAccessSubjectAttribute(SUBJECTID, ident)
             .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
-
             return evaluate(requestBuilder)
     }
 
     override suspend fun harTilgangTilKode6(): Boolean {
-        val requestBuilder = XacmlRequestBuilder()
-            .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
-            .addResourceAttribute(RESOURCE_TYPE, TILGANG_TIL_KODE_6)
-            .addAccessSubjectAttribute(SUBJECT_TYPE, INTERNBRUKER)
-            .addAccessSubjectAttribute(SUBJECTID, azureGraphService.hentIdentTilInnloggetBruker())
-            .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
-        return evaluate(requestBuilder)
-    }
-
-    override suspend fun kanSendeSakTilStatistikk(
-        fagsakNummer: String
-    ): Boolean {
-        val requestBuilder = XacmlRequestBuilder()
-            .addResourceAttribute(RESOURCE_DOMENE, DOMENE)
-            .addResourceAttribute(RESOURCE_TYPE, TILGANG_SAK)
-            .addActionAttribute(ACTION_ID, Action.read)
-            .addAccessSubjectAttribute(SUBJECT_TYPE, KAFKATOPIC)
-            .addAccessSubjectAttribute(SUBJECTID, KAFKATOPIC_STATISTIKK)
-            .addEnvironmentAttribute(ENVIRONMENT_PEP_ID, "srvk9los")
-            .addResourceAttribute(RESOURCE_SAKSNR, fagsakNummer)
-
-        return evaluate(requestBuilder)
+        //TODO inline metode
+        return kotlin.coroutines.coroutineContext.idToken().kanBehandleKode6()
     }
 
     override suspend fun erSakKode6(fagsakNummer: String): Boolean {
