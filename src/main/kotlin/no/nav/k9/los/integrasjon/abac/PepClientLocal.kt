@@ -28,10 +28,6 @@ class PepClientLocal : IPepClient {
         return false
     }
 
-    override suspend fun kanSendeSakTilStatistikk(fagsakNummer: String): Boolean {
-        return true
-    }
-
     override suspend fun erSakKode6(fagsakNummer: String): Boolean {
         return false
     }

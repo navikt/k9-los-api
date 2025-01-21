@@ -55,6 +55,26 @@ spec:
       enabled: true
       tenant: trygdeetaten.no
       claims:
+        # Kun de gruppene brukeren er medlem av vil bli lagt til i claims på tokenet.
+        groups:
+          # 0000-GA-k9-beslutter
+          - id: f171716a-aaab-4e76-8869-047abaebb8f5
+          # 0000-GA-GOSYS_UTVIDET
+          - id: de44052d-b062-4497-89a2-0c85b935b808
+          # 0000-GA-Strengt_Fortrolig_Adresse
+          - id: 5ef775f2-61f8-4283-bf3d-8d03f428aa14
+          # 0000-GA-Fortrolig_Adresse
+          - id: ea930b6b-9397-44d9-b9e6-f4cf527a632a
+          # 0000-GA-k9-overstyrer
+          - id: 5c7003ff-b3ba-407c-9b58-7fea9bf7cb2e
+          # 0000-GA-k9-saksbehandler
+          - id: 93e8903d-5c3f-4cbe-929e-0afeb22dec73
+          # 0000-GA-k9-veileder
+          - id: 5bc5cae2-3ef9-4897-9828-766757299de8
+          # 0000-GA-k9-drift
+          - id: 0bc9661c-975c-4adb-86d1-a97172490662
+          # 0000-GA-k9-oppgavestyrer
+          - id: TODO
         extra:
           - "NAVident"
   accessPolicy:
@@ -123,6 +143,35 @@ spec:
       value: "k9"
     - name: AUDITLOGGER_PRODUCT
       value: "k9-los-api"
+
+    # Gruppenavn for roller fra Active Directory
+    # 0000-GA-k9-beslutter
+    - name: BRUKER_GRUPPE_ID_BESLUTTER
+      value: f171716a-aaab-4e76-8869-047abaebb8f5
+    # 0000-GA-GOSYS_UTVIDET
+    - name: BRUKER_GRUPPE_ID_EGENANSATT
+      value: de44052d-b062-4497-89a2-0c85b935b808
+    # 0000-GA-Strengt_Fortrolig_Adresse
+    - name: BRUKER_GRUPPE_ID_KODE6
+      value: 5ef775f2-61f8-4283-bf3d-8d03f428aa14
+    # 0000-GA-Fortrolig_Adresse
+    - name: BRUKER_GRUPPE_ID_KODE7
+      value: ea930b6b-9397-44d9-b9e6-f4cf527a632a
+    # 0000-GA-k9-overstyrer
+    - name: BRUKER_GRUPPE_ID_OVERSTYRER
+      value: 5c7003ff-b3ba-407c-9b58-7fea9bf7cb2e
+    # 0000-GA-k9-saksbehandler
+    - name: BRUKER_GRUPPE_ID_SAKSBEHANDLER
+      value: 93e8903d-5c3f-4cbe-929e-0afeb22dec73
+    # 0000-GA-k9-veileder
+    - name: BRUKER_GRUPPE_ID_VEILEDER
+      value: 5bc5cae2-3ef9-4897-9828-766757299de8
+    # 0000-GA-k9-drift
+    - name: BRUKER_GRUPPE_ID_DRIFT
+      value: 0bc9661c-975c-4adb-86d1-a97172490662
+    # 0000-GA-k9-oppgavestyrer
+    - name: BRUKER_GRUPPE_ID_OPPGAVESTYRER
+      value: TODO
 
       # feature toggles
     - name: NY_OPPGAVESTYRING

@@ -263,22 +263,6 @@ class SaksbehandlerRepository(
         return saksbehandler
     }
 
-    suspend fun finnSaksbehandlerMedEpost(
-        tx: TransactionalSession,
-        epost: String
-    ): Saksbehandler? {
-        val skjermet = pepClient.harTilgangTilKode6()
-
-        return tx.run(
-            queryOf(
-                "select * from saksbehandler where lower(epost) = lower(:epost) and skjermet = :skjermet",
-                mapOf("epost" to epost, "skjermet" to skjermet)
-            ).map { row ->
-                mapSaksbehandler(row)
-            }.asSingle
-        )
-    }
-
     fun finnSaksbehandlerIdForIdent(ident: String): Long? {
         return using(sessionOf(dataSource)) { session ->
             session.transaction { tx->
