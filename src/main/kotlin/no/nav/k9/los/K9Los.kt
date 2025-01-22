@@ -409,7 +409,7 @@ private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
             route("oppgavetype", { hidden = true }) { OppgavetypeApi() } // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
             route("oppgave-v3", { hidden = true }) { OppgaveV3Api() } // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
             route("sok") { SøkeboksApi() }
-            route("nøkkeltall") { NøkkeltallV3Apis() }
+            route("nokkeltall") { NøkkeltallV3Apis() }
         }
     }
 }

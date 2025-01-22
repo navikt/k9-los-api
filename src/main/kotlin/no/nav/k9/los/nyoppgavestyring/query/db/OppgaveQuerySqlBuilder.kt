@@ -114,7 +114,12 @@ class OppgaveQuerySqlBuilder(
             }
 
             "oppgavestatus" -> {
-                query += "${combineOperator.sql} o.status ${operator.sql} (cast(:oppgavestatus$index as oppgavestatus)) "
+                // det er forskjellig type på kolonnene i de forskjellige tabellene
+                query += if (fraAktiv) {
+                    "${combineOperator.sql} o.status ${operator.sql} (cast(:oppgavestatus$index as oppgavestatus)) "
+                } else {
+                    "${combineOperator.sql} o.status ${operator.sql} :oppgavestatus$index "
+                }
                 queryParams["oppgavestatus$index"] = feltverdi
             }
 
