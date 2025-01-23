@@ -16,18 +16,6 @@ import kotlin.concurrent.fixedRateTimer
 class NøkkeltallService(
     val queryService: OppgaveQueryService
 ) {
-    fun daemon() {
-        fixedRateTimer(
-            name = "NøkkeltallCacheoppdaterer",
-            daemon = true,
-            period = TimeUnit.MINUTES.toMillis(5),
-        ) {
-            val nå = LocalDateTime.now()
-            val dagensTall = dagensTall()
-            //lagre
-        }
-    }
-
     fun dagensTall(): DagensTallResponse {
         val ytelser = listOf(
             FagsakYtelseType.OMSORGSPENGER,

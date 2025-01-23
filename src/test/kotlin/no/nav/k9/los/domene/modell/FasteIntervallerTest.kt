@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFailsWith
 
-internal class IntervallTest {
+internal class FasteIntervallerTest {
 
     @Test
     fun erUtenforTest() {

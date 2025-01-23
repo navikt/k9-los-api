@@ -109,6 +109,8 @@ dependencies {
     testImplementation("io.insert-koin:koin-test-junit5:$koinVersion")
 
     testImplementation("org.apache.commons:commons-compress:1.27.1")
+
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.1")
 }
 
 repositories {
