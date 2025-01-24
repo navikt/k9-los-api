@@ -17,39 +17,33 @@ class Jobbplanlegger(private val scope: CoroutineScope) {
     private var hovedJob: Job? = null
     private val log = LoggerFactory.getLogger(Jobbplanlegger::class.java)
 
-    fun leggTilOppstartJobb(
+    fun planleggOppstartJobb(
         navn: String,
         prioritet: Int,
         blokk: suspend () -> Unit
     ) {
-        if (jobber.containsKey(navn)) {
-            throw IllegalArgumentException("En jobb med navnet '$navn' er allerede registrert.")
-        }
         val jobb = PlanlagtJobb.Oppstart(navn, prioritet, blokk)
-        jobber[navn] = JobbStatus(jobb, LocalDateTime.now())
+        leggTilJobb(jobb, LocalDateTime.now())
     }
 
-    fun leggTilKjørFørTidspunktJobb(
+    fun planleggKjørFørTidspunktJobb(
         navn: String,
         prioritet: Int,
         tidsfrist: LocalDateTime,
         blokk: suspend () -> Unit
     ) {
-        if (jobber.containsKey(navn)) {
-            throw IllegalArgumentException("En jobb med navnet '$navn' er allerede registrert.")
-        }
         val jobb = PlanlagtJobb.KjørFørTidspunkt(navn, prioritet, tidsfrist, blokk)
         val nå = LocalDateTime.now()
 
         if (tidsfrist.isBefore(nå)) {
-            log.info("Jobb '$navn' blir ikke lagt til: Tidsfristen $tidsfrist er allerede passert")
+            log.info("Jobb '$navn' blir ikke lagt til. Jobben er satt til å kjøre ikke senere enn $tidsfrist.")
             return
         }
 
-        jobber[navn] = JobbStatus(jobb, LocalDateTime.now())
+        leggTilJobb(jobb, nå)
     }
 
-    fun leggTilPeriodiskJobb(
+    fun planleggPeriodiskJobb(
         navn: String,
         prioritet: Int,
         intervall: Duration,
@@ -57,52 +51,46 @@ class Jobbplanlegger(private val scope: CoroutineScope) {
         tidsvindu: Tidsvindu? = null,
         blokk: suspend () -> Unit
     ) {
-        if (jobber.containsKey(navn)) {
-            throw IllegalArgumentException("En jobb med navnet '$navn' er allerede registrert.")
-        }
         val jobb = PlanlagtJobb.Periodisk(navn, prioritet, intervall, startForsinkelse, blokk)
-        val startTid = LocalDateTime.now().plus(startForsinkelse.inWholeMilliseconds, ChronoUnit.MILLIS)
-
-        jobber[navn] = JobbStatus(jobb, startTid).also {
-            if (tidsvindu != null) {
-                it.jobbTidsvindu = tidsvindu
-            }
-        }
+        val nesteKjøring = LocalDateTime.now().plus(startForsinkelse.inWholeMilliseconds, ChronoUnit.MILLIS)
+        leggTilJobb(jobb, nesteKjøring, tidsvindu)
     }
 
-    fun leggTilTimeJobb(
+    fun planleggTimeJobb(
         navn: String,
         prioritet: Int,
         minutter: List<Int>,
+        tidsvindu: Tidsvindu? = null,
         blokk: suspend () -> Unit
     ) {
-        if (jobber.containsKey(navn)) {
-            throw IllegalArgumentException("En jobb med navnet '$navn' er allerede registrert.")
-        }
         require(minutter.all { it in 0..59 }) { "Minutter må være mellom 0 og 59" }
         val jobb = PlanlagtJobb.TimeJobb(navn, prioritet, minutter.sorted(), blokk)
         val nesteKjøring = beregnNesteTimeKjøring(minutter)
-        jobber[navn] = JobbStatus(jobb, nesteKjøring)
+        leggTilJobb(jobb, nesteKjøring, tidsvindu)
     }
 
-    fun leggTilKjørPåTidspunktJobb(
+    fun planleggKjørPåTidspunktJobb(
         navn: String,
         prioritet: Int,
         tidspunkt: LocalDateTime,
         blokk: suspend () -> Unit
     ) {
-        if (jobber.containsKey(navn)) {
-            throw IllegalArgumentException("En jobb med navnet '$navn' er allerede registrert.")
-        }
-
         val nå = LocalDateTime.now()
         if (tidspunkt.isBefore(nå)) {
-            log.info("Jobb '$navn' blir ikke lagt til: Tidsfristen $tidspunkt er allerede passert")
+            log.info("Jobb '$navn' blir ikke lagt til. Jobb er satt til å kjøre når $tidspunkt passerer.")
             return
         }
-
         val jobb = PlanlagtJobb.KjørPåTidspunkt(navn, prioritet, tidspunkt, blokk)
-        jobber[navn] = JobbStatus(jobb, tidspunkt)
+        leggTilJobb(jobb, tidspunkt)
+    }
+
+    private fun leggTilJobb(
+        jobb: PlanlagtJobb,
+        nesteKjøring: LocalDateTime,
+        tidsvindu: Tidsvindu? = null
+    ) {
+        require(!jobber.containsKey(jobb.navn)) { "Flere jobber registreres med navn '${jobb.navn}'. De må være unike." }
+        jobber[jobb.navn] = JobbStatus(jobb, tidsvindu, nesteKjøring)
     }
 
     fun hentKjøreplan(): Map<String, LocalDateTime?> = jobber.mapValues { it.value.nesteKjøring }
@@ -154,12 +142,14 @@ class Jobbplanlegger(private val scope: CoroutineScope) {
 
     private fun finnKjørbareJobber(nå: LocalDateTime): List<JobbStatus> {
         return jobber.values.filter { status ->
-            val erInnenTidsvindu = status.jobbTidsvindu?.erInnenfor(nå) ?: true
+            val erInnenTidsvindu = status.tidsvindu?.erInnenfor(nå) ?: true
             val kanKjøreNå = when (val jobb = status.jobb) {
                 is PlanlagtJobb.KjørPåTidspunkt -> nå.isEqual(jobb.tidspunkt) || nå.isAfter(jobb.tidspunkt)
                 else -> true
             }
-            !status.erAktiv && status.nesteKjøring?.isBefore(nå) == true && erInnenTidsvindu && kanKjøreNå
+            val erKlarTilKjøring = !status.erAktiv && status.nesteKjøring?.isBefore(nå) == true
+
+            erKlarTilKjøring && erInnenTidsvindu && kanKjøreNå
         }.sortedBy { it.jobb.prioritet }
     }
 

@@ -38,9 +38,9 @@ import no.nav.helse.dusseldorf.ktor.metrics.init
 import no.nav.k9.los.eventhandler.*
 import no.nav.k9.los.integrasjon.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
-import no.nav.k9.los.jobber.JobbMetrikker
 import no.nav.k9.los.jobber.K9sakBehandlingsoppfriskingJobb
 import no.nav.k9.los.jobbplanlegger.Jobbplanlegger
+import no.nav.k9.los.jobbplanlegger.Tidsvindu
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosApi
@@ -110,7 +110,7 @@ fun Application.k9Los() {
         val mediumPrioritet = 5
         val lavPrioritet = 10
 
-        leggTilOppstartJobb(
+        planleggOppstartJobb(
             navn = "Setup",
             prioritet = høyPrioritet
         ) {
@@ -126,15 +126,27 @@ fun Application.k9Los() {
             k9TilbakeTilLosAdapterTjeneste.setup()
         }
 
-        leggTilPeriodiskJobb(
-            navn = "PepCacheOppdaterer",
+        val utvidetArbeidstid = Tidsvindu.hverdager(5, 20)
+        // Hyppig oppdatering i arbeidstiden
+        planleggPeriodiskJobb(
+            navn = "PepCacheOppdatererArbeidstid",
             prioritet = lavPrioritet,
-            intervall = 4.seconds
+            intervall = 5.seconds,
+            tidsvindu = utvidetArbeidstid
         ) {
-            koin.get<PepCacheService>().oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn(gyldighet = Duration.ofHours(23))
+            koin.get<PepCacheService>().oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn()
+        }
+        // Sjeldnere oppdatering utenfor arbeidstiden
+        planleggPeriodiskJobb(
+            navn = "PepCacheOppdatererUtenforArbeidstid",
+            prioritet = lavPrioritet,
+            intervall = 30.seconds,
+            tidsvindu = utvidetArbeidstid.komplement()
+        ) {
+            koin.get<PepCacheService>().oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn()
         }
 
-        leggTilPeriodiskJobb(
+        planleggPeriodiskJobb(
             navn = "K9TilbakeTilLosAdapterTjeneste.spillAvBehandlingProsessEventer",
             prioritet = mediumPrioritet,
             intervall = 1.hours
@@ -183,7 +195,7 @@ fun Application.k9Los() {
         )
     ) { start(koin.get<Channel<UUID>>(named("oppgaveRefreshChannel"))) }
 
-    // v3, må se på hvordan denne skal løses
+    // må se på om dette skal settes opp med Jobbplanlegger oppstartsjobb
     val refreshOppgaveV3Jobb = with(
         RefreshK9v3(
             refreshK9v3Tjeneste = koin.get()

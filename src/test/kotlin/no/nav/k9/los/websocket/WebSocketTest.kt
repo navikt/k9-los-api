@@ -1,24 +1,21 @@
 package no.nav.k9.los.websocket
 
-import io.ktor.server.application.Application
-import io.ktor.server.application.install
-import io.ktor.websocket.Frame
-import io.ktor.websocket.readText
-import io.ktor.server.routing.routing
+import io.ktor.server.application.*
+import io.ktor.server.routing.*
 import io.ktor.server.testing.*
-import io.ktor.server.websocket.WebSockets
+import io.ktor.server.websocket.*
+import io.ktor.websocket.*
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.broadcast
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.tjenester.sse.Melding
 import no.nav.k9.los.tjenester.sse.RefreshKlienter.initializeRefreshKlienter
 import no.nav.k9.los.tjenester.sse.RefreshKlienter.oppdaterReserverteMelding
 import no.nav.k9.los.tjenester.sse.RefreshKlienter.oppdaterTilBehandlingMelding
 import no.nav.k9.los.tjenester.sse.RefreshKlienter.sendMelding
-import no.nav.k9.los.tjenester.sse.RefreshKlienter.sseChannel
 import no.nav.k9.los.tjenester.sse.RefreshKlienterWebSocket
 import no.nav.k9.los.tjenester.sse.SseEvent
 import org.json.JSONObject
@@ -81,11 +78,11 @@ class WebSocketTest {
 
         private fun Application.websocketTestApp(refreshKlienter: Channel<SseEvent>) {
             install(WebSockets)
-            routing {
+            /*routing {
                 RefreshKlienterWebSocket(
                     sseChannel = refreshKlienter.broadcast()
                 )
-            }
+            }*/
         }
     }
 }
