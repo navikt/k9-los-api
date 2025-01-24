@@ -302,9 +302,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             statistikkRepository = get(),
             statistikkChannel = get(named("statistikkRefreshChannel")),
             reservasjonTjeneste = get(),
-            reservasjonV3Tjeneste = get(),
-            reservasjonOversetter = get(),
-            saksbehandlerRepository = get(),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
             k9TilbakeTilLosAdapterTjeneste = get(),
         )
