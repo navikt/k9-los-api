@@ -40,6 +40,7 @@ abstract class AbstractPostgresTest {
             .withDatabaseName("my-db")
             .withUsername("foo")
             .withPassword("secret")
+            .withExposedPorts(10001, 5432)
             .withReuse(true)
             .also { it.start()  }
 

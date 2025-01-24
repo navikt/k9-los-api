@@ -329,7 +329,6 @@ fun common(app: Application, config: Configuration) = module {
         ReservasjonOversetter(
             transactionalManager = get(),
             oppgaveV3Repository = get(),
-            saksbehandlerRepository = get(),
             reservasjonV3Tjeneste = get(),
             oppgaveV1Repository = get(),
             oppgaveV3RepositoryMedTxWrapper = get(),
@@ -339,10 +338,9 @@ fun common(app: Application, config: Configuration) = module {
     single {
         ReservasjonKonverteringJobb(
             config = get(),
-            reservasjonRepository = get(),
+            reservasjonV3Tjeneste = get(),
+            transactionalManager = get(),
             oppgaveRepository = get(),
-            reservasjonOversetter = get(),
-            saksbehandlerRepository = get(),
         )
     }
 
