@@ -14,13 +14,11 @@ import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.los.integrasjon.kafka.dto.EventHendelse
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
-import org.junit.jupiter.api.Test
-
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.koin.test.get
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -191,15 +189,19 @@ class ReservasjonOversetterTest : AbstractK9LosIntegrationTest() {
             reservasjonV3Tjeneste.hentAktivReservasjonForReservasjonsnøkkel(oppgaveV3.reservasjonsnøkkel)!!
         assertTrue(aktivReservasjon.reservasjonsnøkkel.contains("legacy_"))
 
-        var reservasjon: ReservasjonV3? = reservasjonV3Tjeneste.taReservasjon(
-            reservasjonsnøkkel = oppgaveV3.reservasjonsnøkkel,
-            reserverForId = saraSaksbehandlerId,
-            utføresAvId = saraSaksbehandlerId,
-            kommentar = "test",
-            gyldigFra = nå.minusDays(1),
-            gyldigTil = nå.plusDays(2)
+        var reservasjon = transactionalManager.transaction { tx ->
+            reservasjonV3Tjeneste.taReservasjonMenSjekkLegacyFørst(
+                reservasjonsnøkkel = oppgaveV3.reservasjonsnøkkel,
+                reserverForId = saraSaksbehandlerId,
+                utføresAvId = saraSaksbehandlerId,
+                kommentar = "test",
+                gyldigFra = nå.minusDays(1),
+                gyldigTil = nå.plusDays(2),
+                tx = tx,
             )
+        }
         assertTrue(reservasjon!!.reservasjonsnøkkel.contains("legacy_"))
+
 
         reservasjon = reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktivMenSjekkLegacyFørst(
         reservasjonsnøkkel = oppgaveV3.reservasjonsnøkkel,
