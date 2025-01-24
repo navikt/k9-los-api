@@ -10,7 +10,10 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
-class Jobbplanlegger(private val scope: CoroutineScope) {
+class Jobbplanlegger(
+    private val scope: CoroutineScope,
+    private val tidtaker: () -> LocalDateTime = { LocalDateTime.now() }
+) {
     private val jobber = ConcurrentHashMap<String, JobbStatus>()
     private val aktivePrioriteter = ConcurrentHashMap<String, Int>()
     private val mutex = Mutex()
@@ -23,7 +26,7 @@ class Jobbplanlegger(private val scope: CoroutineScope) {
         blokk: suspend () -> Unit
     ) {
         val jobb = PlanlagtJobb.Oppstart(navn, prioritet, blokk)
-        leggTilJobb(jobb, LocalDateTime.now())
+        leggTilJobb(jobb, tidtaker())
     }
 
     fun planleggKjørFørTidspunktJobb(
@@ -33,7 +36,7 @@ class Jobbplanlegger(private val scope: CoroutineScope) {
         blokk: suspend () -> Unit
     ) {
         val jobb = PlanlagtJobb.KjørFørTidspunkt(navn, prioritet, tidsfrist, blokk)
-        val nå = LocalDateTime.now()
+        val nå = tidtaker()
 
         if (tidsfrist.isBefore(nå)) {
             log.info("Jobb '$navn' blir ikke lagt til. Jobben er satt til å kjøre ikke senere enn $tidsfrist.")
@@ -52,7 +55,7 @@ class Jobbplanlegger(private val scope: CoroutineScope) {
         blokk: suspend () -> Unit
     ) {
         val jobb = PlanlagtJobb.Periodisk(navn, prioritet, intervall, startForsinkelse, blokk)
-        val nesteKjøring = LocalDateTime.now().plus(startForsinkelse.inWholeMilliseconds, ChronoUnit.MILLIS)
+        val nesteKjøring = tidtaker().plus(startForsinkelse.inWholeMilliseconds, ChronoUnit.MILLIS)
         leggTilJobb(jobb, nesteKjøring, tidsvindu)
     }
 
@@ -75,7 +78,7 @@ class Jobbplanlegger(private val scope: CoroutineScope) {
         tidspunkt: LocalDateTime,
         blokk: suspend () -> Unit
     ) {
-        val nå = LocalDateTime.now()
+        val nå = tidtaker()
         if (tidspunkt.isBefore(nå)) {
             log.info("Jobb '$navn' blir ikke lagt til. Jobb er satt til å kjøre når $tidspunkt passerer.")
             return
@@ -98,7 +101,7 @@ class Jobbplanlegger(private val scope: CoroutineScope) {
     fun start() {
         hovedJob = scope.launch {
             while (isActive) {
-                val nå = LocalDateTime.now()
+                val nå = tidtaker()
                 val kjørbare = finnKjørbareJobber(nå)
 
                 kjørbare.forEach { status ->
@@ -147,7 +150,7 @@ class Jobbplanlegger(private val scope: CoroutineScope) {
                 is PlanlagtJobb.KjørPåTidspunkt -> nå.isEqual(jobb.tidspunkt) || nå.isAfter(jobb.tidspunkt)
                 else -> true
             }
-            val erKlarTilKjøring = !status.erAktiv && status.nesteKjøring?.isBefore(nå) == true
+            val erKlarTilKjøring = !status.erAktiv && (status.nesteKjøring?.isEqual(nå) == true || status.nesteKjøring?.isBefore(nå) == true)
 
             erKlarTilKjøring && erInnenTidsvindu && kanKjøreNå
         }.sortedBy { it.jobb.prioritet }
@@ -158,14 +161,15 @@ class Jobbplanlegger(private val scope: CoroutineScope) {
             is PlanlagtJobb.Oppstart -> status.nesteKjøring = null
             is PlanlagtJobb.KjørFørTidspunkt -> status.nesteKjøring = null
             is PlanlagtJobb.KjørPåTidspunkt -> jobber.remove(jobb.navn)
-            is PlanlagtJobb.Periodisk -> status.nesteKjøring = LocalDateTime.now()
+            is PlanlagtJobb.Periodisk -> status.nesteKjøring = tidtaker()
                 .plus(jobb.intervall.inWholeMilliseconds, ChronoUnit.MILLIS)
+
             is PlanlagtJobb.TimeJobb -> status.nesteKjøring = beregnNesteTimeKjøring(jobb.minutter)
         }
     }
 
     private fun beregnNesteTimeKjøring(minutter: List<Int>): LocalDateTime {
-        val nå = LocalDateTime.now()
+        val nå = tidtaker()
         val nesteMinutt = minutter.find { it > nå.minute } ?: minutter.first()
         return if (nesteMinutt > nå.minute) {
             nå.withMinute(nesteMinutt).withSecond(0).withNano(0)
