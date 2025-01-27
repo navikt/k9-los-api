@@ -14,59 +14,55 @@ class Jobbplanlegger(
     private val ventetidMellomJobber: Duration = 1.seconds,
 ) {
     private val jobber = ConcurrentHashMap<String, JobbStatus>()
-    private val aktivePrioriteter = ConcurrentHashMap<String, Int>()
     private var hovedJob: Job? = null
+    private var erStartet = false
     private val log = LoggerFactory.getLogger(Jobbplanlegger::class.java)
 
     fun start() {
+        if (erStartet) {
+            log.warn("Jobbplanlegger er allerede startet")
+            return
+        }
+        erStartet = true
+
         val nå = tidtaker()
         planlagteJobber.forEach { jobb ->
-            val førsteKjøretidspunkt = jobb.førsteKjøretidspunkt(nå)
-            if (førsteKjøretidspunkt != null) {
-                jobber[jobb.navn] = JobbStatus(jobb, førsteKjøretidspunkt)
+            jobb.førsteKjøretidspunkt(nå)?.let { tid ->
+                jobber[jobb.navn] = JobbStatus(jobb, tid)
             }
         }
+
         hovedJob = scope.launch {
             while (isActive) {
-                val kjørbare = finnKjørbareJobber()
-                kjørbare.forEach { status ->
-                    startJobb(status)
-                }
+                finnKjørbareJobber().forEach { startJobb(it) }
                 delay(ventetidMellomJobber)
             }
         }
     }
 
     fun stopp() {
+        if (!erStartet) return
+        erStartet = false
         hovedJob?.cancel()
         hovedJob = null
-        jobber.values.forEach { jobbstatus -> jobbstatus.erAktiv = false }
-        jobber.clear() // Tømmer jobb-settet
-        aktivePrioriteter.clear()
+        jobber.values.forEach { it.erAktiv = false }
+        jobber.clear()
     }
 
     private fun startJobb(status: JobbStatus) {
-        synchronized(status) {
-            status.erAktiv = true
-            aktivePrioriteter[status.jobb.navn] = status.jobb.prioritet
+        if (status.erAktiv) return
 
-            scope.launch {
-                try {
-                    println("try")
-                    status.jobb.blokk(this)
-                /*} catch (e: Exception) {
-                    println("catch")
-                    log.error("Feil ved kjøring av jobb ${status.jobb.navn}", e) */
-                } finally {
-                    println("finally")
-                    status.erAktiv = false
-                    aktivePrioriteter.remove(status.jobb.navn)
-                    val nesteKjøretidspunkt = status.jobb.nesteKjøretidspunkt(tidtaker())
-                    if (nesteKjøretidspunkt == null) {
-                        jobber.remove(status.jobb.navn)
-                    } else {
-                        status.nesteKjøring = nesteKjøretidspunkt
-                    }
+        status.erAktiv = true
+        scope.launch {
+            try {
+                status.jobb.blokk(this)
+            } finally {
+                status.erAktiv = false
+                val nesteKjøretidspunkt = status.jobb.nesteKjøretidspunkt(tidtaker())
+                if (nesteKjøretidspunkt == null) {
+                    jobber.remove(status.jobb.navn)
+                } else {
+                    status.nesteKjøring = nesteKjøretidspunkt
                 }
             }
         }
@@ -74,12 +70,14 @@ class Jobbplanlegger(
 
     private fun finnKjørbareJobber(): List<JobbStatus> {
         val nå = tidtaker()
-        val alleJobber = jobber
-            .values
+        return jobber.values
             .filter { status ->
-                status.nesteKjøring <= nå && !status.erAktiv && aktivePrioriteter.values.none { it < status.jobb.prioritet }
+                status.nesteKjøring <= nå && !status.erAktiv &&
+                        jobber.values.none { it.erAktiv && it.jobb.prioritet < status.jobb.prioritet }
             }
-        val høyestePrioritet = alleJobber.minOfOrNull { it.jobb.prioritet } ?: return emptyList()
-        return alleJobber.filter { it.jobb.prioritet == høyestePrioritet }
+            .groupBy { it.jobb.prioritet }
+            .minByOrNull { it.key }
+            ?.value
+            .orEmpty()
     }
 }

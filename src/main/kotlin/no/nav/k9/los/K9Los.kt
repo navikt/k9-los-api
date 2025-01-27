@@ -399,47 +399,50 @@ fun Application.konfigurerJobber(koin: Koin) {
     val lavPrioritet = 10
     val utvidetArbeidstid = Tidsvindu.hverdager(5, 20)
 
+    val planlagteJobber = setOf(
+        PlanlagtJobb.Oppstart(
+            navn = "Setup",
+            prioritet = høyPrioritet,
+        ) {
+            val områdeSetup = koin.get<OmrådeSetup>()
+            områdeSetup.setup()
+            val k9SakTilLosAdapterTjeneste = koin.get<K9SakTilLosAdapterTjeneste>()
+            k9SakTilLosAdapterTjeneste.setup()
+            val k9KlageTilLosAdapterTjeneste = koin.get<K9KlageTilLosAdapterTjeneste>()
+            k9KlageTilLosAdapterTjeneste.setup()
+            val k9PunsjTilLosAdapterTjeneste = koin.get<K9PunsjTilLosAdapterTjeneste>()
+            k9PunsjTilLosAdapterTjeneste.setup()
+            val k9TilbakeTilLosAdapterTjeneste = koin.get<K9TilbakeTilLosAdapterTjeneste>()
+            k9TilbakeTilLosAdapterTjeneste.setup()
+        },
+
+        // Hyppig oppdatering i arbeidstiden
+        PlanlagtJobb.Periodisk(
+            navn = "PepCacheOppdatererArbeidstid",
+            prioritet = lavPrioritet,
+            intervall = 5.seconds,
+            tidsvindu = utvidetArbeidstid,
+            startForsinkelse = 0.seconds
+        ) {
+            koin.get<PepCacheService>().oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn()
+        },
+
+        // Sjeldnere oppdatering utenfor arbeidstiden
+        PlanlagtJobb.Periodisk(
+            navn = "PepCacheOppdatererUtenforArbeidstid",
+            prioritet = lavPrioritet,
+            intervall = 30.seconds,
+            tidsvindu = utvidetArbeidstid.komplement(),
+            startForsinkelse = 0.seconds
+        ) {
+            koin.get<PepCacheService>().oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn()
+        })
+
     val jobbplanlegger = Jobbplanlegger(
-        planlagteJobber = setOf(
-            PlanlagtJobb.Oppstart(
-                navn = "Setup",
-                prioritet = høyPrioritet,
-            ) {
-                val områdeSetup = koin.get<OmrådeSetup>()
-                områdeSetup.setup()
-                val k9SakTilLosAdapterTjeneste = koin.get<K9SakTilLosAdapterTjeneste>()
-                k9SakTilLosAdapterTjeneste.setup()
-                val k9KlageTilLosAdapterTjeneste = koin.get<K9KlageTilLosAdapterTjeneste>()
-                k9KlageTilLosAdapterTjeneste.setup()
-                val k9PunsjTilLosAdapterTjeneste = koin.get<K9PunsjTilLosAdapterTjeneste>()
-                k9PunsjTilLosAdapterTjeneste.setup()
-                val k9TilbakeTilLosAdapterTjeneste = koin.get<K9TilbakeTilLosAdapterTjeneste>()
-                k9TilbakeTilLosAdapterTjeneste.setup()
-            },
-
-            // Hyppig oppdatering i arbeidstiden
-            PlanlagtJobb.Periodisk(
-                navn = "PepCacheOppdatererArbeidstid",
-                prioritet = lavPrioritet,
-                intervall = 5.seconds,
-                tidsvindu = utvidetArbeidstid,
-                startForsinkelse = 0.seconds
-            ) {
-                koin.get<PepCacheService>().oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn()
-            },
-
-            // Sjeldnere oppdatering utenfor arbeidstiden
-            PlanlagtJobb.Periodisk(
-                navn = "PepCacheOppdatererUtenforArbeidstid",
-                prioritet = lavPrioritet,
-                intervall = 30.seconds,
-                tidsvindu = utvidetArbeidstid.komplement(),
-                startForsinkelse = 0.seconds
-            ) {
-                koin.get<PepCacheService>().oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn()
-            }),
+        planlagteJobber = planlagteJobber,
         scope = CoroutineScope(Dispatchers.Default + SupervisorJob()),
     )
+
     environment.monitor.subscribe(ApplicationStarted) {
         jobbplanlegger.start()
     }
