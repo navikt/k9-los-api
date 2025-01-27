@@ -1,9 +1,9 @@
 package no.nav.k9.los.jobbplanlegger
 
 import assertk.assertThat
-import assertk.assertions.isFalse
-import assertk.assertions.isTrue
+import assertk.assertions.*
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import java.time.LocalDateTime
 
 class TidsvinduTest {
@@ -57,5 +57,35 @@ class TidsvinduTest {
         assertThat(motsatt.erInnenfor(mandagKl8)).isTrue()
         assertThat(motsatt.erInnenfor(mandagKl18)).isTrue()
         assertThat(motsatt.erInnenfor(lørdagKl12)).isTrue()
+    }
+
+    @Test
+    fun `komplement, neste åpne tidspunkt, er ikke innenfor`() {
+        val tidsvindu = Tidsvindu.hverdager(9, 17).komplement()
+        val nesteTidspunktKomplement = tidsvindu.nesteTidspunkt(LocalDateTime.of(2025, 1, 20, 9, 0, 1))
+        assertThat(nesteTidspunktKomplement).isEqualTo(LocalDateTime.of(2025, 1, 20, 17, 0))
+    }
+
+    @Test
+    fun `neste åpne tidspunkt, er innenfor`() {
+        val tidsvindu = Tidsvindu.hverdager(9, 17)
+
+        val nesteTidspunkt = tidsvindu.nesteTidspunkt(LocalDateTime.of(2025, 1, 20, 9, 0))
+        assertThat(nesteTidspunkt).isEqualTo(LocalDateTime.of(2025, 1, 20, 9, 0))
+    }
+
+    @Test
+    fun `neste åpne tidspunkt komplement, er innenfor`() {
+        val tidsvindu = Tidsvindu.hverdager(17, 9)
+        val nesteTidspunktKomplement = tidsvindu.nesteTidspunkt(LocalDateTime.of(2025, 1, 20, 9, 0))
+        assertThat(nesteTidspunktKomplement).isEqualTo(LocalDateTime.of(2025, 1, 20, 17, 0))
+    }
+
+    @Test
+    fun `ikke mulig å finne åpent tidsvindu`() {
+        val tidsvindu = Tidsvindu.ÅPENT.komplement()
+        assertThrows<IllegalStateException> {
+             tidsvindu.nesteTidspunkt(LocalDateTime.of(2025, 1, 20, 9, 0))
+        }
     }
 }

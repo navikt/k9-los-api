@@ -35,7 +35,6 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.OppgaverGruppertRepository
-import no.nav.k9.los.tjenester.sse.SseEvent
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -72,7 +71,6 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
         coEvery { pepClient.erSakKode7EllerEgenAnsatt(any()) } returns false
         val oppgaveKøOppdatert = Channel<UUID>(1)
         val oppgaveRefreshOppdatert = Channel<UUID>(100)
-        val refreshKlienter = Channel<SseEvent>(1000)
         val statistikkChannel = Channel<Boolean>(Channel.CONFLATED)
 
         val oppgaveRepository = get<OppgaveRepository>()
@@ -83,7 +81,6 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             dataSource = get(),
             oppgaveRepositoryV2,
             oppgaveKøOppdatert = oppgaveKøOppdatert,
-            refreshKlienter = refreshKlienter,
             oppgaveRefreshChannel = oppgaveRefreshOppdatert,
             pepClient = pepClient
         )
@@ -94,7 +91,6 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             oppgaveRepository = oppgaveRepository,
             oppgaveRepositoryV2 = oppgaveRepositoryV2,
             dataSource = get(),
-            refreshKlienter = refreshKlienter,
             saksbehandlerRepository = saksbehandlerRepository
         )
 
@@ -211,7 +207,6 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
     @Test
     fun `hent fagsak`(){
         val oppgaveKøOppdatert = Channel<UUID>(1)
-        val refreshKlienter = Channel<SseEvent>(1000)
         val oppgaverRefresh = Channel<UUID>(1000)
         val statistikkChannel = Channel<Boolean>(Channel.CONFLATED)
 
@@ -223,7 +218,6 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             dataSource = dataSource,
             oppgaveKøOppdatert = oppgaveKøOppdatert,
             oppgaveRepositoryV2 = oppgaveRepositoryV2,
-            refreshKlienter = refreshKlienter,
             oppgaveRefreshChannel = oppgaverRefresh,
             pepClient = PepClientLocal()
         )
@@ -240,7 +234,6 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             oppgaveRepository = oppgaveRepository,
             oppgaveRepositoryV2 = oppgaveRepositoryV2,
             dataSource = dataSource,
-            refreshKlienter = refreshKlienter,
             saksbehandlerRepository = saksbehandlerRepository
         )
         val reservasjonOversetter = get<ReservasjonOversetter>()
@@ -408,7 +401,6 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
     @Test
     fun hentReservasjonsHistorikk() = runBlocking {
         val oppgaveKøOppdatert = Channel<UUID>(1)
-        val refreshKlienter = Channel<SseEvent>(1000)
 
         val oppgaverRefresh = Channel<UUID>(1000)
         val statistikkChannel = Channel<Boolean>(Channel.CONFLATED)
@@ -421,7 +413,6 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             dataSource = dataSource,
             oppgaveRepositoryV2 = oppgaveRepositoryV2,
             oppgaveKøOppdatert = oppgaveKøOppdatert,
-            refreshKlienter = refreshKlienter,
             oppgaveRefreshChannel = oppgaverRefresh,
             pepClient = PepClientLocal()
         )
@@ -432,7 +423,6 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             oppgaveRepository = oppgaveRepository,
             oppgaveRepositoryV2 = oppgaveRepositoryV2,
             dataSource = dataSource,
-            refreshKlienter = refreshKlienter,
             saksbehandlerRepository = saksbehandlerRepository
         )
 

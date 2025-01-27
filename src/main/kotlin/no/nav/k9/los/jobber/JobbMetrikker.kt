@@ -2,6 +2,7 @@ package no.nav.k9.los.jobber
 
 import io.prometheus.client.Histogram
 import io.prometheus.client.SimpleTimer
+import kotlinx.coroutines.CoroutineScope
 import kotlin.math.pow
 
 class JobbMetrikker {

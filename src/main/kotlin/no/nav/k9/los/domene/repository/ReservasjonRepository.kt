@@ -1,8 +1,6 @@
 package no.nav.k9.los.domene.repository
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -11,8 +9,6 @@ import no.nav.k9.los.db.util.InClauseHjelper
 import no.nav.k9.los.domene.lager.oppgave.Reservasjon
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.modell.OppgaveKø
-import no.nav.k9.los.tjenester.sse.RefreshKlienter.sendOppdaterReserverte
-import no.nav.k9.los.tjenester.sse.SseEvent
 import no.nav.k9.los.utils.LosObjectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -28,7 +24,6 @@ class ReservasjonRepository(
     private val oppgaveRepositoryV2: OppgaveRepositoryV2,
     private val saksbehandlerRepository: SaksbehandlerRepository,
     private val dataSource: DataSource,
-    private val refreshKlienter: Channel<SseEvent>
 ) {
     companion object {
         val RESERVASJON_YTELSE_LOG = LoggerFactory.getLogger("ReservasjonYtelseDebug")
@@ -43,7 +38,7 @@ class ReservasjonRepository(
         return hentOgFjernInaktiveReservasjoner(saksbehandler.reservasjoner, saksbehandlersIdent)
     }
 
-    suspend fun hentOgFjernInaktiveReservasjoner(reservasjonIder: Set<UUID>, saksbehandlersIdent: String? = null): List<Reservasjon> {
+    fun hentOgFjernInaktiveReservasjoner(reservasjonIder: Set<UUID>, saksbehandlersIdent: String? = null): List<Reservasjon> {
         var fjernede: List<Reservasjon>
         var reservasjoner: List<Reservasjon>
 
@@ -111,7 +106,7 @@ class ReservasjonRepository(
         return json.map { s -> LosObjectMapper.instance.readValue(s, Reservasjon::class.java) }.toList()
     }
 
-    private suspend fun fjernInaktivReservasjon(
+    private fun fjernInaktivReservasjon(
         reservasjon: Reservasjon,
         oppgaveKøer: List<OppgaveKø>,
         saksbehandlersIdent: String?
@@ -163,7 +158,7 @@ class ReservasjonRepository(
         }
     }
 
-    private suspend fun fjernInaktiveReservasjoner(reservasjoner: List<Reservasjon>, saksbehandlersIdent: String?): List<Reservasjon> {
+    private fun fjernInaktiveReservasjoner(reservasjoner: List<Reservasjon>, saksbehandlersIdent: String?): List<Reservasjon> {
         val reservasjonPrAktive = reservasjoner.groupBy { it.erAktiv() }
         val inaktive = reservasjonPrAktive[false] ?: emptyList()
         var totalAntallFjerninger = 0
@@ -322,7 +317,6 @@ class ReservasjonRepository(
         if (refresh && forrigeReservasjon != json) {
             val refreshTid = measureTimeMillis {
                 loggFjerningAvReservasjon(reservasjon, forrigeReservasjon)
-                runBlocking { refreshKlienter.sendOppdaterReserverte() }
             }
             RESERVASJON_YTELSE_LOG.info("refresh av reservasjoner tok {}", refreshTid)
         }

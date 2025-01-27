@@ -30,7 +30,6 @@ internal class OppgaveKoRepositoryTest : AbstractK9LosIntegrationTest() {
             dataSource = get(),
             oppgaveRepositoryV2 = get(),
             oppgaveKøOppdatert = get(named("oppgaveKøOppdatert")),
-            refreshKlienter = get(named("refreshKlienter")),
             oppgaveRefreshChannel = get(named("oppgaveRefreshChannel")),
             pepClient = pep
         )
@@ -97,7 +96,7 @@ internal class OppgaveKoRepositoryTest : AbstractK9LosIntegrationTest() {
 
         runBlocking {
             coEvery { pep.harTilgangTilKode6() } returns kode6
-            oppgaveKøRepository.lagre(id, false) { oppgavekø }
+            oppgaveKøRepository.lagre(id) { oppgavekø }
         }
 
         return id

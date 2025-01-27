@@ -1,7 +1,7 @@
 package no.nav.k9.los
 
 import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.PropertyNamingStrategy
+import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.SerializationFeature
 import io.github.smiley4.ktorswaggerui.SwaggerUI
 import io.github.smiley4.ktorswaggerui.dsl.routing.route
@@ -21,10 +21,7 @@ import io.prometheus.client.hotspot.DefaultExports
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.channels.BroadcastChannel
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.broadcast
-import kotlinx.coroutines.channels.produce
 import no.nav.helse.dusseldorf.ktor.auth.AuthStatusPages
 import no.nav.helse.dusseldorf.ktor.auth.allIssuers
 import no.nav.helse.dusseldorf.ktor.auth.multipleJwtIssuers
@@ -77,8 +74,6 @@ import no.nav.k9.los.tjenester.saksbehandler.NavAnsattApis
 import no.nav.k9.los.tjenester.saksbehandler.nokkeltall.SaksbehandlerNøkkeltallApis
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveApis
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.SaksbehandlerOppgavekoApis
-import no.nav.k9.los.tjenester.sse.RefreshKlienterWebSocket
-import no.nav.k9.los.tjenester.sse.SseEvent
 import org.koin.core.qualifier.named
 import org.koin.ktor.ext.getKoin
 import org.koin.ktor.plugin.Koin
@@ -153,6 +148,14 @@ fun Application.k9Los() {
         ) {
             koin.get<K9TilbakeTilLosAdapterTjeneste>().spillAvBehandlingProsessEventer()
         }
+
+        planleggPeriodiskJobb(
+            navn = "K9SakTilLosAdapterTjeneste.spillAvBehandlingProsessEventer",
+            prioritet = mediumPrioritet,
+            intervall = 1.hours
+        ) {
+            koin.get<K9SakTilLosAdapterTjeneste>().spillAvBehandlingProsessEventer()
+        }
     }
 
     konfigurerJobber(jobbplanlegger)
@@ -164,7 +167,7 @@ fun Application.k9Los() {
     install(ContentNegotiation) {
         jackson {
             dusseldorfConfigured()
-                .setPropertyNamingStrategy(PropertyNamingStrategy.LOWER_CAMEL_CASE)
+                .setPropertyNamingStrategy(PropertyNamingStrategies.LOWER_CAMEL_CASE)
                 .configure(SerializationFeature.WRITE_DURATIONS_AS_TIMESTAMPS, false)
                 .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true)
         }
@@ -316,13 +319,6 @@ fun Application.k9Los() {
         config = koin.get()
     ).kjør(kjørUmiddelbart = false)
 
-    // Server side events
-    val sseChannel = produce {
-        for (oppgaverOppdatertEvent in koin.get<Channel<SseEvent>>(named("refreshKlienter"))) {
-            send(oppgaverOppdatertEvent)
-        }
-    }.broadcast()
-
     install(CallIdRequired)
 
     install(CallLogging) {
@@ -347,7 +343,7 @@ fun Application.k9Los() {
             localSetup.initPunsjoppgaver(0)
             localSetup.initTilbakeoppgaver(0)
             localSetup.initK9SakOppgaver(0)
-            api(sseChannel)
+            api()
             route("/forvaltning") {
                 InnsiktApis()
                 forvaltningApis()
@@ -376,7 +372,7 @@ fun Application.k9Los() {
                         swaggerUI("openapi.json")
                     }
                 }
-                api(sseChannel)
+                api()
             }
         }
 
@@ -402,12 +398,7 @@ fun Application.k9Los() {
     }
 }
 
-private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
-
-    RefreshKlienterWebSocket(
-        sseChannel = sseChannel
-    )
-
+private fun Route.api() {
     route("api") {
         route("driftsmeldinger", { hidden = true }) {
             DriftsmeldingerApis()

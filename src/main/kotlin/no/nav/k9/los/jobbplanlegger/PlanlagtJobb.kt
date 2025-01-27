@@ -1,45 +1,87 @@
 package no.nav.k9.los.jobbplanlegger
 
+import kotlinx.coroutines.CoroutineScope
 import java.time.LocalDateTime
 import kotlin.time.Duration
+import kotlin.time.toJavaDuration
 
 sealed class PlanlagtJobb(
     val navn: String,
     val prioritet: Int,
-    val blokk: suspend () -> Unit
+    val blokk: suspend CoroutineScope.() -> Unit,
 ) {
+    abstract fun førsteKjøretidspunkt(nå: LocalDateTime): LocalDateTime?
+    abstract fun nesteKjøretidspunkt(nå: LocalDateTime): LocalDateTime?
+
+    operator fun LocalDateTime.plus(duration: Duration): LocalDateTime {
+        return this.plus(duration.toJavaDuration())
+    }
+
     class Oppstart(
         navn: String,
         prioritet: Int,
-        blokk: suspend () -> Unit
-    ) : PlanlagtJobb(navn, prioritet, blokk)
-
-    class KjørFørTidspunkt(
-        navn: String,
-        prioritet: Int,
-        val tidspunkt: LocalDateTime,
-        blokk: suspend () -> Unit
-    ) : PlanlagtJobb(navn, prioritet, blokk)
+        blokk: suspend CoroutineScope.() -> Unit
+    ) : PlanlagtJobb(navn, prioritet, blokk) {
+        override fun førsteKjøretidspunkt(nå: LocalDateTime) = nå
+        override fun nesteKjøretidspunkt(nå: LocalDateTime) = null
+    }
 
     class KjørPåTidspunkt(
         navn: String,
         prioritet: Int,
-        val tidspunkt: LocalDateTime,
-        blokk: suspend () -> Unit
-    ) : PlanlagtJobb(navn, prioritet, blokk)
+        private val kjørTidligst: LocalDateTime,
+        private val kjørSenest: LocalDateTime,
+        blokk: suspend CoroutineScope.() -> Unit
+    ) : PlanlagtJobb(navn, prioritet, blokk) {
+        override fun førsteKjøretidspunkt(nå: LocalDateTime): LocalDateTime? {
+            return when {
+                nå > kjørSenest -> null
+                kjørTidligst > nå -> kjørTidligst
+                else -> nå
+            }
+        }
+        override fun nesteKjøretidspunkt(nå: LocalDateTime) = null
+    }
 
     class Periodisk(
         navn: String,
         prioritet: Int,
+        private val tidsvindu: Tidsvindu,
         val intervall: Duration,
-        val startForsinkelse: Duration,
-        blokk: suspend () -> Unit
-    ) : PlanlagtJobb(navn, prioritet, blokk)
+        private val startForsinkelse: Duration,
+        blokk: suspend CoroutineScope.() -> Unit
+    ) : PlanlagtJobb(navn, prioritet, blokk) {
+        override fun førsteKjøretidspunkt(nå: LocalDateTime): LocalDateTime {
+            val nesteÅpneTidspunkt = tidsvindu.nesteTidspunkt(nå)
+            return maxOf(nå + startForsinkelse, nesteÅpneTidspunkt)
+        }
+
+        override fun nesteKjøretidspunkt(nå: LocalDateTime): LocalDateTime {
+            val nesteÅpneTidspunkt = tidsvindu.nesteTidspunkt(nå)
+            return maxOf(nå + intervall, nesteÅpneTidspunkt)
+        }
+    }
 
     class TimeJobb(
         navn: String,
         prioritet: Int,
-        val minutter: List<Int>,
-        blokk: suspend () -> Unit
-    ) : PlanlagtJobb(navn, prioritet, blokk)
+        private val tidsvindu: Tidsvindu,
+        private val minutter: List<Int>,
+        blokk: suspend CoroutineScope.() -> Unit
+    ) : PlanlagtJobb(navn, prioritet, blokk) {
+        override fun førsteKjøretidspunkt(nå: LocalDateTime) = beregnNesteTimeKjøring(nå, minutter)
+        override fun nesteKjøretidspunkt(nå: LocalDateTime) = beregnNesteTimeKjøring(nå, minutter)
+
+        private fun beregnNesteTimeKjøring(nå: LocalDateTime, minutter: List<Int>): LocalDateTime? {
+            val nesteMinutt = minutter.find { it > nå.minute } ?: minutter.first()
+            val nesteTidspunkt = if (nesteMinutt > nå.minute) {
+                nå.withMinute(nesteMinutt).withSecond(0).withNano(0)
+            } else {
+                nå.plusHours(1).withMinute(nesteMinutt).withSecond(0).withNano(0)
+            }
+            val nesteÅpneTidspunkt = tidsvindu.nesteTidspunkt(nå)
+
+            return maxOf(nesteTidspunkt, nesteÅpneTidspunkt)
+        }
+    }
 }

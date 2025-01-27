@@ -84,7 +84,6 @@ import no.nav.k9.los.tjenester.driftsmeldinger.DriftsmeldingTjeneste
 import no.nav.k9.los.tjenester.kodeverk.HentKodeverkTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.*
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.SakslisteTjeneste
-import no.nav.k9.los.tjenester.sse.RefreshKlienter.initializeRefreshKlienter
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -118,9 +117,6 @@ fun common(app: Application, config: Configuration) = module {
     single(named("oppgaveKøOppdatert")) {
         Channel<UUID>(Channel.UNLIMITED)
     }
-    single(named("refreshKlienter")) {
-        initializeRefreshKlienter()
-    }
     single(named("oppgaveRefreshChannel")) {
         Channel<UUID>(Channel.UNLIMITED)
     }
@@ -149,7 +145,6 @@ fun common(app: Application, config: Configuration) = module {
             dataSource = get(),
             oppgaveRepositoryV2 = get(),
             oppgaveKøOppdatert = get(named("oppgaveKøOppdatert")),
-            refreshKlienter = get(named("refreshKlienter")),
             oppgaveRefreshChannel = get(named("oppgaveRefreshChannel")),
             pepClient = get()
         )
@@ -180,7 +175,6 @@ fun common(app: Application, config: Configuration) = module {
             oppgaveRepositoryV2 = get(),
             oppgaveKøRepository = get(),
             dataSource = get(),
-            refreshKlienter = get(named("refreshKlienter")),
             saksbehandlerRepository = get()
         )
     }
