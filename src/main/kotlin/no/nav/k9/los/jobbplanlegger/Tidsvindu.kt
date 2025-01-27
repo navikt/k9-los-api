@@ -5,12 +5,12 @@ import java.time.LocalDateTime
 import java.time.temporal.TemporalAdjusters
 
 sealed class Tidsvindu {
-    abstract fun nesteTidspunkt(nå: LocalDateTime): LocalDateTime
+    abstract fun nesteÅpningITidsvindu(nå: LocalDateTime): LocalDateTime
     abstract fun erInnenfor(nå: LocalDateTime): Boolean
     abstract fun komplement(): Tidsvindu
 
     data object ÅPENT : Tidsvindu() {
-        override fun nesteTidspunkt(nå: LocalDateTime): LocalDateTime {
+        override fun nesteÅpningITidsvindu(nå: LocalDateTime): LocalDateTime {
             return nå
         }
 
@@ -24,7 +24,7 @@ sealed class Tidsvindu {
     }
 
     data object LUKKET : Tidsvindu() {
-        override fun nesteTidspunkt(nå: LocalDateTime): LocalDateTime {
+        override fun nesteÅpningITidsvindu(nå: LocalDateTime): LocalDateTime {
             throw IllegalStateException("Kan ikke finne neste tidspunkt i lukket tidsvindu")
         }
 
@@ -63,7 +63,7 @@ sealed class Tidsvindu {
 class TidsvinduMedPerioder(
     private val perioder: List<DagligPeriode>
 ) : Tidsvindu() {
-    override fun nesteTidspunkt(nå: LocalDateTime): LocalDateTime {
+    override fun nesteÅpningITidsvindu(nå: LocalDateTime): LocalDateTime {
         if (erInnenfor(nå)) {
             return nå
         }
@@ -120,17 +120,6 @@ data class DagligPeriode(
         return startAvUken
             .plusDays(dagerFraMandagTilØnsketDag.toLong())
             .withHour(tidsperiode.fraKl)
-            .withMinute(0)
-            .withSecond(0)
-            .withNano(0)
-    }
-
-    fun sluttAvPeriode(referanse: LocalDateTime): LocalDateTime {
-        val startAvUken = referanse.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-        val dagerFraMandagTilØnsketDag = dag.value - DayOfWeek.MONDAY.value
-        return startAvUken
-            .plusDays(dagerFraMandagTilØnsketDag.toLong())
-            .withHour(tidsperiode.tilKl)
             .withMinute(0)
             .withSecond(0)
             .withNano(0)

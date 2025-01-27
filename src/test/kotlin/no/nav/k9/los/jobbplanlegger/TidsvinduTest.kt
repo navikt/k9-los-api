@@ -62,7 +62,7 @@ class TidsvinduTest {
     @Test
     fun `komplement, neste åpne tidspunkt, er ikke innenfor`() {
         val tidsvindu = Tidsvindu.hverdager(9, 17).komplement()
-        val nesteTidspunktKomplement = tidsvindu.nesteTidspunkt(LocalDateTime.of(2025, 1, 20, 9, 0, 1))
+        val nesteTidspunktKomplement = tidsvindu.nesteÅpningITidsvindu(LocalDateTime.of(2025, 1, 20, 9, 0, 1))
         assertThat(nesteTidspunktKomplement).isEqualTo(LocalDateTime.of(2025, 1, 20, 17, 0))
     }
 
@@ -70,14 +70,14 @@ class TidsvinduTest {
     fun `neste åpne tidspunkt, er innenfor`() {
         val tidsvindu = Tidsvindu.hverdager(9, 17)
 
-        val nesteTidspunkt = tidsvindu.nesteTidspunkt(LocalDateTime.of(2025, 1, 20, 9, 0))
+        val nesteTidspunkt = tidsvindu.nesteÅpningITidsvindu(LocalDateTime.of(2025, 1, 20, 9, 0))
         assertThat(nesteTidspunkt).isEqualTo(LocalDateTime.of(2025, 1, 20, 9, 0))
     }
 
     @Test
     fun `neste åpne tidspunkt komplement, er innenfor`() {
         val tidsvindu = Tidsvindu.hverdager(17, 9)
-        val nesteTidspunktKomplement = tidsvindu.nesteTidspunkt(LocalDateTime.of(2025, 1, 20, 9, 0))
+        val nesteTidspunktKomplement = tidsvindu.nesteÅpningITidsvindu(LocalDateTime.of(2025, 1, 20, 9, 0))
         assertThat(nesteTidspunktKomplement).isEqualTo(LocalDateTime.of(2025, 1, 20, 17, 0))
     }
 
@@ -85,7 +85,7 @@ class TidsvinduTest {
     fun `ikke mulig å finne åpent tidsvindu`() {
         val tidsvindu = Tidsvindu.ÅPENT.komplement()
         assertThrows<IllegalStateException> {
-             tidsvindu.nesteTidspunkt(LocalDateTime.of(2025, 1, 20, 9, 0))
+             tidsvindu.nesteÅpningITidsvindu(LocalDateTime.of(2025, 1, 20, 9, 0))
         }
     }
 }

@@ -52,13 +52,11 @@ sealed class PlanlagtJobb(
         blokk: suspend CoroutineScope.() -> Unit
     ) : PlanlagtJobb(navn, prioritet, blokk) {
         override fun førsteKjøretidspunkt(nå: LocalDateTime): LocalDateTime {
-            val nesteÅpneTidspunkt = tidsvindu.nesteTidspunkt(nå)
-            return maxOf(nå + startForsinkelse, nesteÅpneTidspunkt)
+            return maxOf(nå + startForsinkelse, tidsvindu.nesteÅpningITidsvindu(nå))
         }
 
         override fun nesteKjøretidspunkt(nå: LocalDateTime): LocalDateTime {
-            val nesteÅpneTidspunkt = tidsvindu.nesteTidspunkt(nå)
-            return maxOf(nå + intervall, nesteÅpneTidspunkt)
+            return maxOf(nå + intervall, tidsvindu.nesteÅpningITidsvindu(nå))
         }
     }
 
@@ -79,7 +77,7 @@ sealed class PlanlagtJobb(
             } else {
                 nå.plusHours(1).withMinute(nesteMinutt).withSecond(0).withNano(0)
             }
-            val nesteÅpneTidspunkt = tidsvindu.nesteTidspunkt(nå)
+            val nesteÅpneTidspunkt = tidsvindu.nesteÅpningITidsvindu(nå)
 
             return maxOf(nesteTidspunkt, nesteÅpneTidspunkt)
         }

@@ -180,7 +180,7 @@ class JobbplanleggerTest {
             navn = "tidsvindu-jobb",
             prioritet = 1,
             intervall = 1.hours,
-            tidsvindu = Tidsvindu.hverdager(10, 12)
+            tidsvindu = Tidsvindu.hverdager(10, 11)
         ) {
             antallKjøringer++
         }
@@ -189,7 +189,7 @@ class JobbplanleggerTest {
         repeat(50) {
             advanceLocalTime(1.days)
         }
-        assertThat(antallKjøringer, "Skal være 36 hverdager 50 dager fra 31/12/24, og dermed 36*2 kjøringer").isEqualTo(36 * 2)
+        assertThat(antallKjøringer, "Skal være 36 hverdager 50 dager fra 31/12/24, så 36 kjøringer").isEqualTo(36)
 
         jobbplanlegger.stopp()
     }
