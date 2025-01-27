@@ -3,6 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering
 import kotliquery.queryOf
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ManglerTilgangException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonUtløptException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
@@ -83,6 +84,8 @@ class ReservasjonKonverteringJobb(
                     loggFremgangForHver100(reservasjonTeller++, "Konvertert $reservasjonTeller reservasjoner")
                 } catch (e: ReservasjonUtløptException) {
                     log.info("Reservasjonen har blitt ugyldig før konvertering. Hopper over")
+                } catch (e: ManglerTilgangException) {
+                    log.error("Konvertering av reservasjon $nokkel feilet pga manglende tilgang", e.message)
                 }
             }
 
