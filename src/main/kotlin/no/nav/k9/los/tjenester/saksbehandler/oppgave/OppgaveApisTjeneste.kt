@@ -76,7 +76,7 @@ class OppgaveApisTjeneste(
                     oppgaveNøkkel.oppgaveEksternId
                 )
 
-                reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktiv(
+                reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktivMenSjekkLegacyFørst(
                     reservasjonsnøkkel = oppgaveV3.reservasjonsnøkkel,
                     reserverForId = reserverForSaksbehandler.id!!,
                     gyldigFra = reserverFra,

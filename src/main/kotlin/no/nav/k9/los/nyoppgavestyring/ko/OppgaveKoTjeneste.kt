@@ -239,7 +239,7 @@ class OppgaveKoTjeneste(
                     statistikkChannel.send(true)
                 }
                 // V1-greier til og med denne linjen
-                val reservasjon = reservasjonV3Tjeneste.taReservasjon(
+                val reservasjon = reservasjonV3Tjeneste.taReservasjonMenSjekkLegacyFørst(
                     reserverForId = innloggetBrukerId,
                     utføresAvId = innloggetBrukerId,
                     reservasjonsnøkkel = kandidatoppgave.reservasjonsnøkkel,

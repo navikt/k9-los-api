@@ -84,7 +84,7 @@ class BehandlingProsessEventTilbakeDtoBuilder(
             VURDER_TILBAKEKREVING to AksjonspunktStatus.UTFØRT,
             VURDER_FORELDELSE to AksjonspunktStatus.UTFØRT,
             FORESLÅ_VEDTAK to AksjonspunktStatus.OPPRETTET,
-            FATTE_VEDTAK to AksjonspunktStatus.OPPRETTET,
+            FATTE_VEDTAK to AksjonspunktStatus.AVBRUTT,
             VENT_PÅ_BRUKERTILBAKEMELDING to AksjonspunktStatus.UTFØRT,
             AVKLART_FAKTA_FEILUTBETALING to AksjonspunktStatus.UTFØRT,
         )

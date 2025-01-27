@@ -60,8 +60,8 @@ spec:
         groups:
           # 0000-GA-k9-beslutter
           - id: e5f1ba3d-c29f-4b0c-9cb1-b15fc4253fa3
-          # 0000-GA-GOSYS_UTVIDET
-          - id: 73ff0e76-f2b1-4586-8387-b33f15617381
+          # 0000-GA-Egne_ansatte
+          - id: e750ceb5-b70b-4d94-b4fa-9d22467b786b
           # 0000-GA-Strengt_Fortrolig_Adresse
           - id: ad7b87a6-9180-467c-affc-20a566b0fec0
           # 0000-GA-Fortrolig_Adresse
@@ -149,9 +149,9 @@ spec:
     # 0000-GA-k9-beslutter
     - name: BRUKER_GRUPPE_ID_BESLUTTER
       value: e5f1ba3d-c29f-4b0c-9cb1-b15fc4253fa3
-    # 0000-GA-GOSYS_UTVIDET
+    # 0000-GA-Egne_ansatte
     - name: BRUKER_GRUPPE_ID_EGENANSATT
-      value: 73ff0e76-f2b1-4586-8387-b33f15617381
+      value: e750ceb5-b70b-4d94-b4fa-9d22467b786b
     # 0000-GA-Strengt_Fortrolig_Adresse
     - name: BRUKER_GRUPPE_ID_KODE6
       value: ad7b87a6-9180-467c-affc-20a566b0fec0
