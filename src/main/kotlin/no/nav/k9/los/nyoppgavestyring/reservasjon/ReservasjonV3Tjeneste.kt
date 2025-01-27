@@ -434,20 +434,28 @@ class ReservasjonV3Tjeneste(
         reservasjonsnøkkel: String,
         tx: TransactionalSession
     ): ReservasjonV3 {
-        val legacyreservasjon = seEtterLegacyreservasjon(reservasjonsnøkkel, tx)
-        if (legacyreservasjon != null) {
-            return legacyreservasjon
-        } else {
-            val aktivReservasjon =
-                reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(reservasjonsnøkkel, tx)
-                    ?: throw FinnerIkkeDataException(
-                        "Fant ikke aktiv reservasjon for angitt reservasjonsnøkkel: ${
-                            Reservasjonsnøkkel(
-                                reservasjonsnøkkel
-                            )
-                        }"
-                    )
-            return aktivReservasjon
+        //konvertere reservasjonsnøkkel til legacy_eksternId
+        val oppgaver =
+            oppgaveV3Repository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjonsnøkkel)
+        if (oppgaver.isNotEmpty()) {
+            //sjekke om det finnes en legacy-reservasjon. Kan fjernes etter konvertering
+            val legacyReservasjon =
+                hentAktivReservasjonForReservasjonsnøkkel("legacy_" + oppgaver[0].eksternId, tx)
+            if (legacyReservasjon != null) {
+                return legacyReservasjon
+            }
         }
+
+        val aktivReservasjon =
+            reservasjonV3Repository.hentAktivReservasjonForReservasjonsnøkkel(reservasjonsnøkkel, tx)
+                ?: throw FinnerIkkeDataException(
+                    "Fant ikke aktiv reservasjon for angitt reservasjonsnøkkel: ${
+                        Reservasjonsnøkkel(
+                            reservasjonsnøkkel
+                        )
+                    }"
+                )
+        return aktivReservasjon
+
     }
 }
