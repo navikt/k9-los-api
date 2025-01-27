@@ -172,7 +172,7 @@ fun Application.k9Los() {
 
     val refreshOppgaveV3Jobb = with(RefreshK9v3(
         refreshK9v3Tjeneste = koin.get()
-    )) { start(koin.get<Channel<KøpåvirkendeHendelse>>(named("KøpåvirkendeHendelseChannel"))) }
+)) { start(koin.get<Channel<KøpåvirkendeHendelse>>(named("KøpåvirkendeHendelseChannel"))) }
 
     val oppdaterStatistikkJobb =
         oppdaterStatistikk(

@@ -14,6 +14,7 @@ import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
@@ -59,7 +60,7 @@ class K9TilbakeTilLosIT : AbstractK9LosIntegrationTest() {
 
         // Behandling sendt til beslutter, beslutter plukken oppgaven
         eventHandler.prosesser(eventBuilder.hosBeslutter().build())
-        assertIngenReservasjon(TestSaksbehandler.SARA)
+        assertReservasjon(TestSaksbehandler.SARA, 0)
         assertIngenReservasjon(TestSaksbehandler.BIRGER_BESLUTTER)
 
         taReservasjon(TestSaksbehandler.BIRGER_BESLUTTER, eksternId)
@@ -67,169 +68,20 @@ class K9TilbakeTilLosIT : AbstractK9LosIntegrationTest() {
 
         // Beslutter sender oppgaven tilbake til saksbehandler
         eventHandler.prosesser(eventBuilder.returFraBeslutter().build())
-        assertIngenReservasjon(TestSaksbehandler.SARA)
-        assertIngenReservasjon(TestSaksbehandler.BIRGER_BESLUTTER)
-
-        taReservasjon(TestSaksbehandler.SARA, eksternId)
         assertReservasjon(TestSaksbehandler.SARA, 1)
+        assertReservasjon(TestSaksbehandler.BIRGER_BESLUTTER, 0)
 
         eventHandler.prosesser(eventBuilder.foreslåVedtak().build())
-        assertReservasjon(TestSaksbehandler.SARA, 1)
-        assertIngenReservasjon(TestSaksbehandler.BIRGER_BESLUTTER)
 
         // Behandlingen sendes til ny beslutning
         eventHandler.prosesser(eventBuilder.hosBeslutter().build())
-        assertIngenReservasjon(TestSaksbehandler.SARA)
-        assertIngenReservasjon(TestSaksbehandler.BIRGER_BESLUTTER)
-
-        taReservasjon(TestSaksbehandler.BIRGER_BESLUTTER, eksternId)
+        assertReservasjon(TestSaksbehandler.SARA, 0)
         assertReservasjon(TestSaksbehandler.BIRGER_BESLUTTER, 1)
 
         // Oppgaven er avsluttet, begge reservasjonen skal annulleres
         eventHandler.prosesser(eventBuilder.avsluttet().build())
         assertIngenReservasjon(TestSaksbehandler.SARA)
         assertIngenReservasjon(TestSaksbehandler.BIRGER_BESLUTTER)
-    }
-
-    @Test
-    fun `Tilbakereservasjoner påvirkes ikke av punsj`() {
-        val eksternId = UUID.randomUUID()
-        val aktørId = "123456789"
-        val eventBuilder = BehandlingProsessEventTilbakeDtoBuilder(
-            eksternId = eksternId,
-            aktørId = aktørId,
-            ytelseTypeKode = FagsakYtelseType.PLEIEPENGER_SYKT_BARN
-        )
-
-        // Åpen oppgave plukkes av saksbehandler
-        eventHandler.prosesser(eventBuilder.opprettet().build())
-        taReservasjon(TestSaksbehandler.SARA, eksternId)
-        assertReservasjon(TestSaksbehandler.SARA, 1)
-        eventHandler.prosesser(eventBuilder.foreslåVedtak().build())
-
-        // Innkommende papirsøknad på samme aktør som har tilbakekrevingssak
-        val punsjId1 = UUID.randomUUID()
-        val punsjEventHandler = get<K9punsjEventHandler>()
-        val punsjEventDtoBuilder = PunsjEventDtoBuilder(eksternId = punsjId1, aktørId = aktørId, ytelse = FagsakYtelseType.PLEIEPENGER_SYKT_BARN)
-        punsjEventHandler.prosesser(punsjEventDtoBuilder.papirsøknad().build())
-
-        assertReservasjon(TestSaksbehandler.SARA, 1, Fagsystem.K9TILBAKE)
-
-        // Behandling sendt til beslutter og beslutter plukker oppgave
-        eventHandler.prosesser(eventBuilder.hosBeslutter().build())
-        taReservasjon(TestSaksbehandler.BIRGER_BESLUTTER, eksternId)
-
-        // Innkommende punsjoppgave på samme aktørId
-        val punsjId2 = UUID.randomUUID()
-        punsjEventHandler.prosesser(punsjEventDtoBuilder.medEksternId(punsjId2).papirsøknad().build())
-
-        // Saksbehandler har ikke fått noen ny reservasjon, beslutter har kun sin tilbake-beslutteroppgave
-        assertIngenReservasjon(TestSaksbehandler.SARA)
-        assertReservasjon(TestSaksbehandler.BIRGER_BESLUTTER, 1, Fagsystem.K9TILBAKE)
-
-        // Saksbehandler tar punsj reservasjon. Skal ikke påvirke tilbakeoppgave hos beslutter
-        taReservasjon(TestSaksbehandler.SARA, punsjId1)
-        assertReservasjon(TestSaksbehandler.SARA, 1, Fagsystem.PUNSJ)
-        assertReservasjon(TestSaksbehandler.BIRGER_BESLUTTER, 1, Fagsystem.K9TILBAKE)
-
-        // Birger tar den andre punsjoppgaven
-        taReservasjon(TestSaksbehandler.BIRGER_BESLUTTER, punsjId2)
-        val birgersReservasjoner = runBlocking { oppgaveApisTjeneste.hentReserverteOppgaverForSaksbehandler(TestSaksbehandler.BIRGER_BESLUTTER) }
-        assertThat(birgersReservasjoner
-            .mapNotNull { it.reservertOppgaveV1Dto?.system }
-        ).containsExactlyInAnyOrder(Fagsystem.K9TILBAKE.kode, Fagsystem.PUNSJ.kode)
-
-        // Tilbake sendes i retur, bare punsjreservasjonen igjen
-        eventHandler.prosesser(eventBuilder.returFraBeslutter().build())
-        assertReservasjon(TestSaksbehandler.BIRGER_BESLUTTER, 1, Fagsystem.PUNSJ)
-        assertReservasjon(TestSaksbehandler.SARA, 1, Fagsystem.PUNSJ)
-
-        // Tar beslutter reservasjonen igjen på tilbake
-        eventHandler.prosesser(eventBuilder.hosBeslutter().build())
-        assertReservasjon(TestSaksbehandler.BIRGER_BESLUTTER, 1, Fagsystem.PUNSJ)
-        taReservasjon(TestSaksbehandler.BIRGER_BESLUTTER, eksternId)
-
-        // Punsjer ferdig og har bare tilbake-oppgave igjen
-        punsjEventHandler.prosesser(punsjEventDtoBuilder.sendtInn(TestSaksbehandler.BIRGER_BESLUTTER).build())
-//        assertReservasjon(TestSaksbehandler.BIRGER_BESLUTTER, 1, Fagsystem.K9TILBAKE)
-    }
-
-    @Test
-    fun `Tilbakereservasjoner påvirkes ikke av k9sak`() {
-        val tilbakeEksternId = UUID.randomUUID()
-        val aktørId = "123456789"
-        val tilbakeEventBuilder = BehandlingProsessEventTilbakeDtoBuilder(
-            eksternId = tilbakeEksternId,
-            aktørId = aktørId,
-            ytelseTypeKode = FagsakYtelseType.PLEIEPENGER_SYKT_BARN
-        )
-
-        // Åpen oppgave plukkes av saksbehandler og sendes til beslutter
-        eventHandler.prosesser(tilbakeEventBuilder.opprettet().build())
-        taReservasjon(TestSaksbehandler.SARA, tilbakeEksternId)
-        assertReservasjon(TestSaksbehandler.SARA, 1)
-        eventHandler.prosesser(tilbakeEventBuilder.foreslåVedtak().build())
-        eventHandler.prosesser(tilbakeEventBuilder.hosBeslutter().build())
-
-        // Ny behandling i k9sak
-        val k9sakEksternId = UUID.randomUUID()
-        val k9sakEventBuilder = BehandlingProsessEventDtoBuilder(
-            eksternId = k9sakEksternId,
-            aktørId = aktørId,
-            ytelseType = FagsakYtelseType.PLEIEPENGER_SYKT_BARN
-        )
-        val k9sakEventHandler = get<K9sakEventHandler>()
-
-        // Saksbehandler behandler k9sak
-        k9sakEventHandler.prosesser(k9sakEventBuilder.vurderSykdom().build())
-        taReservasjon(TestSaksbehandler.SARA, k9sakEksternId)
-        runBlocking { oppgaveApisTjeneste.hentReserverteOppgaverForSaksbehandler(TestSaksbehandler.SARA) }.let { reservasjoner ->
-            assertThat(reservasjoner).hasSize(1)
-            assertThat(reservasjoner.first().reservertOppgaveV1Dto).isNull()
-            assertThat(reservasjoner.first().reserverteV3Oppgaver.first().oppgaveNøkkel.oppgaveEksternId).isEqualTo(k9sakEksternId.toString())
-        }
-
-        // Beslutter tar k9sak-oppgave (uten at det påvirker ureserverte tilbake-oppgaven)
-        k9sakEventHandler.prosesser(k9sakEventBuilder.hosBeslutter().build())
-        taReservasjon(TestSaksbehandler.BIRGER_BESLUTTER, k9sakEksternId)
-        runBlocking { oppgaveApisTjeneste.hentReserverteOppgaverForSaksbehandler(TestSaksbehandler.BIRGER_BESLUTTER) }.let { reservasjoner ->
-            assertThat(reservasjoner).hasSize(1)
-            assertThat(reservasjoner.first().reservertOppgaveV1Dto).isNull()
-            assertThat(reservasjoner.first().reserverteV3Oppgaver.first().oppgaveNøkkel.oppgaveEksternId).isEqualTo(k9sakEksternId.toString())
-        }
-
-        // Beslutter sender k9sak-oppgave i retur og har en skjult v3-reservasjon
-        k9sakEventHandler.prosesser(k9sakEventBuilder.returFraBeslutter().build())
-        runBlocking { oppgaveApisTjeneste.hentReserverteOppgaverForSaksbehandler(TestSaksbehandler.BIRGER_BESLUTTER) }.let { reservasjoner ->
-            assertThat(reservasjoner).hasSize(1)
-            assertThat(reservasjoner.first().reservertOppgaveV1Dto).isNull()
-            assertThat(reservasjoner.first().reserverteV3Oppgaver).isEmpty()
-        }
-
-        // Beslutter tar tilbake-oppgave og sender i retur
-        taReservasjon(TestSaksbehandler.BIRGER_BESLUTTER, tilbakeEksternId)
-        runBlocking { oppgaveApisTjeneste.hentReserverteOppgaverForSaksbehandler(TestSaksbehandler.BIRGER_BESLUTTER) }.let { reservasjoner ->
-            assertThat(reservasjoner).hasSize(2)
-            assertThat(reservasjoner.first { it.reservertOppgaveV1Dto != null }.reservertOppgaveV1Dto?.system).assertThat(Fagsystem.K9TILBAKE.kode)
-            assertThat(reservasjoner.flatMap { it.reserverteV3Oppgaver}).isEmpty()
-        }
-
-        eventHandler.prosesser(tilbakeEventBuilder.returFraBeslutter().build())
-        runBlocking { oppgaveApisTjeneste.hentReserverteOppgaverForSaksbehandler(TestSaksbehandler.BIRGER_BESLUTTER) }.let { reservasjoner ->
-            assertThat(reservasjoner).hasSize(1)
-            assertThat(reservasjoner.first().reservertOppgaveV1Dto).isNull()
-            assertThat(reservasjoner.first().reserverteV3Oppgaver).isEmpty()
-        }
-
-        // Både k9sak og tilbake klare hos beslutter med eksisterende k9-sak reservasjon og annullert tilbake
-        k9sakEventHandler.prosesser(k9sakEventBuilder.hosBeslutter().build())
-        eventHandler.prosesser(tilbakeEventBuilder.hosBeslutter().build())
-
-        runBlocking { oppgaveApisTjeneste.hentReserverteOppgaverForSaksbehandler(TestSaksbehandler.BIRGER_BESLUTTER) }.let { reservasjoner ->
-            assertThat(reservasjoner).hasSize(1)
-            assertThat(reservasjoner.first().reservertOppgaveV1Dto).isNull()
-            assertThat(reservasjoner.first().reserverteV3Oppgaver.first().oppgaveNøkkel.oppgaveEksternId).isEqualTo(k9sakEksternId.toString())
-        }
     }
 
     private fun taReservasjon(saksbehandler: Saksbehandler, eksternId: UUID) {
@@ -242,15 +94,6 @@ class K9TilbakeTilLosIT : AbstractK9LosIntegrationTest() {
         }
     }
 
-    private fun hentEnesteReservasjon(saksbehandler: Saksbehandler): ReservasjonV3Dto {
-        val oppgaveApisTjeneste = get<OppgaveApisTjeneste>()
-        return runBlocking {
-            oppgaveApisTjeneste.hentReserverteOppgaverForSaksbehandler(saksbehandler).also {
-                assertThat(it).hasSize(1)
-            }.first()
-        }
-    }
-
     private fun assertIngenReservasjon(saksbehandler: Saksbehandler) {
         val oppgaveApisTjeneste = get<OppgaveApisTjeneste>()
         runBlocking { assertThat(
@@ -258,14 +101,14 @@ class K9TilbakeTilLosIT : AbstractK9LosIntegrationTest() {
         ).isEmpty() }
     }
 
-    private fun assertReservasjon(saksbehandler: Saksbehandler, antallReservasjoner: Int, system: Fagsystem = Fagsystem.K9TILBAKE) {
+    private fun assertReservasjon(saksbehandler: Saksbehandler, antallReserverteOppgaver: Int) {
         val oppgaveApisTjeneste = get<OppgaveApisTjeneste>()
         val reservasjon = runBlocking { oppgaveApisTjeneste.hentReserverteOppgaverForSaksbehandler(saksbehandler) }
-        assertThat(reservasjon).hasSize(antallReservasjoner)
-        reservasjon.firstOrNull()?.let {
-            assertThat(it.reservertOppgaveV1Dto).isNotNull()
-            assertThat(it.reservertOppgaveV1Dto?.system).isEqualTo(system.kode)
+        assertThat(reservasjon).isNotEmpty()
+        assertThat(reservasjon).hasSize(1)
+        reservasjon.first().let {
+            assertThat(it.reserverteV3Oppgaver).hasSize(antallReserverteOppgaver)
+            it.reserverteV3Oppgaver.forEach {oppgave -> assertThat(oppgave.oppgaveNøkkel.oppgaveTypeEksternId).isEqualTo("k9tilbake")}
         }
     }
-
 }

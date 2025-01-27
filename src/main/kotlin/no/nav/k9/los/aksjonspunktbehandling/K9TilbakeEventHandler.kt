@@ -29,9 +29,6 @@ class K9TilbakeEventHandler(
     private val statistikkRepository: StatistikkRepository,
     private val statistikkChannel: Channel<Boolean>,
     private val reservasjonTjeneste: ReservasjonTjeneste,
-    private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
-    private val reservasjonOversetter: ReservasjonOversetter,
-    private val saksbehandlerRepository: SaksbehandlerRepository,
     private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
     private val k9TilbakeTilLosAdapterTjeneste : K9TilbakeTilLosAdapterTjeneste,
 ) : EventTeller {
@@ -56,15 +53,6 @@ class K9TilbakeEventHandler(
             if (modell.fikkEndretAksjonspunkt()) {
                 log.info("Fjerner reservasjon på oppgave ${oppgave.eksternId}")
                 reservasjonTjeneste.fjernReservasjon(oppgave)
-                val reservasjonV3 =
-                    reservasjonOversetter.hentAktivReservasjonFraGammelKontekst(oppgave)
-                reservasjonV3?.let {
-                    val identSomAnnullerer = if (oppgave.tilBeslutter) { event.ansvarligSaksbehandlerIdent } else { event.ansvarligBeslutterIdent ?: event.ansvarligSaksbehandlerIdent }
-                    identSomAnnullerer?.let {
-                        val saksbehandlerSomAnnullerer = runBlocking { saksbehandlerRepository.finnSaksbehandlerMedIdent(identSomAnnullerer)!! }
-                        reservasjonV3Tjeneste.annullerReservasjonHvisFinnes( reservasjonV3.reservasjonsnøkkel, "Tilbakekrav - annullerer ", saksbehandlerSomAnnullerer.id!!)
-                    }
-                }
             }
 
             OpentelemetrySpanUtil.span("k9TilbakeTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid") { k9TilbakeTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId!!) }

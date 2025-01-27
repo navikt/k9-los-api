@@ -206,10 +206,9 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         ReservasjonKonverteringJobb(
             config = get(),
-            reservasjonRepository = get(),
+            reservasjonV3Tjeneste = get(),
+            transactionalManager = get(),
             oppgaveRepository = get(),
-            reservasjonOversetter = get(),
-            saksbehandlerRepository = get(),
         )
     }
 
@@ -236,7 +235,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         ReservasjonOversetter(
             transactionalManager = get(),
             oppgaveV3Repository = get(),
-            saksbehandlerRepository = get(),
             reservasjonV3Tjeneste = get(),
             oppgaveV1Repository = get(),
             oppgaveV3RepositoryMedTxWrapper = get(),
@@ -304,9 +302,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             statistikkRepository = get(),
             statistikkChannel = get(named("statistikkRefreshChannel")),
             reservasjonTjeneste = get(),
-            reservasjonV3Tjeneste = get(),
-            reservasjonOversetter = get(),
-            saksbehandlerRepository = get(),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
             k9TilbakeTilLosAdapterTjeneste = get(),
         )
