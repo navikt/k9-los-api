@@ -45,21 +45,20 @@ class Jobbplanlegger(
         aktivePrioriteter.clear()
     }
 
-    private fun kanStarteJobbMedPrioritet(jobbPrioritet: Int): Boolean {
-        return aktivePrioriteter.values.none { aktivPrioritet -> aktivPrioritet < jobbPrioritet }
-    }
-
     private fun startJobb(status: JobbStatus) {
-        if (!status.erAktiv && kanStarteJobbMedPrioritet(status.jobb.prioritet)) {
+        synchronized(status) {
             status.erAktiv = true
             aktivePrioriteter[status.jobb.navn] = status.jobb.prioritet
 
             scope.launch {
                 try {
+                    println("try")
                     status.jobb.blokk(this)
-                } catch (e: Exception) {
-                    log.error("Feil ved kjøring av jobb ${status.jobb.navn}", e)
+                /*} catch (e: Exception) {
+                    println("catch")
+                    log.error("Feil ved kjøring av jobb ${status.jobb.navn}", e) */
                 } finally {
+                    println("finally")
                     status.erAktiv = false
                     aktivePrioriteter.remove(status.jobb.navn)
                     val nesteKjøretidspunkt = status.jobb.nesteKjøretidspunkt(tidtaker())
@@ -75,6 +74,12 @@ class Jobbplanlegger(
 
     private fun finnKjørbareJobber(): List<JobbStatus> {
         val nå = tidtaker()
-        return jobber.values.filter { status -> status.nesteKjøring <= nå }.sortedBy { it.jobb.prioritet }
+        val alleJobber = jobber
+            .values
+            .filter { status ->
+                status.nesteKjøring <= nå && !status.erAktiv && aktivePrioriteter.values.none { it < status.jobb.prioritet }
+            }
+        val høyestePrioritet = alleJobber.minOfOrNull { it.jobb.prioritet } ?: return emptyList()
+        return alleJobber.filter { it.jobb.prioritet == høyestePrioritet }
     }
 }

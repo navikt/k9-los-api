@@ -15,6 +15,7 @@ import java.time.LocalDateTime
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
@@ -203,7 +204,7 @@ class JobbplanleggerTest {
 
     @Test
     fun `test prioritering av jobber`() = runTest {
-        val rekkefølge = mutableListOf<Int>()
+        val rekkefølge = mutableListOf<String>()
         val jobbplanlegger = Jobbplanlegger(
             setOf(
                 PlanlagtJobb.KjørPåTidspunkt(
@@ -211,7 +212,7 @@ class JobbplanleggerTest {
                     prioritet = 2,
                     kjørTidligst = testTid.plusMinutes(1),
                     blokk = {
-                        rekkefølge.add(2)
+                        rekkefølge.add("lav")
                     }
                 ),
                 PlanlagtJobb.KjørPåTidspunkt(
@@ -219,18 +220,18 @@ class JobbplanleggerTest {
                     prioritet = 1,
                     kjørTidligst = testTid,
                     blokk = {
-                        rekkefølge.add(1)
+                        rekkefølge.add("høy")
                         delay(2.minutes)
                     }
                 )
             ), backgroundScope, testTidtaker
         )
         jobbplanlegger.start()
-        advanceLocalTime(1.minutes)
-        assertThat(rekkefølge).isEqualTo(listOf(1))
+        advanceLocalTime(1.minutes + 1.milliseconds)
+        assertThat(rekkefølge).isEqualTo(listOf("høy"))
 
-        advanceLocalTime(1.minutes + 1.seconds)
-        assertThat(rekkefølge).isEqualTo(listOf(1, 2))
+        advanceLocalTime(1.minutes)
+        assertThat(rekkefølge).isEqualTo(listOf("høy", "lav"))
 
         jobbplanlegger.stopp()
     }
