@@ -5,7 +5,7 @@ import java.time.LocalDateTime
 import kotlin.time.Duration
 import kotlin.time.toJavaDuration
 
-sealed class PlanlagtJobb(
+abstract class PlanlagtJobb(
     val navn: String,
     val prioritet: Int,
     val blokk: suspend CoroutineScope.() -> Unit,
