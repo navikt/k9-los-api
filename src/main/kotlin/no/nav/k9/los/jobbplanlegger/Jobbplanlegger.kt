@@ -8,8 +8,8 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 class Jobbplanlegger(
-    private val scope: CoroutineScope,
     private val planlagteJobber: Set<PlanlagtJobb>,
+    private val scope: CoroutineScope,
     private val tidtaker: () -> LocalDateTime = { LocalDateTime.now() },
     private val ventetidMellomJobber: Duration = 1.seconds,
 ) {

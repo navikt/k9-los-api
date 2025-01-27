@@ -36,18 +36,21 @@ class JobbplanleggerTest {
 
     @Test
     fun `test periodisk jobb kjører med riktig intervall`() = runTest {
-        val jobbplanleggerBuilder = JobbplanleggerBuilder(backgroundScope, testTidtaker)
         var antallKjøringer = 0
-        jobbplanleggerBuilder.planleggPeriodiskJobb(
-            navn = "test-periodisk",
-            prioritet = 1,
-            intervall = 5.minutes,
-            startForsinkelse = 1.minutes
-        ) {
-            antallKjøringer++
-        }
 
-        val jobbplanlegger = jobbplanleggerBuilder.build()
+        val jobbplanlegger = Jobbplanlegger(
+            setOf(
+                PlanlagtJobb.Periodisk(
+                    navn = "test-periodisk",
+                    prioritet = 1,
+                    intervall = 5.minutes,
+                    startForsinkelse = 1.minutes,
+                    blokk = {
+                        antallKjøringer++
+                    }
+                )
+            ), backgroundScope, testTidtaker
+        )
         jobbplanlegger.start()
 
         advanceLocalTime(1.minutes)
@@ -64,17 +67,17 @@ class JobbplanleggerTest {
         var jobKjørt = false
         val kjøreTidspunkt = testTid.plusMinutes(5)
 
-        val jobbplanleggerBuilder = JobbplanleggerBuilder(backgroundScope, testTidtaker)
+        val jobbplanlegger = Jobbplanlegger(
+            setOf(
+                PlanlagtJobb.KjørPåTidspunkt(
+                    navn = "tidligst-tidspunkt",
+                    prioritet = 1,
+                    kjørTidligst = kjøreTidspunkt,
+                    blokk = { jobKjørt = true }
+                )
+            ), backgroundScope, testTidtaker
+        )
 
-        jobbplanleggerBuilder.planleggKjørPåTidspunktJobb(
-            navn = "tidligst-tidspunkt",
-            prioritet = 1,
-            kjørTidligst = kjøreTidspunkt
-        ) {
-            jobKjørt = true
-        }
-
-        val jobbplanlegger = jobbplanleggerBuilder.build()
         jobbplanlegger.start()
         advanceLocalTime(5.minutes)
         assertThat(jobKjørt).isTrue()
@@ -86,20 +89,19 @@ class JobbplanleggerTest {
     fun `test kjør ikke senere enn tidspunkt jobb`() = runTest {
         var jobKjørt = false
 
-        val jobbplanleggerBuilder = JobbplanleggerBuilder(backgroundScope, testTidtaker)
-
-        jobbplanleggerBuilder.planleggKjørPåTidspunktJobb(
-            navn = "senest-tidspunkt",
-            prioritet = 1,
-            kjørSenest = testTid.plusMinutes(5)
-        ) {
-            jobKjørt = true
-        }
+        val jobbplanlegger = Jobbplanlegger(
+            setOf(
+                PlanlagtJobb.KjørPåTidspunkt(
+                    navn = "senest-tidspunkt",
+                    prioritet = 1,
+                    kjørSenest = testTid.plusMinutes(5),
+                    blokk = { jobKjørt = true }
+                )
+            ), backgroundScope, testTidtaker
+        )
         advanceLocalTime(5.minutes + 1.seconds)
-        val jobbplanlegger = jobbplanleggerBuilder.build()
         jobbplanlegger.start()
 
-        // loop 4 times, job should not run
         for (i in 1..4) {
             advanceLocalTime(1.seconds)
             assertThat(jobKjørt).isFalse()
@@ -113,17 +115,18 @@ class JobbplanleggerTest {
         var antallKjøringer = 0
         val testMinutt = (testTid.minute + 2) % 60
 
-        val jobbplanleggerBuilder = JobbplanleggerBuilder(backgroundScope, testTidtaker)
+        val jobbplanlegger = Jobbplanlegger(
+            setOf(
+                PlanlagtJobb.TimeJobb(
+                    navn = "time-jobb",
+                    prioritet = 1,
+                    tidsvindu = Tidsvindu.ÅPENT,
+                    minutter = listOf(testMinutt),
+                    blokk = { antallKjøringer++ }
+                )
+            ), backgroundScope, testTidtaker
+        )
 
-        jobbplanleggerBuilder.planleggTimeJobb(
-            navn = "time-jobb",
-            prioritet = 1,
-            minutter = listOf(testMinutt)
-        ) {
-            antallKjøringer++
-        }
-
-        val jobbplanlegger = jobbplanleggerBuilder.build()
         jobbplanlegger.start()
         advanceLocalTime(2.minutes)
         assertThat(antallKjøringer).isEqualTo(1)
@@ -138,26 +141,26 @@ class JobbplanleggerTest {
     fun `test jobb respekterer tidsvindu`() = runTest {
         var antallKjøringer = 0
 
-        val jobbplanleggerBuilder = JobbplanleggerBuilder(backgroundScope, testTidtaker)
-
-        jobbplanleggerBuilder.planleggPeriodiskJobb(
-            navn = "tidsvindu-jobb",
-            prioritet = 1,
-            intervall = 30.minutes,
-            startForsinkelse = 1.minutes,
-            tidsvindu = TidsvinduMedPerioder(
-                listOf(
-                    DagligPeriode(
-                        dag = testTid.dayOfWeek,
-                        tidsperiode = Tidsperiode(13, 14)
-                    )
+        val jobbplanlegger = Jobbplanlegger(
+            setOf(
+                PlanlagtJobb.Periodisk(
+                    navn = "tidsvindu-jobb",
+                    prioritet = 1,
+                    intervall = 30.minutes,
+                    startForsinkelse = 1.minutes,
+                    tidsvindu = TidsvinduMedPerioder(
+                        listOf(
+                            DagligPeriode(
+                                dag = testTid.dayOfWeek,
+                                tidsperiode = Tidsperiode(13, 14)
+                            )
+                        )
+                    ),
+                    blokk = { antallKjøringer++ }
                 )
-            )
-        ) {
-            antallKjøringer++
-        }
+            ), backgroundScope, testTidtaker
+        )
 
-        val jobbplanlegger = jobbplanleggerBuilder.build()
         jobbplanlegger.start()
         advanceLocalTime(61.minutes)
         assertThat(antallKjøringer).isEqualTo(1)
@@ -175,18 +178,20 @@ class JobbplanleggerTest {
         var antallKjøringer = 0
 
         testTid = LocalDateTime.of(2024, 12, 31, 12, 0)
-        val jobbplanleggerBuilder = JobbplanleggerBuilder(backgroundScope, testTidtaker, ventetidMellomJobber = 1.minutes)
 
-        jobbplanleggerBuilder.planleggPeriodiskJobb(
-            navn = "tidsvindu-jobb",
-            prioritet = 1,
-            intervall = 1.hours,
-            tidsvindu = Tidsvindu.hverdager(10, 11)
-        ) {
-            antallKjøringer++
-        }
+        val jobbplanlegger = Jobbplanlegger(
+            setOf(
+                PlanlagtJobb.Periodisk(
+                    navn = "tidsvindu-jobb",
+                    prioritet = 1,
+                    intervall = 1.days,
+                    startForsinkelse = 1.minutes,
+                    tidsvindu = Tidsvindu.hverdager(10, 11),
+                    blokk = { antallKjøringer++ }
+                )
+            ), backgroundScope, testTidtaker, ventetidMellomJobber = 1.hours
+        )
 
-        val jobbplanlegger = jobbplanleggerBuilder.build()
         jobbplanlegger.start()
         repeat(50) {
             advanceLocalTime(1.days)
@@ -199,25 +204,27 @@ class JobbplanleggerTest {
     @Test
     fun `test prioritering av jobber`() = runTest {
         val rekkefølge = mutableListOf<Int>()
-        val jobbplanleggerBuilder = JobbplanleggerBuilder(backgroundScope, testTidtaker)
-
-        jobbplanleggerBuilder.planleggOppstartJobb(
-            navn = "lav-prioritet",
-            prioritet = 2
-        ) {
-            rekkefølge.add(2)
-        }
-
-        jobbplanleggerBuilder.planleggOppstartJobb(
-            navn = "høy-prioritet",
-            prioritet = 1
-        ) {
-            rekkefølge.add(1)
-            delay(2.minutes)
-        }
-
-        val jobbplanlegger = jobbplanleggerBuilder.build()
-
+        val jobbplanlegger = Jobbplanlegger(
+            setOf(
+                PlanlagtJobb.KjørPåTidspunkt(
+                    navn = "lav-prioritet",
+                    prioritet = 2,
+                    kjørTidligst = testTid.plusMinutes(1),
+                    blokk = {
+                        rekkefølge.add(2)
+                    }
+                ),
+                PlanlagtJobb.KjørPåTidspunkt(
+                    navn = "høy-prioritet",
+                    prioritet = 1,
+                    kjørTidligst = testTid,
+                    blokk = {
+                        rekkefølge.add(1)
+                        delay(2.minutes)
+                    }
+                )
+            ), backgroundScope, testTidtaker
+        )
         jobbplanlegger.start()
         advanceLocalTime(1.minutes)
         assertThat(rekkefølge).isEqualTo(listOf(1))

@@ -29,10 +29,14 @@ abstract class PlanlagtJobb(
     class KjørPåTidspunkt(
         navn: String,
         prioritet: Int,
-        private val kjørTidligst: LocalDateTime,
-        private val kjørSenest: LocalDateTime,
+        private val kjørTidligst: LocalDateTime = LocalDateTime.MIN,
+        private val kjørSenest: LocalDateTime = LocalDateTime.MAX,
         blokk: suspend CoroutineScope.() -> Unit
     ) : PlanlagtJobb(navn, prioritet, blokk) {
+        init {
+            require(kjørSenest > kjørTidligst) { "kjørSenest må være etter kjørTidligst" }
+        }
+
         override fun førsteKjøretidspunkt(nå: LocalDateTime): LocalDateTime? {
             return when {
                 nå > kjørSenest -> null
@@ -46,7 +50,7 @@ abstract class PlanlagtJobb(
     class Periodisk(
         navn: String,
         prioritet: Int,
-        private val tidsvindu: Tidsvindu,
+        private val tidsvindu: Tidsvindu = Tidsvindu.ÅPENT,
         val intervall: Duration,
         private val startForsinkelse: Duration,
         blokk: suspend CoroutineScope.() -> Unit
@@ -67,6 +71,10 @@ abstract class PlanlagtJobb(
         private val minutter: List<Int>,
         blokk: suspend CoroutineScope.() -> Unit
     ) : PlanlagtJobb(navn, prioritet, blokk) {
+        init {
+            require(minutter.all { it in 0..59 }) { "Minutter må være mellom 0 og 59" }
+        }
+
         override fun førsteKjøretidspunkt(nå: LocalDateTime) = beregnNesteTimeKjøring(nå, minutter)
         override fun nesteKjøretidspunkt(nå: LocalDateTime) = beregnNesteTimeKjøring(nå, minutter)
 
