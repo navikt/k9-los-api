@@ -225,12 +225,13 @@ class ReservasjonV3Tjeneste(
             val oppgaver =
                 oppgaveV3Repository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjonsnøkkel)
             //sjekke om det finnes en legacy-reservasjon. Kan fjernes etter konvertering
-            val legacyReservasjon =
-                hentAktivReservasjonForReservasjonsnøkkel("legacy_" + oppgaver[0].eksternId, tx)
-            return legacyReservasjon
-        } else {
-            return null
+            if (oppgaver.isNotEmpty()) {
+                val legacyReservasjon =
+                    hentAktivReservasjonForReservasjonsnøkkel("legacy_" + oppgaver[0].eksternId, tx)
+                return legacyReservasjon
+            }
         }
+        return null
     }
 
     fun hentReservasjonerForSaksbehandler(saksbehandlerId: Long): List<ReservasjonV3MedOppgaver> {
