@@ -8,13 +8,13 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 class Jobbplanlegger(
-    private val planlagteJobber: Set<PlanlagtJobb>,
+    private val innkommendeJobber: Set<PlanlagtJobb>,
     private val scope: CoroutineScope,
     private val tidtaker: () -> LocalDateTime = { LocalDateTime.now() },
     private val ventetidMellomJobber: Duration = 1.seconds,
 ) {
     private val jobber = ConcurrentHashMap<String, JobbStatus>()
-    private var hovedJob: Job? = null
+    private var planleggerJob: Job? = null
     private var erStartet = false
     private val log = LoggerFactory.getLogger(Jobbplanlegger::class.java)
 
@@ -24,15 +24,8 @@ class Jobbplanlegger(
             return
         }
         erStartet = true
-
-        val nå = tidtaker()
-        planlagteJobber.forEach { jobb ->
-            jobb.førsteKjøretidspunkt(nå)?.let { tid ->
-                jobber[jobb.navn] = JobbStatus(jobb, tid)
-            }
-        }
-
-        hovedJob = scope.launch {
+        initialiserJobber()
+        planleggerJob = scope.launch {
             while (isActive) {
                 finnKjørbareJobber().forEach { startJobb(it) }
                 delay(ventetidMellomJobber)
@@ -40,11 +33,20 @@ class Jobbplanlegger(
         }
     }
 
+    private fun initialiserJobber() {
+        val nå = tidtaker()
+        innkommendeJobber.forEach { jobb ->
+            jobb.førsteKjøretidspunkt(nå)?.let { tid ->
+                jobber[jobb.navn] = JobbStatus(jobb, tid)
+            }
+        }
+    }
+
     fun stopp() {
         if (!erStartet) return
         erStartet = false
-        hovedJob?.cancel()
-        hovedJob = null
+        planleggerJob?.cancel()
+        planleggerJob = null
         jobber.values.forEach { it.erAktiv = false }
         jobber.clear()
     }

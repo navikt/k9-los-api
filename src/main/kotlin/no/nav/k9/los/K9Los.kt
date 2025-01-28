@@ -439,7 +439,7 @@ fun Application.konfigurerJobber(koin: Koin) {
         })
 
     val jobbplanlegger = Jobbplanlegger(
-        planlagteJobber = planlagteJobber,
+        innkommendeJobber = planlagteJobber,
         scope = CoroutineScope(Dispatchers.Default + SupervisorJob()),
     )
 
