@@ -372,23 +372,27 @@ private fun Route.api() {
         route("ny-oppgavestyring") {
             route("ko", { hidden = true }) { OppgaveKoApis() }
             route("oppgave", { hidden = true }) { OppgaveQueryApis() }
-            route(
-                "feltdefinisjon",
-                {
-                    hidden = true
-                }) { FeltdefinisjonApi() } // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
-            route(
-                "oppgavetype",
-                {
-                    hidden = true
-                }) { OppgavetypeApi() } // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
-            route(
-                "oppgave-v3",
-                {
-                    hidden = true
-                }) { OppgaveV3Api() } // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
             route("sok") { SøkeboksApi() }
             route("nokkeltall") { NøkkeltallV3Apis() }
+
+            // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
+            route("mottak") {
+                route(
+                    "feltdefinisjon",
+                    {
+                        hidden = true
+                    }) { FeltdefinisjonApi() }
+                route(
+                    "oppgavetype",
+                    {
+                        hidden = true
+                    }) { OppgavetypeApi() }
+                route(
+                    "oppgave-v3",
+                    {
+                        hidden = true
+                    }) { OppgaveV3Api() }
+            }
         }
     }
 }
