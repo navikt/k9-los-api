@@ -17,12 +17,8 @@ import io.ktor.server.plugins.callloging.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.routing.*
-import io.ktor.server.websocket.*
 import io.prometheus.client.hotspot.DefaultExports
-import kotlinx.coroutines.channels.BroadcastChannel
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.broadcast
-import kotlinx.coroutines.channels.produce
 import no.nav.helse.dusseldorf.ktor.auth.AuthStatusPages
 import no.nav.helse.dusseldorf.ktor.auth.allIssuers
 import no.nav.helse.dusseldorf.ktor.auth.multipleJwtIssuers
@@ -79,8 +75,6 @@ import no.nav.k9.los.tjenester.saksbehandler.NavAnsattApis
 import no.nav.k9.los.tjenester.saksbehandler.nokkeltall.SaksbehandlerNøkkeltallApis
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveApis
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.SaksbehandlerOppgavekoApis
-import no.nav.k9.los.tjenester.sse.RefreshKlienterWebSocket
-import no.nav.k9.los.tjenester.sse.SseEvent
 import org.koin.core.qualifier.named
 import org.koin.ktor.ext.getKoin
 import org.koin.ktor.plugin.Koin
@@ -145,13 +139,6 @@ fun Application.k9Los() {
         DefaultStatusPages()
         JacksonStatusPages()
         AuthStatusPages()
-    }
-
-    install(WebSockets) {
-        pingPeriod = Duration.ofSeconds(60)
-        timeout = Duration.ofSeconds(15)
-        maxFrameSize = Long.MAX_VALUE
-        masking = false
     }
 
     val køOppdatertProsessorJob =
@@ -282,13 +269,6 @@ fun Application.k9Los() {
         config = koin.get()
     ).kjør(kjørUmiddelbart = false)
 
-    // Server side events
-    val sseChannel = produce {
-        for (oppgaverOppdatertEvent in koin.get<Channel<SseEvent>>(named("refreshKlienter"))) {
-            send(oppgaverOppdatertEvent)
-        }
-    }.broadcast()
-
     install(CallIdRequired)
 
     install(CallLogging) {
@@ -313,7 +293,7 @@ fun Application.k9Los() {
             localSetup.initPunsjoppgaver(0)
             localSetup.initTilbakeoppgaver(0)
             localSetup.initK9SakOppgaver(0)
-            api(sseChannel)
+            api()
             route("/forvaltning") {
                 InnsiktApis()
                 forvaltningApis()
@@ -342,7 +322,7 @@ fun Application.k9Los() {
                         swaggerUI("openapi.json")
                     }
                 }
-                api(sseChannel)
+                api()
             }
         }
 
@@ -368,12 +348,7 @@ fun Application.k9Los() {
     }
 }
 
-private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
-
-    RefreshKlienterWebSocket(
-        sseChannel = sseChannel
-    )
-
+private fun Route.api() {
     route("api") {
         route("driftsmeldinger", { hidden = true }) {
             DriftsmeldingerApis()

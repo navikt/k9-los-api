@@ -66,7 +66,6 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallRe
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.*
-import no.nav.k9.los.tjenester.sse.SseEvent
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -80,9 +79,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single(named("oppgaveKøOppdatert")) {
         Channel<UUID>(Channel.UNLIMITED)
-    }
-    single(named("refreshKlienter")) {
-        Channel<SseEvent>(Channel.UNLIMITED)
     }
     single(named("oppgaveChannel")) {
         Channel<Oppgave>(Channel.UNLIMITED)
@@ -139,7 +135,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             dataSource = get(),
             oppgaveRepositoryV2 = get(),
             oppgaveKøOppdatert = get(named("oppgaveKøOppdatert")),
-            refreshKlienter = get(named("refreshKlienter")),
             oppgaveRefreshChannel = get(named("oppgaveRefreshChannel")),
             pepClient = get()
         )
@@ -156,9 +151,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgaveKøRepository = get(),
             oppgaveRepository = get(),
             oppgaveRepositoryV2 = get(),
-            dataSource = get(),
-            refreshKlienter = get(named("refreshKlienter")),
-            saksbehandlerRepository = get()
+            saksbehandlerRepository = get(),
+            dataSource = get()
         )
     }
 

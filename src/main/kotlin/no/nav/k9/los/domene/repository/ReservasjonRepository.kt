@@ -1,8 +1,6 @@
 package no.nav.k9.los.domene.repository
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -11,8 +9,6 @@ import no.nav.k9.los.db.util.InClauseHjelper
 import no.nav.k9.los.domene.lager.oppgave.Reservasjon
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.modell.OppgaveKø
-import no.nav.k9.los.tjenester.sse.RefreshKlienter.sendOppdaterReserverte
-import no.nav.k9.los.tjenester.sse.SseEvent
 import no.nav.k9.los.utils.LosObjectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -27,8 +23,7 @@ class ReservasjonRepository(
     private val oppgaveRepository: OppgaveRepository,
     private val oppgaveRepositoryV2: OppgaveRepositoryV2,
     private val saksbehandlerRepository: SaksbehandlerRepository,
-    private val dataSource: DataSource,
-    private val refreshKlienter: Channel<SseEvent>
+    private val dataSource: DataSource
 ) {
     companion object {
         val RESERVASJON_YTELSE_LOG = LoggerFactory.getLogger("ReservasjonYtelseDebug")
@@ -322,7 +317,6 @@ class ReservasjonRepository(
         if (refresh && forrigeReservasjon != json) {
             val refreshTid = measureTimeMillis {
                 loggFjerningAvReservasjon(reservasjon, forrigeReservasjon)
-                runBlocking { refreshKlienter.sendOppdaterReserverte() }
             }
             RESERVASJON_YTELSE_LOG.info("refresh av reservasjoner tok {}", refreshTid)
         }
