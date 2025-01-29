@@ -17,12 +17,8 @@ import io.ktor.server.plugins.callloging.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.routing.*
-import io.ktor.server.websocket.*
 import io.prometheus.client.hotspot.DefaultExports
-import kotlinx.coroutines.channels.BroadcastChannel
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.broadcast
-import kotlinx.coroutines.channels.produce
 import no.nav.helse.dusseldorf.ktor.auth.AuthStatusPages
 import no.nav.helse.dusseldorf.ktor.auth.allIssuers
 import no.nav.helse.dusseldorf.ktor.auth.multipleJwtIssuers
@@ -43,6 +39,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLo
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonKonverteringJobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.k9SakEksternId
@@ -78,8 +75,6 @@ import no.nav.k9.los.tjenester.saksbehandler.NavAnsattApis
 import no.nav.k9.los.tjenester.saksbehandler.nokkeltall.SaksbehandlerNøkkeltallApis
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveApis
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.SaksbehandlerOppgavekoApis
-import no.nav.k9.los.tjenester.sse.RefreshKlienterWebSocket
-import no.nav.k9.los.tjenester.sse.SseEvent
 import org.koin.core.qualifier.named
 import org.koin.ktor.ext.getKoin
 import org.koin.ktor.plugin.Koin
@@ -114,7 +109,7 @@ fun Application.k9Los() {
     val k9TilbakeTilLosAdapterTjeneste = koin.get<K9TilbakeTilLosAdapterTjeneste>()
     k9TilbakeTilLosAdapterTjeneste.setup()
 
-    if (LocalDateTime.now().isBefore(LocalDateTime.of(2025, 1, 16, 21, 0))) {
+    if (LocalDateTime.now().isBefore(LocalDateTime.of(2025, 1, 27, 21, 0))) {
         if (1 == 0) { //HAXX for å ikke kjøre jobb, men indikere at koden er i bruk og dermed ikke slettes
             //koin.get<ReservasjonKonverteringJobb>().kjørReservasjonskonvertering() //TODO slette
             //koin.get<K9SakTilLosLukkeFeiloppgaverTjeneste>().kjørFeiloppgaverVask() //TODO slette
@@ -122,8 +117,9 @@ fun Application.k9Los() {
             koin.get<K9PunsjTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
             koin.get<K9TilbakeTilLosHistorikkvaskTjeneste>().kjørHistorikkvask(pauseHvisDagtid = true)
             koin.get<K9KlageTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
+            koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask(pauseHvisDagtid = true)
         }
-        koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask(pauseHvisDagtid = true)
+        koin.get<ReservasjonKonverteringJobb>().kjørReservasjonskonvertering()
     }
 
     install(Authentication) {
@@ -143,13 +139,6 @@ fun Application.k9Los() {
         DefaultStatusPages()
         JacksonStatusPages()
         AuthStatusPages()
-    }
-
-    install(WebSockets) {
-        pingPeriod = Duration.ofSeconds(60)
-        timeout = Duration.ofSeconds(15)
-        maxFrameSize = Long.MAX_VALUE
-        masking = false
     }
 
     val køOppdatertProsessorJob =
@@ -172,7 +161,7 @@ fun Application.k9Los() {
 
     val refreshOppgaveV3Jobb = with(RefreshK9v3(
         refreshK9v3Tjeneste = koin.get()
-    )) { start(koin.get<Channel<KøpåvirkendeHendelse>>(named("KøpåvirkendeHendelseChannel"))) }
+)) { start(koin.get<Channel<KøpåvirkendeHendelse>>(named("KøpåvirkendeHendelseChannel"))) }
 
     val oppdaterStatistikkJobb =
         oppdaterStatistikk(
@@ -280,13 +269,6 @@ fun Application.k9Los() {
         config = koin.get()
     ).kjør(kjørUmiddelbart = false)
 
-    // Server side events
-    val sseChannel = produce {
-        for (oppgaverOppdatertEvent in koin.get<Channel<SseEvent>>(named("refreshKlienter"))) {
-            send(oppgaverOppdatertEvent)
-        }
-    }.broadcast()
-
     install(CallIdRequired)
 
     install(CallLogging) {
@@ -311,7 +293,7 @@ fun Application.k9Los() {
             localSetup.initPunsjoppgaver(0)
             localSetup.initTilbakeoppgaver(0)
             localSetup.initK9SakOppgaver(0)
-            api(sseChannel)
+            api()
             route("/forvaltning") {
                 InnsiktApis()
                 forvaltningApis()
@@ -340,7 +322,7 @@ fun Application.k9Los() {
                         swaggerUI("openapi.json")
                     }
                 }
-                api(sseChannel)
+                api()
             }
         }
 
@@ -366,12 +348,7 @@ fun Application.k9Los() {
     }
 }
 
-private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
-
-    RefreshKlienterWebSocket(
-        sseChannel = sseChannel
-    )
-
+private fun Route.api() {
     route("api") {
         route("driftsmeldinger", { hidden = true }) {
             DriftsmeldingerApis()

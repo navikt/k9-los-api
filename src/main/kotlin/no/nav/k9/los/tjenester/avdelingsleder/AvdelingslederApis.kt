@@ -94,10 +94,7 @@ internal fun Route.AvdelingslederApis() {
     get("/reservasjoner") {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {
-                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
-                    kotlin.coroutines.coroutineContext.idToken().getUsername()
-                )!!
-                call.respond(avdelingslederTjeneste.hentAlleAktiveReservasjonerV3(innloggetBruker))
+                call.respond(avdelingslederTjeneste.hentAlleAktiveReservasjonerV3())
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

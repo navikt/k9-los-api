@@ -39,8 +39,9 @@ class ReservasjonV3DtoBuilder(
         }
 
         val oppgaveV3Dtos = reservasjonMedOppgaver.oppgaverV3.map {
-
-            val person = pdlService.person(it.hentVerdi("aktorId")!!).person
+            val person = it.hentVerdi("aktorId")?.let {
+                aktørId -> pdlService.person(aktørId).person
+            }
             GenerellOppgaveV3Dto(it, person)
         }
         return ReservasjonV3Dto(reservasjonMedOppgaver.reservasjonV3, oppgaveV3Dtos, saksbehandler, endretAvNavn)
