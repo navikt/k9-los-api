@@ -13,13 +13,28 @@ fun Route.NøkkeltallV3Apis() {
     val requestContextService by inject<RequestContextService>()
     val pepClient by inject<IPepClient>()
 
-    get("/dagens-tall") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.erOppgaveStyrer()) {
-                call.respond(nøkkeltallService.dagensTall())
-            } else {
-                call.respond(HttpStatusCode.Forbidden)
+    route("dagens-tall") {
+        post("oppdater") {
+            requestContextService.withRequestContext(call) {
+                if (pepClient.erOppgaveStyrer()) {
+                    nøkkeltallService.oppdaterDagensTall(this)
+                    call.respond(HttpStatusCode.OK)
+                } else {
+                    call.respond(HttpStatusCode.Forbidden)
+                }
+            }
+        }
+
+        get {
+            requestContextService.withRequestContext(call) {
+                if (pepClient.erOppgaveStyrer()) {
+                    call.respond(nøkkeltallService.dagensTall())
+                } else {
+                    call.respond(HttpStatusCode.Forbidden)
+                }
             }
         }
     }
+
+
 }

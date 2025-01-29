@@ -1,5 +1,8 @@
 package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import no.nav.k9.los.domene.modell.BehandlingType
 import no.nav.k9.los.domene.modell.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
@@ -8,27 +11,30 @@ import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
+import no.nav.k9.los.utils.Cache
+import no.nav.k9.los.utils.CacheObject
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
-import kotlin.concurrent.fixedRateTimer
+
 
 class NøkkeltallService(
-    val queryService: OppgaveQueryService
+    private val queryService: OppgaveQueryService
 ) {
-    fun daemon() {
-        fixedRateTimer(
-            name = "NøkkeltallCacheoppdaterer",
-            daemon = true,
-            period = TimeUnit.MINUTES.toMillis(5),
-        ) {
-            val nå = LocalDateTime.now()
-            val dagensTall = dagensTall()
-            //lagre
+    private val dagensTallCache = Cache<LocalDate, DagensTallResponse.Suksess>(10)
+
+    fun oppdaterDagensTall(scope: CoroutineScope) {
+        scope.launch(Dispatchers.IO) {
+            dagensTallCache.removeExpiredObjects(LocalDateTime.now())
+            val dagensTall = hentDagensTall()
+            dagensTallCache.set(LocalDate.now(), CacheObject(dagensTall, LocalDateTime.now().plusDays(1)))
         }
     }
 
     fun dagensTall(): DagensTallResponse {
+        return dagensTallCache.get(LocalDate.now())?.value ?: DagensTallResponse.Feil("Har ikke lastet inn dagens tall ennå")
+    }
+
+    private fun hentDagensTall(): DagensTallResponse.Suksess {
         val ytelser = listOf(
             FagsakYtelseType.OMSORGSPENGER,
             FagsakYtelseType.OMSORGSDAGER,
@@ -174,7 +180,7 @@ class NøkkeltallService(
             )
         )
 
-        return DagensTallResponse(
+        return DagensTallResponse.Suksess(
             oppdatertTidspunkt = LocalDateTime.now(),
             hovedgrupper = DagensTallHovedgruppe.entries.map { KodeOgNavn(it.name, it.navn) },
             undergrupper = DagensTallUndergruppe.entries.map { KodeOgNavn(it.name, it.navn) },

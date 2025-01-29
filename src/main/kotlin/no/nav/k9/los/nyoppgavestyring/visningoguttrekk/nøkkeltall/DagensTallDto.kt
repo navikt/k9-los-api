@@ -4,12 +4,16 @@ import no.nav.k9.los.domene.modell.BehandlingType
 import no.nav.k9.los.domene.modell.FagsakYtelseType
 import java.time.LocalDateTime
 
-data class DagensTallResponse(
-    val oppdatertTidspunkt: LocalDateTime,
-    val hovedgrupper: List<KodeOgNavn>,
-    val undergrupper: List<KodeOgNavn>,
-    val tall: List<DagensTallDto>
-)
+sealed class DagensTallResponse {
+    data class Suksess(
+        val oppdatertTidspunkt: LocalDateTime,
+        val hovedgrupper: List<KodeOgNavn>,
+        val undergrupper: List<KodeOgNavn>,
+        val tall: List<DagensTallDto>
+    ) : DagensTallResponse()
+
+    data class Feil(val feilmelding: String): DagensTallResponse()
+}
 
 data class KodeOgNavn(
     val kode: String,
@@ -34,7 +38,7 @@ enum class DagensTallHovedgruppe(val navn: String) {
     PUNSJ("Punsj");
 
     companion object {
-        fun fraFagsakYtelseType(fagsakYtelseType: FagsakYtelseType) : DagensTallHovedgruppe {
+        fun fraFagsakYtelseType(fagsakYtelseType: FagsakYtelseType): DagensTallHovedgruppe {
             return when (fagsakYtelseType) {
                 FagsakYtelseType.PLEIEPENGER_SYKT_BARN -> PLEIEPENGER_SYKT_BARN
                 FagsakYtelseType.OMSORGSPENGER -> OMSORGSPENGER
@@ -52,7 +56,7 @@ enum class DagensTallUndergruppe(val navn: String) {
     REVURDERING("Revurdering");
 
     companion object {
-        fun fraBehandlingType(behandlingType: BehandlingType) : DagensTallUndergruppe {
+        fun fraBehandlingType(behandlingType: BehandlingType): DagensTallUndergruppe {
             return when (behandlingType) {
                 BehandlingType.FORSTEGANGSSOKNAD -> FORSTEGANGSSOKNAD
                 BehandlingType.REVURDERING -> REVURDERING

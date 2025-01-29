@@ -32,8 +32,6 @@ object OppgaveQueryToSqlMapper {
         if (request.fjernReserverte) { queryBuilder.utenReservasjoner() }
         request.avgrensning?.let { queryBuilder.medPaging(it.limit, it.offset) }
         queryBuilder.medAntallSomResultat()
-        println("-------------------------------------------------------")
-        println(queryBuilder.unsafeDebug())
         return queryBuilder
     }
 
