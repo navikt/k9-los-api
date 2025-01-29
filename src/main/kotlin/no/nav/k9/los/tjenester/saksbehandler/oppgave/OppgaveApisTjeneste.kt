@@ -37,21 +37,6 @@ class OppgaveApisTjeneste(
     ): OppgaveStatusDto {
         val reserverFra = LocalDateTime.now()
         val oppgaveNøkkel = oppgaveIdMedOverstyringDto.oppgaveNøkkel
-        /*
-         1. Reserver i V1-modellen
-         2. Reserver i V3-modellen
-         3. Returner status fra V3.
-         -- V1 er i praksis en skyggekopi for sikring av evt rollback
-         */
-
-        // Fjernes når V1 skal vekk
-        oppgaveTjeneste.reserverOppgave(
-            innloggetBruker.brukerIdent!!,
-            oppgaveIdMedOverstyringDto.overstyrIdent,
-            UUID.fromString(oppgaveNøkkel.oppgaveEksternId),
-            oppgaveIdMedOverstyringDto.overstyrSjekk,
-            oppgaveIdMedOverstyringDto.overstyrBegrunnelse
-        )
 
         val reserverForSaksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(
             oppgaveIdMedOverstyringDto.overstyrIdent ?: innloggetBruker.brukerIdent!!
@@ -115,15 +100,6 @@ class OppgaveApisTjeneste(
         reserverTil: LocalDate? = null,
         begrunnelse: String? = null
     ): ReservasjonV3Dto {
-        // Fjernes når V1 skal vekk
-        try {
-            oppgaveTjeneste.endreReservasjonPåOppgave(oppgaveNøkkel, tilBrukerIdent, reserverTil, begrunnelse)
-        } catch (_: NullPointerException) {
-        } catch (_: IllegalArgumentException) {
-            //ReservasjonV1 annullerer noen reservasjoner som V3 ikke annullerer, og da kan det hende at det ikke finnes
-            //noen V1-reservasjon å endre på
-        }
-
         val tilSaksbehandler =
             tilBrukerIdent?.let { saksbehandlerRepository.finnSaksbehandlerMedIdent(it) }
 
@@ -151,14 +127,6 @@ class OppgaveApisTjeneste(
         forlengReservasjonDto: ForlengReservasjonDto,
         innloggetBruker: Saksbehandler
     ): ReservasjonV3Dto {
-        // Fjernes når V1 skal vekk
-        try {
-            oppgaveTjeneste.forlengReservasjonPåOppgave(UUID.fromString(forlengReservasjonDto.oppgaveNøkkel.oppgaveEksternId))
-        } catch (e: NullPointerException) {
-            //ReservasjonV1 annullerer noen reservasjoner som V3 ikke annullerer, og da kan det hende at det ikke finnes
-            //noen V1-reservasjon å endre på
-        }
-
         val reservasjonsnøkkel =
             reservasjonOversetter.hentReservasjonsnøkkelForOppgavenøkkel(forlengReservasjonDto.oppgaveNøkkel)
 
@@ -180,18 +148,6 @@ class OppgaveApisTjeneste(
         params: FlyttReservasjonId,
         innloggetBruker: Saksbehandler
     ): ReservasjonV3Dto {
-        // Fjernes når V1 skal vekk
-        try {
-            oppgaveTjeneste.flyttReservasjon(
-                UUID.fromString(params.oppgaveNøkkel.oppgaveEksternId),
-                params.brukerIdent,
-                params.begrunnelse
-            )
-        } catch (e: NullPointerException) {
-            //ReservasjonV1 annullerer noen reservasjoner som V3 ikke annullerer, og da kan det hende at det ikke finnes
-            //noen V1-reservasjon å endre på
-        }
-
         val tilSaksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(
             params.brukerIdent
         )!!
@@ -214,17 +170,6 @@ class OppgaveApisTjeneste(
         innloggetBruker: Saksbehandler,
         oppgaveNøkkelDto: OppgaveNøkkelDto,
     ) {
-        // Fjernes når V1 skal vekk
-        try {
-            oppgaveTjeneste.frigiReservasjon(
-                uuid = UUID.fromString(oppgaveNøkkelDto.oppgaveEksternId),
-                begrunnelse = ""
-            )
-        } catch (e: NullPointerException) {
-            //ReservasjonV1 annullerer noen reservasjoner som V3 ikke annullerer, og da kan det hende at det ikke finnes
-            //noen V1-reservasjon å endre på
-        }
-
         val reservasjonsnøkkel = reservasjonOversetter.hentReservasjonsnøkkelForOppgavenøkkel(oppgaveNøkkelDto)
 
         val annulleringUtført = reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(

@@ -27,7 +27,6 @@ class K9sakEventHandler constructor(
     private val reservasjonRepository: ReservasjonRepository,
     private val statistikkChannel: Channel<Boolean>,
     private val statistikkRepository: StatistikkRepository,
-    private val reservasjonTjeneste: ReservasjonTjeneste,
     private val k9SakTilLosAdapterTjeneste: K9SakTilLosAdapterTjeneste,
     private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
 ) : EventTeller {
