@@ -129,7 +129,7 @@ fun Route.OppgaveKoApis() {
 
     get("/{id}/oppgaver") {
         requestContextService.withRequestContext(call) {
-            if (pepClient.harTilgangTilReserveringAvOppgaver()) {
+            if (pepClient.harBasisTilgang()) {
                 val oppgavekøId = call.parameters["id"]!!
                 call.respond(
                     oppgaveKoTjeneste.hentOppgaverFraKø(
