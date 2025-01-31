@@ -4,6 +4,10 @@ import java.time.LocalDateTime
 
 data class JobbStatus(
     val jobb: PlanlagtJobb,
-    @Volatile var nesteKjøring: LocalDateTime,
+    @Volatile var nesteKjøring: Kjøretidspunkt,
     var erAktiv: Boolean = false
-)
+) {
+    fun kanKjøres(nå: LocalDateTime): Boolean {
+        return !erAktiv && nesteKjøring.kanKjøres(nå)
+    }
+}

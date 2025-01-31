@@ -36,8 +36,14 @@ class Jobbplanlegger(
     private fun initialiserJobber() {
         val nå = tidtaker()
         innkommendeJobber.forEach { jobb ->
-            jobb.førsteKjøretidspunkt(nå)?.let { tid ->
-                jobber[jobb.navn] = JobbStatus(jobb, tid)
+            when (val kjøretidspunkt = jobb.førsteKjøretidspunkt(nå)) {
+                is Kjøretidspunkt.KjørIFremtiden, Kjøretidspunkt.KlarTilKjøring -> {
+                    jobber[jobb.navn] = JobbStatus(jobb, kjøretidspunkt)
+                }
+
+                is Kjøretidspunkt.SkalIkkeKjøres -> {
+                    // Ignorerer jobben
+                }
             }
         }
     }
@@ -53,18 +59,21 @@ class Jobbplanlegger(
 
     private fun startJobb(status: JobbStatus) {
         if (status.erAktiv) return
-
         status.erAktiv = true
+
         scope.launch {
             try {
                 status.jobb.blokk(this)
             } finally {
                 status.erAktiv = false
-                val nesteKjøretidspunkt = status.jobb.nesteKjøretidspunkt(tidtaker())
-                if (nesteKjøretidspunkt == null) {
-                    jobber.remove(status.jobb.navn)
-                } else {
-                    status.nesteKjøring = nesteKjøretidspunkt
+                when (val nesteKjøretidspunkt = status.jobb.nesteKjøretidspunkt(tidtaker())) {
+                    is Kjøretidspunkt.KjørIFremtiden, Kjøretidspunkt.KlarTilKjøring -> {
+                        status.nesteKjøring = nesteKjøretidspunkt
+                    }
+
+                    is Kjøretidspunkt.SkalIkkeKjøres -> {
+                        jobber.remove(status.jobb.navn)
+                    }
                 }
             }
         }
@@ -73,13 +82,14 @@ class Jobbplanlegger(
     private fun finnKjørbareJobber(): List<JobbStatus> {
         val nå = tidtaker()
         return jobber.values
-            .filter { status ->
-                status.nesteKjøring <= nå && !status.erAktiv &&
-                        jobber.values.none { it.erAktiv && it.jobb.prioritet < status.jobb.prioritet }
-            }
+            .filter { it.kanKjøres(nå) }
+            .filter { kjørerIngenJobberMedHøyerePrioritet(it) }
             .groupBy { it.jobb.prioritet }
             .minByOrNull { it.key }
             ?.value
             .orEmpty()
     }
+
+    private fun kjørerIngenJobberMedHøyerePrioritet(jobbStatus: JobbStatus) =
+        jobber.values.none { it.erAktiv && it.jobb.prioritet < jobbStatus.jobb.prioritet }
 }
