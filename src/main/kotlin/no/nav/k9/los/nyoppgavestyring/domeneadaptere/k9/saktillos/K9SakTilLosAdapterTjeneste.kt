@@ -91,7 +91,7 @@ class K9SakTilLosAdapterTjeneste(
     }
 
     @WithSpan
-    private fun spillAvBehandlingProsessEventer() {
+    fun spillAvBehandlingProsessEventer() {
         log.info("Starter avspilling av BehandlingProsessEventer")
         val tidKjøringStartet = System.currentTimeMillis()
 
