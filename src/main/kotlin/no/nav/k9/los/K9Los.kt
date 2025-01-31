@@ -61,6 +61,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeApi
 import no.nav.k9.los.nyoppgavestyring.pep.PepCacheOppdaterer
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryApis
 import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksApi
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallV3Apis
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederApis
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.DataeksportApis
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallApis
@@ -364,7 +365,7 @@ private fun Route.api() {
             SaksbehandlerOppgavekoApis()
             SaksbehandlerNøkkeltallApis()
         }
-        route("avdelingsleder", { hidden = true }) {
+        route("avdelingsleder") {
             AvdelingslederApis()
             route("oppgavekoer") {
                 AvdelingslederOppgavekøApis() // Erstattet av OppgaveKoApis i V3
@@ -387,6 +388,7 @@ private fun Route.api() {
             route("oppgavetype", { hidden = true }) { OppgavetypeApi() } // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
             route("oppgave-v3", { hidden = true }) { OppgaveV3Api() } // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
             route("sok") { SøkeboksApi() }
+            route("nokkeltall") { NøkkeltallV3Apis() }
         }
     }
 }
