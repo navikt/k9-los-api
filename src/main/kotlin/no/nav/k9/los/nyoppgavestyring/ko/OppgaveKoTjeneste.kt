@@ -14,10 +14,10 @@ import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.eventhandler.DetaljerMetrikker
-import no.nav.k9.los.integrasjon.abac.Action
-import no.nav.k9.los.integrasjon.abac.Auditlogging
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.pdl.IPdlService
+import no.nav.k9.los.integrasjon.pdl.fnr
+import no.nav.k9.los.integrasjon.pdl.navn
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveId
@@ -25,14 +25,21 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.query.Avgrensning
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgavefeltverdi
+import no.nav.k9.los.nyoppgavestyring.ko.dto.NesteOppgaverFraKoDto
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.OrderFelt
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgaverad
 import no.nav.k9.los.nyoppgavestyring.reservasjon.AlleredeReservertException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ManglerTilgangException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.GenerellOppgaveV3Dto
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
+import no.nav.k9.los.tjenester.saksbehandler.IIdToken
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import no.nav.k9.los.utils.Cache
 import no.nav.k9.los.utils.leggTilDagerHoppOverHelg
@@ -57,6 +64,7 @@ class OppgaveKoTjeneste(
     private val pepClient: IPepClient,
     private val statistikkChannel: Channel<Boolean>,
     private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
+    private val feltdefinisjonTjeneste: FeltdefinisjonTjeneste,
 ) {
     private val log = LoggerFactory.getLogger(OppgaveKoTjeneste::class.java)
 
@@ -72,27 +80,119 @@ class OppgaveKoTjeneste(
     suspend fun hentOppgaverFraKø(
         oppgaveKoId: Long,
         ønsketAntallSaker: Long,
-        fjernReserverte: Boolean = false
-    ): List<GenerellOppgaveV3Dto> {
+        fjernReserverte: Boolean = false,
+        idToken: IIdToken
+    ): NesteOppgaverFraKoDto {
         val ko = oppgaveKoRepository.hent(oppgaveKoId, pepClient.harTilgangTilKode6())
 
-        val køoppgaveIder = oppgaveQueryService.queryForOppgaveEksternId(QueryRequest(ko.oppgaveQuery, fjernReserverte = fjernReserverte, Avgrensning.maxAntall(ønsketAntallSaker)))
-        val oppgaver = mutableListOf<GenerellOppgaveV3Dto>()
-        for (eksternOppgaveId in køoppgaveIder) {
-            val oppgave = oppgaveRepositoryTxWrapper.hentOppgave(eksternOppgaveId.område, eksternOppgaveId.eksternId)
-
-            if (!pepClient.harTilgangTilOppgaveV3(oppgave, Action.read, Auditlogging.LOGG_VED_PERMIT)) {
-                continue
+        if (ko.oppgaveQuery.order.isNotEmpty()) {
+            for (orderFelt in ko.oppgaveQuery.order) {
+                when (orderFelt) {
+                    is EnkelOrderFelt -> EnkelSelectFelt(orderFelt.område, orderFelt.kode)
+                }
             }
+        } else EnkelSelectFelt("K9", "mottattDato")
 
-            val person = oppgave.hentVerdi("aktorId")?.let { pdlService.person(it).person }
-
-            oppgaver.add(GenerellOppgaveV3Dto(oppgave, person))
-            if (oppgaver.size >= ønsketAntallSaker) {
-                break
+        val orderFelt = ko.oppgaveQuery.order[0]?.let { orderFelt ->
+            when (orderFelt) {
+                is EnkelOrderFelt -> EnkelSelectFelt(orderFelt.område, orderFelt.kode)
             }
         }
-        return oppgaver.toList()
+
+        val selects = genererSelects(ko)
+
+        val køRespons = oppgaveQueryService.query(
+            QueryRequest(
+                oppgaveQuery = ko.oppgaveQuery.copy(select = selects),
+                fjernReserverte = fjernReserverte,
+                avgrensning = Avgrensning.maxAntall(ønsketAntallSaker)
+            ),
+            idToken
+        )
+
+        return byggDto(køRespons, ko.oppgaveQuery.order)
+    }
+
+    private fun genererSelects(ko: OppgaveKo): List<EnkelSelectFelt> {
+        val orderFelt = if (ko.oppgaveQuery.order.isNotEmpty()) {
+            ko.oppgaveQuery.order.map {
+                val orderFelt = it as EnkelOrderFelt
+                EnkelSelectFelt(orderFelt.område, orderFelt.kode)
+            }
+        } else {
+            listOf(EnkelSelectFelt("K9", "mottattDato"))
+        }
+
+        val selects =
+            mutableListOf(
+            EnkelSelectFelt(
+                "K9",
+                "aktorId"
+            ),
+            EnkelSelectFelt(
+                "K9",
+                "saksnummer"
+            ),
+            EnkelSelectFelt(
+                "K9",
+                "journalpostId"
+            ),
+            EnkelSelectFelt(
+                "K9",
+                "behandlingTypekode"
+            ),
+        )
+        selects.addAll(orderFelt)
+        return selects
+    }
+
+    private suspend fun byggDto(
+        køRespons: List<Oppgaverad>,
+        orderFelter: List<OrderFelt>
+    ): NesteOppgaverFraKoDto {
+        val rader = køRespons.map { rad ->
+            rad.copy(felter = rad.felter.map { feltverdi ->
+                if (feltverdi.kode == "aktorId") {
+                    Oppgavefeltverdi(
+                        område = "Generert",
+                        kode = "Søker",
+                        pdlService.person(feltverdi.verdi as String).person?.let { "${it.navn()} ${it.fnr()}" }
+                            ?: "Ukjent navn Ukjent fnummer"
+                    )
+                } else if (feltverdi.kode == "saksnummer") {
+                    //saksnummer og journalpostId slås sammen til ett felt. Antar at kun en av verdiene er populert
+                    Oppgavefeltverdi(
+                        område = "Generert",
+                        kode = "Id",
+                        verdi = feltverdi.verdi
+                    )
+                } else if (feltverdi.kode == "journalpostId") {
+                    Oppgavefeltverdi(
+                        område = "Generert",
+                        kode = "Id",
+                        verdi = feltverdi.verdi
+                    )
+                }
+                feltverdi
+            })
+        }
+
+        val kolonner = mutableListOf(
+            "Søker",
+            "Id",
+            "Behandlingstype"
+        )
+        kolonner.addAll(orderFelter.map {
+            val orderFelt = it as EnkelOrderFelt
+            val visningsnavn =
+                feltdefinisjonTjeneste.hent(orderFelt.område!!).hentFeltdefinisjon(orderFelt.kode).visningsnavn
+            visningsnavn
+        })
+
+        return NesteOppgaverFraKoDto(
+            kolonner = kolonner,
+            rader = rader
+        )
     }
 
     @WithSpan
@@ -108,8 +208,6 @@ class OppgaveKoTjeneste(
                 skjermet = skjermet
             )
         }
-
-        
     }
 
     @WithSpan
@@ -169,7 +267,16 @@ class OppgaveKoTjeneste(
     ): Pair<Oppgave, ReservasjonV3>? {
         return DetaljerMetrikker.time("taReservasjonFraKø", "hele", "$oppgaveKoId") {
             doTaReservasjonFraKø(innloggetBrukerId, oppgaveKoId, coroutineContext)
-                .also { it.let { antallOppgaverCache.decrementValue(AntallOppgaverForKøCacheKey(oppgaveKoId, filtrerReserverte = true)) } } //oppdater cache ved å redusere antall dersom reservasjon ble tatt
+                .also {
+                    it.let {
+                        antallOppgaverCache.decrementValue(
+                            AntallOppgaverForKøCacheKey(
+                                oppgaveKoId,
+                                filtrerReserverte = true
+                            )
+                        )
+                    }
+                } //oppdater cache ved å redusere antall dersom reservasjon ble tatt
         }
     }
 
@@ -180,7 +287,12 @@ class OppgaveKoTjeneste(
     ): Pair<Oppgave, ReservasjonV3>? {
         log.info("taReservasjonFraKø, oppgaveKøId: $oppgaveKoId")
         val skjermet = runBlocking(coroutineContext) { pepClient.harTilgangTilKode6() }
-        val oppgavekø = DetaljerMetrikker.time("taReservasjonFraKø", "hentKø", "$oppgaveKoId" ) { oppgaveKoRepository.hent(oppgaveKoId, skjermet) }
+        val oppgavekø = DetaljerMetrikker.time("taReservasjonFraKø", "hentKø", "$oppgaveKoId") {
+            oppgaveKoRepository.hent(
+                oppgaveKoId,
+                skjermet
+            )
+        }
 
         var antallKandidaterEtterspurt = 1
         while (true) {
