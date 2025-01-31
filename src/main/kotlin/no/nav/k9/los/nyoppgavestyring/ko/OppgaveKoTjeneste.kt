@@ -108,6 +108,8 @@ class OppgaveKoTjeneste(
                 skjermet = skjermet
             )
         }
+
+        
     }
 
     @WithSpan
