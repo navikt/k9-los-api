@@ -50,7 +50,7 @@ class JobbplanleggerTest {
                         antallKjøringer++
                     }
                 )
-            ), backgroundScope, testTidtaker
+            ), coroutineContext, testTidtaker
         )
         jobbplanlegger.start()
 
@@ -76,7 +76,7 @@ class JobbplanleggerTest {
                     kjørTidligst = kjøreTidspunkt,
                     blokk = { jobKjørt = true }
                 )
-            ), backgroundScope, testTidtaker
+            ), coroutineContext, testTidtaker
         )
 
         jobbplanlegger.start()
@@ -98,7 +98,7 @@ class JobbplanleggerTest {
                     kjørSenest = testTid.plusMinutes(5),
                     blokk = { jobKjørt = true }
                 )
-            ), backgroundScope, testTidtaker
+            ), coroutineContext, testTidtaker
         )
         advanceLocalTime(5.minutes + 1.seconds)
         jobbplanlegger.start()
@@ -125,7 +125,7 @@ class JobbplanleggerTest {
                     minutter = listOf(testMinutt),
                     blokk = { antallKjøringer++ }
                 )
-            ), backgroundScope, testTidtaker
+            ), coroutineContext, testTidtaker
         )
 
         jobbplanlegger.start()
@@ -159,7 +159,7 @@ class JobbplanleggerTest {
                     ),
                     blokk = { antallKjøringer++ }
                 )
-            ), backgroundScope, testTidtaker
+            ), coroutineContext, testTidtaker
         )
 
         jobbplanlegger.start()
@@ -190,7 +190,7 @@ class JobbplanleggerTest {
                     tidsvindu = Tidsvindu.hverdager(10, 11),
                     blokk = { antallKjøringer++ }
                 )
-            ), backgroundScope, testTidtaker, ventetidMellomJobber = 1.hours
+            ), coroutineContext, testTidtaker, ventetidMellomJobber = 1.hours
         )
 
         jobbplanlegger.start()
@@ -224,7 +224,7 @@ class JobbplanleggerTest {
                         delay(2.minutes)
                     }
                 )
-            ), backgroundScope, testTidtaker
+            ), coroutineContext, testTidtaker
         )
         jobbplanlegger.start()
         advanceLocalTime(1.minutes + 1.milliseconds)
@@ -232,6 +232,40 @@ class JobbplanleggerTest {
 
         advanceLocalTime(1.minutes)
         assertThat(rekkefølge).isEqualTo(listOf("høy", "lav"))
+
+        jobbplanlegger.stopp()
+    }
+
+    @Test
+    fun `en jobb som kaster exception, skal ikke stoppe andre jobber`() = runTest {
+        var antallKjøringer = 0
+        // SupervisorJob skal unngå at feil i en jobb stopper andre jobber
+        val jobbplanlegger = Jobbplanlegger(
+            setOf(
+                PlanlagtJobb.Periodisk(
+                    navn = "test-periodisk",
+                    prioritet = 1,
+                    intervall = 5.minutes,
+                    startForsinkelse = 1.minutes,
+                    blokk = {
+                        antallKjøringer++
+                        if (antallKjøringer == 2) {
+                            throw RuntimeException("Forventer å kaste feil her")
+                        }
+                    }
+                )
+            ), coroutineContext, testTidtaker
+        )
+        jobbplanlegger.start()
+
+        advanceLocalTime(1.minutes)
+        assertThat(antallKjøringer).isEqualTo(1)
+
+        advanceLocalTime(5.minutes)
+        assertThat(antallKjøringer).isEqualTo(2)
+
+        advanceLocalTime(5.minutes)
+        assertThat(antallKjøringer).isEqualTo(3)
 
         jobbplanlegger.stopp()
     }

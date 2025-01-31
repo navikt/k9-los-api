@@ -17,10 +17,10 @@ import io.ktor.server.plugins.callloging.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.routing.*
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.extension.kotlin.asContextElement
 import io.prometheus.client.hotspot.DefaultExports
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import no.nav.helse.dusseldorf.ktor.auth.AuthStatusPages
 import no.nav.helse.dusseldorf.ktor.auth.allIssuers
@@ -427,7 +427,7 @@ fun Application.konfigurerJobber(koin: Koin) {
 
     val jobbplanlegger = Jobbplanlegger(
         innkommendeJobber = planlagteJobber,
-        scope = CoroutineScope(Dispatchers.Default + SupervisorJob()),
+        coroutineContext = Dispatchers.Default + Span.current().asContextElement(),
     )
 
     environment.monitor.subscribe(ApplicationStarted) {

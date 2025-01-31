@@ -4,15 +4,17 @@ import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 class Jobbplanlegger(
     private val innkommendeJobber: Set<PlanlagtJobb>,
-    private val scope: CoroutineScope,
+    coroutineContext: CoroutineContext,
     private val tidtaker: () -> LocalDateTime = { LocalDateTime.now() },
     private val ventetidMellomJobber: Duration = 1.seconds,
 ) {
+    private val scope = CoroutineScope(coroutineContext + SupervisorJob())
     private val jobber = ConcurrentHashMap<String, JobbStatus>()
     private var planleggerJob: Job? = null
     private var erStartet = false
@@ -61,7 +63,10 @@ class Jobbplanlegger(
         if (status.erAktiv) return
         status.erAktiv = true
 
-        scope.launch {
+        val exceptionHandler = CoroutineExceptionHandler { _, exception ->
+            log.error("Feil ved kjøring av jobb ${status.jobb.navn}", exception)
+        }
+        scope.launch(exceptionHandler) {
             try {
                 status.jobb.blokk(this)
             } finally {
