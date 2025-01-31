@@ -1,6 +1,7 @@
 package no.nav.k9.los.jobbplanlegger
 
 import kotlinx.coroutines.*
+import no.nav.k9.los.jobber.JobbMetrikker
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
@@ -68,7 +69,9 @@ class Jobbplanlegger(
         }
         scope.launch(exceptionHandler) {
             try {
-                status.jobb.blokk(this)
+                JobbMetrikker.timeSuspended(status.jobb.navn) {
+                    status.jobb.blokk(scope)
+                }
             } finally {
                 status.erAktiv = false
                 when (val nesteKjøretidspunkt = status.jobb.nesteKjøretidspunkt(tidtaker())) {

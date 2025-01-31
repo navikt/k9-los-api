@@ -11,12 +11,13 @@ class JobbMetrikker {
             .name("k9los_jobb")
             .help("Tidsforbruk jobber i k9los")
             .labelNames("jobbnavn", "resultat")
-            .exponentialBuckets(0.01, 10.0.pow(1.0 / 3.0), 12 )
+            .exponentialBuckets(0.01, 10.0.pow(1.0 / 3.0), 12)
             .register()
 
 
-        fun observe(jobb: String, starttidNanos: Long,status : String = "OK") {
-            tidsforbruk.labels(jobb, status).observe(SimpleTimer.elapsedSecondsFromNanos(starttidNanos, System.nanoTime()))
+        fun observe(jobb: String, starttidNanos: Long, status: String = "OK") {
+            tidsforbruk.labels(jobb, status)
+                .observe(SimpleTimer.elapsedSecondsFromNanos(starttidNanos, System.nanoTime()))
         }
 
         fun <T> time(jobb: String, operasjon: (() -> T)): T {
@@ -25,7 +26,20 @@ class JobbMetrikker {
             try {
                 val resultat = operasjon.invoke()
                 return resultat
-            } catch (e : Exception){
+            } catch (e: Exception) {
+                status = e.javaClass.simpleName
+                throw e
+            } finally {
+                tidsforbruk.labels(jobb, status).observe(SimpleTimer.elapsedSecondsFromNanos(t0, System.nanoTime()))
+            }
+        }
+
+        suspend fun <T> timeSuspended(jobb: String, operasjon: suspend () -> T): T {
+            val t0 = System.nanoTime()
+            var status = "OK"
+            try {
+                return operasjon.invoke()
+            } catch (e: Exception) {
                 status = e.javaClass.simpleName
                 throw e
             } finally {
