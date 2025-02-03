@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package no.nav.k9.los
 
 import com.fasterxml.jackson.databind.DeserializationFeature
@@ -21,6 +23,7 @@ import io.opentelemetry.api.trace.Span
 import io.opentelemetry.extension.kotlin.asContextElement
 import io.prometheus.client.hotspot.DefaultExports
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import no.nav.helse.dusseldorf.ktor.auth.AuthStatusPages
 import no.nav.helse.dusseldorf.ktor.auth.allIssuers
@@ -59,6 +62,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonApi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Api
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeApi
 import no.nav.k9.los.nyoppgavestyring.pep.PepCacheOppdaterer
+import no.nav.k9.los.nyoppgavestyring.pep.PepCacheService
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryApis
 import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksApi
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallV3Apis
@@ -81,6 +85,8 @@ import org.koin.ktor.ext.getKoin
 import org.koin.ktor.plugin.Koin
 import java.time.Duration
 import java.util.*
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
@@ -201,11 +207,6 @@ fun Application.k9Los() {
         k9SakKorrigerOutOfOrderProsessor.cancel()
         k9TilbakeKorrigerOutOfOrderProsessor.cancel()
     }
-
-    OmrådeSetup(
-        områdeRepository = koin.get(),
-        feltdefinisjonTjeneste = koin.get()
-    )
 
     // skal implementeres med Jobbplanlegger
     K9SakTilLosAdapterTjeneste(
@@ -380,6 +381,13 @@ private fun Route.api() {
 }
 
 fun Application.konfigurerJobber(koin: Koin) {
+    val områdeSetup = koin.get<OmrådeSetup>()
+    val k9SakTilLosAdapterTjeneste = koin.get<K9SakTilLosAdapterTjeneste>()
+    val k9KlageTilLosAdapterTjeneste = koin.get<K9KlageTilLosAdapterTjeneste>()
+    val k9PunsjTilLosAdapterTjeneste = koin.get<K9PunsjTilLosAdapterTjeneste>()
+    val k9TilbakeTilLosAdapterTjeneste = koin.get<K9TilbakeTilLosAdapterTjeneste>()
+    val pepCacheService = koin.get<PepCacheService>()
+
     val høyPrioritet = 0
     val mediumPrioritet = 5
     val lavPrioritet = 10
@@ -390,27 +398,22 @@ fun Application.konfigurerJobber(koin: Koin) {
             navn = "Setup",
             prioritet = høyPrioritet,
         ) {
-            val områdeSetup = koin.get<OmrådeSetup>()
             områdeSetup.setup()
-            val k9SakTilLosAdapterTjeneste = koin.get<K9SakTilLosAdapterTjeneste>()
             k9SakTilLosAdapterTjeneste.setup()
-            val k9KlageTilLosAdapterTjeneste = koin.get<K9KlageTilLosAdapterTjeneste>()
             k9KlageTilLosAdapterTjeneste.setup()
-            val k9PunsjTilLosAdapterTjeneste = koin.get<K9PunsjTilLosAdapterTjeneste>()
             k9PunsjTilLosAdapterTjeneste.setup()
-            val k9TilbakeTilLosAdapterTjeneste = koin.get<K9TilbakeTilLosAdapterTjeneste>()
             k9TilbakeTilLosAdapterTjeneste.setup()
         },
 
         // Hyppig oppdatering i arbeidstiden
-        /*PlanlagtJobb.Periodisk(
+        PlanlagtJobb.Periodisk(
             navn = "PepCacheOppdatererArbeidstid",
             prioritet = lavPrioritet,
             intervall = 5.seconds,
             tidsvindu = utvidetArbeidstid,
-            startForsinkelse = 0.seconds
+            startForsinkelse = 1.minutes
         ) {
-            koin.get<PepCacheService>().oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn()
+            pepCacheService.oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn()
         },
 
         // Sjeldnere oppdatering utenfor arbeidstiden
@@ -419,15 +422,15 @@ fun Application.konfigurerJobber(koin: Koin) {
             prioritet = lavPrioritet,
             intervall = 30.seconds,
             tidsvindu = utvidetArbeidstid.komplement(),
-            startForsinkelse = 0.seconds
+            startForsinkelse = 1.minutes
         ) {
-            koin.get<PepCacheService>().oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn()
-        }*/
+            pepCacheService.oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn()
+        }
     )
 
     val jobbplanlegger = Jobbplanlegger(
         innkommendeJobber = planlagteJobber,
-        coroutineContext = Dispatchers.Default + Span.current().asContextElement(),
+        coroutineContext = Dispatchers.IO.limitedParallelism(4) + Span.current().asContextElement(),
     )
 
     environment.monitor.subscribe(ApplicationStarted) {
