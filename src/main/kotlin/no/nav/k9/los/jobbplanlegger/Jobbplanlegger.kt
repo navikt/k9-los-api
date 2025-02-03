@@ -40,12 +40,18 @@ class Jobbplanlegger(
         val nå = tidtaker()
         innkommendeJobber.forEach { jobb ->
             when (val kjøretidspunkt = jobb.førsteKjøretidspunkt(nå)) {
-                is Kjøretidspunkt.KjørIFremtiden, Kjøretidspunkt.KlarTilKjøring -> {
+                is Kjøretidspunkt.KlarTilKjøring -> {
                     jobber[jobb.navn] = JobbStatus(jobb, kjøretidspunkt)
+                    log.info("Initialiser jobb: ${jobb.navn} er klar til kjøring")
+                }
+
+                is Kjøretidspunkt.KjørIFremtiden -> {
+                    jobber[jobb.navn] = JobbStatus(jobb, kjøretidspunkt)
+                    log.info("Initialiser jobb: ${jobb.navn} har kjøretidspunkt ${kjøretidspunkt.tidspunkt}")
                 }
 
                 is Kjøretidspunkt.SkalIkkeKjøres -> {
-                    // Ignorerer jobben
+                    log.info("Initialiser jobb: ${jobb.navn} skal ikke kjøres")
                 }
             }
         }
