@@ -52,6 +52,7 @@ abstract class PlanlagtJobb(
         blokk: suspend CoroutineScope.() -> Unit
     ) : PlanlagtJobb(navn, prioritet, blokk) {
         init {
+            require(kjørTidligst != LocalDateTime.MIN || kjørSenest != LocalDateTime.MAX) { "Må sette enten kjørSenest eller kjørTidligst til noe annet enn defaultverdi. Bruk PlanlagtJobb.Oppstart hvis jobben skal kjøres uansett." }
             require(kjørSenest > kjørTidligst) { "kjørSenest må være etter kjørTidligst" }
         }
 

@@ -65,6 +65,7 @@ import no.nav.k9.los.nyoppgavestyring.pep.PepCacheOppdaterer
 import no.nav.k9.los.nyoppgavestyring.pep.PepCacheService
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryApis
 import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksApi
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallV3Apis
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederApis
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallApis
@@ -403,6 +404,7 @@ fun Application.konfigurerJobber(koin: Koin) {
     val k9TilbakeTilLosHistorikkvaskTjeneste = koin.get<K9TilbakeTilLosHistorikkvaskTjeneste>()
     val k9KlageTilLosHistorikkvaskTjeneste = koin.get<K9KlageTilLosHistorikkvaskTjeneste>()
     val pepCacheService = koin.get<PepCacheService>()
+    val nøkkeltallService = koin.get<NøkkeltallService>()
 
     val høyPrioritet = 0
     val mediumPrioritet = 5
@@ -477,7 +479,23 @@ fun Application.konfigurerJobber(koin: Koin) {
             startForsinkelse = 1.minutes
         ) {
             pepCacheService.oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn()
-        }
+        },
+
+        PlanlagtJobb.Oppstart(
+            navn = "NøkkeltallOppdatererOppstart",
+            prioritet = mediumPrioritet,
+        ) {
+            nøkkeltallService.oppdaterDagensTall(this)
+        },
+
+        PlanlagtJobb.TimeJobb(
+            navn = "NøkkeltallOppdatererTime",
+            prioritet = lavPrioritet,
+            tidsvindu = Tidsvindu.alleDager(5, 20),
+            minutter = listOf(0, 30),
+        ) {
+            nøkkeltallService.oppdaterDagensTall(this)
+        },
     )
 
     val jobbplanlegger = Jobbplanlegger(

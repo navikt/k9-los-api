@@ -13,20 +13,28 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.utils.Cache
 import no.nav.k9.los.utils.CacheObject
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
+import kotlin.system.measureTimeMillis
 
 
 class NøkkeltallService(
     private val queryService: OppgaveQueryService
 ) {
     private val dagensTallCache = Cache<LocalDate, DagensTallResponse.Suksess>(null)
+    private val log: Logger = LoggerFactory.getLogger(NøkkeltallService::class.java)
 
     fun oppdaterDagensTall(scope: CoroutineScope) {
         scope.launch(Dispatchers.IO) {
             dagensTallCache.removeExpiredObjects(LocalDateTime.now())
-            val dagensTall = hentDagensTall()
-            dagensTallCache.set(LocalDate.now(), CacheObject(dagensTall, LocalDateTime.now().plusDays(1)))
+            val tidBruktPåOppdatering = measureTimeMillis {
+                hentDagensTall()
+                val dagensTall = hentDagensTall()
+                dagensTallCache.set(LocalDate.now(), CacheObject(dagensTall, LocalDateTime.now().plusDays(1)))
+            }
+            log.info("Oppdaterte dagens tall på $tidBruktPåOppdatering ms")
         }
     }
 

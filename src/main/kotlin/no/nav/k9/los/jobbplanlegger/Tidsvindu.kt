@@ -57,6 +57,28 @@ sealed class Tidsvindu {
                 }
             )
         }
+
+        fun alleDager(fraKl: Int = 0, tilKl: Int = 24): Tidsvindu {
+            return TidsvinduMedPerioder(
+                listOf(
+                    DayOfWeek.MONDAY,
+                    DayOfWeek.TUESDAY,
+                    DayOfWeek.WEDNESDAY,
+                    DayOfWeek.THURSDAY,
+                    DayOfWeek.FRIDAY,
+                    DayOfWeek.SATURDAY,
+                    DayOfWeek.SUNDAY
+                ).map {
+                    DagligPeriode(
+                        dag = it,
+                        tidsperiode = Tidsperiode(
+                            fraKl = fraKl,
+                            tilKl = tilKl
+                        )
+                    )
+                }
+            )
+        }
     }
 }
 

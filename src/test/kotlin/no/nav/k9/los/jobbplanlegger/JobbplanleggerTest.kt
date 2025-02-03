@@ -11,6 +11,7 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import java.time.LocalDateTime
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
@@ -268,5 +269,22 @@ class JobbplanleggerTest {
         assertThat(antallKjøringer).isEqualTo(3)
 
         jobbplanlegger.stopp()
+    }
+
+    @Test
+    fun `test at kjørtidspunkt jobb er konfigurert riktig`() = runTest {
+        assertThrows<IllegalArgumentException> {
+            Jobbplanlegger(
+                setOf(
+                    PlanlagtJobb.KjørPåTidspunkt(
+                        navn = "test",
+                        prioritet = 1,
+                        blokk = {
+                            // skal ikke kjøres
+                        },
+                    )
+                ), coroutineContext, testTidtaker
+            )
+        }
     }
 }
