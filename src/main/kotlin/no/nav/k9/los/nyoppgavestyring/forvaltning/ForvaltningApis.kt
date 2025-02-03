@@ -13,7 +13,7 @@ import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.los.domene.repository.BehandlingProsessEventKlageRepository
 import no.nav.k9.los.domene.repository.BehandlingProsessEventTilbakeRepository
 import no.nav.k9.los.domene.repository.PunsjEventK9Repository
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService

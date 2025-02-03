@@ -7,7 +7,7 @@ import no.nav.k9.los.aksjonspunktbehandling.BehandlingProsessEventDtoBuilder
 import no.nav.k9.los.aksjonspunktbehandling.K9sakEventHandler
 import no.nav.k9.los.aksjonspunktbehandling.TestSaksbehandler
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper

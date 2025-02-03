@@ -6,7 +6,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.integrasjon.rest.RequestContextService
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
 import org.koin.ktor.ext.inject
 
 internal fun Route.K9SakTilLosApi() {
