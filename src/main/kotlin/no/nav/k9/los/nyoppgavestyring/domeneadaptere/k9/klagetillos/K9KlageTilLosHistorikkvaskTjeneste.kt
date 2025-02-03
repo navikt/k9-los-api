@@ -1,24 +1,22 @@
-package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
-import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.BehandlingProsessEventKlageRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.HistorikkvaskMetrikker
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerInterfaceKludge
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
+import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.util.*
-import kotlin.concurrent.thread
 
 class K9KlageTilLosHistorikkvaskTjeneste(
     private val behandlingProsessEventKlageRepository: BehandlingProsessEventKlageRepository,
@@ -32,18 +30,12 @@ class K9KlageTilLosHistorikkvaskTjeneste(
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9KlageTilLosHistorikkvaskTjeneste::class.java)
-    private val TRÅDNAVN = "k9-klage-til-los-historikkvask"
+    private val METRIKKLABEL = "k9-klage-til-los-historikkvask"
 
     fun kjørHistorikkvask() {
         if (config.nyOppgavestyringAktivert()) {
             log.info("Starter vask av oppgaver mot historiske k9klage-hendelser")
-            thread(
-                start = true,
-                isDaemon = true,
-                name = TRÅDNAVN
-            ) {
-                spillAvBehandlingProsessEventer()
-            }
+            spillAvBehandlingProsessEventer()
         } else log.info("Ny oppgavestyring er deaktivert")
     }
 
@@ -61,7 +53,7 @@ class K9KlageTilLosHistorikkvaskTjeneste(
             eventTeller = vaskOppgaveForBehandlingUUID(uuid, eventTeller)
             behandlingTeller++
             loggFremgangForHver100(behandlingTeller, "Forsert $behandlingTeller behandlinger")
-            HistorikkvaskMetrikker.observe(TRÅDNAVN, t0)
+            HistorikkvaskMetrikker.observe(METRIKKLABEL, t0)
             t0 = System.nanoTime()
         }
 
@@ -76,7 +68,7 @@ class K9KlageTilLosHistorikkvaskTjeneste(
         behandlingProsessEventKlageRepository.nullstillHistorikkvask()
         log.info("Nullstilt historikkvaskmarkering k9-klage")
 
-        HistorikkvaskMetrikker.observe(TRÅDNAVN, t0)
+        HistorikkvaskMetrikker.observe(METRIKKLABEL, t0)
     }
 
     private fun vaskOppgaveForBehandlingUUID(uuid: UUID, eventTellerInn: Long): Long {

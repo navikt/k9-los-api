@@ -12,11 +12,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.time.*
 import java.util.*
-import kotlin.concurrent.thread
-import kotlin.time.DurationUnit
-import kotlin.time.toDuration
 
 class K9TilbakeTilLosHistorikkvaskTjeneste(
     private val behandlingProsessEventTilbakeRepository: BehandlingProsessEventTilbakeRepository,
@@ -27,84 +23,63 @@ class K9TilbakeTilLosHistorikkvaskTjeneste(
 
     private val log: Logger = LoggerFactory.getLogger(K9TilbakeTilLosHistorikkvaskTjeneste::class.java)
 
-    private val TRÅDNAVN = "k9-tilbake-til-los-historikkvask"
+    private val METRIKKLABEL = "k9-tilbake-til-los-historikkvask"
 
-    fun kjørHistorikkvask(pauseHvisDagtid: Boolean = true) {
+    fun kjørHistorikkvask() {
         if (config.nyOppgavestyringAktivert()) {
             log.info("Starter vask av oppgaver mot historiske k9tilbake-hendelser")
             val start = System.currentTimeMillis()
-            thread(
-                start = true,
-                isDaemon = true,
-                name = TRÅDNAVN
-            ) {
 
-                Thread.sleep(1.toDuration(DurationUnit.MINUTES).inWholeMilliseconds)
+            val dispatcher = newFixedThreadPoolContext(2, "Historikkvask k9tilbake")
 
-                val dispatcher = newFixedThreadPoolContext(2, "Historikkvask k9tilbake")
+            log.info("Starter avspilling av historiske BehandlingProsessEventer")
 
-                log.info("Starter avspilling av historiske BehandlingProsessEventer")
+            val tidKjøringStartet = System.currentTimeMillis()
+            var t0 = System.nanoTime()
+            var eventTeller = 0L
+            var behandlingTeller = 0L
+            val antallEventIder = behandlingProsessEventTilbakeRepository.hentAntallEventIderUtenVasketHistorikk()
+            log.info("Fant totalt $antallEventIder behandlingsider som skal rekjøres mot oppgavemodell")
 
-                val tidKjøringStartet = System.currentTimeMillis()
-                var t0 = System.nanoTime()
-                var eventTeller = 0L
-                var behandlingTeller = 0L
-                val antallEventIder = behandlingProsessEventTilbakeRepository.hentAntallEventIderUtenVasketHistorikk()
-                log.info("Fant totalt $antallEventIder behandlingsider som skal rekjøres mot oppgavemodell")
-
-                while (true) {
-                    val behandlingsIder = DetaljerMetrikker.time("k9tilbakeHistorikkvask", "hentBehandlinger") { behandlingProsessEventTilbakeRepository.hentAlleEventIderUtenVasketHistorikk(antall = 2000) }
-                    if (behandlingsIder.isEmpty()) {
-                        break
-                    }
-
-                    if (pauseHvisDagtid && skalPauses()) {
-                        HistorikkvaskMetrikker.observe(TRÅDNAVN, t0)
-                        log.info("Vaskejobb satt på pause")
-                        Thread.sleep(Duration.ofMinutes(5).toMillis())
-                        t0 = System.nanoTime()
-                        continue
-                    }
-
-                    log.info("Starter vaskeiterasjon på ${behandlingsIder.size} behandlinger")
-                    eventTeller += spillAvBehandlingProsessEventer(dispatcher, behandlingsIder)
-                    behandlingTeller += behandlingsIder.count()
-                    log.info("Vasket iterasjon med ${behandlingsIder.size} behandlinger, har vasket totalt $behandlingTeller av $antallEventIder")
-                    HistorikkvaskMetrikker.observe(TRÅDNAVN, t0)
-                    t0 = System.nanoTime()
+            while (true) {
+                val behandlingsIder = DetaljerMetrikker.time(
+                    "k9tilbakeHistorikkvask",
+                    "hentBehandlinger"
+                ) { behandlingProsessEventTilbakeRepository.hentAlleEventIderUtenVasketHistorikk(antall = 2000) }
+                if (behandlingsIder.isEmpty()) {
+                    break
                 }
 
-                val (antallAlle, antallAktive) = oppgaveV3Tjeneste.tellAntall()
-                log.info("Antall oppgaver etter historikkvask k9-tilbake: $antallAlle, antall aktive: $antallAktive, antall vaskede eventer: $eventTeller fordelt på $behandlingTeller behandlinger.")
-
-                val tidHeleKjøringen = System.currentTimeMillis() - tidKjøringStartet
-                if (eventTeller > 0) {
-                    log.info("Gjennomsnittstid pr behandling: ${tidHeleKjøringen / behandlingTeller}ms, Gjennsomsnittstid pr event: ${tidHeleKjøringen / eventTeller}ms")
-                }
-
-                log.info("Historikkvask k9tilbake ferdig, tid brukt: {} ms", (System.currentTimeMillis() - start))
-                nullstillhistorikkvask()
-                HistorikkvaskMetrikker.observe(TRÅDNAVN, t0)
+                log.info("Starter vaskeiterasjon på ${behandlingsIder.size} behandlinger")
+                eventTeller += spillAvBehandlingProsessEventer(dispatcher, behandlingsIder)
+                behandlingTeller += behandlingsIder.count()
+                log.info("Vasket iterasjon med ${behandlingsIder.size} behandlinger, har vasket totalt $behandlingTeller av $antallEventIder")
+                HistorikkvaskMetrikker.observe(METRIKKLABEL, t0)
+                t0 = System.nanoTime()
             }
+
+            val (antallAlle, antallAktive) = oppgaveV3Tjeneste.tellAntall()
+            log.info("Antall oppgaver etter historikkvask k9-tilbake: $antallAlle, antall aktive: $antallAktive, antall vaskede eventer: $eventTeller fordelt på $behandlingTeller behandlinger.")
+
+            val tidHeleKjøringen = System.currentTimeMillis() - tidKjøringStartet
+            if (eventTeller > 0) {
+                log.info("Gjennomsnittstid pr behandling: ${tidHeleKjøringen / behandlingTeller}ms, Gjennsomsnittstid pr event: ${tidHeleKjøringen / eventTeller}ms")
+            }
+
+            log.info("Historikkvask k9tilbake ferdig, tid brukt: {} ms", (System.currentTimeMillis() - start))
+            nullstillhistorikkvask()
         } else log.info("Ny oppgavestyring er deaktivert")
     }
 
-    fun nullstillhistorikkvask(){
+    private fun nullstillhistorikkvask() {
         behandlingProsessEventTilbakeRepository.nullstillHistorikkvask()
         log.info("Nullstilt historikkvaskmarkering k9-tilbake")
     }
 
-    fun skalPauses(): Boolean {
-        val zone = ZoneId.of("Europe/Oslo")
-        val nå = ZonedDateTime.now().withZoneSameInstant(zone)
-
-        if (nå.toLocalTime() > LocalTime.of(6, 0, 0) && nå.toLocalTime() < LocalTime.of(17, 0, 0) && nå.dayOfWeek <= DayOfWeek.FRIDAY) {
-            return true
-        }
-        return false
-    }
-
-    private fun spillAvBehandlingProsessEventer(dispatcher: ExecutorCoroutineDispatcher, behandlingsIder: List<UUID>): Long {
+    private fun spillAvBehandlingProsessEventer(
+        dispatcher: ExecutorCoroutineDispatcher,
+        behandlingsIder: List<UUID>
+    ): Long {
         val scope = CoroutineScope(dispatcher)
 
         val jobber = behandlingsIder.map {
@@ -112,7 +87,7 @@ class K9TilbakeTilLosHistorikkvaskTjeneste(
         }.toList()
 
         val eventTeller = runBlocking {
-            jobber.map { it.await() }.sum()
+            jobber.sumOf { it.await() }
         }
         return eventTeller
     }
@@ -121,7 +96,10 @@ class K9TilbakeTilLosHistorikkvaskTjeneste(
         var eventTeller = 0L
         DetaljerMetrikker.time("k9tilbakeHistorikkvask", "vaskOppgaveForBehandlingKomplett") {
             transactionalManager.transaction { tx ->
-                eventTeller = DetaljerMetrikker.time("k9tilbakeHistorikkvask", "vaskOppgaveForBehandling") { vaskOppgaveForBehandlingUUID(uuid, tx) }
+                eventTeller = DetaljerMetrikker.time(
+                    "k9tilbakeHistorikkvask",
+                    "vaskOppgaveForBehandling"
+                ) { vaskOppgaveForBehandlingUUID(uuid, tx) }
                 behandlingProsessEventTilbakeRepository.markerVasketHistorikk(uuid, tx)
             }
         }
@@ -136,16 +114,19 @@ class K9TilbakeTilLosHistorikkvaskTjeneste(
         }
     }
 
-    fun vaskOppgaveForBehandlingUUID(uuid: UUID,  tx: TransactionalSession): Long {
+    fun vaskOppgaveForBehandlingUUID(uuid: UUID, tx: TransactionalSession): Long {
         log.info("Vasker historikk for k9tilbake-oppgave med eksternId: $uuid")
         var forrigeOppgave: OppgaveV3? = null
 
-        val behandlingProsessEventer = DetaljerMetrikker.time("k9tilbakeHistorikkvask", "hentEventer") { behandlingProsessEventTilbakeRepository.hentMedLås(tx, uuid).eventer }
+        val behandlingProsessEventer = DetaljerMetrikker.time(
+            "k9tilbakeHistorikkvask",
+            "hentEventer"
+        ) { behandlingProsessEventTilbakeRepository.hentMedLås(tx, uuid).eventer }
         val høyesteInternVersjon = DetaljerMetrikker.time("k9tilbakeHistorikkvask", "hentHøyesteInternVersjon") {
             oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9tilbake", "K9", tx)
         }
         var eventNrForBehandling = 0L
-        var oppgaveV3 : OppgaveV3? = null
+        var oppgaveV3: OppgaveV3? = null
         for (event in behandlingProsessEventer) {
             if (høyesteInternVersjon != null && eventNrForBehandling > høyesteInternVersjon) {
                 log.info("Avbryter historikkvask for ${event.eksternId} ved eventTid ${event.eventTid}. Forventer at håndteres av vanlig adaptertjeneste.")
@@ -153,8 +134,14 @@ class K9TilbakeTilLosHistorikkvaskTjeneste(
             }
             val oppgaveDto = TilbakeEventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
 
-            oppgaveV3 = DetaljerMetrikker.time("k9tilbakeHistorikkvask", "utledEksisterendeOppgaveversjon") { oppgaveV3Tjeneste.utledEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, tx) }
-            DetaljerMetrikker.time("k9tilbakeHistorikkvask", "oppdaterEksisterendeOppgaveversjon") { oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveV3, eventNrForBehandling, tx) }
+            oppgaveV3 = DetaljerMetrikker.time(
+                "k9tilbakeHistorikkvask",
+                "utledEksisterendeOppgaveversjon"
+            ) { oppgaveV3Tjeneste.utledEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, tx) }
+            DetaljerMetrikker.time(
+                "k9tilbakeHistorikkvask",
+                "oppdaterEksisterendeOppgaveversjon"
+            ) { oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveV3, eventNrForBehandling, tx) }
 
             forrigeOppgave = DetaljerMetrikker.time("k9tilbakeHistorikkvask", "hentOppgaveversjon") {
                 oppgaveV3Tjeneste.hentOppgaveversjon(
@@ -165,12 +152,20 @@ class K9TilbakeTilLosHistorikkvaskTjeneste(
         }
 
         oppgaveV3?.let {
-            val ytelsetypefraOppgaven = oppgaveV3.felter.filter { it.oppgavefelt.feltDefinisjon.eksternId == "ytelsestype" }.map { it.verdi }.firstOrNull()
-            if (ytelsetypefraOppgaven == no.nav.k9.kodeverk.behandling.FagsakYtelseType.FRISINN.kode ) {
-                DetaljerMetrikker.time("k9tilbakeHistorikkvask","slettAktivOppgave") { oppgaveV3Tjeneste.slettAktivOppgave(oppgaveV3, tx) }
+            val ytelsetypefraOppgaven =
+                oppgaveV3.felter.filter { it.oppgavefelt.feltDefinisjon.eksternId == "ytelsestype" }.map { it.verdi }
+                    .firstOrNull()
+            if (ytelsetypefraOppgaven == no.nav.k9.kodeverk.behandling.FagsakYtelseType.FRISINN.kode) {
+                DetaljerMetrikker.time(
+                    "k9tilbakeHistorikkvask",
+                    "slettAktivOppgave"
+                ) { oppgaveV3Tjeneste.slettAktivOppgave(oppgaveV3, tx) }
                 log.info("oppgave ${oppgaveV3.eksternId} gjelder FRISINN, fjerner oppgaven fra aktiv-tabellene")
             } else {
-                DetaljerMetrikker.time("k9tilbakeHistorikkvask","ajourholdAktivOppgave") { oppgaveV3Tjeneste.ajourholdAktivOppgave(oppgaveV3, eventNrForBehandling, tx) }
+                DetaljerMetrikker.time(
+                    "k9tilbakeHistorikkvask",
+                    "ajourholdAktivOppgave"
+                ) { oppgaveV3Tjeneste.ajourholdAktivOppgave(oppgaveV3, eventNrForBehandling, tx) }
             }
         }
         log.info("Vasket $eventNrForBehandling hendelser for k9tilbake-oppgave med eksternId: $uuid")
