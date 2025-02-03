@@ -8,7 +8,9 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.los.AbstractPostgresTest
 import no.nav.k9.los.aksjonspunktbehandling.K9punsjEventHandler
@@ -21,6 +23,9 @@ import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.los.integrasjon.kafka.dto.EventHendelse
 import no.nav.k9.los.integrasjon.kafka.dto.PunsjEventDto
+import no.nav.k9.los.jobbplanlegger.Jobbplanlegger
+import no.nav.k9.los.jobbplanlegger.PlanlagtJobb
+import no.nav.k9.los.jobbplanlegger.Tidsvindu
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosAdapterTjeneste
@@ -49,6 +54,8 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.*
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
@@ -229,7 +236,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
     }
 
     @Test
-    fun `PepCacheService skal oppdatere oppgave når sikkerhetsklassifisering endrer seg`() {
+    fun `PepCacheService skal oppdatere oppgave når sikkerhetsklassifisering endrer seg`() = runTest {
         val k9sakEventHandler = get<K9sakEventHandler>()
         val pepRepository = get<PepCacheRepository>()
         val oppgaveQueryService = get<OppgaveQueryService>()
@@ -241,12 +248,11 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
             transactionalManager = get()
         )
 
-        val job = PepCacheOppdaterer(
-            pepCacheService,
-            tidMellomKjøring = Duration.ofMillis(500),
-            alderForOppfriskning = Duration.ofNanos(1),
-            forsinketOppstart = Duration.ZERO
-        ).startOppdateringAvÅpneOgVentende()
+        val jobbplanlegger =
+            Jobbplanlegger(setOf(PlanlagtJobb.Periodisk("pepcache", 0, Tidsvindu.ÅPENT, 500.milliseconds, 0.seconds) {
+                pepCacheService.oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn(gyldighet = Duration.ofNanos(1))
+            }), coroutineContext = this.coroutineContext)
+        jobbplanlegger.start()
 
         val saksnummer = "TEST4"
         gjørSakOrdinær(saksnummer)
@@ -268,7 +274,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, PersonBeskyttelseType.UTEN_KODE6)).isEmpty()
         assertThat(hentOppgaverMedSikkerhetsklassifisering(oppgaveQueryService, eksternId, PersonBeskyttelseType.KODE6)).isNotEmpty()
 
-        job.cancel()
+        jobbplanlegger.stopp()
         verify(exactly = 3) { runBlocking { pepClient.harTilgangTilOppgaveV3(any(), any(), any()) } } //oppgaven var bare i kode6-køa, så ble ett ekstra kall til pep-klent
     }
 
@@ -374,9 +380,9 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         )
     }
 
-    private fun ventPåAntallForsøk(antall: Int, beskrivelse: String = "", f: () -> Boolean) {
+    private suspend fun ventPåAntallForsøk(antall: Int, beskrivelse: String = "", f: () -> Boolean) {
         for (i in 0..antall) {
-            Thread.sleep(500)
+            delay(500)
             if (i == antall) throw IllegalStateException("Ikke oppfylt innen tidsfrist: $beskrivelse")
             if (f()) {
                 logger.info("Oppfylt innen tidsfrist: $beskrivelse")

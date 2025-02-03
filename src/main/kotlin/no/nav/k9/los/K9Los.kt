@@ -61,7 +61,6 @@ import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoApis
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonApi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Api
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeApi
-import no.nav.k9.los.nyoppgavestyring.pep.PepCacheOppdaterer
 import no.nav.k9.los.nyoppgavestyring.pep.PepCacheService
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryApis
 import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksApi
@@ -161,11 +160,6 @@ fun Application.k9Los() {
             statistikkRepository = koin.get(),
             oppgaveTjeneste = koin.get()
         )
-
-    // skal erstattes med Jobbplanlegger
-    PepCacheOppdaterer(koin.get()).run {
-        startOppdateringAvÅpneOgVentende()
-    }
 
     K9sakBehandlingsoppfriskingJobb(
         oppgaveRepository = koin.get(),
