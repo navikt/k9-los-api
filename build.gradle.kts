@@ -2,14 +2,14 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 val mainClass = "no.nav.k9.los.K9LosKt"
 val hikariVersion = "6.2.1"
-val flywayVersion = "11.1.1"
+val flywayVersion = "11.3.0"
 val vaultJdbcVersion = "1.3.10"
 val koinVersion = "4.0.2"
 val kotliqueryVersion = "1.9.1"
 val k9SakVersion = "5.2.2"
 val k9KlageVersion = "0.4.5"
 val fuelVersion = "2.3.1"
-val jacksonVersion = "2.17.2"
+val jacksonVersion = "2.18.2"
 val commonsTextVersion = "1.13.0"
 
 val dusseldorfKtorVersion = "5.0.19"
@@ -63,7 +63,7 @@ dependencies {
     // Tilgangskontroll
     implementation("no.nav.common:auth:$navTilgangskontroll")
     implementation("no.nav.common:rest:$navTilgangskontroll")
-    implementation("com.google.code.gson:gson:2.11.0")
+    implementation("com.google.code.gson:gson:2.12.1")
 
     // Kontrakter
     implementation("no.nav.k9.sak:kontrakt:$k9SakVersion")
@@ -75,7 +75,7 @@ dependencies {
     // opentelemetry
     implementation("io.opentelemetry:opentelemetry-api:1.46.0")
     implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.46.0")
-    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.11.0")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.12.0")
 
     // Div
     implementation(enforcedPlatform( "com.fasterxml.jackson:jackson-bom:$jacksonVersion"))
