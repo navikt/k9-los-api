@@ -27,10 +27,8 @@ import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.reservasjon.AlleredeReservertException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ManglerTilgangException
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.GenerellOppgaveV3Dto
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
@@ -76,7 +74,13 @@ class OppgaveKoTjeneste(
     ): List<GenerellOppgaveV3Dto> {
         val ko = oppgaveKoRepository.hent(oppgaveKoId, pepClient.harTilgangTilKode6())
 
-        val køoppgaveIder = oppgaveQueryService.queryForOppgaveEksternId(QueryRequest(ko.oppgaveQuery, fjernReserverte = fjernReserverte, Avgrensning.maxAntall(ønsketAntallSaker)))
+        val køoppgaveIder = oppgaveQueryService.queryForOppgaveEksternId(
+            QueryRequest(
+                ko.oppgaveQuery,
+                fjernReserverte = fjernReserverte,
+                Avgrensning.maxAntall(ønsketAntallSaker)
+            )
+        )
         val oppgaver = mutableListOf<GenerellOppgaveV3Dto>()
         for (eksternOppgaveId in køoppgaveIder) {
             val oppgave = oppgaveRepositoryTxWrapper.hentOppgave(eksternOppgaveId.område, eksternOppgaveId.eksternId)
@@ -109,7 +113,7 @@ class OppgaveKoTjeneste(
             )
         }
 
-        
+
     }
 
     @WithSpan
@@ -166,10 +170,25 @@ class OppgaveKoTjeneste(
         innloggetBrukerId: Long,
         oppgaveKoId: Long,
         coroutineContext: CoroutineContext
-    ): Pair<Oppgave, ReservasjonV3>? {
+    ): OppgaveMuligReservert {
         return DetaljerMetrikker.time("taReservasjonFraKø", "hele", "$oppgaveKoId") {
             doTaReservasjonFraKø(innloggetBrukerId, oppgaveKoId, coroutineContext)
-                .also { it.let { antallOppgaverCache.decrementValue(AntallOppgaverForKøCacheKey(oppgaveKoId, filtrerReserverte = true)) } } //oppdater cache ved å redusere antall dersom reservasjon ble tatt
+                .also {
+                    when (it) {
+                        is OppgaveMuligReservert.Reservert ->
+                            // oppdater cache ved å redusere antall dersom reservasjon ble tatt
+                            antallOppgaverCache.decrementValue(
+                                AntallOppgaverForKøCacheKey(
+                                    oppgaveKoId,
+                                    filtrerReserverte = true
+                                )
+                            )
+
+                        OppgaveMuligReservert.IkkeReservert -> {
+                            // ikke oppdater cache siden ingenting er endret
+                        }
+                    }
+                }
         }
     }
 
@@ -177,10 +196,15 @@ class OppgaveKoTjeneste(
         innloggetBrukerId: Long,
         oppgaveKoId: Long,
         coroutineContext: CoroutineContext
-    ): Pair<Oppgave, ReservasjonV3>? {
+    ): OppgaveMuligReservert {
         log.info("taReservasjonFraKø, oppgaveKøId: $oppgaveKoId")
         val skjermet = runBlocking(coroutineContext) { pepClient.harTilgangTilKode6() }
-        val oppgavekø = DetaljerMetrikker.time("taReservasjonFraKø", "hentKø", "$oppgaveKoId" ) { oppgaveKoRepository.hent(oppgaveKoId, skjermet) }
+        val oppgavekø = DetaljerMetrikker.time("taReservasjonFraKø", "hentKø", "$oppgaveKoId") {
+            oppgaveKoRepository.hent(
+                oppgaveKoId,
+                skjermet
+            )
+        }
 
         var antallKandidaterEtterspurt = 1
         while (true) {
@@ -194,17 +218,17 @@ class OppgaveKoTjeneste(
                 )
             }
             log.info("Spurte etter $antallKandidaterEtterspurt kandidater fra køen med id $oppgaveKoId, fikk ${kandidatOppgaver.size}")
-            val reservasjon = DetaljerMetrikker.time("taReservasjonFraKø", "finnReservasjonFraKø", "$oppgaveKoId") {
+            val muligReservert = DetaljerMetrikker.time("taReservasjonFraKø", "finnReservasjonFraKø", "$oppgaveKoId") {
                 transactionalManager.transaction { tx ->
                     finnReservasjonFraKø(kandidatOppgaver, tx, innloggetBrukerId, coroutineContext)
                 }
             }
-            if (reservasjon != null) {
-                return reservasjon
+            if (muligReservert is OppgaveMuligReservert.Reservert) {
+                return muligReservert
             }
             if (kandidatOppgaver.size < antallKandidaterEtterspurt) {
                 //vi hentet alle oppgavene i køen, ikke vits å prøve mer
-                return null
+                return OppgaveMuligReservert.IkkeReservert
             }
             log.info("Hadde ${kandidatOppgaver.size} uten å klare å ta reservasjon, forsøker igjen med flere kandidater")
             antallKandidaterEtterspurt *= 2
@@ -217,7 +241,7 @@ class OppgaveKoTjeneste(
         tx: TransactionalSession,
         innloggetBrukerId: Long,
         coroutineContext: CoroutineContext,
-    ): Pair<Oppgave, ReservasjonV3>? {
+    ): OppgaveMuligReservert {
         for (kandidatoppgaveId in kandidatoppgaver) {
             val kandidatoppgave = aktivOppgaveRepository.hentOppgaveForId(tx, kandidatoppgaveId)
 
@@ -250,7 +274,7 @@ class OppgaveKoTjeneste(
                     kommentar = "",
                     tx = tx
                 )
-                return Pair(kandidatoppgave, reservasjon)
+                return OppgaveMuligReservert.Reservert(kandidatoppgave, reservasjon)
             } catch (e: AlleredeReservertException) {
                 log.warn("2 saksbehandlere prøvde å reservere nøkkel samtidig, reservasjonsnøkkel: ${kandidatoppgave.reservasjonsnøkkel}")
                 continue //TODO: Ved mange brukere her trenger vi kanskje en eller annen form for backoff, så ikke alle går samtidig på neste kandidat
@@ -259,7 +283,7 @@ class OppgaveKoTjeneste(
                 continue
             }
         }
-        return null
+        return OppgaveMuligReservert.IkkeReservert
     }
 
     @WithSpan
