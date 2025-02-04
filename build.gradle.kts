@@ -32,11 +32,11 @@ plugins {
 
 dependencies {
     // Server
-    implementation("no.nav.helse:dusseldorf-ktor-core:$dusseldorfKtorVersion")
-    implementation("no.nav.helse:dusseldorf-ktor-jackson:$dusseldorfKtorVersion")
-    implementation("no.nav.helse:dusseldorf-ktor-metrics:$dusseldorfKtorVersion")
-    implementation("no.nav.helse:dusseldorf-ktor-health:$dusseldorfKtorVersion")
-    implementation("no.nav.helse:dusseldorf-ktor-auth:$dusseldorfKtorVersion")
+    implementation ("no.nav.helse:dusseldorf-ktor-core:$dusseldorfKtorVersion")
+    implementation ("no.nav.helse:dusseldorf-ktor-jackson:$dusseldorfKtorVersion")
+    implementation ("no.nav.helse:dusseldorf-ktor-metrics:$dusseldorfKtorVersion")
+    implementation ("no.nav.helse:dusseldorf-ktor-health:$dusseldorfKtorVersion")
+    implementation ("no.nav.helse:dusseldorf-ktor-auth:$dusseldorfKtorVersion")
 
     // Database
     implementation("com.zaxxer:HikariCP:$hikariVersion")
@@ -58,14 +58,7 @@ dependencies {
     implementation("org.apache.httpcomponents:httpclient:4.5.14")
 
     // Kafka
-    implementation("org.apache.kafka:kafka-streams:$kafkaVersion") {
-        //ekskluderer rocksdb siden den
-        // 1. ikke i bruk gitt bruksmønsteret i los (kun les meldinger fra topic, ikke aggreggeringer osv)
-        // 2. det finnes ikke noe filområde den kan skrive til
-        // 3. den bidrar med vesentlig størrelse i image, siden den har binærer for mange ulike plattformer
-        // dersom det blir behov for å bruke DSL store i k9-los-api, vurder InMemoryCaching
-        exclude(group = "org.rocksdb", module = "rocksdbjni")
-    }
+    implementation("org.apache.kafka:kafka-streams:$kafkaVersion")
 
     // Tilgangskontroll
     implementation("no.nav.common:auth:$navTilgangskontroll")
@@ -85,15 +78,15 @@ dependencies {
     implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.11.0")
 
     // Div
-    implementation(enforcedPlatform("com.fasterxml.jackson:jackson-bom:$jacksonVersion"))
-    implementation("org.apache.commons:commons-text:$commonsTextVersion")
+    implementation(enforcedPlatform( "com.fasterxml.jackson:jackson-bom:$jacksonVersion"))
+    implementation("org.apache.commons:commons-text:$commonsTextVersion" )
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
     implementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
-    implementation("com.github.kittinunf.fuel:fuel-coroutines:$fuelVersion") {
+    implementation("com.github.kittinunf.fuel:fuel-coroutines:$fuelVersion"){
         exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
     }
 
-    implementation("io.github.smiley4:ktor-swagger-ui:3.6.1")
+    implementation( "io.github.smiley4:ktor-swagger-ui:3.6.1")
 
 
     // DI
