@@ -89,7 +89,7 @@ class K9TilbakeTilLosAdapterTjeneste(
     }
 
     @WithSpan
-    private fun spillAvBehandlingProsessEventer() {
+    fun spillAvBehandlingProsessEventer() {
         log.info("Starter avspilling av BehandlingProsessEventer")
 
         val behandlingsIder = behandlingProsessEventTilbakeRepository.hentAlleDirtyEventIder()

@@ -3,6 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.pep
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.instrumentation.annotations.WithSpan
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
@@ -32,7 +33,7 @@ class PepCacheService(
         status: Set<Oppgavestatus>
     ) {
         transactionalManager.transaction { tx ->
-            runBlocking {
+            runBlocking(Dispatchers.IO) {
                 val oppgaverSomMåOppdateres = oppgaveRepository.hentOppgaverMedStatusOgPepCacheEldreEnn(
                     tidspunkt = LocalDateTime.now() - gyldighet,
                     antall = 1,
@@ -45,7 +46,7 @@ class PepCacheService(
     }
 
     fun oppdater(tx: TransactionalSession, kildeområde: String, eksternId: String): PepCache {
-        return runBlocking {
+        return runBlocking(Dispatchers.IO) {
             val oppgave = oppgaveRepository.hentNyesteOppgaveForEksternId(
                 tx,
                 kildeområde = kildeområde,

@@ -38,7 +38,7 @@ class ReservasjonRepository(
         return hentOgFjernInaktiveReservasjoner(saksbehandler.reservasjoner, saksbehandlersIdent)
     }
 
-    suspend fun hentOgFjernInaktiveReservasjoner(reservasjonIder: Set<UUID>, saksbehandlersIdent: String? = null): List<Reservasjon> {
+    fun hentOgFjernInaktiveReservasjoner(reservasjonIder: Set<UUID>, saksbehandlersIdent: String? = null): List<Reservasjon> {
         var fjernede: List<Reservasjon>
         var reservasjoner: List<Reservasjon>
 
@@ -106,7 +106,7 @@ class ReservasjonRepository(
         return json.map { s -> LosObjectMapper.instance.readValue(s, Reservasjon::class.java) }.toList()
     }
 
-    private suspend fun fjernInaktivReservasjon(
+    private fun fjernInaktivReservasjon(
         reservasjon: Reservasjon,
         oppgaveKøer: List<OppgaveKø>,
         saksbehandlersIdent: String?
@@ -158,7 +158,7 @@ class ReservasjonRepository(
         }
     }
 
-    private suspend fun fjernInaktiveReservasjoner(reservasjoner: List<Reservasjon>, saksbehandlersIdent: String?): List<Reservasjon> {
+    private fun fjernInaktiveReservasjoner(reservasjoner: List<Reservasjon>, saksbehandlersIdent: String?): List<Reservasjon> {
         val reservasjonPrAktive = reservasjoner.groupBy { it.erAktiv() }
         val inaktive = reservasjonPrAktive[false] ?: emptyList()
         var totalAntallFjerninger = 0
