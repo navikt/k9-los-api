@@ -196,17 +196,23 @@ fun Route.OppgaveKoApis() {
                 val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedEpost(
                     kotlin.coroutines.coroutineContext.idToken().getUsername()
                 )!!
-                val (reservertOppgave, reservasjonFraKø) = oppgaveKoTjeneste.taReservasjonFraKø(
+                val oppgaveMuligReservert = oppgaveKoTjeneste.taReservasjonFraKø(
                     innloggetBrukerId = innloggetBruker.id!!,
                     oppgaveKoId = oppgavekøId.toLong(),
                     kotlin.coroutines.coroutineContext
-                ) ?: Pair(null, null)
-
-                if (reservasjonFraKø != null) {
-                    call.respond(ReservasjonV3FraKøDto(reservasjonFraKø, reservertOppgave!!, innloggetBruker))
-                } else {
-                    call.respond(HttpStatusCode.NotFound, "Fant ingen oppgave i valgt kø")
-                }
+                )
+                call.respond(
+                    when (oppgaveMuligReservert) {
+                        is OppgaveMuligReservert.Reservert -> listOf(
+                            ReservasjonV3FraKøDto(
+                                oppgaveMuligReservert.reservasjon,
+                                oppgaveMuligReservert.oppgave,
+                                innloggetBruker
+                            )
+                        )
+                        OppgaveMuligReservert.IkkeReservert -> emptyList()
+                    }
+                )
             } else {
                 call.respond(HttpStatusCode.Forbidden, "Innlogget bruker mangler tilgang til å reservere oppgaver")
             }

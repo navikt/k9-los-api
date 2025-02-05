@@ -21,6 +21,7 @@ import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
+import no.nav.k9.los.nyoppgavestyring.ko.OppgaveMuligReservert
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
@@ -29,8 +30,6 @@ import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.tjenester.saksbehandler.IIdToken
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveApisTjeneste
@@ -159,7 +158,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
             kø.id,
             CoroutineRequestContext(mockk<IIdToken>(relaxed = true))
         )
-        assertThat(resultat).isNull()
+        assertThat(resultat is OppgaveMuligReservert.IkkeReservert).isTrue()
     }
 
     @Test
@@ -183,7 +182,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         assertThat(antallIKø).isEqualTo(1)
 
         val resultat = taReservasjonFra(kø, TestSaksbehandler.SARA)
-        assertThat(resultat).isNotNull()
+        assertThat(resultat is OppgaveMuligReservert.Reservert).isTrue()
 
         val skjermet1 = runBlocking { pepClient.harTilgangTilKode6() }
         val filtrerReserverte1 = true
@@ -418,7 +417,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         assertThat(antallIKøEtterRes).isEqualTo(forventetAntall.toLong())
     }
 
-    private fun taReservasjonFra(kø: OppgaveKo, saksbehandler: Saksbehandler): Pair<Oppgave, ReservasjonV3>? {
+    private fun taReservasjonFra(kø: OppgaveKo, saksbehandler: Saksbehandler): OppgaveMuligReservert {
         return oppgaveKøTjeneste.taReservasjonFraKø(
             saksbehandler.id!!,
             kø.id,
