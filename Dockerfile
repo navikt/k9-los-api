@@ -3,8 +3,9 @@ WORKDIR /builder
 
 VOLUME /tmp
 COPY build/libs/app.jar /tmp/input-app.jar
-#utled hvilke moduler fra jdk som trengs
-RUN jdeps --print-module-deps --multi-release 21 -q --ignore-missing-deps  --add-modules ALL-MODULE-PATH /tmp/input-app.jar > modules.deps
+#utled hvilke moduler fra jdk som trengs (og legg til jdk.crypto.ec siden den trengs for ssl)
+RUN jdeps --print-module-deps --multi-release 21 -q --ignore-missing-deps  --add-modules ALL-MODULE-PATH /tmp/input-app.jar > modules.deps \
+  && sed -i '1s/^/jdk.crypto.ec,/' modules.deps
 #bygg egen java runtime med bare de modulene som trengs
 RUN jlink --add-modules $(cat modules.deps) --strip-debug --no-man-pages --no-header-files --compress=1 --output javaruntime
 
