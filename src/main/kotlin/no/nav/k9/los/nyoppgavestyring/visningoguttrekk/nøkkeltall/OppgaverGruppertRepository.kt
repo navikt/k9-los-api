@@ -16,7 +16,7 @@ class OppgaverGruppertRepository(private val dataSource: DataSource) {
         Cache<Boolean, List<BehandlingstypeAntallDto>>(cacheSizeLimit = null)
 
     data class BehandlingstypeAntallDto(
-        val behandlistype: String?,
+        val behandlingstype: String?,
         val antall: Int
     )
 
@@ -62,9 +62,9 @@ class OppgaverGruppertRepository(private val dataSource: DataSource) {
                     .asList
             )
         }
-        if (resultat.any {it.behandlistype == null} ){
-            log.warn("Fant ${resultat.filter {it.behandlistype == null}.sumOf { it.antall }} oppgaver uten behandlingstype, de blir ikke med oversikt som viser antall")
-            return resultat.filter { it.behandlistype != null }
+        if (resultat.any {it.behandlingstype == null} ){
+            log.warn("Fant ${resultat.filter {it.behandlingstype == null}.sumOf { it.antall }} oppgaver uten behandlingstype, de blir ikke med oversikt som viser antall")
+            return resultat.filter { it.behandlingstype != null }
         } else {
             return resultat
         }

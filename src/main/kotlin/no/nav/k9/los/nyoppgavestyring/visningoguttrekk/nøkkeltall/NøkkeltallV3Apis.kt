@@ -13,6 +13,18 @@ fun Route.NøkkeltallV3Apis() {
     val requestContextService by inject<RequestContextService>()
     val pepClient by inject<IPepClient>()
 
+    route("status") {
+        get {
+            requestContextService.withRequestContext(call) {
+                if (pepClient.erOppgaveStyrer()) {
+                    call.respond(nøkkeltallService.hentStatus(pepClient.harTilgangTilKode6()))
+                } else {
+                    call.respond(HttpStatusCode.Forbidden)
+                }
+            }
+        }
+    }
+
     route("dagens-tall") {
         post("oppdater") {
             requestContextService.withRequestContext(call) {
