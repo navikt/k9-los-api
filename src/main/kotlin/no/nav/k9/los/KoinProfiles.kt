@@ -679,6 +679,7 @@ fun common(app: Application, config: Configuration) = module {
     single {
         NøkkeltallService(
             queryService = get(),
+            oppgaverGruppertRepository = get(),
         )
     }
 }

@@ -594,6 +594,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         NøkkeltallService(
             queryService = get(),
+            oppgaverGruppertRepository = get(),
         )
     }
 }
