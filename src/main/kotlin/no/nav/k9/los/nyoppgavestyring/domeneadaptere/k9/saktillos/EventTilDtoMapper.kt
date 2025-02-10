@@ -163,6 +163,10 @@ class EventTilDtoMapper {
                 verdi = event.behandlingSteg
             ),
             OppgaveFeltverdiDto(
+                nøkkel = "behandlendeEnhet",
+                verdi = event.behandlendeEnhet
+            ),
+            OppgaveFeltverdiDto(
                 nøkkel = "behandlingTypekode",
                 verdi = event.behandlingTypeKode
             ),

@@ -64,7 +64,8 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeApi
 import no.nav.k9.los.nyoppgavestyring.pep.PepCacheService
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryApis
 import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksApi
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallService
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltPerEnhetService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallV3Apis
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederApis
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallApis
@@ -398,7 +399,8 @@ fun Application.konfigurerJobber(koin: Koin) {
     val k9TilbakeTilLosHistorikkvaskTjeneste = koin.get<K9TilbakeTilLosHistorikkvaskTjeneste>()
     val k9KlageTilLosHistorikkvaskTjeneste = koin.get<K9KlageTilLosHistorikkvaskTjeneste>()
     val pepCacheService = koin.get<PepCacheService>()
-    val nøkkeltallService = koin.get<NøkkeltallService>()
+    val dagensTallService = koin.get<DagensTallService>()
+    val perEnhetService = koin.get<FerdigstiltPerEnhetService>()
 
     val høyPrioritet = 0
     val mediumPrioritet = 5
@@ -420,8 +422,8 @@ fun Application.konfigurerJobber(koin: Koin) {
         PlanlagtJobb.KjørPåTidspunkt(
             "K9SakTilLosHistorikkvask",
             høyPrioritet,
-            kjørTidligst = LocalDateTime.of(2025, 1, 1, 0, 0),
-            kjørSenest = LocalDateTime.of(2025, 1, 1, 0, 1),
+            kjørTidligst = LocalDateTime.of(2025, 2, 7, 0, 0),
+            kjørSenest = LocalDateTime.of(2025, 2, 7, 12, 1),
         ) {
             k9SakTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
         },
@@ -476,13 +478,20 @@ fun Application.konfigurerJobber(koin: Koin) {
         },
 
         // Kjører ikke nøkkeltalloppdatering inntil ytelsen er forbedret
-        /* PlanlagtJobb.Oppstart(
-            navn = "NøkkeltallOppdatererOppstart",
+        PlanlagtJobb.Oppstart(
+            navn = "DagensTallOppstart",
             prioritet = mediumPrioritet,
         ) {
-            nøkkeltallService.oppdaterDagensTall(this)
+            dagensTallService.oppdaterCache(this)
+        },
+        PlanlagtJobb.Oppstart(
+            navn = "PerEnhetOppstart",
+            prioritet = mediumPrioritet,
+        ) {
+            perEnhetService.oppdaterCache(this)
         },
 
+        /*
         PlanlagtJobb.TimeJobb(
             navn = "NøkkeltallOppdatererTime",
             prioritet = lavPrioritet,

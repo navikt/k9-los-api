@@ -84,7 +84,7 @@ object localSetup : KoinComponent {
                         behandlingId = 123L,
                         fraEndringsdialog = false,
                         resultatType = BehandlingResultatType.IKKE_FASTSATT.kode,
-                        behandlendeEnhet = null as String?,
+                        behandlendeEnhet = "1234",
                         aksjonspunktTilstander = emptyList(),
                         søknadsårsaker = mutableListOf<SøknadÅrsak>().map { it.kode },
                         behandlingsårsaker = mutableListOf<BehandlingÅrsakType>().map { it.kode },

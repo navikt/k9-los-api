@@ -6,10 +6,13 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.rest.RequestContextService
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltPerEnhetService
 import org.koin.ktor.ext.inject
 
 fun Route.NøkkeltallV3Apis() {
-    val nøkkeltallService by inject<NøkkeltallService>()
+    val dagensTallService by inject<DagensTallService>()
+    val perEnhetService by inject<FerdigstiltPerEnhetService>()
     val requestContextService by inject<RequestContextService>()
     val pepClient by inject<IPepClient>()
 
@@ -17,7 +20,7 @@ fun Route.NøkkeltallV3Apis() {
         post("oppdater") {
             requestContextService.withRequestContext(call) {
                 if (pepClient.erOppgaveStyrer()) {
-                    nøkkeltallService.oppdaterDagensTall(this)
+                    dagensTallService.oppdaterCache(this)
                     call.respond(HttpStatusCode.OK)
                 } else {
                     call.respond(HttpStatusCode.Forbidden)
@@ -28,7 +31,30 @@ fun Route.NøkkeltallV3Apis() {
         get {
             requestContextService.withRequestContext(call) {
                 if (pepClient.erOppgaveStyrer()) {
-                    call.respond(nøkkeltallService.dagensTall())
+                    call.respond(dagensTallService.hentCachetVerdi())
+                } else {
+                    call.respond(HttpStatusCode.Forbidden)
+                }
+            }
+        }
+    }
+
+    route("per-enhet") {
+        post("oppdater") {
+            requestContextService.withRequestContext(call) {
+                if (pepClient.erOppgaveStyrer()) {
+                    perEnhetService.oppdaterCache(this)
+                    call.respond(HttpStatusCode.OK)
+                } else {
+                    call.respond(HttpStatusCode.Forbidden)
+                }
+            }
+        }
+
+        get {
+            requestContextService.withRequestContext(call) {
+                if (pepClient.erOppgaveStyrer()) {
+                    call.respond(perEnhetService.hentCachetVerdi())
                 } else {
                     call.respond(HttpStatusCode.Forbidden)
                 }

@@ -75,8 +75,9 @@ import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksTjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltPerEnhetService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallRepositoryV3
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.OppgaverGruppertRepository
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
@@ -677,7 +678,13 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        NøkkeltallService(
+        DagensTallService(
+            queryService = get(),
+        )
+    }
+
+    single {
+        FerdigstiltPerEnhetService(
             queryService = get(),
         )
     }
