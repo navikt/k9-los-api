@@ -135,7 +135,8 @@ fun Route.OppgaveKoApis() {
                     oppgaveKoTjeneste.hentOppgaverFraKø(
                         oppgavekøId.toLong(),
                         10,
-                        fjernReserverte = true
+                        fjernReserverte = true,
+                        kotlin.coroutines.coroutineContext.idToken()
                     )
                 ) //Finn et fornuftig antall?
             } else {

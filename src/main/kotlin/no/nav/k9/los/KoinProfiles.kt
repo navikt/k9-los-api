@@ -515,6 +515,7 @@ fun common(app: Application, config: Configuration) = module {
             aktivOppgaveRepository = get(),
             statistikkChannel = get(named("statistikkRefreshChannel")),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
+            feltdefinisjonTjeneste = get(),
         )
     }
 
