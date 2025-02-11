@@ -10,6 +10,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.domene.modell.BehandlingType
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
@@ -19,7 +20,9 @@ import no.nav.k9.los.integrasjon.pdl.IPdlService
 import no.nav.k9.los.integrasjon.pdl.fnr
 import no.nav.k9.los.integrasjon.pdl.navn
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
+import no.nav.k9.los.nyoppgavestyring.ko.dto.NesteOppgaverFraKoDto
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveId
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.query.Avgrensning
@@ -27,16 +30,11 @@ import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
-import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgavefeltverdi
-import no.nav.k9.los.nyoppgavestyring.ko.dto.NesteOppgaverFraKoDto
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OrderFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgaverad
 import no.nav.k9.los.nyoppgavestyring.reservasjon.AlleredeReservertException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ManglerTilgangException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.GenerellOppgaveV3Dto
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
 import no.nav.k9.los.tjenester.saksbehandler.IIdToken
@@ -85,21 +83,17 @@ class OppgaveKoTjeneste(
     ): NesteOppgaverFraKoDto {
         val ko = oppgaveKoRepository.hent(oppgaveKoId, pepClient.harTilgangTilKode6())
 
-        if (ko.oppgaveQuery.order.isNotEmpty()) {
-            for (orderFelt in ko.oppgaveQuery.order) {
-                when (orderFelt) {
-                    is EnkelOrderFelt -> EnkelSelectFelt(orderFelt.område, orderFelt.kode)
+        val selects = buildList {
+            add(EnkelSelectFelt("K9", "aktorId"))
+            add(EnkelSelectFelt("K9", "saksnummer"))
+            add(EnkelSelectFelt("K9", "journalpostId"))
+            add(EnkelSelectFelt("K9", "behandlingTypekode"))
+            addAll(ko.oppgaveQuery.order.map {
+                when (it) {
+                    is EnkelOrderFelt -> EnkelSelectFelt(it.område, it.kode)
                 }
-            }
-        } else EnkelSelectFelt("K9", "mottattDato")
-
-        val orderFelt = ko.oppgaveQuery.order[0]?.let { orderFelt ->
-            when (orderFelt) {
-                is EnkelOrderFelt -> EnkelSelectFelt(orderFelt.område, orderFelt.kode)
-            }
+            })
         }
-
-        val selects = genererSelects(ko)
 
         val køRespons = oppgaveQueryService.query(
             QueryRequest(
@@ -113,84 +107,41 @@ class OppgaveKoTjeneste(
         return byggDto(køRespons, ko.oppgaveQuery.order)
     }
 
-    private fun genererSelects(ko: OppgaveKo): List<EnkelSelectFelt> {
-        val orderFelt = if (ko.oppgaveQuery.order.isNotEmpty()) {
-            ko.oppgaveQuery.order.map {
-                val orderFelt = it as EnkelOrderFelt
-                EnkelSelectFelt(orderFelt.område, orderFelt.kode)
-            }
-        } else {
-            listOf(EnkelSelectFelt("K9", "mottattDato"))
-        }
-
-        val selects =
-            mutableListOf(
-            EnkelSelectFelt(
-                "K9",
-                "aktorId"
-            ),
-            EnkelSelectFelt(
-                "K9",
-                "saksnummer"
-            ),
-            EnkelSelectFelt(
-                "K9",
-                "journalpostId"
-            ),
-            EnkelSelectFelt(
-                "K9",
-                "behandlingTypekode"
-            ),
-        )
-        selects.addAll(orderFelt)
-        return selects
-    }
 
     private suspend fun byggDto(
         køRespons: List<Oppgaverad>,
         orderFelter: List<OrderFelt>
     ): NesteOppgaverFraKoDto {
-        val rader = køRespons.map { rad ->
-            rad.copy(felter = rad.felter.map { feltverdi ->
-                if (feltverdi.kode == "aktorId") {
-                    Oppgavefeltverdi(
-                        område = "Generert",
-                        kode = "Søker",
-                        pdlService.person(feltverdi.verdi as String).person?.let { "${it.navn()} ${it.fnr()}" }
-                            ?: "Ukjent navn Ukjent fnummer"
-                    )
-                } else if (feltverdi.kode == "saksnummer") {
-                    //saksnummer og journalpostId slås sammen til ett felt. Antar at kun en av verdiene er populert
-                    Oppgavefeltverdi(
-                        område = "Generert",
-                        kode = "Id",
-                        verdi = feltverdi.verdi
-                    )
-                } else if (feltverdi.kode == "journalpostId") {
-                    Oppgavefeltverdi(
-                        område = "Generert",
-                        kode = "Id",
-                        verdi = feltverdi.verdi
-                    )
-                }
-                feltverdi
+        val visningskolonner = buildMap {
+            put("søker", "Søker")
+            put("id", "Id")
+            put("behandlingType", "Behandlingstype")
+            putAll(orderFelter.map {
+                val orderFelt = it as EnkelOrderFelt
+                val visningsnavn =
+                    feltdefinisjonTjeneste.hent(orderFelt.område!!).hentFeltdefinisjon(orderFelt.kode).visningsnavn
+                orderFelt.kode to visningsnavn
             })
         }
 
-        val kolonner = mutableListOf(
-            "Søker",
-            "Id",
-            "Behandlingstype"
-        )
-        kolonner.addAll(orderFelter.map {
-            val orderFelt = it as EnkelOrderFelt
-            val visningsnavn =
-                feltdefinisjonTjeneste.hent(orderFelt.område!!).hentFeltdefinisjon(orderFelt.kode).visningsnavn
-            visningsnavn
-        })
+        val rader: List<Map<String, String>> = køRespons.map { rad ->
+            rad.mapNotNull { feltverdi ->
+                feltverdi.verdi?.let { verdi ->
+                    when (feltverdi.kode) {
+                        "aktorId" -> "søker" to (pdlService.person(verdi as String).person
+                            ?.let { "${it.navn()} ${it.fnr()}" }
+                            ?: "Ukjent navn Ukjent fnummer")
+                        "journalpostId", "saksnummer" -> "id" to (verdi as String)
+                        "behandlingTypekode" -> "behandlingType" to BehandlingType.fraKode(verdi as String).navn
+                        in visningskolonner -> feltverdi.kode to verdi.toString()
+                        else -> null
+                    }
+                }
+            }.toMap()
+        }
 
         return NesteOppgaverFraKoDto(
-            kolonner = kolonner,
+            kolonner = visningskolonner,
             rader = rader
         )
     }
@@ -303,20 +254,20 @@ class OppgaveKoTjeneste(
         var antallKandidaterEtterspurt = 1
         while (true) {
             val kandidatOppgaver = DetaljerMetrikker.time("taReservasjonFraKø", "queryForOppgaveId", "$oppgaveKoId") {
-                oppgaveQueryService.queryForOppgaveId(
-                    QueryRequest(
-                        oppgavekø.oppgaveQuery,
-                        fjernReserverte = true,
-                        avgrensning = Avgrensning(limit = antallKandidaterEtterspurt.toLong())
+                    oppgaveQueryService.queryForOppgaveId(
+                        QueryRequest(
+                            oppgavekø.oppgaveQuery,
+                            fjernReserverte = true,
+                            avgrensning = Avgrensning(limit = antallKandidaterEtterspurt.toLong())
+                        )
                     )
-                )
-            }
+                }
             log.info("Spurte etter $antallKandidaterEtterspurt kandidater fra køen med id $oppgaveKoId, fikk ${kandidatOppgaver.size}")
             val muligReservert = DetaljerMetrikker.time("taReservasjonFraKø", "finnReservasjonFraKø", "$oppgaveKoId") {
-                transactionalManager.transaction { tx ->
-                    finnReservasjonFraKø(kandidatOppgaver, tx, innloggetBrukerId, coroutineContext)
+                    transactionalManager.transaction { tx ->
+                        finnReservasjonFraKø(kandidatOppgaver, tx, innloggetBrukerId, coroutineContext)
+                    }
                 }
-            }
             if (muligReservert is OppgaveMuligReservert.Reservert) {
                 return muligReservert
             }

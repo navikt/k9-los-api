@@ -22,16 +22,15 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.tjenester.saksbehandler.IIdToken
 import org.koin.java.KoinJavaComponent.inject
-import java.lang.RuntimeException
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
-class OppgaveQueryService() {
-    val datasource by inject<DataSource>(DataSource::class.java)
-    val oppgaveQueryRepository by inject<OppgaveQueryRepository>(OppgaveQueryRepository::class.java)
-    val aktivOppgaveRepository by inject<AktivOppgaveRepository>(AktivOppgaveRepository::class.java)
-    val oppgaveRepository by inject<OppgaveRepository>(OppgaveRepository::class.java)
-    val pepClient by inject<IPepClient>(IPepClient::class.java)
+class OppgaveQueryService {
+    private val datasource by inject<DataSource>(DataSource::class.java)
+    private val oppgaveQueryRepository by inject<OppgaveQueryRepository>(OppgaveQueryRepository::class.java)
+    private val aktivOppgaveRepository by inject<AktivOppgaveRepository>(AktivOppgaveRepository::class.java)
+    private val oppgaveRepository by inject<OppgaveRepository>(OppgaveRepository::class.java)
+    private val pepClient by inject<IPepClient>(IPepClient::class.java)
 
     @WithSpan
     fun queryForOppgaveId(oppgaveQuery: QueryRequest): List<AktivOppgaveId> {
@@ -74,10 +73,10 @@ class OppgaveQueryService() {
             it.område + it.kode
         }
 
-        val header = oppgaverad.felter.joinToString(";") { oppgavefelter[it.område + it.kode]?.visningsnavn ?: "" }
+        val header = oppgaverad.joinToString(";") { oppgavefelter[it.område + it.kode]?.visningsnavn ?: "" }
 
         return header + "\n" + oppgaver.joinToString("\n") { or: Oppgaverad ->
-            or.felter.joinToString(";") {
+            or.joinToString(";") {
                 if (it.verdi == null) "" else it.verdi.toString()
             }
         }
@@ -99,7 +98,7 @@ class OppgaveQueryService() {
         }
 
         if (request.oppgaveQuery.select.isEmpty()) {
-            return listOf(Oppgaverad(listOf(Oppgavefeltverdi(null, "Antall", oppgaverader.size))))
+            return listOf(listOf(Oppgavefeltverdi(null, "Antall", oppgaverader.size)))
         }
 
         return oppgaverader
@@ -137,10 +136,9 @@ class OppgaveQueryService() {
         }
 
         return if (oppgaveQuery.select.isEmpty()) {
-            Oppgaverad(listOf())
+            emptyList()
         } else {
-            val felter = toOppgavefeltverdier(oppgaveQuery, oppgave)
-            Oppgaverad(felter)
+            return toOppgavefeltverdier(oppgaveQuery, oppgave)
         }
     }
 
