@@ -10,27 +10,34 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.domene.modell.BehandlingType
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.eventhandler.DetaljerMetrikker
-import no.nav.k9.los.integrasjon.abac.Action
-import no.nav.k9.los.integrasjon.abac.Auditlogging
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.pdl.IPdlService
+import no.nav.k9.los.integrasjon.pdl.fnr
+import no.nav.k9.los.integrasjon.pdl.navn
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
+import no.nav.k9.los.nyoppgavestyring.ko.dto.NesteOppgaverFraKoDto
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveId
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.query.Avgrensning
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.OrderFelt
+import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgaverad
 import no.nav.k9.los.nyoppgavestyring.reservasjon.AlleredeReservertException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ManglerTilgangException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.GenerellOppgaveV3Dto
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
+import no.nav.k9.los.tjenester.saksbehandler.IIdToken
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import no.nav.k9.los.utils.Cache
 import no.nav.k9.los.utils.leggTilDagerHoppOverHelg
@@ -55,6 +62,7 @@ class OppgaveKoTjeneste(
     private val pepClient: IPepClient,
     private val statistikkChannel: Channel<Boolean>,
     private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
+    private val feltdefinisjonTjeneste: FeltdefinisjonTjeneste,
 ) {
     private val log = LoggerFactory.getLogger(OppgaveKoTjeneste::class.java)
 
@@ -70,33 +78,72 @@ class OppgaveKoTjeneste(
     suspend fun hentOppgaverFraKø(
         oppgaveKoId: Long,
         ønsketAntallSaker: Long,
-        fjernReserverte: Boolean = false
-    ): List<GenerellOppgaveV3Dto> {
+        fjernReserverte: Boolean = false,
+        idToken: IIdToken
+    ): NesteOppgaverFraKoDto {
         val ko = oppgaveKoRepository.hent(oppgaveKoId, pepClient.harTilgangTilKode6())
 
-        val køoppgaveIder = oppgaveQueryService.queryForOppgaveEksternId(
-            QueryRequest(
-                ko.oppgaveQuery,
-                fjernReserverte = fjernReserverte,
-                Avgrensning.maxAntall(ønsketAntallSaker)
-            )
-        )
-        val oppgaver = mutableListOf<GenerellOppgaveV3Dto>()
-        for (eksternOppgaveId in køoppgaveIder) {
-            val oppgave = oppgaveRepositoryTxWrapper.hentOppgave(eksternOppgaveId.område, eksternOppgaveId.eksternId)
-
-            if (!pepClient.harTilgangTilOppgaveV3(oppgave, Action.read, Auditlogging.LOGG_VED_PERMIT)) {
-                continue
-            }
-
-            val person = oppgave.hentVerdi("aktorId")?.let { pdlService.person(it).person }
-
-            oppgaver.add(GenerellOppgaveV3Dto(oppgave, person))
-            if (oppgaver.size >= ønsketAntallSaker) {
-                break
-            }
+        val selects = buildList {
+            add(EnkelSelectFelt("K9", "aktorId"))
+            add(EnkelSelectFelt("K9", "saksnummer"))
+            add(EnkelSelectFelt("K9", "journalpostId"))
+            add(EnkelSelectFelt("K9", "behandlingTypekode"))
+            addAll(ko.oppgaveQuery.order.map {
+                when (it) {
+                    is EnkelOrderFelt -> EnkelSelectFelt(it.område, it.kode)
+                }
+            })
         }
-        return oppgaver.toList()
+
+        val køRespons = oppgaveQueryService.query(
+            QueryRequest(
+                oppgaveQuery = ko.oppgaveQuery.copy(select = selects),
+                fjernReserverte = fjernReserverte,
+                avgrensning = Avgrensning.maxAntall(ønsketAntallSaker)
+            ),
+            idToken
+        )
+
+        return byggDto(køRespons, ko.oppgaveQuery.order)
+    }
+
+
+    private suspend fun byggDto(
+        køRespons: List<Oppgaverad>,
+        orderFelter: List<OrderFelt>
+    ): NesteOppgaverFraKoDto {
+        val visningskolonner = buildMap {
+            put("søker", "Søker")
+            put("id", "Id")
+            put("behandlingType", "Behandlingstype")
+            putAll(orderFelter.map {
+                val orderFelt = it as EnkelOrderFelt
+                val visningsnavn =
+                    feltdefinisjonTjeneste.hent(orderFelt.område!!).hentFeltdefinisjon(orderFelt.kode).visningsnavn
+                orderFelt.kode to visningsnavn
+            })
+        }
+
+        val rader: List<Map<String, String>> = køRespons.map { rad ->
+            rad.mapNotNull { feltverdi ->
+                feltverdi.verdi?.let { verdi ->
+                    when (feltverdi.kode) {
+                        "aktorId" -> "søker" to (pdlService.person(verdi as String).person
+                            ?.let { "${it.navn()} ${it.fnr()}" }
+                            ?: "Ukjent navn Ukjent fnummer")
+                        "journalpostId", "saksnummer" -> "id" to (verdi as String)
+                        "behandlingTypekode" -> "behandlingType" to BehandlingType.fraKode(verdi as String).navn
+                        in visningskolonner -> feltverdi.kode to verdi.toString()
+                        else -> null
+                    }
+                }
+            }.toMap()
+        }
+
+        return NesteOppgaverFraKoDto(
+            kolonner = visningskolonner,
+            rader = rader
+        )
     }
 
     @WithSpan
@@ -112,8 +159,6 @@ class OppgaveKoTjeneste(
                 skjermet = skjermet
             )
         }
-
-
     }
 
     @WithSpan
@@ -209,20 +254,20 @@ class OppgaveKoTjeneste(
         var antallKandidaterEtterspurt = 1
         while (true) {
             val kandidatOppgaver = DetaljerMetrikker.time("taReservasjonFraKø", "queryForOppgaveId", "$oppgaveKoId") {
-                oppgaveQueryService.queryForOppgaveId(
-                    QueryRequest(
-                        oppgavekø.oppgaveQuery,
-                        fjernReserverte = true,
-                        avgrensning = Avgrensning(limit = antallKandidaterEtterspurt.toLong())
+                    oppgaveQueryService.queryForOppgaveId(
+                        QueryRequest(
+                            oppgavekø.oppgaveQuery,
+                            fjernReserverte = true,
+                            avgrensning = Avgrensning(limit = antallKandidaterEtterspurt.toLong())
+                        )
                     )
-                )
-            }
+                }
             log.info("Spurte etter $antallKandidaterEtterspurt kandidater fra køen med id $oppgaveKoId, fikk ${kandidatOppgaver.size}")
             val muligReservert = DetaljerMetrikker.time("taReservasjonFraKø", "finnReservasjonFraKø", "$oppgaveKoId") {
-                transactionalManager.transaction { tx ->
-                    finnReservasjonFraKø(kandidatOppgaver, tx, innloggetBrukerId, coroutineContext)
+                    transactionalManager.transaction { tx ->
+                        finnReservasjonFraKø(kandidatOppgaver, tx, innloggetBrukerId, coroutineContext)
+                    }
                 }
-            }
             if (muligReservert is OppgaveMuligReservert.Reservert) {
                 return muligReservert
             }

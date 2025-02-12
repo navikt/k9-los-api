@@ -519,6 +519,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             pdlService = get(),
             statistikkChannel = get(named("statistikkRefreshChannel")),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
+            feltdefinisjonTjeneste = get(),
         )
     }
 
