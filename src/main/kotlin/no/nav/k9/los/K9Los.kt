@@ -294,20 +294,20 @@ fun Application.k9Los() {
             }
         } else {
             authenticate(*issuers.allIssuers()) {
+                api()
                 route("forvaltning") {
                     InnsiktApis()
                     forvaltningApis()
                     route("k9saktillos") { K9SakTilLosApi() }
                     route("k9klagetillos") { K9KlageTilLosApi() }
                     route("statistikk") { StatistikkApi() }
-                    route("/swagger") {
-                        route("openapi.json") {
-                            openApiSpec()
-                        }
-                        swaggerUI("openapi.json")
-                    }
                 }
-                api()
+                route("/swagger") {
+                    route("openapi.json") {
+                        openApiSpec()
+                    }
+                    swaggerUI("openapi.json")
+                }
             }
         }
 

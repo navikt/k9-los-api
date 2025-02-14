@@ -66,6 +66,15 @@ class BehandlingProsessEventK9Repository(private val dataSource: DataSource) {
         )
     }
 
+    fun settDirty(uuid: UUID, tx: TransactionalSession) {
+        tx.run(
+            queryOf(
+                """update behandling_prosess_events_k9 set dirty = true where id = :id""",
+                mapOf("id" to uuid.toString())
+            ).asUpdate
+        )
+    }
+
     fun lagre(uuid: UUID, f: (K9SakModell?) -> K9SakModell): K9SakModell {
         var sortertModell = K9SakModell(mutableListOf())
         using(sessionOf(dataSource)) { it ->
