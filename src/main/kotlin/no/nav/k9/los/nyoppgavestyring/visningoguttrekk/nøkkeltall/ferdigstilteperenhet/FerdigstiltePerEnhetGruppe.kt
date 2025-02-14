@@ -2,7 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilte
 
 import no.nav.k9.los.domene.modell.FagsakYtelseType
 
-enum class PerEnhetGruppe(val navn: String) {
+enum class FerdigstiltePerEnhetGruppe(val navn: String) {
     ALLE("Alle ytelser"),
     OMSORGSPENGER("Omsorgspenger"),
     OMSORGSDAGER("Omsorgsdager"),
@@ -11,7 +11,7 @@ enum class PerEnhetGruppe(val navn: String) {
     PUNSJ("Punsj");
 
     companion object {
-        fun fraFagsakYtelse(ytelse: FagsakYtelseType): PerEnhetGruppe {
+        fun fraFagsakYtelse(ytelse: FagsakYtelseType): FerdigstiltePerEnhetGruppe {
             return when (ytelse) {
                 FagsakYtelseType.OMSORGSPENGER -> OMSORGSPENGER
                 FagsakYtelseType.OMSORGSDAGER -> OMSORGSDAGER

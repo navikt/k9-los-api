@@ -24,8 +24,8 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.*
-
+import java.util.UUID
+import kotlin.random.Random
 
 val saksbehandlere = listOf(
     Saksbehandler(
@@ -76,36 +76,82 @@ object localSetup : KoinComponent {
     fun initK9SakOppgaver(antall: Int) {
         if (profile == KoinProfile.LOCAL) {
             for (i in 0..<antall) {
+                val eksternId = UUID.randomUUID()
+                val behandlingId = Random.nextLong(0, 200)
+                val saksnummer = behandlingId.toString()
+                val ytelseTypeKode = listOf(
+                    FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
+                    FagsakYtelseType.PPN,
+                    FagsakYtelseType.OMSORGSPENGER,
+                ).shuffled().first().kode
+                val opprettetBehandling = LocalDateTime.now().minusDays(Random.nextLong(10, 20))
+                val vedtaksdato = opprettetBehandling.plusDays(Random.nextLong(1, 10)).toLocalDate()
+                val aktørId = Random.nextInt(0, 9999999).toString()
+                val pleietrengendeAktørId = Random.nextInt(0, 9999999).toString()
                 sakEventHandler.prosesser(
                     BehandlingProsessEventDto(
-                        UUID.randomUUID(),
+                        eksternId,
                         Fagsystem.K9SAK,
-                        Random().nextInt(0, 200).toString(),
-                        behandlingId = 123L,
+                        saksnummer,
+                        behandlingId = behandlingId,
                         fraEndringsdialog = false,
                         resultatType = BehandlingResultatType.IKKE_FASTSATT.kode,
-                        behandlendeEnhet = "1234",
+                        behandlendeEnhet = null,
                         aksjonspunktTilstander = emptyList(),
                         søknadsårsaker = mutableListOf<SøknadÅrsak>().map { it.kode },
                         behandlingsårsaker = mutableListOf<BehandlingÅrsakType>().map { it.kode },
                         ansvarligSaksbehandlerIdent = null as String?,
                         ansvarligBeslutterForTotrinn = null as String?,
                         ansvarligSaksbehandlerForTotrinn = null as String?,
-                        opprettetBehandling = LocalDateTime.now(),
-                        vedtaksdato = LocalDate.now(),
-                        pleietrengendeAktørId = Random().nextInt(0, 9999999).toString(),
-                        aktørId = Random().nextInt(0, 9999999).toString(),
+                        opprettetBehandling = opprettetBehandling,
+                        vedtaksdato = null,
+                        pleietrengendeAktørId = pleietrengendeAktørId,
+                        aktørId = aktørId,
                         behandlingStatus = BehandlingStatus.UTREDES.kode,
                         behandlingSteg = BehandlingStegType.KONTROLLER_FAKTA.kode,
                         behandlingTypeKode = no.nav.k9.kodeverk.behandling.BehandlingType.FØRSTEGANGSSØKNAD.kode,
                         behandlingstidFrist = null,
-                        eventHendelse = EventHendelse.BEHANDLINGSKONTROLL_EVENT,
+                        eventHendelse = EventHendelse.AKSJONSPUNKT_OPPRETTET,
                         eventTid = LocalDateTime.now().minusSeconds((antall - i).toLong()),
                         aksjonspunktKoderMedStatusListe = mutableMapOf(),
-                        ytelseTypeKode = FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode,
+                        ytelseTypeKode = ytelseTypeKode,
                         eldsteDatoMedEndringFraSøker = LocalDateTime.now()
                     )
                 )
+
+                // ferdigstill noen av sakene
+                if (Random.nextBoolean()) {
+                    sakEventHandler.prosesser(
+                        BehandlingProsessEventDto(
+                            eksternId,
+                            Fagsystem.K9SAK,
+                            saksnummer,
+                            behandlingId = behandlingId,
+                            fraEndringsdialog = false,
+                            resultatType = BehandlingResultatType.INNVILGET.kode,
+                            behandlendeEnhet = listOf("4409", "4432").shuffled().first(),
+                            aksjonspunktTilstander = emptyList(),
+                            søknadsårsaker = mutableListOf<SøknadÅrsak>().map { it.kode },
+                            behandlingsårsaker = mutableListOf<BehandlingÅrsakType>().map { it.kode },
+                            ansvarligSaksbehandlerIdent = "X123456",
+                            ansvarligBeslutterForTotrinn = "Y123456",
+                            ansvarligSaksbehandlerForTotrinn = "X123456",
+                            opprettetBehandling = LocalDateTime.now(),
+                            vedtaksdato = vedtaksdato,
+                            pleietrengendeAktørId = pleietrengendeAktørId,
+                            aktørId = aktørId,
+                            behandlingStatus = BehandlingStatus.AVSLUTTET.kode,
+                            behandlingSteg = BehandlingStegType.IVERKSETT_VEDTAK.kode,
+                            behandlingTypeKode = no.nav.k9.kodeverk.behandling.BehandlingType.FØRSTEGANGSSØKNAD.kode,
+                            behandlingstidFrist = null,
+                            eventHendelse = EventHendelse.AKSJONSPUNKT_UTFØRT,
+                            eventTid = LocalDateTime.now().minusSeconds((antall - i).toLong()),
+                            aksjonspunktKoderMedStatusListe = mutableMapOf(),
+                            ytelseTypeKode = ytelseTypeKode,
+                            eldsteDatoMedEndringFraSøker = LocalDateTime.now()
+                        )
+                    )
+                }
             }
         }
     }
@@ -115,13 +161,13 @@ object localSetup : KoinComponent {
             for (i in 0..<antall) {
                 val event = BehandlingProsessEventTilbakeDto(
                     eksternId = UUID.randomUUID(),
-                    saksnummer = Random().nextInt(0, 200 * antall).toString(),
+                    saksnummer = Random.nextInt(0, 200 * antall).toString(),
                     behandlingId = 123L,
                     resultatType = null,
                     behandlendeEnhet = null,
                     ansvarligSaksbehandlerIdent = null,
                     opprettetBehandling = LocalDateTime.now(),
-                    aktørId = Random().nextLong(1_000_000_000_000, 9_000_000_000_000).toString(),
+                    aktørId = Random.nextLong(1_000_000_000_000, 9_000_000_000_000).toString(),
                     behandlingStatus = BehandlingStatus.UTREDES.kode,
                     behandlinStatus = BehandlingStatus.UTREDES.kode,
                     behandlingSteg = BehandlingStegType.FATTE_VEDTAK.kode,
@@ -132,8 +178,8 @@ object localSetup : KoinComponent {
                     aksjonspunktKoderMedStatusListe = mutableMapOf(AksjonspunktDefinisjonK9Tilbake.VURDER_TILBAKEKREVING.kode to AksjonspunktStatus.OPPRETTET.kode),
                     ytelseTypeKode = FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode,
                     ansvarligBeslutterIdent = null,
-                    førsteFeilutbetaling = LocalDate.now().minusDays(Random().nextLong(100)).toString(),
-                    feilutbetaltBeløp = Random().nextLong(1000, 20000),
+                    førsteFeilutbetaling = LocalDate.now().minusDays(Random.nextLong(100)).toString(),
+                    feilutbetaltBeløp = Random.nextLong(1000, 20000),
                     href = null,
                     fagsystem = Fagsystem.K9TILBAKE.kode,
                 )
@@ -148,10 +194,10 @@ object localSetup : KoinComponent {
                 punsjEventHandler.prosesser(
                     PunsjEventDto(
                         eksternId = UUID.randomUUID(),
-                        journalpostId = JournalpostId(Random().nextLong(100000000, 999999999).toString()),
+                        journalpostId = JournalpostId(Random.nextLong(100000000, 999999999).toString()),
                         eventTid = LocalDateTime.now(),
                         status = Oppgavestatus.AAPEN,
-                        aktørId = AktørId(Random().nextLong(1_000_000_000_000, 9_000_000_000_000).toString()),
+                        aktørId = AktørId(Random.nextLong(1_000_000_000_000, 9_000_000_000_000).toString()),
                         aksjonspunktKoderMedStatusListe = mutableMapOf("PUNSJ" to "OPPR"),
                         pleietrengendeAktørId = null,
                         type = BehandlingType.entries.shuffled().first().kode,

@@ -2,9 +2,9 @@ package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilte
 
 import java.time.LocalDate
 
-data class FerdigstiltPerEnhetTall(
+data class FerdigstiltePerEnhetTall(
     val dato: LocalDate,
     val enhet: String,
+    val gruppe: FerdigstiltePerEnhetGruppe,
     val antall: Int,
-    val gruppe: PerEnhetGruppe
 )
