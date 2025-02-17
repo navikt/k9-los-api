@@ -15,32 +15,36 @@ import org.slf4j.LoggerFactory
 class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
     private val log = LoggerFactory.getLogger(FeltdefinisjonRepository::class.java)
     private val kodeverkCache = Cache<String, KodeverkForOmråde>(cacheSizeLimit = null)
+    private val feltdefinisjonerCache = Cache<String, Feltdefinisjoner>(cacheSizeLimit = null)
 
     fun hent(område: Område, tx: TransactionalSession): Feltdefinisjoner {
-        val feltdefinisjoner = tx.run(
-            queryOf(
-                """
+        return feltdefinisjonerCache.hent(område.eksternId) {
+            val feltdefinisjoner = tx.run(
+                queryOf(
+                    """
                 select * from feltdefinisjon 
                 where omrade_id = :omradeId
                 for update
             """.trimIndent(),
-                mapOf("omradeId" to område.id)
-            ).map { row ->
-                Feltdefinisjon(
-                    id = row.long("id"),
-                    eksternId = row.string("ekstern_id"),
-                    område = område,
-                    visningsnavn = row.string("visningsnavn"),
-                    listetype = row.boolean("liste_type"),
-                    tolkesSom = row.string("tolkes_som"),
-                    visTilBruker = row.boolean("vis_til_bruker"),
-                    kokriterie = row.boolean("kokriterie"),
-                    kodeverkreferanse = row.stringOrNull("kodeverkreferanse")?.let { Kodeverkreferanse(it) },
-                    transientFeltutleder = row.stringOrNull("transient_feltutleder")?.let { GyldigeTransientFeltutleder.hentFeltutleder(it) }
-                )
-            }.asList
-        )
-        return Feltdefinisjoner(område, feltdefinisjoner.toSet())
+                    mapOf("omradeId" to område.id)
+                ).map { row ->
+                    Feltdefinisjon(
+                        id = row.long("id"),
+                        eksternId = row.string("ekstern_id"),
+                        område = område,
+                        visningsnavn = row.string("visningsnavn"),
+                        listetype = row.boolean("liste_type"),
+                        tolkesSom = row.string("tolkes_som"),
+                        visTilBruker = row.boolean("vis_til_bruker"),
+                        kokriterie = row.boolean("kokriterie"),
+                        kodeverkreferanse = row.stringOrNull("kodeverkreferanse")?.let { Kodeverkreferanse(it) },
+                        transientFeltutleder = row.stringOrNull("transient_feltutleder")?.let { GyldigeTransientFeltutleder.hentFeltutleder(it) }
+                    )
+                }.asList
+            )
+
+            Feltdefinisjoner(område, feltdefinisjoner.toSet())
+        }
     }
 
     fun fjern(sletteListe: Set<Feltdefinisjon>, tx: TransactionalSession) {
@@ -65,6 +69,7 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                 }
             }
         }
+        invaliderFeltdefinisjonerCache()
     }
 
     fun oppdater(oppdaterListe: Set<Feltdefinisjon>, område: Område, tx: TransactionalSession) {
@@ -95,6 +100,7 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                 ).asUpdate
             )
         }
+        invaliderFeltdefinisjonerCache()
     }
 
     fun leggTil(leggTilListe: Set<Feltdefinisjon>, område: Område, tx: TransactionalSession) {
@@ -138,6 +144,7 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                 ).asUpdate
             )
         }
+        invaliderFeltdefinisjonerCache()
     }
 
     fun tømVerdierHvisKodeverkFinnes(kodeverk: Kodeverk, tx: TransactionalSession) {
@@ -193,7 +200,7 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
             }
         )
 
-        invaliderCache()
+        invaliderKodeverkCache()
     }
 
     fun hentKodeverk(referanse: Kodeverkreferanse, tx: TransactionalSession) : Kodeverk {
@@ -250,7 +257,11 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
         }.asList
     )
 
-    fun invaliderCache() {
+    fun invaliderKodeverkCache() {
         kodeverkCache.clear()
+    }
+
+    fun invaliderFeltdefinisjonerCache() {
+        feltdefinisjonerCache.clear()
     }
 }

@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon
 
+import kotliquery.TransactionalSession
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
@@ -31,6 +32,12 @@ class FeltdefinisjonTjeneste(
 
             feltdefinisjonRepository.tømVerdierHvisKodeverkFinnes(kodeverk, tx)
             feltdefinisjonRepository.lagre(kodeverk, tx)
+        }
+    }
+
+    fun hent(område: String): Feltdefinisjoner {
+        return transactionalManager.transaction { tx ->
+            feltdefinisjonRepository.hent(områdeRepository.hentOmråde(område, tx), tx)
         }
     }
 

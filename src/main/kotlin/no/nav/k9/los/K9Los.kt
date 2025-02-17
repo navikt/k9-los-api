@@ -475,7 +475,8 @@ fun Application.konfigurerJobber(koin: Koin) {
             pepCacheService.oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn()
         },
 
-        PlanlagtJobb.Oppstart(
+        // Kjører ikke nøkkeltalloppdatering inntil ytelsen er forbedret
+        /* PlanlagtJobb.Oppstart(
             navn = "NøkkeltallOppdatererOppstart",
             prioritet = mediumPrioritet,
         ) {
@@ -489,7 +490,7 @@ fun Application.konfigurerJobber(koin: Koin) {
             minutter = listOf(0, 30),
         ) {
             nøkkeltallService.oppdaterDagensTall(this)
-        },
+        },*/
     )
 
     val jobbplanlegger = Jobbplanlegger(

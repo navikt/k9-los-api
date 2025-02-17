@@ -27,8 +27,8 @@ class StatistikkRepository(
     }
 
     fun lagreBehandling(brukerIdent: String, oppgave: BehandletOppgave) {
-        using(sessionOf(dataSource)) {
-            it.transaction { tx ->
+        using(sessionOf(dataSource)) {session ->
+            session.transaction { tx ->
                 val resultat: MutableList<BehandletOppgave> = ArrayList()
                 val låstIdent = taLås(brukerIdent, tx) //tar lås siden oppdatering skjer stegvis (read - modify - update) for å unngår samtidighetsproblemer
                 val harInnslagFraFør = låstIdent != null
