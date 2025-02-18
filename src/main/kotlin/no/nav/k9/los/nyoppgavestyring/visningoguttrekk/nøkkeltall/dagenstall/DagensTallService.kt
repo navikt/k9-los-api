@@ -81,6 +81,39 @@ class DagensTallService(
             )
         )
 
+        for (behandlingType in behandlingstyper) {
+            tall.add(
+                DagensTallDto(
+                    hovedgruppe = DagensTallHovedgruppe.ALLE,
+                    undergruppe = DagensTallUndergruppe.fraBehandlingType(behandlingType),
+                    nyeIDag = hentTall(
+                        datotype = Datotype.MOTTATTDATO,
+                        operator = EksternFeltverdiOperator.EQUALS,
+                        dato = LocalDate.now(),
+                        behandlingType = behandlingType,
+                    ),
+                    ferdigstilteIDag = hentTall(
+                        datotype = Datotype.VEDTAKSDATO,
+                        operator = EksternFeltverdiOperator.EQUALS,
+                        dato = LocalDate.now(),
+                        behandlingType = behandlingType,
+                    ),
+                    nyeSiste7Dager = hentTall(
+                        datotype = Datotype.MOTTATTDATO,
+                        operator = EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS,
+                        dato = LocalDate.now().minusDays(7),
+                        behandlingType = behandlingType,
+                    ),
+                    ferdigstilteSiste7Dager = hentTall(
+                        datotype = Datotype.VEDTAKSDATO,
+                        operator = EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS,
+                        dato = LocalDate.now().minusDays(7),
+                        behandlingType = behandlingType,
+                    )
+                )
+            )
+        }
+
         for (ytelseType in ytelser) {
             val hovedgruppe = DagensTallHovedgruppe.fraFagsakYtelseType(ytelseType)
 
