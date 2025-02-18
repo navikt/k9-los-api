@@ -412,8 +412,8 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
         PlanlagtJobb.KjørPåTidspunkt(
             "K9SakTilLosHistorikkvask",
             høyPrioritet,
-            kjørTidligst = LocalDateTime.of(2025, 2, 7, 0, 0),
-            kjørSenest = LocalDateTime.of(2025, 2, 7, 12, 1),
+            kjørTidligst = LocalDateTime.of(2025, 2, 18, 0, 0),
+            kjørSenest = LocalDateTime.of(2025, 2, 18, 16, 0),
         ) {
             k9SakTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
         },
