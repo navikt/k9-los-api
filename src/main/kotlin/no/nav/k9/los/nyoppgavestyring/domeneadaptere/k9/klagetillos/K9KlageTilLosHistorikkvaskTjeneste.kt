@@ -71,7 +71,7 @@ class K9KlageTilLosHistorikkvaskTjeneste(
         HistorikkvaskMetrikker.observe(METRIKKLABEL, t0)
     }
 
-    private fun vaskOppgaveForBehandlingUUID(uuid: UUID, eventTellerInn: Long): Long {
+    fun vaskOppgaveForBehandlingUUID(uuid: UUID, eventTellerInn: Long = 0): Long {
         var eventTeller = eventTellerInn
         var forrigeOppgave: OppgaveV3? = null
         transactionalManager.transaction { tx ->
