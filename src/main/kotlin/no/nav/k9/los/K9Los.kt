@@ -64,9 +64,9 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeApi
 import no.nav.k9.los.nyoppgavestyring.pep.PepCacheService
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryApis
 import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksApi
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallV3Apis
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallV3Apis
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederApis
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallApis
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.AvdelingslederOppgavekøApis
@@ -112,7 +112,7 @@ fun Application.k9Los() {
     koin.get<K9PunsjTilLosAdapterTjeneste>().setup()
     koin.get<K9TilbakeTilLosAdapterTjeneste>().setup()
 
-    konfigurerJobber(koin)
+    konfigurerJobber(koin, configuration)
 
     install(Authentication) {
         multipleJwtIssuers(issuers)
@@ -394,7 +394,7 @@ private fun Route.api() {
     }
 }
 
-fun Application.konfigurerJobber(koin: Koin) {
+fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
     val k9SakTilLosHistorikkvaskTjeneste = koin.get<K9SakTilLosHistorikkvaskTjeneste>()
     val k9PunsjTilLosHistorikkvaskTjeneste = koin.get<K9PunsjTilLosHistorikkvaskTjeneste>()
     val k9TilbakeTilLosHistorikkvaskTjeneste = koin.get<K9TilbakeTilLosHistorikkvaskTjeneste>()
@@ -467,19 +467,24 @@ fun Application.konfigurerJobber(koin: Koin) {
             pepCacheService.oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn()
         },
 
-        // Kjører ikke nøkkeltalloppdatering inntil ytelsen er forbedret
-        PlanlagtJobb.Oppstart(
-            navn = "DagensTallOppstart",
-            prioritet = mediumPrioritet,
-        ) {
-            dagensTallService.oppdaterCache(this)
-        },
-        PlanlagtJobb.Oppstart(
-            navn = "PerEnhetOppstart",
-            prioritet = mediumPrioritet,
-        ) {
-            perEnhetService.oppdaterCache(this)
-        },
+        // Kjører ikke nøkkeltalloppdatering i prod inntil ytelsen er forbedret
+        if (configuration.koinProfile != KoinProfile.PROD) {
+            PlanlagtJobb.Oppstart(
+                navn = "DagensTallOppstart",
+                prioritet = mediumPrioritet,
+            ) {
+                dagensTallService.oppdaterCache(this)
+            }
+        } else null,
+
+        if (configuration.koinProfile != KoinProfile.PROD) {
+            PlanlagtJobb.Oppstart(
+                navn = "PerEnhetOppstart",
+                prioritet = mediumPrioritet,
+            ) {
+                perEnhetService.oppdaterCache(this)
+            }
+        } else null,
 
         /*
         PlanlagtJobb.TimeJobb(

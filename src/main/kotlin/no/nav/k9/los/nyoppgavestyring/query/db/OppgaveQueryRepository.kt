@@ -70,7 +70,6 @@ class OppgaveQueryRepository(
 
     @WithSpan
     private fun queryForAntall(tx: TransactionalSession, oppgaveQuery: OppgaveQuerySqlBuilder): Long {
-        println(oppgaveQuery.unsafeDebug())
         return tx.run(
             queryOf(
                 oppgaveQuery.getQuery(),
