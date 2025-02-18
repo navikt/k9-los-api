@@ -24,11 +24,11 @@ import kotlin.time.measureTime
 class DagensTallService(
     private val queryService: OppgaveQueryService
 ) {
-    private val cache = Cache<LocalDate, DagensTallResponse.Suksess>(null)
+    private val cache = Cache<LocalDate, DagensTallResponse>(null)
     private val log: Logger = LoggerFactory.getLogger(DagensTallService::class.java)
 
     fun hentCachetVerdi(): DagensTallResponse {
-        return cache.get(LocalDate.now())?.value ?: DagensTallResponse.Feil("Har ikke lastet inn dagens tall ennå")
+        return cache.get(LocalDate.now())?.value ?: DagensTallResponse(null, emptyList(), emptyList(), emptyList())
     }
 
     fun oppdaterCache(scope: CoroutineScope) {
@@ -42,7 +42,7 @@ class DagensTallService(
         }
     }
 
-    private fun hentFraDatabase(): DagensTallResponse.Suksess {
+    private fun hentFraDatabase(): DagensTallResponse {
         val ytelser = listOf(
             FagsakYtelseType.OMSORGSPENGER,
             FagsakYtelseType.OMSORGSDAGER,
@@ -188,7 +188,7 @@ class DagensTallService(
             )
         )
 
-        return DagensTallResponse.Suksess(
+        return DagensTallResponse(
             oppdatertTidspunkt = LocalDateTime.now(),
             hovedgrupper = DagensTallHovedgruppe.entries.map { KodeOgNavn(it.name, it.navn) },
             undergrupper = DagensTallUndergruppe.entries.map { KodeOgNavn(it.name, it.navn) },
