@@ -408,103 +408,120 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
     val lavPrioritet = 10
     val utvidetArbeidstid = Tidsvindu.hverdager(5, 20)
 
-    val planlagteJobber = setOfNotNull(
-        PlanlagtJobb.KjørPåTidspunkt(
-            "K9SakTilLosHistorikkvask",
-            høyPrioritet,
-            kjørTidligst = LocalDateTime.of(2025, 2, 18, 0, 0),
-            kjørSenest = LocalDateTime.of(2025, 2, 18, 16, 0),
-        ) {
-            k9SakTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
-        },
+    val planlagteJobber = buildSet {
+        add(
+            PlanlagtJobb.KjørPåTidspunkt(
+                "K9SakTilLosHistorikkvask",
+                høyPrioritet,
+                kjørTidligst = LocalDateTime.of(2025, 2, 18, 0, 0),
+                kjørSenest = LocalDateTime.of(2025, 2, 18, 16, 0),
+            ) {
+                k9SakTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
+            }
+        )
 
-        PlanlagtJobb.KjørPåTidspunkt(
-            "K9PunsjTilLosHistorikkvask",
-            høyPrioritet,
-            kjørTidligst = LocalDateTime.of(2025, 1, 1, 0, 0),
-            kjørSenest = LocalDateTime.of(2025, 1, 1, 0, 1),
-        ) {
-            k9PunsjTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
-        },
+        add(
+            PlanlagtJobb.KjørPåTidspunkt(
+                "K9PunsjTilLosHistorikkvask",
+                høyPrioritet,
+                kjørTidligst = LocalDateTime.of(2025, 1, 1, 0, 0),
+                kjørSenest = LocalDateTime.of(2025, 1, 1, 0, 1),
+            ) {
+                k9PunsjTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
+            }
+        )
 
-        PlanlagtJobb.KjørPåTidspunkt(
-            "K9TilbakeTilLosHistorikkvask",
-            høyPrioritet,
-            kjørTidligst = LocalDateTime.of(2025, 1, 1, 0, 0),
-            kjørSenest = LocalDateTime.of(2025, 1, 1, 0, 1),
-        ) {
-            k9TilbakeTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
-        },
+        add(
+            PlanlagtJobb.KjørPåTidspunkt(
+                "K9TilbakeTilLosHistorikkvask",
+                høyPrioritet,
+                kjørTidligst = LocalDateTime.of(2025, 1, 1, 0, 0),
+                kjørSenest = LocalDateTime.of(2025, 1, 1, 0, 1),
+            ) {
+                k9TilbakeTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
+            }
+        )
 
-        PlanlagtJobb.KjørPåTidspunkt(
-            "K9KlageTilLosHistorikkvask",
-            høyPrioritet,
-            kjørTidligst = LocalDateTime.of(2025, 1, 1, 0, 0),
-            kjørSenest = LocalDateTime.of(2025, 1, 1, 0, 1),
-        ) {
-            k9KlageTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
-        },
+        add(
+            PlanlagtJobb.KjørPåTidspunkt(
+                "K9KlageTilLosHistorikkvask",
+                høyPrioritet,
+                kjørTidligst = LocalDateTime.of(2025, 1, 1, 0, 0),
+                kjørSenest = LocalDateTime.of(2025, 1, 1, 0, 1),
+            ) {
+                k9KlageTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
+            }
+        )
 
         // Hyppig oppdatering i arbeidstiden
-        PlanlagtJobb.Periodisk(
-            navn = "PepCacheOppdatererArbeidstid",
-            prioritet = lavPrioritet,
-            intervall = 5.seconds,
-            tidsvindu = utvidetArbeidstid,
-            startForsinkelse = 1.minutes
-        ) {
-            pepCacheService.oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn()
-        },
+        add(
+            PlanlagtJobb.Periodisk(
+                navn = "PepCacheOppdatererArbeidstid",
+                prioritet = lavPrioritet,
+                intervall = 5.seconds,
+                tidsvindu = utvidetArbeidstid,
+                startForsinkelse = 1.minutes
+            ) {
+                pepCacheService.oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn()
+            }
+        )
 
         // Sjeldnere oppdatering utenfor arbeidstiden
-        PlanlagtJobb.Periodisk(
-            navn = "PepCacheOppdatererUtenforArbeidstid",
-            prioritet = lavPrioritet,
-            intervall = 30.seconds,
-            tidsvindu = utvidetArbeidstid.komplement(),
-            startForsinkelse = 1.minutes
-        ) {
-            pepCacheService.oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn()
-        },
+        add(
+            PlanlagtJobb.Periodisk(
+                navn = "PepCacheOppdatererUtenforArbeidstid",
+                prioritet = lavPrioritet,
+                intervall = 30.seconds,
+                tidsvindu = utvidetArbeidstid.komplement(),
+                startForsinkelse = 1.minutes
+            ) {
+                pepCacheService.oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn()
+            }
+        )
 
         // Kjører ikke nøkkeltalloppdatering i prod inntil ytelsen er forbedret
         if (configuration.koinProfile != KoinProfile.PROD) {
-            PlanlagtJobb.Oppstart(
-                navn = "DagensTallOppstart",
-                prioritet = mediumPrioritet,
-            ) {
-                dagensTallService.oppdaterCache(this)
-            }
-        } else null,
+            add(
+                PlanlagtJobb.Oppstart(
+                    navn = "DagensTallOppstart",
+                    prioritet = mediumPrioritet,
+                ) {
+                    dagensTallService.oppdaterCache(this)
+                }
+            )
 
-        if (configuration.koinProfile != KoinProfile.PROD) {
-            PlanlagtJobb.Oppstart(
-                navn = "PerEnhetOppstart",
-                prioritet = mediumPrioritet,
-            ) {
-                perEnhetService.oppdaterCache(this)
-            }
-        } else null,
+            add(
+                PlanlagtJobb.Oppstart(
+                    navn = "PerEnhetOppstart",
+                    prioritet = mediumPrioritet,
+                ) {
+                    perEnhetService.oppdaterCache(this)
+                }
+            )
 
-        /*
-        PlanlagtJobb.TimeJobb(
-            navn = "DagensTallOppdaterer",
-            prioritet = lavPrioritet,
-            tidsvindu = Tidsvindu.alleDager(5, 20),
-            minutter = listOf(0, 30),
-        ) {
-            dagensTallService.oppdaterCache(this)
-        },
-        PlanlagtJobb.TimeJobb(
-            navn = "PerEnhetOppdaterer",
-            prioritet = lavPrioritet,
-            tidsvindu = Tidsvindu.alleDager(7, 11),
-            minutter = listOf(15),
-        ) {
-            perEnhetService.oppdaterCache(this)
-        },
-        */
-    )
+            add(
+                PlanlagtJobb.TimeJobb(
+                    navn = "DagensTallOppdaterer",
+                    prioritet = lavPrioritet,
+                    tidsvindu = Tidsvindu.alleDager(5, 20),
+                    minutter = listOf(0, 30),
+                ) {
+                    dagensTallService.oppdaterCache(this)
+                }
+            )
+
+            add(
+                PlanlagtJobb.TimeJobb(
+                    navn = "PerEnhetOppdaterer",
+                    prioritet = lavPrioritet,
+                    tidsvindu = Tidsvindu.alleDager(7, 11),
+                    minutter = listOf(15),
+                ) {
+                    perEnhetService.oppdaterCache(this)
+                }
+            )
+        }
+    }
 
     val jobbplanlegger = Jobbplanlegger(
         innkommendeJobber = planlagteJobber,

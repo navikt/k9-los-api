@@ -49,7 +49,12 @@ class DagensTallService(
             FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
             FagsakYtelseType.PPN
         )
-        val behandlingstyper = listOf(BehandlingType.FORSTEGANGSSOKNAD, BehandlingType.REVURDERING)
+        val behandlingstyper = listOf(
+            BehandlingType.FORSTEGANGSSOKNAD,
+            BehandlingType.KLAGE,
+            BehandlingType.REVURDERING,
+            BehandlingType.TILBAKE,
+        )
 
         val tall = mutableListOf<DagensTallDto>()
 
