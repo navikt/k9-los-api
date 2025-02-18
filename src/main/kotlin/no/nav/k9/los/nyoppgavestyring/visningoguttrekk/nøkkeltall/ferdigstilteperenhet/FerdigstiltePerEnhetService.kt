@@ -25,7 +25,7 @@ class FerdigstiltePerEnhetService(
     private val cache = Cache<LocalDate, List<FerdigstiltePerEnhetTall>>(null)
     private val log: Logger = LoggerFactory.getLogger(FerdigstiltePerEnhetService::class.java)
 
-    private val enheter = listOf("4409", "4432")
+    private val enheter = listOf("2970")
     private val fagsakytelser = listOf(
         FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
         FagsakYtelseType.PPN,
