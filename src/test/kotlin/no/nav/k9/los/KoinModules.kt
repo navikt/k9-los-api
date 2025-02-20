@@ -64,6 +64,7 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrappe
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.*
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.status.StatusService
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.*
@@ -589,6 +590,13 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             pepClient = get(),
             reservasjonV3Tjeneste = get(),
             saksbehandlerRepository = get()
+        )
+    }
+
+    single {
+        StatusService(
+            queryService = get(),
+            oppgaverGruppertRepository = get(),
         )
     }
 
