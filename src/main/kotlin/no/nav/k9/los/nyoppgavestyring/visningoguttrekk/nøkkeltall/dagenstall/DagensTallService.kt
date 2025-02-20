@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall
+package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -11,94 +11,50 @@ import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.KodeOgNavn
 import no.nav.k9.los.utils.Cache
 import no.nav.k9.los.utils.CacheObject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
-import kotlin.system.measureTimeMillis
+import kotlin.time.measureTime
 
 
-class NøkkeltallService(
-    private val queryService: OppgaveQueryService,
-    private val oppgaverGruppertRepository: OppgaverGruppertRepository,
+class DagensTallService(
+    private val queryService: OppgaveQueryService
 ) {
-    private val dagensTallCache = Cache<LocalDate, DagensTallResponse.Suksess>(null)
-    private val log: Logger = LoggerFactory.getLogger(NøkkeltallService::class.java)
+    private val cache = Cache<LocalDate, DagensTallResponse>(null)
+    private val log: Logger = LoggerFactory.getLogger(DagensTallService::class.java)
 
-    fun hentStatus(harTilgangTilKode6: Boolean): List<OppgaverGruppertRepository.BehandlingstypeAntallDto> {
-        val grupperte =
-            oppgaverGruppertRepository.hentAntallÅpneOppgaverPrOppgavetypeBehandlingstype(harTilgangTilKode6)
-        val (medbehandlingType, utenBehandlingType) = grupperte.partition { it.behandlingstype != null }
-        if (utenBehandlingType.isNotEmpty()) {
-            log.warn(
-                "Fant ${
-                    utenBehandlingType.map { it.antall }.reduce(Int::plus)
-                } oppgaver uten behandlingstype, de blir ikke med oversikt som viser antall"
-            )
-        }
-
-
-        val totaltAntall = OppgaverGruppertRepository.BehandlingstypeAntallDto(
-            "Åpne behandlinger",
-            oppgaverGruppertRepository.hentTotaltAntallÅpneOppgaver(harTilgangTilKode6)
-        )
-
-        val punsjtyper = setOf(
-            BehandlingType.PAPIRSØKNAD,
-            BehandlingType.DIGITAL_SØKNAD,
-            BehandlingType.PAPIRETTERSENDELSE,
-            BehandlingType.PAPIRINNTEKTSOPPLYSNINGER,
-            BehandlingType.DIGITAL_ETTERSENDELSE,
-            BehandlingType.INNLOGGET_CHAT,
-            BehandlingType.SKRIV_TIL_OSS_SPØRMSÅL,
-            BehandlingType.SKRIV_TIL_OSS_SVAR,
-            BehandlingType.SAMTALEREFERAT,
-            BehandlingType.KOPI,
-            BehandlingType.INNTEKTSMELDING_UTGÅTT,
-            BehandlingType.UTEN_FNR_DNR,
-            BehandlingType.PUNSJOPPGAVE_IKKE_LENGER_NØDVENDIG,
-            BehandlingType.UKJENT,
-            )
-        var punsjSum = 0
-        val mutableList = medbehandlingType.toMutableList()
-            medbehandlingType.forEach { antallDto ->
-            if (punsjtyper.any { it.kode == antallDto.behandlingstype }) {
-                punsjSum += antallDto.antall
-                mutableList.removeIf { it.behandlingstype == antallDto.behandlingstype }
-            }
-        }
-        mutableList.add(OppgaverGruppertRepository.BehandlingstypeAntallDto("Punsj", punsjSum))
-
-        return listOf(totaltAntall).plus(mutableList)
+    fun hentCachetVerdi(): DagensTallResponse {
+        return cache.get(LocalDate.now())?.value ?: DagensTallResponse(null, emptyList(), emptyList(), emptyList())
     }
 
-    fun oppdaterDagensTall(scope: CoroutineScope) {
+    fun oppdaterCache(scope: CoroutineScope) {
         scope.launch(Dispatchers.IO) {
-            dagensTallCache.removeExpiredObjects(LocalDateTime.now())
-            val tidBruktPåOppdatering = measureTimeMillis {
-                hentDagensTall()
-                val dagensTall = hentDagensTall()
-                dagensTallCache.set(LocalDate.now(), CacheObject(dagensTall, LocalDateTime.now().plusDays(1)))
+            cache.removeExpiredObjects(LocalDateTime.now())
+            val tidBruktPåOppdatering = measureTime {
+                val dagensTall = hentFraDatabase()
+                cache.set(LocalDate.now(), CacheObject(dagensTall, LocalDateTime.now().plusDays(1)))
             }
-            log.info("Oppdaterte dagens tall på $tidBruktPåOppdatering ms")
+            log.info("Oppdaterte dagens tall på $tidBruktPåOppdatering")
         }
     }
 
-    fun dagensTall(): DagensTallResponse {
-        return dagensTallCache.get(LocalDate.now())?.value
-            ?: DagensTallResponse.Feil("Har ikke lastet inn dagens tall ennå")
-    }
-
-    private fun hentDagensTall(): DagensTallResponse.Suksess {
+    private fun hentFraDatabase(): DagensTallResponse {
         val ytelser = listOf(
             FagsakYtelseType.OMSORGSPENGER,
             FagsakYtelseType.OMSORGSDAGER,
             FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
             FagsakYtelseType.PPN
         )
-        val behandlingstyper = listOf(BehandlingType.FORSTEGANGSSOKNAD, BehandlingType.REVURDERING)
+        val behandlingstyper = listOf(
+            BehandlingType.FORSTEGANGSSOKNAD,
+            BehandlingType.KLAGE,
+            BehandlingType.REVURDERING,
+            BehandlingType.TILBAKE,
+        )
 
         val tall = mutableListOf<DagensTallDto>()
 
@@ -129,6 +85,39 @@ class NøkkeltallService(
                 )
             )
         )
+
+        for (behandlingType in behandlingstyper) {
+            tall.add(
+                DagensTallDto(
+                    hovedgruppe = DagensTallHovedgruppe.ALLE,
+                    undergruppe = DagensTallUndergruppe.fraBehandlingType(behandlingType),
+                    nyeIDag = hentTall(
+                        datotype = Datotype.MOTTATTDATO,
+                        operator = EksternFeltverdiOperator.EQUALS,
+                        dato = LocalDate.now(),
+                        behandlingType = behandlingType,
+                    ),
+                    ferdigstilteIDag = hentTall(
+                        datotype = Datotype.VEDTAKSDATO,
+                        operator = EksternFeltverdiOperator.EQUALS,
+                        dato = LocalDate.now(),
+                        behandlingType = behandlingType,
+                    ),
+                    nyeSiste7Dager = hentTall(
+                        datotype = Datotype.MOTTATTDATO,
+                        operator = EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS,
+                        dato = LocalDate.now().minusDays(7),
+                        behandlingType = behandlingType,
+                    ),
+                    ferdigstilteSiste7Dager = hentTall(
+                        datotype = Datotype.VEDTAKSDATO,
+                        operator = EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS,
+                        dato = LocalDate.now().minusDays(7),
+                        behandlingType = behandlingType,
+                    )
+                )
+            )
+        }
 
         for (ytelseType in ytelser) {
             val hovedgruppe = DagensTallHovedgruppe.fraFagsakYtelseType(ytelseType)
@@ -237,7 +226,7 @@ class NøkkeltallService(
             )
         )
 
-        return DagensTallResponse.Suksess(
+        return DagensTallResponse(
             oppdatertTidspunkt = LocalDateTime.now(),
             hovedgrupper = DagensTallHovedgruppe.entries.map { KodeOgNavn(it.name, it.navn) },
             undergrupper = DagensTallUndergruppe.entries.map { KodeOgNavn(it.name, it.navn) },
