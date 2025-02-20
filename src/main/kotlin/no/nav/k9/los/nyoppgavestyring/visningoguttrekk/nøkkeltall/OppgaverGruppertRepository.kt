@@ -3,6 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.k9.los.domene.modell.BehandlingType
 import no.nav.k9.los.utils.Cache
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -55,7 +56,7 @@ class OppgaverGruppertRepository(private val dataSource: DataSource) {
                 )
                     .map {
                         BehandlingstypeAntallDto(
-                            it.stringOrNull("behandlingType"),
+                            it.stringOrNull("behandlingType")?.let { kode -> BehandlingType.fraKode(kode).navn },
                             it.int("antall")
                         )
                     }

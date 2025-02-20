@@ -79,6 +79,7 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.Da
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallRepositoryV3
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.OppgaverGruppertRepository
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.status.StatusService
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.los.tjenester.driftsmeldinger.DriftsmeldingTjeneste
@@ -679,6 +680,13 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
+        StatusService(
+            queryService = get(),
+            oppgaverGruppertRepository = get(),
+        )
+    }
+
+    single {
         DagensTallService(
             queryService = get(),
         )
@@ -686,8 +694,7 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         FerdigstiltePerEnhetService(
-            queryService = get(),
-            oppgaverGruppertRepository = get(),
+            queryService = get()
         )
     }
 }
