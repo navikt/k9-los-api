@@ -47,6 +47,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonReposi
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltVerdiUtledere
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
@@ -124,8 +125,9 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             refreshOppgave = get(named("oppgaveRefreshChannel"))
         )
     }
-    single { AktivOppgaveRepository(
-        oppgavetypeRepository = get()
+    single {
+        AktivOppgaveRepository(
+            oppgavetypeRepository = get()
         )
     }
 
@@ -146,6 +148,28 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             dataSource = get(),
             pepClient = get()
         )
+    }
+
+    single {
+        OppgaveFeltVerdiUtledere(
+            saksbehandlerRepository = get()
+        )
+    }
+
+    single {
+        no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.EventTilDtoMapper(get())
+    }
+
+    single {
+        no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.EventTilDtoMapper(get())
+    }
+
+    single {
+        no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.tilbaketillos.EventTilDtoMapper(get())
+    }
+
+    single {
+        no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.EventTilDtoMapper(get())
     }
 
     single {
@@ -431,7 +455,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             pepCacheService = get(),
             oppgaveRepository = get(),
             reservasjonV3Tjeneste = get(),
-            historikkvaskChannel = get(named("historikkvaskChannelK9Sak"))
+            historikkvaskChannel = get(named("historikkvaskChannelK9Sak")),
+            eventTilDtoMapper = get()
         )
     }
 
@@ -445,7 +470,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             pepCacheService = get(),
             oppgaveRepository = get(),
             reservasjonV3Tjeneste = get(),
-            historikkvaskChannel = get(named("historikkvaskChannelK9Tilbake"))
+            historikkvaskChannel = get(named("historikkvaskChannelK9Tilbake")),
+            eventTilDtoMapper = get()
         )
     }
 
@@ -462,7 +488,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgaveV3Tjeneste = get(),
             transactionalManager = get(),
             config = get(),
-            k9sakBeriker = get()
+            k9sakBeriker = get(),
+            eventTilDtoMapper = get()
         )
     }
 
@@ -474,7 +501,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             reservasjonV3Tjeneste = get(),
             config = config,
             transactionalManager = get(),
-            pepCacheService = get()
+            pepCacheService = get(),
+            eventTilDtoMapper = get()
         )
     }
 
@@ -608,7 +636,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         FerdigstiltePerEnhetService(
-            queryService = get(),
+            enheter = config.enheter(),
+            queryService = get()
         )
     }
 }

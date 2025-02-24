@@ -27,6 +27,7 @@ class K9KlageTilLosHistorikkvaskTjeneste(
     private val config: Configuration,
     private val transactionalManager: TransactionalManager,
     private val k9sakBeriker: K9SakBerikerInterfaceKludge,
+    private val eventTilDtoMapper: EventTilDtoMapper
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9KlageTilLosHistorikkvaskTjeneste::class.java)
@@ -83,7 +84,7 @@ class K9KlageTilLosHistorikkvaskTjeneste(
             for (event in behandlingProsessEventer) {
                 if (eventNrForBehandling > høyesteInternVersjon) { break }  //Historikkvasken har funnet eventer som ennå ikke er lastet inn med normalflyt. Dirty eventer skal håndteres av vanlig adaptertjeneste
                 val losOpplysningerSomManglerIKlageDto = event.påklagdBehandlingEksternId?.let { k9sakBeriker.berikKlage(it) }
-                val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, losOpplysningerSomManglerIKlageDto, forrigeOppgave)
+                val oppgaveDto = eventTilDtoMapper.lagOppgaveDto(event, losOpplysningerSomManglerIKlageDto, forrigeOppgave)
 
                 oppgaveV3 = oppgaveV3Tjeneste.utledEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, tx)
                 oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveV3, eventNrForBehandling, tx)

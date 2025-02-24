@@ -56,7 +56,7 @@ class OppgaverGruppertRepository(private val dataSource: DataSource) {
                 )
                     .map {
                         BehandlingstypeAntallDto(
-                            it.stringOrNull("behandlingType")?.let { kode -> BehandlingType.fraKode(kode).navn },
+                            it.string("behandlingType").let { kode -> BehandlingType.fraKode(kode).navn },
                             it.int("antall")
                         )
                     }

@@ -397,7 +397,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         assertReservasjonMedAntallOppgaver(TestSaksbehandler.BIRGER_BESLUTTER, 1)
 
         // Denne kan fjernes når historikkvask er endret til å kjøres automatisk ved behov i eventhandler
-        K9SakTilLosHistorikkvaskTjeneste(get(),get(),get(),get(),get(),get()).vaskOppgaveForBehandlingUUID(eksternId1)
+        K9SakTilLosHistorikkvaskTjeneste(get(),get(),get(),get(),get(),get(),get()).vaskOppgaveForBehandlingUUID(eksternId1)
 
         eventHandler.prosesser(behandling2.avsluttet().build())
         assertIngenReservasjon(TestSaksbehandler.BIRGER_BESLUTTER)

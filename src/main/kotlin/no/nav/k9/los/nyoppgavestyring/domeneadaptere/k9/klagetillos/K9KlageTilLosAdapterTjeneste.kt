@@ -32,6 +32,7 @@ class K9KlageTilLosAdapterTjeneste(
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
     private val transactionalManager: TransactionalManager,
     private val k9sakBeriker: K9SakBerikerInterfaceKludge,
+    private val eventTilDtoMapper: EventTilDtoMapper
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9KlageTilLosAdapterTjeneste::class.java)
@@ -118,7 +119,7 @@ class K9KlageTilLosAdapterTjeneste(
                 val losOpplysningerSomManglerIKlageDto =
                     event.påklagdBehandlingEksternId?.let { k9sakBeriker.berikKlage(it) }
                 val oppgaveDto =
-                    EventTilDtoMapper.lagOppgaveDto(event, losOpplysningerSomManglerIKlageDto, forrigeOppgave)
+                    eventTilDtoMapper.lagOppgaveDto(event, losOpplysningerSomManglerIKlageDto, forrigeOppgave)
 
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
 

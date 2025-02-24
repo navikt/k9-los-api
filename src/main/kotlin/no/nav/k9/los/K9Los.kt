@@ -222,7 +222,8 @@ fun Application.k9Los() {
         pepCacheService = koin.get(),
         oppgaveRepository = koin.get(),
         reservasjonV3Tjeneste = koin.get(),
-        historikkvaskChannel = koin.get<Channel<k9SakEksternId>>(named("historikkvaskChannelK9Sak"))
+        historikkvaskChannel = koin.get<Channel<k9SakEksternId>>(named("historikkvaskChannelK9Sak")),
+        eventTilDtoMapper = koin.get()
     ).kjør(kjørSetup = false, kjørUmiddelbart = false)
 
     // implementer med Jobbplanlegger
@@ -235,6 +236,7 @@ fun Application.k9Los() {
         transactionalManager = koin.get(),
         config = koin.get(),
         k9sakBeriker = koin.get(),
+        eventTilDtoMapper = koin.get()
     ).kjør(kjørSetup = false, kjørUmiddelbart = false)
 
     // implementer med Jobbplanlegger
@@ -245,7 +247,8 @@ fun Application.k9Los() {
         reservasjonV3Tjeneste = koin.get(),
         config = koin.get(),
         transactionalManager = koin.get(),
-        pepCacheService = koin.get()
+        pepCacheService = koin.get(),
+        eventTilDtoMapper = koin.get()
     ).kjør(kjørUmiddelbart = false)
 
     // implementer med Jobbplanlegger
@@ -413,8 +416,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
             PlanlagtJobb.KjørPåTidspunkt(
                 "K9SakTilLosHistorikkvask",
                 høyPrioritet,
-                kjørTidligst = LocalDateTime.of(2025, 2, 18, 0, 0),
-                kjørSenest = LocalDateTime.of(2025, 2, 18, 16, 0),
+                kjørSenest = LocalDateTime.of(2025, 2, 24, 17, 0),
             ) {
                 k9SakTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
             }
@@ -424,8 +426,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
             PlanlagtJobb.KjørPåTidspunkt(
                 "K9PunsjTilLosHistorikkvask",
                 høyPrioritet,
-                kjørTidligst = LocalDateTime.of(2025, 1, 1, 0, 0),
-                kjørSenest = LocalDateTime.of(2025, 1, 1, 0, 1),
+                kjørSenest = LocalDateTime.of(2025, 2, 21, 22, 0),
             ) {
                 k9PunsjTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
             }
@@ -435,8 +436,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
             PlanlagtJobb.KjørPåTidspunkt(
                 "K9TilbakeTilLosHistorikkvask",
                 høyPrioritet,
-                kjørTidligst = LocalDateTime.of(2025, 1, 1, 0, 0),
-                kjørSenest = LocalDateTime.of(2025, 1, 1, 0, 1),
+                kjørSenest = LocalDateTime.of(2025, 2, 21, 22, 0),
             ) {
                 k9TilbakeTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
             }
@@ -446,8 +446,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
             PlanlagtJobb.KjørPåTidspunkt(
                 "K9KlageTilLosHistorikkvask",
                 høyPrioritet,
-                kjørTidligst = LocalDateTime.of(2025, 1, 1, 0, 0),
-                kjørSenest = LocalDateTime.of(2025, 1, 1, 0, 1),
+                kjørSenest = LocalDateTime.of(2025, 2, 21, 22, 0),
             ) {
                 k9KlageTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
             }

@@ -17,11 +17,8 @@ class StatusService(
             oppgaverGruppertRepository.hentAntallÅpneOppgaverPrOppgavetypeBehandlingstype(harTilgangTilKode6)
         val (medbehandlingType, utenBehandlingType) = grupperte.partition { it.behandlingstype != null }
         if (utenBehandlingType.isNotEmpty()) {
-            log.warn(
-                "Fant ${
-                    utenBehandlingType.map { it.antall }.reduce(Int::plus)
-                } oppgaver uten behandlingstype, de blir ikke med oversikt som viser antall"
-            )
+            val antall = utenBehandlingType.sumOf { it.antall }
+            log.warn("Fant $antall oppgaver uten behandlingstype, de blir ikke med oversikt som viser antall")
         }
 
 
@@ -45,10 +42,10 @@ class StatusService(
             BehandlingType.UTEN_FNR_DNR,
             BehandlingType.PUNSJOPPGAVE_IKKE_LENGER_NØDVENDIG,
             BehandlingType.UKJENT,
-            )
+        )
         var punsjSum = 0
         val mutableList = medbehandlingType.toMutableList()
-            medbehandlingType.forEach { antallDto ->
+        medbehandlingType.forEach { antallDto ->
             if (punsjtyper.any { it.kode == antallDto.behandlingstype }) {
                 punsjSum += antallDto.antall
                 mutableList.removeIf { it.behandlingstype == antallDto.behandlingstype }

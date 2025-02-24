@@ -41,7 +41,8 @@ class K9SakTilLosAdapterTjeneste(
     private val transactionalManager: TransactionalManager,
     private val k9SakBerikerKlient: K9SakBerikerInterfaceKludge,
     private val pepCacheService: PepCacheService,
-    private val historikkvaskChannel: Channel<k9SakEksternId>
+    private val historikkvaskChannel: Channel<k9SakEksternId>,
+    private val eventTilDtoMapper: EventTilDtoMapper
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9SakTilLosAdapterTjeneste::class.java)
@@ -128,7 +129,7 @@ class K9SakTilLosAdapterTjeneste(
             var eventNrForBehandling = -1L
             behandlingProsessEventer.forEach { event ->
                 eventNrForBehandling++
-                var oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+                var oppgaveDto = eventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
                 oppgaveDto = ryddOppObsoleteOgResultatfeilFra2020(event, oppgaveDto, nyeBehandlingsopplysningerFraK9Sak)
 
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
@@ -176,8 +177,8 @@ class K9SakTilLosAdapterTjeneste(
         event: BehandlingProsessEventDto,
         tx: TransactionalSession
     ) {
-        val saksbehandlerNøkkel = EventTilDtoMapper.utledReservasjonsnøkkel(event, erTilBeslutter = false)
-        val beslutterNøkkel = EventTilDtoMapper.utledReservasjonsnøkkel(event, erTilBeslutter = true)
+        val saksbehandlerNøkkel = eventTilDtoMapper.utledReservasjonsnøkkel(event, erTilBeslutter = false)
+        val beslutterNøkkel = eventTilDtoMapper.utledReservasjonsnøkkel(event, erTilBeslutter = true)
         val antallAnnullert =
             annullerReservasjonHvisAlleOppgaverPåVentEllerAvsluttet(listOf(saksbehandlerNøkkel, beslutterNøkkel), tx)
         if (antallAnnullert > 0) {
@@ -231,16 +232,16 @@ class K9SakTilLosAdapterTjeneste(
         }
 
         if (event.behandlingStatus == "AVSLU"
-            && oppgaveDto.feltverdier.filter { it.nøkkel == "resultattype" }.first().verdi == "IKKE_FASTSATT"
+            && oppgaveDto.feltverdier.first { it.nøkkel == "resultattype" }.verdi == "IKKE_FASTSATT"
         ) {
-            if (nyeBehandlingsopplysningerFraK9Sak.sakstype == FagsakYtelseType.OBSOLETE) {
-                return oppgaveDto.copy(status = "LUKKET").erstattFeltverdi(
+            return if (nyeBehandlingsopplysningerFraK9Sak.sakstype == FagsakYtelseType.OBSOLETE) {
+                oppgaveDto.copy(status = "LUKKET").erstattFeltverdi(
                     OppgaveFeltverdiDto(
                         "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
                     )
                 )
             } else {
-                return oppgaveDto.erstattFeltverdi(
+                oppgaveDto.erstattFeltverdi(
                     OppgaveFeltverdiDto(
                         "resultattype", nyeBehandlingsopplysningerFraK9Sak.behandlingResultatType.kode
                     )

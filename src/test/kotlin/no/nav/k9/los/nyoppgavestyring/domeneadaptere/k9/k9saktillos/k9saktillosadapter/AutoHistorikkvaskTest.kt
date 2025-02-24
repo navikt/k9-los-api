@@ -47,7 +47,7 @@ class AutoHistorikkvaskTest : AbstractK9LosIntegrationTest() {
         eventHandler.prosesser(event3)
 
         //TODO: Håndtere parallellitet
-        K9SakTilLosHistorikkvaskTjeneste(get(),get(),get(),get(),get(),get()).vaskOppgaveForBehandlingUUID(eksternId1)
+        K9SakTilLosHistorikkvaskTjeneste(get(),get(),get(),get(),get(),get(),get()).vaskOppgaveForBehandlingUUID(eksternId1)
 
         val oppgave = oppgaveRepositoryTxWrapper.hentOppgave("K9", eksternId1.toString())
         assertThat(oppgave.status).isEqualTo(Oppgavestatus.LUKKET.kode)

@@ -17,7 +17,8 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
     private val eventRepository: PunsjEventK9Repository,
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
     private val config: Configuration,
-    private val transactionalManager: TransactionalManager
+    private val transactionalManager: TransactionalManager,
+    private val eventTilDtoMapper: EventTilDtoMapper
 ) {
     private val log: Logger = LoggerFactory.getLogger(K9PunsjTilLosHistorikkvaskTjeneste::class.java)
     private val METRIKKLABEL = "k9-punsj-til-los-historikkvask"
@@ -62,9 +63,7 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
     }
 
     private fun spillAvBehandlingProsessEventer(behandlingsIder: List<UUID>): Long {
-        return behandlingsIder
-            .map { uuid -> vaskOgMarkerOppgaveForBehandlingUUID(uuid) }
-            .sum()
+        return behandlingsIder.sumOf { uuid -> vaskOgMarkerOppgaveForBehandlingUUID(uuid) }
     }
 
     @WithSpan
@@ -83,7 +82,7 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
                 //manglende historikkvask må fanges opp fra WARNINGs i loggen
                 eventRepository.markerVasketHistorikk(uuid, tx)
             }
-            return 0;
+            return 0
         }
     }
 
@@ -103,7 +102,7 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
 
         log.info("Vasker ${behandlingProsessEventer.size} hendelser for k9punsj-oppgave med eksternId: $uuid")
         for (event in behandlingProsessEventer) {
-            val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+            val oppgaveDto = eventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
             log.info("Utledet oppgave DTO")
 
             oppgaveV3 = oppgaveV3Tjeneste.utledEksisterendeOppgaveversjon(oppgaveDto, eventTeller, tx)

@@ -15,7 +15,6 @@ import no.nav.k9.los.domene.modell.BehandlingStatus
 import no.nav.k9.los.domene.repository.BehandlingProsessEventTilbakeRepository
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventTilbakeDto
 import no.nav.k9.los.jobber.JobbMetrikker
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.TilbakeEventTilDtoMapper
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
@@ -40,7 +39,8 @@ class K9TilbakeTilLosAdapterTjeneste(
     private val config: Configuration,
     private val transactionalManager: TransactionalManager,
     private val pepCacheService: PepCacheService,
-    private val historikkvaskChannel: Channel<k9TilbakeEksternId>
+    private val historikkvaskChannel: Channel<k9TilbakeEksternId>,
+    private val eventTilDtoMapper: EventTilDtoMapper
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9TilbakeTilLosAdapterTjeneste::class.java)
@@ -115,7 +115,7 @@ class K9TilbakeTilLosAdapterTjeneste(
             var eventNrForBehandling = -1L
             behandlingProsessEventer.forEach { event ->
                 eventNrForBehandling++
-                val oppgaveDto = TilbakeEventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+                val oppgaveDto = eventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
 
                 //oppgave er satt bare dersom oppgavemodellen ikke har sett eksternVersjon fra tidligere
@@ -153,8 +153,8 @@ class K9TilbakeTilLosAdapterTjeneste(
         event: BehandlingProsessEventTilbakeDto,
         tx: TransactionalSession
     ) {
-        val saksbehandlerNøkkel = TilbakeEventTilDtoMapper.utledReservasjonsnøkkel(event, erTilBeslutter = false)
-        val beslutterNøkkel = TilbakeEventTilDtoMapper.utledReservasjonsnøkkel(event, erTilBeslutter = true)
+        val saksbehandlerNøkkel = eventTilDtoMapper.utledReservasjonsnøkkel(event, erTilBeslutter = false)
+        val beslutterNøkkel = eventTilDtoMapper.utledReservasjonsnøkkel(event, erTilBeslutter = true)
         val antallAnnullert = annullerReservasjonHvisAlleOppgaverPåVentEllerAvsluttet(listOf(saksbehandlerNøkkel, beslutterNøkkel), tx)
         if (antallAnnullert > 0) {
             log.info("Annullerte $antallAnnullert reservasjoner maskinelt på oppgave ${event.saksnummer} som følge av status på innkommende event")

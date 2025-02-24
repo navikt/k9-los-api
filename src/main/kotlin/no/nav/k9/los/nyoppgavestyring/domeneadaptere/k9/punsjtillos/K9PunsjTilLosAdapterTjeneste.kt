@@ -31,6 +31,7 @@ class K9PunsjTilLosAdapterTjeneste(
     private val config: Configuration,
     private val transactionalManager: TransactionalManager,
     private val pepCacheService: PepCacheService,
+    private val eventTilDtoMapper: EventTilDtoMapper
 ) {
     private val log: Logger = LoggerFactory.getLogger(K9PunsjTilLosAdapterTjeneste::class.java)
     private val TRÅDNAVN = "k9-punsj-til-los"
@@ -106,7 +107,7 @@ class K9PunsjTilLosAdapterTjeneste(
         transactionalManager.transaction { tx ->
             val punsjEventer = eventRepository.hentMedLås(tx, uuid)
             for (event in punsjEventer.eventer) {
-                val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgaveversjon)
+                val oppgaveDto = eventTilDtoMapper.lagOppgaveDto(event, forrigeOppgaveversjon)
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
 
                 if (oppgave != null) {

@@ -28,47 +28,43 @@ class NokkeltallTjeneste(
     private val log = LoggerFactory.getLogger(BehandlingsmigreringTjeneste::class.java)
 
     fun hentOppgaverPåVent(): OppgaverPåVentDto.PåVentResponse {
-        return if (koinProfile == KoinProfile.PROD){
-            hentOppgaverPåVentV2()
-        } else {
-            hentOppgaverPåVentV3()
-        }
-    }
-
-    fun hentOppgaverPåVentV2(): OppgaverPåVentDto.PåVentResponse {
         val raw = nøkkeltallRepository.hentAllePåVentGruppert()
             //gir ikke helt mening å ha med VENT_PÅ_TILBAKEKREVINGSGRUNNLAG her. Den er vangligvis samtidig med VENT_PÅ_BRUKERTILBAKEMELDING, så ville gitt duplikater her. Frist er også misvisende for aksjonspunktet, k9tilbake vil uansett vente helt til grunnlag kommer
-            .filterNot { gruppe -> gruppe.system == Fagsystem.K9TILBAKE && gruppe.aksjonspunktKode ==  "VENT_PÅ_TILBAKEKREVINGSGRUNNLAG"}
+            .filterNot { gruppe -> gruppe.system == Fagsystem.K9TILBAKE && gruppe.aksjonspunktKode == "VENT_PÅ_TILBAKEKREVINGSGRUNNLAG" }
 
         data class PerBehandling(val f: FagsakYtelseType, val b: BehandlingType, val frist: LocalDate)
-        val påVentPerBehandling = raw.groupingBy { PerBehandling( it.fagsakYtelseType, it.behandlingType, it.frist) }
-            .aggregate { key, accumulator : Int?, element, first -> if (first) element.antall else accumulator!! + element.antall }
+
+        val påVentPerBehandling = raw.groupingBy { PerBehandling(it.fagsakYtelseType, it.behandlingType, it.frist) }
+            .aggregate { key, accumulator: Int?, element, first -> if (first) element.antall else accumulator!! + element.antall }
             .entries.map { OppgaverPåVentDto.PerBehandlingDto(it.key.f, it.key.b, it.key.frist, it.value) }
 
-        data class PerVenteårsak(val f: FagsakYtelseType, val b: BehandlingType, val frist: LocalDate, val venteårsak: Venteårsak)
-        val påVentPerVenteårsak = raw.groupingBy { PerVenteårsak(it.fagsakYtelseType, it.behandlingType, it.frist, tilVenteårsak(it.system, it.venteårsak)) }
-            .aggregate { key, accumulator : Int?, element, first -> if (first) element.antall else accumulator!! + element.antall }
-            .entries.map { OppgaverPåVentDto.PerVenteårsakDto(it.key.f, it.key.b, it.key.frist, it.key.venteårsak, it.value) }
+        data class PerVenteårsak(
+            val f: FagsakYtelseType,
+            val b: BehandlingType,
+            val frist: LocalDate,
+            val venteårsak: Venteårsak
+        )
 
+        val påVentPerVenteårsak = raw.groupingBy {
+            PerVenteårsak(
+                it.fagsakYtelseType,
+                it.behandlingType,
+                it.frist,
+                tilVenteårsak(it.system, it.venteårsak)
+            )
+        }
+            .aggregate { key, accumulator: Int?, element, first -> if (first) element.antall else accumulator!! + element.antall }
+            .entries.map {
+                OppgaverPåVentDto.PerVenteårsakDto(
+                    it.key.f,
+                    it.key.b,
+                    it.key.frist,
+                    it.key.venteårsak,
+                    it.value
+                )
+            }
         return OppgaverPåVentDto.PåVentResponse(påVentPerBehandling, påVentPerVenteårsak)
-    }
 
-    fun hentOppgaverPåVentV3(): OppgaverPåVentDto.PåVentResponse {
-        val raw = nøkkeltallRepositoryV3.hentAllePåVentGruppert()
-            //gir ikke helt mening å ha med VENT_PÅ_TILBAKEKREVINGSGRUNNLAG her. Den er vangligvis samtidig med VENT_PÅ_BRUKERTILBAKEMELDING, så ville gitt duplikater her. Frist er også misvisende for aksjonspunktet, k9tilbake vil uansett vente helt til grunnlag kommer
-            .filterNot { gruppe -> gruppe.system == Fagsystem.K9TILBAKE && gruppe.aksjonspunktKode ==  "VENT_PÅ_TILBAKEKREVINGSGRUNNLAG"}
-
-        data class PerBehandling(val f: FagsakYtelseType, val b: BehandlingType, val frist: LocalDate?)
-        val påVentPerBehandling = raw.groupingBy { PerBehandling( it.fagsakYtelseType, it.behandlingType, it.frist) }
-            .aggregate { key, accumulator : Int?, element, first -> if (first) element.antall else accumulator!! + element.antall }
-            .entries.map { OppgaverPåVentDto.PerBehandlingDto(it.key.f, it.key.b, it.key.frist, it.value) }
-
-        data class PerVenteårsak(val f: FagsakYtelseType, val b: BehandlingType, val frist: LocalDate?, val venteårsak: Venteårsak)
-        val påVentPerVenteårsak = raw.groupingBy { PerVenteårsak(it.fagsakYtelseType, it.behandlingType, it.frist, tilVenteårsak(it.system, it.venteårsak)) }
-            .aggregate { key, accumulator : Int?, element, first -> if (first) element.antall else accumulator!! + element.antall }
-            .entries.map { OppgaverPåVentDto.PerVenteårsakDto(it.key.f, it.key.b, it.key.frist, it.key.venteårsak, it.value) }
-
-        return OppgaverPåVentDto.PåVentResponse(påVentPerBehandling, påVentPerVenteårsak)
     }
 
     private fun tilVenteårsak(system: Fagsystem, venteårsakkode:String) : Venteårsak =
@@ -151,18 +147,7 @@ class NokkeltallTjeneste(
     }
 
     suspend fun hentDagensTall(): List<AlleApneBehandlinger> {
-        if (koinProfile == KoinProfile.PROD) {
-            return oppgaveRepository.hentApneBehandlingerPerBehandlingtypeIdag()
-        } else {
-            val harTilgangTilKode6 = pepClient.harTilgangTilKode6()
-            val grupperte =  oppgaverGruppertRepository.hentAntallÅpneOppgaverPrOppgavetypeBehandlingstype(harTilgangTilKode6)
-            val (medbehandlingType, utenBehandlingType) = grupperte.partition { it.behandlingstype != null }
-            if (utenBehandlingType.isNotEmpty()) {
-                log.warn("Fant ${utenBehandlingType.map {it.antall}.reduce(Int::plus)} oppgaver uten behandlingstype, de blir ikke med oversikt som viser antall")
-            }
-            return medbehandlingType.map { AlleApneBehandlinger(BehandlingType.fraKode(it.behandlingstype!!), it.antall) }
-
-        }
+        return oppgaveRepository.hentApneBehandlingerPerBehandlingtypeIdag()
     }
 }
 

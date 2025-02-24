@@ -1,5 +1,6 @@
-package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9saktillos.k9saktillosadapter;
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9saktillos.k9saktillosadapter
 
+import io.mockk.mockk
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
@@ -21,19 +22,20 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 class UtledFørsteTidHosBeslutterTest : AbstractK9LosIntegrationTest() {
+    private val eventTilDtoMapper = EventTilDtoMapper(mockk())
 
     @Test
     fun `aldri vært hos beslutter gir ingen timestamp for første gang hos beslutter`() {
         val forrigeOppgave = OppgaveTestDataBuilder().lag()
         val event = opprettEvent(FagsakYtelseType.PLEIEPENGER_SYKT_BARN, BehandlingStatus.UTREDES)
-        assertNull(EventTilDtoMapper.utledTidFørsteGangHosBeslutter(forrigeOppgave = forrigeOppgave, event) )
+        assertNull(eventTilDtoMapper.utledTidFørsteGangHosBeslutter(forrigeOppgave = forrigeOppgave, event) )
     }
 
     @Test
     fun `første gang hos beslutter skal sette timestamp lik eventtid`() {
         val forrigeOppgave = OppgaveTestDataBuilder().lag()
         val event = hosBeslutter(opprettEvent(FagsakYtelseType.PLEIEPENGER_SYKT_BARN, BehandlingStatus.UTREDES))
-        assertEquals(event.eventTid.toString(), EventTilDtoMapper.utledTidFørsteGangHosBeslutter(forrigeOppgave = forrigeOppgave, event)!!.verdi)
+        assertEquals(event.eventTid.toString(), eventTilDtoMapper.utledTidFørsteGangHosBeslutter(forrigeOppgave = forrigeOppgave, event)!!.verdi)
     }
 
     @Test
@@ -41,7 +43,7 @@ class UtledFørsteTidHosBeslutterTest : AbstractK9LosIntegrationTest() {
         val timestamp = LocalDate.now().minusDays(1).toString()
         val forrigeOppgave = OppgaveTestDataBuilder().medOppgaveFeltVerdi(feltTypeKode = FeltType.TID_FORSTE_GANG_HOS_BESLUTTER, timestamp).lag()
         val event = opprettEvent(FagsakYtelseType.PLEIEPENGER_SYKT_BARN, BehandlingStatus.UTREDES)
-        assertEquals(timestamp, EventTilDtoMapper.utledTidFørsteGangHosBeslutter(forrigeOppgave = forrigeOppgave, event)!!.verdi)
+        assertEquals(timestamp, eventTilDtoMapper.utledTidFørsteGangHosBeslutter(forrigeOppgave = forrigeOppgave, event)!!.verdi)
     }
 
     @Test
@@ -49,7 +51,7 @@ class UtledFørsteTidHosBeslutterTest : AbstractK9LosIntegrationTest() {
         val timestamp = LocalDate.now().minusDays(1).toString()
         val forrigeOppgave = OppgaveTestDataBuilder().medOppgaveFeltVerdi(feltTypeKode = FeltType.TID_FORSTE_GANG_HOS_BESLUTTER, timestamp).lag()
         val event = hosBeslutter(opprettEvent(FagsakYtelseType.PLEIEPENGER_SYKT_BARN, BehandlingStatus.UTREDES))
-        assertEquals(timestamp, EventTilDtoMapper.utledTidFørsteGangHosBeslutter(forrigeOppgave = forrigeOppgave, event)!!.verdi)
+        assertEquals(timestamp, eventTilDtoMapper.utledTidFørsteGangHosBeslutter(forrigeOppgave = forrigeOppgave, event)!!.verdi)
     }
 
     private fun opprettEvent(fagsakYtelseType: FagsakYtelseType, behandlingStatus: BehandlingStatus) : BehandlingProsessEventDto {
