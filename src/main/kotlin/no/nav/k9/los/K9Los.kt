@@ -301,7 +301,6 @@ fun Application.k9Los() {
             }
         } else {
             authenticate(*issuers.allIssuers()) {
-                api()
                 route("forvaltning") {
                     InnsiktApis()
                     forvaltningApis()
@@ -315,6 +314,7 @@ fun Application.k9Los() {
                     }
                     swaggerUI("openapi.json")
                 }
+                api()
             }
         }
 
@@ -341,6 +341,12 @@ fun Application.k9Los() {
 
 private fun Route.api() {
     route("api") {
+        route("/swagger") {
+            route("openapi.json") {
+                openApiSpec()
+            }
+            swaggerUI("openapi.json")
+        }
         route("driftsmeldinger", { hidden = true }) {
             DriftsmeldingerApis()
         }
