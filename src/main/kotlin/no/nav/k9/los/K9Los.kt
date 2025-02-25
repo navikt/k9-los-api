@@ -286,34 +286,8 @@ fun Application.k9Los() {
             localSetup.initTilbakeoppgaver(0)
             localSetup.initK9SakOppgaver(0)
             api()
-            route("/forvaltning") {
-                InnsiktApis()
-                forvaltningApis()
-                route("k9saktillos") { K9SakTilLosApi() }
-                route("k9klagetillos") { K9KlageTilLosApi() }
-                route("statistikk") { StatistikkApi() }
-            }
-            route("/swagger") {
-                route("openapi.json") {
-                    openApiSpec()
-                }
-                swaggerUI("openapi.json")
-            }
         } else {
             authenticate(*issuers.allIssuers()) {
-                route("forvaltning") {
-                    InnsiktApis()
-                    forvaltningApis()
-                    route("k9saktillos") { K9SakTilLosApi() }
-                    route("k9klagetillos") { K9KlageTilLosApi() }
-                    route("statistikk") { StatistikkApi() }
-                }
-                route("/swagger") {
-                    route("openapi.json") {
-                        openApiSpec()
-                    }
-                    swaggerUI("openapi.json")
-                }
                 api()
             }
         }
@@ -340,6 +314,19 @@ fun Application.k9Los() {
 }
 
 private fun Route.api() {
+    route("/forvaltning") {
+        InnsiktApis()
+        forvaltningApis()
+        route("k9saktillos") { K9SakTilLosApi() }
+        route("k9klagetillos") { K9KlageTilLosApi() }
+        route("statistikk") { StatistikkApi() }
+    }
+    route("k9/los/api/") {
+        route("openapi.json") {
+            openApiSpec()
+        }
+        swaggerUI("openapi.json")
+    }
     route("api") {
         route("driftsmeldinger", { hidden = true }) {
             DriftsmeldingerApis()
