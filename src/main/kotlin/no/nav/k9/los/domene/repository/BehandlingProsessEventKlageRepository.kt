@@ -61,6 +61,15 @@ class BehandlingProsessEventKlageRepository(private val dataSource: DataSource) 
         )
     }
 
+    fun settDirty(uuid: UUID, tx: TransactionalSession) {
+        tx.run(
+            queryOf(
+                """update behandling_prosess_events_klage set dirty = true where id = :id""",
+                mapOf("id" to uuid.toString())
+            ).asUpdate
+        )
+    }
+
     fun lagre(uuid: UUID, f: (K9KlageModell?) -> K9KlageModell): K9KlageModell {
         var sortertModell = K9KlageModell(mutableListOf())
         using(sessionOf(dataSource)) { it ->
