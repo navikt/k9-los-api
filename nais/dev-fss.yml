@@ -83,6 +83,9 @@ spec:
         - application: k9-los-web
           namespace: k9saksbehandling
           cluster: dev-gcp
+        - application: k9-swagger
+          namespace: k9saksbehandling
+          cluster: dev-gcp
         - application: k9-sak
           namespace: k9saksbehandling
   ingresses:
