@@ -341,12 +341,6 @@ fun Application.k9Los() {
 
 private fun Route.api() {
     route("api") {
-        route("/swagger") {
-            route("openapi.json") {
-                openApiSpec()
-            }
-            swaggerUI("openapi.json")
-        }
         route("driftsmeldinger", { hidden = true }) {
             DriftsmeldingerApis()
         }
