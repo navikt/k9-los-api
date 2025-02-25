@@ -86,8 +86,9 @@ spec:
         - application: k9-swagger
           namespace: k9saksbehandling
           cluster: dev-gcp
-          scopes:
-            - "swagger"
+          permissions:
+            scopes:
+              - "swagger"
         - application: k9-sak
           namespace: k9saksbehandling
   ingresses:
