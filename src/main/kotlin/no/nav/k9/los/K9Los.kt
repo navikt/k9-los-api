@@ -314,20 +314,20 @@ fun Application.k9Los() {
 }
 
 private fun Route.api() {
-    route("/forvaltning") {
-        InnsiktApis()
-        forvaltningApis()
-        route("k9saktillos") { K9SakTilLosApi() }
-        route("k9klagetillos") { K9KlageTilLosApi() }
-        route("statistikk") { StatistikkApi() }
-    }
-    route("k9/los/api/") {
+    route("k9/los/api") {
         route("openapi.json") {
             openApiSpec()
         }
         swaggerUI("openapi.json")
+        route("/forvaltning") {
+            InnsiktApis()
+            forvaltningApis()
+            route("k9saktillos") { K9SakTilLosApi() }
+            route("k9klagetillos") { K9KlageTilLosApi() }
+            route("statistikk") { StatistikkApi() }
+        }
     }
-    route("api") {
+    route("k9/los/api") {
         route("driftsmeldinger", { hidden = true }) {
             DriftsmeldingerApis()
         }
