@@ -1,7 +1,7 @@
 package no.nav.k9.los.db
 
 import com.zaxxer.hikari.HikariDataSource
-import io.ktor.server.application.Application
+import io.ktor.server.application.*
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
 import no.nav.vault.jdbc.hikaricp.HikariCPVaultUtil
@@ -39,13 +39,8 @@ fun Application.migrate(configuration: Configuration) =
     }
 
 fun runMigration(dataSource: DataSource, initSql: String? = null): Int {
-    Flyway.configure()
-        .locations("migreringer/")
-        .dataSource(dataSource)
-        .initSql(initSql)
-        .load()
-
     return Flyway.configure()
+        .executeInTransaction(false)
         .locations("migreringer/")
         .dataSource(dataSource)
         .initSql(initSql)

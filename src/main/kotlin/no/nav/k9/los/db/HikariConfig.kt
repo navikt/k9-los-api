@@ -22,6 +22,6 @@ fun createHikariConfig(jdbcUrl: String, username: String? = null, password: Stri
     }
 
 fun Application.hikariConfig(hikariConfig: Configuration): HikariDataSource {
-    migrate(hikariConfig)
+    //migrate(hikariConfig)
     return getDataSource(hikariConfig)
 }

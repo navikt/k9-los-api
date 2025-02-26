@@ -35,6 +35,7 @@ import no.nav.helse.dusseldorf.ktor.jackson.JacksonStatusPages
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.helse.dusseldorf.ktor.metrics.MetricsRoute
 import no.nav.helse.dusseldorf.ktor.metrics.init
+import no.nav.k9.los.db.migrate
 import no.nav.k9.los.eventhandler.*
 import no.nav.k9.los.integrasjon.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
@@ -89,6 +90,7 @@ import java.time.LocalDateTime
 import java.util.*
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.measureTime
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
@@ -396,6 +398,12 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
     val utvidetArbeidstid = Tidsvindu.hverdager(5, 20)
 
     val planlagteJobber = buildSet {
+        add(PlanlagtJobb.KjørPåTidspunkt("FlywayMigrering", høyPrioritet, kjørTidligst = LocalDateTime.now().plusSeconds(10)) {
+            log.info("Starter flywaymigrering")
+            val tidsbruk = measureTime { migrate(configuration) }
+            log.info("Ferdig flywaymigrering, tidsbruk={}", tidsbruk)
+        })
+
         add(
             PlanlagtJobb.KjørPåTidspunkt(
                 "K9SakTilLosHistorikkvask",
