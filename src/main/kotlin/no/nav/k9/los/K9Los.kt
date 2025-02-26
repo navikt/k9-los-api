@@ -327,7 +327,7 @@ private fun Route.api() {
             route("statistikk") { StatistikkApi() }
         }
     }
-    route("k9/los/api") {
+    route("api") {
         route("driftsmeldinger", { hidden = true }) {
             DriftsmeldingerApis()
         }
