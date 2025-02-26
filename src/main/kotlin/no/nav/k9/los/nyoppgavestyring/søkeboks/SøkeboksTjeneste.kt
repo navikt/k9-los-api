@@ -83,19 +83,12 @@ class SøkeboksTjeneste(
                     operator = "IN",
                     verdi = listOf(aktørId, fnr)
                 )
-            ),
-            order = listOf(
-                EnkelOrderFelt(
-                    område = "K9",
-                    kode = "mottattDato",
-                    økende = true
-                )
             )
         )
         val oppgaveEksternIder = queryService.queryForOppgaveEksternId(QueryRequest(oppgaveQuery = query, fraAktiv = fraAktiv))
         return oppgaveRepository.hentOppgaver(
             eksternoppgaveIder = oppgaveEksternIder,
-        )
+        ).sortedBy { it.hentVerdi("mottattDato") }
     }
 
     private fun finnOppgaverForSaksnummer(saksnummer: String, fraAktiv: Boolean): List<Oppgave> {
