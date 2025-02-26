@@ -96,7 +96,21 @@ fun Route.forvaltningApis() {
         call.respond(list)
     }
 
-    get("/eventer/{system}/{eksternId}") {
+    get("/eventer/{system}/{eksternId}", {
+        description = "Hent ut eventhistorikk for en oppgave"
+        request {
+            pathParameter<String>("system") {
+                description = "Kildesystem som har levert eventene"
+                example("k9sak") {
+                    value = "k9sak"
+                    description = "Oppgaver fra k9sak"
+                }
+            }
+            pathParameter<String>("eksternId") {
+                description = "Oppgavens eksterne Id, definert av innleverende fagsystem"
+            }
+        }
+    }) {
         val fagsystem = Fagsystem.fraKode(call.parameters["system"]!!)
         val eksternId = call.parameters["eksternId"]
         when (fagsystem) {
@@ -131,7 +145,28 @@ fun Route.forvaltningApis() {
     }
 
 
-    get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}") {
+    get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}", {
+        description = "Hent ut oppgavehistorikk for en oppgave"
+        request {
+            pathParameter<String>("omrade") {
+                description = "Området oppgavetypen er definert i. Pr i dag er kun K9 implementert"
+                example("K9") {
+                    value = "K9"
+                    description = "Oppgaver definert innenfor K9"
+                }
+            }
+            pathParameter<String>("oppgavetype") {
+                description = "Navnet på oppgavetypen."
+                example("k9sak") {
+                    value = "k9sak"
+                    description = "Oppgaver som kommer fra k9sak"
+                }
+            }
+            pathParameter<String>("oppgaveEksternId") {
+                description = "Oppgavens eksterne Id, definert av innleverende fagsystem"
+            }
+        }
+    }) {
         val område = call.parameters["omrade"]!!
         val oppgavetype = call.parameters["oppgavetype"]!!
         val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
@@ -273,7 +308,28 @@ fun Route.forvaltningApis() {
         }
     }
 
-    get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}/reservasjoner") {
+    get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}/reservasjoner", {
+        description = "Hent ut reservasjonshistorikk for en oppgave"
+        request {
+            pathParameter<String>("omrade") {
+                description = "Området oppgavetypen er definert i. Pr i dag er kun K9 implementert"
+                example("K9") {
+                    value = "K9"
+                    description = "Oppgaver definert innenfor K9"
+                }
+            }
+            pathParameter<String>("oppgavetype") {
+                description = "Navnet på oppgavetypen."
+                example("k9sak") {
+                    value = "k9sak"
+                    description = "Oppgaver som kommer fra k9sak"
+                }
+            }
+            pathParameter<String>("oppgaveEksternId") {
+                description = "Oppgavens eksterne Id, definert av innleverende fagsystem"
+            }
+        }
+    }) {
         val område = call.parameters["omrade"]!!
         val oppgavetypeEksternId = call.parameters["oppgavetype"]!!
         val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
