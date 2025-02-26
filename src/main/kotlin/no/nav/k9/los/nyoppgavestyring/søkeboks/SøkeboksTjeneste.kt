@@ -7,6 +7,7 @@ import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.pdl.IPdlService
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
@@ -75,12 +76,19 @@ class SøkeboksTjeneste(
         val aktørId =
             pdlService.identifikator(fnr).aktorId?.data?.hentIdenter?.identer?.get(0)?.ident ?: return emptyList()
         val query = OppgaveQuery(
-            listOf(
+            filtere = listOf(
                 FeltverdiOppgavefilter(
                     område = "K9",
                     kode = "aktorId",
                     operator = "IN",
                     verdi = listOf(aktørId, fnr)
+                )
+            ),
+            order = listOf(
+                EnkelOrderFelt(
+                    område = "K9",
+                    kode = "mottattDato",
+                    økende = true
                 )
             )
         )
