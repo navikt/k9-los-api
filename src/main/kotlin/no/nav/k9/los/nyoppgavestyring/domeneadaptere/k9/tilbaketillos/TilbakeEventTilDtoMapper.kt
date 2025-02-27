@@ -5,6 +5,8 @@ import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.los.aksjonspunktbehandling.AksjonspunktDefinisjonK9Tilbake
 import no.nav.k9.los.domene.modell.AksjonspunktStatus.OPPRETTET
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventTilbakeDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.EventTilDtoMapper
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.EventTilDtoMapper.Companion
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
@@ -75,6 +77,10 @@ class TilbakeEventTilDtoMapper {
             event: BehandlingProsessEventTilbakeDto,
             forrigeOppgave: OppgaveV3?
         ) = mutableListOf(
+            OppgaveFeltverdiDto(
+                nøkkel = "liggerHosBeslutter",
+                verdi = erTilBeslutter(event).toString()
+            ),
             OppgaveFeltverdiDto(
                 nøkkel = "behandlingUuid",
                 verdi = event.eksternId.toString()
