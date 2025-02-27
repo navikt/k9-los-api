@@ -102,8 +102,12 @@ fun Route.forvaltningApis() {
             pathParameter<String>("system") {
                 description = "Kildesystem som har levert eventene"
                 example("k9sak") {
-                    value = "k9sak"
+                    value = "K9SAK"
                     description = "Oppgaver fra k9sak"
+                }
+                example("k9klage") {
+                    value = "K9KLAGE"
+                    description = "Oppgaver fra k9klage"
                 }
             }
             pathParameter<String>("eksternId") {
