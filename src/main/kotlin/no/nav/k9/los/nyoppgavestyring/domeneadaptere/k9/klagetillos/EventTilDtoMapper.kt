@@ -10,6 +10,8 @@ import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.Aksjonspunkttilstand
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.KlagebehandlingProsessHendelse
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.EventTilDtoMapper
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.EventTilDtoMapper.Companion
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
@@ -254,6 +256,10 @@ class EventTilDtoMapper {
             losOpplysningerSomManglerIKlageDto: LosOpplysningerSomManglerIKlageDto?,
             forrigeOppgave: OppgaveV3?
         ) = mutableListOf(
+            OppgaveFeltverdiDto(
+                nøkkel = "liggerHosBeslutter",
+                verdi = erTilBeslutter(event).toString()
+            ),
             OppgaveFeltverdiDto(
                 nøkkel = "behandlingUuid",
                 verdi = event.eksternId.toString()
