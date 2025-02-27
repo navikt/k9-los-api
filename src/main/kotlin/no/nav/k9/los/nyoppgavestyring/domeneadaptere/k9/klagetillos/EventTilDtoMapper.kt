@@ -9,9 +9,6 @@ import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktType
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.Aksjonspunkttilstand
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.KlagebehandlingProsessHendelse
-import no.nav.k9.kodeverk.behandling.FagsakYtelseType
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.EventTilDtoMapper
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.EventTilDtoMapper.Companion
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
@@ -33,7 +30,11 @@ class EventTilDtoMapper {
             aksjonspunktDefinisjon.aksjonspunktType == AksjonspunktType.AUTOPUNKT
         }.map { aksjonspunktDefinisjon -> aksjonspunktDefinisjon.kode }
 
-        internal fun lagOppgaveDto(event: KlagebehandlingProsessHendelse, losOpplysningerSomManglerIKlageDto: LosOpplysningerSomManglerIKlageDto?, forrigeOppgave: OppgaveV3?) = OppgaveDto(
+        internal fun lagOppgaveDto(
+            event: KlagebehandlingProsessHendelse,
+            losOpplysningerSomManglerIKlageDto: LosOpplysningerSomManglerIKlageDto?,
+            forrigeOppgave: OppgaveV3?
+        ) = OppgaveDto(
             id = event.eksternId.toString(),
             versjon = event.eventTid.toString(),
             område = "K9",
@@ -58,22 +59,10 @@ class EventTilDtoMapper {
         )
 
         private fun utledReservasjonsnøkkel(event: KlagebehandlingProsessHendelse): String {
-            return when (FagsakYtelseType.fraKode(event.ytelseTypeKode)) {
-                FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
-                FagsakYtelseType.PLEIEPENGER_NÆRSTÅENDE,
-                FagsakYtelseType.OMSORGSPENGER_KS,
-                FagsakYtelseType.OMSORGSPENGER_AO,
-                FagsakYtelseType.OPPLÆRINGSPENGER  -> if (erTilBeslutter(event)) {
-                    "K9_k_${event.ytelseTypeKode}_${event.aktørId}_beslutter"
-                } else {
-                    "K9_k_${event.ytelseTypeKode}_${event.aktørId}"
-                }
-
-                else -> if (erTilBeslutter(event)) {
-                    "K9_k_${event.ytelseTypeKode}_${event.aktørId}_beslutter"
-                } else {
-                    "K9_k_${event.ytelseTypeKode}_${event.aktørId}"
-                }
+            return if (erTilBeslutter(event)) {
+                "K9_k_${event.ytelseTypeKode}_${event.aktørId}_beslutter"
+            } else {
+                "K9_k_${event.ytelseTypeKode}_${event.aktørId}"
             }
         }
 
@@ -86,7 +75,7 @@ class EventTilDtoMapper {
             }
 
             val harManueltAksjonspunkt = event.aksjonspunkttilstander
-                .filter { aksjonspunkttilstand -> aksjonspunkttilstand.status != AksjonspunktStatus.AVBRUTT  }
+                .filter { aksjonspunkttilstand -> aksjonspunkttilstand.status != AksjonspunktStatus.AVBRUTT }
                 .any { aksjonspunktTilstandDto -> MANUELLE_AKSJONSPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode) }
 
             utledAvventerSaksbehandler(
@@ -140,8 +129,8 @@ class EventTilDtoMapper {
             oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
         ) {
             åpneAksjonspunkter.filter { aksjonspunktTilstandDto ->
-                    aksjonspunktTilstandDto.venteårsak != Venteårsak.UDEFINERT &&
-                    aksjonspunktTilstandDto.venteårsak != null
+                aksjonspunktTilstandDto.venteårsak != Venteårsak.UDEFINERT &&
+                        aksjonspunktTilstandDto.venteårsak != null
             }.singleOrNull { aksjonspunktTilstandDto ->
                 oppgaveFeltverdiDtos.add(
                     OppgaveFeltverdiDto(
@@ -191,7 +180,7 @@ class EventTilDtoMapper {
             åpneAksjonspunkter: List<Aksjonspunkttilstand>,
             oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
         ) {
-            if(behandlingSteg != null) {
+            if (behandlingSteg != null) {
                 åpneAksjonspunkter.firstOrNull { åpentAksjonspunkt ->
                     val aksjonspunktDefinisjon = AksjonspunktDefinisjon.fraKode(åpentAksjonspunkt.aksjonspunktKode)
                     !aksjonspunktDefinisjon.erAutopunkt() && aksjonspunktDefinisjon.behandlingSteg != null && aksjonspunktDefinisjon.behandlingSteg.kode == behandlingSteg
@@ -234,12 +223,12 @@ class EventTilDtoMapper {
         ) {
 
             val oversendtKlageinstansKabalEllerBehandletIK9 = event.aksjonspunkttilstander
-                .firstOrNull { apt -> apt.aksjonspunktKode == AksjonspunktDefinisjon.AUTO_OVERFØRT_NK.kode } ?:
-            event.aksjonspunkttilstander
-                .firstOrNull { apt ->
-                    apt.aksjonspunktKode == AksjonspunktDefinisjon.VURDERING_AV_FORMKRAV_KLAGE_KA.kode &&
-                            setOf(AksjonspunktStatus.OPPRETTET, AksjonspunktStatus.UTFØRT).contains(apt.status)
-                }
+                .firstOrNull { apt -> apt.aksjonspunktKode == AksjonspunktDefinisjon.AUTO_OVERFØRT_NK.kode }
+                ?: event.aksjonspunkttilstander
+                    .firstOrNull { apt ->
+                        apt.aksjonspunktKode == AksjonspunktDefinisjon.VURDERING_AV_FORMKRAV_KLAGE_KA.kode &&
+                                setOf(AksjonspunktStatus.OPPRETTET, AksjonspunktStatus.UTFØRT).contains(apt.status)
+                    }
 
             (oversendtKlageinstansKabalEllerBehandletIK9)?.let {
                 oppgaveFeltverdiDtos.add(
@@ -407,7 +396,7 @@ class EventTilDtoMapper {
                 oppgaveFeltverdiDtos.addAll(filtrert.map { behandlingsårsak ->
                     OppgaveFeltverdiDto(
                         nøkkel = "behandlingsårsak",
-                        verdi = KLAGE_PREFIX +  behandlingsårsak
+                        verdi = KLAGE_PREFIX + behandlingsårsak
                     )
                 })
             } else {
