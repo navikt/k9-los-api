@@ -131,6 +131,10 @@ class EventTilDtoMapper {
             forrigeOppgave: OppgaveV3?
         ): MutableList<OppgaveFeltverdiDto> = mutableListOf(
             OppgaveFeltverdiDto(
+                nøkkel = "liggerHosBeslutter",
+                verdi = erTilBeslutter(event).toString()
+            ),
+            OppgaveFeltverdiDto(
                 nøkkel = "behandlingUuid",
                 verdi = event.eksternId.toString()
             ),
