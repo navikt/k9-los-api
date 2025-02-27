@@ -130,6 +130,10 @@ class EventTilDtoMapper(
     ): List<OppgaveFeltverdiDto> {
         return listOfNotNull(
             OppgaveFeltverdiDto(
+                nøkkel = "liggerHosBeslutter",
+                verdi = erTilBeslutter(event).toString()
+            ),
+            OppgaveFeltverdiDto(
                 nøkkel = "behandlingUuid",
                 verdi = event.eksternId.toString()
             ),

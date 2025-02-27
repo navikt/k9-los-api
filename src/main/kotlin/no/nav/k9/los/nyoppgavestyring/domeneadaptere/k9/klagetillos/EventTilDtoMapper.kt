@@ -9,7 +9,6 @@ import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktType
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.Aksjonspunkttilstand
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.KlagebehandlingProsessHendelse
-import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.*
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.LosOpplysningerSomManglerIKlageDto
 import org.jetbrains.annotations.VisibleForTesting
@@ -58,24 +57,13 @@ class EventTilDtoMapper(
     }
 
     private fun utledReservasjonsnøkkel(event: KlagebehandlingProsessHendelse): String {
-        return when (FagsakYtelseType.fraKode(event.ytelseTypeKode)) {
-            FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
-            FagsakYtelseType.PLEIEPENGER_NÆRSTÅENDE,
-            FagsakYtelseType.OMSORGSPENGER_KS,
-            FagsakYtelseType.OMSORGSPENGER_AO,
-            FagsakYtelseType.OPPLÆRINGSPENGER -> if (erTilBeslutter(event)) {
-                "K9_k_${event.ytelseTypeKode}_${event.aktørId}_beslutter"
-            } else {
-                "K9_k_${event.ytelseTypeKode}_${event.aktørId}"
-            }
-
-            else -> if (erTilBeslutter(event)) {
+        return  if (erTilBeslutter(event)) {
                 "K9_k_${event.ytelseTypeKode}_${event.aktørId}_beslutter"
             } else {
                 "K9_k_${event.ytelseTypeKode}_${event.aktørId}"
             }
         }
-    }
+
 
     private fun oppgaveSkalHaVentestatus(event: KlagebehandlingProsessHendelse): Boolean {
         val oppgaveFeltverdiDtos = mutableListOf<OppgaveFeltverdiDto>()
@@ -237,7 +225,7 @@ class EventTilDtoMapper(
 
         val oversendtKlageinstansKabalEllerBehandletIK9 = event.aksjonspunkttilstander
             .firstOrNull { apt -> apt.aksjonspunktKode == AksjonspunktDefinisjon.AUTO_OVERFØRT_NK.kode }
-            ?: event.aksjonspunkttilstander
+                ?: event.aksjonspunkttilstander
                 .firstOrNull { apt ->
                     apt.aksjonspunktKode == AksjonspunktDefinisjon.VURDERING_AV_FORMKRAV_KLAGE_KA.kode &&
                             setOf(AksjonspunktStatus.OPPRETTET, AksjonspunktStatus.UTFØRT).contains(apt.status)
@@ -260,7 +248,11 @@ class EventTilDtoMapper(
         forrigeOppgave: OppgaveV3?
     ) = mutableListOf(
         OppgaveFeltverdiDto(
-            nøkkel = "behandlingUuid",
+            nøkkel = "liggerHosBeslutter",
+                verdi = erTilBeslutter(event).toString()
+            ),
+            OppgaveFeltverdiDto(
+                nøkkel = "behandlingUuid",
             verdi = event.eksternId.toString()
         ),
         OppgaveFeltverdiDto(
