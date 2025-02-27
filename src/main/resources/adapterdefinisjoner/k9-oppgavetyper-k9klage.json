@@ -92,6 +92,11 @@
           "påkrevd": false
         },
         {
+          "id": "liggerHosBeslutter",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
           "id": "ansvarligBeslutter",
           "visPåOppgave": true,
           "påkrevd": false
