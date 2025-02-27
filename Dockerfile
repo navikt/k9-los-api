@@ -1,6 +1,5 @@
-FROM eclipse-temurin:21-jdk-alpine as builder
+FROM eclipse-temurin:21-jdk-alpine AS builder
 WORKDIR /builder
-
 VOLUME /tmp
 COPY build/libs/app.jar /tmp/input-app.jar
 #utled hvilke moduler fra jdk som trengs (og legg til jdk.crypto.ec siden den trengs for ssl)
@@ -10,33 +9,13 @@ RUN jdeps --print-module-deps --multi-release 21 -q --ignore-missing-deps  --add
 RUN jlink --add-modules $(cat modules.deps) --strip-debug --no-man-pages --no-header-files --compress=1 --output javaruntime
 
 
-FROM alpine:3.21.2
-RUN apk update && \
-    apk upgrade && \
-    apk add dumb-init
 
+
+FROM ghcr.io/navikt/sif-baseimages/java-base:2025.02.27.1645Z
 LABEL org.opencontainers.image.source=https://github.com/navikt/k9-los-api
 
-# sett opp non-root user
-RUN umask o+r && \
-    addgroup -S -g 1069 apprunner && \
-    adduser -S -u 1069 --ingroup apprunner --no-create-home apprunner
+#kopier inn minimal javaruntime (alternativ er å buke sif-baseimage/java-<javaversjon>:<versjon> som baseimage og ikke bygge minimal javaruntime)
+COPY --from=builder /builder/javaruntime /opt/java/openjdk
 
-#init-scripts, konfigurasjon
-COPY build/resources/main/entrypoint.sh /
-COPY build/resources/main/init-scripts/ /init-scripts/.
-
-ENV JAVA_HOME=/opt/javaruntime
-ENV PATH=$JAVA_HOME/bin:$PATH
-
-EXPOSE 8080
-WORKDIR /app
-USER apprunner
-ENTRYPOINT ["dumb-init", "--", "/entrypoint.sh"]
-
-#kopier inn minimal javaruntime. Kan vurdere å lage en større som går i baseimage
-COPY --from=builder /builder/javaruntime /opt/javaruntime
-
-#spesifikt for applikasjonen (kan ikke være i baseimage)
-ENV DEFAULT_JVM_OPTS="-XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom -Duser.timezone=Europe/Oslo "
+COPY build/resources/main/init-scripts/run.sh /init-scripts/
 COPY build/libs/app.jar /app/app.jar
