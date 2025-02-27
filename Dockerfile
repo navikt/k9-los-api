@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21-jdk-alpine AS builder
+FROM eclipse-temurin:21.0.6_7-jdk-alpine AS builder
 WORKDIR /builder
 VOLUME /tmp
 COPY build/libs/app.jar /tmp/input-app.jar
