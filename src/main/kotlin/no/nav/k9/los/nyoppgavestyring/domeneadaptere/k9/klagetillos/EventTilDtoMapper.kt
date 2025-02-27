@@ -87,9 +87,9 @@ class EventTilDtoMapper(
     }
 
     private fun erTilBeslutter(event: KlagebehandlingProsessHendelse): Boolean {
-        return getåpneAksjonspunkter(event).firstOrNull { ap ->
+        return getåpneAksjonspunkter(event).any { ap ->
             ap.aksjonspunktKode.equals(AksjonspunktDefinisjon.FATTER_VEDTAK.kode)
-        } != null
+        }
     }
 
     private fun lagFeltverdier(
