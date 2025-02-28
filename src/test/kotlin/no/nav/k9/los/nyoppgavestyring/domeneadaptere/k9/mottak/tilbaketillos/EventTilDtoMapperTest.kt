@@ -14,4 +14,12 @@ class EventTilDtoMapperTest {
 
         assertThat(oppgaveDto.feltverdier).any { it.matchesPredicate { feltverdi -> feltverdi.nøkkel == "liggerHosBeslutter" && feltverdi.verdi == "true"} }
     }
+
+    @Test
+    fun `ikke 5005 skal ikke gi til beslutter`() {
+        val k9TilbakeEvent = K9TilbakeEventDtoBuilder().foreslåVedtak().build()
+        val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(k9TilbakeEvent, null)
+
+        assertThat(oppgaveDto.feltverdier).any { it.matchesPredicate { feltverdi -> feltverdi.nøkkel == "liggerHosBeslutter" && feltverdi.verdi == "false"} }
+    }
 }

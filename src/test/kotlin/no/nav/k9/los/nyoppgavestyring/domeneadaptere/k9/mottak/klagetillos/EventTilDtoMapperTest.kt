@@ -28,4 +28,20 @@ class EventTilDtoMapperTest {
 
         assertThat(oppgaveDto.feltverdier).any { it.matchesPredicate { feltverdi -> feltverdi.nøkkel == "liggerHosBeslutter" && feltverdi.verdi == "true"} }
     }
+
+    @Test
+    fun `uten 5016 skal ikke gi til beslutter`() {
+        val k9KlageEvent = KlagebehandlingProsessHendelse.builder()
+            .medEksternId(UUID.randomUUID())
+            .medFagsystem(Fagsystem.K9SAK)
+            .medEventTid(LocalDateTime.now())
+            .medOpprettetBehandling(LocalDateTime.now())
+            .medAksjonspunktTilstander(
+                listOf()
+            )
+            .build()
+        val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(k9KlageEvent, null, null)
+
+        assertThat(oppgaveDto.feltverdier).any { it.matchesPredicate { feltverdi -> feltverdi.nøkkel == "liggerHosBeslutter" && feltverdi.verdi == "false"} }
+    }
 }
