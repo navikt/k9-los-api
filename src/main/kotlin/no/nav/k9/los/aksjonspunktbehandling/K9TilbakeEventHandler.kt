@@ -9,7 +9,7 @@ import no.nav.k9.los.domene.repository.*
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventTilbakeDto
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveHendelseMottatt
 import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
