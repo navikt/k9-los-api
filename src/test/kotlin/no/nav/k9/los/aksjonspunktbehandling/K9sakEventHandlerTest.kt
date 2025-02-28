@@ -18,7 +18,7 @@ import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
 import no.nav.k9.los.integrasjon.kafka.dto.EventHendelse
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.saktillos.K9SakTilLosAdapterTjeneste
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -399,11 +399,11 @@ class K9sakEventHandlerTest : AbstractK9LosIntegrationTest() {
 
         val eksternId = UUID.randomUUID()
         val eventTid = LocalDateTime.now().minusDays(1)
-        k9sakEventHandler.prosesser(BehandlingProsessEventDtoBuilder(eksternId).opprettet().apply { this.eventTid = eventTid }.build())
-        k9sakEventHandler.prosesser(BehandlingProsessEventDtoBuilder(eksternId).foreslåVedtak().apply { this.eventTid = eventTid.plusHours(1) }.build())
-        k9sakEventHandler.prosesser(BehandlingProsessEventDtoBuilder(eksternId).avsluttet().apply { this.eventTid = eventTid.plusHours(2) }.build())
+        k9sakEventHandler.prosesser(K9SakEventDtoBuilder(eksternId).opprettet().apply { this.eventTid = eventTid }.build())
+        k9sakEventHandler.prosesser(K9SakEventDtoBuilder(eksternId).foreslåVedtak().apply { this.eventTid = eventTid.plusHours(1) }.build())
+        k9sakEventHandler.prosesser(K9SakEventDtoBuilder(eksternId).avsluttet().apply { this.eventTid = eventTid.plusHours(2) }.build())
 
-        val vaskeevent = BehandlingProsessEventDtoBuilder(eksternId).avsluttet().apply {
+        val vaskeevent = K9SakEventDtoBuilder(eksternId).avsluttet().apply {
             this.eventTid = LocalDateTime.now()
             this.eventHendelse = EventHendelse.VASKEEVENT
         }.build()
@@ -416,10 +416,10 @@ class K9sakEventHandlerTest : AbstractK9LosIntegrationTest() {
 
         val eksternId = UUID.randomUUID()
         val eventTid = LocalDateTime.now().minusDays(1)
-        k9sakEventHandler.prosesser(BehandlingProsessEventDtoBuilder(eksternId).opprettet().apply { this.eventTid = eventTid }.build())
-        k9sakEventHandler.prosesser(BehandlingProsessEventDtoBuilder(eksternId).foreslåVedtak().apply { this.eventTid = eventTid.plusHours(1) }.build())
+        k9sakEventHandler.prosesser(K9SakEventDtoBuilder(eksternId).opprettet().apply { this.eventTid = eventTid }.build())
+        k9sakEventHandler.prosesser(K9SakEventDtoBuilder(eksternId).foreslåVedtak().apply { this.eventTid = eventTid.plusHours(1) }.build())
 
-        val vaskeevent = BehandlingProsessEventDtoBuilder(eksternId).avsluttet().apply {
+        val vaskeevent = K9SakEventDtoBuilder(eksternId).avsluttet().apply {
             this.eventTid = eventTid.plusHours(2)
             this.eventHendelse = EventHendelse.VASKEEVENT
         }.build()
@@ -436,10 +436,10 @@ class K9sakEventHandlerTest : AbstractK9LosIntegrationTest() {
 
         val eksternId = UUID.randomUUID()
         val eventTid = LocalDateTime.now().minusDays(1)
-        k9sakEventHandler.prosesser(BehandlingProsessEventDtoBuilder(eksternId).opprettet().apply { this.eventTid = eventTid }.build())
-        k9sakEventHandler.prosesser(BehandlingProsessEventDtoBuilder(eksternId).foreslåVedtak().apply { this.eventTid = eventTid.plusHours(1) }.build())
+        k9sakEventHandler.prosesser(K9SakEventDtoBuilder(eksternId).opprettet().apply { this.eventTid = eventTid }.build())
+        k9sakEventHandler.prosesser(K9SakEventDtoBuilder(eksternId).foreslåVedtak().apply { this.eventTid = eventTid.plusHours(1) }.build())
 
-        val vaskeevent = BehandlingProsessEventDtoBuilder(eksternId).avsluttet().apply {
+        val vaskeevent = K9SakEventDtoBuilder(eksternId).avsluttet().apply {
             this.eventTid = eventTid.plusMinutes(30)
             this.eventHendelse = EventHendelse.VASKEEVENT
         }.build()

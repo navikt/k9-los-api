@@ -12,8 +12,8 @@ import no.nav.k9.los.domene.modell.BehandlingStatus
 import no.nav.k9.los.domene.modell.BehandlingType
 import no.nav.k9.los.domene.modell.FagsakYtelseType
 import no.nav.k9.los.domene.modell.Fagsystem
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.EventTilDtoMapper
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.EventTilDtoMapper
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.KodeverkDto

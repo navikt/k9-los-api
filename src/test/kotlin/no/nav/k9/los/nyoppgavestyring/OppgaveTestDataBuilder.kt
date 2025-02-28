@@ -2,10 +2,10 @@ package no.nav.k9.los.nyoppgavestyring
 
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.K9KlageTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.punsjtillos.K9PunsjTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
