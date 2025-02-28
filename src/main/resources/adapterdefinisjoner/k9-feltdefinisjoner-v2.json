@@ -176,8 +176,7 @@
       "listetype": false,
       "tolkesSom": "boolean",
       "visTilBruker": true,
-      "kokriterie": true,
-      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9BeslutterTransientFeltutleder"
+      "kokriterie": true
     },
     {
       "id": "tidFørsteGangHosBeslutter",
