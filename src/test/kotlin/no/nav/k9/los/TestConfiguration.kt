@@ -55,6 +55,7 @@ object TestConfiguration {
         map["nav.features.nyOppgavestyringRestApi"] = "true"
         map["nav.kafka.åpenStatistikkBehandlingTopic"] = "aapen-k9statistikk-behandling-v2"
         map["nav.kafka.åpenStatistikkSakTopic"] = "aapen-k9statistikk-sak-v2"
+        map["nav.nokkeltall.enheter"] = "NAV DRIFT"
         return map.toMap()
     }
 

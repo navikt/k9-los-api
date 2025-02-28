@@ -85,7 +85,6 @@ object localSetup : KoinComponent {
                     FagsakYtelseType.OMSORGSPENGER,
                 ).shuffled().first().kode
                 val opprettetBehandling = LocalDateTime.now().minusDays(Random.nextLong(10, 20))
-                val vedtaksdato = opprettetBehandling.plusDays(Random.nextLong(1, 10)).toLocalDate()
                 val aktørId = Random.nextInt(0, 9999999).toString()
                 val pleietrengendeAktørId = Random.nextInt(0, 9999999).toString()
                 sakEventHandler.prosesser(
@@ -129,15 +128,14 @@ object localSetup : KoinComponent {
                             behandlingId = behandlingId,
                             fraEndringsdialog = false,
                             resultatType = BehandlingResultatType.INNVILGET.kode,
-                            behandlendeEnhet = listOf("4409", "4432").shuffled().first(),
                             aksjonspunktTilstander = emptyList(),
                             søknadsårsaker = mutableListOf<SøknadÅrsak>().map { it.kode },
                             behandlingsårsaker = mutableListOf<BehandlingÅrsakType>().map { it.kode },
-                            ansvarligSaksbehandlerIdent = "X123456",
+                            ansvarligSaksbehandlerIdent = "Z123456",
                             ansvarligBeslutterForTotrinn = "Y123456",
                             ansvarligSaksbehandlerForTotrinn = "X123456",
                             opprettetBehandling = LocalDateTime.now(),
-                            vedtaksdato = vedtaksdato,
+                            vedtaksdato = LocalDate.now(),
                             pleietrengendeAktørId = pleietrengendeAktørId,
                             aktørId = aktørId,
                             behandlingStatus = BehandlingStatus.AVSLUTTET.kode,
