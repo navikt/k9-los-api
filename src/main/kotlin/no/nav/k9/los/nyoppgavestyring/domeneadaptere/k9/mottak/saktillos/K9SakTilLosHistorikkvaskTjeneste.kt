@@ -22,6 +22,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
     private val transactionalManager: TransactionalManager,
     private val k9SakTilLosAdapterTjeneste: K9SakTilLosAdapterTjeneste,
     private val k9SakBerikerKlient: K9SakBerikerInterfaceKludge,
+    private val eventTilDtoMapper: EventTilDtoMapper
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9SakTilLosHistorikkvaskTjeneste::class.java)
@@ -156,7 +157,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 //ser ut som noen gamle mottatte dokumenter kan mangle innsendingstidspunkt.
                 //da faller vi tilbake til å bruke behandling_opprettet i mapperen
             }
-            var oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+            var oppgaveDto = eventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
 
             oppgaveDto = k9SakTilLosAdapterTjeneste.ryddOppObsoleteOgResultatfeilFra2020(
                 event,

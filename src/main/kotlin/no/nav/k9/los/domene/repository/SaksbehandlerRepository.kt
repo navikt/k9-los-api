@@ -318,6 +318,21 @@ class SaksbehandlerRepository(
         return saksbehandler
     }
 
+    fun finnSaksbehandlerMedIdentEkskluderKode6(ident: String): Saksbehandler? {
+        val saksbehandler = using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    "select * from saksbehandler where skjermet = false and lower(saksbehandlerid) = lower(:ident)",
+                    mapOf("ident" to ident)
+                )
+                    .map { row ->
+                        mapSaksbehandler(row)
+                    }.asSingle
+            )
+        }
+        return saksbehandler
+    }
+
     fun slettSaksbehandler(tx: TransactionalSession, epost: String, skjermet: Boolean) {
         tx.run(
             queryOf(
@@ -336,6 +351,21 @@ class SaksbehandlerRepository(
                 queryOf(
                     "select * from saksbehandler where skjermet = :skjermet",
                     mapOf("skjermet" to skjermet)
+                )
+                    .map { row ->
+                        mapSaksbehandler(row)
+                    }.asList
+            )
+        }
+        return identer
+    }
+
+    fun hentAlleSaksbehandlereEkskluderKode6(): List<Saksbehandler> {
+        val identer = using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    "select * from saksbehandler where skjermet = false",
+                    mapOf()
                 )
                     .map { row ->
                         mapSaksbehandler(row)

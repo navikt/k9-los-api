@@ -18,6 +18,7 @@ class K9TilbakeTilLosHistorikkvaskTjeneste(
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
     private val config: Configuration,
     private val transactionalManager: TransactionalManager,
+    private val eventTilDtoMapper: EventTilDtoMapper
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9TilbakeTilLosHistorikkvaskTjeneste::class.java)
@@ -131,7 +132,7 @@ class K9TilbakeTilLosHistorikkvaskTjeneste(
                 log.info("Avbryter historikkvask for ${event.eksternId} ved eventTid ${event.eventTid}. Forventer at håndteres av vanlig adaptertjeneste.")
                 break //Historikkvasken har funnet eventer som ennå ikke er lastet inn med normalflyt. Dirty eventer skal håndteres av vanlig adaptertjeneste
             }
-            val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+            val oppgaveDto = eventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
 
             oppgaveV3 = DetaljerMetrikker.time(
                 "k9tilbakeHistorikkvask",

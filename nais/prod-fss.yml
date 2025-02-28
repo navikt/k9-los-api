@@ -187,3 +187,6 @@ spec:
       value: "true"
     - name: TILBAKE_CONSUMER_AIVEN
       value: "true"
+
+    - name: NOKKELTALL_ENHETER
+      value: "4403 Nav ARBEID OG YTELSER KRISTIANIA,4410 Nav ARBEID OG YTELSER SØRLANDET"

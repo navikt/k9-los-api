@@ -63,6 +63,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonReposi
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltVerdiUtledere
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
@@ -75,10 +76,11 @@ import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksTjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallRepositoryV3
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.OppgaverGruppertRepository
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.status.StatusService
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.los.tjenester.driftsmeldinger.DriftsmeldingTjeneste
@@ -162,6 +164,28 @@ fun common(app: Application, config: Configuration) = module {
             dataSource = get(),
             pepClient = get()
         )
+    }
+
+    single {
+        OppgaveFeltVerdiUtledere(
+            saksbehandlerRepository = get()
+        )
+    }
+
+    single {
+        no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.EventTilDtoMapper(get())
+    }
+
+    single {
+        no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.saktillos.EventTilDtoMapper(get())
+    }
+
+    single {
+        no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.tilbaketillos.EventTilDtoMapper(get())
+    }
+
+    single {
+        no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.punsjtillos.EventTilDtoMapper(get())
     }
 
     single {
@@ -457,7 +481,8 @@ fun common(app: Application, config: Configuration) = module {
             reservasjonV3Tjeneste = get(),
             config = get(),
             transactionalManager = get(),
-            pepCacheService = get()
+            pepCacheService = get(),
+            eventTilDtoMapper = get()
         )
     }
 
@@ -472,7 +497,8 @@ fun common(app: Application, config: Configuration) = module {
             pepCacheService = get(),
             oppgaveRepository = get(),
             reservasjonV3Tjeneste = get(),
-            historikkvaskChannel = get(named("historikkvaskChannelK9Sak"))
+            historikkvaskChannel = get(named("historikkvaskChannelK9Sak")),
+            eventTilDtoMapper = get()
         )
     }
     single {
@@ -485,7 +511,8 @@ fun common(app: Application, config: Configuration) = module {
             pepCacheService = get(),
             oppgaveRepository = get(),
             reservasjonV3Tjeneste = get(),
-            historikkvaskChannel = get(named("historikkvaskChannelK9Tilbake"))
+            historikkvaskChannel = get(named("historikkvaskChannelK9Tilbake")),
+            eventTilDtoMapper = get()
         )
     }
 
@@ -536,6 +563,7 @@ fun common(app: Application, config: Configuration) = module {
             transactionalManager = get(),
             config = get(),
             k9sakBeriker = get(),
+            eventTilDtoMapper = get()
         )
     }
 
@@ -546,7 +574,8 @@ fun common(app: Application, config: Configuration) = module {
             config = get(),
             transactionalManager = get(),
             k9SakTilLosAdapterTjeneste = get(),
-            k9SakBerikerKlient = get()
+            k9SakBerikerKlient = get(),
+            eventTilDtoMapper = get()
         )
     }
 
@@ -555,7 +584,8 @@ fun common(app: Application, config: Configuration) = module {
             eventRepository = get(),
             oppgaveV3Tjeneste = get(),
             config = get(),
-            transactionalManager = get()
+            transactionalManager = get(),
+            eventTilDtoMapper = get()
         )
     }
 
@@ -569,6 +599,7 @@ fun common(app: Application, config: Configuration) = module {
             config = get(),
             transactionalManager = get(),
             k9sakBeriker = get(),
+            eventTilDtoMapper = get()
         )
     }
 
@@ -578,6 +609,7 @@ fun common(app: Application, config: Configuration) = module {
             oppgaveV3Tjeneste = get(),
             config = get(),
             transactionalManager = get(),
+            eventTilDtoMapper = get()
         )
     }
 
@@ -679,6 +711,13 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
+        StatusService(
+            queryService = get(),
+            oppgaverGruppertRepository = get(),
+        )
+    }
+
+    single {
         DagensTallService(
             queryService = get(),
         )
@@ -686,7 +725,8 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         FerdigstiltePerEnhetService(
-            queryService = get(),
+            enheter = config.enheter(),
+            queryService = get()
         )
     }
 }

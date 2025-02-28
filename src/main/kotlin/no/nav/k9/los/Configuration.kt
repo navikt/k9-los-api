@@ -212,4 +212,7 @@ data class Configuration(private val config: ApplicationConfig) {
         return koinProfile
     }
 
+    fun enheter(): List<String> {
+        return config.getOptionalString("nav.nokkeltall.enheter", secret = false)?.split(",") ?: emptyList()
+    }
 }

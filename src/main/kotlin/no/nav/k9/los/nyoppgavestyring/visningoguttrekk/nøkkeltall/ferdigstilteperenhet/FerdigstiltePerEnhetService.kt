@@ -19,13 +19,13 @@ import java.time.format.DateTimeFormatter
 import kotlin.time.measureTime
 
 class FerdigstiltePerEnhetService(
+    private val enheter: List<String>,
     private val queryService: OppgaveQueryService
 ) {
     private var oppdatertTidspunkt: LocalDateTime? = null
     private val cache = Cache<LocalDate, List<FerdigstiltePerEnhetTall>>(null)
     private val log: Logger = LoggerFactory.getLogger(FerdigstiltePerEnhetService::class.java)
 
-    private val enheter = listOf("4487")
     private val fagsakytelser = listOf(
         FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
         FagsakYtelseType.PPN,
@@ -86,9 +86,9 @@ class FerdigstiltePerEnhetService(
                         gruppe = FerdigstiltePerEnhetGruppe.ALLE,
                         antall = hentAntallFraDatabase(
                             dato = dato,
-                            enhet = enhet,
                             fagsakYtelseType = null,
-                            oppgavetype = null
+                            oppgavetype = null,
+                            enhet = enhet
                         )
                     )
                 )
@@ -100,9 +100,9 @@ class FerdigstiltePerEnhetService(
                             gruppe = FerdigstiltePerEnhetGruppe.fraFagsakYtelse(ytelse),
                             antall = hentAntallFraDatabase(
                                 dato = dato,
-                                enhet = enhet,
                                 fagsakYtelseType = ytelse,
-                                oppgavetype = null
+                                oppgavetype = null,
+                                enhet = enhet
                             )
                         )
                     )
@@ -114,9 +114,9 @@ class FerdigstiltePerEnhetService(
                         gruppe = FerdigstiltePerEnhetGruppe.PUNSJ,
                         antall = hentAntallFraDatabase(
                             dato = dato,
-                            enhet = enhet,
                             fagsakYtelseType = null,
-                            oppgavetype = "k9punsj"
+                            oppgavetype = "k9punsj",
+                            enhet = enhet
                         )
                     )
                 )
@@ -126,9 +126,9 @@ class FerdigstiltePerEnhetService(
 
     private fun hentAntallFraDatabase(
         dato: LocalDate,
-        enhet: String,
         fagsakYtelseType: FagsakYtelseType? = null,
-        oppgavetype: String? = null
+        oppgavetype: String? = null,
+        enhet: String
     ): Int {
         val request = QueryRequest(
             oppgaveQuery = OppgaveQuery(
@@ -136,7 +136,7 @@ class FerdigstiltePerEnhetService(
                     add(
                         FeltverdiOppgavefilter(
                             "K9",
-                            "behandlendeEnhet",
+                            "ferdigstiltEnhet",
                             FeltverdiOperator.EQUALS.name,
                             listOf(enhet)
                         )
@@ -163,9 +163,7 @@ class FerdigstiltePerEnhetService(
                     }
                     add(
                         FeltverdiOppgavefilter(
-                            "K9", "vedtaksdato", FeltverdiOperator.EQUALS.name, listOf(
-                                dato.toString()
-                            )
+                            "K9", "ferdigstiltTidspunkt", FeltverdiOperator.EQUALS.name, listOf(dato.toString())
                         )
                     )
                 }

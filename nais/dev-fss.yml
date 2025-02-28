@@ -192,3 +192,6 @@ spec:
       value: "true"
     - name: TILBAKE_CONSUMER_AIVEN
       value: "true"
+
+    - name: NOKKELTALL_ENHETER
+      value: "2970 NAV IKT DRIFT"

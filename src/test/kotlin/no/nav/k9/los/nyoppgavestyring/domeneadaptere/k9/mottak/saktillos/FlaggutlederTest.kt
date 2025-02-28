@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.saktillos
 
+import io.mockk.mockk
 import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
@@ -12,11 +13,12 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 class FlaggutlederTest {
+    private val eventTilDtoMapper = EventTilDtoMapper(mockk())
 
     @Test
     fun `avsluttet behandling og ingen steg gir ingen flagg`() {
         val ventetype =
-            EventTilDtoMapper.utledVentetype(
+            eventTilDtoMapper.utledVentetype(
                 behandlingSteg = null,
                 behandlingStatus = BehandlingStatus.AVSLUTTET.kode,
                 åpneAksjonspunkter = emptyList()
@@ -28,7 +30,7 @@ class FlaggutlederTest {
     @Test
     fun `aktivt behandlingssteg men ingen aktive aksjonspunkter gir avventerAnnet`() {
         val ventetype =
-            EventTilDtoMapper.utledVentetype(
+            eventTilDtoMapper.utledVentetype(
                 behandlingSteg = BehandlingStegType.INNHENT_REGISTEROPP.toString(),
                 behandlingStatus = null,
                 åpneAksjonspunkter = emptyList()
@@ -39,7 +41,7 @@ class FlaggutlederTest {
 
     @Test
     fun `åpent aksjonspunkt med venteårsak gir ventekategori fra venteårsaken`() {
-        val ventetype = EventTilDtoMapper.utledVentetype(
+        val ventetype = eventTilDtoMapper.utledVentetype(
             behandlingSteg = BehandlingStegType.VURDER_MEDISINSKE_VILKÅR.toString(),
             behandlingStatus = null,
             åpneAksjonspunkter = listOf(
@@ -60,7 +62,7 @@ class FlaggutlederTest {
 
     @Test
     fun `avsluttet behandling, men ingen AP gir avventer annet`() {
-        val ventetype = EventTilDtoMapper.utledVentetype(
+        val ventetype = eventTilDtoMapper.utledVentetype(
             behandlingSteg = null,
             behandlingStatus = BehandlingStatus.UTREDES.kode,
             åpneAksjonspunkter = emptyList()
@@ -71,7 +73,7 @@ class FlaggutlederTest {
 
     @Test
     fun `åpent aksjonspunkt uten venteårsak gir ventekategori fra aksjonspunkt`() {
-        val ventetype = EventTilDtoMapper.utledVentetype(
+        val ventetype = eventTilDtoMapper.utledVentetype(
             behandlingSteg = BehandlingStegType.VURDER_MEDISINSKE_VILKÅR.getKode(),
             behandlingStatus = null,
             åpneAksjonspunkter = listOf(
@@ -92,7 +94,7 @@ class FlaggutlederTest {
 
     @Test
     fun `aktivt steg og åpne aksjonspunkt, men ingen løsbare gir avventerAnnet`() {
-        val ventetype = EventTilDtoMapper.utledVentetype(
+        val ventetype = eventTilDtoMapper.utledVentetype(
             behandlingSteg = BehandlingStegType.INREG_AVSL.getKode(),
             behandlingStatus = null,
             åpneAksjonspunkter = listOf(
@@ -113,7 +115,7 @@ class FlaggutlederTest {
 
     @Test
     fun `forvent Avventer Annet hvis ingen aksjonspunkter med ventefrist og -årsak og behandlingen er åpen, men ingen steg er aktive`() {
-        val ventetype = EventTilDtoMapper.utledVentetype(
+        val ventetype = eventTilDtoMapper.utledVentetype(
             behandlingSteg = null,
             behandlingStatus = BehandlingStatus.UTREDES.kode,
             åpneAksjonspunkter = listOf(

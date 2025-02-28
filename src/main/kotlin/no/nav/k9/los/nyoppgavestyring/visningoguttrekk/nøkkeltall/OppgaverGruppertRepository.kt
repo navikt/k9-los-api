@@ -3,6 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.k9.los.domene.modell.BehandlingType
 import no.nav.k9.los.utils.Cache
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -16,7 +17,7 @@ class OppgaverGruppertRepository(private val dataSource: DataSource) {
         Cache<Boolean, List<BehandlingstypeAntallDto>>(cacheSizeLimit = null)
 
     data class BehandlingstypeAntallDto(
-        val behandlistype: String?,
+        val behandlingstype: String?,
         val antall: Int
     )
 
@@ -55,16 +56,16 @@ class OppgaverGruppertRepository(private val dataSource: DataSource) {
                 )
                     .map {
                         BehandlingstypeAntallDto(
-                            it.stringOrNull("behandlingType"),
+                            it.string("behandlingType").let { kode -> BehandlingType.fraKode(kode).navn },
                             it.int("antall")
                         )
                     }
                     .asList
             )
         }
-        if (resultat.any {it.behandlistype == null} ){
-            log.warn("Fant ${resultat.filter {it.behandlistype == null}.sumOf { it.antall }} oppgaver uten behandlingstype, de blir ikke med oversikt som viser antall")
-            return resultat.filter { it.behandlistype != null }
+        if (resultat.any {it.behandlingstype == null} ){
+            log.warn("Fant ${resultat.filter {it.behandlingstype == null}.sumOf { it.antall }} oppgaver uten behandlingstype, de blir ikke med oversikt som viser antall")
+            return resultat.filter { it.behandlingstype != null }
         } else {
             return resultat
         }

@@ -47,6 +47,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonReposi
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltVerdiUtledere
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
@@ -64,6 +65,7 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrappe
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.*
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.status.StatusService
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.*
@@ -123,8 +125,9 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             refreshOppgave = get(named("oppgaveRefreshChannel"))
         )
     }
-    single { AktivOppgaveRepository(
-        oppgavetypeRepository = get()
+    single {
+        AktivOppgaveRepository(
+            oppgavetypeRepository = get()
         )
     }
 
@@ -145,6 +148,28 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             dataSource = get(),
             pepClient = get()
         )
+    }
+
+    single {
+        OppgaveFeltVerdiUtledere(
+            saksbehandlerRepository = get()
+        )
+    }
+
+    single {
+        no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.EventTilDtoMapper(get())
+    }
+
+    single {
+        no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.saktillos.EventTilDtoMapper(get())
+    }
+
+    single {
+        no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.tilbaketillos.EventTilDtoMapper(get())
+    }
+
+    single {
+        no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.punsjtillos.EventTilDtoMapper(get())
     }
 
     single {
@@ -430,7 +455,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             pepCacheService = get(),
             oppgaveRepository = get(),
             reservasjonV3Tjeneste = get(),
-            historikkvaskChannel = get(named("historikkvaskChannelK9Sak"))
+            historikkvaskChannel = get(named("historikkvaskChannelK9Sak")),
+            eventTilDtoMapper = get()
         )
     }
 
@@ -444,7 +470,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             pepCacheService = get(),
             oppgaveRepository = get(),
             reservasjonV3Tjeneste = get(),
-            historikkvaskChannel = get(named("historikkvaskChannelK9Tilbake"))
+            historikkvaskChannel = get(named("historikkvaskChannelK9Tilbake")),
+            eventTilDtoMapper = get()
         )
     }
 
@@ -461,7 +488,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgaveV3Tjeneste = get(),
             transactionalManager = get(),
             config = get(),
-            k9sakBeriker = get()
+            k9sakBeriker = get(),
+            eventTilDtoMapper = get()
         )
     }
 
@@ -473,7 +501,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             reservasjonV3Tjeneste = get(),
             config = config,
             transactionalManager = get(),
-            pepCacheService = get()
+            pepCacheService = get(),
+            eventTilDtoMapper = get()
         )
     }
 
@@ -593,6 +622,13 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single {
+        StatusService(
+            queryService = get(),
+            oppgaverGruppertRepository = get(),
+        )
+    }
+
+    single {
         DagensTallService(
             queryService = get(),
         )
@@ -600,7 +636,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         FerdigstiltePerEnhetService(
-            queryService = get(),
+            enheter = config.enheter(),
+            queryService = get()
         )
     }
 }
