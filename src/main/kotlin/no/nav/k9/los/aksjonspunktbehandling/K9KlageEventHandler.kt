@@ -9,7 +9,7 @@ import no.nav.k9.los.domene.modell.BehandlingStatus
 import no.nav.k9.los.domene.modell.Fagsystem
 import no.nav.k9.los.domene.modell.K9KlageModell
 import no.nav.k9.los.domene.repository.BehandlingProsessEventKlageRepository
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.K9KlageTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveHendelseMottatt
 import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId

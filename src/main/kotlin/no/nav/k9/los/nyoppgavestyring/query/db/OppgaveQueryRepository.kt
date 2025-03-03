@@ -164,6 +164,15 @@ class OppgaveQueryRepository(
             ),
             Oppgavefelt(
                 område = null,
+                "sistEndret",
+                "Tidspunkt siste endring",
+                "Timestamp",
+                kokriterie = false,
+                verdiforklaringerErUttømmende = false,
+                verdiforklaringer = listOf(),
+            ),
+            Oppgavefelt(
+                område = null,
                 kode = "personbeskyttelse",
                 visningsnavn = "Kode 7 eller egen ansatt",
                 tolkes_som = "String",

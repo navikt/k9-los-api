@@ -13,7 +13,10 @@ import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
 import no.nav.k9.los.domene.repository.BehandlingProsessEventKlageRepository
 import no.nav.k9.los.domene.repository.BehandlingProsessEventTilbakeRepository
 import no.nav.k9.los.domene.repository.PunsjEventK9Repository
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.K9KlageTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.punsjtillos.K9PunsjTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.saktillos.K9SakTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.tilbaketillos.K9TilbakeTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
@@ -35,6 +38,9 @@ fun Route.forvaltningApis() {
     val oppgaveKoTjeneste by inject<OppgaveKoTjeneste>()
     val oppgaveQueryService by inject<OppgaveQueryService>()
     val k9SakTilLosHistorikkvaskTjeneste by inject<K9SakTilLosHistorikkvaskTjeneste>()
+    val k9TilbakeTilLosHistorikkvaskTjeneste by inject<K9TilbakeTilLosHistorikkvaskTjeneste>()
+    val k9KlageTilLosHistorikkvaskTjeneste by inject<K9KlageTilLosHistorikkvaskTjeneste>()
+    val k9PunsjTilLosHistorikkvaskTjeneste by inject<K9PunsjTilLosHistorikkvaskTjeneste>()
     val reservasjonV3Repository by inject<ReservasjonV3Repository>()
     val objectMapper = LosObjectMapper.prettyInstance
     val transactionalManager by inject<TransactionalManager>()
@@ -90,7 +96,25 @@ fun Route.forvaltningApis() {
         call.respond(list)
     }
 
-    get("/eventer/{system}/{eksternId}") {
+    get("/eventer/{system}/{eksternId}", {
+        description = "Hent ut eventhistorikk for en oppgave"
+        request {
+            pathParameter<String>("system") {
+                description = "Kildesystem som har levert eventene"
+                example("k9sak") {
+                    value = "K9SAK"
+                    description = "Oppgaver fra k9sak"
+                }
+                example("k9klage") {
+                    value = "K9KLAGE"
+                    description = "Oppgaver fra k9klage"
+                }
+            }
+            pathParameter<String>("eksternId") {
+                description = "Oppgavens eksterne Id, definert av innleverende fagsystem"
+            }
+        }
+    }) {
         val fagsystem = Fagsystem.fraKode(call.parameters["system"]!!)
         val eksternId = call.parameters["eksternId"]
         when (fagsystem) {
@@ -124,7 +148,29 @@ fun Route.forvaltningApis() {
         }
     }
 
-    get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}") {
+
+    get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}", {
+        description = "Hent ut oppgavehistorikk for en oppgave"
+        request {
+            pathParameter<String>("omrade") {
+                description = "Området oppgavetypen er definert i. Pr i dag er kun K9 implementert"
+                example("K9") {
+                    value = "K9"
+                    description = "Oppgaver definert innenfor K9"
+                }
+            }
+            pathParameter<String>("oppgavetype") {
+                description = "Navnet på oppgavetypen."
+                example("k9sak") {
+                    value = "k9sak"
+                    description = "Oppgaver som kommer fra k9sak"
+                }
+            }
+            pathParameter<String>("oppgaveEksternId") {
+                description = "Oppgavens eksterne Id, definert av innleverende fagsystem"
+            }
+        }
+    }) {
         val område = call.parameters["omrade"]!!
         val oppgavetype = call.parameters["oppgavetype"]!!
         val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
@@ -145,7 +191,28 @@ fun Route.forvaltningApis() {
         }
     }
 
-    get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}/historikkvask") {
+    get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}/historikkvask", {
+        description = "Kjøre historikkvask for enkeltsak, for å vaske eksisterende oppgavehistorikk mot korresponderende eventer"
+        request {
+            pathParameter<String>("omrade") {
+                description = "Området oppgavetypen er definert i. Pr i dag er kun K9 implementert"
+                example("K9") {
+                    value = "K9"
+                    description = "Oppgaver definert innenfor K9"
+                }
+            }
+            pathParameter<String>("oppgavetype") {
+                description = "Navnet på oppgavetypen."
+                example("k9sak") {
+                    value = "k9sak"
+                    description = "Oppgaver som kommer fra k9sak"
+                }
+            }
+            pathParameter<String>("oppgaveEksternId") {
+                description = "Oppgavens eksterne Id, definert av innleverende fagsystem"
+            }
+        }
+    }) {
         val område = call.parameters["omrade"]!!
         val oppgavetype = call.parameters["oppgavetype"]!!
         val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
@@ -155,6 +222,18 @@ fun Route.forvaltningApis() {
                 when (oppgavetype) {
                     "k9sak" -> {
                         k9SakTilLosHistorikkvaskTjeneste.vaskOppgaveForBehandlingUUID(UUID.fromString(oppgaveEksternId))
+                        call.respond(HttpStatusCode.NoContent)
+                    }
+                    "k9tilbake" -> {
+                        k9KlageTilLosHistorikkvaskTjeneste.vaskOppgaveForBehandlingUUID(UUID.fromString(oppgaveEksternId))
+                        call.respond(HttpStatusCode.NoContent)
+                    }
+                    "k9klage" -> {
+                        k9TilbakeTilLosHistorikkvaskTjeneste.vaskOppgaveForBehandlingUUID(UUID.fromString(oppgaveEksternId))
+                        call.respond(HttpStatusCode.NoContent)
+                    }
+                    "k9punsj" -> {
+                        k9PunsjTilLosHistorikkvaskTjeneste.vaskOppgaveForBehandlingUUID(UUID.fromString(oppgaveEksternId))
                         call.respond(HttpStatusCode.NoContent)
                     }
 
@@ -169,7 +248,92 @@ fun Route.forvaltningApis() {
         }
     }
 
-    get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}/reservasjoner") {
+    get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}/settdirty", {
+        description = "Sett dirtyflagg på eventhistorikk for å trigge innlesning av eventer som mangler i oppgavehistorikken"
+        request {
+            pathParameter<String>("omrade") {
+                description = "Området oppgavetypen er definert i. Pr i dag er kun K9 implementert"
+                example("K9") {
+                    value = "K9"
+                    description = "Oppgaver definert innenfor K9"
+                }
+            }
+            pathParameter<String>("oppgavetype") {
+                description = "Navnet på oppgavetypen."
+                example("k9sak") {
+                    value = "k9sak"
+                    description = "Oppgaver som kommer fra k9sak"
+                }
+            }
+            pathParameter<String>("oppgaveEksternId") {
+                description = "Oppgavens eksterne Id, definert av innleverende fagsystem"
+            }
+        }
+    }) {
+        val område = call.parameters["omrade"]!!
+        val oppgavetype = call.parameters["oppgavetype"]!!
+        val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
+
+        when (område) {
+            "K9" -> {
+                when (oppgavetype) {
+                    "k9sak" -> {
+                        transactionalManager.transaction { tx ->
+                            k9sakEventRepository.settDirty(UUID.fromString(oppgaveEksternId), tx)
+                        }
+                        call.respond(HttpStatusCode.NoContent)
+                    }
+                    "k9klage" -> {
+                        transactionalManager.transaction { tx ->
+                            k9klageEventRepository.settDirty(UUID.fromString(oppgaveEksternId), tx)
+                        }
+                        call.respond(HttpStatusCode.NoContent)
+                    }
+                    "k9tilbake" -> {
+                        transactionalManager.transaction { tx ->
+                            k9tilbakeEventRepository.settDirty(UUID.fromString(oppgaveEksternId), tx)
+                        }
+                        call.respond(HttpStatusCode.NoContent)
+                    }
+                    "k9punsj" -> {
+                        transactionalManager.transaction { tx ->
+                            k9PunsjEventK9Repository.settDirty(UUID.fromString(oppgaveEksternId), tx)
+                        }
+                        call.respond(HttpStatusCode.NoContent)
+                    }
+                    else -> call.respond(
+                        HttpStatusCode.NotImplemented,
+                        "Oppgavetype $oppgavetype for område: $område ikke implementert"
+                    )
+                }
+            }
+
+            else -> call.respond(HttpStatusCode.NotImplemented, "Område: $område ikke implementert")
+        }
+    }
+
+    get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}/reservasjoner", {
+        description = "Hent ut reservasjonshistorikk for en oppgave"
+        request {
+            pathParameter<String>("omrade") {
+                description = "Området oppgavetypen er definert i. Pr i dag er kun K9 implementert"
+                example("K9") {
+                    value = "K9"
+                    description = "Oppgaver definert innenfor K9"
+                }
+            }
+            pathParameter<String>("oppgavetype") {
+                description = "Navnet på oppgavetypen."
+                example("k9sak") {
+                    value = "k9sak"
+                    description = "Oppgaver som kommer fra k9sak"
+                }
+            }
+            pathParameter<String>("oppgaveEksternId") {
+                description = "Oppgavens eksterne Id, definert av innleverende fagsystem"
+            }
+        }
+    }) {
         val område = call.parameters["omrade"]!!
         val oppgavetypeEksternId = call.parameters["oppgavetype"]!!
         val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!

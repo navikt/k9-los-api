@@ -92,6 +92,11 @@
           "påkrevd": false
         },
         {
+          "id": "liggerHosBeslutter",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
           "id": "ansvarligBeslutter",
           "visPåOppgave": true,
           "påkrevd": false
@@ -159,6 +164,16 @@
         },
         {
           "id": "oversendtKabalTidspunkt",
+          "visPåOppgave": false,
+          "påkrevd": false
+        },
+        {
+          "id": "ferdigstiltTidspunkt",
+          "visPåOppgave": false,
+          "påkrevd": false
+        },
+        {
+          "id": "ferdigstiltEnhet",
           "visPåOppgave": false,
           "påkrevd": false
         }

@@ -1,10 +1,7 @@
 package no.nav.k9.los.eventhandler
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.ReceiveChannel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.domene.repository.StatistikkRepository
@@ -39,6 +36,8 @@ fun CoroutineScope.oppdaterStatistikk(
                 delay(5_000)
             }
         }
+    } catch (e: CancellationException) {
+        throw e // Normal flyt for coroutiner
     } catch (e: Exception) {
         log.error("Feil ved oppdatering av statistikk", e)
     }

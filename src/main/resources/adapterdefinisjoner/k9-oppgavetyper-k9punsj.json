@@ -55,6 +55,16 @@
           "id": "mottattDato",
           "visPåOppgave": true,
           "påkrevd": false
+        },
+        {
+          "id": "ferdigstiltTidspunkt",
+          "visPåOppgave": false,
+          "påkrevd": false
+        },
+        {
+          "id": "ferdigstiltEnhet",
+          "visPåOppgave": false,
+          "påkrevd": false
         }
       ]
     }

@@ -36,7 +36,7 @@ class RefreshK9v3Tjeneste(
     }
 
     @WithSpan
-    fun refreshK9(hendelser: List<KøpåvirkendeHendelse>) : RefreshUtført{
+    fun refreshK9(hendelser: List<KøpåvirkendeHendelse>): RefreshUtført {
         return transactionalManager.transaction { tx ->
             refreshK9(tx, hendelser)
         }
@@ -45,20 +45,25 @@ class RefreshK9v3Tjeneste(
     private fun refreshK9(tx: TransactionalSession, hendelser: List<KøpåvirkendeHendelse>): RefreshUtført {
 
         val aktuelleHendelser = hendelser
-            .filterNot { it is OppgaveHendelseMottatt && it.fagsystem != Fagsystem.K9SAK  }
+            .filterNot { it is OppgaveHendelseMottatt && it.fagsystem != Fagsystem.K9SAK }
             .filterNot { it is KødefinisjonSlettet }
             .filterNot { it is ReservasjonEndret }
+            .filterNot { it is Kødefinisjon && hendelser.any { hendelse -> hendelse is KødefinisjonSlettet && hendelse.køId == it.køId } }
 
-        if (aktuelleHendelser.isEmpty()){
+        if (aktuelleHendelser.isEmpty()) {
             log.info("Fikk ${hendelser.size}, ingen var aktuelle for å refreshe k9sak")
             return RefreshUtført.INGENTING;
         }
 
-        val oppfriskerFraAlleKøer : Boolean
-        val behandlinger  : Set<UUID> = if (aktuelleHendelser.all { it is Kødefinisjon }) {
+        val oppfriskerFraAlleKøer: Boolean
+        val behandlinger: Set<UUID> = if (aktuelleHendelser.all { it is Kødefinisjon }) {
             oppfriskerFraAlleKøer = false
             log.info("Fikk ${aktuelleHendelser.size} aktuelle hendelser, alle var relatert til kødefinisjoner")
-            behandlingerTilOppfriskningForKøer(tx, aktuelleHendelser.map { it as Kødefinisjon }.map { it.køId }.distinct(), antallPrKø)
+            behandlingerTilOppfriskningForKøer(
+                tx,
+                aktuelleHendelser.map { it as Kødefinisjon }.map { it.køId }.distinct(),
+                antallPrKø
+            )
         } else {
             oppfriskerFraAlleKøer = true
             //TODO der er fint mulig å refreshe bare de køene som er påvirket av hendelsene.
@@ -68,7 +73,7 @@ class RefreshK9v3Tjeneste(
         }
 
         DetaljerMetrikker.time("RefreshK9V3", "refreshForKøer", "k9SakService") {
-            runBlocking (Span.current().asContextElement())  {
+            runBlocking(Span.current().asContextElement()) {
                 k9SakService.refreshBehandlinger(behandlinger)
             }
         }
@@ -80,14 +85,14 @@ class RefreshK9v3Tjeneste(
         }
     }
 
-    fun behandlingerTilOppfriskning(antallPrKø: Int) : Set<UUID> {
-        return transactionalManager.transaction {
-            tx -> behandlingerTilOppfriskning(tx, antallPrKø)
+    fun behandlingerTilOppfriskning(antallPrKø: Int): Set<UUID> {
+        return transactionalManager.transaction { tx ->
+            behandlingerTilOppfriskning(tx, antallPrKø)
         }
     }
 
     @WithSpan
-    fun behandlingerTilOppfriskning(tx: TransactionalSession, antallPrKø: Int) : Set<UUID> {
+    fun behandlingerTilOppfriskning(tx: TransactionalSession, antallPrKø: Int): Set<UUID> {
         return DetaljerMetrikker.time("RefreshK9V3", "refreshForKøer", "alle") {
             val alleKøer = oppgaveKoRepository.hentListe(skjermet = false, medSaksbehandlere = false) +
                     oppgaveKoRepository.hentListe(skjermet = true, medSaksbehandlere = false)
@@ -98,19 +103,22 @@ class RefreshK9v3Tjeneste(
     }
 
     @WithSpan
-    fun behandlingerTilOppfriskningForKøer(tx: TransactionalSession, køId: List<Long>, antallPrKø: Int) : Set<UUID>{
+    fun behandlingerTilOppfriskningForKøer(tx: TransactionalSession, køId: List<Long>, antallPrKø: Int): Set<UUID> {
         return DetaljerMetrikker.time("RefreshK9V3", "refreshForKøer", køId.size.toString()) {
             val køer = køId.map { oppgaveKoRepository.hentInkluderKode6(it) }
             behandlingerTilOppfriskning(tx, køer, antallPrKø)
         }
     }
 
-    fun behandlingerTilOppfriskning(tx: TransactionalSession, køer: List<OppgaveKo>, antallPrKø: Int) : Set<UUID> {
+    fun behandlingerTilOppfriskning(tx: TransactionalSession, køer: List<OppgaveKo>, antallPrKø: Int): Set<UUID> {
         return DetaljerMetrikker.time("RefreshK9V3", "refreshForKøer", "hentOgRefresh") {
             val førsteOppgaveIder = mutableSetOf<AktivOppgaveId>()
             for (kø in køer) {
                 DetaljerMetrikker.time("RefreshK9V3", "refreshForKøer", "hentFørsteOppgaverIterativt") {
-                    OpentelemetrySpanUtil.span("hentFørsteUreserverteFraKø", mapOf("køId" to kø.id.toString(), "antall" to antallPrKø.toString())) {
+                    OpentelemetrySpanUtil.span(
+                        "hentFørsteUreserverteFraKø",
+                        mapOf("køId" to kø.id.toString(), "antall" to antallPrKø.toString())
+                    ) {
                         val førsteOppgaverIKøen = oppgaveQueryService.queryForOppgaveId(
                             tx,
                             QueryRequest(
@@ -124,7 +132,8 @@ class RefreshK9v3Tjeneste(
                 }
             }
             DetaljerMetrikker.time("RefreshK9V3", "refreshForKøer", "parsaker") {
-                aktivOppgaveRepository.hentK9sakParsakOppgaver(tx, førsteOppgaveIder).map { UUID.fromString(it.eksternId)}.toSet()
+                aktivOppgaveRepository.hentK9sakParsakOppgaver(tx, førsteOppgaveIder)
+                    .map { UUID.fromString(it.eksternId) }.toSet()
             }
         }
     }

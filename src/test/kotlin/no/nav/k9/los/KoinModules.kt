@@ -30,15 +30,15 @@ import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerKlientLocal
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.K9KlageTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.punsjtillos.K9PunsjTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonKonverteringJobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.tilbaketillos.k9TilbakeEksternId
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.tilbaketillos.k9TilbakeEksternId
 import no.nav.k9.los.nyoppgavestyring.forvaltning.ForvaltningRepository
 import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
@@ -47,6 +47,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonReposi
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltVerdiUtledere
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
@@ -61,12 +62,13 @@ import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksTjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.OppgaverGruppertRepository
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallRepositoryV3
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.*
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.status.StatusService
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.*
-import no.nav.k9.los.tjenester.sse.SseEvent
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -80,9 +82,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single(named("oppgaveKøOppdatert")) {
         Channel<UUID>(Channel.UNLIMITED)
-    }
-    single(named("refreshKlienter")) {
-        Channel<SseEvent>(Channel.UNLIMITED)
     }
     single(named("oppgaveChannel")) {
         Channel<Oppgave>(Channel.UNLIMITED)
@@ -126,8 +125,9 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             refreshOppgave = get(named("oppgaveRefreshChannel"))
         )
     }
-    single { AktivOppgaveRepository(
-        oppgavetypeRepository = get()
+    single {
+        AktivOppgaveRepository(
+            oppgavetypeRepository = get()
         )
     }
 
@@ -139,7 +139,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             dataSource = get(),
             oppgaveRepositoryV2 = get(),
             oppgaveKøOppdatert = get(named("oppgaveKøOppdatert")),
-            refreshKlienter = get(named("refreshKlienter")),
             oppgaveRefreshChannel = get(named("oppgaveRefreshChannel")),
             pepClient = get()
         )
@@ -152,13 +151,18 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single {
+        OppgaveFeltVerdiUtledere(
+            saksbehandlerRepository = get()
+        )
+    }
+
+    single {
         ReservasjonRepository(
             oppgaveKøRepository = get(),
             oppgaveRepository = get(),
             oppgaveRepositoryV2 = get(),
-            dataSource = get(),
-            refreshKlienter = get(named("refreshKlienter")),
-            saksbehandlerRepository = get()
+            saksbehandlerRepository = get(),
+            dataSource = get()
         )
     }
 
@@ -435,7 +439,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             pepCacheService = get(),
             oppgaveRepository = get(),
             reservasjonV3Tjeneste = get(),
-            historikkvaskChannel = get(named("historikkvaskChannelK9Sak"))
+            historikkvaskChannel = get(named("historikkvaskChannelK9Sak")),
         )
     }
 
@@ -449,7 +453,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             pepCacheService = get(),
             oppgaveRepository = get(),
             reservasjonV3Tjeneste = get(),
-            historikkvaskChannel = get(named("historikkvaskChannelK9Tilbake"))
+            historikkvaskChannel = get(named("historikkvaskChannelK9Tilbake")),
         )
     }
 
@@ -466,7 +470,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgaveV3Tjeneste = get(),
             transactionalManager = get(),
             config = get(),
-            k9sakBeriker = get()
+            k9sakBeriker = get(),
         )
     }
 
@@ -478,7 +482,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             reservasjonV3Tjeneste = get(),
             config = config,
             transactionalManager = get(),
-            pepCacheService = get()
+            pepCacheService = get(),
         )
     }
 
@@ -524,6 +528,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             pdlService = get(),
             statistikkChannel = get(named("statistikkRefreshChannel")),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
+            feltdefinisjonTjeneste = get(),
         )
     }
 
@@ -593,6 +598,26 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             pepClient = get(),
             reservasjonV3Tjeneste = get(),
             saksbehandlerRepository = get()
+        )
+    }
+
+    single {
+        StatusService(
+            queryService = get(),
+            oppgaverGruppertRepository = get(),
+        )
+    }
+
+    single {
+        DagensTallService(
+            queryService = get(),
+        )
+    }
+
+    single {
+        FerdigstiltePerEnhetService(
+            enheter = config.enheter(),
+            queryService = get()
         )
     }
 }

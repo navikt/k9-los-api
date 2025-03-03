@@ -83,6 +83,12 @@ spec:
         - application: k9-los-web
           namespace: k9saksbehandling
           cluster: dev-gcp
+        - application: k9-swagger
+          namespace: k9saksbehandling
+          cluster: dev-gcp
+          permissions:
+            scopes:
+              - "swagger"
         - application: k9-sak
           namespace: k9saksbehandling
   ingresses:
@@ -186,3 +192,6 @@ spec:
       value: "true"
     - name: TILBAKE_CONSUMER_AIVEN
       value: "true"
+
+    - name: NOKKELTALL_ENHETER
+      value: "2970 NAV IKT DRIFT"

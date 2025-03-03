@@ -1,7 +1,9 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package no.nav.k9.los
 
 import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.PropertyNamingStrategy
+import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.SerializationFeature
 import io.github.smiley4.ktorswaggerui.SwaggerUI
 import io.github.smiley4.ktorswaggerui.dsl.routing.route
@@ -17,12 +19,12 @@ import io.ktor.server.plugins.callloging.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.routing.*
-import io.ktor.server.websocket.*
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.extension.kotlin.asContextElement
 import io.prometheus.client.hotspot.DefaultExports
-import kotlinx.coroutines.channels.BroadcastChannel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.broadcast
-import kotlinx.coroutines.channels.produce
 import no.nav.helse.dusseldorf.ktor.auth.AuthStatusPages
 import no.nav.helse.dusseldorf.ktor.auth.allIssuers
 import no.nav.helse.dusseldorf.ktor.auth.multipleJwtIssuers
@@ -37,36 +39,35 @@ import no.nav.k9.los.eventhandler.*
 import no.nav.k9.los.integrasjon.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
 import no.nav.k9.los.jobber.K9sakBehandlingsoppfriskingJobb
+import no.nav.k9.los.jobbplanlegger.Jobbplanlegger
+import no.nav.k9.los.jobbplanlegger.PlanlagtJobb
+import no.nav.k9.los.jobbplanlegger.Tidsvindu
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.aktivvask.Aktivvask
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosApi
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonKonverteringJobb
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosApi
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.k9SakEksternId
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.k9SakKorrigerOutOfOrderProsessor
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.K9KlageTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.K9KlageTilLosApi
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.K9KlageTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.punsjtillos.K9PunsjTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.punsjtillos.K9PunsjTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.saktillos.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkApi
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.tilbaketillos.K9TilbakeTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.tilbaketillos.k9TilbakeEksternId
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.tilbaketillos.k9tilbakeKorrigerOutOfOrderProsessor
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.K9KlageTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9saktillos.K9SakTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.tilbaketillos.K9TilbakeTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.tilbaketillos.k9TilbakeEksternId
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.tilbaketillos.k9tilbakeKorrigerOutOfOrderProsessor
 import no.nav.k9.los.nyoppgavestyring.forvaltning.forvaltningApis
 import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoApis
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonApi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Api
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeApi
-import no.nav.k9.los.nyoppgavestyring.pep.PepCacheOppdaterer
+import no.nav.k9.los.nyoppgavestyring.pep.PepCacheService
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryApis
 import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksApi
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallV3Apis
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederApis
-import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.DataeksportApis
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallApis
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.AvdelingslederOppgavekøApis
 import no.nav.k9.los.tjenester.driftsmeldinger.DriftsmeldingerApis
@@ -79,14 +80,15 @@ import no.nav.k9.los.tjenester.saksbehandler.NavAnsattApis
 import no.nav.k9.los.tjenester.saksbehandler.nokkeltall.SaksbehandlerNøkkeltallApis
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveApis
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.SaksbehandlerOppgavekoApis
-import no.nav.k9.los.tjenester.sse.RefreshKlienterWebSocket
-import no.nav.k9.los.tjenester.sse.SseEvent
+import org.koin.core.Koin
 import org.koin.core.qualifier.named
 import org.koin.ktor.ext.getKoin
 import org.koin.ktor.plugin.Koin
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.*
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
@@ -104,29 +106,13 @@ fun Application.k9Los() {
 
     val koin = getKoin()
 
-    val områdeSetup = koin.get<OmrådeSetup>()
-    områdeSetup.setup()
-    val k9SakTilLosAdapterTjeneste = koin.get<K9SakTilLosAdapterTjeneste>()
-    k9SakTilLosAdapterTjeneste.setup()
-    val k9KlageTilLosAdapterTjeneste = koin.get<K9KlageTilLosAdapterTjeneste>()
-    k9KlageTilLosAdapterTjeneste.setup()
-    val k9PunsjTilLosAdapterTjeneste = koin.get<K9PunsjTilLosAdapterTjeneste>()
-    k9PunsjTilLosAdapterTjeneste.setup()
-    val k9TilbakeTilLosAdapterTjeneste = koin.get<K9TilbakeTilLosAdapterTjeneste>()
-    k9TilbakeTilLosAdapterTjeneste.setup()
+    koin.get<OmrådeSetup>().setup()
+    koin.get<K9SakTilLosAdapterTjeneste>().setup()
+    koin.get<K9KlageTilLosAdapterTjeneste>().setup()
+    koin.get<K9PunsjTilLosAdapterTjeneste>().setup()
+    koin.get<K9TilbakeTilLosAdapterTjeneste>().setup()
 
-    if (LocalDateTime.now().isBefore(LocalDateTime.of(2025, 1, 27, 21, 0))) {
-        if (1 == 0) { //HAXX for å ikke kjøre jobb, men indikere at koden er i bruk og dermed ikke slettes
-            //koin.get<ReservasjonKonverteringJobb>().kjørReservasjonskonvertering() //TODO slette
-            //koin.get<K9SakTilLosLukkeFeiloppgaverTjeneste>().kjørFeiloppgaverVask() //TODO slette
-            koin.get<Aktivvask>().kjørAktivvask()
-            koin.get<K9PunsjTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
-            koin.get<K9TilbakeTilLosHistorikkvaskTjeneste>().kjørHistorikkvask(pauseHvisDagtid = true)
-            koin.get<K9KlageTilLosHistorikkvaskTjeneste>().kjørHistorikkvask()
-            koin.get<K9SakTilLosHistorikkvaskTjeneste>().kjørHistorikkvask(pauseHvisDagtid = true)
-        }
-        koin.get<ReservasjonKonverteringJobb>().kjørReservasjonskonvertering()
-    }
+    konfigurerJobber(koin, configuration)
 
     install(Authentication) {
         multipleJwtIssuers(issuers)
@@ -135,7 +121,7 @@ fun Application.k9Los() {
     install(ContentNegotiation) {
         jackson {
             dusseldorfConfigured()
-                .setPropertyNamingStrategy(PropertyNamingStrategy.LOWER_CAMEL_CASE)
+                .setPropertyNamingStrategy(PropertyNamingStrategies.LOWER_CAMEL_CASE)
                 .configure(SerializationFeature.WRITE_DURATIONS_AS_TIMESTAMPS, false)
                 .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true)
         }
@@ -145,13 +131,6 @@ fun Application.k9Los() {
         DefaultStatusPages()
         JacksonStatusPages()
         AuthStatusPages()
-    }
-
-    install(WebSockets) {
-        pingPeriod = Duration.ofSeconds(60)
-        timeout = Duration.ofSeconds(15)
-        maxFrameSize = Long.MAX_VALUE
-        masking = false
     }
 
     val køOppdatertProsessorJob =
@@ -164,6 +143,7 @@ fun Application.k9Los() {
             oppgaveTjeneste = koin.get()
         )
 
+    // v1, skal fjernes
     val refreshOppgaveJobb = with(
         RefreshK9(
             k9SakService = koin.get(),
@@ -172,10 +152,14 @@ fun Application.k9Los() {
         )
     ) { start(koin.get<Channel<UUID>>(named("oppgaveRefreshChannel"))) }
 
-    val refreshOppgaveV3Jobb = with(RefreshK9v3(
-        refreshK9v3Tjeneste = koin.get()
-)) { start(koin.get<Channel<KøpåvirkendeHendelse>>(named("KøpåvirkendeHendelseChannel"))) }
+    // må se på om dette skal settes opp med Jobbplanlegger oppstartsjobb
+    val refreshOppgaveV3Jobb = with(
+        RefreshK9v3(
+            refreshK9v3Tjeneste = koin.get()
+        )
+    ) { start(koin.get<Channel<KøpåvirkendeHendelse>>(named("KøpåvirkendeHendelseChannel"))) }
 
+    // v1, skal fjernes
     val oppdaterStatistikkJobb =
         oppdaterStatistikk(
             channel = koin.get<Channel<Boolean>>(named("statistikkRefreshChannel")),
@@ -183,10 +167,6 @@ fun Application.k9Los() {
             statistikkRepository = koin.get(),
             oppgaveTjeneste = koin.get()
         )
-
-    PepCacheOppdaterer(koin.get()).run {
-        startOppdateringAvÅpneOgVentende()
-    }
 
     K9sakBehandlingsoppfriskingJobb(
         oppgaveRepository = koin.get(),
@@ -197,6 +177,7 @@ fun Application.k9Los() {
         configuration = koin.get()
     ).run { start() }
 
+    // v1, skal fjernes
     val sjekkReserverteJobb =
         sjekkReserverteJobb(saksbehandlerRepository = koin.get(), reservasjonRepository = koin.get())
 
@@ -230,12 +211,7 @@ fun Application.k9Los() {
         k9TilbakeKorrigerOutOfOrderProsessor.cancel()
     }
 
-    OmrådeSetup(
-        områdeRepository = koin.get(),
-        feltdefinisjonTjeneste = koin.get()
-    )
-
-    //TODO bruk injection for å finne adapterne (se koin.get<K9TilbakeTilLosAdapterTjeneste>().kjør
+    // skal implementeres med Jobbplanlegger
     K9SakTilLosAdapterTjeneste(
         behandlingProsessEventK9Repository = koin.get(),
         oppgavetypeTjeneste = koin.get(),
@@ -249,6 +225,7 @@ fun Application.k9Los() {
         historikkvaskChannel = koin.get<Channel<k9SakEksternId>>(named("historikkvaskChannelK9Sak"))
     ).kjør(kjørSetup = false, kjørUmiddelbart = false)
 
+    // implementer med Jobbplanlegger
     K9KlageTilLosAdapterTjeneste(
         behandlingProsessEventKlageRepository = koin.get(),
         områdeRepository = koin.get(),
@@ -260,6 +237,7 @@ fun Application.k9Los() {
         k9sakBeriker = koin.get(),
     ).kjør(kjørSetup = false, kjørUmiddelbart = false)
 
+    // implementer med Jobbplanlegger
     K9PunsjTilLosAdapterTjeneste(
         eventRepository = koin.get(),
         oppgavetypeTjeneste = koin.get(),
@@ -270,9 +248,10 @@ fun Application.k9Los() {
         pepCacheService = koin.get()
     ).kjør(kjørUmiddelbart = false)
 
-
+    // implementer med Jobbplanlegger
     koin.get<K9TilbakeTilLosAdapterTjeneste>().kjør(kjørSetup = false, kjørUmiddelbart = false)
 
+    // implementer med Jobbplanlegger
     OppgavestatistikkTjeneste(
         oppgavetypeRepository = koin.get(),
         statistikkPublisher = koin.get(),
@@ -281,13 +260,6 @@ fun Application.k9Los() {
         pepClient = koin.get(),
         config = koin.get()
     ).kjør(kjørUmiddelbart = false)
-
-    // Server side events
-    val sseChannel = produce {
-        for (oppgaverOppdatertEvent in koin.get<Channel<SseEvent>>(named("refreshKlienter"))) {
-            send(oppgaverOppdatertEvent)
-        }
-    }.broadcast()
 
     install(CallIdRequired)
 
@@ -313,36 +285,10 @@ fun Application.k9Los() {
             localSetup.initPunsjoppgaver(0)
             localSetup.initTilbakeoppgaver(0)
             localSetup.initK9SakOppgaver(0)
-            api(sseChannel)
-            route("/forvaltning") {
-                InnsiktApis()
-                forvaltningApis()
-                route("k9saktillos") { K9SakTilLosApi() }
-                route("k9klagetillos") { K9KlageTilLosApi() }
-                route("statistikk") { StatistikkApi() }
-            }
-            route("/swagger") {
-                route("openapi.json") {
-                    openApiSpec()
-                }
-                swaggerUI("openapi.json")
-            }
+            api()
         } else {
             authenticate(*issuers.allIssuers()) {
-                route("forvaltning") {
-                    InnsiktApis()
-                    forvaltningApis()
-                    route("k9saktillos") { K9SakTilLosApi() }
-                    route("k9klagetillos") { K9KlageTilLosApi() }
-                    route("statistikk") { StatistikkApi() }
-                    route("/swagger") {
-                        route("openapi.json") {
-                            openApiSpec()
-                        }
-                        swaggerUI("openapi.json")
-                    }
-                }
-                api(sseChannel)
+                api()
             }
         }
 
@@ -364,16 +310,23 @@ fun Application.k9Los() {
         fromXCorrelationIdHeader()
     }
 
-    install(SwaggerUI) {
-    }
+    install(SwaggerUI)
 }
 
-private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
-
-    RefreshKlienterWebSocket(
-        sseChannel = sseChannel
-    )
-
+private fun Route.api() {
+    route("k9/los/api") {
+        route("openapi.json") {
+            openApiSpec()
+        }
+        swaggerUI("openapi.json")
+        route("/forvaltning") {
+            InnsiktApis()
+            forvaltningApis()
+            route("k9saktillos") { K9SakTilLosApi() }
+            route("k9klagetillos") { K9KlageTilLosApi() }
+            route("statistikk") { StatistikkApi() }
+        }
+    }
     route("api") {
         route("driftsmeldinger", { hidden = true }) {
             DriftsmeldingerApis()
@@ -389,14 +342,13 @@ private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
             SaksbehandlerOppgavekoApis()
             SaksbehandlerNøkkeltallApis()
         }
-        route("avdelingsleder", { hidden = true }) {
+        route("avdelingsleder") {
             AvdelingslederApis()
             route("oppgavekoer") {
                 AvdelingslederOppgavekøApis() // Erstattet av OppgaveKoApis i V3
             }
             route("nokkeltall") {
                 NokkeltallApis()
-                DataeksportApis()
             }
         }
 
@@ -408,10 +360,166 @@ private fun Route.api(sseChannel: BroadcastChannel<SseEvent>) {
         route("ny-oppgavestyring") {
             route("ko", { hidden = true }) { OppgaveKoApis() }
             route("oppgave", { hidden = true }) { OppgaveQueryApis() }
-            route("feltdefinisjon", { hidden = true }) { FeltdefinisjonApi() } // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
-            route("oppgavetype", { hidden = true }) { OppgavetypeApi() } // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
-            route("oppgave-v3", { hidden = true }) { OppgaveV3Api() } // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
+            route(
+                "feltdefinisjon",
+                {
+                    hidden = true
+                }) { FeltdefinisjonApi() } // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
+            route(
+                "oppgavetype",
+                {
+                    hidden = true
+                }) { OppgavetypeApi() } // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
+            route(
+                "oppgave-v3",
+                {
+                    hidden = true
+                }) { OppgaveV3Api() } // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
             route("sok") { SøkeboksApi() }
+            route("nokkeltall") { NøkkeltallV3Apis() }
         }
+    }
+}
+
+fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
+    val k9SakTilLosHistorikkvaskTjeneste = koin.get<K9SakTilLosHistorikkvaskTjeneste>()
+    val k9PunsjTilLosHistorikkvaskTjeneste = koin.get<K9PunsjTilLosHistorikkvaskTjeneste>()
+    val k9TilbakeTilLosHistorikkvaskTjeneste = koin.get<K9TilbakeTilLosHistorikkvaskTjeneste>()
+    val k9KlageTilLosHistorikkvaskTjeneste = koin.get<K9KlageTilLosHistorikkvaskTjeneste>()
+    val pepCacheService = koin.get<PepCacheService>()
+    val dagensTallService = koin.get<DagensTallService>()
+    val perEnhetService = koin.get<FerdigstiltePerEnhetService>()
+
+    val høyPrioritet = 0
+    val mediumPrioritet = 5
+    val lavPrioritet = 10
+    val utvidetArbeidstid = Tidsvindu.hverdager(5, 20)
+
+    val planlagteJobber = buildSet {
+        add(
+            PlanlagtJobb.KjørPåTidspunkt(
+                "K9SakTilLosHistorikkvask",
+                høyPrioritet,
+                kjørTidligst = LocalDateTime.of(2025, 2, 27, 19, 0),
+                kjørSenest = LocalDateTime.of(2025, 2, 28, 6, 0),
+            ) {
+                k9SakTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
+            }
+        )
+
+        add(
+            PlanlagtJobb.KjørPåTidspunkt(
+                "K9PunsjTilLosHistorikkvask",
+                høyPrioritet,
+                kjørTidligst = LocalDateTime.of(2025, 1, 1, 0, 0),
+                kjørSenest = LocalDateTime.of(2025, 1, 1, 0, 1),
+            ) {
+                k9PunsjTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
+            }
+        )
+
+        add(
+            PlanlagtJobb.KjørPåTidspunkt(
+                "K9TilbakeTilLosHistorikkvask",
+                høyPrioritet,
+                kjørTidligst = LocalDateTime.of(2025, 2, 27, 17, 0),
+                kjørSenest = LocalDateTime.of(2025, 2, 28, 6, 0),
+            ) {
+                k9TilbakeTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
+            }
+        )
+
+        add(
+            PlanlagtJobb.KjørPåTidspunkt(
+                "K9KlageTilLosHistorikkvask",
+                høyPrioritet,
+                kjørTidligst = LocalDateTime.of(2025, 2, 27, 17, 0),
+                kjørSenest = LocalDateTime.of(2025, 2, 28, 6, 0),
+            ) {
+                k9KlageTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
+            }
+        )
+
+        // Hyppig oppdatering i arbeidstiden
+        add(
+            PlanlagtJobb.Periodisk(
+                navn = "PepCacheOppdatererArbeidstid",
+                prioritet = lavPrioritet,
+                intervall = 5.seconds,
+                tidsvindu = utvidetArbeidstid,
+                startForsinkelse = 1.minutes
+            ) {
+                pepCacheService.oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn()
+            }
+        )
+
+        // Sjeldnere oppdatering utenfor arbeidstiden
+        add(
+            PlanlagtJobb.Periodisk(
+                navn = "PepCacheOppdatererUtenforArbeidstid",
+                prioritet = lavPrioritet,
+                intervall = 30.seconds,
+                tidsvindu = utvidetArbeidstid.komplement(),
+                startForsinkelse = 1.minutes
+            ) {
+                pepCacheService.oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn()
+            }
+        )
+
+        // Kjører ikke nøkkeltalloppdatering i prod inntil ytelsen er forbedret
+        if (configuration.koinProfile != KoinProfile.PROD) {
+            add(
+                PlanlagtJobb.Oppstart(
+                    navn = "DagensTallOppstart",
+                    prioritet = mediumPrioritet,
+                ) {
+                    dagensTallService.oppdaterCache(this)
+                }
+            )
+
+            add(
+                PlanlagtJobb.Oppstart(
+                    navn = "PerEnhetOppstart",
+                    prioritet = mediumPrioritet,
+                ) {
+                    perEnhetService.oppdaterCache(this)
+                }
+            )
+
+            add(
+                PlanlagtJobb.TimeJobb(
+                    navn = "DagensTallOppdaterer",
+                    prioritet = lavPrioritet,
+                    tidsvindu = Tidsvindu.alleDager(5, 20),
+                    minutter = listOf(0, 30),
+                ) {
+                    dagensTallService.oppdaterCache(this)
+                }
+            )
+
+            add(
+                PlanlagtJobb.TimeJobb(
+                    navn = "PerEnhetOppdaterer",
+                    prioritet = lavPrioritet,
+                    tidsvindu = Tidsvindu.alleDager(7, 11),
+                    minutter = listOf(15),
+                ) {
+                    perEnhetService.oppdaterCache(this)
+                }
+            )
+        }
+    }
+
+    val jobbplanlegger = Jobbplanlegger(
+        innkommendeJobber = planlagteJobber,
+        coroutineContext = Dispatchers.IO.limitedParallelism(4) + Span.current().asContextElement(),
+    )
+
+    environment.monitor.subscribe(ApplicationStarted) {
+        jobbplanlegger.start()
+    }
+
+    environment.monitor.subscribe(ApplicationStopping) {
+        jobbplanlegger.stopp()
     }
 }
