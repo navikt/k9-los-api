@@ -109,12 +109,14 @@
         {
           "id": "ferdigstiltTidspunkt",
           "visPåOppgave": false,
-          "påkrevd": false
+          "påkrevd": false,
+          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.FerdigstiltTidspunkt"
         },
         {
           "id": "ferdigstiltEnhet",
           "visPåOppgave": false,
-          "påkrevd": false
+          "påkrevd": false,
+          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.FerdigstiltEnhet"
         }
       ]
     }

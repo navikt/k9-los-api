@@ -102,7 +102,7 @@ class HistorikkvaskFerdigstiltTest : AbstractK9LosIntegrationTest() {
                 aktiv = aktivOppgave.aktiv,
             )
             
-            oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppdatertOppgave, 3, tx)
+            oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppdatertOppgave, 1, tx)
         }
         
         // Verifiser at feltene ikke er satt før historikkvask
