@@ -6,7 +6,6 @@ import assertk.assertions.matchesPredicate
 import no.nav.k9.klage.kodeverk.Fagsystem
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.Aksjonspunkttilstand
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.KlagebehandlingProsessHendelse
-import no.nav.k9.los.fagsystem.FagsystemModul
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.*

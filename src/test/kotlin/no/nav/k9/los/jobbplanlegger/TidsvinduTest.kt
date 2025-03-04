@@ -2,6 +2,7 @@ package no.nav.k9.los.jobbplanlegger
 
 import assertk.assertThat
 import assertk.assertions.*
+import no.nav.k9.los.nyoppgavestyring.jobbplanlegger.Tidsvindu
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.LocalDateTime

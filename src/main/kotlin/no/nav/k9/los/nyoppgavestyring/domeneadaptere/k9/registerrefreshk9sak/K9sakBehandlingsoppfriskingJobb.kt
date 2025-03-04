@@ -1,13 +1,13 @@
-package no.nav.k9.los.jobber
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.registerrefreshk9sak
 
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.toList
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
-import no.nav.k9.los.domene.repository.OppgaveKøRepository
-import no.nav.k9.los.domene.repository.OppgaveRepository
-import no.nav.k9.los.eventhandler.RefreshK9v3Tjeneste
+import no.nav.k9.los.db.util.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.jobbplanlegger.JobbMetrikker
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
 import org.slf4j.LoggerFactory
 import java.time.DayOfWeek
@@ -23,12 +23,12 @@ class K9sakBehandlingsoppfriskingJobb(
     val ønsketStarttidJobb : LocalDateTime = avrundFremoverTilKvarter(startidApplikasjon).plusMinutes(1), //1 minutt over neste kvarter
     val tidMellomKjøring: Duration = Duration.ofMinutes(15),
     val forsinketOppstart: Duration = Duration.between(startidApplikasjon, ønsketStarttidJobb),
-    val oppgaveKøRepository: OppgaveKøRepository,
-    val oppgaveRepository: OppgaveRepository,
     val reservasjonRepository: ReservasjonV3Repository,
     val refreshK9v3Tjeneste: RefreshK9v3Tjeneste,
     val refreshOppgaveChannel: Channel<UUID>,
     val configuration: Configuration,
+    val transactionalManager: TransactionalManager,
+    val oppgavetypeRepository: OppgavetypeRepository,
 
     //domenespesifikk konfigurasjon som tilpasses etter erfaringer i prod
     val antallFraHverKø: Int = 10,
@@ -86,32 +86,15 @@ class K9sakBehandlingsoppfriskingJobb(
     }
 
     private fun finnK9sakBehandlingerTilRefresh(skipRefreshFraKøer: Boolean): Set<UUID> {
-        val k9sakOppgaver = taTiden("hent k9sak oppgaver ") { oppgaveRepository.hentAktiveK9sakOppgaver().toSet() }
-        val reserverteOppgaver = taTiden("hent reserverte oppgaver") { hentK9sakReserverteBehandlinger(k9sakOppgaver, ignorerEtter = ignorerReserverteOppgaverSomUtløperEtter) }
+        val reserverteOppgaver = taTiden("hent reserverte oppgaver") { hentK9sakReserverteBehandlinger() }
         if (skipRefreshFraKøer){
             log.info("Refresher ${reserverteOppgaver.size} reserverte oppgaver")
             return reserverteOppgaver
         } else {
-            val oppgaverFørstIGamleKøer = taTiden("hent oppgaver først i køene") { hentOppgaverFørstIGamleKøer(k9sakOppgaver) }
-            val oppgaverFørstINyeKøer = taTiden("hent oppgaver først i nye køer") { refreshK9v3Tjeneste.behandlingerTilOppfriskning(antallFraHverKø) }
-            val oppgaverFørstIKøer = oppgaverFørstINyeKøer + oppgaverFørstIGamleKøer
-            log.info("Fant ${oppgaverFørstIGamleKøer.size} oppgaver først i gamle køer, og ${oppgaverFørstINyeKøer.size} oppgaver først i nye køer")
+            val oppgaverFørstIKøer = taTiden("hent oppgaver forrest i køer") { refreshK9v3Tjeneste.behandlingerTilOppfriskning(antallFraHverKø) }
             log.info("Refresher ${oppgaverFørstIKøer.size} oppgaver da de er først i køer, og ${reserverteOppgaver.size} reserverte oppgaver")
             return oppgaverFørstIKøer + reserverteOppgaver
         }
-    }
-
-    private fun hentOppgaverFørstIGamleKøer(k9sakOppgaver: Set<UUID>): Set<UUID> {
-        val køene = oppgaveKøRepository.hentAlleInkluderKode6()
-        log.info("Hentet ${køene.size} køer")
-        return køene.flatMap { kø ->
-            kø.oppgaverOgDatoer
-                .sortedBy { it.dato }
-                .map { it.id }
-                .filter { k9sakOppgaver.contains(it) }
-                .take(antallFraHverKø)
-        }
-            .toSet()
     }
 
     private fun channelSend(behandlingerTilRefresh: Set<UUID>) {
@@ -123,20 +106,17 @@ class K9sakBehandlingsoppfriskingJobb(
         }
     }
 
-    fun hentK9sakReserverteBehandlinger(k9sakOppgaver: Set<UUID>, ignorerEtter: Duration): Set<UUID> {
-        val nå = LocalDateTime.now()
-        val oppgaveIder = reservasjonRepository.hentOppgaverIdForAktiveReservasjoner(gyldigPåTidspunkt = nå, utløperInnen = nå.plus(ignorerEtter))
-        val k9sakOppgeveIder = k9sakOppgaver.map { it.toString() }
-        val resultat = oppgaveIder
-            .filter { k9sakOppgeveIder.contains(it) }
-            .map { UUID.fromString(it) }
-            .toSet()
+    fun hentK9sakReserverteBehandlinger(): Set<UUID> {
+        val k9sakOppgavetype = oppgavetypeRepository.hentOppgavetype("k9", "k9sak")
+        val oppgaveEksternIder = transactionalManager.transaction { tx ->
+            reservasjonRepository.hentAlleOppgaveEksternIderForOppgavetypeMedAktiveReservasjoner(tx, k9sakOppgavetype)
+        }.map { UUID.fromString(it) }.toSet()
 
-        if (resultat.size > maksAntallReserverteTilRefresh){
-            log.info("Fant ${resultat.size} reservasjoner som kandidat for refresh")
-            return resultat.take(maksAntallReserverteTilRefresh).toSet()
+        if (oppgaveEksternIder.size > maksAntallReserverteTilRefresh){
+            log.info("Fant ${oppgaveEksternIder.size} reservasjoner som kandidat for refresh")
+            return oppgaveEksternIder.take(maksAntallReserverteTilRefresh).toSet()
         } else {
-            return resultat
+            return oppgaveEksternIder
         }
     }
 

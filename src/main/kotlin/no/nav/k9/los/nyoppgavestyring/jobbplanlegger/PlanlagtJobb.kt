@@ -1,4 +1,4 @@
-package no.nav.k9.los.jobbplanlegger
+package no.nav.k9.los.nyoppgavestyring.jobbplanlegger
 
 import kotlinx.coroutines.CoroutineScope
 import java.time.LocalDateTime
@@ -97,8 +97,10 @@ abstract class PlanlagtJobb(
             require(minutter.all { it in 0..59 }) { "Minutter må være mellom 0 og 59" }
         }
 
-        override fun førsteKjøretidspunkt(nå: LocalDateTime) = Kjøretidspunkt.KjørIFremtiden(beregnNesteTimeKjøring(nå, minutter))
-        override fun nesteKjøretidspunkt(nå: LocalDateTime) = Kjøretidspunkt.KjørIFremtiden(beregnNesteTimeKjøring(nå, minutter))
+        override fun førsteKjøretidspunkt(nå: LocalDateTime) =
+            Kjøretidspunkt.KjørIFremtiden(beregnNesteTimeKjøring(nå, minutter))
+        override fun nesteKjøretidspunkt(nå: LocalDateTime) =
+            Kjøretidspunkt.KjørIFremtiden(beregnNesteTimeKjøring(nå, minutter))
 
         private fun beregnNesteTimeKjøring(nå: LocalDateTime, minutter: List<Int>): LocalDateTime {
             val nesteMinutt = minutter.find { it > nå.minute } ?: minutter.first()

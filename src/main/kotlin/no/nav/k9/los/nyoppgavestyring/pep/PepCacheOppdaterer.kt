@@ -1,6 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.pep
 
-import no.nav.k9.los.jobber.JobbMetrikker
+import no.nav.k9.los.nyoppgavestyring.jobbplanlegger.JobbMetrikker
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.*

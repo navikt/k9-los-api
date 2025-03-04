@@ -1,8 +1,10 @@
-package no.nav.k9.los.eventhandler
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.registerrefreshk9sak
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
+import no.nav.k9.los.eventhandler.ChannelMetrikker
+import no.nav.k9.los.eventhandler.asCoroutineDispatcherWithErrorHandling
 import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import org.slf4j.LoggerFactory
 import java.util.concurrent.Executors

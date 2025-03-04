@@ -30,10 +30,7 @@ class K9KlageEventHandler constructor(
     ) {
         val t0 = System.nanoTime()
         val event = håndterVaskeevent(eventInn)
-        if (event == null) {
-            EventHandlerMetrics.observe("k9klage", "vaskeevent", t0)
-            return
-        }
+            ?: return
 
         behandlingProsessEventKlageRepository.lagre(event.eksternId!!) { k9KlageModell ->
             if (k9KlageModell == null) {
@@ -46,7 +43,10 @@ class K9KlageEventHandler constructor(
             k9KlageModell.eventer.add(event)
             k9KlageModell
         }
-        OpentelemetrySpanUtil.span("k9KlageTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid") { k9KlageTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId) }
+        OpentelemetrySpanUtil.span("k9KlageTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid") {
+            k9KlageTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId)
+        }
+
         runBlocking {
             køpåvirkendeHendelseChannel.send(OppgaveHendelseMottatt(Fagsystem.K9KLAGE, EksternOppgaveId("K9", event.eksternId.toString())))
         }

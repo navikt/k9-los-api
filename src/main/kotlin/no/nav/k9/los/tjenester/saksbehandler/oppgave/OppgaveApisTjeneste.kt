@@ -1,9 +1,8 @@
 package no.nav.k9.los.tjenester.saksbehandler.oppgave
 
-import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.db.util.TransactionalManager
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Dto
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
@@ -14,17 +13,13 @@ import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
-import java.util.*
 
 class OppgaveApisTjeneste(
-    private val oppgaveTjeneste: OppgaveTjeneste,
-    private val oppgaveV1Repository: no.nav.k9.los.domene.repository.OppgaveRepository,
     private val saksbehandlerRepository: SaksbehandlerRepository,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
     private val oppgaveV3Repository: OppgaveRepository,
     private val transactionalManager: TransactionalManager,
     private val reservasjonV3DtoBuilder: ReservasjonV3DtoBuilder,
-    private val reservasjonOversetter: ReservasjonOversetter,
 ) {
 
     companion object {
@@ -42,40 +37,27 @@ class OppgaveApisTjeneste(
             oppgaveIdMedOverstyringDto.overstyrIdent ?: innloggetBruker.brukerIdent!!
         )!!
 
-        if (oppgaveNøkkel.erV1Oppgave()) {
-            val reservasjonV3 = reservasjonOversetter.taNyReservasjonFraGammelKontekst(
-                oppgaveV1 = oppgaveV1Repository.hent(UUID.fromString(oppgaveNøkkel.oppgaveEksternId)),
-                reserverForSaksbehandlerId = reserverForSaksbehandler.id!!,
-                reservertTil = reserverFra.leggTilDagerHoppOverHelg(2),
-                utførtAvSaksbehandlerId = innloggetBruker.id!!,
-                kommentar = oppgaveIdMedOverstyringDto.overstyrBegrunnelse ?: "",
-            )!!
-            val saksbehandlerSomHarReservasjon =
-                saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonV3.reservertAv)!!
-            return OppgaveStatusDto(reservasjonV3, innloggetBruker, saksbehandlerSomHarReservasjon)
-        } else {
-            val reservasjonV3 = transactionalManager.transaction { tx ->
-                val oppgaveV3 = oppgaveV3Repository.hentNyesteOppgaveForEksternId(
-                    tx,
-                    oppgaveNøkkel.områdeEksternId,
-                    oppgaveNøkkel.oppgaveEksternId
-                )
+        val reservasjonV3 = transactionalManager.transaction { tx ->
+            val oppgaveV3 = oppgaveV3Repository.hentNyesteOppgaveForEksternId(
+                tx,
+                oppgaveNøkkel.områdeEksternId,
+                oppgaveNøkkel.oppgaveEksternId
+            )
 
-                reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktivMenSjekkLegacyFørst(
-                    reservasjonsnøkkel = oppgaveV3.reservasjonsnøkkel,
-                    reserverForId = reserverForSaksbehandler.id!!,
-                    gyldigFra = reserverFra,
-                    utføresAvId = innloggetBruker.id!!,
-                    kommentar = oppgaveIdMedOverstyringDto.overstyrBegrunnelse,
-                    gyldigTil = reserverFra.leggTilDagerHoppOverHelg(2),
-                    tx = tx
-                )
-            }
-
-            val saksbehandlerSomHarReservasjon =
-                saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonV3.reservertAv)!!
-            return OppgaveStatusDto(reservasjonV3, innloggetBruker, saksbehandlerSomHarReservasjon)
+            reservasjonV3Tjeneste.forsøkReservasjonOgReturnerAktivMenSjekkLegacyFørst(
+                reservasjonsnøkkel = oppgaveV3.reservasjonsnøkkel,
+                reserverForId = reserverForSaksbehandler.id!!,
+                gyldigFra = reserverFra,
+                utføresAvId = innloggetBruker.id!!,
+                kommentar = oppgaveIdMedOverstyringDto.overstyrBegrunnelse,
+                gyldigTil = reserverFra.leggTilDagerHoppOverHelg(2),
+                tx = tx
+            )
         }
+
+        val saksbehandlerSomHarReservasjon =
+            saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonV3.reservertAv)!!
+        return OppgaveStatusDto(reservasjonV3, innloggetBruker, saksbehandlerSomHarReservasjon)
     }
 
     suspend fun endreReservasjoner(
@@ -103,7 +85,7 @@ class OppgaveApisTjeneste(
         val tilSaksbehandler =
             tilBrukerIdent?.let { saksbehandlerRepository.finnSaksbehandlerMedIdent(it) }
 
-        val reservasjonsnøkkel = reservasjonOversetter.hentReservasjonsnøkkelForOppgavenøkkel(oppgaveNøkkel)
+        val reservasjonsnøkkel = hentReservasjonsnøkkelForOppgavenøkkel(oppgaveNøkkel)
         val nyReservasjon = reservasjonV3Tjeneste.endreReservasjon(
             reservasjonsnøkkel = reservasjonsnøkkel,
             endretAvBrukerId = innloggetBruker.id!!,
@@ -128,7 +110,7 @@ class OppgaveApisTjeneste(
         innloggetBruker: Saksbehandler
     ): ReservasjonV3Dto {
         val reservasjonsnøkkel =
-            reservasjonOversetter.hentReservasjonsnøkkelForOppgavenøkkel(forlengReservasjonDto.oppgaveNøkkel)
+            hentReservasjonsnøkkelForOppgavenøkkel(forlengReservasjonDto.oppgaveNøkkel)
 
         val forlengetReservasjon =
             reservasjonV3Tjeneste.forlengReservasjon(
@@ -138,7 +120,8 @@ class OppgaveApisTjeneste(
                 kommentar = forlengReservasjonDto.kommentar
             )
 
-        val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(forlengetReservasjon.reservasjonV3.reservertAv)!!
+        val reservertAv =
+            saksbehandlerRepository.finnSaksbehandlerMedId(forlengetReservasjon.reservasjonV3.reservertAv)!!
         log.info("forlengReservasjon: ${forlengReservasjonDto.oppgaveNøkkel.oppgaveEksternId}, ${forlengetReservasjon.reservasjonV3}, reservertAv: $reservertAv")
 
         return reservasjonV3DtoBuilder.byggReservasjonV3Dto(forlengetReservasjon, reservertAv)
@@ -152,7 +135,7 @@ class OppgaveApisTjeneste(
             params.brukerIdent
         )!!
 
-        val reservasjonsnøkkel = reservasjonOversetter.hentReservasjonsnøkkelForOppgavenøkkel(params.oppgaveNøkkel)
+        val reservasjonsnøkkel = hentReservasjonsnøkkelForOppgavenøkkel(params.oppgaveNøkkel)
 
         val nyReservasjon = reservasjonV3Tjeneste.overførReservasjon(
             reservasjonsnøkkel = reservasjonsnøkkel,
@@ -170,7 +153,7 @@ class OppgaveApisTjeneste(
         innloggetBruker: Saksbehandler,
         oppgaveNøkkelDto: OppgaveNøkkelDto,
     ) {
-        val reservasjonsnøkkel = reservasjonOversetter.hentReservasjonsnøkkelForOppgavenøkkel(oppgaveNøkkelDto)
+        val reservasjonsnøkkel = hentReservasjonsnøkkelForOppgavenøkkel(oppgaveNøkkelDto)
 
         val annulleringUtført = reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(
             reservasjonsnøkkel = reservasjonsnøkkel,
@@ -199,10 +182,22 @@ class OppgaveApisTjeneste(
         return reservasjonerMedOppgaver.map { reservasjonMedOppgaver ->
             try {
                 reservasjonV3DtoBuilder.byggReservasjonV3Dto(reservasjonMedOppgaver, saksbehandler)
-            } catch (e : Exception){
-                log.warn("Klarte ikke tolke reservasjon med id ${reservasjonMedOppgaver.reservasjonV3.id}, v1-oppgave: ${reservasjonMedOppgaver.oppgaveV1?.eksternId} v3-oppgaver: ${reservasjonMedOppgaver.oppgaverV3.map { it.eksternId } }")
+            } catch (e: Exception) {
+                log.warn("Klarte ikke tolke reservasjon med id ${reservasjonMedOppgaver.reservasjonV3.id}, v1-oppgave: ${reservasjonMedOppgaver.oppgaveV1?.eksternId} v3-oppgaver: ${reservasjonMedOppgaver.oppgaverV3.map { it.eksternId }}")
                 throw e;
             }
+        }
+    }
+
+    fun hentReservasjonsnøkkelForOppgavenøkkel(
+        oppgaveNøkkel: OppgaveNøkkelDto
+    ): String {
+        return transactionalManager.transaction { tx ->
+            oppgaveV3Repository.hentNyesteOppgaveForEksternId(
+                tx,
+                oppgaveNøkkel.områdeEksternId,
+                oppgaveNøkkel.oppgaveEksternId
+            ).reservasjonsnøkkel
         }
     }
 }

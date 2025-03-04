@@ -1,4 +1,4 @@
-package no.nav.k9.los.jobbplanlegger
+package no.nav.k9.los.nyoppgavestyring.jobbplanlegger
 
 import java.time.LocalDateTime
 

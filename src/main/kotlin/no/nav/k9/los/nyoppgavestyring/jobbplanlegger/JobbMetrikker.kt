@@ -1,4 +1,4 @@
-package no.nav.k9.los.jobber
+package no.nav.k9.los.nyoppgavestyring.jobbplanlegger
 
 import io.prometheus.client.Histogram
 import io.prometheus.client.SimpleTimer

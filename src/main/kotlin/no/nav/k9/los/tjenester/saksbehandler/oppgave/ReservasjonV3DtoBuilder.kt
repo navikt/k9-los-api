@@ -6,25 +6,18 @@ import no.nav.k9.los.integrasjon.pdl.IPdlService
 import no.nav.k9.los.integrasjon.pdl.fnr
 import no.nav.k9.los.integrasjon.pdl.navn
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Dto
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3EndringMedOppgaver
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3MedOppgaver
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.GenerellOppgaveV3Dto
 
 class ReservasjonV3DtoBuilder(
     private val pdlService: IPdlService,
-    private val oppgaveTjeneste: OppgaveTjeneste,
     private val saksbehandlerRepository: SaksbehandlerRepository
 ) {
     suspend fun byggReservasjonV3Dto(
         reservasjonMedOppgaver: ReservasjonV3MedOppgaver,
         saksbehandler: Saksbehandler
     ): ReservasjonV3Dto {
-        if (reservasjonMedOppgaver.oppgaveV1 == null) {
-            return byggForV3(reservasjonMedOppgaver, saksbehandler)
-        } else {
-            // Fjernes når V1 skal vekk
-            return byggForV1(reservasjonMedOppgaver, saksbehandler)
-        }
+        return byggForV3(reservasjonMedOppgaver, saksbehandler)
     }
 
 
