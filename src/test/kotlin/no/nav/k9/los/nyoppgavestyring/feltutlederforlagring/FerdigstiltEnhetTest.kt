@@ -11,7 +11,8 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavefelt
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
@@ -28,14 +29,14 @@ internal class FerdigstiltEnhetTest {
     @Test
     fun `utled returnerer ferdigstiltEnhet fra aktivOppgaveVersjon hvis den finnes`() {
         val aktivOppgaveVersjon = lagOppgave(
-            status = Oppgavestatus.LUKKET, 
+            status = Oppgavestatus.LUKKET,
             ekstraFeltverdi = lagOppgavefeltverdi("ferdigstiltEnhet", "1234")
         )
-        
+
         val oppgave = lagOppgave(status = Oppgavestatus.LUKKET)
-        
+
         val resultat = ferdigstiltEnhetUtleder.utled(oppgave, aktivOppgaveVersjon)
-        
+
         assertEquals("1234", resultat?.verdi)
     }
 
@@ -43,18 +44,20 @@ internal class FerdigstiltEnhetTest {
     fun `utled finner saksbehandlers enhet fra ansvarligSaksbehandler`() {
         val saksbehandlerId = "Z12345"
         val forventetEnhet = "4567"
-        
-        every { 
-            saksbehandlerRepository.finnSaksbehandlerMedIdentEkskluderKode6(saksbehandlerId) 
-        } returns Saksbehandler(saksbehandlerId, "Navn Navnesen", forventetEnhet)
-        
+
+        every {
+            saksbehandlerRepository.finnSaksbehandlerMedIdentEkskluderKode6(saksbehandlerId)
+        } returns Saksbehandler(
+            id = 0, brukerIdent = saksbehandlerId, navn = "Navn Navnesen", epost = "", enhet = forventetEnhet,
+        )
+
         val oppgave = lagOppgave(
             status = Oppgavestatus.LUKKET,
             ekstraFeltverdi = lagOppgavefeltverdi("ansvarligSaksbehandler", saksbehandlerId)
         )
-        
+
         val resultat = ferdigstiltEnhetUtleder.utled(oppgave, null)
-        
+
         assertEquals(forventetEnhet, resultat?.verdi)
     }
 
@@ -62,45 +65,45 @@ internal class FerdigstiltEnhetTest {
     fun `utled finner saksbehandlers enhet fra ansvarligSaksbehandlerForToTrinn hvis ansvarligSaksbehandler ikke finnes`() {
         val saksbehandlerId = "Z67890"
         val forventetEnhet = "7890"
-        
-        every { 
-            saksbehandlerRepository.finnSaksbehandlerMedIdentEkskluderKode6(saksbehandlerId) 
-        } returns Saksbehandler(saksbehandlerId, "Beslutter Navnesen", forventetEnhet)
-        
+
+        every {
+            saksbehandlerRepository.finnSaksbehandlerMedIdentEkskluderKode6(saksbehandlerId)
+        } returns Saksbehandler(id = 0, brukerIdent = saksbehandlerId, navn = "Beslutter Navnesen", epost = "", enhet = forventetEnhet)
+
         val oppgave = lagOppgave(
             status = Oppgavestatus.LUKKET,
             ekstraFeltverdi = lagOppgavefeltverdi("ansvarligSaksbehandlerForToTrinn", saksbehandlerId)
         )
-        
+
         val resultat = ferdigstiltEnhetUtleder.utled(oppgave, null)
-        
+
         assertEquals(forventetEnhet, resultat?.verdi)
     }
 
     @Test
     fun `utled returnerer null hvis hverken aktivOppgaveVersjon eller saksbehandler finnes`() {
-        every { 
-            saksbehandlerRepository.finnSaksbehandlerMedIdentEkskluderKode6(any()) 
+        every {
+            saksbehandlerRepository.finnSaksbehandlerMedIdentEkskluderKode6(any())
         } returns null
-        
+
         val oppgave = lagOppgave(status = Oppgavestatus.LUKKET)
-        
+
         assertNull(ferdigstiltEnhetUtleder.utled(oppgave, null))
     }
 
     @Test
     fun `utled returnerer null hvis saksbehandler finnes men enhet er null`() {
         val saksbehandlerId = "Z12345"
-        
-        every { 
-            saksbehandlerRepository.finnSaksbehandlerMedIdentEkskluderKode6(saksbehandlerId) 
-        } returns Saksbehandler(saksbehandlerId, "Navn Navnesen", null)
-        
+
+        every {
+            saksbehandlerRepository.finnSaksbehandlerMedIdentEkskluderKode6(saksbehandlerId)
+        } returns Saksbehandler(id = 0, brukerIdent = saksbehandlerId, navn = "Navn Navnesen", epost = "", enhet = null)
+
         val oppgave = lagOppgave(
             status = Oppgavestatus.LUKKET,
             ekstraFeltverdi = lagOppgavefeltverdi("ansvarligSaksbehandler", saksbehandlerId)
         )
-        
+
         assertNull(ferdigstiltEnhetUtleder.utled(oppgave, null))
     }
 
