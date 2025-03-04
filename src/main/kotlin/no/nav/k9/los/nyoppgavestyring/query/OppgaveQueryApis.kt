@@ -8,6 +8,7 @@ import io.ktor.server.routing.*
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.integrasjon.rest.idToken
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import org.koin.java.KoinJavaComponent
 import org.koin.ktor.ext.inject
@@ -22,7 +23,10 @@ fun Route.OppgaveQueryApis() {
             if (pepClient.harBasisTilgang()) {
                 val oppgaveQuery = call.receive<OppgaveQuery>()
                 val idToken = kotlin.coroutines.coroutineContext.idToken()
-                call.respond(oppgaveQueryService.query(QueryRequest(oppgaveQuery), idToken))
+                call.respond(oppgaveQueryService.query(QueryRequest(oppgaveQuery, fraAktiv = !oppgaveQuery.filtere.any { filter -> when (filter) {
+                    is FeltverdiOppgavefilter -> filter.kode == "oppgavestatus" && filter.verdi.contains("LUKKET")
+                    else -> false
+                } }), idToken))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -33,7 +37,11 @@ fun Route.OppgaveQueryApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val oppgaveQuery = call.receive<OppgaveQuery>()
-                call.respond(oppgaveQueryService.queryForAntall(QueryRequest(oppgaveQuery, false)))
+                call.respond(oppgaveQueryService.queryForAntall(QueryRequest(oppgaveQuery, false, fraAktiv = !oppgaveQuery.filtere.any { filter -> when (filter) {
+                    is FeltverdiOppgavefilter -> filter.kode == "oppgavestatus" && filter.verdi.contains("LUKKET")
+                    else -> false
+                } }))
+                )
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

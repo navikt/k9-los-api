@@ -20,7 +20,7 @@ class OppgaveV3Repository(
     private val log = LoggerFactory.getLogger(OppgaveV3Repository::class.java)
 
     fun nyOppgaveversjon(oppgave: OppgaveV3, tx: TransactionalSession) {
-        val (eksisterendeId, eksisterendeOppgavestatus, eksisterendeVersjon) = hentOppgaveIdStatusOgHøyesteInternversjon(
+        val (eksisterendeId, eksisterendeVersjon) = hentOppgaveIdOgHøyesteInternversjon(
             tx,
             oppgave.eksternId,
             oppgave.oppgavetype.eksternId,
@@ -263,16 +263,19 @@ class OppgaveV3Repository(
         tx: TransactionalSession
     ) {
         tx.batchPreparedNamedStatement("""
-            insert into oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi, verdi_bigint, oppgavestatus)
-                    VALUES (:oppgaveId, :oppgavefeltId, :verdi, :verdi_bigint, :oppgavestatus)
+            insert into oppgavefelt_verdi(oppgave_id, oppgavefelt_id, omrade_ekstern_id, oppgavetype_ekstern_id, feltdefinisjon_ekstern_id, verdi, verdi_bigint, aktiv)
+                    VALUES (:oppgaveId, :oppgavefeltId, :omradeEksternId, :oppgavetypeEksternId, :feltdefinisjonEksternId, :verdi, :verdi_bigint, :aktiv)
         """.trimIndent(),
             oppgave.felter.map { feltverdi ->
                 mapOf(
                     "oppgaveId" to oppgaveId.id,
                     "oppgavefeltId" to feltverdi.oppgavefelt.id,
+                    "omradeEksternId" to oppgave.oppgavetype.område.eksternId,
+                    "oppgavetypeEksternId" to oppgave.oppgavetype.eksternId,
+                    "feltdefinisjonEksternId" to feltverdi.oppgavefelt.feltDefinisjon.eksternId,
                     "verdi" to feltverdi.verdi,
                     "verdi_bigint" to feltverdi.verdiBigInt,
-                    "oppgavestatus" to oppgave.status.kode
+                    "aktiv" to oppgave.aktiv
                 )
             }
         )
@@ -281,12 +284,12 @@ class OppgaveV3Repository(
     fun lagreFeltverdierForDatavask(
         eksternId: String,
         internVersjon: Long,
-        oppgavestatus: Oppgavestatus,
+        aktiv: Boolean,
         oppgaveFeltverdier: List<OppgaveFeltverdi>,
         tx: TransactionalSession
     ) {
         tx.batchPreparedNamedStatement("""
-            INSERT INTO oppgavefelt_verdi(oppgave_id, oppgavefelt_id, verdi, verdi_bigint, oppgavestatus)
+            INSERT INTO oppgavefelt_verdi(oppgave_id, oppgavefelt_id, omrade_ekstern_id, oppgavetype_ekstern_id, feltdefinisjon_ekstern_id, verdi, verdi_bigint, aktiv)
             VALUES (
                 (
                     SELECT id 
@@ -295,9 +298,18 @@ class OppgaveV3Repository(
                     AND versjon = :intern_versjon
                 ),
                 :oppgavefelt_id,
+                :omrade_ekstern_id,
+                (
+                    SELECT ot.ekstern_id
+                    FROM oppgavetype ot
+                    INNER JOIN oppgave_v3 o on ot.id = o.oppgavetype_id
+                    WHERE o.ekstern_id = :ekstern_id
+                    AND o.versjon = :intern_versjon
+                ),
+                :feltdefinisjon_ekstern_id,
                 :verdi,
                 :verdi_bigint,
-                :oppgavestatus
+                :aktiv
             )
         """.trimIndent(),
             oppgaveFeltverdier.map { feltverdi ->
@@ -305,9 +317,11 @@ class OppgaveV3Repository(
                     "ekstern_id" to eksternId,
                     "intern_versjon" to internVersjon,
                     "oppgavefelt_id" to feltverdi.oppgavefelt.id,
+                    "omrade_ekstern_id" to feltverdi.oppgavefelt.feltDefinisjon.område.eksternId,
+                    "feltdefinisjon_ekstern_id" to feltverdi.oppgavefelt.feltDefinisjon.eksternId,
                     "verdi" to feltverdi.verdi,
                     "verdi_bigint" to feltverdi.verdiBigInt,
-                    "oppgavestatus" to oppgavestatus.kode
+                    "aktiv" to aktiv
                 )
             }
         )
@@ -339,16 +353,16 @@ class OppgaveV3Repository(
         )
     }
 
-    fun hentOppgaveIdStatusOgHøyesteInternversjon(
+    fun hentOppgaveIdOgHøyesteInternversjon(
         tx: TransactionalSession,
         oppgaveEksternId: String,
         oppgaveTypeEksternId: String,
         områdeEksternId: String
-    ): Triple<OppgaveId?, Oppgavestatus?, Long?> {
+    ): Pair<OppgaveId?, Long?> {
         return tx.run(
             queryOf(
                 """
-                select versjon, o.id, o.status
+                select versjon, o.id
                 from oppgave_v3 o
                 inner join oppgavetype ot on o.oppgavetype_id = ot.id 
                 inner join omrade om on ot.omrade_id = om.id 
@@ -367,13 +381,12 @@ class OppgaveV3Repository(
                     "omrade_ekstern_id" to områdeEksternId
                 )
             ).map { row ->
-                Triple(
+                Pair(
                     OppgaveId(row.long("id")),
-                    Oppgavestatus.fraKode(row.string("status")),
                     row.long("versjon")
                 )
             }.asSingle
-        ) ?: Triple(null, null, null)
+        ) ?: Pair(null, null)
     }
 
     @VisibleForTesting
