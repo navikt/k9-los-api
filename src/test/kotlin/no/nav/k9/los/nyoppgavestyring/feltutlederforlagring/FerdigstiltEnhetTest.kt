@@ -62,25 +62,6 @@ internal class FerdigstiltEnhetTest {
     }
 
     @Test
-    fun `utled finner saksbehandlers enhet fra ansvarligSaksbehandlerForToTrinn hvis ansvarligSaksbehandler ikke finnes`() {
-        val saksbehandlerId = "Z67890"
-        val forventetEnhet = "7890"
-
-        every {
-            saksbehandlerRepository.finnSaksbehandlerMedIdentEkskluderKode6(saksbehandlerId)
-        } returns Saksbehandler(id = 0, brukerIdent = saksbehandlerId, navn = "Beslutter Navnesen", epost = "", enhet = forventetEnhet)
-
-        val oppgave = lagOppgave(
-            status = Oppgavestatus.LUKKET,
-            ekstraFeltverdi = lagOppgavefeltverdi("ansvarligSaksbehandlerForToTrinn", saksbehandlerId)
-        )
-
-        val resultat = ferdigstiltEnhetUtleder.utled(oppgave, null)
-
-        assertEquals(forventetEnhet, resultat?.verdi)
-    }
-
-    @Test
     fun `utled returnerer null hvis hverken aktivOppgaveVersjon eller saksbehandler finnes`() {
         every {
             saksbehandlerRepository.finnSaksbehandlerMedIdentEkskluderKode6(any())
@@ -130,7 +111,6 @@ internal class FerdigstiltEnhetTest {
             oppgavefelter = setOf(
                 lagOppgavefelt("ferdigstiltEnhet"),
                 lagOppgavefelt("ansvarligSaksbehandler"),
-                lagOppgavefelt("ansvarligSaksbehandlerForToTrinn")
             )
         )
     }

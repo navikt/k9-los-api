@@ -219,7 +219,11 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        StatistikkRepository(get())
+        no.nav.k9.los.domene.repository.StatistikkRepository(get())
+    }
+
+    single {
+        no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository(get(), get())
     }
 
     single {

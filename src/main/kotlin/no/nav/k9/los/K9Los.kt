@@ -49,12 +49,12 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.K9Kla
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.punsjtillos.K9PunsjTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.punsjtillos.K9PunsjTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.saktillos.*
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.tilbaketillos.K9TilbakeTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.tilbaketillos.k9TilbakeEksternId
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.tilbaketillos.k9tilbakeKorrigerOutOfOrderProsessor
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkApi
 import no.nav.k9.los.nyoppgavestyring.forvaltning.forvaltningApis
 import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoApis
@@ -400,8 +400,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
             PlanlagtJobb.KjørPåTidspunkt(
                 "K9SakTilLosHistorikkvask",
                 høyPrioritet,
-                kjørTidligst = LocalDateTime.of(2025, 2, 27, 19, 0),
-                kjørSenest = LocalDateTime.of(2025, 2, 28, 6, 0),
+                kjørSenest = LocalDateTime.of(2025, 3, 28, 6, 0),
             ) {
                 k9SakTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
             }

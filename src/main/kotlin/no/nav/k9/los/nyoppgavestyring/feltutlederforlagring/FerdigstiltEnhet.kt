@@ -13,7 +13,6 @@ class FerdigstiltEnhet(val saksbehandlerRepository: SaksbehandlerRepository) : F
     override fun utled(innkommendeOppgave: OppgaveV3, aktivOppgaveVersjon: OppgaveV3?): OppgaveFeltverdi? {
         if (innkommendeOppgave.status != Oppgavestatus.LUKKET) return null
         val saksbehandler = innkommendeOppgave.hentVerdi("ansvarligSaksbehandler")
-            ?: innkommendeOppgave.hentVerdi("ansvarligSaksbehandlerForToTrinn")
         return OppgaveFeltverdi(
             oppgavefelt = innkommendeOppgave.hentFelt("ferdigstiltEnhet"),
             verdi = aktivOppgaveVersjon?.hentVerdi("ferdigstiltEnhet")

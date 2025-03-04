@@ -24,7 +24,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 import kotlin.random.Random
 
 val saksbehandlere = listOf(
@@ -133,7 +133,7 @@ object localSetup : KoinComponent {
                             behandlingsårsaker = mutableListOf<BehandlingÅrsakType>().map { it.kode },
                             ansvarligSaksbehandlerIdent = "Z123456",
                             ansvarligBeslutterForTotrinn = "Y123456",
-                            ansvarligSaksbehandlerForTotrinn = "X123456",
+                            ansvarligSaksbehandlerForTotrinn = "Z123456",
                             opprettetBehandling = LocalDateTime.now(),
                             vedtaksdato = LocalDate.now(),
                             pleietrengendeAktørId = pleietrengendeAktørId,
