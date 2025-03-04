@@ -9,10 +9,7 @@ import kotliquery.queryOf
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.modell.Fagsystem
-import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
-import no.nav.k9.los.domene.repository.BehandlingProsessEventKlageRepository
-import no.nav.k9.los.domene.repository.BehandlingProsessEventTilbakeRepository
-import no.nav.k9.los.domene.repository.PunsjEventK9Repository
+import no.nav.k9.los.domene.repository.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.K9KlageTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.punsjtillos.K9PunsjTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.saktillos.K9SakTilLosHistorikkvaskTjeneste
@@ -20,6 +17,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.tilbaketillos.K9T
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
+import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
@@ -45,6 +43,9 @@ fun Route.forvaltningApis() {
     val objectMapper = LosObjectMapper.prettyInstance
     val transactionalManager by inject<TransactionalManager>()
     val forvaltningRepository by inject<ForvaltningRepository>()
+
+    val oppgaveKoRepository by inject<OppgaveKøRepository>()
+    val oppgaveRepositoryV1 by inject<OppgaveRepository>()
 
 
     get("/index_oversikt", {
@@ -94,6 +95,47 @@ fun Route.forvaltningApis() {
             )
         }
         call.respond(list)
+    }
+
+    get("sammenlignkoer/", {
+        description = "Sammenlign en V1-kø med en V3 kø, og lever de oppgavene som ikke finnes i begge køer"
+        request {
+            queryParameter<String>("v1KoId") {
+                description = "Id på V1 kø"
+                example("07081bc9-5941-408c-95d8-ded6a4ae3b02") {
+                    value = "07081bc9-5941-408c-95d8-ded6a4ae3b02"
+                }
+            }
+            queryParameter<Long>("v3KoId") {
+                description = "Id på V3 kø"
+                example ("5") {
+                    value = "5"
+                }
+            }
+        }
+    }) {
+        val v1KoId = UUID.fromString(call.parameters["v1KoId"])
+        val v3KoId = call.parameters["v3KoId"]!!.toLong()
+
+        val v3Ko = oppgaveKoTjeneste.hent(v3KoId, false)
+        val v3Oppgaver =
+            oppgaveQueryService.queryForOppgaveEksternId(QueryRequest(v3Ko.oppgaveQuery, fjernReserverte = true)).map { UUID.fromString(it.eksternId) }
+
+        val v1Ko = oppgaveKoRepository.hentOppgavekø(v1KoId)
+        val v1Oppgaver = v1Ko.oppgaverOgDatoer.map { it.id }.toList()
+
+        val v3MenIkkeV1 = v3Oppgaver.subtract(v1Oppgaver)
+        val v1MenIkkeV3 = v1Oppgaver.subtract(v3Oppgaver)
+
+        val v3OppgaverSomManglerIV1 = v3MenIkkeV1.map {
+            oppgaveRepositoryTxWrapper.hentOppgave("K9", it.toString())
+        }.toList()
+
+        val v1OppgaverSomManglerIV3 = v1MenIkkeV3.map {
+            oppgaveRepositoryV1.hent(it)
+        }
+
+        call.respond(KoDiff(v3OppgaverSomManglerIV1.toSet(), v1OppgaverSomManglerIV3.toSet()))
     }
 
     get("/eventer/{system}/{eksternId}", {
@@ -407,3 +449,8 @@ fun lagNøkkelAktør(oppgave: Oppgave, tilBeslutter: Boolean): String {
         "K9_b_${oppgave.hentVerdi("ytelsestype")}_${oppgave.hentVerdi("aktorId")}"
     }
 }
+
+data class KoDiff(
+    val v3OppgaverSomManglerIV1: Set<Oppgave>,
+    val v1OppgaverSomManglerIV3: Set<no.nav.k9.los.domene.lager.oppgave.Oppgave>
+)
