@@ -2,7 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
-import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.db.util.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype

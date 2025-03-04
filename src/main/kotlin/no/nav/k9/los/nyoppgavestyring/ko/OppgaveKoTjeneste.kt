@@ -9,10 +9,9 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
-import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.db.util.TransactionalManager
 import no.nav.k9.los.domene.modell.BehandlingType
 import no.nav.k9.los.domene.modell.Saksbehandler
-import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.eventhandler.DetaljerMetrikker
 import no.nav.k9.los.integrasjon.abac.IPepClient
@@ -35,32 +34,23 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgaverad
 import no.nav.k9.los.nyoppgavestyring.reservasjon.AlleredeReservertException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ManglerTilgangException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
 import no.nav.k9.los.tjenester.saksbehandler.IIdToken
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import no.nav.k9.los.utils.Cache
 import no.nav.k9.los.utils.leggTilDagerHoppOverHelg
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.LocalDateTime
-import java.util.*
 import kotlin.coroutines.CoroutineContext
 
 class OppgaveKoTjeneste(
     private val transactionalManager: TransactionalManager,
     private val oppgaveKoRepository: OppgaveKoRepository,
     private val oppgaveQueryService: OppgaveQueryService,
-    private val oppgaveRepository: OppgaveRepository,
     private val aktivOppgaveRepository: AktivOppgaveRepository,
-    private val oppgaveRepositoryTxWrapper: OppgaveRepositoryTxWrapper,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
     private val saksbehandlerRepository: SaksbehandlerRepository,
-    private val oppgaveTjeneste: OppgaveTjeneste,
-    private val reservasjonRepository: ReservasjonRepository,
     private val pdlService: IPdlService,
     private val pepClient: IPepClient,
-    private val statistikkChannel: Channel<Boolean>,
     private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
     private val feltdefinisjonTjeneste: FeltdefinisjonTjeneste,
 ) {
@@ -265,7 +255,7 @@ class OppgaveKoTjeneste(
             log.info("Spurte etter $antallKandidaterEtterspurt kandidater fra køen med id $oppgaveKoId, fikk ${kandidatOppgaver.size}")
             val muligReservert = DetaljerMetrikker.time("taReservasjonFraKø", "finnReservasjonFraKø", "$oppgaveKoId") {
                     transactionalManager.transaction { tx ->
-                        finnReservasjonFraKø(kandidatOppgaver, tx, innloggetBrukerId, coroutineContext)
+                        finnReservasjonFraKø(kandidatOppgaver, tx, innloggetBrukerId)
                     }
                 }
             if (muligReservert is OppgaveMuligReservert.Reservert) {
@@ -284,32 +274,12 @@ class OppgaveKoTjeneste(
     private fun finnReservasjonFraKø(
         kandidatoppgaver: List<AktivOppgaveId>,
         tx: TransactionalSession,
-        innloggetBrukerId: Long,
-        coroutineContext: CoroutineContext,
+        innloggetBrukerId: Long
     ): OppgaveMuligReservert {
         for (kandidatoppgaveId in kandidatoppgaver) {
             val kandidatoppgave = aktivOppgaveRepository.hentOppgaveForId(tx, kandidatoppgaveId)
 
             try {
-                //if (kandidatoppgave.oppgavetype.eksternId == "k9klage") //TODO: Hvis klageoppgave/klagekø -- IKKE ta reservasjon i V1. Disse kan ikke speiles
-                // Fjernes når V1 skal vekk
-                val innloggetBruker = saksbehandlerRepository.finnSaksbehandlerMedId(innloggetBrukerId)!!
-                val åpneOppgaverForReservasjonsnøkkel =
-                    oppgaveRepository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, kandidatoppgave.reservasjonsnøkkel)
-                val v1Reservasjoner = oppgaveTjeneste.lagReservasjoner(
-                    åpneOppgaverForReservasjonsnøkkel.map { UUID.fromString(it.eksternId) }.toSet(),
-                    innloggetBruker.brukerIdent!!,
-                    null,
-                )
-                reservasjonRepository.lagreFlereReservasjoner(v1Reservasjoner)
-
-                runBlocking(coroutineContext) {//TODO: Hvis noen har et forslag til en bedre måte å ta vare på coroutinecontext, så er jeg all ears!
-                    saksbehandlerRepository.leggTilFlereReservasjoner(
-                        innloggetBruker.brukerIdent,
-                        v1Reservasjoner.map { r -> r.oppgave })
-                    statistikkChannel.send(true)
-                }
-                // V1-greier til og med denne linjen
                 val reservasjon = reservasjonV3Tjeneste.taReservasjonMenSjekkLegacyFørst(
                     reserverForId = innloggetBrukerId,
                     utføresAvId = innloggetBrukerId,

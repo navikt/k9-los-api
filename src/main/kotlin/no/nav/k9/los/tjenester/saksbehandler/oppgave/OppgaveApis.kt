@@ -28,9 +28,7 @@ private val log: Logger = LoggerFactory.getLogger("nav.OppgaveApis")
 
 internal fun Route.OppgaveApis() {
     val requestContextService by inject<RequestContextService>()
-    val oppgaveTjeneste by inject<OppgaveTjeneste>()
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
-    val oppgaveRepository by inject<OppgaveRepository>()
     val pepClient by inject<IPepClient>()
     val oppgaveApisTjeneste by inject<OppgaveApisTjeneste>()
     val pdlService by inject<IPdlService>()

@@ -1,7 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.db.util.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjoner
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.*
 import org.junit.jupiter.api.BeforeEach

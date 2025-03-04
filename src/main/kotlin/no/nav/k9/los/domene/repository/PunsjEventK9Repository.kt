@@ -6,12 +6,10 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.los.domene.modell.K9PunsjModell
 import no.nav.k9.los.integrasjon.kafka.dto.PunsjEventDto
-import no.nav.k9.los.tjenester.innsikt.Mapping
 import no.nav.k9.los.utils.LosObjectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
-import java.util.concurrent.atomic.LongAdder
 import javax.sql.DataSource
 
 

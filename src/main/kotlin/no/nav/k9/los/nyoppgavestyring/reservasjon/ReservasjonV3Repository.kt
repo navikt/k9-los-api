@@ -2,7 +2,8 @@ package no.nav.k9.los.nyoppgavestyring.reservasjon
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
-import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.db.util.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import org.postgresql.util.PSQLException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -256,6 +257,32 @@ class ReservasjonV3Repository(
         )
     }
 
+    fun hentAlleOppgaveEksternIderForOppgavetypeMedAktiveReservasjoner(
+        tx: TransactionalSession,
+        oppgavetype: Oppgavetype
+    ): List<String> {
+        return tx.run(
+            queryOf(
+                """
+            select o.ekstern_id
+            from reservasjon_v3 r
+                left outer join reservasjon_v3_endring re on re.ny_reservasjon_id = r.id
+                inner join oppgave_v3_aktiv o on r.reservasjonsnokkel = o.reservasjonsnokkel
+                inner join oppgavetype ot on o.oppgavetype_id = ot.id and ot.ekstern_id = :oppgavetype
+            where annullert_for_utlop = false
+               and lower(r.gyldig_tidsrom) <= :now
+               and upper(r.gyldig_tidsrom) > :now
+            """.trimIndent(),
+                mapOf(
+                    "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
+                    "oppgavetype" to oppgavetype.eksternId
+                )
+            ).map { row ->
+                row.string("ekstern_id")
+            }.asList
+        )
+    }
+
     fun hentAktivReservasjonForReservasjonsnøkkel(nøkkel: String, tx: TransactionalSession): ReservasjonV3? {
         val queryString = """
                    select r.id, r.reservertAv, r.reservasjonsnokkel, lower(r.gyldig_tidsrom) as fra, upper(r.gyldig_tidsrom) as til, r.annullert_for_utlop , kommentar as kommentar, re.endretAv
@@ -445,28 +472,5 @@ class ReservasjonV3Repository(
                 )
             }.asList
         )
-    }
-
-    fun hentOppgaverIdForAktiveReservasjoner(
-        gyldigPåTidspunkt: LocalDateTime,
-        utløperInnen: LocalDateTime
-    ): List<String> {
-        return transactionalManager.transaction { tx ->
-            //TODO denne fungerer eksplisitt kun for oppgave-v1
-            tx.run(
-                queryOf(
-                    """ select id from reservasjon where 
-                             ((data -> 'reservasjoner' -> -1) ->> 'reservertTil')::timestamp > :gyldig_paa
-                         and ((data -> 'reservasjoner' -> -1) ->> 'reservertTil')::timestamp < :ikke_gyldig_paa  
-                """.trimIndent(),
-                    mapOf(
-                        "gyldig_paa" to gyldigPåTidspunkt.truncatedTo(ChronoUnit.MICROS),
-                        "ikke_gyldig_paa" to utløperInnen.truncatedTo(ChronoUnit.MICROS),
-                    )
-                ).map { row ->
-                    row.string("id")
-                }.asList
-            )
-        }
     }
 }

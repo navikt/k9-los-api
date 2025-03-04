@@ -3,7 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.reservasjon
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
-import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.db.util.TransactionalManager
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.integrasjon.abac.Action
@@ -27,7 +27,6 @@ class ReservasjonV3Tjeneste(
     private val reservasjonV3Repository: ReservasjonV3Repository,
     private val pepClient: IPepClient,
     private val saksbehandlerRepository: SaksbehandlerRepository,
-    private val oppgaveV1Repository: no.nav.k9.los.domene.repository.OppgaveRepository,
     private val oppgaveV3Repository: OppgaveRepository,
     private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
 ) {
@@ -176,12 +175,12 @@ class ReservasjonV3Tjeneste(
         kommentar: String?,
         tx: TransactionalSession
     ): ReservasjonV3 {
-        //sjekke tilgang på alle oppgaver tilknyttet nøkkel
         val oppgaverForReservasjonsnøkkel =
             oppgaveV3Repository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjonsnøkkel)
-        if (!sjekkTilganger(oppgaverForReservasjonsnøkkel, reserverForId)) {
-            val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(reserverForId)!!
-            throw ManglerTilgangException("Saksbehandler ${saksbehandler.navn} mangler tilgang til å reservere nøkkel $reservasjonsnøkkel")
+        val saksbehandlerSomSkalReservere = saksbehandlerRepository.finnSaksbehandlerMedId(reserverForId)!!
+        oppgaverForReservasjonsnøkkel.forEach { oppgave ->
+            sjekkTilgang(oppgave, saksbehandlerSomSkalReservere)
+            sjekkBeslutterErSaksbehandler(oppgave, saksbehandlerSomSkalReservere)
         }
 
         //prøv å ta reservasjon
@@ -250,26 +249,10 @@ class ReservasjonV3Tjeneste(
         reservasjon: ReservasjonV3,
         tx: TransactionalSession
     ): ReservasjonV3MedOppgaver {
-        val oppgaveV1 = hentV1OppgaveFraReservasjon(reservasjon)
-        return if (oppgaveV1 != null) {
-            ReservasjonV3MedOppgaver(reservasjon, emptyList(), oppgaveV1)
-        } else {
-            ReservasjonV3MedOppgaver(
-                reservasjon,
-                oppgaveV3Repository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjon.reservasjonsnøkkel),
-                null
-            )
-        }
-    }
-
-    fun hentV1OppgaveFraReservasjon(
-        reservasjon: ReservasjonV3
-    ): no.nav.k9.los.domene.lager.oppgave.Oppgave? {
-        if (reservasjon.reservasjonsnøkkel.startsWith("legacy_")) {
-            return oppgaveV1Repository.hent(UUID.fromString(reservasjon.reservasjonsnøkkel.substring(7)))
-        } else {
-            return null
-        }
+        return ReservasjonV3MedOppgaver(
+            reservasjon,
+            oppgaveV3Repository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjon.reservasjonsnøkkel),
+        )
     }
 
     fun annullerReservasjonHvisFinnes(
@@ -388,34 +371,41 @@ class ReservasjonV3Tjeneste(
         }
     }
 
-    private fun sjekkTilganger(
-        oppgaver: List<Oppgave>,
-        brukerIdSomSkalHaReservasjon: Long
-    ): Boolean {
-        val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(brukerIdSomSkalHaReservasjon)!!
-        return oppgaver.all { oppgave ->
-            if (beslutterErSaksbehandler(
-                    oppgave,
-                    saksbehandler
-                )
-            ) throw ManglerTilgangException("Saksbehandler kan ikke være beslutter på egen behandling")
-
-            pepClient.harTilgangTilOppgaveV3(oppgave, saksbehandler, Action.reserver, Auditlogging.IKKE_LOGG)
+    private fun sjekkTilgang(
+        oppgave: Oppgave,
+        saksbehandlerSomSkalReservere: Saksbehandler
+    ) {
+        if (!pepClient.harTilgangTilOppgaveV3(
+                oppgave,
+                saksbehandlerSomSkalReservere,
+                Action.reserver,
+                Auditlogging.IKKE_LOGG
+            )
+        ) {
+            throw ManglerTilgangException("Saksbehandler ${saksbehandlerSomSkalReservere.id} mangler tilgang til å reservere nøkkel ${oppgave.reservasjonsnøkkel}")
         }
     }
 
-    private fun beslutterErSaksbehandler(
+    private fun sjekkBeslutterErSaksbehandler(
         oppgave: Oppgave,
-        saksbehandler: Saksbehandler
-    ): Boolean {
+        saksbehandlerSomSkalReservere: Saksbehandler
+    ) {
         val hosBeslutter =
             oppgave.hentVerdi("liggerHosBeslutter")?.toBoolean() ?: false //TODO gjøre oppgavetypeagnostisk
-        if (!hosBeslutter) return false
-        val ansvarligSaksbehandlerIdent = oppgave.hentVerdi("ansvarligSaksbehandler") //TODO gjøre oppgavetypeagnostisk
-            ?: throw IllegalStateException("Kan ikke beslutte på oppgave uten ansvarlig saksbehandler")
-        val saksbehandlerIdentSomSkalHaReservasjon = saksbehandler.brukerIdent
+        if (hosBeslutter) {
+            val ansvarligSaksbehandlerIdent =
+                oppgave.hentVerdi("ansvarligSaksbehandler") //TODO gjøre oppgavetypeagnostisk
+                    ?: throw IllegalStateException("Kan ikke beslutte på oppgave uten ansvarlig saksbehandler")
 
-        return ansvarligSaksbehandlerIdent == saksbehandlerIdentSomSkalHaReservasjon
+            if (ansvarligSaksbehandlerIdent == saksbehandlerSomSkalReservere.brukerIdent) {
+                throw BeslutterErSaksbehandlerException("Saksbehandler kan ikke være beslutter på egen behandling")
+            }
+        } else {
+            val ansvarligBeslutter = oppgave.hentVerdi("ansvarligBeslutter") ?: return
+            if (ansvarligBeslutter == saksbehandlerSomSkalReservere.brukerIdent) {
+                throw BeslutterErSaksbehandlerException("Saksbehandler kan ikke være beslutter på egen behandling")
+            }
+        }
     }
 
     fun finnAktivReservasjon(
