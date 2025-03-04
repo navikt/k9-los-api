@@ -284,7 +284,7 @@ fun Application.k9Los() {
             localSetup.initSaksbehandlere()
             localSetup.initPunsjoppgaver(0)
             localSetup.initTilbakeoppgaver(0)
-            localSetup.initK9SakOppgaver(0)
+            localSetup.initK9SakOppgaver(100)
             api()
         } else {
             authenticate(*issuers.allIssuers()) {

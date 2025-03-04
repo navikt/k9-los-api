@@ -10,6 +10,14 @@ class Saksbehandler(
     var reservasjoner: MutableSet<UUID> = mutableSetOf(),
     var enhet: String?
 ) {
+    constructor(brukerIdent: String, navn: String, enhet: String?) : this(
+        id = 0,
+        brukerIdent = brukerIdent,
+        navn = navn,
+        epost = "",
+        enhet = enhet
+    )
+
     override fun toString(): String {
         return brukerIdent ?: ""
     }

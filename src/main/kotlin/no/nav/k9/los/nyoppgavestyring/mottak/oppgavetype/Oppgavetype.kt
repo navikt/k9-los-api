@@ -13,7 +13,14 @@ class Oppgavetype(
     val oppgavefelter: Set<Oppgavefelt>,
 ) {
 
-    constructor(dto: OppgavetypeDto, definisjonskilde: String, område: Område, oppgavebehandlingsUrlTemplate: String, feltdefinisjoner: Feltdefinisjoner) : this(
+    constructor(
+        dto: OppgavetypeDto,
+        definisjonskilde: String,
+        område: Område,
+        oppgavebehandlingsUrlTemplate: String,
+        feltdefinisjoner: Feltdefinisjoner,
+        gyldigeFeltutledere: GyldigeFeltutledere
+    ) : this(
         eksternId = dto.id,
         område = område,
         definisjonskilde = definisjonskilde,
@@ -26,7 +33,7 @@ class Oppgavetype(
                 visPåOppgave = innkommendeFeltdefinisjon.visPåOppgave,
                 påkrevd = innkommendeFeltdefinisjon.påkrevd,
                 defaultverdi = innkommendeFeltdefinisjon.defaultverdi,
-                feltutleder = innkommendeFeltdefinisjon.feltutleder?.let { GyldigeFeltutledere.hentFeltutleder(innkommendeFeltdefinisjon.feltutleder) }
+                feltutleder = innkommendeFeltdefinisjon.feltutleder?.let { gyldigeFeltutledere.hentFeltutleder(innkommendeFeltdefinisjon.feltutleder) }
             )
         }.toSet()
     )

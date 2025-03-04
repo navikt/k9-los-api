@@ -2,6 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.GyldigeFeltutledere
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjoner
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.*
 import org.junit.jupiter.api.BeforeEach
@@ -15,11 +16,13 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
     private lateinit var oppgaveV3Tjeneste: OppgaveV3Tjeneste
     private lateinit var transactionalManager: TransactionalManager
     private lateinit var oppgavemodellBuilder: RedusertOppgaveTestmodellBuilder
+    private lateinit var gyldigeFeltutledere: GyldigeFeltutledere
 
     @BeforeEach
     fun setup() {
         oppgaveV3Tjeneste = get()
         transactionalManager = get()
+        gyldigeFeltutledere = get()
         oppgavemodellBuilder = RedusertOppgaveTestmodellBuilder()
         oppgavemodellBuilder.byggOppgavemodell()
     }
@@ -86,12 +89,13 @@ class OppgaveV3Test : AbstractK9LosIntegrationTest() {
                 oppgavetype = Oppgavetype(
                     dto = oppgaveTypeDto.oppgavetyper.first(),
                     definisjonskilde = "k9-sak-til-los",
-                    oppgavebehandlingsUrlTemplate = "\${baseUrl}/fagsak/\${K9.saksnummer}/behandling/\${K9.behandlingUuid}?fakta=default&punkt=default",
                     område = område,
+                    oppgavebehandlingsUrlTemplate = "\${baseUrl}/fagsak/\${K9.saksnummer}/behandling/\${K9.behandlingUuid}?fakta=default&punkt=default",
                     feltdefinisjoner = Feltdefinisjoner(
                         feltdefinisjonerDto = feltdefinisjonDto,
                         område = område
-                    )
+                    ),
+                    gyldigeFeltutledere = gyldigeFeltutledere
                 )
             )
         }

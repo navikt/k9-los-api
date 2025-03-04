@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype
 
+import no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.GyldigeFeltutledere
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Feltdefinisjoner
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 
@@ -8,7 +9,12 @@ class Oppgavetyper(
     val oppgavetyper: Set<Oppgavetype>
 ) {
 
-    constructor(dto: OppgavetyperDto, område: Område, feltdefinisjoner: Feltdefinisjoner) : this(
+    constructor(
+        dto: OppgavetyperDto,
+        område: Område,
+        feltdefinisjoner: Feltdefinisjoner,
+        gyldigeFeltutledere: GyldigeFeltutledere
+    ) : this(
         område = område,
         oppgavetyper = dto.oppgavetyper.map { oppgavetypeDto ->
             Oppgavetype(
@@ -16,7 +22,8 @@ class Oppgavetyper(
                 definisjonskilde = dto.definisjonskilde,
                 område = område,
                 oppgavebehandlingsUrlTemplate = oppgavetypeDto.oppgavebehandlingsUrlTemplate,
-                feltdefinisjoner = feltdefinisjoner
+                feltdefinisjoner = feltdefinisjoner,
+                gyldigeFeltutledere = gyldigeFeltutledere
             )
         }.toSet()
     )
