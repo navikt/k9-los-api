@@ -1,6 +1,6 @@
 package no.nav.k9.los.domene.modell
 
-import java.util.*
+import java.util.UUID
 
 class Saksbehandler(
     var id: Long?,
