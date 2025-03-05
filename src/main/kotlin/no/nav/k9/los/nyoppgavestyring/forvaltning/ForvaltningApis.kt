@@ -10,6 +10,8 @@ import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.modell.Fagsystem
 import no.nav.k9.los.domene.repository.*
+import no.nav.k9.los.integrasjon.abac.IPepClient
+import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.K9KlageTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.punsjtillos.K9PunsjTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.saktillos.K9SakTilLosHistorikkvaskTjeneste
@@ -47,6 +49,9 @@ fun Route.forvaltningApis() {
     val oppgaveKoRepository by inject<OppgaveKøRepository>()
     val oppgaveRepositoryV1 by inject<OppgaveRepository>()
 
+    val pepClient by inject<IPepClient>()
+    val requestContextService by inject<RequestContextService>()
+
 
     get("/index_oversikt", {
         description = "index_oversikt"
@@ -56,11 +61,13 @@ fun Route.forvaltningApis() {
             }
         }
     }) {
-        val list = mutableListOf<String>()
-        transactionalManager.transaction { tx ->
-            tx.run(
-                queryOf(
-                    """
+        requestContextService.withRequestContext(call) {
+            if (pepClient.kanLeggeUtDriftsmelding()) {
+                val list = mutableListOf<String>()
+                transactionalManager.transaction { tx ->
+                    tx.run(
+                        queryOf(
+                            """
                     SELECT
                     relname AS table_name,
                     indexrelname AS index_name,
@@ -72,29 +79,33 @@ fun Route.forvaltningApis() {
                     index_scan_count ASC,
                     pg_relation_size(indexrelid) DESC;
                 """.trimIndent()
-                ).map { row ->
-                    if (list.isEmpty()) {
-                        list.add(
-                            buildString {
-                                append("${row.underlying.metaData.getColumnLabel(1)} ,")
-                                append("${row.underlying.metaData.getColumnLabel(2)} ,")
-                                append("${row.underlying.metaData.getColumnLabel(3)} ,")
-                                append(row.underlying.metaData.getColumnLabel(4))
+                        ).map { row ->
+                            if (list.isEmpty()) {
+                                list.add(
+                                    buildString {
+                                        append("${row.underlying.metaData.getColumnLabel(1)} ,")
+                                        append("${row.underlying.metaData.getColumnLabel(2)} ,")
+                                        append("${row.underlying.metaData.getColumnLabel(3)} ,")
+                                        append(row.underlying.metaData.getColumnLabel(4))
+                                    }
+                                )
                             }
-                        )
-                    }
-                    list.add(
-                        buildString {
-                            append("${row.string(1)} ,")
-                            append("${row.string(2)} ,")
-                            append("${row.string(3)} ,")
-                            append(row.string(4))
-                        }
+                            list.add(
+                                buildString {
+                                    append("${row.string(1)} ,")
+                                    append("${row.string(2)} ,")
+                                    append("${row.string(3)} ,")
+                                    append(row.string(4))
+                                }
+                            )
+                        }.asList
                     )
-                }.asList
-            )
+                }
+                call.respond(list)
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
         }
-        call.respond(list)
     }
 
     get("sammenlignkoer/", {
