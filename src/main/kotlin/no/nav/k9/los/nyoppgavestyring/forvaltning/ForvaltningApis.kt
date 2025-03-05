@@ -119,34 +119,45 @@ fun Route.forvaltningApis() {
             }
             queryParameter<Long>("v3KoId") {
                 description = "Id på V3 kø"
-                example ("5") {
+                example("5") {
                     value = "5"
                 }
             }
         }
     }) {
-        val v1KoId = UUID.fromString(call.parameters["v1KoId"])
-        val v3KoId = call.parameters["v3KoId"]!!.toLong()
+        requestContextService.withRequestContext(call) {
+            if (pepClient.kanLeggeUtDriftsmelding()) {
+                val v1KoId = UUID.fromString(call.parameters["v1KoId"])
+                val v3KoId = call.parameters["v3KoId"]!!.toLong()
 
-        val v3Ko = oppgaveKoTjeneste.hent(v3KoId, false)
-        val v3Oppgaver =
-            oppgaveQueryService.queryForOppgaveEksternId(QueryRequest(v3Ko.oppgaveQuery, fjernReserverte = true)).map { UUID.fromString(it.eksternId) }
+                val v3Ko = oppgaveKoTjeneste.hent(v3KoId, false)
+                val v3Oppgaver =
+                    oppgaveQueryService.queryForOppgaveEksternId(
+                        QueryRequest(
+                            v3Ko.oppgaveQuery,
+                            fjernReserverte = true
+                        )
+                    ).map { UUID.fromString(it.eksternId) }
 
-        val v1Ko = oppgaveKoRepository.hentOppgavekø(v1KoId)
-        val v1Oppgaver = v1Ko.oppgaverOgDatoer.map { it.id }.toList()
+                val v1Ko = oppgaveKoRepository.hentOppgavekø(v1KoId)
+                val v1Oppgaver = v1Ko.oppgaverOgDatoer.map { it.id }.toList()
 
-        val v3MenIkkeV1 = v3Oppgaver.subtract(v1Oppgaver)
-        val v1MenIkkeV3 = v1Oppgaver.subtract(v3Oppgaver)
+                val v3MenIkkeV1 = v3Oppgaver.subtract(v1Oppgaver)
+                val v1MenIkkeV3 = v1Oppgaver.subtract(v3Oppgaver)
 
-        val v3OppgaverSomManglerIV1 = v3MenIkkeV1.map {
-            oppgaveRepositoryTxWrapper.hentOppgave("K9", it.toString())
-        }.toList()
+                val v3OppgaverSomManglerIV1 = v3MenIkkeV1.map {
+                    oppgaveRepositoryTxWrapper.hentOppgave("K9", it.toString())
+                }.toList()
 
-        val v1OppgaverSomManglerIV3 = v1MenIkkeV3.map {
-            oppgaveRepositoryV1.hent(it)
+                val v1OppgaverSomManglerIV3 = v1MenIkkeV3.map {
+                    oppgaveRepositoryV1.hent(it)
+                }
+
+                call.respond(KoDiff(v3OppgaverSomManglerIV1.toSet(), v1OppgaverSomManglerIV3.toSet()))
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
         }
-
-        call.respond(KoDiff(v3OppgaverSomManglerIV1.toSet(), v1OppgaverSomManglerIV3.toSet()))
     }
 
     get("/eventer/{system}/{eksternId}", {
@@ -168,35 +179,45 @@ fun Route.forvaltningApis() {
             }
         }
     }) {
-        val fagsystem = Fagsystem.fraKode(call.parameters["system"]!!)
-        val eksternId = call.parameters["eksternId"]
-        when (fagsystem) {
-            Fagsystem.K9SAK -> {
-                val k9SakModell = k9sakEventRepository.hent(UUID.fromString(eksternId))
-                if (k9SakModell.eventer.isEmpty()) {
-                    call.respond(HttpStatusCode.NotFound)
-                } else {
-                    val eventerIkkeSensitive = k9SakModell.eventer.map { event -> K9SakEventIkkeSensitiv(event) }
-                    call.respond(objectMapper.writeValueAsString(eventerIkkeSensitive))
+        requestContextService.withRequestContext(call) {
+            if (pepClient.kanLeggeUtDriftsmelding()) {
+                val fagsystem = Fagsystem.fraKode(call.parameters["system"]!!)
+                val eksternId = call.parameters["eksternId"]
+                when (fagsystem) {
+                    Fagsystem.K9SAK -> {
+                        val k9SakModell = k9sakEventRepository.hent(UUID.fromString(eksternId))
+                        if (k9SakModell.eventer.isEmpty()) {
+                            call.respond(HttpStatusCode.NotFound)
+                        } else {
+                            val eventerIkkeSensitive =
+                                k9SakModell.eventer.map { event -> K9SakEventIkkeSensitiv(event) }
+                            call.respond(objectMapper.writeValueAsString(eventerIkkeSensitive))
+                        }
+                    }
+
+                    Fagsystem.K9TILBAKE -> {
+                        val k9TilbakeModell = k9tilbakeEventRepository.hent(UUID.fromString(eksternId))
+                        val eventerIkkeSensitive =
+                            k9TilbakeModell.eventer.map { event -> K9TilbakeEventIkkeSensitiv(event) }
+                        call.respond(objectMapper.writeValueAsString(eventerIkkeSensitive))
+                    }
+
+                    Fagsystem.K9KLAGE -> {
+                        val k9KlageModell = k9klageEventRepository.hent(UUID.fromString(eksternId))
+                        val eventerIkkeSensitive =
+                            k9KlageModell.eventer.map { event -> K9KlageEventIkkeSensitiv(event) }
+                        call.respond(objectMapper.writeValueAsString(eventerIkkeSensitive))
+                    }
+
+                    Fagsystem.PUNSJ -> {
+                        val k9PunsjModell = k9PunsjEventK9Repository.hent(UUID.fromString(eksternId))
+                        val eventerIkkeSensitive =
+                            k9PunsjModell.eventer.map { event -> K9PunsjEventIkkeSensitiv(event) }
+                        call.respond(objectMapper.writeValueAsString(eventerIkkeSensitive))
+                    }
                 }
-            }
-
-            Fagsystem.K9TILBAKE -> {
-                val k9TilbakeModell = k9tilbakeEventRepository.hent(UUID.fromString(eksternId))
-                val eventerIkkeSensitive = k9TilbakeModell.eventer.map { event -> K9TilbakeEventIkkeSensitiv(event) }
-                call.respond(objectMapper.writeValueAsString(eventerIkkeSensitive))
-            }
-
-            Fagsystem.K9KLAGE -> {
-                val k9KlageModell = k9klageEventRepository.hent(UUID.fromString(eksternId))
-                val eventerIkkeSensitive = k9KlageModell.eventer.map { event -> K9KlageEventIkkeSensitiv(event) }
-                call.respond(objectMapper.writeValueAsString(eventerIkkeSensitive))
-            }
-
-            Fagsystem.PUNSJ -> {
-                val k9PunsjModell = k9PunsjEventK9Repository.hent(UUID.fromString(eksternId))
-                val eventerIkkeSensitive = k9PunsjModell.eventer.map { event -> K9PunsjEventIkkeSensitiv(event) }
-                call.respond(objectMapper.writeValueAsString(eventerIkkeSensitive))
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
             }
         }
     }
@@ -224,28 +245,36 @@ fun Route.forvaltningApis() {
             }
         }
     }) {
-        val område = call.parameters["omrade"]!!
-        val oppgavetype = call.parameters["oppgavetype"]!!
-        val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
+        requestContextService.withRequestContext(call) {
+            if (pepClient.kanLeggeUtDriftsmelding()) {
+                val område = call.parameters["omrade"]!!
+                val oppgavetype = call.parameters["oppgavetype"]!!
+                val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
 
-        val oppgaveTidsserie =
-            transactionalManager.transaction { tx ->
-                forvaltningRepository.hentOppgaveTidsserie(
-                    områdeEksternId = område,
-                    oppgaveTypeEksternId = oppgavetype,
-                    oppgaveEksternId = oppgaveEksternId,
-                    tx = tx)
+                val oppgaveTidsserie =
+                    transactionalManager.transaction { tx ->
+                        forvaltningRepository.hentOppgaveTidsserie(
+                            områdeEksternId = område,
+                            oppgaveTypeEksternId = oppgavetype,
+                            oppgaveEksternId = oppgaveEksternId,
+                            tx = tx
+                        )
+                    }
+                if (oppgaveTidsserie.isEmpty()) {
+                    call.respond(HttpStatusCode.NotFound)
+                } else {
+                    val tidsserieIkkeSensitiv = oppgaveTidsserie.map { oppgave -> OppgaveIkkeSensitiv(oppgave) }
+                    call.respond(objectMapper.writeValueAsString(tidsserieIkkeSensitiv))
+                }
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
             }
-        if (oppgaveTidsserie.isEmpty()) {
-            call.respond(HttpStatusCode.NotFound)
-        } else {
-            val tidsserieIkkeSensitiv = oppgaveTidsserie.map { oppgave -> OppgaveIkkeSensitiv(oppgave) }
-            call.respond(objectMapper.writeValueAsString(tidsserieIkkeSensitiv))
         }
     }
 
     get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}/historikkvask", {
-        description = "Kjøre historikkvask for enkeltsak, for å vaske eksisterende oppgavehistorikk mot korresponderende eventer"
+        description =
+            "Kjøre historikkvask for enkeltsak, for å vaske eksisterende oppgavehistorikk mot korresponderende eventer"
         request {
             pathParameter<String>("omrade") {
                 description = "Området oppgavetypen er definert i. Pr i dag er kun K9 implementert"
@@ -266,43 +295,69 @@ fun Route.forvaltningApis() {
             }
         }
     }) {
-        val område = call.parameters["omrade"]!!
-        val oppgavetype = call.parameters["oppgavetype"]!!
-        val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
+        requestContextService.withRequestContext(call) {
+            if (pepClient.kanLeggeUtDriftsmelding()) {
+                val område = call.parameters["omrade"]!!
+                val oppgavetype = call.parameters["oppgavetype"]!!
+                val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
 
-        when (område) {
-            "K9" -> {
-                when (oppgavetype) {
-                    "k9sak" -> {
-                        k9SakTilLosHistorikkvaskTjeneste.vaskOppgaveForBehandlingUUID(UUID.fromString(oppgaveEksternId))
-                        call.respond(HttpStatusCode.NoContent)
-                    }
-                    "k9tilbake" -> {
-                        k9KlageTilLosHistorikkvaskTjeneste.vaskOppgaveForBehandlingUUID(UUID.fromString(oppgaveEksternId))
-                        call.respond(HttpStatusCode.NoContent)
-                    }
-                    "k9klage" -> {
-                        k9TilbakeTilLosHistorikkvaskTjeneste.vaskOppgaveForBehandlingUUID(UUID.fromString(oppgaveEksternId))
-                        call.respond(HttpStatusCode.NoContent)
-                    }
-                    "k9punsj" -> {
-                        k9PunsjTilLosHistorikkvaskTjeneste.vaskOppgaveForBehandlingUUID(UUID.fromString(oppgaveEksternId))
-                        call.respond(HttpStatusCode.NoContent)
+                when (område) {
+                    "K9" -> {
+                        when (oppgavetype) {
+                            "k9sak" -> {
+                                k9SakTilLosHistorikkvaskTjeneste.vaskOppgaveForBehandlingUUID(
+                                    UUID.fromString(
+                                        oppgaveEksternId
+                                    )
+                                )
+                                call.respond(HttpStatusCode.NoContent)
+                            }
+
+                            "k9tilbake" -> {
+                                k9KlageTilLosHistorikkvaskTjeneste.vaskOppgaveForBehandlingUUID(
+                                    UUID.fromString(
+                                        oppgaveEksternId
+                                    )
+                                )
+                                call.respond(HttpStatusCode.NoContent)
+                            }
+
+                            "k9klage" -> {
+                                k9TilbakeTilLosHistorikkvaskTjeneste.vaskOppgaveForBehandlingUUID(
+                                    UUID.fromString(
+                                        oppgaveEksternId
+                                    )
+                                )
+                                call.respond(HttpStatusCode.NoContent)
+                            }
+
+                            "k9punsj" -> {
+                                k9PunsjTilLosHistorikkvaskTjeneste.vaskOppgaveForBehandlingUUID(
+                                    UUID.fromString(
+                                        oppgaveEksternId
+                                    )
+                                )
+                                call.respond(HttpStatusCode.NoContent)
+                            }
+
+                            else -> call.respond(
+                                HttpStatusCode.NotImplemented,
+                                "Støtter ikke historikkvask på oppgavetype: $oppgavetype for område: $område"
+                            )
+                        }
                     }
 
-                    else -> call.respond(
-                        HttpStatusCode.NotImplemented,
-                        "Støtter ikke historikkvask på oppgavetype: $oppgavetype for område: $område"
-                    )
+                    else -> call.respond(HttpStatusCode.NotImplemented, "Støtter ikke historikkvask på område: $område")
                 }
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
             }
-
-            else -> call.respond(HttpStatusCode.NotImplemented, "Støtter ikke historikkvask på område: $område")
         }
     }
 
     get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}/settdirty", {
-        description = "Sett dirtyflagg på eventhistorikk for å trigge innlesning av eventer som mangler i oppgavehistorikken"
+        description =
+            "Sett dirtyflagg på eventhistorikk for å trigge innlesning av eventer som mangler i oppgavehistorikken"
         request {
             pathParameter<String>("omrade") {
                 description = "Området oppgavetypen er definert i. Pr i dag er kun K9 implementert"
@@ -323,45 +378,55 @@ fun Route.forvaltningApis() {
             }
         }
     }) {
-        val område = call.parameters["omrade"]!!
-        val oppgavetype = call.parameters["oppgavetype"]!!
-        val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
+        requestContextService.withRequestContext(call) {
+            if (pepClient.kanLeggeUtDriftsmelding()) {
+                val område = call.parameters["omrade"]!!
+                val oppgavetype = call.parameters["oppgavetype"]!!
+                val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
 
-        when (område) {
-            "K9" -> {
-                when (oppgavetype) {
-                    "k9sak" -> {
-                        transactionalManager.transaction { tx ->
-                            k9sakEventRepository.settDirty(UUID.fromString(oppgaveEksternId), tx)
+                when (område) {
+                    "K9" -> {
+                        when (oppgavetype) {
+                            "k9sak" -> {
+                                transactionalManager.transaction { tx ->
+                                    k9sakEventRepository.settDirty(UUID.fromString(oppgaveEksternId), tx)
+                                }
+                                call.respond(HttpStatusCode.NoContent)
+                            }
+
+                            "k9klage" -> {
+                                transactionalManager.transaction { tx ->
+                                    k9klageEventRepository.settDirty(UUID.fromString(oppgaveEksternId), tx)
+                                }
+                                call.respond(HttpStatusCode.NoContent)
+                            }
+
+                            "k9tilbake" -> {
+                                transactionalManager.transaction { tx ->
+                                    k9tilbakeEventRepository.settDirty(UUID.fromString(oppgaveEksternId), tx)
+                                }
+                                call.respond(HttpStatusCode.NoContent)
+                            }
+
+                            "k9punsj" -> {
+                                transactionalManager.transaction { tx ->
+                                    k9PunsjEventK9Repository.settDirty(UUID.fromString(oppgaveEksternId), tx)
+                                }
+                                call.respond(HttpStatusCode.NoContent)
+                            }
+
+                            else -> call.respond(
+                                HttpStatusCode.NotImplemented,
+                                "Oppgavetype $oppgavetype for område: $område ikke implementert"
+                            )
                         }
-                        call.respond(HttpStatusCode.NoContent)
                     }
-                    "k9klage" -> {
-                        transactionalManager.transaction { tx ->
-                            k9klageEventRepository.settDirty(UUID.fromString(oppgaveEksternId), tx)
-                        }
-                        call.respond(HttpStatusCode.NoContent)
-                    }
-                    "k9tilbake" -> {
-                        transactionalManager.transaction { tx ->
-                            k9tilbakeEventRepository.settDirty(UUID.fromString(oppgaveEksternId), tx)
-                        }
-                        call.respond(HttpStatusCode.NoContent)
-                    }
-                    "k9punsj" -> {
-                        transactionalManager.transaction { tx ->
-                            k9PunsjEventK9Repository.settDirty(UUID.fromString(oppgaveEksternId), tx)
-                        }
-                        call.respond(HttpStatusCode.NoContent)
-                    }
-                    else -> call.respond(
-                        HttpStatusCode.NotImplemented,
-                        "Oppgavetype $oppgavetype for område: $område ikke implementert"
-                    )
+
+                    else -> call.respond(HttpStatusCode.NotImplemented, "Område: $område ikke implementert")
                 }
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
             }
-
-            else -> call.respond(HttpStatusCode.NotImplemented, "Område: $område ikke implementert")
         }
     }
 
@@ -387,47 +452,81 @@ fun Route.forvaltningApis() {
             }
         }
     }) {
-        val område = call.parameters["omrade"]!!
-        val oppgavetypeEksternId = call.parameters["oppgavetype"]!!
-        val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
+        requestContextService.withRequestContext(call) {
+            if (pepClient.kanLeggeUtDriftsmelding()) {
+                val område = call.parameters["omrade"]!!
+                val oppgavetypeEksternId = call.parameters["oppgavetype"]!!
+                val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
 
-        try {
-            oppgaveTypeRepository.hentOppgavetype(område, oppgavetypeEksternId)
-        } catch (e: IllegalArgumentException) {
-            call.respond(HttpStatusCode.NotFound, e.message.toString())
-            return@get
-        }
+                try {
+                    oppgaveTypeRepository.hentOppgavetype(område, oppgavetypeEksternId)
+                } catch (e: IllegalArgumentException) {
+                    call.respond(HttpStatusCode.NotFound, e.message.toString())
+                    return@withRequestContext
+                }
 
-        val oppgave = oppgaveRepositoryTxWrapper.hentOppgave(område, oppgaveEksternId)
-        val reservasjonsnøkkel = utledReservasjonsnøkkel(oppgave, false)
-        val reservasjonsnøkkel_beslutter = utledReservasjonsnøkkel(oppgave, true)
-        val reservasjonerOrdinær = transactionalManager.transaction { tx ->
-            reservasjonV3Repository.hentReservasjonTidslinjeMedEndringer(reservasjonsnøkkel, tx)
-        }
-        val reservasjonerBeslutter = transactionalManager.transaction { tx ->
-            reservasjonV3Repository.hentReservasjonTidslinjeMedEndringer(reservasjonsnøkkel_beslutter, tx)
-        }
+                val oppgave = oppgaveRepositoryTxWrapper.hentOppgave(område, oppgaveEksternId)
+                val reservasjonsnøkkel = utledReservasjonsnøkkel(oppgave, false)
+                val reservasjonsnøkkel_beslutter = utledReservasjonsnøkkel(oppgave, true)
+                val reservasjonerOrdinær = transactionalManager.transaction { tx ->
+                    reservasjonV3Repository.hentReservasjonTidslinjeMedEndringer(reservasjonsnøkkel, tx)
+                }
+                val reservasjonerBeslutter = transactionalManager.transaction { tx ->
+                    reservasjonV3Repository.hentReservasjonTidslinjeMedEndringer(reservasjonsnøkkel_beslutter, tx)
+                }
 
-        val reservasjonerSamlet = (reservasjonerOrdinær + reservasjonerBeslutter).sortedBy { it.reservasjonOpprettet }
-        call.respond(objectMapper.writeValueAsString(reservasjonerSamlet))
+                val reservasjonerSamlet =
+                    (reservasjonerOrdinær + reservasjonerBeslutter).sortedBy { it.reservasjonOpprettet }
+                call.respond(objectMapper.writeValueAsString(reservasjonerSamlet))
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
     }
 
     route("/ytelse") {
         get("/oppgaveko/antall") {
-            val antall = oppgaveKoTjeneste.hentOppgavekøer(skjermet = false).map {
-                oppgaveKoTjeneste.hentAntallOppgaverForKø(oppgaveKoId = it.id, filtrerReserverte = false, skjermet = false) }.size
-            call.respond(antall)
+            requestContextService.withRequestContext(call) {
+                if (pepClient.kanLeggeUtDriftsmelding()) {
+                    val antall = oppgaveKoTjeneste.hentOppgavekøer(skjermet = false).map {
+                        oppgaveKoTjeneste.hentAntallOppgaverForKø(
+                            oppgaveKoId = it.id,
+                            filtrerReserverte = false,
+                            skjermet = false
+                        )
+                    }.size
+                    call.respond(antall)
+                } else {
+                    call.respond(HttpStatusCode.Forbidden)
+                }
+            }
         }
 
         get("/oppgaveko") {
-            call.respond(oppgaveKoTjeneste.hentOppgavekøer(skjermet = false).map { it.id })
+            requestContextService.withRequestContext(call) {
+                if (pepClient.kanLeggeUtDriftsmelding()) {
+                    call.respond(oppgaveKoTjeneste.hentOppgavekøer(skjermet = false).map { it.id })
+                } else {
+                    call.respond(HttpStatusCode.Forbidden)
+                }
+            }
         }
 
         get("/oppgaveko/{ko}/antall") {
-            val køId = call.parameters["ko"]!!.toLong()
-            val medReserverte = call.request.queryParameters["reserverte"]?.toBoolean() ?: false
-            val antall = oppgaveKoTjeneste.hentAntallOppgaverForKø(oppgaveKoId = køId, filtrerReserverte = medReserverte, skjermet = false)
-            call.respond(if (antall > 10) antall else -1)
+            requestContextService.withRequestContext(call) {
+                if (pepClient.kanLeggeUtDriftsmelding()) {
+                    val køId = call.parameters["ko"]!!.toLong()
+                    val medReserverte = call.request.queryParameters["reserverte"]?.toBoolean() ?: false
+                    val antall = oppgaveKoTjeneste.hentAntallOppgaverForKø(
+                        oppgaveKoId = køId,
+                        filtrerReserverte = medReserverte,
+                        skjermet = false
+                    )
+                    call.respond(if (antall > 10) antall else -1)
+                } else {
+                    call.respond(HttpStatusCode.Forbidden)
+                }
+            }
         }
     }
 
