@@ -153,7 +153,7 @@ fun Route.forvaltningApis() {
                     oppgaveRepositoryV1.hent(it)
                 }
 
-                call.respond(KoDiff(v3OppgaverSomManglerIV1.toSet(), v1OppgaverSomManglerIV3.toSet()))
+                call.respond(KoDiff(v3MenIkkeV1.size, v1MenIkkeV3.size, v3OppgaverSomManglerIV1.toSet(), v1OppgaverSomManglerIV3.toSet()))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -561,6 +561,8 @@ fun lagNøkkelAktør(oppgave: Oppgave, tilBeslutter: Boolean): String {
 }
 
 data class KoDiff(
+    val antallOppgaverSomManglerIV1: Int,
+    val antallOppgaverSomManglerIV3: Int,
     val v3OppgaverSomManglerIV1: Set<Oppgave>,
     val v1OppgaverSomManglerIV3: Set<no.nav.k9.los.domene.lager.oppgave.Oppgave>
 )
