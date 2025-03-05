@@ -108,7 +108,7 @@ fun Route.forvaltningApis() {
         }
     }
 
-    get("sammenlignkoer/", {
+    get("/sammenlignkoer", {
         description = "Sammenlign en V1-kø med en V3 kø, og lever de oppgavene som ikke finnes i begge køer"
         request {
             queryParameter<String>("v1KoId") {
