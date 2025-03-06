@@ -146,7 +146,7 @@ fun Route.forvaltningApis() {
                 val v1MenIkkeV3 = v1Oppgaver.subtract(v3Oppgaver)
 
                 val v3OppgaverSomManglerIV1 = v3MenIkkeV1.map {
-                    oppgaveRepositoryTxWrapper.hentOppgave("K9", it.toString())
+                    OppgaveDto(oppgaveRepositoryTxWrapper.hentOppgave("K9", it.toString()))
                 }.toList()
 
                 val v1OppgaverSomManglerIV3 = v1MenIkkeV3.map {
@@ -563,6 +563,6 @@ fun lagNøkkelAktør(oppgave: Oppgave, tilBeslutter: Boolean): String {
 data class KoDiff(
     val antallOppgaverSomManglerIV1: Int,
     val antallOppgaverSomManglerIV3: Int,
-    val v3OppgaverSomManglerIV1: Set<Oppgave>,
+    val v3OppgaverSomManglerIV1: Set<OppgaveDto>,
     val v1OppgaverSomManglerIV3: Set<no.nav.k9.los.domene.lager.oppgave.Oppgave>
 )
