@@ -18,10 +18,12 @@ fun createHikariConfig(jdbcUrl: String, username: String? = null, password: Stri
         driverClassName = "org.postgresql.Driver"
         username?.let { this.username = it }
         password?.let { this.password = it }
-        setMetricsTrackerFactory(PrometheusMetricsTrackerFactory())
+        metricsTrackerFactory = PrometheusMetricsTrackerFactory()
     }
 
-fun Application.hikariConfig(hikariConfig: Configuration): HikariDataSource {
-    migrate(hikariConfig)
-    return getDataSource(hikariConfig)
+fun Application.hikariConfig(configuration: Configuration): HikariDataSource {
+    if (configuration.synkronMigrering) {
+        migrate(configuration)
+    }
+    return getDataSource(configuration)
 }
