@@ -74,15 +74,11 @@ internal class K9SakStream constructor(
                 return data?.let {
                     return try {
                         LosObjectMapper.instance.readValue(it)
-                    } catch (e: ValueInstantiationException) {
-                        log.warn("Feil ved deserialisering av ProduksjonsstyringHendelse", e)
-                        log.warn(String(it))
-                        null
                     }
                     catch (e: Exception) {
                         log.warn("", e)
                         log.warn(String(it))
-                        throw e
+                        null
                     }
                 }
             }
