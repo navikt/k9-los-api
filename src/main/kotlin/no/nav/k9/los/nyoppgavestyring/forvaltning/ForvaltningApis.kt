@@ -222,6 +222,50 @@ fun Route.forvaltningApis() {
         }
     }
 
+    get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}/aktiv", {
+        description = "Hent ut nåtilstand for en oppgave"
+        request {
+            pathParameter<String>("omrade") {
+                description = "Området oppgavetypen er definert i. Pr i dag er kun K9 implementert"
+                example("K9") {
+                    value = "K9"
+                    description = "Oppgaver definert innenfor K9"
+                }
+            }
+            pathParameter<String>("oppgavetype") {
+                description = "Navnet på oppgavetypen."
+                example("k9sak") {
+                    value = "k9sak"
+                    description = "Oppgaver som kommer fra k9sak"
+                }
+            }
+            pathParameter<String>("oppgaveEksternId") {
+                description = "Oppgavens eksterne Id, definert av innleverende fagsystem"
+            }
+        }
+    }) {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.kanLeggeUtDriftsmelding()) {
+                val område = call.parameters["omrade"]!!
+                val oppgavetype = call.parameters["oppgavetype"]!!
+                val oppgaveEksternId = call.parameters["oppgaveEksternId"]!!
+
+                try {
+                    val oppgave =
+                        oppgaveRepositoryTxWrapper.hentOppgave(område, oppgaveEksternId)
+                    call.respond(objectMapper.writeValueAsString(oppgave))
+                } catch (e: IllegalStateException) {
+                    if (e.message != null && e.message!!.startsWith("")) {
+                        call.respond(HttpStatusCode.NotFound)
+                    } else {
+                        throw e
+                    }
+                }
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
 
     get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}", {
         description = "Hent ut oppgavehistorikk for en oppgave"
