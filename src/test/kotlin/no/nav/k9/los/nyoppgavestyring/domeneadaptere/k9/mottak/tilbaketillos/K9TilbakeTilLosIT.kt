@@ -4,9 +4,11 @@ import assertk.assertThat
 import assertk.assertions.*
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.aksjonspunktbehandling.*
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.K9TilbakeEventDtoBuilder
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.TestSaksbehandler
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.*

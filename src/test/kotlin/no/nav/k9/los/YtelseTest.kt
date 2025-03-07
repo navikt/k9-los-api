@@ -1,8 +1,5 @@
 package no.nav.k9.los
 
-import assertk.assertThat
-import assertk.assertions.isEqualTo
-import assertk.assertions.isSuccess
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -14,6 +11,10 @@ import no.nav.k9.los.domene.modell.*
 import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.domene.repository.StatistikkRepository
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import org.junit.jupiter.api.BeforeEach

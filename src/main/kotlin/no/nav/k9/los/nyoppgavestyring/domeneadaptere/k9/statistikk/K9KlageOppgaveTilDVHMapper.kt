@@ -4,7 +4,7 @@ import no.nav.k9.klage.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.klage.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.klage.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
-import no.nav.k9.los.domene.modell.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.EventTilDtoMapper
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import java.time.LocalDate

@@ -2,9 +2,9 @@ package no.nav.k9.los.tjenester.avdelingsleder.nokkeltall
 
 import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.domene.lager.oppgave.v2.BehandlingsmigreringTjeneste
-import no.nav.k9.los.domene.modell.BehandlingType
-import no.nav.k9.los.domene.modell.FagsakYtelseType
-import no.nav.k9.los.domene.modell.Fagsystem
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.domene.periode.tidligsteOgSeneste
 import no.nav.k9.los.domene.repository.NøkkeltallRepository
 import no.nav.k9.los.domene.repository.OppgaveRepository

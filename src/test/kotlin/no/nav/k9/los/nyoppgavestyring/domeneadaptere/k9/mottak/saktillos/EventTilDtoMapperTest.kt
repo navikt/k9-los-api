@@ -3,7 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.saktillos
 import assertk.assertThat
 import assertk.assertions.any
 import assertk.assertions.matchesPredicate
-import no.nav.k9.los.aksjonspunktbehandling.K9SakEventDtoBuilder
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.K9SakEventDtoBuilder
 import org.junit.jupiter.api.Test
 
 class EventTilDtoMapperTest {

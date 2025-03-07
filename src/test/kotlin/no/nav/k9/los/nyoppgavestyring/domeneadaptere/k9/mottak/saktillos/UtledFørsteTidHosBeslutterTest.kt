@@ -4,12 +4,12 @@ import no.nav.k9.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.aksjonspunktbehandling.AksjonspunktTilstandBuilder
-import no.nav.k9.los.domene.modell.BehandlingStatus
-import no.nav.k9.los.domene.modell.BehandlingType
-import no.nav.k9.los.domene.modell.Fagsystem
-import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
-import no.nav.k9.los.integrasjon.kafka.dto.EventHendelse
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.AksjonspunktTilstandBuilder
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
 import org.junit.jupiter.api.Test
@@ -51,8 +51,8 @@ class UtledFørsteTidHosBeslutterTest : AbstractK9LosIntegrationTest() {
         assertEquals(timestamp, EventTilDtoMapper.utledTidFørsteGangHosBeslutter(forrigeOppgave = forrigeOppgave, event)!!.verdi)
     }
 
-    private fun opprettEvent(fagsakYtelseType: FagsakYtelseType, behandlingStatus: BehandlingStatus) : BehandlingProsessEventDto {
-        return BehandlingProsessEventDto(
+    private fun opprettEvent(fagsakYtelseType: FagsakYtelseType, behandlingStatus: BehandlingStatus) : K9SakEventDto {
+        return K9SakEventDto(
             eksternId = UUID.randomUUID(),
             fagsystem = Fagsystem.K9SAK,
             saksnummer = "624QM",
@@ -73,8 +73,9 @@ class UtledFørsteTidHosBeslutterTest : AbstractK9LosIntegrationTest() {
         )
     }
 
-    private fun hosBeslutter(eventDto: BehandlingProsessEventDto) : BehandlingProsessEventDto {
-        return eventDto.copy(aksjonspunktTilstander = listOf(AksjonspunktTilstandBuilder.FATTER_VEDTAK.medStatus(
+    private fun hosBeslutter(eventDto: K9SakEventDto) : K9SakEventDto {
+        return eventDto.copy(aksjonspunktTilstander = listOf(
+            AksjonspunktTilstandBuilder.FATTER_VEDTAK.medStatus(
             AksjonspunktStatus.OPPRETTET).build()) )
     }
 }

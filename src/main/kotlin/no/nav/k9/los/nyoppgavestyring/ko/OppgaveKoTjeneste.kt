@@ -10,7 +10,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.los.domene.modell.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository

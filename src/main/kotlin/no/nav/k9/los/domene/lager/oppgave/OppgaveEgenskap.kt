@@ -1,6 +1,6 @@
 package no.nav.k9.los.domene.lager.oppgave
 
-import no.nav.k9.los.domene.modell.AndreKriterierType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.AndreKriterierType
 
 data class OppgaveEgenskap(
     val id: Long,

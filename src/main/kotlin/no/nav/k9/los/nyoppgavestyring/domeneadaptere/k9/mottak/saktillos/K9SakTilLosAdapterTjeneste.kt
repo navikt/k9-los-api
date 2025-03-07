@@ -12,9 +12,9 @@ import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.los.domene.modell.BehandlingStatus
-import no.nav.k9.los.domene.repository.BehandlingProsessEventK9Repository
-import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import no.nav.k9.los.jobber.JobbMetrikker
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.*
@@ -32,7 +32,7 @@ import kotlin.concurrent.thread
 import kotlin.concurrent.timer
 
 class K9SakTilLosAdapterTjeneste(
-    private val behandlingProsessEventK9Repository: BehandlingProsessEventK9Repository,
+    private val k9SakEventRepository: K9SakEventRepository,
     private val oppgavetypeTjeneste: OppgavetypeTjeneste,
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
     private val oppgaveRepository: OppgaveRepository,
@@ -94,7 +94,7 @@ class K9SakTilLosAdapterTjeneste(
         log.info("Starter avspilling av BehandlingProsessEventer")
         val tidKjøringStartet = System.currentTimeMillis()
 
-        val behandlingsIder = behandlingProsessEventK9Repository.hentAlleDirtyEventIder()
+        val behandlingsIder = k9SakEventRepository.hentAlleDirtyEventIder()
         log.info("Fant ${behandlingsIder.size} behandlinger")
 
         var behandlingTeller: Long = 0
@@ -121,7 +121,7 @@ class K9SakTilLosAdapterTjeneste(
         var korrigerFeilRekkefølge = false
 
         transactionalManager.transaction { tx ->
-            val behandlingProsessEventer = behandlingProsessEventK9Repository.hentMedLås(tx, uuid).eventer
+            val behandlingProsessEventer = k9SakEventRepository.hentMedLås(tx, uuid).eventer
             val nyeBehandlingsopplysningerFraK9Sak = k9SakBerikerKlient.hentBehandling(uuid)
             val høyesteInternVersjon =
                 oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9sak", "K9", tx) ?: -1
@@ -160,7 +160,7 @@ class K9SakTilLosAdapterTjeneste(
                 }
             }
 
-            behandlingProsessEventK9Repository.fjernDirty(uuid, tx)
+            k9SakEventRepository.fjernDirty(uuid, tx)
         }
 
         if (korrigerFeilRekkefølge) {
@@ -173,7 +173,7 @@ class K9SakTilLosAdapterTjeneste(
     }
 
     private fun annullerReservasjonerHvisAlleOppgaverPåVentEllerAvsluttet(
-        event: BehandlingProsessEventDto,
+        event: K9SakEventDto,
         tx: TransactionalSession
     ) {
         val saksbehandlerNøkkel = EventTilDtoMapper.utledReservasjonsnøkkel(event, erTilBeslutter = false)
@@ -210,7 +210,7 @@ class K9SakTilLosAdapterTjeneste(
     }
 
     internal fun ryddOppObsoleteOgResultatfeilFra2020(
-        event: BehandlingProsessEventDto,
+        event: K9SakEventDto,
         oppgaveDto: OppgaveDto,
         nyeBehandlingsopplysningerFraK9Sak: BehandlingMedFagsakDto?,
     ): OppgaveDto {

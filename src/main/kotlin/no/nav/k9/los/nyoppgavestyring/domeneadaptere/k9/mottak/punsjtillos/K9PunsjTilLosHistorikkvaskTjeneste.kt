@@ -4,8 +4,8 @@ import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.los.domene.repository.PunsjEventK9Repository
-import no.nav.k9.los.integrasjon.kafka.dto.PunsjEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.HistorikkvaskMetrikker
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory
 import java.util.*
 
 class K9PunsjTilLosHistorikkvaskTjeneste(
-    private val eventRepository: PunsjEventK9Repository,
+    private val k9PunsjEventRepository: K9PunsjEventRepository,
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
     private val config: Configuration,
     private val transactionalManager: TransactionalManager
@@ -30,11 +30,11 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
             var t0 = System.nanoTime()
             var eventTeller = 0L
             var behandlingTeller = 0L
-            val antallEventIder = eventRepository.hentAntallEventIderUtenVasketHistorikk()
+            val antallEventIder = k9PunsjEventRepository.hentAntallEventIderUtenVasketHistorikk()
             log.info("Fant totalt $antallEventIder behandlingsider som skal rekjøres mot oppgavemodell")
 
             while (true) {
-                val behandlingsIder = eventRepository.hentAlleEventIderUtenVasketHistorikk(antall = 1000)
+                val behandlingsIder = k9PunsjEventRepository.hentAlleEventIderUtenVasketHistorikk(antall = 1000)
                 if (behandlingsIder.isEmpty()) {
                     break
                 }
@@ -55,7 +55,7 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
             }
 
             log.info("Historikkvask k9punsj ferdig")
-            eventRepository.nullstillHistorikkvask()
+            k9PunsjEventRepository.nullstillHistorikkvask()
             log.info("Nullstilt historikkvaskmarkering k9-punsj")
             HistorikkvaskMetrikker.observe(METRIKKLABEL, t0)
         } else log.info("Ny oppgavestyring er deaktivert")
@@ -72,7 +72,7 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
         try {
             return transactionalManager.transaction { tx ->
                 val eventTeller = vaskOppgaveForBehandlingUUID(uuid, tx)
-                eventRepository.markerVasketHistorikk(uuid, tx)
+                k9PunsjEventRepository.markerVasketHistorikk(uuid, tx)
                 eventTeller
             }
         } catch (e: Exception) {
@@ -81,7 +81,7 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
             transactionalManager.transaction { tx ->
                 //marker som vasket for å unngå evig løkke
                 //manglende historikkvask må fanges opp fra WARNINGs i loggen
-                eventRepository.markerVasketHistorikk(uuid, tx)
+                k9PunsjEventRepository.markerVasketHistorikk(uuid, tx)
             }
             return 0;
         }
@@ -98,7 +98,7 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
         var eventTeller = 0L
         var forrigeOppgave: OppgaveV3? = null
 
-        val behandlingProsessEventer: List<PunsjEventDto> = eventRepository.hentMedLås(tx, uuid).eventer
+        val behandlingProsessEventer: List<PunsjEventDto> = k9PunsjEventRepository.hentMedLås(tx, uuid).eventer
         var oppgaveV3: OppgaveV3? = null
 
         log.info("Vasker ${behandlingProsessEventer.size} hendelser for k9punsj-oppgave med eksternId: $uuid")

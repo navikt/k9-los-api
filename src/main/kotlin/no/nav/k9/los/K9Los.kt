@@ -36,7 +36,7 @@ import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.helse.dusseldorf.ktor.metrics.MetricsRoute
 import no.nav.helse.dusseldorf.ktor.metrics.init
 import no.nav.k9.los.eventhandler.*
-import no.nav.k9.los.integrasjon.kafka.AsynkronProsesseringV1Service
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
 import no.nav.k9.los.jobber.K9sakBehandlingsoppfriskingJobb
 import no.nav.k9.los.jobbplanlegger.Jobbplanlegger
@@ -72,7 +72,6 @@ import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallApis
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.AvdelingslederOppgavekøApis
 import no.nav.k9.los.tjenester.driftsmeldinger.DriftsmeldingerApis
 import no.nav.k9.los.tjenester.fagsak.FagsakApis
-import no.nav.k9.los.tjenester.innsikt.InnsiktApis
 import no.nav.k9.los.tjenester.kodeverk.KodeverkApis
 import no.nav.k9.los.tjenester.konfig.KonfigApis
 import no.nav.k9.los.tjenester.mock.localSetup
@@ -213,7 +212,7 @@ fun Application.k9Los() {
 
     // skal implementeres med Jobbplanlegger
     K9SakTilLosAdapterTjeneste(
-        behandlingProsessEventK9Repository = koin.get(),
+        k9SakEventRepository = koin.get(),
         oppgavetypeTjeneste = koin.get(),
         oppgaveV3Tjeneste = koin.get(),
         config = koin.get(),
@@ -227,7 +226,7 @@ fun Application.k9Los() {
 
     // implementer med Jobbplanlegger
     K9KlageTilLosAdapterTjeneste(
-        behandlingProsessEventKlageRepository = koin.get(),
+        k9KlageEventRepository = koin.get(),
         områdeRepository = koin.get(),
         feltdefinisjonTjeneste = koin.get(),
         oppgavetypeTjeneste = koin.get(),
@@ -239,7 +238,7 @@ fun Application.k9Los() {
 
     // implementer med Jobbplanlegger
     K9PunsjTilLosAdapterTjeneste(
-        eventRepository = koin.get(),
+        k9PunsjEventRepository = koin.get(),
         oppgavetypeTjeneste = koin.get(),
         oppgaveV3Tjeneste = koin.get(),
         reservasjonV3Tjeneste = koin.get(),
@@ -320,7 +319,6 @@ private fun Route.api() {
         }
         swaggerUI("openapi.json")
         route("/forvaltning") {
-            InnsiktApis()
             forvaltningApis()
             route("k9saktillos") { K9SakTilLosApi() }
             route("k9klagetillos") { K9KlageTilLosApi() }
