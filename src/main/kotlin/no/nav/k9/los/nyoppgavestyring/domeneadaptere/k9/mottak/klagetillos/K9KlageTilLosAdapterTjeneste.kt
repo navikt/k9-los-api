@@ -6,7 +6,7 @@ import io.opentelemetry.instrumentation.annotations.SpanAttribute
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.los.domene.repository.BehandlingProsessEventKlageRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventRepository
 import no.nav.k9.los.jobber.JobbMetrikker
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
@@ -24,7 +24,7 @@ import kotlin.concurrent.thread
 import kotlin.concurrent.timer
 
 class K9KlageTilLosAdapterTjeneste(
-    private val behandlingProsessEventKlageRepository: BehandlingProsessEventKlageRepository,
+    private val k9KlageEventRepository: K9KlageEventRepository,
     private val områdeRepository: OmrådeRepository,
     private val config: Configuration,
     private val feltdefinisjonTjeneste: FeltdefinisjonTjeneste,
@@ -84,7 +84,7 @@ class K9KlageTilLosAdapterTjeneste(
         log.info("Starter avspilling av BehandlingProsessEventer")
         val tidKjøringStartet = System.currentTimeMillis()
 
-        val behandlingsIder = behandlingProsessEventKlageRepository.hentAlleDirtyEventIder()
+        val behandlingsIder = k9KlageEventRepository.hentAlleDirtyEventIder()
         log.info("Fant ${behandlingsIder.size} behandlinger")
 
         var behandlingTeller: Long = 0
@@ -113,7 +113,7 @@ class K9KlageTilLosAdapterTjeneste(
         var eventTeller = eventTellerInn
         var forrigeOppgave: OppgaveV3? = null
         transactionalManager.transaction { tx ->
-            val behandlingProsessEventer = behandlingProsessEventKlageRepository.hentMedLås(tx, uuid).eventer
+            val behandlingProsessEventer = k9KlageEventRepository.hentMedLås(tx, uuid).eventer
             behandlingProsessEventer.forEach { event ->
                 val losOpplysningerSomManglerIKlageDto =
                     event.påklagdBehandlingEksternId?.let { k9sakBeriker.berikKlage(it) }
@@ -130,7 +130,7 @@ class K9KlageTilLosAdapterTjeneste(
             }
             forrigeOppgave = null
 
-            behandlingProsessEventKlageRepository.fjernDirty(uuid, tx)
+            k9KlageEventRepository.fjernDirty(uuid, tx)
         }
         return eventTeller
     }

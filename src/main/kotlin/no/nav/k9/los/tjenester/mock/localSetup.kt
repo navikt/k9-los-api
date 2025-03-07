@@ -7,16 +7,19 @@ import no.nav.k9.kodeverk.behandling.BehandlingÅrsakType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.kodeverk.uttak.SøknadÅrsak
 import no.nav.k9.los.KoinProfile
-import no.nav.k9.los.aksjonspunktbehandling.AksjonspunktDefinisjonK9Tilbake
-import no.nav.k9.los.aksjonspunktbehandling.K9TilbakeEventHandler
-import no.nav.k9.los.aksjonspunktbehandling.K9punsjEventHandler
-import no.nav.k9.los.aksjonspunktbehandling.K9sakEventHandler
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler
 import no.nav.k9.los.domene.modell.*
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
-import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
-import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventTilbakeDto
-import no.nav.k9.los.integrasjon.kafka.dto.EventHendelse
-import no.nav.k9.los.integrasjon.kafka.dto.PunsjEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9KlageEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
@@ -56,9 +59,9 @@ val saksbehandlere = listOf(
 
 object localSetup : KoinComponent {
     private val saksbehandlerRepository: SaksbehandlerRepository by inject()
-    private val punsjEventHandler: K9punsjEventHandler by inject()
+    private val punsjEventHandler: no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler by inject()
     private val tilbakeEventHandler: K9TilbakeEventHandler by inject()
-    private val sakEventHandler: K9sakEventHandler by inject()
+    private val sakEventHandler: K9SakEventHandler by inject()
     private val profile: KoinProfile by inject()
 
     fun initSaksbehandlere() {
@@ -88,7 +91,7 @@ object localSetup : KoinComponent {
                 val aktørId = Random.nextInt(0, 9999999).toString()
                 val pleietrengendeAktørId = Random.nextInt(0, 9999999).toString()
                 sakEventHandler.prosesser(
-                    BehandlingProsessEventDto(
+                    K9SakEventDto(
                         eksternId,
                         Fagsystem.K9SAK,
                         saksnummer,
@@ -121,7 +124,7 @@ object localSetup : KoinComponent {
                 // ferdigstill noen av sakene
                 if (Random.nextBoolean()) {
                     sakEventHandler.prosesser(
-                        BehandlingProsessEventDto(
+                        K9SakEventDto(
                             eksternId,
                             Fagsystem.K9SAK,
                             saksnummer,
@@ -157,7 +160,7 @@ object localSetup : KoinComponent {
     fun initTilbakeoppgaver(antall: Int) {
         if (profile == KoinProfile.LOCAL) {
             for (i in 0..<antall) {
-                val event = BehandlingProsessEventTilbakeDto(
+                val event = K9KlageEventDto(
                     eksternId = UUID.randomUUID(),
                     saksnummer = Random.nextInt(0, 200 * antall).toString(),
                     behandlingId = 123L,

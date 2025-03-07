@@ -4,7 +4,7 @@ import kotlinx.coroutines.*
 import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.los.domene.repository.BehandlingProsessEventTilbakeRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventRepository
 import no.nav.k9.los.eventhandler.DetaljerMetrikker
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.HistorikkvaskMetrikker
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory
 import java.util.*
 
 class K9TilbakeTilLosHistorikkvaskTjeneste(
-    private val behandlingProsessEventTilbakeRepository: BehandlingProsessEventTilbakeRepository,
+    private val behandlingProsessEventTilbakeRepository: K9TilbakeEventRepository,
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
     private val config: Configuration,
     private val transactionalManager: TransactionalManager,

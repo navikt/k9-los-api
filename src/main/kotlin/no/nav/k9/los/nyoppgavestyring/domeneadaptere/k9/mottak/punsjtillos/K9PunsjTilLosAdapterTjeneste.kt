@@ -7,7 +7,7 @@ import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.los.domene.repository.PunsjEventK9Repository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventRepository
 import no.nav.k9.los.jobber.JobbMetrikker
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
@@ -24,7 +24,7 @@ import kotlin.concurrent.thread
 import kotlin.concurrent.timer
 
 class K9PunsjTilLosAdapterTjeneste(
-    private val eventRepository: PunsjEventK9Repository,
+    private val k9PunsjEventRepository: K9PunsjEventRepository,
     private val oppgavetypeTjeneste: OppgavetypeTjeneste,
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
@@ -78,7 +78,7 @@ class K9PunsjTilLosAdapterTjeneste(
         log.info("Starter avspilling av BehandlingProsessEventer")
         val tidKjøringStartet = System.currentTimeMillis()
 
-        val behandlingsIder = eventRepository.hentAlleDirtyEventIder()
+        val behandlingsIder = k9PunsjEventRepository.hentAlleDirtyEventIder()
         log.info("Fant ${behandlingsIder.size} behandlinger")
 
         var behandlingTeller: Long = 0
@@ -104,7 +104,7 @@ class K9PunsjTilLosAdapterTjeneste(
         var forrigeOppgaveversjon: OppgaveV3? = null
 
         transactionalManager.transaction { tx ->
-            val punsjEventer = eventRepository.hentMedLås(tx, uuid)
+            val punsjEventer = k9PunsjEventRepository.hentMedLås(tx, uuid)
             for (event in punsjEventer.eventer) {
                 val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgaveversjon)
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
@@ -121,7 +121,7 @@ class K9PunsjTilLosAdapterTjeneste(
                     forrigeOppgaveversjon = oppgaveV3Tjeneste.hentOppgaveversjon("K9", oppgaveDto.id, oppgaveDto.versjon, tx)
                 }
             }
-            eventRepository.fjernDirty(uuid, tx)
+            k9PunsjEventRepository.fjernDirty(uuid, tx)
         }
 
         return eventTeller

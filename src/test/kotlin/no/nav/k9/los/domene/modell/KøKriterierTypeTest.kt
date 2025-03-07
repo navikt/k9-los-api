@@ -4,6 +4,9 @@ import assertk.assertThat
 import assertk.assertions.isFalse
 import assertk.assertions.isTrue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.KøKriterierType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.MerknadType
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.KriteriumDto
 import org.junit.jupiter.api.Test
 import java.util.*

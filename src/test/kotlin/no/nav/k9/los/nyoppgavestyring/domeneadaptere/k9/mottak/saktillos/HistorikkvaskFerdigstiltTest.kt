@@ -6,9 +6,9 @@ import io.mockk.every
 import io.mockk.mockk
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.aksjonspunktbehandling.K9SakEventDtoBuilder
-import no.nav.k9.los.aksjonspunktbehandling.K9sakEventHandler
-import no.nav.k9.los.aksjonspunktbehandling.TestSaksbehandler
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.K9SakEventDtoBuilder
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.TestSaksbehandler
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
@@ -31,7 +31,7 @@ import kotlin.test.assertTrue
 class HistorikkvaskFerdigstiltTest : AbstractK9LosIntegrationTest() {
 
     private lateinit var transactionalManager: TransactionalManager
-    private lateinit var eventHandler: K9sakEventHandler
+    private lateinit var k9SakEventHandler: K9SakEventHandler
     private lateinit var oppgaveRepositoryTxWrapper: OppgaveRepositoryTxWrapper
     private lateinit var oppgaveV3Tjeneste: OppgaveV3Tjeneste
     private lateinit var oppgavetypeRepository: OppgavetypeRepository
@@ -42,7 +42,7 @@ class HistorikkvaskFerdigstiltTest : AbstractK9LosIntegrationTest() {
         OppgaveTestDataBuilder()
         TestSaksbehandler().init()
         transactionalManager = get()
-        eventHandler = get()
+        k9SakEventHandler = get()
         oppgaveRepositoryTxWrapper = get()
         oppgaveV3Tjeneste = get()
         oppgavetypeRepository = get()
@@ -72,8 +72,8 @@ class HistorikkvaskFerdigstiltTest : AbstractK9LosIntegrationTest() {
         // Opprett events som vil føre til en ferdigstilt oppgave
         val event1 = eventBuilder.opprettet().apply { ansvarligSaksbehandlerIdent = saksbehandlerId }.build(1)
         val event2 = eventBuilder.avsluttet().build(2)
-        eventHandler.prosesser(event1)
-        eventHandler.prosesser(event2)
+        k9SakEventHandler.prosesser(event1)
+        k9SakEventHandler.prosesser(event2)
         
         // Hent oppgaven og sjekk at den er LUKKET
         val oppgave = oppgaveRepositoryTxWrapper.hentOppgave("K9", eksternId.toString())

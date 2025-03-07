@@ -9,11 +9,11 @@ import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.aksjonspunktbehandling.K9SakEventDtoBuilder
-import no.nav.k9.los.aksjonspunktbehandling.K9sakEventHandler
-import no.nav.k9.los.aksjonspunktbehandling.TestSaksbehandler
-import no.nav.k9.los.aksjonspunktbehandling.builder
-import no.nav.k9.los.domene.modell.BehandlingStatus
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.K9SakEventDtoBuilder
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.TestSaksbehandler
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.builder
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.rest.CoroutineRequestContext
@@ -43,13 +43,13 @@ import java.util.*
 
 class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
 
-    lateinit var eventHandler: K9sakEventHandler
+    lateinit var k9SakEventHandler: K9SakEventHandler
     lateinit var oppgaveKøTjeneste: OppgaveKoTjeneste
     lateinit var pepClient: IPepClient
 
     @BeforeEach
     fun setup() {
-        eventHandler = get<K9sakEventHandler>()
+        k9SakEventHandler = get<K9SakEventHandler>()
         oppgaveKøTjeneste = get<OppgaveKoTjeneste>()
         pepClient = get<IPepClient>()
         TestSaksbehandler().init()
@@ -63,7 +63,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val kø = opprettKøFor(TestSaksbehandler.SARA, querySomKunInneholder(eksternId, Oppgavestatus.AAPEN))
 
         val opprettetUtenÅpneAksjonspunkter = K9SakEventDtoBuilder(eksternId).opprettet().build()
-        eventHandler.prosesser(opprettetUtenÅpneAksjonspunkter)
+        k9SakEventHandler.prosesser(opprettetUtenÅpneAksjonspunkter)
 
         val oppgaveQueryService = get<OppgaveQueryService>()
         val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
@@ -86,7 +86,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
 
         val opprettetUtenÅpneAksjonspunkter =
             K9SakEventDtoBuilder(eksternId).venterPåInntektsmelding().build()
-        eventHandler.prosesser(opprettetUtenÅpneAksjonspunkter)
+        k9SakEventHandler.prosesser(opprettetUtenÅpneAksjonspunkter)
 
         val oppgaveQueryService = get<OppgaveQueryService>()
         val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
@@ -127,7 +127,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
                 .medVenteårsakOgFrist(null, frist = LocalDateTime.now().plusWeeks(1)))
             .build()
 
-        eventHandler.prosesser(opprettetAksjonspunktMedNullVenteårsak)
+        k9SakEventHandler.prosesser(opprettetAksjonspunktMedNullVenteårsak)
     }
 
     @Test
@@ -137,7 +137,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
 
         val opprettetUtenÅpneAksjonspunkter =
             K9SakEventDtoBuilder(eksternId).venterPåInntektsmelding().build()
-        eventHandler.prosesser(opprettetUtenÅpneAksjonspunkter)
+        k9SakEventHandler.prosesser(opprettetUtenÅpneAksjonspunkter)
 
         val oppgaveQueryService = get<OppgaveQueryService>()
         val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
@@ -165,7 +165,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val eksternId = UUID.randomUUID()
         val kø = opprettKøFor(TestSaksbehandler.SARA, querySomKunInneholder(eksternId, Oppgavestatus.AAPEN))
 
-        eventHandler.prosesser(K9SakEventDtoBuilder(eksternId).vurderSykdom().build())
+        k9SakEventHandler.prosesser(K9SakEventDtoBuilder(eksternId).vurderSykdom().build())
 
         val oppgaveQueryService = get<OppgaveQueryService>()
         val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
@@ -199,7 +199,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
 
         // Opprettet event
         val eventBuilder = K9SakEventDtoBuilder(eksternId)
-        eventHandler.prosesser(eventBuilder.opprettet().build())
+        k9SakEventHandler.prosesser(eventBuilder.opprettet().build())
 
         val oppgaveQueryService = get<OppgaveQueryService>()
         val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
@@ -218,7 +218,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         assertReservasjonMedAntallOppgaver(TestSaksbehandler.SARA, 1)
 
         // Transient tilstand mens k9-sak jobber
-        eventHandler.prosesser(
+        k9SakEventHandler.prosesser(
             eventBuilder
                 .medAksjonspunkt(
                     AksjonspunktDefinisjon.KONTROLLER_LEGEERKLÆRING.builder()
@@ -231,7 +231,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         )
 
         assertSkjultReservasjon(TestSaksbehandler.SARA)
-        eventHandler.prosesser(eventBuilder.vurderSykdom().build())
+        k9SakEventHandler.prosesser(eventBuilder.vurderSykdom().build())
 
         assertReservasjonMedAntallOppgaver(TestSaksbehandler.SARA, 1)
     }
@@ -244,8 +244,8 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
 
         val behandling1 = K9SakEventDtoBuilder(eksternId1, pleietrengendeAktørId = "PLEIETRENGENDE_ID")
         val behandling2 = K9SakEventDtoBuilder(eksternId2, pleietrengendeAktørId = "PLEIETRENGENDE_ID")
-        eventHandler.prosesser(behandling1.vurderSykdom().build())
-        eventHandler.prosesser(behandling2.vurderSykdom().build())
+        k9SakEventHandler.prosesser(behandling1.vurderSykdom().build())
+        k9SakEventHandler.prosesser(behandling2.vurderSykdom().build())
 
         // Saksbehandler tar reservasjon på begge sakene på pleietrengende
         assertAntallIKø(kø, 2)
@@ -254,7 +254,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         assertReservasjonMedAntallOppgaver(TestSaksbehandler.SARA, 2)
 
         // Saksbehandler sender den ene saken til beslutter, og beslutter reserverer oppgaven
-        eventHandler.prosesser(behandling1.hosBeslutter().build())
+        k9SakEventHandler.prosesser(behandling1.hosBeslutter().build())
         assertAntallIKø(kø, 1)
         taReservasjonFra(kø, TestSaksbehandler.BIRGER_BESLUTTER)
         assertAntallIKø(kø, 0)
@@ -263,13 +263,13 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         assertReservasjonMedAntallOppgaver(TestSaksbehandler.BIRGER_BESLUTTER, 1)
 
         // Beslutter fatter vedtak
-        eventHandler.prosesser(behandling1.avsluttet().build())
+        k9SakEventHandler.prosesser(behandling1.avsluttet().build())
         assertAntallIKø(kø, 0)
         assertSkjultReservasjon(TestSaksbehandler.BIRGER_BESLUTTER)
         assertReservasjonMedAntallOppgaver(TestSaksbehandler.SARA, 1)
 
         // Saksbehandler setter den gjenstående oppgaven på vent og både saksbehandlers og den skjulte reservasjonen hos beslutter annulleres
-        eventHandler.prosesser(behandling2.venterPåInntektsmelding().build())
+        k9SakEventHandler.prosesser(behandling2.venterPåInntektsmelding().build())
         assertIngenReservasjon(TestSaksbehandler.SARA)
         assertIngenReservasjon(TestSaksbehandler.BIRGER_BESLUTTER)
     }
@@ -283,25 +283,25 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
 
         val behandling1 = K9SakEventDtoBuilder(eksternId1, pleietrengendeAktørId = "PLEIETRENGENDE_ID")
         val behandling2 = K9SakEventDtoBuilder(eksternId2, pleietrengendeAktørId = "PLEIETRENGENDE_ID")
-        eventHandler.prosesser(behandling1.vurderSykdom().build())
-        eventHandler.prosesser(behandling2.vurderSykdom().build())
+        k9SakEventHandler.prosesser(behandling1.vurderSykdom().build())
+        k9SakEventHandler.prosesser(behandling2.vurderSykdom().build())
 
         // Saksbehandler tar reservasjon på begge sakene på pleietrengende
         taReservasjonFra(kø, TestSaksbehandler.SARA)
         assertReservasjonMedAntallOppgaver(TestSaksbehandler.SARA, 2)
         // Saksbehandler setter den ene saken på vent og sender den andre saken til beslutter
-        eventHandler.prosesser(behandling2.hosBeslutter().build())
-        eventHandler.prosesser(behandling1.venterPåInntektsmelding().build())
+        k9SakEventHandler.prosesser(behandling2.hosBeslutter().build())
+        k9SakEventHandler.prosesser(behandling1.venterPåInntektsmelding().build())
 
         taReservasjonFra(kø, TestSaksbehandler.BIRGER_BESLUTTER)
         assertSkjultReservasjon(TestSaksbehandler.SARA)
         assertReservasjonMedAntallOppgaver(TestSaksbehandler.BIRGER_BESLUTTER, 1)
 
         // Beslutter sender i retur
-        eventHandler.prosesser(behandling2.returFraBeslutter().build())
+        k9SakEventHandler.prosesser(behandling2.returFraBeslutter().build())
         assertReservasjonMedAntallOppgaver(TestSaksbehandler.SARA, 1)
         assertSkjultReservasjon(TestSaksbehandler.BIRGER_BESLUTTER)
-        eventHandler.prosesser(behandling2.opprettet().build())
+        k9SakEventHandler.prosesser(behandling2.opprettet().build())
         assertSkjultReservasjon(TestSaksbehandler.BIRGER_BESLUTTER)
     }
 
@@ -313,14 +313,14 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val eventBuilder = K9SakEventDtoBuilder(eksternId)
 
         // Åpen oppgave plukkes av saksbehandler
-        eventHandler.prosesser(eventBuilder.vurderSykdom().build())
+        k9SakEventHandler.prosesser(eventBuilder.vurderSykdom().build())
         assertAntallIKø(kø, 1)
         taReservasjonFra(kø, TestSaksbehandler.SARA)
         assertAntallIKø(kø, 0)
         assertReservasjonMedAntallOppgaver(TestSaksbehandler.SARA, 1)
 
         // Behandling sendt til beslutter, beslutter plukken oppgaven
-        eventHandler.prosesser(eventBuilder.hosBeslutter().build())
+        k9SakEventHandler.prosesser(eventBuilder.hosBeslutter().build())
         assertAntallIKø(kø, 1)
         taReservasjonFra(kø, TestSaksbehandler.BIRGER_BESLUTTER)
         assertAntallIKø(kø, 0)
@@ -329,19 +329,19 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         assertReservasjonMedAntallOppgaver(TestSaksbehandler.BIRGER_BESLUTTER, 1)
 
         // Beslutter sender oppgaven tilbake til saksbehandler
-        eventHandler.prosesser(eventBuilder.returFraBeslutter().build())
+        k9SakEventHandler.prosesser(eventBuilder.returFraBeslutter().build())
         assertAntallIKø(kø, 0)
         assertReservasjonMedAntallOppgaver(TestSaksbehandler.SARA, 1)
         assertSkjultReservasjon(TestSaksbehandler.BIRGER_BESLUTTER)
 
         // Behandlingen settes på vent - begge reservasjonene annulleres
-        eventHandler.prosesser(eventBuilder.manueltSattPåVentMedisinskeOpplysninger().build())
+        k9SakEventHandler.prosesser(eventBuilder.manueltSattPåVentMedisinskeOpplysninger().build())
         assertAntallIKø(kø, 0)
         assertIngenReservasjon(TestSaksbehandler.SARA)
         assertIngenReservasjon(TestSaksbehandler.BIRGER_BESLUTTER)
 
         // Oppgaven er gjenåpnet og saksbehandler plukker oppgaven på nytt
-        eventHandler.prosesser(eventBuilder.vurderSykdom().build())
+        k9SakEventHandler.prosesser(eventBuilder.vurderSykdom().build())
         assertAntallIKø(kø, 1)
         taReservasjonFra(kø, TestSaksbehandler.SARA)
 
@@ -357,48 +357,48 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
 
         val saksnummer = "SAKSNUMMER"
         val behandling1 = K9SakEventDtoBuilder(eksternId1, saksnummer = saksnummer,  pleietrengendeAktørId = "PLEIETRENGENDE_ID")
-        eventHandler.prosesser(behandling1.vurderSykdom().build())
+        k9SakEventHandler.prosesser(behandling1.vurderSykdom().build())
 
         // Saksbehandler tar reservasjon på begge sakene på pleietrengende
         taReservasjonFra(kø, TestSaksbehandler.SARA)
         assertReservasjonMedAntallOppgaver(TestSaksbehandler.SARA, 1)
 
-        eventHandler.prosesser(behandling1.hosBeslutter().build())
+        k9SakEventHandler.prosesser(behandling1.hosBeslutter().build())
         taReservasjonFra(kø, TestSaksbehandler.BIRGER_BESLUTTER)
         assertSkjultReservasjon(TestSaksbehandler.SARA)
         assertReservasjonMedAntallOppgaver(TestSaksbehandler.BIRGER_BESLUTTER, 1)
 
         val avsluttes = behandling1.beslutterGodkjent().build()
         val avsluttet = behandling1.avsluttet().build()
-        eventHandler.prosesser(avsluttet)
-        eventHandler.prosesser(avsluttes)     // Feil rekkefølge under iverksettelse av behandling i k9-sak
+        k9SakEventHandler.prosesser(avsluttet)
+        k9SakEventHandler.prosesser(avsluttes)     // Feil rekkefølge under iverksettelse av behandling i k9-sak
 
         runBlocking { get<OppgaveApisTjeneste>().hentReserverteOppgaverForSaksbehandler(TestSaksbehandler.BIRGER_BESLUTTER) }
         assertIngenReservasjon(TestSaksbehandler.BIRGER_BESLUTTER)
         assertIngenReservasjon(TestSaksbehandler.SARA)
 
         val behandling2 = K9SakEventDtoBuilder(eksternId2, saksnummer = saksnummer, pleietrengendeAktørId = "PLEIETRENGENDE_ID")
-        eventHandler.prosesser(behandling2.vurderSykdom().build())
+        k9SakEventHandler.prosesser(behandling2.vurderSykdom().build())
 
         // Saksbehandler tar reservasjon på begge sakene på pleietrengende
         taReservasjonFra(kø, TestSaksbehandler.SARA)
 
-        eventHandler.prosesser(behandling2.hosBeslutter().build())
+        k9SakEventHandler.prosesser(behandling2.hosBeslutter().build())
         taReservasjonFra(kø, TestSaksbehandler.BIRGER_BESLUTTER)
 
-        eventHandler.prosesser(behandling2.returFraBeslutter().build())
+        k9SakEventHandler.prosesser(behandling2.returFraBeslutter().build())
         assertSkjultReservasjon(TestSaksbehandler.BIRGER_BESLUTTER)
 
-        eventHandler.prosesser(behandling2.foreslåVedtak().build())
+        k9SakEventHandler.prosesser(behandling2.foreslåVedtak().build())
         assertSkjultReservasjon(TestSaksbehandler.BIRGER_BESLUTTER)
 
-        eventHandler.prosesser(behandling2.hosBeslutter().build())
+        k9SakEventHandler.prosesser(behandling2.hosBeslutter().build())
         assertReservasjonMedAntallOppgaver(TestSaksbehandler.BIRGER_BESLUTTER, 1)
 
         // Denne kan fjernes når historikkvask er endret til å kjøres automatisk ved behov i eventhandler
         K9SakTilLosHistorikkvaskTjeneste(get(),get(),get(),get(),get(),get()).vaskOppgaveForBehandlingUUID(eksternId1)
 
-        eventHandler.prosesser(behandling2.avsluttet().build())
+        k9SakEventHandler.prosesser(behandling2.avsluttet().build())
         assertIngenReservasjon(TestSaksbehandler.BIRGER_BESLUTTER)
         assertIngenReservasjon(TestSaksbehandler.SARA)
     }

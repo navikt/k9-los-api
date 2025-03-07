@@ -8,12 +8,12 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
-import no.nav.k9.los.aksjonspunktbehandling.AksjonspunktDefinisjonK9Tilbake
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.los.domene.modell.AksjonspunktStatus
-import no.nav.k9.los.domene.modell.BehandlingStatus
-import no.nav.k9.los.domene.repository.BehandlingProsessEventTilbakeRepository
-import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventTilbakeDto
+import no.nav.k9.los.nyoppgavestyring.kodeverk.AksjonspunktStatus
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9KlageEventDto
 import no.nav.k9.los.jobber.JobbMetrikker
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
@@ -31,7 +31,7 @@ import kotlin.concurrent.thread
 import kotlin.concurrent.timer
 
 class K9TilbakeTilLosAdapterTjeneste(
-    private val behandlingProsessEventTilbakeRepository: BehandlingProsessEventTilbakeRepository,
+    private val behandlingProsessEventTilbakeRepository: K9TilbakeEventRepository,
     private val oppgavetypeTjeneste: OppgavetypeTjeneste,
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
     private val oppgaveRepository: OppgaveRepository,
@@ -149,7 +149,7 @@ class K9TilbakeTilLosAdapterTjeneste(
     }
 
     private fun annullerReservasjonerHvisAlleOppgaverPåVentEllerAvsluttet(
-        event: BehandlingProsessEventTilbakeDto,
+        event: K9KlageEventDto,
         tx: TransactionalSession
     ) {
         val saksbehandlerNøkkel = EventTilDtoMapper.utledReservasjonsnøkkel(event, erTilBeslutter = false)

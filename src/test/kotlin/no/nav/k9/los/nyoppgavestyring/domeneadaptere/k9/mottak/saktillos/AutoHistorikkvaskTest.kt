@@ -3,9 +3,9 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.saktillos
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.aksjonspunktbehandling.K9SakEventDtoBuilder
-import no.nav.k9.los.aksjonspunktbehandling.K9sakEventHandler
-import no.nav.k9.los.aksjonspunktbehandling.TestSaksbehandler
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.K9SakEventDtoBuilder
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.TestSaksbehandler
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
@@ -17,13 +17,13 @@ import java.util.*
 
 class AutoHistorikkvaskTest : AbstractK9LosIntegrationTest() {
 
-    lateinit var eventHandler: K9sakEventHandler
+    lateinit var k9SakEventHandler: K9SakEventHandler
     lateinit var oppgaveKøTjeneste: OppgaveKoTjeneste
     lateinit var oppgaveRepositoryTxWrapper: OppgaveRepositoryTxWrapper
 
     @BeforeEach
     fun setup() {
-        eventHandler = get<K9sakEventHandler>()
+        k9SakEventHandler = get<K9SakEventHandler>()
         oppgaveKøTjeneste = get<OppgaveKoTjeneste>()
         oppgaveRepositoryTxWrapper = get<OppgaveRepositoryTxWrapper>()
         TestSaksbehandler().init()
@@ -40,10 +40,10 @@ class AutoHistorikkvaskTest : AbstractK9LosIntegrationTest() {
         val event2 = behandling1.hosBeslutter().build(2)
         val event3 = behandling1.beslutterGodkjent().build(3)
         val event4 = behandling1.avsluttet().build(4)
-        eventHandler.prosesser(event1)
-        eventHandler.prosesser(event2)
-        eventHandler.prosesser(event4)     // Feil rekkefølge i avsluttet behandling fra k9-sak
-        eventHandler.prosesser(event3)
+        k9SakEventHandler.prosesser(event1)
+        k9SakEventHandler.prosesser(event2)
+        k9SakEventHandler.prosesser(event4)     // Feil rekkefølge i avsluttet behandling fra k9-sak
+        k9SakEventHandler.prosesser(event3)
 
         //TODO: Håndtere parallellitet
         K9SakTilLosHistorikkvaskTjeneste(get(),get(),get(),get(),get(),get()).vaskOppgaveForBehandlingUUID(eksternId1)

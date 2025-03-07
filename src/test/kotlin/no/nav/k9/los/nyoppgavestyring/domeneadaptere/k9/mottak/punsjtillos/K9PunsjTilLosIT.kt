@@ -3,12 +3,12 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.punsjtillos
 import assertk.assertThat
 import assertk.assertions.isNull
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.aksjonspunktbehandling.K9punsjEventHandler
-import no.nav.k9.los.aksjonspunktbehandling.PunsjEventDtoBuilder
-import no.nav.k9.los.aksjonspunktbehandling.TestSaksbehandler
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.PunsjEventDtoBuilder
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.TestSaksbehandler
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.los.domene.modell.FagsakYtelseType
-import no.nav.k9.los.integrasjon.kafka.dto.PunsjEventDto
+import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
@@ -26,7 +26,7 @@ import java.util.*
 
 class K9PunsjTilLosIT : AbstractK9LosIntegrationTest() {
 
-    lateinit var eventHandler: K9punsjEventHandler
+    lateinit var eventHandler: K9PunsjEventHandler
     lateinit var oppgaveKøTjeneste: OppgaveKoTjeneste
 
     lateinit var oppgaveApisTjeneste: OppgaveApisTjeneste
@@ -35,7 +35,7 @@ class K9PunsjTilLosIT : AbstractK9LosIntegrationTest() {
 
     @BeforeEach
     fun setup() {
-        eventHandler = get<K9punsjEventHandler>()
+        eventHandler = get<K9PunsjEventHandler>()
         oppgaveKøTjeneste = get<OppgaveKoTjeneste>()
         oppgaveApisTjeneste = get<OppgaveApisTjeneste>()
         transactionalManager = get<TransactionalManager>()
