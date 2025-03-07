@@ -1,14 +1,15 @@
 package no.nav.k9.los.fagsystem.k9sak
 
+import com.fasterxml.jackson.databind.exc.ValueInstantiationException
 import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.aksjonspunktbehandling.SerDes
 import no.nav.k9.los.aksjonspunktbehandling.Topic
+import no.nav.k9.los.integrasjon.kafka.IKafkaConfig
 import no.nav.k9.los.integrasjon.kafka.ManagedKafkaStreams
 import no.nav.k9.los.integrasjon.kafka.ManagedStreamHealthy
 import no.nav.k9.los.integrasjon.kafka.ManagedStreamReady
-import no.nav.k9.los.integrasjon.kafka.IKafkaConfig
 import no.nav.k9.los.utils.LosObjectMapper
 import no.nav.k9.los.utils.TransientFeilHåndterer
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.ProduksjonsstyringHendelse
@@ -73,7 +74,12 @@ internal class K9SakStream constructor(
                 return data?.let {
                     return try {
                         LosObjectMapper.instance.readValue(it)
-                    } catch (e: Exception) {
+                    } catch (e: ValueInstantiationException) {
+                        log.warn("Feil ved deserialisering av ProduksjonsstyringHendelse", e)
+                        log.warn(String(it))
+                        null
+                    }
+                    catch (e: Exception) {
                         log.warn("", e)
                         log.warn(String(it))
                         throw e
