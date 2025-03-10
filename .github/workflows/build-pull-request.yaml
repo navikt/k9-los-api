@@ -1,5 +1,4 @@
 name: Build Pull Request
-
 on:
   pull_request:
     paths-ignore:
@@ -8,24 +7,12 @@ on:
       - '.gitignore'
       - 'LICENSE'
       - 'CODEOWNERS'
-      - 'nais/**'
-      - 'gradle/**'
-      - 'nais/alerts/**'
-      - '.github/workflows/deploy-alerts.yml'
 
 jobs:
-  Build:
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          java-version: 21
-          distribution: temurin
-          cache: gradle
-      - name: Kjør tester & bygg JAR
-        run: ./gradlew clean test shadowjar
-        env:
-          GITHUB_TOKEN: ${{ secrets.READER_TOKEN }}
+  test:
+    uses: navikt/sif-gha-workflows/.github/workflows/gradle-test.yml@main
+    permissions:
+      contents: read
+    secrets: inherit
+    with:
+      readertoken: false
