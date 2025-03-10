@@ -247,6 +247,8 @@ enum class OppgaveKode(override val kode: String, override val navn: String, val
 
     // Uttak
     VURDER_DATO_NY_REGEL_UTTAK("9291", "Ny inntekt", OppgaveKodeGruppe.UTTAK.navn),
+    VURDER_OVERLAPPENDE_SØSKENSAK("9292", "Vurder overlappende søskensaker", OppgaveKodeGruppe.UTTAK.navn),
+    VURDER_NYOPPSTARTET("9016", "Vurder nyoppstartet", OppgaveKodeGruppe.UTTAK.navn),
 
     // Uspesifisert
     KONTROLL_MANUELL_REVURDERING("5056", "Kontroll manuell revurdering", OppgaveKodeGruppe.USPESIFISERT.navn),
