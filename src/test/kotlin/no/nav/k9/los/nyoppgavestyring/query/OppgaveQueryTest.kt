@@ -690,6 +690,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         OppgaveTestDataBuilder()
             .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, UUID.randomUUID().toString())
             .medOppgaveFeltVerdi(FeltType.LØSBART_AKSJONSPUNKT, "5016")
+            .medOppgaveFeltVerdi(FeltType.LIGGER_HOS_BESLUTTER, true.toString())
             .lagOgLagre()
 
         val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
@@ -711,6 +712,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         OppgaveTestDataBuilder(definisjonskilde = "k9-klage-til-los", oppgaveTypeNavn = "k9klage")
             .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, UUID.randomUUID().toString())
             .medOppgaveFeltVerdi(FeltType.LØSBART_AKSJONSPUNKT, "5016")
+            .medOppgaveFeltVerdi(FeltType.LIGGER_HOS_BESLUTTER, true.toString())
             .lagOgLagre()
 
         val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
@@ -733,6 +735,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         OppgaveTestDataBuilder(definisjonskilde = "k9-tilbake-til-los", oppgaveTypeNavn = "k9tilbake")
             .medOppgaveFeltVerdi(FeltType.BEHANDLINGUUID, eksternId)
             .medOppgaveFeltVerdi(FeltType.LØSBART_AKSJONSPUNKT, "5005")
+            .medOppgaveFeltVerdi(FeltType.LIGGER_HOS_BESLUTTER, true.toString())
             .lagOgLagre()
 
         val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())

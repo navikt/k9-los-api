@@ -1,6 +1,8 @@
 package no.nav.k9.los.nyoppgavestyring.forvaltning
 
+import io.ktor.util.*
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgavefelt
 import java.time.LocalDateTime
 
 data class OppgaveIkkeSensitiv(
@@ -12,6 +14,7 @@ data class OppgaveIkkeSensitiv(
     val endretTidspunkt: LocalDateTime,
     val kildeområde: String,
     val versjon: Int,
+    val felter: List<Oppgavefelt>
 ) {
     constructor(oppgave: Oppgave) : this(
         eksternId = oppgave.eksternId,
@@ -22,5 +25,6 @@ data class OppgaveIkkeSensitiv(
         endretTidspunkt = oppgave.endretTidspunkt,
         kildeområde = oppgave.kildeområde,
         versjon = oppgave.versjon,
+        felter = oppgave.felter.filterNot { it.eksternId.lowercase().contains("aktor") }
     )
 }

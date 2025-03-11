@@ -31,17 +31,12 @@ class OppgaveV3Tjeneste(
         val aktivOppgaveVersjon = oppgaveV3Repository.hentAktivOppgave(oppgaveDto.id, oppgavetype, tx)
         var innkommendeOppgave = OppgaveV3(oppgaveDto, oppgavetype)
 
-        val utledeteFelter = mutableListOf<OppgaveFeltverdi>()
-        oppgavetype.oppgavefelter
-            .filter { oppgavefelt -> oppgavefelt.feltutleder != null }
-            .forEach { oppgavefelt ->
-                val utledetFeltverdi = oppgavefelt.feltutleder!!.utled(innkommendeOppgave, aktivOppgaveVersjon)
-                if (utledetFeltverdi != null) {
-                    utledeteFelter.add(utledetFeltverdi)
-                }
+        val utledeteFelter = oppgavetype.oppgavefelter
+            .mapNotNull { oppgavefelt ->
+                oppgavefelt.feltutleder?.utled(innkommendeOppgave, aktivOppgaveVersjon)
             }
 
-        innkommendeOppgave = OppgaveV3(innkommendeOppgave, innkommendeOppgave.felter.plus(utledeteFelter))
+        innkommendeOppgave = OppgaveV3(innkommendeOppgave, innkommendeOppgave.felter + utledeteFelter)
 
         innkommendeOppgave.valider()
 

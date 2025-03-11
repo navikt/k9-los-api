@@ -1,6 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype
 
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.GyldigeFeltutledere
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
@@ -11,7 +12,8 @@ class OppgavetypeTjeneste(
     private val oppgavetypeRepository: OppgavetypeRepository,
     private val områdeRepository: OmrådeRepository,
     private val feltdefinisjonRepository: FeltdefinisjonRepository,
-    private val transactionalManager: TransactionalManager
+    private val transactionalManager: TransactionalManager,
+    private val gyldigeFeltutledere: GyldigeFeltutledere
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(OppgavetypeTjeneste::class.java)
@@ -26,7 +28,12 @@ class OppgavetypeTjeneste(
             val område = områdeRepository.hentOmråde(innkommendeOppgavetyperDto.område, tx)
             // lås feltdefinisjoner for område og hent opp
             val eksisterendeFeltdefinisjoner = feltdefinisjonRepository.hent(område, tx)
-            val innkommendeOppgavetyper = Oppgavetyper(innkommendeOppgavetyperDto, område, eksisterendeFeltdefinisjoner)
+            val innkommendeOppgavetyper = Oppgavetyper(
+                innkommendeOppgavetyperDto,
+                område,
+                eksisterendeFeltdefinisjoner,
+                gyldigeFeltutledere
+            )
 
             val eksisterendeOppgavetyper = oppgavetypeRepository.hent(område, innkommendeOppgavetyperDto.definisjonskilde, tx)
             val (sletteListe, leggtilListe, oppdaterListe) = eksisterendeOppgavetyper.finnForskjell(innkommendeOppgavetyper)

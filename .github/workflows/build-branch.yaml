@@ -1,0 +1,20 @@
+name: Build branch
+on:
+  push:
+    branches-ignore:
+      - master
+    paths-ignore:
+      - '**.md'
+      - '**.MD'
+      - '.gitignore'
+      - 'LICENSE'
+      - 'CODEOWNERS'
+
+jobs:
+  test:
+    uses: navikt/sif-gha-workflows/.github/workflows/gradle-test.yml@main
+    permissions:
+      contents: read
+    secrets: inherit
+    with:
+      javaversion: 21

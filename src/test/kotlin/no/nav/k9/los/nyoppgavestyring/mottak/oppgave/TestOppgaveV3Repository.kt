@@ -3,6 +3,9 @@ package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.domene.repository.SaksbehandlerRepository
+import no.nav.k9.los.integrasjon.abac.PepClient
+import no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.GyldigeFeltutledere
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
@@ -12,14 +15,20 @@ import javax.sql.DataSource
 /**
  * Til hjelp under testing/debugging
  */
-class TestOppgaveV3Repository(val dataSource: DataSource) {
+class TestOppgaveV3Repository(
+    private val dataSource: DataSource,
+    private val pepClient: PepClient
+) {
     fun hentAlleOppgaver(): List<OppgaveV3> {
         val områdeRepository = OmrådeRepository(dataSource)
         val feltdefinisjonRepository = FeltdefinisjonRepository(
             områdeRepository
         )
         val oppgavetypeRepository = OppgavetypeRepository(
-            dataSource, feltdefinisjonRepository, områdeRepository
+            dataSource,
+            feltdefinisjonRepository,
+            områdeRepository,
+            GyldigeFeltutledere(SaksbehandlerRepository(dataSource, pepClient))
         )
         return TransactionalManager(dataSource).transaction { tx ->
             tx.run(

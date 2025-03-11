@@ -18,8 +18,9 @@ import javax.sql.DataSource
 class OppgavetypeRepository(
     private val dataSource: DataSource,
     private val feltdefinisjonRepository: FeltdefinisjonRepository,
-    private val områdeRepository: OmrådeRepository
-    ) {
+    private val områdeRepository: OmrådeRepository,
+    private val gyldigeFeltutledere: GyldigeFeltutledere
+) {
 
     private val log = LoggerFactory.getLogger(OppgavetypeRepository::class.java)
     private val oppgavetypeCache = Cache<String, Oppgavetyper>(cacheSizeLimit = null)
@@ -28,7 +29,8 @@ class OppgavetypeRepository(
         val oppgavetyper = hent(område, tx)
         return Oppgavetyper(
             område = område,
-            oppgavetyper = oppgavetyper.oppgavetyper.filter { oppgavetype ->  oppgavetype.definisjonskilde == definisjonskilde }.toSet()
+            oppgavetyper = oppgavetyper.oppgavetyper.filter { oppgavetype -> oppgavetype.definisjonskilde == definisjonskilde }
+                .toSet()
         )
     }
 
@@ -89,8 +91,8 @@ class OppgavetypeRepository(
                                     defaultverdi = row.stringOrNull("defaultVerdi"),
                                     visPåOppgave = true,
                                     feltutleder = row.stringOrNull("feltutleder")?.let {
-                                            GyldigeFeltutledere.hentFeltutleder(it)
-                                        }
+                                        gyldigeFeltutledere.hentFeltutleder(it)
+                                    }
                                 )
                             }.asList
                         ).toSet(),
@@ -118,7 +120,7 @@ class OppgavetypeRepository(
                             )
                         ).asUpdate
                     )
-                }  catch (e: PSQLException) {
+                } catch (e: PSQLException) {
                     if (e.sqlState.equals("23503")) {
                         throw IllegalDeleteException("Kan ikke slette oppgavefelt som brukes av oppgave", e)
                     } else {

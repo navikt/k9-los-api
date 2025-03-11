@@ -40,21 +40,24 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.aktivvask.Aktivvask
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerKlientLocal
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerSystemKlient
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.K9KlageTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.punsjtillos.K9PunsjTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.K9KlageTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.K9KlageTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.punsjtillos.K9PunsjTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.punsjtillos.K9PunsjTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.saktillos.K9SakTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.saktillos.K9SakTilLosLukkeFeiloppgaverTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.saktillos.k9SakEksternId
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.tilbaketillos.K9TilbakeTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.tilbaketillos.k9TilbakeEksternId
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonKonverteringJobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosLukkeFeiloppgaverTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.k9SakEksternId
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.*
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.tilbaketillos.K9TilbakeTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.tilbaketillos.k9TilbakeEksternId
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.K9KlageOppgaveTilDVHMapper
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.K9SakOppgaveTilDVHMapper
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkPublisher
+import no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.GyldigeFeltutledere
 import no.nav.k9.los.nyoppgavestyring.forvaltning.ForvaltningRepository
 import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
@@ -76,8 +79,10 @@ import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksTjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallRepositoryV3
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.OppgaverGruppertRepository
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.status.StatusService
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.los.tjenester.driftsmeldinger.DriftsmeldingTjeneste
@@ -164,6 +169,12 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
+        GyldigeFeltutledere(
+            saksbehandlerRepository = get()
+        )
+    }
+
+    single {
         DriftsmeldingRepository(
             dataSource = get()
         )
@@ -209,6 +220,10 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         no.nav.k9.los.domene.repository.StatistikkRepository(get())
+    }
+
+    single {
+        no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository(get(), get())
     }
 
     single {
@@ -383,7 +398,7 @@ fun common(app: Application, config: Configuration) = module {
 
     single { FeltdefinisjonRepository(områdeRepository = get()) }
     single { OmrådeRepository(get()) }
-    single { OppgavetypeRepository(dataSource = get(), feltdefinisjonRepository = get(), områdeRepository = get()) }
+    single { OppgavetypeRepository(dataSource = get(), feltdefinisjonRepository = get(), områdeRepository = get(), gyldigeFeltutledere = get()) }
     single {
         OppgaveV3Repository(
             dataSource = get(),
@@ -396,7 +411,6 @@ fun common(app: Application, config: Configuration) = module {
     single {
         StatistikkRepository(
             dataSource = get(),
-            oppgavetypeRepository = get(),
         )
     }
 
@@ -437,7 +451,8 @@ fun common(app: Application, config: Configuration) = module {
             oppgavetypeRepository = get(),
             områdeRepository = get(),
             feltdefinisjonRepository = get(),
-            transactionalManager = get()
+            transactionalManager = get(),
+            gyldigeFeltutledere = get()
         )
     }
 
@@ -456,7 +471,7 @@ fun common(app: Application, config: Configuration) = module {
             reservasjonV3Tjeneste = get(),
             config = get(),
             transactionalManager = get(),
-            pepCacheService = get()
+            pepCacheService = get(),
         )
     }
 
@@ -471,7 +486,7 @@ fun common(app: Application, config: Configuration) = module {
             pepCacheService = get(),
             oppgaveRepository = get(),
             reservasjonV3Tjeneste = get(),
-            historikkvaskChannel = get(named("historikkvaskChannelK9Sak"))
+            historikkvaskChannel = get(named("historikkvaskChannelK9Sak")),
         )
     }
     single {
@@ -484,7 +499,7 @@ fun common(app: Application, config: Configuration) = module {
             pepCacheService = get(),
             oppgaveRepository = get(),
             reservasjonV3Tjeneste = get(),
-            historikkvaskChannel = get(named("historikkvaskChannelK9Tilbake"))
+            historikkvaskChannel = get(named("historikkvaskChannelK9Tilbake")),
         )
     }
 
@@ -545,7 +560,7 @@ fun common(app: Application, config: Configuration) = module {
             config = get(),
             transactionalManager = get(),
             k9SakTilLosAdapterTjeneste = get(),
-            k9SakBerikerKlient = get()
+            k9SakBerikerKlient = get(),
         )
     }
 
@@ -554,7 +569,7 @@ fun common(app: Application, config: Configuration) = module {
             eventRepository = get(),
             oppgaveV3Tjeneste = get(),
             config = get(),
-            transactionalManager = get()
+            transactionalManager = get(),
         )
     }
 
@@ -678,8 +693,22 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        NøkkeltallService(
+        StatusService(
             queryService = get(),
+            oppgaverGruppertRepository = get(),
+        )
+    }
+
+    single {
+        DagensTallService(
+            queryService = get(),
+        )
+    }
+
+    single {
+        FerdigstiltePerEnhetService(
+            enheter = config.enheter(),
+            queryService = get()
         )
     }
 }

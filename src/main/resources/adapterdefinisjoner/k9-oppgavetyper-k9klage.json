@@ -92,6 +92,11 @@
           "påkrevd": false
         },
         {
+          "id": "liggerHosBeslutter",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
           "id": "ansvarligBeslutter",
           "visPåOppgave": true,
           "påkrevd": false
@@ -161,6 +166,18 @@
           "id": "oversendtKabalTidspunkt",
           "visPåOppgave": false,
           "påkrevd": false
+        },
+        {
+          "id": "ferdigstiltTidspunkt",
+          "visPåOppgave": false,
+          "påkrevd": false,
+          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.FerdigstiltTidspunkt"
+        },
+        {
+          "id": "ferdigstiltEnhet",
+          "visPåOppgave": false,
+          "påkrevd": false,
+          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.FerdigstiltEnhet"
         }
       ]
     }
