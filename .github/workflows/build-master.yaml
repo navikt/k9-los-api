@@ -59,31 +59,37 @@ jobs:
   deploy-dev:
     name: Deploy dev
     permissions:
-      id-token: write
-      contents: write
+      id-token: read
+      contents: read
     needs: [ build, test ]
-    # ser litt rart ut å bruke 'maven-deploy', siden dette er en gradle-applikasjon, men den inneholder ikke noe spesifikt for maven
-    uses: navikt/sif-gha-workflows/.github/workflows/maven-deploy.yml@main
-    with:
-      gar: true
-      image: ${{ needs.build.outputs.image }}
-      namespace: k9saksbehandling
-      cluster: dev-fss
-      input_vars_file: nais/dev-fss.json
-    secrets: inherit
+    environment: "dev-fss:k9saksbehandling"
+    concurrency: "dev-fss:k9saksbehandling"
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # ratchet:actions/checkout@v3
+      - name: Deploy til dev-fss
+        uses: nais/deploy/actions/deploy@c73efa8384743a5c14b94d4a4b9c1cf5a260b532 # ratchet:nais/deploy/actions/deploy@v2
+        env:
+          IMAGE: ${{ needs.build.outputs.image }}
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          CLUSTER: dev-fss
+          RESOURCE: nais/naiserator.yaml
+          VARS: nais/dev-fss.json
 
   deploy-prod:
     name: Deploy prod
     permissions:
-      id-token: write
-      contents: write
-    needs: [ build, test ]
-    # ser litt rart ut å bruke 'maven-deploy', siden dette er en gradle-applikasjon, men den inneholder ikke noe spesifikt for maven
-    uses: navikt/sif-gha-workflows/.github/workflows/maven-deploy.yml@main
-    with:
-      gar: true
-      image: ${{ needs.build.outputs.image }}
-      namespace: k9saksbehandling
-      cluster: prod-fss
-      input_vars_file: nais/prod-fss.json
-    secrets: inherit
+      id-token: read
+      contents: read
+    needs: [ build, test, deploy-dev ]
+    environment: "prod-fss:k9saksbehandling"
+    concurrency: "prod-fss:k9saksbehandling"
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # ratchet:actions/checkout@v3
+      - name: Deploy til prod-fss
+        uses: nais/deploy/actions/deploy@c73efa8384743a5c14b94d4a4b9c1cf5a260b532 # ratchet:nais/deploy/actions/deploy@v2
+        env:
+          IMAGE: ${{ needs.build.outputs.image }}
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          CLUSTER: prod-fss
+          RESOURCE: nais/naiserator.yaml
+          VARS: nais/prod-fss.json
