@@ -74,7 +74,7 @@ jobs:
 
   deploy-prod:
     runs-on: ubuntu-latest
-    needs: [ build, test, deploy-dev ]
+    needs: [ deploy-dev ]
     environment: "prod-fss:k9saksbehandling"
     concurrency: "prod-fss:k9saksbehandling"
     steps:
@@ -87,34 +87,3 @@ jobs:
           CLUSTER: prod-fss
           RESOURCE: nais/naiserator.yaml
           VARS: nais/prod-fss.json
-
-  close-old-deployment-reviews:
-    runs-on: ubuntu-latest
-    needs: [ build, test, deploy-dev ]
-    steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # ratchet:actions/checkout@v3
-
-      - name: Close all older deployment reviews
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          PENDING_REVIEWS=$(gh api \
-            repos/${{ github.repository }}/environments/prod-fss:k9saksbehandling/deployment_protection_rules/pending_deployments \
-            --jq '.pending_deployments[] | {run_id: .deployment.workflow_run_id, deploy_id: .deployment.id}')
-
-          # Lukk ALLE andre deployment reviews unntatt for denne run
-          echo "$PENDING_REVIEWS" | jq -c '.' | while read -r review; do
-            RUN_ID=$(echo "$review" | jq -r '.run_id')
-            DEPLOY_ID=$(echo "$review" | jq -r '.deploy_id')
-
-            # Sjekk om review er fra en annen workflow run
-            if [[ "$RUN_ID" != "${{ github.run_id }}" ]]; then
-              echo "Lukker deployment review for Run ID: $RUN_ID"
-              gh api \
-                --method POST \
-                repos/${{ github.repository }}/actions/deployments/$DEPLOY_ID/reject \
-                -f environment_name="prod-fss:k9saksbehandling" \
-                -f state="rejected" \
-                -f comment="Automatisk avvist - nyere deployment er tilgjengelig"
-            fi
-          done
