@@ -13,7 +13,7 @@ spec:
     initialDelay: 20
     timeout: 1
     periodSeconds: 5
-    failureThreshold: 10
+    failureThreshold: 100
   readiness:
     path: isready
     initialDelay: 20
