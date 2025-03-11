@@ -1,6 +1,8 @@
-name: Build Pull Request
+name: Build Branch
 on:
-  pull_request:
+  push:
+    branches-ignore:
+      - master
     paths-ignore:
       - '**.md'
       - '**.MD'
@@ -15,4 +17,4 @@ jobs:
       contents: read
     secrets: inherit
     with:
-      readertoken: false
+      javaversion: 21

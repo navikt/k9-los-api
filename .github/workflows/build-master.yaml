@@ -9,6 +9,7 @@ on:
       - '.gitignore'
       - 'LICENSE'
       - 'CODEOWNERS'
+  workflow_dispatch:
 
 jobs:
   codeql:
@@ -20,7 +21,7 @@ jobs:
       security-events: write
     secrets: inherit
     with:
-      readertoken: false
+      javaversion: 21
       package-command: './gradlew clean build -x test'
       branch: master
 
@@ -30,7 +31,7 @@ jobs:
       contents: read
     secrets: inherit
     with:
-      readertoken: false
+      javaversion: 21
 
   build:
     uses: navikt/sif-gha-workflows/.github/workflows/gradle-build.yml@main
@@ -40,8 +41,7 @@ jobs:
     secrets: inherit
     with:
       team: k9saksbehandling
-      dockercontext: .
-      readertoken: false
+      javaversion: 21
 
   trivy:
     needs: [ build ]
@@ -61,8 +61,9 @@ jobs:
     uses: navikt/sif-gha-workflows/.github/workflows/gradle-deploy.yml@main
     permissions:
       contents: read
+      id-token: write
     secrets: inherit
     with:
       image: ${{ needs.build.outputs.image }}
       environment: fss
-      deploy-prod: ${{ startsWith(github.ref, 'refs/heads/master') }}
+      deploy-prod: false
