@@ -59,9 +59,6 @@ jobs:
   deploy-dev:
     name: Deploy dev
     runs-on: ubuntu-latest
-    permissions:
-      id-token: read
-      contents: read
     needs: [ build, test ]
     environment: "dev-fss:k9saksbehandling"
     concurrency: "dev-fss:k9saksbehandling"
@@ -79,9 +76,6 @@ jobs:
   deploy-prod:
     name: Deploy prod
     runs-on: ubuntu-latest
-    permissions:
-      id-token: read
-      contents: read
     needs: [ build, test, deploy-dev ]
     environment: "prod-fss:k9saksbehandling"
     concurrency: "prod-fss:k9saksbehandling"
