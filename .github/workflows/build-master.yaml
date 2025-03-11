@@ -58,6 +58,7 @@ jobs:
 
   deploy-dev:
     name: Deploy dev
+    runs-on: ubuntu-latest
     permissions:
       id-token: read
       contents: read
@@ -77,6 +78,7 @@ jobs:
 
   deploy-prod:
     name: Deploy prod
+    runs-on: ubuntu-latest
     permissions:
       id-token: read
       contents: read
