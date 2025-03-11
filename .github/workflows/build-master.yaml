@@ -56,14 +56,34 @@ jobs:
       image: ${{ needs.build.outputs.image }}
       team: k9saksbehandling
 
-  deploy:
-    needs: [ test, build ]
-    uses: navikt/sif-gha-workflows/.github/workflows/gradle-deploy.yml@main
+  deploy-dev:
+    name: Deploy dev
     permissions:
-      contents: read
       id-token: write
-    secrets: inherit
+      contents: write
+    needs: [ build, test ]
+    # ser litt rart ut å bruke 'maven-deploy', siden dette er en gradle-applikasjon, men den inneholder ikke noe spesifikt for maven
+    uses: navikt/sif-gha-workflows/.github/workflows/maven-deploy.yml@main
     with:
+      gar: true
       image: ${{ needs.build.outputs.image }}
-      environment: fss
-      deploy-prod: false
+      namespace: k9saksbehandling
+      cluster: dev-fss
+      input_vars_file: nais/dev-fss.json
+    secrets: inherit
+
+  deploy-prod:
+    name: Deploy prod
+    permissions:
+      id-token: write
+      contents: write
+    needs: [ build, test ]
+    # ser litt rart ut å bruke 'maven-deploy', siden dette er en gradle-applikasjon, men den inneholder ikke noe spesifikt for maven
+    uses: navikt/sif-gha-workflows/.github/workflows/maven-deploy.yml@main
+    with:
+      gar: true
+      image: ${{ needs.build.outputs.image }}
+      namespace: k9saksbehandling
+      cluster: prod-fss
+      input_vars_file: nais/prod-fss.json
+    secrets: inherit
