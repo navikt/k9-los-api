@@ -72,49 +72,9 @@ jobs:
           RESOURCE: nais/naiserator.yaml
           VARS: nais/dev-fss.json
 
-  close-old-deployment-reviews:
-    runs-on: ubuntu-latest
-    needs: [ build, test, deploy-dev ]
-    permissions:
-      deployments: write
-    steps:
-      - name: Close older deployment reviews
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "Fetching pending deployment reviews..."
-          PENDING_REVIEWS=$(gh api \
-            repos/${{ github.repository }}/environments/prod-fss:k9saksbehandling/deployment_protection_rules/pending_deployments \
-            --jq '.pending_deployments[] | {run_id: .deployment.workflow_run_id, deploy_id: .deployment.id}')
-          
-          if [ -z "$PENDING_REVIEWS" ]; then
-            echo "No pending deployment reviews found."
-            exit 0
-          fi
-
-          echo "Found pending reviews: $PENDING_REVIEWS"
-          
-          # Close all deployment reviews except for this run
-          echo "$PENDING_REVIEWS" | jq -c '.' | while read -r review; do
-            RUN_ID=$(echo "$review" | jq -r '.run_id')
-            DEPLOY_ID=$(echo "$review" | jq -r '.deploy_id')
-            
-            if [[ "$RUN_ID" != "${{ github.run_id }}" ]]; then
-              echo "Closing deployment review for Run ID: $RUN_ID, Deploy ID: $DEPLOY_ID"
-              gh api \
-                --method POST \
-                repos/${{ github.repository }}/actions/deployments/$DEPLOY_ID/reject \
-                -f environment_name="prod-fss:k9saksbehandling" \
-                -f state="rejected" \
-                -f comment="Automatically rejected - newer deployment is available"
-            else
-              echo "Skipping current run's deployment review: $RUN_ID"
-            fi
-          done
-
   deploy-prod:
     runs-on: ubuntu-latest
-    needs: [ deploy-dev, close-old-deployment-reviews ]
+    needs: [ deploy-dev ]
     environment: "prod-fss:k9saksbehandling"
     concurrency: "prod-fss:k9saksbehandling"
     steps:
