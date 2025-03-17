@@ -22,7 +22,7 @@ CREATE TABLE oppgavefelt_verdi_inaktiv_part
     PARTITION OF oppgavefelt_verdi_part
     FOR VALUES IN (false);
 
--- For aktive oppgaver, deler vi videre etter oppgavestatus
+-- For aktive oppgaver, deler videre etter oppgavestatus
 CREATE TABLE oppgavefelt_verdi_aktiv_aapen_venter_part
     PARTITION OF oppgavefelt_verdi_aktiv_part
     FOR VALUES IN ('AAPEN', 'VENTER');

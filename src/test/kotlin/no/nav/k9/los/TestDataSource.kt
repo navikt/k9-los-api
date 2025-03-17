@@ -85,6 +85,7 @@ abstract class AbstractPostgresTest {
                 omrade,
                 oppgavetype,
                 oppgavefelt,
+                oppgavefelt_verdi_part,
                 oppgave_v3,
                 oppgavefelt_Verdi,
                 oppgave_v3_aktiv,

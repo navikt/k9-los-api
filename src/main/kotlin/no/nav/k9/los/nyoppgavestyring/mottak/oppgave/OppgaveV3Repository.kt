@@ -16,7 +16,7 @@ class OppgaveV3Repository(
     private val dataSource: DataSource,
     private val oppgavetypeRepository: OppgavetypeRepository,
 ) {
-
+    private val oppgavefeltverdiPartisjonertRepository = OppgavefeltverdiPartisjonertRepository(oppgavetypeRepository)
     private val log = LoggerFactory.getLogger(OppgaveV3Repository::class.java)
 
     fun nyOppgaveversjon(oppgave: OppgaveV3, tx: TransactionalSession) {
@@ -30,6 +30,7 @@ class OppgaveV3Repository(
         eksisterendeId?.let {
             deaktiverVersjon(eksisterendeId, oppgave.endretTidspunkt, tx)
             deaktiverOppgavefelter(eksisterendeId, tx)
+            oppgavefeltverdiPartisjonertRepository.deaktiverOppgavefelter(eksisterendeId, tx)
         }
 
         val nyVersjon = eksisterendeVersjon?.plus(1) ?: 0
@@ -42,6 +43,7 @@ class OppgaveV3Repository(
             log.info("Oppdaterer ikke aktiv oppgave, da hendelsen gjaldt frisinn for oppgaveId ${oppgave.eksternId}")
         } else {
             AktivOppgaveRepository.ajourholdAktivOppgave(oppgave, nyVersjon, tx)
+            oppgavefeltverdiPartisjonertRepository.insertFelter(oppgaveId, oppgave, tx)
         }
     }
 
