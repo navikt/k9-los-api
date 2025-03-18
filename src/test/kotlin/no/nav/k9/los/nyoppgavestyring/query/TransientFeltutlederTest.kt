@@ -2,42 +2,37 @@ package no.nav.k9.los.nyoppgavestyring.query
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
-import assertk.assertions.isFalse
-import assertk.assertions.isNotEmpty
-import assertk.assertions.isTrue
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import io.mockk.mockk
-import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
+import kotliquery.queryOf
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveId
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
-import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveId
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Id
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
-import java.io.StringWriter
 import java.time.Duration
 import java.time.LocalDateTime
 
 class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
 
     private lateinit var transactionalManager: TransactionalManager
+    private lateinit var oppgaveQueryRepository: OppgaveQueryRepository
 
     @BeforeEach
     fun setup() {
         transactionalManager = get()
+        oppgaveQueryRepository = get()
     }
 
     //Følgende tester tester LøpendeDurationTransientFeltutleder via en av subklassene
@@ -51,12 +46,12 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        val result = kjørQuery(oppgaveQuery)
+        val result = oppgaveQueryRepository.query(QueryRequest(oppgaveQuery))
         assertThat(result.size).isEqualTo(1)
 
         val oppgave = hentOppgave(result[0])
 
-        assertThat(Duration.parse(oppgave.hentVerdi("tidSidenMottattDato")).toDays()).isEqualTo(20)
+        assertThat(Duration.parse(oppgave.hentVerdi("tidSidenMottattDato")!!).toDays()).isEqualTo(20)
     }
 
     @Test
@@ -72,12 +67,12 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        val result = kjørQuery(oppgaveQuery)
+        val result = oppgaveQueryRepository.query(QueryRequest(oppgaveQuery))
         assertThat(result.size).isEqualTo(2)
 
         val oppgave = hentOppgave(result[0])
 
-        assertThat(Duration.parse(oppgave.hentVerdi("tidSidenMottattDato")).toDays()).isEqualTo(10)
+        assertThat(Duration.parse(oppgave.hentVerdi("tidSidenMottattDato")!!).toDays()).isEqualTo(10)
     }
 
     @Test
@@ -93,12 +88,12 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        val result = kjørQuery(oppgaveQuery)
+        val result = oppgaveQueryRepository.query(QueryRequest(oppgaveQuery))
         assertThat(result.size).isEqualTo(2)
 
         val oppgave = hentOppgave(result[0])
 
-        assertThat(Duration.parse(oppgave.hentVerdi("tidSidenMottattDato")).toDays()).isEqualTo(20)
+        assertThat(Duration.parse(oppgave.hentVerdi("tidSidenMottattDato")!!).toDays()).isEqualTo(20)
     }
 
 
@@ -123,11 +118,15 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
             .lagOgLagre()
     }
 
-    private fun hentOppgave(id: AktivOppgaveId): Oppgave {
+    private fun hentOppgave(id: OppgaveId): Oppgave {
         val aktivOppgaveRepository = get<AktivOppgaveRepository>()
+        val oppgaveRepository = get<OppgaveRepository>()
 
         val oppgave = transactionalManager.transaction { tx ->
-            aktivOppgaveRepository.hentOppgaveForId(tx, id)
+            when (id) {
+                is AktivOppgaveId -> aktivOppgaveRepository.hentOppgaveForId(tx, id)
+                is OppgaveV3Id -> oppgaveRepository.hentOppgaveForId(tx, id)
+            }
         }
         return oppgave
     }
@@ -151,17 +150,5 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
             feltType.eksternId,
             økende = økende
         )
-    }
-
-    private fun kjørQuery(oppgaveQuery: OppgaveQuery): List<AktivOppgaveId> {
-        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
-        val om = ObjectMapper().dusseldorfConfigured()
-            .enable(SerializationFeature.INDENT_OUTPUT)
-            .registerKotlinModule()
-        val sw = StringWriter()
-        om.writeValue(sw, oppgaveQuery)
-
-        val result = oppgaveQueryRepository.query(QueryRequest(oppgaveQuery))
-        return result
     }
 }

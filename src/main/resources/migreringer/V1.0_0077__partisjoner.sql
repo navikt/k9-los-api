@@ -76,7 +76,6 @@ create index ofv_aktiv_lukket_ferdigstilt_dato_idx on oppgavefelt_verdi_aktiv_lu
     ferdigstilt_dato,
     omrade_ekstern_id,
     feltdefinisjon_ekstern_id,
-    oppgavetype_ekstern_id,
     verdi,
     oppgave_id
     );

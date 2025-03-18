@@ -2,14 +2,13 @@ package no.nav.k9.los.nyoppgavestyring.query.mapping
 
 import assertk.assertThat
 import assertk.assertions.contains
+import assertk.assertions.containsOnly
 import assertk.assertions.hasSize
-import assertk.assertions.isEqualTo
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.felter
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.db.OmrådeOgKode
-import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQuerySqlBuilder
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgavefeltMedMer
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
@@ -51,7 +50,7 @@ class OppgaveQueryToSqlMapperTest {
             LocalDateTime.now()
         )
 
-        assertThat(sqlOppgaveQuery.oppgavestatusFilter).isEqualTo(listOf(Oppgavestatus.AAPEN, Oppgavestatus.LUKKET))
+        assertThat(sqlOppgaveQuery.oppgavestatusFilter).containsOnly(Oppgavestatus.AAPEN, Oppgavestatus.LUKKET)
     }
 
     @Test
@@ -82,7 +81,7 @@ class OppgaveQueryToSqlMapperTest {
             LocalDateTime.now()
         )
 
-        assertThat(sqlOppgaveQuery.oppgavestatusFilter).isEqualTo(listOf(Oppgavestatus.AAPEN, Oppgavestatus.VENTER))
+        assertThat(sqlOppgaveQuery.oppgavestatusFilter).containsOnly(Oppgavestatus.AAPEN, Oppgavestatus.VENTER)
     }
 
     @Test
@@ -108,22 +107,8 @@ class OppgaveQueryToSqlMapperTest {
             LocalDateTime.now()
         )
 
-        val sql = byggSql(sqlBuilder)
         assertThat(sqlBuilder.getQuery()).contains(sqlBuilder.getParams().keys)
         assertThat(sqlBuilder.getParams()).hasSize(8 * 3) // totalt 8 betingelser, hver av de har parameter for feltkode, område og verdi
-    }
-
-    private fun byggSql(sqlBuilder: OppgaveQuerySqlBuilder): String {
-        var query = sqlBuilder.getQuery()
-        sqlBuilder.getParams().asIterable().reversed().forEach { (param, verdi) ->
-            query = query.replaceFirst(
-                ":$param", when (verdi) {
-                    is String, is LocalDateTime -> "'$verdi'"
-                    else -> verdi.toString()
-                }
-            )
-        }
-        return query
     }
 
     private fun byggFilterK9(

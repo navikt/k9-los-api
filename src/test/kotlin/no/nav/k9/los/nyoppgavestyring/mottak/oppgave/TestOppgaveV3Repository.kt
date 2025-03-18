@@ -40,7 +40,7 @@ class TestOppgaveV3Repository(
                     val oppgavetype =
                         oppgavetypeRepository.hentOppgavetype(row.string("kildeomrade"), row.string("ot_ekstern_id"))
                     OppgaveV3(
-                        id = OppgaveId(row.long("id")),
+                        id = OppgaveV3Id(row.long("id")),
                         eksternId = row.string("ekstern_id"),
                         eksternVersjon = row.string("ekstern_versjon"),
                         oppgavetype = oppgavetype,
@@ -49,7 +49,7 @@ class TestOppgaveV3Repository(
                         kildeområde = row.string("kildeomrade"),
                         reservasjonsnøkkel = row.stringOrNull("reservasjonsnokkel") ?: "mangler_historikkvask",
                         aktiv = row.boolean("aktiv"),
-                        felter = hentFeltverdier(OppgaveId(row.long("id")), oppgavetype, tx)
+                        felter = hentFeltverdier(OppgaveV3Id(row.long("id")), oppgavetype, tx)
                     )
                 }.asList
             )

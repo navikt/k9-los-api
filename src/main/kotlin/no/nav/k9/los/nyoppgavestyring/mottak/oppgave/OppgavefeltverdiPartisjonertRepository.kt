@@ -12,8 +12,8 @@ class OppgavefeltverdiPartisjonertRepository(val oppgavetypeRepository: Oppgavet
 
     @WithSpan
     fun ajourholdOppgavefeltverdier(oppgave: OppgaveV3, nyVersjon: Long, tx: TransactionalSession) {
+        if (oppgave.id == null) return
         check(nyVersjon >= 0) { "Ny versjon må være 0 eller høyere: $nyVersjon" }
-        checkNotNull(oppgave.id) { "Trenger oppgaveId når det skal gjøres oppdatering" }
 
         val eksisterendeFelter =
             hentFeltverdier(
@@ -95,7 +95,7 @@ class OppgavefeltverdiPartisjonertRepository(val oppgavetypeRepository: Oppgavet
         )
     }
 
-    private fun slettFelter(oppgaveId: OppgaveId, tx: TransactionalSession) {
+    fun slettFelter(oppgaveId: OppgaveId, tx: TransactionalSession) {
         tx.run(
             queryOf(
                 "delete from oppgavefelt_verdi_part where oppgave_id = :oppgave_id",

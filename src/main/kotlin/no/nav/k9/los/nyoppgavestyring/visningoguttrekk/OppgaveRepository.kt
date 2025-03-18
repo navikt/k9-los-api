@@ -4,6 +4,7 @@ import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.db.util.InClauseHjelper
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Id
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.spi.felter.HentVerdiInput
@@ -66,7 +67,7 @@ class OppgaveRepository(
         return oppgaver
     }
 
-    fun hentOppgaveForId(tx: TransactionalSession, id: Long, now: LocalDateTime = LocalDateTime.now()): Oppgave {
+    fun hentOppgaveForId(tx: TransactionalSession, id: OppgaveV3Id, now: LocalDateTime = LocalDateTime.now()): Oppgave {
         val oppgave = tx.run(
             queryOf(
                 """
@@ -74,7 +75,7 @@ class OppgaveRepository(
                 from oppgave_v3 ov
                 where ov.id = :id
             """.trimIndent(),
-                mapOf("id" to id)
+                mapOf("id" to id.id)
             ).map { row ->
                 mapOppgave(row, now, tx)
             }.asSingle

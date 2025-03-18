@@ -168,7 +168,6 @@ class FerdigstiltePerEnhetService(
                     )
                 }
             ),
-            fraAktiv = false
         )
         return queryService.queryForAntall(request).toInt()
     }

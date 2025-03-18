@@ -7,8 +7,20 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
 import java.time.LocalDateTime
 
 object OppgaveQueryToSqlMapper {
+    private fun utledSqlBuilder(
+        felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
+        request: QueryRequest,
+        now: LocalDateTime
+    ): OppgaveQuerySqlBuilder {
+        val oppgavestatusFilter = traverserFiltereOgFinnOppgavestatusfilter(request)
+        return when {
+            oppgavestatusFilter.isEmpty() || oppgavestatusFilter.contains(Oppgavestatus.LUKKET) -> PartisjonertOppgaveQuerySqlBuilder(felter, oppgavestatusFilter, now)
+            else -> AktivOppgaveQuerySqlBuilder(felter, oppgavestatusFilter, now)
+        }
+    }
+
     fun toSqlOppgaveQuery(request: QueryRequest, felter: Map<OmrådeOgKode, OppgavefeltMedMer>, now: LocalDateTime): OppgaveQuerySqlBuilder {
-        val query = OppgaveQuerySqlBuilder(felter, traverserFiltereOgFinnOppgavestatusfilter(request), now, request.fraAktiv)
+        val query = utledSqlBuilder(felter, request, now)
         val combineOperator = CombineOperator.AND
 
         håndterFiltere(query, felter, OppgavefilterRens.rens(felter, request.oppgaveQuery.filtere), combineOperator)
@@ -26,7 +38,7 @@ object OppgaveQueryToSqlMapper {
         felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
         now: LocalDateTime
     ): OppgaveQuerySqlBuilder {
-        val queryBuilder = OppgaveQuerySqlBuilder(felter, traverserFiltereOgFinnOppgavestatusfilter(request), now, request.fraAktiv)
+        val queryBuilder = utledSqlBuilder(felter, request, now)
         val combineOperator = CombineOperator.AND
         håndterFiltere(queryBuilder, felter, OppgavefilterRens.rens(felter, request.oppgaveQuery.filtere), combineOperator)
         if (request.fjernReserverte) { queryBuilder.utenReservasjoner() }

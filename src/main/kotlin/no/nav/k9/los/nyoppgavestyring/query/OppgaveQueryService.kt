@@ -11,6 +11,8 @@ import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.rest.CoroutineRequestContext
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveId
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveId
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Id
 import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelter
@@ -33,12 +35,31 @@ class OppgaveQueryService {
     private val pepClient by inject<IPepClient>(IPepClient::class.java)
 
     @WithSpan
-    fun queryForOppgaveId(oppgaveQuery: QueryRequest): List<AktivOppgaveId> {
+    fun queryForOppgave(oppgaveQuery: QueryRequest): List<Oppgave> {
+        return using(sessionOf(datasource)) {
+            it.transaction { tx -> queryForOppgave(tx, oppgaveQuery) }
+        }
+    }
+
+    @WithSpan
+    fun queryForOppgave(tx: TransactionalSession, oppgaveQuery: QueryRequest): List<Oppgave> {
+        val now = LocalDateTime.now()
+        val oppgaveIder = queryForOppgaveId(tx, oppgaveQuery)
+        return oppgaveIder.map { oppgaveId ->
+            when (oppgaveId) {
+                is AktivOppgaveId -> aktivOppgaveRepository.hentOppgaveForId(tx, oppgaveId, now)
+                is OppgaveV3Id -> oppgaveRepository.hentOppgaveForId(tx, oppgaveId, now)
+            }
+        }
+    }
+
+    @WithSpan
+    private fun queryForOppgaveId(oppgaveQuery: QueryRequest): List<OppgaveId> {
         return oppgaveQueryRepository.query(oppgaveQuery)
     }
 
     @WithSpan
-    fun queryForOppgaveId(tx: TransactionalSession, oppgaveQuery: QueryRequest): List<AktivOppgaveId> {
+    private fun queryForOppgaveId(tx: TransactionalSession, oppgaveQuery: QueryRequest): List<OppgaveId> {
         return oppgaveQueryRepository.query(tx, oppgaveQuery, LocalDateTime.now())
     }
 
@@ -88,13 +109,14 @@ class OppgaveQueryService {
             it.transaction { tx -> query(tx, oppgaveQuery, idToken) }
         }
     }
+
     @WithSpan
     fun query(tx: TransactionalSession, request: QueryRequest, idToken: IIdToken): List<Oppgaverad> {
         val now = LocalDateTime.now()
         val oppgaveIder = oppgaveQueryRepository.query(tx, request, now)
 
         val oppgaverader = runBlocking(context = CoroutineRequestContext(idToken)) {
-            mapAktiveOppgaver(tx, request, oppgaveIder, now)
+            mapOppgaver(tx, request, oppgaveIder, now)
         }
 
         if (request.oppgaveQuery.select.isEmpty()) {
@@ -110,12 +132,12 @@ class OppgaveQueryService {
     }
 
     @WithSpan
-    private suspend fun mapAktiveOppgaver(tx: TransactionalSession, request: QueryRequest, oppgaveIder: List<AktivOppgaveId>, now: LocalDateTime): List<Oppgaverad> {
+    private suspend fun mapOppgaver(tx: TransactionalSession, request: QueryRequest, oppgaveIder: List<OppgaveId>, now: LocalDateTime): List<Oppgaverad> {
         val oppgaverader = mutableListOf<Oppgaverad>()
         val limit = request.avgrensning?.limit ?: -1
         var antall = 0
         for (oppgaveId in oppgaveIder) {
-            val oppgaverad = mapAktivOppgave(tx, request.oppgaveQuery, oppgaveId, now)
+            val oppgaverad = mapOppgave(tx, request.oppgaveQuery, oppgaveId, now)
             if (oppgaverad != null) {
                 oppgaverader.add(oppgaverad)
                 antall++
@@ -128,8 +150,11 @@ class OppgaveQueryService {
     }
 
     @WithSpan
-    private suspend fun mapAktivOppgave(tx: TransactionalSession, oppgaveQuery: OppgaveQuery, oppgaveId: AktivOppgaveId, now: LocalDateTime): Oppgaverad? {
-        val oppgave = aktivOppgaveRepository.hentOppgaveForId(tx, oppgaveId, now)
+    private suspend fun mapOppgave(tx: TransactionalSession, oppgaveQuery: OppgaveQuery, oppgaveId: OppgaveId, now: LocalDateTime): Oppgaverad? {
+        val oppgave = when (oppgaveId) {
+            is AktivOppgaveId -> aktivOppgaveRepository.hentOppgaveForId(tx, oppgaveId, now)
+            is OppgaveV3Id -> oppgaveRepository.hentOppgaveForId(tx, oppgaveId, now)
+        }
 
         if (!pepClient.harTilgangTilOppgaveV3(oppgave = oppgave, action = Action.read, auditlogging = Auditlogging.LOGG_VED_PERMIT)) {
             return null

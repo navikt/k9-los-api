@@ -825,7 +825,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         assertThat(queryService.queryForAntall(QueryRequest(query))).isEqualTo(2)
 
         assertThat(
-            queryService.queryForOppgaveId(
+            queryService.queryForOppgave(
                 QueryRequest(
                     query,
                     avgrensning = Avgrensning.maxAntall(1)
@@ -847,7 +847,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
     }
 
     @Test
-    fun `ytelse - kan ikke finne lukkede oppgaver fordi de ikke ligger i tabell som brukes for søket - pga ytelse`() {
+    fun `kan finne lukkede oppgaver, fra partisjonert tabell`() {
         OppgaveTestDataBuilder()
             .lagOgLagre()
 
@@ -861,11 +861,11 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        assertThat(oppgaveQueryRepository.query(QueryRequest(oppgaveQuery)).size).isEqualTo(0)
+        assertThat(oppgaveQueryRepository.query(QueryRequest(oppgaveQuery)).size).isEqualTo(1)
     }
 
     @Test
-    fun `ytelse - oppgavequery med filter på oppgavestatus skal ikke filtrere vekk oppgave med samme status`() {
+    fun `oppgavequery med filter på oppgavestatus skal håndtere alle statuser`() {
         OppgaveTestDataBuilder()
             .lagOgLagre()
 
@@ -895,7 +895,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        assertThat(oppgaveQueryRepository.query(QueryRequest(oppgaveQuery4)).size).isEqualTo(1)
+        assertThat(oppgaveQueryRepository.query(QueryRequest(oppgaveQuery4)).size).isEqualTo(2)
 
         val oppgaveQuery5 = OppgaveQuery(
             listOf(
@@ -908,7 +908,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
             )
         )
 
-        assertThat(oppgaveQueryRepository.query(QueryRequest(oppgaveQuery5)).size).isEqualTo(1)
+        assertThat(oppgaveQueryRepository.query(QueryRequest(oppgaveQuery5)).size).isEqualTo(2)
     }
 
     @Test
