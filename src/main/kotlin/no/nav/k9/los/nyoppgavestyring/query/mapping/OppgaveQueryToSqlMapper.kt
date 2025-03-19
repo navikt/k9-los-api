@@ -15,7 +15,7 @@ object OppgaveQueryToSqlMapper {
         val oppgavestatusFilter = traverserFiltereOgFinnOppgavestatusfilter(request)
         return when {
             oppgavestatusFilter.isEmpty() || oppgavestatusFilter.contains(Oppgavestatus.LUKKET) -> PartisjonertOppgaveQuerySqlBuilder(felter, oppgavestatusFilter, now)
-            else -> AktivOppgaveQuerySqlBuilder(felter, oppgavestatusFilter, now)
+            else -> AktivOppgaveQuerySqlBuilder(felter, now)
         }
     }
 

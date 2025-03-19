@@ -5,10 +5,9 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.EgenAnsatt
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
-import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype.*
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype.INTEGER
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveId
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveId
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.mapping.CombineOperator
 import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
 import no.nav.k9.los.spi.felter.OrderByInput
@@ -19,7 +18,6 @@ import java.time.LocalDateTime
 
 class AktivOppgaveQuerySqlBuilder(
     val felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
-    override val oppgavestatusFilter: List<Oppgavestatus>,
     val now: LocalDateTime
 ) : OppgaveQuerySqlBuilder {
     private var selectPrefix = """

@@ -19,7 +19,7 @@ import java.time.LocalDateTime
 
 class PartisjonertOppgaveQuerySqlBuilder(
     val felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
-    override val oppgavestatusFilter: List<Oppgavestatus>,
+    oppgavestatusFilter: List<Oppgavestatus>,
     val now: LocalDateTime,
     private val ferdigstiltDato: LocalDateTime? = null,
 ) : OppgaveQuerySqlBuilder {
