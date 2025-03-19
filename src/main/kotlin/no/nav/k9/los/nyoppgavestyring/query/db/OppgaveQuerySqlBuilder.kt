@@ -23,4 +23,16 @@ interface OppgaveQuerySqlBuilder {
     fun getQuery(): String
     fun getParams(): Map<String, Any?>
     fun mapRowTilId(row: Row): OppgaveId
+
+    /** Skal bare brukes til debugging, siden parametrene settes inn ukritisk */
+    fun unsafeDebug(): String {
+        var queryWithParams = getQuery()
+
+        // erstatter placeholdere reversert siden f.eks. ':feltverdi1' også matcher ':feltverdi10'
+        for ((key, value) in getParams().toSortedMap().reversed()) {
+            queryWithParams = queryWithParams.replace(":$key", if (value is Number) value.toString() else "'" + value.toString() + "'")
+        }
+
+        return queryWithParams
+    }
 }

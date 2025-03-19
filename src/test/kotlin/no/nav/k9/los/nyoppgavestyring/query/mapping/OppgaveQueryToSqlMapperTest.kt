@@ -49,7 +49,7 @@ class OppgaveQueryToSqlMapperTest {
     }
 
     @Test
-    fun `skal traversere hele treet med filtre og sette alle som betingelser`() {
+    fun `skal traversere hele treet med filtre og sette alle som betingelser, for aktiv-tabell`() {
         val oppgaveQuery = OppgaveQuery(
             listOf(
                 // 2 betingelser
@@ -59,9 +59,9 @@ class OppgaveQueryToSqlMapperTest {
                     Oppgavestatus.AAPEN.kode,
                     Oppgavestatus.VENTER.kode
                 ),
-                // 2 betingelser (starten og slutten på dagen)
+                // 2 betingelser (starten og slutten på dagen) med feltkode, område og verdi
                 byggFilter(FeltType.MOTTATT_DATO, FeltverdiOperator.EQUALS, "2024-12-24"),
-                // 4 betingelser
+                // 4 betingelser med feltkode, område og verdi
                 byggFilter(FeltType.YTELSE_TYPE, FeltverdiOperator.IN, "PSB", "OMP", "FOO", "BAR"),
             )
         )
@@ -72,7 +72,35 @@ class OppgaveQueryToSqlMapperTest {
         )
 
         assertThat(sqlBuilder.getQuery()).contains(sqlBuilder.getParams().keys)
-        assertThat(sqlBuilder.getParams()).hasSize(8 * 3) // totalt 8 betingelser, hver av de har parameter for feltkode, område og verdi
+        assertThat(sqlBuilder.getParams()).hasSize(20)
+    }
+
+    @Test
+    fun `skal traversere hele treet med filtre og sette alle som betingelser, for partisjonert-tabell`() {
+        val oppgaveQuery = OppgaveQuery(
+            listOf(
+                // 3 betingelser på status på oppgave_v3
+                byggFilter(
+                    FeltType.OPPGAVE_STATUS,
+                    FeltverdiOperator.IN,
+                    Oppgavestatus.AAPEN.kode,
+                    Oppgavestatus.VENTER.kode,
+                    Oppgavestatus.LUKKET.kode,
+                ),
+                // 2 betingelser (starten og slutten på dagen) med feltkode, område og verdi
+                byggFilter(FeltType.MOTTATT_DATO, FeltverdiOperator.EQUALS, "2024-12-24"),
+                // 4 betingelser med feltkode, område og verdi
+                byggFilter(FeltType.YTELSE_TYPE, FeltverdiOperator.IN, "PSB", "OMP", "FOO", "BAR"),
+            )
+        )
+        val sqlBuilder = OppgaveQueryToSqlMapper.toSqlOppgaveQuery(
+            QueryRequest(oppgaveQuery),
+            felter,
+            LocalDateTime.now()
+        )
+
+        assertThat(sqlBuilder.getQuery()).contains(sqlBuilder.getParams().keys)
+        assertThat(sqlBuilder.getParams()).hasSize(21)
     }
 
     private fun byggFilter(

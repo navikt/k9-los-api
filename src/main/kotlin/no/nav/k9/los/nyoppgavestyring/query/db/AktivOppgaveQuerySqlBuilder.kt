@@ -1,6 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.query.db
 
 import kotliquery.Row
+import no.nav.k9.los.db.util.InClauseHjelper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.EgenAnsatt
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
@@ -8,6 +9,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype.INTEGER
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveId
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveId
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.mapping.CombineOperator
 import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
 import no.nav.k9.los.spi.felter.OrderByInput
@@ -18,6 +20,7 @@ import java.time.LocalDateTime
 
 class AktivOppgaveQuerySqlBuilder(
     val felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
+    oppgavestatusFilter: List<Oppgavestatus>,
     val now: LocalDateTime
 ) : OppgaveQuerySqlBuilder {
     private var selectPrefix = """
@@ -35,7 +38,13 @@ class AktivOppgaveQuerySqlBuilder(
         INNER JOIN oppgavetype ot ON ( ot.id = o.oppgavetype_id )
         INNER JOIN omrade oppgave_omrade ON (oppgave_omrade.id = ot.omrade_id )
         LEFT JOIN oppgave_pep_cache opc ON (o.kildeomrade = opc.kildeomrade AND o.ekstern_id = opc.ekstern_id)
-        WHERE true 
+        WHERE o.status in (${
+        InClauseHjelper.tilParameternavnMedCast(
+            oppgavestatusFilter.map { it.kode },
+            "status",
+            "oppgavestatus"
+        )
+    }) 
     """.trimIndent()
 
     private val filtrerReserverteOppgaver = """
@@ -54,6 +63,8 @@ class AktivOppgaveQuerySqlBuilder(
 
     private val queryParams: MutableMap<String, Any?> = mutableMapOf()
     private val orderByParams: MutableMap<String, Any?> = mutableMapOf()
+    private val oppgavestatusParams =
+        InClauseHjelper.parameternavnTilVerdierMap(oppgavestatusFilter.map { it.kode }, "status")
     private var paging: String = ""
 
     override fun getQuery(): String {
@@ -72,7 +83,11 @@ class AktivOppgaveQuerySqlBuilder(
     }
 
     override fun getParams(): Map<String, Any?> {
-        return (queryParams + orderByParams).toMap()
+        return buildMap {
+            putAll(queryParams)
+            putAll(orderByParams)
+            putAll(oppgavestatusParams)
+        }
     }
 
     private fun hentTransientFeltutleder(feltområde: String?, feltkode: String): TransientFeltutleder? {
@@ -109,11 +124,6 @@ class AktivOppgaveQuerySqlBuilder(
             "sistEndret" -> {
                 query += "${combineOperator.sql} o.endret_tidspunkt ${operator.sql} (timestamp :sistEndret$index)) "
                 queryParams["sistEndret$index"] = feltverdi
-            }
-
-            "oppgavestatus" -> {
-                query += "${combineOperator.sql} o.status ${operator.sql} (cast(:oppgavestatus$index as oppgavestatus)) "
-                queryParams["oppgavestatus$index"] = feltverdi
             }
 
             "kildeområde" -> {
@@ -223,17 +233,25 @@ class AktivOppgaveQuerySqlBuilder(
         }
     }
 
-    private fun utenOppgavefelt(combineOperator: CombineOperator, feltområde: String, feltkode: String, operator: FeltverdiOperator) {
+    private fun utenOppgavefelt(
+        combineOperator: CombineOperator,
+        feltområde: String,
+        feltkode: String,
+        operator: FeltverdiOperator
+    ) {
         val index = queryParams.size + orderByParams.size
 
-        queryParams.putAll(mutableMapOf(
-            "feltOmrade$index" to feltområde,
-            "feltkode$index" to feltkode
-        ))
+        queryParams.putAll(
+            mutableMapOf(
+                "feltOmrade$index" to feltområde,
+                "feltkode$index" to feltkode
+            )
+        )
 
         val invertertOperator = when (operator) {
             FeltverdiOperator.EQUALS,
             FeltverdiOperator.IN -> " NOT"
+
             FeltverdiOperator.NOT_EQUALS,
             FeltverdiOperator.NOT_IN -> ""
 
@@ -261,15 +279,19 @@ class AktivOppgaveQuerySqlBuilder(
             "oppgavestatus" -> {
                 orderBySql += ", o.status "
             }
+
             "kildeområde" -> {
                 orderBySql += ", o.kildeomrade "
             }
+
             "oppgavetype" -> {
                 orderBySql += ", ot.ekstern_id "
             }
+
             "oppgaveområde" -> {
                 orderBySql += ", oppgave_omrade.ekstern_id "
             }
+
             else -> throw IllegalStateException("Ukjent feltkode: $feltkode")
         }
 
@@ -288,10 +310,12 @@ class AktivOppgaveQuerySqlBuilder(
 
         val index = queryParams.size + orderByParams.size
 
-        orderByParams.putAll(mutableMapOf(
-            "orderByfeltOmrade$index" to feltområde,
-            "orderByfeltkode$index" to feltkode
-        ))
+        orderByParams.putAll(
+            mutableMapOf(
+                "orderByfeltOmrade$index" to feltområde,
+                "orderByfeltkode$index" to feltkode
+            )
+        )
 
         val verdifelt = verdifelt(feltområde, feltkode)
         orderBySql +=
@@ -317,17 +341,4 @@ class AktivOppgaveQuerySqlBuilder(
             this.paging = "LIMIT $limit OFFSET $offset"
         }
     }
-
-    /** Skal bare brukes til debugging, siden parametrene settes inn ukritisk */
-    fun unsafeDebug(): String {
-        var queryWithParams = getQuery()
-
-        // erstatter placeholdere reversert siden f.eks. ':feltverdi1' også matcher ':feltverdi10'
-        for ((key, value) in getParams().toSortedMap().reversed()) {
-            queryWithParams = queryWithParams.replace(":$key", if (value is Number) value.toString() else "'" + value.toString() + "'")
-        }
-
-        return queryWithParams
-    }
-
 }

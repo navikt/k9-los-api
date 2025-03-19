@@ -1,6 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.query.db
 
 import kotliquery.Row
+import no.nav.k9.los.db.util.InClauseHjelper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.EgenAnsatt
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
@@ -23,8 +24,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
     val now: LocalDateTime,
     private val ferdigstiltDato: LocalDateTime? = null,
 ) : OppgaveQuerySqlBuilder {
-    private val oppgavestatusParametre = oppgavestatusFilter.mapIndexed { index, oppgavestatus -> "xoppgavestatus$index" to oppgavestatus.kode }.toMap()
-    private val oppgavestatusPlaceholder = oppgavestatusParametre.keys.joinToString(",") { ":$it" }
+    private val oppgavestatusPlaceholder: String = InClauseHjelper.tilParameternavn(oppgavestatusFilter, "status")
     private val ferdigstiltDatoBetingelse = if (ferdigstiltDato != null) " AND ov.ferdigstilt_dato = :ferdigstilt_dato " else ""
 
     private var selectPrefix = """
@@ -38,7 +38,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
         INNER JOIN oppgavetype ot ON ( ot.id = o.oppgavetype_id )
         INNER JOIN omrade oppgave_omrade ON (oppgave_omrade.id = ot.omrade_id )
         LEFT JOIN oppgave_pep_cache opc ON (o.kildeomrade = opc.kildeomrade AND o.ekstern_id = opc.ekstern_id)
-        WHERE o.aktiv = true 
+        WHERE o.aktiv = true AND o.status in ($oppgavestatusPlaceholder) $ferdigstiltDatoBetingelse
     """).trimIndent()
 
     private val filtrerReserverteOppgaver = """
@@ -57,6 +57,8 @@ class PartisjonertOppgaveQuerySqlBuilder(
 
     private val queryParams: MutableMap<String, Any?> = mutableMapOf()
     private val orderByParams: MutableMap<String, Any?> = mutableMapOf()
+    private val oppgavestatusParams =
+        InClauseHjelper.parameternavnTilVerdierMap(oppgavestatusFilter.map { it.kode }, "status")
     private var paging: String = ""
 
     override fun getQuery(): String {
@@ -75,7 +77,11 @@ class PartisjonertOppgaveQuerySqlBuilder(
     }
 
     override fun getParams(): Map<String, Any?> {
-        return (queryParams + orderByParams).toMap()
+        return buildMap {
+            putAll(queryParams)
+            putAll(orderByParams)
+            putAll(oppgavestatusParams)
+        }
     }
 
     private fun hentTransientFeltutleder(feltområde: String?, feltkode: String): TransientFeltutleder? {
@@ -112,12 +118,6 @@ class PartisjonertOppgaveQuerySqlBuilder(
             "sistEndret" -> {
                 query += "${combineOperator.sql} o.endret_tidspunkt ${operator.sql} (timestamp :sistEndret$index)) "
                 queryParams["sistEndret$index"] = feltverdi
-            }
-
-            "oppgavestatus" -> {
-                query +=
-                    "${combineOperator.sql} o.status ${operator.sql} (:oppgavestatus$index) "
-                queryParams["oppgavestatus$index"] = feltverdi
             }
 
             "kildeområde" -> {
@@ -210,15 +210,16 @@ class PartisjonertOppgaveQuerySqlBuilder(
             ) 
             """.trimIndent()
 
+        if (ferdigstiltDato != null) {
+            queryParams["ferdigstilt_dato"] = ferdigstiltDato
+        }
         queryParams.putAll(
             mapOf(
-                "ferdigstilt_dato" to ferdigstiltDato,
                 "feltOmrade$index" to feltområde,
                 "feltkode$index" to feltkode,
                 "feltverdi$index" to feltverdi
             )
         )
-        queryParams.putAll(oppgavestatusParametre)
     }
 
     private fun verdifelt(feltområde: String, feltkode: String): String {
@@ -236,12 +237,13 @@ class PartisjonertOppgaveQuerySqlBuilder(
     ) {
         val index = queryParams.size + orderByParams.size
 
+        if (ferdigstiltDato != null) {
+            queryParams["ferdigstilt_dato"] = ferdigstiltDato
+        }
         queryParams.putAll(mapOf(
-            "ferdigstilt_dato" to ferdigstiltDato,
             "feltOmrade$index" to feltområde,
             "feltkode$index" to feltkode
         ))
-        queryParams.putAll(oppgavestatusParametre)
 
         val invertertOperator = when (operator) {
             FeltverdiOperator.EQUALS,
@@ -300,18 +302,18 @@ class PartisjonertOppgaveQuerySqlBuilder(
             )
             orderBySql += ", " + sqlMedParams.query
             orderByParams.putAll(sqlMedParams.queryParams)
-            orderByParams.putAll(oppgavestatusParametre)
             return
         }
 
         val index = queryParams.size + orderByParams.size
 
-        orderByParams.putAll(mapOf(
-            "ferdigstilt_dato" to ferdigstiltDato,
-            "orderByfeltOmrade$index" to feltområde,
-            "orderByfeltkode$index" to feltkode
-        ))
-        orderByParams.putAll(oppgavestatusParametre)
+        orderByParams.putAll(
+            mapOf(
+                "ferdigstilt_dato" to ferdigstiltDato,
+                "orderByfeltOmrade$index" to feltområde,
+                "orderByfeltkode$index" to feltkode
+            )
+        )
 
         val verdifelt = verdifelt(feltområde, feltkode)
         orderBySql +=
@@ -342,17 +344,4 @@ class PartisjonertOppgaveQuerySqlBuilder(
             this.paging = "LIMIT $limit OFFSET $offset"
         }
     }
-
-    /** Skal bare brukes til debugging, siden parametrene settes inn ukritisk */
-    fun unsafeDebug(): String {
-        var queryWithParams = getQuery()
-
-        // erstatter placeholdere reversert siden f.eks. ':feltverdi1' også matcher ':feltverdi10'
-        for ((key, value) in getParams().toSortedMap().reversed()) {
-            queryWithParams = queryWithParams.replace(":$key", if (value is Number) value.toString() else "'" + value.toString() + "'")
-        }
-
-        return queryWithParams
-    }
-
 }

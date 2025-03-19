@@ -115,7 +115,7 @@ enum class FeltType(
     TID_SIDEN_MOTTATT_DATO("tidSidenMottattDato", tolkesSom = "Duration"),
     REGISTRERT_DATO("registrertDato", tolkesSom = "Timestamp"),
     AVVENTER_ARBEIDSGIVER("avventerArbeidsgiver", tolkesSom = "boolean"),
-    PERSONBESKYTTELSE("personbeskyttelse", tolkesSom = "String"),
+    PERSONBESKYTTELSE("personbeskyttelse", tolkesSom = "String", område = null),
     LØSBART_AKSJONSPUNKT("løsbartAksjonspunkt"),
     LIGGER_HOS_BESLUTTER("liggerHosBeslutter", tolkesSom = "boolean"),
     TID_FORSTE_GANG_HOS_BESLUTTER("tidFørsteGangHosBeslutter"),
