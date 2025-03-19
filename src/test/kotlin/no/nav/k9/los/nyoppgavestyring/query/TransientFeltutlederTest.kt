@@ -2,15 +2,11 @@ package no.nav.k9.los.nyoppgavestyring.query
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
-import kotliquery.queryOf
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveId
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveId
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Id
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.*
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
@@ -40,18 +36,27 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
     fun `transient utleder løpende varighet where clause og hent data halve listen`() {
         testdataLøpendeVarighet()
 
-        val oppgaveQuery = OppgaveQuery(
+        val oppgaveQueryUtenStatusfilter = OppgaveQuery(
             listOf(
-                byggFilterK9(FeltType.TID_SIDEN_MOTTATT_DATO, FeltverdiOperator.GREATER_THAN_OR_EQUALS, Duration.ofDays(11).toString())
+                byggFilter(FeltType.TID_SIDEN_MOTTATT_DATO, FeltverdiOperator.GREATER_THAN_OR_EQUALS, Duration.ofDays(11).toString())
+            )
+        )
+        val oppgaveQueryMedStatusfilter = OppgaveQuery(
+            listOf(
+                byggFilter(FeltType.TID_SIDEN_MOTTATT_DATO, FeltverdiOperator.GREATER_THAN_OR_EQUALS, Duration.ofDays(11).toString()),
+                byggFilter(FeltType.OPPGAVE_STATUS, FeltverdiOperator.EQUALS, Oppgavestatus.AAPEN.kode)
             )
         )
 
-        val result = oppgaveQueryRepository.query(QueryRequest(oppgaveQuery))
+        val result = oppgaveQueryRepository.query(QueryRequest(oppgaveQueryUtenStatusfilter))
+        val resultMedStatusfilter = oppgaveQueryRepository.query(QueryRequest(oppgaveQueryMedStatusfilter))
         assertThat(result.size).isEqualTo(1)
+        assertThat(resultMedStatusfilter.size).isEqualTo(1)
 
-        val oppgave = hentOppgave(result[0])
-
-        assertThat(Duration.parse(oppgave.hentVerdi("tidSidenMottattDato")!!).toDays()).isEqualTo(20)
+        assertThat(Duration.parse(hentOppgave(result[0]).hentVerdi("tidSidenMottattDato")!!).toDays()).isEqualTo(20)
+        assertThat(
+            Duration.parse(hentOppgave(resultMedStatusfilter[0]).hentVerdi("tidSidenMottattDato")!!).toDays()
+        ).isEqualTo(20)
     }
 
     @Test
@@ -60,10 +65,14 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
 
         val oppgaveQuery = OppgaveQuery(
             listOf(
-                byggFilterK9(FeltType.TID_SIDEN_MOTTATT_DATO, FeltverdiOperator.GREATER_THAN_OR_EQUALS, Duration.ofDays(9).toString())
+                byggFilter(
+                    FeltType.TID_SIDEN_MOTTATT_DATO,
+                    FeltverdiOperator.GREATER_THAN_OR_EQUALS,
+                    Duration.ofDays(9).toString()
+                )
             ),
             listOf(
-                byggOrderK9(FeltType.TID_SIDEN_MOTTATT_DATO, true)
+                byggOrder(FeltType.TID_SIDEN_MOTTATT_DATO, true)
             )
         )
 
@@ -81,10 +90,14 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
 
         val oppgaveQuery = OppgaveQuery(
             listOf(
-                byggFilterK9(FeltType.TID_SIDEN_MOTTATT_DATO, FeltverdiOperator.GREATER_THAN_OR_EQUALS, Duration.ofDays(9).toString())
+                byggFilter(
+                    FeltType.TID_SIDEN_MOTTATT_DATO,
+                    FeltverdiOperator.GREATER_THAN_OR_EQUALS,
+                    Duration.ofDays(9).toString()
+                )
             ),
             listOf(
-                byggOrderK9(FeltType.TID_SIDEN_MOTTATT_DATO, false)
+                byggOrder(FeltType.TID_SIDEN_MOTTATT_DATO, false)
             )
         )
 
@@ -131,22 +144,22 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
         return oppgave
     }
 
-    private fun byggFilterK9(
+    private fun byggFilter(
         feltType: FeltType,
         feltverdiOperator: FeltverdiOperator,
         vararg verdier: String?
     ): FeltverdiOppgavefilter {
         return FeltverdiOppgavefilter(
-            "K9",
+            feltType.område,
             feltType.eksternId,
             feltverdiOperator.name,
             verdier.toList()
         )
     }
 
-    private fun byggOrderK9(feltType: FeltType, økende: Boolean): EnkelOrderFelt {
+    private fun byggOrder(feltType: FeltType, økende: Boolean): EnkelOrderFelt {
         return EnkelOrderFelt(
-            område = "K9",
+            område = feltType.område,
             feltType.eksternId,
             økende = økende
         )

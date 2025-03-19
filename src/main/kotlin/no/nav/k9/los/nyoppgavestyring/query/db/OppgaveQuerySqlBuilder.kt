@@ -7,7 +7,7 @@ import no.nav.k9.los.nyoppgavestyring.query.mapping.CombineOperator
 import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
 
 interface OppgaveQuerySqlBuilder {
-    val oppgavestatusFilter: List<Oppgavestatus>
+    val oppgavestatusFilter: List<Oppgavestatus> // ta ut traversering/utledning
 
     fun medFeltverdi(
         combineOperator: CombineOperator,

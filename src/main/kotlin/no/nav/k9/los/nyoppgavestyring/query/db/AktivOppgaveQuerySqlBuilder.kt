@@ -88,9 +88,9 @@ class AktivOppgaveQuerySqlBuilder(
         operator: FeltverdiOperator,
         feltverdi: Any?
     ) {
-        hentTransientFeltutleder(feltområde, feltkode)?.let {
+        hentTransientFeltutleder(feltområde, feltkode)?.let { it: TransientFeltutleder ->
             val sqlMedParams = sikreUnikeParams(
-                it.where(WhereInput(now, feltområde!!, feltkode, operator, feltverdi))
+                it.where(WhereInput(OppgaveTabell.OPPGAVE_AKTIV, now, feltområde!!, feltkode, operator, feltverdi))
             )
             query += "${combineOperator.sql} " + sqlMedParams.query
             queryParams.putAll(sqlMedParams.queryParams)
@@ -281,7 +281,7 @@ class AktivOppgaveQuerySqlBuilder(
     private fun medEnkelOrderAvOppgavefelt(feltområde: String, feltkode: String, økende: Boolean) {
         hentTransientFeltutleder(feltområde, feltkode)?.let {
             val sqlMedParams = sikreUnikeParams(
-                it.orderBy(OrderByInput(now, feltområde, feltkode, økende))
+                it.orderBy(OrderByInput(OppgaveTabell.OPPGAVE_AKTIV, now, feltområde, feltkode, økende))
             )
             orderBySql += ", " + sqlMedParams.query
             orderByParams.putAll(sqlMedParams.queryParams)

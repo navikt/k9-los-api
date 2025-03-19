@@ -21,7 +21,7 @@ import java.time.LocalDateTime
 class OppgaveQueryToSqlMapperTest {
 
     @Test
-    fun `ytelse - oppgaveQueryMapper må sette parameter oppgavestatus for bruk av indeks på oppgavefelt_verdi`() {
+    fun `må finne riktige oppgavestatuser, for å utlede oppgave- og oppgavefeltverditabeller`() {
         val oppgaveQuery = OppgaveQuery(
             listOf(
                 FeltverdiOppgavefilter("K9", "oppgavestatus", "EQUALS", listOf(Oppgavestatus.AAPEN.kode)),
@@ -44,13 +44,11 @@ class OppgaveQueryToSqlMapperTest {
             )
         )
 
-        val sqlOppgaveQuery = OppgaveQueryToSqlMapper.toSqlOppgaveQuery(
+        val oppgavestatuser = OppgaveQueryToSqlMapper.traverserFiltereOgFinnOppgavestatusfilter(
             QueryRequest(oppgaveQuery),
-            felter,
-            LocalDateTime.now()
         )
 
-        assertThat(sqlOppgaveQuery.oppgavestatusFilter).containsOnly(Oppgavestatus.AAPEN, Oppgavestatus.LUKKET)
+        assertThat(oppgavestatuser).containsOnly(Oppgavestatus.AAPEN, Oppgavestatus.LUKKET)
     }
 
     @Test

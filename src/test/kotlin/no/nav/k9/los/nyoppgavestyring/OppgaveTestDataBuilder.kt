@@ -99,11 +99,12 @@ class OppgaveTestDataBuilder(
 
 enum class FeltType(
     val eksternId: String,
+    val område: String? = "K9",
     val tolkesSom: String = "String"
 ) {
     BEHANDLINGUUID("behandlingUuid"),
     BEHANDLING_TYPE("behandlingTypekode"),
-    OPPGAVE_STATUS("oppgavestatus"),
+    OPPGAVE_STATUS("oppgavestatus", område = null),
     FAGSYSTEM("fagsystem"),
     AKSJONSPUNKT("aksjonspunkt"),
     RESULTAT_TYPE("resultattype"),
@@ -111,7 +112,7 @@ enum class FeltType(
     BEHANDLINGSSTATUS("behandlingsstatus"),
     YTELSE_TYPE("ytelsestype"),
     MOTTATT_DATO("mottattDato", tolkesSom = "Timestamp"),
-    TID_SIDEN_MOTTATT_DATO("tidSidenMottattDato", "Duration"),
+    TID_SIDEN_MOTTATT_DATO("tidSidenMottattDato", tolkesSom = "Duration"),
     REGISTRERT_DATO("registrertDato", tolkesSom = "Timestamp"),
     AVVENTER_ARBEIDSGIVER("avventerArbeidsgiver", tolkesSom = "boolean"),
     PERSONBESKYTTELSE("personbeskyttelse", tolkesSom = "String"),

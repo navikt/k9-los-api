@@ -1,6 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder
 
 import no.nav.k9.los.nyoppgavestyring.query.db.OmrådeOgKode
+import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveTabell
 import no.nav.k9.los.spi.felter.*
 import org.postgresql.util.PGInterval
 import java.time.Duration
@@ -34,10 +35,10 @@ abstract class LøpendeDurationTransientFeltutleder(
     val løpendeTidFelter: List<OmrådeOgKode> = listOf(),
 ): TransientFeltutleder{
 
-    private fun sumLøpendeDuration(now: LocalDateTime): SqlMedParams {
-        val sumDurationFelter = sumDurationfelter()
-        val sumLøpendTidHvisTruefelter = sumLøpendeTidHvisTruefelter(now)
-        val sumLøpendetidfelter = sumLøpendetidfelter(now)
+    private fun sumLøpendeDuration(tabellStrategi: OppgaveTabell, now: LocalDateTime): SqlMedParams {
+        val sumDurationFelter = sumDurationfelter(tabellStrategi)
+        val sumLøpendTidHvisTruefelter = sumLøpendeTidHvisTruefelter(tabellStrategi, now)
+        val sumLøpendetidfelter = sumLøpendetidfelter(tabellStrategi, now)
 
         val sqlMedParams = listOfNotNull(sumDurationFelter, sumLøpendTidHvisTruefelter, sumLøpendetidfelter).reduce { a, b ->
             SqlMedParams("${a.query} + ${b.query}", a.queryParams + b.queryParams)
@@ -46,7 +47,7 @@ abstract class LøpendeDurationTransientFeltutleder(
         return SqlMedParams("(${sqlMedParams.query})", sqlMedParams.queryParams)
     }
 
-    private fun sumDurationfelter(): SqlMedParams? {
+    private fun sumDurationfelter(tabellStrategi: OppgaveTabell): SqlMedParams? {
         if (durationfelter.isEmpty()) {
             return null
         }
@@ -55,10 +56,7 @@ abstract class LøpendeDurationTransientFeltutleder(
         val query = """
             COALESCE((
                 SELECT SUM(CAST(ov.verdi AS interval)) 
-                FROM Oppgavefelt_verdi_aktiv ov 
-                INNER JOIN Oppgavefelt f ON (f.id = ov.oppgavefelt_id) 
-                INNER JOIN Feltdefinisjon fd ON (fd.id = f.feltdefinisjon_id) 
-                INNER JOIN Omrade fo ON (fo.id = fd.omrade_id)
+                FROM ${tabellStrategi.verditabell} ov 
                 WHERE ov.oppgave_id = o.id
                   AND $minstEttDurationFeltSql
             ), INTERVAL '0 days')
@@ -66,7 +64,7 @@ abstract class LøpendeDurationTransientFeltutleder(
         return SqlMedParams(query, mapOf())
     }
 
-    private fun sumLøpendeTidHvisTruefelter(now: LocalDateTime): SqlMedParams? {
+    private fun sumLøpendeTidHvisTruefelter(tabellStrategi: OppgaveTabell, now: LocalDateTime): SqlMedParams? {
         if (løpendeTidHvisTrueFelter.isEmpty()) {
             return null
         }
@@ -77,7 +75,7 @@ abstract class LøpendeDurationTransientFeltutleder(
                 SELECT (:now - o.endret_tidspunkt)
                 WHERE EXISTS (
                     SELECT 'Y'
-                    FROM Oppgavefelt_verdi_aktiv ov 
+                    FROM ${tabellStrategi.verditabell} ov 
                     WHERE ov.oppgave_id = o.id
                       AND ov.verdi = 'true'
                       AND $løpendeOppgavetidHvisTrueSql
@@ -88,7 +86,7 @@ abstract class LøpendeDurationTransientFeltutleder(
         return SqlMedParams(query, mapOf("now" to now))
     }
 
-    private fun sumLøpendetidfelter(now: LocalDateTime): SqlMedParams? {
+    private fun sumLøpendetidfelter(tabellStrategi: OppgaveTabell, now: LocalDateTime): SqlMedParams? {
         if (løpendeTidFelter.isEmpty()) {
             return null
         }
@@ -100,7 +98,7 @@ abstract class LøpendeDurationTransientFeltutleder(
                         :now
                     ) - (
                         SELECT CAST(ov.verdi AS timestamp)
-                        FROM Oppgavefelt_verdi_aktiv ov 
+                        FROM ${tabellStrategi.verditabell} ov 
                         WHERE ov.oppgave_id = o.id
                           AND ${områdeOgKodeSql(områdeOgKode)}
                     )
@@ -151,7 +149,7 @@ abstract class LøpendeDurationTransientFeltutleder(
     }
 
     override fun where(input: WhereInput): SqlMedParams {
-        val sumLøpendeDuration = sumLøpendeDuration(input.now)
+        val sumLøpendeDuration = sumLøpendeDuration(input.oppgaveTabell, input.now)
         val query = """
                 ${sumLøpendeDuration.query} ${input.operator.sql} (:inputVerdi)
             """.trimIndent()
@@ -164,7 +162,7 @@ abstract class LøpendeDurationTransientFeltutleder(
 
     override fun orderBy(input: OrderByInput): SqlMedParams {
         val order =  if (input.økende) "ASC" else "DESC"
-        val sumLøpendeDuration = sumLøpendeDuration(input.now)
+        val sumLøpendeDuration = sumLøpendeDuration(input.oppgaveTabell, input.now)
         val query = """
                 ${sumLøpendeDuration.query} $order
             """.trimIndent()

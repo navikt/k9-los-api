@@ -47,7 +47,7 @@ object OppgaveQueryToSqlMapper {
         return queryBuilder
     }
 
-    private fun traverserFiltereOgFinnOppgavestatusfilter(queryRequest: QueryRequest): List<Oppgavestatus> {
+    fun traverserFiltereOgFinnOppgavestatusfilter(queryRequest: QueryRequest): List<Oppgavestatus> {
         val statuser = mutableSetOf<Oppgavestatus>()
         rekursivtSøk(queryRequest.oppgaveQuery.filtere, statuser)
 

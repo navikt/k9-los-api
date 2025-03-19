@@ -44,23 +44,13 @@ class OppgaveQueryService {
     @WithSpan
     fun queryForOppgave(tx: TransactionalSession, oppgaveQuery: QueryRequest): List<Oppgave> {
         val now = LocalDateTime.now()
-        val oppgaveIder = queryForOppgaveId(tx, oppgaveQuery)
+        val oppgaveIder = oppgaveQueryRepository.query(tx, oppgaveQuery, LocalDateTime.now())
         return oppgaveIder.map { oppgaveId ->
             when (oppgaveId) {
                 is AktivOppgaveId -> aktivOppgaveRepository.hentOppgaveForId(tx, oppgaveId, now)
                 is OppgaveV3Id -> oppgaveRepository.hentOppgaveForId(tx, oppgaveId, now)
             }
         }
-    }
-
-    @WithSpan
-    private fun queryForOppgaveId(oppgaveQuery: QueryRequest): List<OppgaveId> {
-        return oppgaveQueryRepository.query(oppgaveQuery)
-    }
-
-    @WithSpan
-    private fun queryForOppgaveId(tx: TransactionalSession, oppgaveQuery: QueryRequest): List<OppgaveId> {
-        return oppgaveQueryRepository.query(tx, oppgaveQuery, LocalDateTime.now())
     }
 
     @WithSpan
