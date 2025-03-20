@@ -6,7 +6,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import java.time.LocalDateTime
 
 class OppgaveV3(
-    val id: OppgaveId? = null, //TODO fjerne? blir kun brukt i innsikt-tjenesten
+    val id: OppgaveId? = null,
     val eksternId: String,
     val eksternVersjon: String,
     val oppgavetype: Oppgavetype,

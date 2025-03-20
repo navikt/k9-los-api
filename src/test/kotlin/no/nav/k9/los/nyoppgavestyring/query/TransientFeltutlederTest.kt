@@ -139,6 +139,8 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
             when (id) {
                 is AktivOppgaveId -> aktivOppgaveRepository.hentOppgaveForId(tx, id)
                 is OppgaveV3Id -> oppgaveRepository.hentOppgaveForId(tx, id)
+                is PartisjonertOppgaveId -> oppgaveRepository.hentOppgaveForEksternIdOgEksternVersjon(tx, id.oppgaveEksternId, id.oppgaveEksternVersjon)
+                    ?: throw IllegalStateException("Fant ikke oppgave med id $id")
             }
         }
         return oppgave

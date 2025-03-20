@@ -237,7 +237,7 @@ class OppgaveQueryRepository(
             queryOf(
                 oppgaveQuery.getQuery(),
                 oppgaveQuery.getParams()
-            ).map { oppgaveQuery.mapRowTilId(it) }.asList
+            ).map(oppgaveQuery::mapRowTilId).asList
         )
     }
 
@@ -249,12 +249,7 @@ class OppgaveQueryRepository(
             queryOf(
                 oppgaveQuery.getQuery(),
                 oppgaveQuery.getParams()
-            ).map { row ->
-                EksternOppgaveId(
-                    row.string("kildeomrade"),
-                    row.string("ekstern_id")
-                )
-            }.asList
+            ).map(oppgaveQuery::mapRowTilEksternId).asList
         )
     }
 }

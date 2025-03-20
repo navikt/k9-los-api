@@ -8,14 +8,15 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype.INTEGER
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveId
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Id
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.PartisjonertOppgaveId
 import no.nav.k9.los.nyoppgavestyring.query.mapping.CombineOperator
 import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
 import no.nav.k9.los.spi.felter.OrderByInput
 import no.nav.k9.los.spi.felter.SqlMedParams
 import no.nav.k9.los.spi.felter.TransientFeltutleder
 import no.nav.k9.los.spi.felter.WhereInput
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
 class PartisjonertOppgaveQuerySqlBuilder(
@@ -24,21 +25,21 @@ class PartisjonertOppgaveQuerySqlBuilder(
     val now: LocalDateTime,
     private val ferdigstiltDato: LocalDateTime? = null,
 ) : OppgaveQuerySqlBuilder {
+    private val log = LoggerFactory.getLogger(PartisjonertOppgaveQuerySqlBuilder::class.java)
+
     private val oppgavestatusPlaceholder: String = InClauseHjelper.tilParameternavn(oppgavestatusFilter, "status")
     private val ferdigstiltDatoBetingelse = if (ferdigstiltDato != null) " AND ov.ferdigstilt_dato = :ferdigstilt_dato " else ""
 
     private var selectPrefix = """
-                SELECT o.id as id, o.kildeomrade as kildeomrade, o.ekstern_id as ekstern_id 
+                SELECT o.oppgave_ekstern_id, o.oppgave_ekstern_versjon
                 """.trimIndent()
 
     private val oppgavefelterKodeOgType = felter.mapValues { Datatype.fraKode(it.value.oppgavefelt.tolkes_som) }
 
     private var query = ("""
-        FROM oppgave_v3 o
-        INNER JOIN oppgavetype ot ON ( ot.id = o.oppgavetype_id )
-        INNER JOIN omrade oppgave_omrade ON (oppgave_omrade.id = ot.omrade_id )
-        LEFT JOIN oppgave_pep_cache opc ON (o.kildeomrade = opc.kildeomrade AND o.ekstern_id = opc.ekstern_id)
-        WHERE o.aktiv = true AND o.status in ($oppgavestatusPlaceholder) $ferdigstiltDatoBetingelse
+        FROM oppgave_v3_part o
+        LEFT JOIN oppgave_pep_cache opc ON (opc.kildeomrade = 'K9' AND o.oppgave_ekstern_id = opc.ekstern_id)
+        WHERE o.oppgavestatus in ($oppgavestatusPlaceholder) $ferdigstiltDatoBetingelse
     """).trimIndent()
 
     private val filtrerReserverteOppgaver = """
@@ -97,7 +98,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
     ) {
         hentTransientFeltutleder(feltområde, feltkode)?.let {
             val sqlMedParams = sikreUnikeParams(
-                it.where(WhereInput(OppgaveTabell.OPPGAVE_PARTISJONERT, now, feltområde!!, feltkode, operator, feltverdi))
+                it.where(WhereInput(OppgavefeltVerdiTabell.OPPGAVE_PARTISJONERT, now, feltområde!!, feltkode, operator, feltverdi))
             )
             query += "${combineOperator.sql} " + sqlMedParams.query
             queryParams.putAll(sqlMedParams.queryParams)
@@ -115,24 +116,9 @@ class PartisjonertOppgaveQuerySqlBuilder(
 
         val index = queryParams.size + orderByParams.size
         when (feltkode) {
-            "sistEndret" -> {
-                query += "${combineOperator.sql} o.endret_tidspunkt ${operator.sql} (timestamp :sistEndret$index)) "
-                queryParams["sistEndret$index"] = feltverdi
-            }
-
-            "kildeområde" -> {
-                query += "${combineOperator.sql} o.kildeomrade ${operator.sql} (:kildeomrade$index) "
-                queryParams["kildeomrade$index"] = feltverdi
-            }
-
             "oppgavetype" -> {
-                query += "${combineOperator.sql} ot.ekstern_id ${operator.sql} (:oppgavetype$index) "
+                query += "${combineOperator.sql} o.oppgavetype_ekstern_id ${operator.sql} (:oppgavetype$index) "
                 queryParams["oppgavetype$index"] = feltverdi
-            }
-
-            "oppgaveområde" -> {
-                query += "${combineOperator.sql} oppgave_omrade.ekstern_id ${operator.sql} (:oppgave_omrade$index) "
-                queryParams["oppgave_omrade$index"] = feltverdi
             }
 
             //deprecated - for removal - bruk "personbeskyttelse" istedet
@@ -163,6 +149,8 @@ class PartisjonertOppgaveQuerySqlBuilder(
                     else -> throw IllegalStateException("Ukjent feltkode: $feltkode")
                 }
             }
+
+            else -> log.warn("Håndterer ikke filter for $feltkode")
         }
     }
 
@@ -202,8 +190,9 @@ class PartisjonertOppgaveQuerySqlBuilder(
             ${combineOperator.sql} ${if (operator.negasjonAv != null) "NOT" else ""} EXISTS (
                 SELECT 1
                 FROM oppgavefelt_verdi_part ov
-                WHERE ov.aktiv = true AND ov.oppgavestatus in ($oppgavestatusPlaceholder) $ferdigstiltDatoBetingelse
-                  AND ov.oppgave_id = o.id
+                WHERE ov.oppgavestatus in ($oppgavestatusPlaceholder) $ferdigstiltDatoBetingelse
+                  AND ov.oppgave_ekstern_id = o.oppgave_ekstern_id
+                  AND ov.oppgave_ekstern_versjon = o.oppgave_ekstern_versjon
                   AND ov.omrade_ekstern_id = :feltOmrade$index
                   AND ov.feltdefinisjon_ekstern_id = :feltkode$index
                   AND $verdifelt ${operator.negasjonAv?.sql ?: operator.sql} (:feltverdi$index)
@@ -258,8 +247,9 @@ class PartisjonertOppgaveQuerySqlBuilder(
             ${combineOperator.sql}$invertertOperator EXISTS (
                 SELECT 1
                 FROM oppgavefelt_verdi_part ov 
-                WHERE ov.aktiv = true AND ov.oppgavestatus in ($oppgavestatusPlaceholder) $ferdigstiltDatoBetingelse
-                    AND ov.oppgave_id = o.id
+                WHERE ov.oppgavestatus in ($oppgavestatusPlaceholder) $ferdigstiltDatoBetingelse
+                    AND ov.oppgave_ekstern_id = o.oppgave_ekstern_id
+                    AND ov.oppgave_ekstern_versjon = o.oppgave_ekstern_versjon
                     AND ov.omrade_ekstern_id = :feltOmrade$index
                     AND ov.feltdefinisjon_ekstern_id = :feltkode$index
             )
@@ -274,19 +264,11 @@ class PartisjonertOppgaveQuerySqlBuilder(
 
         orderBySql += when (feltkode) {
             "oppgavestatus" -> {
-                ", o.status "
-            }
-
-            "kildeområde" -> {
-                ", o.kildeomrade "
+                ", o.oppgavestatus "
             }
 
             "oppgavetype" -> {
-                ", ot.ekstern_id "
-            }
-
-            "oppgaveområde" -> {
-                ", oppgave_omrade.ekstern_id "
+                ", o.oppgavetype_ekstern_id "
             }
 
             else -> throw IllegalStateException("Ukjent feltkode: $feltkode")
@@ -298,7 +280,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
     private fun medEnkelOrderAvOppgavefelt(feltområde: String, feltkode: String, økende: Boolean) {
         hentTransientFeltutleder(feltområde, feltkode)?.let {
             val sqlMedParams = sikreUnikeParams(
-                it.orderBy(OrderByInput(OppgaveTabell.OPPGAVE_PARTISJONERT, now, feltområde, feltkode, økende))
+                it.orderBy(OrderByInput(OppgavefeltVerdiTabell.OPPGAVE_PARTISJONERT, now, feltområde, feltkode, økende))
             )
             orderBySql += ", " + sqlMedParams.query
             orderByParams.putAll(sqlMedParams.queryParams)
@@ -321,8 +303,9 @@ class PartisjonertOppgaveQuerySqlBuilder(
                 , (
                   SELECT $verdifelt                    
                   FROM oppgavefelt_verdi_part ov 
-                  WHERE ov.aktiv = true AND ov.oppgavestatus in ($oppgavestatusPlaceholder) $ferdigstiltDatoBetingelse
-                    AND ov.oppgave_id = o.id
+                  WHERE ov.oppgavestatus in ($oppgavestatusPlaceholder) $ferdigstiltDatoBetingelse
+                    AND ov.oppgave_ekstern_id = o.oppgave_ekstern_id
+                    AND ov.oppgave_ekstern_versjon = o.oppgave_ekstern_versjon
                     AND ov.omrade_ekstern_id = :orderByfeltOmrade$index
                     AND ov.feltdefinisjon_ekstern_id = :orderByfeltkode$index
                 ) 
@@ -332,7 +315,12 @@ class PartisjonertOppgaveQuerySqlBuilder(
     }
 
     override fun mapRowTilId(row: Row): OppgaveId {
-        return OppgaveV3Id(row.long("id"))
+        return PartisjonertOppgaveId(row.string("oppgave_ekstern_id"), row.string("oppgave_ekstern_versjon"))
+    }
+
+    override fun mapRowTilEksternId(row: Row): EksternOppgaveId {
+        // område hardkodes siden det ikke er lagret
+        return EksternOppgaveId("K9", row.string("oppgave_ekstern_id"))
     }
 
     override fun medPaging(limit: Long, offset: Long) {

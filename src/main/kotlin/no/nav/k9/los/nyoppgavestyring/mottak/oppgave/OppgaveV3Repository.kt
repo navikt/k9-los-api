@@ -16,7 +16,7 @@ class OppgaveV3Repository(
     private val dataSource: DataSource,
     private val oppgavetypeRepository: OppgavetypeRepository,
 ) {
-    private val oppgavefeltverdiPartisjonertRepository = OppgavefeltverdiPartisjonertRepository(oppgavetypeRepository)
+    private val oppgaveV3PartisjonertRepository = OppgaveV3PartisjonertRepository(oppgavetypeRepository)
     private val log = LoggerFactory.getLogger(OppgaveV3Repository::class.java)
 
     fun nyOppgaveversjon(oppgave: OppgaveV3, tx: TransactionalSession) {
@@ -30,7 +30,6 @@ class OppgaveV3Repository(
         eksisterendeId?.let {
             deaktiverVersjon(eksisterendeId, oppgave.endretTidspunkt, tx)
             deaktiverOppgavefelter(eksisterendeId, tx)
-            oppgavefeltverdiPartisjonertRepository.deaktiverOppgavefelter(eksisterendeId, tx)
         }
 
         val nyVersjon = eksisterendeVersjon?.plus(1) ?: 0
@@ -43,7 +42,7 @@ class OppgaveV3Repository(
             log.info("Oppdaterer ikke aktiv oppgave, da hendelsen gjaldt frisinn for oppgaveId ${oppgave.eksternId}")
         } else {
             AktivOppgaveRepository.ajourholdAktivOppgave(oppgave, nyVersjon, tx)
-            oppgavefeltverdiPartisjonertRepository.insertFelter(oppgaveId, oppgave, tx)
+            oppgaveV3PartisjonertRepository.ajourhold(oppgave, tx)
         }
     }
 
@@ -212,7 +211,7 @@ class OppgaveV3Repository(
     }
 
     @VisibleForTesting
-    fun nyOppgaveversjon(oppgave: OppgaveV3, nyVersjon: Long, tx: TransactionalSession): OppgaveId {
+    fun nyOppgaveversjon(oppgave: OppgaveV3, nyVersjon: Long, tx: TransactionalSession): OppgaveV3Id {
         return OppgaveV3Id(tx.updateAndReturnGeneratedKey(
             queryOf(
                 """
@@ -235,7 +234,7 @@ class OppgaveV3Repository(
     }
 
     private fun hentFeltverdier(
-        oppgaveId: OppgaveId,
+        oppgaveId: OppgaveV3Id,
         oppgavetype: Oppgavetype,
         tx: TransactionalSession
     ): List<OppgaveFeltverdi> {
@@ -260,7 +259,7 @@ class OppgaveV3Repository(
 
     @VisibleForTesting
     fun lagreFeltverdier(
-        oppgaveId: OppgaveId,
+        oppgaveId: OppgaveV3Id,
         oppgave: OppgaveV3,
         tx: TransactionalSession
     ) {
@@ -346,7 +345,7 @@ class OppgaveV3Repository(
         oppgaveEksternId: String,
         oppgaveTypeEksternId: String,
         områdeEksternId: String
-    ): Triple<OppgaveId?, Oppgavestatus?, Long?> {
+    ): Triple<OppgaveV3Id?, Oppgavestatus?, Long?> {
         return tx.run(
             queryOf(
                 """
@@ -379,7 +378,7 @@ class OppgaveV3Repository(
     }
 
     @VisibleForTesting
-    fun deaktiverVersjon(eksisterendeId: OppgaveId, deaktivertTidspunkt: LocalDateTime, tx: TransactionalSession) {
+    fun deaktiverVersjon(eksisterendeId: OppgaveV3Id, deaktivertTidspunkt: LocalDateTime, tx: TransactionalSession) {
         tx.run(
             queryOf(
                 """
@@ -394,7 +393,7 @@ class OppgaveV3Repository(
     }
 
     @VisibleForTesting
-    fun deaktiverOppgavefelter(oppgaveId: OppgaveId, tx: TransactionalSession) {
+    fun deaktiverOppgavefelter(oppgaveId: OppgaveV3Id, tx: TransactionalSession) {
         tx.run(
             queryOf(
                 """

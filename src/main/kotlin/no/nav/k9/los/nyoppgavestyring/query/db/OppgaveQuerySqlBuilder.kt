@@ -23,6 +23,7 @@ interface OppgaveQuerySqlBuilder {
     fun getQuery(): String
     fun getParams(): Map<String, Any?>
     fun mapRowTilId(row: Row): OppgaveId
+    fun mapRowTilEksternId(row: Row): EksternOppgaveId
 
     /** Skal bare brukes til debugging, siden parametrene settes inn ukritisk */
     fun unsafeDebug(): String {

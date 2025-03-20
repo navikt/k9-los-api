@@ -68,7 +68,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgavefeltverdiPartisjonertRepository
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3PartisjonertRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nyoppgavestyring.pep.PepCacheRepository
@@ -407,7 +407,7 @@ fun common(app: Application, config: Configuration) = module {
         )
     }
     single {
-        OppgavefeltverdiPartisjonertRepository(
+        OppgaveV3PartisjonertRepository(
             oppgavetypeRepository = get()
         )
     }

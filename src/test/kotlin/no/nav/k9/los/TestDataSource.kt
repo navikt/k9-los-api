@@ -88,6 +88,7 @@ abstract class AbstractPostgresTest {
                 oppgavefelt_verdi_part,
                 oppgavefelt_verdi,
                 oppgavefelt_verdi_aktiv,
+                oppgave_v3_part,
                 oppgave_v3,
                 oppgave_v3_aktiv,
                 feltdefinisjon,

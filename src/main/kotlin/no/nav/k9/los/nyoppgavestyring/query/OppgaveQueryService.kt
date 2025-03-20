@@ -9,10 +9,7 @@ import no.nav.k9.los.integrasjon.abac.Action
 import no.nav.k9.los.integrasjon.abac.Auditlogging
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.rest.CoroutineRequestContext
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveId
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveId
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Id
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.*
 import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelter
@@ -49,6 +46,8 @@ class OppgaveQueryService {
             when (oppgaveId) {
                 is AktivOppgaveId -> aktivOppgaveRepository.hentOppgaveForId(tx, oppgaveId, now)
                 is OppgaveV3Id -> oppgaveRepository.hentOppgaveForId(tx, oppgaveId, now)
+                is PartisjonertOppgaveId -> oppgaveRepository.hentOppgaveForEksternIdOgEksternVersjon(tx, oppgaveId.oppgaveEksternId, oppgaveId.oppgaveEksternVersjon)
+                    ?: throw IllegalStateException("Fant ikke oppgave med id $oppgaveId")
             }
         }
     }
@@ -144,6 +143,8 @@ class OppgaveQueryService {
         val oppgave = when (oppgaveId) {
             is AktivOppgaveId -> aktivOppgaveRepository.hentOppgaveForId(tx, oppgaveId, now)
             is OppgaveV3Id -> oppgaveRepository.hentOppgaveForId(tx, oppgaveId, now)
+            is PartisjonertOppgaveId -> oppgaveRepository.hentOppgaveForEksternIdOgEksternVersjon(tx, oppgaveId.oppgaveEksternId, oppgaveId.oppgaveEksternVersjon)
+                ?: throw IllegalStateException("Fant ikke oppgave med id $oppgaveId")
         }
 
         if (!pepClient.harTilgangTilOppgaveV3(oppgave = oppgave, action = Action.read, auditlogging = Auditlogging.LOGG_VED_PERMIT)) {

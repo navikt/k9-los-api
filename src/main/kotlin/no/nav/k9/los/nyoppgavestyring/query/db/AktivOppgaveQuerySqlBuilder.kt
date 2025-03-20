@@ -16,6 +16,7 @@ import no.nav.k9.los.spi.felter.OrderByInput
 import no.nav.k9.los.spi.felter.SqlMedParams
 import no.nav.k9.los.spi.felter.TransientFeltutleder
 import no.nav.k9.los.spi.felter.WhereInput
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
 class AktivOppgaveQuerySqlBuilder(
@@ -23,6 +24,8 @@ class AktivOppgaveQuerySqlBuilder(
     oppgavestatusFilter: List<Oppgavestatus>,
     val now: LocalDateTime
 ) : OppgaveQuerySqlBuilder {
+    private val log = LoggerFactory.getLogger(AktivOppgaveQuerySqlBuilder::class.java)
+
     private var selectPrefix = """
                 SELECT o.id as id, o.kildeomrade as kildeomrade, o.ekstern_id as ekstern_id 
                 """.trimIndent()
@@ -31,6 +34,10 @@ class AktivOppgaveQuerySqlBuilder(
 
     override fun mapRowTilId(row: Row): OppgaveId {
         return AktivOppgaveId(row.long("id"))
+    }
+
+    override fun mapRowTilEksternId(row: Row): EksternOppgaveId {
+        return EksternOppgaveId(row.string("kildeomrade"), row.string("ekstern_id"))
     }
 
     private var query = """
@@ -103,7 +110,7 @@ class AktivOppgaveQuerySqlBuilder(
     ) {
         hentTransientFeltutleder(feltområde, feltkode)?.let { it: TransientFeltutleder ->
             val sqlMedParams = sikreUnikeParams(
-                it.where(WhereInput(OppgaveTabell.OPPGAVE_AKTIV, now, feltområde!!, feltkode, operator, feltverdi))
+                it.where(WhereInput(OppgavefeltVerdiTabell.OPPGAVE_AKTIV, now, feltområde!!, feltkode, operator, feltverdi))
             )
             query += "${combineOperator.sql} " + sqlMedParams.query
             queryParams.putAll(sqlMedParams.queryParams)
@@ -171,6 +178,8 @@ class AktivOppgaveQuerySqlBuilder(
                     else -> throw IllegalStateException("Ukjent feltkode: $feltkode")
                 }
             }
+
+            else -> log.warn("Håndterer ikke filter for $feltkode")
         }
     }
 
@@ -301,7 +310,7 @@ class AktivOppgaveQuerySqlBuilder(
     private fun medEnkelOrderAvOppgavefelt(feltområde: String, feltkode: String, økende: Boolean) {
         hentTransientFeltutleder(feltområde, feltkode)?.let {
             val sqlMedParams = sikreUnikeParams(
-                it.orderBy(OrderByInput(OppgaveTabell.OPPGAVE_AKTIV, now, feltområde, feltkode, økende))
+                it.orderBy(OrderByInput(OppgavefeltVerdiTabell.OPPGAVE_AKTIV, now, feltområde, feltkode, økende))
             )
             orderBySql += ", " + sqlMedParams.query
             orderByParams.putAll(sqlMedParams.queryParams)

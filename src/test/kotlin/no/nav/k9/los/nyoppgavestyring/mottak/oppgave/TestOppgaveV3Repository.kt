@@ -57,7 +57,7 @@ class TestOppgaveV3Repository(
     }
 
     private fun hentFeltverdier(
-        oppgaveId: OppgaveId,
+        oppgaveId: OppgaveV3Id,
         oppgavetype: Oppgavetype,
         tx: TransactionalSession
     ): List<OppgaveFeltverdi> {
