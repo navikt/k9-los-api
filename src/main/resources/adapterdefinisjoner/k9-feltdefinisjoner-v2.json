@@ -18,6 +18,14 @@
       "kokriterie": false
     },
     {
+      "id": "påklagdBehandlingtype",
+      "visningsnavn": "Påklaget behandlingtype",
+      "listetype": false,
+      "tolkesSom": "String",
+      "visTilBruker": true,
+      "kokriterie": false
+    },
+    {
       "id": "aktorId",
       "visningsnavn": "Søkers aktør-ID",
       "listetype": false,

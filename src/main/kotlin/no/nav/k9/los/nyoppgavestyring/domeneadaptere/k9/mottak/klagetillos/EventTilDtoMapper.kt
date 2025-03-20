@@ -2,6 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos
 
 import no.nav.k9.klage.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.klage.kodeverk.behandling.BehandlingStatus
+import no.nav.k9.klage.kodeverk.behandling.BehandlingType
 import no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
@@ -9,6 +10,7 @@ import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktType
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.Aksjonspunkttilstand
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.KlagebehandlingProsessHendelse
+import no.nav.k9.klage.kontrakt.produksjonsstyring.los.LosOpplysningerSomManglerHistoriskIKlageDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
@@ -33,6 +35,7 @@ class EventTilDtoMapper {
         internal fun lagOppgaveDto(
             event: KlagebehandlingProsessHendelse,
             losOpplysningerSomManglerIKlageDto: LosOpplysningerSomManglerIKlageDto?,
+            losOpplysningerSomManglerHistoriskIKlageDto: LosOpplysningerSomManglerHistoriskIKlageDto?,
             forrigeOppgave: OppgaveV3?
         ) = OppgaveDto(
             id = event.eksternId.toString(),
@@ -55,7 +58,7 @@ class EventTilDtoMapper {
             },
             endretTidspunkt = event.eventTid,
             reservasjonsnøkkel = utledReservasjonsnøkkel(event),
-            feltverdier = lagFeltverdier(event, losOpplysningerSomManglerIKlageDto, forrigeOppgave)
+            feltverdier = lagFeltverdier(event, losOpplysningerSomManglerIKlageDto, losOpplysningerSomManglerHistoriskIKlageDto, forrigeOppgave)
         )
 
         private fun utledReservasjonsnøkkel(event: KlagebehandlingProsessHendelse): String {
@@ -96,9 +99,12 @@ class EventTilDtoMapper {
         private fun lagFeltverdier(
             event: KlagebehandlingProsessHendelse,
             losOpplysningerSomManglerIKlageDto: LosOpplysningerSomManglerIKlageDto?,
+            losOpplysningerSomManglerHistoriskIKlageDto: LosOpplysningerSomManglerHistoriskIKlageDto?,
             forrigeOppgave: OppgaveV3?
         ): List<OppgaveFeltverdiDto> {
             val oppgaveFeltverdiDtos = mapEnkeltverdier(event, losOpplysningerSomManglerIKlageDto, forrigeOppgave)
+
+            utledPåklagdBehandlingtype(event, losOpplysningerSomManglerHistoriskIKlageDto, oppgaveFeltverdiDtos)
 
             val åpneAksjonspunkter = getåpneAksjonspunkter(event)
 
@@ -344,6 +350,35 @@ class EventTilDtoMapper {
                 )
             }
         }.filterNotNull().toMutableList()
+
+        fun utledPåklagdBehandlingtype(
+            event: KlagebehandlingProsessHendelse,
+            losOpplysningerSomManglerHistoriskIKlageDto: LosOpplysningerSomManglerHistoriskIKlageDto?,
+            oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
+        ) {
+            val påklagdBehandlingType = event.påklagdBehandlingType?.let { mapBehandlingtype(it) }
+                ?: losOpplysningerSomManglerHistoriskIKlageDto?.påklagdBehandlingType?.let { mapBehandlingtype(it) }
+
+            påklagdBehandlingType?.let {
+                oppgaveFeltverdiDtos.add(OppgaveFeltverdiDto(
+                    nøkkel = "påklagdBehandlingtype",
+                    verdi = it
+                    )
+                )
+            }
+
+        }
+
+        private fun mapBehandlingtype(behandlingType: BehandlingType) : String {
+            return when (behandlingType) {
+                BehandlingType.TILBAKEKREVING, BehandlingType.REVURDERING_TILBAKEKREVING -> {
+                    "k9-tilbake"
+                }
+                else -> {
+                    "k9-sak"
+                }
+            }
+        }
 
         @VisibleForTesting
         fun utledTidFørsteGangHosBeslutter(
