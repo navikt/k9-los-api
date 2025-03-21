@@ -4,9 +4,9 @@ import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.db.util.InClauseHjelper
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Id
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
-import no.nav.k9.los.spi.felter.HentVerdiInput
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -15,6 +15,29 @@ class OppgaveRepository(
     private val oppgavetypeRepository: OppgavetypeRepository
 ) {
     private val log: Logger = LoggerFactory.getLogger("OppgaveRepository")
+
+    fun hentOppgaveForEksternIdOgEksternVersjon(
+        tx: TransactionalSession,
+        eksternId: String,
+        eksternVersjon: String,
+        now: LocalDateTime = LocalDateTime.now()
+    ): Oppgave? {
+        return tx.run(
+            queryOf(
+                """
+                        select * 
+                        from oppgave_v3 ov
+                        where ov.ekstern_id = :eksternId 
+                         and ov.ekstern_versjon = :eksternVersjon
+                        and ov.aktiv = true
+                    """.trimIndent(),
+                mapOf(
+                    "eksternId" to eksternId,
+                    "eksternVersjon" to eksternVersjon
+                )
+            ).map { mapOppgave(it, now, tx) }.asSingle
+        )
+    }
 
     fun hentNyesteOppgaveForEksternId(tx: TransactionalSession, kildeområde: String, eksternId: String, now: LocalDateTime = LocalDateTime.now()): Oppgave {
         return hentNyesteOppgaveForEksternIdHvisFinnes(tx, kildeområde, eksternId, now) ?: throw IllegalStateException("Fant ikke oppgave med kilde $kildeområde og eksternId $eksternId")
@@ -66,7 +89,7 @@ class OppgaveRepository(
         return oppgaver
     }
 
-    fun hentOppgaveForId(tx: TransactionalSession, id: Long, now: LocalDateTime = LocalDateTime.now()): Oppgave {
+    fun hentOppgaveForId(tx: TransactionalSession, id: OppgaveV3Id, now: LocalDateTime = LocalDateTime.now()): Oppgave {
         val oppgave = tx.run(
             queryOf(
                 """
@@ -74,7 +97,7 @@ class OppgaveRepository(
                 from oppgave_v3 ov
                 where ov.id = :id
             """.trimIndent(),
-                mapOf("id" to id)
+                mapOf("id" to id.id)
             ).map { row ->
                 mapOppgave(row, now, tx)
             }.asSingle

@@ -29,7 +29,7 @@ fun Route.SøkeboksApi() {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val søkQuery = call.receive<SøkQuery>()
-                call.respond(søkeboksTjeneste.finnOppgaver(søkQuery.searchString, søkQuery.fraAktiv))
+                call.respond(søkeboksTjeneste.finnOppgaver(søkQuery.searchString))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

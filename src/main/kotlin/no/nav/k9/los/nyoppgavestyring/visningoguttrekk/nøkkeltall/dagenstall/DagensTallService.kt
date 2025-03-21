@@ -243,7 +243,6 @@ class DagensTallService(
                         FeltverdiOppgavefilter("K9", datotype.kode, EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS.kode, listOf(dato.toString()))
                     )
                 ),
-                fraAktiv = false,
             )
         )
     }

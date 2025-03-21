@@ -7,7 +7,6 @@ import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.pdl.IPdlService
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
@@ -22,18 +21,18 @@ class SøkeboksTjeneste(
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
     private val saksbehandlerRepository: SaksbehandlerRepository,
 ) {
-    suspend fun finnOppgaver(søkeord: String, fraAktiv: Boolean): List<SøkeboksOppgaveDto> {
+    suspend fun finnOppgaver(søkeord: String): List<SøkeboksOppgaveDto> {
         val oppgaver = when (søkeord.length) {
             11 -> {
-                finnOppgaverForSøkersFnr(søkeord, fraAktiv)
+                finnOppgaverForSøkersFnr(søkeord)
             }
 
             9 -> {
-                finnOppgaverForJournalpostId(søkeord, fraAktiv)
+                finnOppgaverForJournalpostId(søkeord)
             }
 
             else -> {
-                finnOppgaverForSaksnummer(søkeord, fraAktiv)
+                finnOppgaverForSaksnummer(søkeord)
             }
         }
 
@@ -55,7 +54,7 @@ class SøkeboksTjeneste(
             }
     }
 
-    private fun finnOppgaverForJournalpostId(journalpostId: String, fraAktiv: Boolean): List<Oppgave> {
+    private fun finnOppgaverForJournalpostId(journalpostId: String): List<Oppgave> {
         val query = OppgaveQuery(
             listOf(
                 FeltverdiOppgavefilter(
@@ -66,13 +65,13 @@ class SøkeboksTjeneste(
                 )
             )
         )
-        val oppgaveEksternIder = queryService.queryForOppgaveEksternId(QueryRequest(oppgaveQuery = query, fraAktiv = fraAktiv))
+        val oppgaveEksternIder = queryService.queryForOppgaveEksternId(QueryRequest(oppgaveQuery = query))
         return oppgaveRepository.hentOppgaver(
             eksternoppgaveIder = oppgaveEksternIder,
         )
     }
 
-    private suspend fun finnOppgaverForSøkersFnr(fnr: String, fraAktiv: Boolean): List<Oppgave> {
+    private suspend fun finnOppgaverForSøkersFnr(fnr: String): List<Oppgave> {
         val aktørId =
             pdlService.identifikator(fnr).aktorId?.data?.hentIdenter?.identer?.get(0)?.ident ?: return emptyList()
         val query = OppgaveQuery(
@@ -85,13 +84,13 @@ class SøkeboksTjeneste(
                 )
             )
         )
-        val oppgaveEksternIder = queryService.queryForOppgaveEksternId(QueryRequest(oppgaveQuery = query, fraAktiv = fraAktiv))
+        val oppgaveEksternIder = queryService.queryForOppgaveEksternId(QueryRequest(oppgaveQuery = query))
         return oppgaveRepository.hentOppgaver(
             eksternoppgaveIder = oppgaveEksternIder,
         ).sortedBy { it.hentVerdi("mottattDato") }
     }
 
-    private fun finnOppgaverForSaksnummer(saksnummer: String, fraAktiv: Boolean): List<Oppgave> {
+    private fun finnOppgaverForSaksnummer(saksnummer: String): List<Oppgave> {
         val query = OppgaveQuery(
             listOf(
                 FeltverdiOppgavefilter(
@@ -102,7 +101,7 @@ class SøkeboksTjeneste(
                 )
             )
         )
-        val oppgaveEksternIder = queryService.queryForOppgaveEksternId(QueryRequest(oppgaveQuery = query, fraAktiv = fraAktiv))
+        val oppgaveEksternIder = queryService.queryForOppgaveEksternId(QueryRequest(oppgaveQuery = query))
         return oppgaveRepository.hentOppgaver(
             eksternoppgaveIder = oppgaveEksternIder,
         )

@@ -1,4 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
-data class OppgaveId(val id : Long)
 
-data class AktivOppgaveId(val id : Long)
+sealed class OppgaveId
+
+data class OppgaveV3Id(val id: Long) : OppgaveId()
+data class AktivOppgaveId(val id: Long) : OppgaveId()
+data class PartisjonertOppgaveId(val oppgaveEksternId: String, val oppgaveEksternVersjon: String) : OppgaveId()
