@@ -18,6 +18,7 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.PartisjonertOppgaveId
 import no.nav.k9.los.nyoppgavestyring.pep.PepCache
 import no.nav.k9.los.nyoppgavestyring.pep.PepCacheRepository
 import no.nav.k9.los.nyoppgavestyring.pep.TestRepository
@@ -928,6 +929,34 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
         )
 
         assertThat(oppgaveQueryRepository.query(QueryRequest(query))).isEmpty()
+    }
+
+    @Test
+    fun `sjekk at ferdigstiltDato kan brukes som felt`() {
+        val oppgaveTestDataBuilder = OppgaveTestDataBuilder()
+        val oppgaveQueryRepository = OppgaveQueryRepository(dataSource, mockk<FeltdefinisjonRepository>())
+
+        // lager to oppgaver, en ferdigstilt i dag og en ferdigstilt 1. januar 2025
+       oppgaveTestDataBuilder
+            .lagOgLagre(
+                status = Oppgavestatus.LUKKET,
+            )
+        val oppgaveLukketFørsteJanuar = oppgaveTestDataBuilder
+            .lagOgLagre(
+                status = Oppgavestatus.LUKKET,
+                endretTidspunkt = LocalDateTime.of(2025, 1, 1, 0, 0, 0)
+            )
+
+        val resultat = oppgaveQueryRepository.query(
+            QueryRequest(
+                OppgaveQuery(
+                    listOf(
+                        byggFilter(FeltType.FERDIGSTILT_DATO, FeltverdiOperator.EQUALS, "2025-01-01"),
+                        byggFilter(FeltType.OPPGAVE_STATUS, FeltverdiOperator.EQUALS, "LUKKET"),
+                    )
+                )
+            ))
+        assertThat(resultat).containsOnly(PartisjonertOppgaveId(oppgaveLukketFørsteJanuar.eksternId, oppgaveLukketFørsteJanuar.eksternVersjon))
     }
 
     private fun lagOppgaveMedPepCache(

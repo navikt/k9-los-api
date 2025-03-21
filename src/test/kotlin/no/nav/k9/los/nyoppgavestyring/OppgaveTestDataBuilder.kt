@@ -67,21 +67,21 @@ class OppgaveTestDataBuilder(
     }
 
 
-    fun lagOgLagre(status: Oppgavestatus = Oppgavestatus.AAPEN): OppgaveV3 {
+    fun lagOgLagre(status: Oppgavestatus = Oppgavestatus.AAPEN, endretTidspunkt: LocalDateTime = LocalDateTime.now()): OppgaveV3 {
         return transactionManager.transaction { tx ->
-            val oppgave = lag(status)
+            val oppgave = lag(status, endretTidspunkt = endretTidspunkt)
             oppgaverepo.nyOppgaveversjon(oppgave, tx)
             oppgave
         }
     }
 
-    fun lag(status: Oppgavestatus = Oppgavestatus.AAPEN, reservasjonsnøkkel: String = "", eksternVersjon: String? = null): OppgaveV3 {
+    fun lag(status: Oppgavestatus = Oppgavestatus.AAPEN, reservasjonsnøkkel: String = "", eksternVersjon: String? = null, endretTidspunkt: LocalDateTime = LocalDateTime.now()): OppgaveV3 {
         return OppgaveV3(
             eksternId = oppgaveFeltverdier[FeltType.BEHANDLINGUUID]?.verdi ?: UUID.randomUUID().toString(),
             eksternVersjon = eksternVersjon ?: eksternVersjonTeller++.toString(),
             oppgavetype = oppgavetype,
             status = status,
-            endretTidspunkt = LocalDateTime.now(),
+            endretTidspunkt = endretTidspunkt,
             kildeområde = område.eksternId,
             felter = oppgaveFeltverdier.values.toList(),
             reservasjonsnøkkel = reservasjonsnøkkel,
@@ -119,6 +119,7 @@ enum class FeltType(
     LØSBART_AKSJONSPUNKT("løsbartAksjonspunkt"),
     LIGGER_HOS_BESLUTTER("liggerHosBeslutter", tolkesSom = "boolean"),
     TID_FORSTE_GANG_HOS_BESLUTTER("tidFørsteGangHosBeslutter"),
+    FERDIGSTILT_DATO("ferdigstiltDato", tolkesSom = "Timestamp", område = null),
 }
 
 val felter: Map<OmrådeOgKode, OppgavefeltMedMer> = mapOf(

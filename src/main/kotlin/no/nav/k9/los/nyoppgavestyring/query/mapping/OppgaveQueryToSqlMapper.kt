@@ -4,6 +4,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.db.*
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 object OppgaveQueryToSqlMapper {
@@ -14,7 +15,10 @@ object OppgaveQueryToSqlMapper {
     ): OppgaveQuerySqlBuilder {
         val oppgavestatusFilter = traverserFiltereOgFinnOppgavestatusfilter(request)
         return when {
-            oppgavestatusFilter.isEmpty() || oppgavestatusFilter.contains(Oppgavestatus.LUKKET) -> PartisjonertOppgaveQuerySqlBuilder(felter, oppgavestatusFilter, now)
+            oppgavestatusFilter.isEmpty() || oppgavestatusFilter.contains(Oppgavestatus.LUKKET) -> {
+                PartisjonertOppgaveQuerySqlBuilder(felter, oppgavestatusFilter, now,
+                    traverserFiltereOgFinnFerdigstiltDatofilter(request))
+            }
             else -> AktivOppgaveQuerySqlBuilder(felter, oppgavestatusFilter, now)
         }
     }
@@ -49,7 +53,12 @@ object OppgaveQueryToSqlMapper {
 
     fun traverserFiltereOgFinnOppgavestatusfilter(queryRequest: QueryRequest): List<Oppgavestatus> {
         val statuser = mutableSetOf<Oppgavestatus>()
-        rekursivtSøk(queryRequest.oppgaveQuery.filtere, statuser)
+        rekursivtSøk(
+            queryRequest.oppgaveQuery.filtere,
+            statuser,
+            { verdi -> Oppgavestatus.fraKode(verdi.toString()) },
+            { filter -> filter.kode == "oppgavestatus" }
+        )
 
         //dette parameteret brukes av index på oppgavefeltverdi. Spørringer som ser på lukkede oppgaver er ikke indekserte, og vil være trege
         //Dersom spørringen filterer på oppgavestatus, så matcher vi det.
@@ -61,7 +70,35 @@ object OppgaveQueryToSqlMapper {
         }
     }
 
-    private fun rekursivtSøk(
+    fun traverserFiltereOgFinnFerdigstiltDatofilter(queryRequest: QueryRequest): LocalDate? {
+        val datoer = mutableSetOf<LocalDate>()
+        rekursivtSøk(
+            queryRequest.oppgaveQuery.filtere,
+            datoer,
+            { verdi -> LocalDate.parse(verdi.toString()) },
+            { filter -> filter.kode == "ferdigstiltDato" }
+        )
+
+        //dette parameteret brukes av index på oppgavefeltverdi. Spørringer som ser på lukkede oppgaver er ikke indekserte, og vil være trege
+        return datoer.firstOrNull()
+    }
+
+    private fun <T> rekursivtSøk(
+        filtere: List<Oppgavefilter>,
+        verdierFunnet: MutableSet<T>,
+        mapper: (Any?) -> T,
+        betingelse: (FeltverdiOppgavefilter) -> Boolean
+    ) {
+        for (filter in filtere) {
+            if (filter is FeltverdiOppgavefilter && betingelse(filter)) {
+                verdierFunnet.addAll(filter.verdi.map { verdi -> mapper(verdi) })
+            } else if (filter is CombineOppgavefilter) {
+                rekursivtSøk(filter.filtere, verdierFunnet, mapper, betingelse)
+            }
+        }
+    }
+
+    /*private fun rekursivtSøk(
         filtere: List<Oppgavefilter>,
         statuser: MutableSet<Oppgavestatus>
     ) {
@@ -72,7 +109,7 @@ object OppgaveQueryToSqlMapper {
                 rekursivtSøk(filter.filtere, statuser)
             }
         }
-    }
+    }*/
 
     private fun håndterFiltere(
         queryBuilder: OppgaveQuerySqlBuilder,

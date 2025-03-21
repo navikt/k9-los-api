@@ -128,11 +128,6 @@ class AktivOppgaveQuerySqlBuilder(
 
         val index = queryParams.size + orderByParams.size
         when (feltkode) {
-            "sistEndret" -> {
-                query += "${combineOperator.sql} o.endret_tidspunkt ${operator.sql} (timestamp :sistEndret$index)) "
-                queryParams["sistEndret$index"] = feltverdi
-            }
-
             "kildeområde" -> {
                 query += "${combineOperator.sql} o.kildeomrade ${operator.sql} (:kildeomrade$index) "
                 queryParams["kildeomrade$index"] = feltverdi
@@ -179,7 +174,11 @@ class AktivOppgaveQuerySqlBuilder(
                 }
             }
 
-            else -> log.warn("Håndterer ikke filter for $feltkode")
+            "oppgavestatus" -> {
+                // Ignorerer felt, siden det er håndtert spesielt
+            }
+
+            else -> log.warn("Håndterer ikke filter for $feltkode. Legg til i ignorering hvis feltet håndteres spesielt.")
         }
     }
 

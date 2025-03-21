@@ -4,6 +4,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import no.nav.k9.los.domene.modell.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
@@ -163,7 +164,12 @@ class FerdigstiltePerEnhetService(
                     }
                     add(
                         FeltverdiOppgavefilter(
-                            "K9", "ferdigstiltTidspunkt", FeltverdiOperator.EQUALS.name, listOf(dato.toString())
+                            null, "oppgavestatus", FeltverdiOperator.EQUALS.name, listOf(Oppgavestatus.LUKKET.kode)
+                        )
+                    )
+                    add(
+                        FeltverdiOppgavefilter(
+                            null, "ferdigstiltDato", FeltverdiOperator.EQUALS.name, listOf(dato.toString())
                         )
                     )
                 }

@@ -17,18 +17,20 @@ import no.nav.k9.los.spi.felter.SqlMedParams
 import no.nav.k9.los.spi.felter.TransientFeltutleder
 import no.nav.k9.los.spi.felter.WhereInput
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 class PartisjonertOppgaveQuerySqlBuilder(
     val felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
     oppgavestatusFilter: List<Oppgavestatus>,
     val now: LocalDateTime,
-    private val ferdigstiltDato: LocalDateTime? = null,
+    private val ferdigstiltDato: LocalDate? = null,
 ) : OppgaveQuerySqlBuilder {
     private val log = LoggerFactory.getLogger(PartisjonertOppgaveQuerySqlBuilder::class.java)
 
     private val oppgavestatusPlaceholder: String = InClauseHjelper.tilParameternavn(oppgavestatusFilter, "status")
-    private val ferdigstiltDatoBetingelse = if (ferdigstiltDato != null) " AND ov.ferdigstilt_dato = :ferdigstilt_dato " else ""
+    private val ferdigstiltDatoBetingelseOppgavefeltverdi = if (ferdigstiltDato != null) " AND ov.ferdigstilt_dato = :ferdigstilt_dato " else ""
+    private val ferdigstiltDatoBetingelseOppgave = if (ferdigstiltDato != null) " AND o.ferdigstilt_dato = :ferdigstilt_dato " else ""
 
     private var selectPrefix = """
                 SELECT o.oppgave_ekstern_id, o.oppgave_ekstern_versjon
@@ -39,7 +41,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
     private var query = ("""
         FROM oppgave_v3_part o
         LEFT JOIN oppgave_pep_cache opc ON (opc.kildeomrade = 'K9' AND o.oppgave_ekstern_id = opc.ekstern_id)
-        WHERE o.oppgavestatus in ($oppgavestatusPlaceholder) $ferdigstiltDatoBetingelse
+        WHERE o.oppgavestatus in ($oppgavestatusPlaceholder) $ferdigstiltDatoBetingelseOppgave
     """).trimIndent()
 
     private val filtrerReserverteOppgaver = """
@@ -82,6 +84,9 @@ class PartisjonertOppgaveQuerySqlBuilder(
             putAll(queryParams)
             putAll(orderByParams)
             putAll(oppgavestatusParams)
+            if (ferdigstiltDato != null) {
+                put("ferdigstilt_dato", ferdigstiltDato)
+            }
         }
     }
 
@@ -150,7 +155,11 @@ class PartisjonertOppgaveQuerySqlBuilder(
                 }
             }
 
-            else -> log.warn("Håndterer ikke filter for $feltkode")
+            "ferdigstiltDato", "oppgavestatus" -> {
+                // Ignorerer felter, siden de er håndtert spesielt
+            }
+
+            else -> log.warn("Håndterer ikke filter for $feltkode. Legg til i ignorering hvis feltet håndteres spesielt.")
         }
     }
 
@@ -190,7 +199,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
             ${combineOperator.sql} ${if (operator.negasjonAv != null) "NOT" else ""} EXISTS (
                 SELECT 1
                 FROM oppgavefelt_verdi_part ov
-                WHERE ov.oppgavestatus in ($oppgavestatusPlaceholder) $ferdigstiltDatoBetingelse
+                WHERE ov.oppgavestatus in ($oppgavestatusPlaceholder) $ferdigstiltDatoBetingelseOppgavefeltverdi
                   AND ov.oppgave_ekstern_id = o.oppgave_ekstern_id
                   AND ov.oppgave_ekstern_versjon = o.oppgave_ekstern_versjon
                   AND ov.omrade_ekstern_id = :feltOmrade$index
@@ -247,7 +256,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
             ${combineOperator.sql}$invertertOperator EXISTS (
                 SELECT 1
                 FROM oppgavefelt_verdi_part ov 
-                WHERE ov.oppgavestatus in ($oppgavestatusPlaceholder) $ferdigstiltDatoBetingelse
+                WHERE ov.oppgavestatus in ($oppgavestatusPlaceholder) $ferdigstiltDatoBetingelseOppgavefeltverdi
                     AND ov.oppgave_ekstern_id = o.oppgave_ekstern_id
                     AND ov.oppgave_ekstern_versjon = o.oppgave_ekstern_versjon
                     AND ov.omrade_ekstern_id = :feltOmrade$index
@@ -291,7 +300,6 @@ class PartisjonertOppgaveQuerySqlBuilder(
 
         orderByParams.putAll(
             mapOf(
-                "ferdigstilt_dato" to ferdigstiltDato,
                 "orderByfeltOmrade$index" to feltområde,
                 "orderByfeltkode$index" to feltkode
             )
@@ -303,7 +311,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
                 , (
                   SELECT $verdifelt                    
                   FROM oppgavefelt_verdi_part ov 
-                  WHERE ov.oppgavestatus in ($oppgavestatusPlaceholder) $ferdigstiltDatoBetingelse
+                  WHERE ov.oppgavestatus in ($oppgavestatusPlaceholder) $ferdigstiltDatoBetingelseOppgavefeltverdi
                     AND ov.oppgave_ekstern_id = o.oppgave_ekstern_id
                     AND ov.oppgave_ekstern_versjon = o.oppgave_ekstern_versjon
                     AND ov.omrade_ekstern_id = :orderByfeltOmrade$index
