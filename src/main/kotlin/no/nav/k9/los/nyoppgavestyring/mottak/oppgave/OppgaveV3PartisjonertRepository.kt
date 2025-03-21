@@ -39,9 +39,19 @@ class OppgaveV3PartisjonertRepository(val oppgavetypeRepository: OppgavetypeRepo
         eksisterendeFelter: List<OppgaveFeltverdi>,
         nyeFelter: List<OppgaveFeltverdi>
     ): Boolean {
-        return eksisterendeFelter.size != nyeFelter.size || 
-                !eksisterendeFelter.map { FeltverdiNøkkel(it) }.containsAll(nyeFelter.map { FeltverdiNøkkel(it) }) || 
-                !nyeFelter.map { FeltverdiNøkkel(it) }.containsAll(eksisterendeFelter.map { FeltverdiNøkkel(it) })
+        val mapSammenlignbareVerdier = { verdi: OppgaveFeltverdi ->
+            Triple(
+                verdi.oppgavefelt.feltDefinisjon.eksternId,
+                verdi.verdi,
+                verdi.verdiBigInt
+            )
+        }
+
+        val eksisterende = eksisterendeFelter.map(mapSammenlignbareVerdier)
+        val nye = nyeFelter.map(mapSammenlignbareVerdier)
+        return eksisterendeFelter.size != nyeFelter.size ||
+                !eksisterende.containsAll(nye) ||
+                !nye.containsAll(eksisterende)
     }
 
     private fun hentOppgave(
@@ -178,18 +188,6 @@ class OppgaveV3PartisjonertRepository(val oppgavetypeRepository: OppgavetypeRepo
                     "oppgave_ekstern_id" to oppgave.eksternId
                 )
             ).asUpdate,
-        )
-    }
-    
-    private data class FeltverdiNøkkel(
-        val feltdefinisjonEksternId: String,
-        val verdi: String,
-        val verdiBigInt: Long?
-    ) {
-        constructor(fv: OppgaveFeltverdi) : this(
-            feltdefinisjonEksternId = fv.oppgavefelt.feltDefinisjon.eksternId,
-            verdi = fv.verdi,
-            verdiBigInt = fv.verdiBigInt
         )
     }
 }
