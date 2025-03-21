@@ -7,8 +7,13 @@ import no.nav.k9.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
-import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
-import no.nav.k9.los.integrasjon.kafka.dto.EventHendelse
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakModell
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -25,7 +30,7 @@ class K9SakModellTest {
 
     @Test
     fun `Oppgave uten aksjonspunkter`() {
-        val eventDto = BehandlingProsessEventDto(
+        val eventDto = K9SakEventDto(
             eksternId = uuid,
             fagsystem = Fagsystem.K9SAK,
             saksnummer = "624QM",
@@ -69,7 +74,7 @@ class K9SakModellTest {
 
     @Test
     fun `Oppgave til beslutter`() {
-        val eventDto = BehandlingProsessEventDto(
+        val eventDto = K9SakEventDto(
             eksternId = uuid,
             fagsystem = Fagsystem.K9SAK,
             saksnummer = "624QM",
@@ -100,7 +105,7 @@ class K9SakModellTest {
 
     @Test
     fun `Oppgave til beslutter UTFØRT`() {
-        val eventDto = BehandlingProsessEventDto(
+        val eventDto = K9SakEventDto(
             eksternId = uuid,
             fagsystem = Fagsystem.K9SAK,
             saksnummer = "624QM",
@@ -132,7 +137,7 @@ class K9SakModellTest {
 
     @Test
     fun `Oppgave til beslutter AVBRUTT`() {
-        val eventDto = BehandlingProsessEventDto(
+        val eventDto = K9SakEventDto(
             eksternId = uuid,
             fagsystem = Fagsystem.K9SAK,
             saksnummer = "624QM",
@@ -163,7 +168,7 @@ class K9SakModellTest {
 
     @Test
     fun `Oppgave til skal ha utenlandstildnitt automatisk`() {
-        val eventDto = BehandlingProsessEventDto(
+        val eventDto = K9SakEventDto(
             eksternId = uuid,
             fagsystem = Fagsystem.K9SAK,
             saksnummer = "624QM",
@@ -194,7 +199,7 @@ class K9SakModellTest {
 
     @Test
     fun `Oppgave til skal ha utenlandstildnitt manuell`() {
-        val eventDto = BehandlingProsessEventDto(
+        val eventDto = K9SakEventDto(
             eksternId = uuid,
             fagsystem = Fagsystem.K9SAK,
             saksnummer = "624QM",
@@ -226,7 +231,7 @@ class K9SakModellTest {
 
     @Test
     fun `Oppgave til skal ha årskvantum`() {
-        val eventDto = BehandlingProsessEventDto(
+        val eventDto = K9SakEventDto(
             eksternId = uuid,
             fagsystem = Fagsystem.K9SAK,
             saksnummer = "624QM",
@@ -257,7 +262,7 @@ class K9SakModellTest {
 
     @Test
     fun `Oppgave til skal ha avklar medlemskap`() {
-        val eventDto = BehandlingProsessEventDto(
+        val eventDto = K9SakEventDto(
             eksternId = uuid,
             fagsystem = Fagsystem.K9SAK,
             saksnummer = "624QM",
@@ -407,7 +412,7 @@ class K9SakModellReservasjonTestV3 {
         )
 
         val omsEventBuilder = eventBuilder(fagsakYtelseType)
-        val eventer = mutableListOf<BehandlingProsessEventDto>()
+        val eventer = mutableListOf<K9SakEventDto>()
         val modell = K9SakModell(eventer)
 
         eventer.add(omsEventBuilder(venter_soknad))
@@ -432,7 +437,7 @@ class K9SakModellReservasjonTestV3 {
 
     }
 
-    private fun kjørEventer(eventBuilder: (Map<String, String>) -> BehandlingProsessEventDto,
+    private fun kjørEventer(eventBuilder: (Map<String, String>) -> K9SakEventDto,
                             vararg ap: Map<String, String>): K9SakModell {
 
         val eventer = ap.map { eventBuilder(it) }.toMutableList()
@@ -441,7 +446,7 @@ class K9SakModellReservasjonTestV3 {
 
     @Test
     fun `Skal håndtere flere eventer etter hverandre med tilbakerull PSB`() {
-        val eventer = mutableListOf<BehandlingProsessEventDto>()
+        val eventer = mutableListOf<K9SakEventDto>()
         val modell = K9SakModell(eventer)
         val psbEventBuilder = eventBuilder(FagsakYtelseType.PLEIEPENGER_SYKT_BARN)
 
@@ -533,7 +538,7 @@ class K9SakModellReservasjonTestV3 {
 
     private fun eventBuilder(fagsakYtelseType: FagsakYtelseType) = {
             aksjonspunkter: Map<String, String> ->
-        BehandlingProsessEventDto(
+        K9SakEventDto(
             eksternId = uuid,
             fagsystem = Fagsystem.K9SAK,
             saksnummer = "624QM",

@@ -10,9 +10,9 @@ import no.nav.k9.los.db.util.InClauseHjelper
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.OppgaveMedId
 import no.nav.k9.los.domene.modell.AksjonspunktDefWrapper
-import no.nav.k9.los.domene.modell.BehandlingStatus
-import no.nav.k9.los.domene.modell.BehandlingType
-import no.nav.k9.los.domene.modell.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleApneBehandlinger
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverDto
@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.*
-import java.util.concurrent.atomic.LongAdder
 import javax.sql.DataSource
 
 
