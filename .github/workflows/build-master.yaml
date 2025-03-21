@@ -31,6 +31,7 @@ jobs:
       contents: read
     secrets: inherit
     with:
+      readertoken: true
       javaversion: 21
 
   build:
@@ -40,6 +41,7 @@ jobs:
       id-token: write
     secrets: inherit
     with:
+      readertoken: true
       team: k9saksbehandling
       javaversion: 21
 
