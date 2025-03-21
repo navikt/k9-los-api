@@ -235,6 +235,7 @@ fun Application.k9Los() {
         transactionalManager = koin.get(),
         config = koin.get(),
         k9sakBeriker = koin.get(),
+        k9klageBeriker = koin.get(),
     ).kjør(kjørSetup = false, kjørUmiddelbart = false)
 
     // implementer med Jobbplanlegger

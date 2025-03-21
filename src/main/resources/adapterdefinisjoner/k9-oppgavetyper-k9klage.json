@@ -17,6 +17,11 @@
           "påkrevd": false
         },
         {
+          "id": "påklagdBehandlingtype",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
           "id": "aktorId",
           "visPåOppgave": true,
           "påkrevd": true
