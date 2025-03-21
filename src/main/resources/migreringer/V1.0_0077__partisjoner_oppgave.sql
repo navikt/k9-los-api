@@ -57,4 +57,5 @@ CREATE TABLE oppgave_v3_lukket_2025_part
     FOR VALUES FROM ('2025-01-01') TO ('2026-01-01');
 
 -- Indekser
-create index oppgave_id_idx on oppgave_v3_part(oppgave_ekstern_id, oppgave_ekstern_versjon);
+create index oppgave_id_idx on oppgave_v3_part(oppgave_ekstern_id);
+create index oppgave_lukket_ferdigstilt_dato_idx on oppgave_v3_lukket_part(ferdigstilt_dato desc, oppgave_ekstern_id);
