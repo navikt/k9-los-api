@@ -240,14 +240,14 @@ class DagensTallService(
                                 "K9", "oppgavetype", EksternFeltverdiOperator.EQUALS.kode, listOf(it)
                             )
                         },
-                        FeltverdiOppgavefilter("K9", datotype.kode, EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS.kode, listOf(dato.toString())),
+                        FeltverdiOppgavefilter(datotype.område, datotype.kode, EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS.kode, listOf(dato.toString())),
                     )
                 ),
             )
         )
     }
 
-    private enum class Datotype(val kode: String) {
-        MOTTATT_DATO("mottattDato"), FERDIGSTILT_DATO("ferdigstiltDato")
+    private enum class Datotype(val område: String?, val kode: String) {
+        MOTTATT_DATO("K9", "mottattDato"), FERDIGSTILT_DATO(null, "ferdigstiltDato")
     }
 }
