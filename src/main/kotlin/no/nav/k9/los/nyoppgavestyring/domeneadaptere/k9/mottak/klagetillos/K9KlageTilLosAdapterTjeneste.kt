@@ -9,6 +9,7 @@ import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.repository.BehandlingProsessEventKlageRepository
 import no.nav.k9.los.jobber.JobbMetrikker
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerInterfaceKludge
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.beriker.K9KlageBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
@@ -32,6 +33,7 @@ class K9KlageTilLosAdapterTjeneste(
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
     private val transactionalManager: TransactionalManager,
     private val k9sakBeriker: K9SakBerikerInterfaceKludge,
+    private val k9klageBeriker: K9KlageBerikerInterfaceKludge,
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9KlageTilLosAdapterTjeneste::class.java)
@@ -117,8 +119,15 @@ class K9KlageTilLosAdapterTjeneste(
             behandlingProsessEventer.forEach { event ->
                 val losOpplysningerSomManglerIKlageDto =
                     event.påklagdBehandlingEksternId?.let { k9sakBeriker.berikKlage(it) }
+
+                val påklagdBehandlingDto = if (event.påklagdBehandlingEksternId != null && event.påklagdBehandlingType == null) {
+                    k9klageBeriker.hentFraK9Klage(event.eksternId)
+                } else {
+                    null
+                }
+
                 val oppgaveDto =
-                    EventTilDtoMapper.lagOppgaveDto(event, losOpplysningerSomManglerIKlageDto, forrigeOppgave)
+                    EventTilDtoMapper.lagOppgaveDto(event, losOpplysningerSomManglerIKlageDto, påklagdBehandlingDto, forrigeOppgave)
 
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
 
