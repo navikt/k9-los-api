@@ -58,22 +58,12 @@ CREATE TABLE oppgavefelt_verdi_lukket_2025_part
     FOR VALUES FROM ('2025-01-01') TO ('2026-01-01');
 
 -- Indekser
-create index ofv_oppgave_id_idx on oppgavefelt_verdi_part(oppgave_ekstern_id);
-create index ofv_aapen_venter_verdi_idx on oppgavefelt_verdi_aapen_venter_part(oppgave_ekstern_id, feltdefinisjon_ekstern_id, verdi);
-create index ofv_aapen_venter_verdi_bigint_idx on oppgavefelt_verdi_aapen_venter_part(oppgave_ekstern_id, feltdefinisjon_ekstern_id, verdi_bigint) where verdi_bigint is not null;
-create index ofv_lukket_ferdigstilt_dato_idx on oppgavefelt_verdi_lukket_part(
-    ferdigstilt_dato desc,
-    oppgave_ekstern_id,
-    feltdefinisjon_ekstern_id,
-    verdi
-);
-create index ofv_lukket_verdi_idx on oppgavefelt_verdi_lukket_part(
-    oppgave_ekstern_id,
-    feltdefinisjon_ekstern_id,
-    verdi
-);
-create index ofv_lukket_verdi_bigint_idx on oppgavefelt_verdi_lukket_part(
-    oppgave_ekstern_id,
-    feltdefinisjon_ekstern_id,
-    verdi_bigint
-) where verdi_bigint is not null;
+create index ofv_oppgave_id_idx on oppgavefelt_verdi_part (oppgave_ekstern_id);
+create index ofv_oppgave_id_verdi_idx on oppgavefelt_verdi_part (oppgave_ekstern_id, feltdefinisjon_ekstern_id, verdi);
+create index ofv_oppgave_id_verdi_bigint_idx on oppgavefelt_verdi_part (oppgave_ekstern_id, feltdefinisjon_ekstern_id, verdi_bigint) where verdi_bigint is not null;
+
+create index ofv_feltdefinisjon_verdi_idx on oppgavefelt_verdi_part (feltdefinisjon_ekstern_id, verdi, oppgave_ekstern_id);
+create index ofv_feltdefinisjon_verdi_bigint_idx on oppgavefelt_verdi_part (feltdefinisjon_ekstern_id, verdi_bigint, oppgave_ekstern_id) where verdi_bigint is not null;
+
+create index ofv_lukket_ferdigstilt_dato_verdi_idx on oppgavefelt_verdi_lukket_part (ferdigstilt_dato desc, feltdefinisjon_ekstern_id, verdi, oppgave_ekstern_id);
+create index ofv_lukket_ferdigstilt_dato_verdi_bigint_idx on oppgavefelt_verdi_lukket_part (ferdigstilt_dato desc, feltdefinisjon_ekstern_id, verdi_bigint, oppgave_ekstern_id) where verdi_bigint is null;
