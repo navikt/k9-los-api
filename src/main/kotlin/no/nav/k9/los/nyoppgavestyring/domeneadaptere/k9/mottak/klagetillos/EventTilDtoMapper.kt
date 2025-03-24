@@ -1,9 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos
 
-import no.nav.k9.klage.kodeverk.behandling.BehandlingResultatType
-import no.nav.k9.klage.kodeverk.behandling.BehandlingStatus
-import no.nav.k9.klage.kodeverk.behandling.BehandlingType
-import no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType
+import no.nav.k9.klage.kodeverk.behandling.*
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktType
@@ -43,17 +40,21 @@ class EventTilDtoMapper {
             område = "K9",
             kildeområde = "K9",
             type = "k9klage",
-            status = if (event.aksjonspunkttilstander.any { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.status.erÅpentAksjonspunkt() }) {
-                if (oppgaveSkalHaVentestatus(event)) {
-                    Oppgavestatus.VENTER.kode
-                } else {
-                    Oppgavestatus.AAPEN.kode
-                }
+            status = if (event.behandlingSteg == BehandlingStegType.OVERFØRT_NK.kode) {
+                Oppgavestatus.LUKKET.kode
             } else {
-                if (event.behandlingStatus == BehandlingStatus.UTREDES.toString()) {
-                    Oppgavestatus.AAPEN.kode
+                if (event.aksjonspunkttilstander.any { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.status.erÅpentAksjonspunkt() }) {
+                    if (oppgaveSkalHaVentestatus(event)) {
+                        Oppgavestatus.VENTER.kode
+                    } else {
+                        Oppgavestatus.AAPEN.kode
+                    }
                 } else {
-                    Oppgavestatus.LUKKET.kode
+                    if (event.behandlingStatus == BehandlingStatus.UTREDES.toString()) {
+                        Oppgavestatus.AAPEN.kode
+                    } else {
+                        Oppgavestatus.LUKKET.kode
+                    }
                 }
             },
             endretTidspunkt = event.eventTid,
