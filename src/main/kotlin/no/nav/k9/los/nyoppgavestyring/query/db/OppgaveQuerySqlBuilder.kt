@@ -20,8 +20,6 @@ interface OppgaveQuerySqlBuilder {
     fun medPaging(limit: Long, offset: Long)
     fun medAntallSomResultat()
 
-    fun getQuery(): String
-    fun getParams(): Map<String, Any?>
     fun mapRowTilId(row: Row): OppgaveId
     fun mapRowTilEksternId(row: Row): EksternOppgaveId
 
@@ -36,4 +34,8 @@ interface OppgaveQuerySqlBuilder {
 
         return queryWithParams
     }
+
+    // Det som bygges
+    fun getQuery(): String
+    fun getParams(): Map<String, Any?>
 }

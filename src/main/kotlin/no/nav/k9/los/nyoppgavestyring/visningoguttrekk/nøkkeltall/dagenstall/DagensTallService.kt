@@ -67,7 +67,7 @@ class DagensTallService(
                     dato = LocalDate.now(),
                 ),
                 ferdigstilteIDag = hentTall(
-                    datotype = Datotype.FERDIGSTILT_TIDSPUNKT,
+                    datotype = Datotype.FERDIGSTILT_DATO,
                     dato = LocalDate.now(),
                 ),
                 nyeSiste7Dager = hentTall(
@@ -75,7 +75,7 @@ class DagensTallService(
                     dato = LocalDate.now().minusDays(7),
                 ),
                 ferdigstilteSiste7Dager = hentTall(
-                    datotype = Datotype.FERDIGSTILT_TIDSPUNKT,
+                    datotype = Datotype.FERDIGSTILT_DATO,
                     dato = LocalDate.now().minusDays(7),
                 )
             )
@@ -92,7 +92,7 @@ class DagensTallService(
                         behandlingType = behandlingType,
                     ),
                     ferdigstilteIDag = hentTall(
-                        datotype = Datotype.FERDIGSTILT_TIDSPUNKT,
+                        datotype = Datotype.FERDIGSTILT_DATO,
                         dato = LocalDate.now(),
                         behandlingType = behandlingType,
                     ),
@@ -102,7 +102,7 @@ class DagensTallService(
                         behandlingType = behandlingType,
                     ),
                     ferdigstilteSiste7Dager = hentTall(
-                        datotype = Datotype.FERDIGSTILT_TIDSPUNKT,
+                        datotype = Datotype.FERDIGSTILT_DATO,
                         dato = LocalDate.now().minusDays(7),
                         behandlingType = behandlingType,
                     )
@@ -124,7 +124,7 @@ class DagensTallService(
                         fagsakYtelseType = ytelseType,
                     ),
                     ferdigstilteIDag = hentTall(
-                        datotype = Datotype.FERDIGSTILT_TIDSPUNKT,
+                        datotype = Datotype.FERDIGSTILT_DATO,
                         dato = LocalDate.now(),
                         fagsakYtelseType = ytelseType,
                     ),
@@ -134,7 +134,7 @@ class DagensTallService(
                         fagsakYtelseType = ytelseType,
                     ),
                     ferdigstilteSiste7Dager = hentTall(
-                        datotype = Datotype.FERDIGSTILT_TIDSPUNKT,
+                        datotype = Datotype.FERDIGSTILT_DATO,
                         dato = LocalDate.now().minusDays(7),
                         fagsakYtelseType = ytelseType,
                     )
@@ -153,7 +153,7 @@ class DagensTallService(
                             behandlingType = behandlingType,
                         ),
                         ferdigstilteIDag = hentTall(
-                            datotype = Datotype.FERDIGSTILT_TIDSPUNKT,
+                            datotype = Datotype.FERDIGSTILT_DATO,
                             dato = LocalDate.now(),
                             fagsakYtelseType = ytelseType,
                             behandlingType = behandlingType,
@@ -165,7 +165,7 @@ class DagensTallService(
                             behandlingType = behandlingType,
                         ),
                         ferdigstilteSiste7Dager = hentTall(
-                            datotype = Datotype.FERDIGSTILT_TIDSPUNKT,
+                            datotype = Datotype.FERDIGSTILT_DATO,
                             dato = LocalDate.now().minusDays(7),
                             fagsakYtelseType = ytelseType,
                             behandlingType = behandlingType,
@@ -186,7 +186,7 @@ class DagensTallService(
                     oppgavetype = "k9punsj",
                 ),
                 ferdigstilteIDag = hentTall(
-                    datotype = Datotype.FERDIGSTILT_TIDSPUNKT,
+                    datotype = Datotype.FERDIGSTILT_DATO,
                     dato = LocalDate.now(),
                     oppgavetype = "k9punsj",
                 ),
@@ -196,7 +196,7 @@ class DagensTallService(
                     oppgavetype = "k9punsj",
                 ),
                 ferdigstilteSiste7Dager = hentTall(
-                    datotype = Datotype.FERDIGSTILT_TIDSPUNKT,
+                    datotype = Datotype.FERDIGSTILT_DATO,
                     dato = LocalDate.now().minusDays(7),
                     oppgavetype = "k9punsj",
                 )
@@ -240,7 +240,7 @@ class DagensTallService(
                                 "K9", "oppgavetype", EksternFeltverdiOperator.EQUALS.kode, listOf(it)
                             )
                         },
-                        FeltverdiOppgavefilter("K9", datotype.kode, EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS.kode, listOf(dato.toString()))
+                        FeltverdiOppgavefilter("K9", datotype.kode, EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS.kode, listOf(dato.toString())),
                     )
                 ),
             )
@@ -248,6 +248,6 @@ class DagensTallService(
     }
 
     private enum class Datotype(val kode: String) {
-        MOTTATT_DATO("mottattDato"), FERDIGSTILT_TIDSPUNKT("ferdigstiltTidspunkt")
+        MOTTATT_DATO("mottattDato"), FERDIGSTILT_DATO("ferdigstiltDato")
     }
 }

@@ -7,7 +7,9 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
 object OppgavefilterRens {
     fun rens(felter:  Map<OmrådeOgKode, OppgavefeltMedMer>, oppgavefiltere: List<Oppgavefilter>): List<Oppgavefilter> {
         return oppgavefiltere
-            .let { OppgavefilterStatusFjerner.fjern(it)} // statusfilter er allerede lagt på i starten av OppgaveQuerySqlBuilder
+            .let { FilterFjerner.fjern(it, "oppgavestatus")}
+            .let { FilterFjerner.fjern(it, "spørringstrategi")}
+            .let { FilterFjerner.fjern(it, "ferdigstiltDato")}
             .let { OppgavefilterUtenBetingelserFjerner.fjern(it)} // alle filtre har nå minst én verdi (kan være null)
             .let { OppgavefilterListeEliminerer.eliminer(it) } // alle filtre har nå kun én verdi, og mengdeoperatorer er borte
             .let { OppgavefilterLocalDateSpesialhåndterer.spesialhåndter(it) } // dersom verdien lar seg parse til LocalDate, tilpass filtrene

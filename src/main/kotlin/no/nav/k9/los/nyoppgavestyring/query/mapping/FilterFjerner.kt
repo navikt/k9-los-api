@@ -4,20 +4,20 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
 
-object OppgavefilterStatusFjerner {
-    fun fjern(oppgavefiltere: List<Oppgavefilter>): List<Oppgavefilter> {
+object FilterFjerner {
+    fun fjern(oppgavefiltere: List<Oppgavefilter>, filterkode: String): List<Oppgavefilter> {
         return oppgavefiltere
             .map { oppgavefilter ->
                 when (oppgavefilter) {
                     is FeltverdiOppgavefilter -> oppgavefilter
                     is CombineOppgavefilter -> CombineOppgavefilter(
-                        oppgavefilter.combineOperator, fjern(oppgavefilter.filtere)
+                        oppgavefilter.combineOperator, fjern(oppgavefilter.filtere, filterkode)
                     )
                 }
             }
             .filter { oppgavefilter ->
                 when (oppgavefilter) {
-                    is FeltverdiOppgavefilter -> oppgavefilter.kode != "oppgavestatus"
+                    is FeltverdiOppgavefilter -> oppgavefilter.kode != filterkode
                     is CombineOppgavefilter -> oppgavefilter.filtere.isNotEmpty()
                 }
             }

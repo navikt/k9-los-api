@@ -103,7 +103,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
     ) {
         hentTransientFeltutleder(feltområde, feltkode)?.let {
             val sqlMedParams = sikreUnikeParams(
-                it.where(WhereInput(OppgavefeltVerdiTabell.OPPGAVE_PARTISJONERT, now, feltområde!!, feltkode, operator, feltverdi))
+                it.where(WhereInput(Spørringstrategi.PARTISJONERT, now, feltområde!!, feltkode, operator, feltverdi))
             )
             query += "${combineOperator.sql} " + sqlMedParams.query
             queryParams.putAll(sqlMedParams.queryParams)
@@ -289,7 +289,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
     private fun medEnkelOrderAvOppgavefelt(feltområde: String, feltkode: String, økende: Boolean) {
         hentTransientFeltutleder(feltområde, feltkode)?.let {
             val sqlMedParams = sikreUnikeParams(
-                it.orderBy(OrderByInput(OppgavefeltVerdiTabell.OPPGAVE_PARTISJONERT, now, feltområde, feltkode, økende))
+                it.orderBy(OrderByInput(Spørringstrategi.PARTISJONERT, now, feltområde, feltkode, økende))
             )
             orderBySql += ", " + sqlMedParams.query
             orderByParams.putAll(sqlMedParams.queryParams)

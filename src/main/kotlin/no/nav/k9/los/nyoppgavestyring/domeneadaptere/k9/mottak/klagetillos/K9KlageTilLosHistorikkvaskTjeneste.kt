@@ -102,7 +102,7 @@ class K9KlageTilLosHistorikkvaskTjeneste(
             behandlingProsessEventKlageRepository.markerVasketHistorikk(uuid, tx)
 
             oppgaveV3?.let {
-                oppgaveV3Tjeneste.ajourholdAktivOppgave(oppgaveV3, eventNrForBehandling, tx)
+                oppgaveV3Tjeneste.ajourholdOppgave(oppgaveV3, eventNrForBehandling, tx)
             }
         }
 

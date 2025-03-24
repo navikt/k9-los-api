@@ -41,7 +41,7 @@ class OppgaveQueryToSqlMapperTest {
             )
         )
 
-        val oppgavestatuser = OppgaveQueryToSqlMapper.traverserFiltereOgFinnOppgavestatusfilter(
+        val oppgavestatuser = OppgaveQueryToSqlMapper.traverserFiltereOgFinnOppgavestatus(
             QueryRequest(oppgaveQuery),
         )
 
