@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
-class OptimizedOppgaveQuerySqlBuilderTest {
+class PartisjonertOppgaveQuerySqlBuilderTest {
 
     private val mockFelter = mapOf(
         OmrådeOgKode("TEST", "testfelt") to OppgavefeltMedMer(
@@ -28,7 +28,7 @@ class OptimizedOppgaveQuerySqlBuilderTest {
 
     @Test
     fun `bygger korrekt sql for enkel spørring`() {
-        val builder = OptimizedOppgaveQuerySqlBuilder(
+        val builder = PartisjonertOppgaveQuerySqlBuilder(
             felter = mockFelter,
             oppgavestatusFilter = listOf(Oppgavestatus.AAPEN),
             now = LocalDateTime.now()
@@ -51,7 +51,7 @@ class OptimizedOppgaveQuerySqlBuilderTest {
 
     @Test
     fun `bygger korrekt sql for personbeskyttelse`() {
-        val builder = OptimizedOppgaveQuerySqlBuilder(
+        val builder = PartisjonertOppgaveQuerySqlBuilder(
             felter = mockFelter,
             oppgavestatusFilter = listOf(Oppgavestatus.AAPEN),
             now = LocalDateTime.now()
@@ -72,7 +72,7 @@ class OptimizedOppgaveQuerySqlBuilderTest {
 
     @Test
     fun `setter paging riktig`() {
-        val builder = OptimizedOppgaveQuerySqlBuilder(
+        val builder = PartisjonertOppgaveQuerySqlBuilder(
             felter = mockFelter,
             oppgavestatusFilter = listOf(Oppgavestatus.AAPEN),
             now = LocalDateTime.now()
@@ -86,7 +86,7 @@ class OptimizedOppgaveQuerySqlBuilderTest {
     
     @Test
     fun `håndterer sortering riktig`() {
-        val builder = OptimizedOppgaveQuerySqlBuilder(
+        val builder = PartisjonertOppgaveQuerySqlBuilder(
             felter = mockFelter,
             oppgavestatusFilter = listOf(Oppgavestatus.AAPEN),
             now = LocalDateTime.now()
@@ -101,7 +101,7 @@ class OptimizedOppgaveQuerySqlBuilderTest {
     
     @Test
     fun `bygger korrekt for kompleks spørring`() {
-        val builder = OptimizedOppgaveQuerySqlBuilder(
+        val builder = PartisjonertOppgaveQuerySqlBuilder(
             felter = mockFelter,
             oppgavestatusFilter = listOf(Oppgavestatus.AAPEN, Oppgavestatus.VENTER),
             now = LocalDateTime.now()
@@ -138,7 +138,7 @@ class OptimizedOppgaveQuerySqlBuilderTest {
     
     @Test
     fun `genererer sql for telling`() {
-        val builder = OptimizedOppgaveQuerySqlBuilder(
+        val builder = PartisjonertOppgaveQuerySqlBuilder(
             felter = mockFelter,
             oppgavestatusFilter = listOf(Oppgavestatus.AAPEN),
             now = LocalDateTime.now()

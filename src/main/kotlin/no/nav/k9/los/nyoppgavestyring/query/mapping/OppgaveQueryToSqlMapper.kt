@@ -22,15 +22,12 @@ object OppgaveQueryToSqlMapper {
             spørringstrategiFilter == Spørringstrategi.PARTISJONERT ->
                 PartisjonertOppgaveQuerySqlBuilder(felter, oppgavestatusFilter, now, ferdigstiltDatofilter)
 
-            spørringstrategiFilter == Spørringstrategi.PARTISJONERT_V2 ->
-                OptimizedOppgaveQuerySqlBuilder(felter, oppgavestatusFilter, now, ferdigstiltDatofilter)
-
             spørringstrategiFilter == Spørringstrategi.AKTIV ->
                 AktivOppgaveQuerySqlBuilder(felter, oppgavestatusFilter, now)
 
             // Case 2: Dersom det spørres etter lukkede oppgaver
             oppgavestatusFilter.contains(Oppgavestatus.LUKKET) ->
-                OptimizedOppgaveQuerySqlBuilder(felter, oppgavestatusFilter, now, ferdigstiltDatofilter)
+                PartisjonertOppgaveQuerySqlBuilder(felter, oppgavestatusFilter, now, ferdigstiltDatofilter)
 
             // Case 3: Default (kun åpne/ventende oppgaver)
             else -> AktivOppgaveQuerySqlBuilder(felter, oppgavestatusFilter, now)
