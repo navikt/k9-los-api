@@ -75,7 +75,7 @@ class K9KlageBerikerSystemKlient(
                             "Error response = '$feiltekst' fra '${httpRequest.url}'"
                 )
                 log.error(error.toString())
-                log.error("${url}/los/historikkutfylling")
+                log.error("${url}/los/historikkutfylling, UUID: $påklagdBehandlingUUID")
 
                 if (ignorerManglendeTilgangPgaUtdatertTestdata) {
                     return null
