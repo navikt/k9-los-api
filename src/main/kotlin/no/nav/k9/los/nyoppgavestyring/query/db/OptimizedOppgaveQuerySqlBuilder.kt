@@ -11,10 +11,10 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.PartisjonertOppgaveId
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.mapping.*
+import no.nav.k9.los.spi.felter.OrderByInput
 import no.nav.k9.los.spi.felter.SqlMedParams
 import no.nav.k9.los.spi.felter.TransientFeltutleder
 import no.nav.k9.los.spi.felter.WhereInput
-import no.nav.k9.los.spi.felter.OrderByInput
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -98,6 +98,8 @@ class OptimizedOppgaveQuerySqlBuilder(
 
     override fun medAntallSomResultat() {
         selectClause = "SELECT COUNT(*) as antall"
+        orderByClause = ""
+        orderByParams.clear()
     }
 
     override fun utenReservasjoner() {
@@ -125,10 +127,11 @@ class OptimizedOppgaveQuerySqlBuilder(
         // Håndterer transient felt
         hentTransientFeltutleder(feltområde, feltkode)?.let {
             if (feltverdier.size > 1) {
+                // Ikke støtte for flerverdier, så håndterer som flere enkeltverdier
                 feltverdier.forEach { feltverdi ->
                     medFeltverdi(combineOperator, feltområde, feltkode, operator, listOf(feltverdi))
                 }
-                return
+                return@medFeltverdi
             }
             
             val sqlMedParams = sikreUnikeParams(
@@ -136,11 +139,12 @@ class OptimizedOppgaveQuerySqlBuilder(
             )
             whereClause += " ${combineOperator.sql} " + sqlMedParams.query
             queryParams.putAll(sqlMedParams.queryParams)
-            return
+            return@medFeltverdi
         }
 
         // Håndterer felt med område
         if (feltområde != null) {
+            // Hvis null-verdi er det kun en verdi, allerede håndtert i filterRens
             if (feltverdier.first() == null) {
                 utenOppgavefelt(combineOperator, feltområde, feltkode, operator)
             } else {

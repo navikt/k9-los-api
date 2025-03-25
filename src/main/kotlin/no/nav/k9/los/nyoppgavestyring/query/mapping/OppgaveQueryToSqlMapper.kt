@@ -20,6 +20,9 @@ object OppgaveQueryToSqlMapper {
         return when {
             // Case 1: Eksplisitt spørringsstrategi er angitt
             spørringstrategiFilter == Spørringstrategi.PARTISJONERT ->
+                PartisjonertOppgaveQuerySqlBuilder(felter, oppgavestatusFilter, now, ferdigstiltDatofilter)
+
+            spørringstrategiFilter == Spørringstrategi.PARTISJONERT_V2 ->
                 OptimizedOppgaveQuerySqlBuilder(felter, oppgavestatusFilter, now, ferdigstiltDatofilter)
 
             spørringstrategiFilter == Spørringstrategi.AKTIV ->
@@ -62,7 +65,7 @@ object OppgaveQueryToSqlMapper {
         håndterFiltere(
             queryBuilder,
             felter,
-            OppgavefilterRens.rens(felter, request.oppgaveQuery.filtere),
+            queryBuilder.filterRens(felter, request.oppgaveQuery.filtere),
             combineOperator
         )
         if (request.fjernReserverte) {
