@@ -2,16 +2,19 @@ package no.nav.k9.los.nyoppgavestyring.query.db
 
 import kotliquery.Row
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveId
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.mapping.CombineOperator
 import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
 
 interface OppgaveQuerySqlBuilder {
+    fun filterRens(felter: Map<OmrådeOgKode, OppgavefeltMedMer>, filtere: List<Oppgavefilter>): List<Oppgavefilter>
+
     fun medFeltverdi(
         combineOperator: CombineOperator,
         feltområde: String?,
         feltkode: String,
         operator: FeltverdiOperator,
-        feltverdi: Any?
+        feltverdier: List<Any?>
     )
     fun medBlokk(combineOperator: CombineOperator, defaultTrue: Boolean, blokk: () -> Unit)
     fun medEnkelOrder(feltområde: String?, feltkode: String, økende: Boolean)
@@ -29,7 +32,7 @@ interface OppgaveQuerySqlBuilder {
 
         // erstatter placeholdere reversert siden f.eks. ':feltverdi1' også matcher ':feltverdi10'
         for ((key, value) in getParams().toSortedMap().reversed()) {
-            queryWithParams = queryWithParams.replace(":$key", if (value is Number) value.toString() else "'" + value.toString() + "'")
+            queryWithParams = queryWithParams.replace(":$key", if (value is Number || value == null) value.toString() else "'$value'")
         }
 
         return queryWithParams

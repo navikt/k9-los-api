@@ -10,8 +10,8 @@ import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype.INTEGER
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveId
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveId
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.query.mapping.CombineOperator
-import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
+import no.nav.k9.los.nyoppgavestyring.query.mapping.*
 import no.nav.k9.los.spi.felter.OrderByInput
 import no.nav.k9.los.spi.felter.SqlMedParams
 import no.nav.k9.los.spi.felter.TransientFeltutleder
@@ -106,8 +106,10 @@ class AktivOppgaveQuerySqlBuilder(
         feltområde: String?,
         feltkode: String,
         operator: FeltverdiOperator,
-        feltverdi: Any?
+        feltverdier: List<Any?>
     ) {
+        // forutsetning er kun én verdi per felt
+        val feltverdi = feltverdier.firstOrNull()
         hentTransientFeltutleder(feltområde, feltkode)?.let { it: TransientFeltutleder ->
             val sqlMedParams = sikreUnikeParams(
                 it.where(WhereInput(Spørringstrategi.AKTIV, now, feltområde!!, feltkode, operator, feltverdi))
@@ -180,6 +182,19 @@ class AktivOppgaveQuerySqlBuilder(
 
             else -> log.warn("Håndterer ikke filter for $feltkode. Legg til i ignorering hvis feltet håndteres spesielt.")
         }
+    }
+
+    override fun filterRens(
+        felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
+        filtere: List<Oppgavefilter>
+    ): List<Oppgavefilter> {
+        return filtere
+            .let { FilterFjerner.fjern(it, "oppgavestatus")}
+            .let { FilterFjerner.fjern(it, "spørringstrategi")}
+            .let { OppgavefilterUtenBetingelserFjerner.fjern(it)} // alle filtre har nå minst én verdi (kan være null)
+            .let { OppgavefilterListeUtvider.eliminer(it) } // alle filtre har nå kun én verdi, og mengdeoperatorer er borte
+            .let { OppgavefilterLocalDateSpesialhåndterer.spesialhåndter(it) } // dersom verdien lar seg parse til LocalDate, tilpass filtrene
+            .let { OppgavefilterDatatypeMapper.map(felter, it) } // konverter filterverdiene til deres rette datatype
     }
 
     private fun sikreUnikeParams(sqlMedParams: SqlMedParams): SqlMedParams {

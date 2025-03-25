@@ -42,7 +42,7 @@ object OppgaveQueryToSqlMapper {
         val query = utledSqlBuilder(felter, request, now)
         val combineOperator = CombineOperator.AND
 
-        håndterFiltere(query, felter, OppgavefilterRens.rens(felter, request.oppgaveQuery.filtere), combineOperator)
+        håndterFiltere(query, felter, query.filterRens(felter, request.oppgaveQuery.filtere), combineOperator)
         håndterOrder(query, request.oppgaveQuery.order)
         if (request.fjernReserverte) {
             query.utenReservasjoner()
@@ -156,7 +156,7 @@ object OppgaveQueryToSqlMapper {
                     filter.område,
                     filter.kode,
                     FeltverdiOperator.valueOf(filter.operator),
-                    filter.verdi.first()
+                    filter.verdi
                 )
 
                 is CombineOppgavefilter -> {

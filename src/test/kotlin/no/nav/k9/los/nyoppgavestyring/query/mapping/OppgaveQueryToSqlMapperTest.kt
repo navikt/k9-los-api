@@ -89,7 +89,7 @@ class OppgaveQueryToSqlMapperTest {
                 ),
                 // 2 betingelser (starten og slutten på dagen) med feltkode, område og verdi
                 byggFilter(FeltType.MOTTATT_DATO, FeltverdiOperator.EQUALS, "2024-12-24"),
-                // 4 betingelser med feltkode, område og verdi
+                // feltkode, område og 4 verdier
                 byggFilter(FeltType.YTELSE_TYPE, FeltverdiOperator.IN, "PSB", "OMP", "FOO", "BAR"),
             )
         )
@@ -100,7 +100,7 @@ class OppgaveQueryToSqlMapperTest {
         )
 
         assertThat(sqlBuilder.getQuery()).contains(sqlBuilder.getParams().keys)
-        assertThat(sqlBuilder.getParams()).hasSize(21)
+        assertThat(sqlBuilder.getParams()).hasSize(15)
     }
 
     private fun byggFilter(
