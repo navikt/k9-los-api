@@ -360,7 +360,14 @@ class EventTilDtoMapper {
             val påklagdBehandlingType = event.påklagdBehandlingType?.let { mapBehandlingtype(it) }
                 ?: losOpplysningerSomManglerHistoriskIKlageDto?.påklagdBehandlingType?.let { mapBehandlingtype(it) }
 
-            påklagdBehandlingType?.let {
+            val konvertertBehandlingtype =
+                when (påklagdBehandlingType) {
+                    BehandlingType.TILBAKEKREVING.kode -> "k9tilbake"
+                    null -> null
+                    else -> "k9sak"
+                }
+
+            konvertertBehandlingtype?.let {
                 oppgaveFeltverdiDtos.add(OppgaveFeltverdiDto(
                     nøkkel = "påklagdBehandlingtype",
                     verdi = it

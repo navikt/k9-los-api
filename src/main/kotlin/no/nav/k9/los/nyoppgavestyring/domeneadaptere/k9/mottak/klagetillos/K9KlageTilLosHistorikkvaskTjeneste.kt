@@ -78,6 +78,7 @@ class K9KlageTilLosHistorikkvaskTjeneste(
         var forrigeOppgave: OppgaveV3? = null
         transactionalManager.transaction { tx ->
             val behandlingProsessEventer = behandlingProsessEventKlageRepository.hentMedLås(tx, uuid).eventer
+            
             val høyesteInternVersjon =
                 oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9klage", "K9", tx)!!
             var eventNrForBehandling = 0L
