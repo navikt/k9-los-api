@@ -19,10 +19,6 @@ import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-/**
- * En optimalisert SQL builder for partisjonerte oppgaver som produserer mer effektiv SQL
- * enn PartisjonertOppgaveQuerySqlBuilder.
- */
 class PartisjonertOppgaveQuerySqlBuilder(
     val felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
     oppgavestatusFilter: List<Oppgavestatus>,
@@ -31,20 +27,16 @@ class PartisjonertOppgaveQuerySqlBuilder(
 ) : OppgaveQuerySqlBuilder {
     private val log = LoggerFactory.getLogger(PartisjonertOppgaveQuerySqlBuilder::class.java)
     
-    // Data for SQL-generering
     private val oppgavefelterKodeOgType = felter.mapValues { Datatype.fraKode(it.value.oppgavefelt.tolkes_som) }
     private val queryParams: MutableMap<String, Any?> = mutableMapOf()
     private val orderByParams: MutableMap<String, Any?> = mutableMapOf()
     
-    // Oppgavestatus parametere
     private val oppgavestatusPlaceholder: String = InClauseHjelper.tilParameternavn(oppgavestatusFilter, "status")
     private val oppgavestatusParams = InClauseHjelper.parameternavnTilVerdierMap(oppgavestatusFilter.map { it.kode }, "status")
     
-    // Betingelser for ferdigstilt dato
     private val ferdigstiltDatoBetingelse = if (ferdigstiltDato != null) "AND o.ferdigstilt_dato = :ferdigstilt_dato " else ""
     private val ferdigstiltDatoFeltBetingelse = if (ferdigstiltDato != null) "AND ov.ferdigstilt_dato = :ferdigstilt_dato " else ""
     
-    // SQL byggeblokker
     private var selectClause = "SELECT o.oppgave_ekstern_id, o.oppgave_ekstern_versjon"
     private var fromClause = """
         FROM oppgave_v3_part o
@@ -55,7 +47,6 @@ class PartisjonertOppgaveQuerySqlBuilder(
     private var orderByClause = "ORDER BY (SELECT NULL)"
     private var pagingClause = ""
     
-    // Reservasjonsbetingelse
     private val utenReservasjonerBetingelse = """
         AND NOT EXISTS (
             SELECT 1 
@@ -124,7 +115,9 @@ class PartisjonertOppgaveQuerySqlBuilder(
         operator: FeltverdiOperator,
         feltverdier: List<Any?>
     ) {
-        // Håndterer transient felt
+        // Håndterer de tre forskjellige felttypene
+
+        // 1. Transient felt
         hentTransientFeltutleder(feltområde, feltkode)?.let {
             if (feltverdier.size > 1) {
                 // Ikke støtte for flerverdier, så håndterer som flere enkeltverdier
@@ -142,7 +135,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
             return@medFeltverdi
         }
 
-        // Håndterer felt med område
+        // 2. Felt med område
         if (feltområde != null) {
             // Hvis null-verdi er det kun en verdi, allerede håndtert i filterRens
             if (feltverdier.first() == null) {
@@ -153,7 +146,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
             return
         }
 
-        // Håndterer spesielle felt uten område
+        // 3. Spesielle felt uten område
         val index = queryParams.size + orderByParams.size
         when (feltkode) {
             "oppgavetype" -> {
@@ -194,7 +187,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
                 }
             }
 
-            "ferdigstiltDato", "oppgavestatus" -> {
+            "ferdigstiltDato", "oppgavestatus", "spørringstrategi" -> {
                 // Ignorerer felter, siden de er håndtert spesielt
             }
 
@@ -233,7 +226,6 @@ class PartisjonertOppgaveQuerySqlBuilder(
         return EksternOppgaveId("K9", row.string("oppgave_ekstern_id"))
     }
 
-    // Hjelpemetoder
     private fun hentTransientFeltutleder(feltområde: String?, feltkode: String): TransientFeltutleder? {
         return felter[OmrådeOgKode(feltområde, feltkode)]?.transientFeltutleder
     }
@@ -269,7 +261,6 @@ class PartisjonertOppgaveQuerySqlBuilder(
             ":feltverdi$index" to mapOf("feltverdi$index" to feltverdi.first())
         }
 
-        // Optimizing the EXISTS subquery
         val negationPrefix = if (operator.negasjonAv != null) "NOT " else ""
         whereClause += """
             ${combineOperator.sql} ${negationPrefix}EXISTS (
@@ -320,7 +311,6 @@ class PartisjonertOppgaveQuerySqlBuilder(
     }
 
     private fun medEnkelOrderAvOppgavefelt(feltområde: String, feltkode: String, økende: Boolean) {
-        // Håndterer transient feltutleder for sortering
         hentTransientFeltutleder(feltområde, feltkode)?.let {
             val sqlMedParams = sikreUnikeParams(
                 it.orderBy(OrderByInput(Spørringstrategi.PARTISJONERT, now, feltområde, feltkode, økende))
