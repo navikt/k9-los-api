@@ -23,7 +23,7 @@ class EventTilDtoMapperTest {
                     Aksjonspunkttilstand("5016", no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus.OPPRETTET, null, null, LocalDateTime.now(), LocalDateTime.now())
                 )
             ).build()
-        val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(k9KlageEvent, null, null)
+        val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(k9KlageEvent, null, null, null)
 
         assertThat(oppgaveDto.feltverdier).any { it.matchesPredicate { feltverdi -> feltverdi.nøkkel == "liggerHosBeslutter" && feltverdi.verdi == "true"} }
     }
@@ -39,7 +39,7 @@ class EventTilDtoMapperTest {
                 listOf()
             )
             .build()
-        val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(k9KlageEvent, null, null)
+        val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(k9KlageEvent, null, null, null)
 
         assertThat(oppgaveDto.feltverdier).any { it.matchesPredicate { feltverdi -> feltverdi.nøkkel == "liggerHosBeslutter" && feltverdi.verdi == "false"} }
     }

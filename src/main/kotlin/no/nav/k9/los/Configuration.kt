@@ -27,6 +27,7 @@ data class Configuration(private val config: ApplicationConfig) {
 
     internal fun pdlUrl() = URI(config.getRequiredString("nav.register_urls.pdl_url", secret = false))
     internal fun k9Url() = config.getRequiredString("nav.register_urls.k9_url", secret = false)
+    internal fun k9KlageUrl() = config.getRequiredString("nav.register_urls.k9_klage_url", secret = false)
     internal fun k9FrontendUrl() = config.getRequiredString("nav.register_urls.k9_frontend_url", secret = false)
     internal fun k9PunsjFrontendUrl() = config.getRequiredString("nav.register_urls.k9_punsj_frontend_url", secret = false)
 
