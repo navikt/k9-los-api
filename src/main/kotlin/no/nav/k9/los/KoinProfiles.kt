@@ -42,6 +42,9 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerike
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerSystemKlient
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.K9KlageTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.K9KlageTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.beriker.K9KlageBerikerInterfaceKludge
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.beriker.K9KlageBerikerKlientLocal
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.beriker.K9KlageBerikerSystemKlient
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.punsjtillos.K9PunsjTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.punsjtillos.K9PunsjTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.saktillos.K9SakTilLosAdapterTjeneste
@@ -557,6 +560,7 @@ fun common(app: Application, config: Configuration) = module {
             transactionalManager = get(),
             config = get(),
             k9sakBeriker = get(),
+            k9klageBeriker = get(),
         )
     }
 
@@ -590,6 +594,7 @@ fun common(app: Application, config: Configuration) = module {
             config = get(),
             transactionalManager = get(),
             k9sakBeriker = get(),
+            k9klageBeriker = get(),
         )
     }
 
@@ -740,6 +745,9 @@ fun localDevConfig() = module {
         K9SakBerikerKlientLocal()
     }
 
+    single<K9KlageBerikerInterfaceKludge> {
+        K9KlageBerikerKlientLocal()
+    }
 }
 
 fun preprodConfig(config: Configuration) = module {
@@ -778,6 +786,14 @@ fun preprodConfig(config: Configuration) = module {
             scope = "api://dev-fss.k9saksbehandling.k9-sak/.default"
         )
     }
+
+    single<K9KlageBerikerInterfaceKludge> {
+        K9KlageBerikerSystemKlient(
+            configuration = get(),
+            accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+            scope = "api://dev-fss.k9saksbehandling.k9-klage/.default"
+        )
+    }
 }
 
 fun prodConfig(config: Configuration) = module {
@@ -814,6 +830,14 @@ fun prodConfig(config: Configuration) = module {
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://prod-fss.k9saksbehandling.k9-sak/.default"
+        )
+    }
+
+    single<K9KlageBerikerInterfaceKludge> {
+        K9KlageBerikerSystemKlient(
+            configuration = get(),
+            accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+            scope = "api://prod-fss.k9saksbehandling.k9-klage/.default"
         )
     }
 }

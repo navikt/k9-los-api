@@ -235,6 +235,7 @@ fun Application.k9Los() {
         transactionalManager = koin.get(),
         config = koin.get(),
         k9sakBeriker = koin.get(),
+        k9klageBeriker = koin.get(),
     ).kjør(kjørSetup = false, kjørUmiddelbart = false)
 
     // implementer med Jobbplanlegger
@@ -433,8 +434,8 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
             PlanlagtJobb.KjørPåTidspunkt(
                 "K9KlageTilLosHistorikkvask",
                 høyPrioritet,
-                kjørTidligst = LocalDateTime.of(2025, 2, 27, 17, 0),
-                kjørSenest = LocalDateTime.of(2025, 2, 28, 6, 0),
+                kjørTidligst = LocalDateTime.of(2025, 3, 25, 10, 0),
+                kjørSenest = LocalDateTime.of(2025, 3, 25, 20, 0),
             ) {
                 k9KlageTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
             }
