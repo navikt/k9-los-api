@@ -110,8 +110,6 @@ object OppgaveQueryToSqlMapper {
             { verdi -> LocalDate.parse(verdi.toString()) },
             { filter -> filter.kode == "ferdigstiltDato" }
         )
-
-        //dette parameteret brukes av index på oppgavefeltverdi. Spørringer som ser på lukkede oppgaver er ikke indekserte, og vil være trege
         return datoer.firstOrNull()
     }
 
@@ -129,19 +127,6 @@ object OppgaveQueryToSqlMapper {
             }
         }
     }
-
-    /*private fun rekursivtSøk(
-        filtere: List<Oppgavefilter>,
-        statuser: MutableSet<Oppgavestatus>
-    ) {
-        for (filter in filtere) {
-            if (filter is FeltverdiOppgavefilter && filter.kode == "oppgavestatus") {
-                statuser.addAll(filter.verdi.map { verdi -> Oppgavestatus.fraKode(verdi.toString()) })
-            } else if (filter is CombineOppgavefilter) {
-                rekursivtSøk(filter.filtere, statuser)
-            }
-        }
-    }*/
 
     private fun håndterFiltere(
         queryBuilder: OppgaveQuerySqlBuilder,

@@ -263,7 +263,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
 
         val negationPrefix = if (operator.negasjonAv != null) "NOT " else ""
         whereClause += """
-            ${combineOperator.sql} ${negationPrefix}EXISTS (
+             ${combineOperator.sql} ${negationPrefix}EXISTS (
                 SELECT 1
                 FROM oppgavefelt_verdi_part ov
                 WHERE ov.oppgavestatus IN ($oppgavestatusPlaceholder) $ferdigstiltDatoFeltBetingelse
