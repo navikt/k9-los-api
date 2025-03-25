@@ -78,6 +78,10 @@ spec:
         extra:
           - "NAVident"
   accessPolicy:
+    outbound:
+      rules:
+        - application: k9-klage
+          namespace: k9saksbehandling
     inbound:
       rules:
         - application: k9-los-web
