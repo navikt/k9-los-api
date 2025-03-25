@@ -20,7 +20,7 @@
   "db_vault_mountpath": "postgresql/preprod-fss/",
   "pdl_url": "https://pdl-api.intern.dev.nav.no/graphql",
   "app_k9sak_url": "https://k9-sak.nais.preprod.local/k9/sak/api",
-  "app_k9klage_url": "https://k9-klage.dev.intern.nav.no/k9/klage/api",
+  "app_k9klage_url": "https://k9-klage/k9/klage/api",
   "app_k9sak_frontend_url": "https://k9.dev.intern.nav.no/k9/web",
   "app_k9punsj_frontend_url": "https://k9-punsj-frontend.intern.dev.nav.no",
   "bootstrap_servers": "b27apvl00045.preprod.local:8443,b27apvl00046.preprod.local:8443,b27apvl00047.preprod.local:8443",
