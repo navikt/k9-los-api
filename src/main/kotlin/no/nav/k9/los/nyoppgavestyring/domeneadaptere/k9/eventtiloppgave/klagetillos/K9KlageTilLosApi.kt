@@ -10,20 +10,7 @@ import org.koin.ktor.ext.inject
 
 internal fun Route.K9KlageTilLosApi() {
     val requestContextService by inject<RequestContextService>()
-    val k9KlageTilLosAdapterTjeneste by inject<K9KlageTilLosAdapterTjeneste>()
     val k9KlageTilLosHistorikkvaskTjeneste by inject<K9KlageTilLosHistorikkvaskTjeneste>()
-    val config by inject<Configuration>()
-
-    put("/startOppgaveprosessering") {
-        if (config.nyOppgavestyringRestAktivert()) {
-            requestContextService.withRequestContext(call) {
-                k9KlageTilLosAdapterTjeneste.kjør(kjørUmiddelbart = true)
-                call.respond(HttpStatusCode.NoContent)
-            }
-        } else {
-            call.respond(HttpStatusCode.Locked)
-        }
-    }
 
     put("/startHistorikkvask") {
         requestContextService.withRequestContext(call) {

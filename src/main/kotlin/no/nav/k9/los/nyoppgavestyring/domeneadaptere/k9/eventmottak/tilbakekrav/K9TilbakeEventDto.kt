@@ -10,7 +10,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
-data class K9KlageEventDto(
+data class K9TilbakeEventDto(
 
     /**
      * Ekstern id for behandlingen. Id benyttes til oppslag i fagsystem.

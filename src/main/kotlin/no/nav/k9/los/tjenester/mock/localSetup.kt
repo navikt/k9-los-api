@@ -12,7 +12,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.
 import no.nav.k9.los.domene.modell.*
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9KlageEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
@@ -160,7 +160,7 @@ object localSetup : KoinComponent {
     fun initTilbakeoppgaver(antall: Int) {
         if (profile == KoinProfile.LOCAL) {
             for (i in 0..<antall) {
-                val event = K9KlageEventDto(
+                val event = K9TilbakeEventDto(
                     eksternId = UUID.randomUUID(),
                     saksnummer = Random.nextInt(0, 200 * antall).toString(),
                     behandlingId = 123L,

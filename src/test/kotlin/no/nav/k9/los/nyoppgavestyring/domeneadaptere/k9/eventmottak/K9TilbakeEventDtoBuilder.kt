@@ -13,8 +13,7 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.domene.modell.Saksbehandler
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9KlageEventDto
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -108,8 +107,8 @@ class K9TilbakeEventDtoBuilder(
         return this
     }
 
-    fun build(): K9KlageEventDto {
-        return K9KlageEventDto(
+    fun build(): K9TilbakeEventDto {
+        return K9TilbakeEventDto(
             eksternId = eksternId,
             saksnummer = saksnummer,
             behandlingId = 123L,

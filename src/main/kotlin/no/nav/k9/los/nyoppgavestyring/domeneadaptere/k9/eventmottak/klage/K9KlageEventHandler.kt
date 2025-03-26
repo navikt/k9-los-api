@@ -24,7 +24,7 @@ class K9KlageEventHandler constructor(
 
     @WithSpan
     fun prosesser(
-        eventInn: KlagebehandlingProsessHendelse
+        eventInn: K9KlageEventDto
     ) {
         val t0 = System.nanoTime()
         val event = håndterVaskeevent(eventInn)
@@ -51,7 +51,7 @@ class K9KlageEventHandler constructor(
         EventHandlerMetrics.observe("k9klage", "gjennomført", t0)
     }
 
-    fun håndterVaskeevent(event: KlagebehandlingProsessHendelse): KlagebehandlingProsessHendelse? {
+    fun håndterVaskeevent(event: K9KlageEventDto): K9KlageEventDto? {
         if (event.eventHendelse != EventHendelse.VASKEEVENT) {
             return event
         }
@@ -71,30 +71,33 @@ class K9KlageEventHandler constructor(
         log.info("Vaskeeventfiltrering ${event.behandlingStatus} - ${event.eventTid} - ${event.eksternId}")
         return eksisterendeEventModell.eventer.last().eventTid
             .takeIf { sisteEventTid -> sisteEventTid.isAfter(event.eventTid) }
-            ?.let { sisteEventTid -> KlagebehandlingProsessHendelse.builder()
-                .medEksternId(event.eksternId)
-                .medPåklagdBehandlingEksternId(event.påklagdBehandlingEksternId)
-                .medFagsystem(event.fagsystem)
-                .medSaksnummer(event.saksnummer)
-                .medAktørId(event.aktørId)
-                .medEventTid(sisteEventTid.plusNanos(100_1000))
-                .getBehandlingstidFrist(event.behandlingstidFrist)
-                .medEventHendelse(event.eventHendelse)
-                .medBehandlingStatus(event.behandlingStatus)
-                .medBehandlingSteg(event.behandlingSteg)
-                .medBehandlendeEnhet(event.behandlendeEnhet)
-                .medYtelseTypeKode(event.ytelseTypeKode)
-                .medBehandlingResultat(event.resultatType)
-                .medBehandlingTypeKode(event.behandlingTypeKode)
-                .medOpprettetBehandling(event.opprettetBehandling)
-                .medAnsvarligSaksbehandler(event.ansvarligSaksbehandler)
-                .medFagsakPeriode(event.fagsakPeriode)
-                .medPleietrengendeAktørId(event.pleietrengendeAktørId)
-                .medRelatertPartAktørId(event.relatertPartAktørId)
-                .medAnsvarligBeslutter(event.ansvarligBeslutter)
-                .medAksjonspunktTilstander(event.aksjonspunkttilstander)
-                .medVedtaksdato(event.vedtaksdato)
-                .build()
+            ?.let { sisteEventTid -> K9KlageEventDto(
+                eksternId = event.eksternId,
+                påklagdBehandlingEksternId = event.påklagdBehandlingEksternId,
+                påklagdBehandlingType = event.påklagdBehandlingType,
+                fagsystem = event.fagsystem,
+                saksnummer = event.saksnummer,
+                aktørId = event.aktørId,
+                eventTid = sisteEventTid.plusNanos(100_1000),
+                behandlingstidFrist = event.behandlingstidFrist,
+                eventHendelse = event.eventHendelse,
+                behandlingStatus = event.behandlingStatus,
+                behandlingSteg = event.behandlingSteg,
+                behandlendeEnhet = event.behandlendeEnhet,
+                ytelseTypeKode = event.ytelseTypeKode,
+                resultatType = event.resultatType,
+                behandlingTypeKode = event.behandlingTypeKode,
+                opprettetBehandling = event.opprettetBehandling,
+                ansvarligSaksbehandler = event.ansvarligSaksbehandler,
+                fagsakPeriode = event.fagsakPeriode,
+                pleietrengendeAktørId = event.pleietrengendeAktørId,
+                relatertPartAktørId = event.relatertPartAktørId,
+                ansvarligBeslutter = event.ansvarligBeslutter,
+                aksjonspunkttilstander = event.aksjonspunkttilstander,
+                vedtaksdato = event.vedtaksdato,
+                behandlingsårsaker = event.behandlingsårsaker,
+                utenlandstilsnitt = event.utenlandstilsnitt
+                )
             } ?: event
     }
 }

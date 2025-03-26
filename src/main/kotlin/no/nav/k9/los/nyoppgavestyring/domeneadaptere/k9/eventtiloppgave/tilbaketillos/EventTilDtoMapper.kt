@@ -4,7 +4,7 @@ import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
 import no.nav.k9.los.nyoppgavestyring.kodeverk.AksjonspunktStatus.OPPRETTET
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9KlageEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
 import no.nav.k9.los.nyoppgavestyring.kodeverk.AksjonspunktStatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
@@ -15,7 +15,7 @@ import java.time.temporal.ChronoUnit
 
 class EventTilDtoMapper {
     companion object {
-        fun lagOppgaveDto(event: K9KlageEventDto, forrigeOppgave: OppgaveV3?) =
+        fun lagOppgaveDto(event: K9TilbakeEventDto, forrigeOppgave: OppgaveV3?) =
             OppgaveDto(
                 id = event.eksternId.toString(),
                 versjon = event.eventTid.toString(),
@@ -28,7 +28,7 @@ class EventTilDtoMapper {
                 feltverdier = lagFeltverdier(event, forrigeOppgave)
             )
 
-        fun utledReservasjonsnøkkel(event: K9KlageEventDto, erTilBeslutter: Boolean): String {
+        fun utledReservasjonsnøkkel(event: K9TilbakeEventDto, erTilBeslutter: Boolean): String {
             return lagNøkkelAktør(event, erTilBeslutter)
         }
 
@@ -46,7 +46,7 @@ class EventTilDtoMapper {
             }
         }
 
-        private fun lagNøkkelAktør(event: K9KlageEventDto, tilBeslutter: Boolean): String {
+        private fun lagNøkkelAktør(event: K9TilbakeEventDto, tilBeslutter: Boolean): String {
             return if (tilBeslutter) {
                 "K9_t_${event.ytelseTypeKode}_${event.aktørId}_beslutter"
             } else {
@@ -54,7 +54,7 @@ class EventTilDtoMapper {
             }
         }
 
-        private fun erTilBeslutter(event: K9KlageEventDto): Boolean {
+        private fun erTilBeslutter(event: K9TilbakeEventDto): Boolean {
             return event.aksjonspunktKoderMedStatusListe.any {
                 it.value == OPPRETTET.kode && AksjonspunktDefinisjonK9Tilbake.fraKode(it.key) == AksjonspunktDefinisjonK9Tilbake.FATTE_VEDTAK
             }
@@ -62,7 +62,7 @@ class EventTilDtoMapper {
         }
 
         private fun lagFeltverdier(
-            event: K9KlageEventDto,
+            event: K9TilbakeEventDto,
             forrigeOppgave: OppgaveV3?
         ): List<OppgaveFeltverdiDto> {
             val oppgaveFeltverdiDtos = mapEnkeltverdier(event, forrigeOppgave)
@@ -73,7 +73,7 @@ class EventTilDtoMapper {
         }
 
         private fun mapEnkeltverdier(
-            event: K9KlageEventDto,
+            event: K9TilbakeEventDto,
             forrigeOppgave: OppgaveV3?
         ) = mutableListOf(
             OppgaveFeltverdiDto(
@@ -149,7 +149,7 @@ class EventTilDtoMapper {
         @VisibleForTesting
         fun utledTidFørsteGangHosBeslutter(
             forrigeOppgave: OppgaveV3?,
-            event: K9KlageEventDto
+            event: K9TilbakeEventDto
         ) = forrigeOppgave?.hentVerdi("tidFørsteGangHosBeslutter")?.let {
             OppgaveFeltverdiDto(
                 nøkkel = "tidFørsteGangHosBeslutter",
@@ -165,7 +165,7 @@ class EventTilDtoMapper {
         }
 
         private fun utledAutomatiskBehandletFlagg(
-            event: K9KlageEventDto,
+            event: K9TilbakeEventDto,
             forrigeOppgave: OppgaveV3?,
             oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
         ) {
@@ -192,7 +192,7 @@ class EventTilDtoMapper {
         }
 
         private fun utledAksjonspunkter(
-            event: K9KlageEventDto,
+            event: K9TilbakeEventDto,
             oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
         ) {
             val løsbareAksjonspunkter = event.aksjonspunktKoderMedStatusListe

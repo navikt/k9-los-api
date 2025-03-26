@@ -233,7 +233,6 @@ fun Application.k9Los() {
         oppgaveV3Tjeneste = koin.get(),
         transactionalManager = koin.get(),
         config = koin.get(),
-        k9sakBeriker = koin.get(),
         k9klageBeriker = koin.get(),
     ).kjør(kjørSetup = false, kjørUmiddelbart = false)
 

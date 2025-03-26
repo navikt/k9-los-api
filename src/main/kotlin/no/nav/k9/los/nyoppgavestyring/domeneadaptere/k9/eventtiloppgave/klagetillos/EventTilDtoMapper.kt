@@ -8,6 +8,7 @@ import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.Aksjonspunkttilstand
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.KlagebehandlingProsessHendelse
 import no.nav.k9.klage.kontrakt.produksjonsstyring.los.LosOpplysningerSomManglerHistoriskIKlageDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
@@ -30,9 +31,7 @@ class EventTilDtoMapper {
         }.map { aksjonspunktDefinisjon -> aksjonspunktDefinisjon.kode }
 
         internal fun lagOppgaveDto(
-            event: KlagebehandlingProsessHendelse,
-            losOpplysningerSomManglerIKlageDto: LosOpplysningerSomManglerIKlageDto?,
-            losOpplysningerSomManglerHistoriskIKlageDto: LosOpplysningerSomManglerHistoriskIKlageDto?,
+            event: K9KlageEventDto,
             forrigeOppgave: OppgaveV3?
         ) = OppgaveDto(
             id = event.eksternId.toString(),
@@ -59,10 +58,10 @@ class EventTilDtoMapper {
             },
             endretTidspunkt = event.eventTid,
             reservasjonsnøkkel = utledReservasjonsnøkkel(event),
-            feltverdier = lagFeltverdier(event, losOpplysningerSomManglerIKlageDto, losOpplysningerSomManglerHistoriskIKlageDto, forrigeOppgave)
+            feltverdier = lagFeltverdier(event, forrigeOppgave)
         )
 
-        private fun utledReservasjonsnøkkel(event: KlagebehandlingProsessHendelse): String {
+        private fun utledReservasjonsnøkkel(event: K9KlageEventDto): String {
             return if (erTilBeslutter(event)) {
                 "K9_k_${event.ytelseTypeKode}_${event.aktørId}_beslutter"
             } else {
@@ -70,7 +69,7 @@ class EventTilDtoMapper {
             }
         }
 
-        private fun oppgaveSkalHaVentestatus(event: KlagebehandlingProsessHendelse): Boolean {
+        private fun oppgaveSkalHaVentestatus(event: K9KlageEventDto): Boolean {
             val oppgaveFeltverdiDtos = mutableListOf<OppgaveFeltverdiDto>()
             val åpneAksjonspunkter = getåpneAksjonspunkter(event)
 
@@ -91,21 +90,19 @@ class EventTilDtoMapper {
             return oppgaveFeltverdiDtos.first().nøkkel == "false"
         }
 
-        private fun erTilBeslutter(event: KlagebehandlingProsessHendelse): Boolean {
+        private fun erTilBeslutter(event: K9KlageEventDto): Boolean {
             return getåpneAksjonspunkter(event).firstOrNull { ap ->
                 ap.aksjonspunktKode.equals(AksjonspunktDefinisjon.FATTER_VEDTAK.kode)
             } != null
         }
 
         private fun lagFeltverdier(
-            event: KlagebehandlingProsessHendelse,
-            losOpplysningerSomManglerIKlageDto: LosOpplysningerSomManglerIKlageDto?,
-            losOpplysningerSomManglerHistoriskIKlageDto: LosOpplysningerSomManglerHistoriskIKlageDto?,
+            event: K9KlageEventDto,
             forrigeOppgave: OppgaveV3?
         ): List<OppgaveFeltverdiDto> {
-            val oppgaveFeltverdiDtos = mapEnkeltverdier(event, losOpplysningerSomManglerIKlageDto, forrigeOppgave)
+            val oppgaveFeltverdiDtos = mapEnkeltverdier(event, forrigeOppgave)
 
-            utledPåklagdBehandlingtype(event, losOpplysningerSomManglerHistoriskIKlageDto, oppgaveFeltverdiDtos)
+            utledPåklagdBehandlingtype(event, oppgaveFeltverdiDtos)
 
             val åpneAksjonspunkter = getåpneAksjonspunkter(event)
 
@@ -154,7 +151,7 @@ class EventTilDtoMapper {
             }
         }
 
-        private fun getåpneAksjonspunkter(event: KlagebehandlingProsessHendelse) =
+        private fun getåpneAksjonspunkter(event: K9KlageEventDto) =
             event.aksjonspunkttilstander.filter { aksjonspunkttilstand ->
                 aksjonspunkttilstand.status.erÅpentAksjonspunkt()
             }
@@ -203,7 +200,7 @@ class EventTilDtoMapper {
         }
 
         private fun utledAksjonspunkter(
-            event: KlagebehandlingProsessHendelse,
+            event: K9KlageEventDto,
             oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
         ) {
             if (event.aksjonspunkttilstander.isNotEmpty()) {
@@ -225,7 +222,7 @@ class EventTilDtoMapper {
 
         // Sjekker også lukkede aksjonspunkter for å få med tidspunktet for oversendelser for historiske klagebehandlinger til dvh
         private fun utledTidspunktOversendtKabal(
-            event: KlagebehandlingProsessHendelse,
+            event: K9KlageEventDto,
             oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
         ) {
 
@@ -248,8 +245,7 @@ class EventTilDtoMapper {
         }
 
         private fun mapEnkeltverdier(
-            event: KlagebehandlingProsessHendelse,
-            losOpplysningerSomManglerIKlageDto: LosOpplysningerSomManglerIKlageDto?,
+            event: K9KlageEventDto,
             forrigeOppgave: OppgaveV3?
         ) = mutableListOf(
             OppgaveFeltverdiDto(
@@ -334,64 +330,40 @@ class EventTilDtoMapper {
                 verdi = false.toString() //TODO: Påstand - klagesaker er alltid manuelt behandlet?
             )
         ).apply {
-            if (losOpplysningerSomManglerIKlageDto != null) {
-                if (losOpplysningerSomManglerIKlageDto.pleietrengendeAktørId?.aktørId != null) {
+                if (event.pleietrengendeAktørId != null) {
                     add(
                         OppgaveFeltverdiDto(
                             nøkkel = "pleietrengendeAktorId",
-                            verdi = losOpplysningerSomManglerIKlageDto.pleietrengendeAktørId.aktørId
+                            verdi = event.pleietrengendeAktørId.toString()
                         )
                     )
                 }
                 add(
                     OppgaveFeltverdiDto(
                         nøkkel = "utenlandstilsnitt",
-                        verdi = losOpplysningerSomManglerIKlageDto.isUtenlandstilsnitt.toString()
+                        verdi = event.utenlandstilsnitt.toString()
                     )
                 )
-            }
         }.filterNotNull().toMutableList()
 
         fun utledPåklagdBehandlingtype(
-            event: KlagebehandlingProsessHendelse,
-            losOpplysningerSomManglerHistoriskIKlageDto: LosOpplysningerSomManglerHistoriskIKlageDto?,
+            event: K9KlageEventDto,
             oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
         ) {
-            val påklagdBehandlingType = event.påklagdBehandlingType?.let { mapBehandlingtype(it) }
-                ?: losOpplysningerSomManglerHistoriskIKlageDto?.påklagdBehandlingType?.let { mapBehandlingtype(it) }
 
-            val konvertertBehandlingtype =
-                when (påklagdBehandlingType) {
-                    BehandlingType.TILBAKEKREVING.kode -> "k9tilbake"
-                    null -> null
-                    else -> "k9sak"
-                }
-
-            konvertertBehandlingtype?.let {
+            event.påklagdBehandlingType?.let {
                 oppgaveFeltverdiDtos.add(OppgaveFeltverdiDto(
                     nøkkel = "påklagdBehandlingtype",
-                    verdi = it
+                    verdi = it.toString()
                     )
                 )
-            }
-
-        }
-
-        private fun mapBehandlingtype(behandlingType: BehandlingType) : String {
-            return when (behandlingType) {
-                BehandlingType.TILBAKEKREVING, BehandlingType.REVURDERING_TILBAKEKREVING -> {
-                    "k9-tilbake"
-                }
-                else -> {
-                    "k9-sak"
-                }
             }
         }
 
         @VisibleForTesting
         fun utledTidFørsteGangHosBeslutter(
             forrigeOppgave: OppgaveV3?,
-            event: KlagebehandlingProsessHendelse
+            event: K9KlageEventDto
         ) = forrigeOppgave?.hentVerdi("tidFørsteGangHosBeslutter")?.let {
             OppgaveFeltverdiDto(
                 nøkkel = "tidFørsteGangHosBeslutter",
@@ -429,7 +401,7 @@ class EventTilDtoMapper {
         }
 
         private fun utledBehandlingsårsaker(
-            event: KlagebehandlingProsessHendelse,
+            event: K9KlageEventDto,
             oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
         ) {
             val filtrert = event.behandlingsårsaker?.filterNot { behandlingsårsak ->

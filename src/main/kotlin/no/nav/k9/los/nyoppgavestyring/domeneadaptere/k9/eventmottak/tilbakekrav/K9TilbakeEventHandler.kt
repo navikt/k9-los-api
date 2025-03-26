@@ -41,7 +41,7 @@ class K9TilbakeEventHandler(
 
     @WithSpan
     fun prosesser(
-        event: K9KlageEventDto
+        event: K9TilbakeEventDto
     ) {
         EventHandlerMetrics.time("k9tilbake", "gjennomført") {
             val modell = behandlingProsessEventTilbakeRepository.lagre(event)

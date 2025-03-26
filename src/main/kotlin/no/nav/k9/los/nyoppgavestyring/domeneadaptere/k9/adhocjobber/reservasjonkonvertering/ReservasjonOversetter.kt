@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering
 
 import kotliquery.TransactionalSession
 import no.nav.k9.los.domene.lager.oppgave.Oppgave

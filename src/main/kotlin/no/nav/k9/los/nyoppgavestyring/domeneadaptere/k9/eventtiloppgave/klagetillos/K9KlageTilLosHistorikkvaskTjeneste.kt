@@ -2,12 +2,13 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klageti
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import no.nav.k9.klage.typer.AktørId
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.HistorikkvaskMetrikker
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerInterfaceKludge
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.beriker.K9KlageBerikerInterfaceKludge
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakBerikerInterfaceKludge
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
@@ -27,7 +28,6 @@ class K9KlageTilLosHistorikkvaskTjeneste(
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
     private val config: Configuration,
     private val transactionalManager: TransactionalManager,
-    private val k9sakBeriker: K9SakBerikerInterfaceKludge,
     private val k9klageBeriker: K9KlageBerikerInterfaceKludge,
 ) {
 
@@ -85,7 +85,7 @@ class K9KlageTilLosHistorikkvaskTjeneste(
             var oppgaveV3: OppgaveV3? = null
             for (event in behandlingProsessEventer) {
                 if (eventNrForBehandling > høyesteInternVersjon) { break }  //Historikkvasken har funnet eventer som ennå ikke er lastet inn med normalflyt. Dirty eventer skal håndteres av vanlig adaptertjeneste
-                val losOpplysningerSomManglerIKlageDto = event.påklagdBehandlingEksternId?.let { k9sakBeriker.berikKlage(it) }
+                val losOpplysningerSomManglerIKlageDto = event.påklagdBehandlingEksternId?.let { k9klageBeriker.hentFraK9Sak(it) }
 
                 val påklagdBehandlingDto = if (event.påklagdBehandlingEksternId != null && event.påklagdBehandlingType == null) {
                     k9klageBeriker.hentFraK9Klage(event.eksternId)
@@ -93,8 +93,15 @@ class K9KlageTilLosHistorikkvaskTjeneste(
                     null
                 }
 
+                val eventBeriket =
+                    event.copy(
+                        påklagdBehandlingType = påklagdBehandlingDto?.påklagdBehandlingType,
+                        pleietrengendeAktørId = AktørId(losOpplysningerSomManglerIKlageDto?.pleietrengendeAktørId?.aktørId?.toLong()),
+                        utenlandstilsnitt = losOpplysningerSomManglerIKlageDto?.isUtenlandstilsnitt
+                    )
+
                 val oppgaveDto =
-                    EventTilDtoMapper.lagOppgaveDto(event, losOpplysningerSomManglerIKlageDto, påklagdBehandlingDto, forrigeOppgave)
+                    EventTilDtoMapper.lagOppgaveDto(eventBeriket,forrigeOppgave)
 
                 oppgaveV3 = oppgaveV3Tjeneste.utledEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, tx)
                 oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveV3, eventNrForBehandling, tx)

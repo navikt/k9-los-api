@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.aktivvask
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.aktivvask
 
 import kotliquery.queryOf
 import kotliquery.sessionOf

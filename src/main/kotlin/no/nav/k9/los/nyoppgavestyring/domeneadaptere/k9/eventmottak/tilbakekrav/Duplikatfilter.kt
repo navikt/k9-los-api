@@ -7,15 +7,15 @@ object Duplikatfilter {
 
     private val log = LoggerFactory.getLogger(Duplikatfilter::class.java)
 
-    fun fjernDuplikater(eventer : Collection<K9KlageEventDto>) : Set<K9KlageEventDto> {
+    fun fjernDuplikater(eventer : Collection<K9TilbakeEventDto>) : Set<K9TilbakeEventDto> {
         val gruppert = eventer.groupBy { it.eventTid }
-        val resultat : MutableSet<K9KlageEventDto> = mutableSetOf()
+        val resultat : MutableSet<K9TilbakeEventDto> = mutableSetOf()
         val tidspunktMedFlere : MutableSet<LocalDateTime> = mutableSetOf()
         for ((tidspunkt, eventerMedLikTid) in gruppert) {
             if (eventerMedLikTid.size == 1){
                 resultat.addAll(eventerMedLikTid)
             } else {
-                val leggesTil: MutableSet<K9KlageEventDto> = mutableSetOf()
+                val leggesTil: MutableSet<K9TilbakeEventDto> = mutableSetOf()
                 for (event in eventerMedLikTid) {
                     if (leggesTil.any { erFunksjoneltLike(event, it) }) {
                         log.info("Ignorerer en funksjonelt duplikat hendelse. Gjaldt eksternId ${event.eksternId} eventTid ${event.eventTid}")
@@ -39,7 +39,7 @@ object Duplikatfilter {
         return resultat
     }
 
-    fun erFunksjoneltLike(a : K9KlageEventDto, b: K9KlageEventDto) : Boolean{
+    fun erFunksjoneltLike(a : K9TilbakeEventDto, b: K9TilbakeEventDto) : Boolean{
         if (a == b) {
             return true
         }
@@ -51,7 +51,7 @@ object Duplikatfilter {
     }
 
 
-    fun ulikeFelter(a : K9KlageEventDto, b: K9KlageEventDto) : List<String> {
+    fun ulikeFelter(a : K9TilbakeEventDto, b: K9TilbakeEventDto) : List<String> {
         val avvikendeFelt: MutableList<String> = mutableListOf()
         if (a.eksternId != b.eksternId) {
             avvikendeFelt.add("eksternId")

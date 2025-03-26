@@ -21,7 +21,7 @@ import java.util.*
 import kotlin.math.min
 
 data class K9TilbakeModell(
-    val eventer: List<K9KlageEventDto>
+    val eventer: List<K9TilbakeEventDto>
 ) : IModell {
     private val `Omsorgspenger, Pleiepenger og opplæringspenger` = "ab0271"
 
@@ -29,7 +29,7 @@ data class K9TilbakeModell(
         return oppgave(sisteEvent())
     }
 
-    fun oppgave(sisteEvent: K9KlageEventDto): Oppgave {
+    fun oppgave(sisteEvent: K9TilbakeEventDto): Oppgave {
         val aktiveAksjonspunkt = sisteEvent.aktiveAksjonspunkt()
         val eventResultat = aktiveAksjonspunkt.eventResultatTilbake()
         var aktiv = true
@@ -153,11 +153,11 @@ data class K9TilbakeModell(
         )
     }
 
-    fun sisteEvent(): K9KlageEventDto {
+    fun sisteEvent(): K9TilbakeEventDto {
         return this.eventer[this.eventer.lastIndex]
     }
 
-    fun forrigeEvent(): K9KlageEventDto? {
+    fun forrigeEvent(): K9TilbakeEventDto? {
         return if (this.eventer.lastIndex > 0) {
             this.eventer[this.eventer.lastIndex - 1]
         } else {
@@ -165,7 +165,7 @@ data class K9TilbakeModell(
         }
     }
 
-    fun førsteEvent(): K9KlageEventDto {
+    fun førsteEvent(): K9TilbakeEventDto {
         return this.eventer[0]
     }
 
@@ -208,7 +208,7 @@ data class K9TilbakeModell(
 
     // Array med alle versjoner av modell basert på eventene, brukes når man skal spille av eventer
     fun alleVersjoner(): MutableList<K9TilbakeModell> {
-        val eventListe = mutableListOf<K9KlageEventDto>()
+        val eventListe = mutableListOf<K9TilbakeEventDto>()
         val modeller = mutableListOf<K9TilbakeModell>()
         for (behandlingProsessEventDto in eventer) {
             eventListe.add(behandlingProsessEventDto)
@@ -304,11 +304,11 @@ data class K9TilbakeModell(
     }
 }
 
-fun K9KlageEventDto.aktiveAksjonspunkt(): AksjonspunkterTilbake {
+fun K9TilbakeEventDto.aktiveAksjonspunkt(): AksjonspunkterTilbake {
     return AksjonspunkterTilbake(this.aksjonspunktKoderMedStatusListe.filter { entry -> entry.value == "OPPR" })
 }
 
-fun K9KlageEventDto.InaktiveAksjonspunkt(): AksjonspunkterTilbake {
+fun K9TilbakeEventDto.InaktiveAksjonspunkt(): AksjonspunkterTilbake {
     return AksjonspunkterTilbake(this.aksjonspunktKoderMedStatusListe.filter { entry -> entry.value != "OPPR" })
 }
 

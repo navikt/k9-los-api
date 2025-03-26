@@ -4,12 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.opentelemetry.instrumentation.annotations.SpanAttribute
 import io.opentelemetry.instrumentation.annotations.WithSpan
+import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.KlagebehandlingProsessHendelse
+import no.nav.k9.klage.typer.AktørId
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventRepository
 import no.nav.k9.los.jobber.JobbMetrikker
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerInterfaceKludge
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.beriker.K9KlageBerikerInterfaceKludge
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakBerikerInterfaceKludge
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
@@ -32,7 +34,6 @@ class K9KlageTilLosAdapterTjeneste(
     private val oppgavetypeTjeneste: OppgavetypeTjeneste,
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
     private val transactionalManager: TransactionalManager,
-    private val k9sakBeriker: K9SakBerikerInterfaceKludge,
     private val k9klageBeriker: K9KlageBerikerInterfaceKludge,
 ) {
 
@@ -118,7 +119,7 @@ class K9KlageTilLosAdapterTjeneste(
             val behandlingProsessEventer = k9KlageEventRepository.hentMedLås(tx, uuid).eventer
             behandlingProsessEventer.forEach { event ->
                 val losOpplysningerSomManglerIKlageDto =
-                    event.påklagdBehandlingEksternId?.let { k9sakBeriker.berikKlage(it) }
+                    event.påklagdBehandlingEksternId?.let { k9klageBeriker.hentFraK9Sak(it) }
 
                 val påklagdBehandlingDto = if (event.påklagdBehandlingEksternId != null && event.påklagdBehandlingType == null) {
                     k9klageBeriker.hentFraK9Klage(event.eksternId)
@@ -126,8 +127,15 @@ class K9KlageTilLosAdapterTjeneste(
                     null
                 }
 
+                val eventBeriket =
+                    event.copy(
+                        påklagdBehandlingType = påklagdBehandlingDto?.påklagdBehandlingType,
+                        pleietrengendeAktørId = AktørId(losOpplysningerSomManglerIKlageDto?.pleietrengendeAktørId?.aktørId?.toLong()),
+                        utenlandstilsnitt = losOpplysningerSomManglerIKlageDto?.isUtenlandstilsnitt
+                        )
+
                 val oppgaveDto =
-                    EventTilDtoMapper.lagOppgaveDto(event, losOpplysningerSomManglerIKlageDto, påklagdBehandlingDto, forrigeOppgave)
+                    EventTilDtoMapper.lagOppgaveDto(eventBeriket, forrigeOppgave)
 
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
 

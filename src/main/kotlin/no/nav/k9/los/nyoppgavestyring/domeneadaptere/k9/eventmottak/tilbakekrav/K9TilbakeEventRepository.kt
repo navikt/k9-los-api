@@ -31,7 +31,7 @@ class K9TilbakeEventRepository(private val dataSource: DataSource) {
     }
 
     fun lagre(
-        event: K9KlageEventDto
+        event: K9TilbakeEventDto
     ): K9TilbakeModell {
         val json = LosObjectMapper.instance.writeValueAsString(event)
 

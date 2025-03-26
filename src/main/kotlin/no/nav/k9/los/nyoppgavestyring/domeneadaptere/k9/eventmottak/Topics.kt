@@ -2,8 +2,9 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.KlagebehandlingProsessHendelse
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9KlageEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
 import no.nav.k9.los.utils.LosObjectMapper
 import org.apache.kafka.common.serialization.Deserializer
@@ -49,8 +50,8 @@ internal class AksjonspunktLaget : SerDes<K9SakEventDto>() {
     }
 }
 
-internal class AksjonspunktKlageLaget : SerDes<KlagebehandlingProsessHendelse>() {
-    override fun deserialize(topic: String?, data: ByteArray?): KlagebehandlingProsessHendelse? {
+internal class AksjonspunktKlageLaget : SerDes<K9KlageEventDto>() {
+    override fun deserialize(topic: String?, data: ByteArray?): K9KlageEventDto? {
         return data?.let {
             return try {
                 LosObjectMapper.instance.readValue(it)
@@ -77,11 +78,11 @@ internal class AksjonspunktPunsjLaget : SerDes<PunsjEventDto>() {
     }
 }
 
-internal class AksjonspunktLagetTilbake : SerDes<K9KlageEventDto>() {
-    override fun deserialize(topic: String?, data: ByteArray?): K9KlageEventDto? {
+internal class AksjonspunktLagetTilbake : SerDes<K9TilbakeEventDto>() {
+    override fun deserialize(topic: String?, data: ByteArray?): K9TilbakeEventDto? {
         return data?.let {
             return try {
-                LosObjectMapper.instance.readValue<K9KlageEventDto>(
+                LosObjectMapper.instance.readValue<K9TilbakeEventDto>(
                     it
                 )
             } catch (e: Exception) {
