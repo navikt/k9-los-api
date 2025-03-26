@@ -253,7 +253,7 @@ fun Route.forvaltningApis() {
                 try {
                     val oppgave =
                         oppgaveRepositoryTxWrapper.hentOppgave(område, oppgaveEksternId)
-                    call.respond(objectMapper.writeValueAsString(oppgave))
+                    call.respond(objectMapper.writeValueAsString(OppgaveIkkeSensitiv(oppgave)))
                 } catch (e: IllegalStateException) {
                     if (e.message != null && e.message!!.startsWith("")) {
                         call.respond(HttpStatusCode.NotFound)
