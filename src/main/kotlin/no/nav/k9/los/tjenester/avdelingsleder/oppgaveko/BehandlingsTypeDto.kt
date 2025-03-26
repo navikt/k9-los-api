@@ -1,6 +1,6 @@
 package no.nav.k9.los.tjenester.avdelingsleder.oppgaveko
 
-import no.nav.k9.los.domene.modell.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 
 data class BehandlingsTypeDto(
     val id: String,

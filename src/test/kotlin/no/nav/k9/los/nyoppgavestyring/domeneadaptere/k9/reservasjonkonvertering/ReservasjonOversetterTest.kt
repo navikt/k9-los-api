@@ -5,15 +5,21 @@ import assertk.assertions.contains
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.aksjonspunktbehandling.K9sakEventHandler
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.domene.modell.*
 import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
-import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
-import no.nav.k9.los.integrasjon.kafka.dto.EventHendelse
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonKonverteringJobb
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
 import org.junit.jupiter.api.Assertions.*
@@ -27,7 +33,7 @@ import java.util.*
 class ReservasjonOversetterTest : AbstractK9LosIntegrationTest() {
     lateinit var områdeSetup: OmrådeSetup
     lateinit var saksbehandlerRepository: SaksbehandlerRepository
-    lateinit var k9sakEventHandler: K9sakEventHandler
+    lateinit var k9sakEventHandler: K9SakEventHandler
     lateinit var reservasjonOversetter: ReservasjonOversetter
     lateinit var oppgaveV3Repository: OppgaveRepositoryTxWrapper
     lateinit var transactionalManager: TransactionalManager
@@ -69,7 +75,7 @@ class ReservasjonOversetterTest : AbstractK9LosIntegrationTest() {
         saraSaksbehandlerId = saksbehandlerRepository.finnSaksbehandlerIdForIdent("Z123456")!!
         birgerSaksbehandlerId = saksbehandlerRepository.finnSaksbehandlerIdForIdent("Z123457")!!
 
-        k9sakEventHandler = get<K9sakEventHandler>()
+        k9sakEventHandler = get<K9SakEventHandler>()
         reservasjonOversetter = get<ReservasjonOversetter>()
 
         oppgaveV3Repository = get<OppgaveRepositoryTxWrapper>()
@@ -256,8 +262,8 @@ fun mockEvent(
     aktørId: String,
     behandlingId: Long,
     pleietrengendeAktørId: String
-): BehandlingProsessEventDto {
-    return BehandlingProsessEventDto(
+): K9SakEventDto {
+    return K9SakEventDto(
         eksternId = UUID.randomUUID(),
         fagsystem = Fagsystem.K9SAK,
         saksnummer = saksnummer,

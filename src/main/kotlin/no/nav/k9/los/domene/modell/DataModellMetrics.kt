@@ -3,6 +3,8 @@ package no.nav.k9.los.domene.modell
 import io.prometheus.client.Counter
 import io.prometheus.client.Histogram
 import no.nav.k9.los.domene.repository.ReservasjonRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakModell
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import java.time.Duration
 
 private val oppgaveOpprettet = Counter.build()

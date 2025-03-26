@@ -5,8 +5,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer
-import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventTilbakeDto
-import no.nav.k9.los.integrasjon.kafka.dto.EventHendelse
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -66,7 +66,7 @@ data class K9TilbakeEventIkkeSensitiv(
     val ansvarligSaksbehandlerIdent: String? = null,
     val ansvarligBeslutterIdent: String? = null
 ) {
-    constructor(event: BehandlingProsessEventTilbakeDto) : this(
+    constructor(event: K9TilbakeEventDto) : this(
         eksternId = event.eksternId,
         fagsystem = event.fagsystem,
         saksnummer = event.saksnummer,

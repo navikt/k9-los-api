@@ -4,7 +4,7 @@ import kotlinx.coroutines.channels.Channel
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
-import no.nav.k9.los.aksjonspunktbehandling.AksjonspunktDefinisjonK9Tilbake
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.OppgaveMedId
 import no.nav.k9.los.domene.lager.oppgave.Reservasjon
@@ -15,7 +15,10 @@ import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
 import no.nav.k9.los.integrasjon.pdl.*
 import no.nav.k9.los.integrasjon.rest.idToken
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
+import no.nav.k9.los.nyoppgavestyring.kodeverk.KøSortering
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.OppgaverGruppertRepository

@@ -1,16 +1,16 @@
 package no.nav.k9.los.fagsystem.k9sak
 
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
-import no.nav.k9.los.aksjonspunktbehandling.EventTeller
-import no.nav.k9.los.aksjonspunktbehandling.EventHandlerMetrics
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventTeller
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHandlerMetrics
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.v2.BehandlingEndret
 import no.nav.k9.los.domene.lager.oppgave.v2.FerdigstillBehandling
 import no.nav.k9.los.domene.lager.oppgave.v2.Ident
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveTjenesteV2
-import no.nav.k9.los.domene.modell.FagsakYtelseType
-import no.nav.k9.los.domene.modell.Fagsystem
-import no.nav.k9.los.domene.modell.IModell
+import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.IModell
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.*
 import org.slf4j.LoggerFactory
 

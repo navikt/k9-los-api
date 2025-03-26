@@ -6,9 +6,9 @@ import no.nav.helse.dusseldorf.ktor.health.Result
 import no.nav.helse.dusseldorf.ktor.health.UnHealthy
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
-import no.nav.k9.los.integrasjon.kafka.IKafkaConfig
-import no.nav.k9.los.integrasjon.kafka.TopicEntry
-import no.nav.k9.los.integrasjon.kafka.TopicUse
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.IKafkaConfig
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.TopicEntry
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.TopicUse
 import no.nav.k9.los.integrasjon.sakogbehandling.kontrakt.BehandlingAvsluttet
 import no.nav.k9.los.integrasjon.sakogbehandling.kontrakt.BehandlingOpprettet
 import no.nav.k9.los.utils.LosObjectMapper

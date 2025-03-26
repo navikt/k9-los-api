@@ -1,7 +1,7 @@
 package no.nav.k9.los.tjenester.avdelingsleder.oppgaveko
 
 import com.fasterxml.jackson.annotation.JsonIgnore
-import no.nav.k9.los.domene.modell.KøKriterierType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.KøKriterierType
 
 data class KriteriumDto(
     val id: String,

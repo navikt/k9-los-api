@@ -3,9 +3,9 @@ package no.nav.k9.los.db
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.modell.Aksjonspunkter
-import no.nav.k9.los.domene.modell.BehandlingStatus
-import no.nav.k9.los.domene.modell.BehandlingType
-import no.nav.k9.los.domene.modell.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.domene.repository.OppgaveRepository
 import org.junit.jupiter.api.Test
 import org.koin.test.get

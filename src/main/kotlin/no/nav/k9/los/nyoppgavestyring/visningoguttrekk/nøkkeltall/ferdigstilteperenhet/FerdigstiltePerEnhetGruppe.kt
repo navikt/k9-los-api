@@ -1,6 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet
 
-import no.nav.k9.los.domene.modell.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 
 enum class FerdigstiltePerEnhetGruppe(val navn: String) {
     ALLE("Alle ytelser"),

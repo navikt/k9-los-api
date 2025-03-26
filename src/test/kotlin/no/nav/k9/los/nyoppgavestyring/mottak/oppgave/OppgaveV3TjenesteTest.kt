@@ -6,7 +6,7 @@ import assertk.assertions.isFalse
 import assertk.assertions.isTrue
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.los.domene.modell.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import org.junit.jupiter.api.BeforeEach
