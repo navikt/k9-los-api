@@ -1,4 +1,4 @@
-package no.nav.k9.los.integrasjon.k9
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver
 
 import com.github.kittinunf.fuel.coroutines.awaitStringResponseResult
 import com.github.kittinunf.fuel.httpPost
@@ -15,7 +15,6 @@ import no.nav.k9.sak.kontrakt.behandling.BehandlingIdDto
 import no.nav.k9.sak.kontrakt.behandling.BehandlingIdListe
 import org.slf4j.LoggerFactory
 import java.time.Duration
-import java.time.LocalDateTime
 import java.util.*
 
 open class K9SakServiceSystemClient constructor(

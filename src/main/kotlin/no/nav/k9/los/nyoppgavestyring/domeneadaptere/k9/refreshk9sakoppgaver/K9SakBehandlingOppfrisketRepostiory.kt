@@ -1,4 +1,4 @@
-package no.nav.k9.los.integrasjon.k9
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf

@@ -1,4 +1,4 @@
-package no.nav.k9.los.eventhandler
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver
 
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.extension.kotlin.asContextElement
@@ -8,8 +8,8 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.los.eventhandler.RefreshK9v3.Companion
-import no.nav.k9.los.integrasjon.k9.IK9SakService
+import no.nav.k9.los.eventhandler.ChannelMetrikker
+import no.nav.k9.los.eventhandler.asCoroutineDispatcherWithErrorHandling
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.slf4j.LoggerFactory
 import java.util.*
