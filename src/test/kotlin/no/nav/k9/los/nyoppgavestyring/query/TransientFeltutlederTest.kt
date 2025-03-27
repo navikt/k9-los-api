@@ -38,12 +38,20 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
 
         val oppgaveQueryUtenStatusfilter = OppgaveQuery(
             listOf(
-                byggFilter(FeltType.TID_SIDEN_MOTTATT_DATO, FeltverdiOperator.GREATER_THAN_OR_EQUALS, Duration.ofDays(11).toString())
+                byggFilter(
+                    FeltType.TID_SIDEN_MOTTATT_DATO,
+                    FeltverdiOperator.GREATER_THAN_OR_EQUALS,
+                    Duration.ofDays(11).toString()
+                )
             )
         )
         val oppgaveQueryMedStatusfilter = OppgaveQuery(
             listOf(
-                byggFilter(FeltType.TID_SIDEN_MOTTATT_DATO, FeltverdiOperator.GREATER_THAN_OR_EQUALS, Duration.ofDays(11).toString()),
+                byggFilter(
+                    FeltType.TID_SIDEN_MOTTATT_DATO,
+                    FeltverdiOperator.GREATER_THAN_OR_EQUALS,
+                    Duration.ofDays(11).toString()
+                ),
                 byggFilter(FeltType.OPPGAVE_STATUS, FeltverdiOperator.EQUALS, Oppgavestatus.AAPEN.kode)
             )
         )
@@ -134,36 +142,44 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
     private fun hentOppgave(id: OppgaveId): Oppgave {
         val aktivOppgaveRepository = get<AktivOppgaveRepository>()
         val oppgaveRepository = get<OppgaveRepository>()
+        val partisjonertRepository = get<OppgaveV3PartisjonertRepository>()
 
-        val oppgave = transactionalManager.transaction { tx ->
+        return transactionalManager.transaction { tx ->
             when (id) {
                 is AktivOppgaveId -> aktivOppgaveRepository.hentOppgaveForId(tx, id)
                 is OppgaveV3Id -> oppgaveRepository.hentOppgaveForId(tx, id)
-                is PartisjonertOppgaveId -> oppgaveRepository.hentOppgaveForEksternIdOgEksternVersjon(tx, id.oppgaveEksternId, id.oppgaveEksternVersjon)
-                    ?: throw IllegalStateException("Fant ikke oppgave med id $id")
+                is PartisjonertOppgaveId -> {
+                    val (oppgaveEksternId, oppgavetypeEksternId) = partisjonertRepository
+                        .hentOppgaveEksternIdOgOppgavetype(id, tx)
+                    oppgaveRepository.hentOppgaveForEksternIdOgOppgavetype(
+                        tx,
+                        oppgaveEksternId,
+                        oppgavetypeEksternId
+                    )
+                }
             }
+
         }
-        return oppgave
     }
+}
 
-    private fun byggFilter(
-        feltType: FeltType,
-        feltverdiOperator: FeltverdiOperator,
-        vararg verdier: String?
-    ): FeltverdiOppgavefilter {
-        return FeltverdiOppgavefilter(
-            feltType.område,
-            feltType.eksternId,
-            feltverdiOperator.name,
-            verdier.toList()
-        )
-    }
+private fun byggFilter(
+    feltType: FeltType,
+    feltverdiOperator: FeltverdiOperator,
+    vararg verdier: String?
+): FeltverdiOppgavefilter {
+    return FeltverdiOppgavefilter(
+        feltType.område,
+        feltType.eksternId,
+        feltverdiOperator.name,
+        verdier.toList()
+    )
+}
 
-    private fun byggOrder(feltType: FeltType, økende: Boolean): EnkelOrderFelt {
-        return EnkelOrderFelt(
-            område = feltType.område,
-            feltType.eksternId,
-            økende = økende
-        )
-    }
+private fun byggOrder(feltType: FeltType, økende: Boolean): EnkelOrderFelt {
+    return EnkelOrderFelt(
+        område = feltType.område,
+        feltType.eksternId,
+        økende = økende
+    )
 }

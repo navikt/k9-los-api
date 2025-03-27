@@ -16,27 +16,28 @@ class OppgaveRepository(
 ) {
     private val log: Logger = LoggerFactory.getLogger("OppgaveRepository")
 
-    fun hentOppgaveForEksternIdOgEksternVersjon(
+    fun hentOppgaveForEksternIdOgOppgavetype(
         tx: TransactionalSession,
-        eksternId: String,
-        eksternVersjon: String,
+        oppgaveEksternId: String,
+        oppgavetypeEksternId: String,
         now: LocalDateTime = LocalDateTime.now()
-    ): Oppgave? {
+    ): Oppgave {
         return tx.run(
             queryOf(
                 """
                         select * 
                         from oppgave_v3 ov
-                        where ov.ekstern_id = :eksternId 
-                         and ov.ekstern_versjon = :eksternVersjon
-                        and ov.aktiv = true
+                        inner join oppgavetype ot on ov.oppgavetype_id = ot.id
+                        where ov.ekstern_id = :eksternId
+                          and ot.ekstern_id = :oppgavetypeEksternId
+                          and ov.ekstern_versjon = :eksternVersjon
+                          and ov.aktiv = true
                     """.trimIndent(),
                 mapOf(
-                    "eksternId" to eksternId,
-                    "eksternVersjon" to eksternVersjon
+                    "eksternId" to oppgaveEksternId,
+                    "oppgavetypeEksternId" to oppgavetypeEksternId
                 )
-            ).map { mapOppgave(it, now, tx) }.asSingle
-        )
+            ).map { mapOppgave(it, now, tx) }.asSingle) ?: throw IllegalStateException("Fant ikke oppgave med eksternId $oppgaveEksternId og oppgavetype $oppgavetypeEksternId")
     }
 
     fun hentNyesteOppgaveForEksternId(tx: TransactionalSession, kildeområde: String, eksternId: String, now: LocalDateTime = LocalDateTime.now()): Oppgave {

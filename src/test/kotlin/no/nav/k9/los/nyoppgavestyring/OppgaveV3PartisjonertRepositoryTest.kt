@@ -103,8 +103,8 @@ class OppgaveV3PartisjonertRepositoryTest : AbstractK9LosIntegrationTest() {
             tx.run(
                 kotliquery.queryOf(
                     """
-                    SELECT oppgave_ekstern_id, oppgavestatus FROM oppgave_v3_part 
-                    WHERE oppgave_ekstern_id = :eksternId
+                    SELECT oid.oppgave_ekstern_id, oppgavestatus FROM oppgave_v3_part o INNER JOIN oppgave_id_part oid ON o.oppgave_id = oid.id
+                    WHERE oid.oppgave_ekstern_id = :eksternId
                     """.trimIndent(),
                     mapOf("eksternId" to eksternId)
                 ).map { row -> Pair(row.string("oppgave_ekstern_id"), row.string("oppgavestatus")) }
@@ -118,8 +118,9 @@ class OppgaveV3PartisjonertRepositoryTest : AbstractK9LosIntegrationTest() {
             tx.run(
                 kotliquery.queryOf(
                     """
-                    SELECT feltdefinisjon_ekstern_id, verdi FROM oppgavefelt_verdi_part 
-                    WHERE oppgave_ekstern_id = :eksternId
+                    SELECT feltdefinisjon_ekstern_id, verdi FROM oppgavefelt_verdi_part
+                     INNER JOIN oppgave_id_part ON oppgave_id = oppgave_id_part.id
+                    WHERE oppgave_id_part.oppgave_ekstern_id = :eksternId
                     """.trimIndent(),
                     mapOf("eksternId" to eksternId)
                 ).map { row -> Pair(row.string("feltdefinisjon_ekstern_id"), row.string("verdi")) }

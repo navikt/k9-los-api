@@ -947,7 +947,7 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                 endretTidspunkt = LocalDateTime.of(2025, 1, 1, 0, 0, 0)
             )
 
-        val resultat = oppgaveQueryRepository.query(
+        val resultat = oppgaveQueryRepository.queryForEksternId(
             QueryRequest(
                 OppgaveQuery(
                     listOf(
@@ -955,8 +955,8 @@ class OppgaveQueryTest : AbstractK9LosIntegrationTest() {
                         byggFilter(FeltType.OPPGAVE_STATUS, FeltverdiOperator.EQUALS, "LUKKET"),
                     )
                 )
-            ))
-        assertThat(resultat).containsOnly(PartisjonertOppgaveId(oppgaveLukketFørsteJanuar.eksternId, oppgaveLukketFørsteJanuar.eksternVersjon))
+            ), LocalDateTime.now())
+        assertThat(resultat.map { it.eksternId }).containsOnly(oppgaveLukketFørsteJanuar.eksternId)
     }
 
     private fun lagOppgaveMedPepCache(

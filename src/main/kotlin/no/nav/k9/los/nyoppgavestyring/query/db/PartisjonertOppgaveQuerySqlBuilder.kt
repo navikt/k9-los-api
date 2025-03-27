@@ -37,14 +37,14 @@ class PartisjonertOppgaveQuerySqlBuilder(
     private val ferdigstiltDatoBetingelse = if (ferdigstiltDato != null) "AND o.ferdigstilt_dato = :ferdigstilt_dato " else ""
     private val ferdigstiltDatoFeltBetingelse = if (ferdigstiltDato != null) "AND ov.ferdigstilt_dato = :ferdigstilt_dato " else ""
     
-    private var selectClause = "SELECT o.oppgave_ekstern_id, o.oppgave_ekstern_versjon"
+    private var selectClause = "SELECT o.oppgave_id, o.oppgave_ekstern_id, o.oppgave_ekstern_versjon"
     private var fromClause = """
         FROM oppgave_v3_part o
         LEFT JOIN oppgave_pep_cache opc ON (opc.kildeomrade = 'K9' AND o.oppgave_ekstern_id = opc.ekstern_id)
     """.trimIndent()
     
     private var whereClause = "WHERE o.oppgavestatus IN ($oppgavestatusPlaceholder) $ferdigstiltDatoBetingelse"
-    private var orderByClause = "ORDER BY (SELECT NULL)"
+    private var orderByClause = "ORDER BY "
     private var pagingClause = ""
     
     private val utenReservasjonerBetingelse = """
@@ -73,7 +73,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
     }
 
     override fun getQuery(): String {
-        return "$selectClause $fromClause $whereClause $orderByClause $pagingClause"
+        return "$selectClause $fromClause $whereClause ${if (orderByParams.isNotEmpty()) orderByClause else ""} $pagingClause"
     }
 
     override fun getParams(): Map<String, Any?> {
@@ -218,7 +218,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
     }
 
     override fun mapRowTilId(row: Row): OppgaveId {
-        return PartisjonertOppgaveId(row.string("oppgave_ekstern_id"), row.string("oppgave_ekstern_versjon"))
+        return PartisjonertOppgaveId(row.long("oppgave_id"))
     }
 
     override fun mapRowTilEksternId(row: Row): EksternOppgaveId {
@@ -267,9 +267,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
                 SELECT 1
                 FROM oppgavefelt_verdi_part ov
                 WHERE ov.oppgavestatus IN ($oppgavestatusPlaceholder) $ferdigstiltDatoFeltBetingelse
-                  AND ov.oppgave_ekstern_id = o.oppgave_ekstern_id
-                  AND ov.oppgave_ekstern_versjon = o.oppgave_ekstern_versjon
-                  AND ov.omrade_ekstern_id = :feltOmrade$index
+                  AND ov.oppgave_id = o.oppgave_id
                   AND ov.feltdefinisjon_ekstern_id = :feltkode$index
                   AND $verdifelt ${operator.negasjonAv?.sql ?: operator.sql} $feltverdiPlaceholder
             )
@@ -302,9 +300,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
                 SELECT 1
                 FROM oppgavefelt_verdi_part ov 
                 WHERE ov.oppgavestatus IN ($oppgavestatusPlaceholder) $ferdigstiltDatoFeltBetingelse
-                    AND ov.oppgave_ekstern_id = o.oppgave_ekstern_id
-                    AND ov.oppgave_ekstern_versjon = o.oppgave_ekstern_versjon
-                    AND ov.omrade_ekstern_id = :feltOmrade$index
+                    AND ov.oppgave_id = o.oppgave_id
                     AND ov.feltdefinisjon_ekstern_id = :feltkode$index
             )
         """.trimIndent()
@@ -332,9 +328,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
               SELECT $verdifelt                    
               FROM oppgavefelt_verdi_part ov 
               WHERE ov.oppgavestatus IN ($oppgavestatusPlaceholder) $ferdigstiltDatoFeltBetingelse
-                AND ov.oppgave_ekstern_id = o.oppgave_ekstern_id
-                AND ov.oppgave_ekstern_versjon = o.oppgave_ekstern_versjon
-                AND ov.omrade_ekstern_id = :orderByfeltOmrade$index
+                AND ov.oppgave_id = o.oppgave_id
                 AND ov.feltdefinisjon_ekstern_id = :orderByfeltkode$index
               LIMIT 1
             ) $retning

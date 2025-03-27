@@ -29,6 +29,7 @@ class OppgaveQueryService {
     private val oppgaveQueryRepository by inject<OppgaveQueryRepository>(OppgaveQueryRepository::class.java)
     private val aktivOppgaveRepository by inject<AktivOppgaveRepository>(AktivOppgaveRepository::class.java)
     private val oppgaveRepository by inject<OppgaveRepository>(OppgaveRepository::class.java)
+    private val partisjonertOppgaveRepository by inject<OppgaveV3PartisjonertRepository>(OppgaveV3PartisjonertRepository::class.java)
     private val pepClient by inject<IPepClient>(IPepClient::class.java)
 
     @WithSpan
@@ -46,8 +47,15 @@ class OppgaveQueryService {
             when (oppgaveId) {
                 is AktivOppgaveId -> aktivOppgaveRepository.hentOppgaveForId(tx, oppgaveId, now)
                 is OppgaveV3Id -> oppgaveRepository.hentOppgaveForId(tx, oppgaveId, now)
-                is PartisjonertOppgaveId -> oppgaveRepository.hentOppgaveForEksternIdOgEksternVersjon(tx, oppgaveId.oppgaveEksternId, oppgaveId.oppgaveEksternVersjon)
-                    ?: throw IllegalStateException("Fant ikke oppgave med id $oppgaveId")
+                is PartisjonertOppgaveId ->
+                    partisjonertOppgaveRepository.hentOppgaveEksternIdOgOppgavetype(oppgaveId, tx)
+                        .let { (oppgaveEksternId, oppgavetypeEksternId) ->
+                            oppgaveRepository.hentOppgaveForEksternIdOgOppgavetype(
+                                tx,
+                                oppgaveEksternId,
+                                oppgavetypeEksternId
+                            )
+                        }
             }
         }
     }
@@ -143,8 +151,14 @@ class OppgaveQueryService {
         val oppgave = when (oppgaveId) {
             is AktivOppgaveId -> aktivOppgaveRepository.hentOppgaveForId(tx, oppgaveId, now)
             is OppgaveV3Id -> oppgaveRepository.hentOppgaveForId(tx, oppgaveId, now)
-            is PartisjonertOppgaveId -> oppgaveRepository.hentOppgaveForEksternIdOgEksternVersjon(tx, oppgaveId.oppgaveEksternId, oppgaveId.oppgaveEksternVersjon)
-                ?: throw IllegalStateException("Fant ikke oppgave med id $oppgaveId")
+            is PartisjonertOppgaveId -> partisjonertOppgaveRepository.hentOppgaveEksternIdOgOppgavetype(oppgaveId, tx)
+                .let { (oppgaveEksternId, oppgavetypeEksternId) ->
+                    oppgaveRepository.hentOppgaveForEksternIdOgOppgavetype(
+                        tx,
+                        oppgaveEksternId,
+                        oppgavetypeEksternId
+                    )
+                }
         }
 
         if (!pepClient.harTilgangTilOppgaveV3(oppgave = oppgave, action = Action.read, auditlogging = Auditlogging.LOGG_VED_PERMIT)) {

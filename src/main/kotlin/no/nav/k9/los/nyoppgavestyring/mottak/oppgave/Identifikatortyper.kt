@@ -4,4 +4,4 @@ sealed class OppgaveId
 
 data class OppgaveV3Id(val id: Long) : OppgaveId()
 data class AktivOppgaveId(val id: Long) : OppgaveId()
-data class PartisjonertOppgaveId(val oppgaveEksternId: String, val oppgaveEksternVersjon: String) : OppgaveId()
+data class PartisjonertOppgaveId(val id: Long) : OppgaveId()
