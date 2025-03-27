@@ -71,8 +71,7 @@ jobs:
       - name: Deploy til dev-fss
         uses: nais/deploy/actions/deploy@v2
         env:
-          IMAGE: ${{ needs.build.outputs.image }}
-          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          WORKLOAD_IMAGE: ${{ needs.build.outputs.image }}
           CLUSTER: dev-fss
           RESOURCE: nais/naiserator.yaml
           VARS: nais/dev-fss.json
@@ -87,8 +86,7 @@ jobs:
       - name: Deploy til prod-fss
         uses: nais/deploy/actions/deploy@v2
         env:
-          IMAGE: ${{ needs.build.outputs.image }}
-          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          WORKLOAD_IMAGE: ${{ needs.build.outputs.image }}
           CLUSTER: prod-fss
           RESOURCE: nais/naiserator.yaml
           VARS: nais/prod-fss.json
