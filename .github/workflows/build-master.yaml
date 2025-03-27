@@ -67,9 +67,9 @@ jobs:
     outputs:
       image: ${{ needs.build.outputs.image }}
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # ratchet:actions/checkout@v3
+      - uses: actions/checkout@v3
       - name: Deploy til dev-fss
-        uses: nais/deploy/actions/deploy@c73efa8384743a5c14b94d4a4b9c1cf5a260b532 # ratchet:nais/deploy/actions/deploy@v2
+        uses: nais/deploy/actions/deploy@v2
         env:
           IMAGE: ${{ needs.build.outputs.image }}
           APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
@@ -83,9 +83,9 @@ jobs:
     environment: "prod-fss:k9saksbehandling"
     concurrency: "prod-fss:k9saksbehandling"
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # ratchet:actions/checkout@v3
+      - uses: actions/checkout@v3
       - name: Deploy til prod-fss
-        uses: nais/deploy/actions/deploy@c73efa8384743a5c14b94d4a4b9c1cf5a260b532 # ratchet:nais/deploy/actions/deploy@v2
+        uses: nais/deploy/actions/deploy@v2
         env:
           IMAGE: ${{ needs.build.outputs.image }}
           APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
