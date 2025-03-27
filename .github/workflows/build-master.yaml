@@ -64,6 +64,10 @@ jobs:
     needs: [ build, test ]
     environment: "dev-fss:k9saksbehandling"
     concurrency: "dev-fss:k9saksbehandling"
+    permissions:
+      contents: read
+      id-token: write
+      actions: read
     outputs:
       image: ${{ needs.build.outputs.image }}
     steps:
@@ -81,6 +85,10 @@ jobs:
     needs: [ build, test ]
     environment: "prod-fss:k9saksbehandling"
     concurrency: "prod-fss:k9saksbehandling"
+    permissions:
+      contents: read
+      id-token: write
+      actions: read
     steps:
       - uses: actions/checkout@v3
       - name: Deploy til prod-fss
