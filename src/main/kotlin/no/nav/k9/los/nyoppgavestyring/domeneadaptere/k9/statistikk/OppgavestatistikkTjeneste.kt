@@ -6,7 +6,6 @@ import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.los.domene.modell.Fagsystem
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import org.slf4j.LoggerFactory
@@ -141,7 +140,7 @@ class OppgavestatistikkTjeneste(
         }
     }
 
-    fun slettStatistikkgrunnlag(fagsystem: Fagsystem?) {
-        statistikkRepository.fjernSendtMarkering(fagsystem)
+    fun slettStatistikkgrunnlag(oppgavetype: String) {
+        statistikkRepository.fjernSendtMarkering(oppgavetype)
     }
 }
