@@ -103,7 +103,7 @@ class OppgaveV3PartisjonertRepositoryTest : AbstractK9LosIntegrationTest() {
             tx.run(
                 kotliquery.queryOf(
                     """
-                    SELECT oid.oppgave_ekstern_id, oppgavestatus FROM oppgave_v3_part o INNER JOIN oppgave_id_part oid ON o.oppgave_id = oid.id
+                    SELECT oid.oppgave_ekstern_id, oppgavestatus FROM oppgave_v3_part o INNER JOIN oppgave_id_part oid ON o.id = oid.id
                     WHERE oid.oppgave_ekstern_id = :eksternId
                     """.trimIndent(),
                     mapOf("eksternId" to eksternId)

@@ -37,14 +37,15 @@ class PartisjonertOppgaveQuerySqlBuilder(
     private val ferdigstiltDatoBetingelse = if (ferdigstiltDato != null) "AND o.ferdigstilt_dato = :ferdigstilt_dato " else ""
     private val ferdigstiltDatoFeltBetingelse = if (ferdigstiltDato != null) "AND ov.ferdigstilt_dato = :ferdigstilt_dato " else ""
     
-    private var selectClause = "SELECT o.oppgave_id, o.oppgave_ekstern_id, o.oppgave_ekstern_versjon"
+    private var selectClause = "SELECT o.id, o.oppgave_ekstern_id, o.oppgave_ekstern_versjon"
     private var fromClause = """
         FROM oppgave_v3_part o
         LEFT JOIN oppgave_pep_cache opc ON (opc.kildeomrade = 'K9' AND o.oppgave_ekstern_id = opc.ekstern_id)
     """.trimIndent()
     
     private var whereClause = "WHERE o.oppgavestatus IN ($oppgavestatusPlaceholder) $ferdigstiltDatoBetingelse"
-    private var orderByClause = "ORDER BY "
+    private val orderByClauses = mutableListOf<String>()
+    private val orderByClause get() = if (orderByClauses.isNotEmpty()) "ORDER BY " + orderByClauses.joinToString(", ") else ""
     private var pagingClause = ""
     
     private val utenReservasjonerBetingelse = """
@@ -73,7 +74,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
     }
 
     override fun getQuery(): String {
-        return "$selectClause $fromClause $whereClause ${if (orderByParams.isNotEmpty()) orderByClause else ""} $pagingClause"
+        return "$selectClause $fromClause $whereClause $orderByClause $pagingClause"
     }
 
     override fun getParams(): Map<String, Any?> {
@@ -89,7 +90,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
 
     override fun medAntallSomResultat() {
         selectClause = "SELECT COUNT(*) as antall"
-        orderByClause = ""
+        orderByClauses.clear()
         orderByParams.clear()
     }
 
@@ -139,7 +140,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
         if (feltområde != null) {
             // Hvis null-verdi er det kun en verdi, allerede håndtert i filterRens
             if (feltverdier.first() == null) {
-                utenOppgavefelt(combineOperator, feltområde, feltkode, operator)
+                utenOppgavefelt(combineOperator, feltkode, operator)
             } else {
                 medOppgavefelt(combineOperator, feltområde, feltkode, operator, feltverdier)
             }
@@ -210,15 +211,15 @@ class PartisjonertOppgaveQuerySqlBuilder(
         }
 
         val retning = if (økende) "ASC" else "DESC"
-        orderByClause += ", " + when (feltkode) {
+        orderByClauses.add(when (feltkode) {
             "oppgavestatus" -> "o.oppgavestatus $retning"
             "oppgavetype" -> "o.oppgavetype_ekstern_id $retning"
             else -> throw IllegalStateException("Ukjent feltkode for sortering: $feltkode")
-        }
+        })
     }
 
     override fun mapRowTilId(row: Row): OppgaveId {
-        return PartisjonertOppgaveId(row.long("oppgave_id"))
+        return PartisjonertOppgaveId(row.long("id"))
     }
 
     override fun mapRowTilEksternId(row: Row): EksternOppgaveId {
@@ -267,26 +268,23 @@ class PartisjonertOppgaveQuerySqlBuilder(
                 SELECT 1
                 FROM oppgavefelt_verdi_part ov
                 WHERE ov.oppgavestatus IN ($oppgavestatusPlaceholder) $ferdigstiltDatoFeltBetingelse
-                  AND ov.oppgave_id = o.oppgave_id
+                  AND ov.oppgave_id = o.id
                   AND ov.feltdefinisjon_ekstern_id = :feltkode$index
                   AND $verdifelt ${operator.negasjonAv?.sql ?: operator.sql} $feltverdiPlaceholder
             )
         """.trimIndent()
 
-        queryParams["feltOmrade$index"] = feltområde
         queryParams["feltkode$index"] = feltkode
         queryParams.putAll(feltVerdiMap)
     }
 
     private fun utenOppgavefelt(
         combineOperator: CombineOperator,
-        feltområde: String,
         feltkode: String,
         operator: FeltverdiOperator
     ) {
         val index = queryParams.size + orderByParams.size
         
-        queryParams["feltOmrade$index"] = feltområde
         queryParams["feltkode$index"] = feltkode
 
         val invertertOperator = when (operator) {
@@ -300,7 +298,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
                 SELECT 1
                 FROM oppgavefelt_verdi_part ov 
                 WHERE ov.oppgavestatus IN ($oppgavestatusPlaceholder) $ferdigstiltDatoFeltBetingelse
-                    AND ov.oppgave_id = o.oppgave_id
+                    AND ov.oppgave_id = o.id
                     AND ov.feltdefinisjon_ekstern_id = :feltkode$index
             )
         """.trimIndent()
@@ -311,7 +309,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
             val sqlMedParams = sikreUnikeParams(
                 it.orderBy(OrderByInput(Spørringstrategi.PARTISJONERT, now, feltområde, feltkode, økende))
             )
-            orderByClause += ", " + sqlMedParams.query
+            orderByClauses.add(sqlMedParams.query)
             orderByParams.putAll(sqlMedParams.queryParams)
             return
         }
@@ -320,19 +318,18 @@ class PartisjonertOppgaveQuerySqlBuilder(
         val verdifelt = verdifelt(feltområde, feltkode)
         val retning = if (økende) "ASC" else "DESC"
         
-        orderByParams["orderByfeltOmrade$index"] = feltområde
         orderByParams["orderByfeltkode$index"] = feltkode
 
-        orderByClause += """
-            , (
+        orderByClauses.add("""
+            (
               SELECT $verdifelt                    
               FROM oppgavefelt_verdi_part ov 
               WHERE ov.oppgavestatus IN ($oppgavestatusPlaceholder) $ferdigstiltDatoFeltBetingelse
-                AND ov.oppgave_id = o.oppgave_id
+                AND ov.oppgave_id = o.id
                 AND ov.feltdefinisjon_ekstern_id = :orderByfeltkode$index
               LIMIT 1
             ) $retning
-        """.trimIndent()
+        """.trimIndent())
     }
 
     private fun verdifelt(feltområde: String, feltkode: String): String {

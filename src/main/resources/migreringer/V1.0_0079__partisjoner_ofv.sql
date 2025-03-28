@@ -1,12 +1,12 @@
 CREATE TABLE oppgavefelt_verdi_part
 (
-    oppgave_id                int4 REFERENCES oppgave_id_part(id),
-    feltdefinisjon_ekstern_id varchar(100) NOT NULL,
-    verdi                     varchar(100) NOT NULL,
-    verdi_bigint                 int8 NULL,
+    oppgave_id                  int4 REFERENCES oppgave_id_part(id),
+    feltdefinisjon_ekstern_id   varchar(100) NOT NULL,
+    verdi                       varchar(100) NOT NULL,
+    verdi_bigint                int8 NULL,
     -- partisjoneringsfelter
-    oppgavestatus             varchar(50)  NOT NULL,
-    ferdigstilt_dato          date NULL
+    oppgavestatus               varchar(50)  NOT NULL,
+    ferdigstilt_dato            date NULL
 ) PARTITION BY LIST (oppgavestatus);
 
 -- For aktive oppgaver, deler videre etter oppgavestatus

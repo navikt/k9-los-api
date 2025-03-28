@@ -88,7 +88,7 @@ class OppgaveV3PartisjonertRepository(val oppgavetypeRepository: OppgavetypeRepo
         return tx.run(
             queryOf(
                 """
-                select * from oppgave_v3_part where oppgave_id = :oppgave_id
+                select * from oppgave_v3_part where id = :oppgave_id
                 """.trimIndent(),
                 mapOf(
                     "oppgave_id" to oppgaveId.id,
@@ -142,7 +142,7 @@ class OppgaveV3PartisjonertRepository(val oppgavetypeRepository: OppgavetypeRepo
         tx.run(
             queryOf(
                 """
-                    insert into oppgave_v3_part(oppgave_id, oppgave_ekstern_id, oppgave_ekstern_versjon, oppgavetype_ekstern_id, reservasjonsnokkel, endret_tidspunkt, oppgavestatus, ferdigstilt_dato)
+                    insert into oppgave_v3_part(id, oppgave_ekstern_id, oppgave_ekstern_versjon, oppgavetype_ekstern_id, reservasjonsnokkel, endret_tidspunkt, oppgavestatus, ferdigstilt_dato)
                     VALUES (:oppgave_id, :oppgave_ekstern_id, :oppgave_ekstern_versjon, :oppgavetype_ekstern_id, :reservasjonsnokkel, :endret_tidspunkt, :oppgavestatus, :ferdigstilt_dato)
                 """.trimIndent(),
                 mapOf(
@@ -174,7 +174,7 @@ class OppgaveV3PartisjonertRepository(val oppgavetypeRepository: OppgavetypeRepo
                     endret_tidspunkt = :endret_tidspunkt,
                     oppgavestatus = :oppgavestatus,
                     ferdigstilt_dato = :ferdigstilt_dato
-                where oppgave_id = :oppgave_id
+                where id = :oppgave_id
                 """.trimIndent(),
                 mapOf(
                     "oppgave_id" to partisjonertOppgaveId.id,

@@ -1,17 +1,15 @@
 package no.nav.k9.los.nyoppgavestyring.query.db
 
-enum class Spørringstrategi(val navn: String, val beskrivelse: String, val verditabell: String, val joinuttrykk: String) {
+enum class Spørringstrategi(val navn: String, val beskrivelse: String, val verditabell: String) {
     PARTISJONERT(
         "Partisjonert",
         "Partisjonerte tabeller for alle oppgaver. Tabeller: oppgave_v3_part og oppgavefelt_verdi_part.",
         "oppgavefelt_verdi_part",
-        "ov.oppgave_id = o.oppgave_id"
     ),
     AKTIV(
         "Aktiv",
         "Aktivtabeller for åpne/ventende oppgaver. Tabeller: oppgave_v3_aktiv og oppgavefelt_verdi_aktiv.",
         "oppgavefelt_verdi_aktiv",
-        "ov.oppgave_id = o.id"
     );
 
     companion object {

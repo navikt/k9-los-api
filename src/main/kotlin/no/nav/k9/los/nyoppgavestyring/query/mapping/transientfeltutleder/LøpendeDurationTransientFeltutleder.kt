@@ -52,31 +52,31 @@ abstract class LøpendeDurationTransientFeltutleder(
             return null
         }
 
-        val minstEttDurationFeltSql = sqlVelgFelt(durationfelter)
+        val minstEttDurationFeltSql = sqlVelgFelt(durationfelter, tabellStrategi)
         val query = """
             COALESCE((
                 SELECT SUM(CAST(ov.verdi AS interval)) 
                 FROM ${tabellStrategi.verditabell} ov 
-                WHERE ${tabellStrategi.joinuttrykk}
+                WHERE ov.oppgave_id = o.id
                   AND $minstEttDurationFeltSql
             ), INTERVAL '0 days')
             """.trimIndent()
         return SqlMedParams(query, mapOf())
     }
 
-    private fun sumLøpendeTidHvisTruefelter(tabellStrategi: Spørringstrategi, now: LocalDateTime): SqlMedParams? {
+    private fun sumLøpendeTidHvisTruefelter(spørringstrategi: Spørringstrategi, now: LocalDateTime): SqlMedParams? {
         if (løpendeTidHvisTrueFelter.isEmpty()) {
             return null
         }
 
-        val løpendeOppgavetidHvisTrueSql = sqlVelgFelt(løpendeTidHvisTrueFelter)
+        val løpendeOppgavetidHvisTrueSql = sqlVelgFelt(løpendeTidHvisTrueFelter, spørringstrategi)
         val query = """
             COALESCE((
                 SELECT (:now - o.endret_tidspunkt)
                 WHERE EXISTS (
                     SELECT 'Y'
-                    FROM ${tabellStrategi.verditabell} ov 
-                    WHERE ${tabellStrategi.joinuttrykk}
+                    FROM ${spørringstrategi.verditabell} ov 
+                    WHERE ov.oppgave_id = o.id
                       AND ov.verdi = 'true'
                       AND $løpendeOppgavetidHvisTrueSql
                 )
@@ -86,23 +86,22 @@ abstract class LøpendeDurationTransientFeltutleder(
         return SqlMedParams(query, mapOf("now" to now))
     }
 
-    private fun sumLøpendetidfelter(tabellStrategi: Spørringstrategi, now: LocalDateTime): SqlMedParams? {
+    private fun sumLøpendetidfelter(spørringstrategi: Spørringstrategi, now: LocalDateTime): SqlMedParams? {
         if (løpendeTidFelter.isEmpty()) {
             return null
         }
 
         val query = "(" + løpendeTidFelter.map { områdeOgKode ->
-            """
-                (
-                    (
-                        :now
-                    ) - (
-                        SELECT CAST(ov.verdi AS timestamp)
-                        FROM ${tabellStrategi.verditabell} ov 
-                        WHERE ${tabellStrategi.joinuttrykk}
-                          AND ${områdeOgKodeSql(områdeOgKode)}
-                    )
-                )
+            """(
+                   (
+                       :now
+                   ) - (
+                       SELECT CAST(ov.verdi AS timestamp)
+                       FROM ${spørringstrategi.verditabell} ov 
+                       WHERE ov.oppgave_id = o.id
+                         AND ${områdeOgKodeSql(områdeOgKode, spørringstrategi)}
+                   )
+               )
             """.trimIndent()
         }.reduce { a,b ->
             "$a + $b"
@@ -111,16 +110,17 @@ abstract class LøpendeDurationTransientFeltutleder(
         return SqlMedParams(query, mapOf("now" to now))
     }
 
-    private fun sqlVelgFelt(felter: List<OmrådeOgKode>): String {
-        return "(" + felter.map {
-            områdeOgKodeSql(it)
-        }.reduce { ok1, ok2 ->
-            "$ok1 OR $ok2"
+    private fun sqlVelgFelt(felter: List<OmrådeOgKode>, spørringstrategi: Spørringstrategi): String {
+        return "(" + felter.joinToString(" OR ") {
+            områdeOgKodeSql(it, spørringstrategi)
         } + ")"
     }
 
-    private fun områdeOgKodeSql(områdeOgKode: OmrådeOgKode) =
-        "ov.omrade_ekstern_id = '${områdeOgKode.område}' AND ov.feltdefinisjon_ekstern_id = '${områdeOgKode.kode}'"
+    private fun områdeOgKodeSql(områdeOgKode: OmrådeOgKode, spørringstrategi: Spørringstrategi) =
+        when (spørringstrategi) {
+            Spørringstrategi.PARTISJONERT -> "ov.feltdefinisjon_ekstern_id = '${områdeOgKode.kode}'"
+            Spørringstrategi.AKTIV -> "ov.omrade_ekstern_id = '${områdeOgKode.område}' AND ov.feltdefinisjon_ekstern_id = '${områdeOgKode.kode}'"
+        }
 
     override fun hentVerdi(input: HentVerdiInput): List<String> {
         var løpendeDuration = Duration.ZERO

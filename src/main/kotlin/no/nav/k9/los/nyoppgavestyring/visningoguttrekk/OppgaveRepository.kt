@@ -27,11 +27,8 @@ class OppgaveRepository(
                 """
                         select * 
                         from oppgave_v3 ov
-                        inner join oppgavetype ot on ov.oppgavetype_id = ot.id
-                        where ov.ekstern_id = :eksternId
-                          and ot.ekstern_id = :oppgavetypeEksternId
-                          and ov.ekstern_versjon = :eksternVersjon
-                          and ov.aktiv = true
+                        inner join oppgavetype ot on ov.oppgavetype_id = ot.id and ot.ekstern_id = :oppgavetypeEksternId
+                        where ov.ekstern_id = :eksternId and ov.aktiv = true
                     """.trimIndent(),
                 mapOf(
                     "eksternId" to oppgaveEksternId,
