@@ -13,12 +13,13 @@ class OppgaveV3PartisjonertRepository(val oppgavetypeRepository: OppgavetypeRepo
 
     @WithSpan
     fun ajourhold(oppgave: OppgaveV3, tx: TransactionalSession) {
-        val oppgaveId = hentEllerOpprettPartisjonertOppgaveId(oppgave, tx)
-        oppdaterOppgaveV3(oppgaveId, oppgave, tx)
-        oppdaterOppgavefeltverdier(oppgaveId, oppgave, tx)
+        val partisjonertOppgaveId = hentPartisjonertOppgaveId(oppgave, tx)
+            ?: opprettPartisjonertOppgaveId(oppgave, tx)
+        oppdaterOppgaveV3(partisjonertOppgaveId, oppgave, tx)
+        oppdaterOppgavefeltverdier(partisjonertOppgaveId, oppgave, tx)
     }
 
-    private fun hentEllerOpprettPartisjonertOppgaveId(oppgave: OppgaveV3, tx: TransactionalSession): PartisjonertOppgaveId {
+    private fun hentPartisjonertOppgaveId(oppgave: OppgaveV3, tx: TransactionalSession): PartisjonertOppgaveId? {
         return tx.run(
             queryOf(
                 """
@@ -31,7 +32,11 @@ class OppgaveV3PartisjonertRepository(val oppgavetypeRepository: OppgavetypeRepo
             ).map { row ->
                 PartisjonertOppgaveId(row.long("id"))
             }.asSingle
-        ) ?: tx.run(
+        )
+    }
+
+    private fun opprettPartisjonertOppgaveId(oppgave: OppgaveV3, tx: TransactionalSession): PartisjonertOppgaveId {
+        return tx.run(
             queryOf(
                 "insert into oppgave_id_part(oppgave_ekstern_id, oppgavetype_ekstern_id) values (:oppgave_ekstern_id, :oppgavetype_ekstern_id)",
                 mapOf(
@@ -40,10 +45,14 @@ class OppgaveV3PartisjonertRepository(val oppgavetypeRepository: OppgavetypeRepo
                 )
             ).asUpdateAndReturnGeneratedKey
         )?.let { PartisjonertOppgaveId(it) }
-        ?: throw IllegalStateException("Kunne ikke opprette partisjonert oppgaveId for oppgave ${oppgave.eksternId}")
+            ?: throw IllegalStateException("Kunne ikke opprette partisjonert oppgaveId for oppgave ${oppgave.eksternId} og oppgavetype ${oppgave.oppgavetype.eksternId}")
     }
 
-    private fun oppdaterOppgaveV3(partisjonertOppgaveId: PartisjonertOppgaveId, oppgave: OppgaveV3, tx: TransactionalSession) {
+    private fun oppdaterOppgaveV3(
+        partisjonertOppgaveId: PartisjonertOppgaveId,
+        oppgave: OppgaveV3,
+        tx: TransactionalSession
+    ) {
         val eksisterendeOppgave = hentOppgave(partisjonertOppgaveId, tx)
         if (eksisterendeOppgave == null) {
             nyOppgave(partisjonertOppgaveId, oppgave, tx)
@@ -52,7 +61,11 @@ class OppgaveV3PartisjonertRepository(val oppgavetypeRepository: OppgavetypeRepo
         }
     }
 
-    private fun oppdaterOppgavefeltverdier(oppgaveId: PartisjonertOppgaveId, oppgave: OppgaveV3, tx: TransactionalSession) {
+    private fun oppdaterOppgavefeltverdier(
+        oppgaveId: PartisjonertOppgaveId,
+        oppgave: OppgaveV3,
+        tx: TransactionalSession
+    ) {
         val eksisterendeFelter = hentFeltverdier(oppgaveId, oppgave.oppgavetype, tx)
         val nyeFelter = oppgave.felter
 
