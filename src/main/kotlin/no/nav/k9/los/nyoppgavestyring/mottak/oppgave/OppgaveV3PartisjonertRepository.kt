@@ -15,7 +15,10 @@ class OppgaveV3PartisjonertRepository(val oppgavetypeRepository: OppgavetypeRepo
     fun ajourhold(oppgave: OppgaveV3, tx: TransactionalSession) {
         val partisjonertOppgaveId = hentPartisjonertOppgaveId(oppgave, tx)
             ?: opprettPartisjonertOppgaveId(oppgave, tx)
-        oppdaterOppgaveV3(partisjonertOppgaveId, oppgave, tx)
+        val partisjonertOppgave = hentOppgave(partisjonertOppgaveId, tx)
+        partisjonertOppgave
+            ?.let { oppdaterOppgave(partisjonertOppgaveId, it, tx) }
+            ?: nyOppgave(partisjonertOppgaveId, oppgave, tx)
         oppdaterOppgavefeltverdier(partisjonertOppgaveId, oppgave, tx)
     }
 
@@ -46,19 +49,6 @@ class OppgaveV3PartisjonertRepository(val oppgavetypeRepository: OppgavetypeRepo
             ).asUpdateAndReturnGeneratedKey
         )?.let { PartisjonertOppgaveId(it) }
             ?: throw IllegalStateException("Kunne ikke opprette partisjonert oppgaveId for oppgave ${oppgave.eksternId} og oppgavetype ${oppgave.oppgavetype.eksternId}")
-    }
-
-    private fun oppdaterOppgaveV3(
-        partisjonertOppgaveId: PartisjonertOppgaveId,
-        oppgave: OppgaveV3,
-        tx: TransactionalSession
-    ) {
-        val eksisterendeOppgave = hentOppgave(partisjonertOppgaveId, tx)
-        if (eksisterendeOppgave == null) {
-            nyOppgave(partisjonertOppgaveId, oppgave, tx)
-        } else {
-            oppdaterOppgave(partisjonertOppgaveId, oppgave, tx)
-        }
     }
 
     private fun oppdaterOppgavefeltverdier(
