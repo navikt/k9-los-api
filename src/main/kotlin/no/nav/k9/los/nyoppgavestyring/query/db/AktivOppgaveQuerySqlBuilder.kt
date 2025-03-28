@@ -192,7 +192,7 @@ class AktivOppgaveQuerySqlBuilder(
             .let { FilterFjerner.fjern(it, "oppgavestatus")}
             .let { FilterFjerner.fjern(it, "spørringstrategi")}
             .let { OppgavefilterUtenBetingelserFjerner.fjern(it)} // alle filtre har nå minst én verdi (kan være null)
-            .let { OppgavefilterListeUtvider.eliminer(it) } // alle filtre har nå kun én verdi, og mengdeoperatorer er borte
+            .let { OppgavefilterListeUtvider.utvid(it) } // alle filtre har nå kun én verdi, og mengdeoperatorer er borte
             .let { OppgavefilterLocalDateSpesialhåndterer.spesialhåndter(it) } // dersom verdien lar seg parse til LocalDate, tilpass filtrene
             .let { OppgavefilterDatatypeMapper.map(felter, it) } // konverter filterverdiene til deres rette datatype
     }

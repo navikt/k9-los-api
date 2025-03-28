@@ -3,11 +3,11 @@ package no.nav.k9.los.nyoppgavestyring.query.db
 import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
-import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgavefilterListeUtvider
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.mapping.CombineOperator
 import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgavefilterListeUtvider
 import org.junit.jupiter.api.Test
 
 class OppgavefilterListeUtviderTest {
@@ -17,7 +17,7 @@ class OppgavefilterListeUtviderTest {
         val oppgavefiltre = listOf(
             FeltverdiOppgavefilter(null, "oppgavestatus", FeltverdiOperator.IN.name, listOf("OPPR", "AVSLU"))
         )
-        assertThat(OppgavefilterListeUtvider.eliminer(oppgavefiltre).first()).isEqualTo(
+        assertThat(OppgavefilterListeUtvider.utvid(oppgavefiltre).first()).isEqualTo(
             CombineOppgavefilter(
                 CombineOperator.OR.kode, filtere = listOf(
                 FeltverdiOppgavefilter(null, "oppgavestatus", FeltverdiOperator.EQUALS.name, listOf("OPPR")),
@@ -31,7 +31,7 @@ class OppgavefilterListeUtviderTest {
         val oppgavefiltre = listOf(
             FeltverdiOppgavefilter(null, "aksjonspunkt", FeltverdiOperator.EQUALS.name, listOf("5053", "5016"))
         )
-        val resultat = OppgavefilterListeUtvider.eliminer(oppgavefiltre)
+        val resultat = OppgavefilterListeUtvider.utvid(oppgavefiltre)
         assertThat(resultat).containsExactly(
             CombineOppgavefilter(
                 CombineOperator.AND.kode, filtere = listOf(
@@ -46,7 +46,7 @@ class OppgavefilterListeUtviderTest {
         val oppgavefiltre = listOf(
             FeltverdiOppgavefilter(null, "oppgavestatus", FeltverdiOperator.NOT_IN.name, listOf("OPPR", "AVSLU"))
         )
-        assertThat(OppgavefilterListeUtvider.eliminer(oppgavefiltre).first()).isEqualTo(
+        assertThat(OppgavefilterListeUtvider.utvid(oppgavefiltre).first()).isEqualTo(
             CombineOppgavefilter(
                 CombineOperator.AND.kode, filtere = listOf(
                 FeltverdiOppgavefilter(null, "oppgavestatus", FeltverdiOperator.NOT_EQUALS.name, listOf("OPPR")),
@@ -65,7 +65,7 @@ class OppgavefilterListeUtviderTest {
             ))
         )
 
-        assertThat(OppgavefilterListeUtvider.eliminer(oppgavefiltre).first()).isEqualTo(
+        assertThat(OppgavefilterListeUtvider.utvid(oppgavefiltre).first()).isEqualTo(
             CombineOppgavefilter(
                 CombineOperator.OR.kode, filtere = listOf(
                 CombineOppgavefilter(

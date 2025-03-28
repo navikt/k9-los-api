@@ -19,7 +19,7 @@ object OppgavefilterNullUtvider {
 
     private fun mapNotNull(filter: FeltverdiOppgavefilter): Oppgavefilter {
         if (filter.verdi.any { it == null }) {
-            return OppgavefilterListeUtvider.eliminer(filter)
+            return OppgavefilterListeUtvider.utvid(filter)
         }
         return filter
     }

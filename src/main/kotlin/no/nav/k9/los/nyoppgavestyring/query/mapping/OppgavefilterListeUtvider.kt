@@ -5,19 +5,19 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
 
 object OppgavefilterListeUtvider {
-    fun eliminer(oppgavefiltere: List<Oppgavefilter>): List<Oppgavefilter> {
+    fun utvid(oppgavefiltere: List<Oppgavefilter>): List<Oppgavefilter> {
         return oppgavefiltere.map { filter ->
             when (filter) {
-                is FeltverdiOppgavefilter -> eliminer(filter)
+                is FeltverdiOppgavefilter -> utvid(filter)
                 is CombineOppgavefilter -> CombineOppgavefilter(
                     combineOperator = filter.combineOperator,
-                    filtere = eliminer(filter.filtere)
+                    filtere = utvid(filter.filtere)
                 )
             }
         }
     }
 
-    fun eliminer(filter: FeltverdiOppgavefilter): Oppgavefilter {
+    fun utvid(filter: FeltverdiOppgavefilter): Oppgavefilter {
         if (filter.verdi.size <= 1) {
             return filter
         }
