@@ -67,21 +67,21 @@ class OppgaveTestDataBuilder(
     }
 
 
-    fun lagOgLagre(status: Oppgavestatus = Oppgavestatus.AAPEN): OppgaveV3 {
+    fun lagOgLagre(status: Oppgavestatus = Oppgavestatus.AAPEN, endretTidspunkt: LocalDateTime = LocalDateTime.now()): OppgaveV3 {
         return transactionManager.transaction { tx ->
-            val oppgave = lag(status)
+            val oppgave = lag(status, endretTidspunkt = endretTidspunkt)
             oppgaverepo.nyOppgaveversjon(oppgave, tx)
             oppgave
         }
     }
 
-    fun lag(status: Oppgavestatus = Oppgavestatus.AAPEN, reservasjonsnøkkel: String = "", eksternVersjon: String? = null): OppgaveV3 {
+    fun lag(status: Oppgavestatus = Oppgavestatus.AAPEN, reservasjonsnøkkel: String = "", eksternVersjon: String? = null, endretTidspunkt: LocalDateTime = LocalDateTime.now()): OppgaveV3 {
         return OppgaveV3(
             eksternId = oppgaveFeltverdier[FeltType.BEHANDLINGUUID]?.verdi ?: UUID.randomUUID().toString(),
             eksternVersjon = eksternVersjon ?: eksternVersjonTeller++.toString(),
             oppgavetype = oppgavetype,
             status = status,
-            endretTidspunkt = LocalDateTime.now(),
+            endretTidspunkt = endretTidspunkt,
             kildeområde = område.eksternId,
             felter = oppgaveFeltverdier.values.toList(),
             reservasjonsnøkkel = reservasjonsnøkkel,
@@ -99,11 +99,12 @@ class OppgaveTestDataBuilder(
 
 enum class FeltType(
     val eksternId: String,
+    val område: String? = "K9",
     val tolkesSom: String = "String"
 ) {
     BEHANDLINGUUID("behandlingUuid"),
     BEHANDLING_TYPE("behandlingTypekode"),
-    OPPGAVE_STATUS("oppgavestatus"),
+    OPPGAVE_STATUS("oppgavestatus", område = null),
     FAGSYSTEM("fagsystem"),
     AKSJONSPUNKT("aksjonspunkt"),
     RESULTAT_TYPE("resultattype"),
@@ -111,13 +112,15 @@ enum class FeltType(
     BEHANDLINGSSTATUS("behandlingsstatus"),
     YTELSE_TYPE("ytelsestype"),
     MOTTATT_DATO("mottattDato", tolkesSom = "Timestamp"),
-    TID_SIDEN_MOTTATT_DATO("tidSidenMottattDato", "Duration"),
+    TID_SIDEN_MOTTATT_DATO("tidSidenMottattDato", tolkesSom = "Duration"),
     REGISTRERT_DATO("registrertDato", tolkesSom = "Timestamp"),
     AVVENTER_ARBEIDSGIVER("avventerArbeidsgiver", tolkesSom = "boolean"),
-    PERSONBESKYTTELSE("personbeskyttelse", tolkesSom = "String"),
+    PERSONBESKYTTELSE("personbeskyttelse", tolkesSom = "String", område = null),
     LØSBART_AKSJONSPUNKT("løsbartAksjonspunkt"),
     LIGGER_HOS_BESLUTTER("liggerHosBeslutter", tolkesSom = "boolean"),
     TID_FORSTE_GANG_HOS_BESLUTTER("tidFørsteGangHosBeslutter"),
+    FERDIGSTILT_DATO("ferdigstiltDato", tolkesSom = "Timestamp", område = null),
+    SPØRRINGSTRATEGI("spørringstrategi", område = "K9"),
 }
 
 val felter: Map<OmrådeOgKode, OppgavefeltMedMer> = mapOf(

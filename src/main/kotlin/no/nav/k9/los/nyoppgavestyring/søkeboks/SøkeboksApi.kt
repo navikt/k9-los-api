@@ -8,6 +8,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.rest.RequestContextService
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import org.koin.ktor.ext.inject
 
 
@@ -29,7 +30,7 @@ fun Route.SøkeboksApi() {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val søkQuery = call.receive<SøkQuery>()
-                call.respond(søkeboksTjeneste.finnOppgaver(søkQuery.searchString, søkQuery.fraAktiv))
+                call.respond(søkeboksTjeneste.finnOppgaver(søkQuery.searchString, if (søkQuery.fraAktiv) listOf(Oppgavestatus.AAPEN, Oppgavestatus.VENTER) else Oppgavestatus.entries.toList()))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

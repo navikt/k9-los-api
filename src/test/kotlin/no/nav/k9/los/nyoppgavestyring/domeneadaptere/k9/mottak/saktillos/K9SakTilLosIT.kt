@@ -461,20 +461,32 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
 
     private fun querySomKunInneholder(eksternId: UUID, vararg status: Oppgavestatus = emptyArray()): OppgaveQuery {
         val filtre = mutableListOf(
-            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, eksternId.toString())
+            byggFilter(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, eksternId.toString())
         )
         if (status.isNotEmpty()) {
-            filtre.add(byggGenereltFilter(FeltType.OPPGAVE_STATUS, FeltverdiOperator.EQUALS, *status.map { it.kode }.toTypedArray()))
+            filtre.add(
+                byggFilter(
+                    FeltType.OPPGAVE_STATUS,
+                    FeltverdiOperator.EQUALS,
+                    *status.map { it.kode }.toTypedArray()
+                )
+            )
         }
         return OppgaveQuery(filtre)
     }
 
     private fun querySomKunInneholder(eksternId: List<UUID>, vararg status: Oppgavestatus = emptyArray()): OppgaveQuery {
         val filtre = mutableListOf(
-            byggFilterK9(FeltType.BEHANDLINGUUID, FeltverdiOperator.IN, *eksternId.map { it.toString() }.toTypedArray())
+            byggFilter(FeltType.BEHANDLINGUUID, FeltverdiOperator.IN, *eksternId.map { it.toString() }.toTypedArray())
         )
         if (status.isNotEmpty()) {
-            filtre.add(byggGenereltFilter(FeltType.OPPGAVE_STATUS, FeltverdiOperator.EQUALS, *status.map { it.kode }.toTypedArray()))
+            filtre.add(
+                byggFilter(
+                    FeltType.OPPGAVE_STATUS,
+                    FeltverdiOperator.EQUALS,
+                    *status.map { it.kode }.toTypedArray()
+                )
+            )
         }
         return OppgaveQuery(filtre)
     }
@@ -488,18 +500,9 @@ object TestOppgaveNøkkel {
     )
 }
 
-private fun byggFilterK9(feltType: FeltType, feltverdiOperator: FeltverdiOperator, vararg verdier: String?): FeltverdiOppgavefilter {
+private fun byggFilter(feltType: FeltType, feltverdiOperator: FeltverdiOperator, vararg verdier: String?): FeltverdiOppgavefilter {
     return FeltverdiOppgavefilter(
-        "K9",
-        feltType.eksternId,
-        feltverdiOperator.name,
-        verdier.toList()
-    )
-}
-
-private fun byggGenereltFilter(feltType: FeltType, feltverdiOperator: FeltverdiOperator, vararg verdier: String?): FeltverdiOppgavefilter {
-    return FeltverdiOppgavefilter(
-        null,
+        feltType.område,
         feltType.eksternId,
         feltverdiOperator.name,
         verdier.toList()

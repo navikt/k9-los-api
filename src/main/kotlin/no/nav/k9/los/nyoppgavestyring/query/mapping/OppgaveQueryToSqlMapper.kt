@@ -4,14 +4,45 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.db.*
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 object OppgaveQueryToSqlMapper {
-    fun toSqlOppgaveQuery(request: QueryRequest, felter: Map<OmrådeOgKode, OppgavefeltMedMer>, now: LocalDateTime): OppgaveQuerySqlBuilder {
-        val query = OppgaveQuerySqlBuilder(felter, traverserFiltereOgFinnOppgavestatusfilter(request), now, request.fraAktiv)
+    private fun utledSqlBuilder(
+        felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
+        request: QueryRequest,
+        now: LocalDateTime
+    ): OppgaveQuerySqlBuilder {
+        val oppgavestatusFilter = traverserFiltereOgFinnOppgavestatus(request)
+        val spørringstrategiFilter = traverserFiltereOgFinnSpørringsstrategi(request)
+        val ferdigstiltDatofilter = traverserFiltereOgFinnFerdigstiltDatofilter(request)
+
+        return when {
+            // Case 1: Eksplisitt spørringsstrategi er angitt
+            spørringstrategiFilter == Spørringstrategi.PARTISJONERT ->
+                PartisjonertOppgaveQuerySqlBuilder(felter, oppgavestatusFilter, now, ferdigstiltDatofilter)
+
+            spørringstrategiFilter == Spørringstrategi.AKTIV ->
+                AktivOppgaveQuerySqlBuilder(felter, oppgavestatusFilter, now)
+
+            // Case 2: Dersom det spørres etter lukkede oppgaver
+            oppgavestatusFilter.contains(Oppgavestatus.LUKKET) ->
+                PartisjonertOppgaveQuerySqlBuilder(felter, oppgavestatusFilter, now, ferdigstiltDatofilter)
+
+            // Case 3: Default (kun åpne/ventende oppgaver)
+            else -> AktivOppgaveQuerySqlBuilder(felter, oppgavestatusFilter, now)
+        }
+    }
+
+    fun toSqlOppgaveQuery(
+        request: QueryRequest,
+        felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
+        now: LocalDateTime
+    ): OppgaveQuerySqlBuilder {
+        val query = utledSqlBuilder(felter, request, now)
         val combineOperator = CombineOperator.AND
 
-        håndterFiltere(query, felter, OppgavefilterRens.rens(felter, request.oppgaveQuery.filtere), combineOperator)
+        håndterFiltere(query, felter, query.filterRens(felter, request.oppgaveQuery.filtere), combineOperator)
         håndterOrder(query, request.oppgaveQuery.order)
         if (request.fjernReserverte) {
             query.utenReservasjoner()
@@ -26,18 +57,30 @@ object OppgaveQueryToSqlMapper {
         felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
         now: LocalDateTime
     ): OppgaveQuerySqlBuilder {
-        val queryBuilder = OppgaveQuerySqlBuilder(felter, traverserFiltereOgFinnOppgavestatusfilter(request), now, request.fraAktiv)
+        val queryBuilder = utledSqlBuilder(felter, request, now)
         val combineOperator = CombineOperator.AND
-        håndterFiltere(queryBuilder, felter, OppgavefilterRens.rens(felter, request.oppgaveQuery.filtere), combineOperator)
-        if (request.fjernReserverte) { queryBuilder.utenReservasjoner() }
+        håndterFiltere(
+            queryBuilder,
+            felter,
+            queryBuilder.filterRens(felter, request.oppgaveQuery.filtere),
+            combineOperator
+        )
+        if (request.fjernReserverte) {
+            queryBuilder.utenReservasjoner()
+        }
         request.avgrensning?.let { queryBuilder.medPaging(it.limit, it.offset) }
         queryBuilder.medAntallSomResultat()
         return queryBuilder
     }
 
-    private fun traverserFiltereOgFinnOppgavestatusfilter(queryRequest: QueryRequest): List<Oppgavestatus> {
+    fun traverserFiltereOgFinnOppgavestatus(queryRequest: QueryRequest): List<Oppgavestatus> {
         val statuser = mutableSetOf<Oppgavestatus>()
-        rekursivtSøk(queryRequest.oppgaveQuery.filtere, statuser)
+        rekursivtSøk(
+            queryRequest.oppgaveQuery.filtere,
+            statuser,
+            { verdi -> Oppgavestatus.fraKode(verdi.toString()) },
+            { filter -> filter.kode == "oppgavestatus" }
+        )
 
         //dette parameteret brukes av index på oppgavefeltverdi. Spørringer som ser på lukkede oppgaver er ikke indekserte, og vil være trege
         //Dersom spørringen filterer på oppgavestatus, så matcher vi det.
@@ -49,22 +92,45 @@ object OppgaveQueryToSqlMapper {
         }
     }
 
-    private fun rekursivtSøk(
+    private fun traverserFiltereOgFinnSpørringsstrategi(request: QueryRequest): Spørringstrategi? {
+        val verdierFunnet = mutableSetOf<Spørringstrategi>()
+        rekursivtSøk(
+            request.oppgaveQuery.filtere,
+            verdierFunnet,
+            { verdi -> Spørringstrategi.fraKode(verdi.toString()) },
+            { filter -> filter.kode == "spørringstrategi" })
+        return verdierFunnet.firstOrNull()
+    }
+
+    private fun traverserFiltereOgFinnFerdigstiltDatofilter(queryRequest: QueryRequest): LocalDate? {
+        val datoer = mutableSetOf<LocalDate>()
+        rekursivtSøk(
+            queryRequest.oppgaveQuery.filtere,
+            datoer,
+            { verdi -> LocalDate.parse(verdi.toString()) },
+            { filter -> filter.kode == "ferdigstiltDato" }
+        )
+        return datoer.firstOrNull()
+    }
+
+    private fun <T> rekursivtSøk(
         filtere: List<Oppgavefilter>,
-        statuser: MutableSet<Oppgavestatus>
+        verdierFunnet: MutableSet<T>,
+        mapper: (Any?) -> T?,
+        betingelse: (FeltverdiOppgavefilter) -> Boolean
     ) {
         for (filter in filtere) {
-            if (filter is FeltverdiOppgavefilter && filter.kode == "oppgavestatus") {
-                statuser.addAll(filter.verdi.map { verdi -> Oppgavestatus.fraKode(verdi.toString()) })
+            if (filter is FeltverdiOppgavefilter && betingelse(filter)) {
+                verdierFunnet.addAll(filter.verdi.mapNotNull { verdi -> mapper(verdi) })
             } else if (filter is CombineOppgavefilter) {
-                rekursivtSøk(filter.filtere, statuser)
+                rekursivtSøk(filter.filtere, verdierFunnet, mapper, betingelse)
             }
         }
     }
 
     private fun håndterFiltere(
         queryBuilder: OppgaveQuerySqlBuilder,
-        felter:  Map<OmrådeOgKode, OppgavefeltMedMer>,
+        felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
         filtere: List<Oppgavefilter>,
         combineOperator: CombineOperator
     ) {
@@ -75,7 +141,7 @@ object OppgaveQueryToSqlMapper {
                     filter.område,
                     filter.kode,
                     FeltverdiOperator.valueOf(filter.operator),
-                    filter.verdi.first()
+                    filter.verdi
                 )
 
                 is CombineOppgavefilter -> {

@@ -4,9 +4,9 @@ import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.k9.los.db.util.InClauseHjelper
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Id
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
-import no.nav.k9.los.spi.felter.HentVerdiInput
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -15,6 +15,27 @@ class OppgaveRepository(
     private val oppgavetypeRepository: OppgavetypeRepository
 ) {
     private val log: Logger = LoggerFactory.getLogger("OppgaveRepository")
+
+    fun hentOppgaveForEksternIdOgOppgavetype(
+        tx: TransactionalSession,
+        oppgaveEksternId: String,
+        oppgavetypeEksternId: String,
+        now: LocalDateTime = LocalDateTime.now()
+    ): Oppgave {
+        return tx.run(
+            queryOf(
+                """
+                        select * 
+                        from oppgave_v3 ov
+                        inner join oppgavetype ot on ov.oppgavetype_id = ot.id and ot.ekstern_id = :oppgavetypeEksternId
+                        where ov.ekstern_id = :eksternId and ov.aktiv = true
+                    """.trimIndent(),
+                mapOf(
+                    "eksternId" to oppgaveEksternId,
+                    "oppgavetypeEksternId" to oppgavetypeEksternId
+                )
+            ).map { mapOppgave(it, now, tx) }.asSingle) ?: throw IllegalStateException("Fant ikke oppgave med eksternId $oppgaveEksternId og oppgavetype $oppgavetypeEksternId")
+    }
 
     fun hentNyesteOppgaveForEksternId(tx: TransactionalSession, kildeområde: String, eksternId: String, now: LocalDateTime = LocalDateTime.now()): Oppgave {
         return hentNyesteOppgaveForEksternIdHvisFinnes(tx, kildeområde, eksternId, now) ?: throw IllegalStateException("Fant ikke oppgave med kilde $kildeområde og eksternId $eksternId")
@@ -66,7 +87,7 @@ class OppgaveRepository(
         return oppgaver
     }
 
-    fun hentOppgaveForId(tx: TransactionalSession, id: Long, now: LocalDateTime = LocalDateTime.now()): Oppgave {
+    fun hentOppgaveForId(tx: TransactionalSession, id: OppgaveV3Id, now: LocalDateTime = LocalDateTime.now()): Oppgave {
         val oppgave = tx.run(
             queryOf(
                 """
@@ -74,7 +95,7 @@ class OppgaveRepository(
                 from oppgave_v3 ov
                 where ov.id = :id
             """.trimIndent(),
-                mapOf("id" to id)
+                mapOf("id" to id.id)
             ).map { row ->
                 mapOppgave(row, now, tx)
             }.asSingle

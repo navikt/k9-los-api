@@ -123,7 +123,7 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
         log.info("Vasker aktiv oppgave for k9punsj-oppgave med eksternId: $uuid")
 
         oppgaveV3?.let {
-            oppgaveV3Tjeneste.ajourholdAktivOppgave(it, eventTeller, tx)
+            oppgaveV3Tjeneste.ajourholdOppgave(it, eventTeller, tx)
         }
         log.info("Vasket $eventTeller hendelser for k9punsj-oppgave med eksternId: $uuid")
         return eventTeller

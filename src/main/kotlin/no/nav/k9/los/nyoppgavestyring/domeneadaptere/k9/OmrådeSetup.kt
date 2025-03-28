@@ -19,6 +19,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.KodeverkDto
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.KodeverkVerdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
+import no.nav.k9.los.nyoppgavestyring.query.db.Spørringstrategi
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import no.nav.k9.kodeverk.api.Kodeverdi as KodeverdiK9Sak
@@ -63,6 +64,15 @@ class OmrådeSetup(
         kodeverkBehandlingssteg()
         kodeverkSøknadsårsak()
         kodeverkBehandlingsårsak()
+        kodeverkSpørringstrategi()
+    }
+
+    private fun kodeverkSpørringstrategi() {
+        feltdefinisjonTjeneste.oppdater(
+            KodeverkDto("K9", "spørringstrategi", "Spørringstrategi", true, Spørringstrategi.entries.map {
+                KodeverkVerdiDto(it.name, it.navn, false)
+            })
+        )
     }
 
     private fun kodeverkAksjonspunkt() {
