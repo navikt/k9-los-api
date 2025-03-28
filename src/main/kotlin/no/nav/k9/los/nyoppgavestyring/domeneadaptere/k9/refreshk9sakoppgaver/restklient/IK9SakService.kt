@@ -1,6 +1,5 @@
-package no.nav.k9.los.integrasjon.k9
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient
 
-import no.nav.k9.sak.kontrakt.behandling.BehandlingIdListe
 import java.util.UUID
 
 interface IK9SakService {

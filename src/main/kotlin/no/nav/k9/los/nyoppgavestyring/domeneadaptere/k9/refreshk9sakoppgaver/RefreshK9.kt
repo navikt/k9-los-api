@@ -1,4 +1,4 @@
-package no.nav.k9.los.eventhandler
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver
 
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.extension.kotlin.asContextElement
@@ -7,15 +7,17 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.los.eventhandler.RefreshK9v3.Companion
-import no.nav.k9.los.integrasjon.k9.IK9SakService
+import no.nav.k9.los.db.TransactionalManager
+import no.nav.k9.los.eventhandler.ChannelMetrikker
+import no.nav.k9.los.eventhandler.asCoroutineDispatcherWithErrorHandling
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient.IK9SakService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.Executors
 import kotlin.coroutines.coroutineContext
 
+//TODO: Denne filen skal slettes når V1 saneres
 class RefreshK9(
     val k9SakService: IK9SakService,
     val oppgaveRepository: OppgaveRepository,

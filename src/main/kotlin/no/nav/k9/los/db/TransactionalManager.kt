@@ -1,4 +1,4 @@
-package no.nav.k9.los.domene.lager.oppgave.v2
+package no.nav.k9.los.db
 
 import kotliquery.TransactionalSession
 import kotliquery.sessionOf
