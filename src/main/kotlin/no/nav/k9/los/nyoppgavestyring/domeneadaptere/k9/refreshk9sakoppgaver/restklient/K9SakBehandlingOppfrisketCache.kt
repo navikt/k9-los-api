@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient
 
 import no.nav.k9.los.eventhandler.DetaljerMetrikker
 import no.nav.k9.los.utils.Cache
@@ -8,7 +8,9 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.util.*
 
-class K9SakBehandlingOppfrisketCache (private val repo : K9SakBehandlingOppfrisketRepostiory) {
+class K9SakBehandlingOppfrisketCache (
+    private val repo : K9SakBehandlingOppfrisketRepository
+) {
 
     private val cacheObjectDuration = Duration.ofHours(12)
 

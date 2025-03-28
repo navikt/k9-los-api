@@ -38,7 +38,7 @@ import no.nav.helse.dusseldorf.ktor.metrics.init
 import no.nav.k9.los.eventhandler.*
 import no.nav.k9.los.integrasjon.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
-import no.nav.k9.los.jobber.K9sakBehandlingsoppfriskingJobb
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.K9sakBehandlingsoppfriskingJobb
 import no.nav.k9.los.jobbplanlegger.Jobbplanlegger
 import no.nav.k9.los.jobbplanlegger.PlanlagtJobb
 import no.nav.k9.los.jobbplanlegger.Tidsvindu

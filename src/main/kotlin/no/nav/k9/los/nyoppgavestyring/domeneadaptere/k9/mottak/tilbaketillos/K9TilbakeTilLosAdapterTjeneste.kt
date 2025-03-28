@@ -9,7 +9,7 @@ import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.aksjonspunktbehandling.AksjonspunktDefinisjonK9Tilbake
-import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.db.TransactionalManager
 import no.nav.k9.los.domene.modell.AksjonspunktStatus
 import no.nav.k9.los.domene.modell.BehandlingStatus
 import no.nav.k9.los.domene.repository.BehandlingProsessEventTilbakeRepository

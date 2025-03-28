@@ -3,7 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

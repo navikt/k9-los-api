@@ -6,7 +6,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.aksjonspunktbehandling.K9sakEventHandler
-import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.db.TransactionalManager
 import no.nav.k9.los.domene.modell.*
 import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository

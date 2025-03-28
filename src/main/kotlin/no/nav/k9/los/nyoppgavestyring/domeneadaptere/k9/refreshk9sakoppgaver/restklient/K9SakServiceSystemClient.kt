@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient
 
 import com.github.kittinunf.fuel.coroutines.awaitStringResponseResult
 import com.github.kittinunf.fuel.httpPost
@@ -21,7 +21,7 @@ open class K9SakServiceSystemClient constructor(
     val configuration: Configuration,
     val accessTokenClient: AccessTokenClient,
     val scope: String,
-    k9SakBehandlingOppfrisketRepostiory: K9SakBehandlingOppfrisketRepostiory
+    k9SakBehandlingOppfrisketRepository: K9SakBehandlingOppfrisketRepository
 ) : IK9SakService {
     private val log = LoggerFactory.getLogger("K9SakService")!!
 
@@ -29,7 +29,7 @@ open class K9SakServiceSystemClient constructor(
     private val url = configuration.k9Url()
     private val scopes = setOf(scope)
 
-    private val cache = K9SakBehandlingOppfrisketCache(k9SakBehandlingOppfrisketRepostiory)
+    private val cache = K9SakBehandlingOppfrisketCache(k9SakBehandlingOppfrisketRepository)
 
     @WithSpan
     override suspend fun refreshBehandlinger(behandlingUuid: Collection<UUID>) {

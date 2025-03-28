@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
@@ -8,7 +8,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 import javax.sql.DataSource
 
-class K9SakBehandlingOppfrisketRepostiory(private val dataSource: DataSource) {
+class K9SakBehandlingOppfrisketRepository(private val dataSource: DataSource) {
     fun hentAlleOppfrisketEtter(tidspunkt: LocalDateTime): List<K9sakBehandlingOppfrisketTidspunkt> {
         return using(sessionOf(dataSource)) {
             it.transaction { tx ->
