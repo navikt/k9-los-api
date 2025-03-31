@@ -402,7 +402,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 "K9SakTilLosHistorikkvask",
                 høyPrioritet,
                 kjørTidligst = LocalDateTime.of(2025, 2, 27, 19, 0),
-                kjørSenest = LocalDateTime.of(2025, 3, 31, 12, 0),
+                kjørSenest = LocalDateTime.of(2025, 3, 31, 21, 0),
             ) {
                 k9SakTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
             }
@@ -413,7 +413,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 "K9PunsjTilLosHistorikkvask",
                 høyPrioritet,
                 kjørTidligst = LocalDateTime.of(2025, 1, 1, 0, 0),
-                kjørSenest = LocalDateTime.of(2025, 3, 31, 19, 0),
+                kjørSenest = LocalDateTime.of(2025, 3, 31, 18, 0),
             ) {
                 k9PunsjTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
             }
