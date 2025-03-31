@@ -560,6 +560,18 @@
       "tolkesSom": "String",
       "visTilBruker": false,
       "kokriterie": false
+    },
+    {
+      "id": "spørringstrategi",
+      "visningsnavn": "Spørringstrategi",
+      "listetype": false,
+      "tolkesSom": "String",
+      "visTilBruker": true,
+      "kokriterie": false,
+      "kodeverkreferanse": {
+        "område": "K9",
+        "eksternId": "spørringstrategi"
+      }
     }
   ]
 }

@@ -6,6 +6,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 
 class OppgaveV3Tjeneste(
     private val oppgaveV3Repository: OppgaveV3Repository,
+    private val partisjonertOppgaveRepository: PartisjonertOppgaveRepository,
     private val oppgavetypeRepository: OppgavetypeRepository,
     private val områdeRepository: OmrådeRepository
 ) {
@@ -75,8 +76,9 @@ class OppgaveV3Tjeneste(
         )
     }
 
-    fun ajourholdAktivOppgave(innkommendeOppgave: OppgaveV3, internVersjon: Long, tx: TransactionalSession) {
+    fun ajourholdOppgave(innkommendeOppgave: OppgaveV3, internVersjon: Long, tx: TransactionalSession) {
         AktivOppgaveRepository.ajourholdAktivOppgave(innkommendeOppgave, internVersjon, tx)
+        partisjonertOppgaveRepository.ajourhold(innkommendeOppgave, tx)
     }
 
     fun slettAktivOppgave(innkommendeOppgave: OppgaveV3, tx: TransactionalSession){
