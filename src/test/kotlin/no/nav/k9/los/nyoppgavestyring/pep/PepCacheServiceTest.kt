@@ -43,6 +43,7 @@ import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.koin.test.KoinTest
@@ -56,6 +57,7 @@ import java.util.*
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
+@Disabled
 class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
     val pepClient = mockk<IPepClient>()

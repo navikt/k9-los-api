@@ -26,14 +26,18 @@ object OppgavefilterDatatypeMapper {
     ): FeltverdiOppgavefilter {
         val datatype = felter[OmrådeOgKode(filter.område, filter.kode)]?.oppgavefelt?.tolkes_som
             ?.let { Datatype.fraKode(it) }
-        val verdi = filter.verdi[0]
-        if (verdi == null || verdi !is String) return filter // er enten null eller har blitt konvertert tidligere
-        return when (datatype) {
-            Datatype.INTEGER -> filter.copy(verdi = listOf(verdi.toLong()))
-            Datatype.DURATION -> filter.copy(verdi = listOf(PGInterval(verdi)))
-            // Datatype.TIMESTAMP -> filter.copy(verdi = listOf(LocalDateTime.parse(verdi)))
-            // Datatype.BOOLEAN -> filter.copy(verdi = listOf(verdi.toBoolean()))
-            else -> filter
-        }
+
+        return filter.copy(
+            verdi = filter.verdi.map { verdi ->
+                when {
+                    verdi == null || verdi !is String -> verdi
+                    datatype == Datatype.INTEGER -> verdi.toLong()
+                    datatype == Datatype.DURATION -> PGInterval(verdi)
+                    // Datatype.TIMESTAMP -> filter.copy(verdi = listOf(LocalDateTime.parse(verdi)))
+                    // Datatype.BOOLEAN -> filter.copy(verdi = listOf(verdi.toBoolean()))
+                    else -> verdi
+                }
+            }
+        )
     }
 }

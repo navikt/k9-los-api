@@ -4,20 +4,20 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
 
-object OppgavefilterListeEliminerer {
-    fun eliminer(oppgavefiltere: List<Oppgavefilter>): List<Oppgavefilter> {
+object OppgavefilterListeUtvider {
+    fun utvid(oppgavefiltere: List<Oppgavefilter>): List<Oppgavefilter> {
         return oppgavefiltere.map { filter ->
             when (filter) {
-                is FeltverdiOppgavefilter -> map(filter)
+                is FeltverdiOppgavefilter -> utvid(filter)
                 is CombineOppgavefilter -> CombineOppgavefilter(
                     combineOperator = filter.combineOperator,
-                    filtere = eliminer(filter.filtere)
+                    filtere = utvid(filter.filtere)
                 )
             }
         }
     }
 
-    private fun map(filter: FeltverdiOppgavefilter): Oppgavefilter {
+    fun utvid(filter: FeltverdiOppgavefilter): Oppgavefilter {
         if (filter.verdi.size <= 1) {
             return filter
         }

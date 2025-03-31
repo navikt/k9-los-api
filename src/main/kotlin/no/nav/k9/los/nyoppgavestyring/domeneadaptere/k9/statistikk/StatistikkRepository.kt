@@ -1,7 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk
 
 import kotliquery.*
-import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgavefelt
@@ -45,13 +44,13 @@ class StatistikkRepository(
         }
     }
 
-    fun fjernSendtMarkering(fagsystem: Fagsystem? = null) {
+    fun fjernSendtMarkering(oppgavetype: String? = null) {
         using(sessionOf(dataSource)) {
-            if (fagsystem != null) {
+            if (oppgavetype != null) {
                 it.run(
                     queryOf(
                         """delete from oppgave_v3_sendt_dvh ov3sd where ov3sd.id IN (SELECT ov3.id FROM oppgave_v3 ov3 join oppgavetype ot ON ov3.oppgavetype_id = ot.id WHERE ot.ekstern_id = :oppgavetype)"""
-                    , mapOf("oppgavetype" to fagsystem.kode.lowercase())
+                    , mapOf("oppgavetype" to oppgavetype)
                     ).asUpdate
                 )
             } else {

@@ -67,6 +67,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.PartisjonertOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nyoppgavestyring.pep.PepCacheRepository
@@ -404,6 +405,11 @@ fun common(app: Application, config: Configuration) = module {
             oppgavetypeRepository = get()
         )
     }
+    single {
+        PartisjonertOppgaveRepository(
+            oppgavetypeRepository = get()
+        )
+    }
     single { K9SakOppgaveTilDVHMapper() }
     single { K9KlageOppgaveTilDVHMapper() }
     single { OppgaveRepository(oppgavetypeRepository = get()) }
@@ -441,6 +447,7 @@ fun common(app: Application, config: Configuration) = module {
     single {
         OppgaveV3Tjeneste(
             oppgaveV3Repository = get(),
+            partisjonertOppgaveRepository = get(),
             oppgavetypeRepository = get(),
             områdeRepository = get(),
         )

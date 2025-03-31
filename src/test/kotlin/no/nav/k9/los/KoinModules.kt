@@ -56,6 +56,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.PartisjonertOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nyoppgavestyring.pep.PepCacheRepository
@@ -383,7 +384,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single { OppgaveV3Repository(dataSource = get(), oppgavetypeRepository = get()) }
     single { K9TilbakeEventRepository(dataSource = get()) }
     single { K9TilbakeEventRepository(dataSource = get()) }
-    single { no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventRepository(dataSource = get()) }
+    single { K9PunsjEventRepository(dataSource = get()) }
+    single { PartisjonertOppgaveRepository(oppgavetypeRepository = get()) }
     single { K9SakOppgaveTilDVHMapper() }
     single { K9KlageOppgaveTilDVHMapper() }
     single { OppgaveRepository(oppgavetypeRepository = get()) }
@@ -422,6 +424,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         OppgaveV3Tjeneste(
             oppgaveV3Repository = get(),
+            partisjonertOppgaveRepository = get(),
             oppgavetypeRepository = get(),
             områdeRepository = get(),
         )

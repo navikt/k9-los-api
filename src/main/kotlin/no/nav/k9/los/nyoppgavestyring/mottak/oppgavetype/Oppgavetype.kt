@@ -12,6 +12,9 @@ class Oppgavetype(
     val oppgavebehandlingsUrlTemplate: String?,
     val oppgavefelter: Set<Oppgavefelt>,
 ) {
+    fun hentFelt(feltdefinisjonId: String): Oppgavefelt {
+        return oppgavefelter.first { it.feltDefinisjon.eksternId == feltdefinisjonId }
+    }
 
     constructor(
         dto: OppgavetypeDto,
