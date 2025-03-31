@@ -142,7 +142,7 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
     private fun hentOppgave(id: OppgaveId): Oppgave {
         val aktivOppgaveRepository = get<AktivOppgaveRepository>()
         val oppgaveRepository = get<OppgaveRepository>()
-        val partisjonertRepository = get<OppgaveV3PartisjonertRepository>()
+        val partisjonertRepository = get<PartisjonertOppgaveRepository>()
 
         return transactionalManager.transaction { tx ->
             when (id) {

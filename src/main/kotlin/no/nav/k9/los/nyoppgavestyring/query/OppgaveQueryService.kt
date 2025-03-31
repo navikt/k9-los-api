@@ -29,7 +29,7 @@ class OppgaveQueryService {
     private val oppgaveQueryRepository by inject<OppgaveQueryRepository>(OppgaveQueryRepository::class.java)
     private val aktivOppgaveRepository by inject<AktivOppgaveRepository>(AktivOppgaveRepository::class.java)
     private val oppgaveRepository by inject<OppgaveRepository>(OppgaveRepository::class.java)
-    private val partisjonertOppgaveRepository by inject<OppgaveV3PartisjonertRepository>(OppgaveV3PartisjonertRepository::class.java)
+    private val partisjonertOppgaveRepository by inject<PartisjonertOppgaveRepository>(PartisjonertOppgaveRepository::class.java)
     private val pepClient by inject<IPepClient>(IPepClient::class.java)
 
     @WithSpan

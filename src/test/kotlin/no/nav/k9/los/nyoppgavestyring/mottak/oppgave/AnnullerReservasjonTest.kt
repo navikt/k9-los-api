@@ -22,7 +22,7 @@ class AnnullerReservasjonTest: AbstractK9LosIntegrationTest() {
     fun setup() {
         oppgaveV3Tjeneste = OppgaveV3Tjeneste(
             oppgaveV3Repository = get(),
-            oppgaveV3PartisjonertRepository = get(),
+            partisjonertOppgaveRepository = get(),
             oppgavetypeRepository = get(),
             områdeRepository = get(),
         )

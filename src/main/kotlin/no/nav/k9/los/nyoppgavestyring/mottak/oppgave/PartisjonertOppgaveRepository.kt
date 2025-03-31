@@ -7,18 +7,20 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import org.slf4j.LoggerFactory
 
-class OppgaveV3PartisjonertRepository(val oppgavetypeRepository: OppgavetypeRepository) {
+class PartisjonertOppgaveRepository(val oppgavetypeRepository: OppgavetypeRepository) {
 
-    private val log = LoggerFactory.getLogger(OppgaveV3PartisjonertRepository::class.java)
+    private val log = LoggerFactory.getLogger(PartisjonertOppgaveRepository::class.java)
 
     @WithSpan
     fun ajourhold(oppgave: OppgaveV3, tx: TransactionalSession) {
         val partisjonertOppgaveId = hentPartisjonertOppgaveId(oppgave, tx)
             ?: opprettPartisjonertOppgaveId(oppgave, tx)
         val partisjonertOppgave = hentOppgave(partisjonertOppgaveId, tx)
-        partisjonertOppgave
-            ?.let { oppdaterOppgave(partisjonertOppgaveId, it, tx) }
-            ?: nyOppgave(partisjonertOppgaveId, oppgave, tx)
+        if (partisjonertOppgave == null) {
+            nyOppgave(partisjonertOppgaveId, oppgave, tx)
+        } else {
+            oppdaterOppgave(partisjonertOppgaveId, oppgave, tx)
+        }
         oppdaterOppgavefeltverdier(partisjonertOppgaveId, oppgave, tx)
     }
 

@@ -2,15 +2,15 @@ package no.nav.k9.los.nyoppgavestyring
 
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3PartisjonertRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.PartisjonertOppgaveRepository
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import org.koin.test.get
 import java.time.LocalDateTime
 
-class OppgaveV3PartisjonertRepositoryTest : AbstractK9LosIntegrationTest() {
+class PartisjonertOppgaveRepositoryTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `Sjekker at oppgaver blir lagret i partisjonerte tabeller`() {
@@ -31,7 +31,7 @@ class OppgaveV3PartisjonertRepositoryTest : AbstractK9LosIntegrationTest() {
             .medOppgaveFeltVerdi(FeltType.LIGGER_HOS_BESLUTTER, "false")
 
         val oppgave = oppgaveBuilder.lag(status = Oppgavestatus.AAPEN)
-        val oppgavePartisjonertRepo = get<OppgaveV3PartisjonertRepository>()
+        val oppgavePartisjonertRepo = get<PartisjonertOppgaveRepository>()
         val transactionalManager = get<TransactionalManager>()
 
         // Test
@@ -69,7 +69,7 @@ class OppgaveV3PartisjonertRepositoryTest : AbstractK9LosIntegrationTest() {
             .medOppgaveFeltVerdi(FeltType.AKSJONSPUNKT, "test-aksjonspunkt")
 
         val oppgave = oppgaveBuilder.lag(status = Oppgavestatus.AAPEN)
-        val oppgavePartisjonertRepo = get<OppgaveV3PartisjonertRepository>()
+        val oppgavePartisjonertRepo = get<PartisjonertOppgaveRepository>()
         val transactionalManager = get<TransactionalManager>()
 
         // Lagre oppgave første gang
