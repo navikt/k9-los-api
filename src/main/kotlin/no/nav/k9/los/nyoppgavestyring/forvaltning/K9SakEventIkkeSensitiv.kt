@@ -5,10 +5,10 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer
-import no.nav.k9.los.domene.modell.Fagsystem
-import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
-import no.nav.k9.los.integrasjon.kafka.dto.EventHendelse
-import no.nav.k9.los.integrasjon.kafka.dto.KodeverkDeserializer
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.KodeverkDeserializer
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import no.nav.k9.sak.typer.Periode
 import java.time.LocalDate
@@ -85,7 +85,7 @@ data class K9SakEventIkkeSensitiv(
     @JsonDeserialize(using = KodeverkDeserializer::class)
     val behandlingsårsaker: List<String> = emptyList()
 ) {
-    constructor(event: BehandlingProsessEventDto) : this(
+    constructor(event: K9SakEventDto) : this(
         eksternId = event.eksternId,
         fagsystem = event.fagsystem,
         saksnummer = event.saksnummer,

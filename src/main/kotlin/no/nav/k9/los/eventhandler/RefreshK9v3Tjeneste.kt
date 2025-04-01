@@ -6,7 +6,7 @@ import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.los.domene.modell.Fagsystem
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.integrasjon.k9.IK9SakService
 import no.nav.k9.los.nyoppgavestyring.ko.*
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository

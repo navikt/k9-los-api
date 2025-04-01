@@ -1,6 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall
 
-import no.nav.k9.los.domene.modell.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 
 enum class DagensTallHovedgruppe(val navn: String) {
     ALLE("Alle ytelser"),

@@ -1,9 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.ko
 
-import no.nav.k9.los.domene.modell.Fagsystem
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveId
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
-import no.nav.k9.los.nyoppgavestyring.reservasjon.Reservasjonsnøkkel
 
 interface KøpåvirkendeHendelse
 data class Kødefinisjon(val køId : Long) : KøpåvirkendeHendelse

@@ -13,23 +13,22 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.los.AbstractPostgresTest
-import no.nav.k9.los.aksjonspunktbehandling.K9punsjEventHandler
-import no.nav.k9.los.aksjonspunktbehandling.K9sakEventHandler
 import no.nav.k9.los.buildAndTestConfig
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.los.domene.modell.BehandlingStatus
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.integrasjon.abac.Action
 import no.nav.k9.los.integrasjon.abac.IPepClient
-import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
-import no.nav.k9.los.integrasjon.kafka.dto.EventHendelse
-import no.nav.k9.los.integrasjon.kafka.dto.PunsjEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
 import no.nav.k9.los.jobbplanlegger.Jobbplanlegger
 import no.nav.k9.los.jobbplanlegger.PlanlagtJobb
 import no.nav.k9.los.jobbplanlegger.Tidsvindu
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.punsjtillos.K9PunsjTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.felter
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
@@ -124,7 +123,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
     @Test
     fun `Alle ordinære eventer på K9sakEventHandler skal oppdatere pepcache for å alltid få med aktørendringer i sak`() {
-        val k9sakEventHandler = get<K9sakEventHandler>()
+        val k9sakEventHandler = get<K9SakEventHandler>()
         val pepRepository = get<PepCacheRepository>()
 
         val saksnummer = "TEST1"
@@ -141,7 +140,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
     @Test
     fun `Alle ordinære eventer på K9punsjEventHandler skal oppdatere pepcache for å alltid få med aktørendringer i sak`() {
-        val k9punsjEventHandler = get<K9punsjEventHandler>()
+        val k9punsjEventHandler = get<no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler>()
         val pepRepository = get<PepCacheRepository>()
 
         val aktørId = "1234567890123"
@@ -158,7 +157,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
     @Test
     fun `Eventer i K9punsjEventHandler med kode6 skal oppdatere pepcache`() {
-        val k9punsjEventHandler = get<K9punsjEventHandler>()
+        val k9punsjEventHandler = get<no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler>()
         val pepRepository = get<PepCacheRepository>()
 
         val aktørId = "1234567890123"
@@ -175,7 +174,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
     @Test
     fun `Eventer i K9punsjEventHandler med kode7 skal oppdatere pepcache`() {
-        val k9punsjEventHandler = get<K9punsjEventHandler>()
+        val k9punsjEventHandler = get<no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler>()
         val pepRepository = get<PepCacheRepository>()
 
         val aktørId = "1234567890123"
@@ -191,7 +190,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
     @Test
     fun `Eventer i K9sakEventHandler med kode6 skal oppdatere pepcache`() {
-        val k9sakEventHandler = get<K9sakEventHandler>()
+        val k9sakEventHandler = get<K9SakEventHandler>()
         val pepRepository = get<PepCacheRepository>()
 
         val saksnummer = "TEST2"
@@ -208,7 +207,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
     @Test
     fun `oppdaterCacheForOppgaverEldreEnn skal oppdatere alle oppgaver eldre enn oppgitt alder`() {
-        val k9sakEventHandler = get<K9sakEventHandler>()
+        val k9sakEventHandler = get<K9SakEventHandler>()
         val pepRepository = mockk<PepCacheRepository>(relaxed = true)
 
         val saksnummer = "TEST3"
@@ -239,7 +238,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
     @Test
     fun `PepCacheService skal oppdatere oppgave når sikkerhetsklassifisering endrer seg`() = runTest {
-        val k9sakEventHandler = get<K9sakEventHandler>()
+        val k9sakEventHandler = get<K9SakEventHandler>()
         val pepRepository = get<PepCacheRepository>()
         val oppgaveQueryService = get<OppgaveQueryService>()
 
@@ -334,7 +333,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         behandlingStatus: BehandlingStatus = BehandlingStatus.OPPRETTET,
         eventTid: LocalDateTime = LocalDateTime.now(),
         eventHendelse: EventHendelse = EventHendelse.BEHANDLINGSKONTROLL_EVENT
-    ): BehandlingProsessEventDto {
+    ): K9SakEventDto {
 
         val objectMapper = jacksonObjectMapper()
             .dusseldorfConfigured().setPropertyNamingStrategy(PropertyNamingStrategies.LOWER_CAMEL_CASE)
@@ -364,7 +363,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
                   }
             }"""
 
-        return objectMapper.readValue(json, BehandlingProsessEventDto::class.java)
+        return objectMapper.readValue(json, K9SakEventDto::class.java)
     }
 
     private fun lagPunsjBehandlingprosessEventMedStatus(

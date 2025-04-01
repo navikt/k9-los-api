@@ -3,6 +3,7 @@ package no.nav.k9.los.domene.modell
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.*
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.repository.ReservasjonRepository
+import no.nav.k9.los.nyoppgavestyring.kodeverk.*
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.KriteriumDto
 import org.slf4j.LoggerFactory
