@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer
@@ -17,7 +18,9 @@ import java.util.*
 
 data class K9KlageEventDto(
     val eksternId: UUID,
-    val påklagdBehandlingEksternId: UUID?,
+    
+    val påklagdBehandlingId: UUID?,
+
     val påklagdBehandlingType: BehandlingType?,
     val fagsystem: Fagsystem,
 
