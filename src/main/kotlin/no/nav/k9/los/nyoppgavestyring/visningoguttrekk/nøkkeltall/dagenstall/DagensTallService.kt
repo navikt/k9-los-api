@@ -196,7 +196,8 @@ class DagensTallService(
                         fagsakYtelseType: FagsakYtelseType? = null,
                         behandlingType: BehandlingType? = null,
                         oppgavetype: String? = null): Long {
-        return hentMottattDatoForLukkedeTall(dato, fagsakYtelseType, behandlingType, oppgavetype) + hentÅpneVenterTall(dato, fagsakYtelseType, behandlingType, oppgavetype)
+        return hentMottattDatoForLukkedeTall(dato, fagsakYtelseType, behandlingType, oppgavetype) +
+                hentÅpneVenterTall(dato, fagsakYtelseType, behandlingType, oppgavetype)
     }
 
     private fun hentMottattDatoForLukkedeTall(
@@ -312,9 +313,5 @@ class DagensTallService(
                 ),
             )
         )
-    }
-
-    private enum class Datotype(val område: String?, val kode: String) {
-        MOTTATT_DATO("K9", "mottattDato"), FERDIGSTILT_DATO(null, "ferdigstiltDato")
     }
 }
