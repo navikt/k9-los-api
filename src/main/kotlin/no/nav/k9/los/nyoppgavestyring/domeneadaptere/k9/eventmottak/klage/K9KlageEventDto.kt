@@ -35,7 +35,7 @@ data class K9KlageEventDto(
     val eventTid: LocalDateTime,
 
     val eventHendelse: EventHendelse,
-    val behandlingStatus: String?,
+    val behandlingStatus: String,
     val behandlingSteg: String?,
     val behandlendeEnhet: String?,
     val ansvarligBeslutter: String?,
