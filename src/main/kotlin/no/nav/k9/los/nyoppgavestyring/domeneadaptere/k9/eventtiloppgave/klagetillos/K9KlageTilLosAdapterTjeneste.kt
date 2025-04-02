@@ -4,13 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.opentelemetry.instrumentation.annotations.SpanAttribute
 import io.opentelemetry.instrumentation.annotations.WithSpan
-import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.KlagebehandlingProsessHendelse
 import no.nav.k9.klage.typer.AktørId
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventRepository
 import no.nav.k9.los.jobber.JobbMetrikker
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakBerikerInterfaceKludge
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
@@ -130,7 +128,7 @@ class K9KlageTilLosAdapterTjeneste(
                 val eventBeriket =
                     event.copy(
                         påklagdBehandlingType = påklagdBehandlingDto?.påklagdBehandlingType,
-                        pleietrengendeAktørId = AktørId(losOpplysningerSomManglerIKlageDto?.pleietrengendeAktørId?.aktørId?.toLong()),
+                        pleietrengendeAktørId = losOpplysningerSomManglerIKlageDto?.pleietrengendeAktørId?.aktørId?.let { AktørId(it.toLong()) },
                         utenlandstilsnitt = losOpplysningerSomManglerIKlageDto?.isUtenlandstilsnitt
                         )
 
