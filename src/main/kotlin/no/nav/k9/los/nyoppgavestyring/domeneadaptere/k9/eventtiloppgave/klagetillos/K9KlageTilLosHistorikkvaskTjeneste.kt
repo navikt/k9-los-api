@@ -96,7 +96,7 @@ class K9KlageTilLosHistorikkvaskTjeneste(
                 val eventBeriket =
                     event.copy(
                         påklagdBehandlingType = påklagdBehandlingDto?.påklagdBehandlingType,
-                        pleietrengendeAktørId = AktørId(losOpplysningerSomManglerIKlageDto?.pleietrengendeAktørId?.aktørId?.toLong()),
+                        pleietrengendeAktørId = losOpplysningerSomManglerIKlageDto?.pleietrengendeAktørId?.aktørId?.let { AktørId(it.toLong()) },
                         utenlandstilsnitt = losOpplysningerSomManglerIKlageDto?.isUtenlandstilsnitt
                     )
 
