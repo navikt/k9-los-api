@@ -156,9 +156,7 @@ object OppgaveQueryToSqlMapper {
 
     private fun håndterOrder(query: OppgaveQuerySqlBuilder, orderBys: List<OrderFelt>) {
         for (orderBy in orderBys) {
-            when (orderBy) {
-                is EnkelOrderFelt -> query.medEnkelOrder(orderBy.område, orderBy.kode, orderBy.økende)
-            }
+            query.medEnkelOrder(orderBy.område, orderBy.kode, orderBy.økende)
         }
     }
 }

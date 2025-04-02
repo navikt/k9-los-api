@@ -13,7 +13,6 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.*
 import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelter
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgavefeltverdi
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgaverad
@@ -176,23 +175,18 @@ class OppgaveQueryService {
         oppgaveQuery: OppgaveQuery,
         oppgave: Oppgave
     ) = oppgaveQuery.select.map {
-        if (it is EnkelSelectFelt) {
-            val verdi = when (it.kode) {
-                "oppgavestatus" -> oppgave.status
-                "kildeområde" -> oppgave.kildeområde
-                "oppgavetype" -> oppgave.oppgavetype.eksternId
-                "oppgaveområde" -> oppgave.oppgavetype.område.eksternId
-                else -> oppgave.hentVerdiEllerListe(requireNotNull(it.område), it.kode)
-            }
-            Oppgavefeltverdi(
-                it.område,
-                it.kode,
-                verdi
-            )
-        } else {
-            // TODO: Støtt aggregerte felter:
-            Oppgavefeltverdi("", "", "")
+        val verdi = when (it.kode) {
+            "oppgavestatus" -> oppgave.status
+            "kildeområde" -> oppgave.kildeområde
+            "oppgavetype" -> oppgave.oppgavetype.eksternId
+            "oppgaveområde" -> oppgave.oppgavetype.område.eksternId
+            else -> oppgave.hentVerdiEllerListe(requireNotNull(it.område), it.kode)
         }
+        Oppgavefeltverdi(
+            it.område,
+            it.kode,
+            verdi
+        )
     }
 
     fun validate(request: QueryRequest): Boolean {

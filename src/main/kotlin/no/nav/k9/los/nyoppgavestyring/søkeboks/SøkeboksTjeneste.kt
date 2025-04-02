@@ -8,9 +8,9 @@ import no.nav.k9.los.integrasjon.pdl.IPdlService
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.OrderFelt
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
@@ -72,7 +72,7 @@ class SøkeboksTjeneste(
                     verdi = listOf(journalpostId)
                 )
             ),
-            order = listOf(EnkelOrderFelt("K9", "mottattDato", true))
+            order = listOf(OrderFelt("K9", "mottattDato", true))
         )
         return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
     }
@@ -95,7 +95,7 @@ class SøkeboksTjeneste(
                     verdi = listOf(aktørId, fnr)
                 )
             ),
-            order = listOf(EnkelOrderFelt("K9", "mottattDato", true))
+            order = listOf(OrderFelt("K9", "mottattDato", true))
         )
         return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
     }
@@ -116,7 +116,7 @@ class SøkeboksTjeneste(
                     verdi = listOf(saksnummer)
                 )
             ),
-            order = listOf(EnkelOrderFelt("K9", "mottattDato", true))
+            order = listOf(OrderFelt("K9", "mottattDato", true))
         )
         return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
     }

@@ -34,9 +34,9 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelSelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.SelectFelt
 import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgavefilterRens
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.sak.typer.AktørId
@@ -319,7 +319,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
             oppgaveQueryService.query(tx,
                 QueryRequest(OppgaveQuery(
-                    select = listOf(EnkelSelectFelt(område = "K9", kode = "ekstern_id")),
+                    select = listOf(SelectFelt(område = "K9", kode = "ekstern_id")),
                     filtere = OppgavefilterRens.rens(felter, filtre)
                 )),
                 mockk(relaxed = true),

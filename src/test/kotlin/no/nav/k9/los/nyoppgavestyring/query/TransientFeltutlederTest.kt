@@ -8,9 +8,9 @@ import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.*
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.OrderFelt
 import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
@@ -176,8 +176,8 @@ private fun byggFilter(
     )
 }
 
-private fun byggOrder(feltType: FeltType, økende: Boolean): EnkelOrderFelt {
-    return EnkelOrderFelt(
+private fun byggOrder(feltType: FeltType, økende: Boolean): OrderFelt {
+    return OrderFelt(
         område = feltType.område,
         feltType.eksternId,
         økende = økende
