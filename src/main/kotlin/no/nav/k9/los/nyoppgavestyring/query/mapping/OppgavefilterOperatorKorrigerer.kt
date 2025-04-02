@@ -21,26 +21,26 @@ object OppgavefilterOperatorKorrigerer {
     }
 
     private fun byttOperator(oppgavefilter: FeltverdiOppgavefilter): Oppgavefilter {
-        val operator = EksternFeltverdiOperator.valueOf(oppgavefilter.operator)
+        val operator = oppgavefilter.operator
         return when {
             operator == EksternFeltverdiOperator.EQUALS && oppgavefilter.verdi.size > 1 ->
                 oppgavefilter.copy(
-                    operator = EksternFeltverdiOperator.IN.name
+                    operator = EksternFeltverdiOperator.IN
                 )
 
             operator == EksternFeltverdiOperator.IN && oppgavefilter.verdi.size == 1 ->
                 oppgavefilter.copy(
-                    operator = EksternFeltverdiOperator.EQUALS.name
+                    operator = EksternFeltverdiOperator.EQUALS
                 )
 
             operator == EksternFeltverdiOperator.NOT_EQUALS && oppgavefilter.verdi.size > 1 ->
                 oppgavefilter.copy(
-                    operator = EksternFeltverdiOperator.NOT_IN.name
+                    operator = EksternFeltverdiOperator.NOT_IN
                 )
 
             operator == EksternFeltverdiOperator.NOT_IN && oppgavefilter.verdi.size == 1 ->
                 oppgavefilter.copy(
-                    operator = EksternFeltverdiOperator.NOT_EQUALS.name
+                    operator = EksternFeltverdiOperator.NOT_EQUALS
                 )
 
             listOf(

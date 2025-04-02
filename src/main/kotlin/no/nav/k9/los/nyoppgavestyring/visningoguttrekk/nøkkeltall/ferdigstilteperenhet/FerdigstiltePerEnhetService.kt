@@ -9,7 +9,7 @@ import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
-import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.utils.Cache
 import no.nav.k9.los.utils.CacheObject
 import org.slf4j.Logger
@@ -138,7 +138,7 @@ class FerdigstiltePerEnhetService(
                         FeltverdiOppgavefilter(
                             "K9",
                             "ferdigstiltEnhet",
-                            FeltverdiOperator.EQUALS.name,
+                            EksternFeltverdiOperator.EQUALS,
                             listOf(enhet)
                         )
                     )
@@ -147,7 +147,7 @@ class FerdigstiltePerEnhetService(
                             FeltverdiOppgavefilter(
                                 "K9",
                                 "ytelsestype",
-                                FeltverdiOperator.EQUALS.name,
+                                EksternFeltverdiOperator.EQUALS,
                                 listOf(fagsakYtelseType.kode)
                             )
                         )
@@ -157,19 +157,19 @@ class FerdigstiltePerEnhetService(
                             FeltverdiOppgavefilter(
                                 "K9",
                                 "oppgavetype",
-                                FeltverdiOperator.EQUALS.name,
+                                EksternFeltverdiOperator.EQUALS,
                                 listOf(oppgavetype)
                             )
                         )
                     }
                     add(
                         FeltverdiOppgavefilter(
-                            null, "oppgavestatus", FeltverdiOperator.EQUALS.name, listOf(Oppgavestatus.LUKKET.kode)
+                            null, "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf(Oppgavestatus.LUKKET.kode)
                         )
                     )
                     add(
                         FeltverdiOppgavefilter(
-                            null, "ferdigstiltDato", FeltverdiOperator.EQUALS.name, listOf(dato.toString())
+                            null, "ferdigstiltDato", EksternFeltverdiOperator.EQUALS, listOf(dato.toString())
                         )
                     )
                 }

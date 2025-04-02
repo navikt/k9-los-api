@@ -37,6 +37,8 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.SelectFelt
+import no.nav.k9.los.nyoppgavestyring.query.mapping.CombineOperator
+import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgavefilterRens
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.sak.typer.AktørId
@@ -302,16 +304,16 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         val transactionalManager = get<TransactionalManager>()
         return transactionalManager.transaction { tx ->
             val filtre = listOf(
-                CombineOppgavefilter(combineOperator = "AND", filtere = listOf(
+                CombineOppgavefilter(combineOperator = CombineOperator.AND, filtere = listOf(
                     FeltverdiOppgavefilter(
                         område = null,
                         kode = FeltType.PERSONBESKYTTELSE.eksternId,
-                        operator = "EQUALS",
+                        operator = EksternFeltverdiOperator.EQUALS,
                         verdi = listOf(sikkerhetsklassifiseringtype.kode)
                     ),
                     FeltverdiOppgavefilter(område = "K9",
                         kode = FeltType.BEHANDLINGUUID.eksternId,
-                        operator = "EQUALS",
+                        operator = EksternFeltverdiOperator.EQUALS,
                         verdi = listOf(eksternId)
                     )
                 ))

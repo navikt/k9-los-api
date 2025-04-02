@@ -11,7 +11,7 @@ import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OrderFelt
-import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.junit.jupiter.api.BeforeEach
@@ -40,7 +40,7 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
             listOf(
                 byggFilter(
                     FeltType.TID_SIDEN_MOTTATT_DATO,
-                    FeltverdiOperator.GREATER_THAN_OR_EQUALS,
+                    EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS,
                     Duration.ofDays(11).toString()
                 )
             )
@@ -49,10 +49,10 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
             listOf(
                 byggFilter(
                     FeltType.TID_SIDEN_MOTTATT_DATO,
-                    FeltverdiOperator.GREATER_THAN_OR_EQUALS,
+                    EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS,
                     Duration.ofDays(11).toString()
                 ),
-                byggFilter(FeltType.OPPGAVE_STATUS, FeltverdiOperator.EQUALS, Oppgavestatus.AAPEN.kode)
+                byggFilter(FeltType.OPPGAVE_STATUS, EksternFeltverdiOperator.EQUALS, Oppgavestatus.AAPEN.kode)
             )
         )
 
@@ -75,7 +75,7 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
             listOf(
                 byggFilter(
                     FeltType.TID_SIDEN_MOTTATT_DATO,
-                    FeltverdiOperator.GREATER_THAN_OR_EQUALS,
+                    EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS,
                     Duration.ofDays(9).toString()
                 )
             ),
@@ -100,7 +100,7 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
             listOf(
                 byggFilter(
                     FeltType.TID_SIDEN_MOTTATT_DATO,
-                    FeltverdiOperator.GREATER_THAN_OR_EQUALS,
+                    EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS,
                     Duration.ofDays(9).toString()
                 )
             ),
@@ -165,13 +165,13 @@ class TransientFeltutlederTest : AbstractK9LosIntegrationTest() {
 
 private fun byggFilter(
     feltType: FeltType,
-    feltverdiOperator: FeltverdiOperator,
+    operator: EksternFeltverdiOperator,
     vararg verdier: String?
 ): FeltverdiOppgavefilter {
     return FeltverdiOppgavefilter(
         feltType.område,
         feltType.eksternId,
-        feltverdiOperator.name,
+        operator,
         verdier.toList()
     )
 }
