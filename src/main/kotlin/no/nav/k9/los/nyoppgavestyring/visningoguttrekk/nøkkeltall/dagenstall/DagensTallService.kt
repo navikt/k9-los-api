@@ -289,7 +289,7 @@ class DagensTallService(
                         FeltverdiOppgavefilter(
                             null, "oppgavestatus", EksternFeltverdiOperator.EQUALS.kode, listOf(Oppgavestatus.LUKKET.kode)
                         ),
-                        FeltverdiOppgavefilter("K9", "ferdigstiltDato", EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS.kode, listOf(dato.toString())),
+                        FeltverdiOppgavefilter(null, "ferdigstiltDato", EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS.kode, listOf(dato.toString())),
                         fagsakYtelseType?.let {
                             FeltverdiOppgavefilter(
                                 "K9", "ytelsestype", EksternFeltverdiOperator.EQUALS.kode, listOf(it.kode)

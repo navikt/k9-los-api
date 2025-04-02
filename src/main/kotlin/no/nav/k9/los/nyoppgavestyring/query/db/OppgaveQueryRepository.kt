@@ -227,6 +227,8 @@ class OppgaveQueryRepository(
                 }
             ),
             Oppgavefelt(null, "oppgaveområde", "Oppgaveområde", "String", false, false, emptyList()),
+            Oppgavefelt(null, "spørringstrategi", "Spørringstrategi", "String", false, true, Spørringstrategi.entries.map { Verdiforklaring(it.name, it.navn, false) }),
+            Oppgavefelt(null, "ferdigstiltDato", "Ferdigstilt dato", "Timestamp", true, false, emptyList()),
         ).map { OppgavefeltMedMer(it, null) }
 
         return (felterFraDatabase + standardfelter).sortedBy { it.oppgavefelt.visningsnavn }

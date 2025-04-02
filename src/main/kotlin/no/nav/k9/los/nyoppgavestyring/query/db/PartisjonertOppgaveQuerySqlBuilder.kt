@@ -9,6 +9,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveId
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.PartisjonertOppgaveId
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.mapping.*
 import no.nav.k9.los.spi.felter.OrderByInput
@@ -23,31 +24,81 @@ class PartisjonertOppgaveQuerySqlBuilder(
     val felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
     oppgavestatusFilter: List<Oppgavestatus>,
     val now: LocalDateTime,
-    private val ferdigstiltDato: LocalDate? = null,
+    ferdigstiltDatoFilter: FeltverdiOppgavefilter?,
 ) : OppgaveQuerySqlBuilder {
     private val log = LoggerFactory.getLogger(PartisjonertOppgaveQuerySqlBuilder::class.java)
-    
+
     private val oppgavefelterKodeOgType = felter.mapValues { Datatype.fraKode(it.value.oppgavefelt.tolkes_som) }
     private val queryParams: MutableMap<String, Any?> = mutableMapOf()
     private val orderByParams: MutableMap<String, Any?> = mutableMapOf()
-    
+    private val ferdigstiltDatoParams = mutableMapOf<String, Any?>()
+
     private val oppgavestatusPlaceholder: String = InClauseHjelper.tilParameternavn(oppgavestatusFilter, "status")
-    private val oppgavestatusParams = InClauseHjelper.parameternavnTilVerdierMap(oppgavestatusFilter.map { it.kode }, "status")
-    
-    private val ferdigstiltDatoBetingelse = if (ferdigstiltDato != null) "AND o.ferdigstilt_dato = :ferdigstilt_dato " else ""
-    private val ferdigstiltDatoFeltBetingelse = if (ferdigstiltDato != null) "AND ov.ferdigstilt_dato = :ferdigstilt_dato " else ""
-    
+    private val oppgavestatusParams =
+        InClauseHjelper.parameternavnTilVerdierMap(oppgavestatusFilter.map { it.kode }, "status")
+
+    private var ferdigstiltDatoBetingelse: (tabellalias: String) -> String = { "" }
+
+    init {
+        if (ferdigstiltDatoFilter != null) {
+            initialiserFerdigstiltDatoFilter(ferdigstiltDatoFilter)
+        }
+    }
+
+    private fun Any?.tilLocalDate(): LocalDate? {
+        return when (this) {
+            is LocalDate -> this
+            is String -> LocalDate.parse(this)
+            else -> null
+        }
+    }
+
+    private fun initialiserFerdigstiltDatoFilter(ferdigstiltDatoFilter: FeltverdiOppgavefilter) {
+        when (EksternFeltverdiOperator.valueOf(ferdigstiltDatoFilter.operator)) {
+            EksternFeltverdiOperator.LESS_THAN_OR_EQUALS, EksternFeltverdiOperator.LESS_THAN, EksternFeltverdiOperator.GREATER_THAN, EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS, EksternFeltverdiOperator.NOT_EQUALS, EksternFeltverdiOperator.EQUALS -> {
+                val operator = FeltverdiOperator.valueOf(ferdigstiltDatoFilter.operator).sql
+                ferdigstiltDatoBetingelse = { "AND $it.ferdigstilt_dato $operator :ferdigstilt_dato" }
+                ferdigstiltDatoParams["ferdigstilt_dato"] = ferdigstiltDatoFilter.verdi.first().tilLocalDate()
+            }
+
+            EksternFeltverdiOperator.IN, EksternFeltverdiOperator.NOT_IN -> {
+                val operator = FeltverdiOperator.valueOf(ferdigstiltDatoFilter.operator).sql
+                ferdigstiltDatoBetingelse = {
+                    "AND $it.ferdigstilt_dato $operator (${
+                        InClauseHjelper.tilParameternavn(
+                            ferdigstiltDatoFilter.verdi,
+                            "ferdigstilt_dato"
+                        )
+                    })"
+                }
+                ferdigstiltDatoParams.putAll(
+                    InClauseHjelper.parameternavnTilVerdierMap(
+                        ferdigstiltDatoFilter.verdi.map { it.tilLocalDate() },
+                        "ferdigstilt_dato"
+                    )
+                )
+            }
+
+            EksternFeltverdiOperator.INTERVAL -> {
+                ferdigstiltDatoBetingelse =
+                    { "AND $it.ferdigstilt_dato BETWEEN :ferdigstilt_dato_fra AND :ferdigstilt_dato_til" }
+                ferdigstiltDatoParams["ferdigstilt_dato_fra"] = ferdigstiltDatoFilter.verdi[0].tilLocalDate()
+                ferdigstiltDatoParams["ferdigstilt_dato_til"] = ferdigstiltDatoFilter.verdi[1].tilLocalDate()
+            }
+        }
+    }
+
     private var selectClause = "SELECT o.id, o.oppgave_ekstern_id, o.oppgave_ekstern_versjon"
     private var fromClause = """
         FROM oppgave_v3_part o
         LEFT JOIN oppgave_pep_cache opc ON (opc.kildeomrade = 'K9' AND o.oppgave_ekstern_id = opc.ekstern_id)
     """.trimIndent()
     
-    private var whereClause = "WHERE o.oppgavestatus IN ($oppgavestatusPlaceholder) $ferdigstiltDatoBetingelse"
+    private var whereClause = "WHERE o.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("o")}"
     private val orderByClauses = mutableListOf<String>()
     private val orderByClause get() = if (orderByClauses.isNotEmpty()) "ORDER BY " + orderByClauses.joinToString(", ") else ""
     private var pagingClause = ""
-    
+
     private val utenReservasjonerBetingelse = """
         AND NOT EXISTS (
             SELECT 1 
@@ -57,18 +108,18 @@ class PartisjonertOppgaveQuerySqlBuilder(
             AND rv.annullert_for_utlop = false 
         )
     """.trimIndent()
-    
+
     override fun filterRens(
         felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
         filtere: List<Oppgavefilter>
     ): List<Oppgavefilter> {
         return filtere
-            .let { FilterFjerner.fjern(it, "oppgavestatus")}
-            .let { FilterFjerner.fjern(it, "spørringstrategi")}
-            .let { FilterFjerner.fjern(it, "ferdigstiltDato")}
-            .let { OppgavefilterUtenBetingelserFjerner.fjern(it)}
-            .let { OppgavefilterOperatorKorrigerer.korriger(it)}
-            .let { OppgavefilterNullUtvider.utvid(it)}
+            .let { FilterFjerner.fjern(it, "oppgavestatus") }
+            .let { FilterFjerner.fjern(it, "spørringstrategi") }
+            .let { FilterFjerner.fjern(it, "ferdigstiltDato") }
+            .let { OppgavefilterUtenBetingelserFjerner.fjern(it) }
+            .let { OppgavefilterOperatorKorrigerer.korriger(it) }
+            .let { OppgavefilterNullUtvider.utvid(it) }
             .let { OppgavefilterLocalDateSpesialhåndterer.spesialhåndter(it) }
             .let { OppgavefilterDatatypeMapper.map(felter, it) }
     }
@@ -82,9 +133,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
             putAll(queryParams)
             putAll(orderByParams)
             putAll(oppgavestatusParams)
-            if (ferdigstiltDato != null) {
-                put("ferdigstilt_dato", ferdigstiltDato)
-            }
+            putAll(ferdigstiltDatoParams)
         }
     }
 
@@ -127,9 +176,18 @@ class PartisjonertOppgaveQuerySqlBuilder(
                 }
                 return@medFeltverdi
             }
-            
+
             val sqlMedParams = sikreUnikeParams(
-                it.where(WhereInput(Spørringstrategi.PARTISJONERT, now, feltområde!!, feltkode, operator, feltverdier.first()))
+                it.where(
+                    WhereInput(
+                        Spørringstrategi.PARTISJONERT,
+                        now,
+                        feltområde!!,
+                        feltkode,
+                        operator,
+                        feltverdier.first()
+                    )
+                )
             )
             whereClause += " ${combineOperator.sql} " + sqlMedParams.query
             queryParams.putAll(sqlMedParams.queryParams)
@@ -153,7 +211,12 @@ class PartisjonertOppgaveQuerySqlBuilder(
             "oppgavetype" -> {
                 val (feltverdiPlaceholder, feltVerdiMap) = if (feltverdier.size > 1) {
                     val prefix = "oppgavetype${index * 1000}"
-                    "(${InClauseHjelper.tilParameternavn(feltverdier, prefix)})" to InClauseHjelper.parameternavnTilVerdierMap(feltverdier, prefix)
+                    "(${
+                        InClauseHjelper.tilParameternavn(
+                            feltverdier,
+                            prefix
+                        )
+                    })" to InClauseHjelper.parameternavnTilVerdierMap(feltverdier, prefix)
                 } else {
                     ":oppgavetype$index" to mapOf("oppgavetype$index" to feltverdier.first())
                 }
@@ -188,10 +251,6 @@ class PartisjonertOppgaveQuerySqlBuilder(
                 }
             }
 
-            "ferdigstiltDato", "oppgavestatus", "spørringstrategi" -> {
-                // Ignorerer felter, siden de er håndtert spesielt
-            }
-
             else -> log.warn("Håndterer ikke filter for $feltkode. Legg til i ignorering hvis feltet håndteres spesielt.")
         }
     }
@@ -211,11 +270,13 @@ class PartisjonertOppgaveQuerySqlBuilder(
         }
 
         val retning = if (økende) "ASC" else "DESC"
-        orderByClauses.add(when (feltkode) {
-            "oppgavestatus" -> "o.oppgavestatus $retning"
-            "oppgavetype" -> "o.oppgavetype_ekstern_id $retning"
-            else -> throw IllegalStateException("Ukjent feltkode for sortering: $feltkode")
-        })
+        orderByClauses.add(
+            when (feltkode) {
+                "oppgavestatus" -> "o.oppgavestatus $retning"
+                "oppgavetype" -> "o.oppgavetype_ekstern_id $retning"
+                else -> throw IllegalStateException("Ukjent feltkode for sortering: $feltkode")
+            }
+        )
     }
 
     override fun mapRowTilId(row: Row): OppgaveId {
@@ -234,14 +295,14 @@ class PartisjonertOppgaveQuerySqlBuilder(
     private fun sikreUnikeParams(sqlMedParams: SqlMedParams): SqlMedParams {
         var newQuery = sqlMedParams.query
         val newQueryParams = mutableMapOf<String, Any?>()
-        
+
         sqlMedParams.queryParams.forEach { (oldKey, oldValue) ->
             val index = queryParams.size + orderByParams.size + newQueryParams.size
             val newKey = "$oldKey$index"
             newQuery = newQuery.replace(":$oldKey", ":$newKey")
             newQueryParams[newKey] = oldValue
         }
-        
+
         return SqlMedParams(newQuery, newQueryParams)
     }
 
@@ -254,10 +315,13 @@ class PartisjonertOppgaveQuerySqlBuilder(
     ) {
         val index = queryParams.size + orderByParams.size
         val verdifelt = verdifelt(feltområde, feltkode)
-        
+
         val (feltverdiPlaceholder, feltVerdiMap) = if (feltverdi.size > 1) {
             val prefix = "feltverdi${index * 1000}"
-            "(${InClauseHjelper.tilParameternavn(feltverdi, prefix)})" to InClauseHjelper.parameternavnTilVerdierMap(feltverdi, prefix)
+            "(${InClauseHjelper.tilParameternavn(feltverdi, prefix)})" to InClauseHjelper.parameternavnTilVerdierMap(
+                feltverdi,
+                prefix
+            )
         } else {
             ":feltverdi$index" to mapOf("feltverdi$index" to feltverdi.first())
         }
@@ -267,7 +331,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
              ${combineOperator.sql} ${negationPrefix}EXISTS (
                 SELECT 1
                 FROM oppgavefelt_verdi_part ov
-                WHERE ov.oppgavestatus IN ($oppgavestatusPlaceholder) $ferdigstiltDatoFeltBetingelse
+                WHERE ov.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("ov")}
                   AND ov.oppgave_id = o.id
                   AND ov.feltdefinisjon_ekstern_id = :feltkode$index
                   AND $verdifelt ${operator.negasjonAv?.sql ?: operator.sql} $feltverdiPlaceholder
@@ -284,7 +348,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
         operator: FeltverdiOperator
     ) {
         val index = queryParams.size + orderByParams.size
-        
+
         queryParams["feltkode$index"] = feltkode
 
         val invertertOperator = when (operator) {
@@ -297,7 +361,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
             ${combineOperator.sql} ${invertertOperator}EXISTS (
                 SELECT 1
                 FROM oppgavefelt_verdi_part ov 
-                WHERE ov.oppgavestatus IN ($oppgavestatusPlaceholder) $ferdigstiltDatoFeltBetingelse
+                WHERE ov.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("ov")}
                     AND ov.oppgave_id = o.id
                     AND ov.feltdefinisjon_ekstern_id = :feltkode$index
             )
@@ -317,19 +381,21 @@ class PartisjonertOppgaveQuerySqlBuilder(
         val index = queryParams.size + orderByParams.size
         val verdifelt = verdifelt(feltområde, feltkode)
         val retning = if (økende) "ASC" else "DESC"
-        
+
         orderByParams["orderByfeltkode$index"] = feltkode
 
-        orderByClauses.add("""
+        orderByClauses.add(
+            """
             (
               SELECT $verdifelt                    
               FROM oppgavefelt_verdi_part ov 
-              WHERE ov.oppgavestatus IN ($oppgavestatusPlaceholder) $ferdigstiltDatoFeltBetingelse
+              WHERE ov.oppgavestatus IN ($oppgavestatusPlaceholder) ${ferdigstiltDatoBetingelse("ov")}
                 AND ov.oppgave_id = o.id
                 AND ov.feltdefinisjon_ekstern_id = :orderByfeltkode$index
               LIMIT 1
             ) $retning
-        """.trimIndent())
+        """.trimIndent()
+        )
     }
 
     private fun verdifelt(feltområde: String, feltkode: String): String {

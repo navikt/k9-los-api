@@ -4,7 +4,6 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.db.*
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
-import java.time.LocalDate
 import java.time.LocalDateTime
 
 object OppgaveQueryToSqlMapper {
@@ -102,15 +101,13 @@ object OppgaveQueryToSqlMapper {
         return verdierFunnet.firstOrNull()
     }
 
-    private fun traverserFiltereOgFinnFerdigstiltDatofilter(queryRequest: QueryRequest): LocalDate? {
-        val datoer = mutableSetOf<LocalDate>()
-        rekursivtSøk(
-            queryRequest.oppgaveQuery.filtere,
-            datoer,
-            { verdi -> LocalDate.parse(verdi.toString()) },
-            { filter -> filter.kode == "ferdigstiltDato" }
-        )
-        return datoer.firstOrNull()
+    private fun traverserFiltereOgFinnFerdigstiltDatofilter(queryRequest: QueryRequest): FeltverdiOppgavefilter? {
+        for (filter in queryRequest.oppgaveQuery.filtere) {
+            if (filter is FeltverdiOppgavefilter && filter.kode == "ferdigstiltDato") {
+                return filter
+            }
+        }
+        return null
     }
 
     private fun <T> rekursivtSøk(
