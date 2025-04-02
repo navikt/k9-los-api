@@ -7,7 +7,6 @@ import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.HistorikkvaskMetrikker
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
@@ -85,9 +84,9 @@ class K9KlageTilLosHistorikkvaskTjeneste(
             var oppgaveV3: OppgaveV3? = null
             for (event in behandlingProsessEventer) {
                 if (eventNrForBehandling > høyesteInternVersjon) { break }  //Historikkvasken har funnet eventer som ennå ikke er lastet inn med normalflyt. Dirty eventer skal håndteres av vanlig adaptertjeneste
-                val losOpplysningerSomManglerIKlageDto = event.påklagdBehandlingEksternId?.let { k9klageBeriker.hentFraK9Sak(it) }
+                val losOpplysningerSomManglerIKlageDto = event.påklagdBehandlingId?.let { k9klageBeriker.hentFraK9Sak(it) }
 
-                val påklagdBehandlingDto = if (event.påklagdBehandlingEksternId != null && event.påklagdBehandlingType == null) {
+                val påklagdBehandlingDto = if (event.påklagdBehandlingId != null && event.påklagdBehandlingType == null) {
                     k9klageBeriker.hentFraK9Klage(event.eksternId)
                 } else {
                     null

@@ -36,7 +36,7 @@ class EventTilDtoMapperTest {
                 )
             ),
             påklagdBehandlingType = null,
-            påklagdBehandlingEksternId = null,
+            påklagdBehandlingId = null,
             utenlandstilsnitt = null,
             behandlingstidFrist = LocalDate.now(),
             saksnummer = "test",
@@ -72,7 +72,7 @@ class EventTilDtoMapperTest {
             opprettetBehandling = LocalDateTime.now(),
             aksjonspunkttilstander = listOf(),
             påklagdBehandlingType = null,
-            påklagdBehandlingEksternId = null,
+            påklagdBehandlingId = null,
             utenlandstilsnitt = null,
             behandlingstidFrist = LocalDate.now(),
             saksnummer = "test",

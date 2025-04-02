@@ -4,7 +4,6 @@ import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.klage.kodeverk.behandling.oppgavetillos.EventHendelse
-import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.KlagebehandlingProsessHendelse
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHandlerMetrics
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.K9KlageTilLosAdapterTjeneste
@@ -73,7 +72,7 @@ class K9KlageEventHandler constructor(
             .takeIf { sisteEventTid -> sisteEventTid.isAfter(event.eventTid) }
             ?.let { sisteEventTid -> K9KlageEventDto(
                 eksternId = event.eksternId,
-                påklagdBehandlingEksternId = event.påklagdBehandlingEksternId,
+                påklagdBehandlingId = event.påklagdBehandlingId,
                 påklagdBehandlingType = event.påklagdBehandlingType,
                 fagsystem = event.fagsystem,
                 saksnummer = event.saksnummer,

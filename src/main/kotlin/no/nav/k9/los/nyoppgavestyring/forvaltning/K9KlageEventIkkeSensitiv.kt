@@ -2,7 +2,6 @@ package no.nav.k9.los.nyoppgavestyring.forvaltning
 
 import no.nav.k9.klage.kodeverk.behandling.BehandlingType
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.Aksjonspunkttilstand
-import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.KlagebehandlingProsessHendelse
 import no.nav.k9.klage.typer.Periode
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventDto
 import java.time.LocalDate
@@ -35,7 +34,7 @@ data class K9KlageEventIkkeSensitiv(
 ) {
     constructor(event: K9KlageEventDto) : this(
         eksternId = event.eksternId.toString(),
-        påklagdBehandlingEksternId = event.påklagdBehandlingEksternId,
+        påklagdBehandlingEksternId = event.påklagdBehandlingId,
         påklagdBehandlingType = event.påklagdBehandlingType,
         fagsystem = event.fagsystem.toString(),
         behandlingstidFrist = event.behandlingstidFrist,

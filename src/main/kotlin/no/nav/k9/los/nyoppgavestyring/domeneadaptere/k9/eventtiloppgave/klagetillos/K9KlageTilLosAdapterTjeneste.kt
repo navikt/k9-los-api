@@ -117,9 +117,9 @@ class K9KlageTilLosAdapterTjeneste(
             val behandlingProsessEventer = k9KlageEventRepository.hentMedLås(tx, uuid).eventer
             behandlingProsessEventer.forEach { event ->
                 val losOpplysningerSomManglerIKlageDto =
-                    event.påklagdBehandlingEksternId?.let { k9klageBeriker.hentFraK9Sak(it) }
+                    event.påklagdBehandlingId?.let { k9klageBeriker.hentFraK9Sak(it) }
 
-                val påklagdBehandlingDto = if (event.påklagdBehandlingEksternId != null && event.påklagdBehandlingType == null) {
+                val påklagdBehandlingDto = if (event.påklagdBehandlingId != null && event.påklagdBehandlingType == null) {
                     k9klageBeriker.hentFraK9Klage(event.eksternId)
                 } else {
                     null
