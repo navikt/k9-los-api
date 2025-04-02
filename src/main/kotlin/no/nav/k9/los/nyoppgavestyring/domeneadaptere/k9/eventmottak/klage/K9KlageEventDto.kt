@@ -25,7 +25,7 @@ data class K9KlageEventDto(
 
     @JsonSerialize(using = ToStringSerializer::class)
     @JsonDeserialize(using = LocalDateDeserializer::class)
-    val behandlingstidFrist: LocalDate,
+    val behandlingstidFrist: LocalDate?,
 
     val saksnummer: String,
     val aktørId: String,
@@ -35,26 +35,26 @@ data class K9KlageEventDto(
     val eventTid: LocalDateTime,
 
     val eventHendelse: EventHendelse,
-    val behandlingStatus: String,
-    val behandlingSteg: String,
-    val behandlendeEnhet: String,
-    val ansvarligBeslutter: String,
-    val ansvarligSaksbehandler: String,
-    val resultatType: String,
+    val behandlingStatus: String?,
+    val behandlingSteg: String?,
+    val behandlendeEnhet: String?,
+    val ansvarligBeslutter: String?,
+    val ansvarligSaksbehandler: String?,
+    val resultatType: String?,
     val ytelseTypeKode: String,
     val behandlingTypeKode: String,
 
     @JsonSerialize(using = ToStringSerializer::class)
     @JsonDeserialize(using = LocalDateTimeDeserializer::class)
     val opprettetBehandling: LocalDateTime,
-    val fagsakPeriode: Periode,
-    val pleietrengendeAktørId: AktørId,
-    val relatertPartAktørId: AktørId,
-    val aksjonspunkttilstander: List<Aksjonspunkttilstand>,
+    val fagsakPeriode: Periode?,
+    val pleietrengendeAktørId: AktørId?,
+    val relatertPartAktørId: AktørId?,
+    val aksjonspunkttilstander: List<Aksjonspunkttilstand> = emptyList(),
 
     @JsonSerialize(using = ToStringSerializer::class)
     @JsonDeserialize(using = LocalDateDeserializer::class)
-    val vedtaksdato: LocalDate,
+    val vedtaksdato: LocalDate?,
 
-    val behandlingsårsaker: List<String>
+    val behandlingsårsaker: List<String> = emptyList()
 )
