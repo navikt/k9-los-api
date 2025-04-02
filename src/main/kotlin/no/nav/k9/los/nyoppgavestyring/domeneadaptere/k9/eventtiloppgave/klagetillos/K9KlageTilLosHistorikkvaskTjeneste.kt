@@ -99,6 +99,8 @@ class K9KlageTilLosHistorikkvaskTjeneste(
                         utenlandstilsnitt = losOpplysningerSomManglerIKlageDto?.isUtenlandstilsnitt
                     )
 
+                log.info("eventBeriket.påklagdBehandlingType: ${event.påklagdBehandlingType}, eventBeriket.påklagdBehandlingUUID: ${event.påklagdBehandlingId}")
+
                 val oppgaveDto =
                     EventTilDtoMapper.lagOppgaveDto(eventBeriket,forrigeOppgave)
 
