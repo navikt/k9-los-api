@@ -15,7 +15,7 @@ class OppgavefilterUtenBetingelserFjernerTest {
                 FeltverdiOppgavefilter(
                     "K9",
                     FeltType.BEHANDLINGUUID.eksternId,
-                    "IN",
+                    EksternFeltverdiOperator.IN,
                     listOf("", null)
                 )
             )
@@ -30,7 +30,7 @@ class OppgavefilterUtenBetingelserFjernerTest {
                 FeltverdiOppgavefilter(
                     "K9",
                     FeltType.BEHANDLINGUUID.eksternId,
-                    "IN",
+                    EksternFeltverdiOperator.IN,
                     listOf()
                 )
             )
@@ -45,7 +45,7 @@ class OppgavefilterUtenBetingelserFjernerTest {
                 FeltverdiOppgavefilter(
                     "K9",
                     FeltType.BEHANDLINGUUID.eksternId,
-                    "IN",
+                    EksternFeltverdiOperator.IN,
                     listOf(null)
                 )
             )
@@ -58,8 +58,8 @@ class OppgavefilterUtenBetingelserFjernerTest {
         val resultat = OppgavefilterUtenBetingelserFjerner.fjern(
             listOf(
                 CombineOppgavefilter(
-                    "AND",
-                    listOf(FeltverdiOppgavefilter("K9", FeltType.BEHANDLINGUUID.eksternId, "EQUALS", listOf("")))
+                    CombineOperator.AND,
+                    listOf(FeltverdiOppgavefilter("K9", FeltType.BEHANDLINGUUID.eksternId, EksternFeltverdiOperator.EQUALS, listOf("")))
                 )
             )
         )
@@ -70,19 +70,19 @@ class OppgavefilterUtenBetingelserFjernerTest {
     fun `Vanskeligste case - skal fjerne rekursivt`() {
         val resultat = OppgavefilterUtenBetingelserFjerner.fjern(
             listOf(
-                FeltverdiOppgavefilter("K9", FeltType.BEHANDLINGUUID.eksternId, "EQUALS", listOf()),
+                FeltverdiOppgavefilter("K9", FeltType.BEHANDLINGUUID.eksternId, EksternFeltverdiOperator.EQUALS, listOf()),
                 FeltverdiOppgavefilter(
                     "K9",
                     FeltType.YTELSE_TYPE.eksternId,
-                    "EQUALS",
+                    EksternFeltverdiOperator.EQUALS,
                     listOf("ytelsestype")
                 ),
                 CombineOppgavefilter(
-                    "AND",
+                    CombineOperator.AND,
                     listOf(
                         CombineOppgavefilter(
-                            "AND",
-                            listOf(FeltverdiOppgavefilter("K9", FeltType.BEHANDLINGUUID.eksternId, "EQUALS", listOf()))
+                            CombineOperator.AND,
+                            listOf(FeltverdiOppgavefilter("K9", FeltType.BEHANDLINGUUID.eksternId, EksternFeltverdiOperator.EQUALS, listOf()))
                         )
                     )
                 )
