@@ -785,7 +785,8 @@ fun preprodConfig(config: Configuration) = module {
         K9KlageBerikerSystemKlient(
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
-            scope = "api://dev-fss.k9saksbehandling.k9-klage/.default"
+            scopeKlage = "api://dev-fss.k9saksbehandling.k9-klage/.default",
+            scopeSak = "api://dev-fss.k9saksbehandling.k9-sak/.default"
         )
     }
 }
@@ -831,7 +832,8 @@ fun prodConfig(config: Configuration) = module {
         K9KlageBerikerSystemKlient(
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
-            scope = "api://prod-fss.k9saksbehandling.k9-klage/.default"
+            scopeKlage = "api://prod-fss.k9saksbehandling.k9-klage/.default",
+            scopeSak = "api://prod-fss.k9saksbehandling.k9-sak/.default"
         )
     }
 }

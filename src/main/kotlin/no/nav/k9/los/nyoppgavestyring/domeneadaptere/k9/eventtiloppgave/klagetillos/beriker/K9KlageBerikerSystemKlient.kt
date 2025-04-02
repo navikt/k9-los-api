@@ -22,13 +22,13 @@ import java.util.*
 class K9KlageBerikerSystemKlient(
     private val configuration: Configuration,
     private val accessTokenClient: AccessTokenClient,
-    scope: String
+    private val scopeSak: String,
+    private val scopeKlage: String
 ) : K9KlageBerikerInterfaceKludge {
     val log = LoggerFactory.getLogger(K9KlageBerikerSystemKlient::class.java)
     private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
     private val urlKlage = configuration.k9KlageUrl()
     private val urlSak = configuration.k9Url()
-    private val scopes = setOf(scope)
 
     override fun hentFraK9Klage(
         påklagdBehandlingUUID: UUID,
@@ -48,7 +48,7 @@ class K9KlageBerikerSystemKlient(
             .httpGet(parameters)
             .header(
                 //OBS! Dette kalles bare med system token, og skal ikke brukes ved saksbehandler token
-                HttpHeaders.Authorization to cachedAccessTokenClient.getAccessToken(scopes).asAuthoriationHeader(),
+                HttpHeaders.Authorization to cachedAccessTokenClient.getAccessToken(setOf(scopeSak)).asAuthoriationHeader(),
                 HttpHeaders.Accept to "application/json",
                 HttpHeaders.ContentType to "application/json",
                 NavHeaders.CallId to UUID.randomUUID().toString()
@@ -99,7 +99,7 @@ class K9KlageBerikerSystemKlient(
             .httpGet(parameters)
             .header(
                 //OBS! Dette kalles bare med system token, og skal ikke brukes ved saksbehandler token
-                HttpHeaders.Authorization to cachedAccessTokenClient.getAccessToken(scopes).asAuthoriationHeader(),
+                HttpHeaders.Authorization to cachedAccessTokenClient.getAccessToken(setOf(scopeKlage)).asAuthoriationHeader(),
                 HttpHeaders.Accept to "application/json",
                 HttpHeaders.ContentType to "application/json",
                 NavHeaders.CallId to UUID.randomUUID().toString()
