@@ -26,7 +26,8 @@ class K9KlageBerikerSystemKlient(
 ) : K9KlageBerikerInterfaceKludge {
     val log = LoggerFactory.getLogger(K9KlageBerikerSystemKlient::class.java)
     private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
-    private val url = configuration.k9KlageUrl()
+    private val urlKlage = configuration.k9KlageUrl()
+    private val urlSak = configuration.k9Url()
     private val scopes = setOf(scope)
 
     override fun hentFraK9Klage(
@@ -43,7 +44,7 @@ class K9KlageBerikerSystemKlient(
 
     private suspend fun hentFraK9SakSuspend(påklagdBehandlingUUID: UUID, antallForsøk: Int = 3): LosOpplysningerSomManglerIKlageDto? {
         val parameters = listOf(Pair("behandlingUuid", påklagdBehandlingUUID.toString()))
-        val httpRequest = "${url}/los/klage/berik"
+        val httpRequest = "${urlSak}/los/klage/berik"
             .httpGet(parameters)
             .header(
                 //OBS! Dette kalles bare med system token, og skal ikke brukes ved saksbehandler token
@@ -94,7 +95,7 @@ class K9KlageBerikerSystemKlient(
         antallForsøk: Int
     ): LosOpplysningerSomManglerHistoriskIKlageDto? {
         val parameters = listOf(Pair("behandlingUuid", påklagdBehandlingUUID.toString()))
-        val httpRequest = "${url}/los/historikkutfylling"
+        val httpRequest = "${urlKlage}/los/historikkutfylling"
             .httpGet(parameters)
             .header(
                 //OBS! Dette kalles bare med system token, og skal ikke brukes ved saksbehandler token
@@ -130,7 +131,7 @@ class K9KlageBerikerSystemKlient(
                             "Error response = '$feiltekst' fra '${httpRequest.url}'"
                 )
                 log.error(error.toString())
-                log.error("${url}/los/historikkutfylling, UUID: $påklagdBehandlingUUID")
+                log.error("${urlKlage}/los/historikkutfylling, UUID: $påklagdBehandlingUUID")
 
                 if (ignorerManglendeTilgangPgaUtdatertTestdata) {
                     return null
