@@ -7,6 +7,7 @@ import io.ktor.server.routing.*
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.integrasjon.rest.RequestContextService
 import org.koin.ktor.ext.inject
+import kotlin.concurrent.thread
 
 internal fun Route.K9KlageTilLosApi() {
     val requestContextService by inject<RequestContextService>()
@@ -14,7 +15,13 @@ internal fun Route.K9KlageTilLosApi() {
 
     put("/startHistorikkvask") {
         requestContextService.withRequestContext(call) {
-            k9KlageTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
+            thread(
+                start = true,
+                isDaemon = true,
+                name = k9KlageTilLosHistorikkvaskTjeneste.METRIKKLABEL
+            ) {
+                k9KlageTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
+            }
             call.respond(HttpStatusCode.NoContent)
         }
     }

@@ -32,7 +32,7 @@ class K9KlageTilLosHistorikkvaskTjeneste(
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9KlageTilLosHistorikkvaskTjeneste::class.java)
-    private val METRIKKLABEL = "k9-klage-til-los-historikkvask"
+    val METRIKKLABEL = "k9-klage-til-los-historikkvask"
 
     fun kjørHistorikkvask() {
         if (config.nyOppgavestyringAktivert()) {
