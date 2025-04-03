@@ -119,15 +119,12 @@ class K9KlageTilLosAdapterTjeneste(
                 val losOpplysningerSomManglerIKlageDto =
                     event.påklagdBehandlingId?.let { k9klageBeriker.hentFraK9Sak(it) }
 
-                val påklagdBehandlingDto = if (event.påklagdBehandlingId != null && event.påklagdBehandlingType == null) {
-                    k9klageBeriker.hentFraK9Klage(event.eksternId)
-                } else {
-                    null
-                }
-
                 val eventBeriket =
                     event.copy(
-                        påklagdBehandlingType = påklagdBehandlingDto?.påklagdBehandlingType,
+                        påklagdBehandlingType = event.påklagdBehandlingType ?:
+                        event.påklagdBehandlingId?.let {
+                            k9klageBeriker.hentFraK9Klage(event.eksternId)?.påklagdBehandlingType
+                        },
                         pleietrengendeAktørId = losOpplysningerSomManglerIKlageDto?.pleietrengendeAktørId?.aktørId?.let { AktørId(it.toLong()) },
                         utenlandstilsnitt = losOpplysningerSomManglerIKlageDto?.isUtenlandstilsnitt
                         )
