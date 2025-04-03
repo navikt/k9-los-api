@@ -64,15 +64,6 @@ class OmrådeSetup(
         kodeverkBehandlingssteg()
         kodeverkSøknadsårsak()
         kodeverkBehandlingsårsak()
-        kodeverkSpørringstrategi()
-    }
-
-    private fun kodeverkSpørringstrategi() {
-        feltdefinisjonTjeneste.oppdater(
-            KodeverkDto("K9", "spørringstrategi", "Spørringstrategi", true, Spørringstrategi.entries.map {
-                KodeverkVerdiDto(it.name, it.navn, false)
-            })
-        )
     }
 
     private fun kodeverkAksjonspunkt() {

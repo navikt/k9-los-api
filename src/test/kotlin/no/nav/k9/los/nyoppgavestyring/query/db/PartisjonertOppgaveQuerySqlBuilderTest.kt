@@ -31,7 +31,8 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
         val builder = PartisjonertOppgaveQuerySqlBuilder(
             felter = mockFelter,
             oppgavestatusFilter = listOf(Oppgavestatus.AAPEN),
-            now = LocalDateTime.now()
+            now = LocalDateTime.now(),
+            ferdigstiltDatoFilter = null
         )
 
         builder.medFeltverdi(
@@ -54,7 +55,8 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
         val builder = PartisjonertOppgaveQuerySqlBuilder(
             felter = mockFelter,
             oppgavestatusFilter = listOf(Oppgavestatus.AAPEN),
-            now = LocalDateTime.now()
+            now = LocalDateTime.now(),
+            ferdigstiltDatoFilter = null
         )
 
         builder.medFeltverdi(
@@ -75,7 +77,8 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
         val builder = PartisjonertOppgaveQuerySqlBuilder(
             felter = mockFelter,
             oppgavestatusFilter = listOf(Oppgavestatus.AAPEN),
-            now = LocalDateTime.now()
+            now = LocalDateTime.now(),
+            ferdigstiltDatoFilter = null
         )
 
         builder.medPaging(10, 20)
@@ -89,7 +92,8 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
         val builder = PartisjonertOppgaveQuerySqlBuilder(
             felter = mockFelter,
             oppgavestatusFilter = listOf(Oppgavestatus.AAPEN),
-            now = LocalDateTime.now()
+            now = LocalDateTime.now(),
+            ferdigstiltDatoFilter = null
         )
 
         builder.medEnkelOrder("TEST", "testfelt", true)
@@ -104,7 +108,8 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
         val builder = PartisjonertOppgaveQuerySqlBuilder(
             felter = mockFelter,
             oppgavestatusFilter = listOf(Oppgavestatus.AAPEN, Oppgavestatus.VENTER),
-            now = LocalDateTime.now()
+            now = LocalDateTime.now(),
+            ferdigstiltDatoFilter = null
         )
 
         builder.medFeltverdi(
@@ -141,7 +146,8 @@ class PartisjonertOppgaveQuerySqlBuilderTest {
         val builder = PartisjonertOppgaveQuerySqlBuilder(
             felter = mockFelter,
             oppgavestatusFilter = listOf(Oppgavestatus.AAPEN),
-            now = LocalDateTime.now()
+            now = LocalDateTime.now(),
+            ferdigstiltDatoFilter = null
         )
         
         builder.medAntallSomResultat()

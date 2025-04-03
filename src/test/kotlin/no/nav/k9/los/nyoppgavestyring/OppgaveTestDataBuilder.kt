@@ -120,7 +120,7 @@ enum class FeltType(
     LIGGER_HOS_BESLUTTER("liggerHosBeslutter", tolkesSom = "boolean"),
     TID_FORSTE_GANG_HOS_BESLUTTER("tidFørsteGangHosBeslutter"),
     FERDIGSTILT_DATO("ferdigstiltDato", tolkesSom = "Timestamp", område = null),
-    SPØRRINGSTRATEGI("spørringstrategi", område = "K9"),
+    SPØRRINGSTRATEGI("spørringstrategi", område = null),
 }
 
 val felter: Map<OmrådeOgKode, OppgavefeltMedMer> = mapOf(
