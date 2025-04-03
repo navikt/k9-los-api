@@ -12,13 +12,14 @@ import no.nav.k9.klage.kodeverk.behandling.oppgavetillos.EventHendelse
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.Aksjonspunkttilstand
 import no.nav.k9.klage.typer.AktørId
 import no.nav.k9.klage.typer.Periode
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.KodeverkDeserializer
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
 data class K9KlageEventDto(
     val eksternId: UUID,
-    
+
     val påklagdBehandlingId: UUID?,
 
     val påklagdBehandlingType: BehandlingType?,
@@ -59,5 +60,6 @@ data class K9KlageEventDto(
     @JsonDeserialize(using = LocalDateDeserializer::class)
     val vedtaksdato: LocalDate?,
 
+    @JsonDeserialize(using = KodeverkDeserializer::class)
     val behandlingsårsaker: List<String> = emptyList()
 )
