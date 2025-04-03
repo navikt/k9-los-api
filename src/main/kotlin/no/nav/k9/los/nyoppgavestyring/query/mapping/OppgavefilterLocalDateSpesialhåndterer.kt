@@ -44,15 +44,15 @@ private fun mapSomDato(
     val startPåDato = LocalDateTime.of(dato, LocalTime.MIN)
     val sluttPåDato = LocalDateTime.of(dato, LocalTime.MAX)
 
-    return when (EksternFeltverdiOperator.valueOf(feltfilter.operator)) {
+    return when (feltfilter.operator) {
         EksternFeltverdiOperator.EQUALS, EksternFeltverdiOperator.IN -> CombineOppgavefilter(
-            CombineOperator.AND.name, listOf(
+            CombineOperator.AND, listOf(
                 feltfilter.copy(
                     verdi = listOf(startPåDato),
-                    operator = FeltverdiOperator.GREATER_THAN_OR_EQUALS.name
+                    operator = EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS
                 ), feltfilter.copy(
                     verdi = listOf(sluttPåDato),
-                    operator = FeltverdiOperator.LESS_THAN_OR_EQUALS.name
+                    operator = EksternFeltverdiOperator.LESS_THAN_OR_EQUALS
                 )
             )
         )
@@ -66,13 +66,13 @@ private fun mapSomDato(
         )
 
         EksternFeltverdiOperator.NOT_EQUALS, EksternFeltverdiOperator.NOT_IN -> CombineOppgavefilter(
-            CombineOperator.OR.name, listOf(
+            CombineOperator.OR, listOf(
                 feltfilter.copy(
                     verdi = listOf(startPåDato),
-                    operator = FeltverdiOperator.LESS_THAN.name
+                    operator = EksternFeltverdiOperator.LESS_THAN
                 ), feltfilter.copy(
                     verdi = listOf(sluttPåDato),
-                    operator = FeltverdiOperator.GREATER_THAN.name
+                    operator = EksternFeltverdiOperator.GREATER_THAN
                 )
             )
         )

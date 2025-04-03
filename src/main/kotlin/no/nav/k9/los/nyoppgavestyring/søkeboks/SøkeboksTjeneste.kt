@@ -11,6 +11,7 @@ import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
@@ -62,13 +63,13 @@ class SøkeboksTjeneste(
                 FeltverdiOppgavefilter(
                     område = null,
                     kode = "oppgavestatus",
-                    operator = "IN",
+                    operator = EksternFeltverdiOperator.IN,
                     verdi = oppgavestatus
                 ),
                 FeltverdiOppgavefilter(
                     område = "K9",
                     kode = "journalpostId",
-                    operator = "EQUALS",
+                    operator = EksternFeltverdiOperator.EQUALS,
                     verdi = listOf(journalpostId)
                 )
             ),
@@ -85,13 +86,13 @@ class SøkeboksTjeneste(
                 FeltverdiOppgavefilter(
                     område = null,
                     kode = "oppgavestatus",
-                    operator = "IN",
+                    operator = EksternFeltverdiOperator.IN,
                     verdi = oppgavestatus
                 ),
                 FeltverdiOppgavefilter(
                     område = "K9",
                     kode = "aktorId",
-                    operator = "IN",
+                    operator = EksternFeltverdiOperator.IN,
                     verdi = listOf(aktørId, fnr)
                 )
             ),
@@ -106,13 +107,13 @@ class SøkeboksTjeneste(
                 FeltverdiOppgavefilter(
                     område = null,
                     kode = "oppgavestatus",
-                    operator = "IN",
+                    operator = EksternFeltverdiOperator.IN,
                     verdi = oppgavestatus
                 ),
                 FeltverdiOppgavefilter(
                     område = "K9",
                     kode = "saksnummer",
-                    operator = "EQUALS",
+                    operator = EksternFeltverdiOperator.EQUALS,
                     verdi = listOf(saksnummer)
                 )
             ),

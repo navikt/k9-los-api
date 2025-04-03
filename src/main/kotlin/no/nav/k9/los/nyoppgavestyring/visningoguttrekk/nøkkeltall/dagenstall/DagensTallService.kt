@@ -210,26 +210,26 @@ class DagensTallService(
                 oppgaveQuery = OppgaveQuery(
                     filtere = listOfNotNull(
                         FeltverdiOppgavefilter(
-                            null, "oppgavestatus", EksternFeltverdiOperator.EQUALS.kode, listOf(Oppgavestatus.LUKKET.kode)
+                            null, "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf(Oppgavestatus.LUKKET.kode)
                         ),
-                        FeltverdiOppgavefilter(null, "ferdigstiltDato", EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS.kode, listOf(dato.toString())),
-                        FeltverdiOppgavefilter("K9", "mottattDato", EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS.kode, listOf(dato.toString())),
+                        FeltverdiOppgavefilter(null, "ferdigstiltDato", EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS, listOf(dato.toString())),
+                        FeltverdiOppgavefilter("K9", "mottattDato", EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS, listOf(dato.toString())),
                         fagsakYtelseType?.let {
                             FeltverdiOppgavefilter(
-                                "K9", "ytelsestype", EksternFeltverdiOperator.EQUALS.kode, listOf(it.kode)
+                                "K9", "ytelsestype", EksternFeltverdiOperator.EQUALS, listOf(it.kode)
                             )
                         },
                         behandlingType?.let {
                             FeltverdiOppgavefilter(
                                 "K9",
                                 "behandlingTypekode",
-                                EksternFeltverdiOperator.EQUALS.kode,
+                                EksternFeltverdiOperator.EQUALS,
                                 listOf(it.kode)
                             )
                         },
                         oppgavetype?.let {
                             FeltverdiOppgavefilter(
-                                "K9", "oppgavetype", EksternFeltverdiOperator.EQUALS.kode, listOf(it)
+                                "K9", "oppgavetype", EksternFeltverdiOperator.EQUALS, listOf(it)
                             )
                         },
                     )
@@ -249,25 +249,25 @@ class DagensTallService(
                 oppgaveQuery = OppgaveQuery(
                     filtere = listOfNotNull(
                         FeltverdiOppgavefilter(
-                            null, "oppgavestatus", EksternFeltverdiOperator.IN.kode, listOf(Oppgavestatus.AAPEN, Oppgavestatus.VENTER).map { it.kode }
+                            null, "oppgavestatus", EksternFeltverdiOperator.IN, listOf(Oppgavestatus.AAPEN, Oppgavestatus.VENTER).map { it.kode }
                         ),
-                        FeltverdiOppgavefilter("K9", "mottattDato", EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS.kode, listOf(dato.toString())),
+                        FeltverdiOppgavefilter("K9", "mottattDato", EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS, listOf(dato.toString())),
                         fagsakYtelseType?.let {
                             FeltverdiOppgavefilter(
-                                "K9", "ytelsestype", EksternFeltverdiOperator.EQUALS.kode, listOf(it.kode)
+                                "K9", "ytelsestype", EksternFeltverdiOperator.EQUALS, listOf(it.kode)
                             )
                         },
                         behandlingType?.let {
                             FeltverdiOppgavefilter(
                                 "K9",
                                 "behandlingTypekode",
-                                EksternFeltverdiOperator.EQUALS.kode,
+                                EksternFeltverdiOperator.EQUALS,
                                 listOf(it.kode)
                             )
                         },
                         oppgavetype?.let {
                             FeltverdiOppgavefilter(
-                                "K9", "oppgavetype", EksternFeltverdiOperator.EQUALS.kode, listOf(it)
+                                "K9", "oppgavetype", EksternFeltverdiOperator.EQUALS, listOf(it)
                             )
                         },
                     )
@@ -287,25 +287,25 @@ class DagensTallService(
                 oppgaveQuery = OppgaveQuery(
                     filtere = listOfNotNull(
                         FeltverdiOppgavefilter(
-                            null, "oppgavestatus", EksternFeltverdiOperator.EQUALS.kode, listOf(Oppgavestatus.LUKKET.kode)
+                            null, "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf(Oppgavestatus.LUKKET.kode)
                         ),
-                        FeltverdiOppgavefilter("K9", "ferdigstiltDato", EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS.kode, listOf(dato.toString())),
+                        FeltverdiOppgavefilter("K9", "ferdigstiltDato", EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS, listOf(dato.toString())),
                         fagsakYtelseType?.let {
                             FeltverdiOppgavefilter(
-                                "K9", "ytelsestype", EksternFeltverdiOperator.EQUALS.kode, listOf(it.kode)
+                                "K9", "ytelsestype", EksternFeltverdiOperator.EQUALS, listOf(it.kode)
                             )
                         },
                         behandlingType?.let {
                             FeltverdiOppgavefilter(
                                 "K9",
                                 "behandlingTypekode",
-                                EksternFeltverdiOperator.EQUALS.kode,
+                                EksternFeltverdiOperator.EQUALS,
                                 listOf(it.kode)
                             )
                         },
                         oppgavetype?.let {
                             FeltverdiOppgavefilter(
-                                "K9", "oppgavetype", EksternFeltverdiOperator.EQUALS.kode, listOf(it)
+                                "K9", "oppgavetype", EksternFeltverdiOperator.EQUALS, listOf(it)
                             )
                         },
                     )

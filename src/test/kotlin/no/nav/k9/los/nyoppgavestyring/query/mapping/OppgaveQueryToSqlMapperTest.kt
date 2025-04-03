@@ -21,17 +21,17 @@ class OppgaveQueryToSqlMapperTest {
     fun `finner riktige oppgavestatuser, for å utlede oppgave- og oppgavefeltverditabeller`() {
         val oppgaveQuery = OppgaveQuery(
             listOf(
-                FeltverdiOppgavefilter("K9", "oppgavestatus", "EQUALS", listOf(Oppgavestatus.AAPEN.kode)),
-                FeltverdiOppgavefilter("K9", "fagsystem", "NOT_EQUALS", listOf("Tullball")),
+                FeltverdiOppgavefilter("K9", "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf(Oppgavestatus.AAPEN.kode)),
+                FeltverdiOppgavefilter("K9", "fagsystem", EksternFeltverdiOperator.NOT_EQUALS, listOf("Tullball")),
                 CombineOppgavefilter(
-                    "OR", listOf(
-                        FeltverdiOppgavefilter("K9", "mottattDato", "LESS_THAN", listOf(LocalDate.of(2022, 1, 1))),
+                    CombineOperator.OR, listOf(
+                        FeltverdiOppgavefilter("K9", "mottattDato", EksternFeltverdiOperator.LESS_THAN, listOf(LocalDate.of(2022, 1, 1))),
                         CombineOppgavefilter(
-                            "AND", listOf(
+                            CombineOperator.AND, listOf(
                                 FeltverdiOppgavefilter(
                                     "K9",
                                     "oppgavestatus",
-                                    "EQUALS",
+                                    EksternFeltverdiOperator.EQUALS,
                                     listOf(Oppgavestatus.LUKKET.kode)
                                 ),
                             )
@@ -55,14 +55,14 @@ class OppgaveQueryToSqlMapperTest {
                 // 2 betingelser
                 byggFilter(
                     FeltType.OPPGAVE_STATUS,
-                    FeltverdiOperator.IN,
+                    EksternFeltverdiOperator.IN,
                     Oppgavestatus.AAPEN.kode,
                     Oppgavestatus.VENTER.kode
                 ),
                 // 2 betingelser (starten og slutten på dagen) med feltkode, område og verdi
-                byggFilter(FeltType.MOTTATT_DATO, FeltverdiOperator.EQUALS, "2024-12-24"),
+                byggFilter(FeltType.MOTTATT_DATO, EksternFeltverdiOperator.EQUALS, "2024-12-24"),
                 // 4 betingelser med feltkode, område og verdi
-                byggFilter(FeltType.YTELSE_TYPE, FeltverdiOperator.IN, "PSB", "OMP", "FOO", "BAR"),
+                byggFilter(FeltType.YTELSE_TYPE, EksternFeltverdiOperator.IN, "PSB", "OMP", "FOO", "BAR"),
             )
         )
         val sqlBuilder = OppgaveQueryToSqlMapper.toSqlOppgaveQuery(
@@ -82,15 +82,15 @@ class OppgaveQueryToSqlMapperTest {
                 // 3 betingelser på status på oppgave_v3
                 byggFilter(
                     FeltType.OPPGAVE_STATUS,
-                    FeltverdiOperator.IN,
+                    EksternFeltverdiOperator.IN,
                     Oppgavestatus.AAPEN.kode,
                     Oppgavestatus.VENTER.kode,
                     Oppgavestatus.LUKKET.kode,
                 ),
                 // 2 betingelser (starten og slutten på dagen) med feltkode og verdi
-                byggFilter(FeltType.MOTTATT_DATO, FeltverdiOperator.EQUALS, "2024-12-24"),
+                byggFilter(FeltType.MOTTATT_DATO, EksternFeltverdiOperator.EQUALS, "2024-12-24"),
                 // feltkode, 4 verdier
-                byggFilter(FeltType.YTELSE_TYPE, FeltverdiOperator.IN, "PSB", "OMP", "FOO", "BAR"),
+                byggFilter(FeltType.YTELSE_TYPE, EksternFeltverdiOperator.IN, "PSB", "OMP", "FOO", "BAR"),
             )
         )
         val sqlBuilder = OppgaveQueryToSqlMapper.toSqlOppgaveQuery(
@@ -105,13 +105,13 @@ class OppgaveQueryToSqlMapperTest {
 
     private fun byggFilter(
         feltType: FeltType,
-        feltverdiOperator: FeltverdiOperator,
+        operator: EksternFeltverdiOperator,
         vararg verdier: String?
     ): FeltverdiOppgavefilter {
         return FeltverdiOppgavefilter(
             feltType.område,
             feltType.eksternId,
-            feltverdiOperator.name,
+            operator,
             verdier.toList()
         )
     }

@@ -6,7 +6,7 @@ import assertk.assertions.isEqualTo
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.mapping.CombineOperator
-import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgavefilterListeUtvider
 import org.junit.jupiter.api.Test
 
@@ -15,13 +15,13 @@ class OppgavefilterListeUtviderTest {
     @Test
     fun `Flere verdier med 'IN' skal endres til CombineOperator-OR med enverdi-filtre med EQUALS`() {
         val oppgavefiltre = listOf(
-            FeltverdiOppgavefilter(null, "oppgavestatus", FeltverdiOperator.IN.name, listOf("OPPR", "AVSLU"))
+            FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.IN, listOf("OPPR", "AVSLU"))
         )
         assertThat(OppgavefilterListeUtvider.utvid(oppgavefiltre).first()).isEqualTo(
             CombineOppgavefilter(
-                CombineOperator.OR.kode, filtere = listOf(
-                FeltverdiOppgavefilter(null, "oppgavestatus", FeltverdiOperator.EQUALS.name, listOf("OPPR")),
-                FeltverdiOppgavefilter(null, "oppgavestatus", FeltverdiOperator.EQUALS.name, listOf("AVSLU"))
+                CombineOperator.OR, filtere = listOf(
+                FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf("OPPR")),
+                FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf("AVSLU"))
             ))
         )
     }
@@ -29,14 +29,14 @@ class OppgavefilterListeUtviderTest {
     @Test
     fun `Kun oppgaver som inneholder alle verdier-'EQUALS' skal endres til CombineOperator-AND med enverdi-filtre med EQUALS`() {
         val oppgavefiltre = listOf(
-            FeltverdiOppgavefilter(null, "aksjonspunkt", FeltverdiOperator.EQUALS.name, listOf("5053", "5016"))
+            FeltverdiOppgavefilter(null, "aksjonspunkt", EksternFeltverdiOperator.EQUALS, listOf("5053", "5016"))
         )
         val resultat = OppgavefilterListeUtvider.utvid(oppgavefiltre)
         assertThat(resultat).containsExactly(
             CombineOppgavefilter(
-                CombineOperator.AND.kode, filtere = listOf(
-                FeltverdiOppgavefilter(null, "aksjonspunkt", FeltverdiOperator.EQUALS.name, listOf("5053")),
-                FeltverdiOppgavefilter(null, "aksjonspunkt", FeltverdiOperator.EQUALS.name, listOf("5016"))
+                CombineOperator.AND, filtere = listOf(
+                FeltverdiOppgavefilter(null, "aksjonspunkt", EksternFeltverdiOperator.EQUALS, listOf("5053")),
+                FeltverdiOppgavefilter(null, "aksjonspunkt", EksternFeltverdiOperator.EQUALS, listOf("5016"))
             ))
         )
     }
@@ -44,13 +44,13 @@ class OppgavefilterListeUtviderTest {
     @Test
     fun `Oppgaver som ikke inneholder verdier-'NOT IN' skal endres til CombineOperator-AND med enverdi-filtre med NOT EQUALS`() {
         val oppgavefiltre = listOf(
-            FeltverdiOppgavefilter(null, "oppgavestatus", FeltverdiOperator.NOT_IN.name, listOf("OPPR", "AVSLU"))
+            FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.NOT_IN, listOf("OPPR", "AVSLU"))
         )
         assertThat(OppgavefilterListeUtvider.utvid(oppgavefiltre).first()).isEqualTo(
             CombineOppgavefilter(
-                CombineOperator.AND.kode, filtere = listOf(
-                FeltverdiOppgavefilter(null, "oppgavestatus", FeltverdiOperator.NOT_EQUALS.name, listOf("OPPR")),
-                FeltverdiOppgavefilter(null, "oppgavestatus", FeltverdiOperator.NOT_EQUALS.name, listOf("AVSLU"))
+                CombineOperator.AND, filtere = listOf(
+                FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.NOT_EQUALS, listOf("OPPR")),
+                FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.NOT_EQUALS, listOf("AVSLU"))
             ))
         )
     }
@@ -59,24 +59,24 @@ class OppgavefilterListeUtviderTest {
     fun `Nested oppgavefiltre med 'IN' skal utvides`() {
         val oppgavefiltre = listOf(
             CombineOppgavefilter(
-                CombineOperator.OR.kode, filtere = listOf(
-                FeltverdiOppgavefilter(null, "oppgavestatus", FeltverdiOperator.IN.name, listOf("OPPR", "AVSLU")),
-                FeltverdiOppgavefilter(null, "aksjonspunkt", FeltverdiOperator.EQUALS.name, listOf("5053", "5016"))
+                CombineOperator.OR, filtere = listOf(
+                FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.IN, listOf("OPPR", "AVSLU")),
+                FeltverdiOppgavefilter(null, "aksjonspunkt", EksternFeltverdiOperator.EQUALS, listOf("5053", "5016"))
             ))
         )
 
         assertThat(OppgavefilterListeUtvider.utvid(oppgavefiltre).first()).isEqualTo(
             CombineOppgavefilter(
-                CombineOperator.OR.kode, filtere = listOf(
+                CombineOperator.OR, filtere = listOf(
                 CombineOppgavefilter(
-                    CombineOperator.OR.kode, filtere = listOf(
-                    FeltverdiOppgavefilter(null, "oppgavestatus", FeltverdiOperator.EQUALS.name, listOf("OPPR")),
-                    FeltverdiOppgavefilter(null, "oppgavestatus", FeltverdiOperator.EQUALS.name, listOf("AVSLU"))
+                    CombineOperator.OR, filtere = listOf(
+                    FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf("OPPR")),
+                    FeltverdiOppgavefilter(null, "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf("AVSLU"))
                 )),
                 CombineOppgavefilter(
-                    CombineOperator.AND.kode, filtere = listOf(
-                    FeltverdiOppgavefilter(null, "aksjonspunkt", FeltverdiOperator.EQUALS.name, listOf("5053")),
-                    FeltverdiOppgavefilter(null, "aksjonspunkt", FeltverdiOperator.EQUALS.name, listOf("5016"))
+                    CombineOperator.AND, filtere = listOf(
+                    FeltverdiOppgavefilter(null, "aksjonspunkt", EksternFeltverdiOperator.EQUALS, listOf("5053")),
+                    FeltverdiOppgavefilter(null, "aksjonspunkt", EksternFeltverdiOperator.EQUALS, listOf("5016"))
                 ))
             ))
         )
