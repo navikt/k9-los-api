@@ -54,15 +54,15 @@ class PartisjonertOppgaveQuerySqlBuilder(
     }
 
     private fun initialiserFerdigstiltDatoFilter(ferdigstiltDatoFilter: FeltverdiOppgavefilter) {
-        when (EksternFeltverdiOperator.valueOf(ferdigstiltDatoFilter.operator)) {
+        when (ferdigstiltDatoFilter.operator) {
             EksternFeltverdiOperator.LESS_THAN_OR_EQUALS, EksternFeltverdiOperator.LESS_THAN, EksternFeltverdiOperator.GREATER_THAN, EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS, EksternFeltverdiOperator.NOT_EQUALS, EksternFeltverdiOperator.EQUALS -> {
-                val operator = FeltverdiOperator.valueOf(ferdigstiltDatoFilter.operator).sql
+                val operator = ferdigstiltDatoFilter.operator.tilFeltverdiOperator().sql
                 ferdigstiltDatoBetingelse = { "AND $it.ferdigstilt_dato $operator :ferdigstilt_dato" }
                 ferdigstiltDatoParams["ferdigstilt_dato"] = ferdigstiltDatoFilter.verdi.first().tilLocalDate()
             }
 
             EksternFeltverdiOperator.IN, EksternFeltverdiOperator.NOT_IN -> {
-                val operator = FeltverdiOperator.valueOf(ferdigstiltDatoFilter.operator).sql
+                val operator = ferdigstiltDatoFilter.operator.tilFeltverdiOperator().sql
                 ferdigstiltDatoBetingelse = {
                     "AND $it.ferdigstilt_dato $operator (${
                         InClauseHjelper.tilParameternavn(

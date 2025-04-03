@@ -253,10 +253,12 @@ class EventTilDtoMapper {
                 nøkkel = "behandlingUuid",
                 verdi = event.eksternId.toString()
             ),
-            OppgaveFeltverdiDto(
-                nøkkel = "påklagdBehandlingUuid",
-                verdi = event.påklagdBehandlingId?.toString(),
-            ),
+            event.påklagdBehandlingId?.let {
+                OppgaveFeltverdiDto(
+                    nøkkel = "påklagdBehandlingUuid",
+                    verdi = it.toString(),
+                )
+            },
             OppgaveFeltverdiDto(
                 nøkkel = "aktorId",
                 verdi = event.aktørId
@@ -331,7 +333,7 @@ class EventTilDtoMapper {
                     add(
                         OppgaveFeltverdiDto(
                             nøkkel = "pleietrengendeAktorId",
-                            verdi = event.pleietrengendeAktørId.toString()
+                            verdi = event.pleietrengendeAktørId.id
                         )
                     )
                 }

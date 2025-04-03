@@ -9,26 +9,26 @@ import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.K9SakEventDtoBuilder
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.TestSaksbehandler
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.builder
-import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.integrasjon.rest.CoroutineRequestContext
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.K9SakEventDtoBuilder
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.TestSaksbehandler
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.builder
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveMuligReservert
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
-import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.tjenester.saksbehandler.IIdToken
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveApisTjeneste
@@ -461,13 +461,13 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
 
     private fun querySomKunInneholder(eksternId: UUID, vararg status: Oppgavestatus = emptyArray()): OppgaveQuery {
         val filtre = mutableListOf(
-            byggFilter(FeltType.BEHANDLINGUUID, FeltverdiOperator.EQUALS, eksternId.toString())
+            byggFilter(FeltType.BEHANDLINGUUID, EksternFeltverdiOperator.EQUALS, eksternId.toString())
         )
         if (status.isNotEmpty()) {
             filtre.add(
                 byggFilter(
                     FeltType.OPPGAVE_STATUS,
-                    FeltverdiOperator.EQUALS,
+                    EksternFeltverdiOperator.EQUALS,
                     *status.map { it.kode }.toTypedArray()
                 )
             )
@@ -477,13 +477,13 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
 
     private fun querySomKunInneholder(eksternId: List<UUID>, vararg status: Oppgavestatus = emptyArray()): OppgaveQuery {
         val filtre = mutableListOf(
-            byggFilter(FeltType.BEHANDLINGUUID, FeltverdiOperator.IN, *eksternId.map { it.toString() }.toTypedArray())
+            byggFilter(FeltType.BEHANDLINGUUID, EksternFeltverdiOperator.IN, *eksternId.map { it.toString() }.toTypedArray())
         )
         if (status.isNotEmpty()) {
             filtre.add(
                 byggFilter(
                     FeltType.OPPGAVE_STATUS,
-                    FeltverdiOperator.EQUALS,
+                    EksternFeltverdiOperator.EQUALS,
                     *status.map { it.kode }.toTypedArray()
                 )
             )
@@ -500,11 +500,11 @@ object TestOppgaveNøkkel {
     )
 }
 
-private fun byggFilter(feltType: FeltType, feltverdiOperator: FeltverdiOperator, vararg verdier: String?): FeltverdiOppgavefilter {
+private fun byggFilter(feltType: FeltType, operator: EksternFeltverdiOperator, vararg verdier: String?): FeltverdiOppgavefilter {
     return FeltverdiOppgavefilter(
         feltType.område,
         feltType.eksternId,
-        feltverdiOperator.name,
+        operator,
         verdier.toList()
     )
 }

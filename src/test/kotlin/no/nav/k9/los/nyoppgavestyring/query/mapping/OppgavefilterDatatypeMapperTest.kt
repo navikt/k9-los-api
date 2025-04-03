@@ -10,8 +10,6 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import java.math.BigInteger
-import java.time.LocalDateTime
 
 class OppgavefilterDatatypeMapperTest {
     val felter = mapOf(
@@ -59,7 +57,7 @@ class OppgavefilterDatatypeMapperTest {
         @Test
         fun `skal mappe til true`() {
             val mappet = OppgavefilterDatatypeMapper.map(
-                felter, listOf(FeltverdiOppgavefilter(område = "K9", kode = "testfeltBoolean", "EQUALS", listOf("true")))
+                felter, listOf(FeltverdiOppgavefilter(område = "K9", kode = "testfeltBoolean", EksternFeltverdiOperator.EQUALS, listOf("true")))
             )
             assertThat((mappet[0] as FeltverdiOppgavefilter).verdi[0]).isEqualTo(true)
         }
@@ -67,7 +65,7 @@ class OppgavefilterDatatypeMapperTest {
         @Test
         fun `skal mappe boolean til false`() {
             val mappet = OppgavefilterDatatypeMapper.map(
-                felter, listOf(FeltverdiOppgavefilter(område = "K9", kode = "testfeltBoolean", "EQUALS", listOf("false")))
+                felter, listOf(FeltverdiOppgavefilter(område = "K9", kode = "testfeltBoolean", EksternFeltverdiOperator.EQUALS, listOf("false")))
             )
             assertThat((mappet[0] as FeltverdiOppgavefilter).verdi[0]).isEqualTo(false)
         }
@@ -75,7 +73,7 @@ class OppgavefilterDatatypeMapperTest {
         @Test
         fun `skal mappe til null`() {
             val mappet = OppgavefilterDatatypeMapper.map(
-                felter, listOf(FeltverdiOppgavefilter(område = "K9", kode = "testfeltBoolean", "EQUALS", listOf(null)))
+                felter, listOf(FeltverdiOppgavefilter(område = "K9", kode = "testfeltBoolean", EksternFeltverdiOperator.EQUALS, listOf(null)))
             )
             assertThat((mappet[0] as FeltverdiOppgavefilter).verdi[0]).isNull()
         }
@@ -87,7 +85,7 @@ class OppgavefilterDatatypeMapperTest {
         @Test
         fun `skal mappe til riktig tidspunkt`() {
             val mappet = OppgavefilterDatatypeMapper.map(
-                felter, listOf(FeltverdiOppgavefilter(område = "K9", kode = "testfeltLDT", "EQUALS", listOf("2020-01-01T12:34:56.789")))
+                felter, listOf(FeltverdiOppgavefilter(område = "K9", kode = "testfeltLDT", EksternFeltverdiOperator.EQUALS, listOf("2020-01-01T12:34:56.789")))
             )
             assertThat((mappet[0] as FeltverdiOppgavefilter).verdi[0]).isEqualTo(java.time.LocalDateTime.of(2020, 1, 1, 12, 34, 56, 789000000))
         }
@@ -98,7 +96,7 @@ class OppgavefilterDatatypeMapperTest {
         @Test
         fun `skal mappe til riktig tall`() {
             val mappet = OppgavefilterDatatypeMapper.map(
-                felter, listOf(FeltverdiOppgavefilter(område = "K9", kode = "testfeltInteger", "EQUALS", listOf("2020202020")))
+                felter, listOf(FeltverdiOppgavefilter(område = "K9", kode = "testfeltInteger", EksternFeltverdiOperator.EQUALS, listOf("2020202020")))
             )
             assertThat((mappet[0] as FeltverdiOppgavefilter).verdi[0]).isEqualTo(2020202020L)
         }

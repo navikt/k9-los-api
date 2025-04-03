@@ -5,8 +5,8 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.k9.klage.typer.AktørId
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.HistorikkvaskMetrikker
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
@@ -86,18 +86,18 @@ class K9KlageTilLosHistorikkvaskTjeneste(
                 if (eventNrForBehandling > høyesteInternVersjon) { break }  //Historikkvasken har funnet eventer som ennå ikke er lastet inn med normalflyt. Dirty eventer skal håndteres av vanlig adaptertjeneste
                 val losOpplysningerSomManglerIKlageDto = event.påklagdBehandlingId?.let { k9klageBeriker.hentFraK9Sak(it) }
 
-                val påklagdBehandlingDto = if (event.påklagdBehandlingId != null && event.påklagdBehandlingType == null) {
-                    k9klageBeriker.hentFraK9Klage(event.eksternId)
-                } else {
-                    null
-                }
 
                 val eventBeriket =
                     event.copy(
-                        påklagdBehandlingType = påklagdBehandlingDto?.påklagdBehandlingType,
+                        påklagdBehandlingType = event.påklagdBehandlingType ?:
+                        event.påklagdBehandlingId?.let {
+                            k9klageBeriker.hentFraK9Klage(event.eksternId)?.påklagdBehandlingType
+                        },
                         pleietrengendeAktørId = losOpplysningerSomManglerIKlageDto?.pleietrengendeAktørId?.aktørId?.let { AktørId(it.toLong()) },
                         utenlandstilsnitt = losOpplysningerSomManglerIKlageDto?.isUtenlandstilsnitt
                     )
+
+                log.info("eventBeriket.påklagdBehandlingType: ${event.påklagdBehandlingType}, eventBeriket.påklagdBehandlingUUID: ${event.påklagdBehandlingId}")
 
                 val oppgaveDto =
                     EventTilDtoMapper.lagOppgaveDto(eventBeriket,forrigeOppgave)

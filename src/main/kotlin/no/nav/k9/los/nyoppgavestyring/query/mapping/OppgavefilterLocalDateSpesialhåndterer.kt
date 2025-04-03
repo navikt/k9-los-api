@@ -47,15 +47,15 @@ private fun mapSomDato(
     val startPåDato2 = dato2?.let { LocalDateTime.of(it, LocalTime.MIN) }
     val sluttPåDato2 = dato2?.let { LocalDateTime.of(it, LocalTime.MAX) }
 
-    return when (EksternFeltverdiOperator.valueOf(feltfilter.operator)) {
+    return when (feltfilter.operator) {
         EksternFeltverdiOperator.EQUALS, EksternFeltverdiOperator.IN -> CombineOppgavefilter(
-            CombineOperator.AND.name, listOf(
+            CombineOperator.AND, listOf(
                 feltfilter.copy(
                     verdi = listOf(startPåDato1),
-                    operator = FeltverdiOperator.GREATER_THAN_OR_EQUALS.name
+                    operator = EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS
                 ), feltfilter.copy(
                     verdi = listOf(sluttPåDato1),
-                    operator = FeltverdiOperator.LESS_THAN_OR_EQUALS.name
+                    operator = EksternFeltverdiOperator.LESS_THAN_OR_EQUALS
                 )
             )
         )
@@ -69,25 +69,25 @@ private fun mapSomDato(
         )
 
         EksternFeltverdiOperator.NOT_EQUALS, EksternFeltverdiOperator.NOT_IN -> CombineOppgavefilter(
-            CombineOperator.OR.name, listOf(
+            CombineOperator.OR, listOf(
                 feltfilter.copy(
                     verdi = listOf(startPåDato1),
-                    operator = FeltverdiOperator.LESS_THAN.name
+                    operator = EksternFeltverdiOperator.LESS_THAN
                 ), feltfilter.copy(
                     verdi = listOf(sluttPåDato1),
-                    operator = FeltverdiOperator.GREATER_THAN.name
+                    operator = EksternFeltverdiOperator.GREATER_THAN
                 )
             )
         )
 
         EksternFeltverdiOperator.INTERVAL -> CombineOppgavefilter(
-            CombineOperator.AND.name, listOf(
+            CombineOperator.AND, listOf(
                 feltfilter.copy(
                     verdi = listOf(startPåDato1),
-                    operator = FeltverdiOperator.GREATER_THAN_OR_EQUALS.name
+                    operator = EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS
                 ), feltfilter.copy(
                     verdi = listOf(sluttPåDato2),
-                    operator = FeltverdiOperator.LESS_THAN_OR_EQUALS.name
+                    operator = EksternFeltverdiOperator.LESS_THAN_OR_EQUALS
                 )
             )
         )

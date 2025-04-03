@@ -137,12 +137,12 @@ object OppgaveQueryToSqlMapper {
                     combineOperator,
                     filter.område,
                     filter.kode,
-                    FeltverdiOperator.valueOf(filter.operator),
+                    filter.operator.tilFeltverdiOperator(),
                     filter.verdi
                 )
 
                 is CombineOppgavefilter -> {
-                    val newCombineOperator = CombineOperator.valueOf(filter.combineOperator)
+                    val newCombineOperator = filter.combineOperator
                     queryBuilder.medBlokk(combineOperator, newCombineOperator.defaultValue) {
                         håndterFiltere(queryBuilder, felter, filter.filtere, newCombineOperator)
                     }
