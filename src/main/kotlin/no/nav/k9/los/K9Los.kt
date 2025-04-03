@@ -35,6 +35,7 @@ import no.nav.helse.dusseldorf.ktor.jackson.JacksonStatusPages
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.helse.dusseldorf.ktor.metrics.MetricsRoute
 import no.nav.helse.dusseldorf.ktor.metrics.init
+import no.nav.k9.los.db.migrate
 import no.nav.k9.los.eventhandler.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
@@ -104,12 +105,6 @@ fun Application.k9Los() {
     }
 
     val koin = getKoin()
-
-    koin.get<OmrådeSetup>().setup()
-    koin.get<K9SakTilLosAdapterTjeneste>().setup()
-    koin.get<K9KlageTilLosAdapterTjeneste>().setup()
-    koin.get<K9PunsjTilLosAdapterTjeneste>().setup()
-    koin.get<K9TilbakeTilLosAdapterTjeneste>().setup()
 
     konfigurerJobber(koin, configuration)
 
@@ -280,10 +275,6 @@ fun Application.k9Los() {
         )
 
         if ((KoinProfile.LOCAL == koin.get<KoinProfile>())) {
-            localSetup.initSaksbehandlere()
-            localSetup.initPunsjoppgaver(0)
-            localSetup.initTilbakeoppgaver(0)
-            localSetup.initK9SakOppgaver(0)
             api()
         } else {
             authenticate(*issuers.allIssuers()) {
@@ -394,6 +385,40 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
     val utvidetArbeidstid = Tidsvindu.hverdager(5, 20)
 
     val planlagteJobber = buildSet {
+        if (!configuration.synkronMigrering) {
+            add(
+                PlanlagtJobb.Oppstart(
+                    navn = "FlywayMigrering",
+                    prioritet = 0,
+                ) {
+                    migrate(configuration)
+                }
+            )
+        }
+
+        add(PlanlagtJobb.Oppstart(
+            navn = "Setup",
+            prioritet = 1,
+        ) {
+            koin.get<OmrådeSetup>().setup()
+            koin.get<K9SakTilLosAdapterTjeneste>().setup()
+            koin.get<K9KlageTilLosAdapterTjeneste>().setup()
+            koin.get<K9PunsjTilLosAdapterTjeneste>().setup()
+            koin.get<K9TilbakeTilLosAdapterTjeneste>().setup()
+        })
+
+        if (configuration.koinProfile == KoinProfile.LOCAL) {
+            add(PlanlagtJobb.Oppstart(
+                navn = "Testdata",
+                prioritet = 1,
+            ) {
+                localSetup.initSaksbehandlere()
+                localSetup.initPunsjoppgaver(0)
+                localSetup.initTilbakeoppgaver(0)
+                localSetup.initK9SakOppgaver(0)
+            })
+        }
+
         add(
             PlanlagtJobb.KjørPåTidspunkt(
                 "K9SakTilLosHistorikkvask",
