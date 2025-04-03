@@ -1,6 +1,5 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer
@@ -61,5 +60,5 @@ data class K9KlageEventDto(
     val vedtaksdato: LocalDate?,
 
     @JsonDeserialize(using = KodeverkDeserializer::class)
-    val behandlingsårsaker: List<String> = emptyList()
+    val behandlingsårsaker: List<String>? = emptyList()
 )
