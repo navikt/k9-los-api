@@ -468,48 +468,46 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
             }
         )
 
-        // Kjører ikke nøkkeltalloppdatering i prod inntil ytelsen er forbedret
-        if (configuration.koinProfile != KoinProfile.PROD) {
-            add(
-                PlanlagtJobb.Oppstart(
-                    navn = "DagensTallOppstart",
-                    prioritet = mediumPrioritet,
-                ) {
-                    dagensTallService.oppdaterCache(this)
-                }
-            )
+        add(
+            PlanlagtJobb.Oppstart(
+                navn = "DagensTallOppstart",
+                prioritet = mediumPrioritet,
+            ) {
+                dagensTallService.oppdaterCache(this)
+            }
+        )
 
-            add(
-                PlanlagtJobb.Oppstart(
-                    navn = "PerEnhetOppstart",
-                    prioritet = mediumPrioritet,
-                ) {
-                    perEnhetService.oppdaterCache(this)
-                }
-            )
+        add(
+            PlanlagtJobb.Oppstart(
+                navn = "PerEnhetOppstart",
+                prioritet = mediumPrioritet,
+            ) {
+                perEnhetService.oppdaterCache(this)
+            }
+        )
 
-            add(
-                PlanlagtJobb.TimeJobb(
-                    navn = "DagensTallOppdaterer",
-                    prioritet = lavPrioritet,
-                    tidsvindu = Tidsvindu.alleDager(5, 20),
-                    minutter = listOf(0, 30),
-                ) {
-                    dagensTallService.oppdaterCache(this)
-                }
-            )
+        add(
+            PlanlagtJobb.TimeJobb(
+                navn = "DagensTallOppdaterer",
+                prioritet = lavPrioritet,
+                tidsvindu = Tidsvindu.alleDager(5, 20),
+                minutter = listOf(0, 30),
+            ) {
+                dagensTallService.oppdaterCache(this)
+            }
+        )
 
-            add(
-                PlanlagtJobb.TimeJobb(
-                    navn = "PerEnhetOppdaterer",
-                    prioritet = lavPrioritet,
-                    tidsvindu = Tidsvindu.alleDager(7, 11),
-                    minutter = listOf(15),
-                ) {
-                    perEnhetService.oppdaterCache(this)
-                }
-            )
-        }
+        add(
+            PlanlagtJobb.TimeJobb(
+                navn = "PerEnhetOppdaterer",
+                prioritet = lavPrioritet,
+                tidsvindu = Tidsvindu.alleDager(7, 11),
+                minutter = listOf(15),
+            ) {
+                perEnhetService.oppdaterCache(this)
+            }
+        )
+
     }
 
     val jobbplanlegger = Jobbplanlegger(
