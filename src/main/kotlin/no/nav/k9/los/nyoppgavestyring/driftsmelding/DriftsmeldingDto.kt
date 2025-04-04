@@ -1,4 +1,4 @@
-package no.nav.k9.los.tjenester.driftsmeldinger
+package no.nav.k9.los.nyoppgavestyring.driftsmelding
 
 import java.time.LocalDateTime
 import java.util.*

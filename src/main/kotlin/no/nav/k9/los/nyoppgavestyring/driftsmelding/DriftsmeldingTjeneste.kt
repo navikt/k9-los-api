@@ -1,6 +1,5 @@
-package no.nav.k9.los.tjenester.driftsmeldinger
+package no.nav.k9.los.nyoppgavestyring.driftsmelding
 
-import no.nav.k9.los.domene.repository.DriftsmeldingRepository
 import java.time.LocalDateTime
 import java.util.*
 

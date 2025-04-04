@@ -1,7 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.infrastruktur.jobbplanlegger
 
 import kotlinx.coroutines.*
-import no.nav.k9.los.jobber.JobbMetrikker
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.JobbMetrikker
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap

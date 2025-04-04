@@ -1,4 +1,4 @@
-package no.nav.k9.los.eventhandler
+package no.nav.k9.los.nyoppgavestyring.infrastruktur.utils
 
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.asCoroutineDispatcher

@@ -1,4 +1,4 @@
-package no.nav.k9.los.tjenester.driftsmeldinger
+package no.nav.k9.los.nyoppgavestyring.driftsmelding
 
 data class DriftsmeldingSwitch(
         val id: String,

@@ -1,4 +1,4 @@
-package no.nav.k9.los.db.util
+package no.nav.k9.los.nyoppgavestyring.infrastruktur.db.util
 
 object InClauseHjelper {
 

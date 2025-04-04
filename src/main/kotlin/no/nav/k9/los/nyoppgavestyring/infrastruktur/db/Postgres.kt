@@ -1,4 +1,4 @@
-package no.nav.k9.los.db
+package no.nav.k9.los.nyoppgavestyring.infrastruktur.db
 
 import com.zaxxer.hikari.HikariDataSource
 import io.ktor.server.application.Application

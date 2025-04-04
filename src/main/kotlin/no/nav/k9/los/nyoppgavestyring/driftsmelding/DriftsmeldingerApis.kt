@@ -1,4 +1,4 @@
-package no.nav.k9.los.tjenester.driftsmeldinger
+package no.nav.k9.los.nyoppgavestyring.driftsmelding
 
 import io.ktor.http.*
 import io.ktor.server.application.*

@@ -1,13 +1,10 @@
-package no.nav.k9.los.domene.repository
+package no.nav.k9.los.nyoppgavestyring.driftsmelding
 
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.tjenester.driftsmeldinger.DriftsmeldingDto
-import no.nav.k9.los.tjenester.driftsmeldinger.DriftsmeldingSwitch
 import java.time.LocalDateTime
 import java.util.*
-import java.util.concurrent.atomic.LongAdder
 import javax.sql.DataSource
 
 class DriftsmeldingRepository(

@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9
+package no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker
 
 import io.prometheus.client.Histogram
 import io.prometheus.client.SimpleTimer

@@ -2,7 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjon
 
 import kotliquery.TransactionalSession
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
-import no.nav.k9.los.db.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste

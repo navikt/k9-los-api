@@ -3,8 +3,8 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbake
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.launch
-import no.nav.k9.los.eventhandler.ChannelMetrikker
-import no.nav.k9.los.eventhandler.asCoroutineDispatcherWithErrorHandling
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.ChannelMetrikker
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.asCoroutineDispatcherWithErrorHandling
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.Executors

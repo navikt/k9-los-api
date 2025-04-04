@@ -1,4 +1,4 @@
-package no.nav.k9.los.tjenester.kodeverk
+package no.nav.k9.los.nyoppgavestyring.kodeverk
 
 import io.ktor.server.application.*
 import io.ktor.server.response.*
