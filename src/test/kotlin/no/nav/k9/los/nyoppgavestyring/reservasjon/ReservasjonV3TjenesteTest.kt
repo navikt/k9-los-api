@@ -2,7 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.reservasjon
 
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.db.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.domene.lager.oppgave.v2.equalsWithPrecision
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository

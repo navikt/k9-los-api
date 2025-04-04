@@ -5,7 +5,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
-import no.nav.k9.los.integrasjon.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import org.koin.test.KoinTest
 import org.koin.test.get
 import javax.sql.DataSource

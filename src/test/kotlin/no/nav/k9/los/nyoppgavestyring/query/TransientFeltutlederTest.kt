@@ -3,7 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.query
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.db.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.*

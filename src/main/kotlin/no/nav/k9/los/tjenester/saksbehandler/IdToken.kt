@@ -2,7 +2,7 @@ package no.nav.k9.los.tjenester.saksbehandler
 
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
-import no.nav.k9.los.utils.LosObjectMapper
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import java.nio.charset.Charset
 import java.util.*
 

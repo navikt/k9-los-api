@@ -1,7 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.query.db
 
 import kotliquery.Row
-import no.nav.k9.los.db.util.InClauseHjelper
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.util.InClauseHjelper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.EgenAnsatt
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType

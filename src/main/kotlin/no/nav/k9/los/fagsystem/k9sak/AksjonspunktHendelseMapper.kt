@@ -1,6 +1,6 @@
 package no.nav.k9.los.fagsystem.k9sak
 
-import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.los.domene.lager.oppgave.v2.AvbrytOppgave

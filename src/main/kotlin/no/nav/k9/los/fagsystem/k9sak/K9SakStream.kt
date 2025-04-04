@@ -9,8 +9,8 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.IKafka
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.ManagedKafkaStreams
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.ManagedStreamHealthy
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.ManagedStreamReady
-import no.nav.k9.los.utils.LosObjectMapper
-import no.nav.k9.los.utils.TransientFeilHåndterer
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.TransientFeilHåndterer
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.ProduksjonsstyringHendelse
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import org.apache.kafka.streams.StreamsBuilder

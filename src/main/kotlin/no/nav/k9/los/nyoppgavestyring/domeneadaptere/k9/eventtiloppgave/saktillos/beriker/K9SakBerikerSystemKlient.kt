@@ -11,8 +11,8 @@ import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
-import no.nav.k9.los.integrasjon.rest.NavHeaders
-import no.nav.k9.los.utils.LosObjectMapper
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.NavHeaders
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.BehandlingMedFagsakDto
 import org.slf4j.LoggerFactory
 import java.time.Duration

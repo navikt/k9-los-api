@@ -11,7 +11,7 @@ import no.nav.k9.los.fagsystem.k9punsj.kontrakt.ProduksjonsstyringHendelse
 import no.nav.k9.los.fagsystem.k9punsj.kontrakt.ProduksjonsstyringOppgaveAvbruttHendelse
 import no.nav.k9.los.fagsystem.k9punsj.kontrakt.ProduksjonsstyringOppgaveFerdigstiltHendelse
 import no.nav.k9.los.fagsystem.k9punsj.kontrakt.ProduksjonsstyringOppgaveOpprettetHendelse
-import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.IAzureGraphService
 import org.slf4j.LoggerFactory
 
 

@@ -1,7 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring
 
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.db.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.PartisjonertOppgaveRepository
 import org.junit.jupiter.api.Assertions.assertEquals

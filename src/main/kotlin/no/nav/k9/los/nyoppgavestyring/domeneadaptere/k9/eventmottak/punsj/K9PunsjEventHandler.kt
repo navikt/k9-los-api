@@ -9,7 +9,7 @@ import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.domene.repository.StatistikkRepository
 import no.nav.k9.los.domene.lager.oppgave.v2.*
-import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHandlerMetrics
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventTeller
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.IModell
@@ -23,7 +23,7 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
-import no.nav.k9.los.utils.OpentelemetrySpanUtil
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.OpentelemetrySpanUtil
 import org.slf4j.LoggerFactory
 
 

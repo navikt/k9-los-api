@@ -1,10 +1,10 @@
 package no.nav.k9.los.nyoppgavestyring.søkeboks
 
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
-import no.nav.k9.los.integrasjon.abac.Action
-import no.nav.k9.los.integrasjon.abac.Auditlogging
-import no.nav.k9.los.integrasjon.abac.IPepClient
-import no.nav.k9.los.integrasjon.pdl.IPdlService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Action
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Auditlogging
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest

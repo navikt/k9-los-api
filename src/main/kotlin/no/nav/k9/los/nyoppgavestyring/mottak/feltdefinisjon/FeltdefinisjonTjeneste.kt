@@ -1,6 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon
 
-import no.nav.k9.los.db.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 

@@ -10,7 +10,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetil
 import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveHendelseMottatt
 import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
-import no.nav.k9.los.utils.OpentelemetrySpanUtil
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.OpentelemetrySpanUtil
 import org.slf4j.LoggerFactory
 
 

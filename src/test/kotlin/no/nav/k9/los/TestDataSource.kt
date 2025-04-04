@@ -2,7 +2,7 @@ package no.nav.k9.los
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import no.nav.k9.los.db.runMigration
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.runMigration
 import org.junit.jupiter.api.AfterEach
 import org.testcontainers.containers.PostgreSQLContainer
 import javax.sql.DataSource

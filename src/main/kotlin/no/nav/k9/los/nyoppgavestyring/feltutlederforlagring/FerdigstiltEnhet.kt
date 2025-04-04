@@ -4,7 +4,7 @@ import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.utils.Cache
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
 
 class FerdigstiltEnhet(val saksbehandlerRepository: SaksbehandlerRepository) : Feltutleder {
     // For å speede opp henting av enhet for saksbehandler ved historikkvask, kan nok fjernes etter at feltet er migrert

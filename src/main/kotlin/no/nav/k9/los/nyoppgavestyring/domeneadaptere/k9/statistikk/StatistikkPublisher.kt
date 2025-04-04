@@ -8,7 +8,7 @@ import no.nav.k9.los.Configuration
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.IKafkaConfig
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.TopicEntry
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.TopicUse
-import no.nav.k9.los.utils.LosObjectMapper
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.StringSerializer

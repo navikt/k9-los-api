@@ -5,10 +5,10 @@ import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.integrasjon.abac.Action
-import no.nav.k9.los.integrasjon.abac.Auditlogging
-import no.nav.k9.los.integrasjon.abac.IPepClient
-import no.nav.k9.los.integrasjon.rest.CoroutineRequestContext
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Action
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Auditlogging
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.CoroutineRequestContext
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.*
 import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository

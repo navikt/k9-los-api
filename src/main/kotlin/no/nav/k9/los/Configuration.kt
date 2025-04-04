@@ -6,7 +6,7 @@ import no.nav.helse.dusseldorf.ktor.auth.issuers
 import no.nav.helse.dusseldorf.ktor.auth.withoutAdditionalClaimRules
 import no.nav.helse.dusseldorf.ktor.core.getOptionalString
 import no.nav.helse.dusseldorf.ktor.core.getRequiredString
-import no.nav.k9.los.db.createHikariConfig
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.createHikariConfig
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.KafkaAivenConfig
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.KafkaConfig
 import org.apache.kafka.clients.consumer.OffsetResetStrategy

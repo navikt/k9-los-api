@@ -6,7 +6,7 @@ import io.mockk.every
 import io.mockk.mockk
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.db.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.domene.repository.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.K9SakEventDtoBuilder

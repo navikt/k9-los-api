@@ -1,9 +1,9 @@
 package no.nav.k9.los.tjenester.saksbehandler.oppgave
 
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
-import no.nav.k9.los.integrasjon.pdl.PersonPdl
-import no.nav.k9.los.integrasjon.pdl.fnr
-import no.nav.k9.los.integrasjon.pdl.navn
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.PersonPdl
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.fnr
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.navn
 import java.time.LocalDateTime
 import java.util.*
 

@@ -5,8 +5,10 @@ import kotlinx.coroutines.channels.ReceiveChannel
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.domene.repository.StatistikkRepository
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.ChannelMetrikker
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.DetaljerMetrikker
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
-import no.nav.k9.los.utils.OpentelemetrySpanUtil
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.OpentelemetrySpanUtil
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.Executors

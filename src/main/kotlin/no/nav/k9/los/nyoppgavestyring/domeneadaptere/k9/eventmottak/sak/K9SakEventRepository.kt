@@ -4,7 +4,7 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.utils.LosObjectMapper
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import java.util.*
 import javax.sql.DataSource
 
