@@ -1,7 +1,7 @@
 package no.nav.k9.los.tjenester.saksbehandler.nokkeltall
 
-import no.nav.k9.los.domene.modell.BehandlingType
-import no.nav.k9.los.domene.modell.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import java.time.LocalDate
 
 data class NyeOgFerdigstilteOppgaverDto(

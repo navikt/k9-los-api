@@ -1,6 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.visningoguttrekk
 
-import no.nav.k9.los.domene.modell.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.integrasjon.pdl.*
 import no.nav.k9.los.integrasjon.pdl.fnr
 import no.nav.k9.los.integrasjon.pdl.kjoenn

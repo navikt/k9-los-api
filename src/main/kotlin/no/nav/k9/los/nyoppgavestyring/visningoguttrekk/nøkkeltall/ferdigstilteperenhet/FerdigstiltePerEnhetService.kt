@@ -3,12 +3,13 @@ package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilte
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import no.nav.k9.los.domene.modell.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
-import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.utils.Cache
 import no.nav.k9.los.utils.CacheObject
 import org.slf4j.Logger
@@ -137,7 +138,7 @@ class FerdigstiltePerEnhetService(
                         FeltverdiOppgavefilter(
                             "K9",
                             "ferdigstiltEnhet",
-                            FeltverdiOperator.EQUALS.name,
+                            EksternFeltverdiOperator.EQUALS,
                             listOf(enhet)
                         )
                     )
@@ -146,7 +147,7 @@ class FerdigstiltePerEnhetService(
                             FeltverdiOppgavefilter(
                                 "K9",
                                 "ytelsestype",
-                                FeltverdiOperator.EQUALS.name,
+                                EksternFeltverdiOperator.EQUALS,
                                 listOf(fagsakYtelseType.kode)
                             )
                         )
@@ -156,19 +157,23 @@ class FerdigstiltePerEnhetService(
                             FeltverdiOppgavefilter(
                                 "K9",
                                 "oppgavetype",
-                                FeltverdiOperator.EQUALS.name,
+                                EksternFeltverdiOperator.EQUALS,
                                 listOf(oppgavetype)
                             )
                         )
                     }
                     add(
                         FeltverdiOppgavefilter(
-                            "K9", "ferdigstiltTidspunkt", FeltverdiOperator.EQUALS.name, listOf(dato.toString())
+                            null, "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf(Oppgavestatus.LUKKET.kode)
+                        )
+                    )
+                    add(
+                        FeltverdiOppgavefilter(
+                            null, "ferdigstiltDato", EksternFeltverdiOperator.EQUALS, listOf(dato.toString())
                         )
                     )
                 }
             ),
-            fraAktiv = false
         )
         return queryService.queryForAntall(request).toInt()
     }

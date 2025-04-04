@@ -6,17 +6,17 @@ import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.db.TransactionalManager
-import no.nav.k9.los.domene.modell.Fagsystem
 import no.nav.k9.los.eventhandler.DetaljerMetrikker
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient.IK9SakService
 import no.nav.k9.los.nyoppgavestyring.ko.*
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveId
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.query.Avgrensning
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.utils.OpentelemetrySpanUtil
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -113,14 +113,14 @@ class RefreshK9v3Tjeneste(
 
     fun behandlingerTilOppfriskning(tx: TransactionalSession, køer: List<OppgaveKo>, antallPrKø: Int): Set<UUID> {
         return DetaljerMetrikker.time("RefreshK9V3", "refreshForKøer", "hentOgRefresh") {
-            val førsteOppgaveIder = mutableSetOf<AktivOppgaveId>()
+            val førsteOppgaver = mutableSetOf<Oppgave>()
             for (kø in køer) {
                 DetaljerMetrikker.time("RefreshK9V3", "refreshForKøer", "hentFørsteOppgaverIterativt") {
                     OpentelemetrySpanUtil.span(
                         "hentFørsteUreserverteFraKø",
                         mapOf("køId" to kø.id.toString(), "antall" to antallPrKø.toString())
                     ) {
-                        val førsteOppgaverIKøen = oppgaveQueryService.queryForOppgaveId(
+                        val førsteOppgaverIKøen = oppgaveQueryService.queryForOppgave(
                             tx,
                             QueryRequest(
                                 kø.oppgaveQuery,
@@ -128,12 +128,12 @@ class RefreshK9v3Tjeneste(
                                 Avgrensning.maxAntall(antall = antallPrKø.toLong())
                             )
                         )
-                        førsteOppgaveIder.addAll(førsteOppgaverIKøen)
+                        førsteOppgaver.addAll(førsteOppgaverIKøen)
                     }
                 }
             }
             DetaljerMetrikker.time("RefreshK9V3", "refreshForKøer", "parsaker") {
-                aktivOppgaveRepository.hentK9sakParsakOppgaver(tx, førsteOppgaveIder)
+                aktivOppgaveRepository.hentK9sakParsakOppgaver(tx, førsteOppgaver)
                     .map { UUID.fromString(it.eksternId) }.toSet()
             }
         }

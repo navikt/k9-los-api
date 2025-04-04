@@ -35,24 +35,26 @@ import no.nav.helse.dusseldorf.ktor.jackson.JacksonStatusPages
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.helse.dusseldorf.ktor.metrics.MetricsRoute
 import no.nav.helse.dusseldorf.ktor.metrics.init
-import no.nav.k9.los.eventhandler.*
-import no.nav.k9.los.integrasjon.kafka.AsynkronProsesseringV1Service
+import no.nav.k9.los.eventhandler.køOppdatertProsessor
+import no.nav.k9.los.eventhandler.oppdaterStatistikk
+import no.nav.k9.los.eventhandler.sjekkReserverteJobb
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.K9sakBehandlingsoppfriskingJobb
 import no.nav.k9.los.jobbplanlegger.Jobbplanlegger
 import no.nav.k9.los.jobbplanlegger.PlanlagtJobb
 import no.nav.k9.los.jobbplanlegger.Tidsvindu
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.K9KlageTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.K9KlageTilLosApi
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.K9KlageTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.punsjtillos.K9PunsjTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.punsjtillos.K9PunsjTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.saktillos.*
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.tilbaketillos.K9TilbakeTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.tilbaketillos.k9TilbakeEksternId
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.tilbaketillos.k9tilbakeKorrigerOutOfOrderProsessor
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.AsynkronProsesseringV1Service
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.K9KlageTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.K9KlageTilLosApi
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.K9KlageTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.*
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.k9TilbakeEksternId
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.k9tilbakeKorrigerOutOfOrderProsessor
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.K9sakBehandlingsoppfriskingJobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9v3
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
@@ -74,7 +76,6 @@ import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallApis
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.AvdelingslederOppgavekøApis
 import no.nav.k9.los.tjenester.driftsmeldinger.DriftsmeldingerApis
 import no.nav.k9.los.tjenester.fagsak.FagsakApis
-import no.nav.k9.los.tjenester.innsikt.InnsiktApis
 import no.nav.k9.los.tjenester.kodeverk.KodeverkApis
 import no.nav.k9.los.tjenester.konfig.KonfigApis
 import no.nav.k9.los.tjenester.mock.localSetup
@@ -215,7 +216,7 @@ fun Application.k9Los() {
 
     // skal implementeres med Jobbplanlegger
     K9SakTilLosAdapterTjeneste(
-        behandlingProsessEventK9Repository = koin.get(),
+        k9SakEventRepository = koin.get(),
         oppgavetypeTjeneste = koin.get(),
         oppgaveV3Tjeneste = koin.get(),
         config = koin.get(),
@@ -229,20 +230,19 @@ fun Application.k9Los() {
 
     // implementer med Jobbplanlegger
     K9KlageTilLosAdapterTjeneste(
-        behandlingProsessEventKlageRepository = koin.get(),
+        k9KlageEventRepository = koin.get(),
         områdeRepository = koin.get(),
         feltdefinisjonTjeneste = koin.get(),
         oppgavetypeTjeneste = koin.get(),
         oppgaveV3Tjeneste = koin.get(),
         transactionalManager = koin.get(),
         config = koin.get(),
-        k9sakBeriker = koin.get(),
         k9klageBeriker = koin.get(),
     ).kjør(kjørSetup = false, kjørUmiddelbart = false)
 
     // implementer med Jobbplanlegger
     K9PunsjTilLosAdapterTjeneste(
-        eventRepository = koin.get(),
+        k9PunsjEventRepository = koin.get(),
         oppgavetypeTjeneste = koin.get(),
         oppgaveV3Tjeneste = koin.get(),
         reservasjonV3Tjeneste = koin.get(),
@@ -323,7 +323,6 @@ private fun Route.api() {
         }
         swaggerUI("openapi.json")
         route("/forvaltning") {
-            InnsiktApis()
             forvaltningApis()
             route("k9saktillos") { K9SakTilLosApi() }
             route("k9klagetillos") { K9KlageTilLosApi() }
@@ -404,7 +403,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 "K9SakTilLosHistorikkvask",
                 høyPrioritet,
                 kjørTidligst = LocalDateTime.of(2025, 2, 27, 19, 0),
-                kjørSenest = LocalDateTime.of(2025, 2, 28, 6, 0),
+                kjørSenest = LocalDateTime.of(2025, 3, 31, 21, 0),
             ) {
                 k9SakTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
             }
@@ -415,7 +414,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 "K9PunsjTilLosHistorikkvask",
                 høyPrioritet,
                 kjørTidligst = LocalDateTime.of(2025, 1, 1, 0, 0),
-                kjørSenest = LocalDateTime.of(2025, 1, 1, 0, 1),
+                kjørSenest = LocalDateTime.of(2025, 3, 31, 18, 0),
             ) {
                 k9PunsjTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
             }
@@ -426,7 +425,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 "K9TilbakeTilLosHistorikkvask",
                 høyPrioritet,
                 kjørTidligst = LocalDateTime.of(2025, 2, 27, 17, 0),
-                kjørSenest = LocalDateTime.of(2025, 2, 28, 6, 0),
+                kjørSenest = LocalDateTime.of(2025, 3, 31, 17, 0),
             ) {
                 k9TilbakeTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
             }
@@ -437,7 +436,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 "K9KlageTilLosHistorikkvask",
                 høyPrioritet,
                 kjørTidligst = LocalDateTime.of(2025, 3, 25, 10, 0),
-                kjørSenest = LocalDateTime.of(2025, 3, 25, 20, 0),
+                kjørSenest = LocalDateTime.of(2025, 3, 31, 17, 0),
             ) {
                 k9KlageTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
             }

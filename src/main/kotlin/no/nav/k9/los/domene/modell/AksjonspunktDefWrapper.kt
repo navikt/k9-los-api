@@ -2,6 +2,7 @@ package no.nav.k9.los.domene.modell
 
 
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.tjenester.mock.AksjonspunktMock
 
 class AksjonspunktDefWrapper {

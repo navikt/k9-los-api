@@ -4,8 +4,8 @@ import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.hasSize
 import assertk.assertions.isEqualTo
-import no.nav.k9.los.domene.modell.BehandlingType
-import no.nav.k9.los.domene.modell.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.FerdigstiltBehandling
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.VelgbartHistorikkfelt
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.feltSelector

@@ -4,18 +4,13 @@ import io.ktor.server.application.*
 import kotlinx.coroutines.channels.Channel
 import no.nav.helse.dusseldorf.ktor.health.HealthService
 import no.nav.k9.los.KoinProfile.*
-import no.nav.k9.los.aksjonspunktbehandling.K9KlageEventHandler
-import no.nav.k9.los.aksjonspunktbehandling.K9TilbakeEventHandler
-import no.nav.k9.los.aksjonspunktbehandling.K9punsjEventHandler
-import no.nav.k9.los.aksjonspunktbehandling.K9sakEventHandler
 import no.nav.k9.los.auditlogger.K9Auditlogger
+import no.nav.k9.los.db.TransactionalManager
 import no.nav.k9.los.db.hikariConfig
 import no.nav.k9.los.domene.lager.oppgave.v2.BehandlingsmigreringTjeneste
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveTjenesteV2
-import no.nav.k9.los.db.TransactionalManager
 import no.nav.k9.los.domene.repository.*
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9v3Tjeneste
 import no.nav.k9.los.fagsystem.k9sak.AksjonspunktHendelseMapper
 import no.nav.k9.los.fagsystem.k9sak.K9sakEventHandlerV2
 import no.nav.k9.los.integrasjon.abac.IPepClient
@@ -25,37 +20,38 @@ import no.nav.k9.los.integrasjon.audit.Auditlogger
 import no.nav.k9.los.integrasjon.azuregraph.AzureGraphService
 import no.nav.k9.los.integrasjon.azuregraph.AzureGraphServiceLocal
 import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient.IK9SakService
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakBehandlingOppfrisketRepository
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServiceLocal
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServiceSystemClient
-import no.nav.k9.los.integrasjon.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.los.integrasjon.pdl.IPdlService
 import no.nav.k9.los.integrasjon.pdl.PdlService
 import no.nav.k9.los.integrasjon.pdl.PdlServiceLocal
 import no.nav.k9.los.integrasjon.rest.RequestContextService
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.aktivvask.Aktivvask
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerInterfaceKludge
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerKlientLocal
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.k9sakberiker.K9SakBerikerSystemKlient
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.K9KlageTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.K9KlageTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.beriker.K9KlageBerikerInterfaceKludge
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.beriker.K9KlageBerikerKlientLocal
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.klagetillos.beriker.K9KlageBerikerSystemKlient
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.punsjtillos.K9PunsjTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.punsjtillos.K9PunsjTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.saktillos.K9SakTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.saktillos.K9SakTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.saktillos.K9SakTilLosLukkeFeiloppgaverTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.saktillos.k9SakEksternId
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.tilbaketillos.K9TilbakeTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.mottak.tilbaketillos.k9TilbakeEksternId
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonKonverteringJobb
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.aktivvask.Aktivvask
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonKonverteringJobb
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.AsynkronProsesseringV1Service
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.K9KlageTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.K9KlageTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerInterfaceKludge
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerKlientLocal
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerSystemKlient
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.K9SakTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.K9SakTilLosLukkeFeiloppgaverTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakBerikerInterfaceKludge
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakBerikerKlientLocal
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakBerikerSystemKlient
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.k9SakEksternId
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.k9TilbakeEksternId
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9v3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient.IK9SakService
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakBehandlingOppfrisketRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServiceLocal
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServiceSystemClient
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.K9KlageOppgaveTilDVHMapper
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.K9SakOppgaveTilDVHMapper
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
@@ -71,6 +67,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.PartisjonertOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nyoppgavestyring.pep.PepCacheRepository
@@ -194,19 +191,19 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        BehandlingProsessEventK9Repository(get())
+        no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventRepository(get())
     }
 
     single {
-        BehandlingProsessEventKlageRepository(get())
+        no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventRepository(get())
     }
 
     single {
-        PunsjEventK9Repository(get())
+        no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventRepository(get())
     }
 
     single {
-        BehandlingProsessEventTilbakeRepository(get())
+        no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventRepository(get())
     }
 
     single {
@@ -250,9 +247,9 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        K9sakEventHandler(
+        no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler(
             oppgaveRepository = get(),
-            behandlingProsessEventK9Repository = get(),
+            k9SakEventRepository = get(),
             sakOgBehandlingProducer = get(),
             oppgaveKøRepository = get(),
             reservasjonRepository = get(),
@@ -265,7 +262,7 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        K9KlageEventHandler(
+        no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventHandler(
             behandlingProsessEventKlageRepository = get(),
             k9KlageTilLosAdapterTjeneste = get(),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
@@ -273,7 +270,7 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        K9TilbakeEventHandler(
+        no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler(
             oppgaveRepository = get(),
             behandlingProsessEventTilbakeRepository = get(),
             sakOgBehandlingProducer = get(),
@@ -288,7 +285,7 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        K9punsjEventHandler(
+        no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler(
             oppgaveRepository = get(),
             oppgaveTjenesteV2 = get(),
             punsjEventK9Repository = get(),
@@ -312,7 +309,7 @@ fun common(app: Application, config: Configuration) = module {
             k9sakEventHandler = get(),
             k9sakEventHandlerv2 = get(),
             k9TilbakeEventHandler = get(),
-            punsjEventHandler = get(),
+            k9PunsjEventHandler = get(),
             k9KlageEventHandler = get(),
         )
     }
@@ -408,6 +405,11 @@ fun common(app: Application, config: Configuration) = module {
             oppgavetypeRepository = get()
         )
     }
+    single {
+        PartisjonertOppgaveRepository(
+            oppgavetypeRepository = get()
+        )
+    }
     single { K9SakOppgaveTilDVHMapper() }
     single { K9KlageOppgaveTilDVHMapper() }
     single { OppgaveRepository(oppgavetypeRepository = get()) }
@@ -445,6 +447,7 @@ fun common(app: Application, config: Configuration) = module {
     single {
         OppgaveV3Tjeneste(
             oppgaveV3Repository = get(),
+            partisjonertOppgaveRepository = get(),
             oppgavetypeRepository = get(),
             områdeRepository = get(),
         )
@@ -468,7 +471,7 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         K9PunsjTilLosAdapterTjeneste(
-            eventRepository = get(),
+            k9PunsjEventRepository = get(),
             oppgavetypeTjeneste = get(),
             oppgaveV3Tjeneste = get(),
             reservasjonV3Tjeneste = get(),
@@ -480,7 +483,7 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         K9SakTilLosAdapterTjeneste(
-            behandlingProsessEventK9Repository = get(),
+            k9SakEventRepository = get(),
             oppgavetypeTjeneste = get(),
             oppgaveV3Tjeneste = get(),
             config = get(),
@@ -545,14 +548,13 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         K9KlageTilLosAdapterTjeneste(
-            behandlingProsessEventKlageRepository = get(),
+            k9KlageEventRepository = get(),
             områdeRepository = get(),
             feltdefinisjonTjeneste = get(),
             oppgavetypeTjeneste = get(),
             oppgaveV3Tjeneste = get(),
             transactionalManager = get(),
             config = get(),
-            k9sakBeriker = get(),
             k9klageBeriker = get(),
         )
     }
@@ -570,7 +572,7 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         K9PunsjTilLosHistorikkvaskTjeneste(
-            eventRepository = get(),
+            k9PunsjEventRepository = get(),
             oppgaveV3Tjeneste = get(),
             config = get(),
             transactionalManager = get(),
@@ -586,7 +588,6 @@ fun common(app: Application, config: Configuration) = module {
             oppgaveV3Tjeneste = get(),
             config = get(),
             transactionalManager = get(),
-            k9sakBeriker = get(),
             k9klageBeriker = get(),
         )
     }
@@ -784,7 +785,8 @@ fun preprodConfig(config: Configuration) = module {
         K9KlageBerikerSystemKlient(
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
-            scope = "api://dev-fss.k9saksbehandling.k9-klage/.default"
+            scopeKlage = "api://dev-fss.k9saksbehandling.k9-klage/.default",
+            scopeSak = "api://dev-fss.k9saksbehandling.k9-sak/.default"
         )
     }
 }
@@ -830,7 +832,8 @@ fun prodConfig(config: Configuration) = module {
         K9KlageBerikerSystemKlient(
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
-            scope = "api://prod-fss.k9saksbehandling.k9-klage/.default"
+            scopeKlage = "api://prod-fss.k9saksbehandling.k9-klage/.default",
+            scopeSak = "api://prod-fss.k9saksbehandling.k9-sak/.default"
         )
     }
 }

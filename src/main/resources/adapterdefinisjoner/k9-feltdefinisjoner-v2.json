@@ -547,7 +547,7 @@
     },
     {
       "id": "ferdigstiltTidspunkt",
-      "visningsnavn": "Ferdigstilt dato",
+      "visningsnavn": "Ferdigstilt tidspunkt",
       "listetype": false,
       "tolkesSom": "Timestamp",
       "visTilBruker": false,
