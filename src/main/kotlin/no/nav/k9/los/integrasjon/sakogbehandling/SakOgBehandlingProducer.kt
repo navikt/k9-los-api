@@ -11,7 +11,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.TopicE
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.TopicUse
 import no.nav.k9.los.integrasjon.sakogbehandling.kontrakt.BehandlingAvsluttet
 import no.nav.k9.los.integrasjon.sakogbehandling.kontrakt.BehandlingOpprettet
-import no.nav.k9.los.utils.LosObjectMapper
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.Serializer

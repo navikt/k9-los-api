@@ -3,6 +3,8 @@ package no.nav.k9.los.utils
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.CacheObject
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 

@@ -2,9 +2,10 @@ package no.nav.k9.los.nyoppgavestyring.visningoguttrekk
 
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.integrasjon.pdl.*
-import no.nav.k9.los.integrasjon.pdl.fnr
-import no.nav.k9.los.integrasjon.pdl.kjoenn
-import no.nav.k9.los.integrasjon.pdl.navn
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.*
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.fnr
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.kjoenn
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.navn
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import java.time.LocalDate
 import java.time.LocalDateTime

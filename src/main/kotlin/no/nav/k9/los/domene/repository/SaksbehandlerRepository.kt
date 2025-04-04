@@ -3,8 +3,8 @@ package no.nav.k9.los.domene.repository
 import com.fasterxml.jackson.module.kotlin.readValue
 import kotliquery.*
 import no.nav.k9.los.domene.modell.Saksbehandler
-import no.nav.k9.los.integrasjon.abac.IPepClient
-import no.nav.k9.los.utils.LosObjectMapper
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*

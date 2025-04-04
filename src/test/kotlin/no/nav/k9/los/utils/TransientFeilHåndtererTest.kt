@@ -2,6 +2,7 @@ package no.nav.k9.los.utils
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.TransientFeilHåndterer
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.io.InterruptedIOException

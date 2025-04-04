@@ -1,6 +1,6 @@
 package no.nav.k9.los.tjenester.saksbehandler.saksliste
 
-import no.nav.k9.los.integrasjon.rest.idToken
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.idToken
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import java.util.*
 import kotlin.coroutines.coroutineContext

@@ -1,8 +1,8 @@
 package no.nav.k9.los.pdl
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import no.nav.k9.los.integrasjon.pdl.PersonPdl
-import no.nav.k9.los.utils.LosObjectMapper
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.PersonPdl
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 

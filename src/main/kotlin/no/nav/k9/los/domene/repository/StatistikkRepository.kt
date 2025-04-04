@@ -10,9 +10,9 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.FerdigstiltBehandling
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.BehandletOppgave
-import no.nav.k9.los.utils.Cache
-import no.nav.k9.los.utils.CacheObject
-import no.nav.k9.los.utils.LosObjectMapper
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.CacheObject
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*

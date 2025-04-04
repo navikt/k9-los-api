@@ -1,9 +1,10 @@
 package no.nav.k9.los.auditlogger
 
-import no.nav.k9.los.integrasjon.abac.Action
-import no.nav.k9.los.integrasjon.abac.Auditlogging
-import no.nav.k9.los.integrasjon.abac.TILGANG_SAK
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Action
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Auditlogging
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.TILGANG_SAK
 import no.nav.k9.los.integrasjon.audit.*
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.audit.*
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 

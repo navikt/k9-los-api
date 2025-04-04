@@ -15,11 +15,11 @@ import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.los.AbstractPostgresTest
 import no.nav.k9.los.buildAndTestConfig
 import no.nav.k9.los.db.TransactionalManager
-import no.nav.k9.los.integrasjon.abac.Action
-import no.nav.k9.los.integrasjon.abac.IPepClient
-import no.nav.k9.los.jobbplanlegger.Jobbplanlegger
-import no.nav.k9.los.jobbplanlegger.PlanlagtJobb
-import no.nav.k9.los.jobbplanlegger.Tidsvindu
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Action
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.jobbplanlegger.Jobbplanlegger
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.jobbplanlegger.PlanlagtJobb
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.jobbplanlegger.Tidsvindu
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse

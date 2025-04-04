@@ -9,7 +9,7 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.FerdigstiltBehandling
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.VelgbartHistorikkfelt
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.feltSelector
-import no.nav.k9.los.utils.LosObjectMapper
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 

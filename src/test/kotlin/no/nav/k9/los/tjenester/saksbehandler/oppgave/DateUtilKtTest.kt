@@ -2,8 +2,8 @@ package no.nav.k9.los.tjenester.saksbehandler.oppgave
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
-import no.nav.k9.los.utils.forskyvReservasjonsDato
-import no.nav.k9.los.utils.leggTilDagerHoppOverHelg
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.forskyvReservasjonsDato
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.leggTilDagerHoppOverHelg
 import org.junit.jupiter.api.Test
 import java.time.DayOfWeek
 import java.time.LocalDate

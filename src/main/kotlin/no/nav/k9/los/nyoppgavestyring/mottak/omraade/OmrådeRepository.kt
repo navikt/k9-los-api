@@ -4,7 +4,7 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.utils.Cache
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
 import org.slf4j.LoggerFactory
 import javax.sql.DataSource
 
