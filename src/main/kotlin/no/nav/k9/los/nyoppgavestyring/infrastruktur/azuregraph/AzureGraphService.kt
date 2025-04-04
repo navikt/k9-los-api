@@ -14,8 +14,8 @@ import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.idToken
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.EnheterSomSkalUtelatesFraLos
-import no.nav.k9.los.tjenester.saksbehandler.IIdToken
-import no.nav.k9.los.tjenester.saksbehandler.IdToken
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.idtoken.IIdToken
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.idtoken.IdToken
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.CacheObject
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper

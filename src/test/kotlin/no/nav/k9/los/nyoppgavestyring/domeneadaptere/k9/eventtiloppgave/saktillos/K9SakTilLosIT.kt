@@ -30,7 +30,7 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
-import no.nav.k9.los.tjenester.saksbehandler.IIdToken
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.idtoken.IIdToken
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveApisTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveIdMedOverstyringDto
 import org.junit.jupiter.api.BeforeEach

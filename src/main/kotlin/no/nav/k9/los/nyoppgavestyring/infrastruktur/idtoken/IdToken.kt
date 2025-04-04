@@ -1,4 +1,4 @@
-package no.nav.k9.los.tjenester.saksbehandler
+package no.nav.k9.los.nyoppgavestyring.infrastruktur.idtoken
 
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
