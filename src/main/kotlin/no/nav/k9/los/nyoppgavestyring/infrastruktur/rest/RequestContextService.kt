@@ -6,9 +6,9 @@ import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.withContext
 import no.nav.k9.los.KoinProfile
-import no.nav.k9.los.tjenester.saksbehandler.IIdToken
-import no.nav.k9.los.tjenester.saksbehandler.IdTokenLocal
-import no.nav.k9.los.tjenester.saksbehandler.idToken
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.idtoken.IIdToken
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.idtoken.IdTokenLocal
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.idtoken.idToken
 import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
