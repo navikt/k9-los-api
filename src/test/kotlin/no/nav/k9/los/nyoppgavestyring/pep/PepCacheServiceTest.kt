@@ -14,7 +14,7 @@ import kotlinx.coroutines.test.runTest
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.los.AbstractPostgresTest
 import no.nav.k9.los.buildAndTestConfig
-import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.db.TransactionalManager
 import no.nav.k9.los.integrasjon.abac.Action
 import no.nav.k9.los.integrasjon.abac.IPepClient
 import no.nav.k9.los.jobbplanlegger.Jobbplanlegger

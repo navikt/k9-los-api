@@ -2,7 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjon
 
 import kotliquery.queryOf
 import no.nav.k9.los.Configuration
-import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ManglerTilgangException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonUtløptException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
