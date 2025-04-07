@@ -2,72 +2,20 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj
 
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.modell.*
-import no.nav.k9.los.domene.repository.ReservasjonRepository
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
-import no.nav.k9.los.integrasjon.sakogbehandling.kontrakt.BehandlingAvsluttet
-import no.nav.k9.los.integrasjon.sakogbehandling.kontrakt.BehandlingOpprettet
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.IModell
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
-import no.nav.k9.statistikk.kontrakter.Behandling
-import no.nav.k9.statistikk.kontrakter.Sak
 
 data class K9PunsjModell(
     val eventer: List<PunsjEventDto>
-) : IModell {
+) {
 
-    override fun starterSak(): Boolean {
-        return eventer.size == 1
+     fun oppgave(): Oppgave {
+        return oppgave(eventer[eventer.lastIndex])
     }
 
-    override fun erTom(): Boolean {
-        return this.eventer.isEmpty()
-    }
-
-    override fun dvhSak(): Sak {
-        TODO("Ikke relevant for punsj")
-    }
-
-    override fun dvhBehandling(
-        saksbehandlerRepository: SaksbehandlerRepository,
-        reservasjonRepository: ReservasjonRepository
-    ): Behandling {
-        TODO("Ikke relevant for punsj")
-    }
-
-    override fun sisteSaksNummer(): String {
-        TODO("Ikke relevant for punsj")
-    }
-
-    override fun behandlingOpprettetSakOgBehandling(): BehandlingOpprettet {
-        TODO("Ikke relevant for punsj")
-    }
-
-    override fun behandlingAvsluttetSakOgBehandling(): BehandlingAvsluttet {
-        TODO("Ikke relevant for punsj")
-    }
-
-    internal fun forrigeEvent(): PunsjEventDto? {
-        return if (this.eventer.lastIndex > 0) {
-            this.eventer[this.eventer.lastIndex - 1]
-        } else {
-            null
-        }
-    }
-
-    fun sisteEvent(): PunsjEventDto {
-        return this.eventer[this.eventer.lastIndex]
-    }
-
-    override fun fikkEndretAksjonspunkt(): Boolean {
-        val forrigeEvent = forrigeEvent() ?: return false
-        val forrigeAksjonspunkter = forrigeEvent.tilAksjonspunkter().hentAktive()
-        val nåværendeAksjonspunkter = sisteEvent().tilAksjonspunkter().hentAktive()
-        return forrigeAksjonspunkter != nåværendeAksjonspunkter
-    }
-
-    fun oppgave(sisteEvent: PunsjEventDto = sisteEvent()): Oppgave {
+    private fun oppgave(sisteEvent: PunsjEventDto): Oppgave {
         val førsteEvent = eventer.first()
         val førsteEventMedJournalførtTidspunktSatt = eventer.firstOrNull { it.journalførtTidspunkt != null }
 
@@ -117,19 +65,6 @@ data class K9PunsjModell(
         )
     }
 
-    override fun oppgave(): Oppgave {
-        return oppgave(sisteEvent())
-    }
-
-    fun alleVersjoner(): MutableList<K9PunsjModell> {
-        val eventListe = mutableListOf<PunsjEventDto>()
-        val modeller = mutableListOf<K9PunsjModell>()
-        for (behandlingProsessEventDto in eventer) {
-            eventListe.add(behandlingProsessEventDto)
-            modeller.add(K9PunsjModell(eventListe.toMutableList()))
-        }
-        return modeller
-    }
 }
 
 fun PunsjEventDto.utledStatus() : BehandlingStatus {
