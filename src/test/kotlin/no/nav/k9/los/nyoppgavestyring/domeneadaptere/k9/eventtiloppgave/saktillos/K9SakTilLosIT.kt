@@ -16,6 +16,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.TestSaksbeha
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.builder
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.idtoken.IIdToken
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.CoroutineRequestContext
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveMuligReservert
@@ -32,7 +33,6 @@ import no.nav.k9.los.nyoppgavestyring.reservasjon.OppgaveIdMedOverstyringDto
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonApisTjeneste
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
-import no.nav.k9.los.tjenester.saksbehandler.IIdToken
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
