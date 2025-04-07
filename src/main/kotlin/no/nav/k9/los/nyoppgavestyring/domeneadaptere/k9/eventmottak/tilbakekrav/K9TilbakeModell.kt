@@ -4,8 +4,8 @@ import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.modell.*
 import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
-import no.nav.k9.los.integrasjon.sakogbehandling.kontrakt.BehandlingAvsluttet
-import no.nav.k9.los.integrasjon.sakogbehandling.kontrakt.BehandlingOpprettet
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.modia.kontrakt.BehandlingAvsluttet
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.modia.kontrakt.BehandlingOpprettet
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.IModell
 import no.nav.k9.los.nyoppgavestyring.kodeverk.AksjonspunktStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus

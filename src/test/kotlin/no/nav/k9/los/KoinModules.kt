@@ -22,7 +22,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.res
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServiceLocal
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.PdlServiceLocal
-import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.modia.SakOgBehandlingProducer
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventHandler

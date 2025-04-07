@@ -1,4 +1,4 @@
-package no.nav.k9.los.integrasjon.sakogbehandling
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.modia
 
 import no.nav.helse.dusseldorf.ktor.health.HealthCheck
 import no.nav.helse.dusseldorf.ktor.health.Healthy
@@ -9,8 +9,8 @@ import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.IKafkaConfig
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.TopicEntry
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.TopicUse
-import no.nav.k9.los.integrasjon.sakogbehandling.kontrakt.BehandlingAvsluttet
-import no.nav.k9.los.integrasjon.sakogbehandling.kontrakt.BehandlingOpprettet
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.modia.kontrakt.BehandlingAvsluttet
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.modia.kontrakt.BehandlingOpprettet
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
@@ -19,6 +19,7 @@ import org.apache.kafka.common.serialization.StringSerializer
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
 
+//Melder om åpne behandlinger til Modia, hvor saksbehandlere kan få oversikt over åpne søknader på forskjellige ordninger pr søker
 class SakOgBehandlingProducer constructor(
     val kafkaConfig: IKafkaConfig,
     val config: Configuration
