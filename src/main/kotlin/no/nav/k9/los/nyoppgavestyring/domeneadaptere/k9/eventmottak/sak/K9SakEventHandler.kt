@@ -18,7 +18,7 @@ import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
 import org.slf4j.LoggerFactory
 
 
-class K9SakEventHandler constructor(
+class K9SakEventHandler (
     private val k9SakEventRepository: K9SakEventRepository,
     private val sakOgBehandlingProducer: SakOgBehandlingProducer,
     private val k9SakTilLosAdapterTjeneste: K9SakTilLosAdapterTjeneste,
