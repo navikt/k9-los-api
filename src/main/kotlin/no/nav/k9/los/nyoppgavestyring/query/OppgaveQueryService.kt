@@ -19,7 +19,7 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgavefeltverdi
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgaverad
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
-import no.nav.k9.los.tjenester.saksbehandler.IIdToken
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.idtoken.IIdToken
 import org.koin.java.KoinJavaComponent.inject
 import java.time.LocalDateTime
 import javax.sql.DataSource
