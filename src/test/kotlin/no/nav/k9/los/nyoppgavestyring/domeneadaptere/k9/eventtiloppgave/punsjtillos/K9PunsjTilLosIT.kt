@@ -14,7 +14,7 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveApisTjeneste
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonApisTjeneste
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
 import org.junit.jupiter.api.BeforeEach
@@ -29,7 +29,7 @@ class K9PunsjTilLosIT : AbstractK9LosIntegrationTest() {
     lateinit var eventHandler: K9PunsjEventHandler
     lateinit var oppgaveKøTjeneste: OppgaveKoTjeneste
 
-    lateinit var oppgaveApisTjeneste: OppgaveApisTjeneste
+    lateinit var reservasjonApisTjeneste: ReservasjonApisTjeneste
     lateinit var transactionalManager: TransactionalManager
     lateinit var aktivOppgaveRepository: AktivOppgaveRepository
 
@@ -37,7 +37,7 @@ class K9PunsjTilLosIT : AbstractK9LosIntegrationTest() {
     fun setup() {
         eventHandler = get<K9PunsjEventHandler>()
         oppgaveKøTjeneste = get<OppgaveKoTjeneste>()
-        oppgaveApisTjeneste = get<OppgaveApisTjeneste>()
+        reservasjonApisTjeneste = get<ReservasjonApisTjeneste>()
         transactionalManager = get<TransactionalManager>()
         aktivOppgaveRepository = get<AktivOppgaveRepository>()
 

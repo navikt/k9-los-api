@@ -1,7 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.infrastruktur.abac
 
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
-import no.nav.k9.los.domene.modell.Saksbehandler
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 
 class PepClientLocal : IPepClient {
     override suspend fun erOppgaveStyrer(): Boolean {

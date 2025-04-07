@@ -4,6 +4,7 @@ import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.reservasjon.OppgaveStatusDto
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import java.time.LocalDateTime
 import java.util.*

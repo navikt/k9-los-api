@@ -25,6 +25,7 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.PdlService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.PdlServiceLocal
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.integrasjon.sakogbehandling.SakOgBehandlingProducer
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.aktivvask.Aktivvask
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonKonverteringJobb
@@ -88,6 +89,8 @@ import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.los.nyoppgavestyring.driftsmelding.DriftsmeldingTjeneste
 import no.nav.k9.los.nyoppgavestyring.kodeverk.HentKodeverkTjeneste
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonApisTjeneste
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3DtoBuilder
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.*
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.SakslisteTjeneste
 import org.koin.core.module.Module
@@ -642,7 +645,7 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        OppgaveApisTjeneste(
+        ReservasjonApisTjeneste(
             oppgaveTjeneste = get(),
             oppgaveV1Repository = get(),
             saksbehandlerRepository = get(),

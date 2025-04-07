@@ -1,4 +1,4 @@
-package no.nav.k9.los.tjenester.saksbehandler.oppgave
+package no.nav.k9.los.nyoppgavestyring.reservasjon
 
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -6,14 +6,14 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.domene.repository.OppgaveRepository
-import no.nav.k9.los.domene.repository.SaksbehandlerRepository
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.FinnerIkkeDataException
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ManglerTilgangException
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
+import no.nav.k9.los.tjenester.saksbehandler.oppgave.*
 import org.koin.ktor.ext.inject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -26,13 +26,13 @@ private val log: Logger = LoggerFactory.getLogger("nav.OppgaveApis")
 //TODO fjern reservasjonsid fra objekter til frontend
 //TODO Auditlogging
 
-internal fun Route.OppgaveApis() {
+internal fun Route.ReservasjonApis() {
     val requestContextService by inject<RequestContextService>()
     val oppgaveTjeneste by inject<OppgaveTjeneste>()
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
     val oppgaveRepository by inject<OppgaveRepository>()
     val pepClient by inject<IPepClient>()
-    val oppgaveApisTjeneste by inject<OppgaveApisTjeneste>()
+    val reservasjonApisTjeneste by inject<ReservasjonApisTjeneste>()
     val pdlService by inject<IPdlService>()
 
     post("/reserver") {
@@ -45,7 +45,7 @@ internal fun Route.OppgaveApis() {
 
                 try {
                     log.info("Forsøker å ta reservasjon direkte på ${oppgaveIdMedOverstyringDto.oppgaveNøkkel.oppgaveEksternId} for ${innloggetBruker.brukerIdent}")
-                    val oppgave = oppgaveApisTjeneste.reserverOppgave(innloggetBruker, oppgaveIdMedOverstyringDto)
+                    val oppgave = reservasjonApisTjeneste.reserverOppgave(innloggetBruker, oppgaveIdMedOverstyringDto)
                     call.respond(oppgave)
                 } catch (e: ManglerTilgangException) {
                     call.respond(HttpStatusCode.Forbidden, e.message!!)
@@ -65,7 +65,7 @@ internal fun Route.OppgaveApis() {
                 )
 
                 if (innloggetBruker != null) {
-                    val reservasjonV3Dtos = oppgaveApisTjeneste.hentReserverteOppgaverForSaksbehandler(innloggetBruker)
+                    val reservasjonV3Dtos = reservasjonApisTjeneste.hentReserverteOppgaverForSaksbehandler(innloggetBruker)
                     call.respond(reservasjonV3Dtos)
                 } else {
                     log.info("Innlogger bruker med brukernavn $innloggetBrukernavn finnes ikke i saksbehandlertabellen")
@@ -122,7 +122,7 @@ internal fun Route.OppgaveApis() {
                             params.map { it.oppgaveNøkkel }.joinToString(", ")
                         } (Gjort av ${innloggetBruker.brukerIdent})"
                     )
-                    oppgaveApisTjeneste.annullerReservasjoner(params, innloggetBruker)
+                    reservasjonApisTjeneste.annullerReservasjoner(params, innloggetBruker)
                     call.respond(HttpStatusCode.OK) //TODO: Hva er evt meningsfullt å returnere her?
                 } catch (e: FinnerIkkeDataException) {
                     call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitte reservasjonsnøkler")
@@ -142,7 +142,7 @@ internal fun Route.OppgaveApis() {
                 )!!
 
                 try {
-                    call.respond(oppgaveApisTjeneste.forlengReservasjon(forlengReservasjonDto, innloggetBruker))
+                    call.respond(reservasjonApisTjeneste.forlengReservasjon(forlengReservasjonDto, innloggetBruker))
                 } catch (e: FinnerIkkeDataException) {
                     call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")
                 }
@@ -163,7 +163,7 @@ internal fun Route.OppgaveApis() {
 
                 try {
                     log.info("Flytter reservasjonen ${params.oppgaveNøkkel.oppgaveEksternId} til ${params.brukerIdent} (Gjort av ${innloggetBruker.brukerIdent})")
-                    call.respond(oppgaveApisTjeneste.overførReservasjon(params, innloggetBruker))
+                    call.respond(reservasjonApisTjeneste.overførReservasjon(params, innloggetBruker))
                 } catch (e: FinnerIkkeDataException) {
                     call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")
                 }
@@ -181,7 +181,7 @@ internal fun Route.OppgaveApis() {
                     kotlin.coroutines.coroutineContext.idToken().getUsername()
                 )!!
                 try {
-                    call.respond(oppgaveApisTjeneste.endreReservasjoner(reservasjonEndringDto, innloggetBruker))
+                    call.respond(reservasjonApisTjeneste.endreReservasjoner(reservasjonEndringDto, innloggetBruker))
                 } catch (e: FinnerIkkeDataException) {
                     call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")
                 }

@@ -1,8 +1,7 @@
-package no.nav.k9.los.domene.repository
+package no.nav.k9.los.nyoppgavestyring.saksbehandleradmin
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import kotliquery.*
-import no.nav.k9.los.domene.modell.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import org.slf4j.Logger

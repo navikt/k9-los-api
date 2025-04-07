@@ -4,6 +4,7 @@ import assertk.assertThat
 import assertk.assertions.isFalse
 import assertk.assertions.isTrue
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.kodeverk.*
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
 import org.junit.jupiter.api.Assertions.assertFalse

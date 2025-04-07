@@ -1,4 +1,4 @@
-package no.nav.k9.los.domene.modell
+package no.nav.k9.los.nyoppgavestyring.saksbehandleradmin
 
 import java.util.UUID
 

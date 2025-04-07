@@ -1,6 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.feltutlederforlagring
 
-import no.nav.k9.los.domene.repository.SaksbehandlerRepository
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 
 class GyldigeFeltutledere(val saksbehandlerRepository: SaksbehandlerRepository) {
     private val feltutledere = hashMapOf(

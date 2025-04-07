@@ -10,6 +10,8 @@ import no.nav.k9.los.domene.lager.oppgave.OppgaveMedId
 import no.nav.k9.los.domene.lager.oppgave.Reservasjon
 import no.nav.k9.los.domene.modell.*
 import no.nav.k9.los.domene.repository.*
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.DetaljerMetrikker
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.IAzureGraphService
@@ -32,6 +34,8 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.CacheObject
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.forskyvReservasjonsDato
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.leggTilDagerHoppOverHelg
+import no.nav.k9.los.nyoppgavestyring.reservasjon.BehandletOppgave
+import no.nav.k9.los.nyoppgavestyring.reservasjon.OppgaveStatusDto
 import org.apache.commons.text.similarity.LevenshteinDistance
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

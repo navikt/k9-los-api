@@ -1,6 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 
-import no.nav.k9.los.domene.repository.SaksbehandlerRepository
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
 import java.time.Duration
 import java.time.LocalDateTime

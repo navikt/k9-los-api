@@ -1,7 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.søkeboks
 
 import com.fasterxml.jackson.annotation.JsonFormat
-import no.nav.k9.los.domene.modell.Saksbehandler
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.*
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType

@@ -1,6 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.reservasjon
 
-import no.nav.k9.los.domene.modell.Saksbehandler
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 

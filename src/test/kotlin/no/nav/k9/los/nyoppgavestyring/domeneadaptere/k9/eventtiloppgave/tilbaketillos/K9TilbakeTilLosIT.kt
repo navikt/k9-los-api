@@ -4,14 +4,15 @@ import assertk.assertThat
 import assertk.assertions.*
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.domene.modell.Saksbehandler
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.K9TilbakeEventDtoBuilder
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.TestSaksbehandler
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
+import no.nav.k9.los.nyoppgavestyring.reservasjon.OppgaveIdMedOverstyringDto
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonApisTjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
@@ -23,13 +24,13 @@ class K9TilbakeTilLosIT : AbstractK9LosIntegrationTest() {
     lateinit var eventHandler: K9TilbakeEventHandler
     lateinit var oppgaveKøTjeneste: OppgaveKoTjeneste
 
-    lateinit var oppgaveApisTjeneste: OppgaveApisTjeneste
+    lateinit var reservasjonApisTjeneste: ReservasjonApisTjeneste
 
     @BeforeEach
     fun setup() {
         eventHandler = get<K9TilbakeEventHandler>()
         oppgaveKøTjeneste = get<OppgaveKoTjeneste>()
-        oppgaveApisTjeneste = get<OppgaveApisTjeneste>()
+        reservasjonApisTjeneste = get<ReservasjonApisTjeneste>()
         TestSaksbehandler().init()
         OppgaveTestDataBuilder()
     }
@@ -75,7 +76,7 @@ class K9TilbakeTilLosIT : AbstractK9LosIntegrationTest() {
 
     private fun taReservasjon(saksbehandler: Saksbehandler, eksternId: UUID) {
         runBlocking {
-            get<OppgaveApisTjeneste>().reserverOppgave(
+            get<ReservasjonApisTjeneste>().reserverOppgave(
                 saksbehandler, OppgaveIdMedOverstyringDto(
                     OppgaveNøkkelDto.forV1Oppgave(eksternId.toString())
                 )
@@ -84,15 +85,15 @@ class K9TilbakeTilLosIT : AbstractK9LosIntegrationTest() {
     }
 
     private fun assertIngenReservasjon(saksbehandler: Saksbehandler) {
-        val oppgaveApisTjeneste = get<OppgaveApisTjeneste>()
+        val reservasjonApisTjeneste = get<ReservasjonApisTjeneste>()
         runBlocking { assertThat(
-            oppgaveApisTjeneste.hentReserverteOppgaverForSaksbehandler(saksbehandler)
+            reservasjonApisTjeneste.hentReserverteOppgaverForSaksbehandler(saksbehandler)
         ).isEmpty() }
     }
 
     private fun assertReservasjon(saksbehandler: Saksbehandler, antallReserverteOppgaver: Int) {
-        val oppgaveApisTjeneste = get<OppgaveApisTjeneste>()
-        val reservasjon = runBlocking { oppgaveApisTjeneste.hentReserverteOppgaverForSaksbehandler(saksbehandler) }
+        val reservasjonApisTjeneste = get<ReservasjonApisTjeneste>()
+        val reservasjon = runBlocking { reservasjonApisTjeneste.hentReserverteOppgaverForSaksbehandler(saksbehandler) }
         assertThat(reservasjon).isNotEmpty()
         assertThat(reservasjon).hasSize(1)
         reservasjon.first().let {
