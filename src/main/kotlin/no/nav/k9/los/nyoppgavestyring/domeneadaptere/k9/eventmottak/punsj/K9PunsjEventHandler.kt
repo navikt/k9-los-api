@@ -1,7 +1,9 @@
-package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj
+package no.nav.k9.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHandlerMetrics.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHandlerMetrics
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.OpentelemetrySpanUtil
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
