@@ -363,7 +363,6 @@ class K9SakModellReservasjonTestV3 {
 
         val modell = kjørEventer(eventBuilder, legeærklæring, venter_komplett_søknad)
         assertThat(modell.fikkEndretAksjonspunkt()).isFalse()
-
     }
 
     @Test

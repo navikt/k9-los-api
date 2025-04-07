@@ -1,47 +1,27 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak
 
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon.AUTOMATISK_MARKERING_AV_UTENLANDSSAK_KODE
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon.AVKLAR_FORTSATT_MEDLEMSKAP_KODE
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon.FASTSETT_BEREGNINGSGRUNNLAG_ARBEIDSTAKER_FRILANS_KODE
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon.FASTSETT_BEREGNINGSGRUNNLAG_FOR_SN_NY_I_ARBEIDSLIVET_KODE
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon.FASTSETT_BEREGNINGSGRUNNLAG_SELVSTENDIG_NÆRINGSDRIVENDE_KODE
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon.MANUELL_MARKERING_AV_UTLAND_SAKSTYPE_KODE
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon.OVERSTYRING_AV_OPPTJENINGSVILKÅRET_KODE
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon.VURDER_ARBEIDSFORHOLD_KODE
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon.VURDER_FAKTA_FOR_ATFL_SN_KODE
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon.VURDER_OPPTJENINGSVILKÅRET_KODE
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon.VURDER_PERIODER_MED_OPPTJENING_KODE
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon.VURDER_VARIG_ENDRET_ELLER_NYOPPSTARTET_NÆRING_SELVSTENDIG_NÆRINGSDRIVENDE_KODE
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon.VURDER_ÅRSKVANTUM_KVOTE
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon.*
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
-import no.nav.k9.los.domene.modell.*
-import no.nav.k9.los.domene.repository.ReservasjonRepository
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
+import no.nav.k9.los.domene.modell.tilAksjonspunkter
+import no.nav.k9.los.domene.modell.tilAktiveAksjonspunkter
 import no.nav.k9.los.integrasjon.sakogbehandling.kontrakt.BehandlingAvsluttet
 import no.nav.k9.los.integrasjon.sakogbehandling.kontrakt.BehandlingOpprettet
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.IModell
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
-import no.nav.k9.statistikk.kontrakter.Aktør
-import no.nav.k9.statistikk.kontrakter.Behandling
-import no.nav.k9.statistikk.kontrakter.Sak
 import java.time.LocalDateTime
-import java.time.OffsetDateTime
-import java.time.ZoneId
 import java.util.*
 import kotlin.math.min
 
 data class K9SakModell(
     val eventer: MutableList<K9SakEventDto>
-) : IModell {
+) {
     private val `Omsorgspenger, Pleiepenger og opplæringspenger` = "ab0271"
 
-    override fun oppgave(): Oppgave {
+    fun oppgave(): Oppgave {
         return oppgave(sisteEvent())
     }
 
@@ -157,51 +137,19 @@ data class K9SakModell(
         return this.eventer[this.eventer.lastIndex]
     }
 
-    fun forrigeEvent(): K9SakEventDto? {
-        return if (this.eventer.lastIndex > 0) {
-            this.eventer[this.eventer.lastIndex - 1]
-        } else {
-            null
-        }
-    }
-
     fun førsteEvent(): K9SakEventDto {
         return this.eventer[0]
     }
 
-    override fun starterSak(): Boolean {
+    fun starterSak(): Boolean {
         return this.eventer.size == 1
     }
 
-    override fun erTom(): Boolean {
+    fun erTom(): Boolean {
         return this.eventer.isEmpty()
     }
 
-    override fun dvhSak(): Sak {
-        val oppgave = oppgave()
-        val zone = ZoneId.of("Europe/Oslo")
-        return Sak(
-            saksnummer = oppgave.fagsakSaksnummer,
-            sakId = oppgave.fagsakSaksnummer,
-            funksjonellTid = sisteEvent().eventTid.atOffset(zone.rules.getOffset(sisteEvent().eventTid)),
-            tekniskTid = OffsetDateTime.now(),
-            opprettetDato = oppgave.behandlingOpprettet.toLocalDate(),
-            aktorId = oppgave.aktorId.toLong(),
-            aktorer = listOf(Aktør(oppgave.aktorId.toLong(), "Søker", "Søker")),
-            ytelseType = oppgave.fagsakYtelseType.navn,
-            underType = null,
-            sakStatus = oppgave.behandlingStatus.navn,
-            ytelseTypeBeskrivelse = null,
-            underTypeBeskrivelse = null,
-            sakStatusBeskrivelse = null,
-            avsender = "K9los",
-            versjon = 1
-        )
-    }
-
-    override fun behandlingOpprettetSakOgBehandling(
-
-    ): BehandlingOpprettet {
+    fun behandlingOpprettetSakOgBehandling(): BehandlingOpprettet {
         val sisteEvent = sisteEvent()
         return BehandlingOpprettet(
             hendelseType = "behandlingOpprettet",
@@ -233,8 +181,7 @@ data class K9SakModell(
         )
     }
 
-    override fun behandlingAvsluttetSakOgBehandling(
-    ): BehandlingAvsluttet {
+    fun behandlingAvsluttetSakOgBehandling(): BehandlingAvsluttet {
         val sisteEvent = sisteEvent()
         return BehandlingAvsluttet(
             hendelseType = "behandlingAvsluttet",
@@ -266,105 +213,4 @@ data class K9SakModell(
             avslutningsstatus = BehandlingAvsluttet.Avslutningsstatus("", "", "ok")
         )
     }
-
-    override fun sisteSaksNummer(): String {
-        return sisteEvent().saksnummer
-    }
-
-    override fun dvhBehandling(
-        saksbehandlerRepository: SaksbehandlerRepository,
-        reservasjonRepository: ReservasjonRepository
-    ): Behandling {
-        val oppgave = oppgave()
-        val reservasjon = reservasjonRepository.hentOptional(oppgave.eksternId)
-        val beslutter = if (oppgave.tilBeslutter && reservasjon != null) {
-            val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdentInkluderKode6(reservasjon.reservertAv)
-            saksbehandler?.brukerIdent
-        } else {
-            ""
-        }
-
-        val behandldendeEnhet =
-            if (reservasjon != null) {
-                val hentMedHistorikk = reservasjonRepository.hentMedHistorikk(oppgave.eksternId)
-                val reservertav = hentMedHistorikk.map { it.reservertAv }.first()
-                saksbehandlerRepository.finnSaksbehandlerMedIdentInkluderKode6(reservertav)?.enhet?.substringBefore(" ")
-            } else {
-                "SRV"
-            }
-        val zone = ZoneId.of("Europe/Oslo")
-        return Behandling(
-            sakId = oppgave.fagsakSaksnummer,
-            behandlingId = oppgave.eksternId.toString(),
-            funksjonellTid = sisteEvent().eventTid.atOffset(zone.rules.getOffset(sisteEvent().eventTid)),
-            tekniskTid = OffsetDateTime.now(),
-            mottattDato = oppgave.behandlingOpprettet.toLocalDate(),
-            registrertDato = oppgave.behandlingOpprettet.toLocalDate(),
-            vedtaksDato = null,
-            relatertBehandlingId = null,
-            vedtakId = null,
-            saksnummer = oppgave.fagsakSaksnummer,
-            behandlingType = oppgave.behandlingType.navn,
-            behandlingStatus = oppgave.behandlingStatus.navn,
-            resultat = sisteEvent().resultatType,
-            resultatBegrunnelse = null,
-            utenlandstilsnitt = oppgave.utenlands.toString(),
-            behandlingTypeBeskrivelse = null,
-            behandlingStatusBeskrivelse = null,
-            resultatBeskrivelse = null,
-            resultatBegrunnelseBeskrivelse = null,
-            utenlandstilsnittBeskrivelse = null,
-            beslutter = beslutter,
-            saksbehandler = null,
-            behandlingOpprettetAv = "system",
-            behandlingOpprettetType = null,
-            behandlingOpprettetTypeBeskrivelse = null,
-            ansvarligEnhetKode = behandldendeEnhet,
-            ansvarligEnhetType = "NORG",
-            behandlendeEnhetKode = behandldendeEnhet,
-            behandlendeEnhetType = "NORG",
-            datoForUttak = null,
-            datoForUtbetaling = null,
-            totrinnsbehandling = oppgave.tilBeslutter,
-            avsender = "K9sak",
-            versjon = 1
-        )
-    }
-
-    override fun fikkEndretAksjonspunkt(): Boolean {
-        val forrigeEvent = forrigeEvent() ?: return false
-
-        val blittBeslutter =
-            !forrigeEvent.tilAksjonspunkter().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK) &&
-                sisteEvent().tilAksjonspunkter().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)
-
-        if (blittBeslutter) return true
-
-        // har blitt satt på vent
-        if (sisteEvent().ytelseTypeKode == FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode
-            && sisteEvent().tilAksjonspunkter().påVent(Fagsystem.K9SAK))
-            return true
-
-        val beslutterFerdig =
-            forrigeEvent.tilAksjonspunkter().harAktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK) &&
-                sisteEvent().tilAksjonspunkter().harInaktivtAksjonspunkt(AksjonspunktDefinisjon.FATTER_VEDTAK)
-
-        if (beslutterFerdig) return true
-
-        return false
-    }
-
-    // Array med alle versjoner av modell basert på eventene, brukes når man skal spille av eventer
-    fun alleVersjoner(): MutableList<K9SakModell> {
-        val eventListe = mutableListOf<K9SakEventDto>()
-        val modeller = mutableListOf<K9SakModell>()
-        for (behandlingProsessEventDto in eventer) {
-            eventListe.add(behandlingProsessEventDto)
-            modeller.add(K9SakModell(eventListe.toMutableList()))
-        }
-        return modeller
-    }
-
 }
-
-

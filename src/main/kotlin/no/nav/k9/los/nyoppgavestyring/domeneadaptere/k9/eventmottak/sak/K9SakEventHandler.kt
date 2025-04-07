@@ -62,14 +62,12 @@ class K9SakEventHandler (
             k9SakModell
         }
 
-        val oppgave = modell.oppgave(modell.sisteEvent())
-
         if (skalSkippe) {
             EventHandlerMetrics.observe("k9sak", "skipper", t0)
             return
         }
 
-        sendModia(modell, oppgave)
+        sendModia(modell)
 
         OpentelemetrySpanUtil.span("k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid") {
             k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId)
@@ -88,8 +86,8 @@ class K9SakEventHandler (
 
     private fun sendModia(
         modell: K9SakModell,
-        oppgave: Oppgave
     ) {
+        val oppgave = modell.oppgave(modell.sisteEvent())
         val k9SakModell = modell as K9SakModell
         if (k9SakModell.starterSak()) {
             sakOgBehandlingProducer.behandlingOpprettet(k9SakModell.behandlingOpprettetSakOgBehandling())
