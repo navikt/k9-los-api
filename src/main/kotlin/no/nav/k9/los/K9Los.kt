@@ -81,7 +81,7 @@ import no.nav.k9.los.tjenester.konfig.KonfigApis
 import no.nav.k9.los.tjenester.mock.localSetup
 import no.nav.k9.los.tjenester.saksbehandler.NavAnsattApis
 import no.nav.k9.los.tjenester.saksbehandler.nokkeltall.SaksbehandlerNøkkeltallApis
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveApis
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonApis
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.SaksbehandlerOppgavekoApis
 import org.koin.core.Koin
 import org.koin.core.qualifier.named
@@ -338,7 +338,7 @@ private fun Route.api() {
         }
         route("saksbehandler", { hidden = true }) {
             route("oppgaver") {
-                OppgaveApis()
+                ReservasjonApis()
             }
 
             SaksbehandlerOppgavekoApis()

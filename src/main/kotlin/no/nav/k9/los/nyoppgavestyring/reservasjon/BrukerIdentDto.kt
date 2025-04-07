@@ -1,4 +1,4 @@
-package no.nav.k9.los.tjenester.saksbehandler.oppgave
+package no.nav.k9.los.nyoppgavestyring.reservasjon
 
 data class BrukerIdentDto(
     val brukerIdent: String

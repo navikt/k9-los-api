@@ -9,15 +9,15 @@ import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.domene.modell.Saksbehandler
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.CoroutineRequestContext
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.K9SakEventDtoBuilder
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.TestSaksbehandler
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.builder
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.idtoken.IIdToken
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.CoroutineRequestContext
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveMuligReservert
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
@@ -29,10 +29,10 @@ import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.reservasjon.OppgaveIdMedOverstyringDto
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonApisTjeneste
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.idtoken.IIdToken
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveApisTjeneste
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveIdMedOverstyringDto
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -101,7 +101,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         )
         assertThat(antallIKø).isEqualTo(0)
 
-        val reservasjonTjeneste = get<OppgaveApisTjeneste>()
+        val reservasjonTjeneste = get<ReservasjonApisTjeneste>()
         val reservasjoner = runBlocking {
             reservasjonTjeneste.reserverOppgave(
                 TestSaksbehandler.SARA,
@@ -373,7 +373,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         k9SakEventHandler.prosesser(avsluttet)
         k9SakEventHandler.prosesser(avsluttes)     // Feil rekkefølge under iverksettelse av behandling i k9-sak
 
-        runBlocking { get<OppgaveApisTjeneste>().hentReserverteOppgaverForSaksbehandler(TestSaksbehandler.BIRGER_BESLUTTER) }
+        runBlocking { get<ReservasjonApisTjeneste>().hentReserverteOppgaverForSaksbehandler(TestSaksbehandler.BIRGER_BESLUTTER) }
         assertIngenReservasjon(TestSaksbehandler.BIRGER_BESLUTTER)
         assertIngenReservasjon(TestSaksbehandler.SARA)
 
@@ -425,9 +425,9 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
     }
 
     private fun assertIngenReservasjon(saksbehandler: Saksbehandler) {
-        val oppgaveApisTjeneste = get<OppgaveApisTjeneste>()
+        val reservasjonApisTjeneste = get<ReservasjonApisTjeneste>()
         runBlocking { assertThat(
-            oppgaveApisTjeneste.hentReserverteOppgaverForSaksbehandler(saksbehandler)
+            reservasjonApisTjeneste.hentReserverteOppgaverForSaksbehandler(saksbehandler)
         ).isEmpty() }
     }
 
@@ -440,8 +440,8 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
     }
 
     private fun assertReservasjon(saksbehandler: Saksbehandler, antallReservasjoner: Int, antallOppgaver: Int) {
-        val oppgaveApisTjeneste = get<OppgaveApisTjeneste>()
-        val reservasjon = runBlocking { oppgaveApisTjeneste.hentReserverteOppgaverForSaksbehandler(saksbehandler) }
+        val reservasjonApisTjeneste = get<ReservasjonApisTjeneste>()
+        val reservasjon = runBlocking { reservasjonApisTjeneste.hentReserverteOppgaverForSaksbehandler(saksbehandler) }
         assertThat(reservasjon).hasSize(antallReservasjoner)
         reservasjon.firstOrNull()?.let {
             assertThat(it.reserverteV3Oppgaver.filter { it.oppgavestatus ==  Oppgavestatus.AAPEN}).hasSize(antallOppgaver)

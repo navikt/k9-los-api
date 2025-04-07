@@ -1,9 +1,8 @@
-package no.nav.k9.los.tjenester.saksbehandler.oppgave
+package no.nav.k9.los.nyoppgavestyring.reservasjon
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonFormat
-import no.nav.k9.los.domene.modell.Saksbehandler
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import java.time.LocalDateTime
 
 //ingen auditlogg på denne, siden den ikke inneholder personidentifiserende informasjon, bortsett fra saksbehandlers ident
@@ -40,3 +39,10 @@ enum class Beskjed(val kode: String) {
                 fun fraKode(navn: String): Beskjed = values().find { it.kode == navn }!!
         }
 }
+
+class FlyttetReservasjonDto(
+    val tidspunkt: LocalDateTime,
+    val uid: String,
+    val navn: String,
+    val begrunnelse: String
+)

@@ -1,4 +1,4 @@
-package no.nav.k9.los.tjenester.saksbehandler.oppgave
+package no.nav.k9.los.nyoppgavestyring.reservasjon
 
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import java.time.LocalDateTime

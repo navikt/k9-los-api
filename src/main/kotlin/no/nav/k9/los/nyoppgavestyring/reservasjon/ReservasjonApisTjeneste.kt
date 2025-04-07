@@ -1,14 +1,13 @@
-package no.nav.k9.los.tjenester.saksbehandler.oppgave
+package no.nav.k9.los.nyoppgavestyring.reservasjon
 
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.domene.modell.Saksbehandler
-import no.nav.k9.los.domene.repository.SaksbehandlerRepository
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Dto
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.leggTilDagerHoppOverHelg
+import no.nav.k9.los.tjenester.saksbehandler.oppgave.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
@@ -16,7 +15,7 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.*
 
-class OppgaveApisTjeneste(
+class ReservasjonApisTjeneste(
     private val oppgaveTjeneste: OppgaveTjeneste,
     private val oppgaveV1Repository: no.nav.k9.los.domene.repository.OppgaveRepository,
     private val saksbehandlerRepository: SaksbehandlerRepository,
