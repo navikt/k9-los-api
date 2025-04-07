@@ -29,14 +29,7 @@ import org.slf4j.LoggerFactory
 
 class K9PunsjEventHandler constructor(
     private val oppgaveRepository: OppgaveRepository,
-    private val oppgaveTjenesteV2: OppgaveTjenesteV2,
     private val punsjEventK9Repository: K9PunsjEventRepository,
-    private val statistikkChannel: Channel<Boolean>,
-    private val reservasjonRepository: ReservasjonRepository,
-    private val oppgaveKøRepository: OppgaveKøRepository,
-    private val reservasjonTjeneste: ReservasjonTjeneste,
-    private val statistikkRepository: StatistikkRepository,
-    private val azureGraphService: IAzureGraphService,
     private val punsjTilLosAdapterTjeneste: K9PunsjTilLosAdapterTjeneste,
     private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
 ) : EventTeller {
@@ -57,24 +50,12 @@ class K9PunsjEventHandler constructor(
                 oppgave
             }
 
-            if (modell.fikkEndretAksjonspunkt()) {
-                reservasjonTjeneste.fjernReservasjon(oppgave)
-            }
-
-            runBlocking {
-                for (oppgavekø in oppgaveKøRepository.hentKøIdInkluderKode6()) {
-                    oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø, listOf(oppgave), reservasjonRepository)
-                }
-                statistikkChannel.send(true)
-
-                oppdaterOppgaveV2(event, modell)
-            }
-
             OpentelemetrySpanUtil.span("punsjTilLosAdapterTjeneste.oppdaterOppgaveForEksternId") {
                 punsjTilLosAdapterTjeneste.oppdaterOppgaveForEksternId(
                     event.eksternId
                 )
             }
+
             runBlocking {
                 køpåvirkendeHendelseChannel.send(
                     OppgaveHendelseMottatt(
@@ -84,90 +65,5 @@ class K9PunsjEventHandler constructor(
                 )
             }
         }
-    }
-
-    override fun tellEvent(modell: IModell, oppgave: Oppgave) {
-        if (typer.contains(oppgave.behandlingType)) {
-            val k9PunsjModell = modell as K9PunsjModell
-
-            // teller oppgave fra punsj hvis det er første event og den er aktiv (P.D.D. er alle oppgaver aktive==true fra punsj)
-            if (k9PunsjModell.starterSak() && oppgave.aktiv) {
-                statistikkRepository.lagre(
-                    AlleOppgaverNyeOgFerdigstilte(
-                        oppgave.fagsakYtelseType,
-                        oppgave.behandlingType,
-                        oppgave.eventTid.toLocalDate()
-                    )
-                ) {
-                    it.nye.add(oppgave.eksternId.toString())
-                    it
-                }
-            } else if (k9PunsjModell.eventer.size > 1 && !oppgave.aktiv && (k9PunsjModell.forrigeEvent() != null && k9PunsjModell.oppgave(k9PunsjModell.forrigeEvent()!!).aktiv)) {
-                statistikkRepository.lagre(
-                    AlleOppgaverNyeOgFerdigstilte(
-                        oppgave.fagsakYtelseType,
-                        oppgave.behandlingType,
-                        oppgave.eventTid.toLocalDate()
-                    )
-                ) {
-                    it.ferdigstilte.add(oppgave.eksternId.toString())
-                    it.ferdigstilteSaksbehandler.add(oppgave.eksternId.toString())
-                    it
-                }
-            }
-        }
-    }
-
-    private suspend fun oppdaterOppgaveV2(event: PunsjEventDto, modell: K9PunsjModell) {
-        val oppgavehendelser = mutableSetOf<OppgaveHendelse>()
-        val resultat = event.utledStatus()
-        oppgavehendelser.add(
-            BehandlingEndret(
-                eksternReferanse = event.eksternId.toString(),
-                fagsystem = Fagsystem.PUNSJ,
-                ytelseType = event.ytelse?.run { FagsakYtelseType.fraKode(this) } ?: FagsakYtelseType.UKJENT,
-                behandlingType = event.type,
-                søkersId = event.aktørId?.id?.run { Ident(this, Ident.IdType.AKTØRID) },
-                tidspunkt = event.eventTid
-            )
-        )
-
-        if (modell.starterSak()) {
-            event.aksjonspunktKoderMedStatusListe.map {
-                oppgavehendelser.add(
-                    OpprettOppgave(
-                        tidspunkt = event.eventTid,
-                        oppgaveKode = it.key,
-                        frist = null,
-                    )
-                )
-            }
-        }
-
-        if (resultat == BehandlingStatus.SENDT_INN) {
-            val behandlendeEnhet = event.ferdigstiltAv?.run {
-                azureGraphService.hentEnhetForBrukerMedSystemToken(event.ferdigstiltAv)
-            } ?: "UKJENT".also {
-                log.warn("Forventet saksbehandler satt for ${event.safePrint()}. Bruker 'UKJENT' som enhet")
-            }
-
-            oppgavehendelser.add(
-                FerdigstillBehandling(
-                    tidspunkt = event.eventTid,
-                    behandlendeEnhet = behandlendeEnhet,
-                    ansvarligSaksbehandlerIdent = event.ferdigstiltAv
-                )
-            )
-        }
-
-        if (resultat == BehandlingStatus.LUKKET) {
-            oppgavehendelser.add(
-                AvbrytOppgave(
-                    tidspunkt = event.eventTid,
-                    oppgaveKode = null
-                )
-            )
-        }
-        oppgaveTjenesteV2.nyeOppgaveHendelser(eksternId = event.eksternId.toString(), oppgavehendelser.toList())
     }
 }

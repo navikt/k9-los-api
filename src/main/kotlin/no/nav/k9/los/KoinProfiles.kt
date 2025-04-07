@@ -291,14 +291,7 @@ fun common(app: Application, config: Configuration) = module {
     single {
         no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler(
             oppgaveRepository = get(),
-            oppgaveTjenesteV2 = get(),
             punsjEventK9Repository = get(),
-            statistikkChannel = get(named("statistikkRefreshChannel")),
-            oppgaveKøRepository = get(),
-            reservasjonRepository = get(),
-            reservasjonTjeneste = get(),
-            statistikkRepository = get(),
-            azureGraphService = get(),
             punsjTilLosAdapterTjeneste = get(),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
