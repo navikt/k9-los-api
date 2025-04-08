@@ -13,7 +13,6 @@ import no.nav.k9.los.domene.modell.OppgaveKø
 import no.nav.k9.los.domene.repository.OppgaveKøRepository
 import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.domene.repository.ReservasjonRepository
-import no.nav.k9.los.domene.repository.StatistikkRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.IAzureGraphService
@@ -140,7 +139,6 @@ class BeslutterSkalIkkePlukkeEgenSakTest : AbstractK9LosIntegrationTest() {
             get<Configuration>(),
             get<IAzureGraphService>(),
             get<IPepClient>(),
-            get<StatistikkRepository>(),
             oversetterMock,
             get(named("statistikkRefreshChannel")),
             KoinProfile.LOCAL

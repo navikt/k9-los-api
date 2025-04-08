@@ -960,7 +960,6 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
             get<Configuration>(),
             get<IAzureGraphService>(),
             get<IPepClient>(),
-            get<StatistikkRepository>(),
             oversetterMock,
             statistikkChannel = get(named("statistikkRefreshChannel")),
             KoinProfile.LOCAL,

@@ -34,7 +34,6 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.Ref
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient.IK9SakService
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServiceLocal
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.*
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository
 import no.nav.k9.los.nyoppgavestyring.driftsmelding.DriftsmeldingRepository
 import no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.GyldigeFeltutledere
 import no.nav.k9.los.nyoppgavestyring.forvaltning.ForvaltningRepository
@@ -73,7 +72,6 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.Da
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.status.StatusService
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederTjeneste
-import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveKøOppdaterer
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
@@ -140,7 +138,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single { DriftsmeldingRepository(get()) }
-    single { no.nav.k9.los.domene.repository.StatistikkRepository(get()) }
 
     single {
         OppgaveKøRepository(
@@ -233,7 +230,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             configuration = get(),
             azureGraphService = get(),
             pepClient = get(),
-            statistikkRepository = get(),
             reservasjonOversetter = reservasjonOversetterMock,
             statistikkChannel = get(named("statistikkRefreshChannel")),
             koinProfile = config.koinProfile(),
@@ -252,15 +248,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single { TransactionalManager(dataSource = get()) }
-
-
-    single {
-        NokkeltallTjeneste(
-            oppgaveRepository = get(),
-            statistikkRepository = get(),
-            nøkkeltallRepository = get(),
-        )
-    }
 
     val sakOgBehadlingProducer = mockk<SakOgBehandlingProducer>()
     every { sakOgBehadlingProducer.behandlingOpprettet(any()) } just runs
@@ -362,7 +349,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgavetypeRepository = get()
         )
     }
-    single { NøkkeltallRepository(dataSource = get()) }
 
     single { NøkkeltallRepositoryV3(dataSource = get()) }
 

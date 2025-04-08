@@ -222,23 +222,7 @@ internal fun Route.ReservasjonApis() {
     post("/legg-til-behandlet-sak") {
         requestContextService.withRequestContext(call) { //TODO klageoppgaver
             if (pepClient.harBasisTilgang()) {
-                val oppgavenøkkel = call.receive<OppgaveNøkkelDto>()
-                val eksternUuid = UUID.fromString(oppgavenøkkel.oppgaveEksternId)
-                val oppgave = oppgaveRepository.hent(eksternUuid)
-                val person = pdlService.person(oppgave.aktorId).person
-
-                if (person == null) {
-                    log.warn("Fant ikke personen som er på oppgaven med eksternId $eksternUuid")
-                    call.respond(HttpStatusCode.InternalServerError, "Fant ikke personen på oppgaven")
-                } else {
-                    val behandletOppgave = BehandletOppgave(oppgave, person)
-                    call.respond(
-                        oppgaveTjeneste.leggTilBehandletOppgave(
-                            coroutineContext.idToken().getUsername(),
-                            behandletOppgave
-                        )
-                    )
-                }
+                call.respond(HttpStatusCode.NotImplemented)
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -249,7 +233,7 @@ internal fun Route.ReservasjonApis() {
     get("/behandlede") {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                call.respond(oppgaveTjeneste.hentSisteBehandledeOppgaver())
+                call.respond(HttpStatusCode.NotImplemented)
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

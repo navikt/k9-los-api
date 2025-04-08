@@ -15,7 +15,6 @@ import no.nav.k9.los.domene.modell.OppgaveKø
 import no.nav.k9.los.domene.repository.OppgaveKøRepository
 import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.domene.repository.ReservasjonRepository
-import no.nav.k9.los.domene.repository.StatistikkRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.K9SakTilLosAdapterTjeneste
@@ -95,7 +94,6 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
 
         val config = mockk<Configuration>()
         val pdlService = mockk<PdlService>()
-        val statistikkRepository = StatistikkRepository(dataSource = get())
 
         val azureGraphService = mockk<AzureGraphService>()
         val oppgaveTjeneste = OppgaveTjeneste(
@@ -104,7 +102,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             oppgaveKøRepository,
             saksbehandlerRepository,
             pdlService,
-            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, reservasjonOversetter, statistikkChannel, KoinProfile.LOCAL
+            reservasjonRepository, config, azureGraphService, pepClient, reservasjonOversetter, statistikkChannel, KoinProfile.LOCAL
         )
 
         val uuid = UUID.randomUUID()
@@ -220,7 +218,6 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             pepClient = PepClientLocal()
         )
 
-        val statistikkRepository = StatistikkRepository(dataSource = dataSource)
         val pepClient = mockk<IPepClient>()
         val azureGraphService = mockk<AzureGraphService>()
         val config = mockk<Configuration>()
@@ -237,7 +234,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             oppgaveKøRepository,
             saksbehandlerRepository,
             pdlService,
-            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, reservasjonOversetter, statistikkChannel, KoinProfile.LOCAL
+            reservasjonRepository, config, azureGraphService, pepClient, reservasjonOversetter, statistikkChannel, KoinProfile.LOCAL
         )
 
         val oppgave1 = Oppgave(
@@ -422,7 +419,6 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
         every { reservasjonOversetter.hentAktivReservasjonFraGammelKontekst(any()) } returns null
         val config = mockk<Configuration>()
         val pdlService = mockk<PdlService>()
-        val statistikkRepository = StatistikkRepository(dataSource = dataSource)
         val pepClient = mockk<IPepClient>()
         val azureGraphService = mockk<AzureGraphService>()
 
@@ -433,7 +429,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             oppgaveKøRepository,
             saksbehandlerRepository,
             pdlService,
-            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, reservasjonOversetter, statistikkChannel, KoinProfile.LOCAL
+            reservasjonRepository, config, azureGraphService, pepClient, reservasjonOversetter, statistikkChannel, KoinProfile.LOCAL
         )
 
 

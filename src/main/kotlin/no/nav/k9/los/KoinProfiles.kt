@@ -86,7 +86,6 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.Da
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.status.StatusService
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederTjeneste
-import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveKøOppdaterer
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
@@ -110,13 +109,7 @@ fun common(app: Application, config: Configuration) = module {
     single { config.koinProfile() }
     single { config }
     single<DataSource> { app.hikariConfig(config) }
-    single {
-        NokkeltallTjeneste(
-            oppgaveRepository = get(),
-            statistikkRepository = get(),
-            nøkkeltallRepository = get(),
-        )
-    }
+
     single(named("oppgaveKøOppdatert")) {
         Channel<UUID>(Channel.UNLIMITED)
     }
@@ -199,19 +192,11 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        NøkkeltallRepository(get())
-    }
-
-    single {
         NøkkeltallRepositoryV3(get())
     }
 
     single {
         OppgaverGruppertRepository(get())
-    }
-
-    single {
-        no.nav.k9.los.domene.repository.StatistikkRepository(get())
     }
 
     single {
@@ -289,7 +274,6 @@ fun common(app: Application, config: Configuration) = module {
             configuration = config,
             pepClient = get(),
             azureGraphService = get(),
-            statistikkRepository = get(),
             reservasjonOversetter = get(),
             statistikkChannel = get(named("statistikkRefreshChannel")),
             koinProfile = config.koinProfile,
@@ -387,11 +371,6 @@ fun common(app: Application, config: Configuration) = module {
     single { K9SakOppgaveTilDVHMapper() }
     single { K9KlageOppgaveTilDVHMapper() }
     single { OppgaveRepository(oppgavetypeRepository = get()) }
-    single {
-        StatistikkRepository(
-            dataSource = get(),
-        )
-    }
 
     single {
         StatistikkPublisher(

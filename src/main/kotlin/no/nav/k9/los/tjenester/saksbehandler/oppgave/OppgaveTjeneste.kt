@@ -4,38 +4,33 @@ import kotlinx.coroutines.channels.Channel
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.OppgaveMedId
 import no.nav.k9.los.domene.lager.oppgave.Reservasjon
 import no.nav.k9.los.domene.modell.*
 import no.nav.k9.los.domene.repository.*
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.DetaljerMetrikker
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.IAzureGraphService
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.idToken
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.DetaljerMetrikker
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.*
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.fnr
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.kjoenn
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.navn
-import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
-import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
-import no.nav.k9.los.nyoppgavestyring.kodeverk.KøSortering
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.OppgaverGruppertRepository
-import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverHistorikk
-import no.nav.k9.los.tjenester.fagsak.PersonDto
-import no.nav.k9.los.tjenester.saksbehandler.nokkeltall.NyeOgFerdigstilteOppgaverDto
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.CacheObject
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.forskyvReservasjonsDato
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.leggTilDagerHoppOverHelg
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
+import no.nav.k9.los.nyoppgavestyring.kodeverk.KøSortering
 import no.nav.k9.los.nyoppgavestyring.reservasjon.BehandletOppgave
 import no.nav.k9.los.nyoppgavestyring.reservasjon.OppgaveStatusDto
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.OppgaverGruppertRepository
+import no.nav.k9.los.tjenester.fagsak.PersonDto
 import org.apache.commons.text.similarity.LevenshteinDistance
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -58,7 +53,6 @@ class OppgaveTjeneste constructor(
     private val configuration: Configuration,
     private val azureGraphService: IAzureGraphService,
     private val pepClient: IPepClient,
-    private val statistikkRepository: StatistikkRepository,
     private val reservasjonOversetter: ReservasjonOversetter,
     private val statistikkChannel: Channel<Boolean>,
     private val koinProfile: KoinProfile
@@ -504,59 +498,6 @@ class OppgaveTjeneste constructor(
         )
     }
 
-    suspend fun hentNyeOgFerdigstilteOppgaver(): List<NyeOgFerdigstilteOppgaverDto> {
-        val hentIdentTilInnloggetBruker = azureGraphService.hentIdentTilInnloggetBruker()
-        val alleTallene = statistikkRepository.hentFerdigstilteOgNyeHistorikkPerAntallDager(7)
-
-        return alleTallene.map { it ->
-            val antallFerdistilteMine =
-                reservasjonRepository.hentSelvOmDeIkkeErAktive(it.ferdigstilte.map { UUID.fromString(it)!! }
-                    .toSet())
-                    .filter { it.reservertAv == hentIdentTilInnloggetBruker }.size
-            NyeOgFerdigstilteOppgaverDto(
-                behandlingType = it.behandlingType,
-                fagsakYtelseType = it.fagsakYtelseType,
-                dato = it.dato,
-                antallNye = it.nye.size,
-                antallFerdigstilte = it.ferdigstilteSaksbehandler.size,
-                antallFerdigstilteMine = antallFerdistilteMine
-            )
-        }
-    }
-
-    fun hentBeholdningAvOppgaverPerAntallDager(): List<AlleOppgaverHistorikk> {
-        val ytelsetype = statistikkRepository.hentFerdigstilteOgNyeHistorikkMedYtelsetypeSiste8Uker()
-        val ret = mutableListOf<AlleOppgaverHistorikk>()
-        for (ytelseTypeEntry in ytelsetype.groupBy { it.fagsakYtelseType }) {
-            val perBehandlingstype = ytelseTypeEntry.value.groupBy { it.behandlingType }
-            for (behandlingTypeEntry in perBehandlingstype) {
-                var aktive =
-                    //TODO kjør i en transaksjon, helst som én spørring med group by
-                    oppgaveRepository.hentAktiveOppgaverTotaltPerBehandlingstypeOgYtelseType(
-                        fagsakYtelseType = ytelseTypeEntry.key,
-                        behandlingType = behandlingTypeEntry.key
-                    )
-                behandlingTypeEntry.value.sortedByDescending { it.dato }.map {
-                    aktive = if (aktive <= 0) {
-                        0
-                    } else {
-                        val sum = aktive - it.nye.size + it.ferdigstilte.size
-                        if (sum >= 0) sum else 0
-                    }
-                    ret.add(
-                        AlleOppgaverHistorikk(
-                            it.fagsakYtelseType,
-                            it.behandlingType,
-                            it.dato,
-                            aktive
-                        )
-                    )
-                }
-            }
-        }
-        return ret
-    }
-
     suspend fun frigiReservasjon(uuid: UUID, begrunnelse: String): Reservasjon {
         val reservasjon = reservasjonRepository.lagre(uuid, true) {
             it!!.begrunnelse = begrunnelse
@@ -647,10 +588,6 @@ class OppgaveTjeneste constructor(
         saksbehandlerRepository.leggTilReservasjon(ident, reservasjon.oppgave)
 
         return oppdatertReservasjon
-    }
-
-    suspend fun hentSisteBehandledeOppgaver(): List<BehandletOppgave> {
-        return statistikkRepository.hentBehandlinger(coroutineContext.idToken().getUsername())
     }
 
     fun hentReservasjonsHistorikk(uuid: UUID): ReservasjonHistorikkDto {
@@ -881,10 +818,6 @@ class OppgaveTjeneste constructor(
 
     suspend fun hentOppgaveKøer(): List<OppgaveKø> {
         return oppgaveKøRepository.hentAlle()
-    }
-
-    fun leggTilBehandletOppgave(ident: String, oppgave: BehandletOppgave) {
-        return statistikkRepository.lagreBehandling(ident, oppgave)
     }
 
     suspend fun settSkjermet(oppgave: Oppgave) {
