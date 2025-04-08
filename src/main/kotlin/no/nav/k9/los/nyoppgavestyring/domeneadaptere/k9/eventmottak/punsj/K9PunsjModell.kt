@@ -1,8 +1,8 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj
 
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
-import no.nav.k9.los.domene.modell.*
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.IModell
+import no.nav.k9.los.domene.modell.tilAksjonspunkter
+import no.nav.k9.los.domene.modell.tilAktiveAksjonspunkter
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType

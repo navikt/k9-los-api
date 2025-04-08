@@ -283,14 +283,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         K9SakEventHandler(
-            get(),
             k9SakEventRepository = K9SakEventRepository(dataSource = get()),
             sakOgBehandlingProducer = sakOgBehadlingProducer,
-            oppgaveKøRepository = get(),
-            reservasjonRepository = get(),
-            statistikkChannel = get(named("statistikkRefreshChannel")),
-            statistikkRepository = get(),
-            reservasjonTjeneste = get(),
             k9SakTilLosAdapterTjeneste = get(),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
@@ -306,14 +300,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         K9TilbakeEventHandler(
-            get(),
             K9TilbakeEventRepository(dataSource = get()),
             sakOgBehandlingProducer = sakOgBehadlingProducer,
-            oppgaveKøRepository = get(),
-            reservasjonRepository = get(),
-            statistikkRepository = get(),
-            statistikkChannel = get(named("statistikkRefreshChannel")),
-            reservasjonTjeneste = get(),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
             k9TilbakeTilLosAdapterTjeneste = get(),
         )
@@ -321,15 +309,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         K9PunsjEventHandler(
-            oppgaveRepository = get(),
-            oppgaveTjenesteV2 = get(),
             punsjEventK9Repository = get(),
-            statistikkChannel = get(),
-            reservasjonRepository = get(),
-            oppgaveKøRepository = get(),
-            reservasjonTjeneste = get(),
-            statistikkRepository = get(),
-            azureGraphService = get(),
             punsjTilLosAdapterTjeneste = get(),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
@@ -344,15 +324,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         K9PunsjEventHandler(
-            oppgaveRepository = get(),
-            oppgaveTjenesteV2 = get(),
             punsjEventK9Repository = K9PunsjEventRepository(dataSource = get()),
-            statistikkChannel = get(named("statistikkRefreshChannel")),
-            oppgaveKøRepository = get(),
-            reservasjonRepository = get(),
-            reservasjonTjeneste = get(),
-            statistikkRepository = get(),
-            azureGraphService = get(),
             punsjTilLosAdapterTjeneste = get(),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
