@@ -4,20 +4,13 @@ import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.modell.AksjonspunktTilstand
 import no.nav.k9.los.domene.modell.Aksjonspunkter
 import no.nav.k9.los.domene.modell.EventResultat
-import no.nav.k9.los.domene.repository.ReservasjonRepository
-import no.nav.k9.los.integrasjon.sakogbehandling.kontrakt.BehandlingAvsluttet
-import no.nav.k9.los.integrasjon.sakogbehandling.kontrakt.BehandlingOpprettet
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.modia.kontrakt.BehandlingAvsluttet
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.modia.kontrakt.BehandlingOpprettet
 import no.nav.k9.los.nyoppgavestyring.kodeverk.AksjonspunktStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
-import no.nav.k9.statistikk.kontrakter.Aktør
-import no.nav.k9.statistikk.kontrakter.Behandling
-import no.nav.k9.statistikk.kontrakter.Sak
 import java.time.LocalDateTime
-import java.time.OffsetDateTime
-import java.time.ZoneId
 import java.util.*
 import kotlin.math.min
 

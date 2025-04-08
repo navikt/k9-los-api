@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.pep
+package no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache
 
 import assertk.assertThat
 import assertk.assertions.*
@@ -29,6 +29,9 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEve
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.felter
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCache
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheRepository
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService

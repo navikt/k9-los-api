@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.pep
+package no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache
 
 import kotliquery.LoanPattern.using
 import kotliquery.Row
