@@ -1,4 +1,4 @@
-package no.nav.k9.los.integrasjon.sakogbehandling.kontrakt
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.modia.kontrakt
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
