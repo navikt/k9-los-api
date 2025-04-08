@@ -7,6 +7,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import kotlinx.coroutines.channels.Channel
+import no.nav.k9.los.domene.repository.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonKonverteringJobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
@@ -76,6 +77,7 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.Da
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.status.StatusService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.statusfordeling.StatusFordelingService
+import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
