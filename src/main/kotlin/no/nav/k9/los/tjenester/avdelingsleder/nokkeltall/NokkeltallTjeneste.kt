@@ -1,31 +1,22 @@
 package no.nav.k9.los.tjenester.avdelingsleder.nokkeltall
 
-import no.nav.k9.los.KoinProfile
-import no.nav.k9.los.domene.lager.oppgave.v2.BehandlingsmigreringTjeneste
-import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
-import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
-import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.domene.periode.tidligsteOgSeneste
 import no.nav.k9.los.domene.repository.NøkkeltallRepository
 import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.domene.repository.StatistikkRepository
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallRepositoryV3
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.OppgaverGruppertRepository
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak as VenteårsakK9Sak
 
 class NokkeltallTjeneste(
-    private val pepClient: IPepClient,
     private val oppgaveRepository: OppgaveRepository,
-    private val oppgaverGruppertRepository: OppgaverGruppertRepository,
     private val statistikkRepository: StatistikkRepository,
     private val nøkkeltallRepository: NøkkeltallRepository,
-    private val nøkkeltallRepositoryV3: NøkkeltallRepositoryV3,
-    private val koinProfile: KoinProfile
 ) {
-    private val log = LoggerFactory.getLogger(BehandlingsmigreringTjeneste::class.java)
+    private val log = LoggerFactory.getLogger(NokkeltallTjeneste::class.java)
 
     fun hentOppgaverPåVent(): OppgaverPåVentDto.PåVentResponse {
         val raw = nøkkeltallRepository.hentAllePåVentGruppert()

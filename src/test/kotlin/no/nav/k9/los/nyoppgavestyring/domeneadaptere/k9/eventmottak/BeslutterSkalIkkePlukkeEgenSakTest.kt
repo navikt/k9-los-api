@@ -7,23 +7,20 @@ import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
-import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
-import no.nav.k9.los.nyoppgavestyring.kodeverk.AksjonspunktStatus
 import no.nav.k9.los.domene.modell.AksjonspunktTilstand
 import no.nav.k9.los.domene.modell.Aksjonspunkter
-import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
-import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
-import no.nav.k9.los.nyoppgavestyring.kodeverk.Enhet
-import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
-import no.nav.k9.los.nyoppgavestyring.kodeverk.KøSortering
 import no.nav.k9.los.domene.modell.OppgaveKø
-import no.nav.k9.los.domene.repository.*
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.domene.repository.OppgaveKøRepository
+import no.nav.k9.los.domene.repository.OppgaveRepository
+import no.nav.k9.los.domene.repository.ReservasjonRepository
+import no.nav.k9.los.domene.repository.StatistikkRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.IPdlService
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
+import no.nav.k9.los.nyoppgavestyring.kodeverk.*
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.OppgaverGruppertRepository
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import org.junit.jupiter.api.Test
@@ -40,7 +37,6 @@ class BeslutterSkalIkkePlukkeEgenSakTest : AbstractK9LosIntegrationTest() {
     @Test
     fun `Beslutter skal ikke plukke en oppgave beslutteren har behandlet`() {
         val oppgaveRepository = get<OppgaveRepository>()
-        val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
 
         val oppgaveTjeneste = lagOppgaveTjenesteMedMocketV3Kobling()

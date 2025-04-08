@@ -1,4 +1,4 @@
-package no.nav.k9.los.domene.lager.oppgave
+package no.nav.k9.los.nyoppgavestyring.kodeverk
 
 interface Kodeverdi {
     val navn: String

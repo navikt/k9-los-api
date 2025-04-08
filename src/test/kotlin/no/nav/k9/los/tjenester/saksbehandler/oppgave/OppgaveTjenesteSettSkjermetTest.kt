@@ -10,31 +10,29 @@ import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.buildAndTestConfig
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
-import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.domene.modell.Aksjonspunkter
-import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
-import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
-import no.nav.k9.los.nyoppgavestyring.kodeverk.Enhet
-import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
-import no.nav.k9.los.nyoppgavestyring.kodeverk.KøSortering
 import no.nav.k9.los.domene.modell.OppgaveKø
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
-import no.nav.k9.los.domene.repository.*
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.PepClientLocal
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.AzureGraphService
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.PdlService
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.PersonPdl
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.PersonPdlResponse
+import no.nav.k9.los.domene.repository.OppgaveKøRepository
+import no.nav.k9.los.domene.repository.OppgaveRepository
+import no.nav.k9.los.domene.repository.ReservasjonRepository
+import no.nav.k9.los.domene.repository.StatistikkRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.PepClientLocal
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.AzureGraphService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.PdlService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.PersonPdl
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.PersonPdlResponse
+import no.nav.k9.los.nyoppgavestyring.kodeverk.*
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.OppgaverGruppertRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -75,22 +73,19 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
         val statistikkChannel = Channel<Boolean>(Channel.CONFLATED)
 
         val oppgaveRepository = get<OppgaveRepository>()
-        val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
         val oppgaverGruppertRepository = get<OppgaverGruppertRepository>()
 
         val oppgaveKøRepository = OppgaveKøRepository(
             dataSource = get(),
-            oppgaveRepositoryV2,
-            oppgaveKøOppdatert = oppgaveKøOppdatert,
             oppgaveRefreshChannel = oppgaveRefreshOppdatert,
-            pepClient = pepClient
+            pepClient = pepClient,
+            oppgaveKøOppdatert = oppgaveKøOppdatert,
         )
         val saksbehandlerRepository = SaksbehandlerRepository(dataSource = get(),
             pepClient = pepClient)
         val reservasjonRepository = ReservasjonRepository(
             oppgaveKøRepository = oppgaveKøRepository,
             oppgaveRepository = oppgaveRepository,
-            oppgaveRepositoryV2 = oppgaveRepositoryV2,
             saksbehandlerRepository = saksbehandlerRepository,
             dataSource = get()
         )
@@ -212,12 +207,10 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
         val statistikkChannel = Channel<Boolean>(Channel.CONFLATED)
 
         val oppgaveRepository = OppgaveRepository(dataSource = dataSource,pepClient = PepClientLocal(), refreshOppgave = oppgaverRefresh)
-        val oppgaveRepositoryV2 = OppgaveRepositoryV2(dataSource = dataSource)
         val oppgaverGruppertRepository = get<OppgaverGruppertRepository>()
 
         val oppgaveKøRepository = OppgaveKøRepository(
             dataSource = dataSource,
-            oppgaveRepositoryV2 = oppgaveRepositoryV2,
             oppgaveKøOppdatert = oppgaveKøOppdatert,
             oppgaveRefreshChannel = oppgaverRefresh,
             pepClient = PepClientLocal()
@@ -234,7 +227,6 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
         val reservasjonRepository = ReservasjonRepository(
             oppgaveKøRepository = oppgaveKøRepository,
             oppgaveRepository = oppgaveRepository,
-            oppgaveRepositoryV2 = oppgaveRepositoryV2,
             saksbehandlerRepository = saksbehandlerRepository,
             dataSource = dataSource
         )
@@ -408,12 +400,10 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
         val statistikkChannel = Channel<Boolean>(Channel.CONFLATED)
 
         val oppgaveRepository = OppgaveRepository(dataSource = dataSource,pepClient = PepClientLocal(), refreshOppgave = oppgaverRefresh)
-        val oppgaveRepositoryV2 = OppgaveRepositoryV2(dataSource = dataSource)
         val oppgaverGruppertRepository = get<OppgaverGruppertRepository>()
 
         val oppgaveKøRepository = OppgaveKøRepository(
             dataSource = dataSource,
-            oppgaveRepositoryV2 = oppgaveRepositoryV2,
             oppgaveKøOppdatert = oppgaveKøOppdatert,
             oppgaveRefreshChannel = oppgaverRefresh,
             pepClient = PepClientLocal()
@@ -424,7 +414,6 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
         val reservasjonRepository = ReservasjonRepository(
             oppgaveKøRepository = oppgaveKøRepository,
             oppgaveRepository = oppgaveRepository,
-            oppgaveRepositoryV2 = oppgaveRepositoryV2,
             saksbehandlerRepository = saksbehandlerRepository,
             dataSource = dataSource
         )

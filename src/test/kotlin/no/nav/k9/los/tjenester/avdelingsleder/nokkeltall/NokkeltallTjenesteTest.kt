@@ -96,9 +96,7 @@ class NokkeltallTjenesteTest : AbstractK9LosIntegrationTest() {
     @Test
     fun `Hent løste aksjonspunkter bortsett fra de med behandlende enhet 2103`() {
         val statistikkRepository = mockk<StatistikkRepository>()
-        val nøkkeltallRepository = mockk<NøkkeltallRepository>()
-        val nøkkeltallRepositoryV3 = mockk<NøkkeltallRepositoryV3>()
-        val nøkkeltallTjeneste = NokkeltallTjeneste(mockk(), mockk(), mockk(), statistikkRepository, nøkkeltallRepository, nøkkeltallRepositoryV3, KoinProfile.PROD)
+        val nøkkeltallTjeneste = NokkeltallTjeneste(mockk(), mockk(), mockk())
 
         val ferdigstiltBehandling = FerdigstiltBehandling(
             dato = LocalDate.now(),

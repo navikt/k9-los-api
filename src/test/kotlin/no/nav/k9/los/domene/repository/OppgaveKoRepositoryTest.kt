@@ -28,7 +28,6 @@ internal class OppgaveKoRepositoryTest : AbstractK9LosIntegrationTest() {
     fun setup() {
         oppgaveKøRepository = OppgaveKøRepository(
             dataSource = get(),
-            oppgaveRepositoryV2 = get(),
             oppgaveKøOppdatert = get(named("oppgaveKøOppdatert")),
             oppgaveRefreshChannel = get(named("oppgaveRefreshChannel")),
             pepClient = pep

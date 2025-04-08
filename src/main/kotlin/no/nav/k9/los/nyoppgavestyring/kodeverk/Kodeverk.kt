@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonValue
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
-import no.nav.k9.los.domene.lager.oppgave.Kodeverdi
 import no.nav.k9.los.domene.modell.KøKritererTypeValidatorer.FlaggValidator
 import no.nav.k9.los.domene.modell.KøKritererTypeValidatorer.HeltallRangeValidator
 import no.nav.k9.los.domene.modell.KøKritererTypeValidatorer.KodeverkValidator

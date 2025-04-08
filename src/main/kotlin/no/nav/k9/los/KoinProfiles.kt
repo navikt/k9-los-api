@@ -4,9 +4,6 @@ import io.ktor.server.application.*
 import kotlinx.coroutines.channels.Channel
 import no.nav.helse.dusseldorf.ktor.health.HealthService
 import no.nav.k9.los.KoinProfile.*
-import no.nav.k9.los.domene.lager.oppgave.v2.BehandlingsmigreringTjeneste
-import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
-import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveTjenesteV2
 import no.nav.k9.los.domene.repository.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.aktivvask.Aktivvask
@@ -115,13 +112,9 @@ fun common(app: Application, config: Configuration) = module {
     single<DataSource> { app.hikariConfig(config) }
     single {
         NokkeltallTjeneste(
-            pepClient = get(),
-            oppgaverGruppertRepository = get(),
             oppgaveRepository = get(),
             statistikkRepository = get(),
             nøkkeltallRepository = get(),
-            nøkkeltallRepositoryV3 = get(),
-            koinProfile = config.koinProfile(),
         )
     }
     single(named("oppgaveKøOppdatert")) {
@@ -153,17 +146,13 @@ fun common(app: Application, config: Configuration) = module {
     single {
         OppgaveKøRepository(
             dataSource = get(),
-            oppgaveRepositoryV2 = get(),
             oppgaveKøOppdatert = get(named("oppgaveKøOppdatert")),
             oppgaveRefreshChannel = get(named("oppgaveRefreshChannel")),
             pepClient = get()
         )
     }
 
-    single { OppgaveRepositoryV2(dataSource = get()) }
     single { TransactionalManager(dataSource = get()) }
-    single { BehandlingsmigreringTjeneste(get()) }
-    single { OppgaveTjenesteV2(get(), get(), get()) }
 
     single {
         SaksbehandlerRepository(
@@ -188,7 +177,6 @@ fun common(app: Application, config: Configuration) = module {
         ReservasjonRepository(
             oppgaveKøRepository = get(),
             oppgaveRepository = get(),
-            oppgaveRepositoryV2 = get(),
             saksbehandlerRepository = get(),
             dataSource = get()
         )

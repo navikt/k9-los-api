@@ -3,7 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.reservasjon
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.domene.lager.oppgave.v2.equalsWithPrecision
+import no.nav.k9.los.nyoppgavestyring.query.equalsWithPrecision
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import org.junit.jupiter.api.Assertions.*

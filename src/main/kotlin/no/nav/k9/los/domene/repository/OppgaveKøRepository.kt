@@ -6,7 +6,6 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
-import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.modell.OppgaveKø
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
@@ -18,7 +17,6 @@ import javax.sql.DataSource
 
 class OppgaveKøRepository(
     private val dataSource: DataSource,
-    private val oppgaveRepositoryV2: OppgaveRepositoryV2,
     private val oppgaveKøOppdatert: Channel<UUID>,
     private val oppgaveRefreshChannel: Channel<UUID>,
     private val pepClient: IPepClient

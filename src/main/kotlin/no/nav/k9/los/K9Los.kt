@@ -141,7 +141,6 @@ fun Application.k9Los() {
         køOppdatertProsessor(
             oppgaveKøRepository = koin.get(),
             oppgaveRepository = koin.get(),
-            oppgaveRepositoryV2 = koin.get(),
             channel = koin.get<Channel<UUID>>(named("oppgaveKøOppdatert")),
             refreshOppgaveChannel = koin.get<Channel<UUID>>(named("oppgaveRefreshChannel")),
             oppgaveTjeneste = koin.get()

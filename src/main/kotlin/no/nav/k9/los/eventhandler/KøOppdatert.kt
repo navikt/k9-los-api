@@ -9,7 +9,6 @@ import kotlinx.coroutines.channels.toList
 import kotlinx.coroutines.launch
 import no.nav.k9.kodeverk.Fagsystem
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
-import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.repository.OppgaveKøRepository
 import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.ChannelMetrikker
@@ -27,7 +26,6 @@ fun CoroutineScope.køOppdatertProsessor(
     refreshOppgaveChannel: Channel<UUID>,
     oppgaveKøRepository: OppgaveKøRepository,
     oppgaveRepository: OppgaveRepository,
-    oppgaveRepositoryV2: OppgaveRepositoryV2,
     oppgaveTjeneste: OppgaveTjeneste
 ) = launch(Executors.newSingleThreadExecutor().asCoroutineDispatcherWithErrorHandling()) {
     val log = LoggerFactory.getLogger("behandleOppgave")
@@ -38,7 +36,6 @@ fun CoroutineScope.køOppdatertProsessor(
                     oppgaveKøRepository,
                     uuid,
                     oppgaveRepository,
-                    oppgaveRepositoryV2,
                     oppgaveTjeneste,
                     refreshOppgaveChannel,
                     log
@@ -56,7 +53,6 @@ private suspend fun oppdaterKø(
     oppgaveKøRepository: OppgaveKøRepository,
     @SpanAttribute("koUuid") it: UUID,
     oppgaveRepository: OppgaveRepository,
-    oppgaveRepositoryV2: OppgaveRepositoryV2,
     oppgaveTjeneste: OppgaveTjeneste,
     refreshOppgaveChannel: Channel<UUID>,
     log: Logger
