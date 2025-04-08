@@ -20,7 +20,7 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.*
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
-import no.nav.k9.los.nyoppgavestyring.pep.PepCacheService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.BehandlingMedFagsakDto

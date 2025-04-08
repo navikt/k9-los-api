@@ -18,9 +18,9 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.pep.PepCache
-import no.nav.k9.los.nyoppgavestyring.pep.PepCacheRepository
-import no.nav.k9.los.nyoppgavestyring.pep.TestRepository
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCache
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheRepository
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.TestRepository
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.CombineOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt

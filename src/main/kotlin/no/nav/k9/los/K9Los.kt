@@ -65,7 +65,7 @@ import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoApis
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonApi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Api
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeApi
-import no.nav.k9.los.nyoppgavestyring.pep.PepCacheService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryApis
 import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksApi
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallV3Apis
@@ -82,6 +82,7 @@ import no.nav.k9.los.tjenester.mock.localSetup
 import no.nav.k9.los.tjenester.saksbehandler.NavAnsattApis
 import no.nav.k9.los.tjenester.saksbehandler.nokkeltall.SaksbehandlerNøkkeltallApis
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonApis
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerAdminApis
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.SaksbehandlerOppgavekoApis
 import org.koin.core.Koin
 import org.koin.core.qualifier.named
@@ -334,7 +335,7 @@ private fun Route.api() {
             DriftsmeldingerApis()
         }
         route("fagsak", { hidden = true }) {
-            FagsakApis()
+            FagsakApis() //Erstattet av søkeboksApi?
         }
         route("saksbehandler", { hidden = true }) {
             route("oppgaver") {
@@ -346,6 +347,7 @@ private fun Route.api() {
         }
         route("avdelingsleder") {
             AvdelingslederApis()
+            SaksbehandlerAdminApis()
             route("oppgavekoer") {
                 AvdelingslederOppgavekøApis() // Erstattet av OppgaveKoApis i V3
             }

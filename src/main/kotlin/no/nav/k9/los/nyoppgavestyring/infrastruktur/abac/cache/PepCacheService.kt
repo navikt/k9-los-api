@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.pep
+package no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache
 
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.extension.kotlin.asContextElement

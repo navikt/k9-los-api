@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.pep
+package no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
