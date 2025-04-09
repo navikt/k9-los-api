@@ -17,7 +17,7 @@ class OppgaverGruppertRepository(private val dataSource: DataSource) {
         Cache<Boolean, List<BehandlingstypeAntallDto>>(cacheSizeLimit = null)
 
     data class BehandlingstypeAntallDto(
-        val behandlingstype: String?,
+        val behandlingstype: String,
         val antall: Int
     )
 
@@ -34,7 +34,7 @@ class OppgaverGruppertRepository(private val dataSource: DataSource) {
     }
 
     private fun doHentAntallÅpneOppgaverPrOppgavetypeBehandlingstype(kode6: Boolean): List<BehandlingstypeAntallDto> {
-        val resultat = using(sessionOf(dataSource)) { session ->
+        return using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     /***
@@ -62,12 +62,6 @@ class OppgaverGruppertRepository(private val dataSource: DataSource) {
                     }
                     .asList
             )
-        }
-        if (resultat.any {it.behandlingstype == null} ){
-            log.warn("Fant ${resultat.filter {it.behandlingstype == null}.sumOf { it.antall }} oppgaver uten behandlingstype, de blir ikke med oversikt som viser antall")
-            return resultat.filter { it.behandlingstype != null }
-        } else {
-            return resultat
         }
     }
 }
