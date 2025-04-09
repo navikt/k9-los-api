@@ -1,6 +1,5 @@
 package no.nav.k9.los.nyoppgavestyring.kodeverk
 
-import no.nav.k9.los.domene.lager.oppgave.Kodeverdi
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.Venteårsak
 
 class HentKodeverkTjeneste {

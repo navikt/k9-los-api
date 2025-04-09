@@ -1,7 +1,7 @@
 package no.nav.k9.los.tjenester.avdelingsleder.nokkeltall
 
 import com.fasterxml.jackson.annotation.JsonFormat
-import no.nav.k9.los.domene.lager.oppgave.Kodeverdi
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Kodeverdi
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import java.time.LocalDate

@@ -1,22 +1,15 @@
 package no.nav.k9.los
 
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
-import no.nav.k9.los.domene.modell.*
+import no.nav.k9.los.domene.modell.Aksjonspunkter
 import no.nav.k9.los.domene.repository.OppgaveRepository
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
-import no.nav.k9.los.domene.repository.StatistikkRepository
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
-import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
@@ -71,20 +64,6 @@ class YtelseTest : AbstractK9LosIntegrationTest() {
     }
 
     @Test
-    fun `Opprett og ferdigstill oppgave`() {
-        val oppgaveTjeneste = get<OppgaveTjeneste>()
-
-        runBlocking {
-            Kjøretid.logg("Hent beholdning av oppgaver") {
-                val alleOppgaverNyeOgFerdigstilte = oppgaveTjeneste.hentBeholdningAvOppgaverPerAntallDager()
-                assert(alleOppgaverNyeOgFerdigstilte.size > 100)
-                assert(alleOppgaverNyeOgFerdigstilte.map { it.behandlingType }.distinct().size > 1)
-                assert(alleOppgaverNyeOgFerdigstilte.map { it.fagsakYtelseType }.distinct().size > 1)
-            }
-        }
-    }
-
-    @Test
     fun `Hent fagsaker query`() {
         val oppgaveTjeneste = get<OppgaveTjeneste>()
 
@@ -106,7 +85,6 @@ class YtelseTest : AbstractK9LosIntegrationTest() {
             val behandlingsId = UUID.randomUUID()
 
             val oppgaveRepo = get<OppgaveRepository>()
-            val statistikkRepository = get<StatistikkRepository>()
 
             val oppgave = mockOppgave().copy(
                 eksternId = behandlingsId,
@@ -115,18 +93,6 @@ class YtelseTest : AbstractK9LosIntegrationTest() {
                 behandlendeEnhet = behandlendeEnhet
             )
             oppgaveRepo.lagre(behandlingsId) { oppgave }
-
-            statistikkRepository.lagreFerdigstilt(behandlingType.kode, behandlingsId, dato.toLocalDate())
-
-            val nyeOgFerdigstilte = AlleOppgaverNyeOgFerdigstilte(
-                oppgave.fagsakYtelseType,
-                behandlingType,
-                dato.toLocalDate(),
-                nye = mutableSetOf(behandlingsId.toString()),
-                ferdigstilte = mutableSetOf(behandlingsId.toString()),
-                ferdigstilteSaksbehandler = mutableSetOf(oppgave.ansvarligSaksbehandlerIdent!!)
-            )
-            statistikkRepository.lagre(nyeOgFerdigstilte) { nyeOgFerdigstilte }
     }
 
     private fun mockOppgave(): Oppgave {

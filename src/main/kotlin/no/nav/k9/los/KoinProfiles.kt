@@ -4,28 +4,7 @@ import io.ktor.server.application.*
 import kotlinx.coroutines.channels.Channel
 import no.nav.helse.dusseldorf.ktor.health.HealthService
 import no.nav.k9.los.KoinProfile.*
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.audit.K9Auditlogger
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.hikariConfig
-import no.nav.k9.los.domene.lager.oppgave.v2.BehandlingsmigreringTjeneste
-import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
-import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveTjenesteV2
 import no.nav.k9.los.domene.repository.*
-import no.nav.k9.los.fagsystem.k9sak.AksjonspunktHendelseMapper
-import no.nav.k9.los.fagsystem.k9sak.K9sakEventHandlerV2
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.PepClient
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.PepClientLocal
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.audit.Auditlogger
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.AzureGraphService
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.AzureGraphServiceLocal
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.IAzureGraphService
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.IPdlService
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.PdlService
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.PdlServiceLocal
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.modia.SakOgBehandlingProducer
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.aktivvask.Aktivvask
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonKonverteringJobb
@@ -48,6 +27,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillo
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.k9TilbakeEksternId
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.modia.SakOgBehandlingProducer
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9v3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient.IK9SakService
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakBehandlingOppfrisketRepository
@@ -58,11 +38,29 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.K9SakOppgaveT
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkPublisher
 import no.nav.k9.los.nyoppgavestyring.driftsmelding.DriftsmeldingRepository
+import no.nav.k9.los.nyoppgavestyring.driftsmelding.DriftsmeldingTjeneste
 import no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.GyldigeFeltutledere
 import no.nav.k9.los.nyoppgavestyring.forvaltning.ForvaltningRepository
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.PepClient
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.PepClientLocal
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheRepository
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.audit.Auditlogger
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.audit.K9Auditlogger
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.AzureGraphService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.AzureGraphServiceLocal
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.IAzureGraphService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.hikariConfig
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.IPdlService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.PdlService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.PdlServiceLocal
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
+import no.nav.k9.los.nyoppgavestyring.kodeverk.HentKodeverkTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
@@ -72,12 +70,14 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.PartisjonertOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheRepository
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonApisTjeneste
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3DtoBuilder
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerAdminTjeneste
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksTjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallRepositoryV3
@@ -86,13 +86,9 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.Da
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.status.StatusService
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederTjeneste
-import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
-import no.nav.k9.los.nyoppgavestyring.driftsmelding.DriftsmeldingTjeneste
-import no.nav.k9.los.nyoppgavestyring.kodeverk.HentKodeverkTjeneste
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonApisTjeneste
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3DtoBuilder
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerAdminTjeneste
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.*
+import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveKøOppdaterer
+import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
+import no.nav.k9.los.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.SakslisteTjeneste
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
@@ -113,17 +109,7 @@ fun common(app: Application, config: Configuration) = module {
     single { config.koinProfile() }
     single { config }
     single<DataSource> { app.hikariConfig(config) }
-    single {
-        NokkeltallTjeneste(
-            pepClient = get(),
-            oppgaverGruppertRepository = get(),
-            oppgaveRepository = get(),
-            statistikkRepository = get(),
-            nøkkeltallRepository = get(),
-            nøkkeltallRepositoryV3 = get(),
-            koinProfile = config.koinProfile(),
-        )
-    }
+
     single(named("oppgaveKøOppdatert")) {
         Channel<UUID>(Channel.UNLIMITED)
     }
@@ -153,18 +139,13 @@ fun common(app: Application, config: Configuration) = module {
     single {
         OppgaveKøRepository(
             dataSource = get(),
-            oppgaveRepositoryV2 = get(),
             oppgaveKøOppdatert = get(named("oppgaveKøOppdatert")),
             oppgaveRefreshChannel = get(named("oppgaveRefreshChannel")),
             pepClient = get()
         )
     }
 
-    single { AksjonspunktHendelseMapper(get()) }
-    single { OppgaveRepositoryV2(dataSource = get()) }
     single { TransactionalManager(dataSource = get()) }
-    single { BehandlingsmigreringTjeneste(get()) }
-    single { OppgaveTjenesteV2(get(), get(), get()) }
 
     single {
         SaksbehandlerRepository(
@@ -189,7 +170,6 @@ fun common(app: Application, config: Configuration) = module {
         ReservasjonRepository(
             oppgaveKøRepository = get(),
             oppgaveRepository = get(),
-            oppgaveRepositoryV2 = get(),
             saksbehandlerRepository = get(),
             dataSource = get()
         )
@@ -212,19 +192,11 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        NøkkeltallRepository(get())
-    }
-
-    single {
         NøkkeltallRepositoryV3(get())
     }
 
     single {
         OppgaverGruppertRepository(get())
-    }
-
-    single {
-        no.nav.k9.los.domene.repository.StatistikkRepository(get())
     }
 
     single {
@@ -245,22 +217,9 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        K9sakEventHandlerV2(
-            oppgaveTjenesteV2 = get(),
-            aksjonspunktHendelseMapper = get()
-        )
-    }
-
-    single {
         no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler(
-            oppgaveRepository = get(),
             k9SakEventRepository = get(),
             sakOgBehandlingProducer = get(),
-            oppgaveKøRepository = get(),
-            reservasjonRepository = get(),
-            statistikkChannel = get(named("statistikkRefreshChannel")),
-            statistikkRepository = get(),
-            reservasjonTjeneste = get(),
             k9SakTilLosAdapterTjeneste = get(),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
@@ -276,14 +235,8 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler(
-            oppgaveRepository = get(),
             behandlingProsessEventTilbakeRepository = get(),
             sakOgBehandlingProducer = get(),
-            oppgaveKøRepository = get(),
-            reservasjonRepository = get(),
-            statistikkRepository = get(),
-            statistikkChannel = get(named("statistikkRefreshChannel")),
-            reservasjonTjeneste = get(),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
             k9TilbakeTilLosAdapterTjeneste = get(),
         )
@@ -291,15 +244,7 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler(
-            oppgaveRepository = get(),
-            oppgaveTjenesteV2 = get(),
             punsjEventK9Repository = get(),
-            statistikkChannel = get(named("statistikkRefreshChannel")),
-            oppgaveKøRepository = get(),
-            reservasjonRepository = get(),
-            reservasjonTjeneste = get(),
-            statistikkRepository = get(),
-            azureGraphService = get(),
             punsjTilLosAdapterTjeneste = get(),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
@@ -312,7 +257,6 @@ fun common(app: Application, config: Configuration) = module {
             kafkaAivenConfig = config.getProfileAwareKafkaAivenConfig(),
             configuration = config,
             k9sakEventHandler = get(),
-            k9sakEventHandlerv2 = get(),
             k9TilbakeEventHandler = get(),
             k9PunsjEventHandler = get(),
             k9KlageEventHandler = get(),
@@ -330,7 +274,6 @@ fun common(app: Application, config: Configuration) = module {
             configuration = config,
             pepClient = get(),
             azureGraphService = get(),
-            statistikkRepository = get(),
             reservasjonOversetter = get(),
             statistikkChannel = get(named("statistikkRefreshChannel")),
             koinProfile = config.koinProfile,
@@ -428,11 +371,6 @@ fun common(app: Application, config: Configuration) = module {
     single { K9SakOppgaveTilDVHMapper() }
     single { K9KlageOppgaveTilDVHMapper() }
     single { OppgaveRepository(oppgavetypeRepository = get()) }
-    single {
-        StatistikkRepository(
-            dataSource = get(),
-        )
-    }
 
     single {
         StatistikkPublisher(
