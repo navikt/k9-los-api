@@ -24,7 +24,7 @@ class PepClientLocal : IPepClient {
         return false
     }
 
-    override suspend fun harTilgangTilKode6(ident: String): Boolean {
+    override suspend fun harTilgangTilKode6(ident: String, epost: String): Boolean {
         return false
     }
 

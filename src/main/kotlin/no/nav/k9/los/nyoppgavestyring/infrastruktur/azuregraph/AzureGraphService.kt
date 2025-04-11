@@ -6,29 +6,33 @@ import com.github.kittinunf.fuel.core.Request
 import com.github.kittinunf.fuel.coroutines.awaitStringResponseResult
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.result.Result
-import io.ktor.http.HttpHeaders
+import io.ktor.http.*
 import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.ktor.metrics.Operation
 import no.nav.helse.dusseldorf.oauth2.client.AccessToken
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.idToken
-import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.EnheterSomSkalUtelatesFraLos
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.idtoken.IIdToken
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.idtoken.IdToken
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.CacheObject
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
+import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.EnheterSomSkalUtelatesFraLos
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.LocalDateTime
+import java.util.*
 import kotlin.coroutines.coroutineContext
 
 open class AzureGraphService constructor(
     accessTokenClient: AccessTokenClient
 ) : IAzureGraphService {
     private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
+    private val identCache = Cache<String, String>(cacheSizeLimit = 1000)
     private val officeLocationCache = Cache<String, String>(cacheSizeLimit = 1000)
+    private val saksbehandlerUserIdCache = Cache<String, UUID>(cacheSizeLimit = 1000)
+    private val userIdGrupperCache = Cache<UUID, Set<UUID>>(cacheSizeLimit = 1000)
     private val log = LoggerFactory.getLogger("AzureGraphService")!!
 
     override suspend fun hentIdentTilInnloggetBruker(): String {
@@ -107,7 +111,7 @@ open class AzureGraphService constructor(
                     val result = LosObjectMapper.instance.readValue<OfficeLocationFilterResult>(json).value.also {
                         if (it.size > 1) log.warn("Flere enn 1 treff på ident")
                     }
-                    if (result.isEmpty()){
+                    if (result.isEmpty()) {
                         log.warn("Fant ingen treff på enhet for saksbehandler $brukernavn, bruker tom streng som enhet")
                         ""
                     } else {
@@ -124,6 +128,77 @@ open class AzureGraphService constructor(
             return cachedOfficeLocation.value
         }
     }
+
+    override suspend fun hentGrupperForSaksbehandler(saksbehandlerEpost: String): Set<UUID> {
+        val userId = hentUserIdForSaksbehandler(saksbehandlerEpost)
+        return hentGrupperForSaksbehandler(userId)
+    }
+
+    private suspend fun hentUserIdForSaksbehandler(saksbehandlerEpost: String): UUID {
+        return saksbehandlerUserIdCache.hentSuspend(saksbehandlerEpost) {
+            val url =
+                "https://graph.microsoft.com/v1.0/users?\$filter=mailNickname eq '$saksbehandlerEpost'&\$select=id"
+            val accessToken = accessToken(null)
+            val httpRequest = url
+                .httpGet()
+                .header(
+                    HttpHeaders.Accept to "application/json",
+                    HttpHeaders.Authorization to "Bearer ${accessToken.token}",
+                    "ConsistencyLevel" to "eventual",
+                )
+
+            val json = Retry.retry(
+                operation = "user-id-for-saksbehandler",
+                initialDelay = Duration.ofMillis(200),
+                factor = 2.0,
+                logger = log
+            ) {
+                val (request, _, result) = Operation.monitored(
+                    app = "k9-los-api",
+                    operation = "user-id-for-saksbehandler",
+                    resultResolver = { 200 == it.second.statusCode }
+                ) { httpRequest.awaitStringResponseResult() }
+                håndterResultat(result, request)
+            }
+
+            val x: UserIdFilterResult = LosObjectMapper.instance.readValue<UserIdFilterResult>(json)
+            val result = x.value
+            if (result.size != 1) {
+                throw IllegalArgumentException("Fikk ${result.size} treff på saksbehandler i microsoft graph, forventet 1 treff")
+            }
+            result.first().id
+        }
+    }
+
+    private suspend fun hentGrupperForSaksbehandler(saksbehandlerUserId: UUID): Set<UUID> {
+        return userIdGrupperCache.hentSuspend(saksbehandlerUserId) {
+            val url = "https://graph.microsoft.com/v1.0/users/$saksbehandlerUserId/memberOf"
+            val accessToken = accessToken(null)
+            val httpRequest = url
+                .httpGet()
+                .header(
+                    HttpHeaders.Accept to "application/json",
+                    HttpHeaders.Authorization to "Bearer ${accessToken.token}",
+                    "ConsistencyLevel" to "eventual",
+                )
+
+            val json = Retry.retry(
+                operation = "grupper-for-saksbehandler",
+                initialDelay = Duration.ofMillis(200),
+                factor = 2.0,
+                logger = log
+            ) {
+                val (request, _, result) = Operation.monitored(
+                    app = "k9-los-api",
+                    operation = "grupper-for-saksbehandler",
+                    resultResolver = { 200 == it.second.statusCode }
+                ) { httpRequest.awaitStringResponseResult() }
+                håndterResultat(result, request)
+            }
+            LosObjectMapper.instance.readValue<DirectoryOjects>(json).value.map { it.id }.toSet()
+        }
+    }
+
 
     private fun accessToken(onBehalfOf: IIdToken? = null): AccessToken {
         return onBehalfOf?.run {

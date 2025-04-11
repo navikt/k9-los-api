@@ -1,5 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph
 
+import java.util.*
+
 interface IAzureGraphService {
 
     suspend fun hentIdentTilInnloggetBruker(): String
@@ -7,4 +9,6 @@ interface IAzureGraphService {
     suspend fun hentEnhetForInnloggetBruker(): String
 
     suspend fun hentEnhetForBrukerMedSystemToken(brukernavn: String): String?
+
+    suspend fun hentGrupperForSaksbehandler(saksbehandlerEpost: String): Set<UUID>
 }
