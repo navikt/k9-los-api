@@ -129,15 +129,15 @@ open class AzureGraphService constructor(
         }
     }
 
-    override suspend fun hentGrupperForSaksbehandler(saksbehandlerEpost: String): Set<UUID> {
-        val userId = hentUserIdForSaksbehandler(saksbehandlerEpost)
+    override suspend fun hentGrupperForSaksbehandler(saksbehandlerIdent: String): Set<UUID> {
+        val userId = hentUserIdForSaksbehandler(saksbehandlerIdent)
         return hentGrupperForSaksbehandler(userId)
     }
 
-    private suspend fun hentUserIdForSaksbehandler(saksbehandlerEpost: String): UUID {
-        return saksbehandlerUserIdCache.hentSuspend(saksbehandlerEpost) {
+    private suspend fun hentUserIdForSaksbehandler(saksbehandlerIdent: String): UUID {
+        return saksbehandlerUserIdCache.hentSuspend(saksbehandlerIdent) {
             val url =
-                "https://graph.microsoft.com/v1.0/users?\$filter=mailNickname eq '$saksbehandlerEpost'&\$select=id"
+                "https://graph.microsoft.com/v1.0/users?\$filter=onPremisesSamAccountName eq '$saksbehandlerIdent'&\$select=id"
             val accessToken = accessToken(null)
             val httpRequest = url
                 .httpGet()
