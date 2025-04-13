@@ -16,7 +16,7 @@ open class AzureGraphServiceLocal : IAzureGraphService {
         return "3450"
     }
 
-    override suspend fun hentGrupperForSaksbehandler(saksbehandlerEpost: String): Set<UUID> {
+    override suspend fun hentGrupperForSaksbehandler(saksbehandlerIdent: String): Set<UUID> {
         return emptySet()
     }
 
