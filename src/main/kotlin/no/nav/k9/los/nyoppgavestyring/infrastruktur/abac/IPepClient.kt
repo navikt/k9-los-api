@@ -9,7 +9,7 @@ interface IPepClient {
 
     suspend fun harTilgangTilKode6(): Boolean
 
-    suspend fun harTilgangTilKode6(ident: String, epost: String): Boolean
+    suspend fun harTilgangTilKode6(ident: String): Boolean
 
     suspend fun harBasisTilgang(): Boolean
 

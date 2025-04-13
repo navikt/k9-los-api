@@ -71,7 +71,7 @@ class PepClient(
         return coroutineContext.idToken().erSaksbehandler()
     }
 
-    override suspend fun harTilgangTilKode6(ident: String, epost: String): Boolean {
+    override suspend fun harTilgangTilKode6(ident: String): Boolean {
         if (ident == coroutineContext.idToken().getNavIdent()) {
             return harTilgangTilKode6();
         }
@@ -87,7 +87,7 @@ class PepClient(
                 resultat
             },
             sifAbacPdpImpl = {
-                val grupper = azureGraphService.hentGrupperForSaksbehandler(epost)
+                val grupper = azureGraphService.hentGrupperForSaksbehandler(ident)
                 grupper.contains(UUID.fromString(System.getenv("BRUKER_GRUPPE_ID_KODE6")))
             }
         )
