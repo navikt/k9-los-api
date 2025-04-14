@@ -14,8 +14,8 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.sif.abac.kontrakt.abac.BeskyttetRessursActionAttributt
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import no.nav.sif.abac.kontrakt.abac.ResourceType
-import no.nav.sif.abac.kontrakt.abac.dto.AktørIderOperasjonDto
 import no.nav.sif.abac.kontrakt.abac.dto.OperasjonDto
+import no.nav.sif.abac.kontrakt.abac.dto.PersonerOperasjonDto
 import no.nav.sif.abac.kontrakt.abac.dto.SaksnummerDto
 import no.nav.sif.abac.kontrakt.abac.dto.SaksnummerOperasjonDto
 import no.nav.sif.abac.kontrakt.person.AktørId
@@ -126,7 +126,7 @@ class SifAbacPdpKlient(
     }
 
     override suspend fun harTilgangTilPersoner(action: Action, aktørIder: List<AktørId>): Boolean {
-        val request = AktørIderOperasjonDto(aktørIder, OperasjonDto(ResourceType.FAGSAK, map(action)))
+        val request = PersonerOperasjonDto(aktørIder, emptyList(), OperasjonDto(ResourceType.FAGSAK, map(action)))
         val antallForsøk = 3
         val jwt = coroutineContext.idToken().value
         val oboToken = cachedAccessTokenClient.getAccessToken(scopes, jwt)
