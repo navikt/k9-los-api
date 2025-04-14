@@ -282,7 +282,7 @@ class SaksbehandlerRepository(
     }
 
     suspend fun finnSaksbehandlerMedIdent(ident: String): Saksbehandler? {
-        val skjermet = pepClient.harTilgangTilKode6(ident)
+        val skjermet = pepClient.harTilgangTilKode6()
 
         val saksbehandler = using(sessionOf(dataSource)) {
             it.transaction {tx->
