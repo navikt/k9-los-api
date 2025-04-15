@@ -6,7 +6,6 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isTrue
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
@@ -180,7 +179,7 @@ class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
 
             // Kall ryddOpp-metoden
             transactionalManager.transaction { tx ->
-                sisteOppgaverRepository.ryddOppForSaksbehandler(tx, saksbehandler.epost)
+                sisteOppgaverRepository.ryddOppForBrukerIdent(tx, saksbehandler.epost)
             }
         }
 
