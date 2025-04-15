@@ -50,14 +50,14 @@ class SisteOppgaverTjeneste(
     }
 
     suspend fun lagreSisteOppgave(oppgaveNøkkelDto: OppgaveNøkkelDto) {
-        val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
+        val brukerIdent = azureGraphService.hentIdentTilInnloggetBruker()
         transactionalManager.transaction { tx ->
             sisteOppgaverRepository.lagreSisteOppgave(
                 tx,
-                saksbehandlerIdent,
+                brukerIdent,
                 oppgaveNøkkelDto
             )
-            sisteOppgaverRepository.ryddOppForSaksbehandler(tx, saksbehandlerIdent)
+            sisteOppgaverRepository.ryddOppForBrukerIdent(tx, brukerIdent)
         }
     }
 }
