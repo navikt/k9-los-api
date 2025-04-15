@@ -382,7 +382,7 @@ private fun Route.api() {
                 }) { OppgaveV3Api() } // Må legge til tilgangskontroll dersom disse endepunktene aktiveres
             route("sok") { SøkeboksApi() }
             route("nokkeltall") { NøkkeltallV3Apis() }
-            route("sisteoppgaver") { SisteOppgaverApi() }
+            route("siste-oppgaver") { SisteOppgaverApi() }
         }
     }
 }

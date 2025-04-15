@@ -19,7 +19,7 @@ fun Route.SisteOppgaverApi() {
 
 
     get({
-        description = "Siste 10 oppgaver saksbehandler har besøkt."
+        description = "Siste 10 oppgaver innlogget bruker har besøkt."
         response {
             HttpStatusCode.OK to { body<List<SisteOppgaverDto>>() }
         }
@@ -35,7 +35,7 @@ fun Route.SisteOppgaverApi() {
 
     post({
         description =
-            "Legge til siste oppgave i listen over oppgaver saksbehandler har besøkt, og vil slette eldste oppgave i listen. Dersom oppgave ligger i listen fra før, vil den bli flyttet til toppen av listen."
+            "Legge til siste oppgave i listen over oppgaver innlogget bruker har besøkt, og vil slette eldste oppgave i listen. Dersom oppgave ligger i listen fra før, vil den bli flyttet til toppen av listen."
         request { body<OppgaveNøkkelDto>() }
     }) {
         requestContextService.withRequestContext(call) {
