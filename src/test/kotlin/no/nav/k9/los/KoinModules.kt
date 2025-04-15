@@ -67,6 +67,7 @@ import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
 import no.nav.k9.los.nyoppgavestyring.reservasjon.*
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerAdminTjeneste
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.nyoppgavestyring.sisteoppgaver.SisteOppgaverRepository
 import no.nav.k9.los.nyoppgavestyring.sisteoppgaver.SisteOppgaverTjeneste
 import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksTjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
@@ -640,6 +641,10 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             reservasjonV3Tjeneste = get(),
             saksbehandlerRepository = get()
         )
+    }
+
+    single {
+        SisteOppgaverRepository(dataSource = get())
     }
 
     single {
