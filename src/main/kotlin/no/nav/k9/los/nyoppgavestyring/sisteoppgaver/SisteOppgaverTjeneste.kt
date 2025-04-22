@@ -39,10 +39,10 @@ class SisteOppgaverTjeneste(
             runBlocking(Dispatchers.IO) { innhentinger.awaitAll() }
                 .filter { (harTilgang) -> harTilgang }
                 .map { (_, personPdl, oppgave) ->
-                    val navOgFnr = personPdl?.person?.let { "${it.navn()} ${it.fnr()}" } ?: "Ukjent"
+                    val navnOgFnr = personPdl?.person?.let { "${it.navn()} ${it.fnr()}" } ?: "Ukjent"
                     SisteOppgaverDto(
                         oppgaveEksternId = oppgave.eksternId,
-                        tittel = "$navOgFnr (${oppgave.oppgavetype.eksternId})",
+                        tittel = "$navnOgFnr (${oppgave.oppgavetype.eksternId})",
                         url = oppgave.getOppgaveBehandlingsurl(),
                     )
                 }
