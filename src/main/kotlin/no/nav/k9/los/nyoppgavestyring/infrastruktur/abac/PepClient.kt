@@ -360,7 +360,7 @@ class PepClient(
         }
     }
 
-    suspend fun <T> velgImpl(abacK9Impl: suspend () -> T, sifAbacPdpImpl: suspend () -> T): T {
+    suspend fun velgImpl(abacK9Impl: suspend () -> Boolean, sifAbacPdpImpl: suspend () -> Boolean): Boolean {
         return when (config.valgtPdp()) {
             Configuration.ValgtPdp.ABAC_K9 -> abacK9Impl()
             Configuration.ValgtPdp.SIF_ABAC_PDP -> sifAbacPdpImpl()
