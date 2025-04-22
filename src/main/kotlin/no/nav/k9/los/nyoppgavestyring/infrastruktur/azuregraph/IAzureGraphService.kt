@@ -6,5 +6,5 @@ interface IAzureGraphService {
 
     suspend fun hentEnhetForInnloggetBruker(): String
 
-    suspend fun hentEnhetForBrukerMedSystemToken(brukernavn: String): String?
+    suspend fun hentEnhetForBrukerMedSystemToken(saksbehandlerIdent: String): String?
 }

@@ -51,23 +51,23 @@ open class AzureGraphService constructor(
 
     override suspend fun hentEnhetForInnloggetBruker(): String {
         coroutineContext.idToken().let { brukersToken ->
-            val brukernavnFraKontekst = IdToken(brukersToken.value).getUsername()
-            return hentEnhetForBruker(brukernavn = brukernavnFraKontekst, onBehalfOf = brukersToken)
+            val ident = IdToken(brukersToken.value).getNavIdent()
+            return hentEnhetForBruker(saksbehandlerIdent = ident, onBehalfOf = brukersToken)
         }
     }
 
-    override suspend fun hentEnhetForBrukerMedSystemToken(brukernavn: String): String? {
+    override suspend fun hentEnhetForBrukerMedSystemToken(saksbehandlerIdent: String): String? {
         return try {
-            hentEnhetForBruker(brukernavn = brukernavn)
+            hentEnhetForBruker(saksbehandlerIdent = saksbehandlerIdent)
                 .takeIf { EnheterSomSkalUtelatesFraLos.sjekkKanBrukes(it) }
         } catch (e: Exception) {
-            log.warn("Klarte ikke å hente behandlende enhet for $brukernavn", e)
+            log.warn("Klarte ikke å hente behandlende enhet for $saksbehandlerIdent", e)
             null
         }
     }
 
-    private suspend fun hentEnhetForBruker(brukernavn: String, onBehalfOf: IIdToken? = null): String {
-        val key = brukernavn + "_office_location"
+    private suspend fun hentEnhetForBruker(saksbehandlerIdent: String, onBehalfOf: IIdToken? = null): String {
+        val key = saksbehandlerIdent + "_office_location"
         val cachedOfficeLocation = officeLocationCache.get(key)
         if (cachedOfficeLocation == null) {
             val accessToken = accessToken(onBehalfOf)
@@ -75,7 +75,7 @@ open class AzureGraphService constructor(
             val graphUrl = if (onBehalfOf != null) {
                 "https://graph.microsoft.com/v1.0/me?\$select=officeLocation"
             } else {
-                "https://graph.microsoft.com/v1.0/users?\$filter=mailNickname eq '$brukernavn'&\$select=officeLocation"
+                "https://graph.microsoft.com/v1.0/users?\$filter=onPremisesSamAccountName eq '$saksbehandlerIdent'&\$select=officeLocation"
             }
 
             val httpRequest = graphUrl
@@ -108,7 +108,7 @@ open class AzureGraphService constructor(
                         if (it.size > 1) log.warn("Flere enn 1 treff på ident")
                     }
                     if (result.isEmpty()){
-                        log.warn("Fant ingen treff på enhet for saksbehandler $brukernavn, bruker tom streng som enhet")
+                        log.warn("Fant ingen treff på enhet for saksbehandler $saksbehandlerIdent, bruker tom streng som enhet")
                         ""
                     } else {
                         result.first().officeLocation
@@ -117,7 +117,7 @@ open class AzureGraphService constructor(
                 officeLocationCache.set(key, CacheObject(officeLocation, LocalDateTime.now().plusDays(180)))
                 return officeLocation
             } catch (e: Exception) {
-                log.warn("Feilet i oppslag av enhet for saksbehandler $brukernavn, bruker tom streng som enhet", e)
+                log.warn("Feilet i oppslag av enhet for saksbehandler $saksbehandlerIdent, bruker tom streng som enhet", e)
                 ""
             }
         } else {
