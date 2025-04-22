@@ -29,7 +29,6 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
-import java.util.*
 
 class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
 
@@ -91,7 +90,6 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
             .medOppgaveFeltVerdi(FeltType.AKTØR_ID, aktorId1)
             .lagOgLagre()
             
-        // Mock opp PDL-respons
         val mockPerson: PersonPdl = mockk(relaxed = true)
         coEvery { pdlService.person(aktorId1) } returns PersonPdlResponse(false, mockPerson)
 
@@ -108,17 +106,14 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
             )
         )
         
-        // Hent siste oppgaver
+        // Hent siste oppgaver, og sjekk resultatet
         val sisteOppgaver = sisteOppgaverTjeneste.hentSisteOppgaver(testScope)
-        
-        // Sjekk resultatet
         assertThat(sisteOppgaver).hasSize(1)
         assertThat(sisteOppgaver[0].oppgaveEksternId).isEqualTo(oppgave1.eksternId)
     }
     
     @Test
     fun `skal filtrere bort oppgaver som bruker ikke har tilgang til`() = runTest {
-        // Opprett to oppgaver
         val aktorId1 = "1234567890123"
         val aktorId2 = "9876543210987"
 
@@ -130,12 +125,11 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
             .medOppgaveFeltVerdi(FeltType.AKTØR_ID, aktorId2)
             .lagOgLagre()
 
-        // Mock opp PDL-respons
         val mockPerson: PersonPdl = mockk(relaxed = true)
         coEvery { pdlService.person(aktorId1) } returns PersonPdlResponse(false, mockPerson)
         coEvery { pdlService.person(aktorId2) } returns PersonPdlResponse(true, mockPerson)
         
-        // Mock at bruker har tilgang til oppgave1 men ikke oppgave2
+        // Bruker har tilgang til oppgave1 men ikke oppgave2
         val oppgaveSlot = slot<Oppgave>()
         coEvery {
             pepClient.harTilgangTilOppgaveV3(capture(oppgaveSlot), eq(Action.read), eq(Auditlogging.IKKE_LOGG))
@@ -144,7 +138,6 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
             oppgave.eksternId == oppgave1.eksternId
         }
         
-        // Lagre begge oppgavene som siste besøkt
         sisteOppgaverTjeneste.lagreSisteOppgave(
             OppgaveNøkkelDto(
                 områdeEksternId = "K9",
@@ -160,11 +153,9 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
                 oppgaveTypeEksternId = "k9sak"
             )
         )
-        
-        // Hent siste oppgaver
-        val sisteOppgaver = sisteOppgaverTjeneste.hentSisteOppgaver(testScope)
-        
+
         // Sjekk resultatet - skal kun få oppgave1 tilbake siden bruker ikke har tilgang til oppgave2
+        val sisteOppgaver = sisteOppgaverTjeneste.hentSisteOppgaver(testScope)
         assertThat(sisteOppgaver).hasSize(1)
         assertThat(sisteOppgaver[0].oppgaveEksternId).isEqualTo(oppgave1.eksternId)
     }

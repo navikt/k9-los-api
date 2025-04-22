@@ -30,7 +30,6 @@ class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
         saksbehandlerRepository = get()
         transactionalManager = get()
 
-        // Opprette en testbruker
         runBlocking {
             saksbehandlerRepository.addSaksbehandler(
                 Saksbehandler(
@@ -48,11 +47,9 @@ class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `skal lagre og hente siste oppgaver for en saksbehandler`() {
-        // Opprett to oppgaver
         val behandlingUuid1 = UUID.randomUUID().toString()
         val behandlingUuid2 = UUID.randomUUID().toString()
 
-        // Lagre oppgavene som siste besøkte
         transactionalManager.transaction { tx ->
             sisteOppgaverRepository.lagreSisteOppgave(
                 tx,
@@ -77,12 +74,10 @@ class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
             )
         }
 
-        // Hent siste oppgaver
+        // Hent siste oppgaver, og sjekk resultatet
         val sisteOppgaver = transactionalManager.transaction { tx ->
             sisteOppgaverRepository.hentSisteOppgaver(tx, saksbehandler.epost)
         }
-
-        // Sjekk resultatet
         assertThat(sisteOppgaver).hasSize(2)
         assertThat(sisteOppgaver[0].eksternId).isEqualTo(behandlingUuid2)
         assertThat(sisteOppgaver[1].eksternId).isEqualTo(behandlingUuid1)
@@ -90,12 +85,10 @@ class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `skal flytte oppgave til toppen av listen når den lagres på nytt`() {
-        // Opprett tre oppgaver
         val behandlingUuid1 = UUID.randomUUID().toString()
         val behandlingUuid2 = UUID.randomUUID().toString()
         val behandlingUuid3 = UUID.randomUUID().toString()
 
-        // Lagre oppgavene som siste besøkte i rekkefølge
         transactionalManager.transaction { tx ->
             sisteOppgaverRepository.lagreSisteOppgave(
                 tx,
@@ -132,7 +125,6 @@ class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
             )
         }
 
-
         // Lagre den første oppgaven på nytt - den skal da flyttes til toppen
         transactionalManager.transaction { tx ->
             sisteOppgaverRepository.lagreSisteOppgave(
@@ -146,24 +138,20 @@ class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
             )
         }
 
-        // Hent siste oppgaver
+        // Hent siste oppgaver, og sjekk resultatet
         val sisteOppgaver = transactionalManager.transaction { tx ->
             sisteOppgaverRepository.hentSisteOppgaver(tx, saksbehandler.epost)
         }
-
-        // Sjekk at oppgave1 nå er øverst
         assertThat(sisteOppgaver).hasSize(3)
-        assertThat(sisteOppgaver[0].eksternId).isEqualTo(behandlingUuid1)
+        assertThat(sisteOppgaver[0].eksternId).isEqualTo(behandlingUuid1) // Oppgave1 skal nå være øverst
         assertThat(sisteOppgaver[1].eksternId).isEqualTo(behandlingUuid3)
         assertThat(sisteOppgaver[2].eksternId).isEqualTo(behandlingUuid2)
     }
 
     @Test
     fun `skal rydde opp og beholde kun de 10 nyeste oppgavene`() {
-        // Opprett 11 oppgaver
+        // Opprett 11 oppgaver, og lagre de som siste besøkte
         val behandlingUuids = (1..11).map { UUID.randomUUID().toString() }
-
-        // Lagre alle 11 oppgaver som siste besøkte
         behandlingUuids.forEach { uuid ->
             transactionalManager.transaction { tx ->
                 sisteOppgaverRepository.lagreSisteOppgave(
@@ -177,18 +165,15 @@ class SisteOppgaverRepositoryTest : AbstractK9LosIntegrationTest() {
                 )
             }
 
-            // Kall ryddOpp-metoden
             transactionalManager.transaction { tx ->
                 sisteOppgaverRepository.ryddOppForBrukerIdent(tx, saksbehandler.epost)
             }
         }
 
-        // Hent siste oppgaver
+        // Hent siste oppgaver. Sjekk at vi har 10 oppgaver og at den eldste er fjernet
         val sisteOppgaver = transactionalManager.transaction { tx ->
             sisteOppgaverRepository.hentSisteOppgaver(tx, saksbehandler.epost)
         }
-
-        // Sjekk at vi har 10 oppgaver og at den eldste er fjernet
         assertThat(sisteOppgaver).hasSize(10)
         val eldsteBehandlingUuid = behandlingUuids.first()
         assertThat(sisteOppgaver.none { it.eksternId == eldsteBehandlingUuid }).isTrue()
