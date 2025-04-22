@@ -29,7 +29,6 @@ open class AzureGraphService constructor(
     accessTokenClient: AccessTokenClient
 ) : IAzureGraphService {
     private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
-    private val identCache = Cache<String, String>(cacheSizeLimit = 1000)
     private val officeLocationCache = Cache<String, String>(cacheSizeLimit = 1000)
     private val saksbehandlerUserIdCache = Cache<String, UUID>(cacheSizeLimit = 1000)
     private val userIdGrupperCache = Cache<UUID, Set<UUID>>(cacheSizeLimit = 1000)
