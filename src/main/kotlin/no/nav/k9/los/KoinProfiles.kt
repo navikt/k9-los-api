@@ -13,9 +13,6 @@ import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveTjenesteV2
 import no.nav.k9.los.domene.repository.*
 import no.nav.k9.los.fagsystem.k9sak.AksjonspunktHendelseMapper
 import no.nav.k9.los.fagsystem.k9sak.K9sakEventHandlerV2
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.PepClient
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.PepClientLocal
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.audit.Auditlogger
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.AzureGraphService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.AzureGraphServiceLocal
@@ -88,6 +85,7 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.status.Status
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
 import no.nav.k9.los.nyoppgavestyring.driftsmelding.DriftsmeldingTjeneste
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.*
 import no.nav.k9.los.nyoppgavestyring.kodeverk.HentKodeverkTjeneste
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonApisTjeneste
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3DtoBuilder
@@ -765,9 +763,6 @@ fun preprodConfig(config: Configuration) = module {
             accessTokenClient = get<AccessTokenClientResolver>().azureV2()
         )
     }
-    single<IPepClient> {
-        PepClient(azureGraphService = get(), config = config, k9Auditlogger = K9Auditlogger(Auditlogger(config)))
-    }
     single<IK9SakService> {
         K9SakServiceSystemClient(
             configuration = get(),
@@ -804,6 +799,17 @@ fun preprodConfig(config: Configuration) = module {
             scopeSak = "api://dev-fss.k9saksbehandling.k9-sak/.default"
         )
     }
+
+    single<ISifAbacPdpKlient> {
+        SifAbacPdpKlient (
+            configuration = get(),
+            accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+            scope = "api://dev-fss.k9saksbehandling.sif-abac-pdp/.default",
+        )
+    }
+    single<IPepClient> {
+        PepClient(azureGraphService = get(), config = config, k9Auditlogger = K9Auditlogger(Auditlogger(config)), get())
+    }
 }
 
 fun prodConfig(config: Configuration) = module {
@@ -811,9 +817,6 @@ fun prodConfig(config: Configuration) = module {
         AzureGraphService(
             accessTokenClient = get<AccessTokenClientResolver>().azureV2()
         )
-    }
-    single<IPepClient> {
-        PepClient(azureGraphService = get(), config = config, k9Auditlogger = K9Auditlogger(Auditlogger(config)))
     }
     single<IK9SakService> {
         K9SakServiceSystemClient(
@@ -850,6 +853,18 @@ fun prodConfig(config: Configuration) = module {
             scopeKlage = "api://prod-fss.k9saksbehandling.k9-klage/.default",
             scopeSak = "api://prod-fss.k9saksbehandling.k9-sak/.default"
         )
+    }
+
+    single<ISifAbacPdpKlient> {
+        SifAbacPdpKlient (
+            configuration = get(),
+            accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+            scope = "api://prod-fss.k9saksbehandling.sif-abac-pdp/.default",
+        )
+    }
+
+    single<IPepClient> {
+        PepClient(azureGraphService = get(), config = config, k9Auditlogger = K9Auditlogger(Auditlogger(config)), get())
     }
 }
 

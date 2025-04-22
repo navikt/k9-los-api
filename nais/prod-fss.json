@@ -23,9 +23,11 @@
   "app_k9klage_url": "https://k9-klage.intern.nav.no/k9/klage/api",
   "app_k9sak_frontend_url": "https://k9.intern.nav.no/k9/web",
   "app_k9punsj_frontend_url": "https://k9-punsj-frontend.intern.nav.no",
+  "app_sif_abac_pdp_url": "http://sif-abac-pdp/sif/sif-abac-pdp",
   "bootstrap_servers": "a01apvl00145.adeo.no:8443,a01apvl00146.adeo.no:8443,a01apvl00147.adeo.no:8443,a01apvl00148.adeo.no:8443,a01apvl00149.adeo.no:8443,a01apvl00150.adeo.no:8443",
   "deployment_environment": "p",
   "ny_oppgavestyring_dvh_sending": "true",
   "ny_oppgavestyring_rest_api": "false",
+  "valgt_pdp" : "abac-k9",
   "nokkeltall_enheter": "4403 Nav ARBEID OG YTELSER KRISTIANIA,4410 Nav ARBEID OG YTELSER SØRLANDET"
 }
