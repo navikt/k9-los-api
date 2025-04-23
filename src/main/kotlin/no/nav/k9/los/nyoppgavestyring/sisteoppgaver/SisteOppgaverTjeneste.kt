@@ -24,29 +24,29 @@ class SisteOppgaverTjeneste(
         scope: CoroutineScope,
     ): List<SisteOppgaverDto> {
         val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
-        return transactionalManager.transaction { tx ->
-            val oppgaver = sisteOppgaverRepository.hentSisteOppgaver(tx, saksbehandlerIdent)
+        val oppgaver = transactionalManager.transaction { tx ->
+            sisteOppgaverRepository.hentSisteOppgaver(tx, saksbehandlerIdent)
                 .map { oppgaveRepository.hentNyesteOppgaveForEksternId(tx, it.område, it.eksternId) }
-
-            val innhentinger = oppgaver.map { oppgave ->
-                scope.async {
-                    val harTilgang = pepClient.harTilgangTilOppgaveV3(oppgave, Action.read, Auditlogging.IKKE_LOGG)
-                    val personPdl = oppgave.hentVerdi("aktorId")?.let { pdlService.person(it) }
-                    Triple(harTilgang, personPdl, oppgave)
-                }
-            }
-
-            runBlocking(Dispatchers.IO) { innhentinger.awaitAll() }
-                .filter { (harTilgang) -> harTilgang }
-                .map { (_, personPdl, oppgave) ->
-                    val navnOgFnr = personPdl?.person?.let { "${it.navn()} ${it.fnr()}" } ?: "Ukjent"
-                    SisteOppgaverDto(
-                        oppgaveEksternId = oppgave.eksternId,
-                        tittel = "$navnOgFnr (${oppgave.oppgavetype.eksternId})",
-                        url = oppgave.getOppgaveBehandlingsurl(),
-                    )
-                }
         }
+
+        val innhentinger = oppgaver.map { oppgave ->
+            scope.async {
+                val harTilgang = pepClient.harTilgangTilOppgaveV3(oppgave, Action.read, Auditlogging.IKKE_LOGG)
+                val personPdl = oppgave.hentVerdi("aktorId")?.let { pdlService.person(it) }
+                Triple(harTilgang, personPdl, oppgave)
+            }
+        }
+
+        return runBlocking(Dispatchers.IO) { innhentinger.awaitAll() }
+            .filter { (harTilgang) -> harTilgang }
+            .map { (_, personPdl, oppgave) ->
+                val navnOgFnr = personPdl?.person?.let { "${it.navn()} ${it.fnr()}" } ?: "Ukjent"
+                SisteOppgaverDto(
+                    oppgaveEksternId = oppgave.eksternId,
+                    tittel = "$navnOgFnr (${oppgave.oppgavetype.eksternId})",
+                    url = oppgave.getOppgaveBehandlingsurl(),
+                )
+            }
     }
 
     suspend fun lagreSisteOppgave(oppgaveNøkkelDto: OppgaveNøkkelDto) {
