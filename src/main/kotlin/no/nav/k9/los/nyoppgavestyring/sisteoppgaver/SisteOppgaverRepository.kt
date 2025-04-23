@@ -38,9 +38,9 @@ class SisteOppgaverRepository(
             queryOf(
                 """
                     INSERT INTO siste_oppgaver (oppgave_ekstern_id, oppgavetype_id, bruker_ident, tidspunkt)
-                    VALUES (:oppgaveEksternId, (select id from oppgavetype where ekstern_id = :oppgavetype), :bruker_ident, NOW())
+                    VALUES (:oppgaveEksternId, (select id from oppgavetype where ekstern_id = :oppgavetype), :bruker_ident, localtimestamp)
                     ON CONFLICT (oppgave_ekstern_id, oppgavetype_id, bruker_ident)
-                    DO UPDATE SET tidspunkt = NOW()
+                    DO UPDATE SET tidspunkt = localtimestamp
                 """.trimIndent(),
                 mapOf(
                     "oppgaveEksternId" to oppgaveNøkkel.oppgaveEksternId,
