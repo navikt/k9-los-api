@@ -31,7 +31,7 @@ data class Configuration(private val config: ApplicationConfig) {
     internal fun k9FrontendUrl() = config.getRequiredString("nav.register_urls.k9_frontend_url", secret = false)
     internal fun k9PunsjFrontendUrl() =
         config.getRequiredString("nav.register_urls.k9_punsj_frontend_url", secret = false)
-    internal fun sifAbacPdpUrl() = config.getRequiredString("nav.register_urls.sif_abac_pdp", secret = false)
+    internal fun sifAbacPdpUrl() = config.getRequiredString("nav.register_urls.sif_abac_pdp_url", secret = false)
 
     internal val abacUsername = config.getRequiredString("nav.abac.system_user", secret = false)
     internal val abacPassword = config.getRequiredString("nav.abac.system_user_password", secret = false)
