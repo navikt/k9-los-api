@@ -4,25 +4,12 @@ import io.ktor.server.application.*
 import kotlinx.coroutines.channels.Channel
 import no.nav.helse.dusseldorf.ktor.health.HealthService
 import no.nav.k9.los.KoinProfile.*
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.audit.K9Auditlogger
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.hikariConfig
 import no.nav.k9.los.domene.lager.oppgave.v2.BehandlingsmigreringTjeneste
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveTjenesteV2
 import no.nav.k9.los.domene.repository.*
 import no.nav.k9.los.fagsystem.k9sak.AksjonspunktHendelseMapper
 import no.nav.k9.los.fagsystem.k9sak.K9sakEventHandlerV2
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.audit.Auditlogger
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.AzureGraphService
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.AzureGraphServiceLocal
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.IAzureGraphService
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.IPdlService
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.PdlService
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.PdlServiceLocal
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.modia.SakOgBehandlingProducer
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.aktivvask.Aktivvask
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonKonverteringJobb
@@ -45,6 +32,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillo
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.k9TilbakeEksternId
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.modia.SakOgBehandlingProducer
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9v3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient.IK9SakService
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakBehandlingOppfrisketRepository
@@ -55,11 +43,27 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.K9SakOppgaveT
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkPublisher
 import no.nav.k9.los.nyoppgavestyring.driftsmelding.DriftsmeldingRepository
+import no.nav.k9.los.nyoppgavestyring.driftsmelding.DriftsmeldingTjeneste
 import no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.GyldigeFeltutledere
 import no.nav.k9.los.nyoppgavestyring.forvaltning.ForvaltningRepository
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.*
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheRepository
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.audit.Auditlogger
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.audit.K9Auditlogger
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.AzureGraphService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.AzureGraphServiceLocal
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.IAzureGraphService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.hikariConfig
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.IPdlService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.PdlService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.PdlServiceLocal
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
+import no.nav.k9.los.nyoppgavestyring.kodeverk.HentKodeverkTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
@@ -69,12 +73,16 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.PartisjonertOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheRepository
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonApisTjeneste
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3DtoBuilder
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerAdminTjeneste
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.nyoppgavestyring.sisteoppgaver.SisteOppgaverRepository
+import no.nav.k9.los.nyoppgavestyring.sisteoppgaver.SisteOppgaverTjeneste
 import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksTjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallRepositoryV3
@@ -84,13 +92,9 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstiltep
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.status.StatusService
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederTjeneste
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallTjeneste
-import no.nav.k9.los.nyoppgavestyring.driftsmelding.DriftsmeldingTjeneste
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.*
-import no.nav.k9.los.nyoppgavestyring.kodeverk.HentKodeverkTjeneste
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonApisTjeneste
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3DtoBuilder
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerAdminTjeneste
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.*
+import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveKøOppdaterer
+import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
+import no.nav.k9.los.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.SakslisteTjeneste
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
@@ -431,6 +435,9 @@ fun common(app: Application, config: Configuration) = module {
             dataSource = get(),
         )
     }
+    single {
+        SisteOppgaverRepository(dataSource = get())
+    }
 
     single {
         StatistikkPublisher(
@@ -708,6 +715,17 @@ fun common(app: Application, config: Configuration) = module {
             pepClient = get(),
             reservasjonV3Tjeneste = get(),
             saksbehandlerRepository = get()
+        )
+    }
+
+    single {
+        SisteOppgaverTjeneste(
+            oppgaveRepository = get(),
+            pepClient = get(),
+            sisteOppgaverRepository = get(),
+            pdlService = get(),
+            azureGraphService = get(),
+            transactionalManager = get(),
         )
     }
 
