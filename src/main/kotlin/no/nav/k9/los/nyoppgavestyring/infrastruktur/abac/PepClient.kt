@@ -44,7 +44,7 @@ class PepClient(
     private val azureGraphService: IAzureGraphService,
     private val config: Configuration,
     private val k9Auditlogger: K9Auditlogger,
-    private val sifAbacPdpKlient: SifAbacPdpKlient
+    private val sifAbacPdpKlient: ISifAbacPdpKlient
 ) : IPepClient {
 
     private val url = config.abacEndpointUrl
