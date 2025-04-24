@@ -67,9 +67,11 @@ class SifAbacPdpKlient(
     override suspend fun diskresjonskoderSak(saksnummerDto: SaksnummerDto): Set<Diskresjonskode> {
         val antallForsøk = 3
         val systemToken = cachedAccessTokenClient.getAccessToken(scopes)
-        val httpRequest = "${url}/api/diskresjonskoder/k9/sak"
+        val completeUrl = "${url}/api/diskresjonskoder/k9/sak"
+        val body = LosObjectMapper.instance.writeValueAsString(saksnummerDto)
+        val httpRequest = completeUrl
             .httpPost()
-            .body(LosObjectMapper.instance.writeValueAsString(saksnummerDto))
+            .body(body)
             .header(
                 //OBS! Dette kalles bare med system token, og skal ikke brukes ved saksbehandler token
                 HttpHeaders.Authorization to systemToken.asAuthoriationHeader(),
@@ -87,7 +89,7 @@ class SifAbacPdpKlient(
 
         val abc = result.fold(
             { success -> success },
-            { error -> throw IllegalStateException("Feil ved henting av diskresjonskoder for person fra sif-abac-pdp: $error") }
+            { error -> throw IllegalStateException("Feil ved henting av diskresjonskoder for sak fra sif-abac-pdp $completeUrl for saksnummer $body : $error") }
         )
 
         return LosObjectMapper.instance.readValue<List<Diskresjonskode>>(abc)
