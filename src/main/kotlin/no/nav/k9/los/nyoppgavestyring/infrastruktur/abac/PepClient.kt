@@ -280,7 +280,7 @@ class PepClient(
                         evaluate(builder)
                     },
                     sifAbacPdpImpl = {
-                        //TODO når abac-k9 er ryddet bort: vurder å bruk sifAbacPdpKlient.harTilgangTilSak(action, saksnummer) de steder hvor vi sjekker innlogget bruker
+                        //TODO når abac-k9 er ryddet bort: vurder å bruk sifAbacPdpKlient.harTilgangTilSak(action, aktørIder) de steder hvor vi sjekker innlogget bruker
                         val aktørIder = berørteAktørId.map { AktørId(it) }
                         val saksbehandlersGrupper = azureGraphService.hentGrupperForSaksbehandler(identTilInnloggetBruker)
                         sifAbacPdpKlient.harTilgangTilPersoner(action, aktørIder, saksbehandlersGrupper)
