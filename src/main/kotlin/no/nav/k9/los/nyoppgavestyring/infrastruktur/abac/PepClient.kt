@@ -248,7 +248,9 @@ class PepClient(
                             )
                         },
                         sifAbacPdpImpl = {
-                            sifAbacPdpKlient.harTilgangTilSak(action, SaksnummerDto(saksnummer!!))
+                            //TODO når abac-k9 er ryddet bort: vurder å bruk sifAbacPdpKlient.harTilgangTilSak(action, saksnummer) de steder hvor vi sjekker innlogget bruker
+                            val saksbehandlersGrupper = azureGraphService.hentGrupperForSaksbehandler(identTilInnloggetBruker)
+                            sifAbacPdpKlient.harTilgangTilSak(action, SaksnummerDto(saksnummer!!), saksbehandlersGrupper)
                         }
                     )
 
@@ -278,8 +280,10 @@ class PepClient(
                         evaluate(builder)
                     },
                     sifAbacPdpImpl = {
+                        //TODO når abac-k9 er ryddet bort: vurder å bruk sifAbacPdpKlient.harTilgangTilSak(action, saksnummer) de steder hvor vi sjekker innlogget bruker
                         val aktørIder = berørteAktørId.map { AktørId(it) }
-                        sifAbacPdpKlient.harTilgangTilPersoner(action, aktørIder)
+                        val saksbehandlersGrupper = azureGraphService.hentGrupperForSaksbehandler(identTilInnloggetBruker)
+                        sifAbacPdpKlient.harTilgangTilPersoner(action, aktørIder, saksbehandlersGrupper)
                     })
 
                 berørteAktørId.firstOrNull()?.let { aktørId ->
