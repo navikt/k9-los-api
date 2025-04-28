@@ -8,6 +8,7 @@ import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
 import no.nav.k9.los.Configuration
+import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.NavHeaders
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
@@ -33,6 +34,7 @@ class SifAbacPdpKlient(
     private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
     private val url = configuration.sifAbacPdpUrl()
     private val scopes = setOf(scope)
+    private val environment = configuration.koinProfile
 
     override suspend fun diskresjonskoderPerson(aktørId: AktørId): Set<Diskresjonskode> {
         val antallForsøk = 3
@@ -67,6 +69,12 @@ class SifAbacPdpKlient(
     override suspend fun diskresjonskoderSak(saksnummerDto: SaksnummerDto): Set<Diskresjonskode> {
         val antallForsøk = 3
         val systemToken = cachedAccessTokenClient.getAccessToken(scopes)
+
+        if (environment == KoinProfile.PREPROD) {
+            val tokenUtenSigatur = systemToken.token.substringBeforeLast(".")
+            log.info("Kaller med token $tokenUtenSigatur")
+        }
+
         val completeUrl = "${url}/api/diskresjonskoder/k9/sak"
         val body = LosObjectMapper.instance.writeValueAsString(saksnummerDto)
         val httpRequest = completeUrl
