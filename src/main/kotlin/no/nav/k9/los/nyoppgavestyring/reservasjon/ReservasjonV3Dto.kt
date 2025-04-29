@@ -7,10 +7,6 @@ import java.time.LocalDateTime
 
 data class ReservasjonV3Dto(
     val reserverteV3Oppgaver: List<GenerellOppgaveV3Dto>,
-
-    // Fjernes når V1 skal vekk
-    val reservertOppgaveV1Dto: OppgaveDto? = null,
-
     val reservasjonsnøkkel: String,
     val reservertAvNavn: String?,
     val reservertAvIdent: String,
@@ -35,25 +31,5 @@ data class ReservasjonV3Dto(
         reservertFra = reservasjonV3.gyldigFra,
         reservertTil = reservasjonV3.gyldigTil,
         endretAvNavn = endretAvNavn
-    )
-
-    // Fjernes når V1 skal vekk
-    constructor(
-        reservasjonV3: ReservasjonV3,
-        oppgave: OppgaveDto?,
-        reservertAv: Saksbehandler,
-        endretAvNavn: String?
-    ) : this(
-        reserverteV3Oppgaver = emptyList(),
-        reservertOppgaveV1Dto = oppgave,
-        reservasjonsnøkkel = reservasjonV3.reservasjonsnøkkel,
-        reservertAvIdent = reservertAv.brukerIdent!!,
-        reservertAvEpost = reservertAv.epost,
-        reservertAvNavn = reservertAv.navn,
-        kommentar = reservasjonV3.kommentar ?: "",
-        reservertFra = reservasjonV3.gyldigFra,
-        reservertTil = reservasjonV3.gyldigTil,
-        endretAvNavn = endretAvNavn ?: null
-
     )
 }

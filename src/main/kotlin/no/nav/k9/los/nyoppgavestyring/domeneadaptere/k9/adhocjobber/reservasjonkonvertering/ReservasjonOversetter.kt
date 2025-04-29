@@ -14,7 +14,6 @@ import java.util.*
 // Fjernes når V1 skal vekk
 class ReservasjonOversetter(
     private val transactionalManager: TransactionalManager,
-    private val oppgaveV1Repository: OppgaveRepository,
     private val oppgaveV3Repository: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository,
     private val oppgaveV3RepositoryMedTxWrapper: OppgaveRepositoryTxWrapper,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste
@@ -24,15 +23,10 @@ class ReservasjonOversetter(
     fun hentReservasjonsnøkkelForOppgavenøkkel(
         oppgaveNøkkel: OppgaveNøkkelDto
     ): String {
-        return if (oppgaveNøkkel.erV1Oppgave()) {
-            val oppgaveV1 = oppgaveV1Repository.hent(UUID.fromString(oppgaveNøkkel.oppgaveEksternId))
-            hentAktivReservasjonFraGammelKontekst(oppgaveV1)!!.reservasjonsnøkkel
-        } else {
-            oppgaveV3RepositoryMedTxWrapper.hentOppgave(
+        return oppgaveV3RepositoryMedTxWrapper.hentOppgave(
                 oppgaveNøkkel.områdeEksternId,
                 oppgaveNøkkel.oppgaveEksternId
             ).reservasjonsnøkkel
-        }
     }
 
     fun hentAktivReservasjonFraGammelKontekst(

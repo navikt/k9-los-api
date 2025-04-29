@@ -7,15 +7,16 @@ import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.OppgaveMedId
 import no.nav.k9.los.domene.lager.oppgave.Reservasjon
-import no.nav.k9.los.domene.modell.*
-import no.nav.k9.los.domene.repository.*
+import no.nav.k9.los.domene.modell.OppgaveKø
+import no.nav.k9.los.domene.repository.OppgaveKøRepository
+import no.nav.k9.los.domene.repository.OppgaveRepository
+import no.nav.k9.los.domene.repository.ReservasjonRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.DetaljerMetrikker
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.*
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.CacheObject
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.forskyvReservasjonsDato
@@ -23,7 +24,6 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.leggTilDagerHoppOverHe
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.kodeverk.KøSortering
-import no.nav.k9.los.nyoppgavestyring.reservasjon.BehandletOppgave
 import no.nav.k9.los.nyoppgavestyring.reservasjon.OppgaveStatusDto
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
@@ -37,7 +37,6 @@ import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
-import kotlin.coroutines.coroutineContext
 import kotlin.system.measureTimeMillis
 
 private val log: Logger =
