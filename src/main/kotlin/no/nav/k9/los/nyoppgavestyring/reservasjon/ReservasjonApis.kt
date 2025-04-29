@@ -21,7 +21,6 @@ import java.util.*
 
 private val log: Logger = LoggerFactory.getLogger("nav.OppgaveApis")
 
-//TODO siste 10 saker for saksbhandler -- nye ppgaver? -- klagesaker funker ikke her p.t.
 //TODO generell sikring kode6 - se etter feil
 //TODO fjern reservasjonsid fra objekter til frontend
 //TODO Auditlogging
@@ -30,10 +29,8 @@ internal fun Route.ReservasjonApis() {
     val requestContextService by inject<RequestContextService>()
     val oppgaveTjeneste by inject<OppgaveTjeneste>()
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
-    val oppgaveRepository by inject<OppgaveRepository>()
     val pepClient by inject<IPepClient>()
     val reservasjonApisTjeneste by inject<ReservasjonApisTjeneste>()
-    val pdlService by inject<IPdlService>()
 
     post("/reserver") {
         requestContextService.withRequestContext(call) {
@@ -73,34 +70,6 @@ internal fun Route.ReservasjonApis() {
                         HttpStatusCode.InternalServerError,
                         "Innlogger bruker med brukernavn $innloggetBrukernavn finnes ikke i saksbehandlertabellen"
                     )
-                }
-            } else {
-                call.respond(HttpStatusCode.Forbidden)
-            }
-        }
-    }
-
-    // Fjernes når V1 skal vekk
-    post("/fa-oppgave-fra-ko") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harTilgangTilReserveringAvOppgaver()) {
-                val params = call.receive<OppgaveKøIdDto>()
-
-                val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(
-                    kotlin.coroutines.coroutineContext.idToken().getUsername()
-                )!!
-
-                //reservasjonV3 skjer i enden av oppgaveTjeneste.fåOppgaveFraKø()
-                val oppgaveFraKø = oppgaveTjeneste.fåOppgaveFraKø(
-                    oppgaveKøId = params.oppgaveKøId,
-                    brukerident = saksbehandler.brukerIdent!!
-                )
-
-                if (oppgaveFraKø != null) {
-                    log.info("RESERVASJONDEBUG: Lagt til ${saksbehandler.brukerIdent} oppgave=${oppgaveFraKø.eksternId}, beslutter=${oppgaveFraKø.tilBeslutter}, kø=${params.oppgaveKøId} (neste oppgave)")
-                    call.respond(oppgaveFraKø)
-                } else {
-                    call.respond(HttpStatusCode.NotFound, "Fant ingen oppgave i valgt kø")
                 }
             } else {
                 call.respond(HttpStatusCode.Forbidden)
@@ -185,55 +154,6 @@ internal fun Route.ReservasjonApis() {
                 } catch (e: FinnerIkkeDataException) {
                     call.respond(HttpStatusCode.NotFound, "Fant ingen aktiv reservasjon for angitt reservasjonsnøkkel")
                 }
-            } else {
-                call.respond(HttpStatusCode.Forbidden)
-            }
-        }
-    }
-
-    // Fjernes når V1 skal vekk
-    get("/antall") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val uuid = call.request.queryParameters["id"]!!
-                call.respond(oppgaveTjeneste.hentAntallOppgaver(UUID.fromString(uuid)))
-            } else {
-                call.respond(HttpStatusCode.Forbidden)
-            }
-        }
-    }
-
-    // Fjernes når V1 skal vekk
-    //erstattet av OppgaveKoApis--/{id}/oppgaver::GET
-    get {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val queryParameter = call.request.queryParameters["id"]
-                call.respond(
-                    oppgaveTjeneste.hentNesteOppgaverIKø(UUID.fromString(queryParameter))
-                )
-            } else {
-                call.respond(HttpStatusCode.Forbidden)
-            }
-        }
-    }
-
-    //WIP: siste behandlede oppgaver av saksbehandler. Skal virke så lenge vi vedlikeholder data i OppgaveV1. Må erstattes før V1 og V2 kan slettes
-    post("/legg-til-behandlet-sak") {
-        requestContextService.withRequestContext(call) { //TODO klageoppgaver
-            if (pepClient.harBasisTilgang()) {
-                call.respond(HttpStatusCode.NotImplemented)
-            } else {
-                call.respond(HttpStatusCode.Forbidden)
-            }
-        }
-    }
-
-    //WIP: siste behandlede oppgaver av saksbehandler. Skal virke så lenge vi vedlikeholder data i OppgaveV1. Må erstattes før V1 og V2 kan slettes
-    get("/behandlede") {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                call.respond(HttpStatusCode.NotImplemented)
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
