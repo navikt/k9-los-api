@@ -141,9 +141,10 @@ class SifAbacPdpKlient(
         val request = SaksnummerOperasjonGrupperDto(saksbehandlersIdent, saksbehandlersGrupper.toList(), saksnummerDto, OperasjonDto(ResourceType.FAGSAK, map(action)))
         val antallForsøk = 3
         val systemToken = cachedAccessTokenClient.getAccessToken(scopes)
+        val body = LosObjectMapper.instance.writeValueAsString(request)
         val httpRequest = "${url}/api/tilgangskontroll/k9/sak-grupper"
             .httpPost()
-            .body(LosObjectMapper.instance.writeValueAsString(request))
+            .body(body)
             .header(
                 //OBS! Dette kalles bare med obo token
                 HttpHeaders.Authorization to systemToken.asAuthoriationHeader(),
@@ -161,7 +162,7 @@ class SifAbacPdpKlient(
 
         val abc = result.fold(
             { success -> success },
-            { error -> throw IllegalStateException("Feil ved sjekk av tilgang til sak vha grupper mot sif-abac-pdp: $error") }
+            { error -> throw IllegalStateException("Feil ved sjekk av tilgang til sak vha grupper mot sif-abac-pdp ${if (environment == KoinProfile.PREPROD) body else ""}: $error") }
         )
 
         return LosObjectMapper.instance.readValue<Decision>(abc) == Decision.Permit
@@ -203,9 +204,10 @@ class SifAbacPdpKlient(
         val request = PersonerOperasjonGrupperDto(saksbehandlersIdent,saksbehandlersGrupper.toList(), aktørIder, emptyList(), OperasjonDto(ResourceType.FAGSAK, map(action)))
         val antallForsøk = 3
         val systemToken = cachedAccessTokenClient.getAccessToken(scopes)
+        val body = LosObjectMapper.instance.writeValueAsString(request)
         val httpRequest = "${url}/api/tilgangskontroll/k9/personer-grupper"
             .httpPost()
-            .body(LosObjectMapper.instance.writeValueAsString(request))
+            .body(body)
             .header(
                 //OBS! Dette kalles bare med obo token
                 HttpHeaders.Authorization to systemToken.asAuthoriationHeader(),
@@ -223,7 +225,7 @@ class SifAbacPdpKlient(
 
         val abc = result.fold(
             { success -> success },
-            { error -> throw IllegalStateException("Feil ved sjekk av tilgang til personer vha grupper mot sif-abac-pdp: $error") }
+            { error -> throw IllegalStateException("Feil ved sjekk av tilgang til personer vha grupper mot sif-abac-pdp ${if (environment == KoinProfile.PREPROD) body else ""}: $error") }
         )
 
         return LosObjectMapper.instance.readValue<Decision>(abc) == Decision.Permit
