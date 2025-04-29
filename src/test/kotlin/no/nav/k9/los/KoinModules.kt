@@ -75,7 +75,6 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstiltep
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.status.StatusService
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveKøOppdaterer
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -243,7 +242,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             transactionalManager = get(),
             oppgaveV3Repository = get(),
             reservasjonV3Tjeneste = get(),
-            oppgaveV1Repository = get(),
             oppgaveV3RepositoryMedTxWrapper = get(),
         )
     }
@@ -289,13 +287,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single {
-        ReservasjonTjeneste(
-            reservasjonRepository = get(),
-            saksbehandlerRepository = get()
-        )
-    }
-
-    single {
         K9PunsjEventHandler(
             punsjEventK9Repository = K9PunsjEventRepository(dataSource = get()),
             punsjTilLosAdapterTjeneste = get(),
@@ -304,16 +295,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single { OppgaveKøOppdaterer(get(), get(), get()) }
-
-    single {
-        AvdelingslederTjeneste(
-            oppgaveKøRepository = get(),
-            saksbehandlerRepository = get(),
-            oppgaveTjeneste = get(),
-            pepClient = get(),
-            reservasjonV3Tjeneste = get(),
-        )
-    }
 
     single {
         SaksbehandlerAdminTjeneste(
@@ -488,7 +469,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         ReservasjonV3DtoBuilder(
             pdlService = get(),
-            oppgaveTjeneste = get(),
             saksbehandlerRepository = get()
         )
     }
@@ -498,16 +478,10 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             transactionalManager = get(),
             oppgaveKoRepository = get(),
             oppgaveQueryService = get(),
-            oppgaveRepository = get(),
-            aktivOppgaveRepository = get(),
-            oppgaveRepositoryTxWrapper = get(),
             reservasjonV3Tjeneste = get(),
             saksbehandlerRepository = get(),
-            oppgaveTjeneste = get(),
-            reservasjonRepository = get(),
             pepClient = get(),
             pdlService = get(),
-            statistikkChannel = get(named("statistikkRefreshChannel")),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
             feltdefinisjonTjeneste = get(),
         )
@@ -532,14 +506,13 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         ReservasjonApisTjeneste(
-            oppgaveTjeneste = get(),
-            oppgaveV1Repository = get(),
             saksbehandlerRepository = get(),
             reservasjonV3Tjeneste = get(),
             oppgaveV3Repository = get(),
             transactionalManager = get(),
             reservasjonV3DtoBuilder = get(),
             reservasjonOversetter = get(),
+            pepClient = get(),
         )
     }
 

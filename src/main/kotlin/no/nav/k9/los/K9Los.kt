@@ -76,7 +76,6 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallV3
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
 import no.nav.k9.los.tjenester.fagsak.FagsakApis
-import no.nav.k9.los.tjenester.konfig.KonfigApis
 import no.nav.k9.los.tjenester.mock.localSetup
 import no.nav.k9.los.nyoppgavestyring.innloggetbruker.InnloggetBrukerApi
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.SaksbehandlerOppgavekoApis
@@ -334,7 +333,6 @@ private fun Route.api() {
 
         InnloggetBrukerApi()
 
-        route("konfig", { hidden = true }) { KonfigApis() }
         route("kodeverk") { KodeverkApis() }
 
         route("ny-oppgavestyring") {

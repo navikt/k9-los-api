@@ -87,7 +87,6 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstiltep
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.status.StatusService
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveKøOppdaterer
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.ReservasjonTjeneste
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.SakslisteTjeneste
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
@@ -284,7 +283,6 @@ fun common(app: Application, config: Configuration) = module {
             transactionalManager = get(),
             oppgaveV3Repository = get(),
             reservasjonV3Tjeneste = get(),
-            oppgaveV1Repository = get(),
             oppgaveV3RepositoryMedTxWrapper = get(),
         )
     }
@@ -295,23 +293,6 @@ fun common(app: Application, config: Configuration) = module {
             reservasjonV3Tjeneste = get(),
             transactionalManager = get(),
             oppgaveRepository = get(),
-        )
-    }
-
-    single {
-        ReservasjonTjeneste(
-            reservasjonRepository = get(),
-            saksbehandlerRepository = get()
-        )
-    }
-
-    single {
-        AvdelingslederTjeneste(
-            oppgaveKøRepository = get(),
-            saksbehandlerRepository = get(),
-            oppgaveTjeneste = get(),
-            pepClient = get(),
-            reservasjonV3Tjeneste = get(),
         )
     }
 
@@ -330,7 +311,6 @@ fun common(app: Application, config: Configuration) = module {
     single {
         ReservasjonV3DtoBuilder(
             pdlService = get(),
-            oppgaveTjeneste = get(),
             saksbehandlerRepository = get()
         )
     }
@@ -481,16 +461,10 @@ fun common(app: Application, config: Configuration) = module {
             transactionalManager = get(),
             oppgaveKoRepository = get(),
             oppgaveQueryService = get(),
-            oppgaveRepository = get(),
             reservasjonV3Tjeneste = get(),
             saksbehandlerRepository = get(),
-            oppgaveTjeneste = get(),
-            reservasjonRepository = get(),
-            oppgaveRepositoryTxWrapper = get(),
             pepClient = get(),
             pdlService = get(),
-            aktivOppgaveRepository = get(),
-            statistikkChannel = get(named("statistikkRefreshChannel")),
             køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
             feltdefinisjonTjeneste = get(),
         )
@@ -598,14 +572,13 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         ReservasjonApisTjeneste(
-            oppgaveTjeneste = get(),
-            oppgaveV1Repository = get(),
             saksbehandlerRepository = get(),
             reservasjonV3Tjeneste = get(),
             oppgaveV3Repository = get(),
             transactionalManager = get(),
             reservasjonV3DtoBuilder = get(),
             reservasjonOversetter = get(),
+            pepClient = get(),
         )
     }
 
