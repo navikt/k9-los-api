@@ -331,11 +331,7 @@ private fun Route.api() {
             SaksbehandlerOppgavekoApis()
         }
         route("avdelingsleder") {
-            AvdelingslederApis()
             SaksbehandlerAdminApis()
-            route("oppgavekoer") {
-                AvdelingslederOppgavekøApis() // Erstattet av OppgaveKoApis i V3
-            }
         }
 
         NavAnsattApis()

@@ -1,4 +1,4 @@
-package no.nav.k9.los.tjenester.avdelingsleder.reservasjoner
+package no.nav.k9.los.nyoppgavestyring.reservasjon
 
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto

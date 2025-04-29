@@ -187,4 +187,14 @@ internal fun Route.ReservasjonApis() {
             }
         }
     }
+
+    get("/alle-reservasjoner") {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.erOppgaveStyrer()) {
+                call.respond(reservasjonApisTjeneste.hentAlleAktiveReservasjoner())
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
 }

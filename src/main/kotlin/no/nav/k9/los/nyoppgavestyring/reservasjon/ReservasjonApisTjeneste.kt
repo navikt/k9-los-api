@@ -4,9 +4,12 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.leggTilDagerHoppOverHelg
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonDto
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -22,6 +25,7 @@ class ReservasjonApisTjeneste(
     private val transactionalManager: TransactionalManager,
     private val reservasjonV3DtoBuilder: ReservasjonV3DtoBuilder,
     private val reservasjonOversetter: ReservasjonOversetter,
+    private val pepClient: IPepClient,
 ) {
 
     companion object {
@@ -186,6 +190,52 @@ class ReservasjonApisTjeneste(
             } catch (e : Exception){
                 log.warn("Klarte ikke tolke reservasjon med id ${reservasjonMedOppgaver.reservasjonV3.id}, v1-oppgave: ${reservasjonMedOppgaver.oppgaveV1?.eksternId} v3-oppgaver: ${reservasjonMedOppgaver.oppgaverV3.map { it.eksternId } }")
                 throw e;
+            }
+        }
+    }
+
+    suspend fun hentAlleAktiveReservasjoner(): List<ReservasjonDto> {
+        val innloggetBrukerHarKode6Tilgang = pepClient.harTilgangTilKode6()
+
+        return reservasjonV3Tjeneste.hentAlleAktiveReservasjoner().flatMap { reservasjonMedOppgaver ->
+            val saksbehandler =
+                saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonMedOppgaver.reservasjonV3.reservertAv)!!
+            val saksbehandlerHarKode6Tilgang = pepClient.harTilgangTilKode6(saksbehandler.brukerIdent!!)
+
+            if (innloggetBrukerHarKode6Tilgang != saksbehandlerHarKode6Tilgang) {
+                emptyList()
+            } else {
+                if (reservasjonMedOppgaver.oppgaveV1 != null) {
+                    listOf(
+                        ReservasjonDto(
+                            reservertAvEpost = saksbehandler.epost,
+                            reservertAvIdent = saksbehandler.brukerIdent!!,
+                            reservertAvNavn = saksbehandler.navn,
+                            saksnummer = reservasjonMedOppgaver.oppgaveV1.fagsakSaksnummer,
+                            journalpostId = reservasjonMedOppgaver.oppgaveV1.journalpostId,
+                            behandlingType = reservasjonMedOppgaver.oppgaveV1.behandlingType,
+                            reservertTilTidspunkt = reservasjonMedOppgaver.reservasjonV3.gyldigTil,
+                            kommentar = reservasjonMedOppgaver.reservasjonV3.kommentar ?: "",
+                            tilBeslutter = reservasjonMedOppgaver.oppgaveV1.tilBeslutter,
+                            oppgavenøkkel = OppgaveNøkkelDto.forV1Oppgave(reservasjonMedOppgaver.oppgaveV1.eksternId.toString()),
+                        )
+                    )
+                } else {
+                    reservasjonMedOppgaver.oppgaverV3.map { oppgave ->
+                        ReservasjonDto(
+                            reservertAvEpost = saksbehandler.epost,
+                            reservertAvIdent = saksbehandler.brukerIdent!!,
+                            reservertAvNavn = saksbehandler.navn,
+                            saksnummer = oppgave.hentVerdi("saksnummer"), //TODO: Oppgaveagnostisk logikk. Løses antagelig ved å skrive om frontend i dette tilfellet
+                            journalpostId = oppgave.hentVerdi("journalpostId"),
+                            behandlingType = BehandlingType.fraKode(oppgave.hentVerdi("behandlingTypekode")!!),
+                            reservertTilTidspunkt = reservasjonMedOppgaver.reservasjonV3.gyldigTil,
+                            kommentar = reservasjonMedOppgaver.reservasjonV3.kommentar ?: "",
+                            tilBeslutter = oppgave.hentVerdi("liggerHosBeslutter").toBoolean(),
+                            oppgavenøkkel = OppgaveNøkkelDto(oppgave),
+                        )
+                    }.toList()
+                }
             }
         }
     }

@@ -305,6 +305,17 @@ enum class BehandlingStatus(override val kode: String, override val navn: String
 }
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
+enum class Venteårsak(override val kode: String, override val navn: String) : Kodeverdi {
+    AVV_DOK("AVV_DOK", "Avventer dokumentasjon"),
+    VENT_MANGL_FUNKSJ_SAKSBEHANDLER("VENT_MANGL_FUNKSJ_SAKSBEHANDLER", "Manglende funksjonalitet i løsningen"),
+    VENTER_SVAR_INTERNT("VENTER_SVAR_INTERNT", "Meldt i Porten eller Teams"),
+    AUTOMATISK_SATT_PA_VENT("AUTOMATISK", "Automatisk satt på vent"),
+    UKJENT("UKJENT", "Mangler venteårsak");
+
+    override val kodeverk = "VENTEÅRSAK_TYPE"
+}
+
+@JsonFormat(shape = JsonFormat.Shape.OBJECT)
 enum class Enhet(val navn: String) {
     NASJONAL("NASJONAL");
 

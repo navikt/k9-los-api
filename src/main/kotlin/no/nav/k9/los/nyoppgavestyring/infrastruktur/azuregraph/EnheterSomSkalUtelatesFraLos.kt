@@ -1,4 +1,4 @@
-package no.nav.k9.los.tjenester.avdelingsleder.nokkeltall
+package no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph
 
 object EnheterSomSkalUtelatesFraLos {
     val utelatteEnhetider = setOf("2103")

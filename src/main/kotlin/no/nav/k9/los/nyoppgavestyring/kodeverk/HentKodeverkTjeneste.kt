@@ -1,7 +1,5 @@
 package no.nav.k9.los.nyoppgavestyring.kodeverk
 
-import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.Venteårsak
-
 class HentKodeverkTjeneste {
     fun hentGruppertKodeliste(): MutableMap<String, Collection<Kodeverdi>> {
         val koder = mutableMapOf<String, Collection<Kodeverdi>>()
