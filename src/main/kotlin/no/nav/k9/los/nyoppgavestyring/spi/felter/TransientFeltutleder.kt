@@ -1,4 +1,4 @@
-package no.nav.k9.los.spi.felter
+package no.nav.k9.los.nyoppgavestyring.spi.felter
 
 import no.nav.k9.los.nyoppgavestyring.query.db.Spørringstrategi
 import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator

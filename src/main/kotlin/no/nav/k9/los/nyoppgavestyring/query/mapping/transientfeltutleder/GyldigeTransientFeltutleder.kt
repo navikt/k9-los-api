@@ -1,6 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder
 
-import no.nav.k9.los.spi.felter.TransientFeltutleder
+import no.nav.k9.los.nyoppgavestyring.spi.felter.TransientFeltutleder
 
 class GyldigeTransientFeltutleder {
     /*

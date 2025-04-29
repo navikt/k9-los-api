@@ -2,7 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.visningoguttrekk
 
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
-import no.nav.k9.los.spi.felter.HentVerdiInput
+import no.nav.k9.los.nyoppgavestyring.spi.felter.HentVerdiInput
 import java.time.LocalDateTime
 
 data class Oppgave(
