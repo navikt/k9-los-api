@@ -41,9 +41,7 @@ import no.nav.k9.los.nyoppgavestyring.driftsmelding.DriftsmeldingRepository
 import no.nav.k9.los.nyoppgavestyring.driftsmelding.DriftsmeldingTjeneste
 import no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.GyldigeFeltutledere
 import no.nav.k9.los.nyoppgavestyring.forvaltning.ForvaltningRepository
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.PepClient
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.PepClientLocal
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.*
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.audit.Auditlogger
@@ -78,6 +76,8 @@ import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerAdminTjeneste
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.nyoppgavestyring.sisteoppgaver.SisteOppgaverRepository
+import no.nav.k9.los.nyoppgavestyring.sisteoppgaver.SisteOppgaverTjeneste
 import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksTjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallRepositoryV3
@@ -373,6 +373,10 @@ fun common(app: Application, config: Configuration) = module {
     single { OppgaveRepository(oppgavetypeRepository = get()) }
 
     single {
+        SisteOppgaverRepository(dataSource = get())
+    }
+
+    single {
         StatistikkPublisher(
             kafkaConfig = config.getProfileAwareKafkaAivenConfig(),
             config = config
@@ -652,6 +656,17 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
+        SisteOppgaverTjeneste(
+            oppgaveRepository = get(),
+            pepClient = get(),
+            sisteOppgaverRepository = get(),
+            pdlService = get(),
+            azureGraphService = get(),
+            transactionalManager = get(),
+        )
+    }
+
+    single {
         StatusService(
             queryService = get(),
             oppgaverGruppertRepository = get(),
@@ -703,9 +718,6 @@ fun preprodConfig(config: Configuration) = module {
             accessTokenClient = get<AccessTokenClientResolver>().azureV2()
         )
     }
-    single<IPepClient> {
-        PepClient(azureGraphService = get(), config = config, k9Auditlogger = K9Auditlogger(Auditlogger(config)))
-    }
     single<IK9SakService> {
         K9SakServiceSystemClient(
             configuration = get(),
@@ -742,6 +754,17 @@ fun preprodConfig(config: Configuration) = module {
             scopeSak = "api://dev-fss.k9saksbehandling.k9-sak/.default"
         )
     }
+
+    single<ISifAbacPdpKlient> {
+        SifAbacPdpKlient (
+            configuration = get(),
+            accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+            scope = "api://dev-fss.k9saksbehandling.sif-abac-pdp/.default",
+        )
+    }
+    single<IPepClient> {
+        PepClient(azureGraphService = get(), config = config, k9Auditlogger = K9Auditlogger(Auditlogger(config)), get())
+    }
 }
 
 fun prodConfig(config: Configuration) = module {
@@ -749,9 +772,6 @@ fun prodConfig(config: Configuration) = module {
         AzureGraphService(
             accessTokenClient = get<AccessTokenClientResolver>().azureV2()
         )
-    }
-    single<IPepClient> {
-        PepClient(azureGraphService = get(), config = config, k9Auditlogger = K9Auditlogger(Auditlogger(config)))
     }
     single<IK9SakService> {
         K9SakServiceSystemClient(
@@ -788,6 +808,18 @@ fun prodConfig(config: Configuration) = module {
             scopeKlage = "api://prod-fss.k9saksbehandling.k9-klage/.default",
             scopeSak = "api://prod-fss.k9saksbehandling.k9-sak/.default"
         )
+    }
+
+    single<ISifAbacPdpKlient> {
+        SifAbacPdpKlient (
+            configuration = get(),
+            accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+            scope = "api://prod-fss.k9saksbehandling.sif-abac-pdp/.default",
+        )
+    }
+
+    single<IPepClient> {
+        PepClient(azureGraphService = get(), config = config, k9Auditlogger = K9Auditlogger(Auditlogger(config)), get())
     }
 }
 

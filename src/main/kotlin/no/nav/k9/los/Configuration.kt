@@ -6,9 +6,9 @@ import no.nav.helse.dusseldorf.ktor.auth.issuers
 import no.nav.helse.dusseldorf.ktor.auth.withoutAdditionalClaimRules
 import no.nav.helse.dusseldorf.ktor.core.getOptionalString
 import no.nav.helse.dusseldorf.ktor.core.getRequiredString
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.createHikariConfig
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.KafkaAivenConfig
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.KafkaConfig
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.createHikariConfig
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import java.net.URI
 import java.time.Duration
@@ -29,7 +29,9 @@ data class Configuration(private val config: ApplicationConfig) {
     internal fun k9Url() = config.getRequiredString("nav.register_urls.k9_url", secret = false)
     internal fun k9KlageUrl() = config.getRequiredString("nav.register_urls.k9_klage_url", secret = false)
     internal fun k9FrontendUrl() = config.getRequiredString("nav.register_urls.k9_frontend_url", secret = false)
-    internal fun k9PunsjFrontendUrl() = config.getRequiredString("nav.register_urls.k9_punsj_frontend_url", secret = false)
+    internal fun k9PunsjFrontendUrl() =
+        config.getRequiredString("nav.register_urls.k9_punsj_frontend_url", secret = false)
+    internal fun sifAbacPdpUrl() = config.getRequiredString("nav.register_urls.sif_abac_pdp_url", secret = false)
 
     internal val abacUsername = config.getRequiredString("nav.abac.system_user", secret = false)
     internal val abacPassword = config.getRequiredString("nav.abac.system_user_password", secret = false)
@@ -104,6 +106,21 @@ data class Configuration(private val config: ApplicationConfig) {
 
     internal fun nyOppgavestyringDvhSendingAktivert(): Boolean {
         return config.getOptionalString("nav.features.nyOppgavestyringDvhSending", secret = false).toBoolean()
+    }
+
+    internal fun valgtPdp(): ValgtPdp {
+        return when (config.getOptionalString("nav.features.valgtPdp", secret = false)) {
+            "abac-k9" -> ValgtPdp.ABAC_K9
+            "sif-abac-pdp" -> ValgtPdp.SIF_ABAC_PDP
+            "begge" -> ValgtPdp.BEGGE
+            else -> ValgtPdp.ABAC_K9
+        }
+    }
+
+    enum class ValgtPdp {
+        ABAC_K9,
+        SIF_ABAC_PDP,
+        BEGGE
     }
 
     internal fun nyOppgavestyringRestAktivert(): Boolean {

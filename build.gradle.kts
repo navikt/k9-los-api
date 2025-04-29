@@ -6,7 +6,7 @@ val flywayVersion = "11.1.1"
 val vaultJdbcVersion = "1.3.10"
 val koinVersion = "4.0.2"
 val kotliqueryVersion = "1.9.1"
-val k9SakVersion = "5.3.6"
+val k9SakVersion = "5.4.12"
 val k9KlageVersion = "0.4.7"
 val fuelVersion = "2.3.1"
 val jacksonVersion = "2.17.2"
@@ -71,6 +71,7 @@ dependencies {
     implementation("no.nav.common:auth:$navTilgangskontroll")
     implementation("no.nav.common:rest:$navTilgangskontroll")
     implementation("com.google.code.gson:gson:2.11.0")
+    implementation("no.nav.sif.abac:kontrakt:1.3.0")
 
     // Kontrakter
     implementation("no.nav.k9.sak:kontrakt:$k9SakVersion")
