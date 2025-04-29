@@ -1,6 +1,6 @@
-package no.nav.k9.los.tjenester.saksbehandler
+package no.nav.k9.los.nyoppgavestyring.innloggetbruker
 
-data class InnloggetNavAnsattDto(
+data class InnloggetBrukerDto(
     val brukernavn: String,
     val navn: String,
     val brukerIdent: String?,

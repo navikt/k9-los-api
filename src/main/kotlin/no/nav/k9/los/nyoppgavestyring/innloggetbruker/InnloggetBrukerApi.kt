@@ -1,4 +1,4 @@
-package no.nav.k9.los.tjenester.saksbehandler
+package no.nav.k9.los.nyoppgavestyring.innloggetbruker
 
 import io.ktor.server.application.*
 import io.ktor.server.response.*
@@ -13,21 +13,21 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.idtoken.idToken
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
 import org.koin.ktor.ext.inject
 
-internal fun Route.NavAnsattApis() {
+internal fun Route.InnloggetBrukerApi() {
     val pepClient by inject<IPepClient>()
     val requestContextService by inject<RequestContextService>()
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
     val azureGraphService by inject<IAzureGraphService>()
     val configuration by inject<Configuration>()
 
-    get("/saksbehandler") {
+    get("/innloggetbruker") {
         if (configuration.koinProfile() != KoinProfile.LOCAL) {
             requestContextService.withRequestContext(call) {
                 val token = call.idToken()
                 val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
                 val finnesISaksbehandlerTabell =
                     saksbehandlerRepository.finnSaksbehandlerMedEpost(token.getUsername()) != null
-                val innloggetNavAnsattDto = InnloggetNavAnsattDto(
+                val innloggetBrukerDto = InnloggetBrukerDto(
                     token.getUsername(),
                     token.getName(),
                     brukerIdent = saksbehandlerIdent,
@@ -51,12 +51,12 @@ internal fun Route.NavAnsattApis() {
                     )
                 }
                 call.respond(
-                    innloggetNavAnsattDto
+                    innloggetBrukerDto
                 )
             }
         } else {
             call.respond(
-                InnloggetNavAnsattDto(
+                InnloggetBrukerDto(
                     "saksbehandler@nav.no",
                     "Saksbehandler Sara",
                     "Z123456",

@@ -75,12 +75,10 @@ import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksApi
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallV3Apis
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
-import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederApis
-import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.AvdelingslederOppgavekøApis
 import no.nav.k9.los.tjenester.fagsak.FagsakApis
 import no.nav.k9.los.tjenester.konfig.KonfigApis
 import no.nav.k9.los.tjenester.mock.localSetup
-import no.nav.k9.los.tjenester.saksbehandler.NavAnsattApis
+import no.nav.k9.los.nyoppgavestyring.innloggetbruker.InnloggetBrukerApi
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.SaksbehandlerOppgavekoApis
 import org.koin.core.Koin
 import org.koin.core.qualifier.named
@@ -334,7 +332,7 @@ private fun Route.api() {
             SaksbehandlerAdminApis()
         }
 
-        NavAnsattApis()
+        InnloggetBrukerApi()
 
         route("konfig", { hidden = true }) { KonfigApis() }
         route("kodeverk") { KodeverkApis() }
