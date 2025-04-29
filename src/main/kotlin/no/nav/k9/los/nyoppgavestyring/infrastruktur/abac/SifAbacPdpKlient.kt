@@ -146,7 +146,6 @@ class SifAbacPdpKlient(
             .httpPost()
             .body(body)
             .header(
-                //OBS! Dette kalles bare med obo token
                 HttpHeaders.Authorization to systemToken.asAuthoriationHeader(),
                 HttpHeaders.Accept to "application/json",
                 HttpHeaders.ContentType to "application/json",
@@ -209,7 +208,6 @@ class SifAbacPdpKlient(
             .httpPost()
             .body(body)
             .header(
-                //OBS! Dette kalles bare med obo token
                 HttpHeaders.Authorization to systemToken.asAuthoriationHeader(),
                 HttpHeaders.Accept to "application/json",
                 HttpHeaders.ContentType to "application/json",
