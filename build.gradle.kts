@@ -71,7 +71,7 @@ dependencies {
     implementation("no.nav.common:auth:$navTilgangskontroll")
     implementation("no.nav.common:rest:$navTilgangskontroll")
     implementation("com.google.code.gson:gson:2.11.0")
-    implementation("no.nav.sif.abac:kontrakt:1.3.0")
+    implementation("no.nav.sif.abac:kontrakt:1.3.1")
 
     // Kontrakter
     implementation("no.nav.k9.sak:kontrakt:$k9SakVersion")

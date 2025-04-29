@@ -137,8 +137,8 @@ class SifAbacPdpKlient(
         return LosObjectMapper.instance.readValue<Decision>(abc) == Decision.Permit
     }
 
-    override suspend fun harTilgangTilSak(action: Action, saksnummerDto: SaksnummerDto, saksbhandlersGrupper : Set<UUID>): Boolean {
-        val request = SaksnummerOperasjonGrupperDto(saksbhandlersGrupper.toList(), saksnummerDto, OperasjonDto(ResourceType.FAGSAK, map(action)))
+    override suspend fun harTilgangTilSak(action: Action, saksnummerDto: SaksnummerDto, saksbehandlersIdent : String, saksbehandlersGrupper : Set<UUID>): Boolean {
+        val request = SaksnummerOperasjonGrupperDto(saksbehandlersIdent, saksbehandlersGrupper.toList(), saksnummerDto, OperasjonDto(ResourceType.FAGSAK, map(action)))
         val antallForsøk = 3
         val systemToken = cachedAccessTokenClient.getAccessToken(scopes)
         val httpRequest = "${url}/api/tilgangskontroll/k9/sak-grupper"
@@ -199,8 +199,8 @@ class SifAbacPdpKlient(
     }
 
 
-    override suspend fun harTilgangTilPersoner(action: Action, aktørIder: List<AktørId>, saksbehandlersGrupper : Set<UUID>): Boolean {
-        val request = PersonerOperasjonGrupperDto(saksbehandlersGrupper.toList(), aktørIder, emptyList(), OperasjonDto(ResourceType.FAGSAK, map(action)))
+    override suspend fun harTilgangTilPersoner(action: Action, aktørIder: List<AktørId>, saksbehandlersIdent : String, saksbehandlersGrupper : Set<UUID>): Boolean {
+        val request = PersonerOperasjonGrupperDto(saksbehandlersIdent,saksbehandlersGrupper.toList(), aktørIder, emptyList(), OperasjonDto(ResourceType.FAGSAK, map(action)))
         val antallForsøk = 3
         val systemToken = cachedAccessTokenClient.getAccessToken(scopes)
         val httpRequest = "${url}/api/tilgangskontroll/k9/personer-grupper"
