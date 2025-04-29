@@ -138,6 +138,12 @@ class SifAbacPdpKlient(
     }
 
     override suspend fun harTilgangTilSak(action: Action, saksnummerDto: SaksnummerDto, saksbehandlersIdent : String, saksbehandlersGrupper : Set<UUID>): Boolean {
+        if (!saksbehandlersIdent.matches(Regex("^[A-ZÆØÅ][0-9]{6}$"))){
+            throw IllegalArgumentException("Saksbehandlers ident var '$saksbehandlersIdent', passer ikke med validering")
+        }
+        if (saksnummerDto.saksnummer.trim().isEmpty()){
+            throw IllegalArgumentException("Mangler saksnummer, passer ikke med validering")
+        }
         val request = SaksnummerOperasjonGrupperDto(saksbehandlersIdent, saksbehandlersGrupper.toList(), saksnummerDto, OperasjonDto(ResourceType.FAGSAK, map(action)))
         val antallForsøk = 3
         val systemToken = cachedAccessTokenClient.getAccessToken(scopes)
