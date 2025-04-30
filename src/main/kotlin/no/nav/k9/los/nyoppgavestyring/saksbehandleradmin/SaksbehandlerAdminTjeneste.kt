@@ -3,7 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.saksbehandleradmin
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
-import no.nav.k9.los.tjenester.saksbehandler.saksliste.SaksbehandlerDto
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerDto
 
 class SaksbehandlerAdminTjeneste(
     private val pepClient: IPepClient,

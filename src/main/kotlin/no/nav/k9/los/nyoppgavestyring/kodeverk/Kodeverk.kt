@@ -94,17 +94,6 @@ enum class KøKriterierType(
     ),
     ;
 
-
-    companion object {
-        private val KODER = values().associateBy { it.kode }
-
-        @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
-        @JvmStatic
-        fun fraKode(kode: String): KøKriterierType {
-            return KODER[kode] ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
-        }
-    }
-
     override val kodeverk = "KØ_KRITERIER_TYPE"
 
 }

@@ -1,4 +1,4 @@
-package no.nav.k9.los.tjenester.avdelingsleder.oppgaveko
+package no.nav.k9.los.domene.modell
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import no.nav.k9.los.nyoppgavestyring.kodeverk.KøKriterierType
@@ -14,9 +14,4 @@ data class KriteriumDto(
     val koder: List<String>? = null,
     // Brukes av boolean kriterier for å inkludere og ekskludere
     val inkluder: Boolean? = null
-) {
-    @JsonIgnore
-    fun valider() {
-        this.kriterierType.validator.valider(this)
-    }
-}
+)

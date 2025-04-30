@@ -19,10 +19,6 @@ data class K9TilbakeModell(
 ) {
     private val `Omsorgspenger, Pleiepenger og opplæringspenger` = "ab0271"
 
-    fun oppgave(): Oppgave {
-        return oppgave(sisteEvent())
-    }
-
     fun oppgave(sisteEvent: K9TilbakeEventDto): Oppgave {
         val aktiveAksjonspunkt = sisteEvent.aktiveAksjonspunkt()
         val eventResultat = aktiveAksjonspunkt.eventResultatTilbake()

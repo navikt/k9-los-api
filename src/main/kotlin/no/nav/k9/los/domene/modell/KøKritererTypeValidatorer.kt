@@ -1,6 +1,6 @@
 package no.nav.k9.los.domene.modell
 
-import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.KriteriumDto
+import no.nav.k9.los.domene.modell.KriteriumDto
 
 fun interface KøKriterierTypeValidator {
     fun valider(kriteriumDto: KriteriumDto)

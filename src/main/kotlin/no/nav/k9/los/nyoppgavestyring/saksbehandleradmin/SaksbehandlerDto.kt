@@ -1,4 +1,4 @@
-package no.nav.k9.los.tjenester.saksbehandler.saksliste
+package no.nav.k9.los.nyoppgavestyring.saksbehandleradmin
 
 data class SaksbehandlerDto(
     val id: Long?,

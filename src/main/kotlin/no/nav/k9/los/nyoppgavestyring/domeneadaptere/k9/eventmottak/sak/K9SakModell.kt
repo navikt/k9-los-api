@@ -21,10 +21,6 @@ data class K9SakModell(
 ) {
     private val `Omsorgspenger, Pleiepenger og opplæringspenger` = "ab0271"
 
-    fun oppgave(): Oppgave {
-        return oppgave(sisteEvent())
-    }
-
     fun oppgave(sisteEvent: K9SakEventDto = sisteEvent()): Oppgave {
         val eventResultat = sisteEvent.tilAktiveAksjonspunkter().eventResultat(Fagsystem.K9SAK)
         var aktiv = true
@@ -137,16 +133,8 @@ data class K9SakModell(
         return this.eventer[this.eventer.lastIndex]
     }
 
-    fun førsteEvent(): K9SakEventDto {
-        return this.eventer[0]
-    }
-
     fun starterSak(): Boolean {
         return this.eventer.size == 1
-    }
-
-    fun erTom(): Boolean {
-        return this.eventer.isEmpty()
     }
 
     fun behandlingOpprettetSakOgBehandling(): BehandlingOpprettet {
