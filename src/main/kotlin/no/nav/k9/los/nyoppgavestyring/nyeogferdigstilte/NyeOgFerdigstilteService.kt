@@ -54,7 +54,9 @@ class NyeOgFerdigstilteService(
                     val serierForGruppe = listOf(
                         NyeOgFerdigstilteSerie(
                             "Nye",
-                            datoer.map { dato -> hentNyeFraDatabase(dato, gruppe) }
+                            datoer.map { dato ->
+                                hentNyeÅpneVenterFraDatabase(dato, gruppe)
+                                + hentNyeLukkedeFraDatabase(dato, gruppe) }
                         ),
                         NyeOgFerdigstilteSerie(
                             "Ferdigstilte",
@@ -72,7 +74,7 @@ class NyeOgFerdigstilteService(
     private fun LocalDate.listeMed7DagerBakover(): List<LocalDate> =
         this.minusDays(6).datesUntil(this.plusDays(1)).toList()
 
-    private fun hentNyeFraDatabase(
+    private fun hentNyeÅpneVenterFraDatabase(
         dato: LocalDate, gruppe: NyeOgFerdigstilteGruppe
     ): Int {
         val request = QueryRequest(
@@ -89,7 +91,37 @@ class NyeOgFerdigstilteService(
                             null,
                             "oppgavestatus",
                             EksternFeltverdiOperator.IN,
-                            listOf(Oppgavestatus.AAPEN.kode, Oppgavestatus.LUKKET.kode)
+                            listOf(Oppgavestatus.AAPEN.kode, Oppgavestatus.VENTER.kode)
+                        )
+                    )
+                })
+        )
+        return queryService.queryForAntall(request).toInt()
+    }
+
+    private fun hentNyeLukkedeFraDatabase(
+        dato: LocalDate, gruppe: NyeOgFerdigstilteGruppe
+    ): Int {
+        val request = QueryRequest(
+            oppgaveQuery = OppgaveQuery(
+                filtere = buildList {
+                    leggTilKriterier(gruppe)
+                    add(
+                        FeltverdiOppgavefilter(
+                            "K9", "mottattDato", EksternFeltverdiOperator.EQUALS, listOf(dato.toString())
+                        )
+                    )
+                    add(
+                        FeltverdiOppgavefilter(
+                            null,
+                            "oppgavestatus",
+                            EksternFeltverdiOperator.IN,
+                            listOf(Oppgavestatus.LUKKET.kode)
+                        )
+                    )
+                    add(
+                        FeltverdiOppgavefilter(
+                            null, "ferdigstiltDato", EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS, listOf(dato.toString())
                         )
                     )
                 })
