@@ -8,7 +8,6 @@ import io.mockk.mockk
 import io.mockk.runs
 import kotlinx.coroutines.channels.Channel
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
-import no.nav.k9.los.domene.repository.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonKonverteringJobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
@@ -73,8 +72,6 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.OppgaverGrupp
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.status.StatusService
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveKøOppdaterer
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -124,13 +121,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single { dataSource }
     single { pepClient }
-    single {
-        OppgaveRepository(
-            dataSource = get(),
-            pepClient = get(),
-            refreshOppgave = get(named("oppgaveRefreshChannel"))
-        )
-    }
+
     single {
         AktivOppgaveRepository(
             oppgavetypeRepository = get()
@@ -139,14 +130,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single { DriftsmeldingRepository(get()) }
 
-    single {
-        OppgaveKøRepository(
-            dataSource = get(),
-            oppgaveKøOppdatert = get(named("oppgaveKøOppdatert")),
-            oppgaveRefreshChannel = get(named("oppgaveRefreshChannel")),
-            pepClient = get()
-        )
-    }
     single {
         SaksbehandlerRepository(
             dataSource = get(),
@@ -157,15 +140,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         GyldigeFeltutledere(
             saksbehandlerRepository = get()
-        )
-    }
-
-    single {
-        ReservasjonRepository(
-            oppgaveKøRepository = get(),
-            oppgaveRepository = get(),
-            saksbehandlerRepository = get(),
-            dataSource = get()
         )
     }
 
@@ -188,28 +162,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         ) as IAzureGraphService
     }
 
-    val reservasjonOversetterMock = mockk<ReservasjonOversetter>()
-    every {
-        reservasjonOversetterMock.taNyReservasjonFraGammelKontekst(any(), any(), any(), any(), any())
-    } returns ReservasjonV3(
-        reservertAv = 123,
-        reservasjonsnøkkel = "test1",
-        gyldigFra = LocalDateTime.now(),
-        gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
-        kommentar = "",
-        endretAv = null
-    )
-    every {
-        reservasjonOversetterMock.hentAktivReservasjonFraGammelKontekst(any())
-    } returns ReservasjonV3(
-        reservertAv = 1,
-        reservasjonsnøkkel = "test1",
-        gyldigFra = LocalDateTime.now(),
-        gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
-        kommentar = "",
-        endretAv = null
-    )
-
     single {
         ReservasjonKonverteringJobb(
             config = get(),
@@ -220,28 +172,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single {
-        OppgaveTjeneste(
-            oppgaveRepository = get(),
-            oppgaverGruppertRepository = get(),
-            oppgaveKøRepository = get(),
-            saksbehandlerRepository = get(),
-            pdlService = get(),
-            reservasjonRepository = get(),
-            configuration = get(),
-            azureGraphService = get(),
-            pepClient = get(),
-            reservasjonOversetter = reservasjonOversetterMock,
-            statistikkChannel = get(named("statistikkRefreshChannel")),
-            koinProfile = config.koinProfile(),
-        )
-    }
-
-
-    single {
         ReservasjonOversetter(
-            transactionalManager = get(),
-            oppgaveV3Repository = get(),
-            reservasjonV3Tjeneste = get(),
             oppgaveV3RepositoryMedTxWrapper = get(),
         )
     }
@@ -294,17 +225,12 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         )
     }
 
-    single { OppgaveKøOppdaterer(get(), get(), get()) }
-
     single {
         SaksbehandlerAdminTjeneste(
             pepClient = get(),
             transactionalManager = get(),
             saksbehandlerRepository = get(),
             oppgaveKøV3Repository = get(),
-
-            oppgaveKøRepository = get(),
-            oppgaveTjeneste = get(),
         )
     }
 
@@ -458,7 +384,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         ReservasjonV3Tjeneste(
             transactionalManager = get(),
             reservasjonV3Repository = get(),
-            oppgaveV1Repository = get(),
             oppgaveV3Repository = get(),
             pepClient = get(),
             saksbehandlerRepository = get(),

@@ -5,19 +5,14 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.k9.los.domene.repository.OppgaveRepository
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.nyoppgavestyring.feilhandtering.FinnerIkkeDataException
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.idToken
-import no.nav.k9.los.nyoppgavestyring.feilhandtering.FinnerIkkeDataException
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.*
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import org.koin.ktor.ext.inject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.util.*
 
 private val log: Logger = LoggerFactory.getLogger("nav.OppgaveApis")
 
@@ -27,7 +22,6 @@ private val log: Logger = LoggerFactory.getLogger("nav.OppgaveApis")
 
 internal fun Route.ReservasjonApis() {
     val requestContextService by inject<RequestContextService>()
-    val oppgaveTjeneste by inject<OppgaveTjeneste>()
     val saksbehandlerRepository by inject<SaksbehandlerRepository>()
     val pepClient by inject<IPepClient>()
     val reservasjonApisTjeneste by inject<ReservasjonApisTjeneste>()
@@ -164,7 +158,7 @@ internal fun Route.ReservasjonApis() {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val params = call.receive<BrukerIdentDto>()
-                val sokSaksbehandlerMedIdent = oppgaveTjeneste.sokSaksbehandler(params.brukerIdent)
+                val sokSaksbehandlerMedIdent = saksbehandlerRepository.sokSaksbehandler(params.brukerIdent)
                 call.respond(sokSaksbehandlerMedIdent)
             } else {
                 call.respond(HttpStatusCode.Forbidden)

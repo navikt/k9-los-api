@@ -16,9 +16,6 @@ data class Aksjonspunkter(
     val liste: Map<String, String>,
     val apTilstander: List<AksjonspunktTilstand> = emptyList()
 ) {
-    fun hentLengde(): Int {
-        return liste.filter { entry -> entry.value == AKTIV }.size
-    }
 
     fun hentAktive(): Map<String, String> {
         return liste.filter { entry -> entry.value == AKTIV }
@@ -36,22 +33,6 @@ data class Aksjonspunkter(
         return AksjonspunktDefWrapper.tilBeslutter(this.liste)
     }
 
-    fun harAktivtAksjonspunkt(def: AksjonspunktDefinisjon): Boolean {
-        return AksjonspunktDefWrapper.inneholderEtAktivtAksjonspunktMedKoden(this.liste, def)
-    }
-
-    fun harInaktivtAksjonspunkt(def: AksjonspunktDefinisjon): Boolean {
-        return AksjonspunktDefWrapper.inneholderEtInaktivtAksjonspunktMedKoden(this.liste, def)
-    }
-
-    fun harEtAvAksjonspunkt(vararg def: AksjonspunktDefinisjon): Boolean {
-        return AksjonspunktDefWrapper.inneholderEtAvAksjonspunktUavheningStatusMedKoden(this.liste, def.toList())
-    }
-
-    fun harEtAvInaktivtAksjonspunkt(vararg def: AksjonspunktDefinisjon): Boolean {
-        return AksjonspunktDefWrapper.inneholderEtAvInaktivtAksjonspunkterMedKoder(this.liste, def.toList())
-    }
-
     fun eventResultat(fagsystem: Fagsystem): EventResultat {
         if (erIngenAktive()) {
             return EventResultat.LUKK_OPPGAVE
@@ -66,21 +47,6 @@ data class Aksjonspunkter(
         }
 
         return EventResultat.OPPRETT_OPPGAVE
-    }
-
-    fun aktivAutopunkt(): AksjonspunktTilstand? {
-        return this.apTilstander.firstOrNull {
-            it.status == AksjonspunktStatus.OPPRETTET
-                    && AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode).erAutopunkt()
-                    && it.venteårsak != null
-        }
-    }
-
-    fun beslutterAp(): AksjonspunktTilstand? {
-        return this.apTilstander.firstOrNull {
-           it.aksjonspunktKode == AksjonspunktDefinisjon.FATTER_VEDTAK.kode
-                   || it.aksjonspunktKode == AksjonspunktDefinisjonK9Tilbake.FATTE_VEDTAK.kode
-        }
     }
 
     companion object {

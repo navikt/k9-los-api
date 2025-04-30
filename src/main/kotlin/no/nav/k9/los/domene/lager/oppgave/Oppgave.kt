@@ -8,7 +8,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
-//TODO burde splittes i spesifikke oppgaver, SakOppgave, PunsjOppgave, TilbakeOppgave f.eks.
 data class Oppgave(
     @Deprecated("Bruk eksternId") val behandlingId: Long? = null,
     val fagsakSaksnummer: String,
@@ -53,21 +52,8 @@ data class Oppgave(
     var fraEndringsdialog: Boolean? = false,
     val journalførtTidspunkt: LocalDateTime? = null
 ) {
-    fun avluttet(): Boolean {
-        return behandlingStatus == BehandlingStatus.AVSLUTTET
-    }
-
     data class FagsakPeriode(
         val fom: LocalDate, val tom: LocalDate
     )
-
-    //TODO Dette burde endres. FagsaksNummer er ikke nullable, men kan pr dags dato være en tom streng. Burde derfor endres til String?
-    fun harFagSaksNummer(): Boolean {
-        return fagsakSaksnummer.isNotBlank()
-    }
 }
-
-data class OppgaveMedId(
-    val id: UUID, val oppgave: Oppgave
-)
 

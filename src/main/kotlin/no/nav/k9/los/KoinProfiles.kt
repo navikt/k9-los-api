@@ -4,7 +4,6 @@ import io.ktor.server.application.*
 import kotlinx.coroutines.channels.Channel
 import no.nav.helse.dusseldorf.ktor.health.HealthService
 import no.nav.k9.los.KoinProfile.*
-import no.nav.k9.los.domene.repository.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.aktivvask.Aktivvask
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonKonverteringJobb
@@ -85,9 +84,6 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.OppgaverGrupp
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.status.StatusService
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveKøOppdaterer
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
-import no.nav.k9.los.tjenester.saksbehandler.saksliste.SakslisteTjeneste
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -127,20 +123,11 @@ fun common(app: Application, config: Configuration) = module {
         Channel<k9TilbakeEksternId>(Channel.UNLIMITED)
     }
 
-    single { OppgaveRepository(get(), get(), get(named("oppgaveRefreshChannel"))) }
+    single { OppgaveRepository(get()) }
 
     single { AktivOppgaveRepository(
         oppgavetypeRepository = get()
     )
-    }
-
-    single {
-        OppgaveKøRepository(
-            dataSource = get(),
-            oppgaveKøOppdatert = get(named("oppgaveKøOppdatert")),
-            oppgaveRefreshChannel = get(named("oppgaveRefreshChannel")),
-            pepClient = get()
-        )
     }
 
     single { TransactionalManager(dataSource = get()) }
@@ -160,15 +147,6 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         DriftsmeldingRepository(
-            dataSource = get()
-        )
-    }
-
-    single {
-        ReservasjonRepository(
-            oppgaveKøRepository = get(),
-            oppgaveRepository = get(),
-            saksbehandlerRepository = get(),
             dataSource = get()
         )
     }
@@ -262,27 +240,7 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        OppgaveTjeneste(
-            oppgaveRepository = get(),
-            oppgaverGruppertRepository = get(),
-            oppgaveKøRepository = get(),
-            saksbehandlerRepository = get(),
-            reservasjonRepository = get(),
-            pdlService = get(),
-            configuration = config,
-            pepClient = get(),
-            azureGraphService = get(),
-            reservasjonOversetter = get(),
-            statistikkChannel = get(named("statistikkRefreshChannel")),
-            koinProfile = config.koinProfile,
-        )
-    }
-
-    single {
         ReservasjonOversetter(
-            transactionalManager = get(),
-            oppgaveV3Repository = get(),
-            reservasjonV3Tjeneste = get(),
             oppgaveV3RepositoryMedTxWrapper = get(),
         )
     }
@@ -302,9 +260,6 @@ fun common(app: Application, config: Configuration) = module {
             transactionalManager = get(),
             saksbehandlerRepository = get(),
             oppgaveKøV3Repository = get(),
-
-            oppgaveKøRepository = get(),
-            oppgaveTjeneste = get(),
         )
     }
 
@@ -318,14 +273,10 @@ fun common(app: Application, config: Configuration) = module {
     single {
         DriftsmeldingTjeneste(driftsmeldingRepository = get())
     }
-    single {
-        SakslisteTjeneste(oppgaveTjeneste = get())
-    }
+
     single {
         HentKodeverkTjeneste()
     }
-
-    single { OppgaveKøOppdaterer(get(), get(), get()) }
 
     single {
         HealthService(
@@ -555,7 +506,6 @@ fun common(app: Application, config: Configuration) = module {
         ReservasjonV3Tjeneste(
             transactionalManager = get(),
             reservasjonV3Repository = get(),
-            oppgaveV1Repository = get(),
             oppgaveV3Repository = get(),
             pepClient = get(),
             saksbehandlerRepository = get(),

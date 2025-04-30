@@ -35,8 +35,6 @@ import no.nav.helse.dusseldorf.ktor.jackson.JacksonStatusPages
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.helse.dusseldorf.ktor.metrics.MetricsRoute
 import no.nav.helse.dusseldorf.ktor.metrics.init
-import no.nav.k9.los.eventhandler.køOppdatertProsessor
-import no.nav.k9.los.eventhandler.sjekkReserverteJobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.K9KlageTilLosAdapterTjeneste
@@ -51,7 +49,6 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaket
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.k9tilbakeKorrigerOutOfOrderProsessor
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.modia.SakOgBehandlingProducer
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.K9sakBehandlingsoppfriskingJobb
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9v3
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkApi
@@ -75,10 +72,8 @@ import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksApi
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallV3Apis
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
-import no.nav.k9.los.tjenester.fagsak.FagsakApis
 import no.nav.k9.los.tjenester.mock.localSetup
 import no.nav.k9.los.nyoppgavestyring.innloggetbruker.InnloggetBrukerApi
-import no.nav.k9.los.tjenester.saksbehandler.saksliste.SaksbehandlerOppgavekoApis
 import org.koin.core.Koin
 import org.koin.core.qualifier.named
 import org.koin.ktor.ext.getKoin
@@ -132,24 +127,6 @@ fun Application.k9Los() {
         AuthStatusPages()
     }
 
-    val køOppdatertProsessorJob =
-        køOppdatertProsessor(
-            oppgaveKøRepository = koin.get(),
-            oppgaveRepository = koin.get(),
-            channel = koin.get<Channel<UUID>>(named("oppgaveKøOppdatert")),
-            refreshOppgaveChannel = koin.get<Channel<UUID>>(named("oppgaveRefreshChannel")),
-            oppgaveTjeneste = koin.get()
-        )
-
-    // v1, skal fjernes
-    val refreshOppgaveJobb = with(
-        RefreshK9(
-            k9SakService = koin.get(),
-            oppgaveRepository = koin.get(),
-            transactionalManager = koin.get()
-        )
-    ) { start(koin.get<Channel<UUID>>(named("oppgaveRefreshChannel"))) }
-
     // må se på om dette skal settes opp med Jobbplanlegger oppstartsjobb
     val refreshOppgaveV3Jobb = with(
         RefreshK9v3(
@@ -158,17 +135,11 @@ fun Application.k9Los() {
     ) { start(koin.get<Channel<KøpåvirkendeHendelse>>(named("KøpåvirkendeHendelseChannel"))) }
 
     K9sakBehandlingsoppfriskingJobb(
-        oppgaveRepository = koin.get(),
-        oppgaveKøRepository = koin.get(),
         reservasjonRepository = koin.get(),
         refreshK9v3Tjeneste = koin.get(),
         refreshOppgaveChannel = koin.get<Channel<UUID>>(named("oppgaveRefreshChannel")),
         configuration = koin.get()
     ).run { start() }
-
-    // v1, skal fjernes
-    val sjekkReserverteJobb =
-        sjekkReserverteJobb(saksbehandlerRepository = koin.get(), reservasjonRepository = koin.get())
 
     val asynkronProsesseringV1Service = koin.get<AsynkronProsesseringV1Service>()
     val sakOgBehadlingProducer = koin.get<SakOgBehandlingProducer>()
@@ -189,11 +160,8 @@ fun Application.k9Los() {
         log.info("Stopper AsynkronProsesseringV1Service.")
         asynkronProsesseringV1Service.stop()
         sakOgBehadlingProducer.stop()
-        sjekkReserverteJobb.cancel()
         log.info("AsynkronProsesseringV1Service Stoppet.")
         log.info("Stopper pipeline")
-        køOppdatertProsessorJob.cancel()
-        refreshOppgaveJobb.cancel()
         refreshOppgaveV3Jobb.cancel()
         k9SakKorrigerOutOfOrderProsessor.cancel()
         k9TilbakeKorrigerOutOfOrderProsessor.cancel()
@@ -318,14 +286,10 @@ private fun Route.api() {
         route("driftsmeldinger", { hidden = true }) {
             DriftsmeldingerApis()
         }
-        route("fagsak", { hidden = true }) {
-            FagsakApis() //Erstattet av søkeboksApi?
-        }
         route("saksbehandler", { hidden = true }) {
             route("oppgaver") {
                 ReservasjonApis()
             }
-            SaksbehandlerOppgavekoApis()
         }
         route("avdelingsleder") {
             SaksbehandlerAdminApis()
