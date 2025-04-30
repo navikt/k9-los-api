@@ -64,6 +64,8 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.KodeverkApis
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonApi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Api
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeApi
+import no.nav.k9.los.nyoppgavestyring.nyeogferdigstilte.NyeOgFerdigstilteApi
+import no.nav.k9.los.nyoppgavestyring.nyeogferdigstilte.NyeOgFerdigstilteService
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryApis
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonApis
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerAdminApis
@@ -320,6 +322,7 @@ private fun Route.api() {
             route("sok") { SøkeboksApi() }
             route("nokkeltall") { NøkkeltallV3Apis() }
             route("siste-oppgaver") { SisteOppgaverApi() }
+            route("nye-og-ferdigstilte") { NyeOgFerdigstilteApi() }
         }
     }
 }
@@ -332,6 +335,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
     val pepCacheService = koin.get<PepCacheService>()
     val dagensTallService = koin.get<DagensTallService>()
     val perEnhetService = koin.get<FerdigstiltePerEnhetService>()
+    val nyeOgFerdigstilteService = koin.get<NyeOgFerdigstilteService>()
 
     val høyPrioritet = 0
     val mediumPrioritet = 5
@@ -428,6 +432,15 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
         )
 
         add(
+            PlanlagtJobb.Oppstart(
+                navn = "NyeOgFerdigstilteOppstart",
+                prioritet = mediumPrioritet,
+            ) {
+                nyeOgFerdigstilteService.oppdaterCache(this)
+            }
+        )
+
+        add(
             PlanlagtJobb.TimeJobb(
                 navn = "DagensTallOppdaterer",
                 prioritet = lavPrioritet,
@@ -446,6 +459,17 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 minutter = listOf(15),
             ) {
                 perEnhetService.oppdaterCache(this)
+            }
+        )
+
+        add(
+            PlanlagtJobb.Periodisk(
+                navn = "NyeOgFerdigstilteOppdaterer",
+                prioritet = lavPrioritet,
+                startForsinkelse = 30.minutes,
+                intervall = 30.minutes,
+            ) {
+                nyeOgFerdigstilteService.oppdaterCache(this)
             }
         )
 

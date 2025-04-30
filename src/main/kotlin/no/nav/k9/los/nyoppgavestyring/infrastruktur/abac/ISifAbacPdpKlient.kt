@@ -12,8 +12,8 @@ interface ISifAbacPdpKlient {
     suspend fun harTilgangTilSak(action: Action, saksnummerDto: SaksnummerDto): Boolean
     suspend fun harTilgangTilPersoner(action: Action, aktørIder: List<AktørId>): Boolean
 
-    suspend fun harTilgangTilSak(action: Action, saksnummerDto: SaksnummerDto, saksbhandlersGrupper : Set<UUID>): Boolean
-    suspend fun harTilgangTilPersoner(action: Action, aktørIder: List<AktørId>, saksbhandlersGrupper : Set<UUID>): Boolean
+    suspend fun harTilgangTilSak(action: Action, saksnummerDto: SaksnummerDto, saksbehandlersIdent : String, saksbehandlersGrupper : Set<UUID>): Boolean
+    suspend fun harTilgangTilPersoner(action: Action, aktørIder: List<AktørId>, saksbehandlersIdent : String, saksbehandlersGrupper : Set<UUID>): Boolean
 
 
 

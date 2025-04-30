@@ -136,7 +136,7 @@ open class AzureGraphService constructor(
     private suspend fun hentUserIdForSaksbehandler(saksbehandlerIdent: String): UUID {
         return saksbehandlerUserIdCache.hentSuspend(saksbehandlerIdent) {
             val url =
-                "https://graph.microsoft.com/v1.0/users?\$filter=onPremisesSamAccountName eq '$saksbehandlerIdent'&\$select=id"
+                "https://graph.microsoft.com/v1.0/users?\$filter=onPremisesSamAccountName eq '$saksbehandlerIdent'&\$count=true&\$select=id"
             val accessToken = accessToken(null)
             val httpRequest = url
                 .httpGet()

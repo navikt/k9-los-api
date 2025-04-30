@@ -137,15 +137,21 @@ class SifAbacPdpKlient(
         return LosObjectMapper.instance.readValue<Decision>(abc) == Decision.Permit
     }
 
-    override suspend fun harTilgangTilSak(action: Action, saksnummerDto: SaksnummerDto, saksbhandlersGrupper : Set<UUID>): Boolean {
-        val request = SaksnummerOperasjonGrupperDto(saksbhandlersGrupper.toList(), saksnummerDto, OperasjonDto(ResourceType.FAGSAK, map(action)))
+    override suspend fun harTilgangTilSak(action: Action, saksnummerDto: SaksnummerDto, saksbehandlersIdent : String, saksbehandlersGrupper : Set<UUID>): Boolean {
+        if (!saksbehandlersIdent.matches(Regex("^[A-ZÆØÅ][0-9]{6}$"))){
+            throw IllegalArgumentException("Saksbehandlers ident var '$saksbehandlersIdent', passer ikke med validering")
+        }
+        if (saksnummerDto.saksnummer.trim().isEmpty()){
+            throw IllegalArgumentException("Mangler saksnummer, passer ikke med validering")
+        }
+        val request = SaksnummerOperasjonGrupperDto(saksbehandlersIdent, saksbehandlersGrupper.toList(), saksnummerDto, OperasjonDto(ResourceType.FAGSAK, map(action)))
         val antallForsøk = 3
         val systemToken = cachedAccessTokenClient.getAccessToken(scopes)
+        val body = LosObjectMapper.instance.writeValueAsString(request)
         val httpRequest = "${url}/api/tilgangskontroll/k9/sak-grupper"
             .httpPost()
-            .body(LosObjectMapper.instance.writeValueAsString(request))
+            .body(body)
             .header(
-                //OBS! Dette kalles bare med obo token
                 HttpHeaders.Authorization to systemToken.asAuthoriationHeader(),
                 HttpHeaders.Accept to "application/json",
                 HttpHeaders.ContentType to "application/json",
@@ -161,7 +167,7 @@ class SifAbacPdpKlient(
 
         val abc = result.fold(
             { success -> success },
-            { error -> throw IllegalStateException("Feil ved sjekk av tilgang til sak vha grupper mot sif-abac-pdp: $error") }
+            { error -> throw IllegalStateException("Feil ved sjekk av tilgang til sak vha grupper mot sif-abac-pdp ${if (environment == KoinProfile.PREPROD) body else ""}: $error") }
         )
 
         return LosObjectMapper.instance.readValue<Decision>(abc) == Decision.Permit
@@ -199,15 +205,15 @@ class SifAbacPdpKlient(
     }
 
 
-    override suspend fun harTilgangTilPersoner(action: Action, aktørIder: List<AktørId>, saksbehandlersGrupper : Set<UUID>): Boolean {
-        val request = PersonerOperasjonGrupperDto(saksbehandlersGrupper.toList(), aktørIder, emptyList(), OperasjonDto(ResourceType.FAGSAK, map(action)))
+    override suspend fun harTilgangTilPersoner(action: Action, aktørIder: List<AktørId>, saksbehandlersIdent : String, saksbehandlersGrupper : Set<UUID>): Boolean {
+        val request = PersonerOperasjonGrupperDto(saksbehandlersIdent,saksbehandlersGrupper.toList(), aktørIder, emptyList(), OperasjonDto(ResourceType.FAGSAK, map(action)))
         val antallForsøk = 3
         val systemToken = cachedAccessTokenClient.getAccessToken(scopes)
+        val body = LosObjectMapper.instance.writeValueAsString(request)
         val httpRequest = "${url}/api/tilgangskontroll/k9/personer-grupper"
             .httpPost()
-            .body(LosObjectMapper.instance.writeValueAsString(request))
+            .body(body)
             .header(
-                //OBS! Dette kalles bare med obo token
                 HttpHeaders.Authorization to systemToken.asAuthoriationHeader(),
                 HttpHeaders.Accept to "application/json",
                 HttpHeaders.ContentType to "application/json",
@@ -223,7 +229,7 @@ class SifAbacPdpKlient(
 
         val abc = result.fold(
             { success -> success },
-            { error -> throw IllegalStateException("Feil ved sjekk av tilgang til personer vha grupper mot sif-abac-pdp: $error") }
+            { error -> throw IllegalStateException("Feil ved sjekk av tilgang til personer vha grupper mot sif-abac-pdp ${if (environment == KoinProfile.PREPROD) body else ""}: $error") }
         )
 
         return LosObjectMapper.instance.readValue<Decision>(abc) == Decision.Permit
