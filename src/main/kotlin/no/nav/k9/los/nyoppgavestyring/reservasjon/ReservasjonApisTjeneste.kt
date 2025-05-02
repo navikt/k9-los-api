@@ -1,22 +1,19 @@
 package no.nav.k9.los.nyoppgavestyring.reservasjon
 
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.leggTilDagerHoppOverHelg
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonDto
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.*
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
-import java.util.*
 
 class ReservasjonApisTjeneste(
     private val saksbehandlerRepository: SaksbehandlerRepository,
@@ -126,7 +123,8 @@ class ReservasjonApisTjeneste(
                 kommentar = forlengReservasjonDto.kommentar
             )
 
-        val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(forlengetReservasjon.reservasjonV3.reservertAv)!!
+        val reservertAv =
+            saksbehandlerRepository.finnSaksbehandlerMedId(forlengetReservasjon.reservasjonV3.reservertAv)!!
         log.info("forlengReservasjon: ${forlengReservasjonDto.oppgaveNøkkel.oppgaveEksternId}, ${forlengetReservasjon.reservasjonV3}, reservertAv: $reservertAv")
 
         return reservasjonV3DtoBuilder.byggReservasjonV3Dto(forlengetReservasjon, reservertAv)
@@ -187,8 +185,8 @@ class ReservasjonApisTjeneste(
         return reservasjonerMedOppgaver.map { reservasjonMedOppgaver ->
             try {
                 reservasjonV3DtoBuilder.byggReservasjonV3Dto(reservasjonMedOppgaver, saksbehandler)
-            } catch (e : Exception){
-                log.warn("Klarte ikke tolke reservasjon med id ${reservasjonMedOppgaver.reservasjonV3.id}, v1-oppgave: ${reservasjonMedOppgaver.oppgaveV1?.eksternId} v3-oppgaver: ${reservasjonMedOppgaver.oppgaverV3.map { it.eksternId } }")
+            } catch (e: Exception) {
+                log.warn("Klarte ikke tolke reservasjon med id ${reservasjonMedOppgaver.reservasjonV3.id}, v3-oppgaver: ${reservasjonMedOppgaver.oppgaverV3.map { it.eksternId }}")
                 throw e;
             }
         }
@@ -205,37 +203,20 @@ class ReservasjonApisTjeneste(
             if (innloggetBrukerHarKode6Tilgang != saksbehandlerHarKode6Tilgang) {
                 emptyList()
             } else {
-                if (reservasjonMedOppgaver.oppgaveV1 != null) {
-                    listOf(
-                        ReservasjonDto(
-                            reservertAvEpost = saksbehandler.epost,
-                            reservertAvIdent = saksbehandler.brukerIdent!!,
-                            reservertAvNavn = saksbehandler.navn,
-                            saksnummer = reservasjonMedOppgaver.oppgaveV1.fagsakSaksnummer,
-                            journalpostId = reservasjonMedOppgaver.oppgaveV1.journalpostId,
-                            behandlingType = reservasjonMedOppgaver.oppgaveV1.behandlingType,
-                            reservertTilTidspunkt = reservasjonMedOppgaver.reservasjonV3.gyldigTil,
-                            kommentar = reservasjonMedOppgaver.reservasjonV3.kommentar ?: "",
-                            tilBeslutter = reservasjonMedOppgaver.oppgaveV1.tilBeslutter,
-                            oppgavenøkkel = OppgaveNøkkelDto.forV1Oppgave(reservasjonMedOppgaver.oppgaveV1.eksternId.toString()),
-                        )
+                reservasjonMedOppgaver.oppgaverV3.map { oppgave ->
+                    ReservasjonDto(
+                        reservertAvEpost = saksbehandler.epost,
+                        reservertAvIdent = saksbehandler.brukerIdent!!,
+                        reservertAvNavn = saksbehandler.navn,
+                        saksnummer = oppgave.hentVerdi("saksnummer"), //TODO: Oppgaveagnostisk logikk. Løses antagelig ved å skrive om frontend i dette tilfellet
+                        journalpostId = oppgave.hentVerdi("journalpostId"),
+                        behandlingType = BehandlingType.fraKode(oppgave.hentVerdi("behandlingTypekode")!!),
+                        reservertTilTidspunkt = reservasjonMedOppgaver.reservasjonV3.gyldigTil,
+                        kommentar = reservasjonMedOppgaver.reservasjonV3.kommentar ?: "",
+                        tilBeslutter = oppgave.hentVerdi("liggerHosBeslutter").toBoolean(),
+                        oppgavenøkkel = OppgaveNøkkelDto(oppgave),
                     )
-                } else {
-                    reservasjonMedOppgaver.oppgaverV3.map { oppgave ->
-                        ReservasjonDto(
-                            reservertAvEpost = saksbehandler.epost,
-                            reservertAvIdent = saksbehandler.brukerIdent!!,
-                            reservertAvNavn = saksbehandler.navn,
-                            saksnummer = oppgave.hentVerdi("saksnummer"), //TODO: Oppgaveagnostisk logikk. Løses antagelig ved å skrive om frontend i dette tilfellet
-                            journalpostId = oppgave.hentVerdi("journalpostId"),
-                            behandlingType = BehandlingType.fraKode(oppgave.hentVerdi("behandlingTypekode")!!),
-                            reservertTilTidspunkt = reservasjonMedOppgaver.reservasjonV3.gyldigTil,
-                            kommentar = reservasjonMedOppgaver.reservasjonV3.kommentar ?: "",
-                            tilBeslutter = oppgave.hentVerdi("liggerHosBeslutter").toBoolean(),
-                            oppgavenøkkel = OppgaveNøkkelDto(oppgave),
-                        )
-                    }.toList()
-                }
+                }.toList()
             }
         }
     }

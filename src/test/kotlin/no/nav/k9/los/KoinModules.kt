@@ -7,7 +7,6 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import kotlinx.coroutines.channels.Channel
-import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonKonverteringJobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
@@ -60,7 +59,10 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nyoppgavestyring.nyeogferdigstilte.NyeOgFerdigstilteService
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.db.OppgaveQueryRepository
-import no.nav.k9.los.nyoppgavestyring.reservasjon.*
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonApisTjeneste
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3DtoBuilder
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerAdminTjeneste
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.sisteoppgaver.SisteOppgaverRepository
@@ -76,7 +78,6 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.status.Status
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
-import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
 
@@ -87,11 +88,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single(named("oppgaveKøOppdatert")) {
         Channel<UUID>(Channel.UNLIMITED)
     }
-    single(named("oppgaveChannel")) {
-        Channel<Oppgave>(Channel.UNLIMITED)
-    }
     single(named("oppgaveRefreshChannel")) {
-        Channel<Oppgave>(Channel.UNLIMITED)
+        Channel<UUID>(Channel.UNLIMITED)
     }
     single(named("KøpåvirkendeHendelseChannel")) {
         Channel<KøpåvirkendeHendelse>(Channel.UNLIMITED)

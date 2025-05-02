@@ -78,7 +78,6 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
     fun setup() {
         runBlocking {
             // Gir tilgang til kode6 for å isolere testing av cache-oppdatering
-            coEvery { pepClient.harTilgangTilOppgave(any()) } returns true
             coEvery { pepClient.harTilgangTilOppgaveV3(any(), any(), any()) } returns true
         }
 

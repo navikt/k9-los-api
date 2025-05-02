@@ -55,13 +55,12 @@ class K9TilbakeEventHandler(
     private fun sendModia(
         modell: K9TilbakeModell,
     ) {
-        val oppgave = modell.oppgave(modell.sisteEvent())
         val k9TilbakeModell = modell as K9TilbakeModell
         if (k9TilbakeModell.starterSak()) {
             sakOgBehandlingProducer.behandlingOpprettet(k9TilbakeModell.behandlingOpprettetSakOgBehandling())
         }
 
-        if (oppgave.behandlingStatus == BehandlingStatus.AVSLUTTET) {
+        if (modell.sisteEvent().behandlingStatus == BehandlingStatus.AVSLUTTET.kode) {
             sakOgBehandlingProducer.avsluttetBehandling(k9TilbakeModell.behandlingAvsluttetSakOgBehandling())
         }
     }

@@ -250,8 +250,7 @@ class ReservasjonV3Tjeneste(
     ): ReservasjonV3MedOppgaver {
         return ReservasjonV3MedOppgaver(
             reservasjon,
-            oppgaveV3Repository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjon.reservasjonsnøkkel),
-            null
+            oppgaveV3Repository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjon.reservasjonsnøkkel)
         )
     }
 

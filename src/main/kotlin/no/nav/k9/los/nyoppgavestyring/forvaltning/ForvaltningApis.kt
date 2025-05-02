@@ -548,10 +548,3 @@ fun lagNøkkelAktør(oppgave: Oppgave, tilBeslutter: Boolean): String {
         "K9_b_${oppgave.hentVerdi("ytelsestype")}_${oppgave.hentVerdi("aktorId")}"
     }
 }
-
-data class KoDiff(
-    val antallOppgaverSomManglerIV1: Int,
-    val antallOppgaverSomManglerIV3: Int,
-    val v3OppgaverSomManglerIV1: Set<OppgaveDto>,
-    val v1OppgaverSomManglerIV3: Set<no.nav.k9.los.domene.lager.oppgave.Oppgave>
-)

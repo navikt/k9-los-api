@@ -15,44 +15,7 @@ data class Aksjonspunkter(
     // ikke bruk denne direkte gå via hentAlle eller hentAktive
     val liste: Map<String, String>,
     val apTilstander: List<AksjonspunktTilstand> = emptyList()
-) {
-
-    fun hentAktive(): Map<String, String> {
-        return liste.filter { entry -> entry.value == AKTIV }
-    }
-
-    fun påVent(fagsystem: Fagsystem): Boolean {
-        return AksjonspunktDefWrapper.påVent(fagsystem, this.liste)
-    }
-
-    fun erIngenAktive(): Boolean {
-        return hentAktive().isEmpty()
-    }
-
-    fun tilBeslutter(): Boolean {
-        return AksjonspunktDefWrapper.tilBeslutter(this.liste)
-    }
-
-    fun eventResultat(fagsystem: Fagsystem): EventResultat {
-        if (erIngenAktive()) {
-            return EventResultat.LUKK_OPPGAVE
-        }
-
-        if (påVent(fagsystem)) {
-            return EventResultat.LUKK_OPPGAVE_VENT
-        }
-
-        if (tilBeslutter()) {
-            return EventResultat.OPPRETT_BESLUTTER_OPPGAVE
-        }
-
-        return EventResultat.OPPRETT_OPPGAVE
-    }
-
-    companion object {
-        private const val AKTIV = "OPPR"
-    }
-}
+)
 
 data class AksjonspunktTilstand(
     val aksjonspunktKode: String,
