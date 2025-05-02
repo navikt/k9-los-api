@@ -91,7 +91,6 @@ class K9SakEventHandler (
     private fun sendModia(
         modell: K9SakModell,
     ) {
-        val oppgave = modell.oppgave(modell.sisteEvent())
         val k9SakModell = modell as K9SakModell
         if (k9SakModell.starterSak()) {
             sakOgBehandlingProducer.behandlingOpprettet(k9SakModell.behandlingOpprettetSakOgBehandling())
