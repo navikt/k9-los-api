@@ -27,19 +27,19 @@ class StatusService(
         BehandlingType.UTEN_FNR_DNR,
         BehandlingType.PUNSJOPPGAVE_IKKE_LENGER_NØDVENDIG,
         BehandlingType.UKJENT,
-    ).map { it.kode }
+    )
 
-    fun hentStatus(harTilgangTilKode6: Boolean): List<OppgaverGruppertRepository.BehandlingstypeAntallDto> {
+    fun hentStatus(harTilgangTilKode6: Boolean): List<StatusDto> {
         val alleGrupper =
             oppgaverGruppertRepository.hentAntallÅpneOppgaverPrOppgavetypeBehandlingstype(harTilgangTilKode6)
 
         val (punsjGrupper, andreGrupper) = alleGrupper.partition { it.behandlingstype in punsjtyper }
 
         return buildList {
-            add(OppgaverGruppertRepository.BehandlingstypeAntallDto("Åpne behandlinger", alleGrupper.sumOf { it.antall }))
-            addAll(andreGrupper)
+            add(StatusDto("Åpne behandlinger", alleGrupper.sumOf { it.antall }))
+            addAll(andreGrupper.map { StatusDto(it.behandlingstype.navn, it.antall) })
             if (punsjGrupper.isNotEmpty()) {
-                add(OppgaverGruppertRepository.BehandlingstypeAntallDto("Punsj", punsjGrupper.sumOf { it.antall }))
+                add(StatusDto("Punsj", punsjGrupper.sumOf { it.antall }))
             }
         }
     }
