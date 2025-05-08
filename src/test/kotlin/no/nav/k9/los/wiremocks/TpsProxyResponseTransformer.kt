@@ -5,7 +5,7 @@ import com.github.tomakehurst.wiremock.extension.Parameters
 import com.github.tomakehurst.wiremock.extension.ResponseTransformer
 import com.github.tomakehurst.wiremock.http.Request
 import com.github.tomakehurst.wiremock.http.Response
-import no.nav.k9.los.integrasjon.rest.NavHeaders
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.NavHeaders
 
 class TpsProxyResponseTransformer : ResponseTransformer() {
     override fun transform(

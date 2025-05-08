@@ -1,7 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <appender name="STDOUT_JSON" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+                <maxLength>15000</maxLength>
+                <maxDepthPerThrowable>200</maxDepthPerThrowable>
+                <shortenedClassNameLength>70</shortenedClassNameLength>
+                <exclude>java\.lang\.reflect</exclude>
+                <exclude>jdk\.internal\.reflect</exclude>
+                <exclude>io\.ktor\.server\.application\.hooks</exclude>
+                <exclude>io\.ktor\.util\.pipeline</exclude>
+                <exclude>io\.ktor\.util\.debug</exclude>
+                <exclude>io\.ktor\.server\.plugins\.callloging</exclude>
+                <exclude>kotlinx\.coroutines</exclude>
+                <rootCauseFirst>false</rootCauseFirst>
+            </throwableConverter>
+        </encoder>
     </appender>
 
     <appender name="auditLogger" class="com.papertrailapp.logback.Syslog4jAppender">
@@ -35,6 +49,7 @@
     <logger name="nav" level="INFO"/>
     <logger name="no.nav" level="INFO"/>
     <logger name="io.ktor.auth.jwt" level="TRACE"/>
+    <logger name="no.nav.k9.kodeverk.TempAvledeKode" level="WARN"/>
 
     <logger name="auditLogger" level="INFO" additivity="false">
         <appender-ref ref="auditLogger" />

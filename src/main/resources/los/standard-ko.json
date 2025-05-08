@@ -12,20 +12,25 @@
     {
       "type": "feltverdi",
       "område": null,
-      "kode": "beskyttelse",
+      "kode": "personbeskyttelse",
       "operator": "IN",
       "verdi": [
-        "ORDINÆR"
+        "UGRADERT"
       ]
     },
     {
       "type": "feltverdi",
-      "område": null,
-      "kode": "egenAnsatt",
+      "område": "K9",
+      "kode": "ytelsestype",
       "operator": "IN",
-      "verdi": [
-        "NEI"
-      ]
+      "verdi": []
+    },
+    {
+      "type": "feltverdi",
+      "område": "K9",
+      "kode": "liggerHosBeslutter",
+      "operator": "IN",
+      "verdi": []
     }
   ],
   "select": [],

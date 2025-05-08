@@ -6,11 +6,12 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.Configuration
-import no.nav.k9.los.integrasjon.rest.RequestContextService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.IllegalDeleteException
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.MissingDefaultException
 import org.koin.ktor.ext.inject
 
+// Må legge til tilgangskontroll dersom disse endepunktene aktiveres
 internal fun Route.OppgavetypeApi() {
     val requestContextService by inject<RequestContextService>()
     val oppgavetypeTjeneste by inject<OppgavetypeTjeneste>()

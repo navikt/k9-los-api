@@ -3,8 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon
-import no.nav.k9.los.domene.modell.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -89,18 +88,13 @@ class K9SakOppgaveTilDVHMapper {
             FagsakYtelseType.OMSORGSPENGER_MA -> "4487"
             FagsakYtelseType.OMSORGSPENGER_AO -> "4487"
             FagsakYtelseType.OPPLÆRINGSPENGER -> "4487"
+            FagsakYtelseType.UNGDOMSYTELSE -> "4487" //TODO riktig?
             //FagsakYtelseType.PÅRØRENDESYKDOM -> "4487" //Fjernet fra kontrakt 16.01.2024
             FagsakYtelseType.OBSOLETE -> "4487"
             FagsakYtelseType.UDEFINERT -> "4487"
             else -> throw IllegalStateException("Ukjent ytelsestype: ${oppgave.hentVerdi("ytelsestype")}")
         }
 
-    private fun utledUtenlandstilsnitt(oppgave: Oppgave): Boolean {
-        return oppgave.hentListeverdi("aktivtAksjonspunkt").any { aksjonspunktKode ->
-            aksjonspunktKode.equals(AksjonspunktKodeDefinisjon.AUTOMATISK_MARKERING_AV_UTENLANDSSAK_KODE)
-                    || aksjonspunktKode.equals(AksjonspunktKodeDefinisjon.MANUELL_MARKERING_AV_UTLAND_SAKSTYPE_KODE)
-        }
-    }
 
     fun lagSak(oppgave: Oppgave): Sak {
         return Sak(

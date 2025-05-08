@@ -1,9 +1,10 @@
 package no.nav.k9.los.tjenester.saksbehandler.oppgave
 
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
-import no.nav.k9.los.domene.modell.BehandlingStatus
-import no.nav.k9.los.domene.modell.BehandlingType
-import no.nav.k9.los.domene.modell.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.reservasjon.OppgaveStatusDto
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import java.time.LocalDateTime
 import java.util.*
@@ -30,6 +31,6 @@ class OppgaveDto(
     val søktGradering: Boolean,
     val fagsakPeriode: Oppgave.FagsakPeriode? = null, // bekreftet i bruk
     val paaVent: Boolean? = null, // bekreftet i bruk
-    val merknad: MerknadDto? = null, // bekreftet i bruk,
-    val oppgaveNøkkel: OppgaveNøkkelDto = OppgaveNøkkelDto.forV1Oppgave(eksternId.toString())
+    val oppgaveNøkkel: OppgaveNøkkelDto = OppgaveNøkkelDto.forV1Oppgave(eksternId.toString()),
+    val endretAvNavn: String? = null
 )

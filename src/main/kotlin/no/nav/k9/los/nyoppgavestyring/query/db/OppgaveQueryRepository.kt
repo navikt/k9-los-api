@@ -1,19 +1,25 @@
 package no.nav.k9.los.nyoppgavestyring.query.db
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.EgenAnsatt
+import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Kodeverkreferanse
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveId
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelter
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Verdiforklaring
-import no.nav.k9.los.nyoppgavestyring.query.dto.query.*
-import no.nav.k9.los.nyoppgavestyring.transientfeltutleder.GyldigeTransientFeltutleder
+import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgaveQueryToSqlMapper
+import no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.GyldigeTransientFeltutleder
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
@@ -21,17 +27,70 @@ class OppgaveQueryRepository(
     val datasource: DataSource,
     val feltdefinisjonRepository: FeltdefinisjonRepository
 ) {
+    private val log: Logger = LoggerFactory.getLogger("OppgaveQueryRepository")
 
+    @WithSpan
+    fun query(request: QueryRequest): List<OppgaveId> {
+        return using(sessionOf(datasource)) {
+            it.transaction { tx -> query(tx, request, LocalDateTime.now()) }
+        }
+    }
+
+    @WithSpan
+    fun query(tx: TransactionalSession, request: QueryRequest, now: LocalDateTime): List<OppgaveId> {
+        val felter = hentAlleFelterMedMer(tx, medKodeverk = false)
+            .associateBy { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) }
+
+        return query(tx, OppgaveQueryToSqlMapper.toSqlOppgaveQuery(request, felter, now))
+    }
+
+    @WithSpan
+    fun queryForEksternId(request: QueryRequest, now: LocalDateTime): List<EksternOppgaveId> {
+        return using(sessionOf(datasource)) {
+            it.transaction { tx -> queryForEksternId(tx, request, now) }
+        }
+    }
+
+    @WithSpan
+    fun queryForEksternId(tx: TransactionalSession, request: QueryRequest, now: LocalDateTime): List<EksternOppgaveId> {
+        val felter = hentAlleFelterMedMer(tx, medKodeverk = false)
+            .associate { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) to felt }
+
+        return queryForEksternId(tx, OppgaveQueryToSqlMapper.toSqlOppgaveQuery(request, felter, now))
+    }
+
+    @WithSpan
+    fun queryForAntall(tx: TransactionalSession, oppgaveQuery: QueryRequest, now: LocalDateTime): Long {
+        val felter = hentAlleFelterMedMer(tx, medKodeverk = false)
+            .associate { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) to felt }
+
+        return queryForAntall(tx, OppgaveQueryToSqlMapper.toSqlOppgaveQueryForAntall(oppgaveQuery, felter, now))
+
+    }
+
+    @WithSpan
+    private fun queryForAntall(tx: TransactionalSession, oppgaveQuery: OppgaveQuerySqlBuilder): Long {
+        return tx.run(
+            queryOf(
+                oppgaveQuery.getQuery(),
+                oppgaveQuery.getParams()
+            ).map { row -> row.long("antall") }.asSingle
+        )!!
+    }
+
+    @WithSpan
     fun hentAlleFelter(): Oppgavefelter {
         return using(sessionOf(datasource)) { it ->
             it.transaction { tx -> Oppgavefelter(hentAlleFelter(tx)) }
         }
     }
 
+    @WithSpan
     private fun hentAlleFelter(tx: TransactionalSession, medKodeverk: Boolean = true): List<Oppgavefelt> {
         return hentAlleFelterMedMer(tx, medKodeverk).map { it.oppgavefelt }
     }
 
+    @WithSpan
     private fun hentAlleFelterMedMer(tx: TransactionalSession, medKodeverk: Boolean = true): List<OppgavefeltMedMer> {
         val felterFraDatabase = tx.run(
             queryOf(
@@ -64,8 +123,8 @@ class OppgaveQueryRepository(
                         tolkes_som = row.string("tolkes_som"),
                         kokriterie = row.boolean("kokriterie"),
                         verdiforklaringerErUttømmende = kodeverk?.uttømmende ?: false,
-                        verdiforklaringer = kodeverk?.let { kodeverk ->
-                            kodeverk.verdier.map { kodeverkverdi ->
+                        verdiforklaringer = kodeverk?.let {
+                            it.verdier.map { kodeverkverdi ->
                                 Verdiforklaring(
                                     verdi = kodeverkverdi.verdi,
                                     visningsnavn = kodeverkverdi.visningsnavn,
@@ -77,6 +136,14 @@ class OppgaveQueryRepository(
                     row.stringOrNull("transient_feltutleder")?.let { GyldigeTransientFeltutleder.hentFeltutleder(it) }
                 )
             }.asList
+        )
+
+        val oppgavetypeNavn = tx.run(
+            queryOf(
+                """
+                    SELECT ot.ekstern_id FROM oppgavetype as ot 
+                    """.trimIndent()
+            ).map { it.string(1) }.asList
         )
 
         val standardfelter = listOf(
@@ -97,8 +164,32 @@ class OppgaveQueryRepository(
             ),
             Oppgavefelt(
                 område = null,
+                "sistEndret",
+                "Tidspunkt siste endring",
+                "Timestamp",
+                kokriterie = false,
+                verdiforklaringerErUttømmende = false,
+                verdiforklaringer = listOf(),
+            ),
+            Oppgavefelt(
+                område = null,
+                kode = "personbeskyttelse",
+                visningsnavn = "Kode 7 eller egen ansatt",
+                tolkes_som = "String",
+                kokriterie = false,
+                verdiforklaringerErUttømmende = true,
+                PersonBeskyttelseType.entries.map {
+                    Verdiforklaring(
+                        verdi = it.kode,
+                        visningsnavn = it.beskrivelse,
+                        sekundærvalg = false
+                    )
+                }
+            ),
+            Oppgavefelt(
+                område = null,
                 kode = "beskyttelse",
-                visningsnavn =  "Beskyttelse",
+                visningsnavn = "Beskyttelse",
                 tolkes_som = "String",
                 kokriterie = false,
                 verdiforklaringerErUttømmende = true,
@@ -113,7 +204,7 @@ class OppgaveQueryRepository(
             Oppgavefelt(
                 område = null,
                 kode = "egenAnsatt",
-                visningsnavn =  "Egen ansatt",
+                visningsnavn = "Egen ansatt",
                 tolkes_som = "String",
                 kokriterie = false,
                 verdiforklaringerErUttømmende = true,
@@ -126,133 +217,41 @@ class OppgaveQueryRepository(
                 }
             ),
             Oppgavefelt(null, "kildeområde", "Kildeområde", "String", false, false, emptyList()),
-            Oppgavefelt(null, "oppgavetype", "Oppgavetype", "String", true, false, emptyList()),
+            Oppgavefelt(null, "oppgavetype", "Behandlingstype nivå 1", "String", true, false,
+                oppgavetypeNavn.map {
+                    Verdiforklaring(
+                        verdi = it,
+                        visningsnavn = it,
+                        sekundærvalg = false
+                    )
+                }
+            ),
             Oppgavefelt(null, "oppgaveområde", "Oppgaveområde", "String", false, false, emptyList()),
+            Oppgavefelt(null, "spørringstrategi", "Spørringstrategi", "String", false, true, Spørringstrategi.entries.map { Verdiforklaring(it.name, it.navn, false) }),
+            Oppgavefelt(null, "ferdigstiltDato", "Ferdigstilt dato", "Timestamp", true, false, emptyList()),
         ).map { OppgavefeltMedMer(it, null) }
 
-        return (felterFraDatabase + standardfelter).sortedBy { it.oppgavefelt.visningsnavn };
+        return (felterFraDatabase + standardfelter).sortedBy { it.oppgavefelt.visningsnavn }
     }
 
-    fun query(oppgaveQuery: OppgaveQuery): List<Long> {
-        return using(sessionOf(datasource)) {
-            it.transaction { tx -> query(tx, oppgaveQuery, LocalDateTime.now()) }
-        }
-    }
-
-    fun query(tx: TransactionalSession, oppgaveQuery: OppgaveQuery, now: LocalDateTime): List<Long> {
-        val felter = hentAlleFelterMedMer(tx, medKodeverk = false)
-            .associate { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) to felt }
-
-        return query(tx, toSqlOppgaveQuery(oppgaveQuery, felter, now))
-    }
-
-    fun queryForEksternId(oppgaveQuery: OppgaveQuery, now: LocalDateTime): List<EksternOppgaveId> {
-        return using(sessionOf(datasource)) {
-            it.transaction { tx -> queryForEksternId(tx, oppgaveQuery, now) }
-        }
-    }
-
-    fun queryForEksternId(tx: TransactionalSession, oppgaveQuery: OppgaveQuery, now: LocalDateTime): List<EksternOppgaveId> {
-        val felter = hentAlleFelterMedMer(tx, medKodeverk = false)
-            .associate { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) to felt }
-
-        return queryForEksternId(tx, toSqlOppgaveQuery(oppgaveQuery, felter, now))
-    }
-
-    fun queryForAntall(tx: TransactionalSession, oppgaveQuery: OppgaveQuery, now: LocalDateTime): Long {
-        val felter = hentAlleFelterMedMer(tx, medKodeverk = false)
-            .associate { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) to felt }
-
-        return queryForAntall(tx, toSqlOppgaveQueryForAntall(oppgaveQuery, felter, now))
-
-    }
-
-    private fun queryForAntall(tx: TransactionalSession, oppgaveQuery: SqlOppgaveQuery): Long {
+    private fun query(tx: TransactionalSession, oppgaveQuery: OppgaveQuerySqlBuilder): List<OppgaveId> {
         return tx.run(
             queryOf(
                 oppgaveQuery.getQuery(),
                 oppgaveQuery.getParams()
-            ).map { row -> row.long("antall") }.asSingle
-        )!!
-    }
-
-    private fun query(tx: TransactionalSession, oppgaveQuery: SqlOppgaveQuery): List<Long> {
-        return tx.run(
-            queryOf(
-                oppgaveQuery.getQuery(),
-                oppgaveQuery.getParams()
-            ).map { row -> row.long("id") }.asList
+            ).map(oppgaveQuery::mapRowTilId).asList
         )
     }
 
-    private fun queryForEksternId(tx: TransactionalSession, oppgaveQuery: SqlOppgaveQuery): List<EksternOppgaveId> {
+    private fun queryForEksternId(
+        tx: TransactionalSession,
+        oppgaveQuery: OppgaveQuerySqlBuilder
+    ): List<EksternOppgaveId> {
         return tx.run(
             queryOf(
                 oppgaveQuery.getQuery(),
                 oppgaveQuery.getParams()
-            ).map { row -> EksternOppgaveId(
-                row.string("kildeomrade"),
-                row.string("ekstern_id")
-            ) }.asList
+            ).map(oppgaveQuery::mapRowTilEksternId).asList
         )
-    }
-
-    fun toSqlOppgaveQuery(oppgaveQuery: OppgaveQuery, felter: Map<OmrådeOgKode, OppgavefeltMedMer>, now: LocalDateTime): SqlOppgaveQuery {
-        val query = SqlOppgaveQuery(felter, now)
-        val combineOperator = CombineOperator.AND
-        håndterFiltere(query, oppgaveQuery.filtere, combineOperator)
-        håndterOrder(query, oppgaveQuery.order)
-        query.medLimit(oppgaveQuery.limit)
-
-        return query
-    }
-
-    fun toSqlOppgaveQueryForAntall(
-        oppgaveQuery: OppgaveQuery,
-        felter: Map<OmrådeOgKode, OppgavefeltMedMer>,
-        now: LocalDateTime
-    ): SqlOppgaveQuery {
-        val query = SqlOppgaveQuery(felter, now)
-        val combineOperator = CombineOperator.AND
-        håndterFiltere(query, oppgaveQuery.filtere, combineOperator)
-        query.medAntallSomResultat()
-
-        return query
-    }
-
-    private fun håndterFiltere(
-        query: SqlOppgaveQuery,
-        filtere: List<Oppgavefilter>,
-        combineOperator: CombineOperator
-    ) {
-        for (filter in OppgavefilterUtvider.utvid(filtere)) {
-            when (filter) {
-                is FeltverdiOppgavefilter -> query.medFeltverdi(
-                    combineOperator,
-                    filter.område,
-                    filter.kode,
-                    FeltverdiOperator.valueOf(filter.operator),
-                    filter.verdi.first()
-                )
-
-                is CombineOppgavefilter -> {
-                    val newCombineOperator = CombineOperator.valueOf(filter.combineOperator)
-                    query.medBlokk(combineOperator, newCombineOperator.defaultValue) {
-                        håndterFiltere(query, filter.filtere, newCombineOperator)
-                    }
-                }
-
-                else -> throw IllegalStateException("Ukjent filter: " + filter::class.qualifiedName)
-            }
-        }
-    }
-
-    private fun håndterOrder(query: SqlOppgaveQuery, orderBys: List<OrderFelt>) {
-        for (orderBy in orderBys) {
-            when (orderBy) {
-                is EnkelOrderFelt -> query.medEnkelOrder(orderBy.område, orderBy.kode, orderBy.økende)
-                else -> throw IllegalStateException("Ukjent OrderFelt: " + orderBy::class.qualifiedName)
-            }
-        }
     }
 }

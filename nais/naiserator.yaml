@@ -1,0 +1,207 @@
+apiVersion: nais.io/v1alpha1
+kind: Application
+metadata:
+  name: k9-los-api
+  namespace: k9saksbehandling
+  labels:
+    team: k9saksbehandling
+spec:
+  image: {{ image }}
+  port: 8020
+  liveness:
+    path: isalive
+    initialDelay: 20
+    timeout: 1
+    periodSeconds: 5
+    failureThreshold: 100
+  readiness:
+    path: isready
+    initialDelay: 20
+    timeout: 1
+  resources:
+    limits:
+      memory: "{{memory_limit}}"
+    requests:
+      cpu: "500m"
+      memory: "1560Mi"
+  replicas:
+    min: 1
+    max: 1
+    cpuThresholdPercentage: 80
+  prometheus:
+    enabled: true
+    path: /metrics
+  observability:
+    autoInstrumentation:
+      enabled: true
+      runtime: java
+      destinations:
+        - id: "elastic-apm"
+        - id: "grafana-lgtm"
+  vault:
+    enabled: true
+    paths:
+      - mountPath: /var/run/secrets/nais.io/serviceuser
+        kvPath: {{serviceuser_kvpath}}
+      - mountPath: /var/run/secrets/nais.io/vault
+        kvPath: {{vault_kvpath}}
+  webproxy: true
+  kafka:
+    pool: {{kafka_pool}}
+    streams: true
+  azure:
+    application:
+      allowAllUsers: true
+      enabled: true
+      tenant: {{azure_tenant}}
+      claims:
+        # Kun de gruppene brukeren er medlem av vil bli lagt til i claims på tokenet.
+        groups:
+          # 0000-GA-k9-beslutter
+          - id: {{group_id_beslutter}}
+          # 0000-GA-Egne_ansatte
+          - id: {{group_id_egenansatt}}
+          # 0000-GA-Strengt_Fortrolig_Adresse
+          - id: {{group_id_kode6}}
+          # 0000-GA-Fortrolig_Adresse
+          - id: {{group_id_kode7}}
+          # 0000-GA-k9-overstyrer
+          - id: {{group_id_overstyrer}}
+          # 0000-GA-k9-saksbehandler
+          - id: {{group_id_saksbehandler}}
+          # 0000-GA-k9-veileder
+          - id: {{group_id_veileder}}
+          # 0000-GA-k9-drift
+          - id: {{group_id_drift}}
+          # 0000-GA-k9-oppgavestyrer
+          - id: {{group_id_oppgavestyrer}}
+        extra:
+          - "NAVident"
+  accessPolicy:
+    outbound:
+      rules:
+        - application: k9-klage
+          namespace: k9saksbehandling
+    inbound:
+      rules:
+        - application: k9-los-web
+          namespace: k9saksbehandling
+          cluster: {{cluster_name}}
+        - application: k9-swagger
+          namespace: k9saksbehandling
+          cluster: {{cluster_name}}
+          permissions:
+            scopes:
+              - "swagger"
+        - application: k9-sak
+          namespace: k9saksbehandling
+  ingresses:
+    - {{ingress_url}}
+  env:
+    - name: OPPGAVE_BASE_URI
+      value: {{oppgave_base_uri}}
+    - name: DB_URL
+      value: {{db_url}}
+    - name: DB_VAULT_MOUNTPATH
+      value: {{db_vault_mountpath}}
+
+    - name: PDL_URL
+      value: {{pdl_url}}
+
+      # Nav applikasjoner
+    - name: APP_K9SAK_URL
+      value: {{app_k9sak_url}}
+    - name: APP_K9KLAGE_URL
+      value: {{app_k9klage_url}}
+    - name: APP_K9SAK_FRONTEND_URL
+      value: {{app_k9sak_frontend_url}}
+    - name: APP_K9PUNSJ_FRONTEND_URL
+      value: {{app_k9punsj_frontend_url}}
+    - name: APP_SIF_ABAC_PDP_URL
+      value: {{app_sif_abac_pdp_url}}
+
+      # Kafka
+    - name: BOOTSTRAP_SERVERS
+      value: {{bootstrap_servers}}
+    - name: KAFKA_AKSJONSPUNKTHENDELSE_TOPIC
+      value: k9saksbehandling.k9sak-aksjonspunkthendelse
+    - name: KAFKA_KLAGE_TIL_LOS_TOPIC
+      value: k9saksbehandling.oppgavemeldinger-klage-til-los
+    - name: KAFKA_PUNSJAKSJONSPUNKTHENDELSE_TOPIC
+      value: k9saksbehandling.punsj-aksjonspunkthendelse-v1
+    - name: KAFKA_AKSJONSPUNKTHENDELSE_TILBAKE_TOPIC
+      value: k9saksbehandling.tilbakekreving-hendelse-los
+    - name: KAFKA_SAKOGBEHANDLING_TOPIC
+      value: personoversikt.modia-soknadsstatus-hendelse
+    - name: KAFKA_AAPEN_STATISTIKK_SAK_TOPIC
+      value: k9saksbehandling.aapen-k9statistikk-sak-v2
+    - name: KAFKA_AAPEN_STATISTIKK_BEHANDLING_TOPIC
+      value: k9saksbehandling.aapen-k9statistikk-behandling-v2
+    - name: KAFKA_K9SAK_TOPIC
+      value: k9saksbehandling.privat-k9-produksjonsstyring-sak-v1
+    - name: KAFKA_K9PUNSJ_TOPIC
+      value: k9saksbehandling.privat-k9-produksjonsstyring-punsj-v1
+
+      # opentelemetry
+    - name: "OTEL_RESOURCE_ATTRIBUTES"
+      value: "service.name=k9-los-api,service.namespace=k9saksbehandling,deployment.environment={{deployment_environment}},nais.backend=elastic-apm;grafana-lgtm"
+
+      # ABAC
+    - name: ABAC_PDP_ENDPOINT_URL
+      value: http://abac-k9.k9saksbehandling.svc.nais.local/application/authorize
+
+      # Audit logging
+    - name: AUDITLOGGER_ENABLED
+      value: "true"
+    - name: AUDITLOGGER_VENDOR
+      value: "k9"
+    - name: AUDITLOGGER_PRODUCT
+      value: "k9-los-api"
+
+    # Gruppenavn for roller fra Active Directory
+    # 0000-GA-k9-beslutter
+    - name: BRUKER_GRUPPE_ID_BESLUTTER
+      value: {{group_id_beslutter}}
+    # 0000-GA-Egne_ansatte
+    - name: BRUKER_GRUPPE_ID_EGENANSATT
+      value: {{group_id_egenansatt}}
+    # 0000-GA-Strengt_Fortrolig_Adresse
+    - name: BRUKER_GRUPPE_ID_KODE6
+      value: {{group_id_kode6}}
+    # 0000-GA-Fortrolig_Adresse
+    - name: BRUKER_GRUPPE_ID_KODE7
+      value: {{group_id_kode7}}
+    # 0000-GA-k9-overstyrer
+    - name: BRUKER_GRUPPE_ID_OVERSTYRER
+      value: {{group_id_overstyrer}}
+    # 0000-GA-k9-saksbehandler
+    - name: BRUKER_GRUPPE_ID_SAKSBEHANDLER
+      value: {{group_id_saksbehandler}}
+    # 0000-GA-k9-veileder
+    - name: BRUKER_GRUPPE_ID_VEILEDER
+      value: {{group_id_veileder}}
+    # 0000-GA-k9-drift
+    - name: BRUKER_GRUPPE_ID_DRIFT
+      value: {{group_id_drift}}
+    # 0000-GA-k9-oppgavestyrer
+    - name: BRUKER_GRUPPE_ID_OPPGAVESTYRER
+      value: {{group_id_oppgavestyrer}}
+
+      # feature toggles
+    - name: NY_OPPGAVESTYRING
+      value: "true"
+    - name: NY_OPPGAVESTYRING_DVH_SENDING
+      value: "{{ny_oppgavestyring_dvh_sending}}"
+    - name: NY_OPPGAVESTYRING_REST_API
+      value: "{{ny_oppgavestyring_rest_api}}"
+    - name: K9SAK_CONSUMER_AIVEN
+      value: "true"
+    - name: PUNSJ_CONSUMER_AIVEN
+      value: "true"
+    - name: TILBAKE_CONSUMER_AIVEN
+      value: "true"
+    - name: VALGT_PDP
+      value : "{{valgt_pdp}}"
+
+    - name: NOKKELTALL_ENHETER
+      value: "{{nokkeltall_enheter}}"

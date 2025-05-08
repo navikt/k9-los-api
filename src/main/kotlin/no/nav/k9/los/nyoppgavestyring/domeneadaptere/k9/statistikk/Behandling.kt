@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import no.nav.k9.statistikk.kontrakter.JsonSchemas
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -31,6 +32,9 @@ data class Behandling(
 
     @JsonProperty("relatertBehandlingId")
     val relatertBehandlingId: String? = null,
+
+    @JsonProperty("relatertBehandlingFagsystem")
+    val relatertBehandlingFagsystem: String? = null,
 
     @JsonProperty("vedtakId")
     val vedtakId: String? = null,
@@ -104,6 +108,9 @@ data class Behandling(
     @JsonProperty("avsender")
     val avsender: String? = null,
 
+    @JsonProperty("oversendtKlageinstans")
+    val oversendtKlageinstans: LocalDateTime? = null,
+
     @JsonProperty("versjon")
     val versjon: Long? = null
 ) {
@@ -115,31 +122,33 @@ data class Behandling(
     }
 
     fun toJson(): String = JsonSchemas.toJson(this)
+
+    fun tryggToString(): String {
+        return """Behandling(
+            saksnummer=$saksnummer,
+            behandlingId=$behandlingId,
+            funksjonellTid=$funksjonellTid,
+            tekniskTid=$tekniskTid,
+            registrertDato=$registrertDato,
+            vedtaksDato=$vedtaksDato,
+            avsender=$avsender,
+            resultatBeskrivelse=$resultatBeskrivelse,
+            oversendtKlageinstans=$oversendtKlageinstans
+        )""".trimIndent()
+    }
+
 }
 
 class BehandlingBuilder(behandlingId: String, saksnummer: String) {
-    private var behandling = Behandling(behandlingId = behandlingId, saksnummer = saksnummer)
+    private var behandling = Behandling(
+        behandlingId = behandlingId,
+        saksnummer = saksnummer,
+    )
 
     fun build(): Behandling = behandling
-    fun buildJson(): String = build().toJson()
-
-    fun sakId(sakId: String?): BehandlingBuilder {
-        behandling = behandling.copy(sakId = sakId)
-        return this
-    }
 
     fun behandlingId(behandlingId: String): BehandlingBuilder {
         behandling = behandling.copy(behandlingId = behandlingId)
-        return this
-    }
-
-    fun funksjonellTid(funksjonellTid: OffsetDateTime?): BehandlingBuilder {
-        behandling = behandling.copy(funksjonellTid = funksjonellTid)
-        return this
-    }
-
-    fun tekniskTid(tekniskTid: OffsetDateTime?): BehandlingBuilder {
-        behandling = behandling.copy(tekniskTid = tekniskTid)
         return this
     }
 
@@ -153,21 +162,6 @@ class BehandlingBuilder(behandlingId: String, saksnummer: String) {
         return this
     }
 
-    fun vedtaksDato(vedtaksDato: LocalDate?): BehandlingBuilder {
-        behandling = behandling.copy(vedtaksDato = vedtaksDato)
-        return this
-    }
-
-    fun relatertBehandlingId(relatertBehandlingId: String?): BehandlingBuilder {
-        behandling = behandling.copy(relatertBehandlingId = relatertBehandlingId)
-        return this
-    }
-
-    fun vedtakId(vedtakId: String?): BehandlingBuilder {
-        behandling = behandling.copy(vedtakId = vedtakId)
-        return this
-    }
-
     fun saksnummer(saksnummer: String): BehandlingBuilder {
         behandling = behandling.copy(saksnummer = saksnummer)
         return this
@@ -175,86 +169,6 @@ class BehandlingBuilder(behandlingId: String, saksnummer: String) {
 
     fun behandlingType(kode: String?, beskrivelse: String?): BehandlingBuilder {
         behandling = behandling.copy(behandlingType = kode, behandlingTypeBeskrivelse = beskrivelse)
-        return this
-    }
-
-    fun behandlingStatus(kode: String?, beskrivelse: String?): BehandlingBuilder {
-        behandling = behandling.copy(behandlingStatus = kode, behandlingStatusBeskrivelse = beskrivelse)
-        return this
-    }
-
-    fun resultat(kode: String?, beskrivelse: String?): BehandlingBuilder {
-        behandling = behandling.copy(resultat = kode, resultatBeskrivelse = beskrivelse)
-        return this
-    }
-
-    fun resultatBegrunnelse(kode: String?, beskrivelse: String?): BehandlingBuilder {
-        behandling = behandling.copy(resultatBegrunnelse = kode, resultatBegrunnelseBeskrivelse = beskrivelse)
-        return this
-    }
-
-    fun beslutter(beslutter: String?): BehandlingBuilder {
-        behandling = behandling.copy(beslutter = beslutter)
-        return this
-    }
-
-    fun saksbehandler(saksbehandler: String?): BehandlingBuilder {
-        behandling = behandling.copy(saksbehandler = saksbehandler)
-        return this
-    }
-
-    fun behandlingOpprettetAv(behandlingOpprettetAv: String?): BehandlingBuilder {
-        behandling = behandling.copy(behandlingOpprettetAv = behandlingOpprettetAv)
-        return this
-    }
-
-    fun behandlingOpprettetType(behandlingOpprettetType: String?): BehandlingBuilder {
-        behandling = behandling.copy(behandlingOpprettetType = behandlingOpprettetType)
-        return this
-    }
-
-    fun behandlingOpprettetTypeBeskrivelse(behandlingOpprettetTypeBeskrivelse: String?): BehandlingBuilder {
-        behandling = behandling.copy(behandlingOpprettetTypeBeskrivelse = behandlingOpprettetTypeBeskrivelse)
-        return this
-    }
-
-    fun ansvarligEnhetKode(ansvarligEnhetKode: String?): BehandlingBuilder {
-        behandling = behandling.copy(ansvarligEnhetKode = ansvarligEnhetKode)
-        return this
-    }
-
-    fun ansvarligEnhetType(ansvarligEnhetType: String?): BehandlingBuilder {
-        behandling = behandling.copy(ansvarligEnhetType = ansvarligEnhetType)
-        return this
-    }
-
-    fun datoForUttak(datoForUttak: LocalDate?): BehandlingBuilder {
-        behandling = behandling.copy(datoForUttak = datoForUttak)
-        return this
-    }
-
-    fun datoForUtbetaling(datoForUtbetaling: LocalDate?): BehandlingBuilder {
-        behandling = behandling.copy(datoForUtbetaling = datoForUtbetaling)
-        return this
-    }
-
-    fun totrinnsbehandling(totrinnsbehandling: Boolean?): BehandlingBuilder {
-        behandling = behandling.copy(totrinnsbehandling = totrinnsbehandling)
-        return this
-    }
-
-    fun helautomatiskBehandlet(helautomatiskBehandlet: Boolean?): BehandlingBuilder {
-        behandling = behandling.copy(helautomatiskBehandlet = helautomatiskBehandlet)
-        return this
-    }
-
-    fun avsender(avsender: String?): BehandlingBuilder {
-        behandling = behandling.copy(avsender = avsender)
-        return this
-    }
-
-    fun versjon(versjon: Long?): BehandlingBuilder {
-        behandling = behandling.copy(versjon = versjon)
         return this
     }
 }

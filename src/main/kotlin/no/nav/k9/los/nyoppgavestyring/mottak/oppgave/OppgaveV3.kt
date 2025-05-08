@@ -1,13 +1,12 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavefelt
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import java.time.LocalDateTime
 
 class OppgaveV3(
-    val id: Long? = null,
+    val id: OppgaveId? = null,
     val eksternId: String,
     val eksternVersjon: String,
     val oppgavetype: Oppgavetype,
@@ -15,6 +14,7 @@ class OppgaveV3(
     val endretTidspunkt: LocalDateTime,
     val kildeområde: String,
     val reservasjonsnøkkel: String,
+    val aktiv: Boolean,
     val felter: List<OppgaveFeltverdi>
 ) {
     constructor(oppgaveDto: OppgaveDto, oppgavetype: Oppgavetype) : this(
@@ -25,6 +25,7 @@ class OppgaveV3(
         endretTidspunkt = oppgaveDto.endretTidspunkt,
         kildeområde = oppgaveDto.kildeområde,
         reservasjonsnøkkel = oppgaveDto.reservasjonsnøkkel,
+        aktiv = true,
         felter = lagFelter(oppgaveDto, oppgavetype)
     )
 
@@ -37,6 +38,7 @@ class OppgaveV3(
         endretTidspunkt = oppgave.endretTidspunkt,
         kildeområde = oppgave.kildeområde,
         reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
+        aktiv = oppgave.aktiv,
         felter = oppgavefelter
     )
 
@@ -46,7 +48,7 @@ class OppgaveV3(
 
             oppgaveDto.feltverdier.forEach { oppgaveFeltverdiDto ->
                 val oppgavefelt = oppgavetype.oppgavefelter.find {
-                    it.feltDefinisjon.eksternId.equals(oppgaveFeltverdiDto.nøkkel)
+                    it.feltDefinisjon.eksternId == oppgaveFeltverdiDto.nøkkel
                 } ?: throw IllegalArgumentException("Kunne ikke finne matchede oppgavefelt for oppgaveFeltverdi: ${oppgaveFeltverdiDto.nøkkel}")
 
                 if (oppgaveFeltverdiDto.verdi == null) {
@@ -62,20 +64,23 @@ class OppgaveV3(
                         OppgaveFeltverdi(
                             oppgavefelt = oppgavefelt,
                             verdi = oppgaveFeltverdiDto.verdi,
+                            verdiBigInt = if (oppgavefelt.feltDefinisjon.tolkesSom == Datatype.INTEGER.kode) oppgaveFeltverdiDto.verdi.toLong() else null,
                         )
                     )
                 }
             }
             return oppgavefelter
         }
+
+
     }
 
-    fun hentFelt(eksternId: String) : Oppgavefelt {
-        return oppgavetype.oppgavefelter.first { it.feltDefinisjon.eksternId == eksternId }
+    fun hentFelt(feltEksternId: String) : Oppgavefelt {
+        return oppgavetype.oppgavefelter.first { it.feltDefinisjon.eksternId == feltEksternId }
     }
 
     fun hentVerdi(feltnavn: String): String? {
-        val oppgavefelt = hentOppgavefelt(feltnavn)
+        val oppgavefelt = hentOppgavefeltverdi(feltnavn)
 
         if (oppgavefelt?.oppgavefelt?.feltDefinisjon?.listetype == true) {
             throw IllegalStateException("Kan ikke hente listetype av $feltnavn som enkeltverdi")
@@ -85,7 +90,7 @@ class OppgaveV3(
     }
 
     fun hentListeverdi(feltnavn: String): List<String> {
-        val oppgavefelt = hentOppgavefelt(feltnavn)
+        val oppgavefelt = hentOppgavefeltverdi(feltnavn)
 
         if (oppgavefelt != null) {
             if (!oppgavefelt.oppgavefelt.feltDefinisjon.listetype) {
@@ -98,7 +103,7 @@ class OppgaveV3(
         }.map { it.verdi }
     }
 
-    private fun hentOppgavefelt(feltnavn: String): OppgaveFeltverdi? {
+    fun hentOppgavefeltverdi(feltnavn: String): OppgaveFeltverdi? {
         return felter.find { oppgavefelter ->
             oppgavefelter.oppgavefelt.feltDefinisjon.eksternId == feltnavn
         }
@@ -109,7 +114,7 @@ class OppgaveV3(
             .filter { it.påkrevd && !it.feltDefinisjon.listetype }
             .forEach { obligatoriskFelt ->
                 felter.find {
-                    it.oppgavefelt.equals(obligatoriskFelt)
+                    it.oppgavefelt == obligatoriskFelt
                 } ?: throw IllegalArgumentException("Oppgaven mangler obligatorisk felt " + obligatoriskFelt.feltDefinisjon.eksternId)
             }
     }

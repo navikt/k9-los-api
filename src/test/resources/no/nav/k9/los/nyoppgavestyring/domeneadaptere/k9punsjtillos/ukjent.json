@@ -1,0 +1,18 @@
+{
+  "eventer": [
+    {
+      "type": "UKJENT",
+      "ytelse": "UKJENT",
+      "aktørId": "2036906937724",
+      "eventTid": "2024-06-03T15:36:56.320847283",
+      "sendtInn": null,
+      "eksternId": "304f15c5-d1ff-486c-8eae-6e6207c26cdd",
+      "ferdigstiltAv": null,
+      "journalpostId": "639655315",
+      "pleietrengendeAktørId": null,
+      "aksjonspunktKoderMedStatusListe": {
+        "PUNSJ": "OPPR"
+      }
+    }
+  ]
+}

@@ -1,101 +1,51 @@
 package no.nav.k9.los.tjenester.avdelingsleder.nokkeltall
 
 import io.ktor.http.*
-import io.ktor.server.application.call
-import io.ktor.server.locations.Location
-import io.ktor.server.locations.get
+import io.ktor.server.application.*
 import io.ktor.server.response.*
-import io.ktor.server.routing.Route
-import no.nav.k9.los.integrasjon.rest.RequestContextService
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
+import io.ktor.server.routing.*
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
 import org.koin.ktor.ext.inject
 
-
-//TODO Er det greit at denne ikke finner klageoppgaver frem til ferdig overgang til V3?
 fun Route.NokkeltallApis() {
     val nokkeltallTjeneste by inject<NokkeltallTjeneste>()
-    val oppgaveTjeneste by inject<OppgaveTjeneste>()
     val requestContextService by inject<RequestContextService>()
+    val pepClient by inject<IPepClient>()
 
-    @Location("/behandlinger-under-arbeid")
-    class getAlleOppgaver
-
-    get { _: getAlleOppgaver ->
+    get("/nye-ferdigstilte-oppsummering") {
         requestContextService.withRequestContext(call) {
-            call.respond(nokkeltallTjeneste.hentOppgaverUnderArbeid())
+            if (pepClient.erOppgaveStyrer()) {
+                call.respond(nokkeltallTjeneste.hentNyeFerdigstilteOppgaverOppsummering())
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
         }
     }
 
-    @Location("/beholdning-historikk")
-    class getAntallOppgaverPerDato
-
-    get { _: getAntallOppgaverPerDato ->
-        call.respond(oppgaveTjeneste.hentBeholdningAvOppgaverPerAntallDager())
-    }
-
-    @Location("/nye-ferdigstilte-oppsummering")
-    class getNyeFerdigstilteOppgaver
-
-    get { _: getNyeFerdigstilteOppgaver ->
-        call.respond(nokkeltallTjeneste.hentNyeFerdigstilteOppgaverOppsummering())
-    }
-
-    @Location("/dagens-tall")
-    class hentDagensTall
-
-    get { _: hentDagensTall ->
+    get("/dagens-tall") {
         requestContextService.withRequestContext(call) {
-            call.respond(nokkeltallTjeneste.hentDagensTall())
+            if (pepClient.erOppgaveStyrer()) {
+                call.respond(nokkeltallTjeneste.hentDagensTall())
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
         }
     }
 
-    @Location("/ferdigstilte-historikk")
-    class HentFerdigstilteSiste8Uker
-
-    get { _: HentFerdigstilteSiste8Uker ->
-        call.respond(nokkeltallTjeneste.hentFerdigstilteSiste8Uker())
-    }
-
-    @Location("/hastesaker")
-    class HentHastesaker
-
-    get { _: HentHastesaker ->
+    get("/aksjonspunkter-per-enhet-historikk") {
         requestContextService.withRequestContext(call) {
-            call.response.header(
-                HttpHeaders.ContentDisposition,
-                ContentDisposition.Attachment.withParameter(
-                    ContentDisposition.Parameters.FileName, "hastesaker.csv"
-                ).toString()
-            )
-            call.respond(nokkeltallTjeneste.hentHastesaker())
+            if (pepClient.erOppgaveStyrer()) {
+                val historikk = nokkeltallTjeneste.hentFerdigstilteOppgaverHistorikk(
+                    VelgbartHistorikkfelt.DATO,
+                    VelgbartHistorikkfelt.ENHET,
+                    VelgbartHistorikkfelt.YTELSETYPE,
+                    VelgbartHistorikkfelt.FAGSYSTEM
+                )
+                call.respond(historikk)
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
         }
     }
-
-    @Location("/aksjonspunkter-per-enhet-historikk")
-    class HentFullførteOppgaverPrEnhetOgYtelse
-
-    get { _: HentFullførteOppgaverPrEnhetOgYtelse ->
-        val historikk = nokkeltallTjeneste.hentFerdigstilteOppgaverHistorikk(
-            VelgbartHistorikkfelt.DATO,
-            VelgbartHistorikkfelt.ENHET,
-            VelgbartHistorikkfelt.YTELSETYPE,
-            VelgbartHistorikkfelt.FAGSYSTEM
-        )
-        call.respond(historikk)
-    }
-
-    @Location("/nye-historikk")
-    class hentNyeSiste8Uker
-
-    get { _: hentNyeSiste8Uker ->
-        call.respond(nokkeltallTjeneste.hentNyeSiste8Uker())
-    }
-
-    @Location("/alle-paa-vent_v2")
-    class HentAllePåVentV2
-
-    get { _: HentAllePåVentV2 ->
-        call.respond(nokkeltallTjeneste.hentOppgaverPåVentV2())
-    }
-
 }

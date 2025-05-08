@@ -8,9 +8,9 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.domene.modell.KøSortering
+import no.nav.k9.los.nyoppgavestyring.kodeverk.KøSortering
 import no.nav.k9.los.domene.modell.OppgaveKø
-import no.nav.k9.los.integrasjon.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -30,7 +30,6 @@ internal class OppgaveKoRepositoryTest : AbstractK9LosIntegrationTest() {
             dataSource = get(),
             oppgaveRepositoryV2 = get(),
             oppgaveKøOppdatert = get(named("oppgaveKøOppdatert")),
-            refreshKlienter = get(named("refreshKlienter")),
             oppgaveRefreshChannel = get(named("oppgaveRefreshChannel")),
             pepClient = pep
         )
@@ -97,7 +96,7 @@ internal class OppgaveKoRepositoryTest : AbstractK9LosIntegrationTest() {
 
         runBlocking {
             coEvery { pep.harTilgangTilKode6() } returns kode6
-            oppgaveKøRepository.lagre(id, false) { oppgavekø }
+            oppgaveKøRepository.lagre(id) { oppgavekø }
         }
 
         return id

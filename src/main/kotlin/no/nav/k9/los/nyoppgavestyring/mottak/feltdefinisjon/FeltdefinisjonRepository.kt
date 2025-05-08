@@ -6,45 +6,50 @@ import kotliquery.queryOf
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.IllegalDeleteException
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
-import no.nav.k9.los.nyoppgavestyring.transientfeltutleder.GyldigeTransientFeltutleder
+import no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.GyldigeTransientFeltutleder
 import no.nav.k9.los.spi.felter.TransientFeltutleder
-import no.nav.k9.los.utils.Cache
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
 import org.postgresql.util.PSQLException
 import org.slf4j.LoggerFactory
 
 class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
     private val log = LoggerFactory.getLogger(FeltdefinisjonRepository::class.java)
-    private val kodeverkCache = Cache<KodeverkForOmråde>()
+    private val kodeverkCache = Cache<String, KodeverkForOmråde>(cacheSizeLimit = null)
+    private val feltdefinisjonerCache = Cache<String, Feltdefinisjoner>(cacheSizeLimit = null)
 
     fun hent(område: Område, tx: TransactionalSession): Feltdefinisjoner {
-        val feltdefinisjoner = tx.run(
-            queryOf(
-                """
+        return feltdefinisjonerCache.hent(område.eksternId) {
+            val feltdefinisjoner = tx.run(
+                queryOf(
+                    """
                 select * from feltdefinisjon 
                 where omrade_id = :omradeId
                 for update
             """.trimIndent(),
-                mapOf("omradeId" to område.id)
-            ).map { row ->
-                Feltdefinisjon(
-                    id = row.long("id"),
-                    eksternId = row.string("ekstern_id"),
-                    område = område,
-                    visningsnavn = row.string("visningsnavn"),
-                    listetype = row.boolean("liste_type"),
-                    tolkesSom = row.string("tolkes_som"),
-                    visTilBruker = row.boolean("vis_til_bruker"),
-                    kokriterie = row.boolean("kokriterie"),
-                    kodeverkreferanse = row.stringOrNull("kodeverkreferanse")?.let { Kodeverkreferanse(it) },
-                    transientFeltutleder = row.stringOrNull("transient_feltutleder")?.let { GyldigeTransientFeltutleder.hentFeltutleder(it) }
-                )
-            }.asList
-        )
-        return Feltdefinisjoner(område, feltdefinisjoner.toSet())
+                    mapOf("omradeId" to område.id)
+                ).map { row ->
+                    Feltdefinisjon(
+                        id = row.long("id"),
+                        eksternId = row.string("ekstern_id"),
+                        område = område,
+                        visningsnavn = row.string("visningsnavn"),
+                        listetype = row.boolean("liste_type"),
+                        tolkesSom = row.string("tolkes_som"),
+                        visTilBruker = row.boolean("vis_til_bruker"),
+                        kokriterie = row.boolean("kokriterie"),
+                        kodeverkreferanse = row.stringOrNull("kodeverkreferanse")?.let { Kodeverkreferanse(it) },
+                        transientFeltutleder = row.stringOrNull("transient_feltutleder")?.let { GyldigeTransientFeltutleder.hentFeltutleder(it) }
+                    )
+                }.asList
+            )
+
+            Feltdefinisjoner(område, feltdefinisjoner.toSet())
+        }
     }
 
     fun fjern(sletteListe: Set<Feltdefinisjon>, tx: TransactionalSession) {
         sletteListe.forEach { datatype ->
+            if (datatype.id == null) throw IllegalArgumentException("Kan ikke fjerne feltdefinisjon med ukjent ID")
             try {
                 tx.run(
                     queryOf(
@@ -59,10 +64,12 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                 if (e.sqlState.equals("23503")) {
                     throw IllegalDeleteException("Kan ikke slette feltdefinisjon som brukes av oppgavetype", e)
                 } else {
+                    log.error("PSQLEXception, uventet feilkode: ${e.sqlState}", e)
                     throw e
                 }
             }
         }
+        invaliderFeltdefinisjonerCache()
     }
 
     fun oppdater(oppdaterListe: Set<Feltdefinisjon>, område: Område, tx: TransactionalSession) {
@@ -93,6 +100,7 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                 ).asUpdate
             )
         }
+        invaliderFeltdefinisjonerCache()
     }
 
     fun leggTil(leggTilListe: Set<Feltdefinisjon>, område: Område, tx: TransactionalSession) {
@@ -136,6 +144,7 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
                 ).asUpdate
             )
         }
+        invaliderFeltdefinisjonerCache()
     }
 
     fun tømVerdierHvisKodeverkFinnes(kodeverk: Kodeverk, tx: TransactionalSession) {
@@ -191,15 +200,11 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
             }
         )
 
-        invaliderCache()
+        invaliderKodeverkCache()
     }
 
     fun hentKodeverk(referanse: Kodeverkreferanse, tx: TransactionalSession) : Kodeverk {
         return hentKodeverk(områdeRepository.hentOmråde(referanse.område, tx), tx).hentKodeverk(referanse.eksternId)
-    }
-
-    fun hentKodeverk(områdeEksternId: String, tx: TransactionalSession): KodeverkForOmråde {
-        return hentKodeverk(områdeRepository.hentOmråde(områdeEksternId, tx), tx)
     }
 
     fun hentKodeverk(område: Område, tx: TransactionalSession): KodeverkForOmråde {
@@ -252,7 +257,11 @@ class FeltdefinisjonRepository(val områdeRepository: OmrådeRepository) {
         }.asList
     )
 
-    fun invaliderCache() {
+    fun invaliderKodeverkCache() {
         kodeverkCache.clear()
+    }
+
+    fun invaliderFeltdefinisjonerCache() {
+        feltdefinisjonerCache.clear()
     }
 }

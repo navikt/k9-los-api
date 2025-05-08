@@ -7,22 +7,22 @@ import no.nav.k9.kodeverk.behandling.BehandlingÅrsakType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.kodeverk.produksjonsstyring.UtvidetSøknadÅrsak
-import no.nav.k9.kodeverk.uttak.SøknadÅrsak
 import no.nav.k9.los.domene.lager.oppgave.Kodeverdi
-import no.nav.k9.kodeverk.api.Kodeverdi as KodeverdiK9Sak
-import no.nav.k9.los.domene.modell.BehandlingStatus
-import no.nav.k9.los.domene.modell.BehandlingType
-import no.nav.k9.los.domene.modell.FagsakYtelseType
-import no.nav.k9.los.domene.modell.Fagsystem
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9klagetillos.EventTilDtoMapper
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.EventTilDtoMapper
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.KodeverkDto
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.KodeverkVerdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
+import no.nav.k9.los.nyoppgavestyring.query.db.Spørringstrategi
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import no.nav.k9.kodeverk.api.Kodeverdi as KodeverdiK9Sak
 
 class OmrådeSetup(
     private val områdeRepository: OmrådeRepository,
@@ -175,8 +175,14 @@ class OmrådeSetup(
     }
 
     private fun kodeverkBehandlingsårsak() {
-        val k9sakKodeverk = no.nav.k9.kodeverk.behandling.BehandlingÅrsakType.entries.lagK9Dto(beskrivelse = null, KodeverkSynlighetRegler::behandlingsårsak)
-        val k9klageKodeverk = no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.entries.lageK9KlageDto(beskrivelse = null, KodeverkSynlighetRegler::behandlingsårsak)
+        val k9sakKodeverk = no.nav.k9.kodeverk.behandling.BehandlingÅrsakType.entries.lagK9Dto(
+            beskrivelse = null,
+            KodeverkSynlighetRegler::behandlingsårsak
+        )
+        val k9klageKodeverk = no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.entries.lageK9KlageDto(
+            beskrivelse = null,
+            KodeverkSynlighetRegler::behandlingsårsak
+        )
         val koder = k9sakKodeverk + k9klageKodeverk
         val kodeverkDto = KodeverkDto(
             område = område,
@@ -240,7 +246,7 @@ class OmrådeSetup(
             .map { (kodeverdi, synlighet) ->
                 KodeverkVerdiDto(
                     verdi = EventTilDtoMapper.KLAGE_PREFIX + kodeverdi.kode,
-                    visningsnavn =  EventTilDtoMapper.KLAGE_PREFIX_VISNING + kodeverdi.navn,
+                    visningsnavn = EventTilDtoMapper.KLAGE_PREFIX_VISNING + kodeverdi.navn,
                     beskrivelse = beskrivelse,
                     favoritt = synlighet == KodeverkSynlighet.SYNLIG_FAVORITT
                 )
@@ -252,20 +258,11 @@ object KodeverkSynlighetRegler {
     fun behandlingType(behandlingType: BehandlingType): KodeverkSynlighet {
         return when (behandlingType) {
             BehandlingType.ANKE -> KodeverkSynlighet.SKJULT
-            BehandlingType.UNNTAKSBEHANDLING,
-            BehandlingType.PAPIRSØKNAD,
-            BehandlingType.PAPIRETTERSENDELSE,
-            BehandlingType.PAPIRINNTEKTSOPPLYSNINGER,
-            BehandlingType.DIGITAL_ETTERSENDELSE,
-            BehandlingType.INNLOGGET_CHAT,
-            BehandlingType.SKRIV_TIL_OSS_SPØRMSÅL,
-            BehandlingType.SKRIV_TIL_OSS_SVAR,
-            BehandlingType.SAMTALEREFERAT,
-            BehandlingType.KOPI,
-            BehandlingType.UTEN_FNR_DNR,
-            BehandlingType.UKJENT -> KodeverkSynlighet.SYNLIG
+            BehandlingType.FORSTEGANGSSOKNAD,
+            BehandlingType.REVURDERING,
+            BehandlingType.REVURDERING_TILBAKEKREVING -> KodeverkSynlighet.SYNLIG_FAVORITT
 
-            else -> KodeverkSynlighet.SYNLIG_FAVORITT
+            else -> KodeverkSynlighet.SYNLIG
         }
     }
 
@@ -287,14 +284,16 @@ object KodeverkSynlighetRegler {
 
     fun behandlingsårsak(søknadÅrsak: no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType): KodeverkSynlighet {
         return when (søknadÅrsak) {
-                no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.UDEFINERT -> KodeverkSynlighet.SKJULT
-            else -> KodeverkSynlighet.SYNLIG_FAVORITT
+            no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.UDEFINERT -> KodeverkSynlighet.SKJULT
+            else -> KodeverkSynlighet.SYNLIG
         }
     }
 
     fun ytelseType(ytelseType: FagsakYtelseType): KodeverkSynlighet {
         return when (ytelseType) {
-            FagsakYtelseType.FRISINN -> KodeverkSynlighet.SKJULT
+            FagsakYtelseType.FRISINN,
+            FagsakYtelseType.UNGDOMSYTELSE -> KodeverkSynlighet.SKJULT
+
             FagsakYtelseType.OLP,
             FagsakYtelseType.UKJENT,
             FagsakYtelseType.OMSORGSDAGER -> KodeverkSynlighet.SYNLIG

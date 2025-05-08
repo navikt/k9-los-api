@@ -67,30 +67,9 @@ class SakBuilder(saksnummer: String) {
     private var sak = Sak(saksnummer = saksnummer)
 
     fun build(): Sak = sak
-    fun buildJson(): String = build().toJson()
-
-    fun funksjonellTid(funksjonellTid: OffsetDateTime?): SakBuilder {
-        sak = sak.copy(funksjonellTid = funksjonellTid)
-        return this
-    }
-
-    fun tekniskTid(tekniskTid: OffsetDateTime?): SakBuilder {
-        sak = sak.copy(tekniskTid = tekniskTid)
-        return this
-    }
-
-    fun opprettetDato(opprettetDato: LocalDate?): SakBuilder {
-        sak = sak.copy(opprettetDato = opprettetDato)
-        return this
-    }
 
     fun aktorId(aktorId: Long?): SakBuilder {
         sak = sak.copy(aktorId = aktorId)
-        return this
-    }
-
-    fun aktorer(aktoerer: List<Aktør>): SakBuilder {
-        sak = sak.copy(aktorer = aktoerer)
         return this
     }
 
@@ -104,29 +83,10 @@ class SakBuilder(saksnummer: String) {
         return this
     }
 
-    fun undertype(kode: String?, beskrivelse: String?): SakBuilder {
-        sak = sak.copy(underType = kode, underTypeBeskrivelse = beskrivelse)
-        return this
-    }
-
-    fun sakStatus(kode: String?, beskrivelse: String?): SakBuilder {
-        sak = sak.copy(sakStatus = kode, sakStatusBeskrivelse = beskrivelse)
-        return this
-    }
-
-    fun avsender(avsender: String?): SakBuilder {
-        sak = sak.copy(avsender = avsender)
-        return this
-    }
-
     fun versjon(versjon: Long?): SakBuilder {
         sak = sak.copy(versjon = versjon)
         return this
     }
 
-    fun sakId(sakId: String?): SakBuilder {
-        sak = sak.copy(sakId = sakId)
-        return this
-    }
 
 }

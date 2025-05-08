@@ -1,0 +1,5 @@
+alter index oppgavefelt_verdi_oppgave_id_oppgavefelt_id_verdi_oppgave_aapen set (fillfactor = 60);
+reindex index oppgavefelt_verdi_oppgave_id_oppgavefelt_id_verdi_oppgave_aapen;
+
+alter index oppgavefelt_verdi_oppgave_id_oppgavefelt_id_verdi_oppgaveventer set (fillfactor = 60);
+reindex index oppgavefelt_verdi_oppgave_id_oppgavefelt_id_verdi_oppgaveventer;

@@ -1,0 +1,124 @@
+{
+  "område": "K9",
+  "definisjonskilde": "k9-tilbake-til-los",
+  "oppgavetyper": [
+    {
+      "id": "k9tilbake",
+      "oppgavebehandlingsUrlTemplate": "{baseUrl}/fagsak/{K9.saksnummer}/",
+      "oppgavefelter": [
+        {
+          "id": "behandlingUuid",
+          "visPåOppgave": true,
+          "påkrevd": true
+        },
+        {
+          "id": "aktorId",
+          "visPåOppgave": true,
+          "påkrevd": true
+        },
+        {
+          "id": "fagsystem",
+          "visPåOppgave": false,
+          "påkrevd": true
+        },
+        {
+          "id": "saksnummer",
+          "visPåOppgave": true,
+          "påkrevd": true
+        },
+        {
+          "id": "førsteFeilutbetalingDato",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "feilutbetaltBeløp",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "mottattDato",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "registrertDato",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "ytelsestype",
+          "visPåOppgave": true,
+          "påkrevd": true
+        },
+        {
+          "id": "behandlingsstatus",
+          "visPåOppgave": true,
+          "påkrevd": true
+        },
+        {
+          "id": "behandlingTypekode",
+          "visPåOppgave": true,
+          "påkrevd": true
+        },
+        {
+          "id": "behandlendeEnhet",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "ansvarligSaksbehandler",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "ansvarligBeslutter",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "liggerHosBeslutter",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "tidFørsteGangHosBeslutter",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "løsbartAksjonspunkt",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "behandlingssteg",
+          "visPåOppgave": false,
+          "påkrevd": false
+        },
+        {
+          "id": "resultattype",
+          "visPåOppgave": false,
+          "påkrevd": false
+        },
+        {
+          "id": "helautomatiskBehandlet",
+          "visPåOppgave": false,
+          "påkrevd": false
+        },
+        {
+          "id": "ferdigstiltTidspunkt",
+          "visPåOppgave": false,
+          "påkrevd": false,
+          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.FerdigstiltTidspunkt"
+        },
+        {
+          "id": "ferdigstiltEnhet",
+          "visPåOppgave": false,
+          "påkrevd": false,
+          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.FerdigstiltEnhet"
+        }
+      ]
+    }
+  ]
+}

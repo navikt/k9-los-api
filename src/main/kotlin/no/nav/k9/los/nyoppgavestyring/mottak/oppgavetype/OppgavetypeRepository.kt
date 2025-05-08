@@ -10,7 +10,7 @@ import no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.GyldigeFeltutledere
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
-import no.nav.k9.los.utils.Cache
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
 import org.postgresql.util.PSQLException
 import org.slf4j.LoggerFactory
 import javax.sql.DataSource
@@ -18,17 +18,19 @@ import javax.sql.DataSource
 class OppgavetypeRepository(
     private val dataSource: DataSource,
     private val feltdefinisjonRepository: FeltdefinisjonRepository,
-    private val områdeRepository: OmrådeRepository
-    ) {
+    private val områdeRepository: OmrådeRepository,
+    private val gyldigeFeltutledere: GyldigeFeltutledere
+) {
 
     private val log = LoggerFactory.getLogger(OppgavetypeRepository::class.java)
-    private val oppgavetypeCache = Cache<Oppgavetyper>()
+    private val oppgavetypeCache = Cache<String, Oppgavetyper>(cacheSizeLimit = null)
 
     fun hent(område: Område, definisjonskilde: String, tx: TransactionalSession): Oppgavetyper {
         val oppgavetyper = hent(område, tx)
         return Oppgavetyper(
             område = område,
-            oppgavetyper = oppgavetyper.oppgavetyper.filter { oppgavetype ->  oppgavetype.definisjonskilde == definisjonskilde }.toSet()
+            oppgavetyper = oppgavetyper.oppgavetyper.filter { oppgavetype -> oppgavetype.definisjonskilde == definisjonskilde }
+                .toSet()
         )
     }
 
@@ -45,13 +47,13 @@ class OppgavetypeRepository(
     }
 
     fun hentOppgavetype(område: Område, eksternId: String, tx: TransactionalSession): Oppgavetype {
-        return hent(område, tx).oppgavetyper.find { it.eksternId.equals(eksternId) }
-            ?: throw IllegalArgumentException("Finner ikke oppgavetype: ${eksternId} for område: ${område}")
+        return hent(område, tx).oppgavetyper.find { it.eksternId == eksternId }
+            ?: throw IllegalArgumentException("Finner ikke oppgavetype: ${eksternId} for område: ${område.eksternId}")
     }
 
     fun hentOppgavetype(område: String, oppgavetypeId: Long, tx: TransactionalSession): Oppgavetype {
-        return hent(områdeRepository.hentOmråde(område, tx), tx).oppgavetyper.find { it.id!!.equals(oppgavetypeId) }
-            ?: throw java.lang.IllegalStateException("Finner ikke omsøkt oppgavetypeId: ${oppgavetypeId} for område: ${område}")
+        return hent(områdeRepository.hentOmråde(område, tx), tx).oppgavetyper.find { it.id!! == oppgavetypeId }
+            ?: throw IllegalArgumentException("Finner ikke omsøkt oppgavetypeId: ${oppgavetypeId} for område: ${område}")
     }
 
     fun hent(område: Område, tx: TransactionalSession): Oppgavetyper {
@@ -82,15 +84,15 @@ class OppgavetypeRepository(
                                 Oppgavefelt(
                                     id = row.long("id"),
                                     feltDefinisjon = feltdefinisjoner.feltdefinisjoner.find { feltdefinisjon ->
-                                        feltdefinisjon.id!!.equals(row.long("feltdefinisjon_id"))
+                                        feltdefinisjon.id!! == row.long("feltdefinisjon_id")
                                     }
                                         ?: throw IllegalStateException("Oppgavetypens oppgavefelt referer til udefinert feltdefinisjon eller feltdefinisjon utenfor området"),
                                     påkrevd = row.boolean("pakrevd"),
                                     defaultverdi = row.stringOrNull("defaultVerdi"),
                                     visPåOppgave = true,
                                     feltutleder = row.stringOrNull("feltutleder")?.let {
-                                            GyldigeFeltutledere.hentFeltutleder(it)
-                                        }
+                                        gyldigeFeltutledere.hentFeltutleder(it)
+                                    }
                                 )
                             }.asList
                         ).toSet(),
@@ -118,10 +120,11 @@ class OppgavetypeRepository(
                             )
                         ).asUpdate
                     )
-                }  catch (e: PSQLException) {
+                } catch (e: PSQLException) {
                     if (e.sqlState.equals("23503")) {
                         throw IllegalDeleteException("Kan ikke slette oppgavefelt som brukes av oppgave", e)
                     } else {
+                        log.error("PSQLEXception, uventet feilkode: ${e.sqlState}", e)
                         throw e
                     }
                 }
@@ -143,6 +146,7 @@ class OppgavetypeRepository(
 
     fun leggTil(oppgavetyper: Oppgavetyper, tx: TransactionalSession) {
         oppgavetyper.oppgavetyper.forEach { oppgavetype ->
+            log.info("legger til oppgavetype: ${oppgavetype.eksternId} med behandlingsUrlTemplate: ${oppgavetype.oppgavebehandlingsUrlTemplate}")
             val oppgavetypeId = tx.run(
                 queryOf(
                     """
@@ -193,12 +197,13 @@ class OppgavetypeRepository(
     }
 
     fun endre(endring: OppgavetypeEndring, tx: TransactionalSession) {
-        val oppgaveFinnes = sjekkOmOppgaverFinnes(endring.oppgavetype.id!!, tx)
+        val oppgavetypeId = hentOppgavetype(endring.oppgavetype.område, endring.oppgavetype.eksternId, tx).id!!
+        val oppgaveFinnes = sjekkOmOppgaverFinnes(oppgavetypeId, tx)
         endring.felterSomSkalLeggesTil.forEach { felt ->
             if (oppgaveFinnes && felt.påkrevd && felt.defaultverdi.isNullOrEmpty()) {
                 throw MissingDefaultException("Kan ikke legge til påkrevd på eksisterende oppgave uten å oppgi defaultverdi")
             }
-            leggTilOppgavefelt(tx, felt, endring.oppgavetype.id)
+            leggTilOppgavefelt(tx, felt, oppgavetypeId)
         }
 
         endring.felterSomSkalFjernes.forEach { felt ->
@@ -215,6 +220,7 @@ class OppgavetypeRepository(
     }
 
     private fun oppdaterOppgavebehandlingsUrlTemplate(endring: OppgavetypeEndring, tx: TransactionalSession) {
+        log.info("lagrer urltemplate: ${endring.oppgavetype.oppgavebehandlingsUrlTemplate} på oppgavetype ${endring.oppgavetype.eksternId}")
         tx.run(
             queryOf(
                 """

@@ -1,0 +1,18 @@
+{
+  "eventer": [
+    {
+      "type": "PAPIRETTERSENDELSE",
+      "ytelse": "PSB",
+      "aktørId": "2388498128330",
+      "eventTid": "2024-06-04T13:37:34.517534962",
+      "sendtInn": null,
+      "eksternId": "3cf603bb-7630-4e6c-940b-eb92af2aa1dc",
+      "ferdigstiltAv": null,
+      "journalpostId": "639655402",
+      "pleietrengendeAktørId": null,
+      "aksjonspunktKoderMedStatusListe": {
+        "PUNSJ": "OPPR"
+      }
+    }
+  ]
+}

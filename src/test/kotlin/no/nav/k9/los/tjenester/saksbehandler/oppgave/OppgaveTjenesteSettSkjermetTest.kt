@@ -5,36 +5,38 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
-import no.nav.k9.los.*
+import no.nav.k9.los.AbstractPostgresTest
+import no.nav.k9.los.Configuration
+import no.nav.k9.los.KoinProfile
+import no.nav.k9.los.buildAndTestConfig
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
-import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.domene.modell.Aksjonspunkter
-import no.nav.k9.los.domene.modell.BehandlingStatus
-import no.nav.k9.los.domene.modell.BehandlingType
-import no.nav.k9.los.domene.modell.Enhet
-import no.nav.k9.los.domene.modell.FagsakYtelseType
-import no.nav.k9.los.domene.modell.KøSortering
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Enhet
+import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.KøSortering
 import no.nav.k9.los.domene.modell.OppgaveKø
-import no.nav.k9.los.domene.modell.Saksbehandler
-import no.nav.k9.los.domene.repository.OppgaveKøRepository
-import no.nav.k9.los.domene.repository.OppgaveRepository
-import no.nav.k9.los.domene.repository.ReservasjonRepository
-import no.nav.k9.los.domene.repository.SaksbehandlerRepository
-import no.nav.k9.los.domene.repository.StatistikkRepository
-import no.nav.k9.los.integrasjon.abac.IPepClient
-import no.nav.k9.los.integrasjon.abac.PepClientLocal
-import no.nav.k9.los.integrasjon.azuregraph.AzureGraphService
-import no.nav.k9.los.integrasjon.pdl.PdlService
-import no.nav.k9.los.integrasjon.pdl.PersonPdl
-import no.nav.k9.los.integrasjon.pdl.PersonPdlResponse
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.reservasjonkonvertering.ReservasjonOversetter
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
+import no.nav.k9.los.domene.repository.*
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.PepClientLocal
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.AzureGraphService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.PdlService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.PersonPdl
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.PersonPdlResponse
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
-import no.nav.k9.los.tjenester.sse.SseEvent
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.OppgaverGruppertRepository
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.koin.test.KoinTest
@@ -45,6 +47,14 @@ import java.time.LocalDateTime
 import java.util.*
 
 class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
+
+    @BeforeEach
+    fun setup() {
+        val områdeSetup = get<OmrådeSetup>()
+        områdeSetup.setup()
+        val k9SakTilLosAdapterTjeneste = get<K9SakTilLosAdapterTjeneste>()
+        k9SakTilLosAdapterTjeneste.setup()
+    }
 
     @JvmField
     @RegisterExtension
@@ -62,16 +72,16 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
         coEvery { pepClient.erSakKode7EllerEgenAnsatt(any()) } returns false
         val oppgaveKøOppdatert = Channel<UUID>(1)
         val oppgaveRefreshOppdatert = Channel<UUID>(100)
-        val refreshKlienter = Channel<SseEvent>(1000)
+        val statistikkChannel = Channel<Boolean>(Channel.CONFLATED)
 
         val oppgaveRepository = get<OppgaveRepository>()
         val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
+        val oppgaverGruppertRepository = get<OppgaverGruppertRepository>()
 
         val oppgaveKøRepository = OppgaveKøRepository(
             dataSource = get(),
             oppgaveRepositoryV2,
             oppgaveKøOppdatert = oppgaveKøOppdatert,
-            refreshKlienter = refreshKlienter,
             oppgaveRefreshChannel = oppgaveRefreshOppdatert,
             pepClient = pepClient
         )
@@ -81,12 +91,13 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             oppgaveKøRepository = oppgaveKøRepository,
             oppgaveRepository = oppgaveRepository,
             oppgaveRepositoryV2 = oppgaveRepositoryV2,
-            dataSource = get(),
-            refreshKlienter = refreshKlienter,
-            saksbehandlerRepository = saksbehandlerRepository
+            saksbehandlerRepository = saksbehandlerRepository,
+            dataSource = get()
         )
 
-        val reservasjonOversetter = get<ReservasjonOversetter>()
+        val reservasjonOversetter = mockk<ReservasjonOversetter>()
+        every { reservasjonOversetter.hentAktivReservasjonFraGammelKontekst(any()) } returns null
+
         val config = mockk<Configuration>()
         val pdlService = mockk<PdlService>()
         val statistikkRepository = StatistikkRepository(dataSource = get())
@@ -94,11 +105,11 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
         val azureGraphService = mockk<AzureGraphService>()
         val oppgaveTjeneste = OppgaveTjeneste(
             oppgaveRepository,
-            oppgaveRepositoryV2,
+            oppgaverGruppertRepository,
             oppgaveKøRepository,
             saksbehandlerRepository,
             pdlService,
-            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, reservasjonOversetter
+            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, reservasjonOversetter, statistikkChannel, KoinProfile.LOCAL
         )
 
         val uuid = UUID.randomUUID()
@@ -149,8 +160,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
         oppgaveko.leggOppgaveTilEllerFjernFraKø(
             oppgave1,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
@@ -198,23 +208,24 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
     @Test
     fun `hent fagsak`(){
         val oppgaveKøOppdatert = Channel<UUID>(1)
-        val refreshKlienter = Channel<SseEvent>(1000)
         val oppgaverRefresh = Channel<UUID>(1000)
+        val statistikkChannel = Channel<Boolean>(Channel.CONFLATED)
 
         val oppgaveRepository = OppgaveRepository(dataSource = dataSource,pepClient = PepClientLocal(), refreshOppgave = oppgaverRefresh)
         val oppgaveRepositoryV2 = OppgaveRepositoryV2(dataSource = dataSource)
+        val oppgaverGruppertRepository = get<OppgaverGruppertRepository>()
 
         val oppgaveKøRepository = OppgaveKøRepository(
             dataSource = dataSource,
-            oppgaveKøOppdatert = oppgaveKøOppdatert,
             oppgaveRepositoryV2 = oppgaveRepositoryV2,
-            refreshKlienter = refreshKlienter,
+            oppgaveKøOppdatert = oppgaveKøOppdatert,
             oppgaveRefreshChannel = oppgaverRefresh,
             pepClient = PepClientLocal()
         )
         val pdlService = mockk<PdlService>()
         val saksbehandlerRepository = SaksbehandlerRepository(dataSource = dataSource,
-            pepClient = PepClientLocal())
+            pepClient = PepClientLocal()
+        )
 
         val statistikkRepository = StatistikkRepository(dataSource = dataSource)
         val pepClient = mockk<IPepClient>()
@@ -224,18 +235,17 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
             oppgaveKøRepository = oppgaveKøRepository,
             oppgaveRepository = oppgaveRepository,
             oppgaveRepositoryV2 = oppgaveRepositoryV2,
-            dataSource = dataSource,
-            refreshKlienter = refreshKlienter,
-            saksbehandlerRepository = saksbehandlerRepository
+            saksbehandlerRepository = saksbehandlerRepository,
+            dataSource = dataSource
         )
         val reservasjonOversetter = get<ReservasjonOversetter>()
         val oppgaveTjeneste = OppgaveTjeneste(
             oppgaveRepository,
-            oppgaveRepositoryV2,
+            oppgaverGruppertRepository,
             oppgaveKøRepository,
             saksbehandlerRepository,
             pdlService,
-            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, reservasjonOversetter
+            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, reservasjonOversetter, statistikkChannel, KoinProfile.LOCAL
         )
 
         val oppgave1 = Oppgave(
@@ -393,32 +403,34 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
     @Test
     fun hentReservasjonsHistorikk() = runBlocking {
         val oppgaveKøOppdatert = Channel<UUID>(1)
-        val refreshKlienter = Channel<SseEvent>(1000)
 
         val oppgaverRefresh = Channel<UUID>(1000)
+        val statistikkChannel = Channel<Boolean>(Channel.CONFLATED)
 
         val oppgaveRepository = OppgaveRepository(dataSource = dataSource,pepClient = PepClientLocal(), refreshOppgave = oppgaverRefresh)
         val oppgaveRepositoryV2 = OppgaveRepositoryV2(dataSource = dataSource)
+        val oppgaverGruppertRepository = get<OppgaverGruppertRepository>()
 
         val oppgaveKøRepository = OppgaveKøRepository(
             dataSource = dataSource,
             oppgaveRepositoryV2 = oppgaveRepositoryV2,
             oppgaveKøOppdatert = oppgaveKøOppdatert,
-            refreshKlienter = refreshKlienter,
             oppgaveRefreshChannel = oppgaverRefresh,
             pepClient = PepClientLocal()
         )
         val saksbehandlerRepository = SaksbehandlerRepository(dataSource = dataSource,
-            pepClient = PepClientLocal())
+            pepClient = PepClientLocal()
+        )
         val reservasjonRepository = ReservasjonRepository(
             oppgaveKøRepository = oppgaveKøRepository,
             oppgaveRepository = oppgaveRepository,
             oppgaveRepositoryV2 = oppgaveRepositoryV2,
-            dataSource = dataSource,
-            refreshKlienter = refreshKlienter,
-            saksbehandlerRepository = saksbehandlerRepository
+            saksbehandlerRepository = saksbehandlerRepository,
+            dataSource = dataSource
         )
-        val reservasjonOversetter = get<ReservasjonOversetter>()
+
+        val reservasjonOversetter = mockk<ReservasjonOversetter>()
+        every { reservasjonOversetter.hentAktivReservasjonFraGammelKontekst(any()) } returns null
         val config = mockk<Configuration>()
         val pdlService = mockk<PdlService>()
         val statistikkRepository = StatistikkRepository(dataSource = dataSource)
@@ -428,11 +440,11 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
         coEvery {  azureGraphService.hentIdentTilInnloggetBruker() } returns "123"
         val oppgaveTjeneste = OppgaveTjeneste(
             oppgaveRepository,
-            oppgaveRepositoryV2,
+            oppgaverGruppertRepository,
             oppgaveKøRepository,
             saksbehandlerRepository,
             pdlService,
-            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, reservasjonOversetter
+            reservasjonRepository, config, azureGraphService, pepClient, statistikkRepository, reservasjonOversetter, statistikkChannel, KoinProfile.LOCAL
         )
 
 
@@ -484,8 +496,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
         oppgaveko.leggOppgaveTilEllerFjernFraKø(
             oppgave1,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
@@ -493,7 +504,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
         every { config.koinProfile() } returns KoinProfile.LOCAL
         coEvery { pepClient.harBasisTilgang() } returns true
         coEvery { pepClient.harTilgangTilOppgave(any()) } returns true
-        coEvery { pepClient.harTilgangTilReservingAvOppgaver() } returns true
+        coEvery { pepClient.harTilgangTilReserveringAvOppgaver() } returns true
         coEvery { pdlService.person(any()) } returns PersonPdlResponse(false, PersonPdl(
             data = PersonPdl.Data(
                 hentPerson = PersonPdl.Data.HentPerson(

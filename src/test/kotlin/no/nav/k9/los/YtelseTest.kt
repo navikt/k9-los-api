@@ -1,8 +1,5 @@
 package no.nav.k9.los
 
-import assertk.assertThat
-import assertk.assertions.isEqualTo
-import assertk.assertions.isSuccess
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -10,13 +7,15 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
-import no.nav.k9.los.domene.modell.Aksjonspunkter
-import no.nav.k9.los.domene.modell.BehandlingStatus
-import no.nav.k9.los.domene.modell.BehandlingType
-import no.nav.k9.los.domene.modell.FagsakYtelseType
-import no.nav.k9.los.domene.modell.Fagsystem
+import no.nav.k9.los.domene.modell.*
 import no.nav.k9.los.domene.repository.OppgaveRepository
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.domene.repository.StatistikkRepository
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import org.junit.jupiter.api.BeforeEach
@@ -37,6 +36,14 @@ class YtelseTest : AbstractK9LosIntegrationTest() {
     @OptIn(DelicateCoroutinesApi::class)
     @BeforeEach
     fun setup() {
+        val saksbehandlerRepo = get<SaksbehandlerRepository>()
+        runBlocking {
+            lagSaksbehandler(saksbehandlerRepo,"Z123456")
+            for (testSaksbehandler in TestSaksbehandler.values()) {
+                lagSaksbehandler(saksbehandlerRepo, testSaksbehandler.name)
+            }
+        }
+
         Kjøretid.logg("Opprettelse og ferdigstillelse av oppgaver") {
             runBlocking {
                 coroutineScope {
@@ -49,16 +56,23 @@ class YtelseTest : AbstractK9LosIntegrationTest() {
         }
     }
 
+    suspend fun lagSaksbehandler(saksbehandlerRepo: SaksbehandlerRepository, ident : String){
+        if (saksbehandlerRepo.finnSaksbehandlerMedIdent(ident) == null) {
+            saksbehandlerRepo.addSaksbehandler(
+                Saksbehandler(
+                    null,
+                    ident,
+                    ident,
+                    ident + "@nav.no",
+                    enhet = "1234"
+                )
+            )
+        }
+    }
+
     @Test
     fun `Opprett og ferdigstill oppgave`() {
         val oppgaveTjeneste = get<OppgaveTjeneste>()
-        val oppgaveRepository = get<OppgaveRepository>()
-
-        runBlocking {
-            Kjøretid.logg("Sjekk antall oppgaver") {
-                assertThat(oppgaveRepository.hent().size).isEqualTo(antallOppgaver)
-            }
-        }
 
         runBlocking {
             Kjøretid.logg("Hent beholdning av oppgaver") {

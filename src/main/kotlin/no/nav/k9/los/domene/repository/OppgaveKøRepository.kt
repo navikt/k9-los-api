@@ -5,32 +5,26 @@ import kotlinx.coroutines.runBlocking
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
-import no.nav.k9.los.domene.modell.OppgaveIdMedDato
 import no.nav.k9.los.domene.modell.OppgaveKø
-import no.nav.k9.los.integrasjon.abac.IPepClient
-import no.nav.k9.los.tjenester.innsikt.Databasekall
-import no.nav.k9.los.tjenester.sse.RefreshKlienter.sendOppdaterTilBehandling
-import no.nav.k9.los.tjenester.sse.SseEvent
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.util.*
-import java.util.concurrent.atomic.LongAdder
 import javax.sql.DataSource
 
 class OppgaveKøRepository(
     private val dataSource: DataSource,
     private val oppgaveRepositoryV2: OppgaveRepositoryV2,
     private val oppgaveKøOppdatert: Channel<UUID>,
-    private val refreshKlienter: Channel<SseEvent>,
     private val oppgaveRefreshChannel: Channel<UUID>,
     private val pepClient: IPepClient
 ) {
     private val log: Logger = LoggerFactory.getLogger(OppgaveKøRepository::class.java)
-    suspend fun hent(): List<OppgaveKø> {
+    suspend fun hentAlle(): List<OppgaveKø> {
         val skjermet = pepClient.harTilgangTilKode6()
         val json: List<String> = using(sessionOf(dataSource)) {
             it.run(
@@ -43,13 +37,10 @@ class OppgaveKøRepository(
                     }.asList
             )
         }
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
-        return json.map { s -> objectMapper().readValue(s, OppgaveKø::class.java) }.toList()
+        return json.map { s -> LosObjectMapper.instance.readValue(s, OppgaveKø::class.java) }.toList()
     }
 
-    fun hentIkkeTaHensyn(): List<OppgaveKø> {
+    fun hentAlleInkluderKode6(): List<OppgaveKø> {
         val json: List<String> = using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
@@ -61,13 +52,10 @@ class OppgaveKøRepository(
                     }.asList
             )
         }
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
-        return json.map { s -> objectMapper().readValue(s, OppgaveKø::class.java) }.toList()
+        return json.map { s -> LosObjectMapper.instance.readValue(s, OppgaveKø::class.java) }.toList()
     }
 
-    fun hentKøIdIkkeTaHensyn(): List<UUID> {
+    fun hentKøIdInkluderKode6(): List<UUID> {
         val uuidListe: List<UUID> = using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
@@ -79,8 +67,6 @@ class OppgaveKøRepository(
                     }.asList
             )
         }
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
 
         return uuidListe
     }
@@ -95,10 +81,8 @@ class OppgaveKøRepository(
                     row.string("data")
                 }.asSingle
             )
-        }?.let { objectMapper().readValue(it, OppgaveKø::class.java) }
+        }?.let { LosObjectMapper.instance.readValue(it, OppgaveKø::class.java) }
             ?: throw IllegalStateException("Fant ikke oppgavekø med id $id")
-
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }.increment()
 
         return kø.takeIf { ignorerSkjerming || kø.kode6 == pepClient.harTilgangTilKode6() }
             ?: throw IllegalStateException("Klarte ikke å hente oppgavekø med id $id")
@@ -106,7 +90,6 @@ class OppgaveKøRepository(
 
     suspend fun lagre(
         uuid: UUID,
-        refresh: Boolean = false,
         f: (OppgaveKø?) -> OppgaveKø
     ) {
         val kode6 = pepClient.harTilgangTilKode6()
@@ -123,7 +106,7 @@ class OppgaveKøRepository(
                 )
                 val forrigeOppgavekø: OppgaveKø?
                 var oppgaveKø = if (!run.isNullOrEmpty()) {
-                    forrigeOppgavekø = objectMapper().readValue(run, OppgaveKø::class.java)
+                    forrigeOppgavekø = LosObjectMapper.instance.readValue(run, OppgaveKø::class.java)
                     f(forrigeOppgavekø)
                 } else {
                     f(null)
@@ -132,7 +115,7 @@ class OppgaveKøRepository(
                 //Sorter oppgaver
                 oppgaveKø.sistEndret = LocalDate.now()
                 oppgaveKø.oppgaverOgDatoer.sortBy { it.dato }
-                val json = objectMapper().writeValueAsString(oppgaveKø)
+                val json = LosObjectMapper.instance.writeValueAsString(oppgaveKø)
                 tx.run(
                     queryOf(
                         """
@@ -146,20 +129,21 @@ class OppgaveKøRepository(
 
             }
         }
-        if (refresh) {
-            refreshKlienter.sendOppdaterTilBehandling(uuid)
-        }
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
     }
 
-    suspend fun leggTilOppgaverTilKø(
+    fun leggTilOppgaverTilKø(
         køUUID: UUID,
         oppgaver: List<Oppgave>,
-        reservasjonRepository: ReservasjonRepository
+        reservasjonRepository: ReservasjonRepository,
     ) {
-        var hintRefresh = false
-        var gjennomførteTransaksjon = true
+        return leggTilOppgaverTilKø(køUUID, oppgaver) { OppgaveKø.erOppgavenReservert(reservasjonRepository, it) }
+    }
+
+    fun leggTilOppgaverTilKø(
+        køUUID: UUID,
+        oppgaver: List<Oppgave>,
+        erOppgavenReservertSjekk : (Oppgave) -> Boolean,
+    ) {
         using(sessionOf(dataSource)) { it ->
             it.transaction { tx ->
                 val gammelJson = tx.run(
@@ -171,16 +155,14 @@ class OppgaveKøRepository(
                             row.string("data")
                         }.asSingle
                 )
-                val oppgaveKø = objectMapper().readValue(gammelJson, OppgaveKø::class.java)
-                val første20OppgaverSomVar = oppgaveKø.oppgaverOgDatoer.take(20).toList()
+                val oppgaveKø = LosObjectMapper.instance.readValue(gammelJson, OppgaveKø::class.java)
 
                 var finnesOppgavekøMedEndring = false
                 for (oppgave in oppgaver) {
                     if (oppgaveKø.kode6 == oppgave.kode6) {
                         val oppgavekøHarEndring = oppgaveKø.leggOppgaveTilEllerFjernFraKø(
                             oppgave = oppgave,
-                            reservasjonRepository = reservasjonRepository,
-                            merknader = oppgaveRepositoryV2.hentMerknader(oppgave.eksternId.toString())
+                            erOppgavenReservertSjekk = erOppgavenReservertSjekk
                         )
 
                         if (oppgavekøHarEndring) {
@@ -189,12 +171,10 @@ class OppgaveKøRepository(
                     }
                 }
                 if (!finnesOppgavekøMedEndring) {
-                    gjennomførteTransaksjon = false
                     return@transaction
                 }
                 //Sorter oppgaver
                 oppgaveKø.oppgaverOgDatoer.sortBy { it.dato }
-                hintRefresh = første20OppgaverSomVar != oppgaveKø.oppgaverOgDatoer.take(20).toList()
                 oppgaveKø.oppgaverOgDatoer.take(20).forEach { runBlocking { oppgaveRefreshChannel.send(it.id) } }
                 tx.run(
                     queryOf(
@@ -203,29 +183,19 @@ class OppgaveKøRepository(
                         values (:id, :data :: jsonb, :skjermet)
                         on conflict (id) do update
                         set data = :data :: jsonb
-                     """, mapOf("id" to køUUID.toString(), "data" to objectMapper().writeValueAsString(oppgaveKø))
+                     """, mapOf("id" to køUUID.toString(),
+                            "data" to LosObjectMapper.instance.writeValueAsString(oppgaveKø))
                     ).asUpdate
                 )
 
             }
         }
-
-        if (hintRefresh) {
-            refreshKlienter.sendOppdaterTilBehandling(køUUID)
-        }
-        if (gjennomførteTransaksjon) {
-            Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-                .increment()
-        }
     }
 
-    suspend fun lagreIkkeTaHensyn(
+    fun lagreInkluderKode6(
         uuid: UUID,
         f: (OppgaveKø?) -> OppgaveKø
     ) {
-
-        var hintRefresh = false
-        var gjennomførteTransaksjon = true
         using(sessionOf(dataSource)) { it ->
             it.transaction { tx ->
                 val gammelJson = tx.run(
@@ -237,23 +207,18 @@ class OppgaveKøRepository(
                             row.string("data")
                         }.asSingle
                 )
-                val første20OppgaverSomVar: List<OppgaveIdMedDato>
                 val forrigeOppgavekø: OppgaveKø?
                 val oppgaveKø = if (!gammelJson.isNullOrEmpty()) {
-                    forrigeOppgavekø = objectMapper().readValue(gammelJson, OppgaveKø::class.java)
-                    første20OppgaverSomVar = forrigeOppgavekø.oppgaverOgDatoer.take(20)
+                    forrigeOppgavekø = LosObjectMapper.instance.readValue(gammelJson, OppgaveKø::class.java)
                     f(forrigeOppgavekø)
                 } else {
-                    første20OppgaverSomVar = listOf()
                     f(null)
                 }
                 //Sorter oppgaver
                 oppgaveKø.oppgaverOgDatoer.sortBy { it.dato }
-                hintRefresh = første20OppgaverSomVar != oppgaveKø.oppgaverOgDatoer.take(20)
-                val json = objectMapper().writeValueAsString(oppgaveKø)
+                val json = LosObjectMapper.instance.writeValueAsString(oppgaveKø)
                 if (json == gammelJson) {
                     log.info("Ingen endring i oppgavekø " + oppgaveKø.navn)
-                    gjennomførteTransaksjon = false
                     return@transaction
                 }
                 tx.run(
@@ -268,14 +233,6 @@ class OppgaveKøRepository(
                 )
 
             }
-        }
-
-        if (hintRefresh) {
-            refreshKlienter.sendOppdaterTilBehandling(uuid)
-        }
-        if (gjennomførteTransaksjon) {
-            Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-                .increment()
         }
     }
 
@@ -293,9 +250,6 @@ class OppgaveKøRepository(
                 )
             }
         }
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
     }
 
     suspend fun oppdaterKøMedOppgaver(uuid: UUID) {

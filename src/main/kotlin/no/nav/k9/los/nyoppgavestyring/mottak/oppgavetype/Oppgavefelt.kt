@@ -21,7 +21,7 @@ class Oppgavefelt(
 
         other as Oppgavefelt
 
-        if (id != other.id) return false
+        if (id != other.id) return false //FIXME? risikerer å få feil for like objekter når det ene er i databasn med id, og det andre ikke er i databaesn
         if (feltDefinisjon != other.feltDefinisjon) return false
         if (visPåOppgave != other.visPåOppgave) return false
         if (påkrevd != other.påkrevd) return false
@@ -29,6 +29,12 @@ class Oppgavefelt(
         if (feltutleder != other.feltutleder) return false
 
         return true
+    }
+
+    override fun hashCode(): Int {
+        var result = feltDefinisjon.hashCode()
+        result = 31 * result + visPåOppgave.hashCode()
+        return result
     }
 
     override fun toString(): String {

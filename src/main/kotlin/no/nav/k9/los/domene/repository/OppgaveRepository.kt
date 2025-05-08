@@ -6,25 +6,23 @@ import kotlinx.coroutines.runBlocking
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.aksjonspunktbehandling.objectMapper
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.util.InClauseHjelper
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.OppgaveMedId
 import no.nav.k9.los.domene.modell.AksjonspunktDefWrapper
-import no.nav.k9.los.domene.modell.BehandlingStatus
-import no.nav.k9.los.domene.modell.BehandlingType
-import no.nav.k9.los.domene.modell.FagsakYtelseType
-import no.nav.k9.los.integrasjon.abac.IPepClient
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleApneBehandlinger
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverDto
-import no.nav.k9.los.tjenester.innsikt.Databasekall
 import no.nav.k9.los.tjenester.mock.AksjonspunktMock
-import no.nav.k9.los.utils.Cache
-import no.nav.k9.los.utils.CacheObject
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.*
-import java.util.concurrent.atomic.LongAdder
 import javax.sql.DataSource
 
 
@@ -34,61 +32,8 @@ class OppgaveRepository(
     private val refreshOppgave: Channel<UUID>
 ) {
     private val log: Logger = LoggerFactory.getLogger(OppgaveRepository::class.java)
-    fun hent(): List<Oppgave> {
-        var spørring = System.currentTimeMillis()
-        val json: List<String> = using(sessionOf(dataSource)) {
-            it.run(
-                queryOf(
-                    "select data from oppgave",
-                    mapOf()
-                )
-                    .map { row ->
-                        row.string("data")
-                    }.asList
-            )
-        }
-        spørring = System.currentTimeMillis() - spørring
-        val serialisering = System.currentTimeMillis()
-        val list = json.map { s -> objectMapper().readValue(s, Oppgave::class.java) }.toList()
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
-        log.info("Henter: " + list.size + " oppgaver" + " serialisering: " + (System.currentTimeMillis() - serialisering) + " spørring: " + spørring)
-        return list
-    }
-
-    fun hentAllePåVent(): List<Oppgave> {
-        val startSpørring = System.currentTimeMillis()
-        val jsonOppgaver: List<String> = using(sessionOf(dataSource)) {
-            it.run(
-                queryOf(
-                    autopunktQuery(),
-                    mapOf()
-                )
-                    .map { row ->
-                        row.string("data")
-                    }.asList
-            )
-        }
-        val spørring = System.currentTimeMillis() - startSpørring
-        val startSerialisering = System.currentTimeMillis()
-        val oppgaver = jsonOppgaver.map { s -> objectMapper().readValue(s, Oppgave::class.java) }.toList()
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-        log.info("Henter oppgaver på vent: " + oppgaver.size + " oppgaver" + " serialisering: " + (System.currentTimeMillis() - startSerialisering) + " spørring: " + spørring)
-        return oppgaver
-    }
-
-    private fun autopunktQuery(): String {
-        val autopunkt = AksjonspunktDefinisjon.values().filter { it.erAutopunkt() }.map { it.kode }
-        val queryStubs = autopunkt.map {"data -> 'aksjonspunkter' -> 'liste' ->> '$it' = 'OPPR'"}
-        return queryStubs.joinToString(prefix = "select data from oppgave where ", separator = " or ")
-    }
 
     fun hent(uuid: UUID): Oppgave {
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
         val json: String? = using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
@@ -101,9 +46,9 @@ class OppgaveRepository(
             )
         }
         return try {
-            objectMapper().readValue(json!!, Oppgave::class.java)
+            LosObjectMapper.instance.readValue(json!!, Oppgave::class.java)
         } catch (e: NullPointerException) {
-            log.error("feiler for denne json $json")
+            log.error("Feiler for oppgave ${uuid} med denne json: $json", e)
             throw e
         }
     }
@@ -111,7 +56,8 @@ class OppgaveRepository(
     fun hentOppgaverSomMatcher(pleietrengendeAktørId: String, fagsakYtelseType: FagsakYtelseType): List<OppgaveMedId> {
         return using(sessionOf(dataSource)) {
             it.run(
-                queryOf("""
+                queryOf(
+                    """
                     select id, data from oppgave where data ->> 'aktiv' = 'true'
                     and data -> 'fagsakYtelseType' ->> 'kode' = ?
                     and data ->> 'pleietrengendeAktørId' = ?
@@ -122,7 +68,7 @@ class OppgaveRepository(
                     .map { row ->
                         OppgaveMedId(
                             UUID.fromString(row.string("id")),
-                            objectMapper().readValue(row.string("data"), Oppgave::class.java)
+                            LosObjectMapper.instance.readValue(row.string("data"), Oppgave::class.java)
                         )
                     }.asList
             )
@@ -132,7 +78,8 @@ class OppgaveRepository(
     fun hentOppgaverSomMatcherSaksnummer(saksnummer: String): List<OppgaveMedId> {
         return using(sessionOf(dataSource)) {
             it.run(
-                queryOf("""
+                queryOf(
+                    """
                     select id, data from oppgave where data ->> 'fagsakSaksnummer' = ?
                     """,
                     saksnummer
@@ -140,7 +87,7 @@ class OppgaveRepository(
                     .map { row ->
                         OppgaveMedId(
                             UUID.fromString(row.string("id")),
-                            objectMapper().readValue(row.string("data"), Oppgave::class.java)
+                            LosObjectMapper.instance.readValue(row.string("data"), Oppgave::class.java)
                         )
                     }.asList
             )
@@ -148,9 +95,6 @@ class OppgaveRepository(
     }
 
     fun hentHvis(uuid: UUID): Oppgave? {
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
         val json: String? = using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
@@ -163,41 +107,11 @@ class OppgaveRepository(
             )
         }
         return if (json != null) {
-            objectMapper().readValue(json, Oppgave::class.java)
+            LosObjectMapper.instance.readValue(json, Oppgave::class.java)
         } else null
     }
 
-    suspend fun hentHasteoppgaver(): List<Oppgave> {
-        val kode6 = pepClient.harTilgangTilKode6()
-        val json: List<String> = using(sessionOf(dataSource)) {
-            //language=PostgreSQL
-            it.run(
-                queryOf(
-                    """
-                    SELECT o.data
-                    FROM merknad m INNER JOIN Oppgave o ON (m.ekstern_referanse = o.id)
-                        LEFT JOIN behandling b on b.ekstern_referanse = o.id
-                    WHERE m.slettet = false AND b.ferdigstilt_tidspunkt is NULL
-                    ORDER BY m.opprettet DESC
-                    """
-                )
-                    .map { row ->
-                        row.string("data")
-                    }.asList
-            )
-        }
-        val oppgaver = json.map { s -> objectMapper().readValue(s, Oppgave::class.java) }
-            .filter { it.kode6 == kode6 }
-
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-        return oppgaver
-    }
-
     fun lagre(uuid: UUID, f: (Oppgave?) -> Oppgave) {
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
                 val run = tx.run(
@@ -211,7 +125,7 @@ class OppgaveRepository(
                 )
 
                 val oppgave = if (!run.isNullOrEmpty()) {
-                    f(objectMapper().readValue(run, Oppgave::class.java))
+                    f(LosObjectMapper.instance.readValue(run, Oppgave::class.java))
                 } else {
                     f(null)
                 }
@@ -219,7 +133,7 @@ class OppgaveRepository(
                     oppgave.kode6 = sjekkKode6(oppgave)
                     oppgave.skjermet = sjekkKode7EllerEgenAnsatt(oppgave)
                 }
-                val json = objectMapper().writeValueAsString(oppgave)
+                val json = LosObjectMapper.instance.writeValueAsString(oppgave)
                 tx.run(
                     queryOf(
                         """
@@ -271,73 +185,83 @@ class OppgaveRepository(
 
         val oppgaveiderList = oppgaveider.toList()
         if (oppgaveider.isEmpty()) {
+            log.info("Spurte ikke etter noen oppgaveider")
             return emptyList()
         }
+
+        val t0 = System.currentTimeMillis()
 
         val session = sessionOf(dataSource)
         val json: List<String> = using(session) {
 
+            val spørring : String =
+                "select data from oppgave " +
+                        "where id in (${
+                            IntRange(0, oppgaveiderList.size - 1).joinToString { t -> ":p$t" }
+                        })"
+            val parametre = IntRange(
+                0,
+                oppgaveiderList.size - 1
+            ).associate { t -> "p$t" to oppgaveiderList[t].toString() as Any }
+
             //language=PostgreSQL
             it.run(
-                queryOf(
-                    "select data from oppgave " +
-                            "where id in (${
-                                IntRange(0, oppgaveiderList.size - 1).joinToString { t -> ":p$t" }
-                            })",
-                    IntRange(
-                        0,
-                        oppgaveiderList.size - 1
-                    ).associate { t -> "p$t" to oppgaveiderList[t].toString() as Any }
-                )
+                queryOf(spørring, parametre)
                     .map { row ->
                         row.string("data")
                     }.asList
             )
         }
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
-        return json.filter { it.indexOf("oppgaver") == -1 }
-            .map { s -> objectMapper().readValue(s, Oppgave::class.java) }
+        val t1 = System.currentTimeMillis()
+        val resultat = json.filter { it.indexOf("oppgaver") == -1 } //TODO hvorfor?
+            .map { s -> LosObjectMapper.instance.readValue(s, Oppgave::class.java) }
             .toList()
-            .sortedBy { oppgave -> oppgave.behandlingOpprettet }
+            .sortedBy { oppgave -> oppgave.behandlingOpprettet } //TODO burde gjøre sortering utenfor, siden det ulike domeneregler for sortering
+
+        val t2 = System.currentTimeMillis()
+
+        log.info("Hentet ${resultat.size} oppgaver. Etterspurte med ${oppgaveider.toSet().size} uuider. Hadde ${json.size} oppgaver før filtrering mot teksten 'oppgaver'. Brukte ${t1-t0} ms på spørring og ${t2-t1} ms på deserialisering")
+
+        return resultat
     }
 
-    fun hentPleietrengendeAktør(oppgaveider: Collection<UUID>): Map<String, String> {
-        val oppgaveiderList = oppgaveider.toList()
-        if (oppgaveider.isEmpty()) {
-            return emptyMap()
+    fun hentOppgaverForPleietrengendeAktør(oppgaveIder: Collection<UUID>, pleietrengendeAktørIder: Collection<String>): Set<UUID> {
+        if (oppgaveIder.isEmpty() || pleietrengendeAktørIder.isEmpty()) {
+            return emptySet()
         }
+        val unikeAktørIder = pleietrengendeAktørIder.toSet()
+        val unikeOppgaveIder = oppgaveIder.toSet()
 
         val session = sessionOf(dataSource)
-        val res: List<Pair<String, String>> = using(session) {
+        val alleOppgaverForAktørene: List<OppgaveIdAktørId> = using(session) {
 
             //language=PostgreSQL
             it.run(
                 queryOf(
-                    "select id, data->'pleietrengendeAktørId' as aktor from oppgave " +
-                            "where id in (${
-                                IntRange(0, oppgaveiderList.size - 1).joinToString { t -> ":p$t" }
-                            }) and data->>'pleietrengendeAktørId' is not null",
-                    IntRange(
-                        0,
-                        oppgaveiderList.size - 1
-                    ).associate { t -> "p$t" to oppgaveiderList[t].toString() as Any }
+                    """
+                         select id, data->>'pleietrengendeAktørId' as aktor
+                          from oppgave 
+                          where data->>'pleietrengendeAktørId' in (${InClauseHjelper.tilParameternavn(unikeAktørIder, "a")})
+                          """,
+                    InClauseHjelper.parameternavnTilVerdierMap(unikeAktørIder, "a")
                 )
                     .map { row ->
-                        Pair(row.string("id"), row.string("aktor"))
+                        OppgaveIdAktørId(UUID.fromString(row.string("id")), row.string("aktor"))
                     }.asList
             )
         }
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
+        val resultat = alleOppgaverForAktørene
+            .filter { unikeOppgaveIder.contains(it.oppgaveId) }
+            .map { it.oppgaveId }
+            .toSet()
 
-        val mapOf = mutableMapOf<String, String>()
+        log.info("Spurte med ${oppgaveIder.size} oppgaver og ${pleietrengendeAktørIder.size} aktører. Fant ${alleOppgaverForAktørene.size} oppgaver for aktørene, returnerer ${resultat.size} etter filtrering mot aktuelle oppgaver")
 
-        res.forEach {
-            mapOf[it.second] = it.first
-        }
-        return mapOf
+        return resultat
+    }
+
+    data class OppgaveIdAktørId (val oppgaveId : UUID, val aktørId : String) {
+
     }
 
     suspend fun hentAlleOppgaverUnderArbeid(): List<AlleOppgaverDto> {
@@ -366,8 +290,6 @@ class OppgaveRepository(
                         }.asList
                 )
             }
-            Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-                .increment()
 
             return json
         } catch (e: Exception) {
@@ -398,9 +320,6 @@ class OppgaveRepository(
                         }.asList
                 )
             }
-            Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-                .increment()
-
             return json
         } catch (e: Exception) {
             log.error("", e)
@@ -424,10 +343,9 @@ class OppgaveRepository(
             )
         }
         val oppgaver =
-            json.map { s -> objectMapper().readValue(s, Oppgave::class.java) }.filter { it.kode6 == kode6 }.toList()
+            json.map { s -> LosObjectMapper.instance.readValue(s, Oppgave::class.java) }.filter { it.kode6 == kode6 }
+                .toList()
         oppgaver.forEach { refreshOppgave.trySend(it.eksternId) }
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
         return oppgaver
     }
 
@@ -445,29 +363,10 @@ class OppgaveRepository(
                     }.asList
             )
         }
-        val oppgaver = json.map { objectMapper().readValue(it, Oppgave::class.java) }.filter { it.kode6 == kode6 }
+        val oppgaver =
+            json.map { LosObjectMapper.instance.readValue(it, Oppgave::class.java) }.filter { it.kode6 == kode6 }
         oppgaver.forEach { refreshOppgave.trySend(it.eksternId) }
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
         return oppgaver
-    }
-
-    fun hentOppgaverMedSaksnummerIkkeTaHensyn(saksnummer: String): List<Oppgave> {
-        val json: List<String> = using(sessionOf(dataSource)) {
-            //language=PostgreSQL
-            it.run(
-                queryOf(
-                    "select data from oppgave where lower(data ->> 'fagsakSaksnummer') = lower(:saksnummer) ",
-                    mapOf("saksnummer" to saksnummer)
-                )
-                    .map { row ->
-                        row.string("data")
-                    }.asList
-            )
-        }
-
-        return json.map { objectMapper().readValue(it, Oppgave::class.java) }
     }
 
     internal suspend fun hentAktiveOppgaverTotalt(): Int {
@@ -486,9 +385,6 @@ class OppgaveRepository(
         }
         spørring = System.currentTimeMillis() - spørring
         log.info("Teller aktive oppgaver: $spørring ms")
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
         return count!!
     }
 
@@ -508,29 +404,7 @@ class OppgaveRepository(
         }
         spørring = System.currentTimeMillis() - spørring
         log.info("Teller aktive oppgaver: $spørring ms")
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
         return count!!
-    }
-
-    internal fun hentAlleOppgaveForPunsj(): List<Oppgave> {
-        val json: List<String> = using(sessionOf(dataSource)) {
-            //language=PostgreSQL
-            it.run(
-                queryOf(
-                    "select data from oppgave where data ->> 'system' = 'PUNSJ'"
-                )
-                    .map { row ->
-                        row.string("data")
-                    }.asList
-            )
-        }
-        val oppgaver = json.map { objectMapper().readValue(it, Oppgave::class.java) }
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
-        return oppgaver
     }
 
     internal fun hentAktiveOppgaverTotaltPerBehandlingstypeOgYtelseType(
@@ -550,9 +424,6 @@ class OppgaveRepository(
             )
         }
         return count!!
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
     }
 
     internal fun hentMedBehandlingsstatus(behandlingStatus: BehandlingStatus): Int {
@@ -571,9 +442,6 @@ class OppgaveRepository(
         }
         spørring = System.currentTimeMillis() - spørring
         log.info("Teller inaktive oppgaver: $spørring ms")
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
         return count!!
     }
 
@@ -593,9 +461,6 @@ class OppgaveRepository(
         }
         spørring = System.currentTimeMillis() - spørring
         log.info("Teller inaktive oppgaver: $spørring ms")
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
         return count!!
     }
 
@@ -615,9 +480,6 @@ class OppgaveRepository(
         }
         spørring = System.currentTimeMillis() - spørring
         log.info("Teller inaktive oppgaver: $spørring ms")
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
         return count!!
     }
 
@@ -637,47 +499,83 @@ class OppgaveRepository(
         }
         spørring = System.currentTimeMillis() - spørring
         log.info("Teller automatiske oppgaver: $spørring ms")
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
         return count!!
     }
 
-    private val aktiveOppgaverCache = Cache<List<Oppgave>>()
-    internal fun hentAktiveOppgaver(): List<Oppgave> {
-        val cacheObject = aktiveOppgaverCache.get("default")
-        if (cacheObject != null) {
-            return cacheObject.value
-        }
-
-        var spørring = System.currentTimeMillis()
+    internal fun hentAktiveUreserverteOppgaver(): List<Oppgave> {
+        val t0 = System.currentTimeMillis()
         val json: List<String> = using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
-                    "select data from oppgave where (data -> 'aktiv') ::boolean ",
-                    mapOf()
+                    """with
+                            aktive_reservasjoner as (select id from reservasjon where ((data -> 'reservasjoner' -> -1) ->> 'reservertTil')::timestamp > :now)
+                         select data from oppgave o
+                         where (data -> 'aktiv')::boolean
+                         and not exists (select 1 from aktive_reservasjoner ar where ar.id = (o.data ->> 'eksternId')) 
+                         """.trimMargin(),
+                    mapOf(
+                        "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
+                    )
                 )
                     .map { row ->
                         row.string("data")
                     }.asList
             )
         }
-        spørring = System.currentTimeMillis() - spørring
-        val serialisering = System.currentTimeMillis()
-        val list = json.map { s -> objectMapper().readValue(s, Oppgave::class.java) }.toList()
+        val t1 = System.currentTimeMillis()
+        val list =
+            json.parallelStream().map { s -> LosObjectMapper.instance.readValue(s, Oppgave::class.java) }.toList()
+        val t2 = System.currentTimeMillis()
 
-        log.info("Henter aktive oppgaver: " + list.size + " oppgaver" + " serialisering: " + (System.currentTimeMillis() - serialisering) + " spørring: " + spørring)
-        aktiveOppgaverCache.set("default", CacheObject(list))
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
+        log.info("Hentet ${list.size} aktive ureserverte oppgaver. Serialisering: ${t2 - t1} ms, spørring: ${t1 - t0} ms")
         return list
     }
 
-    internal fun hentAktiveOppgaversAksjonspunktliste(): List<AksjonspunktMock> {
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
+    internal fun hentAktiveOppgaver(): List<UUID> {
+        val t0 = System.currentTimeMillis()
+        val resulat : List<UUID> = using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    """  select (data ->> 'eksternId')::uuid as ekstern_id from oppgave
+                         where (data -> 'aktiv')::boolean 
+                         """.trimMargin(),
+                    mapOf(
+                    )
+                )
+                    .map { row ->
+                        row.uuid("ekstern_id")
+                    }.asList
+            )
+        }
+        val t1 = System.currentTimeMillis()
 
+        log.info("Hentet ${resulat.size} aktive behandlingUuid for aktive oppgaver. Operasjonen tok ${t1 - t0} ms.")
+        return resulat
+    }
+
+    internal fun hentAktiveK9sakOppgaver(): List<UUID> {
+        val t0 = System.currentTimeMillis()
+        val resulat : List<UUID> = using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    """  select (data ->> 'eksternId')::uuid as ekstern_id from oppgave
+                         where (data -> 'aktiv')::boolean and (data ->> 'system') = 'K9SAK' 
+                         """.trimMargin(),
+                    mapOf(
+                    )
+                )
+                    .map { row ->
+                        row.uuid("ekstern_id")
+                    }.asList
+            )
+        }
+        val t1 = System.currentTimeMillis()
+
+        log.info("Hentet ${resulat.size} aktive behandlingUuid for aktive k9sak-oppgaver oppgaver. Operasjonen tok ${t1 - t0} ms.")
+        return resulat
+    }
+
+    internal fun hentAktiveOppgaversAksjonspunktliste(): List<AksjonspunktMock> {
         val json: List<List<AksjonspunktMock>> = using(sessionOf(dataSource)) { it ->
             it.run(
                 queryOf(
@@ -685,7 +583,7 @@ class OppgaveRepository(
                     mapOf()
                 )
                     .map { row ->
-                        val map = objectMapper().readValue(
+                        val map = LosObjectMapper.instance.readValue(
                             row.string("punkt"),
                             object : TypeReference<HashMap<String, String>>() {})
                         val antall = row.int("count")
@@ -718,7 +616,7 @@ class OppgaveRepository(
         }
     }
 
-    suspend fun hentOppgaveMedJournalpost(journalpostId: String) : List<Oppgave> {
+    suspend fun hentOppgaveMedJournalpost(journalpostId: String): List<Oppgave> {
         val kode6 = pepClient.harTilgangTilKode6()
         val json: List<String> = using(sessionOf(dataSource)) {
             //language=PostgreSQL
@@ -732,11 +630,9 @@ class OppgaveRepository(
                     }.asList
             )
         }
-        val oppgaver = json.map { objectMapper().readValue(it, Oppgave::class.java) }.filter { it.kode6 == kode6 }
+        val oppgaver =
+            json.map { LosObjectMapper.instance.readValue(it, Oppgave::class.java) }.filter { it.kode6 == kode6 }
         oppgaver.forEach { refreshOppgave.trySend(it.eksternId) }
-        Databasekall.map.computeIfAbsent(object {}.javaClass.name + object {}.javaClass.enclosingMethod.name) { LongAdder() }
-            .increment()
-
         return oppgaver
     }
 }

@@ -2,7 +2,7 @@ package no.nav.k9.los.tjenester.saksbehandler.oppgave
 
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.repository.ReservasjonRepository
-import no.nav.k9.los.domene.repository.SaksbehandlerRepository
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 
 class ReservasjonTjeneste constructor(
     private val reservasjonRepository: ReservasjonRepository,
@@ -16,7 +16,7 @@ class ReservasjonTjeneste constructor(
                 reservasjon
             }
             val reservasjon = reservasjonRepository.hent(oppgave.eksternId)
-            saksbehandlerRepository.fjernReservasjonIkkeTaHensyn(
+            saksbehandlerRepository.fjernReservasjonInkluderKode6(
                 reservasjon.reservertAv,
                 reservasjon.oppgave
             )

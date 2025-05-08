@@ -1,6 +1,8 @@
 package no.nav.k9.los.nyoppgavestyring.visningoguttrekk
 
+import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Datatype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
+import no.nav.k9.los.spi.felter.HentVerdiInput
 import java.time.LocalDateTime
 
 data class Oppgave(
@@ -71,23 +73,9 @@ data class Oppgave(
             return oppgavefelt.verdi
         } else {
             return felter.filter { feltverdi ->
-                feltverdi.område.equals(område) && feltverdi.eksternId.equals(feltnavn)
+                feltverdi.område == område && feltverdi.eksternId == feltnavn
             }.map { it.verdi }
         }
-    }
-
-    fun hentListeverdi(område: String, feltnavn: String): List<String> {
-        val oppgavefelt = hentOppgavefelt(område, feltnavn)
-        if (oppgavefelt == null) {
-            return listOf()
-        }
-        if (!oppgavefelt.listetype) {
-            throw IllegalStateException("Kan ikke hente enkeltverdi av $feltnavn som listetype")
-        }
-
-        return felter.filter { feltverdi ->
-            feltverdi.område.equals(område) && feltverdi.eksternId.equals(feltnavn)
-        }.map { it.verdi }
     }
 
     fun hentListeverdi(feltnavn: String): List<String> {
@@ -100,19 +88,63 @@ data class Oppgave(
         }
 
         return felter.filter { feltverdi ->
-            feltverdi.eksternId.equals(feltnavn)
+            feltverdi.eksternId == feltnavn
         }.map { it.verdi }
     }
 
     private fun hentOppgavefelt(feltnavn: String): Oppgavefelt? {
         return felter.find { oppgavefelt ->
-            oppgavefelt.eksternId.equals(feltnavn)
+            oppgavefelt.eksternId == feltnavn
         }
     }
 
     private fun hentOppgavefelt(område: String, feltnavn: String): Oppgavefelt? {
         return felter.find { oppgavefelt ->
-            oppgavefelt.område.equals(område) && oppgavefelt.eksternId.equals(feltnavn)
+            oppgavefelt.område == område && oppgavefelt.eksternId == feltnavn
         }
+    }
+
+    fun utledTransienteFelter(now: LocalDateTime): Oppgave {
+        val utlededeVerdier: List<Oppgavefelt> = this.oppgavetype.oppgavefelter.flatMap { oppgavefelt ->
+            oppgavefelt.feltDefinisjon.transientFeltutleder?.let { feltutleder ->
+                feltutleder.hentVerdi(
+                    HentVerdiInput(
+                        now,
+                        this,
+                        oppgavefelt.feltDefinisjon.område.eksternId,
+                        oppgavefelt.feltDefinisjon.eksternId
+                    )
+                ).map { verdi ->
+                    Oppgavefelt(
+                        eksternId = oppgavefelt.feltDefinisjon.eksternId,
+                        område = oppgavefelt.feltDefinisjon.område.eksternId,
+                        listetype = oppgavefelt.feltDefinisjon.listetype,
+                        påkrevd = false,
+                        verdi = verdi,
+                        verdiBigInt = if (oppgavefelt.feltDefinisjon.tolkesSom === Datatype.INTEGER.kode) verdi.toLong() else null
+                    )
+                }
+            } ?: listOf()
+        }
+        return copy(felter = felter.plus(utlededeVerdier))
+    }
+
+    fun fyllDefaultverdier(): Oppgave {
+        val defaultverdier = oppgavetype.oppgavefelter
+            .filter { oppgavefelt -> oppgavefelt.påkrevd }
+            .mapNotNull { påkrevdFelt ->
+                if (felter.find { it.eksternId == påkrevdFelt.feltDefinisjon.eksternId && !påkrevdFelt.feltDefinisjon.listetype } == null) {
+                    Oppgavefelt(
+                        eksternId = påkrevdFelt.feltDefinisjon.eksternId,
+                        område = kildeområde,
+                        listetype = false, //listetyper er aldri påkrevd
+                        påkrevd = true,
+                        verdi = påkrevdFelt.defaultverdi.toString(),
+                        verdiBigInt = null
+                    )
+                } else null
+            }
+
+        return copy(felter = felter.plus(defaultverdier))
     }
 }

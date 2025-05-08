@@ -11,5 +11,6 @@ data class OppgaveKo(
     val oppgaveQuery: OppgaveQuery,
     val frittValgAvOppgave: Boolean,
     val saksbehandlere: List<String>,
-    val endretTidspunkt: LocalDateTime?
+    val endretTidspunkt: LocalDateTime?,
+    val skjermet: Boolean
 )

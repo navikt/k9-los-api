@@ -9,12 +9,12 @@ import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.modell.Aksjonspunkter
-import no.nav.k9.los.domene.modell.AndreKriterierType
-import no.nav.k9.los.domene.modell.BehandlingStatus
-import no.nav.k9.los.domene.modell.BehandlingType
-import no.nav.k9.los.domene.modell.Enhet
-import no.nav.k9.los.domene.modell.FagsakYtelseType
-import no.nav.k9.los.domene.modell.KøSortering
+import no.nav.k9.los.nyoppgavestyring.kodeverk.AndreKriterierType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Enhet
+import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.KøSortering
 import no.nav.k9.los.domene.modell.OppgaveKø
 import no.nav.k9.los.domene.repository.OppgaveKøRepository
 import no.nav.k9.los.domene.repository.OppgaveRepository
@@ -131,13 +131,11 @@ class OppgavekoTest : AbstractK9LosIntegrationTest() {
 
         oppgaveko.leggOppgaveTilEllerFjernFraKø(
             oppgave1,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveko.leggOppgaveTilEllerFjernFraKø(
             oppgave2,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave2.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(oppgaveko.id) {
              oppgaveko

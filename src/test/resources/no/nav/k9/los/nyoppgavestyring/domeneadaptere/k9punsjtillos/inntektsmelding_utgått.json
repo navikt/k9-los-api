@@ -1,0 +1,30 @@
+{
+  "eventer": [
+    {
+      "type": "INNTEKTSMELDING_UTGÅTT",
+      "ytelse": "OMP",
+      "aktørId": "2503064192380",
+      "eventTid": "2024-05-06T11:19:59.407254147",
+      "sendtInn": null,
+      "eksternId": "81f1c977-3ecf-4b4f-848e-bfc561cc873a",
+      "ferdigstiltAv": null,
+      "journalpostId": "637729814",
+      "pleietrengendeAktørId": null,
+      "aksjonspunktKoderMedStatusListe": {
+        "PUNSJ": "OPPR"
+      }
+    },
+    {
+      "type": "PUNSJOPPGAVE_IKKE_LENGER_NØDVENDIG",
+      "ytelse": null,
+      "aktørId": "2503064192380",
+      "eventTid": "2024-05-13T14:45:59.412392485",
+      "sendtInn": false,
+      "eksternId": "81f1c977-3ecf-4b4f-848e-bfc561cc873a",
+      "ferdigstiltAv": null,
+      "journalpostId": "637729814",
+      "pleietrengendeAktørId": null,
+      "aksjonspunktKoderMedStatusListe": {}
+    }
+  ]
+}

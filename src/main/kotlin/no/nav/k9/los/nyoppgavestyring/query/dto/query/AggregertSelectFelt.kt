@@ -13,4 +13,4 @@ import com.fasterxml.jackson.annotation.JsonTypeName
     fieldVisibility = JsonAutoDetect.Visibility.ANY
 )
 @JsonTypeName("aggregert")
-class AggregertSelectFelt(): SelectFelt();
+class AggregertSelectFelt(): SelectFelt()

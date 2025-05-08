@@ -4,7 +4,7 @@
   "oppgavetyper": [
     {
       "id": "k9klage",
-      "oppgavebehandlingsUrlTemplate": "{baseUrl}/fagsak/{K9.saksnummer}/behandling/{K9.behandlingUuid}?fakta=default&punkt=default",
+      "oppgavebehandlingsUrlTemplate": "{baseUrl}/fagsak/{K9.saksnummer}/",
       "oppgavefelter": [
         {
           "id": "behandlingUuid",
@@ -17,13 +17,18 @@
           "påkrevd": false
         },
         {
+          "id": "påklagdBehandlingtype",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
           "id": "aktorId",
           "visPåOppgave": true,
           "påkrevd": true
         },
         {
           "id": "fagsystem",
-          "visPåOppgave": true,
+          "visPåOppgave": false,
           "påkrevd": true
         },
         {
@@ -92,7 +97,17 @@
           "påkrevd": false
         },
         {
+          "id": "liggerHosBeslutter",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
           "id": "ansvarligBeslutter",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "tidFørsteGangHosBeslutter",
           "visPåOppgave": true,
           "påkrevd": false
         },
@@ -108,6 +123,16 @@
         },
         {
           "id": "aktivtAksjonspunkt",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "aktivVenteårsak",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "aktivVentefrist",
           "visPåOppgave": true,
           "påkrevd": false
         },
@@ -129,13 +154,35 @@
         {
           "id": "utenlandstilsnitt",
           "visPåOppgave": true,
-          "påkrevd": true,
+          "påkrevd": false,
           "defaultverdi": false
         },
         {
           "id": "behandlingsårsak",
           "visPåOppgave": true,
           "påkrevd": false
+        },
+        {
+          "id": "oversendtKlageinstansTidspunkt",
+          "visPåOppgave": false,
+          "påkrevd": false
+        },
+        {
+          "id": "oversendtKabalTidspunkt",
+          "visPåOppgave": false,
+          "påkrevd": false
+        },
+        {
+          "id": "ferdigstiltTidspunkt",
+          "visPåOppgave": false,
+          "påkrevd": false,
+          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.FerdigstiltTidspunkt"
+        },
+        {
+          "id": "ferdigstiltEnhet",
+          "visPåOppgave": false,
+          "påkrevd": false,
+          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.FerdigstiltEnhet"
         }
       ]
     }

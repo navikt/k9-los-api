@@ -1,1 +1,0 @@
-fil for å fremtvinge diff, for å se om git sier seg enig i at master og featurebranch er forskjellige

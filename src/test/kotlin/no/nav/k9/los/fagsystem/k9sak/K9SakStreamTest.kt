@@ -4,9 +4,9 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
-import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveTjenesteV2
-import no.nav.k9.los.integrasjon.azuregraph.AzureGraphService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.AzureGraphService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
@@ -36,7 +36,7 @@ class K9SakStreamTest {
              "aksjonspunktTilstander": []
         }""".trimIndent()
         runBlocking {
-            eventHandler.prosesser(objectMapper().readValue(input))
+            eventHandler.prosesser(LosObjectMapper.instance.readValue(input))
         }
     }
 
@@ -56,7 +56,7 @@ class K9SakStreamTest {
             "relatertPartAktørId": "54321"
         }""".trimIndent()
         runBlocking {
-            eventHandler.prosesser(objectMapper().readValue(input))
+            eventHandler.prosesser(LosObjectMapper.instance.readValue(input))
         }
     }
 
@@ -69,7 +69,7 @@ class K9SakStreamTest {
             "behandlingResultatType": "INNVILGET"
         }""".trimIndent()
         runBlocking {
-            eventHandler.prosesser(objectMapper().readValue(input))
+            eventHandler.prosesser(LosObjectMapper.instance.readValue(input))
         }
     }
 
@@ -84,7 +84,7 @@ class K9SakStreamTest {
             "kravdokumenter": []
         }""".trimIndent()
         runBlocking {
-            eventHandler.prosesser(objectMapper().readValue(input))
+            eventHandler.prosesser(LosObjectMapper.instance.readValue(input))
         }
     }
 }

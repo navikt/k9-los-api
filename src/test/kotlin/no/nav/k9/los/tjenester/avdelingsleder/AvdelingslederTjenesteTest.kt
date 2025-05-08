@@ -7,11 +7,11 @@ import assertk.assertions.extracting
 import assertk.assertions.isEmpty
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.domene.modell.KøKriterierType
-import no.nav.k9.los.domene.modell.MerknadType
-import no.nav.k9.los.domene.modell.OppgaveKode
-import no.nav.k9.los.domene.modell.Saksbehandler
-import no.nav.k9.los.domene.repository.SaksbehandlerRepository
+import no.nav.k9.los.nyoppgavestyring.kodeverk.KøKriterierType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.MerknadType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.OppgaveKode
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.KriteriumDto
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.SaksbehandlerOppgavekoDto
 import org.junit.jupiter.api.BeforeEach
@@ -37,8 +37,6 @@ internal class AvdelingslederTjenesteTest : AbstractK9LosIntegrationTest() {
             saksbehandlere.forEach {
                 saksbehandlerRepository.addSaksbehandler(it)
             }
-
-
 
             val id = avdelingslederTjeneste.opprettOppgaveKø()
             val saksbehandlerDto = saksbehandlere.map {

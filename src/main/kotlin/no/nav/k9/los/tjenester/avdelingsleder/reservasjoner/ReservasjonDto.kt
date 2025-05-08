@@ -1,15 +1,18 @@
 package no.nav.k9.los.tjenester.avdelingsleder.reservasjoner
 
-import no.nav.k9.los.domene.modell.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import java.time.LocalDateTime
-import java.util.*
 
 data class ReservasjonDto(
-    val reservertAvUid: String,
-    val reservertAvNavn: String,
-    val reservertTilTidspunkt: LocalDateTime,
-    val oppgaveId: UUID,
-    val saksnummer: String,
+    val reservertAvIdent: String,
+    val reservertAvEpost: String,
+    val reservertAvNavn: String?,
+    val saksnummer: String?,
+    val journalpostId: String?,
     val behandlingType: BehandlingType,
-    val tilBeslutter: Boolean
+    val reservertTilTidspunkt: LocalDateTime,
+    val kommentar: String,
+    val tilBeslutter: Boolean,
+    val oppgavenøkkel: OppgaveNøkkelDto,
 )

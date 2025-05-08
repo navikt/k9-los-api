@@ -2,23 +2,36 @@ package no.nav.k9.los.tjenester.saksbehandler.oppgave
 
 import assertk.assertThat
 import assertk.assertions.*
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.AbstractK9LosIntegrationTest
+import no.nav.k9.los.Configuration
+import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
-import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.domene.modell.*
-import no.nav.k9.los.domene.repository.OppgaveKøRepository
-import no.nav.k9.los.domene.repository.OppgaveRepository
-import no.nav.k9.los.domene.repository.ReservasjonRepository
-import no.nav.k9.los.domene.repository.SaksbehandlerRepository
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.los.domene.repository.*
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.IAzureGraphService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.IPdlService
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.kodeverk.*
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.OppgaverGruppertRepository
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.AndreKriterierDto
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.koin.core.qualifier.named
 import org.koin.test.get
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -28,10 +41,18 @@ import kotlin.test.asserter
 
 class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
+    @BeforeEach
+    fun setup() {
+        val områdeSetup = get<OmrådeSetup>()
+        områdeSetup.setup()
+        val k9SakTilLosAdapterTjeneste = get<K9SakTilLosAdapterTjeneste>()
+        k9SakTilLosAdapterTjeneste.setup()
+    }
+
     @Test
     fun `hent fagsak`() {
         val oppgaveRepository = get<OppgaveRepository>()
-        val oppgaveTjeneste = get<OppgaveTjeneste>()
+        val oppgaveTjeneste = lagOppgaveTjenesteMedMocketV3Kobling()
 
         val oppgave1 = Oppgave(
 
@@ -65,7 +86,16 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
         runBlocking {
-            saksbehandlerRepository.addSaksbehandler(Saksbehandler(123, "saksbehandler@nav.no", "test", "saksbehandler@nav.no", mutableSetOf(), "test"))
+            saksbehandlerRepository.addSaksbehandler(
+                Saksbehandler(
+                    123,
+                    "Z123456",
+                    "test",
+                    "saksbehandler@nav.no",
+                    mutableSetOf(),
+                    "test"
+                )
+            )
         }
 
         get<K9SakTilLosAdapterTjeneste>()
@@ -88,7 +118,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val oppgaveRepository = get<OppgaveRepository>()
         val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
 
-        val oppgaveTjeneste = get<OppgaveTjeneste>()
+        val oppgaveTjeneste = lagOppgaveTjenesteMedMocketV3Kobling()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
         val reservasjonRepository = get<ReservasjonRepository>()
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
@@ -140,8 +170,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
         oppgaveko.leggOppgaveTilEllerFjernFraKø(
             oppgave1,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
@@ -176,7 +205,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val reservasjonsHistorikk = oppgaveTjeneste.hentReservasjonsHistorikk(oppgave.eksternId)
 
         assert(reservasjonsHistorikk.reservasjoner.size == 2)
-        assert(reservasjonsHistorikk.reservasjoner[0].flyttetAv == "saksbehandler@nav.no")
+        assertThat(reservasjonsHistorikk.reservasjoner[0].flyttetAv).isEqualTo("Z123456")
     }
 
     @Test
@@ -185,7 +214,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val oppgaveRepository = get<OppgaveRepository>()
         val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
 
-        val oppgaveTjeneste = get<OppgaveTjeneste>()
+        val oppgaveTjeneste = lagOppgaveTjenesteMedMocketV3Kobling()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
         val reservasjonRepository = get<ReservasjonRepository>()
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
@@ -238,8 +267,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
         oppgaveko.leggOppgaveTilEllerFjernFraKø(
             oppgave1,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
@@ -259,8 +287,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         // act
         oppgaveTjeneste.fåOppgaveFraKø(
             oppgaveKøId.toString(),
-            brukerIdent,
-            emptyArray<OppgaveDto>().toMutableList()
+            brukerIdent
         )
 
         // assert
@@ -275,7 +302,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val oppgaveRepository = get<OppgaveRepository>()
         val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
 
-        val oppgaveTjeneste = get<OppgaveTjeneste>()
+        val oppgaveTjeneste = lagOppgaveTjenesteMedMocketV3Kobling()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
         val reservasjonRepository = get<ReservasjonRepository>()
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
@@ -328,8 +355,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
         oppgaveko.leggOppgaveTilEllerFjernFraKø(
             oppgave1,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
@@ -349,7 +375,6 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveTjeneste.fåOppgaveFraKø(
             oppgaveKøId.toString(),
             brukerIdent,
-            emptyArray<OppgaveDto>().toMutableList()
         )
 
         val reservasjonsHistorikk1 = oppgaveTjeneste.hentReservasjonsHistorikk(oppgave1.eksternId)
@@ -391,8 +416,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         hentOppgavekø.leggOppgaveTilEllerFjernFraKø(
             oppgave2,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave2.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(hentOppgavekø.id) {
             hentOppgavekø
@@ -411,8 +435,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         val oppgaveFraKø = oppgaveTjeneste.fåOppgaveFraKø(
             oppgaveKøId.toString(),
-            brukerIdent2,
-            emptyArray<OppgaveDto>().toMutableList()
+            brukerIdent2
         )
 
         assertNull(oppgaveFraKø)
@@ -427,7 +450,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
             navn = "test",
             sistEndret = LocalDate.now(),
             sortering = KøSortering.FEILUTBETALT,
-            saksbehandlere = mutableListOf(Saksbehandler(null,"OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn))
+            saksbehandlere = mutableListOf(Saksbehandler(null, "OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn))
         )
         val oppgaveId1 = UUID.randomUUID()
         val oppgaveId2 = UUID.randomUUID()
@@ -462,7 +485,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
             sistEndret = LocalDate.now(),
             sortering = KøSortering.OPPRETT_BEHANDLING,
             filtreringAndreKriterierType = andreKriterierDtos(AndreKriterierType.TIL_BESLUTTER),
-            saksbehandlere = mutableListOf(Saksbehandler(null,"OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn))
+            saksbehandlere = mutableListOf(Saksbehandler(null, "OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn))
         )
 
         val oppgaveId1 = UUID.fromString("0000000-0000-0000-0000-000000000001")
@@ -474,35 +497,40 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val now = LocalDateTime.now()
 
         //1
-        val o1b1 = lagOppgave(oppgaveId1,
+        val o1b1 = lagOppgave(
+            oppgaveId1,
             beslutterApStatus = "OPPR",
             behandlingOpprettet = now.minusDays(5),
             beslutterApOpprettTid = now.minusDays(5)
         )
 
         //3
-        val o2b3 = lagOppgave(oppgaveId2,
+        val o2b3 = lagOppgave(
+            oppgaveId2,
             beslutterApStatusTilbake = "OPPR",
             behandlingOpprettet = now.minusDays(4),
             beslutterApOpprettTid = now.minusDays(3)
         )
 
         //5
-        val o3b5 = lagOppgave(oppgaveId3,
+        val o3b5 = lagOppgave(
+            oppgaveId3,
             beslutterApStatus = "OPPR",
             behandlingOpprettet = now.minusDays(3),
             beslutterApOpprettTid = now.minusDays(1)
         )
 
         //4
-        val o4b4 = lagOppgave(oppgaveId4,
+        val o4b4 = lagOppgave(
+            oppgaveId4,
             beslutterApStatus = "OPPR",
             behandlingOpprettet = now.minusDays(2)
             //hvis opprettet tid mangler så brukes behandling opprettet
         )
 
         //2
-        val o5b2 = lagOppgave(oppgaveId5,
+        val o5b2 = lagOppgave(
+            oppgaveId5,
             beslutterApStatus = "OPPR",
             behandlingOpprettet = now.minusDays(1),
             beslutterApOpprettTid = now.minusDays(4)
@@ -534,7 +562,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
             navn = "test",
             sistEndret = LocalDate.now(),
             sortering = KøSortering.OPPRETT_BEHANDLING,
-            saksbehandlere = mutableListOf(Saksbehandler(null,"OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn))
+            saksbehandlere = mutableListOf(Saksbehandler(null, "OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn))
         )
 
         val oppgaveId1 = UUID.fromString("0000000-0000-0000-0000-000000000001")
@@ -544,17 +572,20 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val now = LocalDateTime.now()
 
         //1
-        val o1 = lagOppgave(oppgaveId1,
+        val o1 = lagOppgave(
+            oppgaveId1,
             behandlingOpprettet = now.minusDays(3),
         )
 
         //3
-        val o2 = lagOppgave(oppgaveId2,
+        val o2 = lagOppgave(
+            oppgaveId2,
             behandlingOpprettet = now.minusDays(1),
         )
 
         //2
-        val o3 = lagOppgave(oppgaveId3,
+        val o3 = lagOppgave(
+            oppgaveId3,
             behandlingOpprettet = now.minusDays(2),
             beslutterApOpprettTid = now.minusDays(1)
         )
@@ -581,10 +612,17 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val vanligKø = OppgaveKø(
             id = UUID.randomUUID(),
             navn = "test",
-            filtreringAndreKriterierType = mutableListOf(AndreKriterierDto("1", AndreKriterierType.TIL_BESLUTTER, true, false)),
+            filtreringAndreKriterierType = mutableListOf(
+                AndreKriterierDto(
+                    "1",
+                    AndreKriterierType.TIL_BESLUTTER,
+                    true,
+                    false
+                )
+            ),
             sistEndret = LocalDate.now(),
             sortering = KøSortering.OPPRETT_BEHANDLING,
-            saksbehandlere = mutableListOf(Saksbehandler(null,"OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn))
+            saksbehandlere = mutableListOf(Saksbehandler(null, "OJR", "OJR", "OJR", enhet = Enhet.NASJONAL.navn))
         )
 
         val oppgaveId1 = UUID.fromString("0000000-0000-0000-0000-000000000001")
@@ -594,21 +632,24 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val now = LocalDateTime.now()
 
         //1
-        val o1 = lagOppgave(oppgaveId1,
+        val o1 = lagOppgave(
+            oppgaveId1,
             beslutterApStatus = "UTFO",
             behandlingOpprettet = now.minusDays(3),
             beslutterApOpprettTid = now.minusDays(2)
         )
 
         //3
-        val o2 = lagOppgave(oppgaveId2,
+        val o2 = lagOppgave(
+            oppgaveId2,
             beslutterApStatus = "UTFO",
             behandlingOpprettet = now.minusDays(1),
             beslutterApOpprettTid = now.minusDays(4)
         )
 
         //2
-        val o3 = lagOppgave(oppgaveId3,
+        val o3 = lagOppgave(
+            oppgaveId3,
             behandlingOpprettet = now.minusDays(2),
         )
 
@@ -634,13 +675,13 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val oppgaveRepository = get<OppgaveRepository>()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
 
-        oppgaver.forEach {o ->
+        oppgaver.forEach { o ->
             beslutterKø.leggOppgaveTilEllerFjernFraKø(
                 o,
-                merknader = emptyList()
+                erOppgavenReservertSjekk = {false}
             )
             oppgaveRepository.lagre(o.eksternId) { o }
-            oppgaveKøRepository.lagre(beslutterKø.id) { beslutterKø}
+            oppgaveKøRepository.lagre(beslutterKø.id) { beslutterKø }
         }
 
     }
@@ -654,18 +695,31 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         beslutterApStatus: String? = null,
         beslutterApStatusTilbake: String? = null,
         behandlingOpprettet: LocalDateTime = LocalDateTime.now().minusDays(23),
-        beslutterApOpprettTid: LocalDateTime? = null): Oppgave {
+        beslutterApOpprettTid: LocalDateTime? = null
+    ): Oppgave {
         val apKoder = mutableMapOf("5015" to "OPPR")
         val apTilstand = mutableListOf(AksjonspunktTilstand("5015", AksjonspunktStatus.OPPRETTET))
 
         if (beslutterApStatus != null) {
             apKoder["5016"] = beslutterApStatus
-            apTilstand.add(AksjonspunktTilstand("5016", AksjonspunktStatus.OPPRETTET, opprettetTidspunkt = beslutterApOpprettTid))
+            apTilstand.add(
+                AksjonspunktTilstand(
+                    "5016",
+                    AksjonspunktStatus.OPPRETTET,
+                    opprettetTidspunkt = beslutterApOpprettTid
+                )
+            )
         }
 
         if (beslutterApStatusTilbake != null) {
             apKoder["5005"] = beslutterApStatusTilbake
-            apTilstand.add(AksjonspunktTilstand("5005", AksjonspunktStatus.OPPRETTET, opprettetTidspunkt = beslutterApOpprettTid))
+            apTilstand.add(
+                AksjonspunktTilstand(
+                    "5005",
+                    AksjonspunktStatus.OPPRETTET,
+                    opprettetTidspunkt = beslutterApOpprettTid
+                )
+            )
         }
 
         val aksjonspunkter = Aksjonspunkter(
@@ -674,7 +728,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         )
 
         val tilBeslutter = beslutterApStatus != null && beslutterApStatus == "OPPR" ||
-        beslutterApStatusTilbake != null && beslutterApStatusTilbake == "OPPR"
+                beslutterApStatusTilbake != null && beslutterApStatusTilbake == "OPPR"
 
         return Oppgave(
             eksternId = uuid,
@@ -712,7 +766,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val oppgaveRepository = get<OppgaveRepository>()
         val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
 
-        val oppgaveTjeneste = get<OppgaveTjeneste>()
+        val oppgaveTjeneste = lagOppgaveTjenesteMedMocketV3Kobling()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
         val reservasjonRepository = get<ReservasjonRepository>()
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
@@ -765,8 +819,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
         oppgaveko.leggOppgaveTilEllerFjernFraKø(
             oppgave1,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
@@ -785,8 +838,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         oppgaveTjeneste.fåOppgaveFraKø(
             oppgaveKøId.toString(),
-            brukerIdent,
-            emptyArray<OppgaveDto>().toMutableList()
+            brukerIdent
         )
 
         val reservasjonsHistorikk1 = oppgaveTjeneste.hentReservasjonsHistorikk(oppgave1.eksternId)
@@ -828,8 +880,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         hentOppgavekø.leggOppgaveTilEllerFjernFraKø(
             oppgave2,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave2.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(hentOppgavekø.id) {
             hentOppgavekø
@@ -870,8 +921,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         hentOppgavekø2.leggOppgaveTilEllerFjernFraKø(
             oppgave3,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave3.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(hentOppgavekø2.id) {
             hentOppgavekø2
@@ -879,8 +929,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         oppgaveTjeneste.fåOppgaveFraKø(
             oppgaveKøId.toString(),
-            brukerIdent,
-            emptyArray<OppgaveDto>().toMutableList()
+            brukerIdent
         )
 
         val reservasjonsHistorikk2 = oppgaveTjeneste.hentReservasjonsHistorikk(oppgave1.eksternId)
@@ -892,13 +941,44 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         assert(reservasjonsHistorikk3.reservasjoner[0].reservertAv == "123")
     }
 
+    private fun lagOppgaveTjenesteMedMocketV3Kobling(): OppgaveTjeneste {
+        val oversetterMock = mockk<ReservasjonOversetter>()
+        every { oversetterMock.hentAktivReservasjonFraGammelKontekst(any()) } returns null
+        every {
+            oversetterMock.taNyReservasjonFraGammelKontekst(any(), any(), any(), any(), any())
+        } returns ReservasjonV3(
+            reservertAv = 123,
+            reservasjonsnøkkel = "test1",
+            gyldigFra = LocalDateTime.now(),
+            gyldigTil = LocalDateTime.now().plusDays(1).plusMinutes(1),
+            kommentar = "",
+            endretAv = null
+        )
+
+        return OppgaveTjeneste(
+            get<OppgaveRepository>(),
+            get<OppgaverGruppertRepository>(),
+            get<OppgaveKøRepository>(),
+            get<SaksbehandlerRepository>(),
+            get<IPdlService>(),
+            get<ReservasjonRepository>(),
+            get<Configuration>(),
+            get<IAzureGraphService>(),
+            get<IPepClient>(),
+            get<StatistikkRepository>(),
+            oversetterMock,
+            statistikkChannel = get(named("statistikkRefreshChannel")),
+            KoinProfile.LOCAL,
+        )
+    }
+
     @Test
     fun skalIkkeFåOppNestesakIListenHvisSaksbehandlerVarBeslutterPåDen() = runBlocking {
         // arrange
         val oppgaveRepository = get<OppgaveRepository>()
         val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
 
-        val oppgaveTjeneste = get<OppgaveTjeneste>()
+        val oppgaveTjeneste = lagOppgaveTjenesteMedMocketV3Kobling()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
         val reservasjonRepository = get<ReservasjonRepository>()
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
@@ -951,8 +1031,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
         oppgaveko.leggOppgaveTilEllerFjernFraKø(
             oppgave1,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
@@ -971,8 +1050,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         oppgaveTjeneste.fåOppgaveFraKø(
             oppgaveKøId.toString(),
-            brukerIdent,
-            emptyArray<OppgaveDto>().toMutableList()
+            brukerIdent
         )
 
         val reservasjonsHistorikk1 = oppgaveTjeneste.hentReservasjonsHistorikk(oppgave1.eksternId)
@@ -1015,8 +1093,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         hentOppgavekø.leggOppgaveTilEllerFjernFraKø(
             oppgave2,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave2.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(hentOppgavekø.id) {
             hentOppgavekø
@@ -1057,8 +1134,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         hentOppgavekø2.leggOppgaveTilEllerFjernFraKø(
             oppgave3,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave3.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(hentOppgavekø2.id) {
             hentOppgavekø2
@@ -1066,8 +1142,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         oppgaveTjeneste.fåOppgaveFraKø(
             oppgaveKøId.toString(),
-            brukerIdent,
-            emptyArray<OppgaveDto>().toMutableList()
+            brukerIdent
         )
 
         val reservasjonsHistorikk2 = oppgaveTjeneste.hentReservasjonsHistorikk(oppgave1.eksternId)
@@ -1085,7 +1160,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val oppgaveRepository = get<OppgaveRepository>()
         val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
 
-        val oppgaveTjeneste = get<OppgaveTjeneste>()
+        val oppgaveTjeneste = lagOppgaveTjenesteMedMocketV3Kobling()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
         val reservasjonRepository = get<ReservasjonRepository>()
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
@@ -1143,8 +1218,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
         oppgaveko.leggOppgaveTilEllerFjernFraKø(
             oppgave1,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
@@ -1196,8 +1270,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         hentOppgavekø.leggOppgaveTilEllerFjernFraKø(
             oppgave2,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave2.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(hentOppgavekø.id) {
             hentOppgavekø
@@ -1205,8 +1278,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         oppgaveTjeneste.fåOppgaveFraKø(
             oppgaveKøId.toString(),
-            brukerIdent,
-            emptyArray<OppgaveDto>().toMutableList()
+            brukerIdent
         )
 
         val reservasjonsHistorikk1 = oppgaveTjeneste.hentReservasjonsHistorikk(oppgave1.eksternId)
@@ -1223,7 +1295,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val oppgaveRepository = get<OppgaveRepository>()
         val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
 
-        val oppgaveTjeneste = get<OppgaveTjeneste>()
+        val oppgaveTjeneste = lagOppgaveTjenesteMedMocketV3Kobling()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
         val reservasjonRepository = get<ReservasjonRepository>()
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
@@ -1283,8 +1355,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveRepository.lagre(oppgaveSomSkalIgnoreres.eksternId) { oppgaveSomSkalIgnoreres }
         oppgaveko.leggOppgaveTilEllerFjernFraKø(
             oppgaveSomSkalIgnoreres,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgaveSomSkalIgnoreres.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
@@ -1336,8 +1407,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         hentOppgavekø.leggOppgaveTilEllerFjernFraKø(
             oppgaveSomSkalVelges,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgaveSomSkalVelges.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(hentOppgavekø.id) {
             hentOppgavekø
@@ -1345,8 +1415,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         oppgaveTjeneste.fåOppgaveFraKø(
             oppgaveKøId.toString(),
-            ident,
-            emptyArray<OppgaveDto>().toMutableList()
+            ident
         )
 
 
@@ -1364,7 +1433,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val oppgaveRepository = get<OppgaveRepository>()
         val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
 
-        val oppgaveTjeneste = get<OppgaveTjeneste>()
+        val oppgaveTjeneste = lagOppgaveTjenesteMedMocketV3Kobling()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
         val reservasjonRepository = get<ReservasjonRepository>()
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
@@ -1417,8 +1486,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
         oppgaveko.leggOppgaveTilEllerFjernFraKø(
             oppgave1,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
@@ -1471,8 +1539,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         hentOppgavekø.leggOppgaveTilEllerFjernFraKø(
             oppgave2,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave2.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(hentOppgavekø.id) {
             hentOppgavekø
@@ -1513,8 +1580,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         hentOppgavekø2.leggOppgaveTilEllerFjernFraKø(
             oppgave3,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave3.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(hentOppgavekø2.id) {
             hentOppgavekø2
@@ -1522,8 +1588,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
 
         oppgaveTjeneste.fåOppgaveFraKø(
             oppgaveKøId.toString(),
-            brukerIdent,
-            emptyArray<OppgaveDto>().toMutableList()
+            brukerIdent
         )
 
         val reservasjonsHistorikk1 = oppgaveTjeneste.hentReservasjonsHistorikk(oppgave1.eksternId)
@@ -1543,7 +1608,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val oppgaveRepository = get<OppgaveRepository>()
         val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
 
-        val oppgaveTjeneste = get<OppgaveTjeneste>()
+        val oppgaveTjeneste = lagOppgaveTjenesteMedMocketV3Kobling()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
         val reservasjonRepository = get<ReservasjonRepository>()
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
@@ -1596,8 +1661,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
         oppgaveko.leggOppgaveTilEllerFjernFraKø(
             oppgave1,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
@@ -1635,8 +1699,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveRepository.lagre(oppgave2.eksternId) { oppgave2 }
         oppgaveko.leggOppgaveTilEllerFjernFraKø(
             oppgave2,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave2.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
@@ -1675,7 +1738,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         val oppgaveRepository = get<OppgaveRepository>()
         val oppgaveRepositoryV2 = get<OppgaveRepositoryV2>()
 
-        val oppgaveTjeneste = get<OppgaveTjeneste>()
+        val oppgaveTjeneste = lagOppgaveTjenesteMedMocketV3Kobling()
         val oppgaveKøRepository = get<OppgaveKøRepository>()
         val reservasjonRepository = get<ReservasjonRepository>()
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
@@ -1738,14 +1801,13 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveRepository.lagre(oppgave1.eksternId) { oppgave1 }
         oppgaveko.leggOppgaveTilEllerFjernFraKø(
             oppgave1,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave1.eksternId.toString())
+            reservasjonRepository
         )
         oppgaveKøRepository.lagre(oppgaveko.id) {
             oppgaveko
         }
 
-            oppgaveTjeneste.reserverOppgave("123", null, oppgave1.eksternId)
+        oppgaveTjeneste.reserverOppgave("123", null, oppgave1.eksternId)
 
 
         val oppgave2 = Oppgave(
@@ -1783,8 +1845,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveRepository.lagre(oppgave2.eksternId) { oppgave2 }
         oppgaveKø.leggOppgaveTilEllerFjernFraKø(
             oppgave2,
-            reservasjonRepository,
-            oppgaveRepositoryV2.hentMerknader(oppgave2.eksternId.toString())
+            reservasjonRepository
         )
 
         oppgaveKøRepository.lagre(oppgaveKø.id) {
@@ -1812,7 +1873,7 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
     @Test
     fun skal_bare_returnere_aktivte_eller_sist_ikke_aktive_oppgave() = runBlocking {
         val oppgaveRepository = get<OppgaveRepository>()
-        val oppgaveTjeneste = get<OppgaveTjeneste>()
+        val oppgaveTjeneste = lagOppgaveTjenesteMedMocketV3Kobling()
 
         val fagsakSaksnummer = "Yz647"
         val oppgave1 = Oppgave(
@@ -1876,7 +1937,16 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         oppgaveRepository.lagre(oppgave2.eksternId) { oppgave2 }
 
         val saksbehandlerRepository = get<SaksbehandlerRepository>()
-        saksbehandlerRepository.addSaksbehandler(Saksbehandler(123, "saksbehandler@nav.no", "test", "saksbehandler@nav.no", mutableSetOf(), "test"))
+        saksbehandlerRepository.addSaksbehandler(
+            Saksbehandler(
+                123,
+                "Z123456",
+                "test",
+                "saksbehandler@nav.no",
+                mutableSetOf(),
+                "test"
+            )
+        )
 
         get<K9SakTilLosAdapterTjeneste>()
         val oppgaveV3Tjeneste = get<OppgaveV3Tjeneste>()
@@ -2002,10 +2072,8 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         assertThat(reservasjon.reservertAv).isEqualTo("Foo")
 
         oppgaveTjeneste.endreReservasjonPåOppgave(
-            ReservasjonEndringDto(
-                oppgaveNøkkel = OppgaveNøkkelDto.forV1Oppgave(nyOppgave.eksternId.toString()),
-                brukerIdent = "Bar"
-            )
+            oppgaveNøkkel = OppgaveNøkkelDto.forV1Oppgave(nyOppgave.eksternId.toString()),
+            tilBrukerIdent = "Bar"
         )
 
         val reservasjonEtterEndring = reservasjonRepository.hent(nyOppgave.eksternId)
@@ -2031,10 +2099,8 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         assertThat(reservasjon.begrunnelse).isNull()
 
         oppgaveTjeneste.endreReservasjonPåOppgave(
-            ReservasjonEndringDto(
-                oppgaveNøkkel = OppgaveNøkkelDto.forV1Oppgave(nyOppgave.eksternId.toString()),
-                begrunnelse = "test begrunnelse"
-            )
+            oppgaveNøkkel = OppgaveNøkkelDto.forV1Oppgave(nyOppgave.eksternId.toString()),
+            begrunnelse = "test begrunnelse"
         )
 
         val reservasjonEtterEndring = reservasjonRepository.hent(nyOppgave.eksternId)
@@ -2060,11 +2126,10 @@ class OppgaveTjenesteTest : AbstractK9LosIntegrationTest() {
         assertThat(reservasjon.begrunnelse).isNull()
 
         val nyDato = reservasjon.reservertTil!!.toLocalDate().plusDays(10)
+
         oppgaveTjeneste.endreReservasjonPåOppgave(
-            ReservasjonEndringDto(
-                oppgaveNøkkel = OppgaveNøkkelDto.forV1Oppgave(nyOppgave.eksternId.toString()),
-                reserverTil = nyDato
-            )
+            oppgaveNøkkel = OppgaveNøkkelDto.forV1Oppgave(nyOppgave.eksternId.toString()),
+            reserverTil = nyDato
         )
 
         val reservasjonEtterEndring = reservasjonRepository.hent(nyOppgave.eksternId)

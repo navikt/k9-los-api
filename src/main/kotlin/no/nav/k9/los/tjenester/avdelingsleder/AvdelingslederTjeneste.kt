@@ -1,20 +1,17 @@
 package no.nav.k9.los.tjenester.avdelingsleder
 
-import kotlinx.coroutines.runBlocking
-import no.nav.k9.los.domene.lager.oppgave.Reservasjon
-import no.nav.k9.los.domene.modell.*
+import no.nav.k9.los.domene.modell.Intervall
+import no.nav.k9.los.domene.modell.OppgaveKø
 import no.nav.k9.los.domene.repository.OppgaveKøRepository
-import no.nav.k9.los.domene.repository.OppgaveRepository
-import no.nav.k9.los.domene.repository.ReservasjonRepository
-import no.nav.k9.los.domene.repository.SaksbehandlerRepository
-import no.nav.k9.los.integrasjon.abac.IPepClient
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Dto
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.kodeverk.*
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.*
+import no.nav.k9.los.tjenester.avdelingsleder.reservasjoner.ReservasjonDto
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.ReservasjonV3DtoBuilder
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.OppgavekøDto
-import no.nav.k9.los.tjenester.saksbehandler.saksliste.SaksbehandlerDto
 import no.nav.k9.los.tjenester.saksbehandler.saksliste.SorteringDto
 import java.time.LocalDate
 import java.util.*
@@ -23,11 +20,8 @@ class AvdelingslederTjeneste(
     private val oppgaveKøRepository: OppgaveKøRepository,
     private val saksbehandlerRepository: SaksbehandlerRepository,
     private val oppgaveTjeneste: OppgaveTjeneste,
-    private val reservasjonRepository: ReservasjonRepository,
-    private val oppgaveRepository: OppgaveRepository,
     private val pepClient: IPepClient,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
-    private val reservasjonV3DtoBuilder: ReservasjonV3DtoBuilder,
 ) {
     suspend fun hentOppgaveKø(uuid: UUID): OppgavekøDto {
         val oppgaveKø = oppgaveKøRepository.hentOppgavekø(uuid, ignorerSkjerming = false)
@@ -35,10 +29,7 @@ class AvdelingslederTjeneste(
     }
 
     suspend fun hentOppgaveKøer(): List<OppgavekøDto> {
-        if (!erOppgaveStyrer()) {
-            return emptyList()
-        }
-        return oppgaveKøRepository.hent().map {
+        return oppgaveKøRepository.hentAlle().map {
             lagOppgaveKøDto(it)
         }.sortedBy { it.navn }
     }
@@ -57,17 +48,15 @@ class AvdelingslederTjeneste(
         sistEndret = oppgaveKø.sistEndret,
         skjermet = oppgaveKø.skjermet,
         antallBehandlinger = oppgaveTjeneste.hentAntallOppgaver(oppgavekøId = oppgaveKø.id, taMedReserverte = true),
+        antallUreserverteOppgaver = oppgaveTjeneste.hentAntallOppgaver(
+            oppgavekøId = oppgaveKø.id,
+            taMedReserverte = false
+        ),
         saksbehandlere = oppgaveKø.saksbehandlere,
         kriterier = oppgaveKø.lagKriterier()
     )
 
-    private suspend fun erOppgaveStyrer() = (pepClient.erOppgaveStyrer())
-
     suspend fun opprettOppgaveKø(): IdDto {
-        if (!erOppgaveStyrer()) {
-            return IdDto(UUID.randomUUID().toString())
-        }
-
         val uuid = UUID.randomUUID()
         oppgaveKøRepository.lagre(uuid) {
             OppgaveKø(
@@ -89,46 +78,10 @@ class AvdelingslederTjeneste(
     }
 
     suspend fun slettOppgavekø(uuid: UUID) {
-        if (!erOppgaveStyrer()) {
-            return
-        }
         oppgaveKøRepository.slett(uuid)
     }
 
-    suspend fun søkSaksbehandler(epostDto: EpostDto): Saksbehandler {
-        var saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedEpost(epostDto.epost)
-        if (saksbehandler == null) {
-            saksbehandler = Saksbehandler(
-                null, null, null, epostDto.epost, mutableSetOf(), null
-            )
-            saksbehandlerRepository.addSaksbehandler(saksbehandler)
-        }
-        return saksbehandler
-    }
 
-    suspend fun fjernSaksbehandler(epost: String) {
-        saksbehandlerRepository.slettSaksbehandler(epost)
-        oppgaveKøRepository.hent().forEach { t: OppgaveKø ->
-            oppgaveKøRepository.lagre(t.id) { oppgaveKø ->
-                oppgaveKø!!.saksbehandlere =
-                    oppgaveKø.saksbehandlere.filter { it.epost != epost }
-                        .toMutableList()
-                oppgaveKø
-            }
-        }
-    }
-
-    suspend fun hentSaksbehandlere(): List<SaksbehandlerDto> {
-        val saksbehandlersKoer = hentSaksbehandlersOppgavekoer()
-        return saksbehandlersKoer.entries.map {
-            SaksbehandlerDto(
-                brukerIdent = it.key.brukerIdent,
-                navn = it.key.navn,
-                epost = it.key.epost,
-                enhet = it.key.enhet,
-                oppgavekoer = it.value.map { ko -> ko.navn })
-        }.sortedBy { it.navn }
-    }
 
     suspend fun endreBehandlingsTyper(behandling: BehandlingsTypeDto) {
         oppgaveKøRepository.lagre(UUID.fromString(behandling.id)) { oppgaveKø ->
@@ -138,34 +91,6 @@ class AvdelingslederTjeneste(
             oppgaveKø
         }
         oppgaveKøRepository.oppdaterKøMedOppgaver(UUID.fromString(behandling.id))
-    }
-
-    private suspend fun hentSaksbehandlersOppgavekoer(): Map<Saksbehandler, List<OppgavekøDto>> {
-        val koer = oppgaveTjeneste.hentOppgaveKøer()
-        val saksbehandlere = saksbehandlerRepository.hentAlleSaksbehandlere()
-        val map = mutableMapOf<Saksbehandler, List<OppgavekøDto>>()
-        for (saksbehandler in saksbehandlere) {
-            map[saksbehandler] = koer.filter { oppgaveKø ->
-                oppgaveKø.saksbehandlere
-                    .any { s -> s.epost == saksbehandler.epost }
-            }
-                .map { oppgaveKø ->
-                    OppgavekøDto(
-                        id = oppgaveKø.id,
-                        navn = oppgaveKø.navn,
-                        behandlingTyper = oppgaveKø.filtreringBehandlingTyper,
-                        fagsakYtelseTyper = oppgaveKø.filtreringYtelseTyper,
-                        saksbehandlere = oppgaveKø.saksbehandlere,
-                        antallBehandlinger = oppgaveKø.oppgaverOgDatoer.size,
-                        sistEndret = oppgaveKø.sistEndret,
-                        skjermet = oppgaveKø.skjermet,
-                        sortering = SorteringDto(oppgaveKø.sortering, oppgaveKø.fomDato, oppgaveKø.tomDato),
-                        andreKriterier = oppgaveKø.filtreringAndreKriterierType,
-                        kriterier = oppgaveKø.lagKriterier()
-                    )
-                }
-        }
-        return map
     }
 
     suspend fun endreSkjerming(skjermet: SkjermetDto) {
@@ -200,8 +125,7 @@ class AvdelingslederTjeneste(
     }
 
     suspend fun endreKriterium(kriteriumDto: AndreKriterierDto) {
-        oppgaveKøRepository.lagre(UUID.fromString(kriteriumDto.id))
-        { oppgaveKø ->
+        oppgaveKøRepository.lagre(UUID.fromString(kriteriumDto.id)) { oppgaveKø ->
             if (kriteriumDto.checked) {
                 oppgaveKø!!.filtreringAndreKriterierType = oppgaveKø.filtreringAndreKriterierType.filter {
                     it.andreKriterierType != kriteriumDto.andreKriterierType
@@ -254,7 +178,8 @@ class AvdelingslederTjeneste(
     private fun leggTilEllerEndreKriterium(kriteriumDto: KriteriumDto, oppgaveKø: OppgaveKø) {
         when (kriteriumDto.kriterierType) {
             KøKriterierType.FEILUTBETALING ->
-                oppgaveKø.filtreringFeilutbetaling = Intervall(kriteriumDto.fom?.toLong(), kriteriumDto.tom?.toLong())
+                oppgaveKø.filtreringFeilutbetaling =
+                    Intervall(kriteriumDto.fom?.toLong(), kriteriumDto.tom?.toLong())
 
             KøKriterierType.MERKNADTYPE -> oppgaveKø.merknadKoder = kriteriumDto.koder ?: emptyList()
             KøKriterierType.OPPGAVEKODE -> oppgaveKø.oppgaveKoder = kriteriumDto.koder ?: emptyList()
@@ -314,32 +239,49 @@ class AvdelingslederTjeneste(
         }
     }
 
-    fun hentAlleAktiveReservasjonerV3(innloggetBruker: Saksbehandler): List<ReservasjonV3Dto> {
-        val innloggetBrukerHarKode6Tilgang = pepClient.harTilgangTilKode6(innloggetBruker.brukerIdent!!)
+    suspend fun hentAlleAktiveReservasjonerV3(): List<ReservasjonDto> {
+        val innloggetBrukerHarKode6Tilgang = pepClient.harTilgangTilKode6()
 
-        return reservasjonV3Tjeneste.hentAlleAktiveReservasjoner().mapNotNull { reservasjon ->
-            val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedId(reservasjon.reservertAv)
+        return reservasjonV3Tjeneste.hentAlleAktiveReservasjoner().flatMap { reservasjonMedOppgaver ->
+            val saksbehandler =
+                saksbehandlerRepository.finnSaksbehandlerMedId(reservasjonMedOppgaver.reservasjonV3.reservertAv)!!
             val saksbehandlerHarKode6Tilgang = pepClient.harTilgangTilKode6(saksbehandler.brukerIdent!!)
 
             if (innloggetBrukerHarKode6Tilgang != saksbehandlerHarKode6Tilgang) {
-                null
-            } else runBlocking {
-                reservasjonV3DtoBuilder.byggReservasjonV3Dto(reservasjon, saksbehandler)
+                emptyList()
+            } else {
+                if (reservasjonMedOppgaver.oppgaveV1 != null) {
+                    listOf(
+                        ReservasjonDto(
+                            reservertAvEpost = saksbehandler.epost,
+                            reservertAvIdent = saksbehandler.brukerIdent!!,
+                            reservertAvNavn = saksbehandler.navn,
+                            saksnummer = reservasjonMedOppgaver.oppgaveV1.fagsakSaksnummer,
+                            journalpostId = reservasjonMedOppgaver.oppgaveV1.journalpostId,
+                            behandlingType = reservasjonMedOppgaver.oppgaveV1.behandlingType,
+                            reservertTilTidspunkt = reservasjonMedOppgaver.reservasjonV3.gyldigTil,
+                            kommentar = reservasjonMedOppgaver.reservasjonV3.kommentar ?: "",
+                            tilBeslutter = reservasjonMedOppgaver.oppgaveV1.tilBeslutter,
+                            oppgavenøkkel = OppgaveNøkkelDto.forV1Oppgave(reservasjonMedOppgaver.oppgaveV1.eksternId.toString()),
+                        )
+                    )
+                } else {
+                    reservasjonMedOppgaver.oppgaverV3.map { oppgave ->
+                        ReservasjonDto(
+                            reservertAvEpost = saksbehandler.epost,
+                            reservertAvIdent = saksbehandler.brukerIdent!!,
+                            reservertAvNavn = saksbehandler.navn,
+                            saksnummer = oppgave.hentVerdi("saksnummer"), //TODO: Oppgaveagnostisk logikk. Løses antagelig ved å skrive om frontend i dette tilfellet
+                            journalpostId = oppgave.hentVerdi("journalpostId"),
+                            behandlingType = BehandlingType.fraKode(oppgave.hentVerdi("behandlingTypekode")!!),
+                            reservertTilTidspunkt = reservasjonMedOppgaver.reservasjonV3.gyldigTil,
+                            kommentar = reservasjonMedOppgaver.reservasjonV3.kommentar ?: "",
+                            tilBeslutter = oppgave.hentVerdi("liggerHosBeslutter").toBoolean(),
+                            oppgavenøkkel = OppgaveNøkkelDto(oppgave),
+                        )
+                    }.toList()
+                }
             }
         }
-    }
-
-    suspend fun opphevReservasjon(uuid: UUID): Reservasjon {
-        val reservasjon = reservasjonRepository.lagre(uuid, true) {
-            it!!.begrunnelse = "Opphevet av en avdelingsleder"
-            it.reservertTil = null
-            it
-        }
-        saksbehandlerRepository.fjernReservasjon(reservasjon.reservertAv, reservasjon.oppgave)
-        val oppgave = oppgaveRepository.hent(uuid)
-        for (oppgavekø in oppgaveKøRepository.hent()) {
-            oppgaveKøRepository.leggTilOppgaverTilKø(oppgavekø.id, listOf(oppgave), reservasjonRepository)
-        }
-        return reservasjon
     }
 }

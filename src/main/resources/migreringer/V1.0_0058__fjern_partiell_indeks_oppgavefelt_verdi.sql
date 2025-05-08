@@ -1,0 +1,1 @@
+drop index oppgavefelt_verdi_verdi_oppgavefelt_id_oppgave_id_partiell;

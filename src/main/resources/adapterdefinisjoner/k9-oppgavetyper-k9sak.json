@@ -4,7 +4,7 @@
   "oppgavetyper": [
     {
       "id": "k9sak",
-      "oppgavebehandlingsUrlTemplate": "{baseUrl}/fagsak/{K9.saksnummer}/behandling/{K9.behandlingUuid}?fakta=default&punkt=default",
+      "oppgavebehandlingsUrlTemplate": "{baseUrl}/fagsak/{K9.saksnummer}/",
       "oppgavefelter": [
         {
           "id": "behandlingUuid",
@@ -18,7 +18,7 @@
         },
         {
           "id": "fagsystem",
-          "visPåOppgave": true,
+          "visPåOppgave": false,
           "påkrevd": true
         },
         {
@@ -98,6 +98,11 @@
         },
         {
           "id": "liggerHosBeslutter",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
+          "id": "tidFørsteGangHosBeslutter",
           "visPåOppgave": true,
           "påkrevd": false
         },
@@ -250,7 +255,7 @@
         {
           "id": "hastesak",
           "visPåOppgave": true,
-          "påkrevd": true,
+          "påkrevd": false,
           "defaultverdi": false
         },
         {
@@ -268,6 +273,18 @@
           "id": "behandlingsårsak",
           "visPåOppgave": true,
           "påkrevd": false
+        },
+        {
+          "id": "ferdigstiltTidspunkt",
+          "visPåOppgave": false,
+          "påkrevd": false,
+          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.FerdigstiltTidspunkt"
+        },
+        {
+          "id": "ferdigstiltEnhet",
+          "visPåOppgave": false,
+          "påkrevd": false,
+          "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.FerdigstiltEnhet"
         }
       ]
     }

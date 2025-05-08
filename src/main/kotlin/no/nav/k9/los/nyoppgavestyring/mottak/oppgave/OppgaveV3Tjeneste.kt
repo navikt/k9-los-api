@@ -3,17 +3,13 @@ package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 import kotliquery.TransactionalSession
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
-import org.slf4j.LoggerFactory
 
 class OppgaveV3Tjeneste(
     private val oppgaveV3Repository: OppgaveV3Repository,
+    private val partisjonertOppgaveRepository: PartisjonertOppgaveRepository,
     private val oppgavetypeRepository: OppgavetypeRepository,
-    private val områdeRepository: OmrådeRepository,
-    private val reservasjonTjeneste: ReservasjonV3Tjeneste
+    private val områdeRepository: OmrådeRepository
 ) {
-
-    private val log = LoggerFactory.getLogger(OppgaveV3Tjeneste::class.java)
 
     fun sjekkDuplikatOgProsesser(dto: OppgaveDto, tx: TransactionalSession): OppgaveV3? {
         var oppgave: OppgaveV3? = null
@@ -36,35 +32,16 @@ class OppgaveV3Tjeneste(
         val aktivOppgaveVersjon = oppgaveV3Repository.hentAktivOppgave(oppgaveDto.id, oppgavetype, tx)
         var innkommendeOppgave = OppgaveV3(oppgaveDto, oppgavetype)
 
-        val utledeteFelter = mutableListOf<OppgaveFeltverdi>()
-        oppgavetype.oppgavefelter
-            .filter { oppgavefelt -> oppgavefelt.feltutleder != null }
-            .forEach { oppgavefelt ->
-                val utledetFeltverdi = oppgavefelt.feltutleder!!.utled(innkommendeOppgave, aktivOppgaveVersjon)
-                if (utledetFeltverdi != null) {
-                    utledeteFelter.add(utledetFeltverdi)
-                }
+        val utledeteFelter = oppgavetype.oppgavefelter
+            .mapNotNull { oppgavefelt ->
+                oppgavefelt.feltutleder?.utled(innkommendeOppgave, aktivOppgaveVersjon)
             }
 
-        innkommendeOppgave = OppgaveV3(innkommendeOppgave, innkommendeOppgave.felter.plus(utledeteFelter))
+        innkommendeOppgave = OppgaveV3(innkommendeOppgave, innkommendeOppgave.felter + utledeteFelter)
 
         innkommendeOppgave.valider()
 
         oppgaveV3Repository.nyOppgaveversjon(innkommendeOppgave, tx)
-
-        if (innkommendeOppgave.status == Oppgavestatus.LUKKET) {
-            val oppgaverIderFornøkkel =
-                oppgaveV3Repository.hentOppgaveEksternIderForReservasjonsnøkkel(
-                    innkommendeOppgave.reservasjonsnøkkel,
-                    tx
-                )
-            val oppgaver = oppgaverIderFornøkkel.mapNotNull { eksternId ->
-                oppgaveV3Repository.hentAktivOppgave(eksternId, innkommendeOppgave.oppgavetype, tx)
-            }
-            if (!oppgaver.any { oppgave -> oppgave.status == Oppgavestatus.AAPEN || oppgave.status == Oppgavestatus.VENTER}) { //TODO: hvorfor må oppgave nullsafes her??
-                    reservasjonTjeneste.annullerReservasjonHvisFinnes(innkommendeOppgave.reservasjonsnøkkel, "Alle oppgaver på nøkkel er avsluttet. Annulleres maskinelt", null)
-            }
-        }
 
         return innkommendeOppgave
     }
@@ -99,7 +76,17 @@ class OppgaveV3Tjeneste(
         )
     }
 
-    fun oppdaterEkstisterendeOppgaveversjon(oppgaveDto: OppgaveDto, eventNr: Long, tx: TransactionalSession) {
+    fun ajourholdOppgave(innkommendeOppgave: OppgaveV3, internVersjon: Long, tx: TransactionalSession) {
+        AktivOppgaveRepository.ajourholdAktivOppgave(innkommendeOppgave, internVersjon, tx)
+        partisjonertOppgaveRepository.ajourhold(innkommendeOppgave, tx)
+    }
+
+    fun slettAktivOppgave(innkommendeOppgave: OppgaveV3, tx: TransactionalSession){
+        AktivOppgaveRepository.slettAktivOppgave(tx, innkommendeOppgave)
+    }
+
+
+    fun utledEksisterendeOppgaveversjon(oppgaveDto: OppgaveDto, eventNr: Long, tx: TransactionalSession) : OppgaveV3 {
         val oppgavetype = oppgavetypeRepository.hentOppgavetype(
             område = oppgaveDto.område,
             eksternId = oppgaveDto.type,
@@ -108,7 +95,9 @@ class OppgaveV3Tjeneste(
 
         val forrigeOppgaveversjon = if (eventNr > 0) {
             oppgaveV3Repository.hentOppgaveversjonenFør(oppgaveDto.id, eventNr, oppgavetype, tx)
-        } else { null }
+        } else {
+            null
+        }
         var innkommendeOppgave = OppgaveV3(oppgaveDto = oppgaveDto, oppgavetype = oppgavetype)
 
         val utledeteFelter = mutableListOf<OppgaveFeltverdi>()
@@ -123,6 +112,10 @@ class OppgaveV3Tjeneste(
 
         innkommendeOppgave = OppgaveV3(innkommendeOppgave, innkommendeOppgave.felter.plus(utledeteFelter))
         innkommendeOppgave.valider()
+        return innkommendeOppgave
+    }
+
+    fun oppdaterEksisterendeOppgaveversjon(innkommendeOppgave: OppgaveV3, eventNr: Long, tx: TransactionalSession)  {
 
         //historikkvasktjenesten skal sørge for at oppgaven med internVersjon = eventNr faktisk eksisterer
         oppgaveV3Repository.slettFeltverdier(
@@ -131,10 +124,11 @@ class OppgaveV3Tjeneste(
             tx = tx
         )
 
-        oppgaveV3Repository.lagreFeltverdier(
+        oppgaveV3Repository.lagreFeltverdierForDatavask(
             eksternId = innkommendeOppgave.eksternId,
             internVersjon = eventNr,
             oppgaveFeltverdier = innkommendeOppgave.felter,
+            oppgavestatus = innkommendeOppgave.status,
             tx = tx
         )
 
@@ -148,7 +142,7 @@ class OppgaveV3Tjeneste(
     }
 
     fun hentHøyesteInternVersjon(oppgaveEksternId: String, opppgaveTypeEksternId: String, områdeEksternId: String, tx: TransactionalSession): Long? {
-        val (_, versjon) = oppgaveV3Repository.hentOppgaveIdOgHøyesteInternversjon(tx, oppgaveEksternId, opppgaveTypeEksternId, områdeEksternId)
+        val (_, _, versjon) = oppgaveV3Repository.hentOppgaveIdStatusOgHøyesteInternversjon(tx, oppgaveEksternId, opppgaveTypeEksternId, områdeEksternId)
         return versjon
     }
 
@@ -158,11 +152,5 @@ class OppgaveV3Tjeneste(
 
     fun tellAntall(): Pair<Long, Long> {
         return oppgaveV3Repository.tellAntall()
-    }
-
-    fun destruktivSlettAvAlleOppgaveData() {
-        log.info("trunkerer oppgavedata")
-        oppgaveV3Repository.slettOppgaverOgFelter()
-        log.info("oppgavedata trunkert")
     }
 }

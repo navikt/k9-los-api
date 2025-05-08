@@ -1,6 +1,7 @@
 package no.nav.k9.los.spi.felter
 
-import no.nav.k9.los.nyoppgavestyring.query.db.FeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.query.db.Spørringstrategi
+import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import java.time.LocalDateTime
 
@@ -30,6 +31,7 @@ data class HentVerdiInput(
 )
 
 data class WhereInput(
+    val spørringstrategi: Spørringstrategi,
     val now: LocalDateTime,
     val feltområde: String,
     val feltkode: String,
@@ -38,6 +40,7 @@ data class WhereInput(
 )
 
 data class OrderByInput(
+    val spørringstrategi: Spørringstrategi,
     val now: LocalDateTime,
     val feltområde: String,
     val feltkode: String,

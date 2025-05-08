@@ -1,6 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.visningoguttrekk
 
-import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
 import java.time.LocalDateTime
 
@@ -20,13 +20,9 @@ class OppgaveRepositoryTxWrapper(
         }
     }
 
-    fun hentOppgaverPaget(eksternoppgaveIder: List<EksternOppgaveId>, antallPrPage: Int, pageNr: Int): List<Oppgave> {
-        if (antallPrPage * pageNr >= eksternoppgaveIder.size) { return emptyList() }
-        val fra = antallPrPage * pageNr
-        val til = (fra + antallPrPage).takeIf { it < eksternoppgaveIder.size } ?: eksternoppgaveIder.size
-
+    fun hentOppgaver(eksternoppgaveIder: List<EksternOppgaveId>): List<Oppgave> {
         return transactionalManager.transaction { tx ->
-            eksternoppgaveIder.subList(fra, til).map { eksternoppgaveId ->
+            eksternoppgaveIder.map { eksternoppgaveId ->
                 oppgaveRepository.hentNyesteOppgaveForEksternId(tx, eksternoppgaveId.område, eksternoppgaveId.eksternId)
             }
         }
