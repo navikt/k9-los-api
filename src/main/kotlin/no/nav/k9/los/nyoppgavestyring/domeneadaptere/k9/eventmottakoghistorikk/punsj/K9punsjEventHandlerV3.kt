@@ -1,6 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottakoghistorikk.punsj
 
-import no.nav.k9.los.domene.modell.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import org.slf4j.LoggerFactory
 
 class K9punsjEventHandlerV3(
@@ -12,9 +13,8 @@ class K9punsjEventHandlerV3(
         private val typer = BehandlingType.values().filter { it.kodeverk == "PUNSJ_INNSENDING_TYPE" }
     }
 
-    fun prosesser(event: PunsjEventV3Dto) {
+    fun prosesser(event: PunsjEventDto) {
         log.debug(event.safePrint())
         eventRepository.lagre(event = event)
-
     }
 }

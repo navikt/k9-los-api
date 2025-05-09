@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto

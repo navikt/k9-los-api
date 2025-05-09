@@ -4,12 +4,11 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.aksjonspunktbehandling.objectMapper
-import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.DuplikatDataException
-import no.nav.k9.los.nyoppgavestyring.feilhandtering.FinnerIkkeDataException
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import org.postgresql.util.PSQLException
-import java.util.*
 import javax.sql.DataSource
 
 
@@ -18,8 +17,8 @@ class EventRepository(
     private val transactionalManager: TransactionalManager
 ) {
 
-    fun lagre(event: PunsjEventV3Dto): EventLagret? {
-        val json = objectMapper().writeValueAsString(event)
+    fun lagre(event: PunsjEventDto): EventLagret? {
+        val json = LosObjectMapper.instance.writeValueAsString(event)
         return try {
             using(sessionOf(dataSource)) {
                 it.run(
@@ -44,7 +43,7 @@ class EventRepository(
                             eksternId = row.string("ekstern_id"),
                             eksternVersjon = row.string("ekstern_versjon"),
                             eventNrForOppgave = row.int("eventnr_for_oppgave"),
-                            eventV3Dto = objectMapper().readValue(row.string("data"), PunsjEventV3Dto::class.java),
+                            eventV3Dto = LosObjectMapper.instance.readValue(row.string("data"), PunsjEventDto::class.java),
                             opprettet = row.localDateTime("opprettet")
                         )
                     }.asSingle
@@ -79,7 +78,7 @@ class EventRepository(
                         eksternId = row.string("ekstern_id"),
                         eksternVersjon = row.string("ekstern_versjon"),
                         eventNrForOppgave = row.int("eventnr_for_oppgave"),
-                        eventV3Dto = objectMapper().readValue(row.string("data"), PunsjEventV3Dto::class.java),
+                        eventV3Dto = LosObjectMapper.instance.readValue(row.string("data"), PunsjEventDto::class.java),
                         opprettet = row.localDateTime("opprettet")
                     )
                 }.asSingle
@@ -105,7 +104,7 @@ class EventRepository(
                         eksternId = row.string("ekstern_id"),
                         eksternVersjon = row.string("ekstern_versjon"),
                         eventNrForOppgave = row.int("eventnr_for_oppgave"),
-                        eventV3Dto = objectMapper().readValue(row.string("data"), PunsjEventV3Dto::class.java),
+                        eventV3Dto = LosObjectMapper.instance.readValue(row.string("data"), PunsjEventDto::class.java),
                         opprettet = row.localDateTime("opprettet")
                     )
                 }.asSingle
@@ -130,7 +129,7 @@ class EventRepository(
                         eksternId = row.string("ekstern_id"),
                         eksternVersjon = row.string("ekstern_versjon"),
                         eventNrForOppgave = row.int("eventnr_for_oppgave"),
-                        eventV3Dto = objectMapper().readValue(row.string("data"), PunsjEventV3Dto::class.java),
+                        eventV3Dto = LosObjectMapper.instance.readValue(row.string("data"), PunsjEventDto::class.java),
                         opprettet = row.localDateTime("opprettet")
                     )
                 }.asList
@@ -156,7 +155,7 @@ class EventRepository(
                         eksternId = row.string("ekstern_id"),
                         eksternVersjon = row.string("ekstern_versjon"),
                         eventNrForOppgave = row.int("eventnr_for_oppgave"),
-                        eventV3Dto = objectMapper().readValue(row.string("data"), PunsjEventV3Dto::class.java),
+                        eventV3Dto = LosObjectMapper.instance.readValue(row.string("data"), PunsjEventDto::class.java),
                         opprettet = row.localDateTime("opprettet")
                     )
                 }.asList
