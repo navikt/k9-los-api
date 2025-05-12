@@ -3,6 +3,8 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.fagsystem.k9sak.K9SakStream
 import no.nav.k9.los.fagsystem.k9sak.K9sakEventHandlerV2
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventperlinje.punsj.AksjonspunktPunsjV3Stream
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventperlinje.punsj.K9PunsjEventHandlerV3
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventHandler
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageKafkaStream
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
@@ -22,6 +24,7 @@ internal class AsynkronProsesseringV1Service(
     k9sakEventHandlerv2: K9sakEventHandlerV2,
     k9TilbakeEventHandler: K9TilbakeEventHandler,
     k9PunsjEventHandler: K9PunsjEventHandler,
+    k9PunsjEventHandlerV3: K9PunsjEventHandlerV3,
 ) {
 
     private companion object {
@@ -62,7 +65,7 @@ internal class AsynkronProsesseringV1Service(
     private val aksjonspunkPunsjV3Stream = AksjonspunktPunsjV3Stream(
         kafkaConfig = if (configuration.punsjConsumerAiven()) kafkaAivenConfig else kafkaConfig,
         configuration = configuration,
-        k9punsjEventHandlerV3 = punsjEventV3HandlerV3,
+        k9punsjEventHandlerV3 = k9PunsjEventHandlerV3,
     )
 
     private val healthChecks = setOf(
@@ -70,7 +73,8 @@ internal class AsynkronProsesseringV1Service(
         aksjonspunktStream.healthy,
         k9KlageStream.healthy,
         aksjonspunkTilbakeStream.healthy,
-        aksjonspunkPunsjStream.healthy
+        aksjonspunkPunsjStream.healthy,
+        aksjonspunkPunsjV3Stream.healthy
     )
 
     private val isReadyChecks = setOf(
@@ -78,7 +82,8 @@ internal class AsynkronProsesseringV1Service(
         aksjonspunktStream.ready,
         k9KlageStream.ready,
         aksjonspunkTilbakeStream.ready,
-        aksjonspunkPunsjStream.ready
+        aksjonspunkPunsjStream.ready,
+        aksjonspunkPunsjV3Stream.ready,
     )
 
     internal fun stop() {
@@ -87,6 +92,7 @@ internal class AsynkronProsesseringV1Service(
         k9SakStream.stop()
         aksjonspunkTilbakeStream.stop()
         aksjonspunkPunsjStream.stop()
+        aksjonspunkPunsjV3Stream.stop()
         logger.info("Alle streams stoppet.")
     }
 

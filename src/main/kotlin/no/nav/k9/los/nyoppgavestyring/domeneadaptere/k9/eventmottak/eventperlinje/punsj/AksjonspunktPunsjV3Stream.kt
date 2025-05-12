@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottakoghistorikk.punsj
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventperlinje.punsj
 
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.AksjonspunktPunsjLaget
@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory
 internal class AksjonspunktPunsjV3Stream(
     kafkaConfig: IKafkaConfig,
     configuration: Configuration,
-    k9punsjEventHandlerV3: K9punsjEventHandlerV3
+    k9punsjEventHandlerV3: K9PunsjEventHandlerV3
 ) {
 
     private val stream = ManagedKafkaStreams(
@@ -36,15 +36,15 @@ internal class AksjonspunktPunsjV3Stream(
 
     private companion object {
         private val logger: Logger = LoggerFactory.getLogger(AksjonspunktPunsjV3Stream::class.java)
-        private const val NAME = "OppgavemeldingerPunsjV3"
+        private const val NAME = "OppgavemeldingerPunsj"
 
         private fun topology(
             configuration: Configuration,
-            k9punsjEventHandlerV3: K9punsjEventHandlerV3
+            k9punsjEventHandlerV3: K9PunsjEventHandlerV3
         ): Topology {
             val builder = StreamsBuilder()
             val fromTopic = Topic(
-                name = configuration.getK9PunsjV3Topic(),
+                name = configuration.getAksjonspunkthendelsePunsjTopic(),
                 serDes = AksjonspunktPunsjLaget()
             )
             builder

@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottakoghistorikk.punsj
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventperlinje.punsj
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
@@ -43,7 +43,7 @@ class EventRepository(
                             eksternId = row.string("ekstern_id"),
                             eksternVersjon = row.string("ekstern_versjon"),
                             eventNrForOppgave = row.int("eventnr_for_oppgave"),
-                            eventV3Dto = LosObjectMapper.instance.readValue(row.string("data"), PunsjEventDto::class.java),
+                            eventDto = LosObjectMapper.instance.readValue(row.string("data"), PunsjEventDto::class.java),
                             opprettet = row.localDateTime("opprettet")
                         )
                     }.asSingle
@@ -78,7 +78,7 @@ class EventRepository(
                         eksternId = row.string("ekstern_id"),
                         eksternVersjon = row.string("ekstern_versjon"),
                         eventNrForOppgave = row.int("eventnr_for_oppgave"),
-                        eventV3Dto = LosObjectMapper.instance.readValue(row.string("data"), PunsjEventDto::class.java),
+                        eventDto = LosObjectMapper.instance.readValue(row.string("data"), PunsjEventDto::class.java),
                         opprettet = row.localDateTime("opprettet")
                     )
                 }.asSingle
@@ -104,7 +104,7 @@ class EventRepository(
                         eksternId = row.string("ekstern_id"),
                         eksternVersjon = row.string("ekstern_versjon"),
                         eventNrForOppgave = row.int("eventnr_for_oppgave"),
-                        eventV3Dto = LosObjectMapper.instance.readValue(row.string("data"), PunsjEventDto::class.java),
+                        eventDto = LosObjectMapper.instance.readValue(row.string("data"), PunsjEventDto::class.java),
                         opprettet = row.localDateTime("opprettet")
                     )
                 }.asSingle
@@ -129,7 +129,7 @@ class EventRepository(
                         eksternId = row.string("ekstern_id"),
                         eksternVersjon = row.string("ekstern_versjon"),
                         eventNrForOppgave = row.int("eventnr_for_oppgave"),
-                        eventV3Dto = LosObjectMapper.instance.readValue(row.string("data"), PunsjEventDto::class.java),
+                        eventDto = LosObjectMapper.instance.readValue(row.string("data"), PunsjEventDto::class.java),
                         opprettet = row.localDateTime("opprettet")
                     )
                 }.asList
@@ -155,7 +155,7 @@ class EventRepository(
                         eksternId = row.string("ekstern_id"),
                         eksternVersjon = row.string("ekstern_versjon"),
                         eventNrForOppgave = row.int("eventnr_for_oppgave"),
-                        eventV3Dto = LosObjectMapper.instance.readValue(row.string("data"), PunsjEventDto::class.java),
+                        eventDto = LosObjectMapper.instance.readValue(row.string("data"), PunsjEventDto::class.java),
                         opprettet = row.localDateTime("opprettet")
                     )
                 }.asList
