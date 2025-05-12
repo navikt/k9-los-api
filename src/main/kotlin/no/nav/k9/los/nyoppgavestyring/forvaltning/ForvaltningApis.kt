@@ -128,7 +128,7 @@ fun Route.forvaltningApis() {
                     value = "5"
                 }
             }
-            queryParameter<Boolean>("skjermet") {
+            queryParameter<String>("skjermet") {
                 description = "Vise køer med skjerming"
                 example("false") {
                     value = "false"
