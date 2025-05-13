@@ -30,8 +30,8 @@ class SisteOppgaverTjeneste(
         val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
         val oppgaver = transactionalManager.transaction { tx ->
             sisteOppgaverRepository.hentSisteOppgaver(tx, saksbehandlerIdent)
-                .map { oppgaveRepository.hentNyesteOppgaveForEksternId(tx, it.område, it.eksternId) }
-        }
+                .map { scope.async { oppgaveRepository.hentNyesteOppgaveForEksternId(tx, it.område, it.eksternId) } }
+        }.awaitAll()
 
         val innhentinger = oppgaver.map { oppgave ->
             scope.async {
