@@ -36,4 +36,25 @@ fun Route.SøkeboksApi() {
             }
         }
     }
+
+    post(
+        "ny",
+        {
+            description =
+                "Søk etter oppgaver og tilhørende person. Dersom input er på 9 tegn antas den som journalpostId, ved 11 tegn som fødselsnummer, og ellers som fagsaknummer."
+            request { body<SøkQuery>() }
+            response {
+                HttpStatusCode.OK to { body<Søkeresultat>() }
+            }
+        }
+    ) {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.harBasisTilgang()) {
+                val søkQuery = call.receive<SøkQuery>()
+                call.respond(søkeboksTjeneste.finnOppgaverNy(søkQuery.searchString, if (søkQuery.fraAktiv) listOf(Oppgavestatus.AAPEN, Oppgavestatus.VENTER) else Oppgavestatus.entries.toList()))
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
 }

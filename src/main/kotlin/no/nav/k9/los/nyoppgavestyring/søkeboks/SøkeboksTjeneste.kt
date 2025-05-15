@@ -4,7 +4,13 @@ import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Action
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Auditlogging
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.IPdlService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.*
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.fnr
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.kjoenn
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.navn
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
@@ -14,7 +20,9 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
+import java.time.LocalDateTime
 
 class SøkeboksTjeneste(
     private val queryService: OppgaveQueryService,
@@ -55,6 +63,71 @@ class SøkeboksTjeneste(
                     if (reservasjon != null) saksbehandlerRepository.finnSaksbehandlerMedId(reservasjon.reservertAv) else null
                 SøkeboksOppgaveDto(it, person, reservasjon, reservertAvSaksbehandler)
             }
+    }
+
+    suspend fun finnOppgaverNy(søkeord: String, oppgavestatus: List<Oppgavestatus>): Søkeresultat {
+        val oppgaver = when (søkeord.length) {
+            11 -> {
+                finnOppgaverForSøkersFnr(søkeord, oppgavestatus)
+            }
+
+            9 -> {
+                finnOppgaverForJournalpostId(søkeord, oppgavestatus)
+            }
+
+            else -> {
+                finnOppgaverForSaksnummer(søkeord, oppgavestatus)
+            }
+        }
+
+        if (oppgaver.any { !pepClient.harTilgangTilOppgaveV3(it, Action.read, Auditlogging.LOGG_VED_PERMIT) }) {
+            return Søkeresultat.SøkeresultatIkkeTilgang
+        }
+
+        if (oppgaver.isEmpty()) {
+            return Søkeresultat.SøkeresultatTomtResultat
+        }
+
+        val aktørIder = oppgaver.mapNotNullTo(HashSet()) { it.hentVerdi("aktorId") }
+
+        val oppgaverDto: List<SøkeresultatOppgaveDto> = oppgaver.map {
+            val reservasjon = reservasjonV3Tjeneste.finnAktivReservasjon(it.reservasjonsnøkkel)
+            val reservertAv =
+                if (reservasjon != null) saksbehandlerRepository.finnSaksbehandlerMedId(reservasjon.reservertAv) else null
+
+            SøkeresultatOppgaveDto(
+                ytelsestype = it.hentVerdi("ytelsestype")?.let { FagsakYtelseType.fraKode(it) }
+                    ?: FagsakYtelseType.UKJENT,
+                behandlingstype = BehandlingType.fraKode(it.hentVerdi("behandlingTypekode")!!),
+                saksnummer = it.hentVerdi("saksnummer"),
+                hastesak = it.hentVerdi("hastesak") == "true",
+                oppgaveNøkkel = OppgaveNøkkelDto(it),
+                journalpostId = it.hentVerdi("journalpostId"),
+                opprettetTidspunkt = it.hentVerdi("registrertDato")?.let { LocalDateTime.parse(it) },
+                oppgavestatus = OppgavestatusMedNavn.valueOf(it.status),
+                behandlingsstatus = it.hentVerdi("behandlingsstatus")?.let { BehandlingStatus.fraKode(it) },
+                oppgavebehandlingsUrl = it.getOppgaveBehandlingsurl(),
+                reservasjonsnøkkel = it.reservasjonsnøkkel,
+                reservertAvSaksbehandlerNavn = reservertAv?.navn,
+                reservertAvSaksbehandlerIdent = reservertAv?.brukerIdent,
+                reservertTom = reservasjon?.gyldigTil,
+            )
+        }
+        val person = aktørIder.singleOrNull()?.let { aktørId ->
+            pdlService.person(aktørId).person?.let { personPdl ->
+                SøkeresultatPersonDto(
+                    personPdl.navn(),
+                    personPdl.fnr(),
+                    personPdl.kjoenn(),
+                    personPdl.doedsdato()
+                )
+            }
+        }
+        return if (person != null) {
+            Søkeresultat.SøkeresultatMedPerson(person, oppgaverDto)
+        } else {
+            Søkeresultat.SøkeresultatUtenPerson(oppgaverDto)
+        }
     }
 
     private fun finnOppgaverForJournalpostId(journalpostId: String, oppgavestatus: List<Oppgavestatus>): List<Oppgave> {
