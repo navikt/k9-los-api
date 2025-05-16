@@ -208,6 +208,7 @@ enum class OppgaveKode(override val kode: String, override val navn: String, val
     SYKDOM("9001", "Sykdom", OppgaveKodeGruppe.INNLEDENDE_BEHANDLING.navn),
     OMSORGEN_FOR("9020", "Omsorgen for", OppgaveKodeGruppe.INNLEDENDE_BEHANDLING.navn),
     AVKLAR_VERGE("5030", "Avklar verge", OppgaveKodeGruppe.INNLEDENDE_BEHANDLING.navn),
+    UTENLANDSINNTEKT("5068", "Automatisk markering av utenlandssak", OppgaveKodeGruppe.INNLEDENDE_BEHANDLING.navn),
 
     // Om barnet
     NATTEVÅK("9200", "Nattevåk", OppgaveKodeGruppe.OM_BARNET.navn),
