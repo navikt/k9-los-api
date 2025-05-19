@@ -105,17 +105,17 @@ class SøkeboksTjeneste(
 
             SøkeresultatOppgaveDto(
                 navn = navn,
-                ytelsestype = oppgave.hentVerdi("ytelsestype")?.let { FagsakYtelseType.fraKode(it) }
-                    ?: FagsakYtelseType.UKJENT,
+                ytelsestype = oppgave.hentVerdi("ytelsestype")?.let { FagsakYtelseType.fraKode(it).navn }
+                    ?: FagsakYtelseType.UKJENT.navn,
                 behandlingstype = BehandlingType.fraKode(oppgave.hentVerdi("behandlingTypekode")!!),
                 saksnummer = oppgave.hentVerdi("saksnummer"),
                 hastesak = oppgave.hentVerdi("hastesak") == "true",
                 oppgaveNøkkel = OppgaveNøkkelDto(oppgave),
                 journalpostId = oppgave.hentVerdi("journalpostId"),
                 opprettetTidspunkt = oppgave.hentVerdi("registrertDato")?.let { dato -> LocalDateTime.parse(dato) },
-                oppgavestatus = Oppgavestatus.fraKode(oppgave.status),
-                behandlingsstatus = oppgave.hentVerdi("behandlingsstatus")
-                    ?.let { kode -> BehandlingStatus.fraKode(kode) },
+                status = oppgave.hentVerdi("behandlingsstatus")
+                    ?.let { kode -> BehandlingStatus.fraKode(kode).navn }
+                    ?: Oppgavestatus.fraKode(oppgave.status).visningsnavn,
                 oppgavebehandlingsUrl = oppgave.getOppgaveBehandlingsurl(),
                 reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
                 reservertAvSaksbehandlerNavn = reservertAv?.navn,
