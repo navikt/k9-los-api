@@ -8,7 +8,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import org.koin.ktor.ext.inject
 
 
@@ -21,27 +20,6 @@ fun Route.SøkeboksApi() {
         {
             description =
                 "Søk etter oppgaver og tilhørende person. Dersom input er på 9 tegn antas den som journalpostId, ved 11 tegn som fødselsnummer, og ellers som fagsaknummer."
-            request { body<SøkQuery>() }
-            response {
-                HttpStatusCode.OK to { body<List<SøkeboksOppgaveDto>>() }
-            }
-        }
-    ) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.harBasisTilgang()) {
-                val søkQuery = call.receive<SøkQuery>()
-                call.respond(søkeboksTjeneste.finnOppgaver(søkQuery.searchString, if (søkQuery.fraAktiv) listOf(Oppgavestatus.AAPEN, Oppgavestatus.VENTER) else Oppgavestatus.entries.toList()))
-            } else {
-                call.respond(HttpStatusCode.Forbidden)
-            }
-        }
-    }
-
-    post(
-        "ny",
-        {
-            description =
-                "Søk etter oppgaver og tilhørende person. Dersom input er på 9 tegn antas den som journalpostId, ved 11 tegn som fødselsnummer, og ellers som fagsaknummer."
             request { body<SøkRequest>() }
             response {
                 HttpStatusCode.OK to { body<Søkeresultat>() }
@@ -51,7 +29,7 @@ fun Route.SøkeboksApi() {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val (søkeord, oppgavestatus) = call.receive<SøkRequest>()
-                call.respond(søkeboksTjeneste.finnOppgaverNy(søkeord, oppgavestatus))
+                call.respond(søkeboksTjeneste.finnOppgaver(søkeord, oppgavestatus))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

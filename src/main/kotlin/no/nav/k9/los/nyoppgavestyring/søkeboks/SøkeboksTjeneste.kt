@@ -1,9 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.søkeboks
 
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Action
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Auditlogging
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.*
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.IPdlService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.navn
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
@@ -24,42 +22,10 @@ class SøkeboksTjeneste(
     private val queryService: OppgaveQueryService,
     private val oppgaveRepository: OppgaveRepositoryTxWrapper,
     private val pdlService: IPdlService,
-    private val pepClient: IPepClient,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
     private val saksbehandlerRepository: SaksbehandlerRepository,
 ) {
-    suspend fun finnOppgaver(søkeord: String, oppgavestatus: List<Oppgavestatus>): List<SøkeboksOppgaveDto> {
-        val oppgaver = when (søkeord.length) {
-            11 -> {
-                finnOppgaverForSøkersFnr(søkeord, oppgavestatus)
-            }
-
-            9 -> {
-                finnOppgaverForJournalpostId(søkeord, oppgavestatus)
-            }
-
-            else -> {
-                finnOppgaverForSaksnummer(søkeord, oppgavestatus)
-            }
-        }
-
-        return oppgaver.filter { pepClient.harTilgangTilOppgaveV3(it, Action.read, Auditlogging.LOGG_VED_PERMIT) }.map {
-            val aktorIdFraOppgave = it.hentVerdi("aktorId")
-            val aktorId = when (aktorIdFraOppgave?.length) {
-                // For noen punsj-eventer er det feilaktig lagt inn fnr i feltet for 'aktorId', så hvis lengden er 11 gjøres et ekstra kall til PDL for å finne riktig aktør-id
-                11 -> pdlService.identifikator(aktorIdFraOppgave).aktorId?.data?.hentIdenter?.identer?.get(0)?.ident
-                13 -> aktorIdFraOppgave
-                else -> null
-            }
-            val person = if (aktorId != null) pdlService.person(aktorId).person else null
-            val reservasjon = reservasjonV3Tjeneste.finnAktivReservasjon(it.reservasjonsnøkkel)
-            val reservertAvSaksbehandler =
-                if (reservasjon != null) saksbehandlerRepository.finnSaksbehandlerMedId(reservasjon.reservertAv) else null
-            SøkeboksOppgaveDto(it, person, reservasjon, reservertAvSaksbehandler)
-        }
-    }
-
-    suspend fun finnOppgaverNy(søkeord: String, oppgavestatus: List<Oppgavestatus>): Søkeresultat {
+    suspend fun finnOppgaver(søkeord: String, oppgavestatus: List<Oppgavestatus>): Søkeresultat {
         val oppgaver = when (søkeord.length) {
             11 -> {
                 val pdlResponse = pdlService.identifikator(søkeord)
@@ -83,7 +49,9 @@ class SøkeboksTjeneste(
             .groupBy { oppgave -> oppgave.hentVerdi("aktorId") }
             .map { (aktørId, oppgaverForPerson) ->
                 aktørId?.let {
-                    pdlService.person(it).person?.let { personPdl ->
+                    val personPdlResponse = pdlService.person(it)
+                    if (personPdlResponse.ikkeTilgang) return Søkeresultat.IkkeTilgang
+                    personPdlResponse.person?.let { personPdl ->
                         SøkeresultatPersonDto(personPdl) to oppgaverForPerson.tilDto(personPdl.navn())
                     }
                 } ?: (null to oppgaverForPerson.tilDto("Uten navn"))
