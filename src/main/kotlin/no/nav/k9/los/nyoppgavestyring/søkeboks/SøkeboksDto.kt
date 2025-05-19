@@ -1,8 +1,10 @@
 package no.nav.k9.los.nyoppgavestyring.søkeboks
 
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.*
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -10,23 +12,18 @@ import java.time.LocalDateTime
 enum class SøkeresultatType {
     IKKE_TILGANG,
     TOMT_RESULTAT,
-    UTEN_PERSON,
-    MED_PERSON,
+    MED_RESULTAT,
 }
 
-sealed class Søkeresultat(val resultat: SøkeresultatType) {
-    data object SøkeresultatIkkeTilgang : Søkeresultat(SøkeresultatType.IKKE_TILGANG)
+sealed class Søkeresultat(val type: SøkeresultatType) {
+    data object IkkeTilgang : Søkeresultat(SøkeresultatType.IKKE_TILGANG)
 
-    data object SøkeresultatTomtResultat : Søkeresultat(SøkeresultatType.TOMT_RESULTAT)
+    data object TomtResultat : Søkeresultat(SøkeresultatType.TOMT_RESULTAT)
 
-    data class SøkeresultatUtenPerson(
-        val oppgaver: List<SøkeresultatOppgaveDto>,
-    ) : Søkeresultat(SøkeresultatType.UTEN_PERSON)
-
-    data class SøkeresultatMedPerson(
-        val person: SøkeresultatPersonDto,
-        val oppgaver: List<SøkeresultatOppgaveDto>,
-    ) : Søkeresultat(SøkeresultatType.MED_PERSON)
+    data class MedResultat(
+        val person: SøkeresultatPersonDto?,
+        val oppgaver: List<SøkeresultatOppgaveDto>
+    ) : Søkeresultat(SøkeresultatType.MED_RESULTAT)
 }
 
 data class SøkeresultatPersonDto(
@@ -34,9 +31,17 @@ data class SøkeresultatPersonDto(
     val fnr: String,
     val kjønn: String,
     val dødsdato: LocalDate?,
-)
+) {
+    constructor(personPdl: PersonPdl) : this(
+        navn = personPdl.navn(),
+        fnr = personPdl.fnr(),
+        kjønn = personPdl.kjoenn(),
+        dødsdato = personPdl.doedsdato(),
+    )
+}
 
 data class SøkeresultatOppgaveDto(
+    val navn: String,
     val oppgaveNøkkel: OppgaveNøkkelDto,
     val ytelsestype: FagsakYtelseType,
     val behandlingstype: BehandlingType,
@@ -44,7 +49,7 @@ data class SøkeresultatOppgaveDto(
     val hastesak: Boolean,
     val journalpostId: String?,
     val opprettetTidspunkt: LocalDateTime?,
-    val oppgavestatus: OppgavestatusMedNavn,
+    val oppgavestatus: Oppgavestatus,
     val behandlingsstatus: BehandlingStatus?,
     val oppgavebehandlingsUrl: String?,
     val reservasjonsnøkkel: String,

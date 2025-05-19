@@ -1,13 +1,9 @@
 package no.nav.k9.los.nyoppgavestyring.søkeboks
 
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Action
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Auditlogging
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.*
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.fnr
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.kjoenn
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.navn
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
@@ -19,6 +15,7 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
@@ -47,90 +44,91 @@ class SøkeboksTjeneste(
             }
         }
 
-        return oppgaver
-            .filter { pepClient.harTilgangTilOppgaveV3(it, Action.read, Auditlogging.LOGG_VED_PERMIT) }
-            .map {
-                val aktorIdFraOppgave = it.hentVerdi("aktorId")
-                val aktorId = when (aktorIdFraOppgave?.length) {
-                    // For noen punsj-eventer er det feilaktig lagt inn fnr i feltet for 'aktorId', så hvis lengden er 11 gjøres et ekstra kall til PDL for å finne riktig aktør-id
-                    11 -> pdlService.identifikator(aktorIdFraOppgave).aktorId?.data?.hentIdenter?.identer?.get(0)?.ident
-                    13 -> aktorIdFraOppgave
-                    else -> null
-                }
-                val person = if (aktorId != null) pdlService.person(aktorId).person else null
-                val reservasjon = reservasjonV3Tjeneste.finnAktivReservasjon(it.reservasjonsnøkkel)
-                val reservertAvSaksbehandler =
-                    if (reservasjon != null) saksbehandlerRepository.finnSaksbehandlerMedId(reservasjon.reservertAv) else null
-                SøkeboksOppgaveDto(it, person, reservasjon, reservertAvSaksbehandler)
+        return oppgaver.filter { pepClient.harTilgangTilOppgaveV3(it, Action.read, Auditlogging.LOGG_VED_PERMIT) }.map {
+            val aktorIdFraOppgave = it.hentVerdi("aktorId")
+            val aktorId = when (aktorIdFraOppgave?.length) {
+                // For noen punsj-eventer er det feilaktig lagt inn fnr i feltet for 'aktorId', så hvis lengden er 11 gjøres et ekstra kall til PDL for å finne riktig aktør-id
+                11 -> pdlService.identifikator(aktorIdFraOppgave).aktorId?.data?.hentIdenter?.identer?.get(0)?.ident
+                13 -> aktorIdFraOppgave
+                else -> null
             }
+            val person = if (aktorId != null) pdlService.person(aktorId).person else null
+            val reservasjon = reservasjonV3Tjeneste.finnAktivReservasjon(it.reservasjonsnøkkel)
+            val reservertAvSaksbehandler =
+                if (reservasjon != null) saksbehandlerRepository.finnSaksbehandlerMedId(reservasjon.reservertAv) else null
+            SøkeboksOppgaveDto(it, person, reservasjon, reservertAvSaksbehandler)
+        }
     }
 
     suspend fun finnOppgaverNy(søkeord: String, oppgavestatus: List<Oppgavestatus>): Søkeresultat {
         val oppgaver = when (søkeord.length) {
             11 -> {
-                finnOppgaverForSøkersFnr(søkeord, oppgavestatus)
+                val pdlResponse = pdlService.identifikator(søkeord)
+                if (pdlResponse.ikkeTilgang) return Søkeresultat.IkkeTilgang
+                val aktørIder = pdlResponse.aktorId?.data?.hentIdenter?.identer?.map { it.ident } ?: emptyList()
+                finnOppgaverForAktørId(aktørIder + søkeord, oppgavestatus)
             }
 
             9 -> {
                 finnOppgaverForJournalpostId(søkeord, oppgavestatus)
             }
 
-            else -> {
-                finnOppgaverForSaksnummer(søkeord, oppgavestatus)
-            }
-        }
-
-        if (oppgaver.any { !pepClient.harTilgangTilOppgaveV3(it, Action.read, Auditlogging.LOGG_VED_PERMIT) }) {
-            return Søkeresultat.SøkeresultatIkkeTilgang
+            else -> finnOppgaverForSaksnummer(søkeord, oppgavestatus)
         }
 
         if (oppgaver.isEmpty()) {
-            return Søkeresultat.SøkeresultatTomtResultat
+            return Søkeresultat.TomtResultat
         }
 
-        val aktørIder = oppgaver.mapNotNullTo(HashSet()) { it.hentVerdi("aktorId") }
+        val personerOgOppgaver = oppgaver
+            .groupBy { oppgave -> oppgave.hentVerdi("aktorId") }
+            .map { (aktørId, oppgaverForPerson) ->
+                aktørId?.let {
+                    pdlService.person(it).person?.let { personPdl ->
+                        SøkeresultatPersonDto(personPdl) to oppgaverForPerson.tilDto(personPdl.navn())
+                    }
+                } ?: (null to oppgaverForPerson.tilDto("Uten navn"))
+            }
+            .groupBy { (person) -> person }
+            .mapValues { (_, pairs) -> pairs.flatMap { (_, oppgaver) -> oppgaver } }
+        return Søkeresultat.MedResultat(
+            person = personerOgOppgaver.keys.singleOrNull(),
+            oppgaver = personerOgOppgaver.values.flatten()
+        )
+    }
 
-        val oppgaverDto: List<SøkeresultatOppgaveDto> = oppgaver.map {
-            val reservasjon = reservasjonV3Tjeneste.finnAktivReservasjon(it.reservasjonsnøkkel)
-            val reservertAv =
-                if (reservasjon != null) saksbehandlerRepository.finnSaksbehandlerMedId(reservasjon.reservertAv) else null
+    private fun List<Oppgave>.tilDto(navn: String): List<SøkeresultatOppgaveDto> {
+        return this.map { oppgave ->
+            val reservasjon = reservasjonV3Tjeneste.finnAktivReservasjon(oppgave.reservasjonsnøkkel)
+            val reservertAv = if (reservasjon != null)
+                saksbehandlerRepository.finnSaksbehandlerMedId(reservasjon.reservertAv) else null
 
             SøkeresultatOppgaveDto(
-                ytelsestype = it.hentVerdi("ytelsestype")?.let { FagsakYtelseType.fraKode(it) }
+                navn = navn,
+                ytelsestype = oppgave.hentVerdi("ytelsestype")?.let { FagsakYtelseType.fraKode(it) }
                     ?: FagsakYtelseType.UKJENT,
-                behandlingstype = BehandlingType.fraKode(it.hentVerdi("behandlingTypekode")!!),
-                saksnummer = it.hentVerdi("saksnummer"),
-                hastesak = it.hentVerdi("hastesak") == "true",
-                oppgaveNøkkel = OppgaveNøkkelDto(it),
-                journalpostId = it.hentVerdi("journalpostId"),
-                opprettetTidspunkt = it.hentVerdi("registrertDato")?.let { LocalDateTime.parse(it) },
-                oppgavestatus = OppgavestatusMedNavn.valueOf(it.status),
-                behandlingsstatus = it.hentVerdi("behandlingsstatus")?.let { BehandlingStatus.fraKode(it) },
-                oppgavebehandlingsUrl = it.getOppgaveBehandlingsurl(),
-                reservasjonsnøkkel = it.reservasjonsnøkkel,
+                behandlingstype = BehandlingType.fraKode(oppgave.hentVerdi("behandlingTypekode")!!),
+                saksnummer = oppgave.hentVerdi("saksnummer"),
+                hastesak = oppgave.hentVerdi("hastesak") == "true",
+                oppgaveNøkkel = OppgaveNøkkelDto(oppgave),
+                journalpostId = oppgave.hentVerdi("journalpostId"),
+                opprettetTidspunkt = oppgave.hentVerdi("registrertDato")?.let { dato -> LocalDateTime.parse(dato) },
+                oppgavestatus = Oppgavestatus.fraKode(oppgave.status),
+                behandlingsstatus = oppgave.hentVerdi("behandlingsstatus")
+                    ?.let { kode -> BehandlingStatus.fraKode(kode) },
+                oppgavebehandlingsUrl = oppgave.getOppgaveBehandlingsurl(),
+                reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
                 reservertAvSaksbehandlerNavn = reservertAv?.navn,
                 reservertAvSaksbehandlerIdent = reservertAv?.brukerIdent,
                 reservertTom = reservasjon?.gyldigTil,
             )
         }
-        val person = aktørIder.singleOrNull()?.let { aktørId ->
-            pdlService.person(aktørId).person?.let { personPdl ->
-                SøkeresultatPersonDto(
-                    personPdl.navn(),
-                    personPdl.fnr(),
-                    personPdl.kjoenn(),
-                    personPdl.doedsdato()
-                )
-            }
-        }
-        return if (person != null) {
-            Søkeresultat.SøkeresultatMedPerson(person, oppgaverDto)
-        } else {
-            Søkeresultat.SøkeresultatUtenPerson(oppgaverDto)
-        }
     }
 
-    private fun finnOppgaverForJournalpostId(journalpostId: String, oppgavestatus: List<Oppgavestatus>): List<Oppgave> {
+    private fun finnOppgaverForJournalpostId(
+        journalpostId: String,
+        oppgavestatus: List<Oppgavestatus>
+    ): List<Oppgave> {
         val query = OppgaveQuery(
             filtere = listOf(
                 FeltverdiOppgavefilter(
@@ -138,15 +136,13 @@ class SøkeboksTjeneste(
                     kode = "oppgavestatus",
                     operator = EksternFeltverdiOperator.IN,
                     verdi = oppgavestatus
-                ),
-                FeltverdiOppgavefilter(
+                ), FeltverdiOppgavefilter(
                     område = "K9",
                     kode = "journalpostId",
                     operator = EksternFeltverdiOperator.EQUALS,
                     verdi = listOf(journalpostId)
                 )
-            ),
-            order = listOf(EnkelOrderFelt("K9", "mottattDato", true))
+            ), order = listOf(EnkelOrderFelt("K9", "mottattDato", true))
         )
         return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
     }
@@ -161,15 +157,32 @@ class SøkeboksTjeneste(
                     kode = "oppgavestatus",
                     operator = EksternFeltverdiOperator.IN,
                     verdi = oppgavestatus
-                ),
-                FeltverdiOppgavefilter(
+                ), FeltverdiOppgavefilter(
                     område = "K9",
                     kode = "aktorId",
                     operator = EksternFeltverdiOperator.IN,
                     verdi = listOf(aktørId, fnr)
                 )
-            ),
-            order = listOf(EnkelOrderFelt("K9", "mottattDato", true))
+            ), order = listOf(EnkelOrderFelt("K9", "mottattDato", true))
+        )
+        return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
+    }
+
+    private fun finnOppgaverForAktørId(aktørIder: List<String>, oppgavestatus: List<Oppgavestatus>): List<Oppgave> {
+        val query = OppgaveQuery(
+            filtere = listOf(
+                FeltverdiOppgavefilter(
+                    område = null,
+                    kode = "oppgavestatus",
+                    operator = EksternFeltverdiOperator.IN,
+                    verdi = oppgavestatus
+                ), FeltverdiOppgavefilter(
+                    område = "K9",
+                    kode = "aktorId",
+                    operator = EksternFeltverdiOperator.IN,
+                    verdi = aktørIder
+                )
+            ), order = listOf(EnkelOrderFelt("K9", "mottattDato", true))
         )
         return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
     }
@@ -182,15 +195,13 @@ class SøkeboksTjeneste(
                     kode = "oppgavestatus",
                     operator = EksternFeltverdiOperator.IN,
                     verdi = oppgavestatus
-                ),
-                FeltverdiOppgavefilter(
+                ), FeltverdiOppgavefilter(
                     område = "K9",
                     kode = "saksnummer",
                     operator = EksternFeltverdiOperator.EQUALS,
                     verdi = listOf(saksnummer)
                 )
-            ),
-            order = listOf(EnkelOrderFelt("K9", "mottattDato", true))
+            ), order = listOf(EnkelOrderFelt("K9", "mottattDato", true))
         )
         return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
     }

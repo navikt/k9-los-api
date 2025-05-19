@@ -42,7 +42,7 @@ fun Route.SøkeboksApi() {
         {
             description =
                 "Søk etter oppgaver og tilhørende person. Dersom input er på 9 tegn antas den som journalpostId, ved 11 tegn som fødselsnummer, og ellers som fagsaknummer."
-            request { body<SøkQuery>() }
+            request { body<SøkRequest>() }
             response {
                 HttpStatusCode.OK to { body<Søkeresultat>() }
             }
@@ -50,8 +50,8 @@ fun Route.SøkeboksApi() {
     ) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                val søkQuery = call.receive<SøkQuery>()
-                call.respond(søkeboksTjeneste.finnOppgaverNy(søkQuery.searchString, if (søkQuery.fraAktiv) listOf(Oppgavestatus.AAPEN, Oppgavestatus.VENTER) else Oppgavestatus.entries.toList()))
+                val (søkeord, oppgavestatus) = call.receive<SøkRequest>()
+                call.respond(søkeboksTjeneste.finnOppgaverNy(søkeord, oppgavestatus))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
