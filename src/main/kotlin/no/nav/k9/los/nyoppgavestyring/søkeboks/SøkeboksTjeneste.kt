@@ -5,7 +5,6 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Auditlogging
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.*
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
-import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
@@ -105,12 +104,11 @@ class SøkeboksTjeneste(
 
             SøkeresultatOppgaveDto(
                 navn = navn,
+                oppgaveNøkkel = OppgaveNøkkelDto(oppgave),
                 ytelsestype = oppgave.hentVerdi("ytelsestype")?.let { FagsakYtelseType.fraKode(it).navn }
                     ?: FagsakYtelseType.UKJENT.navn,
-                behandlingstype = BehandlingType.fraKode(oppgave.hentVerdi("behandlingTypekode")!!),
                 saksnummer = oppgave.hentVerdi("saksnummer"),
                 hastesak = oppgave.hentVerdi("hastesak") == "true",
-                oppgaveNøkkel = OppgaveNøkkelDto(oppgave),
                 journalpostId = oppgave.hentVerdi("journalpostId"),
                 opprettetTidspunkt = oppgave.hentVerdi("registrertDato")?.let { dato -> LocalDateTime.parse(dato) },
                 status = oppgave.hentVerdi("behandlingsstatus")

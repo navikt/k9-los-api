@@ -1,10 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.søkeboks
 
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.*
-import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
-import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
-import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -44,7 +40,6 @@ data class SøkeresultatOppgaveDto(
     val navn: String,
     val oppgaveNøkkel: OppgaveNøkkelDto,
     val ytelsestype: String,
-    val behandlingstype: BehandlingType,
     val saksnummer: String?,
     val hastesak: Boolean,
     val journalpostId: String?,
