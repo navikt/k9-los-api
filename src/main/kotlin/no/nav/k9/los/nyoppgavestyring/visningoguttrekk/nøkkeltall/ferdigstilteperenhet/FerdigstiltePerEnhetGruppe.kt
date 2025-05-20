@@ -2,23 +2,11 @@ package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilte
 
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 
-enum class FerdigstiltePerEnhetGruppe(val navn: String) {
-    ALLE("Alle ytelser"),
-    OMSORGSPENGER("Omsorgspenger"),
-    OMSORGSDAGER("Omsorgsdager"),
-    PLEIEPENGER_SYKT_BARN("Pleiepenger sykt barn"),
-    PPN("Pleiepenger i livets sluttfase"),
-    PUNSJ("Punsj");
-
-    companion object {
-        fun fraFagsakYtelse(ytelse: FagsakYtelseType): FerdigstiltePerEnhetGruppe {
-            return when (ytelse) {
-                FagsakYtelseType.OMSORGSPENGER -> OMSORGSPENGER
-                FagsakYtelseType.OMSORGSDAGER -> OMSORGSDAGER
-                FagsakYtelseType.PLEIEPENGER_SYKT_BARN -> PLEIEPENGER_SYKT_BARN
-                FagsakYtelseType.PPN -> PPN
-                else -> throw IllegalArgumentException("FagsakYtelseType $ytelse er ikke støttet")
-            }
-        }
-    }
+enum class FerdigstiltePerEnhetGruppe(val navn: String, val ytelser: List<FagsakYtelseType>?) {
+    ALLE("Alle ytelser", null),
+    OMSORGSPENGER("Omsorgspenger", listOf(FagsakYtelseType.OMSORGSPENGER)),
+    OMSORGSDAGER("Omsorgsdager", listOf(FagsakYtelseType.OMSORGSDAGER, FagsakYtelseType.OMSORGSPENGER_KS, FagsakYtelseType.OMSORGSPENGER_MA, FagsakYtelseType.OMSORGSPENGER_AO)),
+    PLEIEPENGER_SYKT_BARN("Pleiepenger sykt barn", listOf(FagsakYtelseType.PLEIEPENGER_SYKT_BARN)),
+    PPN("Pleiepenger i livets sluttfase", listOf(FagsakYtelseType.PPN)),
+    PUNSJ("Punsj", null);
 }

@@ -56,7 +56,8 @@ class NyeOgFerdigstilteService(
                             "Nye",
                             datoer.map { dato ->
                                 hentNyeÅpneVenterFraDatabase(dato, gruppe)
-                                + hentNyeLukkedeFraDatabase(dato, gruppe) }
+                                + hentNyeLukkedeFraDatabase(dato, gruppe)
+                            }
                         ),
                         NyeOgFerdigstilteSerie(
                             "Ferdigstilte",
@@ -121,7 +122,10 @@ class NyeOgFerdigstilteService(
                     )
                     add(
                         FeltverdiOppgavefilter(
-                            null, "ferdigstiltDato", EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS, listOf(dato.toString())
+                            null,
+                            "ferdigstiltDato",
+                            EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS,
+                            listOf(dato.toString())
                         )
                     )
                 })
@@ -167,7 +171,15 @@ class NyeOgFerdigstilteService(
             NyeOgFerdigstilteGruppe.OMSORGSDAGER -> {
                 add(
                     FeltverdiOppgavefilter(
-                        "K9", "ytelsestype", EksternFeltverdiOperator.EQUALS, listOf(FagsakYtelseType.OMSORGSDAGER.kode)
+                        "K9",
+                        "ytelsestype",
+                        EksternFeltverdiOperator.IN,
+                        listOf(
+                            FagsakYtelseType.OMSORGSDAGER.kode,
+                            FagsakYtelseType.OMSORGSPENGER_MA.kode,
+                            FagsakYtelseType.OMSORGSPENGER_KS.kode,
+                            FagsakYtelseType.OMSORGSPENGER_AO.kode
+                        )
                     )
                 )
             }

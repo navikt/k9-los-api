@@ -3,6 +3,8 @@ package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilte
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.CacheObject
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
@@ -10,8 +12,6 @@ import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.CacheObject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
@@ -27,11 +27,11 @@ class FerdigstiltePerEnhetService(
     private val cache = Cache<LocalDate, List<FerdigstiltePerEnhetTall>>(null)
     private val log: Logger = LoggerFactory.getLogger(FerdigstiltePerEnhetService::class.java)
 
-    private val fagsakytelser = listOf(
-        FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
-        FagsakYtelseType.PPN,
-        FagsakYtelseType.OMSORGSDAGER,
-        FagsakYtelseType.OMSORGSPENGER
+    private val grupper = listOf(
+        FerdigstiltePerEnhetGruppe.PLEIEPENGER_SYKT_BARN,
+        FerdigstiltePerEnhetGruppe.PPN,
+        FerdigstiltePerEnhetGruppe.OMSORGSDAGER,
+        FerdigstiltePerEnhetGruppe.OMSORGSPENGER,
     )
 
     fun hentCachetVerdi(gruppe: FerdigstiltePerEnhetGruppe, uker: Int): FerdigstiltePerEnhetResponse {
@@ -48,7 +48,10 @@ class FerdigstiltePerEnhetService(
                 FerdigstiltePerEnhetSerie(
                     navn = enhet,
                     data = datoer.map { dato ->
-                        cache.get(dato, LocalDateTime.now())?.value?.find { it.enhet == enhet && it.gruppe == gruppe }?.antall
+                        cache.get(
+                            dato,
+                            LocalDateTime.now()
+                        )?.value?.find { it.enhet == enhet && it.gruppe == gruppe }?.antall
                             ?: 0
                     }
                 )
@@ -87,22 +90,21 @@ class FerdigstiltePerEnhetService(
                         gruppe = FerdigstiltePerEnhetGruppe.ALLE,
                         antall = hentAntallFraDatabase(
                             dato = dato,
-                            fagsakYtelseType = null,
+                            ytelser = null,
                             oppgavetype = null,
                             enhet = enhet
                         )
                     )
                 )
-                for (ytelse in fagsakytelser) {
+                for (gruppe in grupper) {
                     add(
                         FerdigstiltePerEnhetTall(
                             dato = dato,
                             enhet = enhet,
-                            gruppe = FerdigstiltePerEnhetGruppe.fraFagsakYtelse(ytelse),
+                            gruppe = gruppe,
                             antall = hentAntallFraDatabase(
                                 dato = dato,
-                                fagsakYtelseType = ytelse,
-                                oppgavetype = null,
+                                ytelser = gruppe.ytelser,
                                 enhet = enhet
                             )
                         )
@@ -115,7 +117,6 @@ class FerdigstiltePerEnhetService(
                         gruppe = FerdigstiltePerEnhetGruppe.PUNSJ,
                         antall = hentAntallFraDatabase(
                             dato = dato,
-                            fagsakYtelseType = null,
                             oppgavetype = "k9punsj",
                             enhet = enhet
                         )
@@ -127,7 +128,7 @@ class FerdigstiltePerEnhetService(
 
     private fun hentAntallFraDatabase(
         dato: LocalDate,
-        fagsakYtelseType: FagsakYtelseType? = null,
+        ytelser: List<FagsakYtelseType>? = null,
         oppgavetype: String? = null,
         enhet: String
     ): Int {
@@ -142,13 +143,13 @@ class FerdigstiltePerEnhetService(
                             listOf(enhet)
                         )
                     )
-                    if (fagsakYtelseType != null) {
+                    if (ytelser != null) {
                         add(
                             FeltverdiOppgavefilter(
                                 "K9",
                                 "ytelsestype",
-                                EksternFeltverdiOperator.EQUALS,
-                                listOf(fagsakYtelseType.kode)
+                                EksternFeltverdiOperator.IN,
+                                ytelser.map { it.kode }
                             )
                         )
                     }
