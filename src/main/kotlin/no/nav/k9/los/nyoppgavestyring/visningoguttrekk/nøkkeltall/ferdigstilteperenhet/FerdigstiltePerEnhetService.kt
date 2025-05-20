@@ -155,7 +155,7 @@ class FerdigstiltePerEnhetService(
                     if (oppgavetype != null) {
                         add(
                             FeltverdiOppgavefilter(
-                                "K9",
+                                null,
                                 "oppgavetype",
                                 EksternFeltverdiOperator.EQUALS,
                                 listOf(oppgavetype)

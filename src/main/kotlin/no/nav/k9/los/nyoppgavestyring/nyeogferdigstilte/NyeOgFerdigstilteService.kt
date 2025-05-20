@@ -194,7 +194,7 @@ class NyeOgFerdigstilteService(
             NyeOgFerdigstilteGruppe.PUNSJ -> {
                 add(
                     FeltverdiOppgavefilter(
-                        "K9", "oppgavetype", EksternFeltverdiOperator.EQUALS, listOf("k9punsj")
+                        null, "oppgavetype", EksternFeltverdiOperator.EQUALS, listOf("k9punsj")
                     )
                 )
             }
