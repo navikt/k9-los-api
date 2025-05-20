@@ -230,7 +230,7 @@ class DagensTallService(
                         },
                         oppgavetype?.let {
                             FeltverdiOppgavefilter(
-                                "K9", "oppgavetype", EksternFeltverdiOperator.EQUALS, listOf(it)
+                                null, "oppgavetype", EksternFeltverdiOperator.EQUALS, listOf(it)
                             )
                         },
                     )
@@ -268,7 +268,7 @@ class DagensTallService(
                         },
                         oppgavetype?.let {
                             FeltverdiOppgavefilter(
-                                "K9", "oppgavetype", EksternFeltverdiOperator.EQUALS, listOf(it)
+                                null, "oppgavetype", EksternFeltverdiOperator.EQUALS, listOf(it)
                             )
                         },
                     )
@@ -306,7 +306,7 @@ class DagensTallService(
                         },
                         oppgavetype?.let {
                             FeltverdiOppgavefilter(
-                                "K9", "oppgavetype", EksternFeltverdiOperator.EQUALS, listOf(it)
+                                null, "oppgavetype", EksternFeltverdiOperator.EQUALS, listOf(it)
                             )
                         },
                     )
