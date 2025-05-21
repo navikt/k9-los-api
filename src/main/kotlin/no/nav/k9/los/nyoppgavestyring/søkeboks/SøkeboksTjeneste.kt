@@ -45,6 +45,15 @@ class SøkeboksTjeneste(
             return Søkeresultat.TomtResultat
         }
 
+
+        /**
+         * Starter med en flat liste av oppgaver og må koble disse til persondata.
+         * Transformasjonen er kompleks fordi:
+         * - Ønsker å unngå å kalle PDL for hver oppgave
+         * - Oppgavene kan inneholde flere aktørIder
+         * - Forskjellige aktørId kan gi samme person (kombinasjon av navn/fnr/kjønn/dødsdato)
+         * Resultatet blir normalisert til en struktur som er enkel for frontend å håndtere
+         */
         val personerOgOppgaver = oppgaver
             .groupBy { oppgave -> oppgave.hentVerdi("aktorId") }
             .map { (aktørId, oppgaverForPerson) ->
