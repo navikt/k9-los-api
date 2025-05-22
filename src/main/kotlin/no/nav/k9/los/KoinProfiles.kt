@@ -61,6 +61,8 @@ import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.kodeverk.HentKodeverkTjeneste
+import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkRepository
+import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
@@ -616,6 +618,19 @@ fun common(app: Application, config: Configuration) = module {
     single {
         NyeOgFerdigstilteService(
             queryService = get()
+        )
+    }
+
+    single<LagretSøkRepository> {
+        LagretSøkRepository(
+            dataSource = get()
+        )
+    }
+
+    single<LagretSøkTjeneste> {
+        LagretSøkTjeneste(
+            lagretSøkRepository = get(),
+            saksbehandlerRepository = get(),
         )
     }
 }

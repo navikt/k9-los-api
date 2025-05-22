@@ -78,6 +78,7 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.Da
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
 import no.nav.k9.los.tjenester.mock.localSetup
 import no.nav.k9.los.nyoppgavestyring.innloggetbruker.InnloggetBrukerApi
+import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkApi
 import org.koin.core.Koin
 import org.koin.core.qualifier.named
 import org.koin.ktor.ext.getKoin
@@ -334,6 +335,7 @@ private fun Route.api() {
             route("nokkeltall") { NøkkeltallV3Apis() }
             route("siste-oppgaver") { SisteOppgaverApi() }
             route("nye-og-ferdigstilte") { NyeOgFerdigstilteApi() }
+            route("lagret-sok") { LagretSøkApi() }
         }
     }
 }
