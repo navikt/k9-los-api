@@ -80,7 +80,8 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
             id = id,
             tittel = "Endret tittel",
             beskrivelse = "Endret beskrivelse",
-            query = OppgaveQuery()
+            query = OppgaveQuery(),
+            versjon = lagretSøk.versjon
         )
 
         hentetSøk.endre(endreLagretSøk, saksbehandler)

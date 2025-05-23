@@ -29,6 +29,9 @@ class LagretSøk private constructor(
         if (saksbehandler.id != lagetAv) {
             throw IllegalStateException("Kan ikke endre lagret søk som ikke er opprettet av seg selv")
         }
+        if (endreLagretSøk.versjon != versjon) {
+            throw IllegalStateException("Kan ikke endre lagret søk med feil versjon.")
+        }
         versjon += 1
         tittel = endreLagretSøk.tittel
         beskrivelse = endreLagretSøk.beskrivelse
