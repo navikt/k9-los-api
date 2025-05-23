@@ -47,6 +47,8 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.PdlServiceLocal
 import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
+import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkRepository
+import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
@@ -517,6 +519,17 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         NyeOgFerdigstilteService(
             queryService = get()
+        )
+    }
+
+    single<LagretSøkRepository> {
+        LagretSøkRepository(dataSource = get())
+    }
+
+    single<LagretSøkTjeneste> {
+        LagretSøkTjeneste(
+            saksbehandlerRepository = get(),
+            lagretSøkRepository = get()
         )
     }
 }
