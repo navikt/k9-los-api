@@ -52,7 +52,7 @@ class LagretSøkRepository(val dataSource: DataSource) {
                 queryOf(
                     """
                 UPDATE lagret_sok
-                set tittel = :tittel, versjon = :versjon, beskrivelse = :beskrivelse, query = :query
+                set tittel = :tittel, versjon = :versjon, beskrivelse = :beskrivelse, query = :query::jsonb
                 where id = :id
                 """.trimIndent(),
                     mapOf(
