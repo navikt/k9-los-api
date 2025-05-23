@@ -59,6 +59,12 @@ internal class AsynkronProsesseringV1Service(
         k9PunsjEventHandler = k9PunsjEventHandler
     )
 
+    private val aksjonspunkPunsjV3Stream = AksjonspunktPunsjV3Stream(
+        kafkaConfig = if (configuration.punsjConsumerAiven()) kafkaAivenConfig else kafkaConfig,
+        configuration = configuration,
+        k9punsjEventHandlerV3 = punsjEventV3HandlerV3,
+    )
+
     private val healthChecks = setOf(
         k9SakStream.healthy,
         aksjonspunktStream.healthy,
