@@ -21,6 +21,7 @@ import no.nav.sif.abac.kontrakt.abac.dto.PersonerOperasjonGrupperDto
 import no.nav.sif.abac.kontrakt.abac.dto.SaksnummerDto
 import no.nav.sif.abac.kontrakt.abac.dto.SaksnummerOperasjonDto
 import no.nav.sif.abac.kontrakt.abac.dto.SaksnummerOperasjonGrupperDto
+import no.nav.sif.abac.kontrakt.abac.resultat.Tilgangsbeslutning
 import no.nav.sif.abac.kontrakt.person.AktørId
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -111,7 +112,7 @@ class SifAbacPdpKlient(
         val antallForsøk = 3
         val jwt = coroutineContext.idToken().value
         val oboToken = cachedAccessTokenClient.getAccessToken(scopes, jwt)
-        val httpRequest = "${url}/api/tilgangskontroll/k9/sak"
+        val httpRequest = "${url}/api/tilgangskontroll/v2/k9/sak"
             .httpPost()
             .body(LosObjectMapper.instance.writeValueAsString(request))
             .header(
@@ -134,7 +135,7 @@ class SifAbacPdpKlient(
             { error -> throw IllegalStateException("Feil ved sjekk av tilgang til sak mot sif-abac-pdp: $error") }
         )
 
-        return LosObjectMapper.instance.readValue<Decision>(abc) == Decision.Permit
+        return LosObjectMapper.instance.readValue<Tilgangsbeslutning>(abc).harTilgang()
     }
 
     override suspend fun harTilgangTilSak(action: Action, saksnummerDto: SaksnummerDto, saksbehandlersIdent : String, saksbehandlersGrupper : Set<UUID>): Boolean {
@@ -148,7 +149,7 @@ class SifAbacPdpKlient(
         val antallForsøk = 3
         val systemToken = cachedAccessTokenClient.getAccessToken(scopes)
         val body = LosObjectMapper.instance.writeValueAsString(request)
-        val httpRequest = "${url}/api/tilgangskontroll/k9/sak-grupper"
+        val httpRequest = "${url}/api/tilgangskontroll/v2/k9/sak-grupper"
             .httpPost()
             .body(body)
             .header(
@@ -170,7 +171,7 @@ class SifAbacPdpKlient(
             { error -> throw IllegalStateException("Feil ved sjekk av tilgang til sak vha grupper mot sif-abac-pdp ${if (environment == KoinProfile.PREPROD) body else ""}: $error") }
         )
 
-        return LosObjectMapper.instance.readValue<Decision>(abc) == Decision.Permit
+        return LosObjectMapper.instance.readValue<Tilgangsbeslutning>(abc).harTilgang()
     }
 
     override suspend fun harTilgangTilPersoner(action: Action, aktørIder: List<AktørId>): Boolean {
@@ -178,7 +179,7 @@ class SifAbacPdpKlient(
         val antallForsøk = 3
         val jwt = coroutineContext.idToken().value
         val oboToken = cachedAccessTokenClient.getAccessToken(scopes, jwt)
-        val httpRequest = "${url}/api/tilgangskontroll/k9/personer"
+        val httpRequest = "${url}/api/tilgangskontroll/v2/k9/personer"
             .httpPost()
             .body(LosObjectMapper.instance.writeValueAsString(request))
             .header(
@@ -201,7 +202,7 @@ class SifAbacPdpKlient(
             { error -> throw IllegalStateException("Feil ved sjekk av tilgang til personer mot sif-abac-pdp: $error") }
         )
 
-        return LosObjectMapper.instance.readValue<Decision>(abc) == Decision.Permit
+        return LosObjectMapper.instance.readValue<Tilgangsbeslutning>(abc).harTilgang()
     }
 
 
@@ -210,7 +211,7 @@ class SifAbacPdpKlient(
         val antallForsøk = 3
         val systemToken = cachedAccessTokenClient.getAccessToken(scopes)
         val body = LosObjectMapper.instance.writeValueAsString(request)
-        val httpRequest = "${url}/api/tilgangskontroll/k9/personer-grupper"
+        val httpRequest = "${url}/api/tilgangskontroll/v2/k9/personer-grupper"
             .httpPost()
             .body(body)
             .header(
@@ -232,7 +233,7 @@ class SifAbacPdpKlient(
             { error -> throw IllegalStateException("Feil ved sjekk av tilgang til personer vha grupper mot sif-abac-pdp ${if (environment == KoinProfile.PREPROD) body else ""}: $error") }
         )
 
-        return LosObjectMapper.instance.readValue<Decision>(abc) == Decision.Permit
+        return LosObjectMapper.instance.readValue<Tilgangsbeslutning>(abc).harTilgang()
     }
 
     private fun map(action: Action): BeskyttetRessursActionAttributt {
@@ -244,8 +245,4 @@ class SifAbacPdpKlient(
         }
     }
 
-    enum class Decision {
-        Deny,
-        Permit
-    }
 }
