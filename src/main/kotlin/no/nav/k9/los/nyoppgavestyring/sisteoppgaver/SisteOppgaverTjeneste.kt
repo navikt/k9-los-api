@@ -41,9 +41,16 @@ class SisteOppgaverTjeneste(
             .filter { (harTilgang) -> harTilgang }
             .map { (_, personPdl, oppgave) ->
                 val navnOgFnr = personPdl?.person?.let { "${it.navn()} ${it.fnr()}" } ?: "Ukjent"
+                val oppgavetypeTittel = when (oppgave.oppgavetype.eksternId) {
+                    "k9sak" -> "K9"
+                    "k9punsj" -> "Punsj"
+                    "k9tilbake" -> "Tilbake"
+                    "k9klage" -> "Klage"
+                    else -> oppgave.oppgavetype.eksternId
+                }
                 SisteOppgaverDto(
                     oppgaveEksternId = oppgave.eksternId,
-                    tittel = "$navnOgFnr (${oppgave.oppgavetype.eksternId})",
+                    tittel = "$navnOgFnr ($oppgavetypeTittel)",
                     url = oppgave.getOppgaveBehandlingsurl(),
                 )
             }
