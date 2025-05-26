@@ -5,6 +5,7 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import javax.sql.DataSource
 
@@ -20,7 +21,16 @@ class LagretSøkRepository(val dataSource: DataSource) {
                 FROM lagret_sok
                 WHERE id = :id
             """.trimIndent(), mapOf("id" to id)
-                ).map(LagretSøk::fraRow).asSingle
+                ).map {
+                    LagretSøk.fraEksisterende(
+                        id = it.long("id"),
+                        lagetAv = it.long("laget_av"),
+                        versjon = it.long("versjon"),
+                        tittel = it.string("tittel"),
+                        beskrivelse = it.string("beskrivelse"),
+                        query = LosObjectMapper.instance.readValue(it.string("query"), OppgaveQuery::class.java)
+                    )
+                }.asSingle
             )
         }
     }
@@ -89,7 +99,16 @@ class LagretSøkRepository(val dataSource: DataSource) {
                 FROM lagret_sok
                 WHERE laget_av = :lagetAv
             """.trimIndent(), mapOf("lagetAv" to saksbehandler.id)
-                ).map(LagretSøk::fraRow).asList
+                ).map {
+                    LagretSøk.fraEksisterende(
+                        id = it.long("id"),
+                        lagetAv = it.long("laget_av"),
+                        versjon = it.long("versjon"),
+                        tittel = it.string("tittel"),
+                        beskrivelse = it.string("beskrivelse"),
+                        query = LosObjectMapper.instance.readValue(it.string("query"), OppgaveQuery::class.java)
+                    )
+                }.asList
             )
         }
     }
