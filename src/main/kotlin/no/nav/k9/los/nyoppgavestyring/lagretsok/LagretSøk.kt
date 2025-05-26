@@ -1,10 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.lagretsok
 
-import kotliquery.Row
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
-import org.jetbrains.annotations.VisibleForTesting
 
 class LagretSøk private constructor(
     val id: Long?,
@@ -83,22 +80,11 @@ class LagretSøk private constructor(
             )
         }
 
-        fun fraRow(row: Row): LagretSøk {
-            return LagretSøk(
-                id = row.long("id"),
-                lagetAv = row.long("laget_av"),
-                versjon = row.long("versjon"),
-                tittel = row.string("tittel"),
-                beskrivelse = row.string("beskrivelse"),
-                query = LosObjectMapper.instance.readValue(row.string("query"), OppgaveQuery::class.java)
-            )
-        }
-
-        @VisibleForTesting
-        fun forTest(
+        // For å konstruere fra database, eller i tester
+        fun fraEksisterende(
             id: Long,
             lagetAv: Long,
-            versjon: Long = 1,
+            versjon: Long,
             tittel: String,
             beskrivelse: String,
             query: OppgaveQuery = OppgaveQuery()
