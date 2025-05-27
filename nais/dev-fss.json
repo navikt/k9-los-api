@@ -28,6 +28,6 @@
   "deployment_environment": "q",
   "ny_oppgavestyring_dvh_sending": "false",
   "ny_oppgavestyring_rest_api": "true",
-  "valgt_pdp" : "begge",
+  "valgt_pdp" : "sif-abac-pdp",
   "nokkeltall_enheter": "2970 NAV IKT DRIFT"
 }
