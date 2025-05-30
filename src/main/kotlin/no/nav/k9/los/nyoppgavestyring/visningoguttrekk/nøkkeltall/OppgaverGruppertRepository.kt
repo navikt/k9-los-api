@@ -17,7 +17,7 @@ class OppgaverGruppertRepository(private val dataSource: DataSource) {
         Cache<Boolean, List<BehandlingstypeAntallDto>>(cacheSizeLimit = null)
 
     data class BehandlingstypeAntallDto(
-        val behandlingstype: String,
+        val behandlingstype: BehandlingType,
         val antall: Int
     )
 
@@ -56,7 +56,7 @@ class OppgaverGruppertRepository(private val dataSource: DataSource) {
                 )
                     .map {
                         BehandlingstypeAntallDto(
-                            it.string("behandlingType").let { kode -> BehandlingType.fraKode(kode).navn },
+                            it.string("behandlingType").let { kode -> BehandlingType.fraKode(kode) },
                             it.int("antall")
                         )
                     }

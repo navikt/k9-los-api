@@ -572,7 +572,6 @@ fun common(app: Application, config: Configuration) = module {
             queryService = get(),
             oppgaveRepository = get(),
             pdlService = get(),
-            pepClient = get(),
             reservasjonV3Tjeneste = get(),
             saksbehandlerRepository = get()
         )
