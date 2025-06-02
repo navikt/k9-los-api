@@ -10,7 +10,7 @@ RUN jdeps --print-module-deps --multi-release 21 -q --ignore-missing-deps  --add
 RUN jlink --add-modules $(cat modules.deps) --strip-debug --no-man-pages --no-header-files --compress=1 --output javaruntime
 
 
-FROM alpine:3.21.3
+FROM alpine:3.22.0
 RUN apk update && \
     apk upgrade && \
     apk add dumb-init
