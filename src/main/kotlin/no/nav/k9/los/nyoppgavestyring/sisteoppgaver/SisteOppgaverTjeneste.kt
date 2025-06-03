@@ -1,6 +1,9 @@
 package no.nav.k9.los.nyoppgavestyring.sisteoppgaver
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.withTimeout
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Action
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Auditlogging
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
@@ -11,6 +14,7 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.fnr
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.navn
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
+import kotlin.time.Duration.Companion.seconds
 
 class SisteOppgaverTjeneste(
     private val sisteOppgaverRepository: SisteOppgaverRepository,
@@ -24,10 +28,17 @@ class SisteOppgaverTjeneste(
         scope: CoroutineScope,
     ): List<SisteOppgaverDto> {
         val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
-        val oppgaver = transactionalManager.transaction { tx ->
+        val sisteOppgaveIds = transactionalManager.transaction { tx ->
             sisteOppgaverRepository.hentSisteOppgaver(tx, saksbehandlerIdent)
-                .map { oppgaveRepository.hentNyesteOppgaveForEksternId(tx, it.område, it.eksternId) }
         }
+        
+        val oppgaver = sisteOppgaveIds.map { eksternOppgaveId ->
+            scope.async {
+                transactionalManager.transaction { tx ->
+                    oppgaveRepository.hentNyesteOppgaveForEksternId(tx, eksternOppgaveId.område, eksternOppgaveId.eksternId)
+                }
+            }
+        }.awaitAll()
 
         val innhentinger = oppgaver.map { oppgave ->
             scope.async {
@@ -37,7 +48,7 @@ class SisteOppgaverTjeneste(
             }
         }
 
-        return runBlocking(Dispatchers.IO) { innhentinger.awaitAll() }
+        return withTimeout(5.seconds) { innhentinger.awaitAll() }
             .filter { (harTilgang) -> harTilgang }
             .map { (_, personPdl, oppgave) ->
                 val navnOgFnr = personPdl?.person?.let { "${it.navn()} ${it.fnr()}" } ?: "Ukjent"

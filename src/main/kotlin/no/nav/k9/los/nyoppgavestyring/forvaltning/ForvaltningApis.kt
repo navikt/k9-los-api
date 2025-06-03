@@ -128,14 +128,21 @@ fun Route.forvaltningApis() {
                     value = "5"
                 }
             }
+            queryParameter<String>("skjermet") {
+                description = "Vise køer med skjerming"
+                example("false") {
+                    value = "false"
+                }
+            }
         }
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
                 val v1KoId = UUID.fromString(call.parameters["v1KoId"])
                 val v3KoId = call.parameters["v3KoId"]!!.toLong()
+                val skjermet = call.parameters["skjermet"].toBoolean()
 
-                val v3Ko = oppgaveKoTjeneste.hent(v3KoId, false)
+                val v3Ko = oppgaveKoTjeneste.hent(v3KoId, skjermet)
                 val v3Oppgaver =
                     oppgaveQueryService.queryForOppgaveEksternId(
                         QueryRequest(
@@ -144,14 +151,14 @@ fun Route.forvaltningApis() {
                         )
                     ).map { UUID.fromString(it.eksternId) }
 
-                val v1Ko = oppgaveKoRepository.hentOppgavekø(v1KoId)
+                val v1Ko = oppgaveKoRepository.hentOppgavekø(v1KoId, ignorerSkjerming = skjermet)
                 val v1Oppgaver = v1Ko.oppgaverOgDatoer.map { it.id }.toList()
 
                 val v3MenIkkeV1 = v3Oppgaver.subtract(v1Oppgaver)
                 val v1MenIkkeV3 = v1Oppgaver.subtract(v3Oppgaver)
 
                 val v3OppgaverSomManglerIV1 = v3MenIkkeV1.map {
-                    OppgaveDto(oppgaveRepositoryTxWrapper.hentOppgave("K9", it.toString()))
+                    OppgaveIkkeSensitiv(oppgaveRepositoryTxWrapper.hentOppgave("K9", it.toString()))
                 }.toList()
 
                 val v1OppgaverSomManglerIV3 = v1MenIkkeV3.map {
@@ -612,6 +619,6 @@ fun lagNøkkelAktør(oppgave: Oppgave, tilBeslutter: Boolean): String {
 data class KoDiff(
     val antallOppgaverSomManglerIV1: Int,
     val antallOppgaverSomManglerIV3: Int,
-    val v3OppgaverSomManglerIV1: Set<OppgaveDto>,
+    val v3OppgaverSomManglerIV1: Set<OppgaveIkkeSensitiv>,
     val v1OppgaverSomManglerIV3: Set<no.nav.k9.los.domene.lager.oppgave.Oppgave>
 )
