@@ -21,6 +21,10 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheService
+import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
+import no.nav.k9.los.nyoppgavestyring.ko.OppgaveHendelseMottatt
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
+import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.slf4j.Logger
@@ -39,7 +43,8 @@ class K9TilbakeTilLosAdapterTjeneste(
     private val config: Configuration,
     private val transactionalManager: TransactionalManager,
     private val pepCacheService: PepCacheService,
-    private val historikkvaskChannel: Channel<k9TilbakeEksternId>
+    private val historikkvaskChannel: Channel<k9TilbakeEksternId>,
+    private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9TilbakeTilLosAdapterTjeneste::class.java)
@@ -72,7 +77,7 @@ class K9TilbakeTilLosAdapterTjeneste(
             name = TRÅDNAVN,
             daemon = true,
             initialDelay = TimeUnit.MINUTES.toMillis(1),
-            period = TimeUnit.HOURS.toMillis(1)
+            period = TimeUnit.MINUTES.toMillis(1)
         ) {
             if (kjørSetup) {
                 setup()
@@ -135,6 +140,15 @@ class K9TilbakeTilLosAdapterTjeneste(
                 } else {
                     forrigeOppgave = oppgaveV3Tjeneste.hentOppgaveversjon("K9", oppgaveDto.id, oppgaveDto.versjon, tx)
                 }
+            }
+
+            runBlocking {
+                køpåvirkendeHendelseChannel.send(
+                    OppgaveHendelseMottatt(
+                        Fagsystem.K9TILBAKE,
+                        EksternOppgaveId("K9", uuid.toString())
+                    )
+                )
             }
 
             behandlingProsessEventTilbakeRepository.fjernDirty(uuid, tx)
