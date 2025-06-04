@@ -18,7 +18,6 @@ import org.slf4j.LoggerFactory
 class K9TilbakeEventHandler(
     private val behandlingProsessEventTilbakeRepository: K9TilbakeEventRepository,
     private val sakOgBehandlingProducer: SakOgBehandlingProducer,
-    private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
     private val k9TilbakeTilLosAdapterTjeneste : K9TilbakeTilLosAdapterTjeneste,
 ) {
 
@@ -36,18 +35,13 @@ class K9TilbakeEventHandler(
             sendModia(modell)
 
             OpentelemetrySpanUtil.span("k9TilbakeTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid") {
-                k9TilbakeTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(
-                    event.eksternId!!
-                )
-            }
-
-            runBlocking {
-                køpåvirkendeHendelseChannel.send(
-                    OppgaveHendelseMottatt(
-                        Fagsystem.K9TILBAKE,
-                        EksternOppgaveId("K9", event.eksternId.toString())
+                try {
+                    k9TilbakeTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(
+                        event.eksternId!!
                     )
-                )
+                } catch (e: Exception) {
+                    log.error("Oppatering av k9-tilbake-oppgave feilet for ${event.eksternId}. Oppgaven er ikke oppdatert, men blir plukket av vaktmester", e)
+                }
             }
         }
     }

@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.opentelemetry.instrumentation.annotations.SpanAttribute
 import io.opentelemetry.instrumentation.annotations.WithSpan
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
@@ -15,6 +17,10 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheService
+import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
+import no.nav.k9.los.nyoppgavestyring.ko.OppgaveHendelseMottatt
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
+import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -31,6 +37,7 @@ class K9PunsjTilLosAdapterTjeneste(
     private val config: Configuration,
     private val transactionalManager: TransactionalManager,
     private val pepCacheService: PepCacheService,
+    private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
 ) {
     private val log: Logger = LoggerFactory.getLogger(K9PunsjTilLosAdapterTjeneste::class.java)
     private val TRÅDNAVN = "k9-punsj-til-los"
@@ -61,7 +68,7 @@ class K9PunsjTilLosAdapterTjeneste(
             name = TRÅDNAVN,
             daemon = true,
             initialDelay = TimeUnit.MINUTES.toMillis(3),
-            period = TimeUnit.HOURS.toMillis(1)
+            period = TimeUnit.MINUTES.toMillis(1)
         ) {
             try {
                 JobbMetrikker.time("spill_av_behandlingprosesseventer_k9punsj") {
@@ -121,6 +128,16 @@ class K9PunsjTilLosAdapterTjeneste(
                     forrigeOppgaveversjon = oppgaveV3Tjeneste.hentOppgaveversjon("K9", oppgaveDto.id, oppgaveDto.versjon, tx)
                 }
             }
+
+            runBlocking {
+                køpåvirkendeHendelseChannel.send(
+                    OppgaveHendelseMottatt(
+                        Fagsystem.PUNSJ,
+                        EksternOppgaveId("K9", uuid.toString())
+                    )
+                )
+            }
+
             k9PunsjEventRepository.fjernDirty(uuid, tx)
         }
 

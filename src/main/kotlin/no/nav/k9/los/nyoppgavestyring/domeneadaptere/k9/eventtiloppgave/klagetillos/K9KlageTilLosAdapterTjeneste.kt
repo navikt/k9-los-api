@@ -4,12 +4,17 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.opentelemetry.instrumentation.annotations.SpanAttribute
 import io.opentelemetry.instrumentation.annotations.WithSpan
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.runBlocking
 import no.nav.k9.klage.typer.AktørId
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.JobbMetrikker
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerInterfaceKludge
+import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
+import no.nav.k9.los.nyoppgavestyring.ko.OppgaveHendelseMottatt
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
@@ -17,6 +22,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
+import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -33,6 +39,7 @@ class K9KlageTilLosAdapterTjeneste(
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
     private val transactionalManager: TransactionalManager,
     private val k9klageBeriker: K9KlageBerikerInterfaceKludge,
+    private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9KlageTilLosAdapterTjeneste::class.java)
@@ -65,7 +72,7 @@ class K9KlageTilLosAdapterTjeneste(
             name = TRÅDNAVN,
             daemon = true,
             initialDelay = TimeUnit.MINUTES.toMillis(2),
-            period = TimeUnit.HOURS.toMillis(1)
+            period = TimeUnit.MINUTES.toMillis(1)
         ) {
             if (kjørSetup) {
                 setup()
@@ -141,6 +148,10 @@ class K9KlageTilLosAdapterTjeneste(
                 forrigeOppgave = oppgave
             }
             forrigeOppgave = null
+
+            runBlocking {
+                køpåvirkendeHendelseChannel.send(OppgaveHendelseMottatt(Fagsystem.K9KLAGE, EksternOppgaveId("K9", uuid.toString())))
+            }
 
             k9KlageEventRepository.fjernDirty(uuid, tx)
         }
