@@ -15,7 +15,6 @@ import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.ktor.metrics.Operation
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
-import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.audit.K9Auditlogger
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.NavHeaders
@@ -172,18 +171,6 @@ class PepClient(
                 val diskresjonskoder = sifAbacPdpKlient.diskresjonskoderPerson(AktørId(aktørid))
                 diskresjonskoder.contains(Diskresjonskode.KODE7) || diskresjonskoder.contains(Diskresjonskode.SKJERMET)
             }
-        )
-    }
-
-    override suspend fun harTilgangTilOppgave(oppgave: Oppgave): Boolean {
-        return harTilgang(
-            "k9sak",
-            azureGraphService.hentIdentTilInnloggetBruker(),
-            Action.read,
-            oppgave.fagsakSaksnummer,
-            oppgave.aktorId,
-            oppgave.pleietrengendeAktørId,
-            Auditlogging.IKKE_LOGG
         )
     }
 

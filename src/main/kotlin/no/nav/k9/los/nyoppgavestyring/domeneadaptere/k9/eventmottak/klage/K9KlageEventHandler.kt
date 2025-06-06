@@ -14,7 +14,7 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.OpentelemetrySpanUtil
 import org.slf4j.LoggerFactory
 
 
-class K9KlageEventHandler constructor(
+class K9KlageEventHandler (
     private val behandlingProsessEventKlageRepository: K9KlageEventRepository,
     private val k9KlageTilLosAdapterTjeneste: K9KlageTilLosAdapterTjeneste,
     private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
