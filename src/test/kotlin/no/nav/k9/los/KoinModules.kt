@@ -298,7 +298,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             statistikkRepository = get(),
             reservasjonTjeneste = get(),
             k9SakTilLosAdapterTjeneste = get(),
-            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
@@ -473,6 +472,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgaveRepository = get(),
             reservasjonV3Tjeneste = get(),
             historikkvaskChannel = get(named("historikkvaskChannelK9Sak")),
+            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
