@@ -105,19 +105,8 @@ internal class ManagedKafkaStreams(
         }
 
         streams.setUncaughtExceptionHandler { e ->
-            when (e.rotfeil()) {
-                is TopicAuthorizationException, is SaslAuthenticationException -> {
-                    log.error("Kafkatråd feilet, erstatter stream med nytt tråd pga exception", e)
-                    StreamsUncaughtExceptionHandler.StreamThreadExceptionResponse.REPLACE_THREAD
-                }
-
-                else -> {
-                    log.error("Kafkatråd feilet, stopper", e)
-                    stop(becauseOfError = true) // vet ikke om denne trengs med den nye setUncaughtExceptionHandler
-                    StreamsUncaughtExceptionHandler.StreamThreadExceptionResponse.SHUTDOWN_CLIENT
-                }
-            }
-
+            log.error("Kafkatråd feilet, erstatter stream med ny tråd pga exception", e.rotfeil())
+            StreamsUncaughtExceptionHandler.StreamThreadExceptionResponse.REPLACE_THREAD
         }
 
         Runtime.getRuntime().addShutdownHook(Thread {

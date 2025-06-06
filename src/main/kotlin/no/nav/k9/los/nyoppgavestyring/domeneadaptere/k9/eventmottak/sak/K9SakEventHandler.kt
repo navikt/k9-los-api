@@ -37,7 +37,6 @@ class K9SakEventHandler constructor(
     private val statistikkRepository: StatistikkRepository,
     private val reservasjonTjeneste: ReservasjonTjeneste,
     private val k9SakTilLosAdapterTjeneste: K9SakTilLosAdapterTjeneste,
-    private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
 ) : EventTeller {
     private val log = LoggerFactory.getLogger(K9SakEventHandler::class.java)
 
@@ -103,10 +102,12 @@ class K9SakEventHandler constructor(
             statistikkChannel.send(true)
         }
 
-        OpentelemetrySpanUtil.span("k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid") { k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId) }
-
-        runBlocking {
-            køpåvirkendeHendelseChannel.send(OppgaveHendelseMottatt(Fagsystem.K9SAK, EksternOppgaveId("K9", event.eksternId.toString())))
+        OpentelemetrySpanUtil.span("k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid") {
+            try {
+                k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId)
+            } catch (e: Exception) {
+                log.error("Oppatering av k9-sak-oppgave feilet for ${event.eksternId}. Oppgaven er ikke oppdatert, men blir plukket av vaktmester", e)
+            }
         }
         EventHandlerMetrics.observe("k9sak", "gjennomført", t0)
     }
