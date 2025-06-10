@@ -265,7 +265,6 @@ fun common(app: Application, config: Configuration) = module {
             statistikkRepository = get(),
             reservasjonTjeneste = get(),
             k9SakTilLosAdapterTjeneste = get(),
-            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
@@ -514,6 +513,7 @@ fun common(app: Application, config: Configuration) = module {
             oppgaveRepository = get(),
             reservasjonV3Tjeneste = get(),
             historikkvaskChannel = get(named("historikkvaskChannelK9Sak")),
+            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
     single {
