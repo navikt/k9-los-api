@@ -134,35 +134,26 @@ class SøkeboksTjeneste(
         val aktørId = oppgaver.first().hentVerdi("aktorId")
             ?: return Søkeresultat.TomtResultat
 
-        val personResponse = pdlService.person(aktørId)
+        val (ikkeTilgang, person) = pdlService.person(aktørId)
 
-        if (personResponse.ikkeTilgang) {
+        if (ikkeTilgang || person == null) {
             return Søkeresultat.IkkeTilgang
         }
 
-        if (personResponse.person == null) {
-            return Søkeresultat.TomtResultat
-        }
-
-        // Filtrer oppgaver basert på saksnummer-logikk
-        val filtrerte = filtrerOppgaverBasertPåSaksnummer(oppgaver)
-
-        val transformerteOppgaver = filtrerte.map { oppgave ->
-            transformerOppgave(oppgave, personResponse.person.navn())
-        }
+        val filtrerteBasertPåSaksnummer = filtrerOppgaverBasertPåSaksnummer(oppgaver)
 
         return Søkeresultat.MedResultat(
-            person = SøkeresultatPersonDto(personResponse),
-            oppgaver = transformerteOppgaver
+            person = SøkeresultatPersonDto(person),
+            oppgaver = filtrerteBasertPåSaksnummer.map { oppgave ->
+                transformerOppgave(oppgave, person.navn())
+            }
         )
     }
 
-    // Hjelpefunksjon for saksnummer-logikk
     private fun filtrerOppgaverBasertPåSaksnummer(oppgaver: List<Oppgave>): List<Oppgave> {
         val (oppgaverMedSaksnummer, oppgaverUtenSaksnummer) =
             oppgaver.partition { it.hentVerdi("saksnummer") != null }
 
-        // Grupper oppgaver med saksnummer
         val gruppertPåSaksnummer = oppgaverMedSaksnummer.groupBy { it.hentVerdi("saksnummer")!! }
 
         val filtrerteMedSaksnummer = gruppertPåSaksnummer.values.map { oppgaverISak ->
@@ -170,11 +161,9 @@ class SøkeboksTjeneste(
             oppgaverISak.find { it.status != "LUKKET" } ?: oppgaverISak.first()
         }
 
-        // Returner alle oppgaver uten saksnummer + den ene ikke-lukkede per saksnummer
         return oppgaverUtenSaksnummer + filtrerteMedSaksnummer
     }
 
-    // Hjelpefunksjon for å transformere enkelt oppgave
     private fun transformerOppgave(oppgave: Oppgave, navn: String): SøkeresultatOppgaveDto {
         val reservasjon = reservasjonV3Tjeneste.finnAktivReservasjon(oppgave.reservasjonsnøkkel)
         val reservertAv = if (reservasjon != null)

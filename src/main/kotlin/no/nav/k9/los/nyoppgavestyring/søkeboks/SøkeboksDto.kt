@@ -28,11 +28,11 @@ data class SøkeresultatPersonDto(
     val kjønn: String,
     val dødsdato: LocalDate?,
 ) {
-    constructor(personPdl: PersonPdlResponse) : this(
-        navn = personPdl.person?.navn() ?: "Uten navn",
-        fnr = personPdl.person?.fnr() ?: "Ukjent fnummer",
-        kjønn = personPdl.person?.kjoenn() ?: "",
-        dødsdato = personPdl.person?.doedsdato(),
+    constructor(person: PersonPdl?) : this(
+        navn = person?.navn() ?: "Uten navn",
+        fnr = person?.fnr() ?: "Ukjent fnummer",
+        kjønn = person?.kjoenn() ?: "",
+        dødsdato = person?.doedsdato(),
     )
 }
 
