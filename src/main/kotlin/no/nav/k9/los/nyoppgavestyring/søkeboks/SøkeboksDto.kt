@@ -50,4 +50,5 @@ data class SøkeresultatOppgaveDto(
     val reservertAvSaksbehandlerNavn: String?,
     val reservertAvSaksbehandlerIdent: String?,
     val reservertTom: LocalDateTime?,
+    val fagsakÅr: Int?,
 )

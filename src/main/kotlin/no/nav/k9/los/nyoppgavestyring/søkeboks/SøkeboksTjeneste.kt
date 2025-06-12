@@ -197,6 +197,7 @@ class SøkeboksTjeneste(
             reservertAvSaksbehandlerNavn = reservertAv?.navn,
             reservertAvSaksbehandlerIdent = reservertAv?.brukerIdent,
             reservertTom = reservasjon?.gyldigTil,
+            fagsakÅr = oppgave.hentVerdi("fagsakÅr")?.toIntOrNull()
         )
     }
 }

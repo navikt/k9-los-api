@@ -560,6 +560,14 @@
       "tolkesSom": "String",
       "visTilBruker": false,
       "kokriterie": false
+    },
+    {
+      "id": "fagsakÅr",
+      "visningsnavn": "Fagsak år",
+      "listetype": false,
+      "tolkesSom": "Integer",
+      "visTilBruker": false,
+      "kokriterie": false
     }
   ]
 }
