@@ -176,8 +176,13 @@ class PepClient(
     }
 
     override suspend fun harTilgangTilOppgave(oppgave: Oppgave): Boolean {
+        val oppgavetype = if (oppgave.behandlingType.gjelderPunsj()){
+            "k9punsj"
+        } else {
+            "k9sak"
+        }
         return harTilgang(
-            "k9sak",
+            oppgavetype ,
             azureGraphService.hentIdentTilInnloggetBruker(),
             Action.read,
             oppgave.fagsakSaksnummer,
