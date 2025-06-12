@@ -17,7 +17,7 @@ sealed class Søkeresultat(val type: SøkeresultatType) {
     data object TomtResultat : Søkeresultat(SøkeresultatType.TOMT_RESULTAT)
 
     data class MedResultat(
-        val person: SøkeresultatPersonDto?,
+        val person: SøkeresultatPersonDto,
         val oppgaver: List<SøkeresultatOppgaveDto>
     ) : Søkeresultat(SøkeresultatType.MED_RESULTAT)
 }
@@ -28,11 +28,11 @@ data class SøkeresultatPersonDto(
     val kjønn: String,
     val dødsdato: LocalDate?,
 ) {
-    constructor(personPdl: PersonPdl) : this(
-        navn = personPdl.navn(),
-        fnr = personPdl.fnr(),
-        kjønn = personPdl.kjoenn(),
-        dødsdato = personPdl.doedsdato(),
+    constructor(personPdl: PersonPdlResponse) : this(
+        navn = personPdl.person?.navn() ?: "Uten navn",
+        fnr = personPdl.person?.fnr() ?: "Ukjent fnummer",
+        kjønn = personPdl.person?.kjoenn() ?: "",
+        dødsdato = personPdl.person?.doedsdato(),
     )
 }
 

@@ -88,8 +88,8 @@ object localSetup : KoinComponent {
                     FagsakYtelseType.OMSORGSPENGER,
                 ).shuffled().first().kode
                 val opprettetBehandling = LocalDateTime.now().minusDays(Random.nextLong(10, 20))
-                val aktørId = Random.nextInt(0, 9999999).toString()
-                val pleietrengendeAktørId = Random.nextInt(0, 9999999).toString()
+                val aktørId = "2392173967319"
+                val pleietrengendeAktørId = "1234567890123"
                 sakEventHandler.prosesser(
                     K9SakEventDto(
                         eksternId,

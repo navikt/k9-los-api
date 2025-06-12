@@ -45,7 +45,9 @@ data class Oppgave(
     }
 
     fun hentVerdi(feltnavn: String): String? {
-        val oppgavefelt = hentOppgavefelt(feltnavn)
+        val oppgavefelt = felter.find { oppgavefelt ->
+            oppgavefelt.eksternId == feltnavn
+        }
 
         if (oppgavefelt?.listetype == true) {
             throw IllegalStateException("Kan ikke hente listetype av $feltnavn som enkeltverdi")
