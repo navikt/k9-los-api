@@ -558,7 +558,7 @@
       "visningsnavn": "Ferdigstilt av enhet",
       "listetype": false,
       "tolkesSom": "String",
-      "visTilBruker": false,
+      "visTilBruker": true,
       "kokriterie": true
     },
     {
