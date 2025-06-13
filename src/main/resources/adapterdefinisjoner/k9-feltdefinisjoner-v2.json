@@ -559,7 +559,7 @@
       "listetype": false,
       "tolkesSom": "String",
       "visTilBruker": false,
-      "kokriterie": false
+      "kokriterie": true
     },
     {
       "id": "fagsakÅr",
