@@ -144,7 +144,7 @@ class PartisjonertOppgaveQuerySqlBuilder(
     }
 
     override fun utenReservasjoner() {
-        whereClause += utenReservasjonerBetingelse
+        whereClause += " $utenReservasjonerBetingelse"
         queryParams["now"] = now
     }
 
