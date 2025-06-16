@@ -15,7 +15,7 @@ import io.ktor.server.auth.*
 import io.ktor.server.http.content.*
 import io.ktor.server.metrics.micrometer.*
 import io.ktor.server.plugins.callid.*
-import io.ktor.server.plugins.callloging.*
+import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.routing.*
@@ -271,14 +271,12 @@ fun Application.k9Los() {
         config = koin.get()
     ).kjør(kjørUmiddelbart = false)
 
-    install(CallIdRequired)
-
     install(CallLogging) {
         correlationIdAndRequestIdInMdc()
         logRequests()
     }
 
-    install(Routing) {
+    routing {
 
         MetricsRoute()
         DefaultProbeRoutes()

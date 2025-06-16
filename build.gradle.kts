@@ -12,8 +12,8 @@ val fuelVersion = "2.3.1"
 val jacksonVersion = "2.17.2"
 val commonsTextVersion = "1.13.0"
 
-val dusseldorfKtorVersion = "5.0.19"
-val ktorVersion = "2.3.13"
+val dusseldorfKtorVersion = "6.1.4"
+val ktorVersion = "3.2.0"
 val kafkaVersion = "3.9.0"
 
 val navTilgangskontroll = "3.2024.01.24_10.14-f70bae69bd65"
@@ -103,6 +103,8 @@ dependencies {
 
     // Test
     testImplementation("org.junit.jupiter:junit-jupiter-api:$jupiterVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:$assertkVersion")
 
