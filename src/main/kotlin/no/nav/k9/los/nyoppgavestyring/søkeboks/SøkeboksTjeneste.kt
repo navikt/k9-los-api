@@ -60,7 +60,7 @@ class SøkeboksTjeneste(
                     operator = EksternFeltverdiOperator.EQUALS,
                     verdi = listOf(journalpostId)
                 )
-            ), order = listOf(EnkelOrderFelt("K9", "mottattDato", true))
+            ), order = listOf(EnkelOrderFelt("K9", "mottattDato", false))
         )
         return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
     }
@@ -81,7 +81,7 @@ class SøkeboksTjeneste(
                     operator = EksternFeltverdiOperator.IN,
                     verdi = listOf(aktørId, fnr)
                 )
-            ), order = listOf(EnkelOrderFelt("K9", "mottattDato", true))
+            ), order = listOf(EnkelOrderFelt("K9", "mottattDato", false))
         )
         return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
     }
@@ -100,7 +100,7 @@ class SøkeboksTjeneste(
                     operator = EksternFeltverdiOperator.IN,
                     verdi = aktørIder
                 )
-            ), order = listOf(EnkelOrderFelt("K9", "mottattDato", true))
+            ), order = listOf(EnkelOrderFelt("K9", "mottattDato", false))
         )
         return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
     }
@@ -119,7 +119,7 @@ class SøkeboksTjeneste(
                     operator = EksternFeltverdiOperator.EQUALS,
                     verdi = listOf(saksnummer)
                 )
-            ), order = listOf(EnkelOrderFelt("K9", "mottattDato", true))
+            ), order = listOf(EnkelOrderFelt("K9", "mottattDato", false))
         )
         return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
     }
