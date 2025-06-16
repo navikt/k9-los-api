@@ -3,10 +3,9 @@ package no.nav.k9.los
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.SerializationFeature
-import io.github.smiley4.ktorswaggerui.SwaggerUI
-import io.github.smiley4.ktorswaggerui.dsl.routing.route
-import io.github.smiley4.ktorswaggerui.routing.openApiSpec
-import io.github.smiley4.ktorswaggerui.routing.swaggerUI
+import io.github.smiley4.ktoropenapi.openApi
+import io.github.smiley4.ktoropenapi.route
+import io.github.smiley4.ktorswaggerui.swaggerUI
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -315,13 +314,12 @@ fun Application.k9Los() {
         fromXCorrelationIdHeader()
     }
 
-    install(SwaggerUI)
 }
 
 private fun Route.api() {
     route("k9/los/api") {
         route("openapi.json") {
-            openApiSpec()
+            openApi()
         }
         swaggerUI("openapi.json")
         route("/forvaltning") {
