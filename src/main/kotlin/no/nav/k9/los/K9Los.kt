@@ -3,6 +3,7 @@ package no.nav.k9.los
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.SerializationFeature
+import io.github.smiley4.ktoropenapi.OpenApi
 import io.github.smiley4.ktoropenapi.openApi
 import io.github.smiley4.ktoropenapi.route
 import io.github.smiley4.ktorswaggerui.swaggerUI
@@ -314,6 +315,7 @@ fun Application.k9Los() {
         fromXCorrelationIdHeader()
     }
 
+    install(OpenApi)
 }
 
 private fun Route.api() {
