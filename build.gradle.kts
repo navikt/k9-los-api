@@ -4,7 +4,7 @@ val mainClass = "no.nav.k9.los.K9LosKt"
 val hikariVersion = "6.2.1"
 val flywayVersion = "11.1.1"
 val vaultJdbcVersion = "1.3.10"
-val koinVersion = "4.0.2"
+val koinVersion = "4.1.0"
 val kotliqueryVersion = "1.9.1"
 val k9SakVersion = "5.4.16"
 val k9KlageVersion = "0.4.7"
@@ -12,8 +12,8 @@ val fuelVersion = "2.3.1"
 val jacksonVersion = "2.17.2"
 val commonsTextVersion = "1.13.0"
 
-val dusseldorfKtorVersion = "5.0.19"
-val ktorVersion = "2.3.13"
+val dusseldorfKtorVersion = "6.1.4"
+val ktorVersion = "3.2.0"
 val kafkaVersion = "3.9.0"
 
 val navTilgangskontroll = "3.2024.01.24_10.14-f70bae69bd65"
@@ -94,7 +94,8 @@ dependencies {
         exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
     }
 
-    implementation("io.github.smiley4:ktor-swagger-ui:3.6.1")
+    implementation("io.github.smiley4:ktor-openapi:5.0.2")
+    implementation("io.github.smiley4:ktor-swagger-ui:5.0.2")
 
 
     // DI
@@ -103,6 +104,8 @@ dependencies {
 
     // Test
     testImplementation("org.junit.jupiter:junit-jupiter-api:$jupiterVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:$assertkVersion")
 
