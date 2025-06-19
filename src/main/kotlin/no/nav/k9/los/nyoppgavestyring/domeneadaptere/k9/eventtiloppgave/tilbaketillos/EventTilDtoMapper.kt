@@ -1,11 +1,11 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos
 
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
-import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
-import no.nav.k9.los.nyoppgavestyring.kodeverk.AksjonspunktStatus.OPPRETTET
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
 import no.nav.k9.los.nyoppgavestyring.kodeverk.AksjonspunktStatus
+import no.nav.k9.los.nyoppgavestyring.kodeverk.AksjonspunktStatus.OPPRETTET
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
@@ -22,7 +22,7 @@ class EventTilDtoMapper {
                 område = "K9",
                 kildeområde = "K9",
                 type = "k9tilbake",
-                status = finnOppgavestatusFraAksjonspunkter(event.aksjonspunktKoderMedStatusListe).kode,
+                status = finnOppgavestatusFraAksjonspunkter(event).kode,
                 endretTidspunkt = event.eventTid,
                 reservasjonsnøkkel = utledReservasjonsnøkkel(event, erTilBeslutter(event)),
                 feltverdier = lagFeltverdier(event, forrigeOppgave)
@@ -32,17 +32,25 @@ class EventTilDtoMapper {
             return lagNøkkelAktør(event, erTilBeslutter)
         }
 
-        private fun finnOppgavestatusFraAksjonspunkter(aksjonspunktMedStatus: Map<String, String>): Oppgavestatus {
+        private fun finnOppgavestatusFraAksjonspunkter(event: K9TilbakeEventDto): Oppgavestatus {
+            val aksjonspunktMedStatus = event.aksjonspunktKoderMedStatusListe
             val harÅpentAutopunkt =
                 aksjonspunktMedStatus.any { it.value == OPPRETTET.kode && AksjonspunktDefinisjonK9Tilbake.fraKode(it.key).erAutopunkt }
             val harÅpentAksjonspunkt =
                 aksjonspunktMedStatus.any { it.value == OPPRETTET.kode && !AksjonspunktDefinisjonK9Tilbake.fraKode(it.key).erAutopunkt }
-            return if (harÅpentAutopunkt) {
-                Oppgavestatus.VENTER
-            } else if (harÅpentAksjonspunkt) {
-                Oppgavestatus.AAPEN
-            } else {
+            return if (event.behandlingStatus == BehandlingStatus.AVSLUTTET.kode) {
                 Oppgavestatus.LUKKET
+            } else {
+                if (!harÅpentAksjonspunkt && !harÅpentAutopunkt) {
+                    Oppgavestatus.AUTOMATISK
+                }
+                if (harÅpentAutopunkt) {
+                    Oppgavestatus.VENTER
+                } else if (harÅpentAksjonspunkt) {
+                    Oppgavestatus.AAPEN
+                } else {
+                    Oppgavestatus.LUKKET
+                }
             }
         }
 
@@ -171,9 +179,7 @@ class EventTilDtoMapper {
         ) {
             val harManueltAksjonspunkt = event.aksjonspunktKoderMedStatusListe
                 .filter { it.value == OPPRETTET.kode || it.value == AksjonspunktStatus.UTFØRT.kode }
-                .map { AksjonspunktDefinisjonK9Tilbake.fraKode(it.key) }
-                .filter { !it.erAutopunkt }
-                .isNotEmpty()
+                .map { AksjonspunktDefinisjonK9Tilbake.fraKode(it.key) }.any { !it.erAutopunkt }
             if (forrigeOppgave != null && forrigeOppgave.hentVerdi("helautomatiskBehandlet").toBoolean().not()) {
                 oppgaveFeltverdiDtos.add(
                     OppgaveFeltverdiDto(
@@ -189,6 +195,10 @@ class EventTilDtoMapper {
                     )
                 )
             }
+        }
+
+        fun isHarEllerHarHattManueltAksjonspunkt(event: K9TilbakeEventDto): Boolean {
+            return event.aksjonspunktKoderMedStatusListe.any { it.value != AksjonspunktStatus.AVBRUTT.kode }
         }
 
         private fun utledAksjonspunkter(

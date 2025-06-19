@@ -129,8 +129,7 @@ class K9TilbakeEventDtoBuilder(
             førsteFeilutbetaling = null,
             feilutbetaltBeløp = 100L,
             href = null,
-            fagsystem = fagsystem.kode,
-            behandlinStatus = behandlingStatus.kode
+            fagsystem = fagsystem.kode
         )
     }
 }
