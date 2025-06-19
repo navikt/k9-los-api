@@ -5,7 +5,8 @@ import com.fasterxml.jackson.annotation.JsonCreator
 enum class Oppgavestatus(val kode: String, val visningsnavn: String) {
     AAPEN("AAPEN", "Åpen"),
     VENTER("VENTER", "Venter"),
-    LUKKET("LUKKET", "Lukket");
+    LUKKET("LUKKET", "Lukket"),
+    AUTOMATISK("AUTOMATISK", "Automatisk"),;
 
     companion object {
         @JsonCreator(mode = JsonCreator.Mode.DELEGATING)

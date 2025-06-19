@@ -1,12 +1,16 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos
 
-import no.nav.k9.klage.kodeverk.behandling.*
+import no.nav.k9.klage.kodeverk.behandling.BehandlingResultatType
+import no.nav.k9.klage.kodeverk.behandling.BehandlingStatus
+import no.nav.k9.klage.kodeverk.behandling.BehandlingStegType
+import no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktType
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.Aksjonspunkttilstand
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
@@ -57,6 +61,12 @@ class EventTilDtoMapper {
             reservasjonsnøkkel = utledReservasjonsnøkkel(event),
             feltverdier = lagFeltverdier(event, forrigeOppgave)
         )
+
+        fun isHarEllerHarHattManueltAksjonspunkt(event: K9SakEventDto): Boolean {
+            return event.aksjonspunktTilstander
+                .filter { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.status != no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus.AVBRUTT }
+                .any { aksjonspunktTilstandDto -> MANUELLE_AKSJONSPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode) }
+        }
 
         private fun utledReservasjonsnøkkel(event: K9KlageEventDto): String {
             return if (erTilBeslutter(event)) {

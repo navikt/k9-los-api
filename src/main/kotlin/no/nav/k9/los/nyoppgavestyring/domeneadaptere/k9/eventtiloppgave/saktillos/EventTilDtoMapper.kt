@@ -1,18 +1,16 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos
 
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
-import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.kodeverk.behandling.BehandlingÅrsakType
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.*
 import no.nav.k9.kodeverk.produksjonsstyring.BehandlingMerknadType
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import org.jetbrains.annotations.VisibleForTesting
 import java.time.temporal.ChronoUnit
@@ -34,7 +32,9 @@ class EventTilDtoMapper {
                 område = "K9",
                 kildeområde = "K9",
                 type = "k9sak",
-                status = if (event.aksjonspunktTilstander.any { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.status.erÅpentAksjonspunkt() }) {
+                status = if (!isHarEllerHarHattManueltAksjonspunkt(event) && event.behandlingStatus != BehandlingStatus.AVSLUTTET.kode) {
+                    Oppgavestatus.AUTOMATISK.kode
+                } else if (event.aksjonspunktTilstander.any { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.status.erÅpentAksjonspunkt() }) {
                     if (oppgaveSkalHaVentestatus(event)) {
                         Oppgavestatus.VENTER.kode
                     } else {
@@ -51,6 +51,34 @@ class EventTilDtoMapper {
                 reservasjonsnøkkel = utledReservasjonsnøkkel(event, erTilBeslutter(event)),
                 feltverdier = lagFeltverdier(event, forrigeOppgave)
             )
+
+        fun utledOppgavestatus(event: K9SakEventDto): Oppgavestatus {
+            val aksjonspunkter = event.aksjonspunktTilstander
+            val harÅpentAutopunkt =
+                aksjonspunkter
+                    .filter { AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode()).erAutopunkt() }
+                    .any { it.status.erÅpentAksjonspunkt() }
+            val harÅpentAksjonspunkt =
+                aksjonspunkter
+                    .filter { !AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode()).erAutopunkt() }
+                    .any { it.status.erÅpentAksjonspunkt() }
+            val harUavbruttManueltAksjonspunkt: Boolean =
+                aksjonspunkter
+                    .filter { !AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode()).erAutopunkt() }
+                    .any { it.status != AksjonspunktStatus.AVBRUTT }
+            return if (event.behandlingStatus == BehandlingStatus.AVSLUTTET.kode) {
+                Oppgavestatus.LUKKET
+            } else {
+                if (!harUavbruttManueltAksjonspunkt) {
+                    Oppgavestatus.AUTOMATISK
+                }
+                if (harÅpentAutopunkt) {
+                    Oppgavestatus.VENTER
+                } else {
+                    Oppgavestatus.AAPEN
+                }
+            }
+        }
 
         fun utledReservasjonsnøkkel(event: K9SakEventDto, erTilBeslutter: Boolean): String {
             return when (FagsakYtelseType.fraKode(event.ytelseTypeKode)) {
@@ -92,6 +120,10 @@ class EventTilDtoMapper {
             return ventetype != Ventekategori.AVVENTER_SAKSBEHANDLER
         }
 
+        fun isHarEllerHarHattManueltAksjonspunkt(event: K9SakEventDto): Boolean {
+            return event.aksjonspunktTilstander.any { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.status != AksjonspunktStatus.AVBRUTT }
+        }
+
         private fun lagFeltverdier(
             event: K9SakEventDto,
             forrigeOppgave: OppgaveV3?
@@ -100,9 +132,7 @@ class EventTilDtoMapper {
 
             val åpneAksjonspunkter = getåpneAksjonspunkter(event)
 
-            val harEllerHarHattManueltAksjonspunkt = event.aksjonspunktTilstander
-                .filter { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.status != AksjonspunktStatus.AVBRUTT }
-                .any { aksjonspunktTilstandDto -> MANUELLE_AKSJONSPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode) }
+            val harEllerHarHattManueltAksjonspunkt = isHarEllerHarHattManueltAksjonspunkt(event)
 
             utledAksjonspunkter(event, oppgaveFeltverdiDtos)
             utledÅpneAksjonspunkter(event.behandlingSteg, åpneAksjonspunkter, oppgaveFeltverdiDtos)
