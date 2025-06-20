@@ -33,7 +33,7 @@ class RefreshK9v3(
                             Thread.sleep(15000)
                         }
                     } catch (e: Exception) {
-                        log.error("Feilet ved refresh av oppgaver i k9-sak: " + hendelser.joinToString(", ").take(1000), e)
+                        log.error("Feilet ved refresh av oppgaver i k9-sak: " + hendelser.joinToString(", "), e)
                     } catch (t : Throwable) {
                         log.error("Feilet hardt (Throwable) ved refresh av oppgaver (v3) mot k9-sak, avslutter tråden", t)
                         throw t;
