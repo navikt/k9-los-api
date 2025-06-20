@@ -29,9 +29,6 @@ object TestConfiguration {
         map["nav.audit.product"] = "test"
         map["nav.auth.trustore.path"] = "vtp"
         map["nav.auth.trustore.password"] = "vtp"
-        map["nav.abac.system_user"] = "very"
-        map["nav.abac.system_user_password"] = "secret"
-        map["nav.abac.url"] = "https://url"
 
         map["nav.auth.clients.size"] = "1"
         map["nav.auth.clients.0.alias"] = "azure-v2"
