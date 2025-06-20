@@ -15,10 +15,14 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.sif.abac.kontrakt.abac.BeskyttetRessursActionAttributt
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import no.nav.sif.abac.kontrakt.abac.ResourceType
-import no.nav.sif.abac.kontrakt.abac.dto.*
+import no.nav.sif.abac.kontrakt.abac.dto.OperasjonDto
+import no.nav.sif.abac.kontrakt.abac.dto.PersonerOperasjonDto
+import no.nav.sif.abac.kontrakt.abac.dto.PersonerOperasjonGrupperDto
+import no.nav.sif.abac.kontrakt.abac.dto.SaksnummerDto
+import no.nav.sif.abac.kontrakt.abac.dto.SaksnummerOperasjonDto
+import no.nav.sif.abac.kontrakt.abac.dto.SaksnummerOperasjonGrupperDto
 import no.nav.sif.abac.kontrakt.abac.resultat.Tilgangsbeslutning
 import no.nav.sif.abac.kontrakt.person.AktørId
-import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.*
@@ -29,7 +33,7 @@ class SifAbacPdpKlient(
     accessTokenClient: AccessTokenClient,
     scope: String
 ) : ISifAbacPdpKlient {
-    val log: Logger = LoggerFactory.getLogger("SifAbacPdpKlient")
+    val log = LoggerFactory.getLogger("SifAbacPdpKlient")
     private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
     private val url = configuration.sifAbacPdpUrl()
     private val scopes = setOf(scope)
@@ -134,24 +138,14 @@ class SifAbacPdpKlient(
         return LosObjectMapper.instance.readValue<Tilgangsbeslutning>(abc).harTilgang()
     }
 
-    override suspend fun harTilgangTilSak(
-        action: Action,
-        saksnummerDto: SaksnummerDto,
-        saksbehandlersIdent: String,
-        saksbehandlersGrupper: Set<UUID>
-    ): Boolean {
-        if (!saksbehandlersIdent.matches(Regex("^[A-ZÆØÅ][0-9]{6}$"))) {
+    override suspend fun harTilgangTilSak(action: Action, saksnummerDto: SaksnummerDto, saksbehandlersIdent : String, saksbehandlersGrupper : Set<UUID>): Boolean {
+        if (!saksbehandlersIdent.matches(Regex("^[A-ZÆØÅ][0-9]{6}$"))){
             throw IllegalArgumentException("Saksbehandlers ident var '$saksbehandlersIdent', passer ikke med validering")
         }
-        if (saksnummerDto.saksnummer.trim().isEmpty()) {
+        if (saksnummerDto.saksnummer.trim().isEmpty()){
             throw IllegalArgumentException("Mangler saksnummer, passer ikke med validering")
         }
-        val request = SaksnummerOperasjonGrupperDto(
-            saksbehandlersIdent,
-            saksbehandlersGrupper.toList(),
-            saksnummerDto,
-            OperasjonDto(ResourceType.FAGSAK, map(action))
-        )
+        val request = SaksnummerOperasjonGrupperDto(saksbehandlersIdent, saksbehandlersGrupper.toList(), saksnummerDto, OperasjonDto(ResourceType.FAGSAK, map(action)))
         val antallForsøk = 3
         val systemToken = cachedAccessTokenClient.getAccessToken(scopes)
         val body = LosObjectMapper.instance.writeValueAsString(request)
@@ -212,19 +206,8 @@ class SifAbacPdpKlient(
     }
 
 
-    override suspend fun harTilgangTilPersoner(
-        action: Action,
-        aktørIder: List<AktørId>,
-        saksbehandlersIdent: String,
-        saksbehandlersGrupper: Set<UUID>
-    ): Boolean {
-        val request = PersonerOperasjonGrupperDto(
-            saksbehandlersIdent,
-            saksbehandlersGrupper.toList(),
-            aktørIder,
-            emptyList(),
-            OperasjonDto(ResourceType.FAGSAK, map(action))
-        )
+    override suspend fun harTilgangTilPersoner(action: Action, aktørIder: List<AktørId>, saksbehandlersIdent : String, saksbehandlersGrupper : Set<UUID>): Boolean {
+        val request = PersonerOperasjonGrupperDto(saksbehandlersIdent,saksbehandlersGrupper.toList(), aktørIder, emptyList(), OperasjonDto(ResourceType.FAGSAK, map(action)))
         val antallForsøk = 3
         val systemToken = cachedAccessTokenClient.getAccessToken(scopes)
         val body = LosObjectMapper.instance.writeValueAsString(request)
