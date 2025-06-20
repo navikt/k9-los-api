@@ -1,17 +1,30 @@
 package no.nav.k9.los.apis
 
 import com.github.tomakehurst.wiremock.WireMockServer
-import io.ktor.client.request.*
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.plugins.calllogging.*
+import io.ktor.server.application.Application
+import io.ktor.server.application.call
+import io.ktor.server.application.install
+import io.ktor.server.auth.Authentication
+import io.ktor.server.auth.authenticate
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.response.respond
+import io.ktor.server.routing.post
+import io.ktor.server.routing.route
+import io.ktor.server.routing.routing
+import io.ktor.server.plugins.callloging.CallLogging
 import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.plugins.statuspages.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
-import io.ktor.server.testing.*
-import no.nav.helse.dusseldorf.ktor.auth.*
+import io.ktor.server.testing.TestApplicationEngine
+import io.ktor.server.testing.handleRequest
+import io.ktor.server.testing.setBody
+import io.ktor.server.testing.withTestApplication
+import no.nav.helse.dusseldorf.ktor.auth.AuthStatusPages
+import no.nav.helse.dusseldorf.ktor.auth.Issuer
+import no.nav.helse.dusseldorf.ktor.auth.allIssuers
+import no.nav.helse.dusseldorf.ktor.auth.multipleJwtIssuers
+import no.nav.helse.dusseldorf.ktor.auth.withoutAdditionalClaimRules
 import no.nav.helse.dusseldorf.ktor.core.DefaultStatusPages
 import no.nav.helse.dusseldorf.ktor.core.logRequests
 import no.nav.helse.dusseldorf.ktor.jackson.JacksonStatusPages
@@ -28,17 +41,11 @@ class AuthenticationTest {
     fun `POST request med og uten CORS`() {
         val wireMock = WireMockBuilder().withAzureSupport().build()
 
-        testApplication {
-            application {
-                testApp(wireMock = wireMock, cors = true)
-            }
+        withTestApplication({ testApp(wireMock = wireMock, cors = true) }) {
             sendJsonRequest(forventetHttpResponseCode = HttpStatusCode.Forbidden)
         }
 
-        testApplication {
-            application {
-                testApp(wireMock = wireMock, cors = false)
-            }
+        withTestApplication({ testApp(wireMock = wireMock, cors = false) }) {
             sendJsonRequest(forventetHttpResponseCode = HttpStatusCode.NoContent)
             sendJsonRequest(
                 forventetHttpResponseCode = HttpStatusCode.Forbidden, authorizationHeader = authorizationHeader(
@@ -50,17 +57,18 @@ class AuthenticationTest {
         wireMock.stop()
     }
 
-    private suspend fun ApplicationTestBuilder.sendJsonRequest(
+    private fun TestApplicationEngine.sendJsonRequest(
         authorizationHeader: String = authorizationHeader(),
         forventetHttpResponseCode: HttpStatusCode
     ) {
-        val response = client.post("/test") {
-            header(HttpHeaders.Authorization, authorizationHeader)
-            header(HttpHeaders.ContentType, "application/json")
-            header(HttpHeaders.Origin, "https://k9-los.nav.no")
+        handleRequest(HttpMethod.Post, "/test") {
+            addHeader(HttpHeaders.Authorization, authorizationHeader)
+            addHeader(HttpHeaders.ContentType, "application/json")
+            addHeader(HttpHeaders.Origin, "https://k9-los.nav.no")
             setBody("""{ "test": true }""".trimIndent())
+        }.apply {
+            assertEquals(forventetHttpResponseCode, response.status())
         }
-        assertEquals(forventetHttpResponseCode, response.status)
     }
 
     private fun Application.testApp(
