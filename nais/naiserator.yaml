@@ -150,10 +150,6 @@ spec:
     - name: "OTEL_RESOURCE_ATTRIBUTES"
       value: "service.name=k9-los-api,service.namespace=k9saksbehandling,deployment.environment={{deployment_environment}},nais.backend=elastic-apm;grafana-lgtm"
 
-      # ABAC
-    - name: ABAC_PDP_ENDPOINT_URL
-      value: http://abac-k9.k9saksbehandling.svc.nais.local/application/authorize
-
       # Audit logging
     - name: AUDITLOGGER_ENABLED
       value: "true"
@@ -204,8 +200,6 @@ spec:
       value: "true"
     - name: TILBAKE_CONSUMER_AIVEN
       value: "true"
-    - name: VALGT_PDP
-      value : "{{valgt_pdp}}"
 
     - name: NOKKELTALL_ENHETER
       value: "{{nokkeltall_enheter}}"

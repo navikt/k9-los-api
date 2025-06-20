@@ -104,8 +104,6 @@ fun Application.k9Los() {
     val configuration = Configuration(environment.config)
     val issuers = configuration.issuers()
 
-    log.info("Valgt pdp er ${configuration.valgtPdp()}")
-
     install(Koin) {
         modules(selectModuleBasedOnProfile(this@k9Los, config = configuration))
     }
