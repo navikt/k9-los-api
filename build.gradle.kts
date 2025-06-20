@@ -12,7 +12,7 @@ val fuelVersion = "2.3.1"
 val jacksonVersion = "2.17.2"
 val commonsTextVersion = "1.13.0"
 
-val dusseldorfKtorVersion = "7.0.0"
+val dusseldorfKtorVersion = "6.1.4"
 val ktorVersion = "3.2.0"
 val kafkaVersion = "3.9.0"
 
