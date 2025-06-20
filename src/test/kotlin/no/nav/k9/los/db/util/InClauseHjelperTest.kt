@@ -2,6 +2,7 @@ package no.nav.k9.los.db.util
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.util.InClauseHjelper
 import org.junit.jupiter.api.Test
 
 class InClauseHjelperTest {

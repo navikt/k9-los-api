@@ -4,18 +4,30 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.k9.los.integrasjon.abac.IPepClient
-import no.nav.k9.los.integrasjon.rest.RequestContextService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetGruppe
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.status.StatusService
 import org.koin.ktor.ext.inject
 
 fun Route.NøkkeltallV3Apis() {
+    val statusService by inject<StatusService>()
     val dagensTallService by inject<DagensTallService>()
     val perEnhetService by inject<FerdigstiltePerEnhetService>()
     val requestContextService by inject<RequestContextService>()
     val pepClient by inject<IPepClient>()
+
+    get("status") {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.erOppgaveStyrer()) {
+                call.respond(statusService.hentStatus(pepClient.harTilgangTilKode6()))
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
 
     get("dagens-tall") {
         requestContextService.withRequestContext(call) {

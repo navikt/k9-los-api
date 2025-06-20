@@ -7,24 +7,28 @@ import no.nav.k9.kodeverk.behandling.BehandlingÅrsakType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.kodeverk.uttak.SøknadÅrsak
 import no.nav.k9.los.KoinProfile
-import no.nav.k9.los.aksjonspunktbehandling.AksjonspunktDefinisjonK9Tilbake
-import no.nav.k9.los.aksjonspunktbehandling.K9TilbakeEventHandler
-import no.nav.k9.los.aksjonspunktbehandling.K9punsjEventHandler
-import no.nav.k9.los.aksjonspunktbehandling.K9sakEventHandler
-import no.nav.k9.los.domene.modell.*
-import no.nav.k9.los.domene.repository.SaksbehandlerRepository
-import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
-import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventTilbakeDto
-import no.nav.k9.los.integrasjon.kafka.dto.EventHendelse
-import no.nav.k9.los.integrasjon.kafka.dto.PunsjEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
+import no.nav.k9.sak.typer.Periode
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 import kotlin.random.Random
 
 val saksbehandlere = listOf(
@@ -56,9 +60,9 @@ val saksbehandlere = listOf(
 
 object localSetup : KoinComponent {
     private val saksbehandlerRepository: SaksbehandlerRepository by inject()
-    private val punsjEventHandler: K9punsjEventHandler by inject()
+    private val punsjEventHandler: no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler by inject()
     private val tilbakeEventHandler: K9TilbakeEventHandler by inject()
-    private val sakEventHandler: K9sakEventHandler by inject()
+    private val sakEventHandler: K9SakEventHandler by inject()
     private val profile: KoinProfile by inject()
 
     fun initSaksbehandlere() {
@@ -85,14 +89,14 @@ object localSetup : KoinComponent {
                     FagsakYtelseType.OMSORGSPENGER,
                 ).shuffled().first().kode
                 val opprettetBehandling = LocalDateTime.now().minusDays(Random.nextLong(10, 20))
-                val vedtaksdato = opprettetBehandling.plusDays(Random.nextLong(1, 10)).toLocalDate()
-                val aktørId = Random.nextInt(0, 9999999).toString()
-                val pleietrengendeAktørId = Random.nextInt(0, 9999999).toString()
+                val aktørId = "2392173967319"
+                val pleietrengendeAktørId = "1234567890123"
                 sakEventHandler.prosesser(
-                    BehandlingProsessEventDto(
+                    K9SakEventDto(
                         eksternId,
                         Fagsystem.K9SAK,
                         saksnummer,
+                        fagsakPeriode = Periode(LocalDate.now().minusMonths(2), LocalDate.now()),
                         behandlingId = behandlingId,
                         fraEndringsdialog = false,
                         resultatType = BehandlingResultatType.IKKE_FASTSATT.kode,
@@ -122,22 +126,21 @@ object localSetup : KoinComponent {
                 // ferdigstill noen av sakene
                 if (Random.nextBoolean()) {
                     sakEventHandler.prosesser(
-                        BehandlingProsessEventDto(
+                        K9SakEventDto(
                             eksternId,
                             Fagsystem.K9SAK,
                             saksnummer,
                             behandlingId = behandlingId,
                             fraEndringsdialog = false,
                             resultatType = BehandlingResultatType.INNVILGET.kode,
-                            behandlendeEnhet = listOf("4409", "4432").shuffled().first(),
                             aksjonspunktTilstander = emptyList(),
                             søknadsårsaker = mutableListOf<SøknadÅrsak>().map { it.kode },
                             behandlingsårsaker = mutableListOf<BehandlingÅrsakType>().map { it.kode },
-                            ansvarligSaksbehandlerIdent = "X123456",
+                            ansvarligSaksbehandlerIdent = "Z123456",
                             ansvarligBeslutterForTotrinn = "Y123456",
-                            ansvarligSaksbehandlerForTotrinn = "X123456",
+                            ansvarligSaksbehandlerForTotrinn = "Z123456",
                             opprettetBehandling = LocalDateTime.now(),
-                            vedtaksdato = vedtaksdato,
+                            vedtaksdato = LocalDate.now(),
                             pleietrengendeAktørId = pleietrengendeAktørId,
                             aktørId = aktørId,
                             behandlingStatus = BehandlingStatus.AVSLUTTET.kode,
@@ -159,7 +162,7 @@ object localSetup : KoinComponent {
     fun initTilbakeoppgaver(antall: Int) {
         if (profile == KoinProfile.LOCAL) {
             for (i in 0..<antall) {
-                val event = BehandlingProsessEventTilbakeDto(
+                val event = K9TilbakeEventDto(
                     eksternId = UUID.randomUUID(),
                     saksnummer = Random.nextInt(0, 200 * antall).toString(),
                     behandlingId = 123L,

@@ -2,9 +2,9 @@ package no.nav.k9.los.eventhandler
 
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.domene.repository.ReservasjonRepository
-import no.nav.k9.los.domene.repository.SaksbehandlerRepository
-import no.nav.k9.los.jobber.JobbMetrikker
-import no.nav.k9.los.utils.OpentelemetrySpanUtil
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.JobbMetrikker
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.OpentelemetrySpanUtil
 import java.util.*
 import kotlin.concurrent.fixedRateTimer
 

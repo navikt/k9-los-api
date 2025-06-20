@@ -1,17 +1,17 @@
 package no.nav.k9.los.fagsystem.k9punsj
 
-import no.nav.k9.los.aksjonspunktbehandling.EventTeller
-import no.nav.k9.los.aksjonspunktbehandling.EventHandlerMetrics
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventTeller
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHandlerMetrics
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.v2.*
-import no.nav.k9.los.domene.modell.FagsakYtelseType
-import no.nav.k9.los.domene.modell.Fagsystem
-import no.nav.k9.los.domene.modell.IModell
+import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.IModell
 import no.nav.k9.los.fagsystem.k9punsj.kontrakt.ProduksjonsstyringHendelse
 import no.nav.k9.los.fagsystem.k9punsj.kontrakt.ProduksjonsstyringOppgaveAvbruttHendelse
 import no.nav.k9.los.fagsystem.k9punsj.kontrakt.ProduksjonsstyringOppgaveFerdigstiltHendelse
 import no.nav.k9.los.fagsystem.k9punsj.kontrakt.ProduksjonsstyringOppgaveOpprettetHendelse
-import no.nav.k9.los.integrasjon.azuregraph.IAzureGraphService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.IAzureGraphService
 import org.slf4j.LoggerFactory
 
 

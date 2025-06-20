@@ -9,22 +9,20 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
-import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
-import no.nav.k9.los.domene.modell.BehandlingType
-import no.nav.k9.los.domene.modell.Saksbehandler
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.domene.repository.ReservasjonRepository
-import no.nav.k9.los.domene.repository.SaksbehandlerRepository
-import no.nav.k9.los.eventhandler.DetaljerMetrikker
-import no.nav.k9.los.integrasjon.abac.IPepClient
-import no.nav.k9.los.integrasjon.pdl.IPdlService
-import no.nav.k9.los.integrasjon.pdl.fnr
-import no.nav.k9.los.integrasjon.pdl.navn
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.DetaljerMetrikker
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.IPdlService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.fnr
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.navn
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.ko.dto.NesteOppgaverFraKoDto
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveId
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.query.Avgrensning
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
@@ -35,12 +33,13 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgaverad
 import no.nav.k9.los.nyoppgavestyring.reservasjon.AlleredeReservertException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ManglerTilgangException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
-import no.nav.k9.los.tjenester.saksbehandler.IIdToken
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.idtoken.IIdToken
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
-import no.nav.k9.los.utils.Cache
-import no.nav.k9.los.utils.leggTilDagerHoppOverHelg
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.leggTilDagerHoppOverHelg
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.LocalDateTime
@@ -52,7 +51,6 @@ class OppgaveKoTjeneste(
     private val oppgaveKoRepository: OppgaveKoRepository,
     private val oppgaveQueryService: OppgaveQueryService,
     private val oppgaveRepository: OppgaveRepository,
-    private val aktivOppgaveRepository: AktivOppgaveRepository,
     private val oppgaveRepositoryTxWrapper: OppgaveRepositoryTxWrapper,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
     private val saksbehandlerRepository: SaksbehandlerRepository,
@@ -254,7 +252,7 @@ class OppgaveKoTjeneste(
         var antallKandidaterEtterspurt = 1
         while (true) {
             val kandidatOppgaver = DetaljerMetrikker.time("taReservasjonFraKø", "queryForOppgaveId", "$oppgaveKoId") {
-                    oppgaveQueryService.queryForOppgaveId(
+                    oppgaveQueryService.queryForOppgave(
                         QueryRequest(
                             oppgavekø.oppgaveQuery,
                             fjernReserverte = true,
@@ -282,14 +280,12 @@ class OppgaveKoTjeneste(
 
     @WithSpan
     private fun finnReservasjonFraKø(
-        kandidatoppgaver: List<AktivOppgaveId>,
+        kandidatoppgaver: List<Oppgave>,
         tx: TransactionalSession,
         innloggetBrukerId: Long,
         coroutineContext: CoroutineContext,
     ): OppgaveMuligReservert {
-        for (kandidatoppgaveId in kandidatoppgaver) {
-            val kandidatoppgave = aktivOppgaveRepository.hentOppgaveForId(tx, kandidatoppgaveId)
-
+        for (kandidatoppgave in kandidatoppgaver) {
             try {
                 //if (kandidatoppgave.oppgavetype.eksternId == "k9klage") //TODO: Hvis klageoppgave/klagekø -- IKKE ta reservasjon i V1. Disse kan ikke speiles
                 // Fjernes når V1 skal vekk

@@ -2,7 +2,7 @@ package no.nav.k9.los
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import no.nav.k9.los.db.runMigration
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.runMigration
 import org.junit.jupiter.api.AfterEach
 import org.testcontainers.containers.PostgreSQLContainer
 import javax.sql.DataSource
@@ -74,6 +74,7 @@ abstract class AbstractPostgresTest {
                 reservasjon,
                 saksbehandler,
                 siste_behandlinger,
+                siste_oppgaver,
                 OPPGAVEKO_SAKSBEHANDLER,
                 OPPGAVEKO_V3,
                 RESERVASJON_V3,
@@ -85,10 +86,13 @@ abstract class AbstractPostgresTest {
                 omrade,
                 oppgavetype,
                 oppgavefelt,
-                oppgave_v3,
-                oppgavefelt_Verdi,
-                oppgave_v3_aktiv,
+                oppgavefelt_verdi_part,
+                oppgavefelt_verdi,
                 oppgavefelt_verdi_aktiv,
+                oppgave_v3_part,
+                oppgave_id_part,
+                oppgave_v3,
+                oppgave_v3_aktiv,
                 feltdefinisjon,
                 oppgave_v3_sendt_dvh;
                 

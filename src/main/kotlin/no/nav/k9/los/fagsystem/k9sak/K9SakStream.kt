@@ -3,14 +3,14 @@ package no.nav.k9.los.fagsystem.k9sak
 import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.Configuration
-import no.nav.k9.los.aksjonspunktbehandling.SerDes
-import no.nav.k9.los.aksjonspunktbehandling.Topic
-import no.nav.k9.los.integrasjon.kafka.ManagedKafkaStreams
-import no.nav.k9.los.integrasjon.kafka.ManagedStreamHealthy
-import no.nav.k9.los.integrasjon.kafka.ManagedStreamReady
-import no.nav.k9.los.integrasjon.kafka.IKafkaConfig
-import no.nav.k9.los.utils.LosObjectMapper
-import no.nav.k9.los.utils.TransientFeilHåndterer
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.SerDes
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.Topic
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.IKafkaConfig
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.ManagedKafkaStreams
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.ManagedStreamHealthy
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.ManagedStreamReady
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.TransientFeilHåndterer
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.ProduksjonsstyringHendelse
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import org.apache.kafka.streams.StreamsBuilder
@@ -55,9 +55,10 @@ internal class K9SakStream constructor(
                 .stream(
                     fromTopic.name,
                     Consumed.with(fromTopic.keySerde, fromTopic.valueSerde)
-                ).peek { _, e -> log.info("--> K9SakHendelse: ${e.tryggToString()}") }
-                .foreach { _, entry ->
+                )
+                .foreach { key, entry ->
                     if (entry != null) {
+                        log.info("--> K9SakHendelse med key=$key: ${entry.tryggToString()}")
                         TransientFeilHåndterer().utfør(NAME) {
                             runBlocking {
                                 k9sakEventHandler.prosesser(entry)
@@ -73,10 +74,11 @@ internal class K9SakStream constructor(
                 return data?.let {
                     return try {
                         LosObjectMapper.instance.readValue(it)
-                    } catch (e: Exception) {
+                    }
+                    catch (e: Exception) {
                         log.warn("", e)
                         log.warn(String(it))
-                        throw e
+                        null
                     }
                 }
             }

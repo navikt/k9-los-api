@@ -3,8 +3,10 @@ package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import no.nav.k9.los.domene.modell.BehandlingType
-import no.nav.k9.los.domene.modell.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.CacheObject
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
@@ -12,8 +14,6 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.KodeOgNavn
-import no.nav.k9.los.utils.Cache
-import no.nav.k9.los.utils.CacheObject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
@@ -43,11 +43,11 @@ class DagensTallService(
     }
 
     private fun hentFraDatabase(): DagensTallResponse {
-        val ytelser = listOf(
-            FagsakYtelseType.OMSORGSPENGER,
-            FagsakYtelseType.OMSORGSDAGER,
-            FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
-            FagsakYtelseType.PPN
+        val grupper = listOf(
+            DagensTallHovedgruppe.OMSORGSPENGER,
+            DagensTallHovedgruppe.OMSORGSDAGER,
+            DagensTallHovedgruppe.PLEIEPENGER_SYKT_BARN,
+            DagensTallHovedgruppe.PPN,
         )
         val behandlingstyper = listOf(
             BehandlingType.FORSTEGANGSSOKNAD,
@@ -63,24 +63,16 @@ class DagensTallService(
             DagensTallDto(
                 hovedgruppe = DagensTallHovedgruppe.ALLE,
                 undergruppe = DagensTallUndergruppe.TOTALT,
-                nyeIDag = hentTall(
-                    datotype = Datotype.MOTTATTDATO,
-                    operator = EksternFeltverdiOperator.EQUALS,
+                nyeIDag = hentNye(
                     dato = LocalDate.now(),
                 ),
-                ferdigstilteIDag = hentTall(
-                    datotype = Datotype.VEDTAKSDATO,
-                    operator = EksternFeltverdiOperator.EQUALS,
+                ferdigstilteIDag = hentFerdigstilte(
                     dato = LocalDate.now(),
                 ),
-                nyeSiste7Dager = hentTall(
-                    datotype = Datotype.MOTTATTDATO,
-                    operator = EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS,
+                nyeSiste7Dager = hentNye(
                     dato = LocalDate.now().minusDays(7),
                 ),
-                ferdigstilteSiste7Dager = hentTall(
-                    datotype = Datotype.VEDTAKSDATO,
-                    operator = EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS,
+                ferdigstilteSiste7Dager = hentFerdigstilte(
                     dato = LocalDate.now().minusDays(7),
                 )
             )
@@ -91,27 +83,19 @@ class DagensTallService(
                 DagensTallDto(
                     hovedgruppe = DagensTallHovedgruppe.ALLE,
                     undergruppe = DagensTallUndergruppe.fraBehandlingType(behandlingType),
-                    nyeIDag = hentTall(
-                        datotype = Datotype.MOTTATTDATO,
-                        operator = EksternFeltverdiOperator.EQUALS,
+                    nyeIDag = hentNye(
                         dato = LocalDate.now(),
                         behandlingType = behandlingType,
                     ),
-                    ferdigstilteIDag = hentTall(
-                        datotype = Datotype.VEDTAKSDATO,
-                        operator = EksternFeltverdiOperator.EQUALS,
+                    ferdigstilteIDag = hentFerdigstilte(
                         dato = LocalDate.now(),
                         behandlingType = behandlingType,
                     ),
-                    nyeSiste7Dager = hentTall(
-                        datotype = Datotype.MOTTATTDATO,
-                        operator = EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS,
+                    nyeSiste7Dager = hentNye(
                         dato = LocalDate.now().minusDays(7),
                         behandlingType = behandlingType,
                     ),
-                    ferdigstilteSiste7Dager = hentTall(
-                        datotype = Datotype.VEDTAKSDATO,
-                        operator = EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS,
+                    ferdigstilteSiste7Dager = hentFerdigstilte(
                         dato = LocalDate.now().minusDays(7),
                         behandlingType = behandlingType,
                     )
@@ -119,37 +103,28 @@ class DagensTallService(
             )
         }
 
-        for (ytelseType in ytelser) {
-            val hovedgruppe = DagensTallHovedgruppe.fraFagsakYtelseType(ytelseType)
+        for (hovedgruppe in grupper) {
 
             // Totalt for ytelse
             tall.add(
                 DagensTallDto(
                     hovedgruppe = hovedgruppe,
                     undergruppe = DagensTallUndergruppe.TOTALT,
-                    nyeIDag = hentTall(
-                        datotype = Datotype.MOTTATTDATO,
-                        operator = EksternFeltverdiOperator.EQUALS,
+                    nyeIDag = hentNye(
                         dato = LocalDate.now(),
-                        fagsakYtelseType = ytelseType,
+                        ytelser = hovedgruppe.ytelser,
                     ),
-                    ferdigstilteIDag = hentTall(
-                        datotype = Datotype.VEDTAKSDATO,
-                        operator = EksternFeltverdiOperator.EQUALS,
+                    ferdigstilteIDag = hentFerdigstilte(
                         dato = LocalDate.now(),
-                        fagsakYtelseType = ytelseType,
+                        ytelser = hovedgruppe.ytelser,
                     ),
-                    nyeSiste7Dager = hentTall(
-                        datotype = Datotype.MOTTATTDATO,
-                        operator = EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS,
+                    nyeSiste7Dager = hentNye(
                         dato = LocalDate.now().minusDays(7),
-                        fagsakYtelseType = ytelseType,
+                        ytelser = hovedgruppe.ytelser,
                     ),
-                    ferdigstilteSiste7Dager = hentTall(
-                        datotype = Datotype.VEDTAKSDATO,
-                        operator = EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS,
+                    ferdigstilteSiste7Dager = hentFerdigstilte(
                         dato = LocalDate.now().minusDays(7),
-                        fagsakYtelseType = ytelseType,
+                        ytelser = hovedgruppe.ytelser,
                     )
                 )
             )
@@ -159,32 +134,24 @@ class DagensTallService(
                     DagensTallDto(
                         hovedgruppe = hovedgruppe,
                         undergruppe = DagensTallUndergruppe.fraBehandlingType(behandlingType),
-                        nyeIDag = hentTall(
-                            datotype = Datotype.MOTTATTDATO,
-                            operator = EksternFeltverdiOperator.EQUALS,
+                        nyeIDag = hentNye(
                             dato = LocalDate.now(),
-                            fagsakYtelseType = ytelseType,
+                            ytelser = hovedgruppe.ytelser,
                             behandlingType = behandlingType,
                         ),
-                        ferdigstilteIDag = hentTall(
-                            datotype = Datotype.VEDTAKSDATO,
-                            operator = EksternFeltverdiOperator.EQUALS,
+                        ferdigstilteIDag = hentFerdigstilte(
                             dato = LocalDate.now(),
-                            fagsakYtelseType = ytelseType,
+                            ytelser = hovedgruppe.ytelser,
                             behandlingType = behandlingType,
                         ),
-                        nyeSiste7Dager = hentTall(
-                            datotype = Datotype.MOTTATTDATO,
-                            operator = EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS,
+                        nyeSiste7Dager = hentNye(
                             dato = LocalDate.now().minusDays(7),
-                            fagsakYtelseType = ytelseType,
+                            ytelser = hovedgruppe.ytelser,
                             behandlingType = behandlingType,
                         ),
-                        ferdigstilteSiste7Dager = hentTall(
-                            datotype = Datotype.VEDTAKSDATO,
-                            operator = EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS,
+                        ferdigstilteSiste7Dager = hentFerdigstilte(
                             dato = LocalDate.now().minusDays(7),
-                            fagsakYtelseType = ytelseType,
+                            ytelser = hovedgruppe.ytelser,
                             behandlingType = behandlingType,
                         )
                     )
@@ -197,31 +164,21 @@ class DagensTallService(
             DagensTallDto(
                 hovedgruppe = DagensTallHovedgruppe.PUNSJ,
                 undergruppe = DagensTallUndergruppe.TOTALT,
-                nyeIDag = hentTall(
-                    datotype = Datotype.MOTTATTDATO,
-                    operator = EksternFeltverdiOperator.EQUALS,
+                nyeIDag = hentNye(
                     dato = LocalDate.now(),
                     oppgavetype = "k9punsj",
                 ),
-                ferdigstilteIDag = hentTall(
-                    datotype = Datotype.SISTENDRET,
-                    operator = EksternFeltverdiOperator.EQUALS,
+                ferdigstilteIDag = hentFerdigstilte(
                     dato = LocalDate.now(),
                     oppgavetype = "k9punsj",
-                    oppgavestatus = Oppgavestatus.LUKKET.kode
                 ),
-                nyeSiste7Dager = hentTall(
-                    datotype = Datotype.MOTTATTDATO,
-                    operator = EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS,
+                nyeSiste7Dager = hentNye(
                     dato = LocalDate.now().minusDays(7),
                     oppgavetype = "k9punsj",
                 ),
-                ferdigstilteSiste7Dager = hentTall(
-                    datotype = Datotype.SISTENDRET,
-                    operator = EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS,
+                ferdigstilteSiste7Dager = hentFerdigstilte(
                     dato = LocalDate.now().minusDays(7),
                     oppgavetype = "k9punsj",
-                    oppgavestatus = Oppgavestatus.LUKKET.kode
                 )
             )
         )
@@ -234,51 +191,151 @@ class DagensTallService(
         )
     }
 
-    private fun hentTall(
-        datotype: Datotype,
-        operator: EksternFeltverdiOperator,
+    private fun hentNye(
         dato: LocalDate,
-        fagsakYtelseType: FagsakYtelseType? = null,
+        ytelser: List<FagsakYtelseType>? = null,
         behandlingType: BehandlingType? = null,
-        oppgavetype: String? = null,
-        oppgavestatus: String? = null
+        oppgavetype: String? = null
+    ): Long {
+        return hentMottattDatoForLukkedeTall(dato, ytelser, behandlingType, oppgavetype) +
+                hentÅpneVenterTall(dato, ytelser, behandlingType, oppgavetype)
+    }
+
+    private fun hentMottattDatoForLukkedeTall(
+        dato: LocalDate,
+        ytelser: List<FagsakYtelseType>? = null,
+        behandlingType: BehandlingType? = null,
+        oppgavetype: String? = null
     ): Long {
         return queryService.queryForAntall(
             QueryRequest(
                 oppgaveQuery = OppgaveQuery(
                     filtere = listOfNotNull(
-                        fagsakYtelseType?.let {
+                        FeltverdiOppgavefilter(
+                            null, "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf(Oppgavestatus.LUKKET.kode)
+                        ),
+                        FeltverdiOppgavefilter(
+                            null,
+                            "ferdigstiltDato",
+                            EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS,
+                            listOf(dato.toString())
+                        ),
+                        FeltverdiOppgavefilter(
+                            "K9",
+                            "mottattDato",
+                            EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS,
+                            listOf(dato.toString())
+                        ),
+                        ytelser?.let { liste: List<FagsakYtelseType> ->
                             FeltverdiOppgavefilter(
-                                "K9", "ytelsestype", EksternFeltverdiOperator.EQUALS.kode, listOf(it.kode)
+                                "K9", "ytelsestype", EksternFeltverdiOperator.IN, liste.map { it.kode }
                             )
                         },
                         behandlingType?.let {
                             FeltverdiOppgavefilter(
                                 "K9",
                                 "behandlingTypekode",
-                                EksternFeltverdiOperator.EQUALS.kode,
+                                EksternFeltverdiOperator.EQUALS,
                                 listOf(it.kode)
                             )
                         },
                         oppgavetype?.let {
                             FeltverdiOppgavefilter(
-                                "K9", "oppgavetype", EksternFeltverdiOperator.EQUALS.kode, listOf(it)
+                                null, "oppgavetype", EksternFeltverdiOperator.EQUALS, listOf(it)
                             )
                         },
-                        oppgavestatus?.let {
-                            FeltverdiOppgavefilter(
-                                null, "oppgavestatus", EksternFeltverdiOperator.EQUALS.kode, listOf(it)
-                            )
-                        },
-                        FeltverdiOppgavefilter("K9", datotype.kode, operator.kode, listOf(dato.toString()))
                     )
                 ),
-                fraAktiv = false,
             )
         )
     }
 
-    private enum class Datotype(val kode: String) {
-        VEDTAKSDATO("vedtaksdato"), MOTTATTDATO("mottattDato"), SISTENDRET("sistEndret")
+    private fun hentÅpneVenterTall(
+        dato: LocalDate,
+        ytelser: List<FagsakYtelseType>? = null,
+        behandlingType: BehandlingType? = null,
+        oppgavetype: String? = null
+    ): Long {
+        return queryService.queryForAntall(
+            QueryRequest(
+                oppgaveQuery = OppgaveQuery(
+                    filtere = listOfNotNull(
+                        FeltverdiOppgavefilter(
+                            null,
+                            "oppgavestatus",
+                            EksternFeltverdiOperator.IN,
+                            listOf(Oppgavestatus.AAPEN, Oppgavestatus.VENTER).map { it.kode }
+                        ),
+                        FeltverdiOppgavefilter(
+                            "K9",
+                            "mottattDato",
+                            EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS,
+                            listOf(dato.toString())
+                        ),
+                        ytelser?.let { liste ->
+                            FeltverdiOppgavefilter(
+                                "K9", "ytelsestype", EksternFeltverdiOperator.IN, liste.map { it.kode }
+                            )
+                        },
+                        behandlingType?.let {
+                            FeltverdiOppgavefilter(
+                                "K9",
+                                "behandlingTypekode",
+                                EksternFeltverdiOperator.EQUALS,
+                                listOf(it.kode)
+                            )
+                        },
+                        oppgavetype?.let {
+                            FeltverdiOppgavefilter(
+                                null, "oppgavetype", EksternFeltverdiOperator.EQUALS, listOf(it)
+                            )
+                        },
+                    )
+                ),
+            )
+        )
+    }
+
+    private fun hentFerdigstilte(
+        dato: LocalDate,
+        ytelser: List<FagsakYtelseType>? = null,
+        behandlingType: BehandlingType? = null,
+        oppgavetype: String? = null
+    ): Long {
+        return queryService.queryForAntall(
+            QueryRequest(
+                oppgaveQuery = OppgaveQuery(
+                    filtere = listOfNotNull(
+                        FeltverdiOppgavefilter(
+                            null, "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf(Oppgavestatus.LUKKET.kode)
+                        ),
+                        FeltverdiOppgavefilter(
+                            null,
+                            "ferdigstiltDato",
+                            EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS,
+                            listOf(dato.toString())
+                        ),
+                        ytelser?.let { liste ->
+                            FeltverdiOppgavefilter(
+                                "K9", "ytelsestype", EksternFeltverdiOperator.IN, liste.map { it.kode }
+                            )
+                        },
+                        behandlingType?.let {
+                            FeltverdiOppgavefilter(
+                                "K9",
+                                "behandlingTypekode",
+                                EksternFeltverdiOperator.EQUALS,
+                                listOf(it.kode)
+                            )
+                        },
+                        oppgavetype?.let {
+                            FeltverdiOppgavefilter(
+                                null, "oppgavetype", EksternFeltverdiOperator.EQUALS, listOf(it)
+                            )
+                        },
+                    )
+                ),
+            )
+        )
     }
 }

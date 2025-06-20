@@ -3,11 +3,11 @@ package no.nav.k9.los.domene.repository
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.modell.Aksjonspunkter
-import no.nav.k9.los.domene.modell.BehandlingStatus
-import no.nav.k9.los.domene.modell.BehandlingType
-import no.nav.k9.los.domene.modell.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverNyeOgFerdigstilte
-import no.nav.k9.los.tjenester.saksbehandler.oppgave.BehandletOppgave
+import no.nav.k9.los.nyoppgavestyring.reservasjon.BehandletOppgave
 import org.junit.jupiter.api.Test
 import org.koin.core.context.stopKoin
 import org.koin.test.get

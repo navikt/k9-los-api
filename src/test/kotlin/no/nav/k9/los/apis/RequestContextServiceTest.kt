@@ -13,8 +13,8 @@ import io.ktor.server.routing.routing
 import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.withTestApplication
 import no.nav.k9.los.KoinProfile
-import no.nav.k9.los.integrasjon.rest.RequestContextService
-import no.nav.k9.los.integrasjon.rest.idToken
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.idToken
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 

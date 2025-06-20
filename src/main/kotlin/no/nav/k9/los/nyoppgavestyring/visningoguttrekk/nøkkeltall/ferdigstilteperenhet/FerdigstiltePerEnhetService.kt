@@ -3,14 +3,15 @@ package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilte
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import no.nav.k9.los.domene.modell.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.CacheObject
+import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
-import no.nav.k9.los.nyoppgavestyring.query.mapping.FeltverdiOperator
-import no.nav.k9.los.utils.Cache
-import no.nav.k9.los.utils.CacheObject
+import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
@@ -19,18 +20,19 @@ import java.time.format.DateTimeFormatter
 import kotlin.time.measureTime
 
 class FerdigstiltePerEnhetService(
+    enheter: List<String>,
     private val queryService: OppgaveQueryService
 ) {
+    private val parametre = enheter.map { enhet -> FerdigstiltParameter.Enhet(enhet) } + FerdigstiltParameter.Helautomatisk
     private var oppdatertTidspunkt: LocalDateTime? = null
     private val cache = Cache<LocalDate, List<FerdigstiltePerEnhetTall>>(null)
     private val log: Logger = LoggerFactory.getLogger(FerdigstiltePerEnhetService::class.java)
 
-    private val enheter = listOf("4487")
-    private val fagsakytelser = listOf(
-        FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
-        FagsakYtelseType.PPN,
-        FagsakYtelseType.OMSORGSDAGER,
-        FagsakYtelseType.OMSORGSPENGER
+    private val grupper = listOf(
+        FerdigstiltePerEnhetGruppe.PLEIEPENGER_SYKT_BARN,
+        FerdigstiltePerEnhetGruppe.PPN,
+        FerdigstiltePerEnhetGruppe.OMSORGSDAGER,
+        FerdigstiltePerEnhetGruppe.OMSORGSPENGER,
     )
 
     fun hentCachetVerdi(gruppe: FerdigstiltePerEnhetGruppe, uker: Int): FerdigstiltePerEnhetResponse {
@@ -43,11 +45,14 @@ class FerdigstiltePerEnhetService(
         return FerdigstiltePerEnhetResponse(
             oppdatertTidspunkt = oppdatertTidspunkt,
             kolonner = datoer.map { it.format(DateTimeFormatter.ofPattern("dd.MM")) },
-            serier = enheter.map { enhet ->
+            serier = parametre.map { parameter ->
                 FerdigstiltePerEnhetSerie(
-                    navn = enhet,
+                    navn = parameter.navn,
                     data = datoer.map { dato ->
-                        cache.get(dato, LocalDateTime.now())?.value?.find { it.enhet == enhet && it.gruppe == gruppe }?.antall
+                        cache.get(
+                            dato,
+                            LocalDateTime.now()
+                        )?.value?.find { it.parameter == parameter && it.gruppe == gruppe }?.antall
                             ?: 0
                     }
                 )
@@ -78,99 +83,116 @@ class FerdigstiltePerEnhetService(
 
     private fun hentFraDatabase(dato: LocalDate): List<FerdigstiltePerEnhetTall> {
         return buildList {
-            for (enhet in enheter) {
+            for (parameter in parametre) {
                 add(
                     FerdigstiltePerEnhetTall(
                         dato = dato,
-                        enhet = enhet,
+                        parameter = parameter,
                         gruppe = FerdigstiltePerEnhetGruppe.ALLE,
                         antall = hentAntallFraDatabase(
                             dato = dato,
-                            enhet = enhet,
-                            fagsakYtelseType = null,
-                            oppgavetype = null
+                            ytelser = null,
+                            oppgavetype = null,
+                            parameter = parameter
                         )
                     )
                 )
-                for (ytelse in fagsakytelser) {
+                for (gruppe in grupper) {
                     add(
                         FerdigstiltePerEnhetTall(
                             dato = dato,
-                            enhet = enhet,
-                            gruppe = FerdigstiltePerEnhetGruppe.fraFagsakYtelse(ytelse),
+                            parameter = parameter,
+                            gruppe = gruppe,
                             antall = hentAntallFraDatabase(
                                 dato = dato,
-                                enhet = enhet,
-                                fagsakYtelseType = ytelse,
-                                oppgavetype = null
+                                ytelser = gruppe.ytelser,
+                                parameter = parameter,
                             )
                         )
                     )
                 }
-                add(
-                    FerdigstiltePerEnhetTall(
-                        dato = dato,
-                        enhet = enhet,
-                        gruppe = FerdigstiltePerEnhetGruppe.PUNSJ,
-                        antall = hentAntallFraDatabase(
+                if (parameter is FerdigstiltParameter.Enhet) {
+                    // Punsj har ikke helautomatiske behandlinger
+                    add(
+                        FerdigstiltePerEnhetTall(
                             dato = dato,
-                            enhet = enhet,
-                            fagsakYtelseType = null,
-                            oppgavetype = "k9punsj"
+                            parameter = parameter,
+                            gruppe = FerdigstiltePerEnhetGruppe.PUNSJ,
+                            antall = hentAntallFraDatabase(
+                                dato = dato,
+                                oppgavetype = "k9punsj",
+                                parameter = parameter,
+                            )
                         )
                     )
-                )
+                }
             }
         }
     }
 
     private fun hentAntallFraDatabase(
         dato: LocalDate,
-        enhet: String,
-        fagsakYtelseType: FagsakYtelseType? = null,
-        oppgavetype: String? = null
+        ytelser: List<FagsakYtelseType>? = null,
+        oppgavetype: String? = null,
+        parameter: FerdigstiltParameter,
     ): Int {
         val request = QueryRequest(
             oppgaveQuery = OppgaveQuery(
                 filtere = buildList {
-                    add(
-                        FeltverdiOppgavefilter(
-                            "K9",
-                            "behandlendeEnhet",
-                            FeltverdiOperator.EQUALS.name,
-                            listOf(enhet)
-                        )
-                    )
-                    if (fagsakYtelseType != null) {
+                    when (parameter) {
+                        is FerdigstiltParameter.Enhet -> {
+                            add(
+                                FeltverdiOppgavefilter(
+                                    "K9",
+                                    "ferdigstiltEnhet",
+                                    EksternFeltverdiOperator.EQUALS,
+                                    listOf(parameter.enhet)
+                                )
+                            )
+                        }
+                        is FerdigstiltParameter.Helautomatisk -> {
+                            add(
+                                FeltverdiOppgavefilter(
+                                    "K9",
+                                    "helautomatiskBehandlet",
+                                    EksternFeltverdiOperator.EQUALS,
+                                    listOf(true.toString())
+                                )
+                            )
+                        }
+                    }
+                    if (ytelser != null) {
                         add(
                             FeltverdiOppgavefilter(
                                 "K9",
                                 "ytelsestype",
-                                FeltverdiOperator.EQUALS.name,
-                                listOf(fagsakYtelseType.kode)
+                                EksternFeltverdiOperator.IN,
+                                ytelser.map { it.kode }
                             )
                         )
                     }
                     if (oppgavetype != null) {
                         add(
                             FeltverdiOppgavefilter(
-                                "K9",
+                                null,
                                 "oppgavetype",
-                                FeltverdiOperator.EQUALS.name,
+                                EksternFeltverdiOperator.EQUALS,
                                 listOf(oppgavetype)
                             )
                         )
                     }
                     add(
                         FeltverdiOppgavefilter(
-                            "K9", "vedtaksdato", FeltverdiOperator.EQUALS.name, listOf(
-                                dato.toString()
-                            )
+                            null, "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf(Oppgavestatus.LUKKET.kode)
+                        )
+                    )
+                    add(
+                        FeltverdiOppgavefilter(
+                            null, "ferdigstiltDato", EksternFeltverdiOperator.EQUALS, listOf(dato.toString())
                         )
                     )
                 }
             ),
-            fraAktiv = false
         )
         return queryService.queryForAntall(request).toInt()
     }

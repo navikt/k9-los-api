@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import kotliquery.*
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
-import no.nav.k9.los.utils.LosObjectMapper
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import java.time.LocalDateTime
 import javax.sql.DataSource
 

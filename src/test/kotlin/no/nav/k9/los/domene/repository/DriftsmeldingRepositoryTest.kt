@@ -1,7 +1,8 @@
 package no.nav.k9.los.domene.repository
 
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.tjenester.driftsmeldinger.DriftsmeldingDto
+import no.nav.k9.los.nyoppgavestyring.driftsmelding.DriftsmeldingDto
+import no.nav.k9.los.nyoppgavestyring.driftsmelding.DriftsmeldingRepository
 import org.junit.jupiter.api.Test
 import org.koin.test.get
 import java.time.LocalDateTime

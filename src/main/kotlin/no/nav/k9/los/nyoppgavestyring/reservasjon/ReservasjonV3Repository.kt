@@ -2,7 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.reservasjon
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
-import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import org.postgresql.util.PSQLException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

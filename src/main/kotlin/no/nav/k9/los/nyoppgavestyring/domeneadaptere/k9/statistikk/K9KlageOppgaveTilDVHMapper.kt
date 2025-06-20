@@ -4,8 +4,8 @@ import no.nav.k9.klage.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.klage.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.klage.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
-import no.nav.k9.los.domene.modell.BehandlingType
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.klagetillos.EventTilDtoMapper
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.EventTilDtoMapper
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -29,6 +29,7 @@ class K9KlageOppgaveTilDVHMapper {
             vedtaksDato = oppgave.hentVerdi("vedtaksDato")
                 ?.let { LocalDate.parse(it) },
             relatertBehandlingId = oppgave.hentVerdi("påklagdBehandlingUuid"),
+            relatertBehandlingFagsystem = utledRelatertBehandlingFagsystem(oppgave),
             vedtakId = oppgave.hentVerdi("vedtakId"),
             saksnummer = oppgave.hentVerdi("saksnummer"),
             behandlingType = oppgave.hentVerdi("behandlingTypekode")
@@ -57,6 +58,20 @@ class K9KlageOppgaveTilDVHMapper {
             avsender = "K9klage",
             versjon = 1, //TODO: Ikke i bruk?
         )
+    }
+
+    private fun utledRelatertBehandlingFagsystem(oppgave: Oppgave) : String? {
+        val verdi = oppgave.hentVerdi(
+            "påklagdBehandlingtype")
+
+        return verdi?.let {
+            val påklagdBehandlingType = no.nav.k9.klage.kodeverk.behandling.BehandlingType.fraKode(it)
+            when (påklagdBehandlingType) {
+                no.nav.k9.klage.kodeverk.behandling.BehandlingType.TILBAKEKREVING,
+                no.nav.k9.klage.kodeverk.behandling.BehandlingType.REVURDERING_TILBAKEKREVING -> "k9-tilbake"
+                else -> "k9-sak"
+            }
+        }
     }
 
     private fun utledBehandlingStatus(oppgave: Oppgave): String {

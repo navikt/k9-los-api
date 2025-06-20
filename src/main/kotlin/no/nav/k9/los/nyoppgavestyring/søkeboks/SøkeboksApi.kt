@@ -6,8 +6,8 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.k9.los.integrasjon.abac.IPepClient
-import no.nav.k9.los.integrasjon.rest.RequestContextService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
 import org.koin.ktor.ext.inject
 
 
@@ -20,16 +20,16 @@ fun Route.SøkeboksApi() {
         {
             description =
                 "Søk etter oppgaver og tilhørende person. Dersom input er på 9 tegn antas den som journalpostId, ved 11 tegn som fødselsnummer, og ellers som fagsaknummer."
-            request { body<SøkQuery>() }
+            request { body<SøkRequest>() }
             response {
-                HttpStatusCode.OK to { body<List<SøkeboksOppgaveDto>>() }
+                HttpStatusCode.OK to { body<Søkeresultat>() }
             }
         }
     ) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                val søkQuery = call.receive<SøkQuery>()
-                call.respond(søkeboksTjeneste.finnOppgaver(søkQuery.searchString, søkQuery.fraAktiv))
+                val (søkeord, oppgavestatus) = call.receive<SøkRequest>()
+                call.respond(søkeboksTjeneste.finnOppgaver(søkeord, oppgavestatus))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

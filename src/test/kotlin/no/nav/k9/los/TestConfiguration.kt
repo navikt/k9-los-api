@@ -20,16 +20,15 @@ object TestConfiguration {
         )
 
         map["nav.register_urls.k9_url"] = "http://localhost:8080"
+        map["nav.register_urls.k9_klage_url"] = "http://localhost:8080"
         map["nav.register_urls.k9_frontend_url"] = "http://localhost:9000"
         map["nav.register_urls.k9_punsj_frontend_url"] = "http://localhost:8080"
+        map["nav.register_urls.sif_abac_pdp_url"] = "http://localhost:8913"
         map["nav.audit.enabled"] = "false"
         map["nav.audit.vendor"] = "test"
         map["nav.audit.product"] = "test"
         map["nav.auth.trustore.path"] = "vtp"
         map["nav.auth.trustore.password"] = "vtp"
-        map["nav.abac.system_user"] = "very"
-        map["nav.abac.system_user_password"] = "secret"
-        map["nav.abac.url"] = "https://url"
 
         map["nav.auth.clients.size"] = "1"
         map["nav.auth.clients.0.alias"] = "azure-v2"
@@ -55,6 +54,7 @@ object TestConfiguration {
         map["nav.features.nyOppgavestyringRestApi"] = "true"
         map["nav.kafka.åpenStatistikkBehandlingTopic"] = "aapen-k9statistikk-behandling-v2"
         map["nav.kafka.åpenStatistikkSakTopic"] = "aapen-k9statistikk-sak-v2"
+        map["nav.nokkeltall.enheter"] = "NAV DRIFT"
         return map.toMap()
     }
 

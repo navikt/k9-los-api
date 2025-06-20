@@ -10,7 +10,7 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.EgenAnsatt
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.Kodeverkreferanse
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.AktivOppgaveId
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveId
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
@@ -30,14 +30,14 @@ class OppgaveQueryRepository(
     private val log: Logger = LoggerFactory.getLogger("OppgaveQueryRepository")
 
     @WithSpan
-    fun query(request: QueryRequest): List<AktivOppgaveId> {
+    fun query(request: QueryRequest): List<OppgaveId> {
         return using(sessionOf(datasource)) {
             it.transaction { tx -> query(tx, request, LocalDateTime.now()) }
         }
     }
 
     @WithSpan
-    fun query(tx: TransactionalSession, request: QueryRequest, now: LocalDateTime): List<AktivOppgaveId> {
+    fun query(tx: TransactionalSession, request: QueryRequest, now: LocalDateTime): List<OppgaveId> {
         val felter = hentAlleFelterMedMer(tx, medKodeverk = false)
             .associateBy { felt -> OmrådeOgKode(felt.oppgavefelt.område, felt.oppgavefelt.kode) }
 
@@ -227,17 +227,19 @@ class OppgaveQueryRepository(
                 }
             ),
             Oppgavefelt(null, "oppgaveområde", "Oppgaveområde", "String", false, false, emptyList()),
+            Oppgavefelt(null, "spørringstrategi", "Spørringstrategi", "String", false, true, Spørringstrategi.entries.map { Verdiforklaring(it.name, it.navn, false) }),
+            Oppgavefelt(null, "ferdigstiltDato", "Ferdigstilt dato", "Timestamp", true, false, emptyList()),
         ).map { OppgavefeltMedMer(it, null) }
 
         return (felterFraDatabase + standardfelter).sortedBy { it.oppgavefelt.visningsnavn }
     }
 
-    private fun query(tx: TransactionalSession, oppgaveQuery: OppgaveQuerySqlBuilder): List<AktivOppgaveId> {
+    private fun query(tx: TransactionalSession, oppgaveQuery: OppgaveQuerySqlBuilder): List<OppgaveId> {
         return tx.run(
             queryOf(
                 oppgaveQuery.getQuery(),
                 oppgaveQuery.getParams()
-            ).map { row -> AktivOppgaveId(row.long("id")) }.asList
+            ).map(oppgaveQuery::mapRowTilId).asList
         )
     }
 
@@ -249,12 +251,7 @@ class OppgaveQueryRepository(
             queryOf(
                 oppgaveQuery.getQuery(),
                 oppgaveQuery.getParams()
-            ).map { row ->
-                EksternOppgaveId(
-                    row.string("kildeomrade"),
-                    row.string("ekstern_id")
-                )
-            }.asList
+            ).map(oppgaveQuery::mapRowTilEksternId).asList
         )
     }
 }

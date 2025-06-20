@@ -4,8 +4,8 @@ import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
-import no.nav.k9.los.db.util.InClauseHjelper
-import no.nav.k9.los.eventhandler.DetaljerMetrikker
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.util.InClauseHjelper
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.DetaljerMetrikker
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
@@ -351,7 +351,7 @@ class AktivOppgaveRepository(val oppgavetypeRepository: OppgavetypeRepository) {
     }
 
     @WithSpan
-    fun hentK9sakParsakOppgaver(tx: TransactionalSession, oppgaver: Collection<AktivOppgaveId>): Set<EksternOppgaveId> {
+    fun hentK9sakParsakOppgaver(tx: TransactionalSession, oppgaver: Collection<Oppgave>): Set<EksternOppgaveId> {
         if (oppgaver.isEmpty()) {
             return emptySet()
         }
@@ -365,7 +365,7 @@ class AktivOppgaveRepository(val oppgavetypeRepository: OppgavetypeRepository) {
                     ot.ekstern_id = 'k9sak'
                  and 
                     reservasjonsnokkel in (
-                       select reservasjonsnokkel from oppgave_v3_aktiv where id in (${
+                       select reservasjonsnokkel from oppgave_v3_aktiv where kildeomrade = 'K9' and ekstern_id in (${
                     InClauseHjelper.tilParameternavn(
                         oppgaver,
                         "o"
@@ -373,7 +373,7 @@ class AktivOppgaveRepository(val oppgavetypeRepository: OppgavetypeRepository) {
                 })
                     )
             """.trimIndent(),
-                InClauseHjelper.parameternavnTilVerdierMap(oppgaver.map { it.id }, "o")
+                InClauseHjelper.parameternavnTilVerdierMap(oppgaver.map { it.eksternId }, "o")
             ).map { row ->
                 EksternOppgaveId("K9", row.string("ekstern_id"))
             }.asList

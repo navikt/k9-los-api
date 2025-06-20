@@ -6,6 +6,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 
 class OppgaveV3Tjeneste(
     private val oppgaveV3Repository: OppgaveV3Repository,
+    private val partisjonertOppgaveRepository: PartisjonertOppgaveRepository,
     private val oppgavetypeRepository: OppgavetypeRepository,
     private val områdeRepository: OmrådeRepository
 ) {
@@ -31,17 +32,12 @@ class OppgaveV3Tjeneste(
         val aktivOppgaveVersjon = oppgaveV3Repository.hentAktivOppgave(oppgaveDto.id, oppgavetype, tx)
         var innkommendeOppgave = OppgaveV3(oppgaveDto, oppgavetype)
 
-        val utledeteFelter = mutableListOf<OppgaveFeltverdi>()
-        oppgavetype.oppgavefelter
-            .filter { oppgavefelt -> oppgavefelt.feltutleder != null }
-            .forEach { oppgavefelt ->
-                val utledetFeltverdi = oppgavefelt.feltutleder!!.utled(innkommendeOppgave, aktivOppgaveVersjon)
-                if (utledetFeltverdi != null) {
-                    utledeteFelter.add(utledetFeltverdi)
-                }
+        val utledeteFelter = oppgavetype.oppgavefelter
+            .mapNotNull { oppgavefelt ->
+                oppgavefelt.feltutleder?.utled(innkommendeOppgave, aktivOppgaveVersjon)
             }
 
-        innkommendeOppgave = OppgaveV3(innkommendeOppgave, innkommendeOppgave.felter.plus(utledeteFelter))
+        innkommendeOppgave = OppgaveV3(innkommendeOppgave, innkommendeOppgave.felter + utledeteFelter)
 
         innkommendeOppgave.valider()
 
@@ -80,8 +76,9 @@ class OppgaveV3Tjeneste(
         )
     }
 
-    fun ajourholdAktivOppgave(innkommendeOppgave: OppgaveV3, internVersjon: Long, tx: TransactionalSession) {
+    fun ajourholdOppgave(innkommendeOppgave: OppgaveV3, internVersjon: Long, tx: TransactionalSession) {
         AktivOppgaveRepository.ajourholdAktivOppgave(innkommendeOppgave, internVersjon, tx)
+        partisjonertOppgaveRepository.ajourhold(innkommendeOppgave, tx)
     }
 
     fun slettAktivOppgave(innkommendeOppgave: OppgaveV3, tx: TransactionalSession){

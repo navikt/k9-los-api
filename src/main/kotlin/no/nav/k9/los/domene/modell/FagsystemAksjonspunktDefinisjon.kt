@@ -1,7 +1,8 @@
 package no.nav.k9.los.domene.modell
 
-import no.nav.k9.los.aksjonspunktbehandling.AksjonspunktDefinisjonK9Tilbake
-import no.nav.k9.los.aksjonspunktbehandling.AksjonspunktDefinisjonPunsj
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.AksjonspunktDefinisjonPunsj
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 
 data class FagsystemAksjonspunktDefinisjon(
     val fagsystem: Fagsystem,

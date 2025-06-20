@@ -2,9 +2,11 @@ package no.nav.k9.los.domene.modell
 
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
-import no.nav.k9.los.aksjonspunktbehandling.AksjonspunktDefinisjonK9Tilbake
-import no.nav.k9.los.integrasjon.kafka.dto.BehandlingProsessEventDto
-import no.nav.k9.los.integrasjon.kafka.dto.PunsjEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
+import no.nav.k9.los.nyoppgavestyring.kodeverk.AksjonspunktStatus
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import java.time.LocalDateTime
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus as AksjonspunktStatusK9
@@ -95,15 +97,15 @@ data class AksjonspunktTilstand(
     val endretTidspunkt: LocalDateTime? = null
 )
 
-internal fun BehandlingProsessEventDto.tilAksjonspunkter(): Aksjonspunkter {
+internal fun K9SakEventDto.tilAksjonspunkter(): Aksjonspunkter {
     return Aksjonspunkter(
         this.aksjonspunktKoderMedStatusListe,
         this.aksjonspunktTilstander.map { it.tilModell() })
 }
 
-internal fun BehandlingProsessEventDto.tilAktiveAksjonspunkter(): Aksjonspunkter {
+internal fun K9SakEventDto.tilAktiveAksjonspunkter(): Aksjonspunkter {
     return Aksjonspunkter(
-        this.aksjonspunktKoderMedStatusListe.filter { it.value == no.nav.k9.los.domene.modell.AksjonspunktStatus.OPPRETTET.kode },
+        this.aksjonspunktKoderMedStatusListe.filter { it.value == AksjonspunktStatus.OPPRETTET.kode },
         this.aksjonspunktTilstander.filter { it.status == AksjonspunktStatusK9.OPPRETTET }.map { it.tilModell() })
 }
 
@@ -119,15 +121,15 @@ private fun AksjonspunktTilstandDto.tilModell() = AksjonspunktTilstand(
 internal fun PunsjEventDto.tilAksjonspunkter(): Aksjonspunkter {
     return Aksjonspunkter(
         this.aksjonspunktKoderMedStatusListe,
-        this.aksjonspunktKoderMedStatusListe.map { AksjonspunktTilstand(it.key, no.nav.k9.los.domene.modell.AksjonspunktStatus.fraKode(it.value)) })
+        this.aksjonspunktKoderMedStatusListe.map { AksjonspunktTilstand(it.key, AksjonspunktStatus.fraKode(it.value)) })
 }
 
 internal fun PunsjEventDto.tilAktiveAksjonspunkter(): Aksjonspunkter {
     return this.aksjonspunktKoderMedStatusListe
-        .filter { it.value == no.nav.k9.los.domene.modell.AksjonspunktStatus.OPPRETTET.kode }
+        .filter { it.value == AksjonspunktStatus.OPPRETTET.kode }
         .let {
             Aksjonspunkter(
                 it,
-                it.map { aktiv -> AksjonspunktTilstand(aktiv.key, no.nav.k9.los.domene.modell.AksjonspunktStatus.fraKode(aktiv.value)) })
+                it.map { aktiv -> AksjonspunktTilstand(aktiv.key, AksjonspunktStatus.fraKode(aktiv.value)) })
         }
 }

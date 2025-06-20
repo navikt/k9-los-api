@@ -3,7 +3,8 @@ package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.utils.Cache
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -16,7 +17,7 @@ class OppgaverGruppertRepository(private val dataSource: DataSource) {
         Cache<Boolean, List<BehandlingstypeAntallDto>>(cacheSizeLimit = null)
 
     data class BehandlingstypeAntallDto(
-        val behandlistype: String?,
+        val behandlingstype: BehandlingType,
         val antall: Int
     )
 
@@ -33,7 +34,7 @@ class OppgaverGruppertRepository(private val dataSource: DataSource) {
     }
 
     private fun doHentAntallÅpneOppgaverPrOppgavetypeBehandlingstype(kode6: Boolean): List<BehandlingstypeAntallDto> {
-        val resultat = using(sessionOf(dataSource)) { session ->
+        return using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     /***
@@ -55,18 +56,12 @@ class OppgaverGruppertRepository(private val dataSource: DataSource) {
                 )
                     .map {
                         BehandlingstypeAntallDto(
-                            it.stringOrNull("behandlingType"),
+                            it.string("behandlingType").let { kode -> BehandlingType.fraKode(kode) },
                             it.int("antall")
                         )
                     }
                     .asList
             )
-        }
-        if (resultat.any {it.behandlistype == null} ){
-            log.warn("Fant ${resultat.filter {it.behandlistype == null}.sumOf { it.antall }} oppgaver uten behandlingstype, de blir ikke med oversikt som viser antall")
-            return resultat.filter { it.behandlistype != null }
-        } else {
-            return resultat
         }
     }
 }

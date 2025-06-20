@@ -3,10 +3,10 @@ package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.domene.modell.BehandlingType
-import no.nav.k9.los.domene.modell.FagsakYtelseType
-import no.nav.k9.los.domene.modell.Fagsystem
-import no.nav.k9.los.utils.Cache
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration

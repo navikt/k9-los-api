@@ -12,6 +12,8 @@ import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.v2.OppgaveRepositoryV2
 import no.nav.k9.los.domene.repository.OppgaveKøRepository
 import no.nav.k9.los.domene.repository.OppgaveRepository
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.ChannelMetrikker
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.asCoroutineDispatcherWithErrorHandling
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
 import no.nav.k9.sak.kontrakt.behandling.BehandlingIdDto
 import org.slf4j.Logger

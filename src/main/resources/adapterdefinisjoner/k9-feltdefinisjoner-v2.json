@@ -18,6 +18,14 @@
       "kokriterie": false
     },
     {
+      "id": "påklagdBehandlingtype",
+      "visningsnavn": "Påklaget behandlingtype",
+      "listetype": false,
+      "tolkesSom": "String",
+      "visTilBruker": true,
+      "kokriterie": false
+    },
+    {
       "id": "aktorId",
       "visningsnavn": "Søkers aktør-ID",
       "listetype": false,
@@ -176,8 +184,7 @@
       "listetype": false,
       "tolkesSom": "boolean",
       "visTilBruker": true,
-      "kokriterie": true,
-      "transientFeltutleder": "no.nav.k9.los.nyoppgavestyring.query.mapping.transientfeltutleder.K9BeslutterTransientFeltutleder"
+      "kokriterie": true
     },
     {
       "id": "tidFørsteGangHosBeslutter",
@@ -537,7 +544,30 @@
       "tolkesSom": "Integer",
       "visTilBruker": true,
       "kokriterie": true
+    },
+    {
+      "id": "ferdigstiltTidspunkt",
+      "visningsnavn": "Ferdigstilt tidspunkt",
+      "listetype": false,
+      "tolkesSom": "Timestamp",
+      "visTilBruker": false,
+      "kokriterie": false
+    },
+    {
+      "id": "ferdigstiltEnhet",
+      "visningsnavn": "Ferdigstilt av enhet",
+      "listetype": false,
+      "tolkesSom": "String",
+      "visTilBruker": true,
+      "kokriterie": true
+    },
+    {
+      "id": "fagsakÅr",
+      "visningsnavn": "Fagsak år",
+      "listetype": false,
+      "tolkesSom": "Integer",
+      "visTilBruker": false,
+      "kokriterie": false
     }
-
   ]
 }

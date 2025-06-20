@@ -33,6 +33,9 @@ data class Behandling(
     @JsonProperty("relatertBehandlingId")
     val relatertBehandlingId: String? = null,
 
+    @JsonProperty("relatertBehandlingFagsystem")
+    val relatertBehandlingFagsystem: String? = null,
+
     @JsonProperty("vedtakId")
     val vedtakId: String? = null,
 
