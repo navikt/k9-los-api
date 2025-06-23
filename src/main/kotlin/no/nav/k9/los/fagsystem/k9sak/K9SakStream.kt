@@ -59,8 +59,8 @@ internal class K9SakStream constructor(
                 .foreach { key, entry ->
                     if (entry != null) {
                         log.info("--> K9SakHendelse med key=$key: ${entry.tryggToString()}")
-                        TransientFeilHåndterer().utfør(NAME) {
-                            runBlocking {
+                        runBlocking {
+                            TransientFeilHåndterer().utfør(NAME) {
                                 k9sakEventHandler.prosesser(entry)
                             }
                         }

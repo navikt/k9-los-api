@@ -36,7 +36,7 @@ interface IPepClient {
         auditlogging: Auditlogging
     ) : Boolean
 
-    fun harTilgangTilOppgaveV3(
+    suspend fun harTilgangTilOppgaveV3(
         oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave,
         saksbehandler: Saksbehandler,
         action: Action,

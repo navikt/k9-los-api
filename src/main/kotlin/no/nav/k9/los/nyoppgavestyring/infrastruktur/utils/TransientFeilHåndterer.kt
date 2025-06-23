@@ -17,13 +17,13 @@ class TransientFeilHåndterer(
     val giOppEtter: Duration = 1.toDuration(DurationUnit.HOURS),
 ) {
 
-    suspend fun utfør(beskrivelse: String, operasjon: () -> Unit) {
+    suspend fun utfør(beskrivelse: String, operasjon: suspend () -> Unit) {
         var pause = pauseInitiell
         var pauseTotal = Duration.ZERO
         var forsøk = 1
         do {
             try {
-                return operasjon.invoke()
+                return operasjon()
             } catch (e: Exception) {
                 if (!antarErTransientFeil(e)) {
                     throw e

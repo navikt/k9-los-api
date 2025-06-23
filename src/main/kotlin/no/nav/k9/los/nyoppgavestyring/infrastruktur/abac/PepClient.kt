@@ -103,7 +103,7 @@ class PepClient(
         )
     }
 
-    suspend fun harTilgangTilOppgaveV3(
+    override suspend fun harTilgangTilOppgaveV3(
         oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave,
         saksbehandler: Saksbehandler,
         action: Action,
