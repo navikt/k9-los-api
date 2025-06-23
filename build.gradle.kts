@@ -149,7 +149,7 @@ tasks {
         gradleVersion = "8.6"
     }
 
-    withType<Test>().configureEach {
+    withType<Test>{
         useJUnitPlatform()
         // Always run tests, even when nothing changed.
         dependsOn("cleanTest")

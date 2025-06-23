@@ -168,6 +168,7 @@ class K9SakTilLosAdapterTjeneste(
             runBlocking {
                 køpåvirkendeHendelseChannel.send(OppgaveHendelseMottatt(Fagsystem.K9SAK, EksternOppgaveId("K9", uuid.toString())))
             }
+
             k9SakEventRepository.fjernDirty(uuid, tx)
         }
 

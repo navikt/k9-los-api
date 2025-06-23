@@ -1,12 +1,12 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos
 
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
+import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.kodeverk.behandling.BehandlingÅrsakType
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.*
 import no.nav.k9.kodeverk.produksjonsstyring.BehandlingMerknadType
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
-import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
@@ -32,50 +32,33 @@ class EventTilDtoMapper {
                 område = "K9",
                 kildeområde = "K9",
                 type = "k9sak",
-                status = if (!isHarEllerHarHattManueltAksjonspunkt(event) && event.behandlingStatus != BehandlingStatus.AVSLUTTET.kode) {
-                    Oppgavestatus.AUTOMATISK.kode
-                } else if (event.aksjonspunktTilstander.any { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.status.erÅpentAksjonspunkt() }) {
-                    if (oppgaveSkalHaVentestatus(event)) {
-                        Oppgavestatus.VENTER.kode
-                    } else {
-                        Oppgavestatus.AAPEN.kode
-                    }
-                } else {
-                    if (event.behandlingStatus != BehandlingStatus.AVSLUTTET.kode && event.behandlingStatus != BehandlingStatus.IVERKSETTER_VEDTAK.kode) {
-                        Oppgavestatus.AAPEN.kode
-                    } else {
-                        Oppgavestatus.LUKKET.kode
-                    }
-                },
+                status = utledOppgavestatus(event).kode,
                 endretTidspunkt = event.eventTid,
                 reservasjonsnøkkel = utledReservasjonsnøkkel(event, erTilBeslutter(event)),
                 feltverdier = lagFeltverdier(event, forrigeOppgave)
             )
 
         fun utledOppgavestatus(event: K9SakEventDto): Oppgavestatus {
-            val aksjonspunkter = event.aksjonspunktTilstander
-            val harÅpentAutopunkt =
-                aksjonspunkter
-                    .filter { AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode()).erAutopunkt() }
-                    .any { it.status.erÅpentAksjonspunkt() }
-            val harÅpentAksjonspunkt =
-                aksjonspunkter
-                    .filter { !AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode()).erAutopunkt() }
-                    .any { it.status.erÅpentAksjonspunkt() }
-            val harUavbruttManueltAksjonspunkt: Boolean =
-                aksjonspunkter
-                    .filter { !AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode()).erAutopunkt() }
-                    .any { it.status != AksjonspunktStatus.AVBRUTT }
-            return if (event.behandlingStatus == BehandlingStatus.AVSLUTTET.kode) {
-                Oppgavestatus.LUKKET
-            } else {
-                if (!harUavbruttManueltAksjonspunkt) {
-                    Oppgavestatus.AUTOMATISK
-                }
-                if (harÅpentAutopunkt) {
-                    Oppgavestatus.VENTER
-                } else {
-                    Oppgavestatus.AAPEN
+            return when (BehandlingStatus.fraKode(event.behandlingStatus!!)) {
+                BehandlingStatus.OPPRETTET -> Oppgavestatus.UAVKLART
+                BehandlingStatus.AVSLUTTET -> Oppgavestatus.LUKKET
+                BehandlingStatus.FATTER_VEDTAK, BehandlingStatus.IVERKSETTER_VEDTAK, BehandlingStatus.UTREDES -> {
+                    val harÅpentManueltAksjonspunkt: Boolean =
+                        event.aksjonspunktTilstander
+                            .filter { !AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode()).erAutopunkt() }
+                            .any { it.status == AksjonspunktStatus.OPPRETTET }
+                    val harÅpentAutopunkt: Boolean =
+                        event.aksjonspunktTilstander
+                            .filter { AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode()).erAutopunkt() }
+                            .any { it.status == AksjonspunktStatus.OPPRETTET }
+
+                    if (harÅpentManueltAksjonspunkt) {
+                        Oppgavestatus.AAPEN
+                    } else if (harÅpentAutopunkt) {
+                        Oppgavestatus.VENTER
+                    } else {
+                        Oppgavestatus.UAVKLART
+                    }
                 }
             }
         }

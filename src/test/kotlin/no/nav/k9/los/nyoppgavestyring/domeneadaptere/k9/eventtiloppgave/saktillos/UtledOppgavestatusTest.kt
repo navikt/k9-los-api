@@ -19,7 +19,7 @@ class UtledOppgavestatusTest {
     @Test
     fun `opprettet behandling gir automatisk oppgave siden prosessen i k9sak ikke har startet ennå`() {
         assertEquals(
-            Oppgavestatus.AUTOMATISK,
+            Oppgavestatus.UAVKLART,
             EventTilDtoMapper.utledOppgavestatus(testevent(BehandlingStatus.OPPRETTET, emptyList()))
         )
     }

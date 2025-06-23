@@ -42,7 +42,7 @@ class EventTilDtoMapper {
                 Oppgavestatus.LUKKET
             } else {
                 if (!harÅpentAksjonspunkt && !harÅpentAutopunkt) {
-                    Oppgavestatus.AUTOMATISK
+                    Oppgavestatus.UAVKLART
                 }
                 if (harÅpentAutopunkt) {
                     Oppgavestatus.VENTER
