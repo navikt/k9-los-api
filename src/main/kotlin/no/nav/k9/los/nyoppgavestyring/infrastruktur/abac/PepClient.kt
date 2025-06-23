@@ -1,6 +1,5 @@
 package no.nav.k9.los.nyoppgavestyring.infrastruktur.abac
 
-import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.audit.K9Auditlogger
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.IAzureGraphService
@@ -104,23 +103,21 @@ class PepClient(
         )
     }
 
-    override fun harTilgangTilOppgaveV3(
+    suspend fun harTilgangTilOppgaveV3(
         oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave,
         saksbehandler: Saksbehandler,
         action: Action,
         auditlogging: Auditlogging
     ): Boolean {
-        return runBlocking {
-            harTilgang(
-                oppgave.oppgavetype.eksternId,
-                saksbehandler.brukerIdent!!,
-                action,
-                oppgave.hentVerdi("saksnummer"),
-                oppgave.hentVerdi("aktorId"),
-                oppgave.hentVerdi("pleietrengendeAktorId"),
-                auditlogging
-            )
-        }
+        return harTilgang(
+            oppgave.oppgavetype.eksternId,
+            saksbehandler.brukerIdent!!,
+            action,
+            oppgave.hentVerdi("saksnummer"),
+            oppgave.hentVerdi("aktorId"),
+            oppgave.hentVerdi("pleietrengendeAktorId"),
+            auditlogging
+        )
     }
 
     private suspend fun harTilgang(

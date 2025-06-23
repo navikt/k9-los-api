@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.infrastruktur.utils
 
+import kotlinx.coroutines.delay
 import org.slf4j.LoggerFactory
 import java.io.InterruptedIOException
 import java.net.SocketException
@@ -16,7 +17,7 @@ class TransientFeilHåndterer(
     val giOppEtter: Duration = 1.toDuration(DurationUnit.HOURS),
 ) {
 
-    fun utfør(beskrivelse: String, operasjon: () -> Unit) {
+    suspend fun utfør(beskrivelse: String, operasjon: () -> Unit) {
         var pause = pauseInitiell
         var pauseTotal = Duration.ZERO
         var forsøk = 1
@@ -35,7 +36,7 @@ class TransientFeilHåndterer(
                     log.info("Operasjonen $beskrivelse feilet, venter og prøver på nytt. Har forsøkt $forsøk ganger og ventet totalt $pauseTotal")
                 }
             }
-            Thread.sleep(pause.inWholeMilliseconds)
+            delay(pause)
             pauseTotal += pause
             forsøk++
             pause = minOf(pauseMaks, pause * 2)
