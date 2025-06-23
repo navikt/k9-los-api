@@ -9,15 +9,16 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.domene.repository.ReservasjonRepository
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.DetaljerMetrikker
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.idtoken.IIdToken
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.DetaljerMetrikker
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.fnr
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.navn
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.leggTilDagerHoppOverHelg
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.ko.dto.NesteOppgaverFraKoDto
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
@@ -33,13 +34,12 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgaverad
 import no.nav.k9.los.nyoppgavestyring.reservasjon.AlleredeReservertException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ManglerTilgangException
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.idtoken.IIdToken
 import no.nav.k9.los.tjenester.saksbehandler.oppgave.OppgaveTjeneste
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.leggTilDagerHoppOverHelg
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.LocalDateTime
@@ -241,7 +241,7 @@ class OppgaveKoTjeneste(
         coroutineContext: CoroutineContext
     ): OppgaveMuligReservert {
         log.info("taReservasjonFraKø, oppgaveKøId: $oppgaveKoId")
-        val skjermet = runBlocking(coroutineContext) { pepClient.harTilgangTilKode6() }
+        val skjermet = runBlocking(Dispatchers.IO + coroutineContext) { pepClient.harTilgangTilKode6() }
         val oppgavekø = DetaljerMetrikker.time("taReservasjonFraKø", "hentKø", "$oppgaveKoId") {
             oppgaveKoRepository.hent(
                 oppgaveKoId,
@@ -299,7 +299,7 @@ class OppgaveKoTjeneste(
                 )
                 reservasjonRepository.lagreFlereReservasjoner(v1Reservasjoner)
 
-                runBlocking(coroutineContext) {//TODO: Hvis noen har et forslag til en bedre måte å ta vare på coroutinecontext, så er jeg all ears!
+                runBlocking(Dispatchers.IO + coroutineContext) {//TODO: Hvis noen har et forslag til en bedre måte å ta vare på coroutinecontext, så er jeg all ears!
                     saksbehandlerRepository.leggTilFlereReservasjoner(
                         innloggetBruker.brukerIdent,
                         v1Reservasjoner.map { r -> r.oppgave })

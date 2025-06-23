@@ -3,11 +3,11 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktill
 import kotlinx.coroutines.*
 import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.DetaljerMetrikker
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.HistorikkvaskMetrikker
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventRepository
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.BehandlingMedFagsakDto
@@ -85,12 +85,11 @@ class K9SakTilLosHistorikkvaskTjeneste(
         val scope = CoroutineScope(dispatcher)
 
         val jobber = behandlingsIder.map {
-            //bruker run blocking for å sikre at tråden(e) som kjører vasking gjør seg ferdig med en behandling uten å suspendere
-            scope.async { runBlocking { vaskOppgaveForBehandlingUUIDOgMarkerVasket(it) } }
+            scope.async(Dispatchers.IO) { vaskOppgaveForBehandlingUUIDOgMarkerVasket(it) }
         }.toList()
 
-        val eventTeller = runBlocking {
-            jobber.map { it.await() }.sum()
+        val eventTeller = runBlocking(Dispatchers.IO) {
+            jobber.sumOf { it.await() }
         }
         return eventTeller
     }

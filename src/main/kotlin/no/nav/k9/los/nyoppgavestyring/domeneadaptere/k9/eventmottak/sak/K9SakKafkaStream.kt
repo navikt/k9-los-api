@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.AksjonspunktLaget
@@ -61,7 +62,7 @@ internal class K9SakKafkaStream constructor(
                     if (entry != null) {
                         OpentelemetrySpanUtil.span(NAME, mapOf("saksnummer" to entry.saksnummer)) {
                             val tid = measureTimeMillis {
-                                runBlocking {
+                                runBlocking(Dispatchers.IO) {
                                     TransientFeilHåndterer(warningEtter = 5.toDuration(DurationUnit.SECONDS)).utfør(NAME) {k9sakEventHandler.prosesser(entry) }
                                 }
                             }

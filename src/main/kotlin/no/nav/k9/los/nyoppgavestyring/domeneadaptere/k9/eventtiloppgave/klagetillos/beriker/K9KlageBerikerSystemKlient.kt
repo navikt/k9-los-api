@@ -5,6 +5,7 @@ import com.github.kittinunf.fuel.coroutines.awaitStringResponseResult
 import com.github.kittinunf.fuel.httpGet
 import io.ktor.http.*
 import io.opentelemetry.instrumentation.annotations.WithSpan
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
@@ -34,12 +35,12 @@ class K9KlageBerikerSystemKlient(
         påklagdBehandlingUUID: UUID,
         antallForsøk: Int
     ): LosOpplysningerSomManglerHistoriskIKlageDto? {
-        return runBlocking { hentFraK9KlageSuspend(påklagdBehandlingUUID, antallForsøk) }
+        return runBlocking(Dispatchers.IO) { hentFraK9KlageSuspend(påklagdBehandlingUUID, antallForsøk) }
     }
 
     @WithSpan
     override fun hentFraK9Sak(påklagdBehandlingUUID: UUID, antallForsøk: Int): LosOpplysningerSomManglerIKlageDto? {
-        return runBlocking { hentFraK9SakSuspend(påklagdBehandlingUUID, antallForsøk) }
+        return runBlocking(Dispatchers.IO) { hentFraK9SakSuspend(påklagdBehandlingUUID, antallForsøk) }
     }
 
     private suspend fun hentFraK9SakSuspend(påklagdBehandlingUUID: UUID, antallForsøk: Int = 3): LosOpplysningerSomManglerIKlageDto? {

@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.AksjonspunktLagetTilbake
@@ -58,7 +59,7 @@ internal class K9TilbakeKafkaStream constructor(
                     if (entry != null) {
                         OpentelemetrySpanUtil.span(NAME, mapOf("saksnummer" to entry.saksnummer)) {
                             log.info("Prosesserer entry fra tilbakekreving ${entry.tryggPrint()}")
-                            runBlocking {
+                            runBlocking(Dispatchers.IO) {
                                 TransientFeilHåndterer().utfør(NAME) { k9TilbakeEventHandler.prosesser(entry) }
                             }
                         }

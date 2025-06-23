@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.AksjonspunktKlageLaget
@@ -57,7 +58,7 @@ internal class K9KlageKafkaStream constructor(
                 .foreach { _, entry ->
                     if (entry != null) {
                         OpentelemetrySpanUtil.span(NAME, mapOf("saksnummer" to entry.saksnummer)) {
-                            runBlocking {
+                            runBlocking(Dispatchers.IO) {
                                 TransientFeilHåndterer().utfør(NAME) { k9KlageEventHandler.prosesser(entry) }
                             }
                         }

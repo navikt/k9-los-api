@@ -5,6 +5,7 @@ import com.github.kittinunf.fuel.coroutines.awaitStringResponseResult
 import com.github.kittinunf.fuel.httpGet
 import io.ktor.http.*
 import io.opentelemetry.instrumentation.annotations.WithSpan
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
@@ -30,7 +31,7 @@ class K9SakBerikerSystemKlient(
 
     @WithSpan
     override fun hentBehandling(behandlingUUID: UUID, antallForsøk: Int): BehandlingMedFagsakDto? {
-        return runBlocking {  hent(behandlingUUID, antallForsøk) }
+        return runBlocking(Dispatchers.IO) {  hent(behandlingUUID, antallForsøk) }
     }
 
     private suspend fun hent(behandlingUUID: UUID, antallForsøk: Int = 3): BehandlingMedFagsakDto? {

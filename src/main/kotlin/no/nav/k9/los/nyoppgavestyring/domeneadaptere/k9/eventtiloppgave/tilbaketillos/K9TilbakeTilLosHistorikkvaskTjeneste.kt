@@ -3,10 +3,10 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbake
 import kotlinx.coroutines.*
 import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.DetaljerMetrikker
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.HistorikkvaskMetrikker
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import org.slf4j.Logger
@@ -82,10 +82,10 @@ class K9TilbakeTilLosHistorikkvaskTjeneste(
         val scope = CoroutineScope(dispatcher)
 
         val jobber = behandlingsIder.map {
-            scope.async { runBlocking { vaskOppgaveForBehandlingUUIDOgMarkerVasket(it) } }
+            scope.async(Dispatchers.IO) { vaskOppgaveForBehandlingUUIDOgMarkerVasket(it) }
         }.toList()
 
-        val eventTeller = runBlocking {
+        val eventTeller = runBlocking(Dispatchers.IO) {
             jobber.sumOf { it.await() }
         }
         return eventTeller

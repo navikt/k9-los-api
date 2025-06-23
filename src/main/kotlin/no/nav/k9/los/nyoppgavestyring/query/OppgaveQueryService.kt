@@ -1,6 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.query
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import kotliquery.sessionOf
@@ -8,6 +9,7 @@ import kotliquery.using
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Action
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Auditlogging
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.idtoken.IIdToken
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.CoroutineRequestContext
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.*
 import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
@@ -19,7 +21,6 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgavefeltverdi
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgaverad
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.idtoken.IIdToken
 import org.koin.java.KoinJavaComponent.inject
 import java.time.LocalDateTime
 import javax.sql.DataSource
@@ -112,7 +113,7 @@ class OppgaveQueryService {
         val now = LocalDateTime.now()
         val oppgaveIder = oppgaveQueryRepository.query(tx, request, now)
 
-        val oppgaverader = runBlocking(context = CoroutineRequestContext(idToken)) {
+        val oppgaverader = runBlocking(Dispatchers.IO + CoroutineRequestContext(idToken)) {
             mapOppgaver(tx, request, oppgaveIder, now)
         }
 

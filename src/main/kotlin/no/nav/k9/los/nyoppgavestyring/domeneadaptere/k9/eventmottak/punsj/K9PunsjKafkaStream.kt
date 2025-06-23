@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.AksjonspunktPunsjLaget
@@ -59,7 +60,7 @@ internal class K9PunsjKafkaStream constructor(
                         OpentelemetrySpanUtil.span(NAME, mapOf("journalpostId" to entry.journalpostId.verdi)) {
                             val spørring = System.currentTimeMillis()
                             logger.info("--> Mottatt hendelse fra punsj: ${entry.eksternId} - ${entry.journalpostId}")
-                            runBlocking {
+                            runBlocking(Dispatchers.IO) {
                                 TransientFeilHåndterer().utfør(NAME) { K9punsjEventHandler.prosesser(entry) }
                             }
                             logger.info("Ferdig prosessert hendelse fra punsj etter ${System.currentTimeMillis() - spørring}ms: ${entry.eksternId} - ${entry.journalpostId}.")

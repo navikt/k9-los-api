@@ -3,11 +3,13 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.instrumentation.annotations.WithSpan
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient.IK9SakService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.DetaljerMetrikker
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient.IK9SakService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.OpentelemetrySpanUtil
 import no.nav.k9.los.nyoppgavestyring.ko.*
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.ko.dto.OppgaveKo
@@ -17,7 +19,6 @@ import no.nav.k9.los.nyoppgavestyring.query.Avgrensning
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.OpentelemetrySpanUtil
 import org.slf4j.LoggerFactory
 import java.util.*
 
@@ -74,7 +75,7 @@ class RefreshK9v3Tjeneste(
         }
 
         DetaljerMetrikker.time("RefreshK9V3", "refreshForKøer", "k9SakService") {
-            runBlocking(Span.current().asContextElement()) {
+            runBlocking(Dispatchers.IO + Span.current().asContextElement()) {
                 k9SakService.refreshBehandlinger(behandlinger)
             }
         }
