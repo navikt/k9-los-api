@@ -80,7 +80,7 @@ class K9SakBerikerSystemKlient(
 
                 if (ignorerManglendeTilgangPgaUtdatertTestdata) {
                     return null
-                } else throw IllegalStateException("Feil ved henting av behandling fra k9-sak")
+                } else throw IllegalStateException("Feil ved henting av behandling fra k9-sak", error.exception)
 
             }
         )
