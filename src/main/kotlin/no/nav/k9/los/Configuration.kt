@@ -33,6 +33,10 @@ data class Configuration(private val config: ApplicationConfig) {
         config.getRequiredString("nav.register_urls.k9_punsj_frontend_url", secret = false)
     internal fun sifAbacPdpUrl() = config.getRequiredString("nav.register_urls.sif_abac_pdp_url", secret = false)
 
+    internal val abacUsername = config.getRequiredString("nav.abac.system_user", secret = false)
+    internal val abacPassword = config.getRequiredString("nav.abac.system_user_password", secret = false)
+    internal val abacEndpointUrl = config.getRequiredString("nav.abac.url", secret = false)
+
     internal fun hikariConfig() = createHikariConfig(
         jdbcUrl = config.getRequiredString("nav.db.url", secret = false),
         username = config.getOptionalString("nav.db.username", secret = false),
@@ -102,6 +106,21 @@ data class Configuration(private val config: ApplicationConfig) {
 
     internal fun nyOppgavestyringDvhSendingAktivert(): Boolean {
         return config.getOptionalString("nav.features.nyOppgavestyringDvhSending", secret = false).toBoolean()
+    }
+
+    internal fun valgtPdp(): ValgtPdp {
+        return when (config.getOptionalString("nav.features.valgtPdp", secret = false)) {
+            "abac-k9" -> ValgtPdp.ABAC_K9
+            "sif-abac-pdp" -> ValgtPdp.SIF_ABAC_PDP
+            "begge" -> ValgtPdp.BEGGE
+            else -> ValgtPdp.ABAC_K9
+        }
+    }
+
+    enum class ValgtPdp {
+        ABAC_K9,
+        SIF_ABAC_PDP,
+        BEGGE
     }
 
     internal fun nyOppgavestyringRestAktivert(): Boolean {
