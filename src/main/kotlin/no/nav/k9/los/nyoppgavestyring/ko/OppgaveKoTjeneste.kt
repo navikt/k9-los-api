@@ -209,12 +209,12 @@ class OppgaveKoTjeneste(
     }
 
     @WithSpan
-    fun taReservasjonFraKø(
+    suspend fun taReservasjonFraKø(
         innloggetBrukerId: Long,
         oppgaveKoId: Long,
         coroutineContext: CoroutineContext
     ): OppgaveMuligReservert {
-        return DetaljerMetrikker.time("taReservasjonFraKø", "hele", "$oppgaveKoId") {
+        return DetaljerMetrikker.timeSuspended("taReservasjonFraKø", "hele", "$oppgaveKoId") {
             doTaReservasjonFraKø(innloggetBrukerId, oppgaveKoId, coroutineContext)
                 .also {
                     when (it) {
@@ -235,13 +235,13 @@ class OppgaveKoTjeneste(
         }
     }
 
-    private fun doTaReservasjonFraKø(
+    private suspend fun doTaReservasjonFraKø(
         innloggetBrukerId: Long,
         oppgaveKoId: Long,
         coroutineContext: CoroutineContext
     ): OppgaveMuligReservert {
         log.info("taReservasjonFraKø, oppgaveKøId: $oppgaveKoId")
-        val skjermet = runBlocking(Dispatchers.IO + coroutineContext) { pepClient.harTilgangTilKode6() }
+        val skjermet = pepClient.harTilgangTilKode6()
         val oppgavekø = DetaljerMetrikker.time("taReservasjonFraKø", "hentKø", "$oppgaveKoId") {
             oppgaveKoRepository.hent(
                 oppgaveKoId,
@@ -251,7 +251,7 @@ class OppgaveKoTjeneste(
 
         var antallKandidaterEtterspurt = 1
         while (true) {
-            val kandidatOppgaver = DetaljerMetrikker.time("taReservasjonFraKø", "queryForOppgaveId", "$oppgaveKoId") {
+            val kandidatOppgaver = DetaljerMetrikker.timeSuspended("taReservasjonFraKø", "queryForOppgaveId", "$oppgaveKoId") {
                     oppgaveQueryService.queryForOppgave(
                         QueryRequest(
                             oppgavekø.oppgaveQuery,

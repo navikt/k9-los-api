@@ -28,7 +28,7 @@ class SisteOppgaverTjeneste(
         scope: CoroutineScope,
     ): List<SisteOppgaverDto> {
         val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
-        val sisteOppgaveIds = transactionalManager.transaction { tx ->
+        val sisteOppgaveIds = transactionalManager.suspendingTransaction { tx ->
             sisteOppgaverRepository.hentSisteOppgaver(tx, saksbehandlerIdent)
         }
         

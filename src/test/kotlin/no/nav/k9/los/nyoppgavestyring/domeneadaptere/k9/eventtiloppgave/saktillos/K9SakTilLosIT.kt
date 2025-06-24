@@ -4,6 +4,7 @@ import assertk.assertThat
 import assertk.assertions.*
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
@@ -131,7 +132,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
     }
 
     @Test
-    fun `Behandlinger på vent skal ikke kunne plukkes`() {
+    fun `Behandlinger på vent skal ikke kunne plukkes`() = runTest {
         val eksternId = UUID.randomUUID()
         val kø = opprettKøFor(TestSaksbehandler.SARA, querySomKunInneholder(eksternId, Oppgavestatus.AAPEN))
 
@@ -161,7 +162,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
     }
 
     @Test
-    fun `Åpne behandlinger skal kunne plukkes og fjernes fra kø`() {
+    fun `Åpne behandlinger skal kunne plukkes og fjernes fra kø`() = runTest {
         val eksternId = UUID.randomUUID()
         val kø = opprettKøFor(TestSaksbehandler.SARA, querySomKunInneholder(eksternId, Oppgavestatus.AAPEN))
 
@@ -171,7 +172,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
         assertThat(antallIDb).isEqualTo(1)
 
-        val skjermet = runBlocking { pepClient.harTilgangTilKode6() }
+        val skjermet = pepClient.harTilgangTilKode6()
         val filtrerReserverte = true
         val antallIKø = oppgaveKøTjeneste.hentAntallOppgaverForKø(
             oppgaveKoId = kø.id,
@@ -193,7 +194,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
     }
 
     @Test
-    fun `Reservasjoner skal ikke annulleres ved udefinert venteårsak på manuelt aksjonspunkt`() {
+    fun `Reservasjoner skal ikke annulleres ved udefinert venteårsak på manuelt aksjonspunkt`() = runTest {
         val eksternId = UUID.randomUUID()
         val kø = opprettKøFor(TestSaksbehandler.SARA, querySomKunInneholder(eksternId))
 
@@ -237,7 +238,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
     }
 
     @Test
-    fun `Reservasjon skal annulleres hvis alle behandlinger i reservasjonen er avsluttet eller på vent`() {
+    fun `Reservasjon skal annulleres hvis alle behandlinger i reservasjonen er avsluttet eller på vent`() = runTest{
         val eksternId1 = UUID.randomUUID()
         val eksternId2 = UUID.randomUUID()
         val kø = opprettKøFor(TestSaksbehandler.SARA, querySomKunInneholder(listOf(eksternId1, eksternId2), Oppgavestatus.AAPEN))
@@ -276,7 +277,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
 
 
     @Test
-    fun `Reservasjon skal skjules fra beslutter etter retur uavhengig av om det finnes åpne oppgaver som er hos saksbehandler`() {
+    fun `Reservasjon skal skjules fra beslutter etter retur uavhengig av om det finnes åpne oppgaver som er hos saksbehandler`() = runTest {
         val eksternId1 = UUID.randomUUID()
         val eksternId2 = UUID.randomUUID()
         val kø = opprettKøFor(TestSaksbehandler.SARA, querySomKunInneholder(listOf(eksternId1, eksternId2), Oppgavestatus.AAPEN))
@@ -306,7 +307,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
     }
 
     @Test
-    fun `Både saksbehandler og beslutters reservasjon skal annulleres hvis behandlinger settes på vent`() {
+    fun `Både saksbehandler og beslutters reservasjon skal annulleres hvis behandlinger settes på vent`() = runTest{
         val eksternId = UUID.randomUUID()
         val kø = opprettKøFor(TestSaksbehandler.SARA, querySomKunInneholder(eksternId, Oppgavestatus.AAPEN))
 
@@ -350,7 +351,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
     }
 
     @Test
-    fun `Retur fra beslutter skal ikke henge igjen`() {
+    fun `Retur fra beslutter skal ikke henge igjen`() = runTest {
         val eksternId1 = UUID.randomUUID()
         val eksternId2 = UUID.randomUUID()
         val kø = opprettKøFor(TestSaksbehandler.SARA, querySomKunInneholder(listOf(eksternId1, eksternId2), Oppgavestatus.AAPEN))
@@ -416,7 +417,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         assertThat(antallIKøEtterRes).isEqualTo(forventetAntall.toLong())
     }
 
-    private fun taReservasjonFra(kø: OppgaveKo, saksbehandler: Saksbehandler): OppgaveMuligReservert {
+    private suspend fun taReservasjonFra(kø: OppgaveKo, saksbehandler: Saksbehandler): OppgaveMuligReservert {
         return oppgaveKøTjeneste.taReservasjonFraKø(
             saksbehandler.id!!,
             kø.id,

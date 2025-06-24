@@ -43,7 +43,7 @@ class SøkeboksTjeneste(
         return transformerTilSøkeresultat(oppgaver)
     }
 
-    private fun finnOppgaverForJournalpostId(
+    private suspend fun finnOppgaverForJournalpostId(
         journalpostId: String,
         oppgavestatus: List<Oppgavestatus>
     ): List<Oppgave> {
@@ -86,7 +86,7 @@ class SøkeboksTjeneste(
         return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
     }
 
-    private fun finnOppgaverForAktørId(aktørIder: List<String>, oppgavestatus: List<Oppgavestatus>): List<Oppgave> {
+    private suspend fun finnOppgaverForAktørId(aktørIder: List<String>, oppgavestatus: List<Oppgavestatus>): List<Oppgave> {
         val query = OppgaveQuery(
             filtere = listOf(
                 FeltverdiOppgavefilter(
@@ -105,7 +105,7 @@ class SøkeboksTjeneste(
         return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
     }
 
-    private fun finnOppgaverForSaksnummer(saksnummer: String, oppgavestatus: List<Oppgavestatus>): List<Oppgave> {
+    private suspend fun finnOppgaverForSaksnummer(saksnummer: String, oppgavestatus: List<Oppgavestatus>): List<Oppgave> {
         val query = OppgaveQuery(
             filtere = listOf(
                 FeltverdiOppgavefilter(

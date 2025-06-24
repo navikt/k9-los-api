@@ -2,15 +2,14 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.runBlocking
 import no.nav.k9.klage.kodeverk.behandling.oppgavetillos.EventHendelse
-import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHandlerMetrics
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.K9KlageTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.OpentelemetrySpanUtil
 import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveHendelseMottatt
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.OpentelemetrySpanUtil
 import org.slf4j.LoggerFactory
 
 
@@ -22,7 +21,7 @@ class K9KlageEventHandler constructor(
     private val log = LoggerFactory.getLogger(K9KlageEventHandler::class.java)
 
     @WithSpan
-    fun prosesser(
+    suspend fun prosesser(
         eventInn: K9KlageEventDto
     ) {
         val t0 = System.nanoTime()
@@ -44,9 +43,7 @@ class K9KlageEventHandler constructor(
             k9KlageModell
         }
         OpentelemetrySpanUtil.span("k9KlageTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid") { k9KlageTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId) }
-        runBlocking {
-            køpåvirkendeHendelseChannel.send(OppgaveHendelseMottatt(Fagsystem.K9KLAGE, EksternOppgaveId("K9", event.eksternId.toString())))
-        }
+        køpåvirkendeHendelseChannel.send(OppgaveHendelseMottatt(Fagsystem.K9KLAGE, EksternOppgaveId("K9", event.eksternId.toString())))
         EventHandlerMetrics.observe("k9klage", "gjennomført", t0)
     }
 

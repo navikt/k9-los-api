@@ -9,6 +9,7 @@ import kotliquery.using
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Action
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Auditlogging
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.idtoken.IIdToken
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.CoroutineRequestContext
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.*
@@ -32,12 +33,11 @@ class OppgaveQueryService {
     private val oppgaveRepository by inject<OppgaveRepository>(OppgaveRepository::class.java)
     private val partisjonertOppgaveRepository by inject<PartisjonertOppgaveRepository>(PartisjonertOppgaveRepository::class.java)
     private val pepClient by inject<IPepClient>(IPepClient::class.java)
+    private val transactionalManager by inject<TransactionalManager>(TransactionalManager::class.java)
 
     @WithSpan
-    fun queryForOppgave(oppgaveQuery: QueryRequest): List<Oppgave> {
-        return using(sessionOf(datasource)) {
-            it.transaction { tx -> queryForOppgave(tx, oppgaveQuery) }
-        }
+    suspend fun queryForOppgave(oppgaveQuery: QueryRequest): List<Oppgave> {
+        return transactionalManager.suspendingTransaction { tx -> queryForOppgave(tx, oppgaveQuery) }
     }
 
     @WithSpan
