@@ -5,7 +5,7 @@ on:
       image:
         required: true
         type: string
-        description: 'Image tag to deploy (example 2023.03.10.080433-f821119)'
+        description: 'Image tag to deploy (example 2023.03.10.080433-f821119). OBS! vær oppmerksom på at naiserator.yml, dev-fss/prod-fss.json ikke oppdateres ved å deploye på denne måten.'
       environment:
         required: true
         type: choice
