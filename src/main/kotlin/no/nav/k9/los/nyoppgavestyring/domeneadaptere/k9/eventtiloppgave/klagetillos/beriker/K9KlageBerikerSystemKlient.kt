@@ -12,6 +12,7 @@ import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
 import no.nav.k9.klage.kontrakt.produksjonsstyring.los.LosOpplysningerSomManglerHistoriskIKlageDto
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.TransientException
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.NavHeaders
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.LosOpplysningerSomManglerIKlageDto
@@ -70,6 +71,12 @@ class K9KlageBerikerSystemKlient(
                 success
             },
             { error ->
+                if (error.response.statusCode == HttpStatusCode.ServiceUnavailable.value
+                    || error.response.statusCode == HttpStatusCode.GatewayTimeout.value
+                    || error.response.statusCode == HttpStatusCode.RequestTimeout.value
+                ) {
+                    throw TransientException("k9sak er ikke tilgjengelig for beriking av k9klage-oppgave, fikk http code ${error.response.statusCode}", error.exception)
+                }
                 val feiltekst = error.response.body().asString("text/plain")
                 val ignorerManglendeTilgangPgaUtdatertTestdata = configuration.koinProfile == KoinProfile.PREPROD
                         && feiltekst.contains("MANGLER_TILGANG_FEIL")
@@ -122,6 +129,12 @@ class K9KlageBerikerSystemKlient(
                 success
             },
             { error ->
+                if (error.response.statusCode == HttpStatusCode.ServiceUnavailable.value
+                    || error.response.statusCode == HttpStatusCode.GatewayTimeout.value
+                    || error.response.statusCode == HttpStatusCode.RequestTimeout.value
+                ) {
+                    throw TransientException("k9klage er ikke tilgjengelig for beriking av k9klage-oppgave, fikk http code ${error.response.statusCode}", error.exception)
+                }
                 val feiltekst = error.response.body().asString("text/plain")
                 val ignorerManglendeTilgangPgaUtdatertTestdata = configuration.koinProfile == KoinProfile.PREPROD
                         && feiltekst.contains("MANGLER_TILGANG_FEIL")
