@@ -3,6 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.reservasjon
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.IPdlService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.PersonPdlResponse
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.fnr
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.navn
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.GenerellOppgaveV3Dto
@@ -59,7 +60,11 @@ class ReservasjonV3DtoBuilder(
         }
 
         val oppgaveV1Dto = if (oppgaveV1.aktiv) {
-            val person = pdlService.person(oppgaveV1.aktorId)
+            val person = if (oppgaveV1.aktorId != null) {
+                pdlService.person(oppgaveV1.aktorId)
+            } else {
+                PersonPdlResponse(false, null)
+            }
             OppgaveDto(
                 status = OppgaveStatusDto(
                     true,

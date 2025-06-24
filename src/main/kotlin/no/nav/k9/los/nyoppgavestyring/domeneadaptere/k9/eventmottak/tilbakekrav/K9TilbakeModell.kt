@@ -220,14 +220,15 @@ data class K9TilbakeModell(
     override fun dvhSak(): Sak {
         val oppgave = oppgave(sisteEvent = sisteEvent())
         val zone = ZoneId.of("Europe/Oslo")
+        val brukerAktørId = oppgave.aktorId!! // not null i k9-tilbake
         return Sak(
             saksnummer = oppgave.fagsakSaksnummer,
             sakId = oppgave.fagsakSaksnummer,
             funksjonellTid = sisteEvent().eventTid.atOffset(zone.rules.getOffset(sisteEvent().eventTid)),
             tekniskTid = OffsetDateTime.now(),
             opprettetDato = oppgave.behandlingOpprettet.toLocalDate(),
-            aktorId = oppgave.aktorId.toLong(),
-            aktorer = listOf(Aktør(oppgave.aktorId.toLong(), "Søker", "Søker")),
+            aktorId = brukerAktørId.toLong(),
+            aktorer = listOf(Aktør(brukerAktørId.toLong(), "Søker", "Søker")),
             ytelseType = oppgave.fagsakYtelseType.navn,
             underType = null,
             sakStatus = oppgave.behandlingStatus.navn,
