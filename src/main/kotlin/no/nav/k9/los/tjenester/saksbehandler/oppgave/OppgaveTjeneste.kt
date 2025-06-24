@@ -461,7 +461,11 @@ class OppgaveTjeneste constructor(
                     flyttetReservasjon = null
                 )
             }
-        val person = pdlService.person(oppgave.aktorId)
+        val person = if (oppgave.aktorId != null) {
+            pdlService.person(oppgave.aktorId)
+        } else {
+            PersonPdlResponse(false, null)
+        }
 
         return oppgave.tilDto(
             oppgaveStatus,
@@ -785,7 +789,11 @@ class OppgaveTjeneste constructor(
                         continue
                     }
 
-                    val person = pdlService.person(oppgave.aktorId)
+                    val person = if (oppgave.aktorId != null) {
+                        pdlService.person(oppgave.aktorId)
+                    } else {
+                        PersonPdlResponse(false, null)
+                    }
                     list.add(
                         lagOppgaveDto(oppgave, person.person)
                     )

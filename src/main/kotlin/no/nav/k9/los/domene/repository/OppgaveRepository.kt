@@ -158,10 +158,9 @@ class OppgaveRepository(
             return (søker || pleietrengende || relatertPart)
 
         }
-        // oppgaver laget av punsj har ikke fagsakSaksnummer
-        val søker = pepClient.erAktørKode6(oppgave.aktorId)
-        val pleietrengende =
-            if (oppgave.pleietrengendeAktørId != null) pepClient.erAktørKode6(oppgave.pleietrengendeAktørId) else false
+        // oppgaver laget av punsj har ikke fagsakSaksnummer og mangler i noen tilfeller aktørId
+        val søker = if (oppgave.aktorId != null) pepClient.erAktørKode6(oppgave.aktorId) else false
+        val pleietrengende = if (oppgave.pleietrengendeAktørId != null) pepClient.erAktørKode6(oppgave.pleietrengendeAktørId) else false
         return (søker || pleietrengende)
     }
 
@@ -175,7 +174,7 @@ class OppgaveRepository(
             return (søker || pleietrengende || relatertPart)
         }
         // oppgaver laget av punsj har ikke fagsakSaksnummer
-        val søker = pepClient.erAktørKode7EllerEgenAnsatt(oppgave.aktorId)
+        val søker = if (oppgave.aktorId != null) pepClient.erAktørKode7EllerEgenAnsatt(oppgave.aktorId) else false
         val pleietrengende =
             if (oppgave.pleietrengendeAktørId != null) pepClient.erAktørKode7EllerEgenAnsatt(oppgave.pleietrengendeAktørId) else false
         return (søker || pleietrengende)
