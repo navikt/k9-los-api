@@ -28,17 +28,12 @@ class SisteOppgaverTjeneste(
         scope: CoroutineScope,
     ): List<SisteOppgaverDto> {
         val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
-        val sisteOppgaveIds = transactionalManager.transaction { tx ->
-            sisteOppgaverRepository.hentSisteOppgaver(tx, saksbehandlerIdent)
-        }
-        
-        val oppgaver = sisteOppgaveIds.map { eksternOppgaveId ->
-            scope.async {
-                transactionalManager.transaction { tx ->
-                    oppgaveRepository.hentNyesteOppgaveForEksternId(tx, eksternOppgaveId.område, eksternOppgaveId.eksternId)
-                }
+        val oppgaver = transactionalManager.transaction { tx ->
+            val sisteOppgaveIds = sisteOppgaverRepository.hentSisteOppgaver(tx, saksbehandlerIdent)
+            sisteOppgaveIds.map { eksternOppgaveId ->
+                oppgaveRepository.hentNyesteOppgaveForEksternId(tx, eksternOppgaveId.område, eksternOppgaveId.eksternId)
             }
-        }.awaitAll()
+        }
 
         val innhentinger = oppgaver.map { oppgave ->
             scope.async {
