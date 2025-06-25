@@ -33,8 +33,8 @@ class SisteOppgaverTjeneste(
             }
         }
 
-        val innhentinger = oppgaver.map { oppgave ->
-            withContext(Dispatchers.IO) {
+        val innhentinger = withContext(Dispatchers.IO) {
+            oppgaver.map { oppgave ->
                 async(Span.current().asContextElement()) {
                     val harTilgang = pepClient.harTilgangTilOppgaveV3(oppgave, Action.read, Auditlogging.IKKE_LOGG)
                     val personPdl = oppgave.hentVerdi("aktorId")?.let { pdlService.person(it) }

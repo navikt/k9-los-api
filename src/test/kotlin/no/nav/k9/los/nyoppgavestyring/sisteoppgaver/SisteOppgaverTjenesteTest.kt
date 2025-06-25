@@ -5,7 +5,6 @@ import assertk.assertions.hasSize
 import assertk.assertions.isEqualTo
 import io.mockk.coEvery
 import io.mockk.mockk
-import io.mockk.slot
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -130,11 +129,10 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
         coEvery { pdlService.person(aktorId2) } returns PersonPdlResponse(true, mockPerson)
         
         // Bruker har tilgang til oppgave1 men ikke oppgave2
-        val oppgaveSlot = slot<Oppgave>()
         coEvery {
-            pepClient.harTilgangTilOppgaveV3(capture(oppgaveSlot), eq(Action.read), eq(Auditlogging.IKKE_LOGG))
+            pepClient.harTilgangTilOppgaveV3(any(), eq(Action.read), eq(Auditlogging.IKKE_LOGG))
         } answers {
-            val oppgave = oppgaveSlot.captured
+            val oppgave = firstArg<Oppgave>()
             oppgave.eksternId == oppgave1.eksternId
         }
         
@@ -155,7 +153,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
         )
 
         // Sjekk resultatet - skal kun få oppgave1 tilbake siden bruker ikke har tilgang til oppgave2
-        val sisteOppgaver = sisteOppgaverTjeneste.hentSisteOppgaver()
+        val sisteOppgaver = runBlocking { sisteOppgaverTjeneste.hentSisteOppgaver() }
         assertThat(sisteOppgaver).hasSize(1)
         assertThat(sisteOppgaver[0].oppgaveEksternId).isEqualTo(oppgave1.eksternId)
     }
