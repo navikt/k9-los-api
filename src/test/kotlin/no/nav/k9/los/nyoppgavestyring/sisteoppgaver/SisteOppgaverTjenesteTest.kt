@@ -153,7 +153,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
         )
 
         // Sjekk resultatet - skal kun få oppgave1 tilbake siden bruker ikke har tilgang til oppgave2
-        val sisteOppgaver = runBlocking { sisteOppgaverTjeneste.hentSisteOppgaver() }
+        val sisteOppgaver = sisteOppgaverTjeneste.hentSisteOppgaver()
         assertThat(sisteOppgaver).hasSize(1)
         assertThat(sisteOppgaver[0].oppgaveEksternId).isEqualTo(oppgave1.eksternId)
     }
