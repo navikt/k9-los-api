@@ -11,6 +11,7 @@ import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.TransientException
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.NavHeaders
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.BehandlingMedFagsakDto
@@ -30,7 +31,7 @@ class K9SakBerikerSystemKlient(
 
     @WithSpan
     override fun hentBehandling(behandlingUUID: UUID, antallForsøk: Int): BehandlingMedFagsakDto? {
-        return runBlocking {  hent(behandlingUUID, antallForsøk) }
+        return runBlocking { hent(behandlingUUID, antallForsøk) }
     }
 
     private suspend fun hent(behandlingUUID: UUID, antallForsøk: Int = 3): BehandlingMedFagsakDto? {
@@ -60,6 +61,13 @@ class K9SakBerikerSystemKlient(
                 success
             },
             { error ->
+                if (error.response.statusCode == HttpStatusCode.ServiceUnavailable.value
+                    || error.response.statusCode == HttpStatusCode.GatewayTimeout.value
+                    || error.response.statusCode == HttpStatusCode.RequestTimeout.value
+                ) {
+                    throw TransientException("k9sak er ikke tilgjengelig for beriking av k9sak-oppgave, fikk http code ${error.response.statusCode}", error.exception)
+                }
+
                 val feiltekst = error.response.body().asString("text/plain")
                 val ignorerManglendeTilgangPgaUtdatertTestdata = configuration.koinProfile == KoinProfile.PREPROD
                         && feiltekst.contains("MANGLER_TILGANG_FEIL")
@@ -72,7 +80,7 @@ class K9SakBerikerSystemKlient(
 
                 if (ignorerManglendeTilgangPgaUtdatertTestdata) {
                     return null
-                } else throw IllegalStateException("Feil ved henting av behandling fra k9-sak")
+                } else throw IllegalStateException("Feil ved henting av behandling fra k9-sak", error.exception)
 
             }
         )
