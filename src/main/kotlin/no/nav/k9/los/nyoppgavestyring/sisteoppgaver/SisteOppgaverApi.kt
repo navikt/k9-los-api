@@ -26,7 +26,7 @@ fun Route.SisteOppgaverApi() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                call.respond(sisteOppgaverTjeneste.hentSisteOppgaver(this))
+                call.respond(sisteOppgaverTjeneste.hentSisteOppgaver())
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
