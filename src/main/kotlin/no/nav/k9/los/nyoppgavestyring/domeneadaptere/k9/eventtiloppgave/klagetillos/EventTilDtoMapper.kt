@@ -40,32 +40,36 @@ class EventTilDtoMapper {
             område = "K9",
             kildeområde = "K9",
             type = "k9klage",
-            status = if (event.behandlingSteg == BehandlingStegType.OVERFØRT_NK.kode) {
-                Oppgavestatus.LUKKET.kode
-            } else {
-                if (event.aksjonspunkttilstander.any { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.status.erÅpentAksjonspunkt() }) {
-                    if (oppgaveSkalHaVentestatus(event)) {
-                        Oppgavestatus.VENTER.kode
-                    } else {
-                        Oppgavestatus.AAPEN.kode
-                    }
-                } else {
-                    if (event.behandlingStatus == BehandlingStatus.UTREDES.toString()) {
-                        Oppgavestatus.AAPEN.kode
-                    } else {
-                        Oppgavestatus.LUKKET.kode
-                    }
-                }
-            },
+            status = utledOppgavestatus(event).kode,
             endretTidspunkt = event.eventTid,
             reservasjonsnøkkel = utledReservasjonsnøkkel(event),
             feltverdier = lagFeltverdier(event, forrigeOppgave)
         )
 
-        fun isHarEllerHarHattManueltAksjonspunkt(event: K9SakEventDto): Boolean {
-            return event.aksjonspunktTilstander
-                .filter { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.status != no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus.AVBRUTT }
-                .any { aksjonspunktTilstandDto -> MANUELLE_AKSJONSPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode) }
+        fun utledOppgavestatus(event: K9KlageEventDto): Oppgavestatus {
+            return when (BehandlingStatus.fraKode(event.behandlingStatus)) {
+                BehandlingStatus.OPPRETTET -> Oppgavestatus.UAVKLART
+                BehandlingStatus.AVSLUTTET -> Oppgavestatus.LUKKET
+                BehandlingStatus.FATTER_VEDTAK, BehandlingStatus.IVERKSETTER_VEDTAK, BehandlingStatus.UTREDES -> {
+                    val harÅpentManueltAksjonspunkt: Boolean =
+                        event.aksjonspunkttilstander
+                            .filter { !AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode()).erAutopunkt() }
+                            .any { it.status == AksjonspunktStatus.OPPRETTET }
+                    val harÅpentAutopunkt: Boolean =
+                        event.aksjonspunkttilstander
+                            .filter { AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode()).erAutopunkt() }
+                            .any { it.status == AksjonspunktStatus.OPPRETTET }
+                    if (event.behandlingSteg == BehandlingStegType.OVERFØRT_NK.kode) {
+                        Oppgavestatus.VENTER
+                    } else if (harÅpentManueltAksjonspunkt) {
+                        Oppgavestatus.AAPEN
+                    } else if (harÅpentAutopunkt) {
+                        Oppgavestatus.VENTER
+                    } else {
+                        Oppgavestatus.UAVKLART
+                    }
+                }
+            }
         }
 
         private fun utledReservasjonsnøkkel(event: K9KlageEventDto): String {

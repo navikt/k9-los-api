@@ -1,5 +1,13 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos
-import no.nav.k9.kodeverk.behandling.*
+
+import io.kotest.core.spec.style.FreeSpec
+import io.kotest.datatest.withData
+import io.kotest.matchers.shouldBe
+import no.nav.k9.kodeverk.behandling.BehandlingResultatType
+import no.nav.k9.kodeverk.behandling.BehandlingStatus
+import no.nav.k9.kodeverk.behandling.BehandlingStegType
+import no.nav.k9.kodeverk.behandling.BehandlingType
+import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
@@ -7,77 +15,88 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEve
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.*
+import java.util.Random
+import java.util.UUID
 
-
-class UtledOppgavestatusTest {
-
-    @Test
-    fun `opprettet behandling gir automatisk oppgave siden prosessen i k9sak ikke har startet ennå`() {
-        assertEquals(
-            Oppgavestatus.UAVKLART,
-            EventTilDtoMapper.utledOppgavestatus(testevent(BehandlingStatus.OPPRETTET, emptyList()))
-        )
+class UtledOppgavestatusKoTest : FreeSpec({
+    "En behandling" - {
+        "med status OPPRETTET" - {
+            val behandlingstatus = BehandlingStatus.OPPRETTET
+            "gir oppgavestatus UAVKLART" {
+                EventTilDtoMapper.utledOppgavestatus(Testdata.testevent(behandlingstatus, emptyList())) shouldBe Oppgavestatus.UAVKLART
+            }
+        }
+        "med status AVSLUTTET" - {
+            val behandlingstatus = BehandlingStatus.AVSLUTTET
+            "gir oppgavestatus LUKKET" {
+                EventTilDtoMapper.utledOppgavestatus(Testdata.testevent(behandlingstatus, emptyList())) shouldBe Oppgavestatus.LUKKET
+            }
+        }
+        "med status UTREDES, FATTER_VEDTAK eller IVERKSETTER_VEDTAK" - {
+            withData(
+                BehandlingStatus.UTREDES,
+                BehandlingStatus.FATTER_VEDTAK,
+                BehandlingStatus.IVERKSETTER_VEDTAK,
+            ) { behandlingstatus ->
+                "og ingen aksjonspunkter" - {
+                    "gir oppgavestatus UAVKLART" {
+                        EventTilDtoMapper.utledOppgavestatus(Testdata.testevent(behandlingstatus, emptyList())) shouldBe Oppgavestatus.UAVKLART
+                    }
+                }
+                "og manuelt aksjonspunkt" - {
+                    val apKode = "9001"
+                    "med status OPPRETTET" - {
+                        val apTilstand = Testdata.testAksjonspunktTilstand(apKode, AksjonspunktStatus.OPPRETTET)
+                        "gir oppgavestatus AAPEN" {
+                            EventTilDtoMapper.utledOppgavestatus(
+                                Testdata.testevent(behandlingstatus, listOf(apTilstand)),
+                            ) shouldBe Oppgavestatus.AAPEN
+                        }
+                    }
+                    "med status UTFØRT eller AVBRUTT" - {
+                        withData(
+                            Testdata.testAksjonspunktTilstand(apKode, AksjonspunktStatus.UTFØRT),
+                            Testdata.testAksjonspunktTilstand(apKode, AksjonspunktStatus.AVBRUTT)
+                        ) { apTilstand ->
+                            "gir oppgavestatus UAVKLART" {
+                                EventTilDtoMapper.utledOppgavestatus(
+                                    Testdata.testevent(behandlingstatus, listOf(apTilstand)),
+                                ) shouldBe Oppgavestatus.UAVKLART
+                            }
+                        }
+                    }
+                }
+                "og autopunkt" - {
+                    val apKode = "9099"
+                    "med status OPPRETTET" - {
+                        val apTilstand = Testdata.testAksjonspunktTilstand(apKode, AksjonspunktStatus.OPPRETTET)
+                        "gir oppgavestatus VENTER" {
+                            EventTilDtoMapper.utledOppgavestatus(
+                                Testdata.testevent(behandlingstatus, listOf(apTilstand)),
+                            ) shouldBe Oppgavestatus.VENTER
+                        }
+                    }
+                    "med status UTFØRT eller AVBRUTT" - {
+                        withData(
+                            Testdata.testAksjonspunktTilstand(apKode, AksjonspunktStatus.UTFØRT),
+                            Testdata.testAksjonspunktTilstand(apKode, AksjonspunktStatus.AVBRUTT)
+                        ) { apTilstand ->
+                            "gir oppgavestatus UAVKLART" {
+                                EventTilDtoMapper.utledOppgavestatus(
+                                    Testdata.testevent(behandlingstatus, listOf(apTilstand)),
+                                ) shouldBe Oppgavestatus.UAVKLART
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
+})
 
-    @Test
-    fun `avsluttet behandling gir lukket oppgave`() {
-        assertEquals(
-            Oppgavestatus.LUKKET,
-            EventTilDtoMapper.utledOppgavestatus(testevent(BehandlingStatus.AVSLUTTET, emptyList()))
-        )
-    }
-
-    @Test
-    fun `IVERKSETTER_VEDTAK gir lukket oppgave siden nye aksjonspunkter ikke kan oppstå`() {
-        assertEquals(
-            Oppgavestatus.LUKKET,
-            EventTilDtoMapper.utledOppgavestatus(testevent(BehandlingStatus.IVERKSETTER_VEDTAK, emptyList()))
-        )
-    }
-
-    @Test
-    fun `behandling utredes med manuelt aksjonspunkt gir åpen oppgave`() {
-        assertEquals(
-            Oppgavestatus.AAPEN,
-            EventTilDtoMapper.utledOppgavestatus(
-                testevent(
-                    BehandlingStatus.UTREDES,
-                    listOf(testAksjonspunktTilstand("9001", AksjonspunktStatus.OPPRETTET))))
-        )
-    }
-
-    @Test
-    fun `åpen behandling med autopunkt gir oppgave på vent`() {
-        assertEquals(
-            Oppgavestatus.AAPEN,
-            EventTilDtoMapper.utledOppgavestatus(
-                testevent(
-                    BehandlingStatus.UTREDES,
-                    listOf(testAksjonspunktTilstand("7003", AksjonspunktStatus.OPPRETTET))))
-        )
-
-        assertEquals(
-            Oppgavestatus.AAPEN,
-            EventTilDtoMapper.utledOppgavestatus(
-                testevent(
-                    BehandlingStatus.IVERKSETTER_VEDTAK,
-                    listOf(testAksjonspunktTilstand("7003", AksjonspunktStatus.OPPRETTET))))
-        )
-
-        assertEquals(
-            Oppgavestatus.AAPEN,
-            EventTilDtoMapper.utledOppgavestatus(
-                testevent(
-                    BehandlingStatus.FATTER_VEDTAK,
-                    listOf(testAksjonspunktTilstand("7003", AksjonspunktStatus.OPPRETTET))))
-        )
-    }
-
+object Testdata {
     fun testAksjonspunktTilstand(apKode: String, status: AksjonspunktStatus): AksjonspunktTilstandDto {
         return AksjonspunktTilstandDto(
             apKode,
