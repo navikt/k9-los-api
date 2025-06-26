@@ -83,7 +83,7 @@ class PepCacheService(
     private suspend fun PepCache.oppdater(saksnummer: String): PepCache {
         val diskresjonskoder = pepClient.diskresjonskoderForSak(saksnummer)
 
-        //TODO ikke sette kode7 og egenansatt til samme verdi, det er misvisende ifht modellen som finnes. Det fungerer funksjonelt p.t fordi kode7 og egen ansatt (skjermet) håndteres i køene
+        //TODO ikke sette kode7 og egenansatt til samme verdi, det er misvisende ifht modellen som finnes. Det fungerer funksjonelt p.t fordi kode7 og egen ansatt (skjermet) håndteres samlet i køene
         val kode7ellerEgenAnsatt = diskresjonskoder.contains(Diskresjonskode.KODE7) || diskresjonskoder.contains(Diskresjonskode.SKJERMET)
         return oppdater(
                 kode6 = diskresjonskoder.contains(Diskresjonskode.KODE6),
@@ -107,7 +107,7 @@ class PepCacheService(
                 .map { it.await() }
                 .reduce { a, b -> a + b }
 
-            //TODO ikke sette kode7 og egenansatt til samme verdi, det er misvisende ifht modellen som finnes
+            //TODO ikke sette kode7 og egenansatt til samme verdi, det er misvisende ifht modellen som finnes. Det fungerer funksjonelt p.t fordi kode7 og egen ansatt (skjermet) håndteres samlet i køene
             val kode7ellerEgenAnsatt = diskresjonskoder.contains(Diskresjonskode.KODE7) || diskresjonskoder.contains(Diskresjonskode.SKJERMET)
             oppdater(
                 kode6 = diskresjonskoder.contains(Diskresjonskode.KODE6),
