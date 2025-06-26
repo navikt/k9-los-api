@@ -1,12 +1,16 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos
 
-import no.nav.k9.klage.kodeverk.behandling.*
+import no.nav.k9.klage.kodeverk.behandling.BehandlingResultatType
+import no.nav.k9.klage.kodeverk.behandling.BehandlingStatus
+import no.nav.k9.klage.kodeverk.behandling.BehandlingStegType
+import no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktType
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.Aksjonspunkttilstand
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
@@ -36,27 +40,37 @@ class EventTilDtoMapper {
             område = "K9",
             kildeområde = "K9",
             type = "k9klage",
-            status = if (event.behandlingSteg == BehandlingStegType.OVERFØRT_NK.kode) {
-                Oppgavestatus.LUKKET.kode
-            } else {
-                if (event.aksjonspunkttilstander.any { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.status.erÅpentAksjonspunkt() }) {
-                    if (oppgaveSkalHaVentestatus(event)) {
-                        Oppgavestatus.VENTER.kode
-                    } else {
-                        Oppgavestatus.AAPEN.kode
-                    }
-                } else {
-                    if (event.behandlingStatus == BehandlingStatus.UTREDES.toString()) {
-                        Oppgavestatus.AAPEN.kode
-                    } else {
-                        Oppgavestatus.LUKKET.kode
-                    }
-                }
-            },
+            status = utledOppgavestatus(event).kode,
             endretTidspunkt = event.eventTid,
             reservasjonsnøkkel = utledReservasjonsnøkkel(event),
             feltverdier = lagFeltverdier(event, forrigeOppgave)
         )
+
+        fun utledOppgavestatus(event: K9KlageEventDto): Oppgavestatus {
+            return when (BehandlingStatus.fraKode(event.behandlingStatus)) {
+                BehandlingStatus.OPPRETTET -> Oppgavestatus.UAVKLART
+                BehandlingStatus.AVSLUTTET -> Oppgavestatus.LUKKET
+                BehandlingStatus.FATTER_VEDTAK, BehandlingStatus.IVERKSETTER_VEDTAK, BehandlingStatus.UTREDES -> {
+                    val harÅpentManueltAksjonspunkt: Boolean =
+                        event.aksjonspunkttilstander
+                            .filter { !AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode()).erAutopunkt() }
+                            .any { it.status == AksjonspunktStatus.OPPRETTET }
+                    val harÅpentAutopunkt: Boolean =
+                        event.aksjonspunkttilstander
+                            .filter { AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode()).erAutopunkt() }
+                            .any { it.status == AksjonspunktStatus.OPPRETTET }
+                    if (event.behandlingSteg == BehandlingStegType.OVERFØRT_NK.kode) {
+                        Oppgavestatus.VENTER
+                    } else if (harÅpentManueltAksjonspunkt) {
+                        Oppgavestatus.AAPEN
+                    } else if (harÅpentAutopunkt) {
+                        Oppgavestatus.VENTER
+                    } else {
+                        Oppgavestatus.UAVKLART
+                    }
+                }
+            }
+        }
 
         private fun utledReservasjonsnøkkel(event: K9KlageEventDto): String {
             return if (erTilBeslutter(event)) {

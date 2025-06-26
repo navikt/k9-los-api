@@ -180,7 +180,8 @@ fun Application.k9Los() {
         pepCacheService = koin.get(),
         oppgaveRepository = koin.get(),
         reservasjonV3Tjeneste = koin.get(),
-        historikkvaskChannel = koin.get<Channel<k9SakEksternId>>(named("historikkvaskChannelK9Sak"))
+        historikkvaskChannel = koin.get<Channel<k9SakEksternId>>(named("historikkvaskChannelK9Sak")),
+        køpåvirkendeHendelseChannel = koin.get(),
     ).kjør(kjørSetup = false, kjørUmiddelbart = false)
 
     // implementer med Jobbplanlegger

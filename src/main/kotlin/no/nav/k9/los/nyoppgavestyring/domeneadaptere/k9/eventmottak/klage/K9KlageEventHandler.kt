@@ -43,7 +43,9 @@ class K9KlageEventHandler (
             k9KlageModell.eventer.add(event)
             k9KlageModell
         }
-        OpentelemetrySpanUtil.span("k9KlageTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid") { k9KlageTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId) }
+        OpentelemetrySpanUtil.span("k9KlageTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid") {
+            k9KlageTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId)
+        }
         runBlocking {
             køpåvirkendeHendelseChannel.send(OppgaveHendelseMottatt(Fagsystem.K9KLAGE, EksternOppgaveId("K9", event.eksternId.toString())))
         }
