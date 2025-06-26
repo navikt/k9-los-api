@@ -1,7 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.infrastruktur.abac
 
 import kotlinx.coroutines.runBlocking
-import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.audit.K9Auditlogger
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.idToken
@@ -77,23 +76,6 @@ class PepClient(
     override suspend fun erAktørKode7EllerEgenAnsatt(aktørid: String): Boolean {
         val diskresjonskoder = sifAbacPdpKlient.diskresjonskoderPerson(AktørId(aktørid))
         return diskresjonskoder.contains(Diskresjonskode.KODE7) || diskresjonskoder.contains(Diskresjonskode.SKJERMET)
-    }
-
-    override suspend fun harTilgangTilOppgave(oppgave: Oppgave): Boolean {
-        val oppgavetype = if (oppgave.behandlingType.gjelderPunsj()) {
-            "k9punsj"
-        } else {
-            "k9sak"
-        }
-        return harTilgang(
-            oppgavetype,
-            azureGraphService.hentIdentTilInnloggetBruker(),
-            Action.read,
-            oppgave.fagsakSaksnummer,
-            oppgave.aktorId,
-            oppgave.pleietrengendeAktørId,
-            Auditlogging.IKKE_LOGG
-        )
     }
 
     override suspend fun harTilgangTilOppgaveV3(

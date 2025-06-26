@@ -7,7 +7,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
-import no.nav.k9.los.tjenester.avdelingsleder.EpostDto
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.EpostDto
 import org.koin.ktor.ext.inject
 
 internal fun Route.SaksbehandlerAdminApis() {
