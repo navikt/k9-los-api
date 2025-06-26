@@ -5,7 +5,6 @@ import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import no.nav.helse.dusseldorf.ktor.client.buildURL
 import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.ktor.metrics.Operation
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
@@ -34,10 +33,7 @@ class PdlService(
     private val log: Logger = LoggerFactory.getLogger(PdlService::class.java)
     private val scopes = setOf(scope)
 
-    private val personUrl = Url.buildURL(
-        baseUrl = baseUrl,
-        pathParts = listOf()
-    ).toString()
+    private val personUrl = baseUrl.toString()
 
     private val graphqlQueryHentPerson = getStringFromResource("/pdl/hentPerson.graphql")
     private val graphqlQueryHentIdent = getStringFromResource("/pdl/hentIdent.graphql")
