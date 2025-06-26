@@ -61,6 +61,14 @@ class PepClient(
         return diskresjonskoder.contains(Diskresjonskode.KODE6)
     }
 
+    override suspend fun diskresjonskoderForSak(saksnummer: String): Set<Diskresjonskode> {
+        return sifAbacPdpKlient.diskresjonskoderSak(SaksnummerDto(saksnummer))
+    }
+
+    override suspend fun diskresjonskoderForPerson(aktørId: String): Set<Diskresjonskode> {
+        return sifAbacPdpKlient.diskresjonskoderPerson(AktørId(aktørId))
+    }
+
     override suspend fun erSakKode7EllerEgenAnsatt(fagsakNummer: String): Boolean {
         val diskresjonskoder = sifAbacPdpKlient.diskresjonskoderSak(SaksnummerDto(fagsakNummer))
         return diskresjonskoder.contains(Diskresjonskode.KODE7) || diskresjonskoder.contains(Diskresjonskode.SKJERMET)

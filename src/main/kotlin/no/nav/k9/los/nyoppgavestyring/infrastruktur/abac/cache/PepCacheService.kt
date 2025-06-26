@@ -13,6 +13,7 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
+import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import java.time.Duration
 import java.time.LocalDateTime
 
@@ -80,22 +81,15 @@ class PepCacheService(
     }
 
     private suspend fun PepCache.oppdater(saksnummer: String): PepCache {
-        return coroutineScope {
-            val kode6Request = async(Span.current().asContextElement()) {
-                pepClient.erSakKode6(fagsakNummer = saksnummer)
-            }
-            val kode7EllerEgenAnsattRequest = async(Span.current().asContextElement()) {
-                pepClient.erSakKode7EllerEgenAnsatt(fagsakNummer = saksnummer)
-            }
-            val kode7EllerEgenAnsatt = kode7EllerEgenAnsattRequest.await()
+        val diskresjonskoder = pepClient.diskresjonskoderForSak(saksnummer)
 
-            val oppdatertPepCache = oppdater(
-                kode6 = kode6Request.await(),
-                kode7 = kode7EllerEgenAnsatt,
-                egenAnsatt = kode7EllerEgenAnsatt,
-            )
-            oppdatertPepCache
-        }
+        //TODO ikke sette kode7 og egenansatt til samme verdi, det er misvisende ifht modellen som finnes. Det fungerer funksjonelt p.t fordi kode7 og egen ansatt (skjermet) håndteres i køene
+        val kode7ellerEgenAnsatt = diskresjonskoder.contains(Diskresjonskode.KODE7) || diskresjonskoder.contains(Diskresjonskode.SKJERMET)
+        return oppdater(
+                kode6 = diskresjonskoder.contains(Diskresjonskode.KODE6),
+                kode7 = kode7ellerEgenAnsatt,
+                egenAnsatt = kode7ellerEgenAnsatt,
+        )
     }
 
     private suspend fun PepCache.oppdater(aktører: List<AktørId>): PepCache {
@@ -103,27 +97,22 @@ class PepCacheService(
             return oppdater(kode6 = false, kode7 = false, egenAnsatt = false)
         }
         return coroutineScope {
-            val kode6Request = aktører.map {
+            val requests = aktører.map {
                 async(Span.current().asContextElement()) {
-                    pepClient.erAktørKode6(it.aktørId)
-                }
-            }
-            val kode7EllerEgenAnsattRequest = aktører.map {
-                async(Span.current().asContextElement()) {
-                    pepClient.erAktørKode7EllerEgenAnsatt(it.aktørId)
+                    pepClient.diskresjonskoderForPerson(it.aktørId)
                 }
             }
 
-            val minsteEnKode6 = kode6Request
+            val diskresjonskoder = requests
                 .map { it.await() }
-                .reduce { a, b -> a || b }
-            val minsteEnKode7EllerEgenAnsatt = kode7EllerEgenAnsattRequest
-                .map { it.await() }
-                .reduce { a, b -> a || b }
+                .reduce { a, b -> a + b }
+
+            //TODO ikke sette kode7 og egenansatt til samme verdi, det er misvisende ifht modellen som finnes
+            val kode7ellerEgenAnsatt = diskresjonskoder.contains(Diskresjonskode.KODE7) || diskresjonskoder.contains(Diskresjonskode.SKJERMET)
             oppdater(
-                kode6 = minsteEnKode6,
-                kode7 = minsteEnKode7EllerEgenAnsatt,
-                egenAnsatt = minsteEnKode7EllerEgenAnsatt,
+                kode6 = diskresjonskoder.contains(Diskresjonskode.KODE6),
+                kode7 = kode7ellerEgenAnsatt,
+                egenAnsatt = kode7ellerEgenAnsatt,
             )
         }
     }
