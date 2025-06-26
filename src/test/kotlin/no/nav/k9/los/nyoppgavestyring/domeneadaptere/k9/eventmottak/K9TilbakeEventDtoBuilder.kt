@@ -2,13 +2,6 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak
 
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake.Companion.AVKLART_FAKTA_FEILUTBETALING
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake.Companion.FATTE_VEDTAK
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake.Companion.FORESLÅ_VEDTAK
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake.Companion.VENT_PÅ_BRUKERTILBAKEMELDING
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake.Companion.VENT_PÅ_TILBAKEKREVINGSGRUNNLAG
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake.Companion.VURDER_FORELDELSE
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake.Companion.VURDER_TILBAKEKREVING
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
@@ -41,8 +34,8 @@ class K9TilbakeEventDtoBuilder(
         this.behandlingStatus = BehandlingStatus.UTREDES
         this.behandlingSteg = "FAKTFEILUTSTEG"
         this.aksjonspunkter =  mutableMapOf(
-            VENT_PÅ_BRUKERTILBAKEMELDING to AksjonspunktStatus.UTFØRT,
-            AVKLART_FAKTA_FEILUTBETALING to AksjonspunktStatus.OPPRETTET,
+            AksjonspunktDefinisjonK9Tilbake.VENT_PÅ_BRUKERTILBAKEMELDING to AksjonspunktStatus.UTFØRT,
+            AksjonspunktDefinisjonK9Tilbake.AVKLART_FAKTA_FEILUTBETALING to AksjonspunktStatus.OPPRETTET,
         )
         this.ansvarligSaksbehandlerIdent = null
         return this
@@ -52,11 +45,11 @@ class K9TilbakeEventDtoBuilder(
         this.behandlingStatus = BehandlingStatus.UTREDES
         this.behandlingSteg = BehandlingStegType.FORESLÅ_VEDTAK.kode
         this.aksjonspunkter = mutableMapOf(
-            VURDER_TILBAKEKREVING to AksjonspunktStatus.UTFØRT,
-            VURDER_FORELDELSE to AksjonspunktStatus.UTFØRT,
-            FORESLÅ_VEDTAK to AksjonspunktStatus.OPPRETTET,
-            VENT_PÅ_BRUKERTILBAKEMELDING to AksjonspunktStatus.UTFØRT,
-            AVKLART_FAKTA_FEILUTBETALING to AksjonspunktStatus.UTFØRT,
+            AksjonspunktDefinisjonK9Tilbake.VURDER_TILBAKEKREVING to AksjonspunktStatus.UTFØRT,
+            AksjonspunktDefinisjonK9Tilbake.VURDER_FORELDELSE to AksjonspunktStatus.UTFØRT,
+            AksjonspunktDefinisjonK9Tilbake.FORESLÅ_VEDTAK to AksjonspunktStatus.OPPRETTET,
+            AksjonspunktDefinisjonK9Tilbake.VENT_PÅ_BRUKERTILBAKEMELDING to AksjonspunktStatus.UTFØRT,
+            AksjonspunktDefinisjonK9Tilbake.AVKLART_FAKTA_FEILUTBETALING to AksjonspunktStatus.UTFØRT,
         )
         this.ansvarligSaksbehandlerIdent = ansvarligSaksbehandler?.brukerIdent
         return this
@@ -66,12 +59,12 @@ class K9TilbakeEventDtoBuilder(
         this.behandlingStatus = BehandlingStatus.UTREDES
         this.behandlingSteg = BehandlingStegType.FATTE_VEDTAK.kode
         this.aksjonspunkter = mutableMapOf(
-            VURDER_TILBAKEKREVING to AksjonspunktStatus.UTFØRT,
-            VURDER_FORELDELSE to AksjonspunktStatus.UTFØRT,
-            FORESLÅ_VEDTAK to AksjonspunktStatus.UTFØRT,
-            FATTE_VEDTAK to AksjonspunktStatus.OPPRETTET,
-            VENT_PÅ_BRUKERTILBAKEMELDING to AksjonspunktStatus.UTFØRT,
-            AVKLART_FAKTA_FEILUTBETALING to AksjonspunktStatus.UTFØRT,
+            AksjonspunktDefinisjonK9Tilbake.VURDER_TILBAKEKREVING to AksjonspunktStatus.UTFØRT,
+            AksjonspunktDefinisjonK9Tilbake.VURDER_FORELDELSE to AksjonspunktStatus.UTFØRT,
+            AksjonspunktDefinisjonK9Tilbake.FORESLÅ_VEDTAK to AksjonspunktStatus.UTFØRT,
+            AksjonspunktDefinisjonK9Tilbake.FATTE_VEDTAK to AksjonspunktStatus.OPPRETTET,
+            AksjonspunktDefinisjonK9Tilbake.VENT_PÅ_BRUKERTILBAKEMELDING to AksjonspunktStatus.UTFØRT,
+            AksjonspunktDefinisjonK9Tilbake.AVKLART_FAKTA_FEILUTBETALING to AksjonspunktStatus.UTFØRT,
         )
         this.ansvarligSaksbehandlerIdent = ansvarligSaksbehandler?.brukerIdent
         return this
@@ -81,12 +74,12 @@ class K9TilbakeEventDtoBuilder(
         this.behandlingStatus = BehandlingStatus.UTREDES
         this.behandlingSteg = BehandlingStegType.FORESLÅ_VEDTAK.kode
         this.aksjonspunkter = mutableMapOf(
-            VURDER_TILBAKEKREVING to AksjonspunktStatus.UTFØRT,
-            VURDER_FORELDELSE to AksjonspunktStatus.UTFØRT,
-            FORESLÅ_VEDTAK to AksjonspunktStatus.OPPRETTET,
-            FATTE_VEDTAK to AksjonspunktStatus.AVBRUTT,
-            VENT_PÅ_BRUKERTILBAKEMELDING to AksjonspunktStatus.UTFØRT,
-            AVKLART_FAKTA_FEILUTBETALING to AksjonspunktStatus.UTFØRT,
+            AksjonspunktDefinisjonK9Tilbake.VURDER_TILBAKEKREVING to AksjonspunktStatus.UTFØRT,
+            AksjonspunktDefinisjonK9Tilbake.VURDER_FORELDELSE to AksjonspunktStatus.UTFØRT,
+            AksjonspunktDefinisjonK9Tilbake.FORESLÅ_VEDTAK to AksjonspunktStatus.OPPRETTET,
+            AksjonspunktDefinisjonK9Tilbake.FATTE_VEDTAK to AksjonspunktStatus.AVBRUTT,
+            AksjonspunktDefinisjonK9Tilbake.VENT_PÅ_BRUKERTILBAKEMELDING to AksjonspunktStatus.UTFØRT,
+            AksjonspunktDefinisjonK9Tilbake.AVKLART_FAKTA_FEILUTBETALING to AksjonspunktStatus.UTFØRT,
         )
         return this
     }
@@ -95,13 +88,13 @@ class K9TilbakeEventDtoBuilder(
         this.behandlingStatus = BehandlingStatus.AVSLUTTET
         this.behandlingSteg = null
         this.aksjonspunkter = mutableMapOf(
-            VURDER_TILBAKEKREVING to AksjonspunktStatus.UTFØRT,
-            VURDER_FORELDELSE to AksjonspunktStatus.UTFØRT,
-            FORESLÅ_VEDTAK to AksjonspunktStatus.UTFØRT,
-            FATTE_VEDTAK to AksjonspunktStatus.UTFØRT,
-            VENT_PÅ_BRUKERTILBAKEMELDING to AksjonspunktStatus.UTFØRT,
-            VENT_PÅ_TILBAKEKREVINGSGRUNNLAG to AksjonspunktStatus.UTFØRT,
-            AVKLART_FAKTA_FEILUTBETALING to AksjonspunktStatus.UTFØRT,
+            AksjonspunktDefinisjonK9Tilbake.VURDER_TILBAKEKREVING to AksjonspunktStatus.UTFØRT,
+            AksjonspunktDefinisjonK9Tilbake.VURDER_FORELDELSE to AksjonspunktStatus.UTFØRT,
+            AksjonspunktDefinisjonK9Tilbake.FORESLÅ_VEDTAK to AksjonspunktStatus.UTFØRT,
+            AksjonspunktDefinisjonK9Tilbake.FATTE_VEDTAK to AksjonspunktStatus.UTFØRT,
+            AksjonspunktDefinisjonK9Tilbake.VENT_PÅ_BRUKERTILBAKEMELDING to AksjonspunktStatus.UTFØRT,
+            AksjonspunktDefinisjonK9Tilbake.VENT_PÅ_TILBAKEKREVINGSGRUNNLAG to AksjonspunktStatus.UTFØRT,
+            AksjonspunktDefinisjonK9Tilbake.AVKLART_FAKTA_FEILUTBETALING to AksjonspunktStatus.UTFØRT,
         )
         this.ansvarligSaksbehandlerForTotrinn = ansvarligBeslutter?.brukerIdent
         return this

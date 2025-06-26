@@ -22,7 +22,7 @@ class EventTilDtoMapper {
                 område = "K9",
                 kildeområde = "K9",
                 type = "k9tilbake",
-                status = finnOppgavestatusFraAksjonspunkter(event).kode,
+                status = utledOppgavestatus(event).kode,
                 endretTidspunkt = event.eventTid,
                 reservasjonsnøkkel = utledReservasjonsnøkkel(event, erTilBeslutter(event)),
                 feltverdier = lagFeltverdier(event, forrigeOppgave)
@@ -32,25 +32,31 @@ class EventTilDtoMapper {
             return lagNøkkelAktør(event, erTilBeslutter)
         }
 
-        private fun finnOppgavestatusFraAksjonspunkter(event: K9TilbakeEventDto): Oppgavestatus {
-            val aksjonspunktMedStatus = event.aksjonspunktKoderMedStatusListe
-            val harÅpentAutopunkt =
-                aksjonspunktMedStatus.any { it.value == OPPRETTET.kode && AksjonspunktDefinisjonK9Tilbake.fraKode(it.key).erAutopunkt }
-            val harÅpentAksjonspunkt =
-                aksjonspunktMedStatus.any { it.value == OPPRETTET.kode && !AksjonspunktDefinisjonK9Tilbake.fraKode(it.key).erAutopunkt }
-            return if (event.behandlingStatus == BehandlingStatus.AVSLUTTET.kode) {
-                Oppgavestatus.LUKKET
-            } else {
-                if (!harÅpentAksjonspunkt && !harÅpentAutopunkt) {
-                    Oppgavestatus.UAVKLART
+        @VisibleForTesting
+        fun utledOppgavestatus(event: K9TilbakeEventDto): Oppgavestatus {
+            return when (BehandlingStatus.fraKode(event.behandlingStatus)) {
+                BehandlingStatus.OPPRETTET -> Oppgavestatus.UAVKLART
+                BehandlingStatus.AVSLUTTET -> Oppgavestatus.LUKKET
+                BehandlingStatus.FATTER_VEDTAK,
+                BehandlingStatus.IVERKSETTER_VEDTAK,
+                BehandlingStatus.UTREDES -> {
+                    val harÅpentAutopunkt =
+                        event.aksjonspunktKoderMedStatusListe.any { it.value == OPPRETTET.kode && AksjonspunktDefinisjonK9Tilbake.fraKode(it.key).erAutopunkt }
+                    val harÅpentAksjonspunkt =
+                        event.aksjonspunktKoderMedStatusListe.any { it.value == OPPRETTET.kode && !AksjonspunktDefinisjonK9Tilbake.fraKode(it.key).erAutopunkt }
+                    if (harÅpentAutopunkt) {
+                        Oppgavestatus.VENTER
+                    }
+                    else if (harÅpentAksjonspunkt) {
+                        Oppgavestatus.AAPEN
+                    } else {
+                        Oppgavestatus.UAVKLART
+                    }
                 }
-                if (harÅpentAutopunkt) {
-                    Oppgavestatus.VENTER
-                } else if (harÅpentAksjonspunkt) {
-                    Oppgavestatus.AAPEN
-                } else {
-                    Oppgavestatus.LUKKET
-                }
+
+                BehandlingStatus.SATT_PÅ_VENT,
+                BehandlingStatus.LUKKET,
+                BehandlingStatus.SENDT_INN -> throw IllegalStateException("Punsj-statuser ikke lov på tilbakekravsbehandling")
             }
         }
 

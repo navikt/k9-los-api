@@ -1,37 +1,33 @@
-package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos
 
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.datatest.withData
 import io.kotest.matchers.shouldBe
-import no.nav.k9.kodeverk.behandling.BehandlingResultatType
-import no.nav.k9.kodeverk.behandling.BehandlingStatus
-import no.nav.k9.kodeverk.behandling.BehandlingStegType
-import no.nav.k9.kodeverk.behandling.BehandlingType
-import no.nav.k9.kodeverk.behandling.FagsakYtelseType
+import no.nav.k9.klage.kodeverk.behandling.BehandlingResultatType
+import no.nav.k9.klage.kodeverk.behandling.BehandlingStegType
+import no.nav.k9.klage.kodeverk.behandling.BehandlingType
+import no.nav.k9.klage.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
-import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
-import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
-import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.Random
-import java.util.UUID
+import java.util.*
 
-class UtledOppgavestatusKoTest : FreeSpec({
+
+class UtledOppgavestatusTest: FreeSpec({
     "En behandling" - {
         "med status OPPRETTET" - {
             val behandlingstatus = BehandlingStatus.OPPRETTET
-            "gir oppgavestatus UAVKLART" {
-                EventTilDtoMapper.utledOppgavestatus(Testdata.testevent(behandlingstatus, emptyList())) shouldBe Oppgavestatus.UAVKLART
+            "gir status UAVKLART" {
+                EventTilDtoMapper.utledOppgavestatus(Testdata.testevent(behandlingstatus, mutableMapOf())) shouldBe Oppgavestatus.UAVKLART
             }
         }
         "med status AVSLUTTET" - {
             val behandlingstatus = BehandlingStatus.AVSLUTTET
-            "gir oppgavestatus LUKKET" {
-                EventTilDtoMapper.utledOppgavestatus(Testdata.testevent(behandlingstatus, emptyList())) shouldBe Oppgavestatus.LUKKET
+            "gir status LUKKET" {
+                EventTilDtoMapper.utledOppgavestatus(Testdata.testevent(behandlingstatus, mutableMapOf())) shouldBe Oppgavestatus.LUKKET
             }
         }
         "med status UTREDES, FATTER_VEDTAK eller IVERKSETTER_VEDTAK" - {
@@ -42,16 +38,16 @@ class UtledOppgavestatusKoTest : FreeSpec({
             ) { behandlingstatus ->
                 "og ingen aksjonspunkter" - {
                     "gir oppgavestatus UAVKLART" {
-                        EventTilDtoMapper.utledOppgavestatus(Testdata.testevent(behandlingstatus, emptyList())) shouldBe Oppgavestatus.UAVKLART
+                        EventTilDtoMapper.utledOppgavestatus(Testdata.testevent(behandlingstatus, mutableMapOf())) shouldBe Oppgavestatus.UAVKLART
                     }
                 }
                 "og manuelt aksjonspunkt" - {
-                    val apKode = "9001"
+                    val apKode = "5002"
                     "med status OPPRETTET" - {
                         val apTilstand = Testdata.testAksjonspunktTilstand(apKode, AksjonspunktStatus.OPPRETTET)
                         "gir oppgavestatus AAPEN" {
                             EventTilDtoMapper.utledOppgavestatus(
-                                Testdata.testevent(behandlingstatus, listOf(apTilstand)),
+                                Testdata.testevent(behandlingstatus, apTilstand),
                             ) shouldBe Oppgavestatus.AAPEN
                         }
                     }
@@ -62,19 +58,19 @@ class UtledOppgavestatusKoTest : FreeSpec({
                         ) { apTilstand ->
                             "gir oppgavestatus UAVKLART" {
                                 EventTilDtoMapper.utledOppgavestatus(
-                                    Testdata.testevent(behandlingstatus, listOf(apTilstand)),
+                                    Testdata.testevent(behandlingstatus, apTilstand),
                                 ) shouldBe Oppgavestatus.UAVKLART
                             }
                         }
                     }
                 }
                 "og autopunkt" - {
-                    val apKode = "9099"
+                    val apKode = "7001"
                     "med status OPPRETTET" - {
                         val apTilstand = Testdata.testAksjonspunktTilstand(apKode, AksjonspunktStatus.OPPRETTET)
                         "gir oppgavestatus VENTER" {
                             EventTilDtoMapper.utledOppgavestatus(
-                                Testdata.testevent(behandlingstatus, listOf(apTilstand)),
+                                Testdata.testevent(behandlingstatus, apTilstand),
                             ) shouldBe Oppgavestatus.VENTER
                         }
                     }
@@ -85,7 +81,7 @@ class UtledOppgavestatusKoTest : FreeSpec({
                         ) { apTilstand ->
                             "gir oppgavestatus UAVKLART" {
                                 EventTilDtoMapper.utledOppgavestatus(
-                                    Testdata.testevent(behandlingstatus, listOf(apTilstand)),
+                                    Testdata.testevent(behandlingstatus, apTilstand),
                                 ) shouldBe Oppgavestatus.UAVKLART
                             }
                         }
@@ -97,45 +93,28 @@ class UtledOppgavestatusKoTest : FreeSpec({
 })
 
 object Testdata {
-    fun testAksjonspunktTilstand(apKode: String, status: AksjonspunktStatus): AksjonspunktTilstandDto {
-        return AksjonspunktTilstandDto(
-            apKode,
-            status,
-            Venteårsak.AVV_DOK,
-            "Sara Saksbehandler",
-            LocalDateTime.now().plusDays(30),
-            LocalDateTime.now(),
-            LocalDateTime.now(),
-        )
+    fun testAksjonspunktTilstand(apKode: String, status: AksjonspunktStatus): MutableMap<String, String> {
+        return mutableMapOf(Pair(apKode, status.kode))
     }
 
-    fun testevent(status: BehandlingStatus, aksjonspunkter: List<AksjonspunktTilstandDto>): K9SakEventDto {
-        return K9SakEventDto(
+    fun testevent(status: BehandlingStatus, aksjonspunkter: MutableMap<String, String>, steg: BehandlingStegType = BehandlingStegType.VURDER_KLAGE_FØRSTEINSTANS): K9TilbakeEventDto {
+        return K9TilbakeEventDto(
             eksternId = UUID.randomUUID(),
-            fagsystem = Fagsystem.K9SAK,
+            fagsystem = "test",
             saksnummer = Random().nextInt(0, 200).toString(),
             aktørId = Random().nextInt(0, 9999999).toString(),
-            behandlingId = 123L,
             resultatType = BehandlingResultatType.IKKE_FASTSATT.kode,
             behandlendeEnhet = null,
-            aksjonspunktTilstander = aksjonspunkter,
-            søknadsårsaker = emptyList(),
-            behandlingsårsaker = emptyList(),
-            ansvarligSaksbehandlerIdent = null,
-            ansvarligBeslutterForTotrinn = null,
-            ansvarligSaksbehandlerForTotrinn = null,
             opprettetBehandling = LocalDateTime.now(),
-            vedtaksdato = LocalDate.now(),
-            pleietrengendeAktørId = Random().nextInt(0, 9999999).toString(),
             behandlingStatus = status.kode,
-            behandlingSteg = BehandlingStegType.KONTROLLER_FAKTA.kode,
+            behandlingSteg = steg.kode,
             behandlingTypeKode = BehandlingType.FØRSTEGANGSSØKNAD.kode,
             behandlingstidFrist = null,
             eventHendelse = EventHendelse.BEHANDLINGSKONTROLL_EVENT,
             eventTid = LocalDateTime.now(),
-            aksjonspunktKoderMedStatusListe = mutableMapOf(),
             ytelseTypeKode = FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode,
-            eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
+            behandlingId = 123L,
+            aksjonspunktKoderMedStatusListe = aksjonspunkter,
         )
     }
 }
