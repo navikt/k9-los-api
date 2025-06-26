@@ -1,6 +1,7 @@
 package no.nav.k9.los
 
 import io.ktor.client.*
+import io.ktor.client.engine.*
 import io.ktor.server.application.*
 import kotlinx.coroutines.channels.Channel
 import no.nav.helse.dusseldorf.ktor.health.HealthService
@@ -149,9 +150,10 @@ fun common(app: Application, config: Configuration) = module {
 
     single { OppgaveRepository(get(), get(), get(named("oppgaveRefreshChannel"))) }
 
-    single { AktivOppgaveRepository(
-        oppgavetypeRepository = get()
-    )
+    single {
+        AktivOppgaveRepository(
+            oppgavetypeRepository = get()
+        )
     }
 
     single {
@@ -782,12 +784,19 @@ fun localDevConfig() = module {
 }
 
 fun preprodConfig(config: Configuration) = module {
-    single<HttpClient> { HttpClient() }
-    
+    single { HttpClient() }
+    single(named("webproxyHttpClient")) {
+        HttpClient {
+            engine {
+                proxy = ProxyBuilder.http("http://webproxy.nais:8088")
+            }
+        }
+    }
+
     single<IAzureGraphService> {
         AzureGraphService(
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
-            httpClient = get<HttpClient>()
+            httpClient = get(named("webproxyHttpClient")),
         )
     }
     single<IK9SakService> {
@@ -796,7 +805,7 @@ fun preprodConfig(config: Configuration) = module {
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://dev-fss.k9saksbehandling.k9-sak/.default",
             k9SakBehandlingOppfrisketRepository = get(),
-            httpClient = get<HttpClient>()
+            httpClient = get()
         )
     }
 
@@ -808,7 +817,7 @@ fun preprodConfig(config: Configuration) = module {
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://dev-fss.pdl.pdl-api/.default",
             azureGraphService = get<IAzureGraphService>(),
-            httpClient = get<HttpClient>()
+            httpClient = get()
         )
     }
 
@@ -817,7 +826,7 @@ fun preprodConfig(config: Configuration) = module {
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://dev-fss.k9saksbehandling.k9-sak/.default",
-            httpClient = get<HttpClient>()
+            httpClient = get()
         )
     }
 
@@ -827,12 +836,12 @@ fun preprodConfig(config: Configuration) = module {
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scopeKlage = "api://dev-fss.k9saksbehandling.k9-klage/.default",
             scopeSak = "api://dev-fss.k9saksbehandling.k9-sak/.default",
-            httpClient = get<HttpClient>()
+            httpClient = get()
         )
     }
 
     single<ISifAbacPdpKlient> {
-        SifAbacPdpKlient (
+        SifAbacPdpKlient(
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://dev-fss.k9saksbehandling.sif-abac-pdp/.default",
@@ -845,12 +854,19 @@ fun preprodConfig(config: Configuration) = module {
 }
 
 fun prodConfig(config: Configuration) = module {
-    single<HttpClient> { HttpClient() }
-    
+    single { HttpClient() }
+    single(named("webproxyHttpClient")) {
+        HttpClient {
+            engine {
+                proxy = ProxyBuilder.http("http://webproxy.nais:8088")
+            }
+        }
+    }
+
     single<IAzureGraphService> {
         AzureGraphService(
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
-            httpClient = get()
+            httpClient = get(named("webproxyHttpClient"))
         )
     }
     single<IK9SakService> {
@@ -895,7 +911,7 @@ fun prodConfig(config: Configuration) = module {
     }
 
     single<ISifAbacPdpKlient> {
-        SifAbacPdpKlient (
+        SifAbacPdpKlient(
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://prod-fss.k9saksbehandling.sif-abac-pdp/.default",
