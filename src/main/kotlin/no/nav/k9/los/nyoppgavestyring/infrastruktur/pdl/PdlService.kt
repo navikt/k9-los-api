@@ -1,8 +1,9 @@
 package no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.github.kittinunf.fuel.coroutines.awaitStringResponseResult
-import com.github.kittinunf.fuel.httpPost
+import io.ktor.client.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import no.nav.helse.dusseldorf.ktor.client.buildURL
 import no.nav.helse.dusseldorf.ktor.core.Retry
@@ -23,11 +24,12 @@ import java.time.LocalDateTime
 import java.util.*
 import kotlin.coroutines.coroutineContext
 
-class PdlService constructor(
+class PdlService(
     baseUrl: URI,
     accessTokenClient: AccessTokenClient,
     scope: String,
-    val azureGraphService : IAzureGraphService
+    val azureGraphService : IAzureGraphService,
+    private val httpClient: HttpClient
 ) : IPdlService {
     private val log: Logger = LoggerFactory.getLogger(PdlService::class.java)
     private val scopes = setOf(scope)
@@ -65,40 +67,35 @@ class PdlService constructor(
             return cachedObject.value
         }
         val callId = UUID.randomUUID().toString()
-        val httpRequest = personUrl
-            .httpPost()
-            .body(
-                LosObjectMapper.instance.writeValueAsString(queryRequest)
-            )
-            .header(
-                HttpHeaders.Authorization to authorizationHeader(),
-                HttpHeaders.Accept to "application/json",
-                HttpHeaders.ContentType to "application/json",
-                NavHeaders.Tema to "OMS",
-                NavHeaders.CallId to callId,
-                NavHeaders.Behandlingsnummer to Behandlingsnummer.entries.map { it.behandlingsnummer }
-            )
-
         val json = Retry.retry(
             operation = "hente-person",
             initialDelay = Duration.ofMillis(200),
             factor = 2.0,
             logger = log
         ) {
-            val (request, _, result) = Operation.monitored(
+            val response = Operation.monitored(
                 app = "k9-los-api",
                 operation = "hente-person",
-                resultResolver = { 200 == it.second.statusCode }
-            ) { httpRequest.awaitStringResponseResult() }
-
-            result.fold(
-                { success -> success },
-                { error ->
-                    log.warn("Error response = '${error.response.body().asString("text/plain")}' fra '${request.url}'")
-                    log.warn("${error} aktorId callId: ${callId} ${coroutineContext.idToken().getUsername()}")
-                    null
+                resultResolver = { 200 == it.status.value }
+            ) {
+                httpClient.post(personUrl) {
+                    setBody(LosObjectMapper.instance.writeValueAsString(queryRequest))
+                    header(HttpHeaders.Authorization, authorizationHeader())
+                    header(HttpHeaders.Accept, "application/json")
+                    header(HttpHeaders.ContentType, "application/json")
+                    header(NavHeaders.Tema, "OMS")
+                    header(NavHeaders.CallId, callId)
+                    header(NavHeaders.Behandlingsnummer, Behandlingsnummer.entries.map { it.behandlingsnummer })
                 }
-            )
+            }
+
+            if (response.status.isSuccess()) {
+                response.bodyAsText()
+            } else {
+                log.warn("Error response = '${response.bodyAsText()}' fra '${response.request.url}'")
+                log.warn("HTTP ${response.status.value} ${response.status.description} aktorId callId: ${callId} ${coroutineContext.idToken().getUsername()}")
+                null
+            }
         }
         try {
             val readValue = LosObjectMapper.instance.readValue<PersonPdl>(json!!)
@@ -144,40 +141,35 @@ class PdlService constructor(
         }
 
         val callId = UUID.randomUUID().toString()
-        val httpRequest = personUrl
-            .httpPost()
-            .body(
-                LosObjectMapper.instance.writeValueAsString(queryRequest)
-            )
-            .header(
-                HttpHeaders.Authorization to authorizationHeader(),
-                HttpHeaders.Accept to "application/json",
-                HttpHeaders.ContentType to "application/json",
-                NavHeaders.Tema to "OMS",
-                NavHeaders.CallId to callId,
-                NavHeaders.Behandlingsnummer to Behandlingsnummer.entries.map { it.behandlingsnummer }
-            )
-
         val json = Retry.retry(
             operation = "hente-ident",
             initialDelay = Duration.ofMillis(200),
             factor = 2.0,
             logger = log
         ) {
-            val (request, _, result) = Operation.monitored(
+            val response = Operation.monitored(
                 app = "k9-los-api",
                 operation = "hente-ident",
-                resultResolver = { 200 == it.second.statusCode }
-            ) { httpRequest.awaitStringResponseResult() }
-
-            result.fold(
-                { success -> success },
-                { error ->
-                    log.warn("Error response = '${error.response.body().asString("text/plain")}' fra '${request.url}'")
-                    log.warn(error.toString())
-                    null
+                resultResolver = { 200 == it.status.value }
+            ) {
+                httpClient.post(personUrl) {
+                    setBody(LosObjectMapper.instance.writeValueAsString(queryRequest))
+                    header(HttpHeaders.Authorization, authorizationHeader())
+                    header(HttpHeaders.Accept, "application/json")
+                    header(HttpHeaders.ContentType, "application/json")
+                    header(NavHeaders.Tema, "OMS")
+                    header(NavHeaders.CallId, callId)
+                    header(NavHeaders.Behandlingsnummer, Behandlingsnummer.entries.map { it.behandlingsnummer })
                 }
-            )
+            }
+
+            if (response.status.isSuccess()) {
+                response.bodyAsText()
+            } else {
+                log.warn("Error response = '${response.bodyAsText()}' fra '${response.request.url}'")
+                log.warn("HTTP ${response.status.value} ${response.status.description}")
+                null
+            }
         }
         try {
             val resultat = PdlResponse(false, LosObjectMapper.instance.readValue<AktøridPdl>(json!!))

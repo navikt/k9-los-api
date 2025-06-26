@@ -8,7 +8,6 @@ val koinVersion = "4.0.2"
 val kotliqueryVersion = "1.9.1"
 val k9SakVersion = "5.4.16"
 val k9KlageVersion = "0.4.7"
-val fuelVersion = "2.3.1"
 val jacksonVersion = "2.17.2"
 val commonsTextVersion = "1.13.0"
 
@@ -89,11 +88,6 @@ dependencies {
     implementation(enforcedPlatform("com.fasterxml.jackson:jackson-bom:$jacksonVersion"))
     implementation("org.apache.commons:commons-text:$commonsTextVersion")
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
-    implementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
-    implementation("com.github.kittinunf.fuel:fuel-coroutines:$fuelVersion") {
-        exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
-    }
-
     implementation("io.github.smiley4:ktor-swagger-ui:3.6.1")
 
 
