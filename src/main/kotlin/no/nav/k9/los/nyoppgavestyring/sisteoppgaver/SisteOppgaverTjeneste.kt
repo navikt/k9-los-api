@@ -1,9 +1,8 @@
 package no.nav.k9.los.nyoppgavestyring.sisteoppgaver
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.withTimeout
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.extension.kotlin.asContextElement
+import kotlinx.coroutines.*
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Action
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Auditlogging
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
@@ -24,27 +23,23 @@ class SisteOppgaverTjeneste(
     private val azureGraphService: IAzureGraphService,
     private val transactionalManager: TransactionalManager
 ) {
-    suspend fun hentSisteOppgaver(
-        scope: CoroutineScope,
-    ): List<SisteOppgaverDto> {
+    suspend fun hentSisteOppgaver(): List<SisteOppgaverDto> {
         val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
-        val sisteOppgaveIds = transactionalManager.transaction { tx ->
-            sisteOppgaverRepository.hentSisteOppgaver(tx, saksbehandlerIdent)
-        }
-        
-        val oppgaver = sisteOppgaveIds.map { eksternOppgaveId ->
-            scope.async {
-                transactionalManager.transaction { tx ->
-                    oppgaveRepository.hentNyesteOppgaveForEksternId(tx, eksternOppgaveId.område, eksternOppgaveId.eksternId)
-                }
-            }
-        }.awaitAll()
 
-        val innhentinger = oppgaver.map { oppgave ->
-            scope.async {
-                val harTilgang = pepClient.harTilgangTilOppgaveV3(oppgave, Action.read, Auditlogging.IKKE_LOGG)
-                val personPdl = oppgave.hentVerdi("aktorId")?.let { pdlService.person(it) }
-                Triple(harTilgang, personPdl, oppgave)
+        val oppgaver = transactionalManager.transaction { tx ->
+            val sisteOppgaveIds = sisteOppgaverRepository.hentSisteOppgaver(tx, saksbehandlerIdent)
+            sisteOppgaveIds.map { eksternOppgaveId ->
+                oppgaveRepository.hentNyesteOppgaveForEksternId(tx, eksternOppgaveId.område, eksternOppgaveId.eksternId)
+            }
+        }
+
+        val innhentinger = withContext(Dispatchers.IO + Span.current().asContextElement()) {
+            oppgaver.map { oppgave ->
+                async {
+                    val harTilgang = pepClient.harTilgangTilOppgaveV3(oppgave, Action.read, Auditlogging.IKKE_LOGG)
+                    val personPdl = oppgave.hentVerdi("aktorId")?.let { pdlService.person(it) }
+                    Triple(harTilgang, personPdl, oppgave)
+                }
             }
         }
 

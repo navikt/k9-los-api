@@ -247,7 +247,13 @@ class EventTilDtoMapper {
                 )
             } else {
                 null //ikke hastesak
-            }
+            },
+            event.fagsakPeriode?.fom?.year?.toString()?.let { fagsakÅr ->
+                OppgaveFeltverdiDto(
+                    nøkkel = "fagsakÅr",
+                    verdi = fagsakÅr,
+                )
+            },
         ).filterNotNull().toMutableList()
 
         @VisibleForTesting

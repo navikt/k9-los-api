@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.infrastruktur.utils
 
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.TransientException
 import org.slf4j.LoggerFactory
 import java.io.InterruptedIOException
 import java.net.SocketException
@@ -49,6 +50,7 @@ class TransientFeilHåndterer(
         return e is InterruptedIOException
                 || e is SocketException
                 || e is SQLException
+                || e is TransientException
     }
 
     companion object {

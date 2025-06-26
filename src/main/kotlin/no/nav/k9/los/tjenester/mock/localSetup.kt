@@ -23,6 +23,7 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
+import no.nav.k9.sak.typer.Periode
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.time.LocalDate
@@ -88,13 +89,14 @@ object localSetup : KoinComponent {
                     FagsakYtelseType.OMSORGSPENGER,
                 ).shuffled().first().kode
                 val opprettetBehandling = LocalDateTime.now().minusDays(Random.nextLong(10, 20))
-                val aktørId = Random.nextInt(0, 9999999).toString()
-                val pleietrengendeAktørId = Random.nextInt(0, 9999999).toString()
+                val aktørId = "2392173967319"
+                val pleietrengendeAktørId = "1234567890123"
                 sakEventHandler.prosesser(
                     K9SakEventDto(
                         eksternId,
                         Fagsystem.K9SAK,
                         saksnummer,
+                        fagsakPeriode = Periode(LocalDate.now().minusMonths(2), LocalDate.now()),
                         behandlingId = behandlingId,
                         fraEndringsdialog = false,
                         resultatType = BehandlingResultatType.IKKE_FASTSATT.kode,

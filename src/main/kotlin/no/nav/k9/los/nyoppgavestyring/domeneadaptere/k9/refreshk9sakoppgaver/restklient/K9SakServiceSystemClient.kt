@@ -79,7 +79,7 @@ open class K9SakServiceSystemClient constructor(
                 },
                 { error ->
                     log.error("Error response = '${begrensLengde(error.response.body().asString("text/plain"), 1000)}' fra '${request.url}'", error.exception)
-                    throw RuntimeException("Kunne ikke gjøre refresh-kall til k9sak", error)
+                    throw RuntimeException("Kunne ikke gjøre refresh-kall til k9sak", error.exception)
                 }
             )
         }

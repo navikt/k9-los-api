@@ -20,9 +20,10 @@ import java.time.format.DateTimeFormatter
 import kotlin.time.measureTime
 
 class FerdigstiltePerEnhetService(
-    private val enheter: List<String>,
+    enheter: List<String>,
     private val queryService: OppgaveQueryService
 ) {
+    private val parametre = enheter.map { enhet -> FerdigstiltParameter.Enhet(enhet) } + FerdigstiltParameter.Helautomatisk
     private var oppdatertTidspunkt: LocalDateTime? = null
     private val cache = Cache<LocalDate, List<FerdigstiltePerEnhetTall>>(null)
     private val log: Logger = LoggerFactory.getLogger(FerdigstiltePerEnhetService::class.java)
@@ -44,14 +45,14 @@ class FerdigstiltePerEnhetService(
         return FerdigstiltePerEnhetResponse(
             oppdatertTidspunkt = oppdatertTidspunkt,
             kolonner = datoer.map { it.format(DateTimeFormatter.ofPattern("dd.MM")) },
-            serier = enheter.map { enhet ->
+            serier = parametre.map { parameter ->
                 FerdigstiltePerEnhetSerie(
-                    navn = enhet,
+                    navn = parameter.navn,
                     data = datoer.map { dato ->
                         cache.get(
                             dato,
                             LocalDateTime.now()
-                        )?.value?.find { it.enhet == enhet && it.gruppe == gruppe }?.antall
+                        )?.value?.find { it.parameter == parameter && it.gruppe == gruppe }?.antall
                             ?: 0
                     }
                 )
@@ -82,17 +83,17 @@ class FerdigstiltePerEnhetService(
 
     private fun hentFraDatabase(dato: LocalDate): List<FerdigstiltePerEnhetTall> {
         return buildList {
-            for (enhet in enheter) {
+            for (parameter in parametre) {
                 add(
                     FerdigstiltePerEnhetTall(
                         dato = dato,
-                        enhet = enhet,
+                        parameter = parameter,
                         gruppe = FerdigstiltePerEnhetGruppe.ALLE,
                         antall = hentAntallFraDatabase(
                             dato = dato,
                             ytelser = null,
                             oppgavetype = null,
-                            enhet = enhet
+                            parameter = parameter
                         )
                     )
                 )
@@ -100,28 +101,31 @@ class FerdigstiltePerEnhetService(
                     add(
                         FerdigstiltePerEnhetTall(
                             dato = dato,
-                            enhet = enhet,
+                            parameter = parameter,
                             gruppe = gruppe,
                             antall = hentAntallFraDatabase(
                                 dato = dato,
                                 ytelser = gruppe.ytelser,
-                                enhet = enhet
+                                parameter = parameter,
                             )
                         )
                     )
                 }
-                add(
-                    FerdigstiltePerEnhetTall(
-                        dato = dato,
-                        enhet = enhet,
-                        gruppe = FerdigstiltePerEnhetGruppe.PUNSJ,
-                        antall = hentAntallFraDatabase(
+                if (parameter is FerdigstiltParameter.Enhet) {
+                    // Punsj har ikke helautomatiske behandlinger
+                    add(
+                        FerdigstiltePerEnhetTall(
                             dato = dato,
-                            oppgavetype = "k9punsj",
-                            enhet = enhet
+                            parameter = parameter,
+                            gruppe = FerdigstiltePerEnhetGruppe.PUNSJ,
+                            antall = hentAntallFraDatabase(
+                                dato = dato,
+                                oppgavetype = "k9punsj",
+                                parameter = parameter,
+                            )
                         )
                     )
-                )
+                }
             }
         }
     }
@@ -130,19 +134,33 @@ class FerdigstiltePerEnhetService(
         dato: LocalDate,
         ytelser: List<FagsakYtelseType>? = null,
         oppgavetype: String? = null,
-        enhet: String
+        parameter: FerdigstiltParameter,
     ): Int {
         val request = QueryRequest(
             oppgaveQuery = OppgaveQuery(
                 filtere = buildList {
-                    add(
-                        FeltverdiOppgavefilter(
-                            "K9",
-                            "ferdigstiltEnhet",
-                            EksternFeltverdiOperator.EQUALS,
-                            listOf(enhet)
-                        )
-                    )
+                    when (parameter) {
+                        is FerdigstiltParameter.Enhet -> {
+                            add(
+                                FeltverdiOppgavefilter(
+                                    "K9",
+                                    "ferdigstiltEnhet",
+                                    EksternFeltverdiOperator.EQUALS,
+                                    listOf(parameter.enhet)
+                                )
+                            )
+                        }
+                        is FerdigstiltParameter.Helautomatisk -> {
+                            add(
+                                FeltverdiOppgavefilter(
+                                    "K9",
+                                    "helautomatiskBehandlet",
+                                    EksternFeltverdiOperator.EQUALS,
+                                    listOf(true.toString())
+                                )
+                            )
+                        }
+                    }
                     if (ytelser != null) {
                         add(
                             FeltverdiOppgavefilter(

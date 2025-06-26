@@ -124,6 +124,10 @@ enum class BehandlingType(override val kode: String, override val navn: String, 
             return entries.find { it.kode == kode } ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
         }
     }
+
+    fun gjelderPunsj() : Boolean {
+        return kodeverk == "PUNSJ_INNSENDING_TYPE"
+    }
 }
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)

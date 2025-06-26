@@ -381,6 +381,7 @@ fun common(app: Application, config: Configuration) = module {
             oppgaveRepository = get(),
             reservasjonV3Tjeneste = get(),
             historikkvaskChannel = get(named("historikkvaskChannelK9Sak")),
+            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
     single {
@@ -691,7 +692,7 @@ fun preprodConfig(config: Configuration) = module {
         )
     }
     single<IPepClient> {
-        PepClient(azureGraphService = get(), config = config, k9Auditlogger = K9Auditlogger(Auditlogger(config)), get())
+        PepClient(azureGraphService = get(), k9Auditlogger = K9Auditlogger(Auditlogger(config)), get())
     }
 }
 
@@ -747,7 +748,7 @@ fun prodConfig(config: Configuration) = module {
     }
 
     single<IPepClient> {
-        PepClient(azureGraphService = get(), config = config, k9Auditlogger = K9Auditlogger(Auditlogger(config)), get())
+        PepClient(azureGraphService = get(), k9Auditlogger = K9Auditlogger(Auditlogger(config)), get())
     }
 }
 

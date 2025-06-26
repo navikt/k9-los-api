@@ -1,6 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.infrastruktur.abac
 
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
+import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 
 interface IPepClient {
 
@@ -23,6 +24,9 @@ interface IPepClient {
     suspend fun erSakKode7EllerEgenAnsatt(
         fagsakNummer: String
     ): Boolean
+
+    suspend fun diskresjonskoderForSak(fagsakNummer: String): Set<Diskresjonskode>
+    suspend fun diskresjonskoderForPerson(aktørId: String): Set<Diskresjonskode>
 
     suspend fun erAktørKode6(aktørid: String): Boolean
     suspend fun erAktørKode7EllerEgenAnsatt(aktørid: String): Boolean
