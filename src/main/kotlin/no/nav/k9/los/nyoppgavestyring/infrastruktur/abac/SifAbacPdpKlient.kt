@@ -12,6 +12,7 @@ import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.NavHeaders
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
+import no.nav.sif.abac.kontrakt.abac.AksjonspunktType
 import no.nav.sif.abac.kontrakt.abac.BeskyttetRessursActionAttributt
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import no.nav.sif.abac.kontrakt.abac.ResourceType
@@ -104,7 +105,7 @@ class SifAbacPdpKlient(
     }
 
     override suspend fun harTilgangTilSak(action: Action, saksnummerDto: SaksnummerDto): Boolean {
-        val request = SaksnummerOperasjonDto(saksnummerDto, OperasjonDto(ResourceType.FAGSAK, map(action)))
+        val request = SaksnummerOperasjonDto(saksnummerDto, OperasjonDto(ResourceType.FAGSAK, map(action), setOf<AksjonspunktType>()))
         val antallForsøk = 3
         val jwt = coroutineContext.idToken().value
         val oboToken = cachedAccessTokenClient.getAccessToken(scopes, jwt)
@@ -150,7 +151,7 @@ class SifAbacPdpKlient(
             saksbehandlersIdent,
             saksbehandlersGrupper.toList(),
             saksnummerDto,
-            OperasjonDto(ResourceType.FAGSAK, map(action))
+            OperasjonDto(ResourceType.FAGSAK, map(action), setOf<AksjonspunktType>())
         )
         val antallForsøk = 3
         val systemToken = cachedAccessTokenClient.getAccessToken(scopes)
@@ -181,7 +182,7 @@ class SifAbacPdpKlient(
     }
 
     override suspend fun harTilgangTilPersoner(action: Action, aktørIder: List<AktørId>): Boolean {
-        val request = PersonerOperasjonDto(aktørIder, emptyList(), OperasjonDto(ResourceType.FAGSAK, map(action)))
+        val request = PersonerOperasjonDto(aktørIder, emptyList(), OperasjonDto(ResourceType.FAGSAK, map(action), setOf<AksjonspunktType>()))
         val antallForsøk = 3
         val jwt = coroutineContext.idToken().value
         val oboToken = cachedAccessTokenClient.getAccessToken(scopes, jwt)
@@ -223,7 +224,7 @@ class SifAbacPdpKlient(
             saksbehandlersGrupper.toList(),
             aktørIder,
             emptyList(),
-            OperasjonDto(ResourceType.FAGSAK, map(action))
+            OperasjonDto(ResourceType.FAGSAK, map(action), setOf<AksjonspunktType>())
         )
         val antallForsøk = 3
         val systemToken = cachedAccessTokenClient.getAccessToken(scopes)
@@ -256,8 +257,6 @@ class SifAbacPdpKlient(
     private fun map(action: Action): BeskyttetRessursActionAttributt {
         return when (action) {
             Action.read -> BeskyttetRessursActionAttributt.READ
-            Action.update -> BeskyttetRessursActionAttributt.UPDATE
-            Action.create -> BeskyttetRessursActionAttributt.CREATE
             Action.reserver -> BeskyttetRessursActionAttributt.RESERVER
         }
     }
