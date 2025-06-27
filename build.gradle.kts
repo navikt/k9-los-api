@@ -48,13 +48,11 @@ dependencies {
     implementation("io.ktor:ktor-server-cors:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
     implementation("io.ktor:ktor-server-html-builder-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-websockets-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-client-auth-jvm:$ktorVersion")
 
     // Client
-    implementation("no.nav.helse:dusseldorf-ktor-client:$dusseldorfKtorVersion")
+    implementation("io.ktor:ktor-client-core:$ktorVersion")
+    implementation("io.ktor:ktor-client-java:$ktorVersion")
     implementation("no.nav.helse:dusseldorf-oauth2-client:$dusseldorfKtorVersion")
-    implementation("org.apache.httpcomponents:httpclient:4.5.14")
 
     // Kafka
     implementation("org.apache.kafka:kafka-streams:$kafkaVersion") {
@@ -67,9 +65,6 @@ dependencies {
     }
 
     // Tilgangskontroll
-    implementation("no.nav.common:auth:$navTilgangskontroll")
-    implementation("no.nav.common:rest:$navTilgangskontroll")
-    implementation("com.google.code.gson:gson:2.11.0")
     implementation("no.nav.sif.abac:kontrakt:1.4.0")
 
     // Kontrakter
@@ -105,12 +100,8 @@ dependencies {
     testImplementation("io.ktor:ktor-server-test-host-jvm:$ktorVersion") {
         exclude(group = "org.eclipse.jetty")
     }
-    testImplementation("org.skyscreamer:jsonassert:$jsonassertVersion")
-
     testImplementation("org.testcontainers:postgresql:$testContainers")
     testImplementation("io.insert-koin:koin-test-junit5:$koinVersion")
-
-    testImplementation("org.apache.commons:commons-compress:1.27.1")
 }
 
 repositories {
