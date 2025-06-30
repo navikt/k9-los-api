@@ -18,6 +18,7 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.CacheObject
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.EnheterSomSkalUtelatesFraLos
 import org.slf4j.LoggerFactory
+import java.net.URLEncoder
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.*
@@ -146,7 +147,7 @@ open class AzureGraphService(
                     operation = "user-id-for-saksbehandler",
                     resultResolver = { 200 == it.status.value }
                 ) {
-                    httpClient.get(url) {
+                    httpClient.get(URLEncoder.encode(url, "UTF-8")) {
                         header(HttpHeaders.Accept, "application/json")
                         header(HttpHeaders.Authorization, "Bearer ${accessToken.token}")
                         header("ConsistencyLevel", "eventual")
