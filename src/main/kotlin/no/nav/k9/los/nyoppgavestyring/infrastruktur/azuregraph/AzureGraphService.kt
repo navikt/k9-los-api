@@ -146,7 +146,9 @@ open class AzureGraphService(
                 ) {
                     httpClient.get {
                         url("https://graph.microsoft.com/v1.0/users")
-                        parameter("\$filter", "onPremisesSamAccountName eq '$saksbehandlerIdent'&\$count=true&\$select=id")
+                        parameter("\$filter", "onPremisesSamAccountName eq '$saksbehandlerIdent'")
+                        parameter("\$count", "true")
+                        parameter("\$select", "id")
                         header(HttpHeaders.Accept, "application/json")
                         header(HttpHeaders.Authorization, "Bearer ${accessToken.token}")
                         header("ConsistencyLevel", "eventual")
@@ -155,12 +157,11 @@ open class AzureGraphService(
                 håndterResultat(response)
             }
 
-            val x: UserIdFilterResult = LosObjectMapper.instance.readValue<UserIdFilterResult>(json)
-            val result = x.value
-            if (result.size != 1) {
-                throw IllegalArgumentException("Fikk ${result.size} treff på saksbehandler i microsoft graph, forventet 1 treff")
+            val (value) = LosObjectMapper.instance.readValue<UserIdFilterResult>(json)
+            if (value.size != 1) {
+                throw IllegalArgumentException("Fikk ${value.size} treff på saksbehandler i microsoft graph, forventet 1 treff")
             }
-            result.first().id
+            value.first().id
         }
     }
 
