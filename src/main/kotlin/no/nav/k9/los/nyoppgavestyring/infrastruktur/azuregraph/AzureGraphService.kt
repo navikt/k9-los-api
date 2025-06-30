@@ -74,12 +74,6 @@ open class AzureGraphService(
         if (cachedOfficeLocation == null) {
             val accessToken = accessToken(onBehalfOf)
 
-            val graphUrl = if (onBehalfOf != null) {
-                "https://graph.microsoft.com/v1.0/me?\$select=officeLocation"
-            } else {
-                "https://graph.microsoft.com/v1.0/users?\$filter=mailNickname eq '$brukernavn'&\$select=officeLocation"
-            }
-
             val json = Retry.retry(
                 operation = "office-location",
                 initialDelay = Duration.ofMillis(200),
@@ -91,7 +85,15 @@ open class AzureGraphService(
                     operation = "office-location",
                     resultResolver = { 200 == it.status.value }
                 ) {
-                    httpClient.get(graphUrl) {
+                    httpClient.get {
+                        if (onBehalfOf != null) {
+                            url("https://graph.microsoft.com/v1.0/me")
+                            parameter("\$select", "officeLocation")
+                        } else {
+                            url("https://graph.microsoft.com/v1.0/users")
+                            parameter("\$filter", "mailNickname eq '$brukernavn'")
+                            parameter("\$select", "officeLocation")
+                        }
                         header(HttpHeaders.Accept, "application/json")
                         header(HttpHeaders.Authorization, "Bearer ${accessToken.token}")
                         header("ConsistencyLevel", "eventual")
@@ -167,7 +169,6 @@ open class AzureGraphService(
 
     private suspend fun hentGrupperForSaksbehandler(saksbehandlerUserId: UUID): Set<UUID> {
         return userIdGrupperCache.hentSuspend(saksbehandlerUserId) {
-            val url = "https://graph.microsoft.com/v1.0/users/$saksbehandlerUserId/memberOf"
             val accessToken = accessToken(null)
             val json = Retry.retry(
                 operation = "grupper-for-saksbehandler",
@@ -180,7 +181,7 @@ open class AzureGraphService(
                     operation = "grupper-for-saksbehandler",
                     resultResolver = { 200 == it.status.value }
                 ) {
-                    httpClient.get(url) {
+                    httpClient.get("https://graph.microsoft.com/v1.0/users/$saksbehandlerUserId/memberOf") {
                         header(HttpHeaders.Accept, "application/json")
                         header(HttpHeaders.Authorization, "Bearer ${accessToken.token}")
                         header("ConsistencyLevel", "eventual")
