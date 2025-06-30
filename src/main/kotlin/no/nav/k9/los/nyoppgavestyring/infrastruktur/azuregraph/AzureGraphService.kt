@@ -18,7 +18,6 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.CacheObject
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.EnheterSomSkalUtelatesFraLos
 import org.slf4j.LoggerFactory
-import java.net.URLEncoder
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.*
@@ -133,8 +132,6 @@ open class AzureGraphService(
 
     private suspend fun hentUserIdForSaksbehandler(saksbehandlerIdent: String): UUID {
         return saksbehandlerUserIdCache.hentSuspend(saksbehandlerIdent) {
-            val url =
-                "https://graph.microsoft.com/v1.0/users?\$filter=onPremisesSamAccountName eq '$saksbehandlerIdent'&\$count=true&\$select=id"
             val accessToken = accessToken(null)
             val json = Retry.retry(
                 operation = "user-id-for-saksbehandler",
@@ -147,7 +144,9 @@ open class AzureGraphService(
                     operation = "user-id-for-saksbehandler",
                     resultResolver = { 200 == it.status.value }
                 ) {
-                    httpClient.get(URLEncoder.encode(url, "UTF-8")) {
+                    httpClient.get {
+                        url("https://graph.microsoft.com/v1.0/users")
+                        parameter("\$filter", "onPremisesSamAccountName eq '$saksbehandlerIdent'&\$count=true&\$select=id")
                         header(HttpHeaders.Accept, "application/json")
                         header(HttpHeaders.Authorization, "Bearer ${accessToken.token}")
                         header("ConsistencyLevel", "eventual")
