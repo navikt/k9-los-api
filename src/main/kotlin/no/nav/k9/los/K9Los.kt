@@ -108,7 +108,7 @@ fun Application.k9Los() {
     val issuers = configuration.issuers()
 
     install(Koin) {
-        modules(selectModuleBasedOnProfile(this@k9Los, config = configuration))
+        modules(selectModulesBasedOnProfile(this@k9Los, config = configuration))
     }
 
     val koin = getKoin()

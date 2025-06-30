@@ -33,7 +33,7 @@ class K9SakK9SakK9PunsjK9KlageK9TilbakeEventHandlerV2Test : AbstractK9LosIntegra
         val accessToken = mockk<AccessTokenClient>()
         coEvery { accessToken.getAccessToken(any()) } throws Exception("FORVENTET TESTFEIL")
 
-        val azureGraphService = AzureGraphService(accessToken)
+        val azureGraphService = AzureGraphService(accessToken, mockk())
         val oppgaveTjenesteV2 = get<OppgaveTjenesteV2>()
         val eventHandler = K9sakEventHandlerV2(oppgaveTjenesteV2, AksjonspunktHendelseMapper(azureGraphService))
 

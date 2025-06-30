@@ -1,8 +1,9 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.github.kittinunf.fuel.coroutines.awaitStringResponseResult
-import com.github.kittinunf.fuel.httpGet
+import io.ktor.client.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.runBlocking
@@ -22,9 +23,10 @@ import java.util.*
 
 class K9KlageBerikerSystemKlient(
     private val configuration: Configuration,
-    private val accessTokenClient: AccessTokenClient,
+    accessTokenClient: AccessTokenClient,
     private val scopeSak: String,
-    private val scopeKlage: String
+    private val scopeKlage: String,
+    private val httpClient: HttpClient
 ) : K9KlageBerikerInterfaceKludge {
     val log = LoggerFactory.getLogger(K9KlageBerikerSystemKlient::class.java)
     private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
@@ -44,55 +46,52 @@ class K9KlageBerikerSystemKlient(
     }
 
     private suspend fun hentFraK9SakSuspend(påklagdBehandlingUUID: UUID, antallForsøk: Int = 3): LosOpplysningerSomManglerIKlageDto? {
-        val parameters = listOf(Pair("behandlingUuid", påklagdBehandlingUUID.toString()))
-        val httpRequest = "${urlSak}/los/klage/berik"
-            .httpGet(parameters)
-            .header(
-                //OBS! Dette kalles bare med system token, og skal ikke brukes ved saksbehandler token
-                HttpHeaders.Authorization to cachedAccessTokenClient.getAccessToken(setOf(scopeSak)).asAuthoriationHeader(),
-                HttpHeaders.Accept to "application/json",
-                HttpHeaders.ContentType to "application/json",
-                NavHeaders.CallId to UUID.randomUUID().toString()
-            )
-
-        val (_, response, result) = Retry.retry(
+        val response = Retry.retry(
             tries = antallForsøk,
             operation = "berik",
             initialDelay = Duration.ofMillis(200),
             factor = 2.0,
             logger = log
-        ) {  httpRequest.awaitStringResponseResult() }
+        ) {
+            httpClient.get("${urlSak}/los/klage/berik") {
+                parameter("behandlingUuid", påklagdBehandlingUUID.toString())
+                header(
+                    //OBS! Dette kalles bare med system token, og skal ikke brukes ved saksbehandler token
+                    HttpHeaders.Authorization, cachedAccessTokenClient.getAccessToken(setOf(scopeSak)).asAuthoriationHeader()
+                )
+                header(HttpHeaders.Accept, "application/json")
+                header(HttpHeaders.ContentType, "application/json")
+                header(NavHeaders.CallId, UUID.randomUUID().toString())
+            }
+        }
 
-        if (response.statusCode == HttpStatusCode.NoContent.value) {
+        if (response.status == HttpStatusCode.NoContent) {
             return null
         }
-        val abc = result.fold(
-            { success ->
-                success
-            },
-            { error ->
-                if (error.response.statusCode == HttpStatusCode.ServiceUnavailable.value
-                    || error.response.statusCode == HttpStatusCode.GatewayTimeout.value
-                    || error.response.statusCode == HttpStatusCode.RequestTimeout.value
-                ) {
-                    throw TransientException("k9sak er ikke tilgjengelig for beriking av k9klage-oppgave, fikk http code ${error.response.statusCode}", error.exception)
-                }
-                val feiltekst = error.response.body().asString("text/plain")
-                val ignorerManglendeTilgangPgaUtdatertTestdata = configuration.koinProfile == KoinProfile.PREPROD
-                        && feiltekst.contains("MANGLER_TILGANG_FEIL")
-
-                log.error(
-                    (if (ignorerManglendeTilgangPgaUtdatertTestdata) "IGNORERER I DEV: " else "") +
-                            "Error response = '$feiltekst' fra '${httpRequest.url}'"
-                )
-                log.error(error.toString())
-
-                if (ignorerManglendeTilgangPgaUtdatertTestdata) {
-                    return null
-                } else throw IllegalStateException("Feil ved henting av data fra k9-sak")
-
+        
+        val abc = if (response.status.isSuccess()) {
+            response.bodyAsText()
+        } else {
+            if (response.status == HttpStatusCode.ServiceUnavailable
+                || response.status == HttpStatusCode.GatewayTimeout
+                || response.status == HttpStatusCode.RequestTimeout
+            ) {
+                throw TransientException("k9sak er ikke tilgjengelig for beriking av k9klage-oppgave, fikk http code ${response.status.value}", Exception("HTTP error ${response.status.value}"))
             }
-        )
+            val feiltekst = response.bodyAsText()
+            val ignorerManglendeTilgangPgaUtdatertTestdata = configuration.koinProfile == KoinProfile.PREPROD
+                    && feiltekst.contains("MANGLER_TILGANG_FEIL")
+
+            log.error(
+                (if (ignorerManglendeTilgangPgaUtdatertTestdata) "IGNORERER I DEV: " else "") +
+                        "Error response = '$feiltekst' fra '${response.request.url}'"
+            )
+            log.error("HTTP ${response.status.value} ${response.status.description}")
+
+            if (ignorerManglendeTilgangPgaUtdatertTestdata) {
+                return null
+            } else throw IllegalStateException("Feil ved henting av data fra k9-sak")
+        }
 
         return LosObjectMapper.instance.readValue<LosOpplysningerSomManglerIKlageDto>(abc)
     }
@@ -101,56 +100,53 @@ class K9KlageBerikerSystemKlient(
         påklagdBehandlingUUID: UUID,
         antallForsøk: Int
     ): LosOpplysningerSomManglerHistoriskIKlageDto? {
-        val parameters = listOf(Pair("behandlingUuid", påklagdBehandlingUUID.toString()))
-        val httpRequest = "${urlKlage}/los/historikkutfylling"
-            .httpGet(parameters)
-            .header(
-                //OBS! Dette kalles bare med system token, og skal ikke brukes ved saksbehandler token
-                HttpHeaders.Authorization to cachedAccessTokenClient.getAccessToken(setOf(scopeKlage)).asAuthoriationHeader(),
-                HttpHeaders.Accept to "application/json",
-                HttpHeaders.ContentType to "application/json",
-                NavHeaders.CallId to UUID.randomUUID().toString()
-            )
-
-        val (_, response, result) = Retry.retry(
+        val response = Retry.retry(
             tries = antallForsøk,
             operation = "berik",
             initialDelay = Duration.ofMillis(200),
             factor = 2.0,
             logger = log
-        ) {  httpRequest.awaitStringResponseResult() }
+        ) {
+            httpClient.get("${urlKlage}/los/historikkutfylling") {
+                parameter("behandlingUuid", påklagdBehandlingUUID.toString())
+                header(
+                    //OBS! Dette kalles bare med system token, og skal ikke brukes ved saksbehandler token
+                    HttpHeaders.Authorization, cachedAccessTokenClient.getAccessToken(setOf(scopeKlage)).asAuthoriationHeader()
+                )
+                header(HttpHeaders.Accept, "application/json")
+                header(HttpHeaders.ContentType, "application/json")
+                header(NavHeaders.CallId, UUID.randomUUID().toString())
+            }
+        }
 
-        if (response.statusCode == HttpStatusCode.NoContent.value) {
+        if (response.status == HttpStatusCode.NoContent) {
             return null
         }
 
-        val abc = result.fold(
-            { success ->
-                success
-            },
-            { error ->
-                if (error.response.statusCode == HttpStatusCode.ServiceUnavailable.value
-                    || error.response.statusCode == HttpStatusCode.GatewayTimeout.value
-                    || error.response.statusCode == HttpStatusCode.RequestTimeout.value
-                ) {
-                    throw TransientException("k9klage er ikke tilgjengelig for beriking av k9klage-oppgave, fikk http code ${error.response.statusCode}", error.exception)
-                }
-                val feiltekst = error.response.body().asString("text/plain")
-                val ignorerManglendeTilgangPgaUtdatertTestdata = configuration.koinProfile == KoinProfile.PREPROD
-                        && feiltekst.contains("MANGLER_TILGANG_FEIL")
-
-                log.error(
-                    (if (ignorerManglendeTilgangPgaUtdatertTestdata) "IGNORERER I DEV: " else "") +
-                            "Error response = '$feiltekst' fra '${httpRequest.url}'"
-                )
-                log.error(error.toString())
-                log.error("${urlKlage}/los/historikkutfylling, UUID: $påklagdBehandlingUUID")
-
-                if (ignorerManglendeTilgangPgaUtdatertTestdata) {
-                    return null
-                } else throw IllegalStateException("Feil ved henting av behandling fra k9-klage")
+        val abc = if (response.status.isSuccess()) {
+            response.bodyAsText()
+        } else {
+            if (response.status == HttpStatusCode.ServiceUnavailable
+                || response.status == HttpStatusCode.GatewayTimeout
+                || response.status == HttpStatusCode.RequestTimeout
+            ) {
+                throw TransientException("k9klage er ikke tilgjengelig for beriking av k9klage-oppgave, fikk http code ${response.status.value}", Exception("HTTP error ${response.status.value}"))
             }
-        )
+            val feiltekst = response.bodyAsText()
+            val ignorerManglendeTilgangPgaUtdatertTestdata = configuration.koinProfile == KoinProfile.PREPROD
+                    && feiltekst.contains("MANGLER_TILGANG_FEIL")
+
+            log.error(
+                (if (ignorerManglendeTilgangPgaUtdatertTestdata) "IGNORERER I DEV: " else "") +
+                        "Error response = '$feiltekst' fra '${response.request.url}'"
+            )
+            log.error("HTTP ${response.status.value} ${response.status.description}")
+            log.error("${urlKlage}/los/historikkutfylling, UUID: $påklagdBehandlingUUID")
+
+            if (ignorerManglendeTilgangPgaUtdatertTestdata) {
+                return null
+            } else throw IllegalStateException("Feil ved henting av behandling fra k9-klage")
+        }
 
         return LosObjectMapper.instance.readValue<LosOpplysningerSomManglerHistoriskIKlageDto>(abc)
     }
