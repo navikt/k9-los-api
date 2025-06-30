@@ -61,16 +61,8 @@ open class Cache<K, V>(val cacheSizeLimit: Int?) {
         }
     }
 
-    fun hent(nøkkel: K, populerCache: () -> V): V {
-        return hent(nøkkel, Duration.ofMinutes(30), populerCache)
-    }
-
-    suspend fun hentSuspend(nøkkel: K, populerCache: suspend () -> V): V {
-        return hentSuspend(nøkkel, Duration.ofMinutes(30), populerCache)
-    }
-
     @WithSpan
-    fun hent(nøkkel: K, duration: Duration, populerCache: () -> V): V {
+    fun hent(nøkkel: K, duration: Duration = Duration.ofMinutes(30), populerCache: () -> V): V {
         get(nøkkel)?.let { return it.value }
 
         //egen lås pr nøkkel for å kunne oppdatere for flere nøkler samtidig, og samtidig unngå at flere tråder forsøker å kjøre unødvendige kall for samme nøkkel
@@ -84,28 +76,34 @@ open class Cache<K, V>(val cacheSizeLimit: Int?) {
             this.set(nøkkel, CacheObject(value = hentetVerdi, expire = LocalDateTime.now().plus(duration)))
             return hentetVerdi
         } finally {
-            låsForHenting.unlock()
-            withWriteLock { låserForHentFunksjon.remove(nøkkel) }
+            try {
+                låsForHenting.unlock()
+            } finally {
+                withWriteLock { låserForHentFunksjon.remove(nøkkel) }
+            }
         }
     }
 
     @WithSpan
-    suspend fun hentSuspend(nøkkel: K, duration: Duration, populerCache: suspend () -> V): V {
+    suspend fun hentSuspend(nøkkel: K, duration: Duration = Duration.ofMinutes(30), populerCache: suspend () -> V): V {
         get(nøkkel)?.let { return it.value }
 
         //egen lås pr nøkkel for å kunne oppdatere for flere nøkler samtidig, og samtidig unngå at flere tråder forsøker å kjøre unødvendige kall for samme nøkkel
         val låsForHenting = finnLåsForHenting(nøkkel)
         låsForHenting.lock()
         try {
-            //sjekk på nytt for å unngå å hente om en annen tråd allerde har gjort det
+            //sjekk på nytt for å unngå å hente om en annen tråd allerede har gjort det
             get(nøkkel)?.let { return it.value }
 
             val hentetVerdi = OpentelemetrySpanUtil.spanSuspend("cache-hent-verdi") { populerCache.invoke() }
             this.set(nøkkel, CacheObject(value = hentetVerdi, expire = LocalDateTime.now().plus(duration)))
             return hentetVerdi
         } finally {
-            låsForHenting.unlock()
-            withWriteLock { låserForHentFunksjon.remove(nøkkel) }
+            try {
+                låsForHenting.unlock()
+            } finally {
+                withWriteLock { låserForHentFunksjon.remove(nøkkel) }
+            }
         }
     }
 
@@ -124,7 +122,7 @@ open class Cache<K, V>(val cacheSizeLimit: Int?) {
         }
         readWriteLock.readLock().lock()
         try {
-            return operasjon.invoke();
+            return operasjon.invoke()
         } finally {
             readWriteLock.readLock().unlock()
         }
