@@ -49,6 +49,7 @@ spec:
         kvPath: {{serviceuser_kvpath}}
       - mountPath: /var/run/secrets/nais.io/vault
         kvPath: {{vault_kvpath}}
+  webproxy: true
   kafka:
     pool: {{kafka_pool}}
     streams: true
