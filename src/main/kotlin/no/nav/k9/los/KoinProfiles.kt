@@ -5,6 +5,7 @@ import io.ktor.client.engine.*
 import io.ktor.client.engine.java.*
 import io.ktor.client.plugins.cache.*
 import io.ktor.server.application.*
+import io.opentelemetry.instrumentation.ktor.v2_0.KtorClientTelemetry
 import kotlinx.coroutines.channels.Channel
 import no.nav.helse.dusseldorf.ktor.health.HealthService
 import no.nav.k9.los.KoinProfile.*
@@ -801,6 +802,7 @@ fun naisCommonConfig(config: Configuration) = module {
                         proxy = ProxyBuilder.http("http://webproxy.nais:8088")
                     }
                     install(HttpCache)
+                    install(KtorClientTelemetry)
                 }
         )
     }
