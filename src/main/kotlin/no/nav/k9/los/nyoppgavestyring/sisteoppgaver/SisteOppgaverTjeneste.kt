@@ -28,34 +28,31 @@ class SisteOppgaverTjeneste(
 
     suspend fun hentSisteOppgaver(): List<SisteOppgaverDto> {
         return try {
-            log.info("Henter siste oppgaver for innlogget bruker")
-            
-            val saksbehandlerIdent = try {
-                azureGraphService.hentIdentTilInnloggetBruker()
-            } catch (e: Exception) {
-                log.info("Feil ved henting av brukerident fra Azure Graph", e)
-                throw e
-            }
+            val saksbehandlerIdent = azureGraphService.hentIdentTilInnloggetBruker()
 
-            val oppgaver = try {
+            val oppgaver =
                 transactionalManager.transaction { tx ->
                     val sisteOppgaveIds = sisteOppgaverRepository.hentSisteOppgaver(tx, saksbehandlerIdent)
                     sisteOppgaveIds.map { eksternOppgaveId ->
-                        oppgaveRepository.hentNyesteOppgaveForEksternId(tx, eksternOppgaveId.område, eksternOppgaveId.eksternId)
+                        oppgaveRepository.hentNyesteOppgaveForEksternId(
+                            tx,
+                            eksternOppgaveId.område,
+                            eksternOppgaveId.eksternId
+                        )
                     }
                 }
-            } catch (e: Exception) {
-                log.info("Feil ved henting av oppgaver fra database for bruker: $saksbehandlerIdent", e)
-                throw e
-            }
+
+            val grupperForSaksbehandler = azureGraphService.hentGrupperForSaksbehandler(saksbehandlerIdent)
 
             val innhentinger = try {
                 withContext(Dispatchers.IO + Span.current().asContextElement()) {
                     oppgaver.map { oppgave ->
                         async {
                             try {
-                                val harTilgang = pepClient.harTilgangTilOppgaveV3(oppgave, Action.read, Auditlogging.IKKE_LOGG)
-                                val personPdl = oppgave.hentVerdi("aktorId")?.let { 
+                                val harTilgang =
+                                    pepClient.harTilgangTilOppgaveV3(oppgave, Action.read, Auditlogging.IKKE_LOGG,
+                                        grupperForSaksbehandler)
+                                val personPdl = oppgave.hentVerdi("aktorId")?.let {
                                     try {
                                         pdlService.person(it)
                                     } catch (e: Exception) {
