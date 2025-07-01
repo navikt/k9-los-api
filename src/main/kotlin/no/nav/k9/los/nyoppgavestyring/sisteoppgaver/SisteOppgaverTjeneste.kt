@@ -49,9 +49,12 @@ class SisteOppgaverTjeneste(
                     oppgaver.map { oppgave ->
                         async {
                             try {
-                                val harTilgang =
-                                    pepClient.harTilgangTilOppgaveV3(oppgave, Action.read, Auditlogging.IKKE_LOGG,
-                                        grupperForSaksbehandler)
+                                val harTilgang = pepClient.harTilgangTilOppgaveV3(
+                                    oppgave,
+                                    Action.read,
+                                    Auditlogging.IKKE_LOGG,
+                                    grupperForSaksbehandler
+                                )
                                 val personPdl = oppgave.hentVerdi("aktorId")?.let {
                                     try {
                                         pdlService.person(it)
