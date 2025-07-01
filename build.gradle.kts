@@ -4,15 +4,15 @@ val mainClass = "no.nav.k9.los.K9LosKt"
 val hikariVersion = "6.2.1"
 val flywayVersion = "11.1.1"
 val vaultJdbcVersion = "1.3.10"
-val koinVersion = "4.0.2"
+val koinVersion = "4.1.0"
 val kotliqueryVersion = "1.9.1"
 val k9SakVersion = "5.4.16"
 val k9KlageVersion = "0.4.7"
 val jacksonVersion = "2.17.2"
 val commonsTextVersion = "1.13.0"
 
-val dusseldorfKtorVersion = "5.0.19"
-val ktorVersion = "2.3.13"
+val dusseldorfKtorVersion = "7.0.0"
+val ktorVersion = "3.2.0"
 val kafkaVersion = "3.9.0"
 
 val navTilgangskontroll = "3.2024.01.24_10.14-f70bae69bd65"
@@ -25,7 +25,7 @@ val assertkVersion = "0.28.1"
 val mockkVersion = "1.13.16"
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "2.0.21" //kan ikke gå for 2.1+ pga ktor som har avhengighet til kotlin-stdlib-common, og den er tilsynelatende ikke tilgjengelig i 2.1+
+    id("org.jetbrains.kotlin.jvm") version "2.1.21"
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
@@ -48,6 +48,7 @@ dependencies {
     implementation("io.ktor:ktor-server-cors:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
     implementation("io.ktor:ktor-server-html-builder-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-client-auth-jvm:$ktorVersion")
 
     // Client
     implementation("io.ktor:ktor-client-core:$ktorVersion")
@@ -83,7 +84,8 @@ dependencies {
     implementation(enforcedPlatform("com.fasterxml.jackson:jackson-bom:$jacksonVersion"))
     implementation("org.apache.commons:commons-text:$commonsTextVersion")
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
-    implementation("io.github.smiley4:ktor-swagger-ui:3.6.1")
+    implementation("io.github.smiley4:ktor-openapi:5.0.2")
+    implementation("io.github.smiley4:ktor-swagger-ui:5.0.2")
 
 
     // DI
@@ -92,6 +94,8 @@ dependencies {
 
     // Test
     testImplementation("org.junit.jupiter:junit-jupiter-api:$jupiterVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:$assertkVersion")
 

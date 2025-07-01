@@ -1,17 +1,12 @@
 package no.nav.k9.los.apis
 
-import io.ktor.server.application.Application
-import io.ktor.server.application.call
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.response.respond
-import io.ktor.server.response.respondText
-import io.ktor.server.routing.get
-import io.ktor.server.routing.route
-import io.ktor.server.routing.routing
-import io.ktor.server.testing.handleRequest
-import io.ktor.server.testing.withTestApplication
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import io.ktor.server.testing.*
 import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.idToken
@@ -22,17 +17,19 @@ internal class RequestContextServiceTest {
 
     @Test
     fun `Får hentet token fra request context`() {
-        withTestApplication({ testApp() }) {
-            handleRequest(HttpMethod.Get, "/med-request-context").apply {
-                assertEquals(HttpStatusCode.InternalServerError, response.status())
+        testApplication {
+            application {
+                testApp()
             }
+            
+            var response = client.get("/med-request-context")
+            assertEquals(HttpStatusCode.InternalServerError, response.status)
 
-            handleRequest(HttpMethod.Get, "/med-request-context") {
-                addHeader(HttpHeaders.Authorization, authorizationHeader(username = "Erik"))
-            }.apply {
-                assertEquals(HttpStatusCode.OK, response.status())
-                assertEquals("Hei Erik", response.content)
+            response = client.get("/med-request-context") {
+                header(HttpHeaders.Authorization, authorizationHeader(username = "Erik"))
             }
+            assertEquals(HttpStatusCode.OK, response.status)
+            assertEquals("Hei Erik", response.bodyAsText())
         }
     }
 
