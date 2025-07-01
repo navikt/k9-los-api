@@ -75,10 +75,9 @@ dependencies {
     implementation("no.nav.k9.statistikk:kontrakter:2.0_20220411110858_dc06dd1")
 
     // opentelemetry
-    implementation("io.opentelemetry:opentelemetry-api:1.51.0")
-    implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.51.0")
-    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.16.0")
-    implementation("io.opentelemetry.instrumentation:opentelemetry-ktor-2.0:2.16.0-alpha")
+    implementation("io.opentelemetry:opentelemetry-api:1.46.0")
+    implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.46.0")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.11.0")
 
     // Div
     implementation(enforcedPlatform("com.fasterxml.jackson:jackson-bom:$jacksonVersion"))
