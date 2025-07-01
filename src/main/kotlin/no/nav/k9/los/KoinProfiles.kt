@@ -3,6 +3,7 @@ package no.nav.k9.los
 import io.ktor.client.*
 import io.ktor.client.engine.*
 import io.ktor.client.engine.java.*
+import io.ktor.client.plugins.cache.*
 import io.ktor.server.application.*
 import kotlinx.coroutines.channels.Channel
 import no.nav.helse.dusseldorf.ktor.health.HealthService
@@ -791,19 +792,16 @@ fun naisCommonConfig(config: Configuration) = module {
         HttpClient(Java)
     }
 
-    single(named("webproxyHttpClient")) {
-        // Httpclient med webproxy, for trafikk ut på internett
-        HttpClient(Java) {
-            engine {
-                proxy = ProxyBuilder.http("http://webproxy.nais:8088")
-            }
-        }
-    }
-
     single<IAzureGraphService> {
         AzureGraphService(
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
-            httpClient = get(named("webproxyHttpClient"))
+            httpClient = // Httpclient med webproxy, for trafikk ut på internett
+                HttpClient(Java) {
+                    engine {
+                        proxy = ProxyBuilder.http("http://webproxy.nais:8088")
+                    }
+                    install(HttpCache)
+                }
         )
     }
 
