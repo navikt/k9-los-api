@@ -56,12 +56,7 @@ class SisteOppgaverTjeneste(
                                     grupperForSaksbehandler
                                 )
                                 val personPdl = oppgave.hentVerdi("aktorId")?.let {
-                                    try {
-                                        pdlService.person(it)
-                                    } catch (e: Exception) {
-                                        log.info("Feil ved henting av persondata for oppgave ${oppgave.eksternId}", e)
-                                        null
-                                    }
+                                    pdlService.person(it)
                                 }
                                 Triple(harTilgang, personPdl, oppgave)
                             } catch (e: Exception) {
@@ -72,7 +67,7 @@ class SisteOppgaverTjeneste(
                     }
                 }
             } catch (e: Exception) {
-                log.info("Feil ved parallell innhenting av tilgangs- og persondata", e)
+                log.warn("Feil ved parallell innhenting av tilgangs- og persondata", e)
                 throw e
             }
 
@@ -93,15 +88,13 @@ class SisteOppgaverTjeneste(
                             tittel = "$navnOgFnr ($oppgavetypeTittel)",
                             url = oppgave.getOppgaveBehandlingsurl(),
                         )
-                    }.also {
-                        log.info("Hentet ${it.size} siste oppgaver for bruker")
                     }
             } catch (e: TimeoutCancellationException) {
-                log.info("Timeout ved henting av siste oppgaver - operasjonen tok lengre enn 5 sekunder", e)
+                log.warn("Timeout ved henting av siste oppgaver - operasjonen tok lengre enn 5 sekunder", e)
                 throw e
             }
         } catch (e: Exception) {
-            log.info("Uventet feil ved henting av siste oppgaver", e)
+            log.warn("Uventet feil ved henting av siste oppgaver", e)
             throw e
         }
     }
