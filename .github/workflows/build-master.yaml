@@ -63,7 +63,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ build, test ]
     environment: "dev-fss:k9saksbehandling"
-    concurrency: "dev-fss:k9saksbehandling"
     permissions:
       contents: read
       id-token: write
@@ -84,7 +83,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ build, test ]
     environment: "prod-fss:k9saksbehandling"
-    concurrency: "prod-fss:k9saksbehandling"
     permissions:
       contents: read
       id-token: write
