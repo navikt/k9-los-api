@@ -159,7 +159,7 @@ class OppgaveRepository(
 
         }
         // oppgaver laget av punsj har ikke fagsakSaksnummer og mangler i noen tilfeller aktørId
-        val søker = if (oppgave.aktorId != null) pepClient.erAktørKode6(oppgave.aktorId) else false
+        val søker = if (!oppgave.aktorId.isNullOrBlank()) pepClient.erAktørKode6(oppgave.aktorId) else false
         val pleietrengende = if (oppgave.pleietrengendeAktørId != null) pepClient.erAktørKode6(oppgave.pleietrengendeAktørId) else false
         return (søker || pleietrengende)
     }
