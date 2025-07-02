@@ -12,7 +12,6 @@ import no.nav.helse.dusseldorf.oauth2.client.AccessToken
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.idtoken.IIdToken
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.idtoken.IdToken
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.CacheObject
@@ -31,7 +30,7 @@ open class AzureGraphService(
     private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
     private val officeLocationCache = Cache<String, String>(cacheSizeLimit = 1000)
     private val saksbehandlerUserIdCache = Cache<String, UUID>(cacheSizeLimit = 1000)
-    private val userIdGrupperCache = Cache<UUID, Set<UUID>>(cacheSizeLimit = 1000)
+    private val saksbehandlerGrupperCache = Cache<String, Set<UUID>>(cacheSizeLimit = 1000)
     private val log = LoggerFactory.getLogger("AzureGraphService")!!
 
     override suspend fun hentIdentTilInnloggetBruker(): String {
@@ -53,10 +52,8 @@ open class AzureGraphService(
     }
 
     override suspend fun hentEnhetForInnloggetBruker(): String {
-        coroutineContext.idToken().let { brukersToken ->
-            val brukernavnFraKontekst = IdToken(brukersToken.value).getUsername()
-            return hentEnhetForBruker(brukernavn = brukernavnFraKontekst, onBehalfOf = brukersToken)
-        }
+        val token = coroutineContext.idToken()
+        return hentEnhetForBruker(brukernavn = token.getUsername(), onBehalfOf = token)
     }
 
     override suspend fun hentEnhetForBrukerMedSystemToken(brukernavn: String): String? {
@@ -130,7 +127,37 @@ open class AzureGraphService(
 
     override suspend fun hentGrupperForSaksbehandler(saksbehandlerIdent: String): Set<UUID> {
         val userId = hentUserIdForSaksbehandler(saksbehandlerIdent)
-        return hentGrupperForSaksbehandler(userId)
+        return hentGrupperForSaksbehandler(userId, saksbehandlerIdent)
+    }
+
+    override suspend fun hentGrupperForInnloggetSaksbehandler(): Set<UUID> {
+        val token = coroutineContext.idToken()
+        return saksbehandlerGrupperCache.hent(coroutineContext.idToken().getNavIdent()) {
+            val accessToken = accessToken(token)
+            val json = runBlocking {
+                Retry.retry(
+                    operation = "grupper-for-saksbehandler",
+                    initialDelay = Duration.ofMillis(200),
+                    factor = 2.0,
+                    logger = log
+                ) {
+                    val response = Operation.monitored(
+                        app = "k9-los-api",
+                        operation = "grupper-for-saksbehandler",
+                        resultResolver = { 200 == it.status.value }
+                    ) {
+                        httpClient.get("https://graph.microsoft.com/v1.0/me/memberOf") {
+                            header(HttpHeaders.Accept, "application/json")
+                            header(HttpHeaders.Authorization, "Bearer ${accessToken.token}")
+                            header("ConsistencyLevel", "eventual")
+                        }
+                    }
+                    håndterResultat(response)
+                }
+            }
+            LosObjectMapper.instance.readValue<DirectoryOjects>(json).value.map { it.id }.toSet()
+        }
+
     }
 
     private fun hentUserIdForSaksbehandler(saksbehandlerIdent: String): UUID {
@@ -170,8 +197,8 @@ open class AzureGraphService(
         }
     }
 
-    private fun hentGrupperForSaksbehandler(saksbehandlerUserId: UUID): Set<UUID> {
-        return userIdGrupperCache.hent(saksbehandlerUserId) {
+    private fun hentGrupperForSaksbehandler(saksbehandlerUserId: UUID, saksbehandlerIdent: String): Set<UUID> {
+        return saksbehandlerGrupperCache.hent(saksbehandlerIdent) {
             val accessToken = accessToken(null)
             val json = runBlocking {
                 Retry.retry(

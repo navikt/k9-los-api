@@ -42,7 +42,7 @@ class SisteOppgaverTjeneste(
                     }
                 }
 
-            val grupperForSaksbehandler = azureGraphService.hentGrupperForSaksbehandler(saksbehandlerIdent)
+            val grupperForSaksbehandler = azureGraphService.hentGrupperForInnloggetSaksbehandler()
 
             val innhentinger = try {
                 withContext(Dispatchers.IO + Span.current().asContextElement()) {
