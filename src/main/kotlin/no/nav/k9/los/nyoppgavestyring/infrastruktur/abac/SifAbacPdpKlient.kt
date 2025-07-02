@@ -1,9 +1,8 @@
 package no.nav.k9.los.nyoppgavestyring.infrastruktur.abac
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import io.ktor.client.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
+import com.github.kittinunf.fuel.coroutines.awaitStringResponseResult
+import com.github.kittinunf.fuel.httpPost
 import io.ktor.http.*
 import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
@@ -28,8 +27,7 @@ import kotlin.coroutines.coroutineContext
 class SifAbacPdpKlient(
     configuration: Configuration,
     accessTokenClient: AccessTokenClient,
-    scope: String,
-    private val httpClient: HttpClient
+    scope: String
 ) : ISifAbacPdpKlient {
     val log: Logger = LoggerFactory.getLogger("SifAbacPdpKlient")
     private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
@@ -40,30 +38,28 @@ class SifAbacPdpKlient(
     override suspend fun diskresjonskoderPerson(aktørId: AktørId): Set<Diskresjonskode> {
         val antallForsøk = 3
         val systemToken = cachedAccessTokenClient.getAccessToken(scopes)
-        val response = Retry.retry(
+        val httpRequest = "${url}/api/diskresjonskoder/person"
+            .httpPost()
+            .body(LosObjectMapper.instance.writeValueAsString(aktørId))
+            .header(
+                //OBS! Dette kalles bare med system token, og skal ikke brukes ved saksbehandler token
+                HttpHeaders.Authorization to systemToken.asAuthoriationHeader(),
+                HttpHeaders.Accept to "application/json",
+                HttpHeaders.ContentType to "application/json",
+                NavHeaders.CallId to UUID.randomUUID().toString()
+            )
+        val (_, _, result) = Retry.retry(
             tries = antallForsøk,
             operation = "diskresjonskoder-person",
             initialDelay = Duration.ofMillis(200),
             factor = 2.0,
             logger = log
-        ) {
-            httpClient.post("${url}/api/diskresjonskoder/person") {
-                setBody(LosObjectMapper.instance.writeValueAsString(aktørId))
-                header(
-                    //OBS! Dette kalles bare med system token, og skal ikke brukes ved saksbehandler token
-                    HttpHeaders.Authorization, systemToken.asAuthoriationHeader()
-                )
-                header(HttpHeaders.Accept, "application/json")
-                header(HttpHeaders.ContentType, "application/json")
-                header(NavHeaders.CallId, UUID.randomUUID().toString())
-            }
-        }
+        ) { httpRequest.awaitStringResponseResult() }
 
-        val abc = if (response.status.isSuccess()) {
-            response.bodyAsText()
-        } else {
-            throw IllegalStateException("Feil ved henting av diskresjonskoder for person fra sif-abac-pdp: HTTP ${response.status.value} ${response.status.description}")
-        }
+        val abc = result.fold(
+            { success -> success },
+            { error -> throw IllegalStateException("Feil ved henting av diskresjonskoder for person fra sif-abac-pdp: $error") }
+        )
 
         return LosObjectMapper.instance.readValue<List<Diskresjonskode>>(abc)
             .toSet()
@@ -80,30 +76,28 @@ class SifAbacPdpKlient(
 
         val completeUrl = "${url}/api/diskresjonskoder/k9/sak"
         val body = LosObjectMapper.instance.writeValueAsString(saksnummerDto)
-        val response = Retry.retry(
+        val httpRequest = completeUrl
+            .httpPost()
+            .body(body)
+            .header(
+                //OBS! Dette kalles bare med system token, og skal ikke brukes ved saksbehandler token
+                HttpHeaders.Authorization to systemToken.asAuthoriationHeader(),
+                HttpHeaders.Accept to "application/json",
+                HttpHeaders.ContentType to "application/json",
+                NavHeaders.CallId to UUID.randomUUID().toString()
+            )
+        val (_, _, result) = Retry.retry(
             tries = antallForsøk,
             operation = "diskresjonskoder-sak",
             initialDelay = Duration.ofMillis(200),
             factor = 2.0,
             logger = log
-        ) {
-            httpClient.post(completeUrl) {
-                setBody(body)
-                header(
-                    //OBS! Dette kalles bare med system token, og skal ikke brukes ved saksbehandler token
-                    HttpHeaders.Authorization, systemToken.asAuthoriationHeader()
-                )
-                header(HttpHeaders.Accept, "application/json")
-                header(HttpHeaders.ContentType, "application/json")
-                header(NavHeaders.CallId, UUID.randomUUID().toString())
-            }
-        }
+        ) { httpRequest.awaitStringResponseResult() }
 
-        val abc = if (response.status.isSuccess()) {
-            response.bodyAsText()
-        } else {
-            throw IllegalStateException("Feil ved henting av diskresjonskoder for sak fra sif-abac-pdp $completeUrl for saksnummer $body : HTTP ${response.status.value} ${response.status.description}")
-        }
+        val abc = result.fold(
+            { success -> success },
+            { error -> throw IllegalStateException("Feil ved henting av diskresjonskoder for sak fra sif-abac-pdp $completeUrl for saksnummer $body : $error") }
+        )
 
         return LosObjectMapper.instance.readValue<List<Diskresjonskode>>(abc)
             .toSet()
@@ -114,30 +108,28 @@ class SifAbacPdpKlient(
         val antallForsøk = 3
         val jwt = coroutineContext.idToken().value
         val oboToken = cachedAccessTokenClient.getAccessToken(scopes, jwt)
-        val response = Retry.retry(
+        val httpRequest = "${url}/api/tilgangskontroll/v2/k9/sak"
+            .httpPost()
+            .body(LosObjectMapper.instance.writeValueAsString(request))
+            .header(
+                //OBS! Dette kalles bare med obo token
+                HttpHeaders.Authorization to oboToken.asAuthoriationHeader(),
+                HttpHeaders.Accept to "application/json",
+                HttpHeaders.ContentType to "application/json",
+                NavHeaders.CallId to UUID.randomUUID().toString()
+            )
+        val (_, _, result) = Retry.retry(
             tries = antallForsøk,
             operation = "tilgangskontroll-sak",
             initialDelay = Duration.ofMillis(200),
             factor = 2.0,
             logger = log
-        ) {
-            httpClient.post("${url}/api/tilgangskontroll/v2/k9/sak") {
-                setBody(LosObjectMapper.instance.writeValueAsString(request))
-                header(
-                    //OBS! Dette kalles bare med obo token
-                    HttpHeaders.Authorization, oboToken.asAuthoriationHeader()
-                )
-                header(HttpHeaders.Accept, "application/json")
-                header(HttpHeaders.ContentType, "application/json")
-                header(NavHeaders.CallId, UUID.randomUUID().toString())
-            }
-        }
+        ) { httpRequest.awaitStringResponseResult() }
 
-        val abc = if (response.status.isSuccess()) {
-            response.bodyAsText()
-        } else {
-            throw IllegalStateException("Feil ved sjekk av tilgang til sak mot sif-abac-pdp: HTTP ${response.status.value} ${response.status.description}")
-        }
+        val abc = result.fold(
+            { success -> success },
+            { error -> throw IllegalStateException("Feil ved sjekk av tilgang til sak mot sif-abac-pdp: $error") }
+        )
 
         return LosObjectMapper.instance.readValue<Tilgangsbeslutning>(abc).harTilgang()
     }
@@ -163,29 +155,27 @@ class SifAbacPdpKlient(
         val antallForsøk = 3
         val systemToken = cachedAccessTokenClient.getAccessToken(scopes)
         val body = LosObjectMapper.instance.writeValueAsString(request)
-        val response = Retry.retry(
+        val httpRequest = "${url}/api/tilgangskontroll/v2/k9/sak-grupper"
+            .httpPost()
+            .body(body)
+            .header(
+                HttpHeaders.Authorization to systemToken.asAuthoriationHeader(),
+                HttpHeaders.Accept to "application/json",
+                HttpHeaders.ContentType to "application/json",
+                NavHeaders.CallId to UUID.randomUUID().toString()
+            )
+        val (_, _, result) = Retry.retry(
             tries = antallForsøk,
             operation = "tilgangskontroll-sak-grupper",
             initialDelay = Duration.ofMillis(200),
             factor = 2.0,
             logger = log
-        ) {
-            httpClient.post("${url}/api/tilgangskontroll/v2/k9/sak-grupper") {
-                setBody(body)
-                header(
-                    HttpHeaders.Authorization, systemToken.asAuthoriationHeader()
-                )
-                header(HttpHeaders.Accept, "application/json")
-                header(HttpHeaders.ContentType, "application/json")
-                header(NavHeaders.CallId, UUID.randomUUID().toString())
-            }
-        }
+        ) { httpRequest.awaitStringResponseResult() }
 
-        val abc = if (response.status.isSuccess()) {
-            response.bodyAsText()
-        } else {
-            throw IllegalStateException("Feil ved sjekk av tilgang til sak vha grupper mot sif-abac-pdp ${if (environment == KoinProfile.PREPROD) body else ""}: HTTP ${response.status.value} ${response.status.description}")
-        }
+        val abc = result.fold(
+            { success -> success },
+            { error -> throw IllegalStateException("Feil ved sjekk av tilgang til sak vha grupper mot sif-abac-pdp ${if (environment == KoinProfile.PREPROD) body else ""}: $error") }
+        )
 
         return LosObjectMapper.instance.readValue<Tilgangsbeslutning>(abc).harTilgang()
     }
@@ -195,30 +185,28 @@ class SifAbacPdpKlient(
         val antallForsøk = 3
         val jwt = coroutineContext.idToken().value
         val oboToken = cachedAccessTokenClient.getAccessToken(scopes, jwt)
-        val response = Retry.retry(
+        val httpRequest = "${url}/api/tilgangskontroll/v2/k9/personer"
+            .httpPost()
+            .body(LosObjectMapper.instance.writeValueAsString(request))
+            .header(
+                //OBS! Dette kalles bare med obo token
+                HttpHeaders.Authorization to oboToken.asAuthoriationHeader(),
+                HttpHeaders.Accept to "application/json",
+                HttpHeaders.ContentType to "application/json",
+                NavHeaders.CallId to UUID.randomUUID().toString()
+            )
+        val (_, _, result) = Retry.retry(
             tries = antallForsøk,
             operation = "tilgangskontroll-personer",
             initialDelay = Duration.ofMillis(200),
             factor = 2.0,
             logger = log
-        ) {
-            httpClient.post("${url}/api/tilgangskontroll/v2/k9/personer") {
-                setBody(LosObjectMapper.instance.writeValueAsString(request))
-                header(
-                    //OBS! Dette kalles bare med obo token
-                    HttpHeaders.Authorization, oboToken.asAuthoriationHeader()
-                )
-                header(HttpHeaders.Accept, "application/json")
-                header(HttpHeaders.ContentType, "application/json")
-                header(NavHeaders.CallId, UUID.randomUUID().toString())
-            }
-        }
+        ) { httpRequest.awaitStringResponseResult() }
 
-        val abc = if (response.status.isSuccess()) {
-            response.bodyAsText()
-        } else {
-            throw IllegalStateException("Feil ved sjekk av tilgang til personer mot sif-abac-pdp: HTTP ${response.status.value} ${response.status.description}")
-        }
+        val abc = result.fold(
+            { success -> success },
+            { error -> throw IllegalStateException("Feil ved sjekk av tilgang til personer mot sif-abac-pdp: $error") }
+        )
 
         return LosObjectMapper.instance.readValue<Tilgangsbeslutning>(abc).harTilgang()
     }
@@ -240,29 +228,27 @@ class SifAbacPdpKlient(
         val antallForsøk = 3
         val systemToken = cachedAccessTokenClient.getAccessToken(scopes)
         val body = LosObjectMapper.instance.writeValueAsString(request)
-        val response = Retry.retry(
+        val httpRequest = "${url}/api/tilgangskontroll/v2/k9/personer-grupper"
+            .httpPost()
+            .body(body)
+            .header(
+                HttpHeaders.Authorization to systemToken.asAuthoriationHeader(),
+                HttpHeaders.Accept to "application/json",
+                HttpHeaders.ContentType to "application/json",
+                NavHeaders.CallId to UUID.randomUUID().toString()
+            )
+        val (_, _, result) = Retry.retry(
             tries = antallForsøk,
             operation = "tilgangskontroll-personer-grupper",
             initialDelay = Duration.ofMillis(200),
             factor = 2.0,
             logger = log
-        ) {
-            httpClient.post("${url}/api/tilgangskontroll/v2/k9/personer-grupper") {
-                setBody(body)
-                header(
-                    HttpHeaders.Authorization, systemToken.asAuthoriationHeader()
-                )
-                header(HttpHeaders.Accept, "application/json")
-                header(HttpHeaders.ContentType, "application/json")
-                header(NavHeaders.CallId, UUID.randomUUID().toString())
-            }
-        }
+        ) { httpRequest.awaitStringResponseResult() }
 
-        val abc = if (response.status.isSuccess()) {
-            response.bodyAsText()
-        } else {
-            throw IllegalStateException("Feil ved sjekk av tilgang til personer vha grupper mot sif-abac-pdp ${if (environment == KoinProfile.PREPROD) body else ""}: HTTP ${response.status.value} ${response.status.description}")
-        }
+        val abc = result.fold(
+            { success -> success },
+            { error -> throw IllegalStateException("Feil ved sjekk av tilgang til personer vha grupper mot sif-abac-pdp ${if (environment == KoinProfile.PREPROD) body else ""}: $error") }
+        )
 
         return LosObjectMapper.instance.readValue<Tilgangsbeslutning>(abc).harTilgang()
     }

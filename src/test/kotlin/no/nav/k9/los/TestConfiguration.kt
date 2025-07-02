@@ -1,9 +1,6 @@
 package no.nav.k9.los
 
-import io.ktor.client.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import kotlinx.coroutines.runBlocking
+import com.github.kittinunf.fuel.httpGet
 import com.github.tomakehurst.wiremock.WireMockServer
 import no.nav.helse.dusseldorf.testsupport.jws.ClientCredentials
 import no.nav.k9.los.wiremocks.getTpsProxyUrl
@@ -61,11 +58,5 @@ object TestConfiguration {
         return map.toMap()
     }
 
-    private fun String.getAsJson(): JSONObject {
-        val httpClient = HttpClient()
-        return runBlocking {
-            val response = httpClient.get(this@getAsJson)
-            JSONObject(response.bodyAsText())
-        }
-    }
+    private fun String.getAsJson() = JSONObject(this.httpGet().responseString().third.component1())
 }

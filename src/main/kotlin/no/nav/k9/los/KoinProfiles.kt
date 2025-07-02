@@ -1,8 +1,5 @@
 package no.nav.k9.los
 
-import io.ktor.client.*
-import io.ktor.client.engine.*
-import io.ktor.client.engine.java.*
 import io.ktor.server.application.*
 import kotlinx.coroutines.channels.Channel
 import no.nav.helse.dusseldorf.ktor.health.HealthService
@@ -106,18 +103,18 @@ import org.koin.dsl.module
 import java.util.*
 import javax.sql.DataSource
 
-fun selectModulesBasedOnProfile(application: Application, config: Configuration): List<Module> {
-    return when (config.koinProfile()) {
-        LOCAL -> listOf(common(application, config), localDevConfig())
-        PREPROD -> listOf(common(application, config), naisCommonConfig(config), preprodConfig(config))
-        PROD -> listOf(common(application, config), naisCommonConfig(config), prodConfig(config))
+fun selectModuleBasedOnProfile(application: Application, config: Configuration): List<Module> {
+    val envModule = when (config.koinProfile()) {
+        LOCAL -> localDevConfig()
+        PREPROD -> preprodConfig(config)
+        PROD -> prodConfig(config)
     }
+    return listOf(common(application, config), envModule)
 }
 
 fun common(app: Application, config: Configuration) = module {
     single { config.koinProfile() }
     single { config }
-    single { RequestContextService(profile = get()) }
     single<DataSource> { app.hikariConfig(config) }
     single {
         NokkeltallTjeneste(
@@ -151,10 +148,9 @@ fun common(app: Application, config: Configuration) = module {
 
     single { OppgaveRepository(get(), get(), get(named("oppgaveRefreshChannel"))) }
 
-    single {
-        AktivOppgaveRepository(
-            oppgavetypeRepository = get()
-        )
+    single { AktivOppgaveRepository(
+        oppgavetypeRepository = get()
+    )
     }
 
     single {
@@ -759,7 +755,6 @@ fun common(app: Application, config: Configuration) = module {
     }
 }
 
-// Kun lokalt, og verdikjede
 fun localDevConfig() = module {
     single<IAzureGraphService> {
         AzureGraphServiceLocal()
@@ -767,6 +762,7 @@ fun localDevConfig() = module {
     single<IPepClient> {
         PepClientLocal()
     }
+    single { RequestContextService(profile = LOCAL) }
 
     single<IPdlService> {
         PdlServiceLocal()
@@ -784,53 +780,29 @@ fun localDevConfig() = module {
     }
 }
 
-// For både preprod og prod
-fun naisCommonConfig(config: Configuration) = module {
-    single {
-        // Standard httpclient uten proxy. Er eksplisitt på engine for å unngå en uforutsett engine fra classpath.
-        HttpClient(Java)
-    }
-
-    single(named("webproxyHttpClient")) {
-        // Httpclient med webproxy, for trafikk ut på internett
-        HttpClient(Java) {
-            engine {
-                proxy = ProxyBuilder.http("http://webproxy.nais:8088")
-            }
-        }
-    }
-
+fun preprodConfig(config: Configuration) = module {
     single<IAzureGraphService> {
         AzureGraphService(
-            accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
-            httpClient = get(named("webproxyHttpClient"))
+            accessTokenClient = get<AccessTokenClientResolver>().azureV2()
         )
     }
-
-    single<IPepClient> {
-        PepClient(azureGraphService = get(), k9Auditlogger = K9Auditlogger(Auditlogger(config)), get())
-    }
-}
-
-// Unik konfigurasjon for preprod
-fun preprodConfig(config: Configuration) = module {
     single<IK9SakService> {
         K9SakServiceSystemClient(
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://dev-fss.k9saksbehandling.k9-sak/.default",
-            k9SakBehandlingOppfrisketRepository = get(),
-            httpClient = get()
+            k9SakBehandlingOppfrisketRepository = get()
         )
     }
+
+    single { RequestContextService(profile = PREPROD) }
 
     single<IPdlService> {
         PdlService(
             baseUrl = config.pdlUrl(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://dev-fss.pdl.pdl-api/.default",
-            azureGraphService = get<IAzureGraphService>(),
-            httpClient = get()
+            azureGraphService = get<IAzureGraphService>()
         )
     }
 
@@ -838,8 +810,7 @@ fun preprodConfig(config: Configuration) = module {
         K9SakBerikerSystemKlient(
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
-            scope = "api://dev-fss.k9saksbehandling.k9-sak/.default",
-            httpClient = get()
+            scope = "api://dev-fss.k9saksbehandling.k9-sak/.default"
         )
     }
 
@@ -848,40 +819,45 @@ fun preprodConfig(config: Configuration) = module {
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scopeKlage = "api://dev-fss.k9saksbehandling.k9-klage/.default",
-            scopeSak = "api://dev-fss.k9saksbehandling.k9-sak/.default",
-            httpClient = get()
+            scopeSak = "api://dev-fss.k9saksbehandling.k9-sak/.default"
         )
     }
 
     single<ISifAbacPdpKlient> {
-        SifAbacPdpKlient(
+        SifAbacPdpKlient (
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://dev-fss.k9saksbehandling.sif-abac-pdp/.default",
-            httpClient = get()
         )
+    }
+    single<IPepClient> {
+        PepClient(azureGraphService = get(), k9Auditlogger = K9Auditlogger(Auditlogger(config)), get())
     }
 }
 
-// Unik konfigurasjon for prod
 fun prodConfig(config: Configuration) = module {
+    single<IAzureGraphService> {
+        AzureGraphService(
+            accessTokenClient = get<AccessTokenClientResolver>().azureV2()
+        )
+    }
     single<IK9SakService> {
         K9SakServiceSystemClient(
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://prod-fss.k9saksbehandling.k9-sak/.default",
-            k9SakBehandlingOppfrisketRepository = get(),
-            httpClient = get()
+            k9SakBehandlingOppfrisketRepository = get()
         )
     }
+
+    single { RequestContextService(profile = PROD) }
 
     single<IPdlService> {
         PdlService(
             baseUrl = config.pdlUrl(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://prod-fss.pdl.pdl-api/.default",
-            azureGraphService = get<IAzureGraphService>(),
-            httpClient = get()
+            azureGraphService = get<IAzureGraphService>()
         )
     }
 
@@ -889,8 +865,7 @@ fun prodConfig(config: Configuration) = module {
         K9SakBerikerSystemKlient(
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
-            scope = "api://prod-fss.k9saksbehandling.k9-sak/.default",
-            httpClient = get()
+            scope = "api://prod-fss.k9saksbehandling.k9-sak/.default"
         )
     }
 
@@ -899,17 +874,20 @@ fun prodConfig(config: Configuration) = module {
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scopeKlage = "api://prod-fss.k9saksbehandling.k9-klage/.default",
-            scopeSak = "api://prod-fss.k9saksbehandling.k9-sak/.default",
-            httpClient = get()
+            scopeSak = "api://prod-fss.k9saksbehandling.k9-sak/.default"
         )
     }
 
     single<ISifAbacPdpKlient> {
-        SifAbacPdpKlient(
+        SifAbacPdpKlient (
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://prod-fss.k9saksbehandling.sif-abac-pdp/.default",
-            httpClient = get()
         )
     }
+
+    single<IPepClient> {
+        PepClient(azureGraphService = get(), k9Auditlogger = K9Auditlogger(Auditlogger(config)), get())
+    }
 }
+

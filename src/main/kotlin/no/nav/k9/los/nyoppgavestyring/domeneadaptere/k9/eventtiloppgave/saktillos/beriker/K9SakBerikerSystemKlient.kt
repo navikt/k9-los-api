@@ -1,9 +1,8 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import io.ktor.client.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
+import com.github.kittinunf.fuel.coroutines.awaitStringResponseResult
+import com.github.kittinunf.fuel.httpGet
 import io.ktor.http.*
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.runBlocking
@@ -16,18 +15,16 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.Transien
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.NavHeaders
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.BehandlingMedFagsakDto
-import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.*
 
 class K9SakBerikerSystemKlient(
     private val configuration: Configuration,
-    accessTokenClient: AccessTokenClient,
-    scope: String,
-    private val httpClient: HttpClient
+    private val accessTokenClient: AccessTokenClient,
+    scope: String
 ) : K9SakBerikerInterfaceKludge {
-    val log: Logger = LoggerFactory.getLogger("K9SakAdapter")
+    val log = LoggerFactory.getLogger("K9SakAdapter")
     private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
     private val url = configuration.k9Url()
     private val scopes = setOf(scope)
@@ -38,53 +35,55 @@ class K9SakBerikerSystemKlient(
     }
 
     private suspend fun hent(behandlingUUID: UUID, antallForsøk: Int = 3): BehandlingMedFagsakDto? {
-        val response = Retry.retry(
+        val parameters = listOf<Pair<String, String>>(Pair("behandlingUuid", behandlingUUID.toString()))
+        val httpRequest = "${url}/los/behandling"
+            .httpGet(parameters)
+            .header(
+                //OBS! Dette kalles bare med system token, og skal ikke brukes ved saksbehandler token
+                HttpHeaders.Authorization to cachedAccessTokenClient.getAccessToken(scopes).asAuthoriationHeader(),
+                HttpHeaders.Accept to "application/json",
+                HttpHeaders.ContentType to "application/json",
+                NavHeaders.CallId to UUID.randomUUID().toString()
+            )
+        val (_, response, result) = Retry.retry(
             tries = antallForsøk,
             operation = "berik",
             initialDelay = Duration.ofMillis(200),
             factor = 2.0,
             logger = log
-        ) {
-            httpClient.get("${url}/los/behandling") {
-                parameter("behandlingUuid", behandlingUUID.toString())
-                header(
-                    //OBS! Dette kalles bare med system token, og skal ikke brukes ved saksbehandler token
-                    HttpHeaders.Authorization, cachedAccessTokenClient.getAccessToken(scopes).asAuthoriationHeader()
-                )
-                header(HttpHeaders.Accept, "application/json")
-                header(HttpHeaders.ContentType, "application/json")
-                header(NavHeaders.CallId, UUID.randomUUID().toString())
-            }
-        }
+        ) { httpRequest.awaitStringResponseResult() }
 
-        if (response.status == HttpStatusCode.NoContent) {
+        if (response.statusCode == HttpStatusCode.NoContent.value) {
             return null
         }
-        
-        val abc = if (response.status.isSuccess()) {
-            response.bodyAsText()
-        } else {
-            if (response.status == HttpStatusCode.ServiceUnavailable
-                || response.status == HttpStatusCode.GatewayTimeout
-                || response.status == HttpStatusCode.RequestTimeout
-            ) {
-                throw TransientException("k9sak er ikke tilgjengelig for beriking av k9sak-oppgave, fikk http code ${response.status.value}", Exception("HTTP error ${response.status.value}"))
+        val abc = result.fold(
+            { success ->
+                success
+            },
+            { error ->
+                if (error.response.statusCode == HttpStatusCode.ServiceUnavailable.value
+                    || error.response.statusCode == HttpStatusCode.GatewayTimeout.value
+                    || error.response.statusCode == HttpStatusCode.RequestTimeout.value
+                ) {
+                    throw TransientException("k9sak er ikke tilgjengelig for beriking av k9sak-oppgave, fikk http code ${error.response.statusCode}", error.exception)
+                }
+
+                val feiltekst = error.response.body().asString("text/plain")
+                val ignorerManglendeTilgangPgaUtdatertTestdata = configuration.koinProfile == KoinProfile.PREPROD
+                        && feiltekst.contains("MANGLER_TILGANG_FEIL")
+
+                log.error(
+                    (if (ignorerManglendeTilgangPgaUtdatertTestdata) "IGNORERER I DEV: " else "") +
+                            "Error response = '$feiltekst' fra '${httpRequest.url}'"
+                )
+                log.error(error.toString())
+
+                if (ignorerManglendeTilgangPgaUtdatertTestdata) {
+                    return null
+                } else throw IllegalStateException("Feil ved henting av behandling fra k9-sak", error.exception)
+
             }
-
-            val feiltekst = response.bodyAsText()
-            val ignorerManglendeTilgangPgaUtdatertTestdata = configuration.koinProfile == KoinProfile.PREPROD
-                    && feiltekst.contains("MANGLER_TILGANG_FEIL")
-
-            log.error(
-                (if (ignorerManglendeTilgangPgaUtdatertTestdata) "IGNORERER I DEV: " else "") +
-                        "Error response = '$feiltekst' fra '${response.request.url}'"
-            )
-            log.error("HTTP ${response.status.value} ${response.status.description}")
-
-            if (ignorerManglendeTilgangPgaUtdatertTestdata) {
-                return null
-            } else throw IllegalStateException("Feil ved henting av behandling fra k9-sak")
-        }
+        )
 
         return LosObjectMapper.instance.readValue<BehandlingMedFagsakDto>(abc)
     }

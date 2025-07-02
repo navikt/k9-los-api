@@ -1,8 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient
 
-import io.ktor.client.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
+import com.github.kittinunf.fuel.coroutines.awaitStringResponseResult
+import com.github.kittinunf.fuel.httpPost
 import io.ktor.http.*
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.helse.dusseldorf.ktor.core.Retry
@@ -18,12 +17,11 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.*
 
-open class K9SakServiceSystemClient(
+open class K9SakServiceSystemClient constructor(
     val configuration: Configuration,
     val accessTokenClient: AccessTokenClient,
     val scope: String,
-    k9SakBehandlingOppfrisketRepository: K9SakBehandlingOppfrisketRepository,
-    private val httpClient: HttpClient
+    k9SakBehandlingOppfrisketRepository: K9SakBehandlingOppfrisketRepository
 ) : IK9SakService {
     private val log = LoggerFactory.getLogger("K9SakService")!!
 
@@ -50,6 +48,17 @@ open class K9SakServiceSystemClient(
 
         val dto = BehandlingIdListe(behandlinger.map { BehandlingIdDto(it) })
         val body = LosObjectMapper.instance.writeValueAsString(dto)
+        val httpRequest = "${url}/behandling/backend-root/refresh"
+            .httpPost()
+            .body(
+                body
+            )
+            .header(
+                HttpHeaders.Authorization to cachedAccessTokenClient.getAccessToken(scopes).asAuthoriationHeader(),
+                HttpHeaders.Accept to "application/json",
+                HttpHeaders.ContentType to "application/json",
+                NavHeaders.CallId to UUID.randomUUID().toString()
+            )
 
         Retry.retry(
             operation = "refresh oppgave",
@@ -57,29 +66,22 @@ open class K9SakServiceSystemClient(
             factor = 2.0,
             logger = log
         ) {
-            val response = Operation.monitored(
+            val (request, _, result) = Operation.monitored(
                 app = "k9-los-api",
                 operation = "hent-ident",
-                resultResolver = { 200 == it.status.value }
-            ) {
-                httpClient.post("${url}/behandling/backend-root/refresh") {
-                    setBody(body)
-                    header(
-                        HttpHeaders.Authorization, cachedAccessTokenClient.getAccessToken(scopes).asAuthoriationHeader()
-                    )
-                    header(HttpHeaders.Accept, "application/json")
-                    header(HttpHeaders.ContentType, "application/json")
-                    header(NavHeaders.CallId, UUID.randomUUID().toString())
-                }
-            }
+                resultResolver = { 200 == it.second.statusCode }
+            ) { httpRequest.awaitStringResponseResult() }
 
-            if (response.status.isSuccess()) {
-                cache.registrerBehandlingerOppfrisket(behandlinger)
-                response.bodyAsText()
-            } else {
-                log.error("Error response = '${begrensLengde(response.bodyAsText(), 1000)}' fra '${response.request.url}'")
-                throw RuntimeException("Kunne ikke gjøre refresh-kall til k9sak")
-            }
+            result.fold(
+                { success ->
+                    cache.registrerBehandlingerOppfrisket(behandlinger)
+                    success
+                },
+                { error ->
+                    log.error("Error response = '${begrensLengde(error.response.body().asString("text/plain"), 1000)}' fra '${request.url}'", error.exception)
+                    throw RuntimeException("Kunne ikke gjøre refresh-kall til k9sak", error.exception)
+                }
+            )
         }
     }
 

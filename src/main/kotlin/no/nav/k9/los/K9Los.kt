@@ -1,19 +1,21 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package no.nav.k9.los
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.SerializationFeature
-import io.github.smiley4.ktoropenapi.OpenApi
-import io.github.smiley4.ktoropenapi.openApi
-import io.github.smiley4.ktoropenapi.route
-import io.github.smiley4.ktorswaggerui.swaggerUI
+import io.github.smiley4.ktorswaggerui.SwaggerUI
+import io.github.smiley4.ktorswaggerui.dsl.routing.route
+import io.github.smiley4.ktorswaggerui.routing.openApiSpec
+import io.github.smiley4.ktorswaggerui.routing.swaggerUI
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.http.content.*
 import io.ktor.server.metrics.micrometer.*
 import io.ktor.server.plugins.callid.*
-import io.ktor.server.plugins.calllogging.*
+import io.ktor.server.plugins.callloging.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.routing.*
@@ -21,6 +23,7 @@ import io.opentelemetry.api.trace.Span
 import io.opentelemetry.extension.kotlin.asContextElement
 import io.prometheus.client.hotspot.DefaultExports
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import no.nav.helse.dusseldorf.ktor.auth.AuthStatusPages
 import no.nav.helse.dusseldorf.ktor.auth.allIssuers
@@ -105,7 +108,7 @@ fun Application.k9Los() {
     val issuers = configuration.issuers()
 
     install(Koin) {
-        modules(selectModulesBasedOnProfile(this@k9Los, config = configuration))
+        modules(selectModuleBasedOnProfile(this@k9Los, config = configuration))
     }
 
     val koin = getKoin()
@@ -266,12 +269,14 @@ fun Application.k9Los() {
         config = koin.get()
     ).kjør(kjørUmiddelbart = false)
 
+    install(CallIdRequired)
+
     install(CallLogging) {
         correlationIdAndRequestIdInMdc()
         logRequests()
     }
 
-    routing {
+    install(Routing) {
 
         MetricsRoute()
         DefaultProbeRoutes()
@@ -313,13 +318,13 @@ fun Application.k9Los() {
         fromXCorrelationIdHeader()
     }
 
-    install(OpenApi)
+    install(SwaggerUI)
 }
 
 private fun Route.api() {
     route("k9/los/api") {
         route("openapi.json") {
-            openApi()
+            openApiSpec()
         }
         swaggerUI("openapi.json")
         route("/forvaltning") {

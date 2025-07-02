@@ -1,10 +1,12 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk
 
-import io.github.smiley4.ktoropenapi.get
+import io.github.smiley4.ktorswaggerui.dsl.routing.get
 import io.ktor.http.*
+import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.Configuration
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
 import org.koin.ktor.ext.inject
 
