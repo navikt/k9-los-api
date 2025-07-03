@@ -81,7 +81,8 @@ class PdlService(
                     header(HttpHeaders.ContentType, "application/json")
                     header(NavHeaders.Tema, "OMS")
                     header(NavHeaders.CallId, callId)
-                    header(NavHeaders.Behandlingsnummer, Behandlingsnummer.entries.map { it.behandlingsnummer })
+                    header(NavHeaders.Behandlingsnummer,
+                        Behandlingsnummer.entries.joinToString(",") { it.behandlingsnummer })
                 }
             }
 
@@ -155,7 +156,8 @@ class PdlService(
                     header(HttpHeaders.ContentType, "application/json")
                     header(NavHeaders.Tema, "OMS")
                     header(NavHeaders.CallId, callId)
-                    header(NavHeaders.Behandlingsnummer, Behandlingsnummer.entries.map { it.behandlingsnummer })
+                    header(NavHeaders.Behandlingsnummer,
+                        Behandlingsnummer.entries.joinToString(",") { it.behandlingsnummer })
                 }
             }
 
