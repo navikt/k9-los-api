@@ -42,6 +42,8 @@ class SisteOppgaverTjeneste(
                     }
                 }
 
+            if (oppgaver.isEmpty()) return emptyList()
+
             val grupperForSaksbehandler = azureGraphService.hentGrupperForInnloggetSaksbehandler()
 
             val innhentinger = try {
