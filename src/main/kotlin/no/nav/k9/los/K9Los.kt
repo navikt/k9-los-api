@@ -19,6 +19,7 @@ import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.routing.*
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.extension.kotlin.asContextElement
+import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.hotspot.DefaultExports
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -200,7 +201,7 @@ fun Application.k9Los() {
             channel = koin.get<Channel<k9TilbakeEksternId>>(named("historikkvaskChannelK9Tilbake")),
         )
 
-    environment.monitor.subscribe(ApplicationStopping) {
+    monitor.subscribe(ApplicationStopping) {
         log.info("Stopper AsynkronProsesseringV1Service.")
         asynkronProsesseringV1Service.stop()
         sakOgBehadlingProducer.stop()
@@ -271,9 +272,13 @@ fun Application.k9Los() {
         logRequests()
     }
 
+    val collectorRegistry = CollectorRegistry(false)
+    install(MicrometerMetrics) {
+        init(appId, collectorRegistry)
+    }
     routing {
 
-        MetricsRoute()
+        MetricsRoute(collectorRegistry)
         DefaultProbeRoutes()
         HealthRoute(healthService = koin.get())
 
@@ -301,9 +306,6 @@ fun Application.k9Los() {
         }
     }
 
-    install(MicrometerMetrics) {
-        init(appId)
-    }
 
     intercept(ApplicationCallPipeline.Monitoring) {
         call.request.log()
@@ -539,11 +541,11 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
         coroutineContext = Dispatchers.IO.limitedParallelism(4) + Span.current().asContextElement(),
     )
 
-    environment.monitor.subscribe(ApplicationStarted) {
+    monitor.subscribe(ApplicationStarted) {
         jobbplanlegger.start()
     }
 
-    environment.monitor.subscribe(ApplicationStopping) {
+    monitor.subscribe(ApplicationStopping) {
         jobbplanlegger.stopp()
     }
 }
