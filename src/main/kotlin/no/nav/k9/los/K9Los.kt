@@ -7,6 +7,7 @@ import io.github.smiley4.ktoropenapi.OpenApi
 import io.github.smiley4.ktoropenapi.openApi
 import io.github.smiley4.ktoropenapi.route
 import io.github.smiley4.ktorswaggerui.swaggerUI
+import io.ktor.http.*
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -16,10 +17,14 @@ import io.ktor.server.plugins.callid.*
 import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.micrometer.prometheus.PrometheusConfig
+import io.micrometer.prometheus.PrometheusMeterRegistry
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.extension.kotlin.asContextElement
 import io.prometheus.client.CollectorRegistry
+import io.prometheus.client.exporter.common.TextFormat
 import io.prometheus.client.hotspot.DefaultExports
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -31,7 +36,6 @@ import no.nav.helse.dusseldorf.ktor.health.HealthReporter
 import no.nav.helse.dusseldorf.ktor.health.HealthRoute
 import no.nav.helse.dusseldorf.ktor.jackson.JacksonStatusPages
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
-import no.nav.helse.dusseldorf.ktor.metrics.MetricsRoute
 import no.nav.helse.dusseldorf.ktor.metrics.init
 import no.nav.k9.los.eventhandler.køOppdatertProsessor
 import no.nav.k9.los.eventhandler.oppdaterStatistikk
@@ -272,13 +276,22 @@ fun Application.k9Los() {
         logRequests()
     }
 
-    val collectorRegistry = CollectorRegistry(false)
+    val prometheusMeterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
+
     install(MicrometerMetrics) {
-        init(appId, collectorRegistry)
+        init(appId)
+        registry = prometheusMeterRegistry
     }
     routing {
-
-        MetricsRoute(collectorRegistry)
+        get("/metrics") {
+            val metrics = CollectorRegistry.defaultRegistry.metricFamilySamples()
+            call.respondTextWriter(ContentType.parse(TextFormat.CONTENT_TYPE_004)) {
+                this.write("# Default registry starter her\n")
+                TextFormat.write004(this, metrics)
+                this.write("# Prometheus registry starter her\n")
+                this.write(prometheusMeterRegistry.scrape())
+            }
+        }
         DefaultProbeRoutes()
         HealthRoute(healthService = koin.get())
 
