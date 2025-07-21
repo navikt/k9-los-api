@@ -4,16 +4,15 @@ val mainClass = "no.nav.k9.los.K9LosKt"
 val hikariVersion = "6.2.1"
 val flywayVersion = "11.1.1"
 val vaultJdbcVersion = "1.3.10"
-val koinVersion = "4.0.2"
+val koinVersion = "4.1.0"
 val kotliqueryVersion = "1.9.1"
-val k9SakVersion = "5.4.16"
+val k9SakVersion = "5.4.20"
 val k9KlageVersion = "0.4.7"
-val fuelVersion = "2.3.1"
 val jacksonVersion = "2.17.2"
 val commonsTextVersion = "1.13.0"
 
-val dusseldorfKtorVersion = "5.0.19"
-val ktorVersion = "2.3.13"
+val dusseldorfKtorVersion = "7.0.1"
+val ktorVersion = "3.2.1"
 val kafkaVersion = "3.9.0"
 
 val navTilgangskontroll = "3.2024.01.24_10.14-f70bae69bd65"
@@ -26,7 +25,7 @@ val assertkVersion = "0.28.1"
 val mockkVersion = "1.13.16"
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "2.0.21" //kan ikke gå for 2.1+ pga ktor som har avhengighet til kotlin-stdlib-common, og den er tilsynelatende ikke tilgjengelig i 2.1+
+    id("org.jetbrains.kotlin.jvm") version "2.2.0"
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
@@ -49,13 +48,12 @@ dependencies {
     implementation("io.ktor:ktor-server-cors:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
     implementation("io.ktor:ktor-server-html-builder-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-websockets-jvm:$ktorVersion")
     implementation("io.ktor:ktor-client-auth-jvm:$ktorVersion")
 
     // Client
-    implementation("no.nav.helse:dusseldorf-ktor-client:$dusseldorfKtorVersion")
+    implementation("io.ktor:ktor-client-core:$ktorVersion")
+    implementation("io.ktor:ktor-client-java:$ktorVersion")
     implementation("no.nav.helse:dusseldorf-oauth2-client:$dusseldorfKtorVersion")
-    implementation("org.apache.httpcomponents:httpclient:4.5.14")
 
     // Kafka
     implementation("org.apache.kafka:kafka-streams:$kafkaVersion") {
@@ -68,9 +66,6 @@ dependencies {
     }
 
     // Tilgangskontroll
-    implementation("no.nav.common:auth:$navTilgangskontroll")
-    implementation("no.nav.common:rest:$navTilgangskontroll")
-    implementation("com.google.code.gson:gson:2.11.0")
     implementation("no.nav.sif.abac:kontrakt:1.4.0")
 
     // Kontrakter
@@ -89,12 +84,8 @@ dependencies {
     implementation(enforcedPlatform("com.fasterxml.jackson:jackson-bom:$jacksonVersion"))
     implementation("org.apache.commons:commons-text:$commonsTextVersion")
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
-    implementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
-    implementation("com.github.kittinunf.fuel:fuel-coroutines:$fuelVersion") {
-        exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
-    }
-
-    implementation("io.github.smiley4:ktor-swagger-ui:3.6.1")
+    implementation("io.github.smiley4:ktor-openapi:5.0.2")
+    implementation("io.github.smiley4:ktor-swagger-ui:5.0.2")
 
 
     // DI
@@ -103,6 +94,8 @@ dependencies {
 
     // Test
     testImplementation("org.junit.jupiter:junit-jupiter-api:$jupiterVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:$assertkVersion")
 
@@ -111,12 +104,8 @@ dependencies {
     testImplementation("io.ktor:ktor-server-test-host-jvm:$ktorVersion") {
         exclude(group = "org.eclipse.jetty")
     }
-    testImplementation("org.skyscreamer:jsonassert:$jsonassertVersion")
-
     testImplementation("org.testcontainers:postgresql:$testContainers")
     testImplementation("io.insert-koin:koin-test-junit5:$koinVersion")
-
-    testImplementation("org.apache.commons:commons-compress:1.27.1")
 }
 
 repositories {

@@ -2,6 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.infrastruktur.abac
 
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
+import java.util.*
 
 class PepClientLocal : IPepClient {
     override suspend fun erOppgaveStyrer(): Boolean {
@@ -55,7 +56,8 @@ class PepClientLocal : IPepClient {
     override suspend fun harTilgangTilOppgaveV3(
         oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave,
         action: Action,
-        auditlogging: Auditlogging
+        auditlogging: Auditlogging,
+        grupperForSaksbehandler: Set<UUID>?
     ): Boolean {
         return true
     }
