@@ -11,6 +11,7 @@ import io.ktor.server.routing.*
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.idToken
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import org.koin.ktor.ext.inject
 
 fun Route.LagretSøkApi() {
@@ -18,6 +19,25 @@ fun Route.LagretSøkApi() {
     val requestContextService by inject<RequestContextService>()
     val lagretSøkTjeneste by inject<LagretSøkTjeneste>()
     val lagretSøkRepository by inject<LagretSøkRepository>()
+    val saksbehandlerRepository by inject<SaksbehandlerRepository>()
+
+    get({
+        response {
+            HttpStatusCode.OK to { body<List<LagretSøk>>() }
+        }
+    }) {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.harBasisTilgang()) {
+                val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
+                    saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
+                }
+                val lagredeSøk = lagretSøkRepository.hentAlle(innloggetSaksbehandler!!)
+                call.respond(lagredeSøk)
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
 
     get("{id}", {
         request {

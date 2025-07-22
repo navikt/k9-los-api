@@ -2,6 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.lagretsok
 
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
+import java.time.LocalDateTime
 
 class LagretSøk private constructor(
     val id: Long?,
@@ -9,6 +10,7 @@ class LagretSøk private constructor(
     versjon: Long,
     tittel: String,
     beskrivelse: String,
+    sistEndret: LocalDateTime,
     query: OppgaveQuery
 ) {
     var versjon: Long = versjon
@@ -23,6 +25,9 @@ class LagretSøk private constructor(
     var query: OppgaveQuery = query
         private set
 
+    var sistEndret: LocalDateTime = sistEndret
+        private set
+
     fun endre(endreLagretSøk: EndreLagretSøk, saksbehandler: Saksbehandler) {
         if (saksbehandler.id != lagetAv) {
             throw IllegalStateException("Kan ikke endre lagret søk som ikke er opprettet av seg selv")
@@ -34,6 +39,7 @@ class LagretSøk private constructor(
         tittel = endreLagretSøk.tittel
         beskrivelse = endreLagretSøk.beskrivelse
         query = endreLagretSøk.query
+        sistEndret = LocalDateTime.now()
     }
 
     fun sjekkOmKanSlette(saksbehandler: Saksbehandler) {
@@ -76,7 +82,8 @@ class LagretSøk private constructor(
                 versjon = 1,
                 tittel = opprettLagretSøk.tittel,
                 beskrivelse = opprettLagretSøk.beskrivelse,
-                query = OppgaveQuery()
+                sistEndret = LocalDateTime.now(),
+                query = OppgaveQuery(),
             )
         }
 
@@ -87,9 +94,10 @@ class LagretSøk private constructor(
             versjon: Long,
             tittel: String,
             beskrivelse: String,
+            sistEndret: LocalDateTime,
             query: OppgaveQuery = OppgaveQuery()
         ): LagretSøk {
-            return LagretSøk(id, lagetAv, versjon, tittel, beskrivelse, query)
+            return LagretSøk(id, lagetAv, versjon, tittel, beskrivelse, sistEndret, query)
         }
     }
 }
