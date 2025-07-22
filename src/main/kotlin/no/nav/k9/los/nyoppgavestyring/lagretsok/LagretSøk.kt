@@ -81,9 +81,9 @@ class LagretSøk private constructor(
                 lagetAv = saksbehandler.id ?: throw IllegalStateException("Saksbehandler må ha id"),
                 versjon = 1,
                 tittel = opprettLagretSøk.tittel,
-                beskrivelse = opprettLagretSøk.beskrivelse,
+                beskrivelse = "",
                 sistEndret = LocalDateTime.now(),
-                query = OppgaveQuery(),
+                query = opprettLagretSøk.query,
             )
         }
 
