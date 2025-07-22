@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.lagretsok
 
+import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
@@ -22,14 +23,7 @@ class LagretSøkRepository(val dataSource: DataSource) {
                 WHERE id = :id
             """.trimIndent(), mapOf("id" to id)
                 ).map {
-                    LagretSøk.fraEksisterende(
-                        id = it.long("id"),
-                        lagetAv = it.long("laget_av"),
-                        versjon = it.long("versjon"),
-                        tittel = it.string("tittel"),
-                        beskrivelse = it.string("beskrivelse"),
-                        query = LosObjectMapper.instance.readValue(it.string("query"), OppgaveQuery::class.java)
-                    )
+                    it.toLagretSøk()
                 }.asSingle
             )
         }
@@ -41,13 +35,14 @@ class LagretSøkRepository(val dataSource: DataSource) {
             tx.updateAndReturnGeneratedKey(
                 queryOf(
                     """
-                    INSERT INTO lagret_sok (tittel, versjon, beskrivelse, query, laget_av)
-                    VALUES (:tittel, :versjon, :beskrivelse, :query::jsonb, :lagetAv)
+                    INSERT INTO lagret_sok (tittel, versjon, beskrivelse, sist_endret, query, laget_av)
+                    VALUES (:tittel, :versjon, :beskrivelse, :sist_endret, :query::jsonb, :lagetAv)
                     """.trimIndent(),
                     mapOf(
                         "tittel" to lagretSøk.tittel,
                         "versjon" to lagretSøk.versjon,
                         "beskrivelse" to lagretSøk.beskrivelse,
+                        "sist_endret" to lagretSøk.sistEndret,
                         "query" to LosObjectMapper.instance.writeValueAsString(lagretSøk.query),
                         "lagetAv" to lagretSøk.lagetAv,
                     )
@@ -62,7 +57,7 @@ class LagretSøkRepository(val dataSource: DataSource) {
                 queryOf(
                     """
                 UPDATE lagret_sok
-                set tittel = :tittel, versjon = :versjon, beskrivelse = :beskrivelse, query = :query::jsonb
+                set tittel = :tittel, versjon = :versjon, beskrivelse = :beskrivelse, sist_endret = :sist_endret, query = :query::jsonb
                 where id = :id
                 """.trimIndent(),
                     mapOf(
@@ -70,6 +65,7 @@ class LagretSøkRepository(val dataSource: DataSource) {
                         "tittel" to lagretSøk.tittel,
                         "versjon" to lagretSøk.versjon,
                         "beskrivelse" to lagretSøk.beskrivelse,
+                        "sist_endret" to lagretSøk.sistEndret,
                         "query" to LosObjectMapper.instance.writeValueAsString(lagretSøk.query),
                     )
                 ).asUpdate
@@ -100,16 +96,21 @@ class LagretSøkRepository(val dataSource: DataSource) {
                 WHERE laget_av = :lagetAv
             """.trimIndent(), mapOf("lagetAv" to saksbehandler.id)
                 ).map {
-                    LagretSøk.fraEksisterende(
-                        id = it.long("id"),
-                        lagetAv = it.long("laget_av"),
-                        versjon = it.long("versjon"),
-                        tittel = it.string("tittel"),
-                        beskrivelse = it.string("beskrivelse"),
-                        query = LosObjectMapper.instance.readValue(it.string("query"), OppgaveQuery::class.java)
-                    )
+                    it.toLagretSøk()
                 }.asList
             )
         }
     }
+}
+
+private fun Row.toLagretSøk(): LagretSøk {
+    return LagretSøk.fraEksisterende(
+        id = long("id"),
+        lagetAv = long("laget_av"),
+        versjon = long("versjon"),
+        tittel = string("tittel"),
+        beskrivelse = string("beskrivelse"),
+        sistEndret = localDateTime("sist_endret"),
+        query = LosObjectMapper.instance.readValue(string("query"), OppgaveQuery::class.java)
+    )
 }
