@@ -43,8 +43,7 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
     @Test
     fun `skal opprette og hente lagret søk`() {
         val opprettLagretSøk = OpprettLagretSøk(
-            tittel = "Test søk",
-            query = OppgaveQuery()
+            tittel = "Test søk"
         )
 
         val lagretSøk = LagretSøk.opprettSøk(opprettLagretSøk, saksbehandler)
@@ -68,8 +67,7 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
     @Test
     fun `skal endre eksisterende lagret søk`() {
         val opprettLagretSøk = OpprettLagretSøk(
-            tittel = "Opprinnelig tittel",
-            query = OppgaveQuery()
+            tittel = "Opprinnelig tittel"
         )
 
         val lagretSøk = LagretSøk.opprettSøk(opprettLagretSøk, saksbehandler)
@@ -96,8 +94,7 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
     @Test
     fun `skal slette lagret søk`() {
         val opprettLagretSøk = OpprettLagretSøk(
-            tittel = "Søk som skal slettes",
-            query = OppgaveQuery()
+            tittel = "Søk som skal slettes"
         )
 
         val lagretSøk = LagretSøk.opprettSøk(opprettLagretSøk, saksbehandler)
@@ -113,11 +110,11 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
     @Test
     fun `skal hente alle lagrede søk for en saksbehandler`() {
         val søk1 = LagretSøk.opprettSøk(
-            OpprettLagretSøk("Søk 1", OppgaveQuery()),
+            OpprettLagretSøk("Søk 1"),
             saksbehandler
         )
         val søk2 = LagretSøk.opprettSøk(
-            OpprettLagretSøk("Søk 2", OppgaveQuery()),
+            OpprettLagretSøk("Søk 2"),
             saksbehandler
         )
 
@@ -147,11 +144,11 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
 
             // Opprett søk for begge saksbehandlere
             val søkForFørsteSaksbehandler = LagretSøk.opprettSøk(
-                OpprettLagretSøk("Søk for første", OppgaveQuery()),
+                OpprettLagretSøk("Søk for første"),
                 saksbehandler
             )
             val søkForAnnenSaksbehandler = LagretSøk.opprettSøk(
-                OpprettLagretSøk("Søk for annen", OppgaveQuery()),
+                OpprettLagretSøk("Søk for annen"),
                 annenSaksbehandler
             )
 

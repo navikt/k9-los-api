@@ -83,7 +83,7 @@ class LagretSøk private constructor(
                 tittel = opprettLagretSøk.tittel,
                 beskrivelse = "",
                 sistEndret = LocalDateTime.now(),
-                query = opprettLagretSøk.query,
+                query = OppgaveQuery(),
             )
         }
 
