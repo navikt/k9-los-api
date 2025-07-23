@@ -351,7 +351,7 @@ class SaksbehandlerRepository(
         tx.run(
             queryOf(
                 """
-                    delete from reservasjon_v3_endring where endret_av = :saksbehandlerId
+                    delete from reservasjon_v3_endring where endretav = :saksbehandlerId
                 """.trimIndent(),
                 mapOf("saksbehandlerId" to saksbehandlerId)
             ).asUpdate
