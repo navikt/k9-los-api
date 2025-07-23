@@ -84,7 +84,7 @@ fun Route.LagretSøkApi() {
         }
     }
 
-    put("endre", {
+    put("{id}/endre", {
         request {
             body<EndreLagretSøk>()
         }
