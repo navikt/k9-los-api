@@ -8,6 +8,7 @@ import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.routing.get
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.idToken
@@ -115,8 +116,20 @@ fun Route.LagretSøkApi() {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
                 val lagretSøkId = call.parameters["id"]!!.toLong()
-                lagretSøkTjeneste.slett(coroutineContext.idToken().getNavIdent(), lagretSøkId)
+                val navIdent = coroutineContext.idToken().getNavIdent()
+                lagretSøkTjeneste.slett(navIdent, lagretSøkId)
                 call.respond(HttpStatusCode.OK)
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
+    get("/{id}/antall") {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.harBasisTilgang()) {
+                val lagretSøkId = call.parameters["id"]!!
+                call.respond(lagretSøkTjeneste.hentAntall(lagretSøkId.toLong()))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
