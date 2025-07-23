@@ -346,6 +346,8 @@ class SaksbehandlerRepository(
 
         if (saksbehandlerId == null) { throw IllegalStateException("Fant ikke saksbehandler med epost $epost") }
 
+        //Sletting av reservasjoner ligger her og ikke i reservasjonV3Repository, siden dette ikke er en del av "vanlig"
+        //saksgang. Tanken var egentlig at reservasjoner og reservasjon_v3_endring ikke skulle slettes.
         tx.run(
             queryOf(
                 """
