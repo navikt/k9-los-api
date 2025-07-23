@@ -264,7 +264,7 @@ class SaksbehandlerRepository(
 
     fun finnSaksbehandlerIdForIdent(ident: String): Long? {
         return using(sessionOf(dataSource)) { session ->
-            session.transaction { tx->
+            session.transaction { tx ->
                 finnSaksbehandlerIdForIdent(ident, tx)
             }
         }
@@ -285,7 +285,7 @@ class SaksbehandlerRepository(
         val skjermet = pepClient.harTilgangTilKode6()
 
         val saksbehandler = using(sessionOf(dataSource)) {
-            it.transaction {tx->
+            it.transaction { tx ->
                 tx.run(
                     queryOf(
                         "select * from saksbehandler where lower(saksbehandlerid) = lower(:ident) and skjermet = :skjermet",
@@ -333,12 +333,42 @@ class SaksbehandlerRepository(
     }
 
     fun slettSaksbehandler(tx: TransactionalSession, epost: String, skjermet: Boolean) {
+        val saksbehandlerId = tx.run(
+            queryOf(
+                """
+                    select id from saksbehandler where lower(epost) = lower(:epost) and skjermet = :skjermet
+                """.trimIndent(),
+                mapOf("epost" to epost.lowercase(Locale.getDefault()), "skjermet" to skjermet)
+            ).map { row ->
+                row.long("id")
+            }.asSingle
+        )
+
+        if (saksbehandlerId == null) { throw IllegalStateException("Fant ikke saksbehandler med epost $epost") }
+
         tx.run(
             queryOf(
                 """
-                            delete from saksbehandler 
-                            where lower(epost) = lower(:epost) and skjermet = :skjermet""",
-                mapOf("epost" to epost.lowercase(Locale.getDefault()), "skjermet" to skjermet)
+                    delete from reservasjon_v3_endring where endret_av = :saksbehandlerId
+                """.trimIndent(),
+                mapOf("saksbehandlerId" to saksbehandlerId)
+            ).asUpdate
+        )
+
+        tx.run(
+            queryOf(
+                """
+                    delete from reservasjon_v3 where reservertav = :saksbehandlerId
+                """.trimIndent(),
+                mapOf("saksbehandlerId" to saksbehandlerId)
+            ).asUpdate
+        )
+
+        tx.run(
+            queryOf(
+                """
+                            delete from saksbehandler where id = :saksbehandlerId""",
+                mapOf("saksbehandlerId" to saksbehandlerId)
             ).asUpdate
         )
     }

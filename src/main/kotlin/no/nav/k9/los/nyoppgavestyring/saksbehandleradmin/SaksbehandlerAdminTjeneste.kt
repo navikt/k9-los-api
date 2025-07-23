@@ -53,6 +53,8 @@ class SaksbehandlerAdminTjeneste(
                 oppgaveKøV3Repository.endre(tx, kø.copy(saksbehandlere = kø.saksbehandlere - epost), skjermet)
             }
 
+            reservasjon
+
             // Sletter fra saksbehandler-tabellen
             saksbehandlerRepository.slettSaksbehandler(
                 tx,
