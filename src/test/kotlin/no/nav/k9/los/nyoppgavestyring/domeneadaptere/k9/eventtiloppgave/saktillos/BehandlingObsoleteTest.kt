@@ -130,7 +130,8 @@ class BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
             opprettetBehandling = LocalDateTime.now(),
             eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
             aksjonspunktKoderMedStatusListe = emptyMap<String, String>().toMutableMap(),
-            aksjonspunktTilstander = emptyList()
+            aksjonspunktTilstander = emptyList(),
+            merknader = emptyList()
         )
     }
 

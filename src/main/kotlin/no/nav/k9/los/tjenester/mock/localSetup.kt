@@ -14,6 +14,7 @@ import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
@@ -59,7 +60,7 @@ val saksbehandlere = listOf(
 
 object localSetup : KoinComponent {
     private val saksbehandlerRepository: SaksbehandlerRepository by inject()
-    private val punsjEventHandler: no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler by inject()
+    private val punsjEventHandler: K9PunsjEventHandler by inject()
     private val tilbakeEventHandler: K9TilbakeEventHandler by inject()
     private val sakEventHandler: K9SakEventHandler by inject()
     private val profile: KoinProfile by inject()
@@ -117,7 +118,8 @@ object localSetup : KoinComponent {
                         eventTid = LocalDateTime.now().minusSeconds((antall - i).toLong()),
                         aksjonspunktKoderMedStatusListe = mutableMapOf(),
                         ytelseTypeKode = ytelseTypeKode,
-                        eldsteDatoMedEndringFraSøker = LocalDateTime.now()
+                        eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
+                        merknader = emptyList()
                     )
                 )
 
@@ -149,7 +151,8 @@ object localSetup : KoinComponent {
                             eventTid = LocalDateTime.now().minusSeconds((antall - i).toLong()),
                             aksjonspunktKoderMedStatusListe = mutableMapOf(),
                             ytelseTypeKode = ytelseTypeKode,
-                            eldsteDatoMedEndringFraSøker = LocalDateTime.now()
+                            eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
+                            merknader = emptyList()
                         )
                     )
                 }
