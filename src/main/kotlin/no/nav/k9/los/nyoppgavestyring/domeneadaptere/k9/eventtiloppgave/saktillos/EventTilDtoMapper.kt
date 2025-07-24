@@ -237,7 +237,10 @@ class EventTilDtoMapper {
                     verdi = "true"
                 )
             } else {
-                null
+                OppgaveFeltverdiDto(
+                    nøkkel = "utenlandstilsnitt",
+                    verdi = "false"
+                )
             },
             if (event.merknader.contains(BehandlingMerknadType.HASTESAK)) {
                 OppgaveFeltverdiDto(
