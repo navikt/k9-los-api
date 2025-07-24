@@ -46,6 +46,7 @@ import no.nav.k9.los.nyoppgavestyring.query.mapping.OppgavefilterRens
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
+import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
@@ -62,7 +63,6 @@ import java.util.*
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
-@Disabled
 class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
     val pepClient = mockk<IPepClient>()
@@ -93,6 +93,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         runBlocking {
             coEvery { pepClient.erSakKode6(eq(saksnummer)) } returns true
             coEvery { pepClient.erSakKode7EllerEgenAnsatt(eq(saksnummer)) } returns false
+            coEvery { pepClient.diskresjonskoderForSak(eq(saksnummer)) } returns setOf(Diskresjonskode.KODE6)
         }
     }
 
@@ -100,6 +101,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         runBlocking {
             coEvery { pepClient.erSakKode6(eq(saksnummer)) } returns false
             coEvery { pepClient.erSakKode7EllerEgenAnsatt(eq(saksnummer)) } returns false
+            coEvery { pepClient.diskresjonskoderForSak(eq(saksnummer)) } returns setOf()
         }
     }
 
@@ -107,6 +109,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         runBlocking {
             coEvery { pepClient.erAktørKode6(eq(aktørId)) } returns true
             coEvery { pepClient.erAktørKode7EllerEgenAnsatt(eq(aktørId)) } returns false
+            coEvery { pepClient.diskresjonskoderForPerson(eq(aktørId)) } returns setOf(Diskresjonskode.KODE6)
         }
     }
 
@@ -114,6 +117,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         runBlocking {
             coEvery { pepClient.erAktørKode6(eq(aktørId)) } returns false
             coEvery { pepClient.erAktørKode7EllerEgenAnsatt(eq(aktørId)) } returns true
+            coEvery { pepClient.diskresjonskoderForPerson(eq(aktørId)) } returns setOf(Diskresjonskode.KODE7)
         }
     }
 
@@ -121,6 +125,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
         runBlocking {
             coEvery { pepClient.erAktørKode6(eq(aktørId)) } returns false
             coEvery { pepClient.erAktørKode7EllerEgenAnsatt(eq(aktørId)) } returns false
+            coEvery { pepClient.diskresjonskoderForPerson(eq(aktørId)) } returns setOf()
         }
     }
 

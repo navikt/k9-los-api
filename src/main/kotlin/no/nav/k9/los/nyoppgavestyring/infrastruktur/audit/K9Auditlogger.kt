@@ -2,13 +2,16 @@ package no.nav.k9.los.nyoppgavestyring.infrastruktur.audit
 
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Action
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Auditlogging
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.TILGANG_SAK
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 
 class K9Auditlogger(
     private val auditlogger: Auditlogger
 ) {
+    companion object {
+        const val TILGANG_SAK = "no.nav.abac.attributter.k9.fagsak"
+    }
+
     fun betingetLogging(tilgang: Boolean, auditlogging: Auditlogging, callback: K9Auditlogger.() -> Unit) {
         if (auditlogging == Auditlogging.ALLTID_LOGG || (tilgang && (auditlogging == Auditlogging.LOGG_VED_PERMIT))) {
             callback(this)

@@ -164,11 +164,9 @@ class K9SakTilLosAdapterTjeneste(
                     forrigeOppgave = oppgaveV3Tjeneste.hentOppgaveversjon("K9", oppgaveDto.id, oppgaveDto.versjon, tx)
                 }
             }
-
             runBlocking {
                 køpåvirkendeHendelseChannel.send(OppgaveHendelseMottatt(Fagsystem.K9SAK, EksternOppgaveId("K9", uuid.toString())))
             }
-
             k9SakEventRepository.fjernDirty(uuid, tx)
         }
 

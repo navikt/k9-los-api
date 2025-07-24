@@ -10,6 +10,7 @@ data class ReservasjonDto(
     val reservertAvNavn: String?,
     val saksnummer: String?,
     val journalpostId: String?,
+    val ytelse: String,
     val behandlingType: BehandlingType,
     val reservertTilTidspunkt: LocalDateTime,
     val kommentar: String,

@@ -1,8 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.nyeogferdigstilte
 
-import io.github.smiley4.ktorswaggerui.dsl.routing.get
 import io.ktor.http.*
-import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
