@@ -83,10 +83,6 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
         val områdeSetup = get<OmrådeSetup>()
         områdeSetup.setup()
-        val k9SakTilLosAdapterTjeneste = get<K9SakTilLosAdapterTjeneste>()
-        k9SakTilLosAdapterTjeneste.setup()
-        val k9PunsjTilLosAdapterTjeneste = get<K9PunsjTilLosAdapterTjeneste>()
-        k9PunsjTilLosAdapterTjeneste.setup()
     }
 
     fun gjørSakKode6(saksnummer: String) {

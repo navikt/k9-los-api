@@ -30,7 +30,6 @@ class K9TilbakeEventHandlerTest : AbstractK9LosIntegrationTest() {
     @BeforeEach
     fun setup() {
         get<OmrådeSetup>().setup()
-        get<K9TilbakeTilLosAdapterTjeneste>().setup()
         k9TilbakeEventHandler = get<K9TilbakeEventHandler>()
         aktivOppgaveRepository = get<AktivOppgaveRepository>()
         transactionalManager = get<TransactionalManager>()
