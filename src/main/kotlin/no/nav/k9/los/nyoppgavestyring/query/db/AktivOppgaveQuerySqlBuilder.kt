@@ -12,10 +12,10 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveId
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.mapping.*
-import no.nav.k9.los.spi.felter.OrderByInput
-import no.nav.k9.los.spi.felter.SqlMedParams
-import no.nav.k9.los.spi.felter.TransientFeltutleder
-import no.nav.k9.los.spi.felter.WhereInput
+import no.nav.k9.los.nyoppgavestyring.spi.felter.OrderByInput
+import no.nav.k9.los.nyoppgavestyring.spi.felter.SqlMedParams
+import no.nav.k9.los.nyoppgavestyring.spi.felter.TransientFeltutleder
+import no.nav.k9.los.nyoppgavestyring.spi.felter.WhereInput
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 

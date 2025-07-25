@@ -33,9 +33,7 @@ class BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
     fun setUp() {
         k9SakTilLosAdapterTjeneste = K9SakTilLosAdapterTjeneste(
             k9SakEventRepository = get(),
-            oppgavetypeTjeneste = get(),
             oppgaveV3Tjeneste = get(),
-            config = get(),
             transactionalManager = get(),
             k9SakBerikerKlient = k9SakBerikerKlientLocal,
             pepCacheService = get(),
@@ -131,7 +129,8 @@ class BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
             opprettetBehandling = LocalDateTime.now(),
             eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
             aksjonspunktKoderMedStatusListe = emptyMap<String, String>().toMutableMap(),
-            aksjonspunktTilstander = emptyList()
+            aksjonspunktTilstander = emptyList(),
+            merknader = emptyList()
         )
     }
 

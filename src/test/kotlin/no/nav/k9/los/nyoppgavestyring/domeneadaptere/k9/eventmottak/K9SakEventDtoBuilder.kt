@@ -216,7 +216,8 @@ class K9SakEventDtoBuilder(
             eventTid = eventTid ?: overstyrRekkefølge ?.let { LocalDateTime.now().plusSeconds(overstyrRekkefølge) } ?: LocalDateTime.now().plusSeconds(teller++),
             aksjonspunktKoderMedStatusListe = aksjonspunkter.associate { it.kode to it.status.kode }.toMutableMap(),
             ytelseTypeKode = ytelseType.kode,
-            eldsteDatoMedEndringFraSøker = LocalDateTime.now()
+            eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
+            merknader = emptyList()
         )
     }
 }

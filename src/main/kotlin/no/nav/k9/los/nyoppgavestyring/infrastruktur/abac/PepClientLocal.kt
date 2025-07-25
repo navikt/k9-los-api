@@ -1,6 +1,5 @@
 package no.nav.k9.los.nyoppgavestyring.infrastruktur.abac
 
-import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import java.util.*
@@ -52,10 +51,6 @@ class PepClientLocal : IPepClient {
 
     override suspend fun erAktørKode7EllerEgenAnsatt(aktørid: String): Boolean {
         return false
-    }
-
-    override suspend fun harTilgangTilOppgave(oppgave: Oppgave): Boolean {
-        return true
     }
 
     override suspend fun harTilgangTilOppgaveV3(

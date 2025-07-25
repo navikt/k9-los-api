@@ -32,20 +32,12 @@ class OppgaveTestDataBuilder(
     val transactionManager = get<TransactionalManager>()
     val oppgavetypeRepo = get<OppgavetypeRepository>()
     val oppgaverepo = get<OppgaveV3Repository>()
-    val k9SakTilLosAdapterTjeneste = get<K9SakTilLosAdapterTjeneste>()
-    val k9PunsjTilLosAdapterTjeneste = get<K9PunsjTilLosAdapterTjeneste>()
-    val k9TilbakeTilLosAdapterTjeneste = get<K9TilbakeTilLosAdapterTjeneste>()
-    val k9KlageTilLosAdapterTjeneste = get<K9KlageTilLosAdapterTjeneste>()
 
     var eksternVersjonTeller = 1000000
 
     init {
         områdeSetup.setup()
         område = områdeRepository.hent("K9")!!
-        k9SakTilLosAdapterTjeneste.setup()
-        k9PunsjTilLosAdapterTjeneste.setup()
-        k9KlageTilLosAdapterTjeneste.setup()
-        k9TilbakeTilLosAdapterTjeneste.setup()
     }
 
     val oppgaveFeltverdier = mutableMapOf<FeltType, OppgaveFeltverdi>()
