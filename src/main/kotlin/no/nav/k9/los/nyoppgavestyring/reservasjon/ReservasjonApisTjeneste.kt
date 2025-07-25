@@ -5,6 +5,7 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.leggTilDagerHoppOverHelg
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
@@ -210,6 +211,7 @@ class ReservasjonApisTjeneste(
                         reservertAvNavn = saksbehandler.navn,
                         saksnummer = oppgave.hentVerdi("saksnummer"), //TODO: Oppgaveagnostisk logikk. Løses antagelig ved å skrive om frontend i dette tilfellet
                         journalpostId = oppgave.hentVerdi("journalpostId"),
+                        ytelse = oppgave.hentVerdi("ytelsestype")?.let { FagsakYtelseType.fraKode(it).navn } ?: FagsakYtelseType.UKJENT.navn,
                         behandlingType = BehandlingType.fraKode(oppgave.hentVerdi("behandlingTypekode")!!),
                         reservertTilTidspunkt = reservasjonMedOppgaver.reservasjonV3.gyldigTil,
                         kommentar = reservasjonMedOppgaver.reservasjonV3.kommentar ?: "",

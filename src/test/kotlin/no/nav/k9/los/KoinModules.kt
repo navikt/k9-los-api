@@ -195,7 +195,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         K9KlageEventHandler(
             K9KlageEventRepository(dataSource = get()),
             k9KlageTilLosAdapterTjeneste = get(),
-            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
@@ -203,7 +202,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         K9TilbakeEventHandler(
             K9TilbakeEventRepository(dataSource = get()),
             sakOgBehandlingProducer = sakOgBehadlingProducer,
-            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
             k9TilbakeTilLosAdapterTjeneste = get(),
         )
     }
@@ -212,7 +210,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         K9PunsjEventHandler(
             punsjEventK9Repository = get(),
             punsjTilLosAdapterTjeneste = get(),
-            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
@@ -220,7 +217,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         K9PunsjEventHandler(
             punsjEventK9Repository = K9PunsjEventRepository(dataSource = get()),
             punsjTilLosAdapterTjeneste = get(),
-            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
@@ -238,7 +234,9 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single(createdAtStart = true) {
         OmrådeSetup(
             områdeRepository = get(),
-            feltdefinisjonTjeneste = get()
+            feltdefinisjonTjeneste = get(),
+            oppgavetypeTjeneste = get(),
+            config = get(),
         )
     }
     single { OppgavetypeRepository(dataSource = get(), feltdefinisjonRepository = get(), områdeRepository = get(), gyldigeFeltutledere = get()) }
@@ -265,12 +263,10 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         OppgavestatistikkTjeneste(
-            oppgavetypeRepository = get(),
             statistikkPublisher = get(),
             transactionalManager = get(),
             statistikkRepository = get(),
             pepClient = get(),
-            config = get()
         )
     }
 
@@ -308,9 +304,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         K9SakTilLosAdapterTjeneste(
             k9SakEventRepository = get(),
-            oppgavetypeTjeneste = get(),
             oppgaveV3Tjeneste = get(),
-            config = get(),
             transactionalManager = get(),
             k9SakBerikerKlient = get(),
             pepCacheService = get(),
@@ -324,14 +318,13 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         K9TilbakeTilLosAdapterTjeneste(
             behandlingProsessEventTilbakeRepository = K9TilbakeEventRepository(get()),
-            oppgavetypeTjeneste = get(),
             oppgaveV3Tjeneste = get(),
-            config = get(),
             transactionalManager = get(),
             pepCacheService = get(),
             oppgaveRepository = get(),
             reservasjonV3Tjeneste = get(),
             historikkvaskChannel = get(named("historikkvaskChannelK9Tilbake")),
+            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
@@ -348,13 +341,10 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         K9KlageTilLosAdapterTjeneste(
             k9KlageEventRepository = get(),
-            områdeRepository = get(),
-            feltdefinisjonTjeneste = get(),
-            oppgavetypeTjeneste = get(),
             oppgaveV3Tjeneste = get(),
             transactionalManager = get(),
-            config = get(),
             k9klageBeriker = get(),
+            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
@@ -365,12 +355,11 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         K9PunsjTilLosAdapterTjeneste(
             k9PunsjEventRepository = get(),
-            oppgavetypeTjeneste = get(),
             oppgaveV3Tjeneste = get(),
             reservasjonV3Tjeneste = get(),
-            config = config,
             transactionalManager = get(),
             pepCacheService = get(),
+            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 

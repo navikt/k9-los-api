@@ -1,8 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.forvaltning
 
-import io.github.smiley4.ktorswaggerui.dsl.routing.get
+import io.github.smiley4.ktoropenapi.get
 import io.ktor.http.*
-import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotliquery.queryOf

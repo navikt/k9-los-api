@@ -1,5 +1,8 @@
 package no.nav.k9.los
 
+import io.ktor.client.*
+import io.ktor.client.engine.*
+import io.ktor.client.engine.java.*
 import io.ktor.server.application.*
 import kotlinx.coroutines.channels.Channel
 import no.nav.helse.dusseldorf.ktor.health.HealthService
@@ -91,18 +94,18 @@ import org.koin.dsl.module
 import java.util.*
 import javax.sql.DataSource
 
-fun selectModuleBasedOnProfile(application: Application, config: Configuration): List<Module> {
-    val envModule = when (config.koinProfile()) {
-        LOCAL -> localDevConfig()
-        PREPROD -> preprodConfig(config)
-        PROD -> prodConfig(config)
+fun selectModulesBasedOnProfile(application: Application, config: Configuration): List<Module> {
+    return when (config.koinProfile()) {
+        LOCAL -> listOf(common(application, config), localDevConfig())
+        PREPROD -> listOf(common(application, config), naisCommonConfig(config), preprodConfig(config))
+        PROD -> listOf(common(application, config), naisCommonConfig(config), prodConfig(config))
     }
-    return listOf(common(application, config), envModule)
 }
 
 fun common(app: Application, config: Configuration) = module {
     single { config.koinProfile() }
     single { config }
+    single { RequestContextService(profile = get()) }
     single<DataSource> { app.hikariConfig(config) }
 
     single(named("oppgaveKøOppdatert")) {
@@ -126,9 +129,10 @@ fun common(app: Application, config: Configuration) = module {
 
     single { OppgaveRepository(get()) }
 
-    single { AktivOppgaveRepository(
-        oppgavetypeRepository = get()
-    )
+    single {
+        AktivOppgaveRepository(
+            oppgavetypeRepository = get()
+        )
     }
 
     single { TransactionalManager(dataSource = get()) }
@@ -206,7 +210,6 @@ fun common(app: Application, config: Configuration) = module {
         no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventHandler(
             behandlingProsessEventKlageRepository = get(),
             k9KlageTilLosAdapterTjeneste = get(),
-            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
@@ -214,7 +217,6 @@ fun common(app: Application, config: Configuration) = module {
         no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler(
             behandlingProsessEventTilbakeRepository = get(),
             sakOgBehandlingProducer = get(),
-            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
             k9TilbakeTilLosAdapterTjeneste = get(),
         )
     }
@@ -223,7 +225,6 @@ fun common(app: Application, config: Configuration) = module {
         no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler(
             punsjEventK9Repository = get(),
             punsjTilLosAdapterTjeneste = get(),
-            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
@@ -316,12 +317,10 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         OppgavestatistikkTjeneste(
-            oppgavetypeRepository = get(),
             statistikkPublisher = get(),
             transactionalManager = get(),
             statistikkRepository = get(),
             pepClient = get(),
-            config = get()
         )
     }
 
@@ -353,28 +352,27 @@ fun common(app: Application, config: Configuration) = module {
     single {
         OmrådeSetup(
             områdeRepository = get(),
-            feltdefinisjonTjeneste = get()
+            feltdefinisjonTjeneste = get(),
+            oppgavetypeTjeneste = get(),
+            config = get(),
         )
     }
 
     single {
         K9PunsjTilLosAdapterTjeneste(
             k9PunsjEventRepository = get(),
-            oppgavetypeTjeneste = get(),
             oppgaveV3Tjeneste = get(),
             reservasjonV3Tjeneste = get(),
-            config = get(),
             transactionalManager = get(),
             pepCacheService = get(),
+            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
     single {
         K9SakTilLosAdapterTjeneste(
             k9SakEventRepository = get(),
-            oppgavetypeTjeneste = get(),
             oppgaveV3Tjeneste = get(),
-            config = get(),
             transactionalManager = get(),
             k9SakBerikerKlient = get(),
             pepCacheService = get(),
@@ -387,14 +385,13 @@ fun common(app: Application, config: Configuration) = module {
     single {
         K9TilbakeTilLosAdapterTjeneste(
             behandlingProsessEventTilbakeRepository = get(),
-            oppgavetypeTjeneste = get(),
             oppgaveV3Tjeneste = get(),
-            config = get(),
             transactionalManager = get(),
             pepCacheService = get(),
             oppgaveRepository = get(),
             reservasjonV3Tjeneste = get(),
             historikkvaskChannel = get(named("historikkvaskChannelK9Tilbake")),
+            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
@@ -432,13 +429,10 @@ fun common(app: Application, config: Configuration) = module {
     single {
         K9KlageTilLosAdapterTjeneste(
             k9KlageEventRepository = get(),
-            områdeRepository = get(),
-            feltdefinisjonTjeneste = get(),
-            oppgavetypeTjeneste = get(),
             oppgaveV3Tjeneste = get(),
             transactionalManager = get(),
-            config = get(),
             k9klageBeriker = get(),
+            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
@@ -616,6 +610,7 @@ fun common(app: Application, config: Configuration) = module {
     }
 }
 
+// Kun lokalt, og verdikjede
 fun localDevConfig() = module {
     single<IAzureGraphService> {
         AzureGraphServiceLocal()
@@ -623,7 +618,6 @@ fun localDevConfig() = module {
     single<IPepClient> {
         PepClientLocal()
     }
-    single { RequestContextService(profile = LOCAL) }
 
     single<IPdlService> {
         PdlServiceLocal()
@@ -641,29 +635,53 @@ fun localDevConfig() = module {
     }
 }
 
-fun preprodConfig(config: Configuration) = module {
+// For både preprod og prod
+fun naisCommonConfig(config: Configuration) = module {
+    single {
+        // Standard httpclient uten proxy. Er eksplisitt på engine for å unngå en uforutsett engine fra classpath.
+        HttpClient(Java)
+    }
+
+    single(named("webproxyHttpClient")) {
+        // Httpclient med webproxy, for trafikk ut på internett
+        HttpClient(Java) {
+            engine {
+                proxy = ProxyBuilder.http("http://webproxy.nais:8088")
+            }
+        }
+    }
+
     single<IAzureGraphService> {
         AzureGraphService(
-            accessTokenClient = get<AccessTokenClientResolver>().azureV2()
+            accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
+            httpClient = get(named("webproxyHttpClient"))
         )
     }
+
+    single<IPepClient> {
+        PepClient(azureGraphService = get(), k9Auditlogger = K9Auditlogger(Auditlogger(config)), get())
+    }
+}
+
+// Unik konfigurasjon for preprod
+fun preprodConfig(config: Configuration) = module {
     single<IK9SakService> {
         K9SakServiceSystemClient(
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://dev-fss.k9saksbehandling.k9-sak/.default",
-            k9SakBehandlingOppfrisketRepository = get()
+            k9SakBehandlingOppfrisketRepository = get(),
+            httpClient = get()
         )
     }
-
-    single { RequestContextService(profile = PREPROD) }
 
     single<IPdlService> {
         PdlService(
             baseUrl = config.pdlUrl(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://dev-fss.pdl.pdl-api/.default",
-            azureGraphService = get<IAzureGraphService>()
+            azureGraphService = get<IAzureGraphService>(),
+            httpClient = get()
         )
     }
 
@@ -671,7 +689,8 @@ fun preprodConfig(config: Configuration) = module {
         K9SakBerikerSystemKlient(
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
-            scope = "api://dev-fss.k9saksbehandling.k9-sak/.default"
+            scope = "api://dev-fss.k9saksbehandling.k9-sak/.default",
+            httpClient = get()
         )
     }
 
@@ -680,45 +699,40 @@ fun preprodConfig(config: Configuration) = module {
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scopeKlage = "api://dev-fss.k9saksbehandling.k9-klage/.default",
-            scopeSak = "api://dev-fss.k9saksbehandling.k9-sak/.default"
+            scopeSak = "api://dev-fss.k9saksbehandling.k9-sak/.default",
+            httpClient = get()
         )
     }
 
     single<ISifAbacPdpKlient> {
-        SifAbacPdpKlient (
+        SifAbacPdpKlient(
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://dev-fss.k9saksbehandling.sif-abac-pdp/.default",
+            httpClient = get()
         )
-    }
-    single<IPepClient> {
-        PepClient(azureGraphService = get(), config = config, k9Auditlogger = K9Auditlogger(Auditlogger(config)), get())
     }
 }
 
+// Unik konfigurasjon for prod
 fun prodConfig(config: Configuration) = module {
-    single<IAzureGraphService> {
-        AzureGraphService(
-            accessTokenClient = get<AccessTokenClientResolver>().azureV2()
-        )
-    }
     single<IK9SakService> {
         K9SakServiceSystemClient(
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://prod-fss.k9saksbehandling.k9-sak/.default",
-            k9SakBehandlingOppfrisketRepository = get()
+            k9SakBehandlingOppfrisketRepository = get(),
+            httpClient = get()
         )
     }
-
-    single { RequestContextService(profile = PROD) }
 
     single<IPdlService> {
         PdlService(
             baseUrl = config.pdlUrl(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://prod-fss.pdl.pdl-api/.default",
-            azureGraphService = get<IAzureGraphService>()
+            azureGraphService = get<IAzureGraphService>(),
+            httpClient = get()
         )
     }
 
@@ -726,7 +740,8 @@ fun prodConfig(config: Configuration) = module {
         K9SakBerikerSystemKlient(
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
-            scope = "api://prod-fss.k9saksbehandling.k9-sak/.default"
+            scope = "api://prod-fss.k9saksbehandling.k9-sak/.default",
+            httpClient = get()
         )
     }
 
@@ -735,20 +750,17 @@ fun prodConfig(config: Configuration) = module {
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scopeKlage = "api://prod-fss.k9saksbehandling.k9-klage/.default",
-            scopeSak = "api://prod-fss.k9saksbehandling.k9-sak/.default"
+            scopeSak = "api://prod-fss.k9saksbehandling.k9-sak/.default",
+            httpClient = get()
         )
     }
 
     single<ISifAbacPdpKlient> {
-        SifAbacPdpKlient (
+        SifAbacPdpKlient(
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://prod-fss.k9saksbehandling.sif-abac-pdp/.default",
+            httpClient = get()
         )
     }
-
-    single<IPepClient> {
-        PepClient(azureGraphService = get(), config = config, k9Auditlogger = K9Auditlogger(Auditlogger(config)), get())
-    }
 }
-

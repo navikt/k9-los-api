@@ -285,6 +285,11 @@
           "visPåOppgave": false,
           "påkrevd": false,
           "feltutleder": "no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.FerdigstiltEnhet"
+        },
+        {
+          "id": "fagsakÅr",
+          "visPåOppgave": true,
+          "påkrevd": false
         }
       ]
     }

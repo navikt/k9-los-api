@@ -4,7 +4,7 @@ import java.time.LocalDate
 
 data class FerdigstiltePerEnhetTall(
     val dato: LocalDate,
-    val enhet: String,
+    val parameter: FerdigstiltParameter,
     val gruppe: FerdigstiltePerEnhetGruppe,
     val antall: Int,
 )

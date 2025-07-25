@@ -20,4 +20,7 @@ open class AzureGraphServiceLocal : IAzureGraphService {
         return emptySet()
     }
 
+    override suspend fun hentGrupperForInnloggetSaksbehandler(): Set<UUID> {
+        return emptySet()
+    }
 }

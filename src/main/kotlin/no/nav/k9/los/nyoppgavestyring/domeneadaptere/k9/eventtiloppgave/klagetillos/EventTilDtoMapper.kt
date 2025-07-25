@@ -341,7 +341,13 @@ class EventTilDtoMapper {
             OppgaveFeltverdiDto(
                 nøkkel = "helautomatiskBehandlet",
                 verdi = false.toString() //TODO: Påstand - klagesaker er alltid manuelt behandlet?
-            )
+            ),
+            event.fagsakPeriode?.fom?.year?.toString()?.let { fagsakÅr ->
+                OppgaveFeltverdiDto(
+                    nøkkel = "fagsakÅr",
+                    verdi = fagsakÅr,
+                )
+            },
         ).apply {
                 if (event.pleietrengendeAktørId != null) {
                     add(

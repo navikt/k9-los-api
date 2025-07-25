@@ -5,7 +5,6 @@ import assertk.assertions.hasSize
 import assertk.assertions.isEqualTo
 import io.mockk.coEvery
 import io.mockk.mockk
-import io.mockk.slot
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -29,6 +28,7 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
+import java.util.*
 
 class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
 
@@ -57,6 +57,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
         azureGraphService = mockk(relaxed = true)
         
         coEvery { azureGraphService.hentIdentTilInnloggetBruker() } returns "test@nav.no"
+        coEvery { azureGraphService.hentGrupperForSaksbehandler(any()) } returns setOf(UUID.randomUUID())
 
         sisteOppgaverTjeneste = SisteOppgaverTjeneste(
             sisteOppgaverRepository = sisteOppgaverRepository,
@@ -94,7 +95,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
         coEvery { pdlService.person(aktorId1) } returns PersonPdlResponse(false, mockPerson)
 
         coEvery {
-            pepClient.harTilgangTilOppgaveV3(any(), eq(Action.read), eq(Auditlogging.IKKE_LOGG))
+            pepClient.harTilgangTilOppgaveV3(any(), eq(Action.read), eq(Auditlogging.IKKE_LOGG), any())
         } returns true
 
         // Lagre oppgaven som siste besøkt
@@ -107,7 +108,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
         )
         
         // Hent siste oppgaver, og sjekk resultatet
-        val sisteOppgaver = sisteOppgaverTjeneste.hentSisteOppgaver(testScope)
+        val sisteOppgaver = sisteOppgaverTjeneste.hentSisteOppgaver()
         assertThat(sisteOppgaver).hasSize(1)
         assertThat(sisteOppgaver[0].oppgaveEksternId).isEqualTo(oppgave1.eksternId)
     }
@@ -130,11 +131,10 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
         coEvery { pdlService.person(aktorId2) } returns PersonPdlResponse(true, mockPerson)
         
         // Bruker har tilgang til oppgave1 men ikke oppgave2
-        val oppgaveSlot = slot<Oppgave>()
         coEvery {
-            pepClient.harTilgangTilOppgaveV3(capture(oppgaveSlot), eq(Action.read), eq(Auditlogging.IKKE_LOGG))
+            pepClient.harTilgangTilOppgaveV3(any(), eq(Action.read), eq(Auditlogging.IKKE_LOGG), any())
         } answers {
-            val oppgave = oppgaveSlot.captured
+            val oppgave = firstArg<Oppgave>()
             oppgave.eksternId == oppgave1.eksternId
         }
         
@@ -155,7 +155,7 @@ class SisteOppgaverTjenesteTest : AbstractK9LosIntegrationTest() {
         )
 
         // Sjekk resultatet - skal kun få oppgave1 tilbake siden bruker ikke har tilgang til oppgave2
-        val sisteOppgaver = sisteOppgaverTjeneste.hentSisteOppgaver(testScope)
+        val sisteOppgaver = sisteOppgaverTjeneste.hentSisteOppgaver()
         assertThat(sisteOppgaver).hasSize(1)
         assertThat(sisteOppgaver[0].oppgaveEksternId).isEqualTo(oppgave1.eksternId)
     }

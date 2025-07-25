@@ -28,6 +28,5 @@
   "deployment_environment": "p",
   "ny_oppgavestyring_dvh_sending": "true",
   "ny_oppgavestyring_rest_api": "false",
-  "valgt_pdp" : "abac-k9",
   "nokkeltall_enheter": "4403 Nav ARBEID OG YTELSER KRISTIANIA,4410 Nav ARBEID OG YTELSER SØRLANDET"
 }

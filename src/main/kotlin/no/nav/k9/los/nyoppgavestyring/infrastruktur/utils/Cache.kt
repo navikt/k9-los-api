@@ -61,16 +61,8 @@ open class Cache<K, V>(val cacheSizeLimit: Int?) {
         }
     }
 
-    fun hent(nøkkel: K, populerCache: () -> V): V {
-        return hent(nøkkel, Duration.ofMinutes(30), populerCache)
-    }
-
-    suspend fun hentSuspend(nøkkel: K, populerCache: suspend () -> V): V {
-        return hentSuspend(nøkkel, Duration.ofMinutes(30), populerCache)
-    }
-
     @WithSpan
-    fun hent(nøkkel: K, duration: Duration, populerCache: () -> V): V {
+    fun hent(nøkkel: K, duration: Duration = Duration.ofMinutes(30), populerCache: () -> V): V {
         get(nøkkel)?.let { return it.value }
 
         //egen lås pr nøkkel for å kunne oppdatere for flere nøkler samtidig, og samtidig unngå at flere tråder forsøker å kjøre unødvendige kall for samme nøkkel
@@ -89,25 +81,6 @@ open class Cache<K, V>(val cacheSizeLimit: Int?) {
         }
     }
 
-    @WithSpan
-    suspend fun hentSuspend(nøkkel: K, duration: Duration, populerCache: suspend () -> V): V {
-        get(nøkkel)?.let { return it.value }
-
-        //egen lås pr nøkkel for å kunne oppdatere for flere nøkler samtidig, og samtidig unngå at flere tråder forsøker å kjøre unødvendige kall for samme nøkkel
-        val låsForHenting = finnLåsForHenting(nøkkel)
-        låsForHenting.lock()
-        try {
-            //sjekk på nytt for å unngå å hente om en annen tråd allerde har gjort det
-            get(nøkkel)?.let { return it.value }
-
-            val hentetVerdi = OpentelemetrySpanUtil.spanSuspend("cache-hent-verdi") { populerCache.invoke() }
-            this.set(nøkkel, CacheObject(value = hentetVerdi, expire = LocalDateTime.now().plus(duration)))
-            return hentetVerdi
-        } finally {
-            låsForHenting.unlock()
-            withWriteLock { låserForHentFunksjon.remove(nøkkel) }
-        }
-    }
 
     private fun finnLåsForHenting(nøkkel: K) = withWriteLock {
         var lås = låserForHentFunksjon.get(nøkkel)
@@ -124,13 +97,13 @@ open class Cache<K, V>(val cacheSizeLimit: Int?) {
         }
         readWriteLock.readLock().lock()
         try {
-            return operasjon.invoke();
+            return operasjon.invoke()
         } finally {
             readWriteLock.readLock().unlock()
         }
     }
 
-    protected fun <V> withWriteLock(operasjon: () -> V): V {
+    fun <V> withWriteLock(operasjon: () -> V): V {
 
         readWriteLock.writeLock().lock()
         try {
