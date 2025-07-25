@@ -103,7 +103,27 @@ fun Route.LagretSøkApi() {
         }
     }
 
-    delete("slett", {
+    post("{id}/kopier", {
+        request {
+            body<OpprettLagretSøk>()
+        }
+        response {
+            HttpStatusCode.OK to { body<LagretSøk>() }
+        }
+    }) {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.harBasisTilgang()) {
+                val kopiRequest = call.receive<OpprettLagretSøk>()
+                val lagretSøkId = call.parameters["id"]!!.toLong()
+                val nyttLagretSøk = lagretSøkTjeneste.kopier(coroutineContext.idToken().getNavIdent(), lagretSøkId, kopiRequest)
+                call.respond(HttpStatusCode.OK, nyttLagretSøk)
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
+    delete("{id}/slett", {
         request {
             pathParameter<Long>("id") {
                 required = true
