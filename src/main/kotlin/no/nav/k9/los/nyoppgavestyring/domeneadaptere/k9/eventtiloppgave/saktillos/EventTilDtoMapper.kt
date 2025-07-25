@@ -5,12 +5,14 @@ import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.kodeverk.behandling.BehandlingÅrsakType
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.*
+import no.nav.k9.kodeverk.produksjonsstyring.BehandlingMerknadType
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import org.jetbrains.annotations.VisibleForTesting
 import java.time.temporal.ChronoUnit
@@ -231,16 +233,9 @@ class EventTilDtoMapper {
             ),
             OppgaveFeltverdiDto(
                 nøkkel = "utenlandstilsnitt",
-                verdi = event.aksjonspunktTilstander
-                    .filter { aksjonspunktTilstandDto ->
-                        aksjonspunktTilstandDto.status != AksjonspunktStatus.AVBRUTT
-                    }
-                    .any { aksjonspunktTilstandDto ->
-                        aksjonspunktTilstandDto.aksjonspunktKode == AksjonspunktKodeDefinisjon.AUTOMATISK_MARKERING_AV_UTENLANDSSAK_KODE
-                                || aksjonspunktTilstandDto.aksjonspunktKode == AksjonspunktKodeDefinisjon.MANUELL_MARKERING_AV_UTLAND_SAKSTYPE_KODE
-                    }.toString()
+                verdi = event.merknader.contains(BehandlingMerknadType.UTENLANDSTILSNITT).toString()
             ),
-            if (forrigeOppgave?.hentVerdi("hastesak") == "true" && event.eventHendelse != EventHendelse.HASTESAK_MERKNAD_FJERNET || event.eventHendelse == EventHendelse.HASTESAK_MERKNAD_NY ) {
+            if (event.merknader.contains(BehandlingMerknadType.HASTESAK)) {
                 OppgaveFeltverdiDto(
                     nøkkel = "hastesak",
                     verdi = "true"
