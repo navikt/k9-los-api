@@ -70,6 +70,18 @@ class LagretSøk private constructor(
         return id?.hashCode() ?: System.identityHashCode(this)
     }
 
+    fun kopier(søk: OpprettLagretSøk, saksbehandler: Saksbehandler): LagretSøk {
+        return LagretSøk(
+            id = null,
+            lagetAv = saksbehandler.id ?: throw IllegalStateException("Saksbehandler må ha id"),
+            versjon = 1,
+            tittel = søk.tittel,
+            beskrivelse = "",
+            sistEndret = LocalDateTime.now(),
+            query = this.query
+        )
+    }
+
     companion object {
         // For nye søk som ikke er lagret ennå
         fun opprettSøk(
