@@ -231,17 +231,10 @@ class EventTilDtoMapper {
                     ))
                 }.isNotEmpty().toString()
             ),
-            if (event.merknader.contains(BehandlingMerknadType.UTENLANDSTILSNITT)) {
-                OppgaveFeltverdiDto(
-                    nøkkel = "utenlandstilsnitt",
-                    verdi = "true"
-                )
-            } else {
-                OppgaveFeltverdiDto(
-                    nøkkel = "utenlandstilsnitt",
-                    verdi = "false"
-                )
-            },
+            OppgaveFeltverdiDto(
+                nøkkel = "utenlandstilsnitt",
+                verdi = event.merknader.contains(BehandlingMerknadType.UTENLANDSTILSNITT).toString()
+            ),
             if (event.merknader.contains(BehandlingMerknadType.HASTESAK)) {
                 OppgaveFeltverdiDto(
                     nøkkel = "hastesak",
