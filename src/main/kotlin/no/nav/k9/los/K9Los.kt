@@ -13,6 +13,7 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.http.content.*
 import io.ktor.server.metrics.micrometer.*
+import io.ktor.server.netty.EngineMain
 import io.ktor.server.plugins.callid.*
 import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.plugins.contentnegotiation.*
@@ -88,7 +89,7 @@ import java.util.*
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
-fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
+fun main(args: Array<String>): Unit = EngineMain.main(args)
 
 fun Application.k9Los() {
     val appId = environment.config.id()
@@ -105,10 +106,6 @@ fun Application.k9Los() {
     val koin = getKoin()
 
     koin.get<OmrådeSetup>().setup()
-    koin.get<K9SakTilLosAdapterTjeneste>().setup()
-    koin.get<K9KlageTilLosAdapterTjeneste>().setup()
-    koin.get<K9PunsjTilLosAdapterTjeneste>().setup()
-    koin.get<K9TilbakeTilLosAdapterTjeneste>().setup()
 
     konfigurerJobber(koin, configuration)
 
@@ -171,12 +168,9 @@ fun Application.k9Los() {
         k9TilbakeKorrigerOutOfOrderProsessor.cancel()
     }
 
-    // skal implementeres med Jobbplanlegger
     K9SakTilLosAdapterTjeneste(
         k9SakEventRepository = koin.get(),
-        oppgavetypeTjeneste = koin.get(),
         oppgaveV3Tjeneste = koin.get(),
-        config = koin.get(),
         transactionalManager = koin.get(),
         k9SakBerikerKlient = koin.get(),
         pepCacheService = koin.get(),
@@ -184,43 +178,33 @@ fun Application.k9Los() {
         reservasjonV3Tjeneste = koin.get(),
         historikkvaskChannel = koin.get<Channel<k9SakEksternId>>(named("historikkvaskChannelK9Sak")),
         køpåvirkendeHendelseChannel = koin.get<Channel<KøpåvirkendeHendelse>>(named("KøpåvirkendeHendelseChannel")),
-    ).kjør(kjørSetup = false, kjørUmiddelbart = false)
+    )
 
-    // implementer med Jobbplanlegger
     K9KlageTilLosAdapterTjeneste(
         k9KlageEventRepository = koin.get(),
-        områdeRepository = koin.get(),
-        feltdefinisjonTjeneste = koin.get(),
-        oppgavetypeTjeneste = koin.get(),
         oppgaveV3Tjeneste = koin.get(),
         transactionalManager = koin.get(),
-        config = koin.get(),
         k9klageBeriker = koin.get(),
-    ).kjør(kjørSetup = false, kjørUmiddelbart = false)
+        køpåvirkendeHendelseChannel = koin.get<Channel<KøpåvirkendeHendelse>>(named("KøpåvirkendeHendelseChannel")),
+    )
 
-    // implementer med Jobbplanlegger
     K9PunsjTilLosAdapterTjeneste(
         k9PunsjEventRepository = koin.get(),
-        oppgavetypeTjeneste = koin.get(),
         oppgaveV3Tjeneste = koin.get(),
         reservasjonV3Tjeneste = koin.get(),
-        config = koin.get(),
         transactionalManager = koin.get(),
-        pepCacheService = koin.get()
-    ).kjør(kjørUmiddelbart = false)
+        pepCacheService = koin.get(),
+        køpåvirkendeHendelseChannel = koin.get<Channel<KøpåvirkendeHendelse>>(named("KøpåvirkendeHendelseChannel")),
+    )
 
-    // implementer med Jobbplanlegger
-    koin.get<K9TilbakeTilLosAdapterTjeneste>().kjør(kjørSetup = false, kjørUmiddelbart = false)
+    koin.get<K9TilbakeTilLosAdapterTjeneste>()
 
-    // implementer med Jobbplanlegger
     OppgavestatistikkTjeneste(
-        oppgavetypeRepository = koin.get(),
         statistikkPublisher = koin.get(),
         transactionalManager = koin.get(),
         statistikkRepository = koin.get(),
         pepClient = koin.get(),
-        config = koin.get()
-    ).kjør(kjørUmiddelbart = false)
+    )
 
     install(CallLogging) {
         correlationIdAndRequestIdInMdc()
@@ -343,6 +327,14 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
     val k9PunsjTilLosHistorikkvaskTjeneste = koin.get<K9PunsjTilLosHistorikkvaskTjeneste>()
     val k9TilbakeTilLosHistorikkvaskTjeneste = koin.get<K9TilbakeTilLosHistorikkvaskTjeneste>()
     val k9KlageTilLosHistorikkvaskTjeneste = koin.get<K9KlageTilLosHistorikkvaskTjeneste>()
+
+    val k9SakTilLosAdapterTjeneste = koin.get<K9SakTilLosAdapterTjeneste>()
+    val k9KlageTilLosAdapterTjeneste = koin.get<K9KlageTilLosAdapterTjeneste>()
+    val k9TilbakeTilLosAdapterTjeneste = koin.get<K9TilbakeTilLosAdapterTjeneste>()
+    val k9PunsjTilLosAdapterTjeneste = koin.get<K9PunsjTilLosAdapterTjeneste>()
+
+    val oppgavestatistikkTjeneste = koin.get<OppgavestatistikkTjeneste>()
+
     val pepCacheService = koin.get<PepCacheService>()
     val dagensTallService = koin.get<DagensTallService>()
     val perEnhetService = koin.get<FerdigstiltePerEnhetService>()
@@ -352,6 +344,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
     val mediumPrioritet = 5
     val lavPrioritet = 10
     val utvidetArbeidstid = Tidsvindu.hverdager(5, 20)
+    val heleTiden = Tidsvindu.alleDager()
 
     val planlagteJobber = buildSet {
         add(
@@ -408,6 +401,66 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 startForsinkelse = 1.minutes
             ) {
                 pepCacheService.oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn()
+            }
+        )
+
+        add(
+            PlanlagtJobb.Periodisk(
+                navn = "K9SakVaktmester",
+                prioritet = lavPrioritet,
+                intervall = 1.minutes,
+                tidsvindu = heleTiden,
+                startForsinkelse = 1.minutes
+            ) {
+                k9SakTilLosAdapterTjeneste.spillAvDirtyBehandlingProsessEventer()
+            }
+        )
+
+        add(
+            PlanlagtJobb.Periodisk(
+                navn = "K9KlageVaktmester",
+                prioritet = lavPrioritet,
+                intervall = 1.minutes,
+                tidsvindu = heleTiden,
+                startForsinkelse = 1.minutes
+            ) {
+                k9KlageTilLosAdapterTjeneste.spillAvDirtyBehandlingProsessEventer()
+            }
+        )
+
+        add(
+            PlanlagtJobb.Periodisk(
+                navn = "K9TilbakeVaktmester",
+                prioritet = lavPrioritet,
+                intervall = 1.minutes,
+                tidsvindu = heleTiden,
+                startForsinkelse = 1.minutes
+            ) {
+                k9TilbakeTilLosAdapterTjeneste.spillAvDirtyBehandlingProsessEventer()
+            }
+        )
+
+        add(
+            PlanlagtJobb.Periodisk(
+                navn = "K9PunsjVaktmester",
+                prioritet = lavPrioritet,
+                intervall = 1.minutes,
+                tidsvindu = heleTiden,
+                startForsinkelse = 1.minutes
+            ) {
+                k9PunsjTilLosAdapterTjeneste.spillAvDirtyBehandlingProsessEventer()
+            }
+        )
+
+        add(
+            PlanlagtJobb.Periodisk(
+                navn = "Oppgavestatistikksender",
+                prioritet = lavPrioritet,
+                intervall = 1.minutes,
+                tidsvindu = heleTiden,
+                startForsinkelse = 1.minutes
+            ) {
+                oppgavestatistikkTjeneste.spillAvUsendtStatistikk()
             }
         )
 
