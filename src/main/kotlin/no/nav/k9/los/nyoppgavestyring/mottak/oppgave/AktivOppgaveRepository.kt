@@ -23,7 +23,7 @@ class AktivOppgaveRepository(val oppgavetypeRepository: OppgavetypeRepository) {
 
         @WithSpan
         fun ajourholdAktivOppgave(oppgave: OppgaveV3, nyVersjon: Long, tx: TransactionalSession) {
-            if (oppgave.status == Oppgavestatus.AAPEN || oppgave.status == Oppgavestatus.VENTER) {
+            if (oppgave.status == Oppgavestatus.AAPEN || oppgave.status == Oppgavestatus.VENTER || oppgave.status == Oppgavestatus.UAVKLART) {
                 val oppgaveId = DetaljerMetrikker.time("k9sakHistorikkvask", "oppdaterOppgaveV3Aktiv") {
                     oppdaterOppgaveV3Aktiv(
                         tx,
