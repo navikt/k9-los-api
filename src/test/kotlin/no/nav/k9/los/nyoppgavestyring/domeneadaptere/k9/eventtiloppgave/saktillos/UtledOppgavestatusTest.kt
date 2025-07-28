@@ -3,11 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktill
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.datatest.withData
 import io.kotest.matchers.shouldBe
-import no.nav.k9.kodeverk.behandling.BehandlingResultatType
-import no.nav.k9.kodeverk.behandling.BehandlingStatus
-import no.nav.k9.kodeverk.behandling.BehandlingStegType
-import no.nav.k9.kodeverk.behandling.BehandlingType
-import no.nav.k9.kodeverk.behandling.FagsakYtelseType
+import no.nav.k9.kodeverk.behandling.*
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
@@ -17,8 +13,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.Random
-import java.util.UUID
+import java.util.*
 
 class UtledOppgavestatusKoTest : FreeSpec({
     "En behandling" - {
@@ -136,6 +131,7 @@ object Testdata {
             aksjonspunktKoderMedStatusListe = mutableMapOf(),
             ytelseTypeKode = FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode,
             eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
+            merknader = emptyList()
         )
     }
 }
