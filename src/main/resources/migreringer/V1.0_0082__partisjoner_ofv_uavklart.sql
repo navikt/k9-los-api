@@ -1,4 +1,4 @@
-DROP TABLE oppgavefelt_verdi_aapen_venter_part
+DROP TABLE oppgavefelt_verdi_aapen_venter_part;
 
 -- For aktive oppgaver, deler videre etter oppgavestatus
 CREATE TABLE oppgavefelt_verdi_aapen_venter_uavklart_part

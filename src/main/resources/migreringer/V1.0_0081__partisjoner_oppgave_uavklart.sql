@@ -1,4 +1,4 @@
-DROP TABLE oppgave_v3_aapen_venter_part
+DROP TABLE oppgave_v3_aapen_venter_part;
 
 -- Deler videre etter oppgavestatus-
 CREATE TABLE oppgave_v3_aapen_venter_uavklart_part
