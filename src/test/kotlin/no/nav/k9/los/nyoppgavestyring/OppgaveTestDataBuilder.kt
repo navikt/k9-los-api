@@ -75,7 +75,7 @@ class OppgaveTestDataBuilder(
         }
     }
 
-    fun lag(status: Oppgavestatus = Oppgavestatus.AAPEN, reservasjonsnøkkel: String = "test", eksternVersjon: String? = null, endretTidspunkt: LocalDateTime = LocalDateTime.now()): OppgaveV3 {
+    fun lag(status: Oppgavestatus = Oppgavestatus.AAPEN, reservasjonsnøkkel: String = "", eksternVersjon: String? = null, endretTidspunkt: LocalDateTime = LocalDateTime.now()): OppgaveV3 {
         return OppgaveV3(
             eksternId = oppgaveFeltverdier[FeltType.BEHANDLINGUUID]?.verdi ?: UUID.randomUUID().toString(),
             eksternVersjon = eksternVersjon ?: eksternVersjonTeller++.toString(),

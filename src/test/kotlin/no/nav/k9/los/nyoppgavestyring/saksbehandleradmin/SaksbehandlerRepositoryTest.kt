@@ -5,6 +5,7 @@ import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
@@ -36,9 +37,9 @@ class SaksbehandlerRepositoryTest : AbstractK9LosIntegrationTest() {
 
         assertThat(saksbehandler!!.brukerIdent, equalTo(ident))
 
-        OppgaveTestDataBuilder()
-            .medOppgaveFeltVerdi(FeltType.AKSJONSPUNKT, "5016")
-            .lagOgLagre()
+        val builder = OppgaveTestDataBuilder()
+        builder.lagOgLagre(Oppgavestatus.AAPEN)
+        builder.lagre(builder.lag(reservasjonsnøkkel = "test"))
 
         val reservasjonV3Tjeneste = get<ReservasjonV3Tjeneste>()
 
