@@ -75,8 +75,10 @@ fun Route.LagretSøkApi() {
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
+                val navIdent = coroutineContext.idToken().getNavIdent()
+                val harKode6Tilgang = pepClient.harTilgangTilKode6()
                 val request = call.receive<OpprettLagretSøk>()
-                val lagretSøk = lagretSøkTjeneste.opprett(coroutineContext.idToken().getNavIdent(), request)
+                val lagretSøk = lagretSøkTjeneste.opprett(navIdent, harKode6Tilgang, request)
                 call.respond(HttpStatusCode.Created, lagretSøk)
             } else {
                 call.respond(HttpStatusCode.Forbidden)
