@@ -1,6 +1,10 @@
 package no.nav.k9.los.nyoppgavestyring.lagretsok
 
+import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import java.time.LocalDateTime
 
@@ -86,7 +90,8 @@ class LagretSøk private constructor(
         // For nye søk som ikke er lagret ennå
         fun opprettSøk(
             opprettLagretSøk: OpprettLagretSøk,
-            saksbehandler: Saksbehandler
+            saksbehandler: Saksbehandler,
+            kode6: Boolean
         ): LagretSøk {
             return LagretSøk(
                 id = null,
@@ -95,7 +100,20 @@ class LagretSøk private constructor(
                 tittel = opprettLagretSøk.tittel,
                 beskrivelse = "",
                 sistEndret = LocalDateTime.now(),
-                query = OppgaveQuery(),
+                query = OppgaveQuery(filtere = listOf(
+                    FeltverdiOppgavefilter(
+                        område = null,
+                        kode = "oppgavestatus",
+                        operator = EksternFeltverdiOperator.IN,
+                        verdi = Oppgavestatus.entries.map { it.kode }
+                    ),
+                    FeltverdiOppgavefilter(
+                        område = null,
+                        kode = "personbeskyttelse",
+                        operator = EksternFeltverdiOperator.IN,
+                        verdi = listOf(if (kode6) PersonBeskyttelseType.KODE6.kode else PersonBeskyttelseType.UGRADERT.kode)
+                    )
+                )),
             )
         }
 

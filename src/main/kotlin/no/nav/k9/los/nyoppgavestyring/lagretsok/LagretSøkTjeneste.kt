@@ -15,10 +15,10 @@ class LagretSøkTjeneste(
         return lagretSøkRepository.hentAlle(saksbehandler)
     }
 
-    suspend fun opprett(navIdent: String, opprettLagretSøk: OpprettLagretSøk): Long {
+    suspend fun opprett(navIdent: String, kode6: Boolean, opprettLagretSøk: OpprettLagretSøk): Long {
         val saksbehandler = saksbehandlerRepository.finnSaksbehandlerMedIdent(navIdent)
             ?: throw IllegalStateException("Innlogget bruker er ikke i saksbehandler-tabellen")
-        val lagretSøk = LagretSøk.opprettSøk(opprettLagretSøk, saksbehandler)
+        val lagretSøk = LagretSøk.opprettSøk(opprettLagretSøk, saksbehandler, kode6)
         return lagretSøkRepository.opprett(lagretSøk)
     }
 
