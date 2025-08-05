@@ -1,3 +1,5 @@
+alter type oppgavestatus add value 'UAVKLART';
+
 DROP TABLE oppgave_v3_aapen_venter_part;
 
 -- Deler videre etter oppgavestatus-
