@@ -12,6 +12,7 @@ import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.koin.test.get
 
 class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
@@ -169,5 +170,47 @@ class LagretSøkRepositoryTest : AbstractK9LosIntegrationTest() {
             assertThat(søkForAnnen).hasSize(1)
             assertThat(søkForAnnen[0].tittel).isEqualTo("Søk for annen")
         }
+    }
+
+    @Test
+    fun `skal kaste exception ved optimistisk låsing ved samtidig endring`() {
+        val opprettLagretSøk = OpprettLagretSøk(
+            tittel = "Test søk"
+        )
+
+        val lagretSøk = LagretSøk.opprettSøk(opprettLagretSøk, saksbehandler, false)
+        val id = lagretSøkRepository.opprett(lagretSøk)
+
+        // Simuler samtidig endring - hent to instanser av samme søk
+        val førsteSøk = lagretSøkRepository.hent(id)!!
+        val andreSøk = lagretSøkRepository.hent(id)!!
+
+        førsteSøk.endre(
+            EndreLagretSøk(
+                id = id,
+                tittel = "Første endring",
+                beskrivelse = "Første beskrivelse",
+                query = OppgaveQuery(),
+                versjon = førsteSøk.versjon
+            ), saksbehandler
+        )
+        lagretSøkRepository.endre(førsteSøk)
+
+        andreSøk.endre(
+            EndreLagretSøk(
+                id = id,
+                tittel = "Andre endring",
+                beskrivelse = "Andre beskrivelse",
+                query = OppgaveQuery(),
+                versjon = andreSøk.versjon // Samme versjon som før første endring
+            ), saksbehandler
+        )
+
+        // Dette skal feile på database-nivå med optimistisk låsing
+        val exception = assertThrows<IllegalStateException> {
+            lagretSøkRepository.endre(andreSøk)
+        }
+
+        assertThat(exception.message).isEqualTo("Feilet ved update på lagret søk. Kan enten skyldes at søket er slettet, eller at versjonsnummer ikke stemmer (optimistisk lås).")
     }
 }
