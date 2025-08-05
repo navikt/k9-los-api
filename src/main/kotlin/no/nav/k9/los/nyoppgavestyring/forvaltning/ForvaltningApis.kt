@@ -6,7 +6,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotliquery.queryOf
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.sak.Avstemmer
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventRepository
@@ -14,7 +14,6 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.K9KlageTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.K9SakTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakBerikerSystemKlient
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
@@ -46,6 +45,7 @@ fun Route.forvaltningApis() {
     val objectMapper = LosObjectMapper.prettyInstance
     val transactionalManager by inject<TransactionalManager>()
     val forvaltningRepository by inject<ForvaltningRepository>()
+    val avstemmingsTjeneste by inject<AvstemmingsTjeneste>()
 
     val pepClient by inject<IPepClient>()
     val requestContextService by inject<RequestContextService>()
@@ -474,21 +474,27 @@ fun Route.forvaltningApis() {
         }
     }
 
-    route("/avstemming") {
-        get() {
-            /*
-            For et gitt fagsystem/oppgavetype
-             1. Be om liste med behandlinger (!avsluttet) fra fagsystem (eksternId, saksnummer(/journalpostId?), ventefrist, ytelsestype)
-             2. Hent lokal liste åpne oppgaver
-             3. Regn ut diff
-             */
-            when (fagsystem) {
-                "k9sak" -> {
-                    val k9SakRapport = K9SakBerikerSystemKlient.hentRapport()
-                    val losRapport = hentLokalt()
-                    val diff = Avstemmer.regnUtDiff(k9SakRapport, losRapport)
-                    call.respond(diff)
-                }
+    get("/avstemming/{fagsystem}", {
+        description = "Hent ut liste med åpne behandlinger/journalposter i spesifisert fagsystem og kontroller opp mot åpne oppgaver i los. Returnerer en avviksrapport"
+        request {
+            pathParameter<Fagsystem>("fagsystem") {
+                description = "Kildesystem som har levert eventene"
+            }
+        }
+    }) {
+        /*
+        For et gitt fagsystem/oppgavetype
+         1. Be om liste med behandlinger (!avsluttet) fra fagsystem (eksternId, saksnummer(/journalpostId?), ventefrist, ytelsestype)
+         2. Hent lokal liste åpne oppgaver
+         3. Regn ut diff
+         */
+        requestContextService.withRequestContext(call) {
+            if (pepClient.kanLeggeUtDriftsmelding()) {
+                val fagsystem = Fagsystem.fraKode(call.parameters["fagsystem"]!!)
+                val avstemmingsrapport = avstemmingsTjeneste.avstem(fagsystem)
+                call.respond(objectMapper.writeValueAsString(avstemmingsrapport))
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
             }
         }
     }

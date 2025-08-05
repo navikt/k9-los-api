@@ -6,7 +6,7 @@ val flywayVersion = "11.1.1"
 val vaultJdbcVersion = "1.3.10"
 val koinVersion = "4.1.0"
 val kotliqueryVersion = "1.9.1"
-val k9SakVersion = "5.4.20"
+val k9SakVersion = "5.4.21"
 val k9KlageVersion = "0.4.7"
 val jacksonVersion = "2.17.2"
 val commonsTextVersion = "1.13.0"
@@ -82,6 +82,7 @@ dependencies {
 
     // Div
     implementation(enforcedPlatform("com.fasterxml.jackson:jackson-bom:$jacksonVersion"))
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.+")
     implementation("org.apache.commons:commons-text:$commonsTextVersion")
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
     implementation("io.github.smiley4:ktor-openapi:5.0.2")
@@ -95,6 +96,7 @@ dependencies {
     // Test
     testImplementation("org.junit.jupiter:junit-jupiter-api:$jupiterVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
+    testImplementation("io.kotest:kotest-runner-junit5:6.0.0.M4")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:$assertkVersion")
