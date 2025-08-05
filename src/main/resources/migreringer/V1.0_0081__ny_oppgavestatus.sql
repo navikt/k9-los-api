@@ -1,1 +1,0 @@
-alter type oppgavestatus add value 'UAVKLART';
