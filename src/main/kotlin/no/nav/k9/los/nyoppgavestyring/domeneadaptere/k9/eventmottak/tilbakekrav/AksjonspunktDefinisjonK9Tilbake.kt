@@ -1,30 +1,25 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav
 
-data class AksjonspunktDefinisjonK9Tilbake (val kode: String, val totrinn:Boolean=false, val erAutopunkt:Boolean=false) {
+enum class AksjonspunktDefinisjonK9Tilbake(
+    val kode: String,
+    val totrinn: Boolean = false,
+    val erAutopunkt: Boolean = false
+) {
+    VURDER_TILBAKEKREVING("5002", totrinn = true),
+    VURDER_FORELDELSE("5003", totrinn = true),
+    FORESLÅ_VEDTAK("5004", totrinn = true),
+    FATTE_VEDTAK("5005"),
+    AVKLAR_VERGE("5030"),
+    VENT_PÅ_BRUKERTILBAKEMELDING("7001", erAutopunkt = true),
+    VENT_PÅ_TILBAKEKREVINGSGRUNNLAG("7002", erAutopunkt = true),
+    AVKLART_FAKTA_FEILUTBETALING("7003", totrinn = true),
+
+    // kun brukes for å sende data til fplos når behandling venter på grunnlaget etter fristen
+    VURDER_HENLEGGELSE_MANGLER_KRAVGRUNNLAG("8001");
+
     companion object {
-
-        val VURDER_TILBAKEKREVING: AksjonspunktDefinisjonK9Tilbake = AksjonspunktDefinisjonK9Tilbake("5002", totrinn = true)
-        val VURDER_FORELDELSE: AksjonspunktDefinisjonK9Tilbake = AksjonspunktDefinisjonK9Tilbake("5003", totrinn = true)
-        val FORESLÅ_VEDTAK: AksjonspunktDefinisjonK9Tilbake = AksjonspunktDefinisjonK9Tilbake("5004", totrinn = true)
-        val FATTE_VEDTAK: AksjonspunktDefinisjonK9Tilbake = AksjonspunktDefinisjonK9Tilbake("5005")
-        val AVKLAR_VERGE: AksjonspunktDefinisjonK9Tilbake = AksjonspunktDefinisjonK9Tilbake("5030")
-        val VENT_PÅ_BRUKERTILBAKEMELDING: AksjonspunktDefinisjonK9Tilbake = AksjonspunktDefinisjonK9Tilbake("7001", erAutopunkt = true)
-        val VENT_PÅ_TILBAKEKREVINGSGRUNNLAG: AksjonspunktDefinisjonK9Tilbake = AksjonspunktDefinisjonK9Tilbake("7002", erAutopunkt = true)
-        val AVKLART_FAKTA_FEILUTBETALING: AksjonspunktDefinisjonK9Tilbake = AksjonspunktDefinisjonK9Tilbake("7003", totrinn = true)
-
-        // kun brukes for å sende data til fplos når behandling venter på grunnlaget etter fristen
-        val VURDER_HENLEGGELSE_MANGLER_KRAVGRUNNLAG: AksjonspunktDefinisjonK9Tilbake = AksjonspunktDefinisjonK9Tilbake("8001")
-
-        fun alle() : List<AksjonspunktDefinisjonK9Tilbake> {
-            return listOf(VURDER_TILBAKEKREVING, VURDER_FORELDELSE, FORESLÅ_VEDTAK, FATTE_VEDTAK, AVKLAR_VERGE, VENT_PÅ_BRUKERTILBAKEMELDING, VENT_PÅ_TILBAKEKREVINGSGRUNNLAG, AVKLART_FAKTA_FEILUTBETALING, VURDER_HENLEGGELSE_MANGLER_KRAVGRUNNLAG)
-        }
-
-        fun fraKode(kode : String) : AksjonspunktDefinisjonK9Tilbake {
-            val match = alle().filter { it.kode == kode }
-            if (match.isNotEmpty()) {
-                return match[0]
-            }
-            throw IllegalArgumentException("Har ikke AksjonspunktDefinisjon for tilbake med kode $kode");
+        fun fraKode(kode: String): AksjonspunktDefinisjonK9Tilbake {
+            return entries.first { it.kode == kode }
         }
     }
 
