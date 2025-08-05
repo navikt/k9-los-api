@@ -14,8 +14,8 @@ class LagretSøkRepository(val dataSource: DataSource) {
     private val transactionalManager = TransactionalManager(dataSource)
 
     fun hent(id: Long): LagretSøk? {
-        return using(sessionOf(dataSource)) { session ->
-            session.run(
+        return transactionalManager.transaction {
+            it.run(
                 queryOf(
                     """
                 SELECT *
@@ -52,13 +52,13 @@ class LagretSøkRepository(val dataSource: DataSource) {
     }
 
     fun endre(lagretSøk: LagretSøk) {
-        using(sessionOf(dataSource)) { session ->
-            session.run(
+        transactionalManager.transaction {
+            val antallRaderOppdatert = it.run(
                 queryOf(
                     """
                 UPDATE lagret_sok
                 set tittel = :tittel, versjon = :versjon, beskrivelse = :beskrivelse, sist_endret = :sist_endret, query = :query::jsonb
-                where id = :id
+                where id = :id and versjon = :versjon - 1
                 """.trimIndent(),
                     mapOf(
                         "id" to lagretSøk.id,
@@ -70,12 +70,15 @@ class LagretSøkRepository(val dataSource: DataSource) {
                     )
                 ).asUpdate
             )
+            if (antallRaderOppdatert != 1) {
+                throw IllegalStateException("Feilet ved update på lagret søk. Kan enten skyldes at søket er slettet, eller at versjonsnummer ikke stemmer (optimistisk lås).")
+            }
         }
     }
 
     fun slett(lagretSøk: LagretSøk) {
-        using(sessionOf(dataSource)) { session ->
-            session.run(
+        transactionalManager.transaction {
+            it.run(
                 queryOf(
                     """
                 DELETE FROM lagret_sok
