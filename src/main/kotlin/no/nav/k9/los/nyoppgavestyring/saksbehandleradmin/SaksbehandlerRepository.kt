@@ -361,6 +361,26 @@ class SaksbehandlerRepository(
         tx.run(
             queryOf(
                 """
+                    delete from reservasjon_v3_endring
+                    where annullert_reservasjon_id in (select id from reservasjon_v3 where reservertAv = :saksbehandlerId)
+                """.trimIndent(),
+                mapOf("saksbehandlerId" to saksbehandlerId)
+            ).asUpdate
+        )
+
+        tx.run(
+            queryOf(
+                """
+                    delete from reservasjon_v3_endring
+                    where ny_reservasjon_id in (select id from reservasjon_v3 where reservertAv = :saksbehandlerId)
+                """.trimIndent(),
+                mapOf("saksbehandlerId" to saksbehandlerId)
+            ).asUpdate
+        )
+
+        tx.run(
+            queryOf(
+                """
                     delete from reservasjon_v3 where reservertav = :saksbehandlerId
                 """.trimIndent(),
                 mapOf("saksbehandlerId" to saksbehandlerId)
