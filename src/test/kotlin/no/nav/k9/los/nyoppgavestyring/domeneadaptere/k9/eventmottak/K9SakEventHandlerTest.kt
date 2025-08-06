@@ -341,7 +341,6 @@ class K9SakEventHandlerTest : AbstractK9LosIntegrationTest() {
 
         @Language("JSON") val json =
             """{
-                "merknader": [],
                   "eksternId": "6b521f78-ef71-43c3-a615-6c2b8bb4dcdb",
                   "fagsystem": {
                     "kode": "K9SAK",

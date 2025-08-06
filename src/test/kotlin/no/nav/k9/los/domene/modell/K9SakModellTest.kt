@@ -7,8 +7,8 @@ import no.nav.k9.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakModell
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
@@ -565,7 +565,7 @@ class K9SakModellReservasjonTestV3 {
             eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
             aksjonspunktKoderMedStatusListe = aksjonspunkter.toMutableMap(),
             aksjonspunktTilstander = aksjonspunkter.tilAksjonspunktTilstandDtoer(),
-            merknader = emptyList(),
+            merknader = emptyList()
         )
     }
 
