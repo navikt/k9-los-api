@@ -350,6 +350,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
         @Language("JSON") val json =
             """{
+                "merknader": [],
                   "eksternId": "$eksternId",
                   "fagsystem": {
                     "kode": "K9SAK",
