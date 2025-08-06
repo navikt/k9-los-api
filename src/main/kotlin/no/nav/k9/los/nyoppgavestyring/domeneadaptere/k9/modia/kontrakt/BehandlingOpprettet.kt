@@ -35,10 +35,6 @@ data class BehandlingOpprettet(
         val aktoerId: String
     )
 
-    data class IdentREF(
-        val ident: String,
-    )
-
     data class Behandlingstema(
         val kodeRef: String,
         val kodeverksRef: String,

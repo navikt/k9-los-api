@@ -6,8 +6,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotliquery.queryOf
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
-import no.nav.k9.los.domene.repository.OppgaveKøRepository
-import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventRepository
@@ -23,8 +21,6 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
-import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
-import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
@@ -40,7 +36,6 @@ fun Route.forvaltningApis() {
     val oppgaveRepositoryTxWrapper by inject<OppgaveRepositoryTxWrapper>()
     val oppgaveTypeRepository by inject<OppgavetypeRepository>()
     val oppgaveKoTjeneste by inject<OppgaveKoTjeneste>()
-    val oppgaveQueryService by inject<OppgaveQueryService>()
     val k9SakTilLosHistorikkvaskTjeneste by inject<K9SakTilLosHistorikkvaskTjeneste>()
     val k9TilbakeTilLosHistorikkvaskTjeneste by inject<K9TilbakeTilLosHistorikkvaskTjeneste>()
     val k9KlageTilLosHistorikkvaskTjeneste by inject<K9KlageTilLosHistorikkvaskTjeneste>()
@@ -49,9 +44,6 @@ fun Route.forvaltningApis() {
     val objectMapper = LosObjectMapper.prettyInstance
     val transactionalManager by inject<TransactionalManager>()
     val forvaltningRepository by inject<ForvaltningRepository>()
-
-    val oppgaveKoRepository by inject<OppgaveKøRepository>()
-    val oppgaveRepositoryV1 by inject<OppgaveRepository>()
 
     val pepClient by inject<IPepClient>()
     val requestContextService by inject<RequestContextService>()
@@ -106,65 +98,6 @@ fun Route.forvaltningApis() {
                     )
                 }
                 call.respond(list)
-            } else {
-                call.respond(HttpStatusCode.Forbidden)
-            }
-        }
-    }
-
-    get("/sammenlignkoer", {
-        description = "Sammenlign en V1-kø med en V3 kø, og lever de oppgavene som ikke finnes i begge køer"
-        request {
-            queryParameter<String>("v1KoId") {
-                description = "Id på V1 kø"
-                example("07081bc9-5941-408c-95d8-ded6a4ae3b02") {
-                    value = "07081bc9-5941-408c-95d8-ded6a4ae3b02"
-                }
-            }
-            queryParameter<Long>("v3KoId") {
-                description = "Id på V3 kø"
-                example("5") {
-                    value = "5"
-                }
-            }
-            queryParameter<String>("skjermet") {
-                description = "Vise køer med skjerming"
-                example("false") {
-                    value = "false"
-                }
-            }
-        }
-    }) {
-        requestContextService.withRequestContext(call) {
-            if (pepClient.kanLeggeUtDriftsmelding()) {
-                val v1KoId = UUID.fromString(call.parameters["v1KoId"])
-                val v3KoId = call.parameters["v3KoId"]!!.toLong()
-                val skjermet = call.parameters["skjermet"].toBoolean()
-
-                val v3Ko = oppgaveKoTjeneste.hent(v3KoId, skjermet)
-                val v3Oppgaver =
-                    oppgaveQueryService.queryForOppgaveEksternId(
-                        QueryRequest(
-                            v3Ko.oppgaveQuery,
-                            fjernReserverte = true
-                        )
-                    ).map { UUID.fromString(it.eksternId) }
-
-                val v1Ko = oppgaveKoRepository.hentOppgavekø(v1KoId, ignorerSkjerming = skjermet)
-                val v1Oppgaver = v1Ko.oppgaverOgDatoer.map { it.id }.toList()
-
-                val v3MenIkkeV1 = v3Oppgaver.subtract(v1Oppgaver)
-                val v1MenIkkeV3 = v1Oppgaver.subtract(v3Oppgaver)
-
-                val v3OppgaverSomManglerIV1 = v3MenIkkeV1.map {
-                    OppgaveIkkeSensitiv(oppgaveRepositoryTxWrapper.hentOppgave("K9", it.toString()))
-                }.toList()
-
-                val v1OppgaverSomManglerIV3 = v1MenIkkeV3.map {
-                    oppgaveRepositoryV1.hent(it)
-                }
-
-                call.respond(KoDiff(v3MenIkkeV1.size, v1MenIkkeV3.size, v3OppgaverSomManglerIV1.toSet(), v1OppgaverSomManglerIV3.toSet()))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -614,10 +547,3 @@ fun lagNøkkelAktør(oppgave: Oppgave, tilBeslutter: Boolean): String {
         "K9_b_${oppgave.hentVerdi("ytelsestype")}_${oppgave.hentVerdi("aktorId")}"
     }
 }
-
-data class KoDiff(
-    val antallOppgaverSomManglerIV1: Int,
-    val antallOppgaverSomManglerIV3: Int,
-    val v3OppgaverSomManglerIV1: Set<OppgaveIkkeSensitiv>,
-    val v1OppgaverSomManglerIV3: Set<no.nav.k9.los.domene.lager.oppgave.Oppgave>
-)

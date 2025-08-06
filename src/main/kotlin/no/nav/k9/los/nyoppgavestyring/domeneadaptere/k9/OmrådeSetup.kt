@@ -1,25 +1,26 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.kodeverk.behandling.BehandlingÅrsakType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.kodeverk.produksjonsstyring.UtvidetSøknadÅrsak
-import no.nav.k9.los.domene.lager.oppgave.Kodeverdi
-import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
-import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
-import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
-import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
+import no.nav.k9.los.Configuration
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.EventTilDtoMapper
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
+import no.nav.k9.los.nyoppgavestyring.kodeverk.*
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonerDto
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.KodeverkDto
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.KodeverkVerdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
-import no.nav.k9.los.nyoppgavestyring.query.db.Spørringstrategi
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import no.nav.k9.kodeverk.api.Kodeverdi as KodeverdiK9Sak
@@ -27,6 +28,8 @@ import no.nav.k9.kodeverk.api.Kodeverdi as KodeverdiK9Sak
 class OmrådeSetup(
     private val områdeRepository: OmrådeRepository,
     private val feltdefinisjonTjeneste: FeltdefinisjonTjeneste,
+    private val oppgavetypeTjeneste: OppgavetypeTjeneste,
+    private val config: Configuration,
 ) {
     private val log: Logger = LoggerFactory.getLogger(OmrådeSetup::class.java)
     private val område: String = "K9"
@@ -35,6 +38,11 @@ class OmrådeSetup(
         opprettOmråde()
         oppdaterKodeverk()
         oppdaterFeltdefinisjoner()
+
+        ajourholdOppgavetype("/adapterdefinisjoner/k9-oppgavetyper-k9sak.json", config.k9FrontendUrl())
+        ajourholdOppgavetype("/adapterdefinisjoner/k9-oppgavetyper-k9klage.json", config.k9FrontendUrl())
+        ajourholdOppgavetype("/adapterdefinisjoner/k9-oppgavetyper-k9tilbake.json", config.k9FrontendUrl())
+        ajourholdOppgavetype("/adapterdefinisjoner/k9-oppgavetyper-k9punsj.json", config.k9PunsjFrontendUrl())
     }
 
     private fun opprettOmråde() {
@@ -51,6 +59,28 @@ class OmrådeSetup(
         )
         log.info("Oppretter/oppdaterer feltdefinisjoner for område $område")
         feltdefinisjonTjeneste.oppdater(feltdefinisjonerDto)
+    }
+
+    @WithSpan
+    private fun ajourholdOppgavetype(oppgavedefinisjon: String, frontendUrl: String) {
+        val oppgavetyperDto = LosObjectMapper.instance.readValue(
+            K9TilbakeTilLosAdapterTjeneste::class.java.getResource(oppgavedefinisjon)!!
+                .readText(),
+            OppgavetyperDto::class.java
+        )
+        oppgavetypeTjeneste.oppdater(
+            oppgavetyperDto.copy(
+                oppgavetyper = oppgavetyperDto.oppgavetyper.map { oppgavetypeDto ->
+                    oppgavetypeDto.copy(
+                        oppgavebehandlingsUrlTemplate = oppgavetypeDto.oppgavebehandlingsUrlTemplate.replace(
+                            "{baseUrl}",
+                            frontendUrl
+                        )
+                    )
+                }.toSet()
+            )
+        )
+        log.info("opprettet oppgavetype: $oppgavedefinisjon")
     }
 
     private fun oppdaterKodeverk() {

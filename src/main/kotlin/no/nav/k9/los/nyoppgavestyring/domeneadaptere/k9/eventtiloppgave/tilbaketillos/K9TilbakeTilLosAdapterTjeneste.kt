@@ -1,94 +1,45 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.opentelemetry.instrumentation.annotations.SpanAttribute
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
-import no.nav.k9.los.Configuration
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.JobbMetrikker
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventRepository
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
+import no.nav.k9.los.nyoppgavestyring.ko.OppgaveHendelseMottatt
 import no.nav.k9.los.nyoppgavestyring.kodeverk.AksjonspunktStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheService
+import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
-import java.util.concurrent.TimeUnit
-import kotlin.concurrent.thread
-import kotlin.concurrent.timer
 
 class K9TilbakeTilLosAdapterTjeneste(
     private val behandlingProsessEventTilbakeRepository: K9TilbakeEventRepository,
-    private val oppgavetypeTjeneste: OppgavetypeTjeneste,
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
     private val oppgaveRepository: OppgaveRepository,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
-    private val config: Configuration,
     private val transactionalManager: TransactionalManager,
     private val pepCacheService: PepCacheService,
-    private val historikkvaskChannel: Channel<k9TilbakeEksternId>
+    private val historikkvaskChannel: Channel<k9TilbakeEksternId>,
+    private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9TilbakeTilLosAdapterTjeneste::class.java)
-    private val TRÅDNAVN = "k9-tilbake-til-los"
-
-
-    fun kjør(kjørSetup: Boolean = false, kjørUmiddelbart: Boolean = false) {
-        if (config.nyOppgavestyringAktivert()) {
-            when (kjørUmiddelbart) {
-                true -> spillAvUmiddelbart()
-                false -> schedulerAvspilling(kjørSetup)
-            }
-        } else log.info("Ny oppgavestyring er deaktivert")
-    }
-
-    private fun spillAvUmiddelbart() {
-        log.info("Spiller av BehandlingProsessEventer umiddelbart")
-        thread(
-            start = true,
-            isDaemon = true,
-            name = TRÅDNAVN
-        ) {
-            spillAvBehandlingProsessEventer()
-        }
-    }
-
-    private fun schedulerAvspilling(kjørSetup: Boolean) {
-        log.info("Schedulerer avspilling av BehandlingProsessEventer til å kjøre 1m fra nå, hver time")
-        timer(
-            name = TRÅDNAVN,
-            daemon = true,
-            initialDelay = TimeUnit.MINUTES.toMillis(1),
-            period = TimeUnit.HOURS.toMillis(1)
-        ) {
-            if (kjørSetup) {
-                setup()
-            }
-            try {
-                JobbMetrikker.time("spill_av_behandlingprosesseventer_k9tilbake") {
-                    spillAvBehandlingProsessEventer()
-                }
-            } catch (e: Exception) {
-                log.warn("Avspilling av k9tilbake-eventer til oppgaveV3 feilet. Retry om en time", e)
-            }
-        }
-    }
 
     @WithSpan
-    fun spillAvBehandlingProsessEventer() {
+    fun spillAvDirtyBehandlingProsessEventer() {
         log.info("Starter avspilling av BehandlingProsessEventer")
 
         val behandlingsIder = behandlingProsessEventTilbakeRepository.hentAlleDirtyEventIder()
@@ -137,6 +88,15 @@ class K9TilbakeTilLosAdapterTjeneste(
                 }
             }
 
+            runBlocking {
+                køpåvirkendeHendelseChannel.send(
+                    OppgaveHendelseMottatt(
+                        Fagsystem.K9TILBAKE,
+                        EksternOppgaveId("K9", uuid.toString())
+                    )
+                )
+            }
+
             behandlingProsessEventTilbakeRepository.fjernDirty(uuid, tx)
         }
 
@@ -183,33 +143,4 @@ class K9TilbakeTilLosAdapterTjeneste(
         log.info("Oppgave annulleres ikke fordi det finnes andre åpne oppgaver: [${åpneOppgaverForReservasjonsnøkkel.map { it.eksternId }}]")
         return 0
     }
-
-    @WithSpan
-    fun setup(): K9TilbakeTilLosAdapterTjeneste {
-        val objectMapper = jacksonObjectMapper()
-        opprettOppgavetype(objectMapper)
-        return this
-    }
-
-    private fun opprettOppgavetype(objectMapper: ObjectMapper) {
-        val oppgavetyperDto = objectMapper.readValue(
-            K9TilbakeTilLosAdapterTjeneste::class.java.getResource("/adapterdefinisjoner/k9-oppgavetyper-k9tilbake.json")!!
-                .readText(),
-            OppgavetyperDto::class.java
-        )
-        oppgavetypeTjeneste.oppdater(
-            oppgavetyperDto.copy(
-                oppgavetyper = oppgavetyperDto.oppgavetyper.map { oppgavetypeDto ->
-                    oppgavetypeDto.copy(
-                        oppgavebehandlingsUrlTemplate = oppgavetypeDto.oppgavebehandlingsUrlTemplate.replace(
-                            "{baseUrl}",
-                            config.k9FrontendUrl()
-                        )
-                    )
-                }.toSet()
-            )
-        )
-        log.info("opprettet oppgavetype")
-    }
-
 }
