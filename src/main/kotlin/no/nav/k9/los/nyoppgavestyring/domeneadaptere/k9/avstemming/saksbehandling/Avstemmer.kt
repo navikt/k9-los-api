@@ -1,10 +1,10 @@
-package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.sak
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling
 
-import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.Avstemmingsrapport
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.Behandlingstilstand
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
-import no.nav.k9.sak.kontrakt.avstemming.produksjonsstyring.Behandlingstilstand
 
 object Avstemmer {
     fun regnUtDiff(k9SakRapport: List<Behandlingstilstand>, åpneLosOppgaver: List<Oppgave>): Avstemmingsrapport {
@@ -12,15 +12,15 @@ object Avstemmer {
         val forekomsterSomGranskesManuelt = mutableSetOf<Pair<Behandlingstilstand, Oppgave>>()
         val åpneForekomsterIFagsystemSomManglerILos = mutableSetOf<Behandlingstilstand>()
         k9SakRapport.forEach { behandling ->
-            val oppgave = åpneLosOppgaver.find { it.eksternId == behandling.behandlingUuid.behandlingUuid.toString() }
+            val oppgave = åpneLosOppgaver.find { it.eksternId == behandling.eksternId }
             if (oppgave == null) {
                 åpneForekomsterIFagsystemSomManglerILos.add(behandling)
             } else {
                 val sammenligning =
-                    FuzzyOppgavestatus.sammenlign(behandling.behandlingStatus, Oppgavestatus.fraKode(oppgave.status))
-                if (sammenligning == FuzzyOppgavestatus.ULIK) {
+                    FuzzySammenligningsresultat.sammenlign(behandling.behandlingStatus, Oppgavestatus.fraKode(oppgave.status))
+                if (sammenligning == FuzzySammenligningsresultat.ULIK) {
                     forekomsterMedUliktInnhold.add(Pair(behandling, oppgave))
-                } else if (sammenligning == FuzzyOppgavestatus.VETIKKE) {
+                } else if (sammenligning == FuzzySammenligningsresultat.VETIKKE) {
                     forekomsterSomGranskesManuelt.add(Pair(behandling, oppgave))
                 }
             }
@@ -28,7 +28,7 @@ object Avstemmer {
 
         val åpneForekomsterILosSomManglerIFagsystem = mutableSetOf<Oppgave>()
         åpneLosOppgaver.forEach { oppgave ->
-            val overlapp = k9SakRapport.find { it.behandlingUuid.behandlingUuid.toString() == oppgave.eksternId }
+            val overlapp = k9SakRapport.find { it.eksternId == oppgave.eksternId }
             if (overlapp == null) {
                 åpneForekomsterILosSomManglerIFagsystem.add(oppgave)
             }
@@ -44,13 +44,13 @@ object Avstemmer {
     }
 }
 
-enum class FuzzyOppgavestatus {
+enum class FuzzySammenligningsresultat {
     LIK,
     ULIK,
     VETIKKE;
 
     companion object {
-        fun sammenlign(behandlingStatus: BehandlingStatus, oppgavestatus: Oppgavestatus): FuzzyOppgavestatus {
+        fun sammenlign(behandlingStatus: BehandlingStatus, oppgavestatus: Oppgavestatus): FuzzySammenligningsresultat {
             return when(behandlingStatus) {
                 BehandlingStatus.AVSLUTTET -> if (oppgavestatus == Oppgavestatus.LUKKET) { LIK } else { ULIK }
                 BehandlingStatus.OPPRETTET ->
@@ -65,6 +65,10 @@ enum class FuzzyOppgavestatus {
                 BehandlingStatus.FATTER_VEDTAK,
                 BehandlingStatus.IVERKSETTER_VEDTAK,
                 BehandlingStatus.UTREDES -> if (oppgavestatus == Oppgavestatus.LUKKET) { ULIK } else { VETIKKE }
+
+                BehandlingStatus.SATT_PÅ_VENT,
+                BehandlingStatus.LUKKET,
+                BehandlingStatus.SENDT_INN -> throw IllegalStateException("Bare aktuell for punsjoppgaver")
             }
         }
     }

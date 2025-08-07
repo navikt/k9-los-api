@@ -1,6 +1,5 @@
-package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.sak.systemklient
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.systemklienter
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.ktor.client.*
 import io.ktor.client.request.*
@@ -10,24 +9,23 @@ import kotlinx.coroutines.runBlocking
 import no.nav.helse.dusseldorf.ktor.core.Retry
 import no.nav.helse.dusseldorf.oauth2.client.AccessTokenClient
 import no.nav.helse.dusseldorf.oauth2.client.CachedAccessTokenClient
-import no.nav.k9.los.Configuration
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.Behandlingstilstand
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.TransientException
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.NavHeaders
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
-import no.nav.k9.sak.kontrakt.avstemming.produksjonsstyring.Behandlingstilstand
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.*
 
-class RestK9SakAvstemmingsklient(
-    private val configuration: Configuration,
+class RestAvstemmingsklient(
+    private val url: String,
+    private val navn: String,
     accessTokenClient: AccessTokenClient,
     scope: String,
     private val httpClient: HttpClient,
-) : K9SakAvstemmingsklient {
-    val log: Logger = LoggerFactory.getLogger("K9SakAvstemmingsklient")
-    private val url = configuration.k9Url()
+) : Avstemmingsklient {
+    val log: Logger = LoggerFactory.getLogger("${navn}Avstemmingsklient")
 
     private val scopes = setOf(scope)
     private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
@@ -69,7 +67,7 @@ class RestK9SakAvstemmingsklient(
                 || response.status == HttpStatusCode.RequestTimeout
             ) {
                 throw TransientException(
-                    "k9sak er ikke tilgjengelig for avstemming, fikk http code ${response.status.value}",
+                    "$navn er ikke tilgjengelig for avstemming, fikk http code ${response.status.value}",
                     Exception("HTTP error ${response.status.value}")
                 )
             } else {
@@ -77,10 +75,10 @@ class RestK9SakAvstemmingsklient(
 
                 log.error("Error response = '$feiltekst' fra '${response.request.url}'")
                 log.error("HTTP ${response.status.value} ${response.status.description}")
-                throw IllegalStateException("Feil ved henting av behandling fra k9-sak")
+                throw IllegalStateException("Feil ved henting av behandling fra $navn")
             }
         }
 
-        return LosObjectMapper.instance.readValue(response.bodyAsText())
+        return LosObjectMapper.instance.readValue(responseBody)
     }
 }

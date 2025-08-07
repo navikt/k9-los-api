@@ -7,7 +7,7 @@ val vaultJdbcVersion = "1.3.10"
 val koinVersion = "4.1.0"
 val kotliqueryVersion = "1.9.1"
 val k9SakVersion = "5.4.21"
-val k9KlageVersion = "0.4.7"
+val k9KlageVersion = "0.4.9"
 val jacksonVersion = "2.17.2"
 val commonsTextVersion = "1.13.0"
 

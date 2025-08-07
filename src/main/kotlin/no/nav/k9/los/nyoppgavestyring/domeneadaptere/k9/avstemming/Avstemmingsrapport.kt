@@ -1,7 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming
 
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
-import no.nav.k9.sak.kontrakt.avstemming.produksjonsstyring.Behandlingstilstand
 
 data class Avstemmingsrapport(
     val fagsystem: String,

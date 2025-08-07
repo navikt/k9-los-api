@@ -10,6 +10,7 @@ import kotlinx.coroutines.channels.Channel
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonKonverteringJobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventHandler
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
@@ -445,6 +446,15 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         ForvaltningRepository(
             oppgavetypeRepository = get(),
             transactionalManager = get(),
+        )
+    }
+
+    single<AvstemmingsTjeneste> {
+        AvstemmingsTjeneste(
+            oppgaveQueryService = get(),
+            k9SakAvstemmingsklient = get(),
+            k9KlageAvstemmingsklient = get(),
+            SakAvstemmer = get()
         )
     }
 

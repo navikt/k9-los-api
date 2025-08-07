@@ -1,7 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming
 
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.sak.Avstemmer
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.sak.systemklient.K9SakAvstemmingsklient
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.Avstemmer
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.systemklienter.Avstemmingsklient
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
@@ -12,8 +12,9 @@ import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 
 class AvstemmingsTjeneste(
     private val oppgaveQueryService: OppgaveQueryService,
-    private val k9SakAvstemmingsklient: K9SakAvstemmingsklient,
-    private val k9SakAvstemmer: Avstemmer
+    private val k9SakAvstemmingsklient: Avstemmingsklient,
+    private val k9KlageAvstemmingsklient: Avstemmingsklient,
+    private val SakAvstemmer: Avstemmer
 ) {
     fun avstem(fagsystem: Fagsystem) : Avstemmingsrapport {
         return when (fagsystem) {
@@ -37,10 +38,31 @@ class AvstemmingsTjeneste(
                     )
                 )
                 val åpneOppgaver = oppgaveQueryService.queryForOppgave(QueryRequest(query))
-                k9SakAvstemmer.regnUtDiff(åpneBehandlinger, åpneOppgaver)
+                SakAvstemmer.regnUtDiff(åpneBehandlinger, åpneOppgaver)
+            }
+            Fagsystem.K9KLAGE -> {
+                val åpneBehandlinger = k9KlageAvstemmingsklient.hentÅpneBehandlinger()
+
+                val query = OppgaveQuery(
+                    filtere = listOf(
+                        FeltverdiOppgavefilter(
+                            "K9",
+                            "oppgavetype",
+                            operator = EksternFeltverdiOperator.EQUALS,
+                            verdi = listOf("k9klage"),
+                        ),
+                        FeltverdiOppgavefilter(
+                            "K9",
+                            "oppgavestatus",
+                            operator = EksternFeltverdiOperator.IN,
+                            verdi = listOf(Oppgavestatus.AAPEN, Oppgavestatus.VENTER),
+                        )
+                    )
+                )
+                val åpneOppgaver = oppgaveQueryService.queryForOppgave(QueryRequest(query))
+                SakAvstemmer.regnUtDiff(åpneBehandlinger, åpneOppgaver)
             }
             Fagsystem.K9TILBAKE -> throw UnsupportedOperationException()
-            Fagsystem.K9KLAGE -> throw UnsupportedOperationException()
             Fagsystem.PUNSJ -> throw UnsupportedOperationException()
         }
     }

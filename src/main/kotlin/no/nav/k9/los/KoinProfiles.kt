@@ -11,6 +11,8 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.aktivvask.Aktivvask
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonKonverteringJobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.systemklienter.RestAvstemmingsklient
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.AsynkronProsesseringV1Service
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.K9KlageTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.K9KlageTilLosHistorikkvaskTjeneste
@@ -549,6 +551,27 @@ fun common(app: Application, config: Configuration) = module {
         ForvaltningRepository(
             oppgavetypeRepository = get(),
             transactionalManager = get(),
+        )
+    }
+
+    single {
+        AvstemmingsTjeneste(
+            oppgaveQueryService = get(),
+            k9SakAvstemmingsklient = RestAvstemmingsklient(
+                url = config.k9Url(),
+                navn = "k9sak",
+                accessTokenClient = get(),
+                scope = "api://dev-fss.k9saksbehandling.k9-sak/.default",
+                httpClient = get(),
+            ),
+            k9KlageAvstemmingsklient = RestAvstemmingsklient(
+                url = config.k9KlageUrl(),
+                navn = "k9klage",
+                accessTokenClient = get(),
+                scope = "api://dev-fss.k9saksbehandling.k9-klage/.default",
+                httpClient = get(),
+            ),
+            SakAvstemmer = get()
         )
     }
 
