@@ -82,7 +82,7 @@ dependencies {
 
     // Div
     implementation(enforcedPlatform("com.fasterxml.jackson:jackson-bom:$jacksonVersion"))
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.+")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
     implementation("org.apache.commons:commons-text:$commonsTextVersion")
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
     implementation("io.github.smiley4:ktor-openapi:5.0.2")

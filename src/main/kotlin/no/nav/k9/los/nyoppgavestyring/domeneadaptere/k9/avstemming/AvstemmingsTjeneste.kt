@@ -1,7 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming
 
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.Avstemmer
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.systemklienter.Avstemmingsklient
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.systemklient.Avstemmingsklient
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
@@ -24,13 +24,13 @@ class AvstemmingsTjeneste(
                 val query = OppgaveQuery(
                     filtere = listOf(
                         FeltverdiOppgavefilter(
-                            "K9",
+                            null,
                             "oppgavetype",
                             operator = EksternFeltverdiOperator.EQUALS,
                             verdi = listOf("k9sak"),
                         ),
                         FeltverdiOppgavefilter(
-                            "K9",
+                            null,
                             "oppgavestatus",
                             operator = EksternFeltverdiOperator.IN,
                             verdi = listOf(Oppgavestatus.AAPEN, Oppgavestatus.VENTER),
@@ -46,13 +46,13 @@ class AvstemmingsTjeneste(
                 val query = OppgaveQuery(
                     filtere = listOf(
                         FeltverdiOppgavefilter(
-                            "K9",
+                            null,
                             "oppgavetype",
                             operator = EksternFeltverdiOperator.EQUALS,
                             verdi = listOf("k9klage"),
                         ),
                         FeltverdiOppgavefilter(
-                            "K9",
+                            null,
                             "oppgavestatus",
                             operator = EksternFeltverdiOperator.IN,
                             verdi = listOf(Oppgavestatus.AAPEN, Oppgavestatus.VENTER),
