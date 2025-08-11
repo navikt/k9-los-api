@@ -175,7 +175,6 @@ object localSetup : KoinComponent {
                     opprettetBehandling = LocalDateTime.now(),
                     aktørId = Random.nextLong(1_000_000_000_000, 9_000_000_000_000).toString(),
                     behandlingStatus = BehandlingStatus.UTREDES.kode,
-                    behandlinStatus = BehandlingStatus.UTREDES.kode,
                     behandlingSteg = BehandlingStegType.FATTE_VEDTAK.kode,
                     behandlingTypeKode = "BT-007",
                     behandlingstidFrist = null,
