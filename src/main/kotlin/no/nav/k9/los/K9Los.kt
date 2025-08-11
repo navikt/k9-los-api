@@ -420,9 +420,9 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
         add(
             PlanlagtJobb.KjørPåTidspunkt(
                 "K9SakTilLosHistorikkvask",
-                høyPrioritet,
-                kjørTidligst = LocalDateTime.of(2025, 2, 27, 19, 0),
-                kjørSenest = LocalDateTime.of(2025, 3, 31, 21, 0),
+                høyPrioritet + 3,
+                kjørTidligst = LocalDateTime.of(2025, 8, 11, 17, 0),
+                kjørSenest = LocalDateTime.of(2025, 8, 11, 17, 30),
             ) {
                 k9SakTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
             }
@@ -431,9 +431,9 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
         add(
             PlanlagtJobb.KjørPåTidspunkt(
                 "K9PunsjTilLosHistorikkvask",
-                høyPrioritet,
-                kjørTidligst = LocalDateTime.of(2025, 1, 1, 0, 0),
-                kjørSenest = LocalDateTime.of(2025, 3, 31, 18, 0),
+                høyPrioritet + 2,
+                kjørTidligst = LocalDateTime.of(2025, 8, 11, 17, 0),
+                kjørSenest = LocalDateTime.of(2025, 8, 11, 17, 30),
             ) {
                 k9PunsjTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
             }
@@ -442,9 +442,9 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
         add(
             PlanlagtJobb.KjørPåTidspunkt(
                 "K9TilbakeTilLosHistorikkvask",
-                høyPrioritet,
-                kjørTidligst = LocalDateTime.of(2025, 2, 27, 17, 0),
-                kjørSenest = LocalDateTime.of(2025, 3, 31, 17, 0),
+                høyPrioritet + 1,
+                kjørTidligst = LocalDateTime.of(2025, 8, 11, 17, 0),
+                kjørSenest = LocalDateTime.of(2025, 8, 11, 17, 30),
             ) {
                 k9TilbakeTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
             }
@@ -454,8 +454,8 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
             PlanlagtJobb.KjørPåTidspunkt(
                 "K9KlageTilLosHistorikkvask",
                 høyPrioritet,
-                kjørTidligst = LocalDateTime.of(2025, 3, 25, 10, 0),
-                kjørSenest = LocalDateTime.of(2025, 3, 31, 17, 0),
+                kjørTidligst = LocalDateTime.of(2025, 8, 11, 17, 0),
+                kjørSenest = LocalDateTime.of(2025, 8, 11, 17, 30),
             ) {
                 k9KlageTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
             }
