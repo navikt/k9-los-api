@@ -12,7 +12,7 @@ import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.K9SakEventDtoBuilder
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.TestSaksbehandler
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakBerikerInterfaceKludge
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlientInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
@@ -51,7 +51,7 @@ class HistorikkvaskFerdigstiltTest : AbstractK9LosIntegrationTest() {
     
     @Test
     fun `historikkvask skal sette ferdigstiltEnhet og ferdigstiltTidspunkt på gamle lukkede oppgaver`() {
-        val k9SakBerikerKlient = mockk<K9SakBerikerInterfaceKludge>()
+        val k9SakBerikerKlient = mockk<K9SakSystemKlientInterfaceKludge>()
         val saksbehandlerId = "Z123456"
 
         every {

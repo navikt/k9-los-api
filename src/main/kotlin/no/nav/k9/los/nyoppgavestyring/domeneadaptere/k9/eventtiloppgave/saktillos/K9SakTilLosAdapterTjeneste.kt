@@ -10,7 +10,7 @@ import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventRepository
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakBerikerInterfaceKludge
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlientInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
@@ -32,7 +32,7 @@ class K9SakTilLosAdapterTjeneste(
     private val oppgaveRepository: OppgaveRepository,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
     private val transactionalManager: TransactionalManager,
-    private val k9SakBerikerKlient: K9SakBerikerInterfaceKludge,
+    private val k9SakBerikerKlient: K9SakSystemKlientInterfaceKludge,
     private val pepCacheService: PepCacheService,
     private val historikkvaskChannel: Channel<k9SakEksternId>,
     private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
