@@ -21,6 +21,10 @@ enum class AksjonspunktDefinisjonK9Tilbake(
         fun fraKode(kode: String): AksjonspunktDefinisjonK9Tilbake {
             return entries.first { it.kode == kode }
         }
+
+        fun alle(): List<AksjonspunktDefinisjonK9Tilbake> {
+            return entries
+        }
     }
 
 }
