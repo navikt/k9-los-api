@@ -297,8 +297,7 @@ class EventTilDtoMapper {
 
             val førsteAPMedFristOgVenteårsak = åpneAksjonspunkter
                 .filter { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.fristTid != null && aksjonspunktTilstandDto.venteårsak != null }
-                .sortedBy { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.fristTid }
-                .firstOrNull()
+                .minByOrNull { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.fristTid }
 
             if (førsteAPMedFristOgVenteårsak != null) {
                 return førsteAPMedFristOgVenteårsak.venteårsak.ventekategori
