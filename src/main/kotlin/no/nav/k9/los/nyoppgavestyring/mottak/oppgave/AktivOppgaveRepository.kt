@@ -176,7 +176,7 @@ class AktivOppgaveRepository(val oppgavetypeRepository: OppgavetypeRepository) {
                     tx
                 )
             }
-            DetaljerMetrikker.time("k9sakHistorikkvask", "oppdaterFelter") { oppdaterFelter(diffResultat.updates, oppgave, tx) }
+            DetaljerMetrikker.time("k9sakHistorikkvask", "oppdaterFelter") { oppdaterFelter(diffResultat.updates, tx) }
             DetaljerMetrikker.time("k9sakHistorikkvask", "slettFelter") { slettFelter(diffResultat.deletes, tx) }
             DetaljerMetrikker.observeTeller("k9sakHistorikkvask", "insertFelter", diffResultat.inserts.size)
             DetaljerMetrikker.observeTeller("k9sakHistorikkvask", "oppdaterFelter", diffResultat.updates.size)
@@ -236,13 +236,13 @@ class AktivOppgaveRepository(val oppgavetypeRepository: OppgavetypeRepository) {
             )
         }
 
-        private fun oppdaterFelter(updates: Map<Long, Verdi>, oppgave: OppgaveV3, tx: TransactionalSession) {
+        private fun oppdaterFelter(updates: Map<Long, Verdi>, tx: TransactionalSession) {
             if (updates.isEmpty()) {
                 return
             }
             tx.batchPreparedNamedStatement(
-                "update oppgavefelt_verdi_aktiv set verdi = :verdi, verdi_bigint = :verdi_bigint, oppgavestatus = cast(:status as oppgavestatus) where id = :id",
-                updates.map { mapOf("id" to it.key, "verdi" to it.value.verdi, "verdi_bigint" to it.value.verdiBigInt, "status" to oppgave.status.kode) }.toList()
+                "update oppgavefelt_verdi_aktiv set verdi = :verdi, verdi_bigint = :verdi_bigint where id = :id",
+                updates.map { mapOf("id" to it.key, "verdi" to it.value.verdi, "verdi_bigint" to it.value.verdiBigInt) }.toList()
             )
         }
 
