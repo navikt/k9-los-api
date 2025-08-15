@@ -203,10 +203,6 @@ class EventTilDtoMapper {
             }
         }
 
-        fun isHarEllerHarHattManueltAksjonspunkt(event: K9TilbakeEventDto): Boolean {
-            return event.aksjonspunktKoderMedStatusListe.any { it.value != AksjonspunktStatus.AVBRUTT.kode }
-        }
-
         private fun utledAksjonspunkter(
             event: K9TilbakeEventDto,
             oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>

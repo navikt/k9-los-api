@@ -259,6 +259,8 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
             Jobbplanlegger(setOf(PlanlagtJobb.Periodisk("pepcache", 0, Tidsvindu.ÅPENT, 500.milliseconds, 0.seconds) {
                 pepCacheService.oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn(gyldighet = Duration.ofNanos(1))
             }), coroutineContext = this.coroutineContext)
+        //hvis testen henger, bytt til testScheduler her for å diagnostisere, men vit at testScheduler mest sannsynlig ødelegger testen
+        // , så du må mest sannsynlig bytte tilbake til coroutineContext for at timing med jobb opp mot cache-endringer og venting på riktig tilstand skal virke
         jobbplanlegger.start()
 
         val saksnummer = "TEST4"

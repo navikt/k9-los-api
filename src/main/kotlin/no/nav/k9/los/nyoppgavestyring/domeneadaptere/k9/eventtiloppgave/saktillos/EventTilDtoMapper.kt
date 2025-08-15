@@ -103,7 +103,7 @@ class EventTilDtoMapper {
             return ventetype != Ventekategori.AVVENTER_SAKSBEHANDLER
         }
 
-        fun isHarEllerHarHattManueltAksjonspunkt(event: K9SakEventDto): Boolean {
+        fun harEllerHarHattManueltAksjonspunkt(event: K9SakEventDto): Boolean {
             return event.aksjonspunktTilstander.any { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.status != AksjonspunktStatus.AVBRUTT }
         }
 
@@ -115,7 +115,7 @@ class EventTilDtoMapper {
 
             val åpneAksjonspunkter = getåpneAksjonspunkter(event)
 
-            val harEllerHarHattManueltAksjonspunkt = isHarEllerHarHattManueltAksjonspunkt(event)
+            val harEllerHarHattManueltAksjonspunkt = harEllerHarHattManueltAksjonspunkt(event)
 
             utledAksjonspunkter(event, oppgaveFeltverdiDtos)
             utledÅpneAksjonspunkter(event.behandlingSteg, åpneAksjonspunkter, oppgaveFeltverdiDtos)
