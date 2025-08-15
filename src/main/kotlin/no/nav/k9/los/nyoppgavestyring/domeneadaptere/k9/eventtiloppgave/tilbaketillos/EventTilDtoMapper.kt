@@ -1,11 +1,11 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos
 
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
-import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
-import no.nav.k9.los.nyoppgavestyring.kodeverk.AksjonspunktStatus.OPPRETTET
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
 import no.nav.k9.los.nyoppgavestyring.kodeverk.AksjonspunktStatus
+import no.nav.k9.los.nyoppgavestyring.kodeverk.AksjonspunktStatus.OPPRETTET
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
@@ -22,7 +22,7 @@ class EventTilDtoMapper {
                 område = "K9",
                 kildeområde = "K9",
                 type = "k9tilbake",
-                status = finnOppgavestatusFraAksjonspunkter(event.aksjonspunktKoderMedStatusListe).kode,
+                status = utledOppgavestatus(event).kode,
                 endretTidspunkt = event.eventTid,
                 reservasjonsnøkkel = utledReservasjonsnøkkel(event, erTilBeslutter(event)),
                 feltverdier = lagFeltverdier(event, forrigeOppgave)
@@ -32,17 +32,31 @@ class EventTilDtoMapper {
             return lagNøkkelAktør(event, erTilBeslutter)
         }
 
-        private fun finnOppgavestatusFraAksjonspunkter(aksjonspunktMedStatus: Map<String, String>): Oppgavestatus {
-            val harÅpentAutopunkt =
-                aksjonspunktMedStatus.any { it.value == OPPRETTET.kode && AksjonspunktDefinisjonK9Tilbake.fraKode(it.key).erAutopunkt }
-            val harÅpentAksjonspunkt =
-                aksjonspunktMedStatus.any { it.value == OPPRETTET.kode && !AksjonspunktDefinisjonK9Tilbake.fraKode(it.key).erAutopunkt }
-            return if (harÅpentAutopunkt) {
-                Oppgavestatus.VENTER
-            } else if (harÅpentAksjonspunkt) {
-                Oppgavestatus.AAPEN
-            } else {
-                Oppgavestatus.LUKKET
+        @VisibleForTesting
+        fun utledOppgavestatus(event: K9TilbakeEventDto): Oppgavestatus {
+            return when (BehandlingStatus.fraKode(event.behandlingStatus)) {
+                BehandlingStatus.OPPRETTET -> Oppgavestatus.UAVKLART
+                BehandlingStatus.AVSLUTTET -> Oppgavestatus.LUKKET
+                BehandlingStatus.FATTER_VEDTAK,
+                BehandlingStatus.IVERKSETTER_VEDTAK,
+                BehandlingStatus.UTREDES -> {
+                    val harÅpentAutopunkt =
+                        event.aksjonspunktKoderMedStatusListe.any { it.value == OPPRETTET.kode && AksjonspunktDefinisjonK9Tilbake.fraKode(it.key).erAutopunkt }
+                    val harÅpentAksjonspunkt =
+                        event.aksjonspunktKoderMedStatusListe.any { it.value == OPPRETTET.kode && !AksjonspunktDefinisjonK9Tilbake.fraKode(it.key).erAutopunkt }
+                    if (harÅpentAutopunkt) {
+                        Oppgavestatus.VENTER
+                    }
+                    else if (harÅpentAksjonspunkt) {
+                        Oppgavestatus.AAPEN
+                    } else {
+                        Oppgavestatus.UAVKLART
+                    }
+                }
+
+                BehandlingStatus.SATT_PÅ_VENT,
+                BehandlingStatus.LUKKET,
+                BehandlingStatus.SENDT_INN -> throw IllegalStateException("Punsj-statuser ikke lov på tilbakekravsbehandling")
             }
         }
 
@@ -171,9 +185,7 @@ class EventTilDtoMapper {
         ) {
             val harManueltAksjonspunkt = event.aksjonspunktKoderMedStatusListe
                 .filter { it.value == OPPRETTET.kode || it.value == AksjonspunktStatus.UTFØRT.kode }
-                .map { AksjonspunktDefinisjonK9Tilbake.fraKode(it.key) }
-                .filter { !it.erAutopunkt }
-                .isNotEmpty()
+                .map { AksjonspunktDefinisjonK9Tilbake.fraKode(it.key) }.any { !it.erAutopunkt }
             if (forrigeOppgave != null && forrigeOppgave.hentVerdi("helautomatiskBehandlet").toBoolean().not()) {
                 oppgaveFeltverdiDtos.add(
                     OppgaveFeltverdiDto(

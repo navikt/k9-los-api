@@ -106,6 +106,7 @@ dependencies {
     }
     testImplementation("org.testcontainers:postgresql:$testContainers")
     testImplementation("io.insert-koin:koin-test-junit5:$koinVersion")
+    testImplementation("io.kotest:kotest-runner-junit5:6.0.0.M4")
 }
 
 repositories {
@@ -148,7 +149,7 @@ tasks {
         gradleVersion = "8.6"
     }
 
-    withType<Test> {
+    withType<Test>{
         useJUnitPlatform()
         // Always run tests, even when nothing changed.
         dependsOn("cleanTest")

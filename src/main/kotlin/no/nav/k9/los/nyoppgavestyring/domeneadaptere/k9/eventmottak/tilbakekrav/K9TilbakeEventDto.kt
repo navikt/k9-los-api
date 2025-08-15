@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav
 
+import com.fasterxml.jackson.annotation.JsonAlias
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer
@@ -33,8 +34,8 @@ data class K9TilbakeEventDto(
     @JsonDeserialize(using = LocalDateTimeDeserializer::class)
     val eventTid: LocalDateTime,
     val eventHendelse: EventHendelse,
-    val behandlingStatus: String?,
-    val behandlinStatus: String?,
+    @JsonAlias("behandlinStatus")
+    val behandlingStatus: String,
     val behandlingSteg: String?,
     val behandlendeEnhet: String? = null,
     val resultatType: String? = null,
@@ -74,7 +75,7 @@ data class K9TilbakeEventDto(
             eksternId=$eksternId, saksnummer='$saksnummer', ytelseTypeKode='$ytelseTypeKode', 
             fagsystem='$fagsystem', behandlingstidFrist=$behandlingstidFrist, eventTid=$eventTid, 
             førsteFeilutbetaling=$førsteFeilutbetaling, feilutbetaltBeløp=$feilutbetaltBeløp)
-            eventHendelse=$eventHendelse, behandlinStatus=$behandlinStatus, behandlingStatus=$behandlingStatus, 
+            eventHendelse=$eventHendelse, behandlingStatus=$behandlingStatus, 
             behandlingSteg=$behandlingSteg, resultatType=$resultatType, 
             behandlingTypeKode='$behandlingTypeKode', 
             opprettetBehandling=$opprettetBehandling, 

@@ -112,7 +112,7 @@ class K9SakEventDtoBuilder(
         this.behandlingSteg = BehandlingStegType.FORESLÅ_VEDTAK
         this.resultatType = BehandlingResultatType.INNVILGET
         this.aksjonspunkter = mutableListOf(
-            AksjonspunktTilstandBuilder.KONTROLLER_LEGEERKLÆRING.medStatus(AksjonspunktStatus.UTFØRT),
+            AksjonspunktTilstandBuilder.KONTROLLER_LEGEERKLÆRING.medStatus(AksjonspunktStatus.OPPRETTET),
             AksjonspunktTilstandBuilder.FORESLÅ_VEDTAK.medStatus(AksjonspunktStatus.AVBRUTT),
             AksjonspunktTilstandBuilder.FATTER_VEDTAK.medStatus(AksjonspunktStatus.UTFØRT)
         )

@@ -45,7 +45,7 @@ data class K9TilbakeModell(
         }
         var behandlingStatus = sisteEvent.behandlingStatus
         // feil i dto, sjekker begge feltene
-        behandlingStatus = behandlingStatus ?: sisteEvent.behandlinStatus ?: BehandlingStatus.OPPRETTET.kode
+        behandlingStatus = behandlingStatus ?: sisteEvent.behandlingStatus ?: BehandlingStatus.OPPRETTET.kode
         if (behandlingStatus == BehandlingStatus.AVSLUTTET.kode) {
             aktiv = false
         }

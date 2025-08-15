@@ -60,7 +60,7 @@ class K9SakBerikerSystemKlient(
         if (response.status == HttpStatusCode.NoContent) {
             return null
         }
-        
+
         val abc = if (response.status.isSuccess()) {
             response.bodyAsText()
         } else {
