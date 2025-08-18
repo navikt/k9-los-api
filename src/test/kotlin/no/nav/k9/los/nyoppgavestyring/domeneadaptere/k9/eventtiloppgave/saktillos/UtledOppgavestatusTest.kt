@@ -49,6 +49,18 @@ class UtledOppgavestatusKoTest : FreeSpec({
                                 Testdata.testevent(behandlingstatus, listOf(apTilstand)),
                             ) shouldBe Oppgavestatus.AAPEN
                         }
+                        "og autopunkt samtidig" - {
+                            val autoKode = "7004"
+                            "med status OPPRETTET" - {
+                                val apTilstand = Testdata.testAksjonspunktTilstand(apKode, AksjonspunktStatus.OPPRETTET)
+                                val autoTilstand = Testdata.testAksjonspunktTilstand(autoKode, AksjonspunktStatus.OPPRETTET)
+                                "gir oppgavestatus VENTER" {
+                                    EventTilDtoMapper.utledOppgavestatus(
+                                        Testdata.testevent(behandlingstatus, listOf(apTilstand, autoTilstand)),
+                                    ) shouldBe Oppgavestatus.VENTER
+                                }
+                            }
+                        }
                     }
                     "med status UTFØRT eller AVBRUTT" - {
                         withData(
