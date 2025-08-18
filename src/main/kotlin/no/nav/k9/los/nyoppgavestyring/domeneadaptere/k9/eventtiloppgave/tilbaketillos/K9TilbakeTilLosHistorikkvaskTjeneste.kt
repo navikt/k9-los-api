@@ -22,7 +22,7 @@ class K9TilbakeTilLosHistorikkvaskTjeneste(
 
     private val log: Logger = LoggerFactory.getLogger(K9TilbakeTilLosHistorikkvaskTjeneste::class.java)
 
-    private val METRIKKLABEL = "k9-tilbake-til-los-historikkvask"
+    val METRIKKLABEL = "k9-tilbake-til-los-historikkvask"
 
     fun kjørHistorikkvask() {
         if (config.nyOppgavestyringAktivert()) {

@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos
 
 import io.ktor.http.*
 import io.ktor.server.response.*
@@ -7,18 +7,18 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
 import org.koin.ktor.ext.inject
 import kotlin.concurrent.thread
 
-internal fun Route.K9SakTilLosApi() {
+internal fun Route.K9TilbakeTilLosApi() {
     val requestContextService by inject<RequestContextService>()
-    val k9SakTilLosHistorikkvaskTjeneste by inject<K9SakTilLosHistorikkvaskTjeneste>()
+    val k9TilbakeTilLosHistorikkvaskTjeneste by inject<K9TilbakeTilLosHistorikkvaskTjeneste>()
 
     put("/startHistorikkvask") {
         requestContextService.withRequestContext(call) {
             thread(
                 start = true,
                 isDaemon = true,
-                name = k9SakTilLosHistorikkvaskTjeneste.METRIKKLABEL
+                name = k9TilbakeTilLosHistorikkvaskTjeneste.METRIKKLABEL
             ) {
-                k9SakTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
+                k9TilbakeTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
             }
             call.respond(HttpStatusCode.NoContent)
         }
