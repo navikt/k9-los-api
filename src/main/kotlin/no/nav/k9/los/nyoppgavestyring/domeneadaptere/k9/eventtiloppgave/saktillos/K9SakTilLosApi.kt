@@ -24,4 +24,11 @@ internal fun Route.K9SakTilLosApi() {
         }
     }
 
+    post("/nullstillHistorikkvask") {
+        requestContextService.withRequestContext(call) {
+            k9SakTilLosHistorikkvaskTjeneste.nullstillHistorikkvask()
+            call.respond(HttpStatusCode.OK)
+        }
+    }
+
 }
