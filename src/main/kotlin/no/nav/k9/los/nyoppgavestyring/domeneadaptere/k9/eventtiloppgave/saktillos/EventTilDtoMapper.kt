@@ -39,6 +39,9 @@ class EventTilDtoMapper {
             )
 
         fun utledOppgavestatus(event: K9SakEventDto): Oppgavestatus {
+            if (event.behandlingStatus == null) {
+                return Oppgavestatus.UAVKLART
+            }
             return when (BehandlingStatus.fraKode(event.behandlingStatus!!)) {
                 BehandlingStatus.OPPRETTET -> Oppgavestatus.UAVKLART
                 BehandlingStatus.AVSLUTTET -> Oppgavestatus.LUKKET
