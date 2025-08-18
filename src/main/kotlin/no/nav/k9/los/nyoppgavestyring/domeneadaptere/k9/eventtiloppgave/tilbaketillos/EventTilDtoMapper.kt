@@ -44,10 +44,10 @@ class EventTilDtoMapper {
                         event.aksjonspunktKoderMedStatusListe.any { it.value == OPPRETTET.kode && AksjonspunktDefinisjonK9Tilbake.fraKode(it.key).erAutopunkt }
                     val harÅpentAksjonspunkt =
                         event.aksjonspunktKoderMedStatusListe.any { it.value == OPPRETTET.kode && !AksjonspunktDefinisjonK9Tilbake.fraKode(it.key).erAutopunkt }
+
                     if (harÅpentAutopunkt) {
                         Oppgavestatus.VENTER
-                    }
-                    else if (harÅpentAksjonspunkt) {
+                    } else if (harÅpentAksjonspunkt) {
                         Oppgavestatus.AAPEN
                     } else {
                         Oppgavestatus.UAVKLART

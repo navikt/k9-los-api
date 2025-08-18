@@ -59,12 +59,13 @@ class EventTilDtoMapper {
                         event.aksjonspunkttilstander
                             .filter { AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode()).erAutopunkt() }
                             .any { it.status == AksjonspunktStatus.OPPRETTET }
+
                     if (event.behandlingSteg == BehandlingStegType.OVERFØRT_NK.kode) {
+                        Oppgavestatus.VENTER
+                    } else if (harÅpentAutopunkt) {
                         Oppgavestatus.VENTER
                     } else if (harÅpentManueltAksjonspunkt) {
                         Oppgavestatus.AAPEN
-                    } else if (harÅpentAutopunkt) {
-                        Oppgavestatus.VENTER
                     } else {
                         Oppgavestatus.UAVKLART
                     }
