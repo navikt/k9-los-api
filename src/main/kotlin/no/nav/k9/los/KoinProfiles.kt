@@ -555,27 +555,6 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        AvstemmingsTjeneste(
-            oppgaveQueryService = get(),
-            k9SakAvstemmingsklient = RestAvstemmingsklient(
-                url = config.k9Url(),
-                navn = "k9sak",
-                accessTokenClient = get(),
-                scope = "api://dev-fss.k9saksbehandling.k9-sak/.default",
-                httpClient = get(),
-            ),
-            k9KlageAvstemmingsklient = RestAvstemmingsklient(
-                url = config.k9KlageUrl(),
-                navn = "k9klage",
-                accessTokenClient = get(),
-                scope = "api://dev-fss.k9saksbehandling.k9-klage/.default",
-                httpClient = get(),
-            ),
-            SakAvstemmer = get()
-        )
-    }
-
-    single {
         RefreshK9v3Tjeneste(
             k9SakService = get(),
             oppgaveQueryService = get(),
@@ -735,6 +714,27 @@ fun preprodConfig(config: Configuration) = module {
             httpClient = get()
         )
     }
+
+    single {
+        AvstemmingsTjeneste(
+            oppgaveQueryService = get(),
+            k9SakAvstemmingsklient = RestAvstemmingsklient(
+                url = config.k9Url(),
+                navn = "k9sak",
+                accessTokenClient = get(),
+                scope = "api://dev-fss.k9saksbehandling.k9-sak/.default",
+                httpClient = get(),
+            ),
+            k9KlageAvstemmingsklient = RestAvstemmingsklient(
+                url = config.k9KlageUrl(),
+                navn = "k9klage",
+                accessTokenClient = get(),
+                scope = "api://dev-fss.k9saksbehandling.k9-klage/.default",
+                httpClient = get(),
+            ),
+            SakAvstemmer = get()
+        )
+    }
 }
 
 // Unik konfigurasjon for prod
@@ -784,6 +784,27 @@ fun prodConfig(config: Configuration) = module {
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://prod-fss.k9saksbehandling.sif-abac-pdp/.default",
             httpClient = get()
+        )
+    }
+
+    single {
+        AvstemmingsTjeneste(
+            oppgaveQueryService = get(),
+            k9SakAvstemmingsklient = RestAvstemmingsklient(
+                url = config.k9Url(),
+                navn = "k9sak",
+                accessTokenClient = get(),
+                scope = "api://prod-fss.k9saksbehandling.k9-sak/.default",
+                httpClient = get(),
+            ),
+            k9KlageAvstemmingsklient = RestAvstemmingsklient(
+                url = config.k9KlageUrl(),
+                navn = "k9klage",
+                accessTokenClient = get(),
+                scope = "api://prod-fss.k9saksbehandling.k9-klage/.default",
+                httpClient = get(),
+            ),
+            SakAvstemmer = get()
         )
     }
 }
