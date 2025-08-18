@@ -5,7 +5,7 @@ import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.BehandlingMedFagsakDto
 import java.util.*
 
-class K9SakBerikerKlientLocal : K9SakBerikerInterfaceKludge {
+class K9SakSystemKlientLocal : K9SakSystemKlientInterfaceKludge {
     override fun hentBehandling(behandlingUUID: UUID, antallForsøk: Int): BehandlingMedFagsakDto? {
         val dto = BehandlingMedFagsakDto()
         dto.sakstype = FagsakYtelseType.OBSOLETE
