@@ -26,7 +26,7 @@ class FerdigstiltEnhet(val saksbehandlerRepository: SaksbehandlerRepository) : F
     private fun hentEnhetFraCache(saksbehandler: String?) =
         saksbehandler?.let {
             saksbehandlerCache.hent(it) {
-                saksbehandlerRepository.finnSaksbehandlerMedIdentEkskluderKode6(it)?.enhet!!.uppercase()
+                saksbehandlerRepository.finnSaksbehandlerMedIdentEkskluderKode6(it)?.enhet?.uppercase()
             }
         }
 }
