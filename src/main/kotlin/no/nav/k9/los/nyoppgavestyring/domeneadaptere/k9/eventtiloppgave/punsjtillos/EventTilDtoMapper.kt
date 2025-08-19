@@ -98,6 +98,10 @@ class EventTilDtoMapper {
                 OppgaveFeltverdiDto(
                     nøkkel = "mottattDato",
                     verdi = forrigeOppgave?.hentVerdi("mottattDato") ?: event.eventTid.toString(),
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "helautomatiskBehandlet",
+                    verdi = "false"
                 )
             )
         }

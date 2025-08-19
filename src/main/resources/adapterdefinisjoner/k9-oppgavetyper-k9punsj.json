@@ -22,6 +22,11 @@
           "påkrevd": false
         },
         {
+          "id": "helautomatiskBehandlet",
+          "visPåOppgave": true,
+          "påkrevd": false
+        },
+        {
           "id": "ytelsestype",
           "visPåOppgave": true,
           "påkrevd": false

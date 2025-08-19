@@ -315,6 +315,12 @@ class DagensTallService(
                             EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS,
                             listOf(dato.toString())
                         ),
+                        FeltverdiOppgavefilter(
+                            område = "K9",
+                            kode = "helautomatiskBehandlet",
+                            operator = EksternFeltverdiOperator.EQUALS,
+                            listOf(false.toString())
+                        ),
                         ytelser?.let { liste ->
                             FeltverdiOppgavefilter(
                                 "K9", "ytelsestype", EksternFeltverdiOperator.IN, liste.map { it.kode }

@@ -156,9 +156,6 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 //ser ut som noen gamle mottatte dokumenter kan mangle innsendingstidspunkt.
                 //da faller vi tilbake til å bruke behandling_opprettet i mapperen
             }
-            if (e.behandlingStatus == null) {
-                log.warn("Event med tom behandlingstatus: ${e.eksternId}")
-            }
             var oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
 
             oppgaveDto = k9SakTilLosAdapterTjeneste.ryddOppObsoleteOgResultatfeilFra2020(
