@@ -76,7 +76,7 @@ class FerdigstiltePerEnhetService(
                     }
                 }
 
-                // Tallene for idag er alltid oppdatert
+                // Tallene for idag skal alltid oppdateres, siden ferdigstilte endrer seg gjennom dagen
                 cache.set(idag, CacheObject(hentFraDatabase(idag), idag.plusDays(29).atStartOfDay()))
                 antallDagerHenter++
 
