@@ -156,33 +156,33 @@ class DagensTallService(
                         )
                     )
                 )
-                tall.add(
-                    DagensTallDto(
-                        hovedgruppe = hovedgruppe,
-                        undergruppe = DagensTallUndergruppe.forPunsj(),
-                        nyeIDag = hentNye(
-                            dato = LocalDate.now(),
-                            ytelser = hovedgruppe.ytelser,
-                            oppgavetype = "k9punsj",
-                        ),
-                        ferdigstilteIDag = hentFerdigstilte(
-                            dato = LocalDate.now(),
-                            ytelser = hovedgruppe.ytelser,
-                            oppgavetype = "k9punsj",
-                        ),
-                        nyeSiste7Dager = hentNye(
-                            dato = LocalDate.now().minusDays(7),
-                            ytelser = hovedgruppe.ytelser,
-                            oppgavetype = "k9punsj",
-                        ),
-                        ferdigstilteSiste7Dager = hentFerdigstilte(
-                            dato = LocalDate.now().minusDays(7),
-                            ytelser = hovedgruppe.ytelser,
-                            oppgavetype = "k9punsj",
-                        ),
-                    )
-                )
             }
+            tall.add(
+                DagensTallDto(
+                    hovedgruppe = hovedgruppe,
+                    undergruppe = DagensTallUndergruppe.forPunsj(),
+                    nyeIDag = hentNye(
+                        dato = LocalDate.now(),
+                        ytelser = hovedgruppe.ytelser,
+                        oppgavetype = "k9punsj",
+                    ),
+                    ferdigstilteIDag = hentFerdigstilte(
+                        dato = LocalDate.now(),
+                        ytelser = hovedgruppe.ytelser,
+                        oppgavetype = "k9punsj",
+                    ),
+                    nyeSiste7Dager = hentNye(
+                        dato = LocalDate.now().minusDays(7),
+                        ytelser = hovedgruppe.ytelser,
+                        oppgavetype = "k9punsj",
+                    ),
+                    ferdigstilteSiste7Dager = hentFerdigstilte(
+                        dato = LocalDate.now().minusDays(7),
+                        ytelser = hovedgruppe.ytelser,
+                        oppgavetype = "k9punsj",
+                    ),
+                )
+            )
         }
 
         // Punsj
