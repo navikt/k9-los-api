@@ -522,7 +522,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
             PlanlagtJobb.TimeJobb(
                 navn = "DagensTallOppdaterer",
                 prioritet = lavPrioritet,
-                tidsvindu = Tidsvindu.alleDager(5, 20),
+                tidsvindu = Tidsvindu.alleDager(),
                 minutter = listOf(0, 30),
             ) {
                 dagensTallService.oppdaterCache(this)
@@ -533,8 +533,8 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
             PlanlagtJobb.TimeJobb(
                 navn = "PerEnhetOppdaterer",
                 prioritet = lavPrioritet,
-                tidsvindu = Tidsvindu.alleDager(7, 11),
-                minutter = listOf(15),
+                tidsvindu = Tidsvindu.alleDager(),
+                minutter = listOf(0, 30),
             ) {
                 perEnhetService.oppdaterCache(this)
             }
