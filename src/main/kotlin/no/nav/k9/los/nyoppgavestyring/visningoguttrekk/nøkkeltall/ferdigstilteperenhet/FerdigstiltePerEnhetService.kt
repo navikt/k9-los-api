@@ -40,7 +40,7 @@ class FerdigstiltePerEnhetService(
         cache.removeExpiredObjects(LocalDateTime.now())
 
         val idag = LocalDate.now()
-        val datoer = idag.minusDays(7L * uker).datesUntil(idag).toList()
+        val datoer = idag.minusDays(7L * uker - 1).datesUntil(idag.plusDays(1)).toList()
 
         return FerdigstiltePerEnhetResponse(
             oppdatertTidspunkt = oppdatertTidspunkt,
@@ -65,7 +65,7 @@ class FerdigstiltePerEnhetService(
             cache.removeExpiredObjects(LocalDateTime.now())
 
             val idag = LocalDate.now()
-            val datoer = idag.minusDays(28).datesUntil(idag)
+            val datoer = idag.minusDays(27).datesUntil(idag)
 
             var antallDagerHenter = 0
             val tidBruktPåOppdatering = measureTime {
@@ -75,6 +75,11 @@ class FerdigstiltePerEnhetService(
                         antallDagerHenter++
                     }
                 }
+
+                // Tallene for idag er alltid oppdatert
+                cache.set(idag, CacheObject(hentFraDatabase(idag), idag.plusDays(29).atStartOfDay()))
+                antallDagerHenter++
+
                 oppdatertTidspunkt = LocalDateTime.now()
             }
             log.info("Oppdaterte $antallDagerHenter datoer for ferdigstilte per enhet på $tidBruktPåOppdatering")

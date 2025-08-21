@@ -7,6 +7,5 @@ enum class DagensTallHovedgruppe(val navn: String, val ytelser: List<FagsakYtels
     OMSORGSPENGER("Omsorgspenger", listOf(FagsakYtelseType.OMSORGSPENGER)),
     OMSORGSDAGER("Omsorgsdager", listOf(FagsakYtelseType.OMSORGSDAGER, FagsakYtelseType.OMSORGSPENGER_KS, FagsakYtelseType.OMSORGSPENGER_AO, FagsakYtelseType.OMSORGSPENGER_MA)),
     PLEIEPENGER_SYKT_BARN("Pleiepenger sykt barn", listOf(FagsakYtelseType.PLEIEPENGER_SYKT_BARN)),
-    PPN("Pleiepenger i livets sluttfase", listOf(FagsakYtelseType.PPN)),
-    PUNSJ("Punsj", null);
+    PPN("Pleiepenger i livets sluttfase", listOf(FagsakYtelseType.PPN));
 }
