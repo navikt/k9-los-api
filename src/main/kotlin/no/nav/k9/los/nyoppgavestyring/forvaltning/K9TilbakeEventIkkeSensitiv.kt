@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.forvaltning
 
+import com.fasterxml.jackson.annotation.JsonAlias
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer
@@ -32,8 +33,8 @@ data class K9TilbakeEventIkkeSensitiv(
     @JsonDeserialize(using = LocalDateTimeDeserializer::class)
     val eventTid: LocalDateTime,
     val eventHendelse: EventHendelse,
+    @JsonAlias("behandlinStatus")
     val behandlingStatus: String?,
-    val behandlinStatus: String?,
     val behandlingSteg: String?,
     val behandlendeEnhet: String? = null,
     val resultatType: String? = null,
@@ -75,7 +76,6 @@ data class K9TilbakeEventIkkeSensitiv(
         eventTid = event.eventTid,
         eventHendelse = event.eventHendelse,
         behandlingStatus = event.behandlingStatus,
-        behandlinStatus = event.behandlinStatus,
         behandlingSteg = event.behandlingSteg,
         behandlendeEnhet = event.behandlendeEnhet,
         resultatType = event.resultatType,

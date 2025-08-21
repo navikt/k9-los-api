@@ -44,9 +44,11 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetil
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.K9KlageTilLosApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.K9KlageTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.k9TilbakeEksternId
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.k9tilbakeKorrigerOutOfOrderProsessor
@@ -276,6 +278,8 @@ private fun Route.api() {
             forvaltningApis()
             route("k9saktillos") { K9SakTilLosApi() }
             route("k9klagetillos") { K9KlageTilLosApi() }
+            route("k9tilbaketillos") { K9TilbakeTilLosApi() }
+            route("k9punsjtillos") { K9PunsjTilLosApi() }
             route("statistikk") { StatistikkApi() }
         }
     }
@@ -350,9 +354,9 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
         add(
             PlanlagtJobb.KjørPåTidspunkt(
                 "K9SakTilLosHistorikkvask",
-                høyPrioritet,
-                kjørTidligst = LocalDateTime.of(2025, 2, 27, 19, 0),
-                kjørSenest = LocalDateTime.of(2025, 3, 31, 21, 0),
+                høyPrioritet + 3,
+                kjørTidligst = LocalDateTime.of(2025, 8, 11, 17, 0),
+                kjørSenest = LocalDateTime.of(2025, 8, 11, 19, 30),
             ) {
                 k9SakTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
             }
@@ -361,9 +365,9 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
         add(
             PlanlagtJobb.KjørPåTidspunkt(
                 "K9PunsjTilLosHistorikkvask",
-                høyPrioritet,
-                kjørTidligst = LocalDateTime.of(2025, 1, 1, 0, 0),
-                kjørSenest = LocalDateTime.of(2025, 3, 31, 18, 0),
+                høyPrioritet + 2,
+                kjørTidligst = LocalDateTime.of(2025, 8, 11, 17, 0),
+                kjørSenest = LocalDateTime.of(2025, 8, 11, 19, 30),
             ) {
                 k9PunsjTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
             }
@@ -372,9 +376,9 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
         add(
             PlanlagtJobb.KjørPåTidspunkt(
                 "K9TilbakeTilLosHistorikkvask",
-                høyPrioritet,
-                kjørTidligst = LocalDateTime.of(2025, 2, 27, 17, 0),
-                kjørSenest = LocalDateTime.of(2025, 3, 31, 17, 0),
+                høyPrioritet + 1,
+                kjørTidligst = LocalDateTime.of(2025, 8, 11, 17, 0),
+                kjørSenest = LocalDateTime.of(2025, 8, 11, 19, 30),
             ) {
                 k9TilbakeTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
             }
@@ -384,8 +388,8 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
             PlanlagtJobb.KjørPåTidspunkt(
                 "K9KlageTilLosHistorikkvask",
                 høyPrioritet,
-                kjørTidligst = LocalDateTime.of(2025, 3, 25, 10, 0),
-                kjørSenest = LocalDateTime.of(2025, 3, 31, 17, 0),
+                kjørTidligst = LocalDateTime.of(2025, 8, 11, 17, 0),
+                kjørSenest = LocalDateTime.of(2025, 8, 11, 19, 30),
             ) {
                 k9KlageTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
             }

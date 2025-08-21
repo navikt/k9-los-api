@@ -12,6 +12,7 @@ enum class DagensTallUndergruppe(val navn: String) {
     ANKE("Anke"),
     REVURDERING_TILBAKEKREVING("Revurdering tilbakekreving"),
     UNNTAKSBEHANDLING("Unntaksbehandling"),
+    PUNSJ("Punsj"),
     ;
 
     companion object {
@@ -27,6 +28,10 @@ enum class DagensTallUndergruppe(val navn: String) {
                 BehandlingType.UNNTAKSBEHANDLING -> UNNTAKSBEHANDLING
                 else -> throw IllegalArgumentException("Støtter ikke behandlingstype=$behandlingType")
             }
+        }
+
+        fun forPunsj(): DagensTallUndergruppe {
+            return PUNSJ
         }
     }
 }

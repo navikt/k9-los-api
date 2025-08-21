@@ -40,7 +40,7 @@ data class K9SakEventDto(
     @JsonDeserialize(using = LocalDateTimeDeserializer::class)
     val eventTid: LocalDateTime,
     val eventHendelse: EventHendelse,
-    val merknader: List<BehandlingMerknadType>,
+    val merknader: List<BehandlingMerknadType> = emptyList(),
 
     @JsonAlias("behandlinStatus")
     val behandlingStatus: String?,
