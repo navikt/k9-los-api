@@ -25,6 +25,9 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
@@ -164,7 +167,87 @@ fun Route.forvaltningApis() {
                     oppgaveRepositoryV1.hent(it)
                 }
 
-                call.respond(KoDiff(v3MenIkkeV1.size, v1MenIkkeV3.size, v3OppgaverSomManglerIV1.toSet(), v1OppgaverSomManglerIV3.toSet()))
+                call.respond(
+                    KoDiff(
+                        v3MenIkkeV1.size,
+                        v1MenIkkeV3.size,
+                        v3OppgaverSomManglerIV1.toSet(),
+                        v1OppgaverSomManglerIV3.toSet()
+                    )
+                )
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
+    get("/{system}/{saksnummer}/finnEksternId", {
+        description = "Søk opp eksternId for saksnummer eller journalpostId"
+        request {
+            pathParameter<String>("system") {
+                description = "Kildesystem som har sendt inn oppgaven"
+                example("k9sak") {
+                    value = "K9SAK"
+                    description = "K9sak"
+                }
+                example("k9punsj") {
+                    value = "PUNSJ"
+                    description = "K9punsj"
+                }
+            }
+            pathParameter<String>("saksnummer") {
+                description = "Oppgavens saksnummer, evt journalpostId for punsjoppgaver"
+            }
+        }
+    }) {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.kanLeggeUtDriftsmelding()) {
+                val fagsystem = Fagsystem.fraKode(call.parameters["system"]!!)
+                val saksnummer = call.parameters["saksnummer"]!!
+
+                when (fagsystem) {
+                    Fagsystem.K9SAK,
+                    Fagsystem.K9TILBAKE,
+                    Fagsystem.K9KLAGE -> {
+                        val query = QueryRequest(
+                            oppgaveQuery = OppgaveQuery(
+                                filtere = listOf(
+                                    FeltverdiOppgavefilter(
+                                        "K9",
+                                        "saksnummer",
+                                        operator = EksternFeltverdiOperator.EQUALS,
+                                        verdi = listOf(saksnummer)
+                                    )
+                                )
+                            ),
+                            fjernReserverte = false,
+                            avgrensning = null
+                        )
+
+                        val eksternIds = oppgaveQueryService.queryForOppgaveEksternId(query)
+                        call.respond(eksternIds)
+                    }
+
+                    Fagsystem.PUNSJ -> {
+                        val query = QueryRequest(
+                            oppgaveQuery = OppgaveQuery(
+                                filtere = listOf(
+                                    FeltverdiOppgavefilter(
+                                        "K9",
+                                        "journalpostId",
+                                        operator = EksternFeltverdiOperator.EQUALS,
+                                        verdi = listOf(saksnummer)
+                                    )
+                                )
+                            ),
+                            fjernReserverte = false,
+                            avgrensning = null
+                        )
+
+                        val eksternIds = oppgaveQueryService.queryForOppgaveEksternId(query)
+                        call.respond(eksternIds)
+                    }
+                }
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
