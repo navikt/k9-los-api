@@ -523,7 +523,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 navn = "DagensTallOppdaterer",
                 prioritet = lavPrioritet,
                 tidsvindu = Tidsvindu.alleDager(),
-                minutter = listOf(0, 30),
+                minutter = (0..59).toList(),
             ) {
                 dagensTallService.oppdaterCache(this)
             }
@@ -534,18 +534,18 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 navn = "PerEnhetOppdaterer",
                 prioritet = lavPrioritet,
                 tidsvindu = Tidsvindu.alleDager(),
-                minutter = listOf(0, 30),
+                minutter = (0..59).toList(),
             ) {
                 perEnhetService.oppdaterCache(this)
             }
         )
 
         add(
-            PlanlagtJobb.Periodisk(
+            PlanlagtJobb.TimeJobb(
                 navn = "NyeOgFerdigstilteOppdaterer",
                 prioritet = lavPrioritet,
-                startForsinkelse = 30.minutes,
-                intervall = 30.minutes,
+                tidsvindu = Tidsvindu.alleDager(),
+                minutter = (0..59).toList(),
             ) {
                 nyeOgFerdigstilteService.oppdaterCache(this)
             }
