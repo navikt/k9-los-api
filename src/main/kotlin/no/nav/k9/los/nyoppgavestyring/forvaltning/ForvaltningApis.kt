@@ -61,6 +61,7 @@ fun Route.forvaltningApis() {
 
 
     get("/index_oversikt", {
+        tags("Forvaltning")
         description = "index_oversikt"
         response {
             HttpStatusCode.OK to {
@@ -116,6 +117,7 @@ fun Route.forvaltningApis() {
     }
 
     get("/sammenlignkoer", {
+        tags("Forvaltning")
         description = "Sammenlign en V1-kø med en V3 kø, og lever de oppgavene som ikke finnes i begge køer"
         request {
             queryParameter<String>("v1KoId") {
@@ -182,6 +184,7 @@ fun Route.forvaltningApis() {
     }
 
     get("/{system}/{saksnummer}/finnEksternId", {
+        tags("Forvaltning")
         description = "Søk opp eksternId for saksnummer eller journalpostId"
         request {
             pathParameter<String>("system") {
@@ -255,6 +258,7 @@ fun Route.forvaltningApis() {
     }
 
     get("/eventer/{system}/{eksternId}", {
+        tags("Forvaltning")
         description = "Hent ut eventhistorikk for en oppgave"
         request {
             pathParameter<String>("system") {
@@ -317,6 +321,7 @@ fun Route.forvaltningApis() {
     }
 
     get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}/aktiv", {
+        tags("Forvaltning")
         description = "Hent ut nåtilstand for en oppgave"
         request {
             pathParameter<String>("omrade") {
@@ -362,6 +367,7 @@ fun Route.forvaltningApis() {
     }
 
     get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}", {
+        tags("Forvaltning")
         description = "Hent ut oppgavehistorikk for en oppgave"
         request {
             pathParameter<String>("omrade") {
@@ -411,6 +417,7 @@ fun Route.forvaltningApis() {
     }
 
     get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}/historikkvask", {
+        tags("Forvaltning")
         description =
             "Kjøre historikkvask for enkeltsak, for å vaske eksisterende oppgavehistorikk mot korresponderende eventer"
         request {
@@ -494,6 +501,7 @@ fun Route.forvaltningApis() {
     }
 
     get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}/settdirty", {
+        tags("Forvaltning")
         description =
             "Sett dirtyflagg på eventhistorikk for å trigge innlesning av eventer som mangler i oppgavehistorikken"
         request {
@@ -569,6 +577,7 @@ fun Route.forvaltningApis() {
     }
 
     get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}/reservasjoner", {
+        tags("Forvaltning")
         description = "Hent ut reservasjonshistorikk for en oppgave"
         request {
             pathParameter<String>("omrade") {
@@ -623,7 +632,7 @@ fun Route.forvaltningApis() {
     }
 
     route("/ytelse") {
-        get("/oppgaveko/antall") {
+        get("/oppgaveko/antall", {tags("Forvaltning")}) {
             requestContextService.withRequestContext(call) {
                 if (pepClient.kanLeggeUtDriftsmelding()) {
                     val antall = oppgaveKoTjeneste.hentOppgavekøer(skjermet = false).map {
@@ -640,7 +649,7 @@ fun Route.forvaltningApis() {
             }
         }
 
-        get("/oppgaveko") {
+        get("/oppgaveko", {tags("Forvaltning")}) {
             requestContextService.withRequestContext(call) {
                 if (pepClient.kanLeggeUtDriftsmelding()) {
                     call.respond(oppgaveKoTjeneste.hentOppgavekøer(skjermet = false).map { it.id })
@@ -650,7 +659,7 @@ fun Route.forvaltningApis() {
             }
         }
 
-        get("/oppgaveko/{ko}/antall") {
+        get("/oppgaveko/{ko}/antall", {tags("Forvaltning")}) {
             requestContextService.withRequestContext(call) {
                 if (pepClient.kanLeggeUtDriftsmelding()) {
                     val køId = call.parameters["ko"]!!.toLong()

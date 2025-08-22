@@ -1,5 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos
 
+import io.github.smiley4.ktoropenapi.post
+import io.github.smiley4.ktoropenapi.put
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -11,7 +13,9 @@ internal fun Route.K9SakTilLosApi() {
     val requestContextService by inject<RequestContextService>()
     val k9SakTilLosHistorikkvaskTjeneste by inject<K9SakTilLosHistorikkvaskTjeneste>()
 
-    put("/startHistorikkvask") {
+    put("/startHistorikkvask", {
+        tags("Forvaltning")
+    }) {
         requestContextService.withRequestContext(call) {
             thread(
                 start = true,
@@ -24,7 +28,9 @@ internal fun Route.K9SakTilLosApi() {
         }
     }
 
-    post("/nullstillHistorikkvask") {
+    post("/nullstillHistorikkvask", {
+        tags("Forvaltning")
+    }) {
         requestContextService.withRequestContext(call) {
             k9SakTilLosHistorikkvaskTjeneste.nullstillHistorikkvask()
             call.respond(HttpStatusCode.OK)

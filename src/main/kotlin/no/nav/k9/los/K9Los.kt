@@ -348,14 +348,14 @@ private fun Route.api() {
             route("statistikk") { StatistikkApi() }
         }
     }
-    route("api") {
-        route("driftsmeldinger", { hidden = true }) {
+    route("api", {hidden = true}) {
+        route("driftsmeldinger") {
             DriftsmeldingerApis()
         }
-        route("fagsak", { hidden = true }) {
+        route("fagsak") {
             FagsakApis() //Erstattet av søkeboksApi?
         }
-        route("saksbehandler", { hidden = true }) {
+        route("saksbehandler") {
             route("oppgaver") {
                 ReservasjonApis()
             }
@@ -376,12 +376,12 @@ private fun Route.api() {
 
         NavAnsattApis()
 
-        route("konfig", { hidden = true }) { KonfigApis() }
+        route("konfig") { KonfigApis() }
         route("kodeverk") { KodeverkApis() }
 
         route("ny-oppgavestyring") {
-            route("ko", { hidden = true }) { OppgaveKoApis() }
-            route("oppgave", { hidden = true }) { OppgaveQueryApis() }
+            route("ko") { OppgaveKoApis() }
+            route("oppgave") { OppgaveQueryApis() }
             route(
                 "feltdefinisjon",
                 {
