@@ -283,11 +283,11 @@ private fun Route.api() {
             route("statistikk") { StatistikkApi() }
         }
     }
-    route("api") {
-        route("driftsmeldinger", { hidden = true }) {
+    route("api", {hidden = true}) {
+        route("driftsmeldinger") {
             DriftsmeldingerApis()
         }
-        route("saksbehandler", { hidden = true }) {
+        route("saksbehandler") {
             route("oppgaver") {
                 ReservasjonApis()
             }
@@ -301,8 +301,8 @@ private fun Route.api() {
         route("kodeverk") { KodeverkApis() }
 
         route("ny-oppgavestyring") {
-            route("ko", { hidden = true }) { OppgaveKoApis() }
-            route("oppgave", { hidden = true }) { OppgaveQueryApis() }
+            route("ko") { OppgaveKoApis() }
+            route("oppgave") { OppgaveQueryApis() }
             route(
                 "feltdefinisjon",
                 {
@@ -512,8 +512,8 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
             PlanlagtJobb.TimeJobb(
                 navn = "DagensTallOppdaterer",
                 prioritet = lavPrioritet,
-                tidsvindu = Tidsvindu.alleDager(5, 20),
-                minutter = listOf(0, 30),
+                tidsvindu = Tidsvindu.alleDager(),
+                minutter = (0..59).toList(),
             ) {
                 dagensTallService.oppdaterCache(this)
             }
@@ -523,19 +523,19 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
             PlanlagtJobb.TimeJobb(
                 navn = "PerEnhetOppdaterer",
                 prioritet = lavPrioritet,
-                tidsvindu = Tidsvindu.alleDager(7, 11),
-                minutter = listOf(15),
+                tidsvindu = Tidsvindu.alleDager(),
+                minutter = (0..59).toList(),
             ) {
                 perEnhetService.oppdaterCache(this)
             }
         )
 
         add(
-            PlanlagtJobb.Periodisk(
+            PlanlagtJobb.TimeJobb(
                 navn = "NyeOgFerdigstilteOppdaterer",
                 prioritet = lavPrioritet,
-                startForsinkelse = 30.minutes,
-                intervall = 30.minutes,
+                tidsvindu = Tidsvindu.alleDager(),
+                minutter = (0..59).toList(),
             ) {
                 nyeOgFerdigstilteService.oppdaterCache(this)
             }

@@ -188,8 +188,8 @@ class DagensTallService(
         // Punsj
         tall.add(
             DagensTallDto(
-                hovedgruppe = DagensTallHovedgruppe.PUNSJ,
-                undergruppe = DagensTallUndergruppe.TOTALT,
+                hovedgruppe = DagensTallHovedgruppe.ALLE,
+                undergruppe = DagensTallUndergruppe.PUNSJ,
                 nyeIDag = hentNye(
                     dato = LocalDate.now(),
                     oppgavetype = "k9punsj",
