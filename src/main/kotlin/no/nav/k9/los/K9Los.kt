@@ -1,29 +1,32 @@
-@file:OptIn(ExperimentalCoroutinesApi::class)
-
 package no.nav.k9.los
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.SerializationFeature
-import io.github.smiley4.ktorswaggerui.SwaggerUI
-import io.github.smiley4.ktorswaggerui.dsl.routing.route
-import io.github.smiley4.ktorswaggerui.routing.openApiSpec
-import io.github.smiley4.ktorswaggerui.routing.swaggerUI
+import io.github.smiley4.ktoropenapi.OpenApi
+import io.github.smiley4.ktoropenapi.openApi
+import io.github.smiley4.ktoropenapi.route
+import io.github.smiley4.ktorswaggerui.swaggerUI
+import io.ktor.http.*
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.http.content.*
 import io.ktor.server.metrics.micrometer.*
 import io.ktor.server.plugins.callid.*
-import io.ktor.server.plugins.callloging.*
+import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.micrometer.prometheus.PrometheusConfig
+import io.micrometer.prometheus.PrometheusMeterRegistry
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.extension.kotlin.asContextElement
+import io.prometheus.client.CollectorRegistry
+import io.prometheus.client.exporter.common.TextFormat
 import io.prometheus.client.hotspot.DefaultExports
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import no.nav.helse.dusseldorf.ktor.auth.AuthStatusPages
 import no.nav.helse.dusseldorf.ktor.auth.allIssuers
@@ -33,7 +36,6 @@ import no.nav.helse.dusseldorf.ktor.health.HealthReporter
 import no.nav.helse.dusseldorf.ktor.health.HealthRoute
 import no.nav.helse.dusseldorf.ktor.jackson.JacksonStatusPages
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
-import no.nav.helse.dusseldorf.ktor.metrics.MetricsRoute
 import no.nav.helse.dusseldorf.ktor.metrics.init
 import no.nav.k9.los.eventhandler.køOppdatertProsessor
 import no.nav.k9.los.eventhandler.oppdaterStatistikk
@@ -44,9 +46,11 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetil
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.K9KlageTilLosApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.K9KlageTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.k9TilbakeEksternId
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.k9tilbakeKorrigerOutOfOrderProsessor
@@ -108,7 +112,7 @@ fun Application.k9Los() {
     val issuers = configuration.issuers()
 
     install(Koin) {
-        modules(selectModuleBasedOnProfile(this@k9Los, config = configuration))
+        modules(selectModulesBasedOnProfile(this@k9Los, config = configuration))
     }
 
     val koin = getKoin()
@@ -203,7 +207,7 @@ fun Application.k9Los() {
             channel = koin.get<Channel<k9TilbakeEksternId>>(named("historikkvaskChannelK9Tilbake")),
         )
 
-    environment.monitor.subscribe(ApplicationStopping) {
+    monitor.subscribe(ApplicationStopping) {
         log.info("Stopper AsynkronProsesseringV1Service.")
         asynkronProsesseringV1Service.stop()
         sakOgBehadlingProducer.stop()
@@ -229,7 +233,8 @@ fun Application.k9Los() {
         pepCacheService = koin.get(),
         oppgaveRepository = koin.get(),
         reservasjonV3Tjeneste = koin.get(),
-        historikkvaskChannel = koin.get<Channel<k9SakEksternId>>(named("historikkvaskChannelK9Sak"))
+        historikkvaskChannel = koin.get<Channel<k9SakEksternId>>(named("historikkvaskChannelK9Sak")),
+        køpåvirkendeHendelseChannel = koin.get<Channel<KøpåvirkendeHendelse>>(named("KøpåvirkendeHendelseChannel")),
     ).kjør(kjørSetup = false, kjørUmiddelbart = false)
 
     // implementer med Jobbplanlegger
@@ -268,16 +273,27 @@ fun Application.k9Los() {
         config = koin.get()
     ).kjør(kjørUmiddelbart = false)
 
-    install(CallIdRequired)
-
     install(CallLogging) {
         correlationIdAndRequestIdInMdc()
         logRequests()
     }
 
-    install(Routing) {
+    val prometheusMeterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
 
-        MetricsRoute()
+    install(MicrometerMetrics) {
+        init(appId)
+        registry = prometheusMeterRegistry
+    }
+    routing {
+        get("/metrics") {
+            val metrics = CollectorRegistry.defaultRegistry.metricFamilySamples()
+            call.respondTextWriter(ContentType.parse(TextFormat.CONTENT_TYPE_004)) {
+                this.write("# Default registry starter her\n")
+                TextFormat.write004(this, metrics)
+                this.write("# Prometheus registry starter her\n")
+                this.write(prometheusMeterRegistry.scrape())
+            }
+        }
         DefaultProbeRoutes()
         HealthRoute(healthService = koin.get())
 
@@ -305,9 +321,6 @@ fun Application.k9Los() {
         }
     }
 
-    install(MicrometerMetrics) {
-        init(appId)
-    }
 
     intercept(ApplicationCallPipeline.Monitoring) {
         call.request.log()
@@ -317,30 +330,32 @@ fun Application.k9Los() {
         fromXCorrelationIdHeader()
     }
 
-    install(SwaggerUI)
+    install(OpenApi)
 }
 
 private fun Route.api() {
     route("k9/los/api") {
         route("openapi.json") {
-            openApiSpec()
+            openApi()
         }
         swaggerUI("openapi.json")
         route("/forvaltning") {
             forvaltningApis()
             route("k9saktillos") { K9SakTilLosApi() }
             route("k9klagetillos") { K9KlageTilLosApi() }
+            route("k9tilbaketillos") { K9TilbakeTilLosApi() }
+            route("k9punsjtillos") { K9PunsjTilLosApi() }
             route("statistikk") { StatistikkApi() }
         }
     }
-    route("api") {
-        route("driftsmeldinger", { hidden = true }) {
+    route("api", {hidden = true}) {
+        route("driftsmeldinger") {
             DriftsmeldingerApis()
         }
-        route("fagsak", { hidden = true }) {
+        route("fagsak") {
             FagsakApis() //Erstattet av søkeboksApi?
         }
-        route("saksbehandler", { hidden = true }) {
+        route("saksbehandler") {
             route("oppgaver") {
                 ReservasjonApis()
             }
@@ -361,12 +376,12 @@ private fun Route.api() {
 
         NavAnsattApis()
 
-        route("konfig", { hidden = true }) { KonfigApis() }
+        route("konfig") { KonfigApis() }
         route("kodeverk") { KodeverkApis() }
 
         route("ny-oppgavestyring") {
-            route("ko", { hidden = true }) { OppgaveKoApis() }
-            route("oppgave", { hidden = true }) { OppgaveQueryApis() }
+            route("ko") { OppgaveKoApis() }
+            route("oppgave") { OppgaveQueryApis() }
             route(
                 "feltdefinisjon",
                 {
@@ -409,9 +424,9 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
         add(
             PlanlagtJobb.KjørPåTidspunkt(
                 "K9SakTilLosHistorikkvask",
-                høyPrioritet,
-                kjørTidligst = LocalDateTime.of(2025, 2, 27, 19, 0),
-                kjørSenest = LocalDateTime.of(2025, 3, 31, 21, 0),
+                høyPrioritet + 3,
+                kjørTidligst = LocalDateTime.of(2025, 8, 11, 17, 0),
+                kjørSenest = LocalDateTime.of(2025, 8, 11, 19, 30),
             ) {
                 k9SakTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
             }
@@ -420,9 +435,9 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
         add(
             PlanlagtJobb.KjørPåTidspunkt(
                 "K9PunsjTilLosHistorikkvask",
-                høyPrioritet,
-                kjørTidligst = LocalDateTime.of(2025, 1, 1, 0, 0),
-                kjørSenest = LocalDateTime.of(2025, 3, 31, 18, 0),
+                høyPrioritet + 2,
+                kjørTidligst = LocalDateTime.of(2025, 8, 11, 17, 0),
+                kjørSenest = LocalDateTime.of(2025, 8, 11, 19, 30),
             ) {
                 k9PunsjTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
             }
@@ -431,9 +446,9 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
         add(
             PlanlagtJobb.KjørPåTidspunkt(
                 "K9TilbakeTilLosHistorikkvask",
-                høyPrioritet,
-                kjørTidligst = LocalDateTime.of(2025, 2, 27, 17, 0),
-                kjørSenest = LocalDateTime.of(2025, 3, 31, 17, 0),
+                høyPrioritet + 1,
+                kjørTidligst = LocalDateTime.of(2025, 8, 11, 17, 0),
+                kjørSenest = LocalDateTime.of(2025, 8, 11, 19, 30),
             ) {
                 k9TilbakeTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
             }
@@ -443,8 +458,8 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
             PlanlagtJobb.KjørPåTidspunkt(
                 "K9KlageTilLosHistorikkvask",
                 høyPrioritet,
-                kjørTidligst = LocalDateTime.of(2025, 3, 25, 10, 0),
-                kjørSenest = LocalDateTime.of(2025, 3, 31, 17, 0),
+                kjørTidligst = LocalDateTime.of(2025, 8, 11, 17, 0),
+                kjørSenest = LocalDateTime.of(2025, 8, 11, 19, 30),
             ) {
                 k9KlageTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
             }
@@ -507,8 +522,8 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
             PlanlagtJobb.TimeJobb(
                 navn = "DagensTallOppdaterer",
                 prioritet = lavPrioritet,
-                tidsvindu = Tidsvindu.alleDager(5, 20),
-                minutter = listOf(0, 30),
+                tidsvindu = Tidsvindu.alleDager(),
+                minutter = (0..59).toList(),
             ) {
                 dagensTallService.oppdaterCache(this)
             }
@@ -518,19 +533,19 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
             PlanlagtJobb.TimeJobb(
                 navn = "PerEnhetOppdaterer",
                 prioritet = lavPrioritet,
-                tidsvindu = Tidsvindu.alleDager(7, 11),
-                minutter = listOf(15),
+                tidsvindu = Tidsvindu.alleDager(),
+                minutter = (0..59).toList(),
             ) {
                 perEnhetService.oppdaterCache(this)
             }
         )
 
         add(
-            PlanlagtJobb.Periodisk(
+            PlanlagtJobb.TimeJobb(
                 navn = "NyeOgFerdigstilteOppdaterer",
                 prioritet = lavPrioritet,
-                startForsinkelse = 30.minutes,
-                intervall = 30.minutes,
+                tidsvindu = Tidsvindu.alleDager(),
+                minutter = (0..59).toList(),
             ) {
                 nyeOgFerdigstilteService.oppdaterCache(this)
             }
@@ -543,11 +558,11 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
         coroutineContext = Dispatchers.IO.limitedParallelism(4) + Span.current().asContextElement(),
     )
 
-    environment.monitor.subscribe(ApplicationStarted) {
+    monitor.subscribe(ApplicationStarted) {
         jobbplanlegger.start()
     }
 
-    environment.monitor.subscribe(ApplicationStopping) {
+    monitor.subscribe(ApplicationStopping) {
         jobbplanlegger.stopp()
     }
 }

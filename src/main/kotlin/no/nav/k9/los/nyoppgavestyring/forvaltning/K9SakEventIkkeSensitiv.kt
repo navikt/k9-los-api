@@ -106,7 +106,7 @@ data class K9SakEventIkkeSensitiv(
         førsteFeilutbetaling = event.førsteFeilutbetaling,
         feilutbetaltBeløp = event.feilutbetaltBeløp,
         ansvarligSaksbehandlerIdent = event.ansvarligSaksbehandlerIdent,
-        ansvarligSaksbehandlerForTotrinn = event.ansvarligBeslutterForTotrinn,
+        ansvarligSaksbehandlerForTotrinn = event.ansvarligSaksbehandlerForTotrinn,
         ansvarligBeslutterForTotrinn = event.ansvarligBeslutterForTotrinn,
         fagsakPeriode = event.fagsakPeriode,
         aksjonspunktTilstander = event.aksjonspunktTilstander,

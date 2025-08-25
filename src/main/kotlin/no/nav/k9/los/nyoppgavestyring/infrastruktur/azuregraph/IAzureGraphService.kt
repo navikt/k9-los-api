@@ -11,4 +11,6 @@ interface IAzureGraphService {
     suspend fun hentEnhetForBrukerMedSystemToken(brukernavn: String): String?
 
     suspend fun hentGrupperForSaksbehandler(saksbehandlerIdent: String): Set<UUID>
+
+    suspend fun hentGrupperForInnloggetSaksbehandler(): Set<UUID>
 }

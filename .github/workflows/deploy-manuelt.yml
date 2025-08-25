@@ -1,0 +1,27 @@
+name: Deploy manuelt
+on:
+  workflow_dispatch:
+    inputs:
+      image:
+        required: true
+        type: string
+        description: 'Image tag to deploy (example 2023.03.10.080433-f821119). OBS! vær oppmerksom på at naiserator.yml, dev-fss/prod-fss.json ikke oppdateres ved å deploye på denne måten.'
+      environment:
+        required: true
+        type: choice
+        description: 'The environment to deployed to (dev|prod)'
+        options:
+          - dev
+          - prod
+
+jobs:
+  deploy:
+    uses: navikt/sif-gha-workflows/.github/workflows/gradle-deploy.yml@main
+    permissions:
+      contents: read
+      id-token: write
+    secrets: inherit
+    with:
+      image: ${{ inputs.image }}
+      environment: fss
+      deploy-prod: ${{ inputs.environment == 'prod' }}

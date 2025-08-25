@@ -14,6 +14,7 @@ import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
@@ -23,6 +24,7 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
+import no.nav.k9.sak.typer.Periode
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.time.LocalDate
@@ -59,7 +61,7 @@ val saksbehandlere = listOf(
 
 object localSetup : KoinComponent {
     private val saksbehandlerRepository: SaksbehandlerRepository by inject()
-    private val punsjEventHandler: no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler by inject()
+    private val punsjEventHandler: K9PunsjEventHandler by inject()
     private val tilbakeEventHandler: K9TilbakeEventHandler by inject()
     private val sakEventHandler: K9SakEventHandler by inject()
     private val profile: KoinProfile by inject()
@@ -88,13 +90,14 @@ object localSetup : KoinComponent {
                     FagsakYtelseType.OMSORGSPENGER,
                 ).shuffled().first().kode
                 val opprettetBehandling = LocalDateTime.now().minusDays(Random.nextLong(10, 20))
-                val aktørId = Random.nextInt(0, 9999999).toString()
-                val pleietrengendeAktørId = Random.nextInt(0, 9999999).toString()
+                val aktørId = "2392173967319"
+                val pleietrengendeAktørId = "1234567890123"
                 sakEventHandler.prosesser(
                     K9SakEventDto(
                         eksternId,
                         Fagsystem.K9SAK,
                         saksnummer,
+                        fagsakPeriode = Periode(LocalDate.now().minusMonths(2), LocalDate.now()),
                         behandlingId = behandlingId,
                         fraEndringsdialog = false,
                         resultatType = BehandlingResultatType.IKKE_FASTSATT.kode,
@@ -117,7 +120,8 @@ object localSetup : KoinComponent {
                         eventTid = LocalDateTime.now().minusSeconds((antall - i).toLong()),
                         aksjonspunktKoderMedStatusListe = mutableMapOf(),
                         ytelseTypeKode = ytelseTypeKode,
-                        eldsteDatoMedEndringFraSøker = LocalDateTime.now()
+                        eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
+                        merknader = emptyList()
                     )
                 )
 
@@ -149,7 +153,8 @@ object localSetup : KoinComponent {
                             eventTid = LocalDateTime.now().minusSeconds((antall - i).toLong()),
                             aksjonspunktKoderMedStatusListe = mutableMapOf(),
                             ytelseTypeKode = ytelseTypeKode,
-                            eldsteDatoMedEndringFraSøker = LocalDateTime.now()
+                            eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
+                            merknader = emptyList()
                         )
                     )
                 }
@@ -170,7 +175,6 @@ object localSetup : KoinComponent {
                     opprettetBehandling = LocalDateTime.now(),
                     aktørId = Random.nextLong(1_000_000_000_000, 9_000_000_000_000).toString(),
                     behandlingStatus = BehandlingStatus.UTREDES.kode,
-                    behandlinStatus = BehandlingStatus.UTREDES.kode,
                     behandlingSteg = BehandlingStegType.FATTE_VEDTAK.kode,
                     behandlingTypeKode = "BT-007",
                     behandlingstidFrist = null,

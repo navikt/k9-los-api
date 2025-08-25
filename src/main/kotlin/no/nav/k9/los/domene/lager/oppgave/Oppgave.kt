@@ -13,7 +13,7 @@ data class Oppgave(
     @Deprecated("Bruk eksternId") val behandlingId: Long? = null,
     val fagsakSaksnummer: String,
     val journalpostId: String?,
-    val aktorId: String,
+    val aktorId: String?,
     val behandlendeEnhet: String,
     val behandlingsfrist: LocalDateTime,
     val behandlingOpprettet: LocalDateTime,

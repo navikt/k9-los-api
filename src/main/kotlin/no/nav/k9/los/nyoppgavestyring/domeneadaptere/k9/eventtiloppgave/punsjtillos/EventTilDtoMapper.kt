@@ -19,18 +19,21 @@ class EventTilDtoMapper {
                 område = "K9",
                 kildeområde = "K9",
                 type = "k9punsj",
-                status =
-                if (event.sendtInn == true || event.status == Oppgavestatus.LUKKET || event.aksjonspunktKoderMedStatusListe.isEmpty()) {
-                    Oppgavestatus.LUKKET.kode
-                } else if (oppgaveSkalHaVentestatus(event)) {
-                    Oppgavestatus.VENTER.kode
-                } else {
-                    Oppgavestatus.AAPEN.kode
-                },
+                status = utledOppgavestatus(event).kode,
                 endretTidspunkt = event.eventTid,
                 reservasjonsnøkkel = utledReservasjonsnøkkel(event),
                 feltverdier = lagFeltverdier(event, forrigeOppgave)
             )
+        }
+
+        fun utledOppgavestatus(event: PunsjEventDto): Oppgavestatus {
+            return if (event.sendtInn == true || event.status == Oppgavestatus.LUKKET || event.aksjonspunktKoderMedStatusListe.isEmpty()) {
+                Oppgavestatus.LUKKET
+            } else if (oppgaveSkalHaVentestatus(event)) {
+                Oppgavestatus.VENTER
+            } else {
+                Oppgavestatus.AAPEN
+            }
         }
 
         fun utledReservasjonsnøkkel(event: PunsjEventDto): String {
@@ -95,6 +98,10 @@ class EventTilDtoMapper {
                 OppgaveFeltverdiDto(
                     nøkkel = "mottattDato",
                     verdi = forrigeOppgave?.hentVerdi("mottattDato") ?: event.eventTid.toString(),
+                ),
+                OppgaveFeltverdiDto(
+                    nøkkel = "helautomatiskBehandlet",
+                    verdi = "false"
                 )
             )
         }

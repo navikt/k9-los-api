@@ -558,6 +558,14 @@
       "visningsnavn": "Ferdigstilt av enhet",
       "listetype": false,
       "tolkesSom": "String",
+      "visTilBruker": true,
+      "kokriterie": true
+    },
+    {
+      "id": "fagsakÅr",
+      "visningsnavn": "Fagsak år",
+      "listetype": false,
+      "tolkesSom": "Integer",
       "visTilBruker": false,
       "kokriterie": false
     }

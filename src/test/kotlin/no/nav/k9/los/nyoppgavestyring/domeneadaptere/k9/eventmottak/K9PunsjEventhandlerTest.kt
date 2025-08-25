@@ -77,23 +77,26 @@ class K9PunsjEventhandlerTest : AbstractK9LosIntegrationTest() {
         }
 
         val felter = oppgaveV3.felter.sortedBy { it.eksternId }
-        assertThat(felter).hasSize(8)
+        assertThat(felter).hasSize(9)
         assertThat(felter[0].eksternId).isEqualTo("aktorId")
         assertThat(felter[0].verdi).isEqualTo(aktørId)
         assertThat(felter[1].eksternId).isEqualTo("behandlingTypekode")
         assertThat(felter[1].verdi).isEqualTo("UKJENT")
-        assertThat(felter[2].eksternId).isEqualTo("journalfort")
-        assertThat(felter[2].verdi).isEqualTo("true")
-        assertThat(felter[3].eksternId).isEqualTo("journalfortTidspunkt")
-        assertThat(felter[3].verdi).isEqualTo(eventTid)
-        assertThat(felter[4].eksternId).isEqualTo("journalpostId")
-        assertThat(felter[4].verdi).isEqualTo(journalpostId)
-        assertThat(felter[5].eksternId).isEqualTo("mottattDato")
-        assertThat(felter[5].verdi).isEqualTo(eventTid)
-        assertThat(felter[6].eksternId).isEqualTo("registrertDato")
+        assertThat(felter[2].eksternId).isEqualTo("helautomatiskBehandlet")
+        assertThat(felter[2].verdi).isEqualTo("false")
+        assertThat(felter[3].eksternId).isEqualTo("journalfort")
+        assertThat(felter[3].verdi).isEqualTo("true")
+        assertThat(felter[4].eksternId).isEqualTo("journalfortTidspunkt")
+        assertThat(felter[4].verdi).isEqualTo(eventTid)
+        assertThat(felter[5].eksternId).isEqualTo("journalpostId")
+        assertThat(felter[5].verdi).isEqualTo(journalpostId)
+        assertThat(felter[6].eksternId).isEqualTo("mottattDato")
         assertThat(felter[6].verdi).isEqualTo(eventTid)
-        assertThat(felter[7].eksternId).isEqualTo("ytelsestype")
-        assertThat(felter[7].verdi).isEqualTo("UKJENT")
+        assertThat(felter[7].eksternId).isEqualTo("registrertDato")
+        assertThat(felter[7].verdi).isEqualTo(eventTid)
+        assertThat(felter[8].eksternId).isEqualTo("ytelsestype")
+        assertThat(felter[8].verdi).isEqualTo("UKJENT")
+
     }
 
     @Test

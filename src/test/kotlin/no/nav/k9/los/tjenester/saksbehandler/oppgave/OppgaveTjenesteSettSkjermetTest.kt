@@ -171,7 +171,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
                 hentPerson = PersonPdl.Data.HentPerson(
                     listOf(
                         element =
-                        PersonPdl.Data.HentPerson.Folkeregisteridentifikator("012345678901")
+                        PersonPdl.Data.HentPerson.Folkeregisteridentifikator("01234567890")
                     ),
                     navn = listOf(
                         PersonPdl.Data.HentPerson.Navn(
@@ -510,7 +510,7 @@ class OppgaveTjenesteSettSkjermetTest : KoinTest, AbstractPostgresTest() {
                 hentPerson = PersonPdl.Data.HentPerson(
                     listOf(
                         element =
-                        PersonPdl.Data.HentPerson.Folkeregisteridentifikator("012345678901")
+                        PersonPdl.Data.HentPerson.Folkeregisteridentifikator("01234567890")
                     ),
                     navn = listOf(
                         PersonPdl.Data.HentPerson.Navn(

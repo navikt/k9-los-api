@@ -6,18 +6,18 @@ import kotlinx.coroutines.runBlocking
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.util.InClauseHjelper
 import no.nav.k9.los.domene.lager.oppgave.Oppgave
 import no.nav.k9.los.domene.lager.oppgave.OppgaveMedId
 import no.nav.k9.los.domene.modell.AksjonspunktDefWrapper
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.util.InClauseHjelper
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleApneBehandlinger
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.AlleOppgaverDto
 import no.nav.k9.los.tjenester.mock.AksjonspunktMock
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -152,16 +152,15 @@ class OppgaveRepository(
         if (oppgave.fagsakSaksnummer.isNotBlank()) {
             val søker = pepClient.erSakKode6(oppgave.fagsakSaksnummer)
             val pleietrengende =
-                if (oppgave.pleietrengendeAktørId != null) pepClient.erAktørKode6(oppgave.pleietrengendeAktørId) else false
+                if (!oppgave.pleietrengendeAktørId.isNullOrBlank()) pepClient.erAktørKode6(oppgave.pleietrengendeAktørId) else false
             val relatertPart =
-                if (oppgave.relatertPartAktørId != null) pepClient.erAktørKode6(oppgave.relatertPartAktørId) else false
+                if (!oppgave.relatertPartAktørId.isNullOrBlank()) pepClient.erAktørKode6(oppgave.relatertPartAktørId) else false
             return (søker || pleietrengende || relatertPart)
 
         }
-        // oppgaver laget av punsj har ikke fagsakSaksnummer
-        val søker = pepClient.erAktørKode6(oppgave.aktorId)
-        val pleietrengende =
-            if (oppgave.pleietrengendeAktørId != null) pepClient.erAktørKode6(oppgave.pleietrengendeAktørId) else false
+        // oppgaver laget av punsj har ikke fagsakSaksnummer og mangler i noen tilfeller aktørId
+        val søker = if (!oppgave.aktorId.isNullOrBlank()) pepClient.erAktørKode6(oppgave.aktorId) else false
+        val pleietrengende = if (!oppgave.pleietrengendeAktørId.isNullOrBlank()) pepClient.erAktørKode6(oppgave.pleietrengendeAktørId) else false
         return (søker || pleietrengende)
     }
 
@@ -169,15 +168,15 @@ class OppgaveRepository(
         if (oppgave.fagsakSaksnummer.isNotBlank()) {
             val søker = pepClient.erSakKode7EllerEgenAnsatt(oppgave.fagsakSaksnummer)
             val pleietrengende =
-                if (oppgave.pleietrengendeAktørId != null) pepClient.erAktørKode7EllerEgenAnsatt(oppgave.pleietrengendeAktørId) else false
+                if (!oppgave.pleietrengendeAktørId.isNullOrBlank()) pepClient.erAktørKode7EllerEgenAnsatt(oppgave.pleietrengendeAktørId) else false
             val relatertPart =
-                if (oppgave.relatertPartAktørId != null) pepClient.erAktørKode7EllerEgenAnsatt(oppgave.relatertPartAktørId) else false
+                if (!oppgave.relatertPartAktørId.isNullOrBlank()) pepClient.erAktørKode7EllerEgenAnsatt(oppgave.relatertPartAktørId) else false
             return (søker || pleietrengende || relatertPart)
         }
         // oppgaver laget av punsj har ikke fagsakSaksnummer
-        val søker = pepClient.erAktørKode7EllerEgenAnsatt(oppgave.aktorId)
+        val søker = if (!oppgave.aktorId.isNullOrBlank()) pepClient.erAktørKode7EllerEgenAnsatt(oppgave.aktorId) else false
         val pleietrengende =
-            if (oppgave.pleietrengendeAktørId != null) pepClient.erAktørKode7EllerEgenAnsatt(oppgave.pleietrengendeAktørId) else false
+            if (!oppgave.pleietrengendeAktørId.isNullOrBlank()) pepClient.erAktørKode7EllerEgenAnsatt(oppgave.pleietrengendeAktørId) else false
         return (søker || pleietrengende)
     }
 

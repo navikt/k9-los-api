@@ -225,7 +225,7 @@ internal fun Route.ReservasjonApis() {
                 val oppgavenøkkel = call.receive<OppgaveNøkkelDto>()
                 val eksternUuid = UUID.fromString(oppgavenøkkel.oppgaveEksternId)
                 val oppgave = oppgaveRepository.hent(eksternUuid)
-                val response = pdlService.person(oppgave.aktorId)
+                val response = pdlService.person(oppgave.aktorId!!)  //ser ut som aktørId alltid er non-null her, men kan være blank (håndteres i pdlService)
 
                 if (response.ikkeTilgang) {
                     call.respond(HttpStatusCode.Forbidden)

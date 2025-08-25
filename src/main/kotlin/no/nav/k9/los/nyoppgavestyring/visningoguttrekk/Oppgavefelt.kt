@@ -1,6 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.visningoguttrekk
 
-class Oppgavefelt(
+data class Oppgavefelt(
     val eksternId: String,
     val område: String,
     val listetype: Boolean,
