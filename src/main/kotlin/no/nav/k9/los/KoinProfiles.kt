@@ -17,9 +17,8 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.aktivvask.Aktivvask
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonKonverteringJobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventperlinje.punsj.EventRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.EventRepositoryPerLinje
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.AsynkronProsesseringV1Service
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventperlinje.punsj.K9PunsjEventHandlerV3
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventHandler
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
@@ -321,13 +320,7 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        K9PunsjEventHandlerV3(
-            eventRepository = get(),
-        )
-    }
-
-    single {
-        EventRepository(
+        EventRepositoryPerLinje(
             dataSource = get(),
             transactionalManager = get(),
         )
@@ -344,7 +337,6 @@ fun common(app: Application, config: Configuration) = module {
             k9TilbakeEventHandler = get(),
             k9PunsjEventHandler = get(),
             k9KlageEventHandler = get(),
-            k9PunsjEventHandlerV3 = get(),
         )
     }
 

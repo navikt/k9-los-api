@@ -6,7 +6,7 @@ import io.opentelemetry.instrumentation.annotations.SpanAttribute
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventperlinje.punsj.EventRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.EventRepositoryPerLinje
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.JobbMetrikker
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
@@ -24,7 +24,7 @@ import kotlin.concurrent.thread
 import kotlin.concurrent.timer
 
 class K9PunsjTilLosAdapterTjenestePerLinje(
-    private val eventRepository: EventRepository,
+    private val eventRepositoryPerLinje: EventRepositoryPerLinje,
     private val oppgavetypeTjeneste: OppgavetypeTjeneste,
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
@@ -78,7 +78,7 @@ class K9PunsjTilLosAdapterTjenestePerLinje(
         log.info("Starter avspilling av BehandlingProsessEventer")
         val tidKjøringStartet = System.currentTimeMillis()
 
-        val behandlingsIder = eventRepository.hentAlleDirtyEventIder()
+        val behandlingsIder = eventRepositoryPerLinje.hentAlleDirtyEventIder()
         log.info("Fant ${behandlingsIder.size} behandlinger")
 
         var behandlingTeller: Long = 0
@@ -104,7 +104,7 @@ class K9PunsjTilLosAdapterTjenestePerLinje(
         var forrigeOppgaveversjon: OppgaveV3? = null
 
         transactionalManager.transaction { tx ->
-            val punsjEventer = eventRepository.hentMedLås(tx, uuid)
+            val punsjEventer = eventRepositoryPerLinje.hentMedLås(tx, uuid)
             for (event in punsjEventer.eventer) {
                 val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgaveversjon)
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
@@ -121,7 +121,7 @@ class K9PunsjTilLosAdapterTjenestePerLinje(
                     forrigeOppgaveversjon = oppgaveV3Tjeneste.hentOppgaveversjon("K9", oppgaveDto.id, oppgaveDto.versjon, tx)
                 }
             }
-            eventRepository.fjernDirty(uuid, tx)
+            eventRepositoryPerLinje.fjernDirty(uuid, tx)
         }
 
         return eventTeller

@@ -1,9 +1,8 @@
-package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventperlinje.punsj
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj
 
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
 import java.time.LocalDateTime
 
-data class EventLagret(
+data class EventPerLinjeLagret(
     val id: Long,
     val eksternId: String,
     val eksternVersjon: String,
