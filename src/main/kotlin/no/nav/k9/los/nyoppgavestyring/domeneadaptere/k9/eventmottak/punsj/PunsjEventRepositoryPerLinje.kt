@@ -5,43 +5,45 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.DuplikatDataException
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import org.postgresql.util.PSQLException
 import javax.sql.DataSource
 
 
-class EventRepositoryPerLinje(
+class PunsjEventRepositoryPerLinje(
     private val dataSource: DataSource,
-    private val transactionalManager: TransactionalManager
 ) {
 
-    fun lagre(event: PunsjEventDto): EventPerLinjeLagret? {
-        val json = LosObjectMapper.instance.writeValueAsString(event)
+    fun lagre(event: String, internVersjon: Int): EventPerLinjeLagret? {
+        val tree = LosObjectMapper.instance.readTree(event)
+        val eksternId = tree.findValue("eksternId").asText()
+        val eksternVersjon = tree.findValue("eventTid").asText()
         return try {
             using(sessionOf(dataSource)) {
                 it.run(
                     queryOf(
                         """
-                            insert into eventlager_punsj(ekstern_id, ekstern_versjon, eventnr_for_oppgave, "data", dirty) 
+                            insert into eventlager_punsj(ekstern_id, ekstern_versjon, intern_versjon, "data", dirty) 
                             values (:ekstern_id,
                             :ekstern_versjon,
-                            (select coalesce(max(eventnr_for_oppgave)+1, 0) from eventlager_punsj where ekstern_id = :ekstern_id),
+                            :intern_versjon,
                             :data :: jsonb,
                             true)
-                            returning id, ekstern_id, ekstern_versjon, eventnr_for_oppgave, data, opprettet
+                            on conflict do nothing
+                            returning id, ekstern_id, ekstern_versjon, intern_versjon, data, opprettet
                          """,
                         mapOf(
-                            "ekstern_id" to event.eksternId,
-                            "ekstern_versjon" to event.eventTid,
-                            "data" to json
+                            "ekstern_id" to eksternId,
+                            "ekstern_versjon" to eksternVersjon,
+                            "intern_versjon" to internVersjon,
+                            "data" to event
                         )
                     ).map { row ->
                         EventPerLinjeLagret(
                             id = row.long("id"),
                             eksternId = row.string("ekstern_id"),
                             eksternVersjon = row.string("ekstern_versjon"),
-                            eventNrForOppgave = row.int("eventnr_for_oppgave"),
+                            eventNrForOppgave = row.int("intern_versjon"),
                             eventDto = LosObjectMapper.instance.readValue(row.string("data"), PunsjEventDto::class.java),
                             opprettet = row.localDateTime("opprettet")
                         )
@@ -50,7 +52,50 @@ class EventRepositoryPerLinje(
             }
         } catch (e: PSQLException) {
             if (e.sqlState == "23505") {
-                throw DuplikatDataException("Punsjevent med eksternId: ${event.eksternId} og eksternVersjon: ${event.eventTid} finnes allerede!")
+                throw DuplikatDataException("Punsjevent med eksternId: ${eksternId} og eksternVersjon: ${eksternVersjon} finnes allerede!")
+            } else {
+                throw e
+            }
+        }
+    }
+
+    fun lagre(event: String): EventPerLinjeLagret? {
+        val tree = LosObjectMapper.instance.readTree(event)
+        val eksternId = tree.findValue("eksternId").asText()
+        val eksternVersjon = tree.findValue("eventTid").asText()
+        return try {
+            using(sessionOf(dataSource)) {
+                it.run(
+                    queryOf(
+                        """
+                            insert into eventlager_punsj(ekstern_id, ekstern_versjon, intern_versjon, "data", dirty) 
+                            values (:ekstern_id,
+                            :ekstern_versjon,
+                            (select coalesce(max(intern_versjon)+1, 0) from eventlager_punsj where ekstern_id = :ekstern_id),
+                            :data :: jsonb,
+                            true)
+                            returning id, ekstern_id, ekstern_versjon, intern_versjon, data, opprettet
+                         """,
+                        mapOf(
+                            "ekstern_id" to eksternId,
+                            "ekstern_versjon" to eksternVersjon,
+                            "data" to event
+                        )
+                    ).map { row ->
+                        EventPerLinjeLagret(
+                            id = row.long("id"),
+                            eksternId = row.string("ekstern_id"),
+                            eksternVersjon = row.string("ekstern_versjon"),
+                            eventNrForOppgave = row.int("intern_versjon"),
+                            eventDto = LosObjectMapper.instance.readValue(row.string("data"), PunsjEventDto::class.java),
+                            opprettet = row.localDateTime("opprettet")
+                        )
+                    }.asSingle
+                )
+            }
+        } catch (e: PSQLException) {
+            if (e.sqlState == "23505") {
+                throw DuplikatDataException("Punsjevent med eksternId: ${eksternId} og eksternVersjon: ${eksternVersjon} finnes allerede!")
             } else {
                 throw e
             }
@@ -65,7 +110,7 @@ class EventRepositoryPerLinje(
                         select *
                         from eventlager_punsj  
                         where ekstern_id = :ekstern_id
-                        and eventnr_for_oppgave = :eventnr
+                        and intern_versjon = :eventnr
                     """.trimIndent(),
                     mapOf(
                         "ekstern_id" to eksternId,
@@ -76,7 +121,7 @@ class EventRepositoryPerLinje(
                         id = row.long("id"),
                         eksternId = row.string("ekstern_id"),
                         eksternVersjon = row.string("ekstern_versjon"),
-                        eventNrForOppgave = row.int("eventnr_for_oppgave"),
+                        eventNrForOppgave = row.int("intern_versjon"),
                         eventDto = LosObjectMapper.instance.readValue(row.string("data"), PunsjEventDto::class.java),
                         opprettet = row.localDateTime("opprettet")
                     )
@@ -102,7 +147,7 @@ class EventRepositoryPerLinje(
                         id = row.long("id"),
                         eksternId = row.string("ekstern_id"),
                         eksternVersjon = row.string("ekstern_versjon"),
-                        eventNrForOppgave = row.int("eventnr_for_oppgave"),
+                        eventNrForOppgave = row.int("intern_versjon"),
                         eventDto = LosObjectMapper.instance.readValue(row.string("data"), PunsjEventDto::class.java),
                         opprettet = row.localDateTime("opprettet")
                     )
@@ -119,7 +164,7 @@ class EventRepositoryPerLinje(
                     select *
                     from eventlager_punsj bpep 
                     where ekstern_id = :ekstern_id
-                    order by eventnr_for_oppgave ASC
+                    order by intern_versjon ASC
                 """.trimIndent(),
                     mapOf("ekstern_id" to eksternId)
                 ).map { row ->
@@ -127,7 +172,7 @@ class EventRepositoryPerLinje(
                         id = row.long("id"),
                         eksternId = row.string("ekstern_id"),
                         eksternVersjon = row.string("ekstern_versjon"),
-                        eventNrForOppgave = row.int("eventnr_for_oppgave"),
+                        eventNrForOppgave = row.int("intern_versjon"),
                         eventDto = LosObjectMapper.instance.readValue(row.string("data"), PunsjEventDto::class.java),
                         opprettet = row.localDateTime("opprettet")
                     )
@@ -145,7 +190,7 @@ class EventRepositoryPerLinje(
                     from eventlager_punsj 
                     where ekstern_id = :ekstern_id
                     and dirty = true
-                    order by eventnr_for_oppgave ASC
+                    order by intern_versjon ASC
                 """.trimIndent(),
                     mapOf("ekstern_id" to eksternId)
                 ).map { row ->
@@ -153,7 +198,7 @@ class EventRepositoryPerLinje(
                         id = row.long("id"),
                         eksternId = row.string("ekstern_id"),
                         eksternVersjon = row.string("ekstern_versjon"),
-                        eventNrForOppgave = row.int("eventnr_for_oppgave"),
+                        eventNrForOppgave = row.int("intern_versjon"),
                         eventDto = LosObjectMapper.instance.readValue(row.string("data"), PunsjEventDto::class.java),
                         opprettet = row.localDateTime("opprettet")
                     )
@@ -168,7 +213,7 @@ class EventRepositoryPerLinje(
                 """update eventlager_punsj
                 set dirty = false 
                 where ekstern_id = :ekstern_id
-                and eventnr_for_oppgave = :eventnr""",
+                and intern_versjon = :eventnr""",
                 mapOf(
                     "ekstern_id" to eksternId,
                     "eventnr" to eventNr
