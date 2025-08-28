@@ -46,6 +46,7 @@ class DagensTallService(
         val grupper = listOf(
             DagensTallHovedgruppe.OMSORGSPENGER,
             DagensTallHovedgruppe.OMSORGSDAGER,
+            DagensTallHovedgruppe.OPPLÆRINGSPENGER,
             DagensTallHovedgruppe.PLEIEPENGER_SYKT_BARN,
             DagensTallHovedgruppe.PPN,
         )
@@ -68,12 +69,22 @@ class DagensTallService(
                 ),
                 ferdigstilteIDag = hentFerdigstilte(
                     dato = LocalDate.now(),
+                    helautomatisk = false,
+                ),
+                ferdigstilteHelautomatiskIDag = hentFerdigstilte(
+                    dato = LocalDate.now(),
+                    helautomatisk = true,
                 ),
                 nyeSiste7Dager = hentNye(
                     dato = LocalDate.now().minusDays(7),
                 ),
                 ferdigstilteSiste7Dager = hentFerdigstilte(
                     dato = LocalDate.now().minusDays(7),
+                    helautomatisk = false,
+                ),
+                ferdigstilteHelautomatiskSiste7Dager = hentFerdigstilte(
+                    dato = LocalDate.now().minusDays(7),
+                    helautomatisk = true,
                 )
             )
         )
@@ -90,6 +101,12 @@ class DagensTallService(
                     ferdigstilteIDag = hentFerdigstilte(
                         dato = LocalDate.now(),
                         behandlingType = behandlingType,
+                        helautomatisk = false,
+                    ),
+                    ferdigstilteHelautomatiskIDag = hentFerdigstilte(
+                        dato = LocalDate.now(),
+                        behandlingType = behandlingType,
+                        helautomatisk = true,
                     ),
                     nyeSiste7Dager = hentNye(
                         dato = LocalDate.now().minusDays(7),
@@ -98,6 +115,12 @@ class DagensTallService(
                     ferdigstilteSiste7Dager = hentFerdigstilte(
                         dato = LocalDate.now().minusDays(7),
                         behandlingType = behandlingType,
+                        helautomatisk = false,
+                    ),
+                    ferdigstilteHelautomatiskSiste7Dager = hentFerdigstilte(
+                        dato = LocalDate.now().minusDays(7),
+                        behandlingType = behandlingType,
+                        helautomatisk = true,
                     )
                 )
             )
@@ -117,6 +140,12 @@ class DagensTallService(
                     ferdigstilteIDag = hentFerdigstilte(
                         dato = LocalDate.now(),
                         ytelser = hovedgruppe.ytelser,
+                        helautomatisk = false,
+                    ),
+                    ferdigstilteHelautomatiskIDag = hentFerdigstilte(
+                        dato = LocalDate.now(),
+                        ytelser = hovedgruppe.ytelser,
+                        helautomatisk = true,
                     ),
                     nyeSiste7Dager = hentNye(
                         dato = LocalDate.now().minusDays(7),
@@ -125,6 +154,12 @@ class DagensTallService(
                     ferdigstilteSiste7Dager = hentFerdigstilte(
                         dato = LocalDate.now().minusDays(7),
                         ytelser = hovedgruppe.ytelser,
+                        helautomatisk = false,
+                    ),
+                    ferdigstilteHelautomatiskSiste7Dager = hentFerdigstilte(
+                        dato = LocalDate.now().minusDays(7),
+                        ytelser = hovedgruppe.ytelser,
+                        helautomatisk = true,
                     )
                 )
             )
@@ -143,6 +178,13 @@ class DagensTallService(
                             dato = LocalDate.now(),
                             ytelser = hovedgruppe.ytelser,
                             behandlingType = behandlingType,
+                            helautomatisk = false,
+                        ),
+                        ferdigstilteHelautomatiskIDag = hentFerdigstilte(
+                            dato = LocalDate.now(),
+                            ytelser = hovedgruppe.ytelser,
+                            behandlingType = behandlingType,
+                            helautomatisk = true,
                         ),
                         nyeSiste7Dager = hentNye(
                             dato = LocalDate.now().minusDays(7),
@@ -153,6 +195,13 @@ class DagensTallService(
                             dato = LocalDate.now().minusDays(7),
                             ytelser = hovedgruppe.ytelser,
                             behandlingType = behandlingType,
+                            helautomatisk = false,
+                        ),
+                        ferdigstilteHelautomatiskSiste7Dager = hentFerdigstilte(
+                            dato = LocalDate.now().minusDays(7),
+                            ytelser = hovedgruppe.ytelser,
+                            behandlingType = behandlingType,
+                            helautomatisk = true,
                         )
                     )
                 )
@@ -170,6 +219,13 @@ class DagensTallService(
                         dato = LocalDate.now(),
                         ytelser = hovedgruppe.ytelser,
                         oppgavetype = "k9punsj",
+                        helautomatisk = false,
+                    ),
+                    ferdigstilteHelautomatiskIDag = hentFerdigstilte(
+                        dato = LocalDate.now(),
+                        ytelser = hovedgruppe.ytelser,
+                        oppgavetype = "k9punsj",
+                        helautomatisk = true,
                     ),
                     nyeSiste7Dager = hentNye(
                         dato = LocalDate.now().minusDays(7),
@@ -180,6 +236,13 @@ class DagensTallService(
                         dato = LocalDate.now().minusDays(7),
                         ytelser = hovedgruppe.ytelser,
                         oppgavetype = "k9punsj",
+                        helautomatisk = false,
+                    ),
+                    ferdigstilteHelautomatiskSiste7Dager = hentFerdigstilte(
+                        dato = LocalDate.now().minusDays(7),
+                        ytelser = hovedgruppe.ytelser,
+                        oppgavetype = "k9punsj",
+                        helautomatisk = true
                     ),
                 )
             )
@@ -197,6 +260,12 @@ class DagensTallService(
                 ferdigstilteIDag = hentFerdigstilte(
                     dato = LocalDate.now(),
                     oppgavetype = "k9punsj",
+                    helautomatisk = false,
+                ),
+                ferdigstilteHelautomatiskIDag = hentFerdigstilte(
+                    dato = LocalDate.now(),
+                    oppgavetype = "k9punsj",
+                    helautomatisk = true,
                 ),
                 nyeSiste7Dager = hentNye(
                     dato = LocalDate.now().minusDays(7),
@@ -205,6 +274,12 @@ class DagensTallService(
                 ferdigstilteSiste7Dager = hentFerdigstilte(
                     dato = LocalDate.now().minusDays(7),
                     oppgavetype = "k9punsj",
+                    helautomatisk = false
+                ),
+                ferdigstilteHelautomatiskSiste7Dager = hentFerdigstilte(
+                    dato = LocalDate.now().minusDays(7),
+                    oppgavetype = "k9punsj",
+                    helautomatisk = true
                 )
             )
         )
@@ -223,6 +298,8 @@ class DagensTallService(
         behandlingType: BehandlingType? = null,
         oppgavetype: String? = null
     ): Long {
+        // Deler opp i to queries, for å utnytte partisjonering.
+        // Lukkede oppgaver har ferdigstiltDato >= mottattDato, og slipper da søke i alle partisjoner
         return hentMottattDatoForLukkedeTall(dato, ytelser, behandlingType, oppgavetype) +
                 hentÅpneVenterTall(dato, ytelser, behandlingType, oppgavetype)
     }
@@ -290,7 +367,7 @@ class DagensTallService(
                             null,
                             "oppgavestatus",
                             EksternFeltverdiOperator.IN,
-                            listOf(Oppgavestatus.AAPEN, Oppgavestatus.VENTER).map { it.kode }
+                            listOf(Oppgavestatus.AAPEN, Oppgavestatus.VENTER, Oppgavestatus.UAVKLART).map { it.kode }
                         ),
                         FeltverdiOppgavefilter(
                             "K9",
@@ -326,7 +403,8 @@ class DagensTallService(
         dato: LocalDate,
         ytelser: List<FagsakYtelseType>? = null,
         behandlingType: BehandlingType? = null,
-        oppgavetype: String? = null
+        oppgavetype: String? = null,
+        helautomatisk: Boolean
     ): Long {
         return queryService.queryForAntall(
             QueryRequest(
@@ -345,7 +423,7 @@ class DagensTallService(
                             område = "K9",
                             kode = "helautomatiskBehandlet",
                             operator = EksternFeltverdiOperator.EQUALS,
-                            listOf(false.toString())
+                            listOf(helautomatisk.toString())
                         ),
                         ytelser?.let { liste ->
                             FeltverdiOppgavefilter(
