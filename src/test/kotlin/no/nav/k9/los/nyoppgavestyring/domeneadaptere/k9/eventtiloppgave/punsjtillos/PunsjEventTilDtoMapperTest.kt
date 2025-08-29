@@ -4,7 +4,7 @@ import assertk.assertThat
 import assertk.assertions.any
 import assertk.assertions.matchesPredicate
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.PunsjEventDtoBuilder
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDtoBuilder
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.FeltType

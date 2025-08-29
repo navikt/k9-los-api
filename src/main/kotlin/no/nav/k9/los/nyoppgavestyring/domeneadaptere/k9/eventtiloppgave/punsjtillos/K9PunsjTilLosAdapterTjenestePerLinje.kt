@@ -6,7 +6,7 @@ import io.opentelemetry.instrumentation.annotations.SpanAttribute
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.EventRepositoryPerLinje
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventRepositoryPerLinje
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.JobbMetrikker
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
@@ -24,7 +24,7 @@ import kotlin.concurrent.thread
 import kotlin.concurrent.timer
 
 class K9PunsjTilLosAdapterTjenestePerLinje(
-    private val eventRepositoryPerLinje: EventRepositoryPerLinje,
+    private val punsjEventRepositoryPerLinje: PunsjEventRepositoryPerLinje,
     private val oppgavetypeTjeneste: OppgavetypeTjeneste,
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
@@ -75,6 +75,7 @@ class K9PunsjTilLosAdapterTjenestePerLinje(
 
     @WithSpan
     private fun spillAvBehandlingProsessEventer() {
+        /*
         log.info("Starter avspilling av BehandlingProsessEventer")
         val tidKjøringStartet = System.currentTimeMillis()
 
@@ -96,10 +97,13 @@ class K9PunsjTilLosAdapterTjenestePerLinje(
             log.info("Gjennomsnittstid pr behandling: ${tidHeleKjøringen / behandlingTeller}ms, Gjennsomsnittstid pr event: ${tidHeleKjøringen / eventTeller}ms")
         }
         log.info("Avspilling av BehandlingProsessEventer ferdig")
+
+         */
     }
 
     @WithSpan
     fun oppdaterOppgaveForEksternId(@SpanAttribute uuid: UUID, eventTellerInn: Long = 0): Long {
+        /*
         var eventTeller = eventTellerInn
         var forrigeOppgaveversjon: OppgaveV3? = null
 
@@ -125,6 +129,9 @@ class K9PunsjTilLosAdapterTjenestePerLinje(
         }
 
         return eventTeller
+
+         */
+        return 0L
     }
 
     private fun annullerReservasjonHvisPåVentEllerAvsluttet(

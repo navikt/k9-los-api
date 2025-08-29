@@ -41,14 +41,14 @@ class K9PunsjEventRepository(private val dataSource: DataSource) {
 
     fun hentMedLås(tx: TransactionalSession, uuid: UUID): K9PunsjModell {
         val json: String? = tx.run(
-                queryOf(
-                    "select data from behandling_prosess_events_k9_punsj where id = :id for update",
-                    mapOf("id" to uuid.toString())
-                )
-                    .map { row ->
-                        row.string("data")
-                    }.asSingle
+            queryOf(
+                "select data from behandling_prosess_events_k9_punsj where id = :id for update",
+                mapOf("id" to uuid.toString())
             )
+                .map { row ->
+                    row.string("data")
+                }.asSingle
+        )
         if (json.isNullOrEmpty()) {
             return K9PunsjModell(emptyList())
         }
@@ -83,33 +83,36 @@ class K9PunsjEventRepository(private val dataSource: DataSource) {
     fun lagre(
         event: PunsjEventDto
     ): K9PunsjModell {
+        return using(sessionOf(dataSource)) {
+            it.transaction { tx ->
+                lagre(event, tx)
+            }
+        }
+    }
+
+    fun lagre(event: PunsjEventDto, tx: TransactionalSession): K9PunsjModell {
         val json = LosObjectMapper.instance.writeValueAsString(event)
 
         val id = event.eksternId.toString()
-        val out = using(sessionOf(dataSource)) {
-            it.transaction { tx ->
-                tx.run(
-                    queryOf(
-                        """
+        tx.run(
+            queryOf(
+                """
                     insert into behandling_prosess_events_k9_punsj as k (id, data)
                     values (:id, :dataInitial :: jsonb)
                     on conflict (id) do update
                     set data = jsonb_set(k.data, '{eventer,999999}', :data :: jsonb, true)
                  """, mapOf("id" to id, "dataInitial" to "{\"eventer\": [$json]}", "data" to json)
-                    ).asUpdate
-                )
-                tx.run(
-                    queryOf(
-                        "select data from behandling_prosess_events_k9_punsj where id = :id",
-                        mapOf("id" to id)
-                    )
-                        .map { row ->
-                            row.string("data")
-                        }.asSingle
-                )
-            }
-
-        }
+            ).asUpdate
+        )
+        val out = tx.run(
+            queryOf(
+                "select data from behandling_prosess_events_k9_punsj where id = :id",
+                mapOf("id" to id)
+            )
+                .map { row ->
+                    row.string("data")
+                }.asSingle
+        )
         val modell = LosObjectMapper.instance.readValue(out!!, K9PunsjModell::class.java)
         val unikeEventer = Duplikatfilter.fjernDuplikater(modell.eventer)
         return modell.copy(eventer = unikeEventer.sortedBy { it.eventTid })
@@ -143,8 +146,8 @@ class K9PunsjEventRepository(private val dataSource: DataSource) {
     }
 
     fun hentAntallEventIderUtenVasketHistorikk(): Long {
-        return using(sessionOf(dataSource)) {
-            session -> session.transaction { tx ->
+        return using(sessionOf(dataSource)) { session ->
+            session.transaction { tx ->
                 tx.run(
                     queryOf(
                         """
