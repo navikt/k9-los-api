@@ -1,6 +1,7 @@
-package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager
 
 import kotliquery.TransactionalSession
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import java.util.UUID
 
