@@ -7,6 +7,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjE
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjId
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
@@ -41,9 +42,9 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         )
         val eventstring = LosObjectMapper.instance.writeValueAsString(event)
 
-        var eventLagret = eventRepository.lagre(eventstring, 0)!!
+        var eventLagret = eventRepository.lagre(eventstring, Fagsystem.PUNSJ, 0)!!
         assertThat(eventLagret.eventNrForOppgave).isEqualTo(0)
-        assertThat(eventLagret.eventDto.status).isEqualTo(Oppgavestatus.AAPEN)
+        assertThat(PunsjEventDto.fraEventLagret(eventLagret).status).isEqualTo(Oppgavestatus.AAPEN)
 
         var alleEventer = eventRepository.hentAlleEventer(eksternId.toString())
         assertThat(alleEventer.size).isEqualTo(1)
@@ -64,9 +65,9 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         )
         val eventstring2 = LosObjectMapper.instance.writeValueAsString(event2)
 
-        eventLagret = eventRepository.lagre(eventstring2, 1)!!
+        eventLagret = eventRepository.lagre(eventstring2, Fagsystem.PUNSJ, 1)!!
         assertThat(eventLagret.eventNrForOppgave).isEqualTo(1)
-        assertThat(eventLagret.eventDto.status).isEqualTo(Oppgavestatus.VENTER)
+        assertThat(PunsjEventDto.fraEventLagret(eventLagret).status).isEqualTo(Oppgavestatus.VENTER)
 
         alleEventer = eventRepository.hentAlleEventer(eksternId.toString())
         assertThat(alleEventer.size).isEqualTo(2)
@@ -79,10 +80,10 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         }
         alleEventer = eventRepository.hentAlleDirtyEventer(eksternId.toString())
         assertThat(alleEventer.size).isEqualTo(1)
-        assertThat(alleEventer.get(0).eventDto.status).isEqualTo(Oppgavestatus.VENTER)
+        assertThat(PunsjEventDto.fraEventLagret(eventLagret).status).isEqualTo(Oppgavestatus.VENTER)
 
         val førsteLagredeEvent = eventRepository.hent(eksternId.toString(), 0)!!
-        assertThat(førsteLagredeEvent.eventDto.status).isEqualTo(Oppgavestatus.AAPEN)
+        assertThat(PunsjEventDto.fraEventLagret(førsteLagredeEvent).status).isEqualTo(Oppgavestatus.AAPEN)
     }
 
     @Test
@@ -109,8 +110,8 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
 
         val eventString = LosObjectMapper.instance.writeValueAsString(event)
 
-        eventRepository.lagre(eventString, 0)
-        val retur = eventRepository.lagre(eventString, 1)
+        eventRepository.lagre(eventString, Fagsystem.PUNSJ, 0)
+        val retur = eventRepository.lagre(eventString, Fagsystem.PUNSJ, 1)
         assertNull(retur)
     }
 
@@ -137,7 +138,7 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         )
         val eventString = LosObjectMapper.instance.writeValueAsString(event)
 
-        val eventLagret = eventRepository.lagre(eventString, 0)!!
+        val eventLagret = eventRepository.lagre(eventString, Fagsystem.PUNSJ,0)!!
 
         val event2 = PunsjEventDto(
             eksternId = eksternId,
@@ -154,7 +155,7 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
             journalførtTidspunkt = LocalDateTime.now().minusDays(1),
         )
         val eventString2 = LosObjectMapper.instance.writeValueAsString(event2)
-        eventRepository.lagre(eventString2, 1)
+        val eventLagret2 = eventRepository.lagre(eventString2, Fagsystem.PUNSJ, 1)
 
         var alleEventer = eventRepository.hentAlleEventIderUtenVasketHistorikk()
         assertThat(alleEventer.size).isEqualTo(2)
@@ -163,7 +164,7 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         alleEventer = eventRepository.hentAlleEventIderUtenVasketHistorikk()
         assertThat(alleEventer.size).isEqualTo(1)
         val uvasketEventLagret = eventRepository.hent(alleEventer.get(0))!!
-        assertThat(uvasketEventLagret.eventDto.status).isEqualTo(Oppgavestatus.VENTER)
+        assertThat(PunsjEventDto.fraEventLagret(uvasketEventLagret).status).isEqualTo(Oppgavestatus.VENTER)
 
         eventRepository.nullstillHistorikkvask()
         alleEventer = eventRepository.hentAlleEventIderUtenVasketHistorikk()

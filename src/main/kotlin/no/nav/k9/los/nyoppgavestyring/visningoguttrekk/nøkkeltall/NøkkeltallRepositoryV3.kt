@@ -82,10 +82,10 @@ class NøkkeltallRepositoryV3 (private val dataSource: DataSource) {
 
     fun mapOppgavetypeTilFagsystem(oppgavetypeEksternId: String): Fagsystem {
         return when (oppgavetypeEksternId){
-            "k9sak" -> Fagsystem.K9SAK
-            "k9klage" -> Fagsystem.K9KLAGE
+            "k9sak" -> Fagsystem.SAK
+            "k9klage" -> Fagsystem.KLAGE
             "k9punsj" -> Fagsystem.PUNSJ
-            "k9tilbake" -> Fagsystem.K9TILBAKE
+            "k9tilbake" -> Fagsystem.TILBAKE
             else -> throw IllegalArgumentException("Oppgavetype " + oppgavetypeEksternId + " er ikke støttet her p.t.")
         }
     }

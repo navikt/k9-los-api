@@ -3,6 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager
 import kotliquery.queryOf
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -35,7 +36,7 @@ class EventlagerKonverteringsjobb(
         for (uuid in ukonverterteEventer) {
             transactionalManager.transaction { tx ->
                 punsjEventRepository.hentMedLås(tx, UUID.fromString(uuid))
-                eventlagerKonverteringsservice.konverterOppgave(uuid, tx)
+                eventlagerKonverteringsservice.konverterOppgave(uuid, Fagsystem.PUNSJ, tx)
             }
         }
     }

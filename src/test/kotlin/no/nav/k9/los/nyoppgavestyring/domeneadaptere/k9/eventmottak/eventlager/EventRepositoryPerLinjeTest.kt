@@ -9,6 +9,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjI
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.DuplikatDataException
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
@@ -42,9 +43,9 @@ class EventRepositoryPerLinjeTest() : AbstractK9LosIntegrationTest() {
             journalførtTidspunkt = LocalDateTime.now().minusDays(1),
         )
         val eventstring = LosObjectMapper.instance.writeValueAsString(event)
-        var eventLagret = eventRepository.lagre(eventstring)!!
+        var eventLagret = eventRepository.lagre(eventstring, Fagsystem.PUNSJ)!!
         assertThat(eventLagret.eventNrForOppgave).isEqualTo(0)
-        assertThat(eventLagret.eventDto.status).isEqualTo(Oppgavestatus.AAPEN)
+        assertThat(PunsjEventDto.fraEventLagret(eventLagret).status).isEqualTo(Oppgavestatus.AAPEN)
 
         var alleEventer = eventRepository.hentAlleEventer(eksternId.toString())
         assertThat(alleEventer.size).isEqualTo(1)
@@ -64,9 +65,9 @@ class EventRepositoryPerLinjeTest() : AbstractK9LosIntegrationTest() {
             journalførtTidspunkt = LocalDateTime.now().minusDays(1),
         )
         val eventstring2 = LosObjectMapper.instance.writeValueAsString(event2)
-        eventLagret = eventRepository.lagre(eventstring2)!!
+        eventLagret = eventRepository.lagre(eventstring2, Fagsystem.PUNSJ)!!
         assertThat(eventLagret.eventNrForOppgave).isEqualTo(1)
-        assertThat(eventLagret.eventDto.status).isEqualTo(Oppgavestatus.VENTER)
+        assertThat(PunsjEventDto.fraEventLagret(eventLagret).status).isEqualTo(Oppgavestatus.VENTER)
 
         alleEventer = eventRepository.hentAlleEventer(eksternId.toString())
         assertThat(alleEventer.size).isEqualTo(2)
@@ -79,10 +80,10 @@ class EventRepositoryPerLinjeTest() : AbstractK9LosIntegrationTest() {
         }
         alleEventer = eventRepository.hentAlleDirtyEventer(eksternId.toString())
         assertThat(alleEventer.size).isEqualTo(1)
-        assertThat(alleEventer.get(0).eventDto.status).isEqualTo(Oppgavestatus.VENTER)
+        assertThat(PunsjEventDto.fraEventLagret(eventLagret).status).isEqualTo(Oppgavestatus.VENTER)
 
         val førsteLagredeEvent = eventRepository.hent(eksternId.toString(), 0)!!
-        assertThat(førsteLagredeEvent.eventDto.status).isEqualTo(Oppgavestatus.AAPEN)
+        assertThat(PunsjEventDto.fraEventLagret(førsteLagredeEvent).status).isEqualTo(Oppgavestatus.AAPEN)
     }
 
     @Test
@@ -107,9 +108,9 @@ class EventRepositoryPerLinjeTest() : AbstractK9LosIntegrationTest() {
             journalførtTidspunkt = LocalDateTime.now().minusDays(1),
         )
         val eventstring = LosObjectMapper.instance.writeValueAsString(event)
-        eventRepository.lagre(eventstring)
+        eventRepository.lagre(eventstring, Fagsystem.PUNSJ)
         assertThrows(DuplikatDataException::class.java) {
-            eventRepository.lagre(eventstring)
+            eventRepository.lagre(eventstring, Fagsystem.PUNSJ)
         }
     }
 
@@ -134,7 +135,7 @@ class EventRepositoryPerLinjeTest() : AbstractK9LosIntegrationTest() {
             journalførtTidspunkt = LocalDateTime.now().minusDays(1),
         )
         val eventstring = LosObjectMapper.instance.writeValueAsString(event)
-        val eventLagret = eventRepository.lagre(eventstring)!!
+        val eventLagret = eventRepository.lagre(eventstring, Fagsystem.PUNSJ)!!
 
         val event2 = PunsjEventDto(
             eksternId = eksternId,
@@ -151,7 +152,7 @@ class EventRepositoryPerLinjeTest() : AbstractK9LosIntegrationTest() {
             journalførtTidspunkt = LocalDateTime.now().minusDays(1),
         )
         val eventstring2 = LosObjectMapper.instance.writeValueAsString(event2)
-        eventRepository.lagre(eventstring2)
+        eventRepository.lagre(eventstring2, Fagsystem.PUNSJ)
 
         var alleEventer = eventRepository.hentAlleEventIderUtenVasketHistorikk()
         assertThat(alleEventer.size).isEqualTo(2)
@@ -160,7 +161,7 @@ class EventRepositoryPerLinjeTest() : AbstractK9LosIntegrationTest() {
         alleEventer = eventRepository.hentAlleEventIderUtenVasketHistorikk()
         assertThat(alleEventer.size).isEqualTo(1)
         val uvasketEventLagret = eventRepository.hent(alleEventer.get(0))!!
-        assertThat(uvasketEventLagret.eventDto.status).isEqualTo(Oppgavestatus.VENTER)
+        assertThat(PunsjEventDto.fraEventLagret(uvasketEventLagret).status).isEqualTo(Oppgavestatus.VENTER)
 
         eventRepository.nullstillHistorikkvask()
         alleEventer = eventRepository.hentAlleEventIderUtenVasketHistorikk()

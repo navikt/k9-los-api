@@ -19,7 +19,7 @@ import java.util.*
 
 class K9SakEventDtoBuilder(
     var eksternId: UUID = UUID.randomUUID(),
-    var fagsystem: Fagsystem = Fagsystem.K9SAK,
+    var fagsystem: Fagsystem = Fagsystem.SAK,
     var saksnummer: String = Random().nextInt(0, 200).toString(),
     var aktørId: String = Random().nextInt(0, 9999999).toString(),
     var pleietrengendeAktørId: String = Random().nextInt(0, 9999999).toString(),

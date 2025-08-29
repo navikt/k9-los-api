@@ -16,7 +16,7 @@ class EventRepository(
     private val dataSource: DataSource,
 ) {
 
-    fun lagre(event: String, internVersjon: Int): EventPerLinjeLagret? {
+    fun lagre(event: String, fagsystem: Fagsystem, internVersjon: Int): EventLagret? {
         val tree = LosObjectMapper.instance.readTree(event)
         val eksternId = tree.findValue("eksternId").asText()
         val eksternVersjon = tree.findValue("eventTid").asText()
@@ -25,16 +25,19 @@ class EventRepository(
                 it.run(
                     queryOf(
                         """
-                            insert into eventlager_punsj(ekstern_id, ekstern_versjon, intern_versjon, "data", dirty) 
-                            values (:ekstern_id,
+                            insert into eventlager(fagsystem, ekstern_id, ekstern_versjon, intern_versjon, "data", dirty) 
+                            values (
+                            :fagsystem,
+                            :ekstern_id,
                             :ekstern_versjon,
                             :intern_versjon,
                             :data :: jsonb,
                             true)
                             on conflict do nothing
-                            returning id, ekstern_id, ekstern_versjon, intern_versjon, data, opprettet
+                            returning id, fagsystem, ekstern_id, ekstern_versjon, intern_versjon, data, opprettet
                          """,
                         mapOf(
+                            "fagsystem" to fagsystem.kode,
                             "ekstern_id" to eksternId,
                             "ekstern_versjon" to eksternVersjon,
                             "intern_versjon" to internVersjon,
@@ -47,14 +50,14 @@ class EventRepository(
             }
         } catch (e: PSQLException) {
             if (e.sqlState == "23505") {
-                throw DuplikatDataException("Punsjevent med eksternId: ${eksternId} og eksternVersjon: ${eksternVersjon} finnes allerede!")
+                throw DuplikatDataException("Event med fagsystem: ${fagsystem}, eksternId: ${eksternId} og eksternVersjon: ${eksternVersjon} finnes allerede!")
             } else {
                 throw e
             }
         }
     }
 
-    fun lagre(event: String): EventPerLinjeLagret? {
+    fun lagre(event: String, fagsystem: Fagsystem): EventLagret? {
         val tree = LosObjectMapper.instance.readTree(event)
         val eksternId = tree.findValue("eksternId").asText()
         val eksternVersjon = tree.findValue("eventTid").asText()
@@ -63,15 +66,18 @@ class EventRepository(
                 it.run(
                     queryOf(
                         """
-                            insert into eventlager_punsj(ekstern_id, ekstern_versjon, intern_versjon, "data", dirty) 
-                            values (:ekstern_id,
+                            insert into eventlager(fagsystem, ekstern_id, ekstern_versjon, intern_versjon, "data", dirty) 
+                            values (
+                            :fagsystem,
+                            :ekstern_id,
                             :ekstern_versjon,
-                            (select coalesce(max(intern_versjon)+1, 0) from eventlager_punsj where ekstern_id = :ekstern_id),
+                            (select coalesce(max(intern_versjon)+1, 0) from eventlager where ekstern_id = :ekstern_id),
                             :data :: jsonb,
                             true)
-                            returning id, ekstern_id, ekstern_versjon, intern_versjon, data, opprettet
+                            returning id, fagsystem, ekstern_id, ekstern_versjon, intern_versjon, data, opprettet
                          """,
                         mapOf(
+                            "fagsystem" to fagsystem.kode,
                             "ekstern_id" to eksternId,
                             "ekstern_versjon" to eksternVersjon,
                             "data" to event
@@ -90,13 +96,13 @@ class EventRepository(
         }
     }
 
-    fun hent(eksternId: String, eventNr: Long): EventPerLinjeLagret? {
+    fun hent(eksternId: String, eventNr: Long): EventLagret? {
         return using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
                     """
                         select *
-                        from eventlager_punsj  
+                        from eventlager  
                         where ekstern_id = :ekstern_id
                         and intern_versjon = :eventnr
                     """.trimIndent(),
@@ -111,13 +117,13 @@ class EventRepository(
         }
     }
 
-    fun hent(id: Long): EventPerLinjeLagret? {
+    fun hent(id: Long): EventLagret? {
         return using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
                     """
                         select *
-                        from eventlager_punsj  
+                        from eventlager  
                         where id = :id
                     """.trimIndent(),
                     mapOf(
@@ -130,13 +136,13 @@ class EventRepository(
         }
     }
 
-    fun hentAlleEventer(eksternId: String): List<EventPerLinjeLagret> {
+    fun hentAlleEventer(eksternId: String): List<EventLagret> {
         return using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
                     """
                     select *
-                    from eventlager_punsj bpep 
+                    from eventlager bpep 
                     where ekstern_id = :ekstern_id
                     order by intern_versjon ASC
                 """.trimIndent(),
@@ -148,13 +154,13 @@ class EventRepository(
         }
     }
 
-    fun hentAlleDirtyEventer(eksternId: String): List<EventPerLinjeLagret> {
+    fun hentAlleDirtyEventer(eksternId: String): List<EventLagret> {
         return using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
                     """
                     select *
-                    from eventlager_punsj 
+                    from eventlager 
                     where ekstern_id = :ekstern_id
                     and dirty = true
                     order by intern_versjon ASC
@@ -167,8 +173,8 @@ class EventRepository(
         }
     }
 
-    private fun rowTilEvent(row: Row): EventPerLinjeLagret? {
-        return EventPerLinjeLagret(
+    private fun rowTilEvent(row: Row): EventLagret? {
+        return EventLagret(
             id = row.long("id"),
             eksternId = row.string("ekstern_id"),
             eksternVersjon = row.string("ekstern_versjon"),
@@ -182,7 +188,7 @@ class EventRepository(
     fun fjernDirty(eksternId: String, eventNr: Long, tx: TransactionalSession) {
         tx.run(
             queryOf(
-                """update eventlager_punsj
+                """update eventlager
                 set dirty = false 
                 where ekstern_id = :ekstern_id
                 and intern_versjon = :eventnr""",
@@ -199,7 +205,7 @@ class EventRepository(
             it.transaction { tx ->
                 tx.run(
                     queryOf(
-                        """delete from eventlager_punsj_historikkvask_ferdig"""
+                        """delete from eventlager_historikkvask_ferdig"""
                     ).asUpdate
                 )
             }
@@ -213,8 +219,8 @@ class EventRepository(
                     queryOf(
                         """
                             select id
-                            from eventlager_punsj e
-                            where not exists (select * from eventlager_punsj_historikkvask_ferdig hv where hv.id = e.id)
+                            from eventlager e
+                            where not exists (select * from eventlager_historikkvask_ferdig hv where hv.id = e.id)
                              """.trimMargin(),
                         mapOf()
                     ).map { row ->
@@ -225,12 +231,12 @@ class EventRepository(
         }
     }
 
-    fun markerVasketHistorikk(eventPerLinjeLagret: EventPerLinjeLagret) {
+    fun markerVasketHistorikk(eventLagret: EventLagret) {
         using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
-                    """insert into eventlager_punsj_historikkvask_ferdig(id) values (:id)""",
-                    mapOf("id" to eventPerLinjeLagret.id)
+                    """insert into eventlager_historikkvask_ferdig(id) values (:id)""",
+                    mapOf("id" to eventLagret.id)
                 ).asUpdate
             )
         }

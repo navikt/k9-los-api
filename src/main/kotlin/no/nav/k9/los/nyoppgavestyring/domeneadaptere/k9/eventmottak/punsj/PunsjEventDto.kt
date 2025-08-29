@@ -1,5 +1,10 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj
 
+import com.fasterxml.jackson.module.kotlin.readValue
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventLagret
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
@@ -34,4 +39,13 @@ data class PunsjEventDto(
         journalførtTidspunkt=$journalførtTidspunkt,
         ferdigstiltAv=$ferdigstiltAv)
         """.trimIndent()
+
+    companion object {
+        fun fraEventLagret(eventLagret: EventLagret): PunsjEventDto {
+            if (eventLagret.fagsystem != Fagsystem.PUNSJ) {
+                throw IllegalStateException()
+            }
+            return LosObjectMapper.instance.readValue<PunsjEventDto>(eventLagret.eventJson)
+        }
+    }
 }

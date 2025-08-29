@@ -346,7 +346,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
                 "merknader": [],
                   "eksternId": "$eksternId",
                   "fagsystem": {
-                    "kode": "K9SAK",
+                    "kode": "SAK",
                     "kodeverk": "FAGSYSTEM"
                   },
                   "saksnummer": "$saksnummer",
