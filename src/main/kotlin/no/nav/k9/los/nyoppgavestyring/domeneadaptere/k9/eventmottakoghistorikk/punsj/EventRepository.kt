@@ -5,6 +5,7 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.los.aksjonspunktbehandling.objectMapper
+import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.FinnerIkkeDataException
 import java.util.*
 import javax.sql.DataSource
@@ -12,18 +13,19 @@ import javax.sql.DataSource
 
 class EventRepository(
     private val dataSource: DataSource,
+    private val transactionalManager: TransactionalManager
 ) {
 
     fun lagre(event: PunsjEventV3Dto): Long? {
         return using(sessionOf(dataSource)) {
-            it.transaction { tx ->
+            transactionalManager.transaction { tx ->
                 val json = objectMapper().writeValueAsString(event)
                 tx.updateAndReturnGeneratedKey(
                     queryOf(
                         """
                             insert into eventlager_punsj(ekstern_id, eventnr_for_oppgave, "data", dirty) 
                             values (:ekstern_id,
-                            (select coalesce(max(eventnr_for_oppgave)+1, 0) from behandling_prosess_events_punsj where ekstern_id = :ekstern_id),
+                            (select coalesce(max(eventnr_for_oppgave)+1, 0) from eventlager_punsj where ekstern_id = :ekstern_id),
                             :data :: jsonb,
                             true)
                          """,
@@ -36,6 +38,7 @@ class EventRepository(
             }
         }
     }
+
 
     fun hent(eksternId: String, eventNr: Long): PunsjEventV3Dto {
         val json = using(sessionOf(dataSource)) {
