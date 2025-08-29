@@ -6,7 +6,7 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import java.util.UUID
 
 class EventlagerKonverteringsservice(
-    private val punsjEventRepositoryPerLinje: PunsjEventRepositoryPerLinje,
+    private val punsjEventRepositoryPerLinje: EventRepository,
     private val eventRepository: K9PunsjEventRepository,
 ) {
 

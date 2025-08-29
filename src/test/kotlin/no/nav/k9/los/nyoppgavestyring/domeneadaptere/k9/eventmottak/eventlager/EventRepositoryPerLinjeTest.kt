@@ -3,7 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottakoghistorikk.
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.PunsjEventRepositoryPerLinje
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjId
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.DuplikatDataException
@@ -22,7 +22,7 @@ class EventRepositoryPerLinjeTest() : AbstractK9LosIntegrationTest() {
 
     @Test
     fun `teste skriv og les`() {
-        val punsjEventRepositoryPerLinje = get<PunsjEventRepositoryPerLinje>()
+        val eventRepository = get<EventRepository>()
         val transactionalManager = get<TransactionalManager>()
 
         val eksternId = PunsjId.fromString(UUID.randomUUID().toString())
@@ -42,11 +42,11 @@ class EventRepositoryPerLinjeTest() : AbstractK9LosIntegrationTest() {
             journalførtTidspunkt = LocalDateTime.now().minusDays(1),
         )
         val eventstring = LosObjectMapper.instance.writeValueAsString(event)
-        var eventLagret = punsjEventRepositoryPerLinje.lagre(eventstring)!!
+        var eventLagret = eventRepository.lagre(eventstring)!!
         assertThat(eventLagret.eventNrForOppgave).isEqualTo(0)
         assertThat(eventLagret.eventDto.status).isEqualTo(Oppgavestatus.AAPEN)
 
-        var alleEventer = punsjEventRepositoryPerLinje.hentAlleEventer(eksternId.toString())
+        var alleEventer = eventRepository.hentAlleEventer(eksternId.toString())
         assertThat(alleEventer.size).isEqualTo(1)
 
         val event2 = PunsjEventDto(
@@ -64,30 +64,30 @@ class EventRepositoryPerLinjeTest() : AbstractK9LosIntegrationTest() {
             journalførtTidspunkt = LocalDateTime.now().minusDays(1),
         )
         val eventstring2 = LosObjectMapper.instance.writeValueAsString(event2)
-        eventLagret = punsjEventRepositoryPerLinje.lagre(eventstring2)!!
+        eventLagret = eventRepository.lagre(eventstring2)!!
         assertThat(eventLagret.eventNrForOppgave).isEqualTo(1)
         assertThat(eventLagret.eventDto.status).isEqualTo(Oppgavestatus.VENTER)
 
-        alleEventer = punsjEventRepositoryPerLinje.hentAlleEventer(eksternId.toString())
+        alleEventer = eventRepository.hentAlleEventer(eksternId.toString())
         assertThat(alleEventer.size).isEqualTo(2)
 
-        alleEventer = punsjEventRepositoryPerLinje.hentAlleDirtyEventer(eksternId.toString())
+        alleEventer = eventRepository.hentAlleDirtyEventer(eksternId.toString())
         assertThat(alleEventer.size).isEqualTo(2)
 
         transactionalManager.transaction { tx ->
-            punsjEventRepositoryPerLinje.fjernDirty(eksternId.toString(), 0, tx)
+            eventRepository.fjernDirty(eksternId.toString(), 0, tx)
         }
-        alleEventer = punsjEventRepositoryPerLinje.hentAlleDirtyEventer(eksternId.toString())
+        alleEventer = eventRepository.hentAlleDirtyEventer(eksternId.toString())
         assertThat(alleEventer.size).isEqualTo(1)
         assertThat(alleEventer.get(0).eventDto.status).isEqualTo(Oppgavestatus.VENTER)
 
-        val førsteLagredeEvent = punsjEventRepositoryPerLinje.hent(eksternId.toString(), 0)!!
+        val førsteLagredeEvent = eventRepository.hent(eksternId.toString(), 0)!!
         assertThat(førsteLagredeEvent.eventDto.status).isEqualTo(Oppgavestatus.AAPEN)
     }
 
     @Test
     fun `teste skriv unique constraint`() {
-        val punsjEventRepositoryPerLinje = get<PunsjEventRepositoryPerLinje>()
+        val eventRepository = get<EventRepository>()
         val transactionalManager = get<TransactionalManager>()
 
         val eksternId = PunsjId.fromString(UUID.randomUUID().toString())
@@ -107,15 +107,15 @@ class EventRepositoryPerLinjeTest() : AbstractK9LosIntegrationTest() {
             journalførtTidspunkt = LocalDateTime.now().minusDays(1),
         )
         val eventstring = LosObjectMapper.instance.writeValueAsString(event)
-        punsjEventRepositoryPerLinje.lagre(eventstring)
+        eventRepository.lagre(eventstring)
         assertThrows(DuplikatDataException::class.java) {
-            punsjEventRepositoryPerLinje.lagre(eventstring)
+            eventRepository.lagre(eventstring)
         }
     }
 
     @Test
     fun `teste historikkvask les og skriv`() {
-        val punsjEventRepositoryPerLinje = get<PunsjEventRepositoryPerLinje>()
+        val eventRepository = get<EventRepository>()
 
         val eksternId = PunsjId.fromString(UUID.randomUUID().toString())
 
@@ -134,7 +134,7 @@ class EventRepositoryPerLinjeTest() : AbstractK9LosIntegrationTest() {
             journalførtTidspunkt = LocalDateTime.now().minusDays(1),
         )
         val eventstring = LosObjectMapper.instance.writeValueAsString(event)
-        val eventLagret = punsjEventRepositoryPerLinje.lagre(eventstring)!!
+        val eventLagret = eventRepository.lagre(eventstring)!!
 
         val event2 = PunsjEventDto(
             eksternId = eksternId,
@@ -151,19 +151,19 @@ class EventRepositoryPerLinjeTest() : AbstractK9LosIntegrationTest() {
             journalførtTidspunkt = LocalDateTime.now().minusDays(1),
         )
         val eventstring2 = LosObjectMapper.instance.writeValueAsString(event2)
-        punsjEventRepositoryPerLinje.lagre(eventstring2)
+        eventRepository.lagre(eventstring2)
 
-        var alleEventer = punsjEventRepositoryPerLinje.hentAlleEventIderUtenVasketHistorikk()
+        var alleEventer = eventRepository.hentAlleEventIderUtenVasketHistorikk()
         assertThat(alleEventer.size).isEqualTo(2)
 
-        punsjEventRepositoryPerLinje.markerVasketHistorikk(eventLagret)
-        alleEventer = punsjEventRepositoryPerLinje.hentAlleEventIderUtenVasketHistorikk()
+        eventRepository.markerVasketHistorikk(eventLagret)
+        alleEventer = eventRepository.hentAlleEventIderUtenVasketHistorikk()
         assertThat(alleEventer.size).isEqualTo(1)
-        val uvasketEventLagret = punsjEventRepositoryPerLinje.hent(alleEventer.get(0))!!
+        val uvasketEventLagret = eventRepository.hent(alleEventer.get(0))!!
         assertThat(uvasketEventLagret.eventDto.status).isEqualTo(Oppgavestatus.VENTER)
 
-        punsjEventRepositoryPerLinje.nullstillHistorikkvask()
-        alleEventer = punsjEventRepositoryPerLinje.hentAlleEventIderUtenVasketHistorikk()
+        eventRepository.nullstillHistorikkvask()
+        alleEventer = eventRepository.hentAlleEventIderUtenVasketHistorikk()
         assertThat(alleEventer.size).isEqualTo(2)
     }
 }

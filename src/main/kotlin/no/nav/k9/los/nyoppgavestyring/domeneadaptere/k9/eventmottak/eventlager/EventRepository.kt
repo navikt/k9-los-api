@@ -1,17 +1,18 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager
 
+import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.DuplikatDataException
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import org.postgresql.util.PSQLException
 import javax.sql.DataSource
 
 
-class PunsjEventRepositoryPerLinje(
+class EventRepository(
     private val dataSource: DataSource,
 ) {
 
@@ -40,14 +41,7 @@ class PunsjEventRepositoryPerLinje(
                             "data" to event
                         )
                     ).map { row ->
-                        EventPerLinjeLagret(
-                            id = row.long("id"),
-                            eksternId = row.string("ekstern_id"),
-                            eksternVersjon = row.string("ekstern_versjon"),
-                            eventNrForOppgave = row.int("intern_versjon"),
-                            eventDto = LosObjectMapper.instance.readValue(row.string("data"), PunsjEventDto::class.java),
-                            opprettet = row.localDateTime("opprettet")
-                        )
+                        rowTilEvent(row)
                     }.asSingle
                 )
             }
@@ -83,14 +77,7 @@ class PunsjEventRepositoryPerLinje(
                             "data" to event
                         )
                     ).map { row ->
-                        EventPerLinjeLagret(
-                            id = row.long("id"),
-                            eksternId = row.string("ekstern_id"),
-                            eksternVersjon = row.string("ekstern_versjon"),
-                            eventNrForOppgave = row.int("intern_versjon"),
-                            eventDto = LosObjectMapper.instance.readValue(row.string("data"), PunsjEventDto::class.java),
-                            opprettet = row.localDateTime("opprettet")
-                        )
+                        rowTilEvent(row)
                     }.asSingle
                 )
             }
@@ -118,14 +105,7 @@ class PunsjEventRepositoryPerLinje(
                         "eventnr" to eventNr
                     )
                 ).map { row ->
-                    EventPerLinjeLagret(
-                        id = row.long("id"),
-                        eksternId = row.string("ekstern_id"),
-                        eksternVersjon = row.string("ekstern_versjon"),
-                        eventNrForOppgave = row.int("intern_versjon"),
-                        eventDto = LosObjectMapper.instance.readValue(row.string("data"), PunsjEventDto::class.java),
-                        opprettet = row.localDateTime("opprettet")
-                    )
+                    rowTilEvent(row)
                 }.asSingle
             )
         }
@@ -144,14 +124,7 @@ class PunsjEventRepositoryPerLinje(
                         "id" to id,
                     )
                 ).map { row ->
-                    EventPerLinjeLagret(
-                        id = row.long("id"),
-                        eksternId = row.string("ekstern_id"),
-                        eksternVersjon = row.string("ekstern_versjon"),
-                        eventNrForOppgave = row.int("intern_versjon"),
-                        eventDto = LosObjectMapper.instance.readValue(row.string("data"), PunsjEventDto::class.java),
-                        opprettet = row.localDateTime("opprettet")
-                    )
+                    rowTilEvent(row)
                 }.asSingle
             )
         }
@@ -169,14 +142,7 @@ class PunsjEventRepositoryPerLinje(
                 """.trimIndent(),
                     mapOf("ekstern_id" to eksternId)
                 ).map { row ->
-                    EventPerLinjeLagret(
-                        id = row.long("id"),
-                        eksternId = row.string("ekstern_id"),
-                        eksternVersjon = row.string("ekstern_versjon"),
-                        eventNrForOppgave = row.int("intern_versjon"),
-                        eventDto = LosObjectMapper.instance.readValue(row.string("data"), PunsjEventDto::class.java),
-                        opprettet = row.localDateTime("opprettet")
-                    )
+                    rowTilEvent(row)
                 }.asList
             )
         }
@@ -195,17 +161,22 @@ class PunsjEventRepositoryPerLinje(
                 """.trimIndent(),
                     mapOf("ekstern_id" to eksternId)
                 ).map { row ->
-                    EventPerLinjeLagret(
-                        id = row.long("id"),
-                        eksternId = row.string("ekstern_id"),
-                        eksternVersjon = row.string("ekstern_versjon"),
-                        eventNrForOppgave = row.int("intern_versjon"),
-                        eventDto = LosObjectMapper.instance.readValue(row.string("data"), PunsjEventDto::class.java),
-                        opprettet = row.localDateTime("opprettet")
-                    )
+                    rowTilEvent(row)
                 }.asList
             )
         }
+    }
+
+    private fun rowTilEvent(row: Row): EventPerLinjeLagret? {
+        return EventPerLinjeLagret(
+            id = row.long("id"),
+            eksternId = row.string("ekstern_id"),
+            eksternVersjon = row.string("ekstern_versjon"),
+            eventNrForOppgave = row.int("intern_versjon"),
+            eventJson = row.string("data"),
+            opprettet = row.localDateTime("opprettet"),
+            fagsystem = Fagsystem.fraKode(row.string("fagsystem"))
+        )
     }
 
     fun fjernDirty(eksternId: String, eventNr: Long, tx: TransactionalSession) {

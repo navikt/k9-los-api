@@ -6,7 +6,7 @@ import io.opentelemetry.instrumentation.annotations.SpanAttribute
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.PunsjEventRepositoryPerLinje
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.JobbMetrikker
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
@@ -24,7 +24,7 @@ import kotlin.concurrent.thread
 import kotlin.concurrent.timer
 
 class K9PunsjTilLosAdapterTjenestePerLinje(
-    private val punsjEventRepositoryPerLinje: PunsjEventRepositoryPerLinje,
+    private val eventRepository: EventRepository,
     private val oppgavetypeTjeneste: OppgavetypeTjeneste,
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,

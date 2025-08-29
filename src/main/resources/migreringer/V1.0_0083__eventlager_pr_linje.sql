@@ -12,9 +12,9 @@ create table if not exists eventlager
     unique (FAGSYSTEM, EKSTERN_ID, INTERN_VERSJON)
 );
 
-CREATE TABLE if not exists eventlager_punsj_historikkvask_ferdig
+CREATE TABLE if not exists eventlager_historikkvask_ferdig
 (
     id                  BIGINT    NOT NULL PRIMARY KEY,
-    CONSTRAINT fk_eventlager_punsj_historikkvask_ferdig
-        FOREIGN KEY(id) references eventlager_punsj(id)
+    CONSTRAINT fk_eventlager_historikkvask_ferdig
+        FOREIGN KEY(id) references eventlager(id)
 );
