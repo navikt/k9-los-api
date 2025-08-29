@@ -3,13 +3,11 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottakoghistorikk.
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.DuplikatDataException
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
-import org.koin.core.component.get
 import org.koin.test.get
 import java.time.LocalDateTime
 

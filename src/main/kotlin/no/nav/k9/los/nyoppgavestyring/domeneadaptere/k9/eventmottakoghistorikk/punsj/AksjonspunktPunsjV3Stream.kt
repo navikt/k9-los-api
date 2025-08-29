@@ -1,13 +1,13 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottakoghistorikk.punsj
 
 import no.nav.k9.los.Configuration
-import no.nav.k9.los.aksjonspunktbehandling.AksjonspunktPunsjLaget
-import no.nav.k9.los.aksjonspunktbehandling.PunsjEventV3SerDes
-import no.nav.k9.los.aksjonspunktbehandling.Topic
-import no.nav.k9.los.integrasjon.kafka.*
-import no.nav.k9.los.integrasjon.kafka.ManagedKafkaStreams
-import no.nav.k9.los.integrasjon.kafka.ManagedStreamHealthy
-import no.nav.k9.los.integrasjon.kafka.ManagedStreamReady
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.AksjonspunktPunsjLaget
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.Topic
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.IKafkaConfig
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.ManagedKafkaStreams
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.ManagedStreamHealthy
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.ManagedStreamReady
+
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.Topology
@@ -45,7 +45,7 @@ internal class AksjonspunktPunsjV3Stream(
             val builder = StreamsBuilder()
             val fromTopic = Topic(
                 name = configuration.getK9PunsjV3Topic(),
-                serDes = PunsjEventV3SerDes()
+                serDes = AksjonspunktPunsjLaget()
             )
             builder
                 .stream(
