@@ -44,7 +44,7 @@ internal class AksjonspunktPunsjV3Stream(
         ): Topology {
             val builder = StreamsBuilder()
             val fromTopic = Topic(
-                name = configuration.getAksjonspunkthendelsePunsjTopic(),
+                name = configuration.getK9PunsjV3Topic(),
                 serDes = PunsjEventV3SerDes()
             )
             builder

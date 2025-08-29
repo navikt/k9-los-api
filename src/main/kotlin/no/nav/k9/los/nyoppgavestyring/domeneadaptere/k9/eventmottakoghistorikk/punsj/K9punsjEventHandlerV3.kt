@@ -3,7 +3,6 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottakoghistorikk.
 import no.nav.k9.los.domene.modell.BehandlingType
 import org.slf4j.LoggerFactory
 
-
 class K9punsjEventHandlerV3(
     private val eventRepository: EventRepository,
 ) {
@@ -15,7 +14,7 @@ class K9punsjEventHandlerV3(
 
     fun prosesser(event: PunsjEventV3Dto) {
         log.debug(event.safePrint())
-        val id = eventRepository.lagre(event = event)
+        eventRepository.lagre(event = event)
 
     }
 }

@@ -1,6 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka
 
 import no.nav.k9.los.Configuration
+import no.nav.k9.los.aksjonspunktbehandling.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventHandler
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageKafkaStream
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
@@ -9,6 +10,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEve
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakKafkaStream
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeKafkaStream
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottakoghistorikk.punsj.AksjonspunktPunsjV3Stream
 import org.slf4j.LoggerFactory
 
 internal class AsynkronProsesseringV1Service(
@@ -47,6 +49,12 @@ internal class AsynkronProsesseringV1Service(
         kafkaConfig = if (configuration.punsjConsumerAiven()) kafkaAivenConfig else kafkaConfig,
         configuration = configuration,
         k9PunsjEventHandler = k9PunsjEventHandler
+    )
+
+    private val aksjonspunkPunsjV3Stream = AksjonspunktPunsjV3Stream(
+        kafkaConfig = if (configuration.punsjConsumerAiven()) kafkaAivenConfig else kafkaConfig,
+        configuration = configuration,
+        k9punsjEventHandlerV3 = punsjEventV3HandlerV3,
     )
 
     private val healthChecks = setOf(
