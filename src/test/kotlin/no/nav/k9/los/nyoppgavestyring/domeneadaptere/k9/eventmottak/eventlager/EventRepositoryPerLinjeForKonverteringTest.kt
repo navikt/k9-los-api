@@ -1,15 +1,15 @@
-package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.nyoppgavestyring.feilhandtering.DuplikatDataException
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjId
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNull
 import org.koin.test.get
@@ -93,19 +93,19 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         val eksternId = PunsjId.fromString(UUID.randomUUID().toString())
 
         val event = PunsjEventDto(
-                eksternId = eksternId,
-                journalpostId = JournalpostId(1L),
-                eventTid = LocalDateTime.now().minusHours(1),
-                status = Oppgavestatus.AAPEN,
-                aktørId = AktørId(2L),
-                aksjonspunktKoderMedStatusListe = mutableMapOf(),
-                pleietrengendeAktørId = "pleietrengendeAktørId",
-                type = "type",
-                ytelse = "ytelse",
-                sendtInn = false,
-                ferdigstiltAv = "saksbehandler",
-                journalførtTidspunkt = LocalDateTime.now().minusDays(1),
-            )
+            eksternId = eksternId,
+            journalpostId = JournalpostId(1L),
+            eventTid = LocalDateTime.now().minusHours(1),
+            status = Oppgavestatus.AAPEN,
+            aktørId = AktørId(2L),
+            aksjonspunktKoderMedStatusListe = mutableMapOf(),
+            pleietrengendeAktørId = "pleietrengendeAktørId",
+            type = "type",
+            ytelse = "ytelse",
+            sendtInn = false,
+            ferdigstiltAv = "saksbehandler",
+            journalførtTidspunkt = LocalDateTime.now().minusDays(1),
+        )
 
         val eventString = LosObjectMapper.instance.writeValueAsString(event)
 
@@ -122,37 +122,37 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         val eksternId = PunsjId.fromString(UUID.randomUUID().toString())
 
         val event = PunsjEventDto(
-                eksternId = PunsjId.fromString(UUID.randomUUID().toString()),
-                journalpostId = JournalpostId(1L),
-                eventTid = LocalDateTime.now().minusHours(1),
-                status = Oppgavestatus.AAPEN,
-                aktørId = AktørId(2L),
-                aksjonspunktKoderMedStatusListe = mutableMapOf(),
-                pleietrengendeAktørId = "pleietrengendeAktørId",
-                type = "type",
-                ytelse = "ytelse",
-                sendtInn = false,
-                ferdigstiltAv = "saksbehandler",
-                journalførtTidspunkt = LocalDateTime.now().minusDays(1),
-            )
+            eksternId = PunsjId.fromString(UUID.randomUUID().toString()),
+            journalpostId = JournalpostId(1L),
+            eventTid = LocalDateTime.now().minusHours(1),
+            status = Oppgavestatus.AAPEN,
+            aktørId = AktørId(2L),
+            aksjonspunktKoderMedStatusListe = mutableMapOf(),
+            pleietrengendeAktørId = "pleietrengendeAktørId",
+            type = "type",
+            ytelse = "ytelse",
+            sendtInn = false,
+            ferdigstiltAv = "saksbehandler",
+            journalførtTidspunkt = LocalDateTime.now().minusDays(1),
+        )
         val eventString = LosObjectMapper.instance.writeValueAsString(event)
 
         val eventLagret = punsjEventRepositoryPerLinje.lagre(eventString, 0)!!
 
         val event2 = PunsjEventDto(
-                eksternId = eksternId,
-                journalpostId = JournalpostId(1L),
-                aktørId = AktørId(2L),
-                eventTid = LocalDateTime.now(),
-                status = Oppgavestatus.VENTER,
-                aksjonspunktKoderMedStatusListe = mutableMapOf(),
-                pleietrengendeAktørId = "pleietrengendeAktørId",
-                type = "type",
-                ytelse = "ytelse",
-                sendtInn = false,
-                ferdigstiltAv = "saksbehandler",
-                journalførtTidspunkt = LocalDateTime.now().minusDays(1),
-            )
+            eksternId = eksternId,
+            journalpostId = JournalpostId(1L),
+            aktørId = AktørId(2L),
+            eventTid = LocalDateTime.now(),
+            status = Oppgavestatus.VENTER,
+            aksjonspunktKoderMedStatusListe = mutableMapOf(),
+            pleietrengendeAktørId = "pleietrengendeAktørId",
+            type = "type",
+            ytelse = "ytelse",
+            sendtInn = false,
+            ferdigstiltAv = "saksbehandler",
+            journalførtTidspunkt = LocalDateTime.now().minusDays(1),
+        )
         val eventString2 = LosObjectMapper.instance.writeValueAsString(event2)
         punsjEventRepositoryPerLinje.lagre(eventString2, 1)
 

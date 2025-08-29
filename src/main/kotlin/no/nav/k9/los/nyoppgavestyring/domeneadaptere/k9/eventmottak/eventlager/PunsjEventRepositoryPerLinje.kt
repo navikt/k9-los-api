@@ -1,9 +1,10 @@
-package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.DuplikatDataException
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import org.postgresql.util.PSQLException
