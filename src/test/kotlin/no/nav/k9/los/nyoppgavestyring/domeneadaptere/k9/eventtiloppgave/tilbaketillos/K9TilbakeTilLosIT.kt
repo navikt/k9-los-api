@@ -78,7 +78,11 @@ class K9TilbakeTilLosIT : AbstractK9LosIntegrationTest() {
         runBlocking {
             get<ReservasjonApisTjeneste>().reserverOppgave(
                 saksbehandler, OppgaveIdMedOverstyringDto(
-                    OppgaveNøkkelDto.forV1Oppgave(eksternId.toString())
+                    OppgaveNøkkelDto(
+                        oppgaveEksternId = eksternId.toString(),
+                        oppgaveTypeEksternId = "k9tilbake",
+                        områdeEksternId = "K9"
+                    )
                 )
             )
         }

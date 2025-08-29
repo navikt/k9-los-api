@@ -1,7 +1,5 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.opentelemetry.instrumentation.annotations.SpanAttribute
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.channels.Channel
@@ -10,20 +8,16 @@ import kotliquery.TransactionalSession
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
-import no.nav.k9.los.Configuration
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.JobbMetrikker
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakBerikerInterfaceKludge
-import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.*
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
-import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveHendelseMottatt
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.*
 import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
@@ -31,17 +25,12 @@ import no.nav.k9.sak.kontrakt.produksjonsstyring.los.BehandlingMedFagsakDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
-import java.util.concurrent.TimeUnit
-import kotlin.concurrent.thread
-import kotlin.concurrent.timer
 
 class K9SakTilLosAdapterTjeneste(
     private val k9SakEventRepository: K9SakEventRepository,
-    private val oppgavetypeTjeneste: OppgavetypeTjeneste,
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
     private val oppgaveRepository: OppgaveRepository,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
-    private val config: Configuration,
     private val transactionalManager: TransactionalManager,
     private val k9SakBerikerKlient: K9SakBerikerInterfaceKludge,
     private val pepCacheService: PepCacheService,
@@ -50,52 +39,9 @@ class K9SakTilLosAdapterTjeneste(
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9SakTilLosAdapterTjeneste::class.java)
-    private val TRÅDNAVN = "k9-sak-til-los"
-
-
-    fun kjør(kjørSetup: Boolean = false, kjørUmiddelbart: Boolean = false) {
-        if (config.nyOppgavestyringAktivert()) {
-            when (kjørUmiddelbart) {
-                true -> spillAvUmiddelbart()
-                false -> schedulerAvspilling(kjørSetup)
-            }
-        } else log.info("Ny oppgavestyring er deaktivert")
-    }
-
-    private fun spillAvUmiddelbart() {
-        log.info("Spiller av BehandlingProsessEventer umiddelbart")
-        thread(
-            start = true,
-            isDaemon = true,
-            name = TRÅDNAVN
-        ) {
-            spillAvBehandlingProsessEventer()
-        }
-    }
-
-    private fun schedulerAvspilling(kjørSetup: Boolean) {
-        log.info("Schedulerer avspilling av BehandlingProsessEventer til å kjøre 1m fra nå, hver time")
-        timer(
-            name = TRÅDNAVN,
-            daemon = true,
-            initialDelay = TimeUnit.MINUTES.toMillis(1),
-            period = TimeUnit.MINUTES.toMillis(1)
-        ) {
-            if (kjørSetup) {
-                setup()
-            }
-            try {
-                JobbMetrikker.time("spill_av_behandlingprosesseventer_k9sak") {
-                    spillAvBehandlingProsessEventer()
-                }
-            } catch (e: Exception) {
-                log.warn("Avspilling av k9sak-eventer til oppgaveV3 feilet. Retry om en time", e)
-            }
-        }
-    }
 
     @WithSpan
-    fun spillAvBehandlingProsessEventer() {
+    fun spillAvDirtyBehandlingProsessEventer() {
         log.info("Starter avspilling av BehandlingProsessEventer")
         val tidKjøringStartet = System.currentTimeMillis()
 
@@ -164,7 +110,6 @@ class K9SakTilLosAdapterTjeneste(
                     forrigeOppgave = oppgaveV3Tjeneste.hentOppgaveversjon("K9", oppgaveDto.id, oppgaveDto.versjon, tx)
                 }
             }
-
             runBlocking {
                 køpåvirkendeHendelseChannel.send(OppgaveHendelseMottatt(Fagsystem.K9SAK, EksternOppgaveId("K9", uuid.toString())))
             }
@@ -258,34 +203,6 @@ class K9SakTilLosAdapterTjeneste(
         }
 
         return oppgaveDto
-    }
-
-    @WithSpan
-    fun setup(): K9SakTilLosAdapterTjeneste {
-        val objectMapper = jacksonObjectMapper()
-        opprettOppgavetype(objectMapper)
-        return this
-    }
-
-    private fun opprettOppgavetype(objectMapper: ObjectMapper) {
-        val oppgavetyperDto = objectMapper.readValue(
-            K9SakTilLosAdapterTjeneste::class.java.getResource("/adapterdefinisjoner/k9-oppgavetyper-k9sak.json")!!
-                .readText(),
-            OppgavetyperDto::class.java
-        )
-        oppgavetypeTjeneste.oppdater(
-            oppgavetyperDto.copy(
-                oppgavetyper = oppgavetyperDto.oppgavetyper.map { oppgavetypeDto ->
-                    oppgavetypeDto.copy(
-                        oppgavebehandlingsUrlTemplate = oppgavetypeDto.oppgavebehandlingsUrlTemplate.replace(
-                            "{baseUrl}",
-                            config.k9FrontendUrl()
-                        )
-                    )
-                }.toSet()
-            )
-        )
-        log.info("opprettet oppgavetype")
     }
 
     private fun loggFremgangForHver100(teller: Long, tekst: String) {

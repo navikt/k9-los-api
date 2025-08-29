@@ -74,16 +74,11 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
     fun setup() {
         runBlocking {
             // Gir tilgang til kode6 for å isolere testing av cache-oppdatering
-            coEvery { pepClient.harTilgangTilOppgave(any()) } returns true
             coEvery { pepClient.harTilgangTilOppgaveV3(any(), any(), any()) } returns true
         }
 
         val områdeSetup = get<OmrådeSetup>()
         områdeSetup.setup()
-        val k9SakTilLosAdapterTjeneste = get<K9SakTilLosAdapterTjeneste>()
-        k9SakTilLosAdapterTjeneste.setup()
-        val k9PunsjTilLosAdapterTjeneste = get<K9PunsjTilLosAdapterTjeneste>()
-        k9PunsjTilLosAdapterTjeneste.setup()
     }
 
     fun gjørSakKode6(saksnummer: String) {
