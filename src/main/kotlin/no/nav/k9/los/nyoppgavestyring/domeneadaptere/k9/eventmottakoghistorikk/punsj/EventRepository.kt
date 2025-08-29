@@ -6,7 +6,9 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.los.aksjonspunktbehandling.objectMapper
 import no.nav.k9.los.domene.lager.oppgave.v2.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.feilhandtering.DuplikatDataException
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.FinnerIkkeDataException
+import org.postgresql.util.PSQLException
 import java.util.*
 import javax.sql.DataSource
 
@@ -16,81 +18,132 @@ class EventRepository(
     private val transactionalManager: TransactionalManager
 ) {
 
-    fun lagre(event: PunsjEventV3Dto): Long? {
-        return using(sessionOf(dataSource)) {
-            transactionalManager.transaction { tx ->
-                val json = objectMapper().writeValueAsString(event)
-                tx.updateAndReturnGeneratedKey(
+    fun lagre(event: PunsjEventV3Dto): EventLagret? {
+        val json = objectMapper().writeValueAsString(event)
+        return try {
+            using(sessionOf(dataSource)) {
+                it.run(
                     queryOf(
                         """
-                            insert into eventlager_punsj(ekstern_id, eventnr_for_oppgave, "data", dirty) 
+                            insert into eventlager_punsj(ekstern_id, ekstern_versjon, eventnr_for_oppgave, "data", dirty) 
                             values (:ekstern_id,
+                            :ekstern_versjon,
                             (select coalesce(max(eventnr_for_oppgave)+1, 0) from eventlager_punsj where ekstern_id = :ekstern_id),
                             :data :: jsonb,
                             true)
+                            returning id, ekstern_id, ekstern_versjon, eventnr_for_oppgave, data, opprettet
                          """,
                         mapOf(
                             "ekstern_id" to event.eksternId,
+                            "ekstern_versjon" to event.eventTid,
                             "data" to json
                         )
-                    )
+                    ).map { row ->
+                        EventLagret(
+                            id = row.long("id"),
+                            eksternId = row.string("ekstern_id"),
+                            eksternVersjon = row.string("ekstern_versjon"),
+                            eventNrForOppgave = row.int("eventnr_for_oppgave"),
+                            eventV3Dto = objectMapper().readValue(row.string("data"), PunsjEventV3Dto::class.java),
+                            opprettet = row.localDateTime("opprettet")
+                        )
+                    }.asSingle
                 )
+            }
+        } catch (e: PSQLException) {
+            if (e.sqlState == "23505") {
+                throw DuplikatDataException("Punsjevent med eksternId: ${event.eksternId} og eksternVersjon: ${event.eventTid} finnes allerede!")
+            } else {
+                throw e
             }
         }
     }
 
-
-    fun hent(eksternId: String, eventNr: Long): PunsjEventV3Dto {
-        val json = using(sessionOf(dataSource)) {
+    fun hent(eksternId: String, eventNr: Long): EventLagret? {
+        return using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
                     """
-                        select data
+                        select *
                         from eventlager_punsj  
                         where ekstern_id = :ekstern_id
                         and eventnr_for_oppgave = :eventnr
                     """.trimIndent(),
                     mapOf(
                         "ekstern_id" to eksternId,
-                        "eventNr" to eventNr
+                        "eventnr" to eventNr
                     )
                 ).map { row ->
-                    row.string("data")
+                    EventLagret(
+                        id = row.long("id"),
+                        eksternId = row.string("ekstern_id"),
+                        eksternVersjon = row.string("ekstern_versjon"),
+                        eventNrForOppgave = row.int("eventnr_for_oppgave"),
+                        eventV3Dto = objectMapper().readValue(row.string("data"), PunsjEventV3Dto::class.java),
+                        opprettet = row.localDateTime("opprettet")
+                    )
                 }.asSingle
             )
         }
-        json?.let {
-            return objectMapper().readValue(json, PunsjEventV3Dto::class.java)
-        } ?: throw FinnerIkkeDataException("Fant ingen Punsj-event med eksternId: $eksternId og eventNr: $eventNr")
     }
 
-    fun hentAlleEventer(eksternId: String): List<PunsjEventV3Dto> {
-        val eventerJson = using(sessionOf(dataSource)) {
+    fun hent(id: Long): EventLagret? {
+        return using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
                     """
-                    select data
+                        select *
+                        from eventlager_punsj  
+                        where id = :id
+                    """.trimIndent(),
+                    mapOf(
+                        "id" to id,
+                    )
+                ).map { row ->
+                    EventLagret(
+                        id = row.long("id"),
+                        eksternId = row.string("ekstern_id"),
+                        eksternVersjon = row.string("ekstern_versjon"),
+                        eventNrForOppgave = row.int("eventnr_for_oppgave"),
+                        eventV3Dto = objectMapper().readValue(row.string("data"), PunsjEventV3Dto::class.java),
+                        opprettet = row.localDateTime("opprettet")
+                    )
+                }.asSingle
+            )
+        }
+    }
+
+    fun hentAlleEventer(eksternId: String): List<EventLagret> {
+        return using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    """
+                    select *
                     from eventlager_punsj bpep 
                     where ekstern_id = :ekstern_id
                     order by eventnr_for_oppgave ASC
                 """.trimIndent(),
                     mapOf("ekstern_id" to eksternId)
                 ).map { row ->
-                    row.string("data")
+                    EventLagret(
+                        id = row.long("id"),
+                        eksternId = row.string("ekstern_id"),
+                        eksternVersjon = row.string("ekstern_versjon"),
+                        eventNrForOppgave = row.int("eventnr_for_oppgave"),
+                        eventV3Dto = objectMapper().readValue(row.string("data"), PunsjEventV3Dto::class.java),
+                        opprettet = row.localDateTime("opprettet")
+                    )
                 }.asList
             )
         }
-        return eventerJson
-            .map { event -> objectMapper().readValue(event, PunsjEventV3Dto::class.java) }
-            .toList()
     }
 
-    fun hentAlleDirtyEventer(eksternId: String): List<PunsjEventV3Dto> {
-        val eventerJson = using(sessionOf(dataSource)) {
+    fun hentAlleDirtyEventer(eksternId: String): List<EventLagret> {
+        return using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
                     """
-                    select data
+                    select *
                     from eventlager_punsj 
                     where ekstern_id = :ekstern_id
                     and dirty = true
@@ -98,13 +151,17 @@ class EventRepository(
                 """.trimIndent(),
                     mapOf("ekstern_id" to eksternId)
                 ).map { row ->
-                    row.string("data")
+                    EventLagret(
+                        id = row.long("id"),
+                        eksternId = row.string("ekstern_id"),
+                        eksternVersjon = row.string("ekstern_versjon"),
+                        eventNrForOppgave = row.int("eventnr_for_oppgave"),
+                        eventV3Dto = objectMapper().readValue(row.string("data"), PunsjEventV3Dto::class.java),
+                        opprettet = row.localDateTime("opprettet")
+                    )
                 }.asList
             )
         }
-        return eventerJson
-            .map { event -> objectMapper().readValue(event, PunsjEventV3Dto::class.java) }
-            .toList()
     }
 
     fun fjernDirty(eksternId: String, eventNr: Long, tx: TransactionalSession) {
@@ -134,31 +191,33 @@ class EventRepository(
         }
     }
 
-    fun hentAlleEventIderUtenVasketHistorikk(): List<UUID> {
+    fun hentAlleEventIderUtenVasketHistorikk(): List<Long> {
         return using(sessionOf(dataSource)) {
             it.transaction { tx ->
                 tx.run(
                     queryOf(
                         """
-                            select * 
+                            select id
                             from eventlager_punsj e
                             where not exists (select * from eventlager_punsj_historikkvask_ferdig hv where hv.id = e.id)
                              """.trimMargin(),
                         mapOf()
                     ).map { row ->
-                        UUID.fromString(row.string("id"))
+                        row.long("id")
                     }.asList
                 )
             }
         }
     }
 
-    fun markerVasketHistorikk(uuid: UUID, tx: TransactionalSession) {
-        tx.run(
-            queryOf(
-                """insert into eventlager_punsj_historikkvask_ferdig(id) values (:uuid)""",
-                mapOf("uuid" to uuid.toString())
-            ).asUpdate
-        )
+    fun markerVasketHistorikk(eventLagret: EventLagret) {
+        using(sessionOf(dataSource)) {
+            it.run(
+                queryOf(
+                    """insert into eventlager_punsj_historikkvask_ferdig(id) values (:id)""",
+                    mapOf("id" to eventLagret.id)
+                ).asUpdate
+            )
+        }
     }
 }
