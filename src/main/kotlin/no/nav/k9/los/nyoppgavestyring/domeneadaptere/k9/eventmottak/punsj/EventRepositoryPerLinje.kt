@@ -1,10 +1,9 @@
-package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventperlinje.punsj
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.feilhandtering.DuplikatDataException
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
@@ -12,12 +11,12 @@ import org.postgresql.util.PSQLException
 import javax.sql.DataSource
 
 
-class EventRepository(
+class EventRepositoryPerLinje(
     private val dataSource: DataSource,
     private val transactionalManager: TransactionalManager
 ) {
 
-    fun lagre(event: PunsjEventDto): EventLagret? {
+    fun lagre(event: PunsjEventDto): EventPerLinjeLagret? {
         val json = LosObjectMapper.instance.writeValueAsString(event)
         return try {
             using(sessionOf(dataSource)) {
@@ -38,7 +37,7 @@ class EventRepository(
                             "data" to json
                         )
                     ).map { row ->
-                        EventLagret(
+                        EventPerLinjeLagret(
                             id = row.long("id"),
                             eksternId = row.string("ekstern_id"),
                             eksternVersjon = row.string("ekstern_versjon"),
@@ -58,7 +57,7 @@ class EventRepository(
         }
     }
 
-    fun hent(eksternId: String, eventNr: Long): EventLagret? {
+    fun hent(eksternId: String, eventNr: Long): EventPerLinjeLagret? {
         return using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
@@ -73,7 +72,7 @@ class EventRepository(
                         "eventnr" to eventNr
                     )
                 ).map { row ->
-                    EventLagret(
+                    EventPerLinjeLagret(
                         id = row.long("id"),
                         eksternId = row.string("ekstern_id"),
                         eksternVersjon = row.string("ekstern_versjon"),
@@ -86,7 +85,7 @@ class EventRepository(
         }
     }
 
-    fun hent(id: Long): EventLagret? {
+    fun hent(id: Long): EventPerLinjeLagret? {
         return using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
@@ -99,7 +98,7 @@ class EventRepository(
                         "id" to id,
                     )
                 ).map { row ->
-                    EventLagret(
+                    EventPerLinjeLagret(
                         id = row.long("id"),
                         eksternId = row.string("ekstern_id"),
                         eksternVersjon = row.string("ekstern_versjon"),
@@ -112,7 +111,7 @@ class EventRepository(
         }
     }
 
-    fun hentAlleEventer(eksternId: String): List<EventLagret> {
+    fun hentAlleEventer(eksternId: String): List<EventPerLinjeLagret> {
         return using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
@@ -124,7 +123,7 @@ class EventRepository(
                 """.trimIndent(),
                     mapOf("ekstern_id" to eksternId)
                 ).map { row ->
-                    EventLagret(
+                    EventPerLinjeLagret(
                         id = row.long("id"),
                         eksternId = row.string("ekstern_id"),
                         eksternVersjon = row.string("ekstern_versjon"),
@@ -137,7 +136,7 @@ class EventRepository(
         }
     }
 
-    fun hentAlleDirtyEventer(eksternId: String): List<EventLagret> {
+    fun hentAlleDirtyEventer(eksternId: String): List<EventPerLinjeLagret> {
         return using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
@@ -150,7 +149,7 @@ class EventRepository(
                 """.trimIndent(),
                     mapOf("ekstern_id" to eksternId)
                 ).map { row ->
-                    EventLagret(
+                    EventPerLinjeLagret(
                         id = row.long("id"),
                         eksternId = row.string("ekstern_id"),
                         eksternVersjon = row.string("ekstern_versjon"),
@@ -209,12 +208,12 @@ class EventRepository(
         }
     }
 
-    fun markerVasketHistorikk(eventLagret: EventLagret) {
+    fun markerVasketHistorikk(eventPerLinjeLagret: EventPerLinjeLagret) {
         using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
                     """insert into eventlager_punsj_historikkvask_ferdig(id) values (:id)""",
-                    mapOf("id" to eventLagret.id)
+                    mapOf("id" to eventPerLinjeLagret.id)
                 ).asUpdate
             )
         }
