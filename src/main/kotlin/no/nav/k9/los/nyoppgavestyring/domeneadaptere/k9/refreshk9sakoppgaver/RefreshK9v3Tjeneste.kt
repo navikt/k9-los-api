@@ -46,7 +46,7 @@ class RefreshK9v3Tjeneste(
     private fun refreshK9(tx: TransactionalSession, hendelser: List<KøpåvirkendeHendelse>): RefreshUtført {
 
         val aktuelleHendelser = hendelser
-            .filterNot { it is OppgaveHendelseMottatt && it.fagsystem != Fagsystem.K9SAK }
+            .filterNot { it is OppgaveHendelseMottatt && it.fagsystem != Fagsystem.SAK }
             .filterNot { it is KødefinisjonSlettet }
             .filterNot { it is ReservasjonEndret }
             .filterNot { it is Kødefinisjon && hendelser.any { hendelse -> hendelse is KødefinisjonSlettet && hendelse.køId == it.køId } }
