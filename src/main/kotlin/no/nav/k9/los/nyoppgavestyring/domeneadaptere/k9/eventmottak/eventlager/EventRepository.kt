@@ -16,15 +16,14 @@ class EventRepository(
     private val dataSource: DataSource,
 ) {
 
-    fun lagre(event: String, fagsystem: Fagsystem, internVersjon: Int): EventLagret? {
+    fun lagre(event: String, fagsystem: Fagsystem, internVersjon: Int, tx: TransactionalSession): EventLagret? {
         val tree = LosObjectMapper.instance.readTree(event)
         val eksternId = tree.findValue("eksternId").asText()
         val eksternVersjon = tree.findValue("eventTid").asText()
         return try {
-            using(sessionOf(dataSource)) {
-                it.run(
-                    queryOf(
-                        """
+            tx.run(
+                queryOf(
+                    """
                             insert into eventlager(fagsystem, ekstern_id, ekstern_versjon, intern_versjon, "data", dirty) 
                             values (
                             :fagsystem,
@@ -36,18 +35,17 @@ class EventRepository(
                             on conflict do nothing
                             returning id, fagsystem, ekstern_id, ekstern_versjon, intern_versjon, data, opprettet
                          """,
-                        mapOf(
-                            "fagsystem" to fagsystem.kode,
-                            "ekstern_id" to eksternId,
-                            "ekstern_versjon" to eksternVersjon,
-                            "intern_versjon" to internVersjon,
-                            "data" to event
-                        )
-                    ).map { row ->
-                        rowTilEvent(row)
-                    }.asSingle
-                )
-            }
+                    mapOf(
+                        "fagsystem" to fagsystem.kode,
+                        "ekstern_id" to eksternId,
+                        "ekstern_versjon" to eksternVersjon,
+                        "intern_versjon" to internVersjon,
+                        "data" to event
+                    )
+                ).map { row ->
+                    rowTilEvent(row)
+                }.asSingle
+            )
         } catch (e: PSQLException) {
             if (e.sqlState == "23505") {
                 throw DuplikatDataException("Event med fagsystem: ${fagsystem}, eksternId: ${eksternId} og eksternVersjon: ${eksternVersjon} finnes allerede!")
@@ -57,15 +55,14 @@ class EventRepository(
         }
     }
 
-    fun lagre(event: String, fagsystem: Fagsystem): EventLagret? {
+    fun lagre(event: String, fagsystem: Fagsystem, tx: TransactionalSession): EventLagret? {
         val tree = LosObjectMapper.instance.readTree(event)
         val eksternId = tree.findValue("eksternId").asText()
         val eksternVersjon = tree.findValue("eventTid").asText()
         return try {
-            using(sessionOf(dataSource)) {
-                it.run(
-                    queryOf(
-                        """
+            tx.run(
+                queryOf(
+                    """
                             insert into eventlager(fagsystem, ekstern_id, ekstern_versjon, intern_versjon, "data", dirty) 
                             values (
                             :fagsystem,
@@ -76,17 +73,16 @@ class EventRepository(
                             true)
                             returning id, fagsystem, ekstern_id, ekstern_versjon, intern_versjon, data, opprettet
                          """,
-                        mapOf(
-                            "fagsystem" to fagsystem.kode,
-                            "ekstern_id" to eksternId,
-                            "ekstern_versjon" to eksternVersjon,
-                            "data" to event
-                        )
-                    ).map { row ->
-                        rowTilEvent(row)
-                    }.asSingle
-                )
-            }
+                    mapOf(
+                        "fagsystem" to fagsystem.kode,
+                        "ekstern_id" to eksternId,
+                        "ekstern_versjon" to eksternVersjon,
+                        "data" to event
+                    )
+                ).map { row ->
+                    rowTilEvent(row)
+                }.asSingle
+            )
         } catch (e: PSQLException) {
             if (e.sqlState == "23505") {
                 throw DuplikatDataException("Punsjevent med eksternId: ${eksternId} og eksternVersjon: ${eksternVersjon} finnes allerede!")

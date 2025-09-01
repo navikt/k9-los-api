@@ -69,40 +69,44 @@ class K9KlageEventRepository(private val dataSource: DataSource) {
     }
 
     fun lagre(uuid: UUID, f: (K9KlageModell?) -> K9KlageModell): K9KlageModell {
-        var sortertModell = K9KlageModell(mutableListOf())
-        using(sessionOf(dataSource)) { it ->
+        return using(sessionOf(dataSource)) {
             it.transaction { tx ->
-                val run = tx.run(
-                    queryOf(
-                        "select data from behandling_prosess_events_klage where id = :id for update",
-                        mapOf("id" to uuid.toString())
-                    )
-                        .map { row ->
-                            row.string("data")
-                        }.asSingle
-                )
+                lagre(uuid, tx, f)
+            }
+        }
+    }
 
-                val modell = if (!run.isNullOrEmpty()) {
-                    val modell = LosObjectMapper.instance.readValue(run, K9KlageModell::class.java)
-                    f(modell.copy(eventer = modell.eventer.sortedBy { it.eventTid }.toMutableList()))
-                } else {
-                    f(null)
-                }
-                sortertModell =
-                    modell.copy(eventer = (modell.eventer.toSet().toList().sortedBy { it.eventTid }.toMutableList()))
-                val json = LosObjectMapper.instance.writeValueAsString(sortertModell)
-                tx.run(
-                    queryOf(
-                        """
+    fun lagre(uuid: UUID, tx: TransactionalSession, f: (K9KlageModell?) -> K9KlageModell): K9KlageModell {
+        var sortertModell: K9KlageModell
+        val run = tx.run(
+            queryOf(
+                "select data from behandling_prosess_events_klage where id = :id for update",
+                mapOf("id" to uuid.toString())
+            )
+                .map { row ->
+                    row.string("data")
+                }.asSingle
+        )
+
+        val modell = if (!run.isNullOrEmpty()) {
+            val modell = LosObjectMapper.instance.readValue(run, K9KlageModell::class.java)
+            f(modell.copy(eventer = modell.eventer.sortedBy { it.eventTid }.toMutableList()))
+        } else {
+            f(null)
+        }
+        sortertModell =
+            modell.copy(eventer = (modell.eventer.toSet().toList().sortedBy { it.eventTid }.toMutableList()))
+        val json = LosObjectMapper.instance.writeValueAsString(sortertModell)
+        tx.run(
+            queryOf(
+                """
                     insert into behandling_prosess_events_klage as k (id, data, dirty)
                     values (:id, :data :: jsonb, true)
                     on conflict (id) do update
                     set data = :data :: jsonb, dirty = true
                  """, mapOf("id" to uuid.toString(), "data" to json)
-                    ).asUpdate
-                )
-            }
-        }
+            ).asUpdate
+        )
         return sortertModell
     }
 
