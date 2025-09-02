@@ -34,5 +34,3 @@ data class EventLagret(
         return LosObjectMapper.instance.readValue<PunsjEventDto>(eventJson)
     }
 }
-
-sealed class EventDto
