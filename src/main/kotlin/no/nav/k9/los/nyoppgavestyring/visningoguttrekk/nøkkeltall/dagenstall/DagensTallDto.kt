@@ -5,6 +5,8 @@ data class DagensTallDto(
     val undergruppe: DagensTallUndergruppe,
     val nyeIDag: Long,
     val ferdigstilteIDag: Long,
+    val ferdigstilteHelautomatiskIDag: Long,
     val nyeSiste7Dager: Long,
     val ferdigstilteSiste7Dager: Long,
+    val ferdigstilteHelautomatiskSiste7Dager: Long,
 )

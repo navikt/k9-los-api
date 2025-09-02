@@ -47,11 +47,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtil
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.*
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosApi
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.k9TilbakeEksternId
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.k9tilbakeKorrigerOutOfOrderProsessor
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.modia.SakOgBehandlingProducer
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.K9sakBehandlingsoppfriskingJobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9v3
@@ -513,7 +509,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 navn = "DagensTallOppdaterer",
                 prioritet = lavPrioritet,
                 tidsvindu = Tidsvindu.alleDager(),
-                minutter = (0..59).toList(),
+                minutter = listOf(0, 10, 20, 30, 40, 50),
             ) {
                 dagensTallService.oppdaterCache(this)
             }
@@ -524,7 +520,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 navn = "PerEnhetOppdaterer",
                 prioritet = lavPrioritet,
                 tidsvindu = Tidsvindu.alleDager(),
-                minutter = (0..59).toList(),
+                minutter = listOf(0, 10, 20, 30, 40, 50),
             ) {
                 perEnhetService.oppdaterCache(this)
             }
@@ -535,7 +531,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 navn = "NyeOgFerdigstilteOppdaterer",
                 prioritet = lavPrioritet,
                 tidsvindu = Tidsvindu.alleDager(),
-                minutter = (0..59).toList(),
+                minutter = listOf(0, 10, 20, 30, 40, 50),
             ) {
                 nyeOgFerdigstilteService.oppdaterCache(this)
             }

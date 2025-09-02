@@ -3,8 +3,8 @@ package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -47,7 +47,7 @@ class OppgaverGruppertRepository(private val dataSource: DataSource) {
                               (select verdi from oppgavefelt_verdi_aktiv ova where ova.oppgave_id = oa.id and ova.feltdefinisjon_ekstern_id = 'behandlingTypekode') as behandlingType
                           from oppgave_v3_aktiv oa
                           join oppgave_pep_cache opc on opc.ekstern_id = oa.ekstern_id
-                          where oa.status = cast('AAPEN' as oppgavestatus) and opc.kode6 = :kode6)
+                          where opc.kode6 = :kode6)
                     select behandlingType, count(*) as antall
                     from oppgaver
                     group by behandlingType;
