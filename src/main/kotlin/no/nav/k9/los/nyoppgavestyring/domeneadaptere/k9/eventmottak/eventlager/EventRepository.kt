@@ -9,6 +9,7 @@ import no.nav.k9.los.nyoppgavestyring.feilhandtering.DuplikatDataException
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import org.postgresql.util.PSQLException
+import java.time.LocalDateTime
 import javax.sql.DataSource
 
 
@@ -16,35 +17,30 @@ class EventRepository(
     private val dataSource: DataSource,
 ) {
 
-    fun lagre(event: String, fagsystem: Fagsystem, internVersjon: Int, tx: TransactionalSession): EventLagret? {
+    fun lagre(event: String, fagsystem: Fagsystem, tx: TransactionalSession): EventLagret? {
         val tree = LosObjectMapper.instance.readTree(event)
         val eksternId = tree.findValue("eksternId").asText()
         val eksternVersjon = tree.findValue("eventTid").asText()
-        return try {
+        val id = try {
             tx.run(
                 queryOf(
                     """
-                            insert into eventlager(fagsystem, ekstern_id, ekstern_versjon, intern_versjon, "data", dirty) 
+                            insert into eventlager(fagsystem, ekstern_id, ekstern_versjon, "data", dirty) 
                             values (
                             :fagsystem,
                             :ekstern_id,
                             :ekstern_versjon,
-                            :intern_versjon,
                             :data :: jsonb,
                             true)
                             on conflict do nothing
-                            returning id, fagsystem, ekstern_id, ekstern_versjon, intern_versjon, data, opprettet
                          """,
                     mapOf(
                         "fagsystem" to fagsystem.kode,
                         "ekstern_id" to eksternId,
                         "ekstern_versjon" to eksternVersjon,
-                        "intern_versjon" to internVersjon,
                         "data" to event
                     )
-                ).map { row ->
-                    rowTilEvent(row)
-                }.asSingle
+                ).asUpdateAndReturnGeneratedKey
             )
         } catch (e: PSQLException) {
             if (e.sqlState == "23505") {
@@ -53,64 +49,61 @@ class EventRepository(
                 throw e
             }
         }
-    }
 
-    fun lagre(event: String, fagsystem: Fagsystem, tx: TransactionalSession): EventLagret? {
-        val tree = LosObjectMapper.instance.readTree(event)
-        val eksternId = tree.findValue("eksternId").asText()
-        val eksternVersjon = tree.findValue("eventTid").asText()
-        return try {
-            tx.run(
-                queryOf(
-                    """
-                            insert into eventlager(fagsystem, ekstern_id, ekstern_versjon, intern_versjon, "data", dirty) 
-                            values (
-                            :fagsystem,
-                            :ekstern_id,
-                            :ekstern_versjon,
-                            (select coalesce(max(intern_versjon)+1, 0) from eventlager where ekstern_id = :ekstern_id),
-                            :data :: jsonb,
-                            true)
-                            returning id, fagsystem, ekstern_id, ekstern_versjon, intern_versjon, data, opprettet
-                         """,
-                    mapOf(
-                        "fagsystem" to fagsystem.kode,
-                        "ekstern_id" to eksternId,
-                        "ekstern_versjon" to eksternVersjon,
-                        "data" to event
-                    )
-                ).map { row ->
-                    rowTilEvent(row)
-                }.asSingle
-            )
-        } catch (e: PSQLException) {
-            if (e.sqlState == "23505") {
-                throw DuplikatDataException("Punsjevent med eksternId: ${eksternId} og eksternVersjon: ${eksternVersjon} finnes allerede!")
-            } else {
-                throw e
-            }
+        if (id == null) {
+            return hent(fagsystem, eksternId, eksternVersjon, tx)
         }
+
+        return EventLagret(
+            id!!,
+            fagsystem,
+            eksternId,
+            eksternVersjon,
+            eventJson = event,
+            LocalDateTime.now()
+        )
     }
 
-    fun hent(eksternId: String, eventNr: Long): EventLagret? {
-        return using(sessionOf(dataSource)) {
+    fun hentAlleEventer(eksternId: String): List<EventLagret> {
+        val eventer = using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
                     """
-                        select *
-                        from eventlager  
-                        where ekstern_id = :ekstern_id
-                        and intern_versjon = :eventnr
-                    """.trimIndent(),
-                    mapOf(
-                        "ekstern_id" to eksternId,
-                        "eventnr" to eventNr
-                    )
+                    select *
+                    from eventlager bpep 
+                    where ekstern_id = :ekstern_id
+                """.trimIndent(),
+                    mapOf("ekstern_id" to eksternId)
                 ).map { row ->
                     rowTilEvent(row)
-                }.asSingle
+                }.asList
             )
         }
+
+        return eventer.sortedBy { LocalDateTime.parse(it.eksternVersjon) }
+    }
+
+    fun hent(fagsystem: Fagsystem, eksternId: String, eksternVersjon: String, tx: TransactionalSession): EventLagret {
+        return tx.run(
+            queryOf(
+                """
+                    select *
+                    from eventlager
+                    where fagsystem = :fagsystem
+                    and ekstern_id = :ekstern_id
+                    and ekstern_versjon = :ekstern_versjon
+                """.trimIndent(),
+                mapOf(
+                    "fagsystem" to fagsystem.kode,
+                    "ekstern_id" to eksternId,
+                    "ekstern_versjon" to eksternVersjon,
+                )
+            ).map { row -> rowTilEvent(row) }.asSingle
+        )!!
+    }
+
+    fun hent(eksternId: String, eventNr: Int): EventLagret? {
+        return hentAlleEventer(eksternId).getOrNull(eventNr)
     }
 
     fun hent(id: Long): EventLagret? {
@@ -132,36 +125,39 @@ class EventRepository(
         }
     }
 
-    fun hentAlleEventer(eksternId: String): List<EventLagret> {
+    fun hentAlleEksternIderMedDirtyEventer(fagsystem: Fagsystem): List<String> {
         return using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
                     """
-                    select *
-                    from eventlager bpep 
-                    where ekstern_id = :ekstern_id
-                    order by intern_versjon ASC
+                    select distinct ekstern_id
+                    from eventlager 
+                    where fagsystem = :fagsystem
+                    and dirty = true
                 """.trimIndent(),
-                    mapOf("ekstern_id" to eksternId)
+                    mapOf("fagsystem" to fagsystem.kode)
                 ).map { row ->
-                    rowTilEvent(row)
+                    row.string("ekstern_id")
                 }.asList
             )
         }
     }
 
-    fun hentAlleDirtyEventer(eksternId: String): List<EventLagret> {
+    fun hentAlleDirtyEventer(eksternId: String, fagsystem: Fagsystem): List<EventLagret> {
         return using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
                     """
                     select *
-                    from eventlager 
+                    from eventlager
                     where ekstern_id = :ekstern_id
+                    and FAGSYSTEM = :fagsystem
                     and dirty = true
-                    order by intern_versjon ASC
                 """.trimIndent(),
-                    mapOf("ekstern_id" to eksternId)
+                    mapOf(
+                        "ekstern_id" to eksternId,
+                        "fagsystem" to fagsystem.kode
+                    )
                 ).map { row ->
                     rowTilEvent(row)
                 }.asList
@@ -174,23 +170,20 @@ class EventRepository(
             id = row.long("id"),
             eksternId = row.string("ekstern_id"),
             eksternVersjon = row.string("ekstern_versjon"),
-            eventNrForOppgave = row.int("intern_versjon"),
             eventJson = row.string("data"),
             opprettet = row.localDateTime("opprettet"),
             fagsystem = Fagsystem.fraKode(row.string("fagsystem"))
         )
     }
 
-    fun fjernDirty(eksternId: String, eventNr: Long, tx: TransactionalSession) {
+    fun fjernDirty(eventLagret: EventLagret, tx: TransactionalSession) {
         tx.run(
             queryOf(
                 """update eventlager
                 set dirty = false 
-                where ekstern_id = :ekstern_id
-                and intern_versjon = :eventnr""",
+                where id = :id""",
                 mapOf(
-                    "ekstern_id" to eksternId,
-                    "eventnr" to eventNr
+                    "id" to eventLagret.id
                 )
             ).asUpdate
         )

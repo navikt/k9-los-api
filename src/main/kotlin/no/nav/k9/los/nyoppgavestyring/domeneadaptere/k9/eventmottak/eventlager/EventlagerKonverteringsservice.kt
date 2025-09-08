@@ -21,34 +21,26 @@ class EventlagerKonverteringsservice(
         when (fagsystem) {
             Fagsystem.SAK -> {
                 val gammelModell = sakEventRepository.hent(UUID.fromString(eksternId))
-                var internVersjon = 0
                 gammelModell.eventer.forEach { event ->
-                    nyttEventrepository.lagre(LosObjectMapper.instance.writeValueAsString(event), fagsystem, internVersjon, tx)
-                    internVersjon++
+                    nyttEventrepository.lagre(LosObjectMapper.instance.writeValueAsString(event), fagsystem, tx)
                 }
             }
             Fagsystem.TILBAKE -> {
                 val gammelModell = tilbakeEventRepository.hent(UUID.fromString(eksternId))
-                var internVersjon = 0
                 gammelModell.eventer.forEach { event ->
-                    nyttEventrepository.lagre(LosObjectMapper.instance.writeValueAsString(event), fagsystem, internVersjon, tx)
-                    internVersjon++
+                    nyttEventrepository.lagre(LosObjectMapper.instance.writeValueAsString(event), fagsystem, tx)
                 }
             }
             Fagsystem.KLAGE -> {
                 val gammelModell = klageEventRepository.hent(UUID.fromString(eksternId))
-                var internVersjon = 0
                 gammelModell.eventer.forEach { event ->
-                    nyttEventrepository.lagre(LosObjectMapper.instance.writeValueAsString(event), fagsystem, internVersjon, tx)
-                    internVersjon++
+                    nyttEventrepository.lagre(LosObjectMapper.instance.writeValueAsString(event), fagsystem, tx)
                 }
             }
             Fagsystem.PUNSJ -> {
                 val gammelModell = punsjEventRepository.hent(UUID.fromString(eksternId))
-                var internVersjon = 0
                 gammelModell.eventer.forEach { event ->
-                    nyttEventrepository.lagre(LosObjectMapper.instance.writeValueAsString(event), fagsystem, internVersjon, tx)
-                    internVersjon++
+                    nyttEventrepository.lagre(LosObjectMapper.instance.writeValueAsString(event), fagsystem, tx)
                 }
             }
         }

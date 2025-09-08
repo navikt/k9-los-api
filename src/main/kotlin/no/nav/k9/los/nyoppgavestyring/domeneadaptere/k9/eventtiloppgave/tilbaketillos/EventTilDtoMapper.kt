@@ -17,8 +17,8 @@ class EventTilDtoMapper {
     companion object {
         fun lagOppgaveDto(event: K9TilbakeEventDto, forrigeOppgave: OppgaveV3?) =
             OppgaveDto(
-                id = event.eksternId.toString(),
-                versjon = event.eventTid.toString(),
+                eksternId = event.eksternId.toString(),
+                eksternVersjon = event.eventTid.toString(),
                 område = "K9",
                 kildeområde = "K9",
                 type = "k9tilbake",

@@ -38,7 +38,7 @@ class K9TilbakeEventHandler(
             val modell = transactionalManager.transaction { tx ->
                 val lås = behandlingProsessEventTilbakeRepository.hentMedLås(tx, event.eksternId!!)
 
-                val modell = behandlingProsessEventTilbakeRepository.lagre(event)
+                val modell = behandlingProsessEventTilbakeRepository.lagre(event, tx)
 
                 eventlagerKonverteringsservice.konverterOppgave(event.eksternId.toString(), Fagsystem.TILBAKE, tx)
 

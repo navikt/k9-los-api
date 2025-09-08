@@ -6,15 +6,18 @@ import io.opentelemetry.instrumentation.annotations.SpanAttribute
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.JobbMetrikker
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -75,17 +78,17 @@ class K9PunsjTilLosAdapterTjenestePerLinje(
 
     @WithSpan
     private fun spillAvBehandlingProsessEventer() {
-        /*
+
         log.info("Starter avspilling av BehandlingProsessEventer")
         val tidKjøringStartet = System.currentTimeMillis()
 
-        val behandlingsIder = eventRepositoryPerLinje.hentAlleDirtyEventIder()
+        val behandlingsIder = eventRepository.hentAlleEksternIderMedDirtyEventer(Fagsystem.PUNSJ)
         log.info("Fant ${behandlingsIder.size} behandlinger")
 
         var behandlingTeller: Long = 0
         var eventTeller: Long = 0
-        behandlingsIder.forEach { uuid ->
-            eventTeller = oppdaterOppgaveForEksternId(uuid, eventTeller)
+        behandlingsIder.forEach { eksternId ->
+            eventTeller = oppdaterOppgaveForEksternId(eksternId, eventTeller)
             behandlingTeller++
             loggFremgangForHver100(behandlingTeller, "Forsert $behandlingTeller behandlinger")
         }
@@ -97,20 +100,27 @@ class K9PunsjTilLosAdapterTjenestePerLinje(
             log.info("Gjennomsnittstid pr behandling: ${tidHeleKjøringen / behandlingTeller}ms, Gjennsomsnittstid pr event: ${tidHeleKjøringen / eventTeller}ms")
         }
         log.info("Avspilling av BehandlingProsessEventer ferdig")
-
-         */
     }
 
     @WithSpan
-    fun oppdaterOppgaveForEksternId(@SpanAttribute uuid: UUID, eventTellerInn: Long = 0): Long {
-        /*
+    fun oppdaterOppgaveForEksternId(@SpanAttribute eksternId: String, eventTellerInn: Long = 0): Long {
         var eventTeller = eventTellerInn
         var forrigeOppgaveversjon: OppgaveV3? = null
 
         transactionalManager.transaction { tx ->
-            val punsjEventer = eventRepositoryPerLinje.hentMedLås(tx, uuid)
-            for (event in punsjEventer.eventer) {
-                val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgaveversjon)
+            val punsjEventer = eventRepository.hentAlleDirtyEventer(eksternId, Fagsystem.PUNSJ)
+
+            forrigeOppgaveversjon =
+                oppgaveV3Tjeneste.hentOppgaveversjonenFør(
+                    "K9",
+                    "k9-punsj",
+                    eksternId,
+                    punsjEventer.first().eksternVersjon,
+                    tx
+                )
+            for (eventLagret in punsjEventer) {
+                val punsjEvent = PunsjEventDto.fraEventLagret(eventLagret)
+                val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(punsjEvent, forrigeOppgaveversjon)
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
 
                 if (oppgave != null) {
@@ -121,17 +131,19 @@ class K9PunsjTilLosAdapterTjenestePerLinje(
 
                     eventTeller++
                     forrigeOppgaveversjon = oppgave
-                } else {
-                    forrigeOppgaveversjon = oppgaveV3Tjeneste.hentOppgaveversjon("K9", oppgaveDto.id, oppgaveDto.versjon, tx)
+                } else { // hvis oppgave == null ble ikke oppgaven oppdatert selv om eventet var dirty. Vi henter ut oppgaveversjonen vi forsøkte å oppdatere som kontekst for neste event
+                    forrigeOppgaveversjon = oppgaveV3Tjeneste.hentOppgaveversjonenFør(
+                        "K9",
+                        K9Oppgavetypenavn.PUNSJ.kode,
+                        eksternId,
+                        eventLagret.eksternVersjon,
+                        tx
+                    )
                 }
+                eventRepository.fjernDirty(eventLagret, tx)
             }
-            eventRepositoryPerLinje.fjernDirty(uuid, tx)
         }
-
         return eventTeller
-
-         */
-        return 0L
     }
 
     private fun annullerReservasjonHvisPåVentEllerAvsluttet(

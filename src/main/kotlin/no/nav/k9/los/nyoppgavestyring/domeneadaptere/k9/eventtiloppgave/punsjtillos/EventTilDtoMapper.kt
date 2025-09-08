@@ -14,8 +14,8 @@ class EventTilDtoMapper {
 
         fun lagOppgaveDto(event: PunsjEventDto, forrigeOppgave: OppgaveV3?): OppgaveDto {
             return OppgaveDto(
-                id = event.eksternId.toString(),
-                versjon = event.eventTid.toString(),
+                eksternId = event.eksternId.toString(),
+                eksternVersjon = event.eventTid.toString(),
                 område = "K9",
                 kildeområde = "K9",
                 type = "k9punsj",

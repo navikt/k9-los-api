@@ -42,8 +42,9 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         )
         val eventstring = LosObjectMapper.instance.writeValueAsString(event)
 
-        var eventLagret = eventRepository.lagre(eventstring, Fagsystem.PUNSJ, 0)!!
-        assertThat(eventLagret.eventNrForOppgave).isEqualTo(0)
+        val eventLagret = transactionalManager.transaction { tx ->
+            eventRepository.lagre(eventstring, Fagsystem.PUNSJ, tx)!!
+        }
         assertThat(PunsjEventDto.fraEventLagret(eventLagret).status).isEqualTo(Oppgavestatus.AAPEN)
 
         var alleEventer = eventRepository.hentAlleEventer(eksternId.toString())
@@ -65,22 +66,23 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         )
         val eventstring2 = LosObjectMapper.instance.writeValueAsString(event2)
 
-        eventLagret = eventRepository.lagre(eventstring2, Fagsystem.PUNSJ, 1)!!
-        assertThat(eventLagret.eventNrForOppgave).isEqualTo(1)
-        assertThat(PunsjEventDto.fraEventLagret(eventLagret).status).isEqualTo(Oppgavestatus.VENTER)
+        val eventLagret2 = transactionalManager.transaction { tx ->
+            eventRepository.lagre(eventstring2, Fagsystem.PUNSJ, tx)!!
+        }
+        assertThat(PunsjEventDto.fraEventLagret(eventLagret2).status).isEqualTo(Oppgavestatus.VENTER)
 
         alleEventer = eventRepository.hentAlleEventer(eksternId.toString())
         assertThat(alleEventer.size).isEqualTo(2)
 
-        alleEventer = eventRepository.hentAlleDirtyEventer(eksternId.toString())
+        alleEventer = eventRepository.hentAlleDirtyEventer(eksternId.toString(), Fagsystem.PUNSJ)
         assertThat(alleEventer.size).isEqualTo(2)
 
         transactionalManager.transaction { tx ->
-            eventRepository.fjernDirty(eksternId.toString(), 0, tx)
+            eventRepository.fjernDirty(eventLagret, tx)
         }
-        alleEventer = eventRepository.hentAlleDirtyEventer(eksternId.toString())
+        alleEventer = eventRepository.hentAlleDirtyEventer(eksternId.toString(), Fagsystem.PUNSJ)
         assertThat(alleEventer.size).isEqualTo(1)
-        assertThat(PunsjEventDto.fraEventLagret(eventLagret).status).isEqualTo(Oppgavestatus.VENTER)
+        assertThat(PunsjEventDto.fraEventLagret(alleEventer[0]).status).isEqualTo(Oppgavestatus.VENTER)
 
         val førsteLagredeEvent = eventRepository.hent(eksternId.toString(), 0)!!
         assertThat(PunsjEventDto.fraEventLagret(førsteLagredeEvent).status).isEqualTo(Oppgavestatus.AAPEN)
@@ -110,9 +112,14 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
 
         val eventString = LosObjectMapper.instance.writeValueAsString(event)
 
-        eventRepository.lagre(eventString, Fagsystem.PUNSJ, 0)
-        val retur = eventRepository.lagre(eventString, Fagsystem.PUNSJ, 1)
-        assertNull(retur)
+        transactionalManager.transaction { tx ->
+            eventRepository.lagre(eventString, Fagsystem.PUNSJ, tx)
+            eventRepository.lagre(eventString, Fagsystem.PUNSJ, tx)
+        }
+
+        val retur = eventRepository.hentAlleEventer(eksternId.toString())
+
+        assertThat(retur.size).isEqualTo(1)
     }
 
     @Test
@@ -138,7 +145,9 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         )
         val eventString = LosObjectMapper.instance.writeValueAsString(event)
 
-        val eventLagret = eventRepository.lagre(eventString, Fagsystem.PUNSJ,0)!!
+        val eventLagret = transactionalManager.transaction { tx ->
+            eventRepository.lagre(eventString, Fagsystem.PUNSJ, tx)!!
+        }
 
         val event2 = PunsjEventDto(
             eksternId = eksternId,
@@ -155,7 +164,9 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
             journalførtTidspunkt = LocalDateTime.now().minusDays(1),
         )
         val eventString2 = LosObjectMapper.instance.writeValueAsString(event2)
-        val eventLagret2 = eventRepository.lagre(eventString2, Fagsystem.PUNSJ, 1)
+        val eventLagret2 = transactionalManager.transaction { tx ->
+            eventRepository.lagre(eventString2, Fagsystem.PUNSJ, tx)
+        }
 
         var alleEventer = eventRepository.hentAlleEventIderUtenVasketHistorikk()
         assertThat(alleEventer.size).isEqualTo(2)
