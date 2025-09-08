@@ -78,6 +78,7 @@ import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksApi
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallV3Apis
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.statusfordeling.StatusFordelingService
 import no.nav.k9.los.tjenester.avdelingsleder.AvdelingslederApis
 import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.NokkeltallApis
 import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.AvdelingslederOppgavekøApis
@@ -344,7 +345,7 @@ private fun Route.api() {
             route("statistikk") { StatistikkApi() }
         }
     }
-    route("api", {hidden = true}) {
+    route("api", { hidden = true }) {
         route("driftsmeldinger") {
             DriftsmeldingerApis()
         }
@@ -407,6 +408,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
     val k9TilbakeTilLosHistorikkvaskTjeneste = koin.get<K9TilbakeTilLosHistorikkvaskTjeneste>()
     val k9KlageTilLosHistorikkvaskTjeneste = koin.get<K9KlageTilLosHistorikkvaskTjeneste>()
     val pepCacheService = koin.get<PepCacheService>()
+    val statusFordelingService = koin.get<StatusFordelingService>()
     val dagensTallService = koin.get<DagensTallService>()
     val perEnhetService = koin.get<FerdigstiltePerEnhetService>()
     val nyeOgFerdigstilteService = koin.get<NyeOgFerdigstilteService>()
@@ -489,6 +491,15 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
 
         add(
             PlanlagtJobb.Oppstart(
+                navn = "StatusFordelingOppstart",
+                prioritet = mediumPrioritet,
+            ) {
+                statusFordelingService.oppdaterCache(kode6 = false)
+            }
+        )
+
+        add(
+            PlanlagtJobb.Oppstart(
                 navn = "DagensTallOppstart",
                 prioritet = mediumPrioritet,
             ) {
@@ -511,6 +522,17 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 prioritet = mediumPrioritet,
             ) {
                 nyeOgFerdigstilteService.oppdaterCache(this)
+            }
+        )
+
+        add(
+            PlanlagtJobb.TimeJobb(
+                navn = "StatusFordelingOppdaterer",
+                prioritet = lavPrioritet,
+                tidsvindu = utvidetArbeidstid,
+                minutter = (0..55 step 5).toList(),
+            ) {
+                statusFordelingService.oppdaterCache(kode6 = false)
             }
         )
 

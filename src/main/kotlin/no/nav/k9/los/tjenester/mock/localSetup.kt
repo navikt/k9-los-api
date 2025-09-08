@@ -4,7 +4,9 @@ import kotlinx.coroutines.runBlocking
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.kodeverk.behandling.BehandlingÅrsakType
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.kodeverk.uttak.SøknadÅrsak
 import no.nav.k9.los.KoinProfile
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
@@ -22,6 +24,7 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
 import no.nav.k9.sak.typer.Periode
@@ -102,7 +105,15 @@ object localSetup : KoinComponent {
                         fraEndringsdialog = false,
                         resultatType = BehandlingResultatType.IKKE_FASTSATT.kode,
                         behandlendeEnhet = null,
-                        aksjonspunktTilstander = emptyList(),
+                        aksjonspunktTilstander = if (Random.nextBoolean()) listOf(AksjonspunktTilstandDto(
+                            AksjonspunktKodeDefinisjon.VENT_PGA_FOR_TIDLIG_SØKNAD_KODE,
+                            AksjonspunktStatus.OPPRETTET,
+                            Venteårsak.AVV_IM_MOT_SØKNAD_AT,
+                            null,
+                            LocalDateTime.now(),
+                            LocalDateTime.now(),
+                            LocalDateTime.now(),
+                        )) else emptyList(),
                         søknadsårsaker = mutableListOf<SøknadÅrsak>().map { it.kode },
                         behandlingsårsaker = mutableListOf<BehandlingÅrsakType>().map { it.kode },
                         ansvarligSaksbehandlerIdent = null as String?,
@@ -201,7 +212,7 @@ object localSetup : KoinComponent {
                         eksternId = UUID.randomUUID(),
                         journalpostId = JournalpostId(Random.nextLong(100000000, 999999999).toString()),
                         eventTid = LocalDateTime.now(),
-                        status = Oppgavestatus.AAPEN,
+                        status = Oppgavestatus.VENTER,
                         aktørId = AktørId(Random.nextLong(1_000_000_000_000, 9_000_000_000_000).toString()),
                         aksjonspunktKoderMedStatusListe = mutableMapOf("PUNSJ" to "OPPR"),
                         pleietrengendeAktørId = null,
