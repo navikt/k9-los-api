@@ -216,6 +216,5 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
         }
 
         return tall
-            //.filter { it.antallTotalt > 0 || it.gruppe == StatusGruppe.BEHANDLINGER || it.gruppe == StatusGruppe.PUNSJ }
     }
 }
