@@ -21,10 +21,9 @@ class EventRepository(
         val tree = LosObjectMapper.instance.readTree(event)
         val eksternId = tree.findValue("eksternId").asText()
         val eksternVersjon = tree.findValue("eventTid").asText()
-        val id = try {
-            tx.run(
-                queryOf(
-                    """
+        val id = tx.run(
+            queryOf(
+                """
                             insert into eventlager(fagsystem, ekstern_id, ekstern_versjon, "data", dirty) 
                             values (
                             :fagsystem,
@@ -34,21 +33,15 @@ class EventRepository(
                             true)
                             on conflict do nothing
                          """,
-                    mapOf(
-                        "fagsystem" to fagsystem.kode,
-                        "ekstern_id" to eksternId,
-                        "ekstern_versjon" to eksternVersjon,
-                        "data" to event
-                    )
-                ).asUpdateAndReturnGeneratedKey
-            )
-        } catch (e: PSQLException) {
-            if (e.sqlState == "23505") {
-                throw DuplikatDataException("Event med fagsystem: ${fagsystem}, eksternId: ${eksternId} og eksternVersjon: ${eksternVersjon} finnes allerede!")
-            } else {
-                throw e
-            }
-        }
+                mapOf(
+                    "fagsystem" to fagsystem.kode,
+                    "ekstern_id" to eksternId,
+                    "ekstern_versjon" to eksternVersjon,
+                    "data" to event
+                )
+            ).asUpdateAndReturnGeneratedKey
+        )
+
 
         if (id == null) {
             return hent(fagsystem, eksternId, eksternVersjon, tx)
