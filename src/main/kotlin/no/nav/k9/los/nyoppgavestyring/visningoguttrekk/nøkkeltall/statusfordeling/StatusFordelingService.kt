@@ -45,6 +45,20 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
     }
 
     private companion object {
+        val kunKode6 = FeltverdiOppgavefilter(
+            null,
+            "personbeskyttelse",
+            EksternFeltverdiOperator.EQUALS,
+            listOf(PersonBeskyttelseType.KODE6.kode)
+        )
+
+        val ikkeKode6 = FeltverdiOppgavefilter(
+            null,
+            "personbeskyttelse",
+            EksternFeltverdiOperator.EQUALS,
+            listOf(PersonBeskyttelseType.UTEN_KODE6.kode)
+        )
+
         val åpenVenterUavklart = FeltverdiOppgavefilter(
             område = null,
             kode = "oppgavestatus",
@@ -105,38 +119,33 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
         )
 
         val klage = FeltverdiOppgavefilter(
-            "K9",
-            "behandlingTypekode",
+            null,
+            "oppgavetype",
             EksternFeltverdiOperator.EQUALS,
-            listOf(no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType.KLAGE.kode)
+            listOf("k9klage")
         )
 
         val revurdering = FeltverdiOppgavefilter(
             "K9",
             "behandlingTypekode",
-            EksternFeltverdiOperator.EQUALS,
-            listOf(no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType.REVURDERING.kode)
+            EksternFeltverdiOperator.IN,
+            listOf(
+                no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType.REVURDERING.kode,
+                no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType.REVURDERING_TILBAKEKREVING.kode)
         )
 
         val feilutbetaling = FeltverdiOppgavefilter(
+            null,
+            "oppgavetype",
+            EksternFeltverdiOperator.EQUALS,
+            listOf("k9tilbake")
+        )
+
+        val unntak = FeltverdiOppgavefilter(
             "K9",
             "behandlingTypekode",
             EksternFeltverdiOperator.EQUALS,
-            listOf(no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType.TILBAKE.kode)
-        )
-
-        val kunKode6 = FeltverdiOppgavefilter(
-            null,
-            "personbeskyttelse",
-            EksternFeltverdiOperator.EQUALS,
-            listOf(PersonBeskyttelseType.KODE6.kode)
-        )
-
-        val ikkeKode6 = FeltverdiOppgavefilter(
-            null,
-            "personbeskyttelse",
-            EksternFeltverdiOperator.EQUALS,
-            listOf(PersonBeskyttelseType.UTEN_KODE6.kode)
+            listOf(no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType.UNNTAKSBEHANDLING.kode)
         )
     }
 
@@ -164,14 +173,6 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
                     antall(personbeskyttelse, uavklart, førstegang)
                 )
 
-                StatusGruppe.KLAGE -> StatusFordelingDto(
-                    gruppe,
-                    antall(personbeskyttelse, åpenVenterUavklart, klage),
-                    antall(personbeskyttelse, åpen, klage),
-                    antall(personbeskyttelse, venter, klage),
-                    antall(personbeskyttelse, uavklart, klage)
-                )
-
                 StatusGruppe.REVURDERING -> StatusFordelingDto(
                     gruppe,
                     antall(personbeskyttelse, åpenVenterUavklart, revurdering),
@@ -188,6 +189,14 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
                     antall(personbeskyttelse, uavklart, feilutbetaling)
                 )
 
+                StatusGruppe.KLAGE -> StatusFordelingDto(
+                    gruppe,
+                    antall(personbeskyttelse, åpenVenterUavklart, klage),
+                    antall(personbeskyttelse, åpen, klage),
+                    antall(personbeskyttelse, venter, klage),
+                    antall(personbeskyttelse, uavklart, klage)
+                )
+
                 StatusGruppe.PUNSJ -> StatusFordelingDto(
                     gruppe,
                     antall(personbeskyttelse, åpenVenterUavklart, punsj),
@@ -195,8 +204,17 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
                     antall(personbeskyttelse, venter, punsj),
                     antall(personbeskyttelse, uavklart, punsj)
                 )
+
+                StatusGruppe.UNNTAKSBEHANDLING -> StatusFordelingDto(
+                    gruppe,
+                    antall(personbeskyttelse, åpenVenterUavklart, unntak),
+                    antall(personbeskyttelse, åpen, unntak),
+                    antall(personbeskyttelse, venter, unntak),
+                    antall(personbeskyttelse, uavklart, unntak)
+                )
             }
         }
+
         return tall
     }
 }
