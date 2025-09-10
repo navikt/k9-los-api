@@ -34,6 +34,12 @@ class FeltdefinisjonTjeneste(
         }
     }
 
+    fun hentKodeverk(kodeverkReferanse: Kodeverkreferanse): KodeverkDto {
+        return transactionalManager.transaction { tx ->
+            feltdefinisjonRepository.hentKodeverk(kodeverkReferanse, tx)
+        }
+    }
+
     fun hent(område: String): Feltdefinisjoner {
         return transactionalManager.transaction { tx ->
             feltdefinisjonRepository.hent(områdeRepository.hentOmråde(område, tx), tx)

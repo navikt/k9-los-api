@@ -77,7 +77,7 @@ class OmrådeSetup(
         feltdefinisjonTjeneste.oppdater(kodeverkDto)
     }
 
-    private fun aksjonspunktVerdierK9Sak() =
+    fun aksjonspunktVerdierK9Sak() =
         AksjonspunktDefinisjon.entries.filterNot { it == AksjonspunktDefinisjon.UNDEFINED }.map { apDefinisjon ->
             KodeverkVerdiDto(
                 verdi = apDefinisjon.kode,
@@ -86,7 +86,7 @@ class OmrådeSetup(
             )
         }
 
-    private fun aksjonspunktVerdierK9Klage() =
+    fun aksjonspunktVerdierK9Klage() =
         no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.entries
             .filterNot { it == no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.UNDEFINED }
             .map { apDefinisjon ->
