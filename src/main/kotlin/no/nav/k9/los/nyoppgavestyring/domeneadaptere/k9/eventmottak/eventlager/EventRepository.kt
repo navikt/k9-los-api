@@ -136,26 +136,25 @@ class EventRepository(
         }
     }
 
-    fun hentAlleDirtyEventer(eksternId: String, fagsystem: Fagsystem): List<EventLagret> {
-        return using(sessionOf(dataSource)) {
-            it.run(
-                queryOf(
-                    """
+    fun hentAlleDirtyEventerMedLås(eksternId: String, fagsystem: Fagsystem, tx: TransactionalSession): List<EventLagret> {
+        return tx.run(
+            queryOf(
+                """
                     select *
                     from eventlager
                     where ekstern_id = :ekstern_id
                     and FAGSYSTEM = :fagsystem
                     and dirty = true
+                    for update
                 """.trimIndent(),
-                    mapOf(
-                        "ekstern_id" to eksternId,
-                        "fagsystem" to fagsystem.kode
-                    )
-                ).map { row ->
-                    rowTilEvent(row)
-                }.asList
-            )
-        }
+                mapOf(
+                    "ekstern_id" to eksternId,
+                    "fagsystem" to fagsystem.kode
+                )
+            ).map { row ->
+                rowTilEvent(row)
+            }.asList
+        )
     }
 
     private fun rowTilEvent(row: Row): EventLagret? {

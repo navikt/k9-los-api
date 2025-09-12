@@ -12,7 +12,6 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertNull
 import org.koin.test.get
 import java.time.LocalDateTime
 import java.util.UUID
@@ -74,13 +73,15 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         alleEventer = eventRepository.hentAlleEventer(eksternId.toString())
         assertThat(alleEventer.size).isEqualTo(2)
 
-        alleEventer = eventRepository.hentAlleDirtyEventer(eksternId.toString(), Fagsystem.PUNSJ)
+        transactionalManager.transaction { tx ->
+            alleEventer = eventRepository.hentAlleDirtyEventerMedLås(eksternId.toString(), Fagsystem.PUNSJ, tx)
+        }
         assertThat(alleEventer.size).isEqualTo(2)
 
-        transactionalManager.transaction { tx ->
+        alleEventer = transactionalManager.transaction { tx ->
             eventRepository.fjernDirty(eventLagret, tx)
+            eventRepository.hentAlleDirtyEventerMedLås(eksternId.toString(), Fagsystem.PUNSJ, tx)
         }
-        alleEventer = eventRepository.hentAlleDirtyEventer(eksternId.toString(), Fagsystem.PUNSJ)
         assertThat(alleEventer.size).isEqualTo(1)
         assertThat(PunsjEventDto.fraEventLagret(alleEventer[0]).status).isEqualTo(Oppgavestatus.VENTER)
 

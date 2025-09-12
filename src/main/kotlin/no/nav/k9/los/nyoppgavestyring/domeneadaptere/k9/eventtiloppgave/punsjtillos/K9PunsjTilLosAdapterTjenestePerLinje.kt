@@ -21,14 +21,13 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetyperDto
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.util.*
+import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 import kotlin.concurrent.timer
 
 class K9PunsjTilLosAdapterTjenestePerLinje(
     private val eventRepository: EventRepository,
-    private val oppgavetypeTjeneste: OppgavetypeTjeneste,
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
     private val config: Configuration,
@@ -108,7 +107,18 @@ class K9PunsjTilLosAdapterTjenestePerLinje(
         var forrigeOppgaveversjon: OppgaveV3? = null
 
         transactionalManager.transaction { tx ->
-            val punsjEventer = eventRepository.hentAlleDirtyEventer(eksternId, Fagsystem.PUNSJ)
+            val punsjEventer = eventRepository.hentAlleDirtyEventerMedLås(eksternId, Fagsystem.PUNSJ, tx).sortedBy { LocalDateTime.parse(it.eksternVersjon) }
+
+            val sisteEksternVersjon =
+                oppgaveV3Tjeneste.hentSisteEksternVersjon("K9", K9Oppgavetypenavn.PUNSJ.kode, eksternId, tx)
+
+            val meldingerIFeilRekkefølge = sisteEksternVersjon?.let {
+                LocalDateTime.parse(sisteEksternVersjon)
+                    .isAfter(LocalDateTime.parse(punsjEventer.last().eksternVersjon))
+            } ?: false //Logger enn så lenge, men trenger å trigge historikkvask
+            if (meldingerIFeilRekkefølge) {
+                log.error("Punsjoppgave med eksternId: $eksternId har fått meldinger i feil rekkefølge. Må historikkvaskes!")
+            }
 
             forrigeOppgaveversjon =
                 oppgaveV3Tjeneste.hentOppgaveversjonenFør(
@@ -164,33 +174,5 @@ class K9PunsjTilLosAdapterTjenestePerLinje(
         if (teller.mod(100) == 0) {
             log.info(tekst)
         }
-    }
-
-    @WithSpan
-    fun setup(): K9PunsjTilLosAdapterTjenestePerLinje {
-        val objectMapper = jacksonObjectMapper()
-        opprettOppgavetype(objectMapper)
-        return this
-    }
-
-    private fun opprettOppgavetype(objectMapper: ObjectMapper) {
-        val oppgavetyperDto = objectMapper.readValue(
-            K9PunsjTilLosAdapterTjenestePerLinje::class.java.getResource("/adapterdefinisjoner/k9-oppgavetyper-k9punsj.json")!!
-                .readText(),
-            OppgavetyperDto::class.java
-        )
-        oppgavetypeTjeneste.oppdater(
-            oppgavetyperDto.copy(
-                oppgavetyper = oppgavetyperDto.oppgavetyper.map { oppgavetypeDto ->
-                    oppgavetypeDto.copy(
-                        oppgavebehandlingsUrlTemplate = oppgavetypeDto.oppgavebehandlingsUrlTemplate.replace(
-                            "{baseUrl}",
-                            config.k9PunsjFrontendUrl()
-                        )
-                    )
-                }.toSet()
-            )
-        )
-        log.info("opprettet oppgavetype")
     }
 }
