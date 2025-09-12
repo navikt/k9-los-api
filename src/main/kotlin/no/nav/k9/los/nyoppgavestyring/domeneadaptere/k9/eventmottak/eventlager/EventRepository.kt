@@ -181,45 +181,81 @@ class EventRepository(
         )
     }
 
-    fun nullstillHistorikkvask() {
+    fun bestillHistorikkvask(fagsystem: Fagsystem) {
         using(sessionOf(dataSource)) {
             it.transaction { tx ->
                 tx.run(
                     queryOf(
-                        """delete from eventlager_historikkvask_ferdig"""
+                        """insert into eventlager_historikkvask_bestilt(ekstern_id, fagsystem)
+                            select distinct ekstern_id, fagsystem
+                            from eventlager
+                            where fagsystem = :fagsystem
+                        """.trimMargin(),
+                        mapOf(
+                            "fagsystem" to fagsystem.kode,
+                        )
                     ).asUpdate
                 )
             }
         }
     }
 
-    fun hentAlleEventIderUtenVasketHistorikk(): List<Long> {
-        return using(sessionOf(dataSource)) {
+    fun bestillHistorikkvask(fagsystem: Fagsystem, eksternId: String) {
+        using(sessionOf(dataSource)) {
             it.transaction { tx ->
                 tx.run(
                     queryOf(
-                        """
-                            select id
-                            from eventlager e
-                            where not exists (select * from eventlager_historikkvask_ferdig hv where hv.id = e.id)
-                             """.trimMargin(),
-                        mapOf()
-                    ).map { row ->
-                        row.long("id")
-                    }.asList
+                        """insert into eventlager_historikkvask_bestilt(ekstern_id, fagsystem)
+                            select distinct ekstern_id, fagsystem
+                            from eventlager
+                            where fagsystem = :fagsystem
+                            and ekstern_id = :ekstern_id
+                        """.trimMargin(),
+                        mapOf(
+                            "fagsystem" to fagsystem.kode,
+                            "ekstern_id" to eksternId
+                        )
+                    ).asUpdate
                 )
             }
         }
     }
 
-    fun markerVasketHistorikk(eventLagret: EventLagret) {
+    fun settHistorikkvaskFerdig(fagsystem: Fagsystem, eksternId: String) {
         using(sessionOf(dataSource)) {
-            it.run(
-                queryOf(
-                    """insert into eventlager_historikkvask_ferdig(id) values (:id)""",
-                    mapOf("id" to eventLagret.id)
-                ).asUpdate
-            )
+            it.transaction { tx ->
+                tx.run(
+                    queryOf(
+                        """delete from eventlager_historikkvask_bestilt
+                            where fagsystem = :fagsystem
+                            and ekstern_id = :ekstern_id""".trimMargin(),
+                        mapOf(
+                            "fagsystem" to fagsystem.kode,
+                            "ekstern_id" to eksternId
+                        )
+                    ).asUpdate
+                )
+            }
+        }
+    }
+
+    fun hentAlleHistorikkvaskbestillinger(): List<HistorikkvaskBestilling> {
+        return using(sessionOf(dataSource)) {
+            it.transaction { tx ->
+                tx.run(
+                    queryOf(
+                        """
+                            select *
+                            from eventlager_historikkvask_bestilt
+                        """.trimIndent()
+                    ).map { row ->
+                        HistorikkvaskBestilling(
+                            fagsystem = Fagsystem.fraKode(row.string("fagsystem")),
+                            eksternId = row.string("ekstern_id")
+                        )
+                    }.asList
+                )
+            }
         }
     }
 }
