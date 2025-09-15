@@ -27,6 +27,11 @@
           "påkrevd": true
         },
         {
+          "id": "saksnummerForSøk",
+          "visPåOppgave": false,
+          "påkrevd": false
+        },
+        {
           "id": "førsteFeilutbetalingDato",
           "visPåOppgave": true,
           "påkrevd": false

@@ -115,9 +115,9 @@ class SøkeboksTjeneste(
                     verdi = oppgavestatus
                 ), FeltverdiOppgavefilter(
                     område = "K9",
-                    kode = "saksnummer",
+                    kode = "saksnummerForSøk",
                     operator = EksternFeltverdiOperator.EQUALS,
-                    verdi = listOf(saksnummer)
+                    verdi = listOf(saksnummer.lowercase())
                 )
             ), order = listOf(EnkelOrderFelt("K9", "mottattDato", false))
         )

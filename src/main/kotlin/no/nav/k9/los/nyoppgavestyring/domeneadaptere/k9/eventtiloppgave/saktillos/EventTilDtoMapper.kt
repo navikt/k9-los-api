@@ -169,6 +169,10 @@ class EventTilDtoMapper {
                 verdi = event.saksnummer
             ),
             OppgaveFeltverdiDto(
+                nøkkel = "saksnummerForSøk",
+                verdi = event.saksnummer.lowercase()
+            ),
+            OppgaveFeltverdiDto(
                 nøkkel = "resultattype",
                 verdi = event.resultatType ?: BehandlingResultatType.IKKE_FASTSATT.kode
             ),

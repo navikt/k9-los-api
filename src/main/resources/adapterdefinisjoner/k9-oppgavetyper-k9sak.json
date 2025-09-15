@@ -27,6 +27,11 @@
           "påkrevd": true
         },
         {
+          "id": "saksnummerForSøk",
+          "visPåOppgave": false,
+          "påkrevd": false
+        },
+        {
           "id": "resultattype",
           "visPåOppgave": true,
           "påkrevd": true

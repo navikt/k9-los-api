@@ -54,6 +54,14 @@
       "kokriterie": false
     },
     {
+      "id": "saksnummerForSøk",
+      "visningsnavn": "Saksnummer, for søk",
+      "listetype": false,
+      "tolkesSom": "String",
+      "visTilBruker": false,
+      "kokriterie": false
+    },
+    {
       "id": "resultattype",
       "visningsnavn": "Resultattype",
       "listetype": false,
