@@ -1,22 +1,15 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExecutorCoroutineDispatcher
-import kotlinx.coroutines.async
-import kotlinx.coroutines.newFixedThreadPoolContext
-import kotlinx.coroutines.runBlocking
-import no.nav.k9.los.Configuration
+import kotlinx.coroutines.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.HistorikkvaskBestilling
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.K9SakTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.SakEventTilOppgaveMapper
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import kotlin.collections.map
+import kotlin.time.measureTime
 
 class HistorikkvaskTjeneste(
     private val eventRepository: EventRepository,
@@ -27,23 +20,25 @@ class HistorikkvaskTjeneste(
     private val log: Logger = LoggerFactory.getLogger(HistorikkvaskTjeneste::class.java)
 
     fun kjørHistorikkvask() {
-        val dispatcher = newFixedThreadPoolContext(5, "Historikkvask k9sak")
+        val dispatcher = newFixedThreadPoolContext(5, "Historikkvask")
 
         val antallBestillinger = eventRepository.hentAntallHistorikkvaskbestillinger()
         log.info("Fant totalt $antallBestillinger historikkvaskbestillinger")
 
         var vasketeller = 0L
-        while(true) {
-            val historikkvaskbestillinger = eventRepository.hentAlleHistorikkvaskbestillinger(antall = 2000)
-            if (historikkvaskbestillinger.isEmpty()) break
+        val tidsbruk = measureTime {
+            while (true) {
+                val historikkvaskbestillinger = eventRepository.hentAlleHistorikkvaskbestillinger(antall = 2000)
+                if (historikkvaskbestillinger.isEmpty()) break
 
-            log.info("Starter vaskeiterasjon på ${historikkvaskbestillinger.size} oppgaver")
-            vaskBestillinger(historikkvaskbestillinger, dispatcher)
-            vasketeller += historikkvaskbestillinger.size
-            log.info("Vasket iterasjon med ${historikkvaskbestillinger.size} oppgaver. Har vasket totalt $vasketeller oppgaver")
+                log.info("Starter vaskeiterasjon på ${historikkvaskbestillinger.size} oppgaver")
+                vaskBestillinger(historikkvaskbestillinger, dispatcher)
+                vasketeller += historikkvaskbestillinger.size
+                log.info("Vasket iterasjon med ${historikkvaskbestillinger.size} oppgaver. Har vasket totalt $vasketeller oppgaver")
+            }
         }
 
-        log.info("Historikkvask ferdig. Vasket totalt $vasketeller oppgaver")
+        log.info("Historikkvask ferdig på ${tidsbruk}. Vasket totalt $vasketeller oppgaver")
     }
 
     private fun vaskBestillinger(
