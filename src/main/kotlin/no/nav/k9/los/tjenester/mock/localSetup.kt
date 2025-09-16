@@ -88,8 +88,8 @@ object localSetup : KoinComponent {
         if (profile == KoinProfile.LOCAL) {
             for (i in 0..<antall) {
                 val eksternId = UUID.randomUUID()
-                val behandlingId = Random.nextLong(0, 200)
-                val saksnummer = behandlingId.toString()
+                val behandlingId = Random.nextLong(0, 2000)
+                val saksnummer = behandlingId.toString(36).uppercase().replace("O", "o").replace("I", "i")
                 val ytelseTypeKode = listOf(
                     FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
                     FagsakYtelseType.PPN,
