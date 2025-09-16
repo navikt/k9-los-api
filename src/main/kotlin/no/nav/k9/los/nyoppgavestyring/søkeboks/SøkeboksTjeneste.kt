@@ -25,36 +25,28 @@ class SøkeboksTjeneste(
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
     private val saksbehandlerRepository: SaksbehandlerRepository,
 ) {
-    suspend fun finnOppgaver(søkeord: String, oppgavestatus: List<Oppgavestatus>): Søkeresultat {
+    suspend fun finnOppgaver(søkeord: String): Søkeresultat {
         val oppgaver = when (søkeord.length) {
             11 -> {
                 val pdlResponse = pdlService.identifikator(søkeord)
                 if (pdlResponse.ikkeTilgang) return Søkeresultat.IkkeTilgang
                 val aktørIder = pdlResponse.aktorId?.data?.hentIdenter?.identer?.map { it.ident } ?: emptyList()
-                finnOppgaverForAktørId(aktørIder + søkeord, oppgavestatus)
+                finnOppgaverForAktørId(aktørIder + søkeord)
             }
 
             9 -> {
-                finnOppgaverForJournalpostId(søkeord, oppgavestatus)
+                finnOppgaverForJournalpostId(søkeord)
             }
 
-            else -> finnOppgaverForSaksnummer(søkeord, oppgavestatus)
+            else -> finnOppgaverForSaksnummer(søkeord)
         }
         return transformerTilSøkeresultat(oppgaver)
     }
 
-    private fun finnOppgaverForJournalpostId(
-        journalpostId: String,
-        oppgavestatus: List<Oppgavestatus>
-    ): List<Oppgave> {
+    private fun finnOppgaverForJournalpostId(journalpostId: String): List<Oppgave> {
         val query = OppgaveQuery(
             filtere = listOf(
                 FeltverdiOppgavefilter(
-                    område = null,
-                    kode = "oppgavestatus",
-                    operator = EksternFeltverdiOperator.IN,
-                    verdi = oppgavestatus
-                ), FeltverdiOppgavefilter(
                     område = "K9",
                     kode = "journalpostId",
                     operator = EksternFeltverdiOperator.EQUALS,
@@ -65,17 +57,12 @@ class SøkeboksTjeneste(
         return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
     }
 
-    private suspend fun finnOppgaverForSøkersFnr(fnr: String, oppgavestatus: List<Oppgavestatus>): List<Oppgave> {
+    private suspend fun finnOppgaverForSøkersFnr(fnr: String): List<Oppgave> {
         val aktørId =
             pdlService.identifikator(fnr).aktorId?.data?.hentIdenter?.identer?.get(0)?.ident ?: return emptyList()
         val query = OppgaveQuery(
             filtere = listOf(
                 FeltverdiOppgavefilter(
-                    område = null,
-                    kode = "oppgavestatus",
-                    operator = EksternFeltverdiOperator.IN,
-                    verdi = oppgavestatus
-                ), FeltverdiOppgavefilter(
                     område = "K9",
                     kode = "aktorId",
                     operator = EksternFeltverdiOperator.IN,
@@ -86,15 +73,10 @@ class SøkeboksTjeneste(
         return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
     }
 
-    private fun finnOppgaverForAktørId(aktørIder: List<String>, oppgavestatus: List<Oppgavestatus>): List<Oppgave> {
+    private fun finnOppgaverForAktørId(aktørIder: List<String>): List<Oppgave> {
         val query = OppgaveQuery(
             filtere = listOf(
                 FeltverdiOppgavefilter(
-                    område = null,
-                    kode = "oppgavestatus",
-                    operator = EksternFeltverdiOperator.IN,
-                    verdi = oppgavestatus
-                ), FeltverdiOppgavefilter(
                     område = "K9",
                     kode = "aktorId",
                     operator = EksternFeltverdiOperator.IN,
@@ -105,19 +87,14 @@ class SøkeboksTjeneste(
         return queryService.queryForOppgave(QueryRequest(oppgaveQuery = query))
     }
 
-    private fun finnOppgaverForSaksnummer(saksnummer: String, oppgavestatus: List<Oppgavestatus>): List<Oppgave> {
+    private fun finnOppgaverForSaksnummer(saksnummer: String): List<Oppgave> {
         val query = OppgaveQuery(
             filtere = listOf(
                 FeltverdiOppgavefilter(
-                    område = null,
-                    kode = "oppgavestatus",
-                    operator = EksternFeltverdiOperator.IN,
-                    verdi = oppgavestatus
-                ), FeltverdiOppgavefilter(
                     område = "K9",
                     kode = "saksnummer",
                     operator = EksternFeltverdiOperator.EQUALS,
-                    verdi = listOf(saksnummer)
+                    verdi = listOf(saksnummer.uppercase().replace("O", "o").replace("I", "i"))
                 )
             ), order = listOf(EnkelOrderFelt("K9", "mottattDato", false))
         )
