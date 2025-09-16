@@ -133,6 +133,13 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
             listOf("KLAGE"+ AksjonspunktKodeDefinisjon.AUTO_OVERFØRT_NK_KODE)
         )
 
+        val venterIkkeKabal = FeltverdiOppgavefilter(
+            område = "K9",
+            kode = "løsbartAksjonspunkt",
+            operator = EksternFeltverdiOperator.NOT_EQUALS,
+            listOf("KLAGE"+ AksjonspunktKodeDefinisjon.AUTO_OVERFØRT_NK_KODE)
+        )
+
         val revurdering = FeltverdiOppgavefilter(
             "K9",
             "behandlingTypekode",
@@ -205,7 +212,7 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
                     gruppe,
                     antall(personbeskyttelse, åpenVenterUavklart, klage),
                     antall(personbeskyttelse, åpen, klage),
-                    antall(personbeskyttelse, venter, klage),
+                    antall(personbeskyttelse, venter, klage, venterIkkeKabal),
                     antall(personbeskyttelse, venter, klage, venterKabal),
                     antall(personbeskyttelse, uavklart, klage)
                 )
