@@ -95,7 +95,7 @@ abstract class AbstractPostgresTest {
                 oppgave_v3_aktiv,
                 feltdefinisjon,
                 eventlager,
-                eventlager_historikkvask_ferdig,
+                eventlager_historikkvask_bestilt,
                 oppgave_v3_sendt_dvh;
                 
             ALTER SEQUENCE saksbehandler_id_seq restart

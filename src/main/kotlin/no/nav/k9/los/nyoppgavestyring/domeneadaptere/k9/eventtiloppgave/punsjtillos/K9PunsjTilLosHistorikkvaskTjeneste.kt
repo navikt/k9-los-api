@@ -102,7 +102,7 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
 
         log.info("Vasker ${behandlingProsessEventer.size} hendelser for k9punsj-oppgave med eksternId: $uuid")
         for (event in behandlingProsessEventer) {
-            val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+            val oppgaveDto = PunsjEventTilOppgaveMapper.lagOppgaveDto(event, forrigeOppgave)
             log.info("Utledet oppgave DTO")
 
             oppgaveV3 = oppgaveV3Tjeneste.utledEksisterendeOppgaveversjon(oppgaveDto, eventTeller, tx)

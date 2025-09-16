@@ -12,7 +12,7 @@ import java.util.*
 class UtledOppgavestatusTest : FreeSpec( {
     "Base case" - {
         "skal gi oppgavestatus ÅPEN" {
-            EventTilDtoMapper.utledOppgavestatus(
+            PunsjEventTilOppgaveMapper.utledOppgavestatus(
                 Testdata.testevent(Oppgavestatus.AAPEN, sendtInn = false, mapOf(Pair("PUNSJ", "Test")).toMutableMap())
             ) shouldBe Oppgavestatus.AAPEN
         }
@@ -21,19 +21,19 @@ class UtledOppgavestatusTest : FreeSpec( {
         "er sendt inn" - {
             val event = Testdata.testevent(Oppgavestatus.AAPEN, sendtInn = true, emptyMap<String, String>().toMutableMap())
             "skal gi oppgavestatus LUKKET" {
-                EventTilDtoMapper.utledOppgavestatus(event) shouldBe Oppgavestatus.LUKKET
+                PunsjEventTilOppgaveMapper.utledOppgavestatus(event) shouldBe Oppgavestatus.LUKKET
             }
         }
         "har status LUKKET" - {
             val event = Testdata.testevent(Oppgavestatus.LUKKET, sendtInn = false, emptyMap<String, String>().toMutableMap())
             "skal gi oppgavestatus LUKKET" {
-                EventTilDtoMapper.utledOppgavestatus(event) shouldBe Oppgavestatus.LUKKET
+                PunsjEventTilOppgaveMapper.utledOppgavestatus(event) shouldBe Oppgavestatus.LUKKET
             }
         }
         "har tom aksjonspunktliste" - {
             val event = Testdata.testevent(Oppgavestatus.AAPEN, sendtInn = false, emptyMap<String, String>().toMutableMap())
             "skal gi oppgavestatus LUKKET" {
-                EventTilDtoMapper.utledOppgavestatus(event) shouldBe Oppgavestatus.LUKKET
+                PunsjEventTilOppgaveMapper.utledOppgavestatus(event) shouldBe Oppgavestatus.LUKKET
             }
         }
         "har aksjonspunkt med kode MER_INFORMASJON" - {
@@ -42,7 +42,7 @@ class UtledOppgavestatusTest : FreeSpec( {
                 sendtInn = false,
                 mapOf(Pair("MER_INFORMASJON",AksjonspunktStatus.OPPRETTET.kode)).toMutableMap())
             "skal gi oppgavestatus VENTER" {
-                EventTilDtoMapper.utledOppgavestatus(event) shouldBe Oppgavestatus.VENTER
+                PunsjEventTilOppgaveMapper.utledOppgavestatus(event) shouldBe Oppgavestatus.VENTER
             }
         }
     }

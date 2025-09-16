@@ -1,6 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager
 
 import assertk.assertThat
+import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
@@ -46,7 +47,9 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         }
         assertThat(PunsjEventDto.fraEventLagret(eventLagret).status).isEqualTo(Oppgavestatus.AAPEN)
 
-        var alleEventer = eventRepository.hentAlleEventer(eksternId.toString())
+        var alleEventer = transactionalManager.transaction { tx ->
+            eventRepository.hentAlleEventerMedLås(Fagsystem.PUNSJ, eksternId.toString(), tx)
+        }
         assertThat(alleEventer.size).isEqualTo(1)
 
         val event2 = PunsjEventDto(
@@ -70,22 +73,26 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         }
         assertThat(PunsjEventDto.fraEventLagret(eventLagret2).status).isEqualTo(Oppgavestatus.VENTER)
 
-        alleEventer = eventRepository.hentAlleEventer(eksternId.toString())
+        alleEventer = transactionalManager.transaction { tx ->
+            eventRepository.hentAlleEventerMedLås(Fagsystem.PUNSJ, eksternId.toString(), tx)
+        }
         assertThat(alleEventer.size).isEqualTo(2)
 
         transactionalManager.transaction { tx ->
-            alleEventer = eventRepository.hentAlleDirtyEventerMedLås(eksternId.toString(), Fagsystem.PUNSJ, tx)
+            alleEventer = eventRepository.hentAlleDirtyEventerMedLås(Fagsystem.PUNSJ, eksternId.toString(), tx)
         }
         assertThat(alleEventer.size).isEqualTo(2)
 
         alleEventer = transactionalManager.transaction { tx ->
             eventRepository.fjernDirty(eventLagret, tx)
-            eventRepository.hentAlleDirtyEventerMedLås(eksternId.toString(), Fagsystem.PUNSJ, tx)
+            eventRepository.hentAlleDirtyEventerMedLås(Fagsystem.PUNSJ, eksternId.toString(), tx)
         }
         assertThat(alleEventer.size).isEqualTo(1)
         assertThat(PunsjEventDto.fraEventLagret(alleEventer[0]).status).isEqualTo(Oppgavestatus.VENTER)
 
-        val førsteLagredeEvent = eventRepository.hent(eksternId.toString(), 0)!!
+        val førsteLagredeEvent = transactionalManager.transaction { tx ->
+            eventRepository.hent(Fagsystem.PUNSJ, eksternId.toString(), event.eventTid.toString(), tx)!!
+        }
         assertThat(PunsjEventDto.fraEventLagret(førsteLagredeEvent).status).isEqualTo(Oppgavestatus.AAPEN)
     }
 
@@ -118,7 +125,9 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
             eventRepository.lagre(eventString, Fagsystem.PUNSJ, tx)
         }
 
-        val retur = eventRepository.hentAlleEventer(eksternId.toString())
+        val retur = transactionalManager.transaction { tx ->
+            eventRepository.hentAlleEventerMedLås(Fagsystem.PUNSJ, eksternId.toString(), tx)
+        }
 
         assertThat(retur.size).isEqualTo(1)
     }
@@ -169,17 +178,24 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
             eventRepository.lagre(eventString2, Fagsystem.PUNSJ, tx)
         }
 
-        var alleEventer = eventRepository.hentAlleEventIderUtenVasketHistorikk()
-        assertThat(alleEventer.size).isEqualTo(2)
+        eventRepository.bestillHistorikkvask(Fagsystem.PUNSJ)
+        var vaskeBestillinger = eventRepository.hentAlleHistorikkvaskbestillinger()
+        assertThat(vaskeBestillinger.size).isEqualTo(2)
 
-        eventRepository.markerVasketHistorikk(eventLagret)
-        alleEventer = eventRepository.hentAlleEventIderUtenVasketHistorikk()
-        assertThat(alleEventer.size).isEqualTo(1)
-        val uvasketEventLagret = eventRepository.hent(alleEventer.get(0))!!
+        eventRepository.settHistorikkvaskFerdig(Fagsystem.PUNSJ, eventLagret.eksternId)
+        vaskeBestillinger = eventRepository.hentAlleHistorikkvaskbestillinger()
+        assertThat(vaskeBestillinger.size).isEqualTo(1)
+        val uvasketEventLagret = transactionalManager.transaction { tx ->
+            eventRepository.hentAlleEventerMedLås(
+                Fagsystem.PUNSJ,
+                vaskeBestillinger.get(0).eksternId, tx)
+                .sortedBy { LocalDateTime.parse(it.eksternVersjon) }[0]
+        }
         assertThat(PunsjEventDto.fraEventLagret(uvasketEventLagret).status).isEqualTo(Oppgavestatus.VENTER)
 
-        eventRepository.nullstillHistorikkvask()
-        alleEventer = eventRepository.hentAlleEventIderUtenVasketHistorikk()
-        assertThat(alleEventer.size).isEqualTo(2)
+        eventRepository.settHistorikkvaskFerdig(Fagsystem.PUNSJ, uvasketEventLagret.eksternId)
+
+        vaskeBestillinger = eventRepository.hentAlleHistorikkvaskbestillinger()
+        assertThat(vaskeBestillinger).isEmpty()
     }
 }

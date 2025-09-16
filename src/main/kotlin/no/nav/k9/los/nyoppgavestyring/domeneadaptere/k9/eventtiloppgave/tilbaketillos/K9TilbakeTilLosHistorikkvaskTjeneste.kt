@@ -132,7 +132,7 @@ class K9TilbakeTilLosHistorikkvaskTjeneste(
                 log.info("Avbryter historikkvask for ${event.eksternId} ved eventTid ${event.eventTid}. Forventer at håndteres av vanlig adaptertjeneste.")
                 break //Historikkvasken har funnet eventer som ennå ikke er lastet inn med normalflyt. Dirty eventer skal håndteres av vanlig adaptertjeneste
             }
-            val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+            val oppgaveDto = TilbakeEventTilOppgaveMapper.lagOppgaveDto(event, forrigeOppgave)
 
             oppgaveV3 = DetaljerMetrikker.time(
                 "k9tilbakeHistorikkvask",

@@ -157,7 +157,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 //ser ut som noen gamle mottatte dokumenter kan mangle innsendingstidspunkt.
                 //da faller vi tilbake til å bruke behandling_opprettet i mapperen
             }
-            var oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+            var oppgaveDto = SakEventTilOppgaveMapper.lagOppgaveDto(event, forrigeOppgave)
 
             oppgaveDto = k9SakTilLosAdapterTjeneste.ryddOppObsoleteOgResultatfeilFra2020(
                 event,
