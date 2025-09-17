@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos
 
+import io.github.smiley4.ktoropenapi.put
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
@@ -13,7 +14,9 @@ internal fun Route.K9KlageTilLosApi() {
     val requestContextService by inject<RequestContextService>()
     val k9KlageTilLosHistorikkvaskTjeneste by inject<K9KlageTilLosHistorikkvaskTjeneste>()
 
-    put("/startHistorikkvask") {
+    put("/startHistorikkvask", {
+        tags("Forvaltning")
+    }) {
         requestContextService.withRequestContext(call) {
             thread(
                 start = true,

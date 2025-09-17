@@ -49,6 +49,7 @@ class K9SakEventHandlerTest : AbstractK9LosIntegrationTest() {
 
         @Language("JSON") val json =
             """{
+                "merknader": [],
                   "eksternId": "70c7a780-08ad-4ccf-8cef-c341d4913d65",
                   "fagsystem": {
                     "kode": "K9SAK",
@@ -93,6 +94,7 @@ class K9SakEventHandlerTest : AbstractK9LosIntegrationTest() {
 
         @Language("JSON") val json =
             """{
+                "merknader": [],
               "eksternId": "6b521f78-ef71-43c3-a615-6c2b8bb4dcdb",
               "fagsystem": {
                 "kode": "K9SAK",
@@ -133,6 +135,7 @@ class K9SakEventHandlerTest : AbstractK9LosIntegrationTest() {
 
         @Language("JSON") val json =
             """{
+                "merknader": [],
               "eksternId": "6b521f78-ef71-43c3-a615-6c2b8bb4dcdb",
               "fagsystem": {
                 "kode": "K9SAK",
@@ -154,7 +157,8 @@ class K9SakEventHandlerTest : AbstractK9LosIntegrationTest() {
               "aksjonspunktKoderMedStatusListe": {
                 "5016": "OPPR",
                 "5080": "OPPR"
-              }
+              },
+              "merknader": []
             }"""
         val event = objectMapper.readValue(json, K9SakEventDto::class.java)
 
@@ -172,6 +176,7 @@ class K9SakEventHandlerTest : AbstractK9LosIntegrationTest() {
 
         @Language("JSON") val json =
             """{
+                "merknader": [],
               "eksternId": "6b521f78-ef71-43c3-a615-6c2b8bb4dcdb",
               "fagsystem": {
                 "kode": "K9SAK",
@@ -212,6 +217,7 @@ class K9SakEventHandlerTest : AbstractK9LosIntegrationTest() {
 
         @Language("JSON") val json =
             """{
+                "merknader": [],
                   "eksternId": "6b521f78-ef71-43c3-a615-6c2b8bb4dcdb",
                   "fagsystem": {
                     "kode": "K9SAK",
@@ -255,6 +261,7 @@ class K9SakEventHandlerTest : AbstractK9LosIntegrationTest() {
 
         @Language("JSON") val json =
             """{
+                "merknader": [],
                   "eksternId": "6b521f78-ef71-43c3-a615-6c2b8bb4dcdb",
                   "fagsystem": {
                     "kode": "K9SAK",
@@ -293,6 +300,7 @@ class K9SakEventHandlerTest : AbstractK9LosIntegrationTest() {
 
         @Language("JSON") val json =
             """{
+                "merknader": [],
                   "eksternId": "6b521f78-ef71-43c3-a615-6c2b8bb4dcdb",
                   "fagsystem": {
                     "kode": "K9SAK",

@@ -42,6 +42,7 @@ class BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
             oppgaveRepository = get(),
             reservasjonV3Tjeneste = get(),
             historikkvaskChannel = get(named("historikkvaskChannelK9Sak")),
+            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
@@ -130,7 +131,8 @@ class BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
             opprettetBehandling = LocalDateTime.now(),
             eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
             aksjonspunktKoderMedStatusListe = emptyMap<String, String>().toMutableMap(),
-            aksjonspunktTilstander = emptyList()
+            aksjonspunktTilstander = emptyList(),
+            merknader = emptyList()
         )
     }
 

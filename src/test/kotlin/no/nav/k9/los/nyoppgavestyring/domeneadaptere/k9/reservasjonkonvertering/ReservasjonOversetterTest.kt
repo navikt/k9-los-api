@@ -281,7 +281,8 @@ fun mockEvent(
         eldsteDatoMedEndringFraSøker = LocalDateTime.now(),
         aksjonspunktKoderMedStatusListe = mutableMapOf(),
         aksjonspunktTilstander = emptyList(),
-        pleietrengendeAktørId = pleietrengendeAktørId
+        pleietrengendeAktørId = pleietrengendeAktørId,
+        merknader = emptyList(),
     )
 }
 

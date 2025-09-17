@@ -225,13 +225,15 @@ internal fun Route.ReservasjonApis() {
                 val oppgavenøkkel = call.receive<OppgaveNøkkelDto>()
                 val eksternUuid = UUID.fromString(oppgavenøkkel.oppgaveEksternId)
                 val oppgave = oppgaveRepository.hent(eksternUuid)
-                val person = pdlService.person(oppgave.aktorId).person
+                val response = pdlService.person(oppgave.aktorId!!)  //ser ut som aktørId alltid er non-null her, men kan være blank (håndteres i pdlService)
 
-                if (person == null) {
+                if (response.ikkeTilgang) {
+                    call.respond(HttpStatusCode.Forbidden)
+                } else if (response.person == null) {
                     log.warn("Fant ikke personen som er på oppgaven med eksternId $eksternUuid")
                     call.respond(HttpStatusCode.InternalServerError, "Fant ikke personen på oppgaven")
                 } else {
-                    val behandletOppgave = BehandletOppgave(oppgave, person)
+                    val behandletOppgave = BehandletOppgave(oppgave, response.person)
                     call.respond(
                         oppgaveTjeneste.leggTilBehandletOppgave(
                             coroutineContext.idToken().getUsername(),

@@ -20,7 +20,7 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
     private val transactionalManager: TransactionalManager
 ) {
     private val log: Logger = LoggerFactory.getLogger(K9PunsjTilLosHistorikkvaskTjeneste::class.java)
-    private val METRIKKLABEL = "k9-punsj-til-los-historikkvask"
+    val METRIKKLABEL = "k9-punsj-til-los-historikkvask"
 
     fun kjørHistorikkvask() {
         if (config.nyOppgavestyringAktivert()) {

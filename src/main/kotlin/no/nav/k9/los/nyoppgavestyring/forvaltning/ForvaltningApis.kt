@@ -1,17 +1,13 @@
 package no.nav.k9.los.nyoppgavestyring.forvaltning
 
-import io.github.smiley4.ktorswaggerui.dsl.routing.get
+import io.github.smiley4.ktoropenapi.get
 import io.ktor.http.*
-import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotliquery.queryOf
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.domene.repository.OppgaveKøRepository
 import no.nav.k9.los.domene.repository.OppgaveRepository
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventRepository
@@ -20,15 +16,21 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetil
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.K9SakTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import org.koin.ktor.ext.inject
 import java.util.*
 
@@ -59,6 +61,7 @@ fun Route.forvaltningApis() {
 
 
     get("/index_oversikt", {
+        tags("Forvaltning")
         description = "index_oversikt"
         response {
             HttpStatusCode.OK to {
@@ -114,6 +117,7 @@ fun Route.forvaltningApis() {
     }
 
     get("/sammenlignkoer", {
+        tags("Forvaltning")
         description = "Sammenlign en V1-kø med en V3 kø, og lever de oppgavene som ikke finnes i begge køer"
         request {
             queryParameter<String>("v1KoId") {
@@ -128,14 +132,21 @@ fun Route.forvaltningApis() {
                     value = "5"
                 }
             }
+            queryParameter<String>("skjermet") {
+                description = "Vise køer med skjerming"
+                example("false") {
+                    value = "false"
+                }
+            }
         }
     }) {
         requestContextService.withRequestContext(call) {
             if (pepClient.kanLeggeUtDriftsmelding()) {
                 val v1KoId = UUID.fromString(call.parameters["v1KoId"])
                 val v3KoId = call.parameters["v3KoId"]!!.toLong()
+                val skjermet = call.parameters["skjermet"].toBoolean()
 
-                val v3Ko = oppgaveKoTjeneste.hent(v3KoId, false)
+                val v3Ko = oppgaveKoTjeneste.hent(v3KoId, skjermet)
                 val v3Oppgaver =
                     oppgaveQueryService.queryForOppgaveEksternId(
                         QueryRequest(
@@ -144,21 +155,102 @@ fun Route.forvaltningApis() {
                         )
                     ).map { UUID.fromString(it.eksternId) }
 
-                val v1Ko = oppgaveKoRepository.hentOppgavekø(v1KoId)
+                val v1Ko = oppgaveKoRepository.hentOppgavekø(v1KoId, ignorerSkjerming = skjermet)
                 val v1Oppgaver = v1Ko.oppgaverOgDatoer.map { it.id }.toList()
 
                 val v3MenIkkeV1 = v3Oppgaver.subtract(v1Oppgaver)
                 val v1MenIkkeV3 = v1Oppgaver.subtract(v3Oppgaver)
 
                 val v3OppgaverSomManglerIV1 = v3MenIkkeV1.map {
-                    OppgaveDto(oppgaveRepositoryTxWrapper.hentOppgave("K9", it.toString()))
+                    OppgaveIkkeSensitiv(oppgaveRepositoryTxWrapper.hentOppgave("K9", it.toString()))
                 }.toList()
 
                 val v1OppgaverSomManglerIV3 = v1MenIkkeV3.map {
                     oppgaveRepositoryV1.hent(it)
                 }
 
-                call.respond(KoDiff(v3MenIkkeV1.size, v1MenIkkeV3.size, v3OppgaverSomManglerIV1.toSet(), v1OppgaverSomManglerIV3.toSet()))
+                call.respond(
+                    KoDiff(
+                        v3MenIkkeV1.size,
+                        v1MenIkkeV3.size,
+                        v3OppgaverSomManglerIV1.toSet(),
+                        v1OppgaverSomManglerIV3.toSet()
+                    )
+                )
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
+    get("/{system}/{saksnummer}/finnEksternId", {
+        tags("Forvaltning")
+        description = "Søk opp eksternId for saksnummer eller journalpostId"
+        request {
+            pathParameter<String>("system") {
+                description = "Kildesystem som har sendt inn oppgaven"
+                example("k9sak") {
+                    value = "K9SAK"
+                    description = "K9sak"
+                }
+                example("k9punsj") {
+                    value = "PUNSJ"
+                    description = "K9punsj"
+                }
+            }
+            pathParameter<String>("saksnummer") {
+                description = "Oppgavens saksnummer, evt journalpostId for punsjoppgaver"
+            }
+        }
+    }) {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.kanLeggeUtDriftsmelding()) {
+                val fagsystem = Fagsystem.fraKode(call.parameters["system"]!!)
+                val saksnummer = call.parameters["saksnummer"]!!
+
+                when (fagsystem) {
+                    Fagsystem.K9SAK,
+                    Fagsystem.K9TILBAKE,
+                    Fagsystem.K9KLAGE -> {
+                        val query = QueryRequest(
+                            oppgaveQuery = OppgaveQuery(
+                                filtere = listOf(
+                                    FeltverdiOppgavefilter(
+                                        "K9",
+                                        "saksnummer",
+                                        operator = EksternFeltverdiOperator.EQUALS,
+                                        verdi = listOf(saksnummer)
+                                    )
+                                )
+                            ),
+                            fjernReserverte = false,
+                            avgrensning = null
+                        )
+
+                        val eksternIds = oppgaveQueryService.queryForOppgaveEksternId(query)
+                        call.respond(eksternIds)
+                    }
+
+                    Fagsystem.PUNSJ -> {
+                        val query = QueryRequest(
+                            oppgaveQuery = OppgaveQuery(
+                                filtere = listOf(
+                                    FeltverdiOppgavefilter(
+                                        "K9",
+                                        "journalpostId",
+                                        operator = EksternFeltverdiOperator.EQUALS,
+                                        verdi = listOf(saksnummer)
+                                    )
+                                )
+                            ),
+                            fjernReserverte = false,
+                            avgrensning = null
+                        )
+
+                        val eksternIds = oppgaveQueryService.queryForOppgaveEksternId(query)
+                        call.respond(eksternIds)
+                    }
+                }
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
@@ -166,6 +258,7 @@ fun Route.forvaltningApis() {
     }
 
     get("/eventer/{system}/{eksternId}", {
+        tags("Forvaltning")
         description = "Hent ut eventhistorikk for en oppgave"
         request {
             pathParameter<String>("system") {
@@ -228,6 +321,7 @@ fun Route.forvaltningApis() {
     }
 
     get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}/aktiv", {
+        tags("Forvaltning")
         description = "Hent ut nåtilstand for en oppgave"
         request {
             pathParameter<String>("omrade") {
@@ -273,6 +367,7 @@ fun Route.forvaltningApis() {
     }
 
     get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}", {
+        tags("Forvaltning")
         description = "Hent ut oppgavehistorikk for en oppgave"
         request {
             pathParameter<String>("omrade") {
@@ -322,6 +417,7 @@ fun Route.forvaltningApis() {
     }
 
     get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}/historikkvask", {
+        tags("Forvaltning")
         description =
             "Kjøre historikkvask for enkeltsak, for å vaske eksisterende oppgavehistorikk mot korresponderende eventer"
         request {
@@ -405,6 +501,7 @@ fun Route.forvaltningApis() {
     }
 
     get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}/settdirty", {
+        tags("Forvaltning")
         description =
             "Sett dirtyflagg på eventhistorikk for å trigge innlesning av eventer som mangler i oppgavehistorikken"
         request {
@@ -480,6 +577,7 @@ fun Route.forvaltningApis() {
     }
 
     get("/oppgaveV3/{omrade}/{oppgavetype}/{oppgaveEksternId}/reservasjoner", {
+        tags("Forvaltning")
         description = "Hent ut reservasjonshistorikk for en oppgave"
         request {
             pathParameter<String>("omrade") {
@@ -534,7 +632,7 @@ fun Route.forvaltningApis() {
     }
 
     route("/ytelse") {
-        get("/oppgaveko/antall") {
+        get("/oppgaveko/antall", {tags("Forvaltning")}) {
             requestContextService.withRequestContext(call) {
                 if (pepClient.kanLeggeUtDriftsmelding()) {
                     val antall = oppgaveKoTjeneste.hentOppgavekøer(skjermet = false).map {
@@ -551,7 +649,7 @@ fun Route.forvaltningApis() {
             }
         }
 
-        get("/oppgaveko") {
+        get("/oppgaveko", {tags("Forvaltning")}) {
             requestContextService.withRequestContext(call) {
                 if (pepClient.kanLeggeUtDriftsmelding()) {
                     call.respond(oppgaveKoTjeneste.hentOppgavekøer(skjermet = false).map { it.id })
@@ -561,7 +659,7 @@ fun Route.forvaltningApis() {
             }
         }
 
-        get("/oppgaveko/{ko}/antall") {
+        get("/oppgaveko/{ko}/antall", {tags("Forvaltning")}) {
             requestContextService.withRequestContext(call) {
                 if (pepClient.kanLeggeUtDriftsmelding()) {
                     val køId = call.parameters["ko"]!!.toLong()
@@ -612,6 +710,6 @@ fun lagNøkkelAktør(oppgave: Oppgave, tilBeslutter: Boolean): String {
 data class KoDiff(
     val antallOppgaverSomManglerIV1: Int,
     val antallOppgaverSomManglerIV3: Int,
-    val v3OppgaverSomManglerIV1: Set<OppgaveDto>,
+    val v3OppgaverSomManglerIV1: Set<OppgaveIkkeSensitiv>,
     val v1OppgaverSomManglerIV3: Set<no.nav.k9.los.domene.lager.oppgave.Oppgave>
 )
