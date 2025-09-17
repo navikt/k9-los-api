@@ -12,6 +12,7 @@ create table if not exists eventlager
 
 CREATE TABLE if not exists eventlager_historikkvask_bestilt
 (
-    EKSTERN_ID                  VARCHAR(100)    NOT NULL PRIMARY KEY,
-    FAGSYSTEM                   VARCHAR(50)     NOT NULL
+    EKSTERN_ID                  VARCHAR(100)    NOT NULL,
+    FAGSYSTEM                   VARCHAR(50)     NOT NULL,
+    PRIMARY KEY (EKSTERN_ID, FAGSYSTEM)
 );
