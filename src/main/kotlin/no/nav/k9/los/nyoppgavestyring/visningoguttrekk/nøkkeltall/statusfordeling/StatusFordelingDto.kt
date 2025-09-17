@@ -6,5 +6,6 @@ data class StatusFordelingDto(
     val antallÅpne: Long,
     val antallVenter: Long,
     val antallVenterKabal: Long,
+    val antallVenterAnnet: Long,
     val antallUavklart: Long
 )

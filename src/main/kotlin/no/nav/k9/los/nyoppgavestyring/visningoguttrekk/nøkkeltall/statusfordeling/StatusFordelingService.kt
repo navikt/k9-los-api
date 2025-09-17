@@ -178,6 +178,7 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
                     antall(personbeskyttelse, åpen, ikkePunsj),
                     antall(personbeskyttelse, venter, ikkePunsj),
                     0,
+                    0,
                     antall(personbeskyttelse, uavklart, ikkePunsj)
                 )
 
@@ -186,6 +187,7 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
                     antall(personbeskyttelse, åpenVenterUavklart, førstegang),
                     antall(personbeskyttelse, åpen, førstegang),
                     antall(personbeskyttelse, venter, førstegang),
+                    0,
                     0,
                     antall(personbeskyttelse, uavklart, førstegang)
                 )
@@ -196,6 +198,7 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
                     antall(personbeskyttelse, åpen, revurdering),
                     antall(personbeskyttelse, venter, revurdering),
                     0,
+                    0,
                     antall(personbeskyttelse, uavklart, revurdering)
                 )
 
@@ -205,6 +208,7 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
                     antall(personbeskyttelse, åpen, feilutbetaling),
                     antall(personbeskyttelse, venter, feilutbetaling),
                     0,
+                    0,
                     antall(personbeskyttelse, uavklart, feilutbetaling)
                 )
 
@@ -212,8 +216,9 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
                     gruppe,
                     antall(personbeskyttelse, åpenVenterUavklart, klage),
                     antall(personbeskyttelse, åpen, klage),
-                    antall(personbeskyttelse, venter, klage, venterIkkeKabal),
+                    0,
                     antall(personbeskyttelse, venter, klage, venterKabal),
+                    antall(personbeskyttelse, venter, klage, venterIkkeKabal),
                     antall(personbeskyttelse, uavklart, klage)
                 )
 
@@ -223,6 +228,7 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
                     antall(personbeskyttelse, åpen, punsj),
                     antall(personbeskyttelse, venter, punsj),
                     0,
+                    0,
                     antall(personbeskyttelse, uavklart, punsj)
                 )
 
@@ -231,6 +237,7 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
                     antall(personbeskyttelse, åpenVenterUavklart, unntak),
                     antall(personbeskyttelse, åpen, unntak),
                     antall(personbeskyttelse, venter, unntak),
+                    0,
                     0,
                     antall(personbeskyttelse, uavklart, unntak)
                 )
