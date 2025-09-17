@@ -13,7 +13,7 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.http.content.*
 import io.ktor.server.metrics.micrometer.*
-import io.ktor.server.netty.EngineMain
+import io.ktor.server.netty.*
 import io.ktor.server.plugins.callid.*
 import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.plugins.contentnegotiation.*
@@ -59,6 +59,7 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.jobbplanlegger.Jobbplanlegger
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.jobbplanlegger.PlanlagtJobb
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.jobbplanlegger.Tidsvindu
+import no.nav.k9.los.nyoppgavestyring.innloggetbruker.InnloggetBrukerApi
 import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoApis
 import no.nav.k9.los.nyoppgavestyring.kodeverk.KodeverkApis
@@ -75,8 +76,8 @@ import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksApi
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallV3Apis
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.statusfordeling.StatusFordelingService
 import no.nav.k9.los.tjenester.mock.localSetup
-import no.nav.k9.los.nyoppgavestyring.innloggetbruker.InnloggetBrukerApi
 import org.koin.core.Koin
 import org.koin.core.qualifier.named
 import org.koin.ktor.ext.getKoin
@@ -238,6 +239,7 @@ fun Application.k9Los() {
             localSetup.initSaksbehandlere()
             localSetup.initPunsjoppgaver(0)
             localSetup.initTilbakeoppgaver(0)
+            localSetup.initKlageoppgaver(0)
             localSetup.initK9SakOppgaver(0)
             api()
         } else {
@@ -279,7 +281,7 @@ private fun Route.api() {
             route("statistikk") { StatistikkApi() }
         }
     }
-    route("api", {hidden = true}) {
+    route("api", { hidden = true }) {
         route("driftsmeldinger") {
             DriftsmeldingerApis()
         }
@@ -336,6 +338,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
     val oppgavestatistikkTjeneste = koin.get<OppgavestatistikkTjeneste>()
 
     val pepCacheService = koin.get<PepCacheService>()
+    val statusFordelingService = koin.get<StatusFordelingService>()
     val dagensTallService = koin.get<DagensTallService>()
     val perEnhetService = koin.get<FerdigstiltePerEnhetService>()
     val nyeOgFerdigstilteService = koin.get<NyeOgFerdigstilteService>()
@@ -479,6 +482,15 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
 
         add(
             PlanlagtJobb.Oppstart(
+                navn = "StatusFordelingOppstart",
+                prioritet = mediumPrioritet,
+            ) {
+                statusFordelingService.oppdaterCache(kode6 = false)
+            }
+        )
+
+        add(
+            PlanlagtJobb.Oppstart(
                 navn = "DagensTallOppstart",
                 prioritet = mediumPrioritet,
             ) {
@@ -501,6 +513,17 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 prioritet = mediumPrioritet,
             ) {
                 nyeOgFerdigstilteService.oppdaterCache(this)
+            }
+        )
+
+        add(
+            PlanlagtJobb.TimeJobb(
+                navn = "StatusFordelingOppdaterer",
+                prioritet = lavPrioritet,
+                tidsvindu = utvidetArbeidstid,
+                minutter = (0..55 step 5).toList(),
+            ) {
+                statusFordelingService.oppdaterCache(kode6 = false)
             }
         )
 
