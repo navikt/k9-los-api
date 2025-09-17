@@ -1,6 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.statusfordeling
 
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon
+import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.CacheObject
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
@@ -128,16 +129,16 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
 
         val venterKabal = FeltverdiOppgavefilter(
             område = "K9",
-            kode = "løsbartAksjonspunkt",
+            kode = "aktivVenteårsak",
             operator = EksternFeltverdiOperator.EQUALS,
-            listOf("KLAGE"+ AksjonspunktKodeDefinisjon.AUTO_OVERFØRT_NK_KODE)
+            listOf(Venteårsak.OVERSENDT_KABAL.kode)
         )
 
         val venterIkkeKabal = FeltverdiOppgavefilter(
             område = "K9",
-            kode = "løsbartAksjonspunkt",
+            kode = "aktivVenteårsak",
             operator = EksternFeltverdiOperator.NOT_EQUALS,
-            listOf("KLAGE"+ AksjonspunktKodeDefinisjon.AUTO_OVERFØRT_NK_KODE)
+            listOf(Venteårsak.OVERSENDT_KABAL.kode)
         )
 
         val revurdering = FeltverdiOppgavefilter(
