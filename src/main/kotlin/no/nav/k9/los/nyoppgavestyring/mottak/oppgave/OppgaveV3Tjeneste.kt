@@ -29,7 +29,7 @@ class OppgaveV3Tjeneste(
             tx = tx
         )
 
-        val aktivOppgaveVersjon = oppgaveV3Repository.hentAktivOppgave(oppgaveDto.id, oppgavetype, tx)
+        val aktivOppgaveVersjon = oppgaveV3Repository.hentAktivOppgave(oppgaveDto.eksternId, oppgavetype, tx)
         var innkommendeOppgave = OppgaveV3(oppgaveDto, oppgavetype)
 
         val utledeteFelter = oppgavetype.oppgavefelter
@@ -64,19 +64,38 @@ class OppgaveV3Tjeneste(
 
     fun hentOppgaveversjon(
         område: String,
+        oppgavetype: String,
         eksternId: String,
         eksternVersjon: String,
         tx: TransactionalSession
     ): OppgaveV3 {
         return oppgaveV3Repository.hentOppgaveversjon(
             område = områdeRepository.hentOmråde(område, tx),
+            oppgavetype = oppgavetypeRepository.hentOppgavetype(område, oppgavetype, tx),
             eksternId = eksternId,
             eksternVersjon = eksternVersjon,
             tx = tx
         )
     }
 
-    fun ajourholdOppgave(innkommendeOppgave: OppgaveV3, internVersjon: Long, tx: TransactionalSession) {
+    fun hentOppgaveversjon(
+        område: String,
+        oppgavetype: String,
+        eksternId: String,
+        internVersjon: Int,
+        tx: TransactionalSession
+    ) : OppgaveV3? {
+        val område = områdeRepository.hentOmråde(område, tx)
+        return oppgaveV3Repository.hentOppgaveversjon(
+            område = område,
+            oppgavetype = oppgavetypeRepository.hentOppgavetype(område, oppgavetype, tx),
+            eksternId = eksternId,
+            internVersjon = internVersjon,
+            tx
+        )
+    }
+
+    fun ajourholdOppgave(innkommendeOppgave: OppgaveV3, internVersjon: Int, tx: TransactionalSession) {
         AktivOppgaveRepository.ajourholdAktivOppgave(innkommendeOppgave, internVersjon, tx)
         partisjonertOppgaveRepository.ajourhold(innkommendeOppgave, tx)
     }
@@ -85,16 +104,35 @@ class OppgaveV3Tjeneste(
         AktivOppgaveRepository.slettAktivOppgave(tx, innkommendeOppgave)
     }
 
+    fun hentOppgaveversjonenFør(
+        område: String,
+        oppgavetype: String,
+        eksternId: String,
+        eksternVersjon: String,
+        tx: TransactionalSession
+    ): OppgaveV3? {
+        val område = områdeRepository.hentOmråde(område, tx)
 
-    fun utledEksisterendeOppgaveversjon(oppgaveDto: OppgaveDto, eventNr: Long, tx: TransactionalSession) : OppgaveV3 {
+        val oppgavetype = oppgavetypeRepository.hentOppgavetype(
+            område = område,
+            eksternId = oppgavetype,
+            tx = tx
+        )
+
+        return oppgaveV3Repository.hentOppgaveversjonenFør(område, oppgavetype, eksternId, eksternVersjon, tx)
+    }
+
+    fun utledEksisterendeOppgaveversjon(oppgaveDto: OppgaveDto, eventNr: Int, tx: TransactionalSession) : OppgaveV3 {
         val oppgavetype = oppgavetypeRepository.hentOppgavetype(
             område = oppgaveDto.område,
             eksternId = oppgaveDto.type,
             tx = tx
         )
 
+        val område = områdeRepository.hentOmråde(oppgaveDto.område, tx)
+
         val forrigeOppgaveversjon = if (eventNr > 0) {
-            oppgaveV3Repository.hentOppgaveversjonenFør(oppgaveDto.id, eventNr, oppgavetype, tx)
+            oppgaveV3Repository.hentOppgaveversjonenFør(område, oppgavetype, oppgaveDto.eksternId, eventNr, tx)
         } else {
             null
         }
@@ -115,7 +153,7 @@ class OppgaveV3Tjeneste(
         return innkommendeOppgave
     }
 
-    fun oppdaterEksisterendeOppgaveversjon(innkommendeOppgave: OppgaveV3, eventNr: Long, tx: TransactionalSession)  {
+    fun oppdaterEksisterendeOppgaveversjon(innkommendeOppgave: OppgaveV3, eventNr: Int, tx: TransactionalSession)  {
 
         //historikkvasktjenesten skal sørge for at oppgaven med internVersjon = eventNr faktisk eksisterer
         oppgaveV3Repository.slettFeltverdier(
@@ -141,13 +179,13 @@ class OppgaveV3Tjeneste(
             tx = tx)
     }
 
-    fun hentHøyesteInternVersjon(oppgaveEksternId: String, opppgaveTypeEksternId: String, områdeEksternId: String, tx: TransactionalSession): Long? {
+    fun hentHøyesteInternVersjon(oppgaveEksternId: String, opppgaveTypeEksternId: String, områdeEksternId: String, tx: TransactionalSession): Int? {
         val (_, _, versjon) = oppgaveV3Repository.hentOppgaveIdStatusOgHøyesteInternversjon(tx, oppgaveEksternId, opppgaveTypeEksternId, områdeEksternId)
         return versjon
     }
 
     fun nyEksternversjon(oppgaveDto: OppgaveDto, tx: TransactionalSession): Boolean {
-        return !oppgaveV3Repository.finnesFraFør(tx, oppgaveDto.id, oppgaveDto.versjon)
+        return !oppgaveV3Repository.finnesFraFør(tx, oppgaveDto.eksternId, oppgaveDto.eksternVersjon)
     }
 
     fun tellAntall(): Pair<Long, Long> {

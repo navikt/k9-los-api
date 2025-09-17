@@ -137,9 +137,9 @@ fun Route.forvaltningApis() {
                 val saksnummer = call.parameters["saksnummer"]!!
 
                 when (fagsystem) {
-                    Fagsystem.K9SAK,
-                    Fagsystem.K9TILBAKE,
-                    Fagsystem.K9KLAGE -> {
+                    Fagsystem.SAK,
+                    Fagsystem.TILBAKE,
+                    Fagsystem.KLAGE -> {
                         val query = QueryRequest(
                             oppgaveQuery = OppgaveQuery(
                                 filtere = listOf(
@@ -210,7 +210,7 @@ fun Route.forvaltningApis() {
                 val fagsystem = Fagsystem.fraKode(call.parameters["system"]!!)
                 val eksternId = call.parameters["eksternId"]
                 when (fagsystem) {
-                    Fagsystem.K9SAK -> {
+                    Fagsystem.SAK -> {
                         val k9SakModell = k9sakEventRepository.hent(UUID.fromString(eksternId))
                         if (k9SakModell.eventer.isEmpty()) {
                             call.respond(HttpStatusCode.NotFound)
@@ -221,14 +221,14 @@ fun Route.forvaltningApis() {
                         }
                     }
 
-                    Fagsystem.K9TILBAKE -> {
+                    Fagsystem.TILBAKE -> {
                         val k9TilbakeModell = k9tilbakeEventRepository.hent(UUID.fromString(eksternId))
                         val eventerIkkeSensitive =
                             k9TilbakeModell.eventer.map { event -> K9TilbakeEventIkkeSensitiv(event) }
                         call.respond(objectMapper.writeValueAsString(eventerIkkeSensitive))
                     }
 
-                    Fagsystem.K9KLAGE -> {
+                    Fagsystem.KLAGE -> {
                         val k9KlageModell = k9klageEventRepository.hent(UUID.fromString(eksternId))
                         val eventerIkkeSensitive =
                             k9KlageModell.eventer.map { event -> K9KlageEventIkkeSensitiv(event) }

@@ -5,13 +5,19 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
-import org.slf4j.LoggerFactory
 import javax.sql.DataSource
 
 class OmrådeRepository(private val dataSource: DataSource) {
 
     private val områdeCache = Cache<String, Område>(cacheSizeLimit = null)
 
+    fun hentOmråde(eksternId: String): Område {
+        return using(sessionOf(dataSource)) { session ->
+            session.transaction { tx ->
+                hentOmråde(eksternId, tx)
+            }
+        }
+    }
 
     fun hentOmråde(eksternId: String, tx: TransactionalSession): Område {
         return områdeCache.hent(nøkkel = eksternId) {

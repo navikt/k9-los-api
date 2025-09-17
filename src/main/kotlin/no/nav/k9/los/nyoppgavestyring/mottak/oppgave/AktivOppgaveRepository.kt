@@ -22,7 +22,7 @@ class AktivOppgaveRepository(val oppgavetypeRepository: OppgavetypeRepository) {
         private val log = LoggerFactory.getLogger(AktivOppgaveRepository::class.java)
 
         @WithSpan
-        fun ajourholdAktivOppgave(oppgave: OppgaveV3, nyVersjon: Long, tx: TransactionalSession) {
+        fun ajourholdAktivOppgave(oppgave: OppgaveV3, nyVersjon: Int, tx: TransactionalSession) {
             if (oppgave.status == Oppgavestatus.AAPEN || oppgave.status == Oppgavestatus.VENTER || oppgave.status == Oppgavestatus.UAVKLART) {
                 val oppgaveId = DetaljerMetrikker.time("k9sakHistorikkvask", "oppdaterOppgaveV3Aktiv") {
                     oppdaterOppgaveV3Aktiv(
@@ -71,7 +71,7 @@ class AktivOppgaveRepository(val oppgavetypeRepository: OppgavetypeRepository) {
         private fun opprettOppgaveV3Aktiv(
             tx: TransactionalSession,
             oppgave: OppgaveV3,
-            nyVersjon: Long
+            nyVersjon: Int
         ): AktivOppgaveId {
             return AktivOppgaveId(
                 tx.updateAndReturnGeneratedKey(
@@ -114,7 +114,7 @@ class AktivOppgaveRepository(val oppgavetypeRepository: OppgavetypeRepository) {
         private fun oppdaterOppgaveV3Aktiv(
             tx: TransactionalSession,
             oppgave: OppgaveV3,
-            nyVersjon: Long,
+            nyVersjon: Int,
         ): AktivOppgaveId {
             val id = hentOppgaveV3AktivId(tx, oppgave) ?: return opprettOppgaveV3Aktiv(tx, oppgave, nyVersjon)
 
@@ -149,7 +149,7 @@ class AktivOppgaveRepository(val oppgavetypeRepository: OppgavetypeRepository) {
         private fun oppdaterAktivOppgavefelter(
             oppgaveId: AktivOppgaveId,
             oppgave: OppgaveV3,
-            nyVersjon: Long,
+            nyVersjon: Int,
             tx: TransactionalSession
         ) {
             check(nyVersjon >= 0) { "Ny versjon må være 0 eller høyere: $nyVersjon" }

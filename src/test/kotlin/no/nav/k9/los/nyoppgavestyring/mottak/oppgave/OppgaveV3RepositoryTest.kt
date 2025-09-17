@@ -66,6 +66,7 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val lagretOppgave = transactionalManager.transaction { tx ->
             oppgaveV3Repository.hentOppgaveversjon(
                 oppgaveV3.oppgavetype.område,
+                oppgaveV3.oppgavetype,
                 oppgaveV3.eksternId,
                 oppgaveV3.eksternVersjon,
                 tx
@@ -98,6 +99,7 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
         val lagretOppgave1 = transactionalManager.transaction { tx ->
             oppgaveV3Repository.hentOppgaveversjon(
                 område = oppgave1.oppgavetype.område,
+                oppgave1.oppgavetype,
                 eksternId = oppgave1.eksternId,
                 eksternVersjon = oppgave1.eksternVersjon,
                 tx
@@ -118,13 +120,13 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
             oppgaveV3Repository.nyOppgaveversjon(oppgave3, tx)
         }
         val lagretOppgave2 = transactionalManager.transaction { tx ->
-            oppgaveV3Repository.hentOppgaveversjon(oppgave2.oppgavetype.område, oppgave2.eksternId, oppgave2.eksternVersjon, tx)
+            oppgaveV3Repository.hentOppgaveversjon(oppgave2.oppgavetype.område, oppgave2.oppgavetype, oppgave2.eksternId, oppgave2.eksternVersjon, tx)
         }
 
         assertThat(lagretOppgave2.aktiv).isFalse()
 
         val lagretOppgave3 = transactionalManager.transaction { tx ->
-            oppgaveV3Repository.hentOppgaveversjon(oppgave3.oppgavetype.område, oppgave3.eksternId, oppgave3.eksternVersjon, tx)
+            oppgaveV3Repository.hentOppgaveversjon(oppgave3.oppgavetype.område, oppgave3.oppgavetype, oppgave3.eksternId, oppgave3.eksternVersjon, tx)
         }
 
         assertThat(lagretOppgave3.aktiv).isTrue()
@@ -162,9 +164,10 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
         }
         val lagretOppgave1 = transactionalManager.transaction { tx ->
             oppgaveV3Repository.hentOppgaveversjonenFør(
+                område = oppgave2.oppgavetype.område,
+                oppgavetype = oppgave2.oppgavetype,
                 eksternId = oppgave2.eksternId,
                 internVersjon = 1, //første opppgave er internversjon 0
-                oppgavetype = oppgave2.oppgavetype,
                 tx
             )
         }!!
@@ -173,9 +176,10 @@ class OppgaveV3RepositoryTest : AbstractK9LosIntegrationTest() {
 
         val lagretOppgave2 = transactionalManager.transaction { tx ->
             oppgaveV3Repository.hentOppgaveversjonenFør(
+                område = oppgave2.oppgavetype.område,
+                oppgavetype = oppgave3.oppgavetype,
                 eksternId = oppgave3.eksternId,
                 internVersjon = 2, //første opppgave er internversjon 0
-                oppgavetype = oppgave3.oppgavetype,
                 tx
             )
         }!!

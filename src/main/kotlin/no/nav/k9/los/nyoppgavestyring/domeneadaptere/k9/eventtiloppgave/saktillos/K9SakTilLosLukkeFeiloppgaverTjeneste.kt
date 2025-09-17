@@ -63,7 +63,7 @@ class K9SakTilLosLukkeFeiloppgaverTjeneste(
                     val oppgaveLukket = oppgaveDto
                         .copy(
                             status = Oppgavestatus.LUKKET.kode,
-                            versjon = nå.toString(),
+                            eksternVersjon = nå.toString(),
                             endretTidspunkt = nå
                         )
                         .erstattFeltverdi(

@@ -33,33 +33,40 @@ class K9TilbakeEventRepository(private val dataSource: DataSource) {
     fun lagre(
         event: K9TilbakeEventDto
     ): K9TilbakeModell {
+        return using(sessionOf(dataSource)) {
+            it.transaction { tx ->
+                lagre(event, tx)
+            }
+        }
+    }
+
+    fun lagre(
+        event: K9TilbakeEventDto,
+        tx: TransactionalSession
+    ): K9TilbakeModell {
         val json = LosObjectMapper.instance.writeValueAsString(event)
 
         val id = event.eksternId.toString()
-        val out = using(sessionOf(dataSource)) {
-            it.transaction { tx ->
-                tx.run(
-                    queryOf(
-                        """
+        tx.run(
+            queryOf(
+                """
                     insert into behandling_prosess_events_tilbake as k (id, data)
                     values (:id, :dataInitial :: jsonb)
                     on conflict (id) do update
                     set data = jsonb_set(k.data, '{eventer,999999}', :data :: jsonb, true), dirty = true
                  """, mapOf("id" to id, "dataInitial" to "{\"eventer\": [$json]}", "data" to json)
-                    ).asUpdate
-                )
-                tx.run(
-                    queryOf(
-                        "select data from behandling_prosess_events_tilbake where id = :id",
-                        mapOf("id" to id)
-                    )
-                        .map { row ->
-                            row.string("data")
-                        }.asSingle
-                )
-            }
+            ).asUpdate
+        )
+        val out = tx.run(
+            queryOf(
+                "select data from behandling_prosess_events_tilbake where id = :id",
+                mapOf("id" to id)
+            )
+                .map { row ->
+                    row.string("data")
+                }.asSingle
+        )
 
-        }
         val modell = LosObjectMapper.instance.readValue(out!!, K9TilbakeModell::class.java)
         val unikeEventer = Duplikatfilter.fjernDuplikater(modell.eventer)
         return K9TilbakeModell(unikeEventer.sortedBy { it.eventTid }.toMutableList())
@@ -67,18 +74,18 @@ class K9TilbakeEventRepository(private val dataSource: DataSource) {
 
 
     fun hentAntallEventIderUtenVasketHistorikk(): Long {
-        return using(sessionOf(dataSource)) {
-                session -> session.transaction { tx ->
-            tx.run(
-                queryOf(
-                    """
+        return using(sessionOf(dataSource)) { session ->
+            session.transaction { tx ->
+                tx.run(
+                    queryOf(
+                        """
                             select count(*) as antall
                             from behandling_prosess_events_tilbake e
                             where not exists (select * from behandling_prosess_events_tilbake_historikkvask_ferdig hv where hv.id = e.id)
                              """.trimMargin(),
-                ).map { it.long("antall") }.asSingle
-            )!!
-        }
+                    ).map { it.long("antall") }.asSingle
+                )!!
+            }
         }
     }
 

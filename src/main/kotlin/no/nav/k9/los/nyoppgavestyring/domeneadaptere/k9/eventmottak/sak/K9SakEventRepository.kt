@@ -52,7 +52,6 @@ class K9SakEventRepository(private val dataSource: DataSource) {
     }
 
 
-
     fun fjernDirty(uuid: UUID, tx: TransactionalSession) {
         tx.run(
             queryOf(
@@ -72,40 +71,46 @@ class K9SakEventRepository(private val dataSource: DataSource) {
     }
 
     fun lagre(uuid: UUID, f: (K9SakModell?) -> K9SakModell): K9SakModell {
-        var sortertModell = K9SakModell(mutableListOf())
-        using(sessionOf(dataSource)) { it ->
+        return using(sessionOf(dataSource)) {
             it.transaction { tx ->
-                val run = tx.run(
-                    queryOf(
-                        "select data from behandling_prosess_events_k9 where id = :id for update",
-                        mapOf("id" to uuid.toString())
-                    )
-                        .map { row ->
-                            row.string("data")
-                        }.asSingle
-                )
+                lagre(uuid, tx, f)
+            }
+        }
+    }
 
-                val modell = if (!run.isNullOrEmpty()) {
-                    val modell = LosObjectMapper.instance.readValue(run, K9SakModell::class.java)
-                    f(modell.copy(eventer = Duplikatfilter.fjernDuplikater(modell.eventer).sortedBy { it.eventTid }.toMutableList()))
-                } else {
-                    f(null)
-                }
-                sortertModell =
-                    modell.copy(eventer = (Duplikatfilter.fjernDuplikater(modell.eventer).sortedBy { it.eventTid }.toMutableList()))
-                val json = LosObjectMapper.instance.writeValueAsString(sortertModell)
-                tx.run(
-                    queryOf(
-                        """
+    fun lagre(uuid: UUID, tx: TransactionalSession, f: (K9SakModell?) -> K9SakModell): K9SakModell {
+        var sortertModell: K9SakModell
+        val run = tx.run(
+            queryOf(
+                "select data from behandling_prosess_events_k9 where id = :id for update",
+                mapOf("id" to uuid.toString())
+            )
+                .map { row ->
+                    row.string("data")
+                }.asSingle
+        )
+
+        val modell = if (!run.isNullOrEmpty()) {
+            val modell = LosObjectMapper.instance.readValue(run, K9SakModell::class.java)
+            f(modell.copy(eventer = Duplikatfilter.fjernDuplikater(modell.eventer).sortedBy { it.eventTid }
+                .toMutableList()))
+        } else {
+            f(null)
+        }
+        sortertModell =
+            modell.copy(eventer = (Duplikatfilter.fjernDuplikater(modell.eventer).sortedBy { it.eventTid }
+                .toMutableList()))
+        val json = LosObjectMapper.instance.writeValueAsString(sortertModell)
+        tx.run(
+            queryOf(
+                """
                     insert into behandling_prosess_events_k9 as k (id, data, dirty)
                     values (:id, :data :: jsonb, true)
                     on conflict (id) do update
                     set data = :data :: jsonb, dirty = true
                  """, mapOf("id" to uuid.toString(), "data" to json)
-                    ).asUpdate
-                )
-            }
-        }
+            ).asUpdate
+        )
         return sortertModell
     }
 
@@ -145,8 +150,8 @@ class K9SakEventRepository(private val dataSource: DataSource) {
     }
 
     fun hentAntallEventIderUtenVasketHistorikk(): Long {
-        return using(sessionOf(dataSource)) {
-            session -> session.transaction { tx ->
+        return using(sessionOf(dataSource)) { session ->
+            session.transaction { tx ->
                 tx.run(
                     queryOf(
                         """

@@ -114,7 +114,7 @@ class BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
     private fun opprettEvent(fagsakYtelseType: FagsakYtelseType, behandlingStatus: BehandlingStatus) : K9SakEventDto {
         return K9SakEventDto(
             eksternId = UUID.randomUUID(),
-            fagsystem = Fagsystem.K9SAK,
+            fagsystem = Fagsystem.SAK,
             saksnummer = "624QM",
             aktørId = "1442456610368",
             vedtaksdato = null,
@@ -136,8 +136,8 @@ class BehandlingObsoleteTest : AbstractK9LosIntegrationTest() {
 
     private fun opprettOppgaveDto(resultat: BehandlingResultatType) : OppgaveDto {
         return OppgaveDto(
-            id = "12345",
-            versjon = "1",
+            eksternId = "12345",
+            eksternVersjon = "1",
             område = "K9",
             kildeområde = "K9",
             type = "k9-sak",

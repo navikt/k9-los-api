@@ -18,8 +18,8 @@ class OppgaveV3(
     val felter: List<OppgaveFeltverdi>
 ) {
     constructor(oppgaveDto: OppgaveDto, oppgavetype: Oppgavetype) : this(
-        eksternId = oppgaveDto.id,
-        eksternVersjon = oppgaveDto.versjon,
+        eksternId = oppgaveDto.eksternId,
+        eksternVersjon = oppgaveDto.eksternVersjon,
         oppgavetype = oppgavetype,
         status = Oppgavestatus.valueOf(oppgaveDto.status),
         endretTidspunkt = oppgaveDto.endretTidspunkt,
@@ -56,7 +56,7 @@ class OppgaveV3(
                         if (oppgavefelt.feltDefinisjon.listetype) {
                             //skip. lagrer ikke verdier for tomme lister
                         } else {
-                            throw IllegalArgumentException("Mangler obligatorisk feltverdi for ${oppgavefelt.feltDefinisjon.eksternId}. Oppgavens eksternId: ${oppgaveDto.id}\n")
+                            throw IllegalArgumentException("Mangler obligatorisk feltverdi for ${oppgavefelt.feltDefinisjon.eksternId}. Oppgavens eksternId: ${oppgaveDto.eksternId}\n")
                         }
                     }
                 } else {

@@ -11,7 +11,6 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import org.jetbrains.annotations.VisibleForTesting
 import java.time.temporal.ChronoUnit
@@ -28,8 +27,8 @@ class EventTilDtoMapper {
 
         fun lagOppgaveDto(event: K9SakEventDto, forrigeOppgave: OppgaveV3?) =
             OppgaveDto(
-                id = event.eksternId.toString(),
-                versjon = event.eventTid.toString(),
+                eksternId = event.eksternId.toString(),
+                eksternVersjon = event.eventTid.toString(),
                 område = "K9",
                 kildeområde = "K9",
                 type = "k9sak",
