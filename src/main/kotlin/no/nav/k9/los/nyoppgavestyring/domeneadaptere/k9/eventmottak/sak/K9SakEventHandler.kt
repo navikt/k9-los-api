@@ -149,7 +149,7 @@ class K9SakEventHandler constructor(
                 it.ferdigstilteSaksbehandler.add(oppgave.eksternId.toString())
                 it
             }
-        } else log.warn("Ignorerer nyFerdigstilltAvSaksbehandler statistikk på ytelseType=${oppgave.fagsakYtelseType} da den ikke er støttet enda ")
+        } else log.info("Ignorerer nyFerdigstilltAvSaksbehandler statistikk på ytelseType=${oppgave.fagsakYtelseType} da den ikke er støttet enda ")
     }
 
     private fun beholdingNed(oppgave: Oppgave) {
@@ -164,7 +164,7 @@ class K9SakEventHandler constructor(
                 it.ferdigstilte.add(oppgave.eksternId.toString())
                 it
             }
-        } else log.warn("Ignorerer beholdingNed statistikk på ytelseType=${oppgave.fagsakYtelseType} da den ikke er støttet enda ")
+        } else log.info("Ignorerer beholdingNed statistikk på ytelseType=${oppgave.fagsakYtelseType} da den ikke er støttet enda ")
     }
 
     private fun beholdningOpp(oppgave: Oppgave) {
@@ -179,7 +179,7 @@ class K9SakEventHandler constructor(
                 it.nye.add(oppgave.eksternId.toString())
                 it
             }
-        } else log.warn("Ignorerer beholdningOpp statistikk på ytelseType=${oppgave.fagsakYtelseType} da den ikke er støttet enda ")
+        } else log.info("Ignorerer beholdningOpp statistikk på ytelseType=${oppgave.fagsakYtelseType} da den ikke er støttet enda ")
     }
 
     override fun tellEvent(modell: IModell, oppgave: Oppgave) {
