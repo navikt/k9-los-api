@@ -186,6 +186,28 @@ class OppgaveV3Repository(
         return hentOppgaveversjon(område, oppgavetype, eksternId, internVersjon - 1, tx)
     }
 
+    fun hentAktivOppgaveEksternversjon(område: Område, oppgavetype: Oppgavetype, oppgaveEksternId: String, tx: TransactionalSession): String? {
+        return tx.run(
+            queryOf(
+                """
+                    select ekstern_versjon
+                    from oppgave_v3
+                        inner join oppgavetype ot on ov.oppgavetype_id = ot.id and ot.ekstern_id = :oppgavetype
+                        inner join omrade o on ot.omrade_id = o.id and o.ekstern_id = :omrade
+                    where ekstern_id = :eksternId
+                    and aktiv = true
+                """.trimIndent(),
+                mapOf(
+                    "omrade_ekstern_id" to område.eksternId,
+                    "oppgavetype_ekstern_id" to oppgavetype.eksternId,
+                    "eksternId" to oppgaveEksternId
+                )
+            ).map { row ->
+                row.string("ekstern_versjon")
+            }.asSingle
+        )
+    }
+
     fun hentAktivOppgave(eksternId: String, oppgavetype: Oppgavetype, tx: TransactionalSession): OppgaveV3? {
         return tx.run(
             queryOf(
