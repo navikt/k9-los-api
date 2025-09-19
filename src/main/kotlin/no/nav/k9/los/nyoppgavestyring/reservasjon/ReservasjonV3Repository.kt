@@ -403,7 +403,7 @@ class ReservasjonV3Repository(
                         "utloperinnen" to utløperInnen.truncatedTo(ChronoUnit.MICROS),
                     )
                 ).map { row ->
-                    row.uuid("id")
+                    UUID.fromString(row.string("id"))
                 }.asList
             ).toSet()
         }
