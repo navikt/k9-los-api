@@ -8,6 +8,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
+import java.util.UUID
 
 class ReservasjonV3Repository(
     private val transactionalManager: TransactionalManager,
@@ -303,80 +304,6 @@ class ReservasjonV3Repository(
         )
     }
 
-    fun hentAktiveOgHistoriskeReservasjonerForReservasjonsnøkkel(
-        nøkkel: String,
-        tx: TransactionalSession
-    ): List<ReservasjonV3> {
-        return tx.run(
-            queryOf(
-                """
-                   select r.id, r.reservertAv, r.reservasjonsnokkel, lower(r.gyldig_tidsrom) as fra, upper(r.gyldig_tidsrom) as til, r.annullert_for_utlop , kommentar as kommentar, re.endretAv
-                   from reservasjon_v3 r
-                   left outer join reservasjon_v3_endring re on re.ny_reservasjon_id = r.id
-                   where r.reservasjonsnokkel = :nokkel 
-                """.trimIndent(),
-                mapOf(
-                    "nokkel" to nøkkel
-                )
-            ).map { row ->
-                ReservasjonV3(
-                    id = row.long("id"),
-                    reservertAv = row.long("reservertAv"),
-                    reservasjonsnøkkel = row.string("reservasjonsnokkel"),
-                    kommentar = row.stringOrNull("kommentar"),
-                    annullertFørUtløp = row.boolean("annullert_for_utlop"),
-                    gyldigFra = row.localDateTime("fra"),
-                    gyldigTil = row.localDateTime("til"),
-                    endretAv = row.longOrNull("endretAv")
-                )
-            }.asList
-        )
-    }
-
-    fun hentUreserverteOppgaveIder(oppgaveIder: List<Long>): List<Long> {
-        if (oppgaveIder.isEmpty()) return emptyList()
-        val queryString = """
-                    select distinct ov.id as oppgaveId
-                    from oppgave_v3 ov 
-                    where ov.aktiv = true
-                    and ov.id in (${oppgaveIder.joinToString(",")})
-                    and not exists (
-                        select * 
-                        from reservasjon_v3 rv 
-                        where rv.reservasjonsnokkel = ov.reservasjonsnokkel
-                        and upper(rv.gyldig_tidsrom) > :now 
-                        and rv.annullert_for_utlop = false 
-                    )
-                """
-
-        return transactionalManager.transaction { tx ->
-
-            log.info("spørring hent ureserverte OppgaveIder: $queryString")
-            /* val explain = tx.run(
-                queryOf(
-                    """explain $queryString""",
-                    mapOf(
-                        "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
-                    )
-                ).map { row ->
-                    row.string(1)
-                }.asList
-            ).joinToString("\n")
-            log.info("explain ureserverte OppgaveIder: $explain")  */
-
-            tx.run(
-                queryOf(
-                    queryString,
-                    mapOf(
-                        "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
-                    )
-                ).map { row ->
-                    row.long("oppgaveId")
-                }.asList
-            )
-        }
-    }
-
     private fun lagreEndring(endring: ReservasjonV3Endring, tx: TransactionalSession) {
         tx.run(
             queryOf(
@@ -447,26 +374,38 @@ class ReservasjonV3Repository(
         )
     }
 
-    fun hentOppgaverIdForAktiveReservasjoner(
+    //TODO: Burde flyttes til pakke for domeneadapter. Ikke kjernelogikk for los
+    fun hentOppgaverIdForAktiveReservasjonerForK9SakRefresh(
         gyldigPåTidspunkt: LocalDateTime,
         utløperInnen: LocalDateTime
-    ): List<String> {
+    ): Set<UUID> {
         return transactionalManager.transaction { tx ->
-            //TODO denne fungerer eksplisitt kun for oppgave-v1
             tx.run(
                 queryOf(
-                    """ select id from reservasjon where 
-                             ((data -> 'reservasjoner' -> -1) ->> 'reservertTil')::timestamp > :gyldig_paa
-                         and ((data -> 'reservasjoner' -> -1) ->> 'reservertTil')::timestamp < :ikke_gyldig_paa  
+                    """
+                select ova.oppgave_ekstern_id as id
+                from reservasjon_v3 r
+                    left outer join reservasjon_v3_endring re on re.ny_reservasjon_id = r.id
+                    inner join oppgave_v3_part ova
+                        on ova.reservasjonsnokkel = r.reservasjonsnokkel
+                        and ova.oppgavetype_ekstern_id = 'k9sak'
+                    inner join oppgavefelt_verdi_part ofv
+                        on ofv.oppgave_id = ova.id
+                        and ofv.feltdefinisjon_ekstern_id = 'ytelsestype'
+                        and ofv.verdi not in ('OMP_KS', 'OMP_AO', 'OMP_MA') -- filtrere vekk rammevedtak da de ikke trenger refresh
+                where annullert_for_utlop = false
+                    and lower(r.gyldig_tidsrom) <= :now
+                    and upper(r.gyldig_tidsrom) > :now
+                    and upper(r.gyldig_tidsrom) < :utloperinnen
                 """.trimIndent(),
                     mapOf(
-                        "gyldig_paa" to gyldigPåTidspunkt.truncatedTo(ChronoUnit.MICROS),
-                        "ikke_gyldig_paa" to utløperInnen.truncatedTo(ChronoUnit.MICROS),
+                        "now" to gyldigPåTidspunkt.truncatedTo(ChronoUnit.MICROS),
+                        "utloperinnen" to utløperInnen.truncatedTo(ChronoUnit.MICROS),
                     )
                 ).map { row ->
-                    row.string("id")
+                    UUID.fromString(row.string("id"))
                 }.asList
-            )
+            ).toSet()
         }
     }
 }

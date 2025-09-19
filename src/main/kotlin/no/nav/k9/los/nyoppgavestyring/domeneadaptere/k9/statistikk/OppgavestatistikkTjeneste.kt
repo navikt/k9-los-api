@@ -15,59 +15,15 @@ import kotlin.concurrent.thread
 import kotlin.concurrent.timer
 
 class OppgavestatistikkTjeneste(
-    private val oppgavetypeRepository: OppgavetypeRepository,
     private val statistikkPublisher: StatistikkPublisher,
     private val transactionalManager: TransactionalManager,
     private val statistikkRepository: StatistikkRepository,
-    private val config: Configuration,
     private val pepClient: IPepClient
 ) {
 
     private val log = LoggerFactory.getLogger(OppgavestatistikkTjeneste::class.java)
-    private val TRÅDNAVN = "k9los-til-statistikk"
 
-    fun kjør(kjørUmiddelbart: Boolean = false) {
-        if (config.nyOppgavestyringDvhSendingAktivert()) {
-            when (kjørUmiddelbart) {
-                true -> spillAvUmiddelbart()
-                false -> schedulerAvspilling()
-            }
-        } else log.info("Ny oppgavestyring er deaktivert")
-    }
-
-    private fun spillAvUmiddelbart() {
-        log.info("Spiller av BehandlingProsessEventer umiddelbart")
-        thread(
-            start = true,
-            isDaemon = true,
-            name = TRÅDNAVN
-        ) {
-            spillAvStatistikk()
-        }
-    }
-
-    private fun schedulerAvspilling() {
-        log.info("Schedulerer avspilling av statistikk til å kjøre 5 minutter fra nå, og hver time etter det")
-        timer(
-            name = TRÅDNAVN,
-            daemon = true,
-            initialDelay = TimeUnit.MINUTES.toMillis(5),
-            period = TimeUnit.HOURS.toMillis(1)
-        ) {
-            if (LocalDateTime.now().isBefore(LocalDateTime.of(2023, 6, 9, 20, 0))) {
-                log.info("Nullstiller datavarehussending")
-                statistikkRepository.fjernSendtMarkering()
-                log.info("Datavarehussending nullstilt")
-            }
-            try {
-                spillAvStatistikk()
-            } catch (e: Exception) {
-                log.warn("Overføring av statistikk til DVH feilet. Retry om en time", e)
-            }
-        }
-    }
-
-    private fun spillAvStatistikk() {
+    fun spillAvUsendtStatistikk() {
         log.info("Starter sending av saks- og behandlingsstatistikk til DVH")
         val tidStatistikksendingStartet = System.currentTimeMillis()
         val oppgaverSomIkkeErSendt = statistikkRepository.hentOppgaverSomIkkeErSendt()

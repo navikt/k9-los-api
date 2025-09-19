@@ -19,6 +19,7 @@ data class GenerellOppgaveV3Dto(
     val oppgavestatus: Oppgavestatus,
     val oppgavebehandlingsUrl: String?,
     val reservasjonsnøkkel: String,
+    val hastesak: Boolean,
 ) {
     constructor(oppgaveV3: Oppgave, person: PersonPdl?) : this(
         søkersNavn = person?.navn() ?: "Ukjent navn",
@@ -33,5 +34,6 @@ data class GenerellOppgaveV3Dto(
         oppgavestatus = Oppgavestatus.fraKode(oppgaveV3.status),
         oppgavebehandlingsUrl = oppgaveV3.getOppgaveBehandlingsurl(),
         reservasjonsnøkkel = oppgaveV3.reservasjonsnøkkel,
+        hastesak = oppgaveV3.hentVerdi("hastesak") == "true",
     )
 }

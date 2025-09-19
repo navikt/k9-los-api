@@ -7,7 +7,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
-import no.nav.k9.los.tjenester.avdelingsleder.oppgaveko.IdDto
+import no.nav.k9.los.nyoppgavestyring.driftsmelding.IdDto
 import org.koin.ktor.ext.inject
 import java.util.*
 
