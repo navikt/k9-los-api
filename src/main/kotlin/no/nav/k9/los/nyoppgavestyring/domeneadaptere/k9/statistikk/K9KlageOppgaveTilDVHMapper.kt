@@ -26,7 +26,7 @@ class K9KlageOppgaveTilDVHMapper {
             tekniskTid = OffsetDateTime.now(zoneId),
             mottattDato = LocalDateTime.parse(oppgave.hentVerdi("mottattDato")).toLocalDate(),
             registrertDato = LocalDateTime.parse(oppgave.hentVerdi("registrertDato")).toLocalDate(),
-            vedtaksDato = oppgave.hentVerdi("vedtaksDato")
+            vedtaksDato = oppgave.hentVerdi("vedtaksdato")
                 ?.let { LocalDate.parse(it) },
             relatertBehandlingId = oppgave.hentVerdi("påklagdBehandlingUuid"),
             relatertBehandlingFagsystem = utledRelatertBehandlingFagsystem(oppgave),
