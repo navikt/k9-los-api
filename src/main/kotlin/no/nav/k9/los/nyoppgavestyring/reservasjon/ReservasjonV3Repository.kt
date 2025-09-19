@@ -383,7 +383,7 @@ class ReservasjonV3Repository(
             tx.run(
                 queryOf(
                     """
-                select ova.oppgave_ekstern_id
+                select ova.oppgave_ekstern_id as id
                 from reservasjon_v3 r
                     left outer join reservasjon_v3_endring re on re.ny_reservasjon_id = r.id
                     inner join oppgave_v3_part ova
