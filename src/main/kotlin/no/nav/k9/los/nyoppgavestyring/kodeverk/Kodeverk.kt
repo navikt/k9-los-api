@@ -187,6 +187,7 @@ enum class BehandlingType(override val kode: String, override val navn: String, 
     INNTEKTSMELDING_UTGÅTT("INNTEKTSMELDING_UTGÅTT", "Inntektsmeldinger uten søknad", "PUNSJ_INNSENDING_TYPE"),
     UTEN_FNR_DNR("UTEN_FNR_DNR", "Uten fnr eller dnr", "PUNSJ_INNSENDING_TYPE"),
     PUNSJOPPGAVE_IKKE_LENGER_NØDVENDIG("PUNSJOPPGAVE_IKKE_LENGER_NØDVENDIG", "Punsjoppgave ikke lenger nødvendig", "PUNSJ_INNSENDING_TYPE"), // Prodfiks: Lagt til fordi den er mottatt på kafka
+    JOURNALPOSTNOTAT("JOURNALPOSTNOTAT", "Manuelt opprettet journalpostnotat", "PUNSJ_INNSENDING_TYPE"),
     UKJENT("UKJENT", "Ukjent", "PUNSJ_INNSENDING_TYPE");
 
     companion object {
