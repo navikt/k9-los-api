@@ -1,4 +1,4 @@
-package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj
 
 import assertk.assertThat
 import assertk.assertions.hasSize
@@ -8,12 +8,10 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.los.AbstractK9LosIntegrationTest
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.domene.repository.OppgaveRepository
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Repository
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
@@ -21,11 +19,10 @@ import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
-import java.util.*
+import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-
 
 class K9PunsjEventhandlerTest : AbstractK9LosIntegrationTest() {
 
