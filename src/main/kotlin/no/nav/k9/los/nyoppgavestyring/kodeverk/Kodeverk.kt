@@ -282,7 +282,8 @@ enum class OppgaveKodeGruppe(val navn: String) {
     FLYTTESAKER("Flyttesaker"),
     FATTE_VEDTAK("Fatte vedtak"),
     USPESIFISERT("Uspesifisert"),
-    UTTAK("Uttak")
+    UTTAK("Uttak"),
+    AUTOPUNKT("På vent"),
     ;
 }
 
