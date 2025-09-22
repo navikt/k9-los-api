@@ -27,8 +27,8 @@ fun Route.SøkeboksApi() {
     ) {
         requestContextService.withRequestContext(call) {
             if (pepClient.harBasisTilgang()) {
-                val (søkeord, oppgavestatus) = call.receive<SøkRequest>()
-                call.respond(søkeboksTjeneste.finnOppgaver(søkeord, oppgavestatus))
+                val (søkeord) = call.receive<SøkRequest>()
+                call.respond(søkeboksTjeneste.finnOppgaver(søkeord))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

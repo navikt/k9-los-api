@@ -36,7 +36,7 @@ class K9SakOppgaveTilDVHMapper {
 
     fun lagBehandling(
         oppgave: Oppgave,
-        vedtaksDato: LocalDate? = oppgave.hentVerdi("vedtaksDato")?.let { LocalDate.parse(it) },
+        vedtaksDato: LocalDate? = oppgave.hentVerdi("vedtaksdato")?.let { LocalDate.parse(it) },
         registrertDato: LocalDate = LocalDateTime.parse(oppgave.hentVerdi("registrertDato")).toLocalDate(),
         behandlingStatus: BehandlingStatus
     ): Behandling {

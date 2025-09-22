@@ -36,7 +36,7 @@ class StatusService(
         val (punsjGrupper, andreGrupper) = alleGrupper.partition { it.behandlingstype in punsjtyper }
 
         return buildList {
-            add(StatusDto("Åpne behandlinger", alleGrupper.sumOf { it.antall }))
+            add(StatusDto("Åpne behandlinger", andreGrupper.sumOf { it.antall }))
             addAll(andreGrupper.map { StatusDto(it.behandlingstype.navn, it.antall) })
             if (punsjGrupper.isNotEmpty()) {
                 add(StatusDto("Punsj", punsjGrupper.sumOf { it.antall }))

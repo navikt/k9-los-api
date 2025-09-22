@@ -33,6 +33,7 @@ class FerdigstiltePerEnhetService(
         FerdigstiltePerEnhetGruppe.PPN,
         FerdigstiltePerEnhetGruppe.OMSORGSDAGER,
         FerdigstiltePerEnhetGruppe.OMSORGSPENGER,
+        FerdigstiltePerEnhetGruppe.OPPLÆRINGSPENGER,
     )
 
     fun hentCachetVerdi(gruppe: FerdigstiltePerEnhetGruppe, uker: Int): FerdigstiltePerEnhetResponse {
