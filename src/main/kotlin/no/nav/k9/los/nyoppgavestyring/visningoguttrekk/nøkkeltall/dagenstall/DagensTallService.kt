@@ -27,6 +27,142 @@ class DagensTallService(
     private val cache = Cache<LocalDate, DagensTallResponse>(null)
     private val log: Logger = LoggerFactory.getLogger(DagensTallService::class.java)
 
+    companion object {
+        val omsorgspenger = FeltverdiOppgavefilter(
+            "K9",
+            "ytelsestype",
+            EksternFeltverdiOperator.IN,
+            listOf(FagsakYtelseType.OMSORGSPENGER.kode)
+        )
+
+        val omsorgsdager = FeltverdiOppgavefilter(
+            "K9",
+            "ytelsestype",
+            EksternFeltverdiOperator.IN,
+            listOf(FagsakYtelseType.OMSORGSDAGER, FagsakYtelseType.OMSORGSPENGER_KS, FagsakYtelseType.OMSORGSPENGER_AO, FagsakYtelseType.OMSORGSPENGER_MA).map { it.kode }
+        )
+
+        val opplæringspenger = FeltverdiOppgavefilter(
+            "K9",
+            "ytelsestype",
+            EksternFeltverdiOperator.IN,
+            listOf(FagsakYtelseType.OLP.kode)
+        )
+
+        val psb = FeltverdiOppgavefilter(
+            "K9",
+            "ytelsestype",
+            EksternFeltverdiOperator.IN,
+            listOf(FagsakYtelseType.PLEIEPENGER_SYKT_BARN.kode)
+        )
+
+        val ppn = FeltverdiOppgavefilter(
+            "K9",
+            "ytelsestype",
+            EksternFeltverdiOperator.IN,
+            listOf(FagsakYtelseType.PPN.kode)
+        )
+
+        val mottattDato = { dato: LocalDate ->
+            FeltverdiOppgavefilter(
+                "K9",
+                "mottattDato",
+                EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS,
+                listOf(dato.toString())
+            )
+        }
+
+        val ferdigstiltDato = { dato: LocalDate ->
+            FeltverdiOppgavefilter(
+                "K9",
+                "ferdigstiltDato",
+                EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS,
+                listOf(dato.toString())
+            )
+        }
+
+        val lukket = FeltverdiOppgavefilter(
+            null,
+            "oppgavestatus",
+            EksternFeltverdiOperator.EQUALS,
+            listOf(Oppgavestatus.LUKKET.kode)
+        )
+
+        val åpenVenterUavklart = FeltverdiOppgavefilter(
+            null,
+            "oppgavestatus",
+            EksternFeltverdiOperator.IN,
+            listOf(
+                Oppgavestatus.AAPEN.kode,
+                Oppgavestatus.VENTER.kode,
+                Oppgavestatus.UAVKLART.kode
+            )
+        )
+
+        val førstegang = FeltverdiOppgavefilter(
+            "K9",
+            "behandlingTypekode",
+            EksternFeltverdiOperator.EQUALS,
+            listOf(BehandlingType.FORSTEGANGSSOKNAD.kode)
+        )
+
+        val revurdering = FeltverdiOppgavefilter(
+            "K9",
+            "behandlingTypekode",
+            EksternFeltverdiOperator.IN,
+            listOf(BehandlingType.REVURDERING.kode, BehandlingType.REVURDERING_TILBAKEKREVING.kode)
+        )
+
+        val klage = FeltverdiOppgavefilter(
+            null,
+            "oppgavetype",
+            EksternFeltverdiOperator.EQUALS,
+            listOf("k9klage")
+        )
+
+        val punsj = FeltverdiOppgavefilter(
+            null,
+            "oppgavetype",
+            EksternFeltverdiOperator.EQUALS,
+            listOf("k9punsj")
+        )
+
+        val innsyn = FeltverdiOppgavefilter(
+            "K9",
+            "behandlingTypekode",
+            EksternFeltverdiOperator.EQUALS,
+            listOf(BehandlingType.INNSYN.kode)
+        )
+
+        val feilutbetaling = FeltverdiOppgavefilter(
+            null,
+            "oppgavetype",
+            EksternFeltverdiOperator.EQUALS,
+            listOf("k9tilbake")
+        )
+
+        val unntaksbehandling = FeltverdiOppgavefilter(
+            "K9",
+            "behandlingTypekode",
+            EksternFeltverdiOperator.EQUALS,
+            listOf(BehandlingType.UNNTAKSBEHANDLING.kode)
+        )
+
+        val helautomatisk = FeltverdiOppgavefilter(
+            "K9",
+            "helautomatiskBehandlet",
+            EksternFeltverdiOperator.EQUALS,
+            listOf(true.toString())
+        )
+
+        val ikkeHelautomatisk = FeltverdiOppgavefilter(
+            "K9",
+            "helautomatiskBehandlet",
+            EksternFeltverdiOperator.EQUALS,
+            listOf(false.toString())
+        )
+    }
+
     fun hentCachetVerdi(): DagensTallResponse {
         return cache.get(LocalDate.now())?.value ?: DagensTallResponse(null, emptyList(), emptyList(), emptyList())
     }
@@ -42,332 +178,75 @@ class DagensTallService(
         }
     }
 
+    private fun antall(vararg filtere: FeltverdiOppgavefilter?): Long {
+        return queryService.queryForAntall(
+            QueryRequest(
+                oppgaveQuery = OppgaveQuery(
+                    filtere = filtere.toList().filterNotNull()
+                ),
+            )
+        )
+    }
+
     private fun hentFraDatabase(): DagensTallResponse {
-        val grupper = listOf(
-            DagensTallHovedgruppe.OMSORGSPENGER,
-            DagensTallHovedgruppe.OMSORGSDAGER,
-            DagensTallHovedgruppe.PLEIEPENGER_SYKT_BARN,
-            DagensTallHovedgruppe.PPN,
-        )
-        val behandlingstyper = listOf(
-            BehandlingType.FORSTEGANGSSOKNAD,
-            BehandlingType.KLAGE,
-            BehandlingType.REVURDERING,
-            BehandlingType.TILBAKE,
-        )
+        val iDag = LocalDate.now()
+        val enUkeSiden = iDag.minusWeeks(1)
+        val toUkerSiden = iDag.minusWeeks(2)
+        val fireUkerSiden = iDag.minusWeeks(4)
 
-        val tall = mutableListOf<DagensTallDto>()
+        val tall = DagensTallHovedgruppe.entries.flatMap { hovedgruppe ->
+            val ytelse = when (hovedgruppe) {
+                DagensTallHovedgruppe.ALLE -> null
+                DagensTallHovedgruppe.OMSORGSPENGER -> omsorgspenger
+                DagensTallHovedgruppe.OMSORGSDAGER -> omsorgsdager
+                DagensTallHovedgruppe.OPPLÆRINGSPENGER -> opplæringspenger
+                DagensTallHovedgruppe.PLEIEPENGER_SYKT_BARN -> psb
+                DagensTallHovedgruppe.PPN -> ppn
+            }
 
-        // Totalt for alle ytelser og behandlingstyper
-        tall.add(
-            DagensTallDto(
-                hovedgruppe = DagensTallHovedgruppe.ALLE,
-                undergruppe = DagensTallUndergruppe.TOTALT,
-                nyeIDag = hentNye(
-                    dato = LocalDate.now(),
-                ),
-                ferdigstilteIDag = hentFerdigstilte(
-                    dato = LocalDate.now(),
-                ),
-                nyeSiste7Dager = hentNye(
-                    dato = LocalDate.now().minusDays(7),
-                ),
-                ferdigstilteSiste7Dager = hentFerdigstilte(
-                    dato = LocalDate.now().minusDays(7),
-                )
-            )
-        )
+            DagensTallUndergruppe.entries.map { undergruppe ->
+                val behandlingstype = when (undergruppe) {
+                    DagensTallUndergruppe.TOTALT -> null
+                    DagensTallUndergruppe.FØRSTEGANG -> førstegang
+                    DagensTallUndergruppe.REVURDERING -> revurdering
+                    DagensTallUndergruppe.KLAGE -> klage
+                    DagensTallUndergruppe.PUNSJ -> punsj
+                    DagensTallUndergruppe.FEILUTBETALING -> feilutbetaling
+                    DagensTallUndergruppe.UNNTAKSBEHANDLING -> unntaksbehandling
+                }
 
-        for (behandlingType in behandlingstyper) {
-            tall.add(
-                DagensTallDto(
-                    hovedgruppe = DagensTallHovedgruppe.ALLE,
-                    undergruppe = DagensTallUndergruppe.fraBehandlingType(behandlingType),
-                    nyeIDag = hentNye(
-                        dato = LocalDate.now(),
-                        behandlingType = behandlingType,
-                    ),
-                    ferdigstilteIDag = hentFerdigstilte(
-                        dato = LocalDate.now(),
-                        behandlingType = behandlingType,
-                    ),
-                    nyeSiste7Dager = hentNye(
-                        dato = LocalDate.now().minusDays(7),
-                        behandlingType = behandlingType,
-                    ),
-                    ferdigstilteSiste7Dager = hentFerdigstilte(
-                        dato = LocalDate.now().minusDays(7),
-                        behandlingType = behandlingType,
-                    )
-                )
-            )
-        }
-
-        for (hovedgruppe in grupper) {
-
-            // Totalt for ytelse
-            tall.add(
                 DagensTallDto(
                     hovedgruppe = hovedgruppe,
-                    undergruppe = DagensTallUndergruppe.TOTALT,
-                    nyeIDag = hentNye(
-                        dato = LocalDate.now(),
-                        ytelser = hovedgruppe.ytelser,
-                    ),
-                    ferdigstilteIDag = hentFerdigstilte(
-                        dato = LocalDate.now(),
-                        ytelser = hovedgruppe.ytelser,
-                    ),
-                    nyeSiste7Dager = hentNye(
-                        dato = LocalDate.now().minusDays(7),
-                        ytelser = hovedgruppe.ytelser,
-                    ),
-                    ferdigstilteSiste7Dager = hentFerdigstilte(
-                        dato = LocalDate.now().minusDays(7),
-                        ytelser = hovedgruppe.ytelser,
-                    )
-                )
-            )
+                    undergruppe = undergruppe,
 
-            for (behandlingType in behandlingstyper) {
-                tall.add(
-                    DagensTallDto(
-                        hovedgruppe = hovedgruppe,
-                        undergruppe = DagensTallUndergruppe.fraBehandlingType(behandlingType),
-                        nyeIDag = hentNye(
-                            dato = LocalDate.now(),
-                            ytelser = hovedgruppe.ytelser,
-                            behandlingType = behandlingType,
-                        ),
-                        ferdigstilteIDag = hentFerdigstilte(
-                            dato = LocalDate.now(),
-                            ytelser = hovedgruppe.ytelser,
-                            behandlingType = behandlingType,
-                        ),
-                        nyeSiste7Dager = hentNye(
-                            dato = LocalDate.now().minusDays(7),
-                            ytelser = hovedgruppe.ytelser,
-                            behandlingType = behandlingType,
-                        ),
-                        ferdigstilteSiste7Dager = hentFerdigstilte(
-                            dato = LocalDate.now().minusDays(7),
-                            ytelser = hovedgruppe.ytelser,
-                            behandlingType = behandlingType,
-                        )
-                    )
+                    nyeIDag = antall(åpenVenterUavklart, mottattDato(iDag), ytelse, behandlingstype)
+                            + antall(lukket, ferdigstiltDato(iDag), mottattDato(iDag), ytelse, behandlingstype),
+                    ferdigstilteIDag = antall(lukket, ferdigstiltDato(iDag), ytelse, behandlingstype, ikkeHelautomatisk),
+                    ferdigstilteHelautomatiskIDag = antall(lukket, ferdigstiltDato(iDag), ytelse, behandlingstype, helautomatisk),
+
+                    nyeSiste7Dager = antall(åpenVenterUavklart, mottattDato(enUkeSiden), ytelse, behandlingstype)
+                                   + antall(lukket, ferdigstiltDato(enUkeSiden), mottattDato(enUkeSiden), ytelse, behandlingstype),
+                    ferdigstilteSiste7Dager = antall(lukket, ferdigstiltDato(enUkeSiden), ytelse, behandlingstype, ikkeHelautomatisk),
+                    ferdigstilteHelautomatiskSiste7Dager = antall(lukket, ferdigstiltDato(enUkeSiden), ytelse, behandlingstype, helautomatisk),
+
+                    nyeSiste2Uker = antall(åpenVenterUavklart, mottattDato(toUkerSiden), ytelse, behandlingstype)
+                                   + antall(lukket, ferdigstiltDato(toUkerSiden), mottattDato(toUkerSiden), ytelse, behandlingstype),
+                    ferdigstilteSiste2Uker = antall(lukket, ferdigstiltDato(toUkerSiden), ytelse, behandlingstype, ikkeHelautomatisk),
+                    ferdigstilteHelautomatiskSiste2Uker = antall(lukket, ferdigstiltDato(toUkerSiden), ytelse, behandlingstype, helautomatisk),
+
+                    nyeSiste4Uker = antall(åpenVenterUavklart, mottattDato(fireUkerSiden), ytelse, behandlingstype)
+                                    + antall(lukket, ferdigstiltDato(fireUkerSiden), mottattDato(fireUkerSiden), ytelse, behandlingstype),
+                    ferdigstilteSiste4Uker = antall(lukket, ferdigstiltDato(fireUkerSiden), ytelse, behandlingstype, ikkeHelautomatisk),
+                    ferdigstilteHelautomatiskSiste4Uker = antall(lukket, ferdigstiltDato(fireUkerSiden), ytelse, behandlingstype, ikkeHelautomatisk),
                 )
             }
-            tall.add(
-                DagensTallDto(
-                    hovedgruppe = hovedgruppe,
-                    undergruppe = DagensTallUndergruppe.forPunsj(),
-                    nyeIDag = hentNye(
-                        dato = LocalDate.now(),
-                        ytelser = hovedgruppe.ytelser,
-                        oppgavetype = "k9punsj",
-                    ),
-                    ferdigstilteIDag = hentFerdigstilte(
-                        dato = LocalDate.now(),
-                        ytelser = hovedgruppe.ytelser,
-                        oppgavetype = "k9punsj",
-                    ),
-                    nyeSiste7Dager = hentNye(
-                        dato = LocalDate.now().minusDays(7),
-                        ytelser = hovedgruppe.ytelser,
-                        oppgavetype = "k9punsj",
-                    ),
-                    ferdigstilteSiste7Dager = hentFerdigstilte(
-                        dato = LocalDate.now().minusDays(7),
-                        ytelser = hovedgruppe.ytelser,
-                        oppgavetype = "k9punsj",
-                    ),
-                )
-            )
         }
-
-        // Punsj
-        tall.add(
-            DagensTallDto(
-                hovedgruppe = DagensTallHovedgruppe.ALLE,
-                undergruppe = DagensTallUndergruppe.PUNSJ,
-                nyeIDag = hentNye(
-                    dato = LocalDate.now(),
-                    oppgavetype = "k9punsj",
-                ),
-                ferdigstilteIDag = hentFerdigstilte(
-                    dato = LocalDate.now(),
-                    oppgavetype = "k9punsj",
-                ),
-                nyeSiste7Dager = hentNye(
-                    dato = LocalDate.now().minusDays(7),
-                    oppgavetype = "k9punsj",
-                ),
-                ferdigstilteSiste7Dager = hentFerdigstilte(
-                    dato = LocalDate.now().minusDays(7),
-                    oppgavetype = "k9punsj",
-                )
-            )
-        )
 
         return DagensTallResponse(
             oppdatertTidspunkt = LocalDateTime.now(),
             hovedgrupper = DagensTallHovedgruppe.entries.map { KodeOgNavn(it.name, it.navn) },
             undergrupper = DagensTallUndergruppe.entries.map { KodeOgNavn(it.name, it.navn) },
             tall = tall
-        )
-    }
-
-    private fun hentNye(
-        dato: LocalDate,
-        ytelser: List<FagsakYtelseType>? = null,
-        behandlingType: BehandlingType? = null,
-        oppgavetype: String? = null
-    ): Long {
-        return hentMottattDatoForLukkedeTall(dato, ytelser, behandlingType, oppgavetype) +
-                hentÅpneVenterTall(dato, ytelser, behandlingType, oppgavetype)
-    }
-
-    private fun hentMottattDatoForLukkedeTall(
-        dato: LocalDate,
-        ytelser: List<FagsakYtelseType>? = null,
-        behandlingType: BehandlingType? = null,
-        oppgavetype: String? = null
-    ): Long {
-        return queryService.queryForAntall(
-            QueryRequest(
-                oppgaveQuery = OppgaveQuery(
-                    filtere = listOfNotNull(
-                        FeltverdiOppgavefilter(
-                            null, "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf(Oppgavestatus.LUKKET.kode)
-                        ),
-                        FeltverdiOppgavefilter(
-                            null,
-                            "ferdigstiltDato",
-                            EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS,
-                            listOf(dato.toString())
-                        ),
-                        FeltverdiOppgavefilter(
-                            "K9",
-                            "mottattDato",
-                            EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS,
-                            listOf(dato.toString())
-                        ),
-                        ytelser?.let { liste: List<FagsakYtelseType> ->
-                            FeltverdiOppgavefilter(
-                                "K9", "ytelsestype", EksternFeltverdiOperator.IN, liste.map { it.kode }
-                            )
-                        },
-                        behandlingType?.let {
-                            FeltverdiOppgavefilter(
-                                "K9",
-                                "behandlingTypekode",
-                                EksternFeltverdiOperator.EQUALS,
-                                listOf(it.kode)
-                            )
-                        },
-                        oppgavetype?.let {
-                            FeltverdiOppgavefilter(
-                                null, "oppgavetype", EksternFeltverdiOperator.EQUALS, listOf(it)
-                            )
-                        },
-                    )
-                ),
-            )
-        )
-    }
-
-    private fun hentÅpneVenterTall(
-        dato: LocalDate,
-        ytelser: List<FagsakYtelseType>? = null,
-        behandlingType: BehandlingType? = null,
-        oppgavetype: String? = null
-    ): Long {
-        return queryService.queryForAntall(
-            QueryRequest(
-                oppgaveQuery = OppgaveQuery(
-                    filtere = listOfNotNull(
-                        FeltverdiOppgavefilter(
-                            null,
-                            "oppgavestatus",
-                            EksternFeltverdiOperator.IN,
-                            listOf(Oppgavestatus.AAPEN, Oppgavestatus.VENTER).map { it.kode }
-                        ),
-                        FeltverdiOppgavefilter(
-                            "K9",
-                            "mottattDato",
-                            EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS,
-                            listOf(dato.toString())
-                        ),
-                        ytelser?.let { liste ->
-                            FeltverdiOppgavefilter(
-                                "K9", "ytelsestype", EksternFeltverdiOperator.IN, liste.map { it.kode }
-                            )
-                        },
-                        behandlingType?.let {
-                            FeltverdiOppgavefilter(
-                                "K9",
-                                "behandlingTypekode",
-                                EksternFeltverdiOperator.EQUALS,
-                                listOf(it.kode)
-                            )
-                        },
-                        oppgavetype?.let {
-                            FeltverdiOppgavefilter(
-                                null, "oppgavetype", EksternFeltverdiOperator.EQUALS, listOf(it)
-                            )
-                        },
-                    )
-                ),
-            )
-        )
-    }
-
-    private fun hentFerdigstilte(
-        dato: LocalDate,
-        ytelser: List<FagsakYtelseType>? = null,
-        behandlingType: BehandlingType? = null,
-        oppgavetype: String? = null
-    ): Long {
-        return queryService.queryForAntall(
-            QueryRequest(
-                oppgaveQuery = OppgaveQuery(
-                    filtere = listOfNotNull(
-                        FeltverdiOppgavefilter(
-                            null, "oppgavestatus", EksternFeltverdiOperator.EQUALS, listOf(Oppgavestatus.LUKKET.kode)
-                        ),
-                        FeltverdiOppgavefilter(
-                            null,
-                            "ferdigstiltDato",
-                            EksternFeltverdiOperator.GREATER_THAN_OR_EQUALS,
-                            listOf(dato.toString())
-                        ),
-                        FeltverdiOppgavefilter(
-                            område = "K9",
-                            kode = "helautomatiskBehandlet",
-                            operator = EksternFeltverdiOperator.EQUALS,
-                            listOf(false.toString())
-                        ),
-                        ytelser?.let { liste ->
-                            FeltverdiOppgavefilter(
-                                "K9", "ytelsestype", EksternFeltverdiOperator.IN, liste.map { it.kode }
-                            )
-                        },
-                        behandlingType?.let {
-                            FeltverdiOppgavefilter(
-                                "K9",
-                                "behandlingTypekode",
-                                EksternFeltverdiOperator.EQUALS,
-                                listOf(it.kode)
-                            )
-                        },
-                        oppgavetype?.let {
-                            FeltverdiOppgavefilter(
-                                null, "oppgavetype", EksternFeltverdiOperator.EQUALS, listOf(it)
-                            )
-                        },
-                    )
-                ),
-            )
         )
     }
 }
