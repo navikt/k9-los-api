@@ -137,7 +137,15 @@ class OppgaveTjeneste constructor(
                 flyttetReservasjon = null
             )
         }
-        val oppgaveSomSkalBliReservert = oppgaveRepository.hent(oppgaveUuid)
+
+        val oppgaveSomSkalBliReservert = oppgaveRepository.hentHvis(oppgaveUuid) ?: return OppgaveStatusDto(
+            erReservert = false,
+            reservertTilTidspunkt = null,
+            erReservertAvInnloggetBruker = false,
+            reservertAv = null,
+            reservertAvNavn = null,
+            flyttetReservasjon = null
+        )
 
         /*TODO midlertidig fjernet pga feil
         if (sjekkHvisSaksbehandlerPrøverOgReserverEnOppgaveDeSelvHarBesluttet(ident, oppgaveSomSkalBliReservert)) {
