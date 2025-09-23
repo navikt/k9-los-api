@@ -193,6 +193,26 @@ class ReservasjonApisTjeneste(
         }
     }
 
+    fun hentAktivReservasjon(oppgaveNøkkel: OppgaveNøkkelDto): ReservasjonV3Dto? {
+        val oppgave = transactionalManager.transaction { tx ->
+            oppgaveV3Repository.hentNyesteOppgaveForEksternId(
+                tx,
+                oppgaveNøkkel.områdeEksternId,
+                oppgaveNøkkel.oppgaveEksternId
+            )
+        }
+        val reservasjon = reservasjonV3Tjeneste.finnAktivReservasjon(oppgave.reservasjonsnøkkel)
+            ?: return null
+        val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(reservasjon.reservertAv)
+            ?: throw IllegalStateException("Fant ikke saksbehandler med id ${reservasjon.reservertAv} som har reservert oppgave ${oppgave.eksternId}")
+        return ReservasjonV3Dto(
+            reservasjonV3 = reservasjon,
+            oppgaver = emptyList(),
+            reservertAv = reservertAv,
+            endretAvNavn = null
+        )
+    }
+
     suspend fun hentAlleAktiveReservasjoner(): List<ReservasjonDto> {
         val innloggetBrukerHarKode6Tilgang = pepClient.harTilgangTilKode6()
 
@@ -211,7 +231,8 @@ class ReservasjonApisTjeneste(
                         reservertAvNavn = saksbehandler.navn,
                         saksnummer = oppgave.hentVerdi("saksnummer"), //TODO: Oppgaveagnostisk logikk. Løses antagelig ved å skrive om frontend i dette tilfellet
                         journalpostId = oppgave.hentVerdi("journalpostId"),
-                        ytelse = oppgave.hentVerdi("ytelsestype")?.let { FagsakYtelseType.fraKode(it).navn } ?: FagsakYtelseType.UKJENT.navn,
+                        ytelse = oppgave.hentVerdi("ytelsestype")?.let { FagsakYtelseType.fraKode(it).navn }
+                            ?: FagsakYtelseType.UKJENT.navn,
                         behandlingType = BehandlingType.fraKode(oppgave.hentVerdi("behandlingTypekode")!!),
                         reservertTilTidspunkt = reservasjonMedOppgaver.reservasjonV3.gyldigTil,
                         kommentar = reservasjonMedOppgaver.reservasjonV3.kommentar ?: "",

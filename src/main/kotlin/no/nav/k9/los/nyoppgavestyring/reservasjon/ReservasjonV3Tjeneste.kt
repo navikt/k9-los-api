@@ -3,20 +3,20 @@ package no.nav.k9.los.nyoppgavestyring.reservasjon
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.nyoppgavestyring.feilhandtering.FinnerIkkeDataException
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Action
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Auditlogging
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
-import no.nav.k9.los.nyoppgavestyring.feilhandtering.FinnerIkkeDataException
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.leggTilDagerHoppOverHelg
 import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.ReservasjonAnnullert
 import no.nav.k9.los.nyoppgavestyring.ko.ReservasjonEndret
 import no.nav.k9.los.nyoppgavestyring.ko.ReservasjonTatt
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.leggTilDagerHoppOverHelg
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -413,7 +413,7 @@ class ReservasjonV3Tjeneste(
         }
     }
 
-    private fun finnAktivReservasjon(
+    fun finnAktivReservasjon(
         reservasjonsnøkkel: String,
         tx: TransactionalSession
     ): ReservasjonV3 {
