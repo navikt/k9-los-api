@@ -413,7 +413,7 @@ class ReservasjonV3Tjeneste(
         }
     }
 
-    fun finnAktivReservasjon(
+    private fun finnAktivReservasjon(
         reservasjonsnøkkel: String,
         tx: TransactionalSession
     ): ReservasjonV3 {
