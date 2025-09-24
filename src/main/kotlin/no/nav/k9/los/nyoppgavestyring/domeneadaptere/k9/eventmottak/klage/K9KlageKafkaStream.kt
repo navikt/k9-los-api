@@ -7,6 +7,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.Manage
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.AksjonspunktKlageLaget
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.Topic
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.IKafkaConfig
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakKafkaStream
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.OpentelemetrySpanUtil
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.TransientFeilHåndterer
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
@@ -52,7 +53,7 @@ internal class K9KlageKafkaStream constructor(
                 .stream(
                     fromTopic.name,
                     Consumed.with(fromTopic.keySerde, fromTopic.valueSerde)
-                )
+                ).peek { _, e -> log.info("--> Behandlingsprosesshendelse fra k9klage: ${e.tryggToString() }") }
                 .foreach { _, entry ->
                     if (entry != null) {
                         OpentelemetrySpanUtil.span(NAME, mapOf("saksnummer" to entry.saksnummer)) {
@@ -65,4 +66,32 @@ internal class K9KlageKafkaStream constructor(
     }
 
     internal fun stop() = stream.stop(becauseOfError = false)
+}
+
+fun K9KlageEventDto.tryggToString(): String {
+    return """K9KlageEventDto(
+            eksternId=$eksternId, 
+            påklagdBehandlingId=$påklagdBehandlingId,
+            påklagdBehandlingType=$påklagdBehandlingType,
+            fagsystem=$fagsystem, 
+            utenlandstilsnitt=$utenlandstilsnitt,
+            behandlingstidFrist=$behandlingstidFrist,
+            saksnummer='$saksnummer', 
+            eventTid=$eventTid, 
+            eventHendelse=$eventHendelse, 
+            behandlingStatus=$behandlingStatus, 
+            behandlingSteg=$behandlingSteg, 
+            behandlendeEnhet=$behandlendeEnhet,
+            ansvarligBeslutter=$ansvarligBeslutter,
+            ansvarligSaksbehandler=$ansvarligSaksbehandler, 
+            resultatType=$resultatType,
+            ytelseTypeKode='$ytelseTypeKode', 
+            behandlingTypeKode='$behandlingTypeKode', 
+            opprettetBehandling=$opprettetBehandling,
+            fagsakPeriode=$fagsakPeriode,
+            aksjonspunktTilstander=$aksjonspunkttilstander,
+            vedtaksdato=$vedtaksdato,
+            behandlingsårsaker=$behandlingsårsaker
+            )"""
+        .trimMargin()
 }

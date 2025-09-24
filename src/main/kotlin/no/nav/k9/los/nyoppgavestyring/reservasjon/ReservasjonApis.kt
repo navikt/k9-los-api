@@ -182,6 +182,8 @@ internal fun Route.ReservasjonApis() {
         }
     }
 
+    // TODO: Dette er det nye stedet for endepunktet. Duplisert i AvdelingslederApis.
+    //  Fjernes derfra når frontend er over på nytt endepunkt. Slett da denne kommentaren.
     get("/alle-reservasjoner") {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {

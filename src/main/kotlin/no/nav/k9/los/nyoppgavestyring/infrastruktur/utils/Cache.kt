@@ -6,7 +6,7 @@ import java.time.LocalDateTime
 import java.util.concurrent.locks.ReentrantLock
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
-open class Cache<K, V>(val cacheSizeLimit: Int?) {
+open class Cache<K, V>(val cacheSizeLimit: Int? = null) {
 
     private val readWriteLock = ReentrantReadWriteLock(true)
 
