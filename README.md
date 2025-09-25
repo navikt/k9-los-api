@@ -3,7 +3,7 @@ K9-los håndterer oppgave- og ledelsesstyring i k9. k9-sak, k9-tilbake og k9-pun
 
 Oppgavestyrere definerer kriterier som ligger til grunn for køer som fordeler oppgaver etter prioritet til saksbehandlere.
 
-Versjon 3 av LOS ligger i pakken nyoppgavestyring. V3 er strukturert etter "package-by-feature". Kode som er relevant etter sanering av versjon 1 og 2 flyttes gradvis inn i nyoppgavestyring og struktureres som package by feature.
+LOS er strukturert etter "package-by-feature".
 
 # Bygge og kjøre lokalt
 
