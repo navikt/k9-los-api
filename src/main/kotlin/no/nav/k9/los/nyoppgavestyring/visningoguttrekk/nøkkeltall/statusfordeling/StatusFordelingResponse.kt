@@ -5,7 +5,7 @@ import java.time.LocalDateTime
 
 data class StatusFordelingResponse(
     val oppdatertTidspunkt: LocalDateTime = LocalDateTime.now(),
-    val tall: List<StatusFordelingDto> = emptyList(),
+    val tall: List<StatuskortDto> = emptyList(),
 ) {
     val grupper: List<KodeOgNavn> = StatusGruppe.entries.map { KodeOgNavn(it.name, it.tekst) }
 }
