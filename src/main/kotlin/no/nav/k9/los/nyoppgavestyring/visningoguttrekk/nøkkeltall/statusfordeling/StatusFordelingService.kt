@@ -12,6 +12,7 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.KodeOgNavn
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -165,82 +166,92 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
         )
     }
 
-    private fun antall(vararg filtere: Oppgavefilter): Long {
-        return queryService.queryForAntall(QueryRequest(OppgaveQuery(filtere.toList())))
+    private fun antall(
+        visningsnavn: String,
+        vararg filtere: Oppgavefilter
+    ): StatuslinjeDto {
+        val query = OppgaveQuery(filtere.toList())
+        return StatuslinjeDto(
+            visningsnavn,
+            queryService.queryForAntall(QueryRequest(query)),
+            query
+        )
     }
 
-    private fun hentFraDatabase(kode6: Boolean): List<StatusFordelingDto> {
+    private fun hentFraDatabase(kode6: Boolean): List<StatuskortDto> {
         val personbeskyttelse = if (kode6) kunKode6 else ikkeKode6
         val tall = StatusGruppe.entries.map { gruppe ->
             when (gruppe) {
-                StatusGruppe.BEHANDLINGER -> StatusFordelingDto(
-                    gruppe,
-                    antall(personbeskyttelse, åpenVenterUavklart, ikkePunsj),
-                    antall(personbeskyttelse, åpen, ikkePunsj),
-                    antall(personbeskyttelse, venter, ikkePunsj),
-                    0,
-                    0,
-                    antall(personbeskyttelse, uavklart, ikkePunsj)
+                StatusGruppe.BEHANDLINGER -> StatuskortDto(
+                    KodeOgNavn(gruppe.name, gruppe.tekst),
+                    antall("åpne", personbeskyttelse, åpen, ikkePunsj),
+                    linjer =
+                        listOf(
+                            antall("venter", personbeskyttelse, venter, ikkePunsj),
+                            antall("uavklart", personbeskyttelse, uavklart, ikkePunsj),
+                            antall("totalt", personbeskyttelse, åpenVenterUavklart, ikkePunsj),
+                        )
                 )
 
-                StatusGruppe.FØRSTEGANG -> StatusFordelingDto(
-                    gruppe,
-                    antall(personbeskyttelse, åpenVenterUavklart, førstegang),
-                    antall(personbeskyttelse, åpen, førstegang),
-                    antall(personbeskyttelse, venter, førstegang),
-                    0,
-                    0,
-                    antall(personbeskyttelse, uavklart, førstegang)
+                StatusGruppe.FØRSTEGANG -> StatuskortDto(
+                    KodeOgNavn(gruppe.name, gruppe.tekst),
+                    antall("åpne", personbeskyttelse, åpen, førstegang),
+                    linjer = listOf(
+                        antall("venter", personbeskyttelse, venter, førstegang),
+                        antall("uavklart", personbeskyttelse, uavklart, førstegang),
+                        antall("totalt", personbeskyttelse, åpenVenterUavklart, førstegang)
+                    )
                 )
 
-                StatusGruppe.REVURDERING -> StatusFordelingDto(
-                    gruppe,
-                    antall(personbeskyttelse, åpenVenterUavklart, revurdering),
-                    antall(personbeskyttelse, åpen, revurdering),
-                    antall(personbeskyttelse, venter, revurdering),
-                    0,
-                    0,
-                    antall(personbeskyttelse, uavklart, revurdering)
+                StatusGruppe.REVURDERING -> StatuskortDto(
+                    KodeOgNavn(gruppe.name, gruppe.tekst),
+                    antall("åpne", personbeskyttelse, åpen, revurdering),
+                    linjer = listOf(
+                        antall("venter", personbeskyttelse, venter, revurdering),
+                        antall("uavklart", personbeskyttelse, uavklart, revurdering),
+                        antall("totalt", personbeskyttelse, åpenVenterUavklart, revurdering),
+                    )
                 )
 
-                StatusGruppe.FEILUTBETALING -> StatusFordelingDto(
-                    gruppe,
-                    antall(personbeskyttelse, åpenVenterUavklart, feilutbetaling),
-                    antall(personbeskyttelse, åpen, feilutbetaling),
-                    antall(personbeskyttelse, venter, feilutbetaling),
-                    0,
-                    0,
-                    antall(personbeskyttelse, uavklart, feilutbetaling)
+                StatusGruppe.FEILUTBETALING -> StatuskortDto(
+                    KodeOgNavn(gruppe.name, gruppe.tekst),
+                    antall("åpne", personbeskyttelse, åpen, feilutbetaling),
+                    listOf(
+                        antall("venter", personbeskyttelse, venter, feilutbetaling),
+                        antall("uavklart", personbeskyttelse, uavklart, feilutbetaling),
+                        antall("totalt", personbeskyttelse, åpenVenterUavklart, feilutbetaling),
+                    )
                 )
 
-                StatusGruppe.KLAGE -> StatusFordelingDto(
-                    gruppe,
-                    antall(personbeskyttelse, åpenVenterUavklart, klage),
-                    antall(personbeskyttelse, åpen, klage),
-                    0,
-                    antall(personbeskyttelse, venter, klage, venterKabal),
-                    antall(personbeskyttelse, venter, klage, venterIkkeKabal),
-                    antall(personbeskyttelse, uavklart, klage)
+                StatusGruppe.KLAGE -> StatuskortDto(
+                    KodeOgNavn(gruppe.name, gruppe.tekst),
+                    antall("åpne", personbeskyttelse, åpen, klage),
+                    listOf(
+                        antall("venter Kabal", personbeskyttelse, venter, klage, venterKabal),
+                        antall("venter annet", personbeskyttelse, venter, klage, venterIkkeKabal),
+                        antall("uavklart", personbeskyttelse, uavklart, klage),
+                        antall("totalt", personbeskyttelse, åpenVenterUavklart, klage),
+                    ),
                 )
 
-                StatusGruppe.PUNSJ -> StatusFordelingDto(
-                    gruppe,
-                    antall(personbeskyttelse, åpenVenterUavklart, punsj),
-                    antall(personbeskyttelse, åpen, punsj),
-                    antall(personbeskyttelse, venter, punsj),
-                    0,
-                    0,
-                    antall(personbeskyttelse, uavklart, punsj)
+                StatusGruppe.UNNTAKSBEHANDLING -> StatuskortDto(
+                    KodeOgNavn(gruppe.name, gruppe.tekst),
+                    antall("åpne", personbeskyttelse, åpen, unntak),
+                    listOf(
+                        antall("venter", personbeskyttelse, venter, unntak),
+                        antall("uavklart", personbeskyttelse, uavklart, unntak),
+                        antall("totalt", personbeskyttelse, åpenVenterUavklart, unntak),
+                    )
                 )
 
-                StatusGruppe.UNNTAKSBEHANDLING -> StatusFordelingDto(
-                    gruppe,
-                    antall(personbeskyttelse, åpenVenterUavklart, unntak),
-                    antall(personbeskyttelse, åpen, unntak),
-                    antall(personbeskyttelse, venter, unntak),
-                    0,
-                    0,
-                    antall(personbeskyttelse, uavklart, unntak)
+                StatusGruppe.PUNSJ -> StatuskortDto(
+                    KodeOgNavn(gruppe.name, gruppe.tekst),
+                    antall("åpne", personbeskyttelse, åpen, punsj),
+                    listOf(
+                        antall("venter", personbeskyttelse, venter, punsj),
+                        antall("uavklart", personbeskyttelse, uavklart, punsj),
+                        antall("totalt", personbeskyttelse, åpenVenterUavklart, punsj),
+                    )
                 )
             }
         }
