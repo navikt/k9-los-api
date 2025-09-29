@@ -17,7 +17,7 @@ class EventRepository(
     private val dataSource: DataSource,
 ) {
 
-    fun lagre(event: String, fagsystem: Fagsystem, tx: TransactionalSession): EventLagret? {
+    fun lagre(fagsystem: Fagsystem, event: String,  tx: TransactionalSession): EventLagret? {
         val tree = LosObjectMapper.instance.readTree(event)
         val eksternId = tree.findValue("eksternId").asText()
         val eksternVersjon = tree.findValue("eventTid").asText()
