@@ -21,10 +21,9 @@ class EventRepository(
         val tree = LosObjectMapper.instance.readTree(event)
         val eksternId = tree.findValue("eksternId").asText()
         val eksternVersjon = tree.findValue("eventTid").asText()
-        val id = try {
-            tx.run(
-                queryOf(
-                    """
+        val id = tx.run(
+            queryOf(
+                """
                             insert into eventlager(fagsystem, ekstern_id, ekstern_versjon, "data", dirty) 
                             values (
                             :fagsystem,
@@ -34,21 +33,15 @@ class EventRepository(
                             true)
                             on conflict do nothing
                          """,
-                    mapOf(
-                        "fagsystem" to fagsystem.kode,
-                        "ekstern_id" to eksternId,
-                        "ekstern_versjon" to eksternVersjon,
-                        "data" to event
-                    )
-                ).asUpdateAndReturnGeneratedKey
-            )
-        } catch (e: PSQLException) {
-            if (e.sqlState == "23505") {
-                throw DuplikatDataException("Event med fagsystem: ${fagsystem}, eksternId: ${eksternId} og eksternVersjon: ${eksternVersjon} finnes allerede!")
-            } else {
-                throw e
-            }
-        }
+                mapOf(
+                    "fagsystem" to fagsystem.kode,
+                    "ekstern_id" to eksternId,
+                    "ekstern_versjon" to eksternVersjon,
+                    "data" to event
+                )
+            ).asUpdateAndReturnGeneratedKey
+        )
+
 
         if (id == null) {
             return hent(fagsystem, eksternId, eksternVersjon, tx)
@@ -64,21 +57,24 @@ class EventRepository(
         )
     }
 
-    fun hentAlleEventer(eksternId: String): List<EventLagret> {
-        val eventer = using(sessionOf(dataSource)) {
-            it.run(
-                queryOf(
-                    """
+    fun hentAlleEventerMedLås(fagsystem: Fagsystem, eksternId: String, tx: TransactionalSession): List<EventLagret> {
+        val eventer = tx.run(
+            queryOf(
+                """
                     select *
                     from eventlager bpep 
                     where ekstern_id = :ekstern_id
+                    and fagsystem = :fagsystem
+                    for update
                 """.trimIndent(),
-                    mapOf("ekstern_id" to eksternId)
-                ).map { row ->
-                    rowTilEvent(row)
-                }.asList
-            )
-        }
+                mapOf(
+                    "ekstern_id" to eksternId,
+                    "fagsystem" to fagsystem.kode
+                )
+            ).map { row ->
+                rowTilEvent(row)
+            }.asList
+        )
 
         return eventer.sortedBy { LocalDateTime.parse(it.eksternVersjon) }
     }
@@ -100,10 +96,6 @@ class EventRepository(
                 )
             ).map { row -> rowTilEvent(row) }.asSingle
         )!!
-    }
-
-    fun hent(eksternId: String, eventNr: Int): EventLagret? {
-        return hentAlleEventer(eksternId).getOrNull(eventNr)
     }
 
     fun hent(id: Long): EventLagret? {
@@ -143,26 +135,48 @@ class EventRepository(
         }
     }
 
-    fun hentAlleDirtyEventer(eksternId: String, fagsystem: Fagsystem): List<EventLagret> {
+    fun hentAlleEksternIderMedDirtyEventer(): List<EventNøkkel> {
         return using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
                     """
+                    select distinct ekstern_id, fagsystem
+                    from eventlager 
+                    where dirty = true
+                """.trimIndent()
+                ).map { row ->
+                    EventNøkkel(
+                        fagsystem = Fagsystem.fraKode(row.string("fagsystem")),
+                        eksternId = row.string("ekstern_id")
+                    )
+                }.asList
+            )
+        }
+    }
+
+    fun hentAlleDirtyEventerMedLås(
+        fagsystem: Fagsystem,
+        eksternId: String,
+        tx: TransactionalSession
+    ): List<EventLagret> {
+        return tx.run(
+            queryOf(
+                """
                     select *
                     from eventlager
                     where ekstern_id = :ekstern_id
                     and FAGSYSTEM = :fagsystem
                     and dirty = true
+                    for update
                 """.trimIndent(),
-                    mapOf(
-                        "ekstern_id" to eksternId,
-                        "fagsystem" to fagsystem.kode
-                    )
-                ).map { row ->
-                    rowTilEvent(row)
-                }.asList
-            )
-        }
+                mapOf(
+                    "ekstern_id" to eksternId,
+                    "fagsystem" to fagsystem.kode
+                )
+            ).map { row ->
+                rowTilEvent(row)
+            }.asList
+        )
     }
 
     private fun rowTilEvent(row: Row): EventLagret? {
@@ -208,25 +222,21 @@ class EventRepository(
         }
     }
 
-    fun bestillHistorikkvask(fagsystem: Fagsystem, eksternId: String) {
-        using(sessionOf(dataSource)) {
-            it.transaction { tx ->
-                tx.run(
-                    queryOf(
-                        """insert into eventlager_historikkvask_bestilt(ekstern_id, fagsystem)
+    fun bestillHistorikkvask(fagsystem: Fagsystem, eksternId: String, tx: TransactionalSession) {
+        tx.run(
+            queryOf(
+                """insert into eventlager_historikkvask_bestilt(ekstern_id, fagsystem)
                             select distinct ekstern_id, fagsystem
                             from eventlager
                             where fagsystem = :fagsystem
                             and ekstern_id = :ekstern_id
                         """.trimMargin(),
-                        mapOf(
-                            "fagsystem" to fagsystem.kode,
-                            "ekstern_id" to eksternId
-                        )
-                    ).asUpdate
+                mapOf(
+                    "fagsystem" to fagsystem.kode,
+                    "ekstern_id" to eksternId
                 )
-            }
-        }
+            ).asUpdate
+        )
     }
 
     fun settHistorikkvaskFerdig(fagsystem: Fagsystem, eksternId: String) {
@@ -247,7 +257,22 @@ class EventRepository(
         }
     }
 
-    fun hentAlleHistorikkvaskbestillinger(): List<HistorikkvaskBestilling> {
+    fun hentAntallHistorikkvaskbestillinger() : Long {
+        return using(sessionOf(dataSource)) {
+            it.transaction { tx ->
+                tx.run(
+                    queryOf(
+                        """
+                            select count(*) as antall
+                            from eventlager_historikkvask_bestilt
+                        """.trimIndent()
+                    ).map { it.long("antall") }.asSingle
+                )!!
+            }
+        }
+    }
+
+    fun hentAlleHistorikkvaskbestillinger(antall: Int = 10000): List<HistorikkvaskBestilling> {
         return using(sessionOf(dataSource)) {
             it.transaction { tx ->
                 tx.run(
@@ -255,7 +280,9 @@ class EventRepository(
                         """
                             select *
                             from eventlager_historikkvask_bestilt
-                        """.trimIndent()
+                            LIMIT :antall
+                        """.trimIndent(),
+                        mapOf("antall" to antall)
                     ).map { row ->
                         HistorikkvaskBestilling(
                             fagsystem = Fagsystem.fraKode(row.string("fagsystem")),
