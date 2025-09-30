@@ -2,16 +2,9 @@ package no.nav.k9.los.nyoppgavestyring.kodeverk
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonFormat
-import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonValue
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
-import no.nav.k9.los.domene.lager.oppgave.Kodeverdi
-import no.nav.k9.los.domene.modell.KøKritererTypeValidatorer.FlaggValidator
-import no.nav.k9.los.domene.modell.KøKritererTypeValidatorer.HeltallRangeValidator
-import no.nav.k9.los.domene.modell.KøKritererTypeValidatorer.KodeverkValidator
-import no.nav.k9.los.domene.modell.KøKriterierTypeValidator
 
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
@@ -42,72 +35,6 @@ enum class AndreKriterierType(override val kode: String, override val navn: Stri
             return values().find { it.kode == kode } ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
         }
     }
-}
-
-// Tanken er på sikt å erstatte AndreKriterierType og SorteringDatoDto og evt. andre filtereringsmuligheter med denne
-@JsonFormat(shape = JsonFormat.Shape.OBJECT)
-@JsonInclude(value = JsonInclude.Include.NON_ABSENT, content = JsonInclude.Include.NON_EMPTY)
-enum class KøKriterierType(
-    override val kode: String,
-    override val navn: String,
-    val felttype: KøKriterierFeltType,
-    val felttypeKodeverk: String? = null,
-    @JsonIgnore val validator: KøKriterierTypeValidator
-) : Kodeverdi {
-    FEILUTBETALING(
-        kode = "FEILUTBETALING",
-        navn = "Feilutbetalt beløp",
-        felttype = KøKriterierFeltType.BELØP,
-        validator = HeltallRangeValidator
-    ),
-    BEHANDLINGTYPE(
-        kode = "BEHANDLINGTYPE",
-        navn = "Behandling type",
-        felttype = KøKriterierFeltType.KODEVERK,
-        felttypeKodeverk = BehandlingType::class.java.simpleName,
-        validator = KodeverkValidator { BehandlingType.fraKode(it) }
-    ),
-    OPPGAVEKODE(
-        kode = "OPPGAVEKODE",
-        navn = "Oppgavekode",
-        felttype = KøKriterierFeltType.KODEVERK,
-        felttypeKodeverk = OppgaveKode::class.java.simpleName,
-        validator = KodeverkValidator { OppgaveKode.fraKode(it) }
-    ),
-    MERKNADTYPE(
-        kode = "MERKNADTYPE",
-        navn = "Merknad type",
-        felttype = KøKriterierFeltType.KODEVERK,
-        felttypeKodeverk = MerknadType::class.java.simpleName,
-        validator = KodeverkValidator { MerknadType.fraKode(it) }
-    ),
-    NYE_KRAV(
-        kode = "NYE_KRAV",
-        navn = "Nye søknadsperioder",
-        felttype = KøKriterierFeltType.FLAGG,
-        validator = FlaggValidator
-    ),
-    FRA_ENDRINGSDIALOG(
-        kode = "FRA_ENDRINGSDIALOG",
-        navn = "Har endring fra endringsdialog",
-        felttype = KøKriterierFeltType.FLAGG,
-        validator = FlaggValidator
-    ),
-    ;
-
-
-    companion object {
-        private val KODER = values().associateBy { it.kode }
-
-        @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
-        @JvmStatic
-        fun fraKode(kode: String): KøKriterierType {
-            return KODER[kode] ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
-        }
-    }
-
-    override val kodeverk = "KØ_KRITERIER_TYPE"
-
 }
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
@@ -187,6 +114,7 @@ enum class BehandlingType(override val kode: String, override val navn: String, 
     INNTEKTSMELDING_UTGÅTT("INNTEKTSMELDING_UTGÅTT", "Inntektsmeldinger uten søknad", "PUNSJ_INNSENDING_TYPE"),
     UTEN_FNR_DNR("UTEN_FNR_DNR", "Uten fnr eller dnr", "PUNSJ_INNSENDING_TYPE"),
     PUNSJOPPGAVE_IKKE_LENGER_NØDVENDIG("PUNSJOPPGAVE_IKKE_LENGER_NØDVENDIG", "Punsjoppgave ikke lenger nødvendig", "PUNSJ_INNSENDING_TYPE"), // Prodfiks: Lagt til fordi den er mottatt på kafka
+    JOURNALPOSTNOTAT("JOURNALPOSTNOTAT", "Manuelt opprettet journalpostnotat", "PUNSJ_INNSENDING_TYPE"),
     UKJENT("UKJENT", "Ukjent", "PUNSJ_INNSENDING_TYPE");
 
     companion object {
@@ -311,6 +239,17 @@ enum class BehandlingStatus(override val kode: String, override val navn: String
 }
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
+enum class Venteårsak(override val kode: String, override val navn: String) : Kodeverdi {
+    AVV_DOK("AVV_DOK", "Avventer dokumentasjon"),
+    VENT_MANGL_FUNKSJ_SAKSBEHANDLER("VENT_MANGL_FUNKSJ_SAKSBEHANDLER", "Manglende funksjonalitet i løsningen"),
+    VENTER_SVAR_INTERNT("VENTER_SVAR_INTERNT", "Meldt i Porten eller Teams"),
+    AUTOMATISK_SATT_PA_VENT("AUTOMATISK", "Automatisk satt på vent"),
+    UKJENT("UKJENT", "Mangler venteårsak");
+
+    override val kodeverk = "VENTEÅRSAK_TYPE"
+}
+
+@JsonFormat(shape = JsonFormat.Shape.OBJECT)
 enum class Enhet(val navn: String) {
     NASJONAL("NASJONAL");
 
@@ -323,31 +262,6 @@ enum class Enhet(val navn: String) {
         }
     }
 }
-
-@JsonFormat(shape = JsonFormat.Shape.OBJECT)
-enum class KøSortering(
-    override val kode: String,
-    override val navn: String,
-    val felttype: String,
-    val feltkategori: String
-) :
-    Kodeverdi {
-    OPPRETT_BEHANDLING("OPPRBEH", "Dato for opprettelse av behandling", "DATO", ""),
-    FORSTE_STONADSDAG("FORSTONAD", "Dato for første stønadsdag", "DATO", ""),
-    FEILUTBETALT("FEILUTBETALT", "Sorter etter høyeste feilutbetalt beløp", "BELOP", "");
-
-    override val kodeverk = "KO_SORTERING"
-
-    companion object {
-        @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
-        @JvmStatic
-        fun fraKode(o: Any): KøSortering {
-            val kode = TempAvledeKode.getVerdi(o)
-            return values().find { it.kode == kode } ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
-        }
-    }
-}
-
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 enum class Fagsystem(override val kode: String, override val kodeverk: String, override val navn: String): Kodeverdi {
@@ -381,25 +295,6 @@ enum class AksjonspunktStatus(@JsonValue val kode: String, val navn: String) {
         }
     }
 }
-
-@JsonFormat(shape = JsonFormat.Shape.OBJECT)
-enum class MerknadType(override val kode: String, override val navn: String) : Kodeverdi {
-    HASTESAK("HASTESAK", "Hastesak"),
-    VANSKELIG("VANSKELIG", "Vanskelig sak");
-
-    override val kodeverk = "MERKNADTYPE"
-
-    companion object {
-        private val KODER = values().associateBy { it.kode }
-
-        @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
-        @JvmStatic
-        fun fraKode(kode: String): MerknadType {
-            return KODER[kode] ?: throw IllegalStateException("Kjenner ikke igjen koden=$kode")
-        }
-    }
-}
-
 
 /**
  * for avledning av kode for enum som ikke er mappet direkte på navn der både ny (@JsonValue) og gammel (@JsonProperty kode + kodeverk) kan

@@ -3,31 +3,29 @@ package no.nav.k9.los.nyoppgavestyring.reservasjon
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
-import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.nyoppgavestyring.feilhandtering.FinnerIkkeDataException
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Action
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Auditlogging
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
-import no.nav.k9.los.nyoppgavestyring.feilhandtering.FinnerIkkeDataException
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.leggTilDagerHoppOverHelg
 import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.ReservasjonAnnullert
 import no.nav.k9.los.nyoppgavestyring.ko.ReservasjonEndret
 import no.nav.k9.los.nyoppgavestyring.ko.ReservasjonTatt
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
+import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.leggTilDagerHoppOverHelg
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
-import java.util.*
 
 class ReservasjonV3Tjeneste(
     private val transactionalManager: TransactionalManager,
     private val reservasjonV3Repository: ReservasjonV3Repository,
     private val pepClient: IPepClient,
     private val saksbehandlerRepository: SaksbehandlerRepository,
-    private val oppgaveV1Repository: no.nav.k9.los.domene.repository.OppgaveRepository,
     private val oppgaveV3Repository: OppgaveRepository,
     private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
 ) {
@@ -250,26 +248,10 @@ class ReservasjonV3Tjeneste(
         reservasjon: ReservasjonV3,
         tx: TransactionalSession
     ): ReservasjonV3MedOppgaver {
-        val oppgaveV1 = hentV1OppgaveFraReservasjon(reservasjon)
-        return if (oppgaveV1 != null) {
-            ReservasjonV3MedOppgaver(reservasjon, emptyList(), oppgaveV1)
-        } else {
-            ReservasjonV3MedOppgaver(
-                reservasjon,
-                oppgaveV3Repository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjon.reservasjonsnøkkel),
-                null
-            )
-        }
-    }
-
-    fun hentV1OppgaveFraReservasjon(
-        reservasjon: ReservasjonV3
-    ): no.nav.k9.los.domene.lager.oppgave.Oppgave? {
-        if (reservasjon.reservasjonsnøkkel.startsWith("legacy_")) {
-            return oppgaveV1Repository.hent(UUID.fromString(reservasjon.reservasjonsnøkkel.substring(7)))
-        } else {
-            return null
-        }
+        return ReservasjonV3MedOppgaver(
+            reservasjon,
+            oppgaveV3Repository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjon.reservasjonsnøkkel)
+        )
     }
 
     fun annullerReservasjonHvisFinnes(

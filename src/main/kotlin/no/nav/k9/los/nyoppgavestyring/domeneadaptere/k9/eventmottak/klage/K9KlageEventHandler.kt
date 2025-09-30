@@ -14,10 +14,9 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.OpentelemetrySpanUtil
 import org.slf4j.LoggerFactory
 
 
-class K9KlageEventHandler constructor(
+class K9KlageEventHandler (
     private val behandlingProsessEventKlageRepository: K9KlageEventRepository,
     private val k9KlageTilLosAdapterTjeneste: K9KlageTilLosAdapterTjeneste,
-    private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
 ) {
     private val log = LoggerFactory.getLogger(K9KlageEventHandler::class.java)
 
@@ -44,11 +43,13 @@ class K9KlageEventHandler constructor(
             k9KlageModell
         }
         OpentelemetrySpanUtil.span("k9KlageTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid") {
-            k9KlageTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId)
+            try {
+                k9KlageTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId)
+            } catch (e: Exception) {
+                log.error("Oppatering av k9-klage-oppgave feilet for ${event.eksternId}. Oppgaven er ikke oppdatert, men blir plukket av vaktmester", e)
+            }
         }
-        runBlocking {
-            køpåvirkendeHendelseChannel.send(OppgaveHendelseMottatt(Fagsystem.K9KLAGE, EksternOppgaveId("K9", event.eksternId.toString())))
-        }
+
         EventHandlerMetrics.observe("k9klage", "gjennomført", t0)
     }
 
