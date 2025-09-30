@@ -173,6 +173,10 @@ class OppgaveV3Repository(
             }.asSingle
         )
 
+        if (internVersjonForEksternversjon == null) {
+            return null
+        }
+
         return hentOppgaveversjon(område, oppgavetype, eksternId, internVersjonForEksternversjon!! - 1, tx)
     }
 
@@ -191,10 +195,10 @@ class OppgaveV3Repository(
             queryOf(
                 """
                     select ekstern_versjon
-                    from oppgave_v3
-                        inner join oppgavetype ot on ov.oppgavetype_id = ot.id and ot.ekstern_id = :oppgavetype
-                        inner join omrade o on ot.omrade_id = o.id and o.ekstern_id = :omrade
-                    where ekstern_id = :eksternId
+                    from oppgave_v3 o
+                        inner join oppgavetype ot on o.oppgavetype_id = ot.id and ot.ekstern_id = :oppgavetype
+                        inner join omrade omr on ot.omrade_id = omr.id and omr.ekstern_id = :omrade
+                    where o.ekstern_id = :eksternId
                     and aktiv = true
                 """.trimIndent(),
                 mapOf(

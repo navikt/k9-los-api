@@ -29,19 +29,35 @@ class OppgaveOppdatertHandler(
     internal fun håndterOppgaveOppdatert(eventLagret: EventLagret, oppgave: OppgaveV3, tx: TransactionalSession) {
         when (eventLagret.fagsystem) {
             Fagsystem.SAK -> {
-                håndterK9SakPåVent(eventLagret, oppgave, tx)
+                håndterSakOppdatert(eventLagret, oppgave, tx)
             }
             Fagsystem.TILBAKE -> {
-                håndterK9TilbakePåVent(eventLagret, oppgave, tx)
+                håndterTilbakeOppdatert(eventLagret, oppgave, tx)
             }
             Fagsystem.KLAGE -> {
-                håndterK9KlagePåVent(eventLagret, oppgave, tx)
+                håndterKlageOppdatert(eventLagret, oppgave, tx)
             }
-            Fagsystem.PUNSJ -> TODO()
+            Fagsystem.PUNSJ -> {
+                håndterPunsjOppdatert(oppgave, tx)
+            }
         }
     }
 
-    private fun håndterK9KlagePåVent(eventLagret: EventLagret, oppgave: OppgaveV3, tx: TransactionalSession) {
+    private fun håndterPunsjOppdatert(
+        oppgave: OppgaveV3,
+        tx: TransactionalSession
+    ) {
+        if (oppgave.status == Oppgavestatus.LUKKET || oppgave.status == Oppgavestatus.VENTER) {
+            reservasjonV3Tjeneste.annullerReservasjonHvisFinnes(
+                oppgave.reservasjonsnøkkel,
+                "Maskinelt annullert reservasjon, siden oppgave på reservasjonen er avsluttet eller på vent",
+                null,
+                tx
+            )
+        }
+    }
+
+    private fun håndterKlageOppdatert(eventLagret: EventLagret, oppgave: OppgaveV3, tx: TransactionalSession) {
         val event = LosObjectMapper.instance.readValue<K9KlageEventDto>(eventLagret.eventJson)
         val erPåVent  = event.aksjonspunkttilstander.any {
             it.status.erÅpentAksjonspunkt()
@@ -52,7 +68,7 @@ class OppgaveOppdatertHandler(
         }
     }
 
-    private fun håndterK9TilbakePåVent(eventLagret: EventLagret, oppgave: OppgaveV3, tx: TransactionalSession) {
+    private fun håndterTilbakeOppdatert(eventLagret: EventLagret, oppgave: OppgaveV3, tx: TransactionalSession) {
         val event = LosObjectMapper.instance.readValue<K9TilbakeEventDto>(eventLagret.eventJson)
         val erPåVent = event.aksjonspunktKoderMedStatusListe.any { it.value == AksjonspunktStatus.OPPRETTET.kode && AksjonspunktDefinisjonK9Tilbake.fraKode(it.key).erAutopunkt }
         if (erPåVent || BehandlingStatus.AVSLUTTET.kode == event.behandlingStatus || oppgave.status == Oppgavestatus.LUKKET) {
@@ -60,7 +76,7 @@ class OppgaveOppdatertHandler(
         }
     }
 
-    private fun håndterK9SakPåVent(eventLagret: EventLagret, oppgave: OppgaveV3, tx: TransactionalSession) {
+    private fun håndterSakOppdatert(eventLagret: EventLagret, oppgave: OppgaveV3, tx: TransactionalSession) {
         val event = LosObjectMapper.instance.readValue<K9SakEventDto>(eventLagret.eventJson)
         val erPåVent = event.aksjonspunktTilstander.any {
             it.status.erÅpentAksjonspunkt() && AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode)

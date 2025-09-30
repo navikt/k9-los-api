@@ -27,7 +27,7 @@ class EventTilOppgaveAdapter(
     private val TRÅDNAVN = "event-til-oppgave"
 
     @WithSpan
-    private fun spillAvBehandlingProsessEventer() {
+    fun spillAvBehandlingProsessEventer() {
 
         log.info("Starter avspilling av K9-eventer")
         val tidKjøringStartet = System.currentTimeMillis()
