@@ -43,7 +43,7 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         val eventstring = LosObjectMapper.instance.writeValueAsString(event)
 
         val eventLagret = transactionalManager.transaction { tx ->
-            eventRepository.lagre(eventstring, Fagsystem.PUNSJ, tx)!!
+            eventRepository.lagre(Fagsystem.PUNSJ, eventstring, tx)!!
         }
         assertThat(PunsjEventDto.fraEventLagret(eventLagret).status).isEqualTo(Oppgavestatus.AAPEN)
 
@@ -69,7 +69,7 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         val eventstring2 = LosObjectMapper.instance.writeValueAsString(event2)
 
         val eventLagret2 = transactionalManager.transaction { tx ->
-            eventRepository.lagre(eventstring2, Fagsystem.PUNSJ, tx)!!
+            eventRepository.lagre(Fagsystem.PUNSJ, eventstring2, tx)!!
         }
         assertThat(PunsjEventDto.fraEventLagret(eventLagret2).status).isEqualTo(Oppgavestatus.VENTER)
 
@@ -121,8 +121,8 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         val eventString = LosObjectMapper.instance.writeValueAsString(event)
 
         transactionalManager.transaction { tx ->
-            eventRepository.lagre(eventString, Fagsystem.PUNSJ, tx)
-            eventRepository.lagre(eventString, Fagsystem.PUNSJ, tx)
+            eventRepository.lagre(Fagsystem.PUNSJ,eventString, tx)
+            eventRepository.lagre(Fagsystem.PUNSJ,eventString, tx)
         }
 
         val retur = transactionalManager.transaction { tx ->
@@ -156,7 +156,7 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         val eventString = LosObjectMapper.instance.writeValueAsString(event)
 
         val eventLagret = transactionalManager.transaction { tx ->
-            eventRepository.lagre(eventString, Fagsystem.PUNSJ, tx)!!
+            eventRepository.lagre(Fagsystem.PUNSJ, eventString, tx)!!
         }
 
         val event2 = PunsjEventDto(
@@ -175,7 +175,7 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         )
         val eventString2 = LosObjectMapper.instance.writeValueAsString(event2)
         val eventLagret2 = transactionalManager.transaction { tx ->
-            eventRepository.lagre(eventString2, Fagsystem.PUNSJ, tx)
+            eventRepository.lagre(Fagsystem.PUNSJ,eventString2, tx)
         }
 
         eventRepository.bestillHistorikkvask(Fagsystem.PUNSJ)
@@ -197,5 +197,12 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
 
         vaskeBestillinger = eventRepository.hentAlleHistorikkvaskbestillinger()
         assertThat(vaskeBestillinger).isEmpty()
+
+        transactionalManager.transaction { tx ->
+            eventRepository.bestillHistorikkvask(Fagsystem.PUNSJ, event.eksternId.toString(), tx)
+        }
+
+        vaskeBestillinger = eventRepository.hentAlleHistorikkvaskbestillinger()
+        assertThat(vaskeBestillinger.size).isEqualTo(1)
     }
 }
