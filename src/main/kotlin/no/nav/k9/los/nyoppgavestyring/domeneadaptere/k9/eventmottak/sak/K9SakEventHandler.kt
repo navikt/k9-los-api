@@ -1,15 +1,14 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
-import kotlinx.coroutines.channels.Channel
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHandlerMetrics
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventlagerKonverteringsservice
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.modia.SakOgBehandlingProducer
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.OpentelemetrySpanUtil
-import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
@@ -20,10 +19,10 @@ class K9SakEventHandler (
     private val k9SakEventRepository: K9SakEventRepository,
     private val sakOgBehandlingProducer: SakOgBehandlingProducer,
     private val k9SakTilLosAdapterTjeneste: K9SakTilLosAdapterTjeneste,
-    private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
 
     private val transactionalManager: TransactionalManager,
     private val eventlagerKonverteringsservice: EventlagerKonverteringsservice,
+    private val eventRepository: EventRepository,
 ) {
     private val log = LoggerFactory.getLogger(K9SakEventHandler::class.java)
 
@@ -44,6 +43,14 @@ class K9SakEventHandler (
         val t0 = System.nanoTime()
 
         val event = håndterVaskeevent(eventInn)
+        /* TODO:
+        if (vaskeevent) {
+            //låse
+            overskriv et event
+            //bestill historikkvask
+            //fjern DVH-kvittering
+        }
+         */
         if (event == null) {
             EventHandlerMetrics.observe("k9sak", "vaskeevent", t0)
             return

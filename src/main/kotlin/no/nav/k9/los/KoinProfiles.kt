@@ -215,9 +215,9 @@ fun common(app: Application, config: Configuration) = module {
             k9SakEventRepository = get(),
             sakOgBehandlingProducer = get(),
             k9SakTilLosAdapterTjeneste = get(),
-            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
             transactionalManager = get(),
-            eventlagerKonverteringsservice = get()
+            eventlagerKonverteringsservice = get(),
+            eventRepository = get(),
         )
     }
 
