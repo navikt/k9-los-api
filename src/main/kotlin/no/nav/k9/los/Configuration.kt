@@ -7,7 +7,6 @@ import no.nav.helse.dusseldorf.ktor.auth.withoutAdditionalClaimRules
 import no.nav.helse.dusseldorf.ktor.core.getOptionalString
 import no.nav.helse.dusseldorf.ktor.core.getRequiredString
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.KafkaAivenConfig
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.KafkaConfig
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.createHikariConfig
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import java.net.URI
@@ -120,29 +119,8 @@ data class Configuration(private val config: ApplicationConfig) {
         return config.getOptionalString("nav.features.k9SakConsumerAiven", secret = false).toBoolean()
     }
 
-    internal fun getKafkaConfig() =
-        config.getRequiredString("nav.kafka.bootstrap_servers", secret = false).let { bootstrapServers ->
-            val trustStore = config.getRequiredString("nav.trust_store.path", secret = false).let { trustStorePath ->
-                config.getOptionalString("nav.trust_store.password", secret = true)?.let { trustStorePassword ->
-                    Pair(trustStorePath, trustStorePassword)
-                }
-            }
-
-            KafkaConfig(
-                bootstrapServers = bootstrapServers,
-                credentials = Pair(
-                    config.getRequiredString("nav.kafka.username", secret = false),
-                    config.getRequiredString("nav.kafka.password", secret = true)
-                ),
-                trustStore = trustStore,
-                exactlyOnce = false,
-                unreadyAfterStreamStoppedIn = unreadyAfterStreamStoppedIn()
-            )
-        }
-
     internal fun getProfileAwareKafkaAivenConfig() =
-        // Bytter ut aivenkonfig med onprem kafkakonfig som er støttet i vtp.
-        if (koinProfile == KoinProfile.LOCAL) getKafkaConfig() else getKafkaAivenConfig()
+        getKafkaAivenConfig()
 
 
     internal fun getKafkaAivenConfig(defaultOffsetResetStrategy: OffsetResetStrategy = OffsetResetStrategy.NONE): KafkaAivenConfig {

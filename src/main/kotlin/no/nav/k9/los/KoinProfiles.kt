@@ -232,7 +232,6 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         AsynkronProsesseringV1Service(
-            kafkaConfig = config.getKafkaConfig(),
             kafkaAivenConfig = config.getProfileAwareKafkaAivenConfig(),
             configuration = config,
             k9sakEventHandler = get(),
