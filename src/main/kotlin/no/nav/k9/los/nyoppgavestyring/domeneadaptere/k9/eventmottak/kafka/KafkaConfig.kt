@@ -25,7 +25,6 @@ interface IKafkaConfig {
 
 class KafkaConfig(
     bootstrapServers: String,
-    credentials: Pair<String, String>,
     trustStore: Pair<String, String>?,
     exactlyOnce: Boolean,
     override val unreadyAfterStreamStoppedIn: Duration
@@ -34,7 +33,6 @@ class KafkaConfig(
         put(BOOTSTRAP_SERVERS_CONFIG, bootstrapServers)
         put(DEFAULT_DESERIALIZATION_EXCEPTION_HANDLER_CLASS_CONFIG, LogAndFailExceptionHandler::class.java)
         put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
-        medCredentials(credentials)
         medTrustStore(trustStore)
         medProcessingGuarantee(exactlyOnce)
     }
@@ -45,7 +43,6 @@ class KafkaConfig(
 
     private val producer = Properties().apply {
         put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers)
-        medCredentials(credentials)
         medTrustStore(trustStore)
     }
 
@@ -82,11 +79,4 @@ private fun Properties.medTrustStore(trustStore: Pair<String, String>?) {
         }
     }
 }
-private fun Properties.medCredentials(credentials: Pair<String, String>) {
-    put(SaslConfigs.SASL_MECHANISM, "PLAIN")
-    put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_PLAINTEXT")
-    put(
-        SaslConfigs.SASL_JAAS_CONFIG,
-        "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${credentials.first}\" password=\"${credentials.second}\";"
-    )
-}
+

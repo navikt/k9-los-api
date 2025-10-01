@@ -40,9 +40,7 @@ object TestConfiguration {
         map["nav.auth.clients.0.certificate_hex_thumbprint"] = ClientCredentials.ClientA.certificateHexThumbprint
         map["nav.auth.clients.0.discovery_endpoint"] = "http://azure-mock:8100/v2.0/.well-known/openid-configuration"
 
-        map["nav.kafka.bootstrap_servers"] = "vtp:9092"
-        map["nav.kafka.username"] = "vtp"
-        map["nav.kafka.password"] = "vtp"
+        map["nav.kafka.bootstrap_servers"] = "kafka:9093"
         map["nav.kafka.unready_after_stream_stopped_in.amount"] = "1010"
         map["nav.kafka.unready_after_stream_stopped_in.unit"] = "SECONDS"
         map["nav.trust_store.path"] = "${System.getProperty("user.home")}/.modig/truststore.jks"

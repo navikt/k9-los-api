@@ -120,25 +120,18 @@ data class Configuration(private val config: ApplicationConfig) {
         return config.getOptionalString("nav.features.k9SakConsumerAiven", secret = false).toBoolean()
     }
 
-    internal fun getKafkaConfig() =
-        config.getRequiredString("nav.kafka.bootstrap_servers", secret = false).let { bootstrapServers ->
-            val trustStore = config.getRequiredString("nav.trust_store.path", secret = false).let { trustStorePath ->
-                config.getOptionalString("nav.trust_store.password", secret = true)?.let { trustStorePassword ->
-                    Pair(trustStorePath, trustStorePassword)
-                }
-            }
-
-            KafkaConfig(
-                bootstrapServers = bootstrapServers,
-                credentials = Pair(
-                    config.getRequiredString("nav.kafka.username", secret = false),
-                    config.getRequiredString("nav.kafka.password", secret = true)
-                ),
-                trustStore = trustStore,
-                exactlyOnce = false,
-                unreadyAfterStreamStoppedIn = unreadyAfterStreamStoppedIn()
-            )
-        }
+    internal fun getKafkaConfig() {
+        val bootstrapServers =  config.getRequiredString("nav.kafka.bootstrap_servers", secret = false)
+        val trustStorePath = config.getRequiredString("nav.trust_store.path", secret = false)
+        val trustStorePassword = config.getRequiredString("nav.trust_store.password", secret = true)
+        val trustStore = Pair(trustStorePath, trustStorePassword)
+        KafkaConfig(
+            bootstrapServers = bootstrapServers,
+            trustStore = trustStore,
+            exactlyOnce = false,
+            unreadyAfterStreamStoppedIn = unreadyAfterStreamStoppedIn()
+        )
+    }
 
     internal fun getProfileAwareKafkaAivenConfig() =
         // Bytter ut aivenkonfig med onprem kafkakonfig som er støttet i vtp.
