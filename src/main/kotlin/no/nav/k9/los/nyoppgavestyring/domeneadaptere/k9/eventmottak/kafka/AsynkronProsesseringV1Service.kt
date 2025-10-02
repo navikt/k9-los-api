@@ -12,7 +12,6 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.
 import org.slf4j.LoggerFactory
 
 internal class AsynkronProsesseringV1Service(
-    kafkaConfig: KafkaConfig,
     kafkaAivenConfig: IKafkaConfig,
     configuration: Configuration,
     k9sakEventHandler: K9SakEventHandler,
@@ -26,7 +25,7 @@ internal class AsynkronProsesseringV1Service(
     }
 
     private val aksjonspunktStream = K9SakKafkaStream(
-        kafkaConfig = if (configuration.k9SakConsumerAiven()) kafkaAivenConfig else kafkaConfig,
+        kafkaConfig = kafkaAivenConfig,
         configuration = configuration,
         k9sakEventHandler = k9sakEventHandler
     )
@@ -38,13 +37,13 @@ internal class AsynkronProsesseringV1Service(
     )
 
     private val aksjonspunkTilbakeStream = K9TilbakeKafkaStream(
-        kafkaConfig = if (configuration.tilbakeConsumerAiven()) kafkaAivenConfig else kafkaConfig,
+        kafkaConfig = kafkaAivenConfig,
         configuration = configuration,
         k9TilbakeEventHandler = k9TilbakeEventHandler
     )
 
     private val aksjonspunkPunsjStream = K9PunsjKafkaStream(
-        kafkaConfig = if (configuration.punsjConsumerAiven()) kafkaAivenConfig else kafkaConfig,
+        kafkaConfig = kafkaAivenConfig,
         configuration = configuration,
         k9PunsjEventHandler = k9PunsjEventHandler
     )

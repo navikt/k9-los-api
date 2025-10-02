@@ -14,7 +14,7 @@ import java.io.File
 import java.time.Duration
 import java.util.*
 
-private val logger: Logger = LoggerFactory.getLogger(KafkaConfig::class.java)
+private val logger: Logger = LoggerFactory.getLogger(KafkaAivenConfig::class.java)
 private const val ID_PREFIX = "srvpps-k9los-"
 
 class KafkaAivenConfig(
