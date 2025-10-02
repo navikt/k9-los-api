@@ -20,7 +20,7 @@ internal fun Route.InnloggetBrukerApi() {
     val azureGraphService by inject<IAzureGraphService>()
     val configuration by inject<Configuration>()
 
-    get("/saksbehandler") {
+    get("/innloggetbruker") {
         if (configuration.koinProfile() != KoinProfile.LOCAL) {
             requestContextService.withRequestContext(call) {
                 val token = call.idToken()

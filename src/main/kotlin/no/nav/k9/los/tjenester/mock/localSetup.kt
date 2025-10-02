@@ -40,6 +40,14 @@ import kotlin.random.Random
 val saksbehandlere = listOf(
     Saksbehandler(
         id = null,
+        brukerIdent = "Z000000",
+        navn = "Null",
+        epost = "",
+        reservasjoner = mutableSetOf(),
+        enhet = ""
+    ),
+    Saksbehandler(
+        id = null,
         brukerIdent = "Z123456",
         navn = "Saksbehandler Sara",
         epost = "saksbehandler@nav.no",
