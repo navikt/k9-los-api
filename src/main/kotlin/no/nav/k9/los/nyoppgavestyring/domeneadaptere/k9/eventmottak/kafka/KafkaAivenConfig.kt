@@ -32,6 +32,8 @@ class KafkaAivenConfig(
         put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, SecurityProtocol.SSL.name)
         put(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, "")
         put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, credStorePassword)
+
+        //put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
         medTrustStore(trustStore)
         medKeyStore(keyStore)
     }

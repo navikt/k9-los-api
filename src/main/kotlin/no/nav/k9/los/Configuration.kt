@@ -6,6 +6,7 @@ import no.nav.helse.dusseldorf.ktor.auth.issuers
 import no.nav.helse.dusseldorf.ktor.auth.withoutAdditionalClaimRules
 import no.nav.helse.dusseldorf.ktor.core.getOptionalString
 import no.nav.helse.dusseldorf.ktor.core.getRequiredString
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.IKafkaConfig
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.KafkaAivenConfig
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.createHikariConfig
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
@@ -30,6 +31,7 @@ data class Configuration(private val config: ApplicationConfig) {
     internal fun k9FrontendUrl() = config.getRequiredString("nav.register_urls.k9_frontend_url", secret = false)
     internal fun k9PunsjFrontendUrl() =
         config.getRequiredString("nav.register_urls.k9_punsj_frontend_url", secret = false)
+
     internal fun sifAbacPdpUrl() = config.getRequiredString("nav.register_urls.sif_abac_pdp_url", secret = false)
 
     internal fun hikariConfig() = createHikariConfig(
@@ -119,9 +121,11 @@ data class Configuration(private val config: ApplicationConfig) {
         return config.getOptionalString("nav.features.k9SakConsumerAiven", secret = false).toBoolean()
     }
 
-    internal fun getProfileAwareKafkaAivenConfig() =
-        getKafkaAivenConfig()
-
+    internal fun getProfileAwareKafkaAivenConfig(): IKafkaConfig {
+        val defaultOffsetResetStrategy =
+            if (koinProfile == KoinProfile.LOCAL) OffsetResetStrategy.EARLIEST else OffsetResetStrategy.NONE
+        return getKafkaAivenConfig(defaultOffsetResetStrategy)
+    }
 
     internal fun getKafkaAivenConfig(defaultOffsetResetStrategy: OffsetResetStrategy = OffsetResetStrategy.NONE): KafkaAivenConfig {
         val bootstrapServers = config.getRequiredString("nav.kafka_aiven.bootstrap_servers", secret = false)
