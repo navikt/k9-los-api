@@ -25,14 +25,14 @@ class UtledFørsteTidHosBeslutterTest : AbstractK9LosIntegrationTest() {
     fun `aldri vært hos beslutter gir ingen timestamp for første gang hos beslutter`() {
         val forrigeOppgave = OppgaveTestDataBuilder().lag()
         val event = opprettEvent(FagsakYtelseType.PLEIEPENGER_SYKT_BARN, BehandlingStatus.UTREDES)
-        assertNull(EventTilDtoMapper.utledTidFørsteGangHosBeslutter(forrigeOppgave = forrigeOppgave, event) )
+        assertNull(SakEventTilOppgaveMapper.utledTidFørsteGangHosBeslutter(forrigeOppgave = forrigeOppgave, event) )
     }
 
     @Test
     fun `første gang hos beslutter skal sette timestamp lik eventtid`() {
         val forrigeOppgave = OppgaveTestDataBuilder().lag()
         val event = hosBeslutter(opprettEvent(FagsakYtelseType.PLEIEPENGER_SYKT_BARN, BehandlingStatus.UTREDES))
-        assertEquals(event.eventTid.toString(), EventTilDtoMapper.utledTidFørsteGangHosBeslutter(forrigeOppgave = forrigeOppgave, event)!!.verdi)
+        assertEquals(event.eventTid.toString(), SakEventTilOppgaveMapper.utledTidFørsteGangHosBeslutter(forrigeOppgave = forrigeOppgave, event)!!.verdi)
     }
 
     @Test
@@ -40,7 +40,7 @@ class UtledFørsteTidHosBeslutterTest : AbstractK9LosIntegrationTest() {
         val timestamp = LocalDate.now().minusDays(1).toString()
         val forrigeOppgave = OppgaveTestDataBuilder().medOppgaveFeltVerdi(feltTypeKode = FeltType.TID_FORSTE_GANG_HOS_BESLUTTER, timestamp).lag()
         val event = opprettEvent(FagsakYtelseType.PLEIEPENGER_SYKT_BARN, BehandlingStatus.UTREDES)
-        assertEquals(timestamp, EventTilDtoMapper.utledTidFørsteGangHosBeslutter(forrigeOppgave = forrigeOppgave, event)!!.verdi)
+        assertEquals(timestamp, SakEventTilOppgaveMapper.utledTidFørsteGangHosBeslutter(forrigeOppgave = forrigeOppgave, event)!!.verdi)
     }
 
     @Test
@@ -48,7 +48,7 @@ class UtledFørsteTidHosBeslutterTest : AbstractK9LosIntegrationTest() {
         val timestamp = LocalDate.now().minusDays(1).toString()
         val forrigeOppgave = OppgaveTestDataBuilder().medOppgaveFeltVerdi(feltTypeKode = FeltType.TID_FORSTE_GANG_HOS_BESLUTTER, timestamp).lag()
         val event = hosBeslutter(opprettEvent(FagsakYtelseType.PLEIEPENGER_SYKT_BARN, BehandlingStatus.UTREDES))
-        assertEquals(timestamp, EventTilDtoMapper.utledTidFørsteGangHosBeslutter(forrigeOppgave = forrigeOppgave, event)!!.verdi)
+        assertEquals(timestamp, SakEventTilOppgaveMapper.utledTidFørsteGangHosBeslutter(forrigeOppgave = forrigeOppgave, event)!!.verdi)
     }
 
     private fun opprettEvent(fagsakYtelseType: FagsakYtelseType, behandlingStatus: BehandlingStatus) : K9SakEventDto {

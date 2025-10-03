@@ -64,7 +64,7 @@ class K9PunsjTilLosAdapterTjeneste(
         transactionalManager.transaction { tx ->
             val punsjEventer = k9PunsjEventRepository.hentMedLås(tx, uuid)
             for (event in punsjEventer.eventer) {
-                val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgaveversjon)
+                val oppgaveDto = PunsjEventTilOppgaveMapper.lagOppgaveDto(event, forrigeOppgaveversjon)
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
 
                 if (oppgave != null) {
@@ -115,3 +115,14 @@ class K9PunsjTilLosAdapterTjeneste(
         }
     }
 }
+
+data class StatuskortDto(
+    private val Navn: String,
+    private val topplinje: StatuslinjeDto,
+    private val liste: List<StatuslinjeDto>, //sortert
+)
+
+data class StatuslinjeDto(
+    private val visningsnavn: String,
+    private val verdi: Int,
+)

@@ -101,7 +101,7 @@ class K9KlageTilLosHistorikkvaskTjeneste(
                 log.info("eventBeriket.påklagdBehandlingType: ${event.påklagdBehandlingType}, eventBeriket.påklagdBehandlingUUID: ${event.påklagdBehandlingId}")
 
                 val oppgaveDto =
-                    EventTilDtoMapper.lagOppgaveDto(eventBeriket,forrigeOppgave)
+                    KlageEventTilOppgaveMapper.lagOppgaveDto(eventBeriket,forrigeOppgave)
 
                 oppgaveV3 = oppgaveV3Tjeneste.utledEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, tx)
                 oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveV3, eventNrForBehandling, tx)
