@@ -47,8 +47,5 @@ data class SøkeresultatOppgaveDto(
     val status: String,
     val oppgavebehandlingsUrl: String?,
     val reservasjonsnøkkel: String,
-    val reservertAvSaksbehandlerNavn: String?,
-    val reservertAvSaksbehandlerIdent: String?,
-    val reservertTom: LocalDateTime?,
     val fagsakÅr: Int?,
 )
