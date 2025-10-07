@@ -239,9 +239,9 @@ fun Application.k9Los() {
         if ((KoinProfile.LOCAL == koin.get<KoinProfile>())) {
             localSetup.initSaksbehandlere()
             localSetup.initPunsjoppgaver(0)
-            localSetup.initTilbakeoppgaver(0)
-            localSetup.initKlageoppgaver(0)
-            localSetup.initK9SakOppgaver(0)
+            localSetup.initTilbakeoppgaver(10)
+            localSetup.initKlageoppgaver(20)
+            localSetup.initK9SakOppgaver(100)
             api()
         } else {
             authenticate(*issuers.allIssuers()) {
