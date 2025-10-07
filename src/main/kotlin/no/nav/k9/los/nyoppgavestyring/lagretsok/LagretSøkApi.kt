@@ -32,8 +32,12 @@ fun Route.LagretSøkApi() {
                 val innloggetSaksbehandler = coroutineContext.idToken().getNavIdent().let {
                     saksbehandlerRepository.finnSaksbehandlerMedIdent(it)
                 }
-                val lagredeSøk = lagretSøkRepository.hentAlle(innloggetSaksbehandler!!)
-                call.respond(lagredeSøk)
+                if (innloggetSaksbehandler == null) {
+                    call.respond(HttpStatusCode.Forbidden, "Innlogget bruker er ikke i saksbehandler-tabellen.")
+                } else {
+                    val lagredeSøk = lagretSøkRepository.hentAlle(innloggetSaksbehandler)
+                    call.respond(lagredeSøk)
+                }
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
