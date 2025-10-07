@@ -257,5 +257,7 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
         }
 
         return tall
+            .filter { statuskort -> statuskort.bunnlinje.verdi > 0 }
+            .map { statuskort -> statuskort.copy(linjer = statuskort.linjer.filter { linje -> linje.verdi > 0 }) }
     }
 }
