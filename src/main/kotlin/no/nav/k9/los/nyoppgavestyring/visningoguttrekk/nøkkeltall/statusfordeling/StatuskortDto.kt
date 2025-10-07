@@ -6,7 +6,8 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.KodeOgNavn
 data class StatuskortDto(
     val tittel: KodeOgNavn,
     val topplinje: StatuslinjeDto,
-    val linjer: List<StatuslinjeDto> //funksjonell sortering
+    val linjer: List<StatuslinjeDto>,
+    val bunnlinje: StatuslinjeDto,
 )
 
 data class StatuslinjeDto(
