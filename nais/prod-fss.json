@@ -27,5 +27,5 @@
   "deployment_environment": "p",
   "ny_oppgavestyring_dvh_sending": "true",
   "ny_oppgavestyring_rest_api": "false",
-  "nokkeltall_enheter": "4400 NAV ARBEID OG YTELSER STYRINGSENHET,4403 NAV ARBEID OG YTELSER KRISTIANIA,4410 NAV ARBEID OG YTELSER SØRLANDET"
+  "nokkeltall_enheter": "4400 NAV ARBEID OG YTELSER STYRINGSENHET,4403 NAV ARBEID OG YTELSER KRISTIANIA,4410 NAV ARBEID OG YTELSER SØRLANDET,2830 YTELSESAVDELINGEN"
 }
