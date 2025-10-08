@@ -20,10 +20,10 @@ import java.time.format.DateTimeFormatter
 import kotlin.time.measureTime
 
 class FerdigstiltePerEnhetService(
-    enheter: List<String>,
+    private val enheter: List<String>,
     private val queryService: OppgaveQueryService
 ) {
-    private val parametre = enheter.map { enhet -> FerdigstiltParameter.Enhet(enhet) } + FerdigstiltParameter.Helautomatisk
+    private val parametre = enheter.map { enhet -> FerdigstiltParameter.Enhet(enhet) } + FerdigstiltParameter.Helautomatisk + FerdigstiltParameter.Andre
     private var oppdatertTidspunkt: LocalDateTime? = null
     private val cache = Cache<LocalDate, List<FerdigstiltePerEnhetTall>>(null)
     private val log: Logger = LoggerFactory.getLogger(FerdigstiltePerEnhetService::class.java)
@@ -166,6 +166,27 @@ class FerdigstiltePerEnhetService(
                                 )
                             )
                         }
+
+                        FerdigstiltParameter.Andre -> {
+                            add(
+                                FeltverdiOppgavefilter(
+                                    "K9",
+                                    "ferdigstiltEnhet",
+                                    EksternFeltverdiOperator.NOT_IN,
+                                    enheter
+                                )
+                            )
+                            add(
+                                FeltverdiOppgavefilter(
+                                    "K9",
+                                    "helautomatiskBehandlet",
+                                    EksternFeltverdiOperator.NOT_EQUALS,
+                                    listOf(true.toString())
+                                )
+                            )
+                        }
+
+
                     }
                     if (ytelser != null) {
                         add(
