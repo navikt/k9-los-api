@@ -124,7 +124,7 @@ class EventTilDtoMapper {
             utledAksjonspunkter(event, oppgaveFeltverdiDtos)
             utledÅpneAksjonspunkter(event.behandlingSteg, åpneAksjonspunkter, oppgaveFeltverdiDtos)
             utledVenteÅrsakOgFrist(åpneAksjonspunkter, oppgaveFeltverdiDtos)
-            utledAutomatiskBehandletFlagg(forrigeOppgave, oppgaveFeltverdiDtos, harEllerHarHattManueltAksjonspunkt)
+            utledAutomatiskBehandletFlagg(oppgaveFeltverdiDtos, harEllerHarHattManueltAksjonspunkt)
             utledSøknadsårsaker(event, oppgaveFeltverdiDtos)
             utledBehandlingsårsaker(event, oppgaveFeltverdiDtos)
             oppgaveFeltverdiDtos.addAll(
@@ -398,25 +398,15 @@ class EventTilDtoMapper {
         }
 
         private fun utledAutomatiskBehandletFlagg(
-            forrigeOppgave: OppgaveV3?,
             oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>,
             harManueltAksjonspunkt: Boolean
         ) {
-            if (forrigeOppgave != null && forrigeOppgave.hentVerdi("helautomatiskBehandlet").toBoolean().not()) {
-                oppgaveFeltverdiDtos.add(
-                    OppgaveFeltverdiDto(
-                        nøkkel = "helautomatiskBehandlet",
-                        verdi = false.toString()
-                    )
+            oppgaveFeltverdiDtos.add(
+                OppgaveFeltverdiDto(
+                    nøkkel = "helautomatiskBehandlet",
+                    verdi = if (harManueltAksjonspunkt) false.toString() else true.toString()
                 )
-            } else {
-                oppgaveFeltverdiDtos.add(
-                    OppgaveFeltverdiDto(
-                        nøkkel = "helautomatiskBehandlet",
-                        verdi = if (harManueltAksjonspunkt) false.toString() else true.toString()
-                    )
-                )
-            }
+            )
         }
 
         private fun utledÅpneAksjonspunkter(
