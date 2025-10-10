@@ -8,6 +8,7 @@ import io.kotest.core.listeners.TestListener
 import io.kotest.core.test.TestCase
 import io.kotest.engine.test.TestResult
 import no.nav.k9.los.buildAndTestConfig
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.runMigration
 import no.nav.k9.los.tjenester.mock.localSetup.getKoin
 import org.koin.core.context.startKoin
@@ -49,6 +50,8 @@ class ProjectConfig : AbstractProjectConfig() {
                 )
             )
         }
+
+        getKoin().get<OmrådeSetup>().setup()
     }
 
     override suspend fun afterProject() {
@@ -106,6 +109,7 @@ fun cleanupTables(dataSource: DataSource) {
                 oppgave_v3,
                 oppgave_v3_aktiv,
                 feltdefinisjon,
+                lagret_sok,
                 event,
                 event_historikkvask_bestilt,
                 oppgave_v3_sendt_dvh;

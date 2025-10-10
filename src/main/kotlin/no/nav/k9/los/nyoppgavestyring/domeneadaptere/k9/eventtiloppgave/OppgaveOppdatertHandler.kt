@@ -107,6 +107,12 @@ class OppgaveOppdatertHandler(
         reservasjonsnøkler: List<String>,
         tx: TransactionalSession
     ): Int {
+        //TODO:
+        //hent reservasjon for nøkler
+        //hvis opprettet dato for reservasjon er før eventLagret.eventTid
+        //  -- utfør resten av denne funksjonen for den aktuelle reservasjonen
+        //hvis ikke
+        //  -- return
         val åpneOppgaverForReservasjonsnøkkel =
             oppgaveRepository.hentAlleÅpneOppgaverForReservasjonsnøkkel(tx, reservasjonsnøkler)
                 .filter { it.status == Oppgavestatus.AAPEN.kode }
