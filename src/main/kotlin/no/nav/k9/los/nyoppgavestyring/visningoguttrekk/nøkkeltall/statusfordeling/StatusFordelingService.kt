@@ -1,9 +1,9 @@
 package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.statusfordeling
 
-import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktKodeDefinisjon
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.CacheObject
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
@@ -12,6 +12,7 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.Oppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.KodeOgNavn
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -117,7 +118,7 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
             "K9",
             "behandlingTypekode",
             EksternFeltverdiOperator.EQUALS,
-            listOf(no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType.FORSTEGANGSSOKNAD.kode)
+            listOf(BehandlingType.FORSTEGANGSSOKNAD.kode)
         )
 
         val klage = FeltverdiOppgavefilter(
@@ -146,8 +147,8 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
             "behandlingTypekode",
             EksternFeltverdiOperator.IN,
             listOf(
-                no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType.REVURDERING.kode,
-                no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType.REVURDERING_TILBAKEKREVING.kode)
+                BehandlingType.REVURDERING.kode,
+                BehandlingType.REVURDERING_TILBAKEKREVING.kode)
         )
 
         val feilutbetaling = FeltverdiOppgavefilter(
@@ -161,90 +162,102 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
             "K9",
             "behandlingTypekode",
             EksternFeltverdiOperator.EQUALS,
-            listOf(no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType.UNNTAKSBEHANDLING.kode)
+            listOf(BehandlingType.UNNTAKSBEHANDLING.kode)
         )
     }
 
-    private fun antall(vararg filtere: Oppgavefilter): Long {
-        return queryService.queryForAntall(QueryRequest(OppgaveQuery(filtere.toList())))
+    private fun antall(
+        visningsnavn: String,
+        vararg filtere: Oppgavefilter
+    ): StatuslinjeDto {
+        val query = OppgaveQuery(filtere.toList())
+        return StatuslinjeDto(
+            visningsnavn,
+            queryService.queryForAntall(QueryRequest(query)),
+            query
+        )
     }
 
-    private fun hentFraDatabase(kode6: Boolean): List<StatusFordelingDto> {
+    private fun hentFraDatabase(kode6: Boolean): List<StatuskortDto> {
         val personbeskyttelse = if (kode6) kunKode6 else ikkeKode6
         val tall = StatusGruppe.entries.map { gruppe ->
             when (gruppe) {
-                StatusGruppe.BEHANDLINGER -> StatusFordelingDto(
-                    gruppe,
-                    antall(personbeskyttelse, åpenVenterUavklart, ikkePunsj),
-                    antall(personbeskyttelse, åpen, ikkePunsj),
-                    antall(personbeskyttelse, venter, ikkePunsj),
-                    0,
-                    0,
-                    antall(personbeskyttelse, uavklart, ikkePunsj)
+                StatusGruppe.BEHANDLINGER -> StatuskortDto(
+                    tittel = KodeOgNavn(gruppe.name, gruppe.tekst),
+                    topplinje = antall("åpne", personbeskyttelse, åpen, ikkePunsj),
+                    linjer =
+                        listOf(
+                            antall("venter", personbeskyttelse, venter, ikkePunsj),
+                            antall("uavklart", personbeskyttelse, uavklart, ikkePunsj),
+                        ),
+                    bunnlinje = antall("totalt", personbeskyttelse, åpenVenterUavklart, ikkePunsj),
                 )
 
-                StatusGruppe.FØRSTEGANG -> StatusFordelingDto(
-                    gruppe,
-                    antall(personbeskyttelse, åpenVenterUavklart, førstegang),
-                    antall(personbeskyttelse, åpen, førstegang),
-                    antall(personbeskyttelse, venter, førstegang),
-                    0,
-                    0,
-                    antall(personbeskyttelse, uavklart, førstegang)
+                StatusGruppe.FØRSTEGANG -> StatuskortDto(
+                    tittel = KodeOgNavn(gruppe.name, gruppe.tekst),
+                    topplinje = antall("åpne", personbeskyttelse, åpen, førstegang),
+                    linjer = listOf(
+                        antall("venter", personbeskyttelse, venter, førstegang),
+                        antall("uavklart", personbeskyttelse, uavklart, førstegang),
+                    ),
+                    bunnlinje = antall("totalt", personbeskyttelse, åpenVenterUavklart, førstegang)
                 )
 
-                StatusGruppe.REVURDERING -> StatusFordelingDto(
-                    gruppe,
-                    antall(personbeskyttelse, åpenVenterUavklart, revurdering),
-                    antall(personbeskyttelse, åpen, revurdering),
-                    antall(personbeskyttelse, venter, revurdering),
-                    0,
-                    0,
-                    antall(personbeskyttelse, uavklart, revurdering)
+                StatusGruppe.REVURDERING -> StatuskortDto(
+                    tittel = KodeOgNavn(gruppe.name, gruppe.tekst),
+                    topplinje = antall("åpne", personbeskyttelse, åpen, revurdering),
+                    linjer = listOf(
+                        antall("venter", personbeskyttelse, venter, revurdering),
+                        antall("uavklart", personbeskyttelse, uavklart, revurdering),
+                    ),
+                    bunnlinje = antall("totalt", personbeskyttelse, åpenVenterUavklart, revurdering),
                 )
 
-                StatusGruppe.FEILUTBETALING -> StatusFordelingDto(
-                    gruppe,
-                    antall(personbeskyttelse, åpenVenterUavklart, feilutbetaling),
-                    antall(personbeskyttelse, åpen, feilutbetaling),
-                    antall(personbeskyttelse, venter, feilutbetaling),
-                    0,
-                    0,
-                    antall(personbeskyttelse, uavklart, feilutbetaling)
+                StatusGruppe.FEILUTBETALING -> StatuskortDto(
+                    tittel = KodeOgNavn(gruppe.name, gruppe.tekst),
+                    topplinje = antall("åpne", personbeskyttelse, åpen, feilutbetaling),
+                    linjer = listOf(
+                        antall("venter", personbeskyttelse, venter, feilutbetaling),
+                        antall("uavklart", personbeskyttelse, uavklart, feilutbetaling),
+                    ),
+                    bunnlinje = antall("totalt", personbeskyttelse, åpenVenterUavklart, feilutbetaling),
                 )
 
-                StatusGruppe.KLAGE -> StatusFordelingDto(
-                    gruppe,
-                    antall(personbeskyttelse, åpenVenterUavklart, klage),
-                    antall(personbeskyttelse, åpen, klage),
-                    0,
-                    antall(personbeskyttelse, venter, klage, venterKabal),
-                    antall(personbeskyttelse, venter, klage, venterIkkeKabal),
-                    antall(personbeskyttelse, uavklart, klage)
+                StatusGruppe.KLAGE -> StatuskortDto(
+                    tittel = KodeOgNavn(gruppe.name, gruppe.tekst),
+                    topplinje = antall("åpne", personbeskyttelse, åpen, klage),
+                    linjer = listOf(
+                        antall("venter Kabal", personbeskyttelse, venter, klage, venterKabal),
+                        antall("venter annet", personbeskyttelse, venter, klage, venterIkkeKabal),
+                        antall("uavklart", personbeskyttelse, uavklart, klage),
+                    ),
+                    bunnlinje = antall("totalt", personbeskyttelse, åpenVenterUavklart, klage),
                 )
 
-                StatusGruppe.PUNSJ -> StatusFordelingDto(
-                    gruppe,
-                    antall(personbeskyttelse, åpenVenterUavklart, punsj),
-                    antall(personbeskyttelse, åpen, punsj),
-                    antall(personbeskyttelse, venter, punsj),
-                    0,
-                    0,
-                    antall(personbeskyttelse, uavklart, punsj)
+                StatusGruppe.UNNTAKSBEHANDLING -> StatuskortDto(
+                    tittel = KodeOgNavn(gruppe.name, gruppe.tekst),
+                    topplinje = antall("åpne", personbeskyttelse, åpen, unntak),
+                    linjer = listOf(
+                        antall("venter", personbeskyttelse, venter, unntak),
+                        antall("uavklart", personbeskyttelse, uavklart, unntak),
+                    ),
+                    bunnlinje = antall("totalt", personbeskyttelse, åpenVenterUavklart, unntak),
                 )
 
-                StatusGruppe.UNNTAKSBEHANDLING -> StatusFordelingDto(
-                    gruppe,
-                    antall(personbeskyttelse, åpenVenterUavklart, unntak),
-                    antall(personbeskyttelse, åpen, unntak),
-                    antall(personbeskyttelse, venter, unntak),
-                    0,
-                    0,
-                    antall(personbeskyttelse, uavklart, unntak)
+                StatusGruppe.PUNSJ -> StatuskortDto(
+                    tittel = KodeOgNavn(gruppe.name, gruppe.tekst),
+                    topplinje = antall("åpne", personbeskyttelse, åpen, punsj),
+                    linjer = listOf(
+                        antall("venter", personbeskyttelse, venter, punsj),
+                        antall("uavklart", personbeskyttelse, uavklart, punsj),
+                    ),
+                    bunnlinje = antall("totalt", personbeskyttelse, åpenVenterUavklart, punsj),
                 )
             }
         }
 
         return tall
+            .filter { statuskort -> statuskort.bunnlinje.verdi > 0 }
+            .map { statuskort -> statuskort.copy(linjer = statuskort.linjer.filter { linje -> linje.verdi > 0 }) }
     }
 }

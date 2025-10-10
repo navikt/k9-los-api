@@ -19,7 +19,6 @@ class K9SakEventHandler (
     private val k9SakEventRepository: K9SakEventRepository,
     private val sakOgBehandlingProducer: SakOgBehandlingProducer,
     private val k9SakTilLosAdapterTjeneste: K9SakTilLosAdapterTjeneste,
-
     private val transactionalManager: TransactionalManager,
     private val eventlagerKonverteringsservice: EventlagerKonverteringsservice,
     private val eventRepository: EventRepository,
@@ -94,13 +93,6 @@ class K9SakEventHandler (
             }
         }
 
-        OpentelemetrySpanUtil.span("k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid") {
-            try {
-                k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId!!)
-            } catch (e: Exception) {
-                log.error("Oppatering av k9-sak-oppgave feilet for ${event.eksternId}. Oppgaven er ikke oppdatert, men blir plukket av vaktmester", e)
-            }
-        }
 
         EventHandlerMetrics.observe("k9sak", "gjennomført", t0)
     }

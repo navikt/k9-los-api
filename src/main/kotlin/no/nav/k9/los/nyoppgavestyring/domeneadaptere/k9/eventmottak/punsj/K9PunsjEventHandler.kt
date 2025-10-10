@@ -1,18 +1,13 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHandlerMetrics
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventlagerKonverteringsservice
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.OpentelemetrySpanUtil
-import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
-import no.nav.k9.los.nyoppgavestyring.ko.OppgaveHendelseMottatt
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
-import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
 import org.slf4j.LoggerFactory
 
 

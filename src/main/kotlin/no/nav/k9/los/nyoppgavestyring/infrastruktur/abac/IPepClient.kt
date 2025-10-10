@@ -34,8 +34,8 @@ interface IPepClient {
 
     suspend fun harTilgangTilOppgaveV3(
         oppgave: no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave,
-        action: Action,
-        auditlogging: Auditlogging,
+        action: Action = Action.read,
+        auditlogging: Auditlogging = Auditlogging.IKKE_LOGG,
         grupperForSaksbehandler: Set<UUID>? = null
     ) : Boolean
 

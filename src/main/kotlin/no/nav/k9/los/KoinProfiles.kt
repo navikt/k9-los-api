@@ -72,6 +72,8 @@ import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.kodeverk.HentKodeverkTjeneste
+import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkRepository
+import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
@@ -99,8 +101,8 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallRe
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.OppgaverGruppertRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
-import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.statusfordeling.StatusFordelingService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.status.StatusService
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.statusfordeling.StatusFordelingService
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -268,7 +270,6 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         AsynkronProsesseringV1Service(
-            kafkaConfig = config.getKafkaConfig(),
             kafkaAivenConfig = config.getProfileAwareKafkaAivenConfig(),
             configuration = config,
             k9sakEventHandler = get(),
@@ -562,6 +563,7 @@ fun common(app: Application, config: Configuration) = module {
             reservasjonV3DtoBuilder = get(),
             reservasjonOversetter = get(),
             pepClient = get(),
+            azureGraphService = get(),
         )
     }
 
@@ -604,8 +606,8 @@ fun common(app: Application, config: Configuration) = module {
             queryService = get(),
             oppgaveRepository = get(),
             pdlService = get(),
-            reservasjonV3Tjeneste = get(),
-            saksbehandlerRepository = get()
+            saksbehandlerRepository = get(),
+            pepClient = get(),
         )
     }
 
@@ -649,6 +651,20 @@ fun common(app: Application, config: Configuration) = module {
     single {
         StatusFordelingService(
             queryService = get()
+        )
+    }
+
+    single<LagretSøkRepository> {
+        LagretSøkRepository(
+            dataSource = get()
+        )
+    }
+
+    single<LagretSøkTjeneste> {
+        LagretSøkTjeneste(
+            lagretSøkRepository = get(),
+            saksbehandlerRepository = get(),
+            oppgaveQueryService = get()
         )
     }
 }
