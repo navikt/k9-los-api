@@ -107,10 +107,6 @@ class EventTilDtoMapper {
             return ventetype != Ventekategori.AVVENTER_SAKSBEHANDLER
         }
 
-        fun harEllerHarHattManueltAksjonspunkt(event: K9SakEventDto): Boolean {
-            return event.aksjonspunktTilstander.any { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.status != AksjonspunktStatus.AVBRUTT }
-        }
-
         private fun lagFeltverdier(
             event: K9SakEventDto,
             forrigeOppgave: OppgaveV3?
@@ -119,12 +115,10 @@ class EventTilDtoMapper {
 
             val åpneAksjonspunkter = getåpneAksjonspunkter(event)
 
-            val harEllerHarHattManueltAksjonspunkt = harEllerHarHattManueltAksjonspunkt(event)
-
             utledAksjonspunkter(event, oppgaveFeltverdiDtos)
             utledÅpneAksjonspunkter(event.behandlingSteg, åpneAksjonspunkter, oppgaveFeltverdiDtos)
             utledVenteÅrsakOgFrist(åpneAksjonspunkter, oppgaveFeltverdiDtos)
-            utledAutomatiskBehandletFlagg(oppgaveFeltverdiDtos, harEllerHarHattManueltAksjonspunkt)
+            utledAutomatiskBehandletFlagg(oppgaveFeltverdiDtos, event)
             utledSøknadsårsaker(event, oppgaveFeltverdiDtos)
             utledBehandlingsårsaker(event, oppgaveFeltverdiDtos)
             oppgaveFeltverdiDtos.addAll(
@@ -399,12 +393,18 @@ class EventTilDtoMapper {
 
         private fun utledAutomatiskBehandletFlagg(
             oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>,
-            harManueltAksjonspunkt: Boolean
+            event: K9SakEventDto
         ) {
+            val harUtførtManueltAksjonspunkt =
+                event.aksjonspunktTilstander
+                    .filter { it.status() == AksjonspunktStatus.UTFØRT }
+                    .map { AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode) }
+                    .any { !it.erAutopunkt() }
+
             oppgaveFeltverdiDtos.add(
                 OppgaveFeltverdiDto(
                     nøkkel = "helautomatiskBehandlet",
-                    verdi = if (harManueltAksjonspunkt) false.toString() else true.toString()
+                    verdi = if (harUtførtManueltAksjonspunkt) false.toString() else true.toString()
                 )
             )
         }
