@@ -1,15 +1,16 @@
-package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak
-
+package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj
 
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.TestSaksbehandler
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.Saksbehandler
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
 import java.time.LocalDateTime
-import java.util.*
+import java.util.Random
+import java.util.UUID
 
 data class PunsjEventDtoBuilder(
     var eksternId: UUID = UUID.randomUUID(),
@@ -47,7 +48,7 @@ data class PunsjEventDtoBuilder(
         )
     }
 
-    fun sendtInn(ansvarligBeslutter: Saksbehandler? = TestSaksbehandler.BIRGER_BESLUTTER): PunsjEventDtoBuilder {
+    fun sendtInn(ansvarligBeslutter: Saksbehandler? = TestSaksbehandler.Companion.BIRGER_BESLUTTER): PunsjEventDtoBuilder {
         return this.copy(
             aksjonspunkter = mutableMapOf(),
             ferdigstiltAv = ansvarligBeslutter?.brukerIdent,

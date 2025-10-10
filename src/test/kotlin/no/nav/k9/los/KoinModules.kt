@@ -10,6 +10,8 @@ import kotlinx.coroutines.channels.Channel
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonKonverteringJobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventlagerKonverteringsservice
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventHandler
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
@@ -190,7 +192,9 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             k9SakEventRepository = K9SakEventRepository(dataSource = get()),
             sakOgBehandlingProducer = sakOgBehadlingProducer,
             k9SakTilLosAdapterTjeneste = get(),
-            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
+            transactionalManager = get(),
+            eventlagerKonverteringsservice = get(),
+            eventRepository = get(),
         )
     }
 
@@ -198,6 +202,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         K9KlageEventHandler(
             K9KlageEventRepository(dataSource = get()),
             k9KlageTilLosAdapterTjeneste = get(),
+            transactionalManager = get(),
+            eventlagerKonverteringsservice = get()
         )
     }
 
@@ -206,6 +212,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             K9TilbakeEventRepository(dataSource = get()),
             sakOgBehandlingProducer = sakOgBehadlingProducer,
             k9TilbakeTilLosAdapterTjeneste = get(),
+            transactionalManager = get(),
+            eventlagerKonverteringsservice = get()
         )
     }
 
@@ -213,6 +221,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         K9PunsjEventHandler(
             punsjEventK9Repository = get(),
             punsjTilLosAdapterTjeneste = get(),
+            transactionalManager = get(),
+            eventlagerKonverteringsservice = get()
         )
     }
 
@@ -220,6 +230,24 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         K9PunsjEventHandler(
             punsjEventK9Repository = K9PunsjEventRepository(dataSource = get()),
             punsjTilLosAdapterTjeneste = get(),
+            transactionalManager = get(),
+            eventlagerKonverteringsservice = get()
+        )
+    }
+
+    single {
+        EventlagerKonverteringsservice(
+            nyttEventrepository = get(),
+            punsjEventRepository = get(),
+            klageEventRepository = get(),
+            tilbakeEventRepository = get(),
+            sakEventRepository = get()
+        )
+    }
+
+    single {
+        EventRepository(
+            dataSource = get(),
         )
     }
 
@@ -295,6 +323,12 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             feltdefinisjonRepository = get(),
             transactionalManager = get(),
             gyldigeFeltutledere = get()
+        )
+    }
+
+    single {
+        EventRepository(
+            dataSource = get(),
         )
     }
 
@@ -430,7 +464,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             reservasjonV3DtoBuilder = get(),
             reservasjonOversetter = get(),
             pepClient = get(),
-            azureGraphService = get()
+            azureGraphService = get(),
         )
     }
 

@@ -91,7 +91,7 @@ class K9KlageTilLosAdapterTjeneste(
             forrigeOppgave = null
 
             runBlocking {
-                køpåvirkendeHendelseChannel.send(OppgaveHendelseMottatt(Fagsystem.K9KLAGE, EksternOppgaveId("K9", uuid.toString())))
+                køpåvirkendeHendelseChannel.send(OppgaveHendelseMottatt(Fagsystem.KLAGE, EksternOppgaveId("K9", uuid.toString())))
             }
 
             k9KlageEventRepository.fjernDirty(uuid, tx)

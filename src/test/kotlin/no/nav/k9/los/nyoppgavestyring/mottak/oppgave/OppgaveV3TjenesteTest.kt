@@ -7,6 +7,7 @@ import assertk.assertions.isTrue
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.OppgaveTestDataBuilder
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import org.junit.jupiter.api.BeforeEach
@@ -67,11 +68,11 @@ class OppgaveV3TjenesteTest : AbstractK9LosIntegrationTest() {
         }
 
         val vasketOppgave1 = transactionalManager.transaction { tx ->
-            oppgaveV3Tjeneste.hentOppgaveversjon("K9", oppgaveVersjon1.id, oppgaveVersjon1.versjon, tx)
+            oppgaveV3Tjeneste.hentOppgaveversjon("K9", K9Oppgavetypenavn.SAK.kode, oppgaveVersjon1.eksternId, oppgaveVersjon1.eksternVersjon, tx)
         }
 
         val vasketOppgave2 = transactionalManager.transaction { tx ->
-            oppgaveV3Tjeneste.hentOppgaveversjon("K9", oppgaveVersjon2.id, oppgaveVersjon2.versjon, tx)
+            oppgaveV3Tjeneste.hentOppgaveversjon("K9", K9Oppgavetypenavn.SAK.kode, oppgaveVersjon2.eksternId, oppgaveVersjon2.eksternVersjon, tx)
         }
 
         assertThat(vasketOppgave1.aktiv).isFalse()
@@ -87,8 +88,8 @@ class OppgaveV3TjenesteTest : AbstractK9LosIntegrationTest() {
 
     private fun lagOppgaveDto(eksternId: String, versjon: Int, oppgavestatus: Oppgavestatus, aksjonspunkt: String?): no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto {
         return OppgaveDto(
-            id = eksternId,
-            versjon = versjon.toString(),
+            eksternId = eksternId,
+            eksternVersjon = versjon.toString(),
             område = Område(eksternId = "K9").eksternId,
             kildeområde = "k9-sak-til-los",
             type = "k9sak",

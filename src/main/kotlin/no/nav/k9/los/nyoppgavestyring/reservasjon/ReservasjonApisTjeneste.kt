@@ -25,7 +25,7 @@ class ReservasjonApisTjeneste(
     private val reservasjonV3DtoBuilder: ReservasjonV3DtoBuilder,
     private val reservasjonOversetter: ReservasjonOversetter,
     private val pepClient: IPepClient,
-    private val azureGraphService: IAzureGraphService
+    private val azureGraphService: IAzureGraphService,
 ) {
 
     companion object {
