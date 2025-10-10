@@ -184,6 +184,12 @@ class OppgaveV3Tjeneste(
         return versjon
     }
 
+    fun hentSisteEksternVersjon( områdeEksternId: String, oppgaveTypeEksternId: String, oppgaveEksternId: String, tx: TransactionalSession): String? {
+        val område = områdeRepository.hentOmråde(områdeEksternId, tx)
+        val oppgavetype = oppgavetypeRepository.hentOppgavetype(område, oppgaveTypeEksternId, tx)
+        return oppgaveV3Repository.hentAktivOppgaveEksternversjon(område, oppgavetype, oppgaveEksternId, tx = tx)
+    }
+
     fun nyEksternversjon(oppgaveDto: OppgaveDto, tx: TransactionalSession): Boolean {
         return !oppgaveV3Repository.finnesFraFør(tx, oppgaveDto.eksternId, oppgaveDto.eksternVersjon)
     }

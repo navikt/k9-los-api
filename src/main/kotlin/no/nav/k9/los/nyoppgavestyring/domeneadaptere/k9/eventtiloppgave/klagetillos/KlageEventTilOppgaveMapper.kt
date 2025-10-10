@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.k9.klage.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.klage.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.klage.kodeverk.behandling.BehandlingStegType
@@ -9,14 +10,55 @@ import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktType
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.Aksjonspunkttilstand
+import no.nav.k9.klage.typer.AktørId
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventLagret
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerInterfaceKludge
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import org.jetbrains.annotations.VisibleForTesting
 
-class EventTilDtoMapper {
+class KlageEventTilOppgaveMapper(
+    private val k9klageBeriker: K9KlageBerikerInterfaceKludge,
+) {
+    internal fun lagOppgaveDto(
+        eventLagret: EventLagret,
+        forrigeOppgave: OppgaveV3?
+    ): OppgaveDto {
+        if (eventLagret.fagsystem != Fagsystem.KLAGE) {
+            throw IllegalArgumentException("Fagsystem er ikke KLAGE")
+        }
+        val event = LosObjectMapper.instance.readValue<K9KlageEventDto>(eventLagret.eventJson)
+
+        val losOpplysningerSomManglerIKlageDto =
+            event.påklagdBehandlingId?.let { k9klageBeriker.hentFraK9Sak(it) }
+
+        val eventBeriket =
+            event.copy(
+                påklagdBehandlingType = event.påklagdBehandlingType ?:
+                event.påklagdBehandlingId?.let {
+                    k9klageBeriker.hentFraK9Klage(event.eksternId)?.påklagdBehandlingType
+                },
+                pleietrengendeAktørId = losOpplysningerSomManglerIKlageDto?.pleietrengendeAktørId?.aktørId?.let { AktørId(it.toLong()) },
+                utenlandstilsnitt = losOpplysningerSomManglerIKlageDto?.isUtenlandstilsnitt
+            )
+
+        return OppgaveDto(
+            eksternId = eventBeriket.eksternId.toString(),
+            eksternVersjon = eventBeriket.eventTid.toString(),
+            område = "K9",
+            kildeområde = "K9",
+            type = "k9klage",
+            status = utledOppgavestatus(eventBeriket).kode,
+            endretTidspunkt = eventBeriket.eventTid,
+            reservasjonsnøkkel = utledReservasjonsnøkkel(eventBeriket, erTilBeslutter(eventBeriket)),
+            feltverdier = lagFeltverdier(eventBeriket, forrigeOppgave)
+        )
+    }
 
     companion object {
         const val KLAGE_PREFIX = "KLAGE"
@@ -41,7 +83,7 @@ class EventTilDtoMapper {
             type = "k9klage",
             status = utledOppgavestatus(event).kode,
             endretTidspunkt = event.eventTid,
-            reservasjonsnøkkel = utledReservasjonsnøkkel(event),
+            reservasjonsnøkkel = utledReservasjonsnøkkel(event, erTilBeslutter(event)),
             feltverdier = lagFeltverdier(event, forrigeOppgave)
         )
 
@@ -72,8 +114,8 @@ class EventTilDtoMapper {
             }
         }
 
-        private fun utledReservasjonsnøkkel(event: K9KlageEventDto): String {
-            return if (erTilBeslutter(event)) {
+        fun utledReservasjonsnøkkel(event: K9KlageEventDto, erTilBeslutter: Boolean): String {
+            return if (erTilBeslutter) {
                 "K9_k_${event.ytelseTypeKode}_${event.aktørId}_beslutter"
             } else {
                 "K9_k_${event.ytelseTypeKode}_${event.aktørId}"
