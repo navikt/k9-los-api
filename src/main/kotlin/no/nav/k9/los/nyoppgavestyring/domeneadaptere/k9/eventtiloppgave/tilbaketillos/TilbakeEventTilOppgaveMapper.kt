@@ -205,24 +205,16 @@ class TilbakeEventTilOppgaveMapper {
             forrigeOppgave: OppgaveV3?,
             oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>
         ) {
-            val harManueltAksjonspunkt = event.aksjonspunktKoderMedStatusListe
-                .filter { it.value == OPPRETTET.kode || it.value == AksjonspunktStatus.UTFØRT.kode }
+            val harUtførtManueltAksjonspunkt = event.aksjonspunktKoderMedStatusListe
+                .filter { it.value == AksjonspunktStatus.UTFØRT.kode }
                 .map { AksjonspunktDefinisjonK9Tilbake.fraKode(it.key) }.any { !it.erAutopunkt }
-            if (forrigeOppgave != null && forrigeOppgave.hentVerdi("helautomatiskBehandlet").toBoolean().not()) {
-                oppgaveFeltverdiDtos.add(
-                    OppgaveFeltverdiDto(
-                        nøkkel = "helautomatiskBehandlet",
-                        verdi = false.toString()
-                    )
+
+            oppgaveFeltverdiDtos.add(
+                OppgaveFeltverdiDto(
+                    nøkkel = "helautomatiskBehandlet",
+                    verdi = if (harUtførtManueltAksjonspunkt) false.toString() else true.toString()
                 )
-            } else {
-                oppgaveFeltverdiDtos.add(
-                    OppgaveFeltverdiDto(
-                        nøkkel = "helautomatiskBehandlet",
-                        verdi = if (harManueltAksjonspunkt) false.toString() else true.toString()
-                    )
-                )
-            }
+            )
         }
 
         private fun utledAksjonspunkter(

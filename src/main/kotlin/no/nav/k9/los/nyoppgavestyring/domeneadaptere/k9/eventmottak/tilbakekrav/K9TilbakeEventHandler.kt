@@ -1,19 +1,14 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHandlerMetrics
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventlagerKonverteringsservice
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.modia.SakOgBehandlingProducer
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.OpentelemetrySpanUtil
-import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
-import no.nav.k9.los.nyoppgavestyring.ko.OppgaveHendelseMottatt
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
-import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
 import org.slf4j.LoggerFactory
 
 
@@ -21,7 +16,6 @@ class K9TilbakeEventHandler(
     private val behandlingProsessEventTilbakeRepository: K9TilbakeEventRepository,
     private val sakOgBehandlingProducer: SakOgBehandlingProducer,
     private val k9TilbakeTilLosAdapterTjeneste : K9TilbakeTilLosAdapterTjeneste,
-
     private val transactionalManager: TransactionalManager,
     private val eventlagerKonverteringsservice: EventlagerKonverteringsservice,
 ) {
@@ -37,7 +31,6 @@ class K9TilbakeEventHandler(
         EventHandlerMetrics.time("k9tilbake", "gjennomført") {
             val modell = transactionalManager.transaction { tx ->
                 val lås = behandlingProsessEventTilbakeRepository.hentMedLås(tx, event.eksternId!!)
-
                 val modell = behandlingProsessEventTilbakeRepository.lagre(event, tx)
 
                 eventlagerKonverteringsservice.konverterOppgave(event.eksternId.toString(), Fagsystem.TILBAKE, tx)

@@ -40,13 +40,13 @@ object TestConfiguration {
         map["nav.auth.clients.0.certificate_hex_thumbprint"] = ClientCredentials.ClientA.certificateHexThumbprint
         map["nav.auth.clients.0.discovery_endpoint"] = "http://azure-mock:8100/v2.0/.well-known/openid-configuration"
 
-        map["nav.kafka.bootstrap_servers"] = "vtp:9092"
-        map["nav.kafka.username"] = "vtp"
-        map["nav.kafka.password"] = "vtp"
+        map["nav.kafka_aiven.bootstrap_servers"] = "vtp:9093"
         map["nav.kafka.unready_after_stream_stopped_in.amount"] = "1010"
         map["nav.kafka.unready_after_stream_stopped_in.unit"] = "SECONDS"
-        map["nav.trust_store.path"] = "${System.getProperty("user.home")}/.modig/truststore.jks"
-        map["nav.trust_store.password"] = "changeit"
+        map["nav.kafka_aiven.key_store_path"] = "${System.getProperty("user.home")}/.modig/keystore.jks"
+        map["nav.kafka_aiven.trust_store_path"] = "${System.getProperty("user.home")}/.modig/truststore.jks"
+        map["nav.kafka_aiven.credstore_password"] = "vtpvtp"
+        map["nav.kafka_aiven.application_id"] = "k9-los-api"
 
         map["nav.kafka.statistikkSakTopic"] = "privat-k9statistikk-sak-v1"
 

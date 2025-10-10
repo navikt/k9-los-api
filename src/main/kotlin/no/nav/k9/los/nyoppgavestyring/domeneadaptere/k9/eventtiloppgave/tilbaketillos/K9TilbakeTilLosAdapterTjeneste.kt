@@ -98,6 +98,15 @@ class K9TilbakeTilLosAdapterTjeneste(
                 )
             }
 
+            runBlocking {
+                køpåvirkendeHendelseChannel.send(
+                    OppgaveHendelseMottatt(
+                        Fagsystem.TILBAKE,
+                        EksternOppgaveId("K9", uuid.toString())
+                    )
+                )
+            }
+
             behandlingProsessEventTilbakeRepository.fjernDirty(uuid, tx)
         }
 

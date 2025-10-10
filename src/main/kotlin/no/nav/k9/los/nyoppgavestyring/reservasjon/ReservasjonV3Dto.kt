@@ -12,7 +12,7 @@ data class ReservasjonV3Dto(
     val reservertAvEpost: String,
     val kommentar: String,
     val reservertFra: LocalDateTime,
-    val reservertTil: LocalDateTime?,
+    val reservertTil: LocalDateTime,
     val endretAvNavn: String?
 ) {
     constructor(

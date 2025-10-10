@@ -63,6 +63,7 @@ import no.nav.k9.los.nyoppgavestyring.innloggetbruker.InnloggetBrukerApi
 import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoApis
 import no.nav.k9.los.nyoppgavestyring.kodeverk.KodeverkApis
+import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkApi
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonApi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Api
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeApi
@@ -238,9 +239,9 @@ fun Application.k9Los() {
         if ((KoinProfile.LOCAL == koin.get<KoinProfile>())) {
             localSetup.initSaksbehandlere()
             localSetup.initPunsjoppgaver(0)
-            localSetup.initTilbakeoppgaver(0)
-            localSetup.initKlageoppgaver(0)
-            localSetup.initK9SakOppgaver(0)
+            localSetup.initTilbakeoppgaver(10)
+            localSetup.initKlageoppgaver(20)
+            localSetup.initK9SakOppgaver(100)
             api()
         } else {
             authenticate(*issuers.allIssuers()) {
@@ -320,6 +321,7 @@ private fun Route.api() {
             route("nokkeltall") { NøkkeltallV3Apis() }
             route("siste-oppgaver") { SisteOppgaverApi() }
             route("nye-og-ferdigstilte") { NyeOgFerdigstilteApi() }
+            route("lagret-sok") { LagretSøkApi() }
         }
     }
 }
