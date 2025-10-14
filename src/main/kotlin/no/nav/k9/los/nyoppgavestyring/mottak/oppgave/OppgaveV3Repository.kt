@@ -196,15 +196,15 @@ class OppgaveV3Repository(
                 """
                     select ekstern_versjon
                     from oppgave_v3 o
-                        inner join oppgavetype ot on o.oppgavetype_id = ot.id and ot.ekstern_id = :oppgavetype
-                        inner join omrade omr on ot.omrade_id = omr.id and omr.ekstern_id = :omrade
-                    where o.ekstern_id = :eksternId
+                        inner join oppgavetype ot on o.oppgavetype_id = ot.id and ot.ekstern_id = :oppgavetype_ekstern_id
+                        inner join omrade omr on ot.omrade_id = omr.id and omr.ekstern_id = :omrade_ekstern_id
+                    where o.ekstern_id = :ekstern_id
                     and aktiv = true
                 """.trimIndent(),
                 mapOf(
                     "omrade_ekstern_id" to område.eksternId,
                     "oppgavetype_ekstern_id" to oppgavetype.eksternId,
-                    "eksternId" to oppgaveEksternId
+                    "ekstern_id" to oppgaveEksternId
                 )
             ).map { row ->
                 row.string("ekstern_versjon")

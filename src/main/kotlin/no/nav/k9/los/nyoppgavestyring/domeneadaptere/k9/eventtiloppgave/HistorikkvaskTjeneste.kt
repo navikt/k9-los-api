@@ -86,7 +86,7 @@ class HistorikkvaskTjeneste(
 
                 forrigeOppgave = oppgaveV3Tjeneste.hentOppgaveversjon(
                     område = "K9",
-                    oppgavetype = K9Oppgavetypenavn.SAK.kode,
+                    oppgavetype = oppgaveDto.type,
                     eksternId = oppgaveDto.eksternId,
                     eksternVersjon = oppgaveDto.eksternVersjon,
                     tx = tx
