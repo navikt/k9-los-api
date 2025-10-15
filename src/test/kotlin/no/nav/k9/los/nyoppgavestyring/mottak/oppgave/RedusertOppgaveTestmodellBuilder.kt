@@ -137,8 +137,8 @@ class RedusertOppgaveTestmodellBuilder(
 
     fun lagOppgaveDto(id: String = "test", reservasjonsnøkkel: String = "test", status: String = "AAPEN"): OppgaveDto {
         return OppgaveDto(
-            id = "aksjonspunkt",
-            versjon = LocalDateTime.now().toString(),
+            eksternId = "aksjonspunkt",
+            eksternVersjon = LocalDateTime.now().toString(),
             område = område.eksternId,
             kildeområde = "k9-sak-til-los",
             type = "aksjonspunkt",
@@ -164,8 +164,8 @@ class RedusertOppgaveTestmodellBuilder(
 
     fun lagOppgaveDtoMedManglendeVerdiIObligFelt(): OppgaveDto {
         return OppgaveDto(
-            id = "aksjonspunkt",
-            versjon = LocalDateTime.now().toString(),
+            eksternId = "aksjonspunkt",
+            eksternVersjon = LocalDateTime.now().toString(),
             område = område.eksternId,
             kildeområde = "k9-sak-til-los",
             type = "aksjonspunkt",

@@ -3,8 +3,8 @@ package no.nav.k9.los.nyoppgavestyring.mottak.oppgave
 import java.time.LocalDateTime
 
 data class OppgaveDto(
-    val id: String,
-    val versjon: String,
+    val eksternId: String,
+    val eksternVersjon: String,
     val område: String,
     val kildeområde: String,
     val type: String,
@@ -15,8 +15,8 @@ data class OppgaveDto(
 ) {
 
     constructor(oppgaveV3: OppgaveV3) : this(
-        id = oppgaveV3.eksternId,
-        versjon = oppgaveV3.eksternVersjon,
+        eksternId = oppgaveV3.eksternId,
+        eksternVersjon = oppgaveV3.eksternVersjon,
         område = oppgaveV3.oppgavetype.område.eksternId,
         kildeområde = oppgaveV3.kildeområde,
         type = oppgaveV3.oppgavetype.eksternId,
@@ -32,8 +32,8 @@ data class OppgaveDto(
     )
 
     constructor(oppgaveDto: OppgaveDto, feltverdier: List<OppgaveFeltverdiDto>) : this(
-        id = oppgaveDto.id,
-        versjon = oppgaveDto.versjon,
+        eksternId = oppgaveDto.eksternId,
+        eksternVersjon = oppgaveDto.eksternVersjon,
         område = oppgaveDto.område,
         kildeområde = oppgaveDto.kildeområde,
         type = oppgaveDto.type,

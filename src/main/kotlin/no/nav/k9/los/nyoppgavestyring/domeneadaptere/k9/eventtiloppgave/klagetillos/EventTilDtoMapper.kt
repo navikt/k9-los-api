@@ -10,7 +10,6 @@ import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktType
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.Aksjonspunkttilstand
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventDto
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
@@ -35,8 +34,8 @@ class EventTilDtoMapper {
             event: K9KlageEventDto,
             forrigeOppgave: OppgaveV3?
         ) = OppgaveDto(
-            id = event.eksternId.toString(),
-            versjon = event.eventTid.toString(),
+            eksternId = event.eksternId.toString(),
+            eksternVersjon = event.eventTid.toString(),
             område = "K9",
             kildeområde = "K9",
             type = "k9klage",

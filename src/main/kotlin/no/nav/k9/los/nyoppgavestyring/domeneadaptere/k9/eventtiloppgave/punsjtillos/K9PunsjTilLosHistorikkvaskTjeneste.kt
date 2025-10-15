@@ -3,6 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjti
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.HistorikkvaskMetrikker
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventRepository
@@ -61,14 +62,12 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
         } else log.info("Ny oppgavestyring er deaktivert")
     }
 
-    private fun spillAvBehandlingProsessEventer(behandlingsIder: List<UUID>): Long {
-        return behandlingsIder
-            .map { uuid -> vaskOgMarkerOppgaveForBehandlingUUID(uuid) }
-            .sum()
+    private fun spillAvBehandlingProsessEventer(behandlingsIder: List<UUID>): Int {
+        return behandlingsIder.sumOf { uuid -> vaskOgMarkerOppgaveForBehandlingUUID(uuid) }
     }
 
     @WithSpan
-    fun vaskOgMarkerOppgaveForBehandlingUUID(uuid: UUID): Long {
+    fun vaskOgMarkerOppgaveForBehandlingUUID(uuid: UUID): Int {
         try {
             return transactionalManager.transaction { tx ->
                 val eventTeller = vaskOppgaveForBehandlingUUID(uuid, tx)
@@ -87,15 +86,15 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
         }
     }
 
-    fun vaskOppgaveForBehandlingUUID(uuid: UUID): Long {
+    fun vaskOppgaveForBehandlingUUID(uuid: UUID): Int {
         return transactionalManager.transaction { tx ->
             vaskOppgaveForBehandlingUUID(uuid, tx)
         }
     }
 
-    private fun vaskOppgaveForBehandlingUUID(uuid: UUID, tx: TransactionalSession): Long {
+    private fun vaskOppgaveForBehandlingUUID(uuid: UUID, tx: TransactionalSession): Int {
         log.info("Vasker historikk for k9punsj-oppgave med eksternId: $uuid")
-        var eventTeller = 0L
+        var eventTeller = 0
         var forrigeOppgave: OppgaveV3? = null
 
         val behandlingProsessEventer: List<PunsjEventDto> = k9PunsjEventRepository.hentMedLås(tx, uuid).eventer
@@ -113,8 +112,9 @@ class K9PunsjTilLosHistorikkvaskTjeneste(
 
             forrigeOppgave = oppgaveV3Tjeneste.hentOppgaveversjon(
                 område = "K9",
-                eksternId = oppgaveDto.id,
-                eksternVersjon = oppgaveDto.versjon,
+                oppgavetype = K9Oppgavetypenavn.PUNSJ.kode,
+                eksternId = oppgaveDto.eksternId,
+                eksternVersjon = oppgaveDto.eksternVersjon,
                 tx = tx
             )
             log.info("Hentet oppgave")

@@ -5,6 +5,7 @@ import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventRepository
@@ -84,8 +85,17 @@ class K9TilbakeTilLosAdapterTjeneste(
                     }
                     forrigeOppgave = oppgave
                 } else {
-                    forrigeOppgave = oppgaveV3Tjeneste.hentOppgaveversjon("K9", oppgaveDto.id, oppgaveDto.versjon, tx)
+                    forrigeOppgave = oppgaveV3Tjeneste.hentOppgaveversjon("K9", K9Oppgavetypenavn.TILBAKE.kode, oppgaveDto.eksternId, oppgaveDto.eksternVersjon, tx)
                 }
+            }
+
+            runBlocking {
+                køpåvirkendeHendelseChannel.send(
+                    OppgaveHendelseMottatt(
+                        Fagsystem.K9TILBAKE,
+                        EksternOppgaveId("K9", uuid.toString())
+                    )
+                )
             }
 
             runBlocking {
