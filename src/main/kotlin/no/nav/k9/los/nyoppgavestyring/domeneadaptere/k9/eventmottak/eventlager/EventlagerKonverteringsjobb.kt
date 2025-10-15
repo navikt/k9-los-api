@@ -115,7 +115,7 @@ class EventlagerKonverteringsjobb(
                     """
                 select id
                 from behandling_prosess_events_k9 egml
-                where not exists (select ekstern_id from event_nokkel eny where egml.id = eny.ekstern_id and eny.fagsystem = "SAK")
+                where not exists (select ekstern_id from event_nokkel eny where egml.id = eny.ekstern_id and eny.fagsystem = '${Fagsystem.K9SAK.kode}')
             """.trimIndent(),
                     mapOf(
                         "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
@@ -134,7 +134,7 @@ class EventlagerKonverteringsjobb(
                     """
                 select id
                 from behandling_prosess_events_k9_klage egml
-                where not exists (select ekstern_id from event_nokkel eny where egml.id = eny.ekstern_id and eny.fagsystem = "KLAGE")
+                where not exists (select ekstern_id from event_nokkel eny where egml.id = eny.ekstern_id and eny.fagsystem = '${Fagsystem.K9KLAGE.kode}')
             """.trimIndent(),
                     mapOf(
                         "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
@@ -153,7 +153,7 @@ class EventlagerKonverteringsjobb(
                     """
                 select id
                 from behandling_prosess_events_k9_tilbake egml
-                where not exists (select ekstern_id from event_nokkel eny where egml.id = eny.ekstern_id and eny.fagsystem = "TILBAKE")
+                where not exists (select ekstern_id from event_nokkel eny where egml.id = eny.ekstern_id and eny.fagsystem = '${Fagsystem.K9TILBAKE.kode}')
             """.trimIndent(),
                     mapOf(
                         "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
@@ -172,7 +172,7 @@ class EventlagerKonverteringsjobb(
                     """
                 select id
                 from behandling_prosess_events_k9_punsj egml
-                where not exists (select ekstern_id from event_nokkel eny where egml.id = eny.ekstern_id and eny.fagsystem = "PUNSJ")
+                where not exists (select ekstern_id from event_nokkel eny where egml.id = eny.ekstern_id and eny.fagsystem = '${Fagsystem.PUNSJ.kode}')
             """.trimIndent(),
                     mapOf(
                         "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
