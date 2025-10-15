@@ -73,7 +73,7 @@ class K9SakEventHandler (
                 k9SakModell
             }
 
-            eventlagerKonverteringsservice.konverterOppgave(event.eksternId.toString(), Fagsystem.SAK, tx)
+            eventlagerKonverteringsservice.konverterOppgave(event.eksternId.toString(), Fagsystem.K9SAK, tx)
 
             modell
         }

@@ -33,7 +33,7 @@ class K9TilbakeEventHandler(
                 val lås = behandlingProsessEventTilbakeRepository.hentMedLås(tx, event.eksternId!!)
                 val modell = behandlingProsessEventTilbakeRepository.lagre(event, tx)
 
-                eventlagerKonverteringsservice.konverterOppgave(event.eksternId.toString(), Fagsystem.TILBAKE, tx)
+                eventlagerKonverteringsservice.konverterOppgave(event.eksternId.toString(), Fagsystem.K9TILBAKE, tx)
 
                 modell
             }

@@ -1,7 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.søkeboks
 
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.PepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.navn
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
@@ -130,7 +129,7 @@ class SøkeboksTjeneste(
 
         return Søkeresultat.MedResultat(
             person = SøkeresultatPersonDto(person),
-            oppgaver = filtrertForTilgang.map { oppgave ->
+            oppgaver = filtrertForTilgang.mapNotNull { oppgave ->
                 transformerOppgave(oppgave, person.navn())
             }
         )
@@ -150,7 +149,10 @@ class SøkeboksTjeneste(
         return oppgaverUtenSaksnummer + filtrerteMedSaksnummer
     }
 
-    private fun transformerOppgave(oppgave: Oppgave, navn: String): SøkeresultatOppgaveDto {
+    private fun transformerOppgave(oppgave: Oppgave, navn: String): SøkeresultatOppgaveDto? {
+        if (oppgave.hentVerdi("ytelsestype") == "OBSOLETE") {
+            return null
+        }
         return SøkeresultatOppgaveDto(
             navn = navn,
             oppgaveNøkkel = OppgaveNøkkelDto(oppgave),
