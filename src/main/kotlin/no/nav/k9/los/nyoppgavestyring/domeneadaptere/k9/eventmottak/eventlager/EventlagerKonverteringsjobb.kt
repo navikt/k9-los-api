@@ -133,7 +133,7 @@ class EventlagerKonverteringsjobb(
                 queryOf(
                     """
                 select id
-                from behandling_prosess_events_k9_klage egml
+                from behandling_prosess_events_klage egml
                 where not exists (select ekstern_id from event_nokkel eny where egml.id = eny.ekstern_id and eny.fagsystem = '${Fagsystem.K9KLAGE.kode}')
             """.trimIndent(),
                     mapOf(
@@ -152,7 +152,7 @@ class EventlagerKonverteringsjobb(
                 queryOf(
                     """
                 select id
-                from behandling_prosess_events_k9_tilbake egml
+                from behandling_prosess_events_tilbake egml
                 where not exists (select ekstern_id from event_nokkel eny where egml.id = eny.ekstern_id and eny.fagsystem = '${Fagsystem.K9TILBAKE.kode}')
             """.trimIndent(),
                     mapOf(
