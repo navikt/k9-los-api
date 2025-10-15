@@ -23,7 +23,7 @@ class EventlagerKonverteringsjobb(
     private val eventlagerKonverteringsservice: EventlagerKonverteringsservice,
 ) {
     private val log: Logger = LoggerFactory.getLogger(EventlagerKonverteringsjobb::class.java)
-    private val TRÅDNAVN = "eventlagerKonverteringPunsj"
+    private val TRÅDNAVN = "eventlagerKonvertering"
 
     fun kjørEventlagerKonvertering() {
         log.info("Spiller av eventer i gammel løsning og skriver til ny modell")
