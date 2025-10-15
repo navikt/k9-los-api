@@ -29,7 +29,7 @@ class KlageEventTilOppgaveMapper(
         eventLagret: EventLagret,
         forrigeOppgave: OppgaveV3?
     ): OppgaveDto {
-        if (eventLagret.fagsystem != Fagsystem.KLAGE) {
+        if (eventLagret.fagsystem != Fagsystem.K9KLAGE) {
             throw IllegalArgumentException("Fagsystem er ikke KLAGE")
         }
         val event = LosObjectMapper.instance.readValue<K9KlageEventDto>(eventLagret.eventJson)

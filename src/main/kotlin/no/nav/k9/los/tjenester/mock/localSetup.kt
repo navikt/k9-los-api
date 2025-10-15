@@ -102,7 +102,7 @@ object localSetup : KoinComponent {
                 sakEventHandler.prosesser(
                     K9SakEventDto(
                         eksternId,
-                        Fagsystem.SAK,
+                        Fagsystem.K9SAK,
                         saksnummer,
                         fagsakPeriode = Periode(LocalDate.now().minusMonths(2), LocalDate.now()),
                         behandlingId = behandlingId,
@@ -145,7 +145,7 @@ object localSetup : KoinComponent {
                     sakEventHandler.prosesser(
                         K9SakEventDto(
                             eksternId,
-                            Fagsystem.SAK,
+                            Fagsystem.K9SAK,
                             saksnummer,
                             behandlingId = behandlingId,
                             fraEndringsdialog = false,
@@ -237,7 +237,7 @@ object localSetup : KoinComponent {
                     førsteFeilutbetaling = LocalDate.now().minusDays(Random.nextLong(100)).toString(),
                     feilutbetaltBeløp = Random.nextLong(1000, 20000),
                     href = null,
-                    fagsystem = Fagsystem.TILBAKE.kode,
+                    fagsystem = Fagsystem.K9TILBAKE.kode,
                 )
                 tilbakeEventHandler.prosesser(event)
             }

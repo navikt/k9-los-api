@@ -14,7 +14,7 @@ import java.util.*
 
 class K9TilbakeEventDtoBuilder(
     var eksternId: UUID = UUID.randomUUID(),
-    var fagsystem: Fagsystem = Fagsystem.TILBAKE,
+    var fagsystem: Fagsystem = Fagsystem.K9TILBAKE,
     var saksnummer: String = Random().nextInt(0, 200).toString(),
     var aktørId: String = Random().nextInt(0, 9999999).toString(),
     var behandlingstidFrist: LocalDate? = null,

@@ -11,9 +11,9 @@ enum class K9Oppgavetypenavn(val kode: String) {
     companion object {
         fun fraFagsystem(fagsystem: Fagsystem): K9Oppgavetypenavn {
             return when (fagsystem) {
-                Fagsystem.SAK -> SAK
-                Fagsystem.TILBAKE -> TILBAKE
-                Fagsystem.KLAGE -> KLAGE
+                Fagsystem.K9SAK -> SAK
+                Fagsystem.K9TILBAKE -> TILBAKE
+                Fagsystem.K9KLAGE -> KLAGE
                 Fagsystem.PUNSJ -> PUNSJ
             }
         }

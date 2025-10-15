@@ -16,7 +16,6 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import no.nav.k9.sak.kontrakt.produksjonsstyring.los.BehandlingMedFagsakDto
 import org.jetbrains.annotations.VisibleForTesting
@@ -26,7 +25,7 @@ class SakEventTilOppgaveMapper(
     private val k9SakBerikerKlient: K9SakBerikerInterfaceKludge,
 ) {
     fun lagOppgaveDto(eventLagret: EventLagret, forrigeOppgave: OppgaveV3?): OppgaveDto {
-        if (eventLagret.fagsystem != Fagsystem.SAK) {
+        if (eventLagret.fagsystem != Fagsystem.K9SAK) {
             throw IllegalArgumentException("Fagsystem er ikke SAK")
         }
         val event = LosObjectMapper.instance.readValue<K9SakEventDto>(eventLagret.eventJson)

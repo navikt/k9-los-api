@@ -19,7 +19,7 @@ import java.time.temporal.ChronoUnit
 
 class TilbakeEventTilOppgaveMapper {
     fun lagOppgaveDto(eventLagret: EventLagret, forrigeOppgave: OppgaveV3?) : OppgaveDto {
-        if (eventLagret.fagsystem != Fagsystem.TILBAKE) {
+        if (eventLagret.fagsystem != Fagsystem.K9TILBAKE) {
             throw IllegalArgumentException("Fagsystem er ikke TILBAKE")
         }
         val event = LosObjectMapper.instance.readValue<K9TilbakeEventDto>(eventLagret.eventJson)

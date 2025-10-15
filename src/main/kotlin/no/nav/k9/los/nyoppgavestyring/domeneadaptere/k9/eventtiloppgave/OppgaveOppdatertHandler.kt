@@ -28,13 +28,13 @@ class OppgaveOppdatertHandler(
 
     internal fun håndterOppgaveOppdatert(eventLagret: EventLagret, oppgave: OppgaveV3, tx: TransactionalSession) {
         when (eventLagret.fagsystem) {
-            Fagsystem.SAK -> {
+            Fagsystem.K9SAK -> {
                 håndterSakOppdatert(eventLagret, oppgave, tx)
             }
-            Fagsystem.TILBAKE -> {
+            Fagsystem.K9TILBAKE -> {
                 håndterTilbakeOppdatert(eventLagret, oppgave, tx)
             }
-            Fagsystem.KLAGE -> {
+            Fagsystem.K9KLAGE -> {
                 håndterKlageOppdatert(eventLagret, oppgave, tx)
             }
             Fagsystem.PUNSJ -> {

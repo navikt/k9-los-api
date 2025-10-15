@@ -23,13 +23,13 @@ class EventTilOppgaveMapper(
 ) {
     internal fun mapOppgave(eventLagret: EventLagret, forrigeOppgaveversjon: OppgaveV3?) : OppgaveDto {
         return when(eventLagret.fagsystem) {
-            Fagsystem.SAK -> {
+            Fagsystem.K9SAK -> {
                 sakEventTilOppgaveMapper.lagOppgaveDto(eventLagret, forrigeOppgaveversjon)
             }
-            Fagsystem.TILBAKE -> {
+            Fagsystem.K9TILBAKE -> {
                 tilbakeEventTilOppgaveMapper.lagOppgaveDto(eventLagret, forrigeOppgaveversjon)
             }
-            Fagsystem.KLAGE -> {
+            Fagsystem.K9KLAGE -> {
                 klageEventTilOppgaveMapper.lagOppgaveDto(eventLagret, forrigeOppgaveversjon)
             }
             Fagsystem.PUNSJ -> {
@@ -40,11 +40,11 @@ class EventTilOppgaveMapper(
 
     internal fun utledReservasjonsnøkkel(eventLagret: EventLagret, erTilBeslutter: Boolean) : String {
         return when(eventLagret.fagsystem) {
-            Fagsystem.SAK -> {
+            Fagsystem.K9SAK -> {
                 val event = LosObjectMapper.instance.readValue<K9SakEventDto>(eventLagret.eventJson)
                 SakEventTilOppgaveMapper.utledReservasjonsnøkkel(event, erTilBeslutter)
             }
-            Fagsystem.KLAGE -> {
+            Fagsystem.K9KLAGE -> {
                 val event = LosObjectMapper.instance.readValue<K9KlageEventDto>(eventLagret.eventJson)
                 KlageEventTilOppgaveMapper.utledReservasjonsnøkkel(event, erTilBeslutter)
             }
@@ -52,7 +52,7 @@ class EventTilOppgaveMapper(
                 val event = LosObjectMapper.instance.readValue<PunsjEventDto>(eventLagret.eventJson)
                 PunsjEventTilOppgaveMapper.utledReservasjonsnøkkel(event)
             }
-            Fagsystem.TILBAKE -> {
+            Fagsystem.K9TILBAKE -> {
                 val event = LosObjectMapper.instance.readValue<K9TilbakeEventDto>(eventLagret.eventJson)
                 TilbakeEventTilOppgaveMapper.utledReservasjonsnøkkel(event, erTilBeslutter)
             }

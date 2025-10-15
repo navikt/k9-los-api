@@ -265,9 +265,9 @@ enum class Enhet(val navn: String) {
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 enum class Fagsystem(override val kode: String, override val kodeverk: String, override val navn: String): Kodeverdi {
-    SAK("SAK", "FAGSYSTEM", "K9-sak"),
-    TILBAKE("TILBAKE", "FAGSYSTEM", "K9-tilbake"),
-    KLAGE("KLAGE", "FAGSYSTEM", "K9-klage"),
+    K9SAK("K9SAK", "FAGSYSTEM", "K9-sak"),
+    K9TILBAKE("K9TILBAKE", "FAGSYSTEM", "K9-tilbake"),
+    K9KLAGE("K9KLAGE", "FAGSYSTEM", "K9-klage"),
     PUNSJ("PUNSJ", "FAGSYSTEM", "K9-punsj");
 
     companion object {
