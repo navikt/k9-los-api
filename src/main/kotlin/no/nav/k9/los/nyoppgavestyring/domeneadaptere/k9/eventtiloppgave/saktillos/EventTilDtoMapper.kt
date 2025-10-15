@@ -11,6 +11,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import org.jetbrains.annotations.VisibleForTesting
 import java.time.temporal.ChronoUnit
@@ -106,10 +107,6 @@ class EventTilDtoMapper {
             return ventetype != Ventekategori.AVVENTER_SAKSBEHANDLER
         }
 
-        fun harEllerHarHattManueltAksjonspunkt(event: K9SakEventDto): Boolean {
-            return event.aksjonspunktTilstander.any { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.status != AksjonspunktStatus.AVBRUTT }
-        }
-
         private fun lagFeltverdier(
             event: K9SakEventDto,
             forrigeOppgave: OppgaveV3?
@@ -118,12 +115,10 @@ class EventTilDtoMapper {
 
             val åpneAksjonspunkter = getåpneAksjonspunkter(event)
 
-            val harEllerHarHattManueltAksjonspunkt = harEllerHarHattManueltAksjonspunkt(event)
-
             utledAksjonspunkter(event, oppgaveFeltverdiDtos)
             utledÅpneAksjonspunkter(event.behandlingSteg, åpneAksjonspunkter, oppgaveFeltverdiDtos)
             utledVenteÅrsakOgFrist(åpneAksjonspunkter, oppgaveFeltverdiDtos)
-            utledAutomatiskBehandletFlagg(forrigeOppgave, oppgaveFeltverdiDtos, harEllerHarHattManueltAksjonspunkt)
+            utledAutomatiskBehandletFlagg(oppgaveFeltverdiDtos, event)
             utledSøknadsårsaker(event, oppgaveFeltverdiDtos)
             utledBehandlingsårsaker(event, oppgaveFeltverdiDtos)
             oppgaveFeltverdiDtos.addAll(
@@ -397,25 +392,21 @@ class EventTilDtoMapper {
         }
 
         private fun utledAutomatiskBehandletFlagg(
-            forrigeOppgave: OppgaveV3?,
             oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>,
-            harManueltAksjonspunkt: Boolean
+            event: K9SakEventDto
         ) {
-            if (forrigeOppgave != null && forrigeOppgave.hentVerdi("helautomatiskBehandlet").toBoolean().not()) {
-                oppgaveFeltverdiDtos.add(
-                    OppgaveFeltverdiDto(
-                        nøkkel = "helautomatiskBehandlet",
-                        verdi = false.toString()
-                    )
+            val harUtførtManueltAksjonspunkt =
+                event.aksjonspunktTilstander
+                    .filter { it.status() == AksjonspunktStatus.UTFØRT }
+                    .map { AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode) }
+                    .any { !it.erAutopunkt() }
+
+            oppgaveFeltverdiDtos.add(
+                OppgaveFeltverdiDto(
+                    nøkkel = "helautomatiskBehandlet",
+                    verdi = if (harUtførtManueltAksjonspunkt) false.toString() else true.toString()
                 )
-            } else {
-                oppgaveFeltverdiDtos.add(
-                    OppgaveFeltverdiDto(
-                        nøkkel = "helautomatiskBehandlet",
-                        verdi = if (harManueltAksjonspunkt) false.toString() else true.toString()
-                    )
-                )
-            }
+            )
         }
 
         private fun utledÅpneAksjonspunkter(

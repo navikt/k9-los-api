@@ -1,7 +1,5 @@
 package no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon
 
-import no.nav.k9.los.spi.felter.TransientFeltutleder
-
 data class FeltdefinisjonDto(
     val id: String,
     val visningsnavn: String,

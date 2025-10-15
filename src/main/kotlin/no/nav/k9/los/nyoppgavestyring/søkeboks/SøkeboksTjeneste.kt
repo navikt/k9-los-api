@@ -1,5 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.søkeboks
 
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.IPdlService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.pdl.navn
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
@@ -11,7 +12,6 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
-import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
@@ -22,8 +22,8 @@ class SøkeboksTjeneste(
     private val queryService: OppgaveQueryService,
     private val oppgaveRepository: OppgaveRepositoryTxWrapper,
     private val pdlService: IPdlService,
-    private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
     private val saksbehandlerRepository: SaksbehandlerRepository,
+    private val pepClient: IPepClient,
 ) {
     suspend fun finnOppgaver(søkeord: String): Søkeresultat {
         val oppgaver = when (søkeord.length) {
@@ -119,9 +119,17 @@ class SøkeboksTjeneste(
 
         val filtrerteBasertPåSaksnummer = filtrerOppgaverBasertPåSaksnummer(oppgaver)
 
+        val filtrertForTilgang = filtrerteBasertPåSaksnummer.filter {
+            pepClient.harTilgangTilOppgaveV3(it)
+        }
+
+        if (filtrertForTilgang.isEmpty()) {
+            return Søkeresultat.IkkeTilgang
+        }
+
         return Søkeresultat.MedResultat(
             person = SøkeresultatPersonDto(person),
-            oppgaver = filtrerteBasertPåSaksnummer.map { oppgave ->
+            oppgaver = filtrertForTilgang.mapNotNull { oppgave ->
                 transformerOppgave(oppgave, person.navn())
             }
         )
@@ -141,11 +149,10 @@ class SøkeboksTjeneste(
         return oppgaverUtenSaksnummer + filtrerteMedSaksnummer
     }
 
-    private fun transformerOppgave(oppgave: Oppgave, navn: String): SøkeresultatOppgaveDto {
-        val reservasjon = reservasjonV3Tjeneste.finnAktivReservasjon(oppgave.reservasjonsnøkkel)
-        val reservertAv = if (reservasjon != null)
-            saksbehandlerRepository.finnSaksbehandlerMedId(reservasjon.reservertAv) else null
-
+    private fun transformerOppgave(oppgave: Oppgave, navn: String): SøkeresultatOppgaveDto? {
+        if (oppgave.hentVerdi("ytelsestype") == "OBSOLETE") {
+            return null
+        }
         return SøkeresultatOppgaveDto(
             navn = navn,
             oppgaveNøkkel = OppgaveNøkkelDto(oppgave),
@@ -160,9 +167,6 @@ class SøkeboksTjeneste(
                 ?: Oppgavestatus.fraKode(oppgave.status).visningsnavn,
             oppgavebehandlingsUrl = oppgave.getOppgaveBehandlingsurl(),
             reservasjonsnøkkel = oppgave.reservasjonsnøkkel,
-            reservertAvSaksbehandlerNavn = reservertAv?.navn,
-            reservertAvSaksbehandlerIdent = reservertAv?.brukerIdent,
-            reservertTom = reservasjon?.gyldigTil,
             fagsakÅr = oppgave.hentVerdi("fagsakÅr")?.toIntOrNull()
         )
     }

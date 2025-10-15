@@ -5,8 +5,6 @@ import kotlinx.coroutines.channels.toList
 import kotlinx.coroutines.runBlocking
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.KoinProfile
-import no.nav.k9.los.domene.repository.OppgaveKøRepository
-import no.nav.k9.los.domene.repository.OppgaveRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.JobbMetrikker
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
 import org.slf4j.LoggerFactory
@@ -23,8 +21,6 @@ class K9sakBehandlingsoppfriskingJobb(
     val ønsketStarttidJobb : LocalDateTime = avrundFremoverTilKvarter(startidApplikasjon).plusMinutes(1), //1 minutt over neste kvarter
     val tidMellomKjøring: Duration = Duration.ofMinutes(15),
     val forsinketOppstart: Duration = Duration.between(startidApplikasjon, ønsketStarttidJobb),
-    val oppgaveKøRepository: OppgaveKøRepository,
-    val oppgaveRepository: OppgaveRepository,
     val reservasjonRepository: ReservasjonV3Repository,
     val refreshK9v3Tjeneste: RefreshK9v3Tjeneste,
     val refreshOppgaveChannel: Channel<UUID>,
@@ -86,32 +82,17 @@ class K9sakBehandlingsoppfriskingJobb(
     }
 
     private fun finnK9sakBehandlingerTilRefresh(skipRefreshFraKøer: Boolean): Set<UUID> {
-        val k9sakOppgaver = taTiden("hent k9sak oppgaver ") { oppgaveRepository.hentAktiveK9sakOppgaver().toSet() }
-        val reserverteOppgaver = taTiden("hent reserverte oppgaver") { hentK9sakReserverteBehandlinger(k9sakOppgaver, ignorerEtter = ignorerReserverteOppgaverSomUtløperEtter) }
+        val reserverteOppgaver = taTiden("hent reserverte oppgaver") { hentK9sakReserverteBehandlinger(ignorerEtter = ignorerReserverteOppgaverSomUtløperEtter) }
         if (skipRefreshFraKøer){
             log.info("Refresher ${reserverteOppgaver.size} reserverte oppgaver")
             return reserverteOppgaver
         } else {
-            val oppgaverFørstIGamleKøer = taTiden("hent oppgaver først i køene") { hentOppgaverFørstIGamleKøer(k9sakOppgaver) }
             val oppgaverFørstINyeKøer = taTiden("hent oppgaver først i nye køer") { refreshK9v3Tjeneste.behandlingerTilOppfriskning(antallFraHverKø) }
-            val oppgaverFørstIKøer = oppgaverFørstINyeKøer + oppgaverFørstIGamleKøer
-            log.info("Fant ${oppgaverFørstIGamleKøer.size} oppgaver først i gamle køer, og ${oppgaverFørstINyeKøer.size} oppgaver først i nye køer")
+            val oppgaverFørstIKøer = oppgaverFørstINyeKøer
+            log.info("Fant ${oppgaverFørstINyeKøer.size} oppgaver først i nye køer")
             log.info("Refresher ${oppgaverFørstIKøer.size} oppgaver da de er først i køer, og ${reserverteOppgaver.size} reserverte oppgaver")
             return oppgaverFørstIKøer + reserverteOppgaver
         }
-    }
-
-    private fun hentOppgaverFørstIGamleKøer(k9sakOppgaver: Set<UUID>): Set<UUID> {
-        val køene = oppgaveKøRepository.hentAlleInkluderKode6()
-        log.info("Hentet ${køene.size} køer")
-        return køene.flatMap { kø ->
-            kø.oppgaverOgDatoer
-                .sortedBy { it.dato }
-                .map { it.id }
-                .filter { k9sakOppgaver.contains(it) }
-                .take(antallFraHverKø)
-        }
-            .toSet()
     }
 
     private fun channelSend(behandlingerTilRefresh: Set<UUID>) {
@@ -123,21 +104,9 @@ class K9sakBehandlingsoppfriskingJobb(
         }
     }
 
-    fun hentK9sakReserverteBehandlinger(k9sakOppgaver: Set<UUID>, ignorerEtter: Duration): Set<UUID> {
+    fun hentK9sakReserverteBehandlinger(ignorerEtter: Duration): Set<UUID> {
         val nå = LocalDateTime.now()
-        val oppgaveIder = reservasjonRepository.hentOppgaverIdForAktiveReservasjoner(gyldigPåTidspunkt = nå, utløperInnen = nå.plus(ignorerEtter))
-        val k9sakOppgeveIder = k9sakOppgaver.map { it.toString() }
-        val resultat = oppgaveIder
-            .filter { k9sakOppgeveIder.contains(it) }
-            .map { UUID.fromString(it) }
-            .toSet()
-
-        if (resultat.size > maksAntallReserverteTilRefresh){
-            log.info("Fant ${resultat.size} reservasjoner som kandidat for refresh")
-            return resultat.take(maksAntallReserverteTilRefresh).toSet()
-        } else {
-            return resultat
-        }
+        return reservasjonRepository.hentOppgaverIdForAktiveReservasjonerForK9SakRefresh(gyldigPåTidspunkt = nå, utløperInnen = nå.plus(ignorerEtter))
     }
 
     fun <T> taTiden(tekst: String, operasjon: () -> T): T {

@@ -16,7 +16,7 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.CacheObject
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
-import no.nav.k9.los.tjenester.avdelingsleder.nokkeltall.EnheterSomSkalUtelatesFraLos
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.EnheterSomSkalUtelatesFraLos
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.LocalDateTime

@@ -68,7 +68,10 @@ class K9SakBerikerSystemKlient(
                 || response.status == HttpStatusCode.GatewayTimeout
                 || response.status == HttpStatusCode.RequestTimeout
             ) {
-                throw TransientException("k9sak er ikke tilgjengelig for beriking av k9sak-oppgave, fikk http code ${response.status.value}", Exception("HTTP error ${response.status.value}"))
+                throw TransientException(
+                    "k9sak er ikke tilgjengelig for beriking av k9sak-oppgave, fikk http code ${response.status.value}",
+                    Exception("HTTP error ${response.status.value}")
+                )
             }
 
             val feiltekst = response.bodyAsText()
