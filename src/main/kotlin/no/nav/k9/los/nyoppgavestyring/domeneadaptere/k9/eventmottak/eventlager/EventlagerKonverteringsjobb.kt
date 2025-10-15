@@ -39,7 +39,7 @@ class EventlagerKonverteringsjobb(
     private fun spillAvEventer() {
         run { // PUNSJ
             val ukonverterteEventer = finnUkonvertertePunsjEventer()
-            log.info("Starter konvertering av punsjeventer. Funnet $ukonverterteEventer ukonverterte oppgaver.")
+            log.info("Starter konvertering av punsjeventer. Funnet ${ukonverterteEventer.size} ukonverterte oppgaver.")
             var i = 0L
             for (uuid in ukonverterteEventer) {
                 transactionalManager.transaction { tx ->
@@ -57,7 +57,7 @@ class EventlagerKonverteringsjobb(
 
         run { // TILBAKE
             val ukonverterteEventer = finnUkonverterteTilbakeEventer()
-            log.info("Starter konvertering av k9-tilbake-eventer. Funnet $ukonverterteEventer ukonverterte oppgaver.")
+            log.info("Starter konvertering av k9-tilbake-eventer. Funnet ${ukonverterteEventer.size} ukonverterte oppgaver.")
             var i = 0L
             for (uuid in ukonverterteEventer) {
                 transactionalManager.transaction { tx ->
@@ -75,7 +75,7 @@ class EventlagerKonverteringsjobb(
 
         run { // KLAGE
             val ukonverterteEventer = finnUkonverterteKlageEventer()
-            log.info("Starter konvertering av k9-klage-eventer. Funnet $ukonverterteEventer ukonverterte oppgaver.")
+            log.info("Starter konvertering av k9-klage-eventer. Funnet ${ukonverterteEventer.size} ukonverterte oppgaver.")
             var i = 0L
             for (uuid in ukonverterteEventer) {
                 transactionalManager.transaction { tx ->
@@ -92,7 +92,7 @@ class EventlagerKonverteringsjobb(
 
         run { // SAK
             val ukonverterteEventer = finnUkonverterteSakEventer()
-            log.info("Starter konvertering av k9-sak-eventer. Funnet $ukonverterteEventer ukonverterte oppgaver.")
+            log.info("Starter konvertering av k9-sak-eventer. Funnet ${ukonverterteEventer.size} ukonverterte oppgaver.")
             var i = 0L
             for (uuid in ukonverterteEventer) {
                 transactionalManager.transaction { tx ->
