@@ -119,7 +119,7 @@ object Testdata {
     fun testevent(status: BehandlingStatus, aksjonspunkter: List<AksjonspunktTilstandDto>): K9SakEventDto {
         return K9SakEventDto(
             eksternId = UUID.randomUUID(),
-            fagsystem = Fagsystem.SAK,
+            fagsystem = Fagsystem.K9SAK,
             saksnummer = Random().nextInt(0, 200).toString(),
             aktørId = Random().nextInt(0, 9999999).toString(),
             behandlingId = 123L,

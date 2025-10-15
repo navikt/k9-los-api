@@ -45,7 +45,7 @@ class K9KlageEventHandler (
                 k9KlageModell
             }
 
-            eventlagerKonverteringsservice.konverterOppgave(event.eksternId.toString(), Fagsystem.KLAGE, tx)
+            eventlagerKonverteringsservice.konverterOppgave(event.eksternId.toString(), Fagsystem.K9KLAGE, tx)
 
             modell
         }

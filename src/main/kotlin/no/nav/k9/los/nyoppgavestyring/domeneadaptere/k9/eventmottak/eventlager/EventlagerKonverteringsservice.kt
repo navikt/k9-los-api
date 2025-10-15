@@ -19,22 +19,25 @@ class EventlagerKonverteringsservice(
 
     fun konverterOppgave(eksternId: String, fagsystem: Fagsystem, tx: TransactionalSession) {
         when (fagsystem) {
-            Fagsystem.SAK -> {
+            Fagsystem.K9SAK -> {
                 val gammelModell = sakEventRepository.hent(UUID.fromString(eksternId))
                 gammelModell.eventer.forEach { event ->
-                    nyttEventrepository.lagre(Fagsystem.SAK,LosObjectMapper.instance.writeValueAsString(event), tx)
+                    nyttEventrepository.lagre(Fagsystem.K9SAK,LosObjectMapper.instance.writeValueAsString(event), tx)
                 }
             }
-            Fagsystem.TILBAKE -> {
+            Fagsystem.K9TILBAKE -> {
                 val gammelModell = tilbakeEventRepository.hent(UUID.fromString(eksternId))
                 gammelModell.eventer.forEach { event ->
-                    nyttEventrepository.lagre(Fagsystem.TILBAKE, LosObjectMapper.instance.writeValueAsString(event), tx)
+                    nyttEventrepository.lagre(Fagsystem.K9TILBAKE, LosObjectMapper.instance.writeValueAsString(event), tx)
                 }
             }
-            Fagsystem.KLAGE -> {
+            Fagsystem.K9KLAGE -> {
                 val gammelModell = klageEventRepository.hent(UUID.fromString(eksternId))
                 gammelModell.eventer.forEach { event ->
-                    nyttEventrepository.lagre(Fagsystem.KLAGE, LosObjectMapper.instance.writeValueAsString(event), tx)
+                    val eventLagret = nyttEventrepository.lagre(Fagsystem.K9KLAGE, LosObjectMapper.instance.writeValueAsString(event), tx)
+                    eventLagret?.let {
+                        nyttEventrepository.fjernDirty(eventLagret, tx)
+                    }
                 }
             }
             Fagsystem.PUNSJ -> {

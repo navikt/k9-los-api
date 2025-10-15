@@ -92,7 +92,7 @@ class K9TilbakeTilLosAdapterTjeneste(
             runBlocking {
                 køpåvirkendeHendelseChannel.send(
                     OppgaveHendelseMottatt(
-                        Fagsystem.TILBAKE,
+                        Fagsystem.K9TILBAKE,
                         EksternOppgaveId("K9", uuid.toString())
                     )
                 )
@@ -101,7 +101,7 @@ class K9TilbakeTilLosAdapterTjeneste(
             runBlocking {
                 køpåvirkendeHendelseChannel.send(
                     OppgaveHendelseMottatt(
-                        Fagsystem.TILBAKE,
+                        Fagsystem.K9TILBAKE,
                         EksternOppgaveId("K9", uuid.toString())
                     )
                 )

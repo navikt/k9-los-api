@@ -62,7 +62,7 @@ class EventlagerKonverteringsjobb(
             for (uuid in ukonverterteEventer) {
                 transactionalManager.transaction { tx ->
                     tilbakeEventRepository.hentMedLås(tx, UUID.fromString(uuid))
-                    eventlagerKonverteringsservice.konverterOppgave(uuid, Fagsystem.TILBAKE, tx)
+                    eventlagerKonverteringsservice.konverterOppgave(uuid, Fagsystem.K9TILBAKE, tx)
                 }
                 i++
                 if (i % 1000 == 0L) {
@@ -80,7 +80,7 @@ class EventlagerKonverteringsjobb(
             for (uuid in ukonverterteEventer) {
                 transactionalManager.transaction { tx ->
                     klageEventRepository.hentMedLås(tx, UUID.fromString(uuid))
-                    eventlagerKonverteringsservice.konverterOppgave(uuid, Fagsystem.KLAGE, tx)
+                    eventlagerKonverteringsservice.konverterOppgave(uuid, Fagsystem.K9KLAGE, tx)
                 }
                 i++
                 if (i % 1000 == 0L) {
@@ -97,7 +97,7 @@ class EventlagerKonverteringsjobb(
             for (uuid in ukonverterteEventer) {
                 transactionalManager.transaction { tx ->
                     sakEventRepository.hentMedLås(tx, UUID.fromString(uuid))
-                    eventlagerKonverteringsservice.konverterOppgave(uuid, Fagsystem.SAK, tx)
+                    eventlagerKonverteringsservice.konverterOppgave(uuid, Fagsystem.K9SAK, tx)
                 }
                 i++
                 if (i % 1000 == 0L) {
