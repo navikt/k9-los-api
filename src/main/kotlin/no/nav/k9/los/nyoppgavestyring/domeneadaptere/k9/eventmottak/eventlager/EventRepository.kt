@@ -183,14 +183,16 @@ class EventRepository(
             it.run(
                 queryOf(
                     """
-                    select distinct ekstern_id, fagsystem
-                    from event 
-                    where dirty = true
+                    select en.*
+                    from event e
+                        join event_nokkel en on e.event_nokkel_id = en.id
+                    where e.dirty = true
                 """.trimIndent()
                 ).map { row ->
                     EventNøkkel(
-                        fagsystem = Fagsystem.fraKode(row.string("fagsystem")),
-                        eksternId = row.string("ekstern_id")
+                        nøkkelId = row.long("id"),
+                        eksternId = row.string("ekstern_id"),
+                        fagsystem = Fagsystem.fraKode(row.string("fagsystem"))
                     )
                 }.asList
             )
