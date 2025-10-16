@@ -7,6 +7,8 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEve
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.util.UUID
 
 class EventlagerKonverteringsservice(
@@ -16,8 +18,10 @@ class EventlagerKonverteringsservice(
     private val tilbakeEventRepository: K9TilbakeEventRepository,
     private val sakEventRepository: K9SakEventRepository,
 ) {
+    private val log: Logger = LoggerFactory.getLogger(EventlagerKonverteringsservice::class.java)
 
     fun konverterOppgave(eksternId: String, fagsystem: Fagsystem, tx: TransactionalSession) {
+        log.info("Konverterer oppgave med eksternId: $eksternId, fagsystem: $fagsystem")
         when (fagsystem) {
             Fagsystem.K9SAK -> {
                 val gammelModell = sakEventRepository.hent(UUID.fromString(eksternId))
