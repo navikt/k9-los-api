@@ -20,8 +20,10 @@ class EventlagerKonverteringsservice(
 ) {
     private val log: Logger = LoggerFactory.getLogger(EventlagerKonverteringsservice::class.java)
 
-    fun konverterOppgave(eksternId: String, fagsystem: Fagsystem, tx: TransactionalSession) {
-        log.info("Konverterer oppgave med eksternId: $eksternId, fagsystem: $fagsystem")
+    fun konverterOppgave(eksternId: String, fagsystem: Fagsystem, tx: TransactionalSession, batchkontekst: Boolean = false) {
+        if (!batchkontekst) {
+            log.info("Konverterer oppgave med eksternId: $eksternId, fagsystem: $fagsystem")
+        }
         when (fagsystem) {
             Fagsystem.K9SAK -> {
                 val gammelModell = sakEventRepository.hent(UUID.fromString(eksternId))
