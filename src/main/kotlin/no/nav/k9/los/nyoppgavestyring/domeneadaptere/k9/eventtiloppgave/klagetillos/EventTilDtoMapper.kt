@@ -342,7 +342,8 @@ class EventTilDtoMapper {
                 nøkkel = "helautomatiskBehandlet",
                 verdi = false.toString() //TODO: Påstand - klagesaker er alltid manuelt behandlet?
             ),
-            event.fagsakPeriode?.fom?.year?.toString()?.let { fagsakÅr ->
+            event.fagsakPeriode?.fom?.year?.takeIf { it in 2000..2100 }?.toString()?.let { fagsakÅr ->
+                // Hvis årstallet er utenfor rimelig område settes ikke fagsakÅr
                 OppgaveFeltverdiDto(
                     nøkkel = "fagsakÅr",
                     verdi = fagsakÅr,
