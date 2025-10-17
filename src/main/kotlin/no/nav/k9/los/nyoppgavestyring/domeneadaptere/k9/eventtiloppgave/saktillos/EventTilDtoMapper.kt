@@ -11,7 +11,6 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
 import org.jetbrains.annotations.VisibleForTesting
 import java.time.temporal.ChronoUnit
@@ -254,7 +253,8 @@ class EventTilDtoMapper {
             } else {
                 null //ikke hastesak
             },
-            event.fagsakPeriode?.fom?.year?.toString()?.let { fagsakÅr ->
+            event.fagsakPeriode?.fom?.year?.takeIf { it in 2000..2100 }?.toString()?.let { fagsakÅr ->
+                // Hvis årstallet er utenfor rimelig område settes ikke fagsakÅr
                 OppgaveFeltverdiDto(
                     nøkkel = "fagsakÅr",
                     verdi = fagsakÅr,
