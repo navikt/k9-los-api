@@ -21,13 +21,13 @@ class UtledOppgavestatusTest: FreeSpec({
         "med status OPPRETTET" - {
             val behandlingstatus = BehandlingStatus.OPPRETTET
             "gir status UAVKLART" {
-                EventTilDtoMapper.utledOppgavestatus(Testdata.testevent(behandlingstatus, mutableMapOf())) shouldBe Oppgavestatus.UAVKLART
+                TilbakeEventTilOppgaveMapper.utledOppgavestatus(Testdata.testevent(behandlingstatus, mutableMapOf())) shouldBe Oppgavestatus.UAVKLART
             }
         }
         "med status AVSLUTTET" - {
             val behandlingstatus = BehandlingStatus.AVSLUTTET
             "gir status LUKKET" {
-                EventTilDtoMapper.utledOppgavestatus(Testdata.testevent(behandlingstatus, mutableMapOf())) shouldBe Oppgavestatus.LUKKET
+                TilbakeEventTilOppgaveMapper.utledOppgavestatus(Testdata.testevent(behandlingstatus, mutableMapOf())) shouldBe Oppgavestatus.LUKKET
             }
         }
         "med status UTREDES, FATTER_VEDTAK eller IVERKSETTER_VEDTAK" - {
@@ -38,7 +38,7 @@ class UtledOppgavestatusTest: FreeSpec({
             ) { behandlingstatus ->
                 "og ingen aksjonspunkter" - {
                     "gir oppgavestatus UAVKLART" {
-                        EventTilDtoMapper.utledOppgavestatus(Testdata.testevent(behandlingstatus, mutableMapOf())) shouldBe Oppgavestatus.UAVKLART
+                        TilbakeEventTilOppgaveMapper.utledOppgavestatus(Testdata.testevent(behandlingstatus, mutableMapOf())) shouldBe Oppgavestatus.UAVKLART
                     }
                 }
                 "og manuelt aksjonspunkt" - {
@@ -46,7 +46,7 @@ class UtledOppgavestatusTest: FreeSpec({
                     "med status OPPRETTET" - {
                         val apTilstand = Testdata.testAksjonspunktTilstand(apKode, AksjonspunktStatus.OPPRETTET)
                         "gir oppgavestatus AAPEN" {
-                            EventTilDtoMapper.utledOppgavestatus(
+                            TilbakeEventTilOppgaveMapper.utledOppgavestatus(
                                 Testdata.testevent(behandlingstatus, apTilstand),
                             ) shouldBe Oppgavestatus.AAPEN
                         }
@@ -56,7 +56,7 @@ class UtledOppgavestatusTest: FreeSpec({
                                 val apTilstand = Testdata.testAksjonspunktTilstand(apKode, AksjonspunktStatus.OPPRETTET)
                                 apTilstand[autoKode] = AksjonspunktStatus.OPPRETTET.toString()
                                 "gir oppgavestatus VENTER" {
-                                    EventTilDtoMapper.utledOppgavestatus(
+                                    TilbakeEventTilOppgaveMapper.utledOppgavestatus(
                                         Testdata.testevent(behandlingstatus, apTilstand),
                                     ) shouldBe Oppgavestatus.VENTER
                                 }
@@ -69,7 +69,7 @@ class UtledOppgavestatusTest: FreeSpec({
                             Testdata.testAksjonspunktTilstand(apKode, AksjonspunktStatus.AVBRUTT)
                         ) { apTilstand ->
                             "gir oppgavestatus UAVKLART" {
-                                EventTilDtoMapper.utledOppgavestatus(
+                                TilbakeEventTilOppgaveMapper.utledOppgavestatus(
                                     Testdata.testevent(behandlingstatus, apTilstand),
                                 ) shouldBe Oppgavestatus.UAVKLART
                             }
@@ -81,7 +81,7 @@ class UtledOppgavestatusTest: FreeSpec({
                     "med status OPPRETTET" - {
                         val apTilstand = Testdata.testAksjonspunktTilstand(apKode, AksjonspunktStatus.OPPRETTET)
                         "gir oppgavestatus VENTER" {
-                            EventTilDtoMapper.utledOppgavestatus(
+                            TilbakeEventTilOppgaveMapper.utledOppgavestatus(
                                 Testdata.testevent(behandlingstatus, apTilstand),
                             ) shouldBe Oppgavestatus.VENTER
                         }
@@ -92,7 +92,7 @@ class UtledOppgavestatusTest: FreeSpec({
                             Testdata.testAksjonspunktTilstand(apKode, AksjonspunktStatus.AVBRUTT)
                         ) { apTilstand ->
                             "gir oppgavestatus UAVKLART" {
-                                EventTilDtoMapper.utledOppgavestatus(
+                                TilbakeEventTilOppgaveMapper.utledOppgavestatus(
                                     Testdata.testevent(behandlingstatus, apTilstand),
                                 ) shouldBe Oppgavestatus.UAVKLART
                             }

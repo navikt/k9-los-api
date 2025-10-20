@@ -41,9 +41,6 @@ class EventlagerKonverteringsservice(
                 val gammelModell = klageEventRepository.hent(UUID.fromString(eksternId))
                 gammelModell.eventer.forEach { event ->
                     val eventLagret = nyttEventrepository.lagre(Fagsystem.K9KLAGE, LosObjectMapper.instance.writeValueAsString(event), tx)
-                    eventLagret?.let {
-                        nyttEventrepository.fjernDirty(eventLagret, tx)
-                    }
                 }
             }
             Fagsystem.PUNSJ -> {

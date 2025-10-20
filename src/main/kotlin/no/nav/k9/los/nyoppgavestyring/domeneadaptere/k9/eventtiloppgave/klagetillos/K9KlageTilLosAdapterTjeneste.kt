@@ -78,7 +78,7 @@ class K9KlageTilLosAdapterTjeneste(
                         )
 
                 val oppgaveDto =
-                    EventTilDtoMapper.lagOppgaveDto(eventBeriket, forrigeOppgave)
+                    KlageEventTilOppgaveMapper.lagOppgaveDto(eventBeriket, forrigeOppgave)
 
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
 

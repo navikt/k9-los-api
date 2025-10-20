@@ -5,7 +5,7 @@ import no.nav.k9.klage.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.klage.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.EventTilDtoMapper
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.KlageEventTilOppgaveMapper
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -75,7 +75,7 @@ class K9KlageOppgaveTilDVHMapper {
     }
 
     private fun utledBehandlingStatus(oppgave: Oppgave): String {
-        return if (oppgave.hentListeverdi("aktivtAksjonspunkt").contains(EventTilDtoMapper.KLAGE_PREFIX + AksjonspunktDefinisjon.AUTO_OVERFØRT_NK.kode)) {
+        return if (oppgave.hentListeverdi("aktivtAksjonspunkt").contains(KlageEventTilOppgaveMapper.KLAGE_PREFIX + AksjonspunktDefinisjon.AUTO_OVERFØRT_NK.kode)) {
             "OVERFORT_KLAGE_ANKE"
         } else {
             BehandlingStatus.fraKode(oppgave.hentVerdi("behandlingsstatus")).kode

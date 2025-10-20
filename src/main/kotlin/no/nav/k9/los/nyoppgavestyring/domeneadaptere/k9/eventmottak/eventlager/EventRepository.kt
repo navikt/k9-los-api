@@ -101,6 +101,26 @@ class EventRepository(
         return hent(fagsystem, eksternId, eksternVersjon, tx)
     }
 
+    fun endreEvent(eventNøkkel: EventNøkkel, event: String, tx: TransactionalSession): EventLagret? {
+        val tree = LosObjectMapper.instance.readTree(event)
+        val eksternVersjon = tree.findValue("eventTid").asText()
+
+        tx.run(
+            queryOf(
+                """
+                        update event set "data" = :data :: jsonb
+                        where event_nokkel_id = :event_nokkel_id 
+                     """,
+                mapOf(
+                    "event_nokkel_id" to eventNøkkel.nøkkelId,
+                    "data" to event
+                )
+            ).asUpdate
+        )
+
+        return hent(eventNøkkel.fagsystem, eventNøkkel.eksternId, eksternVersjon, tx)
+    }
+
     fun hentAlleEventerMedLås(fagsystem: Fagsystem, eksternId: String, tx: TransactionalSession): List<EventLagret> {
         val eventId = hentOgLåsEventnøkkel(fagsystem, eksternId, tx)
         val eventer = tx.run(
@@ -183,14 +203,17 @@ class EventRepository(
             it.run(
                 queryOf(
                     """
-                    select distinct ekstern_id, fagsystem
-                    from event 
-                    where dirty = true
-                """.trimIndent()
+                    select en.*
+                    from event e
+                        join event_nokkel en on e.event_nokkel_id = en.id
+                    where e.dirty = true
+                    and en.fagsystem = '${Fagsystem.PUNSJ.kode}'
+                """.trimIndent() //TODO: Midlertidig filter på punsj for pilottest
                 ).map { row ->
                     EventNøkkel(
-                        fagsystem = Fagsystem.fraKode(row.string("fagsystem")),
-                        eksternId = row.string("ekstern_id")
+                        nøkkelId = row.long("id"),
+                        eksternId = row.string("ekstern_id"),
+                        fagsystem = Fagsystem.fraKode(row.string("fagsystem"))
                     )
                 }.asList
             )
@@ -279,6 +302,14 @@ class EventRepository(
         }
     }
 
+    fun bestillHistorikkvask(fagsystem: Fagsystem, eksternId: String) {
+        using(sessionOf(dataSource)) {
+            it.transaction { tx ->
+                bestillHistorikkvask(fagsystem, eksternId, tx)
+            }
+        }
+    }
+
     fun bestillHistorikkvask(fagsystem: Fagsystem, eksternId: String, tx: TransactionalSession) {
         tx.run(
             queryOf(
@@ -341,8 +372,9 @@ class EventRepository(
                             select en.*
                             from event_historikkvask_bestilt hb
                                 join event_nokkel en on hb.event_nokkel_id = en.id
+                                where en.fagsystem = '${Fagsystem.PUNSJ.kode}'
                             LIMIT :antall
-                        """.trimIndent(),
+                        """.trimIndent(), //TODO: Midlertidig filter på punsj for pilottest
                         mapOf("antall" to antall)
                     ).map { row ->
                         HistorikkvaskBestilling(

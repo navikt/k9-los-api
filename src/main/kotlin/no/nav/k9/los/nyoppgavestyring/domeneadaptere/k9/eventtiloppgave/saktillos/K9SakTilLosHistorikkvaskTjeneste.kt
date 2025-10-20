@@ -150,20 +150,20 @@ class K9SakTilLosHistorikkvaskTjeneste(
             if (eventNrForBehandling > høyesteInternVersjon) {
                 log.info("Avbryter historikkvask for ${event.eksternId} ved eventTid ${event.eventTid}. Forventer at håndteres av vanlig adaptertjeneste.")
                 break //Historikkvasken har funnet eventer som ennå ikke er lastet inn med normalflyt. Dirty eventer skal håndteres av vanlig adaptertjeneste
-            }
+            } //erstattet
             if (event.eldsteDatoMedEndringFraSøker == null && nyeBehandlingsopplysningerFraK9Sak != null && nyeBehandlingsopplysningerFraK9Sak.eldsteDatoMedEndringFraSøker != null) {
                 event =
                     event.copy(eldsteDatoMedEndringFraSøker = nyeBehandlingsopplysningerFraK9Sak.eldsteDatoMedEndringFraSøker)
                 //ser ut som noen gamle mottatte dokumenter kan mangle innsendingstidspunkt.
                 //da faller vi tilbake til å bruke behandling_opprettet i mapperen
-            }
-            var oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+            } //erstattet
+            var oppgaveDto = SakEventTilOppgaveMapper.lagOppgaveDto(event, forrigeOppgave) //NA
 
             oppgaveDto = k9SakTilLosAdapterTjeneste.ryddOppObsoleteOgResultatfeilFra2020(
                 event,
                 oppgaveDto,
                 nyeBehandlingsopplysningerFraK9Sak
-            )
+            ) //erstattet
 
             oppgaveV3 = DetaljerMetrikker.time(
                 "k9sakHistorikkvask",

@@ -1,11 +1,15 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventLagret
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.AksjonspunktStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.AksjonspunktStatus.OPPRETTET
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
@@ -13,7 +17,25 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import org.jetbrains.annotations.VisibleForTesting
 import java.time.temporal.ChronoUnit
 
-class EventTilDtoMapper {
+class TilbakeEventTilOppgaveMapper {
+    fun lagOppgaveDto(eventLagret: EventLagret, forrigeOppgave: OppgaveV3?) : OppgaveDto {
+        if (eventLagret.fagsystem != Fagsystem.K9TILBAKE) {
+            throw IllegalArgumentException("Fagsystem er ikke TILBAKE")
+        }
+        val event = LosObjectMapper.instance.readValue<K9TilbakeEventDto>(eventLagret.eventJson)
+        return OppgaveDto(
+            eksternId = event.eksternId.toString(),
+            eksternVersjon = event.eventTid.toString(),
+            område = "K9",
+            kildeområde = "K9",
+            type = "k9tilbake",
+            status = utledOppgavestatus(event).kode,
+            endretTidspunkt = event.eventTid,
+            reservasjonsnøkkel = utledReservasjonsnøkkel(event, erTilBeslutter(event)),
+            feltverdier = lagFeltverdier(event, forrigeOppgave)
+        )
+    }
+
     companion object {
         fun lagOppgaveDto(event: K9TilbakeEventDto, forrigeOppgave: OppgaveV3?) =
             OppgaveDto(

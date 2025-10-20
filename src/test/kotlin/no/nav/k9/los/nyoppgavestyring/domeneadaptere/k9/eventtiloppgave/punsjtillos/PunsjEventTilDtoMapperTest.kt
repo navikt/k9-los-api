@@ -16,7 +16,7 @@ class PunsjEventTilDtoMapperTest : AbstractK9LosIntegrationTest() {
     fun `defaulter til ukjent`() {
         val forrigeOppgave = OppgaveTestDataBuilder().lag()
         val event = PunsjEventDtoBuilder(ytelse = null, type = null).build()
-        val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+        val oppgaveDto = PunsjEventTilOppgaveMapper.lagOppgaveDto(event, forrigeOppgave)
         assertThat(oppgaveDto.feltverdier)
             .any { it.matchesPredicate { feltverdi -> feltverdi.nøkkel == "ytelsestype" && feltverdi.verdi == "UKJENT" } }
         assertThat(oppgaveDto.feltverdier)
@@ -30,7 +30,7 @@ class PunsjEventTilDtoMapperTest : AbstractK9LosIntegrationTest() {
             .medOppgaveFeltVerdi(FeltType.BEHANDLING_TYPE, "UKJENT")
             .lag()
         val event = PunsjEventDtoBuilder(ytelse = FagsakYtelseType.PLEIEPENGER_SYKT_BARN, type = BehandlingType.PAPIRSØKNAD).build()
-        val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+        val oppgaveDto = PunsjEventTilOppgaveMapper.lagOppgaveDto(event, forrigeOppgave)
         assertThat(oppgaveDto.feltverdier)
             .any { it.matchesPredicate { feltverdi -> feltverdi.nøkkel == "ytelsestype" && feltverdi.verdi == "PSB" } }
         assertThat(oppgaveDto.feltverdier)
@@ -44,7 +44,7 @@ class PunsjEventTilDtoMapperTest : AbstractK9LosIntegrationTest() {
             .medOppgaveFeltVerdi(FeltType.BEHANDLING_TYPE, "PAPIRSØKNAD")
             .lag()
         val event = PunsjEventDtoBuilder(ytelse = null, type = null).build()
-        val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+        val oppgaveDto = PunsjEventTilOppgaveMapper.lagOppgaveDto(event, forrigeOppgave)
         assertThat(oppgaveDto.feltverdier)
             .any { it.matchesPredicate { feltverdi -> feltverdi.nøkkel == "ytelsestype" && feltverdi.verdi == "PSB" } }
         assertThat(oppgaveDto.feltverdier)

@@ -66,7 +66,7 @@ class K9TilbakeTilLosAdapterTjeneste(
             var eventNrForBehandling = -1L
             behandlingProsessEventer.forEach { event ->
                 eventNrForBehandling++
-                val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+                val oppgaveDto = TilbakeEventTilOppgaveMapper.lagOppgaveDto(event, forrigeOppgave)
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
 
                 //oppgave er satt bare dersom oppgavemodellen ikke har sett eksternVersjon fra tidligere
@@ -98,15 +98,6 @@ class K9TilbakeTilLosAdapterTjeneste(
                 )
             }
 
-            runBlocking {
-                køpåvirkendeHendelseChannel.send(
-                    OppgaveHendelseMottatt(
-                        Fagsystem.K9TILBAKE,
-                        EksternOppgaveId("K9", uuid.toString())
-                    )
-                )
-            }
-
             behandlingProsessEventTilbakeRepository.fjernDirty(uuid, tx)
         }
 
@@ -122,8 +113,8 @@ class K9TilbakeTilLosAdapterTjeneste(
         event: K9TilbakeEventDto,
         tx: TransactionalSession
     ) {
-        val saksbehandlerNøkkel = EventTilDtoMapper.utledReservasjonsnøkkel(event, erTilBeslutter = false)
-        val beslutterNøkkel = EventTilDtoMapper.utledReservasjonsnøkkel(event, erTilBeslutter = true)
+        val saksbehandlerNøkkel = TilbakeEventTilOppgaveMapper.utledReservasjonsnøkkel(event, erTilBeslutter = false)
+        val beslutterNøkkel = TilbakeEventTilOppgaveMapper.utledReservasjonsnøkkel(event, erTilBeslutter = true)
         val antallAnnullert = annullerReservasjonHvisAlleOppgaverPåVentEllerAvsluttet(listOf(saksbehandlerNøkkel, beslutterNøkkel), tx)
         if (antallAnnullert > 0) {
             log.info("Annullerte $antallAnnullert reservasjoner maskinelt på oppgave ${event.saksnummer} som følge av status på innkommende event")
