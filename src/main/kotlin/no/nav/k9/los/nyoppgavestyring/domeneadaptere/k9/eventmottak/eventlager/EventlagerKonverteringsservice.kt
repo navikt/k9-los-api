@@ -26,25 +26,25 @@ class EventlagerKonverteringsservice(
         }
         when (fagsystem) {
             Fagsystem.K9SAK -> {
-                val gammelModell = sakEventRepository.hent(UUID.fromString(eksternId))
+                val gammelModell = sakEventRepository.hentMedLås(tx, UUID.fromString(eksternId))
                 gammelModell.eventer.forEach { event ->
                     nyttEventrepository.lagre(Fagsystem.K9SAK,LosObjectMapper.instance.writeValueAsString(event), tx)
                 }
             }
             Fagsystem.K9TILBAKE -> {
-                val gammelModell = tilbakeEventRepository.hent(UUID.fromString(eksternId))
+                val gammelModell = tilbakeEventRepository.hentMedLås(tx, UUID.fromString(eksternId))
                 gammelModell.eventer.forEach { event ->
                     nyttEventrepository.lagre(Fagsystem.K9TILBAKE, LosObjectMapper.instance.writeValueAsString(event), tx)
                 }
             }
             Fagsystem.K9KLAGE -> {
-                val gammelModell = klageEventRepository.hent(UUID.fromString(eksternId))
+                val gammelModell = klageEventRepository.hentMedLås(tx, UUID.fromString(eksternId))
                 gammelModell.eventer.forEach { event ->
                     val eventLagret = nyttEventrepository.lagre(Fagsystem.K9KLAGE, LosObjectMapper.instance.writeValueAsString(event), tx)
                 }
             }
             Fagsystem.PUNSJ -> {
-                val gammelModell = punsjEventRepository.hent(UUID.fromString(eksternId))
+                val gammelModell = punsjEventRepository.hentMedLås(tx, UUID.fromString(eksternId))
                 gammelModell.eventer.forEach { event ->
                     nyttEventrepository.lagre(Fagsystem.PUNSJ, LosObjectMapper.instance.writeValueAsString(event), tx)
                 }
