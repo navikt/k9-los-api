@@ -440,6 +440,18 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
 
         add(
             PlanlagtJobb.Periodisk(
+                navn = "oppgaveVaktmester",
+                prioritet = lavPrioritet,
+                intervall = 1.minutes,
+                tidsvindu = heleTiden,
+                startForsinkelse = 1.minutes
+            ) {
+                eventTilOppgaveAdapter.spillAvBehandlingProsessEventer()
+            }
+        )
+
+        add(
+            PlanlagtJobb.Periodisk(
                 navn = "HistorikkvaskVaktmester",
                 prioritet = lavPrioritet,
                 intervall = 1.minutes,
