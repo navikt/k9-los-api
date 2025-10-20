@@ -469,6 +469,7 @@ fun common(app: Application, config: Configuration) = module {
             reservasjonV3Tjeneste = get(),
             eventTilOppgaveMapper = get(),
             pepCacheService = get(),
+            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 

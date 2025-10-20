@@ -392,6 +392,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             reservasjonV3Tjeneste = get(),
             eventTilOppgaveMapper = get(),
             pepCacheService = get(),
+            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 

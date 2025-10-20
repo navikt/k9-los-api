@@ -1,6 +1,8 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventLagret
@@ -10,11 +12,14 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
+import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
+import no.nav.k9.los.nyoppgavestyring.ko.OppgaveHendelseMottatt
 import no.nav.k9.los.nyoppgavestyring.kodeverk.AksjonspunktStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
+import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
 import org.slf4j.Logger
@@ -24,11 +29,20 @@ class OppgaveOppdatertHandler(
     private val oppgaveRepository: OppgaveRepository,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
     private val eventTilOppgaveMapper: EventTilOppgaveMapper,
-    private val pepCacheService: PepCacheService
+    private val pepCacheService: PepCacheService,
+    private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
 ) {
     private val log: Logger = LoggerFactory.getLogger(OppgaveOppdatertHandler::class.java)
 
     internal fun håndterOppgaveOppdatert(eventLagret: EventLagret, oppgave: OppgaveV3, tx: TransactionalSession) {
+        runBlocking {
+            køpåvirkendeHendelseChannel.send(
+                OppgaveHendelseMottatt(
+                    eventLagret.fagsystem,
+                    EksternOppgaveId("K9", oppgave.eksternId)
+                )
+            )
+        }
         pepCacheService.oppdater(tx, oppgave.kildeområde, oppgave.eksternId)
         when (eventLagret.fagsystem) {
             Fagsystem.K9SAK -> {

@@ -17,6 +17,7 @@ import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
+import org.koin.core.qualifier.named
 import org.koin.test.KoinTest
 import org.koin.test.get
 import java.time.LocalDateTime
@@ -40,6 +41,7 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
             reservasjonV3Tjeneste = get(),
             eventTilOppgaveMapper = get(),
             pepCacheService = get(),
+            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         ))
 
         oppgaveAdapter = EventTilOppgaveAdapter(

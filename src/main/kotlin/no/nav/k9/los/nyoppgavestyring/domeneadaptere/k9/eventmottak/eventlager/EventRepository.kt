@@ -302,6 +302,14 @@ class EventRepository(
         }
     }
 
+    fun bestillHistorikkvask(fagsystem: Fagsystem, eksternId: String) {
+        using(sessionOf(dataSource)) {
+            it.transaction { tx ->
+                bestillHistorikkvask(fagsystem, eksternId, tx)
+            }
+        }
+    }
+
     fun bestillHistorikkvask(fagsystem: Fagsystem, eksternId: String, tx: TransactionalSession) {
         tx.run(
             queryOf(
