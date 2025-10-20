@@ -52,6 +52,7 @@ class EventTilOppgaveAdapter(
 
     @WithSpan
     fun oppdaterOppgaveForEksternId(@SpanAttribute eventnøkkel: EventNøkkel, eventTellerInn: Long = 0): Long {
+        log.info("Nytt felles oppgaveadapter, oppdaterer oppgave for fagsystem: ${eventnøkkel.fagsystem}, eksternId: ${eventnøkkel.eksternId}")
         var eventTeller = eventTellerInn
         var forrigeOppgaveversjon: OppgaveV3? = null
 
@@ -101,7 +102,7 @@ class EventTilOppgaveAdapter(
                 .isAfter(LocalDateTime.parse(eventerForEksternId.last().eksternVersjon))
         } ?: false //Logger enn så lenge, men trenger å trigge historikkvask
         if (meldingerIFeilRekkefølge) {
-            log.warn("Oppgave med fagsystem: ${eventnøkkel.fagsystem}, eksternId: ${eventnøkkel.eksternId} har fått meldinger i feil rekkefølge. Må historikkvaskes!")
+            log.warn("Oppgave med fagsystem: ${eventnøkkel.fagsystem}, eksternId: ${eventnøkkel.eksternId} har fått meldinger i feil rekkefølge. Bestiller historikkvask!")
             eventRepository.bestillHistorikkvask(eventnøkkel.fagsystem, eventnøkkel.eksternId, tx)
         }
     }
