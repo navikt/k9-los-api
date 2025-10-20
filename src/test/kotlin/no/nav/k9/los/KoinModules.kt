@@ -228,7 +228,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     single {
         K9PunsjEventHandler(
             punsjEventK9Repository = get(),
-            punsjTilLosAdapterTjeneste = get(),
             transactionalManager = get(),
             eventlagerKonverteringsservice = get(),
             oppgaveAdapter = get(),

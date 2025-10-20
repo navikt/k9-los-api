@@ -246,7 +246,6 @@ fun common(app: Application, config: Configuration) = module {
     single {
         K9PunsjEventHandler(
             punsjEventK9Repository = get(),
-            punsjTilLosAdapterTjeneste = get(),
             transactionalManager = get(),
             eventlagerKonverteringsservice = get(),
             oppgaveAdapter = get(),
