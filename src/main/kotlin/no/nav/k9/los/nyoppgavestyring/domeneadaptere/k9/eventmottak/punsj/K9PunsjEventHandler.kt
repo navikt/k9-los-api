@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory
 
 class K9PunsjEventHandler (
     private val punsjEventK9Repository: K9PunsjEventRepository,
-    private val punsjTilLosAdapterTjeneste: K9PunsjTilLosAdapterTjeneste,
     private val transactionalManager: TransactionalManager,
     private val eventlagerKonverteringsservice: EventlagerKonverteringsservice,
     private val oppgaveAdapter: EventTilOppgaveAdapter,
@@ -41,14 +40,9 @@ class K9PunsjEventHandler (
                 modell
             }
 
-            punsjEventK9Repository.lagre(event = event)
-
             OpentelemetrySpanUtil.span("punsjTilLosAdapterTjeneste.oppdaterOppgaveForEksternId") {
                 try {
                     oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(null, Fagsystem.PUNSJ, event.eksternId.toString()))
-                    //punsjTilLosAdapterTjeneste.oppdaterOppgaveForEksternId(
-                    //    event.eksternId
-                    //)
                 } catch (e: Exception) {
                     log.error("Oppatering av k9-punsj-oppgave feilet for ${event.eksternId}. Oppgaven er ikke oppdatert, men blir plukket av vaktmester", e)
                 }
