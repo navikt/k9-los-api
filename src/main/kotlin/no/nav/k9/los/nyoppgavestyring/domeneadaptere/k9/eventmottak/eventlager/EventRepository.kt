@@ -180,30 +180,12 @@ class EventRepository(
         }
     }
 
-    fun hentAlleEksternIderMedDirtyEventer(fagsystem: Fagsystem): List<String> {
-        return using(sessionOf(dataSource)) {
-            it.run(
-                queryOf(
-                    """
-                    select distinct ekstern_id
-                    from event 
-                    where fagsystem = :fagsystem
-                    and dirty = true
-                """.trimIndent(),
-                    mapOf("fagsystem" to fagsystem.kode)
-                ).map { row ->
-                    row.string("ekstern_id")
-                }.asList
-            )
-        }
-    }
-
     fun hentAlleEksternIderMedDirtyEventer(): List<EventNøkkel> {
         return using(sessionOf(dataSource)) {
             it.run(
                 queryOf(
                     """
-                    select en.*
+                    select distinct en.*
                     from event e
                         join event_nokkel en on e.event_nokkel_id = en.id
                     where e.dirty = true
@@ -228,7 +210,7 @@ class EventRepository(
         return tx.run(
             queryOf(
                 """
-                    select e.*
+                    select distinct e.*
                     from event e
                         join event_nokkel en on e.event_nokkel_id = en.id 
                     where en.ekstern_id = :ekstern_id
