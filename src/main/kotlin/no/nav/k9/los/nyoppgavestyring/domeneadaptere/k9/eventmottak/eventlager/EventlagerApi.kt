@@ -15,4 +15,16 @@ internal fun Route.EventlagerApi() {
         eventlagerKonverteringsjobb.kjørEventlagerKonvertering()
         call.respond(HttpStatusCode.NoContent)
     }
+
+    put("/spillAvDirtyEventer", {
+        tags("Forvaltning")
+    }) {
+
+    }
+
+    put("bestillHistorikkvask", {
+        tags("Forvaltning")
+    }) {
+
+    }
 }

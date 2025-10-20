@@ -38,14 +38,14 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
         oppgaveOppdatertHandler = spyk(OppgaveOppdatertHandler(
             oppgaveRepository = get(),
             reservasjonV3Tjeneste = get(),
-            eventTilOppgaveMapper = get()
+            eventTilOppgaveMapper = get(),
+            pepCacheService = get(),
         ))
 
         oppgaveAdapter = EventTilOppgaveAdapter(
             eventRepository = eventRepository,
             oppgaveV3Tjeneste = get(),
             transactionalManager = get(),
-            pepCacheService = get(),
             eventTilOppgaveMapper = get(),
             oppgaveOppdatertHandler = oppgaveOppdatertHandler
         )
@@ -67,7 +67,7 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
                             oppgaveV3Tjeneste.hentHøyesteInternVersjon(event.eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, "K9", tx)
                         }
                         internVersjon shouldBe 0
-                        verify(exactly = 1) { //this fails
+                        verify(exactly = 1) {
                             oppgaveOppdatertHandler.håndterOppgaveOppdatert(any(), any(), any())
                         }
                         verify(exactly = 0) {

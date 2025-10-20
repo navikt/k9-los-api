@@ -1,16 +1,23 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave
 
+import io.github.smiley4.ktoropenapi.config.descriptors.empty
+import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FreeSpec
+import io.kotest.engine.runBlocking
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.equals.shouldNotBeEqual
 import io.kotest.matchers.shouldBe
 import kotliquery.queryOf
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventNøkkel
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.HistorikkvaskBestilling
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
+import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
@@ -24,8 +31,41 @@ class HistorikkvaskTjenesteSpec: FreeSpec(), KoinTest {
     val eventRepository = get<EventRepository>()
     val oppgaveAdapter = get<EventTilOppgaveAdapter>()
     val historikkvaskTjeneste = get<HistorikkvaskTjeneste>()
+    val oppgaveTjeneste = get<OppgaveV3Tjeneste>()
+
+    override fun isolationMode() = IsolationMode.InstancePerLeaf
 
     init {
+        "En oppgaveversjon innlest i oppgavemodellen" - {
+            val eksternId = UUID.randomUUID()
+            val event = punsjEvent(eksternId, LocalDateTime.now().minusHours(2))
+            val eventLagret = transactionalManager.transaction { tx ->
+                eventRepository.lagre(Fagsystem.PUNSJ, LosObjectMapper.instance.writeValueAsString(event), tx)
+            }
+            oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(null, Fagsystem.PUNSJ, eksternId.toString()))
+            "med feil i oppgavefeltverdier" - {
+                val eventKorrigert = LosObjectMapper.instance.writeValueAsString(event.copy(ytelse = "ytelsekorrigert"))
+                transactionalManager.transaction { tx ->
+                    eventRepository.endreEvent(EventNøkkel(eventLagret!!.nøkkelId, Fagsystem.PUNSJ, eksternId.toString()), eventKorrigert, tx)
+                }
+                "skal få korrigerte verdier av historikkvasker" {
+                    val oppgaveUvasket = transactionalManager.transaction { tx ->
+                        eventRepository.bestillHistorikkvask(Fagsystem.PUNSJ)
+                        oppgaveTjeneste.hentAktivOppgave(eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, "K9", tx)
+                    }
+                    oppgaveUvasket.hentVerdi("ytelsestype") shouldBe "ytelse"
+                    oppgaveUvasket.felter shouldHaveSize 12
+
+                    historikkvaskTjeneste.vaskBestilling(HistorikkvaskBestilling(null, eksternId.toString(), Fagsystem.PUNSJ))
+
+                    val oppgaveVasket = transactionalManager.transaction { tx ->
+                        oppgaveTjeneste.hentAktivOppgave(eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, "K9", tx)
+                    }
+                    oppgaveVasket.hentVerdi("ytelsestype") shouldBe "ytelsekorrigert"
+                    oppgaveVasket.felter shouldHaveSize 12
+                }
+            }
+        }
         "Tre oppgaveeventer, sortert etter eventTid" - {
             val eksternId = UUID.randomUUID()
             val event = punsjEvent(eksternId, LocalDateTime.now().minusHours(2))
@@ -49,7 +89,7 @@ class HistorikkvaskTjenesteSpec: FreeSpec(), KoinTest {
                         uvasketHistorikk.size shouldBe 3
                         uvasketHistorikk.sortedBy { it.second } shouldNotBeEqual uvasketHistorikk.sortedBy { it.third }
 
-                        historikkvaskTjeneste.kjørHistorikkvask()
+                        historikkvaskTjeneste.vaskBestilling(HistorikkvaskBestilling(null, eksternId.toString(), Fagsystem.PUNSJ))
 
                         val vasketHistorikk = hentOppgavehistorikk(eksternId.toString())
                         vasketHistorikk.size shouldBe 3
@@ -77,6 +117,21 @@ class HistorikkvaskTjenesteSpec: FreeSpec(), KoinTest {
                         row.int("versjon")
                     )
                 }.asList
+            )
+        }
+    }
+
+    fun endreOppgaveverdier(eksternId: String) {
+        transactionalManager.transaction { tx ->
+            tx.run(
+                queryOf(
+                    """
+                        delete
+                        from oppgavefelt_verdi
+                        where oppgave_id = (select id from oppgave_v3 where ekstern_id = :ekstern_id)
+                    """.trimIndent(),
+                    mapOf("ekstern_id" to eksternId)
+                ).asUpdate
             )
         }
     }

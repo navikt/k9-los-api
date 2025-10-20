@@ -230,16 +230,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             punsjEventK9Repository = get(),
             punsjTilLosAdapterTjeneste = get(),
             transactionalManager = get(),
-            eventlagerKonverteringsservice = get()
-        )
-    }
-
-    single {
-        K9PunsjEventHandler(
-            punsjEventK9Repository = K9PunsjEventRepository(dataSource = get()),
-            punsjTilLosAdapterTjeneste = get(),
-            transactionalManager = get(),
-            eventlagerKonverteringsservice = get()
+            eventlagerKonverteringsservice = get(),
+            oppgaveAdapter = get(),
         )
     }
 
@@ -351,7 +343,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             eventRepository = get(),
             oppgaveV3Tjeneste = get(),
             transactionalManager = get(),
-            pepCacheService = get(),
             eventTilOppgaveMapper = get(),
             oppgaveOppdatertHandler = get()
         )
@@ -400,6 +391,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             oppgaveRepository = get(),
             reservasjonV3Tjeneste = get(),
             eventTilOppgaveMapper = get(),
+            pepCacheService = get(),
         )
     }
 

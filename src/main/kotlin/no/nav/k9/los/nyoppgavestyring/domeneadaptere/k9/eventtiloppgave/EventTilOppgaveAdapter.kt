@@ -19,7 +19,6 @@ class EventTilOppgaveAdapter(
     private val eventRepository: EventRepository,
     private val oppgaveV3Tjeneste: OppgaveV3Tjeneste,
     private val transactionalManager: TransactionalManager,
-    private val pepCacheService: PepCacheService,
     private val eventTilOppgaveMapper: EventTilOppgaveMapper,
     private val oppgaveOppdatertHandler: OppgaveOppdatertHandler,
 ) {
@@ -28,11 +27,10 @@ class EventTilOppgaveAdapter(
 
     @WithSpan
     fun spillAvBehandlingProsessEventer() {
-
         log.info("Starter avspilling av K9-eventer")
         val tidKjøringStartet = System.currentTimeMillis()
 
-        val eventnøkler = eventRepository.hentAlleEksternIderMedDirtyEventer()
+        val eventnøkler = eventRepository.hentAlleEksternIderMedDirtyEventer() //TODO: hente bare punsj, for pilottest
         log.info("Fant ${eventnøkler.size} eksternIder")
 
         var behandlingTeller: Long = 0
@@ -75,8 +73,6 @@ class EventTilOppgaveAdapter(
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
 
                 if (oppgave != null) {
-                    pepCacheService.oppdater(tx, oppgave.kildeområde, oppgave.eksternId)
-
                     oppgaveOppdatertHandler.håndterOppgaveOppdatert(eventLagret, oppgave, tx)
 
                     eventTeller++

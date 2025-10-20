@@ -8,6 +8,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9Klag
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.AksjonspunktStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
@@ -22,11 +23,13 @@ import org.slf4j.LoggerFactory
 class OppgaveOppdatertHandler(
     private val oppgaveRepository: OppgaveRepository,
     private val reservasjonV3Tjeneste: ReservasjonV3Tjeneste,
-    private val eventTilOppgaveMapper: EventTilOppgaveMapper
+    private val eventTilOppgaveMapper: EventTilOppgaveMapper,
+    private val pepCacheService: PepCacheService
 ) {
     private val log: Logger = LoggerFactory.getLogger(OppgaveOppdatertHandler::class.java)
 
     internal fun håndterOppgaveOppdatert(eventLagret: EventLagret, oppgave: OppgaveV3, tx: TransactionalSession) {
+        pepCacheService.oppdater(tx, oppgave.kildeområde, oppgave.eksternId)
         when (eventLagret.fagsystem) {
             Fagsystem.K9SAK -> {
                 håndterSakOppdatert(eventLagret, oppgave, tx)

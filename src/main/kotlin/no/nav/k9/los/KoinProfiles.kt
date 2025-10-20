@@ -247,7 +247,8 @@ fun common(app: Application, config: Configuration) = module {
             punsjEventK9Repository = get(),
             punsjTilLosAdapterTjeneste = get(),
             transactionalManager = get(),
-            eventlagerKonverteringsservice = get()
+            eventlagerKonverteringsservice = get(),
+            oppgaveAdapter = get(),
         )
     }
 
@@ -428,7 +429,6 @@ fun common(app: Application, config: Configuration) = module {
             eventRepository = get(),
             oppgaveV3Tjeneste = get(),
             transactionalManager = get(),
-            pepCacheService = get(),
             eventTilOppgaveMapper = get(),
             oppgaveOppdatertHandler = get()
         )
@@ -468,6 +468,7 @@ fun common(app: Application, config: Configuration) = module {
             oppgaveRepository = get(),
             reservasjonV3Tjeneste = get(),
             eventTilOppgaveMapper = get(),
+            pepCacheService = get(),
         )
     }
 
