@@ -210,14 +210,16 @@ class EventRepository(
         return tx.run(
             queryOf(
                 """
-                    select distinct e.*
-                    from event e
-                        join event_nokkel en on e.event_nokkel_id = en.id 
-                    where en.ekstern_id = :ekstern_id
-                    and en.FAGSYSTEM = :fagsystem
-                    and e.dirty = true
-                    for update
-                """.trimIndent(),
+                    with eventer as (
+                        select distinct e.*
+                        from event e
+                            join event_nokkel en on e.event_nokkel_id = en.id 
+                        where en.ekstern_id = :ekstern_id
+                        and en.FAGSYSTEM = :fagsystem
+                        and e.dirty = true
+                    )
+                    select * from eventer for update
+                """.trimIndent(), //select for update ikke lov med distinct, derfor CTE
                 mapOf(
                     "ekstern_id" to eksternId,
                     "fagsystem" to fagsystem.kode
