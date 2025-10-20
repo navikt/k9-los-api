@@ -94,6 +94,7 @@ class EventTilOppgaveAdapter(
     }
 
     private fun sjekkMeldingIFeilRekkefølgeOgBestillVask(eventnøkkel: EventNøkkel, eventerForEksternId: List<EventLagret>, tx: TransactionalSession)  {
+        log.info("Sjekker rekkefølge for eventnøkkel: $eventnøkkel")
         val sisteEksternVersjon =
             oppgaveV3Tjeneste.hentSisteEksternVersjon("K9", K9Oppgavetypenavn.fraFagsystem(eventnøkkel.fagsystem).kode, eventnøkkel.eksternId, tx)
 
