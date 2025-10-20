@@ -1,4 +1,4 @@
-FROM ghcr.io/navikt/sif-baseimages/java-21:2025.06.04.0911Z
+FROM ghcr.io/navikt/sif-baseimages/java-21:2025.10.17.1307Z
 
 LABEL org.opencontainers.image.source=https://github.com/navikt/k9-los-api
 
