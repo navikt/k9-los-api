@@ -7,7 +7,6 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventLagret
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventNøkkel
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Tjeneste
@@ -57,50 +56,57 @@ class EventTilOppgaveAdapter(
         var forrigeOppgaveversjon: OppgaveV3? = null
 
         transactionalManager.transaction { tx ->
-            val eventerForEksternId = eventRepository.hentAlleDirtyEventerMedLås(eventnøkkel.fagsystem, eventnøkkel.eksternId, tx).sortedBy { LocalDateTime.parse(it.eksternVersjon) }
+            val eventerForEksternId = eventRepository.hentAlleDirtyEventerNummerertMedLås(eventnøkkel.fagsystem, eventnøkkel.eksternId, tx).sortedBy { LocalDateTime.parse(it.second.eksternVersjon) }
 
             sjekkMeldingIFeilRekkefølgeOgBestillVask(eventnøkkel, eventerForEksternId, tx)
 
+            eventRepository.hentAlleEventerMedLås(eventnøkkel.fagsystem, eventnøkkel.eksternId, tx)
+
             forrigeOppgaveversjon =
-                oppgaveV3Tjeneste.hentOppgaveversjonenFør(
-                    "K9",
-                    K9Oppgavetypenavn.fraFagsystem(eventnøkkel.fagsystem).kode,
-                    eventnøkkel.eksternId,
-                    eventerForEksternId.first().eksternVersjon,
-                    tx
-                )
+                if (eventerForEksternId.first().first > 0) {
+                    oppgaveV3Tjeneste.hentOppgaveversjon(
+                        "K9",
+                        K9Oppgavetypenavn.fraFagsystem(eventnøkkel.fagsystem).kode,
+                        eventnøkkel.eksternId,
+                        eventerForEksternId.first().first - 1,
+                        tx
+                    )
+                } else {
+                    null
+                }
+
             for (eventLagret in eventerForEksternId) {
-                val oppgaveDto = eventTilOppgaveMapper.mapOppgave(eventLagret, forrigeOppgaveversjon)
+                val oppgaveDto = eventTilOppgaveMapper.mapOppgave(eventLagret.second, forrigeOppgaveversjon)
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
 
                 if (oppgave != null) {
-                    oppgaveOppdatertHandler.håndterOppgaveOppdatert(eventLagret, oppgave, tx)
+                    oppgaveOppdatertHandler.håndterOppgaveOppdatert(eventLagret.second, oppgave, tx)
 
                     eventTeller++
                     forrigeOppgaveversjon = oppgave
                 } else { // hvis oppgave == null ble ikke oppgaven oppdatert selv om eventet var dirty. Vi henter ut oppgaveversjonen vi forsøkte å oppdatere som kontekst for neste event
-                    forrigeOppgaveversjon = oppgaveV3Tjeneste.hentOppgaveversjonenFør(
+                    forrigeOppgaveversjon = oppgaveV3Tjeneste.hentOppgaveversjon(
                         "K9",
-                        K9Oppgavetypenavn.fraFagsystem(eventLagret.fagsystem).kode,
-                        eventLagret.eksternId,
-                        eventLagret.eksternVersjon,
+                        K9Oppgavetypenavn.fraFagsystem(eventnøkkel.fagsystem).kode,
+                        eventnøkkel.eksternId,
+                        eventLagret.first,
                         tx
                     )
                 }
-                eventRepository.fjernDirty(eventLagret, tx)
+                eventRepository.fjernDirty(eventLagret.second, tx)
             }
         }
         return eventTeller
     }
 
-    private fun sjekkMeldingIFeilRekkefølgeOgBestillVask(eventnøkkel: EventNøkkel, eventerForEksternId: List<EventLagret>, tx: TransactionalSession)  {
+    private fun sjekkMeldingIFeilRekkefølgeOgBestillVask(eventnøkkel: EventNøkkel, eventerForEksternId: List<Pair<Int, EventLagret>>, tx: TransactionalSession)  {
         log.info("Sjekker rekkefølge for eventnøkkel: $eventnøkkel")
         val sisteEksternVersjon =
             oppgaveV3Tjeneste.hentSisteEksternVersjon("K9", K9Oppgavetypenavn.fraFagsystem(eventnøkkel.fagsystem).kode, eventnøkkel.eksternId, tx)
 
         val meldingerIFeilRekkefølge = sisteEksternVersjon?.let {
             LocalDateTime.parse(sisteEksternVersjon)
-                .isAfter(LocalDateTime.parse(eventerForEksternId.last().eksternVersjon))
+                .isAfter(LocalDateTime.parse(eventerForEksternId.last().second.eksternVersjon))
         } ?: false //Logger enn så lenge, men trenger å trigge historikkvask
         if (meldingerIFeilRekkefølge) {
             log.warn("Oppgave med fagsystem: ${eventnøkkel.fagsystem}, eksternId: ${eventnøkkel.eksternId} har fått meldinger i feil rekkefølge. Bestiller historikkvask!")

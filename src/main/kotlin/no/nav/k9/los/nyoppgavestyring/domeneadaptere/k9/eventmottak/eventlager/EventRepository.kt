@@ -202,30 +202,32 @@ class EventRepository(
         }
     }
 
-    fun hentAlleDirtyEventerMedLås(
+    fun hentAlleDirtyEventerNummerertMedLås(
         fagsystem: Fagsystem,
         eksternId: String,
         tx: TransactionalSession
-    ): List<EventLagret> {
+    ): List<Pair<Int, EventLagret>> {
         return tx.run(
             queryOf(
                 """
-                    with eventer as (
-                        select distinct e.*
-                        from event e
-                            join event_nokkel en on e.event_nokkel_id = en.id 
-                        where en.ekstern_id = :ekstern_id
-                        and en.FAGSYSTEM = :fagsystem
-                        and e.dirty = true
-                    )
-                    select * from eventer for update
+                with oppgaveversjoner as (
+                    select e.event_nokkel_id, en.fagsystem, en.ekstern_id, e.ekstern_versjon, e."data", row_number() over (order by ekstern_versjon :: timestamp) -1 as nummer, e.dirty, e.opprettet
+                    from "event" e 
+                        join event_nokkel en on e.event_nokkel_id = en.id 
+                    where en.ekstern_id = :ekstern_id
+                    and en.fagsystem = :fagsystem
+                )
+                select *
+                from oppgaveversjoner
+                where dirty = true
+                for update
                 """.trimIndent(), //select for update ikke lov med distinct, derfor CTE
                 mapOf(
                     "ekstern_id" to eksternId,
                     "fagsystem" to fagsystem.kode
                 )
             ).map { row ->
-                rowTilEvent(row, eksternId, fagsystem)
+                Pair(row.int("nummer"), rowTilEvent(row, eksternId, fagsystem))
             }.asList
         )
     }
@@ -241,7 +243,7 @@ class EventRepository(
         )
     }
 
-    private fun rowTilEvent(row: Row, eksternId: String, fagsystem: Fagsystem): EventLagret? {
+    private fun rowTilEvent(row: Row, eksternId: String, fagsystem: Fagsystem): EventLagret {
         return EventLagret(
             nøkkelId = row.long("event_nokkel_id"),
             eksternId = eksternId,

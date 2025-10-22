@@ -78,20 +78,20 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         }
         assertThat(alleEventer.size).isEqualTo(2)
 
-        transactionalManager.transaction { tx ->
-            alleEventer = eventRepository.hentAlleDirtyEventerMedLås(Fagsystem.PUNSJ, eksternId.toString(), tx)
+        var alleDirtyEventerNummerert = transactionalManager.transaction { tx ->
+            eventRepository.hentAlleDirtyEventerNummerertMedLås(Fagsystem.PUNSJ, eksternId.toString(), tx)
         }
-        assertThat(alleEventer.size).isEqualTo(2)
+        assertThat(alleDirtyEventerNummerert.size).isEqualTo(2)
 
-        alleEventer = transactionalManager.transaction { tx ->
+        alleDirtyEventerNummerert = transactionalManager.transaction { tx ->
             eventRepository.fjernDirty(eventLagret, tx)
-            eventRepository.hentAlleDirtyEventerMedLås(Fagsystem.PUNSJ, eksternId.toString(), tx)
+            eventRepository.hentAlleDirtyEventerNummerertMedLås(Fagsystem.PUNSJ, eksternId.toString(), tx)
         }
-        assertThat(alleEventer.size).isEqualTo(1)
-        assertThat(PunsjEventDto.fraEventLagret(alleEventer[0]).status).isEqualTo(Oppgavestatus.VENTER)
+        assertThat(alleDirtyEventerNummerert.size).isEqualTo(1)
+        assertThat(PunsjEventDto.fraEventLagret(alleDirtyEventerNummerert[0].second).status).isEqualTo(Oppgavestatus.VENTER)
 
         val førsteLagredeEvent = transactionalManager.transaction { tx ->
-            eventRepository.hent(Fagsystem.PUNSJ, eksternId.toString(), event.eventTid.toString(), tx)!!
+            eventRepository.hent(Fagsystem.PUNSJ, eksternId.toString(), event.eventTid.toString(), tx)
         }
         assertThat(PunsjEventDto.fraEventLagret(førsteLagredeEvent).status).isEqualTo(Oppgavestatus.AAPEN)
     }

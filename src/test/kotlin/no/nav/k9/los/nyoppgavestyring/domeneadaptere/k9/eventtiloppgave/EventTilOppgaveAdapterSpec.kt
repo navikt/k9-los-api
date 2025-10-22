@@ -126,7 +126,34 @@ class EventTilOppgaveAdapterSpec : KoinTest, FreeSpec() {
                         internVersjon shouldBe 1
                     }
                 }
+            }
+            "hvor den første har ytelsestype og den andre mangler ytelsestype" - {
+                val event2m = event2.copy(ytelse = null)
+                transactionalManager.transaction { tx ->
+                    eventRepository.lagre(Fagsystem.PUNSJ, LosObjectMapper.instance.writeValueAsString(event), tx)
+                }
+                oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(null, Fagsystem.PUNSJ, eksternId.toString()))
+                transactionalManager.transaction { tx ->
+                    eventRepository.lagre(Fagsystem.PUNSJ, LosObjectMapper.instance.writeValueAsString(event2m), tx)
+                }
+                "skal fylle ut ytelsestype med foregående oppgaveversjon sin ytelsestype" {
+                    oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(null, Fagsystem.PUNSJ, eksternId.toString()))
+                    verify(exactly = 1) {
+                        oppgaveOppdatertHandler.håndterOppgaveOppdatert(any(), any(), any())
+                    }
+                    verify(exactly = 0) {
+                        eventRepository.bestillHistorikkvask(any(), any(), any())
+                    }
+                    val internVersjon = transactionalManager.transaction { tx ->
+                        oppgaveV3Tjeneste.hentHøyesteInternVersjon(event.eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, "K9", tx)
+                    }
+                    internVersjon shouldBe 1
+                    val aktivOppgave = transactionalManager.transaction { tx ->
+                        oppgaveV3Tjeneste.hentAktivOppgave(event.eksternId.toString(), K9Oppgavetypenavn.PUNSJ.kode, "K9", tx)
+                    }
 
+                    aktivOppgave.hentVerdi("ytelsestype") shouldBe "ytelse"
+                }
             }
             "hvor den andre er lest inn og den første er dirty" - {
                 transactionalManager.transaction { tx ->
