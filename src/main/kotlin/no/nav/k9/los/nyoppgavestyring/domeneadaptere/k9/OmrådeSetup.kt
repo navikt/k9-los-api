@@ -324,7 +324,6 @@ object KodeverkSynlighetRegler {
             FagsakYtelseType.FRISINN,
             FagsakYtelseType.UNGDOMSYTELSE -> KodeverkSynlighet.SKJULT
 
-            FagsakYtelseType.OLP,
             FagsakYtelseType.UKJENT,
             FagsakYtelseType.OMSORGSDAGER -> KodeverkSynlighet.SYNLIG
 
