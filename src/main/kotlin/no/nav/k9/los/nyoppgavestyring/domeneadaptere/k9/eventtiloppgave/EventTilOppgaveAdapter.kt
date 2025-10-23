@@ -75,12 +75,12 @@ class EventTilOppgaveAdapter(
                     null
                 }
 
-            for (eventLagret in eventerForEksternId) {
-                val oppgaveDto = eventTilOppgaveMapper.mapOppgave(eventLagret.second, forrigeOppgaveversjon)
+            for ((nummer, eventLagret) in eventerForEksternId) {
+                val oppgaveDto = eventTilOppgaveMapper.mapOppgave(eventLagret, forrigeOppgaveversjon)
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
 
                 if (oppgave != null) {
-                    oppgaveOppdatertHandler.håndterOppgaveOppdatert(eventLagret.second, oppgave, tx)
+                    oppgaveOppdatertHandler.håndterOppgaveOppdatert(eventLagret, oppgave, tx)
 
                     eventTeller++
                     forrigeOppgaveversjon = oppgave
@@ -89,11 +89,11 @@ class EventTilOppgaveAdapter(
                         "K9",
                         K9Oppgavetypenavn.fraFagsystem(eventnøkkel.fagsystem).kode,
                         eventnøkkel.eksternId,
-                        eventLagret.first,
+                        nummer,
                         tx
                     )
                 }
-                eventRepository.fjernDirty(eventLagret.second, tx)
+                eventRepository.fjernDirty(eventLagret, tx)
             }
         }
         return eventTeller
