@@ -48,7 +48,6 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetil
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.K9KlageTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosApi
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.modia.SakOgBehandlingProducer
@@ -241,10 +240,10 @@ fun Application.k9Los() {
 
         if ((KoinProfile.LOCAL == koin.get<KoinProfile>())) {
             localSetup.initSaksbehandlere()
-            localSetup.initPunsjoppgaver(100)
-            localSetup.initTilbakeoppgaver(100)
-            localSetup.initKlageoppgaver(100)
-            localSetup.initK9SakOppgaver(300)
+            localSetup.initPunsjoppgaver(0)
+            localSetup.initTilbakeoppgaver(0)
+            localSetup.initKlageoppgaver(0)
+            localSetup.initK9SakOppgaver(0)
             api()
         } else {
             authenticate(*issuers.allIssuers()) {
