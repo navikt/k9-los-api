@@ -231,6 +231,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             transactionalManager = get(),
             eventlagerKonverteringsservice = get(),
             oppgaveAdapter = get(),
+            k9PunsjTilLosAdapterTjeneste = get(),
         )
     }
 
