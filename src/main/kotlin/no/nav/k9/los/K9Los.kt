@@ -338,6 +338,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
     val k9SakTilLosAdapterTjeneste = koin.get<K9SakTilLosAdapterTjeneste>()
     val k9KlageTilLosAdapterTjeneste = koin.get<K9KlageTilLosAdapterTjeneste>()
     val k9TilbakeTilLosAdapterTjeneste = koin.get<K9TilbakeTilLosAdapterTjeneste>()
+    val k9PunsjTilLosAdapterTjeneste = koin.get<K9PunsjTilLosAdapterTjeneste>()
     val eventTilOppgaveAdapter = koin.get<EventTilOppgaveAdapter>()
 
     val oppgavestatistikkTjeneste = koin.get<OppgavestatistikkTjeneste>()
@@ -439,6 +440,19 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
 
         add(
             PlanlagtJobb.Periodisk(
+                navn = "K9PunsjVaktmester",
+                prioritet = lavPrioritet,
+                intervall = 1.minutes,
+                tidsvindu = heleTiden,
+                startForsinkelse = 1.minutes
+            ) {
+                k9PunsjTilLosAdapterTjeneste.spillAvDirtyBehandlingProsessEventer()
+            }
+        )
+
+        /*
+        add(
+            PlanlagtJobb.Periodisk(
                 navn = "oppgaveVaktmester",
                 prioritet = lavPrioritet,
                 intervall = 1.minutes,
@@ -448,7 +462,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 eventTilOppgaveAdapter.spillAvBehandlingProsessEventer()
             }
         )
-
+               
         add(
             PlanlagtJobb.Periodisk(
                 navn = "HistorikkvaskVaktmester",
@@ -460,6 +474,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 historikkvaskTjeneste.kjørHistorikkvask()
             }
         )
+         */
 
         add(
             PlanlagtJobb.Periodisk(
