@@ -5,6 +5,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
 import io.ktor.server.routing.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import org.koin.ktor.ext.inject
@@ -15,8 +16,10 @@ import kotlin.getValue
 internal fun Route.EventlagerApi() {
     val requestContextService by inject<RequestContextService>()
     val eventlagerKonverteringsjobb by inject<EventlagerKonverteringsjobb>()
+    val eventlagerKonverteringsservice by inject<EventlagerKonverteringsservice>()
     val eventRepository by inject <EventRepository>()
     val oppgaveAdapter by inject <EventTilOppgaveAdapter>()
+    val transactionalManager by inject<TransactionalManager>()
 
     put("/startEventlagerKonvertering", {
         tags("Forvaltning")
@@ -37,6 +40,31 @@ internal fun Route.EventlagerApi() {
                 oppgaveAdapter.spillAvBehandlingProsessEventer()
             }
 
+            call.respond(HttpStatusCode.NoContent)
+        }
+    }
+
+    put("konverterEnkeltoppgave", {
+        tags("Forvaltning")
+        request {
+            queryParameter<Fagsystem>("fagsystem") {
+                description = "Fagsystemet man vil ha eventkonvertering for"
+                required = true
+                example("oneOf") {
+                    value = Fagsystem.K9SAK
+                }
+            }
+            queryParameter<String>("eksternId") {
+                description = "Ekstern ID for oppgaven"
+            }
+        }
+    }) {
+        requestContextService.withRequestContext(call) {
+            val fagsystem = Fagsystem.fraKode(call.parameters["fagsystem"]!!)
+            val eksternId = call.parameters["eksternId"]!!
+            transactionalManager.transaction { tx ->
+                eventlagerKonverteringsservice.konverterOppgave(eksternId, fagsystem, tx, false)
+            }
             call.respond(HttpStatusCode.NoContent)
         }
     }
