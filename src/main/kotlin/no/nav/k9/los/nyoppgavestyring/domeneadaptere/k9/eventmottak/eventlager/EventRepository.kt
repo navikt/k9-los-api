@@ -121,6 +121,28 @@ class EventRepository(
         return hent(eventNøkkel.fagsystem, eventNøkkel.eksternId, eksternVersjon, tx)
     }
 
+    fun hentAlleEventer(fagsystem: Fagsystem, eksternId: String, tx: TransactionalSession): List<EventLagret> {
+        val eventId = hentOgLåsEventnøkkel(fagsystem, eksternId, tx)
+        val eventer = tx.run(
+            queryOf(
+                """
+                    select e.*
+                    from event e
+                    where event_nokkel_id = (select id from event_nokkel where ekstern_id = :ekstern_id and fagsystem = :fagsystem)
+                    order by ekstern_versjon :: timestamp
+                """.trimIndent(),
+                mapOf(
+                    "nokkelId" to eventId,
+                )
+            ).map { row ->
+                rowTilEvent(row, eksternId, fagsystem)
+            }.asList
+        )
+
+        return eventer.sortedBy { LocalDateTime.parse(it.eksternVersjon) }
+    }
+
+
     fun hentAlleEventerMedLås(fagsystem: Fagsystem, eksternId: String, tx: TransactionalSession): List<EventLagret> {
         val eventId = hentOgLåsEventnøkkel(fagsystem, eksternId, tx)
         val eventer = tx.run(
