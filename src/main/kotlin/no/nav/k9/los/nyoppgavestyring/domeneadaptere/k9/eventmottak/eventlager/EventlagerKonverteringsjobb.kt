@@ -36,15 +36,17 @@ class EventlagerKonverteringsjobb(
         }
     }
 
-    private fun spillAvEventer() {
+    fun spillAvEventer() {
         run { // PUNSJ
             val ukonverterteEventer = finnUkonvertertePunsjEventer()
             log.info("Starter konvertering av punsjeventer. Funnet ${ukonverterteEventer.size} ukonverterte oppgaver.")
             var i = 0L
             for (uuid in ukonverterteEventer) {
                 transactionalManager.transaction { tx ->
-                    punsjEventRepository.hentMedLås(tx, UUID.fromString(uuid))
-                    eventlagerKonverteringsservice.konverterOppgave(uuid, Fagsystem.PUNSJ, tx, true)
+                    val punsjModell = punsjEventRepository.hentMedLås(tx, UUID.fromString(uuid))
+                    for (event in punsjModell.eventer) {
+                        eventlagerKonverteringsservice.konverterEvent(event, tx, true)
+                    }
                 }
                 i++
                 if (i % 1000 == 0L) {
@@ -61,8 +63,10 @@ class EventlagerKonverteringsjobb(
             var i = 0L
             for (uuid in ukonverterteEventer) {
                 transactionalManager.transaction { tx ->
-                    tilbakeEventRepository.hentMedLås(tx, UUID.fromString(uuid))
-                    eventlagerKonverteringsservice.konverterOppgave(uuid, Fagsystem.K9TILBAKE, tx, true)
+                    val tilbakeModell = tilbakeEventRepository.hentMedLås(tx, UUID.fromString(uuid))
+                    for (event in tilbakeModell.eventer) {
+                        eventlagerKonverteringsservice.konverterEvent(event, tx, true)
+                    }
                 }
                 i++
                 if (i % 1000 == 0L) {
@@ -79,8 +83,10 @@ class EventlagerKonverteringsjobb(
             var i = 0L
             for (uuid in ukonverterteEventer) {
                 transactionalManager.transaction { tx ->
-                    klageEventRepository.hentMedLås(tx, UUID.fromString(uuid))
-                    eventlagerKonverteringsservice.konverterOppgave(uuid, Fagsystem.K9KLAGE, tx, true)
+                    val klageModell = klageEventRepository.hentMedLås(tx, UUID.fromString(uuid))
+                    for (event in klageModell.eventer) {
+                        eventlagerKonverteringsservice.konverterEvent(event, tx, true)
+                    }
                 }
                 i++
                 if (i % 1000 == 0L) {
@@ -96,8 +102,10 @@ class EventlagerKonverteringsjobb(
             var i = 0L
             for (uuid in ukonverterteEventer) {
                 transactionalManager.transaction { tx ->
-                    sakEventRepository.hentMedLås(tx, UUID.fromString(uuid))
-                    eventlagerKonverteringsservice.konverterOppgave(uuid, Fagsystem.K9SAK, tx, true)
+                    val sakModell = sakEventRepository.hentMedLås(tx, UUID.fromString(uuid))
+                    for (event in sakModell.eventer) {
+                        eventlagerKonverteringsservice.konverterEvent(event, tx, true)
+                    }
                 }
                 i++
                 if (i % 1000 == 0L) {
@@ -115,7 +123,6 @@ class EventlagerKonverteringsjobb(
                     """
                 select id
                 from behandling_prosess_events_k9 egml
-                where not exists (select ekstern_id from event_nokkel eny where egml.id = eny.ekstern_id and eny.fagsystem = '${Fagsystem.K9SAK.kode}')
             """.trimIndent(),
                     mapOf(
                         "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
@@ -134,7 +141,6 @@ class EventlagerKonverteringsjobb(
                     """
                 select id
                 from behandling_prosess_events_klage egml
-                where not exists (select ekstern_id from event_nokkel eny where egml.id = eny.ekstern_id and eny.fagsystem = '${Fagsystem.K9KLAGE.kode}')
             """.trimIndent(),
                     mapOf(
                         "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
@@ -153,7 +159,6 @@ class EventlagerKonverteringsjobb(
                     """
                 select id
                 from behandling_prosess_events_tilbake egml
-                where not exists (select ekstern_id from event_nokkel eny where egml.id = eny.ekstern_id and eny.fagsystem = '${Fagsystem.K9TILBAKE.kode}')
             """.trimIndent(),
                     mapOf(
                         "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
@@ -172,7 +177,6 @@ class EventlagerKonverteringsjobb(
                     """
                 select id
                 from behandling_prosess_events_k9_punsj egml
-                where not exists (select ekstern_id from event_nokkel eny where egml.id = eny.ekstern_id and eny.fagsystem = '${Fagsystem.PUNSJ.kode}')
             """.trimIndent(),
                     mapOf(
                         "now" to LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
