@@ -8,7 +8,6 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.modia.SakOgBehandlingPro
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.OpentelemetrySpanUtil
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
-import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import org.slf4j.LoggerFactory
 
 
@@ -33,7 +32,7 @@ class K9TilbakeEventHandler(
                 val lås = behandlingProsessEventTilbakeRepository.hentMedLås(tx, event.eksternId!!)
                 val modell = behandlingProsessEventTilbakeRepository.lagre(event, tx)
 
-                eventlagerKonverteringsservice.konverterOppgave(event.eksternId.toString(), Fagsystem.K9TILBAKE, tx)
+                eventlagerKonverteringsservice.konverterEvent(event, tx)
 
                 modell
             }

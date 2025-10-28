@@ -11,7 +11,6 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.OpentelemetrySpanUtil
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
-import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import org.slf4j.LoggerFactory
 
 
@@ -73,7 +72,7 @@ class K9SakEventHandler (
                 k9SakModell
             }
 
-            eventlagerKonverteringsservice.konverterOppgave(event.eksternId.toString(), Fagsystem.K9SAK, tx)
+            eventlagerKonverteringsservice.konverterEvent(event, tx)
 
             modell
         }

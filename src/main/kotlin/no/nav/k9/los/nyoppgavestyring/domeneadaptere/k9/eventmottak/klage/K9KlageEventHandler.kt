@@ -7,7 +7,6 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.E
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.K9KlageTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.OpentelemetrySpanUtil
-import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import org.slf4j.LoggerFactory
 
 
@@ -45,7 +44,7 @@ class K9KlageEventHandler (
                 k9KlageModell
             }
 
-            eventlagerKonverteringsservice.konverterOppgave(event.eksternId.toString(), Fagsystem.K9KLAGE, tx)
+            eventlagerKonverteringsservice.konverterEvent(event, tx)
 
             modell
         }

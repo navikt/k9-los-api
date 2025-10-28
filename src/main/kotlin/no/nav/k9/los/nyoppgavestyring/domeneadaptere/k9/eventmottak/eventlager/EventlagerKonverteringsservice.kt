@@ -1,9 +1,13 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager
 
 import kotliquery.TransactionalSession
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
@@ -52,4 +56,34 @@ class EventlagerKonverteringsservice(
         }
 
     }
+
+    fun konverterEvent(event: K9SakEventDto, tx: TransactionalSession, batchkontekst: Boolean = false) {
+        if (!batchkontekst) {
+            log.info("Konverterer oppgave med eksternId: ${event.eksternId}, fagsystem: K9SAK")
+        }
+        nyttEventrepository.lagre(Fagsystem.K9SAK, LosObjectMapper.instance.writeValueAsString(event), tx)
+    }
+
+    fun konverterEvent(event: PunsjEventDto, tx: TransactionalSession, batchkontekst: Boolean = false) {
+        if (!batchkontekst) {
+            log.info("Konverterer oppgave med eksternId: ${event.eksternId}, fagsystem: PUNSJ")
+        }
+        nyttEventrepository.lagre(Fagsystem.PUNSJ, LosObjectMapper.instance.writeValueAsString(event), tx)
+    }
+
+    fun konverterEvent(event: K9TilbakeEventDto, tx: TransactionalSession, batchkontekst: Boolean = false) {
+        if (!batchkontekst) {
+            log.info("Konverterer oppgave med eksternId: ${event.eksternId}, fagsystem: K9TILBAKE")
+        }
+        nyttEventrepository.lagre(Fagsystem.K9TILBAKE, LosObjectMapper.instance.writeValueAsString(event), tx)
+    }
+
+    fun konverterEvent(event: K9KlageEventDto, tx: TransactionalSession, batchkontekst: Boolean = false) {
+        if (!batchkontekst) {
+            log.info("Konverterer oppgave med eksternId: ${event.eksternId}, fagsystem: K9KLAGE")
+        }
+        nyttEventrepository.lagre(Fagsystem.K9KLAGE, LosObjectMapper.instance.writeValueAsString(event), tx)
+
+    }
+
 }

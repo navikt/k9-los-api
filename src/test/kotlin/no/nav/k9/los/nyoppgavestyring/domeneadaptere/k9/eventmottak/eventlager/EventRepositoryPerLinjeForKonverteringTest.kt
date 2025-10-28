@@ -4,6 +4,7 @@ import assertk.assertThat
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import no.nav.k9.los.AbstractK9LosIntegrationTest
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjId
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
@@ -12,12 +13,18 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.sak.typer.AktørId
 import no.nav.k9.sak.typer.JournalpostId
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.koin.test.get
 import java.time.LocalDateTime
 import java.util.UUID
 
 class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTest() {
+
+    @BeforeEach
+    fun setup() {
+        get<OmrådeSetup>().setup()
+    }
 
     @Test
     fun `teste skriv og les`() {
@@ -205,4 +212,5 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         vaskeBestillinger = eventRepository.hentAlleHistorikkvaskbestillinger()
         assertThat(vaskeBestillinger.size).isEqualTo(1)
     }
+
 }

@@ -126,9 +126,9 @@ class EventRepository(
         val eventer = tx.run(
             queryOf(
                 """
-                    select e.*
-                    from event e
-                    where event_nokkel_id = (select id from event_nokkel where ekstern_id = :ekstern_id and fagsystem = :fagsystem)
+                    select e.* 
+                    from event e 
+                    where event_nokkel_id = :nokkelId
                     order by ekstern_versjon :: timestamp
                 """.trimIndent(),
                 mapOf(

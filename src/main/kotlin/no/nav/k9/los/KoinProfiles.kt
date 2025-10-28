@@ -281,16 +281,6 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        EventlagerKonverteringsservice(
-            nyttEventrepository = get(),
-            punsjEventRepository = get(),
-            klageEventRepository = get(),
-            tilbakeEventRepository = get(),
-            sakEventRepository = get()
-        )
-    }
-
-    single {
         EventRepository(
             dataSource = get(),
         )
