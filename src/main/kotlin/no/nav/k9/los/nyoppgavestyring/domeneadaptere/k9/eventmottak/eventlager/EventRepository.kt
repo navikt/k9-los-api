@@ -8,6 +8,8 @@ import kotliquery.using
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
+import java.time.temporal.TemporalUnit
 import javax.sql.DataSource
 
 
@@ -76,7 +78,7 @@ class EventRepository(
     fun lagre(fagsystem: Fagsystem, event: String, tx: TransactionalSession): EventLagret? {
         val tree = LosObjectMapper.instance.readTree(event)
         val eksternId = tree.findValue("eksternId").asText()
-        val eksternVersjon = tree.findValue("eventTid").asText()
+        val eksternVersjon = LocalDateTime.parse(tree.findValue("eventTid").asText()).truncatedTo(ChronoUnit.MICROS).toString()
         val eventnøkkelId = upsertOgLåsEventnøkkel(fagsystem, eksternId, tx)
 
         tx.run(
@@ -103,7 +105,7 @@ class EventRepository(
 
     fun endreEvent(eventNøkkel: EventNøkkel, event: String, tx: TransactionalSession): EventLagret? {
         val tree = LosObjectMapper.instance.readTree(event)
-        val eksternVersjon = tree.findValue("eventTid").asText()
+        val eksternVersjon = LocalDateTime.parse(tree.findValue("eventTid").asText()).truncatedTo(ChronoUnit.MICROS).toString()
 
         tx.run(
             queryOf(
@@ -177,7 +179,7 @@ class EventRepository(
                 mapOf(
                     "fagsystem" to fagsystem.kode,
                     "ekstern_id" to eksternId,
-                    "ekstern_versjon" to eksternVersjon,
+                    "ekstern_versjon" to LocalDateTime.parse(eksternVersjon).truncatedTo(ChronoUnit.MICROS).toString(),
                 )
             ).map { row -> rowTilEvent(row, eksternId, fagsystem) }.asSingle
         )!!
