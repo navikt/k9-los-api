@@ -7,6 +7,7 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
+import org.jetbrains.annotations.VisibleForTesting
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
@@ -163,6 +164,7 @@ class EventRepository(
         return eventer.sortedBy { LocalDateTime.parse(it.eksternVersjon) }
     }
 
+    @VisibleForTesting
     fun hent(fagsystem: Fagsystem, eksternId: String, eksternVersjon: String, tx: TransactionalSession): EventLagret {
         return tx.run(
             queryOf(
@@ -181,25 +183,6 @@ class EventRepository(
                 )
             ).map { row -> rowTilEvent(row, eksternId, fagsystem) }.asSingle
         )!!
-    }
-
-    fun hent(id: Long): EventLagret? { //TODO: slette?
-        return using(sessionOf(dataSource)) {
-            it.run(
-                queryOf(
-                    """
-                        select *
-                        from event  
-                        where id = :id
-                    """.trimIndent(),
-                    mapOf(
-                        "id" to id,
-                    )
-                ).map { row ->
-                    rowTilEvent(row)
-                }.asSingle
-            )
-        }
     }
 
     fun hentAlleEksternIderMedDirtyEventer(): List<EventNøkkel> {
