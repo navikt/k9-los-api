@@ -194,7 +194,7 @@ class EventRepository(
                     from event e
                         join event_nokkel en on e.event_nokkel_id = en.id
                     where e.dirty = true
-                    and en.fagsystem = '${Fagsystem.K9TILBAKE.kode}'
+                    and en.fagsystem in ('${Fagsystem.K9TILBAKE.kode}', '${Fagsystem.PUNSJ.kode}')
                 """.trimIndent() //TODO: Midlertidig filter på punsj for pilottest
                 ).map { row ->
                     EventNøkkel(
@@ -363,7 +363,7 @@ class EventRepository(
                             select en.*
                             from event_historikkvask_bestilt hb
                                 join event_nokkel en on hb.event_nokkel_id = en.id
-                                where en.fagsystem = '${Fagsystem.K9TILBAKE.kode}'
+                                where en.fagsystem in ('${Fagsystem.K9TILBAKE.kode}', '${Fagsystem.PUNSJ.kode}')
                             LIMIT :antall
                         """.trimIndent(), //TODO: Midlertidig filter på tilbakekrav for pilottest
                         mapOf("antall" to antall)

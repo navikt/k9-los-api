@@ -147,7 +147,6 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         assertThat(retur.size).isEqualTo(1)
     }
 
-    /*
     @Test
     //Ignorerer testen midlertidig, siden bakenforliggende logikk midlertidig sjalter vekk punsj
     fun `teste historikkvask les og skriv`() {
@@ -223,6 +222,4 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         vaskeBestillinger = eventRepository.hentAlleHistorikkvaskbestillinger()
         assertThat(vaskeBestillinger.size).isEqualTo(1)
     }
-     */
-
 }

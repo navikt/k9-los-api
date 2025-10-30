@@ -249,7 +249,6 @@ fun common(app: Application, config: Configuration) = module {
             transactionalManager = get(),
             eventlagerKonverteringsservice = get(),
             oppgaveAdapter = get(),
-            k9PunsjTilLosAdapterTjeneste = get(),
         )
     }
 

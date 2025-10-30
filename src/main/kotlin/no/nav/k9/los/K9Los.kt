@@ -417,18 +417,6 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
 
         add(
             PlanlagtJobb.Periodisk(
-                navn = "K9PunsjVaktmester",
-                prioritet = lavPrioritet,
-                intervall = 1.minutes,
-                tidsvindu = heleTiden,
-                startForsinkelse = 1.minutes
-            ) {
-                k9PunsjTilLosAdapterTjeneste.spillAvDirtyBehandlingProsessEventer()
-            }
-        )
-
-        add(
-            PlanlagtJobb.Periodisk(
                 navn = "oppgaveVaktmester",
                 prioritet = lavPrioritet,
                 intervall = 1.minutes,
