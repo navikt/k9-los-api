@@ -29,7 +29,7 @@ class EventTilOppgaveAdapter(
         log.info("Starter avspilling av K9-eventer")
         val tidKjøringStartet = System.currentTimeMillis()
 
-        val eventnøkler = eventRepository.hentAlleEksternIderMedDirtyEventer() //TODO: hente bare punsj, for pilottest
+        val eventnøkler = eventRepository.hentAlleEksternIderMedDirtyEventer() //TODO: hente bare tbk, for pilottest
         log.info("Fant ${eventnøkler.size} eksternIder")
 
         var behandlingTeller: Long = 0

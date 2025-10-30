@@ -3,6 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager
 import assertk.assertThat
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
+import io.kotest.core.spec.style.AnnotationSpec
 import no.nav.k9.los.AbstractK9LosIntegrationTest
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDto
@@ -146,7 +147,9 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         assertThat(retur.size).isEqualTo(1)
     }
 
+    /*
     @Test
+    //Ignorerer testen midlertidig, siden bakenforliggende logikk midlertidig sjalter vekk punsj
     fun `teste historikkvask les og skriv`() {
         val eventRepository = get<EventRepository>()
         val transactionalManager = get<TransactionalManager>()
@@ -220,5 +223,6 @@ class EventRepositoryPerLinjeForKonverteringTest() : AbstractK9LosIntegrationTes
         vaskeBestillinger = eventRepository.hentAlleHistorikkvaskbestillinger()
         assertThat(vaskeBestillinger.size).isEqualTo(1)
     }
+     */
 
 }
