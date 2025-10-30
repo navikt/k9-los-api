@@ -369,17 +369,6 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
 
         add(
             PlanlagtJobb.KjørPåTidspunkt(
-                "K9TilbakeTilLosHistorikkvask",
-                høyPrioritet + 1,
-                kjørTidligst = LocalDateTime.of(2025, 8, 11, 17, 0),
-                kjørSenest = LocalDateTime.of(2025, 8, 11, 19, 30),
-            ) {
-                k9TilbakeTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
-            }
-        )
-
-        add(
-            PlanlagtJobb.KjørPåTidspunkt(
                 "K9KlageTilLosHistorikkvask",
                 høyPrioritet,
                 kjørTidligst = LocalDateTime.of(2025, 8, 11, 17, 0),
@@ -428,18 +417,6 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
 
         add(
             PlanlagtJobb.Periodisk(
-                navn = "K9TilbakeVaktmester",
-                prioritet = lavPrioritet,
-                intervall = 1.minutes,
-                tidsvindu = heleTiden,
-                startForsinkelse = 1.minutes
-            ) {
-                k9TilbakeTilLosAdapterTjeneste.spillAvDirtyBehandlingProsessEventer()
-            }
-        )
-
-        add(
-            PlanlagtJobb.Periodisk(
                 navn = "K9PunsjVaktmester",
                 prioritet = lavPrioritet,
                 intervall = 1.minutes,
@@ -450,7 +427,6 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
             }
         )
 
-        /*
         add(
             PlanlagtJobb.Periodisk(
                 navn = "oppgaveVaktmester",
@@ -474,7 +450,6 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 historikkvaskTjeneste.kjørHistorikkvask()
             }
         )
-         */
 
         add(
             PlanlagtJobb.Periodisk(

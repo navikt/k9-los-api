@@ -2,19 +2,22 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHandlerMetrics
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventNøkkel
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventlagerKonverteringsservice
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.modia.SakOgBehandlingProducer
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.OpentelemetrySpanUtil
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import org.slf4j.LoggerFactory
 
 
 class K9TilbakeEventHandler(
     private val behandlingProsessEventTilbakeRepository: K9TilbakeEventRepository,
     private val sakOgBehandlingProducer: SakOgBehandlingProducer,
-    private val k9TilbakeTilLosAdapterTjeneste : K9TilbakeTilLosAdapterTjeneste,
+    private val oppgaveAdapter: EventTilOppgaveAdapter,
     private val transactionalManager: TransactionalManager,
     private val eventlagerKonverteringsservice: EventlagerKonverteringsservice,
 ) {
@@ -42,9 +45,7 @@ class K9TilbakeEventHandler(
 
             OpentelemetrySpanUtil.span("k9TilbakeTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid") {
                 try {
-                    k9TilbakeTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(
-                        event.eksternId!!
-                    )
+                    oppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(null, Fagsystem.K9TILBAKE, event.eksternId.toString()))
                 } catch (e: Exception) {
                     log.error("Oppatering av k9-tilbake-oppgave feilet for ${event.eksternId}. Oppgaven er ikke oppdatert, men blir plukket av vaktmester", e)
                 }

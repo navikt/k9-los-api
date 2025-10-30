@@ -237,9 +237,9 @@ fun common(app: Application, config: Configuration) = module {
         K9TilbakeEventHandler(
             behandlingProsessEventTilbakeRepository = get(),
             sakOgBehandlingProducer = get(),
-            k9TilbakeTilLosAdapterTjeneste = get(),
             transactionalManager = get(),
-            eventlagerKonverteringsservice = get()
+            eventlagerKonverteringsservice = get(),
+            oppgaveAdapter = get(),
         )
     }
 
