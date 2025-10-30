@@ -28,7 +28,7 @@ class HistorikkvaskTjeneste(
         var vasketeller = 0L
         val tidsbruk = measureTime {
             while (true) {
-                val historikkvaskbestillinger = eventRepository.hentAlleHistorikkvaskbestillinger(antall = 2000) //TODO: Hent bare punsj for pilottest
+                val historikkvaskbestillinger = eventRepository.hentAlleHistorikkvaskbestillinger(antall = 2000) //TODO: Hent bare tilbakekrav for pilottest
                 if (historikkvaskbestillinger.isEmpty()) break
 
                 log.info("Starter vaskeiterasjon på ${historikkvaskbestillinger.size} oppgaver")
