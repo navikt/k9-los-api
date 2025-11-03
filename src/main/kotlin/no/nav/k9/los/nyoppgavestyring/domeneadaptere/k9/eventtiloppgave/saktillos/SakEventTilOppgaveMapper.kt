@@ -1,22 +1,92 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.kodeverk.behandling.BehandlingÅrsakType
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.*
 import no.nav.k9.kodeverk.produksjonsstyring.BehandlingMerknadType
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventLagret
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakBerikerInterfaceKludge
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
+import no.nav.k9.sak.kontrakt.produksjonsstyring.los.BehandlingMedFagsakDto
 import org.jetbrains.annotations.VisibleForTesting
 import java.time.temporal.ChronoUnit
 
-class EventTilDtoMapper {
+class SakEventTilOppgaveMapper(
+    private val k9SakBerikerKlient: K9SakBerikerInterfaceKludge,
+) {
+    fun lagOppgaveDto(eventLagret: EventLagret, forrigeOppgave: OppgaveV3?): OppgaveDto {
+        if (eventLagret.fagsystem != Fagsystem.K9SAK) {
+            throw IllegalArgumentException("Fagsystem er ikke SAK")
+        }
+        val event = LosObjectMapper.instance.readValue<K9SakEventDto>(eventLagret.eventJson)
+        var oppgaveDto = OppgaveDto(
+            eksternId = event.eksternId.toString(),
+            eksternVersjon = event.eventTid.toString(),
+            område = "K9",
+            kildeområde = "K9",
+            type = "k9sak",
+            status = utledOppgavestatus(event).kode,
+            endretTidspunkt = event.eventTid,
+            reservasjonsnøkkel = utledReservasjonsnøkkel(event, erTilBeslutter(event)),
+            feltverdier = lagFeltverdier(event, forrigeOppgave)
+        )
+
+        val nyeBehandlingsopplysningerFraK9Sak = k9SakBerikerKlient.hentBehandling(event.eksternId!!) //TODO: Denne kalles mer enn nødvendig. Cache?
+        return ryddOppObsoleteOgResultatfeilFra2020(event, oppgaveDto, nyeBehandlingsopplysningerFraK9Sak)
+    }
+
+    internal fun ryddOppObsoleteOgResultatfeilFra2020(
+        event: K9SakEventDto,
+        oppgaveDto: OppgaveDto,
+        nyeBehandlingsopplysningerFraK9Sak: BehandlingMedFagsakDto?,
+    ): OppgaveDto {
+        //behandlingen finnes ikke i k9-sak, pga rollback i transaksjon i k9-sak som skulle opprette behandlingen
+        if (nyeBehandlingsopplysningerFraK9Sak == null) {
+            return oppgaveDto.copy(status = "LUKKET").erstattFeltverdi(
+                OppgaveFeltverdiDto(
+                    "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
+                )
+            )
+        }
+        if (event.ytelseTypeKode == FagsakYtelseType.OBSOLETE.kode) {
+            return oppgaveDto.copy(status = "LUKKET").erstattFeltverdi(
+                OppgaveFeltverdiDto(
+                    "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
+                )
+            )
+        }
+
+        if (event.behandlingStatus == "AVSLU"
+            && oppgaveDto.feltverdier.filter { it.nøkkel == "resultattype" }.first().verdi == "IKKE_FASTSATT"
+        ) {
+            if (nyeBehandlingsopplysningerFraK9Sak.sakstype == FagsakYtelseType.OBSOLETE) {
+                return oppgaveDto.copy(status = "LUKKET").erstattFeltverdi(
+                    OppgaveFeltverdiDto(
+                        "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
+                    )
+                )
+            } else {
+                return oppgaveDto.erstattFeltverdi(
+                    OppgaveFeltverdiDto(
+                        "resultattype", nyeBehandlingsopplysningerFraK9Sak.behandlingResultatType.kode
+                    )
+                )
+            }
+        }
+
+        return oppgaveDto
+    }
+
     companion object {
         private val MANUELLE_AKSJONSPUNKTER = AksjonspunktDefinisjon.values().filter { aksjonspunktDefinisjon ->
             aksjonspunktDefinisjon.aksjonspunktType == AksjonspunktType.MANUELL
@@ -28,8 +98,8 @@ class EventTilDtoMapper {
 
         fun lagOppgaveDto(event: K9SakEventDto, forrigeOppgave: OppgaveV3?) =
             OppgaveDto(
-                id = event.eksternId.toString(),
-                versjon = event.eventTid.toString(),
+                eksternId = event.eksternId.toString(),
+                eksternVersjon = event.eventTid.toString(),
                 område = "K9",
                 kildeområde = "K9",
                 type = "k9sak",
@@ -254,7 +324,8 @@ class EventTilDtoMapper {
             } else {
                 null //ikke hastesak
             },
-            event.fagsakPeriode?.fom?.year?.toString()?.let { fagsakÅr ->
+            event.fagsakPeriode?.fom?.year?.takeIf { it in 2000..2100 }?.toString()?.let { fagsakÅr ->
+                // Hvis årstallet er utenfor rimelig område settes ikke fagsakÅr
                 OppgaveFeltverdiDto(
                     nøkkel = "fagsakÅr",
                     verdi = fagsakÅr,

@@ -3,6 +3,7 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbake
 import kotlinx.coroutines.*
 import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.DetaljerMetrikker
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.HistorikkvaskMetrikker
@@ -78,7 +79,7 @@ class K9TilbakeTilLosHistorikkvaskTjeneste(
     private fun spillAvBehandlingProsessEventer(
         dispatcher: ExecutorCoroutineDispatcher,
         behandlingsIder: List<UUID>
-    ): Long {
+    ): Int {
         val scope = CoroutineScope(dispatcher)
 
         val jobber = behandlingsIder.map {
@@ -91,8 +92,8 @@ class K9TilbakeTilLosHistorikkvaskTjeneste(
         return eventTeller
     }
 
-    fun vaskOppgaveForBehandlingUUIDOgMarkerVasket(uuid: UUID): Long {
-        var eventTeller = 0L
+    fun vaskOppgaveForBehandlingUUIDOgMarkerVasket(uuid: UUID): Int {
+        var eventTeller = 0
         DetaljerMetrikker.time("k9tilbakeHistorikkvask", "vaskOppgaveForBehandlingKomplett") {
             transactionalManager.transaction { tx ->
                 eventTeller = DetaljerMetrikker.time(
@@ -105,7 +106,7 @@ class K9TilbakeTilLosHistorikkvaskTjeneste(
         return eventTeller
     }
 
-    fun vaskOppgaveForBehandlingUUID(uuid: UUID): Long {
+    fun vaskOppgaveForBehandlingUUID(uuid: UUID): Int {
         return DetaljerMetrikker.time("k9tilbakeHistorikkvask", "vaskOppgaveForBehandling") {
             transactionalManager.transaction { tx ->
                 vaskOppgaveForBehandlingUUID(uuid, tx)
@@ -113,7 +114,7 @@ class K9TilbakeTilLosHistorikkvaskTjeneste(
         }
     }
 
-    fun vaskOppgaveForBehandlingUUID(uuid: UUID, tx: TransactionalSession): Long {
+    fun vaskOppgaveForBehandlingUUID(uuid: UUID, tx: TransactionalSession): Int {
         log.info("Vasker historikk for k9tilbake-oppgave med eksternId: $uuid")
         var forrigeOppgave: OppgaveV3? = null
 
@@ -124,14 +125,14 @@ class K9TilbakeTilLosHistorikkvaskTjeneste(
         val høyesteInternVersjon = DetaljerMetrikker.time("k9tilbakeHistorikkvask", "hentHøyesteInternVersjon") {
             oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9tilbake", "K9", tx)
         }
-        var eventNrForBehandling = 0L
+        var eventNrForBehandling = 0
         var oppgaveV3: OppgaveV3? = null
         for (event in behandlingProsessEventer) {
             if (høyesteInternVersjon != null && eventNrForBehandling > høyesteInternVersjon) {
                 log.info("Avbryter historikkvask for ${event.eksternId} ved eventTid ${event.eventTid}. Forventer at håndteres av vanlig adaptertjeneste.")
                 break //Historikkvasken har funnet eventer som ennå ikke er lastet inn med normalflyt. Dirty eventer skal håndteres av vanlig adaptertjeneste
             }
-            val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+            val oppgaveDto = TilbakeEventTilOppgaveMapper.lagOppgaveDto(event, forrigeOppgave)
 
             oppgaveV3 = DetaljerMetrikker.time(
                 "k9tilbakeHistorikkvask",
@@ -144,7 +145,7 @@ class K9TilbakeTilLosHistorikkvaskTjeneste(
 
             forrigeOppgave = DetaljerMetrikker.time("k9tilbakeHistorikkvask", "hentOppgaveversjon") {
                 oppgaveV3Tjeneste.hentOppgaveversjon(
-                    område = "K9", eksternId = oppgaveDto.id, eksternVersjon = oppgaveDto.versjon, tx = tx
+                    område = "K9", K9Oppgavetypenavn.TILBAKE.kode, eksternId = oppgaveDto.eksternId, eksternVersjon = oppgaveDto.eksternVersjon, tx = tx
                 )
             }
             eventNrForBehandling++

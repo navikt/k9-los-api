@@ -1,13 +1,14 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
-import kotlinx.coroutines.channels.Channel
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHandlerMetrics
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventlagerKonverteringsservice
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.modia.SakOgBehandlingProducer
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.OpentelemetrySpanUtil
-import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import org.slf4j.LoggerFactory
@@ -17,7 +18,9 @@ class K9SakEventHandler (
     private val k9SakEventRepository: K9SakEventRepository,
     private val sakOgBehandlingProducer: SakOgBehandlingProducer,
     private val k9SakTilLosAdapterTjeneste: K9SakTilLosAdapterTjeneste,
-    private val køpåvirkendeHendelseChannel: Channel<KøpåvirkendeHendelse>,
+    private val transactionalManager: TransactionalManager,
+    private val eventlagerKonverteringsservice: EventlagerKonverteringsservice,
+    private val eventRepository: EventRepository,
 ) {
     private val log = LoggerFactory.getLogger(K9SakEventHandler::class.java)
 
@@ -38,23 +41,40 @@ class K9SakEventHandler (
         val t0 = System.nanoTime()
 
         val event = håndterVaskeevent(eventInn)
+        /* TODO:
+        if (vaskeevent) {
+            //låse
+            overskriv et event
+            //bestill historikkvask
+            //fjern DVH-kvittering
+        }
+         */
         if (event == null) {
             EventHandlerMetrics.observe("k9sak", "vaskeevent", t0)
             return
         }
 
         var skalSkippe = false
-        val modell = k9SakEventRepository.lagre(event.eksternId!!) { k9SakModell ->
-            if (k9SakModell == null) {
-                return@lagre K9SakModell(mutableListOf(event))
+        val modell = transactionalManager.transaction { tx ->
+            k9SakEventRepository.hentMedLås(tx, event.eksternId!!)
+
+            val modell = k9SakEventRepository.lagre(event.eksternId, tx) { k9SakModell ->
+                if (k9SakModell == null) {
+                    return@lagre K9SakModell(mutableListOf(event))
+                }
+                if (k9SakModell.eventer.contains(event)) {
+                    log.info("""Skipping eventen har kommet tidligere ${event.eventTid}""")
+                    skalSkippe = true
+                    return@lagre k9SakModell
+                }
+                k9SakModell.eventer.add(event)
+
+                k9SakModell
             }
-            if (k9SakModell.eventer.contains(event)) {
-                log.info("""Skipping eventen har kommet tidligere ${event.eventTid}""")
-                skalSkippe = true
-                return@lagre k9SakModell
-            }
-            k9SakModell.eventer.add(event)
-            k9SakModell
+
+            eventlagerKonverteringsservice.konverterEvent(event, tx)
+
+            modell
         }
 
         if (skalSkippe) {
@@ -66,19 +86,12 @@ class K9SakEventHandler (
 
         OpentelemetrySpanUtil.span("k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid") {
             try {
-                k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId)
+                k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId!!)
             } catch (e: Exception) {
                 log.error("Oppatering av k9-sak-oppgave feilet for ${event.eksternId}. Oppgaven er ikke oppdatert, men blir plukket av vaktmester", e)
             }
         }
 
-        OpentelemetrySpanUtil.span("k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid") {
-            try {
-                k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId)
-            } catch (e: Exception) {
-                log.error("Oppatering av k9-sak-oppgave feilet for ${event.eksternId}. Oppgaven er ikke oppdatert, men blir plukket av vaktmester", e)
-            }
-        }
 
         EventHandlerMetrics.observe("k9sak", "gjennomført", t0)
     }

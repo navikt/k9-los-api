@@ -10,6 +10,9 @@ import kotlinx.coroutines.channels.Channel
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonKonverteringJobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventlagerKonverteringsjobb
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventlagerKonverteringsservice
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventHandler
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
@@ -18,14 +21,22 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEve
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveMapper
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.HistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.OppgaveOppdatertHandler
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.K9KlageTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.KlageEventTilOppgaveMapper
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerKlientLocal
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.PunsjEventTilOppgaveMapper
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.SakEventTilOppgaveMapper
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakBerikerKlientLocal
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.TilbakeEventTilOppgaveMapper
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.k9TilbakeEksternId
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.modia.SakOgBehandlingProducer
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9v3Tjeneste
@@ -190,7 +201,9 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             k9SakEventRepository = K9SakEventRepository(dataSource = get()),
             sakOgBehandlingProducer = sakOgBehadlingProducer,
             k9SakTilLosAdapterTjeneste = get(),
-            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
+            transactionalManager = get(),
+            eventlagerKonverteringsservice = get(),
+            eventRepository = get(),
         )
     }
 
@@ -198,6 +211,8 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         K9KlageEventHandler(
             K9KlageEventRepository(dataSource = get()),
             k9KlageTilLosAdapterTjeneste = get(),
+            transactionalManager = get(),
+            eventlagerKonverteringsservice = get()
         )
     }
 
@@ -205,21 +220,45 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         K9TilbakeEventHandler(
             K9TilbakeEventRepository(dataSource = get()),
             sakOgBehandlingProducer = sakOgBehadlingProducer,
-            k9TilbakeTilLosAdapterTjeneste = get(),
+            transactionalManager = get(),
+            eventlagerKonverteringsservice = get(),
+            oppgaveAdapter = get(),
         )
     }
 
     single {
         K9PunsjEventHandler(
             punsjEventK9Repository = get(),
-            punsjTilLosAdapterTjeneste = get(),
+            transactionalManager = get(),
+            eventlagerKonverteringsservice = get(),
+            oppgaveAdapter = get(),
         )
     }
 
     single {
-        K9PunsjEventHandler(
-            punsjEventK9Repository = K9PunsjEventRepository(dataSource = get()),
-            punsjTilLosAdapterTjeneste = get(),
+        EventlagerKonverteringsjobb(
+            transactionalManager = get(),
+            punsjEventRepository = get(),
+            klageEventRepository = get(),
+            tilbakeEventRepository = get(),
+            sakEventRepository = get(),
+            eventlagerKonverteringsservice = get(),
+        )
+    }
+
+    single {
+        EventlagerKonverteringsservice(
+            nyttEventrepository = get(),
+            punsjEventRepository = get(),
+            klageEventRepository = get(),
+            tilbakeEventRepository = get(),
+            sakEventRepository = get()
+        )
+    }
+
+    single {
+        EventRepository(
+            dataSource = get(),
         )
     }
 
@@ -299,8 +338,72 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
     }
 
     single {
+        EventRepository(
+            dataSource = get(),
+        )
+    }
+
+    single {
         K9SakEventRepository(
             dataSource = get()
+        )
+    }
+
+    single {
+        EventTilOppgaveAdapter(
+            eventRepository = get(),
+            oppgaveV3Tjeneste = get(),
+            transactionalManager = get(),
+            eventTilOppgaveMapper = get(),
+            oppgaveOppdatertHandler = get()
+        )
+    }
+
+    single {
+        HistorikkvaskTjeneste(
+            eventRepository = get(),
+            oppgaveV3Tjeneste = get(),
+            eventTilOppgaveMapper = get(),
+            transactionalManager = get()
+        )
+    }
+    
+    single {
+        EventTilOppgaveMapper(
+            klageEventTilOppgaveMapper = get(),
+            punsjEventTilOppgaveMapper = get(),
+            sakEventTilOppgaveMapper = get(),
+            tilbakeEventTilOppgaveMapper = get()
+        )
+    }
+
+    single {
+        SakEventTilOppgaveMapper(
+            k9SakBerikerKlient = get(),
+        )
+    }
+
+    single {
+        KlageEventTilOppgaveMapper(
+            k9klageBeriker = get()
+        )
+    }
+
+    single {
+        TilbakeEventTilOppgaveMapper()
+    }
+
+    single {
+        PunsjEventTilOppgaveMapper()
+    }
+
+    single {
+        OppgaveOppdatertHandler(
+            oppgaveRepository = get(),
+            reservasjonV3Tjeneste = get(),
+            eventTilOppgaveMapper = get(),
+            pepCacheService = get(),
+            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
         )
     }
 
@@ -430,7 +533,7 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
             reservasjonV3DtoBuilder = get(),
             reservasjonOversetter = get(),
             pepClient = get(),
-            azureGraphService = get()
+            azureGraphService = get(),
         )
     }
 

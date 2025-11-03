@@ -5,6 +5,7 @@ import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.AksjonspunktDefinisjonK9Tilbake
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventRepository
@@ -65,7 +66,7 @@ class K9TilbakeTilLosAdapterTjeneste(
             var eventNrForBehandling = -1L
             behandlingProsessEventer.forEach { event ->
                 eventNrForBehandling++
-                val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+                val oppgaveDto = TilbakeEventTilOppgaveMapper.lagOppgaveDto(event, forrigeOppgave)
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
 
                 //oppgave er satt bare dersom oppgavemodellen ikke har sett eksternVersjon fra tidligere
@@ -84,7 +85,7 @@ class K9TilbakeTilLosAdapterTjeneste(
                     }
                     forrigeOppgave = oppgave
                 } else {
-                    forrigeOppgave = oppgaveV3Tjeneste.hentOppgaveversjon("K9", oppgaveDto.id, oppgaveDto.versjon, tx)
+                    forrigeOppgave = oppgaveV3Tjeneste.hentOppgaveversjon("K9", K9Oppgavetypenavn.TILBAKE.kode, oppgaveDto.eksternId, oppgaveDto.eksternVersjon, tx)
                 }
             }
 
@@ -112,8 +113,8 @@ class K9TilbakeTilLosAdapterTjeneste(
         event: K9TilbakeEventDto,
         tx: TransactionalSession
     ) {
-        val saksbehandlerNøkkel = EventTilDtoMapper.utledReservasjonsnøkkel(event, erTilBeslutter = false)
-        val beslutterNøkkel = EventTilDtoMapper.utledReservasjonsnøkkel(event, erTilBeslutter = true)
+        val saksbehandlerNøkkel = TilbakeEventTilOppgaveMapper.utledReservasjonsnøkkel(event, erTilBeslutter = false)
+        val beslutterNøkkel = TilbakeEventTilOppgaveMapper.utledReservasjonsnøkkel(event, erTilBeslutter = true)
         val antallAnnullert = annullerReservasjonHvisAlleOppgaverPåVentEllerAvsluttet(listOf(saksbehandlerNøkkel, beslutterNøkkel), tx)
         if (antallAnnullert > 0) {
             log.info("Annullerte $antallAnnullert reservasjoner maskinelt på oppgave ${event.saksnummer} som følge av status på innkommende event")

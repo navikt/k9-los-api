@@ -5,6 +5,7 @@ import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotliquery.TransactionalSession
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventRepository
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
@@ -63,7 +64,7 @@ class K9PunsjTilLosAdapterTjeneste(
         transactionalManager.transaction { tx ->
             val punsjEventer = k9PunsjEventRepository.hentMedLås(tx, uuid)
             for (event in punsjEventer.eventer) {
-                val oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgaveversjon)
+                val oppgaveDto = PunsjEventTilOppgaveMapper.lagOppgaveDto(event, forrigeOppgaveversjon)
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
 
                 if (oppgave != null) {
@@ -75,7 +76,7 @@ class K9PunsjTilLosAdapterTjeneste(
                     eventTeller++
                     forrigeOppgaveversjon = oppgave
                 } else {
-                    forrigeOppgaveversjon = oppgaveV3Tjeneste.hentOppgaveversjon("K9", oppgaveDto.id, oppgaveDto.versjon, tx)
+                    forrigeOppgaveversjon = oppgaveV3Tjeneste.hentOppgaveversjon("K9", K9Oppgavetypenavn.PUNSJ.kode, oppgaveDto.eksternId, oppgaveDto.eksternVersjon, tx)
                 }
             }
 
@@ -114,3 +115,14 @@ class K9PunsjTilLosAdapterTjeneste(
         }
     }
 }
+
+data class StatuskortDto(
+    private val Navn: String,
+    private val topplinje: StatuslinjeDto,
+    private val liste: List<StatuslinjeDto>, //sortert
+)
+
+data class StatuslinjeDto(
+    private val visningsnavn: String,
+    private val verdi: Int,
+)

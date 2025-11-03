@@ -9,7 +9,7 @@ import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.kodeverk.produksjonsstyring.UtvidetSøknadÅrsak
 import no.nav.k9.los.Configuration
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.EventTilDtoMapper
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.KlageEventTilOppgaveMapper
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
@@ -121,8 +121,8 @@ class OmrådeSetup(
             .filterNot { it == no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.UNDEFINED }
             .map { apDefinisjon ->
                 KodeverkVerdiDto(
-                    verdi = EventTilDtoMapper.KLAGE_PREFIX + apDefinisjon.kode,
-                    visningsnavn = EventTilDtoMapper.KLAGE_PREFIX_VISNING + apDefinisjon.navn,
+                    verdi = KlageEventTilOppgaveMapper.KLAGE_PREFIX + apDefinisjon.kode,
+                    visningsnavn = KlageEventTilOppgaveMapper.KLAGE_PREFIX_VISNING + apDefinisjon.navn,
                     beskrivelse = null,
                 )
             }
@@ -275,8 +275,8 @@ class OmrådeSetup(
             .filter { (_, synlighet) -> synlighet != KodeverkSynlighet.SKJULT }
             .map { (kodeverdi, synlighet) ->
                 KodeverkVerdiDto(
-                    verdi = EventTilDtoMapper.KLAGE_PREFIX + kodeverdi.kode,
-                    visningsnavn = EventTilDtoMapper.KLAGE_PREFIX_VISNING + kodeverdi.navn,
+                    verdi = KlageEventTilOppgaveMapper.KLAGE_PREFIX + kodeverdi.kode,
+                    visningsnavn = KlageEventTilOppgaveMapper.KLAGE_PREFIX_VISNING + kodeverdi.navn,
                     beskrivelse = beskrivelse,
                     favoritt = synlighet == KodeverkSynlighet.SYNLIG_FAVORITT
                 )
@@ -324,7 +324,6 @@ object KodeverkSynlighetRegler {
             FagsakYtelseType.FRISINN,
             FagsakYtelseType.UNGDOMSYTELSE -> KodeverkSynlighet.SKJULT
 
-            FagsakYtelseType.OLP,
             FagsakYtelseType.UKJENT,
             FagsakYtelseType.OMSORGSDAGER -> KodeverkSynlighet.SYNLIG
 
