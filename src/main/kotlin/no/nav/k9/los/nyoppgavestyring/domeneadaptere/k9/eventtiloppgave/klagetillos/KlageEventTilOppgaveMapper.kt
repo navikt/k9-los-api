@@ -1,19 +1,64 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos
 
-import no.nav.k9.klage.kodeverk.behandling.*
+import com.fasterxml.jackson.module.kotlin.readValue
+import no.nav.k9.klage.kodeverk.behandling.BehandlingResultatType
+import no.nav.k9.klage.kodeverk.behandling.BehandlingStatus
+import no.nav.k9.klage.kodeverk.behandling.BehandlingStegType
+import no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktType
 import no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.Venteårsak
 import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.Aksjonspunkttilstand
+import no.nav.k9.klage.typer.AktørId
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventLagret
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventDto
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerInterfaceKludge
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import org.jetbrains.annotations.VisibleForTesting
 
-class EventTilDtoMapper {
+class KlageEventTilOppgaveMapper(
+    private val k9klageBeriker: K9KlageBerikerInterfaceKludge,
+) {
+    internal fun lagOppgaveDto(
+        eventLagret: EventLagret,
+        forrigeOppgave: OppgaveV3?
+    ): OppgaveDto {
+        if (eventLagret.fagsystem != Fagsystem.K9KLAGE) {
+            throw IllegalArgumentException("Fagsystem er ikke KLAGE")
+        }
+        val event = LosObjectMapper.instance.readValue<K9KlageEventDto>(eventLagret.eventJson)
+
+        val losOpplysningerSomManglerIKlageDto =
+            event.påklagdBehandlingId?.let { k9klageBeriker.hentFraK9Sak(it) }
+
+        val eventBeriket =
+            event.copy(
+                påklagdBehandlingType = event.påklagdBehandlingType ?:
+                event.påklagdBehandlingId?.let {
+                    k9klageBeriker.hentFraK9Klage(event.eksternId)?.påklagdBehandlingType
+                },
+                pleietrengendeAktørId = losOpplysningerSomManglerIKlageDto?.pleietrengendeAktørId?.aktørId?.let { AktørId(it.toLong()) },
+                utenlandstilsnitt = losOpplysningerSomManglerIKlageDto?.isUtenlandstilsnitt
+            )
+
+        return OppgaveDto(
+            eksternId = eventBeriket.eksternId.toString(),
+            eksternVersjon = eventBeriket.eventTid.toString(),
+            område = "K9",
+            kildeområde = "K9",
+            type = "k9klage",
+            status = utledOppgavestatus(eventBeriket).kode,
+            endretTidspunkt = eventBeriket.eventTid,
+            reservasjonsnøkkel = utledReservasjonsnøkkel(eventBeriket, erTilBeslutter(eventBeriket)),
+            feltverdier = lagFeltverdier(eventBeriket, forrigeOppgave)
+        )
+    }
 
     companion object {
         const val KLAGE_PREFIX = "KLAGE"
@@ -31,35 +76,46 @@ class EventTilDtoMapper {
             event: K9KlageEventDto,
             forrigeOppgave: OppgaveV3?
         ) = OppgaveDto(
-            id = event.eksternId.toString(),
-            versjon = event.eventTid.toString(),
+            eksternId = event.eksternId.toString(),
+            eksternVersjon = event.eventTid.toString(),
             område = "K9",
             kildeområde = "K9",
             type = "k9klage",
-            status = if (event.behandlingSteg == BehandlingStegType.OVERFØRT_NK.kode) {
-                Oppgavestatus.LUKKET.kode
-            } else {
-                if (event.aksjonspunkttilstander.any { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.status.erÅpentAksjonspunkt() }) {
-                    if (oppgaveSkalHaVentestatus(event)) {
-                        Oppgavestatus.VENTER.kode
-                    } else {
-                        Oppgavestatus.AAPEN.kode
-                    }
-                } else {
-                    if (event.behandlingStatus == BehandlingStatus.UTREDES.toString()) {
-                        Oppgavestatus.AAPEN.kode
-                    } else {
-                        Oppgavestatus.LUKKET.kode
-                    }
-                }
-            },
+            status = utledOppgavestatus(event).kode,
             endretTidspunkt = event.eventTid,
-            reservasjonsnøkkel = utledReservasjonsnøkkel(event),
+            reservasjonsnøkkel = utledReservasjonsnøkkel(event, erTilBeslutter(event)),
             feltverdier = lagFeltverdier(event, forrigeOppgave)
         )
 
-        private fun utledReservasjonsnøkkel(event: K9KlageEventDto): String {
-            return if (erTilBeslutter(event)) {
+        fun utledOppgavestatus(event: K9KlageEventDto): Oppgavestatus {
+            return when (BehandlingStatus.fraKode(event.behandlingStatus)) {
+                BehandlingStatus.OPPRETTET -> Oppgavestatus.UAVKLART
+                BehandlingStatus.AVSLUTTET -> Oppgavestatus.LUKKET
+                BehandlingStatus.FATTER_VEDTAK, BehandlingStatus.IVERKSETTER_VEDTAK, BehandlingStatus.UTREDES -> {
+                    val harÅpentManueltAksjonspunkt: Boolean =
+                        event.aksjonspunkttilstander
+                            .filter { !AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode()).erAutopunkt() }
+                            .any { it.status == AksjonspunktStatus.OPPRETTET }
+                    val harÅpentAutopunkt: Boolean =
+                        event.aksjonspunkttilstander
+                            .filter { AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode()).erAutopunkt() }
+                            .any { it.status == AksjonspunktStatus.OPPRETTET }
+
+                    if (event.behandlingSteg == BehandlingStegType.OVERFØRT_NK.kode) {
+                        Oppgavestatus.VENTER
+                    } else if (harÅpentAutopunkt) {
+                        Oppgavestatus.VENTER
+                    } else if (harÅpentManueltAksjonspunkt) {
+                        Oppgavestatus.AAPEN
+                    } else {
+                        Oppgavestatus.UAVKLART
+                    }
+                }
+            }
+        }
+
+        fun utledReservasjonsnøkkel(event: K9KlageEventDto, erTilBeslutter: Boolean): String {
+            return if (erTilBeslutter) {
                 "K9_k_${event.ytelseTypeKode}_${event.aktørId}_beslutter"
             } else {
                 "K9_k_${event.ytelseTypeKode}_${event.aktørId}"
@@ -328,7 +384,8 @@ class EventTilDtoMapper {
                 nøkkel = "helautomatiskBehandlet",
                 verdi = false.toString() //TODO: Påstand - klagesaker er alltid manuelt behandlet?
             ),
-            event.fagsakPeriode?.fom?.year?.toString()?.let { fagsakÅr ->
+            event.fagsakPeriode?.fom?.year?.takeIf { it in 2000..2100 }?.toString()?.let { fagsakÅr ->
+                // Hvis årstallet er utenfor rimelig område settes ikke fagsakÅr
                 OppgaveFeltverdiDto(
                     nøkkel = "fagsakÅr",
                     verdi = fagsakÅr,

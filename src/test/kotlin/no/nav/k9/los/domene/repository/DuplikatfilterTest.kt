@@ -2,7 +2,7 @@ package no.nav.k9.los.domene.repository
 
 import assertk.assertThat
 import assertk.assertions.containsExactlyInAnyOrder
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.PunsjEventDtoBuilder
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjEventDtoBuilder
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.Duplikatfilter
 import org.junit.jupiter.api.Test
 

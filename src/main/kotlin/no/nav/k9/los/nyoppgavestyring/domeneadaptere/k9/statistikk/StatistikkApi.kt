@@ -33,6 +33,7 @@ internal fun Route.StatistikkApi() {
 
 
     get("resendStatistikkFraStart/{oppgavetype}", {
+        tags("Forvaltning")
         description = "Nullstill statistikksending for en oppgavetype, slik at alle oppgaver av den typen blir resendt til DVH"
         request {
             pathParameter<String>("oppgavetype") {

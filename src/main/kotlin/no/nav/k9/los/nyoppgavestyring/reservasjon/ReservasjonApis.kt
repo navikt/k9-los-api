@@ -1,7 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.reservasjon
 
 import io.ktor.http.*
-import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -10,6 +9,7 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.RequestContextService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.idToken
 import no.nav.k9.los.nyoppgavestyring.saksbehandleradmin.SaksbehandlerRepository
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveNøkkelDto
 import org.koin.ktor.ext.inject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -182,6 +182,28 @@ internal fun Route.ReservasjonApis() {
         }
     }
 
+    get("/aktiv-reservasjon") {
+        requestContextService.withRequestContext(call) {
+            if (pepClient.harBasisTilgang()) {
+                val oppgaveNøkkel = OppgaveNøkkelDto(
+                    call.queryParameters["oppgaveEksternId"]!!,
+                    call.queryParameters["oppgaveTypeEksternId"]!!,
+                    call.queryParameters["områdeEksternId"]!!
+                )
+                val aktivReservasjon = reservasjonApisTjeneste.hentAktivReservasjon(oppgaveNøkkel)
+                if (aktivReservasjon != null) {
+                    call.respond(aktivReservasjon)
+                } else {
+                    call.respond(HttpStatusCode.NoContent)
+                }
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+            }
+        }
+    }
+
+    // TODO: Dette er det nye stedet for endepunktet. Duplisert i AvdelingslederApis.
+    //  Fjernes derfra når frontend er over på nytt endepunkt. Slett da denne kommentaren.
     get("/alle-reservasjoner") {
         requestContextService.withRequestContext(call) {
             if (pepClient.erOppgaveStyrer()) {

@@ -1,23 +1,92 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStatus
 import no.nav.k9.kodeverk.behandling.BehandlingÅrsakType
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.*
 import no.nav.k9.kodeverk.produksjonsstyring.BehandlingMerknadType
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventLagret
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlientInterfaceKludge
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.LosObjectMapper
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveFeltverdiDto
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
-import no.nav.k9.los.nyoppgavestyring.query.dto.felter.Oppgavefelt
 import no.nav.k9.sak.kontrakt.aksjonspunkt.AksjonspunktTilstandDto
+import no.nav.k9.sak.kontrakt.produksjonsstyring.los.BehandlingMedFagsakDto
 import org.jetbrains.annotations.VisibleForTesting
 import java.time.temporal.ChronoUnit
 
-class EventTilDtoMapper {
+class SakEventTilOppgaveMapper(
+    private val k9SakBerikerKlient: K9SakSystemKlientInterfaceKludge,
+) {
+    fun lagOppgaveDto(eventLagret: EventLagret, forrigeOppgave: OppgaveV3?): OppgaveDto {
+        if (eventLagret.fagsystem != Fagsystem.K9SAK) {
+            throw IllegalArgumentException("Fagsystem er ikke SAK")
+        }
+        val event = LosObjectMapper.instance.readValue<K9SakEventDto>(eventLagret.eventJson)
+        var oppgaveDto = OppgaveDto(
+            eksternId = event.eksternId.toString(),
+            eksternVersjon = event.eventTid.toString(),
+            område = "K9",
+            kildeområde = "K9",
+            type = "k9sak",
+            status = utledOppgavestatus(event).kode,
+            endretTidspunkt = event.eventTid,
+            reservasjonsnøkkel = utledReservasjonsnøkkel(event, erTilBeslutter(event)),
+            feltverdier = lagFeltverdier(event, forrigeOppgave)
+        )
+
+        val nyeBehandlingsopplysningerFraK9Sak = k9SakBerikerKlient.hentBehandling(event.eksternId!!) //TODO: Denne kalles mer enn nødvendig. Cache?
+        return ryddOppObsoleteOgResultatfeilFra2020(event, oppgaveDto, nyeBehandlingsopplysningerFraK9Sak)
+    }
+
+    internal fun ryddOppObsoleteOgResultatfeilFra2020(
+        event: K9SakEventDto,
+        oppgaveDto: OppgaveDto,
+        nyeBehandlingsopplysningerFraK9Sak: BehandlingMedFagsakDto?,
+    ): OppgaveDto {
+        //behandlingen finnes ikke i k9-sak, pga rollback i transaksjon i k9-sak som skulle opprette behandlingen
+        if (nyeBehandlingsopplysningerFraK9Sak == null) {
+            return oppgaveDto.copy(status = "LUKKET").erstattFeltverdi(
+                OppgaveFeltverdiDto(
+                    "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
+                )
+            )
+        }
+        if (event.ytelseTypeKode == FagsakYtelseType.OBSOLETE.kode) {
+            return oppgaveDto.copy(status = "LUKKET").erstattFeltverdi(
+                OppgaveFeltverdiDto(
+                    "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
+                )
+            )
+        }
+
+        if (event.behandlingStatus == "AVSLU"
+            && oppgaveDto.feltverdier.filter { it.nøkkel == "resultattype" }.first().verdi == "IKKE_FASTSATT"
+        ) {
+            if (nyeBehandlingsopplysningerFraK9Sak.sakstype == FagsakYtelseType.OBSOLETE) {
+                return oppgaveDto.copy(status = "LUKKET").erstattFeltverdi(
+                    OppgaveFeltverdiDto(
+                        "resultattype", BehandlingResultatType.HENLAGT_FEILOPPRETTET.kode
+                    )
+                )
+            } else {
+                return oppgaveDto.erstattFeltverdi(
+                    OppgaveFeltverdiDto(
+                        "resultattype", nyeBehandlingsopplysningerFraK9Sak.behandlingResultatType.kode
+                    )
+                )
+            }
+        }
+
+        return oppgaveDto
+    }
+
     companion object {
         private val MANUELLE_AKSJONSPUNKTER = AksjonspunktDefinisjon.values().filter { aksjonspunktDefinisjon ->
             aksjonspunktDefinisjon.aksjonspunktType == AksjonspunktType.MANUELL
@@ -29,28 +98,44 @@ class EventTilDtoMapper {
 
         fun lagOppgaveDto(event: K9SakEventDto, forrigeOppgave: OppgaveV3?) =
             OppgaveDto(
-                id = event.eksternId.toString(),
-                versjon = event.eventTid.toString(),
+                eksternId = event.eksternId.toString(),
+                eksternVersjon = event.eventTid.toString(),
                 område = "K9",
                 kildeområde = "K9",
                 type = "k9sak",
-                status = if (event.aksjonspunktTilstander.any { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.status.erÅpentAksjonspunkt() }) {
-                    if (oppgaveSkalHaVentestatus(event)) {
-                        Oppgavestatus.VENTER.kode
-                    } else {
-                        Oppgavestatus.AAPEN.kode
-                    }
-                } else {
-                    if (event.behandlingStatus != BehandlingStatus.AVSLUTTET.kode && event.behandlingStatus != BehandlingStatus.IVERKSETTER_VEDTAK.kode) {
-                        Oppgavestatus.AAPEN.kode
-                    } else {
-                        Oppgavestatus.LUKKET.kode
-                    }
-                },
+                status = utledOppgavestatus(event).kode,
                 endretTidspunkt = event.eventTid,
                 reservasjonsnøkkel = utledReservasjonsnøkkel(event, erTilBeslutter(event)),
                 feltverdier = lagFeltverdier(event, forrigeOppgave)
             )
+
+        fun utledOppgavestatus(event: K9SakEventDto): Oppgavestatus {
+            if (event.behandlingStatus == null) {
+                return Oppgavestatus.UAVKLART
+            }
+            return when (BehandlingStatus.fraKode(event.behandlingStatus!!)) {
+                BehandlingStatus.OPPRETTET -> Oppgavestatus.UAVKLART
+                BehandlingStatus.AVSLUTTET -> Oppgavestatus.LUKKET
+                BehandlingStatus.FATTER_VEDTAK, BehandlingStatus.IVERKSETTER_VEDTAK, BehandlingStatus.UTREDES -> {
+                    val harÅpentManueltAksjonspunkt: Boolean =
+                        event.aksjonspunktTilstander
+                            .filter { !AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode()).erAutopunkt() }
+                            .any { it.status == AksjonspunktStatus.OPPRETTET }
+                    val harÅpentAutopunkt: Boolean =
+                        event.aksjonspunktTilstander
+                            .filter { AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode()).erAutopunkt() }
+                            .any { it.status == AksjonspunktStatus.OPPRETTET }
+
+                    if (harÅpentAutopunkt) {
+                        Oppgavestatus.VENTER
+                    } else if (harÅpentManueltAksjonspunkt) {
+                        Oppgavestatus.AAPEN
+                    } else {
+                        Oppgavestatus.UAVKLART
+                    }
+                }
+            }
+        }
 
         fun utledReservasjonsnøkkel(event: K9SakEventDto, erTilBeslutter: Boolean): String {
             return when (FagsakYtelseType.fraKode(event.ytelseTypeKode)) {
@@ -100,14 +185,10 @@ class EventTilDtoMapper {
 
             val åpneAksjonspunkter = getåpneAksjonspunkter(event)
 
-            val harEllerHarHattManueltAksjonspunkt = event.aksjonspunktTilstander
-                .filter { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.status != AksjonspunktStatus.AVBRUTT }
-                .any { aksjonspunktTilstandDto -> MANUELLE_AKSJONSPUNKTER.contains(aksjonspunktTilstandDto.aksjonspunktKode) }
-
             utledAksjonspunkter(event, oppgaveFeltverdiDtos)
             utledÅpneAksjonspunkter(event.behandlingSteg, åpneAksjonspunkter, oppgaveFeltverdiDtos)
             utledVenteÅrsakOgFrist(åpneAksjonspunkter, oppgaveFeltverdiDtos)
-            utledAutomatiskBehandletFlagg(forrigeOppgave, oppgaveFeltverdiDtos, harEllerHarHattManueltAksjonspunkt)
+            utledAutomatiskBehandletFlagg(oppgaveFeltverdiDtos, event)
             utledSøknadsårsaker(event, oppgaveFeltverdiDtos)
             utledBehandlingsårsaker(event, oppgaveFeltverdiDtos)
             oppgaveFeltverdiDtos.addAll(
@@ -243,7 +324,8 @@ class EventTilDtoMapper {
             } else {
                 null //ikke hastesak
             },
-            event.fagsakPeriode?.fom?.year?.toString()?.let { fagsakÅr ->
+            event.fagsakPeriode?.fom?.year?.takeIf { it in 2000..2100 }?.toString()?.let { fagsakÅr ->
+                // Hvis årstallet er utenfor rimelig område settes ikke fagsakÅr
                 OppgaveFeltverdiDto(
                     nøkkel = "fagsakÅr",
                     verdi = fagsakÅr,
@@ -284,8 +366,7 @@ class EventTilDtoMapper {
 
             val førsteAPMedFristOgVenteårsak = åpneAksjonspunkter
                 .filter { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.fristTid != null && aksjonspunktTilstandDto.venteårsak != null }
-                .sortedBy { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.fristTid }
-                .firstOrNull()
+                .minByOrNull { aksjonspunktTilstandDto -> aksjonspunktTilstandDto.fristTid }
 
             if (førsteAPMedFristOgVenteårsak != null) {
                 return førsteAPMedFristOgVenteårsak.venteårsak.ventekategori
@@ -382,25 +463,21 @@ class EventTilDtoMapper {
         }
 
         private fun utledAutomatiskBehandletFlagg(
-            forrigeOppgave: OppgaveV3?,
             oppgaveFeltverdiDtos: MutableList<OppgaveFeltverdiDto>,
-            harManueltAksjonspunkt: Boolean
+            event: K9SakEventDto
         ) {
-            if (forrigeOppgave != null && forrigeOppgave.hentVerdi("helautomatiskBehandlet").toBoolean().not()) {
-                oppgaveFeltverdiDtos.add(
-                    OppgaveFeltverdiDto(
-                        nøkkel = "helautomatiskBehandlet",
-                        verdi = false.toString()
-                    )
+            val harUtførtManueltAksjonspunkt =
+                event.aksjonspunktTilstander
+                    .filter { it.status() == AksjonspunktStatus.UTFØRT }
+                    .map { AksjonspunktDefinisjon.fraKode(it.aksjonspunktKode) }
+                    .any { !it.erAutopunkt() }
+
+            oppgaveFeltverdiDtos.add(
+                OppgaveFeltverdiDto(
+                    nøkkel = "helautomatiskBehandlet",
+                    verdi = if (harUtførtManueltAksjonspunkt) false.toString() else true.toString()
                 )
-            } else {
-                oppgaveFeltverdiDtos.add(
-                    OppgaveFeltverdiDto(
-                        nøkkel = "helautomatiskBehandlet",
-                        verdi = if (harManueltAksjonspunkt) false.toString() else true.toString()
-                    )
-                )
-            }
+            )
         }
 
         private fun utledÅpneAksjonspunkter(

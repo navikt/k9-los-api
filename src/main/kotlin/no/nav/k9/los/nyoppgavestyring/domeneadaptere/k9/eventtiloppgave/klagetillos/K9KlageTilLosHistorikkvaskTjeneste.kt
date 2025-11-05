@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.k9.klage.typer.AktørId
 import no.nav.k9.los.Configuration
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.HistorikkvaskMetrikker
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventRepository
@@ -80,7 +81,7 @@ class K9KlageTilLosHistorikkvaskTjeneste(
             
             val høyesteInternVersjon =
                 oppgaveV3Tjeneste.hentHøyesteInternVersjon(uuid.toString(), "k9klage", "K9", tx)!!
-            var eventNrForBehandling = 0L
+            var eventNrForBehandling = 0
             var oppgaveV3: OppgaveV3? = null
             for (event in behandlingProsessEventer) {
                 if (eventNrForBehandling > høyesteInternVersjon) { break }  //Historikkvasken har funnet eventer som ennå ikke er lastet inn med normalflyt. Dirty eventer skal håndteres av vanlig adaptertjeneste
@@ -100,7 +101,7 @@ class K9KlageTilLosHistorikkvaskTjeneste(
                 log.info("eventBeriket.påklagdBehandlingType: ${event.påklagdBehandlingType}, eventBeriket.påklagdBehandlingUUID: ${event.påklagdBehandlingId}")
 
                 val oppgaveDto =
-                    EventTilDtoMapper.lagOppgaveDto(eventBeriket,forrigeOppgave)
+                    KlageEventTilOppgaveMapper.lagOppgaveDto(eventBeriket,forrigeOppgave)
 
                 oppgaveV3 = oppgaveV3Tjeneste.utledEksisterendeOppgaveversjon(oppgaveDto, eventNrForBehandling, tx)
                 oppgaveV3Tjeneste.oppdaterEksisterendeOppgaveversjon(oppgaveV3, eventNrForBehandling, tx)
@@ -109,7 +110,7 @@ class K9KlageTilLosHistorikkvaskTjeneste(
                 loggFremgangForHver100(eventTeller, "Prosessert $eventTeller eventer")
 
                 forrigeOppgave = oppgaveV3Tjeneste.hentOppgaveversjon(
-                    område = "K9", eksternId = oppgaveDto.id, eksternVersjon = oppgaveDto.versjon, tx = tx
+                    område = "K9", oppgavetype = K9Oppgavetypenavn.KLAGE.kode, eksternId = oppgaveDto.eksternId, eksternVersjon = oppgaveDto.eksternVersjon, tx = tx
                 )
                 eventNrForBehandling++
             }

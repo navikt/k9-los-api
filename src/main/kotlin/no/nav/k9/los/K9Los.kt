@@ -13,7 +13,7 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.http.content.*
 import io.ktor.server.metrics.micrometer.*
-import io.ktor.server.netty.EngineMain
+import io.ktor.server.netty.*
 import io.ktor.server.plugins.callid.*
 import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.plugins.contentnegotiation.*
@@ -39,17 +39,17 @@ import no.nav.helse.dusseldorf.ktor.jackson.JacksonStatusPages
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.helse.dusseldorf.ktor.metrics.init
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventlagerApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.AsynkronProsesseringV1Service
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.HistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.K9KlageTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.K9KlageTilLosApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.K9KlageTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosApi
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.*
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.k9TilbakeEksternId
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.k9tilbakeKorrigerOutOfOrderProsessor
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.*
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.modia.SakOgBehandlingProducer
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.K9sakBehandlingsoppfriskingJobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9v3
@@ -61,9 +61,11 @@ import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.jobbplanlegger.Jobbplanlegger
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.jobbplanlegger.PlanlagtJobb
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.jobbplanlegger.Tidsvindu
+import no.nav.k9.los.nyoppgavestyring.innloggetbruker.InnloggetBrukerApi
 import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoApis
 import no.nav.k9.los.nyoppgavestyring.kodeverk.KodeverkApis
+import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkApi
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonApi
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.OppgaveV3Api
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeApi
@@ -77,8 +79,8 @@ import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksApi
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallV3Apis
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.statusfordeling.StatusFordelingService
 import no.nav.k9.los.tjenester.mock.localSetup
-import no.nav.k9.los.nyoppgavestyring.innloggetbruker.InnloggetBrukerApi
 import org.koin.core.Koin
 import org.koin.core.qualifier.named
 import org.koin.ktor.ext.getKoin
@@ -240,6 +242,7 @@ fun Application.k9Los() {
             localSetup.initSaksbehandlere()
             localSetup.initPunsjoppgaver(0)
             localSetup.initTilbakeoppgaver(0)
+            localSetup.initKlageoppgaver(0)
             localSetup.initK9SakOppgaver(0)
             api()
         } else {
@@ -274,16 +277,19 @@ private fun Route.api() {
         swaggerUI("openapi.json")
         route("/forvaltning") {
             forvaltningApis()
+            route("eventlager") { EventlagerApi() }
             route("k9saktillos") { K9SakTilLosApi() }
             route("k9klagetillos") { K9KlageTilLosApi() }
+            route("k9tilbaketillos") { K9TilbakeTilLosApi() }
+            route("k9punsjtillos") { K9PunsjTilLosApi() }
             route("statistikk") { StatistikkApi() }
         }
     }
-    route("api") {
-        route("driftsmeldinger", { hidden = true }) {
+    route("api", { hidden = true }) {
+        route("driftsmeldinger") {
             DriftsmeldingerApis()
         }
-        route("saksbehandler", { hidden = true }) {
+        route("saksbehandler") {
             route("oppgaver") {
                 ReservasjonApis()
             }
@@ -297,8 +303,8 @@ private fun Route.api() {
         route("kodeverk") { KodeverkApis() }
 
         route("ny-oppgavestyring") {
-            route("ko", { hidden = true }) { OppgaveKoApis() }
-            route("oppgave", { hidden = true }) { OppgaveQueryApis() }
+            route("ko") { OppgaveKoApis() }
+            route("oppgave") { OppgaveQueryApis() }
             route(
                 "feltdefinisjon",
                 {
@@ -318,24 +324,27 @@ private fun Route.api() {
             route("nokkeltall") { NøkkeltallV3Apis() }
             route("siste-oppgaver") { SisteOppgaverApi() }
             route("nye-og-ferdigstilte") { NyeOgFerdigstilteApi() }
+            route("lagret-sok") { LagretSøkApi() }
         }
     }
 }
 
 fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
     val k9SakTilLosHistorikkvaskTjeneste = koin.get<K9SakTilLosHistorikkvaskTjeneste>()
-    val k9PunsjTilLosHistorikkvaskTjeneste = koin.get<K9PunsjTilLosHistorikkvaskTjeneste>()
     val k9TilbakeTilLosHistorikkvaskTjeneste = koin.get<K9TilbakeTilLosHistorikkvaskTjeneste>()
     val k9KlageTilLosHistorikkvaskTjeneste = koin.get<K9KlageTilLosHistorikkvaskTjeneste>()
+    val historikkvaskTjeneste = koin.get<HistorikkvaskTjeneste>()
 
     val k9SakTilLosAdapterTjeneste = koin.get<K9SakTilLosAdapterTjeneste>()
     val k9KlageTilLosAdapterTjeneste = koin.get<K9KlageTilLosAdapterTjeneste>()
     val k9TilbakeTilLosAdapterTjeneste = koin.get<K9TilbakeTilLosAdapterTjeneste>()
     val k9PunsjTilLosAdapterTjeneste = koin.get<K9PunsjTilLosAdapterTjeneste>()
+    val eventTilOppgaveAdapter = koin.get<EventTilOppgaveAdapter>()
 
     val oppgavestatistikkTjeneste = koin.get<OppgavestatistikkTjeneste>()
 
     val pepCacheService = koin.get<PepCacheService>()
+    val statusFordelingService = koin.get<StatusFordelingService>()
     val dagensTallService = koin.get<DagensTallService>()
     val perEnhetService = koin.get<FerdigstiltePerEnhetService>()
     val nyeOgFerdigstilteService = koin.get<NyeOgFerdigstilteService>()
@@ -350,9 +359,9 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
         add(
             PlanlagtJobb.KjørPåTidspunkt(
                 "K9SakTilLosHistorikkvask",
-                høyPrioritet,
-                kjørTidligst = LocalDateTime.of(2025, 2, 27, 19, 0),
-                kjørSenest = LocalDateTime.of(2025, 3, 31, 21, 0),
+                høyPrioritet + 3,
+                kjørTidligst = LocalDateTime.of(2025, 8, 11, 17, 0),
+                kjørSenest = LocalDateTime.of(2025, 8, 11, 19, 30),
             ) {
                 k9SakTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
             }
@@ -360,32 +369,10 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
 
         add(
             PlanlagtJobb.KjørPåTidspunkt(
-                "K9PunsjTilLosHistorikkvask",
-                høyPrioritet,
-                kjørTidligst = LocalDateTime.of(2025, 1, 1, 0, 0),
-                kjørSenest = LocalDateTime.of(2025, 3, 31, 18, 0),
-            ) {
-                k9PunsjTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
-            }
-        )
-
-        add(
-            PlanlagtJobb.KjørPåTidspunkt(
-                "K9TilbakeTilLosHistorikkvask",
-                høyPrioritet,
-                kjørTidligst = LocalDateTime.of(2025, 2, 27, 17, 0),
-                kjørSenest = LocalDateTime.of(2025, 3, 31, 17, 0),
-            ) {
-                k9TilbakeTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
-            }
-        )
-
-        add(
-            PlanlagtJobb.KjørPåTidspunkt(
                 "K9KlageTilLosHistorikkvask",
                 høyPrioritet,
-                kjørTidligst = LocalDateTime.of(2025, 3, 25, 10, 0),
-                kjørSenest = LocalDateTime.of(2025, 3, 31, 17, 0),
+                kjørTidligst = LocalDateTime.of(2025, 8, 11, 17, 0),
+                kjørSenest = LocalDateTime.of(2025, 8, 11, 19, 30),
             ) {
                 k9KlageTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
             }
@@ -430,25 +417,25 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
 
         add(
             PlanlagtJobb.Periodisk(
-                navn = "K9TilbakeVaktmester",
+                navn = "oppgaveVaktmester",
                 prioritet = lavPrioritet,
                 intervall = 1.minutes,
                 tidsvindu = heleTiden,
                 startForsinkelse = 1.minutes
             ) {
-                k9TilbakeTilLosAdapterTjeneste.spillAvDirtyBehandlingProsessEventer()
+                eventTilOppgaveAdapter.spillAvBehandlingProsessEventer()
             }
         )
 
         add(
             PlanlagtJobb.Periodisk(
-                navn = "K9PunsjVaktmester",
+                navn = "HistorikkvaskVaktmester",
                 prioritet = lavPrioritet,
                 intervall = 1.minutes,
                 tidsvindu = heleTiden,
                 startForsinkelse = 1.minutes
             ) {
-                k9PunsjTilLosAdapterTjeneste.spillAvDirtyBehandlingProsessEventer()
+                historikkvaskTjeneste.kjørHistorikkvask()
             }
         )
 
@@ -474,6 +461,15 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 startForsinkelse = 1.minutes
             ) {
                 pepCacheService.oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn()
+            }
+        )
+
+        add(
+            PlanlagtJobb.Oppstart(
+                navn = "StatusFordelingOppstart",
+                prioritet = mediumPrioritet,
+            ) {
+                statusFordelingService.oppdaterCache(kode6 = false)
             }
         )
 
@@ -506,10 +502,21 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
 
         add(
             PlanlagtJobb.TimeJobb(
+                navn = "StatusFordelingOppdaterer",
+                prioritet = lavPrioritet,
+                tidsvindu = utvidetArbeidstid,
+                minutter = (0..55 step 5).toList(),
+            ) {
+                statusFordelingService.oppdaterCache(kode6 = false)
+            }
+        )
+
+        add(
+            PlanlagtJobb.TimeJobb(
                 navn = "DagensTallOppdaterer",
                 prioritet = lavPrioritet,
-                tidsvindu = Tidsvindu.alleDager(5, 20),
-                minutter = listOf(0, 30),
+                tidsvindu = Tidsvindu.alleDager(),
+                minutter = listOf(0, 10, 20, 30, 40, 50),
             ) {
                 dagensTallService.oppdaterCache(this)
             }
@@ -519,19 +526,19 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
             PlanlagtJobb.TimeJobb(
                 navn = "PerEnhetOppdaterer",
                 prioritet = lavPrioritet,
-                tidsvindu = Tidsvindu.alleDager(7, 11),
-                minutter = listOf(15),
+                tidsvindu = Tidsvindu.alleDager(),
+                minutter = listOf(0, 10, 20, 30, 40, 50),
             ) {
                 perEnhetService.oppdaterCache(this)
             }
         )
 
         add(
-            PlanlagtJobb.Periodisk(
+            PlanlagtJobb.TimeJobb(
                 navn = "NyeOgFerdigstilteOppdaterer",
                 prioritet = lavPrioritet,
-                startForsinkelse = 30.minutes,
-                intervall = 30.minutes,
+                tidsvindu = Tidsvindu.alleDager(),
+                minutter = listOf(0, 10, 20, 30, 40, 50),
             ) {
                 nyeOgFerdigstilteService.oppdaterCache(this)
             }

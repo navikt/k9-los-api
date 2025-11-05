@@ -56,7 +56,6 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         OppgaveTestDataBuilder()
     }
 
-    @Disabled("Automatiske behandlinger uten åpne aksjonspunkter kan dukke opp i køer")
     @Test
     fun `Behandling uten åpne aksjonspunkter skal ikke vises i køer`() {
         val eksternId = UUID.randomUUID()
@@ -122,9 +121,11 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val kø = opprettKøFor(TestSaksbehandler.SARA, querySomKunInneholder(eksternId, Oppgavestatus.AAPEN))
 
         val opprettetAksjonspunktMedNullVenteårsak = K9SakEventDtoBuilder(eksternId).opprettet()
-            .medAksjonspunkt(AksjonspunktDefinisjon.KONTROLLER_LEGEERKLÆRING.builder()
-                .medStatus(AksjonspunktStatus.OPPRETTET)
-                .medVenteårsakOgFrist(null, frist = LocalDateTime.now().plusWeeks(1)))
+            .medAksjonspunkt(
+                AksjonspunktDefinisjon.KONTROLLER_LEGEERKLÆRING.builder()
+                    .medStatus(AksjonspunktStatus.OPPRETTET)
+                    .medVenteårsakOgFrist(null, frist = LocalDateTime.now().plusWeeks(1))
+            )
             .build()
 
         k9SakEventHandler.prosesser(opprettetAksjonspunktMedNullVenteårsak)
@@ -185,7 +186,8 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
 
         val skjermet1 = runBlocking { pepClient.harTilgangTilKode6() }
         val filtrerReserverte1 = true
-        val antallIKøEtterRes = oppgaveKøTjeneste.hentAntallOppgaverForKø(kø.id,
+        val antallIKøEtterRes = oppgaveKøTjeneste.hentAntallOppgaverForKø(
+            kø.id,
             filtrerReserverte = filtrerReserverte1,
             skjermet = skjermet1
         )
@@ -199,7 +201,9 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
 
         // Opprettet event
         val eventBuilder = K9SakEventDtoBuilder(eksternId)
-        k9SakEventHandler.prosesser(eventBuilder.opprettet().build())
+        k9SakEventHandler.prosesser(
+            eventBuilder.vurderSykdom().build()
+        )
 
         val oppgaveQueryService = get<OppgaveQueryService>()
         val antallIDb = oppgaveQueryService.queryForAntall(QueryRequest(querySomKunInneholder(eksternId)))
@@ -215,7 +219,10 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         assertThat(antallIKø).isEqualTo(1)
 
         taReservasjonFra(kø, TestSaksbehandler.SARA)
-        assertReservasjonMedAntallOppgaver(TestSaksbehandler.SARA, 1)
+        assertReservasjonMedAntallOppgaver(
+            TestSaksbehandler.SARA,
+            1
+        ) //oppgave uten AP får status UAVKLART, og blir ikke reservert
 
         // Transient tilstand mens k9-sak jobber
         k9SakEventHandler.prosesser(
@@ -230,7 +237,7 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
                 .build()
         )
 
-        assertSkjultReservasjon(TestSaksbehandler.SARA)
+        assertReservasjonMedAntallOppgaver(TestSaksbehandler.SARA, 1)
         k9SakEventHandler.prosesser(eventBuilder.vurderSykdom().build())
 
         assertReservasjonMedAntallOppgaver(TestSaksbehandler.SARA, 1)
@@ -240,7 +247,10 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
     fun `Reservasjon skal annulleres hvis alle behandlinger i reservasjonen er avsluttet eller på vent`() {
         val eksternId1 = UUID.randomUUID()
         val eksternId2 = UUID.randomUUID()
-        val kø = opprettKøFor(TestSaksbehandler.SARA, querySomKunInneholder(listOf(eksternId1, eksternId2), Oppgavestatus.AAPEN))
+        val kø = opprettKøFor(
+            TestSaksbehandler.SARA,
+            querySomKunInneholder(listOf(eksternId1, eksternId2), Oppgavestatus.AAPEN)
+        )
 
         val behandling1 = K9SakEventDtoBuilder(eksternId1, pleietrengendeAktørId = "PLEIETRENGENDE_ID")
         val behandling2 = K9SakEventDtoBuilder(eksternId2, pleietrengendeAktørId = "PLEIETRENGENDE_ID")
@@ -279,7 +289,10 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
     fun `Reservasjon skal skjules fra beslutter etter retur uavhengig av om det finnes åpne oppgaver som er hos saksbehandler`() {
         val eksternId1 = UUID.randomUUID()
         val eksternId2 = UUID.randomUUID()
-        val kø = opprettKøFor(TestSaksbehandler.SARA, querySomKunInneholder(listOf(eksternId1, eksternId2), Oppgavestatus.AAPEN))
+        val kø = opprettKøFor(
+            TestSaksbehandler.SARA,
+            querySomKunInneholder(listOf(eksternId1, eksternId2), Oppgavestatus.AAPEN)
+        )
 
         val behandling1 = K9SakEventDtoBuilder(eksternId1, pleietrengendeAktørId = "PLEIETRENGENDE_ID")
         val behandling2 = K9SakEventDtoBuilder(eksternId2, pleietrengendeAktørId = "PLEIETRENGENDE_ID")
@@ -353,10 +366,14 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
     fun `Retur fra beslutter skal ikke henge igjen`() {
         val eksternId1 = UUID.randomUUID()
         val eksternId2 = UUID.randomUUID()
-        val kø = opprettKøFor(TestSaksbehandler.SARA, querySomKunInneholder(listOf(eksternId1, eksternId2), Oppgavestatus.AAPEN))
+        val kø = opprettKøFor(
+            TestSaksbehandler.SARA,
+            querySomKunInneholder(listOf(eksternId1, eksternId2), Oppgavestatus.AAPEN)
+        )
 
         val saksnummer = "SAKSNUMMER"
-        val behandling1 = K9SakEventDtoBuilder(eksternId1, saksnummer = saksnummer,  pleietrengendeAktørId = "PLEIETRENGENDE_ID")
+        val behandling1 =
+            K9SakEventDtoBuilder(eksternId1, saksnummer = saksnummer, pleietrengendeAktørId = "PLEIETRENGENDE_ID")
         k9SakEventHandler.prosesser(behandling1.vurderSykdom().build())
 
         // Saksbehandler tar reservasjon på begge sakene på pleietrengende
@@ -377,7 +394,8 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         assertIngenReservasjon(TestSaksbehandler.BIRGER_BESLUTTER)
         assertIngenReservasjon(TestSaksbehandler.SARA)
 
-        val behandling2 = K9SakEventDtoBuilder(eksternId2, saksnummer = saksnummer, pleietrengendeAktørId = "PLEIETRENGENDE_ID")
+        val behandling2 =
+            K9SakEventDtoBuilder(eksternId2, saksnummer = saksnummer, pleietrengendeAktørId = "PLEIETRENGENDE_ID")
         k9SakEventHandler.prosesser(behandling2.vurderSykdom().build())
 
         // Saksbehandler tar reservasjon på begge sakene på pleietrengende
@@ -396,7 +414,9 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         assertReservasjonMedAntallOppgaver(TestSaksbehandler.BIRGER_BESLUTTER, 1)
 
         // Denne kan fjernes når historikkvask er endret til å kjøres automatisk ved behov i eventhandler
-        K9SakTilLosHistorikkvaskTjeneste(get(),get(),get(),get(),get(),get()).vaskOppgaveForBehandlingUUID(eksternId1)
+        K9SakTilLosHistorikkvaskTjeneste(get(), get(), get(), get(), get(), get()).vaskOppgaveForBehandlingUUID(
+            eksternId1
+        )
 
         k9SakEventHandler.prosesser(behandling2.avsluttet().build())
         assertIngenReservasjon(TestSaksbehandler.BIRGER_BESLUTTER)
@@ -426,9 +446,11 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
 
     private fun assertIngenReservasjon(saksbehandler: Saksbehandler) {
         val reservasjonApisTjeneste = get<ReservasjonApisTjeneste>()
-        runBlocking { assertThat(
-            reservasjonApisTjeneste.hentReserverteOppgaverForSaksbehandler(saksbehandler)
-        ).isEmpty() }
+        runBlocking {
+            assertThat(
+                reservasjonApisTjeneste.hentReserverteOppgaverForSaksbehandler(saksbehandler)
+            ).isEmpty()
+        }
     }
 
     private fun assertSkjultReservasjon(saksbehandler: Saksbehandler) {
@@ -444,7 +466,9 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         val reservasjon = runBlocking { reservasjonApisTjeneste.hentReserverteOppgaverForSaksbehandler(saksbehandler) }
         assertThat(reservasjon).hasSize(antallReservasjoner)
         reservasjon.firstOrNull()?.let {
-            assertThat(it.reserverteV3Oppgaver.filter { it.oppgavestatus ==  Oppgavestatus.AAPEN}).hasSize(antallOppgaver)
+            assertThat(it.reserverteV3Oppgaver.filter { it.oppgavestatus == Oppgavestatus.AAPEN }).hasSize(
+                antallOppgaver
+            )
         }
     }
 
@@ -475,9 +499,16 @@ class K9SakTilLosIT : AbstractK9LosIntegrationTest() {
         return OppgaveQuery(filtre)
     }
 
-    private fun querySomKunInneholder(eksternId: List<UUID>, vararg status: Oppgavestatus = emptyArray()): OppgaveQuery {
+    private fun querySomKunInneholder(
+        eksternId: List<UUID>,
+        vararg status: Oppgavestatus = emptyArray()
+    ): OppgaveQuery {
         val filtre = mutableListOf(
-            byggFilter(FeltType.BEHANDLINGUUID, EksternFeltverdiOperator.IN, *eksternId.map { it.toString() }.toTypedArray())
+            byggFilter(
+                FeltType.BEHANDLINGUUID,
+                EksternFeltverdiOperator.IN,
+                *eksternId.map { it.toString() }.toTypedArray()
+            )
         )
         if (status.isNotEmpty()) {
             filtre.add(
@@ -500,7 +531,11 @@ object TestOppgaveNøkkel {
     )
 }
 
-private fun byggFilter(feltType: FeltType, operator: EksternFeltverdiOperator, vararg verdier: String?): FeltverdiOppgavefilter {
+private fun byggFilter(
+    feltType: FeltType,
+    operator: EksternFeltverdiOperator,
+    vararg verdier: String?
+): FeltverdiOppgavefilter {
     return FeltverdiOppgavefilter(
         feltType.område,
         feltType.eksternId,

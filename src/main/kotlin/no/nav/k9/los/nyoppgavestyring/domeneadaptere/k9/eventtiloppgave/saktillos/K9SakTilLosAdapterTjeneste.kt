@@ -8,6 +8,7 @@ import kotliquery.TransactionalSession
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.FagsakYtelseType
 import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlientInterfaceKludge
@@ -79,7 +80,7 @@ class K9SakTilLosAdapterTjeneste(
             var eventNrForBehandling = -1L
             behandlingProsessEventer.forEach { event ->
                 eventNrForBehandling++
-                var oppgaveDto = EventTilDtoMapper.lagOppgaveDto(event, forrigeOppgave)
+                var oppgaveDto = SakEventTilOppgaveMapper.lagOppgaveDto(event, forrigeOppgave)
                 oppgaveDto = ryddOppObsoleteOgResultatfeilFra2020(event, oppgaveDto, nyeBehandlingsopplysningerFraK9Sak)
 
                 val oppgave = oppgaveV3Tjeneste.sjekkDuplikatOgProsesser(oppgaveDto, tx)
@@ -107,12 +108,13 @@ class K9SakTilLosAdapterTjeneste(
                     }
                     forrigeOppgave = oppgave
                 } else {
-                    forrigeOppgave = oppgaveV3Tjeneste.hentOppgaveversjon("K9", oppgaveDto.id, oppgaveDto.versjon, tx)
+                    forrigeOppgave = oppgaveV3Tjeneste.hentOppgaveversjon("K9", K9Oppgavetypenavn.SAK.kode, oppgaveDto.eksternId, oppgaveDto.eksternVersjon, tx)
                 }
             }
             runBlocking {
                 køpåvirkendeHendelseChannel.send(OppgaveHendelseMottatt(Fagsystem.K9SAK, EksternOppgaveId("K9", uuid.toString())))
             }
+
             k9SakEventRepository.fjernDirty(uuid, tx)
         }
 
@@ -129,8 +131,8 @@ class K9SakTilLosAdapterTjeneste(
         event: K9SakEventDto,
         tx: TransactionalSession
     ) {
-        val saksbehandlerNøkkel = EventTilDtoMapper.utledReservasjonsnøkkel(event, erTilBeslutter = false)
-        val beslutterNøkkel = EventTilDtoMapper.utledReservasjonsnøkkel(event, erTilBeslutter = true)
+        val saksbehandlerNøkkel = SakEventTilOppgaveMapper.utledReservasjonsnøkkel(event, erTilBeslutter = false)
+        val beslutterNøkkel = SakEventTilOppgaveMapper.utledReservasjonsnøkkel(event, erTilBeslutter = true)
         val antallAnnullert =
             annullerReservasjonHvisAlleOppgaverPåVentEllerAvsluttet(listOf(saksbehandlerNøkkel, beslutterNøkkel), tx)
         if (antallAnnullert > 0) {

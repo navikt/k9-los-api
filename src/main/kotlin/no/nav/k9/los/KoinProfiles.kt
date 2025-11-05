@@ -13,23 +13,38 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonk
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.systemklient.RestAvstemmingsklient
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventlagerKonverteringsjobb
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventlagerKonverteringsservice
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.kafka.AsynkronProsesseringV1Service
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventHandler
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveMapper
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.HistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.OppgaveOppdatertHandler
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.K9KlageTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.K9KlageTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.KlageEventTilOppgaveMapper
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerKlientLocal
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.klagetillos.beriker.K9KlageBerikerSystemKlient
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.K9SakTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.K9SakTilLosHistorikkvaskTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.K9SakTilLosLukkeFeiloppgaverTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.PunsjEventTilOppgaveMapper
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.*
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlient
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlientInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlientLocal
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlient
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.k9SakEksternId
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosHistorikkvaskTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.TilbakeEventTilOppgaveMapper
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.k9TilbakeEksternId
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.modia.SakOgBehandlingProducer
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.RefreshK9v3Tjeneste
@@ -37,10 +52,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.res
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakBehandlingOppfrisketRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServiceLocal
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.refreshk9sakoppgaver.restklient.K9SakServiceSystemClient
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.K9KlageOppgaveTilDVHMapper
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.K9SakOppgaveTilDVHMapper
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.OppgavestatistikkTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkPublisher
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.*
 import no.nav.k9.los.nyoppgavestyring.driftsmelding.DriftsmeldingRepository
 import no.nav.k9.los.nyoppgavestyring.driftsmelding.DriftsmeldingTjeneste
 import no.nav.k9.los.nyoppgavestyring.feltutlederforlagring.GyldigeFeltutledere
@@ -63,6 +75,8 @@ import no.nav.k9.los.nyoppgavestyring.ko.KøpåvirkendeHendelse
 import no.nav.k9.los.nyoppgavestyring.ko.OppgaveKoTjeneste
 import no.nav.k9.los.nyoppgavestyring.ko.db.OppgaveKoRepository
 import no.nav.k9.los.nyoppgavestyring.kodeverk.HentKodeverkTjeneste
+import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkRepository
+import no.nav.k9.los.nyoppgavestyring.lagretsok.LagretSøkTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonRepository
 import no.nav.k9.los.nyoppgavestyring.mottak.feltdefinisjon.FeltdefinisjonTjeneste
 import no.nav.k9.los.nyoppgavestyring.mottak.omraade.OmrådeRepository
@@ -85,11 +99,13 @@ import no.nav.k9.los.nyoppgavestyring.sisteoppgaver.SisteOppgaverRepository
 import no.nav.k9.los.nyoppgavestyring.sisteoppgaver.SisteOppgaverTjeneste
 import no.nav.k9.los.nyoppgavestyring.søkeboks.SøkeboksTjeneste
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.NøkkeltallRepositoryV3
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.OppgaverGruppertRepository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.dagenstall.DagensTallService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilteperenhet.FerdigstiltePerEnhetService
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.status.StatusService
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.statusfordeling.StatusFordelingService
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -159,19 +175,19 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventRepository(get())
+        K9SakEventRepository(get())
     }
 
     single {
-        no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventRepository(get())
+        K9KlageEventRepository(get())
     }
 
     single {
-        no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventRepository(get())
+        K9PunsjEventRepository(get())
     }
 
     single {
-        no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventRepository(get())
+        K9TilbakeEventRepository(get())
     }
 
     single {
@@ -183,7 +199,7 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.statistikk.StatistikkRepository(get(), get())
+        StatistikkRepository(get(), get())
     }
 
     single {
@@ -200,40 +216,80 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler(
+        K9SakEventHandler(
             k9SakEventRepository = get(),
             sakOgBehandlingProducer = get(),
             k9SakTilLosAdapterTjeneste = get(),
-            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
+            transactionalManager = get(),
+            eventlagerKonverteringsservice = get(),
+            eventRepository = get(),
         )
     }
 
     single {
-        no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.klage.K9KlageEventHandler(
+        K9KlageEventHandler(
             behandlingProsessEventKlageRepository = get(),
             k9KlageTilLosAdapterTjeneste = get(),
+            transactionalManager = get(),
+            eventlagerKonverteringsservice = get()
         )
     }
 
     single {
-        no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.tilbakekrav.K9TilbakeEventHandler(
+        K9TilbakeEventHandler(
             behandlingProsessEventTilbakeRepository = get(),
             sakOgBehandlingProducer = get(),
-            k9TilbakeTilLosAdapterTjeneste = get(),
+            transactionalManager = get(),
+            eventlagerKonverteringsservice = get(),
+            oppgaveAdapter = get(),
         )
     }
 
     single {
-        no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler(
+        K9PunsjEventHandler(
             punsjEventK9Repository = get(),
-            punsjTilLosAdapterTjeneste = get(),
+            transactionalManager = get(),
+            eventlagerKonverteringsservice = get(),
+            oppgaveAdapter = get(),
+        )
+    }
+
+    single {
+        EventlagerKonverteringsservice(
+            nyttEventrepository = get(),
+            punsjEventRepository = get(),
+            klageEventRepository = get(),
+            tilbakeEventRepository = get(),
+            sakEventRepository = get()
+        )
+    }
+
+    single {
+        EventlagerKonverteringsjobb(
+            transactionalManager = get(),
+            punsjEventRepository = get(),
+            klageEventRepository = get(),
+            tilbakeEventRepository = get(),
+            sakEventRepository = get(),
+            eventlagerKonverteringsservice = get()
+        )
+    }
+
+    single {
+        EventRepository(
+            dataSource = get(),
+        )
+    }
+
+    single {
+        EventRepository(
+            dataSource = get(),
         )
     }
 
 
     single {
         AsynkronProsesseringV1Service(
-            kafkaConfig = config.getKafkaConfig(),
             kafkaAivenConfig = config.getProfileAwareKafkaAivenConfig(),
             configuration = config,
             k9sakEventHandler = get(),
@@ -361,6 +417,55 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
+        EventTilOppgaveAdapter(
+            eventRepository = get(),
+            oppgaveV3Tjeneste = get(),
+            transactionalManager = get(),
+            eventTilOppgaveMapper = get(),
+            oppgaveOppdatertHandler = get()
+        )
+    }
+
+    single {
+        EventTilOppgaveMapper(
+            klageEventTilOppgaveMapper = get(),
+            punsjEventTilOppgaveMapper = get(),
+            sakEventTilOppgaveMapper = get(),
+            tilbakeEventTilOppgaveMapper = get()
+        )
+    }
+
+    single {
+        SakEventTilOppgaveMapper(
+            k9SakBerikerKlient = get(),
+        )
+    }
+
+    single {
+        KlageEventTilOppgaveMapper(
+            k9klageBeriker = get()
+        )
+    }
+
+    single {
+        TilbakeEventTilOppgaveMapper()
+    }
+
+    single {
+        PunsjEventTilOppgaveMapper()
+    }
+
+    single {
+        OppgaveOppdatertHandler(
+            oppgaveRepository = get(),
+            reservasjonV3Tjeneste = get(),
+            eventTilOppgaveMapper = get(),
+            pepCacheService = get(),
+            køpåvirkendeHendelseChannel = get(named("KøpåvirkendeHendelseChannel")),
+        )
+    }
+
+    single {
         K9PunsjTilLosAdapterTjeneste(
             k9PunsjEventRepository = get(),
             oppgaveV3Tjeneste = get(),
@@ -450,6 +555,15 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
+        HistorikkvaskTjeneste(
+            eventRepository = get(),
+            oppgaveV3Tjeneste = get(),
+            eventTilOppgaveMapper = get(),
+            transactionalManager = get()
+        )
+    }
+
+    single {
         K9PunsjTilLosHistorikkvaskTjeneste(
             k9PunsjEventRepository = get(),
             oppgaveV3Tjeneste = get(),
@@ -512,7 +626,7 @@ fun common(app: Application, config: Configuration) = module {
     }
 
     single {
-        no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper(
+        OppgaveRepositoryTxWrapper(
             oppgaveRepository = get(),
             transactionalManager = get(),
         )
@@ -527,6 +641,7 @@ fun common(app: Application, config: Configuration) = module {
             reservasjonV3DtoBuilder = get(),
             reservasjonOversetter = get(),
             pepClient = get(),
+            azureGraphService = get(),
         )
     }
 
@@ -569,8 +684,8 @@ fun common(app: Application, config: Configuration) = module {
             queryService = get(),
             oppgaveRepository = get(),
             pdlService = get(),
-            reservasjonV3Tjeneste = get(),
-            saksbehandlerRepository = get()
+            saksbehandlerRepository = get(),
+            pepClient = get(),
         )
     }
 
@@ -608,6 +723,26 @@ fun common(app: Application, config: Configuration) = module {
     single {
         NyeOgFerdigstilteService(
             queryService = get()
+        )
+    }
+
+    single {
+        StatusFordelingService(
+            queryService = get()
+        )
+    }
+
+    single<LagretSøkRepository> {
+        LagretSøkRepository(
+            dataSource = get()
+        )
+    }
+
+    single<LagretSøkTjeneste> {
+        LagretSøkTjeneste(
+            lagretSøkRepository = get(),
+            saksbehandlerRepository = get(),
+            oppgaveQueryService = get()
         )
     }
 }

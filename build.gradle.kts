@@ -5,9 +5,10 @@ val hikariVersion = "6.2.1"
 val flywayVersion = "11.1.1"
 val vaultJdbcVersion = "1.3.10"
 val koinVersion = "4.1.0"
+val kotestVersion = "6.0.3"
 val kotliqueryVersion = "1.9.1"
-val k9SakVersion = "5.4.21"
-val k9KlageVersion = "0.4.9"
+val k9SakVersion = "5.4.22"
+val k9KlageVersion = "0.4.7"
 val jacksonVersion = "2.17.2"
 val commonsTextVersion = "1.13.0"
 
@@ -108,6 +109,9 @@ dependencies {
     }
     testImplementation("org.testcontainers:postgresql:$testContainers")
     testImplementation("io.insert-koin:koin-test-junit5:$koinVersion")
+    testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
+    testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
+    testImplementation("io.kotest:kotest-extensions-koin:$kotestVersion")
 }
 
 repositories {
@@ -150,7 +154,7 @@ tasks {
         gradleVersion = "8.6"
     }
 
-    withType<Test> {
+    withType<Test>{
         useJUnitPlatform()
         // Always run tests, even when nothing changed.
         dependsOn("cleanTest")

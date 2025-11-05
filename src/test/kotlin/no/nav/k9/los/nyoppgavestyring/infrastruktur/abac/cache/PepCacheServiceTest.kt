@@ -14,12 +14,6 @@ import kotlinx.coroutines.test.runTest
 import no.nav.helse.dusseldorf.ktor.jackson.dusseldorfConfigured
 import no.nav.k9.los.AbstractPostgresTest
 import no.nav.k9.los.buildAndTestConfig
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Action
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.jobbplanlegger.Jobbplanlegger
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.jobbplanlegger.PlanlagtJobb
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.jobbplanlegger.Tidsvindu
 import no.nav.k9.los.nyoppgavestyring.FeltType
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
@@ -27,11 +21,13 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.PunsjE
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventDto
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventHandler
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosAdapterTjeneste
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.K9SakTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.felter
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCache
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheRepository
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.cache.PepCacheService
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Action
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.jobbplanlegger.Jobbplanlegger
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.jobbplanlegger.PlanlagtJobb
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.jobbplanlegger.Tidsvindu
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.PersonBeskyttelseType
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
@@ -49,7 +45,6 @@ import no.nav.k9.sak.typer.JournalpostId
 import no.nav.sif.abac.kontrakt.abac.Diskresjonskode
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.koin.test.KoinTest
@@ -147,11 +142,13 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
     fun `Alle ordinære eventer på K9punsjEventHandler skal oppdatere pepcache for å alltid få med aktørendringer i sak`() {
         val k9punsjEventHandler = get<no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler>()
         val pepRepository = get<PepCacheRepository>()
+        val punsjTilLosAdapterTjeneste = get<K9PunsjTilLosAdapterTjeneste>()
 
         val aktørId = "1234567890123"
         val eksternId = UUID.randomUUID().toString()
         gjørAktørOrdinær(aktørId)
         k9punsjEventHandler.prosesser(lagPunsjBehandlingprosessEventMedStatus(eksternId, aktørId))
+        punsjTilLosAdapterTjeneste.oppdaterOppgaveForEksternId(UUID.fromString(eksternId))
 
         val pepCache = pepRepository.hent("K9", eksternId)!!
         assertThat(pepCache.kode6).isFalse()
@@ -164,11 +161,13 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
     fun `Eventer i K9punsjEventHandler med kode6 skal oppdatere pepcache`() {
         val k9punsjEventHandler = get<no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler>()
         val pepRepository = get<PepCacheRepository>()
+        val punsjTilLosAdapterTjeneste = get<K9PunsjTilLosAdapterTjeneste>()
 
         val aktørId = "1234567890123"
         val eksternId = UUID.randomUUID().toString()
         gjørAktørKode6(aktørId)
         k9punsjEventHandler.prosesser(lagPunsjBehandlingprosessEventMedStatus(eksternId, aktørId))
+        punsjTilLosAdapterTjeneste.oppdaterOppgaveForEksternId(UUID.fromString(eksternId))
 
         val pepCache = pepRepository.hent("K9", eksternId)!!
         assertThat(pepCache.kode6).isTrue()
@@ -181,11 +180,13 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
     fun `Eventer i K9punsjEventHandler med kode7 skal oppdatere pepcache`() {
         val k9punsjEventHandler = get<no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.punsj.K9PunsjEventHandler>()
         val pepRepository = get<PepCacheRepository>()
+        val punsjTilLosAdapterTjeneste = get<K9PunsjTilLosAdapterTjeneste>()
 
         val aktørId = "1234567890123"
         val eksternId = UUID.randomUUID().toString()
         gjørAktørKode7(aktørId)
         k9punsjEventHandler.prosesser(lagPunsjBehandlingprosessEventMedStatus(eksternId, aktørId))
+        punsjTilLosAdapterTjeneste.oppdaterOppgaveForEksternId(UUID.fromString(eksternId))
 
         val pepCache = pepRepository.hent("K9", eksternId)!!
         assertThat(pepCache.kode6).isFalse()
@@ -197,11 +198,13 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
     fun `Eventer i K9sakEventHandler med kode6 skal oppdatere pepcache`() {
         val k9sakEventHandler = get<K9SakEventHandler>()
         val pepRepository = get<PepCacheRepository>()
+        val punsjTilLosAdapterTjeneste = get<K9PunsjTilLosAdapterTjeneste>()
 
         val saksnummer = "TEST2"
         val eksternId = UUID.randomUUID().toString()
         gjørSakKode6(saksnummer)
         k9sakEventHandler.prosesser(lagBehandlingprosessEventMedStatus(eksternId, saksnummer))
+        punsjTilLosAdapterTjeneste.oppdaterOppgaveForEksternId(UUID.fromString(eksternId))
 
         val pepCache = pepRepository.hent("K9", eksternId)!!
         assertThat(pepCache.kode6).isTrue()
@@ -258,6 +261,8 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
             Jobbplanlegger(setOf(PlanlagtJobb.Periodisk("pepcache", 0, Tidsvindu.ÅPENT, 500.milliseconds, 0.seconds) {
                 pepCacheService.oppdaterCacheForÅpneOgVentendeOppgaverEldreEnn(gyldighet = Duration.ofNanos(1))
             }), coroutineContext = this.coroutineContext)
+        //hvis testen henger, bytt til testScheduler her for å diagnostisere, men vit at testScheduler mest sannsynlig ødelegger testen
+        // , så du må mest sannsynlig bytte tilbake til coroutineContext for at timing med jobb opp mot cache-endringer og venting på riktig tilstand skal virke
         jobbplanlegger.start()
 
         val saksnummer = "TEST4"
@@ -335,7 +340,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
     private fun lagBehandlingprosessEventMedStatus(
         eksternId: String,
         saksnummer: String,
-        behandlingStatus: BehandlingStatus = BehandlingStatus.OPPRETTET,
+        behandlingStatus: BehandlingStatus = BehandlingStatus.UTREDES,
         eventTid: LocalDateTime = LocalDateTime.now(),
         eventHendelse: EventHendelse = EventHendelse.BEHANDLINGSKONTROLL_EVENT
     ): K9SakEventDto {
@@ -345,6 +350,7 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
 
         @Language("JSON") val json =
             """{
+                "merknader": [],
                   "eksternId": "$eksternId",
                   "fagsystem": {
                     "kode": "K9SAK",
@@ -365,7 +371,22 @@ class PepCacheServiceTest : KoinTest, AbstractPostgresTest() {
                   "opprettetBehandling": "2020-02-20T07:38:49",
                   "aksjonspunktKoderMedStatusListe": {
                     "5009": "OPPR"
-                  }
+                  },
+                  "aksjonspunktTilstander": [
+                    {
+                        "status": {
+                        "kode": "OPPR",
+                        "kodeverk": "AKSJONSPUNKT_STATUS"
+                    },
+                    "fristTid": null,
+                    "venteårsak": {
+                    "kode": "-",
+                    "kodeverk": "VENT_AARSAK",
+                    "kanVelgesIGui": false
+                    },
+                    "aksjonspunktKode": "5009"
+                    }
+                    ]
             }"""
 
         return objectMapper.readValue(json, K9SakEventDto::class.java)

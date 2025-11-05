@@ -3,6 +3,7 @@ on:
   push:
     branches-ignore:
       - master
+      - slette_V1
     paths-ignore:
       - '**.md'
       - '**.MD'

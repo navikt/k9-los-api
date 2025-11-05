@@ -2,6 +2,7 @@ package no.nav.k9.los.nyoppgavestyring.reservasjon
 
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.azuregraph.IAzureGraphService
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.leggTilDagerHoppOverHelg
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingType
@@ -24,6 +25,7 @@ class ReservasjonApisTjeneste(
     private val reservasjonV3DtoBuilder: ReservasjonV3DtoBuilder,
     private val reservasjonOversetter: ReservasjonOversetter,
     private val pepClient: IPepClient,
+    private val azureGraphService: IAzureGraphService,
 ) {
 
     companion object {
@@ -167,7 +169,7 @@ class ReservasjonApisTjeneste(
         log.info("annullerReservasjon: ${oppgaveNøkkelDto.oppgaveEksternId}, utførtAv: $innloggetBruker, $annulleringUtført")
     }
 
-    suspend fun annullerReservasjoner(
+    fun annullerReservasjoner(
         params: List<AnnullerReservasjon>,
         innloggetBruker: Saksbehandler
     ) {
@@ -188,9 +190,36 @@ class ReservasjonApisTjeneste(
                 reservasjonV3DtoBuilder.byggReservasjonV3Dto(reservasjonMedOppgaver, saksbehandler)
             } catch (e: Exception) {
                 log.warn("Klarte ikke tolke reservasjon med id ${reservasjonMedOppgaver.reservasjonV3.id}, v3-oppgaver: ${reservasjonMedOppgaver.oppgaverV3.map { it.eksternId }}")
-                throw e;
+                throw e
             }
         }
+    }
+
+    suspend fun hentAktivReservasjon(oppgaveNøkkel: OppgaveNøkkelDto): ReservasjonV3Dto? {
+        val oppgave = transactionalManager.transaction { tx ->
+            oppgaveV3Repository.hentNyesteOppgaveForEksternId(
+                tx,
+                oppgaveNøkkel.områdeEksternId,
+                oppgaveNøkkel.oppgaveEksternId
+            )
+        }
+        if (!pepClient.harTilgangTilOppgaveV3(
+                oppgave = oppgave,
+                grupperForSaksbehandler = azureGraphService.hentGrupperForInnloggetSaksbehandler()
+            )
+        ) {
+            throw ManglerTilgangException("Mangler tilgang til oppgave ${oppgave.eksternId}")
+        }
+        val reservasjon = reservasjonV3Tjeneste.finnAktivReservasjon(oppgave.reservasjonsnøkkel)
+            ?: return null
+        val reservertAv = saksbehandlerRepository.finnSaksbehandlerMedId(reservasjon.reservertAv)
+            ?: throw IllegalStateException("Fant ikke saksbehandler med id ${reservasjon.reservertAv} som har reservert oppgave ${oppgave.eksternId}")
+        return ReservasjonV3Dto(
+            reservasjonV3 = reservasjon,
+            oppgaver = emptyList(),
+            reservertAv = reservertAv,
+            endretAvNavn = null
+        )
     }
 
     suspend fun hentAlleAktiveReservasjoner(): List<ReservasjonDto> {
@@ -211,7 +240,8 @@ class ReservasjonApisTjeneste(
                         reservertAvNavn = saksbehandler.navn,
                         saksnummer = oppgave.hentVerdi("saksnummer"), //TODO: Oppgaveagnostisk logikk. Løses antagelig ved å skrive om frontend i dette tilfellet
                         journalpostId = oppgave.hentVerdi("journalpostId"),
-                        ytelse = oppgave.hentVerdi("ytelsestype")?.let { FagsakYtelseType.fraKode(it).navn } ?: FagsakYtelseType.UKJENT.navn,
+                        ytelse = oppgave.hentVerdi("ytelsestype")?.let { FagsakYtelseType.fraKode(it).navn }
+                            ?: FagsakYtelseType.UKJENT.navn,
                         behandlingType = BehandlingType.fraKode(oppgave.hentVerdi("behandlingTypekode")!!),
                         reservertTilTidspunkt = reservasjonMedOppgaver.reservasjonV3.gyldigTil,
                         kommentar = reservasjonMedOppgaver.reservasjonV3.kommentar ?: "",
