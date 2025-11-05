@@ -21,12 +21,12 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.*
 
-class K9SakBerikerSystemKlient(
+class K9SakSystemKlient(
     private val configuration: Configuration,
     accessTokenClient: AccessTokenClient,
     scope: String,
     private val httpClient: HttpClient
-) : K9SakBerikerInterfaceKludge {
+) : K9SakSystemKlientInterfaceKludge {
     val log: Logger = LoggerFactory.getLogger("K9SakAdapter")
     private val cachedAccessTokenClient = CachedAccessTokenClient(accessTokenClient)
     private val url = configuration.k9Url()

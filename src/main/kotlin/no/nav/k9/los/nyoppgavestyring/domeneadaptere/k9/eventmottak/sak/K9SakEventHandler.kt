@@ -92,7 +92,6 @@ class K9SakEventHandler (
             }
         }
 
-
         EventHandlerMetrics.observe("k9sak", "gjennomført", t0)
     }
 

@@ -426,7 +426,7 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 eventTilOppgaveAdapter.spillAvBehandlingProsessEventer()
             }
         )
-               
+
         add(
             PlanlagtJobb.Periodisk(
                 navn = "HistorikkvaskVaktmester",

@@ -83,4 +83,3 @@ data class K9SakModell(
         )
     }
 }
-

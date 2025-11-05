@@ -5,7 +5,7 @@ import kotliquery.TransactionalSession
 import no.nav.k9.los.Configuration
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.K9Oppgavetypenavn
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak.K9SakEventRepository
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakBerikerInterfaceKludge
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlientInterfaceKludge
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.DetaljerMetrikker
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.metrikker.HistorikkvaskMetrikker
@@ -22,7 +22,7 @@ class K9SakTilLosHistorikkvaskTjeneste(
     private val config: Configuration,
     private val transactionalManager: TransactionalManager,
     private val k9SakTilLosAdapterTjeneste: K9SakTilLosAdapterTjeneste,
-    private val k9SakBerikerKlient: K9SakBerikerInterfaceKludge,
+    private val k9SakBerikerKlient: K9SakSystemKlientInterfaceKludge,
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(K9SakTilLosHistorikkvaskTjeneste::class.java)

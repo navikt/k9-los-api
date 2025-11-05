@@ -11,6 +11,8 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.OmrådeSetup
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.aktivvask.Aktivvask
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonKonverteringJobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.systemklient.RestAvstemmingsklient
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventlagerKonverteringsjobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventlagerKonverteringsservice
@@ -37,9 +39,9 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtil
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.K9PunsjTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.punsjtillos.PunsjEventTilOppgaveMapper
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.*
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakBerikerInterfaceKludge
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakBerikerKlientLocal
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakBerikerSystemKlient
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlient
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlientInterfaceKludge
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.beriker.K9SakSystemKlientLocal
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosAdapterTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.K9TilbakeTilLosHistorikkvaskTjeneste
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.tilbaketillos.TilbakeEventTilOppgaveMapper
@@ -761,8 +763,8 @@ fun localDevConfig() = module {
         K9SakServiceLocal()
     }
 
-    single<K9SakBerikerInterfaceKludge> {
-        K9SakBerikerKlientLocal()
+    single<K9SakSystemKlientInterfaceKludge> {
+        K9SakSystemKlientLocal()
     }
 
     single<K9KlageBerikerInterfaceKludge> {
@@ -820,8 +822,8 @@ fun preprodConfig(config: Configuration) = module {
         )
     }
 
-    single<K9SakBerikerInterfaceKludge> {
-        K9SakBerikerSystemKlient(
+    single<K9SakSystemKlientInterfaceKludge> {
+        K9SakSystemKlient(
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://dev-fss.k9saksbehandling.k9-sak/.default",
@@ -845,6 +847,27 @@ fun preprodConfig(config: Configuration) = module {
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://dev-fss.k9saksbehandling.sif-abac-pdp/.default",
             httpClient = get()
+        )
+    }
+
+    single {
+        AvstemmingsTjeneste(
+            oppgaveQueryService = get(),
+            k9SakAvstemmingsklient = RestAvstemmingsklient(
+                url = config.k9Url(),
+                navn = "k9sak",
+                accessTokenClient = get(),
+                scope = "api://dev-fss.k9saksbehandling.k9-sak/.default",
+                httpClient = get(),
+            ),
+            k9KlageAvstemmingsklient = RestAvstemmingsklient(
+                url = config.k9KlageUrl(),
+                navn = "k9klage",
+                accessTokenClient = get(),
+                scope = "api://dev-fss.k9saksbehandling.k9-klage/.default",
+                httpClient = get(),
+            ),
+            SakAvstemmer = get()
         )
     }
 }
@@ -871,8 +894,8 @@ fun prodConfig(config: Configuration) = module {
         )
     }
 
-    single<K9SakBerikerInterfaceKludge> {
-        K9SakBerikerSystemKlient(
+    single<K9SakSystemKlientInterfaceKludge> {
+        K9SakSystemKlient(
             configuration = get(),
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://prod-fss.k9saksbehandling.k9-sak/.default",
@@ -896,6 +919,27 @@ fun prodConfig(config: Configuration) = module {
             accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
             scope = "api://prod-fss.k9saksbehandling.sif-abac-pdp/.default",
             httpClient = get()
+        )
+    }
+
+    single {
+        AvstemmingsTjeneste(
+            oppgaveQueryService = get(),
+            k9SakAvstemmingsklient = RestAvstemmingsklient(
+                url = config.k9Url(),
+                navn = "k9sak",
+                accessTokenClient = get(),
+                scope = "api://prod-fss.k9saksbehandling.k9-sak/.default",
+                httpClient = get(),
+            ),
+            k9KlageAvstemmingsklient = RestAvstemmingsklient(
+                url = config.k9KlageUrl(),
+                navn = "k9klage",
+                accessTokenClient = get(),
+                scope = "api://prod-fss.k9saksbehandling.k9-klage/.default",
+                httpClient = get(),
+            ),
+            SakAvstemmer = get()
         )
     }
 }
