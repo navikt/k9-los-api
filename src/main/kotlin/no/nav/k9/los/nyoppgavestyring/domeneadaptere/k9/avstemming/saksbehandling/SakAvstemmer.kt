@@ -6,7 +6,7 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 
-object Avstemmer {
+object SakAvstemmer {
     fun regnUtDiff(k9SakRapport: List<Behandlingstilstand>, åpneLosOppgaver: List<Oppgave>): Avstemmingsrapport {
         val forekomsterMedUliktInnhold = mutableSetOf<Pair<Behandlingstilstand, Oppgave>>()
         val forekomsterSomGranskesManuelt = mutableSetOf<Pair<Behandlingstilstand, Oppgave>>()

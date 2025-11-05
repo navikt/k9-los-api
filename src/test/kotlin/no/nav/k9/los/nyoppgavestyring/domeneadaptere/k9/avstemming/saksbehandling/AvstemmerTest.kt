@@ -2,7 +2,6 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandli
 
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
-import io.mockk.InternalPlatformDsl.toStr
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.Behandlingstilstand
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
@@ -21,7 +20,7 @@ class AvstemmerTest : FreeSpec({
         "og korresponderende åpen oppgave" - {
             val oppgaver = listOf(Testdata.testOppgave(behandlingUuid))
             "skal gi ingen diff" {
-                val rapport = Avstemmer.regnUtDiff(behandlinger, oppgaver)
+                val rapport = SakAvstemmer.regnUtDiff(behandlinger, oppgaver)
                 rapport.forekomsterILosSomManglerIFagsystem shouldBe emptyList()
                 rapport.forekomsterIFagsystemSomManglerILos shouldBe emptyList()
             }
@@ -33,7 +32,7 @@ class AvstemmerTest : FreeSpec({
         "og korresponderende oppgave med annen status" - {
             val oppgaver = listOf(Testdata.testOppgave(behandlingUuid, status = Oppgavestatus.AAPEN))
             "skal gi diff på ulikt innhold i oppgaven" {
-                val rapport = Avstemmer.regnUtDiff(behandlinger, oppgaver)
+                val rapport = SakAvstemmer.regnUtDiff(behandlinger, oppgaver)
                 rapport.forekomsterILosSomManglerIFagsystem shouldBe emptyList()
                 rapport.forekomsterIFagsystemSomManglerILos shouldBe emptyList()
                 rapport.forekomsterMedUliktInnhold.size shouldBe 1
@@ -47,7 +46,7 @@ class AvstemmerTest : FreeSpec({
         "og korresponderende oppgave med annen status" - {
             val oppgaver = listOf(Testdata.testOppgave(behandlingUuid, status = Oppgavestatus.AAPEN))
             "skal gi diff for manuell granskning" {
-                val rapport = Avstemmer.regnUtDiff(behandlinger, oppgaver)
+                val rapport = SakAvstemmer.regnUtDiff(behandlinger, oppgaver)
                 rapport.forekomsterILosSomManglerIFagsystem shouldBe emptyList()
                 rapport.forekomsterIFagsystemSomManglerILos shouldBe emptyList()
                 rapport.forekomsterMedUliktInnhold  shouldBe emptyList()

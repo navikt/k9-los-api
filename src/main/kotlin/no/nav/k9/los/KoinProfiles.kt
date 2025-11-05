@@ -12,6 +12,7 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.aktivvask.Ak
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonKonverteringJobb
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.adhocjobber.reservasjonkonvertering.ReservasjonOversetter
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.AvstemmingsTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.systemklient.LocalAvstemmingsklient
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.systemklient.RestAvstemmingsklient
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventlagerKonverteringsjobb
@@ -770,6 +771,14 @@ fun localDevConfig() = module {
     single<K9KlageBerikerInterfaceKludge> {
         K9KlageBerikerKlientLocal()
     }
+
+    single<AvstemmingsTjeneste> {
+        AvstemmingsTjeneste(
+            oppgaveQueryService = get(),
+            k9SakAvstemmingsklient = LocalAvstemmingsklient(),
+            k9KlageAvstemmingsklient = LocalAvstemmingsklient(),
+        )
+    }
 }
 
 // For både preprod og prod
@@ -850,7 +859,7 @@ fun preprodConfig(config: Configuration) = module {
         )
     }
 
-    single {
+    single<AvstemmingsTjeneste> {
         AvstemmingsTjeneste(
             oppgaveQueryService = get(),
             k9SakAvstemmingsklient = RestAvstemmingsklient(
@@ -866,8 +875,7 @@ fun preprodConfig(config: Configuration) = module {
                 accessTokenClient = get(),
                 scope = "api://dev-fss.k9saksbehandling.k9-klage/.default",
                 httpClient = get(),
-            ),
-            SakAvstemmer = get()
+            )
         )
     }
 }
@@ -922,7 +930,7 @@ fun prodConfig(config: Configuration) = module {
         )
     }
 
-    single {
+    single<AvstemmingsTjeneste> {
         AvstemmingsTjeneste(
             oppgaveQueryService = get(),
             k9SakAvstemmingsklient = RestAvstemmingsklient(
@@ -938,8 +946,7 @@ fun prodConfig(config: Configuration) = module {
                 accessTokenClient = get(),
                 scope = "api://prod-fss.k9saksbehandling.k9-klage/.default",
                 httpClient = get(),
-            ),
-            SakAvstemmer = get()
+            )
         )
     }
 }

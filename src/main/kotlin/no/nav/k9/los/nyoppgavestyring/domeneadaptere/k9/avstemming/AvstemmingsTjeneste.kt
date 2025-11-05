@@ -1,6 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming
 
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.Avstemmer
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.SakAvstemmer
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.systemklient.Avstemmingsklient
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
@@ -14,7 +14,6 @@ class AvstemmingsTjeneste(
     private val oppgaveQueryService: OppgaveQueryService,
     private val k9SakAvstemmingsklient: Avstemmingsklient,
     private val k9KlageAvstemmingsklient: Avstemmingsklient,
-    private val SakAvstemmer: Avstemmer
 ) {
     fun avstem(fagsystem: Fagsystem) : Avstemmingsrapport {
         return when (fagsystem) {

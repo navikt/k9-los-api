@@ -563,6 +563,7 @@ fun Route.forvaltningApis() {
     }
 
     get("/avstemming/{fagsystem}", {
+        tags("Forvaltning")
         description = "Hent ut liste med åpne behandlinger/journalposter i spesifisert fagsystem og kontroller opp mot åpne oppgaver i los. Returnerer en avviksrapport"
         request {
             pathParameter<Fagsystem>("fagsystem") {
