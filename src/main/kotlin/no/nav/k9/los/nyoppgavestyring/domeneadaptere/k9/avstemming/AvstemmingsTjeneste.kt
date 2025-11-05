@@ -15,10 +15,15 @@ class AvstemmingsTjeneste(
     private val k9SakAvstemmingsklient: Avstemmingsklient,
     private val k9KlageAvstemmingsklient: Avstemmingsklient,
 ) {
+    private val log = org.slf4j.LoggerFactory.getLogger(AvstemmingsTjeneste::class.java)
+
     fun avstem(fagsystem: Fagsystem) : Avstemmingsrapport {
+        log.info("Starter avstemming for fagsystem: $fagsystem")
         return when (fagsystem) {
             Fagsystem.K9SAK -> {
+                log.info("Henter åpne behandlinger fra K9Sak")
                 val åpneBehandlinger = k9SakAvstemmingsklient.hentÅpneBehandlinger()
+                log.info("Mottatt åpne behandlinger fra K9Sak")
 
                 val query = OppgaveQuery(
                     filtere = listOf(
@@ -40,7 +45,9 @@ class AvstemmingsTjeneste(
                 SakAvstemmer.regnUtDiff(åpneBehandlinger, åpneOppgaver)
             }
             Fagsystem.K9KLAGE -> {
+                log.info("Henter åpne behandlinger fra K9Klage")
                 val åpneBehandlinger = k9KlageAvstemmingsklient.hentÅpneBehandlinger()
+                log.info("Mottatt åpne behandlinger fra K9Klage")
 
                 val query = OppgaveQuery(
                     filtere = listOf(
