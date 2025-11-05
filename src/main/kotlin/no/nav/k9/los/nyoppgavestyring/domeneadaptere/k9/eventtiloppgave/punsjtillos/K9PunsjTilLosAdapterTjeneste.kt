@@ -115,14 +115,3 @@ class K9PunsjTilLosAdapterTjeneste(
         }
     }
 }
-
-data class StatuskortDto(
-    private val Navn: String,
-    private val topplinje: StatuslinjeDto,
-    private val liste: List<StatuslinjeDto>, //sortert
-)
-
-data class StatuslinjeDto(
-    private val visningsnavn: String,
-    private val verdi: Int,
-)
