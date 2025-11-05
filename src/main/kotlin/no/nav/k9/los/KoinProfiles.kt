@@ -867,14 +867,14 @@ fun preprodConfig(config: Configuration) = module {
             k9SakAvstemmingsklient = RestAvstemmingsklient(
                 url = config.k9Url(),
                 navn = "k9sak",
-                accessTokenClient = get(),
+                accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
                 scope = "api://dev-fss.k9saksbehandling.k9-sak/.default",
                 httpClient = get(),
             ),
             k9KlageAvstemmingsklient = RestAvstemmingsklient(
                 url = config.k9KlageUrl(),
                 navn = "k9klage",
-                accessTokenClient = get(),
+                accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
                 scope = "api://dev-fss.k9saksbehandling.k9-klage/.default",
                 httpClient = get(),
             )
@@ -938,14 +938,14 @@ fun prodConfig(config: Configuration) = module {
             k9SakAvstemmingsklient = RestAvstemmingsklient(
                 url = config.k9Url(),
                 navn = "k9sak",
-                accessTokenClient = get(),
+                accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
                 scope = "api://prod-fss.k9saksbehandling.k9-sak/.default",
                 httpClient = get(),
             ),
             k9KlageAvstemmingsklient = RestAvstemmingsklient(
                 url = config.k9KlageUrl(),
                 navn = "k9klage",
-                accessTokenClient = get(),
+                accessTokenClient = get<AccessTokenClientResolver>().azureV2(),
                 scope = "api://prod-fss.k9saksbehandling.k9-klage/.default",
                 httpClient = get(),
             )
