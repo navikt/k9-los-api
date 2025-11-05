@@ -110,6 +110,7 @@ import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.statusfordeli
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import org.slf4j.LoggerFactory
 import java.util.*
 import javax.sql.DataSource
 
@@ -811,6 +812,7 @@ fun naisCommonConfig(config: Configuration) = module {
 
 // Unik konfigurasjon for preprod
 fun preprodConfig(config: Configuration) = module {
+    LoggerFactory.getLogger(KoinProfile::class.java).info("Koin preprodConfig loaded")
     single<IK9SakService> {
         K9SakServiceSystemClient(
             configuration = get(),
