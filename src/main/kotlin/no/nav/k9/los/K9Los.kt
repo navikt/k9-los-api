@@ -331,14 +331,9 @@ private fun Route.api() {
 
 fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
     val k9SakTilLosHistorikkvaskTjeneste = koin.get<K9SakTilLosHistorikkvaskTjeneste>()
-    val k9TilbakeTilLosHistorikkvaskTjeneste = koin.get<K9TilbakeTilLosHistorikkvaskTjeneste>()
-    val k9KlageTilLosHistorikkvaskTjeneste = koin.get<K9KlageTilLosHistorikkvaskTjeneste>()
-    val historikkvaskTjeneste = koin.get<HistorikkvaskTjeneste>()
-
     val k9SakTilLosAdapterTjeneste = koin.get<K9SakTilLosAdapterTjeneste>()
-    val k9KlageTilLosAdapterTjeneste = koin.get<K9KlageTilLosAdapterTjeneste>()
-    val k9TilbakeTilLosAdapterTjeneste = koin.get<K9TilbakeTilLosAdapterTjeneste>()
-    val k9PunsjTilLosAdapterTjeneste = koin.get<K9PunsjTilLosAdapterTjeneste>()
+
+    val historikkvaskTjeneste = koin.get<HistorikkvaskTjeneste>()
     val eventTilOppgaveAdapter = koin.get<EventTilOppgaveAdapter>()
 
     val oppgavestatistikkTjeneste = koin.get<OppgavestatistikkTjeneste>()
@@ -367,17 +362,6 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
             }
         )
 
-        add(
-            PlanlagtJobb.KjørPåTidspunkt(
-                "K9KlageTilLosHistorikkvask",
-                høyPrioritet,
-                kjørTidligst = LocalDateTime.of(2025, 8, 11, 17, 0),
-                kjørSenest = LocalDateTime.of(2025, 8, 11, 19, 30),
-            ) {
-                k9KlageTilLosHistorikkvaskTjeneste.kjørHistorikkvask()
-            }
-        )
-
         // Hyppig oppdatering i arbeidstiden
         add(
             PlanlagtJobb.Periodisk(
@@ -400,18 +384,6 @@ fun Application.konfigurerJobber(koin: Koin, configuration: Configuration) {
                 startForsinkelse = 1.minutes
             ) {
                 k9SakTilLosAdapterTjeneste.spillAvDirtyBehandlingProsessEventer()
-            }
-        )
-
-        add(
-            PlanlagtJobb.Periodisk(
-                navn = "K9KlageVaktmester",
-                prioritet = lavPrioritet,
-                intervall = 1.minutes,
-                tidsvindu = heleTiden,
-                startForsinkelse = 1.minutes
-            ) {
-                k9KlageTilLosAdapterTjeneste.spillAvDirtyBehandlingProsessEventer()
             }
         )
 
