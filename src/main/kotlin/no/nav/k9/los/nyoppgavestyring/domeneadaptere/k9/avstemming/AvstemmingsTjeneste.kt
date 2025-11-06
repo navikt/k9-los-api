@@ -1,5 +1,7 @@
 package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming
 
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.SakAvstemmer
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandling.systemklient.Avstemmingsklient
 import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
@@ -9,6 +11,7 @@ import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 
 class AvstemmingsTjeneste(
     private val oppgaveQueryService: OppgaveQueryService,
@@ -17,13 +20,11 @@ class AvstemmingsTjeneste(
 ) {
     private val log = org.slf4j.LoggerFactory.getLogger(AvstemmingsTjeneste::class.java)
 
-    fun avstem(fagsystem: Fagsystem) : Avstemmingsrapport {
+    suspend fun avstem(fagsystem: Fagsystem) : Avstemmingsrapport {
         log.info("Starter avstemming for fagsystem: $fagsystem")
         return when (fagsystem) {
             Fagsystem.K9SAK -> {
-                log.info("Henter åpne behandlinger fra K9Sak")
-                val åpneBehandlinger = k9SakAvstemmingsklient.hentÅpneBehandlinger()
-                log.info("Mottatt åpne behandlinger fra K9Sak")
+
 
                 val query = OppgaveQuery(
                     filtere = listOf(
@@ -41,7 +42,14 @@ class AvstemmingsTjeneste(
                         )
                     )
                 )
-                val åpneOppgaver = oppgaveQueryService.queryForOppgave(QueryRequest(query))
+                var åpneOppgaver: List<Oppgave>
+                var åpneBehandlinger: List<Behandlingstilstand>
+                coroutineScope {
+                    val åpneOppgaverDeferred = async { oppgaveQueryService.queryForOppgave(QueryRequest(query)) }
+                    val åpneBehandlingerDeferred = async { k9SakAvstemmingsklient.hentÅpneBehandlinger() }
+                    åpneOppgaver = åpneOppgaverDeferred.await()
+                    åpneBehandlinger = åpneBehandlingerDeferred.await()
+                }
                 SakAvstemmer.regnUtDiff(åpneBehandlinger, åpneOppgaver)
             }
             Fagsystem.K9KLAGE -> {
