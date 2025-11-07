@@ -37,6 +37,10 @@ object SakAvstemmer {
 
         return Avstemmingsrapport(
             "K9Sak",
+            åpneForekomsterIFagsystemSomManglerILos.size,
+            åpneForekomsterILosSomManglerIFagsystem.size,
+            forekomsterMedUliktInnhold.size,
+            forekomsterSomGranskesManuelt.size,
             åpneForekomsterIFagsystemSomManglerILos.toList(),
             åpneForekomsterILosSomManglerIFagsystem.toList(),
             forekomsterMedUliktInnhold.toList(),
