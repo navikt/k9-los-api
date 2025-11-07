@@ -9,11 +9,12 @@ import no.nav.k9.los.nyoppgavestyring.mottak.omraade.Område
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.Oppgavetype
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
+import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgavefelt
 import java.time.LocalDateTime
 import java.util.UUID
 
 
-class AvstemmerTest : FreeSpec({
+class AvstemmerSpec : FreeSpec({
     "Åpen behandling" - {
         val behandlingUuid = UUID.randomUUID().toString()
         val behandlinger = listOf(Testdata.testBehandlingstilstand(behandlingUuid))
@@ -92,7 +93,24 @@ object Testdata {
             status = status.toString(),
             endretTidspunkt = LocalDateTime.now(),
             kildeområde = "K9",
-            felter = emptyList(),
+            felter = listOf(
+                Oppgavefelt(
+                    område = "K9",
+                    eksternId = "saksnummer",
+                    verdi = "saksnummer123",
+                    listetype = false,
+                    påkrevd = true,
+                    verdiBigInt = null,
+                ),
+                Oppgavefelt(
+                    område = "K9",
+                    eksternId = "ytelsestype",
+                    verdi = "ytelse",
+                    listetype = false,
+                    påkrevd = true,
+                    verdiBigInt = null,
+                )
+            ),
             versjon = 0
         )
     }
