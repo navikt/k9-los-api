@@ -4,6 +4,6 @@ import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.Behandlingsti
 
 class LocalAvstemmingsklient : Avstemmingsklient {
     override fun hentÅpneBehandlinger(): List<Behandlingstilstand> {
-        TODO("Not yet implemented")
+        return emptyList()
     }
 }

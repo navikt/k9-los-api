@@ -2,14 +2,15 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.saksbehandli
 
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.Avstemmingsrapport
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.Behandlingstilstand
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.avstemming.Oppgavetilstand
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 
 object SakAvstemmer {
     fun regnUtDiff(k9SakRapport: List<Behandlingstilstand>, åpneLosOppgaver: List<Oppgave>): Avstemmingsrapport {
-        val forekomsterMedUliktInnhold = mutableSetOf<Pair<Behandlingstilstand, Oppgave>>()
-        val forekomsterSomGranskesManuelt = mutableSetOf<Pair<Behandlingstilstand, Oppgave>>()
+        val forekomsterMedUliktInnhold = mutableSetOf<Pair<Behandlingstilstand, Oppgavetilstand>>()
+        val forekomsterSomGranskesManuelt = mutableSetOf<Pair<Behandlingstilstand, Oppgavetilstand>>()
         val åpneForekomsterIFagsystemSomManglerILos = mutableSetOf<Behandlingstilstand>()
         k9SakRapport.forEach { behandling ->
             val oppgave = åpneLosOppgaver.find { it.eksternId == behandling.eksternId }
@@ -19,18 +20,18 @@ object SakAvstemmer {
                 val sammenligning =
                     FuzzySammenligningsresultat.sammenlign(behandling.behandlingStatus, Oppgavestatus.fraKode(oppgave.status))
                 if (sammenligning == FuzzySammenligningsresultat.ULIK) {
-                    forekomsterMedUliktInnhold.add(Pair(behandling, oppgave))
+                    forekomsterMedUliktInnhold.add(Pair(behandling, Oppgavetilstand(oppgave)))
                 } else if (sammenligning == FuzzySammenligningsresultat.VETIKKE) {
-                    forekomsterSomGranskesManuelt.add(Pair(behandling, oppgave))
+                    forekomsterSomGranskesManuelt.add(Pair(behandling, Oppgavetilstand(oppgave)))
                 }
             }
         }
 
-        val åpneForekomsterILosSomManglerIFagsystem = mutableSetOf<Oppgave>()
+        val åpneForekomsterILosSomManglerIFagsystem = mutableSetOf<Oppgavetilstand>()
         åpneLosOppgaver.forEach { oppgave ->
             val overlapp = k9SakRapport.find { it.eksternId == oppgave.eksternId }
             if (overlapp == null) {
-                åpneForekomsterILosSomManglerIFagsystem.add(oppgave)
+                åpneForekomsterILosSomManglerIFagsystem.add(Oppgavetilstand(oppgave))
             }
         }
 

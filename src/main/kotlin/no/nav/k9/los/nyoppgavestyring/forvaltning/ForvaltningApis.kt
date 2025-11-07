@@ -31,6 +31,7 @@ import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepositoryTxWrapper
 import org.koin.ktor.ext.inject
+import org.slf4j.LoggerFactory
 import java.util.*
 import kotlin.getValue
 
