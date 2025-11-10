@@ -12,8 +12,8 @@ val k9KlageVersion = "0.4.7"
 val jacksonVersion = "2.17.2"
 val commonsTextVersion = "1.13.0"
 
-val dusseldorfKtorVersion = "7.0.1"
-val ktorVersion = "3.2.1"
+val dusseldorfKtorVersion = "7.0.6"
+val ktorVersion = "3.3.2"
 val kafkaVersion = "3.9.0"
 
 val navTilgangskontroll = "3.2024.01.24_10.14-f70bae69bd65"
