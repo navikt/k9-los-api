@@ -12,4 +12,9 @@ data class Behandlingstilstand(
     val behandlingStatus: BehandlingStatus,
     val ytelseType: FagsakYtelseType,
     val ventefrist: LocalDateTime?,
-)
+    val harManueltAksjonspunkt: Boolean
+) {
+    fun harAutopunkt(): Boolean {
+        return ventefrist != null
+    }
+}

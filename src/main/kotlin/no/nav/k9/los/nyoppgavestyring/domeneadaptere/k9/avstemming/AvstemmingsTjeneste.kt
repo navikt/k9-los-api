@@ -24,8 +24,6 @@ class AvstemmingsTjeneste(
         log.info("Starter avstemming for fagsystem: $fagsystem")
         return when (fagsystem) {
             Fagsystem.K9SAK -> {
-
-
                 val query = OppgaveQuery(
                     filtere = listOf(
                         FeltverdiOppgavefilter(

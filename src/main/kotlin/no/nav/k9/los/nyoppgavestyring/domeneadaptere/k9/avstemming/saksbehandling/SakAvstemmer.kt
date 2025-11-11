@@ -18,7 +18,7 @@ object SakAvstemmer {
                 åpneForekomsterIFagsystemSomManglerILos.add(behandling)
             } else {
                 val sammenligning =
-                    FuzzySammenligningsresultat.sammenlign(behandling.behandlingStatus, Oppgavestatus.fraKode(oppgave.status))
+                    FuzzySammenligningsresultat.sammenlign(behandling, oppgave)
                 if (sammenligning == FuzzySammenligningsresultat.ULIK) {
                     forekomsterMedUliktInnhold.add(Pair(behandling, Oppgavetilstand(oppgave)))
                 } else if (sammenligning == FuzzySammenligningsresultat.VETIKKE) {
@@ -45,7 +45,7 @@ object SakAvstemmer {
             åpneForekomsterILosSomManglerIFagsystem.toList(),
             forekomsterMedUliktInnhold.toList(),
             forekomsterSomGranskesManuelt.toList()
-            )
+        )
     }
 }
 
@@ -55,21 +55,48 @@ enum class FuzzySammenligningsresultat {
     VETIKKE;
 
     companion object {
-        fun sammenlign(behandlingStatus: BehandlingStatus, oppgavestatus: Oppgavestatus): FuzzySammenligningsresultat {
-            return when(behandlingStatus) {
-                BehandlingStatus.AVSLUTTET -> if (oppgavestatus == Oppgavestatus.LUKKET) { LIK } else { ULIK }
+        fun sammenlign(behandlingstilstand: Behandlingstilstand, oppgave: Oppgave): FuzzySammenligningsresultat {
+            val oppgavestatus = Oppgavestatus.fraKode(oppgave.status)
+            return when (behandlingstilstand.behandlingStatus) {
+                BehandlingStatus.AVSLUTTET -> if (oppgavestatus == Oppgavestatus.LUKKET) {
+                    LIK
+                } else {
+                    ULIK
+                }
+
                 BehandlingStatus.OPPRETTET ->
-                    if (oppgavestatus == Oppgavestatus.LUKKET ) { //UAVKLART etter merge
+                    if (oppgavestatus == Oppgavestatus.UAVKLART) {
                         LIK
-                    } else if (oppgavestatus == Oppgavestatus.LUKKET) {
-                        ULIK
                     } else {
-                        VETIKKE
+                        ULIK
                     }
 
                 BehandlingStatus.FATTER_VEDTAK,
                 BehandlingStatus.IVERKSETTER_VEDTAK,
-                BehandlingStatus.UTREDES -> if (oppgavestatus == Oppgavestatus.LUKKET) { ULIK } else { VETIKKE }
+                BehandlingStatus.UTREDES -> {
+                    if (oppgavestatus == Oppgavestatus.LUKKET) {
+                        ULIK
+                    } else {
+                        if (behandlingstilstand.harAutopunkt()) {
+                            if (oppgavestatus == Oppgavestatus.VENTER) {
+                                LIK
+                            } else {
+                                ULIK
+                            }
+                        } else if (behandlingstilstand.harManueltAP) {
+                            if (oppgavestatus == Oppgavestatus.AAPEN) {
+                                LIK
+                            } else {
+                                ULIK
+                            }
+                        } else if (oppgavestatus == Oppgavestatus.UAVKLART) {
+                            LIK
+                        } else {
+                            ULIK
+                        }
+                    }
+                }
+
 
                 BehandlingStatus.SATT_PÅ_VENT,
                 BehandlingStatus.LUKKET,

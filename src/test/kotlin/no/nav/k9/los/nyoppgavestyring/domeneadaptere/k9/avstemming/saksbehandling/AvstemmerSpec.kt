@@ -43,19 +43,57 @@ class AvstemmerSpec : FreeSpec({
 
     "Behandling under utredning" - {
         val behandlingUuid = UUID.randomUUID().toString()
-        val behandlinger = listOf(Testdata.testBehandlingstilstand(behandlingUuid, behandlingStatus = BehandlingStatus.UTREDES))
-        "og korresponderende oppgave med annen status" - {
-            val oppgaver = listOf(Testdata.testOppgave(behandlingUuid, status = Oppgavestatus.AAPEN))
-            "skal gi diff for manuell granskning" {
-                val rapport = SakAvstemmer.regnUtDiff(behandlinger, oppgaver)
-                rapport.forekomsterILosSomManglerIFagsystem shouldBe emptyList()
-                rapport.forekomsterIFagsystemSomManglerILos shouldBe emptyList()
-                rapport.forekomsterMedUliktInnhold  shouldBe emptyList()
-                rapport.forekomsterSomGranskesManuelt.size shouldBe 1
+        val behandlingstatus = BehandlingStatus.UTREDES
+        val behandlinger = listOf(Testdata.testBehandlingstilstand(behandlingUuid, behandlingStatus = behandlingstatus))
+        "og autopunkt" - { //autopunkt == true når ventefrist er satt
+            "og korresponderende oppgave på vent" - {
+                val oppgaver = listOf(Testdata.testOppgave(behandlingUuid, status = Oppgavestatus.VENTER))
+                "skal gi ingen diff" {
+                    val rapport = SakAvstemmer.regnUtDiff(behandlinger, oppgaver)
+                    rapport.forekomsterILosSomManglerIFagsystem shouldBe emptyList()
+                    rapport.forekomsterIFagsystemSomManglerILos shouldBe emptyList()
+                    rapport.forekomsterMedUliktInnhold  shouldBe emptyList()
+                    rapport.forekomsterSomGranskesManuelt shouldBe emptyList()
+                }
+            }
+            "og korresponderende oppgave annen status enn på vent" - {
+                val oppgaver = listOf(Testdata.testOppgave(behandlingUuid, status = Oppgavestatus.AAPEN))
+                "skal gi diff på ulikt innhold i oppgaven" {
+                    val rapport = SakAvstemmer.regnUtDiff(behandlinger, oppgaver)
+                    rapport.forekomsterMedUliktInnhold.size shouldBe 1
+                }
+            }
+        }
+        "og manuelt aksjonspunkt" - { //manuelt aksjonspunkt == false når ventefrist ikke er satt
+            val behandlingerUtenVenteFrist = listOf(
+                Testdata.testBehandlingstilstand(
+                    behandlingUuid,
+                    behandlingStatus = behandlingstatus,
+                    harManueltAP = true,
+                    venteFrist = null
+                )
+            )
+            "og korresponderende åpen oppgave" - {
+                val oppgaver = listOf(Testdata.testOppgave(behandlingUuid, status = Oppgavestatus.AAPEN))
+                "skal gi ingen diff" {
+                    val rapport = SakAvstemmer.regnUtDiff(behandlingerUtenVenteFrist, oppgaver)
+                    rapport.forekomsterILosSomManglerIFagsystem shouldBe emptyList()
+                    rapport.forekomsterIFagsystemSomManglerILos shouldBe emptyList()
+                    rapport.forekomsterMedUliktInnhold  shouldBe emptyList()
+                    rapport.forekomsterSomGranskesManuelt shouldBe emptyList()
+                }
+            }
+            "og korresponderende oppgave med annen status" - {
+                val oppgaver = listOf(Testdata.testOppgave(behandlingUuid, status = Oppgavestatus.VENTER))
+                "skal gi diff på ulikt innhold i oppgaven" {
+                    val rapport = SakAvstemmer.regnUtDiff(behandlingerUtenVenteFrist, oppgaver)
+                    rapport.forekomsterILosSomManglerIFagsystem shouldBe emptyList()
+                    rapport.forekomsterIFagsystemSomManglerILos shouldBe emptyList()
+                    rapport.forekomsterMedUliktInnhold.size shouldBe 1
+                }
             }
         }
     }
-
 })
 
 object Testdata {
@@ -64,7 +102,8 @@ object Testdata {
         saksnummer: String = System.nanoTime().toString() + "",
         behandlingStatus: BehandlingStatus = BehandlingStatus.UTREDES,
         ytelseType: FagsakYtelseType = FagsakYtelseType.PLEIEPENGER_SYKT_BARN,
-        venteFrist: LocalDateTime = LocalDateTime.now().plusDays(2),
+        venteFrist: LocalDateTime? = LocalDateTime.now().plusDays(2),
+        harManueltAP: Boolean = true,
         ): Behandlingstilstand {
         return Behandlingstilstand(
             saksnummer,
@@ -72,6 +111,7 @@ object Testdata {
             behandlingStatus,
             ytelseType,
             venteFrist,
+            harManueltAP
         )
     }
 
