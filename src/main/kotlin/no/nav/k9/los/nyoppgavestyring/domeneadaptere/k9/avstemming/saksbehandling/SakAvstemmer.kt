@@ -83,7 +83,7 @@ enum class FuzzySammenligningsresultat {
                             } else {
                                 ULIK
                             }
-                        } else if (behandlingstilstand.harManueltAP) {
+                        } else if (behandlingstilstand.harManueltAksjonspunkt) {
                             if (oppgavestatus == Oppgavestatus.AAPEN) {
                                 LIK
                             } else {
