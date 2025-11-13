@@ -24,7 +24,7 @@ class FerdigstiltePerEnhetService(
     private val queryService: OppgaveQueryService
 
 ) {
-    private val enheter = BehandlendeEnhet.entries
+    private val enheter = BehandlendeEnhet.entries.minusElement(BehandlendeEnhet.UKJENT)
     private val parametre = enheter.map { enhet -> FerdigstiltParameter.Enhet(enhet.kode) } + FerdigstiltParameter.Helautomatisk + FerdigstiltParameter.Andre
     private var oppdatertTidspunkt: LocalDateTime? = null
     private val cache = Cache<LocalDate, List<FerdigstiltePerEnhetTall>>(null)
@@ -65,6 +65,7 @@ class FerdigstiltePerEnhetService(
 
     fun oppdaterCache(coroutineScope: CoroutineScope) {
         coroutineScope.launch(Dispatchers.IO) {
+            log.info("Oppdaterer cache for ferdigstilte per enhet")
             cache.removeExpiredObjects(LocalDateTime.now())
 
             val idag = LocalDate.now()

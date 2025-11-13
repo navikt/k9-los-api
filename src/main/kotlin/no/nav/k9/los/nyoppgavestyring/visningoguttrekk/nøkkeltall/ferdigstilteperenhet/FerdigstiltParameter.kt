@@ -3,5 +3,5 @@ package no.nav.k9.los.nyoppgavestyring.visningoguttrekk.nøkkeltall.ferdigstilte
 sealed class FerdigstiltParameter(val navn: String) {
     data class Enhet(val enhet: String) : FerdigstiltParameter(enhet)
     data object Helautomatisk : FerdigstiltParameter("Helautomatisk behandlet")
-    data object Andre : FerdigstiltParameter("Andre")
+    data object Andre : FerdigstiltParameter("Ukjent enhet")
 }
