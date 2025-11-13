@@ -25,7 +25,7 @@ class FerdigstiltePerEnhetService(
 
 ) {
     private val enheter = BehandlendeEnhet.entries.minusElement(BehandlendeEnhet.UKJENT)
-    private val parametre = enheter.map { enhet -> FerdigstiltParameter.Enhet(enhet.kode) } + FerdigstiltParameter.Helautomatisk + FerdigstiltParameter.Andre
+    private val parametre = enheter.map { enhet -> FerdigstiltParameter.Enhet(enhet) } + FerdigstiltParameter.Helautomatisk + FerdigstiltParameter.Andre
     private var oppdatertTidspunkt: LocalDateTime? = null
     private val cache = Cache<LocalDate, List<FerdigstiltePerEnhetTall>>(null)
     private val log: Logger = LoggerFactory.getLogger(FerdigstiltePerEnhetService::class.java)
@@ -155,7 +155,7 @@ class FerdigstiltePerEnhetService(
                                     "K9",
                                     "ferdigstiltEnhet",
                                     EksternFeltverdiOperator.EQUALS,
-                                    listOf(parameter.enhet)
+                                    listOf(parameter.enhet.kode)
                                 )
                             )
                         }
