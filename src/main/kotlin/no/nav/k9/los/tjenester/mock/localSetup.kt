@@ -44,7 +44,7 @@ val saksbehandlere = listOf(
         navn = "Saksbehandler Sara",
         epost = "saksbehandler@nav.no",
         reservasjoner = mutableSetOf(),
-        enhet = "NAV DRIFT"
+        enhet = "2830 NAV DRIFT"
     ),
     Saksbehandler(
         id = null,
@@ -52,7 +52,7 @@ val saksbehandlere = listOf(
         navn = "Lars Pokèmonsen",
         epost = "lars.monsen@nav.no",
         reservasjoner = mutableSetOf(),
-        enhet = "NAV DRIFT"
+        enhet = "2830 NAV DRIFT"
     ),
     Saksbehandler(
         id = null,
@@ -60,7 +60,7 @@ val saksbehandlere = listOf(
         navn = "Lord Edgar Hansen",
         epost = "the.lord@nav.no",
         reservasjoner = mutableSetOf(),
-        enhet = "NAV DRIFT"
+        enhet = "2830 NAV DRIFT"
     )
 )
 

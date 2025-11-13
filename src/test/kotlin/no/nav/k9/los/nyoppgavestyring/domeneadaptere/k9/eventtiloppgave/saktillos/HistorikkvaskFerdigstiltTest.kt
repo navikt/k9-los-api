@@ -133,7 +133,7 @@ class HistorikkvaskFerdigstiltTest : AbstractK9LosIntegrationTest() {
 
         // Verifiser at verdiene er riktige
         assertEquals(
-            "NAV DRIFT",
+            "2830",
             ferdigstiltEnhetEtterVask?.verdi,
             "ferdigstiltEnhet skal være satt til saksbehandlerens enhet"
         )

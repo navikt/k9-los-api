@@ -717,7 +717,6 @@ fun common(app: Application, config: Configuration) = module {
 
     single {
         FerdigstiltePerEnhetService(
-            enheter = config.enheter(),
             queryService = get()
         )
     }

@@ -5,6 +5,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.Cache
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.CacheObject
+import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlendeEnhet
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.Oppgavestatus
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
@@ -20,10 +21,11 @@ import java.time.format.DateTimeFormatter
 import kotlin.time.measureTime
 
 class FerdigstiltePerEnhetService(
-    private val enheter: List<String>,
     private val queryService: OppgaveQueryService
+
 ) {
-    private val parametre = enheter.map { enhet -> FerdigstiltParameter.Enhet(enhet) } + FerdigstiltParameter.Helautomatisk + FerdigstiltParameter.Andre
+    private val enheter = BehandlendeEnhet.entries
+    private val parametre = enheter.map { enhet -> FerdigstiltParameter.Enhet(enhet.kode) } + FerdigstiltParameter.Helautomatisk + FerdigstiltParameter.Andre
     private var oppdatertTidspunkt: LocalDateTime? = null
     private val cache = Cache<LocalDate, List<FerdigstiltePerEnhetTall>>(null)
     private val log: Logger = LoggerFactory.getLogger(FerdigstiltePerEnhetService::class.java)

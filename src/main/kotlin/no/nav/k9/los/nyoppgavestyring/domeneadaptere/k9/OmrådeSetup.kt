@@ -94,6 +94,18 @@ class OmrådeSetup(
         kodeverkBehandlingssteg()
         kodeverkSøknadsårsak()
         kodeverkBehandlingsårsak()
+        kodeverkBehandlendeEnhet()
+    }
+
+    private fun kodeverkBehandlendeEnhet() {
+        val kodeverkDto = KodeverkDto(
+            område = område,
+            eksternId = "behandlendeEnhet",
+            beskrivelse = null,
+            uttømmende = false,
+            verdier = BehandlendeEnhet.entries.lagDto(beskrivelse = null)
+        )
+        feltdefinisjonTjeneste.oppdater(kodeverkDto)
     }
 
     private fun kodeverkAksjonspunkt() {

@@ -614,7 +614,6 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
 
     single {
         FerdigstiltePerEnhetService(
-            enheter = config.enheter(),
             queryService = get()
         )
     }
