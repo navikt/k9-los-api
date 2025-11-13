@@ -176,7 +176,7 @@ class FerdigstiltePerEnhetService(
                                     "K9",
                                     "ferdigstiltEnhet",
                                     EksternFeltverdiOperator.NOT_IN,
-                                    enheter
+                                    enheter.map { it.kode }
                                 )
                             )
                             add(
