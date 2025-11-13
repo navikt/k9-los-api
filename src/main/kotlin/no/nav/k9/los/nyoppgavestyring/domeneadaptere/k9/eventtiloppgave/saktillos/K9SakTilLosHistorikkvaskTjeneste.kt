@@ -131,7 +131,6 @@ class K9SakTilLosHistorikkvaskTjeneste(
         nyeBehandlingsopplysningerFraK9Sak: BehandlingMedFagsakDto?,
         tx: TransactionalSession
     ): Int {
-        log.info("Vasker historikk for k9sak-oppgave med eksternId: $uuid")
         var forrigeOppgave: OppgaveV3? = null
 
         val behandlingProsessEventer = DetaljerMetrikker.time("k9sakHistorikkvask", "hentEventer") {
@@ -187,7 +186,6 @@ class K9SakTilLosHistorikkvaskTjeneste(
             val ytelsetypefraOppgaven =
                 oppgaveV3.felter.filter { it.oppgavefelt.feltDefinisjon.eksternId == "ytelsestype" }.map { it.verdi }
                     .firstOrNull()
-            log.info("sakstype fra kall er $sakstypekodefraK9sakKall og fra oppgaven er det $ytelsetypefraOppgaven")
             if (sakstypekodefraK9sakKall == no.nav.k9.kodeverk.behandling.FagsakYtelseType.FRISINN.kode || ytelsetypefraOppgaven == no.nav.k9.kodeverk.behandling.FagsakYtelseType.FRISINN.kode) {
                 log.info("oppgave ${oppgaveV3.eksternId} gjelder FRISINN, ignorerer oppgaven")
             } else {
@@ -197,7 +195,6 @@ class K9SakTilLosHistorikkvaskTjeneste(
                 ) { oppgaveV3Tjeneste.ajourholdOppgave(oppgaveV3, eventNrForBehandling, tx) }
             }
         }
-        log.info("Vasket $eventNrForBehandling hendelser for k9sak-oppgave med eksternId: $uuid")
         return eventNrForBehandling
     }
 }
