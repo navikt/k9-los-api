@@ -184,6 +184,17 @@ class NyeOgFerdigstilteService(
                 )
             }
 
+            NyeOgFerdigstilteGruppe.OPPLÆRINGSPENGER -> {
+                add(
+                    FeltverdiOppgavefilter(
+                        "K9",
+                        "ytelsestype",
+                        EksternFeltverdiOperator.EQUALS,
+                        listOf(FagsakYtelseType.OLP.kode)
+                    )
+                )
+            }
+
             NyeOgFerdigstilteGruppe.PLEIEPENGER_SYKT_BARN -> {
                 add(
                     FeltverdiOppgavefilter(
