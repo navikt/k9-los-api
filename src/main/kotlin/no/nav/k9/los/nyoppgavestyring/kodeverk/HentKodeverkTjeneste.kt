@@ -1,5 +1,8 @@
 package no.nav.k9.los.nyoppgavestyring.kodeverk
 
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon
+import no.nav.k9.kodeverk.behandling.aksjonspunkt.AksjonspunktType
+
 class HentKodeverkTjeneste {
     fun hentGruppertKodeliste(): MutableMap<String, Collection<Kodeverdi>> {
         val koder = mutableMapOf<String, Collection<Kodeverdi>>()
@@ -10,6 +13,75 @@ class HentKodeverkTjeneste {
         koder[BehandlingStatus::class.java.simpleName] = BehandlingStatus.entries
         koder[Venteårsak::class.java.simpleName] = Venteårsak.entries
         koder[OppgaveKode::class.java.simpleName] = OppgaveKode.entries
+        koder["Aksjonspunkt"] = kodelisteAksjonspunktK9sak() + kodelisteAksjonspunktK9klage()
         return koder
     }
+
+    private fun kodelisteAksjonspunktK9sak(): List<AksjonspunktKodeverkDto> {
+        val k9SakAp = AksjonspunktDefinisjon.entries
+        return k9SakAp.map { ap ->
+            when {
+                ap.aksjonspunktType == AksjonspunktType.AUTOPUNKT -> {
+                    AksjonspunktKodeverkDto(
+                        kode = ap.kode,
+                        navn = ap.navn,
+                        kodeverk = OppgaveKodeGruppe.AUTOPUNKT.navn
+                    )
+                }
+
+                AksjonspunktDefinisjon.entries.contains(AksjonspunktDefinisjon.fraKode(ap.kode)) -> {
+                    AksjonspunktKodeverkDto(
+                        kode = ap.kode,
+                        navn = ap.navn,
+                        kodeverk = ap.behandlingSteg.navn
+                    )
+                }
+
+                else -> {
+                    AksjonspunktKodeverkDto(
+                        kode = ap.kode,
+                        navn = ap.navn,
+                        kodeverk = "Uspesifisert"
+                    )
+                }
+            }
+        }
+    }
+
+    private fun kodelisteAksjonspunktK9klage(): List<AksjonspunktKodeverkDto> {
+        val k9KlageAp = no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktDefinisjon.entries
+        return k9KlageAp.map { ap ->
+            when {
+                ap.aksjonspunktType == no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktType.AUTOPUNKT -> {
+                    AksjonspunktKodeverkDto(
+                        kode = "KLAGE" + ap.kode,
+                        navn = ap.navn,
+                        kodeverk = OppgaveKodeGruppe.AUTOPUNKT.navn
+                    )
+                }
+
+                AksjonspunktDefinisjon.entries.contains(AksjonspunktDefinisjon.fraKode(ap.kode)) -> {
+                    AksjonspunktKodeverkDto(
+                        kode = "KLAGE" + ap.kode,
+                        navn = ap.navn,
+                        kodeverk = ap.behandlingSteg.navn
+                    )
+                }
+
+                else -> {
+                    AksjonspunktKodeverkDto(
+                        kode = "KLAGE" + ap.kode,
+                        navn = ap.navn,
+                        kodeverk = "Uspesifisert"
+                    )
+                }
+            }
+        }
+    }
 }
+
+class AksjonspunktKodeverkDto(
+    override val kode: String,
+    override val navn: String,
+    override val kodeverk: String,
+): Kodeverdi
