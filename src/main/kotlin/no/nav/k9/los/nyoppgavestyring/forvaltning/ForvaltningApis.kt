@@ -24,8 +24,10 @@ import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgavetype.OppgavetypeRepository
 import no.nav.k9.los.nyoppgavestyring.query.OppgaveQueryService
 import no.nav.k9.los.nyoppgavestyring.query.QueryRequest
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.EnkelOrderFelt
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.FeltverdiOppgavefilter
 import no.nav.k9.los.nyoppgavestyring.query.dto.query.OppgaveQuery
+import no.nav.k9.los.nyoppgavestyring.query.dto.query.OrderFelt
 import no.nav.k9.los.nyoppgavestyring.query.mapping.EksternFeltverdiOperator
 import no.nav.k9.los.nyoppgavestyring.reservasjon.ReservasjonV3Repository
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
@@ -152,6 +154,13 @@ fun Route.forvaltningApis() {
                                         "saksnummer",
                                         operator = EksternFeltverdiOperator.EQUALS,
                                         verdi = listOf(saksnummer)
+                                    )
+                                ),
+                                order = listOf(
+                                    EnkelOrderFelt(
+                                        område = "K9",
+                                        kode = "opprettetTidspunkt",
+                                        økende = true
                                     )
                                 )
                             ),

@@ -23,7 +23,3 @@ Skape en PAT <a href="https://docs.github.com/en/authentication/keeping-your-acc
 `-Djavax.net.ssl.trustStore=/Users/.../.modig/trustStore.jks -Djavax.net.ssl.keyStore=/Users/.../.modig/keyStore.jks -Djavax.net.ssl.trustStorePassword=changeit -Djavax.net.ssl.keyStorePassword=devillokeystore1234`
 
 ![logo](Los.png)
-
-```mermaid
-    info
-```
