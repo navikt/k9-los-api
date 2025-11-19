@@ -289,7 +289,7 @@ class OmrådeSetup(
             .map { (kodeverdi, synlighet) ->
                 KodeverkVerdiDto(
                     verdi = (if (prefiks) KlageEventTilOppgaveMapper.KLAGE_PREFIX else "") + kodeverdi.kode,
-                    visningsnavn = (if (prefiks) KlageEventTilOppgaveMapper.KLAGE_PREFIX_VISNING else "") + kodeverdi.navn,
+                    visningsnavn = KlageEventTilOppgaveMapper.KLAGE_PREFIX_VISNING + kodeverdi.navn,
                     beskrivelse = beskrivelse,
                     favoritt = synlighet == KodeverkSynlighet.SYNLIG_FAVORITT
                 )
