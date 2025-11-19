@@ -1,6 +1,7 @@
 package no.nav.k9.los.tjenester.mock
 
 import kotlinx.coroutines.runBlocking
+import no.nav.k9.klage.kontrakt.behandling.oppgavetillos.Aksjonspunkttilstand
 import no.nav.k9.kodeverk.behandling.BehandlingResultatType
 import no.nav.k9.kodeverk.behandling.BehandlingStegType
 import no.nav.k9.kodeverk.behandling.BehandlingÅrsakType
@@ -203,7 +204,14 @@ object localSetup : KoinComponent {
                     fagsakPeriode = null,
                     pleietrengendeAktørId = null,
                     relatertPartAktørId = null,
-                    aksjonspunkttilstander = emptyList(),
+                    aksjonspunkttilstander = listOf(Aksjonspunkttilstand(
+                        "7100",
+                        no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.AksjonspunktStatus.OPPRETTET,
+                        no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.Venteårsak.OVERSENDT_KABAL,
+                        LocalDateTime.now(),
+                        LocalDateTime.now(),
+                        LocalDateTime.now()
+                    )),
                     vedtaksdato = null,
                     behandlingsårsaker = null,
                 )
