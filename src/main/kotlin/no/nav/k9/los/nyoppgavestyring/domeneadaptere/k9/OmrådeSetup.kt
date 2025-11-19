@@ -199,7 +199,7 @@ class OmrådeSetup(
             eksternId = "Venteårsak",
             beskrivelse = null,
             uttømmende = true,
-            verdier = no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak.entries.lagK9Dto(beskrivelse = null) + no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.Venteårsak.entries.lageK9KlageDto(beskrivelse = null),
+            verdier = no.nav.k9.kodeverk.behandling.aksjonspunkt.Venteårsak.entries.lagK9Dto(beskrivelse = null) + no.nav.k9.klage.kodeverk.behandling.aksjonspunkt.Venteårsak.entries.lageK9KlageDto(beskrivelse = null, prefiks = false),
         )
         feltdefinisjonTjeneste.oppdater(kodeverkDto)
     }
@@ -222,6 +222,7 @@ class OmrådeSetup(
         )
         val k9klageKodeverk = no.nav.k9.klage.kodeverk.behandling.BehandlingÅrsakType.entries.lageK9KlageDto(
             beskrivelse = null,
+            prefiks = true,
             KodeverkSynlighetRegler::behandlingsårsak
         )
         val koder = k9sakKodeverk + k9klageKodeverk
@@ -280,14 +281,15 @@ class OmrådeSetup(
 
     fun <T : no.nav.k9.klage.kodeverk.api.Kodeverdi> Collection<T>.lageK9KlageDto(
         beskrivelse: String?,
+        prefiks: Boolean,
         synlighet: (T) -> KodeverkSynlighet = { KodeverkSynlighet.SYNLIG_FAVORITT }
     ): List<KodeverkVerdiDto> {
         return associateWith { synlighet(it) }
             .filter { (_, synlighet) -> synlighet != KodeverkSynlighet.SKJULT }
             .map { (kodeverdi, synlighet) ->
                 KodeverkVerdiDto(
-                    verdi = KlageEventTilOppgaveMapper.KLAGE_PREFIX + kodeverdi.kode,
-                    visningsnavn = KlageEventTilOppgaveMapper.KLAGE_PREFIX_VISNING + kodeverdi.navn,
+                    verdi = (if (prefiks) KlageEventTilOppgaveMapper.KLAGE_PREFIX else "") + kodeverdi.kode,
+                    visningsnavn = (if (prefiks) KlageEventTilOppgaveMapper.KLAGE_PREFIX_VISNING else "") + kodeverdi.navn,
                     beskrivelse = beskrivelse,
                     favoritt = synlighet == KodeverkSynlighet.SYNLIG_FAVORITT
                 )
