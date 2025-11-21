@@ -36,7 +36,7 @@ class AvstemmingsTjeneste(
                             null,
                             "oppgavestatus",
                             operator = EksternFeltverdiOperator.IN,
-                            verdi = listOf(Oppgavestatus.AAPEN, Oppgavestatus.VENTER),
+                            verdi = listOf(Oppgavestatus.AAPEN, Oppgavestatus.VENTER, Oppgavestatus.UAVKLART),
                         )
                     )
                 )
@@ -67,7 +67,7 @@ class AvstemmingsTjeneste(
                             null,
                             "oppgavestatus",
                             operator = EksternFeltverdiOperator.IN,
-                            verdi = listOf(Oppgavestatus.AAPEN, Oppgavestatus.VENTER),
+                            verdi = listOf(Oppgavestatus.AAPEN, Oppgavestatus.VENTER, Oppgavestatus.UAVKLART),
                         )
                     )
                 )
