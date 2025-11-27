@@ -1,6 +1,6 @@
 package no.nav.k9.los.nyoppgavestyring.uttrekk
 
-import java.time.OffsetDateTime
+import java.time.LocalDateTime
 
 enum class UttrekkStatus {
     OPPRETTET,
@@ -11,16 +11,23 @@ enum class UttrekkStatus {
 
 class Uttrekk private constructor(
     val id: Long?,
-    val opprettetTidspunkt: OffsetDateTime,
+    val opprettetTidspunkt: LocalDateTime,
     status: UttrekkStatus,
     val lagretSøkId: Long,
     val kjøreplan: String?,
-    resultat: String?
+    resultat: String?,
+    startetTidspunkt: LocalDateTime?,
+    fullførtTidspunkt: LocalDateTime?,
 ) {
     var status: UttrekkStatus = status
         private set
 
     var resultat: String? = resultat
+        private set
+
+    var startetTidspunkt: LocalDateTime? = startetTidspunkt
+        private set
+    var fullførtTidspunkt: LocalDateTime? = fullførtTidspunkt
         private set
 
     fun markerSomKjører() {
@@ -36,6 +43,7 @@ class Uttrekk private constructor(
         }
         status = UttrekkStatus.FULLFØRT
         resultat = resultatData
+        fullførtTidspunkt = LocalDateTime.now()
     }
 
     fun markerSomFeilet(feilmelding: String) {
@@ -44,29 +52,34 @@ class Uttrekk private constructor(
         }
         status = UttrekkStatus.FEILET
         resultat = feilmelding
+        fullførtTidspunkt = LocalDateTime.now()
     }
 
     companion object {
         fun opprettUttrekk(lagretSokId: Long, kjoreplan: String?): Uttrekk {
             return Uttrekk(
                 id = null,
-                opprettetTidspunkt = OffsetDateTime.now(),
+                opprettetTidspunkt = LocalDateTime.now(),
                 status = UttrekkStatus.OPPRETTET,
                 lagretSøkId = lagretSokId,
                 kjøreplan = kjoreplan,
-                resultat = null
+                resultat = null,
+                startetTidspunkt = null,
+                fullførtTidspunkt = null
             )
         }
 
         fun fraEksisterende(
             id: Long,
-            opprettetTidspunkt: OffsetDateTime,
+            opprettetTidspunkt: LocalDateTime,
             status: UttrekkStatus,
             lagretSokId: Long,
             kjoreplan: String?,
-            resultat: String?
+            resultat: String?,
+            startetTidspunkt: LocalDateTime?,
+            fullførtTidspunkt: LocalDateTime?,
         ): Uttrekk {
-            return Uttrekk(id, opprettetTidspunkt, status, lagretSokId, kjoreplan, resultat)
+            return Uttrekk(id, opprettetTidspunkt, status, lagretSokId, kjoreplan, resultat, startetTidspunkt, fullførtTidspunkt)
         }
     }
 }

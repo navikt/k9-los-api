@@ -8,6 +8,8 @@ import kotliquery.using
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Action
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.Auditlogging
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.abac.IPepClient
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
+import no.nav.k9.los.nyoppgavestyring.infrastruktur.idtoken.IIdToken
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.rest.CoroutineRequestContext
 import no.nav.k9.los.nyoppgavestyring.mottak.oppgave.*
 import no.nav.k9.los.nyoppgavestyring.query.db.EksternOppgaveId
@@ -19,7 +21,6 @@ import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgavefeltverdi
 import no.nav.k9.los.nyoppgavestyring.query.dto.resultat.Oppgaverad
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.Oppgave
 import no.nav.k9.los.nyoppgavestyring.visningoguttrekk.OppgaveRepository
-import no.nav.k9.los.nyoppgavestyring.infrastruktur.idtoken.IIdToken
 import org.koin.java.KoinJavaComponent.inject
 import java.time.LocalDateTime
 import javax.sql.DataSource
@@ -72,16 +73,17 @@ class OppgaveQueryService {
         val now = LocalDateTime.now()
         return oppgaveQueryRepository.queryForEksternId(oppgaveQuery, now)
     }
+
     @WithSpan
-    fun queryToFile(oppgaveQuery: QueryRequest, idToken: IIdToken): String {
-        return using(sessionOf(datasource)) {
-            it.transaction { tx -> queryToFile(tx, oppgaveQuery, idToken) }
+    suspend fun queryToFile(oppgaveQuery: QueryRequest): String {
+        return TransactionalManager(datasource).transactionSuspend { tx ->
+            queryToFile(tx, oppgaveQuery)
         }
     }
 
     @WithSpan
-    fun queryToFile(tx: TransactionalSession, oppgaveQuery: QueryRequest, idToken: IIdToken): String {
-        val oppgaver = query(tx, oppgaveQuery, idToken)
+    suspend fun queryToFile(tx: TransactionalSession, oppgaveQuery: QueryRequest): String {
+        val oppgaver = query(tx, oppgaveQuery)
         if (oppgaver.isEmpty()) {
             return ""
         }
@@ -105,6 +107,20 @@ class OppgaveQueryService {
         return using(sessionOf(datasource)) {
             it.transaction { tx -> query(tx, oppgaveQuery, idToken) }
         }
+    }
+
+    @WithSpan
+    suspend fun query(tx: TransactionalSession, request: QueryRequest): List<Oppgaverad> {
+        val now = LocalDateTime.now()
+        val oppgaveIder = oppgaveQueryRepository.query(tx, request, now)
+
+        val oppgaverader = mapOppgaver(tx, request, oppgaveIder, now)
+
+        if (request.oppgaveQuery.select.isEmpty()) {
+            return listOf(listOf(Oppgavefeltverdi(null, "Antall", oppgaverader.size)))
+        }
+
+        return oppgaverader
     }
 
     @WithSpan
