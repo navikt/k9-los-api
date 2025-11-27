@@ -201,10 +201,9 @@ fun buildAndTestConfig(dataSource: DataSource, pepClient: IPepClient = PepClient
         K9SakEventHandler(
             k9SakEventRepository = K9SakEventRepository(dataSource = get()),
             sakOgBehandlingProducer = sakOgBehadlingProducer,
-            k9SakTilLosAdapterTjeneste = get(),
             transactionalManager = get(),
             eventlagerKonverteringsservice = get(),
-            eventRepository = get(),
+            eventTilOppgaveAdapter = get()
         )
     }
 
