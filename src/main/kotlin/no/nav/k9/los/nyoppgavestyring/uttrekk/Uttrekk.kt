@@ -35,6 +35,7 @@ class Uttrekk private constructor(
             throw IllegalStateException("Kan kun starte uttrekk som er i status OPPRETTET")
         }
         status = UttrekkStatus.KJØRER
+        startetTidspunkt = LocalDateTime.now()
     }
 
     fun markerSomFullført(resultatData: String) {
