@@ -234,16 +234,6 @@ class StatusFordelingService(val queryService: OppgaveQueryService) {
                     bunnlinje = antall("totalt", personbeskyttelse, åpenVenterUavklart, klage),
                 )
 
-                StatusGruppe.UNNTAKSBEHANDLING -> StatuskortDto(
-                    tittel = KodeOgNavn(gruppe.name, gruppe.tekst),
-                    topplinje = antall("åpne", personbeskyttelse, åpen, unntak),
-                    linjer = listOf(
-                        antall("venter", personbeskyttelse, venter, unntak),
-                        antall("uavklart", personbeskyttelse, uavklart, unntak),
-                    ),
-                    bunnlinje = antall("totalt", personbeskyttelse, åpenVenterUavklart, unntak),
-                )
-
                 StatusGruppe.PUNSJ -> StatuskortDto(
                     tittel = KodeOgNavn(gruppe.name, gruppe.tekst),
                     topplinje = antall("åpne", personbeskyttelse, åpen, punsj),
