@@ -3,24 +3,24 @@ package no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.sak
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHandlerMetrics
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.EventHendelse
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventRepository
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventNøkkel
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventmottak.eventlager.EventlagerKonverteringsservice
-import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.saktillos.K9SakTilLosAdapterTjeneste
+import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.eventtiloppgave.EventTilOppgaveAdapter
 import no.nav.k9.los.nyoppgavestyring.domeneadaptere.k9.modia.SakOgBehandlingProducer
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.db.TransactionalManager
 import no.nav.k9.los.nyoppgavestyring.infrastruktur.utils.OpentelemetrySpanUtil
 import no.nav.k9.los.nyoppgavestyring.kodeverk.BehandlingStatus
 import no.nav.k9.los.nyoppgavestyring.kodeverk.FagsakYtelseType
+import no.nav.k9.los.nyoppgavestyring.kodeverk.Fagsystem
 import org.slf4j.LoggerFactory
 
 
 class K9SakEventHandler (
     private val k9SakEventRepository: K9SakEventRepository,
     private val sakOgBehandlingProducer: SakOgBehandlingProducer,
-    private val k9SakTilLosAdapterTjeneste: K9SakTilLosAdapterTjeneste,
+    private val eventTilOppgaveAdapter: EventTilOppgaveAdapter,
     private val transactionalManager: TransactionalManager,
     private val eventlagerKonverteringsservice: EventlagerKonverteringsservice,
-    private val eventRepository: EventRepository,
 ) {
     private val log = LoggerFactory.getLogger(K9SakEventHandler::class.java)
 
@@ -86,7 +86,7 @@ class K9SakEventHandler (
 
         OpentelemetrySpanUtil.span("k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid") {
             try {
-                k9SakTilLosAdapterTjeneste.oppdaterOppgaveForBehandlingUuid(event.eksternId!!)
+                eventTilOppgaveAdapter.oppdaterOppgaveForEksternId(EventNøkkel(null, Fagsystem.K9SAK, event.eksternId.toString()))
             } catch (e: Exception) {
                 log.error("Oppatering av k9-sak-oppgave feilet for ${event.eksternId}. Oppgaven er ikke oppdatert, men blir plukket av vaktmester", e)
             }

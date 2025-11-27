@@ -221,10 +221,9 @@ fun common(app: Application, config: Configuration) = module {
         K9SakEventHandler(
             k9SakEventRepository = get(),
             sakOgBehandlingProducer = get(),
-            k9SakTilLosAdapterTjeneste = get(),
             transactionalManager = get(),
             eventlagerKonverteringsservice = get(),
-            eventRepository = get(),
+            eventTilOppgaveAdapter = get(),
         )
     }
 
