@@ -62,7 +62,7 @@ fun Route.OppgaveQueryApis() {
                         ContentDisposition.Parameters.FileName, "oppgaver.csv"
                     ).toString()
                 )
-                call.respondText(oppgaveQueryService.queryToFile(QueryRequest(oppgaveQuery), idToken))
+                call.respondText(oppgaveQueryService.queryToFile(QueryRequest(oppgaveQuery)))
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }

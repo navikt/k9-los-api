@@ -95,6 +95,7 @@ abstract class AbstractPostgresTest {
                 oppgave_v3,
                 oppgave_v3_aktiv,
                 feltdefinisjon,
+                uttrekk,
                 lagret_sok,
                 event,
                 event_historikkvask_bestilt;
