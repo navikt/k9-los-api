@@ -9,12 +9,18 @@ enum class UttrekkStatus {
     FEILET
 }
 
+enum class TypeKjøring {
+    ANTALL,
+    OPPGAVER
+}
+
 class Uttrekk private constructor(
     val id: Long?,
     val opprettetTidspunkt: LocalDateTime,
     status: UttrekkStatus,
     val lagretSøkId: Long,
     val kjøreplan: String?,
+    val typeKjøring: TypeKjøring,
     resultat: String?,
     startetTidspunkt: LocalDateTime?,
     fullførtTidspunkt: LocalDateTime?,
@@ -57,13 +63,14 @@ class Uttrekk private constructor(
     }
 
     companion object {
-        fun opprettUttrekk(lagretSokId: Long, kjoreplan: String?): Uttrekk {
+        fun opprettUttrekk(lagretSokId: Long, kjoreplan: String?, typeKjoring: TypeKjøring = TypeKjøring.OPPGAVER): Uttrekk {
             return Uttrekk(
                 id = null,
                 opprettetTidspunkt = LocalDateTime.now(),
                 status = UttrekkStatus.OPPRETTET,
                 lagretSøkId = lagretSokId,
                 kjøreplan = kjoreplan,
+                typeKjøring = typeKjoring,
                 resultat = null,
                 startetTidspunkt = null,
                 fullførtTidspunkt = null
@@ -76,11 +83,12 @@ class Uttrekk private constructor(
             status: UttrekkStatus,
             lagretSokId: Long,
             kjoreplan: String?,
+            typeKjoring: TypeKjøring,
             resultat: String?,
             startetTidspunkt: LocalDateTime?,
             fullførtTidspunkt: LocalDateTime?,
         ): Uttrekk {
-            return Uttrekk(id, opprettetTidspunkt, status, lagretSokId, kjoreplan, resultat, startetTidspunkt, fullførtTidspunkt)
+            return Uttrekk(id, opprettetTidspunkt, status, lagretSokId, kjoreplan, typeKjoring, resultat, startetTidspunkt, fullførtTidspunkt)
         }
     }
 }

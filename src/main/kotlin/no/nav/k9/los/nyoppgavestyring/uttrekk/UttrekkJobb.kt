@@ -17,7 +17,12 @@ class UttrekkJobb(
         val uttrekk = uttrekkTjeneste.startUttrekk(uttrekkId)
         val lagretSøk = lagretSøkTjeneste.hent(uttrekk.lagretSøkId)
         try {
-            val resultat = oppgaveQueryService.queryToFile(QueryRequest(lagretSøk.query))
+            val resultat = when (uttrekk.typeKjøring) {
+                TypeKjøring.ANTALL ->
+                    oppgaveQueryService.queryForAntall(QueryRequest(lagretSøk.query)).toString()
+                TypeKjøring.OPPGAVER ->
+                    oppgaveQueryService.queryToFile(QueryRequest(lagretSøk.query))
+            }
             uttrekkTjeneste.fullførUttrekk(uttrekkId, resultat)
         } catch (e: Exception) {
             uttrekkTjeneste.feilUttrekk(uttrekkId, e.message ?: "Ukjent feil under uttrekk")

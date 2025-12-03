@@ -12,7 +12,8 @@ class UttrekkTjeneste(
 
         val uttrekk = Uttrekk.opprettUttrekk(
             lagretSokId = opprettUttrekk.lagretSokId,
-            kjoreplan = opprettUttrekk.kjoreplan
+            kjoreplan = opprettUttrekk.kjoreplan,
+            typeKjoring = opprettUttrekk.typeKjoring
         )
         return uttrekkRepository.opprett(uttrekk)
     }

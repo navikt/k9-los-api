@@ -31,14 +31,15 @@ class UttrekkRepository(val dataSource: DataSource) {
             tx.updateAndReturnGeneratedKey(
                 queryOf(
                     """
-                    INSERT INTO uttrekk (opprettet_tidspunkt, status, lagret_sok, kjoreplan, resultat)
-                    VALUES (:opprettetTidspunkt, :status, :lagretSok, :kjoreplan, :resultat::jsonb)
+                    INSERT INTO uttrekk (opprettet_tidspunkt, status, lagret_sok, kjoreplan, type_kjoring, resultat)
+                    VALUES (:opprettetTidspunkt, :status, :lagretSok, :kjoreplan, :typeKjoring, :resultat::jsonb)
                     """.trimIndent(),
                     mapOf(
                         "opprettetTidspunkt" to uttrekk.opprettetTidspunkt,
                         "status" to uttrekk.status.name,
                         "lagretSok" to uttrekk.lagretSøkId,
                         "kjoreplan" to uttrekk.kjøreplan,
+                        "typeKjoring" to uttrekk.typeKjøring.name,
                         "resultat" to uttrekk.resultat
                     )
                 )
@@ -124,6 +125,7 @@ private fun Row.toUttrekk(): Uttrekk {
         status = UttrekkStatus.valueOf(string("status")),
         lagretSokId = long("lagret_sok"),
         kjoreplan = stringOrNull("kjoreplan"),
+        typeKjoring = TypeKjøring.valueOf(string("type_kjoring")),
         resultat = stringOrNull("resultat"),
         startetTidspunkt = localDateTimeOrNull("startet_tidspunkt"),
         fullførtTidspunkt = localDateTimeOrNull("fullfort_tidspunkt")
